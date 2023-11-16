@@ -17,6 +17,10 @@ export class JournalConfig {
     await this.plugin.saveData(this.configs);
   }
 
+  get(index: number): JournalConfigs | undefined {
+    return this.configs[index];
+  }
+
   *[Symbol.iterator]() {
     for (let i = 0; i < this.configs.length; ++i) {
       yield [this.configs[i], i] as [JournalConfigs, number];
