@@ -12,13 +12,11 @@ export interface CalendarConfig {
   yearly: YearlyCalendarSection;
 }
 
-interface CalndarSectionBase {
+export interface CalndarSectionBase {
   enabled: boolean;
   titleTemplate: string;
   dateFormat: string;
-  folderType: "manual" | "auto";
   folder: string;
-  folderTemplate: string;
 }
 
 export interface DailyCalendarSection extends CalndarSectionBase {}

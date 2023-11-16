@@ -1,9 +1,13 @@
 import EventEmitter from "eventemitter3";
 import { Disposable } from "../contracts/disposable.types";
-import { CalendarConfig } from "../contracts/config.types";
+import { CalendarConfig, CalndarSectionBase } from "../contracts/config.types";
 import { Setting } from "obsidian";
+import { SettingsBaseCalendarSection } from "./settings-base-calendar-section";
+import { SettingsCalendarWeeklySection } from "./settings-calendar-weekly-section";
 
 export class SettingsCalendarPage extends EventEmitter implements Disposable {
+  private disposables: Disposable[] = [];
+
   constructor(
     private containerEl: HTMLElement,
     private config: CalendarConfig,
@@ -62,9 +66,25 @@ export class SettingsCalendarPage extends EventEmitter implements Disposable {
         });
       });
     }
+
+    this.registerSection(new SettingsBaseCalendarSection(containerEl, this.config.daily, "Daily"));
+    this.registerSection(new SettingsCalendarWeeklySection(containerEl, this.config.weekly, "Weekly"));
+    this.registerSection(new SettingsBaseCalendarSection(containerEl, this.config.monthly, "Monthly"));
+    this.registerSection(new SettingsBaseCalendarSection(containerEl, this.config.quarterly, "Quarterly"));
+    this.registerSection(new SettingsBaseCalendarSection(containerEl, this.config.yearly, "Yearly"));
+  }
+
+  registerSection(section: SettingsBaseCalendarSection<CalndarSectionBase>): void {
+    this.disposables.push(section);
+    section.on("save", () => this.emit("save"));
+    section.on("save+redraw", () => this.emit("save+redraw"));
+    section.display();
   }
 
   dispose(): void {
+    for (const disposable of this.disposables) {
+      disposable.dispose();
+    }
     this.removeAllListeners();
   }
 }
