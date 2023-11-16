@@ -16,4 +16,10 @@ export class JournalConfig {
   async save(): Promise<void> {
     await this.plugin.saveData(this.configs);
   }
+
+  *[Symbol.iterator]() {
+    for (let i = 0; i < this.configs.length; ++i) {
+      yield [this.configs[i], i] as [JournalConfigs, number];
+    }
+  }
 }

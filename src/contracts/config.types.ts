@@ -32,6 +32,7 @@ export interface YearlyCalendarSection extends CalndarSectionBase {}
 
 export interface IntervalConfig {
   type: "interval";
+  name: string;
 }
 
 export type JournalConfigs = CalendarConfig | IntervalConfig;
