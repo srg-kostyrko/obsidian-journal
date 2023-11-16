@@ -1,6 +1,14 @@
-import { PluginSettingTab, Setting } from "obsidian";
+import { PluginSettingTab, Setting, Plugin, App } from "obsidian";
+import { JournalConfig } from "../config/journal-config";
 
 export class JournalSettingTab extends PluginSettingTab {
+  constructor(
+    app: App,
+    plugin: Plugin,
+    private config: JournalConfig,
+  ) {
+    super(app, plugin);
+  }
   display() {
     const { containerEl } = this;
 
