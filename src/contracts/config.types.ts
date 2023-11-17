@@ -1,3 +1,5 @@
+export type CalendarGranularity = "day" | "week" | "month" | "quarter" | "year";
+
 export interface CalendarConfig {
   type: "calendar";
   name: string;
