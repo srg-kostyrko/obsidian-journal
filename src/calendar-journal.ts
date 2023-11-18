@@ -10,4 +10,8 @@ export class CalendarJournal {
   ) {
     this.daily = new CalendarJournalSection(app, this, this.config.daily, "day");
   }
+
+  get id(): string {
+    return this.config.id;
+  }
 }

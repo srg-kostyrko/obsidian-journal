@@ -4,6 +4,7 @@ import { CalendarJournal } from "./calendar-journal";
 import { ensureFolderExists } from "./utils/io";
 import { replaceTemplateVariables } from "./utils/template";
 import { TemplateContext } from "./contracts/template.types";
+import { FRONTMATTER_DATE_FORMAT } from "./constants";
 
 export class CalendarJournalSection<T extends CalndarSectionBase> {
   constructor(
@@ -36,6 +37,11 @@ export class CalendarJournalSection<T extends CalndarSectionBase> {
     if (!file) {
       await ensureFolderExists(this.app, folderPath);
       file = await this.app.vault.create(filePath, await this.getContent(templateContext));
+      this.app.fileManager.processFrontMatter(file as TFile, (frontmatter) => {
+        console.log(frontmatter);
+        frontmatter["date"] = date.format(FRONTMATTER_DATE_FORMAT);
+        frontmatter["journal"] = [this.journal.id, this.granularity];
+      });
     }
     const leaf = this.app.workspace.getLeaf();
     await leaf.openFile(file as TFile, { active: true });
