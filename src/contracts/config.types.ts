@@ -1,4 +1,5 @@
 export type CalendarGranularity = "day" | "week" | "month" | "quarter" | "year";
+export type SectionName = "daily" | "weekly" | "monthly" | "quarterly" | "yearly";
 
 export interface CalendarConfig {
   type: "calendar";
@@ -6,7 +7,7 @@ export interface CalendarConfig {
   name: string;
   rootFolder: string;
   openOnStartup: boolean;
-  startupSection: "daily" | "weekly" | "monthly" | "quarterly" | "yearly";
+  startupSection: SectionName;
 
   daily: DailyCalendarSection;
   weekly: WeeklyCalendarSection;

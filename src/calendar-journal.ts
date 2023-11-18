@@ -30,4 +30,10 @@ export class CalendarJournal {
   get id(): string {
     return this.config.id;
   }
+
+  openStartupNote(): void {
+    if (!this.config.openOnStartup) return;
+    const section = this.config.startupSection;
+    this[section].open();
+  }
 }

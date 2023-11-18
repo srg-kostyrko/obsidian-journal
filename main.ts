@@ -7,6 +7,8 @@ import { CalendarConfig } from "./src/contracts/config.types";
 export default class JournalPlugin extends Plugin {
   private config: JournalConfig;
   async onload() {
+    const appStartup = document.body.querySelector(".progress-bar") !== null;
+
     this.config = new JournalConfig(this);
     await this.config.load();
 
@@ -16,6 +18,10 @@ export default class JournalPlugin extends Plugin {
 
     this.addRibbonIcon("calendar-days", "Open daily note", async () => {
       await calendar.daily.open();
+    });
+
+    this.app.workspace.onLayoutReady(async () => {
+      if (appStartup) await calendar.openStartupNote();
     });
   }
 }
