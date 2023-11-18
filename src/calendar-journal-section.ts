@@ -15,7 +15,7 @@ export class CalendarJournalSection<T extends CalndarSectionBase> {
   ) {}
 
   get folderPath(): string {
-    const folderPath = [this.journal.config.rootFolder];
+    const folderPath = this.journal.config.rootFolder ? [this.journal.config.rootFolder] : [];
     if (this.config.folder) {
       folderPath.push(this.config.folder);
     }
@@ -38,7 +38,6 @@ export class CalendarJournalSection<T extends CalndarSectionBase> {
       await ensureFolderExists(this.app, folderPath);
       file = await this.app.vault.create(filePath, await this.getContent(templateContext));
       this.app.fileManager.processFrontMatter(file as TFile, (frontmatter) => {
-        console.log(frontmatter);
         frontmatter["date"] = date.format(FRONTMATTER_DATE_FORMAT);
         frontmatter["journal"] = [this.journal.id, this.granularity];
       });

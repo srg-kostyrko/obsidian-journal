@@ -38,8 +38,8 @@ export const DEFAULT_CONFIG_CALENDAR: Omit<CalendarConfig, "id"> = {
   },
   yearly: {
     enabled: false,
-    titleTemplate: "YYYY",
-    dateFormat: "YYYY-MM-DD",
+    titleTemplate: "{{date}}",
+    dateFormat: "YYYY",
     folder: "",
     template: "",
   },
