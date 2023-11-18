@@ -1,10 +1,14 @@
 import EventEmitter from "eventemitter3";
 import { Disposable } from "../contracts/disposable.types";
-import { CalndarSectionBase } from "../contracts/config.types";
-import { Setting } from "obsidian";
+import { CalendarConfig, CalndarSectionBase } from "../contracts/config.types";
+import { App, Setting } from "obsidian";
+import { FolderSuggestion } from "./ui/folder-suggestion";
 
 export class SettingsBaseCalendarSection<T extends CalndarSectionBase> extends EventEmitter implements Disposable {
+  private folderSuggestions: FolderSuggestion[] = [];
   constructor(
+    protected app: App,
+    protected journal: CalendarConfig,
     protected containerEl: HTMLElement,
     protected config: T,
     protected title: string,
@@ -42,6 +46,7 @@ export class SettingsBaseCalendarSection<T extends CalndarSectionBase> extends E
     });
 
     new Setting(containerEl).setName("Folder").addText((text) => {
+      this.folderSuggestions.push(new FolderSuggestion(this.app, text.inputEl, this.journal.rootFolder));
       text.setValue(this.config.folder).onChange((value) => {
         this.config.folder = value;
         this.emit("save");
@@ -54,6 +59,12 @@ export class SettingsBaseCalendarSection<T extends CalndarSectionBase> extends E
         this.emit("save");
       });
     });
+  }
+
+  updateFolderSuggestions(root: string): void {
+    for (const suggestion of this.folderSuggestions) {
+      suggestion.root = root;
+    }
   }
 
   dispose(): void {

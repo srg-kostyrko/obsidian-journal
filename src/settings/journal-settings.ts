@@ -54,7 +54,7 @@ export class JournalSettingTab extends PluginSettingTab {
         }
         switch (journalConfig.type) {
           case "calendar": {
-            const calendarPage = new SettingsCalendarPage(containerEl, journalConfig);
+            const calendarPage = new SettingsCalendarPage(this.app, containerEl, journalConfig);
             this.disposables.push(calendarPage);
             calendarPage.on("navigate", (state) => {
               this.routeState = state;
