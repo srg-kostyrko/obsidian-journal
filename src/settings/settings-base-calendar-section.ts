@@ -47,6 +47,13 @@ export class SettingsBaseCalendarSection<T extends CalndarSectionBase> extends E
         this.emit("save");
       });
     });
+
+    new Setting(containerEl).setName("Template").addText((text) => {
+      text.setValue(this.config.template).onChange((value) => {
+        this.config.template = value;
+        this.emit("save");
+      });
+    });
   }
 
   dispose(): void {

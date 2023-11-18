@@ -12,6 +12,7 @@ export const DEFAULT_CONFIG_CALENDAR: CalendarConfig = {
     titleTemplate: "{{date}}",
     dateFormat: "YYYY-MM-DD",
     folder: "",
+    template: "",
   },
   weekly: {
     enabled: false,
@@ -19,23 +20,27 @@ export const DEFAULT_CONFIG_CALENDAR: CalendarConfig = {
     titleTemplate: "{{date}}",
     dateFormat: "YYYY-[W]ww",
     folder: "",
+    template: "",
   },
   monthly: {
     enabled: false,
     titleTemplate: "{{date}}",
     dateFormat: "YYYY-MM",
     folder: "",
+    template: "",
   },
   quarterly: {
     enabled: false,
     titleTemplate: "{{date}}",
     dateFormat: "YYYY-[Q]Q",
     folder: "",
+    template: "",
   },
   yearly: {
     enabled: false,
     titleTemplate: "YYYY",
     dateFormat: "YYYY-MM-DD",
     folder: "",
+    template: "",
   },
 };

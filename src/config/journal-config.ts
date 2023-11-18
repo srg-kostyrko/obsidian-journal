@@ -1,6 +1,7 @@
 import { Plugin } from "obsidian";
 import { JournalConfigs } from "../contracts/config.types";
 import { DEFAULT_CONFIG_CALENDAR } from "./config-defaults";
+import { deepCopy } from "../utils";
 
 const DEFAULT_CONFIG: JournalConfigs[] = [DEFAULT_CONFIG_CALENDAR];
 
@@ -10,7 +11,7 @@ export class JournalConfig {
   constructor(private plugin: Plugin) {}
 
   async load(): Promise<void> {
-    this.configs = (await this.plugin.loadData()) ?? DEFAULT_CONFIG;
+    this.configs = (await this.plugin.loadData()) ?? deepCopy(DEFAULT_CONFIG);
   }
 
   async save(): Promise<void> {
