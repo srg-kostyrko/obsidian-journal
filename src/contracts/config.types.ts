@@ -2,6 +2,7 @@ export type CalendarGranularity = "day" | "week" | "month" | "quarter" | "year";
 
 export interface CalendarConfig {
   type: "calendar";
+  id: string;
   name: string;
   rootFolder: string;
   openOnStartup: boolean;
