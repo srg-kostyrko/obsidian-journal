@@ -1,13 +1,25 @@
 import { App } from "obsidian";
 import {
   CalendarConfig,
+  CalendarGranularity,
   DailyCalendarSection,
   MonthlyCalendarSection,
   QuarterlyCalendarSection,
+  SectionName,
   WeeklyCalendarSection,
   YearlyCalendarSection,
-} from "./contracts/config.types";
+} from "../contracts/config.types";
 import { CalendarJournalSection } from "./calendar-journal-section";
+import { MomentDate } from "../contracts/date.types";
+
+const SECTIONS_MAP: Record<CalendarGranularity, SectionName> = {
+  day: "daily",
+  week: "weekly",
+  month: "monthly",
+
+  quarter: "quarterly",
+  year: "yearly",
+};
 
 export class CalendarJournal {
   public readonly daily: CalendarJournalSection<DailyCalendarSection>;
@@ -31,9 +43,24 @@ export class CalendarJournal {
     return this.config.id;
   }
 
-  openStartupNote(): void {
+  async openStartupNote(): Promise<void> {
     if (!this.config.openOnStartup) return;
     const section = this.config.startupSection;
-    this[section].open();
+    await this[section].open();
+  }
+
+  indexNote(date: MomentDate, payload: [string], path: string): void {
+    const [granularity] = payload;
+    const section = SECTIONS_MAP[granularity as CalendarGranularity];
+    if (!section) return;
+    this[section].indexNote(date, path);
+  }
+
+  clearForPath(path: string): void {
+    this.daily.clearForPath(path);
+    this.weekly.clearForPath(path);
+    this.monthly.clearForPath(path);
+    this.quarterly.clearForPath(path);
+    this.yearly.clearForPath(path);
   }
 }

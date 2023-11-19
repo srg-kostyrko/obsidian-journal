@@ -1,7 +1,7 @@
-import { moment } from "obsidian";
+import { MomentDate } from "./date.types";
 export interface TemplateContext {
   date?: {
-    value: ReturnType<typeof moment>;
+    value: MomentDate;
     defaultFormat: string;
   };
 }
