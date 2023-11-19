@@ -88,6 +88,18 @@ export class CalendarJournal {
     await this[section].open();
   }
 
+  async openDefault(): Promise<void> {
+    if (this.config.daily.enabled) {
+      return this.daily.open();
+    } else if (this.config.weekly.enabled) {
+      return this.weekly.open();
+    } else if (this.config.monthly.enabled) {
+      return this.monthly.open();
+    } else if (this.config.quarterly.enabled) {
+      return this.quarterly.open();
+    }
+  }
+
   indexNote(date: MomentDate, payload: [string], path: string): void {
     const [granularity] = payload;
     const section = SECTIONS_MAP[granularity as CalendarGranularity];

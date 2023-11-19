@@ -49,7 +49,6 @@ export class JournalManager extends Component {
         id: `journal:${id}`,
         name: label,
         checkCallback: (checking: boolean): boolean => {
-          console.log(id, checking);
           const calendars = this.getCalendarsSupportingCommand(id);
           if (calendars.length > 0) {
             if (!checking) {
