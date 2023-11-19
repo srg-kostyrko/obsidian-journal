@@ -52,35 +52,36 @@ export class SettingsCalendarPage extends EventEmitter implements Disposable {
           this.emit("save");
         });
     });
-
-    const startUp = new Setting(containerEl).setName("Open on Startup").addToggle((toggle) => {
-      toggle.setValue(this.config.openOnStartup).onChange(() => {
-        this.config.openOnStartup = toggle.getValue();
-        this.emit("save+redraw");
-      });
-    });
-    if (this.config.openOnStartup) {
-      startUp.addDropdown((dropdown) => {
-        if (this.config.daily.enabled) {
-          dropdown.addOption("daily", "Daily Note");
-        }
-        if (this.config.weekly.enabled) {
-          dropdown.addOption("weekly", "Weekly Note");
-        }
-        if (this.config.monthly.enabled) {
-          dropdown.addOption("monthly", "Monthly Note");
-        }
-        if (this.config.quarterly.enabled) {
-          dropdown.addOption("quarterly", "Quarterly Note");
-        }
-        if (this.config.yearly.enabled) {
-          dropdown.addOption("yearly", "Yearly Note");
-        }
-        dropdown.setValue(this.config.startupSection).onChange((value) => {
-          this.config.startupSection = value as CalendarConfig["startupSection"];
-          this.emit("save");
+    if (this.config.isDefault) {
+      const startUp = new Setting(containerEl).setName("Open on Startup").addToggle((toggle) => {
+        toggle.setValue(this.config.openOnStartup).onChange(() => {
+          this.config.openOnStartup = toggle.getValue();
+          this.emit("save+redraw");
         });
       });
+      if (this.config.openOnStartup) {
+        startUp.addDropdown((dropdown) => {
+          if (this.config.daily.enabled) {
+            dropdown.addOption("daily", "Daily Note");
+          }
+          if (this.config.weekly.enabled) {
+            dropdown.addOption("weekly", "Weekly Note");
+          }
+          if (this.config.monthly.enabled) {
+            dropdown.addOption("monthly", "Monthly Note");
+          }
+          if (this.config.quarterly.enabled) {
+            dropdown.addOption("quarterly", "Quarterly Note");
+          }
+          if (this.config.yearly.enabled) {
+            dropdown.addOption("yearly", "Yearly Note");
+          }
+          dropdown.setValue(this.config.startupSection).onChange((value) => {
+            this.config.startupSection = value as CalendarConfig["startupSection"];
+            this.emit("save");
+          });
+        });
+      }
     }
 
     this.registerSection(

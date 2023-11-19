@@ -2,12 +2,13 @@ import { App, Component, Plugin, TAbstractFile, TFile, moment } from "obsidian";
 import { JournalConfig } from "./config/journal-config";
 import { CalendarJournal, calendarCommands } from "./calendar-journal/calendar-journal";
 import { FRONTMATTER_DATE_KEY, FRONTMATTER_ID_KEY, FRONTMATTER_META_KEY } from "./constants";
+import { deepCopy, generateId } from "./utils";
+import { DEFAULT_CONFIG_CALENDAR } from "./config/config-defaults";
+import { CalendarConfig } from "./contracts/config.types";
 
 export class JournalManager extends Component {
   private journals = new Map<string, CalendarJournal>();
   private defaultId: string;
-
-  private knownCommands = new Set();
 
   constructor(
     private app: App,
@@ -15,7 +16,7 @@ export class JournalManager extends Component {
     private config: JournalConfig,
   ) {
     super();
-    for (const [journalConfig] of config) {
+    for (const journalConfig of config) {
       switch (journalConfig.type) {
         case "calendar": {
           const calendar = new CalendarJournal(this.app, journalConfig);
@@ -33,6 +34,21 @@ export class JournalManager extends Component {
 
   get defaultJournal() {
     return this.journals.get(this.defaultId);
+  }
+
+  async createCalendarJournal(name: string): Promise<string> {
+    const id = generateId();
+    const config: CalendarConfig = {
+      ...deepCopy(DEFAULT_CONFIG_CALENDAR),
+      id,
+      name,
+      isDefault: false,
+    };
+    this.config.add(config);
+    await this.config.save();
+    const calendar = new CalendarJournal(this.app, config);
+    this.journals.set(id, calendar);
+    return id;
   }
 
   async openStartupNote(): Promise<void> {

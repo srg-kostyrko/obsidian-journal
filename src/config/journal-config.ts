@@ -27,13 +27,17 @@ export class JournalConfig {
     await this.plugin.saveData(this.configs);
   }
 
-  get(index: number): JournalConfigs | undefined {
-    return this.configs[index];
+  add(config: JournalConfigs): void {
+    this.configs.push(config);
+  }
+
+  get(id: string): JournalConfigs | undefined {
+    return this.configs.find((c) => c.id === id);
   }
 
   *[Symbol.iterator]() {
-    for (let i = 0; i < this.configs.length; ++i) {
-      yield [this.configs[i], i] as [JournalConfigs, number];
+    for (const config of this.configs) {
+      yield config;
     }
   }
 }

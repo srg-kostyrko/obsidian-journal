@@ -1,10 +1,14 @@
-import { Setting } from "obsidian";
+import { App, Setting } from "obsidian";
 import { EventEmitter } from "eventemitter3";
 import { JournalConfig } from "../config/journal-config";
 import { Disposable } from "../contracts/disposable.types";
+import { CreateJournalModal } from "./ui/create-journal-modal";
+import { JournalManager } from "../journal-manager";
 
 export class SettingsHomePage extends EventEmitter implements Disposable {
   constructor(
+    private app: App,
+    private manager: JournalManager,
     private containerEl: HTMLElement,
     private config: JournalConfig,
   ) {
@@ -14,9 +18,20 @@ export class SettingsHomePage extends EventEmitter implements Disposable {
   display(): void {
     const { containerEl } = this;
 
-    new Setting(containerEl).setName("Journals").setHeading();
+    new Setting(containerEl)
+      .setName("Journals")
+      .setHeading()
+      .addButton((button) => {
+        button
+          .setTooltip("Create new journal configuration")
+          .setCta()
+          .setIcon("plus")
+          .onClick(() => {
+            new CreateJournalModal(this.app, this.manager, this).open();
+          });
+      });
 
-    for (const [entry, index] of this.config) {
+    for (const entry of this.config) {
       const setting = new Setting(containerEl).setName(entry.name).addButton((button) => {
         button
           .setIcon("pencil")
@@ -25,7 +40,7 @@ export class SettingsHomePage extends EventEmitter implements Disposable {
           .onClick(() => {
             this.emit("navigate", {
               type: "journal",
-              index,
+              id: entry.id,
             });
           });
       });
@@ -33,6 +48,7 @@ export class SettingsHomePage extends EventEmitter implements Disposable {
         const defaultBadge = setting.nameEl.createEl("span");
         defaultBadge.innerText = "Default";
         defaultBadge.classList.add("flair");
+        defaultBadge.classList.add("mod-pop");
       } else {
         setting.addButton((button) => {
           button.setIcon("trash-2").setTooltip(`Delete ${entry.name}`).setClass("clickable-icon");

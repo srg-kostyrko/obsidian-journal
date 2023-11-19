@@ -3,6 +3,7 @@ import { JournalConfig } from "../config/journal-config";
 import { SettingsHomePage } from "./settings-home-page";
 import { Disposable } from "../contracts/disposable.types";
 import { SettingsCalendarPage } from "./settings-calendar-page";
+import { JournalManager } from "../journal-manager";
 
 type RouteState =
   | {
@@ -10,7 +11,7 @@ type RouteState =
     }
   | {
       type: "journal";
-      index: number;
+      id: string;
     };
 
 export class JournalSettingTab extends PluginSettingTab {
@@ -22,6 +23,7 @@ export class JournalSettingTab extends PluginSettingTab {
   constructor(
     app: App,
     plugin: Plugin,
+    private manager: JournalManager,
     private config: JournalConfig,
   ) {
     super(app, plugin);
@@ -35,7 +37,7 @@ export class JournalSettingTab extends PluginSettingTab {
 
     switch (this.routeState.type) {
       case "home": {
-        const homePage = new SettingsHomePage(containerEl, this.config);
+        const homePage = new SettingsHomePage(this.app, this.manager, containerEl, this.config);
         this.disposables.push(homePage);
         homePage.on("navigate", (state) => {
           this.routeState = state;
@@ -45,7 +47,7 @@ export class JournalSettingTab extends PluginSettingTab {
         break;
       }
       case "journal": {
-        const journalConfig = this.config.get(this.routeState.index);
+        const journalConfig = this.config.get(this.routeState.id);
         if (!journalConfig) {
           console.error("Unknown config");
           this.routeState = { type: "home" };
