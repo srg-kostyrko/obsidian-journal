@@ -51,6 +51,17 @@ export class JournalManager extends Component {
     return id;
   }
 
+  async changeDefaultJournal(id: string) {
+    const currentDefault = this.config.get(this.defaultId);
+    if (currentDefault) currentDefault.isDefault = false;
+    const nextDefault = this.config.get(id);
+    if (nextDefault) {
+      nextDefault.isDefault = true;
+      this.defaultId = id;
+    }
+    await this.config.save();
+  }
+
   async openStartupNote(): Promise<void> {
     await this.defaultJournal?.openStartupNote();
   }

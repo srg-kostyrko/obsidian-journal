@@ -43,6 +43,9 @@ export class JournalSettingTab extends PluginSettingTab {
           this.routeState = state;
           this.display();
         });
+        homePage.on("redraw", () => {
+          this.display();
+        });
         homePage.display();
         break;
       }

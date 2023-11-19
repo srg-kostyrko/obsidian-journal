@@ -50,9 +50,20 @@ export class SettingsHomePage extends EventEmitter implements Disposable {
         defaultBadge.classList.add("flair");
         defaultBadge.classList.add("mod-pop");
       } else {
-        setting.addButton((button) => {
-          button.setIcon("trash-2").setTooltip(`Delete ${entry.name}`).setClass("clickable-icon");
-        });
+        setting
+          .addButton((button) => {
+            button
+              .setIcon("shield-check")
+              .setTooltip(`Make default`)
+              .setClass("clickable-icon")
+              .onClick(async () => {
+                await this.manager.changeDefaultJournal(entry.id);
+                this.emit("redraw");
+              });
+          })
+          .addButton((button) => {
+            button.setIcon("trash-2").setTooltip(`Delete ${entry.name}`).setClass("clickable-icon");
+          });
       }
     }
   }
