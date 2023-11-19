@@ -5,6 +5,7 @@ import { FRONTMATTER_DATE_KEY, FRONTMATTER_ID_KEY, FRONTMATTER_META_KEY } from "
 import { deepCopy, generateId } from "./utils";
 import { DEFAULT_CONFIG_CALENDAR } from "./config/config-defaults";
 import { CalendarConfig } from "./contracts/config.types";
+import { JournalSuggestModal } from "./ui/journal-suggest-modal";
 
 export class JournalManager extends Component {
   private journals = new Map<string, CalendarJournal>();
@@ -104,7 +105,9 @@ export class JournalManager extends Component {
       const [calendar] = calendars;
       calendar.execCommand(id);
     } else {
-      // TODO add journal selector
+      new JournalSuggestModal(this.app, calendars, (calendar: CalendarJournal) => {
+        calendar.execCommand(id);
+      }).open();
     }
   }
 
