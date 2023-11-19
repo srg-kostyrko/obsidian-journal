@@ -1,10 +1,15 @@
 export type CalendarGranularity = "day" | "week" | "month" | "quarter" | "year";
 export type SectionName = "daily" | "weekly" | "monthly" | "quarterly" | "yearly";
 
-export interface CalendarConfig {
-  type: "calendar";
+interface JournalCaseConfig {
   id: string;
   name: string;
+  isDefault: boolean;
+}
+
+export interface CalendarConfig extends JournalCaseConfig {
+  type: "calendar";
+
   rootFolder: string;
   openOnStartup: boolean;
   startupSection: SectionName;
@@ -33,9 +38,8 @@ export interface MonthlyCalendarSection extends CalndarSectionBase {}
 export interface QuarterlyCalendarSection extends CalndarSectionBase {}
 export interface YearlyCalendarSection extends CalndarSectionBase {}
 
-export interface IntervalConfig {
+export interface IntervalConfig extends JournalCaseConfig {
   type: "interval";
-  name: string;
 }
 
 export type JournalConfigs = CalendarConfig | IntervalConfig;

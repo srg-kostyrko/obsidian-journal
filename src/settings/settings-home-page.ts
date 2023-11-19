@@ -17,23 +17,27 @@ export class SettingsHomePage extends EventEmitter implements Disposable {
     new Setting(containerEl).setName("Journals").setHeading();
 
     for (const [entry, index] of this.config) {
-      new Setting(containerEl)
-        .setName(entry.name)
-        .addButton((button) => {
-          button
-            .setIcon("pencil")
-            .setTooltip(`Edit ${entry.name}`)
-            .setClass("clickable-icon")
-            .onClick(() => {
-              this.emit("navigate", {
-                type: "journal",
-                index,
-              });
+      const setting = new Setting(containerEl).setName(entry.name).addButton((button) => {
+        button
+          .setIcon("pencil")
+          .setTooltip(`Edit ${entry.name}`)
+          .setClass("clickable-icon")
+          .onClick(() => {
+            this.emit("navigate", {
+              type: "journal",
+              index,
             });
-        })
-        .addButton((button) => {
+          });
+      });
+      if (entry.isDefault) {
+        const defaultBadge = setting.nameEl.createEl("span");
+        defaultBadge.innerText = "Default";
+        defaultBadge.classList.add("flair");
+      } else {
+        setting.addButton((button) => {
           button.setIcon("trash-2").setTooltip(`Delete ${entry.name}`).setClass("clickable-icon");
         });
+      }
     }
   }
 

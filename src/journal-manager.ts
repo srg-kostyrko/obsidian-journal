@@ -17,7 +17,9 @@ export class JournalManager extends Component {
         case "calendar": {
           const calendar = new CalendarJournal(this.app, journalConfig);
           this.journals.set(journalConfig.id, calendar);
-          this.defaultId = journalConfig.id;
+          if (journalConfig.isDefault) {
+            this.defaultId = journalConfig.id;
+          }
           break;
         }
         default:
