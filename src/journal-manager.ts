@@ -1,14 +1,17 @@
-import { App, Component, TAbstractFile, TFile, moment } from "obsidian";
+import { App, Component, Plugin, TAbstractFile, TFile, moment } from "obsidian";
 import { JournalConfig } from "./config/journal-config";
-import { CalendarJournal } from "./calendar-journal/calendar-journal";
+import { CalendarJournal, calendarCommands } from "./calendar-journal/calendar-journal";
 import { FRONTMATTER_DATE_KEY, FRONTMATTER_ID_KEY, FRONTMATTER_META_KEY } from "./constants";
 
 export class JournalManager extends Component {
   private journals = new Map<string, CalendarJournal>();
   private defaultId: string;
 
+  private knownCommands = new Set();
+
   constructor(
     private app: App,
+    private plugin: Plugin,
     private config: JournalConfig,
   ) {
     super();
@@ -36,6 +39,49 @@ export class JournalManager extends Component {
     await this.defaultJournal?.openStartupNote();
   }
 
+  configureCommands() {
+    this.configureCalendarCommands();
+  }
+
+  private configureCalendarCommands(): void {
+    for (const [id, label] of Object.entries(calendarCommands)) {
+      this.plugin.addCommand({
+        id: `journal:${id}`,
+        name: label,
+        checkCallback: (checking: boolean): boolean => {
+          console.log(id, checking);
+          const calendars = this.getCalendarsSupportingCommand(id);
+          if (calendars.length > 0) {
+            if (!checking) {
+              this.execCalendarCommand(id, calendars);
+            }
+            return true;
+          }
+          return false;
+        },
+      });
+    }
+  }
+
+  private getCalendarsSupportingCommand(id: string) {
+    const journals: CalendarJournal[] = [];
+    for (const journal of this.journals.values()) {
+      if (journal instanceof CalendarJournal && journal.supportsCommand(id)) {
+        journals.push(journal);
+      }
+    }
+    return journals;
+  }
+
+  private execCalendarCommand(id: string, calendars: CalendarJournal[]) {
+    if (calendars.length === 1) {
+      const [calendar] = calendars;
+      calendar.execCommand(id);
+    } else {
+      // TODO add journal selector
+    }
+  }
+
   async reindex(): Promise<void> {
     const files = this.app.vault.getMarkdownFiles();
     for (const file of files) {
@@ -55,7 +101,6 @@ export class JournalManager extends Component {
       if (!journal) return;
       const date = moment(frontmatter[FRONTMATTER_DATE_KEY]);
       const meta = frontmatter[FRONTMATTER_META_KEY];
-      console.log(journal, date, meta);
       journal.indexNote(date, meta, file.path);
     }
   }

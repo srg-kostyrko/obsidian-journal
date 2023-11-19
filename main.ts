@@ -11,7 +11,7 @@ export default class JournalPlugin extends Plugin {
 
     this.config = new JournalConfig(this);
     await this.config.load();
-    this.manager = new JournalManager(this.app, this.config);
+    this.manager = new JournalManager(this.app, this, this.config);
     this.addChild(this.manager);
 
     this.addSettingTab(new JournalSettingTab(this.app, this, this.config));
@@ -22,6 +22,7 @@ export default class JournalPlugin extends Plugin {
 
     this.app.workspace.onLayoutReady(async () => {
       await this.manager.reindex();
+      this.manager.configureCommands();
       if (appStartup) await this.manager.openStartupNote();
     });
   }

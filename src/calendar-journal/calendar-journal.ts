@@ -21,6 +21,14 @@ const SECTIONS_MAP: Record<CalendarGranularity, SectionName> = {
   year: "yearly",
 };
 
+export const calendarCommands = {
+  "calendar:open-daily": "Open daily note",
+  "calendar:open-weekly": "Open weekly note",
+  "calendar:open-monthly": "Open monthly note",
+  "calendar:open-quarterly": "Open quarterly note",
+  "calendar:open-yearly": "Open yearly note",
+};
+
 export class CalendarJournal {
   public readonly daily: CalendarJournalSection<DailyCalendarSection>;
   public readonly weekly: CalendarJournalSection<WeeklyCalendarSection>;
@@ -41,6 +49,37 @@ export class CalendarJournal {
 
   get id(): string {
     return this.config.id;
+  }
+
+  supportsCommand(id: string): boolean {
+    switch (id) {
+      case "calendar:open-daily":
+        return this.config.daily.enabled;
+      case "calendar:open-weekly":
+        return this.config.weekly.enabled;
+      case "calendar:open-monthly":
+        return this.config.monthly.enabled;
+      case "calendar:open-quarterly":
+        return this.config.quarterly.enabled;
+      case "calendar:open-yearly":
+        return this.config.yearly.enabled;
+    }
+    return false;
+  }
+
+  async execCommand(id: string): Promise<void> {
+    switch (id) {
+      case "calendar:open-daily":
+        return this.daily.open();
+      case "calendar:open-weekly":
+        return this.weekly.open();
+      case "calendar:open-monthly":
+        return this.monthly.open();
+      case "calendar:open-quarterly":
+        return this.quarterly.open();
+      case "calendar:open-yearly":
+        return this.yearly.open();
+    }
   }
 
   async openStartupNote(): Promise<void> {
