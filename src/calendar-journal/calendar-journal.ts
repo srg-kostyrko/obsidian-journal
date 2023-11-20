@@ -27,6 +27,16 @@ export const calendarCommands = {
   "calendar:open-monthly": "Open monthly note",
   "calendar:open-quarterly": "Open quarterly note",
   "calendar:open-yearly": "Open yearly note",
+  "calendar:open-daily-next": "Open tomorrow's note",
+  "calendar:open-weekly-next": "Open next week note",
+  "calendar:open-monthly-next": "Open next month note",
+  "calendar:open-quarterly-next": "Open next quarter note",
+  "calendar:open-yearly-next": "Open next year note",
+  "calendar:open-daily-prev": "Open yesterday's note",
+  "calendar:open-weekly-prev": "Open last week note",
+  "calendar:open-monthly-prev": "Open last month note",
+  "calendar:open-quarterly-prev": "Open last quarter note",
+  "calendar:open-yearly-prev": "Open last year note",
 };
 
 export class CalendarJournal {
@@ -54,14 +64,24 @@ export class CalendarJournal {
   supportsCommand(id: string): boolean {
     switch (id) {
       case "calendar:open-daily":
+      case "calendar:open-daily-next":
+      case "calendar:open-daily-prev":
         return this.config.daily.enabled;
       case "calendar:open-weekly":
+      case "calendar:open-weekly-next":
+      case "calendar:open-weekly-prev":
         return this.config.weekly.enabled;
       case "calendar:open-monthly":
+      case "calendar:open-monthly-next":
+      case "calendar:open-monthly-prev":
         return this.config.monthly.enabled;
       case "calendar:open-quarterly":
+      case "calendar:open-quarterly-next":
+      case "calendar:open-quarterly-prev":
         return this.config.quarterly.enabled;
       case "calendar:open-yearly":
+      case "calendar:open-yearly-next":
+      case "calendar:open-yearly-prev":
         return this.config.yearly.enabled;
     }
     return false;
@@ -69,16 +89,36 @@ export class CalendarJournal {
 
   async execCommand(id: string): Promise<void> {
     switch (id) {
+      case "calendar:open-daily-prev":
+        return this.daily.openPrev();
       case "calendar:open-daily":
         return this.daily.open();
+      case "calendar:open-daily-next":
+        return this.daily.openNext();
+      case "calendar:open-weekly-prev":
+        return this.weekly.openPrev();
       case "calendar:open-weekly":
         return this.weekly.open();
+      case "calendar:open-weekly-next":
+        return this.weekly.openNext();
+      case "calendar:open-monthly-prev":
+        return this.monthly.openPrev();
       case "calendar:open-monthly":
         return this.monthly.open();
+      case "calendar:open-monthly-next":
+        return this.monthly.openNext();
+      case "calendar:open-quarterly-prev":
+        return this.quarterly.openPrev();
       case "calendar:open-quarterly":
         return this.quarterly.open();
+      case "calendar:open-quarterly-next":
+        return this.quarterly.openNext();
+      case "calendar:open-yearly-prev":
+        return this.yearly.openPrev();
       case "calendar:open-yearly":
         return this.yearly.open();
+      case "calendar:open-yearly-next":
+        return this.yearly.openNext();
     }
   }
 

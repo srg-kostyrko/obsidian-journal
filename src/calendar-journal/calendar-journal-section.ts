@@ -35,6 +35,20 @@ export class CalendarJournalSection<T extends CalndarSectionBase> {
 
   async open(): Promise<void> {
     const date = moment().startOf(this.granularity);
+    return await this.openDate(date);
+  }
+
+  async openNext(): Promise<void> {
+    const date = moment().startOf(this.granularity).add(1, this.granularity);
+    return await this.openDate(date);
+  }
+
+  async openPrev(): Promise<void> {
+    const date = moment().startOf(this.granularity).subtract(1, this.granularity);
+    return await this.openDate(date);
+  }
+
+  private async openDate(date: MomentDate): Promise<void> {
     const filePath = this.getDatePath(date);
     let file = this.app.vault.getAbstractFileByPath(filePath);
     if (!file) {
@@ -53,7 +67,7 @@ export class CalendarJournalSection<T extends CalndarSectionBase> {
     await leaf.openFile(file as TFile, { active: true });
   }
 
-  getTemplateContext(date: MomentDate): TemplateContext {
+  private getTemplateContext(date: MomentDate): TemplateContext {
     return {
       date: {
         value: date,
@@ -62,7 +76,7 @@ export class CalendarJournalSection<T extends CalndarSectionBase> {
     };
   }
 
-  getDatePath(date: MomentDate): string {
+  private getDatePath(date: MomentDate): string {
     const indexed = this.index.get(date);
     if (indexed) return indexed.path;
     const templateContext = this.getTemplateContext(date);
@@ -71,7 +85,7 @@ export class CalendarJournalSection<T extends CalndarSectionBase> {
     return folderPath ? `${folderPath}/${filename}` : filename;
   }
 
-  async getContent(context: TemplateContext): Promise<string> {
+  private async getContent(context: TemplateContext): Promise<string> {
     if (this.config.template) {
       const templateFile = this.app.vault.getAbstractFileByPath(
         this.config.template.endsWith(".md") ? this.config.template : this.config.template + ".md",
