@@ -10,15 +10,34 @@ export class SettingsCalendarWeeklySection extends SettingsBaseCalendarSection<W
       new Setting(containerEl).setName("First Day of Week").addDropdown((dropdown) => {
         dropdown
           .addOptions({
-            monday: "Monday",
-            sunday: "Sunday",
+            "-1": "From Locale",
+            "0": "Sunday",
+            "1": "Monday",
+            "2": "Tuesday",
+            "3": "Wednesday",
+            "4": "Thursday",
+            "5": "Friday",
+            "6": "Saturday",
           })
-          .setValue(this.config.firstDayOfWeek)
+          .setValue(String(this.config.firstDayOfWeek))
           .onChange((value) => {
-            this.config.firstDayOfWeek = value as "monday" | "sunday";
-            this.emit("save");
+            this.config.firstDayOfWeek = parseInt(value, 10);
+            this.emit("save+redraw");
           });
       });
+      if (this.config.firstDayOfWeek !== -1) {
+        const s = new Setting(containerEl).setName("First Week of Year");
+        s.setDesc(`First week of year must contain ${this.config.firstWeekOfYear ?? 1} January`);
+        s.addText((text) => {
+          text.setValue(String(this.config.firstWeekOfYear ?? 1)).onChange((value) => {
+            if (value) {
+              this.config.firstWeekOfYear = parseInt(value, 10);
+              s.setDesc(`First week of year must contain ${this.config.firstWeekOfYear ?? 1} January`);
+              this.emit("save");
+            }
+          });
+        });
+      }
     }
   }
 }

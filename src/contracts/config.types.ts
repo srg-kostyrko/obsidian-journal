@@ -32,7 +32,8 @@ export interface CalndarSectionBase {
 export interface DailyCalendarSection extends CalndarSectionBase {}
 
 export interface WeeklyCalendarSection extends CalndarSectionBase {
-  firstDayOfWeek: "sunday" | "monday";
+  firstDayOfWeek: number;
+  firstWeekOfYear: number;
 }
 export interface MonthlyCalendarSection extends CalndarSectionBase {}
 export interface QuarterlyCalendarSection extends CalndarSectionBase {}

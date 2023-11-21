@@ -6,11 +6,11 @@ import {
   MonthlyCalendarSection,
   QuarterlyCalendarSection,
   SectionName,
-  WeeklyCalendarSection,
   YearlyCalendarSection,
 } from "../contracts/config.types";
 import { CalendarJournalSection } from "./calendar-journal-section";
 import { MomentDate } from "../contracts/date.types";
+import { CalendarJournalSectionWeekly } from "./calendar-journal-section-weekly";
 
 const SECTIONS_MAP: Record<CalendarGranularity, SectionName> = {
   day: "daily",
@@ -41,7 +41,7 @@ export const calendarCommands = {
 
 export class CalendarJournal {
   public readonly daily: CalendarJournalSection<DailyCalendarSection>;
-  public readonly weekly: CalendarJournalSection<WeeklyCalendarSection>;
+  public readonly weekly: CalendarJournalSectionWeekly;
   public readonly monthly: CalendarJournalSection<MonthlyCalendarSection>;
   public readonly quarterly: CalendarJournalSection<QuarterlyCalendarSection>;
   public readonly yearly: CalendarJournalSection<YearlyCalendarSection>;
@@ -51,7 +51,7 @@ export class CalendarJournal {
     public readonly config: CalendarConfig,
   ) {
     this.daily = new CalendarJournalSection(app, this, this.config.daily, "day");
-    this.weekly = new CalendarJournalSection(app, this, this.config.weekly, "week");
+    this.weekly = new CalendarJournalSectionWeekly(app, this, this.config.weekly, "week");
     this.monthly = new CalendarJournalSection(app, this, this.config.monthly, "month");
     this.quarterly = new CalendarJournalSection(app, this, this.config.quarterly, "quarter");
     this.yearly = new CalendarJournalSection(app, this, this.config.yearly, "year");

@@ -9,13 +9,13 @@ import { CalendarJournalSectionIndex } from "./calendar-journal-section-index";
 import { MomentDate } from "../contracts/date.types";
 
 export class CalendarJournalSection<T extends CalndarSectionBase> {
-  private index = new CalendarJournalSectionIndex();
+  protected index = new CalendarJournalSectionIndex();
 
   constructor(
-    private app: App,
-    private journal: CalendarJournal,
-    private config: T,
-    private granularity: CalendarGranularity,
+    protected app: App,
+    protected journal: CalendarJournal,
+    protected config: T,
+    protected granularity: CalendarGranularity,
   ) {}
 
   get folderPath(): string {
@@ -26,6 +26,10 @@ export class CalendarJournalSection<T extends CalndarSectionBase> {
     return folderPath.join("/").replaceAll(/\/{2,}/g, "/");
   }
 
+  get baseDate(): MomentDate {
+    return moment().startOf(this.granularity);
+  }
+
   indexNote(date: MomentDate, path: string) {
     this.index.set(date, { path });
   }
@@ -34,17 +38,16 @@ export class CalendarJournalSection<T extends CalndarSectionBase> {
   }
 
   async open(): Promise<void> {
-    const date = moment().startOf(this.granularity);
-    return await this.openDate(date);
+    return await this.openDate(this.baseDate);
   }
 
   async openNext(): Promise<void> {
-    const date = moment().startOf(this.granularity).add(1, this.granularity);
+    const date = this.baseDate.add(1, this.granularity);
     return await this.openDate(date);
   }
 
   async openPrev(): Promise<void> {
-    const date = moment().startOf(this.granularity).subtract(1, this.granularity);
+    const date = this.baseDate.subtract(1, this.granularity);
     return await this.openDate(date);
   }
 

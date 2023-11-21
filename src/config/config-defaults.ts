@@ -17,7 +17,8 @@ export const DEFAULT_CONFIG_CALENDAR: Omit<CalendarConfig, "id"> = {
   },
   weekly: {
     enabled: false,
-    firstDayOfWeek: "monday",
+    firstDayOfWeek: -1,
+    firstWeekOfYear: 1,
     titleTemplate: "{{date}}",
     dateFormat: "YYYY-[W]ww",
     folder: "",
