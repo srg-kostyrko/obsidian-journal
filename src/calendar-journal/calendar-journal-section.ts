@@ -119,9 +119,11 @@ export class CalendarJournalSection<T extends CalndarSectionBase> {
 
   private async getContent(context: TemplateContext): Promise<string> {
     if (this.config.template) {
-      const templateFile = this.app.vault.getAbstractFileByPath(
+      const path = replaceTemplateVariables(
         this.config.template.endsWith(".md") ? this.config.template : this.config.template + ".md",
+        context,
       );
+      const templateFile = this.app.vault.getAbstractFileByPath(path);
       if (templateFile instanceof TFile) {
         const templateContent = await this.app.vault.cachedRead(templateFile);
         return replaceTemplateVariables(templateContent, context);
