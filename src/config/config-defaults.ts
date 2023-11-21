@@ -10,6 +10,7 @@ export const DEFAULT_CONFIG_CALENDAR: Omit<CalendarConfig, "id"> = {
 
   daily: {
     enabled: true,
+    openMode: "active",
     titleTemplate: "{{date}}",
     dateFormat: "YYYY-MM-DD",
     folder: "",
@@ -23,6 +24,7 @@ export const DEFAULT_CONFIG_CALENDAR: Omit<CalendarConfig, "id"> = {
   },
   weekly: {
     enabled: false,
+    openMode: "active",
     firstDayOfWeek: -1,
     firstWeekOfYear: 1,
     titleTemplate: "{{date}}",
@@ -38,6 +40,7 @@ export const DEFAULT_CONFIG_CALENDAR: Omit<CalendarConfig, "id"> = {
   },
   monthly: {
     enabled: false,
+    openMode: "active",
     titleTemplate: "{{date}}",
     dateFormat: "YYYY-MM",
     folder: "",
@@ -51,6 +54,7 @@ export const DEFAULT_CONFIG_CALENDAR: Omit<CalendarConfig, "id"> = {
   },
   quarterly: {
     enabled: false,
+    openMode: "active",
     titleTemplate: "{{date}}",
     dateFormat: "YYYY-[Q]Q",
     folder: "",
@@ -64,6 +68,7 @@ export const DEFAULT_CONFIG_CALENDAR: Omit<CalendarConfig, "id"> = {
   },
   yearly: {
     enabled: false,
+    openMode: "active",
     titleTemplate: "{{date}}",
     dateFormat: "YYYY",
     folder: "",

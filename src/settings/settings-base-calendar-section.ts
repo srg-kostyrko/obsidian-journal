@@ -32,6 +32,21 @@ export class SettingsBaseCalendarSection<T extends CalndarSectionBase> extends E
 
     if (!this.config.enabled) return;
 
+    new Setting(containerEl).setName("Open Note").addDropdown((dropdown) => {
+      dropdown
+        .addOptions({
+          active: "Replacing active note",
+          tab: "In new tab",
+          split: "Adjusten to active note",
+          window: "In popout window",
+        })
+        .setValue(this.config.openMode ?? "active")
+        .onChange((value) => {
+          this.config.openMode = value as CalndarSectionBase["openMode"];
+          this.emit("save");
+        });
+    });
+
     new Setting(containerEl).setName("Note title").addText((text) => {
       text.setValue(this.config.titleTemplate).onChange((value) => {
         this.config.titleTemplate = value;

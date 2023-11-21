@@ -95,7 +95,8 @@ export class CalendarJournalSection<T extends CalndarSectionBase> {
 
   private async openDate(date: MomentDate): Promise<void> {
     const file = await this.ensureDateNote(date);
-    const leaf = this.app.workspace.getLeaf();
+    const mode = this.config.openMode === "active" ? undefined : this.config.openMode;
+    const leaf = this.app.workspace.getLeaf(mode);
     await leaf.openFile(file, { active: true });
   }
 

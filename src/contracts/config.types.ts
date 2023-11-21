@@ -23,6 +23,7 @@ export interface CalendarConfig extends JournalCaseConfig {
 
 export interface CalndarSectionBase {
   enabled: boolean;
+  openMode: "active" | "tab" | "split" | "window";
   titleTemplate: string;
   dateFormat: string;
   folder: string;
