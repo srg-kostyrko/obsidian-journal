@@ -27,6 +27,11 @@ export interface CalndarSectionBase {
   dateFormat: string;
   folder: string;
   template: string;
+  ribbon: {
+    show: boolean;
+    icon: string;
+    tooltip: string;
+  };
 }
 
 export interface DailyCalendarSection extends CalndarSectionBase {}

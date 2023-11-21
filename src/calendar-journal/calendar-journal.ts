@@ -1,25 +1,16 @@
-import { App } from "obsidian";
+import { App, Plugin } from "obsidian";
 import {
   CalendarConfig,
   CalendarGranularity,
   DailyCalendarSection,
   MonthlyCalendarSection,
   QuarterlyCalendarSection,
-  SectionName,
   YearlyCalendarSection,
 } from "../contracts/config.types";
 import { CalendarJournalSection } from "./calendar-journal-section";
 import { MomentDate } from "../contracts/date.types";
 import { CalendarJournalSectionWeekly } from "./calendar-journal-section-weekly";
-
-const SECTIONS_MAP: Record<CalendarGranularity, SectionName> = {
-  day: "daily",
-  week: "weekly",
-  month: "monthly",
-
-  quarter: "quarterly",
-  year: "yearly",
-};
+import { SECTIONS_MAP } from "../constants";
 
 export const calendarCommands = {
   "calendar:open-daily": "Open daily note",
@@ -120,6 +111,14 @@ export class CalendarJournal {
       case "calendar:open-yearly-next":
         return this.yearly.openNext();
     }
+  }
+
+  configureRibbonIcons(plugin: Plugin) {
+    this.daily.configureRibbonIcons(plugin);
+    this.weekly.configureRibbonIcons(plugin);
+    this.monthly.configureRibbonIcons(plugin);
+    this.quarterly.configureRibbonIcons(plugin);
+    this.yearly.configureRibbonIcons(plugin);
   }
 
   async openStartupNote(): Promise<void> {

@@ -1,8 +1,9 @@
 import EventEmitter from "eventemitter3";
 import { Disposable } from "../contracts/disposable.types";
 import { CalendarConfig, CalndarSectionBase } from "../contracts/config.types";
-import { App, Setting } from "obsidian";
+import { App, ButtonComponent, Setting } from "obsidian";
 import { FolderSuggestion } from "./ui/folder-suggestion";
+import { IconSuggestion } from "./ui/icon-suggestion";
 
 export class SettingsBaseCalendarSection<T extends CalndarSectionBase> extends EventEmitter implements Disposable {
   private folderSuggestions: FolderSuggestion[] = [];
@@ -59,6 +60,43 @@ export class SettingsBaseCalendarSection<T extends CalndarSectionBase> extends E
         this.emit("save");
       });
     });
+
+    new Setting(containerEl)
+      .setName("Show in ribbon?")
+      .setDesc("Changing ribbon settings requires Obsidian restart to take effect.")
+      .addToggle((toggle) => {
+        toggle.setValue(this.config.ribbon.show).onChange((value) => {
+          this.config.ribbon.show = value;
+          this.emit("save+redraw");
+        });
+      });
+
+    if (this.config.ribbon.show) {
+      let iconPreivewButton: ButtonComponent | null = null;
+      new Setting(containerEl)
+        .setName("Ribbon icon")
+        .addButton((button) => {
+          iconPreivewButton = button;
+          button.setIcon(this.config.ribbon.icon).setDisabled(true);
+        })
+        .addText((text) => {
+          new IconSuggestion(this.app, text.inputEl);
+          text.setValue(this.config.ribbon.icon).onChange((value) => {
+            this.config.ribbon.icon = value;
+            iconPreivewButton?.setIcon(value);
+            this.emit("save");
+          });
+        });
+      new Setting(containerEl).setName("Ribbon tooltip").addText((text) => {
+        text
+          .setValue(this.config.ribbon.tooltip)
+          .setPlaceholder(`Open ${this.title} note`)
+          .onChange((value) => {
+            this.config.ribbon.tooltip = value;
+            this.emit("save");
+          });
+      });
+    }
   }
 
   updateFolderSuggestions(root: string): void {

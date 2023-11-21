@@ -71,6 +71,16 @@ export class JournalManager extends Component {
     this.configureCalendarCommands();
   }
 
+  configureRibbonIcons() {
+    if (this.defaultJournal) {
+      this.defaultJournal.configureRibbonIcons(this.plugin);
+    }
+    for (const journal of this.journals.values()) {
+      if (journal === this.defaultJournal) continue;
+      journal.configureRibbonIcons(this.plugin);
+    }
+  }
+
   private configureCalendarCommands(): void {
     for (const [id, label] of Object.entries(calendarCommands)) {
       this.plugin.addCommand({

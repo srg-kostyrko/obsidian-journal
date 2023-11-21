@@ -16,9 +16,7 @@ export default class JournalPlugin extends Plugin {
 
     this.addSettingTab(new JournalSettingTab(this.app, this, this.manager, this.config));
 
-    this.addRibbonIcon("calendar-days", "Open daily note", async () => {
-      await this.manager.defaultJournal?.openDefault();
-    });
+    this.manager.configureRibbonIcons();
 
     this.app.workspace.onLayoutReady(async () => {
       await this.manager.reindex();

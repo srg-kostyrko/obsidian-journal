@@ -14,6 +14,11 @@ export const DEFAULT_CONFIG_CALENDAR: Omit<CalendarConfig, "id"> = {
     dateFormat: "YYYY-MM-DD",
     folder: "",
     template: "",
+    ribbon: {
+      show: true,
+      icon: "",
+      tooltip: "",
+    },
   },
   weekly: {
     enabled: false,
@@ -23,6 +28,11 @@ export const DEFAULT_CONFIG_CALENDAR: Omit<CalendarConfig, "id"> = {
     dateFormat: "YYYY-[W]ww",
     folder: "",
     template: "",
+    ribbon: {
+      show: false,
+      icon: "",
+      tooltip: "",
+    },
   },
   monthly: {
     enabled: false,
@@ -30,6 +40,11 @@ export const DEFAULT_CONFIG_CALENDAR: Omit<CalendarConfig, "id"> = {
     dateFormat: "YYYY-MM",
     folder: "",
     template: "",
+    ribbon: {
+      show: false,
+      icon: "",
+      tooltip: "",
+    },
   },
   quarterly: {
     enabled: false,
@@ -37,6 +52,11 @@ export const DEFAULT_CONFIG_CALENDAR: Omit<CalendarConfig, "id"> = {
     dateFormat: "YYYY-[Q]Q",
     folder: "",
     template: "",
+    ribbon: {
+      show: false,
+      icon: "",
+      tooltip: "",
+    },
   },
   yearly: {
     enabled: false,
@@ -44,5 +64,10 @@ export const DEFAULT_CONFIG_CALENDAR: Omit<CalendarConfig, "id"> = {
     dateFormat: "YYYY",
     folder: "",
     template: "",
+    ribbon: {
+      show: false,
+      icon: "",
+      tooltip: "",
+    },
   },
 };

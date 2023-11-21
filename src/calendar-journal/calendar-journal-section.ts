@@ -1,10 +1,16 @@
-import { App, TFile, moment } from "obsidian";
+import { App, TFile, Plugin, moment } from "obsidian";
 import { CalendarGranularity, CalndarSectionBase } from "../contracts/config.types";
 import { CalendarJournal } from "./calendar-journal";
 import { ensureFolderExists } from "../utils/io";
 import { replaceTemplateVariables } from "../utils/template";
 import { TemplateContext } from "../contracts/template.types";
-import { FRONTMATTER_DATE_FORMAT, FRONTMATTER_DATE_KEY, FRONTMATTER_ID_KEY, FRONTMATTER_META_KEY } from "../constants";
+import {
+  FRONTMATTER_DATE_FORMAT,
+  FRONTMATTER_DATE_KEY,
+  FRONTMATTER_ID_KEY,
+  FRONTMATTER_META_KEY,
+  SECTIONS_MAP,
+} from "../constants";
 import { CalendarJournalSectionIndex } from "./calendar-journal-section-index";
 import { MomentDate } from "../contracts/date.types";
 
@@ -35,6 +41,18 @@ export class CalendarJournalSection<T extends CalndarSectionBase> {
   }
   clearForPath(path: string): void {
     this.index.clearForPath(path);
+  }
+
+  configureRibbonIcons(plugin: Plugin): void {
+    if (!this.config.enabled) return;
+    if (!this.config.ribbon.show) return;
+    plugin.addRibbonIcon(
+      this.config.ribbon.icon || "calendar-days",
+      this.config.ribbon.tooltip || `Open ${SECTIONS_MAP[this.granularity]} Note`,
+      () => {
+        this.open();
+      },
+    );
   }
 
   async open(): Promise<void> {
