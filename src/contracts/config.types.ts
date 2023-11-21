@@ -32,6 +32,7 @@ export interface CalndarSectionBase {
     icon: string;
     tooltip: string;
   };
+  createOnStartup: boolean;
 }
 
 export interface DailyCalendarSection extends CalndarSectionBase {}

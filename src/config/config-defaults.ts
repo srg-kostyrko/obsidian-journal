@@ -19,6 +19,7 @@ export const DEFAULT_CONFIG_CALENDAR: Omit<CalendarConfig, "id"> = {
       icon: "",
       tooltip: "",
     },
+    createOnStartup: false,
   },
   weekly: {
     enabled: false,
@@ -33,6 +34,7 @@ export const DEFAULT_CONFIG_CALENDAR: Omit<CalendarConfig, "id"> = {
       icon: "",
       tooltip: "",
     },
+    createOnStartup: false,
   },
   monthly: {
     enabled: false,
@@ -45,6 +47,7 @@ export const DEFAULT_CONFIG_CALENDAR: Omit<CalendarConfig, "id"> = {
       icon: "",
       tooltip: "",
     },
+    createOnStartup: false,
   },
   quarterly: {
     enabled: false,
@@ -57,6 +60,7 @@ export const DEFAULT_CONFIG_CALENDAR: Omit<CalendarConfig, "id"> = {
       icon: "",
       tooltip: "",
     },
+    createOnStartup: false,
   },
   yearly: {
     enabled: false,
@@ -69,5 +73,6 @@ export const DEFAULT_CONFIG_CALENDAR: Omit<CalendarConfig, "id"> = {
       icon: "",
       tooltip: "",
     },
+    createOnStartup: false,
   },
 };

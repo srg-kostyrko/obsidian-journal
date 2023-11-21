@@ -21,7 +21,10 @@ export default class JournalPlugin extends Plugin {
     this.app.workspace.onLayoutReady(async () => {
       await this.manager.reindex();
       this.manager.configureCommands();
-      if (appStartup) await this.manager.openStartupNote();
+      if (appStartup) {
+        await this.manager.autoCreateNotes();
+        await this.manager.openStartupNote();
+      }
     });
   }
 }

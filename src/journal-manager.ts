@@ -63,6 +63,12 @@ export class JournalManager extends Component {
     await this.config.save();
   }
 
+  async autoCreateNotes(): Promise<void> {
+    for (const journal of this.journals.values()) {
+      journal.autoCreateNotes();
+    }
+  }
+
   async openStartupNote(): Promise<void> {
     await this.defaultJournal?.openStartupNote();
   }

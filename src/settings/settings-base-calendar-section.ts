@@ -97,6 +97,13 @@ export class SettingsBaseCalendarSection<T extends CalndarSectionBase> extends E
           });
       });
     }
+
+    new Setting(containerEl).setName("Create note on startup").addToggle((toggle) => {
+      toggle.setValue(this.config.createOnStartup ?? false).onChange((value) => {
+        this.config.createOnStartup = value;
+        this.emit("save");
+      });
+    });
   }
 
   updateFolderSuggestions(root: string): void {

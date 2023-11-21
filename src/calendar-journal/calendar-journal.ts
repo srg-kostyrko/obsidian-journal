@@ -121,6 +121,14 @@ export class CalendarJournal {
     this.yearly.configureRibbonIcons(plugin);
   }
 
+  async autoCreateNotes(): Promise<void> {
+    await this.daily.autoCreateNote();
+    await this.weekly.autoCreateNote();
+    await this.monthly.autoCreateNote();
+    await this.quarterly.autoCreateNote();
+    await this.yearly.autoCreateNote();
+  }
+
   async openStartupNote(): Promise<void> {
     if (!this.config.openOnStartup) return;
     const section = this.config.startupSection;

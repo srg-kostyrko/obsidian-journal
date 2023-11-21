@@ -43,6 +43,12 @@ export class CalendarJournalSection<T extends CalndarSectionBase> {
     this.index.clearForPath(path);
   }
 
+  async autoCreateNote(): Promise<void> {
+    if (!this.config.enabled) return;
+    if (!this.config.createOnStartup) return;
+    await this.ensureDateNote(this.baseDate);
+  }
+
   configureRibbonIcons(plugin: Plugin): void {
     if (!this.config.enabled) return;
     if (!this.config.ribbon.show) return;
@@ -69,7 +75,7 @@ export class CalendarJournalSection<T extends CalndarSectionBase> {
     return await this.openDate(date);
   }
 
-  private async openDate(date: MomentDate): Promise<void> {
+  private async ensureDateNote(date: MomentDate): Promise<TFile> {
     const filePath = this.getDatePath(date);
     let file = this.app.vault.getAbstractFileByPath(filePath);
     if (!file) {
@@ -84,8 +90,13 @@ export class CalendarJournalSection<T extends CalndarSectionBase> {
         path: filePath,
       });
     }
+    return file as TFile;
+  }
+
+  private async openDate(date: MomentDate): Promise<void> {
+    const file = await this.ensureDateNote(date);
     const leaf = this.app.workspace.getLeaf();
-    await leaf.openFile(file as TFile, { active: true });
+    await leaf.openFile(file, { active: true });
   }
 
   private getTemplateContext(date: MomentDate): TemplateContext {
