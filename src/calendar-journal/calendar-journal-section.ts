@@ -12,12 +12,9 @@ import {
   FRONTMATTER_START_DATE_KEY,
   SECTIONS_MAP,
 } from "../constants";
-import { CalendarJournalSectionIndex } from "./calendar-journal-section-index";
 import { MomentDate } from "../contracts/date.types";
 
 export class CalendarJournalSection<T extends CalndarSectionBase> {
-  protected index = new CalendarJournalSectionIndex();
-
   constructor(
     protected app: App,
     protected journal: CalendarJournal,
@@ -35,13 +32,6 @@ export class CalendarJournalSection<T extends CalndarSectionBase> {
 
   get baseDate(): MomentDate {
     return moment().startOf(this.granularity);
-  }
-
-  indexNote(date: MomentDate, path: string) {
-    this.index.set(date, { path });
-  }
-  clearForPath(path: string): void {
-    this.index.clearForPath(path);
   }
 
   async autoCreateNote(): Promise<void> {
@@ -82,15 +72,14 @@ export class CalendarJournalSection<T extends CalndarSectionBase> {
     if (!file) {
       await ensureFolderExists(this.app, filePath);
       file = await this.app.vault.create(filePath, await this.getContent(this.getTemplateContext(date)));
+      const endDate = date.clone().endOf(this.granularity);
       this.app.fileManager.processFrontMatter(file as TFile, (frontmatter) => {
         frontmatter[FRONTMATTER_ID_KEY] = this.journal.id;
         frontmatter[FRONTMATTER_START_DATE_KEY] = date.format(FRONTMATTER_DATE_FORMAT);
-        frontmatter[FRONTMATTER_END_DATE_KEY] = date.clone().endOf(this.granularity).format(FRONTMATTER_DATE_FORMAT);
+        frontmatter[FRONTMATTER_END_DATE_KEY] = endDate.format(FRONTMATTER_DATE_FORMAT);
         frontmatter[FRONTMATTER_SECTION_KEY] = this.granularity;
       });
-      this.index.set(date, {
-        path: filePath,
-      });
+      this.journal.index.add(date, endDate, { path: filePath, granularity: this.granularity });
     }
     return file as TFile;
   }
@@ -112,7 +101,7 @@ export class CalendarJournalSection<T extends CalndarSectionBase> {
   }
 
   private getDatePath(date: MomentDate): string {
-    const indexed = this.index.get(date);
+    const indexed = this.journal.index.get(date, this.granularity);
     if (indexed) return indexed.path;
     const templateContext = this.getTemplateContext(date);
     const filename = replaceTemplateVariables(this.config.titleTemplate, templateContext) + ".md";

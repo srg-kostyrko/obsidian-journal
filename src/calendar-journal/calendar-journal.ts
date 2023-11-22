@@ -11,10 +11,12 @@ import { CalendarJournalSection } from "./calendar-journal-section";
 import { CalendarJournalSectionWeekly } from "./calendar-journal-section-weekly";
 import {
   FRONTMATTER_DATE_FORMAT,
+  FRONTMATTER_END_DATE_KEY,
   FRONTMATTER_SECTION_KEY,
   FRONTMATTER_START_DATE_KEY,
   SECTIONS_MAP,
 } from "../constants";
+import { CalendarIndex } from "./calendar-index";
 
 export const calendarCommands = {
   "calendar:open-daily": "Open daily note",
@@ -40,6 +42,8 @@ export class CalendarJournal {
   public readonly monthly: CalendarJournalSection<MonthlyCalendarSection>;
   public readonly quarterly: CalendarJournalSection<QuarterlyCalendarSection>;
   public readonly yearly: CalendarJournalSection<YearlyCalendarSection>;
+
+  public readonly index = new CalendarIndex();
 
   constructor(
     private app: App,
@@ -153,18 +157,14 @@ export class CalendarJournal {
 
   indexNote(frontmatter: FrontMatterCache, path: string): void {
     const startDate = moment(frontmatter[FRONTMATTER_START_DATE_KEY], FRONTMATTER_DATE_FORMAT);
-    // const endDate = moment(frontmatter[FRONTMATTER_END_DATE_KEY], FRONTMATTER_DATE_FORMAT);
+    const endDate = moment(frontmatter[FRONTMATTER_END_DATE_KEY], FRONTMATTER_DATE_FORMAT);
     const granularity = frontmatter[FRONTMATTER_SECTION_KEY];
     const section = SECTIONS_MAP[granularity as CalendarGranularity];
     if (!section) return;
-    this[section].indexNote(startDate, path);
+    this.index.add(startDate, endDate, { path, granularity });
   }
 
   clearForPath(path: string): void {
-    this.daily.clearForPath(path);
-    this.weekly.clearForPath(path);
-    this.monthly.clearForPath(path);
-    this.quarterly.clearForPath(path);
-    this.yearly.clearForPath(path);
+    this.index.clearForPath(path);
   }
 }
