@@ -6,9 +6,10 @@ import { replaceTemplateVariables } from "../utils/template";
 import { TemplateContext } from "../contracts/template.types";
 import {
   FRONTMATTER_DATE_FORMAT,
-  FRONTMATTER_DATE_KEY,
+  FRONTMATTER_END_DATE_KEY,
   FRONTMATTER_ID_KEY,
-  FRONTMATTER_META_KEY,
+  FRONTMATTER_SECTION_KEY,
+  FRONTMATTER_START_DATE_KEY,
   SECTIONS_MAP,
 } from "../constants";
 import { CalendarJournalSectionIndex } from "./calendar-journal-section-index";
@@ -83,8 +84,9 @@ export class CalendarJournalSection<T extends CalndarSectionBase> {
       file = await this.app.vault.create(filePath, await this.getContent(this.getTemplateContext(date)));
       this.app.fileManager.processFrontMatter(file as TFile, (frontmatter) => {
         frontmatter[FRONTMATTER_ID_KEY] = this.journal.id;
-        frontmatter[FRONTMATTER_DATE_KEY] = date.format(FRONTMATTER_DATE_FORMAT);
-        frontmatter[FRONTMATTER_META_KEY] = [this.granularity];
+        frontmatter[FRONTMATTER_START_DATE_KEY] = date.format(FRONTMATTER_DATE_FORMAT);
+        frontmatter[FRONTMATTER_END_DATE_KEY] = date.clone().endOf(this.granularity).format(FRONTMATTER_DATE_FORMAT);
+        frontmatter[FRONTMATTER_SECTION_KEY] = this.granularity;
       });
       this.index.set(date, {
         path: filePath,

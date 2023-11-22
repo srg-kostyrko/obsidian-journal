@@ -1,7 +1,7 @@
-import { App, Component, Plugin, TAbstractFile, TFile, moment } from "obsidian";
+import { App, Component, Plugin, TAbstractFile, TFile } from "obsidian";
 import { JournalConfig } from "./config/journal-config";
 import { CalendarJournal, calendarCommands } from "./calendar-journal/calendar-journal";
-import { FRONTMATTER_DATE_KEY, FRONTMATTER_ID_KEY, FRONTMATTER_META_KEY } from "./constants";
+import { FRONTMATTER_ID_KEY } from "./constants";
 import { deepCopy } from "./utils";
 import { DEFAULT_CONFIG_CALENDAR } from "./config/config-defaults";
 import { CalendarConfig } from "./contracts/config.types";
@@ -143,9 +143,7 @@ export class JournalManager extends Component {
       const id = frontmatter[FRONTMATTER_ID_KEY];
       const journal = this.journals.get(id);
       if (!journal) return;
-      const date = moment(frontmatter[FRONTMATTER_DATE_KEY]);
-      const meta = frontmatter[FRONTMATTER_META_KEY];
-      journal.indexNote(date, meta, file.path);
+      journal.indexNote(frontmatter, file.path);
     }
   }
 

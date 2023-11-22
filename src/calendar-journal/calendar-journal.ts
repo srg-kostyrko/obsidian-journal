@@ -1,4 +1,4 @@
-import { App, Plugin } from "obsidian";
+import { App, FrontMatterCache, Plugin, moment } from "obsidian";
 import {
   CalendarConfig,
   CalendarGranularity,
@@ -8,9 +8,13 @@ import {
   YearlyCalendarSection,
 } from "../contracts/config.types";
 import { CalendarJournalSection } from "./calendar-journal-section";
-import { MomentDate } from "../contracts/date.types";
 import { CalendarJournalSectionWeekly } from "./calendar-journal-section-weekly";
-import { SECTIONS_MAP } from "../constants";
+import {
+  FRONTMATTER_DATE_FORMAT,
+  FRONTMATTER_SECTION_KEY,
+  FRONTMATTER_START_DATE_KEY,
+  SECTIONS_MAP,
+} from "../constants";
 
 export const calendarCommands = {
   "calendar:open-daily": "Open daily note",
@@ -147,11 +151,13 @@ export class CalendarJournal {
     }
   }
 
-  indexNote(date: MomentDate, payload: [string], path: string): void {
-    const [granularity] = payload;
+  indexNote(frontmatter: FrontMatterCache, path: string): void {
+    const startDate = moment(frontmatter[FRONTMATTER_START_DATE_KEY], FRONTMATTER_DATE_FORMAT);
+    // const endDate = moment(frontmatter[FRONTMATTER_END_DATE_KEY], FRONTMATTER_DATE_FORMAT);
+    const granularity = frontmatter[FRONTMATTER_SECTION_KEY];
     const section = SECTIONS_MAP[granularity as CalendarGranularity];
     if (!section) return;
-    this[section].indexNote(date, path);
+    this[section].indexNote(startDate, path);
   }
 
   clearForPath(path: string): void {
