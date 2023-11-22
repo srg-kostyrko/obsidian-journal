@@ -2,7 +2,7 @@ import { App, Component, Plugin, TAbstractFile, TFile, moment } from "obsidian";
 import { JournalConfig } from "./config/journal-config";
 import { CalendarJournal, calendarCommands } from "./calendar-journal/calendar-journal";
 import { FRONTMATTER_DATE_KEY, FRONTMATTER_ID_KEY, FRONTMATTER_META_KEY } from "./constants";
-import { deepCopy, generateId } from "./utils";
+import { deepCopy } from "./utils";
 import { DEFAULT_CONFIG_CALENDAR } from "./config/config-defaults";
 import { CalendarConfig } from "./contracts/config.types";
 import { JournalSuggestModal } from "./ui/journal-suggest-modal";
@@ -37,8 +37,7 @@ export class JournalManager extends Component {
     return this.journals.get(this.defaultId);
   }
 
-  async createCalendarJournal(name: string): Promise<string> {
-    const id = generateId();
+  async createCalendarJournal(id: string, name: string): Promise<string> {
     const config: CalendarConfig = {
       ...deepCopy(DEFAULT_CONFIG_CALENDAR),
       id,

@@ -33,6 +33,10 @@ export class SettingsCalendarPage extends EventEmitter implements Disposable {
         });
       });
 
+    const badge = heading.nameEl.createEl("span");
+    badge.innerText = `ID: ${this.config.id}`;
+    badge.classList.add("flair");
+
     new Setting(containerEl).setName("Journal Name").addText((text) => {
       text.setValue(this.config.name).onChange(() => {
         this.config.name = text.getValue();

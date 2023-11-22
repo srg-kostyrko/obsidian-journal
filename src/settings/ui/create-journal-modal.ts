@@ -4,6 +4,7 @@ import EventEmitter from "eventemitter3";
 
 export class CreateJournalModal extends Modal {
   private name = "";
+  private id = "";
 
   constructor(
     app: App,
@@ -22,7 +23,18 @@ export class CreateJournalModal extends Modal {
       text.setPlaceholder("ex. Work").onChange((value) => {
         this.name = value;
       });
+      text.inputEl.required = true;
     });
+
+    new Setting(contentEl)
+      .setName("Jornal ID")
+      .setDesc("This will be used to connect nodes to journal in frontmatter")
+      .addText((text) => {
+        text.setPlaceholder("ex. work").onChange((value) => {
+          this.id = value;
+        });
+        text.inputEl.required = true;
+      });
 
     new Setting(contentEl)
       .addButton((button) => {
@@ -33,9 +45,9 @@ export class CreateJournalModal extends Modal {
           .setButtonText("Create")
           .setCta()
           .onClick(async () => {
-            console.log(this.name);
+            if (!this.name || !this.id) return;
             this.close();
-            const id = await this.manager.createCalendarJournal(this.name);
+            const id = await this.manager.createCalendarJournal(this.id, this.name);
             this.parent.emit("navigate", {
               type: "journal",
               id,

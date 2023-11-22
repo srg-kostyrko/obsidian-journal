@@ -32,18 +32,21 @@ export class SettingsHomePage extends EventEmitter implements Disposable {
       });
 
     for (const entry of this.config) {
-      const setting = new Setting(containerEl).setName(entry.name).addButton((button) => {
-        button
-          .setIcon("pencil")
-          .setTooltip(`Edit ${entry.name}`)
-          .setClass("clickable-icon")
-          .onClick(() => {
-            this.emit("navigate", {
-              type: "journal",
-              id: entry.id,
+      const setting = new Setting(containerEl)
+        .setName(entry.name)
+        .setDesc(`ID: ${entry.id}`)
+        .addButton((button) => {
+          button
+            .setIcon("pencil")
+            .setTooltip(`Edit ${entry.name}`)
+            .setClass("clickable-icon")
+            .onClick(() => {
+              this.emit("navigate", {
+                type: "journal",
+                id: entry.id,
+              });
             });
-          });
-      });
+        });
       if (entry.isDefault) {
         const defaultBadge = setting.nameEl.createEl("span");
         defaultBadge.innerText = "Default";

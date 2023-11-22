@@ -1,8 +1,9 @@
 import { CalendarConfig } from "../contracts/config.types";
 
-export const DEFAULT_CONFIG_CALENDAR: Omit<CalendarConfig, "id"> = {
+export const DEFAULT_CONFIG_CALENDAR: CalendarConfig = {
+  id: "my-journal",
   type: "calendar",
-  name: "MyJournal",
+  name: "My Journal",
   isDefault: true,
   rootFolder: "",
   openOnStartup: false,

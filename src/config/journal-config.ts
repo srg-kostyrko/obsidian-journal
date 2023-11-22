@@ -1,6 +1,6 @@
 import { Plugin } from "obsidian";
 import { JournalConfigs } from "../contracts/config.types";
-import { deepCopy, generateId } from "../utils";
+import { deepCopy } from "../utils";
 import { DEFAULT_CONFIG_CALENDAR } from "./config-defaults";
 
 export class JournalConfig {
@@ -13,12 +13,7 @@ export class JournalConfig {
     if (saved) {
       this.configs = saved;
     } else {
-      this.configs = [
-        {
-          ...deepCopy(DEFAULT_CONFIG_CALENDAR),
-          id: generateId(),
-        },
-      ];
+      this.configs = [deepCopy(DEFAULT_CONFIG_CALENDAR)];
       await this.save();
     }
   }
