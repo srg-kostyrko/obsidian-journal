@@ -5,7 +5,7 @@ import { CalendarJournalSection } from "./calendar-journal-section";
 import { extractCurrentlocaleData } from "../utils/moment";
 
 export class CalendarJournalSectionWeekly extends CalendarJournalSection<WeeklyCalendarSection> {
-  get baseDate(): MomentDate {
+  get startDate(): MomentDate {
     const base = moment();
     if (this.config.firstDayOfWeek < 0) {
       return base.startOf(this.granularity);

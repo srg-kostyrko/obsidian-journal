@@ -30,14 +30,17 @@ export class CalendarJournalSection<T extends CalndarSectionBase> {
     return folderPath.join("/").replaceAll(/\/{2,}/g, "/");
   }
 
-  get baseDate(): MomentDate {
+  get startDate(): MomentDate {
     return moment().startOf(this.granularity);
+  }
+  get endDate(): MomentDate {
+    return this.startDate.clone().endOf(this.granularity);
   }
 
   async autoCreateNote(): Promise<void> {
     if (!this.config.enabled) return;
     if (!this.config.createOnStartup) return;
-    await this.ensureDateNote(this.baseDate);
+    await this.ensureDateNote(this.startDate, this.endDate);
   }
 
   configureRibbonIcons(plugin: Plugin): void {
@@ -53,57 +56,66 @@ export class CalendarJournalSection<T extends CalndarSectionBase> {
   }
 
   async open(): Promise<void> {
-    return await this.openDate(this.baseDate);
+    return await this.openDate(this.startDate, this.endDate);
   }
 
   async openNext(): Promise<void> {
-    const date = this.baseDate.add(1, this.granularity);
-    return await this.openDate(date);
+    const startDate = this.startDate.add(1, this.granularity);
+    const endDate = startDate.clone().endOf(this.granularity);
+    return await this.openDate(startDate, endDate);
   }
 
   async openPrev(): Promise<void> {
-    const date = this.baseDate.subtract(1, this.granularity);
-    return await this.openDate(date);
+    const startDate = this.startDate.subtract(1, this.granularity);
+    const endDate = startDate.clone().endOf(this.granularity);
+    return await this.openDate(startDate, endDate);
   }
 
-  private async ensureDateNote(date: MomentDate): Promise<TFile> {
-    const filePath = this.getDatePath(date);
+  private async ensureDateNote(startDate: MomentDate, endDate: MomentDate): Promise<TFile> {
+    const filePath = this.getDatePath(startDate, endDate);
     let file = this.app.vault.getAbstractFileByPath(filePath);
     if (!file) {
       await ensureFolderExists(this.app, filePath);
-      file = await this.app.vault.create(filePath, await this.getContent(this.getTemplateContext(date)));
-      const endDate = date.clone().endOf(this.granularity);
+      file = await this.app.vault.create(filePath, await this.getContent(this.getTemplateContext(startDate, endDate)));
       this.app.fileManager.processFrontMatter(file as TFile, (frontmatter) => {
         frontmatter[FRONTMATTER_ID_KEY] = this.journal.id;
-        frontmatter[FRONTMATTER_START_DATE_KEY] = date.format(FRONTMATTER_DATE_FORMAT);
+        frontmatter[FRONTMATTER_START_DATE_KEY] = startDate.format(FRONTMATTER_DATE_FORMAT);
         frontmatter[FRONTMATTER_END_DATE_KEY] = endDate.format(FRONTMATTER_DATE_FORMAT);
         frontmatter[FRONTMATTER_SECTION_KEY] = this.granularity;
       });
-      this.journal.index.add(date, endDate, { path: filePath, granularity: this.granularity });
+      this.journal.index.add(startDate, endDate, { path: filePath, granularity: this.granularity });
     }
     return file as TFile;
   }
 
-  private async openDate(date: MomentDate): Promise<void> {
-    const file = await this.ensureDateNote(date);
+  private async openDate(startDate: MomentDate, endDate: MomentDate): Promise<void> {
+    const file = await this.ensureDateNote(startDate, endDate);
     const mode = this.config.openMode === "active" ? undefined : this.config.openMode;
     const leaf = this.app.workspace.getLeaf(mode);
     await leaf.openFile(file, { active: true });
   }
 
-  private getTemplateContext(date: MomentDate): TemplateContext {
+  private getTemplateContext(start_date: MomentDate, end_date: MomentDate): TemplateContext {
     return {
       date: {
-        value: date,
+        value: start_date,
+        defaultFormat: this.config.dateFormat,
+      },
+      start_date: {
+        value: start_date,
+        defaultFormat: this.config.dateFormat,
+      },
+      end_date: {
+        value: end_date,
         defaultFormat: this.config.dateFormat,
       },
     };
   }
 
-  private getDatePath(date: MomentDate): string {
-    const indexed = this.journal.index.get(date, this.granularity);
+  private getDatePath(startDate: MomentDate, endDate: MomentDate): string {
+    const indexed = this.journal.index.get(startDate, this.granularity);
     if (indexed) return indexed.path;
-    const templateContext = this.getTemplateContext(date);
+    const templateContext = this.getTemplateContext(startDate, endDate);
     const filename = replaceTemplateVariables(this.config.titleTemplate, templateContext) + ".md";
     const folderPath = replaceTemplateVariables(this.folderPath, templateContext);
     return folderPath ? `${folderPath}/${filename}` : filename;

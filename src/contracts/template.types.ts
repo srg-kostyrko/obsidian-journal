@@ -4,4 +4,12 @@ export interface TemplateContext {
     value: MomentDate;
     defaultFormat: string;
   };
+  start_date?: {
+    value: MomentDate;
+    defaultFormat: string;
+  };
+  end_date?: {
+    value: MomentDate;
+    defaultFormat: string;
+  };
 }

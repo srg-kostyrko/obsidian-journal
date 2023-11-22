@@ -10,5 +10,21 @@ export function replaceTemplateVariables(template: string, context: TemplateCont
         return date.format(format);
       });
   }
+  if (context.start_date) {
+    const { value: start_date, defaultFormat } = context.start_date;
+    content = content
+      .replaceAll("{{start_date}}", start_date.format(defaultFormat))
+      .replaceAll(/\{\{start_date:(.*?)\}\}/g, (_, format) => {
+        return start_date.format(format);
+      });
+  }
+  if (context.end_date) {
+    const { value: end_date, defaultFormat } = context.end_date;
+    content = content
+      .replaceAll("{{end_date}}", end_date.format(defaultFormat))
+      .replaceAll(/\{\{end_date:(.*?)\}\}/g, (_, format) => {
+        return end_date.format(format);
+      });
+  }
   return content;
 }
