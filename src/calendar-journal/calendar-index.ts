@@ -12,7 +12,6 @@ export class CalendarIndex {
 
   get(date: MomentDate, granularity: CalendarGranularity): IndexEntry | undefined {
     const list = this.intervalTree.search([date.toDate().getTime(), date.toDate().getTime()]);
-    console.log(list);
     return list.find((entry) => entry.granularity === granularity);
   }
 

@@ -51,3 +51,12 @@ export interface IntervalConfig extends JournalCaseConfig {
 }
 
 export type JournalConfigs = CalendarConfig | IntervalConfig;
+
+export interface CalerndatFrontMatter {
+  type: "calendar";
+  id: string;
+  start_date: string;
+  end_date: string;
+  granularity: CalendarGranularity;
+}
+export type JournalFrontMatter = CalerndatFrontMatter;

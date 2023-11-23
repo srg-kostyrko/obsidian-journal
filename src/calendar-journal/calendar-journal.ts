@@ -2,6 +2,7 @@ import { App, FrontMatterCache, Plugin, moment } from "obsidian";
 import {
   CalendarConfig,
   CalendarGranularity,
+  CalerndatFrontMatter,
   DailyCalendarSection,
   MonthlyCalendarSection,
   QuarterlyCalendarSection,
@@ -14,7 +15,6 @@ import {
   FRONTMATTER_END_DATE_KEY,
   FRONTMATTER_SECTION_KEY,
   FRONTMATTER_START_DATE_KEY,
-  SECTIONS_MAP,
 } from "../constants";
 import { CalendarIndex } from "./calendar-index";
 
@@ -155,13 +155,20 @@ export class CalendarJournal {
     }
   }
 
-  indexNote(frontmatter: FrontMatterCache, path: string): void {
-    const startDate = moment(frontmatter[FRONTMATTER_START_DATE_KEY], FRONTMATTER_DATE_FORMAT);
-    const endDate = moment(frontmatter[FRONTMATTER_END_DATE_KEY], FRONTMATTER_DATE_FORMAT);
-    const granularity = frontmatter[FRONTMATTER_SECTION_KEY];
-    const section = SECTIONS_MAP[granularity as CalendarGranularity];
-    if (!section) return;
-    this.index.add(startDate, endDate, { path, granularity });
+  parseFrontMatter(frontmatter: FrontMatterCache): CalerndatFrontMatter {
+    return {
+      type: "calendar",
+      id: this.id,
+      start_date: frontmatter[FRONTMATTER_START_DATE_KEY],
+      end_date: frontmatter[FRONTMATTER_END_DATE_KEY],
+      granularity: frontmatter[FRONTMATTER_SECTION_KEY] as CalendarGranularity,
+    };
+  }
+
+  indexNote(frontmatter: CalerndatFrontMatter, path: string): void {
+    const startDate = moment(frontmatter.start_date, FRONTMATTER_DATE_FORMAT);
+    const endDate = moment(frontmatter.end_date, FRONTMATTER_DATE_FORMAT);
+    this.index.add(startDate, endDate, { path, granularity: frontmatter.granularity });
   }
 
   clearForPath(path: string): void {

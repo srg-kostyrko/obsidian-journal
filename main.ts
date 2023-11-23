@@ -2,6 +2,7 @@ import { Plugin } from "obsidian";
 import { JournalSettingTab } from "./src/settings/journal-settings";
 import { JournalConfig } from "./src/config/journal-config";
 import { JournalManager } from "./src/journal-manager";
+import { CodeBlockProcessor } from "./src/code-block/code-block-processor";
 
 export default class JournalPlugin extends Plugin {
   private config: JournalConfig;
@@ -17,6 +18,12 @@ export default class JournalPlugin extends Plugin {
     this.addSettingTab(new JournalSettingTab(this.app, this, this.manager, this.config));
 
     this.manager.configureRibbonIcons();
+
+    this.registerMarkdownCodeBlockProcessor("journal", (source, el, ctx) => {
+      const processor = new CodeBlockProcessor(this.manager, source, el, ctx);
+      ctx.addChild(processor);
+      processor.display();
+    });
 
     this.app.workspace.onLayoutReady(async () => {
       await this.manager.reindex();

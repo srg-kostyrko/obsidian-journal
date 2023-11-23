@@ -4,12 +4,13 @@ import { CalendarJournal, calendarCommands } from "./calendar-journal/calendar-j
 import { FRONTMATTER_ID_KEY } from "./constants";
 import { deepCopy } from "./utils";
 import { DEFAULT_CONFIG_CALENDAR } from "./config/config-defaults";
-import { CalendarConfig } from "./contracts/config.types";
+import { CalendarConfig, JournalFrontMatter } from "./contracts/config.types";
 import { JournalSuggestModal } from "./ui/journal-suggest-modal";
 
 export class JournalManager extends Component {
   private journals = new Map<string, CalendarJournal>();
   private defaultId: string;
+  private fileFrontMatters = new Map<string, JournalFrontMatter | null>();
 
   constructor(
     private app: App,
@@ -134,20 +135,42 @@ export class JournalManager extends Component {
     this.setupListeners();
   }
 
-  indexFile(file: TFile): void {
-    const metadata = this.app.metadataCache.getFileCache(file);
-    if (!metadata) return;
-    const { frontmatter } = metadata;
-    if (!frontmatter) return;
-    if (FRONTMATTER_ID_KEY in frontmatter) {
-      const id = frontmatter[FRONTMATTER_ID_KEY];
-      const journal = this.journals.get(id);
-      if (!journal) return;
-      journal.indexNote(frontmatter, file.path);
+  async getJournalData(path: string): Promise<JournalFrontMatter | null> {
+    if (this.fileFrontMatters.has(path)) {
+      return this.fileFrontMatters.get(path) ?? null;
+    }
+    const file = this.app.vault.getAbstractFileByPath(path);
+    if (file instanceof TFile) {
+      const metadata = this.app.metadataCache.getFileCache(file);
+      if (metadata) {
+        const { frontmatter } = metadata;
+        if (frontmatter && FRONTMATTER_ID_KEY in frontmatter) {
+          const id = frontmatter[FRONTMATTER_ID_KEY];
+          const journal = this.journals.get(id);
+          if (journal) {
+            const data = journal.parseFrontMatter(frontmatter);
+            this.fileFrontMatters.set(path, data);
+            return data;
+          }
+        }
+      }
+    }
+    this.fileFrontMatters.set(path, null);
+    return null;
+  }
+
+  async indexFile(file: TFile): Promise<void> {
+    const data = await this.getJournalData(file.path);
+    if (data) {
+      const journal = this.journals.get(data.id);
+      if (journal) {
+        journal.indexNote(data, file.path);
+      }
     }
   }
 
   clearForPath(path: string): void {
+    this.fileFrontMatters.delete(path);
     for (const journal of this.journals.values()) {
       journal.clearForPath(path);
     }
