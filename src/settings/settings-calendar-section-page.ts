@@ -3,8 +3,9 @@ import { App, ButtonComponent, Setting } from "obsidian";
 import { FolderSuggestion } from "./ui/folder-suggestion";
 import { IconSuggestion } from "./ui/icon-suggestion";
 import { SettingsWidget } from "./settings-widget";
+import { capitalize } from "../utils";
 
-export class SettingsBaseCalendarSection<T extends CalndarSectionBase> extends SettingsWidget {
+export class SettingsCalendarSectionPage<T extends CalndarSectionBase> extends SettingsWidget {
   private folderSuggestions: FolderSuggestion[] = [];
   constructor(
     app: App,
@@ -20,13 +21,15 @@ export class SettingsBaseCalendarSection<T extends CalndarSectionBase> extends S
     const { containerEl } = this;
 
     new Setting(containerEl)
-      .setName(`${this.title} Notes`)
+      .setName(`${capitalize(this.title)} Notes`)
       .setHeading()
-      .addToggle((toggle) => {
-        toggle.setValue(this.config.enabled).onChange((value) => {
-          this.config.enabled = value;
-          this.save(true);
-        });
+      .addButton((button) => {
+        button
+          .setIcon("arrow-left")
+          .setTooltip("Back to journal")
+          .onClick(() => {
+            this.navigate({ type: "journal", id: this.journal.id });
+          });
       });
 
     if (!this.config.enabled) return;

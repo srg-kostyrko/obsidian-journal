@@ -4,6 +4,8 @@ import { SettingsHomePage } from "./settings-home-page";
 import { SettingsCalendarPage } from "./settings-calendar-page";
 import { JournalManager } from "../journal-manager";
 import { SettingsRouteState } from "../contracts/settings";
+import { SettingsCalendarSectionPage } from "./settings-calendar-section-page";
+import { SettingsCalendarWeeklySectionPage } from "./settings-calendar-weekly-section-page";
 
 export class JournalSettingTab extends PluginSettingTab {
   private routeState: SettingsRouteState = {
@@ -39,8 +41,7 @@ export class JournalSettingTab extends PluginSettingTab {
 
     switch (this.routeState.type) {
       case "home": {
-        const homePage = new SettingsHomePage(this.app, this.manager, containerEl, this.config);
-        homePage.display();
+        new SettingsHomePage(this.app, this.manager, containerEl, this.config).display();
         break;
       }
       case "journal": {
@@ -53,8 +54,27 @@ export class JournalSettingTab extends PluginSettingTab {
         }
         switch (journalConfig.type) {
           case "calendar": {
-            const calendarPage = new SettingsCalendarPage(this.app, containerEl, journalConfig);
-            calendarPage.display();
+            if (this.routeState.section) {
+              const page =
+                this.routeState.section === "weekly"
+                  ? new SettingsCalendarWeeklySectionPage(
+                      this.app,
+                      journalConfig,
+                      containerEl,
+                      journalConfig[this.routeState.section],
+                      this.routeState.section,
+                    )
+                  : new SettingsCalendarSectionPage(
+                      this.app,
+                      journalConfig,
+                      containerEl,
+                      journalConfig[this.routeState.section],
+                      this.routeState.section,
+                    );
+              page.display();
+            } else {
+              new SettingsCalendarPage(this.app, containerEl, journalConfig).display();
+            }
             break;
           }
           default:

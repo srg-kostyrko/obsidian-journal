@@ -1,13 +1,10 @@
 import { CalendarConfig, CalndarSectionBase, SectionName } from "../contracts/config.types";
 import { App, Setting } from "obsidian";
-import { SettingsBaseCalendarSection } from "./settings-base-calendar-section";
-import { SettingsCalendarWeeklySection } from "./settings-calendar-weekly-section";
 import { FolderSuggestion } from "./ui/folder-suggestion";
 import { SettingsWidget } from "./settings-widget";
+import { capitalize } from "../utils";
 
 export class SettingsCalendarPage extends SettingsWidget {
-  private sections: SettingsBaseCalendarSection<CalndarSectionBase>[] = [];
-
   constructor(
     app: App,
     private containerEl: HTMLElement,
@@ -51,7 +48,6 @@ export class SettingsCalendarPage extends SettingsWidget {
         .setPlaceholder("Example: folder 1/folder 2")
         .onChange(() => {
           this.config.rootFolder = text.getValue();
-          this.updateFolderSuggestions();
           this.save();
         });
     });
@@ -96,31 +92,34 @@ export class SettingsCalendarPage extends SettingsWidget {
       }
     }
 
-    this.registerSection(
-      new SettingsBaseCalendarSection(this.app, this.config, containerEl, this.config.daily, "Daily"),
-    );
-    this.registerSection(
-      new SettingsCalendarWeeklySection(this.app, this.config, containerEl, this.config.weekly, "Weekly"),
-    );
-    this.registerSection(
-      new SettingsBaseCalendarSection(this.app, this.config, containerEl, this.config.monthly, "Monthly"),
-    );
-    this.registerSection(
-      new SettingsBaseCalendarSection(this.app, this.config, containerEl, this.config.quarterly, "Quarterly"),
-    );
-    this.registerSection(
-      new SettingsBaseCalendarSection(this.app, this.config, containerEl, this.config.yearly, "Yearly"),
-    );
+    this.renderSectionsHeader("daily", this.config.daily);
+    this.renderSectionsHeader("weekly", this.config.weekly);
+    this.renderSectionsHeader("monthly", this.config.monthly);
+    this.renderSectionsHeader("quarterly", this.config.quarterly);
+    this.renderSectionsHeader("yearly", this.config.yearly);
   }
 
-  registerSection(section: SettingsBaseCalendarSection<CalndarSectionBase>): void {
-    this.sections.push(section);
-    section.display();
-  }
-
-  private updateFolderSuggestions() {
-    for (const section of this.sections) {
-      section.updateFolderSuggestions(this.config.rootFolder);
+  renderSectionsHeader(sectionName: SectionName, config: CalndarSectionBase): void {
+    const daily = new Setting(this.containerEl).setName(`${capitalize(sectionName)} notes`);
+    if (config.enabled) {
+      daily.addButton((button) => {
+        button
+          .setIcon("cog")
+          .setTooltip(`Configure ${sectionName} notes`)
+          .onClick(() => {
+            this.navigate({
+              type: "journal",
+              id: this.config.id,
+              section: sectionName,
+            });
+          });
+      });
     }
+    daily.addToggle((toggle) => {
+      toggle.setValue(config.enabled).onChange((value) => {
+        config.enabled = value;
+        this.save(true);
+      });
+    });
   }
 }

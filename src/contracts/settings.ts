@@ -1,3 +1,5 @@
+import { SectionName } from "./config.types";
+
 export type SettingsRouteState =
   | {
       type: "home";
@@ -5,4 +7,5 @@ export type SettingsRouteState =
   | {
       type: "journal";
       id: string;
+      section?: SectionName;
     };

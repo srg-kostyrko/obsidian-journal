@@ -1,8 +1,8 @@
 import { Setting } from "obsidian";
 import { WeeklyCalendarSection } from "../contracts/config.types";
-import { SettingsBaseCalendarSection } from "./settings-base-calendar-section";
+import { SettingsCalendarSectionPage } from "./settings-calendar-section-page";
 
-export class SettingsCalendarWeeklySection extends SettingsBaseCalendarSection<WeeklyCalendarSection> {
+export class SettingsCalendarWeeklySectionPage extends SettingsCalendarSectionPage<WeeklyCalendarSection> {
   display(): void {
     super.display();
     const { containerEl } = this;
