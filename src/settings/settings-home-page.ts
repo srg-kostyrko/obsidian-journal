@@ -1,18 +1,17 @@
 import { App, Setting } from "obsidian";
-import { EventEmitter } from "eventemitter3";
 import { JournalConfig } from "../config/journal-config";
-import { Disposable } from "../contracts/disposable.types";
 import { CreateJournalModal } from "./ui/create-journal-modal";
 import { JournalManager } from "../journal-manager";
+import { SettingsWidget } from "./settings-widget";
 
-export class SettingsHomePage extends EventEmitter implements Disposable {
+export class SettingsHomePage extends SettingsWidget {
   constructor(
-    private app: App,
+    app: App,
     private manager: JournalManager,
     private containerEl: HTMLElement,
     private config: JournalConfig,
   ) {
-    super();
+    super(app);
   }
 
   display(): void {
@@ -27,7 +26,7 @@ export class SettingsHomePage extends EventEmitter implements Disposable {
           .setCta()
           .setIcon("plus")
           .onClick(() => {
-            new CreateJournalModal(this.app, this.manager, this).open();
+            new CreateJournalModal(this.app, this.manager).open();
           });
       });
 
@@ -41,7 +40,7 @@ export class SettingsHomePage extends EventEmitter implements Disposable {
             .setTooltip(`Edit ${entry.name}`)
             .setClass("clickable-icon")
             .onClick(() => {
-              this.emit("navigate", {
+              this.navigate({
                 type: "journal",
                 id: entry.id,
               });
@@ -61,7 +60,7 @@ export class SettingsHomePage extends EventEmitter implements Disposable {
               .setClass("clickable-icon")
               .onClick(async () => {
                 await this.manager.changeDefaultJournal(entry.id);
-                this.emit("redraw");
+                this.save(true);
               });
           })
           .addButton((button) => {
@@ -69,9 +68,5 @@ export class SettingsHomePage extends EventEmitter implements Disposable {
           });
       }
     }
-  }
-
-  dispose(): void {
-    this.removeAllListeners();
   }
 }

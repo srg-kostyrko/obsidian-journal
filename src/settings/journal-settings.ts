@@ -1,24 +1,14 @@
 import { PluginSettingTab, Plugin, App } from "obsidian";
 import { JournalConfig } from "../config/journal-config";
 import { SettingsHomePage } from "./settings-home-page";
-import { Disposable } from "../contracts/disposable.types";
 import { SettingsCalendarPage } from "./settings-calendar-page";
 import { JournalManager } from "../journal-manager";
-
-type RouteState =
-  | {
-      type: "home";
-    }
-  | {
-      type: "journal";
-      id: string;
-    };
+import { SettingsRouteState } from "../contracts/settings";
 
 export class JournalSettingTab extends PluginSettingTab {
-  private routeState: RouteState = {
+  private routeState: SettingsRouteState = {
     type: "home",
   };
-  private disposables: Disposable[] = [];
 
   constructor(
     app: App,
@@ -27,25 +17,29 @@ export class JournalSettingTab extends PluginSettingTab {
     private config: JournalConfig,
   ) {
     super(app, plugin);
+
+    plugin.registerEvent(
+      this.app.workspace.on("journal:settings-navigate", (state) => {
+        this.routeState = state;
+        this.display();
+      }),
+    );
+
+    plugin.registerEvent(
+      this.app.workspace.on("journal:settings-save", async (redraw: boolean) => {
+        await this.config.save();
+        if (redraw) this.display();
+      }),
+    );
   }
 
   display() {
     const { containerEl } = this;
-
-    this.cleanup();
     containerEl.empty();
 
     switch (this.routeState.type) {
       case "home": {
         const homePage = new SettingsHomePage(this.app, this.manager, containerEl, this.config);
-        this.disposables.push(homePage);
-        homePage.on("navigate", (state) => {
-          this.routeState = state;
-          this.display();
-        });
-        homePage.on("redraw", () => {
-          this.display();
-        });
         homePage.display();
         break;
       }
@@ -60,16 +54,6 @@ export class JournalSettingTab extends PluginSettingTab {
         switch (journalConfig.type) {
           case "calendar": {
             const calendarPage = new SettingsCalendarPage(this.app, containerEl, journalConfig);
-            this.disposables.push(calendarPage);
-            calendarPage.on("navigate", (state) => {
-              this.routeState = state;
-              this.display();
-            });
-            calendarPage.on("save", async () => await this.config.save());
-            calendarPage.on("save+redraw", async () => {
-              await this.config.save();
-              this.display();
-            });
             calendarPage.display();
             break;
           }
@@ -81,12 +65,5 @@ export class JournalSettingTab extends PluginSettingTab {
       default:
         console.log("not supported", this.routeState);
     }
-  }
-
-  private cleanup() {
-    for (const disposable of this.disposables) {
-      disposable.dispose();
-    }
-    this.disposables = [];
   }
 }

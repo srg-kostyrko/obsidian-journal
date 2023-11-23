@@ -1,20 +1,19 @@
-import EventEmitter from "eventemitter3";
-import { Disposable } from "../contracts/disposable.types";
 import { CalendarConfig, CalndarSectionBase } from "../contracts/config.types";
 import { App, ButtonComponent, Setting } from "obsidian";
 import { FolderSuggestion } from "./ui/folder-suggestion";
 import { IconSuggestion } from "./ui/icon-suggestion";
+import { SettingsWidget } from "./settings-widget";
 
-export class SettingsBaseCalendarSection<T extends CalndarSectionBase> extends EventEmitter implements Disposable {
+export class SettingsBaseCalendarSection<T extends CalndarSectionBase> extends SettingsWidget {
   private folderSuggestions: FolderSuggestion[] = [];
   constructor(
-    protected app: App,
+    app: App,
     protected journal: CalendarConfig,
     protected containerEl: HTMLElement,
     protected config: T,
     protected title: string,
   ) {
-    super();
+    super(app);
   }
 
   display() {
@@ -26,7 +25,7 @@ export class SettingsBaseCalendarSection<T extends CalndarSectionBase> extends E
       .addToggle((toggle) => {
         toggle.setValue(this.config.enabled).onChange((value) => {
           this.config.enabled = value;
-          this.emit("save+redraw");
+          this.save(true);
         });
       });
 
@@ -43,21 +42,21 @@ export class SettingsBaseCalendarSection<T extends CalndarSectionBase> extends E
         .setValue(this.config.openMode ?? "active")
         .onChange((value) => {
           this.config.openMode = value as CalndarSectionBase["openMode"];
-          this.emit("save");
+          this.save();
         });
     });
 
     new Setting(containerEl).setName("Note title").addText((text) => {
       text.setValue(this.config.titleTemplate).onChange((value) => {
         this.config.titleTemplate = value;
-        this.emit("save");
+        this.save();
       });
     });
 
     new Setting(containerEl).setName("Date format").addMomentFormat((format) => {
       format.setValue(this.config.dateFormat).onChange((value) => {
         this.config.dateFormat = value;
-        this.emit("save");
+        this.save();
       });
     });
 
@@ -65,14 +64,14 @@ export class SettingsBaseCalendarSection<T extends CalndarSectionBase> extends E
       this.folderSuggestions.push(new FolderSuggestion(this.app, text.inputEl, this.journal.rootFolder));
       text.setValue(this.config.folder).onChange((value) => {
         this.config.folder = value;
-        this.emit("save");
+        this.save();
       });
     });
 
     new Setting(containerEl).setName("Template").addText((text) => {
       text.setValue(this.config.template).onChange((value) => {
         this.config.template = value;
-        this.emit("save");
+        this.save();
       });
     });
 
@@ -82,7 +81,7 @@ export class SettingsBaseCalendarSection<T extends CalndarSectionBase> extends E
       .addToggle((toggle) => {
         toggle.setValue(this.config.ribbon.show).onChange((value) => {
           this.config.ribbon.show = value;
-          this.emit("save+redraw");
+          this.save(true);
         });
       });
 
@@ -99,7 +98,7 @@ export class SettingsBaseCalendarSection<T extends CalndarSectionBase> extends E
           text.setValue(this.config.ribbon.icon).onChange((value) => {
             this.config.ribbon.icon = value;
             iconPreivewButton?.setIcon(value);
-            this.emit("save");
+            this.save();
           });
         });
       new Setting(containerEl).setName("Ribbon tooltip").addText((text) => {
@@ -108,7 +107,7 @@ export class SettingsBaseCalendarSection<T extends CalndarSectionBase> extends E
           .setPlaceholder(`Open ${this.title} note`)
           .onChange((value) => {
             this.config.ribbon.tooltip = value;
-            this.emit("save");
+            this.save();
           });
       });
     }
@@ -116,7 +115,7 @@ export class SettingsBaseCalendarSection<T extends CalndarSectionBase> extends E
     new Setting(containerEl).setName("Create note on startup").addToggle((toggle) => {
       toggle.setValue(this.config.createOnStartup ?? false).onChange((value) => {
         this.config.createOnStartup = value;
-        this.emit("save");
+        this.save();
       });
     });
   }
@@ -125,9 +124,5 @@ export class SettingsBaseCalendarSection<T extends CalndarSectionBase> extends E
     for (const suggestion of this.folderSuggestions) {
       suggestion.root = root;
     }
-  }
-
-  dispose(): void {
-    this.removeAllListeners();
   }
 }

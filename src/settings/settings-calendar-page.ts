@@ -1,20 +1,19 @@
-import EventEmitter from "eventemitter3";
-import { Disposable } from "../contracts/disposable.types";
 import { CalendarConfig, CalndarSectionBase, SectionName } from "../contracts/config.types";
 import { App, Setting } from "obsidian";
 import { SettingsBaseCalendarSection } from "./settings-base-calendar-section";
 import { SettingsCalendarWeeklySection } from "./settings-calendar-weekly-section";
 import { FolderSuggestion } from "./ui/folder-suggestion";
+import { SettingsWidget } from "./settings-widget";
 
-export class SettingsCalendarPage extends EventEmitter implements Disposable {
+export class SettingsCalendarPage extends SettingsWidget {
   private sections: SettingsBaseCalendarSection<CalndarSectionBase>[] = [];
 
   constructor(
-    private app: App,
+    app: App,
     private containerEl: HTMLElement,
     private config: CalendarConfig,
   ) {
-    super();
+    super(app);
   }
 
   get headerText(): string {
@@ -29,7 +28,7 @@ export class SettingsCalendarPage extends EventEmitter implements Disposable {
       .setHeading()
       .addButton((button) => {
         button.setButtonText("Back to list").onClick(() => {
-          this.emit("navigate", { type: "home" });
+          this.navigate({ type: "home" });
         });
       });
 
@@ -41,7 +40,7 @@ export class SettingsCalendarPage extends EventEmitter implements Disposable {
       text.setValue(this.config.name).onChange(() => {
         this.config.name = text.getValue();
         heading.setName(this.headerText);
-        this.emit("save");
+        this.save();
       });
     });
 
@@ -53,36 +52,45 @@ export class SettingsCalendarPage extends EventEmitter implements Disposable {
         .onChange(() => {
           this.config.rootFolder = text.getValue();
           this.updateFolderSuggestions();
-          this.emit("save");
+          this.save();
         });
     });
     if (this.config.isDefault) {
       const startUp = new Setting(containerEl).setName("Open on Startup").addToggle((toggle) => {
         toggle.setValue(this.config.openOnStartup).onChange(() => {
           this.config.openOnStartup = toggle.getValue();
-          this.emit("save+redraw");
+          this.save(true);
         });
       });
       if (this.config.openOnStartup) {
         startUp.addDropdown((dropdown) => {
+          const avaliable: SectionName[] = [];
           if (this.config.daily.enabled) {
             dropdown.addOption("daily", "Daily Note");
+            avaliable.push("daily");
           }
           if (this.config.weekly.enabled) {
             dropdown.addOption("weekly", "Weekly Note");
+            avaliable.push("weekly");
           }
           if (this.config.monthly.enabled) {
             dropdown.addOption("monthly", "Monthly Note");
+            avaliable.push("monthly");
           }
           if (this.config.quarterly.enabled) {
             dropdown.addOption("quarterly", "Quarterly Note");
+            avaliable.push("quarterly");
           }
           if (this.config.yearly.enabled) {
             dropdown.addOption("yearly", "Yearly Note");
+            avaliable.push("yearly");
+          }
+          if (!avaliable.contains(this.config.startupSection)) {
+            this.config.startupSection = avaliable[0];
           }
           dropdown.setValue(this.config.startupSection).onChange((value) => {
             this.config.startupSection = value as CalendarConfig["startupSection"];
-            this.emit("save");
+            this.save();
           });
         });
       }
@@ -107,55 +115,12 @@ export class SettingsCalendarPage extends EventEmitter implements Disposable {
 
   registerSection(section: SettingsBaseCalendarSection<CalndarSectionBase>): void {
     this.sections.push(section);
-    section.on("save", () => {
-      this.ensureValidData();
-      this.emit("save");
-    });
-    section.on("save+redraw", () => {
-      this.ensureValidData();
-      this.emit("save+redraw");
-    });
     section.display();
-  }
-
-  private ensureValidData() {
-    const section = this.config.startupSection;
-    if (!this.config[section].enabled) {
-      const [first] = this.getEnabledSections();
-      this.config.startupSection = first;
-    }
-  }
-
-  private getEnabledSections(): SectionName[] {
-    const sections: SectionName[] = [];
-    if (this.config.daily.enabled) {
-      sections.push("daily");
-    }
-    if (this.config.weekly.enabled) {
-      sections.push("weekly");
-    }
-    if (this.config.monthly.enabled) {
-      sections.push("monthly");
-    }
-    if (this.config.quarterly.enabled) {
-      sections.push("quarterly");
-    }
-    if (this.config.yearly.enabled) {
-      sections.push("yearly");
-    }
-    return sections;
   }
 
   private updateFolderSuggestions() {
     for (const section of this.sections) {
       section.updateFolderSuggestions(this.config.rootFolder);
     }
-  }
-
-  dispose(): void {
-    for (const disposable of this.sections) {
-      disposable.dispose();
-    }
-    this.removeAllListeners();
   }
 }

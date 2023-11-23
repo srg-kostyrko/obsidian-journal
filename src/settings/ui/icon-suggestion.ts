@@ -27,7 +27,6 @@ export class IconSuggestion extends AbstractInputSuggest<string> {
       const title = el.createSpan();
       title.style.marginLeft = "8px";
       title.appendText(value);
-      el.appendChild(title);
     }
   }
   selectSuggestion(value: string): void {

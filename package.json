@@ -23,7 +23,6 @@
   "license": "MIT",
   "dependencies": {
     "@flatten-js/interval-tree": "^1.1.1",
-    "eventemitter3": "^5.0.1",
     "obsidian": "^1.4.11"
   },
   "devDependencies": {

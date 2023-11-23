@@ -1,6 +1,5 @@
 import { App, Modal, Setting } from "obsidian";
 import { JournalManager } from "../../journal-manager";
-import EventEmitter from "eventemitter3";
 
 export class CreateJournalModal extends Modal {
   private name = "";
@@ -9,7 +8,6 @@ export class CreateJournalModal extends Modal {
   constructor(
     app: App,
     private manager: JournalManager,
-    private parent: EventEmitter,
   ) {
     super(app);
   }
@@ -48,7 +46,7 @@ export class CreateJournalModal extends Modal {
             if (!this.name || !this.id) return;
             this.close();
             const id = await this.manager.createCalendarJournal(this.id, this.name);
-            this.parent.emit("navigate", {
+            this.app.workspace.trigger("journal:navigate", {
               type: "journal",
               id,
             });

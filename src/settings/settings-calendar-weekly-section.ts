@@ -22,7 +22,7 @@ export class SettingsCalendarWeeklySection extends SettingsBaseCalendarSection<W
           .setValue(String(this.config.firstDayOfWeek))
           .onChange((value) => {
             this.config.firstDayOfWeek = parseInt(value, 10);
-            this.emit("save+redraw");
+            this.save(true);
           });
       });
       if (this.config.firstDayOfWeek !== -1) {
@@ -33,7 +33,7 @@ export class SettingsCalendarWeeklySection extends SettingsBaseCalendarSection<W
             if (value) {
               this.config.firstWeekOfYear = parseInt(value, 10);
               s.setDesc(`First week of year must contain ${this.config.firstWeekOfYear ?? 1} January`);
-              this.emit("save");
+              this.save();
             }
           });
         });
