@@ -21,6 +21,14 @@ export class CalendarHelper {
     return md;
   }
 
+  today(): MomentDate {
+    const md = moment();
+    if (this.config.firstDayOfWeek !== -1) {
+      md.locale(CUSTOM_LOCALE);
+    }
+    return md;
+  }
+
   updateLocale(): void {
     moment.updateLocale(CUSTOM_LOCALE, {
       week: {

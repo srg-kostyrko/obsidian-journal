@@ -9,6 +9,7 @@ import {
 } from "../constants";
 import { CalendarIndex } from "./calendar-index";
 import { CalendarHelper } from "../utils/calendar";
+import { MomentDate } from "../contracts/date.types";
 
 export const calendarCommands = {
   "calendar:open-daily": "Open daily note",
@@ -51,6 +52,10 @@ export class CalendarJournal {
 
   get id(): string {
     return this.config.id;
+  }
+
+  get today(): MomentDate {
+    return this.calendar.today();
   }
 
   supportsCommand(id: string): boolean {

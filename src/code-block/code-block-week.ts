@@ -1,4 +1,4 @@
-import { MarkdownRenderChild, moment } from "obsidian";
+import { MarkdownRenderChild } from "obsidian";
 import { CalendarJournal } from "../calendar-journal/calendar-journal";
 
 export class CodeBlockWeek extends MarkdownRenderChild {
@@ -12,7 +12,7 @@ export class CodeBlockWeek extends MarkdownRenderChild {
 
   display() {
     this.containerEl.empty();
-    const today = moment();
+    const today = this.journal.today;
 
     const start = this.journal.weekly.getRangeStart(this.date);
     const end = this.journal.weekly.getRangeEnd(this.date);
