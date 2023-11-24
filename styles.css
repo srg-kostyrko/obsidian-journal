@@ -1,51 +1,60 @@
 .journal-clickable {
   cursor: pointer;
 }
-.journal-weekly-title {
-  padding-left: 6px;
+.journal-title {
+  margin-left: 18px;
 }
 
-.journal-weekly-view {
+.journal-week-view,
+.journal-month-view {
   display: grid;
   grid-template-columns: repeat(7, 30px);
   gap: 6px;
+  margin-left: 12px;
+  margin-bottom: 12px;
 }
 
-.journal-weekly-weekday {
-  font-size: 0.7em;
+.journal-weekday {
+  /* font-size: 0.7em; */
   display: flex;
   flex-direction: column;
   text-align: center;
 }
 
-.journal-weekly-day {
+.journal-day {
+  font-size: 0.7em;
   border: 1px solid transparent;
   border-radius: 50%;
   height: 28px;
   line-height: 26px;
   width: 28px;
-  cursor: pointer;
+  text-align: center;
 }
 
-.journal-weekly-day:hover {
+.journal-day:hover {
   border-color: var(--background-modifier-border);
-}
-
-.is-selected .journal-weekly-day {
   background-color: var(--background-secondary);
 }
 
-.journal-is-today .journal-weekly-day {
+.is-selected .journal-day {
+  background-color: var(--background-secondary);
+}
+
+.journal-is-today {
   color: var(--text-accent);
   font-weight: 600;
 }
 
-.journal-weekly-day-of-week {
+.journal-day-of-week {
   color: var(--text-muted);
-  font-size: 0.9em;
+  font-size: 0.65em;
   font-weight: 600;
   letter-spacing: 0.2px;
 }
-.is-selected .journal-weekly-day-of-week {
+.is-selected .journal-day-of-week {
   color: var(--text-normal);
+}
+
+.journal-is-not-same-month {
+  color: var(--code-comment);
 }

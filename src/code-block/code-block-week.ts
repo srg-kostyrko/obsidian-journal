@@ -1,7 +1,7 @@
 import { MarkdownRenderChild, moment } from "obsidian";
 import { CalendarJournal } from "../calendar-journal/calendar-journal";
 
-export class CodeBlockWeekly extends MarkdownRenderChild {
+export class CodeBlockWeek extends MarkdownRenderChild {
   constructor(
     containerEl: HTMLElement,
     protected journal: CalendarJournal,
@@ -18,41 +18,48 @@ export class CodeBlockWeekly extends MarkdownRenderChild {
     const end = this.journal.weekly.getRangeEnd(this.date);
 
     const title = this.containerEl.createEl("h6", {
-      cls: "journal-weekly-title",
+      cls: "journal-title",
       text: start.format(this.journal.config.weekly.dateFormat),
     });
     if (this.journal.config.weekly.enabled) {
       title.classList.add("journal-clickable");
-      title.on("click", ".journal-weekly-title", () => {
+      title.on("click", ".journal-title", () => {
         this.journal.weekly.open(this.date);
       });
     }
     const view = this.containerEl.createDiv({
-      cls: "journal-weekly-view",
+      cls: "journal-week-view",
     });
+    if (this.journal.config.daily.enabled) {
+      view.on("click", ".journal-weekday", (e) => {
+        const date = (e.target as HTMLElement)?.dataset?.date;
+        if (date) {
+          this.journal.daily.open(date);
+        }
+      });
+    }
 
     while (start.isSameOrBefore(end)) {
-      const cls = ["journal-weekly-weekday"];
+      const cls = ["journal-weekday"];
       if (start.isSame(today, "day")) {
         cls.push("journal-is-today");
+      }
+      if (this.journal.config.daily.enabled) {
+        cls.push("journal-clickable");
       }
 
       const day = view.createDiv({
         cls,
       });
       day.createDiv({
-        cls: "journal-weekly-day-of-week",
+        cls: "journal-day-of-week",
         text: start.format("ddd"),
       });
       day.createDiv({
-        cls: "journal-weekly-day",
+        cls: "journal-day",
         text: start.format("DD"),
       });
-      const date = start.format("YYYY-MM-DD");
-      day.on("click", ".journal-weekly-day", () => {
-        console.log(date);
-        this.journal.daily.open(date);
-      });
+      day.dataset.date = start.format("YYYY-MM-DD");
       start.add(1, "day");
     }
   }

@@ -1,10 +1,12 @@
 import { MarkdownPostProcessorContext, MarkdownRenderChild } from "obsidian";
 import { JournalManager } from "../journal-manager";
 import { JournalFrontMatter } from "../contracts/config.types";
-import { CodeBlockWeekly } from "./code-block-weekly";
+import { CodeBlockMonth } from "./code-block-month";
+import { CodeBlockWeek } from "./code-block-week";
 
 export class CodeBlockTimelineProcessor extends MarkdownRenderChild {
   private data: JournalFrontMatter | null = null;
+  private mode: string = "week";
   constructor(
     private manager: JournalManager,
     private readonly source: string,
@@ -18,6 +20,13 @@ export class CodeBlockTimelineProcessor extends MarkdownRenderChild {
 
   async init() {
     this.data = await this.manager.getJournalData(this.ctx.sourcePath);
+    const lines = this.source.split("\n");
+    for (const line of lines) {
+      const [key, value] = line.split(":");
+      if (key.trim() === "mode") {
+        this.mode = value.trim();
+      }
+    }
   }
 
   async display() {
@@ -34,8 +43,10 @@ export class CodeBlockTimelineProcessor extends MarkdownRenderChild {
       return;
     }
     const container = this.containerEl.createDiv();
-    const weekly = new CodeBlockWeekly(container, journal, this.data.start_date);
-    this.ctx.addChild(weekly);
-    weekly.display();
+
+    const Block = this.mode === "month" ? CodeBlockMonth : CodeBlockWeek;
+    const block = new Block(container, journal, this.data.start_date);
+    this.ctx.addChild(block);
+    block.display();
   }
 }
