@@ -1,16 +1,16 @@
 import { Plugin } from "obsidian";
 import { JournalSettingTab } from "./src/settings/journal-settings";
-import { JournalConfig } from "./src/config/journal-config";
 import { JournalManager } from "./src/journal-manager";
 import { CodeBlockTimelineProcessor } from "./src/code-block/code-block-timeline-processor";
+import { JournalConfigManager } from "./src/config/journal-config-manager";
 
 export default class JournalPlugin extends Plugin {
-  private config: JournalConfig;
+  private config: JournalConfigManager;
   private manager: JournalManager;
   async onload() {
     const appStartup = document.body.querySelector(".progress-bar") !== null;
 
-    this.config = new JournalConfig(this);
+    this.config = new JournalConfigManager(this);
     await this.config.load();
     this.manager = new JournalManager(this.app, this, this.config);
     this.addChild(this.manager);

@@ -1,31 +1,31 @@
 import { App, Component, Plugin, TAbstractFile, TFile } from "obsidian";
-import { JournalConfig } from "./config/journal-config";
 import { CalendarJournal, calendarCommands } from "./calendar-journal/calendar-journal";
 import { FRONTMATTER_ID_KEY } from "./constants";
 import { deepCopy } from "./utils";
 import { DEFAULT_CONFIG_CALENDAR } from "./config/config-defaults";
 import { CalendarConfig, JournalFrontMatter } from "./contracts/config.types";
 import { JournalSuggestModal } from "./ui/journal-suggest-modal";
+import { JournalConfigManager } from "./config/journal-config-manager";
+import { CalendarHelper } from "./utils/calendar";
 
 export class JournalManager extends Component {
   private journals = new Map<string, CalendarJournal>();
-  private defaultId: string;
   private fileFrontMatters = new Map<string, JournalFrontMatter | null>();
+
+  public readonly calendar: CalendarHelper;
 
   constructor(
     private app: App,
     private plugin: Plugin,
-    private config: JournalConfig,
+    private config: JournalConfigManager,
   ) {
     super();
+    this.calendar = new CalendarHelper(this.config.calendar);
     for (const journalConfig of config) {
       switch (journalConfig.type) {
         case "calendar": {
-          const calendar = new CalendarJournal(this.app, journalConfig);
+          const calendar = new CalendarJournal(this.app, journalConfig, this.calendar);
           this.journals.set(journalConfig.id, calendar);
-          if (journalConfig.isDefault) {
-            this.defaultId = journalConfig.id;
-          }
           break;
         }
         default:
@@ -35,7 +35,7 @@ export class JournalManager extends Component {
   }
 
   get defaultJournal() {
-    return this.journals.get(this.defaultId);
+    return this.journals.get(this.config.defaultId);
   }
 
   get(id: string): CalendarJournal | undefined {
@@ -47,23 +47,16 @@ export class JournalManager extends Component {
       ...deepCopy(DEFAULT_CONFIG_CALENDAR),
       id,
       name,
-      isDefault: false,
     };
     this.config.add(config);
     await this.config.save();
-    const calendar = new CalendarJournal(this.app, config);
+    const calendar = new CalendarJournal(this.app, config, this.calendar);
     this.journals.set(id, calendar);
     return id;
   }
 
   async changeDefaultJournal(id: string) {
-    const currentDefault = this.config.get(this.defaultId);
-    if (currentDefault) currentDefault.isDefault = false;
-    const nextDefault = this.config.get(id);
-    if (nextDefault) {
-      nextDefault.isDefault = true;
-      this.defaultId = id;
-    }
+    this.config.defaultId = id;
     await this.config.save();
   }
 

@@ -1,6 +1,5 @@
-import { MarkdownRenderChild } from "obsidian";
+import { MarkdownRenderChild, moment } from "obsidian";
 import { CalendarJournal } from "../calendar-journal/calendar-journal";
-import moment from "moment";
 
 export class CodeBlockWeekly extends MarkdownRenderChild {
   constructor(

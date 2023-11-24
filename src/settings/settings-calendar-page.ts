@@ -1,4 +1,4 @@
-import { CalendarConfig, CalndarSectionBase, SectionName } from "../contracts/config.types";
+import { CalendarConfig, CalendarSection, SectionName } from "../contracts/config.types";
 import { App, Setting } from "obsidian";
 import { FolderSuggestion } from "./ui/folder-suggestion";
 import { SettingsWidget } from "./settings-widget";
@@ -9,6 +9,7 @@ export class SettingsCalendarPage extends SettingsWidget {
     app: App,
     private containerEl: HTMLElement,
     private config: CalendarConfig,
+    private isDefault: boolean,
   ) {
     super(app);
   }
@@ -51,7 +52,7 @@ export class SettingsCalendarPage extends SettingsWidget {
           this.save();
         });
     });
-    if (this.config.isDefault) {
+    if (this.isDefault) {
       const startUp = new Setting(containerEl).setName("Open on Startup").addToggle((toggle) => {
         toggle.setValue(this.config.openOnStartup).onChange(() => {
           this.config.openOnStartup = toggle.getValue();
@@ -99,7 +100,7 @@ export class SettingsCalendarPage extends SettingsWidget {
     this.renderSectionsHeader("yearly", this.config.yearly);
   }
 
-  renderSectionsHeader(sectionName: SectionName, config: CalndarSectionBase): void {
+  renderSectionsHeader(sectionName: SectionName, config: CalendarSection): void {
     const daily = new Setting(this.containerEl).setName(`${capitalize(sectionName)} notes`);
     if (config.enabled) {
       daily.addButton((button) => {

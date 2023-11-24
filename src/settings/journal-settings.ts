@@ -1,11 +1,10 @@
 import { PluginSettingTab, Plugin, App } from "obsidian";
-import { JournalConfig } from "../config/journal-config";
 import { SettingsHomePage } from "./settings-home-page";
 import { SettingsCalendarPage } from "./settings-calendar-page";
 import { JournalManager } from "../journal-manager";
 import { SettingsRouteState } from "../contracts/settings";
 import { SettingsCalendarSectionPage } from "./settings-calendar-section-page";
-import { SettingsCalendarWeeklySectionPage } from "./settings-calendar-weekly-section-page";
+import { JournalConfigManager } from "../config/journal-config-manager";
 
 export class JournalSettingTab extends PluginSettingTab {
   private routeState: SettingsRouteState = {
@@ -16,7 +15,7 @@ export class JournalSettingTab extends PluginSettingTab {
     app: App,
     plugin: Plugin,
     private manager: JournalManager,
-    private config: JournalConfig,
+    private config: JournalConfigManager,
   ) {
     super(app, plugin);
 
@@ -55,25 +54,20 @@ export class JournalSettingTab extends PluginSettingTab {
         switch (journalConfig.type) {
           case "calendar": {
             if (this.routeState.section) {
-              const page =
-                this.routeState.section === "weekly"
-                  ? new SettingsCalendarWeeklySectionPage(
-                      this.app,
-                      journalConfig,
-                      containerEl,
-                      journalConfig[this.routeState.section],
-                      this.routeState.section,
-                    )
-                  : new SettingsCalendarSectionPage(
-                      this.app,
-                      journalConfig,
-                      containerEl,
-                      journalConfig[this.routeState.section],
-                      this.routeState.section,
-                    );
-              page.display();
+              new SettingsCalendarSectionPage(
+                this.app,
+                journalConfig,
+                containerEl,
+                journalConfig[this.routeState.section],
+                this.routeState.section,
+              ).display();
             } else {
-              new SettingsCalendarPage(this.app, containerEl, journalConfig).display();
+              new SettingsCalendarPage(
+                this.app,
+                containerEl,
+                journalConfig,
+                this.config.defaultId === journalConfig.id,
+              ).display();
             }
             break;
           }

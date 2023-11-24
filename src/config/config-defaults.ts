@@ -1,10 +1,9 @@
-import { CalendarConfig } from "../contracts/config.types";
+import { CalendarConfig, PluginSettings } from "../contracts/config.types";
 
 export const DEFAULT_CONFIG_CALENDAR: CalendarConfig = {
   id: "my-journal",
   type: "calendar",
   name: "My Journal",
-  isDefault: true,
   rootFolder: "",
   openOnStartup: false,
   startupSection: "daily",
@@ -26,8 +25,6 @@ export const DEFAULT_CONFIG_CALENDAR: CalendarConfig = {
   weekly: {
     enabled: false,
     openMode: "active",
-    firstDayOfWeek: -1,
-    firstWeekOfYear: 1,
     titleTemplate: "{{date}}",
     dateFormat: "YYYY-[W]ww",
     folder: "",
@@ -80,5 +77,16 @@ export const DEFAULT_CONFIG_CALENDAR: CalendarConfig = {
       tooltip: "",
     },
     createOnStartup: false,
+  },
+};
+
+export const DEFAULT_PLUGIN_SETTINGS: PluginSettings = {
+  journals: {
+    "my-journal": DEFAULT_CONFIG_CALENDAR,
+  },
+  defaultId: "my-journal",
+  calendar: {
+    firstDayOfWeek: -1,
+    firstWeekOfYear: 1,
   },
 };

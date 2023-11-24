@@ -1,15 +1,15 @@
-import { App, Setting } from "obsidian";
-import { JournalConfig } from "../config/journal-config";
+import { App, Setting, moment } from "obsidian";
 import { CreateJournalModal } from "./ui/create-journal-modal";
 import { JournalManager } from "../journal-manager";
 import { SettingsWidget } from "./settings-widget";
+import { JournalConfigManager } from "../config/journal-config-manager";
 
 export class SettingsHomePage extends SettingsWidget {
   constructor(
     app: App,
     private manager: JournalManager,
     private containerEl: HTMLElement,
-    private config: JournalConfig,
+    private config: JournalConfigManager,
   ) {
     super(app);
   }
@@ -46,7 +46,7 @@ export class SettingsHomePage extends SettingsWidget {
               });
             });
         });
-      if (entry.isDefault) {
+      if (this.config.defaultId === entry.id) {
         const defaultBadge = setting.nameEl.createEl("span");
         defaultBadge.innerText = "Default";
         defaultBadge.classList.add("flair");
@@ -67,6 +67,44 @@ export class SettingsHomePage extends SettingsWidget {
             button.setIcon("trash-2").setTooltip(`Delete ${entry.name}`).setClass("clickable-icon");
           });
       }
+    }
+
+    new Setting(containerEl).setName("Calendar Settings").setHeading();
+
+    new Setting(containerEl).setName("First Day of Week").addDropdown((dropdown) => {
+      const fow = moment().localeData().firstDayOfWeek();
+      const fowText = moment().localeData().weekdays()[fow];
+      dropdown
+        .addOptions({
+          "-1": `From Locale (${fowText})`,
+          "0": "Sunday",
+          "1": "Monday",
+          "2": "Tuesday",
+          "3": "Wednesday",
+          "4": "Thursday",
+          "5": "Friday",
+          "6": "Saturday",
+        })
+        .setValue(String(this.config.calendar.firstDayOfWeek))
+        .onChange((value) => {
+          this.config.calendar.firstDayOfWeek = parseInt(value, 10);
+          this.manager.calendar.updateLocale();
+          this.save(true);
+        });
+    });
+    if (this.config.calendar.firstDayOfWeek !== -1) {
+      const s = new Setting(containerEl).setName("First Week of Year");
+      s.setDesc(`First week of year must contain ${this.config.calendar.firstWeekOfYear ?? 1} January`);
+      s.addText((text) => {
+        text.setValue(String(this.config.calendar.firstWeekOfYear ?? 1)).onChange((value) => {
+          if (value) {
+            this.config.calendar.firstWeekOfYear = parseInt(value, 10);
+            this.manager.calendar.updateLocale();
+            s.setDesc(`First week of year must contain ${this.config.calendar.firstWeekOfYear ?? 1} January`);
+            this.save();
+          }
+        });
+      });
     }
   }
 }

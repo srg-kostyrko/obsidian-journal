@@ -1,15 +1,6 @@
-import { App, FrontMatterCache, Plugin, moment } from "obsidian";
-import {
-  CalendarConfig,
-  CalendarGranularity,
-  CalerndatFrontMatter,
-  DailyCalendarSection,
-  MonthlyCalendarSection,
-  QuarterlyCalendarSection,
-  YearlyCalendarSection,
-} from "../contracts/config.types";
+import { App, FrontMatterCache, Plugin } from "obsidian";
+import { CalendarConfig, CalendarGranularity, CalerndatFrontMatter } from "../contracts/config.types";
 import { CalendarJournalSection } from "./calendar-journal-section";
-import { CalendarJournalSectionWeekly } from "./calendar-journal-section-weekly";
 import {
   FRONTMATTER_DATE_FORMAT,
   FRONTMATTER_END_DATE_KEY,
@@ -17,6 +8,7 @@ import {
   FRONTMATTER_START_DATE_KEY,
 } from "../constants";
 import { CalendarIndex } from "./calendar-index";
+import { CalendarHelper } from "../utils/calendar";
 
 export const calendarCommands = {
   "calendar:open-daily": "Open daily note",
@@ -37,23 +29,24 @@ export const calendarCommands = {
 };
 
 export class CalendarJournal {
-  public readonly daily: CalendarJournalSection<DailyCalendarSection>;
-  public readonly weekly: CalendarJournalSectionWeekly;
-  public readonly monthly: CalendarJournalSection<MonthlyCalendarSection>;
-  public readonly quarterly: CalendarJournalSection<QuarterlyCalendarSection>;
-  public readonly yearly: CalendarJournalSection<YearlyCalendarSection>;
+  public readonly daily: CalendarJournalSection;
+  public readonly weekly: CalendarJournalSection;
+  public readonly monthly: CalendarJournalSection;
+  public readonly quarterly: CalendarJournalSection;
+  public readonly yearly: CalendarJournalSection;
 
   public readonly index = new CalendarIndex();
 
   constructor(
     private app: App,
     public readonly config: CalendarConfig,
+    private calendar: CalendarHelper,
   ) {
-    this.daily = new CalendarJournalSection(app, this, this.config.daily, "day");
-    this.weekly = new CalendarJournalSectionWeekly(app, this, this.config.weekly, "week");
-    this.monthly = new CalendarJournalSection(app, this, this.config.monthly, "month");
-    this.quarterly = new CalendarJournalSection(app, this, this.config.quarterly, "quarter");
-    this.yearly = new CalendarJournalSection(app, this, this.config.yearly, "year");
+    this.daily = new CalendarJournalSection(app, this, this.config.daily, "day", this.calendar);
+    this.weekly = new CalendarJournalSection(app, this, this.config.weekly, "week", this.calendar);
+    this.monthly = new CalendarJournalSection(app, this, this.config.monthly, "month", this.calendar);
+    this.quarterly = new CalendarJournalSection(app, this, this.config.quarterly, "quarter", this.calendar);
+    this.yearly = new CalendarJournalSection(app, this, this.config.yearly, "year", this.calendar);
   }
 
   get id(): string {
@@ -166,8 +159,8 @@ export class CalendarJournal {
   }
 
   indexNote(frontmatter: CalerndatFrontMatter, path: string): void {
-    const startDate = moment(frontmatter.start_date, FRONTMATTER_DATE_FORMAT);
-    const endDate = moment(frontmatter.end_date, FRONTMATTER_DATE_FORMAT);
+    const startDate = this.calendar.date(frontmatter.start_date, FRONTMATTER_DATE_FORMAT);
+    const endDate = this.calendar.date(frontmatter.end_date, FRONTMATTER_DATE_FORMAT);
     this.index.add(startDate, endDate, { path, granularity: frontmatter.granularity });
   }
 

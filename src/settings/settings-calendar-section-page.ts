@@ -1,17 +1,17 @@
-import { CalendarConfig, CalndarSectionBase } from "../contracts/config.types";
+import { CalendarConfig, CalendarSection } from "../contracts/config.types";
 import { App, ButtonComponent, Setting } from "obsidian";
 import { FolderSuggestion } from "./ui/folder-suggestion";
 import { IconSuggestion } from "./ui/icon-suggestion";
 import { SettingsWidget } from "./settings-widget";
 import { capitalize } from "../utils";
 
-export class SettingsCalendarSectionPage<T extends CalndarSectionBase> extends SettingsWidget {
+export class SettingsCalendarSectionPage extends SettingsWidget {
   private folderSuggestions: FolderSuggestion[] = [];
   constructor(
     app: App,
     protected journal: CalendarConfig,
     protected containerEl: HTMLElement,
-    protected config: T,
+    protected config: CalendarSection,
     protected title: string,
   ) {
     super(app);
@@ -44,7 +44,7 @@ export class SettingsCalendarSectionPage<T extends CalndarSectionBase> extends S
         })
         .setValue(this.config.openMode ?? "active")
         .onChange((value) => {
-          this.config.openMode = value as CalndarSectionBase["openMode"];
+          this.config.openMode = value as CalendarSection["openMode"];
           this.save();
         });
     });

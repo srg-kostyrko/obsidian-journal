@@ -1,10 +1,18 @@
 export type CalendarGranularity = "day" | "week" | "month" | "quarter" | "year";
 export type SectionName = "daily" | "weekly" | "monthly" | "quarterly" | "yearly";
 
+export interface PluginSettings {
+  journals: Record<string, JournalConfig>;
+  defaultId: string;
+  calendar: {
+    firstDayOfWeek: number;
+    firstWeekOfYear: number;
+  };
+}
+
 interface JournalCaseConfig {
   id: string;
   name: string;
-  isDefault: boolean;
 }
 
 export interface CalendarConfig extends JournalCaseConfig {
@@ -14,14 +22,14 @@ export interface CalendarConfig extends JournalCaseConfig {
   openOnStartup: boolean;
   startupSection: SectionName;
 
-  daily: DailyCalendarSection;
-  weekly: WeeklyCalendarSection;
-  monthly: MonthlyCalendarSection;
-  quarterly: QuarterlyCalendarSection;
-  yearly: YearlyCalendarSection;
+  daily: CalendarSection;
+  weekly: CalendarSection;
+  monthly: CalendarSection;
+  quarterly: CalendarSection;
+  yearly: CalendarSection;
 }
 
-export interface CalndarSectionBase {
+export interface CalendarSection {
   enabled: boolean;
   openMode: "active" | "tab" | "split" | "window";
   titleTemplate: string;
@@ -36,21 +44,11 @@ export interface CalndarSectionBase {
   createOnStartup: boolean;
 }
 
-export interface DailyCalendarSection extends CalndarSectionBase {}
-
-export interface WeeklyCalendarSection extends CalndarSectionBase {
-  firstDayOfWeek: number;
-  firstWeekOfYear: number;
-}
-export interface MonthlyCalendarSection extends CalndarSectionBase {}
-export interface QuarterlyCalendarSection extends CalndarSectionBase {}
-export interface YearlyCalendarSection extends CalndarSectionBase {}
-
 export interface IntervalConfig extends JournalCaseConfig {
   type: "interval";
 }
 
-export type JournalConfigs = CalendarConfig | IntervalConfig;
+export type JournalConfig = CalendarConfig | IntervalConfig;
 
 export interface CalerndatFrontMatter {
   type: "calendar";

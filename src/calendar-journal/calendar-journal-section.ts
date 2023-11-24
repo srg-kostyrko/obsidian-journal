@@ -1,5 +1,5 @@
-import { App, TFile, Plugin, moment } from "obsidian";
-import { CalendarGranularity, CalndarSectionBase } from "../contracts/config.types";
+import { App, TFile, Plugin } from "obsidian";
+import { CalendarGranularity, CalendarSection } from "../contracts/config.types";
 import { CalendarJournal } from "./calendar-journal";
 import { ensureFolderExists } from "../utils/io";
 import { replaceTemplateVariables } from "../utils/template";
@@ -13,13 +13,15 @@ import {
   SECTIONS_MAP,
 } from "../constants";
 import { MomentDate } from "../contracts/date.types";
+import { CalendarHelper } from "../utils/calendar";
 
-export class CalendarJournalSection<T extends CalndarSectionBase> {
+export class CalendarJournalSection {
   constructor(
     protected app: App,
     protected journal: CalendarJournal,
-    protected config: T,
+    protected config: CalendarSection,
     protected granularity: CalendarGranularity,
+    protected calendar: CalendarHelper,
   ) {}
 
   get folderPath(): string {
@@ -31,11 +33,11 @@ export class CalendarJournalSection<T extends CalndarSectionBase> {
   }
 
   getRangeStart(date?: string): MomentDate {
-    return moment(date).startOf(this.granularity);
+    return this.calendar.date(date).startOf(this.granularity);
   }
 
   getRangeEnd(date?: string): MomentDate {
-    return moment(date).endOf(this.granularity);
+    return this.calendar.date(date).endOf(this.granularity);
   }
 
   async autoCreateNote(): Promise<void> {
