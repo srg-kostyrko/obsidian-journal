@@ -1,0 +1,51 @@
+.journal-clickable {
+  cursor: pointer;
+}
+.journal-weekly-title {
+  padding-left: 6px;
+}
+
+.journal-weekly-view {
+  display: grid;
+  grid-template-columns: repeat(7, 30px);
+  gap: 6px;
+}
+
+.journal-weekly-weekday {
+  font-size: 0.7em;
+  display: flex;
+  flex-direction: column;
+  text-align: center;
+}
+
+.journal-weekly-day {
+  border: 1px solid transparent;
+  border-radius: 50%;
+  height: 28px;
+  line-height: 26px;
+  width: 28px;
+  cursor: pointer;
+}
+
+.journal-weekly-day:hover {
+  border-color: var(--background-modifier-border);
+}
+
+.is-selected .journal-weekly-day {
+  background-color: var(--background-secondary);
+}
+
+.journal-is-today .journal-weekly-day {
+  color: var(--text-accent);
+  font-weight: 600;
+}
+
+.journal-weekly-day-of-week {
+  color: var(--text-muted);
+  font-size: 0.9em;
+  font-weight: 600;
+  letter-spacing: 0.2px;
+}
+.is-selected .journal-weekly-day-of-week {
+  color: var(--text-normal);
+}

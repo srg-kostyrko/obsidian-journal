@@ -1,8 +1,9 @@
 import { MarkdownPostProcessorContext, MarkdownRenderChild } from "obsidian";
 import { JournalManager } from "../journal-manager";
 import { JournalFrontMatter } from "../contracts/config.types";
+import { CodeBlockWeekly } from "./code-block-weekly";
 
-export class CodeBlockProcessor extends MarkdownRenderChild {
+export class CodeBlockTimelineProcessor extends MarkdownRenderChild {
   private data: JournalFrontMatter | null = null;
   constructor(
     private manager: JournalManager,
@@ -27,6 +28,14 @@ export class CodeBlockProcessor extends MarkdownRenderChild {
       this.containerEl.appendText("no data");
       return;
     }
-    this.containerEl.appendText("works");
+    const journal = this.manager.get(this.data.id) || this.manager.defaultJournal;
+    if (!journal) {
+      this.containerEl.appendText("no journal");
+      return;
+    }
+    const container = this.containerEl.createDiv();
+    const weekly = new CodeBlockWeekly(container, journal, this.data.start_date);
+    this.ctx.addChild(weekly);
+    weekly.display();
   }
 }

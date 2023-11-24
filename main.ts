@@ -2,7 +2,7 @@ import { Plugin } from "obsidian";
 import { JournalSettingTab } from "./src/settings/journal-settings";
 import { JournalConfig } from "./src/config/journal-config";
 import { JournalManager } from "./src/journal-manager";
-import { CodeBlockProcessor } from "./src/code-block/code-block-processor";
+import { CodeBlockTimelineProcessor } from "./src/code-block/code-block-timeline-processor";
 
 export default class JournalPlugin extends Plugin {
   private config: JournalConfig;
@@ -19,8 +19,8 @@ export default class JournalPlugin extends Plugin {
 
     this.manager.configureRibbonIcons();
 
-    this.registerMarkdownCodeBlockProcessor("journal", (source, el, ctx) => {
-      const processor = new CodeBlockProcessor(this.manager, source, el, ctx);
+    this.registerMarkdownCodeBlockProcessor("journal-timeline", (source, el, ctx) => {
+      const processor = new CodeBlockTimelineProcessor(this.manager, source, el, ctx);
       ctx.addChild(processor);
       processor.display();
     });

@@ -38,6 +38,10 @@ export class JournalManager extends Component {
     return this.journals.get(this.defaultId);
   }
 
+  get(id: string): CalendarJournal | undefined {
+    return this.journals.get(id);
+  }
+
   async createCalendarJournal(id: string, name: string): Promise<string> {
     const config: CalendarConfig = {
       ...deepCopy(DEFAULT_CONFIG_CALENDAR),

@@ -30,17 +30,18 @@ export class CalendarJournalSection<T extends CalndarSectionBase> {
     return folderPath.join("/").replaceAll(/\/{2,}/g, "/");
   }
 
-  get startDate(): MomentDate {
-    return moment().startOf(this.granularity);
+  getRangeStart(date?: string): MomentDate {
+    return moment(date).startOf(this.granularity);
   }
-  get endDate(): MomentDate {
-    return this.startDate.clone().endOf(this.granularity);
+
+  getRangeEnd(date?: string): MomentDate {
+    return moment(date).endOf(this.granularity);
   }
 
   async autoCreateNote(): Promise<void> {
     if (!this.config.enabled) return;
     if (!this.config.createOnStartup) return;
-    await this.ensureDateNote(this.startDate, this.endDate);
+    await this.ensureDateNote(this.getRangeStart(), this.getRangeEnd());
   }
 
   configureRibbonIcons(plugin: Plugin): void {
@@ -55,18 +56,18 @@ export class CalendarJournalSection<T extends CalndarSectionBase> {
     );
   }
 
-  async open(): Promise<void> {
-    return await this.openDate(this.startDate, this.endDate);
+  async open(date?: string): Promise<void> {
+    return await this.openDate(this.getRangeStart(date), this.getRangeEnd(date));
   }
 
-  async openNext(): Promise<void> {
-    const startDate = this.startDate.add(1, this.granularity);
+  async openNext(date?: string): Promise<void> {
+    const startDate = this.getRangeStart(date).add(1, this.granularity);
     const endDate = startDate.clone().endOf(this.granularity);
     return await this.openDate(startDate, endDate);
   }
 
-  async openPrev(): Promise<void> {
-    const startDate = this.startDate.subtract(1, this.granularity);
+  async openPrev(date?: string): Promise<void> {
+    const startDate = this.getRangeStart(date).subtract(1, this.granularity);
     const endDate = startDate.clone().endOf(this.granularity);
     return await this.openDate(startDate, endDate);
   }

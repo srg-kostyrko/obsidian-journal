@@ -5,13 +5,22 @@ import { CalendarJournalSection } from "./calendar-journal-section";
 import { extractCurrentlocaleData } from "../utils/moment";
 
 export class CalendarJournalSectionWeekly extends CalendarJournalSection<WeeklyCalendarSection> {
-  get startDate(): MomentDate {
-    const base = moment();
+  getRangeStart(date?: string): MomentDate {
+    const base = date ? moment(date) : moment();
     if (this.config.firstDayOfWeek < 0) {
       return base.startOf(this.granularity);
     }
     base.locale(this.locale);
     return base.startOf(this.granularity);
+  }
+
+  getRangeEnd(date?: string): MomentDate {
+    const base = date ? moment(date) : moment();
+    if (this.config.firstDayOfWeek < 0) {
+      return base.endOf(this.granularity);
+    }
+    base.locale(this.locale);
+    return base.endOf(this.granularity);
   }
 
   get locale(): string {
