@@ -73,14 +73,15 @@
   color: var(--code-comment);
 }
 
-.journal-day-nav-view {
+.journal-nav-view {
   display: flex;
   justify-content: space-around;
   align-items: flex-start;
   text-align: center;
 }
 
-.journal-day-nav {
+.journal-day-nav,
+.journal-week-nav {
   position: relative;
 }
 
@@ -88,20 +89,23 @@
   font-weight: bold;
   font-size: 3em;
 }
-
 .journal-nav-week {
+  font-weight: bold;
+  font-size: 2.5em;
+}
+.journal-day-nav .journal-nav-week {
   font-size: 0.8em;
 }
 
-.journal-day-nav-icon {
+.journal-nav-icon {
   --icon-size: 3em;
   position: absolute;
   top: 30%;
 }
-.journal-day-nav-icon-prev {
+.journal-nav-icon-prev {
   left: -5em;
 }
-.journal-day-nav-icon-next {
+.journal-nav-icon-next {
   right: -5em;
 }
 .journal-nav-relative {

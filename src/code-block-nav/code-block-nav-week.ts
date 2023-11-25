@@ -2,7 +2,7 @@ import { MarkdownPostProcessorContext, MarkdownRenderChild, getIcon } from "obsi
 import { CalendarJournal } from "../calendar-journal/calendar-journal";
 import { MomentDate } from "../contracts/date.types";
 
-export class CodeBlockNavDay extends MarkdownRenderChild {
+export class CodeBlockNavWeek extends MarkdownRenderChild {
   constructor(
     containerEl: HTMLElement,
     protected journal: CalendarJournal,
@@ -15,38 +15,38 @@ export class CodeBlockNavDay extends MarkdownRenderChild {
   display() {
     this.containerEl.empty();
 
-    const date = this.journal.date(this.date);
+    const date = this.journal.date(this.date).startOf("week");
 
     const view = this.containerEl.createDiv({
       cls: "journal-nav-view",
     });
 
-    const prevDay = view.createDiv({
-      cls: "journal-day-nav journal-day-nav-prev",
+    const prevWeek = view.createDiv({
+      cls: "journal-week-nav journal-week-nav-prev",
     });
-    this.renderDay(prevDay, date.clone().subtract(1, "day"));
+    this.renderWeek(prevWeek, date.clone().subtract(1, "week"));
 
-    const currentDay = view.createDiv({
-      cls: "journal-day-nav journal-day-nav-current",
+    const currentWeek = view.createDiv({
+      cls: "journal-week-nav journal-week-nav-current",
     });
-    this.renderDay(currentDay, date, false);
+    this.renderWeek(currentWeek, date, false);
 
-    const iconPrev = currentDay.createDiv({
+    const iconPrev = currentWeek.createDiv({
       cls: "journal-nav-icon journal-nav-icon-prev",
     });
     const iconPrevEl = getIcon("arrow-left");
     if (iconPrevEl) iconPrev.appendChild(iconPrevEl);
 
-    const iconNext = currentDay.createDiv({
+    const iconNext = currentWeek.createDiv({
       cls: "journal-nav-icon journal-nav-icon-next",
     });
     const iconNextEl = getIcon("arrow-right");
     if (iconNextEl) iconNext.appendChild(iconNextEl);
 
     const nextDay = view.createDiv({
-      cls: "journal-day-nav journal-day-nav-next",
+      cls: "journal-week-nav journal-week-nav-next",
     });
-    this.renderDay(nextDay, date.clone().add(1, "day"));
+    this.renderWeek(nextDay, date.clone().add(1, "week"));
 
     if (this.journal.config.daily.enabled) {
       iconPrev.classList.add("journal-clickable");
@@ -54,57 +54,38 @@ export class CodeBlockNavDay extends MarkdownRenderChild {
       iconNext.classList.add("journal-clickable");
       iconNext.dataset.date = date.clone().add(1, "day").format("YYYY-MM-DD");
 
-      iconPrev.on("click", ".journal-nav-icon-prev, .journal-nav-icon-next", (e) => {
-        const date = (e.currentTarget as HTMLElement)?.dataset?.date;
-        if (date) {
-          this.journal.daily.open(date);
-        }
-      });
-    }
-  }
-
-  renderDay(parent: HTMLElement, date: MomentDate, dayClickable = true) {
-    const dayWrapper = parent.createDiv({
-      cls: "journal-nav-day-wrapper",
-    });
-    dayWrapper.createDiv({
-      cls: "journal-nav-week",
-      text: date.format("ddd"),
-    });
-    dayWrapper.createDiv({
-      cls: "journal-nav-day",
-      text: date.format("D"),
-    });
-    dayWrapper.createDiv({
-      cls: "journal-nav-relative",
-      text: this.journal.fromToday(date.format("YYYY-MM-DD")),
-    });
-    if (dayClickable && this.journal.config.daily.enabled) {
-      dayWrapper.dataset.date = date.format("YYYY-MM-DD");
-      dayWrapper.classList.add("journal-clickable");
-      dayWrapper.on("click", ".journal-nav-day-wrapper", (e) => {
-        console.log("click", e);
-        const date = (e.currentTarget as HTMLElement)?.dataset?.date;
-        if (date) {
-          this.journal.daily.open(date);
-        }
-      });
-    }
-
-    if (this.journal.config.weekly.enabled) {
-      const week = parent.createDiv({
-        cls: "journal-nav-week",
-        text: date.format("[W]w"),
-      });
-      week.classList.add("journal-clickable");
-      week.dataset.date = date.format("YYYY-MM-DD");
-      week.on("click", ".journal-nav-week", (e) => {
+      view.on("click", ".journal-day-nav-icon", (e) => {
         const date = (e.currentTarget as HTMLElement)?.dataset?.date;
         if (date) {
           this.journal.weekly.open(date);
         }
       });
     }
+  }
+
+  renderWeek(parent: HTMLElement, date: MomentDate, weekClickable = true) {
+    const weekWrapper = parent.createDiv({
+      cls: "journal-nav-week-wrapper",
+    });
+    weekWrapper.createDiv({
+      cls: "journal-nav-week",
+      text: date.format("[W]ww"),
+    });
+    if (weekClickable && this.journal.config.daily.enabled) {
+      weekWrapper.dataset.date = date.format("YYYY-MM-DD");
+      weekWrapper.classList.add("journal-clickable");
+      weekWrapper.on("click", ".journal-nav-week", (e) => {
+        console.log("click", e);
+        const date = (e.currentTarget as HTMLElement)?.dataset?.date;
+        if (date) {
+          this.journal.weekly.open(date);
+        }
+      });
+    }
+    weekWrapper.createDiv({
+      cls: "journal-nav-relative",
+      text: this.relativeWeek(date),
+    });
 
     const month = parent.createDiv({
       cls: "journal-nav-month",
@@ -134,5 +115,22 @@ export class CodeBlockNavDay extends MarkdownRenderChild {
         }
       });
     }
+  }
+
+  relativeWeek(date: MomentDate) {
+    const thisWeek = this.journal.today.startOf("week");
+    const fromNow = date.diff(thisWeek, "week");
+    console.log(thisWeek, date, fromNow);
+    if (fromNow === 0) {
+      return "This week";
+    } else if (fromNow === -1) {
+      return "Last week";
+    } else if (fromNow === 1) {
+      return "Next week";
+    }
+    if (fromNow < 0) {
+      return `${Math.abs(fromNow)} weeks ago`;
+    }
+    return `${fromNow} weeks from now`;
   }
 }
