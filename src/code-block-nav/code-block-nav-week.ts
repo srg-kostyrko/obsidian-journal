@@ -50,9 +50,9 @@ export class CodeBlockNavWeek extends MarkdownRenderChild {
 
     if (this.journal.config.daily.enabled) {
       iconPrev.classList.add("journal-clickable");
-      iconPrev.dataset.date = date.clone().subtract(1, "day").format("YYYY-MM-DD");
+      iconPrev.dataset.date = date.clone().subtract(1, "week").format("YYYY-MM-DD");
       iconNext.classList.add("journal-clickable");
-      iconNext.dataset.date = date.clone().add(1, "day").format("YYYY-MM-DD");
+      iconNext.dataset.date = date.clone().add(1, "week").format("YYYY-MM-DD");
 
       view.on("click", ".journal-day-nav-icon", (e) => {
         const date = (e.currentTarget as HTMLElement)?.dataset?.date;

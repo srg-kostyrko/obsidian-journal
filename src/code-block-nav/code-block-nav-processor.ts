@@ -1,7 +1,7 @@
 import { MarkdownPostProcessorContext, MarkdownRenderChild } from "obsidian";
 import { JournalManager } from "../journal-manager";
 import { JournalFrontMatter } from "../contracts/config.types";
-import { CodeBlockNavWeek } from "./code-block-nav-week";
+import { CodeBlockNavMonth } from "./code-block-nav-month";
 
 export class CodeBlockNavProcessor extends MarkdownRenderChild {
   private data: JournalFrontMatter | null = null;
@@ -35,7 +35,7 @@ export class CodeBlockNavProcessor extends MarkdownRenderChild {
     }
     const container = this.containerEl.createDiv();
 
-    const block = new CodeBlockNavWeek(container, journal, this.data.start_date, this.ctx);
+    const block = new CodeBlockNavMonth(container, journal, this.data.start_date, this.ctx);
     this.ctx.addChild(block);
     block.display();
   }

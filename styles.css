@@ -81,7 +81,8 @@
 }
 
 .journal-day-nav,
-.journal-week-nav {
+.journal-week-nav,
+.journal-month-nav {
   position: relative;
 }
 
@@ -110,4 +111,7 @@
 }
 .journal-nav-relative {
   font-size: 0.7em;
+}
+.journal-month-nav .journal-nav-month {
+  font-size: 2em;
 }
