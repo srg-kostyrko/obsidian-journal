@@ -27,6 +27,6 @@ module.exports = {
   },
   plugins: ["@typescript-eslint"],
   rules: {
-    "no-console": "error",
+    "no-console": ["error", { allow: ["warn", "error"] }],
   },
 };

@@ -33,7 +33,7 @@ export class CodeBlockWeek extends MarkdownRenderChild {
     });
     if (this.journal.config.daily.enabled) {
       view.on("click", ".journal-weekday", (e) => {
-        const date = (e.currentTarget as HTMLElement)?.dataset?.date;
+        const date = (e.target as HTMLElement).closest<HTMLElement>("[data-date]")?.dataset?.date;
         if (date) {
           this.journal.daily.open(date);
         }

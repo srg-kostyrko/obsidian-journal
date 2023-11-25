@@ -14,6 +14,7 @@ export class CodeBlockMonth extends MarkdownRenderChild {
 
   display() {
     this.containerEl.empty();
+    this.containerEl.classList.add("journal-month-timeline");
     const today = this.journal.today;
 
     const start = this.journal.monthly.getRangeStart(this.date);
@@ -36,7 +37,7 @@ export class CodeBlockMonth extends MarkdownRenderChild {
     });
     if (this.journal.config.daily.enabled) {
       view.on("click", ".journal-day", (e) => {
-        const date = (e.currentTarget as HTMLElement)?.dataset?.date;
+        const date = (e.target as HTMLElement).closest<HTMLElement>("[data-date]")?.dataset?.date;
         if (date) {
           this.journal.daily.open(date);
         }

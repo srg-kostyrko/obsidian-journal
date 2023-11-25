@@ -16,6 +16,14 @@
 .journal-month-with-week {
   grid-template-columns: 35px repeat(7, 30px);
 }
+
+.journal-month-timeline {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+}
+
 .journal-calendar-view {
   display: grid;
   grid-template-columns: repeat(2, 1fr);
@@ -122,4 +130,10 @@
 }
 .journal-year-nav .journal-nav-year {
   font-size: 3em;
+}
+
+.journal-nav-prev,
+.journal-nav-next {
+  font-size: 0.8em;
+  margin-top: 0.5em;
 }

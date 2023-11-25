@@ -23,13 +23,11 @@ export default class JournalPlugin extends Plugin {
     this.registerMarkdownCodeBlockProcessor("journal-timeline", (source, el, ctx) => {
       const processor = new CodeBlockTimelineProcessor(this.manager, source, el, ctx);
       ctx.addChild(processor);
-      processor.display();
     });
 
     this.registerMarkdownCodeBlockProcessor("journal-nav", (source, el, ctx) => {
       const processor = new CodeBlockNavProcessor(this.manager, source, el, ctx);
       ctx.addChild(processor);
-      processor.display();
     });
 
     this.app.workspace.onLayoutReady(async () => {
