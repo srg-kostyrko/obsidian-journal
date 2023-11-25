@@ -26,7 +26,23 @@ export class CalendarHelper {
     if (this.config.firstDayOfWeek !== -1) {
       md.locale(CUSTOM_LOCALE);
     }
-    return md;
+    return md.startOf("day");
+  }
+
+  fromToday(dateStr: string): string {
+    const today = this.today();
+    const date = this.date(dateStr);
+
+    return date.calendar(today, {
+      lastWeek: "[Last] dddd",
+      lastDay: "[Yesterday]",
+      sameDay: "[Today]",
+      nextDay: "[Tomorrow]",
+      nextWeek: "dddd",
+      sameElse: function () {
+        return "[" + date.from(today) + "]";
+      },
+    });
   }
 
   updateLocale(): void {

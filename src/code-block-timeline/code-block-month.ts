@@ -36,7 +36,7 @@ export class CodeBlockMonth extends MarkdownRenderChild {
     });
     if (this.journal.config.daily.enabled) {
       view.on("click", ".journal-day", (e) => {
-        const date = (e.target as HTMLElement)?.dataset?.date;
+        const date = (e.currentTarget as HTMLElement)?.dataset?.date;
         if (date) {
           this.journal.daily.open(date);
         }
@@ -65,7 +65,7 @@ export class CodeBlockMonth extends MarkdownRenderChild {
           weekNum.classList.add("journal-clickable");
           weekNum.dataset.date = curr.format("YYYY-MM-DD");
           weekNum.on("click", ".journal-weeknumber", (e) => {
-            const date = (e.target as HTMLElement)?.dataset?.date;
+            const date = (e.currentTarget as HTMLElement)?.dataset?.date;
             if (date) {
               this.journal.weekly.open(date);
             }

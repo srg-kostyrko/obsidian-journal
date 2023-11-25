@@ -58,6 +58,14 @@ export class CalendarJournal {
     return this.calendar.today();
   }
 
+  date(date?: string, format?: string): MomentDate {
+    return this.calendar.date(date, format);
+  }
+
+  fromToday(date: string): string {
+    return this.calendar.fromToday(date);
+  }
+
   supportsCommand(id: string): boolean {
     switch (id) {
       case "calendar:open-daily":

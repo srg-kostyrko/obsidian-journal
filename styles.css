@@ -72,3 +72,38 @@
 .journal-is-not-same-month {
   color: var(--code-comment);
 }
+
+.journal-day-nav-view {
+  display: flex;
+  justify-content: space-around;
+  align-items: flex-start;
+  text-align: center;
+}
+
+.journal-day-nav {
+  position: relative;
+}
+
+.journal-nav-day {
+  font-weight: bold;
+  font-size: 3em;
+}
+
+.journal-nav-week {
+  font-size: 0.8em;
+}
+
+.journal-day-nav-icon {
+  --icon-size: 3em;
+  position: absolute;
+  top: 30%;
+}
+.journal-day-nav-icon-prev {
+  left: -5em;
+}
+.journal-day-nav-icon-next {
+  right: -5em;
+}
+.journal-nav-relative {
+  font-size: 0.7em;
+}

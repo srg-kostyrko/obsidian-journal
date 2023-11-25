@@ -3,6 +3,7 @@ import { JournalSettingTab } from "./src/settings/journal-settings";
 import { JournalManager } from "./src/journal-manager";
 import { CodeBlockTimelineProcessor } from "./src/code-block-timeline/code-block-timeline-processor";
 import { JournalConfigManager } from "./src/config/journal-config-manager";
+import { CodeBlockNavProcessor } from "./src/code-block-nav/code-block-nav-processor";
 
 export default class JournalPlugin extends Plugin {
   private config: JournalConfigManager;
@@ -21,6 +22,12 @@ export default class JournalPlugin extends Plugin {
 
     this.registerMarkdownCodeBlockProcessor("journal-timeline", (source, el, ctx) => {
       const processor = new CodeBlockTimelineProcessor(this.manager, source, el, ctx);
+      ctx.addChild(processor);
+      processor.display();
+    });
+
+    this.registerMarkdownCodeBlockProcessor("journal-nav", (source, el, ctx) => {
+      const processor = new CodeBlockNavProcessor(this.manager, source, el, ctx);
       ctx.addChild(processor);
       processor.display();
     });
