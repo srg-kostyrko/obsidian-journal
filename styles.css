@@ -83,7 +83,8 @@
 .journal-day-nav,
 .journal-week-nav,
 .journal-month-nav,
-.journal-quarter-nav {
+.journal-quarter-nav,
+.journal-year-nav {
   position: relative;
 }
 
@@ -117,5 +118,8 @@
   font-size: 2em;
 }
 .journal-quarter-nav .journal-nav-quarter {
+  font-size: 3em;
+}
+.journal-year-nav .journal-nav-year {
   font-size: 3em;
 }

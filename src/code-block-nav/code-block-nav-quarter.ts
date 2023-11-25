@@ -52,8 +52,8 @@ export class CodeBlockNavQuarter extends CodeBlockNav {
       return "Next quarter";
     }
     if (fromNow < 0) {
-      return `${Math.abs(fromNow)} quarter ago`;
+      return `${Math.abs(fromNow)} quarters ago`;
     }
-    return `${fromNow} quarter from now`;
+    return `${fromNow} quarters from now`;
   }
 }
