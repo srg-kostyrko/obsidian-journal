@@ -1,7 +1,7 @@
 import { Plugin } from "obsidian";
 import { JournalSettingTab } from "./src/settings/journal-settings";
 import { JournalManager } from "./src/journal-manager";
-import { CodeBlockTimelineProcessor } from "./src/code-block/code-block-timeline-processor";
+import { CodeBlockTimelineProcessor } from "./src/code-block-timeline/code-block-timeline-processor";
 import { JournalConfigManager } from "./src/config/journal-config-manager";
 
 export default class JournalPlugin extends Plugin {
