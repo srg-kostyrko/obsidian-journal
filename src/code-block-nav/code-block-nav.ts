@@ -59,14 +59,12 @@ export abstract class CodeBlockNav extends MarkdownRenderChild {
       iconNext.dataset.date = nextDate.format("YYYY-MM-DD");
 
       iconPrev.on("click", ".journal-nav-icon-prev", (e) => {
-        console.log(e.currentTarget);
         const date = (e.currentTarget as HTMLElement)?.dataset?.date;
         if (date) {
           this.openDate(date);
         }
       });
       iconNext.on("click", ".journal-nav-icon-next", (e) => {
-        console.log(e.currentTarget);
         const date = (e.currentTarget as HTMLElement)?.dataset?.date;
         if (date) {
           this.openDate(date);
