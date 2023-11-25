@@ -16,7 +16,11 @@
 .journal-month-with-week {
   grid-template-columns: 35px repeat(7, 30px);
 }
-
+.journal-calendar-view {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 6px;
+}
 .journal-weeknumber {
   font-size: 0.7em;
   display: flex;

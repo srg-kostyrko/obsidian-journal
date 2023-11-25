@@ -1,4 +1,4 @@
-import { MarkdownRenderChild } from "obsidian";
+import { MarkdownPostProcessorContext, MarkdownRenderChild } from "obsidian";
 import { CalendarJournal } from "../calendar-journal/calendar-journal";
 
 export class CodeBlockWeek extends MarkdownRenderChild {
@@ -6,6 +6,7 @@ export class CodeBlockWeek extends MarkdownRenderChild {
     containerEl: HTMLElement,
     protected journal: CalendarJournal,
     protected date: string,
+    protected ctx: MarkdownPostProcessorContext,
   ) {
     super(containerEl);
   }
@@ -57,7 +58,7 @@ export class CodeBlockWeek extends MarkdownRenderChild {
       });
       day.createDiv({
         cls: "journal-day",
-        text: start.format("DD"),
+        text: start.format("D"),
       });
       day.dataset.date = start.format("YYYY-MM-DD");
       start.add(1, "day");

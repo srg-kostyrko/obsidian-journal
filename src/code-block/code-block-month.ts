@@ -1,11 +1,13 @@
-import { MarkdownRenderChild } from "obsidian";
+import { MarkdownPostProcessorContext, MarkdownRenderChild } from "obsidian";
 import { CalendarJournal } from "../calendar-journal/calendar-journal";
 
 export class CodeBlockMonth extends MarkdownRenderChild {
+  public showPrevMonthDays = true;
   constructor(
     containerEl: HTMLElement,
     protected journal: CalendarJournal,
     protected date: string,
+    protected ctx: MarkdownPostProcessorContext,
   ) {
     super(containerEl);
   }
@@ -26,7 +28,7 @@ export class CodeBlockMonth extends MarkdownRenderChild {
     if (this.journal.config.monthly.enabled) {
       title.classList.add("journal-clickable");
       title.on("click", ".journal-title", () => {
-        this.journal.weekly.open(this.date);
+        this.journal.monthly.open(this.date);
       });
     }
     const view = this.containerEl.createDiv({
@@ -72,18 +74,22 @@ export class CodeBlockMonth extends MarkdownRenderChild {
       }
 
       const cls = ["journal-day"];
+      let text = curr.format("D");
       if (curr.isSame(today, "day")) {
         cls.push("journal-is-today");
       }
       if (!curr.isSame(start, "month")) {
         cls.push("journal-is-not-same-month");
+        if (!this.showPrevMonthDays) {
+          text = "";
+        }
       }
       if (this.journal.config.daily.enabled) {
         cls.push("journal-clickable");
       }
       const day = view.createDiv({
         cls,
-        text: curr.format("DD"),
+        text,
       });
       day.dataset.date = curr.format("YYYY-MM-DD");
       curr.add(1, "day");

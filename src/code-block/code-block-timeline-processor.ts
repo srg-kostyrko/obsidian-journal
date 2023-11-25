@@ -3,6 +3,13 @@ import { JournalManager } from "../journal-manager";
 import { JournalFrontMatter } from "../contracts/config.types";
 import { CodeBlockMonth } from "./code-block-month";
 import { CodeBlockWeek } from "./code-block-week";
+import { CodeBlockCalendar } from "./code-block-calendar";
+
+const modes = {
+  month: CodeBlockMonth,
+  week: CodeBlockWeek,
+  calendar: CodeBlockCalendar,
+};
 
 export class CodeBlockTimelineProcessor extends MarkdownRenderChild {
   private data: JournalFrontMatter | null = null;
@@ -44,8 +51,13 @@ export class CodeBlockTimelineProcessor extends MarkdownRenderChild {
     }
     const container = this.containerEl.createDiv();
 
-    const Block = this.mode === "month" ? CodeBlockMonth : CodeBlockWeek;
-    const block = new Block(container, journal, this.data.start_date);
+    if (!(this.mode in modes)) {
+      this.containerEl.appendText("unknown mode");
+      return;
+    }
+
+    const Block = modes[this.mode as keyof typeof modes];
+    const block = new Block(container, journal, this.data.start_date, this.ctx);
     this.ctx.addChild(block);
     block.display();
   }
