@@ -35,7 +35,7 @@ export class CodeBlockNavProcessor extends MarkdownRenderChild {
     }
     const container = this.containerEl.createDiv();
 
-    const block = new CodeBlockNavMonth(container, journal, this.data.start_date, this.ctx);
+    const block = new CodeBlockNavMonth(container, journal, this.data.start_date);
     this.ctx.addChild(block);
     block.display();
   }

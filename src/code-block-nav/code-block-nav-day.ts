@@ -1,74 +1,26 @@
-import { MarkdownPostProcessorContext, MarkdownRenderChild, getIcon } from "obsidian";
 import { CalendarJournal } from "../calendar-journal/calendar-journal";
 import { MomentDate } from "../contracts/date.types";
+import { CodeBlockNav } from "./code-block-nav";
 
-export class CodeBlockNavDay extends MarkdownRenderChild {
-  constructor(
-    containerEl: HTMLElement,
-    protected journal: CalendarJournal,
-    protected date: string,
-    protected ctx: MarkdownPostProcessorContext,
-  ) {
-    super(containerEl);
+export class CodeBlockNavDay extends CodeBlockNav {
+  constructor(containerEl: HTMLElement, journal: CalendarJournal, date: string) {
+    super(containerEl, journal, date);
   }
 
-  display() {
-    this.containerEl.empty();
-
-    const date = this.journal.date(this.date);
-
-    const view = this.containerEl.createDiv({
-      cls: "journal-nav-view",
-    });
-
-    const prevDay = view.createDiv({
-      cls: "journal-day-nav journal-day-nav-prev",
-    });
-    this.renderDay(prevDay, date.clone().subtract(1, "day"));
-
-    const currentDay = view.createDiv({
-      cls: "journal-day-nav journal-day-nav-current",
-    });
-    this.renderDay(currentDay, date, false);
-
-    const iconPrev = currentDay.createDiv({
-      cls: "journal-nav-icon journal-nav-icon-prev",
-    });
-    const iconPrevEl = getIcon("arrow-left");
-    if (iconPrevEl) iconPrev.appendChild(iconPrevEl);
-
-    const iconNext = currentDay.createDiv({
-      cls: "journal-nav-icon journal-nav-icon-next",
-    });
-    const iconNextEl = getIcon("arrow-right");
-    if (iconNextEl) iconNext.appendChild(iconNextEl);
-
-    const nextDay = view.createDiv({
-      cls: "journal-day-nav journal-day-nav-next",
-    });
-    this.renderDay(nextDay, date.clone().add(1, "day"));
-
-    if (this.journal.config.daily.enabled) {
-      iconPrev.classList.add("journal-clickable");
-      iconPrev.dataset.date = date.clone().subtract(1, "day").format("YYYY-MM-DD");
-      iconNext.classList.add("journal-clickable");
-      iconNext.dataset.date = date.clone().add(1, "day").format("YYYY-MM-DD");
-
-      iconPrev.on("click", ".journal-nav-icon-prev, .journal-nav-icon-next", (e) => {
-        const date = (e.currentTarget as HTMLElement)?.dataset?.date;
-        if (date) {
-          this.journal.daily.open(date);
-        }
-      });
-    }
+  isCurrentEnabled(): boolean {
+    return this.journal.config.daily.enabled;
   }
 
-  renderDay(parent: HTMLElement, date: MomentDate, dayClickable = true) {
+  openDate(date: string): void {
+    this.journal.daily.open(date);
+  }
+
+  renderOne(parent: HTMLElement, date: MomentDate, clickable = true) {
     const dayWrapper = parent.createDiv({
       cls: "journal-nav-day-wrapper",
     });
     dayWrapper.createDiv({
-      cls: "journal-nav-week",
+      cls: "journal-nav-weekday",
       text: date.format("ddd"),
     });
     dayWrapper.createDiv({
@@ -77,13 +29,12 @@ export class CodeBlockNavDay extends MarkdownRenderChild {
     });
     dayWrapper.createDiv({
       cls: "journal-nav-relative",
-      text: this.journal.fromToday(date.format("YYYY-MM-DD")),
+      text: this.relativeDay(date),
     });
-    if (dayClickable && this.journal.config.daily.enabled) {
+    if (clickable && this.journal.config.daily.enabled) {
       dayWrapper.dataset.date = date.format("YYYY-MM-DD");
       dayWrapper.classList.add("journal-clickable");
       dayWrapper.on("click", ".journal-nav-day-wrapper", (e) => {
-        console.log("click", e);
         const date = (e.currentTarget as HTMLElement)?.dataset?.date;
         if (date) {
           this.journal.daily.open(date);
@@ -92,47 +43,24 @@ export class CodeBlockNavDay extends MarkdownRenderChild {
     }
 
     if (this.journal.config.weekly.enabled) {
-      const week = parent.createDiv({
-        cls: "journal-nav-week",
-        text: date.format("[W]w"),
-      });
-      week.classList.add("journal-clickable");
-      week.dataset.date = date.format("YYYY-MM-DD");
-      week.on("click", ".journal-nav-week", (e) => {
-        const date = (e.currentTarget as HTMLElement)?.dataset?.date;
-        if (date) {
-          this.journal.weekly.open(date);
-        }
-      });
+      this.renderWeek(parent, date);
     }
+    this.renderMonth(parent, date);
+    this.renderYear(parent, date);
+  }
 
-    const month = parent.createDiv({
-      cls: "journal-nav-month",
-      text: date.format("MMMM"),
+  relativeDay(date: MomentDate) {
+    const today = this.journal.today;
+
+    return date.calendar(today, {
+      lastWeek: "[Last] dddd",
+      lastDay: "[Yesterday]",
+      sameDay: "[Today]",
+      nextDay: "[Tomorrow]",
+      nextWeek: "dddd",
+      sameElse: function () {
+        return "[" + date.from(today) + "]";
+      },
     });
-    if (this.journal.config.monthly.enabled) {
-      month.classList.add("journal-clickable");
-      month.dataset.date = date.format("YYYY-MM");
-      month.on("click", ".journal-nav-month", (e) => {
-        const date = (e.currentTarget as HTMLElement)?.dataset?.date;
-        if (date) {
-          this.journal.monthly.open(date);
-        }
-      });
-    }
-    const year = parent.createDiv({
-      cls: "journal-nav-year",
-      text: date.format("YYYY"),
-    });
-    if (this.journal.config.yearly.enabled) {
-      year.classList.add("journal-clickable");
-      year.dataset.date = date.format("YYYY");
-      year.on("click", ".journal-nav-year", (e) => {
-        const date = (e.currentTarget as HTMLElement)?.dataset?.date;
-        if (date) {
-          this.journal.yearly.open(date);
-        }
-      });
-    }
   }
 }
