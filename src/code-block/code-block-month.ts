@@ -30,7 +30,7 @@ export class CodeBlockMonth extends MarkdownRenderChild {
       });
     }
     const view = this.containerEl.createDiv({
-      cls: "journal-month-view",
+      cls: "journal-month-view journal-month-with-week",
     });
     if (this.journal.config.daily.enabled) {
       view.on("click", ".journal-day", (e) => {
@@ -44,6 +44,7 @@ export class CodeBlockMonth extends MarkdownRenderChild {
     const week = start.clone().startOf("week");
     const weekEnd = week.clone().endOf("week");
 
+    view.createDiv();
     while (week.isSameOrBefore(weekEnd)) {
       view.createDiv({
         cls: "journal-weekday",
@@ -51,13 +52,30 @@ export class CodeBlockMonth extends MarkdownRenderChild {
       });
       week.add(1, "day");
     }
+    const curr = startWithWeek.clone();
+    while (curr.isSameOrBefore(endWithWeek)) {
+      if (curr.isSame(curr.clone().startOf("week"), "day")) {
+        const weekNum = view.createDiv({
+          cls: "journal-weeknumber",
+          text: curr.format("[W]ww"),
+        });
+        if (this.journal.config.weekly.enabled) {
+          weekNum.classList.add("journal-clickable");
+          weekNum.dataset.date = curr.format("YYYY-MM-DD");
+          weekNum.on("click", ".journal-weeknumber", (e) => {
+            const date = (e.target as HTMLElement)?.dataset?.date;
+            if (date) {
+              this.journal.weekly.open(date);
+            }
+          });
+        }
+      }
 
-    while (startWithWeek.isSameOrBefore(endWithWeek)) {
       const cls = ["journal-day"];
-      if (startWithWeek.isSame(today, "day")) {
+      if (curr.isSame(today, "day")) {
         cls.push("journal-is-today");
       }
-      if (!startWithWeek.isSame(start, "month")) {
+      if (!curr.isSame(start, "month")) {
         cls.push("journal-is-not-same-month");
       }
       if (this.journal.config.daily.enabled) {
@@ -65,10 +83,10 @@ export class CodeBlockMonth extends MarkdownRenderChild {
       }
       const day = view.createDiv({
         cls,
-        text: startWithWeek.format("DD"),
+        text: curr.format("DD"),
       });
-      day.dataset.date = startWithWeek.format("YYYY-MM-DD");
-      startWithWeek.add(1, "day");
+      day.dataset.date = curr.format("YYYY-MM-DD");
+      curr.add(1, "day");
     }
   }
 }
