@@ -71,6 +71,24 @@ export abstract class CodeBlockNav extends MarkdownRenderChild {
         }
       });
     }
+
+    if (this.journal.config.daily.enabled) {
+      const today = this.journal.today;
+      if (!today.isSame(date)) {
+        const todayBlock = view.createDiv({
+          cls: `journal-nav-today`,
+          text: "Today",
+        });
+        todayBlock.classList.add("journal-clickable");
+        todayBlock.dataset.date = today.format("YYYY-MM-DD");
+        todayBlock.on("click", ".journal-nav-today", (e) => {
+          const date = (e.currentTarget as HTMLElement)?.dataset?.date;
+          if (date) {
+            this.journal.daily.open(date);
+          }
+        });
+      }
+    }
   }
 
   abstract renderOne(parent: HTMLElement, date: MomentDate, clickable: boolean): void;
