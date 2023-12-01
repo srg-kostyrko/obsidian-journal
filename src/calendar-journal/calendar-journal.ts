@@ -10,6 +10,7 @@ import {
 import { CalendarIndex } from "./calendar-index";
 import { CalendarHelper } from "../utils/calendar";
 import { MomentDate } from "../contracts/date.types";
+import { Journal } from "../contracts/journal.types";
 
 export const calendarCommands = {
   "calendar:open-daily": "Open daily note",
@@ -29,7 +30,7 @@ export const calendarCommands = {
   "calendar:open-yearly-prev": "Open last year note",
 };
 
-export class CalendarJournal {
+export class CalendarJournal implements Journal {
   public readonly daily: CalendarJournalSection;
   public readonly weekly: CalendarJournalSection;
   public readonly monthly: CalendarJournalSection;

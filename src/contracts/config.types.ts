@@ -46,6 +46,11 @@ export interface CalendarSection {
 
 export interface IntervalConfig extends JournalCaseConfig {
   type: "interval";
+  duration: number;
+  granularity: CalendarGranularity;
+  start_date: string;
+  start_index: number;
+  numeration_type: "increment" | "year";
 }
 
 export type JournalConfig = CalendarConfig | IntervalConfig;
@@ -56,5 +61,12 @@ export interface CalerndatFrontMatter {
   start_date: string;
   end_date: string;
   granularity: CalendarGranularity;
+}
+export interface IntervalFrontMatter {
+  type: "interval";
+  id: string;
+  start_date: string;
+  end_date: string;
+  index: number;
 }
 export type JournalFrontMatter = CalerndatFrontMatter;

@@ -28,5 +28,6 @@ module.exports = {
   plugins: ["@typescript-eslint"],
   rules: {
     "no-console": ["error", { allow: ["warn", "error"] }],
+    "@typescript-eslint/no-unused-vars": ["error", { argsIgnorePattern: "^_" }],
   },
 };

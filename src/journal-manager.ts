@@ -3,13 +3,15 @@ import { CalendarJournal, calendarCommands } from "./calendar-journal/calendar-j
 import { FRONTMATTER_ID_KEY } from "./constants";
 import { deepCopy } from "./utils";
 import { DEFAULT_CONFIG_CALENDAR } from "./config/config-defaults";
-import { CalendarConfig, JournalFrontMatter } from "./contracts/config.types";
+import { CalendarConfig, IntervalConfig, JournalFrontMatter } from "./contracts/config.types";
 import { JournalSuggestModal } from "./ui/journal-suggest-modal";
 import { JournalConfigManager } from "./config/journal-config-manager";
 import { CalendarHelper } from "./utils/calendar";
+import { IntervalJournal } from "./interval-journal/interval-journal";
+import { Journal } from "./contracts/journal.types";
 
 export class JournalManager extends Component {
-  private journals = new Map<string, CalendarJournal>();
+  private journals = new Map<string, Journal>();
   private fileFrontMatters = new Map<string, JournalFrontMatter | null>();
 
   public readonly calendar: CalendarHelper;
@@ -28,8 +30,11 @@ export class JournalManager extends Component {
           this.journals.set(journalConfig.id, calendar);
           break;
         }
-        default:
-          console.warn(`${journalConfig.type} journals not supported`);
+        case "interval": {
+          const interval = new IntervalJournal(this.app, journalConfig, this.calendar);
+          this.journals.set(journalConfig.id, interval);
+          break;
+        }
       }
     }
   }
@@ -38,7 +43,7 @@ export class JournalManager extends Component {
     return this.journals.get(this.config.defaultId);
   }
 
-  get(id: string): CalendarJournal | undefined {
+  get(id: string): Journal | undefined {
     return this.journals.get(id);
   }
 
@@ -55,6 +60,15 @@ export class JournalManager extends Component {
     return id;
   }
 
+  async createIntervalJournal(config: IntervalConfig): Promise<string> {
+    const id = config.id;
+    this.config.add(config);
+    await this.config.save();
+    const calendar = new IntervalJournal(this.app, config, this.calendar);
+    this.journals.set(id, calendar);
+    return id;
+  }
+
   async changeDefaultJournal(id: string) {
     this.config.defaultId = id;
     await this.config.save();
@@ -62,7 +76,7 @@ export class JournalManager extends Component {
 
   async autoCreateNotes(): Promise<void> {
     for (const journal of this.journals.values()) {
-      journal.autoCreateNotes();
+      await journal.autoCreateNotes();
     }
   }
 
