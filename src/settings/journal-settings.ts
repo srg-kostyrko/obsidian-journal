@@ -5,6 +5,7 @@ import { JournalManager } from "../journal-manager";
 import { SettingsRouteState } from "../contracts/settings";
 import { SettingsCalendarSectionPage } from "./settings-calendar-section-page";
 import { JournalConfigManager } from "../config/journal-config-manager";
+import { SettingsIntervalPage } from "./settings-interval-page";
 
 export class JournalSettingTab extends PluginSettingTab {
   private routeState: SettingsRouteState = {
@@ -71,13 +72,20 @@ export class JournalSettingTab extends PluginSettingTab {
             }
             break;
           }
-          default:
-            console.log("not supported", journalConfig.type);
+          case "interval": {
+            new SettingsIntervalPage(
+              this.app,
+              containerEl,
+              journalConfig,
+              this.config.defaultId === journalConfig.id,
+            ).display();
+            break;
+          }
         }
         break;
       }
       default:
-        console.log("not supported", this.routeState);
+        console.error("not supported", this.routeState);
     }
   }
 }

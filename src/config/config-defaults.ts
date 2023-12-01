@@ -1,4 +1,4 @@
-import { CalendarConfig, PluginSettings } from "../contracts/config.types";
+import { CalendarConfig, IntervalConfig, PluginSettings } from "../contracts/config.types";
 
 export const DEFAULT_CONFIG_CALENDAR: CalendarConfig = {
   id: "my-journal",
@@ -78,6 +78,29 @@ export const DEFAULT_CONFIG_CALENDAR: CalendarConfig = {
     },
     createOnStartup: false,
   },
+};
+
+export const DEFAULT_CONFIG_INTERVAL: IntervalConfig = {
+  id: "",
+  type: "interval",
+  name: "",
+  duration: 1,
+  granularity: "day",
+  start_date: "",
+  start_index: 1,
+  numeration_type: "increment",
+  openOnStartup: false,
+  openMode: "active",
+  titleTemplate: "{{index}}",
+  dateFormat: "YYYY-MM-DD",
+  folder: "",
+  template: "",
+  ribbon: {
+    show: false,
+    icon: "",
+    tooltip: "",
+  },
+  createOnStartup: false,
 };
 
 export const DEFAULT_PLUGIN_SETTINGS: PluginSettings = {

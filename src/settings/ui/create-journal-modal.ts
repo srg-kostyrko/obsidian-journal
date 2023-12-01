@@ -1,6 +1,7 @@
 import { App, Modal, Setting } from "obsidian";
 import { JournalManager } from "../../journal-manager";
 import { CalendarGranularity, IntervalConfig, JournalConfig } from "../../contracts/config.types";
+import { DEFAULT_CONFIG_INTERVAL } from "../../config/config-defaults";
 
 export class CreateJournalModal extends Modal {
   private name = "";
@@ -119,7 +120,7 @@ export class CreateJournalModal extends Modal {
               if (!this.duration || !this.start_date || !this.start_index) return;
               this.close();
               const config: IntervalConfig = {
-                type: "interval",
+                ...DEFAULT_CONFIG_INTERVAL,
                 id: this.id,
                 name: this.name,
                 duration: this.duration,
@@ -129,7 +130,7 @@ export class CreateJournalModal extends Modal {
                 numeration_type: this.numeration_type,
               };
               const id = await this.manager.createIntervalJournal(config);
-              this.app.workspace.trigger("journal:navigate", {
+              this.app.workspace.trigger("journal:settings-navigate", {
                 type: "journal",
                 id,
               });
@@ -137,7 +138,7 @@ export class CreateJournalModal extends Modal {
             }
             this.close();
             const id = await this.manager.createCalendarJournal(this.id, this.name);
-            this.app.workspace.trigger("journal:navigate", {
+            this.app.workspace.trigger("journal:settings-navigate", {
               type: "journal",
               id,
             });

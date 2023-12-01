@@ -51,6 +51,19 @@ export interface IntervalConfig extends JournalCaseConfig {
   start_date: string;
   start_index: number;
   numeration_type: "increment" | "year";
+
+  openOnStartup: boolean;
+  openMode: "active" | "tab" | "split" | "window";
+  titleTemplate: string;
+  dateFormat: string;
+  folder: string;
+  template: string;
+  ribbon: {
+    show: boolean;
+    icon: string;
+    tooltip: string;
+  };
+  createOnStartup: boolean;
 }
 
 export type JournalConfig = CalendarConfig | IntervalConfig;
