@@ -12,4 +12,7 @@ export interface TemplateContext {
     value: MomentDate;
     defaultFormat: string;
   };
+  index?: {
+    value: number;
+  };
 }

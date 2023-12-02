@@ -26,5 +26,9 @@ export function replaceTemplateVariables(template: string, context: TemplateCont
         return end_date.format(format);
       });
   }
+  if (context.index) {
+    const { value: index } = context.index;
+    content = content.replaceAll("{{index}}", index.toString());
+  }
   return content;
 }

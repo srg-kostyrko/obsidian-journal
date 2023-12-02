@@ -82,4 +82,4 @@ export interface IntervalFrontMatter {
   end_date: string;
   index: number;
 }
-export type JournalFrontMatter = CalerndatFrontMatter;
+export type JournalFrontMatter = CalerndatFrontMatter | IntervalFrontMatter;
