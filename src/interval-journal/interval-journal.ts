@@ -127,6 +127,9 @@ export class IntervalJournal implements Journal {
       index: {
         value: interval.index,
       },
+      name: {
+        value: this.config.name,
+      },
     };
   }
 

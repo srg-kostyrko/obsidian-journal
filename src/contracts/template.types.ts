@@ -1,5 +1,8 @@
 import { MomentDate } from "./date.types";
 export interface TemplateContext {
+  name?: {
+    value: string;
+  };
   date?: {
     value: MomentDate;
     defaultFormat: string;

@@ -112,6 +112,9 @@ export class CalendarJournalSection {
         value: end_date,
         defaultFormat: this.config.dateFormat,
       },
+      name: {
+        value: this.journal.config.name,
+      },
     };
   }
 
