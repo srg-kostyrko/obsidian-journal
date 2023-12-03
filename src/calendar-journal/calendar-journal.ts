@@ -55,6 +55,10 @@ export class CalendarJournal implements Journal {
     return this.config.id;
   }
 
+  get name(): string {
+    return this.config.name;
+  }
+
   get today(): MomentDate {
     return this.calendar.today();
   }

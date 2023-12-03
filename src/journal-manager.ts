@@ -7,7 +7,7 @@ import { CalendarConfig, IntervalConfig, JournalFrontMatter } from "./contracts/
 import { JournalSuggestModal } from "./ui/journal-suggest-modal";
 import { JournalConfigManager } from "./config/journal-config-manager";
 import { CalendarHelper } from "./utils/calendar";
-import { IntervalJournal } from "./interval-journal/interval-journal";
+import { IntervalJournal, intervalCommands } from "./interval-journal/interval-journal";
 import { Journal } from "./contracts/journal.types";
 
 export class JournalManager extends Component {
@@ -85,7 +85,22 @@ export class JournalManager extends Component {
   }
 
   configureCommands() {
-    this.configureCalendarCommands();
+    for (const [id, label] of Object.entries({ ...intervalCommands, ...calendarCommands })) {
+      this.plugin.addCommand({
+        id: `journal:${id}`,
+        name: label,
+        checkCallback: (checking: boolean): boolean => {
+          const journals = this.getJournalsSupportingCommand(id);
+          if (journals.length > 0) {
+            if (!checking) {
+              this.execCommand(id, journals);
+            }
+            return true;
+          }
+          return false;
+        },
+      });
+    }
   }
 
   configureRibbonIcons() {
@@ -98,41 +113,22 @@ export class JournalManager extends Component {
     }
   }
 
-  private configureCalendarCommands(): void {
-    for (const [id, label] of Object.entries(calendarCommands)) {
-      this.plugin.addCommand({
-        id: `journal:${id}`,
-        name: label,
-        checkCallback: (checking: boolean): boolean => {
-          const calendars = this.getCalendarsSupportingCommand(id);
-          if (calendars.length > 0) {
-            if (!checking) {
-              this.execCalendarCommand(id, calendars);
-            }
-            return true;
-          }
-          return false;
-        },
-      });
-    }
-  }
-
-  private getCalendarsSupportingCommand(id: string) {
-    const journals: CalendarJournal[] = [];
+  private getJournalsSupportingCommand(id: string): Journal[] {
+    const journals: Journal[] = [];
     for (const journal of this.journals.values()) {
-      if (journal instanceof CalendarJournal && journal.supportsCommand(id)) {
+      if (journal.supportsCommand(id)) {
         journals.push(journal);
       }
     }
     return journals;
   }
 
-  private execCalendarCommand(id: string, calendars: CalendarJournal[]) {
-    if (calendars.length === 1) {
-      const [calendar] = calendars;
+  private execCommand(id: string, journals: Journal[]) {
+    if (journals.length === 1) {
+      const [calendar] = journals;
       calendar.execCommand(id);
     } else {
-      new JournalSuggestModal(this.app, calendars, (calendar: CalendarJournal) => {
+      new JournalSuggestModal(this.app, journals, (calendar: Journal) => {
         calendar.execCommand(id);
       }).open();
     }

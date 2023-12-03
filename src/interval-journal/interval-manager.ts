@@ -55,6 +55,16 @@ export class IntervalManager {
     return startInterval;
   }
 
+  findNextInterval(date?: string): Interval {
+    const interval = this.findInterval(date);
+    return this.calculateIntervalAfterKnown(interval.endDate.clone().add(1, "day"), interval);
+  }
+
+  findPreviousInterval(date?: string): Interval {
+    const interval = this.findInterval(date);
+    return this.calculateIntervalBeforeKnown(interval.startDate.clone().subtract(1, "day"), interval);
+  }
+
   add(interval: Interval): void {
     const dateInterval: [number, number] = [interval.startDate.toDate().getTime(), interval.endDate.toDate().getTime()];
     this.intervalTree.insert(dateInterval, interval);
@@ -62,6 +72,7 @@ export class IntervalManager {
   }
 
   clearForPath(path: string): void {
+    if (!this.intervalTree.size) return;
     for (const [key, entry] of this.intervalTree.iterate(undefined, (value, key) => [key, value])) {
       if (entry?.path === path) {
         this.intervalTree.remove(key, entry);

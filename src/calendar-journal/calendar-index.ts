@@ -21,6 +21,7 @@ export class CalendarIndex {
   }
 
   clearForPath(path: string): void {
+    if (!this.intervalTree.size) return;
     for (const [key, entry] of this.intervalTree.iterate(undefined, (value, key) => [key, value])) {
       if (entry?.path === path) {
         this.intervalTree.remove(key, entry);

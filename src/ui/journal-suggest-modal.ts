@@ -1,23 +1,23 @@
 import { App, SuggestModal } from "obsidian";
-import { CalendarJournal } from "../calendar-journal/calendar-journal";
+import { Journal } from "../contracts/journal.types";
 
-export class JournalSuggestModal extends SuggestModal<CalendarJournal> {
+export class JournalSuggestModal extends SuggestModal<Journal> {
   constructor(
     app: App,
-    private calendars: CalendarJournal[],
-    private cb: (journal: CalendarJournal) => void,
+    private journals: Journal[],
+    private cb: (journal: Journal) => void,
   ) {
     super(app);
   }
 
-  getSuggestions(query: string): CalendarJournal[] | Promise<CalendarJournal[]> {
+  getSuggestions(query: string): Journal[] | Promise<Journal[]> {
     query = query.toLocaleLowerCase();
-    return this.calendars.filter((journal) => journal.config.name.toLocaleLowerCase().contains(query));
+    return this.journals.filter((journal) => journal.name.toLocaleLowerCase().contains(query));
   }
-  renderSuggestion(value: CalendarJournal, el: HTMLElement) {
-    el.setText(value.config.name);
+  renderSuggestion(value: Journal, el: HTMLElement) {
+    el.setText(value.name);
   }
-  onChooseSuggestion(item: CalendarJournal) {
+  onChooseSuggestion(item: Journal) {
     this.cb(item);
   }
 }

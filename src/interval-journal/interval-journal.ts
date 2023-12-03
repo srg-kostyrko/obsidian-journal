@@ -14,6 +14,12 @@ import { replaceTemplateVariables } from "../utils/template";
 import { ensureFolderExists } from "../utils/io";
 import { Interval, IntervalManager } from "./interval-manager";
 
+export const intervalCommands = {
+  "interval-journal:open": "Open current interval",
+  "interval-journal:open-next": "Open next interval",
+  "interval-journal:open-prev": "Open previous interval",
+};
+
 export class IntervalJournal implements Journal {
   public readonly intervals: IntervalManager;
   constructor(
@@ -28,12 +34,24 @@ export class IntervalJournal implements Journal {
     return this.config.id;
   }
 
+  get name(): string {
+    return this.config.name;
+  }
+
   findInterval(date?: string): Interval {
     return this.intervals.findInterval(date);
   }
 
   async open(date?: string): Promise<void> {
     return await this.openInterval(this.findInterval(date));
+  }
+
+  async openNext(date?: string): Promise<void> {
+    return await this.openInterval(this.intervals.findNextInterval(date));
+  }
+
+  async openPrev(date?: string): Promise<void> {
+    return await this.openInterval(this.intervals.findPreviousInterval(date));
   }
 
   async autoCreateNotes(): Promise<void> {
@@ -80,6 +98,27 @@ export class IntervalJournal implements Journal {
 
   clearForPath(path: string): void {
     this.intervals.clearForPath(path);
+  }
+
+  supportsCommand(id: string): boolean {
+    return id in intervalCommands;
+  }
+
+  async execCommand(id: string): Promise<void> {
+    switch (id) {
+      case "interval-journal:open": {
+        await this.open();
+        break;
+      }
+      case "interval-journal:open-next": {
+        await this.openNext();
+        break;
+      }
+      case "interval-journal:open-prev": {
+        await this.openPrev();
+        break;
+      }
+    }
   }
 
   private getIntervalPath(interval: Interval): string {
