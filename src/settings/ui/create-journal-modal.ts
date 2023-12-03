@@ -2,6 +2,7 @@ import { App, Modal, Setting } from "obsidian";
 import { JournalManager } from "../../journal-manager";
 import { CalendarGranularity, IntervalConfig, JournalConfig } from "../../contracts/config.types";
 import { DEFAULT_CONFIG_INTERVAL } from "../../config/config-defaults";
+import { DatePickerModal } from "../../ui/date-picker-modal";
 
 export class CreateJournalModal extends Modal {
   private name = "";
@@ -81,9 +82,17 @@ export class CreateJournalModal extends Modal {
             });
         });
 
-      new Setting(contentEl).setName("Start Date").addText((text) => {
-        text.setValue(this.start_date).onChange((value) => {
-          this.start_date = value;
+      new Setting(contentEl).setName("Start Date").addButton((button) => {
+        button.setButtonText(this.start_date || "Pick date").onClick(() => {
+          new DatePickerModal(
+            this.app,
+            this.manager.calendar,
+            (date: string) => {
+              this.start_date = date;
+              this.display();
+            },
+            this.start_date,
+          ).open();
         });
       });
 

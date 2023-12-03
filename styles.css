@@ -162,3 +162,32 @@
 .interval-separator {
   font-size: 0.9em;
 }
+
+.journal-date-picker-modal {
+  --dialog-width: 300px;
+}
+
+.journal-dp-title-row {
+  display: flex;
+  justify-content: space-between;
+  margin-bottom: 0.8em;
+}
+.journal-dp-year-view {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 6px;
+}
+
+.journal-dp-decade-view {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 6px;
+}
+.journal-out-of-range {
+  opacity: 0.7;
+}
+
+.journal-is-selected {
+  background-color: var(--interactive-accent);
+  color: var(--text-on-accent);
+}
