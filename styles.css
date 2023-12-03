@@ -108,15 +108,18 @@
   font-size: 0.8em;
 }
 
-.journal-nav-icon {
+.journal-nav-icon,
+.interval-nav-icon {
   --icon-size: 3em;
   position: absolute;
   top: 30%;
 }
-.journal-nav-icon-prev {
+.journal-nav-icon-prev,
+.interval-nav-icon-prev {
   left: -5em;
 }
-.journal-nav-icon-next {
+.journal-nav-icon-next,
+.interval-nav-icon-next {
   right: -5em;
 }
 .journal-nav-relative {
@@ -133,7 +136,29 @@
 }
 
 .journal-nav-prev,
-.journal-nav-next {
+.journal-nav-next,
+.interval-nav-prev,
+.interval-nav-next {
   font-size: 0.8em;
   margin-top: 0.5em;
+}
+
+.interval-nav-view {
+  display: flex;
+  justify-content: space-around;
+  align-items: flex-start;
+  text-align: center;
+}
+
+.interval-title {
+  font-size: 2em;
+}
+.interval-nav-current {
+  position: relative;
+}
+.interval-dates {
+  font-size: 0.9em;
+}
+.interval-separator {
+  font-size: 0.9em;
 }

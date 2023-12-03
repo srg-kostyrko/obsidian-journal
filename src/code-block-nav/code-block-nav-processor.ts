@@ -6,6 +6,7 @@ import { CodeBlockNavQuarter } from "./code-block-nav-quarter";
 import { CodeBlockNavMonth } from "./code-block-nav-month";
 import { CodeBlockNavWeek } from "./code-block-nav-week";
 import { CodeBlockNavDay } from "./code-block-nav-day";
+import { CalendarJournal } from "../calendar-journal/calendar-journal";
 
 const blocks = {
   day: CodeBlockNavDay,
@@ -54,6 +55,14 @@ export class CodeBlockNavProcessor extends MarkdownRenderChild {
     const journal = this.manager.get(this.data.id) || this.manager.defaultJournal;
     if (!journal) {
       this.containerEl.appendText("no journal");
+      return;
+    }
+    if (!(journal instanceof CalendarJournal)) {
+      this.containerEl.appendText("not a calendar journal");
+      return;
+    }
+    if (!("granularity" in this.data)) {
+      this.containerEl.appendText("no granularity");
       return;
     }
     const container = this.containerEl.createDiv();

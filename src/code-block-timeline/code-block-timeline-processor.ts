@@ -5,6 +5,7 @@ import { CodeBlockMonth } from "./code-block-month";
 import { CodeBlockWeek } from "./code-block-week";
 import { CodeBlockCalendar } from "./code-block-calendar";
 import { CodeBlockQuarter } from "./code-block-quarter";
+import { CalendarJournal } from "../calendar-journal/calendar-journal";
 
 const modes = {
   month: CodeBlockMonth,
@@ -63,6 +64,10 @@ export class CodeBlockTimelineProcessor extends MarkdownRenderChild {
       this.containerEl.appendText("no journal");
       return;
     }
+    if (!(journal instanceof CalendarJournal)) {
+      this.containerEl.appendText("not a calendar journal");
+      return;
+    }
     const container = this.containerEl.createDiv();
 
     const mode = this.getMode();
@@ -80,6 +85,9 @@ export class CodeBlockTimelineProcessor extends MarkdownRenderChild {
   getMode(): string {
     if (this.mode) {
       return this.mode;
+    }
+    if (!this.data || !("granularity" in this.data)) {
+      return "week";
     }
     switch (this.data?.granularity) {
       case "day":

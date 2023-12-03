@@ -4,6 +4,7 @@ import { JournalManager } from "./src/journal-manager";
 import { CodeBlockTimelineProcessor } from "./src/code-block-timeline/code-block-timeline-processor";
 import { JournalConfigManager } from "./src/config/journal-config-manager";
 import { CodeBlockNavProcessor } from "./src/code-block-nav/code-block-nav-processor";
+import { CodeBlockIntervalProcessor } from "./src/code-block-interval/code-block-interval-processor";
 
 export default class JournalPlugin extends Plugin {
   private config: JournalConfigManager;
@@ -20,13 +21,18 @@ export default class JournalPlugin extends Plugin {
 
     this.manager.configureRibbonIcons();
 
-    this.registerMarkdownCodeBlockProcessor("journal-timeline", (source, el, ctx) => {
+    this.registerMarkdownCodeBlockProcessor("calendar-timeline", (source, el, ctx) => {
       const processor = new CodeBlockTimelineProcessor(this.manager, source, el, ctx);
       ctx.addChild(processor);
     });
 
-    this.registerMarkdownCodeBlockProcessor("journal-nav", (source, el, ctx) => {
+    this.registerMarkdownCodeBlockProcessor("calendar-nav", (source, el, ctx) => {
       const processor = new CodeBlockNavProcessor(this.manager, source, el, ctx);
+      ctx.addChild(processor);
+    });
+
+    this.registerMarkdownCodeBlockProcessor("interval-nav", (source, el, ctx) => {
+      const processor = new CodeBlockIntervalProcessor(this.manager, source, el, ctx);
       ctx.addChild(processor);
     });
 

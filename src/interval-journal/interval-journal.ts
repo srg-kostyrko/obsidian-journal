@@ -41,6 +41,13 @@ export class IntervalJournal implements Journal {
   findInterval(date?: string): Interval {
     return this.intervals.findInterval(date);
   }
+  findNextInterval(date?: string): Interval {
+    return this.intervals.findNextInterval(date);
+  }
+
+  findPreviousInterval(date?: string): Interval {
+    return this.intervals.findPreviousInterval(date);
+  }
 
   async open(date?: string): Promise<void> {
     return await this.openInterval(this.findInterval(date));
@@ -153,7 +160,7 @@ export class IntervalJournal implements Journal {
     await leaf.openFile(file, { active: true });
   }
 
-  private getTemplateContext(interval: Interval): TemplateContext {
+  getTemplateContext(interval: Interval): TemplateContext {
     return {
       start_date: {
         value: interval.startDate,
