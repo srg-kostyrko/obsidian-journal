@@ -1,9 +1,10 @@
-import { App, FrontMatterCache, Plugin } from "obsidian";
+import { App, FrontMatterCache, Plugin, TFile } from "obsidian";
 import { CalendarConfig, CalendarGranularity, CalerndatFrontMatter } from "../contracts/config.types";
 import { CalendarJournalSection } from "./calendar-journal-section";
 import {
   FRONTMATTER_DATE_FORMAT,
   FRONTMATTER_END_DATE_KEY,
+  FRONTMATTER_ID_KEY,
   FRONTMATTER_SECTION_KEY,
   FRONTMATTER_START_DATE_KEY,
 } from "../constants";
@@ -180,5 +181,35 @@ export class CalendarJournal implements Journal {
 
   clearForPath(path: string): void {
     this.index.clearForPath(path);
+  }
+
+  async clearNotes(): Promise<void> {
+    const proomises = [];
+    for (const entry of this.index) {
+      const file = this.app.vault.getAbstractFileByPath(entry.path);
+      if (!file) continue;
+      proomises.push(
+        new Promise<void>((resolve) => {
+          this.app.fileManager.processFrontMatter(file as TFile, (frontmatter) => {
+            delete frontmatter[FRONTMATTER_ID_KEY];
+            delete frontmatter[FRONTMATTER_START_DATE_KEY];
+            delete frontmatter[FRONTMATTER_END_DATE_KEY];
+            delete frontmatter[FRONTMATTER_SECTION_KEY];
+            resolve();
+          });
+        }),
+      );
+    }
+    await Promise.allSettled(proomises);
+  }
+
+  async deleteNotes(): Promise<void> {
+    const proomises = [];
+    for (const entry of this.index) {
+      const file = this.app.vault.getAbstractFileByPath(entry.path);
+      if (!file) continue;
+      proomises.push(this.app.vault.delete(file));
+    }
+    await Promise.allSettled(proomises);
   }
 }

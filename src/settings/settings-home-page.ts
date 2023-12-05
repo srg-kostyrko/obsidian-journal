@@ -3,6 +3,7 @@ import { CreateJournalModal } from "./ui/create-journal-modal";
 import { JournalManager } from "../journal-manager";
 import { SettingsWidget } from "./settings-widget";
 import { JournalConfigManager } from "../config/journal-config-manager";
+import { DeleteJournalModal } from "../ui/delete-journal-modal";
 
 export class SettingsHomePage extends SettingsWidget {
   constructor(
@@ -64,7 +65,13 @@ export class SettingsHomePage extends SettingsWidget {
               });
           })
           .addButton((button) => {
-            button.setIcon("trash-2").setTooltip(`Delete ${entry.name}`).setClass("clickable-icon");
+            button
+              .setIcon("trash-2")
+              .setTooltip(`Delete ${entry.name}`)
+              .setClass("clickable-icon")
+              .onClick(async () => {
+                new DeleteJournalModal(this.app, this.manager, entry).open();
+              });
           });
       }
     }

@@ -11,4 +11,9 @@ export interface Journal {
   clearForPath(path: string): void;
   supportsCommand(id: string): boolean;
   execCommand(id: string): Promise<void>;
+
+  clearNotes(): Promise<void>;
+  deleteNotes(): Promise<void>;
 }
+
+export type NotesProcessing = "keep" | "clear" | "delete";

@@ -28,4 +28,10 @@ export class CalendarIndex {
       }
     }
   }
+
+  *[Symbol.iterator](): Iterator<IndexEntry> {
+    for (const entry of this.intervalTree.iterate()) {
+      yield entry;
+    }
+  }
 }

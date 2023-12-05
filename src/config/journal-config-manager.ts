@@ -30,6 +30,10 @@ export class JournalConfigManager {
     return this.settings.journals[id];
   }
 
+  delete(id: string): void {
+    delete this.settings.journals[id];
+  }
+
   get defaultId(): string {
     return this.settings.defaultId;
   }

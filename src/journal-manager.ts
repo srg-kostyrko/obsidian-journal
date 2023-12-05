@@ -8,7 +8,7 @@ import { JournalSuggestModal } from "./ui/journal-suggest-modal";
 import { JournalConfigManager } from "./config/journal-config-manager";
 import { CalendarHelper } from "./utils/calendar";
 import { IntervalJournal, intervalCommands } from "./interval-journal/interval-journal";
-import { Journal } from "./contracts/journal.types";
+import { Journal, NotesProcessing } from "./contracts/journal.types";
 
 export class JournalManager extends Component {
   private journals = new Map<string, Journal>();
@@ -199,4 +199,21 @@ export class JournalManager extends Component {
     this.clearForPath(file.path);
     this.indexFile(file);
   };
+
+  async deleteJournal(id: string, notesProcessing: NotesProcessing): Promise<void> {
+    const journal = this.journals.get(id);
+    if (journal) {
+      switch (notesProcessing) {
+        case "clear":
+          await journal.clearNotes();
+          break;
+        case "delete":
+          await journal.deleteNotes();
+          break;
+      }
+      this.journals.delete(id);
+      this.config.delete(id);
+      await this.config.save();
+    }
+  }
 }

@@ -156,4 +156,11 @@ export class IntervalManager {
         break;
     }
   }
+
+  *[Symbol.iterator](): IterableIterator<Interval> {
+    if (!this.intervalTree.size) return;
+    for (const entry of this.intervalTree.iterate()) {
+      yield entry;
+    }
+  }
 }

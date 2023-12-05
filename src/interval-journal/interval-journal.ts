@@ -193,4 +193,36 @@ export class IntervalJournal implements Journal {
     }
     return "";
   }
+
+  async clearNotes(): Promise<void> {
+    const proomises = [];
+    for (const entry of this.intervals) {
+      if (!entry.path) continue;
+      const file = this.app.vault.getAbstractFileByPath(entry.path);
+      if (!file) continue;
+      proomises.push(
+        new Promise<void>((resolve) => {
+          this.app.fileManager.processFrontMatter(file as TFile, (frontmatter) => {
+            delete frontmatter[FRONTMATTER_ID_KEY];
+            delete frontmatter[FRONTMATTER_START_DATE_KEY];
+            delete frontmatter[FRONTMATTER_END_DATE_KEY];
+            delete frontmatter[FRONTMATTER_INDEX_KEY];
+            resolve();
+          });
+        }),
+      );
+    }
+    await Promise.allSettled(proomises);
+  }
+
+  async deleteNotes(): Promise<void> {
+    const proomises = [];
+    for (const entry of this.intervals) {
+      if (!entry.path) continue;
+      const file = this.app.vault.getAbstractFileByPath(entry.path);
+      if (!file) continue;
+      proomises.push(this.app.vault.delete(file));
+    }
+    await Promise.allSettled(proomises);
+  }
 }
