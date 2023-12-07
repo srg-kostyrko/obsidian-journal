@@ -79,7 +79,10 @@ export class CalendarJournalSection {
     let file = this.app.vault.getAbstractFileByPath(filePath);
     if (!file) {
       await ensureFolderExists(this.app, filePath);
-      file = await this.app.vault.create(filePath, await this.getContent(this.getTemplateContext(startDate, endDate)));
+      file = await this.app.vault.create(
+        filePath,
+        await this.getContent(this.getTemplateContext(startDate, endDate, this.getNoteName(startDate, endDate))),
+      );
       this.app.fileManager.processFrontMatter(file as TFile, (frontmatter) => {
         frontmatter[FRONTMATTER_ID_KEY] = this.journal.id;
         frontmatter[FRONTMATTER_START_DATE_KEY] = startDate.format(FRONTMATTER_DATE_FORMAT);
@@ -98,7 +101,7 @@ export class CalendarJournalSection {
     await leaf.openFile(file, { active: true });
   }
 
-  private getTemplateContext(start_date: MomentDate, end_date: MomentDate): TemplateContext {
+  private getTemplateContext(start_date: MomentDate, end_date: MomentDate, note_name?: string): TemplateContext {
     return {
       date: {
         value: start_date,
@@ -112,10 +115,18 @@ export class CalendarJournalSection {
         value: end_date,
         defaultFormat: this.config.dateFormat,
       },
-      name: {
+      journal_name: {
         value: this.journal.config.name,
       },
+      note_name: {
+        value: note_name ?? "",
+      },
     };
+  }
+
+  private getNoteName(startDate: MomentDate, endDate: MomentDate): string {
+    const templateContext = this.getTemplateContext(startDate, endDate);
+    return replaceTemplateVariables(this.config.titleTemplate, templateContext);
   }
 
   private getDatePath(startDate: MomentDate, endDate: MomentDate): string {
@@ -136,6 +147,7 @@ export class CalendarJournalSection {
       const templateFile = this.app.vault.getAbstractFileByPath(path);
       if (templateFile instanceof TFile) {
         const templateContent = await this.app.vault.cachedRead(templateFile);
+
         return replaceTemplateVariables(templateContent, context);
       }
     }

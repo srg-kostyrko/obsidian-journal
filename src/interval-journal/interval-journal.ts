@@ -128,6 +128,11 @@ export class IntervalJournal implements Journal {
     }
   }
 
+  private getNoteName(interval: Interval): string {
+    const templateContext = this.getTemplateContext(interval);
+    return replaceTemplateVariables(this.config.titleTemplate, templateContext);
+  }
+
   private getIntervalPath(interval: Interval): string {
     if (interval.path) return interval.path;
     const templateContext = this.getTemplateContext(interval);
@@ -141,7 +146,10 @@ export class IntervalJournal implements Journal {
     let file = this.app.vault.getAbstractFileByPath(filePath);
     if (!file) {
       await ensureFolderExists(this.app, filePath);
-      file = await this.app.vault.create(filePath, await this.getContent(this.getTemplateContext(interval)));
+      file = await this.app.vault.create(
+        filePath,
+        await this.getContent(this.getTemplateContext(interval, this.getNoteName(interval))),
+      );
       this.app.fileManager.processFrontMatter(file as TFile, (frontmatter) => {
         frontmatter[FRONTMATTER_ID_KEY] = this.id;
         frontmatter[FRONTMATTER_START_DATE_KEY] = interval.startDate.format(FRONTMATTER_DATE_FORMAT);
@@ -160,7 +168,7 @@ export class IntervalJournal implements Journal {
     await leaf.openFile(file, { active: true });
   }
 
-  getTemplateContext(interval: Interval): TemplateContext {
+  getTemplateContext(interval: Interval, note_name?: string): TemplateContext {
     return {
       start_date: {
         value: interval.startDate,
@@ -173,8 +181,11 @@ export class IntervalJournal implements Journal {
       index: {
         value: interval.index,
       },
-      name: {
+      journal_name: {
         value: this.config.name,
+      },
+      note_name: {
+        value: note_name ?? "",
       },
     };
   }

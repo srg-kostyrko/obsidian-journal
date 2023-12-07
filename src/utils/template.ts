@@ -30,9 +30,13 @@ export function replaceTemplateVariables(template: string, context: TemplateCont
     const { value: index } = context.index;
     content = content.replaceAll("{{index}}", index.toString());
   }
-  if (context.name) {
-    const { value: name } = context.name;
-    content = content.replaceAll("{{name}}", name);
+  if (context.journal_name) {
+    const { value: name } = context.journal_name;
+    content = content.replaceAll("{{journal_name}}", name);
+  }
+  if (context.note_name) {
+    const { value: name } = context.note_name;
+    content = content.replaceAll("{{note_name}}", name);
   }
   return content;
 }

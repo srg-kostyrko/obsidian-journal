@@ -1,6 +1,9 @@
 import { MomentDate } from "./date.types";
 export interface TemplateContext {
-  name?: {
+  journal_name?: {
+    value: string;
+  };
+  note_name?: {
     value: string;
   };
   date?: {
