@@ -150,15 +150,37 @@ export class IntervalJournal implements Journal {
         filePath,
         await this.getContent(this.getTemplateContext(interval, this.getNoteName(interval))),
       );
-      this.app.fileManager.processFrontMatter(file as TFile, (frontmatter) => {
+      await this.processFrontMatter(file as TFile, interval);
+    } else {
+      await this.enshureFrontMatter(file as TFile, interval);
+    }
+    return file as TFile;
+  }
+
+  private async enshureFrontMatter(file: TFile, interval: Interval): Promise<void> {
+    const metadata = this.app.metadataCache.getFileCache(file);
+    if (
+      !metadata?.frontmatter?.[FRONTMATTER_ID_KEY] ||
+      metadata.frontmatter[FRONTMATTER_ID_KEY] ||
+      metadata.frontmatter[FRONTMATTER_START_DATE_KEY] ||
+      metadata.frontmatter[FRONTMATTER_END_DATE_KEY] ||
+      metadata.frontmatter[FRONTMATTER_INDEX_KEY]
+    ) {
+      await this.processFrontMatter(file, interval);
+    }
+  }
+
+  private processFrontMatter(file: TFile, interval: Interval): Promise<void> {
+    return new Promise((resolve) => {
+      this.app.fileManager.processFrontMatter(file, (frontmatter) => {
         frontmatter[FRONTMATTER_ID_KEY] = this.id;
         frontmatter[FRONTMATTER_START_DATE_KEY] = interval.startDate.format(FRONTMATTER_DATE_FORMAT);
         frontmatter[FRONTMATTER_END_DATE_KEY] = interval.endDate.format(FRONTMATTER_DATE_FORMAT);
         frontmatter[FRONTMATTER_INDEX_KEY] = interval.index;
+        resolve();
       });
-      this.intervals.add({ ...interval, path: filePath });
-    }
-    return file as TFile;
+      this.intervals.add({ ...interval, path: file.path });
+    });
   }
 
   private async openInterval(interval: Interval): Promise<void> {

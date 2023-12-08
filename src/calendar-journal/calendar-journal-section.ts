@@ -83,13 +83,9 @@ export class CalendarJournalSection {
         filePath,
         await this.getContent(this.getTemplateContext(startDate, endDate, this.getNoteName(startDate, endDate))),
       );
-      this.app.fileManager.processFrontMatter(file as TFile, (frontmatter) => {
-        frontmatter[FRONTMATTER_ID_KEY] = this.journal.id;
-        frontmatter[FRONTMATTER_START_DATE_KEY] = startDate.format(FRONTMATTER_DATE_FORMAT);
-        frontmatter[FRONTMATTER_END_DATE_KEY] = endDate.format(FRONTMATTER_DATE_FORMAT);
-        frontmatter[FRONTMATTER_SECTION_KEY] = this.granularity;
-      });
-      this.journal.index.add(startDate, endDate, { path: filePath, granularity: this.granularity });
+      await this.processFrontMatter(file as TFile, startDate, endDate);
+    } else {
+      await this.enshureFrontMatter(file as TFile, startDate, endDate);
     }
     return file as TFile;
   }
@@ -152,5 +148,31 @@ export class CalendarJournalSection {
       }
     }
     return "";
+  }
+
+  private async enshureFrontMatter(file: TFile, startDate: MomentDate, endDate: MomentDate): Promise<void> {
+    const metadata = this.app.metadataCache.getFileCache(file);
+    if (
+      !metadata?.frontmatter?.[FRONTMATTER_ID_KEY] ||
+      metadata?.frontmatter?.[FRONTMATTER_ID_KEY] ||
+      metadata?.frontmatter?.[FRONTMATTER_START_DATE_KEY] ||
+      metadata?.frontmatter?.[FRONTMATTER_END_DATE_KEY] ||
+      metadata?.frontmatter?.[FRONTMATTER_SECTION_KEY]
+    ) {
+      await this.processFrontMatter(file, startDate, endDate);
+    }
+  }
+
+  private processFrontMatter(file: TFile, startDate: MomentDate, endDate: MomentDate): Promise<void> {
+    return new Promise((resolve) => {
+      this.app.fileManager.processFrontMatter(file as TFile, (frontmatter) => {
+        frontmatter[FRONTMATTER_ID_KEY] = this.journal.id;
+        frontmatter[FRONTMATTER_START_DATE_KEY] = startDate.format(FRONTMATTER_DATE_FORMAT);
+        frontmatter[FRONTMATTER_END_DATE_KEY] = endDate.format(FRONTMATTER_DATE_FORMAT);
+        frontmatter[FRONTMATTER_SECTION_KEY] = this.granularity;
+        resolve();
+      });
+      this.journal.index.add(startDate, endDate, { path: file.path, granularity: this.granularity });
+    });
   }
 }
