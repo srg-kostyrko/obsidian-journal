@@ -32,7 +32,7 @@ export interface CalendarConfig extends JournalCaseConfig {
 export interface CalendarSection {
   enabled: boolean;
   openMode: "active" | "tab" | "split" | "window";
-  titleTemplate: string;
+  nameTemplate: string;
   dateFormat: string;
   folder: string;
   template: string;
@@ -54,7 +54,7 @@ export interface IntervalConfig extends JournalCaseConfig {
 
   openOnStartup: boolean;
   openMode: "active" | "tab" | "split" | "window";
-  titleTemplate: string;
+  nameTemplate: string;
   dateFormat: string;
   folder: string;
   template: string;

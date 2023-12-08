@@ -119,10 +119,10 @@ export class CodeBlockIntervalProcessor extends MarkdownRenderChild {
       });
     }
     wrapper.dataset.date = interval.startDate.format("YYYY-MM-DD");
-    const title = replaceTemplateVariables(journal.config.titleTemplate, context);
+    const name = replaceTemplateVariables(journal.config.nameTemplate, context);
     wrapper.createDiv({
-      cls: "interval-title",
-      text: title,
+      cls: "interval-name",
+      text: name,
     });
     const dates = wrapper.createDiv({
       cls: "interval-dates",

@@ -18,13 +18,13 @@ export class CodeBlockWeek extends MarkdownRenderChild {
     const start = this.journal.weekly.getRangeStart(this.date);
     const end = this.journal.weekly.getRangeEnd(this.date);
 
-    const title = this.containerEl.createEl("h6", {
-      cls: "journal-title",
+    const name = this.containerEl.createEl("h6", {
+      cls: "journal-name",
       text: start.format(this.journal.config.weekly.dateFormat),
     });
     if (this.journal.config.weekly.enabled) {
-      title.classList.add("journal-clickable");
-      title.on("click", ".journal-title", () => {
+      name.classList.add("journal-clickable");
+      name.on("click", ".journal-name", () => {
         this.journal.weekly.open(this.date);
       });
     }

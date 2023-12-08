@@ -49,7 +49,7 @@ export class DatePickerModal extends Modal {
     const startWithWeek = this.currentDate.clone().startOf("week");
     const endWithWeek = this.currentDate.clone().endOf("month").endOf("week");
 
-    this.renderTitle(contentEl, "MMMM YYYY", "month", "year");
+    this.renderName(contentEl, "MMMM YYYY", "month", "year");
 
     const view = contentEl.createDiv({
       cls: "journal-month-view",
@@ -97,7 +97,7 @@ export class DatePickerModal extends Modal {
     const start = this.currentDate.clone().startOf("year");
     const end = this.currentDate.clone().endOf("year");
 
-    this.renderTitle(contentEl, "YYYY", "year", "decade");
+    this.renderName(contentEl, "YYYY", "year", "decade");
 
     const view = contentEl.createDiv({
       cls: "journal-dp-year-view",
@@ -128,10 +128,10 @@ export class DatePickerModal extends Modal {
     const startYear = this.currentDate.year() - (this.currentDate.year() % 10);
     const endYear = startYear + 9;
 
-    const titleRow = contentEl.createDiv({
-      cls: "journal-dp-title-row",
+    const nameRow = contentEl.createDiv({
+      cls: "journal-dp-name-row",
     });
-    const prevButton = titleRow.createEl("button", {
+    const prevButton = nameRow.createEl("button", {
       cls: `clickable-icon journal-dp-prev-decade journal-clickable`,
     });
     prevButton.on("click", `.journal-dp-prev-decade`, () => {
@@ -141,12 +141,12 @@ export class DatePickerModal extends Modal {
     const prevIcon = getIcon("arrow-left");
     if (prevIcon) prevButton.appendChild(prevIcon);
 
-    titleRow.createDiv({
-      cls: `journal-dp-decade-title `,
+    nameRow.createDiv({
+      cls: `journal-dp-decade-name `,
       text: `${startYear} - ${endYear}`,
     });
 
-    const nextButton = titleRow.createEl("button", {
+    const nextButton = nameRow.createEl("button", {
       cls: `clickable-icon journal-dp-next-decade journal-clickable`,
     });
     nextButton.on("click", `.journal-dp-next-decade`, () => {
@@ -182,11 +182,11 @@ export class DatePickerModal extends Modal {
     }
   }
 
-  renderTitle(contentEl: HTMLElement, format: string, granularity: CalendarGranularity, mode: string) {
-    const titleRow = contentEl.createDiv({
-      cls: "journal-dp-title-row",
+  renderName(contentEl: HTMLElement, format: string, granularity: CalendarGranularity, mode: string) {
+    const nameRow = contentEl.createDiv({
+      cls: "journal-dp-name-row",
     });
-    const prevButton = titleRow.createEl("button", {
+    const prevButton = nameRow.createEl("button", {
       cls: `clickable-icon journal-dp-prev-${granularity} journal-clickable`,
     });
     prevButton.on("click", `.journal-dp-prev-${granularity}`, () => {
@@ -196,16 +196,16 @@ export class DatePickerModal extends Modal {
     const prevIcon = getIcon("arrow-left");
     if (prevIcon) prevButton.appendChild(prevIcon);
 
-    const monthTitle = titleRow.createEl("button", {
-      cls: `journal-dp-${granularity}-title journal-clickable`,
+    const monthName = nameRow.createEl("button", {
+      cls: `journal-dp-${granularity}-name journal-clickable`,
       text: this.currentDate.format(format),
     });
-    monthTitle.on("click", `.journal-dp-${granularity}-title`, () => {
+    monthName.on("click", `.journal-dp-${granularity}-name`, () => {
       this.mode = mode;
       this.display();
     });
 
-    const nextButton = titleRow.createEl("button", {
+    const nextButton = nameRow.createEl("button", {
       cls: `clickable-icon journal-dp-next-${granularity} journal-clickable`,
     });
     nextButton.on("click", `.journal-dp-next-${granularity}`, () => {

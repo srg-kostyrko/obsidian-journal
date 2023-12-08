@@ -14,7 +14,7 @@ export class SettingsCalendarPage extends SettingsWidget {
     super(app);
   }
 
-  get headerText(): string {
+  get headingText(): string {
     return `Configuring ${this.config.name}`;
   }
 
@@ -22,7 +22,7 @@ export class SettingsCalendarPage extends SettingsWidget {
     const { containerEl } = this;
 
     const heading = new Setting(containerEl)
-      .setName(this.headerText)
+      .setName(this.headingText)
       .setHeading()
       .addButton((button) => {
         button.setButtonText("Back to list").onClick(() => {
@@ -37,7 +37,7 @@ export class SettingsCalendarPage extends SettingsWidget {
     new Setting(containerEl).setName("Journal Name").addText((text) => {
       text.setValue(this.config.name).onChange(() => {
         this.config.name = text.getValue();
-        heading.setName(this.headerText);
+        heading.setName(this.headingText);
         this.save();
       });
     });
@@ -93,14 +93,14 @@ export class SettingsCalendarPage extends SettingsWidget {
       }
     }
 
-    this.renderSectionsHeader("daily", this.config.daily);
-    this.renderSectionsHeader("weekly", this.config.weekly);
-    this.renderSectionsHeader("monthly", this.config.monthly);
-    this.renderSectionsHeader("quarterly", this.config.quarterly);
-    this.renderSectionsHeader("yearly", this.config.yearly);
+    this.renderSectionsHeading("daily", this.config.daily);
+    this.renderSectionsHeading("weekly", this.config.weekly);
+    this.renderSectionsHeading("monthly", this.config.monthly);
+    this.renderSectionsHeading("quarterly", this.config.quarterly);
+    this.renderSectionsHeading("yearly", this.config.yearly);
   }
 
-  renderSectionsHeader(sectionName: SectionName, config: CalendarSection): void {
+  renderSectionsHeading(sectionName: SectionName, config: CalendarSection): void {
     const daily = new Setting(this.containerEl).setName(`${capitalize(sectionName)} notes`);
     if (config.enabled) {
       daily.addButton((button) => {

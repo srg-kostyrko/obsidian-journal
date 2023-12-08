@@ -24,9 +24,9 @@ export class IconSuggestion extends AbstractInputSuggest<string> {
       el.classList.add("mod-complex");
       el.style.justifyContent = "flex-start";
       el.appendChild(icon);
-      const title = el.createSpan();
-      title.style.marginLeft = "8px";
-      title.appendText(value);
+      const name = el.createSpan();
+      name.style.marginLeft = "8px";
+      name.appendText(value);
     }
   }
   selectSuggestion(value: string): void {

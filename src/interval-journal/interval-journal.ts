@@ -130,13 +130,13 @@ export class IntervalJournal implements Journal {
 
   private getNoteName(interval: Interval): string {
     const templateContext = this.getTemplateContext(interval);
-    return replaceTemplateVariables(this.config.titleTemplate, templateContext);
+    return replaceTemplateVariables(this.config.nameTemplate, templateContext);
   }
 
   private getIntervalPath(interval: Interval): string {
     if (interval.path) return interval.path;
     const templateContext = this.getTemplateContext(interval);
-    const filename = replaceTemplateVariables(this.config.titleTemplate, templateContext) + ".md";
+    const filename = replaceTemplateVariables(this.config.nameTemplate, templateContext) + ".md";
     const folderPath = replaceTemplateVariables(this.config.folder, templateContext);
     return folderPath ? `${folderPath}/${filename}` : filename;
   }

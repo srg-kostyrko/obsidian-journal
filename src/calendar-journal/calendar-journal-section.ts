@@ -122,14 +122,14 @@ export class CalendarJournalSection {
 
   private getNoteName(startDate: MomentDate, endDate: MomentDate): string {
     const templateContext = this.getTemplateContext(startDate, endDate);
-    return replaceTemplateVariables(this.config.titleTemplate, templateContext);
+    return replaceTemplateVariables(this.config.nameTemplate, templateContext);
   }
 
   private getDatePath(startDate: MomentDate, endDate: MomentDate): string {
     const indexed = this.journal.index.get(startDate, this.granularity);
     if (indexed) return indexed.path;
     const templateContext = this.getTemplateContext(startDate, endDate);
-    const filename = replaceTemplateVariables(this.config.titleTemplate, templateContext) + ".md";
+    const filename = replaceTemplateVariables(this.config.nameTemplate, templateContext) + ".md";
     const folderPath = replaceTemplateVariables(this.folderPath, templateContext);
     return folderPath ? `${folderPath}/${filename}` : filename;
   }

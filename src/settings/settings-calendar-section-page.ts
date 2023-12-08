@@ -12,7 +12,7 @@ export class SettingsCalendarSectionPage extends SettingsWidget {
     protected journal: CalendarConfig,
     protected containerEl: HTMLElement,
     protected config: CalendarSection,
-    protected title: string,
+    protected name: string,
   ) {
     super(app);
   }
@@ -21,7 +21,7 @@ export class SettingsCalendarSectionPage extends SettingsWidget {
     const { containerEl } = this;
 
     new Setting(containerEl)
-      .setName(`${capitalize(this.title)} Notes`)
+      .setName(`${capitalize(this.name)} Notes`)
       .setHeading()
       .addButton((button) => {
         button
@@ -49,9 +49,9 @@ export class SettingsCalendarSectionPage extends SettingsWidget {
         });
     });
 
-    new Setting(containerEl).setName("Note title").addText((text) => {
-      text.setValue(this.config.titleTemplate).onChange((value) => {
-        this.config.titleTemplate = value;
+    new Setting(containerEl).setName("Note name").addText((text) => {
+      text.setValue(this.config.nameTemplate).onChange((value) => {
+        this.config.nameTemplate = value;
         this.save();
       });
     });
@@ -107,7 +107,7 @@ export class SettingsCalendarSectionPage extends SettingsWidget {
       new Setting(containerEl).setName("Ribbon tooltip").addText((text) => {
         text
           .setValue(this.config.ribbon.tooltip)
-          .setPlaceholder(`Open ${this.title} note`)
+          .setPlaceholder(`Open ${this.name} note`)
           .onChange((value) => {
             this.config.ribbon.tooltip = value;
             this.save();

@@ -14,7 +14,7 @@ export class SettingsIntervalPage extends SettingsWidget {
     super(app);
   }
 
-  get headerText(): string {
+  get headingText(): string {
     return `Configuring ${this.config.name}`;
   }
 
@@ -22,7 +22,7 @@ export class SettingsIntervalPage extends SettingsWidget {
     const { containerEl } = this;
 
     const heading = new Setting(containerEl)
-      .setName(this.headerText)
+      .setName(this.headingText)
       .setHeading()
       .addButton((button) => {
         button.setButtonText("Back to list").onClick(() => {
@@ -37,7 +37,7 @@ export class SettingsIntervalPage extends SettingsWidget {
     new Setting(containerEl).setName("Journal Name").addText((text) => {
       text.setValue(this.config.name).onChange(() => {
         this.config.name = text.getValue();
-        heading.setName(this.headerText);
+        heading.setName(this.headingText);
         this.save();
       });
     });
@@ -66,9 +66,9 @@ export class SettingsIntervalPage extends SettingsWidget {
         });
     });
 
-    new Setting(containerEl).setName("Note title").addText((text) => {
-      text.setValue(this.config.titleTemplate).onChange((value) => {
-        this.config.titleTemplate = value;
+    new Setting(containerEl).setName("Note name").addText((text) => {
+      text.setValue(this.config.nameTemplate).onChange((value) => {
+        this.config.nameTemplate = value;
         this.save();
       });
     });

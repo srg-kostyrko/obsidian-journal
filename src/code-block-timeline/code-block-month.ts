@@ -22,13 +22,13 @@ export class CodeBlockMonth extends MarkdownRenderChild {
     const startWithWeek = start.clone().startOf("week");
     const endWithWeek = end.clone().endOf("week");
 
-    const title = this.containerEl.createEl("h6", {
-      cls: "journal-title",
+    const name = this.containerEl.createEl("h6", {
+      cls: "journal-name",
       text: start.format("MMMM YYYY"),
     });
     if (this.journal.config.monthly.enabled) {
-      title.classList.add("journal-clickable");
-      title.on("click", ".journal-title", () => {
+      name.classList.add("journal-clickable");
+      name.on("click", ".journal-name", () => {
         this.journal.monthly.open(this.date);
       });
     }

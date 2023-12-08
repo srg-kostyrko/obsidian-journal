@@ -18,13 +18,13 @@ export class CodeBlockCalendar extends MarkdownRenderChild {
     const start = this.journal.yearly.getRangeStart(this.date);
     const end = this.journal.yearly.getRangeEnd(this.date);
 
-    const title = this.containerEl.createEl("h6", {
-      cls: "journal-title",
+    const name = this.containerEl.createEl("h6", {
+      cls: "journal-name",
       text: start.format("YYYY"),
     });
     if (this.journal.config.yearly.enabled) {
-      title.classList.add("journal-clickable");
-      title.on("click", ".journal-title", () => {
+      name.classList.add("journal-clickable");
+      name.on("click", ".journal-name", () => {
         this.journal.yearly.open(this.date);
       });
     }

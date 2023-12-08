@@ -14,14 +14,14 @@ export class IntervalManager {
   private intervalTree = new IntervalTree<Interval>();
   private keysMap = new Map<string, Interval>();
 
-  private maxYearIndex = 0;
+  private maximumYearIndex = 0;
 
   constructor(
     private config: IntervalConfig,
     private calendar: CalendarHelper,
   ) {
     if (this.shouldResetYearly) {
-      this.calculateMaxYearIndex();
+      this.calculateMaximumYearIndex();
     }
   }
 
@@ -132,7 +132,7 @@ export class IntervalManager {
       curent.subtract(this.config.duration, this.config.granularity);
       index--;
       if (this.shouldResetYearly && index === 0) {
-        index = this.maxYearIndex;
+        index = this.maximumYearIndex;
       }
     }
     return {
@@ -142,17 +142,17 @@ export class IntervalManager {
     };
   }
 
-  private calculateMaxYearIndex(): void {
+  private calculateMaximumYearIndex(): void {
     const duration = this.config.duration;
     switch (this.config.granularity) {
       case "month":
-        this.maxYearIndex = Math.floor(12 / duration);
+        this.maximumYearIndex = Math.floor(12 / duration);
         break;
       case "week":
-        this.maxYearIndex = Math.floor(52 / duration);
+        this.maximumYearIndex = Math.floor(52 / duration);
         break;
       case "day":
-        this.maxYearIndex = Math.floor(365 / duration);
+        this.maximumYearIndex = Math.floor(365 / duration);
         break;
     }
   }

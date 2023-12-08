@@ -11,7 +11,7 @@ export const DEFAULT_CONFIG_CALENDAR: CalendarConfig = {
   daily: {
     enabled: true,
     openMode: "active",
-    titleTemplate: "{{date}}",
+    nameTemplate: "{{date}}",
     dateFormat: "YYYY-MM-DD",
     folder: "",
     template: "",
@@ -25,7 +25,7 @@ export const DEFAULT_CONFIG_CALENDAR: CalendarConfig = {
   weekly: {
     enabled: false,
     openMode: "active",
-    titleTemplate: "{{date}}",
+    nameTemplate: "{{date}}",
     dateFormat: "YYYY-[W]ww",
     folder: "",
     template: "",
@@ -39,7 +39,7 @@ export const DEFAULT_CONFIG_CALENDAR: CalendarConfig = {
   monthly: {
     enabled: false,
     openMode: "active",
-    titleTemplate: "{{date}}",
+    nameTemplate: "{{date}}",
     dateFormat: "YYYY-MM",
     folder: "",
     template: "",
@@ -53,7 +53,7 @@ export const DEFAULT_CONFIG_CALENDAR: CalendarConfig = {
   quarterly: {
     enabled: false,
     openMode: "active",
-    titleTemplate: "{{date}}",
+    nameTemplate: "{{date}}",
     dateFormat: "YYYY-[Q]Q",
     folder: "",
     template: "",
@@ -67,7 +67,7 @@ export const DEFAULT_CONFIG_CALENDAR: CalendarConfig = {
   yearly: {
     enabled: false,
     openMode: "active",
-    titleTemplate: "{{date}}",
+    nameTemplate: "{{date}}",
     dateFormat: "YYYY",
     folder: "",
     template: "",
@@ -91,7 +91,7 @@ export const DEFAULT_CONFIG_INTERVAL: IntervalConfig = {
   numeration_type: "increment",
   openOnStartup: false,
   openMode: "active",
-  titleTemplate: "{{index}}",
+  nameTemplate: "{{index}}",
   dateFormat: "YYYY-MM-DD",
   folder: "",
   template: "",
