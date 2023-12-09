@@ -61,6 +61,7 @@ export class JournalSettingTab extends PluginSettingTab {
                 containerEl,
                 journalConfig[this.routeState.section],
                 this.routeState.section,
+                this.manager.calendar,
               ).display();
             } else {
               new SettingsCalendarPage(
@@ -78,6 +79,7 @@ export class JournalSettingTab extends PluginSettingTab {
               containerEl,
               journalConfig,
               this.config.defaultId === journalConfig.id,
+              this.manager.calendar,
             ).display();
             break;
           }

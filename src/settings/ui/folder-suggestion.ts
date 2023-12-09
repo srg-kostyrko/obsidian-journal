@@ -16,6 +16,7 @@ export class FolderSuggestion extends AbstractInputSuggest<TFolder> {
     return fileAndFolders.filter((f): f is TFolder => {
       if (!(f instanceof TFolder)) return false;
       let path = f.path.toLocaleLowerCase();
+      if (path === "/") return false;
       if (root) {
         if (!path.startsWith(root)) return false;
         path = path.slice(root.length);

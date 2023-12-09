@@ -23,19 +23,22 @@ export class DeleteJournalModal extends Modal {
     const { contentEl } = this;
     contentEl.empty();
 
-    new Setting(contentEl).setName("Journal Notes").addDropdown((dropdown) => {
-      dropdown
-        .addOptions({
-          keep: "Keep",
-          clear: "Clear",
-          delete: "Delete",
-        })
-        .setValue(this.notesProcessing)
-        .onChange((value) => {
-          this.notesProcessing = value as NotesProcessing;
-          this.display();
-        });
-    });
+    new Setting(contentEl)
+      .setName("Journal notes")
+      .setDesc("What to do with notes connected to this journal")
+      .addDropdown((dropdown) => {
+        dropdown
+          .addOptions({
+            keep: "Keep",
+            clear: "Clear journal data",
+            delete: "Delete",
+          })
+          .setValue(this.notesProcessing)
+          .onChange((value) => {
+            this.notesProcessing = value as NotesProcessing;
+            this.display();
+          });
+      });
 
     new Setting(contentEl)
       .addButton((button) => {

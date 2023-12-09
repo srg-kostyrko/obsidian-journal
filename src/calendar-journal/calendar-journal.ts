@@ -14,7 +14,7 @@ import { MomentDate } from "../contracts/date.types";
 import { Journal } from "../contracts/journal.types";
 
 export const calendarCommands = {
-  "calendar:open-daily": "Open daily note",
+  "calendar:open-daily": "Open today's note",
   "calendar:open-weekly": "Open weekly note",
   "calendar:open-monthly": "Open monthly note",
   "calendar:open-quarterly": "Open quarterly note",

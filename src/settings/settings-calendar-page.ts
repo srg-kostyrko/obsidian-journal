@@ -25,16 +25,20 @@ export class SettingsCalendarPage extends SettingsWidget {
       .setName(this.headingText)
       .setHeading()
       .addButton((button) => {
-        button.setButtonText("Back to list").onClick(() => {
-          this.navigate({ type: "home" });
-        });
+        button
+          .setClass("journal-clickable")
+          .setIcon("chevron-left")
+          .setTooltip("Back to list")
+          .onClick(() => {
+            this.navigate({ type: "home" });
+          });
       });
 
     const badge = heading.nameEl.createEl("span");
     badge.innerText = `ID: ${this.config.id}`;
     badge.classList.add("flair");
 
-    new Setting(containerEl).setName("Journal Name").addText((text) => {
+    new Setting(containerEl).setName("Journal name").addText((text) => {
       text.setValue(this.config.name).onChange(() => {
         this.config.name = text.getValue();
         heading.setName(this.headingText);
@@ -42,44 +46,50 @@ export class SettingsCalendarPage extends SettingsWidget {
       });
     });
 
-    new Setting(containerEl).setName("Root Folder").addText((text) => {
-      new FolderSuggestion(this.app, text.inputEl);
-      text
-        .setValue(this.config.rootFolder)
-        .setPlaceholder("Example: folder 1/folder 2")
-        .onChange(() => {
-          this.config.rootFolder = text.getValue();
-          this.save();
-        });
-    });
-    if (this.isDefault) {
-      const startUp = new Setting(containerEl).setName("Open on Startup").addToggle((toggle) => {
-        toggle.setValue(this.config.openOnStartup).onChange(() => {
-          this.config.openOnStartup = toggle.getValue();
-          this.save(true);
-        });
+    new Setting(containerEl)
+      .setName("Root folder")
+      .setDesc("All other folders in sections will be relative to this one")
+      .addText((text) => {
+        new FolderSuggestion(this.app, text.inputEl);
+        text
+          .setValue(this.config.rootFolder)
+          .setPlaceholder("Example: folder 1/folder 2")
+          .onChange(() => {
+            this.config.rootFolder = text.getValue();
+            this.save();
+          });
       });
+    if (this.isDefault) {
+      const startUp = new Setting(containerEl)
+        .setName("Open on startup")
+        .setDesc("Open a note whenever you open this vault? This option is only avaliable for default journal")
+        .addToggle((toggle) => {
+          toggle.setValue(this.config.openOnStartup).onChange(() => {
+            this.config.openOnStartup = toggle.getValue();
+            this.save(true);
+          });
+        });
       if (this.config.openOnStartup) {
         startUp.addDropdown((dropdown) => {
           const avaliable: SectionName[] = [];
           if (this.config.daily.enabled) {
-            dropdown.addOption("daily", "Daily Note");
+            dropdown.addOption("daily", "Daily note");
             avaliable.push("daily");
           }
           if (this.config.weekly.enabled) {
-            dropdown.addOption("weekly", "Weekly Note");
+            dropdown.addOption("weekly", "Weekly note");
             avaliable.push("weekly");
           }
           if (this.config.monthly.enabled) {
-            dropdown.addOption("monthly", "Monthly Note");
+            dropdown.addOption("monthly", "Monthly note");
             avaliable.push("monthly");
           }
           if (this.config.quarterly.enabled) {
-            dropdown.addOption("quarterly", "Quarterly Note");
+            dropdown.addOption("quarterly", "Quarterly note");
             avaliable.push("quarterly");
           }
           if (this.config.yearly.enabled) {
-            dropdown.addOption("yearly", "Yearly Note");
+            dropdown.addOption("yearly", "Yearly note");
             avaliable.push("yearly");
           }
           if (!avaliable.contains(this.config.startupSection)) {
@@ -106,6 +116,7 @@ export class SettingsCalendarPage extends SettingsWidget {
       daily.addButton((button) => {
         button
           .setIcon("cog")
+          .setClass("journal-clickable")
           .setTooltip(`Configure ${sectionName} notes`)
           .onClick(() => {
             this.navigate({

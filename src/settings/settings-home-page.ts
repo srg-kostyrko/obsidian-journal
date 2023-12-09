@@ -19,12 +19,51 @@ export class SettingsHomePage extends SettingsWidget {
     const { containerEl } = this;
 
     new Setting(containerEl)
+      .setName("Start week on")
+      .setDesc("Which day to consider as first day of week.")
+      .addDropdown((dropdown) => {
+        const fow = moment().localeData().firstDayOfWeek();
+        const fowText = moment().localeData().weekdays()[fow];
+        dropdown
+          .addOption("-1", `Locale default (${fowText})`)
+          .addOptions({
+            "0": "Sunday",
+            "1": "Monday",
+            "2": "Tuesday",
+            "3": "Wednesday",
+            "4": "Thursday",
+            "5": "Friday",
+            "6": "Saturday",
+          })
+          .setValue(String(this.config.calendar.firstDayOfWeek))
+          .onChange((value) => {
+            this.config.calendar.firstDayOfWeek = parseInt(value, 10);
+            this.manager.calendar.updateLocale();
+            this.save(true);
+          });
+      });
+    if (this.config.calendar.firstDayOfWeek !== -1) {
+      const s = new Setting(containerEl).setName("First week of year");
+      s.setDesc(`Define what date in January a week should contain to be considered first week of a year.`);
+      s.addText((text) => {
+        text.setValue(String(this.config.calendar.firstWeekOfYear ?? 1)).onChange((value) => {
+          if (value) {
+            this.config.calendar.firstWeekOfYear = parseInt(value, 10);
+            this.manager.calendar.updateLocale();
+            this.save();
+          }
+        });
+      });
+    }
+
+    new Setting(containerEl)
       .setName("Journals")
       .setHeading()
       .addButton((button) => {
         button
           .setTooltip("Create new journal configuration")
           .setCta()
+          .setClass("journal-clickable")
           .setIcon("plus")
           .onClick(() => {
             new CreateJournalModal(this.app, this.manager).open();
@@ -40,6 +79,7 @@ export class SettingsHomePage extends SettingsWidget {
             .setIcon("pencil")
             .setTooltip(`Edit ${entry.name}`)
             .setClass("clickable-icon")
+            .setClass("journal-clickable")
             .onClick(() => {
               this.navigate({
                 type: "journal",
@@ -59,6 +99,7 @@ export class SettingsHomePage extends SettingsWidget {
               .setIcon("shield-check")
               .setTooltip(`Make default`)
               .setClass("clickable-icon")
+              .setClass("journal-clickable")
               .onClick(async () => {
                 await this.manager.changeDefaultJournal(entry.id);
                 this.save(true);
@@ -69,49 +110,12 @@ export class SettingsHomePage extends SettingsWidget {
               .setIcon("trash-2")
               .setTooltip(`Delete ${entry.name}`)
               .setClass("clickable-icon")
+              .setClass("journal-clickable")
               .onClick(async () => {
                 new DeleteJournalModal(this.app, this.manager, entry).open();
               });
           });
       }
-    }
-
-    new Setting(containerEl).setName("Calendar Settings").setHeading();
-
-    new Setting(containerEl).setName("First Day of Week").addDropdown((dropdown) => {
-      const fow = moment().localeData().firstDayOfWeek();
-      const fowText = moment().localeData().weekdays()[fow];
-      dropdown
-        .addOptions({
-          "-1": `From Locale (${fowText})`,
-          "0": "Sunday",
-          "1": "Monday",
-          "2": "Tuesday",
-          "3": "Wednesday",
-          "4": "Thursday",
-          "5": "Friday",
-          "6": "Saturday",
-        })
-        .setValue(String(this.config.calendar.firstDayOfWeek))
-        .onChange((value) => {
-          this.config.calendar.firstDayOfWeek = parseInt(value, 10);
-          this.manager.calendar.updateLocale();
-          this.save(true);
-        });
-    });
-    if (this.config.calendar.firstDayOfWeek !== -1) {
-      const s = new Setting(containerEl).setName("First Week of Year");
-      s.setDesc(`First week of year must contain ${this.config.calendar.firstWeekOfYear ?? 1} January`);
-      s.addText((text) => {
-        text.setValue(String(this.config.calendar.firstWeekOfYear ?? 1)).onChange((value) => {
-          if (value) {
-            this.config.calendar.firstWeekOfYear = parseInt(value, 10);
-            this.manager.calendar.updateLocale();
-            s.setDesc(`First week of year must contain ${this.config.calendar.firstWeekOfYear ?? 1} January`);
-            this.save();
-          }
-        });
-      });
     }
   }
 }

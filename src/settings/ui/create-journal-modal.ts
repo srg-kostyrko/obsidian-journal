@@ -14,6 +14,8 @@ export class CreateJournalModal extends Modal {
   private start_index = 1;
   private numeration_type: IntervalConfig["numeration_type"] = "increment";
 
+  private errors: string[] = [];
+
   constructor(
     app: App,
     private manager: JournalManager,
@@ -22,29 +24,47 @@ export class CreateJournalModal extends Modal {
   }
 
   onOpen() {
+    this.titleEl.innerText = "Add Journal";
     this.display();
+  }
+
+  validate() {
+    this.errors = [];
+    if (!this.name) this.errors.push("Name is required");
+    if (!this.id) this.errors.push("ID is required");
+    if (this.type === "interval") {
+      if (!this.duration) this.errors.push("Duration is required");
+      if (!this.granularity) this.errors.push("Granularity is required");
+      if (!this.start_date) this.errors.push("Start date is required");
+      if (!this.start_index) this.errors.push("Start index is required");
+    }
   }
 
   display() {
     const { contentEl } = this;
     contentEl.empty();
 
-    new Setting(contentEl).setName("Add Journal").setHeading();
+    new Setting(contentEl)
+      .setName("Type")
+      .setDesc(
+        this.type === "interval"
+          ? "Interval based journal can be used for notes that are bound to time intervals not aligned with the calendar (like financial quarters or 2 week sprints)"
+          : "Calendar based journal can be used for daily, weelly, monthly, quarterly, and yearly notes",
+      )
+      .addDropdown((dropdown) => {
+        dropdown
+          .addOptions({
+            calendar: "Calendar based",
+            interval: "Interval based",
+          })
+          .setValue(this.type)
+          .onChange((value) => {
+            this.type = value as JournalConfig["type"];
+            this.display();
+          });
+      });
 
-    new Setting(contentEl).setName("Jornal Type").addDropdown((dropdown) => {
-      dropdown
-        .addOptions({
-          calendar: "Calendar based",
-          interval: "Interval based",
-        })
-        .setValue(this.type)
-        .onChange((value) => {
-          this.type = value as JournalConfig["type"];
-          this.display();
-        });
-    });
-
-    new Setting(contentEl).setName("Jornal Name").addText((text) => {
+    new Setting(contentEl).setName("Name").addText((text) => {
       text.setPlaceholder("ex. Work").onChange((value) => {
         this.name = value;
       });
@@ -52,7 +72,7 @@ export class CreateJournalModal extends Modal {
     });
 
     new Setting(contentEl)
-      .setName("Jornal ID")
+      .setName("ID")
       .setDesc("This will be used to connect nodes to journal in frontmatter")
       .addText((text) => {
         text.setPlaceholder("ex. work").onChange((value) => {
@@ -64,7 +84,9 @@ export class CreateJournalModal extends Modal {
     if (this.type === "interval") {
       new Setting(contentEl)
         .setName("Interval")
+        .setDesc("Define duration of an interval")
         .addText((text) => {
+          text.inputEl.classList.add("journal-small-input");
           text.setValue(this.duration.toString()).onChange((value) => {
             this.duration = parseInt(value, 10);
           });
@@ -82,7 +104,7 @@ export class CreateJournalModal extends Modal {
             });
         });
 
-      new Setting(contentEl).setName("Start Date").addButton((button) => {
+      new Setting(contentEl).setName("Start date").addButton((button) => {
         button.setButtonText(this.start_date || "Pick date").onClick(() => {
           new DatePickerModal(
             this.app,
@@ -96,23 +118,34 @@ export class CreateJournalModal extends Modal {
         });
       });
 
-      new Setting(contentEl).setName("Start Index").addText((text) => {
+      new Setting(contentEl).setName("Start index").addText((text) => {
+        text.inputEl.classList.add("journal-small-input");
         text.setValue(this.start_index.toString()).onChange((value) => {
           this.start_index = parseInt(value, 10);
         });
       });
 
-      new Setting(contentEl).setName("Index change").addDropdown((dropdown) => {
-        dropdown
-          .addOptions({
-            increment: "Increasing",
-            year: "Yearly restart (ex. quarters)",
-          })
-          .setValue(this.numeration_type)
-          .onChange((value) => {
-            this.numeration_type = value as IntervalConfig["numeration_type"];
-          });
-      });
+      new Setting(contentEl)
+        .setName("Index change")
+        .setDesc("Define how index of ongoing interval will change")
+        .addDropdown((dropdown) => {
+          dropdown
+            .addOptions({
+              increment: "Increasing",
+              year: "Yearly restart (ex. quarters)",
+            })
+            .setValue(this.numeration_type)
+            .onChange((value) => {
+              this.numeration_type = value as IntervalConfig["numeration_type"];
+            });
+        });
+    }
+
+    if (this.errors.length > 0) {
+      const ul = contentEl.createEl("ul", { cls: "journal-warning" });
+      for (const error of this.errors) {
+        ul.createEl("li", { text: error });
+      }
     }
 
     new Setting(contentEl)
@@ -124,10 +157,13 @@ export class CreateJournalModal extends Modal {
           .setButtonText("Add")
           .setCta()
           .onClick(async () => {
-            if (!this.name || !this.id) return;
+            this.validate();
+            if (this.errors.length > 0) {
+              this.display();
+              return;
+            }
+            this.close();
             if (this.type === "interval") {
-              if (!this.duration || !this.start_date || !this.start_index) return;
-              this.close();
               const config: IntervalConfig = {
                 ...DEFAULT_CONFIG_INTERVAL,
                 id: this.id,
@@ -145,7 +181,6 @@ export class CreateJournalModal extends Modal {
               });
               return;
             }
-            this.close();
             const id = await this.manager.createCalendarJournal(this.id, this.name);
             this.app.workspace.trigger("journal:settings-navigate", {
               type: "journal",

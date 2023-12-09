@@ -191,3 +191,11 @@
   background-color: var(--interactive-accent);
   color: var(--text-on-accent);
 }
+
+.journal-small-input {
+  width: 50px;
+}
+
+.journal-warning {
+  color: var(--text-error);
+}
