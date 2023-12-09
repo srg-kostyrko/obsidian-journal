@@ -1,4 +1,4 @@
-import { App, TFile, Plugin } from "obsidian";
+import { App, TFile, Plugin, normalizePath } from "obsidian";
 import { CalendarGranularity, CalendarSection } from "../contracts/config.types";
 import { CalendarJournal } from "./calendar-journal";
 import { ensureFolderExists } from "../utils/io";
@@ -131,7 +131,7 @@ export class CalendarJournalSection {
     const templateContext = this.getTemplateContext(startDate, endDate);
     const filename = replaceTemplateVariables(this.config.nameTemplate, templateContext) + ".md";
     const folderPath = replaceTemplateVariables(this.folderPath, templateContext);
-    return folderPath ? `${folderPath}/${filename}` : filename;
+    return normalizePath(folderPath ? `${folderPath}/${filename}` : filename);
   }
 
   private async getContent(context: TemplateContext): Promise<string> {

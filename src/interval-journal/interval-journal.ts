@@ -1,4 +1,4 @@
-import { App, FrontMatterCache, Plugin, TFile } from "obsidian";
+import { App, FrontMatterCache, Plugin, TFile, normalizePath } from "obsidian";
 import { IntervalConfig, IntervalFrontMatter } from "../contracts/config.types";
 import { CalendarHelper } from "../utils/calendar";
 import { Journal } from "../contracts/journal.types";
@@ -138,7 +138,7 @@ export class IntervalJournal implements Journal {
     const templateContext = this.getTemplateContext(interval);
     const filename = replaceTemplateVariables(this.config.nameTemplate, templateContext) + ".md";
     const folderPath = replaceTemplateVariables(this.config.folder, templateContext);
-    return folderPath ? `${folderPath}/${filename}` : filename;
+    return normalizePath(folderPath ? `${folderPath}/${filename}` : filename);
   }
 
   private async ensureIntervalNote(interval: Interval): Promise<TFile> {
