@@ -199,3 +199,31 @@
 .journal-warning {
   color: var(--text-error);
 }
+
+.journal-link {
+  color: var(--link-color);
+  text-decoration: underline;
+  outline: none;
+  text-decoration-line: var(--link-decoration);
+  text-decoration-thickness: var(--link-decoration-thickness);
+  cursor: var(--cursor-link);
+}
+
+.journal-variable {
+  border: var(--modal-border-width) solid var(--modal-border-color);
+  border-radius: var(--radius-s);
+  cursor: pointer;
+  padding: 2px 4px;
+}
+.journal-variable:hover {
+  background-color: var(--background-secondary);
+}
+.journal-hint {
+  color: var(--bold-color);
+}
+
+.journal-variables-grid {
+  display: grid;
+  grid-template-columns: auto 1fr;
+  gap: 12px;
+}

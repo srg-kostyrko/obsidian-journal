@@ -4,6 +4,7 @@ import { FolderSuggestion } from "./ui/folder-suggestion";
 import { SettingsWidget } from "./settings-widget";
 import { IconSuggestion } from "./ui/icon-suggestion";
 import { CalendarHelper } from "../utils/calendar";
+import { VariableReferenceModal } from "./ui/variable-reference";
 
 export class SettingsIntervalPage extends SettingsWidget {
   constructor(
@@ -187,9 +188,13 @@ export class SettingsIntervalPage extends SettingsWidget {
   }
 
   createVaribleReferenceHint(el: HTMLElement): void {
-    el.createEl("a", {
-      text: "Supported variables",
+    const link = el.createEl("span", {
+      cls: "var-ref journal-link",
+      text: "Supported variables.",
       href: "#",
+    });
+    link.on("click", ".var-ref", () => {
+      new VariableReferenceModal(this.app, "interval", "year", this.config.dateFormat).open();
     });
   }
 

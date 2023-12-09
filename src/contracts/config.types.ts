@@ -1,6 +1,14 @@
 export type CalendarGranularity = "day" | "week" | "month" | "quarter" | "year";
 export type SectionName = "daily" | "weekly" | "monthly" | "quarterly" | "yearly";
 
+export const sectionGranularity: Record<SectionName, CalendarGranularity> = {
+  daily: "day",
+  weekly: "week",
+  monthly: "month",
+  quarterly: "quarter",
+  yearly: "year",
+};
+
 export interface PluginSettings {
   journals: Record<string, JournalConfig>;
   defaultId: string;

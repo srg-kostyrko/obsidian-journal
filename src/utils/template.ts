@@ -1,7 +1,7 @@
 import { TemplateContext } from "../contracts/template.types";
 
 export function replaceTemplateVariables(template: string, context: TemplateContext): string {
-  let content = template;
+  let content = template ?? "";
   if (context.date) {
     const { value: date, defaultFormat } = context.date;
     content = content

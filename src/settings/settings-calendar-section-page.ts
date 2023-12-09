@@ -1,10 +1,11 @@
-import { CalendarConfig, CalendarSection } from "../contracts/config.types";
+import { CalendarConfig, CalendarGranularity, CalendarSection } from "../contracts/config.types";
 import { App, ButtonComponent, Setting } from "obsidian";
 import { FolderSuggestion } from "./ui/folder-suggestion";
 import { IconSuggestion } from "./ui/icon-suggestion";
 import { SettingsWidget } from "./settings-widget";
 import { capitalize } from "../utils";
 import { CalendarHelper } from "../utils/calendar";
+import { VariableReferenceModal } from "./ui/variable-reference";
 
 export class SettingsCalendarSectionPage extends SettingsWidget {
   private folderSuggestions: FolderSuggestion[] = [];
@@ -13,6 +14,7 @@ export class SettingsCalendarSectionPage extends SettingsWidget {
     protected journal: CalendarConfig,
     protected containerEl: HTMLElement,
     protected config: CalendarSection,
+    protected granularity: CalendarGranularity,
     protected name: string,
     private calendar: CalendarHelper,
   ) {
@@ -80,6 +82,9 @@ export class SettingsCalendarSectionPage extends SettingsWidget {
     dateFormat.descEl.createEl("br");
     dateFormat.descEl.createEl("a", {
       text: "Syntax reference.",
+      attr: {
+        target: "_blank",
+      },
       href: "https://momentjs.com/docs/#/displaying/format/",
     });
     dateFormat.descEl.createEl("br");
@@ -178,14 +183,19 @@ export class SettingsCalendarSectionPage extends SettingsWidget {
   }
 
   createVaribleReferenceHint(el: HTMLElement): void {
-    el.createEl("a", {
+    const link = el.createEl("span", {
+      cls: "var-ref journal-link",
       text: "Supported variables.",
       href: "#",
+    });
+    link.on("click", ".var-ref", () => {
+      new VariableReferenceModal(this.app, "calendar", this.granularity, this.config.dateFormat).open();
     });
   }
 
   createCodeBlockReferenceHint(el: HTMLElement): void {
-    el.createEl("a", {
+    el.createEl("span", {
+      cls: "code-ref journal-link",
       text: "Supported code blocks",
       href: "#",
     });

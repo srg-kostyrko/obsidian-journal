@@ -6,6 +6,7 @@ import { SettingsRouteState } from "../contracts/settings";
 import { SettingsCalendarSectionPage } from "./settings-calendar-section-page";
 import { JournalConfigManager } from "../config/journal-config-manager";
 import { SettingsIntervalPage } from "./settings-interval-page";
+import { sectionGranularity } from "../contracts/config.types";
 
 export class JournalSettingTab extends PluginSettingTab {
   private routeState: SettingsRouteState = {
@@ -60,6 +61,7 @@ export class JournalSettingTab extends PluginSettingTab {
                 journalConfig,
                 containerEl,
                 journalConfig[this.routeState.section],
+                sectionGranularity[this.routeState.section],
                 this.routeState.section,
                 this.manager.calendar,
               ).display();
