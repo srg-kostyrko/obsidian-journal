@@ -5,6 +5,7 @@ import { SettingsWidget } from "./settings-widget";
 import { IconSuggestion } from "./ui/icon-suggestion";
 import { CalendarHelper } from "../utils/calendar";
 import { VariableReferenceModal } from "./ui/variable-reference";
+import { IntervalCodeBlocksModal } from "./ui/interval-code-blocks";
 
 export class SettingsIntervalPage extends SettingsWidget {
   constructor(
@@ -191,7 +192,6 @@ export class SettingsIntervalPage extends SettingsWidget {
     const link = el.createEl("span", {
       cls: "var-ref journal-link",
       text: "Supported variables.",
-      href: "#",
     });
     link.on("click", ".var-ref", () => {
       new VariableReferenceModal(this.app, "interval", "year", this.config.dateFormat).open();
@@ -199,9 +199,13 @@ export class SettingsIntervalPage extends SettingsWidget {
   }
 
   createCodeBlockReferenceHint(el: HTMLElement): void {
-    el.createEl("a", {
+    const link = el.createEl("span", {
+      cls: "code-ref journal-link",
       text: "Supported code blocks",
-      href: "#",
+    });
+
+    link.on("click", ".code-ref", () => {
+      new IntervalCodeBlocksModal(this.app, this.config, this.calendar).open();
     });
   }
 }
