@@ -6,6 +6,7 @@ import { SettingsWidget } from "./settings-widget";
 import { capitalize } from "../utils";
 import { CalendarHelper } from "../utils/calendar";
 import { VariableReferenceModal } from "./ui/variable-reference";
+import { CalendarCodeBlocksModal } from "./ui/calendar-code-blocks";
 
 export class SettingsCalendarSectionPage extends SettingsWidget {
   private folderSuggestions: FolderSuggestion[] = [];
@@ -194,10 +195,12 @@ export class SettingsCalendarSectionPage extends SettingsWidget {
   }
 
   createCodeBlockReferenceHint(el: HTMLElement): void {
-    el.createEl("span", {
+    const link = el.createEl("span", {
       cls: "code-ref journal-link",
       text: "Supported code blocks",
-      href: "#",
+    });
+    link.on("click", ".code-ref", () => {
+      new CalendarCodeBlocksModal(this.app, this.journal, this.calendar, this.granularity).open();
     });
   }
 }

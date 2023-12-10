@@ -209,11 +209,13 @@
   cursor: var(--cursor-link);
 }
 
-.journal-variable {
+.journal-variable,
+.journal-code-block {
   border: var(--modal-border-width) solid var(--modal-border-color);
   border-radius: var(--radius-s);
   cursor: pointer;
   padding: 2px 4px;
+  font-family: monospace;
 }
 .journal-variable:hover {
   background-color: var(--background-secondary);
@@ -226,4 +228,14 @@
   display: grid;
   grid-template-columns: auto 1fr;
   gap: 12px;
+}
+
+.journal-divider {
+  height: 1px;
+  margin: 4px 0 12px;
+  border-bottom: var(--modal-border-width) solid var(--modal-border-color);
+}
+
+.calendar-code-block-modal {
+  --dialog-width: 720px;
 }

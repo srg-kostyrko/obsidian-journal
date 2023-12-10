@@ -10,6 +10,7 @@ export abstract class CodeBlockNav extends MarkdownRenderChild {
     containerEl: HTMLElement,
     protected journal: CalendarJournal,
     protected date: string,
+    protected addLinks = true,
   ) {
     super(containerEl);
   }
@@ -52,7 +53,7 @@ export abstract class CodeBlockNav extends MarkdownRenderChild {
     });
     this.renderOne(nextBlock, nextDate, true);
 
-    if (this.isCurrentEnabled()) {
+    if (this.addLinks && this.isCurrentEnabled()) {
       iconPrev.classList.add("journal-clickable");
       iconPrev.dataset.date = prevDate.format("YYYY-MM-DD");
       iconNext.classList.add("journal-clickable");
@@ -72,7 +73,7 @@ export abstract class CodeBlockNav extends MarkdownRenderChild {
       });
     }
 
-    if (this.journal.config.daily.enabled) {
+    if (this.addLinks && this.journal.config.daily.enabled) {
       const today = this.journal.today;
       if (!today.isSame(date)) {
         const todayBlock = view.createDiv({
@@ -100,7 +101,7 @@ export abstract class CodeBlockNav extends MarkdownRenderChild {
       cls: "journal-nav-week",
       text: date.format("[W]w"),
     });
-    if (clickable && this.journal.config.weekly.enabled) {
+    if (this.addLinks && clickable && this.journal.config.weekly.enabled) {
       week.classList.add("journal-clickable");
       week.dataset.date = date.format("YYYY-MM-DD");
       week.on("click", ".journal-nav-week", (e) => {
@@ -118,7 +119,7 @@ export abstract class CodeBlockNav extends MarkdownRenderChild {
       cls: "journal-nav-month",
       text: date.format("MMMM"),
     });
-    if (this.journal.config.monthly.enabled) {
+    if (this.addLinks && this.journal.config.monthly.enabled) {
       month.classList.add("journal-clickable");
       month.dataset.date = date.format("YYYY-MM");
       month.on("click", ".journal-nav-month", (e) => {
@@ -136,7 +137,7 @@ export abstract class CodeBlockNav extends MarkdownRenderChild {
       cls: "journal-nav-year",
       text: date.format("YYYY"),
     });
-    if (this.journal.config.yearly.enabled) {
+    if (this.addLinks && this.journal.config.yearly.enabled) {
       year.classList.add("journal-clickable");
       year.dataset.date = date.format("YYYY");
       year.on("click", ".journal-nav-year", (e) => {

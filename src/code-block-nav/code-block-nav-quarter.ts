@@ -3,8 +3,8 @@ import { MomentDate } from "../contracts/date.types";
 import { CodeBlockNav } from "./code-block-nav";
 
 export class CodeBlockNavQuarter extends CodeBlockNav {
-  constructor(containerEl: HTMLElement, journal: CalendarJournal, date: string) {
-    super(containerEl, journal, date);
+  constructor(containerEl: HTMLElement, journal: CalendarJournal, date: string, addLinks = true) {
+    super(containerEl, journal, date, addLinks);
     this.granularity = "quarter";
   }
 
@@ -23,7 +23,7 @@ export class CodeBlockNavQuarter extends CodeBlockNav {
       cls: "journal-nav-quarter",
       text: date.format("[Q]Q"),
     });
-    if (clickable && this.journal.config.monthly.enabled) {
+    if (this.addLinks && clickable && this.journal.config.monthly.enabled) {
       monthWrapper.dataset.date = date.format("YYYY-MM-DD");
       monthWrapper.classList.add("journal-clickable");
       monthWrapper.on("click", ".journal-nav-quarter-wrapper", (e) => {

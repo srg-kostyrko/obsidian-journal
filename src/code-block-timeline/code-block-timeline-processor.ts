@@ -1,18 +1,8 @@
 import { MarkdownPostProcessorContext, MarkdownRenderChild } from "obsidian";
 import { JournalManager } from "../journal-manager";
 import { JournalFrontMatter } from "../contracts/config.types";
-import { CodeBlockMonth } from "./code-block-month";
-import { CodeBlockWeek } from "./code-block-week";
-import { CodeBlockCalendar } from "./code-block-calendar";
-import { CodeBlockQuarter } from "./code-block-quarter";
 import { CalendarJournal } from "../calendar-journal/calendar-journal";
-
-const modes = {
-  month: CodeBlockMonth,
-  week: CodeBlockWeek,
-  quarter: CodeBlockQuarter,
-  calendar: CodeBlockCalendar,
-};
+import { timelineGranularityMapping, timelineModes } from "./timeline-mappings";
 
 export class CodeBlockTimelineProcessor extends MarkdownRenderChild {
   private data: JournalFrontMatter | null = null;
@@ -56,27 +46,29 @@ export class CodeBlockTimelineProcessor extends MarkdownRenderChild {
     await Promise.resolve();
 
     if (!this.data) {
-      this.containerEl.appendText("no data");
+      this.containerEl.appendText("Note is not connected to a journal.");
       return;
     }
     const journal = this.manager.get(this.data.id) || this.manager.defaultJournal;
     if (!journal) {
-      this.containerEl.appendText("no journal");
+      this.containerEl.appendText("Note is connected to a deleted journal.");
       return;
     }
     if (!(journal instanceof CalendarJournal)) {
-      this.containerEl.appendText("not a calendar journal");
+      this.containerEl.appendText("Note is connected to a non-calendar journal.");
       return;
     }
     const container = this.containerEl.createDiv();
 
     const mode = this.getMode();
-    if (!(mode in modes)) {
-      this.containerEl.appendText("unknown mode");
+    if (!(mode in timelineModes)) {
+      this.containerEl.appendText(
+        `Unknown mode: ${mode}. Supported modes are ${Object.keys(timelineModes).join(", ")}.`,
+      );
       return;
     }
 
-    const Block = modes[mode as keyof typeof modes];
+    const Block = timelineModes[mode as keyof typeof timelineModes];
     const block = new Block(container, journal, this.data.start_date, this.ctx);
     this.ctx.addChild(block);
     block.display();
@@ -89,17 +81,6 @@ export class CodeBlockTimelineProcessor extends MarkdownRenderChild {
     if (!this.data || !("granularity" in this.data)) {
       return "week";
     }
-    switch (this.data?.granularity) {
-      case "day":
-      case "week":
-        return "week";
-      case "month":
-        return "month";
-      case "quarter":
-        return "quarter";
-      case "year":
-        return "calendar";
-    }
-    return "week";
+    return timelineGranularityMapping[this.data.granularity];
   }
 }

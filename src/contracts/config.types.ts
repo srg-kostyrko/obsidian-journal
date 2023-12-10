@@ -9,6 +9,14 @@ export const sectionGranularity: Record<SectionName, CalendarGranularity> = {
   yearly: "year",
 };
 
+export const granularitySection: Record<CalendarGranularity, SectionName> = {
+  day: "daily",
+  week: "weekly",
+  month: "monthly",
+  quarter: "quarterly",
+  year: "yearly",
+};
+
 export interface PluginSettings {
   journals: Record<string, JournalConfig>;
   defaultId: string;

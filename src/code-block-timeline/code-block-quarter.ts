@@ -8,6 +8,7 @@ export class CodeBlockQuarter extends MarkdownRenderChild {
     protected journal: CalendarJournal,
     protected date: string,
     protected ctx: MarkdownPostProcessorContext,
+    protected addLinks = true,
   ) {
     super(containerEl);
   }
@@ -22,7 +23,7 @@ export class CodeBlockQuarter extends MarkdownRenderChild {
       cls: "journal-name",
       text: start.format("[Q]Q YYYY"),
     });
-    if (this.journal.config.quarterly.enabled) {
+    if (this.addLinks && this.journal.config.quarterly.enabled) {
       name.classList.add("journal-clickable");
       name.on("click", ".journal-name", () => {
         this.journal.quarterly.open(this.date);
@@ -36,7 +37,7 @@ export class CodeBlockQuarter extends MarkdownRenderChild {
     const curr = start.clone();
     while (curr.isSame(end, "quarter")) {
       const month = view.createDiv();
-      const monthView = new CodeBlockMonth(month, this.journal, curr.format("YYYY-MM-DD"), this.ctx);
+      const monthView = new CodeBlockMonth(month, this.journal, curr.format("YYYY-MM-DD"), this.ctx, this.addLinks);
       monthView.showPrevMonthDays = false;
       this.ctx.addChild(monthView);
       monthView.display();

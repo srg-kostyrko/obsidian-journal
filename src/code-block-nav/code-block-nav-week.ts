@@ -3,8 +3,8 @@ import { MomentDate } from "../contracts/date.types";
 import { CodeBlockNav } from "./code-block-nav";
 
 export class CodeBlockNavWeek extends CodeBlockNav {
-  constructor(containerEl: HTMLElement, journal: CalendarJournal, date: string) {
-    super(containerEl, journal, date);
+  constructor(containerEl: HTMLElement, journal: CalendarJournal, date: string, addLinks = true) {
+    super(containerEl, journal, date, addLinks);
     this.granularity = "week";
   }
 
@@ -24,7 +24,7 @@ export class CodeBlockNavWeek extends CodeBlockNav {
       cls: "journal-nav-relative",
       text: this.relativeWeek(date),
     });
-    if (weekClickable && this.journal.config.weekly.enabled) {
+    if (this.addLinks && weekClickable && this.journal.config.weekly.enabled) {
       relative.dataset.date = date.format("YYYY-MM-DD");
       relative.classList.add("journal-clickable");
       relative.on("click", ".journal-nav-relative", (e) => {

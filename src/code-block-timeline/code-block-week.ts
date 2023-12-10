@@ -7,6 +7,7 @@ export class CodeBlockWeek extends MarkdownRenderChild {
     protected journal: CalendarJournal,
     protected date: string,
     protected ctx: MarkdownPostProcessorContext,
+    protected addLinks = true,
   ) {
     super(containerEl);
   }
@@ -22,7 +23,7 @@ export class CodeBlockWeek extends MarkdownRenderChild {
       cls: "journal-name",
       text: start.format(this.journal.config.weekly.dateFormat),
     });
-    if (this.journal.config.weekly.enabled) {
+    if (this.addLinks && this.journal.config.weekly.enabled) {
       name.classList.add("journal-clickable");
       name.on("click", ".journal-name", () => {
         this.journal.weekly.open(this.date);
@@ -31,7 +32,7 @@ export class CodeBlockWeek extends MarkdownRenderChild {
     const view = this.containerEl.createDiv({
       cls: "journal-week-view",
     });
-    if (this.journal.config.daily.enabled) {
+    if (this.addLinks && this.journal.config.daily.enabled) {
       view.on("click", ".journal-weekday", (e) => {
         const date = (e.target as HTMLElement).closest<HTMLElement>("[data-date]")?.dataset?.date;
         if (date) {
@@ -45,7 +46,7 @@ export class CodeBlockWeek extends MarkdownRenderChild {
       if (start.isSame(today, "day")) {
         cls.push("journal-is-today");
       }
-      if (this.journal.config.daily.enabled) {
+      if (this.addLinks && this.journal.config.daily.enabled) {
         cls.push("journal-clickable");
       }
 

@@ -3,8 +3,8 @@ import { MomentDate } from "../contracts/date.types";
 import { CodeBlockNav } from "./code-block-nav";
 
 export class CodeBlockNavYear extends CodeBlockNav {
-  constructor(containerEl: HTMLElement, journal: CalendarJournal, date: string) {
-    super(containerEl, journal, date);
+  constructor(containerEl: HTMLElement, journal: CalendarJournal, date: string, addLinks = true) {
+    super(containerEl, journal, date, addLinks);
     this.granularity = "year";
   }
 
@@ -23,7 +23,7 @@ export class CodeBlockNavYear extends CodeBlockNav {
       cls: "journal-nav-year",
       text: date.format("YYYY"),
     });
-    if (clickable && this.journal.config.yearly.enabled) {
+    if (this.addLinks && clickable && this.journal.config.yearly.enabled) {
       yearWrapper.classList.add("journal-clickable");
       yearWrapper.dataset.date = date.format("YYYY");
       yearWrapper.on("click", ".journal-nav-year-wrapper", (e) => {
@@ -41,7 +41,7 @@ export class CodeBlockNavYear extends CodeBlockNav {
 
   relativeYear(date: MomentDate) {
     const thisQuarter = this.journal.today.startOf(this.granularity);
-    const fromNow = date.diff(thisQuarter, "quarter");
+    const fromNow = date.diff(thisQuarter, "year");
     if (fromNow === 0) {
       return "This year";
     } else if (fromNow === -1) {

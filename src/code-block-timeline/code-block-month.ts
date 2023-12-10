@@ -8,6 +8,7 @@ export class CodeBlockMonth extends MarkdownRenderChild {
     protected journal: CalendarJournal,
     protected date: string,
     protected ctx: MarkdownPostProcessorContext,
+    protected addLinks = true,
   ) {
     super(containerEl);
   }
@@ -26,7 +27,7 @@ export class CodeBlockMonth extends MarkdownRenderChild {
       cls: "journal-name",
       text: start.format("MMMM YYYY"),
     });
-    if (this.journal.config.monthly.enabled) {
+    if (this.addLinks && this.journal.config.monthly.enabled) {
       name.classList.add("journal-clickable");
       name.on("click", ".journal-name", () => {
         this.journal.monthly.open(this.date);
@@ -35,7 +36,7 @@ export class CodeBlockMonth extends MarkdownRenderChild {
     const view = this.containerEl.createDiv({
       cls: "journal-month-view journal-month-with-week",
     });
-    if (this.journal.config.daily.enabled) {
+    if (this.addLinks && this.journal.config.daily.enabled) {
       view.on("click", ".journal-day", (e) => {
         const date = (e.target as HTMLElement).closest<HTMLElement>("[data-date]")?.dataset?.date;
         if (date) {
@@ -62,7 +63,7 @@ export class CodeBlockMonth extends MarkdownRenderChild {
           cls: "journal-weeknumber",
           text: curr.format("[W]ww"),
         });
-        if (this.journal.config.weekly.enabled) {
+        if (this.addLinks && this.journal.config.weekly.enabled) {
           weekNum.classList.add("journal-clickable");
           weekNum.dataset.date = curr.format("YYYY-MM-DD");
           weekNum.on("click", ".journal-weeknumber", (e) => {
@@ -85,7 +86,7 @@ export class CodeBlockMonth extends MarkdownRenderChild {
           text = "";
         }
       }
-      if (this.journal.config.daily.enabled) {
+      if (this.addLinks && this.journal.config.daily.enabled) {
         cls.push("journal-clickable");
       }
       const day = view.createDiv({

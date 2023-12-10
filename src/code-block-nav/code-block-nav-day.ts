@@ -3,8 +3,8 @@ import { MomentDate } from "../contracts/date.types";
 import { CodeBlockNav } from "./code-block-nav";
 
 export class CodeBlockNavDay extends CodeBlockNav {
-  constructor(containerEl: HTMLElement, journal: CalendarJournal, date: string) {
-    super(containerEl, journal, date);
+  constructor(containerEl: HTMLElement, journal: CalendarJournal, date: string, addLinks = true) {
+    super(containerEl, journal, date, addLinks);
   }
 
   isCurrentEnabled(): boolean {
@@ -31,7 +31,7 @@ export class CodeBlockNavDay extends CodeBlockNav {
       cls: "journal-nav-relative",
       text: this.relativeDay(date),
     });
-    if (clickable && this.journal.config.daily.enabled) {
+    if (this.addLinks && clickable && this.journal.config.daily.enabled) {
       dayWrapper.dataset.date = date.format("YYYY-MM-DD");
       dayWrapper.classList.add("journal-clickable");
       dayWrapper.on("click", ".journal-nav-day-wrapper", (e) => {
