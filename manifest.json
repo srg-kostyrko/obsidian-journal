@@ -1,9 +1,9 @@
 {
-  "id": "journal",
-  "name": "Journal",
+  "id": "journals",
+  "name": "Journals",
   "version": "0.1.0",
   "minAppVersion": "1.0.0",
-  "description": "Plugin for everyday journaling.",
+  "description": "Manage your journals in Obsidian",
   "author": "Sergii Kostyrko",
   "authorUrl": "https://github.com/srg-kostyrko",
   "isDesktopOnly": false

@@ -13,6 +13,9 @@
   margin-left: 12px;
   margin-bottom: 12px;
 }
+.journal-week-view .journal-weekday {
+  font-size: 1em;
+}
 .journal-month-with-week {
   grid-template-columns: 35px repeat(7, 30px);
 }
