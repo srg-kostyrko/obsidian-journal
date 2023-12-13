@@ -73,7 +73,7 @@ export abstract class CodeBlockNav extends MarkdownRenderChild {
       });
     }
 
-    if (this.addLinks && this.journal.config.daily.enabled) {
+    if (this.addLinks && this.journal.config.day.enabled) {
       const today = this.journal.today;
       if (!today.isSame(date)) {
         const todayBlock = view.createDiv({
@@ -85,7 +85,7 @@ export abstract class CodeBlockNav extends MarkdownRenderChild {
         todayBlock.on("click", ".journal-nav-today", (e) => {
           const date = (e.currentTarget as HTMLElement)?.dataset?.date;
           if (date) {
-            this.journal.daily.open(date);
+            this.journal.day.open(date);
           }
         });
       }
@@ -101,13 +101,13 @@ export abstract class CodeBlockNav extends MarkdownRenderChild {
       cls: "journal-nav-week",
       text: date.format("[W]w"),
     });
-    if (this.addLinks && clickable && this.journal.config.weekly.enabled) {
+    if (this.addLinks && clickable && this.journal.config.week.enabled) {
       week.classList.add("journal-clickable");
       week.dataset.date = date.format("YYYY-MM-DD");
       week.on("click", ".journal-nav-week", (e) => {
         const date = (e.currentTarget as HTMLElement)?.dataset?.date;
         if (date) {
-          this.journal.weekly.open(date);
+          this.journal.week.open(date);
         }
       });
     }
@@ -119,13 +119,13 @@ export abstract class CodeBlockNav extends MarkdownRenderChild {
       cls: "journal-nav-month",
       text: date.format("MMMM"),
     });
-    if (this.addLinks && this.journal.config.monthly.enabled) {
+    if (this.addLinks && this.journal.config.month.enabled) {
       month.classList.add("journal-clickable");
       month.dataset.date = date.format("YYYY-MM");
       month.on("click", ".journal-nav-month", (e) => {
         const date = (e.currentTarget as HTMLElement)?.dataset?.date;
         if (date) {
-          this.journal.monthly.open(date);
+          this.journal.month.open(date);
         }
       });
     }
@@ -137,13 +137,13 @@ export abstract class CodeBlockNav extends MarkdownRenderChild {
       cls: "journal-nav-year",
       text: date.format("YYYY"),
     });
-    if (this.addLinks && this.journal.config.yearly.enabled) {
+    if (this.addLinks && this.journal.config.year.enabled) {
       year.classList.add("journal-clickable");
       year.dataset.date = date.format("YYYY");
       year.on("click", ".journal-nav-year", (e) => {
         const date = (e.currentTarget as HTMLElement)?.dataset?.date;
         if (date) {
-          this.journal.yearly.open(date);
+          this.journal.year.open(date);
         }
       });
     }

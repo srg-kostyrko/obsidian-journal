@@ -16,17 +16,17 @@ export class CodeBlockCalendar extends MarkdownRenderChild {
   display() {
     this.containerEl.empty();
 
-    const start = this.journal.yearly.getRangeStart(this.date);
-    const end = this.journal.yearly.getRangeEnd(this.date);
+    const start = this.journal.year.getRangeStart(this.date);
+    const end = this.journal.year.getRangeEnd(this.date);
 
     const name = this.containerEl.createEl("h6", {
       cls: "journal-name",
       text: start.format("YYYY"),
     });
-    if (this.addLinks && this.journal.config.yearly.enabled) {
+    if (this.addLinks && this.journal.config.year.enabled) {
       name.classList.add("journal-clickable");
       name.on("click", ".journal-name", () => {
-        this.journal.yearly.open(this.date);
+        this.journal.year.open(this.date);
       });
     }
 

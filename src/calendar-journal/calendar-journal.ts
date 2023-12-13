@@ -14,29 +14,29 @@ import { MomentDate } from "../contracts/date.types";
 import { Journal } from "../contracts/journal.types";
 
 export const calendarCommands = {
-  "calendar:open-daily": "Open today's note",
-  "calendar:open-weekly": "Open weekly note",
-  "calendar:open-monthly": "Open monthly note",
-  "calendar:open-quarterly": "Open quarterly note",
-  "calendar:open-yearly": "Open yearly note",
-  "calendar:open-daily-next": "Open tomorrow's note",
-  "calendar:open-weekly-next": "Open next week note",
-  "calendar:open-monthly-next": "Open next month note",
-  "calendar:open-quarterly-next": "Open next quarter note",
-  "calendar:open-yearly-next": "Open next year note",
-  "calendar:open-daily-prev": "Open yesterday's note",
-  "calendar:open-weekly-prev": "Open last week note",
-  "calendar:open-monthly-prev": "Open last month note",
-  "calendar:open-quarterly-prev": "Open last quarter note",
-  "calendar:open-yearly-prev": "Open last year note",
+  "calendar:open-day": "Open today's note",
+  "calendar:open-week": "Open weekly note",
+  "calendar:open-month": "Open monthly note",
+  "calendar:open-quarter": "Open quarterly note",
+  "calendar:open-year": "Open yearly note",
+  "calendar:open-next-day": "Open tomorrow's note",
+  "calendar:open-next-week": "Open next week note",
+  "calendar:open-next-month": "Open next month note",
+  "calendar:open-next-quarter": "Open next quarter note",
+  "calendar:open-next-year": "Open next year note",
+  "calendar:open-prev-day": "Open yesterday's note",
+  "calendar:open-prev-week": "Open last week note",
+  "calendar:open-prev-month": "Open last month note",
+  "calendar:open-prev-quarter": "Open last quarter note",
+  "calendar:open-prev-year": "Open last year note",
 };
 
 export class CalendarJournal implements Journal {
-  public readonly daily: CalendarJournalSection;
-  public readonly weekly: CalendarJournalSection;
-  public readonly monthly: CalendarJournalSection;
-  public readonly quarterly: CalendarJournalSection;
-  public readonly yearly: CalendarJournalSection;
+  public readonly day: CalendarJournalSection;
+  public readonly week: CalendarJournalSection;
+  public readonly month: CalendarJournalSection;
+  public readonly quarter: CalendarJournalSection;
+  public readonly year: CalendarJournalSection;
 
   public readonly index = new CalendarIndex();
 
@@ -45,11 +45,11 @@ export class CalendarJournal implements Journal {
     public readonly config: CalendarConfig,
     private calendar: CalendarHelper,
   ) {
-    this.daily = new CalendarJournalSection(app, this, this.config.daily, "day", this.calendar);
-    this.weekly = new CalendarJournalSection(app, this, this.config.weekly, "week", this.calendar);
-    this.monthly = new CalendarJournalSection(app, this, this.config.monthly, "month", this.calendar);
-    this.quarterly = new CalendarJournalSection(app, this, this.config.quarterly, "quarter", this.calendar);
-    this.yearly = new CalendarJournalSection(app, this, this.config.yearly, "year", this.calendar);
+    this.day = new CalendarJournalSection(app, this, this.config.day, "day", this.calendar);
+    this.week = new CalendarJournalSection(app, this, this.config.week, "week", this.calendar);
+    this.month = new CalendarJournalSection(app, this, this.config.month, "month", this.calendar);
+    this.quarter = new CalendarJournalSection(app, this, this.config.quarter, "quarter", this.calendar);
+    this.year = new CalendarJournalSection(app, this, this.config.year, "year", this.calendar);
   }
 
   get id(): string {
@@ -68,81 +68,81 @@ export class CalendarJournal implements Journal {
     return this.calendar.date(date, format);
   }
 
-  supportsCommand(id: string): boolean {
+  supportsCommand(id: keyof typeof calendarCommands): boolean {
     switch (id) {
-      case "calendar:open-daily":
-      case "calendar:open-daily-next":
-      case "calendar:open-daily-prev":
-        return this.config.daily.enabled;
-      case "calendar:open-weekly":
-      case "calendar:open-weekly-next":
-      case "calendar:open-weekly-prev":
-        return this.config.weekly.enabled;
-      case "calendar:open-monthly":
-      case "calendar:open-monthly-next":
-      case "calendar:open-monthly-prev":
-        return this.config.monthly.enabled;
-      case "calendar:open-quarterly":
-      case "calendar:open-quarterly-next":
-      case "calendar:open-quarterly-prev":
-        return this.config.quarterly.enabled;
-      case "calendar:open-yearly":
-      case "calendar:open-yearly-next":
-      case "calendar:open-yearly-prev":
-        return this.config.yearly.enabled;
+      case "calendar:open-day":
+      case "calendar:open-next-day":
+      case "calendar:open-prev-day":
+        return this.config.day.enabled;
+      case "calendar:open-week":
+      case "calendar:open-next-week":
+      case "calendar:open-prev-week":
+        return this.config.week.enabled;
+      case "calendar:open-month":
+      case "calendar:open-next-month":
+      case "calendar:open-prev-month":
+        return this.config.month.enabled;
+      case "calendar:open-quarter":
+      case "calendar:open-next-quarter":
+      case "calendar:open-prev-quarter":
+        return this.config.quarter.enabled;
+      case "calendar:open-year":
+      case "calendar:open-next-year":
+      case "calendar:open-prev-year":
+        return this.config.year.enabled;
     }
     return false;
   }
 
-  async execCommand(id: string): Promise<void> {
+  async execCommand(id: keyof typeof calendarCommands): Promise<void> {
     switch (id) {
-      case "calendar:open-daily-prev":
-        return this.daily.openPrev();
-      case "calendar:open-daily":
-        return this.daily.open();
-      case "calendar:open-daily-next":
-        return this.daily.openNext();
-      case "calendar:open-weekly-prev":
-        return this.weekly.openPrev();
-      case "calendar:open-weekly":
-        return this.weekly.open();
-      case "calendar:open-weekly-next":
-        return this.weekly.openNext();
-      case "calendar:open-monthly-prev":
-        return this.monthly.openPrev();
-      case "calendar:open-monthly":
-        return this.monthly.open();
-      case "calendar:open-monthly-next":
-        return this.monthly.openNext();
-      case "calendar:open-quarterly-prev":
-        return this.quarterly.openPrev();
-      case "calendar:open-quarterly":
-        return this.quarterly.open();
-      case "calendar:open-quarterly-next":
-        return this.quarterly.openNext();
-      case "calendar:open-yearly-prev":
-        return this.yearly.openPrev();
-      case "calendar:open-yearly":
-        return this.yearly.open();
-      case "calendar:open-yearly-next":
-        return this.yearly.openNext();
+      case "calendar:open-prev-day":
+        return this.day.openPrev();
+      case "calendar:open-day":
+        return this.day.open();
+      case "calendar:open-next-day":
+        return this.day.openNext();
+      case "calendar:open-prev-week":
+        return this.week.openPrev();
+      case "calendar:open-week":
+        return this.week.open();
+      case "calendar:open-next-week":
+        return this.week.openNext();
+      case "calendar:open-prev-month":
+        return this.month.openPrev();
+      case "calendar:open-month":
+        return this.month.open();
+      case "calendar:open-next-month":
+        return this.month.openNext();
+      case "calendar:open-prev-quarter":
+        return this.quarter.openPrev();
+      case "calendar:open-quarter":
+        return this.quarter.open();
+      case "calendar:open-next-quarter":
+        return this.quarter.openNext();
+      case "calendar:open-prev-year":
+        return this.year.openPrev();
+      case "calendar:open-year":
+        return this.year.open();
+      case "calendar:open-next-year":
+        return this.year.openNext();
     }
   }
 
   configureRibbonIcons(plugin: Plugin) {
-    this.daily.configureRibbonIcons(plugin);
-    this.weekly.configureRibbonIcons(plugin);
-    this.monthly.configureRibbonIcons(plugin);
-    this.quarterly.configureRibbonIcons(plugin);
-    this.yearly.configureRibbonIcons(plugin);
+    this.day.configureRibbonIcons(plugin);
+    this.week.configureRibbonIcons(plugin);
+    this.month.configureRibbonIcons(plugin);
+    this.quarter.configureRibbonIcons(plugin);
+    this.year.configureRibbonIcons(plugin);
   }
 
   async autoCreateNotes(): Promise<void> {
-    await this.daily.autoCreateNote();
-    await this.weekly.autoCreateNote();
-    await this.monthly.autoCreateNote();
-    await this.quarterly.autoCreateNote();
-    await this.yearly.autoCreateNote();
+    await this.day.autoCreateNote();
+    await this.week.autoCreateNote();
+    await this.month.autoCreateNote();
+    await this.quarter.autoCreateNote();
+    await this.year.autoCreateNote();
   }
 
   async openStartupNote(): Promise<void> {
@@ -152,14 +152,14 @@ export class CalendarJournal implements Journal {
   }
 
   async openDefault(): Promise<void> {
-    if (this.config.daily.enabled) {
-      return this.daily.open();
-    } else if (this.config.weekly.enabled) {
-      return this.weekly.open();
-    } else if (this.config.monthly.enabled) {
-      return this.monthly.open();
-    } else if (this.config.quarterly.enabled) {
-      return this.quarterly.open();
+    if (this.config.day.enabled) {
+      return this.day.open();
+    } else if (this.config.week.enabled) {
+      return this.week.open();
+    } else if (this.config.month.enabled) {
+      return this.month.open();
+    } else if (this.config.quarter.enabled) {
+      return this.quarter.open();
     }
   }
 

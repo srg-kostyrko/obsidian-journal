@@ -1,4 +1,4 @@
-import { CalendarConfig, CalendarSection, SectionName } from "../contracts/config.types";
+import { CalendarConfig, CalendarGranularity, CalendarSection } from "../contracts/config.types";
 import { App, Setting } from "obsidian";
 import { FolderSuggestion } from "./ui/folder-suggestion";
 import { SettingsWidget } from "./settings-widget";
@@ -71,26 +71,26 @@ export class SettingsCalendarPage extends SettingsWidget {
         });
       if (this.config.openOnStartup) {
         startUp.addDropdown((dropdown) => {
-          const avaliable: SectionName[] = [];
-          if (this.config.daily.enabled) {
-            dropdown.addOption("daily", "Daily note");
-            avaliable.push("daily");
+          const avaliable: CalendarGranularity[] = [];
+          if (this.config.day.enabled) {
+            dropdown.addOption("day", "Daily note");
+            avaliable.push("day");
           }
-          if (this.config.weekly.enabled) {
-            dropdown.addOption("weekly", "Weekly note");
-            avaliable.push("weekly");
+          if (this.config.week.enabled) {
+            dropdown.addOption("week", "Weekly note");
+            avaliable.push("week");
           }
-          if (this.config.monthly.enabled) {
-            dropdown.addOption("monthly", "Monthly note");
-            avaliable.push("monthly");
+          if (this.config.month.enabled) {
+            dropdown.addOption("month", "Monthly note");
+            avaliable.push("month");
           }
-          if (this.config.quarterly.enabled) {
-            dropdown.addOption("quarterly", "Quarterly note");
-            avaliable.push("quarterly");
+          if (this.config.quarter.enabled) {
+            dropdown.addOption("quarter", "Quarterly note");
+            avaliable.push("quarter");
           }
-          if (this.config.yearly.enabled) {
-            dropdown.addOption("yearly", "Yearly note");
-            avaliable.push("yearly");
+          if (this.config.year.enabled) {
+            dropdown.addOption("year", "Yearly note");
+            avaliable.push("year");
           }
           if (!avaliable.contains(this.config.startupSection)) {
             this.config.startupSection = avaliable[0];
@@ -103,17 +103,17 @@ export class SettingsCalendarPage extends SettingsWidget {
       }
     }
 
-    this.renderSectionsHeading("daily", this.config.daily);
-    this.renderSectionsHeading("weekly", this.config.weekly);
-    this.renderSectionsHeading("monthly", this.config.monthly);
-    this.renderSectionsHeading("quarterly", this.config.quarterly);
-    this.renderSectionsHeading("yearly", this.config.yearly);
+    this.renderSectionsHeading("day", this.config.day);
+    this.renderSectionsHeading("week", this.config.week);
+    this.renderSectionsHeading("month", this.config.month);
+    this.renderSectionsHeading("quarter", this.config.quarter);
+    this.renderSectionsHeading("year", this.config.year);
   }
 
-  renderSectionsHeading(sectionName: SectionName, config: CalendarSection): void {
-    const daily = new Setting(this.containerEl).setName(`${capitalize(sectionName)} notes`);
+  renderSectionsHeading(sectionName: CalendarGranularity, config: CalendarSection): void {
+    const setting = new Setting(this.containerEl).setName(`${capitalize(sectionName)} notes`);
     if (config.enabled) {
-      daily.addButton((button) => {
+      setting.addButton((button) => {
         button
           .setIcon("cog")
           .setClass("journal-clickable")
@@ -127,7 +127,7 @@ export class SettingsCalendarPage extends SettingsWidget {
           });
       });
     }
-    daily.addToggle((toggle) => {
+    setting.addToggle((toggle) => {
       toggle.setValue(config.enabled).onChange((value) => {
         config.enabled = value;
         this.save(true);

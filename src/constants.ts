@@ -1,4 +1,4 @@
-import { CalendarGranularity, SectionName } from "./contracts/config.types";
+import { CalendarGranularity } from "./contracts/config.types";
 
 export const FRONTMATTER_DATE_FORMAT = "YYYY-MM-DD";
 export const FRONTMATTER_ID_KEY = "journal";
@@ -7,7 +7,7 @@ export const FRONTMATTER_END_DATE_KEY = "journal-end-date";
 export const FRONTMATTER_SECTION_KEY = "journal-section";
 export const FRONTMATTER_INDEX_KEY = "journal-interval-index";
 
-export const SECTIONS_MAP: Record<CalendarGranularity, SectionName> = {
+export const SECTIONS_MAP: Record<CalendarGranularity, string> = {
   day: "daily",
   week: "weekly",
   month: "monthly",

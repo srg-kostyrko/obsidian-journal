@@ -18,8 +18,8 @@ export class CodeBlockMonth extends MarkdownRenderChild {
     this.containerEl.classList.add("journal-month-timeline");
     const today = this.journal.today;
 
-    const start = this.journal.monthly.getRangeStart(this.date);
-    const end = this.journal.monthly.getRangeEnd(this.date);
+    const start = this.journal.month.getRangeStart(this.date);
+    const end = this.journal.month.getRangeEnd(this.date);
     const startWithWeek = start.clone().startOf("week");
     const endWithWeek = end.clone().endOf("week");
 
@@ -27,20 +27,20 @@ export class CodeBlockMonth extends MarkdownRenderChild {
       cls: "journal-name",
       text: start.format("MMMM YYYY"),
     });
-    if (this.addLinks && this.journal.config.monthly.enabled) {
+    if (this.addLinks && this.journal.config.month.enabled) {
       name.classList.add("journal-clickable");
       name.on("click", ".journal-name", () => {
-        this.journal.monthly.open(this.date);
+        this.journal.month.open(this.date);
       });
     }
     const view = this.containerEl.createDiv({
       cls: "journal-month-view journal-month-with-week",
     });
-    if (this.addLinks && this.journal.config.daily.enabled) {
+    if (this.addLinks && this.journal.config.day.enabled) {
       view.on("click", ".journal-day", (e) => {
         const date = (e.target as HTMLElement).closest<HTMLElement>("[data-date]")?.dataset?.date;
         if (date) {
-          this.journal.daily.open(date);
+          this.journal.day.open(date);
         }
       });
     }
@@ -63,13 +63,13 @@ export class CodeBlockMonth extends MarkdownRenderChild {
           cls: "journal-weeknumber",
           text: curr.format("[W]ww"),
         });
-        if (this.addLinks && this.journal.config.weekly.enabled) {
+        if (this.addLinks && this.journal.config.week.enabled) {
           weekNum.classList.add("journal-clickable");
           weekNum.dataset.date = curr.format("YYYY-MM-DD");
           weekNum.on("click", ".journal-weeknumber", (e) => {
             const date = (e.currentTarget as HTMLElement)?.dataset?.date;
             if (date) {
-              this.journal.weekly.open(date);
+              this.journal.week.open(date);
             }
           });
         }
@@ -86,7 +86,7 @@ export class CodeBlockMonth extends MarkdownRenderChild {
           text = "";
         }
       }
-      if (this.addLinks && this.journal.config.daily.enabled) {
+      if (this.addLinks && this.journal.config.day.enabled) {
         cls.push("journal-clickable");
       }
       const day = view.createDiv({

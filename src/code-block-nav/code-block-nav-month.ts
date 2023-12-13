@@ -9,10 +9,10 @@ export class CodeBlockNavMonth extends CodeBlockNav {
   }
 
   isCurrentEnabled(): boolean {
-    return this.journal.config.monthly.enabled;
+    return this.journal.config.month.enabled;
   }
   openDate(date: string): void {
-    this.journal.monthly.open(date);
+    this.journal.month.open(date);
   }
 
   renderOne(parent: HTMLElement, date: MomentDate, clickable = true) {
@@ -23,13 +23,13 @@ export class CodeBlockNavMonth extends CodeBlockNav {
       cls: "journal-nav-month",
       text: date.format("MMMM"),
     });
-    if (this.addLinks && clickable && this.journal.config.monthly.enabled) {
+    if (this.addLinks && clickable && this.journal.config.month.enabled) {
       monthWrapper.dataset.date = date.format("YYYY-MM-DD");
       monthWrapper.classList.add("journal-clickable");
       monthWrapper.on("click", ".journal-nav-month-wrapper", (e) => {
         const date = (e.currentTarget as HTMLElement)?.dataset?.date;
         if (date) {
-          this.journal.monthly.open(date);
+          this.journal.month.open(date);
         }
       });
     }

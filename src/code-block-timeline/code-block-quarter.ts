@@ -16,17 +16,17 @@ export class CodeBlockQuarter extends MarkdownRenderChild {
   display() {
     this.containerEl.empty();
 
-    const start = this.journal.quarterly.getRangeStart(this.date);
-    const end = this.journal.quarterly.getRangeEnd(this.date);
+    const start = this.journal.quarter.getRangeStart(this.date);
+    const end = this.journal.quarter.getRangeEnd(this.date);
 
     const name = this.containerEl.createEl("h6", {
       cls: "journal-name",
       text: start.format("[Q]Q YYYY"),
     });
-    if (this.addLinks && this.journal.config.quarterly.enabled) {
+    if (this.addLinks && this.journal.config.quarter.enabled) {
       name.classList.add("journal-clickable");
       name.on("click", ".journal-name", () => {
-        this.journal.quarterly.open(this.date);
+        this.journal.quarter.open(this.date);
       });
     }
 

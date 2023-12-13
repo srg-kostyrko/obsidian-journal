@@ -1,10 +1,11 @@
 import { App, Modal } from "obsidian";
-import { CalendarConfig, CalendarGranularity, granularitySection } from "../../contracts/config.types";
+import { CalendarConfig, CalendarGranularity } from "../../contracts/config.types";
 import { CalendarJournal } from "../../calendar-journal/calendar-journal";
 import { CalendarHelper } from "../../utils/calendar";
 import { timelineGranularityMapping, timelineModes } from "../../code-block-timeline/timeline-mappings";
 import { stubMarkdownContext } from "./stub-markdown-context";
 import { navBlocks } from "../../code-block-nav/nav-blocks";
+import { SECTIONS_MAP } from "../../constants";
 
 export class CalendarCodeBlocksModal extends Modal {
   private journal: CalendarJournal;
@@ -50,7 +51,7 @@ export class CalendarCodeBlocksModal extends Modal {
       text: "Navigation code block helps navigating relative to current note.",
     });
     contentEl.createEl("p", {
-      text: `Navigation code block for ${granularitySection[this.granularity]} note looks like this:`,
+      text: `Navigation code block for ${SECTIONS_MAP[this.granularity]} note looks like this:`,
     });
 
     const navBlockWrapper = contentEl.createDiv();
@@ -82,7 +83,7 @@ export class CalendarCodeBlocksModal extends Modal {
       });
     }
     contentEl.createEl("p", {
-      text: `Default timeline for ${granularitySection[this.granularity]} note looks like this:`,
+      text: `Default timeline for ${SECTIONS_MAP[this.granularity]} note looks like this:`,
     });
 
     contentEl.createEl("div", {

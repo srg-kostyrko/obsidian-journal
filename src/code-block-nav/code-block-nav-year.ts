@@ -9,10 +9,10 @@ export class CodeBlockNavYear extends CodeBlockNav {
   }
 
   isCurrentEnabled(): boolean {
-    return this.journal.config.yearly.enabled;
+    return this.journal.config.year.enabled;
   }
   openDate(date: string): void {
-    this.journal.yearly.open(date);
+    this.journal.year.open(date);
   }
 
   renderOne(parent: HTMLElement, date: MomentDate, clickable = true) {
@@ -23,13 +23,13 @@ export class CodeBlockNavYear extends CodeBlockNav {
       cls: "journal-nav-year",
       text: date.format("YYYY"),
     });
-    if (this.addLinks && clickable && this.journal.config.yearly.enabled) {
+    if (this.addLinks && clickable && this.journal.config.year.enabled) {
       yearWrapper.classList.add("journal-clickable");
       yearWrapper.dataset.date = date.format("YYYY");
       yearWrapper.on("click", ".journal-nav-year-wrapper", (e) => {
         const date = (e.currentTarget as HTMLElement)?.dataset?.date;
         if (date) {
-          this.journal.yearly.open(date);
+          this.journal.year.open(date);
         }
       });
     }

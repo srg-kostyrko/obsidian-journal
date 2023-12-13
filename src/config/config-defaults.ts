@@ -6,9 +6,9 @@ export const DEFAULT_CONFIG_CALENDAR: CalendarConfig = {
   name: "My Journal",
   rootFolder: "",
   openOnStartup: false,
-  startupSection: "daily",
+  startupSection: "day",
 
-  daily: {
+  day: {
     enabled: true,
     openMode: "active",
     nameTemplate: "{{date}}",
@@ -22,7 +22,7 @@ export const DEFAULT_CONFIG_CALENDAR: CalendarConfig = {
     },
     createOnStartup: false,
   },
-  weekly: {
+  week: {
     enabled: false,
     openMode: "active",
     nameTemplate: "{{date}}",
@@ -36,7 +36,7 @@ export const DEFAULT_CONFIG_CALENDAR: CalendarConfig = {
     },
     createOnStartup: false,
   },
-  monthly: {
+  month: {
     enabled: false,
     openMode: "active",
     nameTemplate: "{{date}}",
@@ -50,7 +50,7 @@ export const DEFAULT_CONFIG_CALENDAR: CalendarConfig = {
     },
     createOnStartup: false,
   },
-  quarterly: {
+  quarter: {
     enabled: false,
     openMode: "active",
     nameTemplate: "{{date}}",
@@ -64,7 +64,7 @@ export const DEFAULT_CONFIG_CALENDAR: CalendarConfig = {
     },
     createOnStartup: false,
   },
-  yearly: {
+  year: {
     enabled: false,
     openMode: "active",
     nameTemplate: "{{date}}",

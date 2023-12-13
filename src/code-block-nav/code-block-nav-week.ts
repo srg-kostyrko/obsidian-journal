@@ -9,10 +9,10 @@ export class CodeBlockNavWeek extends CodeBlockNav {
   }
 
   isCurrentEnabled(): boolean {
-    return this.journal.config.weekly.enabled;
+    return this.journal.config.week.enabled;
   }
   openDate(date: string): void {
-    this.journal.weekly.open(date);
+    this.journal.week.open(date);
   }
 
   renderOne(parent: HTMLElement, date: MomentDate, weekClickable = true) {
@@ -24,13 +24,13 @@ export class CodeBlockNavWeek extends CodeBlockNav {
       cls: "journal-nav-relative",
       text: this.relativeWeek(date),
     });
-    if (this.addLinks && weekClickable && this.journal.config.weekly.enabled) {
+    if (this.addLinks && weekClickable && this.journal.config.week.enabled) {
       relative.dataset.date = date.format("YYYY-MM-DD");
       relative.classList.add("journal-clickable");
       relative.on("click", ".journal-nav-relative", (e) => {
         const date = (e.currentTarget as HTMLElement)?.dataset?.date;
         if (date) {
-          this.journal.weekly.open(date);
+          this.journal.week.open(date);
         }
       });
     }

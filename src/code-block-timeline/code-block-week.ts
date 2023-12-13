@@ -16,27 +16,27 @@ export class CodeBlockWeek extends MarkdownRenderChild {
     this.containerEl.empty();
     const today = this.journal.today;
 
-    const start = this.journal.weekly.getRangeStart(this.date);
-    const end = this.journal.weekly.getRangeEnd(this.date);
+    const start = this.journal.week.getRangeStart(this.date);
+    const end = this.journal.week.getRangeEnd(this.date);
 
     const name = this.containerEl.createEl("h6", {
       cls: "journal-name",
-      text: start.format(this.journal.config.weekly.dateFormat),
+      text: start.format(this.journal.config.week.dateFormat),
     });
-    if (this.addLinks && this.journal.config.weekly.enabled) {
+    if (this.addLinks && this.journal.config.week.enabled) {
       name.classList.add("journal-clickable");
       name.on("click", ".journal-name", () => {
-        this.journal.weekly.open(this.date);
+        this.journal.week.open(this.date);
       });
     }
     const view = this.containerEl.createDiv({
       cls: "journal-week-view",
     });
-    if (this.addLinks && this.journal.config.daily.enabled) {
+    if (this.addLinks && this.journal.config.day.enabled) {
       view.on("click", ".journal-weekday", (e) => {
         const date = (e.target as HTMLElement).closest<HTMLElement>("[data-date]")?.dataset?.date;
         if (date) {
-          this.journal.daily.open(date);
+          this.journal.day.open(date);
         }
       });
     }
@@ -46,7 +46,7 @@ export class CodeBlockWeek extends MarkdownRenderChild {
       if (start.isSame(today, "day")) {
         cls.push("journal-is-today");
       }
-      if (this.addLinks && this.journal.config.daily.enabled) {
+      if (this.addLinks && this.journal.config.day.enabled) {
         cls.push("journal-clickable");
       }
 

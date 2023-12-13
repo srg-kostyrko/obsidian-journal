@@ -8,11 +8,11 @@ export class CodeBlockNavDay extends CodeBlockNav {
   }
 
   isCurrentEnabled(): boolean {
-    return this.journal.config.daily.enabled;
+    return this.journal.config.day.enabled;
   }
 
   openDate(date: string): void {
-    this.journal.daily.open(date);
+    this.journal.day.open(date);
   }
 
   renderOne(parent: HTMLElement, date: MomentDate, clickable = true) {
@@ -31,18 +31,18 @@ export class CodeBlockNavDay extends CodeBlockNav {
       cls: "journal-nav-relative",
       text: this.relativeDay(date),
     });
-    if (this.addLinks && clickable && this.journal.config.daily.enabled) {
+    if (this.addLinks && clickable && this.journal.config.day.enabled) {
       dayWrapper.dataset.date = date.format("YYYY-MM-DD");
       dayWrapper.classList.add("journal-clickable");
       dayWrapper.on("click", ".journal-nav-day-wrapper", (e) => {
         const date = (e.currentTarget as HTMLElement)?.dataset?.date;
         if (date) {
-          this.journal.daily.open(date);
+          this.journal.day.open(date);
         }
       });
     }
 
-    if (this.journal.config.weekly.enabled) {
+    if (this.journal.config.week.enabled) {
       this.renderWeek(parent, date);
     }
     this.renderMonth(parent, date);
