@@ -7,6 +7,7 @@ import { capitalize } from "../utils";
 import { CalendarHelper } from "../utils/calendar";
 import { VariableReferenceModal } from "./ui/variable-reference";
 import { CalendarCodeBlocksModal } from "./ui/calendar-code-blocks";
+import { SECTIONS_MAP } from "../constants";
 
 export class SettingsCalendarSectionPage extends SettingsWidget {
   private folderSuggestions: FolderSuggestion[] = [];
@@ -16,7 +17,6 @@ export class SettingsCalendarSectionPage extends SettingsWidget {
     protected containerEl: HTMLElement,
     protected config: CalendarSection,
     protected granularity: CalendarGranularity,
-    protected name: string,
     private calendar: CalendarHelper,
   ) {
     super(app);
@@ -26,7 +26,7 @@ export class SettingsCalendarSectionPage extends SettingsWidget {
     const { containerEl } = this;
 
     new Setting(containerEl)
-      .setName(`${capitalize(this.name)} Notes`)
+      .setName(`${capitalize(SECTIONS_MAP[this.granularity])} Notes`)
       .setHeading()
       .addButton((button) => {
         button
@@ -158,7 +158,7 @@ export class SettingsCalendarSectionPage extends SettingsWidget {
         .addText((text) => {
           text
             .setValue(this.config.ribbon.tooltip)
-            .setPlaceholder(`Open ${this.name} note`)
+            .setPlaceholder(`Open ${SECTIONS_MAP[this.granularity]} note`)
             .onChange((value) => {
               this.config.ribbon.tooltip = value;
               this.save();

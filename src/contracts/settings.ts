@@ -1,4 +1,4 @@
-import { SectionName } from "./config.types";
+import { CalendarGranularity } from "./config.types";
 
 export type SettingsRouteState =
   | {
@@ -7,5 +7,5 @@ export type SettingsRouteState =
   | {
       type: "journal";
       id: string;
-      section?: SectionName;
+      section?: CalendarGranularity;
     };

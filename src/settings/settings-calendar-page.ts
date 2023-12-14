@@ -3,6 +3,7 @@ import { App, Setting } from "obsidian";
 import { FolderSuggestion } from "./ui/folder-suggestion";
 import { SettingsWidget } from "./settings-widget";
 import { capitalize } from "../utils";
+import { SECTIONS_MAP } from "../constants";
 
 export class SettingsCalendarPage extends SettingsWidget {
   constructor(
@@ -111,13 +112,13 @@ export class SettingsCalendarPage extends SettingsWidget {
   }
 
   renderSectionsHeading(sectionName: CalendarGranularity, config: CalendarSection): void {
-    const setting = new Setting(this.containerEl).setName(`${capitalize(sectionName)} notes`);
+    const setting = new Setting(this.containerEl).setName(`${capitalize(SECTIONS_MAP[sectionName])} notes`);
     if (config.enabled) {
       setting.addButton((button) => {
         button
           .setIcon("cog")
           .setClass("journal-clickable")
-          .setTooltip(`Configure ${sectionName} notes`)
+          .setTooltip(`Configure ${SECTIONS_MAP[sectionName]} notes`)
           .onClick(() => {
             this.navigate({
               type: "journal",
