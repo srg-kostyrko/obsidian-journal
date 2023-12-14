@@ -10,6 +10,7 @@
     "lint": "eslint . --ext .ts",
     "test": "vitest run",
     "test:watch": "vitest",
+    "ts-check": "tsc --noEmit -skipLibCheck",
     "prepare": "husky install"
   },
   "repository": {
