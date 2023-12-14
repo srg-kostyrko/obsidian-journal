@@ -39,10 +39,6 @@ export class JournalManager extends Component {
     }
   }
 
-  get defaultJournal() {
-    return this.journals.get(this.config.defaultId);
-  }
-
   get(id: string): Journal | undefined {
     return this.journals.get(id);
   }
@@ -69,11 +65,6 @@ export class JournalManager extends Component {
     return id;
   }
 
-  async changeDefaultJournal(id: string) {
-    this.config.defaultId = id;
-    await this.config.save();
-  }
-
   async autoCreateNotes(): Promise<void> {
     for (const journal of this.journals.values()) {
       await journal.autoCreateNotes();
@@ -81,7 +72,9 @@ export class JournalManager extends Component {
   }
 
   async openStartupNote(): Promise<void> {
-    await this.defaultJournal?.openStartupNote();
+    for (const journal of this.journals.values()) {
+      await journal.openStartupNote();
+    }
   }
 
   configureCommands() {
@@ -104,11 +97,7 @@ export class JournalManager extends Component {
   }
 
   configureRibbonIcons() {
-    if (this.defaultJournal) {
-      this.defaultJournal.configureRibbonIcons(this.plugin);
-    }
     for (const journal of this.journals.values()) {
-      if (journal === this.defaultJournal) continue;
       journal.configureRibbonIcons(this.plugin);
     }
   }

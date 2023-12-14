@@ -12,7 +12,6 @@ export class SettingsIntervalPage extends SettingsWidget {
     app: App,
     private containerEl: HTMLElement,
     private config: IntervalConfig,
-    private isDefault: boolean,
     private calendar: CalendarHelper,
   ) {
     super(app);
@@ -46,17 +45,15 @@ export class SettingsIntervalPage extends SettingsWidget {
       });
     });
 
-    if (this.isDefault) {
-      new Setting(containerEl)
-        .setName("Open on Startup")
-        .setDesc("Open a note whenever you open this vault? This option is only avaliable for default journal")
-        .addToggle((toggle) => {
-          toggle.setValue(this.config.openOnStartup).onChange(() => {
-            this.config.openOnStartup = toggle.getValue();
-            this.save(true);
-          });
+    new Setting(containerEl)
+      .setName("Open on Startup")
+      .setDesc("Open a note whenever you open this vault?")
+      .addToggle((toggle) => {
+        toggle.setValue(this.config.openOnStartup).onChange(() => {
+          this.config.openOnStartup = toggle.getValue();
+          this.save(true);
         });
-    }
+      });
 
     new Setting(containerEl)
       .setName("Open Note")

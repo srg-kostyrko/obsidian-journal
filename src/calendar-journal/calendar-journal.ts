@@ -151,18 +151,6 @@ export class CalendarJournal implements Journal {
     await this[section].open();
   }
 
-  async openDefault(): Promise<void> {
-    if (this.config.day.enabled) {
-      return this.day.open();
-    } else if (this.config.week.enabled) {
-      return this.week.open();
-    } else if (this.config.month.enabled) {
-      return this.month.open();
-    } else if (this.config.quarter.enabled) {
-      return this.quarter.open();
-    }
-  }
-
   parseFrontMatter(frontmatter: FrontMatterCache): CalerndatFrontMatter {
     return {
       type: "calendar",

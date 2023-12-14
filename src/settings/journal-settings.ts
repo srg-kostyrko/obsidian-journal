@@ -64,23 +64,12 @@ export class JournalSettingTab extends PluginSettingTab {
                 this.manager.calendar,
               ).display();
             } else {
-              new SettingsCalendarPage(
-                this.app,
-                containerEl,
-                journalConfig,
-                this.config.defaultId === journalConfig.id,
-              ).display();
+              new SettingsCalendarPage(this.app, containerEl, journalConfig).display();
             }
             break;
           }
           case "interval": {
-            new SettingsIntervalPage(
-              this.app,
-              containerEl,
-              journalConfig,
-              this.config.defaultId === journalConfig.id,
-              this.manager.calendar,
-            ).display();
+            new SettingsIntervalPage(this.app, containerEl, journalConfig, this.manager.calendar).display();
             break;
           }
         }

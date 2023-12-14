@@ -34,12 +34,8 @@ export class JournalConfigManager {
     delete this.settings.journals[id];
   }
 
-  get defaultId(): string {
-    return this.settings.defaultId;
-  }
-
-  set defaultId(id: string) {
-    this.settings.defaultId = id;
+  get size(): number {
+    return Object.keys(this.settings.journals).length;
   }
 
   get calendar() {

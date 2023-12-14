@@ -10,7 +10,6 @@ export class SettingsCalendarPage extends SettingsWidget {
     app: App,
     private containerEl: HTMLElement,
     private config: CalendarConfig,
-    private isDefault: boolean,
   ) {
     super(app);
   }
@@ -60,48 +59,46 @@ export class SettingsCalendarPage extends SettingsWidget {
             this.save();
           });
       });
-    if (this.isDefault) {
-      const startUp = new Setting(containerEl)
-        .setName("Open on startup")
-        .setDesc("Open a note whenever you open this vault? This option is only avaliable for default journal")
-        .addToggle((toggle) => {
-          toggle.setValue(this.config.openOnStartup).onChange(() => {
-            this.config.openOnStartup = toggle.getValue();
-            this.save(true);
-          });
+    const startUp = new Setting(containerEl)
+      .setName("Open on startup")
+      .setDesc("Open a note whenever you open this vault?")
+      .addToggle((toggle) => {
+        toggle.setValue(this.config.openOnStartup).onChange(() => {
+          this.config.openOnStartup = toggle.getValue();
+          this.save(true);
         });
-      if (this.config.openOnStartup) {
-        startUp.addDropdown((dropdown) => {
-          const avaliable: CalendarGranularity[] = [];
-          if (this.config.day.enabled) {
-            dropdown.addOption("day", "Daily note");
-            avaliable.push("day");
-          }
-          if (this.config.week.enabled) {
-            dropdown.addOption("week", "Weekly note");
-            avaliable.push("week");
-          }
-          if (this.config.month.enabled) {
-            dropdown.addOption("month", "Monthly note");
-            avaliable.push("month");
-          }
-          if (this.config.quarter.enabled) {
-            dropdown.addOption("quarter", "Quarterly note");
-            avaliable.push("quarter");
-          }
-          if (this.config.year.enabled) {
-            dropdown.addOption("year", "Yearly note");
-            avaliable.push("year");
-          }
-          if (!avaliable.contains(this.config.startupSection)) {
-            this.config.startupSection = avaliable[0];
-          }
-          dropdown.setValue(this.config.startupSection).onChange((value) => {
-            this.config.startupSection = value as CalendarConfig["startupSection"];
-            this.save();
-          });
+      });
+    if (this.config.openOnStartup) {
+      startUp.addDropdown((dropdown) => {
+        const avaliable: CalendarGranularity[] = [];
+        if (this.config.day.enabled) {
+          dropdown.addOption("day", "Daily note");
+          avaliable.push("day");
+        }
+        if (this.config.week.enabled) {
+          dropdown.addOption("week", "Weekly note");
+          avaliable.push("week");
+        }
+        if (this.config.month.enabled) {
+          dropdown.addOption("month", "Monthly note");
+          avaliable.push("month");
+        }
+        if (this.config.quarter.enabled) {
+          dropdown.addOption("quarter", "Quarterly note");
+          avaliable.push("quarter");
+        }
+        if (this.config.year.enabled) {
+          dropdown.addOption("year", "Yearly note");
+          avaliable.push("year");
+        }
+        if (!avaliable.contains(this.config.startupSection)) {
+          this.config.startupSection = avaliable[0];
+        }
+        dropdown.setValue(this.config.startupSection).onChange((value) => {
+          this.config.startupSection = value as CalendarConfig["startupSection"];
+          this.save();
         });
-      }
+      });
     }
 
     this.renderSectionsHeading("day", this.config.day);

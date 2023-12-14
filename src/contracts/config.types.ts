@@ -2,7 +2,6 @@ export type CalendarGranularity = "day" | "week" | "month" | "quarter" | "year";
 
 export interface PluginSettings {
   journals: Record<string, JournalConfig>;
-  defaultId: string;
   calendar: {
     firstDayOfWeek: number;
     firstWeekOfYear: number;

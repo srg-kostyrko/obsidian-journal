@@ -49,7 +49,7 @@ export class CodeBlockTimelineProcessor extends MarkdownRenderChild {
       this.containerEl.appendText("Note is not connected to a journal.");
       return;
     }
-    const journal = this.manager.get(this.data.id) || this.manager.defaultJournal;
+    const journal = this.manager.get(this.data.id);
     if (!journal) {
       this.containerEl.appendText("Note is connected to a deleted journal.");
       return;

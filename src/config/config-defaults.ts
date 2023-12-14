@@ -104,10 +104,7 @@ export const DEFAULT_CONFIG_INTERVAL: IntervalConfig = {
 };
 
 export const DEFAULT_PLUGIN_SETTINGS: PluginSettings = {
-  journals: {
-    "my-journal": DEFAULT_CONFIG_CALENDAR,
-  },
-  defaultId: "my-journal",
+  journals: {},
   calendar: {
     firstDayOfWeek: -1,
     firstWeekOfYear: 1,

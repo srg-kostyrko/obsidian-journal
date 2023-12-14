@@ -70,6 +70,10 @@ export class SettingsHomePage extends SettingsWidget {
           });
       });
 
+    if (this.config.size === 0) {
+      containerEl.createEl("p", { text: "No journals configured yet." });
+    }
+
     for (const entry of this.config) {
       const setting = new Setting(containerEl)
         .setName(entry.name)
@@ -87,35 +91,17 @@ export class SettingsHomePage extends SettingsWidget {
               });
             });
         });
-      if (this.config.defaultId === entry.id) {
-        const defaultBadge = setting.nameEl.createEl("span");
-        defaultBadge.innerText = "Default";
-        defaultBadge.classList.add("flair");
-        defaultBadge.classList.add("mod-pop");
-      } else {
-        setting
-          .addButton((button) => {
-            button
-              .setIcon("shield-check")
-              .setTooltip(`Make default`)
-              .setClass("clickable-icon")
-              .setClass("journal-clickable")
-              .onClick(async () => {
-                await this.manager.changeDefaultJournal(entry.id);
-                this.save(true);
-              });
-          })
-          .addButton((button) => {
-            button
-              .setIcon("trash-2")
-              .setTooltip(`Delete ${entry.name}`)
-              .setClass("clickable-icon")
-              .setClass("journal-clickable")
-              .onClick(async () => {
-                new DeleteJournalModal(this.app, this.manager, entry).open();
-              });
+
+      setting.addButton((button) => {
+        button
+          .setIcon("trash-2")
+          .setTooltip(`Delete ${entry.name}`)
+          .setClass("clickable-icon")
+          .setClass("journal-clickable")
+          .onClick(async () => {
+            new DeleteJournalModal(this.app, this.manager, entry).open();
           });
-      }
+      });
     }
   }
 }
