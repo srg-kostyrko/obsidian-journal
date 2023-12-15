@@ -8,6 +8,12 @@ import { CalendarHelper } from "../utils/calendar";
 import { VariableReferenceModal } from "./ui/variable-reference";
 import { CalendarCodeBlocksModal } from "./ui/calendar-code-blocks";
 import { SECTIONS_MAP } from "../constants";
+import {
+  DEFAULT_DATE_FORMATS_CALENDAR,
+  DEFAULT_NAME_TEMPLATE_CALENDAR,
+  DEFAULT_RIBBON_ICONS_CALENDAR,
+  DEFAULT_RIBBON_TOOLTIPS,
+} from "../config/config-defaults";
 
 export class SettingsCalendarSectionPage extends SettingsWidget {
   private folderSuggestions: FolderSuggestion[] = [];
@@ -20,6 +26,14 @@ export class SettingsCalendarSectionPage extends SettingsWidget {
     private calendar: CalendarHelper,
   ) {
     super(app);
+  }
+
+  get dateFormat() {
+    return this.config.dateFormat || DEFAULT_DATE_FORMATS_CALENDAR[this.granularity];
+  }
+
+  get ribbonIcon() {
+    return this.config.ribbon.icon || DEFAULT_RIBBON_ICONS_CALENDAR;
   }
 
   display() {
@@ -59,10 +73,13 @@ export class SettingsCalendarSectionPage extends SettingsWidget {
       });
 
     const nameTemplate = new Setting(containerEl).setName("Note name template").addText((text) => {
-      text.setValue(this.config.nameTemplate).onChange((value) => {
-        this.config.nameTemplate = value;
-        this.save();
-      });
+      text
+        .setPlaceholder(DEFAULT_NAME_TEMPLATE_CALENDAR)
+        .setValue(this.config.nameTemplate)
+        .onChange((value) => {
+          this.config.nameTemplate = value;
+          this.save();
+        });
     });
     nameTemplate.descEl.createEl("span", {
       text: "Template used to generate new note name.",
@@ -71,11 +88,14 @@ export class SettingsCalendarSectionPage extends SettingsWidget {
     this.createVaribleReferenceHint(nameTemplate.descEl);
 
     const dateFormat = new Setting(containerEl).setName("Default date format").addMomentFormat((format) => {
-      format.setValue(this.config.dateFormat).onChange((value) => {
-        this.config.dateFormat = value;
-        dateFormatHint.innerText = this.calendar.today().format(this.config.dateFormat);
-        this.save();
-      });
+      format
+        .setPlaceholder(DEFAULT_DATE_FORMATS_CALENDAR[this.granularity])
+        .setValue(this.config.dateFormat)
+        .onChange((value) => {
+          this.config.dateFormat = value;
+          dateFormatHint.innerText = this.calendar.today().format(this.dateFormat);
+          this.save();
+        });
     });
     dateFormat.descEl.createEl("span", {
       text: "Used to format dates if not defined in variable.",
@@ -95,7 +115,7 @@ export class SettingsCalendarSectionPage extends SettingsWidget {
     const dateFormatHint = dateFormat.descEl.createEl("b", {
       cls: "u-pop",
     });
-    dateFormatHint.innerText = this.calendar.today().format(this.config.dateFormat);
+    dateFormatHint.innerText = this.calendar.today().format(this.dateFormat);
 
     const folder = new Setting(containerEl).setName("Folder").addText((text) => {
       this.folderSuggestions.push(new FolderSuggestion(this.app, text.inputEl, this.journal.rootFolder));
@@ -142,7 +162,7 @@ export class SettingsCalendarSectionPage extends SettingsWidget {
         .setDesc("Select icon to be show in ribbon.")
         .addButton((button) => {
           iconPreivewButton = button;
-          button.setIcon(this.config.ribbon.icon).setDisabled(true);
+          button.setIcon(this.ribbonIcon).setDisabled(true);
         })
         .addText((text) => {
           new IconSuggestion(this.app, text.inputEl);
@@ -158,7 +178,7 @@ export class SettingsCalendarSectionPage extends SettingsWidget {
         .addText((text) => {
           text
             .setValue(this.config.ribbon.tooltip)
-            .setPlaceholder(`Open ${SECTIONS_MAP[this.granularity]} note`)
+            .setPlaceholder(DEFAULT_RIBBON_TOOLTIPS[this.granularity])
             .onChange((value) => {
               this.config.ribbon.tooltip = value;
               this.save();
@@ -190,7 +210,7 @@ export class SettingsCalendarSectionPage extends SettingsWidget {
       href: "#",
     });
     link.on("click", ".var-ref", () => {
-      new VariableReferenceModal(this.app, "calendar", this.granularity, this.config.dateFormat).open();
+      new VariableReferenceModal(this.app, "calendar", this.granularity, this.dateFormat).open();
     });
   }
 

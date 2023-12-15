@@ -1,4 +1,5 @@
 export type CalendarGranularity = "day" | "week" | "month" | "quarter" | "year";
+export type OpenMode = "active" | "tab" | "split" | "window";
 
 export interface PluginSettings {
   journals: Record<string, JournalConfig>;
@@ -29,7 +30,7 @@ export interface CalendarConfig extends JournalCaseConfig {
 
 export interface CalendarSection {
   enabled: boolean;
-  openMode: "active" | "tab" | "split" | "window";
+  openMode: OpenMode;
   nameTemplate: string;
   dateFormat: string;
   folder: string;
@@ -50,8 +51,9 @@ export interface IntervalConfig extends JournalCaseConfig {
   start_index: number;
   numeration_type: "increment" | "year";
 
+  createOnStartup: boolean;
   openOnStartup: boolean;
-  openMode: "active" | "tab" | "split" | "window";
+  openMode: OpenMode;
   nameTemplate: string;
   dateFormat: string;
   folder: string;
@@ -61,7 +63,6 @@ export interface IntervalConfig extends JournalCaseConfig {
     icon: string;
     tooltip: string;
   };
-  createOnStartup: boolean;
 }
 
 export type JournalConfig = CalendarConfig | IntervalConfig;

@@ -21,7 +21,7 @@ export class CodeBlockWeek extends MarkdownRenderChild {
 
     const name = this.containerEl.createEl("h6", {
       cls: "journal-name",
-      text: start.format(this.journal.config.week.dateFormat),
+      text: start.format(this.journal.week.dateFormat),
     });
     if (this.addLinks && this.journal.config.week.enabled) {
       name.classList.add("journal-clickable");

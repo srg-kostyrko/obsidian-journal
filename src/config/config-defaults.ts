@@ -1,22 +1,45 @@
-import { CalendarConfig, IntervalConfig, PluginSettings } from "../contracts/config.types";
+import { CalendarConfig, CalendarGranularity, IntervalConfig, PluginSettings } from "../contracts/config.types";
+
+export const DEFAULT_NAME_TEMPLATE_CALENDAR = "{{date}}";
+export const DEFAULT_NAME_TEMPLATE_INTERVAL = "{{journal_name}} {{index}}";
+
+export const DEFAULT_DATE_FORMAT = "YYYY-MM-DD";
+export const DEFAULT_DATE_FORMATS_CALENDAR: Record<CalendarGranularity, string> = {
+  day: "YYYY-MM-DD",
+  week: "YYYY-[W]ww",
+  month: "YYYY-MM",
+  quarter: "YYYY-[Q]Q",
+  year: "YYYY",
+};
+
+export const DEFAULT_RIBBON_ICONS_CALENDAR = "calendar-days";
+export const DEFAULT_RIBBON_ICONS_INTERVAL = "calendar-range";
+
+export const DEFAULT_RIBBON_TOOLTIPS: Record<CalendarGranularity, string> = {
+  day: "Open today's note",
+  week: "Open this week's note",
+  month: "Open this month's note",
+  quarter: "Open this quarter's note",
+  year: "Open this year's note",
+};
 
 export const DEFAULT_CONFIG_CALENDAR: CalendarConfig = {
-  id: "my-journal",
+  id: "",
   type: "calendar",
-  name: "My Journal",
+  name: "",
   rootFolder: "",
   openOnStartup: false,
   startupSection: "day",
 
   day: {
-    enabled: true,
+    enabled: false,
     openMode: "active",
-    nameTemplate: "{{date}}",
-    dateFormat: "YYYY-MM-DD",
+    nameTemplate: "",
+    dateFormat: "",
     folder: "",
     template: "",
     ribbon: {
-      show: true,
+      show: false,
       icon: "",
       tooltip: "",
     },
@@ -25,8 +48,8 @@ export const DEFAULT_CONFIG_CALENDAR: CalendarConfig = {
   week: {
     enabled: false,
     openMode: "active",
-    nameTemplate: "{{date}}",
-    dateFormat: "YYYY-[W]ww",
+    nameTemplate: "",
+    dateFormat: "",
     folder: "",
     template: "",
     ribbon: {
@@ -39,8 +62,8 @@ export const DEFAULT_CONFIG_CALENDAR: CalendarConfig = {
   month: {
     enabled: false,
     openMode: "active",
-    nameTemplate: "{{date}}",
-    dateFormat: "YYYY-MM",
+    nameTemplate: "",
+    dateFormat: "",
     folder: "",
     template: "",
     ribbon: {
@@ -53,8 +76,8 @@ export const DEFAULT_CONFIG_CALENDAR: CalendarConfig = {
   quarter: {
     enabled: false,
     openMode: "active",
-    nameTemplate: "{{date}}",
-    dateFormat: "YYYY-[Q]Q",
+    nameTemplate: "",
+    dateFormat: "",
     folder: "",
     template: "",
     ribbon: {
@@ -67,8 +90,8 @@ export const DEFAULT_CONFIG_CALENDAR: CalendarConfig = {
   year: {
     enabled: false,
     openMode: "active",
-    nameTemplate: "{{date}}",
-    dateFormat: "YYYY",
+    nameTemplate: "",
+    dateFormat: "",
     folder: "",
     template: "",
     ribbon: {
@@ -91,8 +114,8 @@ export const DEFAULT_CONFIG_INTERVAL: IntervalConfig = {
   numeration_type: "increment",
   openOnStartup: false,
   openMode: "active",
-  nameTemplate: "{{index}}",
-  dateFormat: "YYYY-MM-DD",
+  nameTemplate: "",
+  dateFormat: "",
   folder: "",
   template: "",
   ribbon: {

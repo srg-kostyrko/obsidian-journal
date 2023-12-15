@@ -10,10 +10,15 @@ import {
   FRONTMATTER_ID_KEY,
   FRONTMATTER_SECTION_KEY,
   FRONTMATTER_START_DATE_KEY,
-  SECTIONS_MAP,
 } from "../constants";
 import { MomentDate } from "../contracts/date.types";
 import { CalendarHelper } from "../utils/calendar";
+import {
+  DEFAULT_DATE_FORMATS_CALENDAR,
+  DEFAULT_NAME_TEMPLATE_CALENDAR,
+  DEFAULT_RIBBON_ICONS_CALENDAR,
+  DEFAULT_RIBBON_TOOLTIPS,
+} from "../config/config-defaults";
 
 export class CalendarJournalSection {
   constructor(
@@ -30,6 +35,22 @@ export class CalendarJournalSection {
       folderPath.push(this.config.folder);
     }
     return folderPath.join("/").replaceAll(/\/{2,}/g, "/");
+  }
+
+  get nameTemplate(): string {
+    return this.config.nameTemplate || DEFAULT_NAME_TEMPLATE_CALENDAR;
+  }
+
+  get dateFormat(): string {
+    return this.config.dateFormat || DEFAULT_DATE_FORMATS_CALENDAR[this.granularity];
+  }
+
+  get ribbonIcon(): string {
+    return this.config.ribbon.icon || DEFAULT_RIBBON_ICONS_CALENDAR;
+  }
+
+  get ribbonTooltip(): string {
+    return this.config.ribbon.tooltip || DEFAULT_RIBBON_TOOLTIPS[this.granularity];
   }
 
   getRangeStart(date?: string): MomentDate {
@@ -49,13 +70,9 @@ export class CalendarJournalSection {
   configureRibbonIcons(plugin: Plugin): void {
     if (!this.config.enabled) return;
     if (!this.config.ribbon.show) return;
-    plugin.addRibbonIcon(
-      this.config.ribbon.icon || "calendar-days",
-      this.config.ribbon.tooltip || `Open ${SECTIONS_MAP[this.granularity]} Note`,
-      () => {
-        this.open();
-      },
-    );
+    plugin.addRibbonIcon(this.ribbonIcon, this.ribbonTooltip, () => {
+      this.open();
+    });
   }
 
   async open(date?: string): Promise<void> {
@@ -101,18 +118,18 @@ export class CalendarJournalSection {
     return {
       date: {
         value: start_date,
-        defaultFormat: this.config.dateFormat,
+        defaultFormat: this.dateFormat,
       },
       start_date: {
         value: start_date,
-        defaultFormat: this.config.dateFormat,
+        defaultFormat: this.dateFormat,
       },
       end_date: {
         value: end_date,
-        defaultFormat: this.config.dateFormat,
+        defaultFormat: this.dateFormat,
       },
       journal_name: {
-        value: this.journal.config.name,
+        value: this.journal.name,
       },
       note_name: {
         value: note_name ?? "",
@@ -122,14 +139,14 @@ export class CalendarJournalSection {
 
   private getNoteName(startDate: MomentDate, endDate: MomentDate): string {
     const templateContext = this.getTemplateContext(startDate, endDate);
-    return replaceTemplateVariables(this.config.nameTemplate, templateContext);
+    return replaceTemplateVariables(this.nameTemplate, templateContext);
   }
 
   private getDatePath(startDate: MomentDate, endDate: MomentDate): string {
     const indexed = this.journal.index.get(startDate, this.granularity);
     if (indexed) return indexed.path;
     const templateContext = this.getTemplateContext(startDate, endDate);
-    const filename = replaceTemplateVariables(this.config.nameTemplate, templateContext) + ".md";
+    const filename = replaceTemplateVariables(this.nameTemplate, templateContext) + ".md";
     const folderPath = replaceTemplateVariables(this.folderPath, templateContext);
     return normalizePath(folderPath ? `${folderPath}/${filename}` : filename);
   }

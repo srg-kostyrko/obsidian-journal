@@ -6,6 +6,11 @@ import { IconSuggestion } from "./ui/icon-suggestion";
 import { CalendarHelper } from "../utils/calendar";
 import { VariableReferenceModal } from "./ui/variable-reference";
 import { IntervalCodeBlocksModal } from "./ui/interval-code-blocks";
+import {
+  DEFAULT_DATE_FORMAT,
+  DEFAULT_NAME_TEMPLATE_INTERVAL,
+  DEFAULT_RIBBON_ICONS_INTERVAL,
+} from "../config/config-defaults";
 
 export class SettingsIntervalPage extends SettingsWidget {
   constructor(
@@ -19,6 +24,14 @@ export class SettingsIntervalPage extends SettingsWidget {
 
   get headingText(): string {
     return `Configuring ${this.config.name}`;
+  }
+
+  get dateFormat(): string {
+    return this.config.dateFormat || DEFAULT_DATE_FORMAT;
+  }
+
+  get ribbonIcon(): string {
+    return this.config.ribbon.icon || DEFAULT_RIBBON_ICONS_INTERVAL;
   }
 
   display(): void {
@@ -74,10 +87,13 @@ export class SettingsIntervalPage extends SettingsWidget {
       });
 
     const nameTemplate = new Setting(containerEl).setName("Note name template").addText((text) => {
-      text.setValue(this.config.nameTemplate).onChange((value) => {
-        this.config.nameTemplate = value;
-        this.save();
-      });
+      text
+        .setPlaceholder(DEFAULT_NAME_TEMPLATE_INTERVAL)
+        .setValue(this.config.nameTemplate)
+        .onChange((value) => {
+          this.config.nameTemplate = value;
+          this.save();
+        });
     });
     nameTemplate.descEl.createEl("span", {
       text: "Template used to generate new note name.",
@@ -86,11 +102,14 @@ export class SettingsIntervalPage extends SettingsWidget {
     this.createVaribleReferenceHint(nameTemplate.descEl);
 
     const dateFormat = new Setting(containerEl).setName("Default date format").addMomentFormat((format) => {
-      format.setValue(this.config.dateFormat).onChange((value) => {
-        this.config.dateFormat = value;
-        dateFormatHint.innerText = this.calendar.today().format(this.config.dateFormat);
-        this.save();
-      });
+      format
+        .setPlaceholder(DEFAULT_DATE_FORMAT)
+        .setValue(this.config.dateFormat)
+        .onChange((value) => {
+          this.config.dateFormat = value;
+          dateFormatHint.innerText = this.calendar.today().format(this.dateFormat);
+          this.save();
+        });
     });
     dateFormat.descEl.createEl("span", {
       text: "Used to format dates if not defined in variable.",
@@ -107,7 +126,7 @@ export class SettingsIntervalPage extends SettingsWidget {
     const dateFormatHint = dateFormat.descEl.createEl("b", {
       cls: "u-pop",
     });
-    dateFormatHint.innerText = this.calendar.today().format(this.config.dateFormat);
+    dateFormatHint.innerText = this.calendar.today().format(this.dateFormat);
 
     const folder = new Setting(containerEl).setName("Folder").addText((text) => {
       new FolderSuggestion(this.app, text.inputEl);
@@ -153,20 +172,20 @@ export class SettingsIntervalPage extends SettingsWidget {
         .setDesc("Select icon to be show in ribbon.")
         .addButton((button) => {
           iconPreivewButton = button;
-          button.setIcon(this.config.ribbon.icon).setDisabled(true);
+          button.setIcon(this.ribbonIcon).setDisabled(true);
         })
         .addText((text) => {
           new IconSuggestion(this.app, text.inputEl);
           text.setValue(this.config.ribbon.icon).onChange((value) => {
             this.config.ribbon.icon = value;
-            iconPreivewButton?.setIcon(value);
+            iconPreivewButton?.setIcon(this.ribbonIcon);
             this.save();
           });
         });
       new Setting(containerEl).setName("Ribbon tooltip").addText((text) => {
         text
           .setValue(this.config.ribbon.tooltip)
-          .setPlaceholder(`Open ${this.config.name} note`)
+          .setPlaceholder(`Open current ${this.config.name} note`)
           .onChange((value) => {
             this.config.ribbon.tooltip = value;
             this.save();

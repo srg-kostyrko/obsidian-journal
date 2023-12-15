@@ -13,6 +13,11 @@ import { TemplateContext } from "../contracts/template.types";
 import { replaceTemplateVariables } from "../utils/template";
 import { ensureFolderExists } from "../utils/io";
 import { Interval, IntervalManager } from "./interval-manager";
+import {
+  DEFAULT_DATE_FORMAT,
+  DEFAULT_NAME_TEMPLATE_INTERVAL,
+  DEFAULT_RIBBON_ICONS_INTERVAL,
+} from "../config/config-defaults";
 
 export const intervalCommands = {
   "interval-journal:open": "Open current interval",
@@ -36,6 +41,22 @@ export class IntervalJournal implements Journal {
 
   get name(): string {
     return this.config.name;
+  }
+
+  get nameTemplate(): string {
+    return this.config.nameTemplate || DEFAULT_NAME_TEMPLATE_INTERVAL;
+  }
+
+  get dateFormat(): string {
+    return this.config.dateFormat || DEFAULT_DATE_FORMAT;
+  }
+
+  get ribbonIcon(): string {
+    return this.config.ribbon.icon || DEFAULT_RIBBON_ICONS_INTERVAL;
+  }
+
+  get ribbonTooltip(): string {
+    return this.config.ribbon.tooltip || `Open current ${this.config.name} note`;
   }
 
   findInterval(date?: string): Interval {
@@ -73,13 +94,9 @@ export class IntervalJournal implements Journal {
 
   configureRibbonIcons(plugin: Plugin): void {
     if (!this.config.ribbon.show) return;
-    plugin.addRibbonIcon(
-      this.config.ribbon.icon || "calendar-range",
-      this.config.ribbon.tooltip || `Open current ${this.config.name} note`,
-      () => {
-        this.open();
-      },
-    );
+    plugin.addRibbonIcon(this.ribbonIcon, this.ribbonTooltip, () => {
+      this.open();
+    });
   }
 
   parseFrontMatter(frontmatter: FrontMatterCache): IntervalFrontMatter {
@@ -130,13 +147,13 @@ export class IntervalJournal implements Journal {
 
   private getNoteName(interval: Interval): string {
     const templateContext = this.getTemplateContext(interval);
-    return replaceTemplateVariables(this.config.nameTemplate, templateContext);
+    return replaceTemplateVariables(this.nameTemplate, templateContext);
   }
 
   private getIntervalPath(interval: Interval): string {
     if (interval.path) return interval.path;
     const templateContext = this.getTemplateContext(interval);
-    const filename = replaceTemplateVariables(this.config.nameTemplate, templateContext) + ".md";
+    const filename = replaceTemplateVariables(this.nameTemplate, templateContext) + ".md";
     const folderPath = replaceTemplateVariables(this.config.folder, templateContext);
     return normalizePath(folderPath ? `${folderPath}/${filename}` : filename);
   }
@@ -194,17 +211,17 @@ export class IntervalJournal implements Journal {
     return {
       start_date: {
         value: interval.startDate,
-        defaultFormat: this.config.dateFormat,
+        defaultFormat: this.dateFormat,
       },
       end_date: {
         value: interval.endDate,
-        defaultFormat: this.config.dateFormat,
+        defaultFormat: this.dateFormat,
       },
       index: {
         value: interval.index,
       },
       journal_name: {
-        value: this.config.name,
+        value: this.name,
       },
       note_name: {
         value: note_name ?? "",
