@@ -242,3 +242,14 @@
 .calendar-code-block-modal {
   --dialog-width: 720px;
 }
+
+.journal-nav-today {
+  position: absolute;
+  top: 0.5em;
+  right: 2.5em;
+  color: var(--text-accent);
+  font-size: 0.8em;
+}
+.block-language-calendar-nav {
+  padding-top: 1em;
+}

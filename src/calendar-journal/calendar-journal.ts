@@ -146,7 +146,7 @@ export class CalendarJournal implements Journal {
   }
 
   async openStartupNote(): Promise<void> {
-    if (!this.config.openOnStartup) return;
+    if (!this.config.openOnStartup || !this.config.startupSection) return;
     const section = this.config.startupSection;
     await this[section].open();
   }

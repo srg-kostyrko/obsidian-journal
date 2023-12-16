@@ -209,6 +209,10 @@ export class IntervalJournal implements Journal {
 
   getTemplateContext(interval: Interval, note_name?: string): TemplateContext {
     return {
+      date: {
+        value: interval.startDate,
+        defaultFormat: this.dateFormat,
+      },
       start_date: {
         value: interval.startDate,
         defaultFormat: this.dateFormat,

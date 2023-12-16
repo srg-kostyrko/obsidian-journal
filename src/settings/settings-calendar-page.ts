@@ -93,6 +93,7 @@ export class SettingsCalendarPage extends SettingsWidget {
         }
         if (!avaliable.contains(this.config.startupSection)) {
           this.config.startupSection = avaliable[0];
+          this.save();
         }
         dropdown.setValue(this.config.startupSection).onChange((value) => {
           this.config.startupSection = value as CalendarConfig["startupSection"];

@@ -12,6 +12,7 @@ import {
   DEFAULT_RIBBON_ICONS_INTERVAL,
 } from "../config/config-defaults";
 import { TemplateSuggestion } from "./ui/template-suggestion";
+import { formatOrdinals } from "../utils/plural";
 
 export class SettingsIntervalPage extends SettingsWidget {
   constructor(
@@ -40,6 +41,13 @@ export class SettingsIntervalPage extends SettingsWidget {
 
     const heading = new Setting(containerEl)
       .setName(this.headingText)
+      .setDesc(
+        `Duration: ${this.config.duration} ${this.config.granularity}, ${formatOrdinals(
+          this.config.start_index,
+        )} starts on ${this.config.start_date}, index ${
+          this.config.numeration_type === "increment" ? "increases constantly" : "resets every year"
+        }`,
+      )
       .setHeading()
       .addButton((button) => {
         button.setButtonText("Back to list").onClick(() => {

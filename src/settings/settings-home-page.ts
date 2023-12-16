@@ -75,7 +75,7 @@ export class SettingsHomePage extends SettingsWidget {
     }
 
     for (const entry of this.config) {
-      const setting = new Setting(containerEl)
+      const row = new Setting(containerEl)
         .setName(entry.name)
         .setDesc(`ID: ${entry.id}`)
         .addButton((button) => {
@@ -91,8 +91,11 @@ export class SettingsHomePage extends SettingsWidget {
               });
             });
         });
+      const badge = row.nameEl.createEl("span");
+      badge.innerText = `${entry.type}`;
+      badge.classList.add("flair");
 
-      setting.addButton((button) => {
+      row.addButton((button) => {
         button
           .setIcon("trash-2")
           .setTooltip(`Delete ${entry.name}`)
