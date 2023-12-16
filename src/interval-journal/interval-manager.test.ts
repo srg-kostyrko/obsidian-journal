@@ -347,8 +347,8 @@ describe("IntervalManager", () => {
         {
           ...deepCopy(DEFAULT_CONFIG_INTERVAL),
           numeration_type: "year",
-          start_index: 2,
-          start_date: "2022-05-01",
+          start_index: 4,
+          start_date: "2023-11-01",
           duration: 3,
           granularity: "month",
         },
@@ -357,51 +357,51 @@ describe("IntervalManager", () => {
     });
 
     test.each([
-      ["start interval for start date", "2022-05-01", { index: 2, startDate: "2022-05-01", endDate: "2022-07-31" }],
+      ["start interval for start date", "2023-11-01", { index: 4, startDate: "2023-11-01", endDate: "2024-01-31" }],
       [
         "start interval for date within start interval",
-        "2022-06-01",
-        { index: 2, startDate: "2022-05-01", endDate: "2022-07-31" },
+        "2023-12-01",
+        { index: 4, startDate: "2023-11-01", endDate: "2024-01-31" },
       ],
       [
         "start interval for interval end date",
-        "2022-07-31",
-        { index: 2, startDate: "2022-05-01", endDate: "2022-07-31" },
+        "2024-01-31",
+        { index: 4, startDate: "2023-11-01", endDate: "2024-01-31" },
       ],
       [
         "next interval after start interval",
-        "2022-08-01",
-        { index: 3, startDate: "2022-08-01", endDate: "2022-10-31" },
+        "2024-03-01",
+        { index: 1, startDate: "2024-02-01", endDate: "2024-04-30" },
       ],
       [
         "next interval with date in middle of interval",
-        "2022-08-10",
-        { index: 3, startDate: "2022-08-01", endDate: "2022-10-31" },
+        "2024-05-10",
+        { index: 2, startDate: "2024-05-01", endDate: "2024-07-31" },
       ],
       [
         "next interval for end date of interval",
-        "2022-10-31",
-        { index: 3, startDate: "2022-08-01", endDate: "2022-10-31" },
+        "2024-04-30",
+        { index: 1, startDate: "2024-02-01", endDate: "2024-04-30" },
       ],
       [
         "prev interval before start interval",
-        "2022-02-01",
-        { index: 1, startDate: "2022-02-01", endDate: "2022-04-30" },
+        "2023-08-01",
+        { index: 3, startDate: "2023-08-01", endDate: "2023-10-31" },
       ],
       [
         "prev interval with date in middle of interval",
-        "2022-03-10",
-        { index: 1, startDate: "2022-02-01", endDate: "2022-04-30" },
+        "2023-09-01",
+        { index: 3, startDate: "2023-08-01", endDate: "2023-10-31" },
       ],
       [
         "prev interval for end date of interval",
-        "2022-03-31",
-        { index: 1, startDate: "2022-02-01", endDate: "2022-04-30" },
+        "2023-10-31",
+        { index: 3, startDate: "2023-08-01", endDate: "2023-10-31" },
       ],
       [
         "interval in next year with index reset",
-        "2023-03-01",
-        { index: 1, startDate: "2023-02-01", endDate: "2023-04-30" },
+        "2025-03-01",
+        { index: 1, startDate: "2025-02-01", endDate: "2025-04-30" },
       ],
       [
         "interval in prev year with index reset",

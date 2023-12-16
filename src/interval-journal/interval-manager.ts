@@ -104,7 +104,7 @@ export class IntervalManager {
   private calculateIntervalAfterKnown(date: MomentDate, interval: Interval): Interval {
     let curent = interval.endDate.clone().add(1, "day");
     let index = interval.index + 1;
-    if (this.shouldResetYearly && !curent.isSame(interval.endDate, "year")) {
+    if (this.shouldResetYearly && !curent.isSame(interval.startDate, "year")) {
       index = 1;
     }
     while (curent.isBefore(date, "day")) {
