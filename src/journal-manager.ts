@@ -174,6 +174,7 @@ export class JournalManager extends Component {
 
   private setupListeners() {
     this.registerEvent(this.app.vault.on("rename", this.onRenamed, this));
+    this.registerEvent(this.app.vault.on("delete", this.onDeleted, this));
     this.registerEvent(this.app.metadataCache.on("changed", this.onMetadataChanged, this));
   }
 
@@ -181,6 +182,12 @@ export class JournalManager extends Component {
     if (file instanceof TFile) {
       this.clearForPath(oldPath);
       this.indexFile(file);
+    }
+  };
+
+  onDeleted = (file: TAbstractFile) => {
+    if (file instanceof TFile) {
+      this.clearForPath(file.path);
     }
   };
 
