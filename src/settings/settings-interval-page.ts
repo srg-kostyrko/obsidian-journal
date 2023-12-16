@@ -11,6 +11,7 @@ import {
   DEFAULT_NAME_TEMPLATE_INTERVAL,
   DEFAULT_RIBBON_ICONS_INTERVAL,
 } from "../config/config-defaults";
+import { TemplateSuggestion } from "./ui/template-suggestion";
 
 export class SettingsIntervalPage extends SettingsWidget {
   constructor(
@@ -142,6 +143,7 @@ export class SettingsIntervalPage extends SettingsWidget {
     this.createVaribleReferenceHint(folder.descEl);
 
     const template = new Setting(containerEl).setName("Template").addText((text) => {
+      new TemplateSuggestion(this.app, text.inputEl);
       text.setValue(this.config.template).onChange((value) => {
         this.config.template = value;
         this.save();
