@@ -36,14 +36,14 @@ export class CalendarCodeBlocksModal extends Modal {
       text: "Click on a code block to copy it to your clipboard.",
     });
 
-    const navBlokContainer = contentEl.createDiv({
+    const navBlockContainer = contentEl.createDiv({
       cls: "journal-code-block",
     });
-    navBlokContainer.createSpan({
+    navBlockContainer.createSpan({
       text: "```calendar-nav",
     });
-    navBlokContainer.createEl("br");
-    navBlokContainer.createSpan({
+    navBlockContainer.createEl("br");
+    navBlockContainer.createSpan({
       text: "```",
     });
 
@@ -75,7 +75,7 @@ export class CalendarCodeBlocksModal extends Modal {
 
     if (this.granularity === "day") {
       contentEl.createEl("p", {
-        text: "For daily notes timeline blocks helps navigating withing corresponding week.",
+        text: "For daily notes timeline blocks helps navigating within corresponding week.",
       });
     } else {
       contentEl.createEl("p", {

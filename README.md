@@ -28,7 +28,7 @@ There variables can be used in note name template, note storage path, content of
 - `{{start_date}}` - first day of week, month, quarter, year or interval depending on note type, formatted using date format from settings, format can be overridden using following syntax `{{start_date:format}}` where format is string using Moment.js format rules (like `{{start_date:YYYY-MM-DD}}`)
 - `{{end_date}}` - last day of week, month, quarter, year or interval depending on note type, formatting rules are the same as in `{{start_date}}`
 - `{{date}}` - alias to `{{start_date}}`
-- `{{index}}` - avaliable for interval based journals indicating index of interval (like financial quarter or spring number)
+- `{{index}}` - available for interval based journals indicating index of interval (like financial quarter or spring number)
 
 ## Supported code blocks
 
@@ -68,7 +68,7 @@ Example look for interval note (configured as 1 week sprints):
 ```
 ````
 
-Timeline code blocks helps navigating daily notes in bigger periods (like week, month, quarter or year). By defauls daily and weekly notes show `week` timeline, monthly note - `month` timeline, quarter note - `quarter` timeline and yearly note - `calendar` timeline. This can be changed using `mode` param.
+Timeline code blocks helps navigating daily notes in bigger periods (like week, month, quarter or year). By default daily and weekly notes show `week` timeline, monthly note - `month` timeline, quarter note - `quarter` timeline and yearly note - `calendar` timeline. This can be changed using `mode` param.
 
 ````markdown
 ```calendar-timeline

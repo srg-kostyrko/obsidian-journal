@@ -32,14 +32,14 @@ export class IntervalCodeBlocksModal extends Modal {
       text: "Click on a code block to copy it to your clipboard.",
     });
 
-    const navBlokContainer = contentEl.createDiv({
+    const navBlockContainer = contentEl.createDiv({
       cls: "journal-code-block",
     });
-    navBlokContainer.createSpan({
+    navBlockContainer.createSpan({
       text: "```interval-nav",
     });
-    navBlokContainer.createEl("br");
-    navBlokContainer.createSpan({
+    navBlockContainer.createEl("br");
+    navBlockContainer.createSpan({
       text: "```",
     });
     contentEl.createEl("p", {

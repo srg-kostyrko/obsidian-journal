@@ -102,42 +102,42 @@ export class IntervalManager {
   }
 
   private calculateIntervalAfterKnown(date: MomentDate, interval: Interval): Interval {
-    let curent = interval.endDate.clone().add(1, "day");
+    let current = interval.endDate.clone().add(1, "day");
     let index = interval.index + 1;
-    if (this.shouldResetYearly && !curent.isSame(interval.startDate, "year")) {
+    if (this.shouldResetYearly && !current.isSame(interval.startDate, "year")) {
       index = 1;
     }
-    while (curent.isBefore(date, "day")) {
-      const next = curent.clone().add(this.config.duration, this.config.granularity);
+    while (current.isBefore(date, "day")) {
+      const next = current.clone().add(this.config.duration, this.config.granularity);
       if (next.isAfter(date, "day")) {
         break;
       }
       index++;
-      if (this.shouldResetYearly && !next.isSame(curent, "year")) {
+      if (this.shouldResetYearly && !next.isSame(current, "year")) {
         index = 1;
       }
-      curent = next;
+      current = next;
     }
     return {
-      startDate: curent,
-      endDate: this.createEndDate(curent),
+      startDate: current,
+      endDate: this.createEndDate(current),
       index,
     };
   }
 
   private calculateIntervalBeforeKnown(date: MomentDate, interval: Interval): Interval {
-    const curent = interval.startDate.clone();
+    const current = interval.startDate.clone();
     let index = interval.index;
-    while (curent.isAfter(date, "day")) {
-      curent.subtract(this.config.duration, this.config.granularity);
+    while (current.isAfter(date, "day")) {
+      current.subtract(this.config.duration, this.config.granularity);
       index--;
       if (this.shouldResetYearly && index === 0) {
         index = this.maximumYearIndex;
       }
     }
     return {
-      startDate: curent,
-      endDate: this.createEndDate(curent),
+      startDate: current,
+      endDate: this.createEndDate(current),
       index,
     };
   }

@@ -70,29 +70,29 @@ export class SettingsCalendarPage extends SettingsWidget {
       });
     if (this.config.openOnStartup) {
       startUp.addDropdown((dropdown) => {
-        const avaliable: CalendarGranularity[] = [];
+        const available: CalendarGranularity[] = [];
         if (this.config.day.enabled) {
           dropdown.addOption("day", "Daily note");
-          avaliable.push("day");
+          available.push("day");
         }
         if (this.config.week.enabled) {
           dropdown.addOption("week", "Weekly note");
-          avaliable.push("week");
+          available.push("week");
         }
         if (this.config.month.enabled) {
           dropdown.addOption("month", "Monthly note");
-          avaliable.push("month");
+          available.push("month");
         }
         if (this.config.quarter.enabled) {
           dropdown.addOption("quarter", "Quarterly note");
-          avaliable.push("quarter");
+          available.push("quarter");
         }
         if (this.config.year.enabled) {
           dropdown.addOption("year", "Yearly note");
-          avaliable.push("year");
+          available.push("year");
         }
-        if (!avaliable.contains(this.config.startupSection)) {
-          this.config.startupSection = avaliable[0];
+        if (!available.contains(this.config.startupSection)) {
+          this.config.startupSection = available[0];
           this.save();
         }
         dropdown.setValue(this.config.startupSection).onChange((value) => {

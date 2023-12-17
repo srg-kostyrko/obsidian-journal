@@ -86,7 +86,7 @@ export class SettingsCalendarSectionPage extends SettingsWidget {
       text: "Template used to generate new note name.",
     });
     nameTemplate.descEl.createEl("br");
-    this.createVaribleReferenceHint(nameTemplate.descEl);
+    this.createVariableReferenceHint(nameTemplate.descEl);
 
     const dateFormat = new Setting(containerEl).setName("Default date format").addMomentFormat((format) => {
       format
@@ -130,7 +130,7 @@ export class SettingsCalendarSectionPage extends SettingsWidget {
       text: "New notes will be created in this folder.",
     });
     folder.descEl.createEl("br");
-    this.createVaribleReferenceHint(folder.descEl);
+    this.createVariableReferenceHint(folder.descEl);
 
     const template = new Setting(containerEl).setName("Template").addText((text) => {
       new TemplateSuggestion(this.app, text.inputEl);
@@ -143,7 +143,7 @@ export class SettingsCalendarSectionPage extends SettingsWidget {
       text: "Path to note that will be used as template when creating new notes. ",
     });
     template.descEl.createEl("br");
-    this.createVaribleReferenceHint(template.descEl);
+    this.createVariableReferenceHint(template.descEl);
     template.descEl.createEl("br");
     this.createCodeBlockReferenceHint(template.descEl);
 
@@ -158,19 +158,19 @@ export class SettingsCalendarSectionPage extends SettingsWidget {
       });
 
     if (this.config.ribbon.show) {
-      let iconPreivewButton: ButtonComponent | null = null;
+      let iconPreviewButton: ButtonComponent | null = null;
       new Setting(containerEl)
         .setName("Ribbon icon")
         .setDesc("Select icon to be show in ribbon.")
         .addButton((button) => {
-          iconPreivewButton = button;
+          iconPreviewButton = button;
           button.setIcon(this.ribbonIcon).setDisabled(true);
         })
         .addText((text) => {
           new IconSuggestion(this.app, text.inputEl);
           text.setValue(this.config.ribbon.icon).onChange((value) => {
             this.config.ribbon.icon = value;
-            iconPreivewButton?.setIcon(value);
+            iconPreviewButton?.setIcon(value);
             this.save();
           });
         });
@@ -205,7 +205,7 @@ export class SettingsCalendarSectionPage extends SettingsWidget {
     }
   }
 
-  createVaribleReferenceHint(el: HTMLElement): void {
+  createVariableReferenceHint(el: HTMLElement): void {
     const link = el.createEl("span", {
       cls: "var-ref journal-link",
       text: "Supported variables.",
