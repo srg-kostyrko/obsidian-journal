@@ -11,7 +11,7 @@ Manage your journals in [Obsidian](https://obsidian.md/) knowledge base.
 - Opening journal note on startup
 - Code blocks for journal notes for easier navigation
 
-## Instalation
+## Installation
 
 Follow the steps below to install Tasks.
 
