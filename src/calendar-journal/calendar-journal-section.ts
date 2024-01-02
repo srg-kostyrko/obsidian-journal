@@ -94,17 +94,20 @@ export class CalendarJournalSection {
   private async ensureDateNote(startDate: MomentDate, endDate: MomentDate): Promise<TFile> {
     const filePath = this.getDatePath(startDate, endDate);
     let file = this.app.vault.getAbstractFileByPath(filePath);
+
     if (!file) {
       await ensureFolderExists(this.app, filePath);
       file = await this.app.vault.create(
         filePath,
         await this.getContent(this.getTemplateContext(startDate, endDate, this.getNoteName(startDate, endDate))),
       );
-      await this.processFrontMatter(file as TFile, startDate, endDate);
+      if (!(file instanceof TFile)) throw new Error("File is not a TFile");
+      await this.processFrontMatter(file, startDate, endDate);
     } else {
-      await this.enshureFrontMatter(file as TFile, startDate, endDate);
+      if (!(file instanceof TFile)) throw new Error("File is not a TFile");
+      await this.enshureFrontMatter(file, startDate, endDate);
     }
-    return file as TFile;
+    return file;
   }
 
   private async openDate(startDate: MomentDate, endDate: MomentDate): Promise<void> {
@@ -182,7 +185,7 @@ export class CalendarJournalSection {
 
   private processFrontMatter(file: TFile, startDate: MomentDate, endDate: MomentDate): Promise<void> {
     return new Promise((resolve) => {
-      this.app.fileManager.processFrontMatter(file as TFile, (frontmatter) => {
+      this.app.fileManager.processFrontMatter(file, (frontmatter) => {
         frontmatter[FRONTMATTER_ID_KEY] = this.journal.id;
         frontmatter[FRONTMATTER_START_DATE_KEY] = startDate.format(FRONTMATTER_DATE_FORMAT);
         frontmatter[FRONTMATTER_END_DATE_KEY] = endDate.format(FRONTMATTER_DATE_FORMAT);

@@ -176,9 +176,10 @@ export class CalendarJournal implements Journal {
     for (const entry of this.index) {
       const file = this.app.vault.getAbstractFileByPath(entry.path);
       if (!file) continue;
+      if (!(file instanceof TFile)) continue;
       proomises.push(
         new Promise<void>((resolve) => {
-          this.app.fileManager.processFrontMatter(file as TFile, (frontmatter) => {
+          this.app.fileManager.processFrontMatter(file, (frontmatter) => {
             delete frontmatter[FRONTMATTER_ID_KEY];
             delete frontmatter[FRONTMATTER_START_DATE_KEY];
             delete frontmatter[FRONTMATTER_END_DATE_KEY];

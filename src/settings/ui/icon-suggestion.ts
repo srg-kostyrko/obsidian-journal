@@ -22,9 +22,10 @@ export class IconSuggestion extends AbstractInputSuggest<string> {
     if (icon) {
       icon.classList.add("suggestion-icon");
       el.classList.add("mod-complex");
-      el.style.justifyContent = "flex-start";
+      el.classList.add("journal-suggestion-icon");
       el.appendChild(icon);
       const name = el.createSpan();
+      name.classList.add("journal-suggestion-name");
       name.style.marginLeft = "8px";
       name.appendText(value);
     }

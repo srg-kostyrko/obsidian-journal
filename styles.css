@@ -253,3 +253,10 @@
 .block-language-calendar-nav {
   padding-top: 1em;
 }
+
+.journal-suggestion-icon {
+  justify-content: flex-start;
+}
+.journal-suggestion-name {
+  margin-left: 8px;
+}

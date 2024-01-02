@@ -167,11 +167,13 @@ export class IntervalJournal implements Journal {
         filePath,
         await this.getContent(this.getTemplateContext(interval, this.getNoteName(interval))),
       );
-      await this.processFrontMatter(file as TFile, interval);
+      if (!(file instanceof TFile)) throw new Error("File is not a TFile");
+      await this.processFrontMatter(file, interval);
     } else {
-      await this.enshureFrontMatter(file as TFile, interval);
+      if (!(file instanceof TFile)) throw new Error("File is not a TFile");
+      await this.enshureFrontMatter(file, interval);
     }
-    return file as TFile;
+    return file;
   }
 
   private async enshureFrontMatter(file: TFile, interval: Interval): Promise<void> {
@@ -254,9 +256,10 @@ export class IntervalJournal implements Journal {
       if (!entry.path) continue;
       const file = this.app.vault.getAbstractFileByPath(entry.path);
       if (!file) continue;
+      if (!(file instanceof TFile)) continue;
       proomises.push(
         new Promise<void>((resolve) => {
-          this.app.fileManager.processFrontMatter(file as TFile, (frontmatter) => {
+          this.app.fileManager.processFrontMatter(file, (frontmatter) => {
             delete frontmatter[FRONTMATTER_ID_KEY];
             delete frontmatter[FRONTMATTER_START_DATE_KEY];
             delete frontmatter[FRONTMATTER_END_DATE_KEY];
