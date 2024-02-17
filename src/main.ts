@@ -1,10 +1,10 @@
 import { Plugin } from "obsidian";
-import { JournalSettingTab } from "./src/settings/journal-settings";
-import { JournalManager } from "./src/journal-manager";
-import { CodeBlockTimelineProcessor } from "./src/code-block-timeline/code-block-timeline-processor";
-import { JournalConfigManager } from "./src/config/journal-config-manager";
-import { CodeBlockNavProcessor } from "./src/code-block-nav/code-block-nav-processor";
-import { CodeBlockIntervalProcessor } from "./src/code-block-interval/code-block-interval-processor";
+import { JournalSettingTab } from "./settings/journal-settings";
+import { JournalManager } from "./journal-manager";
+import { CodeBlockTimelineProcessor } from "./code-block-timeline/code-block-timeline-processor";
+import { JournalConfigManager } from "./config/journal-config-manager";
+import { CodeBlockNavProcessor } from "./code-block-nav/code-block-nav-processor";
+import { CodeBlockIntervalProcessor } from "./code-block-interval/code-block-interval-processor";
 
 export default class JournalPlugin extends Plugin {
   private config: JournalConfigManager;

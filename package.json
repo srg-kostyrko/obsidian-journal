@@ -4,8 +4,8 @@
   "description": "Journal plugin for Obsidian (https://obsidian.md)",
   "main": "main.js",
   "scripts": {
-    "dev": "node esbuild.config.mjs",
-    "build": "tsc -noEmit -skipLibCheck && node esbuild.config.mjs production",
+    "dev": " rollup --config rollup.config.mjs -w",
+    "build": "rollup --config rollup.config.mjs --environment BUILD:production",
     "version": "node version-bump.mjs && git add manifest.json versions.json",
     "lint": "eslint . --ext .ts",
     "test": "vitest run",
@@ -29,15 +29,18 @@
     "obsidian": "^1.4.11"
   },
   "devDependencies": {
+    "@rollup/plugin-commonjs": "^25.0.7",
+    "@rollup/plugin-node-resolve": "^15.2.3",
     "@typescript-eslint/eslint-plugin": "^7.0.1",
     "@typescript-eslint/parser": "^7.0.1",
-    "builtin-modules": "^3.3.0",
-    "esbuild": "^0.20.0",
     "eslint": "^8.56.0",
     "eslint-config-prettier": "^9.1.0",
     "husky": "^9.0.11",
     "lint-staged": "^15.2.2",
     "prettier": "^3.2.5",
+    "rollup": "^4.11.0",
+    "rollup-plugin-copy": "^3.5.0",
+    "rollup-plugin-typescript2": "^0.36.0",
     "tslib": "^2.6.2",
     "typescript": "^5.3.3",
     "vitest": "^1.2.2"
