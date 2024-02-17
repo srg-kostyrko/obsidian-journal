@@ -5,6 +5,7 @@ import { ensureFolderExists } from "../utils/io";
 import { replaceTemplateVariables } from "../utils/template";
 import { TemplateContext } from "../contracts/template.types";
 import {
+  FRONTMATTER_ADDING_DELAY,
   FRONTMATTER_DATE_FORMAT,
   FRONTMATTER_END_DATE_KEY,
   FRONTMATTER_ID_KEY,
@@ -19,6 +20,7 @@ import {
   DEFAULT_RIBBON_ICONS_CALENDAR,
   DEFAULT_RIBBON_TOOLTIPS,
 } from "../config/config-defaults";
+import { delay } from "../utils/misc";
 
 export class CalendarJournalSection {
   constructor(
@@ -102,6 +104,7 @@ export class CalendarJournalSection {
         await this.getContent(this.getTemplateContext(startDate, endDate, this.getNoteName(startDate, endDate))),
       );
       if (!(file instanceof TFile)) throw new Error("File is not a TFile");
+      await delay(FRONTMATTER_ADDING_DELAY);
       await this.processFrontMatter(file, startDate, endDate);
     } else {
       if (!(file instanceof TFile)) throw new Error("File is not a TFile");

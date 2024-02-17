@@ -3,6 +3,7 @@ import { IntervalConfig, IntervalFrontMatter } from "../contracts/config.types";
 import { CalendarHelper } from "../utils/calendar";
 import { Journal } from "../contracts/journal.types";
 import {
+  FRONTMATTER_ADDING_DELAY,
   FRONTMATTER_DATE_FORMAT,
   FRONTMATTER_END_DATE_KEY,
   FRONTMATTER_ID_KEY,
@@ -18,6 +19,7 @@ import {
   DEFAULT_NAME_TEMPLATE_INTERVAL,
   DEFAULT_RIBBON_ICONS_INTERVAL,
 } from "../config/config-defaults";
+import { delay } from "../utils/misc";
 
 export const intervalCommands = {
   "interval-journal:open": "Open current interval",
@@ -168,6 +170,7 @@ export class IntervalJournal implements Journal {
         await this.getContent(this.getTemplateContext(interval, this.getNoteName(interval))),
       );
       if (!(file instanceof TFile)) throw new Error("File is not a TFile");
+      await delay(FRONTMATTER_ADDING_DELAY);
       await this.processFrontMatter(file, interval);
     } else {
       if (!(file instanceof TFile)) throw new Error("File is not a TFile");

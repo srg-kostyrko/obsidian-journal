@@ -13,6 +13,7 @@ test-vault/.obsidian/plugins/journals/*
 !test-vault/.obsidian/plugins/journals/.hotreload
 build/main.js
 
+test-vault/.obsidian/plugins/templater-obsidian/*
 test-vault/.obsidian/app.json
 test-vault/.obsidian/appearance.json
 test-vault/.obsidian/core-plugins-migration.json
