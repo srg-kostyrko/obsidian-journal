@@ -130,6 +130,16 @@ export class SettingsCalendarSectionPage extends SettingsWidget {
       text: "New notes will be created in this folder.",
     });
     folder.descEl.createEl("br");
+    if (this.journal.rootFolder) {
+      folder.descEl.createEl("span", {
+        text: `It will be relative to the journals' root folder: `,
+      });
+      folder.descEl.createEl("b", {
+        text: this.journal.rootFolder,
+        cls: "u-pop",
+      });
+      folder.descEl.createEl("br");
+    }
     this.createVariableReferenceHint(folder.descEl);
 
     const template = new Setting(containerEl).setName("Template").addText((text) => {
