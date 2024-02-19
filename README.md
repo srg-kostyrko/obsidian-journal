@@ -19,7 +19,7 @@ Follow the steps below to install Tasks.
 2. Enable the plugin in your Obsidian settings (find "Journals" under "Community plugins").
 3. Check the settings. Configure journals that you need.
 
-## Work with other plugins
+## Compatibility with other plugins
 
 - `Daily notes` core plugin - this plugin intends to be a replacement for it, the only difference now is the next/previous note command that will be added in next release. Notes created through Daily notes will not be connected to any journal (can be done manually editing frontmatter properties).
 - `Periodic Notes` community plugin - this plugin was intially inspired by Periodic notes that seem to abandoned and aims to be a replacement for it.
