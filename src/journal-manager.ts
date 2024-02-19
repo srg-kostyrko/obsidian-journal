@@ -1,4 +1,4 @@
-import { App, Component, Plugin, TAbstractFile, TFile } from "obsidian";
+import { App, Component, Notice, Plugin, TAbstractFile, TFile } from "obsidian";
 import { CalendarJournal, calendarCommands } from "./calendar-journal/calendar-journal";
 import { FRONTMATTER_ID_KEY } from "./constants";
 import { deepCopy } from "./utils";
@@ -94,6 +94,56 @@ export class JournalManager extends Component {
         },
       });
     }
+    this.plugin.addCommand({
+      id: "journal:open-next",
+      name: "Open next note",
+      editorCallback: async (editor, ctx) => {
+        const file = ctx.file;
+        if (file) {
+          const data = await this.getJournalData(file.path);
+          if (data) {
+            const journal = this.journals.get(data.id);
+            if (journal) {
+              const notePath = await journal.findNextNote(data);
+              if (notePath) {
+                await journal.openPath(notePath, data);
+              } else {
+                new Notice("There is no next note after this one.");
+              }
+            } else {
+              new Notice("Unknown journal id.");
+            }
+          } else {
+            new Notice("This note is not connected to any journal.");
+          }
+        }
+      },
+    });
+    this.plugin.addCommand({
+      id: "journal:open-prev",
+      name: "Open previous note",
+      editorCallback: async (editor, ctx) => {
+        const file = ctx.file;
+        if (file) {
+          const data = await this.getJournalData(file.path);
+          if (data) {
+            const journal = this.journals.get(data.id);
+            if (journal) {
+              const notePath = await journal.findPreviousNote(data);
+              if (notePath) {
+                await journal.openPath(notePath, data);
+              } else {
+                new Notice("There is no previous note before this one.");
+              }
+            } else {
+              new Notice("Unknown journal id.");
+            }
+          } else {
+            new Notice("This note is not connected to any journal.");
+          }
+        }
+      },
+    });
   }
 
   configureRibbonIcons() {

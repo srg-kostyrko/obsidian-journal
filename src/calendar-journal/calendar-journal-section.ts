@@ -81,6 +81,13 @@ export class CalendarJournalSection {
     return await this.openDate(this.getRangeStart(date), this.getRangeEnd(date));
   }
 
+  async openPath(filePath: string): Promise<void> {
+    const file = this.app.vault.getAbstractFileByPath(filePath);
+    if (!file) return;
+    if (!(file instanceof TFile)) return;
+    await this.openFile(file);
+  }
+
   async openNext(date?: string): Promise<void> {
     const startDate = this.getRangeStart(date).add(1, this.granularity);
     const endDate = startDate.clone().endOf(this.granularity);
@@ -115,6 +122,10 @@ export class CalendarJournalSection {
 
   private async openDate(startDate: MomentDate, endDate: MomentDate): Promise<void> {
     const file = await this.ensureDateNote(startDate, endDate);
+    await this.openFile(file);
+  }
+
+  private async openFile(file: TFile): Promise<void> {
     const mode = this.config.openMode === "active" ? undefined : this.config.openMode;
     const leaf = this.app.workspace.getLeaf(mode);
     await leaf.openFile(file, { active: true });

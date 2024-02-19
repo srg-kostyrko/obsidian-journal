@@ -71,6 +71,18 @@ export class IntervalManager {
     this.keysMap.set(this.getIntervalKey(interval), interval);
   }
 
+  findNextNote(endDate: MomentDate): string | null {
+    const list = this.intervalTree.search([endDate.toDate().getTime(), Infinity]) as Interval[];
+    const note = list.pop();
+    return note?.path ?? null;
+  }
+
+  findPreviousNote(startDate: MomentDate): string | null {
+    const list = this.intervalTree.search([0, startDate.toDate().getTime()]) as Interval[];
+    const [note] = list;
+    return note?.path ?? null;
+  }
+
   clearForPath(path: string): void {
     if (!this.intervalTree.size) return;
     for (const [key, entry] of this.intervalTree.iterate(undefined, (value, key) => [key, value])) {

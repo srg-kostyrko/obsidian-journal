@@ -1,5 +1,5 @@
 import { App, FrontMatterCache, Plugin, TFile, normalizePath } from "obsidian";
-import { IntervalConfig, IntervalFrontMatter } from "../contracts/config.types";
+import { IntervalConfig, IntervalFrontMatter, JournalFrontMatter } from "../contracts/config.types";
 import { CalendarHelper } from "../utils/calendar";
 import { Journal } from "../contracts/journal.types";
 import {
@@ -59,6 +59,20 @@ export class IntervalJournal implements Journal {
 
   get ribbonTooltip(): string {
     return this.config.ribbon.tooltip || `Open current ${this.config.name} note`;
+  }
+
+  async findNextNote(data: IntervalFrontMatter): Promise<string | null> {
+    return this.intervals.findNextNote(this.calendar.date(data.end_date).add(1, "day").startOf("day"));
+  }
+  async findPreviousNote(data: IntervalFrontMatter): Promise<string | null> {
+    return this.intervals.findPreviousNote(this.calendar.date(data.start_date).subtract(1, "day").endOf("day"));
+  }
+
+  async openPath(path: string, _frontmatter: JournalFrontMatter): Promise<void> {
+    const file = this.app.vault.getAbstractFileByPath(path);
+    if (!file) return;
+    if (!(file instanceof TFile)) return;
+    await this.openFile(file);
   }
 
   findInterval(date?: string): Interval {
@@ -207,6 +221,10 @@ export class IntervalJournal implements Journal {
 
   private async openInterval(interval: Interval): Promise<void> {
     const file = await this.ensureIntervalNote(interval);
+    await this.openFile(file);
+  }
+
+  private async openFile(file: TFile): Promise<void> {
     const mode = this.config.openMode === "active" ? undefined : this.config.openMode;
     const leaf = this.app.workspace.getLeaf(mode);
     await leaf.openFile(file, { active: true });

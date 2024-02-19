@@ -20,6 +20,18 @@ export class CalendarIndex {
     this.intervalTree.insert(interval, value);
   }
 
+  findNextNote(endDate: MomentDate, granularity: CalendarGranularity): string | null {
+    const list = this.intervalTree.search([endDate.toDate().getTime(), Infinity]) as IndexEntry[];
+    const [note] = list.filter((entry) => entry.granularity === granularity);
+    return note?.path ?? null;
+  }
+
+  findPreviousNote(startDate: MomentDate, granularity: CalendarGranularity): string | null {
+    const list = this.intervalTree.search([0, startDate.toDate().getTime()]) as IndexEntry[];
+    const note = list.filter((entry) => entry.granularity === granularity).pop();
+    return note?.path ?? null;
+  }
+
   clearForPath(path: string): void {
     if (!this.intervalTree.size) return;
     for (const [key, entry] of this.intervalTree.iterate(undefined, (value, key) => [key, value])) {

@@ -145,10 +145,25 @@ export class CalendarJournal implements Journal {
     await this.year.autoCreateNote();
   }
 
+  async findNextNote(data: CalerndatFrontMatter): Promise<string | null> {
+    return this.index.findNextNote(this.calendar.date(data.end_date).add(1, "day").startOf("day"), data.granularity);
+  }
+  async findPreviousNote(data: CalerndatFrontMatter): Promise<string | null> {
+    return this.index.findPreviousNote(
+      this.calendar.date(data.start_date).subtract(1, "day").endOf("day"),
+      data.granularity,
+    );
+  }
+
   async openStartupNote(): Promise<void> {
     if (!this.config.openOnStartup || !this.config.startupSection) return;
     const section = this.config.startupSection;
     await this[section].open();
+  }
+
+  async openPath(path: string, frontmatter: CalerndatFrontMatter): Promise<void> {
+    const section = frontmatter.granularity;
+    await this[section].openPath(path);
   }
 
   parseFrontMatter(frontmatter: FrontMatterCache): CalerndatFrontMatter {
