@@ -243,6 +243,9 @@ export class SettingsIntervalPage extends SettingsWidget {
     });
     navDatesTemplate.descEl.createEl("br");
     this.createVariableReferenceHint(navDatesTemplate.descEl);
+    navDatesTemplate.descEl.createEl("span", {
+      text: " You can also use the pipe symbol for line breaks.",
+    });
   }
 
   createVariableReferenceHint(el: HTMLElement): void {
