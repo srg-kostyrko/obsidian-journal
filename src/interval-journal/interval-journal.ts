@@ -197,12 +197,12 @@ export class IntervalJournal implements Journal {
       await this.processFrontMatter(file, interval);
     } else {
       if (!(file instanceof TFile)) throw new Error("File is not a TFile");
-      await this.enshureFrontMatter(file, interval);
+      await this.ensureFrontMatter(file, interval);
     }
     return file;
   }
 
-  private async enshureFrontMatter(file: TFile, interval: Interval): Promise<void> {
+  private async ensureFrontMatter(file: TFile, interval: Interval): Promise<void> {
     const metadata = this.app.metadataCache.getFileCache(file);
     if (
       !metadata?.frontmatter?.[FRONTMATTER_ID_KEY] ||
