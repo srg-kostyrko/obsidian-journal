@@ -9,6 +9,7 @@ import { IntervalCodeBlocksModal } from "./ui/interval-code-blocks";
 import {
   DEFAULT_DATE_FORMAT,
   DEFAULT_NAME_TEMPLATE_INTERVAL,
+  DEFAULT_NAV_DATES_TEMPLATE_INTERVAL,
   DEFAULT_RIBBON_ICONS_INTERVAL,
 } from "../config/config-defaults";
 import { TemplateSuggestion } from "./ui/template-suggestion";
@@ -227,6 +228,21 @@ export class SettingsIntervalPage extends SettingsWidget {
     });
     navNameTemplate.descEl.createEl("br");
     this.createVariableReferenceHint(navNameTemplate.descEl);
+
+    const navDatesTemplate = new Setting(containerEl).setName("Navigation dates template").addText((text) => {
+      text
+        .setPlaceholder(this.config.navDatesTemplate || DEFAULT_NAV_DATES_TEMPLATE_INTERVAL)
+        .setValue(this.config.navDatesTemplate)
+        .onChange((value) => {
+          this.config.navDatesTemplate = value;
+          this.save();
+        });
+    });
+    navDatesTemplate.descEl.createEl("span", {
+      text: "Template used to render the dates in navigation code blocks.",
+    });
+    navDatesTemplate.descEl.createEl("br");
+    this.createVariableReferenceHint(navDatesTemplate.descEl);
   }
 
   createVariableReferenceHint(el: HTMLElement): void {

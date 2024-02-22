@@ -161,9 +161,7 @@
 }
 .interval-dates {
   font-size: 0.9em;
-}
-.interval-separator {
-  font-size: 0.9em;
+  white-space: pre-line;
 }
 
 .journal-date-picker-modal {

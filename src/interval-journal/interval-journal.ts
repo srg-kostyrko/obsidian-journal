@@ -17,6 +17,7 @@ import { Interval, IntervalManager } from "./interval-manager";
 import {
   DEFAULT_DATE_FORMAT,
   DEFAULT_NAME_TEMPLATE_INTERVAL,
+  DEFAULT_NAV_DATES_TEMPLATE_INTERVAL,
   DEFAULT_RIBBON_ICONS_INTERVAL,
 } from "../config/config-defaults";
 import { delay } from "../utils/misc";
@@ -51,6 +52,10 @@ export class IntervalJournal implements Journal {
 
   get navNameTemplate(): string {
     return this.config.navNameTemplate || this.nameTemplate;
+  }
+
+  get navDatesTemplate(): string {
+    return this.config.navDatesTemplate || DEFAULT_NAV_DATES_TEMPLATE_INTERVAL;
   }
 
   get dateFormat(): string {

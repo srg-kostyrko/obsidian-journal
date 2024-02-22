@@ -56,6 +56,7 @@ export interface IntervalConfig extends JournalCaseConfig {
   openMode: OpenMode;
   nameTemplate: string;
   navNameTemplate: string;
+  navDatesTemplate: string;
   dateFormat: string;
   folder: string;
   template: string;
