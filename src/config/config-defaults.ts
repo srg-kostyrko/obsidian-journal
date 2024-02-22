@@ -115,6 +115,7 @@ export const DEFAULT_CONFIG_INTERVAL: IntervalConfig = {
   openOnStartup: false,
   openMode: "active",
   nameTemplate: "",
+  navNameTemplate: "",
   dateFormat: "",
   folder: "",
   template: "",

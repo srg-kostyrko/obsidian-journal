@@ -49,6 +49,10 @@ export class IntervalJournal implements Journal {
     return this.config.nameTemplate || DEFAULT_NAME_TEMPLATE_INTERVAL;
   }
 
+  get navNameTemplate(): string {
+    return this.config.navNameTemplate || this.nameTemplate;
+  }
+
   get dateFormat(): string {
     return this.config.dateFormat || DEFAULT_DATE_FORMAT;
   }

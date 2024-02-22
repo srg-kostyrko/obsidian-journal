@@ -86,7 +86,7 @@ export class CodeBlockIntervalNav extends MarkdownRenderChild {
       });
     }
     wrapper.dataset.date = interval.startDate.format("YYYY-MM-DD");
-    const name = replaceTemplateVariables(journal.nameTemplate, context);
+    const name = replaceTemplateVariables(journal.navNameTemplate || journal.nameTemplate, context);
     wrapper.createDiv({
       cls: "interval-name",
       text: name,

@@ -212,6 +212,21 @@ export class SettingsIntervalPage extends SettingsWidget {
           this.save();
         });
       });
+
+    const navNameTemplate = new Setting(containerEl).setName("Navigation name template").addText((text) => {
+      text
+        .setPlaceholder(this.config.nameTemplate || DEFAULT_NAME_TEMPLATE_INTERVAL)
+        .setValue(this.config.navNameTemplate)
+        .onChange((value) => {
+          this.config.navNameTemplate = value;
+          this.save();
+        });
+    });
+    navNameTemplate.descEl.createEl("span", {
+      text: "Template used to render the name in navigation code blocks.",
+    });
+    navNameTemplate.descEl.createEl("br");
+    this.createVariableReferenceHint(navNameTemplate.descEl);
   }
 
   createVariableReferenceHint(el: HTMLElement): void {

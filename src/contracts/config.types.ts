@@ -55,6 +55,7 @@ export interface IntervalConfig extends JournalCaseConfig {
   openOnStartup: boolean;
   openMode: OpenMode;
   nameTemplate: string;
+  navNameTemplate: string;
   dateFormat: string;
   folder: string;
   template: string;
