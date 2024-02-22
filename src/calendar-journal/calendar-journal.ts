@@ -1,5 +1,5 @@
 import { App, FrontMatterCache, Plugin, TFile } from "obsidian";
-import { CalendarConfig, CalendarGranularity, CalerndatFrontMatter } from "../contracts/config.types";
+import { CalendarConfig, CalendarGranularity, CalendarFrontMatter } from "../contracts/config.types";
 import { CalendarJournalSection } from "./calendar-journal-section";
 import {
   FRONTMATTER_DATE_FORMAT,
@@ -145,10 +145,10 @@ export class CalendarJournal implements Journal {
     await this.year.autoCreateNote();
   }
 
-  async findNextNote(data: CalerndatFrontMatter): Promise<string | null> {
+  async findNextNote(data: CalendarFrontMatter): Promise<string | null> {
     return this.index.findNextNote(this.calendar.date(data.end_date).add(1, "day").startOf("day"), data.granularity);
   }
-  async findPreviousNote(data: CalerndatFrontMatter): Promise<string | null> {
+  async findPreviousNote(data: CalendarFrontMatter): Promise<string | null> {
     return this.index.findPreviousNote(
       this.calendar.date(data.start_date).subtract(1, "day").endOf("day"),
       data.granularity,
@@ -161,12 +161,12 @@ export class CalendarJournal implements Journal {
     await this[section].open();
   }
 
-  async openPath(path: string, frontmatter: CalerndatFrontMatter): Promise<void> {
+  async openPath(path: string, frontmatter: CalendarFrontMatter): Promise<void> {
     const section = frontmatter.granularity;
     await this[section].openPath(path);
   }
 
-  parseFrontMatter(frontmatter: FrontMatterCache): CalerndatFrontMatter {
+  parseFrontMatter(frontmatter: FrontMatterCache): CalendarFrontMatter {
     return {
       type: "calendar",
       id: this.id,
@@ -176,7 +176,7 @@ export class CalendarJournal implements Journal {
     };
   }
 
-  indexNote(frontmatter: CalerndatFrontMatter, path: string): void {
+  indexNote(frontmatter: CalendarFrontMatter, path: string): void {
     const startDate = this.calendar.date(frontmatter.start_date, FRONTMATTER_DATE_FORMAT);
     const endDate = this.calendar.date(frontmatter.end_date, FRONTMATTER_DATE_FORMAT);
     this.index.add(startDate, endDate, { path, granularity: frontmatter.granularity });
