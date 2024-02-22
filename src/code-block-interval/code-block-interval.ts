@@ -92,7 +92,6 @@ export class CodeBlockIntervalNav extends MarkdownRenderChild {
       text: name,
     });
     const dates = replaceTemplateVariables(journal.navDatesTemplate, context).replaceAll("|", "\n");
-
     wrapper.createDiv({
       cls: "interval-dates",
       text: dates,
