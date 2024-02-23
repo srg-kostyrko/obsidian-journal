@@ -2,6 +2,7 @@ import { CalendarConfig, CalendarGranularity, IntervalConfig, PluginSettings } f
 
 export const DEFAULT_NAME_TEMPLATE_CALENDAR = "{{date}}";
 export const DEFAULT_NAME_TEMPLATE_INTERVAL = "{{journal_name}} {{index}}";
+export const DEFAULT_NAV_DATES_TEMPLATE_INTERVAL = "{{start_date}}|to|{{end_date}}";
 
 export const DEFAULT_DATE_FORMAT = "YYYY-MM-DD";
 export const DEFAULT_DATE_FORMATS_CALENDAR: Record<CalendarGranularity, string> = {
@@ -115,6 +116,8 @@ export const DEFAULT_CONFIG_INTERVAL: IntervalConfig = {
   openOnStartup: false,
   openMode: "active",
   nameTemplate: "",
+  navNameTemplate: "",
+  navDatesTemplate: "",
   dateFormat: "",
   folder: "",
   template: "",

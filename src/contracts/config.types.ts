@@ -55,6 +55,8 @@ export interface IntervalConfig extends JournalCaseConfig {
   openOnStartup: boolean;
   openMode: OpenMode;
   nameTemplate: string;
+  navNameTemplate: string;
+  navDatesTemplate: string;
   dateFormat: string;
   folder: string;
   template: string;
@@ -67,7 +69,7 @@ export interface IntervalConfig extends JournalCaseConfig {
 
 export type JournalConfig = CalendarConfig | IntervalConfig;
 
-export interface CalerndatFrontMatter {
+export interface CalendarFrontMatter {
   type: "calendar";
   id: string;
   start_date: string;
@@ -81,4 +83,4 @@ export interface IntervalFrontMatter {
   end_date: string;
   index: number;
 }
-export type JournalFrontMatter = CalerndatFrontMatter | IntervalFrontMatter;
+export type JournalFrontMatter = CalendarFrontMatter | IntervalFrontMatter;

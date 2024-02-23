@@ -17,6 +17,7 @@ import { Interval, IntervalManager } from "./interval-manager";
 import {
   DEFAULT_DATE_FORMAT,
   DEFAULT_NAME_TEMPLATE_INTERVAL,
+  DEFAULT_NAV_DATES_TEMPLATE_INTERVAL,
   DEFAULT_RIBBON_ICONS_INTERVAL,
 } from "../config/config-defaults";
 import { delay } from "../utils/misc";
@@ -47,6 +48,14 @@ export class IntervalJournal implements Journal {
 
   get nameTemplate(): string {
     return this.config.nameTemplate || DEFAULT_NAME_TEMPLATE_INTERVAL;
+  }
+
+  get navNameTemplate(): string {
+    return this.config.navNameTemplate || this.nameTemplate;
+  }
+
+  get navDatesTemplate(): string {
+    return this.config.navDatesTemplate || DEFAULT_NAV_DATES_TEMPLATE_INTERVAL;
   }
 
   get dateFormat(): string {
@@ -188,12 +197,12 @@ export class IntervalJournal implements Journal {
       await this.processFrontMatter(file, interval);
     } else {
       if (!(file instanceof TFile)) throw new Error("File is not a TFile");
-      await this.enshureFrontMatter(file, interval);
+      await this.ensureFrontMatter(file, interval);
     }
     return file;
   }
 
-  private async enshureFrontMatter(file: TFile, interval: Interval): Promise<void> {
+  private async ensureFrontMatter(file: TFile, interval: Interval): Promise<void> {
     const metadata = this.app.metadataCache.getFileCache(file);
     if (
       !metadata?.frontmatter?.[FRONTMATTER_ID_KEY] ||
