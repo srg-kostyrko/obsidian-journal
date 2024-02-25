@@ -280,9 +280,9 @@ export class JournalManager extends Component {
       });
     }
     if (this.config.calendarView.leaf === "left") {
-      this.app.workspace.getLeftLeaf(false).setViewState({ type: CALENDAR_VIEW_TYPE });
+      this.app.workspace.getLeftLeaf(false)?.setViewState({ type: CALENDAR_VIEW_TYPE });
     } else {
-      this.app.workspace.getRightLeaf(false).setViewState({ type: CALENDAR_VIEW_TYPE });
+      this.app.workspace.getRightLeaf(false)?.setViewState({ type: CALENDAR_VIEW_TYPE });
     }
   }
 
