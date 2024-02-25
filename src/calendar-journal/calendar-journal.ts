@@ -56,6 +56,10 @@ export class CalendarJournal implements Journal {
     return this.config.id;
   }
 
+  get type(): "calendar" {
+    return "calendar";
+  }
+
   get name(): string {
     return this.config.name;
   }
@@ -179,7 +183,12 @@ export class CalendarJournal implements Journal {
   indexNote(frontmatter: CalendarFrontMatter, path: string): void {
     const startDate = this.calendar.date(frontmatter.start_date, FRONTMATTER_DATE_FORMAT);
     const endDate = this.calendar.date(frontmatter.end_date, FRONTMATTER_DATE_FORMAT);
-    this.index.add(startDate, endDate, { path, granularity: frontmatter.granularity });
+    this.index.add(startDate, endDate, {
+      path,
+      granularity: frontmatter.granularity,
+      startDate: frontmatter.start_date,
+      endDate: frontmatter.end_date,
+    });
   }
 
   clearForPath(path: string): void {

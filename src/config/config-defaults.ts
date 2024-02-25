@@ -135,4 +135,8 @@ export const DEFAULT_PLUGIN_SETTINGS: PluginSettings = {
     firstDayOfWeek: -1,
     firstWeekOfYear: 1,
   },
+  calendar_view: {
+    leaf: "right",
+    weeks: "left",
+  },
 };

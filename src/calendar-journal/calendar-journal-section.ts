@@ -206,7 +206,12 @@ export class CalendarJournalSection {
         frontmatter[FRONTMATTER_SECTION_KEY] = this.granularity;
         resolve();
       });
-      this.journal.index.add(startDate, endDate, { path: file.path, granularity: this.granularity });
+      this.journal.index.add(startDate, endDate, {
+        path: file.path,
+        granularity: this.granularity,
+        startDate: startDate.format(FRONTMATTER_DATE_FORMAT),
+        endDate: endDate.format(FRONTMATTER_DATE_FORMAT),
+      });
     });
   }
 }

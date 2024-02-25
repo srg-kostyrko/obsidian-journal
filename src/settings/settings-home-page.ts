@@ -106,5 +106,32 @@ export class SettingsHomePage extends SettingsWidget {
           });
       });
     }
+
+    new Setting(containerEl).setName("Calendar view").setHeading();
+    new Setting(containerEl).setName("Add to").addDropdown((dropdown) => {
+      dropdown
+        .addOptions({
+          left: "Left sidebar",
+          right: "Right sidebar",
+        })
+        .setValue(this.config.calendarView.leaf || "right")
+        .onChange((value) => {
+          this.config.calendarView.leaf = value as "left" | "right";
+          this.save();
+          this.manager.placeCalendarView(true);
+        });
+    });
+    new Setting(containerEl).setName("Show weeks").addDropdown((dropdown) => {
+      dropdown
+        .addOptions({
+          left: "Before weekdays",
+          right: "After weekdays",
+        })
+        .setValue(this.config.calendarView.weeks || "left")
+        .onChange((value) => {
+          this.config.calendarView.weeks = value as "left" | "right";
+          this.save();
+        });
+    });
   }
 }

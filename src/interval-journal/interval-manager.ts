@@ -29,6 +29,10 @@ export class IntervalManager {
     return this.config.numeration_type === "year";
   }
 
+  find(startDate: MomentDate, endDate: MomentDate): Interval[] {
+    return this.intervalTree.search([startDate.toDate().getTime(), endDate.toDate().getTime()]) as Interval[];
+  }
+
   findInterval(date?: string): Interval {
     const intervalDate = date ? this.calendar.date(date) : this.calendar.today();
     const intervalTime = intervalDate.toDate().getTime();

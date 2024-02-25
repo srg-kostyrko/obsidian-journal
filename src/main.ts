@@ -5,6 +5,8 @@ import { CodeBlockTimelineProcessor } from "./code-block-timeline/code-block-tim
 import { JournalConfigManager } from "./config/journal-config-manager";
 import { CodeBlockNavProcessor } from "./code-block-nav/code-block-nav-processor";
 import { CodeBlockIntervalProcessor } from "./code-block-interval/code-block-interval-processor";
+import { CALENDAR_VIEW_TYPE } from "./constants";
+import { CalendarView } from "./calendar-view/calendar-view";
 
 export default class JournalPlugin extends Plugin {
   private config: JournalConfigManager;
@@ -14,8 +16,11 @@ export default class JournalPlugin extends Plugin {
 
     this.config = new JournalConfigManager(this);
     await this.config.load();
+
     this.manager = new JournalManager(this.app, this, this.config);
     this.addChild(this.manager);
+
+    this.registerView(CALENDAR_VIEW_TYPE, (leaf) => new CalendarView(leaf, this.manager));
 
     this.addSettingTab(new JournalSettingTab(this.app, this, this.manager, this.config));
 
@@ -35,14 +40,20 @@ export default class JournalPlugin extends Plugin {
       const processor = new CodeBlockIntervalProcessor(this.manager, source, el, ctx);
       ctx.addChild(processor);
     });
-
     this.app.workspace.onLayoutReady(async () => {
       await this.manager.reindex();
+      this.manager.placeCalendarView();
       this.manager.configureCommands();
       if (appStartup) {
         await this.manager.autoCreateNotes();
         await this.manager.openStartupNote();
       }
+    });
+  }
+
+  async onunload(): Promise<void> {
+    this.app.workspace.getLeavesOfType(CALENDAR_VIEW_TYPE).forEach((leaf) => {
+      leaf.detach();
     });
   }
 }

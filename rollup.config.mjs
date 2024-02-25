@@ -21,10 +21,7 @@ const DEV_PLUGIN_CONFIG = {
   },
   plugins: getRollupPlugins(
     copy({
-      targets: [
-        { src: "manifest.json", dest: "test-vault/.obsidian/plugins/journals/" },
-        { src: "styles.css", dest: "test-vault/.obsidian/plugins/journals/" },
-      ],
+      targets: [{ src: ["manifest.json", "styles.css"], dest: "test-vault/.obsidian/plugins/journals/" }],
     }),
   ),
 };

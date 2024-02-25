@@ -42,6 +42,10 @@ export class IntervalJournal implements Journal {
     return this.config.id;
   }
 
+  get type(): "interval" {
+    return "interval";
+  }
+
   get name(): string {
     return this.config.name;
   }

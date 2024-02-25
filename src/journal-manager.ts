@@ -1,6 +1,6 @@
 import { App, Component, Notice, Plugin, TAbstractFile, TFile } from "obsidian";
 import { CalendarJournal, calendarCommands } from "./calendar-journal/calendar-journal";
-import { FRONTMATTER_ID_KEY } from "./constants";
+import { CALENDAR_VIEW_TYPE, FRONTMATTER_ID_KEY } from "./constants";
 import { deepCopy } from "./utils";
 import { DEFAULT_CONFIG_CALENDAR } from "./config/config-defaults";
 import { CalendarConfig, IntervalConfig, JournalFrontMatter } from "./contracts/config.types";
@@ -17,9 +17,9 @@ export class JournalManager extends Component {
   public readonly calendar: CalendarHelper;
 
   constructor(
-    private app: App,
-    private plugin: Plugin,
-    private config: JournalConfigManager,
+    public readonly app: App,
+    public readonly plugin: Plugin,
+    public readonly config: JournalConfigManager,
   ) {
     super();
     this.calendar = new CalendarHelper(this.config.calendar);
@@ -41,6 +41,18 @@ export class JournalManager extends Component {
 
   get(id: string): Journal | undefined {
     return this.journals.get(id);
+  }
+
+  getByType<T extends "calendar" | "interval", J = T extends "calendar" ? CalendarJournal : IntervalJournal>(
+    type: T,
+  ): J[] {
+    const journals: J[] = [];
+    for (const journal of this.journals.values()) {
+      if (journal.type === type) {
+        journals.push(journal as J);
+      }
+    }
+    return journals;
   }
 
   async createCalendarJournal(id: string, name: string): Promise<string> {
@@ -144,6 +156,19 @@ export class JournalManager extends Component {
         }
       },
     });
+
+    this.plugin.addCommand({
+      id: "journal:open-calendar",
+      name: "Open calendar",
+      callback: () => {
+        let [leaf] = this.app.workspace.getLeavesOfType(CALENDAR_VIEW_TYPE);
+        if (!leaf) {
+          this.placeCalendarView();
+          leaf = this.app.workspace.getLeavesOfType(CALENDAR_VIEW_TYPE)[0];
+        }
+        this.app.workspace.revealLeaf(leaf);
+      },
+    });
   }
 
   configureRibbonIcons() {
@@ -175,9 +200,8 @@ export class JournalManager extends Component {
 
   async reindex(): Promise<void> {
     const files = this.app.vault.getMarkdownFiles();
-    for (const file of files) {
-      this.indexFile(file);
-    }
+    await Promise.allSettled(files.map((file) => this.indexFile(file)));
+    this.app.workspace.trigger("journal:index-update");
     this.setupListeners();
   }
 
@@ -211,6 +235,7 @@ export class JournalManager extends Component {
       const journal = this.journals.get(data.id);
       if (journal) {
         journal.indexNote(data, file.path);
+        this.app.workspace.trigger("journal:index-update");
       }
     }
   }
@@ -238,6 +263,7 @@ export class JournalManager extends Component {
   onDeleted = (file: TAbstractFile) => {
     if (file instanceof TFile) {
       this.clearForPath(file.path);
+      this.app.workspace.trigger("journal:index-update");
     }
   };
 
@@ -245,6 +271,20 @@ export class JournalManager extends Component {
     this.clearForPath(file.path);
     this.indexFile(file);
   };
+
+  placeCalendarView(moving = false) {
+    if (this.app.workspace.getLeavesOfType(CALENDAR_VIEW_TYPE).length > 0) {
+      if (!moving) return;
+      this.app.workspace.getLeavesOfType(CALENDAR_VIEW_TYPE).forEach((leaf) => {
+        leaf.detach();
+      });
+    }
+    if (this.config.calendarView.leaf === "left") {
+      this.app.workspace.getLeftLeaf(false).setViewState({ type: CALENDAR_VIEW_TYPE });
+    } else {
+      this.app.workspace.getRightLeaf(false).setViewState({ type: CALENDAR_VIEW_TYPE });
+    }
+  }
 
   async deleteJournal(id: string, notesProcessing: NotesProcessing): Promise<void> {
     const journal = this.journals.get(id);

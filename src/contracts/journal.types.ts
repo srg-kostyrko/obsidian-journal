@@ -2,6 +2,7 @@ import { FrontMatterCache, Plugin } from "obsidian";
 import { JournalFrontMatter } from "./config.types";
 
 export interface Journal {
+  type: string;
   name: string;
   autoCreateNotes(): Promise<void>;
   openStartupNote(): Promise<void>;

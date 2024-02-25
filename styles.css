@@ -49,16 +49,10 @@
 .journal-day {
   font-size: 0.7em;
   border: 1px solid transparent;
-  border-radius: 50%;
   height: 28px;
   line-height: 26px;
   width: 28px;
   text-align: center;
-}
-
-.journal-day:hover {
-  border-color: var(--background-modifier-border);
-  background-color: var(--background-secondary);
 }
 
 .is-selected .journal-day {
@@ -257,4 +251,102 @@
 }
 .journal-suggestion-name {
   margin-left: 8px;
+}
+
+.journal-day,
+.journal-weeknumber,
+.journal-month,
+.journal-quarter,
+.journal-year,
+.journal-interval-name {
+  position: relative;
+}
+
+.journal-calendar-view {
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+}
+.journal-calendar-view-month {
+  display: grid;
+  grid-template-columns: repeat(7, 30px);
+  gap: 6px;
+}
+.journal-calendar-view-month.with-week {
+  grid-template-columns: repeat(8, 30px);
+}
+.journal-calendar-view-toolbar {
+  width: 100%;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 6px;
+}
+.journal-calendar-view-title-row {
+  width: 100%;
+  display: grid;
+  grid-template-columns: 18px 18px 1fr 18px 18px;
+  gap: 6px;
+  margin-bottom: 6px;
+}
+.journal-calendar-view-title-row > div {
+  padding: 4px 0;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+.journal-calendar-view-title-row .journal-calendar-view-title-text {
+  display: flex;
+  justify-content: space-around;
+  align-items: center;
+}
+.journal-note-marker {
+  position: absolute;
+  bottom: 0;
+  left: 50%;
+  width: 4px;
+  height: 4px;
+  border-radius: 50%;
+  background-color: var(--text-accent);
+  transform: translateX(-50%);
+}
+.journal-calendar-view-title-text .journal-note-marker {
+  bottom: -3px;
+}
+
+.journal-interval-name .journal-note-marker {
+  left: -8px;
+  bottom: 50%;
+  transform: translateY(50%);
+}
+
+.journal-is-active {
+  color: var(--text-on-accent);
+  background-color: var(--interactive-accent);
+  border-radius: 2px;
+}
+.journal-is-active .journal-note-marker {
+  background-color: var(--text-on-accent);
+}
+
+.journal-interval-block {
+  padding: 8px 0;
+}
+
+.journal-interval-block h5 {
+  margin-top: 0;
+}
+
+.journal-interval-block + .journal-interval-block {
+  border-top: 1px solid var(--modal-border-color);
+}
+
+.journal-interval + .journal-interval {
+  margin-top: 6px;
+}
+.journal-interval-name {
+  font-size: 1.2em;
+}
+.journal-interval-dates {
+  font-size: 0.8em;
 }

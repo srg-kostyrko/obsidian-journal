@@ -12,6 +12,10 @@ export class JournalConfigManager {
     const saved = await this.plugin.loadData();
     if (saved) {
       this.settings = saved;
+      if (!this.settings.calendar_view) {
+        this.settings.calendar_view = deepCopy(DEFAULT_PLUGIN_SETTINGS.calendar_view);
+        await this.save();
+      }
     } else {
       this.settings = deepCopy(DEFAULT_PLUGIN_SETTINGS);
       await this.save();
@@ -40,6 +44,10 @@ export class JournalConfigManager {
 
   get calendar() {
     return this.settings.calendar;
+  }
+
+  get calendarView() {
+    return this.settings.calendar_view;
   }
 
   *[Symbol.iterator]() {

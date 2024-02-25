@@ -7,6 +7,10 @@ export interface PluginSettings {
     firstDayOfWeek: number;
     firstWeekOfYear: number;
   };
+  calendar_view: {
+    leaf: "left" | "right";
+    weeks: "left" | "right";
+  };
 }
 
 interface JournalCaseConfig {

@@ -4,11 +4,17 @@ import { MomentDate } from "../contracts/date.types";
 
 interface IndexEntry {
   path: string;
+  startDate: string;
+  endDate: string;
   granularity: CalendarGranularity;
 }
 
 export class CalendarIndex {
   private intervalTree = new IntervalTree<IndexEntry>();
+
+  find(startDate: MomentDate, endDate: MomentDate): IndexEntry[] {
+    return this.intervalTree.search([startDate.toDate().getTime(), endDate.toDate().getTime()]) as IndexEntry[];
+  }
 
   get(date: MomentDate, granularity: CalendarGranularity): IndexEntry | undefined {
     const list = this.intervalTree.search([date.toDate().getTime(), date.toDate().getTime()]);
