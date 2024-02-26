@@ -8,6 +8,7 @@ import { JournalSuggestModal } from "../ui/journal-suggest-modal";
 import { IntervalJournal } from "../interval-journal/interval-journal";
 import { replaceTemplateVariables } from "../utils/template";
 import { Interval } from "../interval-journal/interval-manager";
+import { delay } from "../utils/misc";
 
 interface NoteIndexentry {
   journalId: string;
@@ -57,6 +58,8 @@ export class CalendarViewMonth {
     this.manager.plugin.registerEvent(
       this.manager.app.workspace.on("active-leaf-change", async () => {
         await this.updateActiveNote();
+        // delaying render to avoid missed clicks
+        await delay(100);
         this.display();
       }),
     );
@@ -73,7 +76,6 @@ export class CalendarViewMonth {
 
   display(): void {
     this.containerEl.empty();
-
     const calendarJournals = this.manager.getByType("calendar");
     const active = this.computedActive(calendarJournals);
     const placeWeeks = this.manager.config.calendarView.weeks || "left";
@@ -455,6 +457,12 @@ export class CalendarViewMonth {
       intervalEl.dataset.date = interval.startDate.format("YYYY-MM-DD");
       if (this.checkIsActiveInterval(journal.id, interval.startDate)) {
         intervalEl.classList.add("journal-is-active");
+      }
+      if (
+        interval.startDate.isSameOrBefore(this.manager.calendar.today(), "day") &&
+        interval.endDate.isSameOrAfter(this.manager.calendar.today(), "day")
+      ) {
+        intervalEl.classList.add("journal-is-current-interval");
       }
 
       const context = journal.getTemplateContext(interval);

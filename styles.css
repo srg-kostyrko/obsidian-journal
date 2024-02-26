@@ -350,3 +350,10 @@
 .journal-interval-dates {
   font-size: 0.8em;
 }
+.journal-is-current-interval {
+  color: var(--text-accent);
+  font-weight: 600;
+}
+.journal-is-active.journal-is-current-interval {
+  color: var(--text-on-accent);
+}
