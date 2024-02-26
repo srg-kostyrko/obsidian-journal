@@ -124,6 +124,7 @@ export class SettingsHomePage extends SettingsWidget {
     new Setting(containerEl).setName("Show weeks").addDropdown((dropdown) => {
       dropdown
         .addOptions({
+          none: "Don't show",
           left: "Before weekdays",
           right: "After weekdays",
         })

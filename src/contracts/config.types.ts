@@ -9,7 +9,7 @@ export interface PluginSettings {
   };
   calendar_view: {
     leaf: "left" | "right";
-    weeks: "left" | "right";
+    weeks: "none" | "left" | "right";
   };
 }
 

@@ -105,16 +105,18 @@ export class CalendarViewMonth {
     const week = start.clone().startOf("week");
     const weekEnd = week.clone().endOf("week");
 
-    if (active.week) {
+    if (placeWeeks !== "none") {
       view.classList.add("with-week");
+    }
+    if (active.week) {
       view.on("click", ".journal-weeknumber", (e) => {
         const date = (e.target as HTMLElement).closest<HTMLElement>("[data-date]")?.dataset?.date;
         if (date) {
           this.openDate(date, "week");
         }
       });
-      if (placeWeeks === "left") view.createDiv();
     }
+    if (placeWeeks === "left") view.createDiv();
     while (week.isSameOrBefore(weekEnd)) {
       view.createDiv({
         cls: "journal-weekday",
@@ -122,7 +124,7 @@ export class CalendarViewMonth {
       });
       week.add(1, "day");
     }
-    if (active.week && placeWeeks === "right") view.createDiv();
+    if (placeWeeks === "right") view.createDiv();
 
     if (active.day) {
       view.on("click", ".journal-day", (e) => {
@@ -135,8 +137,8 @@ export class CalendarViewMonth {
 
     const curr = startWithWeek.clone();
     while (curr.isSameOrBefore(endWithWeek)) {
-      if (active.week && placeWeeks === "left" && curr.isSame(curr.clone().startOf("week"), "day")) {
-        this.renderWeekNumber(view, curr);
+      if (placeWeeks === "left" && curr.isSame(curr.clone().startOf("week"), "day")) {
+        this.renderWeekNumber(view, curr, active.week);
       }
       const cls = ["journal-day"];
       const text = curr.format("D");
@@ -161,8 +163,8 @@ export class CalendarViewMonth {
         this.renderNoteMarker(day);
       }
 
-      if (active.week && placeWeeks === "right" && curr.isSame(curr.clone().endOf("week"), "day")) {
-        this.renderWeekNumber(view, curr);
+      if (placeWeeks === "right" && curr.isSame(curr.clone().endOf("week"), "day")) {
+        this.renderWeekNumber(view, curr, active.week);
       }
 
       curr.add(1, "day");
@@ -393,11 +395,14 @@ export class CalendarViewMonth {
     });
   }
 
-  private renderWeekNumber(parent: HTMLElement, curr: MomentDate) {
+  private renderWeekNumber(parent: HTMLElement, curr: MomentDate, active: boolean) {
     const weekNumber = parent.createDiv({
-      cls: "journal-weeknumber journal-clickable",
+      cls: "journal-weeknumber",
       text: curr.format("[W]ww"),
     });
+    if (active) {
+      weekNumber.classList.add("journal-clickable");
+    }
     weekNumber.dataset.date = curr.format("YYYY-MM-DD");
     if (this.checkIsActiveCalendar(curr, "week")) {
       weekNumber.classList.add("journal-is-active");
