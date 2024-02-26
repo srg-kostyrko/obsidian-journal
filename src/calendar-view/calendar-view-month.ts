@@ -297,6 +297,7 @@ export class CalendarViewMonth {
         this.manager.calendar,
         (date: string) => {
           this.changeCurrentDate(this.manager.calendar.date(date));
+          this.openDate(date, "day");
         },
         this.currentDate.format("YYYY-MM-DD"),
       ).open();
@@ -307,6 +308,7 @@ export class CalendarViewMonth {
     });
     toolbar.on("click", ".journal-calendar-view-today", () => {
       this.changeCurrentDate(this.manager.calendar.today());
+      this.openDate(this.manager.calendar.today().format("YYYY-MM-DD"), "day");
     });
   }
 
