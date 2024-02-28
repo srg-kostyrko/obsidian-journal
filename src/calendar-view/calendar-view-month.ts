@@ -116,6 +116,12 @@ export class CalendarViewMonth {
           this.openDate(date, "week", e);
         }
       });
+      view.on("contextmenu", ".journal-weeknumber", (e) => {
+        const date = (e.target as HTMLElement).closest<HTMLElement>("[data-date]")?.dataset?.date;
+        if (date) {
+          this.showDateContextMenu(date, "week", e);
+        }
+      });
     }
     if (placeWeeks === "left") view.createDiv();
     while (week.isSameOrBefore(weekEnd)) {
@@ -132,6 +138,12 @@ export class CalendarViewMonth {
         const date = (e.target as HTMLElement).closest<HTMLElement>("[data-date]")?.dataset?.date;
         if (date) {
           this.openDate(date, "day", e);
+        }
+      });
+      view.on("contextmenu", ".journal-day", (e) => {
+        const date = (e.target as HTMLElement).closest<HTMLElement>("[data-date]")?.dataset?.date;
+        if (date) {
+          this.showDateContextMenu(date, "day", e);
         }
       });
     }
@@ -257,6 +269,35 @@ export class CalendarViewMonth {
     }
   }
 
+  private showDateContextMenu(dateString: string, granularity: CalendarGranularity, event: MouseEvent): void {
+    const date = this.manager.calendar.date(dateString);
+    const indexKey = date.format(INDEX_FORMATS[granularity]);
+    const notes = this.notesIndex.get(indexKey);
+    if (!notes) return;
+    if (notes.length === 1) {
+      this.showContextMenuForPath(notes[0].path, event);
+    } else {
+      const menu = new Menu();
+      for (const note of notes) {
+        menu.addItem((item) => {
+          item.setTitle(note.path).onClick(() => {
+            this.showContextMenuForPath(note.path, event);
+          });
+        });
+      }
+      menu.showAtMouseEvent(event);
+    }
+  }
+
+  private showContextMenuForPath(path: string, event: MouseEvent): void {
+    const file = this.manager.app.vault.getAbstractFileByPath(path);
+    if (file) {
+      const menu = new Menu();
+      this.manager.app.workspace.trigger("file-menu", menu, file, "file-explorer-context-menu", null);
+      menu.showAtMouseEvent(event);
+    }
+  }
+
   private computedActive(journals: CalendarJournal[]): Record<CalendarGranularity, boolean> {
     const active: Record<CalendarGranularity, boolean> = {
       day: false,
@@ -349,6 +390,12 @@ export class CalendarViewMonth {
           this.openDate(date, "month", e);
         }
       });
+      titleRow.on("contextmenu", ".journal-month", (e) => {
+        const date = (e.target as HTMLElement).dataset.date;
+        if (date) {
+          this.showDateContextMenu(date, "month", e);
+        }
+      });
       if (this.checkHasNote(start, "month")) {
         this.renderNoteMarker(month);
       }
@@ -366,6 +413,12 @@ export class CalendarViewMonth {
         const date = (e.target as HTMLElement).dataset.date;
         if (date) {
           this.openDate(date, "quarter", e);
+        }
+      });
+      titleRow.on("contextmenu", ".journal-quarter", (e) => {
+        const date = (e.target as HTMLElement).dataset.date;
+        if (date) {
+          this.showDateContextMenu(date, "quarter", e);
         }
       });
       if (this.checkHasNote(start, "quarter")) {
@@ -386,6 +439,12 @@ export class CalendarViewMonth {
         const date = (e.target as HTMLElement).dataset.date;
         if (date) {
           this.openDate(date, "year", e);
+        }
+      });
+      titleRow.on("contextmenu", ".journal-year", (e) => {
+        const date = (e.target as HTMLElement).dataset.date;
+        if (date) {
+          this.showDateContextMenu(date, "year", e);
         }
       });
       if (this.checkHasNote(start, "year")) {
@@ -441,18 +500,28 @@ export class CalendarViewMonth {
     });
     const start = this.currentDate.clone().startOf("month").startOf("week");
     const end = this.currentDate.clone().endOf("month").endOf("week");
-    block.on("click", ".journal-interval", (e) => {
-      const date = (e.target as HTMLElement).closest<HTMLElement>("[data-date]")?.dataset?.date;
-      if (date) {
-        journal.open(date);
-      }
-    });
     const notes = journal.intervals.find(start, end);
     const index: Record<string, Interval> = {};
     for (const note of notes) {
       const key = note.startDate.format("YYYY-MM-DD");
       index[key] = note;
     }
+
+    block.on("click", ".journal-interval", (e) => {
+      const date = (e.target as HTMLElement).closest<HTMLElement>("[data-date]")?.dataset?.date;
+      if (date) {
+        journal.open(date);
+      }
+    });
+    block.on("contextmenu", ".journal-interval", (e) => {
+      const date = (e.target as HTMLElement).closest<HTMLElement>("[data-date]")?.dataset?.date;
+      if (date) {
+        const note = index[date];
+        if (note?.path) {
+          this.showContextMenuForPath(note.path, e);
+        }
+      }
+    });
 
     let interval = journal.findInterval(start.format("YYYY-MM-DD"));
     do {
