@@ -19,6 +19,7 @@ test-vault/.obsidian/appearance.json
 test-vault/.obsidian/core-plugins-migration.json
 test-vault/.obsidian/core-plugins.json
 test-vault/.obsidian/workspace.json
+test-vault/**/*.md
 
 # Exclude sourcemaps
 *.map

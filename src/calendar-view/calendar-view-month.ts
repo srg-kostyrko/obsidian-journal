@@ -1,10 +1,9 @@
-import { getIcon, setTooltip } from "obsidian";
+import { Menu, getIcon, setTooltip } from "obsidian";
 import { MomentDate } from "../contracts/date.types";
 import { JournalManager } from "../journal-manager";
 import { DatePickerModal } from "../ui/date-picker-modal";
 import { CalendarJournal } from "../calendar-journal/calendar-journal";
 import { CalendarGranularity, JournalFrontMatter } from "../contracts/config.types";
-import { JournalSuggestModal } from "../ui/journal-suggest-modal";
 import { IntervalJournal } from "../interval-journal/interval-journal";
 import { replaceTemplateVariables } from "../utils/template";
 import { Interval } from "../interval-journal/interval-manager";
@@ -114,7 +113,7 @@ export class CalendarViewMonth {
       view.on("click", ".journal-weeknumber", (e) => {
         const date = (e.target as HTMLElement).closest<HTMLElement>("[data-date]")?.dataset?.date;
         if (date) {
-          this.openDate(date, "week");
+          this.openDate(date, "week", e);
         }
       });
     }
@@ -132,7 +131,7 @@ export class CalendarViewMonth {
       view.on("click", ".journal-day", (e) => {
         const date = (e.target as HTMLElement).closest<HTMLElement>("[data-date]")?.dataset?.date;
         if (date) {
-          this.openDate(date, "day");
+          this.openDate(date, "day", e);
         }
       });
     }
@@ -239,15 +238,21 @@ export class CalendarViewMonth {
     return date.isSame(this.activeFile.start_date, "day");
   }
 
-  private openDate(date: string, garnularity: CalendarGranularity): void {
+  private openDate(date: string, garnularity: CalendarGranularity, event: MouseEvent): void {
     const journals = this.manager.getByType("calendar").filter((j) => j.config[garnularity].enabled);
     if (journals.length > 0) {
       if (journals.length === 1) {
         journals[0][garnularity].open(date);
       } else {
-        new JournalSuggestModal(this.manager.app, journals, (journal: CalendarJournal) => {
-          journal[garnularity].open(date);
-        }).open();
+        const menu = new Menu();
+        for (const journal of journals) {
+          menu.addItem((item) => {
+            item.setTitle(journal.name).onClick(() => {
+              journal[garnularity].open(date);
+            });
+          });
+        }
+        menu.showAtMouseEvent(event);
       }
     }
   }
@@ -299,9 +304,9 @@ export class CalendarViewMonth {
       new DatePickerModal(
         this.manager.app,
         this.manager.calendar,
-        (date: string) => {
+        (date: string, e: MouseEvent) => {
           this.changeCurrentDate(this.manager.calendar.date(date));
-          this.openDate(date, "day");
+          this.openDate(date, "day", e);
         },
         this.currentDate.format("YYYY-MM-DD"),
       ).open();
@@ -310,9 +315,9 @@ export class CalendarViewMonth {
       cls: "journal-calendar-view-today",
       text: "Today",
     });
-    toolbar.on("click", ".journal-calendar-view-today", () => {
+    toolbar.on("click", ".journal-calendar-view-today", (e) => {
       this.changeCurrentDate(this.manager.calendar.today());
-      this.openDate(this.manager.calendar.today().format("YYYY-MM-DD"), "day");
+      this.openDate(this.manager.calendar.today().format("YYYY-MM-DD"), "day", e);
     });
   }
 
@@ -341,7 +346,7 @@ export class CalendarViewMonth {
       titleRow.on("click", ".journal-month", (e) => {
         const date = (e.target as HTMLElement).dataset.date;
         if (date) {
-          this.openDate(date, "month");
+          this.openDate(date, "month", e);
         }
       });
       if (this.checkHasNote(start, "month")) {
@@ -360,7 +365,7 @@ export class CalendarViewMonth {
       titleRow.on("click", ".journal-quarter", (e) => {
         const date = (e.target as HTMLElement).dataset.date;
         if (date) {
-          this.openDate(date, "quarter");
+          this.openDate(date, "quarter", e);
         }
       });
       if (this.checkHasNote(start, "quarter")) {
@@ -380,7 +385,7 @@ export class CalendarViewMonth {
       titleRow.on("click", ".journal-year", (e) => {
         const date = (e.target as HTMLElement).dataset.date;
         if (date) {
-          this.openDate(date, "year");
+          this.openDate(date, "year", e);
         }
       });
       if (this.checkHasNote(start, "year")) {

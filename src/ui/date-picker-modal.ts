@@ -11,7 +11,7 @@ export class DatePickerModal extends Modal {
   constructor(
     app: App,
     private calendar: CalendarHelper,
-    private cb: (date: string) => void,
+    private cb: (date: string, event: MouseEvent) => void,
     private selectedDate?: string,
   ) {
     super(app);
@@ -57,7 +57,7 @@ export class DatePickerModal extends Modal {
     view.on("click", ".journal-day", (e) => {
       const date = (e.target as HTMLElement).closest<HTMLElement>("[data-date]")?.dataset?.date;
       if (date) {
-        this.cb(date);
+        this.cb(date, e);
         this.close();
       }
     });
