@@ -2,11 +2,29 @@
 
 All notable changes to this project will be documented in this file.
 
+## [1.2.0] - 2024-03-03
+
+### Bug Fixes
+
+- Show journals in lexicographic order in journal selection menu
+- Typo
+
+### Features
+
+- Open note on pick date and today buttons click
+- Controll visibility of weeks in calendar view by settings
+- Highlight current intervals similar to today
+- Use context menu for journal selection in calendar view
+- Add context menu to calendar view
+- Add setting to show intervals in reverse order in calendar view
+- Command to connect node to a journal
+
 ## [1.1.0] - 2024-02-25
 
 ### Bug Fixes
 
 - Clarify section folder setting to be relative to root folder
+- Fix type error
 
 ### Features
 
