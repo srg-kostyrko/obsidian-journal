@@ -49,7 +49,7 @@ export class CreateJournalModal extends Modal {
       .setDesc(
         this.type === "interval"
           ? "Interval based journal can be used for notes that are bound to time intervals not aligned with the calendar (like financial quarters or 2 week sprints)"
-          : "Calendar based journal can be used for daily, weelly, monthly, quarterly, and yearly notes",
+          : "Calendar based journal can be used for daily, weekly, monthly, quarterly, and yearly notes",
       )
       .addDropdown((dropdown) => {
         dropdown
