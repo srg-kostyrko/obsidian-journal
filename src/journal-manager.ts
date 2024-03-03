@@ -184,6 +184,7 @@ export class JournalManager extends Component {
         journals.push(journal);
       }
     }
+    journals.sort((a, b) => a.name.localeCompare(b.name));
     return journals;
   }
 

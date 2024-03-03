@@ -252,6 +252,7 @@ export class CalendarViewMonth {
 
   private openDate(date: string, garnularity: CalendarGranularity, event: MouseEvent): void {
     const journals = this.manager.getByType("calendar").filter((j) => j.config[garnularity].enabled);
+    journals.sort((a, b) => a.name.localeCompare(b.name));
     if (journals.length > 0) {
       if (journals.length === 1) {
         journals[0][garnularity].open(date);
