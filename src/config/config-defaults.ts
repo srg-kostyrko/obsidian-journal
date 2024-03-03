@@ -127,6 +127,9 @@ export const DEFAULT_CONFIG_INTERVAL: IntervalConfig = {
     tooltip: "",
   },
   createOnStartup: false,
+  calendar_view: {
+    order: "chrono",
+  },
 };
 
 export const DEFAULT_PLUGIN_SETTINGS: PluginSettings = {

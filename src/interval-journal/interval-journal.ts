@@ -21,6 +21,7 @@ import {
   DEFAULT_RIBBON_ICONS_INTERVAL,
 } from "../config/config-defaults";
 import { delay } from "../utils/misc";
+import { MomentDate } from "../contracts/date.types";
 
 export const intervalCommands = {
   "interval-journal:open": "Open current interval",
@@ -97,6 +98,16 @@ export class IntervalJournal implements Journal {
 
   findPreviousInterval(date?: string): Interval {
     return this.intervals.findPreviousInterval(date);
+  }
+
+  findIntervalsForPeriod(startDate: MomentDate, endDate: MomentDate): Interval[] {
+    const list: Interval[] = [];
+    let interval = this.intervals.findInterval(startDate.format("YYYY-MM-DD"));
+    do {
+      list.push(interval);
+      interval = this.intervals.findNextInterval(interval.endDate.format("YYYY-MM-DD"));
+    } while (interval && interval.startDate.isBefore(endDate));
+    return list;
   }
 
   async open(date?: string): Promise<void> {

@@ -69,6 +69,10 @@ export interface IntervalConfig extends JournalCaseConfig {
     icon: string;
     tooltip: string;
   };
+
+  calendar_view: {
+    order: "chrono" | "reverse";
+  };
 }
 
 export type JournalConfig = CalendarConfig | IntervalConfig;

@@ -523,8 +523,12 @@ export class CalendarViewMonth {
       }
     });
 
-    let interval = journal.findInterval(start.format("YYYY-MM-DD"));
-    do {
+    const intervals = journal.findIntervalsForPeriod(start, end);
+    if (journal.config.calendar_view?.order === "reverse") {
+      intervals.reverse();
+    }
+
+    for (const interval of intervals) {
       const intervalEl = block.createDiv({
         cls: "journal-interval journal-clickable",
       });
@@ -553,8 +557,6 @@ export class CalendarViewMonth {
         cls: "journal-interval-dates",
         text: dates,
       });
-
-      interval = journal.findNextInterval(interval.startDate.format("YYYY-MM-DD"));
-    } while (interval.startDate.isSameOrBefore(end, "day"));
+    }
   }
 }

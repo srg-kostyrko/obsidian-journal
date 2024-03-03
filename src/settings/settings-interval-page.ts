@@ -7,6 +7,7 @@ import { CalendarHelper } from "../utils/calendar";
 import { VariableReferenceModal } from "./ui/variable-reference";
 import { IntervalCodeBlocksModal } from "./ui/interval-code-blocks";
 import {
+  DEFAULT_CONFIG_INTERVAL,
   DEFAULT_DATE_FORMAT,
   DEFAULT_NAME_TEMPLATE_INTERVAL,
   DEFAULT_NAV_DATES_TEMPLATE_INTERVAL,
@@ -14,6 +15,7 @@ import {
 } from "../config/config-defaults";
 import { TemplateSuggestion } from "./ui/template-suggestion";
 import { formatOrdinals } from "../utils/plural";
+import { deepCopy } from "../utils";
 
 export class SettingsIntervalPage extends SettingsWidget {
   constructor(
@@ -23,6 +25,9 @@ export class SettingsIntervalPage extends SettingsWidget {
     private calendar: CalendarHelper,
   ) {
     super(app);
+    if (!this.config.calendar_view) {
+      this.config.calendar_view = deepCopy(DEFAULT_CONFIG_INTERVAL.calendar_view);
+    }
   }
 
   get headingText(): string {
@@ -245,6 +250,19 @@ export class SettingsIntervalPage extends SettingsWidget {
     this.createVariableReferenceHint(navDatesTemplate.descEl);
     navDatesTemplate.descEl.createEl("span", {
       text: " You can also use the pipe symbol for line breaks.",
+    });
+
+    new Setting(containerEl).setName("Calendar view").setHeading();
+
+    new Setting(containerEl).setName("Show order").addDropdown((dropdown) => {
+      dropdown
+        .addOption("chrono", "Chronological")
+        .addOption("reverse", "Reverse chronological")
+        .setValue(this.config.calendar_view?.order ?? "chrono")
+        .onChange((value) => {
+          this.config.calendar_view.order = value as "chrono" | "reverse";
+          this.save();
+        });
     });
   }
 
