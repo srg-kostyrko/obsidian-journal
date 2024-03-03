@@ -108,7 +108,7 @@ export class CreateJournalModal extends Modal {
         button.setButtonText(this.start_date || "Pick date").onClick(() => {
           new DatePickerModal(
             this.app,
-            this.manager.calendar,
+            this.manager,
             (date: string) => {
               this.start_date = date;
               this.display();

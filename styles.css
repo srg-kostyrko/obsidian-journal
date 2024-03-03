@@ -19,6 +19,9 @@
 .journal-month-with-week {
   grid-template-columns: 35px repeat(7, 30px);
 }
+.journal-month-view.with-week {
+  grid-template-columns: repeat(8, 30px);
+}
 
 .journal-month-timeline {
   display: flex;
@@ -159,7 +162,7 @@
 }
 
 .journal-date-picker-modal {
-  --dialog-width: 300px;
+  --dialog-width: 330px;
 }
 
 .journal-dp-name-row {
@@ -177,6 +180,10 @@
   display: grid;
   grid-template-columns: repeat(4, 1fr);
   gap: 6px;
+}
+.journal-dp-quarters-view {
+  display: flex;
+  justify-content: space-around;
 }
 .journal-out-of-range {
   opacity: 0.7;

@@ -345,7 +345,7 @@ export class CalendarViewMonth {
     this.renderTitleIcon(toolbar, "crosshair", "Pick date", () => {
       new DatePickerModal(
         this.manager.app,
-        this.manager.calendar,
+        this.manager,
         (date: string, e: MouseEvent) => {
           this.changeCurrentDate(this.manager.calendar.date(date));
           this.openDate(date, "day", e);

@@ -9,6 +9,7 @@ import { JournalConfigManager } from "./config/journal-config-manager";
 import { CalendarHelper } from "./utils/calendar";
 import { IntervalJournal, intervalCommands } from "./interval-journal/interval-journal";
 import { Journal, NotesProcessing } from "./contracts/journal.types";
+import { ConnectNoteModal } from "./maintenance/connect-note-modal";
 
 export class JournalManager extends Component {
   private journals = new Map<string, Journal>();
@@ -53,6 +54,9 @@ export class JournalManager extends Component {
       }
     }
     return journals;
+  }
+  getAll(): Record<string, Journal> {
+    return Object.fromEntries(this.journals);
   }
 
   async createCalendarJournal(id: string, name: string): Promise<string> {
@@ -153,6 +157,17 @@ export class JournalManager extends Component {
           } else {
             new Notice("This note is not connected to any journal.");
           }
+        }
+      },
+    });
+
+    this.plugin.addCommand({
+      id: "journal:connect-note",
+      name: "Connect note to a journal",
+      editorCallback: async (editor, ctx) => {
+        const file = ctx.file;
+        if (file) {
+          new ConnectNoteModal(this.app, this, file).open();
         }
       },
     });

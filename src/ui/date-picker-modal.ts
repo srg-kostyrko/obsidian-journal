@@ -1,7 +1,7 @@
 import { App, Modal, getIcon } from "obsidian";
-import { CalendarHelper } from "../utils/calendar";
 import { MomentDate } from "../contracts/date.types";
 import { CalendarGranularity } from "../contracts/config.types";
+import { JournalManager } from "../journal-manager";
 
 export class DatePickerModal extends Modal {
   private mode = "month";
@@ -10,16 +10,35 @@ export class DatePickerModal extends Modal {
 
   constructor(
     app: App,
-    private calendar: CalendarHelper,
+    private manager: JournalManager,
     private cb: (date: string, event: MouseEvent) => void,
-    private selectedDate?: string,
+    private selectedDate?: string | null,
+    private granularity: CalendarGranularity = "day",
   ) {
     super(app);
     if (this.selectedDate) {
       this.selected = this.selectedDate;
-      this.currentDate = this.calendar.date(this.selected).startOf("month");
+      this.currentDate = this.manager.calendar.date(this.selected).startOf("month");
     } else {
-      this.currentDate = this.calendar.today().startOf("month");
+      this.currentDate = this.manager.calendar.today().startOf("month");
+    }
+
+    switch (granularity) {
+      case "day":
+        this.mode = "month";
+        break;
+      case "week":
+        this.mode = "month";
+        break;
+      case "month":
+        this.mode = "year";
+        break;
+      case "year":
+        this.mode = "decade";
+        break;
+      case "quarter":
+        this.mode = "quarter";
+        break;
     }
   }
 
@@ -31,9 +50,13 @@ export class DatePickerModal extends Modal {
   display(): void {
     const { contentEl } = this;
     contentEl.empty();
+
     switch (this.mode) {
       case "month":
         this.displayMonth(contentEl);
+        break;
+      case "quarter":
+        this.displayQuarter(contentEl);
         break;
       case "year":
         this.displayYear(contentEl);
@@ -45,7 +68,7 @@ export class DatePickerModal extends Modal {
   }
 
   displayMonth(contentEl: HTMLElement) {
-    const today = this.calendar.today();
+    const today = this.manager.calendar.today();
     const startWithWeek = this.currentDate.clone().startOf("week");
     const endWithWeek = this.currentDate.clone().endOf("month").endOf("week");
 
@@ -65,6 +88,12 @@ export class DatePickerModal extends Modal {
     const week = startWithWeek.clone().startOf("week");
     const weekEnd = week.clone().endOf("week");
 
+    const placeWeeks = this.manager.config.calendarView.weeks || "left";
+    if (placeWeeks !== "none") {
+      view.classList.add("with-week");
+    }
+
+    if (placeWeeks === "left") view.createDiv();
     while (week.isSameOrBefore(weekEnd)) {
       view.createDiv({
         cls: "journal-weekday",
@@ -72,8 +101,13 @@ export class DatePickerModal extends Modal {
       });
       week.add(1, "day");
     }
+    if (placeWeeks === "right") view.createDiv();
+
     const curr = startWithWeek.clone();
     while (curr.isSameOrBefore(endWithWeek)) {
+      if (placeWeeks === "left" && curr.isSame(curr.clone().startOf("week"), "day")) {
+        this.renderWeekNumber(view, curr);
+      }
       const cls = ["journal-day", "journal-clickable"];
       if (curr.isSame(today, "day")) {
         cls.push("journal-is-today");
@@ -89,7 +123,49 @@ export class DatePickerModal extends Modal {
       if (this.selected === day.dataset.date) {
         day.classList.add("journal-is-selected");
       }
+      if (placeWeeks === "right" && curr.isSame(curr.clone().endOf("week"), "day")) {
+        this.renderWeekNumber(view, curr);
+      }
       curr.add(1, "day");
+    }
+  }
+
+  private renderWeekNumber(parent: HTMLElement, curr: MomentDate) {
+    const weekNumber = parent.createDiv({
+      cls: "journal-weeknumber",
+      text: curr.format("[W]ww"),
+    });
+    weekNumber.dataset.date = curr.format("YYYY-MM-DD");
+  }
+
+  displayQuarter(contentEl: HTMLElement) {
+    const start = this.currentDate.clone().startOf("year").startOf("quarter");
+    const end = this.currentDate.clone().endOf("year");
+
+    this.renderName(contentEl, "YYYY", "year", "quarter");
+
+    const view = contentEl.createDiv({
+      cls: "journal-dp-quarters-view",
+    });
+    view.on("click", ".journal-dp-quarter", (e) => {
+      const date = (e.target as HTMLElement).closest<HTMLElement>("[data-date]")?.dataset?.date;
+      if (date) {
+        this.currentDate = this.manager.calendar.date(date);
+        this.cb(this.currentDate.startOf("quarter").format("YYYY-MM-DD"), e);
+        this.close();
+      }
+    });
+
+    const curr = start.clone();
+    while (curr.isSameOrBefore(end, "year")) {
+      view.createEl("button", {
+        cls: "journal-dp-quarter journal-clickable",
+        text: curr.format("[Q]Q"),
+        attr: {
+          "data-date": curr.format("YYYY-MM-DD"),
+        },
+      });
+      curr.add(1, "quarter");
     }
   }
 
@@ -105,9 +181,14 @@ export class DatePickerModal extends Modal {
     view.on("click", ".journal-dp-month", (e) => {
       const date = (e.target as HTMLElement).closest<HTMLElement>("[data-date]")?.dataset?.date;
       if (date) {
-        this.currentDate = this.calendar.date(date);
-        this.mode = "month";
-        this.display();
+        this.currentDate = this.manager.calendar.date(date);
+        if (this.granularity === "month") {
+          this.cb(this.currentDate.startOf("month").format("YYYY-MM-DD"), e);
+          this.close();
+        } else {
+          this.mode = "month";
+          this.display();
+        }
       }
     });
 
@@ -163,8 +244,13 @@ export class DatePickerModal extends Modal {
       const year = (e.target as HTMLElement).closest<HTMLElement>("[data-year]")?.dataset?.year;
       if (year) {
         this.currentDate.year(parseInt(year, 10));
-        this.mode = "year";
-        this.display();
+        if (this.granularity === "year") {
+          this.cb(this.currentDate.startOf("year").format("YYYY-MM-DD"), e);
+          this.close();
+        } else {
+          this.mode = "year";
+          this.display();
+        }
       }
     });
 

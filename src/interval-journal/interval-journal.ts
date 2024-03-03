@@ -110,6 +110,14 @@ export class IntervalJournal implements Journal {
     return list;
   }
 
+  getIntervalFileName(interval: Interval): string {
+    return replaceTemplateVariables(this.nameTemplate, this.getTemplateContext(interval));
+  }
+
+  getIntervalFolderPath(interval: Interval): string {
+    return normalizePath(replaceTemplateVariables(this.config.folder, this.getTemplateContext(interval)));
+  }
+
   async open(date?: string): Promise<void> {
     return await this.openInterval(this.findInterval(date));
   }
@@ -185,6 +193,38 @@ export class IntervalJournal implements Journal {
     }
   }
 
+  async connectNote(
+    file: TFile,
+    interval: Interval,
+    options: {
+      override?: boolean;
+      rename?: boolean;
+      move?: boolean;
+    },
+  ): Promise<void> {
+    if (interval.path) {
+      if (!options.override) return;
+      await this.disconnectNote(interval.path);
+    }
+    let path = file.path;
+    if (options.rename || options.move) {
+      const folderPath = options.move ? this.getIntervalFolderPath(interval) : file.parent?.path;
+      const filename = options.rename ? this.getIntervalFileName(interval) + ".md" : file.name;
+      path = normalizePath(folderPath ? `${folderPath}/${filename}` : filename);
+      await ensureFolderExists(this.app, path);
+      await this.app.vault.rename(file, path);
+      file = this.app.vault.getAbstractFileByPath(path) as TFile;
+    }
+    interval.path = path;
+    this.intervals.add(interval);
+    await this.ensureFrontMatter(file, interval);
+  }
+
+  disconnectNote(path: string): Promise<void> {
+    this.intervals.clearForPath(path);
+    return this.clearFrontMatter(path);
+  }
+
   private getNoteName(interval: Interval): string {
     const templateContext = this.getTemplateContext(interval);
     return replaceTemplateVariables(this.nameTemplate, templateContext);
@@ -230,16 +270,25 @@ export class IntervalJournal implements Journal {
     }
   }
 
-  private processFrontMatter(file: TFile, interval: Interval): Promise<void> {
-    return new Promise((resolve) => {
-      this.app.fileManager.processFrontMatter(file, (frontmatter) => {
-        frontmatter[FRONTMATTER_ID_KEY] = this.id;
-        frontmatter[FRONTMATTER_START_DATE_KEY] = interval.startDate.format(FRONTMATTER_DATE_FORMAT);
-        frontmatter[FRONTMATTER_END_DATE_KEY] = interval.endDate.format(FRONTMATTER_DATE_FORMAT);
-        frontmatter[FRONTMATTER_INDEX_KEY] = interval.index;
-        resolve();
-      });
-      this.intervals.add({ ...interval, path: file.path });
+  private async processFrontMatter(file: TFile, interval: Interval): Promise<void> {
+    await this.app.fileManager.processFrontMatter(file, (frontmatter) => {
+      frontmatter[FRONTMATTER_ID_KEY] = this.id;
+      frontmatter[FRONTMATTER_START_DATE_KEY] = interval.startDate.format(FRONTMATTER_DATE_FORMAT);
+      frontmatter[FRONTMATTER_END_DATE_KEY] = interval.endDate.format(FRONTMATTER_DATE_FORMAT);
+      frontmatter[FRONTMATTER_INDEX_KEY] = interval.index;
+    });
+    this.intervals.add({ ...interval, path: file.path });
+  }
+
+  private async clearFrontMatter(path: string): Promise<void> {
+    const file = this.app.vault.getAbstractFileByPath(path);
+    if (!file) return;
+    if (!(file instanceof TFile)) return;
+    await this.app.fileManager.processFrontMatter(file, (frontmatter) => {
+      delete frontmatter[FRONTMATTER_ID_KEY];
+      delete frontmatter[FRONTMATTER_START_DATE_KEY];
+      delete frontmatter[FRONTMATTER_END_DATE_KEY];
+      delete frontmatter[FRONTMATTER_INDEX_KEY];
     });
   }
 

@@ -195,34 +195,34 @@ export class CalendarJournal implements Journal {
     this.index.clearForPath(path);
   }
 
+  async disconnectNote(path: string): Promise<void> {
+    this.clearForPath(path);
+    const file = this.app.vault.getAbstractFileByPath(path);
+    if (!file) return;
+    if (!(file instanceof TFile)) return;
+    await this.app.fileManager.processFrontMatter(file, (frontmatter) => {
+      delete frontmatter[FRONTMATTER_ID_KEY];
+      delete frontmatter[FRONTMATTER_START_DATE_KEY];
+      delete frontmatter[FRONTMATTER_END_DATE_KEY];
+      delete frontmatter[FRONTMATTER_SECTION_KEY];
+    });
+  }
+
   async clearNotes(): Promise<void> {
-    const proomises = [];
+    const promises = [];
     for (const entry of this.index) {
-      const file = this.app.vault.getAbstractFileByPath(entry.path);
-      if (!file) continue;
-      if (!(file instanceof TFile)) continue;
-      proomises.push(
-        new Promise<void>((resolve) => {
-          this.app.fileManager.processFrontMatter(file, (frontmatter) => {
-            delete frontmatter[FRONTMATTER_ID_KEY];
-            delete frontmatter[FRONTMATTER_START_DATE_KEY];
-            delete frontmatter[FRONTMATTER_END_DATE_KEY];
-            delete frontmatter[FRONTMATTER_SECTION_KEY];
-            resolve();
-          });
-        }),
-      );
+      promises.push(this.disconnectNote(entry.path));
     }
-    await Promise.allSettled(proomises);
+    await Promise.allSettled(promises);
   }
 
   async deleteNotes(): Promise<void> {
-    const proomises = [];
+    const promises = [];
     for (const entry of this.index) {
       const file = this.app.vault.getAbstractFileByPath(entry.path);
       if (!file) continue;
-      proomises.push(this.app.vault.delete(file));
+      promises.push(this.app.vault.delete(file));
     }
-    await Promise.allSettled(proomises);
+    await Promise.allSettled(promises);
   }
 }

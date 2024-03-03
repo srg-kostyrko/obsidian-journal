@@ -17,6 +17,8 @@ export interface Journal {
   findNextNote(data: JournalFrontMatter): Promise<string | null>;
   findPreviousNote(data: JournalFrontMatter): Promise<string | null>;
 
+  disconnectNote(path: string): Promise<void>;
+
   clearNotes(): Promise<void>;
   deleteNotes(): Promise<void>;
 }

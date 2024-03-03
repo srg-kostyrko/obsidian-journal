@@ -100,6 +100,50 @@ export class CalendarJournalSection {
     return await this.openDate(startDate, endDate);
   }
 
+  getDateFilename(startDate: MomentDate, endDate: MomentDate): string {
+    const templateContext = this.getTemplateContext(startDate, endDate);
+    return replaceTemplateVariables(this.nameTemplate, templateContext) + ".md";
+  }
+
+  getDateFolder(startDate: MomentDate, endDate: MomentDate): string {
+    const templateContext = this.getTemplateContext(startDate, endDate);
+    return replaceTemplateVariables(this.folderPath, templateContext);
+  }
+
+  async connectNote(
+    file: TFile,
+    startDate: MomentDate,
+    endDate: MomentDate,
+    options: {
+      override?: boolean;
+      rename?: boolean;
+      move?: boolean;
+    },
+  ): Promise<void> {
+    const indexed = this.journal.index.get(startDate, this.granularity);
+    if (indexed) {
+      if (!options.override) return;
+      await this.journal.disconnectNote(indexed.path);
+    }
+    let path = file.path;
+    if (options.rename || options.move) {
+      const folderPath = options.move ? this.getDateFolder(startDate, endDate) : file.parent?.path;
+      const filename = options.rename ? this.getDateFilename(startDate, endDate) : file.name;
+      path = normalizePath(folderPath ? `${folderPath}/${filename}` : filename);
+      await ensureFolderExists(this.app, path);
+      await this.app.vault.rename(file, path);
+      file = this.app.vault.getAbstractFileByPath(path) as TFile;
+    }
+
+    this.journal.index.add(startDate, endDate, {
+      path: path,
+      granularity: this.granularity,
+      startDate: startDate.format(FRONTMATTER_DATE_FORMAT),
+      endDate: endDate.format(FRONTMATTER_DATE_FORMAT),
+    });
+    await this.ensureFrontMatter(file, startDate, startDate);
+  }
+
   private async ensureDateNote(startDate: MomentDate, endDate: MomentDate): Promise<TFile> {
     const filePath = this.getDatePath(startDate, endDate);
     let file = this.app.vault.getAbstractFileByPath(filePath);
@@ -115,7 +159,7 @@ export class CalendarJournalSection {
       await this.processFrontMatter(file, startDate, endDate);
     } else {
       if (!(file instanceof TFile)) throw new Error("File is not a TFile");
-      await this.enshureFrontMatter(file, startDate, endDate);
+      await this.ensureFrontMatter(file, startDate, endDate);
     }
     return file;
   }
@@ -184,7 +228,7 @@ export class CalendarJournalSection {
     return "";
   }
 
-  private async enshureFrontMatter(file: TFile, startDate: MomentDate, endDate: MomentDate): Promise<void> {
+  private async ensureFrontMatter(file: TFile, startDate: MomentDate, endDate: MomentDate): Promise<void> {
     const metadata = this.app.metadataCache.getFileCache(file);
     if (
       !metadata?.frontmatter?.[FRONTMATTER_ID_KEY] ||
@@ -197,21 +241,18 @@ export class CalendarJournalSection {
     }
   }
 
-  private processFrontMatter(file: TFile, startDate: MomentDate, endDate: MomentDate): Promise<void> {
-    return new Promise((resolve) => {
-      this.app.fileManager.processFrontMatter(file, (frontmatter) => {
-        frontmatter[FRONTMATTER_ID_KEY] = this.journal.id;
-        frontmatter[FRONTMATTER_START_DATE_KEY] = startDate.format(FRONTMATTER_DATE_FORMAT);
-        frontmatter[FRONTMATTER_END_DATE_KEY] = endDate.format(FRONTMATTER_DATE_FORMAT);
-        frontmatter[FRONTMATTER_SECTION_KEY] = this.granularity;
-        resolve();
-      });
-      this.journal.index.add(startDate, endDate, {
-        path: file.path,
-        granularity: this.granularity,
-        startDate: startDate.format(FRONTMATTER_DATE_FORMAT),
-        endDate: endDate.format(FRONTMATTER_DATE_FORMAT),
-      });
+  private async processFrontMatter(file: TFile, startDate: MomentDate, endDate: MomentDate): Promise<void> {
+    await this.app.fileManager.processFrontMatter(file, (frontmatter) => {
+      frontmatter[FRONTMATTER_ID_KEY] = this.journal.id;
+      frontmatter[FRONTMATTER_START_DATE_KEY] = startDate.format(FRONTMATTER_DATE_FORMAT);
+      frontmatter[FRONTMATTER_END_DATE_KEY] = endDate.format(FRONTMATTER_DATE_FORMAT);
+      frontmatter[FRONTMATTER_SECTION_KEY] = this.granularity;
+    });
+    this.journal.index.add(startDate, endDate, {
+      path: file.path,
+      granularity: this.granularity,
+      startDate: startDate.format(FRONTMATTER_DATE_FORMAT),
+      endDate: endDate.format(FRONTMATTER_DATE_FORMAT),
     });
   }
 }
