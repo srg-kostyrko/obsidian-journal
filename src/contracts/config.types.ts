@@ -54,6 +54,9 @@ export interface IntervalConfig extends JournalCaseConfig {
   start_date: string;
   start_index: number;
   numeration_type: "increment" | "year";
+  end_type: "never" | "date" | "repeats";
+  end_date: string;
+  repeats: number;
 
   limitCreation: boolean;
   createOnStartup: boolean;

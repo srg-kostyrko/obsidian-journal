@@ -75,7 +75,9 @@ describe("IntervalManager", () => {
         { index: 4, startDate: "2021-12-22", endDate: "2021-12-31" },
       ],
     ])("find %s", (_, date, interval) => {
-      expectInterval(manager.findInterval(date), interval);
+      const found = manager.findInterval(date);
+      expect(found).toBeDefined();
+      expectInterval(found!, interval);
     });
 
     describe("using previously indexed intervals", () => {
@@ -92,7 +94,9 @@ describe("IntervalManager", () => {
         ["interval from index by date", "2022-01-16", { index: 3, startDate: "2022-01-15", endDate: "2022-01-24" }],
         ["prev interval based on indexed", "2021-12-29", { index: 1, startDate: "2021-12-22", endDate: "2021-12-31" }],
       ])("find %s", (_, date, interval) => {
-        expectInterval(manager.findInterval(date), interval);
+        const found = manager.findInterval(date);
+        expect(found).toBeDefined();
+        expectInterval(found!, interval);
       });
     });
   });
@@ -156,7 +160,9 @@ describe("IntervalManager", () => {
         { index: 4, startDate: "2021-12-25", endDate: "2021-12-31" },
       ],
     ])("find %s", (_, date, interval) => {
-      expectInterval(manager.findInterval(date), interval);
+      const found = manager.findInterval(date);
+      expect(found).toBeDefined();
+      expectInterval(found!, interval);
     });
 
     describe("using previously indexed intervals", () => {
@@ -173,7 +179,9 @@ describe("IntervalManager", () => {
         ["interval from index by date", "2022-01-16", { index: 3, startDate: "2022-01-15", endDate: "2022-01-21" }],
         ["prev interval based on indexed", "2021-12-29", { index: 1, startDate: "2021-12-25", endDate: "2021-12-31" }],
       ])("find %s", (_, date, interval) => {
-        expectInterval(manager.findInterval(date), interval);
+        const found = manager.findInterval(date);
+        expect(found).toBeDefined();
+        expectInterval(found!, interval);
       });
     });
   });
@@ -237,7 +245,9 @@ describe("IntervalManager", () => {
         { index: 4, startDate: "2021-12-18", endDate: "2021-12-31" },
       ],
     ])("find %s", (_, date, interval) => {
-      expectInterval(manager.findInterval(date), interval);
+      const found = manager.findInterval(date);
+      expect(found).toBeDefined();
+      expectInterval(found!, interval);
     });
 
     describe("using previously indexed intervals", () => {
@@ -254,7 +264,9 @@ describe("IntervalManager", () => {
         ["interval from index by date", "2022-01-25", { index: 3, startDate: "2022-01-22", endDate: "2022-02-04" }],
         ["prev interval based on indexed", "2021-12-29", { index: 1, startDate: "2021-12-18", endDate: "2021-12-31" }],
       ])("find %s", (_, date, interval) => {
-        expectInterval(manager.findInterval(date), interval);
+        const found = manager.findInterval(date);
+        expect(found).toBeDefined();
+        expectInterval(found!, interval);
       });
     });
   });
@@ -318,7 +330,9 @@ describe("IntervalManager", () => {
         { index: 4, startDate: "2021-12-01", endDate: "2021-12-31" },
       ],
     ])("find %s", (_, date, interval) => {
-      expectInterval(manager.findInterval(date), interval);
+      const found = manager.findInterval(date);
+      expect(found).toBeDefined();
+      expectInterval(found!, interval);
     });
 
     describe("using previously indexed intervals", () => {
@@ -335,7 +349,9 @@ describe("IntervalManager", () => {
         ["interval from index by date", "2022-01-16", { index: 3, startDate: "2022-01-15", endDate: "2022-02-14" }],
         ["prev interval based on indexed", "2021-12-29", { index: 1, startDate: "2021-12-01", endDate: "2021-12-31" }],
       ])("find %s", (_, date, interval) => {
-        expectInterval(manager.findInterval(date), interval);
+        const found = manager.findInterval(date);
+        expect(found).toBeDefined();
+        expectInterval(found!, interval);
       });
     });
   });
@@ -409,7 +425,9 @@ describe("IntervalManager", () => {
         { index: 4, startDate: "2021-11-01", endDate: "2022-01-31" },
       ],
     ])("find %s", (_, date, interval) => {
-      expectInterval(manager.findInterval(date), interval);
+      const found = manager.findInterval(date);
+      expect(found).toBeDefined();
+      expectInterval(found!, interval);
     });
 
     describe("using previously indexed intervals", () => {
@@ -426,7 +444,9 @@ describe("IntervalManager", () => {
         ["next interval based on indexed", "2022-06-15", { index: 3, startDate: "2022-06-01", endDate: "2022-08-31" }],
         ["prev interval based on indexed", "2022-04-15", { index: 1, startDate: "2022-02-01", endDate: "2022-04-30" }],
       ])("find %s", (_, date, interval) => {
-        expectInterval(manager.findInterval(date), interval);
+        const found = manager.findInterval(date);
+        expect(found).toBeDefined();
+        expectInterval(found!, interval);
       });
     });
   });

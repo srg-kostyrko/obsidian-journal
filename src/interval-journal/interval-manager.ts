@@ -33,7 +33,7 @@ export class IntervalManager {
     return this.intervalTree.search([startDate.toDate().getTime(), endDate.toDate().getTime()]) as Interval[];
   }
 
-  findInterval(date?: string): Interval {
+  findInterval(date?: string): Interval | null {
     const intervalDate = date ? this.calendar.date(date) : this.calendar.today();
     const intervalTime = intervalDate.toDate().getTime();
     const list = this.intervalTree.search([intervalTime, intervalTime]);
@@ -52,6 +52,7 @@ export class IntervalManager {
     }
     const startInterval = this.getStartInterval();
     if (intervalDate.isBefore(startInterval.startDate, "day")) {
+      if (this.config.limitCreation) return null;
       return this.calculateIntervalBeforeKnown(intervalDate, startInterval);
     } else if (intervalDate.isAfter(startInterval.endDate, "day")) {
       return this.calculateIntervalAfterKnown(intervalDate, startInterval);
@@ -59,13 +60,15 @@ export class IntervalManager {
     return startInterval;
   }
 
-  findNextInterval(date?: string): Interval {
+  findNextInterval(date?: string): Interval | null {
     const interval = this.findInterval(date);
+    if (!interval) return null;
     return this.calculateIntervalAfterKnown(interval.endDate.clone().add(1, "day"), interval);
   }
 
-  findPreviousInterval(date?: string): Interval {
+  findPreviousInterval(date?: string): Interval | null {
     const interval = this.findInterval(date);
+    if (!interval) return null;
     return this.calculateIntervalBeforeKnown(interval.startDate.clone().subtract(1, "day"), interval);
   }
 
@@ -117,7 +120,7 @@ export class IntervalManager {
     return startDate.clone().add(this.config.duration, this.config.granularity).subtract(1, "day").endOf("day");
   }
 
-  private calculateIntervalAfterKnown(date: MomentDate, interval: Interval): Interval {
+  private calculateIntervalAfterKnown(date: MomentDate, interval: Interval): Interval | null {
     let current = interval.endDate.clone().add(1, "day");
     let index = interval.index + 1;
     if (this.shouldResetYearly && !current.isSame(interval.startDate, "year")) {
@@ -134,6 +137,17 @@ export class IntervalManager {
       }
       current = next;
     }
+    switch (this.config.end_type) {
+      case "date":
+        if (current.isAfter(this.calendar.date(this.config.end_date), "day")) {
+          return null;
+        }
+        break;
+      case "repeats":
+        if (index >= this.config.start_index + this.config.repeats) {
+          return null;
+        }
+    }
     return {
       startDate: current,
       endDate: this.createEndDate(current),
@@ -141,7 +155,7 @@ export class IntervalManager {
     };
   }
 
-  private calculateIntervalBeforeKnown(date: MomentDate, interval: Interval): Interval {
+  private calculateIntervalBeforeKnown(date: MomentDate, interval: Interval): Interval | null {
     const current = interval.startDate.clone();
     let index = interval.index;
     while (current.isAfter(date, "day")) {
@@ -150,6 +164,9 @@ export class IntervalManager {
       if (this.shouldResetYearly && index === 0) {
         index = this.maximumYearIndex;
       }
+    }
+    if (this.config.limitCreation && current.isBefore(this.calendar.date(this.config.start_date))) {
+      return null;
     }
     return {
       startDate: current,

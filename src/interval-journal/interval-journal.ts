@@ -75,6 +75,19 @@ export class IntervalJournal implements Journal {
     return this.config.ribbon.tooltip || `Open current ${this.config.name} note`;
   }
 
+  get endDate(): string {
+    switch (this.config.end_type) {
+      case "date":
+        return this.config.end_date;
+      case "repeats":
+        return this.calendar
+          .date(this.config.start_date)
+          .add(this.config.repeats * this.config.duration, this.config.granularity)
+          .format("YYYY-MM-DD");
+    }
+    return "";
+  }
+
   async findNextNote(data: IntervalFrontMatter): Promise<string | null> {
     return this.intervals.findNextNote(this.calendar.date(data.end_date).add(1, "day").startOf("day"));
   }
@@ -89,14 +102,14 @@ export class IntervalJournal implements Journal {
     await this.openFile(file);
   }
 
-  findInterval(date?: string): Interval {
+  findInterval(date?: string): Interval | null {
     return this.intervals.findInterval(date);
   }
-  findNextInterval(date?: string): Interval {
+  findNextInterval(date?: string): Interval | null {
     return this.intervals.findNextInterval(date);
   }
 
-  findPreviousInterval(date?: string): Interval {
+  findPreviousInterval(date?: string): Interval | null {
     return this.intervals.findPreviousInterval(date);
   }
 
@@ -106,6 +119,7 @@ export class IntervalJournal implements Journal {
       startDate = this.calendar.date(this.config.start_date);
     }
     let interval = this.intervals.findInterval(startDate.format("YYYY-MM-DD"));
+    if (!interval) return list;
     do {
       list.push(interval);
       interval = this.intervals.findNextInterval(interval.endDate.format("YYYY-MM-DD"));
@@ -122,20 +136,28 @@ export class IntervalJournal implements Journal {
   }
 
   async open(date?: string): Promise<void> {
-    return await this.openInterval(this.findInterval(date));
+    const interval = this.findInterval(date);
+    if (!interval) return;
+    return await this.openInterval(interval);
   }
 
   async openNext(date?: string): Promise<void> {
-    return await this.openInterval(this.intervals.findNextInterval(date));
+    const interval = this.intervals.findNextInterval(date);
+    if (!interval) return;
+    return await this.openInterval(interval);
   }
 
   async openPrev(date?: string): Promise<void> {
-    return await this.openInterval(this.intervals.findPreviousInterval(date));
+    const interval = this.intervals.findPreviousInterval(date);
+    if (!interval) return;
+    return await this.openInterval(interval);
   }
 
   async autoCreateNotes(): Promise<void> {
     if (!this.config.createOnStartup) return;
-    await this.ensureIntervalNote(this.findInterval());
+    const interval = this.findInterval();
+    if (!interval) return;
+    await this.ensureIntervalNote(interval);
   }
 
   async openStartupNote(): Promise<void> {

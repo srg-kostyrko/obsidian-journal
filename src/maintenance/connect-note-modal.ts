@@ -246,7 +246,7 @@ export class ConnectNoteModal extends Modal {
           this.app,
           this.manager,
           (date: string) => {
-            this.interval = journal.findInterval(date);
+            this.interval = journal.findInterval(date) || undefined;
             this.override = false;
             this.rename = false;
             this.move = false;

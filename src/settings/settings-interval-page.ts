@@ -16,10 +16,13 @@ import {
 import { TemplateSuggestion } from "./ui/template-suggestion";
 import { formatOrdinals } from "../utils/plural";
 import { deepCopy } from "../utils";
+import { DatePickerModal } from "../ui/date-picker-modal";
+import { JournalManager } from "../journal-manager";
 
 export class SettingsIntervalPage extends SettingsWidget {
   constructor(
     app: App,
+    private manager: JournalManager,
     private containerEl: HTMLElement,
     private config: IntervalConfig,
     private calendar: CalendarHelper,
@@ -82,6 +85,52 @@ export class SettingsIntervalPage extends SettingsWidget {
           this.save();
         });
       });
+
+    const endSetting = new Setting(containerEl)
+      .setName("Ends")
+      .setDesc("Define when journal should end")
+      .addDropdown((dropdown) => {
+        dropdown
+          .addOptions({
+            never: "Never",
+            date: "On",
+            repeats: "After",
+          })
+          .setValue(this.config.end_type ?? "never")
+          .onChange((value) => {
+            this.config.end_type = value as IntervalConfig["end_type"];
+            this.save();
+            this.display();
+          });
+      });
+    if (this.config.end_type === "date") {
+      endSetting.addButton((button) => {
+        button.setButtonText(this.config.end_date || "Pick date").onClick(() => {
+          new DatePickerModal(
+            this.app,
+            this.manager,
+            (date: string) => {
+              this.config.end_date = date;
+              this.save();
+              this.display();
+            },
+            this.config.end_date,
+          ).open();
+        });
+      });
+    } else if (this.config.end_type === "repeats") {
+      endSetting.addText((text) => {
+        text.inputEl.type = "number";
+        text.inputEl.classList.add("journal-small-input");
+        text.setValue(String(this.config.repeats ?? 1)).onChange((value) => {
+          if (value) {
+            this.config.repeats = parseInt(value, 10);
+            this.save();
+          }
+        });
+        endSetting.controlEl.createSpan({ text: "times" });
+      });
+    }
 
     new Setting(containerEl)
       .setName("Open on Startup")

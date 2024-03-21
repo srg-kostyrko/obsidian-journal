@@ -104,21 +104,25 @@ export class CreateJournalModal extends Modal {
             });
         });
 
-      new Setting(contentEl).setName("Start date").addButton((button) => {
-        button.setButtonText(this.start_date || "Pick date").onClick(() => {
-          new DatePickerModal(
-            this.app,
-            this.manager,
-            (date: string) => {
-              this.start_date = date;
-              this.display();
-            },
-            this.start_date,
-          ).open();
+      new Setting(contentEl)
+        .setName("Start date")
+        .setDesc("This date is used as base for calculations")
+        .addButton((button) => {
+          button.setButtonText(this.start_date || "Pick date").onClick(() => {
+            new DatePickerModal(
+              this.app,
+              this.manager,
+              (date: string) => {
+                this.start_date = date;
+                this.display();
+              },
+              this.start_date,
+            ).open();
+          });
         });
-      });
 
       new Setting(contentEl).setName("Start index").addText((text) => {
+        text.inputEl.type = "number";
         text.inputEl.classList.add("journal-small-input");
         text.setValue(this.start_index.toString()).onChange((value) => {
           this.start_index = parseInt(value, 10);

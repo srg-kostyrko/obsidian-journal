@@ -19,19 +19,12 @@ export class CodeBlockIntervalNav extends MarkdownRenderChild {
       cls: "interval-nav-view",
     });
 
-    let shouldShowPrev = true;
     const prevInterval = this.journal.findPreviousInterval(this.startDate);
-    if (
-      this.journal.config.limitCreation &&
-      prevInterval.startDate.isBefore(this.journal.calendar.date(this.journal.config.start_date))
-    ) {
-      shouldShowPrev = false;
-    }
 
     const prevBlock = view.createDiv({
       cls: `interval-nav-prev`,
     });
-    if (shouldShowPrev) {
+    if (prevInterval) {
       this.renderInterval(prevBlock, prevInterval, this.journal);
     }
 
@@ -39,14 +32,14 @@ export class CodeBlockIntervalNav extends MarkdownRenderChild {
     const current = view.createDiv({
       cls: `interval-nav-current`,
     });
-    this.renderInterval(current, currentInterval, this.journal, false);
+    if (currentInterval) this.renderInterval(current, currentInterval, this.journal, false);
 
     const iconPrev = current.createDiv({
       cls: "interval-nav-icon interval-nav-icon-prev",
     });
     const iconPrevEl = getIcon("arrow-left");
-    if (iconPrevEl && shouldShowPrev) iconPrev.appendChild(iconPrevEl);
-    if (this.addLinks) {
+    if (iconPrevEl && prevInterval) iconPrev.appendChild(iconPrevEl);
+    if (prevInterval && this.addLinks) {
       iconPrev.classList.add("journal-clickable");
       iconPrev.dataset.date = prevInterval.startDate.format("YYYY-MM-DD");
       iconPrev.on("click", ".interval-nav-icon-prev", (e) => {
@@ -62,9 +55,9 @@ export class CodeBlockIntervalNav extends MarkdownRenderChild {
       cls: "interval-nav-icon interval-nav-icon-next",
     });
     const iconNextEl = getIcon("arrow-right");
-    if (iconNextEl) iconNext.appendChild(iconNextEl);
+    if (iconNextEl && nextInterval) iconNext.appendChild(iconNextEl);
 
-    if (this.addLinks) {
+    if (nextInterval && this.addLinks) {
       iconNext.classList.add("journal-clickable");
       iconNext.dataset.date = nextInterval.startDate.format("YYYY-MM-DD");
       iconNext.on("click", ".interval-nav-icon-next", (e) => {
@@ -78,7 +71,7 @@ export class CodeBlockIntervalNav extends MarkdownRenderChild {
     const nextBlock = view.createDiv({
       cls: `interval-nav-next`,
     });
-    this.renderInterval(nextBlock, nextInterval, this.journal);
+    if (nextInterval) this.renderInterval(nextBlock, nextInterval, this.journal);
   }
 
   renderInterval(parent: HTMLElement, interval: Interval, journal: IntervalJournal, addLinks = true) {

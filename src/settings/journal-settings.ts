@@ -69,7 +69,13 @@ export class JournalSettingTab extends PluginSettingTab {
             break;
           }
           case "interval": {
-            new SettingsIntervalPage(this.app, containerEl, journalConfig, this.manager.calendar).display();
+            new SettingsIntervalPage(
+              this.app,
+              this.manager,
+              containerEl,
+              journalConfig,
+              this.manager.calendar,
+            ).display();
             break;
           }
         }
