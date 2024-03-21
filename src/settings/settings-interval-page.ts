@@ -74,6 +74,16 @@ export class SettingsIntervalPage extends SettingsWidget {
     });
 
     new Setting(containerEl)
+      .setName("Limit note creation")
+      .setDesc("Will prevent creating new notes before journal start date")
+      .addToggle((toggle) => {
+        toggle.setValue(this.config.limitCreation).onChange((value) => {
+          this.config.limitCreation = value;
+          this.save();
+        });
+      });
+
+    new Setting(containerEl)
       .setName("Open on Startup")
       .setDesc("Open a note whenever you open this vault?")
       .addToggle((toggle) => {

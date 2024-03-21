@@ -34,7 +34,7 @@ export class IntervalJournal implements Journal {
   constructor(
     private app: App,
     public readonly config: IntervalConfig,
-    private calendar: CalendarHelper,
+    public readonly calendar: CalendarHelper,
   ) {
     this.intervals = new IntervalManager(this.config, this.calendar);
   }
@@ -102,6 +102,9 @@ export class IntervalJournal implements Journal {
 
   findIntervalsForPeriod(startDate: MomentDate, endDate: MomentDate): Interval[] {
     const list: Interval[] = [];
+    if (this.config.limitCreation && startDate.isBefore(this.calendar.date(this.config.start_date))) {
+      startDate = this.calendar.date(this.config.start_date);
+    }
     let interval = this.intervals.findInterval(startDate.format("YYYY-MM-DD"));
     do {
       list.push(interval);

@@ -113,6 +113,7 @@ export const DEFAULT_CONFIG_INTERVAL: IntervalConfig = {
   start_date: "",
   start_index: 1,
   numeration_type: "increment",
+  limitCreation: false,
   openOnStartup: false,
   openMode: "active",
   nameTemplate: "",

@@ -19,11 +19,21 @@ export class CodeBlockIntervalNav extends MarkdownRenderChild {
       cls: "interval-nav-view",
     });
 
+    let shouldShowPrev = true;
     const prevInterval = this.journal.findPreviousInterval(this.startDate);
+    if (
+      this.journal.config.limitCreation &&
+      prevInterval.startDate.isBefore(this.journal.calendar.date(this.journal.config.start_date))
+    ) {
+      shouldShowPrev = false;
+    }
+
     const prevBlock = view.createDiv({
       cls: `interval-nav-prev`,
     });
-    this.renderInterval(prevBlock, prevInterval, this.journal);
+    if (shouldShowPrev) {
+      this.renderInterval(prevBlock, prevInterval, this.journal);
+    }
 
     const currentInterval = this.journal.findInterval(this.startDate);
     const current = view.createDiv({
@@ -35,7 +45,7 @@ export class CodeBlockIntervalNav extends MarkdownRenderChild {
       cls: "interval-nav-icon interval-nav-icon-prev",
     });
     const iconPrevEl = getIcon("arrow-left");
-    if (iconPrevEl) iconPrev.appendChild(iconPrevEl);
+    if (iconPrevEl && shouldShowPrev) iconPrev.appendChild(iconPrevEl);
     if (this.addLinks) {
       iconPrev.classList.add("journal-clickable");
       iconPrev.dataset.date = prevInterval.startDate.format("YYYY-MM-DD");

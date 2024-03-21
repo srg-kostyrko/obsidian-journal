@@ -55,6 +55,7 @@ export interface IntervalConfig extends JournalCaseConfig {
   start_index: number;
   numeration_type: "increment" | "year";
 
+  limitCreation: boolean;
   createOnStartup: boolean;
   openOnStartup: boolean;
   openMode: OpenMode;
