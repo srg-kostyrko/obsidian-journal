@@ -223,6 +223,7 @@ export class CalendarViewMonth {
       const data = await this.manager.getJournalData(file.path);
       if (data) {
         this.activeFile = data;
+        this.currentDate = this.manager.calendar.date(data.start_date);
       } else {
         this.activeFile = null;
       }
