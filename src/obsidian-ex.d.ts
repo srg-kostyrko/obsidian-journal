@@ -8,4 +8,11 @@ declare module "obsidian" {
     on(name: "journal:settings-save", callback: (redraw: boolean) => void, ctx?: unknown): EventRef;
     on(name: "journal:index-update", callback: () => void, ctx?: unknown): EventRef;
   }
+
+  export interface App {
+    plugins: CommunityPluginManager;
+  }
+  export interface CommunityPluginManager {
+    getPlugin(id: string): Plugin | null;
+  }
 }

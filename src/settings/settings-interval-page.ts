@@ -18,6 +18,7 @@ import { formatOrdinals } from "../utils/plural";
 import { deepCopy } from "../utils";
 import { DatePickerModal } from "../ui/date-picker-modal";
 import { JournalManager } from "../journal-manager";
+import { canApplyTemplater } from "../utils/template";
 
 export class SettingsIntervalPage extends SettingsWidget {
   constructor(
@@ -229,6 +230,12 @@ export class SettingsIntervalPage extends SettingsWidget {
     this.createVariableReferenceHint(template.descEl);
     template.descEl.createEl("br");
     this.createCodeBlockReferenceHint(template.descEl);
+    if (canApplyTemplater(this.app, "<% $>")) {
+      template.descEl.createEl("br");
+      template.descEl.createSpan({
+        text: "Templater syntax is supported. Check plugin description for more info.",
+      });
+    }
 
     new Setting(containerEl)
       .setName("Show in ribbon?")

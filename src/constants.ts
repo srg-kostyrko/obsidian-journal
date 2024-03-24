@@ -16,5 +16,3 @@ export const SECTIONS_MAP: Record<CalendarGranularity, string> = {
   quarter: "quarterly",
   year: "yearly",
 };
-
-export const FRONTMATTER_ADDING_DELAY = 800;

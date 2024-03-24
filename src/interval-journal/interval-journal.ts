@@ -3,7 +3,6 @@ import { IntervalConfig, IntervalFrontMatter, JournalFrontMatter } from "../cont
 import { CalendarHelper } from "../utils/calendar";
 import { Journal } from "../contracts/journal.types";
 import {
-  FRONTMATTER_ADDING_DELAY,
   FRONTMATTER_DATE_FORMAT,
   FRONTMATTER_END_DATE_KEY,
   FRONTMATTER_ID_KEY,
@@ -11,7 +10,7 @@ import {
   FRONTMATTER_START_DATE_KEY,
 } from "../constants";
 import { TemplateContext } from "../contracts/template.types";
-import { replaceTemplateVariables } from "../utils/template";
+import { replaceTemplateVariables, tryApplyingTemplater } from "../utils/template";
 import { ensureFolderExists } from "../utils/io";
 import { Interval, IntervalManager } from "./interval-manager";
 import {
@@ -20,7 +19,6 @@ import {
   DEFAULT_NAV_DATES_TEMPLATE_INTERVAL,
   DEFAULT_RIBBON_ICONS_INTERVAL,
 } from "../config/config-defaults";
-import { delay } from "../utils/misc";
 import { MomentDate } from "../contracts/date.types";
 
 export const intervalCommands = {
@@ -268,12 +266,10 @@ export class IntervalJournal implements Journal {
     let file = this.app.vault.getAbstractFileByPath(filePath);
     if (!file) {
       await ensureFolderExists(this.app, filePath);
-      file = await this.app.vault.create(
-        filePath,
-        await this.getContent(this.getTemplateContext(interval, this.getNoteName(interval))),
-      );
+      file = await this.app.vault.create(filePath, "");
       if (!(file instanceof TFile)) throw new Error("File is not a TFile");
-      await delay(FRONTMATTER_ADDING_DELAY);
+      const content = await this.getContent(file, this.getTemplateContext(interval, this.getNoteName(interval)));
+      if (content) await this.app.vault.modify(file, content);
       await this.processFrontMatter(file, interval);
     } else {
       if (!(file instanceof TFile)) throw new Error("File is not a TFile");
@@ -354,7 +350,7 @@ export class IntervalJournal implements Journal {
     };
   }
 
-  private async getContent(context: TemplateContext): Promise<string> {
+  private async getContent(note: TFile, context: TemplateContext): Promise<string> {
     if (this.config.template) {
       const path = replaceTemplateVariables(
         this.config.template.endsWith(".md") ? this.config.template : this.config.template + ".md",
@@ -363,7 +359,7 @@ export class IntervalJournal implements Journal {
       const templateFile = this.app.vault.getAbstractFileByPath(path);
       if (templateFile instanceof TFile) {
         const templateContent = await this.app.vault.cachedRead(templateFile);
-        return replaceTemplateVariables(templateContent, context);
+        return tryApplyingTemplater(this.app, templateFile, note, replaceTemplateVariables(templateContent, context));
       }
     }
     return "";
