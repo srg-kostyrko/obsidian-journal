@@ -32,6 +32,10 @@ export class CreateJournalModal extends Modal {
     this.errors = [];
     if (!this.name) this.errors.push("Name is required");
     if (!this.id) this.errors.push("ID is required");
+    else {
+      const existing = this.manager.get(this.id);
+      if (existing) this.errors.push(`ID is already used for ${existing.name}`);
+    }
     if (this.type === "interval") {
       if (!this.duration) this.errors.push("Duration is required");
       if (!this.granularity) this.errors.push("Granularity is required");
