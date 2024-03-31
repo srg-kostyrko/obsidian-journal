@@ -4,6 +4,7 @@ import { JournalManager } from "../journal-manager";
 import { SettingsWidget } from "./settings-widget";
 import { JournalConfigManager } from "../config/journal-config-manager";
 import { DeleteJournalModal } from "../ui/delete-journal-modal";
+import { AddNotesJournalModal } from "../ui/add-notes-journal-modal";
 
 export class SettingsHomePage extends SettingsWidget {
   constructor(
@@ -75,25 +76,38 @@ export class SettingsHomePage extends SettingsWidget {
     }
 
     for (const entry of this.config) {
-      const row = new Setting(containerEl)
-        .setName(entry.name)
-        .setDesc(`ID: ${entry.id}`)
-        .addButton((button) => {
-          button
-            .setIcon("pencil")
-            .setTooltip(`Edit ${entry.name}`)
-            .setClass("clickable-icon")
-            .setClass("journal-clickable")
-            .onClick(() => {
-              this.navigate({
-                type: "journal",
-                id: entry.id,
-              });
-            });
-        });
+      const row = new Setting(containerEl).setName(entry.name).setDesc(`ID: ${entry.id}`);
+
       const badge = row.nameEl.createEl("span");
       badge.innerText = `${entry.type}`;
       badge.classList.add("flair");
+
+      if (entry.type === "calendar") {
+        row.addButton((button) => {
+          button
+            .setIcon("import")
+            .setTooltip("Add existing notes to journal")
+            .setClass("clickable-icon")
+            .setClass("journal-clickable")
+            .onClick(() => {
+              new AddNotesJournalModal(this.app, this.manager, entry).open();
+            });
+        });
+      }
+
+      row.addButton((button) => {
+        button
+          .setIcon("pencil")
+          .setTooltip(`Edit ${entry.name}`)
+          .setClass("clickable-icon")
+          .setClass("journal-clickable")
+          .onClick(() => {
+            this.navigate({
+              type: "journal",
+              id: entry.id,
+            });
+          });
+      });
 
       row.addButton((button) => {
         button

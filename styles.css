@@ -164,6 +164,9 @@
 .journal-date-picker-modal {
   --dialog-width: 330px;
 }
+.journal-add-notes-modal {
+  --dialog-width: 700px;
+}
 
 .journal-dp-name-row {
   display: flex;

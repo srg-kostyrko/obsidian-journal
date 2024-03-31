@@ -205,6 +205,10 @@ export class CalendarJournal implements Journal {
       delete frontmatter[FRONTMATTER_START_DATE_KEY];
       delete frontmatter[FRONTMATTER_END_DATE_KEY];
       delete frontmatter[FRONTMATTER_SECTION_KEY];
+      // TODO remove when issue is fixed
+      if (!Object.keys(frontmatter).length) {
+        frontmatter[" "] = "";
+      }
     });
   }
 

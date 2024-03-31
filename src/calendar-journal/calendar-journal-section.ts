@@ -117,10 +117,10 @@ export class CalendarJournalSection {
       rename?: boolean;
       move?: boolean;
     },
-  ): Promise<void> {
+  ): Promise<boolean> {
     const indexed = this.journal.index.get(startDate, this.granularity);
     if (indexed) {
-      if (!options.override) return;
+      if (!options.override) return false;
       await this.journal.disconnectNote(indexed.path);
     }
     let path = file.path;
@@ -140,6 +140,7 @@ export class CalendarJournalSection {
       endDate: endDate.format(FRONTMATTER_DATE_FORMAT),
     });
     await this.ensureFrontMatter(file, startDate, startDate);
+    return true;
   }
 
   private async ensureDateNote(startDate: MomentDate, endDate: MomentDate): Promise<TFile> {
