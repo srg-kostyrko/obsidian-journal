@@ -2,6 +2,20 @@
 
 All notable changes to this project will be documented in this file.
 
+## [1.3.0] - 2024-03-31
+
+### Bug Fixes
+
+- Check id uniqness when creating a journal
+
+### Features
+
+- Focus calendar view around opened note
+- Add setting to restrict note creation before start date
+- Allow configuring how interval journal ends
+- Better templater interop
+- Add existing notes to journal in bulk
+
 ## [1.2.0] - 2024-03-03
 
 ### Bug Fixes
