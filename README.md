@@ -43,7 +43,7 @@ There variables can be used in note name template, note storage path, content of
 
 - `{{journal_name}}` - name of journal note belongs to
 - `{{note_name}}` - name of note
-- `{{start_date}}` - first day of week, month, quarter, year or interval depending on note type, formatted using date format from settings, format can be overridden using following syntax `{{start_date:format}}` where format is string using Moment.js format rules (like `{{start_date:YYYY-MM-DD}}`). You can add date calculations, e.g. `{{start_date+5d:format}}` to add 5 days. You can add or subtract any number of days (`d`), weeks (`w`), months (`m`), or years (`y`).
+- `{{start_date}}` - first day of week, month, quarter, year or interval depending on note type, formatted using date format from settings. Format can be overridden using following syntax `{{start_date:format}}` where format is string using [Moment.js format rules](https://momentjs.com/docs/#/displaying/format/) (like `{{start_date:YYYY-MM-DD}}`). You can do date manipulations using [Moment.js manipulation rules](https://momentjs.com/docs/#/manipulating/add/), e.g. `{{start_date+5D:format}}` to add 5 days.
 - `{{end_date}}` - last day of week, month, quarter, year or interval depending on note type, formatting rules are the same as in `{{start_date}}`, as well as the calculations
 - `{{date}}` - alias to `{{start_date}}`
 - `{{index}}` - available for interval based journals indicating index of interval (like financial quarter or spring number)
