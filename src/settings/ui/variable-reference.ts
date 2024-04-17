@@ -47,8 +47,25 @@ export class VariableReferenceModal extends Modal {
       });
       div.createEl("br");
       div.createSpan({
-        text: "You can also use {{date:format}} to override format once.",
+        text: "You can also use {{date:format}} to override format once, and use {{date+5d:format}} to add 5 days.",
       });
+      div.createEl("br");
+      div.createEl("a", {
+        text: "Formatting reference.",
+        attr: {
+          target: "_blank",
+        },
+        href: "https://momentjs.com/docs/#/displaying/format/",
+      });
+      div.createEl("br");
+      div.createEl("a", {
+        text: "Date manipulation reference.",
+        attr: {
+          target: "_blank",
+        },
+        href: "https://momentjs.com/docs/#/manipulating/add/",
+      });
+
     } else {
       this.renderVariable(grid.createDiv(), "start_date");
       const div1 = grid.createDiv({
@@ -59,7 +76,23 @@ export class VariableReferenceModal extends Modal {
       });
       div1.createEl("br");
       div1.createSpan({
-        text: "You can also use {{start_date:format}} to override format once.",
+        text: "You can also use {{start_date:format}} to override format once, and use {{start_date+5d:format}} to add 5 days.",
+      });
+      div1.createEl("br");
+      div1.createEl("a", {
+        text: "Formatting reference.",
+        attr: {
+          target: "_blank",
+        },
+        href: "https://momentjs.com/docs/#/displaying/format/",
+      });
+      div1.createEl("br");
+      div1.createEl("a", {
+        text: "Date manipulation reference.",
+        attr: {
+          target: "_blank",
+        },
+        href: "https://momentjs.com/docs/#/manipulating/add/",
       });
       this.renderVariable(grid.createDiv(), "end_date");
       const div2 = grid.createDiv({
@@ -70,7 +103,23 @@ export class VariableReferenceModal extends Modal {
       });
       div2.createEl("br");
       div2.createSpan({
-        text: "You can also use {{end_date:format}} to override format once.",
+        text: "You can also use {{end_date:format}} to override format once, and use {{end_date+5d:format}} to add 5 days.",
+      });
+      div2.createEl("br");
+      div2.createEl("a", {
+        text: "Formatting reference.",
+        attr: {
+          target: "_blank",
+        },
+        href: "https://momentjs.com/docs/#/displaying/format/",
+      });
+      div2.createEl("br");
+      div2.createEl("a", {
+        text: "Date manipulation reference.",
+        attr: {
+          target: "_blank",
+        },
+        href: "https://momentjs.com/docs/#/manipulating/add/",
       });
     }
 

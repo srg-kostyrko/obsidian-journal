@@ -7,27 +7,48 @@ export function replaceTemplateVariables(template: string, context: TemplateCont
   if (context.date) {
     const { value: date, defaultFormat } = context.date;
     content = content
-      .replaceAll("{{date}}", date.format(defaultFormat))
-      .replaceAll(/\{\{date:(.*?)\}\}/g, (_, format) => {
-        return date.format(format);
-      });
+    .replaceAll(/{{\s*(date)\s*(([+-]\d+)([yqmwdhs]))?\s*(:(.*?))?}}/gi, (_, _variableName, calc, timeDelta, unit, _customFormat, format) => {
+      const templateVar = date.clone();
+      if (calc) {
+        templateVar.add(parseInt(timeDelta, 10), unit);
+      }
+      if(format) {
+        return templateVar.format(format);
+      }
+      return templateVar.format(defaultFormat);
+    });
   }
+
   if (context.start_date) {
     const { value: start_date, defaultFormat } = context.start_date;
     content = content
-      .replaceAll("{{start_date}}", start_date.format(defaultFormat))
-      .replaceAll(/\{\{start_date:(.*?)\}\}/g, (_, format) => {
-        return start_date.format(format);
-      });
+    .replaceAll(/{{\s*(start_date)\s*(([+-]\d+)([yqmwdhs]))?\s*(:(.*?))?}}/gi, (_, _variableName, calc, timeDelta, unit, _customFormat, format) => {
+      const templateVar = start_date.clone();
+      if (calc) {
+        templateVar.add(parseInt(timeDelta, 10), unit);
+      }
+      if(format) {
+        return templateVar.format(format);
+      }
+      return templateVar.format(defaultFormat);
+    });
   }
+
   if (context.end_date) {
     const { value: end_date, defaultFormat } = context.end_date;
     content = content
-      .replaceAll("{{end_date}}", end_date.format(defaultFormat))
-      .replaceAll(/\{\{end_date:(.*?)\}\}/g, (_, format) => {
-        return end_date.format(format);
-      });
+    .replaceAll(/{{\s*(end_date)\s*(([+-]\d+)([yqmwdhs]))?\s*(:(.*?))?}}/gi, (_, _variableName, calc, timeDelta, unit, _customFormat, format) => {
+      const templateVar = end_date.clone();
+      if (calc) {
+        templateVar.add(parseInt(timeDelta, 10), unit);
+      }
+      if(format) {
+        return templateVar.format(format);
+      }
+      return templateVar.format(defaultFormat);
+    });
   }
+
   if (context.index) {
     const { value: index } = context.index;
     content = content.replaceAll("{{index}}", index.toString());
