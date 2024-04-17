@@ -47,7 +47,7 @@ export class VariableReferenceModal extends Modal {
       });
       div.createEl("br");
       div.createSpan({
-        text: "You can also use {{date:format}} to override format once, and use {{date+5D:format}} to add 5 days.",
+        text: "You can also use {{date:format}} to override format once, and use {{date+5d:format}} to add 5 days.",
       });
       div.createEl("br");
       div.createEl("a", {
@@ -76,7 +76,7 @@ export class VariableReferenceModal extends Modal {
       });
       div1.createEl("br");
       div1.createSpan({
-        text: "You can also use {{start_date:format}} to override format once, and use {{start_date+5D:format}} to add 5 days.",
+        text: "You can also use {{start_date:format}} to override format once, and use {{start_date+5d:format}} to add 5 days.",
       });
       div1.createEl("br");
       div1.createEl("a", {
@@ -103,7 +103,7 @@ export class VariableReferenceModal extends Modal {
       });
       div2.createEl("br");
       div2.createSpan({
-        text: "You can also use {{end_date:format}} to override format once, and use {{end_date+5D:format}} to add 5 days.",
+        text: "You can also use {{end_date:format}} to override format once, and use {{end_date+5d:format}} to add 5 days.",
       });
       div2.createEl("br");
       div2.createEl("a", {

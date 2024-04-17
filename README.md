@@ -3,7 +3,7 @@
 Manage your journals in [Obsidian](https://obsidian.md/) knowledge base.
 
 - Calendar based journals (daily, weekly, monthly, quarterly and yearly notes)
-- Interval based journals (like finantial quarters or sprints)
+- Interval based journals (like financial quarters or sprints)
 - You can configure many different journals based on your needs
 - Every note type configured separately (path to store, templates etc)
 - Variables to insert journal related data into paths/note name/template content.
@@ -21,12 +21,12 @@ Follow the steps below to install Tasks.
 
 ## Compatibility with other plugins
 
-- `Daily notes` core plugin - this plugin intends to be a replacement for it. Notes created through Daily notes will not be connected to any journal so it is advides to disable this plugin.
-- `Periodic Notes` community plugin - this plugin was intially inspired by Periodic notes that seem to abandoned and aims to be a replacement for it.
+- `Daily notes` core plugin - this plugin intends to be a replacement for it. Notes created through Daily notes will not be connected to any journal so it is advised to disable this plugin.
+- `Periodic Notes` community plugin - this plugin was initially inspired by Periodic notes that seem to abandoned and aims to be a replacement for it.
 - `Calendar` community plugin - starting 1.1.0 this plugin has calendar view similar to calendar plugin. It does not have all the features of calendar plugin as of now, but will gradually catch up.
 - `Templater` community plugin - starting with 1.3.0 plugin supports Templater templates in its settings. Journal plugin variables are replaced first and can be used inside templater commands.
 
-### Templater caveeats
+### Templater caveats
 
 There can be cases when Templater starts interfering with plugin actions resulting in partially broken note ot journal related data removed from frontmatter.
 The best setup to avoid such problems would be:
@@ -43,7 +43,7 @@ There variables can be used in note name template, note storage path, content of
 
 - `{{journal_name}}` - name of journal note belongs to
 - `{{note_name}}` - name of note
-- `{{start_date}}` - first day of week, month, quarter, year or interval depending on note type, formatted using date format from settings. Format can be overridden using following syntax `{{start_date:format}}` where format is string using [Moment.js format rules](https://momentjs.com/docs/#/displaying/format/) (like `{{start_date:YYYY-MM-DD}}`). You can do date manipulations using [Moment.js manipulation rules](https://momentjs.com/docs/#/manipulating/add/), e.g. `{{start_date+5D:format}}` to add 5 days.
+- `{{start_date}}` - first day of week, month, quarter, year or interval depending on note type, formatted using date format from settings. Format can be overridden using following syntax `{{start_date:format}}` where format is string using [Moment.js format rules](https://momentjs.com/docs/#/displaying/format/) (like `{{start_date:YYYY-MM-DD}}`). You can do date manipulations using [Moment.js manipulation rules](https://momentjs.com/docs/#/manipulating/add/), e.g. `{{start_date+5d:format}}` to add 5 days.
 - `{{end_date}}` - last day of week, month, quarter, year or interval depending on note type, formatting rules are the same as in `{{start_date}}`, as well as the calculations
 - `{{date}}` - alias to `{{start_date}}`
 - `{{index}}` - available for interval based journals indicating index of interval (like financial quarter or spring number)
