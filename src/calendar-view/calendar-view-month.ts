@@ -44,7 +44,19 @@ export class CalendarViewMonth {
       this.manager.app.workspace.on("journal:index-update", async () => {
         this.updateNotesIndex();
         await this.updateActiveNote();
+        // delaying render to allow templates and other dataview queries to run
+        await delay(500);
         this.display();
+      }),
+    );
+    this.manager.plugin.registerEvent(
+      this.manager.app.vault.on("create", async () => {
+        this.manager.reindex();
+      }),
+    );
+    this.manager.plugin.registerEvent(
+      this.manager.app.vault.on("delete", async () => {
+        this.manager.reindex();
       }),
     );
     this.manager.plugin.registerEvent(
@@ -99,7 +111,10 @@ export class CalendarViewMonth {
     });
     this.renderTitleRow(titleRow, start, active);
 
-    const view = this.containerEl.createDiv({
+    const viewContainer = this.containerEl.createDiv({
+      cls: "journal-calendar-view-month-container",
+    });
+    const view = viewContainer.createDiv({
       cls: "journal-calendar-view-month",
     });
 

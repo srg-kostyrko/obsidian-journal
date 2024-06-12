@@ -277,6 +277,10 @@
   flex-direction: column;
   align-items: stretch;
 }
+.journal-calendar-view-month-container {
+  display: grid;
+  place-items: center;
+}
 .journal-calendar-view-month {
   display: grid;
   grid-template-columns: repeat(7, 30px);
