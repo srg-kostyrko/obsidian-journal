@@ -10,8 +10,9 @@
   display: grid;
   grid-template-columns: repeat(7, 30px);
   gap: 6px;
-  margin-left: 12px;
-  margin-bottom: 12px;
+  margin: 0 auto 12px auto;
+  /* margin-left: 12px;
+  margin-bottom: 12px; */
 }
 .journal-week-view .journal-weekday {
   font-size: 1em;
@@ -276,6 +277,10 @@
   display: flex;
   flex-direction: column;
   align-items: stretch;
+}
+.journal-calendar-view-month-container {
+  display: grid;
+  place-items: center;
 }
 .journal-calendar-view-month {
   display: grid;
