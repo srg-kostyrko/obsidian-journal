@@ -44,7 +44,19 @@ export class CalendarViewMonth {
       this.manager.app.workspace.on("journal:index-update", async () => {
         this.updateNotesIndex();
         await this.updateActiveNote();
+        // delaying render to allow templates and other dataview queries to run
+        await delay(500);
         this.display();
+      }),
+    );
+    this.manager.plugin.registerEvent(
+      this.manager.app.vault.on("create", async () => {
+        this.manager.reindex();
+      }),
+    );
+    this.manager.plugin.registerEvent(
+      this.manager.app.vault.on("delete", async () => {
+        this.manager.reindex();
       }),
     );
     this.manager.plugin.registerEvent(
