@@ -25,6 +25,7 @@ export default [
           argsIgnorePattern: "^_",
         },
       ],
+      "@typescript-eslint/no-dynamic-delete": "off",
     },
   },
 ];

@@ -1,12 +1,12 @@
 import { Plugin, TFile } from "obsidian";
 
 type RunMode = number;
-type RunningConfig = {
+interface RunningConfig {
   template_file: TFile | undefined;
   target_file: TFile;
   run_mode: RunMode;
   active_file?: TFile | null;
-};
+}
 
 export interface TemplaterPlugin extends Plugin {
   templater: {

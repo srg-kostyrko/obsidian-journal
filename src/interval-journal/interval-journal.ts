@@ -41,9 +41,7 @@ export class IntervalJournal implements Journal {
     return this.config.id;
   }
 
-  get type(): "interval" {
-    return "interval";
-  }
+  readonly type = "interval";
 
   get name(): string {
     return this.config.name;

@@ -56,9 +56,7 @@ export class CalendarJournal implements Journal {
     return this.config.id;
   }
 
-  get type(): "calendar" {
-    return "calendar";
-  }
+  readonly type = "calendar";
 
   get name(): string {
     return this.config.name;

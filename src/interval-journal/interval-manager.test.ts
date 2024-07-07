@@ -77,7 +77,7 @@ describe("IntervalManager", () => {
     ])("find %s", (_, date, interval) => {
       const found = manager.findInterval(date);
       expect(found).toBeDefined();
-      expectInterval(found!, interval);
+      if (found) expectInterval(found, interval);
     });
 
     describe("using previously indexed intervals", () => {
@@ -96,7 +96,7 @@ describe("IntervalManager", () => {
       ])("find %s", (_, date, interval) => {
         const found = manager.findInterval(date);
         expect(found).toBeDefined();
-        expectInterval(found!, interval);
+        if (found) expectInterval(found, interval);
       });
     });
   });
@@ -162,7 +162,7 @@ describe("IntervalManager", () => {
     ])("find %s", (_, date, interval) => {
       const found = manager.findInterval(date);
       expect(found).toBeDefined();
-      expectInterval(found!, interval);
+      if (found) expectInterval(found, interval);
     });
 
     describe("using previously indexed intervals", () => {
@@ -181,7 +181,7 @@ describe("IntervalManager", () => {
       ])("find %s", (_, date, interval) => {
         const found = manager.findInterval(date);
         expect(found).toBeDefined();
-        expectInterval(found!, interval);
+        if (found) expectInterval(found, interval);
       });
     });
   });
@@ -247,7 +247,7 @@ describe("IntervalManager", () => {
     ])("find %s", (_, date, interval) => {
       const found = manager.findInterval(date);
       expect(found).toBeDefined();
-      expectInterval(found!, interval);
+      if (found) expectInterval(found, interval);
     });
 
     describe("using previously indexed intervals", () => {
@@ -266,7 +266,7 @@ describe("IntervalManager", () => {
       ])("find %s", (_, date, interval) => {
         const found = manager.findInterval(date);
         expect(found).toBeDefined();
-        expectInterval(found!, interval);
+        if (found) expectInterval(found, interval);
       });
     });
   });
@@ -332,7 +332,7 @@ describe("IntervalManager", () => {
     ])("find %s", (_, date, interval) => {
       const found = manager.findInterval(date);
       expect(found).toBeDefined();
-      expectInterval(found!, interval);
+      if (found) expectInterval(found, interval);
     });
 
     describe("using previously indexed intervals", () => {
@@ -351,7 +351,7 @@ describe("IntervalManager", () => {
       ])("find %s", (_, date, interval) => {
         const found = manager.findInterval(date);
         expect(found).toBeDefined();
-        expectInterval(found!, interval);
+        if (found) expectInterval(found, interval);
       });
     });
   });
@@ -427,7 +427,7 @@ describe("IntervalManager", () => {
     ])("find %s", (_, date, interval) => {
       const found = manager.findInterval(date);
       expect(found).toBeDefined();
-      expectInterval(found!, interval);
+      if (found) expectInterval(found, interval);
     });
 
     describe("using previously indexed intervals", () => {
@@ -446,7 +446,7 @@ describe("IntervalManager", () => {
       ])("find %s", (_, date, interval) => {
         const found = manager.findInterval(date);
         expect(found).toBeDefined();
-        expectInterval(found!, interval);
+        if (found) expectInterval(found, interval);
       });
     });
   });
