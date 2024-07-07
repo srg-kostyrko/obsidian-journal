@@ -186,7 +186,7 @@ export class IntervalJournal implements Journal {
 
   indexNote(frontmatter: IntervalFrontMatter, path: string): void {
     const startDate = this.calendar.date(frontmatter.start_date, FRONTMATTER_DATE_FORMAT);
-    const endDate = this.calendar.date(frontmatter.end_date, FRONTMATTER_DATE_FORMAT);
+    const endDate = this.calendar.date(frontmatter.end_date, FRONTMATTER_DATE_FORMAT).endOf("day");
     this.intervals.add({
       startDate,
       endDate,
