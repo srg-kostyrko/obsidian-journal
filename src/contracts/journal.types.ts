@@ -8,7 +8,7 @@ export interface Journal {
   openStartupNote(): Promise<void>;
   openPath(path: string, frontmatter: JournalFrontMatter): Promise<void>;
   configureRibbonIcons(plugin: Plugin): void;
-  parseFrontMatter(frontmatter: FrontMatterCache): JournalFrontMatter;
+  parseFrontMatter(frontmatter: FrontMatterCache): JournalFrontMatter | null;
   indexNote(frontmatter: JournalFrontMatter, path: string): void;
   clearForPath(path: string): void;
   supportsCommand(id: string): boolean;

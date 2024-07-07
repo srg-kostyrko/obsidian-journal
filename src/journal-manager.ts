@@ -235,8 +235,10 @@ export class JournalManager extends Component {
           const journal = this.journals.get(id);
           if (journal) {
             const data = journal.parseFrontMatter(frontmatter);
-            this.fileFrontMatters.set(path, data);
-            return data;
+            if (data) {
+              this.fileFrontMatters.set(path, data);
+              return data;
+            }
           }
         }
       }

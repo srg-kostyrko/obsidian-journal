@@ -1,4 +1,4 @@
-import { App, FrontMatterCache, Plugin, TFile, normalizePath } from "obsidian";
+import { App, FrontMatterCache, Plugin, TFile, normalizePath, moment } from "obsidian";
 import { IntervalConfig, IntervalFrontMatter, JournalFrontMatter } from "../contracts/config.types";
 import { CalendarHelper } from "../utils/calendar";
 import { Journal } from "../contracts/journal.types";
@@ -168,12 +168,18 @@ export class IntervalJournal implements Journal {
     });
   }
 
-  parseFrontMatter(frontmatter: FrontMatterCache): IntervalFrontMatter {
+  parseFrontMatter(frontmatter: FrontMatterCache): IntervalFrontMatter | null {
+    const start_date = frontmatter[FRONTMATTER_START_DATE_KEY];
+    const end_date = frontmatter[FRONTMATTER_END_DATE_KEY];
+    if (!moment(start_date).isValid() || !moment(end_date).isValid()) {
+      return null;
+    }
+
     return {
       type: "interval",
       id: this.id,
-      start_date: frontmatter[FRONTMATTER_START_DATE_KEY],
-      end_date: frontmatter[FRONTMATTER_END_DATE_KEY],
+      start_date,
+      end_date,
       index: frontmatter[FRONTMATTER_INDEX_KEY],
     };
   }

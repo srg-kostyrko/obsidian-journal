@@ -1,4 +1,4 @@
-import { App, FrontMatterCache, Plugin, TFile } from "obsidian";
+import { App, FrontMatterCache, Plugin, TFile, moment } from "obsidian";
 import { CalendarConfig, CalendarGranularity, CalendarFrontMatter } from "../contracts/config.types";
 import { CalendarJournalSection } from "./calendar-journal-section";
 import {
@@ -168,12 +168,18 @@ export class CalendarJournal implements Journal {
     await this[section].openPath(path);
   }
 
-  parseFrontMatter(frontmatter: FrontMatterCache): CalendarFrontMatter {
+  parseFrontMatter(frontmatter: FrontMatterCache): CalendarFrontMatter | null {
+    const start_date = frontmatter[FRONTMATTER_START_DATE_KEY];
+    const end_date = frontmatter[FRONTMATTER_END_DATE_KEY];
+    if (!moment(start_date).isValid() || !moment(end_date).isValid()) {
+      return null;
+    }
+
     return {
       type: "calendar",
       id: this.id,
-      start_date: frontmatter[FRONTMATTER_START_DATE_KEY],
-      end_date: frontmatter[FRONTMATTER_END_DATE_KEY],
+      start_date,
+      end_date,
       granularity: frontmatter[FRONTMATTER_SECTION_KEY] as CalendarGranularity,
     };
   }
