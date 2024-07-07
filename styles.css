@@ -8,7 +8,7 @@
 .journal-week-view,
 .journal-month-view {
   display: grid;
-  grid-template-columns: repeat(7, 30px);
+  grid-template-columns: repeat(7, 1fr);
   gap: 6px;
   margin-left: 12px;
   margin-bottom: 12px;
@@ -17,10 +17,10 @@
   font-size: 1em;
 }
 .journal-month-with-week {
-  grid-template-columns: 35px repeat(7, 30px);
+  grid-template-columns: 1.25fr repeat(7, 1fr);
 }
 .journal-month-view.with-week {
-  grid-template-columns: repeat(8, 30px);
+  grid-template-columns: repeat(8, 1fr);
 }
 
 .journal-month-timeline {
@@ -54,7 +54,7 @@
   border: 1px solid transparent;
   height: 28px;
   line-height: 26px;
-  width: 28px;
+  /* width: 28px; */
   text-align: center;
 }
 
@@ -279,12 +279,11 @@
 }
 .journal-calendar-view-month {
   display: grid;
-  grid-template-columns: repeat(7, 30px);
+  grid-template-columns: repeat(7, 1fr);
   gap: 6px;
-  margin: 0 auto;
 }
 .journal-calendar-view-month.with-week {
-  grid-template-columns: repeat(8, 30px);
+  grid-template-columns: repeat(8, 1fr);
 }
 .journal-calendar-view-toolbar {
   width: 100%;
@@ -294,9 +293,8 @@
 }
 .journal-calendar-view-title-row {
   display: grid;
-  grid-template-columns: 18px 18px 120px 18px 18px;
+  grid-template-columns: 18px 18px 1fr 18px 18px;
   gap: 6px;
-  margin: 0 auto 6px auto;
 }
 .journal-calendar-view-title-row > div {
   padding: 4px 0;
