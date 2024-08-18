@@ -1,16 +1,11 @@
 {
-  "compilerOptions": {
-    "allowSyntheticDefaultImports": true,
-    "baseUrl": ".",
-    "module": "ESNext",
-    "target": "es6",
-    "allowJs": true,
-    "noImplicitAny": true,
-    "strictNullChecks": true,
-    "moduleResolution": "node",
-    "importHelpers": true,
-    "importsNotUsedAsValues": "remove",
-    "lib": ["dom", "es5", "scripthost", "es2015", "es2021", "ES2022"]
-  },
-  "include": ["**/*.ts"]
+  "files": [],
+  "references": [
+    {
+      "path": "./tsconfig.node.json"
+    },
+    {
+      "path": "./tsconfig.app.json"
+    }
+  ]
 }

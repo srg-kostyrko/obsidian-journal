@@ -2,12 +2,16 @@ import { fileURLToPath, URL } from "node:url";
 import { defineConfig } from "vite";
 import builtins from "builtin-modules";
 import { viteStaticCopy } from "vite-plugin-static-copy";
+import vue from "@vitejs/plugin-vue";
+import vueDevTools from 'vite-plugin-vue-devtools'
 
 const isWatch = process.argv.includes("--watch");
 
 // https://vitejs.dev/config/
 export default defineConfig({
   plugins: [
+    vue(),
+    vueDevTools(),
     viteStaticCopy({
       targets: [
         {
@@ -17,9 +21,14 @@ export default defineConfig({
       ],
     }),
   ],
+  resolve: {
+    alias: {
+      "@": fileURLToPath(new URL("./src", import.meta.url)),
+    },
+  },
   build: {
     target: "esnext",
-    sourcemap: false,
+    sourcemap: isWatch ? "inline" : false,
     commonjsOptions: {
       ignoreTryCatch: false,
     },
