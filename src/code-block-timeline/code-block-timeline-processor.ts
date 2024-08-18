@@ -1,12 +1,12 @@
-import { MarkdownPostProcessorContext, MarkdownRenderChild } from "obsidian";
+import { type MarkdownPostProcessorContext, MarkdownRenderChild } from "obsidian";
 import { JournalManager } from "../journal-manager";
-import { JournalFrontMatter } from "../contracts/config.types";
+import type { JournalFrontMatter } from "../contracts/config.types";
 import { CalendarJournal } from "../calendar-journal/calendar-journal";
 import { timelineGranularityMapping, timelineModes } from "./timeline-mappings";
 
 export class CodeBlockTimelineProcessor extends MarkdownRenderChild {
   private data: JournalFrontMatter | null = null;
-  private mode: string;
+  private mode: string | undefined;
   constructor(
     private manager: JournalManager,
     private readonly source: string,

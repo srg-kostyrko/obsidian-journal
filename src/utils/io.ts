@@ -1,4 +1,4 @@
-import { App } from "obsidian";
+import { type App } from "obsidian";
 
 export async function ensureFolderExists(app: App, path: string): Promise<void> {
   if (!path) return;

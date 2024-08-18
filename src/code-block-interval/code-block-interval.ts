@@ -1,6 +1,6 @@
 import { MarkdownRenderChild, getIcon } from "obsidian";
 import { IntervalJournal } from "../interval-journal/interval-journal";
-import { Interval } from "../interval-journal/interval-manager";
+import { type Interval } from "../interval-journal/interval-manager";
 import { replaceTemplateVariables } from "../utils/template";
 
 export class CodeBlockIntervalNav extends MarkdownRenderChild {

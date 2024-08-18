@@ -1,52 +1,58 @@
-import { App, TFile } from "obsidian";
-import { TemplateContext } from "../contracts/template.types";
-import { TemplaterPlugin } from "../contracts/templater.types";
+import { type App, TFile } from "obsidian";
+import type { TemplateContext } from "../contracts/template.types";
+import type { TemplaterPlugin } from "../contracts/templater.types";
 
 export function replaceTemplateVariables(template: string, context: TemplateContext): string {
   let content = template ?? "";
   if (context.date) {
     const { value: date, defaultFormat } = context.date;
-    content = content
-    .replaceAll(/{{\s*(date)\s*(([+-]\d+)([yqmwdhs]))?\s*(:(.*?))?}}/gi, (_, _variableName, calc, timeDelta, unit, _customFormat, format) => {
-      const templateVar = date.clone();
-      if (calc) {
-        templateVar.add(parseInt(timeDelta, 10), unit);
-      }
-      if(format) {
-        return templateVar.format(format);
-      }
-      return templateVar.format(defaultFormat);
-    });
+    content = content.replaceAll(
+      /{{\s*(date)\s*(([+-]\d+)([yqmwdhs]))?\s*(:(.*?))?}}/gi,
+      (_, _variableName, calc, timeDelta, unit, _customFormat, format) => {
+        const templateVar = date.clone();
+        if (calc) {
+          templateVar.add(parseInt(timeDelta, 10), unit);
+        }
+        if (format) {
+          return templateVar.format(format);
+        }
+        return templateVar.format(defaultFormat);
+      },
+    );
   }
 
   if (context.start_date) {
     const { value: start_date, defaultFormat } = context.start_date;
-    content = content
-    .replaceAll(/{{\s*(start_date)\s*(([+-]\d+)([yqmwdhs]))?\s*(:(.*?))?}}/gi, (_, _variableName, calc, timeDelta, unit, _customFormat, format) => {
-      const templateVar = start_date.clone();
-      if (calc) {
-        templateVar.add(parseInt(timeDelta, 10), unit);
-      }
-      if(format) {
-        return templateVar.format(format);
-      }
-      return templateVar.format(defaultFormat);
-    });
+    content = content.replaceAll(
+      /{{\s*(start_date)\s*(([+-]\d+)([yqmwdhs]))?\s*(:(.*?))?}}/gi,
+      (_, _variableName, calc, timeDelta, unit, _customFormat, format) => {
+        const templateVar = start_date.clone();
+        if (calc) {
+          templateVar.add(parseInt(timeDelta, 10), unit);
+        }
+        if (format) {
+          return templateVar.format(format);
+        }
+        return templateVar.format(defaultFormat);
+      },
+    );
   }
 
   if (context.end_date) {
     const { value: end_date, defaultFormat } = context.end_date;
-    content = content
-    .replaceAll(/{{\s*(end_date)\s*(([+-]\d+)([yqmwdhs]))?\s*(:(.*?))?}}/gi, (_, _variableName, calc, timeDelta, unit, _customFormat, format) => {
-      const templateVar = end_date.clone();
-      if (calc) {
-        templateVar.add(parseInt(timeDelta, 10), unit);
-      }
-      if(format) {
-        return templateVar.format(format);
-      }
-      return templateVar.format(defaultFormat);
-    });
+    content = content.replaceAll(
+      /{{\s*(end_date)\s*(([+-]\d+)([yqmwdhs]))?\s*(:(.*?))?}}/gi,
+      (_, _variableName, calc, timeDelta, unit, _customFormat, format) => {
+        const templateVar = end_date.clone();
+        if (calc) {
+          templateVar.add(parseInt(timeDelta, 10), unit);
+        }
+        if (format) {
+          return templateVar.format(format);
+        }
+        return templateVar.format(defaultFormat);
+      },
+    );
   }
 
   if (context.index) {

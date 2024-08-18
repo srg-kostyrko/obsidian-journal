@@ -1,5 +1,5 @@
-import { CalendarConfig, CalendarGranularity, CalendarSection } from "../contracts/config.types";
-import { App, Setting } from "obsidian";
+import type { CalendarConfig, CalendarGranularity, CalendarSection } from "../contracts/config.types";
+import { type App, Setting } from "obsidian";
 import { FolderSuggestion } from "./ui/folder-suggestion";
 import { SettingsWidget } from "./settings-widget";
 import { capitalize } from "../utils";

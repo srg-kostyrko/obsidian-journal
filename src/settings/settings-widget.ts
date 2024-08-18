@@ -1,5 +1,5 @@
-import { App } from "obsidian";
-import { SettingsRouteState } from "../contracts/settings";
+import { type App } from "obsidian";
+import type { SettingsRouteState } from "../contracts/settings";
 
 export class SettingsWidget {
   constructor(protected app: App) {}

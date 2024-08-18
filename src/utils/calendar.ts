@@ -1,7 +1,7 @@
 import { moment } from "obsidian";
 import { extractCurrentlocaleData } from "./moment";
-import { PluginSettings } from "../contracts/config.types";
-import { MomentDate } from "../contracts/date.types";
+import type { PluginSettings } from "../contracts/config.types";
+import type { MomentDate } from "../contracts/date.types";
 
 const CUSTOM_LOCALE = "custom-journal-locale";
 

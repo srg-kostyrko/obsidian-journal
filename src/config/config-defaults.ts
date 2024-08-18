@@ -1,4 +1,4 @@
-import { CalendarConfig, CalendarGranularity, IntervalConfig, PluginSettings } from "../contracts/config.types";
+import type { CalendarConfig, CalendarGranularity, IntervalConfig, PluginSettings } from "../contracts/config.types";
 
 export const DEFAULT_NAME_TEMPLATE_CALENDAR = "{{date}}";
 export const DEFAULT_NAME_TEMPLATE_INTERVAL = "{{journal_name}} {{index}}";

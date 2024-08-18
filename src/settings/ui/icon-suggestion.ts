@@ -1,4 +1,4 @@
-import { AbstractInputSuggest, App, getIcon, getIconIds } from "obsidian";
+import { AbstractInputSuggest, type App, getIcon, getIconIds } from "obsidian";
 
 export class IconSuggestion extends AbstractInputSuggest<string> {
   constructor(

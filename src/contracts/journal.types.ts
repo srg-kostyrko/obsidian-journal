@@ -1,5 +1,5 @@
-import { FrontMatterCache, Plugin } from "obsidian";
-import { JournalFrontMatter } from "./config.types";
+import { type FrontMatterCache, Plugin } from "obsidian";
+import { type JournalFrontMatter } from "./config.types";
 
 export interface Journal {
   type: string;

@@ -1,7 +1,7 @@
 import { beforeEach, describe, expect, test } from "vitest";
 import { deepCopy } from "../utils";
 import { DEFAULT_CONFIG_INTERVAL } from "../config/config-defaults";
-import { Interval, IntervalManager } from "./interval-manager";
+import { type Interval, IntervalManager } from "./interval-manager";
 import { CalendarHelper } from "../utils/calendar";
 
 const expectInterval = (input: Interval, expected: { index: number; startDate: string; endDate: string }) => {

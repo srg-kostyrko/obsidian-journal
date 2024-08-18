@@ -1,9 +1,9 @@
-import { App, TFile, Plugin, normalizePath } from "obsidian";
-import { CalendarGranularity, CalendarSection } from "../contracts/config.types";
+import { type App, TFile, Plugin, normalizePath } from "obsidian";
+import type { CalendarGranularity, CalendarSection } from "../contracts/config.types";
 import { CalendarJournal } from "./calendar-journal";
 import { ensureFolderExists } from "../utils/io";
 import { replaceTemplateVariables, tryApplyingTemplater } from "../utils/template";
-import { TemplateContext } from "../contracts/template.types";
+import type { TemplateContext } from "../contracts/template.types";
 import {
   FRONTMATTER_DATE_FORMAT,
   FRONTMATTER_END_DATE_KEY,
@@ -11,7 +11,7 @@ import {
   FRONTMATTER_SECTION_KEY,
   FRONTMATTER_START_DATE_KEY,
 } from "../constants";
-import { MomentDate } from "../contracts/date.types";
+import type { MomentDate } from "../contracts/date.types";
 import { CalendarHelper } from "../utils/calendar";
 import {
   DEFAULT_DATE_FORMATS_CALENDAR,

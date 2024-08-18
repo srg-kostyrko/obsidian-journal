@@ -1,4 +1,4 @@
-import { AbstractInputSuggest, App, TFile, TFolder } from "obsidian";
+import { AbstractInputSuggest, type App, TFile, TFolder } from "obsidian";
 
 export class TemplateSuggestion extends AbstractInputSuggest<TFile> {
   constructor(

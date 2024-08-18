@@ -1,6 +1,6 @@
-import { App, Modal, Setting } from "obsidian";
+import { type App, Modal, Setting } from "obsidian";
 import { JournalManager } from "../../journal-manager";
-import { CalendarGranularity, IntervalConfig, JournalConfig } from "../../contracts/config.types";
+import type { CalendarGranularity, IntervalConfig, JournalConfig } from "../../contracts/config.types";
 import { DEFAULT_CONFIG_INTERVAL } from "../../config/config-defaults";
 import { DatePickerModal } from "../../ui/date-picker-modal";
 

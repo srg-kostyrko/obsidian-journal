@@ -1,7 +1,7 @@
-import { App, FrontMatterCache, Plugin, TFile, normalizePath, moment } from "obsidian";
-import { IntervalConfig, IntervalFrontMatter, JournalFrontMatter } from "../contracts/config.types";
+import { type App, type FrontMatterCache, Plugin, TFile, normalizePath, moment } from "obsidian";
+import type { IntervalConfig, IntervalFrontMatter, JournalFrontMatter } from "../contracts/config.types";
 import { CalendarHelper } from "../utils/calendar";
-import { Journal } from "../contracts/journal.types";
+import type { Journal } from "../contracts/journal.types";
 import {
   FRONTMATTER_DATE_FORMAT,
   FRONTMATTER_END_DATE_KEY,
@@ -9,17 +9,17 @@ import {
   FRONTMATTER_INDEX_KEY,
   FRONTMATTER_START_DATE_KEY,
 } from "../constants";
-import { TemplateContext } from "../contracts/template.types";
+import type { TemplateContext } from "../contracts/template.types";
 import { replaceTemplateVariables, tryApplyingTemplater } from "../utils/template";
 import { ensureFolderExists } from "../utils/io";
-import { Interval, IntervalManager } from "./interval-manager";
+import { type Interval, IntervalManager } from "./interval-manager";
 import {
   DEFAULT_DATE_FORMAT,
   DEFAULT_NAME_TEMPLATE_INTERVAL,
   DEFAULT_NAV_DATES_TEMPLATE_INTERVAL,
   DEFAULT_RIBBON_ICONS_INTERVAL,
 } from "../config/config-defaults";
-import { MomentDate } from "../contracts/date.types";
+import type { MomentDate } from "../contracts/date.types";
 
 export const intervalCommands = {
   "interval-journal:open": "Open current interval",

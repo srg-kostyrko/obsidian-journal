@@ -1,5 +1,5 @@
 import { CalendarJournal } from "../calendar-journal/calendar-journal";
-import { MomentDate } from "../contracts/date.types";
+import type { MomentDate } from "../contracts/date.types";
 import { CodeBlockNav } from "./code-block-nav";
 
 export class CodeBlockNavYear extends CodeBlockNav {

@@ -1,5 +1,5 @@
-import { App, FrontMatterCache, Plugin, TFile, moment } from "obsidian";
-import { CalendarConfig, CalendarGranularity, CalendarFrontMatter } from "../contracts/config.types";
+import { type App, type FrontMatterCache, Plugin, TFile, moment } from "obsidian";
+import type { CalendarConfig, CalendarGranularity, CalendarFrontMatter } from "../contracts/config.types";
 import { CalendarJournalSection } from "./calendar-journal-section";
 import {
   FRONTMATTER_DATE_FORMAT,
@@ -10,8 +10,8 @@ import {
 } from "../constants";
 import { CalendarIndex } from "./calendar-index";
 import { CalendarHelper } from "../utils/calendar";
-import { MomentDate } from "../contracts/date.types";
-import { Journal } from "../contracts/journal.types";
+import type { MomentDate } from "../contracts/date.types";
+import type { Journal } from "../contracts/journal.types";
 
 export const calendarCommands = {
   "calendar:open-day": "Open today's note",

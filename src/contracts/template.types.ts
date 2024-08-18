@@ -1,4 +1,4 @@
-import { MomentDate } from "./date.types";
+import type { MomentDate } from "./date.types";
 export interface TemplateContext {
   journal_name?: {
     value: string;

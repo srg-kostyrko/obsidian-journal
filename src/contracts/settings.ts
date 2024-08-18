@@ -1,4 +1,4 @@
-import { CalendarGranularity } from "./config.types";
+import type { CalendarGranularity } from "./config.types";
 
 export type SettingsRouteState =
   | {

@@ -1,12 +1,12 @@
 import { Menu, getIcon, setTooltip } from "obsidian";
-import { MomentDate } from "../contracts/date.types";
+import type { MomentDate } from "../contracts/date.types";
 import { JournalManager } from "../journal-manager";
 import { DatePickerModal } from "../ui/date-picker-modal";
 import { CalendarJournal } from "../calendar-journal/calendar-journal";
-import { CalendarGranularity, JournalFrontMatter } from "../contracts/config.types";
+import type { CalendarGranularity, JournalFrontMatter } from "../contracts/config.types";
 import { IntervalJournal } from "../interval-journal/interval-journal";
 import { replaceTemplateVariables } from "../utils/template";
-import { Interval } from "../interval-journal/interval-manager";
+import type { Interval } from "../interval-journal/interval-manager";
 import { delay } from "../utils/misc";
 
 interface NoteIndexentry {
@@ -23,9 +23,9 @@ const INDEX_FORMATS: Record<CalendarGranularity, string> = {
 };
 
 export class CalendarViewMonth {
-  private currentDate: MomentDate;
+  private currentDate!: MomentDate;
   private notesIndex = new Map<string, NoteIndexentry[]>();
-  private activeFile: JournalFrontMatter | null;
+  private activeFile: JournalFrontMatter | null = null;
 
   constructor(
     private containerEl: HTMLElement,

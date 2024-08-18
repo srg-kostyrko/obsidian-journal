@@ -1,5 +1,5 @@
-import { App, Modal } from "obsidian";
-import { CalendarGranularity } from "../../contracts/config.types";
+import { type App, Modal } from "obsidian";
+import type { CalendarGranularity } from "../../contracts/config.types";
 
 export class VariableReferenceModal extends Modal {
   constructor(
@@ -65,7 +65,6 @@ export class VariableReferenceModal extends Modal {
         },
         href: "https://momentjs.com/docs/#/manipulating/add/",
       });
-
     } else {
       this.renderVariable(grid.createDiv(), "start_date");
       const div1 = grid.createDiv({

@@ -1,11 +1,11 @@
-import { App, Modal, Setting, TFile } from "obsidian";
+import { type App, Modal, Setting, TFile } from "obsidian";
 import { JournalManager } from "../journal-manager";
 import { CalendarJournal } from "../calendar-journal/calendar-journal";
 import { IntervalJournal } from "../interval-journal/interval-journal";
 import { SECTIONS_MAP } from "../constants";
-import { CalendarGranularity, JournalFrontMatter } from "../contracts/config.types";
+import type { CalendarGranularity, JournalFrontMatter } from "../contracts/config.types";
 import { DatePickerModal } from "../ui/date-picker-modal";
-import { Interval } from "../interval-journal/interval-manager";
+import type { Interval } from "../interval-journal/interval-manager";
 
 export class ConnectNoteModal extends Modal {
   private journalFrontMatter: JournalFrontMatter | null = null;

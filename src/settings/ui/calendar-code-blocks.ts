@@ -1,5 +1,5 @@
-import { App, Modal } from "obsidian";
-import { CalendarConfig, CalendarGranularity } from "../../contracts/config.types";
+import { type App, Modal } from "obsidian";
+import type { CalendarConfig, CalendarGranularity } from "../../contracts/config.types";
 import { CalendarJournal } from "../../calendar-journal/calendar-journal";
 import { CalendarHelper } from "../../utils/calendar";
 import { timelineGranularityMapping, timelineModes } from "../../code-block-timeline/timeline-mappings";

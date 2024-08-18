@@ -1,6 +1,6 @@
 import IntervalTree from "@flatten-js/interval-tree";
-import { MomentDate } from "../contracts/date.types";
-import { IntervalConfig } from "../contracts/config.types";
+import type { MomentDate } from "../contracts/date.types";
+import type { IntervalConfig } from "../contracts/config.types";
 import { CalendarHelper } from "../utils/calendar";
 
 export interface Interval {

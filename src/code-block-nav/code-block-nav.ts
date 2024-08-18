@@ -1,6 +1,6 @@
 import { MarkdownRenderChild, getIcon } from "obsidian";
-import { MomentDate } from "../contracts/date.types";
-import { CalendarGranularity } from "../contracts/config.types";
+import type { MomentDate } from "../contracts/date.types";
+import type { CalendarGranularity } from "../contracts/config.types";
 import { CalendarJournal } from "../calendar-journal/calendar-journal";
 
 export abstract class CodeBlockNav extends MarkdownRenderChild {

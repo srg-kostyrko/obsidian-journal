@@ -1,5 +1,5 @@
-import { App, SuggestModal } from "obsidian";
-import { Journal } from "../contracts/journal.types";
+import { type App, SuggestModal } from "obsidian";
+import type { Journal } from "../contracts/journal.types";
 
 export class JournalSuggestModal extends SuggestModal<Journal> {
   constructor(

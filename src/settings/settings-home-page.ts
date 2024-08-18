@@ -1,4 +1,4 @@
-import { App, Setting, moment } from "obsidian";
+import { type App, Setting, moment } from "obsidian";
 import { CreateJournalModal } from "./ui/create-journal-modal";
 import { JournalManager } from "../journal-manager";
 import { SettingsWidget } from "./settings-widget";

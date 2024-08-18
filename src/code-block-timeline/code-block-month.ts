@@ -1,4 +1,4 @@
-import { MarkdownPostProcessorContext, MarkdownRenderChild } from "obsidian";
+import { type MarkdownPostProcessorContext, MarkdownRenderChild } from "obsidian";
 import { CalendarJournal } from "../calendar-journal/calendar-journal";
 
 export class CodeBlockMonth extends MarkdownRenderChild {

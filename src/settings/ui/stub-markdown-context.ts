@@ -1,4 +1,4 @@
-import { MarkdownPostProcessorContext, MarkdownRenderChild, MarkdownSectionInformation } from "obsidian";
+import { type MarkdownPostProcessorContext, MarkdownRenderChild, type MarkdownSectionInformation } from "obsidian";
 
 export const stubMarkdownContext: MarkdownPostProcessorContext = {
   docId: "",

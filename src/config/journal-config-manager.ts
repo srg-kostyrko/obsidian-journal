@@ -1,10 +1,10 @@
 import { Plugin } from "obsidian";
-import { JournalConfig, PluginSettings } from "../contracts/config.types";
+import type { JournalConfig, PluginSettings } from "../contracts/config.types";
 import { deepCopy } from "../utils";
 import { DEFAULT_PLUGIN_SETTINGS } from "./config-defaults";
 
 export class JournalConfigManager {
-  private settings: PluginSettings;
+  private settings!: PluginSettings;
 
   constructor(private plugin: Plugin) {}
 

@@ -1,4 +1,4 @@
-import { CalendarGranularity } from "./contracts/config.types";
+import type { CalendarGranularity } from "./contracts/config.types";
 
 export const CALENDAR_VIEW_TYPE = "journal-calendar";
 

@@ -10,7 +10,7 @@
     "lint": "eslint .",
     "test": "vitest run",
     "test:watch": "vitest",
-    "ts-check": "tsc --noEmit -skipLibCheck && vue-tsc --noEmit",
+    "ts-check": "vue-tsc -b",
     "changelog": "npx git-cliff --output CHANGELOG.md",
     "prepare": "husky"
   },

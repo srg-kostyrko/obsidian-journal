@@ -1,6 +1,6 @@
 import IntervalTree from "@flatten-js/interval-tree";
-import { CalendarGranularity } from "../contracts/config.types";
-import { MomentDate } from "../contracts/date.types";
+import type { CalendarGranularity } from "../contracts/config.types";
+import type { MomentDate } from "../contracts/date.types";
 
 interface IndexEntry {
   path: string;

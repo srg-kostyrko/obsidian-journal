@@ -1,6 +1,6 @@
-import { MarkdownPostProcessorContext, MarkdownRenderChild } from "obsidian";
+import { type MarkdownPostProcessorContext, MarkdownRenderChild } from "obsidian";
 import { JournalManager } from "../journal-manager";
-import { JournalFrontMatter } from "../contracts/config.types";
+import type { JournalFrontMatter } from "../contracts/config.types";
 import { CalendarJournal } from "../calendar-journal/calendar-journal";
 import { navBlocks } from "./nav-blocks";
 

@@ -9,8 +9,9 @@ import { CALENDAR_VIEW_TYPE } from "./constants";
 import { CalendarView } from "./calendar-view/calendar-view";
 
 export default class JournalPlugin extends Plugin {
-  private config: JournalConfigManager;
-  private manager: JournalManager;
+  private config!: JournalConfigManager;
+  private manager!: JournalManager;
+
   async onload() {
     const appStartup = document.body.querySelector(".progress-bar") !== null;
 

@@ -1,6 +1,6 @@
-import { App, Modal, Setting, TFile, TFolder } from "obsidian";
+import { type App, Modal, Setting, TFile, TFolder } from "obsidian";
 import { JournalManager } from "../journal-manager";
-import { CalendarConfig, CalendarGranularity } from "../contracts/config.types";
+import type { CalendarConfig, CalendarGranularity } from "../contracts/config.types";
 import { FolderSuggestion } from "../settings/ui/folder-suggestion";
 import { SECTIONS_MAP } from "../constants";
 import { DEFAULT_DATE_FORMATS_CALENDAR } from "../config/config-defaults";
@@ -36,10 +36,10 @@ export class AddNotesJournalModal extends Modal {
   private filters_combination: "no" | "or" | "and" = "no";
   private filters: NoteFilter[] = [];
 
-  private errorsEl: HTMLElement;
-  private consoleEl: HTMLElement;
+  private errorsEl!: HTMLElement;
+  private consoleEl!: HTMLElement;
   private console_ident = 0;
-  private dateRegexp: RegExp;
+  private dateRegexp!: RegExp;
 
   constructor(
     app: App,

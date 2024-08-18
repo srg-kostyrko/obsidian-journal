@@ -1,14 +1,14 @@
-import { App, Component, Notice, Plugin, TAbstractFile, TFile } from "obsidian";
+import { type App, Component, Notice, Plugin, type TAbstractFile, TFile } from "obsidian";
 import { CalendarJournal, calendarCommands } from "./calendar-journal/calendar-journal";
 import { CALENDAR_VIEW_TYPE, FRONTMATTER_ID_KEY } from "./constants";
 import { deepCopy } from "./utils";
 import { DEFAULT_CONFIG_CALENDAR } from "./config/config-defaults";
-import { CalendarConfig, IntervalConfig, JournalFrontMatter } from "./contracts/config.types";
+import type { CalendarConfig, IntervalConfig, JournalFrontMatter } from "./contracts/config.types";
 import { JournalSuggestModal } from "./ui/journal-suggest-modal";
 import { JournalConfigManager } from "./config/journal-config-manager";
 import { CalendarHelper } from "./utils/calendar";
 import { IntervalJournal, intervalCommands } from "./interval-journal/interval-journal";
-import { Journal, NotesProcessing } from "./contracts/journal.types";
+import type { Journal, NotesProcessing } from "./contracts/journal.types";
 import { ConnectNoteModal } from "./maintenance/connect-note-modal";
 
 export class JournalManager extends Component {

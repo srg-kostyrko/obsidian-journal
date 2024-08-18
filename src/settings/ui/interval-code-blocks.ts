@@ -1,6 +1,6 @@
-import { App, Modal } from "obsidian";
+import { type App, Modal } from "obsidian";
 import { IntervalJournal } from "../../interval-journal/interval-journal";
-import { IntervalConfig } from "../../contracts/config.types";
+import type { IntervalConfig } from "../../contracts/config.types";
 import { CalendarHelper } from "../../utils/calendar";
 import { CodeBlockIntervalNav } from "../../code-block-interval/code-block-interval";
 

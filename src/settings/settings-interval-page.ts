@@ -1,5 +1,5 @@
-import { IntervalConfig } from "../contracts/config.types";
-import { App, ButtonComponent, Setting } from "obsidian";
+import type { IntervalConfig } from "../contracts/config.types";
+import { type App, type ButtonComponent, Setting } from "obsidian";
 import { FolderSuggestion } from "./ui/folder-suggestion";
 import { SettingsWidget } from "./settings-widget";
 import { IconSuggestion } from "./ui/icon-suggestion";

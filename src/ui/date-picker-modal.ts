@@ -1,6 +1,6 @@
-import { App, Modal, getIcon } from "obsidian";
-import { MomentDate } from "../contracts/date.types";
-import { CalendarGranularity } from "../contracts/config.types";
+import { type App, Modal, getIcon } from "obsidian";
+import type { MomentDate } from "../contracts/date.types";
+import type { CalendarGranularity } from "../contracts/config.types";
 import { JournalManager } from "../journal-manager";
 
 export class DatePickerModal extends Modal {

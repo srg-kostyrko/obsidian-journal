@@ -1,7 +1,7 @@
-import { App, Modal, Setting } from "obsidian";
+import { type App, Modal, Setting } from "obsidian";
 import { JournalManager } from "../journal-manager";
-import { JournalConfig } from "../contracts/config.types";
-import { NotesProcessing } from "../contracts/journal.types";
+import type { JournalConfig } from "../contracts/config.types";
+import type { NotesProcessing } from "../contracts/journal.types";
 
 export class DeleteJournalModal extends Modal {
   private notesProcessing: NotesProcessing = "keep";

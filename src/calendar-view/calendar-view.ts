@@ -1,4 +1,4 @@
-import { ItemView, WorkspaceLeaf } from "obsidian";
+import { ItemView, type WorkspaceLeaf } from "obsidian";
 import { CALENDAR_VIEW_TYPE } from "../constants";
 import { JournalManager } from "../journal-manager";
 import { CalendarViewMonth } from "./calendar-view-month";

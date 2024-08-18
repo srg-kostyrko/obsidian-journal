@@ -1,8 +1,8 @@
-import { PluginSettingTab, Plugin, App } from "obsidian";
+import { PluginSettingTab, Plugin, type App } from "obsidian";
 import { SettingsHomePage } from "./settings-home-page";
 import { SettingsCalendarPage } from "./settings-calendar-page";
 import { JournalManager } from "../journal-manager";
-import { SettingsRouteState } from "../contracts/settings";
+import type { SettingsRouteState } from "../contracts/settings";
 import { SettingsCalendarSectionPage } from "./settings-calendar-section-page";
 import { JournalConfigManager } from "../config/journal-config-manager";
 import { SettingsIntervalPage } from "./settings-interval-page";
