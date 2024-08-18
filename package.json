@@ -12,7 +12,7 @@
     "test:watch": "vitest",
     "ts-check": "tsc --noEmit -skipLibCheck",
     "changelog": "npx git-cliff --output CHANGELOG.md",
-    "prepare": "husky install"
+    "prepare": "husky"
   },
   "repository": {
     "type": "git",
