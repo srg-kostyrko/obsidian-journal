@@ -1,0 +1,10 @@
+{
+	"id": "journals",
+	"name": "Journals",
+	"version": "1.4.0",
+	"minAppVersion": "1.0.0",
+	"description": "Manage your journals in Obsidian",
+	"author": "Sergii Kostyrko",
+	"authorUrl": "https://github.com/srg-kostyrko",
+	"isDesktopOnly": false
+}

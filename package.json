@@ -4,8 +4,8 @@
   "description": "Journal plugin for Obsidian (https://obsidian.md)",
   "main": "main.js",
   "scripts": {
-    "dev": " rollup --config rollup.config.mjs -w",
-    "build": "rollup --config rollup.config.mjs --environment BUILD:production",
+    "dev": "vite build --watch",
+    "build": "vite build",
     "version": "node version-bump.mjs && git add manifest.json versions.json",
     "lint": "eslint .",
     "test": "vitest run",
@@ -32,10 +32,9 @@
   "devDependencies": {
     "@eslint/eslintrc": "^3.1.0",
     "@eslint/js": "^9.9.0",
-    "@rollup/plugin-commonjs": "^26.0.1",
-    "@rollup/plugin-node-resolve": "^15.2.3",
     "@typescript-eslint/eslint-plugin": "^8.0.0-alpha.40",
     "@typescript-eslint/parser": "^8.0.0-alpha.39",
+    "builtin-modules": "^4.0.0",
     "eslint": "^9.9.0",
     "eslint-config-prettier": "^9.1.0",
     "git-cliff": "^2.4.0",
@@ -43,12 +42,11 @@
     "husky": "^9.1.4",
     "lint-staged": "^15.2.9",
     "prettier": "^3.3.3",
-    "rollup": "^4.21.0",
-    "rollup-plugin-copy": "^3.5.0",
-    "rollup-plugin-typescript2": "^0.36.0",
     "tslib": "^2.6.3",
     "typescript": "^5.5.4",
     "typescript-eslint": "^8.1.0",
+    "vite": "^5.4.1",
+    "vite-plugin-static-copy": "^1.0.6",
     "vitest": "^2.0.5"
   },
   "lint-staged": {
