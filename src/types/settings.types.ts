@@ -26,47 +26,47 @@ export interface ShelfSettings {
   name: string;
 }
 
-interface WriteDaily {
+export interface WriteDaily {
   type: "day";
 }
 
-interface WriteWeekly {
+export interface WriteWeekly {
   type: "week";
 }
 
-interface WriteMonthly {
+export interface WriteMonthly {
   type: "month";
 }
 
-interface WriteQuarterly {
+export interface WriteQuarterly {
   type: "quarter";
 }
 
-interface WriteYearly {
+export interface WriteYearly {
   type: "year";
 }
 
-interface WriteWeekdays {
+export interface WriteWeekdays {
   type: "weekdays";
   weekdays: number[];
 }
 
-interface WriteCustom {
+export interface WriteCustom {
   type: "custom";
   every: "day" | "week" | "month" | "quarter" | "year";
   duration: number;
 }
 
-interface EndWritingNever {
+export interface EndWritingNever {
   type: "never";
 }
 
-interface EndWritingDate {
+export interface EndWritingDate {
   type: "date";
   date: string;
 }
 
-interface EndWritingAfterNTimes {
+export interface EndWritingAfterNTimes {
   type: "repeats";
   repeats: number;
 }
@@ -222,3 +222,5 @@ type JournalHighlightCondition =
   | {
       type: "all-tasks-completed";
     };
+
+export type NotesProcessing = "keep" | "clear" | "delete";

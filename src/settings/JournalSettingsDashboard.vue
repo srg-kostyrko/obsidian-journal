@@ -1,12 +1,22 @@
 <script setup lang="ts">
 import { moment } from "obsidian";
 import { computed } from "vue";
-import { calendarSettings$, calendarViewSettings$ } from "../stores/settings.store";
+import {
+  calendarSettings$,
+  calendarViewSettings$,
+  journals$,
+  createJournal,
+  removeJournal,
+} from "../stores/settings.store";
 import ObsidianSetting from "../components/obsidian/ObsidianSetting.vue";
 import ObsidianDropdown from "../components/obsidian/ObsidianDropdown.vue";
 import ObsidianNumberInput from "../components/obsidian/ObsidianNumberInput.vue";
 import ObsidianIconButton from "../components/obsidian/ObsidianIconButton.vue";
 import JournalSettingsList from "./JournalSettingsList.vue";
+import CreateJournal from "../components/modals/CreateJournal.modal.vue";
+import RemoveJournal from "../components/modals/RemoveJournal.modal.vue";
+import { VueModal } from "../components/modals/vue-modal";
+import type { JournalSettings, NotesProcessing } from "../types/settings.types";
 
 const fow = moment().localeData().firstDayOfWeek();
 const fowText = moment().localeData().weekdays()[fow];
@@ -20,6 +30,28 @@ const weekStart = computed({
   },
 });
 const showFirstWeekOfYear = computed(() => calendarSettings$.value.firstDayOfWeek !== -1);
+
+function create(): void {
+  new VueModal("Add Journal", CreateJournal, {
+    onCreate(name: string, id: string, writing: JournalSettings["write"]) {
+      createJournal(name, id, writing);
+    },
+  }).open();
+}
+function edit(id: string): void {
+  // eslint-disable-next-line no-console
+  console.log("edit", id);
+}
+function remove(id: string): void {
+  const journal = journals$.value[id];
+  if (!journal) return;
+  new VueModal(`Remove ${journal.name} journal`, RemoveJournal, {
+    onRemove(_noteProcessing: NotesProcessing) {
+      // TODO Process notes on remove
+      removeJournal(id);
+    },
+  }).open();
+}
 </script>
 
 <template>
@@ -44,14 +76,10 @@ const showFirstWeekOfYear = computed(() => calendarSettings$.value.firstDayOfWee
   </ObsidianSetting>
 
   <ObsidianSetting name="Journals" heading>
-    <ObsidianIconButton
-      :icon="'plus'"
-      cta
-      tooltip="Create new journal configuration"
-      @click="() => console.log('TODO')"
-    />
+    <ObsidianIconButton :icon="'plus'" cta tooltip="Create new journal" @click="create" />
   </ObsidianSetting>
-  <JournalSettingsList />
+
+  <JournalSettingsList @edit="edit" @remove="remove" />
 
   <ObsidianSetting name="Calendar view" heading />
   <ObsidianSetting name="Add to">
