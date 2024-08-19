@@ -84,7 +84,7 @@ export interface JournalSettings {
   nameTemplate: string;
   dateFormat: string;
   folder: string;
-  template: string[];
+  templates: string[];
 
   ribbon: {
     show: boolean;

@@ -18,6 +18,8 @@ import RemoveJournal from "../components/modals/RemoveJournal.modal.vue";
 import { VueModal } from "../components/modals/vue-modal";
 import type { JournalSettings, NotesProcessing } from "../types/settings.types";
 
+const emit = defineEmits<(event: "edit", id: string) => void>();
+
 const fow = moment().localeData().firstDayOfWeek();
 const fowText = moment().localeData().weekdays()[fow];
 
@@ -39,8 +41,7 @@ function create(): void {
   }).open();
 }
 function edit(id: string): void {
-  // eslint-disable-next-line no-console
-  console.log("edit", id);
+  emit("edit", id);
 }
 function remove(id: string): void {
   const journal = journals$.value[id];

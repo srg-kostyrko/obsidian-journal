@@ -31,7 +31,7 @@ export const defaultJournalSettings: JournalSettings = {
   nameTemplate: "",
   dateFormat: "",
   folder: "",
-  template: [],
+  templates: [],
 
   ribbon: {
     show: false,

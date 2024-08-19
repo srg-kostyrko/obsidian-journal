@@ -1,10 +1,10 @@
 <script setup lang="ts">
-defineProps<{ name?: string; descripton?: string; heading?: boolean }>();
+defineProps<{ name?: string; descripton?: string; heading?: boolean; controlsOnly?: boolean }>();
 </script>
 
 <template>
   <div class="setting-item" :class="{ 'setting-item--heading': heading }">
-    <div class="setting-item-info">
+    <div v-if="!controlsOnly" class="setting-item-info">
       <div class="setting-item-name">
         <slot name="name">
           {{ name ?? "" }}
