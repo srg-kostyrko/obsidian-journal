@@ -28,6 +28,7 @@
   "dependencies": {
     "@flatten-js/interval-tree": "^1.1.3",
     "obsidian": "^1.6.6",
+    "perfect-debounce": "^1.0.0",
     "vue": "^3.4.38"
   },
   "devDependencies": {

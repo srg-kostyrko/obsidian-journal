@@ -71,7 +71,7 @@ interface EndWritingAfterNTimes {
   repeats: number;
 }
 
-interface JournalSettings {
+export interface JournalSettings {
   id: string;
   name: string;
   shelves: string[];
