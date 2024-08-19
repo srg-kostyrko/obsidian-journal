@@ -17,7 +17,8 @@ onMounted(() => {
   );
 });
 
-function placeIcon(name: string): void {
+function placeIcon(name?: string): void {
+  if (!name) return;
   const icon = getIcon(name);
   if (icon && el.value) {
     el.value.empty();
@@ -27,5 +28,5 @@ function placeIcon(name: string): void {
 </script>
 
 <template>
-  <div ref="el" class="clickable-icon extra-setting-button" :aria-label="tooltip"></div>
+  <div ref="el" :aria-label="tooltip"></div>
 </template>

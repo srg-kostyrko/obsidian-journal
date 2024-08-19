@@ -1,3 +1,7 @@
-<script setup lang="ts"></script>
+<script setup lang="ts">
+import JournalSettingsDashboard from "./JournalSettingsDashboard.vue";
+</script>
 
-<template>works</template>
+<template>
+  <JournalSettingsDashboard />
+</template>

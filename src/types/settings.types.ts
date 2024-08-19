@@ -12,7 +12,7 @@ export interface PluginSettings {
   };
 
   calendarView: {
-    display: "month" | "week" | "three-months" | "day";
+    display: "month" | "week" | "day";
 
     leaf: "left" | "right";
     weeks: "none" | "left" | "right";
