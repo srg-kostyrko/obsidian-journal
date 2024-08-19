@@ -3,6 +3,7 @@ import { calendarSettings$, pluginSettings$ } from "./stores/settings.store";
 import { watch, type WatchStopHandle } from "vue";
 import { debounce } from "perfect-debounce";
 import { initCalendarCustomization, updateLocale } from "./calendar";
+import { JournalSettingTab } from "./settings/journal-settings-tab";
 
 export default class JournalPlugin extends Plugin {
   #stopHandles: WatchStopHandle[] = [];
@@ -12,6 +13,8 @@ export default class JournalPlugin extends Plugin {
     initCalendarCustomization();
 
     this.#setupWatchers();
+
+    this.addSettingTab(new JournalSettingTab(this.app, this));
   }
   onunload(): void {
     for (const handle of this.#stopHandles) {
