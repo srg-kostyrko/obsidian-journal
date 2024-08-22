@@ -2,7 +2,7 @@ import { computed, type ComputedRef } from "vue";
 import { journals$ } from "../stores/settings.store";
 import type { JournalSettings } from "../types/settings.types";
 import type { IntervalResolver, JournalInterval, JournalMetadata } from "../types/journal.types";
-import { app$ } from "../stores/obsidian.store";
+import { app$, plugin$ } from "../stores/obsidian.store";
 import { normalizePath, TFile, moment } from "obsidian";
 import { ensureFolderExists } from "../utils/io";
 import { replaceTemplateVariables, tryApplyingTemplater } from "../utils/template";
@@ -28,22 +28,34 @@ export class Journal {
   }
 
   async find(date: string): Promise<JournalMetadata | null> {
+    const metadata = plugin$.value.index.find(this.id, date);
+    if (metadata) return metadata;
     const interval = this.#intervalResolver.resolveForDate(date);
     if (!interval) return null;
     return await this.#buildMetadata(interval);
   }
 
-  async next(metadata: JournalMetadata, _existing = false): Promise<JournalMetadata | null> {
-    // TODO: process existing
+  async next(metadata: JournalMetadata, existing = false): Promise<JournalMetadata | null> {
+    if (existing) {
+      const nextExstingMetadata = plugin$.value.index.findNext(this.id, metadata);
+      if (nextExstingMetadata) return nextExstingMetadata;
+    }
     const interval = this.#intervalResolver.resolveNext(metadata.end_date);
     if (!interval) return null;
+    const nextMetadata = plugin$.value.index.find(this.id, interval.start_date);
+    if (nextMetadata) return nextMetadata;
     return await this.#buildMetadata(interval);
   }
 
-  async previous(metadata: JournalMetadata, _existing = false): Promise<JournalMetadata | null> {
-    // TODO: process existing
+  async previous(metadata: JournalMetadata, existing = false): Promise<JournalMetadata | null> {
+    if (existing) {
+      const previousExstingMetadata = plugin$.value.index.findPrevious(this.id, metadata);
+      if (previousExstingMetadata) return previousExstingMetadata;
+    }
     const interval = this.#intervalResolver.resolvePrevious(metadata.end_date);
     if (!interval) return null;
+    const previousMetadata = plugin$.value.index.find(this.id, interval.end_date);
+    if (previousMetadata) return previousMetadata;
     return await this.#buildMetadata(interval);
   }
 

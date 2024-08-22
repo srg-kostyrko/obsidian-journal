@@ -4,15 +4,21 @@ import { watch, type WatchStopHandle } from "vue";
 import { debounce } from "perfect-debounce";
 import { initCalendarCustomization, updateLocale } from "./calendar";
 import { JournalSettingTab } from "./settings/journal-settings-tab";
-import { app$, plugin$ } from "./stores/obsidian.store";
+import { activeNote$, app$, plugin$ } from "./stores/obsidian.store";
 import { Journal } from "./journals/journal";
 import type { JournalSettings } from "./types/settings.types";
 import { defaultJournalSettings } from "./defaults";
 import { prepareJournalDefaultsBasedOnType } from "./journals/journal-defaults";
+import { JournalsIndex } from "./journals/journals-index";
 
 export default class JournalPlugin extends Plugin {
   #stopHandles: WatchStopHandle[] = [];
   #journals = new Map<string, Journal>();
+  #index!: JournalsIndex;
+
+  get index(): JournalsIndex {
+    return this.#index;
+  }
 
   createJournal(id: string, name: string, write: JournalSettings["write"]): void {
     const settings: JournalSettings = {
@@ -40,6 +46,9 @@ export default class JournalPlugin extends Plugin {
 
     this.#fillJournals();
     this.#setupWatchers();
+    this.#index = new JournalsIndex();
+    this.addChild(this.#index);
+    this.index.reindex();
 
     this.addSettingTab(new JournalSettingTab(this.app, this));
   }
@@ -81,6 +90,12 @@ export default class JournalPlugin extends Plugin {
         },
         { deep: true, immediate: true },
       ),
+    );
+
+    this.registerEvent(
+      this.app.workspace.on("file-open", (file) => {
+        activeNote$.value = file;
+      }),
     );
   }
 }
