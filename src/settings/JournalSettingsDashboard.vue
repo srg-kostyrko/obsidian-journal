@@ -1,13 +1,7 @@
 <script setup lang="ts">
 import { moment } from "obsidian";
 import { computed } from "vue";
-import {
-  calendarSettings$,
-  calendarViewSettings$,
-  journals$,
-  createJournal,
-  removeJournal,
-} from "../stores/settings.store";
+import { calendarSettings$, calendarViewSettings$, journals$ } from "../stores/settings.store";
 import ObsidianSetting from "../components/obsidian/ObsidianSetting.vue";
 import ObsidianDropdown from "../components/obsidian/ObsidianDropdown.vue";
 import ObsidianNumberInput from "../components/obsidian/ObsidianNumberInput.vue";
@@ -17,6 +11,7 @@ import CreateJournal from "../components/modals/CreateJournal.modal.vue";
 import RemoveJournal from "../components/modals/RemoveJournal.modal.vue";
 import { VueModal } from "../components/modals/vue-modal";
 import type { JournalSettings, NotesProcessing } from "../types/settings.types";
+import { plugin$ } from "../stores/obsidian.store";
 
 const emit = defineEmits<(event: "edit", id: string) => void>();
 
@@ -36,7 +31,7 @@ const showFirstWeekOfYear = computed(() => calendarSettings$.value.firstDayOfWee
 function create(): void {
   new VueModal("Add Journal", CreateJournal, {
     onCreate(name: string, id: string, writing: JournalSettings["write"]) {
-      createJournal(name, id, writing);
+      plugin$.value.createJournal(name, id, writing);
     },
   }).open();
 }
@@ -49,7 +44,7 @@ function remove(id: string): void {
   new VueModal(`Remove ${journal.name} journal`, RemoveJournal, {
     onRemove(_noteProcessing: NotesProcessing) {
       // TODO Process notes on remove
-      removeJournal(id);
+      plugin$.value.removeJournal(id);
     },
   }).open();
 }

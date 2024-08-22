@@ -12,6 +12,7 @@ node_modules
 test-vault/.obsidian/plugins/journals/*
 !test-vault/.obsidian/plugins/journals/.hotreload
 build/main.js
+build/styles.css
 
 test-vault/.obsidian/plugins/*
 test-vault/.obsidian/app.json

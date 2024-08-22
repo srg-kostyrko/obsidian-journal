@@ -71,12 +71,14 @@ export interface EndWritingAfterNTimes {
   repeats: number;
 }
 
+export type FixedWriteIntervals = WriteDaily | WriteWeekly | WriteMonthly | WriteQuarterly | WriteYearly;
+
 export interface JournalSettings {
   id: string;
   name: string;
   shelves: string[];
 
-  write: WriteDaily | WriteWeekly | WriteMonthly | WriteQuarterly | WriteYearly | WriteWeekdays | WriteCustom;
+  write: FixedWriteIntervals | WriteWeekdays | WriteCustom;
 
   openMode: OpenMode;
   confirmCreation: boolean;
