@@ -20,7 +20,11 @@ export class JournalsIndex extends Component {
     this.#setupListeners();
   }
 
-  getPathComputed(path: string) {
+  getForPath(path: string): JournalMetadata | null {
+    return this.#pathIndex.value.get(path) ?? null;
+  }
+
+  getForPathComputed(path: string) {
     let cmp = this.#pathComputeds.get(path);
     if (cmp) return cmp;
     cmp = computed(() => this.#pathIndex.value.get(path) ?? null);

@@ -1,5 +1,5 @@
-import { type App, Plugin } from "obsidian";
-import { calendarSettings$, journals$, pluginSettings$ } from "./stores/settings.store";
+import { type App, Notice, Plugin } from "obsidian";
+import { calendarSettings$, calendarViewSettings$, journals$, pluginSettings$ } from "./stores/settings.store";
 import { watch, type WatchStopHandle } from "vue";
 import { debounce } from "perfect-debounce";
 import { initCalendarCustomization, updateLocale } from "./calendar";
@@ -10,6 +10,7 @@ import type { JournalSettings } from "./types/settings.types";
 import { defaultJournalSettings } from "./defaults";
 import { prepareJournalDefaultsBasedOnType } from "./journals/journal-defaults";
 import { JournalsIndex } from "./journals/journals-index";
+import { CALENDAR_VIEW_TYPE } from "./constants";
 
 export default class JournalPlugin extends Plugin {
   #stopHandles: WatchStopHandle[] = [];
@@ -37,6 +38,20 @@ export default class JournalPlugin extends Plugin {
     delete pluginSettings$.value.journals[id];
   }
 
+  placeCalendarView(moving = false) {
+    if (this.app.workspace.getLeavesOfType(CALENDAR_VIEW_TYPE).length > 0) {
+      if (!moving) return;
+      this.app.workspace.getLeavesOfType(CALENDAR_VIEW_TYPE).forEach((leaf) => {
+        leaf.detach();
+      });
+    }
+    if (calendarViewSettings$.value.leaf === "left") {
+      this.app.workspace.getLeftLeaf(false)?.setViewState({ type: CALENDAR_VIEW_TYPE });
+    } else {
+      this.app.workspace.getRightLeaf(false)?.setViewState({ type: CALENDAR_VIEW_TYPE });
+    }
+  }
+
   async onload(): Promise<void> {
     app$.value = this.app;
     plugin$.value = this;
@@ -49,6 +64,8 @@ export default class JournalPlugin extends Plugin {
     this.#index = new JournalsIndex();
     this.addChild(this.#index);
     this.index.reindex();
+
+    this.#configureCommands();
 
     this.addSettingTab(new JournalSettingTab(this.app, this));
   }
@@ -97,5 +114,81 @@ export default class JournalPlugin extends Plugin {
         activeNote$.value = file;
       }),
     );
+  }
+
+  #configureCommands(): void {
+    this.addCommand({
+      id: "open-next",
+      name: "Open next note",
+      editorCallback: async (editor, ctx) => {
+        const file = ctx.file;
+        if (!file) return;
+        const metadata = this.#index.getForPath(file.path);
+        if (!metadata) {
+          new Notice("This note is not connected to any journal.");
+          return;
+        }
+        const journal = this.#journals.get(metadata.id);
+        if (!journal) {
+          new Notice("Unknown journal id.");
+          return;
+        }
+        const nextNote = await journal.next(metadata, true);
+        if (!nextNote) {
+          new Notice("There is no next note after this one.");
+          return;
+        }
+        await journal.open(nextNote);
+      },
+    });
+    this.addCommand({
+      id: "open-prev",
+      name: "Open previous note",
+      editorCallback: async (editor, ctx) => {
+        const file = ctx.file;
+        if (!file) return;
+        const metadata = this.#index.getForPath(file.path);
+        if (!metadata) {
+          new Notice("This note is not connected to any journal.");
+          return;
+        }
+        const journal = this.#journals.get(metadata.id);
+        if (!journal) {
+          new Notice("Unknown journal id.");
+          return;
+        }
+        const prevNote = await journal.previous(metadata, true);
+        if (!prevNote) {
+          new Notice("There is no previous note before this one.");
+          return;
+        }
+        await journal.open(prevNote);
+      },
+    });
+
+    this.addCommand({
+      id: "connect-note",
+      name: "Connect note to a journal",
+      editorCallback: async (editor, ctx) => {
+        const file = ctx.file;
+        if (file) {
+          // TODO
+          // new ConnectNoteModal(this.app, this, file).open();
+        }
+      },
+    });
+
+    this.addCommand({
+      id: "open-calendar",
+      name: "Open calendar",
+      callback: () => {
+        let [leaf] = this.app.workspace.getLeavesOfType(CALENDAR_VIEW_TYPE);
+        if (!leaf) {
+          this.placeCalendarView();
+          leaf = this.app.workspace.getLeavesOfType(CALENDAR_VIEW_TYPE)[0];
+        }
+        this.app.workspace.revealLeaf(leaf);
+      },
+    });
   }
 }
