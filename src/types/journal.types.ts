@@ -1,3 +1,5 @@
+import type { JournalCommand } from "./settings.types";
+
 export interface JournalMetadata {
   id: string;
   start_date: string;
@@ -16,4 +18,5 @@ export interface IntervalResolver {
   resolveForDate(date: string): JournalInterval | null;
   resolveNext(date: string): JournalInterval | null;
   resolvePrevious(date: string): JournalInterval | null;
+  resolveDateForCommand(date: string, command: JournalCommand["type"]): string | null;
 }

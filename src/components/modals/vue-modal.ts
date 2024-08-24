@@ -1,6 +1,6 @@
 import { Modal } from "obsidian";
 import { type Component, createApp, type App as VueApp } from "vue";
-import { app$ } from "../../stores/obsidian.store";
+import { app$, plugin$ } from "../../stores/obsidian.store";
 
 export class VueModal extends Modal {
   private _vueApp: VueApp | undefined;
@@ -10,6 +10,9 @@ export class VueModal extends Modal {
     private componentProps: Record<string, unknown> = {},
   ) {
     super(app$.value);
+    plugin$.value.register(() => {
+      this.close();
+    });
   }
 
   onOpen(): void {

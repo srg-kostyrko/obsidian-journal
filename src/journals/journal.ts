@@ -1,9 +1,9 @@
 import { computed, type ComputedRef } from "vue";
 import { journals$ } from "../stores/settings.store";
-import type { JournalSettings } from "../types/settings.types";
+import type { JournalCommand, JournalSettings } from "../types/settings.types";
 import type { IntervalResolver, JournalInterval, JournalMetadata } from "../types/journal.types";
-import { app$, plugin$ } from "../stores/obsidian.store";
-import { normalizePath, TFile, moment } from "obsidian";
+import { activeNote$, app$, plugin$ } from "../stores/obsidian.store";
+import { normalizePath, TFile, moment, type LeftRibbon } from "obsidian";
 import { ensureFolderExists } from "../utils/io";
 import { replaceTemplateVariables, tryApplyingTemplater } from "../utils/template";
 import type { TemplateContext } from "../types/template.types";
@@ -15,6 +15,7 @@ import {
   FRONTMATTER_START_DATE_KEY,
 } from "../constants";
 import { FixedInterval } from "./fixed-interval";
+import { today } from "../calendar";
 
 export class Journal {
   #config: ComputedRef<JournalSettings>;
@@ -25,6 +26,40 @@ export class Journal {
     // eslint-disable-next-line @typescript-eslint/ban-ts-comment
     // @ts-expect-error
     this.#intervalResolver = new FixedInterval(() => this.#config.value.write);
+  }
+
+  registerCommands(): void {
+    for (const command of this.#config.value.commands) {
+      plugin$.value.addCommand({
+        id: this.id + ":" + command.name,
+        name: `${this.#config.value.name}: ${command.name}`,
+        icon: command.icon,
+        checkCallback: (checking: boolean): boolean => {
+          if (checking) {
+            return this.#checkCommand(command);
+          } else {
+            this.#execCommand(command);
+          }
+          return true;
+        },
+      });
+      if (command.showInRibbon) {
+        const ribbonId = "journals:" + this.id + ":" + command.name;
+        const item = (app$.value.workspace.leftRibbon as LeftRibbon).addRibbonItemButton(
+          ribbonId,
+          command.icon,
+          command.name,
+          () => {
+            if (!this.#checkCommand(command)) return;
+            this.#execCommand(command);
+          },
+        );
+        plugin$.value.register(() => {
+          (app$.value.workspace.leftRibbon as LeftRibbon).removeRibbonAction(ribbonId);
+          item.detach();
+        });
+      }
+    }
   }
 
   async find(date: string): Promise<JournalMetadata | null> {
@@ -162,5 +197,36 @@ export class Journal {
       end_date: interval.start_date,
     };
     return metadata;
+  }
+
+  #checkCommand(command: JournalCommand): boolean {
+    if (command.context === "only_open_note") {
+      const activeNode = activeNote$.value;
+      if (!activeNode) return false;
+      const metadata = plugin$.value.index.getForPath(activeNode.path);
+      if (!metadata) return false;
+      if (metadata.id !== this.id) return false;
+    }
+    return true;
+  }
+
+  async #execCommand(command: JournalCommand): Promise<void> {
+    const refDate = this.#getCommandRefDate(command);
+    if (!refDate) return;
+    const date = this.#intervalResolver.resolveDateForCommand(refDate, command.type);
+    if (!date) return;
+    const metadata = await this.find(date);
+    if (!metadata) return;
+    this.open(metadata);
+  }
+
+  #getCommandRefDate(command: JournalCommand): string | null {
+    const activeNode = activeNote$.value;
+    const metadata = activeNode ? plugin$.value.index.getForPath(activeNode.path) : null;
+    if (metadata && command.context !== "today") {
+      return metadata.end_date;
+    }
+    if (command.context === "only_open_note") return null;
+    return today().format(FRONTMATTER_DATE_FORMAT);
   }
 }

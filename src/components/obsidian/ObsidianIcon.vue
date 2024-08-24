@@ -18,15 +18,15 @@ onMounted(() => {
 });
 
 function placeIcon(name?: string): void {
+  el.value?.empty();
   if (!name) return;
   const icon = getIcon(name);
   if (icon && el.value) {
-    el.value.empty();
     el.value.appendChild(icon);
   }
 }
 </script>
 
 <template>
-  <div ref="el" :aria-label="tooltip"></div>
+  <span ref="el" :aria-label="tooltip"></span>
 </template>

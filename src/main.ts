@@ -61,6 +61,10 @@ export default class JournalPlugin extends Plugin {
 
     this.#fillJournals();
     this.#setupWatchers();
+    if (pluginSettings$.value.showReloadHint) {
+      pluginSettings$.value.showReloadHint = false;
+    }
+
     this.#index = new JournalsIndex();
     this.addChild(this.#index);
     this.index.reindex();
@@ -190,5 +194,9 @@ export default class JournalPlugin extends Plugin {
         this.app.workspace.revealLeaf(leaf);
       },
     });
+
+    for (const journal of this.#journals.values()) {
+      journal.registerCommands();
+    }
   }
 }

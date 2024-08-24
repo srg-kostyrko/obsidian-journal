@@ -3,6 +3,8 @@ export type OpenMode = "active" | "tab" | "split" | "window";
 export interface PluginSettings {
   version: number;
 
+  showReloadHint: boolean;
+
   journals: Record<string, JournalSettings>;
   shelves: Record<string, ShelfSettings>;
 
@@ -88,12 +90,6 @@ export interface JournalSettings {
   folder: string;
   templates: string[];
 
-  ribbon: {
-    show: boolean;
-    icon: string;
-    tooltip: string;
-  };
-
   start: {
     enabled: boolean;
     date: string;
@@ -125,11 +121,21 @@ export interface JournalSettings {
   };
 }
 
-interface JournalCommand {
-  id: string;
-  name: string;
+export interface JournalCommand {
   icon: string;
-  offset: number; // for example days from now
+  name: string;
+  type:
+    | "same"
+    | "next"
+    | "previous"
+    | "same_next_week"
+    | "same_previous_week"
+    | "same_next_month"
+    | "same_previous_month"
+    | "same_next_year"
+    | "same_previous_year";
+  context: "today" | "open_note" | "only_open_note";
+  showInRibbon: boolean;
 }
 
 interface JournalHighlight {

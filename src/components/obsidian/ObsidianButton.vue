@@ -3,11 +3,12 @@ defineProps<{
   disabled?: boolean;
   cta?: boolean;
   warning?: boolean;
+  type?: "button" | "submit" | "reset";
 }>();
 </script>
 
 <template>
-  <button :class="{ 'mod-cta': cta, 'mod-warning': warning }" :disabled="disabled">
+  <button :class="{ 'mod-cta': cta, 'mod-warning': warning }" :disabled="disabled" :type="type ?? 'button'">
     <slot />
   </button>
 </template>

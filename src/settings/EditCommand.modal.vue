@@ -1,0 +1,134 @@
+<script setup lang="ts">
+import { defaultCommand } from "../defaults";
+import type { JournalCommand } from "../types/settings.types";
+import { useForm } from "vee-validate";
+import * as v from "valibot";
+import { toTypedSchema } from "@vee-validate/valibot";
+import ObsidianSetting from "../components/obsidian/ObsidianSetting.vue";
+import ObsidianButton from "../components/obsidian/ObsidianButton.vue";
+import ObsidianTextInput from "../components/obsidian/ObsidianTextInput.vue";
+import ObsidianDropdown from "../components/obsidian/ObsidianDropdown.vue";
+import IconSelector from "../components/IconSelector.vue";
+import ObsidianToggle from "../components/obsidian/ObsidianToggle.vue";
+import { getIconIds } from "obsidian";
+
+const props = defineProps<{
+  index: number;
+  command?: JournalCommand;
+  commands: JournalCommand[];
+}>();
+const emit = defineEmits<{
+  (e: "close"): void;
+  (e: "submit", command: JournalCommand, index: number): void;
+}>();
+
+const supportedIcons = new Set(getIconIds());
+
+function isNameNotUnique(name: string) {
+  if (!name) return true;
+  return !props.commands.some((command, index) => command.name === name && index !== props.index);
+}
+
+const { defineField, errorBag, handleSubmit } = useForm({
+  initialValues: props.command ? { ...props.command } : { ...defaultCommand },
+  validationSchema: toTypedSchema(
+    v.pipe(
+      v.object({
+        icon: v.string(),
+        name: v.pipe(
+          v.string(),
+          v.nonEmpty("Command name is required"),
+          v.check(isNameNotUnique, "Command name should be unique in journal"),
+        ),
+        type: v.picklist([
+          "same",
+          "next",
+          "previous",
+          "same_next_week",
+          "same_previous_week",
+          "same_next_month",
+          "same_previous_month",
+          "same_next_year",
+          "same_previous_year",
+        ]),
+        context: v.picklist(["today", "open_note", "only_open_note"]),
+        showInRibbon: v.boolean(),
+      }),
+      v.forward(
+        v.partialCheck(
+          [["showInRibbon"], ["icon"]],
+          (input) => {
+            return input.showInRibbon ? supportedIcons.has(input.icon) : true;
+          },
+          "Icon is required if command is added to ribbon.",
+        ),
+        ["icon"],
+      ),
+    ),
+  ),
+});
+const [name, nameAttrs] = defineField("name");
+const [icon, iconAttrs] = defineField("icon");
+const [type, typeAttrs] = defineField("type");
+const [context, contextAttrs] = defineField("context");
+const [showInRibbon, showInRibbonAttrs] = defineField("showInRibbon");
+
+const onSubmit = handleSubmit((values) => {
+  emit("submit", values, props.index);
+  emit("close");
+});
+</script>
+
+<template>
+  <form @submit="onSubmit">
+    <ObsidianSetting name="Name">
+      <template #description>
+        <ul v-if="errorBag.name" class="journal-errors">
+          <li v-for="error in errorBag.name" :key="error">{{ error }}</li>
+        </ul>
+      </template>
+      <ObsidianTextInput v-model="name" v-bind="nameAttrs" />
+    </ObsidianSetting>
+    <ObsidianSetting name="Icon">
+      <template #description>
+        <ul v-if="errorBag.icon" class="journal-errors">
+          <li v-for="error in errorBag.icon" :key="error">{{ error }}</li>
+        </ul>
+      </template>
+      <IconSelector v-model="icon" v-bind="iconAttrs" />
+    </ObsidianSetting>
+    <ObsidianSetting name="Show in ribbon?">
+      <ObsidianToggle v-model="showInRibbon" v-bind="showInRibbonAttrs" />
+    </ObsidianSetting>
+    <ObsidianSetting name="When command runs">
+      <ObsidianDropdown v-model="type" v-bind="typeAttrs">
+        <option value="same">Open today's note</option>
+        <option value="next">Open tomorrow's note</option>
+        <option value="previous">Open yesterday's note</option>
+        <option value="same_next_week">Open same day next week</option>
+        <option value="same_previous_week">Open same day last week</option>
+        <option value="same_next_month">Open same day next month</option>
+        <option value="same_previous_month">Open same day last month</option>
+        <option value="same_next_year">Open same day next year</option>
+        <option value="same_previous_year">Open same day last year</option>
+      </ObsidianDropdown>
+    </ObsidianSetting>
+    <ObsidianSetting name="Context">
+      <ObsidianDropdown v-model="context" v-bind="contextAttrs">
+        <option value="today">Today</option>
+        <option value="open_note">Currently opened note</option>
+        <option value="only_open_note">Only currently opened note</option>
+      </ObsidianDropdown>
+    </ObsidianSetting>
+    <ObsidianSetting>
+      <ObsidianButton @click="$emit('close')">Cancel</ObsidianButton>
+      <ObsidianButton cta type="submit">Save</ObsidianButton>
+    </ObsidianSetting>
+  </form>
+</template>
+
+<style scoped>
+.journal-errors {
+  color: var(--text-error);
+}
+</style>

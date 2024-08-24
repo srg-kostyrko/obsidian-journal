@@ -1,4 +1,4 @@
-import type { JournalSettings, PluginSettings } from "./types/settings.types";
+import type { JournalSettings, PluginSettings, JournalCommand } from "./types/settings.types";
 
 export const defaultPluginSettings: PluginSettings = {
   version: 2,
@@ -33,12 +33,6 @@ export const defaultJournalSettings: JournalSettings = {
   folder: "",
   templates: [],
 
-  ribbon: {
-    show: false,
-    icon: "",
-    tooltip: "",
-  },
-
   start: {
     enabled: false,
     date: "",
@@ -70,4 +64,12 @@ export const defaultJournalSettings: JournalSettings = {
     showPeriod: false,
     periodTemplate: "",
   },
+};
+
+export const defaultCommand: JournalCommand = {
+  icon: "",
+  name: "",
+  type: "same",
+  context: "today",
+  showInRibbon: false,
 };

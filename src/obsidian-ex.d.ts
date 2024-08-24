@@ -15,4 +15,9 @@ declare module "obsidian" {
   export interface CommunityPluginManager {
     getPlugin(id: string): Plugin | null;
   }
+
+  export interface LeftRibbon {
+    addRibbonItemButton(id: string, icon: string, name: string, callback: () => void): Item;
+    removeRibbonAction(id: string): void;
+  }
 }
