@@ -11,10 +11,12 @@ const props = withDefaults(
     placeholder?: string;
     previewFormat?: string;
     disabled?: boolean;
+    tooltip?: string;
   }>(),
   {
     placeholder: "Pick a date",
     previewFormat: "YYYY-MM-DD",
+    tooltip: "Pick a date",
   },
 );
 
@@ -48,7 +50,7 @@ function openPickerModal() {
 </script>
 
 <template>
-  <ObsidianButton class="date-picker" :disabled="disabled" @click="openPickerModal">
+  <ObsidianButton class="date-picker" :disabled="disabled" :tooltip="tooltip" @click="openPickerModal">
     <ObsidianIcon name="calendar" /> <span>{{ formattedDate }}</span>
   </ObsidianButton>
 </template>

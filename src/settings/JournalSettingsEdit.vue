@@ -10,6 +10,7 @@ import ObsidianNumberInput from "../components/obsidian/ObsidianNumberInput.vue"
 import ObsidianIconButton from "../components/obsidian/ObsidianIconButton.vue";
 import ObsidianButton from "../components/obsidian/ObsidianButton.vue";
 import ObsidianDropdown from "../components/obsidian/ObsidianDropdown.vue";
+import ObsidianToggle from "../components/obsidian/ObsidianToggle.vue";
 import FolderInput from "../components/FolderInput.vue";
 import DateFormatPreview from "../components/DateFormatPreview.vue";
 import VariableReferenceHint from "../components/VariableReferenceHint.vue";
@@ -51,6 +52,14 @@ function deleteCommand(index: number): void {
   pluginSettings$.value.showReloadHint = true;
 }
 
+watch(
+  () => journal.value.start,
+  (value) => {
+    if (value) {
+      journal.value.index.anchorDate = value;
+    }
+  },
+);
 watch(
   () => journal.value.end.type,
   () => {
@@ -101,6 +110,43 @@ watch(
       times
     </template>
   </ObsidianSetting>
+
+  <ObsidianSetting name="Index notes">
+    <template #description> Allows to assign numbers to notes (ex. Day 1, Day 2, etc.). </template>
+    <ObsidianToggle v-model="journal.index.enabled" />
+  </ObsidianSetting>
+
+  <template v-if="journal.index.enabled">
+    <ObsidianSetting name="Anchor date">
+      <template #description>
+        This date is used to connect some number to it for further calculations.<br />
+        Start date is used as anchor date if defined.
+      </template>
+      <div :aria-label="journal.start ? 'Start date is used' : ''">
+        <DatePicker v-model="journal.index.anchorDate" :disabled="!!journal.start" />
+      </div>
+    </ObsidianSetting>
+    <ObsidianSetting name="Start number">
+      <template #description> This number is used to start numbering notes at anchor date. </template>
+      <ObsidianNumberInput v-model="journal.index.anchorIndex" :min="1" />
+    </ObsidianSetting>
+
+    <ObsidianSetting name="Index change">
+      <template #description> Define how index number will change with time. </template>
+      <ObsidianDropdown v-model="journal.index.type">
+        <option value="increment">Constantly increasing</option>
+        <option value="reset_after">Resets after</option>
+      </ObsidianDropdown>
+      <template v-if="journal.index.type === 'reset_after'">
+        <ObsidianNumberInput v-model="journal.index.resetAfter" :min="2" narrow />
+        repeats
+      </template>
+    </ObsidianSetting>
+    <ObsidianSetting v-if="!journal.start && journal.index.type === 'increment'" name="Allow before">
+      <template #description> Enabled to index before anchor date. Might result in negative numbers. </template>
+      <ObsidianToggle v-model="journal.index.allowBefore" />
+    </ObsidianSetting>
+  </template>
 
   <ObsidianSetting name="Open note">
     <ObsidianDropdown v-model="journal.openMode">

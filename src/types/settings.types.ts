@@ -98,7 +98,8 @@ export interface JournalSettings {
     enabled: boolean;
     anchorDate: string;
     anchorIndex: number;
-    type: "increment" | "year_reset" | "reset_after";
+    allowBefore: boolean;
+    type: "increment" | "reset_after";
     resetAfter: number;
     secondary: boolean;
     secondaryAncorIndex: number;

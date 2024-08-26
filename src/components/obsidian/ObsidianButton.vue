@@ -4,11 +4,17 @@ defineProps<{
   cta?: boolean;
   warning?: boolean;
   type?: "button" | "submit" | "reset";
+  tooltip?: string;
 }>();
 </script>
 
 <template>
-  <button :class="{ 'mod-cta': cta, 'mod-warning': warning }" :disabled="disabled" :type="type ?? 'button'">
+  <button
+    :class="{ 'mod-cta': cta, 'mod-warning': warning }"
+    :disabled="disabled"
+    :type="type ?? 'button'"
+    :aria-label="tooltip"
+  >
     <slot />
   </button>
 </template>

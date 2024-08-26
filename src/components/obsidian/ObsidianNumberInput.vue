@@ -4,6 +4,7 @@ defineProps<{
   disabled?: boolean;
   min?: number;
   max?: number;
+  narrow?: boolean;
 }>();
 
 const model = defineModel<number>();
@@ -13,6 +14,7 @@ const model = defineModel<number>();
   <input
     v-model="model"
     type="number"
+    :class="{ 'narrow-input': narrow }"
     :placeholder="placeholder"
     :disabled="disabled"
     :min="min"
@@ -20,3 +22,9 @@ const model = defineModel<number>();
     spellcheck="false"
   />
 </template>
+
+<style scoped>
+.narrow-input {
+  width: 60px;
+}
+</style>

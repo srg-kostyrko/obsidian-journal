@@ -71,7 +71,7 @@ export class Journal {
     return await this.#buildMetadata(interval);
   }
 
-  async next(metadata: JournalMetadata, existing = false): Promise<JournalMetadata | null> {
+  async next(metadata: JournalInterval, existing = false): Promise<JournalMetadata | null> {
     if (existing) {
       const nextExstingMetadata = plugin$.value.index.findNext(this.id, metadata);
       if (nextExstingMetadata) return nextExstingMetadata;
@@ -84,7 +84,7 @@ export class Journal {
     return await this.#buildMetadata(interval);
   }
 
-  async previous(metadata: JournalMetadata, existing = false): Promise<JournalMetadata | null> {
+  async previous(metadata: JournalInterval, existing = false): Promise<JournalMetadata | null> {
     if (existing) {
       const previousExstingMetadata = plugin$.value.index.findPrevious(this.id, metadata);
       if (previousExstingMetadata) return previousExstingMetadata;
@@ -198,6 +198,7 @@ export class Journal {
       id: this.id,
       start_date: interval.start_date,
       end_date: interval.start_date,
+      index: await this.#resolveIndex(interval),
     };
     return metadata;
   }
@@ -249,5 +250,50 @@ export class Journal {
     }
 
     return true;
+  }
+
+  async #resolveIndex(interval: JournalInterval): Promise<number | undefined> {
+    if (!this.#config.value.index.enabled) return undefined;
+    if (!this.#config.value.index.anchorDate || !this.#config.value.index.anchorIndex) return undefined;
+    const before = await this.previous(interval, true);
+    if (before && before.index) {
+      const repeats = this.#intervalResolver.countRepeats(before.end_date, interval.start_date);
+      let index = before.index + repeats;
+      if (this.#config.value.index.type === "reset_after") {
+        index %= this.#config.value.index.resetAfter;
+      }
+      return index;
+    }
+    const after = await this.next(interval, true);
+    if (after && after.index) {
+      const repeats = this.#intervalResolver.countRepeats(interval.end_date, after.start_date);
+      let index = after.index - repeats;
+      if (this.#config.value.index.type === "reset_after" && index < 0) {
+        index *= -1;
+      }
+      return index;
+    }
+    const anchor = date(this.#config.value.index.anchorDate);
+    if (!anchor.isValid()) return undefined;
+    if (
+      anchor.isAfter(interval.start_date) &&
+      this.#config.value.index.type === "increment" &&
+      !this.#config.value.index.allowBefore
+    )
+      return undefined;
+    if (anchor.isBefore(interval.start_date)) {
+      const repeats = this.#intervalResolver.countRepeats(this.#config.value.index.anchorDate, interval.start_date);
+      let index = this.#config.value.index.anchorIndex + repeats;
+      if (this.#config.value.index.type === "reset_after") {
+        index %= this.#config.value.index.resetAfter;
+      }
+      return index;
+    }
+    const repeats = this.#intervalResolver.countRepeats(interval.end_date, this.#config.value.index.anchorDate);
+    let index = this.#config.value.index.anchorIndex - repeats;
+    if (this.#config.value.index.type === "reset_after" && index < 0) {
+      index *= -1;
+    }
+    return index;
   }
 }

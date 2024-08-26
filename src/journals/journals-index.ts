@@ -2,7 +2,7 @@ import { Component, type TAbstractFile, TFile, moment, type FrontMatterCache } f
 import { app$ } from "../stores/obsidian.store";
 import { computed, ref, type ComputedRef } from "vue";
 import IntervalTree from "@flatten-js/interval-tree";
-import type { JournalMetadata } from "../types/journal.types";
+import type { JournalInterval, JournalMetadata } from "../types/journal.types";
 import {
   FRONTMATTER_END_DATE_KEY,
   FRONTMATTER_ID_KEY,
@@ -38,13 +38,13 @@ export class JournalsIndex extends Component {
     return list.find((entry) => entry.id === journalId);
   }
 
-  findNext(journalId: string, metadata: JournalMetadata): JournalMetadata | null {
+  findNext(journalId: string, metadata: JournalInterval): JournalMetadata | null {
     const date = moment(metadata.end_date).add(1, "day").toDate().getTime();
     const list = this.#intervalTree.search([date, Infinity]);
     return list.find((entry) => entry.id === journalId);
   }
 
-  findPrevious(journalId: string, metadata: JournalMetadata): JournalMetadata | null {
+  findPrevious(journalId: string, metadata: JournalInterval): JournalMetadata | null {
     const date = moment(metadata.start_date).subtract(1, "day").toDate().getTime();
     const list = this.#intervalTree.search([0, date]);
     return list.findLast((entry) => entry.id === journalId);
