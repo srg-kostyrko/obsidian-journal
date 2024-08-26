@@ -2,6 +2,7 @@ import type { JournalSettings, PluginSettings, JournalCommand } from "./types/se
 
 export const defaultPluginSettings: PluginSettings = {
   version: 2,
+  showReloadHint: false,
   journals: {},
   shelves: {},
   calendar: {

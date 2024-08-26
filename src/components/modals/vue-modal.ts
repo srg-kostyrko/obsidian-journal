@@ -8,6 +8,7 @@ export class VueModal extends Modal {
     private title: string,
     private component: Component,
     private componentProps: Record<string, unknown> = {},
+    private customWidth?: number,
   ) {
     super(app$.value);
     plugin$.value.register(() => {
@@ -17,6 +18,11 @@ export class VueModal extends Modal {
 
   onOpen(): void {
     this.titleEl.setText(this.title);
+    if (this.customWidth) {
+      this.modalEl.setCssProps({
+        "--dialog-width": `${this.customWidth}px`,
+      });
+    }
     this._vueApp = createApp(this.component, {
       ...this.componentProps,
       onClose: () => {

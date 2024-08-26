@@ -12,6 +12,9 @@ import RemoveJournal from "../components/modals/RemoveJournal.modal.vue";
 import { VueModal } from "../components/modals/vue-modal";
 import type { JournalSettings, NotesProcessing } from "../types/settings.types";
 import { plugin$ } from "../stores/obsidian.store";
+import { updateLocale } from "../calendar";
+
+import DatePicker from "../components/DatePicker.vue";
 
 const emit = defineEmits<(event: "edit", id: string) => void>();
 
@@ -23,10 +26,17 @@ const weekStart = computed({
     return String(calendarSettings$.value.firstDayOfWeek);
   },
   set(value) {
+    if (value !== "-1") {
+      updateLocale(parseInt(value, 10), calendarSettings$.value.firstWeekOfYear);
+    }
     calendarSettings$.value.firstDayOfWeek = parseInt(value, 10);
   },
 });
 const showFirstWeekOfYear = computed(() => calendarSettings$.value.firstDayOfWeek !== -1);
+function changeFirstWeekOfYear(value: number): void {
+  updateLocale(calendarSettings$.value.firstDayOfWeek, value);
+  calendarSettings$.value.firstWeekOfYear = value;
+}
 
 function create(): void {
   new VueModal("Add Journal", CreateJournal, {
@@ -51,6 +61,9 @@ function remove(id: string): void {
 </script>
 
 <template>
+  <ObsidianSetting>
+    <DatePicker />
+  </ObsidianSetting>
   <ObsidianSetting name="Start week on" description="Which day to consider as first day of week.">
     <ObsidianDropdown v-model="weekStart">
       <option value="-1">Locale default ({{ fowText }})</option>
@@ -68,7 +81,7 @@ function remove(id: string): void {
     name="First week of year"
     description="Define what date in January a week should contain to be considered first week of a year."
   >
-    <ObsidianNumberInput v-model="calendarSettings$.firstWeekOfYear" />
+    <ObsidianNumberInput :model-value="calendarSettings$.firstWeekOfYear" @update:model-value="changeFirstWeekOfYear" />
   </ObsidianSetting>
 
   <ObsidianSetting name="Journals" heading>

@@ -1,3 +1,4 @@
+import { computed } from "vue";
 import { moment } from "obsidian";
 import { extractCurrentlocaleData } from "./utils/moment";
 import { calendarSettings$ } from "./stores/settings.store";
@@ -29,13 +30,26 @@ export function today(): MomentDate {
   return md.startOf("day");
 }
 
-export function updateLocale(): void {
+export const weekdayNames = computed(() => {
+  const weekdayNames: string[] = [];
+  const week = today().startOf("week");
+  const weekEnd = today().endOf("week");
+
+  while (week.isSameOrBefore(weekEnd)) {
+    weekdayNames.push(week.format("ddd"));
+    week.add(1, "day");
+  }
+
+  return weekdayNames;
+});
+
+export const updateLocale = (firstDayOfWeek: number, firstWeekOfYear: number): void => {
   const currentLocale = moment.locale();
   moment.updateLocale(CUSTOM_LOCALE, {
     week: {
-      dow: calendarSettings$.value.firstDayOfWeek,
-      doy: 7 + calendarSettings$.value.firstDayOfWeek - (calendarSettings$.value.firstWeekOfYear ?? 1),
+      dow: firstDayOfWeek,
+      doy: 7 + firstDayOfWeek - (firstWeekOfYear ?? 1),
     },
   });
   moment.locale(currentLocale);
-}
+};

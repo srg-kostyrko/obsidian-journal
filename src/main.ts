@@ -1,5 +1,5 @@
 import { type App, Notice, Plugin } from "obsidian";
-import { calendarSettings$, calendarViewSettings$, journals$, pluginSettings$ } from "./stores/settings.store";
+import { calendarViewSettings$, journals$, pluginSettings$ } from "./stores/settings.store";
 import { watch, type WatchStopHandle } from "vue";
 import { debounce } from "perfect-debounce";
 import { initCalendarCustomization, updateLocale } from "./calendar";
@@ -58,6 +58,9 @@ export default class JournalPlugin extends Plugin {
 
     await this.#loadSettings();
     initCalendarCustomization();
+    if (pluginSettings$.value.calendar.firstDayOfWeek !== -1) {
+      updateLocale(pluginSettings$.value.calendar.firstDayOfWeek, pluginSettings$.value.calendar.firstWeekOfYear);
+    }
 
     this.#fillJournals();
     this.#setupWatchers();
@@ -101,15 +104,6 @@ export default class JournalPlugin extends Plugin {
           this.saveData(settings);
         }, 50),
         { deep: true },
-      ),
-    );
-    this.#stopHandles.push(
-      watch(
-        calendarSettings$,
-        () => {
-          updateLocale();
-        },
-        { deep: true, immediate: true },
       ),
     );
 
