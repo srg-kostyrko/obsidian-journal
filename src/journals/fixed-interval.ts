@@ -4,6 +4,7 @@ import type { IntervalResolver, JournalInterval } from "../types/journal.types";
 import type { FixedWriteIntervals, JournalCommand } from "../types/settings.types";
 import { FRONTMATTER_DATE_FORMAT } from "../constants";
 import type { MomentDate } from "../types/date.types";
+import { date } from "../calendar";
 
 // TODO: write tests
 export class FixedInterval implements IntervalResolver {
@@ -55,6 +56,12 @@ export class FixedInterval implements IntervalResolver {
         return moment(date).subtract(1, "year").format(FRONTMATTER_DATE_FORMAT);
     }
     return null;
+  }
+
+  countRepeats(startDate: string, endDate: string): number {
+    const start = date(startDate);
+    const end = date(endDate);
+    return Math.ceil(start.diff(end, this.#settings.value.type));
   }
 
   #buildInterval(base: MomentDate): JournalInterval {

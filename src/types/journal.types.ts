@@ -19,4 +19,6 @@ export interface IntervalResolver {
   resolveNext(date: string): JournalInterval | null;
   resolvePrevious(date: string): JournalInterval | null;
   resolveDateForCommand(date: string, command: JournalCommand["type"]): string | null;
+
+  countRepeats(startDate: string, endDate: string): number;
 }

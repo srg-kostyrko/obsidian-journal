@@ -34,10 +34,7 @@ export const defaultJournalSettings: JournalSettings = {
   folder: "",
   templates: [],
 
-  start: {
-    enabled: false,
-    date: "",
-  },
+  start: "",
 
   end: {
     type: "never",

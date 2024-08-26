@@ -90,10 +90,7 @@ export interface JournalSettings {
   folder: string;
   templates: string[];
 
-  start: {
-    enabled: boolean;
-    date: string;
-  };
+  start: string;
 
   end: EndWritingNever | EndWritingDate | EndWritingAfterNTimes;
 

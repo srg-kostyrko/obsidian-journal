@@ -15,7 +15,7 @@ import {
   FRONTMATTER_START_DATE_KEY,
 } from "../constants";
 import { FixedInterval } from "./fixed-interval";
-import { today } from "../calendar";
+import { date, today } from "../calendar";
 
 export class Journal {
   #config: ComputedRef<JournalSettings>;
@@ -67,6 +67,7 @@ export class Journal {
     if (metadata) return metadata;
     const interval = this.#intervalResolver.resolveForDate(date);
     if (!interval) return null;
+    if (!this.#checkBounds(interval)) return null;
     return await this.#buildMetadata(interval);
   }
 
@@ -79,6 +80,7 @@ export class Journal {
     if (!interval) return null;
     const nextMetadata = plugin$.value.index.find(this.id, interval.start_date);
     if (nextMetadata) return nextMetadata;
+    if (!this.#checkBounds(interval)) return null;
     return await this.#buildMetadata(interval);
   }
 
@@ -91,6 +93,7 @@ export class Journal {
     if (!interval) return null;
     const previousMetadata = plugin$.value.index.find(this.id, interval.end_date);
     if (previousMetadata) return previousMetadata;
+    if (!this.#checkBounds(interval)) return null;
     return await this.#buildMetadata(interval);
   }
 
@@ -228,5 +231,23 @@ export class Journal {
     }
     if (command.context === "only_open_note") return null;
     return today().format(FRONTMATTER_DATE_FORMAT);
+  }
+
+  #checkBounds(interval: JournalInterval): boolean {
+    if (this.#config.value.start) {
+      const startDate = date(this.#config.value.start);
+      if (startDate.isValid() && date(interval.end_date).isBefore(startDate)) return false;
+    }
+
+    if (this.#config.value.end.type === "date" && this.#config.value.end.date) {
+      const endDate = date(this.#config.value.end.date);
+      if (endDate.isValid() && date(interval.start_date).isAfter(endDate)) return false;
+    }
+    if (this.#config.value.end.type === "repeats" && this.#config.value.end.repeats && this.#config.value.start) {
+      const repeats = this.#intervalResolver.countRepeats(this.#config.value.start, interval.start_date);
+      if (repeats > this.#config.value.end.repeats) return false;
+    }
+
+    return true;
   }
 }

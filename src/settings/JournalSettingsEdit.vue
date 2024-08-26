@@ -1,11 +1,12 @@
 <script setup lang="ts">
-import { computed } from "vue";
+import { computed, watch } from "vue";
 import { journals$, pluginSettings$ } from "../stores/settings.store";
 import { app$ } from "../stores/obsidian.store";
 import { canApplyTemplater } from "../utils/template";
 import type { JournalCommand } from "../types/settings.types";
 import ObsidianSetting from "../components/obsidian/ObsidianSetting.vue";
 import ObsidianTextInput from "../components/obsidian/ObsidianTextInput.vue";
+import ObsidianNumberInput from "../components/obsidian/ObsidianNumberInput.vue";
 import ObsidianIconButton from "../components/obsidian/ObsidianIconButton.vue";
 import ObsidianButton from "../components/obsidian/ObsidianButton.vue";
 import ObsidianDropdown from "../components/obsidian/ObsidianDropdown.vue";
@@ -14,6 +15,7 @@ import DateFormatPreview from "../components/DateFormatPreview.vue";
 import VariableReferenceHint from "../components/VariableReferenceHint.vue";
 import EditCommandModal from "./EditCommand.modal.vue";
 import { VueModal } from "../components/modals/vue-modal";
+import DatePicker from "../components/DatePicker.vue";
 
 const props = defineProps<{
   journalId: string;
@@ -48,6 +50,15 @@ function deleteCommand(index: number): void {
   journal.value.commands.splice(index, 1);
   pluginSettings$.value.showReloadHint = true;
 }
+
+watch(
+  () => journal.value.end.type,
+  () => {
+    if (journal.value.end.type === "repeats" && !journal.value.end.repeats) {
+      journal.value.end.repeats = 1;
+    }
+  },
+);
 </script>
 
 <template>
@@ -58,8 +69,37 @@ function deleteCommand(index: number): void {
     </template>
     <ObsidianIconButton icon="chevron-left" tooltip="Back to list" @click="$emit('back')" />
   </ObsidianSetting>
+
   <ObsidianSetting name="Journal name">
     <ObsidianTextInput v-model="journal.name" />
+  </ObsidianSetting>
+
+  <ObsidianSetting name="Start writing on">
+    <template #description>
+      New notes prior to this date won't be created.
+      <div v-if="journal.end.type === 'repeats' && !journal.start" class="journal-important">
+        Start date should be defined for journal that ends after some number of repeats.
+      </div>
+    </template>
+    <DatePicker v-model="journal.start" />
+    <ObsidianIconButton v-if="journal.start" icon="trash" tooltip="Clear start date" @click="journal.start = ''" />
+  </ObsidianSetting>
+
+  <ObsidianSetting name="End writing">
+    <template #description>
+      <div v-if="journal.end.type === 'repeats'">After creating this many notes, new notes won't be created.</div>
+      <div v-if="journal.end.type === 'date'">New notes after this date won't be created.</div>
+    </template>
+    <ObsidianDropdown v-model="journal.end.type">
+      <option value="never">Never</option>
+      <option value="date">After date</option>
+      <option value="repeats">After repeating</option>
+    </ObsidianDropdown>
+    <DatePicker v-if="journal.end.type === 'date'" v-model="journal.end.date" />
+    <template v-if="journal.end.type === 'repeats'">
+      <ObsidianNumberInput v-model="journal.end.repeats" :min="1" />
+      times
+    </template>
   </ObsidianSetting>
 
   <ObsidianSetting name="Open note">

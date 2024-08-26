@@ -14,8 +14,6 @@ import type { JournalSettings, NotesProcessing } from "../types/settings.types";
 import { plugin$ } from "../stores/obsidian.store";
 import { updateLocale } from "../calendar";
 
-import DatePicker from "../components/DatePicker.vue";
-
 const emit = defineEmits<(event: "edit", id: string) => void>();
 
 const fow = moment().localeData().firstDayOfWeek();
@@ -61,9 +59,6 @@ function remove(id: string): void {
 </script>
 
 <template>
-  <ObsidianSetting>
-    <DatePicker />
-  </ObsidianSetting>
   <ObsidianSetting name="Start week on" description="Which day to consider as first day of week.">
     <ObsidianDropdown v-model="weekStart">
       <option value="-1">Locale default ({{ fowText }})</option>
