@@ -50,6 +50,10 @@ function submit() {
   <ObsidianSetting name="I'll be writing">
     <ObsidianDropdown v-model="state.write">
       <option value="day">Daily</option>
+      <option value="week">Weekly</option>
+      <option value="month">Monthly</option>
+      <option value="quarter">Quarterly</option>
+      <option value="year">Annually</option>
     </ObsidianDropdown>
   </ObsidianSetting>
   <ul class="errors">

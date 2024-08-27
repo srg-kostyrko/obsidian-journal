@@ -3,7 +3,7 @@ import { journals$ } from "../stores/settings.store";
 import type { JournalCommand, JournalSettings } from "../types/settings.types";
 import type { IntervalResolver, JournalInterval, JournalMetadata } from "../types/journal.types";
 import { activeNote$, app$, plugin$ } from "../stores/obsidian.store";
-import { normalizePath, TFile, moment, type LeftRibbon } from "obsidian";
+import { normalizePath, TFile, type LeftRibbon } from "obsidian";
 import { ensureFolderExists } from "../utils/io";
 import { replaceTemplateVariables, tryApplyingTemplater } from "../utils/template";
 import type { TemplateContext } from "../types/template.types";
@@ -15,7 +15,7 @@ import {
   FRONTMATTER_START_DATE_KEY,
 } from "../constants";
 import { FixedInterval } from "./fixed-interval";
-import { date, today } from "../calendar";
+import { date_from_string, today } from "../calendar";
 
 export class Journal {
   #config: ComputedRef<JournalSettings>;
@@ -25,7 +25,7 @@ export class Journal {
     this.#config = computed(() => journals$.value[id]);
     // eslint-disable-next-line @typescript-eslint/ban-ts-comment
     // @ts-expect-error
-    this.#intervalResolver = new FixedInterval(() => this.#config.value.write);
+    this.#intervalResolver = new FixedInterval(id, () => this.#config.value.write);
   }
 
   registerCommands(): void {
@@ -183,8 +183,8 @@ export class Journal {
   async #ensureFrontMatter(note: TFile, metadata: JournalMetadata): Promise<void> {
     await app$.value.fileManager.processFrontMatter(note, (frontmatter) => {
       frontmatter[FRONTMATTER_ID_KEY] = this.id;
-      frontmatter[FRONTMATTER_START_DATE_KEY] = moment(metadata.start_date).format(FRONTMATTER_DATE_FORMAT);
-      frontmatter[FRONTMATTER_END_DATE_KEY] = moment(metadata.end_date).format(FRONTMATTER_DATE_FORMAT);
+      frontmatter[FRONTMATTER_START_DATE_KEY] = date_from_string(metadata.start_date).format(FRONTMATTER_DATE_FORMAT);
+      frontmatter[FRONTMATTER_END_DATE_KEY] = date_from_string(metadata.end_date).format(FRONTMATTER_DATE_FORMAT);
       if (metadata.index == null) {
         delete frontmatter[FRONTMATTER_INDEX_KEY];
       } else {
@@ -196,6 +196,7 @@ export class Journal {
   async #buildMetadata(interval: JournalInterval): Promise<JournalMetadata> {
     const metadata: JournalMetadata = {
       id: this.id,
+      key: interval.key,
       start_date: interval.start_date,
       end_date: interval.start_date,
       index: await this.#resolveIndex(interval),
@@ -236,13 +237,13 @@ export class Journal {
 
   #checkBounds(interval: JournalInterval): boolean {
     if (this.#config.value.start) {
-      const startDate = date(this.#config.value.start);
-      if (startDate.isValid() && date(interval.end_date).isBefore(startDate)) return false;
+      const startDate = date_from_string(this.#config.value.start);
+      if (startDate.isValid() && date_from_string(interval.end_date).isBefore(startDate)) return false;
     }
 
     if (this.#config.value.end.type === "date" && this.#config.value.end.date) {
-      const endDate = date(this.#config.value.end.date);
-      if (endDate.isValid() && date(interval.start_date).isAfter(endDate)) return false;
+      const endDate = date_from_string(this.#config.value.end.date);
+      if (endDate.isValid() && date_from_string(interval.start_date).isAfter(endDate)) return false;
     }
     if (this.#config.value.end.type === "repeats" && this.#config.value.end.repeats && this.#config.value.start) {
       const repeats = this.#intervalResolver.countRepeats(this.#config.value.start, interval.start_date);
@@ -273,7 +274,7 @@ export class Journal {
       }
       return index;
     }
-    const anchor = date(this.#config.value.index.anchorDate);
+    const anchor = date_from_string(this.#config.value.index.anchorDate);
     if (!anchor.isValid()) return undefined;
     if (
       anchor.isAfter(interval.start_date) &&

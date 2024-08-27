@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { computed, toRefs } from "vue";
 import { useMonth } from "./use-month";
-import { weekdayNames, date } from "../../calendar";
+import { weekdayNames, date_from_string } from "../../calendar";
 import { calendarViewSettings$ } from "../../stores/settings.store";
 import CalendarDay from "./CalendarDay.vue";
 import CalendarWeekNumber from "./CalendarWeekNumber.vue";
@@ -13,7 +13,7 @@ const props = defineProps<{
 defineEmits<(e: "select" | "selectWeek", date: string) => void>();
 
 const { refDate } = toRefs(props);
-const momentDate = computed(() => date(refDate.value));
+const momentDate = computed(() => date_from_string(refDate.value));
 
 const { grid } = useMonth(refDate);
 </script>

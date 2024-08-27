@@ -1,6 +1,7 @@
-import { type TFile, type App, moment } from "obsidian";
+import { type TFile, type App } from "obsidian";
 import type { TemplaterPlugin } from "../types/templater.types";
 import type { TemplateContext } from "../types/template.types";
+import { date_from_string } from "../calendar";
 
 // TODO add tests
 
@@ -15,7 +16,7 @@ export function replaceTemplateVariables(template: string, context: TemplateCont
       case "date": {
         const regExp = new RegExp(`{{\\s*(${name})\\s*(([+-]\\d+)([yqmwd]))?\\s*(:(.*?))?}}`, "gi");
         content = content.replaceAll(regExp, (_, _variableName, calc, timeDelta, unit, _customFormat, format) => {
-          const templateVar = moment(variable.value);
+          const templateVar = date_from_string(variable.value);
           if (calc) {
             templateVar.add(parseInt(timeDelta, 10), unit);
           }

@@ -1,12 +1,12 @@
 import { ref, watchEffect, type Ref } from "vue";
 import type { CalendarUiElement } from "../../types/calendar-ui.types";
-import { date } from "../../calendar";
+import { date_from_string } from "../../calendar";
 
 export function useYear(refDate: Ref<string>) {
   const grid = ref<CalendarUiElement[]>([]);
 
   watchEffect(() => {
-    const momentDate = date(refDate.value);
+    const momentDate = date_from_string(refDate.value);
     if (!momentDate.isValid()) {
       return;
     }

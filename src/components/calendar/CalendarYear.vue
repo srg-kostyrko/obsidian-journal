@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { computed, toRefs } from "vue";
-import { date } from "../../calendar";
+import { date_from_string } from "../../calendar";
 import { useYear } from "./use-year";
 
 const props = defineProps<{
@@ -9,7 +9,7 @@ const props = defineProps<{
 defineEmits<(e: "select", date: string) => void>();
 
 const { refDate } = toRefs(props);
-const momentDate = computed(() => date(refDate.value));
+const momentDate = computed(() => date_from_string(refDate.value));
 
 const { grid } = useYear(refDate);
 </script>

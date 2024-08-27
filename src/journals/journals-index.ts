@@ -1,4 +1,4 @@
-import { Component, type TAbstractFile, TFile, moment, type FrontMatterCache } from "obsidian";
+import { Component, type TAbstractFile, TFile, type FrontMatterCache } from "obsidian";
 import { app$ } from "../stores/obsidian.store";
 import { computed, ref, type ComputedRef } from "vue";
 import IntervalTree from "@flatten-js/interval-tree";
@@ -9,6 +9,7 @@ import {
   FRONTMATTER_INDEX_KEY,
   FRONTMATTER_START_DATE_KEY,
 } from "../constants";
+import { date_from_string } from "../calendar";
 
 export class JournalsIndex extends Component {
   #pathIndex = ref(new Map<string, JournalMetadata>());
@@ -33,19 +34,19 @@ export class JournalsIndex extends Component {
   }
 
   find(journalId: string, date: string): JournalMetadata | null {
-    const time = moment(date).toDate().getTime();
+    const time = date_from_string(date).toDate().getTime();
     const list = this.#intervalTree.search([time, time]);
     return list.find((entry) => entry.id === journalId);
   }
 
   findNext(journalId: string, metadata: JournalInterval): JournalMetadata | null {
-    const date = moment(metadata.end_date).add(1, "day").toDate().getTime();
+    const date = date_from_string(metadata.end_date).add(1, "day").toDate().getTime();
     const list = this.#intervalTree.search([date, Infinity]);
     return list.find((entry) => entry.id === journalId);
   }
 
   findPrevious(journalId: string, metadata: JournalInterval): JournalMetadata | null {
-    const date = moment(metadata.start_date).subtract(1, "day").toDate().getTime();
+    const date = date_from_string(metadata.start_date).subtract(1, "day").toDate().getTime();
     const list = this.#intervalTree.search([0, date]);
     return list.findLast((entry) => entry.id === journalId);
   }
@@ -102,9 +103,11 @@ export class JournalsIndex extends Component {
     if (!(FRONTMATTER_ID_KEY in frontmatter)) return;
     const start_date = frontmatter[FRONTMATTER_START_DATE_KEY];
     const end_date = frontmatter[FRONTMATTER_END_DATE_KEY];
-    if (!moment(start_date).isValid() || !moment(end_date).isValid()) return;
+    if (!date_from_string(start_date).isValid() || !date_from_string(end_date).isValid()) return;
+    const id = frontmatter[FRONTMATTER_ID_KEY];
     const journalMetadata: JournalMetadata = {
       id: frontmatter[FRONTMATTER_ID_KEY],
+      key: `${id}_${start_date}_${end_date}`,
       start_date,
       end_date,
       path,
@@ -112,7 +115,10 @@ export class JournalsIndex extends Component {
     };
     this.#pathIndex.value.set(path, journalMetadata);
     this.#intervalTree.insert(
-      [moment(start_date).startOf("day").toDate().getTime(), moment(end_date).endOf("day").toDate().getTime()],
+      [
+        date_from_string(start_date).startOf("day").toDate().getTime(),
+        date_from_string(end_date).endOf("day").toDate().getTime(),
+      ],
       journalMetadata,
     );
   }

@@ -29,6 +29,7 @@ const supportsTemplater = canApplyTemplater(app$.value, "<% $>");
 function addCommand(): void {
   new VueModal("Add command", EditCommandModal, {
     index: journal.value.commands.length,
+    writeType: journal.value.write,
     commands: journal.value.commands,
     onSubmit: (command: JournalCommand) => {
       journal.value.commands.push(command);
@@ -39,6 +40,7 @@ function addCommand(): void {
 function editCommand(command: JournalCommand, index: number): void {
   new VueModal("Edit command", EditCommandModal, {
     index,
+    writeType: journal.value.write,
     command,
     commands: journal.value.commands,
     onSubmit: (command: JournalCommand) => {

@@ -1,13 +1,13 @@
 import { ref, watchEffect, type Ref } from "vue";
 import type { CalendarUiDay } from "../../types/calendar-ui.types";
-import { date, today } from "../../calendar";
+import { date_from_string, today } from "../../calendar";
 import { calendarViewSettings$ } from "../../stores/settings.store";
 
 export function useMonth(refDate: Ref<string>) {
   const grid = ref<CalendarUiDay[]>([]);
 
   watchEffect(() => {
-    const momentDate = date(refDate.value);
+    const momentDate = date_from_string(refDate.value);
     if (!momentDate.isValid()) {
       return;
     }

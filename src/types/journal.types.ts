@@ -1,9 +1,7 @@
 import type { JournalCommand } from "./settings.types";
 
-export interface JournalMetadata {
+export interface JournalMetadata extends JournalInterval {
   id: string;
-  start_date: string;
-  end_date: string;
   index?: number;
   path?: string;
 }

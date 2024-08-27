@@ -14,7 +14,7 @@ export function initCalendarCustomization(): void {
   }
 }
 
-export function date(date?: string, format?: string): MomentDate {
+export function date_from_string(date?: string, format?: string): MomentDate {
   const md = date ? moment(date, format) : moment();
   if (calendarSettings$.value.firstDayOfWeek !== -1) {
     md.locale(CUSTOM_LOCALE);

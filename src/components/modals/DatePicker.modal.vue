@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { computed, ref } from "vue";
-import { today, date } from "../../calendar";
+import { today, date_from_string } from "../../calendar";
 import CalendarMonth from "../calendar/CalendarMonth.vue";
 import CalendarYear from "../calendar/CalendarYear.vue";
 import ObsidianButton from "../obsidian/ObsidianButton.vue";
@@ -17,7 +17,7 @@ const emit = defineEmits<{
 const mode = ref<"month" | "year">("month");
 
 const currentDate = ref(props.selectedDate ?? today().format("YYYY-MM-DD"));
-const currentDateMoment = computed(() => date(currentDate.value).startOf("month"));
+const currentDateMoment = computed(() => date_from_string(currentDate.value).startOf("month"));
 
 function prev(step: "month" | "year" = "month") {
   currentDate.value = currentDateMoment.value.subtract(1, step).format("YYYY-MM-DD");

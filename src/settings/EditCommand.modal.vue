@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { defaultCommand } from "../defaults";
-import type { JournalCommand } from "../types/settings.types";
+import type { JournalCommand, JournalSettings } from "../types/settings.types";
 import { useForm } from "vee-validate";
 import * as v from "valibot";
 import { toTypedSchema } from "@vee-validate/valibot";
@@ -11,9 +11,11 @@ import ObsidianDropdown from "../components/obsidian/ObsidianDropdown.vue";
 import IconSelector from "../components/IconSelector.vue";
 import ObsidianToggle from "../components/obsidian/ObsidianToggle.vue";
 import { getIconIds } from "obsidian";
+import { buildSupportedCommandList } from "../journals/journal-commands";
 
 const props = defineProps<{
   index: number;
+  writeType: JournalSettings["write"];
   command?: JournalCommand;
   commands: JournalCommand[];
 }>();
@@ -23,6 +25,7 @@ const emit = defineEmits<{
 }>();
 
 const supportedIcons = new Set(getIconIds());
+const supportedCommandTypes = buildSupportedCommandList(props.writeType);
 
 function isNameNotUnique(name: string) {
   if (!name) return true;
@@ -102,15 +105,9 @@ const onSubmit = handleSubmit((values) => {
     </ObsidianSetting>
     <ObsidianSetting name="When command runs">
       <ObsidianDropdown v-model="type" v-bind="typeAttrs">
-        <option value="same">Open today's note</option>
-        <option value="next">Open tomorrow's note</option>
-        <option value="previous">Open yesterday's note</option>
-        <option value="same_next_week">Open same day next week</option>
-        <option value="same_previous_week">Open same day last week</option>
-        <option value="same_next_month">Open same day next month</option>
-        <option value="same_previous_month">Open same day last month</option>
-        <option value="same_next_year">Open same day next year</option>
-        <option value="same_previous_year">Open same day last year</option>
+        <option v-for="commandOption of supportedCommandTypes" :key="commandOption.value" :value="commandOption.value">
+          {{ commandOption.label }}
+        </option>
       </ObsidianDropdown>
     </ObsidianSetting>
     <ObsidianSetting name="Context">

@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { computed } from "vue";
-import { date } from "../calendar";
+import { date_from_string } from "../calendar";
 import { VueModal } from "./modals/vue-modal";
 import ObsidianButton from "./obsidian/ObsidianButton.vue";
 import ObsidianIcon from "./obsidian/ObsidianIcon.vue";
@@ -23,7 +23,7 @@ const props = withDefaults(
 const model = defineModel<string>();
 const momentDate = computed(() => {
   if (model.value) {
-    return date(model.value);
+    return date_from_string(model.value);
   }
   return null;
 });
