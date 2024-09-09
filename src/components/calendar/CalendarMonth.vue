@@ -66,7 +66,7 @@ const { grid } = useMonth(refDate);
 .calendar-month-grid {
   display: grid;
   grid-template-columns: repeat(8, 1fr);
-  gap: 6px;
+  gap: 1px;
 }
 .calendar-month-grid.weeks-none {
   grid-template-columns: repeat(7, 1fr);
@@ -80,6 +80,7 @@ const { grid } = useMonth(refDate);
   height: 28px;
   line-height: 26px;
   text-align: center;
+  padding: 0;
 }
 .calendar-day--outside {
   color: var(--code-comment);

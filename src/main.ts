@@ -11,6 +11,7 @@ import { defaultJournalSettings } from "./defaults";
 import { prepareJournalDefaultsBasedOnType } from "./journals/journal-defaults";
 import { JournalsIndex } from "./journals/journals-index";
 import { CALENDAR_VIEW_TYPE } from "./constants";
+import { CalendarView } from "./calendar-view/calendar-view";
 
 export default class JournalPlugin extends Plugin {
   #stopHandles: WatchStopHandle[] = [];
@@ -75,6 +76,12 @@ export default class JournalPlugin extends Plugin {
     this.#configureCommands();
 
     this.addSettingTab(new JournalSettingTab(this.app, this));
+
+    this.registerView(CALENDAR_VIEW_TYPE, (leaf) => new CalendarView(leaf));
+
+    this.app.workspace.onLayoutReady(async () => {
+      this.placeCalendarView(true);
+    });
   }
   onunload(): void {
     for (const handle of this.#stopHandles) {
@@ -104,6 +111,15 @@ export default class JournalPlugin extends Plugin {
           this.saveData(settings);
         }, 50),
         { deep: true },
+      ),
+    );
+
+    this.#stopHandles.push(
+      watch(
+        () => calendarViewSettings$.value.leaf,
+        () => {
+          this.placeCalendarView(true);
+        },
       ),
     );
 
