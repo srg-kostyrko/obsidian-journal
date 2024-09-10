@@ -159,6 +159,13 @@ watch(
     </ObsidianDropdown>
   </ObsidianSetting>
 
+  <ObsidianSetting name="Confirm creating new note?">
+    <template #description>
+      When turned on will show confirmation dialog any time you try navigating to a date that does not have a note yet.
+    </template>
+    <ObsidianToggle v-model="journal.confirmCreation" />
+  </ObsidianSetting>
+
   <ObsidianSetting name="Note name template">
     <template #description>
       Template used to generate new note name.<br />

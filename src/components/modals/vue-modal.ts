@@ -24,10 +24,10 @@ export class VueModal extends Modal {
       });
     }
     this._vueApp = createApp(this.component, {
-      ...this.componentProps,
       onClose: () => {
         this.close();
       },
+      ...this.componentProps,
     });
     this._vueApp.mount(this.contentEl);
   }

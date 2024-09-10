@@ -16,17 +16,21 @@ import {
 } from "../constants";
 import { FixedInterval } from "./fixed-interval";
 import { date_from_string, today } from "../calendar";
+import { VueModal } from "@/components/modals/vue-modal";
+import ConfirmNoteCreationModal from "@/components/modals/ConfirmNoteCreation.modal.vue";
 
 export class Journal {
+  readonly name$: ComputedRef<string>;
   #config: ComputedRef<JournalSettings>;
   #intervalResolver: IntervalResolver;
 
   constructor(public readonly id: string) {
     this.#config = computed(() => journals$.value[id]);
-    // eslint-disable-next-line @typescript-eslint/ban-ts-comment
-    // @ts-expect-error
+    this.name$ = computed(() => this.#config.value.name);
     this.#intervalResolver = new FixedInterval(
       id,
+      // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+      // @ts-expect-error
       computed(() => this.#config.value.write),
     );
   }
@@ -102,6 +106,7 @@ export class Journal {
 
   async open(metadata: JournalMetadata): Promise<void> {
     const file = await this.#ensureNote(metadata);
+    if (!file) return;
     await this.#openFile(file);
   }
 
@@ -111,15 +116,19 @@ export class Journal {
     await leaf.openFile(file, { active: true });
   }
 
-  async #ensureNote(metadata: JournalMetadata): Promise<TFile> {
+  async #ensureNote(metadata: JournalMetadata): Promise<TFile | null> {
     const filePath = this.#getNotePath(metadata);
     let file = app$.value.vault.getAbstractFileByPath(filePath);
     if (!file) {
+      const templateContext = this.#getTemplateContext(metadata);
+      const noteName = replaceTemplateVariables(this.#config.value.nameTemplate, templateContext);
+      if (this.#config.value.confirmCreation && !(await this.#confirmNoteCreation(noteName))) {
+        return null;
+      }
       await ensureFolderExists(app$.value, filePath);
       file = await app$.value.vault.create(filePath, "");
       if (!(file instanceof TFile)) throw new Error("File is not a TFile");
-      const templateContext = this.#getTemplateContext(metadata);
-      const noteName = replaceTemplateVariables(this.#config.value.nameTemplate, templateContext);
+
       templateContext.note_name = { type: "string", value: noteName };
       const content = await this.#getNoteContent(file, templateContext);
       if (content) await app$.value.vault.modify(file, content);
@@ -127,6 +136,29 @@ export class Journal {
     if (!(file instanceof TFile)) throw new Error("File is not a TFile");
     await this.#ensureFrontMatter(file, metadata);
     return file;
+  }
+
+  #confirmNoteCreation(noteName: string): Promise<boolean> {
+    return new Promise((resolve) => {
+      const modal = new VueModal(
+        "Confirm note creation",
+        ConfirmNoteCreationModal,
+        {
+          journalName: this.name$.value,
+          noteName,
+          onConfirm(confirm: boolean) {
+            modal.close();
+            resolve(confirm);
+          },
+          onClose() {
+            modal.close();
+            resolve(false);
+          },
+        },
+        400,
+      );
+      modal.open();
+    });
   }
 
   #getNotePath(metadata: JournalMetadata): string {
