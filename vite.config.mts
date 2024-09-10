@@ -29,6 +29,7 @@ export default defineConfig({
   build: {
     target: "esnext",
     sourcemap: isWatch ? "inline" : false,
+    minify: !isWatch,
     commonjsOptions: {
       ignoreTryCatch: false,
     },

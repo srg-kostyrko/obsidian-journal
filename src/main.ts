@@ -22,6 +22,10 @@ export default class JournalPlugin extends Plugin {
     return this.#index;
   }
 
+  getJournal(id: string): Journal | undefined {
+    return this.#journals.get(id);
+  }
+
   createJournal(id: string, name: string, write: JournalSettings["write"]): void {
     const settings: JournalSettings = {
       ...structuredClone(defaultJournalSettings),

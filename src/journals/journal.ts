@@ -25,7 +25,10 @@ export class Journal {
     this.#config = computed(() => journals$.value[id]);
     // eslint-disable-next-line @typescript-eslint/ban-ts-comment
     // @ts-expect-error
-    this.#intervalResolver = new FixedInterval(id, () => this.#config.value.write);
+    this.#intervalResolver = new FixedInterval(
+      id,
+      computed(() => this.#config.value.write),
+    );
   }
 
   registerCommands(): void {

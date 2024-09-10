@@ -217,8 +217,8 @@ watch(
         {{ command.name }}
       </template>
       <template #description> {{ command.type }} in {{ command.context }} </template>
-      <ObsidianIconButton class="clickable-icon" icon="pencil" tooltip="Edit" @click="editCommand(command, index)" />
-      <ObsidianIconButton class="clickable-icon" icon="trash-2" tooltip="Delete" @click="deleteCommand(index)" />
+      <ObsidianIconButton icon="pencil" tooltip="Edit" @click="editCommand(command, index)" />
+      <ObsidianIconButton icon="trash-2" tooltip="Delete" @click="deleteCommand(index)" />
     </ObsidianSetting>
   </template>
 </template>

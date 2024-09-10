@@ -13,7 +13,6 @@ defineProps<{
 
 <style scoped>
 button {
-  cursor: pointer;
   background-color: transparent;
   box-shadow: none;
 }

@@ -6,11 +6,20 @@ import { calendarViewSettings$ } from "../../stores/settings.store";
 import CalendarDay from "./CalendarDay.vue";
 import CalendarWeekNumber from "./CalendarWeekNumber.vue";
 
-const props = defineProps<{
-  refDate: string;
-  selectedDate?: string;
-}>();
-defineEmits<(e: "select" | "selectWeek", date: string) => void>();
+const props = withDefaults(
+  defineProps<{
+    refDate: string;
+    selectedDate?: string | null;
+    selectDays: boolean;
+    selectWeeks: boolean;
+  }>(),
+  {
+    selectedDate: null,
+    selectDays: true,
+    selectWeeks: false,
+  },
+);
+defineEmits<(e: "select" | "selectWeek", date: string, event: MouseEvent) => void>();
 
 const { refDate } = toRefs(props);
 const momentDate = computed(() => date_from_string(refDate.value));
@@ -37,7 +46,10 @@ const { grid } = useMonth(refDate);
           v-if="uiDate.isWeekNumber"
           :date="uiDate.date"
           class="calendar-week-number"
-          @click="$emit('selectWeek', uiDate.date.format('YYYY-MM-DD'))"
+          :class="{
+            'calendar-clickable': selectWeeks,
+          }"
+          @click="selectWeeks && $emit('selectWeek', uiDate.date.format('YYYY-MM-DD'), $event)"
         />
         <CalendarDay
           v-else
@@ -47,8 +59,9 @@ const { grid } = useMonth(refDate);
             'calendar-day--outside': uiDate.outside,
             'calendar-day--today': uiDate.today,
             'calendar-day--selected': selectedDate === uiDate.key,
+            'calendar-clickable': selectDays,
           }"
-          @click="$emit('select', uiDate.date.format('YYYY-MM-DD'))"
+          @click="selectDays && $emit('select', uiDate.date.format('YYYY-MM-DD'), $event)"
         />
       </template>
     </div>
@@ -92,5 +105,8 @@ const { grid } = useMonth(refDate);
 .calendar-day--selected {
   background-color: var(--interactive-accent);
   color: var(--text-on-accent);
+}
+.calendar-clickable {
+  cursor: pointer;
 }
 </style>

@@ -22,18 +22,8 @@ const journalsList = computed(() => Object.values(journals$.value).toSorted((a, 
         <span class="flair">{{ journal.write.type }}</span>
       </template>
       <template #description>ID: {{ journal.id }}</template>
-      <ObsidianIconButton
-        class="clickable-icon"
-        icon="pencil"
-        :tooltip="'Edit ' + journal.name"
-        @click="$emit('edit', journal.id)"
-      />
-      <ObsidianIconButton
-        class="clickable-icon"
-        icon="trash-2"
-        :tooltip="'Delete ' + journal.name"
-        @click="$emit('remove', journal.id)"
-      />
+      <ObsidianIconButton icon="pencil" :tooltip="'Edit ' + journal.name" @click="$emit('edit', journal.id)" />
+      <ObsidianIconButton icon="trash-2" :tooltip="'Delete ' + journal.name" @click="$emit('remove', journal.id)" />
     </ObsidianSetting>
   </template>
 </template>
