@@ -1,4 +1,10 @@
-import type { JournalSettings, PluginSettings, JournalCommand } from "./types/settings.types";
+import type {
+  JournalSettings,
+  PluginSettings,
+  JournalCommand,
+  JournalDecorationsStyle,
+  JournalDecorationCondition,
+} from "./types/settings.types";
 
 export const defaultPluginSettings: PluginSettings = {
   version: 2,
@@ -55,7 +61,7 @@ export const defaultJournalSettings: JournalSettings = {
 
   commands: [],
 
-  highlights: [],
+  decorations: [],
 
   navBlock: {
     type: "create",
@@ -71,4 +77,104 @@ export const defaultCommand: JournalCommand = {
   type: "same",
   context: "today",
   showInRibbon: false,
+};
+
+export const defaultConditions: Record<JournalDecorationCondition["type"], JournalDecorationCondition> = {
+  date: {
+    type: "date",
+    day: -1,
+    month: -1,
+    year: null,
+  },
+  title: {
+    type: "title",
+    condition: "contains",
+    value: "",
+  },
+  tag: {
+    type: "tag",
+    condition: "contains",
+    value: "",
+  },
+  property: {
+    type: "property",
+    name: "",
+    condition: "contains",
+    value: "",
+  },
+  weekday: {
+    type: "weekday",
+    weekdays: [],
+  },
+  offset: {
+    type: "offset",
+    offset: 0,
+  },
+  "has-note": {
+    type: "has-note",
+  },
+  "has-open-task": {
+    type: "has-open-task",
+  },
+  "all-tasks-completed": {
+    type: "all-tasks-completed",
+  },
+};
+
+export const defaultDecorations: Record<JournalDecorationsStyle["type"], JournalDecorationsStyle> = {
+  background: {
+    type: "background",
+    color: "#000",
+  },
+  color: {
+    type: "color",
+    color: "#fff",
+  },
+  border: {
+    type: "border",
+    border: "uniform",
+    left: {
+      show: true,
+      width: 1,
+      color: "#000",
+      style: "solid",
+    },
+    right: {
+      show: false,
+      width: 1,
+      color: "#000",
+      style: "solid",
+    },
+    top: {
+      show: false,
+      width: 1,
+      color: "#000",
+      style: "solid",
+    },
+    bottom: {
+      show: false,
+      width: 1,
+      color: "#000",
+      style: "solid",
+    },
+  },
+  shape: {
+    type: "shape",
+    shape: "circle",
+    color: "#000",
+    placement_x: "center",
+    placement_y: "bottom",
+  },
+  corner: {
+    type: "corner",
+    placement: "top-left",
+    color: "#000",
+  },
+  icon: {
+    type: "icon",
+    icon: "",
+    color: "#fff",
+    placement_x: "center",
+    placement_y: "top",
+  },
 };

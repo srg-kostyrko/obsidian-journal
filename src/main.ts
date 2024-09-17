@@ -12,6 +12,7 @@ import { prepareJournalDefaultsBasedOnType } from "./journals/journal-defaults";
 import { JournalsIndex } from "./journals/journals-index";
 import { CALENDAR_VIEW_TYPE } from "./constants";
 import { CalendarView } from "./calendar-view/calendar-view";
+import { deepCopy } from "./utils/misc";
 
 export default class JournalPlugin extends Plugin {
   #stopHandles: WatchStopHandle[] = [];
@@ -28,7 +29,7 @@ export default class JournalPlugin extends Plugin {
 
   createJournal(id: string, name: string, write: JournalSettings["write"]): void {
     const settings: JournalSettings = {
-      ...structuredClone(defaultJournalSettings),
+      ...deepCopy(defaultJournalSettings),
       ...prepareJournalDefaultsBasedOnType(write),
       id,
       name,

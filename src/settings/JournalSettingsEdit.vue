@@ -3,7 +3,7 @@ import { computed, watch } from "vue";
 import { journals$, pluginSettings$ } from "../stores/settings.store";
 import { app$ } from "../stores/obsidian.store";
 import { canApplyTemplater } from "../utils/template";
-import type { JournalCommand } from "../types/settings.types";
+import type { JournalCommand, JournalDecoration } from "../types/settings.types";
 import ObsidianSetting from "../components/obsidian/ObsidianSetting.vue";
 import ObsidianTextInput from "../components/obsidian/ObsidianTextInput.vue";
 import ObsidianNumberInput from "../components/obsidian/ObsidianNumberInput.vue";
@@ -15,13 +15,18 @@ import FolderInput from "../components/FolderInput.vue";
 import DateFormatPreview from "../components/DateFormatPreview.vue";
 import VariableReferenceHint from "../components/VariableReferenceHint.vue";
 import EditCommandModal from "./EditCommand.modal.vue";
+import EditDecorationModal from "@/components/modals/EditDecoration.modal.vue";
+import CalendarDecoration from "@/components/calendar/CalendarDecoration.vue";
 import { VueModal } from "../components/modals/vue-modal";
 import DatePicker from "../components/DatePicker.vue";
+import { today } from "@/calendar";
 
 const props = defineProps<{
   journalId: string;
 }>();
 defineEmits(["back"]);
+
+const day = today().day();
 
 const journal = computed(() => journals$.value[props.journalId]);
 const supportsTemplater = canApplyTemplater(app$.value, "<% $>");
@@ -52,6 +57,29 @@ function editCommand(command: JournalCommand, index: number): void {
 function deleteCommand(index: number): void {
   journal.value.commands.splice(index, 1);
   pluginSettings$.value.showReloadHint = true;
+}
+
+function addCalendarDecoration() {
+  new VueModal("Add calendar decoration", EditDecorationModal, {
+    index: journal.value.decorations.length,
+    writeType: journal.value.write,
+    onSubmit: (decoration: JournalDecoration) => {
+      journal.value.decorations.push(decoration);
+    },
+  }).open();
+}
+function editCalendarDecoration(decoration: JournalDecoration, index: number) {
+  new VueModal("Add calendar decoration", EditDecorationModal, {
+    index: journal.value.decorations.length,
+    writeType: journal.value.write,
+    decoration,
+    onSubmit: (decoration: JournalDecoration) => {
+      journal.value.decorations[index] = decoration;
+    },
+  }).open();
+}
+function deleteHighlight(index: number) {
+  journal.value.decorations.splice(index, 1);
 }
 
 watch(
@@ -228,6 +256,26 @@ watch(
       <ObsidianIconButton icon="trash-2" tooltip="Delete" @click="deleteCommand(index)" />
     </ObsidianSetting>
   </template>
+
+  <ObsidianSetting heading name="Calendar decorations">
+    <template #description> Use decorations to highlight dates in calendar that meet certain conditions. </template>
+    <ObsidianButton @click="addCalendarDecoration">Add decoration</ObsidianButton>
+  </ObsidianSetting>
+  <p v-if="!journal.decorations.length">No calendar decorations configured yet.</p>
+  <template v-else>
+    <ObsidianSetting v-for="(decoration, index) of journal.decorations" :key="index">
+      <template #name>
+        <CalendarDecoration class="decoration-preview" :styles="decoration.styles">{{ day }}</CalendarDecoration>
+        when
+        <template v-for="(condition, index) of decoration.conditions" :key="index">
+          {{ condition.type }}
+          <span v-if="index > 0">{{ decoration.mode }}</span>
+        </template>
+      </template>
+      <ObsidianIconButton icon="pencil" tooltip="Edit" @click="editCalendarDecoration(decoration, index)" />
+      <ObsidianIconButton icon="trash-2" tooltip="Delete" @click="deleteHighlight(index)" />
+    </ObsidianSetting>
+  </template>
 </template>
 
 <style scoped>
@@ -236,5 +284,13 @@ watch(
 }
 .journal-important {
   color: var(--text-error);
+}
+.decoration-preview {
+  display: inline-block;
+  font-size: 1.5em;
+  width: 1.5em;
+  height: 1.5em;
+  padding: 0.25em;
+  text-align: center;
 }
 </style>

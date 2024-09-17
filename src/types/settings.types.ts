@@ -109,7 +109,7 @@ export interface JournalSettings {
 
   commands: JournalCommand[];
 
-  highlights: JournalHighlight[];
+  decorations: JournalDecoration[];
 
   navBlock: {
     type: "create" | "existing";
@@ -136,97 +136,124 @@ export interface JournalCommand {
   showInRibbon: boolean;
 }
 
-interface JournalHighlight {
-  condition: JournalHighlightCondition;
-  highlights: JournalHighlightDisplay[];
+export interface JournalDecoration {
+  mode: "or" | "and";
+  conditions: JournalDecorationCondition[];
+  styles: JournalDecorationsStyle[];
 }
 
-interface BorderSettings {
+export interface BorderSettings {
   show: boolean;
   width: number;
   color: string;
   style: string;
 }
 
-type JournalHighlightDisplay =
-  | {
-      type: "background";
-      color: string;
-    }
-  | {
-      type: "border";
-      left: BorderSettings;
-      right: BorderSettings;
-      top: BorderSettings;
-      bottom: BorderSettings;
-    }
-  | {
-      type: "shape";
-      shape: "square" | "circle" | "triangle";
-      color: string;
-      placement_x: "left" | "center" | "right";
-      placement_y: "top" | "middle" | "bottom";
-    }
-  | {
-      type: "corner";
-      placement: "top-left" | "top-right" | "bottom-left" | "bottom-right";
-      color: string;
-    }
-  | {
-      type: "icon";
-      icon: string;
-      placement_x: "left" | "center" | "right";
-      placement_y: "top" | "middle" | "bottom";
-      color: string;
-    };
+export interface JournalDecorationBackground {
+  type: "background";
+  color: string;
+}
 
-type JournalHighlightCondition =
-  | {
-      type: "title";
-      condition: "contains" | "starts-with" | "ends-with";
-      value: string;
-    }
-  | {
-      type: "tag";
-      condition: "contains" | "starts-with" | "ends-with";
-      value: string;
-    }
-  | {
-      type: "property";
-      name: string;
-      condition:
-        | "exists"
-        | "does-not-exist"
-        | "eq"
-        | "neq"
-        | "contains"
-        | "does-not-contain"
-        | "starts-with"
-        | "ends-with";
-      value: string;
-    }
-  | {
-      type: "date";
-      day: number;
-      month: number;
-      year: number;
-    }
-  | {
-      type: "weekday";
-      weekdays: number[];
-    }
-  | {
-      type: "offset";
-      offset: number;
-    }
-  | {
-      type: "has-note";
-    }
-  | {
-      type: "has-open-task";
-    }
-  | {
-      type: "all-tasks-completed";
-    };
+export interface JournalDecorationColor {
+  type: "color";
+  color: string;
+}
+
+export interface JournalDecorationBorder {
+  type: "border";
+  border: "uniform" | "different";
+  left: BorderSettings;
+  right: BorderSettings;
+  top: BorderSettings;
+  bottom: BorderSettings;
+}
+
+export interface JournalDecorationShape {
+  type: "shape";
+  shape: "square" | "circle" | "triangle-up" | "triangle-down" | "triangle-left" | "triangle-right";
+  color: string;
+  placement_x: "left" | "center" | "right";
+  placement_y: "top" | "middle" | "bottom";
+}
+
+export interface JournalDecorationCorner {
+  type: "corner";
+  placement: "top-left" | "top-right" | "bottom-left" | "bottom-right";
+  color: string;
+}
+export interface JournalDecorationIcon {
+  type: "icon";
+  icon: string;
+  placement_x: "left" | "center" | "right";
+  placement_y: "top" | "middle" | "bottom";
+  color: string;
+}
+
+export type JournalDecorationsStyle =
+  | JournalDecorationBackground
+  | JournalDecorationColor
+  | JournalDecorationBorder
+  | JournalDecorationShape
+  | JournalDecorationCorner
+  | JournalDecorationIcon;
+
+export interface JournalDecorationTitleCondition {
+  type: "title";
+  condition: "contains" | "starts-with" | "ends-with";
+  value: string;
+}
+
+export interface JournalDecorationTagCondition {
+  type: "tag";
+  condition: "contains" | "starts-with" | "ends-with";
+  value: string;
+}
+
+export interface JournalDecorationPropertyCondition {
+  type: "property";
+  name: string;
+  condition: "exists" | "does-not-exist" | "eq" | "neq" | "contains" | "does-not-contain" | "starts-with" | "ends-with";
+  value: string;
+}
+
+export interface JournalDecorationDateCondition {
+  type: "date";
+  day: number;
+  month: number;
+  year: number | null;
+}
+
+export interface JournalDecorationWeekdayCondition {
+  type: "weekday";
+  weekdays: number[];
+}
+
+export interface JournalDecorationOffsetCondition {
+  type: "offset";
+  offset: number;
+}
+
+export interface JournalDecorationHasNoteCondition {
+  type: "has-note";
+}
+
+export interface JournalDecorationHasOpenTaskCondition {
+  type: "has-open-task";
+}
+
+export interface JournalDecorationAllTasksCompletedCondition {
+  type: "all-tasks-completed";
+}
+
+export type JournalDecorationCondition =
+  | JournalDecorationTitleCondition
+  | JournalDecorationTagCondition
+  | JournalDecorationPropertyCondition
+  | JournalDecorationDateCondition
+  | JournalDecorationWeekdayCondition
+  | JournalDecorationOffsetCondition
+  | JournalDecorationHasNoteCondition
+  | JournalDecorationHasOpenTaskCondition
+  | JournalDecorationAllTasksCompletedCondition;
 
 export type NotesProcessing = "keep" | "clear" | "delete";
