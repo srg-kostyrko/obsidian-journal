@@ -7,7 +7,7 @@ export function JournalAnchorDate(date: string): JournalAnchorDate {
 }
 
 export interface JournalMetadata {
-  id: string;
+  name: string;
   date: JournalAnchorDate;
   end_date?: string;
   index?: number;

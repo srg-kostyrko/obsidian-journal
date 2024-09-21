@@ -23,25 +23,35 @@ export default class JournalPlugin extends Plugin {
     return this.#index;
   }
 
-  getJournal(id: string): Journal | undefined {
-    return this.#journals.get(id);
+  getJournal(name: string): Journal | undefined {
+    return this.#journals.get(name);
   }
 
-  createJournal(id: string, name: string, write: JournalSettings["write"]): void {
+  createJournal(name: string, write: JournalSettings["write"]): void {
     const settings: JournalSettings = {
       ...deepCopy(defaultJournalSettings),
       ...prepareJournalDefaultsBasedOnType(write),
-      id,
       name,
       write,
     };
-    pluginSettings$.value.journals[id] = settings;
-    this.#journals.set(id, new Journal(id));
+    pluginSettings$.value.journals[name] = settings;
+    this.#journals.set(name, new Journal(name));
   }
 
-  removeJournal(id: string): void {
-    this.#journals.delete(id);
-    delete pluginSettings$.value.journals[id];
+  async renameJournal(name: string, newName: string): Promise<void> {
+    const journal = this.getJournal(name);
+    if (!journal) return;
+    await this.#index.renameJournal(name, newName);
+    pluginSettings$.value.journals[newName] = pluginSettings$.value.journals[name];
+    pluginSettings$.value.journals[newName].name = newName;
+    delete pluginSettings$.value.journals[name];
+    this.#journals.delete(name);
+    this.#journals.set(newName, new Journal(newName));
+  }
+
+  removeJournal(name: string): void {
+    this.#journals.delete(name);
+    delete pluginSettings$.value.journals[name];
   }
 
   placeCalendarView(moving = false) {
@@ -103,8 +113,8 @@ export default class JournalPlugin extends Plugin {
   }
 
   #fillJournals(): void {
-    for (const id of Object.keys(journals$.value)) {
-      this.#journals.set(id, new Journal(id));
+    for (const name of Object.keys(journals$.value)) {
+      this.#journals.set(name, new Journal(name));
     }
   }
 
@@ -147,12 +157,12 @@ export default class JournalPlugin extends Plugin {
           new Notice("This note is not connected to any journal.");
           return;
         }
-        const journal = this.#journals.get(metadata.id);
+        const journal = this.#journals.get(metadata.name);
         if (!journal) {
-          new Notice("Unknown journal id.");
+          new Notice("Unknown journal.");
           return;
         }
-        const nextNote = await journal.next(metadata, true);
+        const nextNote = await journal.next(metadata.date, true);
         if (!nextNote) {
           new Notice("There is no next note after this one.");
           return;
@@ -171,12 +181,12 @@ export default class JournalPlugin extends Plugin {
           new Notice("This note is not connected to any journal.");
           return;
         }
-        const journal = this.#journals.get(metadata.id);
+        const journal = this.#journals.get(metadata.name);
         if (!journal) {
-          new Notice("Unknown journal id.");
+          new Notice("Unknown journal.");
           return;
         }
-        const prevNote = await journal.previous(metadata, true);
+        const prevNote = await journal.previous(metadata.date, true);
         if (!prevNote) {
           new Notice("There is no previous note before this one.");
           return;

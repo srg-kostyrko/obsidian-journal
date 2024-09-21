@@ -4,7 +4,7 @@ import { computed, ref, type ComputedRef } from "vue";
 import type { JournalAnchorDate, JournalMetadata } from "../types/journal.types";
 import {
   FRONTMATTER_END_DATE_KEY,
-  FRONTMATTER_ID_KEY,
+  FRONTMATTER_NAME_KEY,
   FRONTMATTER_INDEX_KEY,
   FRONTMATTER_DATE_KEY,
 } from "../constants";
@@ -51,6 +51,19 @@ export class JournalsIndex extends Component {
     return this.getForPath(path);
   }
 
+  async renameJournal(oldName: string, name: string): Promise<void> {
+    const index = this.#getJournalIndex(oldName);
+    if (!index) return;
+    for (const [, path] of index) {
+      const file = app$.value.vault.getAbstractFileByPath(path);
+      if (!file) continue;
+      if (!(file instanceof TFile)) continue;
+      await app$.value.fileManager.processFrontMatter(file, (frontmatter) => {
+        frontmatter[FRONTMATTER_NAME_KEY] = name;
+      });
+    }
+  }
+
   async reindex(): Promise<void> {
     const files = app$.value.vault.getMarkdownFiles();
     for (const file of files) {
@@ -80,7 +93,7 @@ export class JournalsIndex extends Component {
         this.#pathIndex.value.delete(oldPath);
         metadata.path = file.path;
         this.#pathIndex.value.set(file.path, metadata);
-        const index = this.#journalIndecies.get(metadata.id);
+        const index = this.#journalIndecies.get(metadata.name);
         if (!index) return;
         index.deleteForPath(oldPath);
         index.set(metadata.date, file.path);
@@ -94,7 +107,7 @@ export class JournalsIndex extends Component {
       if (!metadata) return;
       this.#pathIndex.value.delete(file.path);
       this.#pathComputeds.delete(file.path);
-      this.#journalIndecies.get(metadata.id)?.delete(metadata.date);
+      this.#journalIndecies.get(metadata.name)?.delete(metadata.date);
     }
   };
 
@@ -107,20 +120,20 @@ export class JournalsIndex extends Component {
   };
 
   #processFrontmatter(path: string, frontmatter: FrontMatterCache): void {
-    if (!(FRONTMATTER_ID_KEY in frontmatter)) return;
+    if (!(FRONTMATTER_NAME_KEY in frontmatter)) return;
     const date = frontmatter[FRONTMATTER_DATE_KEY];
     const end_date = frontmatter[FRONTMATTER_END_DATE_KEY];
     if (!date_from_string(date).isValid() || (end_date && !date_from_string(end_date).isValid())) return;
-    const id = frontmatter[FRONTMATTER_ID_KEY];
+    const name = frontmatter[FRONTMATTER_NAME_KEY];
     const journalMetadata: JournalMetadata = {
-      id,
+      name,
       date,
       end_date,
       path,
       index: frontmatter[FRONTMATTER_INDEX_KEY],
     };
     this.#pathIndex.value.set(path, journalMetadata);
-    this.#getJournalIndex(id).set(date, path);
+    this.#getJournalIndex(name).set(date, path);
   }
 
   onunload(): void {

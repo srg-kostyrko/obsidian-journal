@@ -5,9 +5,9 @@ import ObsidianSetting from "../components/obsidian/ObsidianSetting.vue";
 import ObsidianIconButton from "../components/obsidian/ObsidianIconButton.vue";
 
 defineEmits<{
-  (event: "edit", id: string): void;
+  (event: "edit", name: string): void;
   // eslint-disable-next-line @typescript-eslint/unified-signatures
-  (event: "remove", id: string): void;
+  (event: "remove", name: string): void;
 }>();
 
 const journalsList = computed(() => Object.values(journals$.value).toSorted((a, b) => a.name.localeCompare(b.name)));
@@ -16,14 +16,13 @@ const journalsList = computed(() => Object.values(journals$.value).toSorted((a, 
 <template>
   <p v-if="journalsList.length === 0">No journals configured yet.</p>
   <template v-else>
-    <ObsidianSetting v-for="journal of journalsList" :key="journal.id">
+    <ObsidianSetting v-for="journal of journalsList" :key="journal.name">
       <template #name>
         {{ journal.name }}
         <span class="flair">{{ journal.write.type }}</span>
       </template>
-      <template #description>ID: {{ journal.id }}</template>
-      <ObsidianIconButton icon="pencil" :tooltip="'Edit ' + journal.name" @click="$emit('edit', journal.id)" />
-      <ObsidianIconButton icon="trash-2" :tooltip="'Delete ' + journal.name" @click="$emit('remove', journal.id)" />
+      <ObsidianIconButton icon="pencil" :tooltip="'Edit ' + journal.name" @click="$emit('edit', journal.name)" />
+      <ObsidianIconButton icon="trash-2" :tooltip="'Delete ' + journal.name" @click="$emit('remove', journal.name)" />
     </ObsidianSetting>
   </template>
 </template>

@@ -1,27 +1,22 @@
 import { type App, SuggestModal } from "obsidian";
 
-interface JournalOption {
-  id: string;
-  name: string;
-}
-
-export class JournalSuggestModal extends SuggestModal<JournalOption> {
+export class JournalSuggestModal extends SuggestModal<string> {
   constructor(
     app: App,
-    private journals: JournalOption[],
+    private journals: string[],
     private cb: (journalId: string) => void,
   ) {
     super(app);
   }
 
-  getSuggestions(query: string): JournalOption[] | Promise<JournalOption[]> {
+  getSuggestions(query: string): string[] | Promise<string[]> {
     query = query.toLocaleLowerCase();
-    return this.journals.filter((journal) => journal.name.toLocaleLowerCase().contains(query));
+    return this.journals.filter((journal) => journal.toLocaleLowerCase().contains(query));
   }
-  renderSuggestion(value: JournalOption, el: HTMLElement) {
-    el.setText(value.name);
+  renderSuggestion(value: string, el: HTMLElement) {
+    el.setText(value);
   }
-  onChooseSuggestion(item: JournalOption) {
-    this.cb(item.id);
+  onChooseSuggestion(item: string) {
+    this.cb(item);
   }
 }

@@ -10,7 +10,7 @@ import type { TemplateContext } from "../types/template.types";
 import {
   FRONTMATTER_DATE_FORMAT,
   FRONTMATTER_END_DATE_KEY,
-  FRONTMATTER_ID_KEY,
+  FRONTMATTER_NAME_KEY,
   FRONTMATTER_INDEX_KEY,
   FRONTMATTER_DATE_KEY,
 } from "../constants";
@@ -24,8 +24,8 @@ export class Journal {
   #config: ComputedRef<JournalSettings>;
   #anchorDateResolver: AnchorDateResolver;
 
-  constructor(public readonly id: string) {
-    this.#config = computed(() => journals$.value[id]);
+  constructor(public readonly name: string) {
+    this.#config = computed(() => journals$.value[name]);
     this.name$ = computed(() => this.#config.value.name);
     this.#anchorDateResolver = new FixedIntervalResolver(
       // eslint-disable-next-line @typescript-eslint/ban-ts-comment
@@ -37,7 +37,7 @@ export class Journal {
   registerCommands(): void {
     for (const command of this.#config.value.commands) {
       plugin$.value.addCommand({
-        id: this.id + ":" + command.name,
+        id: this.name + ":" + command.name,
         name: `${this.#config.value.name}: ${command.name}`,
         icon: command.icon,
         checkCallback: (checking: boolean): boolean => {
@@ -50,7 +50,7 @@ export class Journal {
         },
       });
       if (command.showInRibbon) {
-        const ribbonId = "journals:" + this.id + ":" + command.name;
+        const ribbonId = "journals:" + this.name + ":" + command.name;
         const item = (app$.value.workspace.leftRibbon as LeftRibbon).addRibbonItemButton(
           ribbonId,
           command.icon,
@@ -71,7 +71,7 @@ export class Journal {
   async find(date: string): Promise<JournalMetadata | null> {
     const anchorDate = this.#anchorDateResolver.resolveForDate(date);
     if (!anchorDate) return null;
-    const metadata = plugin$.value.index.find(this.id, anchorDate);
+    const metadata = plugin$.value.index.find(this.name, anchorDate);
     if (metadata) return metadata;
     if (!this.#checkBounds(anchorDate)) return null;
     return await this.#buildMetadata(anchorDate);
@@ -81,12 +81,12 @@ export class Journal {
     const anchorDate = this.#anchorDateResolver.resolveForDate(date);
     if (!anchorDate) return null;
     if (existing) {
-      const nextExstingMetadata = plugin$.value.index.findNext(this.id, anchorDate);
+      const nextExstingMetadata = plugin$.value.index.findNext(this.name, anchorDate);
       if (nextExstingMetadata) return nextExstingMetadata;
     }
     const nextAnchorDate = this.#anchorDateResolver.resolveNext(anchorDate);
     if (!nextAnchorDate) return null;
-    const nextMetadata = plugin$.value.index.find(this.id, nextAnchorDate);
+    const nextMetadata = plugin$.value.index.find(this.name, nextAnchorDate);
     if (nextMetadata) return nextMetadata;
     if (!this.#checkBounds(nextAnchorDate)) return null;
     return await this.#buildMetadata(nextAnchorDate);
@@ -96,12 +96,12 @@ export class Journal {
     const anchorDate = this.#anchorDateResolver.resolveForDate(date);
     if (!anchorDate) return null;
     if (existing) {
-      const previousExstingMetadata = plugin$.value.index.findPrevious(this.id, anchorDate);
+      const previousExstingMetadata = plugin$.value.index.findPrevious(this.name, anchorDate);
       if (previousExstingMetadata) return previousExstingMetadata;
     }
     const prevAnchorDate = this.#anchorDateResolver.resolvePrevious(anchorDate);
     if (!prevAnchorDate) return null;
-    const previousMetadata = plugin$.value.index.find(this.id, prevAnchorDate);
+    const previousMetadata = plugin$.value.index.find(this.name, prevAnchorDate);
     if (previousMetadata) return previousMetadata;
     if (!this.#checkBounds(prevAnchorDate)) return null;
     return await this.#buildMetadata(prevAnchorDate);
@@ -220,7 +220,7 @@ export class Journal {
   }
   async #ensureFrontMatter(note: TFile, metadata: JournalMetadata): Promise<void> {
     await app$.value.fileManager.processFrontMatter(note, (frontmatter) => {
-      frontmatter[FRONTMATTER_ID_KEY] = this.id;
+      frontmatter[FRONTMATTER_NAME_KEY] = this.name;
       frontmatter[FRONTMATTER_DATE_KEY] = date_from_string(metadata.date).format(FRONTMATTER_DATE_FORMAT);
       if (metadata.end_date) {
         frontmatter[FRONTMATTER_END_DATE_KEY] = date_from_string(metadata.end_date).format(FRONTMATTER_DATE_FORMAT);
@@ -237,7 +237,7 @@ export class Journal {
 
   async #buildMetadata(anchorDate: JournalAnchorDate): Promise<JournalMetadata> {
     const metadata: JournalMetadata = {
-      id: this.id,
+      name: this.name,
       date: anchorDate,
       index: await this.#resolveIndex(anchorDate),
     };
@@ -250,7 +250,7 @@ export class Journal {
       if (!activeNode) return false;
       const metadata = plugin$.value.index.getForPath(activeNode.path);
       if (!metadata) return false;
-      if (metadata.id !== this.id) return false;
+      if (metadata.name !== this.name) return false;
     }
     return true;
   }

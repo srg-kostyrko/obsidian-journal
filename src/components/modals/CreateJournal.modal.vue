@@ -8,31 +8,27 @@ import { type JournalSettings } from "../../types/settings.types";
 
 const state = reactive({
   name: "",
-  id: "",
   write: "day" satisfies JournalSettings["write"]["type"],
   touched: {
     name: false,
-    id: false,
   },
 });
 
 const emit = defineEmits<{
-  (event: "create", name: string, id: string, write: JournalSettings["write"]): void;
+  (event: "create", name: string, write: JournalSettings["write"]): void;
   (event: "close"): void;
 }>();
 
 const errors = computed(() => {
   const errors = [];
   if (!state.name && state.touched.name) errors.push("Name is required");
-  if (!state.id && state.touched.id) errors.push("ID is required");
   return errors;
 });
 
 function submit() {
   state.touched.name = true;
-  state.touched.id = true;
   if (errors.value.length) return;
-  emit("create", state.name, state.id, {
+  emit("create", state.name, {
     type: state.write as JournalSettings["write"]["type"],
   } as JournalSettings["write"]);
   emit("close");
@@ -42,10 +38,6 @@ function submit() {
 <template>
   <ObsidianSetting name="Journal name">
     <ObsidianTextInput v-model="state.name" placeholder="ex. Work" @blur="state.touched.name = true" />
-  </ObsidianSetting>
-  <ObsidianSetting name="Journal ID">
-    <template #description> This will be used to connect nodes to journal in frontmatter. Cannot be changed. </template>
-    <ObsidianTextInput v-model="state.id" placeholder="ex. work" @blur="state.touched.id = true" />
   </ObsidianSetting>
   <ObsidianSetting name="I'll be writing">
     <ObsidianDropdown v-model="state.write">

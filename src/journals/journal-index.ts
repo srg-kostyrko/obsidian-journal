@@ -45,4 +45,8 @@ export class JournalIndex {
     if (index === 0) return null;
     return this.#map.get(dates[index - 1]) ?? null;
   }
+
+  *[Symbol.iterator]() {
+    yield* this.#map;
+  }
 }

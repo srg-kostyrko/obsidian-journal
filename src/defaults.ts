@@ -24,7 +24,6 @@ export const defaultPluginSettings: PluginSettings = {
 };
 
 export const defaultJournalSettings: JournalSettings = {
-  id: "",
   name: "",
   shelves: [],
 

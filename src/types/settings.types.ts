@@ -76,7 +76,6 @@ export interface EndWritingAfterNTimes {
 export type FixedWriteIntervals = WriteDaily | WriteWeekly | WriteMonthly | WriteQuarterly | WriteYearly;
 
 export interface JournalSettings {
-  id: string;
   name: string;
   shelves: string[];
 

@@ -14,7 +14,7 @@ import type { JournalSettings, NotesProcessing } from "../types/settings.types";
 import { plugin$ } from "../stores/obsidian.store";
 import { updateLocale } from "../calendar";
 
-const emit = defineEmits<(event: "edit", id: string) => void>();
+const emit = defineEmits<(event: "edit", name: string) => void>();
 
 const fow = moment().localeData().firstDayOfWeek();
 const fowText = moment().localeData().weekdays()[fow];
@@ -38,21 +38,21 @@ function changeFirstWeekOfYear(value: number): void {
 
 function create(): void {
   new VueModal("Add Journal", CreateJournal, {
-    onCreate(name: string, id: string, writing: JournalSettings["write"]) {
-      plugin$.value.createJournal(name, id, writing);
+    onCreate(name: string, writing: JournalSettings["write"]) {
+      plugin$.value.createJournal(name, writing);
     },
   }).open();
 }
-function edit(id: string): void {
-  emit("edit", id);
+function edit(name: string): void {
+  emit("edit", name);
 }
-function remove(id: string): void {
-  const journal = journals$.value[id];
+function remove(name: string): void {
+  const journal = journals$.value[name];
   if (!journal) return;
   new VueModal(`Remove ${journal.name} journal`, RemoveJournal, {
     onRemove(_noteProcessing: NotesProcessing) {
       // TODO Process notes on remove
-      plugin$.value.removeJournal(id);
+      plugin$.value.removeJournal(name);
     },
   }).open();
 }

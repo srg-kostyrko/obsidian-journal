@@ -5,7 +5,8 @@ import type { Journal } from "../journals/journal";
 
 export interface JournalPlugin extends Plugin {
   readonly index: JournalsIndex;
-  getJournal(id: string): Journal | undefined;
-  createJournal(id: string, name: string, write: JournalSettings["write"]): void;
-  removeJournal(id: string): void;
+  getJournal(name: string): Journal | undefined;
+  createJournal(name: string, write: JournalSettings["write"]): void;
+  renameJournal(name: string, newName: string): void;
+  removeJournal(name: string): void;
 }
