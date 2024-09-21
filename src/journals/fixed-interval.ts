@@ -1,38 +1,46 @@
 import type { ComputedRef } from "vue";
-import type { IntervalResolver, JournalInterval } from "../types/journal.types";
+import { JournalAnchorDate, type AnchorDateResolver } from "../types/journal.types";
 import type { FixedWriteIntervals, JournalCommand } from "../types/settings.types";
 import { FRONTMATTER_DATE_FORMAT } from "../constants";
 import type { MomentDate } from "../types/date.types";
 import { date_from_string } from "../calendar";
 
 // TODO: write tests
-export class FixedInterval implements IntervalResolver {
-  #journalId: string;
+export class FixedIntervalResolver implements AnchorDateResolver {
   #settings: ComputedRef<FixedWriteIntervals>;
 
-  constructor(journalId: string, settings: ComputedRef<FixedWriteIntervals>) {
-    this.#journalId = journalId;
+  constructor(settings: ComputedRef<FixedWriteIntervals>) {
     this.#settings = settings;
   }
-
-  resolveForDate(date: string): JournalInterval | null {
-    const baseDate = date_from_string(date);
-    if (!baseDate.isValid()) return null;
-    return this.#buildInterval(baseDate);
+  resolveStartDate(anchorDate: JournalAnchorDate): string {
+    const type = this.#settings.value.type;
+    const start_date = date_from_string(anchorDate).startOf(type).format(FRONTMATTER_DATE_FORMAT);
+    return start_date;
+  }
+  resolveEndDate(anchorDate: JournalAnchorDate): string {
+    const type = this.#settings.value.type;
+    const end_date = date_from_string(anchorDate).endOf(type).format(FRONTMATTER_DATE_FORMAT);
+    return end_date;
   }
 
-  resolveNext(date: string): JournalInterval | null {
+  resolveForDate(date: string): JournalAnchorDate | null {
+    const baseDate = date_from_string(date);
+    if (!baseDate.isValid()) return null;
+    return this.#resolveAnchorDate(baseDate);
+  }
+
+  resolveNext(date: string): JournalAnchorDate | null {
     const baseDate = date_from_string(date);
     if (!baseDate.isValid()) return null;
     baseDate.add(1, this.#settings.value.type);
-    return this.#buildInterval(baseDate);
+    return this.#resolveAnchorDate(baseDate);
   }
 
-  resolvePrevious(date: string): JournalInterval | null {
+  resolvePrevious(date: string): JournalAnchorDate | null {
     const baseDate = date_from_string(date);
     if (!baseDate.isValid()) return null;
     baseDate.subtract(1, this.#settings.value.type);
-    return this.#buildInterval(baseDate);
+    return this.#resolveAnchorDate(baseDate);
   }
 
   resolveDateForCommand(date: string, command: JournalCommand["type"]): string | null {
@@ -65,14 +73,9 @@ export class FixedInterval implements IntervalResolver {
     return Math.ceil(start.diff(end, this.#settings.value.type));
   }
 
-  #buildInterval(base: MomentDate): JournalInterval {
+  #resolveAnchorDate(base: MomentDate): JournalAnchorDate {
     const type = this.#settings.value.type;
     const start_date = base.startOf(type).format(FRONTMATTER_DATE_FORMAT);
-    const end_date = base.endOf(type).format(FRONTMATTER_DATE_FORMAT);
-    return {
-      key: `${this.#journalId}_${start_date}_${end_date}`,
-      start_date,
-      end_date,
-    };
+    return JournalAnchorDate(start_date);
   }
 }

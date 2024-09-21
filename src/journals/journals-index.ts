@@ -1,20 +1,20 @@
 import { Component, type TAbstractFile, TFile, type FrontMatterCache } from "obsidian";
 import { app$ } from "../stores/obsidian.store";
 import { computed, ref, type ComputedRef } from "vue";
-import IntervalTree from "@flatten-js/interval-tree";
-import type { JournalInterval, JournalMetadata } from "../types/journal.types";
+import type { JournalAnchorDate, JournalMetadata } from "../types/journal.types";
 import {
   FRONTMATTER_END_DATE_KEY,
   FRONTMATTER_ID_KEY,
   FRONTMATTER_INDEX_KEY,
-  FRONTMATTER_START_DATE_KEY,
+  FRONTMATTER_DATE_KEY,
 } from "../constants";
 import { date_from_string } from "../calendar";
+import { JournalIndex } from "./journal-index";
 
 export class JournalsIndex extends Component {
   #pathIndex = ref(new Map<string, JournalMetadata>());
   #pathComputeds = new Map<string, ComputedRef<JournalMetadata | null>>();
-  #intervalTree = new IntervalTree<JournalMetadata>();
+  #journalIndecies = new Map<string, JournalIndex>();
 
   constructor() {
     super();
@@ -33,22 +33,22 @@ export class JournalsIndex extends Component {
     return cmp;
   }
 
-  find(journalId: string, date: string): JournalMetadata | null {
-    const time = date_from_string(date).toDate().getTime();
-    const list = this.#intervalTree.search([time, time]);
-    return list.find((entry) => entry.id === journalId);
+  find(journalId: string, date: JournalAnchorDate): JournalMetadata | null {
+    const path = this.#getJournalIndex(journalId).get(date);
+    if (!path) return null;
+    return this.getForPath(path);
   }
 
-  findNext(journalId: string, metadata: JournalInterval): JournalMetadata | null {
-    const date = date_from_string(metadata.end_date).add(1, "day").toDate().getTime();
-    const list = this.#intervalTree.search([date, Infinity]);
-    return list.find((entry) => entry.id === journalId);
+  findNext(journalId: string, anchorDate: JournalAnchorDate): JournalMetadata | null {
+    const path = this.#getJournalIndex(journalId).findNext(anchorDate);
+    if (!path) return null;
+    return this.getForPath(path);
   }
 
-  findPrevious(journalId: string, metadata: JournalInterval): JournalMetadata | null {
-    const date = date_from_string(metadata.start_date).subtract(1, "day").toDate().getTime();
-    const list = this.#intervalTree.search([0, date]);
-    return list.findLast((entry) => entry.id === journalId);
+  findPrevious(journalId: string, anchorDate: JournalAnchorDate): JournalMetadata | null {
+    const path = this.#getJournalIndex(journalId).findPrevious(anchorDate);
+    if (!path) return null;
+    return this.getForPath(path);
   }
 
   async reindex(): Promise<void> {
@@ -56,6 +56,15 @@ export class JournalsIndex extends Component {
     for (const file of files) {
       this.#onMetadataChanged(file);
     }
+  }
+
+  #getJournalIndex(journalId: string) {
+    let index = this.#journalIndecies.get(journalId);
+    if (!index) {
+      index = new JournalIndex();
+      this.#journalIndecies.set(journalId, index);
+    }
+    return index;
   }
 
   #setupListeners() {
@@ -71,23 +80,21 @@ export class JournalsIndex extends Component {
         this.#pathIndex.value.delete(oldPath);
         metadata.path = file.path;
         this.#pathIndex.value.set(file.path, metadata);
+        const index = this.#journalIndecies.get(metadata.id);
+        if (!index) return;
+        index.deleteForPath(oldPath);
+        index.set(metadata.date, file.path);
       }
     }
   };
 
   #onDeleted = (file: TAbstractFile) => {
     if (file instanceof TFile) {
+      const metadata = this.#pathIndex.value.get(file.path);
+      if (!metadata) return;
       this.#pathIndex.value.delete(file.path);
       this.#pathComputeds.delete(file.path);
-      const toDelete = [];
-      for (const [key, entry] of this.#intervalTree.iterate(undefined, (value, key) => [key, value])) {
-        if (entry?.path === file.path) {
-          toDelete.push([key, entry]);
-        }
-      }
-      for (const [key, entry] of toDelete) {
-        this.#intervalTree.remove(key, entry);
-      }
+      this.#journalIndecies.get(metadata.id)?.delete(metadata.date);
     }
   };
 
@@ -101,31 +108,24 @@ export class JournalsIndex extends Component {
 
   #processFrontmatter(path: string, frontmatter: FrontMatterCache): void {
     if (!(FRONTMATTER_ID_KEY in frontmatter)) return;
-    const start_date = frontmatter[FRONTMATTER_START_DATE_KEY];
+    const date = frontmatter[FRONTMATTER_DATE_KEY];
     const end_date = frontmatter[FRONTMATTER_END_DATE_KEY];
-    if (!date_from_string(start_date).isValid() || !date_from_string(end_date).isValid()) return;
+    if (!date_from_string(date).isValid() || (end_date && !date_from_string(end_date).isValid())) return;
     const id = frontmatter[FRONTMATTER_ID_KEY];
     const journalMetadata: JournalMetadata = {
-      id: frontmatter[FRONTMATTER_ID_KEY],
-      key: `${id}_${start_date}_${end_date}`,
-      start_date,
+      id,
+      date,
       end_date,
       path,
       index: frontmatter[FRONTMATTER_INDEX_KEY],
     };
     this.#pathIndex.value.set(path, journalMetadata);
-    this.#intervalTree.insert(
-      [
-        date_from_string(start_date).startOf("day").toDate().getTime(),
-        date_from_string(end_date).endOf("day").toDate().getTime(),
-      ],
-      journalMetadata,
-    );
+    this.#getJournalIndex(id).set(date, path);
   }
 
   onunload(): void {
-    this.#intervalTree.clear();
     this.#pathIndex.value.clear();
     this.#pathComputeds.clear();
+    this.#journalIndecies.clear();
   }
 }

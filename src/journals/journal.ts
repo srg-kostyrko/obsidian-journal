@@ -1,7 +1,7 @@
 import { computed, type ComputedRef } from "vue";
 import { journals$ } from "../stores/settings.store";
 import type { JournalCommand, JournalSettings } from "../types/settings.types";
-import type { IntervalResolver, JournalInterval, JournalMetadata } from "../types/journal.types";
+import type { AnchorDateResolver, JournalAnchorDate, JournalMetadata } from "../types/journal.types";
 import { activeNote$, app$, plugin$ } from "../stores/obsidian.store";
 import { normalizePath, TFile, type LeftRibbon } from "obsidian";
 import { ensureFolderExists } from "../utils/io";
@@ -12,9 +12,9 @@ import {
   FRONTMATTER_END_DATE_KEY,
   FRONTMATTER_ID_KEY,
   FRONTMATTER_INDEX_KEY,
-  FRONTMATTER_START_DATE_KEY,
+  FRONTMATTER_DATE_KEY,
 } from "../constants";
-import { FixedInterval } from "./fixed-interval";
+import { FixedIntervalResolver } from "./fixed-interval";
 import { date_from_string, today } from "../calendar";
 import { VueModal } from "@/components/modals/vue-modal";
 import ConfirmNoteCreationModal from "@/components/modals/ConfirmNoteCreation.modal.vue";
@@ -22,13 +22,12 @@ import ConfirmNoteCreationModal from "@/components/modals/ConfirmNoteCreation.mo
 export class Journal {
   readonly name$: ComputedRef<string>;
   #config: ComputedRef<JournalSettings>;
-  #intervalResolver: IntervalResolver;
+  #anchorDateResolver: AnchorDateResolver;
 
   constructor(public readonly id: string) {
     this.#config = computed(() => journals$.value[id]);
     this.name$ = computed(() => this.#config.value.name);
-    this.#intervalResolver = new FixedInterval(
-      id,
+    this.#anchorDateResolver = new FixedIntervalResolver(
       // eslint-disable-next-line @typescript-eslint/ban-ts-comment
       // @ts-expect-error
       computed(() => this.#config.value.write),
@@ -70,38 +69,42 @@ export class Journal {
   }
 
   async find(date: string): Promise<JournalMetadata | null> {
-    const metadata = plugin$.value.index.find(this.id, date);
+    const anchorDate = this.#anchorDateResolver.resolveForDate(date);
+    if (!anchorDate) return null;
+    const metadata = plugin$.value.index.find(this.id, anchorDate);
     if (metadata) return metadata;
-    const interval = this.#intervalResolver.resolveForDate(date);
-    if (!interval) return null;
-    if (!this.#checkBounds(interval)) return null;
-    return await this.#buildMetadata(interval);
+    if (!this.#checkBounds(anchorDate)) return null;
+    return await this.#buildMetadata(anchorDate);
   }
 
-  async next(metadata: JournalInterval, existing = false): Promise<JournalMetadata | null> {
+  async next(date: string, existing = false): Promise<JournalMetadata | null> {
+    const anchorDate = this.#anchorDateResolver.resolveForDate(date);
+    if (!anchorDate) return null;
     if (existing) {
-      const nextExstingMetadata = plugin$.value.index.findNext(this.id, metadata);
+      const nextExstingMetadata = plugin$.value.index.findNext(this.id, anchorDate);
       if (nextExstingMetadata) return nextExstingMetadata;
     }
-    const interval = this.#intervalResolver.resolveNext(metadata.end_date);
-    if (!interval) return null;
-    const nextMetadata = plugin$.value.index.find(this.id, interval.start_date);
+    const nextAnchorDate = this.#anchorDateResolver.resolveNext(anchorDate);
+    if (!nextAnchorDate) return null;
+    const nextMetadata = plugin$.value.index.find(this.id, nextAnchorDate);
     if (nextMetadata) return nextMetadata;
-    if (!this.#checkBounds(interval)) return null;
-    return await this.#buildMetadata(interval);
+    if (!this.#checkBounds(nextAnchorDate)) return null;
+    return await this.#buildMetadata(nextAnchorDate);
   }
 
-  async previous(metadata: JournalInterval, existing = false): Promise<JournalMetadata | null> {
+  async previous(date: string, existing = false): Promise<JournalMetadata | null> {
+    const anchorDate = this.#anchorDateResolver.resolveForDate(date);
+    if (!anchorDate) return null;
     if (existing) {
-      const previousExstingMetadata = plugin$.value.index.findPrevious(this.id, metadata);
+      const previousExstingMetadata = plugin$.value.index.findPrevious(this.id, anchorDate);
       if (previousExstingMetadata) return previousExstingMetadata;
     }
-    const interval = this.#intervalResolver.resolvePrevious(metadata.end_date);
-    if (!interval) return null;
-    const previousMetadata = plugin$.value.index.find(this.id, interval.end_date);
+    const prevAnchorDate = this.#anchorDateResolver.resolvePrevious(anchorDate);
+    if (!prevAnchorDate) return null;
+    const previousMetadata = plugin$.value.index.find(this.id, prevAnchorDate);
     if (previousMetadata) return previousMetadata;
-    if (!this.#checkBounds(interval)) return null;
-    return await this.#buildMetadata(interval);
+    if (!this.#checkBounds(prevAnchorDate)) return null;
+    return await this.#buildMetadata(prevAnchorDate);
   }
 
   async open(metadata: JournalMetadata): Promise<void> {
@@ -173,17 +176,17 @@ export class Journal {
     return {
       date: {
         type: "date",
-        value: metadata.start_date,
+        value: metadata.date,
         defaultFormat: this.#config.value.dateFormat,
       },
       start_date: {
         type: "date",
-        value: metadata.start_date,
+        value: this.#anchorDateResolver.resolveStartDate(metadata.date),
         defaultFormat: this.#config.value.dateFormat,
       },
       end_date: {
         type: "date",
-        value: metadata.end_date,
+        value: metadata.end_date ?? this.#anchorDateResolver.resolveEndDate(metadata.date),
         defaultFormat: this.#config.value.dateFormat,
       },
       journal_name: {
@@ -218,8 +221,12 @@ export class Journal {
   async #ensureFrontMatter(note: TFile, metadata: JournalMetadata): Promise<void> {
     await app$.value.fileManager.processFrontMatter(note, (frontmatter) => {
       frontmatter[FRONTMATTER_ID_KEY] = this.id;
-      frontmatter[FRONTMATTER_START_DATE_KEY] = date_from_string(metadata.start_date).format(FRONTMATTER_DATE_FORMAT);
-      frontmatter[FRONTMATTER_END_DATE_KEY] = date_from_string(metadata.end_date).format(FRONTMATTER_DATE_FORMAT);
+      frontmatter[FRONTMATTER_DATE_KEY] = date_from_string(metadata.date).format(FRONTMATTER_DATE_FORMAT);
+      if (metadata.end_date) {
+        frontmatter[FRONTMATTER_END_DATE_KEY] = date_from_string(metadata.end_date).format(FRONTMATTER_DATE_FORMAT);
+      } else {
+        delete frontmatter[FRONTMATTER_END_DATE_KEY];
+      }
       if (metadata.index == null) {
         delete frontmatter[FRONTMATTER_INDEX_KEY];
       } else {
@@ -228,13 +235,11 @@ export class Journal {
     });
   }
 
-  async #buildMetadata(interval: JournalInterval): Promise<JournalMetadata> {
+  async #buildMetadata(anchorDate: JournalAnchorDate): Promise<JournalMetadata> {
     const metadata: JournalMetadata = {
       id: this.id,
-      key: interval.key,
-      start_date: interval.start_date,
-      end_date: interval.start_date,
-      index: await this.#resolveIndex(interval),
+      date: anchorDate,
+      index: await this.#resolveIndex(anchorDate),
     };
     return metadata;
   }
@@ -253,7 +258,7 @@ export class Journal {
   async #execCommand(command: JournalCommand): Promise<void> {
     const refDate = this.#getCommandRefDate(command);
     if (!refDate) return;
-    const date = this.#intervalResolver.resolveDateForCommand(refDate, command.type);
+    const date = this.#anchorDateResolver.resolveDateForCommand(refDate, command.type);
     if (!date) return;
     const metadata = await this.find(date);
     if (!metadata) return;
@@ -264,45 +269,45 @@ export class Journal {
     const activeNode = activeNote$.value;
     const metadata = activeNode ? plugin$.value.index.getForPath(activeNode.path) : null;
     if (metadata && command.context !== "today") {
-      return metadata.end_date;
+      return metadata.date;
     }
     if (command.context === "only_open_note") return null;
     return today().format(FRONTMATTER_DATE_FORMAT);
   }
 
-  #checkBounds(interval: JournalInterval): boolean {
+  #checkBounds(anchorDate: JournalAnchorDate): boolean {
     if (this.#config.value.start) {
       const startDate = date_from_string(this.#config.value.start);
-      if (startDate.isValid() && date_from_string(interval.end_date).isBefore(startDate)) return false;
+      if (startDate.isValid() && date_from_string(anchorDate).isBefore(startDate)) return false;
     }
 
     if (this.#config.value.end.type === "date" && this.#config.value.end.date) {
       const endDate = date_from_string(this.#config.value.end.date);
-      if (endDate.isValid() && date_from_string(interval.start_date).isAfter(endDate)) return false;
+      if (endDate.isValid() && date_from_string(anchorDate).isAfter(endDate)) return false;
     }
     if (this.#config.value.end.type === "repeats" && this.#config.value.end.repeats && this.#config.value.start) {
-      const repeats = this.#intervalResolver.countRepeats(this.#config.value.start, interval.start_date);
+      const repeats = this.#anchorDateResolver.countRepeats(this.#config.value.start, anchorDate);
       if (repeats > this.#config.value.end.repeats) return false;
     }
 
     return true;
   }
 
-  async #resolveIndex(interval: JournalInterval): Promise<number | undefined> {
+  async #resolveIndex(anchorDate: JournalAnchorDate): Promise<number | undefined> {
     if (!this.#config.value.index.enabled) return undefined;
     if (!this.#config.value.index.anchorDate || !this.#config.value.index.anchorIndex) return undefined;
-    const before = await this.previous(interval, true);
+    const before = await this.previous(anchorDate, true);
     if (before && before.index) {
-      const repeats = this.#intervalResolver.countRepeats(before.end_date, interval.start_date);
+      const repeats = this.#anchorDateResolver.countRepeats(before.date, anchorDate);
       let index = before.index + repeats;
       if (this.#config.value.index.type === "reset_after") {
         index %= this.#config.value.index.resetAfter;
       }
       return index;
     }
-    const after = await this.next(interval, true);
+    const after = await this.next(anchorDate, true);
     if (after && after.index) {
-      const repeats = this.#intervalResolver.countRepeats(interval.end_date, after.start_date);
+      const repeats = this.#anchorDateResolver.countRepeats(anchorDate, after.date);
       let index = after.index - repeats;
       if (this.#config.value.index.type === "reset_after" && index < 0) {
         index *= -1;
@@ -312,20 +317,20 @@ export class Journal {
     const anchor = date_from_string(this.#config.value.index.anchorDate);
     if (!anchor.isValid()) return undefined;
     if (
-      anchor.isAfter(interval.start_date) &&
+      anchor.isAfter(anchorDate) &&
       this.#config.value.index.type === "increment" &&
       !this.#config.value.index.allowBefore
     )
       return undefined;
-    if (anchor.isBefore(interval.start_date)) {
-      const repeats = this.#intervalResolver.countRepeats(this.#config.value.index.anchorDate, interval.start_date);
+    if (anchor.isBefore(anchorDate)) {
+      const repeats = this.#anchorDateResolver.countRepeats(this.#config.value.index.anchorDate, anchorDate);
       let index = this.#config.value.index.anchorIndex + repeats;
       if (this.#config.value.index.type === "reset_after") {
         index %= this.#config.value.index.resetAfter;
       }
       return index;
     }
-    const repeats = this.#intervalResolver.countRepeats(interval.end_date, this.#config.value.index.anchorDate);
+    const repeats = this.#anchorDateResolver.countRepeats(anchorDate, this.#config.value.index.anchorDate);
     let index = this.#config.value.index.anchorIndex - repeats;
     if (this.#config.value.index.type === "reset_after" && index < 0) {
       index *= -1;

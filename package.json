@@ -26,7 +26,6 @@
   "author": "Sergii Kostyrko",
   "license": "MIT",
   "dependencies": {
-    "@flatten-js/interval-tree": "^1.1.3",
     "@vee-validate/valibot": "^4.13.2",
     "@vueuse/core": "^11.0.3",
     "obsidian": "^1.6.6",
