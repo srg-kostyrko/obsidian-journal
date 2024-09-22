@@ -1,7 +1,7 @@
 import { computed, type ComputedRef } from "vue";
 import { journals$ } from "../stores/settings.store";
 import type { JournalCommand, JournalSettings } from "../types/settings.types";
-import type { AnchorDateResolver, JournalAnchorDate, JournalMetadata } from "../types/journal.types";
+import type { AnchorDateResolver, JournalAnchorDate, JournalMetadata, JournalNoteData } from "../types/journal.types";
 import { activeNote$, app$, plugin$ } from "../stores/obsidian.store";
 import { normalizePath, TFile, type LeftRibbon } from "obsidian";
 import { ensureFolderExists } from "../utils/io";
@@ -68,7 +68,7 @@ export class Journal {
     }
   }
 
-  async find(date: string): Promise<JournalMetadata | null> {
+  async find(date: string): Promise<JournalNoteData | JournalMetadata | null> {
     const anchorDate = this.#anchorDateResolver.resolveForDate(date);
     if (!anchorDate) return null;
     const metadata = plugin$.value.index.find(this.name, anchorDate);
@@ -77,7 +77,7 @@ export class Journal {
     return await this.#buildMetadata(anchorDate);
   }
 
-  async next(date: string, existing = false): Promise<JournalMetadata | null> {
+  async next(date: string, existing = false): Promise<JournalNoteData | JournalMetadata | null> {
     const anchorDate = this.#anchorDateResolver.resolveForDate(date);
     if (!anchorDate) return null;
     if (existing) {
@@ -92,7 +92,7 @@ export class Journal {
     return await this.#buildMetadata(nextAnchorDate);
   }
 
-  async previous(date: string, existing = false): Promise<JournalMetadata | null> {
+  async previous(date: string, existing = false): Promise<JournalNoteData | JournalMetadata | null> {
     const anchorDate = this.#anchorDateResolver.resolveForDate(date);
     if (!anchorDate) return null;
     if (existing) {
@@ -111,6 +111,10 @@ export class Journal {
     const file = await this.#ensureNote(metadata);
     if (!file) return;
     await this.#openFile(file);
+  }
+
+  resolveAnchorDate(date: string): JournalAnchorDate | null {
+    return this.#anchorDateResolver.resolveForDate(date);
   }
 
   async #openFile(file: TFile): Promise<void> {
@@ -164,8 +168,8 @@ export class Journal {
     });
   }
 
-  #getNotePath(metadata: JournalMetadata): string {
-    if (metadata.path) return metadata.path;
+  #getNotePath(metadata: JournalNoteData | JournalMetadata): string {
+    if ("path" in metadata) return metadata.path;
     const templateContext = this.#getTemplateContext(metadata);
     const filename = replaceTemplateVariables(this.#config.value.nameTemplate, templateContext) + ".md";
     const folderPath = replaceTemplateVariables(this.#config.value.folder, templateContext);
@@ -237,7 +241,7 @@ export class Journal {
 
   async #buildMetadata(anchorDate: JournalAnchorDate): Promise<JournalMetadata> {
     const metadata: JournalMetadata = {
-      name: this.name,
+      journal: this.name,
       date: anchorDate,
       index: await this.#resolveIndex(anchorDate),
     };
@@ -250,7 +254,7 @@ export class Journal {
       if (!activeNode) return false;
       const metadata = plugin$.value.index.getForPath(activeNode.path);
       if (!metadata) return false;
-      if (metadata.name !== this.name) return false;
+      if (metadata.journal !== this.name) return false;
     }
     return true;
   }

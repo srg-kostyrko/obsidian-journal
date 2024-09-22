@@ -157,7 +157,7 @@ export default class JournalPlugin extends Plugin {
           new Notice("This note is not connected to any journal.");
           return;
         }
-        const journal = this.#journals.get(metadata.name);
+        const journal = this.#journals.get(metadata.journal);
         if (!journal) {
           new Notice("Unknown journal.");
           return;
@@ -181,7 +181,7 @@ export default class JournalPlugin extends Plugin {
           new Notice("This note is not connected to any journal.");
           return;
         }
-        const journal = this.#journals.get(metadata.name);
+        const journal = this.#journals.get(metadata.journal);
         if (!journal) {
           new Notice("Unknown journal.");
           return;

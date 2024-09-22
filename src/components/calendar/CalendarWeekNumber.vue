@@ -1,13 +1,18 @@
 <script setup lang="ts">
-import type { MomentDate } from "../../types/date.types";
-defineProps<{
+import { useDecorations } from "@/composables/use-decorations";
+import type { MomentDate } from "@/types/date.types";
+import CalendarDecoration from "./CalendarDecoration.vue";
+import { journalsWithWeeks$ } from "@/stores/settings.store";
+const props = defineProps<{
   date: MomentDate;
 }>();
+
+const decorationsStyles = useDecorations(props.date, journalsWithWeeks$);
 </script>
 
 <template>
   <button>
-    {{ date.format("[W]W") }}
+    <CalendarDecoration :styles="decorationsStyles">{{ date.format("[W]W") }}</CalendarDecoration>
   </button>
 </template>
 
@@ -15,5 +20,6 @@ defineProps<{
 button {
   background-color: transparent;
   box-shadow: none;
+  position: relative;
 }
 </style>

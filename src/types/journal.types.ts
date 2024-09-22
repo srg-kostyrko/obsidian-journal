@@ -7,11 +7,22 @@ export function JournalAnchorDate(date: string): JournalAnchorDate {
 }
 
 export interface JournalMetadata {
-  name: string;
+  journal: string;
   date: JournalAnchorDate;
   end_date?: string;
   index?: number;
-  path?: string;
+}
+
+export interface JournalNoteData {
+  title: string;
+  path: string;
+  journal: string;
+  date: JournalAnchorDate;
+  tags: string[];
+  properties: Record<string, unknown>;
+  tasks: { completed: boolean }[];
+  end_date?: string;
+  index?: number;
 }
 
 export interface AnchorDateResolver {

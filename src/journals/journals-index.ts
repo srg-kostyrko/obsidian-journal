@@ -1,7 +1,7 @@
-import { Component, type TAbstractFile, TFile, type FrontMatterCache } from "obsidian";
+import { Component, type TAbstractFile, TFile, type CachedMetadata } from "obsidian";
 import { app$ } from "../stores/obsidian.store";
-import { computed, ref, type ComputedRef } from "vue";
-import type { JournalAnchorDate, JournalMetadata } from "../types/journal.types";
+import { computed, ref, shallowRef, type ComputedRef } from "vue";
+import type { JournalAnchorDate, JournalNoteData } from "../types/journal.types";
 import {
   FRONTMATTER_END_DATE_KEY,
   FRONTMATTER_NAME_KEY,
@@ -12,16 +12,16 @@ import { date_from_string } from "../calendar";
 import { JournalIndex } from "./journal-index";
 
 export class JournalsIndex extends Component {
-  #pathIndex = ref(new Map<string, JournalMetadata>());
-  #pathComputeds = new Map<string, ComputedRef<JournalMetadata | null>>();
-  #journalIndecies = new Map<string, JournalIndex>();
+  #pathIndex = ref(new Map<string, JournalNoteData>());
+  #pathComputeds = new Map<string, ComputedRef<JournalNoteData | null>>();
+  #journalIndecies = shallowRef(new Map<string, JournalIndex>());
 
   constructor() {
     super();
     this.#setupListeners();
   }
 
-  getForPath(path: string): JournalMetadata | null {
+  getForPath(path: string): JournalNoteData | null {
     return this.#pathIndex.value.get(path) ?? null;
   }
 
@@ -33,19 +33,19 @@ export class JournalsIndex extends Component {
     return cmp;
   }
 
-  find(journalId: string, date: JournalAnchorDate): JournalMetadata | null {
+  find(journalId: string, date: JournalAnchorDate): JournalNoteData | null {
     const path = this.#getJournalIndex(journalId).get(date);
     if (!path) return null;
     return this.getForPath(path);
   }
 
-  findNext(journalId: string, anchorDate: JournalAnchorDate): JournalMetadata | null {
+  findNext(journalId: string, anchorDate: JournalAnchorDate): JournalNoteData | null {
     const path = this.#getJournalIndex(journalId).findNext(anchorDate);
     if (!path) return null;
     return this.getForPath(path);
   }
 
-  findPrevious(journalId: string, anchorDate: JournalAnchorDate): JournalMetadata | null {
+  findPrevious(journalId: string, anchorDate: JournalAnchorDate): JournalNoteData | null {
     const path = this.#getJournalIndex(journalId).findPrevious(anchorDate);
     if (!path) return null;
     return this.getForPath(path);
@@ -72,10 +72,10 @@ export class JournalsIndex extends Component {
   }
 
   #getJournalIndex(journalId: string) {
-    let index = this.#journalIndecies.get(journalId);
+    let index = this.#journalIndecies.value.get(journalId);
     if (!index) {
       index = new JournalIndex();
-      this.#journalIndecies.set(journalId, index);
+      this.#journalIndecies.value.set(journalId, index);
     }
     return index;
   }
@@ -93,7 +93,7 @@ export class JournalsIndex extends Component {
         this.#pathIndex.value.delete(oldPath);
         metadata.path = file.path;
         this.#pathIndex.value.set(file.path, metadata);
-        const index = this.#journalIndecies.get(metadata.name);
+        const index = this.#journalIndecies.value.get(metadata.journal);
         if (!index) return;
         index.deleteForPath(oldPath);
         index.set(metadata.date, file.path);
@@ -107,38 +107,47 @@ export class JournalsIndex extends Component {
       if (!metadata) return;
       this.#pathIndex.value.delete(file.path);
       this.#pathComputeds.delete(file.path);
-      this.#journalIndecies.get(metadata.name)?.delete(metadata.date);
+      this.#journalIndecies.value.get(metadata.journal)?.delete(metadata.date);
     }
   };
 
   #onMetadataChanged = (file: TFile) => {
     const metadata = app$.value.metadataCache.getFileCache(file);
     if (!metadata) return;
-    const { frontmatter } = metadata;
-    if (!frontmatter) return;
-    this.#processFrontmatter(file.path, frontmatter);
+    this.#processMetadata(file.basename, file.path, metadata);
   };
 
-  #processFrontmatter(path: string, frontmatter: FrontMatterCache): void {
+  #processMetadata(title: string, path: string, metadata: CachedMetadata): void {
+    const { frontmatter } = metadata;
+    if (!frontmatter) return;
     if (!(FRONTMATTER_NAME_KEY in frontmatter)) return;
     const date = frontmatter[FRONTMATTER_DATE_KEY];
     const end_date = frontmatter[FRONTMATTER_END_DATE_KEY];
     if (!date_from_string(date).isValid() || (end_date && !date_from_string(end_date).isValid())) return;
-    const name = frontmatter[FRONTMATTER_NAME_KEY];
-    const journalMetadata: JournalMetadata = {
-      name,
+    const journal = frontmatter[FRONTMATTER_NAME_KEY];
+    const journalMetadata: JournalNoteData = {
+      title,
+      journal,
       date,
       end_date,
       path,
       index: frontmatter[FRONTMATTER_INDEX_KEY],
+      tags: metadata.tags?.map((tag) => tag.tag) ?? [],
+      tasks:
+        metadata.listItems
+          ?.filter((item) => item.task != undefined)
+          .map((item) => ({
+            completed: item.task !== " ",
+          })) ?? [],
+      properties: frontmatter,
     };
     this.#pathIndex.value.set(path, journalMetadata);
-    this.#getJournalIndex(name).set(date, path);
+    this.#getJournalIndex(journal).set(date, path);
   }
 
   onunload(): void {
     this.#pathIndex.value.clear();
     this.#pathComputeds.clear();
-    this.#journalIndecies.clear();
+    this.#journalIndecies.value.clear();
   }
 }
