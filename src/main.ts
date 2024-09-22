@@ -13,6 +13,7 @@ import { JournalsIndex } from "./journals/journals-index";
 import { CALENDAR_VIEW_TYPE } from "./constants";
 import { CalendarView } from "./calendar-view/calendar-view";
 import { deepCopy } from "./utils/misc";
+import { TimelineCodeBlockProcessor } from "./code-blocks/timeline/timeline-processor";
 
 export default class JournalPlugin extends Plugin {
   #stopHandles: WatchStopHandle[] = [];
@@ -91,6 +92,10 @@ export default class JournalPlugin extends Plugin {
     this.#configureCommands();
 
     this.addSettingTab(new JournalSettingTab(this.app, this));
+    this.registerMarkdownCodeBlockProcessor("calendar-timeline", (source, el, ctx) => {
+      const processor = new TimelineCodeBlockProcessor(el, source, ctx.sourcePath);
+      ctx.addChild(processor);
+    });
 
     this.registerView(CALENDAR_VIEW_TYPE, (leaf) => new CalendarView(leaf));
 
