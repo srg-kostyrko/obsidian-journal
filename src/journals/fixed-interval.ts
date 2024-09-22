@@ -75,7 +75,13 @@ export class FixedIntervalResolver implements AnchorDateResolver {
 
   #resolveAnchorDate(base: MomentDate): JournalAnchorDate {
     const type = this.#settings.value.type;
-    const start_date = base.startOf(type).format(FRONTMATTER_DATE_FORMAT);
-    return JournalAnchorDate(start_date);
+    const start_date = base.startOf(type);
+    if (this.#settings.value.type === "week") {
+      const end_date = base.clone().endOf(type);
+      if (!start_date.isSame(end_date, "year") && start_date.week() === 1) {
+        return JournalAnchorDate(end_date.format(FRONTMATTER_DATE_FORMAT));
+      }
+    }
+    return JournalAnchorDate(start_date.format(FRONTMATTER_DATE_FORMAT));
   }
 }
