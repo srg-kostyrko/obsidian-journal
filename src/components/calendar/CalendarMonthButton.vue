@@ -2,7 +2,7 @@
 import { useDecorations } from "@/composables/use-decorations";
 import type { MomentDate } from "@/types/date.types";
 import CalendarDecoration from "./CalendarDecoration.vue";
-import { journalsWithMonths$ } from "@/stores/settings.store";
+import { decorationsForMonths$, journalsWithMonths$ } from "@/stores/settings.store";
 import ObsidianButton from "../obsidian/ObsidianButton.vue";
 import { toRefs } from "vue";
 
@@ -12,7 +12,7 @@ const props = defineProps<{
 const { date } = toRefs(props);
 const emit = defineEmits<(e: "select", event: MouseEvent, date: MomentDate) => void>();
 
-const decorationsStyles = useDecorations(date, journalsWithMonths$);
+const decorationsStyles = useDecorations(date, decorationsForMonths$);
 function select(event: MouseEvent) {
   if (!journalsWithMonths$.value.length) {
     return;

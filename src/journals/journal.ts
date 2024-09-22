@@ -18,6 +18,7 @@ import { FixedIntervalResolver } from "./fixed-interval";
 import { date_from_string, today } from "../calendar";
 import { VueModal } from "@/components/modals/vue-modal";
 import ConfirmNoteCreationModal from "@/components/modals/ConfirmNoteCreation.modal.vue";
+import type { MomentDate } from "@/types/date.types";
 
 export class Journal {
   readonly name$: ComputedRef<string>;
@@ -32,6 +33,10 @@ export class Journal {
       // @ts-expect-error
       computed(() => this.#config.value.write),
     );
+  }
+
+  calculateOffset(date: MomentDate): [positive: number, negative: number] {
+    return this.#anchorDateResolver.calculateOffset(date);
   }
 
   registerCommands(): void {

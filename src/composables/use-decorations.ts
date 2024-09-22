@@ -1,5 +1,6 @@
 import type { MomentDate } from "@/types/date.types";
 import type {
+  JournalDecoration,
   JournalDecorationCondition,
   JournalDecorationDateCondition,
   JournalDecorationOffsetCondition,
@@ -9,21 +10,26 @@ import type {
   JournalDecorationTitleCondition,
   JournalDecorationWeekdayCondition,
 } from "@/types/settings.types";
-import { computed, toRef, type ComputedRef, type MaybeRefOrGetter } from "vue";
+import { computed, toRef, unref, type ComputedRef, type MaybeRefOrGetter } from "vue";
 import { useJournalDate } from "./use-journal-date";
 import type { JournalNoteData } from "@/types/journal.types";
-import { pluginSettings$ } from "@/stores/settings.store";
+import { useJournal } from "./use-journal";
 
 export function useDecorations(
-  date: MaybeRefOrGetter<MomentDate>,
-  journals: MaybeRefOrGetter<string[]>,
+  dateRef: MaybeRefOrGetter<MomentDate>,
+  decorationsList: MaybeRefOrGetter<
+    {
+      journalName: string;
+      decoration: JournalDecoration;
+    }[]
+  >,
 ): ComputedRef<JournalDecorationsStyle[]> {
-  const _date = toRef(date);
-  const _journals = toRef(journals);
+  const _date = unref(dateRef);
+  const _decorationsList = toRef(decorationsList);
   return computed(() => {
-    return _journals.value
-      .map((journal) => {
-        return useJournalDecorations(_date, journal).value;
+    return _decorationsList.value
+      .map(({ journalName, decoration }) => {
+        return useJournalDecorations(_date, journalName, decoration).value;
       })
       .flat();
   });
@@ -31,37 +37,43 @@ export function useDecorations(
 
 export function useJournalDecorations(
   date: MaybeRefOrGetter<MomentDate>,
-  journalName: MaybeRefOrGetter<string>,
+  journalName: string,
+  decoration: MaybeRefOrGetter<JournalDecoration>,
 ): ComputedRef<JournalDecorationsStyle[]> {
   const _date = toRef(date);
   const _journalName = toRef(journalName);
-  const _journalSettings = computed(() => pluginSettings$.value.journals[_journalName.value]);
+  const _decoration = toRef(decoration);
+
   return computed(() => {
-    const { noteData } = useJournalDate(_date, _journalName.value);
-    return _journalSettings.value.decorations
-      .filter((decoration) => {
-        return checkDecorationConditions(_date.value, noteData.value, decoration.mode, decoration.conditions);
-      })
-      .map((decoration) => {
-        return decoration.styles;
-      })
-      .flat();
+    const { noteData } = useJournalDate(_date, _journalName);
+    return checkDecorationConditions(
+      _date.value,
+      _journalName.value,
+      noteData.value,
+      _decoration.value.mode,
+      _decoration.value.conditions,
+    )
+      ? _decoration.value.styles
+      : [];
   });
 }
 
 function checkDecorationConditions(
   date: MomentDate,
+  journalName: string,
   noteDate: JournalNoteData | null,
   mode: "and" | "or",
   conditions: JournalDecorationCondition[],
 ): boolean {
   if (conditions.length === 0) return false;
-  if (mode === "or") return conditions.some((condition) => checkDecorationCondition(date, noteDate, condition));
-  return conditions.every((condition) => checkDecorationCondition(date, noteDate, condition));
+  if (mode === "or")
+    return conditions.some((condition) => checkDecorationCondition(date, journalName, noteDate, condition));
+  return conditions.every((condition) => checkDecorationCondition(date, journalName, noteDate, condition));
 }
 
 function checkDecorationCondition(
   date: MomentDate,
+  journalName: string,
   noteData: JournalNoteData | null,
   condition: JournalDecorationCondition,
 ): boolean {
@@ -71,13 +83,13 @@ function checkDecorationCondition(
     case "tag":
       return checkDecorationTagCondition(noteData, condition);
     case "date":
-      return checkDecorationDateCondition(date, noteData, condition);
+      return checkDecorationDateCondition(date, condition);
     case "property":
       return checkDecorationPropertyCondition(noteData, condition);
     case "weekday":
-      return checkDecorationWeekdayCondition(date, noteData, condition);
+      return checkDecorationWeekdayCondition(date, condition);
     case "offset":
-      return checkDecorationOffsetCondition(date, noteData, condition);
+      return checkDecorationOffsetCondition(date, journalName, condition);
     case "all-tasks-completed":
       return checkDecorationAllTasksCompletedCondition(noteData);
     case "has-note":
@@ -124,12 +136,11 @@ function checkDecorationTagCondition(
   }
 }
 
-function checkDecorationDateCondition(
-  _date: MomentDate,
-  _noteDate: JournalNoteData | null,
-  _condition: JournalDecorationDateCondition,
-): boolean {
-  return false;
+function checkDecorationDateCondition(date: MomentDate, condition: JournalDecorationDateCondition): boolean {
+  if (condition.day !== -1 && date.date() !== condition.day) return false;
+  if (condition.month !== -1 && date.month() !== condition.month) return false;
+  if (condition.year && date.year() !== condition.year) return false;
+  return true;
 }
 
 function checkDecorationPropertyCondition(
@@ -189,20 +200,18 @@ function checkDecorationPropertyCondition(
   return false;
 }
 
-function checkDecorationWeekdayCondition(
-  _date: MomentDate,
-  _noteDate: JournalNoteData | null,
-  _condition: JournalDecorationWeekdayCondition,
-): boolean {
-  return false;
+function checkDecorationWeekdayCondition(date: MomentDate, condition: JournalDecorationWeekdayCondition): boolean {
+  return condition.weekdays.includes(date.day());
 }
 
 function checkDecorationOffsetCondition(
-  _date: MomentDate,
-  _noteDate: JournalNoteData | null,
-  _condition: JournalDecorationOffsetCondition,
+  date: MomentDate,
+  journalName: string,
+  condition: JournalDecorationOffsetCondition,
 ): boolean {
-  return false;
+  const [positive, negative] = useJournal(journalName).value?.calculateOffset(date) ?? [0, 0];
+  if (condition.offset < 0) return negative === condition.offset;
+  return positive === condition.offset;
 }
 
 function checkDecorationAllTasksCompletedCondition(noteDate: JournalNoteData | null): boolean {

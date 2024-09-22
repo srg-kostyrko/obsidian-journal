@@ -73,6 +73,16 @@ export class FixedIntervalResolver implements AnchorDateResolver {
     return Math.ceil(start.diff(end, this.#settings.value.type));
   }
 
+  calculateOffset(date: MomentDate): [positive: number, negative: number] {
+    const anchorDate = this.#resolveAnchorDate(date);
+    if (!anchorDate) return [0, 0];
+    const start = date_from_string(anchorDate).startOf(this.#settings.value.type);
+    const end = start.clone().endOf(this.#settings.value.type);
+
+    if (date.isBefore(start) || date.isAfter(end)) return [0, 0];
+    return [start.diff(date, "days"), end.diff(date, "days")];
+  }
+
   #resolveAnchorDate(base: MomentDate): JournalAnchorDate {
     const type = this.#settings.value.type;
     const start_date = base.startOf(type);

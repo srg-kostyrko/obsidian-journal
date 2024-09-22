@@ -47,7 +47,7 @@ const conditionTypes = computed(() => {
   if (props.writeType.type === "day") {
     return ["title", "tag", "property", "date", "weekday", "has-note", "has-open-task", "all-tasks-completed"] as const;
   }
-  return ["title", "tag", "property", "offset", "has-note", "has-open-task", "all-tasks-completed"] as const;
+  return ["title", "tag", "property", "has-note", "has-open-task", "all-tasks-completed"] as const;
 });
 
 const conditions = ref<JournalDecorationCondition[]>(props.decoration ? deepCopy(props.decoration.conditions) : []);

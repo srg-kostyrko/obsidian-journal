@@ -30,3 +30,23 @@ export const journalsWithQuarters$ = computed(() => {
 export const journalsWithYears$ = computed(() => {
   return journalsList$.value.filter((journal) => journal.write.type === "year").map((journal) => journal.name);
 });
+
+function decorationsForType(type: "day" | "week" | "month" | "quarter" | "year") {
+  return computed(() => {
+    return journalsList$.value
+      .filter((journal) => journal.write.type === type)
+      .map((journal) =>
+        journal.decorations.map((decoration) => ({
+          journalName: journal.name,
+          decoration,
+        })),
+      )
+      .flat();
+  });
+}
+
+export const decorationsForDays$ = decorationsForType("day");
+export const decorationsForWeeks$ = decorationsForType("week");
+export const decorationsForMonths$ = decorationsForType("month");
+export const decorationsForQuarters$ = decorationsForType("quarter");
+export const decorationsForYears$ = decorationsForType("year");
