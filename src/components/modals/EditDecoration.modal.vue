@@ -43,22 +43,17 @@ const day = today().day();
 
 const mode = ref<"and" | "or">(props.decoration?.mode ?? "and");
 
-const conditionTypes = [
-  "title",
-  "tag",
-  "property",
-  "date",
-  "weekday",
-  "offset",
-  "has-note",
-  "has-open-task",
-  "all-tasks-completed",
-] as const;
+const conditionTypes = computed(() => {
+  if (props.writeType.type === "day") {
+    return ["title", "tag", "property", "date", "weekday", "has-note", "has-open-task", "all-tasks-completed"] as const;
+  }
+  return ["title", "tag", "property", "offset", "has-note", "has-open-task", "all-tasks-completed"] as const;
+});
 
 const conditions = ref<JournalDecorationCondition[]>(props.decoration ? deepCopy(props.decoration.conditions) : []);
 const availableConditionTypes = computed(() => {
   const used = new Set(conditions.value.map(({ type }) => type));
-  return conditionTypes.filter((type) => !used.has(type));
+  return conditionTypes.value.filter((type) => !used.has(type));
 });
 function getConditionComponent(condition: JournalDecorationCondition) {
   switch (condition.type) {
