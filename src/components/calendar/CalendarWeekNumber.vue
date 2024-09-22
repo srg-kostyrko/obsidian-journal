@@ -3,11 +3,13 @@ import { useDecorations } from "@/composables/use-decorations";
 import type { MomentDate } from "@/types/date.types";
 import CalendarDecoration from "./CalendarDecoration.vue";
 import { journalsWithWeeks$ } from "@/stores/settings.store";
+import { toRefs } from "vue";
 const props = defineProps<{
   date: MomentDate;
 }>();
 
-const decorationsStyles = useDecorations(props.date, journalsWithWeeks$);
+const { date } = toRefs(props);
+const decorationsStyles = useDecorations(date, journalsWithWeeks$);
 </script>
 
 <template>
