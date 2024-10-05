@@ -64,9 +64,7 @@ export const defaultJournalSettings: JournalSettings = {
 
   navBlock: {
     type: "create",
-    nameTemplate: "",
-    showPeriod: false,
-    periodTemplate: "",
+    rows: [],
   },
 };
 

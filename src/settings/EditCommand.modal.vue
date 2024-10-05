@@ -10,6 +10,7 @@ import ObsidianTextInput from "../components/obsidian/ObsidianTextInput.vue";
 import ObsidianDropdown from "../components/obsidian/ObsidianDropdown.vue";
 import IconSelector from "../components/IconSelector.vue";
 import ObsidianToggle from "../components/obsidian/ObsidianToggle.vue";
+import FormErrors from "@/components/FormErrors.vue";
 import { getIconIds } from "obsidian";
 import { buildSupportedCommandList } from "../journals/journal-commands";
 
@@ -86,17 +87,13 @@ const onSubmit = handleSubmit((values) => {
   <form @submit="onSubmit">
     <ObsidianSetting name="Name">
       <template #description>
-        <ul v-if="errorBag.name" class="journal-errors">
-          <li v-for="error in errorBag.name" :key="error">{{ error }}</li>
-        </ul>
+        <FormErrors :errors="errorBag.name" />
       </template>
       <ObsidianTextInput v-model="name" v-bind="nameAttrs" />
     </ObsidianSetting>
     <ObsidianSetting name="Icon">
       <template #description>
-        <ul v-if="errorBag.icon" class="journal-errors">
-          <li v-for="error in errorBag.icon" :key="error">{{ error }}</li>
-        </ul>
+        <FormErrors :errors="errorBag.icon" />
       </template>
       <IconSelector v-model="icon" v-bind="iconAttrs" />
     </ObsidianSetting>
@@ -123,9 +120,3 @@ const onSubmit = handleSubmit((values) => {
     </ObsidianSetting>
   </form>
 </template>
-
-<style scoped>
-.journal-errors {
-  color: var(--text-error);
-}
-</style>

@@ -14,6 +14,7 @@ import { CALENDAR_VIEW_TYPE } from "./constants";
 import { CalendarView } from "./calendar-view/calendar-view";
 import { deepCopy } from "./utils/misc";
 import { TimelineCodeBlockProcessor } from "./code-blocks/timeline/timeline-processor";
+import { NavCodeBlockProcessor } from "./code-blocks/navigation/nav-processor";
 
 export default class JournalPlugin extends Plugin {
   #stopHandles: WatchStopHandle[] = [];
@@ -29,12 +30,12 @@ export default class JournalPlugin extends Plugin {
   }
 
   createJournal(name: string, write: JournalSettings["write"]): void {
-    const settings: JournalSettings = {
+    const settings: JournalSettings = deepCopy({
       ...deepCopy(defaultJournalSettings),
       ...prepareJournalDefaultsBasedOnType(write),
       name,
       write,
-    };
+    });
     pluginSettings$.value.journals[name] = settings;
     this.#journals.set(name, new Journal(name));
   }
@@ -94,6 +95,14 @@ export default class JournalPlugin extends Plugin {
     this.addSettingTab(new JournalSettingTab(this.app, this));
     this.registerMarkdownCodeBlockProcessor("calendar-timeline", (source, el, ctx) => {
       const processor = new TimelineCodeBlockProcessor(el, source, ctx.sourcePath);
+      ctx.addChild(processor);
+    });
+    this.registerMarkdownCodeBlockProcessor("calendar-nav", (source, el, ctx) => {
+      const processor = new NavCodeBlockProcessor(el, source, ctx.sourcePath);
+      ctx.addChild(processor);
+    });
+    this.registerMarkdownCodeBlockProcessor("journal-nav", (source, el, ctx) => {
+      const processor = new NavCodeBlockProcessor(el, source, ctx.sourcePath);
       ctx.addChild(processor);
     });
 

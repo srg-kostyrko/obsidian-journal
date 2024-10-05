@@ -112,9 +112,7 @@ export interface JournalSettings {
 
   navBlock: {
     type: "create" | "existing";
-    nameTemplate: string;
-    showPeriod: boolean;
-    periodTemplate: string;
+    rows: NavBlockRow[];
   };
 }
 
@@ -256,3 +254,12 @@ export type JournalDecorationCondition =
   | JournalDecorationAllTasksCompletedCondition;
 
 export type NotesProcessing = "keep" | "clear" | "delete";
+
+export interface NavBlockRow {
+  template: string;
+  fontSize: number;
+  bold: boolean;
+  italic: boolean;
+  link: "none" | "self" | "journal" | FixedWriteIntervals["type"];
+  journal: string;
+}

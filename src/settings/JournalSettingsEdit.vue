@@ -3,7 +3,7 @@ import { computed, watch } from "vue";
 import { journals$, pluginSettings$ } from "../stores/settings.store";
 import { app$, plugin$ } from "../stores/obsidian.store";
 import { canApplyTemplater } from "../utils/template";
-import type { JournalCommand, JournalDecoration } from "../types/settings.types";
+import type { JournalCommand, JournalDecoration, NavBlockRow } from "../types/settings.types";
 import ObsidianSetting from "../components/obsidian/ObsidianSetting.vue";
 import ObsidianTextInput from "../components/obsidian/ObsidianTextInput.vue";
 import ObsidianNumberInput from "../components/obsidian/ObsidianNumberInput.vue";
@@ -21,6 +21,8 @@ import { VueModal } from "../components/modals/vue-modal";
 import DatePicker from "../components/DatePicker.vue";
 import RenameJournalModal from "../components/modals/RenameJournal.modal.vue";
 import { today } from "@/calendar";
+import NavigationBlockEditPreview from "@/code-blocks/navigation/NavigationBlockEditPreview.vue";
+import EditNavBlockRowModal from "@/components/modals/EditNavBlockRow.modal.vue";
 
 const props = defineProps<{
   journalName: string;
@@ -31,6 +33,7 @@ const emit = defineEmits<{
 }>();
 
 const day = today().day();
+const refDate = today().format("YYYY-MM-DD");
 
 const journal = computed(() => journals$.value[props.journalName]);
 const supportsTemplater = canApplyTemplater(app$.value, "<% $>");
@@ -94,6 +97,41 @@ function editCalendarDecoration(decoration: JournalDecoration, index: number) {
 }
 function deleteHighlight(index: number) {
   journal.value.decorations.splice(index, 1);
+}
+
+function addNavRow() {
+  new VueModal("Add row to nav block", EditNavBlockRowModal, {
+    currentJournal: props.journalName,
+    onSubmit: (row: NavBlockRow) => {
+      journal.value.navBlock.rows.push(row);
+    },
+  }).open();
+}
+function editNavRow(index: number) {
+  new VueModal("Edit nav block row", EditNavBlockRowModal, {
+    currentJournal: props.journalName,
+    row: journal.value.navBlock.rows[index],
+    onSubmit: (row: NavBlockRow) => {
+      journal.value.navBlock.rows[index] = row;
+    },
+  }).open();
+}
+function removeNavRow(index: number) {
+  journal.value.navBlock.rows.splice(index, 1);
+}
+function moveNavRowUp(index: number) {
+  if (index > 0) {
+    const tmp = journal.value.navBlock.rows[index];
+    journal.value.navBlock.rows[index] = journal.value.navBlock.rows[index - 1];
+    journal.value.navBlock.rows[index - 1] = tmp;
+  }
+}
+function moveNavRowDown(index: number) {
+  if (index < journal.value.navBlock.rows.length - 1) {
+    const tmp = journal.value.navBlock.rows[index];
+    journal.value.navBlock.rows[index] = journal.value.navBlock.rows[index + 1];
+    journal.value.navBlock.rows[index + 1] = tmp;
+  }
 }
 
 watch(
@@ -286,6 +324,25 @@ watch(
         <ObsidianIconButton icon="trash-2" tooltip="Delete" @click="deleteHighlight(index)" />
       </ObsidianSetting>
     </template>
+
+    <ObsidianSetting heading name="Navigation block">
+      <ObsidianButton @click="addNavRow">Add row</ObsidianButton>
+    </ObsidianSetting>
+    <NavigationBlockEditPreview
+      class="nav-block-preview"
+      :journal-name="journalName"
+      :ref-date="refDate"
+      @move-up="moveNavRowUp"
+      @move-down="moveNavRowDown"
+      @edit="editNavRow"
+      @remove="removeNavRow"
+    />
+    <ObsidianSetting name="Navigation block mode">
+      <ObsidianDropdown v-model="journal.navBlock.type">
+        <option value="create">Create new note</option>
+        <option value="existing">Open existing note</option>
+      </ObsidianDropdown>
+    </ObsidianSetting>
   </div>
 </template>
 
@@ -303,5 +360,8 @@ watch(
   height: 1.5em;
   padding: 0.25em;
   text-align: center;
+}
+.nav-block-preview {
+  margin-bottom: 1em;
 }
 </style>

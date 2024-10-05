@@ -122,6 +122,16 @@ export class Journal {
     return this.#anchorDateResolver.resolveForDate(date);
   }
 
+  resolveStartDate(anchorDate: JournalAnchorDate): string {
+    return this.#anchorDateResolver.resolveStartDate(anchorDate);
+  }
+  resolveEndDate(anchorDate: JournalAnchorDate): string {
+    return this.#anchorDateResolver.resolveEndDate(anchorDate);
+  }
+  resolveRelativeDate(anchorDate: JournalAnchorDate): string {
+    return this.#anchorDateResolver.resolveRelativeDate(anchorDate);
+  }
+
   async #openFile(file: TFile): Promise<void> {
     const mode = this.#config.value.openMode === "active" ? undefined : this.#config.value.openMode;
     const leaf = app$.value.workspace.getLeaf(mode);

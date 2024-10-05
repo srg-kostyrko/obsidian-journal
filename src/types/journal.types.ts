@@ -34,6 +34,7 @@ export interface AnchorDateResolver {
 
   resolveStartDate(anchorDate: JournalAnchorDate): string;
   resolveEndDate(anchorDate: JournalAnchorDate): string;
+  resolveRelativeDate(anchorDate: JournalAnchorDate): string;
 
   calculateOffset(date: MomentDate): [positive: number, negative: number];
   countRepeats(startDate: string, endDate: string): number;

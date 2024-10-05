@@ -3,7 +3,7 @@ import { JournalAnchorDate, type AnchorDateResolver } from "../types/journal.typ
 import type { FixedWriteIntervals, JournalCommand } from "../types/settings.types";
 import { FRONTMATTER_DATE_FORMAT } from "../constants";
 import type { MomentDate } from "../types/date.types";
-import { date_from_string } from "../calendar";
+import { date_from_string, relativeDate } from "../calendar";
 
 // TODO: write tests
 export class FixedIntervalResolver implements AnchorDateResolver {
@@ -21,6 +21,11 @@ export class FixedIntervalResolver implements AnchorDateResolver {
     const type = this.#settings.value.type;
     const end_date = date_from_string(anchorDate).endOf(type).format(FRONTMATTER_DATE_FORMAT);
     return end_date;
+  }
+
+  resolveRelativeDate(anchorDate: JournalAnchorDate): string {
+    const type = this.#settings.value.type;
+    return relativeDate(type, anchorDate);
   }
 
   resolveForDate(date: string): JournalAnchorDate | null {
