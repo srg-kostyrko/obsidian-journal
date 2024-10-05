@@ -19,6 +19,7 @@ import { date_from_string, today } from "../calendar";
 import { VueModal } from "@/components/modals/vue-modal";
 import ConfirmNoteCreationModal from "@/components/modals/ConfirmNoteCreation.modal.vue";
 import type { MomentDate } from "@/types/date.types";
+import { disconnectNote } from "@/utils/journals";
 
 export class Journal {
   readonly name$: ComputedRef<string>;
@@ -139,7 +140,7 @@ export class Journal {
   }
 
   async #ensureNote(metadata: JournalMetadata): Promise<TFile | null> {
-    const filePath = this.#getNotePath(metadata);
+    const filePath = this.getNotePath(metadata);
     let file = app$.value.vault.getAbstractFileByPath(filePath);
     if (!file) {
       const templateContext = this.#getTemplateContext(metadata);
@@ -183,12 +184,49 @@ export class Journal {
     });
   }
 
-  #getNotePath(metadata: JournalNoteData | JournalMetadata): string {
+  getConfiguredPathData(metadata: JournalMetadata): [string, string] {
+    const templateContext = this.#getTemplateContext(metadata);
+    const filename = replaceTemplateVariables(this.#config.value.nameTemplate, templateContext) + ".md";
+    const folderPath = replaceTemplateVariables(this.#config.value.folder, templateContext) || "/";
+    return [folderPath, filename];
+  }
+
+  getNotePath(metadata: JournalNoteData | JournalMetadata): string {
     if ("path" in metadata) return metadata.path;
     const templateContext = this.#getTemplateContext(metadata);
     const filename = replaceTemplateVariables(this.#config.value.nameTemplate, templateContext) + ".md";
     const folderPath = replaceTemplateVariables(this.#config.value.folder, templateContext);
     return normalizePath(folderPath ? `${folderPath}/${filename}` : filename);
+  }
+
+  async connectNote(
+    file: TFile,
+    anchorDate: JournalAnchorDate,
+    options: {
+      override?: boolean;
+      rename?: boolean;
+      move?: boolean;
+    },
+  ): Promise<boolean> {
+    const metadata = await this.find(anchorDate);
+    if (!metadata) return false;
+    if ("path" in metadata) {
+      if (!options.override) return false;
+      await disconnectNote(metadata.path);
+    }
+    let path = file.path;
+    if (options.rename || options.move) {
+      const [configuredFolder, configuredFilename] = this.getConfiguredPathData(metadata);
+      const folderPath = options.move ? configuredFolder : file.parent?.path;
+      const filename = options.rename ? configuredFilename : file.name;
+      path = normalizePath(folderPath ? `${folderPath}/${filename}` : filename);
+      await ensureFolderExists(app$.value, path);
+      await app$.value.vault.rename(file, path);
+      file = app$.value.vault.getAbstractFileByPath(path) as TFile;
+    }
+
+    await this.#ensureFrontMatter(file, metadata);
+    return true;
   }
 
   #getTemplateContext(metadata: JournalMetadata): TemplateContext {

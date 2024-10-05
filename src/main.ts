@@ -15,6 +15,8 @@ import { CalendarView } from "./calendar-view/calendar-view";
 import { deepCopy } from "./utils/misc";
 import { TimelineCodeBlockProcessor } from "./code-blocks/timeline/timeline-processor";
 import { NavCodeBlockProcessor } from "./code-blocks/navigation/nav-processor";
+import { VueModal } from "./components/modals/vue-modal";
+import ConnectNoteModal from "./components/modals/ConnectNote.modal.vue";
 
 export default class JournalPlugin extends Plugin {
   #stopHandles: WatchStopHandle[] = [];
@@ -215,8 +217,9 @@ export default class JournalPlugin extends Plugin {
       editorCallback: async (editor, ctx) => {
         const file = ctx.file;
         if (file) {
-          // TODO
-          // new ConnectNoteModal(this.app, this, file).open();
+          new VueModal("Connect note to a journal", ConnectNoteModal, {
+            file,
+          }).open();
         }
       },
     });

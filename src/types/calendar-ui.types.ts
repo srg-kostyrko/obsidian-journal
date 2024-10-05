@@ -11,4 +11,5 @@ export interface CalendarUiDay {
 export interface CalendarUiElement {
   date: MomentDate;
   key: string;
+  outside?: boolean;
 }

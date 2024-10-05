@@ -8,12 +8,14 @@ import DatePickerModal from "./modals/DatePicker.modal.vue";
 
 const props = withDefaults(
   defineProps<{
+    picking?: "day" | "week" | "month" | "quarter" | "year";
     placeholder?: string;
     previewFormat?: string;
     disabled?: boolean;
     tooltip?: string;
   }>(),
   {
+    picking: "day",
     placeholder: "Pick a date",
     previewFormat: "YYYY-MM-DD",
     tooltip: "Pick a date",
@@ -40,6 +42,7 @@ function openPickerModal() {
     DatePickerModal,
     {
       selectedDate: model.value,
+      picking: props.picking,
       onSelect(date: string) {
         model.value = date;
       },
