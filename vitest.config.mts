@@ -5,6 +5,12 @@ export default defineConfig({
     alias: {
       obsidian: new URL('./__mocks__/obsidian.ts', import.meta.url).pathname,
       '@': new URL('./src', import.meta.url).pathname
+    },
+    poolOptions: {
+      threads: {
+        minThreads: 1,
+        maxThreads: 4,
+      }
     }
   },
 })

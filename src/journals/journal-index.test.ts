@@ -82,7 +82,7 @@ describe("JournalIndex", () => {
       expect(index.findClosestDate("2022-09-04")).toBe(JournalAnchorDate("2022-11-10"));
     });
 
-    test("it should return previous date if distance is sime", () => {
+    test("it should return previous date if distance is same", () => {
       expect(index.findClosestDate("2022-01-03")).toBe(JournalAnchorDate("2022-01-02"));
     });
   });

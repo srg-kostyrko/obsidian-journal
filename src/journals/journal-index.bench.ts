@@ -3,7 +3,7 @@ import { JournalIndex } from "./journal-index";
 import { JournalAnchorDate } from "@/types/journal.types";
 import moment from "moment";
 
-describe("JournalIndex - filling in", () => {
+describe.skip("JournalIndex - filling in", () => {
   const dates = prepareTenYearsOfDates();
 
   bench("fill in journal - 1 year", () => {

@@ -1,30 +1,36 @@
 import { dateDistance } from "@/calendar";
-import type { JournalAnchorDate } from "@/types/journal.types";
+import { JournalAnchorDate } from "@/types/journal.types";
 import { ref } from "vue";
 
 export class JournalIndex {
-  map = ref(new Map<JournalAnchorDate, string>());
+  #map = ref(new Map<string, string>());
   #reversedMap = new Map<string, JournalAnchorDate>();
+  #sortedDates: string[] = [];
 
   has(anchorDate: JournalAnchorDate): boolean {
-    return this.map.value.has(anchorDate);
+    return this.#map.value.has(anchorDate);
   }
 
   get(anchorDate: JournalAnchorDate): string | null {
-    return this.map.value.get(anchorDate) ?? null;
+    return this.#map.value.get(anchorDate) ?? null;
   }
 
   set(anchorDate: JournalAnchorDate, path: string) {
-    this.map.value.set(anchorDate, path);
+    const has = this.#map.value.has(anchorDate);
+    this.#map.value.set(anchorDate, path);
     this.#reversedMap.set(path, anchorDate);
+    if (!has) {
+      this.#insertSortedDate(anchorDate);
+    }
   }
 
   delete(anchorDate: JournalAnchorDate) {
-    const path = this.map.value.get(anchorDate);
-    this.map.value.delete(anchorDate);
+    const path = this.#map.value.get(anchorDate);
+    this.#map.value.delete(anchorDate);
     if (path) {
       this.#reversedMap.delete(path);
     }
+    this.#removeSortedDate(anchorDate);
   }
 
   deleteForPath(path: string) {
@@ -35,38 +41,66 @@ export class JournalIndex {
   }
 
   findNext(anchorDate: JournalAnchorDate): string | null {
-    const dates = Array.from(this.map.value.keys());
-    dates.sort();
-    const index = dates.indexOf(anchorDate);
+    const index = this.#bsearchSortedDate(anchorDate);
     if (index === -1) return null;
-    if (index === dates.length - 1) return null;
-    return this.map.value.get(dates[index + 1]) ?? null;
+    if (index === this.#sortedDates.length - 1) return null;
+    return this.#map.value.get(this.#sortedDates[index + 1]) ?? null;
   }
 
   findPrevious(anchorDate: JournalAnchorDate): string | null {
-    const dates = Array.from(this.map.value.keys());
-    dates.sort();
-    const index = dates.indexOf(anchorDate);
+    const index = this.#bsearchSortedDate(anchorDate);
     if (index === -1) return null;
     if (index === 0) return null;
-    return this.map.value.get(dates[index - 1]) ?? null;
+    return this.#map.value.get(this.#sortedDates[index - 1]) ?? null;
   }
 
   findClosestDate(date: string): JournalAnchorDate | undefined {
-    const dates = Array.from(this.map.value.keys());
-    dates.sort();
-    if (!dates.length) return;
-    if (date <= dates[0]) return dates[0];
-    // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
-    if (date >= dates.at(-1)!) return dates.at(-1);
-    for (let i = 0; i < dates.length - 1; i++) {
-      if (dates[i] <= date && dates[i + 1] > date) {
-        return dateDistance(dates[i], date) <= dateDistance(dates[i + 1], date) ? dates[i] : dates[i + 1];
-      }
+    if (!this.#map.value.size) return;
+    if (this.#map.value.has(date)) return JournalAnchorDate(date);
+    if (date <= this.#sortedDates[0]) return JournalAnchorDate(this.#sortedDates[0]);
+    const last = this.#sortedDates.at(-1);
+    if (last && date >= last) return JournalAnchorDate(last);
+    const index = this.#bsearchSortedDate(date);
+    if (index === -1) return;
+    if (this.#sortedDates[index] < date) {
+      return dateDistance(this.#sortedDates[index], date) <= dateDistance(this.#sortedDates[index + 1], date)
+        ? JournalAnchorDate(this.#sortedDates[index])
+        : JournalAnchorDate(this.#sortedDates[index + 1]);
     }
+    return dateDistance(this.#sortedDates[index], date) < dateDistance(this.#sortedDates[index - 1], date)
+      ? JournalAnchorDate(this.#sortedDates[index])
+      : JournalAnchorDate(this.#sortedDates[index - 1]);
   }
 
   *[Symbol.iterator]() {
-    yield* this.map.value;
+    yield* this.#map.value;
+  }
+
+  #insertSortedDate(date: string) {
+    const pos = this.#bsearchSortedDate(date);
+    this.#sortedDates.splice(pos + 1, 0, date);
+    return pos + 1;
+  }
+
+  #removeSortedDate(date: string) {
+    const pos = this.#bsearchSortedDate(date);
+    if (pos === -1) return;
+    this.#sortedDates.splice(pos, 1);
+  }
+
+  #bsearchSortedDate(date: string) {
+    if (!this.#sortedDates.length) return -1;
+    let start = 0;
+    let end = this.#sortedDates.length;
+    while (end - start > 1) {
+      const mid = Math.floor((start + end) / 2);
+      if (this.#sortedDates[mid] === date) return mid;
+      if (this.#sortedDates[mid] < date) {
+        start = mid;
+      } else {
+        end = mid;
+      }
+    }
+    return start === 0 && this.#sortedDates[0] > date ? -1 : start;
   }
 }
