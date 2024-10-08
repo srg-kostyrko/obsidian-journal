@@ -1,9 +1,14 @@
+import { dateDistance } from "@/calendar";
 import type { JournalAnchorDate } from "@/types/journal.types";
 import { ref } from "vue";
 
 export class JournalIndex {
   map = ref(new Map<JournalAnchorDate, string>());
   #reversedMap = new Map<string, JournalAnchorDate>();
+
+  has(anchorDate: JournalAnchorDate): boolean {
+    return this.map.value.has(anchorDate);
+  }
 
   get(anchorDate: JournalAnchorDate): string | null {
     return this.map.value.get(anchorDate) ?? null;
@@ -56,7 +61,7 @@ export class JournalIndex {
     if (date >= dates.at(-1)!) return dates.at(-1);
     for (let i = 0; i < dates.length - 1; i++) {
       if (dates[i] <= date && dates[i + 1] > date) {
-        return dates[i];
+        return dateDistance(dates[i], date) <= dateDistance(dates[i + 1], date) ? dates[i] : dates[i + 1];
       }
     }
   }

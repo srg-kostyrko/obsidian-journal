@@ -10,6 +10,7 @@
     "lint": "eslint .",
     "test": "vitest run",
     "test:watch": "vitest",
+    "bench": "vitest bench",
     "ts-check": "vue-tsc -b",
     "changelog": "npx git-cliff --output CHANGELOG.md",
     "prepare": "husky"

@@ -30,6 +30,11 @@ export function today(): MomentDate {
   return md.startOf("day");
 }
 
+export function dateDistance(fromDate: string, toDate: string): number {
+  const from = date_from_string(fromDate);
+  return Math.abs(from.diff(toDate, "days"));
+}
+
 export const weekdayNames = computed(() => {
   const weekdayNames: string[] = [];
   const week = today().startOf("week");
