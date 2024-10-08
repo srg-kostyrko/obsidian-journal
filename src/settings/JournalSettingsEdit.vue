@@ -323,9 +323,9 @@ watch(
         <template #name>
           <CalendarDecoration class="decoration-preview" :styles="decoration.styles">{{ day }}</CalendarDecoration>
           when
-          <template v-for="(condition, index) of decoration.conditions" :key="index">
+          <template v-for="(condition, i) of decoration.conditions" :key="i">
             {{ condition.type }}
-            <span v-if="index > 0">{{ decoration.mode }}</span>
+            <span v-if="i > 0">{{ decoration.mode }}</span>
           </template>
         </template>
         <ObsidianIconButton icon="pencil" tooltip="Edit" @click="editCalendarDecoration(decoration, index)" />

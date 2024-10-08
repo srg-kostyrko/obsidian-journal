@@ -152,14 +152,14 @@ function save() {
     <ObsidianSetting>
       <ButtonDropdown :options="availableConditionTypes" @select="addCondition">Add condition</ButtonDropdown>
     </ObsidianSetting>
-    <ObsidianSetting v-for="(condition, index) of conditions" :key="index" class="condition-wrapper">
-      <span v-if="index > 0" class="mode-hint">{{ mode }}</span>
+    <ObsidianSetting v-for="(condition, i) of conditions" :key="i" class="condition-wrapper">
+      <span v-if="i > 0" class="mode-hint">{{ mode }}</span>
       <component
         :is="getConditionComponent(condition)"
         :condition="condition"
         @change="chengeDecorationCondition(condition, $event)"
       />
-      <ObsidianIconButton icon="trash" @click="removeDecorationCondition(index)" />
+      <ObsidianIconButton icon="trash" @click="removeDecorationCondition(i)" />
     </ObsidianSetting>
     <p v-if="conditions.length === 0" class="journal-hint">No conditions defined yet</p>
     <div class="separator" />
