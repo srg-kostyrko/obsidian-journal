@@ -10,8 +10,8 @@ const props = withDefaults(
   defineProps<{
     refDate: string;
     selectedDate?: string | null;
-    selectDays: boolean;
-    selectWeeks: boolean;
+    selectDays?: boolean;
+    selectWeeks?: boolean;
   }>(),
   {
     selectedDate: null,
