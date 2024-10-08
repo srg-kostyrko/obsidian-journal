@@ -103,6 +103,10 @@ export default class JournalPlugin extends Plugin {
       const processor = new NavCodeBlockProcessor(el, source, ctx.sourcePath);
       ctx.addChild(processor);
     });
+    this.registerMarkdownCodeBlockProcessor("interval-nav", (source, el, ctx) => {
+      const processor = new NavCodeBlockProcessor(el, source, ctx.sourcePath);
+      ctx.addChild(processor);
+    });
     this.registerMarkdownCodeBlockProcessor("journal-nav", (source, el, ctx) => {
       const processor = new NavCodeBlockProcessor(el, source, ctx.sourcePath);
       ctx.addChild(processor);

@@ -37,7 +37,11 @@ export const supportedJournalCommands: Record<JournalSettings["write"]["type"], 
     { label: "Open last year's note", value: "previous" },
   ],
   weekdays: [],
-  custom: [],
+  custom: [
+    { label: "Open current interval's note", value: "same" },
+    { label: "Open next interval's note", value: "next" },
+    { label: "Open previous interval's note", value: "previous" },
+  ],
 };
 
 export const buildSupportedCommandList = (write: JournalSettings["write"]) => {

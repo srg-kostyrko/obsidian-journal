@@ -47,6 +47,20 @@ export class JournalIndex {
     return this.map.value.get(dates[index - 1]) ?? null;
   }
 
+  findClosestDate(date: string): JournalAnchorDate | undefined {
+    const dates = Array.from(this.map.value.keys());
+    dates.sort();
+    if (!dates.length) return;
+    if (date <= dates[0]) return dates[0];
+    // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
+    if (date >= dates.at(-1)!) return dates.at(-1);
+    for (let i = 0; i < dates.length - 1; i++) {
+      if (dates[i] <= date && dates[i + 1] > date) {
+        return dates[i];
+      }
+    }
+  }
+
   *[Symbol.iterator]() {
     yield* this.map.value;
   }

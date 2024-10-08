@@ -1,6 +1,6 @@
 import { computed, type ComputedRef } from "vue";
 import { journals$ } from "../stores/settings.store";
-import type { JournalCommand, JournalSettings } from "../types/settings.types";
+import type { JournalCommand, JournalSettings, WriteCustom } from "../types/settings.types";
 import type { AnchorDateResolver, JournalAnchorDate, JournalMetadata, JournalNoteData } from "../types/journal.types";
 import { activeNote$, app$, plugin$ } from "../stores/obsidian.store";
 import { normalizePath, TFile, type LeftRibbon } from "obsidian";
@@ -20,6 +20,7 @@ import { VueModal } from "@/components/modals/vue-modal";
 import ConfirmNoteCreationModal from "@/components/modals/ConfirmNoteCreation.modal.vue";
 import type { MomentDate } from "@/types/date.types";
 import { disconnectNote } from "@/utils/journals";
+import { CustomIntervalResolver } from "./custom-interval";
 
 export class Journal {
   readonly name$: ComputedRef<string>;
@@ -29,11 +30,17 @@ export class Journal {
   constructor(public readonly name: string) {
     this.#config = computed(() => journals$.value[name]);
     this.name$ = computed(() => this.#config.value.name);
-    this.#anchorDateResolver = new FixedIntervalResolver(
-      // eslint-disable-next-line @typescript-eslint/ban-ts-comment
-      // @ts-expect-error
-      computed(() => this.#config.value.write),
-    );
+    this.#anchorDateResolver =
+      this.#config.value.write.type === "custom"
+        ? new CustomIntervalResolver(
+            this.name$.value,
+            computed(() => this.#config.value.write) as ComputedRef<WriteCustom>,
+          )
+        : new FixedIntervalResolver(
+            // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+            // @ts-expect-error
+            computed(() => this.#config.value.write),
+          );
   }
 
   calculateOffset(date: MomentDate): [positive: number, negative: number] {

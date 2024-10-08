@@ -7,7 +7,7 @@ const defaultNameTemplates: Record<JournalSettings["write"]["type"], string> = {
   quarter: "{{date}}",
   year: "{{date}}",
   weekdays: "",
-  custom: "",
+  custom: "{{journal_name}} {{start_date}} - {{end_date}}",
 };
 
 const defaultDateFormats: Record<JournalSettings["write"]["type"], string> = {
@@ -17,7 +17,7 @@ const defaultDateFormats: Record<JournalSettings["write"]["type"], string> = {
   quarter: "YYYY-[Q]Q",
   year: "YYYY",
   weekdays: "",
-  custom: "",
+  custom: "YYYY-MM-DD",
 };
 const emptyNavRow: NavBlockRow = {
   template: "",
@@ -129,14 +129,39 @@ const defaultNavBlocks: Record<JournalSettings["write"]["type"], JournalSettings
   },
   custom: {
     type: "create",
-    rows: [],
+    rows: [
+      {
+        ...emptyNavRow,
+        template: "{{journal_name}}",
+        link: "self",
+        fontSize: 3,
+        bold: true,
+      },
+      {
+        ...emptyNavRow,
+        template: "{{start_date}}",
+      },
+      {
+        ...emptyNavRow,
+        template: "to",
+      },
+      {
+        ...emptyNavRow,
+        template: "{{end_date}}",
+      },
+    ],
   },
 };
 
 export function prepareJournalDefaultsBasedOnType(write: JournalSettings["write"]): Partial<JournalSettings> {
-  return {
+  const defaults: Partial<JournalSettings> = {
     nameTemplate: defaultNameTemplates[write.type],
     dateFormat: defaultDateFormats[write.type],
     navBlock: defaultNavBlocks[write.type],
   };
+  if (write.type === "custom") {
+    defaults.start = write.anchorDate;
+  }
+
+  return defaults;
 }

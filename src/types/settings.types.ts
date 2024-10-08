@@ -1,3 +1,5 @@
+import type { JournalAnchorDate } from "./journal.types";
+
 export type OpenMode = "active" | "tab" | "split" | "window";
 
 export interface PluginSettings {
@@ -57,6 +59,7 @@ export interface WriteCustom {
   type: "custom";
   every: "day" | "week" | "month" | "quarter" | "year";
   duration: number;
+  anchorDate: JournalAnchorDate;
 }
 
 export interface EndWritingNever {

@@ -1,8 +1,9 @@
 <script setup lang="ts">
 import type { Journal } from "@/journals/journal";
+import type { JournalMetadata, JournalNoteData } from "@/types/journal.types";
 import type { NavBlockRow } from "@/types/settings.types";
 import { replaceTemplateVariables } from "@/utils/template";
-import { computed } from "vue";
+import { computed, ref, watch } from "vue";
 
 const props = defineProps<{
   row: NavBlockRow;
@@ -14,6 +15,10 @@ const emit = defineEmits<(e: "navigate", type: string, date: string, journalName
 
 const anchorDate = computed(() => {
   return props.journal.resolveAnchorDate(props.refDate);
+});
+const noteData = ref<JournalNoteData | JournalMetadata | null>(null);
+watch(anchorDate, async () => {
+  noteData.value = await props.journal.find(props.refDate);
 });
 
 const text = computed(() => {
@@ -36,6 +41,14 @@ const text = computed(() => {
     relative_date: {
       type: "string",
       value: anchorDate.value ? props.journal.resolveRelativeDate(anchorDate.value) : "",
+    },
+    journal_name: {
+      type: "string",
+      value: props.journal.name,
+    },
+    index: {
+      type: "string",
+      value: noteData.value ? String(noteData.value.index) : "",
     },
   });
 });

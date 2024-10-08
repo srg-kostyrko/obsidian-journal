@@ -166,9 +166,17 @@ watch(
         <div v-if="journal.end.type === 'repeats' && !journal.start" class="journal-important">
           Start date should be defined for journal that ends after some number of repeats.
         </div>
+        <div v-if="journal.write.type === 'custom'" class="journal-important">
+          Start date for custom intervals cannot be changes as it is used to calcualte interval
+        </div>
       </template>
-      <DatePicker v-model="journal.start" />
-      <ObsidianIconButton v-if="journal.start" icon="trash" tooltip="Clear start date" @click="journal.start = ''" />
+      <DatePicker v-model="journal.start" :disabled="journal.write.type === 'custom'" />
+      <ObsidianIconButton
+        v-if="journal.start && journal.write.type !== 'custom'"
+        icon="trash"
+        tooltip="Clear start date"
+        @click="journal.start = ''"
+      />
     </ObsidianSetting>
 
     <ObsidianSetting name="End writing">

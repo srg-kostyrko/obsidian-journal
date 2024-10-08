@@ -34,25 +34,25 @@ export class JournalsIndex extends Component {
   }
 
   find(journalId: string, date: JournalAnchorDate): JournalNoteData | null {
-    const path = this.#getJournalIndex(journalId).get(date);
+    const path = this.getJournalIndex(journalId).get(date);
     if (!path) return null;
     return this.getForPath(path);
   }
 
   findNext(journalId: string, anchorDate: JournalAnchorDate): JournalNoteData | null {
-    const path = this.#getJournalIndex(journalId).findNext(anchorDate);
+    const path = this.getJournalIndex(journalId).findNext(anchorDate);
     if (!path) return null;
     return this.getForPath(path);
   }
 
   findPrevious(journalId: string, anchorDate: JournalAnchorDate): JournalNoteData | null {
-    const path = this.#getJournalIndex(journalId).findPrevious(anchorDate);
+    const path = this.getJournalIndex(journalId).findPrevious(anchorDate);
     if (!path) return null;
     return this.getForPath(path);
   }
 
   async renameJournal(oldName: string, name: string): Promise<void> {
-    const index = this.#getJournalIndex(oldName);
+    const index = this.getJournalIndex(oldName);
     if (!index) return;
     for (const [, path] of index) {
       const file = app$.value.vault.getAbstractFileByPath(path);
@@ -71,7 +71,7 @@ export class JournalsIndex extends Component {
     }
   }
 
-  #getJournalIndex(journalId: string) {
+  getJournalIndex(journalId: string) {
     let index = this.#journalIndecies.value.get(journalId);
     if (!index) {
       index = new JournalIndex();
@@ -142,7 +142,7 @@ export class JournalsIndex extends Component {
       properties: frontmatter,
     };
     this.#pathIndex.value.set(path, journalMetadata);
-    this.#getJournalIndex(journal).set(date, path);
+    this.getJournalIndex(journal).set(date, path);
   }
 
   onunload(): void {

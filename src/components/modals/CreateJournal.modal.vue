@@ -1,66 +1,116 @@
 <script setup lang="ts">
-import { computed, reactive } from "vue";
 import ObsidianSetting from "../obsidian/ObsidianSetting.vue";
 import ObsidianTextInput from "../obsidian/ObsidianTextInput.vue";
 import ObsidianDropdown from "../obsidian/ObsidianDropdown.vue";
 import ObsidianButton from "../obsidian/ObsidianButton.vue";
-import { type JournalSettings } from "../../types/settings.types";
-
-const state = reactive({
-  name: "",
-  write: "day" satisfies JournalSettings["write"]["type"],
-  touched: {
-    name: false,
-  },
-});
+import { type FixedWriteIntervals, type JournalSettings, type WriteCustom } from "../../types/settings.types";
+import { useForm } from "vee-validate";
+import { toTypedSchema } from "@vee-validate/valibot";
+import * as v from "valibot";
+import ObsidianNumberInput from "../obsidian/ObsidianNumberInput.vue";
+import DatePicker from "../DatePicker.vue";
+import FormErrors from "../FormErrors.vue";
+import { JournalAnchorDate } from "@/types/journal.types";
 
 const emit = defineEmits<{
   (event: "create", name: string, write: JournalSettings["write"]): void;
   (event: "close"): void;
 }>();
 
-const errors = computed(() => {
-  const errors = [];
-  if (!state.name && state.touched.name) errors.push("Name is required");
-  return errors;
+const { defineField, errorBag, handleSubmit } = useForm({
+  initialValues: {
+    journalName: "",
+    write: "day",
+    every: "day",
+    duration: 1,
+    anchorDate: "",
+  },
+  validationSchema: toTypedSchema(
+    v.pipe(
+      v.object({
+        journalName: v.pipe(v.string(), v.nonEmpty("Journal name is required")),
+        write: v.picklist(["day", "week", "month", "quarter", "year", "custom"]),
+        every: v.picklist(["day", "week", "month", "quarter", "year"]),
+        duration: v.number(),
+        anchorDate: v.string(),
+      }),
+      v.forward(
+        v.partialCheck(
+          [["write"], ["anchorDate"]],
+          (input) => {
+            return input.write === "custom" ? Boolean(input.anchorDate) : true;
+          },
+          "Please select an anchor date.",
+        ),
+        ["anchorDate"],
+      ),
+    ),
+  ),
 });
 
-function submit() {
-  state.touched.name = true;
-  if (errors.value.length) return;
-  emit("create", state.name, {
-    type: state.write as JournalSettings["write"]["type"],
-  } as JournalSettings["write"]);
+const [journalName, journalNameAttrs] = defineField("journalName");
+const [write, writeAttrs] = defineField("write");
+const [every, everyAttrs] = defineField("every");
+const [duration, durationAttrs] = defineField("duration");
+const [anchorDate, anchorDateAttrs] = defineField("anchorDate");
+
+const onSubmit = handleSubmit((values) => {
+  emit(
+    "create",
+    values.journalName,
+    values.write === "custom"
+      ? {
+          type: "custom",
+          every: values.every as WriteCustom["every"],
+          duration: values.duration,
+          anchorDate: JournalAnchorDate(values.anchorDate),
+        }
+      : {
+          type: values.write as FixedWriteIntervals["type"],
+        },
+  );
   emit("close");
-}
+});
 </script>
 
 <template>
-  <ObsidianSetting name="Journal name">
-    <ObsidianTextInput v-model="state.name" placeholder="ex. Work" @blur="state.touched.name = true" />
-  </ObsidianSetting>
-  <ObsidianSetting name="I'll be writing">
-    <ObsidianDropdown v-model="state.write">
-      <option value="day">Daily</option>
-      <option value="week">Weekly</option>
-      <option value="month">Monthly</option>
-      <option value="quarter">Quarterly</option>
-      <option value="year">Annually</option>
-    </ObsidianDropdown>
-  </ObsidianSetting>
-  <ul class="errors">
-    <li v-for="error in errors" :key="error">{{ error }}</li>
-  </ul>
-  <ObsidianSetting>
-    <ObsidianButton @click="emit('close')">Close</ObsidianButton>
-    <ObsidianButton cta :disabled="errors.length > 0" @click="submit">Add</ObsidianButton>
-  </ObsidianSetting>
+  <form @submit.prevent="onSubmit">
+    <ObsidianSetting name="Journal name">
+      <template #description>
+        <FormErrors :errors="errorBag.journalName" />
+      </template>
+      <ObsidianTextInput v-model="journalName" placeholder="ex. Work" v-bind="journalNameAttrs" />
+    </ObsidianSetting>
+    <ObsidianSetting name="I'll be writing">
+      <ObsidianDropdown v-model="write" v-bind="writeAttrs">
+        <option value="day">Daily</option>
+        <option value="week">Weekly</option>
+        <option value="month">Monthly</option>
+        <option value="quarter">Quarterly</option>
+        <option value="year">Annually</option>
+        <option value="custom">In custom intervals</option>
+      </ObsidianDropdown>
+    </ObsidianSetting>
+    <ObsidianSetting v-if="write === 'custom'" name="Every">
+      <ObsidianNumberInput v-model="duration" v-bind="durationAttrs" :min="1" />
+      <ObsidianDropdown v-model="every" v-bind="everyAttrs">
+        <option value="day">days</option>
+        <option value="week">weeks</option>
+        <option value="month">months</option>
+        <option value="quarter">quarters</option>
+        <option value="year">years</option>
+      </ObsidianDropdown>
+    </ObsidianSetting>
+    <ObsidianSetting v-if="write === 'custom'" name="Start date">
+      <template #description>
+        This date will be used to start counting intervals. It cannot be changed after creating journal.
+        <FormErrors :errors="errorBag.anchorDate" />
+      </template>
+      <DatePicker v-model="anchorDate" v-bind="anchorDateAttrs" />
+    </ObsidianSetting>
+    <ObsidianSetting>
+      <ObsidianButton @click="emit('close')">Close</ObsidianButton>
+      <ObsidianButton cta type="submit" @click="onSubmit">Add</ObsidianButton>
+    </ObsidianSetting>
+  </form>
 </template>
-
-<style scoped>
-.errors {
-  color: var(--text-error);
-  margin: 0 0 10px;
-  padding-inline-start: 20px;
-}
-</style>
