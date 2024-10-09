@@ -27,17 +27,17 @@ export function useWeek(refDate: Ref<string>) {
       });
     }
 
-    const curr = start.clone();
-    while (curr.isSameOrBefore(end)) {
+    const current = start.clone();
+    while (current.isSameOrBefore(end)) {
       days.push({
-        date: curr.clone(),
-        key: curr.format("YYYY-MM-DD"),
-        today: curr.isSame(todayDate, "day"),
-        outside: !momentDate.isSame(curr, "month"),
+        date: current.clone(),
+        key: current.format("YYYY-MM-DD"),
+        today: current.isSame(todayDate, "day"),
+        outside: !momentDate.isSame(current, "month"),
         isWeekNumber: false,
       });
 
-      curr.add(1, "day");
+      current.add(1, "day");
     }
 
     if (placeWeeks === "right") {

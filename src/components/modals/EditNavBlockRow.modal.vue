@@ -24,7 +24,7 @@ const emit = defineEmits<{
 }>();
 
 const supportedJournals = computed(() => {
-  return journalsList$.value.filter((j) => j.name !== props.currentJournal).map((j) => j.name);
+  return journalsList$.value.filter((journal) => journal.name !== props.currentJournal).map(({ name }) => name);
 });
 
 const { defineField, errorBag, handleSubmit } = useForm({

@@ -9,8 +9,8 @@ const props = defineProps<{
   name: string;
 }>();
 const emit = defineEmits<{
-  (e: "save", name: string): void;
-  (e: "close"): void;
+  (event: "save", name: string): void;
+  (event: "close"): void;
 }>();
 
 const newName = ref(props.name);

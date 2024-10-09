@@ -7,8 +7,8 @@ const props = defineProps<{
 
 const variable = computed(() => `{{${props.name}}}`);
 
-function copy(e: Event) {
-  navigator.clipboard.writeText((e.target as HTMLElement).innerText);
+function copy(event: Event) {
+  navigator.clipboard.writeText((event.target as HTMLElement).textContent ?? "");
 }
 </script>
 

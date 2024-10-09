@@ -55,7 +55,7 @@ export class JournalIndex {
   }
 
   findClosestDate(date: string): JournalAnchorDate | undefined {
-    if (!this.#map.value.size) return;
+    if (this.#map.value.size === 0) return;
     if (this.#map.value.has(date)) return JournalAnchorDate(date);
     if (date <= this.#sortedDates[0]) return JournalAnchorDate(this.#sortedDates[0]);
     const last = this.#sortedDates.at(-1);
@@ -89,7 +89,7 @@ export class JournalIndex {
   }
 
   #bsearchSortedDate(date: string) {
-    if (!this.#sortedDates.length) return -1;
+    if (this.#sortedDates.length === 0) return -1;
     let start = 0;
     let end = this.#sortedDates.length;
     while (end - start > 1) {

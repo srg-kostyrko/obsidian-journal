@@ -74,7 +74,7 @@ const existingNote = computed(() => {
   if (!journal.value) return null;
   if (!refDate.value) return null;
   if (!anchorDate.value) return null;
-  return plugin$.value.index.find(journal.value.name, anchorDate.value);
+  return plugin$.value.index.get(journal.value.name, anchorDate.value);
 });
 
 const notePath = computed(() => {

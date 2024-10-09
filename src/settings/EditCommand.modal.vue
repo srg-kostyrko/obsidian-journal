@@ -21,8 +21,8 @@ const props = defineProps<{
   commands: JournalCommand[];
 }>();
 const emit = defineEmits<{
-  (e: "close"): void;
-  (e: "submit", command: JournalCommand, index: number): void;
+  (event: "close"): void;
+  (event: "submit", command: JournalCommand, index: number): void;
 }>();
 
 const supportedIcons = new Set(getIconIds());

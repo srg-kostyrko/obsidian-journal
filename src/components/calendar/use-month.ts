@@ -18,34 +18,34 @@ export function useMonth(refDate: Ref<string>) {
 
     const days: CalendarUiDay[] = [];
 
-    const curr = start.clone();
-    while (curr.isSameOrBefore(end)) {
-      if (placeWeeks === "left" && curr.isSame(curr.clone().startOf("week"), "day")) {
+    const current = start.clone();
+    while (current.isSameOrBefore(end)) {
+      if (placeWeeks === "left" && current.isSame(current.clone().startOf("week"), "day")) {
         days.push({
-          date: curr.clone(),
-          key: curr.format("[W]W"),
+          date: current.clone(),
+          key: current.format("[W]W"),
           outside: false,
           isWeekNumber: true,
         });
       }
 
       days.push({
-        date: curr.clone(),
-        key: curr.format("YYYY-MM-DD"),
-        today: curr.isSame(todayDate, "day"),
-        outside: !momentDate.isSame(curr, "month"),
+        date: current.clone(),
+        key: current.format("YYYY-MM-DD"),
+        today: current.isSame(todayDate, "day"),
+        outside: !momentDate.isSame(current, "month"),
         isWeekNumber: false,
       });
 
-      if (placeWeeks === "right" && curr.isSame(curr.clone().endOf("week"), "day")) {
+      if (placeWeeks === "right" && current.isSame(current.clone().endOf("week"), "day")) {
         days.push({
-          date: curr.clone(),
-          key: curr.format("[W]W"),
+          date: current.clone(),
+          key: current.format("[W]W"),
           outside: false,
           isWeekNumber: true,
         });
       }
-      curr.add(1, "day");
+      current.add(1, "day");
     }
 
     grid.value = days;

@@ -2,12 +2,12 @@ import { type App } from "obsidian";
 
 export async function ensureFolderExists(app: App, path: string): Promise<void> {
   if (!path) return;
-  const dirs = path.split("/");
+  const directories = path.split("/");
   if (path.endsWith(".md")) {
-    dirs.pop();
+    directories.pop();
   }
-  if (dirs.length) {
-    const folderPath = dirs.join("/");
+  if (directories.length > 0) {
+    const folderPath = directories.join("/");
     if (!app.vault.getAbstractFileByPath(folderPath)) {
       await app.vault.createFolder(folderPath);
     }

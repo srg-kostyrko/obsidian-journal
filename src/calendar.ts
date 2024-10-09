@@ -83,12 +83,17 @@ function relativeDay(date: string): string {
 function relativeWeek(date: string) {
   const thisWeek = today().startOf("week");
   const fromNow = date_from_string(date).diff(thisWeek, "week");
-  if (fromNow === 0) {
-    return "This week";
-  } else if (fromNow === -1) {
-    return "Last week";
-  } else if (fromNow === 1) {
-    return "Next week";
+  switch (fromNow) {
+    case 0: {
+      return "This week";
+    }
+    case -1: {
+      return "Last week";
+    }
+    case 1: {
+      return "Next week";
+    }
+    // No default
   }
   if (fromNow < 0) {
     return `${Math.abs(fromNow)} weeks ago`;
@@ -99,12 +104,17 @@ function relativeWeek(date: string) {
 function relativeMonth(date: string) {
   const thisMonth = today().startOf("month");
   const fromNow = date_from_string(date).diff(thisMonth, "month");
-  if (fromNow === 0) {
-    return "This month";
-  } else if (fromNow === -1) {
-    return "Last month";
-  } else if (fromNow === 1) {
-    return "Next month";
+  switch (fromNow) {
+    case 0: {
+      return "This month";
+    }
+    case -1: {
+      return "Last month";
+    }
+    case 1: {
+      return "Next month";
+    }
+    // No default
   }
   if (fromNow < 0) {
     return `${Math.abs(fromNow)} months ago`;
@@ -115,12 +125,17 @@ function relativeMonth(date: string) {
 function relativeQuarter(date: string) {
   const thisQuarter = today().startOf("quarter");
   const fromNow = date_from_string(date).diff(thisQuarter, "quarter");
-  if (fromNow === 0) {
-    return "This quarter";
-  } else if (fromNow === -1) {
-    return "Last quarter";
-  } else if (fromNow === 1) {
-    return "Next quarter";
+  switch (fromNow) {
+    case 0: {
+      return "This quarter";
+    }
+    case -1: {
+      return "Last quarter";
+    }
+    case 1: {
+      return "Next quarter";
+    }
+    // No default
   }
   if (fromNow < 0) {
     return `${Math.abs(fromNow)} quarters ago`;
@@ -131,12 +146,17 @@ function relativeQuarter(date: string) {
 function relativeYear(date: string) {
   const thisYear = today().startOf("year");
   const fromNow = date_from_string(date).diff(thisYear, "year");
-  if (fromNow === 0) {
-    return "This year";
-  } else if (fromNow === -1) {
-    return "Last year";
-  } else if (fromNow === 1) {
-    return "Next year";
+  switch (fromNow) {
+    case 0: {
+      return "This year";
+    }
+    case -1: {
+      return "Last year";
+    }
+    case 1: {
+      return "Next year";
+    }
+    // No default
   }
   if (fromNow < 0) {
     return `${Math.abs(fromNow)} years ago`;

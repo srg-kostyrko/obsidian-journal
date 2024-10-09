@@ -19,7 +19,7 @@ const props = withDefaults(
     selectWeeks: false,
   },
 );
-defineEmits<(e: "select" | "selectWeek", date: string, event: MouseEvent) => void>();
+defineEmits<(event: "select" | "selectWeek", date: string, nativeEvent: MouseEvent) => void>();
 
 const { refDate } = toRefs(props);
 

@@ -84,7 +84,7 @@ export class Journal {
   async find(date: string): Promise<JournalNoteData | JournalMetadata | null> {
     const anchorDate = this.#anchorDateResolver.resolveForDate(date);
     if (!anchorDate) return null;
-    const metadata = plugin$.value.index.find(this.name, anchorDate);
+    const metadata = plugin$.value.index.get(this.name, anchorDate);
     if (metadata) return metadata;
     if (!this.#checkBounds(anchorDate)) return null;
     return await this.#buildMetadata(anchorDate);
@@ -99,7 +99,7 @@ export class Journal {
     }
     const nextAnchorDate = this.#anchorDateResolver.resolveNext(anchorDate);
     if (!nextAnchorDate) return null;
-    const nextMetadata = plugin$.value.index.find(this.name, nextAnchorDate);
+    const nextMetadata = plugin$.value.index.get(this.name, nextAnchorDate);
     if (nextMetadata) return nextMetadata;
     if (!this.#checkBounds(nextAnchorDate)) return null;
     return await this.#buildMetadata(nextAnchorDate);
@@ -112,12 +112,12 @@ export class Journal {
       const previousExstingMetadata = plugin$.value.index.findPrevious(this.name, anchorDate);
       if (previousExstingMetadata) return previousExstingMetadata;
     }
-    const prevAnchorDate = this.#anchorDateResolver.resolvePrevious(anchorDate);
-    if (!prevAnchorDate) return null;
-    const previousMetadata = plugin$.value.index.find(this.name, prevAnchorDate);
+    const previousAnchorDate = this.#anchorDateResolver.resolvePrevious(anchorDate);
+    if (!previousAnchorDate) return null;
+    const previousMetadata = plugin$.value.index.get(this.name, previousAnchorDate);
     if (previousMetadata) return previousMetadata;
-    if (!this.#checkBounds(prevAnchorDate)) return null;
-    return await this.#buildMetadata(prevAnchorDate);
+    if (!this.#checkBounds(previousAnchorDate)) return null;
+    return await this.#buildMetadata(previousAnchorDate);
   }
 
   async open(metadata: JournalMetadata): Promise<void> {

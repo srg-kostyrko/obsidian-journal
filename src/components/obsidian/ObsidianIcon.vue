@@ -7,7 +7,7 @@ const props = defineProps<{
   tooltip?: string;
 }>();
 
-const el = ref<HTMLDivElement>();
+const element = ref<HTMLDivElement>();
 
 onMounted(() => {
   watch(
@@ -18,15 +18,15 @@ onMounted(() => {
 });
 
 function placeIcon(name?: string): void {
-  el.value?.empty();
+  element.value?.empty();
   if (!name) return;
   const icon = getIcon(name);
-  if (icon && el.value) {
-    el.value.appendChild(icon);
+  if (icon && element.value) {
+    element.value.append(icon);
   }
 }
 </script>
 
 <template>
-  <span ref="el" :aria-label="tooltip"></span>
+  <span ref="element" :aria-label="tooltip"></span>
 </template>

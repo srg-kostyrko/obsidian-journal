@@ -10,17 +10,18 @@ export function replaceTemplateVariables(template: string, context: TemplateCont
   for (const [name, variable] of Object.entries(context)) {
     switch (variable.type) {
       case "string":
-      case "number":
+      case "number": {
         content = content.replaceAll(`{{${name}}}`, (variable.value ?? "").toString());
         break;
+      }
       case "date": {
         const regExp = new RegExp(`{{\\s*(${name})\\s*(([+-]\\d+)([yqmwd]))?\\s*(:(.*?))?}}`, "gi");
         content = content.replaceAll(regExp, (_, _variableName, calc, timeDelta, unit, _customFormat, format) => {
-          const templateVar = date_from_string(variable.value);
+          const templateVariable = date_from_string(variable.value);
           if (calc) {
-            templateVar.add(parseInt(timeDelta, 10), unit);
+            templateVariable.add(Number.parseInt(timeDelta, 10), unit);
           }
-          return templateVar.format(format ? format : variable.defaultFormat);
+          return templateVariable.format(format ?? variable.defaultFormat);
         });
         break;
       }
@@ -56,8 +57,8 @@ export async function tryApplyingTemplater(
       0, // RunMode.CreateNewFromTemplate
     );
     return await templaterPlugin.templater.parse_template(running_config, content);
-  } catch (e) {
-    console.error("Error applying templater", e);
+  } catch (error) {
+    console.error("Error applying templater", error);
   }
   return content;
 }

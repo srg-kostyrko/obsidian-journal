@@ -61,9 +61,9 @@ export default class JournalPlugin extends Plugin {
   placeCalendarView(moving = false) {
     if (this.app.workspace.getLeavesOfType(CALENDAR_VIEW_TYPE).length > 0) {
       if (!moving) return;
-      this.app.workspace.getLeavesOfType(CALENDAR_VIEW_TYPE).forEach((leaf) => {
+      for (const leaf of this.app.workspace.getLeavesOfType(CALENDAR_VIEW_TYPE)) {
         leaf.detach();
-      });
+      }
     }
     if (calendarViewSettings$.value.leaf === "left") {
       this.app.workspace.getLeftLeaf(false)?.setViewState({ type: CALENDAR_VIEW_TYPE });
@@ -95,21 +95,21 @@ export default class JournalPlugin extends Plugin {
     this.#configureCommands();
 
     this.addSettingTab(new JournalSettingTab(this.app, this));
-    this.registerMarkdownCodeBlockProcessor("calendar-timeline", (source, el, ctx) => {
-      const processor = new TimelineCodeBlockProcessor(el, source, ctx.sourcePath);
-      ctx.addChild(processor);
+    this.registerMarkdownCodeBlockProcessor("calendar-timeline", (source, element, context) => {
+      const processor = new TimelineCodeBlockProcessor(element, source, context.sourcePath);
+      context.addChild(processor);
     });
-    this.registerMarkdownCodeBlockProcessor("calendar-nav", (source, el, ctx) => {
-      const processor = new NavCodeBlockProcessor(el, source, ctx.sourcePath);
-      ctx.addChild(processor);
+    this.registerMarkdownCodeBlockProcessor("calendar-nav", (source, element, context) => {
+      const processor = new NavCodeBlockProcessor(element, source, context.sourcePath);
+      context.addChild(processor);
     });
-    this.registerMarkdownCodeBlockProcessor("interval-nav", (source, el, ctx) => {
-      const processor = new NavCodeBlockProcessor(el, source, ctx.sourcePath);
-      ctx.addChild(processor);
+    this.registerMarkdownCodeBlockProcessor("interval-nav", (source, element, context) => {
+      const processor = new NavCodeBlockProcessor(element, source, context.sourcePath);
+      context.addChild(processor);
     });
-    this.registerMarkdownCodeBlockProcessor("journal-nav", (source, el, ctx) => {
-      const processor = new NavCodeBlockProcessor(el, source, ctx.sourcePath);
-      ctx.addChild(processor);
+    this.registerMarkdownCodeBlockProcessor("journal-nav", (source, element, context) => {
+      const processor = new NavCodeBlockProcessor(element, source, context.sourcePath);
+      context.addChild(processor);
     });
 
     this.registerView(CALENDAR_VIEW_TYPE, (leaf) => new CalendarView(leaf));
@@ -147,9 +147,6 @@ export default class JournalPlugin extends Plugin {
         }, 50),
         { deep: true },
       ),
-    );
-
-    this.#stopHandles.push(
       watch(
         () => calendarViewSettings$.value.leaf,
         () => {
@@ -169,8 +166,8 @@ export default class JournalPlugin extends Plugin {
     this.addCommand({
       id: "open-next",
       name: "Open next note",
-      editorCallback: async (editor, ctx) => {
-        const file = ctx.file;
+      editorCallback: async (editor, context) => {
+        const file = context.file;
         if (!file) return;
         const metadata = this.#index.getForPath(file.path);
         if (!metadata) {
@@ -193,8 +190,8 @@ export default class JournalPlugin extends Plugin {
     this.addCommand({
       id: "open-prev",
       name: "Open previous note",
-      editorCallback: async (editor, ctx) => {
-        const file = ctx.file;
+      editorCallback: async (editor, context) => {
+        const file = context.file;
         if (!file) return;
         const metadata = this.#index.getForPath(file.path);
         if (!metadata) {
@@ -206,20 +203,20 @@ export default class JournalPlugin extends Plugin {
           new Notice("Unknown journal.");
           return;
         }
-        const prevNote = await journal.previous(metadata.date, true);
-        if (!prevNote) {
+        const previousNote = await journal.previous(metadata.date, true);
+        if (!previousNote) {
           new Notice("There is no previous note before this one.");
           return;
         }
-        await journal.open(prevNote);
+        await journal.open(previousNote);
       },
     });
 
     this.addCommand({
       id: "connect-note",
       name: "Connect note to a journal",
-      editorCallback: async (editor, ctx) => {
-        const file = ctx.file;
+      editorCallback: async (editor, context) => {
+        const file = context.file;
         if (file) {
           new VueModal("Connect note to a journal", ConnectNoteModal, {
             file,

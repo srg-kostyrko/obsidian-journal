@@ -28,8 +28,8 @@ const props = defineProps<{
   journalName: string;
 }>();
 const emit = defineEmits<{
-  (e: "back"): void;
-  (e: "edit", journalName: string): void;
+  (event: "back"): void;
+  (event: "edit", journalName: string): void;
 }>();
 
 const day = today().day();
@@ -121,16 +121,16 @@ function removeNavRow(index: number) {
 }
 function moveNavRowUp(index: number) {
   if (index > 0) {
-    const tmp = journal.value.navBlock.rows[index];
+    const temporary = journal.value.navBlock.rows[index];
     journal.value.navBlock.rows[index] = journal.value.navBlock.rows[index - 1];
-    journal.value.navBlock.rows[index - 1] = tmp;
+    journal.value.navBlock.rows[index - 1] = temporary;
   }
 }
 function moveNavRowDown(index: number) {
   if (index < journal.value.navBlock.rows.length - 1) {
-    const tmp = journal.value.navBlock.rows[index];
+    const temporary = journal.value.navBlock.rows[index];
     journal.value.navBlock.rows[index] = journal.value.navBlock.rows[index + 1];
-    journal.value.navBlock.rows[index + 1] = tmp;
+    journal.value.navBlock.rows[index + 1] = temporary;
   }
 }
 
@@ -301,7 +301,7 @@ watch(
       </template>
       <ObsidianButton @click="addCommand">Add command</ObsidianButton>
     </ObsidianSetting>
-    <p v-if="!journal.commands.length">No commands configured yet.</p>
+    <p v-if="journal.commands.length === 0">No commands configured yet.</p>
     <template v-else>
       <ObsidianSetting v-for="(command, index) of journal.commands" :key="index">
         <template #name>
@@ -317,7 +317,7 @@ watch(
       <template #description> Use decorations to highlight dates in calendar that meet certain conditions. </template>
       <ObsidianButton @click="addCalendarDecoration">Add decoration</ObsidianButton>
     </ObsidianSetting>
-    <p v-if="!journal.decorations.length">No calendar decorations configured yet.</p>
+    <p v-if="journal.decorations.length === 0">No calendar decorations configured yet.</p>
     <template v-else>
       <ObsidianSetting v-for="(decoration, index) of journal.decorations" :key="index">
         <template #name>

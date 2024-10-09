@@ -44,7 +44,7 @@ export class CustomIntervalResolver implements AnchorDateResolver {
     return anchorDate;
   }
   resolveEndDate(anchorDate: JournalAnchorDate): string {
-    const existing = plugin$.value.index.find(this.journalName, anchorDate);
+    const existing = plugin$.value.index.get(this.journalName, anchorDate);
     if (existing?.end_date) {
       return existing.end_date;
     }
@@ -56,12 +56,17 @@ export class CustomIntervalResolver implements AnchorDateResolver {
     const current = this.#resolveDate(today().format(FRONTMATTER_DATE_FORMAT));
     if (!current) return "";
     const fromNow = this.countRepeats(current, anchorDate);
-    if (fromNow === 0) {
-      return "This " + this.journalName;
-    } else if (fromNow === -1) {
-      return "Last " + this.journalName;
-    } else if (fromNow === 1) {
-      return "Next " + this.journalName;
+    switch (fromNow) {
+      case 0: {
+        return "This " + this.journalName;
+      }
+      case -1: {
+        return "Last " + this.journalName;
+      }
+      case 1: {
+        return "Next " + this.journalName;
+      }
+      // No default
     }
     if (anchorDate < current) {
       return `${Math.abs(fromNow)} ${this.journalName}s ago`;
@@ -94,11 +99,7 @@ export class CustomIntervalResolver implements AnchorDateResolver {
 
     const closest = index.findClosestDate(date);
     if (closest) {
-      if (closest <= date) {
-        return this.#resolveDateAfterKnown(closest);
-      } else {
-        return this.#resolveDateBeforeKnown(closest);
-      }
+      return closest <= date ? this.#resolveDateAfterKnown(closest) : this.#resolveDateBeforeKnown(closest);
     }
 
     const startDate = this.#settings.value.anchorDate;
@@ -123,7 +124,7 @@ export class CustomIntervalResolver implements AnchorDateResolver {
   #resolveDateAfterKnown(date: JournalAnchorDate): JournalAnchorDate | null {
     let current = date_from_string(date);
     while (current.isBefore(date, "day")) {
-      const existing = plugin$.value.index.find(this.journalName, JournalAnchorDate(current.format("YYYY-MM-DD")));
+      const existing = plugin$.value.index.get(this.journalName, JournalAnchorDate(current.format("YYYY-MM-DD")));
       if (existing && existing.end_date) {
         current = date_from_string(existing.end_date).add(1, "day");
       } else {

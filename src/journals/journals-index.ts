@@ -33,7 +33,7 @@ export class JournalsIndex extends Component {
     return cmp;
   }
 
-  find(journalId: string, date: JournalAnchorDate): JournalNoteData | null {
+  get(journalId: string, date: JournalAnchorDate): JournalNoteData | null {
     const path = this.getJournalIndex(journalId).get(date);
     if (!path) return null;
     return this.getForPath(path);

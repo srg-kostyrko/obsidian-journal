@@ -11,7 +11,7 @@ const props = defineProps<{
   defaultFormat: string;
   journal: Journal;
 }>();
-const emit = defineEmits<(e: "navigate", type: string, date: string, journalName?: string) => void>();
+const emit = defineEmits<(event: "navigate", type: string, date: string, journalName?: string) => void>();
 
 const anchorDate = computed(() => {
   return props.journal.resolveAnchorDate(props.refDate);
@@ -55,7 +55,7 @@ const text = computed(() => {
 const fontSize = computed(() => `${props.row.fontSize}em`);
 const fontWeight = computed(() => (props.row.bold ? "bold" : "normal"));
 const fontStyle = computed(() => (props.row.italic ? "italic" : "normal"));
-const cursor = computed(() => (props.row.link !== "none" ? "pointer" : "default"));
+const cursor = computed(() => (props.row.link === "none" ? "default" : "pointer"));
 
 function onClick() {
   if (props.row.link === "none") return;

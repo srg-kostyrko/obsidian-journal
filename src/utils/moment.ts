@@ -18,7 +18,7 @@ const formatRegExpParts = new Map([
   [
     "o",
     String((localeData as any)._config.dayOfMonthOrdinalParse) // eslint-disable-line @typescript-eslint/no-explicit-any
-      .replace("/\\d{1,2}", "")
+      .replace(String.raw`/\d{1,2}`, "")
       .slice(0, -1),
   ],
   ["M", "([1-9]|1[0-2])"],

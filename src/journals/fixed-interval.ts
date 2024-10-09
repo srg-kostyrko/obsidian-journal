@@ -50,24 +50,33 @@ export class FixedIntervalResolver implements AnchorDateResolver {
 
   resolveDateForCommand(date: string, command: JournalCommand["type"]): string | null {
     switch (command) {
-      case "same":
+      case "same": {
         return date;
-      case "next":
+      }
+      case "next": {
         return date_from_string(date).add(1, this.#settings.value.type).format(FRONTMATTER_DATE_FORMAT);
-      case "previous":
+      }
+      case "previous": {
         return date_from_string(date).subtract(1, this.#settings.value.type).format(FRONTMATTER_DATE_FORMAT);
-      case "same_next_week":
+      }
+      case "same_next_week": {
         return date_from_string(date).add(1, "week").format(FRONTMATTER_DATE_FORMAT);
-      case "same_previous_week":
+      }
+      case "same_previous_week": {
         return date_from_string(date).subtract(1, "week").format(FRONTMATTER_DATE_FORMAT);
-      case "same_next_month":
+      }
+      case "same_next_month": {
         return date_from_string(date).add(1, "month").format(FRONTMATTER_DATE_FORMAT);
-      case "same_previous_month":
+      }
+      case "same_previous_month": {
         return date_from_string(date).subtract(1, "month").format(FRONTMATTER_DATE_FORMAT);
-      case "same_next_year":
+      }
+      case "same_next_year": {
         return date_from_string(date).add(1, "year").format(FRONTMATTER_DATE_FORMAT);
-      case "same_previous_year":
+      }
+      case "same_previous_year": {
         return date_from_string(date).subtract(1, "year").format(FRONTMATTER_DATE_FORMAT);
+      }
     }
     return null;
   }

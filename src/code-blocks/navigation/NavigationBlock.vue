@@ -10,7 +10,7 @@ const props = defineProps<{
   journalName: string;
 }>();
 
-defineEmits<(e: "move-up" | "move-down" | "edit" | "remove", index: number) => void>();
+defineEmits<(event: "move-up" | "move-down" | "edit" | "remove", index: number) => void>();
 
 const journalSettings = computed(() => journals$.value[props.journalName]);
 const journal = computed(() => plugin$.value.getJournal(props.journalName));
@@ -23,7 +23,7 @@ async function navigate(type: string, date: string, journalName?: string) {
     if (!journalName) return;
     await openDateInJournal(date, journalName);
   } else {
-    const journals = journalsList$.value.filter((j) => j.write.type === type).map((j) => j.name);
+    const journals = journalsList$.value.filter((journal) => journal.write.type === type).map(({ name }) => name);
     await openDate(date, journals);
   }
 }

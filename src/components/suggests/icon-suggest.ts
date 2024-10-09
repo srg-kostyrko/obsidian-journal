@@ -2,35 +2,35 @@ import { AbstractInputSuggest, getIcon, getIconIds } from "obsidian";
 import { app$ } from "../../stores/obsidian.store";
 
 export class IconSuggest extends AbstractInputSuggest<string> {
-  constructor(protected textInputEl: HTMLInputElement) {
-    super(app$.value, textInputEl);
+  constructor(protected textInputElement: HTMLInputElement) {
+    super(app$.value, textInputElement);
   }
 
-  getSuggestions(inputStr: string): string[] {
+  getSuggestions(input: string): string[] {
     const icons = getIconIds();
-    const search = inputStr.toLocaleLowerCase();
+    const search = input.toLocaleLowerCase();
     return icons
       .filter((icon) => {
         return icon.toLocaleLowerCase().includes(search);
       })
       .sort();
   }
-  renderSuggestion(value: string, el: HTMLElement): void {
+  renderSuggestion(value: string, element: HTMLElement): void {
     const icon = getIcon(value);
     if (icon) {
       icon.classList.add("suggestion-icon");
-      el.classList.add("mod-complex");
-      el.classList.add("journal-suggestion-icon");
-      el.appendChild(icon);
-      const name = el.createSpan();
+      element.classList.add("mod-complex");
+      element.classList.add("journal-suggestion-icon");
+      element.append(icon);
+      const name = element.createSpan();
       name.classList.add("journal-suggestion-name");
       name.style.marginLeft = "8px";
       name.appendText(value);
     }
   }
   selectSuggestion(value: string): void {
-    this.textInputEl.value = value;
-    this.textInputEl.trigger("input");
+    this.textInputElement.value = value;
+    this.textInputElement.trigger("input");
     this.close();
   }
 }

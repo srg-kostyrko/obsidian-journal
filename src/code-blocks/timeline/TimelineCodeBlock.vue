@@ -25,14 +25,18 @@ const mode = computed<TimelineMode>(() => {
   if (journalSettings.value) {
     switch (journalSettings.value.write.type) {
       case "day":
-      case "week":
+      case "week": {
         return "week";
-      case "month":
+      }
+      case "month": {
         return "month";
-      case "quarter":
+      }
+      case "quarter": {
         return "quarter";
-      case "year":
+      }
+      case "year": {
         return "calendar";
+      }
     }
   }
   return "week";
@@ -40,14 +44,18 @@ const mode = computed<TimelineMode>(() => {
 
 const component = computed(() => {
   switch (mode.value) {
-    case "week":
+    case "week": {
       return TimelineWeek;
-    case "month":
+    }
+    case "month": {
       return TimelineMonth;
-    case "quarter":
+    }
+    case "quarter": {
       return TimelineQuarter;
-    case "calendar":
+    }
+    case "calendar": {
       return TimelineCalendar;
+    }
   }
   return null;
 });

@@ -25,9 +25,9 @@ const weekStart = computed({
   },
   set(value) {
     if (value !== "-1") {
-      updateLocale(parseInt(value, 10), calendarSettings$.value.firstWeekOfYear);
+      updateLocale(Number.parseInt(value, 10), calendarSettings$.value.firstWeekOfYear);
     }
-    calendarSettings$.value.firstDayOfWeek = parseInt(value, 10);
+    calendarSettings$.value.firstDayOfWeek = Number.parseInt(value, 10);
   },
 });
 const showFirstWeekOfYear = computed(() => calendarSettings$.value.firstDayOfWeek !== -1);

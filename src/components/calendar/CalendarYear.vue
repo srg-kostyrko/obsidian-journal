@@ -6,7 +6,7 @@ import { useYear } from "./use-year";
 const props = defineProps<{
   refDate: string;
 }>();
-defineEmits<(e: "select", date: string) => void>();
+defineEmits<(event: "select", date: string) => void>();
 
 const { refDate } = toRefs(props);
 const momentDate = computed(() => date_from_string(refDate.value));

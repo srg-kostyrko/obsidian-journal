@@ -35,13 +35,12 @@ function decorationsForType(type: "day" | "week" | "month" | "quarter" | "year")
   return computed(() => {
     return journalsList$.value
       .filter((journal) => journal.write.type === type)
-      .map((journal) =>
+      .flatMap((journal) =>
         journal.decorations.map((decoration) => ({
           journalName: journal.name,
           decoration,
         })),
-      )
-      .flat();
+      );
   });
 }
 

@@ -58,20 +58,26 @@ const availableConditionTypes = computed(() => {
 function getConditionComponent(condition: JournalDecorationCondition) {
   switch (condition.type) {
     case "title":
-    case "tag":
+    case "tag": {
       return ConditionValueCheck;
-    case "date":
+    }
+    case "date": {
       return ConditionDate;
-    case "property":
+    }
+    case "property": {
       return ConditionProperty;
-    case "weekday":
+    }
+    case "weekday": {
       return ConditionWeekday;
-    case "offset":
+    }
+    case "offset": {
       return ConditionOffset;
+    }
     case "all-tasks-completed":
     case "has-note":
-    case "has-open-task":
+    case "has-open-task": {
       return ConditionTypeOnly;
+    }
   }
 }
 
@@ -97,18 +103,24 @@ const availableTypes = computed(() => {
 
 function getStyleComponent(decoration: JournalDecorationsStyle) {
   switch (decoration.type) {
-    case "background":
+    case "background": {
       return DecorationBackground;
-    case "color":
+    }
+    case "color": {
       return DecorationColor;
-    case "shape":
+    }
+    case "shape": {
       return DecorationShape;
-    case "corner":
+    }
+    case "corner": {
       return DecorationCorner;
-    case "icon":
+    }
+    case "icon": {
       return DecorationIcon;
-    case "border":
+    }
+    case "border": {
       return DecorationBorder;
+    }
   }
 }
 

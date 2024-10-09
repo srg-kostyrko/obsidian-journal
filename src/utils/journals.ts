@@ -17,7 +17,7 @@ export async function disconnectNote(path: string): Promise<void> {
     delete frontmatter[FRONTMATTER_END_DATE_KEY];
     delete frontmatter[FRONTMATTER_INDEX_KEY];
     // TODO remove when issue is fixed
-    if (!Object.keys(frontmatter).length) {
+    if (Object.keys(frontmatter).length === 0) {
       frontmatter[" "] = "";
     }
   });

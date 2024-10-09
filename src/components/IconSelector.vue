@@ -8,8 +8,8 @@ defineProps<{
   placeholder?: string;
 }>();
 defineEmits<{
-  (e: "blur"): void;
-  (e: "change", value: string): void;
+  (event: "blur"): void;
+  (event: "change", value: string): void;
 }>();
 const model = defineModel<string>();
 const inputCmp = ref<InstanceType<typeof ObsidianTextInput>>();

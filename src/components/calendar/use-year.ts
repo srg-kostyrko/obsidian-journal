@@ -15,13 +15,13 @@ export function useYear(refDate: Ref<string>) {
 
     const months: CalendarUiElement[] = [];
 
-    const curr = start.clone();
-    while (curr.isSameOrBefore(end)) {
+    const current = start.clone();
+    while (current.isSameOrBefore(end)) {
       months.push({
-        date: curr.clone(),
-        key: curr.format("YYYY-MM-DD"),
+        date: current.clone(),
+        key: current.format("YYYY-MM-DD"),
       });
-      curr.add(1, "month");
+      current.add(1, "month");
     }
 
     grid.value = months;

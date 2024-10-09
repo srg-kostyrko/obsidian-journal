@@ -7,12 +7,12 @@ defineProps<{
   disabled?: boolean;
 }>();
 const model = defineModel<string>();
-const el = ref<HTMLInputElement>();
+const element = ref<HTMLInputElement>();
 
 let suggest: FolderSuggest;
 onMounted(() => {
-  if (el.value) {
-    suggest = new FolderSuggest(el.value);
+  if (element.value) {
+    suggest = new FolderSuggest(element.value);
   }
 });
 onBeforeUnmount(() => {
@@ -23,5 +23,5 @@ onBeforeUnmount(() => {
 </script>
 
 <template>
-  <input ref="el" v-model="model" type="text" :placeholder="placeholder" :disabled="disabled" spellcheck="false" />
+  <input ref="element" v-model="model" type="text" :placeholder="placeholder" :disabled="disabled" spellcheck="false" />
 </template>

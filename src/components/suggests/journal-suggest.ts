@@ -4,7 +4,7 @@ export class JournalSuggestModal extends SuggestModal<string> {
   constructor(
     app: App,
     private journals: string[],
-    private cb: (journalId: string) => void,
+    private callback: (journalId: string) => void,
   ) {
     super(app);
   }
@@ -13,10 +13,10 @@ export class JournalSuggestModal extends SuggestModal<string> {
     query = query.toLocaleLowerCase();
     return this.journals.filter((journal) => journal.toLocaleLowerCase().contains(query));
   }
-  renderSuggestion(value: string, el: HTMLElement) {
-    el.setText(value);
+  renderSuggestion(value: string, element: HTMLElement) {
+    element.setText(value);
   }
   onChooseSuggestion(item: string) {
-    this.cb(item);
+    this.callback(item);
   }
 }

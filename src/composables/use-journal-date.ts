@@ -19,7 +19,7 @@ export function useJournalDate(date: MaybeRefOrGetter<MomentDate>, journalName: 
     noteData: computed<JournalNoteData | null>(() => {
       if (!journal.value) return null;
       if (!anchorDate.value) return null;
-      return plugin$.value.index.find(journal.value.name, anchorDate.value);
+      return plugin$.value.index.get(journal.value.name, anchorDate.value);
     }),
   };
 }

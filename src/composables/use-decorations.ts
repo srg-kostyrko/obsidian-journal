@@ -27,11 +27,9 @@ export function useDecorations(
   const _date = unref(dateRef);
   const _decorationsList = toRef(decorationsList);
   return computed(() => {
-    return _decorationsList.value
-      .map(({ journalName, decoration }) => {
-        return useJournalDecorations(_date, journalName, decoration).value;
-      })
-      .flat();
+    return _decorationsList.value.flatMap(({ journalName, decoration }) => {
+      return useJournalDecorations(_date, journalName, decoration).value;
+    });
   });
 }
 
@@ -78,24 +76,33 @@ function checkDecorationCondition(
   condition: JournalDecorationCondition,
 ): boolean {
   switch (condition.type) {
-    case "title":
+    case "title": {
       return checkDecorationTitleCondition(noteData, condition);
-    case "tag":
+    }
+    case "tag": {
       return checkDecorationTagCondition(noteData, condition);
-    case "date":
+    }
+    case "date": {
       return checkDecorationDateCondition(date, condition);
-    case "property":
+    }
+    case "property": {
       return checkDecorationPropertyCondition(noteData, condition);
-    case "weekday":
+    }
+    case "weekday": {
       return checkDecorationWeekdayCondition(date, condition);
-    case "offset":
+    }
+    case "offset": {
       return checkDecorationOffsetCondition(date, journalName, condition);
-    case "all-tasks-completed":
+    }
+    case "all-tasks-completed": {
       return checkDecorationAllTasksCompletedCondition(noteData);
-    case "has-note":
+    }
+    case "has-note": {
       return checkDecorationHasNoteCondition(noteData);
-    case "has-open-task":
+    }
+    case "has-open-task": {
       return checkDecorationHasOpenTaskCondition(noteData);
+    }
   }
   return false;
 }
@@ -108,12 +115,15 @@ function checkDecorationTitleCondition(
   const title = noteData.title.toLowerCase();
   const value = condition.value.toLowerCase();
   switch (condition.condition) {
-    case "contains":
+    case "contains": {
       return title.includes(value);
-    case "starts-with":
+    }
+    case "starts-with": {
       return title.startsWith(value);
-    case "ends-with":
+    }
+    case "ends-with": {
       return title.endsWith(value);
+    }
   }
   return false;
 }
@@ -124,15 +134,18 @@ function checkDecorationTagCondition(
 ): boolean {
   if (!noteData) return false;
   const tags = noteData.tags;
-  if (!tags.length) return false;
+  if (tags.length === 0) return false;
   const value = condition.value.toLowerCase();
   switch (condition.condition) {
-    case "contains":
+    case "contains": {
       return tags.some((tag) => tag.toLowerCase().includes(value));
-    case "starts-with":
+    }
+    case "starts-with": {
       return tags.some((tag) => tag.toLowerCase().startsWith(value));
-    case "ends-with":
+    }
+    case "ends-with": {
       return tags.some((tag) => tag.toLowerCase().endsWith(value));
+    }
   }
 }
 
@@ -151,15 +164,19 @@ function checkDecorationPropertyCondition(
   const properties = noteData.properties;
   const name = condition.name;
   switch (condition.condition) {
-    case "exists":
+    case "exists": {
       return name in properties;
-    case "does-not-exist":
+    }
+    case "does-not-exist": {
       return !(name in properties);
-    case "eq":
+    }
+    case "eq": {
       return properties[name] == condition.value;
-    case "neq":
+    }
+    case "neq": {
       return properties[name] != condition.value;
-    case "contains":
+    }
+    case "contains": {
       if (Array.isArray(properties[name])) {
         return properties[name].some(
           (property) => typeof property === "string" && property.toLowerCase().includes(condition.value.toLowerCase()),
@@ -168,7 +185,8 @@ function checkDecorationPropertyCondition(
         return properties[name].toLowerCase().includes(condition.value.toLowerCase());
       }
       return false;
-    case "does-not-contain":
+    }
+    case "does-not-contain": {
       if (Array.isArray(properties[name])) {
         return !properties[name].some(
           (property) => typeof property === "string" && property.toLowerCase().includes(condition.value.toLowerCase()),
@@ -177,7 +195,8 @@ function checkDecorationPropertyCondition(
         return !properties[name].toLowerCase().includes(condition.value.toLowerCase());
       }
       return false;
-    case "starts-with":
+    }
+    case "starts-with": {
       if (Array.isArray(properties[name])) {
         return properties[name].some(
           (property) =>
@@ -187,7 +206,8 @@ function checkDecorationPropertyCondition(
         return properties[name].toLowerCase().startsWith(condition.value.toLowerCase());
       }
       return false;
-    case "ends-with":
+    }
+    case "ends-with": {
       if (Array.isArray(properties[name])) {
         return properties[name].some(
           (property) => typeof property === "string" && property.toLowerCase().endsWith(condition.value.toLowerCase()),
@@ -196,6 +216,7 @@ function checkDecorationPropertyCondition(
         return properties[name].toLowerCase().endsWith(condition.value.toLowerCase());
       }
       return false;
+    }
   }
   return false;
 }
@@ -217,14 +238,14 @@ function checkDecorationOffsetCondition(
 function checkDecorationAllTasksCompletedCondition(noteDate: JournalNoteData | null): boolean {
   if (!noteDate) return false;
   const tasks = noteDate.tasks;
-  if (!tasks.length) return false;
+  if (tasks.length === 0) return false;
   return tasks.every((task) => task.completed);
 }
 
 function checkDecorationHasOpenTaskCondition(noteDate: JournalNoteData | null): boolean {
   if (!noteDate) return false;
   const tasks = noteDate.tasks;
-  if (!tasks.length) return false;
+  if (tasks.length === 0) return false;
   const openTasks = tasks.filter((task) => !task.completed);
   return openTasks.length > 0;
 }

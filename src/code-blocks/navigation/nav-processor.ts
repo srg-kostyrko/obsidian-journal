@@ -7,11 +7,11 @@ export class NavCodeBlockProcessor extends MarkdownRenderChild {
   private mode: string | undefined;
 
   constructor(
-    containerEl: HTMLElement,
+    containerElement: HTMLElement,
     private source: string,
     private path: string,
   ) {
-    super(containerEl);
+    super(containerElement);
     this.init();
   }
 

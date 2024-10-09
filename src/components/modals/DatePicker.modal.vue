@@ -13,45 +13,48 @@ const props = defineProps<{
   picking: "day" | "week" | "month" | "quarter" | "year";
 }>();
 const emit = defineEmits<{
-  (e: "select", date: string): void;
-  (e: "close"): void;
+  (error: "select", date: string): void;
+  (error: "close"): void;
 }>();
 
 const mode = ref<"month" | "quarter" | "year" | "decade">("month");
 switch (props.picking) {
-  case "day":
+  case "day": {
     mode.value = "month";
     break;
-  case "week":
+  }
+  case "week": {
     mode.value = "month";
     break;
-  case "month":
+  }
+  case "month": {
     mode.value = "month";
     break;
-  case "quarter":
+  }
+  case "quarter": {
     mode.value = "quarter";
     break;
-  case "year":
+  }
+  case "year": {
     mode.value = "decade";
     break;
+  }
 }
 
 const currentDate = ref(props.selectedDate ?? today().format("YYYY-MM-DD"));
 const currentDateMoment = computed(() => date_from_string(currentDate.value).startOf("month"));
 
-function prev(step: "month" | "quarter" | "year" | "decade" = "month") {
-  if (step === "decade") {
-    currentDate.value = currentDateMoment.value.subtract(10, "year").format("YYYY-MM-DD");
-  } else {
-    currentDate.value = currentDateMoment.value.subtract(1, step).format("YYYY-MM-DD");
-  }
+function previous(step: "month" | "quarter" | "year" | "decade" = "month") {
+  currentDate.value =
+    step === "decade"
+      ? currentDateMoment.value.subtract(10, "year").format("YYYY-MM-DD")
+      : currentDateMoment.value.subtract(1, step).format("YYYY-MM-DD");
 }
 function next(step: "month" | "quarter" | "year" | "decade" = "month") {
-  if (step === "decade") {
-    currentDate.value = currentDateMoment.value.add(10, "year").format("YYYY-MM-DD");
-  } else {
-    currentDate.value = currentDateMoment.value.add(1, step).format("YYYY-MM-DD");
-  }
+  currentDate.value =
+    step === "decade"
+      ? currentDateMoment.value.add(10, "year").format("YYYY-MM-DD")
+      : currentDateMoment.value.add(1, step).format("YYYY-MM-DD");
 }
 
 function selectDate(date: string) {
@@ -98,7 +101,7 @@ function selectYear(date: string) {
 <template>
   <CalendarDecade v-if="mode === 'decade'" :ref-date="currentDate" @select="selectYear">
     <template #header="{ startYear, endYear }">
-      <ObsidianIconButton icon="arrow-left" tooltip="Previous decade" @click="prev('decade')" />
+      <ObsidianIconButton icon="arrow-left" tooltip="Previous decade" @click="previous('decade')" />
       {{ startYear }} - {{ endYear }}
       <ObsidianIconButton icon="arrow-right" tooltip="Next decade" @click="next('decade')" />
     </template>
@@ -106,7 +109,7 @@ function selectYear(date: string) {
 
   <CalendarYear v-else-if="mode === 'year'" :ref-date="currentDate" @select="selectMonth">
     <template #header>
-      <ObsidianIconButton icon="arrow-left" tooltip="Previous year" @click="prev('year')" />
+      <ObsidianIconButton icon="arrow-left" tooltip="Previous year" @click="previous('year')" />
       <ObsidianButton @click="mode = 'decade'">{{ currentDateMoment.format("YYYY") }}</ObsidianButton>
       <ObsidianIconButton icon="arrow-right" tooltip="Next year" @click="next('year')" />
     </template>
@@ -114,7 +117,7 @@ function selectYear(date: string) {
 
   <CalendarQuarter v-else-if="mode === 'quarter'" :ref-date="currentDate" @select="selectQuarter">
     <template #header>
-      <ObsidianIconButton icon="arrow-left" tooltip="Previous quarter" @click="prev('quarter')" />
+      <ObsidianIconButton icon="arrow-left" tooltip="Previous quarter" @click="previous('quarter')" />
       <ObsidianButton @click="mode = 'year'">{{ currentDateMoment.format("YYYY") }}</ObsidianButton>
       <ObsidianIconButton icon="arrow-right" tooltip="Next quarter" @click="next('quarter')" />
     </template>
@@ -129,7 +132,7 @@ function selectYear(date: string) {
     @select-week="selectWeek"
   >
     <template #header>
-      <ObsidianIconButton icon="arrow-left" tooltip="Previous month" @click="prev" />
+      <ObsidianIconButton icon="arrow-left" tooltip="Previous month" @click="previous" />
       <ObsidianButton @click="mode = 'year'">{{ currentDateMoment.format("MMMM YYYY") }}</ObsidianButton>
       <ObsidianIconButton icon="arrow-right" tooltip="Next month" @click="next" />
     </template>

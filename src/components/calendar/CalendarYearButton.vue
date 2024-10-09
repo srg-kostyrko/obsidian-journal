@@ -10,11 +10,11 @@ const props = defineProps<{
   date: MomentDate;
 }>();
 const { date } = toRefs(props);
-const emit = defineEmits<(e: "select", event: MouseEvent, date: MomentDate) => void>();
+const emit = defineEmits<(event: "select", event: MouseEvent, date: MomentDate) => void>();
 
 const decorationsStyles = useDecorations(date, decorationsForYears$);
 function select(event: MouseEvent) {
-  if (!journalsWithYears$.value.length) {
+  if (journalsWithYears$.value.length === 0) {
     return;
   }
   emit("select", event, props.date);
@@ -22,7 +22,7 @@ function select(event: MouseEvent) {
 </script>
 
 <template>
-  <ObsidianButton class="year-button" flat :disabled="!journalsWithYears$.length" @click="select">
+  <ObsidianButton class="year-button" flat :disabled="journalsWithYears$.length === 0" @click="select">
     <CalendarDecoration :styles="decorationsStyles">{{ date.format("YYYY") }}</CalendarDecoration>
   </ObsidianButton>
 </template>

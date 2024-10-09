@@ -2,13 +2,13 @@ import { AbstractInputSuggest, TFolder } from "obsidian";
 import { app$ } from "../../stores/obsidian.store";
 
 export class FolderSuggest extends AbstractInputSuggest<TFolder> {
-  constructor(protected textInputEl: HTMLInputElement) {
-    super(app$.value, textInputEl);
+  constructor(protected textInputElement: HTMLInputElement) {
+    super(app$.value, textInputElement);
   }
 
-  getSuggestions(inputStr: string): TFolder[] {
+  getSuggestions(input: string): TFolder[] {
     const fileAndFolders = this.app.vault.getAllLoadedFiles();
-    const search = inputStr.toLocaleLowerCase();
+    const search = input.toLocaleLowerCase();
     return fileAndFolders.filter((f): f is TFolder => {
       if (!(f instanceof TFolder)) return false;
       const path = f.path.toLocaleLowerCase();
@@ -16,12 +16,12 @@ export class FolderSuggest extends AbstractInputSuggest<TFolder> {
       return path.includes(search);
     });
   }
-  renderSuggestion(value: TFolder, el: HTMLElement): void {
-    el.setText(value.path);
+  renderSuggestion(value: TFolder, element: HTMLElement): void {
+    element.setText(value.path);
   }
   selectSuggestion(value: TFolder): void {
-    this.textInputEl.value = value.path;
-    this.textInputEl.trigger("input");
+    this.textInputElement.value = value.path;
+    this.textInputElement.trigger("input");
     this.close();
   }
 }

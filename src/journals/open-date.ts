@@ -3,7 +3,7 @@ import { app$, plugin$ } from "@/stores/obsidian.store";
 import { JournalSuggestModal } from "@/components/suggests/journal-suggest";
 
 export async function openDate(date: string, journals: string[], event?: MouseEvent): Promise<void> {
-  if (!journals.length) return;
+  if (journals.length === 0) return;
   if (journals.length === 1) {
     const [name] = journals;
     await openDateInJournal(date, name);

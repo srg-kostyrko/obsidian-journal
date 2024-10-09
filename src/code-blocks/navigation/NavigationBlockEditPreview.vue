@@ -10,7 +10,7 @@ const props = defineProps<{
   journalName: string;
 }>();
 
-defineEmits<(e: "move-up" | "move-down" | "edit" | "remove", index: number) => void>();
+defineEmits<(event: "move-up" | "move-down" | "edit" | "remove", index: number) => void>();
 
 const journalSettings = computed(() => journals$.value[props.journalName]);
 const journal = computed(() => plugin$.value.getJournal(props.journalName));
