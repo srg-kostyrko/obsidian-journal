@@ -82,16 +82,16 @@ export class Journal {
     }
   }
 
-  async get(date: string): Promise<JournalNoteData | JournalMetadata | null> {
+  get(date: string): JournalNoteData | JournalMetadata | null {
     const anchorDate = this.#anchorDateResolver.resolveForDate(date);
     if (!anchorDate) return null;
     const metadata = plugin$.value.index.get(this.name, anchorDate);
     if (metadata) return metadata;
     if (!this.#checkBounds(anchorDate)) return null;
-    return await this.#buildMetadata(anchorDate);
+    return this.#buildMetadata(anchorDate);
   }
 
-  async next(date: string, existing = false): Promise<JournalNoteData | JournalMetadata | null> {
+  next(date: string, existing = false): JournalNoteData | JournalMetadata | null {
     const anchorDate = this.#anchorDateResolver.resolveForDate(date);
     if (!anchorDate) return null;
     if (existing) {
@@ -103,10 +103,10 @@ export class Journal {
     const nextMetadata = plugin$.value.index.get(this.name, nextAnchorDate);
     if (nextMetadata) return nextMetadata;
     if (!this.#checkBounds(nextAnchorDate)) return null;
-    return await this.#buildMetadata(nextAnchorDate);
+    return this.#buildMetadata(nextAnchorDate);
   }
 
-  async previous(date: string, existing = false): Promise<JournalNoteData | JournalMetadata | null> {
+  previous(date: string, existing = false): JournalNoteData | JournalMetadata | null {
     const anchorDate = this.#anchorDateResolver.resolveForDate(date);
     if (!anchorDate) return null;
     if (existing) {
@@ -118,7 +118,7 @@ export class Journal {
     const previousMetadata = plugin$.value.index.get(this.name, previousAnchorDate);
     if (previousMetadata) return previousMetadata;
     if (!this.#checkBounds(previousAnchorDate)) return null;
-    return await this.#buildMetadata(previousAnchorDate);
+    return this.#buildMetadata(previousAnchorDate);
   }
 
   async open(metadata: JournalMetadata): Promise<void> {
@@ -216,7 +216,7 @@ export class Journal {
       move?: boolean;
     },
   ): Promise<boolean> {
-    const metadata = await this.get(anchorDate);
+    const metadata = this.get(anchorDate);
     if (!metadata) return false;
     if ("path" in metadata) {
       if (!options.override) return false;
@@ -300,11 +300,11 @@ export class Journal {
     });
   }
 
-  async #buildMetadata(anchorDate: JournalAnchorDate): Promise<JournalMetadata> {
+  #buildMetadata(anchorDate: JournalAnchorDate): JournalMetadata {
     const metadata: JournalMetadata = {
       journal: this.name,
       date: anchorDate,
-      index: await this.#resolveIndex(anchorDate),
+      index: this.#resolveIndex(anchorDate),
     };
     return metadata;
   }
@@ -325,7 +325,7 @@ export class Journal {
     if (!refDate) return;
     const date = this.#anchorDateResolver.resolveDateForCommand(refDate, command.type);
     if (!date) return;
-    const metadata = await this.get(date);
+    const metadata = this.get(date);
     if (!metadata) return;
     await this.open(metadata);
   }
@@ -358,10 +358,10 @@ export class Journal {
     return true;
   }
 
-  async #resolveIndex(anchorDate: JournalAnchorDate): Promise<number | undefined> {
+  #resolveIndex(anchorDate: JournalAnchorDate): number | undefined {
     if (!this.#config.value.index.enabled) return undefined;
     if (!this.#config.value.index.anchorDate || !this.#config.value.index.anchorIndex) return undefined;
-    const before = await this.previous(anchorDate, true);
+    const before = this.previous(anchorDate, true);
     if (before?.index) {
       const repeats = this.#anchorDateResolver.countRepeats(before.date, anchorDate);
       let index = before.index + repeats;
@@ -370,7 +370,7 @@ export class Journal {
       }
       return index;
     }
-    const after = await this.next(anchorDate, true);
+    const after = this.next(anchorDate, true);
     if (after?.index) {
       const repeats = this.#anchorDateResolver.countRepeats(anchorDate, after.date);
       let index = after.index - repeats;

@@ -12,7 +12,7 @@ import { toTypedSchema } from "@vee-validate/valibot";
 import FormErrors from "../FormErrors.vue";
 import DatePicker from "../DatePicker.vue";
 import ObsidianToggle from "../obsidian/ObsidianToggle.vue";
-import { computed, ref, watch, watchEffect } from "vue";
+import { computed, watch } from "vue";
 import type { JournalMetadata } from "@/types/journal.types";
 import { disconnectNote } from "@/utils/journals";
 
@@ -63,11 +63,10 @@ const anchorDate = computed(() => {
   if (!refDate.value) return null;
   return journal.value.resolveAnchorDate(refDate.value);
 });
-const metadata = ref<JournalMetadata | null>(null);
-watchEffect(async () => {
-  if (!journal.value) return;
-  if (!anchorDate.value) return;
-  metadata.value = await journal.value.find(anchorDate.value);
+const metadata = computed<JournalMetadata | null>(() => {
+  if (!journal.value) return null;
+  if (!anchorDate.value) return null;
+  return journal.value.get(anchorDate.value);
 });
 
 const existingNote = computed(() => {
@@ -103,16 +102,18 @@ const canSubmit = computed(() => {
 });
 
 function disconnect() {
-  disconnectNote(props.file.path);
+  disconnectNote(props.file.path).catch(console.error);
 }
 const onSubmit = handleSubmit(() => {
   if (!canSubmit.value) return;
   if (!anchorDate.value) return;
-  journal.value?.connectNote(props.file, anchorDate.value, {
-    override: override.value,
-    rename: rename.value,
-    move: move.value,
-  });
+  journal.value
+    ?.connectNote(props.file, anchorDate.value, {
+      override: override.value,
+      rename: rename.value,
+      move: move.value,
+    })
+    .catch(console.error);
   emit("close");
 });
 </script>

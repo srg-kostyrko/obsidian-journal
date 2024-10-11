@@ -30,7 +30,7 @@ export async function openDate(date: string, journals: string[], event?: MouseEv
 export async function openDateInJournal(date: string, journalName: string): Promise<void> {
   const journal = plugin$.value.getJournal(journalName);
   if (!journal) return;
-  const metadata = await journal.get(date);
+  const metadata = journal.get(date);
   if (!metadata) return;
   await journal.open(metadata);
 }

@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { usePathData } from "@/composables/use-path-data";
 import { pluginSettings$ } from "@/stores/settings.store";
-import { computed, ref, watchEffect } from "vue";
+import { computed } from "vue";
 import NavigationBlock from "./NavigationBlock.vue";
 import { plugin$ } from "@/stores/obsidian.store";
 import type { JournalMetadata } from "@/types/journal.types";
@@ -12,23 +12,27 @@ const props = defineProps<{
 }>();
 
 const noteData = usePathData(props.path);
-const previousMetadata = ref<JournalMetadata | null>(null);
-const nextMetadata = ref<JournalMetadata | null>(null);
 
 const journalSettings = computed(() => {
   if (!noteData.value) return null;
   return pluginSettings$.value.journals[noteData.value.journal];
 });
+const shouldNavigateExisting = computed(() => {
+  if (!journalSettings.value) return false;
+  return journalSettings.value.navBlock.type === "existing";
+});
 
-watchEffect(async () => {
-  if (!noteData.value) return;
-  const journal = plugin$.value.getJournal(noteData.value.journal);
-  if (!journal) return;
-  const anchorDate = journal.resolveAnchorDate(noteData.value.date);
-  if (!anchorDate) return;
-  const existing = journalSettings.value?.navBlock.type === "existing";
-  nextMetadata.value = await journal.next(anchorDate, existing);
-  previousMetadata.value = await journal.previous(anchorDate, existing);
+const journal = computed(() => {
+  if (!noteData.value) return null;
+  return plugin$.value.getJournal(noteData.value.journal);
+});
+const nextMetadata = computed<JournalMetadata | null>(() => {
+  if (!noteData.value || !journal.value) return null;
+  return journal.value.next(noteData.value.date, shouldNavigateExisting.value);
+});
+const previousMetadata = computed<JournalMetadata | null>(() => {
+  if (!noteData.value || !journal.value) return null;
+  return journal.value.previous(noteData.value.date, shouldNavigateExisting.value);
 });
 </script>
 

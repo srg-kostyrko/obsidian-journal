@@ -179,7 +179,7 @@ export default class JournalPlugin extends Plugin {
           new Notice("Unknown journal.");
           return;
         }
-        const nextNote = await journal.next(metadata.date, true);
+        const nextNote = journal.next(metadata.date, true);
         if (!nextNote) {
           new Notice("There is no next note after this one.");
           return;
@@ -203,7 +203,7 @@ export default class JournalPlugin extends Plugin {
           new Notice("Unknown journal.");
           return;
         }
-        const previousNote = await journal.previous(metadata.date, true);
+        const previousNote = journal.previous(metadata.date, true);
         if (!previousNote) {
           new Notice("There is no previous note before this one.");
           return;
