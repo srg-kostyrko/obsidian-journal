@@ -19,7 +19,7 @@ onClickOutside(popoutRef, () => {
 
 function open() {
   if (!buttonRef.value) return;
-  const rect = buttonRef.value.$el.getBoundingClientRect();
+  const rect = (buttonRef.value.$el as HTMLElement).getBoundingClientRect();
   popoutPosition.value = {
     top: `${rect.top + rect.height}px`,
     left: `${rect.left}px`,

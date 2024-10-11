@@ -17,8 +17,8 @@ const journal = computed(() => plugin$.value.getJournal(props.journalName));
 
 async function navigate(type: string, date: string, journalName?: string) {
   if (type === "self") {
-    const metadata = await journal.value?.find(props.refDate);
-    if (metadata) journal.value?.open(metadata);
+    const metadata = await journal.value?.get(props.refDate);
+    if (metadata) await journal.value?.open(metadata);
   } else if (type === "journal") {
     if (!journalName) return;
     await openDateInJournal(date, journalName);

@@ -57,7 +57,7 @@ export class Journal {
           if (checking) {
             return this.#checkCommand(command);
           } else {
-            this.#execCommand(command);
+            this.#execCommand(command).catch(console.error);
           }
           return true;
         },
@@ -70,18 +70,19 @@ export class Journal {
           command.name,
           () => {
             if (!this.#checkCommand(command)) return;
-            this.#execCommand(command);
+            this.#execCommand(command).catch(console.error);
           },
         );
         plugin$.value.register(() => {
           (app$.value.workspace.leftRibbon as LeftRibbon).removeRibbonAction(ribbonId);
+          // eslint-disable-next-line @typescript-eslint/no-unsafe-call
           item.detach();
         });
       }
     }
   }
 
-  async find(date: string): Promise<JournalNoteData | JournalMetadata | null> {
+  async get(date: string): Promise<JournalNoteData | JournalMetadata | null> {
     const anchorDate = this.#anchorDateResolver.resolveForDate(date);
     if (!anchorDate) return null;
     const metadata = plugin$.value.index.get(this.name, anchorDate);
@@ -215,7 +216,7 @@ export class Journal {
       move?: boolean;
     },
   ): Promise<boolean> {
-    const metadata = await this.find(anchorDate);
+    const metadata = await this.get(anchorDate);
     if (!metadata) return false;
     if ("path" in metadata) {
       if (!options.override) return false;
@@ -283,7 +284,7 @@ export class Journal {
     return "";
   }
   async #ensureFrontMatter(note: TFile, metadata: JournalMetadata): Promise<void> {
-    await app$.value.fileManager.processFrontMatter(note, (frontmatter) => {
+    await app$.value.fileManager.processFrontMatter(note, (frontmatter: Record<string, string | number>) => {
       frontmatter[FRONTMATTER_NAME_KEY] = this.name;
       frontmatter[FRONTMATTER_DATE_KEY] = date_from_string(metadata.date).format(FRONTMATTER_DATE_FORMAT);
       if (metadata.end_date) {
@@ -324,9 +325,9 @@ export class Journal {
     if (!refDate) return;
     const date = this.#anchorDateResolver.resolveDateForCommand(refDate, command.type);
     if (!date) return;
-    const metadata = await this.find(date);
+    const metadata = await this.get(date);
     if (!metadata) return;
-    this.open(metadata);
+    await this.open(metadata);
   }
 
   #getCommandRefDate(command: JournalCommand): string | null {
@@ -361,7 +362,7 @@ export class Journal {
     if (!this.#config.value.index.enabled) return undefined;
     if (!this.#config.value.index.anchorDate || !this.#config.value.index.anchorIndex) return undefined;
     const before = await this.previous(anchorDate, true);
-    if (before && before.index) {
+    if (before?.index) {
       const repeats = this.#anchorDateResolver.countRepeats(before.date, anchorDate);
       let index = before.index + repeats;
       if (this.#config.value.index.type === "reset_after") {
@@ -370,7 +371,7 @@ export class Journal {
       return index;
     }
     const after = await this.next(anchorDate, true);
-    if (after && after.index) {
+    if (after?.index) {
       const repeats = this.#anchorDateResolver.countRepeats(anchorDate, after.date);
       let index = after.index - repeats;
       if (this.#config.value.index.type === "reset_after" && index < 0) {

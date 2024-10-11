@@ -18,14 +18,16 @@ export class CalendarView extends ItemView {
     return "calendar-days";
   }
 
-  protected async onOpen(): Promise<void> {
+  protected onOpen(): Promise<void> {
     this.#vueApp = createApp(CalendarViewComponent);
     this.#vueApp.mount(this.contentEl);
+    return Promise.resolve();
   }
 
-  protected async onClose(): Promise<void> {
+  protected onClose(): Promise<void> {
     this.#vueApp?.unmount();
     this.#vueApp = null;
     this.contentEl.empty();
+    return Promise.resolve();
   }
 }

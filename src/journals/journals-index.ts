@@ -64,7 +64,7 @@ export class JournalsIndex extends Component {
     }
   }
 
-  async reindex(): Promise<void> {
+  reindex(): void {
     const files = app$.value.vault.getMarkdownFiles();
     for (const file of files) {
       this.#onMetadataChanged(file);

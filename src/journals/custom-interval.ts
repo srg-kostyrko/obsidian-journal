@@ -125,7 +125,7 @@ export class CustomIntervalResolver implements AnchorDateResolver {
     let current = date_from_string(date);
     while (current.isBefore(date, "day")) {
       const existing = plugin$.value.index.get(this.journalName, JournalAnchorDate(current.format("YYYY-MM-DD")));
-      if (existing && existing.end_date) {
+      if (existing?.end_date) {
         current = date_from_string(existing.end_date).add(1, "day");
       } else {
         current.add(this.#settings.value.duration, this.#settings.value.every);

@@ -3,7 +3,7 @@ import ObsidianSetting from "../obsidian/ObsidianSetting.vue";
 import ObsidianTextInput from "../obsidian/ObsidianTextInput.vue";
 import ObsidianDropdown from "../obsidian/ObsidianDropdown.vue";
 import ObsidianButton from "../obsidian/ObsidianButton.vue";
-import { type FixedWriteIntervals, type JournalSettings, type WriteCustom } from "../../types/settings.types";
+import { type JournalSettings } from "../../types/settings.types";
 import { useForm } from "vee-validate";
 import { toTypedSchema } from "@vee-validate/valibot";
 import * as v from "valibot";
@@ -61,12 +61,12 @@ const onSubmit = handleSubmit((values) => {
     values.write === "custom"
       ? {
           type: "custom",
-          every: values.every as WriteCustom["every"],
+          every: values.every,
           duration: values.duration,
           anchorDate: JournalAnchorDate(values.anchorDate),
         }
       : {
-          type: values.write as FixedWriteIntervals["type"],
+          type: values.write,
         },
   );
   emit("close");

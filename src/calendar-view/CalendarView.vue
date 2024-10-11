@@ -52,19 +52,19 @@ function pickDate() {
 }
 
 function openDay(date: string, event: MouseEvent) {
-  openDate(date, journalsWithDays$.value, event);
+  openDate(date, journalsWithDays$.value, event).catch(console.error);
 }
 function openWeek(date: string, event: MouseEvent) {
-  openDate(date, journalsWithWeeks$.value, event);
+  openDate(date, journalsWithWeeks$.value, event).catch(console.error);
 }
 function openMonth(event: MouseEvent) {
-  openDate(refDate.value, journalsWithMonths$.value, event);
+  openDate(refDate.value, journalsWithMonths$.value, event).catch(console.error);
 }
 function openQuarter(event: MouseEvent) {
-  openDate(refDate.value, journalsWithQuarters$.value, event);
+  openDate(refDate.value, journalsWithQuarters$.value, event).catch(console.error);
 }
 function openYear(event: MouseEvent) {
-  openDate(refDate.value, journalsWithYears$.value, event);
+  openDate(refDate.value, journalsWithYears$.value, event).catch(console.error);
 }
 // TODO slim header to avoid scroll
 </script>

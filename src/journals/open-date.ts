@@ -15,20 +15,22 @@ export async function openDate(date: string, journals: string[], event?: MouseEv
     for (const journal of journals) {
       menu.addItem((item) => {
         item.setTitle(journal).onClick(() => {
-          openDateInJournal(date, journal);
+          openDateInJournal(date, journal).catch(console.error);
         });
       });
     }
     menu.showAtMouseEvent(event);
   } else {
-    new JournalSuggestModal(app$.value, journals, (journalId) => openDateInJournal(date, journalId)).open();
+    new JournalSuggestModal(app$.value, journals, (journalId) => {
+      openDateInJournal(date, journalId).catch(console.error);
+    }).open();
   }
 }
 
 export async function openDateInJournal(date: string, journalName: string): Promise<void> {
   const journal = plugin$.value.getJournal(journalName);
   if (!journal) return;
-  const metadata = await journal.find(date);
+  const metadata = await journal.get(date);
   if (!metadata) return;
   await journal.open(metadata);
 }

@@ -66,9 +66,9 @@ export default class JournalPlugin extends Plugin {
       }
     }
     if (calendarViewSettings$.value.leaf === "left") {
-      this.app.workspace.getLeftLeaf(false)?.setViewState({ type: CALENDAR_VIEW_TYPE });
+      this.app.workspace.getLeftLeaf(false)?.setViewState({ type: CALENDAR_VIEW_TYPE }).catch(console.error);
     } else {
-      this.app.workspace.getRightLeaf(false)?.setViewState({ type: CALENDAR_VIEW_TYPE });
+      this.app.workspace.getRightLeaf(false)?.setViewState({ type: CALENDAR_VIEW_TYPE }).catch(console.error);
     }
   }
 
@@ -114,7 +114,7 @@ export default class JournalPlugin extends Plugin {
 
     this.registerView(CALENDAR_VIEW_TYPE, (leaf) => new CalendarView(leaf));
 
-    this.app.workspace.onLayoutReady(async () => {
+    this.app.workspace.onLayoutReady(() => {
       this.placeCalendarView(true);
     });
   }
@@ -143,7 +143,7 @@ export default class JournalPlugin extends Plugin {
       watch(
         pluginSettings$,
         debounce((settings) => {
-          this.saveData(settings);
+          this.saveData(settings).catch(console.error);
         }, 50),
         { deep: true },
       ),
@@ -215,7 +215,7 @@ export default class JournalPlugin extends Plugin {
     this.addCommand({
       id: "connect-note",
       name: "Connect note to a journal",
-      editorCallback: async (editor, context) => {
+      editorCallback: (editor, context) => {
         const file = context.file;
         if (file) {
           new VueModal("Connect note to a journal", ConnectNoteModal, {
@@ -234,7 +234,7 @@ export default class JournalPlugin extends Plugin {
           this.placeCalendarView();
           leaf = this.app.workspace.getLeavesOfType(CALENDAR_VIEW_TYPE)[0];
         }
-        this.app.workspace.revealLeaf(leaf);
+        this.app.workspace.revealLeaf(leaf).catch(console.error);
       },
     });
 
