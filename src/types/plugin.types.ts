@@ -9,4 +9,8 @@ export interface JournalPlugin extends Plugin {
   createJournal(name: string, write: JournalSettings["write"]): void;
   renameJournal(name: string, newName: string): void;
   removeJournal(name: string): void;
+
+  createShelf(name: string): void;
+  renameShelf(name: string, newName: string): void;
+  removeShelf(name: string, destinationShelf?: string): void;
 }

@@ -5,6 +5,7 @@ export type OpenMode = "active" | "tab" | "split" | "window";
 export interface PluginSettings {
   version: number;
 
+  useShelves: boolean;
   showReloadHint: boolean;
 
   journals: Record<string, JournalSettings>;
@@ -26,8 +27,8 @@ export interface PluginSettings {
 }
 
 export interface ShelfSettings {
-  id: string;
   name: string;
+  journals: string[];
 }
 
 export interface WriteDaily {

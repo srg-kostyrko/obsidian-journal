@@ -1,20 +1,16 @@
 <script setup lang="ts">
 import { moment } from "obsidian";
 import { computed } from "vue";
-import { calendarSettings$, calendarViewSettings$, journals$ } from "../stores/settings.store";
+import { calendarSettings$, calendarViewSettings$, pluginSettings$ } from "../stores/settings.store";
 import ObsidianSetting from "../components/obsidian/ObsidianSetting.vue";
 import ObsidianDropdown from "../components/obsidian/ObsidianDropdown.vue";
 import ObsidianNumberInput from "../components/obsidian/ObsidianNumberInput.vue";
-import ObsidianIconButton from "../components/obsidian/ObsidianIconButton.vue";
-import JournalSettingsList from "./JournalSettingsList.vue";
-import CreateJournal from "../components/modals/CreateJournal.modal.vue";
-import RemoveJournal from "../components/modals/RemoveJournal.modal.vue";
-import { VueModal } from "../components/modals/vue-modal";
-import type { JournalSettings, NotesProcessing } from "../types/settings.types";
-import { plugin$ } from "../stores/obsidian.store";
+import ObsidianToggle from "@/components/obsidian/ObsidianToggle.vue";
 import { updateLocale } from "../calendar";
+import JournalSettingsWithoutShelves from "./JournalSettingsWithoutShelves.vue";
+import JournalSettingsWithShelves from "./JournalSettingsWithShelves.vue";
 
-const emit = defineEmits<(event: "edit", name: string) => void>();
+const emit = defineEmits<(event: "edit" | "orgamize", name: string) => void>();
 
 const fow = moment().localeData().firstDayOfWeek();
 const fowText = moment().localeData().weekdays()[fow];
@@ -34,27 +30,6 @@ const showFirstWeekOfYear = computed(() => calendarSettings$.value.firstDayOfWee
 function changeFirstWeekOfYear(value: number): void {
   updateLocale(calendarSettings$.value.firstDayOfWeek, value);
   calendarSettings$.value.firstWeekOfYear = value;
-}
-
-function create(): void {
-  new VueModal("Add Journal", CreateJournal, {
-    onCreate(name: string, writing: JournalSettings["write"]) {
-      plugin$.value.createJournal(name, writing);
-    },
-  }).open();
-}
-function edit(name: string): void {
-  emit("edit", name);
-}
-function remove(name: string): void {
-  const journal = journals$.value[name];
-  if (!journal) return;
-  new VueModal(`Remove ${journal.name} journal`, RemoveJournal, {
-    onRemove(_noteProcessing: NotesProcessing) {
-      // TODO Process notes on remove
-      plugin$.value.removeJournal(name);
-    },
-  }).open();
 }
 </script>
 
@@ -79,11 +54,12 @@ function remove(name: string): void {
     <ObsidianNumberInput :model-value="calendarSettings$.firstWeekOfYear" @update:model-value="changeFirstWeekOfYear" />
   </ObsidianSetting>
 
-  <ObsidianSetting name="Journals" heading>
-    <ObsidianIconButton :icon="'plus'" cta tooltip="Create new journal" @click="create" />
+  <ObsidianSetting name="Use shelves?">
+    <ObsidianToggle v-model="pluginSettings$.useShelves" />
   </ObsidianSetting>
 
-  <JournalSettingsList @edit="edit" @remove="remove" />
+  <JournalSettingsWithShelves v-if="pluginSettings$.useShelves" @organize="emit('orgamize', $event)" />
+  <JournalSettingsWithoutShelves v-else @edit="emit('edit', $event)" />
 
   <ObsidianSetting name="Calendar view" heading />
   <ObsidianSetting name="Add to">

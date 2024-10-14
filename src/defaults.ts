@@ -8,6 +8,7 @@ import type {
 
 export const defaultPluginSettings: PluginSettings = {
   version: 2,
+  useShelves: false,
   showReloadHint: false,
   journals: {},
   shelves: {},

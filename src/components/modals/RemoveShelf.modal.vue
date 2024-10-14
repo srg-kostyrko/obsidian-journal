@@ -1,0 +1,39 @@
+<script setup lang="ts">
+import { computed, ref } from "vue";
+import ObsidianSetting from "../obsidian/ObsidianSetting.vue";
+import ObsidianDropdown from "../obsidian/ObsidianDropdown.vue";
+import ObsidianButton from "../obsidian/ObsidianButton.vue";
+import { pluginSettings$ } from "@/stores/settings.store";
+
+const { shelfName } = defineProps<{
+  shelfName: string;
+}>();
+const emit = defineEmits<{
+  (event: "close"): void;
+  (event: "remove", destination: string): void;
+}>();
+
+const destinationShelf = ref("");
+const otherShelves = computed(() => {
+  return Object.values(pluginSettings$.value.shelves).filter((shelf) => shelf.name !== shelfName);
+});
+
+function confirm() {
+  emit("remove", destinationShelf.value);
+  emit("close");
+}
+</script>
+
+<template>
+  <ObsidianSetting v-if="otherShelves.length > 0" name="Move journals to">
+    <ObsidianDropdown v-model="destinationShelf">
+      <option value="">None</option>
+      <option v-for="shelf in otherShelves" :key="shelf.name" :value="shelf.name">{{ shelf.name }}</option>
+    </ObsidianDropdown>
+  </ObsidianSetting>
+  <p v-else>Journals will be moved out</p>
+  <ObsidianSetting>
+    <ObsidianButton @click="$emit('close')">Cancel</ObsidianButton>
+    <ObsidianButton cta @click="confirm">Remove</ObsidianButton>
+  </ObsidianSetting>
+</template>

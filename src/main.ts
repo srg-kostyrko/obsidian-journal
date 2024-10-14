@@ -49,12 +49,22 @@ export default class JournalPlugin extends Plugin {
     pluginSettings$.value.journals[newName] = pluginSettings$.value.journals[name];
     pluginSettings$.value.journals[newName].name = newName;
     delete pluginSettings$.value.journals[name];
+    for (const shelf of pluginSettings$.value.journals[newName].shelves) {
+      pluginSettings$.value.shelves[shelf].journals = pluginSettings$.value.shelves[shelf].journals.map(
+        (journalName) => (journalName === name ? newName : journalName),
+      );
+    }
     this.#journals.delete(name);
     this.#journals.set(newName, new Journal(newName));
   }
 
   removeJournal(name: string): void {
     this.#journals.delete(name);
+    for (const shelf of pluginSettings$.value.journals[name].shelves) {
+      pluginSettings$.value.shelves[shelf].journals = pluginSettings$.value.shelves[shelf].journals.filter(
+        (journalName) => journalName !== name,
+      );
+    }
     delete pluginSettings$.value.journals[name];
   }
 
@@ -69,6 +79,32 @@ export default class JournalPlugin extends Plugin {
       this.app.workspace.getLeftLeaf(false)?.setViewState({ type: CALENDAR_VIEW_TYPE }).catch(console.error);
     } else {
       this.app.workspace.getRightLeaf(false)?.setViewState({ type: CALENDAR_VIEW_TYPE }).catch(console.error);
+    }
+  }
+
+  createShelf(name: string): void {
+    pluginSettings$.value.shelves[name] = {
+      name,
+      journals: [],
+    };
+  }
+
+  renameShelf(name: string, newName: string): void {
+    pluginSettings$.value.shelves[newName] = pluginSettings$.value.shelves[name];
+    delete pluginSettings$.value.shelves[name];
+    for (const journal of pluginSettings$.value.shelves[newName].journals) {
+      pluginSettings$.value.journals[journal].shelves = pluginSettings$.value.journals[journal].shelves.map((shelf) =>
+        shelf === name ? newName : shelf,
+      );
+    }
+  }
+
+  removeShelf(name: string, destinationShelf?: string): void {
+    delete pluginSettings$.value.shelves[name];
+    for (const journal of pluginSettings$.value.shelves[name].journals) {
+      pluginSettings$.value.journals[journal].shelves = destinationShelf
+        ? pluginSettings$.value.journals[journal].shelves.map((shelf) => (shelf === name ? destinationShelf : shelf))
+        : pluginSettings$.value.journals[journal].shelves.filter((shelf) => shelf !== name);
     }
   }
 
