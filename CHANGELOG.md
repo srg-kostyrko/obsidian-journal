@@ -2,6 +2,25 @@
 
 All notable changes to this project will be documented in this file.
 
+## [unreleased]
+
+### Bug Fixes
+
+- Fix adding existing notes to journal
+
+## [1.4.0] - 2024-07-07
+
+### Bug Fixes
+
+- Prevent failures on unexpected frontmatter data
+- Fix indexing inconsistencies
+- Improve calendar styles
+- More calendar view improvements
+
+### Features
+
+- Add relative date calculations to date template variables
+
 ## [1.3.0] - 2024-03-31
 
 ### Bug Fixes
