@@ -361,7 +361,7 @@ export class AddNotesJournalModal extends Modal {
 
   private async processNote(note: TFile): Promise<void> {
     this.writeToConsole(`Processing ${note.basename}`);
-    if (note.extension !== ".md") return this.writeToConsole(`Not a markdown file - skipped`);
+    if (note.extension !== "md") return this.writeToConsole(`Not a markdown file - skipped`);
     const journalData = await this.manager.getJournalData(note.path);
     this.console_ident++;
     try {
