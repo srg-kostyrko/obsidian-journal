@@ -6,47 +6,53 @@ export function replaceTemplateVariables(template: string, context: TemplateCont
   let content = template ?? "";
   if (context.date) {
     const { value: date, defaultFormat } = context.date;
-    content = content
-    .replaceAll(/{{\s*(date)\s*(([+-]\d+)([yqmwdhs]))?\s*(:(.*?))?}}/gi, (_, _variableName, calc, timeDelta, unit, _customFormat, format) => {
-      const templateVar = date.clone();
-      if (calc) {
-        templateVar.add(parseInt(timeDelta, 10), unit);
-      }
-      if(format) {
-        return templateVar.format(format);
-      }
-      return templateVar.format(defaultFormat);
-    });
+    content = content.replaceAll(
+      /{{\s*(date)\s*(([+-]\d+)([yqmwdhs]))?\s*(:(.*?))?}}/gi,
+      (_, _variableName, calc, timeDelta, unit, _customFormat, format) => {
+        const templateVar = date.clone();
+        if (calc) {
+          templateVar.add(parseInt(timeDelta, 10), unit);
+        }
+        if (format) {
+          return templateVar.format(format);
+        }
+        return templateVar.format(defaultFormat);
+      },
+    );
   }
 
   if (context.start_date) {
     const { value: start_date, defaultFormat } = context.start_date;
-    content = content
-    .replaceAll(/{{\s*(start_date)\s*(([+-]\d+)([yqmwdhs]))?\s*(:(.*?))?}}/gi, (_, _variableName, calc, timeDelta, unit, _customFormat, format) => {
-      const templateVar = start_date.clone();
-      if (calc) {
-        templateVar.add(parseInt(timeDelta, 10), unit);
-      }
-      if(format) {
-        return templateVar.format(format);
-      }
-      return templateVar.format(defaultFormat);
-    });
+    content = content.replaceAll(
+      /{{\s*(start_date)\s*(([+-]\d+)([yqmwdhs]))?\s*(:(.*?))?}}/gi,
+      (_, _variableName, calc, timeDelta, unit, _customFormat, format) => {
+        const templateVar = start_date.clone();
+        if (calc) {
+          templateVar.add(parseInt(timeDelta, 10), unit);
+        }
+        if (format) {
+          return templateVar.format(format);
+        }
+        return templateVar.format(defaultFormat);
+      },
+    );
   }
 
   if (context.end_date) {
     const { value: end_date, defaultFormat } = context.end_date;
-    content = content
-    .replaceAll(/{{\s*(end_date)\s*(([+-]\d+)([yqmwdhs]))?\s*(:(.*?))?}}/gi, (_, _variableName, calc, timeDelta, unit, _customFormat, format) => {
-      const templateVar = end_date.clone();
-      if (calc) {
-        templateVar.add(parseInt(timeDelta, 10), unit);
-      }
-      if(format) {
-        return templateVar.format(format);
-      }
-      return templateVar.format(defaultFormat);
-    });
+    content = content.replaceAll(
+      /{{\s*(end_date)\s*(([+-]\d+)([yqmwdhs]))?\s*(:(.*?))?}}/gi,
+      (_, _variableName, calc, timeDelta, unit, _customFormat, format) => {
+        const templateVar = end_date.clone();
+        if (calc) {
+          templateVar.add(parseInt(timeDelta, 10), unit);
+        }
+        if (format) {
+          return templateVar.format(format);
+        }
+        return templateVar.format(defaultFormat);
+      },
+    );
   }
 
   if (context.index) {
@@ -73,6 +79,21 @@ export function canApplyTemplater(app: App, content: string): boolean {
   if (!("create_running_config" in templaterPlugin.templater)) return false;
   if (!("parse_template" in templaterPlugin.templater)) return false;
   return true;
+}
+
+export function supportsTemplaterCursor(app: App): boolean {
+  const templaterPlugin = app.plugins.getPlugin("templater-obsidian") as TemplaterPlugin | null;
+  if (!templaterPlugin) return false;
+  if (!("editor_handler" in templaterPlugin)) return false;
+  if (!("jump_to_next_cursor_location" in templaterPlugin.editor_handler)) return false;
+  return true;
+}
+
+export async function tryTemplaterCursorJump(app: App, note: TFile) {
+  if (!supportsTemplaterCursor(app)) return;
+  const templaterPlugin = app.plugins.getPlugin("templater-obsidian") as TemplaterPlugin | null;
+  if (!templaterPlugin) return false;
+  await templaterPlugin.editor_handler.jump_to_next_cursor_location(note, true);
 }
 
 export async function tryApplyingTemplater(

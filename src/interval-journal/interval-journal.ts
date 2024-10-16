@@ -10,7 +10,7 @@ import {
   FRONTMATTER_START_DATE_KEY,
 } from "../constants";
 import { TemplateContext } from "../contracts/template.types";
-import { replaceTemplateVariables, tryApplyingTemplater } from "../utils/template";
+import { replaceTemplateVariables, tryApplyingTemplater, tryTemplaterCursorJump } from "../utils/template";
 import { ensureFolderExists } from "../utils/io";
 import { Interval, IntervalManager } from "./interval-manager";
 import {
@@ -95,7 +95,7 @@ export class IntervalJournal implements Journal {
     const file = this.app.vault.getAbstractFileByPath(path);
     if (!file) return;
     if (!(file instanceof TFile)) return;
-    await this.openFile(file);
+    await this.openFile(file, false);
   }
 
   findInterval(date?: string): Interval | null {
@@ -265,10 +265,12 @@ export class IntervalJournal implements Journal {
     return normalizePath(folderPath ? `${folderPath}/${filename}` : filename);
   }
 
-  private async ensureIntervalNote(interval: Interval): Promise<TFile> {
+  private async ensureIntervalNote(interval: Interval): Promise<[TFile, boolean]> {
     const filePath = this.getIntervalPath(interval);
     let file = this.app.vault.getAbstractFileByPath(filePath);
+    let newFile = false;
     if (!file) {
+      newFile = true;
       await ensureFolderExists(this.app, filePath);
       file = await this.app.vault.create(filePath, "");
       if (!(file instanceof TFile)) throw new Error("File is not a TFile");
@@ -279,7 +281,7 @@ export class IntervalJournal implements Journal {
       if (!(file instanceof TFile)) throw new Error("File is not a TFile");
       await this.ensureFrontMatter(file, interval);
     }
-    return file;
+    return [file, newFile];
   }
 
   private async ensureFrontMatter(file: TFile, interval: Interval): Promise<void> {
@@ -318,14 +320,17 @@ export class IntervalJournal implements Journal {
   }
 
   private async openInterval(interval: Interval): Promise<void> {
-    const file = await this.ensureIntervalNote(interval);
-    await this.openFile(file);
+    const [file, isNew] = await this.ensureIntervalNote(interval);
+    await this.openFile(file, isNew);
   }
 
-  private async openFile(file: TFile): Promise<void> {
+  private async openFile(file: TFile, isNew: boolean): Promise<void> {
     const mode = this.config.openMode === "active" ? undefined : this.config.openMode;
     const leaf = this.app.workspace.getLeaf(mode);
     await leaf.openFile(file, { active: true });
+    if (isNew) {
+      await tryTemplaterCursorJump(this.app, file);
+    }
   }
 
   getTemplateContext(interval: Interval, note_name?: string): TemplateContext {

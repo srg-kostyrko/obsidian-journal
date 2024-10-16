@@ -2,7 +2,7 @@ import { App, TFile, Plugin, normalizePath } from "obsidian";
 import { CalendarGranularity, CalendarSection } from "../contracts/config.types";
 import { CalendarJournal } from "./calendar-journal";
 import { ensureFolderExists } from "../utils/io";
-import { replaceTemplateVariables, tryApplyingTemplater } from "../utils/template";
+import { replaceTemplateVariables, tryApplyingTemplater, tryTemplaterCursorJump } from "../utils/template";
 import { TemplateContext } from "../contracts/template.types";
 import {
   FRONTMATTER_DATE_FORMAT,
@@ -83,7 +83,7 @@ export class CalendarJournalSection {
     const file = this.app.vault.getAbstractFileByPath(filePath);
     if (!file) return;
     if (!(file instanceof TFile)) return;
-    await this.openFile(file);
+    await this.openFile(file, false);
   }
 
   async openNext(date?: string): Promise<void> {
@@ -143,11 +143,12 @@ export class CalendarJournalSection {
     return true;
   }
 
-  private async ensureDateNote(startDate: MomentDate, endDate: MomentDate): Promise<TFile> {
+  private async ensureDateNote(startDate: MomentDate, endDate: MomentDate): Promise<[TFile, boolean]> {
     const filePath = this.getDatePath(startDate, endDate);
     let file = this.app.vault.getAbstractFileByPath(filePath);
-
+    let isNew = false;
     if (!file) {
+      isNew = true;
       await ensureFolderExists(this.app, filePath);
       file = await this.app.vault.create(filePath, "");
       if (!(file instanceof TFile)) throw new Error("File is not a TFile");
@@ -161,18 +162,21 @@ export class CalendarJournalSection {
       if (!(file instanceof TFile)) throw new Error("File is not a TFile");
       await this.ensureFrontMatter(file, startDate, endDate);
     }
-    return file;
+    return [file, isNew];
   }
 
   private async openDate(startDate: MomentDate, endDate: MomentDate): Promise<void> {
-    const file = await this.ensureDateNote(startDate, endDate);
-    await this.openFile(file);
+    const [file, isNew] = await this.ensureDateNote(startDate, endDate);
+    await this.openFile(file, isNew);
   }
 
-  private async openFile(file: TFile): Promise<void> {
+  private async openFile(file: TFile, isNew: boolean): Promise<void> {
     const mode = this.config.openMode === "active" ? undefined : this.config.openMode;
     const leaf = this.app.workspace.getLeaf(mode);
     await leaf.openFile(file, { active: true });
+    if (isNew) {
+      await tryTemplaterCursorJump(this.app, file);
+    }
   }
 
   private getTemplateContext(start_date: MomentDate, end_date: MomentDate, note_name?: string): TemplateContext {
