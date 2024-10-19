@@ -31,7 +31,7 @@ export default class JournalPlugin extends Plugin {
     return this.#journals.get(name);
   }
 
-  createJournal(name: string, write: JournalSettings["write"]): void {
+  createJournal(name: string, write: JournalSettings["write"]): JournalSettings {
     const settings: JournalSettings = deepCopy({
       ...deepCopy(defaultJournalSettings),
       ...prepareJournalDefaultsBasedOnType(write),
@@ -40,6 +40,7 @@ export default class JournalPlugin extends Plugin {
     });
     pluginSettings$.value.journals[name] = settings;
     this.#journals.set(name, new Journal(name));
+    return pluginSettings$.value.journals[name];
   }
 
   async renameJournal(name: string, newName: string): Promise<void> {

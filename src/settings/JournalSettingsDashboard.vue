@@ -10,7 +10,7 @@ import { updateLocale } from "../calendar";
 import JournalSettingsWithoutShelves from "./JournalSettingsWithoutShelves.vue";
 import JournalSettingsWithShelves from "./JournalSettingsWithShelves.vue";
 
-const emit = defineEmits<(event: "edit" | "orgamize", name: string) => void>();
+const emit = defineEmits<(event: "edit" | "organize", name: string) => void>();
 
 const fow = moment().localeData().firstDayOfWeek();
 const fowText = moment().localeData().weekdays()[fow];
@@ -58,7 +58,7 @@ function changeFirstWeekOfYear(value: number): void {
     <ObsidianToggle v-model="pluginSettings$.useShelves" />
   </ObsidianSetting>
 
-  <JournalSettingsWithShelves v-if="pluginSettings$.useShelves" @organize="emit('orgamize', $event)" />
+  <JournalSettingsWithShelves v-if="pluginSettings$.useShelves" @organize="emit('organize', $event)" />
   <JournalSettingsWithoutShelves v-else @edit="emit('edit', $event)" />
 
   <ObsidianSetting name="Calendar view" heading />

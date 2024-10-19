@@ -47,8 +47,9 @@ function removeShelf(shelfName: string): void {
     <ObsidianSetting v-for="shelf of shelvesList" :key="shelf.name">
       <template #name>
         <b>
-          {{ shelf.name }} </b
-        ><br />
+          {{ shelf.name }}
+        </b>
+        <br />
         {{ shelf.journals.length }} journals
       </template>
       <ObsidianIconButton icon="library" :tooltip="'Organize ' + shelf.name" @click="$emit('organize', shelf.name)" />
