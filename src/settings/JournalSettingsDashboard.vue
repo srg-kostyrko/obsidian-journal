@@ -58,7 +58,11 @@ function changeFirstWeekOfYear(value: number): void {
     <ObsidianToggle v-model="pluginSettings$.useShelves" />
   </ObsidianSetting>
 
-  <JournalSettingsWithShelves v-if="pluginSettings$.useShelves" @organize="emit('organize', $event)" />
+  <JournalSettingsWithShelves
+    v-if="pluginSettings$.useShelves"
+    @organize="emit('organize', $event)"
+    @edit="emit('edit', $event)"
+  />
   <JournalSettingsWithoutShelves v-else @edit="emit('edit', $event)" />
 
   <ObsidianSetting name="Calendar view" heading />

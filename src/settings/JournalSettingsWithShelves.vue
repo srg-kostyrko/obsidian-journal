@@ -7,8 +7,15 @@ import RemoveShelf from "@/components/modals/RemoveShelf.modal.vue";
 import { plugin$ } from "@/stores/obsidian.store";
 import { pluginSettings$ } from "@/stores/settings.store";
 import { computed } from "vue";
+import JournalSettingsList from "./JournalSettingsList.vue";
+import CreateJournalModal from "@/components/modals/CreateJournal.modal.vue";
+import type { JournalSettings } from "@/types/settings.types";
 
-defineEmits<(event: "organize", shelfName: string) => void>();
+const emit = defineEmits<{
+  (event: "organize", shelfName: string): void;
+  // eslint-disable-next-line @typescript-eslint/unified-signatures
+  (event: "edit", journalName: string): void;
+}>();
 
 const shelvesList = computed(() =>
   Object.values(pluginSettings$.value.shelves).toSorted((a, b) => a.name.localeCompare(b.name)),
@@ -36,6 +43,15 @@ function removeShelf(shelfName: string): void {
     },
   }).open();
 }
+
+function create(): void {
+  new VueModal("Add Journal", CreateJournalModal, {
+    onCreate(name: string, writing: JournalSettings["write"]) {
+      plugin$.value.createJournal(name, writing);
+      emit("edit", name);
+    },
+  }).open();
+}
 </script>
 
 <template>
@@ -56,9 +72,10 @@ function removeShelf(shelfName: string): void {
       <ObsidianIconButton icon="trash-2" :tooltip="'Delete ' + shelf.name" @click="removeShelf(shelf.name)" />
     </ObsidianSetting>
   </template>
-  <template v-if="journalsWithoutShelf.length > 0">
-    <ObsidianSetting name="Journals without shelf" heading />
-  </template>
+  <ObsidianSetting name="Journals not on shelf" heading>
+    <ObsidianIconButton icon="plus" cta tooltip="Create new journal" @click="create" />
+  </ObsidianSetting>
+  <JournalSettingsList :journals="journalsWithoutShelf" @edit="$emit('edit', $event)" />
 </template>
 
 <style scoped></style>

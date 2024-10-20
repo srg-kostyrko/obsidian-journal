@@ -23,6 +23,7 @@ import RenameJournalModal from "../components/modals/RenameJournal.modal.vue";
 import { today } from "@/calendar";
 import NavigationBlockEditPreview from "@/code-blocks/navigation/NavigationBlockEditPreview.vue";
 import EditNavBlockRowModal from "@/components/modals/EditNavBlockRow.modal.vue";
+import JournalShelfModal from "@/components/modals/JournalShelf.modal.vue";
 
 const props = defineProps<{
   journalName: string;
@@ -44,6 +45,26 @@ function showRenameModal(): void {
     onSave(name: string) {
       plugin$.value.renameJournal(props.journalName, name);
       emit("edit", name);
+    },
+  }).open();
+}
+
+function place(): void {
+  new VueModal("Place journal", JournalShelfModal, {
+    currentShelf: journal.value.shelves[0] ?? "",
+    onSave(shelfName: string) {
+      const currentShelf = journal.value.shelves[0];
+      if (currentShelf) {
+        pluginSettings$.value.shelves[currentShelf].journals = pluginSettings$.value.shelves[
+          currentShelf
+        ].journals.filter((name) => name !== props.journalName);
+      }
+      if (shelfName) {
+        pluginSettings$.value.shelves[shelfName].journals.push(props.journalName);
+        journal.value.shelves = [shelfName];
+      } else {
+        journal.value.shelves = [];
+      }
     },
   }).open();
 }
@@ -156,6 +177,12 @@ watch(
   <div v-if="journal">
     <ObsidianSetting heading>
       <template #name> Configuring {{ journal.name }} </template>
+      <template #description>
+        <div v-if="pluginSettings$.useShelves">
+          <div v-if="journal.shelves.length === 0">Not on a shelf right not. <a href="#" @click="place">Place</a></div>
+          <div v-else>On {{ journal.shelves[0] }} shelf right now. <a href="#" @click="place">Place elsewhere</a></div>
+        </div>
+      </template>
       <ObsidianIconButton icon="pencil" tooltip="Rename journal" @click="showRenameModal" />
       <ObsidianIconButton icon="chevron-left" tooltip="Back to list" @click="$emit('back')" />
     </ObsidianSetting>
