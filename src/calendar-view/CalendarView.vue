@@ -12,14 +12,26 @@ import {
   journalsWithMonths$,
   journalsWithQuarters$,
   journalsWithYears$,
+  pluginSettings$,
+  journalsList$,
 } from "../stores/settings.store";
 import { openDate } from "@/journals/open-date";
 import CalendarMonthButton from "@/components/calendar/CalendarMonthButton.vue";
 import CalendarYearButton from "@/components/calendar/CalendarYearButton.vue";
 import CalendarQuarterButton from "@/components/calendar/CalendarQuarterButton.vue";
+import { ShelfSuggestModal } from "@/components/suggests/shelf-suggest";
+import { app$ } from "@/stores/obsidian.store";
 
 const refDateMoment = ref(today());
 const refDate = computed(() => refDateMoment.value.format("YYYY-MM-DD"));
+
+const selectedShelf = ref<string | null>(null);
+const shouldShowShelf = computed(() => {
+  return (
+    (pluginSettings$.value.useShelves && Object.values(pluginSettings$.value.shelves).length > 0) ||
+    journalsList$.value.some((journal) => journal.shelves.length === 0)
+  );
+});
 
 const daysClickable = computed(() => {
   return journalsWithDays$.value.length > 0;
@@ -30,6 +42,12 @@ const weeksClickable = computed(() => {
 const quartersClickable = computed(() => {
   return journalsWithQuarters$.value.length > 0;
 });
+
+function selectShelf() {
+  new ShelfSuggestModal(app$.value, Object.keys(pluginSettings$.value.shelves), (shelf: string | null) => {
+    selectedShelf.value = shelf;
+  }).open();
+}
 
 function navigate(amount: number, step: "month" | "year" = "month") {
   refDateMoment.value = refDateMoment.value.clone().add(amount, step);
@@ -72,6 +90,9 @@ function openYear(event: MouseEvent) {
 <template>
   <div>
     <div class="calendar-view-header">
+      <ObsidianButton v-if="shouldShowShelf" @click="selectShelf">
+        {{ selectedShelf || "All journals" }}
+      </ObsidianButton>
       <ObsidianIconButton icon="crosshair" tooltip="Select a date to be displayed" @click="pickDate" />
       <ObsidianButton @click="goToday">Today</ObsidianButton>
     </div>
