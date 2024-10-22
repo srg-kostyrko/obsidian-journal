@@ -1,4 +1,4 @@
-import { App, TFile } from "obsidian";
+import { App, TFile, moment } from "obsidian";
 import { TemplateContext } from "../contracts/template.types";
 import { TemplaterPlugin } from "../contracts/templater.types";
 
@@ -65,8 +65,38 @@ export function replaceTemplateVariables(template: string, context: TemplateCont
   }
   if (context.note_name) {
     const { value: name } = context.note_name;
-    content = content.replaceAll("{{note_name}}", name);
+    content = content.replaceAll("{{note_name}}", name).replaceAll("{{title}}", name);
   }
+  const now = moment();
+  const timeFormat = "HH:mm";
+  content = content.replaceAll(
+    /{{\s*(time|current_time)\s*(([+-]\d+)([yqmwdhs]))?\s*(:(.*?))?}}/gi,
+    (_, _variableName, calc, timeDelta, unit, _customFormat, format) => {
+      const templateVar = now.clone();
+      if (calc) {
+        templateVar.add(parseInt(timeDelta, 10), unit);
+      }
+      if (format) {
+        return templateVar.format(format);
+      }
+      return templateVar.format(timeFormat);
+    },
+  );
+  const dateFormat = "YYYY-MM-DD";
+  content = content.replaceAll(
+    /{{\s*(current_date)\s*(([+-]\d+)([yqmwdhs]))?\s*(:(.*?))?}}/gi,
+    (_, _variableName, calc, timeDelta, unit, _customFormat, format) => {
+      const templateVar = now.clone();
+      if (calc) {
+        templateVar.add(parseInt(timeDelta, 10), unit);
+      }
+      if (format) {
+        return templateVar.format(format);
+      }
+      return templateVar.format(dateFormat);
+    },
+  );
+
   return content;
 }
 

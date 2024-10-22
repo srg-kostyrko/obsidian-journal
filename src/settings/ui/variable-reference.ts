@@ -40,6 +40,10 @@ export class VariableReferenceModal extends Modal {
     grid.createDiv({
       text: "Name of current note",
     });
+    this.renderVariable(grid.createDiv(), "title");
+    grid.createDiv({
+      text: "Name of current note (to support core template variable)",
+    });
     if (this.granularity === "day") {
       this.renderVariable(grid.createDiv(), "date");
       const div = grid.createDiv({
@@ -65,7 +69,6 @@ export class VariableReferenceModal extends Modal {
         },
         href: "https://momentjs.com/docs/#/manipulating/add/",
       });
-
     } else {
       this.renderVariable(grid.createDiv(), "start_date");
       const div1 = grid.createDiv({
@@ -129,6 +132,32 @@ export class VariableReferenceModal extends Modal {
         text: "Index of current interval",
       });
     }
+
+    this.renderVariable(grid.createDiv(), "current_date");
+    const current_date = grid.createDiv({
+      text: "Current date (in YYYY-MM-DD format)",
+    });
+    current_date.createEl("br");
+    current_date.createSpan({
+      text: "You can also use {{current_date:format}} to override format.",
+    });
+
+    this.renderVariable(grid.createDiv(), "time");
+    const timediv = grid.createDiv({
+      text: "Current time (in HH:mm format)",
+    });
+    timediv.createEl("br");
+    timediv.createSpan({
+      text: "You can also use {{time:format}} to override format.",
+    });
+    this.renderVariable(grid.createDiv(), "current_time");
+    const current_time = grid.createDiv({
+      text: "Current time (in HH:mm format)",
+    });
+    current_time.createEl("br");
+    current_time.createSpan({
+      text: "You can also use {{current_time:format}} to override format.",
+    });
   }
 
   renderVariable(parent: HTMLElement, name: string) {
