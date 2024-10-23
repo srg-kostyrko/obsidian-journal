@@ -2,7 +2,23 @@
 
 All notable changes to this project will be documented in this file.
 
-## [unreleased]
+## [1.4.3] - 2024-10-23
+
+### Bug Fixes
+
+- Support time and title template variables
+
+### Features
+
+- Support templater cursor
+
+## [1.4.2] - 2024-10-15
+
+### Bug Fixes
+
+- Fix bulk node processing
+
+## [1.4.1] - 2024-10-14
 
 ### Bug Fixes
 
