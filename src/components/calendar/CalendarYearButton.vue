@@ -2,19 +2,20 @@
 import { useDecorations } from "@/composables/use-decorations";
 import type { MomentDate } from "@/types/date.types";
 import CalendarDecoration from "./CalendarDecoration.vue";
-import { decorationsForYears$, journalsWithYears$ } from "@/stores/settings.store";
 import ObsidianButton from "../obsidian/ObsidianButton.vue";
-import { toRefs } from "vue";
+import { inject, toRefs } from "vue";
+import { SHELF_DATA_KEY } from "@/constants";
 
 const props = defineProps<{
   date: MomentDate;
 }>();
 const { date } = toRefs(props);
-const emit = defineEmits<(event: "select", event: MouseEvent, date: MomentDate) => void>();
+const emit = defineEmits<(event_: "select", event: MouseEvent, date: MomentDate) => void>();
 
-const decorationsStyles = useDecorations(date, decorationsForYears$);
+const { journals, decorations } = inject(SHELF_DATA_KEY);
+const decorationsStyles = useDecorations(date, decorations.year);
 function select(event: MouseEvent) {
-  if (journalsWithYears$.value.length === 0) {
+  if (journals.year.value.length === 0) {
     return;
   }
   emit("select", event, props.date);
@@ -22,7 +23,7 @@ function select(event: MouseEvent) {
 </script>
 
 <template>
-  <ObsidianButton class="year-button" flat :disabled="journalsWithYears$.length === 0" @click="select">
+  <ObsidianButton class="year-button" flat :disabled="journals.year.value.length === 0" @click="select">
     <CalendarDecoration :styles="decorationsStyles">{{ date.format("YYYY") }}</CalendarDecoration>
   </ObsidianButton>
 </template>

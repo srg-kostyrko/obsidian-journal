@@ -6,6 +6,7 @@
     "composite": true,
     "tsBuildInfoFile": "./node_modules/.tmp/tsconfig.app.tsbuildinfo",
     "lib": ["es2021", "DOM", "ESNext"],
+    "target": "ES2015",
     "esModuleInterop": false,
     "allowSyntheticDefaultImports": true,
 

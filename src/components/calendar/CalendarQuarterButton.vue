@@ -2,9 +2,9 @@
 import { useDecorations } from "@/composables/use-decorations";
 import type { MomentDate } from "@/types/date.types";
 import CalendarDecoration from "./CalendarDecoration.vue";
-import { decorationsForQuarters$, journalsWithQuarters$ } from "@/stores/settings.store";
 import ObsidianButton from "../obsidian/ObsidianButton.vue";
-import { toRefs } from "vue";
+import { inject, toRefs } from "vue";
+import { SHELF_DATA_KEY } from "@/constants";
 
 const props = defineProps<{
   date: MomentDate;
@@ -12,9 +12,10 @@ const props = defineProps<{
 const { date } = toRefs(props);
 const emit = defineEmits<(event: "select", nativeEvent: MouseEvent, date: MomentDate) => void>();
 
-const decorationsStyles = useDecorations(date, decorationsForQuarters$);
+const { journals, decorations } = inject(SHELF_DATA_KEY);
+const decorationsStyles = useDecorations(date, decorations.quarter);
 function select(event: MouseEvent) {
-  if (journalsWithQuarters$.value.length === 0) {
+  if (journals.quarter.value.length === 0) {
     return;
   }
   emit("select", event, props.date);
@@ -22,7 +23,7 @@ function select(event: MouseEvent) {
 </script>
 
 <template>
-  <ObsidianButton class="quarter-button" flat :disabled="journalsWithQuarters$.length === 0" @click="select">
+  <ObsidianButton class="quarter-button" flat :disabled="journals.quarter.value.length === 0" @click="select">
     <CalendarDecoration :styles="decorationsStyles">{{ date.format("[Q]Q") }}</CalendarDecoration>
   </ObsidianButton>
 </template>

@@ -17,6 +17,7 @@ import { TimelineCodeBlockProcessor } from "./code-blocks/timeline/timeline-proc
 import { NavCodeBlockProcessor } from "./code-blocks/navigation/nav-processor";
 import { VueModal } from "./components/modals/vue-modal";
 import ConnectNoteModal from "./components/modals/ConnectNote.modal.vue";
+import { ShelfSuggestModal } from "./components/suggests/shelf-suggest";
 
 export default class JournalPlugin extends Plugin {
   #stopHandles: WatchStopHandle[] = [];
@@ -278,5 +279,19 @@ export default class JournalPlugin extends Plugin {
     for (const journal of this.#journals.values()) {
       journal.registerCommands();
     }
+
+    this.addCommand({
+      id: "change-calendar-shelf",
+      name: "Change calendar view shelf",
+      checkCallback: (checking: boolean): boolean => {
+        if (checking) {
+          return pluginSettings$.value.useShelves && Object.values(pluginSettings$.value.shelves).length > 0;
+        }
+        new ShelfSuggestModal(this.app, Object.keys(pluginSettings$.value.shelves), (name) => {
+          pluginSettings$.value.ui.calendarShelf = name;
+        }).open();
+        return true;
+      },
+    });
   }
 }

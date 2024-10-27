@@ -6,26 +6,26 @@ import CalendarMonth from "../components/calendar/CalendarMonth.vue";
 import DatePickerModal from "../components/modals/DatePicker.modal.vue";
 import { VueModal } from "../components/modals/vue-modal";
 import { today, date_from_string } from "../calendar";
-import {
-  journalsWithDays$,
-  journalsWithWeeks$,
-  journalsWithMonths$,
-  journalsWithQuarters$,
-  journalsWithYears$,
-  pluginSettings$,
-  journalsList$,
-} from "../stores/settings.store";
+import { pluginSettings$, journalsList$ } from "../stores/settings.store";
 import { openDate } from "@/journals/open-date";
 import CalendarMonthButton from "@/components/calendar/CalendarMonthButton.vue";
 import CalendarYearButton from "@/components/calendar/CalendarYearButton.vue";
 import CalendarQuarterButton from "@/components/calendar/CalendarQuarterButton.vue";
 import { ShelfSuggestModal } from "@/components/suggests/shelf-suggest";
 import { app$ } from "@/stores/obsidian.store";
+import { useShelfProvider } from "@/composables/use-shelf";
 
 const refDateMoment = ref(today());
 const refDate = computed(() => refDateMoment.value.format("YYYY-MM-DD"));
 
-const selectedShelf = ref<string | null>(null);
+const selectedShelf = computed({
+  get() {
+    return pluginSettings$.value.ui.calendarShelf;
+  },
+  set(value) {
+    pluginSettings$.value.ui.calendarShelf = value;
+  },
+});
 const shouldShowShelf = computed(() => {
   return (
     (pluginSettings$.value.useShelves && Object.values(pluginSettings$.value.shelves).length > 0) ||
@@ -33,14 +33,13 @@ const shouldShowShelf = computed(() => {
   );
 });
 
+const { journals } = useShelfProvider(selectedShelf);
+
 const daysClickable = computed(() => {
-  return journalsWithDays$.value.length > 0;
+  return journals.day.value.length > 0;
 });
 const weeksClickable = computed(() => {
-  return journalsWithWeeks$.value.length > 0;
-});
-const quartersClickable = computed(() => {
-  return journalsWithQuarters$.value.length > 0;
+  return journals.week.value.length > 0;
 });
 
 function selectShelf() {
@@ -70,19 +69,39 @@ function pickDate() {
 }
 
 function openDay(date: string, event: MouseEvent) {
-  openDate(date, journalsWithDays$.value, event).catch(console.error);
+  openDate(
+    date,
+    journals.day.value.map((journal) => journal.name),
+    event,
+  ).catch(console.error);
 }
 function openWeek(date: string, event: MouseEvent) {
-  openDate(date, journalsWithWeeks$.value, event).catch(console.error);
+  openDate(
+    date,
+    journals.week.value.map((journal) => journal.name),
+    event,
+  ).catch(console.error);
 }
 function openMonth(event: MouseEvent) {
-  openDate(refDate.value, journalsWithMonths$.value, event).catch(console.error);
+  openDate(
+    refDate.value,
+    journals.month.value.map((journal) => journal.name),
+    event,
+  ).catch(console.error);
 }
 function openQuarter(event: MouseEvent) {
-  openDate(refDate.value, journalsWithQuarters$.value, event).catch(console.error);
+  openDate(
+    refDate.value,
+    journals.quarter.value.map((journal) => journal.name),
+    event,
+  ).catch(console.error);
 }
 function openYear(event: MouseEvent) {
-  openDate(refDate.value, journalsWithYears$.value, event).catch(console.error);
+  openDate(
+    refDate.value,
+    journals.year.value.map((journal) => journal.name),
+    event,
+  ).catch(console.error);
 }
 // TODO slim header to avoid scroll
 </script>
@@ -108,7 +127,7 @@ function openYear(event: MouseEvent) {
         <ObsidianIconButton icon="chevron-left" tooltip="Previous month" @click="navigate(-1, 'month')" />
         <div class="calendar-month-header">
           <CalendarMonthButton :date="refDateMoment" @select="openMonth" />
-          <CalendarQuarterButton v-if="quartersClickable" :date="refDateMoment" @select="openQuarter" />
+          <CalendarQuarterButton v-if="journals.quarter.value.length > 0" :date="refDateMoment" @select="openQuarter" />
           <CalendarYearButton :date="refDateMoment" @select="openYear" />
         </div>
 

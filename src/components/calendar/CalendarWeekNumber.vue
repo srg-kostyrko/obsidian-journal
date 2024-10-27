@@ -2,14 +2,15 @@
 import { useDecorations } from "@/composables/use-decorations";
 import type { MomentDate } from "@/types/date.types";
 import CalendarDecoration from "./CalendarDecoration.vue";
-import { decorationsForWeeks$ } from "@/stores/settings.store";
-import { toRefs } from "vue";
+import { inject, toRefs } from "vue";
+import { SHELF_DATA_KEY } from "@/constants";
 const props = defineProps<{
   date: MomentDate;
 }>();
 
 const { date } = toRefs(props);
-const decorationsStyles = useDecorations(date, decorationsForWeeks$);
+const { decorations } = inject(SHELF_DATA_KEY);
+const decorationsStyles = useDecorations(date, decorations.week);
 </script>
 
 <template>

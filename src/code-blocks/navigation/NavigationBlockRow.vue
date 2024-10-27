@@ -1,8 +1,9 @@
 <script setup lang="ts">
+import { SHELF_DATA_KEY } from "@/constants";
 import type { Journal } from "@/journals/journal";
 import type { NavBlockRow } from "@/types/settings.types";
 import { replaceTemplateVariables } from "@/utils/template";
-import { computed } from "vue";
+import { computed, inject } from "vue";
 
 const props = defineProps<{
   row: NavBlockRow;
@@ -51,7 +52,16 @@ const text = computed(() => {
 const fontSize = computed(() => `${props.row.fontSize}em`);
 const fontWeight = computed(() => (props.row.bold ? "bold" : "normal"));
 const fontStyle = computed(() => (props.row.italic ? "italic" : "normal"));
-const cursor = computed(() => (props.row.link === "none" ? "default" : "pointer"));
+
+const { journals } = inject(SHELF_DATA_KEY);
+
+const isClickable = computed(() => {
+  if (props.row.link === "none") return false;
+  if (props.row.link === "self") return true;
+  if (props.row.link === "journal") return Boolean(props.row.journal);
+  return journals[props.row.link].value.length > 0;
+});
+const cursor = computed(() => (isClickable.value ? "pointer" : "default"));
 
 function onClick() {
   if (props.row.link === "none") return;

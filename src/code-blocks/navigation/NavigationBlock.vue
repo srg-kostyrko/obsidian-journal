@@ -1,9 +1,11 @@
 <script setup lang="ts">
 import { computed } from "vue";
-import { journals$, journalsList$ } from "@/stores/settings.store";
+import { journals$ } from "@/stores/settings.store";
 import NavigationBlockRow from "./NavigationBlockRow.vue";
 import { plugin$ } from "@/stores/obsidian.store";
 import { openDate, openDateInJournal } from "@/journals/open-date";
+import { useShelfProvider } from "@/composables/use-shelf";
+import { NavBlockRow } from "@/types/settings.types";
 
 const props = defineProps<{
   refDate: string;
@@ -14,8 +16,12 @@ defineEmits<(event: "move-up" | "move-down" | "edit" | "remove", index: number) 
 
 const journalSettings = computed(() => journals$.value[props.journalName]);
 const journal = computed(() => plugin$.value.getJournal(props.journalName));
+const shelfName = computed(() => journalSettings.value?.shelves[0] ?? null);
 
-async function navigate(type: string, date: string, journalName?: string) {
+const { journals } = useShelfProvider(shelfName);
+
+async function navigate(type: NavBlockRow["link"], date: string, journalName?: string) {
+  if (type === "none") return;
   if (type === "self") {
     const metadata = journal.value?.get(props.refDate);
     if (metadata) await journal.value?.open(metadata);
@@ -23,8 +29,8 @@ async function navigate(type: string, date: string, journalName?: string) {
     if (!journalName) return;
     await openDateInJournal(date, journalName);
   } else {
-    const journals = journalsList$.value.filter((journal) => journal.write.type === type).map(({ name }) => name);
-    await openDate(date, journals);
+    const journalsToUse = journals[type].value.map((journal) => journal.name);
+    await openDate(date, journalsToUse);
   }
 }
 </script>

@@ -8,6 +8,9 @@ import type {
 
 export const defaultPluginSettings: PluginSettings = {
   version: 2,
+  ui: {
+    calendarShelf: null,
+  },
   useShelves: false,
   showReloadHint: false,
   journals: {},

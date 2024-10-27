@@ -5,6 +5,10 @@ export type OpenMode = "active" | "tab" | "split" | "window";
 export interface PluginSettings {
   version: number;
 
+  ui: {
+    calendarShelf: string | null;
+  };
+
   useShelves: boolean;
   showReloadHint: boolean;
 
@@ -264,6 +268,6 @@ export interface NavBlockRow {
   fontSize: number;
   bold: boolean;
   italic: boolean;
-  link: "none" | "self" | "journal" | FixedWriteIntervals["type"];
+  link: "none" | "self" | "journal" | JournalSettings["write"]["type"];
   journal: string;
 }
