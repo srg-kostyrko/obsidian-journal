@@ -79,4 +79,11 @@ function changeFirstWeekOfYear(value: number): void {
       <option value="right">After weekdays</option>
     </ObsidianDropdown>
   </ObsidianSetting>
+  <ObsidianSetting name="Today button">
+    <ObsidianDropdown v-model="calendarViewSettings$.todayMode">
+      <option value="create">Creates today's note if doesn't exist</option>
+      <option value="navigate">Opens today's note if it exists</option>
+      <option value="switch_date">Just switch calendar view to current month</option>
+    </ObsidianDropdown>
+  </ObsidianSetting>
 </template>

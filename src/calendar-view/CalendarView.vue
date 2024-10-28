@@ -6,13 +6,13 @@ import CalendarMonth from "../components/calendar/CalendarMonth.vue";
 import DatePickerModal from "../components/modals/DatePicker.modal.vue";
 import { VueModal } from "../components/modals/vue-modal";
 import { today, date_from_string } from "../calendar";
-import { pluginSettings$, journalsList$ } from "../stores/settings.store";
+import { pluginSettings$, journalsList$, calendarViewSettings$ } from "../stores/settings.store";
 import { openDate } from "@/journals/open-date";
 import CalendarMonthButton from "@/components/calendar/CalendarMonthButton.vue";
 import CalendarYearButton from "@/components/calendar/CalendarYearButton.vue";
 import CalendarQuarterButton from "@/components/calendar/CalendarQuarterButton.vue";
 import { ShelfSuggestModal } from "@/components/suggests/shelf-suggest";
-import { app$ } from "@/stores/obsidian.store";
+import { app$, plugin$ } from "@/stores/obsidian.store";
 import { useShelfProvider } from "@/composables/use-shelf";
 
 const refDateMoment = ref(today());
@@ -51,8 +51,23 @@ function selectShelf() {
 function navigate(amount: number, step: "month" | "year" = "month") {
   refDateMoment.value = refDateMoment.value.clone().add(amount, step);
 }
-function goToday() {
+function goToday(event: MouseEvent) {
   refDateMoment.value = today();
+  if (calendarViewSettings$.value.todayMode === "create") {
+    openDay(refDate.value, event);
+  } else if (calendarViewSettings$.value.todayMode === "navigate") {
+    const journals: string[] = [];
+    for (const journalSetttings of journalsList$.value) {
+      const journal = plugin$.value.getJournal(journalSetttings.name);
+      if (!journal) continue;
+      const anchorDate = journal.resolveAnchorDate(refDate.value);
+      if (!anchorDate) continue;
+      const index = plugin$.value.index.getJournalIndex(journal.name);
+      if (!index) continue;
+      if (index.get(anchorDate)) journals.push(journal.name);
+    }
+    openDate(refDate.value, journals, event).catch(console.error);
+  }
 }
 function pickDate() {
   new VueModal(

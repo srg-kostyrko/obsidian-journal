@@ -26,7 +26,7 @@ export interface PluginSettings {
     leaf: "left" | "right";
     weeks: "none" | "left" | "right";
 
-    todayMode: "navigate" | "create";
+    todayMode: "navigate" | "create" | "switch_date";
   };
 }
 
