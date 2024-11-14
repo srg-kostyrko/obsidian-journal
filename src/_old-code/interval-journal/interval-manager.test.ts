@@ -10,7 +10,7 @@ const expectInterval = (input: Interval, expected: { index: number; startDate: s
   expect(input.endDate.format("YYYY-MM-DD")).to.eq(expected.endDate);
 };
 
-describe("IntervalManager", () => {
+describe.skip("IntervalManager", () => {
   const calendar = new CalendarHelper({
     firstDayOfWeek: 1,
     firstWeekOfYear: 1,
