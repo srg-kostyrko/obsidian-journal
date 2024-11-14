@@ -2,7 +2,6 @@ import { computed, type ComputedRef } from "vue";
 import { journals$ } from "../stores/settings.store";
 import type { JournalCommand, JournalSettings, WriteCustom } from "../types/settings.types";
 import type { AnchorDateResolver, JournalAnchorDate, JournalMetadata, JournalNoteData } from "../types/journal.types";
-import { activeNote$ } from "../stores/obsidian.store";
 import { type App, normalizePath, TFile, type LeftRibbon } from "obsidian";
 import { ensureFolderExists } from "../utils/io";
 import { replaceTemplateVariables, tryApplyingTemplater } from "../utils/template";
@@ -314,9 +313,8 @@ export class Journal {
 
   #checkCommand(command: JournalCommand): boolean {
     if (command.context === "only_open_note") {
-      const activeNode = activeNote$.value;
-      if (!activeNode) return false;
-      const metadata = this.plugin.index.getForPath(activeNode.path);
+      if (!this.plugin.activeNote) return false;
+      const metadata = this.plugin.index.getForPath(this.plugin.activeNote.path);
       if (!metadata) return false;
       if (metadata.journal !== this.name) return false;
     }
@@ -334,7 +332,7 @@ export class Journal {
   }
 
   #getCommandRefDate(command: JournalCommand): string | null {
-    const activeNode = activeNote$.value;
+    const activeNode = this.plugin.activeNote;
     const metadata = activeNode ? this.plugin.index.getForPath(activeNode.path) : null;
     if (metadata && command.context !== "today") {
       return metadata.date;

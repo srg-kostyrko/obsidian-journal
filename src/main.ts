@@ -1,10 +1,9 @@
-import { Notice, Plugin } from "obsidian";
+import { Notice, Plugin, type TFile } from "obsidian";
 import { calendarViewSettings$, journals$, pluginSettings$ } from "./stores/settings.store";
 import { watch, type WatchStopHandle } from "vue";
 import { debounce } from "perfect-debounce";
 import { initCalendarCustomization, updateLocale } from "./calendar";
 import { JournalSettingTab } from "./settings/journal-settings-tab";
-import { activeNote$ } from "./stores/obsidian.store";
 import { Journal } from "./journals/journal";
 import type { JournalSettings } from "./types/settings.types";
 import { defaultJournalSettings } from "./defaults";
@@ -23,9 +22,14 @@ export default class JournalPlugin extends Plugin {
   #stopHandles: WatchStopHandle[] = [];
   #journals = new Map<string, Journal>();
   #index!: JournalsIndex;
+  #activeNote: TFile | null = null;
 
   get index(): JournalsIndex {
     return this.#index;
+  }
+
+  get activeNote(): TFile | null {
+    return this.#activeNote;
   }
 
   getJournal(name: string): Journal | undefined {
@@ -191,7 +195,7 @@ export default class JournalPlugin extends Plugin {
 
     this.registerEvent(
       this.app.workspace.on("file-open", (file) => {
-        activeNote$.value = file;
+        this.#activeNote = file;
       }),
     );
   }
