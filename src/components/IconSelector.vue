@@ -3,6 +3,7 @@ import { onMounted, ref } from "vue";
 import { IconSuggest } from "./suggests/icon-suggest";
 import ObsidianIcon from "./obsidian/ObsidianIcon.vue";
 import ObsidianTextInput from "./obsidian/ObsidianTextInput.vue";
+import { useApp } from "@/composables/use-app";
 
 defineProps<{
   placeholder?: string;
@@ -14,9 +15,11 @@ defineEmits<{
 const model = defineModel<string>();
 const inputCmp = ref<InstanceType<typeof ObsidianTextInput>>();
 
+const app = useApp();
+
 onMounted(() => {
   if (inputCmp.value) {
-    new IconSuggest(inputCmp.value.$el);
+    new IconSuggest(app, inputCmp.value.$el);
   }
 });
 </script>

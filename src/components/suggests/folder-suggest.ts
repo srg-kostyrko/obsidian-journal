@@ -1,9 +1,11 @@
-import { AbstractInputSuggest, TFolder } from "obsidian";
-import { app$ } from "../../stores/obsidian.store";
+import { AbstractInputSuggest, type App, TFolder } from "obsidian";
 
 export class FolderSuggest extends AbstractInputSuggest<TFolder> {
-  constructor(protected textInputElement: HTMLInputElement) {
-    super(app$.value, textInputElement);
+  constructor(
+    app: App,
+    protected textInputElement: HTMLInputElement,
+  ) {
+    super(app, textInputElement);
   }
 
   getSuggestions(input: string): TFolder[] {

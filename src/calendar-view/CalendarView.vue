@@ -12,8 +12,12 @@ import CalendarMonthButton from "@/components/calendar/CalendarMonthButton.vue";
 import CalendarYearButton from "@/components/calendar/CalendarYearButton.vue";
 import CalendarQuarterButton from "@/components/calendar/CalendarQuarterButton.vue";
 import { ShelfSuggestModal } from "@/components/suggests/shelf-suggest";
-import { app$, plugin$ } from "@/stores/obsidian.store";
 import { useShelfProvider } from "@/composables/use-shelf";
+import { useApp } from "@/composables/use-app";
+import { usePlugin } from "@/composables/use-plugin";
+
+const app = useApp();
+const plugin = usePlugin();
 
 const refDateMoment = ref(today());
 const refDate = computed(() => refDateMoment.value.format("YYYY-MM-DD"));
@@ -43,7 +47,7 @@ const weeksClickable = computed(() => {
 });
 
 function selectShelf() {
-  new ShelfSuggestModal(app$.value, Object.keys(pluginSettings$.value.shelves), (shelf: string | null) => {
+  new ShelfSuggestModal(app, Object.keys(pluginSettings$.value.shelves), (shelf: string | null) => {
     selectedShelf.value = shelf;
   }).open();
 }
@@ -58,19 +62,21 @@ function goToday(event: MouseEvent) {
   } else if (calendarViewSettings$.value.todayMode === "navigate") {
     const journals: string[] = [];
     for (const journalSetttings of journalsList$.value) {
-      const journal = plugin$.value.getJournal(journalSetttings.name);
+      const journal = plugin.getJournal(journalSetttings.name);
       if (!journal) continue;
       const anchorDate = journal.resolveAnchorDate(refDate.value);
       if (!anchorDate) continue;
-      const index = plugin$.value.index.getJournalIndex(journal.name);
+      const index = plugin.index.getJournalIndex(journal.name);
       if (!index) continue;
       if (index.get(anchorDate)) journals.push(journal.name);
     }
-    openDate(refDate.value, journals, event).catch(console.error);
+    openDate(app, plugin, refDate.value, journals, event).catch(console.error);
   }
 }
 function pickDate() {
   new VueModal(
+    app,
+    plugin,
     "Pick a date",
     DatePickerModal,
     {
@@ -85,6 +91,8 @@ function pickDate() {
 
 function openDay(date: string, event: MouseEvent) {
   openDate(
+    app,
+    plugin,
     date,
     journals.day.value.map((journal) => journal.name),
     event,
@@ -92,6 +100,8 @@ function openDay(date: string, event: MouseEvent) {
 }
 function openWeek(date: string, event: MouseEvent) {
   openDate(
+    app,
+    plugin,
     date,
     journals.week.value.map((journal) => journal.name),
     event,
@@ -99,6 +109,8 @@ function openWeek(date: string, event: MouseEvent) {
 }
 function openMonth(event: MouseEvent) {
   openDate(
+    app,
+    plugin,
     refDate.value,
     journals.month.value.map((journal) => journal.name),
     event,
@@ -106,6 +118,8 @@ function openMonth(event: MouseEvent) {
 }
 function openQuarter(event: MouseEvent) {
   openDate(
+    app,
+    plugin,
     refDate.value,
     journals.quarter.value.map((journal) => journal.name),
     event,
@@ -113,6 +127,8 @@ function openQuarter(event: MouseEvent) {
 }
 function openYear(event: MouseEvent) {
   openDate(
+    app,
+    plugin,
     refDate.value,
     journals.year.value.map((journal) => journal.name),
     event,

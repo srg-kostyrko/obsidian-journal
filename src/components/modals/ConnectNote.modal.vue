@@ -4,7 +4,6 @@ import { usePathData } from "@/composables/use-path-data";
 import ObsidianSetting from "../obsidian/ObsidianSetting.vue";
 import ObsidianButton from "../obsidian/ObsidianButton.vue";
 import ObsidianDropdown from "../obsidian/ObsidianDropdown.vue";
-import { plugin$ } from "@/stores/obsidian.store";
 import { journalsList$ } from "@/stores/settings.store";
 import { useForm } from "vee-validate";
 import * as v from "valibot";
@@ -15,12 +14,16 @@ import ObsidianToggle from "../obsidian/ObsidianToggle.vue";
 import { computed, watch } from "vue";
 import type { JournalMetadata } from "@/types/journal.types";
 import { disconnectNote } from "@/utils/journals";
+import { useApp } from "@/composables/use-app";
+import { usePlugin } from "@/composables/use-plugin";
 
 const props = defineProps<{
   file: TFile;
 }>();
 const emit = defineEmits(["close"]);
 
+const app = useApp();
+const plugin = usePlugin();
 const noteData = usePathData(props.file.path);
 
 const { defineField, errorBag, handleSubmit } = useForm({
@@ -56,7 +59,7 @@ watch(refDate, () => {
 
 const journal = computed(() => {
   if (!journalName.value) return null;
-  return plugin$.value.getJournal(journalName.value);
+  return plugin.getJournal(journalName.value);
 });
 const anchorDate = computed(() => {
   if (!journal.value) return null;
@@ -73,7 +76,7 @@ const existingNote = computed(() => {
   if (!journal.value) return null;
   if (!refDate.value) return null;
   if (!anchorDate.value) return null;
-  return plugin$.value.index.get(journal.value.name, anchorDate.value);
+  return plugin.index.get(journal.value.name, anchorDate.value);
 });
 
 const notePath = computed(() => {
@@ -102,7 +105,7 @@ const canSubmit = computed(() => {
 });
 
 function disconnect() {
-  disconnectNote(props.file.path).catch(console.error);
+  disconnectNote(app, props.file.path).catch(console.error);
 }
 const onSubmit = handleSubmit(() => {
   if (!canSubmit.value) return;

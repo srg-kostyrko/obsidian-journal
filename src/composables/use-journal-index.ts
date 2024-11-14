@@ -1,6 +1,6 @@
 import type { JournalIndex } from "@/journals/journal-index";
-import { plugin$ } from "@/stores/obsidian.store";
+import { usePlugin } from "./use-plugin";
 
 export function useJournalIndex(journalName: string): JournalIndex {
-  return plugin$.value.index.getJournalIndex(journalName);
+  return usePlugin().index.getJournalIndex(journalName);
 }

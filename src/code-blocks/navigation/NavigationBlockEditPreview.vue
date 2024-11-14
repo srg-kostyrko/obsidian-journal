@@ -3,7 +3,8 @@ import { computed } from "vue";
 import { journals$ } from "@/stores/settings.store";
 import NavigationBlockRow from "./NavigationBlockRow.vue";
 import ObsidianIconButton from "@/components/obsidian/ObsidianIconButton.vue";
-import { plugin$ } from "@/stores/obsidian.store";
+import { usePlugin } from "@/composables/use-plugin";
+import { useShelfProvider } from "@/composables/use-shelf";
 
 const props = defineProps<{
   refDate: string;
@@ -12,8 +13,12 @@ const props = defineProps<{
 
 defineEmits<(event: "move-up" | "move-down" | "edit" | "remove", index: number) => void>();
 
+const plugin = usePlugin();
+
 const journalSettings = computed(() => journals$.value[props.journalName]);
-const journal = computed(() => plugin$.value.getJournal(props.journalName));
+const journal = computed(() => plugin.getJournal(props.journalName));
+
+useShelfProvider(journalSettings.value?.shelves[0]);
 </script>
 
 <template>

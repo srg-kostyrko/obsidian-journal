@@ -5,12 +5,17 @@ import JournalSettingsEdit from "./JournalSettingsEdit.vue";
 import JournalSettingsShelfDetails from "./JournalSettingsShelfDetails.vue";
 import BulkAddNotesModal from "@/components/modals/BulkAddNotes.modal.vue";
 import { VueModal } from "@/components/modals/vue-modal";
+import { useApp } from "@/composables/use-app";
+import { usePlugin } from "@/composables/use-plugin";
 
 const selectedJournalName = ref<string | null>(null);
 const selectedShelfName = ref<string | null>(null);
 
+const app = useApp();
+const plugin = usePlugin();
+
 function bulkAdd(journalName: string) {
-  new VueModal(`Add notes to ${journalName}`, BulkAddNotesModal, { journalName }, 700).open();
+  new VueModal(app, plugin, `Add notes to ${journalName}`, BulkAddNotesModal, { journalName }, 700).open();
 }
 </script>
 

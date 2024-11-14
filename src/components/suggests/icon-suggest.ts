@@ -1,9 +1,11 @@
-import { AbstractInputSuggest, getIcon, getIconIds } from "obsidian";
-import { app$ } from "../../stores/obsidian.store";
+import { AbstractInputSuggest, type App, getIcon, getIconIds } from "obsidian";
 
 export class IconSuggest extends AbstractInputSuggest<string> {
-  constructor(protected textInputElement: HTMLInputElement) {
-    super(app$.value, textInputElement);
+  constructor(
+    app: App,
+    protected textInputElement: HTMLInputElement,
+  ) {
+    super(app, textInputElement);
   }
 
   getSuggestions(input: string): string[] {

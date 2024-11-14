@@ -2,8 +2,8 @@ import { computed, type ComputedRef } from "vue";
 import { journals$ } from "../stores/settings.store";
 import type { JournalCommand, JournalSettings, WriteCustom } from "../types/settings.types";
 import type { AnchorDateResolver, JournalAnchorDate, JournalMetadata, JournalNoteData } from "../types/journal.types";
-import { activeNote$, app$, plugin$ } from "../stores/obsidian.store";
-import { normalizePath, TFile, type LeftRibbon } from "obsidian";
+import { activeNote$ } from "../stores/obsidian.store";
+import { type App, normalizePath, TFile, type LeftRibbon } from "obsidian";
 import { ensureFolderExists } from "../utils/io";
 import { replaceTemplateVariables, tryApplyingTemplater } from "../utils/template";
 import type { TemplateContext } from "../types/template.types";
@@ -21,18 +21,24 @@ import ConfirmNoteCreationModal from "@/components/modals/ConfirmNoteCreation.mo
 import type { MomentDate } from "@/types/date.types";
 import { disconnectNote } from "@/utils/journals";
 import { CustomIntervalResolver } from "./custom-interval";
+import type { JournalPlugin } from "@/types/plugin.types";
 
 export class Journal {
   readonly name$: ComputedRef<string>;
   #config: ComputedRef<JournalSettings>;
   #anchorDateResolver: AnchorDateResolver;
 
-  constructor(public readonly name: string) {
+  constructor(
+    public readonly name: string,
+    private plugin: JournalPlugin,
+    private app: App,
+  ) {
     this.#config = computed(() => journals$.value[name]);
     this.name$ = computed(() => this.#config.value.name);
     this.#anchorDateResolver =
       this.#config.value.write.type === "custom"
         ? new CustomIntervalResolver(
+            this.plugin,
             this.name$.value,
             computed(() => this.#config.value.write) as ComputedRef<WriteCustom>,
           )
@@ -49,7 +55,7 @@ export class Journal {
 
   registerCommands(): void {
     for (const command of this.#config.value.commands) {
-      plugin$.value.addCommand({
+      this.plugin.addCommand({
         id: this.name + ":" + command.name,
         name: `${this.#config.value.name}: ${command.name}`,
         icon: command.icon,
@@ -64,7 +70,7 @@ export class Journal {
       });
       if (command.showInRibbon) {
         const ribbonId = "journals:" + this.name + ":" + command.name;
-        const item = (app$.value.workspace.leftRibbon as LeftRibbon).addRibbonItemButton(
+        const item = (this.app.workspace.leftRibbon as LeftRibbon).addRibbonItemButton(
           ribbonId,
           command.icon,
           command.name,
@@ -73,8 +79,8 @@ export class Journal {
             this.#execCommand(command).catch(console.error);
           },
         );
-        plugin$.value.register(() => {
-          (app$.value.workspace.leftRibbon as LeftRibbon).removeRibbonAction(ribbonId);
+        this.plugin.register(() => {
+          (this.app.workspace.leftRibbon as LeftRibbon).removeRibbonAction(ribbonId);
           // eslint-disable-next-line @typescript-eslint/no-unsafe-call
           item.detach();
         });
@@ -85,7 +91,7 @@ export class Journal {
   get(date: string): JournalNoteData | JournalMetadata | null {
     const anchorDate = this.#anchorDateResolver.resolveForDate(date);
     if (!anchorDate) return null;
-    const metadata = plugin$.value.index.get(this.name, anchorDate);
+    const metadata = this.plugin.index.get(this.name, anchorDate);
     if (metadata) return metadata;
     if (!this.#checkBounds(anchorDate)) return null;
     return this.#buildMetadata(anchorDate);
@@ -95,12 +101,12 @@ export class Journal {
     const anchorDate = this.#anchorDateResolver.resolveForDate(date);
     if (!anchorDate) return null;
     if (existing) {
-      const nextExstingMetadata = plugin$.value.index.findNext(this.name, anchorDate);
+      const nextExstingMetadata = this.plugin.index.findNext(this.name, anchorDate);
       if (nextExstingMetadata) return nextExstingMetadata;
     }
     const nextAnchorDate = this.#anchorDateResolver.resolveNext(anchorDate);
     if (!nextAnchorDate) return null;
-    const nextMetadata = plugin$.value.index.get(this.name, nextAnchorDate);
+    const nextMetadata = this.plugin.index.get(this.name, nextAnchorDate);
     if (nextMetadata) return nextMetadata;
     if (!this.#checkBounds(nextAnchorDate)) return null;
     return this.#buildMetadata(nextAnchorDate);
@@ -110,12 +116,12 @@ export class Journal {
     const anchorDate = this.#anchorDateResolver.resolveForDate(date);
     if (!anchorDate) return null;
     if (existing) {
-      const previousExstingMetadata = plugin$.value.index.findPrevious(this.name, anchorDate);
+      const previousExstingMetadata = this.plugin.index.findPrevious(this.name, anchorDate);
       if (previousExstingMetadata) return previousExstingMetadata;
     }
     const previousAnchorDate = this.#anchorDateResolver.resolvePrevious(anchorDate);
     if (!previousAnchorDate) return null;
-    const previousMetadata = plugin$.value.index.get(this.name, previousAnchorDate);
+    const previousMetadata = this.plugin.index.get(this.name, previousAnchorDate);
     if (previousMetadata) return previousMetadata;
     if (!this.#checkBounds(previousAnchorDate)) return null;
     return this.#buildMetadata(previousAnchorDate);
@@ -143,26 +149,26 @@ export class Journal {
 
   async #openFile(file: TFile): Promise<void> {
     const mode = this.#config.value.openMode === "active" ? undefined : this.#config.value.openMode;
-    const leaf = app$.value.workspace.getLeaf(mode);
+    const leaf = this.app.workspace.getLeaf(mode);
     await leaf.openFile(file, { active: true });
   }
 
   async #ensureNote(metadata: JournalMetadata): Promise<TFile | null> {
     const filePath = this.getNotePath(metadata);
-    let file = app$.value.vault.getAbstractFileByPath(filePath);
+    let file = this.app.vault.getAbstractFileByPath(filePath);
     if (!file) {
       const templateContext = this.#getTemplateContext(metadata);
       const noteName = replaceTemplateVariables(this.#config.value.nameTemplate, templateContext);
       if (this.#config.value.confirmCreation && !(await this.#confirmNoteCreation(noteName))) {
         return null;
       }
-      await ensureFolderExists(app$.value, filePath);
-      file = await app$.value.vault.create(filePath, "");
+      await ensureFolderExists(this.app, filePath);
+      file = await this.app.vault.create(filePath, "");
       if (!(file instanceof TFile)) throw new Error("File is not a TFile");
 
       templateContext.note_name = { type: "string", value: noteName };
       const content = await this.#getNoteContent(file, templateContext);
-      if (content) await app$.value.vault.modify(file, content);
+      if (content) await this.app.vault.modify(file, content);
     }
     if (!(file instanceof TFile)) throw new Error("File is not a TFile");
     await this.#ensureFrontMatter(file, metadata);
@@ -172,6 +178,8 @@ export class Journal {
   #confirmNoteCreation(noteName: string): Promise<boolean> {
     return new Promise((resolve) => {
       const modal = new VueModal(
+        this.app,
+        this.plugin,
         "Confirm note creation",
         ConfirmNoteCreationModal,
         {
@@ -220,7 +228,7 @@ export class Journal {
     if (!metadata) return false;
     if ("path" in metadata) {
       if (!options.override) return false;
-      await disconnectNote(metadata.path);
+      await disconnectNote(this.app, metadata.path);
     }
     let path = file.path;
     if (options.rename || options.move) {
@@ -228,9 +236,9 @@ export class Journal {
       const folderPath = options.move ? configuredFolder : file.parent?.path;
       const filename = options.rename ? configuredFilename : file.name;
       path = normalizePath(folderPath ? `${folderPath}/${filename}` : filename);
-      await ensureFolderExists(app$.value, path);
-      await app$.value.vault.rename(file, path);
-      file = app$.value.vault.getAbstractFileByPath(path) as TFile;
+      await ensureFolderExists(this.app, path);
+      await this.app.vault.rename(file, path);
+      file = this.app.vault.getAbstractFileByPath(path) as TFile;
     }
 
     await this.#ensureFrontMatter(file, metadata);
@@ -269,22 +277,17 @@ export class Journal {
     if (this.#config.value.templates.length > 0) {
       for (const template of this.#config.value.templates) {
         const path = replaceTemplateVariables(template.endsWith(".md") ? template : template + ".md", context);
-        const templateFile = app$.value.vault.getAbstractFileByPath(path);
+        const templateFile = this.app.vault.getAbstractFileByPath(path);
         if (templateFile instanceof TFile) {
-          const templateContent = await app$.value.vault.cachedRead(templateFile);
-          return tryApplyingTemplater(
-            app$.value,
-            templateFile,
-            note,
-            replaceTemplateVariables(templateContent, context),
-          );
+          const templateContent = await this.app.vault.cachedRead(templateFile);
+          return tryApplyingTemplater(this.app, templateFile, note, replaceTemplateVariables(templateContent, context));
         }
       }
     }
     return "";
   }
   async #ensureFrontMatter(note: TFile, metadata: JournalMetadata): Promise<void> {
-    await app$.value.fileManager.processFrontMatter(note, (frontmatter: Record<string, string | number>) => {
+    await this.app.fileManager.processFrontMatter(note, (frontmatter: Record<string, string | number>) => {
       frontmatter[FRONTMATTER_NAME_KEY] = this.name;
       frontmatter[FRONTMATTER_DATE_KEY] = date_from_string(metadata.date).format(FRONTMATTER_DATE_FORMAT);
       if (metadata.end_date) {
@@ -313,7 +316,7 @@ export class Journal {
     if (command.context === "only_open_note") {
       const activeNode = activeNote$.value;
       if (!activeNode) return false;
-      const metadata = plugin$.value.index.getForPath(activeNode.path);
+      const metadata = this.plugin.index.getForPath(activeNode.path);
       if (!metadata) return false;
       if (metadata.journal !== this.name) return false;
     }
@@ -332,7 +335,7 @@ export class Journal {
 
   #getCommandRefDate(command: JournalCommand): string | null {
     const activeNode = activeNote$.value;
-    const metadata = activeNode ? plugin$.value.index.getForPath(activeNode.path) : null;
+    const metadata = activeNode ? this.plugin.index.getForPath(activeNode.path) : null;
     if (metadata && command.context !== "today") {
       return metadata.date;
     }

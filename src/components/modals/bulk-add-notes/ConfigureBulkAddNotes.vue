@@ -160,7 +160,7 @@ const onSubmit = handleSubmit(() => {
     />
 
     <ObsidianSetting name="If other note with same date existits in journal">
-      <ObsidianDropdown v-model="existingNote" v-binf="existingNoteAttrs">
+      <ObsidianDropdown v-model="existingNote" v-bind="existingNoteAttrs">
         <option value="skip">Skip note</option>
         <option value="override">Override date connection</option>
         <option value="merge">Merge note content into existing one</option>

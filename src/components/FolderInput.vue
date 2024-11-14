@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { onBeforeUnmount, onMounted, ref } from "vue";
 import { FolderSuggest } from "./suggests/folder-suggest";
+import { useApp } from "@/composables/use-app";
 
 defineProps<{
   placeholder?: string;
@@ -8,11 +9,12 @@ defineProps<{
 }>();
 const model = defineModel<string>();
 const element = ref<HTMLInputElement>();
+const app = useApp();
 
 let suggest: FolderSuggest;
 onMounted(() => {
   if (element.value) {
-    suggest = new FolderSuggest(element.value);
+    suggest = new FolderSuggest(app, element.value);
   }
 });
 onBeforeUnmount(() => {

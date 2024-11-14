@@ -1,10 +1,10 @@
-import { type App, Notice, Plugin } from "obsidian";
+import { Notice, Plugin } from "obsidian";
 import { calendarViewSettings$, journals$, pluginSettings$ } from "./stores/settings.store";
 import { watch, type WatchStopHandle } from "vue";
 import { debounce } from "perfect-debounce";
 import { initCalendarCustomization, updateLocale } from "./calendar";
 import { JournalSettingTab } from "./settings/journal-settings-tab";
-import { activeNote$, app$, plugin$ } from "./stores/obsidian.store";
+import { activeNote$ } from "./stores/obsidian.store";
 import { Journal } from "./journals/journal";
 import type { JournalSettings } from "./types/settings.types";
 import { defaultJournalSettings } from "./defaults";
@@ -40,7 +40,7 @@ export default class JournalPlugin extends Plugin {
       write,
     });
     pluginSettings$.value.journals[name] = settings;
-    this.#journals.set(name, new Journal(name));
+    this.#journals.set(name, new Journal(name, this, this.app));
     return pluginSettings$.value.journals[name];
   }
 
@@ -57,7 +57,7 @@ export default class JournalPlugin extends Plugin {
       );
     }
     this.#journals.delete(name);
-    this.#journals.set(newName, new Journal(newName));
+    this.#journals.set(newName, new Journal(newName, this, this.app));
   }
 
   removeJournal(name: string): void {
@@ -111,9 +111,6 @@ export default class JournalPlugin extends Plugin {
   }
 
   async onload(): Promise<void> {
-    app$.value = this.app;
-    plugin$.value = this;
-
     await this.#loadSettings();
     initCalendarCustomization();
     if (pluginSettings$.value.calendar.firstDayOfWeek !== -1) {
@@ -126,7 +123,7 @@ export default class JournalPlugin extends Plugin {
       pluginSettings$.value.showReloadHint = false;
     }
 
-    this.#index = new JournalsIndex();
+    this.#index = new JournalsIndex(this.app);
     this.addChild(this.#index);
     this.index.reindex();
 
@@ -134,23 +131,23 @@ export default class JournalPlugin extends Plugin {
 
     this.addSettingTab(new JournalSettingTab(this.app, this));
     this.registerMarkdownCodeBlockProcessor("calendar-timeline", (source, element, context) => {
-      const processor = new TimelineCodeBlockProcessor(element, source, context.sourcePath);
+      const processor = new TimelineCodeBlockProcessor(this.app, this, element, source, context.sourcePath);
       context.addChild(processor);
     });
     this.registerMarkdownCodeBlockProcessor("calendar-nav", (source, element, context) => {
-      const processor = new NavCodeBlockProcessor(element, source, context.sourcePath);
+      const processor = new NavCodeBlockProcessor(this.app, this, element, source, context.sourcePath);
       context.addChild(processor);
     });
     this.registerMarkdownCodeBlockProcessor("interval-nav", (source, element, context) => {
-      const processor = new NavCodeBlockProcessor(element, source, context.sourcePath);
+      const processor = new NavCodeBlockProcessor(this.app, this, element, source, context.sourcePath);
       context.addChild(processor);
     });
     this.registerMarkdownCodeBlockProcessor("journal-nav", (source, element, context) => {
-      const processor = new NavCodeBlockProcessor(element, source, context.sourcePath);
+      const processor = new NavCodeBlockProcessor(this.app, this, element, source, context.sourcePath);
       context.addChild(processor);
     });
 
-    this.registerView(CALENDAR_VIEW_TYPE, (leaf) => new CalendarView(leaf));
+    this.registerView(CALENDAR_VIEW_TYPE, (leaf) => new CalendarView(leaf, this));
 
     this.app.workspace.onLayoutReady(() => {
       this.placeCalendarView(true);
@@ -160,7 +157,6 @@ export default class JournalPlugin extends Plugin {
     for (const handle of this.#stopHandles) {
       handle();
     }
-    app$.value = {} as App;
   }
 
   async #loadSettings(): Promise<void> {
@@ -172,7 +168,7 @@ export default class JournalPlugin extends Plugin {
 
   #fillJournals(): void {
     for (const name of Object.keys(journals$.value)) {
-      this.#journals.set(name, new Journal(name));
+      this.#journals.set(name, new Journal(name, this, this.app));
     }
   }
 
@@ -256,7 +252,7 @@ export default class JournalPlugin extends Plugin {
       editorCallback: (editor, context) => {
         const file = context.file;
         if (file) {
-          new VueModal("Connect note to a journal", ConnectNoteModal, {
+          new VueModal(this.app, this, "Connect note to a journal", ConnectNoteModal, {
             file,
           }).open();
         }

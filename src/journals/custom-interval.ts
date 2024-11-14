@@ -4,13 +4,14 @@ import { JournalAnchorDate, type AnchorDateResolver } from "../types/journal.typ
 import type { ComputedRef } from "vue";
 import { useJournalIndex } from "@/composables/use-journal-index";
 import { date_from_string, today } from "@/calendar";
-import { plugin$ } from "@/stores/obsidian.store";
 import { FRONTMATTER_DATE_FORMAT } from "@/constants";
+import type { JournalPlugin } from "@/types/plugin.types";
 
 export class CustomIntervalResolver implements AnchorDateResolver {
   #settings: ComputedRef<WriteCustom>;
 
   constructor(
+    private plugin: JournalPlugin,
     private journalName: string,
     settings: ComputedRef<WriteCustom>,
   ) {
@@ -44,7 +45,7 @@ export class CustomIntervalResolver implements AnchorDateResolver {
     return anchorDate;
   }
   resolveEndDate(anchorDate: JournalAnchorDate): string {
-    const existing = plugin$.value.index.get(this.journalName, anchorDate);
+    const existing = this.plugin.index.get(this.journalName, anchorDate);
     if (existing?.end_date) {
       return existing.end_date;
     }
@@ -124,7 +125,7 @@ export class CustomIntervalResolver implements AnchorDateResolver {
   #resolveDateAfterKnown(date: JournalAnchorDate): JournalAnchorDate | null {
     let current = date_from_string(date);
     while (current.isBefore(date, "day")) {
-      const existing = plugin$.value.index.get(this.journalName, JournalAnchorDate(current.format("YYYY-MM-DD")));
+      const existing = this.plugin.index.get(this.journalName, JournalAnchorDate(current.format("YYYY-MM-DD")));
       if (existing?.end_date) {
         current = date_from_string(existing.end_date).add(1, "day");
       } else {

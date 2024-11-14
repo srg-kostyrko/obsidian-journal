@@ -1,5 +1,4 @@
-import { Component, type TAbstractFile, TFile, type CachedMetadata } from "obsidian";
-import { app$ } from "../stores/obsidian.store";
+import { Component, type TAbstractFile, TFile, type CachedMetadata, type App } from "obsidian";
 import { computed, ref, shallowRef, type ComputedRef } from "vue";
 import type { JournalAnchorDate, JournalNoteData } from "../types/journal.types";
 import {
@@ -16,7 +15,7 @@ export class JournalsIndex extends Component {
   #pathComputeds = new Map<string, ComputedRef<JournalNoteData | null>>();
   #journalIndecies = shallowRef(new Map<string, JournalIndex>());
 
-  constructor() {
+  constructor(private app: App) {
     super();
     this.#setupListeners();
   }
@@ -55,17 +54,17 @@ export class JournalsIndex extends Component {
     const index = this.getJournalIndex(oldName);
     if (!index) return;
     for (const [, path] of index) {
-      const file = app$.value.vault.getAbstractFileByPath(path);
+      const file = this.app.vault.getAbstractFileByPath(path);
       if (!file) continue;
       if (!(file instanceof TFile)) continue;
-      await app$.value.fileManager.processFrontMatter(file, (frontmatter) => {
+      await this.app.fileManager.processFrontMatter(file, (frontmatter) => {
         frontmatter[FRONTMATTER_NAME_KEY] = name;
       });
     }
   }
 
   reindex(): void {
-    const files = app$.value.vault.getMarkdownFiles();
+    const files = this.app.vault.getMarkdownFiles();
     for (const file of files) {
       this.#onMetadataChanged(file);
     }
@@ -81,9 +80,9 @@ export class JournalsIndex extends Component {
   }
 
   #setupListeners() {
-    this.registerEvent(app$.value.vault.on("rename", this.#onRenamed, this));
-    this.registerEvent(app$.value.vault.on("delete", this.#onDeleted, this));
-    this.registerEvent(app$.value.metadataCache.on("changed", this.#onMetadataChanged, this));
+    this.registerEvent(this.app.vault.on("rename", this.#onRenamed, this));
+    this.registerEvent(this.app.vault.on("delete", this.#onDeleted, this));
+    this.registerEvent(this.app.metadataCache.on("changed", this.#onMetadataChanged, this));
   }
 
   #onRenamed = (file: TAbstractFile, oldPath: string) => {
@@ -112,7 +111,7 @@ export class JournalsIndex extends Component {
   };
 
   #onMetadataChanged = (file: TFile) => {
-    const metadata = app$.value.metadataCache.getFileCache(file);
+    const metadata = this.app.metadataCache.getFileCache(file);
     if (!metadata) return;
     this.#processMetadata(file.basename, file.path, metadata);
   };

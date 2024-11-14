@@ -4,16 +4,20 @@ import JournalSettingsList from "./JournalSettingsList.vue";
 import ObsidianIconButton from "@/components/obsidian/ObsidianIconButton.vue";
 import { VueModal } from "@/components/modals/vue-modal";
 import CreateJournal from "@/components/modals/CreateJournal.modal.vue";
-import { plugin$ } from "@/stores/obsidian.store";
 import type { JournalSettings } from "@/types/settings.types";
 import { journalsList$ } from "@/stores/settings.store";
+import { useApp } from "@/composables/use-app";
+import { usePlugin } from "@/composables/use-plugin";
 
 defineEmits<(event: "edit" | "bulk-add", name: string) => void>();
 
+const app = useApp();
+const plugin = usePlugin();
+
 function create(): void {
-  new VueModal("Add Journal", CreateJournal, {
+  new VueModal(app, plugin, "Add Journal", CreateJournal, {
     onCreate(name: string, writing: JournalSettings["write"]) {
-      plugin$.value.createJournal(name, writing);
+      plugin.createJournal(name, writing);
     },
   }).open();
 }

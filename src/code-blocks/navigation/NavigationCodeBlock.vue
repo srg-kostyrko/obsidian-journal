@@ -3,14 +3,15 @@ import { usePathData } from "@/composables/use-path-data";
 import { pluginSettings$ } from "@/stores/settings.store";
 import { computed } from "vue";
 import NavigationBlock from "./NavigationBlock.vue";
-import { plugin$ } from "@/stores/obsidian.store";
 import type { JournalMetadata } from "@/types/journal.types";
 import ObsidianIconButton from "@/components/obsidian/ObsidianIconButton.vue";
+import { usePlugin } from "@/composables/use-plugin";
 
 const props = defineProps<{
   path: string;
 }>();
 
+const plugin = usePlugin();
 const noteData = usePathData(props.path);
 
 const journalSettings = computed(() => {
@@ -24,7 +25,7 @@ const shouldNavigateExisting = computed(() => {
 
 const journal = computed(() => {
   if (!noteData.value) return null;
-  return plugin$.value.getJournal(noteData.value.journal);
+  return plugin.getJournal(noteData.value.journal);
 });
 const nextMetadata = computed<JournalMetadata | null>(() => {
   if (!noteData.value || !journal.value) return null;

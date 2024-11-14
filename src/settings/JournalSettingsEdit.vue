@@ -1,7 +1,6 @@
 <script setup lang="ts">
 import { computed, watch } from "vue";
 import { journals$, pluginSettings$ } from "../stores/settings.store";
-import { app$, plugin$ } from "../stores/obsidian.store";
 import { canApplyTemplater } from "../utils/template";
 import type { JournalCommand, JournalDecoration, NavBlockRow } from "../types/settings.types";
 import ObsidianSetting from "../components/obsidian/ObsidianSetting.vue";
@@ -24,6 +23,8 @@ import { today } from "@/calendar";
 import NavigationBlockEditPreview from "@/code-blocks/navigation/NavigationBlockEditPreview.vue";
 import EditNavBlockRowModal from "@/components/modals/EditNavBlockRow.modal.vue";
 import JournalShelfModal from "@/components/modals/JournalShelf.modal.vue";
+import { useApp } from "@/composables/use-app";
+import { usePlugin } from "@/composables/use-plugin";
 
 const props = defineProps<{
   journalName: string;
@@ -33,24 +34,27 @@ const emit = defineEmits<{
   (event: "edit", journalName: string): void;
 }>();
 
+const app = useApp();
+const plugin = usePlugin();
+
 const day = today().day();
 const refDate = today().format("YYYY-MM-DD");
 
 const journal = computed(() => journals$.value[props.journalName]);
-const supportsTemplater = canApplyTemplater(app$.value, "<% $>");
+const supportsTemplater = canApplyTemplater(app, "<% $>");
 
 function showRenameModal(): void {
-  new VueModal("Rename journal", RenameJournalModal, {
+  new VueModal(app, plugin, "Rename journal", RenameJournalModal, {
     name: journal.value.name,
     onSave(name: string) {
-      plugin$.value.renameJournal(props.journalName, name);
+      plugin.renameJournal(props.journalName, name);
       emit("edit", name);
     },
   }).open();
 }
 
 function place(): void {
-  new VueModal("Place journal", JournalShelfModal, {
+  new VueModal(app, plugin, "Place journal", JournalShelfModal, {
     currentShelf: journal.value.shelves[0] ?? "",
     onSave(shelfName: string) {
       const currentShelf = journal.value.shelves[0];
@@ -70,7 +74,7 @@ function place(): void {
 }
 
 function addCommand(): void {
-  new VueModal("Add command", EditCommandModal, {
+  new VueModal(app, plugin, "Add command", EditCommandModal, {
     index: journal.value.commands.length,
     writeType: journal.value.write,
     commands: journal.value.commands,
@@ -81,7 +85,7 @@ function addCommand(): void {
   }).open();
 }
 function editCommand(command: JournalCommand, index: number): void {
-  new VueModal("Edit command", EditCommandModal, {
+  new VueModal(app, plugin, "Edit command", EditCommandModal, {
     index,
     writeType: journal.value.write,
     command,
@@ -98,7 +102,7 @@ function deleteCommand(index: number): void {
 }
 
 function addCalendarDecoration() {
-  new VueModal("Add calendar decoration", EditDecorationModal, {
+  new VueModal(app, plugin, "Add calendar decoration", EditDecorationModal, {
     index: journal.value.decorations.length,
     writeType: journal.value.write,
     onSubmit: (decoration: JournalDecoration) => {
@@ -107,7 +111,7 @@ function addCalendarDecoration() {
   }).open();
 }
 function editCalendarDecoration(decoration: JournalDecoration, index: number) {
-  new VueModal("Add calendar decoration", EditDecorationModal, {
+  new VueModal(app, plugin, "Add calendar decoration", EditDecorationModal, {
     index: journal.value.decorations.length,
     writeType: journal.value.write,
     decoration,
@@ -121,7 +125,7 @@ function deleteHighlight(index: number) {
 }
 
 function addNavRow() {
-  new VueModal("Add row to nav block", EditNavBlockRowModal, {
+  new VueModal(app, plugin, "Add row to nav block", EditNavBlockRowModal, {
     currentJournal: props.journalName,
     onSubmit: (row: NavBlockRow) => {
       journal.value.navBlock.rows.push(row);
@@ -129,7 +133,7 @@ function addNavRow() {
   }).open();
 }
 function editNavRow(index: number) {
-  new VueModal("Edit nav block row", EditNavBlockRowModal, {
+  new VueModal(app, plugin, "Edit nav block row", EditNavBlockRowModal, {
     currentJournal: props.journalName,
     row: journal.value.navBlock.rows[index],
     onSubmit: (row: NavBlockRow) => {

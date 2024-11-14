@@ -2,10 +2,11 @@
 import { computed } from "vue";
 import { journals$ } from "@/stores/settings.store";
 import NavigationBlockRow from "./NavigationBlockRow.vue";
-import { plugin$ } from "@/stores/obsidian.store";
 import { openDate, openDateInJournal } from "@/journals/open-date";
 import { useShelfProvider } from "@/composables/use-shelf";
-import { NavBlockRow } from "@/types/settings.types";
+import type { NavBlockRow } from "@/types/settings.types";
+import { useApp } from "@/composables/use-app";
+import { usePlugin } from "@/composables/use-plugin";
 
 const props = defineProps<{
   refDate: string;
@@ -14,8 +15,11 @@ const props = defineProps<{
 
 defineEmits<(event: "move-up" | "move-down" | "edit" | "remove", index: number) => void>();
 
+const app = useApp();
+const plugin = usePlugin();
+
 const journalSettings = computed(() => journals$.value[props.journalName]);
-const journal = computed(() => plugin$.value.getJournal(props.journalName));
+const journal = computed(() => plugin.getJournal(props.journalName));
 const shelfName = computed(() => journalSettings.value?.shelves[0] ?? null);
 
 const { journals } = useShelfProvider(shelfName);
@@ -27,10 +31,10 @@ async function navigate(type: NavBlockRow["link"], date: string, journalName?: s
     if (metadata) await journal.value?.open(metadata);
   } else if (type === "journal") {
     if (!journalName) return;
-    await openDateInJournal(date, journalName);
+    await openDateInJournal(plugin, date, journalName);
   } else {
     const journalsToUse = journals[type].value.map((journal) => journal.name);
-    await openDate(date, journalsToUse);
+    await openDate(app, plugin, date, journalsToUse);
   }
 }
 </script>

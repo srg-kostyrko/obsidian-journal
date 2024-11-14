@@ -1,6 +1,5 @@
 import { TFile, TFolder } from "obsidian";
 import type { BulkAddPrams, NoteDataForProcessing } from "./bulk-add-notes.types";
-import { app$, plugin$ } from "@/stores/obsidian.store";
 import type { Journal } from "@/journals/journal";
 import { formatToRegexp } from "@/utils/moment";
 import { date_from_string } from "@/calendar";
@@ -11,9 +10,14 @@ import type {
   JournalDecorationTitleCondition,
 } from "@/types/settings.types";
 import { checkExhaustive } from "@/utils/types";
+import { useApp } from "@/composables/use-app";
+import { usePlugin } from "@/composables/use-plugin";
+
+const app = useApp();
+const plugin = usePlugin();
 
 export function buildNotesList(folderPath: string): TFile[] {
-  const folder = app$.value.vault.getFolderByPath(folderPath ?? "/");
+  const folder = app.vault.getFolderByPath(folderPath ?? "/");
   if (!folder) {
     throw new Error(`Folder ${folderPath} not found`);
   }
@@ -42,7 +46,7 @@ export function preprocessNotes(journal: Journal, notes: TFile[], parameters: Bu
       operations: [],
     };
     data.push(noteData);
-    const existing = plugin$.value.index.getForPath(note.path);
+    const existing = plugin.index.getForPath(note.path);
     if (existing) {
       noteData.operations.push({
         type: "skiping",
@@ -61,7 +65,7 @@ export function preprocessNotes(journal: Journal, notes: TFile[], parameters: Bu
     const dateString: string | undefined =
       parameters.date_place === "title"
         ? note.basename
-        : app$.value.metadataCache.getFileCache(note)?.frontmatter?.[parameters.property_name];
+        : app.metadataCache.getFileCache(note)?.frontmatter?.[parameters.property_name];
     if (dateString === undefined) {
       noteData.operations.push({
         type: "skiping",
@@ -96,7 +100,7 @@ export function preprocessNotes(journal: Journal, notes: TFile[], parameters: Bu
     if ("path" in metadata && metadata.path) {
       noteData.operations.push({
         type: "existing_note",
-        other_file: app$.value.vault.getAbstractFileByPath(metadata.path) as TFile,
+        other_file: app.vault.getAbstractFileByPath(metadata.path) as TFile,
         desision: parameters.existing_note,
       });
     }
@@ -127,7 +131,7 @@ function checkFilters(note: TFile, combinator: BulkAddPrams["filter_combinator"]
 }
 
 function checkFilter(note: TFile, filter: GenericConditions) {
-  const metadata = app$.value.metadataCache.getFileCache(note);
+  const metadata = app.metadataCache.getFileCache(note);
   if (!metadata) return false;
   switch (filter.type) {
     case "title": {
@@ -161,7 +165,7 @@ function checkNameFilter(note: TFile, filter: JournalDecorationTitleCondition) {
 }
 
 function checkTagFilter(note: TFile, filter: JournalDecorationTagCondition) {
-  const metadata = app$.value.metadataCache.getFileCache(note);
+  const metadata = app.metadataCache.getFileCache(note);
   if (!metadata) return false;
   if (!metadata.tags) return false;
   switch (filter.condition) {
@@ -181,7 +185,7 @@ function checkTagFilter(note: TFile, filter: JournalDecorationTagCondition) {
 }
 
 function checkPropertyFilter(note: TFile, filter: JournalDecorationPropertyCondition) {
-  const metadata = app$.value.metadataCache.getFileCache(note);
+  const metadata = app.metadataCache.getFileCache(note);
   if (!metadata) return false;
   const propertyValue = metadata.frontmatter?.[filter.name];
   switch (filter.condition) {

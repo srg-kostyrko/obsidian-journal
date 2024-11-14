@@ -4,14 +4,13 @@ import {
   FRONTMATTER_END_DATE_KEY,
   FRONTMATTER_INDEX_KEY,
 } from "@/constants";
-import { app$ } from "@/stores/obsidian.store";
-import { TFile } from "obsidian";
+import { type App, TFile } from "obsidian";
 
-export async function disconnectNote(path: string): Promise<void> {
-  const file = app$.value.vault.getAbstractFileByPath(path);
+export async function disconnectNote(app: App, path: string): Promise<void> {
+  const file = app.vault.getAbstractFileByPath(path);
   if (!file) return;
   if (!(file instanceof TFile)) return;
-  await app$.value.fileManager.processFrontMatter(file, (frontmatter) => {
+  await app.fileManager.processFrontMatter(file, (frontmatter) => {
     delete frontmatter[FRONTMATTER_NAME_KEY];
     delete frontmatter[FRONTMATTER_DATE_KEY];
     delete frontmatter[FRONTMATTER_END_DATE_KEY];
