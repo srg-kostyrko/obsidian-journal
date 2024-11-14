@@ -12,7 +12,7 @@ const { journals } = defineProps<{
   journals: JournalSettings[];
 }>();
 
-defineEmits<(event: "edit", name: string) => void>();
+defineEmits<(event: "edit" | "bulk-add", name: string) => void>();
 
 const journalsList = computed(() => Object.values(journals).toSorted((a, b) => a.name.localeCompare(b.name)));
 
@@ -36,6 +36,11 @@ function remove(name: string): void {
         {{ journal.name }}
         <span class="flair">{{ journal.write.type }}</span>
       </template>
+      <ObsidianIconButton
+        icon="import"
+        :tooltip="'Add existing notes to ' + journal.name"
+        @click="$emit('bulk-add', journal.name)"
+      />
       <ObsidianIconButton icon="pencil" :tooltip="'Edit ' + journal.name" @click="$emit('edit', journal.name)" />
       <ObsidianIconButton icon="trash-2" :tooltip="'Delete ' + journal.name" @click="remove(journal.name)" />
     </ObsidianSetting>

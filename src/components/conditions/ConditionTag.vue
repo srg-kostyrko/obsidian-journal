@@ -5,11 +5,11 @@ import type { JournalDecorationTagCondition, JournalDecorationTitleCondition } f
 import { computed } from "vue";
 
 const props = defineProps<{
-  condition: JournalDecorationTitleCondition | JournalDecorationTagCondition;
+  condition: JournalDecorationTagCondition;
 }>();
 
 const emit = defineEmits<
-  <T extends JournalDecorationTitleCondition | JournalDecorationTagCondition, K extends keyof T>(
+  <T extends JournalDecorationTagCondition, K extends keyof T>(
     event: "change",
     change: {
       prop: K;

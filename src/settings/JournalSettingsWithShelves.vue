@@ -14,7 +14,7 @@ import type { JournalSettings } from "@/types/settings.types";
 const emit = defineEmits<{
   (event: "organize", shelfName: string): void;
   // eslint-disable-next-line @typescript-eslint/unified-signatures
-  (event: "edit", journalName: string): void;
+  (event: "edit" | "bulk-add", journalName: string): void;
 }>();
 
 const shelvesList = computed(() =>
@@ -75,7 +75,11 @@ function create(): void {
   <ObsidianSetting name="Journals not on shelf" heading>
     <ObsidianIconButton icon="plus" cta tooltip="Create new journal" @click="create" />
   </ObsidianSetting>
-  <JournalSettingsList :journals="journalsWithoutShelf" @edit="$emit('edit', $event)" />
+  <JournalSettingsList
+    :journals="journalsWithoutShelf"
+    @edit="$emit('edit', $event)"
+    @bulk-add="$emit('bulk-add', $event)"
+  />
 </template>
 
 <style scoped></style>

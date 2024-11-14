@@ -1,0 +1,61 @@
+<script setup lang="ts">
+import ObsidianSetting from "../obsidian/ObsidianSetting.vue";
+import ButtonDropdown from "../ButtonDropdown.vue";
+import ObsidianIconButton from "../obsidian/ObsidianIconButton.vue";
+import type { GenericConditions } from "@/types/settings.types";
+import ConditionNoteName from "./ConditionNoteName.vue";
+import ConditionTag from "./ConditionTag.vue";
+import ConditionProperty from "./ConditionProperty.vue";
+import { deepCopy } from "@/utils/misc";
+import { defaultConditions } from "@/defaults";
+
+defineProps<{
+  mode: string;
+  conditions: GenericConditions[];
+}>();
+const emit = defineEmits<{
+  (event: "add-condition", condition: GenericConditions): void;
+  (event: "change-condition", index: number, change: { prop: unknown; value: unknown }): void;
+  (event: "remove-condition", index: number): void;
+}>();
+
+const types = ["title", "tag", "property"];
+
+function getConditionComponent(condition: GenericConditions) {
+  switch (condition.type) {
+    case "title": {
+      return ConditionNoteName;
+    }
+    case "tag": {
+      return ConditionTag;
+    }
+    case "property": {
+      return ConditionProperty;
+    }
+  }
+}
+
+function addCondition(type: string) {
+  emit("add-condition", deepCopy(defaultConditions[type as GenericConditions["type"]]) as GenericConditions);
+}
+function removeDecorationCondition(index: number) {
+  emit("remove-condition", index);
+}
+function chengeCondition(index: number, change: { prop: unknown; value: unknown }) {
+  emit("change-condition", index, change);
+}
+</script>
+
+<template>
+  <ObsidianSetting>
+    <ButtonDropdown :options="types" @select="addCondition">Add condition</ButtonDropdown>
+  </ObsidianSetting>
+  <ObsidianSetting v-for="(condition, i) of conditions" :key="i" class="condition-wrapper">
+    <span v-if="i > 0" class="mode-hint">{{ mode }}</span>
+    <component :is="getConditionComponent(condition)" :condition="condition" @change="chengeCondition(i, $event)" />
+    <ObsidianIconButton icon="trash" @click="removeDecorationCondition(i)" />
+  </ObsidianSetting>
+  <p v-if="conditions.length === 0" class="journal-hint">No conditions defined yet</p>
+</template>
+
+<style scoped></style>

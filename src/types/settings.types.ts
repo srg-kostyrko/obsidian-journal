@@ -250,6 +250,11 @@ export interface JournalDecorationAllTasksCompletedCondition {
   type: "all-tasks-completed";
 }
 
+export type GenericConditions =
+  | JournalDecorationTitleCondition
+  | JournalDecorationTagCondition
+  | JournalDecorationPropertyCondition;
+
 export type JournalDecorationCondition =
   | JournalDecorationTitleCondition
   | JournalDecorationTagCondition

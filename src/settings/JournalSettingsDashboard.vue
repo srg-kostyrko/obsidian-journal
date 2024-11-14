@@ -10,7 +10,7 @@ import { updateLocale } from "../calendar";
 import JournalSettingsWithoutShelves from "./JournalSettingsWithoutShelves.vue";
 import JournalSettingsWithShelves from "./JournalSettingsWithShelves.vue";
 
-const emit = defineEmits<(event: "edit" | "organize", name: string) => void>();
+const emit = defineEmits<(event: "edit" | "organize" | "bulk-add", name: string) => void>();
 
 const fow = moment().localeData().firstDayOfWeek();
 const fowText = moment().localeData().weekdays()[fow];
@@ -62,6 +62,7 @@ function changeFirstWeekOfYear(value: number): void {
     v-if="pluginSettings$.useShelves"
     @organize="emit('organize', $event)"
     @edit="emit('edit', $event)"
+    @bulk-add="emit('bulk-add', $event)"
   />
   <JournalSettingsWithoutShelves v-else @edit="emit('edit', $event)" />
 

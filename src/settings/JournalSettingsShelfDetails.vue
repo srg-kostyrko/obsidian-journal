@@ -15,7 +15,7 @@ const { shelfName } = defineProps<{
 }>();
 const emit = defineEmits<{
   (event: "back"): void;
-  (event: "edit" | "organize", name: string): void;
+  (event: "edit" | "organize" | "bulk-add", name: string): void;
 }>();
 
 const shelf = computed(() => pluginSettings$.value.shelves[shelfName]);
@@ -59,7 +59,11 @@ function create(): void {
       <ObsidianIconButton icon="plus" cta tooltip="Create new journal" @click="create" />
     </ObsidianSetting>
 
-    <JournalSettingsList :journals="shelfJournals" @edit="$emit('edit', $event)" />
+    <JournalSettingsList
+      :journals="shelfJournals"
+      @edit="$emit('edit', $event)"
+      @bulk-add="$emit('bulk-add', $event)"
+    />
   </div>
 </template>
 

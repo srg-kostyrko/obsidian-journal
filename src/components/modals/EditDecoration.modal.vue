@@ -16,8 +16,9 @@ import DecorationCorner from "./edit-decoration/DecorationCorner.vue";
 import DecorationIcon from "./edit-decoration/DecorationIcon.vue";
 import ButtonDropdown from "../ButtonDropdown.vue";
 import ConditionTypeOnly from "./edit-decoration/ConditionTypeOnly.vue";
-import ConditionValueCheck from "./edit-decoration/ConditionValueCheck.vue";
-import ConditionProperty from "./edit-decoration/ConditionProperty.vue";
+import ConditionNoteName from "../conditions/ConditionNoteName.vue";
+import ConditionProperty from "../conditions/ConditionProperty.vue";
+import ConditionTag from "../conditions/ConditionTag.vue";
 import ConditionDate from "./edit-decoration/ConditionDate.vue";
 import ConditionWeekday from "./edit-decoration/ConditionWeekday.vue";
 import ConditionOffset from "./edit-decoration/ConditionOffset.vue";
@@ -57,9 +58,11 @@ const availableConditionTypes = computed(() => {
 });
 function getConditionComponent(condition: JournalDecorationCondition) {
   switch (condition.type) {
-    case "title":
+    case "title": {
+      return ConditionNoteName;
+    }
     case "tag": {
-      return ConditionValueCheck;
+      return ConditionTag;
     }
     case "date": {
       return ConditionDate;
