@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { computed, toRefs } from "vue";
 import { useMonth } from "./use-month";
-import { weekdayNames, date_from_string } from "../../calendar";
+import { date_from_string, weekdayNames } from "../../calendar";
 import { calendarViewSettings$ } from "../../stores/settings.store";
 import CalendarDay from "./CalendarDay.vue";
 import CalendarWeekNumber from "./CalendarWeekNumber.vue";

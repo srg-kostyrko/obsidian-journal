@@ -2,7 +2,7 @@ import { Notice, Plugin, type TFile } from "obsidian";
 import { calendarViewSettings$, journals$, pluginSettings$ } from "./stores/settings.store";
 import { watch, type WatchStopHandle } from "vue";
 import { debounce } from "perfect-debounce";
-import { initCalendarCustomization, updateLocale } from "./calendar";
+import { initCalendarCustomization, restoreLocale, updateLocale } from "./calendar";
 import { JournalSettingTab } from "./settings/journal-settings-tab";
 import { Journal } from "./journals/journal";
 import type { JournalSettings } from "./types/settings.types";
@@ -117,7 +117,9 @@ export default class JournalPlugin extends Plugin {
   async onload(): Promise<void> {
     await this.#loadSettings();
     initCalendarCustomization();
-    if (pluginSettings$.value.calendar.firstDayOfWeek !== -1) {
+    if (pluginSettings$.value.calendar.firstDayOfWeek === -1) {
+      restoreLocale();
+    } else {
       updateLocale(pluginSettings$.value.calendar.firstDayOfWeek, pluginSettings$.value.calendar.firstWeekOfYear);
     }
 

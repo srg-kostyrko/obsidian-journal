@@ -1,38 +1,50 @@
-import { computed } from "vue";
 import { moment } from "obsidian";
 import { extractCurrentlocaleData } from "./utils/moment";
-import { calendarSettings$ } from "./stores/settings.store";
 import type { MomentDate } from "./types/date.types";
+import { computed } from "vue";
 
 const CUSTOM_LOCALE = "custom-journal-locale";
+let initialWeekSettings: { dow: number; doy: number } | undefined;
 
 export function initCalendarCustomization(): void {
   if (!moment.locales().includes(CUSTOM_LOCALE)) {
     const currentLocale = moment.locale();
-    moment.defineLocale(CUSTOM_LOCALE, extractCurrentlocaleData());
+    const currentLccaleData = extractCurrentlocaleData();
+    initialWeekSettings = currentLccaleData.week;
+    moment.defineLocale(CUSTOM_LOCALE, currentLccaleData);
     moment.locale(currentLocale);
   }
 }
 
+export const updateLocale = (firstDayOfWeek: number, firstWeekOfYear: number): void => {
+  const currentLocale = moment.locale();
+  moment.updateLocale(CUSTOM_LOCALE, {
+    week: {
+      dow: firstDayOfWeek,
+      doy: 7 + firstDayOfWeek - (firstWeekOfYear ?? 1),
+    },
+  });
+  moment.locale(currentLocale);
+};
+
+export const restoreLocale = (): void => {
+  if (initialWeekSettings) {
+    const currentLocale = moment.locale();
+    moment.updateLocale(CUSTOM_LOCALE, initialWeekSettings);
+    moment.locale(currentLocale);
+  }
+};
+
 export function date_from_string(date?: string, format?: string): MomentDate {
   const md = date ? moment(date, format) : moment();
-  if (calendarSettings$.value.firstDayOfWeek !== -1) {
-    md.locale(CUSTOM_LOCALE);
-  }
+  md.locale(CUSTOM_LOCALE);
   return md;
 }
 
 export function today(): MomentDate {
   const md = moment();
-  if (calendarSettings$.value.firstDayOfWeek !== -1) {
-    md.locale(CUSTOM_LOCALE);
-  }
+  md.locale(CUSTOM_LOCALE);
   return md.startOf("day");
-}
-
-export function dateDistance(fromDate: string, toDate: string): number {
-  const from = date_from_string(fromDate);
-  return Math.abs(from.diff(toDate, "days"));
 }
 
 export const weekdayNames = computed(() => {
@@ -48,16 +60,10 @@ export const weekdayNames = computed(() => {
   return weekdayNames;
 });
 
-export const updateLocale = (firstDayOfWeek: number, firstWeekOfYear: number): void => {
-  const currentLocale = moment.locale();
-  moment.updateLocale(CUSTOM_LOCALE, {
-    week: {
-      dow: firstDayOfWeek,
-      doy: 7 + firstDayOfWeek - (firstWeekOfYear ?? 1),
-    },
-  });
-  moment.locale(currentLocale);
-};
+export function dateDistance(fromDate: string, toDate: string): number {
+  const from = date_from_string(fromDate);
+  return Math.abs(from.diff(toDate, "days"));
+}
 
 const relativeDates = {
   day: relativeDay,

@@ -6,7 +6,7 @@ import ObsidianSetting from "../components/obsidian/ObsidianSetting.vue";
 import ObsidianDropdown from "../components/obsidian/ObsidianDropdown.vue";
 import ObsidianNumberInput from "../components/obsidian/ObsidianNumberInput.vue";
 import ObsidianToggle from "@/components/obsidian/ObsidianToggle.vue";
-import { updateLocale } from "../calendar";
+import { restoreLocale, updateLocale } from "../calendar";
 import JournalSettingsWithoutShelves from "./JournalSettingsWithoutShelves.vue";
 import JournalSettingsWithShelves from "./JournalSettingsWithShelves.vue";
 
@@ -20,7 +20,9 @@ const weekStart = computed({
     return String(calendarSettings$.value.firstDayOfWeek);
   },
   set(value) {
-    if (value !== "-1") {
+    if (value === "-1") {
+      restoreLocale();
+    } else {
       updateLocale(Number.parseInt(value, 10), calendarSettings$.value.firstWeekOfYear);
     }
     calendarSettings$.value.firstDayOfWeek = Number.parseInt(value, 10);
