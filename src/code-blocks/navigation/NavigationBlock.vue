@@ -1,6 +1,5 @@
 <script setup lang="ts">
 import { computed } from "vue";
-import { journals$ } from "@/stores/settings.store";
 import NavigationBlockRow from "./NavigationBlockRow.vue";
 import { openDate, openDateInJournal } from "@/journals/open-date";
 import { useShelfProvider } from "@/composables/use-shelf";
@@ -18,9 +17,8 @@ defineEmits<(event: "move-up" | "move-down" | "edit" | "remove", index: number) 
 const app = useApp();
 const plugin = usePlugin();
 
-const journalSettings = computed(() => journals$.value[props.journalName]);
 const journal = computed(() => plugin.getJournal(props.journalName));
-const shelfName = computed(() => journalSettings.value?.shelves[0] ?? null);
+const shelfName = computed(() => journal.value?.shelfName ?? null);
 
 const { journals } = useShelfProvider(shelfName);
 
@@ -41,12 +39,12 @@ async function navigate(type: NavBlockRow["link"], date: string, journalName?: s
 
 <template>
   <div v-if="journal" class="nav-block">
-    <div v-for="(row, index) of journalSettings.navBlock.rows" :key="index">
+    <div v-for="(row, index) of journal.navBlock.rows" :key="index">
       <NavigationBlockRow
         :journal="journal"
         :row="row"
         :ref-date="refDate"
-        :default-format="journalSettings.dateFormat"
+        :default-format="journal.dateFormat"
         @navigate="navigate"
       />
     </div>

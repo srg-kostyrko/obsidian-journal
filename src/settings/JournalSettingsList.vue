@@ -1,16 +1,15 @@
 <script setup lang="ts">
-import { computed } from "vue";
 import ObsidianSetting from "../components/obsidian/ObsidianSetting.vue";
 import ObsidianIconButton from "../components/obsidian/ObsidianIconButton.vue";
-import type { JournalSettings, NotesProcessing } from "@/types/settings.types";
+import type { NotesProcessing } from "@/types/settings.types";
 import { VueModal } from "@/components/modals/vue-modal";
 import RemoveJournal from "@/components/modals/RemoveJournal.modal.vue";
-import { journals$ } from "@/stores/settings.store";
 import { useApp } from "@/composables/use-app";
 import { usePlugin } from "@/composables/use-plugin";
+import type { Journal } from "@/journals/journal";
 
 const { journals } = defineProps<{
-  journals: JournalSettings[];
+  journals: Journal[];
 }>();
 
 defineEmits<(event: "edit" | "bulk-add", name: string) => void>();
@@ -18,12 +17,8 @@ defineEmits<(event: "edit" | "bulk-add", name: string) => void>();
 const app = useApp();
 const plugin = usePlugin();
 
-const journalsList = computed(() => Object.values(journals).toSorted((a, b) => a.name.localeCompare(b.name)));
-
 function remove(name: string): void {
-  const journal = journals$.value[name];
-  if (!journal) return;
-  new VueModal(app, plugin, `Remove ${journal.name} journal`, RemoveJournal, {
+  new VueModal(app, plugin, `Remove ${name} journal`, RemoveJournal, {
     onRemove(_noteProcessing: NotesProcessing) {
       // TODO Process notes on remove
       plugin.removeJournal(name);
@@ -33,12 +28,12 @@ function remove(name: string): void {
 </script>
 
 <template>
-  <p v-if="journalsList.length === 0">No journals configured yet.</p>
+  <p v-if="journals.length === 0">No journals configured yet.</p>
   <template v-else>
-    <ObsidianSetting v-for="journal of journalsList" :key="journal.name">
+    <ObsidianSetting v-for="journal of journals" :key="journal.name">
       <template #name>
         {{ journal.name }}
-        <span class="flair">{{ journal.write.type }}</span>
+        <span class="flair">{{ journal.type }}</span>
       </template>
       <ObsidianIconButton
         icon="import"

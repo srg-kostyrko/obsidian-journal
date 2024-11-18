@@ -1,6 +1,5 @@
 <script setup lang="ts">
 import { computed } from "vue";
-import { journals$ } from "@/stores/settings.store";
 import NavigationBlockRow from "./NavigationBlockRow.vue";
 import ObsidianIconButton from "@/components/obsidian/ObsidianIconButton.vue";
 import { usePlugin } from "@/composables/use-plugin";
@@ -15,27 +14,22 @@ defineEmits<(event: "move-up" | "move-down" | "edit" | "remove", index: number) 
 
 const plugin = usePlugin();
 
-const journalSettings = computed(() => journals$.value[props.journalName]);
 const journal = computed(() => plugin.getJournal(props.journalName));
+const shelfName = computed(() => journal.value?.shelfName ?? null);
 
-useShelfProvider(journalSettings.value?.shelves[0]);
+useShelfProvider(shelfName);
 </script>
 
 <template>
   <div v-if="journal">
-    <div v-for="(row, index) of journalSettings.navBlock.rows" :key="index" class="nav-row">
+    <div v-for="(row, index) of journal.navBlock.rows" :key="index" class="nav-row">
       <div class="nav-row-wrapper">
-        <NavigationBlockRow
-          :journal="journal"
-          :row="row"
-          :ref-date="refDate"
-          :default-format="journalSettings.dateFormat"
-        />
+        <NavigationBlockRow :journal="journal" :row="row" :ref-date="refDate" :default-format="journal.dateFormat" />
       </div>
       <div class="controls">
         <ObsidianIconButton v-if="index > 0" icon="arrow-up" tooltip="Move up" @click="$emit('move-up', index)" />
         <ObsidianIconButton
-          v-if="index < journalSettings.navBlock.rows.length - 1"
+          v-if="index < journal.navBlock.rows.length - 1"
           icon="arrow-down"
           tooltip="Move down"
           @click="$emit('move-down', index)"

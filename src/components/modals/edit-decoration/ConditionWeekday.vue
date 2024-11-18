@@ -1,8 +1,8 @@
 <script setup lang="ts">
 import { moment } from "obsidian";
-import { calendarSettings$ } from "@/stores/settings.store";
 import { ref, watch } from "vue";
 import type { JournalDecorationWeekdayCondition } from "@/types/settings.types";
+import { usePlugin } from "@/composables/use-plugin";
 
 const props = defineProps<{ condition: JournalDecorationWeekdayCondition }>();
 const emit = defineEmits<
@@ -14,11 +14,11 @@ const emit = defineEmits<
     },
   ) => void
 >();
+const plugin = usePlugin();
 
+// TODO
 const startWeekDay =
-  calendarSettings$.value.firstDayOfWeek === -1
-    ? moment().localeData().firstDayOfWeek()
-    : calendarSettings$.value.firstDayOfWeek;
+  plugin.calendar.firstDayOfWeek === -1 ? moment().localeData().firstDayOfWeek() : plugin.calendar.firstDayOfWeek;
 
 const weekDaysIndexes = [];
 for (let i = startWeekDay; i < 7; ++i) weekDaysIndexes.push(i);

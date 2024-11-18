@@ -10,17 +10,19 @@ import FormErrors from "../../FormErrors.vue";
 import DateFormatPreview from "@/components/DateFormatPreview.vue";
 import ObsidianButton from "@/components/obsidian/ObsidianButton.vue";
 import { computed } from "vue";
-import { pluginSettings$ } from "@/stores/settings.store";
 import { ref } from "vue";
 import type { GenericConditions } from "@/types/settings.types";
 import ConditionsList from "@/components/conditions/ConditionsList.vue";
 import ObsidianToggle from "@/components/obsidian/ObsidianToggle.vue";
 import type { BulkAddPrams } from "./bulk-add-notes.types";
+import { usePlugin } from "@/composables/use-plugin";
+
+const plugin = usePlugin();
 
 const { journalName } = defineProps<{
   journalName: string;
 }>();
-const journal = computed(() => pluginSettings$.value.journals[journalName]);
+const journal = computed(() => plugin.getJournal(journalName));
 
 const emit = defineEmits<{
   (event: "process", parameters: BulkAddPrams): void;
@@ -32,7 +34,7 @@ const { defineField, errorBag, handleSubmit } = useForm({
     folder: "",
     date_place: "title",
     property_name: "",
-    date_format: journal.value.dateFormat,
+    date_format: journal.value?.dateFormat,
     filter_combinator: "no",
     existing_note: "skip",
     other_folder: "keep",
@@ -96,7 +98,7 @@ const onSubmit = handleSubmit(() => {
     folder: folder.value ?? "/",
     date_place: datePlace.value ?? "title",
     property_name: propertyName.value ?? "",
-    date_format: dateFormat.value ?? journal.value.dateFormat,
+    date_format: dateFormat.value ?? journal.value?.dateFormat ?? "",
     filter_combinator: filtersCombination.value ?? "no",
     filters: filters.value,
     existing_note: existingNote.value ?? "skip",

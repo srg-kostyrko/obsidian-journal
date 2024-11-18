@@ -1,5 +1,4 @@
 <script setup lang="ts">
-import { pluginSettings$ } from "@/stores/settings.store";
 import { computed } from "vue";
 import ObsidianSetting from "@/components/obsidian/ObsidianSetting.vue";
 import ObsidianIconButton from "@/components/obsidian/ObsidianIconButton.vue";
@@ -10,6 +9,7 @@ import type { JournalSettings } from "@/types/settings.types";
 import JournalSettingsList from "./JournalSettingsList.vue";
 import { useApp } from "@/composables/use-app";
 import { usePlugin } from "@/composables/use-plugin";
+import type { Journal } from "@/journals/journal";
 
 const { shelfName } = defineProps<{
   shelfName: string;
@@ -22,13 +22,19 @@ const emit = defineEmits<{
 const app = useApp();
 const plugin = usePlugin();
 
-const shelf = computed(() => pluginSettings$.value.shelves[shelfName]);
+const shelf = computed(() => plugin.getShelf(shelfName));
 const shelfJournals = computed(() => {
   if (!shelf.value) return [];
-  return shelf.value.journals.map((journalName) => pluginSettings$.value.journals[journalName]);
+  return (
+    shelf.value.journals
+      .map((name) => plugin.getJournal(name))
+      // eslint-disable-next-line unicorn/prefer-native-coercion-functions
+      .filter((journal): journal is Journal => Boolean(journal))
+  );
 });
 
 function showRenameModal(): void {
+  if (!shelf.value) return;
   new VueModal(app, plugin, "Rename shelf", RenameShelfModal, {
     name: shelf.value.name,
     onSave(name: string) {
@@ -41,10 +47,10 @@ function showRenameModal(): void {
 function create(): void {
   new VueModal(app, plugin, "Add Journal", CreateJournal, {
     onCreate(name: string, writing: JournalSettings["write"]) {
+      if (!shelf.value) return;
       const journal = plugin.createJournal(name, writing);
       shelf.value.journals.push(name);
       journal.shelves.push(shelfName);
-
       emit("edit", name);
     },
   }).open();

@@ -4,7 +4,6 @@ import ObsidianIconButton from "@/components/obsidian/ObsidianIconButton.vue";
 import { VueModal } from "@/components/modals/vue-modal";
 import CreateShelf from "@/components/modals/CreateShelf.modal.vue";
 import RemoveShelf from "@/components/modals/RemoveShelf.modal.vue";
-import { pluginSettings$ } from "@/stores/settings.store";
 import { computed } from "vue";
 import JournalSettingsList from "./JournalSettingsList.vue";
 import CreateJournalModal from "@/components/modals/CreateJournal.modal.vue";
@@ -21,12 +20,8 @@ const emit = defineEmits<{
 const app = useApp();
 const plugin = usePlugin();
 
-const shelvesList = computed(() =>
-  Object.values(pluginSettings$.value.shelves).toSorted((a, b) => a.name.localeCompare(b.name)),
-);
 const journalsWithoutShelf = computed(() => {
-  const journals = Object.values(pluginSettings$.value.journals);
-  return journals.filter((journal) => journal.shelves.length === 0);
+  return plugin.journals.filter((journal) => journal.isOnShelf);
 });
 
 function createShelf(): void {
@@ -38,9 +33,7 @@ function createShelf(): void {
 }
 
 function removeShelf(shelfName: string): void {
-  const shelf = pluginSettings$.value.shelves[shelfName];
-  if (!shelf) return;
-  new VueModal(app, plugin, `Remove ${shelf.name} shelf`, RemoveShelf, {
+  new VueModal(app, plugin, `Remove ${shelfName} shelf`, RemoveShelf, {
     shelfName,
     onRemove(destinationShelf: string) {
       plugin.removeShelf(shelfName, destinationShelf);
@@ -62,9 +55,9 @@ function create(): void {
   <ObsidianSetting name="Journal shelves" heading>
     <ObsidianIconButton :icon="'plus'" cta tooltip="Create new shelf" @click="createShelf" />
   </ObsidianSetting>
-  <p v-if="shelvesList.length === 0">No shelves configured yet.</p>
+  <p v-if="plugin.shelves.length === 0">No shelves configured yet.</p>
   <template v-else>
-    <ObsidianSetting v-for="shelf of shelvesList" :key="shelf.name">
+    <ObsidianSetting v-for="shelf of plugin.shelves" :key="shelf.name">
       <template #name>
         <b>
           {{ shelf.name }}

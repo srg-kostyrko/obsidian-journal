@@ -5,7 +5,6 @@ import ObsidianIconButton from "@/components/obsidian/ObsidianIconButton.vue";
 import { VueModal } from "@/components/modals/vue-modal";
 import CreateJournal from "@/components/modals/CreateJournal.modal.vue";
 import type { JournalSettings } from "@/types/settings.types";
-import { journalsList$ } from "@/stores/settings.store";
 import { useApp } from "@/composables/use-app";
 import { usePlugin } from "@/composables/use-plugin";
 
@@ -28,7 +27,11 @@ function create(): void {
     <ObsidianIconButton icon="plus" cta tooltip="Create new journal" @click="create" />
   </ObsidianSetting>
 
-  <JournalSettingsList :journals="journalsList$" @edit="$emit('edit', $event)" @bulk-add="$emit('bulk-add', $event)" />
+  <JournalSettingsList
+    :journals="plugin.journals"
+    @edit="$emit('edit', $event)"
+    @bulk-add="$emit('bulk-add', $event)"
+  />
 </template>
 
 <style scoped></style>

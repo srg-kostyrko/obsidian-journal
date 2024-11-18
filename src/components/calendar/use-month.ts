@@ -1,10 +1,11 @@
 import { ref, watchEffect, type Ref } from "vue";
 import type { CalendarUiDay } from "../../types/calendar-ui.types";
 import { date_from_string, today } from "../../calendar";
-import { calendarViewSettings$ } from "../../stores/settings.store";
+import { usePlugin } from "@/composables/use-plugin";
 
 export function useMonth(refDate: Ref<string>) {
   const grid = ref<CalendarUiDay[]>([]);
+  const plugin = usePlugin();
 
   watchEffect(() => {
     const momentDate = date_from_string(refDate.value);
@@ -14,7 +15,7 @@ export function useMonth(refDate: Ref<string>) {
     const todayDate = today();
     const start = momentDate.clone().startOf("month").startOf("week");
     const end = momentDate.clone().endOf("month").endOf("week");
-    const placeWeeks = calendarViewSettings$.value.weeks || "left";
+    const placeWeeks = plugin.placeWeeks || "left";
 
     const days: CalendarUiDay[] = [];
 

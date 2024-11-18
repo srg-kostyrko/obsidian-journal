@@ -11,9 +11,10 @@ import ObsidianToggle from "../obsidian/ObsidianToggle.vue";
 import FormErrors from "@/components/FormErrors.vue";
 import ObsidianButton from "../obsidian/ObsidianButton.vue";
 import { computed } from "vue";
-import { journalsList$ } from "@/stores/settings.store";
+import { usePlugin } from "@/composables/use-plugin";
+import { useShelfProvider } from "@/composables/use-shelf";
 
-const props = defineProps<{
+const { currentJournal, row } = defineProps<{
   row?: NavBlockRow;
   currentJournal: string;
 }>();
@@ -23,13 +24,22 @@ const emit = defineEmits<{
   (event: "submit", row: NavBlockRow): void;
 }>();
 
+const plugin = usePlugin();
+
+const journal = computed(() => {
+  return plugin.getJournal(currentJournal);
+});
+const shelfName = computed(() => journal.value?.shelfName ?? null);
+
+const { journals } = useShelfProvider(shelfName);
+
 const supportedJournals = computed(() => {
-  return journalsList$.value.filter((journal) => journal.name !== props.currentJournal).map(({ name }) => name);
+  return journals.all.value.map(({ name }) => name).filter((name) => name !== currentJournal);
 });
 
 const { defineField, errorBag, handleSubmit } = useForm({
-  initialValues: props.row
-    ? { ...props.row }
+  initialValues: row
+    ? { ...row }
     : { template: "", fontSize: 1, bold: false, italic: false, link: "none", journal: "" },
   validationSchema: toTypedSchema(
     v.pipe(
@@ -60,7 +70,7 @@ const [fontSize, fontSizeAttrs] = defineField("fontSize");
 const [bold, boldAttrs] = defineField("bold");
 const [italic, italicAttrs] = defineField("italic");
 const [link, linkAttrs] = defineField("link");
-const [journal, journalAttrs] = defineField("journal");
+const [journalField, journalAttrs] = defineField("journal");
 
 const onSubmit = handleSubmit((values) => {
   emit("submit", values);
@@ -104,7 +114,7 @@ const onSubmit = handleSubmit((values) => {
       <template #description>
         <FormErrors :errors="errorBag.journal" />
       </template>
-      <ObsidianDropdown v-model="journal" v-bind="journalAttrs">
+      <ObsidianDropdown v-model="journalField" v-bind="journalAttrs">
         <option v-for="journalName of supportedJournals" :key="journalName" :value="journalName">
           {{ journalName }}
         </option>

@@ -1,10 +1,11 @@
 import { date_from_string, today } from "@/calendar";
-import { calendarViewSettings$ } from "@/stores/settings.store";
+import { usePlugin } from "@/composables/use-plugin";
 import type { CalendarUiDay } from "@/types/calendar-ui.types";
 import { ref, watchEffect, type Ref } from "vue";
 
 export function useWeek(refDate: Ref<string>) {
   const grid = ref<CalendarUiDay[]>([]);
+  const plugin = usePlugin();
 
   watchEffect(() => {
     const momentDate = date_from_string(refDate.value);
@@ -14,7 +15,7 @@ export function useWeek(refDate: Ref<string>) {
     const todayDate = today();
     const start = momentDate.clone().startOf("week");
     const end = momentDate.clone().endOf("week");
-    const placeWeeks = calendarViewSettings$.value.weeks || "left";
+    const placeWeeks = plugin.placeWeeks || "left";
 
     const days: CalendarUiDay[] = [];
 

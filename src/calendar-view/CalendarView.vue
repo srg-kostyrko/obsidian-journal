@@ -6,7 +6,6 @@ import CalendarMonth from "../components/calendar/CalendarMonth.vue";
 import DatePickerModal from "../components/modals/DatePicker.modal.vue";
 import { VueModal } from "../components/modals/vue-modal";
 import { today, date_from_string } from "../calendar";
-import { pluginSettings$, journalsList$, calendarViewSettings$ } from "../stores/settings.store";
 import { openDate } from "@/journals/open-date";
 import CalendarMonthButton from "@/components/calendar/CalendarMonthButton.vue";
 import CalendarYearButton from "@/components/calendar/CalendarYearButton.vue";
@@ -24,16 +23,16 @@ const refDate = computed(() => refDateMoment.value.format("YYYY-MM-DD"));
 
 const selectedShelf = computed({
   get() {
-    return pluginSettings$.value.ui.calendarShelf;
+    return plugin.ui.calendarShelf;
   },
   set(value) {
-    pluginSettings$.value.ui.calendarShelf = value;
+    plugin.ui.calendarShelf = value;
   },
 });
 const shouldShowShelf = computed(() => {
   return (
-    (pluginSettings$.value.useShelves && Object.values(pluginSettings$.value.shelves).length > 0) ||
-    journalsList$.value.some((journal) => journal.shelves.length === 0)
+    (plugin.usesShelves && Object.values(plugin.shelves).length > 0) ||
+    plugin.journals.some((journal) => !journal.isOnShelf)
   );
 });
 
@@ -47,9 +46,13 @@ const weeksClickable = computed(() => {
 });
 
 function selectShelf() {
-  new ShelfSuggestModal(app, Object.keys(pluginSettings$.value.shelves), (shelf: string | null) => {
-    selectedShelf.value = shelf;
-  }).open();
+  new ShelfSuggestModal(
+    app,
+    plugin.shelves.map((s) => s.name),
+    (shelf: string | null) => {
+      selectedShelf.value = shelf;
+    },
+  ).open();
 }
 
 function navigate(amount: number, step: "month" | "year" = "month") {
@@ -57,13 +60,11 @@ function navigate(amount: number, step: "month" | "year" = "month") {
 }
 function goToday(event: MouseEvent) {
   refDateMoment.value = today();
-  if (calendarViewSettings$.value.todayMode === "create") {
+  if (plugin.calendarView.todayMode === "create") {
     openDay(refDate.value, event);
-  } else if (calendarViewSettings$.value.todayMode === "navigate") {
+  } else if (plugin.calendarView.todayMode === "navigate") {
     const journals: string[] = [];
-    for (const journalSetttings of journalsList$.value) {
-      const journal = plugin.getJournal(journalSetttings.name);
-      if (!journal) continue;
+    for (const journal of plugin.journals) {
       const anchorDate = journal.resolveAnchorDate(refDate.value);
       if (!anchorDate) continue;
       const index = plugin.index.getJournalIndex(journal.name);

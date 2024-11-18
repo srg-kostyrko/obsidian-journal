@@ -1,10 +1,10 @@
 <script setup lang="ts">
 import { toRefs } from "vue";
 import { weekdayNames } from "../../calendar";
-import { calendarViewSettings$ } from "../../stores/settings.store";
 import CalendarDay from "./CalendarDay.vue";
 import CalendarWeekNumber from "./CalendarWeekNumber.vue";
 import { useWeek } from "./use-week";
+import { usePlugin } from "@/composables/use-plugin";
 
 const props = withDefaults(
   defineProps<{
@@ -21,6 +21,8 @@ const props = withDefaults(
 );
 defineEmits<(event: "select" | "selectWeek", date: string, nativeEvent: MouseEvent) => void>();
 
+const plugin = usePlugin();
+
 const { refDate } = toRefs(props);
 
 const { grid } = useWeek(refDate);
@@ -28,12 +30,12 @@ const { grid } = useWeek(refDate);
 
 <template>
   <div class="calendar-month">
-    <div class="calendar-month-grid" :class="[`weeks-${calendarViewSettings$.weeks}`]">
-      <div v-if="calendarViewSettings$.weeks === 'left'"></div>
+    <div class="calendar-month-grid" :class="[`weeks-${plugin.placeWeeks}`]">
+      <div v-if="plugin.placeWeeks === 'left'"></div>
       <div v-for="day of weekdayNames" :key="day" class="calendar-month-grid-week-day">
         {{ day }}
       </div>
-      <div v-if="calendarViewSettings$.weeks === 'right'"></div>
+      <div v-if="plugin.placeWeeks === 'right'"></div>
 
       <template v-for="uiDate of grid" :key="uiDate.key">
         <CalendarWeekNumber

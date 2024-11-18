@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { ref } from "vue";
+import { computed, ref } from "vue";
 import JournalSettingsDashboard from "./JournalSettingsDashboard.vue";
 import JournalSettingsEdit from "./JournalSettingsEdit.vue";
 import JournalSettingsShelfDetails from "./JournalSettingsShelfDetails.vue";
@@ -14,6 +14,8 @@ const selectedShelfName = ref<string | null>(null);
 const app = useApp();
 const plugin = usePlugin();
 
+const journal = computed(() => (selectedJournalName.value ? plugin.getJournal(selectedJournalName.value) : null));
+
 function bulkAdd(journalName: string) {
   new VueModal(app, plugin, `Add notes to ${journalName}`, BulkAddNotesModal, { journalName }, 700).open();
 }
@@ -21,8 +23,8 @@ function bulkAdd(journalName: string) {
 
 <template>
   <JournalSettingsEdit
-    v-if="selectedJournalName"
-    :journal-name="selectedJournalName"
+    v-if="journal"
+    :journal="journal"
     @back="selectedJournalName = null"
     @edit="selectedJournalName = $event"
   />

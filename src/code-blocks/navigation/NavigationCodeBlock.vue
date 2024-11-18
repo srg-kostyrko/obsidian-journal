@@ -1,6 +1,5 @@
 <script setup lang="ts">
 import { usePathData } from "@/composables/use-path-data";
-import { pluginSettings$ } from "@/stores/settings.store";
 import { computed } from "vue";
 import NavigationBlock from "./NavigationBlock.vue";
 import type { JournalMetadata } from "@/types/journal.types";
@@ -14,26 +13,19 @@ const props = defineProps<{
 const plugin = usePlugin();
 const noteData = usePathData(props.path);
 
-const journalSettings = computed(() => {
-  if (!noteData.value) return null;
-  return pluginSettings$.value.journals[noteData.value.journal];
-});
-const shouldNavigateExisting = computed(() => {
-  if (!journalSettings.value) return false;
-  return journalSettings.value.navBlock.type === "existing";
-});
-
 const journal = computed(() => {
   if (!noteData.value) return null;
   return plugin.getJournal(noteData.value.journal);
 });
 const nextMetadata = computed<JournalMetadata | null>(() => {
   if (!noteData.value || !journal.value) return null;
-  return journal.value.next(noteData.value.date, shouldNavigateExisting.value);
+  const shouldNavigateExisting = journal.value.navBlock.type === "existing";
+  return journal.value.next(noteData.value.date, shouldNavigateExisting);
 });
 const previousMetadata = computed<JournalMetadata | null>(() => {
   if (!noteData.value || !journal.value) return null;
-  return journal.value.previous(noteData.value.date, shouldNavigateExisting.value);
+  const shouldNavigateExisting = journal.value.navBlock.type === "existing";
+  return journal.value.previous(noteData.value.date, shouldNavigateExisting);
 });
 </script>
 

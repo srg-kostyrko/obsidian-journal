@@ -4,7 +4,6 @@ import { usePathData } from "@/composables/use-path-data";
 import ObsidianSetting from "../obsidian/ObsidianSetting.vue";
 import ObsidianButton from "../obsidian/ObsidianButton.vue";
 import ObsidianDropdown from "../obsidian/ObsidianDropdown.vue";
-import { journalsList$ } from "@/stores/settings.store";
 import { useForm } from "vee-validate";
 import * as v from "valibot";
 import { toTypedSchema } from "@vee-validate/valibot";
@@ -140,7 +139,7 @@ const onSubmit = handleSubmit(() => {
           <FormErrors :errors="errorBag.journalName" />
         </template>
         <ObsidianDropdown v-model="journalName" v-bind="journalNameAttrs">
-          <option v-for="j of journalsList$" :key="j.name" :value="j.name">
+          <option v-for="j of plugin.journals" :key="j.name" :value="j.name">
             {{ j.name }}
           </option>
         </ObsidianDropdown>

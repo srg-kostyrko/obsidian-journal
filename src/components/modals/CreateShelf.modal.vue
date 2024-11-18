@@ -6,15 +6,17 @@ import { useForm } from "vee-validate";
 import { toTypedSchema } from "@vee-validate/valibot";
 import * as v from "valibot";
 import FormErrors from "../FormErrors.vue";
-import { pluginSettings$ } from "@/stores/settings.store";
+import { usePlugin } from "@/composables/use-plugin";
 
 const emit = defineEmits<{
   (event: "create", name: string): void;
   (event: "close"): void;
 }>();
 
+const plugin = usePlugin();
+
 function isNameNotUnique(value: string) {
-  return !(value in pluginSettings$.value.shelves);
+  return plugin.hasShelf(value);
 }
 
 const { defineField, errorBag, handleSubmit } = useForm({

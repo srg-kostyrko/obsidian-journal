@@ -1,5 +1,4 @@
 import { computed, type ComputedRef } from "vue";
-import { journals$ } from "../stores/settings.store";
 import type { JournalCommand, JournalSettings, WriteCustom } from "../types/settings.types";
 import type { AnchorDateResolver, JournalAnchorDate, JournalMetadata, JournalNoteData } from "../types/journal.types";
 import { type App, normalizePath, TFile, type LeftRibbon } from "obsidian";
@@ -24,7 +23,7 @@ import type { JournalPlugin } from "@/types/plugin.types";
 
 export class Journal {
   readonly name$: ComputedRef<string>;
-  #config: ComputedRef<JournalSettings>;
+  readonly config: ComputedRef<JournalSettings>;
   #anchorDateResolver: AnchorDateResolver;
 
   constructor(
@@ -32,20 +31,48 @@ export class Journal {
     private plugin: JournalPlugin,
     private app: App,
   ) {
-    this.#config = computed(() => journals$.value[name]);
-    this.name$ = computed(() => this.#config.value.name);
+    this.config = computed(() => plugin.getJournalConfig(name));
+    this.name$ = computed(() => this.config.value.name);
     this.#anchorDateResolver =
-      this.#config.value.write.type === "custom"
+      this.config.value.write.type === "custom"
         ? new CustomIntervalResolver(
             this.plugin,
             this.name$.value,
-            computed(() => this.#config.value.write) as ComputedRef<WriteCustom>,
+            computed(() => this.config.value.write) as ComputedRef<WriteCustom>,
           )
         : new FixedIntervalResolver(
             // eslint-disable-next-line @typescript-eslint/ban-ts-comment
             // @ts-expect-error
-            computed(() => this.#config.value.write),
+            computed(() => this.config.value.write),
           );
+  }
+
+  get type(): JournalSettings["write"]["type"] {
+    return this.config.value.write.type;
+  }
+
+  get dateFormat(): JournalSettings["dateFormat"] {
+    return this.config.value.dateFormat;
+  }
+
+  get navBlock(): JournalSettings["navBlock"] {
+    return this.config.value.navBlock;
+  }
+
+  get decorations(): JournalSettings["decorations"] {
+    return this.config.value.decorations;
+  }
+
+  get commands(): JournalSettings["commands"] {
+    return this.config.value.commands;
+  }
+
+  get isOnShelf(): boolean {
+    return this.config.value.shelves.length > 0;
+  }
+
+  get shelfName(): string {
+    return this.config.value.shelves[0] ?? "";
   }
 
   calculateOffset(date: MomentDate): [positive: number, negative: number] {
@@ -53,10 +80,10 @@ export class Journal {
   }
 
   registerCommands(): void {
-    for (const command of this.#config.value.commands) {
+    for (const command of this.config.value.commands) {
       this.plugin.addCommand({
         id: this.name + ":" + command.name,
-        name: `${this.#config.value.name}: ${command.name}`,
+        name: `${this.config.value.name}: ${command.name}`,
         icon: command.icon,
         checkCallback: (checking: boolean): boolean => {
           if (checking) {
@@ -147,7 +174,7 @@ export class Journal {
   }
 
   async #openFile(file: TFile): Promise<void> {
-    const mode = this.#config.value.openMode === "active" ? undefined : this.#config.value.openMode;
+    const mode = this.config.value.openMode === "active" ? undefined : this.config.value.openMode;
     const leaf = this.app.workspace.getLeaf(mode);
     await leaf.openFile(file, { active: true });
   }
@@ -157,8 +184,8 @@ export class Journal {
     let file = this.app.vault.getAbstractFileByPath(filePath);
     if (!file) {
       const templateContext = this.#getTemplateContext(metadata);
-      const noteName = replaceTemplateVariables(this.#config.value.nameTemplate, templateContext);
-      if (this.#config.value.confirmCreation && !(await this.#confirmNoteCreation(noteName))) {
+      const noteName = replaceTemplateVariables(this.config.value.nameTemplate, templateContext);
+      if (this.config.value.confirmCreation && !(await this.#confirmNoteCreation(noteName))) {
         return null;
       }
       await ensureFolderExists(this.app, filePath);
@@ -201,16 +228,16 @@ export class Journal {
 
   getConfiguredPathData(metadata: JournalMetadata): [string, string] {
     const templateContext = this.#getTemplateContext(metadata);
-    const filename = replaceTemplateVariables(this.#config.value.nameTemplate, templateContext) + ".md";
-    const folderPath = replaceTemplateVariables(this.#config.value.folder, templateContext) || "/";
+    const filename = replaceTemplateVariables(this.config.value.nameTemplate, templateContext) + ".md";
+    const folderPath = replaceTemplateVariables(this.config.value.folder, templateContext) || "/";
     return [folderPath, filename];
   }
 
   getNotePath(metadata: JournalNoteData | JournalMetadata): string {
     if ("path" in metadata) return metadata.path;
     const templateContext = this.#getTemplateContext(metadata);
-    const filename = replaceTemplateVariables(this.#config.value.nameTemplate, templateContext) + ".md";
-    const folderPath = replaceTemplateVariables(this.#config.value.folder, templateContext);
+    const filename = replaceTemplateVariables(this.config.value.nameTemplate, templateContext) + ".md";
+    const folderPath = replaceTemplateVariables(this.config.value.folder, templateContext);
     return normalizePath(folderPath ? `${folderPath}/${filename}` : filename);
   }
 
@@ -249,21 +276,21 @@ export class Journal {
       date: {
         type: "date",
         value: metadata.date,
-        defaultFormat: this.#config.value.dateFormat,
+        defaultFormat: this.config.value.dateFormat,
       },
       start_date: {
         type: "date",
         value: this.#anchorDateResolver.resolveStartDate(metadata.date),
-        defaultFormat: this.#config.value.dateFormat,
+        defaultFormat: this.config.value.dateFormat,
       },
       end_date: {
         type: "date",
         value: metadata.end_date ?? this.#anchorDateResolver.resolveEndDate(metadata.date),
-        defaultFormat: this.#config.value.dateFormat,
+        defaultFormat: this.config.value.dateFormat,
       },
       journal_name: {
         type: "string",
-        value: this.#config.value.name,
+        value: this.config.value.name,
       },
       index: {
         type: "number",
@@ -273,8 +300,8 @@ export class Journal {
   }
 
   async #getNoteContent(note: TFile, context: TemplateContext): Promise<string> {
-    if (this.#config.value.templates.length > 0) {
-      for (const template of this.#config.value.templates) {
+    if (this.config.value.templates.length > 0) {
+      for (const template of this.config.value.templates) {
         const path = replaceTemplateVariables(template.endsWith(".md") ? template : template + ".md", context);
         const templateFile = this.app.vault.getAbstractFileByPath(path);
         if (templateFile instanceof TFile) {
@@ -342,32 +369,32 @@ export class Journal {
   }
 
   #checkBounds(anchorDate: JournalAnchorDate): boolean {
-    if (this.#config.value.start) {
-      const startDate = date_from_string(this.#config.value.start);
+    if (this.config.value.start) {
+      const startDate = date_from_string(this.config.value.start);
       if (startDate.isValid() && date_from_string(anchorDate).isBefore(startDate)) return false;
     }
 
-    if (this.#config.value.end.type === "date" && this.#config.value.end.date) {
-      const endDate = date_from_string(this.#config.value.end.date);
+    if (this.config.value.end.type === "date" && this.config.value.end.date) {
+      const endDate = date_from_string(this.config.value.end.date);
       if (endDate.isValid() && date_from_string(anchorDate).isAfter(endDate)) return false;
     }
-    if (this.#config.value.end.type === "repeats" && this.#config.value.end.repeats && this.#config.value.start) {
-      const repeats = this.#anchorDateResolver.countRepeats(this.#config.value.start, anchorDate);
-      if (repeats > this.#config.value.end.repeats) return false;
+    if (this.config.value.end.type === "repeats" && this.config.value.end.repeats && this.config.value.start) {
+      const repeats = this.#anchorDateResolver.countRepeats(this.config.value.start, anchorDate);
+      if (repeats > this.config.value.end.repeats) return false;
     }
 
     return true;
   }
 
   #resolveIndex(anchorDate: JournalAnchorDate): number | undefined {
-    if (!this.#config.value.index.enabled) return undefined;
-    if (!this.#config.value.index.anchorDate || !this.#config.value.index.anchorIndex) return undefined;
+    if (!this.config.value.index.enabled) return undefined;
+    if (!this.config.value.index.anchorDate || !this.config.value.index.anchorIndex) return undefined;
     const before = this.previous(anchorDate, true);
     if (before?.index) {
       const repeats = this.#anchorDateResolver.countRepeats(before.date, anchorDate);
       let index = before.index + repeats;
-      if (this.#config.value.index.type === "reset_after") {
-        index %= this.#config.value.index.resetAfter;
+      if (this.config.value.index.type === "reset_after") {
+        index %= this.config.value.index.resetAfter;
       }
       return index;
     }
@@ -375,30 +402,30 @@ export class Journal {
     if (after?.index) {
       const repeats = this.#anchorDateResolver.countRepeats(anchorDate, after.date);
       let index = after.index - repeats;
-      if (this.#config.value.index.type === "reset_after" && index < 0) {
+      if (this.config.value.index.type === "reset_after" && index < 0) {
         index *= -1;
       }
       return index;
     }
-    const anchor = date_from_string(this.#config.value.index.anchorDate);
+    const anchor = date_from_string(this.config.value.index.anchorDate);
     if (!anchor.isValid()) return undefined;
     if (
       anchor.isAfter(anchorDate) &&
-      this.#config.value.index.type === "increment" &&
-      !this.#config.value.index.allowBefore
+      this.config.value.index.type === "increment" &&
+      !this.config.value.index.allowBefore
     )
       return undefined;
     if (anchor.isBefore(anchorDate)) {
-      const repeats = this.#anchorDateResolver.countRepeats(this.#config.value.index.anchorDate, anchorDate);
-      let index = this.#config.value.index.anchorIndex + repeats;
-      if (this.#config.value.index.type === "reset_after") {
-        index %= this.#config.value.index.resetAfter;
+      const repeats = this.#anchorDateResolver.countRepeats(this.config.value.index.anchorDate, anchorDate);
+      let index = this.config.value.index.anchorIndex + repeats;
+      if (this.config.value.index.type === "reset_after") {
+        index %= this.config.value.index.resetAfter;
       }
       return index;
     }
-    const repeats = this.#anchorDateResolver.countRepeats(anchorDate, this.#config.value.index.anchorDate);
-    let index = this.#config.value.index.anchorIndex - repeats;
-    if (this.#config.value.index.type === "reset_after" && index < 0) {
+    const repeats = this.#anchorDateResolver.countRepeats(anchorDate, this.config.value.index.anchorDate);
+    let index = this.config.value.index.anchorIndex - repeats;
+    if (this.config.value.index.type === "reset_after" && index < 0) {
       index *= -1;
     }
     return index;

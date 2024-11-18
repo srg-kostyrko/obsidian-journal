@@ -2,9 +2,9 @@
 import { computed, toRefs } from "vue";
 import { useMonth } from "./use-month";
 import { date_from_string, weekdayNames } from "../../calendar";
-import { calendarViewSettings$ } from "../../stores/settings.store";
 import CalendarDay from "./CalendarDay.vue";
 import CalendarWeekNumber from "./CalendarWeekNumber.vue";
+import { usePlugin } from "@/composables/use-plugin";
 
 const props = withDefaults(
   defineProps<{
@@ -21,6 +21,8 @@ const props = withDefaults(
 );
 defineEmits<(event: "select" | "selectWeek", date: string, nativeEvent: MouseEvent) => void>();
 
+const plugin = usePlugin();
+
 const { refDate } = toRefs(props);
 const momentDate = computed(() => date_from_string(refDate.value));
 
@@ -34,12 +36,12 @@ const { grid } = useMonth(refDate);
         <div>{{ momentDate.format("MMMM YYYY") }}</div>
       </slot>
     </div>
-    <div class="calendar-month-grid" :class="[`weeks-${calendarViewSettings$.weeks}`]">
-      <div v-if="calendarViewSettings$.weeks === 'left'"></div>
+    <div class="calendar-month-grid" :class="[`weeks-${plugin.placeWeeks}`]">
+      <div v-if="plugin.placeWeeks === 'left'"></div>
       <div v-for="day of weekdayNames" :key="day" class="calendar-month-grid-week-day">
         {{ day }}
       </div>
-      <div v-if="calendarViewSettings$.weeks === 'right'"></div>
+      <div v-if="plugin.placeWeeks === 'right'"></div>
 
       <template v-for="uiDate of grid" :key="uiDate.key">
         <CalendarWeekNumber

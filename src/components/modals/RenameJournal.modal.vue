@@ -3,7 +3,7 @@ import { computed, ref } from "vue";
 import ObsidianSetting from "../obsidian/ObsidianSetting.vue";
 import ObsidianTextInput from "../obsidian/ObsidianTextInput.vue";
 import ObsidianButton from "../obsidian/ObsidianButton.vue";
-import { pluginSettings$ } from "@/stores/settings.store";
+import { usePlugin } from "@/composables/use-plugin";
 
 const props = defineProps<{
   name: string;
@@ -13,17 +13,15 @@ const emit = defineEmits<{
   (event: "close"): void;
 }>();
 
+const plugin = usePlugin();
+
 const newName = ref(props.name);
 
 const canSave = computed(() => {
-  return (
-    newName.value.length > 0 &&
-    newName.value !== props.name &&
-    pluginSettings$.value.journals[newName.value] === undefined
-  );
+  return newName.value.length > 0 && newName.value !== props.name && !plugin.hasJournal(newName.value);
 });
 const showUniqeWarning = computed(() => {
-  return newName.value && newName.value !== props.name && pluginSettings$.value.journals[newName.value] !== undefined;
+  return newName.value && newName.value !== props.name && !plugin.hasJournal(newName.value);
 });
 
 function save() {

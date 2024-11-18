@@ -1,12 +1,11 @@
 import { Notice, Plugin, type TFile } from "obsidian";
-import { calendarViewSettings$, journals$, pluginSettings$ } from "./stores/settings.store";
-import { watch, type WatchStopHandle } from "vue";
+import { ref, watch, type Ref, type WatchStopHandle } from "vue";
 import { debounce } from "perfect-debounce";
 import { initCalendarCustomization, restoreLocale, updateLocale } from "./calendar";
 import { JournalSettingTab } from "./settings/journal-settings-tab";
 import { Journal } from "./journals/journal";
-import type { JournalSettings } from "./types/settings.types";
-import { defaultJournalSettings } from "./defaults";
+import type { JournalSettings, PluginSettings, ShelfSettings } from "./types/settings.types";
+import { defaultJournalSettings, defaultPluginSettings } from "./defaults";
 import { prepareJournalDefaultsBasedOnType } from "./journals/journal-defaults";
 import { JournalsIndex } from "./journals/journals-index";
 import { CALENDAR_VIEW_TYPE } from "./constants";
@@ -17,12 +16,14 @@ import { NavCodeBlockProcessor } from "./code-blocks/navigation/nav-processor";
 import { VueModal } from "./components/modals/vue-modal";
 import ConnectNoteModal from "./components/modals/ConnectNote.modal.vue";
 import { ShelfSuggestModal } from "./components/suggests/shelf-suggest";
+import type { JournalPlugin } from "./types/plugin.types";
 
-export default class JournalPlugin extends Plugin {
+export default class JournalPluginImpl extends Plugin implements JournalPlugin {
   #stopHandles: WatchStopHandle[] = [];
   #journals = new Map<string, Journal>();
   #index!: JournalsIndex;
   #activeNote: TFile | null = null;
+  #config: Ref<PluginSettings> = ref(deepCopy(defaultPluginSettings));
 
   get index(): JournalsIndex {
     return this.#index;
@@ -30,6 +31,14 @@ export default class JournalPlugin extends Plugin {
 
   get activeNote(): TFile | null {
     return this.#activeNote;
+  }
+
+  get shelves(): ShelfSettings[] {
+    return Object.values(this.#config.value.shelves).sort((a, b) => a.name.localeCompare(b.name));
+  }
+
+  hasJournal(name: string): boolean {
+    return this.#journals.has(name);
   }
 
   getJournal(name: string): Journal | undefined {
@@ -43,21 +52,21 @@ export default class JournalPlugin extends Plugin {
       name,
       write,
     });
-    pluginSettings$.value.journals[name] = settings;
+    this.#config.value.journals[name] = settings;
     this.#journals.set(name, new Journal(name, this, this.app));
-    return pluginSettings$.value.journals[name];
+    return this.#config.value.journals[name];
   }
 
   async renameJournal(name: string, newName: string): Promise<void> {
     const journal = this.getJournal(name);
     if (!journal) return;
     await this.#index.renameJournal(name, newName);
-    pluginSettings$.value.journals[newName] = pluginSettings$.value.journals[name];
-    pluginSettings$.value.journals[newName].name = newName;
-    delete pluginSettings$.value.journals[name];
-    for (const shelf of pluginSettings$.value.journals[newName].shelves) {
-      pluginSettings$.value.shelves[shelf].journals = pluginSettings$.value.shelves[shelf].journals.map(
-        (journalName) => (journalName === name ? newName : journalName),
+    this.#config.value.journals[newName] = this.#config.value.journals[name];
+    this.#config.value.journals[newName].name = newName;
+    delete this.#config.value.journals[name];
+    for (const shelf of this.#config.value.journals[newName].shelves) {
+      this.#config.value.shelves[shelf].journals = this.#config.value.shelves[shelf].journals.map((journalName) =>
+        journalName === name ? newName : journalName,
       );
     }
     this.#journals.delete(name);
@@ -66,12 +75,12 @@ export default class JournalPlugin extends Plugin {
 
   removeJournal(name: string): void {
     this.#journals.delete(name);
-    for (const shelf of pluginSettings$.value.journals[name].shelves) {
-      pluginSettings$.value.shelves[shelf].journals = pluginSettings$.value.shelves[shelf].journals.filter(
+    for (const shelf of this.#config.value.journals[name].shelves) {
+      this.#config.value.shelves[shelf].journals = this.#config.value.shelves[shelf].journals.filter(
         (journalName) => journalName !== name,
       );
     }
-    delete pluginSettings$.value.journals[name];
+    delete this.#config.value.journals[name];
   }
 
   placeCalendarView(moving = false) {
@@ -81,52 +90,56 @@ export default class JournalPlugin extends Plugin {
         leaf.detach();
       }
     }
-    if (calendarViewSettings$.value.leaf === "left") {
+    if (this.#config.value.calendarView.leaf === "left") {
       this.app.workspace.getLeftLeaf(false)?.setViewState({ type: CALENDAR_VIEW_TYPE }).catch(console.error);
     } else {
       this.app.workspace.getRightLeaf(false)?.setViewState({ type: CALENDAR_VIEW_TYPE }).catch(console.error);
     }
   }
 
+  hasShelf(name: string): boolean {
+    return name in this.#config.value.shelves[name];
+  }
+
   createShelf(name: string): void {
-    pluginSettings$.value.shelves[name] = {
+    this.#config.value.shelves[name] = {
       name,
       journals: [],
     };
   }
 
   renameShelf(name: string, newName: string): void {
-    pluginSettings$.value.shelves[newName] = pluginSettings$.value.shelves[name];
-    delete pluginSettings$.value.shelves[name];
-    for (const journal of pluginSettings$.value.shelves[newName].journals) {
-      pluginSettings$.value.journals[journal].shelves = pluginSettings$.value.journals[journal].shelves.map((shelf) =>
+    this.#config.value.shelves[newName] = this.#config.value.shelves[name];
+    delete this.#config.value.shelves[name];
+    for (const journal of this.#config.value.shelves[newName].journals) {
+      this.#config.value.journals[journal].shelves = this.#config.value.journals[journal].shelves.map((shelf) =>
         shelf === name ? newName : shelf,
       );
     }
   }
 
   removeShelf(name: string, destinationShelf?: string): void {
-    delete pluginSettings$.value.shelves[name];
-    for (const journal of pluginSettings$.value.shelves[name].journals) {
-      pluginSettings$.value.journals[journal].shelves = destinationShelf
-        ? pluginSettings$.value.journals[journal].shelves.map((shelf) => (shelf === name ? destinationShelf : shelf))
-        : pluginSettings$.value.journals[journal].shelves.filter((shelf) => shelf !== name);
+    delete this.#config.value.shelves[name];
+    for (const journal of this.#config.value.shelves[name].journals) {
+      this.#config.value.journals[journal].shelves = destinationShelf
+        ? this.#config.value.journals[journal].shelves.map((shelf) => (shelf === name ? destinationShelf : shelf))
+        : this.#config.value.journals[journal].shelves.filter((shelf) => shelf !== name);
     }
   }
 
   async onload(): Promise<void> {
     await this.#loadSettings();
     initCalendarCustomization();
-    if (pluginSettings$.value.calendar.firstDayOfWeek === -1) {
+    if (this.#config.value.calendar.firstDayOfWeek === -1) {
       restoreLocale();
     } else {
-      updateLocale(pluginSettings$.value.calendar.firstDayOfWeek, pluginSettings$.value.calendar.firstWeekOfYear);
+      updateLocale(this.#config.value.calendar.firstDayOfWeek, this.#config.value.calendar.firstWeekOfYear);
     }
 
     this.#fillJournals();
     this.#setupWatchers();
-    if (pluginSettings$.value.showReloadHint) {
-      pluginSettings$.value.showReloadHint = false;
+    if (this.#config.value.showReloadHint) {
+      this.#config.value.showReloadHint = false;
     }
 
     this.#index = new JournalsIndex(this.app);
@@ -168,12 +181,12 @@ export default class JournalPlugin extends Plugin {
   async #loadSettings(): Promise<void> {
     const saved = await this.loadData();
     if (saved) {
-      pluginSettings$.value = saved;
+      this.#config.value = saved;
     }
   }
 
   #fillJournals(): void {
-    for (const name of Object.keys(journals$.value)) {
+    for (const name of Object.keys(this.#config.value.journals.value)) {
       this.#journals.set(name, new Journal(name, this, this.app));
     }
   }
@@ -181,14 +194,14 @@ export default class JournalPlugin extends Plugin {
   #setupWatchers(): void {
     this.#stopHandles.push(
       watch(
-        pluginSettings$,
+        this.#config,
         debounce((settings) => {
           this.saveData(settings).catch(console.error);
         }, 50),
         { deep: true },
       ),
       watch(
-        () => calendarViewSettings$.value.leaf,
+        () => this.#config.value.calendarView.leaf,
         () => {
           this.placeCalendarView(true);
         },
@@ -287,10 +300,10 @@ export default class JournalPlugin extends Plugin {
       name: "Change calendar view shelf",
       checkCallback: (checking: boolean): boolean => {
         if (checking) {
-          return pluginSettings$.value.useShelves && Object.values(pluginSettings$.value.shelves).length > 0;
+          return this.#config.value.useShelves && Object.values(this.#config.value.shelves).length > 0;
         }
-        new ShelfSuggestModal(this.app, Object.keys(pluginSettings$.value.shelves), (name) => {
-          pluginSettings$.value.ui.calendarShelf = name;
+        new ShelfSuggestModal(this.app, Object.keys(this.#config.value.shelves), (name) => {
+          this.#config.value.ui.calendarShelf = name;
         }).open();
         return true;
       },

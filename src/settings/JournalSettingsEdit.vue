@@ -1,6 +1,7 @@
+<!-- eslint-disable @typescript-eslint/no-unsafe-call -->
+<!-- eslint-disable no-undef -->
 <script setup lang="ts">
 import { computed, watch } from "vue";
-import { journals$, pluginSettings$ } from "../stores/settings.store";
 import { canApplyTemplater } from "../utils/template";
 import type { JournalCommand, JournalDecoration, NavBlockRow } from "../types/settings.types";
 import ObsidianSetting from "../components/obsidian/ObsidianSetting.vue";
@@ -26,7 +27,7 @@ import JournalShelfModal from "@/components/modals/JournalShelf.modal.vue";
 import { useApp } from "@/composables/use-app";
 import { usePlugin } from "@/composables/use-plugin";
 
-const props = defineProps<{
+const { journalName } = defineProps<{
   journalName: string;
 }>();
 const emit = defineEmits<{
@@ -36,28 +37,32 @@ const emit = defineEmits<{
 
 const app = useApp();
 const plugin = usePlugin();
+const journal = computed(() => plugin.getJournal(journalName));
 
 const day = today().day();
 const refDate = today().format("YYYY-MM-DD");
 
-const journal = computed(() => journals$.value[props.journalName]);
 const supportsTemplater = canApplyTemplater(app, "<% $>");
 
 function showRenameModal(): void {
+  if (!journal.value) return;
   new VueModal(app, plugin, "Rename journal", RenameJournalModal, {
     name: journal.value.name,
-    onSave(name: string) {
-      plugin.renameJournal(props.journalName, name);
+    async onSave(name: string) {
+      if (!journal.value) return;
+      await plugin.renameJournal(journal.value.name, name);
       emit("edit", name);
     },
   }).open();
 }
 
 function place(): void {
+  if (!journal.value) return;
   new VueModal(app, plugin, "Place journal", JournalShelfModal, {
-    currentShelf: journal.value.shelves[0] ?? "",
+    currentShelf: journal.value.shelfName,
     onSave(shelfName: string) {
-      const currentShelf = journal.value.shelves[0];
+      if (!journal.value) return;
+      const currentShelf = journal.value.shelfName;
       if (currentShelf) {
         pluginSettings$.value.shelves[currentShelf].journals = pluginSettings$.value.shelves[
           currentShelf
@@ -74,77 +79,93 @@ function place(): void {
 }
 
 function addCommand(): void {
+  if (!journal.value) return;
   new VueModal(app, plugin, "Add command", EditCommandModal, {
     index: journal.value.commands.length,
-    writeType: journal.value.write,
+    writeType: journal.value.type,
     commands: journal.value.commands,
     onSubmit: (command: JournalCommand) => {
+      if (!journal.value) return;
       journal.value.commands.push(command);
       pluginSettings$.value.showReloadHint = true;
     },
   }).open();
 }
 function editCommand(command: JournalCommand, index: number): void {
+  if (!journal.value) return;
   new VueModal(app, plugin, "Edit command", EditCommandModal, {
     index,
-    writeType: journal.value.write,
+    writeType: journal.value.type,
     command,
     commands: journal.value.commands,
     onSubmit: (command: JournalCommand) => {
+      if (!journal.value) return;
       journal.value.commands[index] = command;
       pluginSettings$.value.showReloadHint = true;
     },
   }).open();
 }
 function deleteCommand(index: number): void {
+  if (!journal.value) return;
   journal.value.commands.splice(index, 1);
   pluginSettings$.value.showReloadHint = true;
 }
 
 function addCalendarDecoration() {
+  if (!journal.value) return;
   new VueModal(app, plugin, "Add calendar decoration", EditDecorationModal, {
     index: journal.value.decorations.length,
-    writeType: journal.value.write,
+    writeType: journal.value.type,
     onSubmit: (decoration: JournalDecoration) => {
+      if (!journal.value) return;
       journal.value.decorations.push(decoration);
     },
   }).open();
 }
 function editCalendarDecoration(decoration: JournalDecoration, index: number) {
+  if (!journal.value) return;
   new VueModal(app, plugin, "Add calendar decoration", EditDecorationModal, {
     index: journal.value.decorations.length,
-    writeType: journal.value.write,
+    writeType: journal.value.type,
     decoration,
     onSubmit: (decoration: JournalDecoration) => {
+      if (!journal.value) return;
       journal.value.decorations[index] = decoration;
     },
   }).open();
 }
 function deleteHighlight(index: number) {
+  if (!journal.value) return;
   journal.value.decorations.splice(index, 1);
 }
 
 function addNavRow() {
+  if (!journal.value) return;
   new VueModal(app, plugin, "Add row to nav block", EditNavBlockRowModal, {
-    currentJournal: props.journalName,
+    currentJournal: journal.value.name,
     onSubmit: (row: NavBlockRow) => {
+      if (!journal.value) return;
       journal.value.navBlock.rows.push(row);
     },
   }).open();
 }
 function editNavRow(index: number) {
+  if (!journal.value) return;
   new VueModal(app, plugin, "Edit nav block row", EditNavBlockRowModal, {
-    currentJournal: props.journalName,
+    currentJournal: journalName,
     row: journal.value.navBlock.rows[index],
     onSubmit: (row: NavBlockRow) => {
+      if (!journal.value) return;
       journal.value.navBlock.rows[index] = row;
     },
   }).open();
 }
 function removeNavRow(index: number) {
+  if (!journal.value) return;
   journal.value.navBlock.rows.splice(index, 1);
 }
 function moveNavRowUp(index: number) {
+  if (!journal.value) return;
   if (index > 0) {
     const temporary = journal.value.navBlock.rows[index];
     journal.value.navBlock.rows[index] = journal.value.navBlock.rows[index - 1];
@@ -152,6 +173,7 @@ function moveNavRowUp(index: number) {
   }
 }
 function moveNavRowDown(index: number) {
+  if (!journal.value) return;
   if (index < journal.value.navBlock.rows.length - 1) {
     const temporary = journal.value.navBlock.rows[index];
     journal.value.navBlock.rows[index] = journal.value.navBlock.rows[index + 1];
@@ -160,18 +182,19 @@ function moveNavRowDown(index: number) {
 }
 
 watch(
-  () => journal.value?.start,
+  () => journal.value?.config.value.start,
   (value) => {
+    if (!journal.value) return;
     if (value) {
-      journal.value.index.anchorDate = value;
+      journal.value.config.value.index.anchorDate = value;
     }
   },
 );
 watch(
-  () => journal.value?.end.type,
+  () => journal.value?.config.value.end.type,
   () => {
-    if (journal.value?.end.type === "repeats" && !journal.value.end.repeats) {
-      journal.value.end.repeats = 1;
+    if (journal.value?.config.value.end.type === "repeats" && !journal.value.config.value.end.repeats) {
+      journal.value.config.value.end.repeats = 1;
     }
   },
 );
@@ -182,9 +205,9 @@ watch(
     <ObsidianSetting heading>
       <template #name> Configuring {{ journal.name }} </template>
       <template #description>
-        <div v-if="pluginSettings$.useShelves">
-          <div v-if="journal.shelves.length === 0">Not on a shelf right not. <a href="#" @click="place">Place</a></div>
-          <div v-else>On {{ journal.shelves[0] }} shelf right now. <a href="#" @click="place">Place elsewhere</a></div>
+        <div v-if="plugin.usesShelves">
+          <div v-if="!journal.shelfName">Not on a shelf right not. <a href="#" @click="place">Place</a></div>
+          <div v-else>On {{ journal.shelfName }} shelf right now. <a href="#" @click="place">Place elsewhere</a></div>
         </div>
       </template>
       <ObsidianIconButton icon="pencil" tooltip="Rename journal" @click="showRenameModal" />
@@ -310,7 +333,7 @@ watch(
       <template #description>
         Path to note that will be used as template when creating new notes. <br />
         When multiple templates are configured - first existing will be used. <br />
-        <VariableReferenceHint :type="journal.write.type" :date-format="journal.dateFormat" /><br />
+        <VariableReferenceHint :type="journal.type" :date-format="journal.dateFormat" /><br />
         TODO this.createCodeBlockReferenceHint(template.descEl);
         <template v-if="supportsTemplater">
           <br />Templater syntax is supported. Check plugin description for more info.
