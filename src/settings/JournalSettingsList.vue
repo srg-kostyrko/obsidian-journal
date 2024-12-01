@@ -4,7 +4,6 @@ import ObsidianIconButton from "../components/obsidian/ObsidianIconButton.vue";
 import type { NotesProcessing } from "@/types/settings.types";
 import { VueModal } from "@/components/modals/vue-modal";
 import RemoveJournal from "@/components/modals/RemoveJournal.modal.vue";
-import { useApp } from "@/composables/use-app";
 import { usePlugin } from "@/composables/use-plugin";
 import type { Journal } from "@/journals/journal";
 
@@ -14,11 +13,10 @@ const { journals } = defineProps<{
 
 defineEmits<(event: "edit" | "bulk-add", name: string) => void>();
 
-const app = useApp();
 const plugin = usePlugin();
 
 function remove(name: string): void {
-  new VueModal(app, plugin, `Remove ${name} journal`, RemoveJournal, {
+  new VueModal(plugin, `Remove ${name} journal`, RemoveJournal, {
     onRemove(_noteProcessing: NotesProcessing) {
       // TODO Process notes on remove
       plugin.removeJournal(name);

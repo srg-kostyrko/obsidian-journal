@@ -46,7 +46,7 @@ const supportsTemplater = canApplyTemplater(app, "<% $>");
 
 function showRenameModal(): void {
   if (!journal.value) return;
-  new VueModal(app, plugin, "Rename journal", RenameJournalModal, {
+  new VueModal(plugin, "Rename journal", RenameJournalModal, {
     name: journal.value.name,
     async onSave(name: string) {
       if (!journal.value) return;
@@ -58,7 +58,7 @@ function showRenameModal(): void {
 
 function place(): void {
   if (!journal.value) return;
-  new VueModal(app, plugin, "Place journal", JournalShelfModal, {
+  new VueModal(plugin, "Place journal", JournalShelfModal, {
     currentShelf: journal.value.shelfName,
     onSave(shelfName: string) {
       if (!journal.value) return;
@@ -80,7 +80,7 @@ function place(): void {
 
 function addCommand(): void {
   if (!journal.value) return;
-  new VueModal(app, plugin, "Add command", EditCommandModal, {
+  new VueModal(plugin, "Add command", EditCommandModal, {
     index: journal.value.commands.length,
     writeType: journal.value.type,
     commands: journal.value.commands,
@@ -93,7 +93,7 @@ function addCommand(): void {
 }
 function editCommand(command: JournalCommand, index: number): void {
   if (!journal.value) return;
-  new VueModal(app, plugin, "Edit command", EditCommandModal, {
+  new VueModal(plugin, "Edit command", EditCommandModal, {
     index,
     writeType: journal.value.type,
     command,
@@ -113,7 +113,7 @@ function deleteCommand(index: number): void {
 
 function addCalendarDecoration() {
   if (!journal.value) return;
-  new VueModal(app, plugin, "Add calendar decoration", EditDecorationModal, {
+  new VueModal(plugin, "Add calendar decoration", EditDecorationModal, {
     index: journal.value.decorations.length,
     writeType: journal.value.type,
     onSubmit: (decoration: JournalDecoration) => {
@@ -124,7 +124,7 @@ function addCalendarDecoration() {
 }
 function editCalendarDecoration(decoration: JournalDecoration, index: number) {
   if (!journal.value) return;
-  new VueModal(app, plugin, "Add calendar decoration", EditDecorationModal, {
+  new VueModal(plugin, "Add calendar decoration", EditDecorationModal, {
     index: journal.value.decorations.length,
     writeType: journal.value.type,
     decoration,
@@ -141,7 +141,7 @@ function deleteHighlight(index: number) {
 
 function addNavRow() {
   if (!journal.value) return;
-  new VueModal(app, plugin, "Add row to nav block", EditNavBlockRowModal, {
+  new VueModal(plugin, "Add row to nav block", EditNavBlockRowModal, {
     currentJournal: journal.value.name,
     onSubmit: (row: NavBlockRow) => {
       if (!journal.value) return;
@@ -151,7 +151,7 @@ function addNavRow() {
 }
 function editNavRow(index: number) {
   if (!journal.value) return;
-  new VueModal(app, plugin, "Edit nav block row", EditNavBlockRowModal, {
+  new VueModal(plugin, "Edit nav block row", EditNavBlockRowModal, {
     currentJournal: journalName,
     row: journal.value.navBlock.rows[index],
     onSubmit: (row: NavBlockRow) => {

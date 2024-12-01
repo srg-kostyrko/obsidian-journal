@@ -8,7 +8,6 @@ import { computed } from "vue";
 import JournalSettingsList from "./JournalSettingsList.vue";
 import CreateJournalModal from "@/components/modals/CreateJournal.modal.vue";
 import type { JournalSettings } from "@/types/settings.types";
-import { useApp } from "@/composables/use-app";
 import { usePlugin } from "@/composables/use-plugin";
 
 const emit = defineEmits<{
@@ -17,7 +16,6 @@ const emit = defineEmits<{
   (event: "edit" | "bulk-add", journalName: string): void;
 }>();
 
-const app = useApp();
 const plugin = usePlugin();
 
 const journalsWithoutShelf = computed(() => {
@@ -25,7 +23,7 @@ const journalsWithoutShelf = computed(() => {
 });
 
 function createShelf(): void {
-  new VueModal(app, plugin, "Add Journal Shelf", CreateShelf, {
+  new VueModal(plugin, "Add Journal Shelf", CreateShelf, {
     onCreate(name: string) {
       plugin.createShelf(name);
     },
@@ -33,7 +31,7 @@ function createShelf(): void {
 }
 
 function removeShelf(shelfName: string): void {
-  new VueModal(app, plugin, `Remove ${shelfName} shelf`, RemoveShelf, {
+  new VueModal(plugin, `Remove ${shelfName} shelf`, RemoveShelf, {
     shelfName,
     onRemove(destinationShelf: string) {
       plugin.removeShelf(shelfName, destinationShelf);
@@ -42,7 +40,7 @@ function removeShelf(shelfName: string): void {
 }
 
 function create(): void {
-  new VueModal(app, plugin, "Add Journal", CreateJournalModal, {
+  new VueModal(plugin, "Add Journal", CreateJournalModal, {
     onCreate(name: string, writing: JournalSettings["write"]) {
       plugin.createJournal(name, writing);
       emit("edit", name);

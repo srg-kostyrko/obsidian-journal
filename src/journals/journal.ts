@@ -1,7 +1,7 @@
 import { computed, type ComputedRef } from "vue";
 import type { JournalCommand, JournalSettings, WriteCustom } from "../types/settings.types";
 import type { AnchorDateResolver, JournalAnchorDate, JournalMetadata, JournalNoteData } from "../types/journal.types";
-import { type App, normalizePath, TFile, type LeftRibbon } from "obsidian";
+import { normalizePath, TFile, type LeftRibbon } from "obsidian";
 import { ensureFolderExists } from "../utils/io";
 import { replaceTemplateVariables, tryApplyingTemplater } from "../utils/template";
 import type { TemplateContext } from "../types/template.types";
@@ -29,7 +29,6 @@ export class Journal {
   constructor(
     public readonly name: string,
     private plugin: JournalPlugin,
-    private app: App,
   ) {
     this.config = computed(() => plugin.getJournalConfig(name));
     this.name$ = computed(() => this.config.value.name);
@@ -96,7 +95,7 @@ export class Journal {
       });
       if (command.showInRibbon) {
         const ribbonId = "journals:" + this.name + ":" + command.name;
-        const item = (this.app.workspace.leftRibbon as LeftRibbon).addRibbonItemButton(
+        const item = (this.plugin.app.workspace.leftRibbon as LeftRibbon).addRibbonItemButton(
           ribbonId,
           command.icon,
           command.name,
@@ -106,7 +105,7 @@ export class Journal {
           },
         );
         this.plugin.register(() => {
-          (this.app.workspace.leftRibbon as LeftRibbon).removeRibbonAction(ribbonId);
+          (this.plugin.app.workspace.leftRibbon as LeftRibbon).removeRibbonAction(ribbonId);
           // eslint-disable-next-line @typescript-eslint/no-unsafe-call
           item.detach();
         });
@@ -175,26 +174,26 @@ export class Journal {
 
   async #openFile(file: TFile): Promise<void> {
     const mode = this.config.value.openMode === "active" ? undefined : this.config.value.openMode;
-    const leaf = this.app.workspace.getLeaf(mode);
+    const leaf = this.plugin.app.workspace.getLeaf(mode);
     await leaf.openFile(file, { active: true });
   }
 
   async #ensureNote(metadata: JournalMetadata): Promise<TFile | null> {
     const filePath = this.getNotePath(metadata);
-    let file = this.app.vault.getAbstractFileByPath(filePath);
+    let file = this.plugin.app.vault.getAbstractFileByPath(filePath);
     if (!file) {
       const templateContext = this.#getTemplateContext(metadata);
       const noteName = replaceTemplateVariables(this.config.value.nameTemplate, templateContext);
       if (this.config.value.confirmCreation && !(await this.#confirmNoteCreation(noteName))) {
         return null;
       }
-      await ensureFolderExists(this.app, filePath);
-      file = await this.app.vault.create(filePath, "");
+      await ensureFolderExists(this.plugin.app, filePath);
+      file = await this.plugin.app.vault.create(filePath, "");
       if (!(file instanceof TFile)) throw new Error("File is not a TFile");
 
       templateContext.note_name = { type: "string", value: noteName };
       const content = await this.#getNoteContent(file, templateContext);
-      if (content) await this.app.vault.modify(file, content);
+      if (content) await this.plugin.app.vault.modify(file, content);
     }
     if (!(file instanceof TFile)) throw new Error("File is not a TFile");
     await this.#ensureFrontMatter(file, metadata);
@@ -204,7 +203,6 @@ export class Journal {
   #confirmNoteCreation(noteName: string): Promise<boolean> {
     return new Promise((resolve) => {
       const modal = new VueModal(
-        this.app,
         this.plugin,
         "Confirm note creation",
         ConfirmNoteCreationModal,
@@ -254,7 +252,7 @@ export class Journal {
     if (!metadata) return false;
     if ("path" in metadata) {
       if (!options.override) return false;
-      await disconnectNote(this.app, metadata.path);
+      await disconnectNote(this.plugin.app, metadata.path);
     }
     let path = file.path;
     if (options.rename || options.move) {
@@ -262,9 +260,9 @@ export class Journal {
       const folderPath = options.move ? configuredFolder : file.parent?.path;
       const filename = options.rename ? configuredFilename : file.name;
       path = normalizePath(folderPath ? `${folderPath}/${filename}` : filename);
-      await ensureFolderExists(this.app, path);
-      await this.app.vault.rename(file, path);
-      file = this.app.vault.getAbstractFileByPath(path) as TFile;
+      await ensureFolderExists(this.plugin.app, path);
+      await this.plugin.app.vault.rename(file, path);
+      file = this.plugin.app.vault.getAbstractFileByPath(path) as TFile;
     }
 
     await this.#ensureFrontMatter(file, metadata);
@@ -303,17 +301,22 @@ export class Journal {
     if (this.config.value.templates.length > 0) {
       for (const template of this.config.value.templates) {
         const path = replaceTemplateVariables(template.endsWith(".md") ? template : template + ".md", context);
-        const templateFile = this.app.vault.getAbstractFileByPath(path);
+        const templateFile = this.plugin.app.vault.getAbstractFileByPath(path);
         if (templateFile instanceof TFile) {
-          const templateContent = await this.app.vault.cachedRead(templateFile);
-          return tryApplyingTemplater(this.app, templateFile, note, replaceTemplateVariables(templateContent, context));
+          const templateContent = await this.plugin.app.vault.cachedRead(templateFile);
+          return tryApplyingTemplater(
+            this.plugin.app,
+            templateFile,
+            note,
+            replaceTemplateVariables(templateContent, context),
+          );
         }
       }
     }
     return "";
   }
   async #ensureFrontMatter(note: TFile, metadata: JournalMetadata): Promise<void> {
-    await this.app.fileManager.processFrontMatter(note, (frontmatter: Record<string, string | number>) => {
+    await this.plugin.app.fileManager.processFrontMatter(note, (frontmatter: Record<string, string | number>) => {
       frontmatter[FRONTMATTER_NAME_KEY] = this.name;
       frontmatter[FRONTMATTER_DATE_KEY] = date_from_string(metadata.date).format(FRONTMATTER_DATE_FORMAT);
       if (metadata.end_date) {

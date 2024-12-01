@@ -1,7 +1,7 @@
 import { type App, PluginSettingTab } from "obsidian";
 import { createApp, type App as VueApp } from "vue";
 import JournalSettingsRoot from "./JournalSettingsRoot.vue";
-import { APP_KEY, PLUGIN_KEY } from "@/constants";
+import { PLUGIN_KEY } from "@/constants";
 import type { JournalPlugin } from "@/types/plugin.types";
 
 export class JournalSettingTab extends PluginSettingTab {
@@ -15,7 +15,6 @@ export class JournalSettingTab extends PluginSettingTab {
 
   display() {
     this.#vueApp = createApp(JournalSettingsRoot);
-    this.#vueApp.provide(APP_KEY, this.app);
     this.#vueApp.provide(PLUGIN_KEY, this.#plugin);
     this.#vueApp.mount(this.containerEl);
   }

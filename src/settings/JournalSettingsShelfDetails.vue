@@ -7,7 +7,6 @@ import RenameShelfModal from "@/components/modals/RenameShelf.modal.vue";
 import CreateJournal from "@/components/modals/CreateJournal.modal.vue";
 import type { JournalSettings } from "@/types/settings.types";
 import JournalSettingsList from "./JournalSettingsList.vue";
-import { useApp } from "@/composables/use-app";
 import { usePlugin } from "@/composables/use-plugin";
 import type { Journal } from "@/journals/journal";
 
@@ -19,7 +18,6 @@ const emit = defineEmits<{
   (event: "edit" | "organize" | "bulk-add", name: string): void;
 }>();
 
-const app = useApp();
 const plugin = usePlugin();
 
 const shelf = computed(() => plugin.getShelf(shelfName));
@@ -35,7 +33,7 @@ const shelfJournals = computed(() => {
 
 function showRenameModal(): void {
   if (!shelf.value) return;
-  new VueModal(app, plugin, "Rename shelf", RenameShelfModal, {
+  new VueModal(plugin, "Rename shelf", RenameShelfModal, {
     name: shelf.value.name,
     onSave(name: string) {
       plugin.renameShelf(shelfName, name);
@@ -45,7 +43,7 @@ function showRenameModal(): void {
 }
 
 function create(): void {
-  new VueModal(app, plugin, "Add Journal", CreateJournal, {
+  new VueModal(plugin, "Add Journal", CreateJournal, {
     onCreate(name: string, writing: JournalSettings["write"]) {
       if (!shelf.value) return;
       const journal = plugin.createJournal(name, writing);

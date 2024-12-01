@@ -19,6 +19,23 @@ import { ShelfSuggestModal } from "./components/suggests/shelf-suggest";
 import type { JournalPlugin } from "./types/plugin.types";
 
 export default class JournalPluginImpl extends Plugin implements JournalPlugin {
+  calendar: { firstDayOfWeek: number; firstWeekOfYear: number };
+  calendarView: {
+    display: "month" | "week" | "day";
+    leaf: "left" | "right";
+    weeks: "none" | "left" | "right";
+    todayMode: "navigate" | "create" | "switch_date";
+  };
+  ui: { calendarShelf: string | null };
+  journals: Journal[];
+
+  getJournalConfig(_name: string): JournalSettings {
+    throw new Error("Method not implemented.");
+  }
+  usesShelves: boolean;
+  getShelf(_name: string): ShelfSettings | undefined {
+    throw new Error("Method not implemented.");
+  }
   #stopHandles: WatchStopHandle[] = [];
   #journals = new Map<string, Journal>();
   #index!: JournalsIndex;
@@ -53,7 +70,7 @@ export default class JournalPluginImpl extends Plugin implements JournalPlugin {
       write,
     });
     this.#config.value.journals[name] = settings;
-    this.#journals.set(name, new Journal(name, this, this.app));
+    this.#journals.set(name, new Journal(name, this));
     return this.#config.value.journals[name];
   }
 
@@ -70,7 +87,7 @@ export default class JournalPluginImpl extends Plugin implements JournalPlugin {
       );
     }
     this.#journals.delete(name);
-    this.#journals.set(newName, new Journal(newName, this, this.app));
+    this.#journals.set(newName, new Journal(newName, this));
   }
 
   removeJournal(name: string): void {
@@ -150,19 +167,19 @@ export default class JournalPluginImpl extends Plugin implements JournalPlugin {
 
     this.addSettingTab(new JournalSettingTab(this.app, this));
     this.registerMarkdownCodeBlockProcessor("calendar-timeline", (source, element, context) => {
-      const processor = new TimelineCodeBlockProcessor(this.app, this, element, source, context.sourcePath);
+      const processor = new TimelineCodeBlockProcessor(this, element, source, context.sourcePath);
       context.addChild(processor);
     });
     this.registerMarkdownCodeBlockProcessor("calendar-nav", (source, element, context) => {
-      const processor = new NavCodeBlockProcessor(this.app, this, element, source, context.sourcePath);
+      const processor = new NavCodeBlockProcessor(this, element, source, context.sourcePath);
       context.addChild(processor);
     });
     this.registerMarkdownCodeBlockProcessor("interval-nav", (source, element, context) => {
-      const processor = new NavCodeBlockProcessor(this.app, this, element, source, context.sourcePath);
+      const processor = new NavCodeBlockProcessor(this, element, source, context.sourcePath);
       context.addChild(processor);
     });
     this.registerMarkdownCodeBlockProcessor("journal-nav", (source, element, context) => {
-      const processor = new NavCodeBlockProcessor(this.app, this, element, source, context.sourcePath);
+      const processor = new NavCodeBlockProcessor(this, element, source, context.sourcePath);
       context.addChild(processor);
     });
 
@@ -187,7 +204,7 @@ export default class JournalPluginImpl extends Plugin implements JournalPlugin {
 
   #fillJournals(): void {
     for (const name of Object.keys(this.#config.value.journals.value)) {
-      this.#journals.set(name, new Journal(name, this, this.app));
+      this.#journals.set(name, new Journal(name, this));
     }
   }
 
@@ -271,7 +288,7 @@ export default class JournalPluginImpl extends Plugin implements JournalPlugin {
       editorCallback: (editor, context) => {
         const file = context.file;
         if (file) {
-          new VueModal(this.app, this, "Connect note to a journal", ConnectNoteModal, {
+          new VueModal(this, "Connect note to a journal", ConnectNoteModal, {
             file,
           }).open();
         }

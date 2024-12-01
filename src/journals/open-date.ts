@@ -1,9 +1,8 @@
-import { type App, Menu } from "obsidian";
+import { Menu } from "obsidian";
 import { JournalSuggestModal } from "@/components/suggests/journal-suggest";
 import type { JournalPlugin } from "@/types/plugin.types";
 
 export async function openDate(
-  app: App,
   plugin: JournalPlugin,
   date: string,
   journals: string[],
@@ -27,7 +26,7 @@ export async function openDate(
     }
     menu.showAtMouseEvent(event);
   } else {
-    new JournalSuggestModal(app, journals, (journalId) => {
+    new JournalSuggestModal(plugin.app, journals, (journalId) => {
       openDateInJournal(plugin, date, journalId).catch(console.error);
     }).open();
   }

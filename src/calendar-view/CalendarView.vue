@@ -71,12 +71,11 @@ function goToday(event: MouseEvent) {
       if (!index) continue;
       if (index.get(anchorDate)) journals.push(journal.name);
     }
-    openDate(app, plugin, refDate.value, journals, event).catch(console.error);
+    openDate(plugin, refDate.value, journals, event).catch(console.error);
   }
 }
 function pickDate() {
   new VueModal(
-    app,
     plugin,
     "Pick a date",
     DatePickerModal,
@@ -92,7 +91,6 @@ function pickDate() {
 
 function openDay(date: string, event: MouseEvent) {
   openDate(
-    app,
     plugin,
     date,
     journals.day.value.map((journal) => journal.name),
@@ -101,7 +99,6 @@ function openDay(date: string, event: MouseEvent) {
 }
 function openWeek(date: string, event: MouseEvent) {
   openDate(
-    app,
     plugin,
     date,
     journals.week.value.map((journal) => journal.name),
@@ -110,7 +107,6 @@ function openWeek(date: string, event: MouseEvent) {
 }
 function openMonth(event: MouseEvent) {
   openDate(
-    app,
     plugin,
     refDate.value,
     journals.month.value.map((journal) => journal.name),
@@ -119,7 +115,6 @@ function openMonth(event: MouseEvent) {
 }
 function openQuarter(event: MouseEvent) {
   openDate(
-    app,
     plugin,
     refDate.value,
     journals.quarter.value.map((journal) => journal.name),
@@ -128,7 +123,6 @@ function openQuarter(event: MouseEvent) {
 }
 function openYear(event: MouseEvent) {
   openDate(
-    app,
     plugin,
     refDate.value,
     journals.year.value.map((journal) => journal.name),

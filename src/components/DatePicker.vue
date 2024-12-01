@@ -5,7 +5,6 @@ import { VueModal } from "./modals/vue-modal";
 import ObsidianButton from "./obsidian/ObsidianButton.vue";
 import ObsidianIcon from "./obsidian/ObsidianIcon.vue";
 import DatePickerModal from "./modals/DatePicker.modal.vue";
-import { useApp } from "@/composables/use-app";
 import { usePlugin } from "@/composables/use-plugin";
 
 const props = withDefaults(
@@ -24,7 +23,6 @@ const props = withDefaults(
   },
 );
 
-const app = useApp();
 const plugin = usePlugin();
 
 const model = defineModel<string>();
@@ -43,7 +41,6 @@ const formattedDate = computed(() => {
 
 function openPickerModal() {
   new VueModal(
-    app,
     plugin,
     "Pick a date",
     DatePickerModal,

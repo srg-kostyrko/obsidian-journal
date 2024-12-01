@@ -4,7 +4,6 @@ import NavigationBlockRow from "./NavigationBlockRow.vue";
 import { openDate, openDateInJournal } from "@/journals/open-date";
 import { useShelfProvider } from "@/composables/use-shelf";
 import type { NavBlockRow } from "@/types/settings.types";
-import { useApp } from "@/composables/use-app";
 import { usePlugin } from "@/composables/use-plugin";
 
 const props = defineProps<{
@@ -14,7 +13,6 @@ const props = defineProps<{
 
 defineEmits<(event: "move-up" | "move-down" | "edit" | "remove", index: number) => void>();
 
-const app = useApp();
 const plugin = usePlugin();
 
 const journal = computed(() => plugin.getJournal(props.journalName));
@@ -32,7 +30,7 @@ async function navigate(type: NavBlockRow["link"], date: string, journalName?: s
     await openDateInJournal(plugin, date, journalName);
   } else {
     const journalsToUse = journals[type].value.map((journal) => journal.name);
-    await openDate(app, plugin, date, journalsToUse);
+    await openDate(plugin, date, journalsToUse);
   }
 }
 </script>
