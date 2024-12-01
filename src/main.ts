@@ -128,7 +128,7 @@ export default class JournalPluginImpl extends Plugin implements JournalPlugin {
   }
 
   hasShelf(name: string): boolean {
-    return name in this.#config.value.shelves[name];
+    return name in this.#config.value.shelves;
   }
 
   createShelf(name: string): void {
