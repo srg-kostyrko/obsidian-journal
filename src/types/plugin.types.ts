@@ -18,7 +18,7 @@ export interface JournalPlugin extends Plugin {
   renameJournal(name: string, newName: string): Promise<void>;
   removeJournal(name: string): void;
 
-  readonly usesShelves: boolean;
+  usesShelves: boolean;
   readonly shelves: ShelfSettings[];
   hasShelf(name: string): boolean;
   getShelf(name: string): ShelfSettings | undefined;

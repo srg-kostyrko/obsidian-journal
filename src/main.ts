@@ -36,6 +36,9 @@ export default class JournalPluginImpl extends Plugin implements JournalPlugin {
   get usesShelves() {
     return this.#config.value.useShelves;
   }
+  set usesShelves(value: boolean) {
+    this.#config.value.useShelves = value;
+  }
 
   get calendarSettings() {
     return this.#config.value.calendar;
@@ -213,7 +216,7 @@ export default class JournalPluginImpl extends Plugin implements JournalPlugin {
   }
 
   #fillJournals(): void {
-    for (const name of Object.keys(this.#config.value.journals.value)) {
+    for (const name of Object.keys(this.#config.value.journals)) {
       this.#journals.set(name, new Journal(name, this));
     }
   }
