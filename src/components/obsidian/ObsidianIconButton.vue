@@ -17,6 +17,6 @@ const emit = defineEmits(["click"]);
 
 <style scoped>
 .icon-button {
-  padding: 4px 2px;
+  padding: var(--size-4-1) var(--size-4-2);
 }
 </style>
