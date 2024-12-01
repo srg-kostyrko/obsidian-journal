@@ -4,9 +4,9 @@ import type { JournalSettings, PluginSettings, ShelfSettings } from "./settings.
 import type { Journal } from "../journals/journal";
 
 export interface JournalPlugin extends Plugin {
-  readonly calendar: PluginSettings["calendar"];
-  readonly calendarView: PluginSettings["calendarView"];
-  readonly ui: PluginSettings["ui"];
+  readonly calendarSettings: PluginSettings["calendar"];
+  readonly calendarViewSettings: PluginSettings["calendarView"];
+  readonly uiSettings: PluginSettings["ui"];
 
   readonly index: JournalsIndex;
   readonly activeNote: TFile | null;

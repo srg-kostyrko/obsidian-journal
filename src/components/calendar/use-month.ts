@@ -15,7 +15,7 @@ export function useMonth(refDate: Ref<string>) {
     const todayDate = today();
     const start = momentDate.clone().startOf("month").startOf("week");
     const end = momentDate.clone().endOf("month").endOf("week");
-    const placeWeeks = plugin.placeWeeks || "left";
+    const placeWeeks = plugin.calendarViewSettings.weeks || "left";
 
     const days: CalendarUiDay[] = [];
 

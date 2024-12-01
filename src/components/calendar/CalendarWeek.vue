@@ -30,12 +30,12 @@ const { grid } = useWeek(refDate);
 
 <template>
   <div class="calendar-month">
-    <div class="calendar-month-grid" :class="[`weeks-${plugin.placeWeeks}`]">
-      <div v-if="plugin.placeWeeks === 'left'"></div>
+    <div class="calendar-month-grid" :class="[`weeks-${plugin.calendarViewSettings.weeks}`]">
+      <div v-if="plugin.calendarViewSettings.weeks === 'left'"></div>
       <div v-for="day of weekdayNames" :key="day" class="calendar-month-grid-week-day">
         {{ day }}
       </div>
-      <div v-if="plugin.placeWeeks === 'right'"></div>
+      <div v-if="plugin.calendarViewSettings.weeks === 'right'"></div>
 
       <template v-for="uiDate of grid" :key="uiDate.key">
         <CalendarWeekNumber

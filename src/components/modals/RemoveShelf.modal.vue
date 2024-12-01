@@ -17,7 +17,7 @@ const plugin = usePlugin();
 
 const destinationShelf = ref("");
 const otherShelves = computed(() => {
-  return Object.values(plugin.shelves).filter((shelf) => shelf !== shelfName);
+  return Object.values(plugin.shelves).filter((shelf) => shelf.name !== shelfName);
 });
 
 function confirm() {
@@ -30,7 +30,7 @@ function confirm() {
   <ObsidianSetting v-if="otherShelves.length > 0" name="Move journals to">
     <ObsidianDropdown v-model="destinationShelf">
       <option value="">None</option>
-      <option v-for="shelf in otherShelves" :key="shelf" :value="shelf">{{ shelf }}</option>
+      <option v-for="shelf in otherShelves" :key="shelf.name" :value="shelf.name">{{ shelf.name }}</option>
     </ObsidianDropdown>
   </ObsidianSetting>
   <p v-else>Journals will be moved out</p>

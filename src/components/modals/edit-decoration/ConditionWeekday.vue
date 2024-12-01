@@ -16,9 +16,10 @@ const emit = defineEmits<
 >();
 const plugin = usePlugin();
 
-// TODO
 const startWeekDay =
-  plugin.calendar.firstDayOfWeek === -1 ? moment().localeData().firstDayOfWeek() : plugin.calendar.firstDayOfWeek;
+  plugin.calendarSettings.firstDayOfWeek === -1
+    ? moment().localeData().firstDayOfWeek()
+    : plugin.calendarSettings.firstDayOfWeek;
 
 const weekDaysIndexes = [];
 for (let i = startWeekDay; i < 7; ++i) weekDaysIndexes.push(i);

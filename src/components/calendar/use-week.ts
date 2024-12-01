@@ -15,7 +15,7 @@ export function useWeek(refDate: Ref<string>) {
     const todayDate = today();
     const start = momentDate.clone().startOf("week");
     const end = momentDate.clone().endOf("week");
-    const placeWeeks = plugin.placeWeeks || "left";
+    const placeWeeks = plugin.calendarViewSettings.weeks || "left";
 
     const days: CalendarUiDay[] = [];
 

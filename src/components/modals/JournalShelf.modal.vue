@@ -29,7 +29,7 @@ function save() {
   <ObsidianSetting name="Shelf">
     <ObsidianDropdown v-model="selectedShelf">
       <option value="">Not on a shelf</option>
-      <option v-for="shelf in plugin.shelves" :key="shelf" :value="shelf">{{ shelf }}</option>
+      <option v-for="shelf in plugin.shelves" :key="shelf.name" :value="shelf.name">{{ shelf.name }}</option>
     </ObsidianDropdown>
   </ObsidianSetting>
   <ObsidianSetting>

@@ -19,23 +19,6 @@ import { ShelfSuggestModal } from "./components/suggests/shelf-suggest";
 import type { JournalPlugin } from "./types/plugin.types";
 
 export default class JournalPluginImpl extends Plugin implements JournalPlugin {
-  calendar: { firstDayOfWeek: number; firstWeekOfYear: number };
-  calendarView: {
-    display: "month" | "week" | "day";
-    leaf: "left" | "right";
-    weeks: "none" | "left" | "right";
-    todayMode: "navigate" | "create" | "switch_date";
-  };
-  ui: { calendarShelf: string | null };
-  journals: Journal[];
-
-  getJournalConfig(_name: string): JournalSettings {
-    throw new Error("Method not implemented.");
-  }
-  usesShelves: boolean;
-  getShelf(_name: string): ShelfSettings | undefined {
-    throw new Error("Method not implemented.");
-  }
   #stopHandles: WatchStopHandle[] = [];
   #journals = new Map<string, Journal>();
   #index!: JournalsIndex;
@@ -50,8 +33,31 @@ export default class JournalPluginImpl extends Plugin implements JournalPlugin {
     return this.#activeNote;
   }
 
+  get usesShelves() {
+    return this.#config.value.useShelves;
+  }
+
+  get calendarSettings() {
+    return this.#config.value.calendar;
+  }
+  get calendarViewSettings() {
+    return this.#config.value.calendarView;
+  }
+
+  get uiSettings() {
+    return this.#config.value.ui;
+  }
+
   get shelves(): ShelfSettings[] {
     return Object.values(this.#config.value.shelves).sort((a, b) => a.name.localeCompare(b.name));
+  }
+
+  getShelf(name: string): ShelfSettings | undefined {
+    return this.#config.value.shelves[name];
+  }
+
+  get journals(): Journal[] {
+    return [...this.#journals.values()];
   }
 
   hasJournal(name: string): boolean {
@@ -60,6 +66,10 @@ export default class JournalPluginImpl extends Plugin implements JournalPlugin {
 
   getJournal(name: string): Journal | undefined {
     return this.#journals.get(name);
+  }
+
+  getJournalConfig(name: string): JournalSettings {
+    return this.#config.value.journals[name];
   }
 
   createJournal(name: string, write: JournalSettings["write"]): JournalSettings {

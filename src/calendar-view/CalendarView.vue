@@ -23,10 +23,10 @@ const refDate = computed(() => refDateMoment.value.format("YYYY-MM-DD"));
 
 const selectedShelf = computed({
   get() {
-    return plugin.ui.calendarShelf;
+    return plugin.uiSettings.calendarShelf;
   },
   set(value) {
-    plugin.ui.calendarShelf = value;
+    plugin.uiSettings.calendarShelf = value;
   },
 });
 const shouldShowShelf = computed(() => {
@@ -60,9 +60,9 @@ function navigate(amount: number, step: "month" | "year" = "month") {
 }
 function goToday(event: MouseEvent) {
   refDateMoment.value = today();
-  if (plugin.calendarView.todayMode === "create") {
+  if (plugin.calendarViewSettings.todayMode === "create") {
     openDay(refDate.value, event);
-  } else if (plugin.calendarView.todayMode === "navigate") {
+  } else if (plugin.calendarViewSettings.todayMode === "navigate") {
     const journals: string[] = [];
     for (const journal of plugin.journals) {
       const anchorDate = journal.resolveAnchorDate(refDate.value);
