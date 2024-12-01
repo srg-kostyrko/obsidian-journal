@@ -27,12 +27,12 @@
   "author": "Sergii Kostyrko",
   "license": "MIT",
   "dependencies": {
-    "@vee-validate/valibot": "^4.14.7",
+    "@vee-validate/valibot": "4.13.2",
     "@vueuse/core": "^11.3.0",
     "obsidian": "^1.7.2",
     "perfect-debounce": "^1.0.0",
-    "valibot": "^1.0.0-beta.8",
-    "vee-validate": "^4.14.7",
+    "valibot": "0.42.1",
+    "vee-validate": "4.13.2",
     "vue": "^3.5.13"
   },
   "devDependencies": {
