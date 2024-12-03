@@ -9,6 +9,7 @@ import JournalSettingsList from "./JournalSettingsList.vue";
 import CreateJournalModal from "@/components/modals/CreateJournal.modal.vue";
 import type { JournalSettings } from "@/types/settings.types";
 import { usePlugin } from "@/composables/use-plugin";
+import CollapsibleBlock from "@/components/CollapsibleBlock.vue";
 
 const emit = defineEmits<{
   (event: "organize", shelfName: string): void;
@@ -50,31 +51,37 @@ function create(): void {
 </script>
 
 <template>
-  <ObsidianSetting name="Journal shelves" heading>
-    <ObsidianIconButton :icon="'plus'" cta tooltip="Create new shelf" @click="createShelf" />
-  </ObsidianSetting>
-  <p v-if="plugin.shelves.length === 0">No shelves configured yet.</p>
-  <template v-else>
-    <ObsidianSetting v-for="shelf of plugin.shelves" :key="shelf.name">
-      <template #name>
-        <b>
-          {{ shelf.name }}
-        </b>
-        <br />
-        {{ shelf.journals.length }} journals
-      </template>
-      <ObsidianIconButton icon="library" :tooltip="'Organize ' + shelf.name" @click="$emit('organize', shelf.name)" />
-      <ObsidianIconButton icon="trash-2" :tooltip="'Delete ' + shelf.name" @click="removeShelf(shelf.name)" />
-    </ObsidianSetting>
-  </template>
-  <ObsidianSetting name="Journals not on shelf" heading>
-    <ObsidianIconButton icon="plus" cta tooltip="Create new journal" @click="create" />
-  </ObsidianSetting>
-  <JournalSettingsList
-    :journals="journalsWithoutShelf"
-    @edit="$emit('edit', $event)"
-    @bulk-add="$emit('bulk-add', $event)"
-  />
+  <CollapsibleBlock>
+    <template #trigger> Journal shelves </template>
+    <template #controls>
+      <ObsidianIconButton :icon="'plus'" cta tooltip="Create new shelf" @click="createShelf" />
+    </template>
+    <p v-if="plugin.shelves.length === 0">No shelves configured yet.</p>
+    <template v-else>
+      <ObsidianSetting v-for="shelf of plugin.shelves" :key="shelf.name">
+        <template #name>
+          <b>
+            {{ shelf.name }}
+          </b>
+          <br />
+          {{ shelf.journals.length }} journals
+        </template>
+        <ObsidianIconButton icon="library" :tooltip="'Organize ' + shelf.name" @click="$emit('organize', shelf.name)" />
+        <ObsidianIconButton icon="trash-2" :tooltip="'Delete ' + shelf.name" @click="removeShelf(shelf.name)" />
+      </ObsidianSetting>
+    </template>
+  </CollapsibleBlock>
+  <CollapsibleBlock>
+    <template #trigger> Journals not on shelf </template>
+    <template #controls>
+      <ObsidianIconButton icon="plus" cta tooltip="Create new journal" @click="create" />
+    </template>
+    <JournalSettingsList
+      :journals="journalsWithoutShelf"
+      @edit="$emit('edit', $event)"
+      @bulk-add="$emit('bulk-add', $event)"
+    />
+  </CollapsibleBlock>
 </template>
 
 <style scoped></style>

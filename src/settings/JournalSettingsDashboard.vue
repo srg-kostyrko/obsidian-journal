@@ -8,6 +8,7 @@ import ObsidianToggle from "@/components/obsidian/ObsidianToggle.vue";
 import { restoreLocale, updateLocale } from "../calendar";
 import JournalSettingsWithoutShelves from "./JournalSettingsWithoutShelves.vue";
 import JournalSettingsWithShelves from "./JournalSettingsWithShelves.vue";
+import CollapsibleBlock from "@/components/CollapsibleBlock.vue";
 import { usePlugin } from "@/composables/use-plugin";
 
 const emit = defineEmits<(event: "edit" | "organize" | "bulk-add", name: string) => void>();
@@ -38,29 +39,6 @@ function changeFirstWeekOfYear(value: number): void {
 </script>
 
 <template>
-  <ObsidianSetting name="Start week on" description="Which day to consider as first day of week.">
-    <ObsidianDropdown v-model="weekStart">
-      <option value="-1">Locale default ({{ fowText }})</option>
-      <option value="0">Sunday</option>
-      <option value="1">Monday</option>
-      <option value="2">Tuesday</option>
-      <option value="3">Wednesday</option>
-      <option value="4">Thursday</option>
-      <option value="5">Friday</option>
-      <option value="6">Saturday</option>
-    </ObsidianDropdown>
-  </ObsidianSetting>
-  <ObsidianSetting
-    v-if="showFirstWeekOfYear"
-    name="First week of year"
-    description="Define what date in January a week should contain to be considered first week of a year."
-  >
-    <ObsidianNumberInput
-      :model-value="plugin.calendarSettings.firstWeekOfYear"
-      @update:model-value="changeFirstWeekOfYear"
-    />
-  </ObsidianSetting>
-
   <ObsidianSetting name="Use shelves?">
     <ObsidianToggle v-model="plugin.usesShelves" />
   </ObsidianSetting>
@@ -73,25 +51,49 @@ function changeFirstWeekOfYear(value: number): void {
   />
   <JournalSettingsWithoutShelves v-else @edit="emit('edit', $event)" />
 
-  <ObsidianSetting name="Calendar view" heading />
-  <ObsidianSetting name="Add to">
-    <ObsidianDropdown v-model="plugin.calendarViewSettings.leaf">
-      <option value="left">Left sidebar</option>
-      <option value="right">Right sidebar</option>
-    </ObsidianDropdown>
-  </ObsidianSetting>
-  <ObsidianSetting name="Show weeks">
-    <ObsidianDropdown v-model="plugin.calendarViewSettings.weeks">
-      <option value="none">Don't show</option>
-      <option value="left">Before weekdays</option>
-      <option value="right">After weekdays</option>
-    </ObsidianDropdown>
-  </ObsidianSetting>
-  <ObsidianSetting name="Today button">
-    <ObsidianDropdown v-model="plugin.calendarViewSettings.todayMode">
-      <option value="create">Creates today's note if doesn't exist</option>
-      <option value="navigate">Opens today's note if it exists</option>
-      <option value="switch_date">Just switch calendar view to current month</option>
-    </ObsidianDropdown>
-  </ObsidianSetting>
+  <CollapsibleBlock>
+    <template #trigger> Calendar view </template>
+    <ObsidianSetting name="Start week on" description="Which day to consider as first day of week.">
+      <ObsidianDropdown v-model="weekStart">
+        <option value="-1">Locale default ({{ fowText }})</option>
+        <option value="0">Sunday</option>
+        <option value="1">Monday</option>
+        <option value="2">Tuesday</option>
+        <option value="3">Wednesday</option>
+        <option value="4">Thursday</option>
+        <option value="5">Friday</option>
+        <option value="6">Saturday</option>
+      </ObsidianDropdown>
+    </ObsidianSetting>
+    <ObsidianSetting
+      v-if="showFirstWeekOfYear"
+      name="First week of year"
+      description="Define what date in January a week should contain to be considered first week of a year."
+    >
+      <ObsidianNumberInput
+        :model-value="plugin.calendarSettings.firstWeekOfYear"
+        @update:model-value="changeFirstWeekOfYear"
+      />
+    </ObsidianSetting>
+    <ObsidianSetting name="Add to">
+      <ObsidianDropdown v-model="plugin.calendarViewSettings.leaf">
+        <option value="left">Left sidebar</option>
+        <option value="right">Right sidebar</option>
+      </ObsidianDropdown>
+    </ObsidianSetting>
+    <ObsidianSetting name="Show weeks">
+      <ObsidianDropdown v-model="plugin.calendarViewSettings.weeks">
+        <option value="none">Don't show</option>
+        <option value="left">Before weekdays</option>
+        <option value="right">After weekdays</option>
+      </ObsidianDropdown>
+    </ObsidianSetting>
+    <ObsidianSetting name="Today button">
+      <ObsidianDropdown v-model="plugin.calendarViewSettings.todayMode">
+        <option value="create">Creates today's note if doesn't exist</option>
+        <option value="navigate">Opens today's note if it exists</option>
+        <option value="switch_date">Just switch calendar view to current month</option>
+      </ObsidianDropdown>
+    </ObsidianSetting>
+  </CollapsibleBlock>
 </template>

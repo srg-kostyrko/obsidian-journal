@@ -1,11 +1,11 @@
 <script setup lang="ts">
-import ObsidianSetting from "@/components/obsidian/ObsidianSetting.vue";
 import JournalSettingsList from "./JournalSettingsList.vue";
 import ObsidianIconButton from "@/components/obsidian/ObsidianIconButton.vue";
 import { VueModal } from "@/components/modals/vue-modal";
 import CreateJournal from "@/components/modals/CreateJournal.modal.vue";
 import type { JournalSettings } from "@/types/settings.types";
 import { usePlugin } from "@/composables/use-plugin";
+import CollapsibleBlock from "@/components/CollapsibleBlock.vue";
 
 defineEmits<(event: "edit" | "bulk-add", name: string) => void>();
 
@@ -21,15 +21,17 @@ function create(): void {
 </script>
 
 <template>
-  <ObsidianSetting name="Journals" heading>
-    <ObsidianIconButton icon="plus" cta tooltip="Create new journal" @click="create" />
-  </ObsidianSetting>
-
-  <JournalSettingsList
-    :journals="plugin.journals"
-    @edit="$emit('edit', $event)"
-    @bulk-add="$emit('bulk-add', $event)"
-  />
+  <CollapsibleBlock>
+    <template #trigger> Journals </template>
+    <template #controls>
+      <ObsidianIconButton icon="plus" cta tooltip="Create new journal" @click="create" />
+    </template>
+    <JournalSettingsList
+      :journals="plugin.journals"
+      @edit="$emit('edit', $event)"
+      @bulk-add="$emit('bulk-add', $event)"
+    />
+  </CollapsibleBlock>
 </template>
 
 <style scoped></style>

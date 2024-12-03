@@ -30,3 +30,10 @@ function placeIcon(name?: string): void {
 <template>
   <span ref="element" :aria-label="tooltip"></span>
 </template>
+
+<style scoped>
+span {
+  display: inline-flex;
+  align-items: center;
+}
+</style>
