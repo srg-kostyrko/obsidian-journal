@@ -20,7 +20,7 @@ const emit = defineEmits<{
 const plugin = usePlugin();
 
 const journalsWithoutShelf = computed(() => {
-  return plugin.journals.filter((journal) => journal.isOnShelf);
+  return plugin.journals.filter((journal) => !journal.isOnShelf);
 });
 
 function createShelf(): void {
@@ -52,11 +52,16 @@ function create(): void {
 
 <template>
   <CollapsibleBlock>
-    <template #trigger> Journal shelves </template>
+    <template #trigger>
+      Journal shelves <span class="flair">{{ plugin.shelves.length }}</span>
+    </template>
     <template #controls>
       <ObsidianIconButton :icon="'plus'" cta tooltip="Create new shelf" @click="createShelf" />
     </template>
-    <p v-if="plugin.shelves.length === 0">No shelves configured yet.</p>
+    <ObsidianSetting v-if="plugin.shelves.length === 0">
+      <template #description> No shelves configured yet. </template>
+    </ObsidianSetting>
+
     <template v-else>
       <ObsidianSetting v-for="shelf of plugin.shelves" :key="shelf.name">
         <template #name>
@@ -72,7 +77,9 @@ function create(): void {
     </template>
   </CollapsibleBlock>
   <CollapsibleBlock>
-    <template #trigger> Journals not on shelf </template>
+    <template #trigger>
+      Journals not on shelf <span class="flair">{{ journalsWithoutShelf.length }}</span>
+    </template>
     <template #controls>
       <ObsidianIconButton icon="plus" cta tooltip="Create new journal" @click="create" />
     </template>

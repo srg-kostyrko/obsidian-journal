@@ -16,7 +16,7 @@ const emit = defineEmits<{
 const plugin = usePlugin();
 
 function isNameNotUnique(value: string) {
-  return plugin.hasShelf(value);
+  return !plugin.hasShelf(value);
 }
 
 const { defineField, errorBag, handleSubmit } = useForm({

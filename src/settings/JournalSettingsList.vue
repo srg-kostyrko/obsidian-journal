@@ -26,7 +26,9 @@ function remove(name: string): void {
 </script>
 
 <template>
-  <p v-if="journals.length === 0">No journals configured yet.</p>
+  <ObsidianSetting v-if="journals.length === 0">
+    <template #description> No journals created yet. </template>
+  </ObsidianSetting>
   <template v-else>
     <ObsidianSetting v-for="journal of journals" :key="journal.name">
       <template #name>

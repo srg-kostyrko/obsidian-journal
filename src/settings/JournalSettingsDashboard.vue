@@ -40,6 +40,7 @@ function changeFirstWeekOfYear(value: number): void {
 
 <template>
   <ObsidianSetting name="Use shelves?">
+    <template #description> # TODO add description </template>
     <ObsidianToggle v-model="plugin.usesShelves" />
   </ObsidianSetting>
 
@@ -75,7 +76,7 @@ function changeFirstWeekOfYear(value: number): void {
         @update:model-value="changeFirstWeekOfYear"
       />
     </ObsidianSetting>
-    <ObsidianSetting name="Add to">
+    <ObsidianSetting name="Show calendar in">
       <ObsidianDropdown v-model="plugin.calendarViewSettings.leaf">
         <option value="left">Left sidebar</option>
         <option value="right">Right sidebar</option>

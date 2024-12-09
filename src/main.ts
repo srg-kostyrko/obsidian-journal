@@ -1,5 +1,5 @@
 import { Notice, Plugin, type TFile } from "obsidian";
-import { ref, watch, type Ref, type WatchStopHandle } from "vue";
+import { ref, shallowRef, watch, type Ref, type WatchStopHandle } from "vue";
 import { debounce } from "perfect-debounce";
 import { initCalendarCustomization, restoreLocale, updateLocale } from "./calendar";
 import { JournalSettingTab } from "./settings/journal-settings-tab";
@@ -20,7 +20,7 @@ import type { JournalPlugin } from "./types/plugin.types";
 
 export default class JournalPluginImpl extends Plugin implements JournalPlugin {
   #stopHandles: WatchStopHandle[] = [];
-  #journals = new Map<string, Journal>();
+  #journals = shallowRef<Record<string, Journal>>({});
   #index!: JournalsIndex;
   #activeNote: TFile | null = null;
   #config: Ref<PluginSettings> = ref(deepCopy(defaultPluginSettings));
@@ -60,15 +60,15 @@ export default class JournalPluginImpl extends Plugin implements JournalPlugin {
   }
 
   get journals(): Journal[] {
-    return [...this.#journals.values()];
+    return Object.values(this.#journals.value);
   }
 
   hasJournal(name: string): boolean {
-    return this.#journals.has(name);
+    return name in this.#journals.value;
   }
 
   getJournal(name: string): Journal | undefined {
-    return this.#journals.get(name);
+    return this.#journals.value[name];
   }
 
   getJournalConfig(name: string): JournalSettings {
@@ -83,7 +83,10 @@ export default class JournalPluginImpl extends Plugin implements JournalPlugin {
       write,
     });
     this.#config.value.journals[name] = settings;
-    this.#journals.set(name, new Journal(name, this));
+    this.#journals.value = {
+      ...this.#journals.value,
+      [name]: new Journal(name, this),
+    };
     return this.#config.value.journals[name];
   }
 
@@ -99,12 +102,16 @@ export default class JournalPluginImpl extends Plugin implements JournalPlugin {
         journalName === name ? newName : journalName,
       );
     }
-    this.#journals.delete(name);
-    this.#journals.set(newName, new Journal(newName, this));
+    const { [name]: _, ...otherJournals } = this.#journals.value;
+    this.#journals.value = {
+      ...otherJournals,
+      [newName]: new Journal(newName, this),
+    };
   }
 
   removeJournal(name: string): void {
-    this.#journals.delete(name);
+    const { [name]: _, ...otherJournals } = this.#journals.value;
+    this.#journals.value = otherJournals;
     for (const shelf of this.#config.value.journals[name].shelves) {
       this.#config.value.shelves[shelf].journals = this.#config.value.shelves[shelf].journals.filter(
         (journalName) => journalName !== name,
@@ -140,21 +147,22 @@ export default class JournalPluginImpl extends Plugin implements JournalPlugin {
 
   renameShelf(name: string, newName: string): void {
     this.#config.value.shelves[newName] = this.#config.value.shelves[name];
-    delete this.#config.value.shelves[name];
+    this.#config.value.shelves[newName].name = newName;
     for (const journal of this.#config.value.shelves[newName].journals) {
       this.#config.value.journals[journal].shelves = this.#config.value.journals[journal].shelves.map((shelf) =>
         shelf === name ? newName : shelf,
       );
     }
+    delete this.#config.value.shelves[name];
   }
 
   removeShelf(name: string, destinationShelf?: string): void {
-    delete this.#config.value.shelves[name];
     for (const journal of this.#config.value.shelves[name].journals) {
       this.#config.value.journals[journal].shelves = destinationShelf
         ? this.#config.value.journals[journal].shelves.map((shelf) => (shelf === name ? destinationShelf : shelf))
         : this.#config.value.journals[journal].shelves.filter((shelf) => shelf !== name);
     }
+    delete this.#config.value.shelves[name];
   }
 
   async onload(): Promise<void> {
@@ -216,9 +224,11 @@ export default class JournalPluginImpl extends Plugin implements JournalPlugin {
   }
 
   #fillJournals(): void {
+    const journals: Record<string, Journal> = {};
     for (const name of Object.keys(this.#config.value.journals)) {
-      this.#journals.set(name, new Journal(name, this));
+      journals[name] = new Journal(name, this);
     }
+    this.#journals.value = journals;
   }
 
   #setupWatchers(): void {
@@ -257,7 +267,7 @@ export default class JournalPluginImpl extends Plugin implements JournalPlugin {
           new Notice("This note is not connected to any journal.");
           return;
         }
-        const journal = this.#journals.get(metadata.journal);
+        const journal = this.getJournal(metadata.journal);
         if (!journal) {
           new Notice("Unknown journal.");
           return;
@@ -281,7 +291,7 @@ export default class JournalPluginImpl extends Plugin implements JournalPlugin {
           new Notice("This note is not connected to any journal.");
           return;
         }
-        const journal = this.#journals.get(metadata.journal);
+        const journal = this.getJournal(metadata.journal);
         if (!journal) {
           new Notice("Unknown journal.");
           return;
@@ -321,7 +331,7 @@ export default class JournalPluginImpl extends Plugin implements JournalPlugin {
       },
     });
 
-    for (const journal of this.#journals.values()) {
+    for (const journal of Object.values(this.#journals.value)) {
       journal.registerCommands();
     }
 

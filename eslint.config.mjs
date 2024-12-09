@@ -29,6 +29,7 @@ export default [
         "error",
         {
           argsIgnorePattern: "^_",
+          varsIgnorePattern: "^_",
         },
       ],
       "@typescript-eslint/no-dynamic-delete": "off",

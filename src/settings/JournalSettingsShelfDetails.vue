@@ -9,6 +9,7 @@ import type { JournalSettings } from "@/types/settings.types";
 import JournalSettingsList from "./JournalSettingsList.vue";
 import { usePlugin } from "@/composables/use-plugin";
 import type { Journal } from "@/journals/journal";
+import CollapsibleBlock from "@/components/CollapsibleBlock.vue";
 
 const { shelfName } = defineProps<{
   shelfName: string;
@@ -63,15 +64,19 @@ function create(): void {
       <ObsidianIconButton icon="chevron-left" tooltip="Back to list" @click="$emit('back')" />
     </ObsidianSetting>
 
-    <ObsidianSetting name="Journals" heading>
-      <ObsidianIconButton icon="plus" cta tooltip="Create new journal" @click="create" />
-    </ObsidianSetting>
-
-    <JournalSettingsList
-      :journals="shelfJournals"
-      @edit="$emit('edit', $event)"
-      @bulk-add="$emit('bulk-add', $event)"
-    />
+    <CollapsibleBlock>
+      <template #trigger>
+        Journals <span class="flair">{{ shelfJournals.length }}</span>
+      </template>
+      <template #controls>
+        <ObsidianIconButton icon="plus" cta tooltip="Create new journal" @click="create" />
+      </template>
+      <JournalSettingsList
+        :journals="shelfJournals"
+        @edit="$emit('edit', $event)"
+        @bulk-add="$emit('bulk-add', $event)"
+      />
+    </CollapsibleBlock>
   </div>
 </template>
 
