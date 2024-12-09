@@ -10,6 +10,7 @@ import JournalSettingsList from "./JournalSettingsList.vue";
 import { usePlugin } from "@/composables/use-plugin";
 import type { Journal } from "@/journals/journal";
 import CollapsibleBlock from "@/components/CollapsibleBlock.vue";
+import IconedRow from "@/components/IconedRow.vue";
 
 const { shelfName } = defineProps<{
   shelfName: string;
@@ -59,14 +60,18 @@ function create(): void {
 <template>
   <div v-if="shelf">
     <ObsidianSetting heading>
-      <template #name> Configuring {{ shelf.name }} </template>
+      <template #name>
+        <IconedRow icon="library"> Configuring {{ shelf.name }} </IconedRow>
+      </template>
       <ObsidianIconButton icon="pencil" tooltip="Rename shelf" @click="showRenameModal" />
       <ObsidianIconButton icon="chevron-left" tooltip="Back to list" @click="$emit('back')" />
     </ObsidianSetting>
 
-    <CollapsibleBlock>
+    <CollapsibleBlock :default-expanded="shelfJournals.length > 0">
       <template #trigger>
-        Journals <span class="flair">{{ shelfJournals.length }}</span>
+        <IconedRow icon="book-open">
+          Journals <span class="flair">{{ shelfJournals.length }}</span>
+        </IconedRow>
       </template>
       <template #controls>
         <ObsidianIconButton icon="plus" cta tooltip="Create new journal" @click="create" />
@@ -79,5 +84,3 @@ function create(): void {
     </CollapsibleBlock>
   </div>
 </template>
-
-<style scoped></style>

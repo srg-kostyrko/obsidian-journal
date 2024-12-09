@@ -10,6 +10,7 @@ import JournalSettingsWithoutShelves from "./JournalSettingsWithoutShelves.vue";
 import JournalSettingsWithShelves from "./JournalSettingsWithShelves.vue";
 import CollapsibleBlock from "@/components/CollapsibleBlock.vue";
 import { usePlugin } from "@/composables/use-plugin";
+import IconedRow from "@/components/IconedRow.vue";
 
 const emit = defineEmits<(event: "edit" | "organize" | "bulk-add", name: string) => void>();
 
@@ -53,7 +54,9 @@ function changeFirstWeekOfYear(value: number): void {
   <JournalSettingsWithoutShelves v-else @edit="emit('edit', $event)" />
 
   <CollapsibleBlock>
-    <template #trigger> Calendar view </template>
+    <template #trigger>
+      <IconedRow icon="calendar"> Calendar view </IconedRow>
+    </template>
     <ObsidianSetting name="Start week on" description="Which day to consider as first day of week.">
       <ObsidianDropdown v-model="weekStart">
         <option value="-1">Locale default ({{ fowText }})</option>

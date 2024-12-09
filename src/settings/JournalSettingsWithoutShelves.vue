@@ -7,8 +7,9 @@ import type { JournalSettings } from "@/types/settings.types";
 import { usePlugin } from "@/composables/use-plugin";
 import CollapsibleBlock from "@/components/CollapsibleBlock.vue";
 import { computed } from "vue";
+import IconedRow from "@/components/IconedRow.vue";
 
-defineEmits<(event: "edit" | "bulk-add", name: string) => void>();
+const emit = defineEmits<(event: "edit" | "bulk-add", name: string) => void>();
 
 const plugin = usePlugin();
 const journals = computed(() => plugin.journals);
@@ -17,15 +18,18 @@ function create(): void {
   new VueModal(plugin, "Add Journal", CreateJournal, {
     onCreate(name: string, writing: JournalSettings["write"]) {
       plugin.createJournal(name, writing);
+      emit("edit", name);
     },
   }).open();
 }
 </script>
 
 <template>
-  <CollapsibleBlock>
+  <CollapsibleBlock :default-expanded="journals.length > 0">
     <template #trigger>
-      Journals <span class="flair">{{ journals.length }}</span>
+      <IconedRow icon="book-open">
+        Journals <span class="flair">{{ journals.length }}</span>
+      </IconedRow>
     </template>
     <template #controls>
       <ObsidianIconButton icon="plus" cta tooltip="Create new journal" @click="create" />

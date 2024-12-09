@@ -10,6 +10,7 @@ import CreateJournalModal from "@/components/modals/CreateJournal.modal.vue";
 import type { JournalSettings } from "@/types/settings.types";
 import { usePlugin } from "@/composables/use-plugin";
 import CollapsibleBlock from "@/components/CollapsibleBlock.vue";
+import IconedRow from "@/components/IconedRow.vue";
 
 const emit = defineEmits<{
   (event: "organize", shelfName: string): void;
@@ -27,6 +28,7 @@ function createShelf(): void {
   new VueModal(plugin, "Add Journal Shelf", CreateShelf, {
     onCreate(name: string) {
       plugin.createShelf(name);
+      emit("organize", name);
     },
   }).open();
 }
@@ -51,9 +53,11 @@ function create(): void {
 </script>
 
 <template>
-  <CollapsibleBlock>
+  <CollapsibleBlock :default-expanded="plugin.shelves.length > 0">
     <template #trigger>
-      Journal shelves <span class="flair">{{ plugin.shelves.length }}</span>
+      <IconedRow icon="library">
+        Journal shelves <span class="flair">{{ plugin.shelves.length }}</span>
+      </IconedRow>
     </template>
     <template #controls>
       <ObsidianIconButton :icon="'plus'" cta tooltip="Create new shelf" @click="createShelf" />
@@ -76,9 +80,11 @@ function create(): void {
       </ObsidianSetting>
     </template>
   </CollapsibleBlock>
-  <CollapsibleBlock>
+  <CollapsibleBlock :default-expanded="journalsWithoutShelf.length > 0">
     <template #trigger>
-      Journals not on shelf <span class="flair">{{ journalsWithoutShelf.length }}</span>
+      <IconedRow icon="book-open">
+        Journals not on shelf <span class="flair">{{ journalsWithoutShelf.length }}</span>
+      </IconedRow>
     </template>
     <template #controls>
       <ObsidianIconButton icon="plus" cta tooltip="Create new journal" @click="create" />

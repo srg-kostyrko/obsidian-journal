@@ -2,16 +2,21 @@
 import { computed } from "vue";
 import ObsidianIcon from "./obsidian/ObsidianIcon.vue";
 
-const open = defineModel<boolean>("open");
-const icon = computed(() => (open.value ? "chevron-down" : "chevron-right"));
+const expanded = defineModel<boolean>("expanded");
+const props = defineProps<{ defaultExpanded?: boolean }>();
+if (props.defaultExpanded) {
+  expanded.value = true;
+}
+
+const icon = computed(() => (expanded.value ? "chevron-down" : "chevron-right"));
 
 function toggle() {
-  open.value = !open.value;
+  expanded.value = !expanded.value;
 }
 </script>
 
 <template>
-  <div class="collapsible-root" :data-open="open ? true : undefined">
+  <div class="collapsible-root" :data-open="expanded ? true : undefined">
     <div class="collapsible-trigger">
       <ObsidianIcon :name="icon" @click="toggle" />
       <span class="collapsible-trigger-text" @click="toggle">
@@ -21,7 +26,7 @@ function toggle() {
         <slot name="controls"></slot>
       </span>
     </div>
-    <template v-if="open">
+    <template v-if="expanded">
       <slot />
     </template>
   </div>

@@ -11,11 +11,18 @@ import ObsidianNumberInput from "../obsidian/ObsidianNumberInput.vue";
 import DatePicker from "../DatePicker.vue";
 import FormErrors from "../FormErrors.vue";
 import { JournalAnchorDate } from "@/types/journal.types";
+import { usePlugin } from "@/composables/use-plugin";
 
 const emit = defineEmits<{
   (event: "create", name: string, write: JournalSettings["write"]): void;
   (event: "close"): void;
 }>();
+
+const plugin = usePlugin();
+
+function isNameNotUnique(value: string) {
+  return !plugin.hasJournal(value);
+}
 
 const { defineField, errorBag, handleSubmit } = useForm({
   initialValues: {
@@ -28,7 +35,11 @@ const { defineField, errorBag, handleSubmit } = useForm({
   validationSchema: toTypedSchema(
     v.pipe(
       v.object({
-        journalName: v.pipe(v.string(), v.nonEmpty("Journal name is required")),
+        journalName: v.pipe(
+          v.string(),
+          v.nonEmpty("Journal name is required"),
+          v.check(isNameNotUnique, "Journal name should be unique"),
+        ),
         write: v.picklist(["day", "week", "month", "quarter", "year", "custom"]),
         every: v.picklist(["day", "week", "month", "quarter", "year"]),
         duration: v.number(),

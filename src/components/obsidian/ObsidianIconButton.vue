@@ -10,8 +10,8 @@ const emit = defineEmits(["click"]);
 </script>
 
 <template>
-  <ObsidianButton :tooltip="tooltip" flat class="icon-button">
-    <ObsidianIcon :name="icon" @click="emit('click')" />
+  <ObsidianButton :tooltip="tooltip" flat class="icon-button" @click="emit('click')">
+    <ObsidianIcon :name="icon" />
   </ObsidianButton>
 </template>
 
