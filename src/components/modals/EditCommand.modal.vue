@@ -1,18 +1,18 @@
 <script setup lang="ts">
-import { defaultCommand } from "../defaults";
-import type { JournalCommand, JournalSettings } from "../types/settings.types";
+import { defaultCommand } from "../../defaults";
+import type { JournalCommand, JournalSettings } from "../../types/settings.types";
 import { useForm } from "vee-validate";
 import * as v from "valibot";
 import { toTypedSchema } from "@vee-validate/valibot";
-import ObsidianSetting from "../components/obsidian/ObsidianSetting.vue";
-import ObsidianButton from "../components/obsidian/ObsidianButton.vue";
-import ObsidianTextInput from "../components/obsidian/ObsidianTextInput.vue";
-import ObsidianDropdown from "../components/obsidian/ObsidianDropdown.vue";
-import IconSelector from "../components/IconSelector.vue";
-import ObsidianToggle from "../components/obsidian/ObsidianToggle.vue";
+import ObsidianSetting from "../obsidian/ObsidianSetting.vue";
+import ObsidianButton from "../obsidian/ObsidianButton.vue";
+import ObsidianTextInput from "../obsidian/ObsidianTextInput.vue";
+import ObsidianDropdown from "../obsidian/ObsidianDropdown.vue";
+import IconSelector from "../IconSelector.vue";
+import ObsidianToggle from "../obsidian/ObsidianToggle.vue";
 import FormErrors from "@/components/FormErrors.vue";
 import { getIconIds } from "obsidian";
-import { buildSupportedCommandList } from "../journals/journal-commands";
+import { buildSupportedCommandList } from "../../journals/journal-commands";
 
 const props = defineProps<{
   index: number;

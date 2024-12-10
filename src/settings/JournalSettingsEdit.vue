@@ -1,5 +1,3 @@
-<!-- eslint-disable @typescript-eslint/no-unsafe-call -->
-<!-- eslint-disable no-undef -->
 <script setup lang="ts">
 import { computed, watch } from "vue";
 import { canApplyTemplater } from "../utils/template";
@@ -14,7 +12,7 @@ import ObsidianToggle from "../components/obsidian/ObsidianToggle.vue";
 import FolderInput from "../components/FolderInput.vue";
 import DateFormatPreview from "../components/DateFormatPreview.vue";
 import VariableReferenceHint from "../components/VariableReferenceHint.vue";
-import EditCommandModal from "./EditCommand.modal.vue";
+import EditCommandModal from "../components/modals/EditCommand.modal.vue";
 import EditDecorationModal from "@/components/modals/EditDecoration.modal.vue";
 import CalendarDecoration from "@/components/calendar/CalendarDecoration.vue";
 import { VueModal } from "../components/modals/vue-modal";
@@ -38,6 +36,7 @@ const emit = defineEmits<{
 const app = useApp();
 const plugin = usePlugin();
 const journal = computed(() => plugin.getJournal(journalName));
+const config = computed(() => journal.value?.config.value);
 
 const day = today().day();
 const refDate = today().format("YYYY-MM-DD");
@@ -61,19 +60,7 @@ function place(): void {
   new VueModal(plugin, "Place journal", JournalShelfModal, {
     currentShelf: journal.value.shelfName,
     onSave(shelfName: string) {
-      if (!journal.value) return;
-      const currentShelf = journal.value.shelfName;
-      if (currentShelf) {
-        pluginSettings$.value.shelves[currentShelf].journals = pluginSettings$.value.shelves[
-          currentShelf
-        ].journals.filter((name) => name !== props.journalName);
-      }
-      if (shelfName) {
-        pluginSettings$.value.shelves[shelfName].journals.push(props.journalName);
-        journal.value.shelves = [shelfName];
-      } else {
-        journal.value.shelves = [];
-      }
+      plugin.moveJournal(journalName, shelfName);
     },
   }).open();
 }
@@ -86,8 +73,7 @@ function addCommand(): void {
     commands: journal.value.commands,
     onSubmit: (command: JournalCommand) => {
       if (!journal.value) return;
-      journal.value.commands.push(command);
-      pluginSettings$.value.showReloadHint = true;
+      journal.value.addCommand(command);
     },
   }).open();
 }
@@ -100,15 +86,13 @@ function editCommand(command: JournalCommand, index: number): void {
     commands: journal.value.commands,
     onSubmit: (command: JournalCommand) => {
       if (!journal.value) return;
-      journal.value.commands[index] = command;
-      pluginSettings$.value.showReloadHint = true;
+      journal.value.updateCommand(index, command);
     },
   }).open();
 }
 function deleteCommand(index: number): void {
   if (!journal.value) return;
-  journal.value.commands.splice(index, 1);
-  pluginSettings$.value.showReloadHint = true;
+  journal.value.deleteCommand(index);
 }
 
 function addCalendarDecoration() {
@@ -118,7 +102,7 @@ function addCalendarDecoration() {
     writeType: journal.value.type,
     onSubmit: (decoration: JournalDecoration) => {
       if (!journal.value) return;
-      journal.value.decorations.push(decoration);
+      journal.value.addDecoration(decoration);
     },
   }).open();
 }
@@ -130,13 +114,13 @@ function editCalendarDecoration(decoration: JournalDecoration, index: number) {
     decoration,
     onSubmit: (decoration: JournalDecoration) => {
       if (!journal.value) return;
-      journal.value.decorations[index] = decoration;
+      journal.value.editDecoration(index, decoration);
     },
   }).open();
 }
 function deleteHighlight(index: number) {
   if (!journal.value) return;
-  journal.value.decorations.splice(index, 1);
+  journal.value.deleteDecoration(index);
 }
 
 function addNavRow() {
@@ -145,7 +129,7 @@ function addNavRow() {
     currentJournal: journal.value.name,
     onSubmit: (row: NavBlockRow) => {
       if (!journal.value) return;
-      journal.value.navBlock.rows.push(row);
+      journal.value.addNavRow(row);
     },
   }).open();
 }
@@ -156,29 +140,21 @@ function editNavRow(index: number) {
     row: journal.value.navBlock.rows[index],
     onSubmit: (row: NavBlockRow) => {
       if (!journal.value) return;
-      journal.value.navBlock.rows[index] = row;
+      journal.value.editNavRow(index, row);
     },
   }).open();
 }
 function removeNavRow(index: number) {
   if (!journal.value) return;
-  journal.value.navBlock.rows.splice(index, 1);
+  journal.value.deleteNavRow(index);
 }
 function moveNavRowUp(index: number) {
   if (!journal.value) return;
-  if (index > 0) {
-    const temporary = journal.value.navBlock.rows[index];
-    journal.value.navBlock.rows[index] = journal.value.navBlock.rows[index - 1];
-    journal.value.navBlock.rows[index - 1] = temporary;
-  }
+  journal.value.moveNavRowUp(index);
 }
 function moveNavRowDown(index: number) {
   if (!journal.value) return;
-  if (index < journal.value.navBlock.rows.length - 1) {
-    const temporary = journal.value.navBlock.rows[index];
-    journal.value.navBlock.rows[index] = journal.value.navBlock.rows[index + 1];
-    journal.value.navBlock.rows[index + 1] = temporary;
-  }
+  journal.value.moveNavRowDown(index);
 }
 
 watch(
@@ -201,7 +177,7 @@ watch(
 </script>
 
 <template>
-  <div v-if="journal">
+  <div v-if="journal && config">
     <ObsidianSetting heading>
       <template #name> Configuring {{ journal.name }} </template>
       <template #description>
@@ -217,78 +193,78 @@ watch(
     <ObsidianSetting name="Start writing on">
       <template #description>
         New notes prior to this date won't be created.
-        <div v-if="journal.end.type === 'repeats' && !journal.start" class="journal-important">
+        <div v-if="config.end.type === 'repeats' && !config.start" class="journal-important">
           Start date should be defined for journal that ends after some number of repeats.
         </div>
-        <div v-if="journal.write.type === 'custom'" class="journal-important">
+        <div v-if="config.write.type === 'custom'" class="journal-important">
           Start date for custom intervals cannot be changes as it is used to calcualte interval
         </div>
       </template>
-      <DatePicker v-model="journal.start" :disabled="journal.write.type === 'custom'" />
+      <DatePicker v-model="config.start" :disabled="config.write.type === 'custom'" />
       <ObsidianIconButton
-        v-if="journal.start && journal.write.type !== 'custom'"
+        v-if="config.start && config.write.type !== 'custom'"
         icon="trash"
         tooltip="Clear start date"
-        @click="journal.start = ''"
+        @click="config.start = ''"
       />
     </ObsidianSetting>
 
     <ObsidianSetting name="End writing">
       <template #description>
-        <div v-if="journal.end.type === 'repeats'">After creating this many notes, new notes won't be created.</div>
-        <div v-if="journal.end.type === 'date'">New notes after this date won't be created.</div>
+        <div v-if="config.end.type === 'repeats'">After creating this many notes, new notes won't be created.</div>
+        <div v-if="config.end.type === 'date'">New notes after this date won't be created.</div>
       </template>
-      <ObsidianDropdown v-model="journal.end.type">
+      <ObsidianDropdown v-model="config.end.type">
         <option value="never">Never</option>
         <option value="date">After date</option>
         <option value="repeats">After repeating</option>
       </ObsidianDropdown>
-      <DatePicker v-if="journal.end.type === 'date'" v-model="journal.end.date" />
-      <template v-if="journal.end.type === 'repeats'">
-        <ObsidianNumberInput v-model="journal.end.repeats" :min="1" />
+      <DatePicker v-if="config.end.type === 'date'" v-model="config.end.date" />
+      <template v-if="config.end.type === 'repeats'">
+        <ObsidianNumberInput v-model="config.end.repeats" :min="1" />
         times
       </template>
     </ObsidianSetting>
 
     <ObsidianSetting name="Index notes">
       <template #description> Allows to assign numbers to notes (ex. Day 1, Day 2, etc.). </template>
-      <ObsidianToggle v-model="journal.index.enabled" />
+      <ObsidianToggle v-model="config.index.enabled" />
     </ObsidianSetting>
 
-    <template v-if="journal.index.enabled">
+    <template v-if="config.index.enabled">
       <ObsidianSetting name="Anchor date">
         <template #description>
           This date is used to connect some number to it for further calculations.<br />
           Start date is used as anchor date if defined.
         </template>
-        <div :aria-label="journal.start ? 'Start date is used' : ''">
-          <DatePicker v-model="journal.index.anchorDate" :disabled="!!journal.start" />
+        <div :aria-label="config.start ? 'Start date is used' : ''">
+          <DatePicker v-model="config.index.anchorDate" :disabled="!!config.start" />
         </div>
       </ObsidianSetting>
       <ObsidianSetting name="Start number">
         <template #description> This number is used to start numbering notes at anchor date. </template>
-        <ObsidianNumberInput v-model="journal.index.anchorIndex" :min="1" />
+        <ObsidianNumberInput v-model="config.index.anchorIndex" :min="1" />
       </ObsidianSetting>
 
       <ObsidianSetting name="Index change">
         <template #description> Define how index number will change with time. </template>
-        <ObsidianDropdown v-model="journal.index.type">
+        <ObsidianDropdown v-model="config.index.type">
           <option value="increment">Constantly increasing</option>
           <option value="reset_after">Resets after</option>
         </ObsidianDropdown>
-        <template v-if="journal.index.type === 'reset_after'">
-          <ObsidianNumberInput v-model="journal.index.resetAfter" :min="2" narrow />
+        <template v-if="config.index.type === 'reset_after'">
+          <ObsidianNumberInput v-model="config.index.resetAfter" :min="2" narrow />
           repeats
         </template>
       </ObsidianSetting>
-      <ObsidianSetting v-if="!journal.start && journal.index.type === 'increment'" name="Allow before">
+      <ObsidianSetting v-if="!config.start && config.index.type === 'increment'" name="Allow before">
         <template #description> Enabled to index before anchor date. Might result in negative numbers. </template>
-        <ObsidianToggle v-model="journal.index.allowBefore" />
+        <ObsidianToggle v-model="config.index.allowBefore" />
       </ObsidianSetting>
     </template>
 
     <ObsidianSetting name="Open note">
-      <ObsidianDropdown v-model="journal.openMode">
+      <ObsidianDropdown v-model="config.openMode">
         <option value="active">Replacing active note</option>
         <option value="tab">In new tab</option>
         <option value="split">Adjusten to active note</option>
@@ -301,15 +277,15 @@ watch(
         When turned on will show confirmation dialog any time you try navigating to a date that does not have a note
         yet.
       </template>
-      <ObsidianToggle v-model="journal.confirmCreation" />
+      <ObsidianToggle v-model="config.confirmCreation" />
     </ObsidianSetting>
 
     <ObsidianSetting name="Note name template">
       <template #description>
         Template used to generate new note name.<br />
-        <VariableReferenceHint :type="journal.write.type" :date-format="journal.dateFormat" />
+        <VariableReferenceHint :type="config.write.type" :date-format="journal.dateFormat" />
       </template>
-      <ObsidianTextInput v-model="journal.nameTemplate" />
+      <ObsidianTextInput v-model="config.nameTemplate" />
     </ObsidianSetting>
 
     <ObsidianSetting name="Date format">
@@ -324,9 +300,9 @@ watch(
     <ObsidianSetting name="Folder">
       <template #description>
         New notes will be created in this folder. <br />
-        <VariableReferenceHint :type="journal.write.type" :date-format="journal.dateFormat" />
+        <VariableReferenceHint :type="config.write.type" :date-format="journal.dateFormat" />
       </template>
-      <FolderInput v-model="journal.folder" />
+      <FolderInput v-model="config.folder" />
     </ObsidianSetting>
 
     <ObsidianSetting name="Templates">
@@ -339,16 +315,16 @@ watch(
           <br />Templater syntax is supported. Check plugin description for more info.
         </template>
       </template>
-      <ObsidianIconButton icon="plus" tooltip="Add new template" @click="journal.templates.push('')" />
+      <ObsidianIconButton icon="plus" tooltip="Add new template" @click="config.templates.push('')" />
     </ObsidianSetting>
-    <ObsidianSetting v-for="(template, index) in journal.templates" :key="index" controls-only>
-      <ObsidianTextInput v-model="journal.templates[index]" class="grow" />
-      <ObsidianIconButton icon="trash" tooltip="Remove template" @click="journal.templates.splice(index, 1)" />
+    <ObsidianSetting v-for="(template, index) in config.templates" :key="index" controls-only>
+      <ObsidianTextInput v-model="config.templates[index]" class="grow" />
+      <ObsidianIconButton icon="trash" tooltip="Remove template" @click="config.templates.splice(index, 1)" />
     </ObsidianSetting>
 
     <ObsidianSetting name="Commands" heading>
       <template #description>
-        <div v-if="pluginSettings$.showReloadHint" class="journal-important">
+        <div v-if="plugin.showReloadHint" class="journal-important">
           Please reload Obsidian for changes to take effect.
         </div>
         <div v-else>Changing ribbon settings requires Obsidian restart to take effect.</div>

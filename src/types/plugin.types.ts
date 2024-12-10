@@ -7,6 +7,8 @@ export interface JournalPlugin extends Plugin {
   readonly calendarSettings: PluginSettings["calendar"];
   readonly calendarViewSettings: PluginSettings["calendarView"];
   readonly uiSettings: PluginSettings["ui"];
+  readonly showReloadHint: boolean;
+  requestReloadHint(): void;
 
   readonly index: JournalsIndex;
   readonly activeNote: TFile | null;
@@ -25,4 +27,6 @@ export interface JournalPlugin extends Plugin {
   createShelf(name: string): void;
   renameShelf(name: string, newName: string): void;
   removeShelf(name: string, destinationShelf?: string): void;
+
+  moveJournal(journalName: string, destinationShelf: string): void;
 }

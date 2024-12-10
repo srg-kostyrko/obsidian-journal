@@ -1,5 +1,11 @@
 import { computed, type ComputedRef } from "vue";
-import type { JournalCommand, JournalSettings, WriteCustom } from "../types/settings.types";
+import type {
+  JournalCommand,
+  JournalDecoration,
+  JournalSettings,
+  NavBlockRow,
+  WriteCustom,
+} from "../types/settings.types";
 import type { AnchorDateResolver, JournalAnchorDate, JournalMetadata, JournalNoteData } from "../types/journal.types";
 import { normalizePath, TFile, type LeftRibbon } from "obsidian";
 import { ensureFolderExists } from "../utils/io";
@@ -170,6 +176,60 @@ export class Journal {
   }
   resolveRelativeDate(anchorDate: JournalAnchorDate): string {
     return this.#anchorDateResolver.resolveRelativeDate(anchorDate);
+  }
+
+  addCommand(command: JournalCommand): void {
+    this.config.value.commands.push(command);
+    this.plugin.requestReloadHint();
+  }
+
+  updateCommand(index: number, command: JournalCommand): void {
+    this.config.value.commands[index] = command;
+    this.plugin.requestReloadHint();
+  }
+
+  deleteCommand(index: number): void {
+    this.config.value.commands.splice(index, 1);
+    this.plugin.requestReloadHint();
+  }
+
+  addDecoration(decoration: JournalDecoration): void {
+    this.config.value.decorations.push(decoration);
+  }
+
+  editDecoration(index: number, decoration: JournalDecoration): void {
+    this.config.value.decorations[index] = decoration;
+  }
+
+  deleteDecoration(index: number): void {
+    this.config.value.decorations.splice(index, 1);
+  }
+
+  addNavRow(row: NavBlockRow): void {
+    this.config.value.navBlock.rows.push(row);
+  }
+
+  editNavRow(index: number, row: NavBlockRow): void {
+    this.config.value.navBlock.rows[index] = row;
+  }
+
+  deleteNavRow(index: number): void {
+    this.config.value.navBlock.rows.splice(index, 1);
+  }
+
+  moveNavRowUp(index: number) {
+    if (index > 0) {
+      const temporary = this.config.value.navBlock.rows[index];
+      this.config.value.navBlock.rows[index] = this.config.value.navBlock.rows[index - 1];
+      this.config.value.navBlock.rows[index - 1] = temporary;
+    }
+  }
+  moveNavRowDown(index: number) {
+    if (index < this.config.value.navBlock.rows.length - 1) {
+      const temporary = this.config.value.navBlock.rows[index];
+      this.config.value.navBlock.rows[index] = this.config.value.navBlock.rows[index + 1];
+      this.config.value.navBlock.rows[index + 1] = temporary;
+    }
   }
 
   async #openFile(file: TFile): Promise<void> {

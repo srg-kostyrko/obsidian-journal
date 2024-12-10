@@ -25,6 +25,10 @@ export default class JournalPluginImpl extends Plugin implements JournalPlugin {
   #activeNote: TFile | null = null;
   #config: Ref<PluginSettings> = ref(deepCopy(defaultPluginSettings));
 
+  get showReloadHint(): boolean {
+    return this.#config.value.showReloadHint;
+  }
+
   get index(): JournalsIndex {
     return this.#index;
   }
@@ -118,6 +122,28 @@ export default class JournalPluginImpl extends Plugin implements JournalPlugin {
       );
     }
     delete this.#config.value.journals[name];
+  }
+
+  moveJournal(journalName: string, destinationShelf: string): void {
+    const journal = this.getJournal(journalName);
+    if (!journal) return;
+
+    const currentShelf = journal.shelfName;
+    if (currentShelf) {
+      this.#config.value.shelves[currentShelf].journals = this.#config.value.shelves[currentShelf].journals.filter(
+        (name) => name !== journalName,
+      );
+    }
+    if (destinationShelf) {
+      this.#config.value.shelves[destinationShelf].journals.push(journalName);
+      this.#config.value.journals[journalName].shelves = [destinationShelf];
+    } else {
+      this.#config.value.journals[journalName].shelves = [];
+    }
+  }
+
+  requestReloadHint(): void {
+    this.#config.value.showReloadHint = true;
   }
 
   placeCalendarView(moving = false) {
