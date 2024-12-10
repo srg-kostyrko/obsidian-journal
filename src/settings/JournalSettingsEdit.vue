@@ -24,6 +24,8 @@ import EditNavBlockRowModal from "@/components/modals/EditNavBlockRow.modal.vue"
 import JournalShelfModal from "@/components/modals/JournalShelf.modal.vue";
 import { useApp } from "@/composables/use-app";
 import { usePlugin } from "@/composables/use-plugin";
+import CollapsibleBlock from "@/components/CollapsibleBlock.vue";
+import IconedRow from "@/components/IconedRow.vue";
 
 const { journalName } = defineProps<{
   journalName: string;
@@ -305,82 +307,122 @@ watch(
       <FolderInput v-model="config.folder" />
     </ObsidianSetting>
 
-    <ObsidianSetting name="Templates">
-      <template #description>
-        Path to note that will be used as template when creating new notes. <br />
-        When multiple templates are configured - first existing will be used. <br />
-        <VariableReferenceHint :type="journal.type" :date-format="journal.dateFormat" /><br />
-        TODO this.createCodeBlockReferenceHint(template.descEl);
-        <template v-if="supportsTemplater">
-          <br />Templater syntax is supported. Check plugin description for more info.
-        </template>
+    <CollapsibleBlock>
+      <template #trigger>
+        <IconedRow icon="notepad-text-dashed">
+          Templates
+          <span class="flair">{{ config.templates.length }}</span>
+        </IconedRow>
       </template>
-      <ObsidianIconButton icon="plus" tooltip="Add new template" @click="config.templates.push('')" />
-    </ObsidianSetting>
-    <ObsidianSetting v-for="(template, index) in config.templates" :key="index" controls-only>
-      <ObsidianTextInput v-model="config.templates[index]" class="grow" />
-      <ObsidianIconButton icon="trash" tooltip="Remove template" @click="config.templates.splice(index, 1)" />
-    </ObsidianSetting>
-
-    <ObsidianSetting name="Commands" heading>
-      <template #description>
-        <div v-if="plugin.showReloadHint" class="journal-important">
-          Please reload Obsidian for changes to take effect.
-        </div>
-        <div v-else>Changing ribbon settings requires Obsidian restart to take effect.</div>
+      <template #controls>
+        <ObsidianButton @click="config.templates.push('')"> Add template </ObsidianButton>
       </template>
-      <ObsidianButton @click="addCommand">Add command</ObsidianButton>
-    </ObsidianSetting>
-    <p v-if="journal.commands.length === 0">No commands configured yet.</p>
-    <template v-else>
-      <ObsidianSetting v-for="(command, index) of journal.commands" :key="index">
-        <template #name>
-          {{ command.name }}
-        </template>
-        <template #description> {{ command.type }} in {{ command.context }} </template>
-        <ObsidianIconButton icon="pencil" tooltip="Edit" @click="editCommand(command, index)" />
-        <ObsidianIconButton icon="trash-2" tooltip="Delete" @click="deleteCommand(index)" />
-      </ObsidianSetting>
-    </template>
-
-    <ObsidianSetting heading name="Calendar decorations">
-      <template #description> Use decorations to highlight dates in calendar that meet certain conditions. </template>
-      <ObsidianButton @click="addCalendarDecoration">Add decoration</ObsidianButton>
-    </ObsidianSetting>
-    <p v-if="journal.decorations.length === 0">No calendar decorations configured yet.</p>
-    <template v-else>
-      <ObsidianSetting v-for="(decoration, index) of journal.decorations" :key="index">
-        <template #name>
-          <CalendarDecoration class="decoration-preview" :styles="decoration.styles">{{ day }}</CalendarDecoration>
-          when
-          <template v-for="(condition, i) of decoration.conditions" :key="i">
-            {{ condition.type }}
-            <span v-if="i > 0">{{ decoration.mode }}</span>
+      <ObsidianSetting no-controls>
+        <template #description>
+          Path to note that will be used as template when creating new notes. <br />
+          When multiple templates are configured - first existing will be used. <br />
+          <VariableReferenceHint :type="journal.type" :date-format="journal.dateFormat" /><br />
+          TODO this.createCodeBlockReferenceHint(template.descEl);
+          <template v-if="supportsTemplater">
+            <br />Templater syntax is supported. Check plugin description for more info.
           </template>
         </template>
-        <ObsidianIconButton icon="pencil" tooltip="Edit" @click="editCalendarDecoration(decoration, index)" />
-        <ObsidianIconButton icon="trash-2" tooltip="Delete" @click="deleteHighlight(index)" />
       </ObsidianSetting>
-    </template>
+      <ObsidianSetting v-for="(_, index) in config.templates" :key="index" controls-only>
+        <ObsidianTextInput v-model="config.templates[index]" class="grow" />
+        <ObsidianIconButton icon="trash" tooltip="Remove template" @click="config.templates.splice(index, 1)" />
+      </ObsidianSetting>
+    </CollapsibleBlock>
 
-    <ObsidianSetting heading name="Navigation block">
-      <ObsidianButton @click="addNavRow">Add row</ObsidianButton>
-    </ObsidianSetting>
-    <NavigationBlockEditPreview
-      class="nav-block-preview"
-      :journal-name="journalName"
-      :ref-date="refDate"
-      @move-up="moveNavRowUp"
-      @move-down="moveNavRowDown"
-      @edit="editNavRow"
-      @remove="removeNavRow"
-    />
-    <ObsidianSetting name="Navigation block mode">
-      <ObsidianDropdown v-model="journal.navBlock.type">
-        <option value="create">Create new note</option>
-        <option value="existing">Open existing note</option>
-      </ObsidianDropdown>
-    </ObsidianSetting>
+    <CollapsibleBlock>
+      <template #trigger>
+        <IconedRow icon="terminal">
+          Commands
+          <span class="flair">{{ journal.commands.length }}</span>
+        </IconedRow>
+      </template>
+      <template #controls>
+        <ObsidianButton @click="addCommand">Add command</ObsidianButton>
+      </template>
+
+      <ObsidianSetting no-controls>
+        <template #description>
+          <div v-if="plugin.showReloadHint" class="journal-important">
+            Please reload Obsidian for changes to take effect.
+          </div>
+          <div v-else>Changing ribbon settings requires Obsidian restart to take effect.</div>
+        </template>
+      </ObsidianSetting>
+      <ObsidianSetting v-if="journal.commands.length === 0">
+        <template #description> No commands configured yet. </template>
+      </ObsidianSetting>
+      <template v-else>
+        <ObsidianSetting v-for="(command, index) of journal.commands" :key="index">
+          <template #name>
+            {{ command.name }}
+          </template>
+          <template #description> {{ command.type }} in {{ command.context }} </template>
+          <ObsidianIconButton icon="pencil" tooltip="Edit" @click="editCommand(command, index)" />
+          <ObsidianIconButton icon="trash-2" tooltip="Delete" @click="deleteCommand(index)" />
+        </ObsidianSetting>
+      </template>
+    </CollapsibleBlock>
+
+    <CollapsibleBlock>
+      <template #trigger>
+        <IconedRow icon="paintbrush">
+          Calendar decorations
+          <span class="flair">{{ journal.decorations.length }}</span>
+        </IconedRow>
+      </template>
+      <template #controls>
+        <ObsidianButton @click="addCalendarDecoration">Add decoration</ObsidianButton>
+      </template>
+      <ObsidianSetting no-controls>
+        <template #description> Use decorations to highlight dates in calendar that meet certain conditions. </template>
+      </ObsidianSetting>
+      <ObsidianSetting v-if="journal.decorations.length === 0">
+        <template #description> No calendar decorations configured yet. </template>
+      </ObsidianSetting>
+      <template v-else>
+        <ObsidianSetting v-for="(decoration, index) of journal.decorations" :key="index">
+          <template #name>
+            <CalendarDecoration class="decoration-preview" :styles="decoration.styles">{{ day }}</CalendarDecoration>
+            when
+            <template v-for="(condition, i) of decoration.conditions" :key="i">
+              {{ condition.type }}
+              <span v-if="i > 0">{{ decoration.mode }}</span>
+            </template>
+          </template>
+          <ObsidianIconButton icon="pencil" tooltip="Edit" @click="editCalendarDecoration(decoration, index)" />
+          <ObsidianIconButton icon="trash-2" tooltip="Delete" @click="deleteHighlight(index)" />
+        </ObsidianSetting>
+      </template>
+    </CollapsibleBlock>
+
+    <CollapsibleBlock>
+      <template #trigger>
+        <IconedRow icon="signpost-big"> Navigation block </IconedRow>
+      </template>
+      <template #controls>
+        <ObsidianButton @click="addNavRow">Add row</ObsidianButton>
+      </template>
+      <NavigationBlockEditPreview
+        class="nav-block-preview"
+        :journal-name="journalName"
+        :ref-date="refDate"
+        @move-up="moveNavRowUp"
+        @move-down="moveNavRowDown"
+        @edit="editNavRow"
+        @remove="removeNavRow"
+      />
+      <ObsidianSetting name="Navigation block mode">
+        <ObsidianDropdown v-model="journal.navBlock.type">
+          <option value="create">Create new note</option>
+          <option value="existing">Open existing note</option>
+        </ObsidianDropdown>
+      </ObsidianSetting>
+    </CollapsibleBlock>
   </div>
 </template>
 

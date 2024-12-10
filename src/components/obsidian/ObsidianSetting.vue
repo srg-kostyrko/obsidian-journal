@@ -1,5 +1,5 @@
 <script setup lang="ts">
-defineProps<{ name?: string; descripton?: string; heading?: boolean; controlsOnly?: boolean }>();
+defineProps<{ name?: string; descripton?: string; heading?: boolean; controlsOnly?: boolean; noControls?: boolean }>();
 </script>
 
 <template>
@@ -16,7 +16,7 @@ defineProps<{ name?: string; descripton?: string; heading?: boolean; controlsOnl
         </slot>
       </div>
     </div>
-    <div class="setting-item-control">
+    <div v-if="!noControls" class="setting-item-control">
       <slot />
     </div>
   </div>
