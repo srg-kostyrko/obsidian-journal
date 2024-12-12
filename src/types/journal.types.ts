@@ -1,4 +1,3 @@
-import type { MomentDate } from "./date.types";
 import type { JournalCommand } from "./settings.types";
 
 export type JournalAnchorDate = string & { _journal_anchor_date: true };
@@ -36,6 +35,6 @@ export interface AnchorDateResolver {
   resolveEndDate(anchorDate: JournalAnchorDate): string;
   resolveRelativeDate(anchorDate: JournalAnchorDate): string;
 
-  calculateOffset(date: MomentDate): [positive: number, negative: number];
+  calculateOffset(date: string): [positive: number, negative: number];
   countRepeats(startDate: string, endDate: string): number;
 }

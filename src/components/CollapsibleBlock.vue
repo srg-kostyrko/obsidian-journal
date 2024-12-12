@@ -16,7 +16,7 @@ function toggle() {
 </script>
 
 <template>
-  <div class="collapsible-root" :data-open="expanded ? true : undefined">
+  <div class="collapsible-root" :data-open="expanded || null">
     <div class="collapsible-trigger">
       <ObsidianIcon :name="icon" @click="toggle" />
       <span class="collapsible-trigger-text" @click="toggle">

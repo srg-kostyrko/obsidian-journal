@@ -1,7 +1,6 @@
 import { moment } from "obsidian";
 import { extractCurrentlocaleData } from "./utils/moment";
 import type { MomentDate } from "./types/date.types";
-import { computed } from "vue";
 
 const CUSTOM_LOCALE = "custom-journal-locale";
 let initialWeekSettings: { dow: number; doy: number } | undefined;
@@ -47,18 +46,15 @@ export function today(): MomentDate {
   return md.startOf("day");
 }
 
-export const weekdayNames = computed(() => {
-  const weekdayNames: string[] = [];
-  const week = today().startOf("week");
-  const weekEnd = today().endOf("week");
-
-  while (week.isSameOrBefore(weekEnd)) {
-    weekdayNames.push(week.format("ddd"));
-    week.add(1, "day");
-  }
-
-  return weekdayNames;
-});
+export function isSamePeriod(
+  period: moment.unitOfTime.StartOf,
+  a: string | MomentDate,
+  b: string | MomentDate,
+): boolean {
+  const date1 = typeof a === "string" ? date_from_string(a) : a;
+  const date2 = typeof b === "string" ? date_from_string(b) : b;
+  return date1.isSame(date2, period);
+}
 
 export function dateDistance(fromDate: string, toDate: string): number {
   const from = date_from_string(fromDate);

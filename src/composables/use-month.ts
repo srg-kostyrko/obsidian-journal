@@ -1,7 +1,8 @@
 import { ref, watchEffect, type Ref } from "vue";
-import type { CalendarUiDay } from "../../types/calendar-ui.types";
-import { date_from_string, today } from "../../calendar";
+import type { CalendarUiDay } from "../types/calendar-ui.types";
+import { date_from_string, today } from "../calendar";
 import { usePlugin } from "@/composables/use-plugin";
+import { FRONTMATTER_DATE_FORMAT } from "@/constants";
 
 export function useMonth(refDate: Ref<string>) {
   const grid = ref<CalendarUiDay[]>([]);
@@ -23,16 +24,16 @@ export function useMonth(refDate: Ref<string>) {
     while (current.isSameOrBefore(end)) {
       if (placeWeeks === "left" && current.isSame(current.clone().startOf("week"), "day")) {
         days.push({
-          date: current.clone(),
-          key: current.format("[W]W"),
+          date: current.format("[W]W"),
+          key: current.format(FRONTMATTER_DATE_FORMAT),
           outside: false,
           isWeekNumber: true,
         });
       }
 
       days.push({
-        date: current.clone(),
-        key: current.format("YYYY-MM-DD"),
+        date: current.format("D"),
+        key: current.format(FRONTMATTER_DATE_FORMAT),
         today: current.isSame(todayDate, "day"),
         outside: !momentDate.isSame(current, "month"),
         isWeekNumber: false,
@@ -40,8 +41,8 @@ export function useMonth(refDate: Ref<string>) {
 
       if (placeWeeks === "right" && current.isSame(current.clone().endOf("week"), "day")) {
         days.push({
-          date: current.clone(),
-          key: current.format("[W]W"),
+          date: current.format("[W]W"),
+          key: current.format(FRONTMATTER_DATE_FORMAT),
           outside: false,
           isWeekNumber: true,
         });

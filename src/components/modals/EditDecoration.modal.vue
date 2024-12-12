@@ -8,7 +8,7 @@ import type {
 } from "@/types/settings.types";
 import ObsidianSetting from "../obsidian/ObsidianSetting.vue";
 import ObsidianButton from "../obsidian/ObsidianButton.vue";
-import CalendarDecoration from "../calendar/CalendarDecoration.vue";
+import CalendarDecoration from "../notes-calendar/decorations/CalendarDecoration.vue";
 import DecorationBackground from "./edit-decoration/DecorationBackground.vue";
 import DecorationColor from "./edit-decoration/DecorationColor.vue";
 import DecorationShape from "./edit-decoration/DecorationShape.vue";

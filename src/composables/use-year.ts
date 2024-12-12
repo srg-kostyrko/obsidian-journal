@@ -1,6 +1,7 @@
 import { ref, watchEffect, type Ref } from "vue";
-import type { CalendarUiElement } from "../../types/calendar-ui.types";
-import { date_from_string } from "../../calendar";
+import type { CalendarUiElement } from "../types/calendar-ui.types";
+import { date_from_string } from "../calendar";
+import { FRONTMATTER_DATE_FORMAT } from "@/constants";
 
 export function useYear(refDate: Ref<string>) {
   const grid = ref<CalendarUiElement[]>([]);
@@ -18,8 +19,8 @@ export function useYear(refDate: Ref<string>) {
     const current = start.clone();
     while (current.isSameOrBefore(end)) {
       months.push({
-        date: current.clone(),
-        key: current.format("YYYY-MM-DD"),
+        date: current.format("MMMM"),
+        key: current.format(FRONTMATTER_DATE_FORMAT),
       });
       current.add(1, "month");
     }

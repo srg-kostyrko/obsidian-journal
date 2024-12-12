@@ -3,11 +3,7 @@ import { date_from_string, today } from "@/calendar";
 import type { JournalNoteData } from "@/types/journal.types";
 import { computed } from "vue";
 
-import CalendarMonth from "@/components/calendar/CalendarMonth.vue";
-import CalendarMonthButton from "@/components/calendar/CalendarMonthButton.vue";
-import CalendarQuarterButton from "@/components/calendar/CalendarQuarterButton.vue";
-import CalendarYearButton from "@/components/calendar/CalendarYearButton.vue";
-
+import NotesMonthView from "@/components/notes-calendar/NotesMonthView.vue";
 const props = defineProps<{
   noteData: JournalNoteData | null;
 }>();
@@ -29,13 +25,7 @@ const list = computed(() => {
 
 <template>
   <div>
-    <CalendarMonth v-for="date in list" :key="date.format('YYYY-MM-DD')" :ref-date="date.format('YYYY-MM-DD')">
-      <template #header>
-        <CalendarMonthButton :date="date" />
-        <CalendarQuarterButton :date="date" />
-        <CalendarYearButton :date="date" />
-      </template>
-    </CalendarMonth>
+    <NotesMonthView v-for="date in list" :key="date.format('YYYY-MM-DD')" :ref-date="date.format('YYYY-MM-DD')" />
   </div>
 </template>
 

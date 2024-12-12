@@ -1,6 +1,6 @@
 import { SHELF_DATA_KEY } from "@/constants";
 import type { ProvidedShelfData } from "@/types/provided-data.types";
-import { computed, type MaybeRef, provide, toRef } from "vue";
+import { computed, inject, type MaybeRef, provide, toRef } from "vue";
 import { usePlugin } from "./use-plugin";
 import type { Journal } from "@/journals/journal";
 
@@ -65,4 +65,10 @@ function prepareDecorations(journals: Journal[]) {
       decoration,
     })),
   );
+}
+
+export function useShelfData(): ProvidedShelfData {
+  const data = inject(SHELF_DATA_KEY);
+  if (!data) throw new Error("Shelf data not provided or composable used outside of vue context");
+  return data;
 }

@@ -1,12 +1,13 @@
 <script setup lang="ts">
 import { computed, ref } from "vue";
 import { today, date_from_string } from "../../calendar";
-import CalendarMonth from "../calendar/CalendarMonth.vue";
-import CalendarYear from "../calendar/CalendarYear.vue";
 import ObsidianButton from "../obsidian/ObsidianButton.vue";
 import ObsidianIconButton from "../obsidian/ObsidianIconButton.vue";
-import CalendarDecade from "../calendar/CalendarDecade.vue";
-import CalendarQuarter from "../calendar/CalendarQuarter.vue";
+import CalendarMonthView from "../calendar/CalendarMonthView.vue";
+import CalendarQuarterView from "../calendar/CalendarQuarterView.vue";
+import CalendarYearView from "../calendar/CalendarYearView.vue";
+import CalendarDecadeView from "../calendar/CalendarDecadeView.vue";
+import FormattedDate from "../calendar/FormattedDate.vue";
 
 const props = defineProps<{
   selectedDate?: string;
@@ -65,10 +66,7 @@ function selectDate(date: string) {
   }
   emit("close");
 }
-function selectWeek(date: string) {
-  emit("select", date);
-  emit("close");
-}
+
 function selectMonth(date: string) {
   if (props.picking === "month") {
     emit("select", date);
@@ -99,42 +97,39 @@ function selectYear(date: string) {
 </script>
 
 <template>
-  <CalendarDecade v-if="mode === 'decade'" :ref-date="currentDate" @select="selectYear">
+  <CalendarDecadeView v-if="mode === 'decade'" :ref-date="currentDate" @select="selectYear">
     <template #header="{ startYear, endYear }">
       <ObsidianIconButton icon="arrow-left" tooltip="Previous decade" @click="previous('decade')" />
       {{ startYear }} - {{ endYear }}
       <ObsidianIconButton icon="arrow-right" tooltip="Next decade" @click="next('decade')" />
     </template>
-  </CalendarDecade>
+  </CalendarDecadeView>
 
-  <CalendarYear v-else-if="mode === 'year'" :ref-date="currentDate" @select="selectMonth">
+  <CalendarYearView v-else-if="mode === 'year'" :ref-date="currentDate" @select="selectMonth">
     <template #header>
       <ObsidianIconButton icon="arrow-left" tooltip="Previous year" @click="previous('year')" />
       <ObsidianButton @click="mode = 'decade'">{{ currentDateMoment.format("YYYY") }}</ObsidianButton>
       <ObsidianIconButton icon="arrow-right" tooltip="Next year" @click="next('year')" />
     </template>
-  </CalendarYear>
+  </CalendarYearView>
 
-  <CalendarQuarter v-else-if="mode === 'quarter'" :ref-date="currentDate" @select="selectQuarter">
+  <CalendarQuarterView v-else-if="mode === 'quarter'" :ref-date="currentDate" @select="selectQuarter">
     <template #header>
       <ObsidianIconButton icon="arrow-left" tooltip="Previous quarter" @click="previous('quarter')" />
-      <ObsidianButton @click="mode = 'year'">{{ currentDateMoment.format("YYYY") }}</ObsidianButton>
+      <ObsidianButton @click="mode = 'year'">
+        <FormattedDate :date="currentDate" format="YYYY" />
+      </ObsidianButton>
       <ObsidianIconButton icon="arrow-right" tooltip="Next quarter" @click="next('quarter')" />
     </template>
-  </CalendarQuarter>
+  </CalendarQuarterView>
 
-  <CalendarMonth
-    v-else
-    :ref-date="currentDate"
-    :selected-date="selectedDate"
-    :select-weeks="picking === 'week'"
-    @select="selectDate"
-    @select-week="selectWeek"
-  >
+  <CalendarMonthView v-else :ref-date="currentDate" :selected-date="selectedDate" @select="selectDate">
     <template #header>
       <ObsidianIconButton icon="arrow-left" tooltip="Previous month" @click="previous" />
-      <ObsidianButton @click="mode = 'year'">{{ currentDateMoment.format("MMMM YYYY") }}</ObsidianButton>
+      <ObsidianButton @click="mode = 'year'">
+        <FormattedDate :date="currentDate" format="MMMM YYYY" />
+      </ObsidianButton>
       <ObsidianIconButton icon="arrow-right" tooltip="Next month" @click="next" />
     </template>
-  </CalendarMonth>
+  </CalendarMonthView>
 </template>

@@ -1,8 +1,8 @@
 <script setup lang="ts">
 import { today } from "@/calendar";
-import CalendarWeek from "@/components/calendar/CalendarWeek.vue";
 import type { JournalNoteData } from "@/types/journal.types";
 import { computed } from "vue";
+import NotesWeekView from "@/components/notes-calendar/NotesWeekView.vue";
 
 const props = defineProps<{
   noteData: JournalNoteData | null;
@@ -15,9 +15,7 @@ const refDate = computed(() => {
 </script>
 
 <template>
-  <div>
-    <CalendarWeek :ref-date="refDate" />
-  </div>
+  <NotesWeekView :ref-date="refDate" :selected-date="refDate" />
 </template>
 
 <style scoped></style>

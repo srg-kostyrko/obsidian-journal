@@ -1,9 +1,9 @@
 <script setup lang="ts">
 import type { BorderSettings, JournalDecorationsStyle } from "@/types/settings.types";
 import { computed } from "vue";
-import DecorationShape from "./decorations/DecorationShape.vue";
-import DecorationCorner from "./decorations/DecorationCorner.vue";
-import DecorationIcon from "./decorations/DecorationIcon.vue";
+import DecorationShape from "./DecorationShape.vue";
+import DecorationCorner from "./DecorationCorner.vue";
+import DecorationIcon from "./DecorationIcon.vue";
 
 const props = defineProps<{ styles: JournalDecorationsStyle[] }>();
 

@@ -14,7 +14,7 @@ import DateFormatPreview from "../components/DateFormatPreview.vue";
 import VariableReferenceHint from "../components/VariableReferenceHint.vue";
 import EditCommandModal from "../components/modals/EditCommand.modal.vue";
 import EditDecorationModal from "@/components/modals/EditDecoration.modal.vue";
-import CalendarDecoration from "@/components/calendar/CalendarDecoration.vue";
+import CalendarDecoration from "@/components/notes-calendar/decorations/CalendarDecoration.vue";
 import { VueModal } from "../components/modals/vue-modal";
 import DatePicker from "../components/DatePicker.vue";
 import RenameJournalModal from "../components/modals/RenameJournal.modal.vue";

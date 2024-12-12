@@ -1,4 +1,3 @@
-import type { MomentDate } from "@/types/date.types";
 import type {
   JournalDecoration,
   JournalDecorationCondition,
@@ -14,9 +13,10 @@ import { computed, toRef, unref, type ComputedRef, type MaybeRefOrGetter } from 
 import { useJournalDate } from "./use-journal-date";
 import type { JournalNoteData } from "@/types/journal.types";
 import { useJournal } from "./use-journal";
+import { date_from_string } from "@/calendar";
 
 export function useDecorations(
-  dateRef: MaybeRefOrGetter<MomentDate>,
+  dateRef: MaybeRefOrGetter<string>,
   decorationsList: MaybeRefOrGetter<
     {
       journalName: string;
@@ -34,7 +34,7 @@ export function useDecorations(
 }
 
 export function useJournalDecorations(
-  date: MaybeRefOrGetter<MomentDate>,
+  date: MaybeRefOrGetter<string>,
   journalName: string,
   decoration: MaybeRefOrGetter<JournalDecoration>,
 ): ComputedRef<JournalDecorationsStyle[]> {
@@ -57,7 +57,7 @@ export function useJournalDecorations(
 }
 
 function checkDecorationConditions(
-  date: MomentDate,
+  date: string,
   journalName: string,
   noteDate: JournalNoteData | null,
   mode: "and" | "or",
@@ -70,7 +70,7 @@ function checkDecorationConditions(
 }
 
 function checkDecorationCondition(
-  date: MomentDate,
+  date: string,
   journalName: string,
   noteData: JournalNoteData | null,
   condition: JournalDecorationCondition,
@@ -149,10 +149,11 @@ function checkDecorationTagCondition(
   }
 }
 
-function checkDecorationDateCondition(date: MomentDate, condition: JournalDecorationDateCondition): boolean {
-  if (condition.day !== -1 && date.date() !== condition.day) return false;
-  if (condition.month !== -1 && date.month() !== condition.month) return false;
-  if (condition.year && date.year() !== condition.year) return false;
+function checkDecorationDateCondition(date: string, condition: JournalDecorationDateCondition): boolean {
+  const parsed = date_from_string(date);
+  if (condition.day !== -1 && parsed.date() !== condition.day) return false;
+  if (condition.month !== -1 && parsed.month() !== condition.month) return false;
+  if (condition.year && parsed.year() !== condition.year) return false;
   return true;
 }
 
@@ -221,12 +222,13 @@ function checkDecorationPropertyCondition(
   return false;
 }
 
-function checkDecorationWeekdayCondition(date: MomentDate, condition: JournalDecorationWeekdayCondition): boolean {
-  return condition.weekdays.includes(date.day());
+function checkDecorationWeekdayCondition(date: string, condition: JournalDecorationWeekdayCondition): boolean {
+  const parsed = date_from_string(date);
+  return condition.weekdays.includes(parsed.day());
 }
 
 function checkDecorationOffsetCondition(
-  date: MomentDate,
+  date: string,
   journalName: string,
   condition: JournalDecorationOffsetCondition,
 ): boolean {

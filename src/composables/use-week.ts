@@ -1,5 +1,6 @@
 import { date_from_string, today } from "@/calendar";
 import { usePlugin } from "@/composables/use-plugin";
+import { FRONTMATTER_DATE_FORMAT } from "@/constants";
 import type { CalendarUiDay } from "@/types/calendar-ui.types";
 import { ref, watchEffect, type Ref } from "vue";
 
@@ -21,8 +22,8 @@ export function useWeek(refDate: Ref<string>) {
 
     if (placeWeeks === "left") {
       days.push({
-        date: start.clone(),
-        key: start.format("[W]W"),
+        date: start.format("[W]W"),
+        key: start.format(FRONTMATTER_DATE_FORMAT),
         outside: false,
         isWeekNumber: true,
       });
@@ -31,8 +32,8 @@ export function useWeek(refDate: Ref<string>) {
     const current = start.clone();
     while (current.isSameOrBefore(end)) {
       days.push({
-        date: current.clone(),
-        key: current.format("YYYY-MM-DD"),
+        date: current.format("D"),
+        key: current.format(FRONTMATTER_DATE_FORMAT),
         today: current.isSame(todayDate, "day"),
         outside: !momentDate.isSame(current, "month"),
         isWeekNumber: false,
@@ -43,8 +44,8 @@ export function useWeek(refDate: Ref<string>) {
 
     if (placeWeeks === "right") {
       days.push({
-        date: start.clone(),
-        key: start.format("[W]W"),
+        date: start.format("[W]W"),
+        key: start.format(FRONTMATTER_DATE_FORMAT),
         outside: false,
         isWeekNumber: true,
       });

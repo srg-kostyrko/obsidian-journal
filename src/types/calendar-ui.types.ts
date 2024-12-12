@@ -1,7 +1,5 @@
-import type { MomentDate } from "./date.types";
-
 export interface CalendarUiDay {
-  date: MomentDate;
+  date: string;
   key: string;
   outside: boolean;
   today?: boolean;
@@ -9,7 +7,7 @@ export interface CalendarUiDay {
 }
 
 export interface CalendarUiElement {
-  date: MomentDate;
+  date: string;
   key: string;
   outside?: boolean;
 }

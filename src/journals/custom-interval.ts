@@ -1,4 +1,3 @@
-import type { MomentDate } from "@/types/date.types";
 import type { JournalCommand, WriteCustom } from "@/types/settings.types";
 import { JournalAnchorDate, type AnchorDateResolver } from "../types/journal.types";
 import type { ComputedRef } from "vue";
@@ -74,8 +73,8 @@ export class CustomIntervalResolver implements AnchorDateResolver {
     }
     return `${fromNow} ${this.journalName}s from now`;
   }
-  calculateOffset(date: MomentDate): [positive: number, negative: number] {
-    const anchorDate = this.#resolveDate(date.format(FRONTMATTER_DATE_FORMAT));
+  calculateOffset(date: string): [positive: number, negative: number] {
+    const anchorDate = this.#resolveDate(date);
     if (!anchorDate) return [0, 0];
     const start = date_from_string(anchorDate);
     const end = date_from_string(this.resolveEndDate(anchorDate));
