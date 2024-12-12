@@ -15,6 +15,10 @@ export class JournalIndex {
     return this.#map.value.get(anchorDate) ?? null;
   }
 
+  getAll(): string[] {
+    return [...this.#map.value.values()];
+  }
+
   set(anchorDate: JournalAnchorDate, path: string) {
     const has = this.#map.value.has(anchorDate);
     this.#map.value.set(anchorDate, path);

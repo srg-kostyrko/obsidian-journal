@@ -1,6 +1,6 @@
 import type { Plugin, TFile } from "obsidian";
 import type { JournalsIndex } from "../journals/journals-index";
-import type { JournalSettings, PluginSettings, ShelfSettings } from "./settings.types";
+import type { JournalSettings, NotesProcessing, PluginSettings, ShelfSettings } from "./settings.types";
 import type { Journal } from "../journals/journal";
 
 export interface JournalPlugin extends Plugin {
@@ -18,7 +18,7 @@ export interface JournalPlugin extends Plugin {
   getJournalConfig(name: string): JournalSettings;
   createJournal(name: string, write: JournalSettings["write"]): JournalSettings;
   renameJournal(name: string, newName: string): Promise<void>;
-  removeJournal(name: string): void;
+  removeJournal(name: string, notesProcessing: NotesProcessing): Promise<void>;
 
   usesShelves: boolean;
   readonly shelves: ShelfSettings[];

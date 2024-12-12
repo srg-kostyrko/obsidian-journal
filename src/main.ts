@@ -4,7 +4,7 @@ import { debounce } from "perfect-debounce";
 import { initCalendarCustomization, restoreLocale, updateLocale } from "./calendar";
 import { JournalSettingTab } from "./settings/journal-settings-tab";
 import { Journal } from "./journals/journal";
-import type { JournalSettings, PluginSettings, ShelfSettings } from "./types/settings.types";
+import type { JournalSettings, NotesProcessing, PluginSettings, ShelfSettings } from "./types/settings.types";
 import { defaultJournalSettings, defaultPluginSettings } from "./defaults";
 import { prepareJournalDefaultsBasedOnType } from "./journals/journal-defaults";
 import { JournalsIndex } from "./journals/journals-index";
@@ -113,7 +113,19 @@ export default class JournalPluginImpl extends Plugin implements JournalPlugin {
     };
   }
 
-  removeJournal(name: string): void {
+  async removeJournal(name: string, notesProcessing: NotesProcessing): Promise<void> {
+    const journal = this.getJournal(name);
+    if (!journal) return;
+    switch (notesProcessing) {
+      case "clear": {
+        await journal.clearNotes();
+        break;
+      }
+      case "delete": {
+        await journal.deleteNotes();
+        break;
+      }
+    }
     const { [name]: _, ...otherJournals } = this.#journals.value;
     this.#journals.value = otherJournals;
     for (const shelf of this.#config.value.journals[name].shelves) {

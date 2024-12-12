@@ -38,6 +38,10 @@ export class JournalsIndex extends Component {
     return this.getForPath(path);
   }
 
+  getAllPaths(journalId: string): string[] {
+    return this.getJournalIndex(journalId).getAll();
+  }
+
   findNext(journalId: string, anchorDate: JournalAnchorDate): JournalNoteData | null {
     const path = this.getJournalIndex(journalId).findNext(anchorDate);
     if (!path) return null;

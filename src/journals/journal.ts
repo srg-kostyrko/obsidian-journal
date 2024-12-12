@@ -231,6 +231,38 @@ export class Journal {
     }
   }
 
+  async clearNotes(): Promise<void> {
+    const promises = [];
+    const paths = this.plugin.index.getAllPaths(this.name);
+    for (const path of paths) {
+      promises.push(this.disconnectNote(path));
+    }
+    await Promise.allSettled(promises);
+  }
+
+  async deleteNotes(): Promise<void> {
+    const promises = [];
+    const paths = this.plugin.index.getAllPaths(this.name);
+    for (const path of paths) {
+      const file = this.plugin.app.vault.getAbstractFileByPath(path);
+      if (!file) continue;
+      promises.push(this.plugin.app.vault.delete(file));
+    }
+    await Promise.allSettled(promises);
+  }
+
+  async disconnectNote(path: string): Promise<void> {
+    const file = this.plugin.app.vault.getAbstractFileByPath(path);
+    if (!file) return;
+    if (!(file instanceof TFile)) return;
+    await this.plugin.app.fileManager.processFrontMatter(file, (frontmatter) => {
+      delete frontmatter[FRONTMATTER_NAME_KEY];
+      delete frontmatter[FRONTMATTER_DATE_KEY];
+      delete frontmatter[FRONTMATTER_END_DATE_KEY];
+      delete frontmatter[FRONTMATTER_INDEX_KEY];
+    });
+  }
+
   async #openFile(file: TFile): Promise<void> {
     const mode = this.config.value.openMode === "active" ? undefined : this.config.value.openMode;
     const leaf = this.plugin.app.workspace.getLeaf(mode);

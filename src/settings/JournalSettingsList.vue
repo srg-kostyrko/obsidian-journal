@@ -17,9 +17,8 @@ const plugin = usePlugin();
 
 function remove(name: string): void {
   new VueModal(plugin, `Remove ${name} journal`, RemoveJournal, {
-    onRemove(_noteProcessing: NotesProcessing) {
-      // TODO Process notes on remove
-      plugin.removeJournal(name);
+    onRemove(notesProcessing: NotesProcessing) {
+      plugin.removeJournal(name, notesProcessing).catch(console.error);
     },
   }).open();
 }
