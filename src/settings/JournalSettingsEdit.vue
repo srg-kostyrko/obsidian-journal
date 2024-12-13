@@ -45,6 +45,31 @@ const refDate = today().format("YYYY-MM-DD");
 
 const supportsTemplater = canApplyTemplater(app, "<% $>");
 
+const writingDescription = computed(() => {
+  if (!journal.value) return "";
+  if (journal.value.config.value.write.type === "custom") {
+    return `every ${journal.value.config.value.write.duration} ${journal.value.config.value.write.every}s`;
+  }
+  switch (journal.value.config.value.write.type) {
+    case "day": {
+      return "daily";
+    }
+    case "week": {
+      return "weekly";
+    }
+    case "month": {
+      return "monthly";
+    }
+    case "quarter": {
+      return "quarterly";
+    }
+    case "year": {
+      return "annually";
+    }
+  }
+  return "";
+});
+
 function showRenameModal(): void {
   if (!journal.value) return;
   new VueModal(plugin, "Rename journal", RenameJournalModal, {
@@ -181,7 +206,7 @@ watch(
 <template>
   <div v-if="journal && config">
     <ObsidianSetting heading>
-      <template #name> Configuring {{ journal.name }} </template>
+      <template #name> Configuring {{ journal.name }} (writing {{ writingDescription }}) </template>
       <template #description>
         <div v-if="plugin.usesShelves">
           <div v-if="!journal.shelfName">Not on a shelf right not. <a href="#" @click="place">Place</a></div>
