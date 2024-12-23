@@ -12,11 +12,12 @@ import IconSelector from "../IconSelector.vue";
 import ObsidianToggle from "../obsidian/ObsidianToggle.vue";
 import FormErrors from "@/components/FormErrors.vue";
 import { getIconIds } from "obsidian";
-import { buildSupportedCommandList } from "../../journals/journal-commands";
+import { buildSupportedCommandList, resolveCommandLabel } from "../../journals/journal-commands";
+import { computed } from "vue";
 
-const props = defineProps<{
+const { writeType, commands, command, index } = defineProps<{
   index: number;
-  writeType: JournalSettings["write"];
+  writeType: JournalSettings["write"]["type"];
   command?: JournalCommand;
   commands: JournalCommand[];
 }>();
@@ -26,15 +27,15 @@ const emit = defineEmits<{
 }>();
 
 const supportedIcons = new Set(getIconIds());
-const supportedCommandTypes = buildSupportedCommandList(props.writeType);
+const supportedCommandTypes = computed(() => buildSupportedCommandList(writeType));
 
 function isNameNotUnique(name: string) {
   if (!name) return true;
-  return !props.commands.some((command, index) => command.name === name && index !== props.index);
+  return !commands.some((command, i) => command.name === name && i !== index);
 }
 
 const { defineField, errorBag, handleSubmit } = useForm({
-  initialValues: props.command ? { ...props.command } : { ...defaultCommand },
+  initialValues: command ? { ...command } : { ...defaultCommand },
   validationSchema: toTypedSchema(
     v.pipe(
       v.object({
@@ -77,8 +78,12 @@ const [type, typeAttrs] = defineField("type");
 const [context, contextAttrs] = defineField("context");
 const [showInRibbon, showInRibbonAttrs] = defineField("showInRibbon");
 
+const supportedCommandTypeOptions = computed(() =>
+  supportedCommandTypes.value.map((value) => ({ value, label: resolveCommandLabel(writeType, value, context.value) })),
+);
+
 const onSubmit = handleSubmit((values) => {
-  emit("submit", values, props.index);
+  emit("submit", values, index);
   emit("close");
 });
 </script>
@@ -87,27 +92,43 @@ const onSubmit = handleSubmit((values) => {
   <form @submit="onSubmit">
     <ObsidianSetting name="Name">
       <template #description>
+        Journal name will be added to command name automatically.
         <FormErrors :errors="errorBag.name" />
       </template>
       <ObsidianTextInput v-model="name" v-bind="nameAttrs" />
     </ObsidianSetting>
-    <ObsidianSetting name="Icon">
+
+    <ObsidianSetting name="Show in ribbon?">
+      <ObsidianToggle v-model="showInRibbon" v-bind="showInRibbonAttrs" />
+    </ObsidianSetting>
+    <ObsidianSetting v-if="showInRibbon" name="Icon">
       <template #description>
         <FormErrors :errors="errorBag.icon" />
       </template>
       <IconSelector v-model="icon" v-bind="iconAttrs" />
     </ObsidianSetting>
-    <ObsidianSetting name="Show in ribbon?">
-      <ObsidianToggle v-model="showInRibbon" v-bind="showInRibbonAttrs" />
-    </ObsidianSetting>
     <ObsidianSetting name="When command runs">
       <ObsidianDropdown v-model="type" v-bind="typeAttrs">
-        <option v-for="commandOption of supportedCommandTypes" :key="commandOption.value" :value="commandOption.value">
+        <option
+          v-for="commandOption of supportedCommandTypeOptions"
+          :key="commandOption.value"
+          :value="commandOption.value"
+        >
           {{ commandOption.label }}
         </option>
       </ObsidianDropdown>
     </ObsidianSetting>
-    <ObsidianSetting name="Context">
+    <ObsidianSetting v-if="type !== 'same'" name="Context">
+      <template #description>
+        Allows to run command only in specific context.<br />
+        <div v-if="context == 'open_note'">
+          If there is an open journal note - its date will be takes as current, otherwise command will run relative to
+          today.
+        </div>
+        <div v-if="context == 'only_open_note'">
+          Will only run when there is an open journal note using its date as current.
+        </div>
+      </template>
       <ObsidianDropdown v-model="context" v-bind="contextAttrs">
         <option value="today">Today</option>
         <option value="open_note">Currently opened note</option>

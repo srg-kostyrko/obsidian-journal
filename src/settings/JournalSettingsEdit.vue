@@ -31,6 +31,7 @@ import CodeBlockReferenceHint from "@/components/CodeBlockReferenceHint.vue";
 import { getWritingDescription } from "@/utils/journal";
 import TemplatePathPreview from "@/components/TemplatePathPreview.vue";
 import TemplateInput from "@/components/TemplateInput.vue";
+import { resolveCommandLabel, resolveContextDescription } from "@/journals/journal-commands";
 
 const { journalName } = defineProps<{
   journalName: string;
@@ -377,7 +378,10 @@ watch(
           <template #name>
             {{ command.name }}
           </template>
-          <template #description> {{ command.type }} in {{ command.context }} </template>
+          <template #description>
+            {{ resolveCommandLabel(journal.type, command.type) }}
+            {{ resolveContextDescription(journal.type, command.type, command.context) }}
+          </template>
           <ObsidianIconButton icon="pencil" tooltip="Edit" @click="editCommand(command, index)" />
           <ObsidianIconButton icon="trash-2" tooltip="Delete" @click="deleteCommand(index)" />
         </ObsidianSetting>
