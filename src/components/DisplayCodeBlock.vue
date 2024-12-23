@@ -1,15 +1,13 @@
 <script setup lang="ts">
 import { Notice } from "obsidian";
-import { computed } from "vue";
 
-const props = defineProps<{
+defineProps<{
   name: string;
 }>();
 
-const variable = computed(() => `{{${props.name}}}`);
-
-async function copy(event: Event) {
-  const content = (event.target as HTMLElement).textContent;
+async function copy(event: MouseEvent) {
+  // eslint-disable-next-line unicorn/prefer-dom-node-text-content -- textContent does not keep line breaks
+  const content = (event.target as HTMLElement).innerText;
   if (!content) return;
   try {
     await navigator.clipboard.writeText(content);
@@ -21,18 +19,17 @@ async function copy(event: Event) {
 </script>
 
 <template>
-  <span class="variable" @click="copy">{{ variable }}</span>
+  <div class="code-block-sample" @click="copy">
+    ```{{ name }}<br /><template v-if="$slots.default"><slot /><br /></template>```
+  </div>
 </template>
 
 <style scoped>
-.variable {
+.code-block-sample {
   border: var(--modal-border-width) solid var(--modal-border-color);
   border-radius: var(--radius-s);
   cursor: pointer;
-  padding: 2px 4px;
+  padding: var(--size-2-2);
   font-family: monospace;
-}
-.variable:hover {
-  background-color: var(--background-secondary);
 }
 </style>

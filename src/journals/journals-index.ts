@@ -83,6 +83,14 @@ export class JournalsIndex extends Component {
     return index;
   }
 
+  registerPathData(path: string, data: JournalNoteData): void {
+    this.#pathIndex.value.set(path, data);
+  }
+
+  unregisterPathData(path: string): void {
+    this.#pathIndex.value.delete(path);
+  }
+
   #setupListeners() {
     this.registerEvent(this.app.vault.on("rename", this.#onRenamed, this));
     this.registerEvent(this.app.vault.on("delete", this.#onDeleted, this));

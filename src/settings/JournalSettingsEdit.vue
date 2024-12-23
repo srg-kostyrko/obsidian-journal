@@ -27,6 +27,8 @@ import { usePlugin } from "@/composables/use-plugin";
 import CollapsibleBlock from "@/components/CollapsibleBlock.vue";
 import IconedRow from "@/components/IconedRow.vue";
 import PathPreview from "@/components/PathPreview.vue";
+import CodeBlockReferenceHint from "@/components/CodeBlockReferenceHint.vue";
+import { getWritingDescription } from "@/utils/journal";
 
 const { journalName } = defineProps<{
   journalName: string;
@@ -48,27 +50,7 @@ const supportsTemplater = canApplyTemplater(app, "<% $>");
 
 const writingDescription = computed(() => {
   if (!journal.value) return "";
-  if (journal.value.config.value.write.type === "custom") {
-    return `every ${journal.value.config.value.write.duration} ${journal.value.config.value.write.every}s`;
-  }
-  switch (journal.value.config.value.write.type) {
-    case "day": {
-      return "daily";
-    }
-    case "week": {
-      return "weekly";
-    }
-    case "month": {
-      return "monthly";
-    }
-    case "quarter": {
-      return "quarterly";
-    }
-    case "year": {
-      return "annually";
-    }
-  }
-  return "";
+  return getWritingDescription(journal.value.config.value.write);
 });
 
 function showRenameModal(): void {
@@ -351,7 +333,7 @@ watch(
           Path to note that will be used as template when creating new notes. <br />
           When multiple templates are configured - first existing will be used. <br />
           <VariableReferenceHint :type="journal.type" :date-format="journal.dateFormat" /><br />
-          TODO this.createCodeBlockReferenceHint(template.descEl);
+          <CodeBlockReferenceHint :type="journal.type" :journal-name="journalName" />
           <template v-if="supportsTemplater">
             <br />Templater syntax is supported. Check plugin description for more info.
           </template>

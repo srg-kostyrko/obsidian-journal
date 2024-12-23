@@ -8,6 +8,7 @@ import { usePlugin } from "@/composables/use-plugin";
 
 const props = defineProps<{
   path: string;
+  preventNavigation?: boolean;
 }>();
 
 const plugin = usePlugin();
@@ -32,13 +33,13 @@ const previousMetadata = computed<JournalMetadata | null>(() => {
 <template>
   <div v-if="noteData" class="nav-view">
     <div v-if="previousMetadata" class="nav-block-relative">
-      <NavigationBlock :ref-date="previousMetadata.date" :journal-name="noteData.journal" />
+      <NavigationBlock :ref-date="previousMetadata.date" :journal-name="noteData.journal" :prevent-navigation />
       <ObsidianIconButton icon="arrow-left" class="nav-prev" />
     </div>
-    <NavigationBlock :ref-date="noteData.date" :journal-name="noteData.journal" />
+    <NavigationBlock :ref-date="noteData.date" :journal-name="noteData.journal" :prevent-navigation />
     <div v-if="nextMetadata" class="nav-block-relative">
       <ObsidianIconButton icon="arrow-right" class="nav-next" />
-      <NavigationBlock :ref-date="nextMetadata.date" :journal-name="noteData.journal" />
+      <NavigationBlock :ref-date="nextMetadata.date" :journal-name="noteData.journal" :prevent-navigation />
     </div>
   </div>
   <div v-else>Note is not connected to a journal</div>

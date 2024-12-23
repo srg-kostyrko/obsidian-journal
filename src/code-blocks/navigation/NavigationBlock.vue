@@ -9,6 +9,7 @@ import { usePlugin } from "@/composables/use-plugin";
 const props = defineProps<{
   refDate: string;
   journalName: string;
+  preventNavigation?: boolean;
 }>();
 
 defineEmits<(event: "move-up" | "move-down" | "edit" | "remove", index: number) => void>();
@@ -21,6 +22,7 @@ const shelfName = computed(() => journal.value?.shelfName ?? null);
 const { journals } = useShelfProvider(shelfName);
 
 async function navigate(type: NavBlockRow["link"], date: string, journalName?: string) {
+  if (props.preventNavigation) return;
   if (type === "none") return;
   if (type === "self") {
     const metadata = journal.value?.get(props.refDate);

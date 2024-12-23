@@ -7,9 +7,10 @@ import TimelineMonth from "./TimelineMonth.vue";
 import TimelineQuarter from "./TimelineQuarter.vue";
 import TimelineCalendar from "./TimelineCalendar.vue";
 import { usePlugin } from "@/composables/use-plugin";
+import { useShelfProvider } from "@/composables/use-shelf";
 
 const props = defineProps<{
-  mode: string | undefined;
+  mode?: string | undefined;
   path: string;
 }>();
 
@@ -20,6 +21,8 @@ const journal = computed(() => {
   if (!noteData.value) return null;
   return plugin.getJournal(noteData.value.journal);
 });
+const shelfName = computed(() => journal.value?.shelfName ?? null);
+useShelfProvider(shelfName);
 
 const mode = computed<TimelineMode>(() => {
   if (props.mode && timelineModes.includes(props.mode as TimelineMode)) return props.mode as TimelineMode;
