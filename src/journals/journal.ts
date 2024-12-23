@@ -322,6 +322,11 @@ export class Journal {
     return [folderPath, filename];
   }
 
+  getResolvedTemplatePath(path: string, metadata: JournalMetadata): string {
+    const templateContext = this.#getTemplateContext(metadata);
+    return replaceTemplateVariables(path, templateContext);
+  }
+
   getNotePath(metadata: JournalNoteData | JournalMetadata): string {
     if ("path" in metadata) return metadata.path;
     const templateContext = this.#getTemplateContext(metadata);

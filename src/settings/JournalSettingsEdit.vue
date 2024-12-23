@@ -29,6 +29,8 @@ import IconedRow from "@/components/IconedRow.vue";
 import PathPreview from "@/components/PathPreview.vue";
 import CodeBlockReferenceHint from "@/components/CodeBlockReferenceHint.vue";
 import { getWritingDescription } from "@/utils/journal";
+import TemplatePathPreview from "@/components/TemplatePathPreview.vue";
+import TemplateInput from "@/components/TemplateInput.vue";
 
 const { journalName } = defineProps<{
   journalName: string;
@@ -339,10 +341,13 @@ watch(
           </template>
         </template>
       </ObsidianSetting>
-      <ObsidianSetting v-for="(_, index) in config.templates" :key="index" controls-only>
-        <ObsidianTextInput v-model="config.templates[index]" class="grow" />
-        <ObsidianIconButton icon="trash" tooltip="Remove template" @click="config.templates.splice(index, 1)" />
-      </ObsidianSetting>
+      <template v-for="(path, index) in config.templates" :key="index">
+        <ObsidianSetting controls-only>
+          <TemplateInput v-model="config.templates[index]" class="grow" />
+          <ObsidianIconButton icon="trash" tooltip="Remove template" @click="config.templates.splice(index, 1)" />
+        </ObsidianSetting>
+        <TemplatePathPreview v-if="path.includes('{')" :journal-name="journalName" :path="path" />
+      </template>
     </CollapsibleBlock>
 
     <CollapsibleBlock>
