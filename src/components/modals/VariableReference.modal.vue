@@ -61,7 +61,7 @@ defineEmits(["close"]);
     <div>
       <DisplayVariable name="index" />
     </div>
-    <div>Index of current {{ type }} if enabled.</div>
+    <div>Index of current {{ type === "custom" ? "interval" : type }} if enabled.</div>
   </div>
 </template>
 

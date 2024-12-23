@@ -2,7 +2,6 @@
 import { VueModal } from "./modals/vue-modal";
 import VariableReference from "./modals/VariableReference.modal.vue";
 import type { JournalSettings } from "../types/settings.types";
-import { useApp } from "@/composables/use-app";
 import { usePlugin } from "@/composables/use-plugin";
 
 const props = defineProps<{
@@ -10,11 +9,10 @@ const props = defineProps<{
   dateFormat: string;
 }>();
 
-const app = useApp();
 const plugin = usePlugin();
 
 function show() {
-  new VueModal(app, plugin, "Variable reference", VariableReference, {
+  new VueModal(plugin, "Variable reference", VariableReference, {
     type: props.type,
     dateFormat: props.dateFormat,
   }).open();

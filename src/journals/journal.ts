@@ -295,7 +295,7 @@ export class Journal {
     return new Promise((resolve) => {
       const modal = new VueModal(
         this.plugin,
-        "Confirm note creation",
+        "About to create a new note",
         ConfirmNoteCreationModal,
         {
           journalName: this.name$.value,

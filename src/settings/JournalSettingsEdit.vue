@@ -26,6 +26,7 @@ import { useApp } from "@/composables/use-app";
 import { usePlugin } from "@/composables/use-plugin";
 import CollapsibleBlock from "@/components/CollapsibleBlock.vue";
 import IconedRow from "@/components/IconedRow.vue";
+import PathPreview from "@/components/PathPreview.vue";
 
 const { journalName } = defineProps<{
   journalName: string;
@@ -327,7 +328,10 @@ watch(
     <ObsidianSetting name="Folder">
       <template #description>
         New notes will be created in this folder. <br />
-        <VariableReferenceHint :type="config.write.type" :date-format="journal.dateFormat" />
+        <VariableReferenceHint :type="config.write.type" :date-format="journal.dateFormat" /> <br />
+        <template v-if="config.folder && config.folder.includes('{')">
+          <PathPreview :journal-name="journalName" />
+        </template>
       </template>
       <FolderInput v-model="config.folder" />
     </ObsidianSetting>

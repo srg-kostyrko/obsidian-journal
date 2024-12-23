@@ -10,7 +10,6 @@ defineEmits<{
 </script>
 
 <template>
-  <ObsidianSetting name="About to create new note"></ObsidianSetting>
   <ObsidianSetting name="Journal">
     {{ journalName }}
   </ObsidianSetting>
@@ -19,6 +18,6 @@ defineEmits<{
   </ObsidianSetting>
   <ObsidianSetting>
     <ObsidianButton @click="$emit('confirm', false)">Cancel</ObsidianButton>
-    <ObsidianButton cta @click="$emit('confirm', true)">Confirm</ObsidianButton>
+    <ObsidianButton cta @click="$emit('confirm', true)">Create</ObsidianButton>
   </ObsidianSetting>
 </template>
