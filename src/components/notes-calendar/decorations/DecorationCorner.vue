@@ -18,7 +18,7 @@ const color = computed(() => props.decoration.color);
   position: absolute;
   width: 0;
   height: 0;
-  --size: 0.3em;
+  --size: 0.4em;
 }
 .top-left {
   top: 0;

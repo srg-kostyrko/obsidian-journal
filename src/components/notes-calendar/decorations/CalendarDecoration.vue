@@ -71,7 +71,8 @@ function toBorderStyle(side: BorderSettings) {
 
 <style scoped>
 .calendar-decoration {
-  position: relative;
+  width: 100%;
+  height: 100%;
   background-color: v-bind(background);
   color: v-bind(textColor);
 }

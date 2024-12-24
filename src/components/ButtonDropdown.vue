@@ -4,7 +4,7 @@ import ObsidianButton from "./obsidian/ObsidianButton.vue";
 import { onClickOutside } from "@vueuse/core";
 
 defineProps<{
-  options: string[];
+  options: { value: string; label: string }[];
 }>();
 const emit = defineEmits<(event: "select", option: string) => void>();
 
@@ -39,12 +39,12 @@ function select(option: string) {
       <div v-if="isOpen" ref="popoutRef" class="button-dropdown-popout" :style="popoutPosition">
         <ObsidianButton
           v-for="option in options"
-          :key="option"
+          :key="option.value"
           flat
           class="button-dropdown-option"
-          @click="select(option)"
+          @click="select(option.value)"
         >
-          {{ option }}
+          {{ option.label }}
         </ObsidianButton>
       </div>
     </Teleport>

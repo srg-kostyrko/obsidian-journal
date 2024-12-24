@@ -14,8 +14,8 @@ defineProps<{
 
 const descriptions = {
   "has-note": "There is a note connected to date",
-  "has-open-task": "There is not completed task in a note connected to date",
-  "all-tasks-completed": "All tasks in a notes connected to date have been completed",
+  "has-open-task": "There is no completed task in a note connected to date",
+  "all-tasks-completed": "All tasks in the note connected to date have been completed",
 };
 </script>
 

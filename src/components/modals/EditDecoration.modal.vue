@@ -29,6 +29,7 @@ import { defaultConditions, defaultDecorations } from "@/defaults";
 import ObsidianIconButton from "../obsidian/ObsidianIconButton.vue";
 import ObsidianDropdown from "../obsidian/ObsidianDropdown.vue";
 import { deepCopy } from "@/utils/misc";
+import { decorationConditionTypeLabels } from "@/components/ui-texts";
 
 const props = defineProps<{
   index: number;
@@ -54,7 +55,9 @@ const conditionTypes = computed(() => {
 const conditions = ref<JournalDecorationCondition[]>(props.decoration ? deepCopy(props.decoration.conditions) : []);
 const availableConditionTypes = computed(() => {
   const used = new Set(conditions.value.map(({ type }) => type));
-  return conditionTypes.value.filter((type) => !used.has(type));
+  return conditionTypes.value
+    .filter((type) => !used.has(type))
+    .map((value) => ({ value, label: decorationConditionTypeLabels[value] }));
 });
 function getConditionComponent(condition: JournalDecorationCondition) {
   switch (condition.type) {
@@ -101,7 +104,7 @@ const types = ["background", "color", "shape", "corner", "shape", "icon", "borde
 const decorations = ref<JournalDecorationsStyle[]>(props.decoration ? deepCopy(props.decoration.styles) : []);
 const availableTypes = computed(() => {
   const used = new Set(decorations.value.map(({ type }) => type));
-  return types.filter((type) => !used.has(type));
+  return types.filter((type) => !used.has(type)).map((value) => ({ value, label: value }));
 });
 
 function getStyleComponent(decoration: JournalDecorationsStyle) {
@@ -180,7 +183,9 @@ function save() {
     <div class="separator" />
     <div class="preview-container">
       <div class="preview-decoration">
-        <CalendarDecoration :styles="decorations">{{ day }}</CalendarDecoration>
+        <CalendarDecoration :styles="decorations">
+          {{ day }}
+        </CalendarDecoration>
       </div>
       <div>
         <ObsidianSetting>
@@ -213,14 +218,13 @@ function save() {
   display: grid;
   grid-template-columns: 25% 1fr;
 }
-.preview-decoration > * {
+.preview-decoration {
+  position: relative;
   font-size: 48px;
   width: 1.5em;
   height: 1.5em;
-  line-height: 48px;
-  margin: 0 auto;
-  padding: 0.25em;
   text-align: center;
+  margin: 0 auto;
 }
 .separator {
   width: 100%;

@@ -19,7 +19,7 @@ const color = computed(() => props.decoration.color);
 <style scoped>
 .shape-decoration {
   position: absolute;
-  --size: 0.2em;
+  --size: 0.4em;
 }
 .shape-circle {
   width: var(--size);

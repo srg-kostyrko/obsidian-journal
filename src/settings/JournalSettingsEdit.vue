@@ -32,6 +32,7 @@ import { getWritingDescription } from "@/utils/journal";
 import TemplatePathPreview from "@/components/TemplatePathPreview.vue";
 import TemplateInput from "@/components/TemplateInput.vue";
 import { resolveCommandLabel, resolveContextDescription } from "@/journals/journal-commands";
+import { getDecorationConditionDescription } from "@/utils/journal";
 
 const { journalName } = defineProps<{
   journalName: string;
@@ -406,13 +407,19 @@ watch(
       </ObsidianSetting>
       <template v-else>
         <ObsidianSetting v-for="(decoration, index) of journal.decorations" :key="index">
-          <template #name>
-            <CalendarDecoration class="decoration-preview" :styles="decoration.styles">{{ day }}</CalendarDecoration>
-            when
-            <template v-for="(condition, i) of decoration.conditions" :key="i">
-              {{ condition.type }}
-              <span v-if="i > 0">{{ decoration.mode }}</span>
-            </template>
+          <template #description>
+            <div class="decoration-preview-container">
+              <div class="decoration-preview-block">
+                <CalendarDecoration class="decoration-preview" :styles="decoration.styles">{{
+                  day
+                }}</CalendarDecoration>
+              </div>
+              when
+              <template v-for="(condition, i) of decoration.conditions" :key="i">
+                {{ getDecorationConditionDescription(condition) }}
+                <span v-if="i > 0">{{ decoration.mode }}</span>
+              </template>
+            </div>
           </template>
           <ObsidianIconButton icon="pencil" tooltip="Edit" @click="editCalendarDecoration(decoration, index)" />
           <ObsidianIconButton icon="trash-2" tooltip="Delete" @click="deleteHighlight(index)" />
@@ -459,9 +466,18 @@ watch(
   width: 1.5em;
   height: 1.5em;
   padding: 0.25em;
+  line-height: 1;
   text-align: center;
 }
 .nav-block-preview {
   margin-bottom: 1em;
+}
+.decoration-preview-container {
+  display: flex;
+  align-items: center;
+  gap: 0.5em;
+}
+.decoration-preview-block {
+  position: relative;
 }
 </style>

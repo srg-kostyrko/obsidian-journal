@@ -14,8 +14,10 @@ import { useJournalDate } from "./use-journal-date";
 import type { JournalNoteData } from "@/types/journal.types";
 import { useJournal } from "./use-journal";
 import { date_from_string } from "@/calendar";
+import type { JournalPlugin } from "@/types/plugin.types";
 
 export function useDecorations(
+  plugin: JournalPlugin,
   dateRef: MaybeRefOrGetter<string>,
   decorationsList: MaybeRefOrGetter<
     {
@@ -28,12 +30,13 @@ export function useDecorations(
   const _decorationsList = toRef(decorationsList);
   return computed(() => {
     return _decorationsList.value.flatMap(({ journalName, decoration }) => {
-      return useJournalDecorations(_date, journalName, decoration).value;
+      return useJournalDecorations(plugin, _date, journalName, decoration).value;
     });
   });
 }
 
 export function useJournalDecorations(
+  plugin: JournalPlugin,
   date: MaybeRefOrGetter<string>,
   journalName: string,
   decoration: MaybeRefOrGetter<JournalDecoration>,
@@ -43,20 +46,21 @@ export function useJournalDecorations(
   const _decoration = toRef(decoration);
 
   return computed(() => {
-    const { noteData } = useJournalDate(_date, _journalName);
-    return checkDecorationConditions(
+    const { noteData } = useJournalDate(plugin, _date, _journalName);
+    const isApplicable = checkDecorationConditions(
+      plugin,
       _date.value,
       _journalName.value,
       noteData.value,
       _decoration.value.mode,
       _decoration.value.conditions,
-    )
-      ? _decoration.value.styles
-      : [];
+    );
+    return isApplicable ? _decoration.value.styles : [];
   });
 }
 
 function checkDecorationConditions(
+  plugin: JournalPlugin,
   date: string,
   journalName: string,
   noteDate: JournalNoteData | null,
@@ -65,11 +69,12 @@ function checkDecorationConditions(
 ): boolean {
   if (conditions.length === 0) return false;
   if (mode === "or")
-    return conditions.some((condition) => checkDecorationCondition(date, journalName, noteDate, condition));
-  return conditions.every((condition) => checkDecorationCondition(date, journalName, noteDate, condition));
+    return conditions.some((condition) => checkDecorationCondition(plugin, date, journalName, noteDate, condition));
+  return conditions.every((condition) => checkDecorationCondition(plugin, date, journalName, noteDate, condition));
 }
 
 function checkDecorationCondition(
+  plugin: JournalPlugin,
   date: string,
   journalName: string,
   noteData: JournalNoteData | null,
@@ -92,7 +97,7 @@ function checkDecorationCondition(
       return checkDecorationWeekdayCondition(date, condition);
     }
     case "offset": {
-      return checkDecorationOffsetCondition(date, journalName, condition);
+      return checkDecorationOffsetCondition(plugin, date, journalName, condition);
     }
     case "all-tasks-completed": {
       return checkDecorationAllTasksCompletedCondition(noteData);
@@ -228,11 +233,12 @@ function checkDecorationWeekdayCondition(date: string, condition: JournalDecorat
 }
 
 function checkDecorationOffsetCondition(
+  plugin: JournalPlugin,
   date: string,
   journalName: string,
   condition: JournalDecorationOffsetCondition,
 ): boolean {
-  const [positive, negative] = useJournal(journalName).value?.calculateOffset(date) ?? [0, 0];
+  const [positive, negative] = useJournal(plugin, journalName).value?.calculateOffset(date) ?? [0, 0];
   if (condition.offset < 0) return negative === condition.offset;
   return positive === condition.offset;
 }

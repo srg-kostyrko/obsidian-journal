@@ -19,7 +19,7 @@ const plugin = usePlugin();
 const { journals, decorations } = useShelfData();
 const isActionable = computed(() => journals[type].value.length > 0);
 const format = computed(() => calendarFormats[type]);
-const decorationsStyles = useDecorations(date, decorations[type]);
+const decorationsStyles = useDecorations(plugin, date, decorations[type]);
 
 function open(event: MouseEvent) {
   if (!isActionable.value) return;
@@ -33,9 +33,15 @@ function open(event: MouseEvent) {
 </script>
 
 <template>
-  <CalendarButton :clickable="isActionable" @click="open">
+  <CalendarButton class="calendar-button" :clickable="isActionable" @click="open">
     <CalendarDecoration :styles="decorationsStyles">
       <FormattedDate :date :format />
     </CalendarDecoration>
   </CalendarButton>
 </template>
+
+<style scoped>
+.calendar-button {
+  position: relative;
+}
+</style>

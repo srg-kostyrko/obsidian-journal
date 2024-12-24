@@ -220,7 +220,6 @@ export default class JournalPluginImpl extends Plugin implements JournalPlugin {
 
     this.#index = new JournalsIndex(this.app);
     this.addChild(this.#index);
-    this.index.reindex();
 
     this.#configureCommands();
 
@@ -245,12 +244,16 @@ export default class JournalPluginImpl extends Plugin implements JournalPlugin {
     this.registerView(CALENDAR_VIEW_TYPE, (leaf) => new CalendarView(leaf, this));
 
     this.app.workspace.onLayoutReady(() => {
+      this.index.reindex();
       this.placeCalendarView(true);
     });
   }
   onunload(): void {
     for (const handle of this.#stopHandles) {
       handle();
+    }
+    for (const leaf of this.app.workspace.getLeavesOfType(CALENDAR_VIEW_TYPE)) {
+      leaf.detach();
     }
   }
 
