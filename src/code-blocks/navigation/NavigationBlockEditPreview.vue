@@ -45,6 +45,7 @@ useShelfProvider(shelfName);
 .nav-row {
   display: flex;
   position: relative;
+  border: 1px dotted transparent;
 }
 .nav-row-wrapper {
   margin: 0 auto;
@@ -54,7 +55,9 @@ useShelfProvider(shelfName);
 .controls {
   display: none;
 }
-
+.nav-row:hover {
+  border-top-color: var(--color-accent);
+}
 .nav-row:hover .controls {
   display: flex;
   position: absolute;

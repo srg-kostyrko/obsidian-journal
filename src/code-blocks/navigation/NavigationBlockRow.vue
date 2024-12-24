@@ -1,9 +1,9 @@
 <script setup lang="ts">
-import { SHELF_DATA_KEY } from "@/constants";
 import type { Journal } from "@/journals/journal";
 import type { NavBlockRow } from "@/types/settings.types";
 import { replaceTemplateVariables } from "@/utils/template";
-import { computed, inject } from "vue";
+import { computed } from "vue";
+import { useShelfData } from "@/composables/use-shelf";
 
 const props = defineProps<{
   row: NavBlockRow;
@@ -11,7 +11,7 @@ const props = defineProps<{
   defaultFormat: string;
   journal: Journal;
 }>();
-const emit = defineEmits<(event: "navigate", type: string, date: string, journalName?: string) => void>();
+const emit = defineEmits<(event: "navigate", type: NavBlockRow["link"], date: string, journalName?: string) => void>();
 
 const anchorDate = computed(() => {
   return props.journal.resolveAnchorDate(props.refDate);
@@ -53,7 +53,7 @@ const fontSize = computed(() => `${props.row.fontSize}em`);
 const fontWeight = computed(() => (props.row.bold ? "bold" : "normal"));
 const fontStyle = computed(() => (props.row.italic ? "italic" : "normal"));
 
-const { journals } = inject(SHELF_DATA_KEY);
+const { journals } = useShelfData();
 
 const isClickable = computed(() => {
   if (props.row.link === "none") return false;

@@ -131,8 +131,7 @@ export class Journal {
     const anchorDate = this.#anchorDateResolver.resolveForDate(date);
     if (!anchorDate) return null;
     if (existing) {
-      const nextExstingMetadata = this.plugin.index.findNext(this.name, anchorDate);
-      if (nextExstingMetadata) return nextExstingMetadata;
+      return this.plugin.index.findNext(this.name, anchorDate);
     }
     const nextAnchorDate = this.#anchorDateResolver.resolveNext(anchorDate);
     if (!nextAnchorDate) return null;
@@ -146,8 +145,7 @@ export class Journal {
     const anchorDate = this.#anchorDateResolver.resolveForDate(date);
     if (!anchorDate) return null;
     if (existing) {
-      const previousExstingMetadata = this.plugin.index.findPrevious(this.name, anchorDate);
-      if (previousExstingMetadata) return previousExstingMetadata;
+      return this.plugin.index.findPrevious(this.name, anchorDate);
     }
     const previousAnchorDate = this.#anchorDateResolver.resolvePrevious(anchorDate);
     if (!previousAnchorDate) return null;
