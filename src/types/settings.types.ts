@@ -150,18 +150,18 @@ export interface JournalDecoration {
 export interface BorderSettings {
   show: boolean;
   width: number;
-  color: string;
+  color: ColorSettings;
   style: string;
 }
 
 export interface JournalDecorationBackground {
   type: "background";
-  color: string;
+  color: ColorSettings;
 }
 
 export interface JournalDecorationColor {
   type: "color";
-  color: string;
+  color: ColorSettings;
 }
 
 export interface JournalDecorationBorder {
@@ -176,7 +176,7 @@ export interface JournalDecorationBorder {
 export interface JournalDecorationShape {
   type: "shape";
   shape: "square" | "circle" | "triangle-up" | "triangle-down" | "triangle-left" | "triangle-right";
-  color: string;
+  color: ColorSettings;
   placement_x: "left" | "center" | "right";
   placement_y: "top" | "middle" | "bottom";
 }
@@ -184,14 +184,14 @@ export interface JournalDecorationShape {
 export interface JournalDecorationCorner {
   type: "corner";
   placement: "top-left" | "top-right" | "bottom-left" | "bottom-right";
-  color: string;
+  color: ColorSettings;
 }
 export interface JournalDecorationIcon {
   type: "icon";
   icon: string;
   placement_x: "left" | "center" | "right";
   placement_y: "top" | "middle" | "bottom";
-  color: string;
+  color: ColorSettings;
 }
 
 export type JournalDecorationsStyle =
@@ -276,3 +276,16 @@ export interface NavBlockRow {
   link: "none" | "self" | "journal" | JournalSettings["write"]["type"];
   journal: string;
 }
+
+export type ColorSettings =
+  | {
+      type: "transparent";
+    }
+  | {
+      type: "theme";
+      name: string;
+    }
+  | {
+      type: "custom";
+      color: string;
+    };

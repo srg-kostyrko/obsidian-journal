@@ -1,9 +1,9 @@
 <script setup lang="ts">
-import ObsidianColorPicker from "@/components/obsidian/ObsidianColorPicker.vue";
 import ObsidianDropdown from "@/components/obsidian/ObsidianDropdown.vue";
 import ObsidianSetting from "@/components/obsidian/ObsidianSetting.vue";
 import type { JournalDecorationCorner } from "@/types/settings.types";
 import { computed } from "vue";
+import ColorPicker from "../../ColorPicker.vue";
 
 const props = defineProps<{ decoration: JournalDecorationCorner }>();
 const emit = defineEmits<
@@ -43,6 +43,6 @@ const color = computed({
     </ObsidianDropdown>
   </ObsidianSetting>
   <ObsidianSetting name="Color">
-    <ObsidianColorPicker v-model="color" />
+    <ColorPicker v-model="color" />
   </ObsidianSetting>
 </template>

@@ -1,12 +1,13 @@
 <script setup lang="ts">
 import type { JournalDecorationShape } from "@/types/settings.types";
+import { colorToString } from "@/utils/color";
 import { computed } from "vue";
 
 const props = defineProps<{
   decoration: JournalDecorationShape;
 }>();
 
-const color = computed(() => props.decoration.color);
+const color = computed(() => colorToString(props.decoration.color));
 </script>
 
 <template>

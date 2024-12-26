@@ -1,13 +1,14 @@
 <script setup lang="ts">
 import ObsidianIcon from "@/components/obsidian/ObsidianIcon.vue";
 import type { JournalDecorationIcon } from "@/types/settings.types";
+import { colorToString } from "@/utils/color";
 import { computed } from "vue";
 
 const props = defineProps<{
   decoration: JournalDecorationIcon;
 }>();
 
-const color = computed(() => props.decoration.color);
+const color = computed(() => colorToString(props.decoration.color));
 </script>
 
 <template>

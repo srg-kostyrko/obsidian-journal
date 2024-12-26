@@ -1,8 +1,8 @@
 <script setup lang="ts">
 import { computed } from "vue";
-import type { JournalDecorationBackground } from "@/types/settings.types";
+import type { JournalDecorationBackground, ColorSettings } from "@/types/settings.types";
 import ObsidianSetting from "@/components/obsidian/ObsidianSetting.vue";
-import ObsidianColorPicker from "@/components/obsidian/ObsidianColorPicker.vue";
+import ColorPicker from "@/components/ColorPicker.vue";
 
 const props = defineProps<{ decoration: JournalDecorationBackground }>();
 const emit = defineEmits<
@@ -19,7 +19,7 @@ const color = computed({
   get() {
     return props.decoration.color;
   },
-  set(value: string) {
+  set(value: ColorSettings) {
     emit("change", { prop: "color", value });
   },
 });
@@ -27,6 +27,6 @@ const color = computed({
 
 <template>
   <ObsidianSetting name="Background color">
-    <ObsidianColorPicker v-model="color" />
+    <ColorPicker v-model="color" />
   </ObsidianSetting>
 </template>

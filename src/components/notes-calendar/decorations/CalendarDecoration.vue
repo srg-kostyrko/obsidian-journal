@@ -4,18 +4,19 @@ import { computed } from "vue";
 import DecorationShape from "./DecorationShape.vue";
 import DecorationCorner from "./DecorationCorner.vue";
 import DecorationIcon from "./DecorationIcon.vue";
+import { colorToString } from "@/utils/color";
 
 const props = defineProps<{ styles: JournalDecorationsStyle[] }>();
 
 const background = computed(() => {
   const decoration = props.styles.find((d) => d.type === "background");
   if (!decoration) return "inherit";
-  return decoration.color;
+  return colorToString(decoration.color);
 });
 const textColor = computed(() => {
   const decoration = props.styles.find((d) => d.type === "color");
   if (!decoration) return "inherit";
-  return decoration.color;
+  return colorToString(decoration.color);
 });
 
 const shapeDecorations = computed(() => props.styles.filter((d) => d.type === "shape"));
@@ -56,7 +57,7 @@ const borderStyle = computed(() => {
 });
 function toBorderStyle(side: BorderSettings) {
   if (!side.show) return "none";
-  return `${side.width}px ${side.style} ${side.color}`;
+  return `${side.width}px ${side.style} ${colorToString(side.color)}`;
 }
 </script>
 

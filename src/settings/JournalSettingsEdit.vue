@@ -109,28 +109,42 @@ function deleteCommand(index: number): void {
   journal.value.deleteCommand(index);
 }
 
+const DECORATIONS_MODAL_WIDTH = 800;
+
 function addCalendarDecoration() {
   if (!journal.value) return;
-  new VueModal(plugin, "Add calendar decoration", EditDecorationModal, {
-    index: journal.value.decorations.length,
-    writeType: journal.value.type,
-    onSubmit: (decoration: JournalDecoration) => {
-      if (!journal.value) return;
-      journal.value.addDecoration(decoration);
+  new VueModal(
+    plugin,
+    "Add calendar decoration",
+    EditDecorationModal,
+    {
+      index: journal.value.decorations.length,
+      writeType: journal.value.type,
+      onSubmit: (decoration: JournalDecoration) => {
+        if (!journal.value) return;
+        journal.value.addDecoration(decoration);
+      },
     },
-  }).open();
+    DECORATIONS_MODAL_WIDTH,
+  ).open();
 }
 function editCalendarDecoration(decoration: JournalDecoration, index: number) {
   if (!journal.value) return;
-  new VueModal(plugin, "Add calendar decoration", EditDecorationModal, {
-    index: journal.value.decorations.length,
-    writeType: journal.value.type,
-    decoration,
-    onSubmit: (decoration: JournalDecoration) => {
-      if (!journal.value) return;
-      journal.value.editDecoration(index, decoration);
+  new VueModal(
+    plugin,
+    "Add calendar decoration",
+    EditDecorationModal,
+    {
+      index: journal.value.decorations.length,
+      writeType: journal.value.type,
+      decoration,
+      onSubmit: (decoration: JournalDecoration) => {
+        if (!journal.value) return;
+        journal.value.editDecoration(index, decoration);
+      },
     },
-  }).open();
+    DECORATIONS_MODAL_WIDTH,
+  ).open();
 }
 function deleteHighlight(index: number) {
   if (!journal.value) return;
@@ -410,9 +424,9 @@ watch(
           <template #description>
             <div class="decoration-preview-container">
               <div class="decoration-preview-block">
-                <CalendarDecoration class="decoration-preview" :styles="decoration.styles">{{
-                  day
-                }}</CalendarDecoration>
+                <CalendarDecoration class="decoration-preview" :styles="decoration.styles">
+                  {{ day }}
+                </CalendarDecoration>
               </div>
               when
               <template v-for="(condition, i) of decoration.conditions" :key="i">

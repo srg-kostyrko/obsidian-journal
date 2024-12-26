@@ -125,11 +125,11 @@ export const defaultConditions: Record<JournalDecorationCondition["type"], Journ
 export const defaultDecorations: Record<JournalDecorationsStyle["type"], JournalDecorationsStyle> = {
   background: {
     type: "background",
-    color: "#000",
+    color: { type: "transparent" },
   },
   color: {
     type: "color",
-    color: "#fff",
+    color: { type: "theme", name: "text-normal" },
   },
   border: {
     type: "border",
@@ -137,44 +137,44 @@ export const defaultDecorations: Record<JournalDecorationsStyle["type"], Journal
     left: {
       show: true,
       width: 1,
-      color: "#000",
+      color: { type: "transparent" },
       style: "solid",
     },
     right: {
       show: false,
       width: 1,
-      color: "#000",
+      color: { type: "transparent" },
       style: "solid",
     },
     top: {
       show: false,
       width: 1,
-      color: "#000",
+      color: { type: "transparent" },
       style: "solid",
     },
     bottom: {
       show: false,
       width: 1,
-      color: "#000",
+      color: { type: "transparent" },
       style: "solid",
     },
   },
   shape: {
     type: "shape",
     shape: "circle",
-    color: "#000",
+    color: { type: "transparent" },
     placement_x: "center",
     placement_y: "bottom",
   },
   corner: {
     type: "corner",
     placement: "top-left",
-    color: "#000",
+    color: { type: "transparent" },
   },
   icon: {
     type: "icon",
     icon: "",
-    color: "#fff",
+    color: { type: "transparent" },
     placement_x: "center",
     placement_y: "top",
   },

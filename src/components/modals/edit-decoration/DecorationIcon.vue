@@ -1,10 +1,10 @@
 <script setup lang="ts">
 import IconSelector from "@/components/IconSelector.vue";
-import ObsidianColorPicker from "@/components/obsidian/ObsidianColorPicker.vue";
 import ObsidianDropdown from "@/components/obsidian/ObsidianDropdown.vue";
 import ObsidianSetting from "@/components/obsidian/ObsidianSetting.vue";
 import type { JournalDecorationIcon } from "@/types/settings.types";
 import { computed } from "vue";
+import ColorPicker from "@/components/ColorPicker.vue";
 
 const props = defineProps<{ decoration: JournalDecorationIcon }>();
 const emit = defineEmits<
@@ -58,7 +58,7 @@ const placement_y = computed({
     <IconSelector v-model="icon" />
   </ObsidianSetting>
   <ObsidianSetting name="Color">
-    <ObsidianColorPicker v-model="color" />
+    <ColorPicker v-model="color" />
   </ObsidianSetting>
   <ObsidianSetting name="Placement">
     <ObsidianDropdown v-model="placement_x">

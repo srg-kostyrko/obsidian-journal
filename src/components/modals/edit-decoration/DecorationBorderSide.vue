@@ -1,11 +1,11 @@
 <script setup lang="ts">
 import { computed } from "vue";
-import type { BorderSettings } from "@/types/settings.types";
+import type { BorderSettings, ColorSettings } from "@/types/settings.types";
 import ObsidianSetting from "@/components/obsidian/ObsidianSetting.vue";
-import ObsidianColorPicker from "@/components/obsidian/ObsidianColorPicker.vue";
 import ObsidianToggle from "@/components/obsidian/ObsidianToggle.vue";
 import ObsidianNumberInput from "@/components/obsidian/ObsidianNumberInput.vue";
 import ObsidianDropdown from "@/components/obsidian/ObsidianDropdown.vue";
+import ColorPicker from "@/components/ColorPicker.vue";
 
 const props = defineProps<{ border: BorderSettings; label: string }>();
 const emit = defineEmits<
@@ -38,7 +38,7 @@ const color = computed({
   get() {
     return props.border.color;
   },
-  set(value: string) {
+  set(value: ColorSettings) {
     emit("change", { prop: "color", value });
   },
 });
@@ -64,7 +64,7 @@ const style = computed({
         <option value="groove">groove</option>
         <option value="groove">ridge</option>
       </ObsidianDropdown>
-      <ObsidianColorPicker v-model="color" />
+      <ColorPicker v-model="color" />
     </template>
   </ObsidianSetting>
 </template>
