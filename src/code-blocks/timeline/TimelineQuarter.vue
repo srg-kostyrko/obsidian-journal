@@ -25,7 +25,12 @@ const list = computed(() => {
 
 <template>
   <div>
-    <NotesMonthView v-for="date in list" :key="date.format('YYYY-MM-DD')" :ref-date="date.format('YYYY-MM-DD')" />
+    <NotesMonthView
+      v-for="date in list"
+      :key="date.format('YYYY-MM-DD')"
+      :ref-date="date.format('YYYY-MM-DD')"
+      :selected-date="refDate"
+    />
   </div>
 </template>
 

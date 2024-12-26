@@ -17,7 +17,7 @@ defineProps<{ columns: number }>();
 .calendar-header {
   display: flex;
   align-items: center;
-  justify-content: space-between;
+  justify-content: center;
   gap: 4px;
   margin-bottom: 6px;
 }

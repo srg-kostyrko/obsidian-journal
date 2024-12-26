@@ -22,7 +22,7 @@ const { grid } = useMonth(computed(() => refDate));
 </script>
 
 <template>
-  <CalendarGrid :columns="columns">
+  <CalendarGrid class="month-grid" :columns="columns">
     <template #header>
       <slot name="header">
         <NotesCalendarButton :date="refDate" type="month" />
@@ -38,9 +38,15 @@ const { grid } = useMonth(computed(() => refDate));
       :key="uiDate.key + (uiDate.isWeekNumber ? 'week' : 'day')"
       :date="uiDate.key"
       :type="uiDate.isWeekNumber ? 'week' : 'day'"
-      :data-selected="selectedDate === uiDate.key || null"
+      :data-selected="(!uiDate.isWeekNumber && selectedDate === uiDate.key) || null"
       :data-outside="uiDate.outside || null"
       :data-today="uiDate.today || null"
     />
   </CalendarGrid>
 </template>
+
+<style scoped>
+.month-grid {
+  margin-bottom: var(--size-4-2);
+}
+</style>
