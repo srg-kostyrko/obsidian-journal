@@ -36,6 +36,7 @@ const { grid } = useWeek(computed(() => refDate));
     <NotesCalendarButton
       v-for="uiDate of grid"
       :key="uiDate.key + (uiDate.isWeekNumber ? 'week' : 'day')"
+      :class="{ 'week-number': uiDate.isWeekNumber }"
       :date="uiDate.key"
       :type="uiDate.isWeekNumber ? 'week' : 'day'"
       :data-selected="(!uiDate.isWeekNumber && selectedDate === uiDate.key) || null"
@@ -44,3 +45,9 @@ const { grid } = useWeek(computed(() => refDate));
     />
   </CalendarGrid>
 </template>
+
+<style scoped>
+.week-number {
+  font-weight: bold;
+}
+</style>

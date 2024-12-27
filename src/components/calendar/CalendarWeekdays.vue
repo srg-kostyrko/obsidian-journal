@@ -9,18 +9,21 @@ const weekdayNames = useWeekdayNames();
 <template>
   <div v-if="plugin.calendarViewSettings.weeks === 'left'"></div>
   <div v-for="day of weekdayNames" :key="day" class="week-day">
-    {{ day }}
+    <span>{{ day }}</span>
   </div>
   <div v-if="plugin.calendarViewSettings.weeks === 'right'"></div>
 </template>
 
 <style scoped>
 .week-day {
-  font-size: 0.7em;
+  font-size: 0.6em;
   border: 1px solid transparent;
-  height: 28px;
-  line-height: 26px;
+  line-height: 1;
   text-align: center;
   padding: 0;
+  color: var(--text-muted);
+  display: flex;
+  justify-content: center;
+  align-items: end;
 }
 </style>

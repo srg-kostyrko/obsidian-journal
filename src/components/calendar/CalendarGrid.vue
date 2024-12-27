@@ -18,8 +18,7 @@ defineProps<{ columns: number }>();
   display: flex;
   align-items: center;
   justify-content: center;
-  gap: 4px;
-  margin-bottom: 6px;
+  gap: var(--size-2-2);
 }
 .calendar-grid {
   display: grid;
