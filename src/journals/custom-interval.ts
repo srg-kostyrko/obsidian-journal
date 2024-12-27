@@ -115,7 +115,7 @@ export class CustomIntervalResolver implements AnchorDateResolver {
 
   #resolveDateBeforeKnown(date: JournalAnchorDate): JournalAnchorDate | null {
     const current = date_from_string(date);
-    while (current.isAfter(date, "day")) {
+    while (current.isSameOrAfter(date, "day")) {
       current.subtract(this.#settings.value.duration, this.#settings.value.every);
     }
     return JournalAnchorDate(current.format("YYYY-MM-DD"));
@@ -123,7 +123,7 @@ export class CustomIntervalResolver implements AnchorDateResolver {
 
   #resolveDateAfterKnown(date: JournalAnchorDate): JournalAnchorDate | null {
     let current = date_from_string(date);
-    while (current.isBefore(date, "day")) {
+    while (current.isSameOrBefore(date, "day")) {
       const existing = this.plugin.index.get(this.journalName, JournalAnchorDate(current.format("YYYY-MM-DD")));
       if (existing?.end_date) {
         current = date_from_string(existing.end_date).add(1, "day");

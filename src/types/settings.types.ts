@@ -122,6 +122,9 @@ export interface JournalSettings {
     type: "create" | "existing";
     rows: NavBlockRow[];
   };
+  calendarViewBlock: {
+    rows: NavBlockRow[];
+  };
 }
 
 export interface JournalCommand {

@@ -4,10 +4,12 @@ import NavigationBlockRow from "./NavigationBlockRow.vue";
 import ObsidianIconButton from "@/components/obsidian/ObsidianIconButton.vue";
 import { usePlugin } from "@/composables/use-plugin";
 import { useShelfProvider } from "@/composables/use-shelf";
+import type { NavBlockRow } from "@/types/settings.types";
 
 const props = defineProps<{
   refDate: string;
   journalName: string;
+  rows: NavBlockRow[];
 }>();
 
 defineEmits<(event: "move-up" | "move-down" | "edit" | "remove", index: number) => void>();
@@ -22,14 +24,14 @@ useShelfProvider(shelfName);
 
 <template>
   <div v-if="journal">
-    <div v-for="(row, index) of journal.navBlock.rows" :key="index" class="nav-row">
+    <div v-for="(row, index) of rows" :key="index" class="nav-row">
       <div class="nav-row-wrapper">
         <NavigationBlockRow :journal="journal" :row="row" :ref-date="refDate" :default-format="journal.dateFormat" />
       </div>
       <div class="controls">
         <ObsidianIconButton v-if="index > 0" icon="arrow-up" tooltip="Move up" @click="$emit('move-up', index)" />
         <ObsidianIconButton
-          v-if="index < journal.navBlock.rows.length - 1"
+          v-if="index < rows.length - 1"
           icon="arrow-down"
           tooltip="Move down"
           @click="$emit('move-down', index)"

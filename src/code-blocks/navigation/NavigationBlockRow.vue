@@ -44,8 +44,8 @@ const text = computed(() => {
       value: props.journal.name,
     },
     index: {
-      type: "string",
-      value: noteData.value ? String(noteData.value.index) : "",
+      type: "number",
+      value: noteData.value?.index,
     },
   });
 });

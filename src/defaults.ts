@@ -21,7 +21,7 @@ export const defaultPluginSettings: PluginSettings = {
   },
   calendarView: {
     display: "month",
-    leaf: "left",
+    leaf: "right",
     weeks: "left",
     todayMode: "navigate",
   },
@@ -68,6 +68,9 @@ export const defaultJournalSettings: JournalSettings = {
 
   navBlock: {
     type: "create",
+    rows: [],
+  },
+  calendarViewBlock: {
     rows: [],
   },
 };

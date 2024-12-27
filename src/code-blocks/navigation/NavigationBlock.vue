@@ -9,6 +9,7 @@ import { usePlugin } from "@/composables/use-plugin";
 const props = defineProps<{
   refDate: string;
   journalName: string;
+  rows: NavBlockRow[];
   preventNavigation?: boolean;
 }>();
 
@@ -39,7 +40,7 @@ async function navigate(type: NavBlockRow["link"], date: string, journalName?: s
 
 <template>
   <div v-if="journal" class="nav-block">
-    <div v-for="(row, index) of journal.navBlock.rows" :key="index">
+    <div v-for="(row, index) of rows" :key="index">
       <NavigationBlockRow
         :journal="journal"
         :row="row"

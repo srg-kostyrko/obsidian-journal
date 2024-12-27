@@ -63,6 +63,10 @@ export class Journal {
     return this.config.value.navBlock;
   }
 
+  get calendarViewBlock(): JournalSettings["calendarViewBlock"] {
+    return this.config.value.calendarViewBlock;
+  }
+
   get decorations(): JournalSettings["decorations"] {
     return this.config.value.decorations;
   }
@@ -155,6 +159,24 @@ export class Journal {
     return this.#buildMetadata(previousAnchorDate);
   }
 
+  findAll(startDate: string, endDate: string): (JournalNoteData | JournalMetadata)[] {
+    const startAnchorDate = this.#anchorDateResolver.resolveForDate(startDate);
+    const endAnchorDate = this.#anchorDateResolver.resolveForDate(endDate);
+    if (!startAnchorDate || !endAnchorDate) return [];
+    const list = [];
+    let current: string | null = startAnchorDate;
+    while (current && current <= endAnchorDate) {
+      const data = this.get(current);
+      if (data) {
+        list.push(data);
+      }
+      const next = this.next(current);
+      current = next ? next.date : null;
+    }
+
+    return list;
+  }
+
   async open(metadata: JournalMetadata): Promise<void> {
     const file = await this.#ensureNote(metadata);
     if (!file) return;
@@ -226,6 +248,33 @@ export class Journal {
       const temporary = this.config.value.navBlock.rows[index];
       this.config.value.navBlock.rows[index] = this.config.value.navBlock.rows[index + 1];
       this.config.value.navBlock.rows[index + 1] = temporary;
+    }
+  }
+
+  addCalendarViewRow(row: NavBlockRow): void {
+    this.config.value.calendarViewBlock.rows.push(row);
+  }
+
+  editCalendarViewRow(index: number, row: NavBlockRow): void {
+    this.config.value.calendarViewBlock.rows[index] = row;
+  }
+
+  deleteCalendarViewRow(index: number): void {
+    this.config.value.calendarViewBlock.rows.splice(index, 1);
+  }
+
+  moveCalendarViewRowUp(index: number) {
+    if (index > 0) {
+      const temporary = this.config.value.calendarViewBlock.rows[index];
+      this.config.value.calendarViewBlock.rows[index] = this.config.value.calendarViewBlock.rows[index - 1];
+      this.config.value.calendarViewBlock.rows[index - 1] = temporary;
+    }
+  }
+  moveCalendarViewRowDown(index: number) {
+    if (index < this.config.value.calendarViewBlock.rows.length - 1) {
+      const temporary = this.config.value.calendarViewBlock.rows[index];
+      this.config.value.calendarViewBlock.rows[index] = this.config.value.calendarViewBlock.rows[index + 1];
+      this.config.value.calendarViewBlock.rows[index + 1] = temporary;
     }
   }
 

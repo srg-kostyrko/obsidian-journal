@@ -12,6 +12,7 @@ import { useApp } from "@/composables/use-app";
 import { usePlugin } from "@/composables/use-plugin";
 import NotesMonthView from "@/components/notes-calendar/NotesMonthView.vue";
 import NotesCalendarButton from "@/components/notes-calendar/NotesCalendarButton.vue";
+import CalendarViewCustomIntervals from "./CalendarViewCustomIntervals.vue";
 
 const app = useApp();
 const plugin = usePlugin();
@@ -114,6 +115,10 @@ function openDay(date: string, event: MouseEvent) {
         <ObsidianIconButton icon="chevrons-right" tooltip="Next year" @click="navigate(1, 'year')" />
       </template>
     </NotesMonthView>
+
+    <div class="calendar-view-separator" />
+
+    <CalendarViewCustomIntervals :date="refDate" />
   </div>
 </template>
 
@@ -130,5 +135,10 @@ function openDay(date: string, event: MouseEvent) {
   gap: var(--size-2-2);
   align-items: center;
   justify-content: center;
+}
+.calendar-view-separator {
+  height: 1px;
+  margin: var(--size-2-2) 0;
+  border-bottom: 1px solid var(--color-accent);
 }
 </style>

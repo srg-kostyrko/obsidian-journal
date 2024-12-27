@@ -185,6 +185,41 @@ function moveNavRowDown(index: number) {
   journal.value.moveNavRowDown(index);
 }
 
+function addCalendarViewBlockRow() {
+  if (!journal.value) return;
+  new VueModal(plugin, "Add row to calendar view block", EditNavBlockRowModal, {
+    currentJournal: journal.value.name,
+    onSubmit: (row: NavBlockRow) => {
+      if (!journal.value) return;
+      journal.value.addCalendarViewRow(row);
+    },
+  }).open();
+}
+
+function editCalendarViewRow(index: number) {
+  if (!journal.value) return;
+  new VueModal(plugin, "Edit calendar view block row", EditNavBlockRowModal, {
+    currentJournal: journalName,
+    row: journal.value.calendarViewBlock.rows[index],
+    onSubmit: (row: NavBlockRow) => {
+      if (!journal.value) return;
+      journal.value.editNavRow(index, row);
+    },
+  }).open();
+}
+function removeCalendarViewRow(index: number) {
+  if (!journal.value) return;
+  journal.value.deleteCalendarViewRow(index);
+}
+function moveCalendarViewRowUp(index: number) {
+  if (!journal.value) return;
+  journal.value.moveNavRowUp(index);
+}
+function moveCalendarViewRowDown(index: number) {
+  if (!journal.value) return;
+  journal.value.moveNavRowDown(index);
+}
+
 watch(
   () => journal.value?.config.value.start,
   (value) => {
@@ -450,6 +485,7 @@ watch(
       </template>
       <NavigationBlockEditPreview
         class="nav-block-preview"
+        :rows="journal.navBlock.rows"
         :journal-name="journalName"
         :ref-date="refDate"
         @move-up="moveNavRowUp"
@@ -463,6 +499,26 @@ watch(
           <option value="existing">Open existing note</option>
         </ObsidianDropdown>
       </ObsidianSetting>
+    </CollapsibleBlock>
+
+    <CollapsibleBlock v-if="journal.type === 'custom'">
+      <template #trigger>
+        <IconedRow icon="signpost-big"> Calendar View block </IconedRow>
+      </template>
+      <template #controls>
+        <ObsidianButton @click="addCalendarViewBlockRow">Add row</ObsidianButton>
+      </template>
+
+      <NavigationBlockEditPreview
+        class="nav-block-preview"
+        :rows="journal.calendarViewBlock.rows"
+        :journal-name="journalName"
+        :ref-date="refDate"
+        @move-up="moveCalendarViewRowUp"
+        @move-down="moveCalendarViewRowDown"
+        @edit="editCalendarViewRow"
+        @remove="removeCalendarViewRow"
+      />
     </CollapsibleBlock>
   </div>
 </template>

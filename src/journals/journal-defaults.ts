@@ -158,6 +158,21 @@ export function prepareJournalDefaultsBasedOnType(write: JournalSettings["write"
     nameTemplate: defaultNameTemplates[write.type],
     dateFormat: defaultDateFormats[write.type],
     navBlock: defaultNavBlocks[write.type],
+    calendarViewBlock: {
+      rows: [
+        {
+          ...emptyNavRow,
+          template: "{{journal_name}} {{index}}",
+          link: "self",
+          fontSize: 1.2,
+          bold: true,
+        },
+        {
+          ...emptyNavRow,
+          template: "{{start_date}} to {{end_date}}",
+        },
+      ],
+    },
   };
   if (write.type === "custom") {
     defaults.start = write.anchorDate;

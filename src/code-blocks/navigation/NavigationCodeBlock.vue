@@ -37,16 +37,32 @@ function open(metadata: JournalMetadata) {
 </script>
 
 <template>
-  <div v-if="noteData" class="nav-view">
+  <div v-if="noteData && journal" class="nav-view">
     <div v-if="previousMetadata" class="nav-block-relative">
-      <NavigationBlock :ref-date="previousMetadata.date" :journal-name="noteData.journal" :prevent-navigation />
+      <NavigationBlock
+        :rows="journal.navBlock.rows"
+        :ref-date="previousMetadata.date"
+        :journal-name="noteData.journal"
+        :prevent-navigation
+      />
       <ObsidianIconButton icon="arrow-left" class="nav-prev" @click="open(previousMetadata)" />
     </div>
     <div v-else class="nav-block-relative"></div>
-    <NavigationBlock class="nav-block" :ref-date="noteData.date" :journal-name="noteData.journal" :prevent-navigation />
+    <NavigationBlock
+      :rows="journal.navBlock.rows"
+      class="nav-block"
+      :ref-date="noteData.date"
+      :journal-name="noteData.journal"
+      :prevent-navigation
+    />
     <div v-if="nextMetadata" class="nav-block-relative">
       <ObsidianIconButton icon="arrow-right" class="nav-next" @click="open(nextMetadata)" />
-      <NavigationBlock :ref-date="nextMetadata.date" :journal-name="noteData.journal" :prevent-navigation />
+      <NavigationBlock
+        :rows="journal.navBlock.rows"
+        :ref-date="nextMetadata.date"
+        :journal-name="noteData.journal"
+        :prevent-navigation
+      />
     </div>
     <div v-else class="nav-block-relative"></div>
   </div>
