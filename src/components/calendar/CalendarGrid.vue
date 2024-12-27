@@ -1,5 +1,17 @@
 <script setup lang="ts">
+import { computed } from "vue";
+import { usePlugin } from "@/composables/use-plugin";
+import { colorToString } from "@/utils/color";
+
 defineProps<{ columns: number }>();
+
+const plugin = usePlugin();
+
+const todayColor = computed(() => colorToString(plugin.calendarViewSettings.todayStyle.color));
+const todayBackground = computed(() => colorToString(plugin.calendarViewSettings.todayStyle.background));
+
+const activeColor = computed(() => colorToString(plugin.calendarViewSettings.activeStyle.color));
+const activeBackground = computed(() => colorToString(plugin.calendarViewSettings.activeStyle.background));
 </script>
 
 <template>
@@ -39,11 +51,11 @@ defineProps<{ columns: number }>();
   color: var(--code-comment);
 }
 .calendar :deep([data-today]) {
-  color: var(--text-accent);
-  font-weight: 600;
+  color: v-bind(todayColor);
+  background-color: v-bind(todayBackground);
 }
 .calendar :deep([data-selected]) {
-  background-color: var(--interactive-accent);
-  color: var(--text-on-accent);
+  color: v-bind(activeColor);
+  background-color: v-bind(activeBackground);
 }
 </style>

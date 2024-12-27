@@ -24,6 +24,14 @@ export const defaultPluginSettings: PluginSettings = {
     leaf: "right",
     weeks: "left",
     todayMode: "navigate",
+    todayStyle: {
+      color: { type: "theme", name: "text-accent" },
+      background: { type: "transparent" },
+    },
+    activeStyle: {
+      color: { type: "theme", name: "text-on-accent" },
+      background: { type: "theme", name: "interactive-accent" },
+    },
   },
 };
 

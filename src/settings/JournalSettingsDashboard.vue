@@ -11,6 +11,7 @@ import JournalSettingsWithShelves from "./JournalSettingsWithShelves.vue";
 import CollapsibleBlock from "@/components/CollapsibleBlock.vue";
 import { usePlugin } from "@/composables/use-plugin";
 import IconedRow from "@/components/IconedRow.vue";
+import ColorPicker from "@/components/ColorPicker.vue";
 
 const emit = defineEmits<(event: "edit" | "organize" | "bulk-add", name: string) => void>();
 
@@ -98,6 +99,20 @@ function changeFirstWeekOfYear(value: number): void {
         <option value="navigate">Opens today's note if it exists</option>
         <option value="switch_date">Just switch calendar view to current month</option>
       </ObsidianDropdown>
+    </ObsidianSetting>
+    <ObsidianSetting name="Highlighting today" header />
+    <ObsidianSetting name="Text color">
+      <ColorPicker v-model="plugin.calendarViewSettings.todayStyle.color" />
+    </ObsidianSetting>
+    <ObsidianSetting name="Background color">
+      <ColorPicker v-model="plugin.calendarViewSettings.todayStyle.background" />
+    </ObsidianSetting>
+    <ObsidianSetting name="Highlighting active note" header />
+    <ObsidianSetting name="Text color">
+      <ColorPicker v-model="plugin.calendarViewSettings.activeStyle.color" />
+    </ObsidianSetting>
+    <ObsidianSetting name="Background color">
+      <ColorPicker v-model="plugin.calendarViewSettings.activeStyle.background" />
     </ObsidianSetting>
   </CollapsibleBlock>
 </template>
