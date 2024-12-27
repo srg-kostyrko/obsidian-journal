@@ -4,6 +4,7 @@ import type { NavBlockRow } from "@/types/settings.types";
 import { replaceTemplateVariables } from "@/utils/template";
 import { computed } from "vue";
 import { useShelfData } from "@/composables/use-shelf";
+import { colorToString } from "@/utils/color";
 
 const props = defineProps<{
   row: NavBlockRow;
@@ -52,6 +53,8 @@ const text = computed(() => {
 const fontSize = computed(() => `${props.row.fontSize}em`);
 const fontWeight = computed(() => (props.row.bold ? "bold" : "normal"));
 const fontStyle = computed(() => (props.row.italic ? "italic" : "normal"));
+const color = computed(() => colorToString(props.row.color));
+const background = computed(() => colorToString(props.row.background));
 
 const { journals } = useShelfData();
 
@@ -83,5 +86,7 @@ function onClick() {
   font-weight: v-bind(fontWeight);
   font-style: v-bind(fontStyle);
   cursor: v-bind(cursor);
+  color: v-bind(color);
+  background-color: v-bind(background);
 }
 </style>

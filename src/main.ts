@@ -81,7 +81,7 @@ export default class JournalPluginImpl extends Plugin implements JournalPlugin {
 
   createJournal(name: string, write: JournalSettings["write"]): JournalSettings {
     const settings: JournalSettings = deepCopy({
-      ...deepCopy(defaultJournalSettings),
+      ...defaultJournalSettings,
       ...prepareJournalDefaultsBasedOnType(write),
       name,
       write,

@@ -10,9 +10,12 @@ import ObsidianDropdown from "../obsidian/ObsidianDropdown.vue";
 import ObsidianToggle from "../obsidian/ObsidianToggle.vue";
 import FormErrors from "@/components/FormErrors.vue";
 import ObsidianButton from "../obsidian/ObsidianButton.vue";
+import ColorPicker from "../ColorPicker.vue";
 import { computed } from "vue";
 import { usePlugin } from "@/composables/use-plugin";
 import { useShelfProvider } from "@/composables/use-shelf";
+import { colorScheme } from "@/utils/color";
+import { deepCopy } from "@/utils/misc";
 
 const { currentJournal, row } = defineProps<{
   row?: NavBlockRow;
@@ -39,8 +42,17 @@ const supportedJournals = computed(() => {
 
 const { defineField, errorBag, handleSubmit } = useForm({
   initialValues: row
-    ? { ...row }
-    : { template: "", fontSize: 1, bold: false, italic: false, link: "none", journal: "" },
+    ? deepCopy(row)
+    : {
+        template: "",
+        fontSize: 1,
+        bold: false,
+        italic: false,
+        link: "none",
+        journal: "",
+        color: { type: "theme", name: "text-normal" },
+        background: { type: "transparent" },
+      },
   validationSchema: toTypedSchema(
     v.pipe(
       v.object({
@@ -48,6 +60,8 @@ const { defineField, errorBag, handleSubmit } = useForm({
         fontSize: v.number(),
         bold: v.boolean(),
         italic: v.boolean(),
+        color: colorScheme,
+        background: colorScheme,
         link: v.picklist(["none", "self", "journal", "day", "week", "month", "quarter", "year"]),
         journal: v.string(),
       }),
@@ -69,6 +83,8 @@ const [template, templateAttrs] = defineField("template");
 const [fontSize, fontSizeAttrs] = defineField("fontSize");
 const [bold, boldAttrs] = defineField("bold");
 const [italic, italicAttrs] = defineField("italic");
+const [color, colorAttrs] = defineField("color");
+const [background, backgroundAttrs] = defineField("background");
 const [link, linkAttrs] = defineField("link");
 const [journalField, journalAttrs] = defineField("journal");
 
@@ -97,6 +113,15 @@ const onSubmit = handleSubmit((values) => {
     </ObsidianSetting>
     <ObsidianSetting name="Italic">
       <ObsidianToggle v-model="italic" v-bind="italicAttrs" />
+    </ObsidianSetting>
+    <ObsidianSetting name="Text color">
+      <template #description>
+        <FormErrors :errors="errorBag.color" />
+      </template>
+      <ColorPicker v-model="color" v-bind="colorAttrs" />
+    </ObsidianSetting>
+    <ObsidianSetting name="Background color">
+      <ColorPicker v-model="background" v-bind="backgroundAttrs" />
     </ObsidianSetting>
     <ObsidianSetting name="Link">
       <ObsidianDropdown v-model="link" v-bind="linkAttrs">

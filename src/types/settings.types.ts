@@ -276,6 +276,8 @@ export interface NavBlockRow {
   fontSize: number;
   bold: boolean;
   italic: boolean;
+  color: ColorSettings;
+  background: ColorSettings;
   link: "none" | "self" | "journal" | JournalSettings["write"]["type"];
   journal: string;
 }

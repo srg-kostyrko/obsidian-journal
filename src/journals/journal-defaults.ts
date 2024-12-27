@@ -26,6 +26,8 @@ const emptyNavRow: NavBlockRow = {
   italic: false,
   link: "none",
   journal: "",
+  color: { type: "theme", name: "text-normal" },
+  background: { type: "transparent" },
 };
 
 const rowNavWeek: NavBlockRow = {
