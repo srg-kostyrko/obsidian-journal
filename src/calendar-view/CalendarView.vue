@@ -93,7 +93,7 @@ function goToday(event: MouseEvent) {
     openDate(plugin, refDate.value, journals, event).catch(console.error);
   }
 }
-function pickDate() {
+function pickDate(event: MouseEvent) {
   new VueModal(
     plugin,
     "Pick a date",
@@ -102,6 +102,19 @@ function pickDate() {
       selectedDate: refDate.value,
       onSelect(date: string) {
         refDateMoment.value = date_from_string(date);
+        if (plugin.calendarViewSettings.pickMode === "create") {
+          openDay(date, event);
+        } else if (plugin.calendarViewSettings.pickMode === "navigate") {
+          const journals: string[] = [];
+          for (const journal of plugin.journals) {
+            const anchorDate = journal.resolveAnchorDate(date);
+            if (!anchorDate) continue;
+            const index = plugin.index.getJournalIndex(journal.name);
+            if (!index) continue;
+            if (index.get(anchorDate)) journals.push(journal.name);
+          }
+          openDate(plugin, date, journals, event).catch(console.error);
+        }
       },
     },
     400,

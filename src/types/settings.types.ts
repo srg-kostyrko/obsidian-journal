@@ -27,6 +27,7 @@ export interface PluginSettings {
     weeks: "none" | "left" | "right";
 
     todayMode: "navigate" | "create" | "switch_date";
+    pickMode: "navigate" | "create" | "switch_date";
 
     todayStyle: {
       color: ColorSettings;

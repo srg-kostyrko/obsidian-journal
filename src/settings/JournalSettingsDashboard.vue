@@ -100,6 +100,13 @@ function changeFirstWeekOfYear(value: number): void {
         <option value="switch_date">Just switch calendar view to current month</option>
       </ObsidianDropdown>
     </ObsidianSetting>
+    <ObsidianSetting name="Pick date button">
+      <ObsidianDropdown v-model="plugin.calendarViewSettings.pickMode">
+        <option value="create">Creates note for picked date if doesn't exist</option>
+        <option value="navigate">Opens note for picked date if it exists</option>
+        <option value="switch_date">Just switch calendar view to month containing corresponding date</option>
+      </ObsidianDropdown>
+    </ObsidianSetting>
     <ObsidianSetting name="Highlighting today" header />
     <ObsidianSetting name="Text color">
       <ColorPicker v-model="plugin.calendarViewSettings.todayStyle.color" />
