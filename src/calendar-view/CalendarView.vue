@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { computed, ref } from "vue";
+import { computed, ref, watch } from "vue";
 import ObsidianIconButton from "../components/obsidian/ObsidianIconButton.vue";
 import ObsidianButton from "../components/obsidian/ObsidianButton.vue";
 import DatePickerModal from "../components/modals/DatePicker.modal.vue";
@@ -116,6 +116,33 @@ function openDay(date: string, event: MouseEvent) {
     event,
   ).catch(console.error);
 }
+
+watch(activeNoteData, (activeNote) => {
+  if (!activeNote) return;
+  const journal = plugin.getJournal(activeNote.journal);
+  if (!journal) return;
+  switch (journal.type) {
+    case "quarter": {
+      const start = date_from_string(activeNote.date).startOf("quarter");
+      const end = date_from_string(activeNote.date).endOf("quarter");
+      if (!refDateMoment.value.isBetween(start, end)) {
+        refDateMoment.value = start;
+      }
+      break;
+    }
+    case "year": {
+      const start = date_from_string(activeNote.date).startOf("year");
+      const end = date_from_string(activeNote.date).endOf("year");
+      if (!refDateMoment.value.isBetween(start, end)) {
+        refDateMoment.value = start;
+      }
+      break;
+    }
+    default: {
+      refDateMoment.value = date_from_string(activeNote.date);
+    }
+  }
+});
 // TODO slim header to avoid scroll
 </script>
 
