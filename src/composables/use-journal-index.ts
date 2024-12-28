@@ -1,6 +1,6 @@
 import type { JournalIndex } from "@/journals/journal-index";
-import { usePlugin } from "./use-plugin";
+import type { JournalPlugin } from "@/types/plugin.types";
 
-export function useJournalIndex(journalName: string): JournalIndex {
-  return usePlugin().index.getJournalIndex(journalName);
+export function useJournalIndex(plugin: JournalPlugin, journalName: string): JournalIndex {
+  return plugin.index.getJournalIndex(journalName);
 }

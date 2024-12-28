@@ -95,10 +95,11 @@ export class CustomIntervalResolver implements AnchorDateResolver {
   }
 
   #resolveDate(date: string): JournalAnchorDate | null {
-    const index = useJournalIndex(this.journalName);
+    const index = useJournalIndex(this.plugin, this.journalName);
 
     const closest = index.findClosestDate(date);
     if (closest) {
+      if (closest === date) return closest;
       return closest <= date ? this.#resolveDateAfterKnown(closest) : this.#resolveDateBeforeKnown(closest);
     }
 
