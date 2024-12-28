@@ -13,6 +13,8 @@ import { usePlugin } from "@/composables/use-plugin";
 import NotesMonthView from "@/components/notes-calendar/NotesMonthView.vue";
 import NotesCalendarButton from "@/components/notes-calendar/NotesCalendarButton.vue";
 import CalendarViewCustomIntervals from "./CalendarViewCustomIntervals.vue";
+import { FRONTMATTER_DATE_FORMAT } from "@/constants";
+import { useActiveNoteData } from "@/composables/use-active-note-data";
 
 const app = useApp();
 const plugin = usePlugin();
@@ -36,6 +38,31 @@ const shouldShowShelf = computed(() => {
 });
 
 const { journals } = useShelfProvider(selectedShelf);
+
+const monthRefDate = computed(() => {
+  return refDateMoment.value.startOf("month").format(FRONTMATTER_DATE_FORMAT);
+});
+const quarterRefDate = computed(() => {
+  return refDateMoment.value.startOf("quarter").format(FRONTMATTER_DATE_FORMAT);
+});
+const yearRefDate = computed(() => {
+  return refDateMoment.value.startOf("year").format(FRONTMATTER_DATE_FORMAT);
+});
+
+const activeNoteData = useActiveNoteData(plugin);
+const activeNoteJournal = computed(() => {
+  if (!activeNoteData.value) return null;
+  return plugin.getJournal(activeNoteData.value.journal);
+});
+const isMonthActive = computed(
+  () => activeNoteJournal.value?.type === "month" && activeNoteData.value?.date === monthRefDate.value,
+);
+const isQuarterActive = computed(
+  () => activeNoteJournal.value?.type === "quarter" && activeNoteData.value?.date === quarterRefDate.value,
+);
+const isYearActive = computed(
+  () => activeNoteJournal.value?.type === "year" && activeNoteData.value?.date === yearRefDate.value,
+);
 
 function selectShelf() {
   new ShelfSuggestModal(
@@ -106,9 +133,14 @@ function openDay(date: string, event: MouseEvent) {
         <ObsidianIconButton icon="chevrons-left" tooltip="Previous year" @click="navigate(-1, 'year')" />
         <ObsidianIconButton icon="chevron-left" tooltip="Previous month" @click="navigate(-1, 'month')" />
         <div class="month-header">
-          <NotesCalendarButton :date="refDate" type="month" />
-          <NotesCalendarButton v-if="journals.quarter.value.length > 0" :date="refDate" type="quarter" />
-          <NotesCalendarButton :date="refDate" type="year" />
+          <NotesCalendarButton :date="refDate" type="month" :data-selected="isMonthActive ? '' : null" />
+          <NotesCalendarButton
+            v-if="journals.quarter.value.length > 0"
+            :date="refDate"
+            type="quarter"
+            :data-selected="isQuarterActive ? '' : null"
+          />
+          <NotesCalendarButton :date="refDate" type="year" :data-selected="isYearActive ? '' : null" />
         </div>
 
         <ObsidianIconButton icon="chevron-right" tooltip="Next month" @click="navigate(1, 'month')" />

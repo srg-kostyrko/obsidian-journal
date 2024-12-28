@@ -40,6 +40,7 @@ export default [
       "vue/max-attributes-per-line": "off",
       "vue/singleline-html-element-content-newline": "off",
       "vue/html-self-closing": "off",
+      "vue/html-indent": "off",
       "unicorn/prefer-structured-clone": "off",
       "unicorn/filename-case": [
         "error",

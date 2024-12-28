@@ -355,9 +355,9 @@ watch(
       <template #description>
         Used to format dates if not defined in variable.<br />
         <a target="_blank" href="https://momentjs.com/docs/#/displaying/format/">Syntax reference</a><br />
-        <DateFormatPreview :format="journal.dateFormat" />
+        <DateFormatPreview :format="config.dateFormat" />
       </template>
-      <ObsidianTextInput v-model="journal.dateFormat" />
+      <ObsidianTextInput v-model="config.dateFormat" />
     </ObsidianSetting>
 
     <ObsidianSetting name="Folder">

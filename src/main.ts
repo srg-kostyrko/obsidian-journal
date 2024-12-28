@@ -22,7 +22,7 @@ export default class JournalPluginImpl extends Plugin implements JournalPlugin {
   #stopHandles: WatchStopHandle[] = [];
   #journals = shallowRef<Record<string, Journal>>({});
   #index!: JournalsIndex;
-  #activeNote: TFile | null = null;
+  #activeNote: Ref<TFile | null> = ref(null);
   #config: Ref<PluginSettings> = ref(deepCopy(defaultPluginSettings));
 
   get showReloadHint(): boolean {
@@ -34,7 +34,7 @@ export default class JournalPluginImpl extends Plugin implements JournalPlugin {
   }
 
   get activeNote(): TFile | null {
-    return this.#activeNote;
+    return this.#activeNote.value;
   }
 
   get usesShelves() {
@@ -246,6 +246,7 @@ export default class JournalPluginImpl extends Plugin implements JournalPlugin {
     this.app.workspace.onLayoutReady(() => {
       this.index.reindex();
       this.placeCalendarView(true);
+      this.#activeNote.value = this.app.workspace.getActiveFile();
     });
   }
   onunload(): void {
@@ -291,7 +292,7 @@ export default class JournalPluginImpl extends Plugin implements JournalPlugin {
 
     this.registerEvent(
       this.app.workspace.on("file-open", (file) => {
-        this.#activeNote = file;
+        this.#activeNote.value = file;
       }),
     );
   }

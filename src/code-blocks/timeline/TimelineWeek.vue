@@ -15,7 +15,7 @@ const refDate = computed(() => {
 </script>
 
 <template>
-  <NotesWeekView :ref-date="refDate" :selected-date="refDate" />
+  <NotesWeekView :ref-date="refDate" />
 </template>
 
 <style scoped></style>

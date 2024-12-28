@@ -62,18 +62,21 @@ function toBorderStyle(side: BorderSettings) {
 </script>
 
 <template>
-  <div class="calendar-decoration" :style="borderStyle">
+  <span class="calendar-decoration" :style="borderStyle">
     <slot></slot>
     <DecorationShape v-for="(decoration, index) in shapeDecorations" :key="index" :decoration="decoration" />
     <DecorationCorner v-for="(decoration, index) in cornerDecorations" :key="index" :decoration="decoration" />
     <DecorationIcon v-for="(decoration, index) in iconDecorations" :key="index" :decoration="decoration" />
-  </div>
+  </span>
 </template>
 
 <style scoped>
 .calendar-decoration {
   width: 100%;
   height: 100%;
+  display: flex;
+  justify-content: center;
+  align-items: center;
   background-color: v-bind(background);
   color: v-bind(textColor);
 }
