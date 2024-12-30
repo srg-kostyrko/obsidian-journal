@@ -131,9 +131,11 @@ export interface JournalSettings {
   navBlock: {
     type: "create" | "existing";
     rows: NavBlockRow[];
+    decorateWholeBlock: boolean;
   };
   calendarViewBlock: {
     rows: NavBlockRow[];
+    decorateWholeBlock: boolean;
   };
 }
 
@@ -290,6 +292,7 @@ export interface NavBlockRow {
   background: ColorSettings;
   link: "none" | "self" | "journal" | JournalSettings["write"]["type"];
   journal: string;
+  addDecorations: boolean;
 }
 
 export type ColorSettings =

@@ -5,13 +5,14 @@ import type { JournalNoteData } from "@/types/journal.types";
 
 export function useJournalDate(
   plugin: JournalPlugin,
-  date: MaybeRefOrGetter<string>,
+  date: MaybeRefOrGetter<string | null>,
   journalName: MaybeRefOrGetter<string>,
 ) {
   const _date = toRef(date);
   const _journalName = toRef(journalName);
   const journal = useJournal(plugin, _journalName);
   const anchorDate = computed(() => {
+    if (!_date.value) return null;
     if (journal.value) {
       return journal.value.resolveAnchorDate(_date.value);
     }

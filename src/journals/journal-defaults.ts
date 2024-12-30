@@ -28,6 +28,7 @@ const emptyNavRow: NavBlockRow = {
   journal: "",
   color: { type: "theme", name: "text-normal" },
   background: { type: "transparent" },
+  addDecorations: false,
 };
 
 const rowNavWeek: NavBlockRow = {
@@ -54,6 +55,7 @@ const rowNavRelative: NavBlockRow = {
 const defaultNavBlocks: Record<JournalSettings["write"]["type"], JournalSettings["navBlock"]> = {
   day: {
     type: "create",
+    decorateWholeBlock: false,
     rows: [
       {
         ...emptyNavRow,
@@ -65,6 +67,7 @@ const defaultNavBlocks: Record<JournalSettings["write"]["type"], JournalSettings
         fontSize: 3,
         bold: true,
         link: "self",
+        addDecorations: true,
       },
       rowNavRelative,
       rowNavWeek,
@@ -74,12 +77,14 @@ const defaultNavBlocks: Record<JournalSettings["write"]["type"], JournalSettings
   },
   week: {
     type: "create",
+    decorateWholeBlock: false,
     rows: [
       {
         ...rowNavWeek,
         fontSize: 3,
         bold: true,
         link: "self",
+        addDecorations: true,
       },
       rowNavRelative,
       rowNavMonth,
@@ -88,12 +93,14 @@ const defaultNavBlocks: Record<JournalSettings["write"]["type"], JournalSettings
   },
   month: {
     type: "create",
+    decorateWholeBlock: false,
     rows: [
       {
         ...rowNavMonth,
         fontSize: 3,
         bold: true,
         link: "self",
+        addDecorations: true,
       },
       rowNavRelative,
       rowNavYear,
@@ -101,6 +108,7 @@ const defaultNavBlocks: Record<JournalSettings["write"]["type"], JournalSettings
   },
   quarter: {
     type: "create",
+    decorateWholeBlock: false,
     rows: [
       {
         ...emptyNavRow,
@@ -108,6 +116,7 @@ const defaultNavBlocks: Record<JournalSettings["write"]["type"], JournalSettings
         fontSize: 3,
         bold: true,
         link: "self",
+        addDecorations: true,
       },
       rowNavRelative,
       rowNavYear,
@@ -115,22 +124,26 @@ const defaultNavBlocks: Record<JournalSettings["write"]["type"], JournalSettings
   },
   year: {
     type: "create",
+    decorateWholeBlock: false,
     rows: [
       {
         ...rowNavYear,
         fontSize: 3,
         bold: true,
         link: "self",
+        addDecorations: true,
       },
       rowNavRelative,
     ],
   },
   weekdays: {
     type: "create",
+    decorateWholeBlock: false,
     rows: [],
   },
   custom: {
     type: "create",
+    decorateWholeBlock: false,
     rows: [
       {
         ...emptyNavRow,
@@ -138,6 +151,7 @@ const defaultNavBlocks: Record<JournalSettings["write"]["type"], JournalSettings
         link: "self",
         fontSize: 3,
         bold: true,
+        addDecorations: true,
       },
       {
         ...emptyNavRow,

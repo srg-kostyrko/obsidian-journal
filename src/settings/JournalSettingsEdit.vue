@@ -499,6 +499,9 @@ watch(
           <option value="existing">Open existing note</option>
         </ObsidianDropdown>
       </ObsidianSetting>
+      <ObsidianSetting name="Decorate whole navigation block">
+        <ObsidianToggle v-model="journal.navBlock.decorateWholeBlock" />
+      </ObsidianSetting>
     </CollapsibleBlock>
 
     <CollapsibleBlock v-if="journal.type === 'custom'">
@@ -519,6 +522,10 @@ watch(
         @edit="editCalendarViewRow"
         @remove="removeCalendarViewRow"
       />
+
+      <ObsidianSetting name="Decorate whole navigation block">
+        <ObsidianToggle v-model="journal.calendarViewBlock.decorateWholeBlock" />
+      </ObsidianSetting>
     </CollapsibleBlock>
   </div>
 </template>

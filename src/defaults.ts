@@ -78,9 +78,11 @@ export const defaultJournalSettings: JournalSettings = {
   navBlock: {
     type: "create",
     rows: [],
+    decorateWholeBlock: false,
   },
   calendarViewBlock: {
     rows: [],
+    decorateWholeBlock: false,
   },
 };
 

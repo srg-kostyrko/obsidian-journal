@@ -52,6 +52,7 @@ const { defineField, errorBag, handleSubmit } = useForm({
         journal: "",
         color: { type: "theme", name: "text-normal" },
         background: { type: "transparent" },
+        addDecorations: false,
       },
   validationSchema: toTypedSchema(
     v.pipe(
@@ -64,6 +65,7 @@ const { defineField, errorBag, handleSubmit } = useForm({
         background: colorScheme,
         link: v.picklist(["none", "self", "journal", "day", "week", "month", "quarter", "year"]),
         journal: v.string(),
+        addDecorations: v.boolean(),
       }),
       v.forward(
         v.partialCheck(
@@ -87,6 +89,7 @@ const [color, colorAttrs] = defineField("color");
 const [background, backgroundAttrs] = defineField("background");
 const [link, linkAttrs] = defineField("link");
 const [journalField, journalAttrs] = defineField("journal");
+const [addDecorations, addDecorationsAttrs] = defineField("addDecorations");
 
 const onSubmit = handleSubmit((values) => {
   emit("submit", values);
@@ -144,6 +147,9 @@ const onSubmit = handleSubmit((values) => {
           {{ journalName }}
         </option>
       </ObsidianDropdown>
+    </ObsidianSetting>
+    <ObsidianSetting name="Add decorations">
+      <ObsidianToggle v-model="addDecorations" v-bind="addDecorationsAttrs" />
     </ObsidianSetting>
     <ObsidianSetting>
       <ObsidianButton @click="$emit('close')">Cancel</ObsidianButton>

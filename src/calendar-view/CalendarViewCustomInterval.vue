@@ -34,6 +34,7 @@ const activeBackground = computed(() => colorToString(plugin.calendarViewSetting
       :ref-date="interval.date"
       :journal-name="journal.name"
       :class="{ 'is-active': isActive && interval.date === activeNote?.date }"
+      :decorate-block="journal.calendarViewBlock.decorateWholeBlock"
     />
   </div>
 </template>

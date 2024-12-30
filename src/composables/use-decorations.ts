@@ -18,7 +18,7 @@ import type { JournalPlugin } from "@/types/plugin.types";
 
 export function useDecorations(
   plugin: JournalPlugin,
-  dateRef: MaybeRefOrGetter<string>,
+  dateRef: MaybeRefOrGetter<string | null>,
   decorationsList: MaybeRefOrGetter<
     {
       journalName: string;
@@ -26,9 +26,10 @@ export function useDecorations(
     }[]
   >,
 ): ComputedRef<JournalDecorationsStyle[]> {
-  const _date = unref(dateRef);
   const _decorationsList = toRef(decorationsList);
   return computed(() => {
+    const _date = unref(dateRef);
+    if (!_date) return [];
     return _decorationsList.value.flatMap(({ journalName, decoration }) => {
       return useJournalDecorations(plugin, _date, journalName, decoration).value;
     });
@@ -37,7 +38,7 @@ export function useDecorations(
 
 export function useJournalDecorations(
   plugin: JournalPlugin,
-  date: MaybeRefOrGetter<string>,
+  date: MaybeRefOrGetter<string | null>,
   journalName: string,
   decoration: MaybeRefOrGetter<JournalDecoration>,
 ): ComputedRef<JournalDecorationsStyle[]> {
@@ -46,6 +47,7 @@ export function useJournalDecorations(
   const _decoration = toRef(decoration);
 
   return computed(() => {
+    if (!_date.value) return [];
     const { noteData } = useJournalDate(plugin, _date, _journalName);
     const isApplicable = checkDecorationConditions(
       plugin,

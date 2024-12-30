@@ -44,6 +44,7 @@ function open(metadata: JournalMetadata) {
         :ref-date="previousMetadata.date"
         :journal-name="noteData.journal"
         :prevent-navigation
+        :decorate-block="journal.navBlock.decorateWholeBlock"
       />
       <ObsidianIconButton icon="arrow-left" class="nav-prev" @click="open(previousMetadata)" />
     </div>
@@ -54,6 +55,7 @@ function open(metadata: JournalMetadata) {
       :ref-date="noteData.date"
       :journal-name="noteData.journal"
       :prevent-navigation
+      :decorate-block="journal.navBlock.decorateWholeBlock"
     />
     <div v-if="nextMetadata" class="nav-block-relative">
       <ObsidianIconButton icon="arrow-right" class="nav-next" @click="open(nextMetadata)" />
@@ -62,6 +64,7 @@ function open(metadata: JournalMetadata) {
         :ref-date="nextMetadata.date"
         :journal-name="noteData.journal"
         :prevent-navigation
+        :decorate-block="journal.navBlock.decorateWholeBlock"
       />
     </div>
     <div v-else class="nav-block-relative"></div>

@@ -5,28 +5,37 @@ import { openDate, openDateInJournal } from "@/journals/open-date";
 import { useShelfProvider } from "@/composables/use-shelf";
 import type { NavBlockRow } from "@/types/settings.types";
 import { usePlugin } from "@/composables/use-plugin";
+import { useDecorations } from "@/composables/use-decorations";
+import CalendarDecoration from "@/components/notes-calendar/decorations/CalendarDecoration.vue";
 
-const props = defineProps<{
+const { refDate, journalName, preventNavigation } = defineProps<{
   refDate: string;
   journalName: string;
   rows: NavBlockRow[];
   preventNavigation?: boolean;
+  decorateBlock?: boolean;
 }>();
 
 defineEmits<(event: "move-up" | "move-down" | "edit" | "remove", index: number) => void>();
 
 const plugin = usePlugin();
 
-const journal = computed(() => plugin.getJournal(props.journalName));
+const journal = computed(() => plugin.getJournal(journalName));
 const shelfName = computed(() => journal.value?.shelfName ?? null);
 
-const { journals } = useShelfProvider(shelfName);
+const { journals, decorations } = useShelfProvider(shelfName);
+const decorationsList = computed(() => {
+  return journal.value
+    ? decorations[journal.value.type].value.filter((decoration) => decoration.journalName === journalName)
+    : [];
+});
+const decorationsStyles = useDecorations(plugin, refDate, decorationsList);
 
 async function navigate(type: NavBlockRow["link"], date: string, journalName?: string) {
-  if (props.preventNavigation) return;
+  if (preventNavigation) return;
   if (type === "none") return;
   if (type === "self") {
-    const metadata = journal.value?.get(props.refDate);
+    const metadata = journal.value?.get(refDate);
     if (metadata) await journal.value?.open(metadata);
   } else if (type === "journal") {
     if (!journalName) return;
@@ -40,15 +49,28 @@ async function navigate(type: NavBlockRow["link"], date: string, journalName?: s
 
 <template>
   <div v-if="journal" class="nav-block">
-    <div v-for="(row, index) of rows" :key="index">
-      <NavigationBlockRow
-        :journal="journal"
-        :row="row"
-        :ref-date="refDate"
-        :default-format="journal.dateFormat"
-        @navigate="navigate"
-      />
-    </div>
+    <CalendarDecoration v-if="decorateBlock" :styles="decorationsStyles" class="nav-block">
+      <div v-for="(row, index) of rows" :key="index">
+        <NavigationBlockRow
+          :journal="journal"
+          :row="row"
+          :ref-date="refDate"
+          :default-format="journal.dateFormat"
+          @navigate="navigate"
+        />
+      </div>
+    </CalendarDecoration>
+    <template v-else>
+      <div v-for="(row, index) of rows" :key="index">
+        <NavigationBlockRow
+          :journal="journal"
+          :row="row"
+          :ref-date="refDate"
+          :default-format="journal.dateFormat"
+          @navigate="navigate"
+        />
+      </div>
+    </template>
   </div>
 </template>
 
