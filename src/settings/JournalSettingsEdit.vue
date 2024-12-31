@@ -330,7 +330,7 @@ watch(
       <ObsidianDropdown v-model="config.openMode">
         <option value="active">Replacing active note</option>
         <option value="tab">In new tab</option>
-        <option value="split">Adjusten to active note</option>
+        <option value="split">Adjacent to active note</option>
         <option value="window">In popout window</option>
       </ObsidianDropdown>
     </ObsidianSetting>
