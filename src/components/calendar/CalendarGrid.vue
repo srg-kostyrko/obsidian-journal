@@ -35,13 +35,13 @@ const activeBackground = computed(() => colorToString(plugin.calendarViewSetting
 .calendar-grid {
   display: grid;
   grid-template-columns: repeat(v-bind(columns), 1fr);
-  gap: 6px;
+  grid-template-rows: 1.2em repeat(auto-fill, 28px);
+  gap: var(--size-2-1);
 }
 
 .calendar-grid > * {
   font-size: 0.7em;
   border: 1px solid transparent;
-  height: 28px;
   line-height: 26px;
   text-align: center;
   padding: 0;

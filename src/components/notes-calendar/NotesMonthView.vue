@@ -12,6 +12,7 @@ import { FRONTMATTER_DATE_FORMAT } from "@/constants";
 
 const { refDate } = defineProps<{
   refDate: string;
+  hideOutsideDates?: boolean;
 }>();
 defineEmits<(event: "select" | "selectWeek", date: string, nativeEvent: MouseEvent) => void>();
 
@@ -75,6 +76,7 @@ const isYearActive = computed(
       :type="uiDate.isWeekNumber ? 'week' : 'day'"
       :data-outside="uiDate.outside || null"
       :data-today="uiDate.today || null"
+      :inactive="hideOutsideDates && uiDate.outside"
       :data-selected="
         activeNoteData &&
         ((uiDate.isWeekNumber && isWeekActive) || (!uiDate.isWeekNumber && isDayActive)) &&

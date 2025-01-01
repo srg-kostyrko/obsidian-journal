@@ -24,9 +24,46 @@ const list = computed(() => {
 </script>
 
 <template>
-  <div>
-    <NotesMonthView v-for="date in list" :key="date.format('YYYY-MM-DD')" :ref-date="date.format('YYYY-MM-DD')" />
+  <div class="timeline-quarter">
+    <NotesMonthView
+      v-for="date in list"
+      :key="date.format('YYYY-MM-DD')"
+      :ref-date="date.format('YYYY-MM-DD')"
+      hide-outside-dates
+    />
   </div>
 </template>
 
-<style scoped></style>
+<style scoped>
+.timeline-quarter {
+  --gap: var(--size-4-4);
+  --line-offset: calc(var(--gap) / 2);
+  --line-thickness: 1px;
+  --line-color: var(--text-faint);
+  display: grid;
+  gap: 0 var(--gap);
+  grid-template-columns: repeat(3, 1fr);
+}
+.timeline-quarter > * {
+  position: relative;
+}
+.timeline-quarter > *::before,
+.timeline-quarter > *::after {
+  content: "";
+  position: absolute;
+  background-color: var(--line-color);
+  z-index: 1;
+}
+.timeline-quarter > *::after {
+  inline-size: 100vw;
+  block-size: var(--line-thickness);
+  inset-inline-start: 0;
+  inset-block-start: calc(var(--line-offset) * -1);
+}
+.timeline-quarter > *::before {
+  inline-size: var(--line-thickness);
+  block-size: 100vh;
+  inset-block-start: 0;
+  inset-inline-start: calc(var(--line-offset) * -1);
+}
+</style>

@@ -12,6 +12,7 @@ defineProps<{ disabled?: boolean; clickable?: boolean }>();
 button {
   background-color: transparent;
   box-shadow: none;
+  border-radius: 0;
 }
 .clickable {
   cursor: pointer;

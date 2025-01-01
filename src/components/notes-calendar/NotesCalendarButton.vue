@@ -12,14 +12,15 @@ import { calendarFormats } from "@/constants";
 import { Menu } from "obsidian";
 import type { JournalNoteData } from "@/types/journal.types";
 
-const { date, type } = defineProps<{
+const { date, type, inactive } = defineProps<{
   date: string;
   type: JournalSettings["write"]["type"];
+  inactive?: boolean;
 }>();
 
 const plugin = usePlugin();
 const { journals, decorations } = useShelfData();
-const isActionable = computed(() => journals[type].value.length > 0);
+const isActionable = computed(() => !inactive && journals[type].value.length > 0);
 const format = computed(() => calendarFormats[type]);
 const decorationsStyles = useDecorations(plugin, date, decorations[type]);
 
@@ -78,7 +79,7 @@ function showContextMenuForPath(path: string, event: MouseEvent): void {
 
 <template>
   <CalendarButton class="calendar-button" :clickable="isActionable" @click="open" @contextmenu="openContextMenu">
-    <CalendarDecoration :styles="decorationsStyles">
+    <CalendarDecoration v-if="!inactive" :styles="decorationsStyles">
       <FormattedDate :date :format />
     </CalendarDecoration>
   </CalendarButton>

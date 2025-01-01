@@ -15,7 +15,17 @@ const refDate = computed(() => {
 </script>
 
 <template>
-  <NotesMonthView :ref-date="refDate" />
+  <div class="timeline-month">
+    <NotesMonthView :ref-date="refDate" />
+  </div>
 </template>
 
-<style scoped></style>
+<style scoped>
+.timeline-month {
+  display: flex;
+  justify-content: center;
+}
+.timeline-month > * {
+  width: 400px;
+}
+</style>

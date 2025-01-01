@@ -15,7 +15,17 @@ const refDate = computed(() => {
 </script>
 
 <template>
-  <NotesWeekView :ref-date="refDate" />
+  <div class="timeline-week">
+    <NotesWeekView :ref-date="refDate" />
+  </div>
 </template>
 
-<style scoped></style>
+<style scoped>
+.timeline-week {
+  display: flex;
+  justify-content: center;
+}
+.timeline-week > * {
+  width: 400px;
+}
+</style>
