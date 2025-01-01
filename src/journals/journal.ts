@@ -17,6 +17,7 @@ import {
   FRONTMATTER_NAME_KEY,
   FRONTMATTER_INDEX_KEY,
   FRONTMATTER_DATE_KEY,
+  FRONTMATTER_START_DATE_KEY,
 } from "../constants";
 import { FixedIntervalResolver } from "./fixed-interval";
 import { date_from_string, today } from "../calendar";
@@ -81,6 +82,22 @@ export class Journal {
 
   get shelfName(): string {
     return this.config.value.shelves[0] ?? "";
+  }
+
+  get frontmatterDate(): string {
+    return this.config.value.frontmatter.dateField || FRONTMATTER_DATE_KEY;
+  }
+
+  get frontmatterIndex(): string {
+    return this.config.value.frontmatter.indexField || FRONTMATTER_INDEX_KEY;
+  }
+
+  get frontmatterStartDate(): string {
+    return this.config.value.frontmatter.startDateField || FRONTMATTER_START_DATE_KEY;
+  }
+
+  get frontmatterEndDate(): string {
+    return this.config.value.frontmatter.endDateField || FRONTMATTER_END_DATE_KEY;
   }
 
   calculateOffset(date: string): [positive: number, negative: number] {
@@ -304,10 +321,70 @@ export class Journal {
     if (!(file instanceof TFile)) return;
     await this.plugin.app.fileManager.processFrontMatter(file, (frontmatter) => {
       delete frontmatter[FRONTMATTER_NAME_KEY];
-      delete frontmatter[FRONTMATTER_DATE_KEY];
-      delete frontmatter[FRONTMATTER_END_DATE_KEY];
-      delete frontmatter[FRONTMATTER_INDEX_KEY];
+      delete frontmatter[this.frontmatterDate];
+      delete frontmatter[this.frontmatterStartDate];
+      delete frontmatter[this.frontmatterEndDate];
+      delete frontmatter[this.frontmatterIndex];
     });
+  }
+
+  async renameFrontmatterField<
+    Field extends keyof JournalSettings["frontmatter"],
+    Value extends JournalSettings["frontmatter"][Field],
+  >(fieldName: Field, oldName: Value, newName: Value): Promise<void> {
+    this.config.value.frontmatter[fieldName] = newName;
+    const index = this.plugin.index.getJournalIndex(this.name);
+    if (!index) return;
+    for (const [, path] of index) {
+      const file = this.plugin.app.vault.getAbstractFileByPath(path);
+      if (!file) continue;
+      if (!(file instanceof TFile)) continue;
+      await this.plugin.app.fileManager.processFrontMatter(file, (frontmatter) => {
+        frontmatter[newName] = frontmatter[oldName];
+        delete frontmatter[oldName];
+      });
+    }
+  }
+
+  async toggleFrontmatterStartDate(): Promise<void> {
+    this.config.value.frontmatter.addStartDate = !this.config.value.frontmatter.addStartDate;
+    const index = this.plugin.index.getJournalIndex(this.name);
+    if (!index) return;
+    for (const [, path] of index) {
+      const file = this.plugin.app.vault.getAbstractFileByPath(path);
+      if (!file) continue;
+      if (!(file instanceof TFile)) continue;
+      await this.plugin.app.fileManager.processFrontMatter(file, (frontmatter) => {
+        const anchorDate = this.resolveAnchorDate(frontmatter[this.frontmatterDate]);
+        if (!anchorDate) return;
+        if (this.config.value.frontmatter.addStartDate) {
+          frontmatter[this.frontmatterStartDate] = this.resolveStartDate(anchorDate);
+        } else {
+          delete frontmatter[this.frontmatterStartDate];
+        }
+      });
+    }
+  }
+
+  async toggleFrontmatterEndDate(): Promise<void> {
+    this.config.value.frontmatter.addEndDate = !this.config.value.frontmatter.addEndDate;
+    const index = this.plugin.index.getJournalIndex(this.name);
+    if (!index) return;
+    for (const [, path] of index) {
+      const file = this.plugin.app.vault.getAbstractFileByPath(path);
+      if (!file) continue;
+      if (!(file instanceof TFile)) continue;
+      await this.plugin.app.fileManager.processFrontMatter(file, (frontmatter) => {
+        const anchorDate = this.resolveAnchorDate(frontmatter[this.frontmatterDate]);
+        if (!anchorDate) return;
+        const metadata = this.plugin.index.getForPath(path);
+        if (this.config.value.frontmatter.addEndDate) {
+          frontmatter[this.frontmatterEndDate] = metadata?.end_date ?? this.resolveEndDate(anchorDate);
+        } else if (metadata?.end_date && frontmatter[this.frontmatterEndDate] === metadata.end_date) {
+          delete frontmatter[this.frontmatterEndDate];
+        }
+      });
+    }
   }
 
   async #openFile(file: TFile): Promise<void> {
@@ -395,7 +472,7 @@ export class Journal {
     if (!metadata) return false;
     if ("path" in metadata) {
       if (!options.override) return false;
-      await disconnectNote(this.plugin.app, metadata.path);
+      await disconnectNote(this.plugin, metadata.path);
     }
     let path = file.path;
     if (options.rename || options.move) {
@@ -461,16 +538,16 @@ export class Journal {
   async #ensureFrontMatter(note: TFile, metadata: JournalMetadata): Promise<void> {
     await this.plugin.app.fileManager.processFrontMatter(note, (frontmatter: Record<string, string | number>) => {
       frontmatter[FRONTMATTER_NAME_KEY] = this.name;
-      frontmatter[FRONTMATTER_DATE_KEY] = date_from_string(metadata.date).format(FRONTMATTER_DATE_FORMAT);
+      frontmatter[this.frontmatterDate] = date_from_string(metadata.date).format(FRONTMATTER_DATE_FORMAT);
       if (metadata.end_date) {
-        frontmatter[FRONTMATTER_END_DATE_KEY] = date_from_string(metadata.end_date).format(FRONTMATTER_DATE_FORMAT);
+        frontmatter[this.frontmatterEndDate] = date_from_string(metadata.end_date).format(FRONTMATTER_DATE_FORMAT);
       } else {
-        delete frontmatter[FRONTMATTER_END_DATE_KEY];
+        delete frontmatter[this.frontmatterEndDate];
       }
       if (metadata.index == null) {
-        delete frontmatter[FRONTMATTER_INDEX_KEY];
+        delete frontmatter[this.frontmatterIndex];
       } else {
-        frontmatter[FRONTMATTER_INDEX_KEY] = metadata.index;
+        frontmatter[this.frontmatterIndex] = metadata.index;
       }
     });
   }

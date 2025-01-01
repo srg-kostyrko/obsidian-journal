@@ -137,6 +137,15 @@ export interface JournalSettings {
     rows: NavBlockRow[];
     decorateWholeBlock: boolean;
   };
+
+  frontmatter: {
+    dateField: string;
+    addStartDate: boolean;
+    startDateField: string;
+    addEndDate: boolean;
+    endDateField: string;
+    indexField: string;
+  };
 }
 
 export interface JournalCommand {

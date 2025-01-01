@@ -1,5 +1,11 @@
 <script setup lang="ts">
 import { computed, watch } from "vue";
+import {
+  FRONTMATTER_DATE_KEY,
+  FRONTMATTER_INDEX_KEY,
+  FRONTMATTER_START_DATE_KEY,
+  FRONTMATTER_END_DATE_KEY,
+} from "@/constants";
 import { canApplyTemplater } from "../utils/template";
 import type { JournalCommand, JournalDecoration, NavBlockRow } from "../types/settings.types";
 import ObsidianSetting from "../components/obsidian/ObsidianSetting.vue";
@@ -33,6 +39,7 @@ import TemplatePathPreview from "@/components/TemplatePathPreview.vue";
 import TemplateInput from "@/components/TemplateInput.vue";
 import { resolveCommandLabel, resolveContextDescription } from "@/journals/journal-commands";
 import { getDecorationConditionDescription } from "@/utils/journal";
+import EditFrontmatterFieldNameModal from "@/components/modals/EditFrontmatterFieldName.vue";
 
 const { journalName } = defineProps<{
   journalName: string;
@@ -218,6 +225,24 @@ function moveCalendarViewRowUp(index: number) {
 function moveCalendarViewRowDown(index: number) {
   if (!journal.value) return;
   journal.value.moveNavRowDown(index);
+}
+
+function editFrontmatterField(fieldName: string) {
+  if (!journal.value) return;
+  new VueModal(plugin, "Edit frontmatter field", EditFrontmatterFieldNameModal, {
+    journalName: journal.value.name,
+    fieldName,
+  }).open();
+}
+
+async function toggleFrontmatterStartDate() {
+  if (!journal.value) return;
+  await journal.value.toggleFrontmatterStartDate();
+}
+
+async function toggleFrontmatterEndDate() {
+  if (!journal.value) return;
+  await journal.value.toggleFrontmatterEndDate();
 }
 
 watch(
@@ -525,6 +550,45 @@ watch(
 
       <ObsidianSetting name="Decorate whole navigation block">
         <ObsidianToggle v-model="journal.calendarViewBlock.decorateWholeBlock" />
+      </ObsidianSetting>
+    </CollapsibleBlock>
+
+    <CollapsibleBlock>
+      <template #trigger>
+        <IconedRow icon="table-properties"> Frontmatter </IconedRow>
+      </template>
+
+      <ObsidianSetting name="Date property name">
+        {{ config.frontmatter.dateField || FRONTMATTER_DATE_KEY }}
+        <ObsidianIconButton icon="pencil" tooltip="Edit" @click="editFrontmatterField('dateField')" />
+      </ObsidianSetting>
+
+      <ObsidianSetting v-if="config.index.enabled" name="Index property name">
+        {{ config.frontmatter.indexField || FRONTMATTER_INDEX_KEY }}
+        <ObsidianIconButton icon="pencil" tooltip="Edit" @click="editFrontmatterField('indexField')" />
+      </ObsidianSetting>
+
+      <ObsidianSetting name="Add start date property?">
+        <template #description>
+          In most cases start date is equal to date property. But for weeks journal it might be different for weeks
+          start one year and end in other.
+        </template>
+        <ObsidianToggle
+          :model-value="config.frontmatter.addStartDate"
+          @update:model-value="toggleFrontmatterStartDate"
+        />
+      </ObsidianSetting>
+      <ObsidianSetting v-if="config.frontmatter.addStartDate" name="Start date property name">
+        {{ config.frontmatter.startDateField || FRONTMATTER_START_DATE_KEY }}
+        <ObsidianIconButton icon="pencil" tooltip="Edit" @click="editFrontmatterField('startDateField')" />
+      </ObsidianSetting>
+
+      <ObsidianSetting name="Add end date property?">
+        <ObsidianToggle :model-value="config.frontmatter.addEndDate" @update:model-value="toggleFrontmatterEndDate" />
+      </ObsidianSetting>
+      <ObsidianSetting v-if="config.frontmatter.addEndDate" name="End date property name">
+        {{ config.frontmatter.endDateField || FRONTMATTER_END_DATE_KEY }}
+        <ObsidianIconButton icon="pencil" tooltip="Edit" @click="editFrontmatterField('endDateField')" />
       </ObsidianSetting>
     </CollapsibleBlock>
   </div>

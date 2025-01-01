@@ -13,7 +13,6 @@ import ObsidianToggle from "../obsidian/ObsidianToggle.vue";
 import { computed, watch } from "vue";
 import type { JournalMetadata } from "@/types/journal.types";
 import { disconnectNote } from "@/utils/journals";
-import { useApp } from "@/composables/use-app";
 import { usePlugin } from "@/composables/use-plugin";
 
 const props = defineProps<{
@@ -21,7 +20,6 @@ const props = defineProps<{
 }>();
 const emit = defineEmits(["close"]);
 
-const app = useApp();
 const plugin = usePlugin();
 const noteData = usePathData(props.file.path);
 
@@ -104,7 +102,7 @@ const canSubmit = computed(() => {
 });
 
 function disconnect() {
-  disconnectNote(app, props.file.path).catch(console.error);
+  disconnectNote(plugin, props.file.path).catch(console.error);
 }
 const onSubmit = handleSubmit(() => {
   if (!canSubmit.value) return;

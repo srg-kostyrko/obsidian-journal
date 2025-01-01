@@ -1,21 +1,17 @@
-import { Component, type TAbstractFile, TFile, type CachedMetadata, type App } from "obsidian";
+import { Component, type TAbstractFile, TFile, type CachedMetadata } from "obsidian";
 import { computed, ref, shallowRef, type ComputedRef } from "vue";
 import type { JournalAnchorDate, JournalNoteData } from "../types/journal.types";
-import {
-  FRONTMATTER_END_DATE_KEY,
-  FRONTMATTER_NAME_KEY,
-  FRONTMATTER_INDEX_KEY,
-  FRONTMATTER_DATE_KEY,
-} from "../constants";
+import { FRONTMATTER_NAME_KEY } from "../constants";
 import { date_from_string } from "../calendar";
 import { JournalIndex } from "./journal-index";
+import type { JournalPlugin } from "@/types/plugin.types";
 
 export class JournalsIndex extends Component {
   #pathIndex = ref(new Map<string, JournalNoteData>());
   #pathComputeds = new Map<string, ComputedRef<JournalNoteData | null>>();
   #journalIndecies = shallowRef(new Map<string, JournalIndex>());
 
-  constructor(private app: App) {
+  constructor(private plugin: JournalPlugin) {
     super();
     this.#setupListeners();
   }
@@ -58,17 +54,17 @@ export class JournalsIndex extends Component {
     const index = this.getJournalIndex(oldName);
     if (!index) return;
     for (const [, path] of index) {
-      const file = this.app.vault.getAbstractFileByPath(path);
+      const file = this.plugin.app.vault.getAbstractFileByPath(path);
       if (!file) continue;
       if (!(file instanceof TFile)) continue;
-      await this.app.fileManager.processFrontMatter(file, (frontmatter) => {
+      await this.plugin.app.fileManager.processFrontMatter(file, (frontmatter) => {
         frontmatter[FRONTMATTER_NAME_KEY] = name;
       });
     }
   }
 
   reindex(): void {
-    const files = this.app.vault.getMarkdownFiles();
+    const files = this.plugin.app.vault.getMarkdownFiles();
     for (const file of files) {
       this.#onMetadataChanged(file);
     }
@@ -92,9 +88,9 @@ export class JournalsIndex extends Component {
   }
 
   #setupListeners() {
-    this.registerEvent(this.app.vault.on("rename", this.#onRenamed, this));
-    this.registerEvent(this.app.vault.on("delete", this.#onDeleted, this));
-    this.registerEvent(this.app.metadataCache.on("changed", this.#onMetadataChanged, this));
+    this.registerEvent(this.plugin.app.vault.on("rename", this.#onRenamed, this));
+    this.registerEvent(this.plugin.app.vault.on("delete", this.#onDeleted, this));
+    this.registerEvent(this.plugin.app.metadataCache.on("changed", this.#onMetadataChanged, this));
   }
 
   #onRenamed = (file: TAbstractFile, oldPath: string) => {
@@ -123,7 +119,7 @@ export class JournalsIndex extends Component {
   };
 
   #onMetadataChanged = (file: TFile) => {
-    const metadata = this.app.metadataCache.getFileCache(file);
+    const metadata = this.plugin.app.metadataCache.getFileCache(file);
     if (!metadata) return;
     this.#processMetadata(file.basename, file.path, metadata);
   };
@@ -132,17 +128,20 @@ export class JournalsIndex extends Component {
     const { frontmatter } = metadata;
     if (!frontmatter) return;
     if (!(FRONTMATTER_NAME_KEY in frontmatter)) return;
-    const date = frontmatter[FRONTMATTER_DATE_KEY];
-    const end_date = frontmatter[FRONTMATTER_END_DATE_KEY];
+    const journalName = frontmatter[FRONTMATTER_NAME_KEY];
+    const journal = this.plugin.getJournal(journalName);
+    if (!journal) return;
+    const date = frontmatter[journal.frontmatterDate];
+    const end_date = frontmatter[journal.frontmatterEndDate];
     if (!date_from_string(date).isValid() || (end_date && !date_from_string(end_date).isValid())) return;
-    const journal = frontmatter[FRONTMATTER_NAME_KEY];
+
     const journalMetadata: JournalNoteData = {
       title,
-      journal,
+      journal: journalName,
       date,
       end_date,
       path,
-      index: frontmatter[FRONTMATTER_INDEX_KEY],
+      index: frontmatter[journal.frontmatterIndex],
       tags: metadata.tags?.map((tag) => tag.tag) ?? [],
       tasks:
         metadata.listItems
@@ -153,7 +152,7 @@ export class JournalsIndex extends Component {
       properties: frontmatter,
     };
     this.#pathIndex.value.set(path, journalMetadata);
-    this.getJournalIndex(journal).set(date, path);
+    this.getJournalIndex(journalName).set(date, path);
   }
 
   onunload(): void {

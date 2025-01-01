@@ -218,7 +218,7 @@ export default class JournalPluginImpl extends Plugin implements JournalPlugin {
       this.#config.value.showReloadHint = false;
     }
 
-    this.#index = new JournalsIndex(this.app);
+    this.#index = new JournalsIndex(this);
     this.addChild(this.#index);
 
     this.#configureCommands();

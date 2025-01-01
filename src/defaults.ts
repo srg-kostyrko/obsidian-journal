@@ -1,3 +1,9 @@
+import {
+  FRONTMATTER_DATE_KEY,
+  FRONTMATTER_INDEX_KEY,
+  FRONTMATTER_START_DATE_KEY,
+  FRONTMATTER_END_DATE_KEY,
+} from "./constants";
 import type {
   JournalSettings,
   PluginSettings,
@@ -84,6 +90,22 @@ export const defaultJournalSettings: JournalSettings = {
     rows: [],
     decorateWholeBlock: false,
   },
+
+  frontmatter: {
+    dateField: "",
+    addStartDate: false,
+    startDateField: "",
+    addEndDate: false,
+    endDateField: "",
+    indexField: "",
+  },
+};
+
+export const defaultFieldNames: Record<string, string> = {
+  dateField: FRONTMATTER_DATE_KEY,
+  indexField: FRONTMATTER_INDEX_KEY,
+  startDateField: FRONTMATTER_START_DATE_KEY,
+  endDateField: FRONTMATTER_END_DATE_KEY,
 };
 
 export const defaultCommand: JournalCommand = {
