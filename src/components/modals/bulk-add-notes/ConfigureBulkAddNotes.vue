@@ -44,7 +44,7 @@ const { defineField, errorBag, handleSubmit } = useForm({
   validationSchema: toTypedSchema(
     v.pipe(
       v.object({
-        folder: v.pipe(v.string(), v.nonEmpty("Folder is required")),
+        folder: v.string(),
         date_place: v.picklist(["title", "property"]),
         property_name: v.string(),
         date_format: v.pipe(v.string(), v.nonEmpty("Date format is required")),
@@ -106,7 +106,6 @@ const onSubmit = handleSubmit(() => {
     other_name: otherName.value ?? "keep",
     dry_run: dryRun.value ?? false,
   });
-  emit("close");
 });
 </script>
 

@@ -1,3 +1,4 @@
+import type { JournalAnchorDate } from "@/types/journal.types";
 import type { GenericConditions } from "@/types/settings.types";
 import type { TFile } from "obsidian";
 
@@ -14,32 +15,46 @@ export interface BulkAddPrams {
   dry_run: boolean;
 }
 
-type NodeProcessingOperations =
-  | {
-      type: "skiping";
-      reason: string;
-    }
-  | {
-      type: "existing_note";
-      other_file: TFile;
-      desision: BulkAddPrams["existing_note"];
-    }
-  | {
-      type: "other_folder";
-      configured_folder: string;
-      desision: BulkAddPrams["other_folder"];
-    }
-  | {
-      type: "other_name";
-      configured_name: string;
-      desision: BulkAddPrams["other_name"];
-    }
-  | {
-      type: "connect";
-      anchor_date: string;
-    };
+export interface RelateToExistingNote {
+  type: "existing_note";
+  other_file: TFile;
+  desision: BulkAddPrams["existing_note"];
+}
+
+export interface FolderDeifference {
+  type: "other_folder";
+  configured_folder: string;
+  desision: BulkAddPrams["other_folder"];
+}
+
+export interface NameDifference {
+  type: "other_name";
+  configured_name: string;
+  desision: BulkAddPrams["other_name"];
+}
+
+export type NodeProcessingOperationsWithDesisions = RelateToExistingNote | FolderDeifference | NameDifference;
+
+export interface SkippingNote {
+  type: "skiping";
+  reason: string;
+}
+
+export interface ConnectNote {
+  type: "connect";
+  anchor_date: JournalAnchorDate;
+}
+
+export type NodeProcessingOperations = SkippingNote | ConnectNote | NodeProcessingOperationsWithDesisions;
 
 export interface NoteDataForProcessing {
   file: TFile;
   operations: NodeProcessingOperations[];
+}
+
+export interface NoteProcessingResult {
+  note: string;
+  folder: string;
+  path: string;
+  actions: string[];
 }

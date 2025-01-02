@@ -1,6 +1,15 @@
-import { TFile, TFolder } from "obsidian";
-import type { BulkAddPrams, NoteDataForProcessing } from "./bulk-add-notes.types";
-import type { Journal } from "@/journals/journal";
+import { normalizePath, TFile, TFolder } from "obsidian";
+import type {
+  BulkAddPrams,
+  ConnectNote,
+  FolderDeifference,
+  NameDifference,
+  NoteDataForProcessing,
+  NoteProcessingResult,
+  RelateToExistingNote,
+  SkippingNote,
+} from "./bulk-add-notes.types";
+import { Journal } from "@/journals/journal";
 import { formatToRegexp } from "@/utils/moment";
 import { date_from_string } from "@/calendar";
 import type {
@@ -10,14 +19,12 @@ import type {
   JournalDecorationTitleCondition,
 } from "@/types/settings.types";
 import { checkExhaustive } from "@/utils/types";
-import { useApp } from "@/composables/use-app";
-import { usePlugin } from "@/composables/use-plugin";
+import type { JournalPlugin } from "@/types/plugin.types";
+import { ensureFolderExists } from "@/utils/io";
+import { disconnectNote } from "@/utils/journals";
 
-const app = useApp();
-const plugin = usePlugin();
-
-export function buildNotesList(folderPath: string): TFile[] {
-  const folder = app.vault.getFolderByPath(folderPath ?? "/");
+export function buildNotesList(plugin: JournalPlugin, folderPath = "/"): TFile[] {
+  const folder = plugin.app.vault.getFolderByPath(folderPath || "/");
   if (!folder) {
     throw new Error(`Folder ${folderPath} not found`);
   }
@@ -37,7 +44,12 @@ export function buildNotesList(folderPath: string): TFile[] {
   return notes;
 }
 
-export function preprocessNotes(journal: Journal, notes: TFile[], parameters: BulkAddPrams): NoteDataForProcessing[] {
+export function preprocessNotes(
+  plugin: JournalPlugin,
+  journal: Journal,
+  notes: TFile[],
+  parameters: BulkAddPrams,
+): NoteDataForProcessing[] {
   const data: NoteDataForProcessing[] = [];
   const dateRegexp = formatToRegexp(parameters.date_format);
   for (const note of notes) {
@@ -55,7 +67,7 @@ export function preprocessNotes(journal: Journal, notes: TFile[], parameters: Bu
       });
       continue;
     }
-    if (!checkFilters(note, parameters.filter_combinator, parameters.filters)) {
+    if (!checkFilters(plugin, note, parameters.filter_combinator, parameters.filters)) {
       noteData.operations.push({
         type: "skiping",
         reason: "does not match filters",
@@ -65,7 +77,7 @@ export function preprocessNotes(journal: Journal, notes: TFile[], parameters: Bu
     const dateString: string | undefined =
       parameters.date_place === "title"
         ? note.basename
-        : app.metadataCache.getFileCache(note)?.frontmatter?.[parameters.property_name];
+        : plugin.app.metadataCache.getFileCache(note)?.frontmatter?.[parameters.property_name];
     if (dateString === undefined) {
       noteData.operations.push({
         type: "skiping",
@@ -77,7 +89,7 @@ export function preprocessNotes(journal: Journal, notes: TFile[], parameters: Bu
     if (!match) {
       noteData.operations.push({
         type: "skiping",
-        reason: "date not found",
+        reason: "date with configured format not found",
       });
       continue;
     }
@@ -100,7 +112,7 @@ export function preprocessNotes(journal: Journal, notes: TFile[], parameters: Bu
     if ("path" in metadata && metadata.path) {
       noteData.operations.push({
         type: "existing_note",
-        other_file: app.vault.getAbstractFileByPath(metadata.path) as TFile,
+        other_file: plugin.app.vault.getAbstractFileByPath(metadata.path) as TFile,
         desision: parameters.existing_note,
       });
     }
@@ -112,7 +124,7 @@ export function preprocessNotes(journal: Journal, notes: TFile[], parameters: Bu
         desision: parameters.other_folder,
       });
     }
-    if (configuredFilename !== note.basename) {
+    if (configuredFilename !== note.name) {
       noteData.operations.push({
         type: "other_name",
         configured_name: configuredFilename,
@@ -123,25 +135,30 @@ export function preprocessNotes(journal: Journal, notes: TFile[], parameters: Bu
   return data;
 }
 
-function checkFilters(note: TFile, combinator: BulkAddPrams["filter_combinator"], filters: BulkAddPrams["filters"]) {
+function checkFilters(
+  plugin: JournalPlugin,
+  note: TFile,
+  combinator: BulkAddPrams["filter_combinator"],
+  filters: BulkAddPrams["filters"],
+) {
   if (combinator === "no") return true;
-  if (combinator === "and") return filters.every((f) => checkFilter(note, f));
-  if (combinator === "or") return filters.some((f) => checkFilter(note, f));
+  if (combinator === "and") return filters.every((f) => checkFilter(plugin, note, f));
+  if (combinator === "or") return filters.some((f) => checkFilter(plugin, note, f));
   return false;
 }
 
-function checkFilter(note: TFile, filter: GenericConditions) {
-  const metadata = app.metadataCache.getFileCache(note);
+function checkFilter(plugin: JournalPlugin, note: TFile, filter: GenericConditions) {
+  const metadata = plugin.app.metadataCache.getFileCache(note);
   if (!metadata) return false;
   switch (filter.type) {
     case "title": {
       return checkNameFilter(note, filter);
     }
     case "tag": {
-      return checkTagFilter(note, filter);
+      return checkTagFilter(plugin, note, filter);
     }
     case "property": {
-      return checkPropertyFilter(note, filter);
+      return checkPropertyFilter(plugin, note, filter);
     }
   }
   return true;
@@ -164,8 +181,8 @@ function checkNameFilter(note: TFile, filter: JournalDecorationTitleCondition) {
   }
 }
 
-function checkTagFilter(note: TFile, filter: JournalDecorationTagCondition) {
-  const metadata = app.metadataCache.getFileCache(note);
+function checkTagFilter(plugin: JournalPlugin, note: TFile, filter: JournalDecorationTagCondition) {
+  const metadata = plugin.app.metadataCache.getFileCache(note);
   if (!metadata) return false;
   if (!metadata.tags) return false;
   switch (filter.condition) {
@@ -184,8 +201,8 @@ function checkTagFilter(note: TFile, filter: JournalDecorationTagCondition) {
   }
 }
 
-function checkPropertyFilter(note: TFile, filter: JournalDecorationPropertyCondition) {
-  const metadata = app.metadataCache.getFileCache(note);
+function checkPropertyFilter(plugin: JournalPlugin, note: TFile, filter: JournalDecorationPropertyCondition) {
+  const metadata = plugin.app.metadataCache.getFileCache(note);
   if (!metadata) return false;
   const propertyValue = metadata.frontmatter?.[filter.name];
   switch (filter.condition) {
@@ -220,4 +237,155 @@ function checkPropertyFilter(note: TFile, filter: JournalDecorationPropertyCondi
       checkExhaustive(filter.condition);
     }
   }
+}
+
+function skipNote(operation: SkippingNote, result: NoteProcessingResult) {
+  result.actions.push(`Skipped: ${operation.reason}`);
+}
+
+async function connectNote(
+  journal: Journal,
+  noteData: NoteDataForProcessing,
+  parameters: BulkAddPrams,
+  operation: ConnectNote,
+  result: NoteProcessingResult,
+) {
+  result.actions.push(`Note connected to journal as ${operation.anchor_date}`);
+  if (!parameters.dry_run) {
+    await journal.connectNote(noteData.file, operation.anchor_date, {});
+  }
+}
+
+async function relateExistingNote(
+  plugin: JournalPlugin,
+  noteData: NoteDataForProcessing,
+  parameters: BulkAddPrams,
+  operation: RelateToExistingNote,
+  result: NoteProcessingResult,
+) {
+  switch (operation.desision) {
+    case "skip": {
+      result.actions.push(`Skipped: other note connected to same date already exists in journal`);
+      break;
+    }
+    case "override": {
+      result.actions.push(`Other note "${operation.other_file.path}" connected to same date disconnected`);
+      if (!parameters.dry_run) {
+        await disconnectNote(plugin, noteData.file.path);
+      }
+      break;
+    }
+    case "merge": {
+      result.actions.push(`Content of note was merged into "${operation.other_file.path}, note deleted"`);
+      if (!parameters.dry_run) {
+        const content = await plugin.app.vault.cachedRead(noteData.file);
+        await plugin.app.vault.append(operation.other_file, content);
+        await plugin.app.vault.delete(noteData.file);
+      }
+      break;
+    }
+  }
+}
+
+async function processDifferentFolder(
+  plugin: JournalPlugin,
+  noteData: NoteDataForProcessing,
+  parameters: BulkAddPrams,
+  operation: FolderDeifference,
+  result: NoteProcessingResult,
+) {
+  switch (operation.desision) {
+    case "keep": {
+      result.actions.push(
+        `Notes folder "${noteData.file.parent?.path ?? "/"}" differs from configured folder "${parameters.folder || "/"}" - keeping as is`,
+      );
+      break;
+    }
+    case "move": {
+      result.actions.push(`Moved note to "${operation.configured_folder ?? "/"}"`);
+      if (!parameters.dry_run) {
+        const filename = noteData.file.name;
+        const path = normalizePath(
+          operation.configured_folder ? `${operation.configured_folder}/${filename}` : filename,
+        );
+        await ensureFolderExists(plugin.app, path);
+        await plugin.app.vault.rename(noteData.file, path);
+        noteData.file = plugin.app.vault.getAbstractFileByPath(path) as TFile;
+      }
+      break;
+    }
+  }
+}
+
+async function processDifferentName(
+  plugin: JournalPlugin,
+  noteData: NoteDataForProcessing,
+  parameters: BulkAddPrams,
+  operation: NameDifference,
+  result: NoteProcessingResult,
+) {
+  switch (operation.desision) {
+    case "keep": {
+      result.actions.push(
+        `Note name "${noteData.file.basename}" differs from configured name "${parameters.property_name}" - keeping as is`,
+      );
+      break;
+    }
+    case "rename": {
+      result.actions.push(`Renamed note to "${operation.configured_name}"`);
+      if (!parameters.dry_run) {
+        const folder = noteData.file.parent?.path;
+        const path = normalizePath(folder ? `${folder}/${operation.configured_name}` : operation.configured_name);
+        await ensureFolderExists(plugin.app, path);
+        await plugin.app.vault.rename(noteData.file, path);
+        noteData.file = plugin.app.vault.getAbstractFileByPath(path) as TFile;
+      }
+      break;
+    }
+  }
+}
+
+export async function processNote(
+  plugin: JournalPlugin,
+  journal: Journal,
+  noteData: NoteDataForProcessing,
+  parameters: BulkAddPrams,
+): Promise<NoteProcessingResult> {
+  const { file, operations } = noteData;
+  const result: NoteProcessingResult = {
+    note: file.basename,
+    folder: file.parent?.path ?? "",
+    path: file.path,
+    actions: [],
+  };
+  try {
+    for (const op of operations) {
+      switch (op.type) {
+        case "skiping": {
+          skipNote(op, result);
+          break;
+        }
+        case "connect": {
+          await connectNote(journal, noteData, parameters, op, result);
+          break;
+        }
+        case "existing_note": {
+          await relateExistingNote(plugin, noteData, parameters, op, result);
+          return result;
+        }
+        case "other_folder": {
+          await processDifferentFolder(plugin, noteData, parameters, op, result);
+          break;
+        }
+        case "other_name": {
+          await processDifferentName(plugin, noteData, parameters, op, result);
+          break;
+        }
+      }
+    }
+  } catch (error) {
+    console.error(error);
+    result.actions.push(`Error: ${error instanceof Error ? error.message : String(error)}`);
+  }
+  return result;
 }

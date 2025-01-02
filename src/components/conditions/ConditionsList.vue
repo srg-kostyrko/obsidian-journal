@@ -19,7 +19,11 @@ const emit = defineEmits<{
   (event: "remove-condition", index: number): void;
 }>();
 
-const types = ["title", "tag", "property"];
+const types = [
+  { value: "title", label: "Note title" },
+  { value: "tag", label: "Tag" },
+  { value: "property", label: "Property" },
+];
 
 function getConditionComponent(condition: GenericConditions) {
   switch (condition.type) {

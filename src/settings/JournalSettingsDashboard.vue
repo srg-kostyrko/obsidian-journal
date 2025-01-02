@@ -52,7 +52,7 @@ function changeFirstWeekOfYear(value: number): void {
     @edit="emit('edit', $event)"
     @bulk-add="emit('bulk-add', $event)"
   />
-  <JournalSettingsWithoutShelves v-else @edit="emit('edit', $event)" />
+  <JournalSettingsWithoutShelves v-else @edit="emit('edit', $event)" @bulk-add="emit('bulk-add', $event)" />
 
   <CollapsibleBlock>
     <template #trigger>
