@@ -387,6 +387,13 @@ export class Journal {
     }
   }
 
+  async autoCreate() {
+    if (!this.config.value.autoCreate) return;
+    const metadata = this.get(today().format(FRONTMATTER_DATE_FORMAT));
+    if (!metadata) return;
+    await this.#ensureNote(metadata);
+  }
+
   async #openFile(file: TFile): Promise<void> {
     const mode = this.config.value.openMode === "active" ? undefined : this.config.value.openMode;
     const leaf = this.plugin.app.workspace.getLeaf(mode);

@@ -245,6 +245,12 @@ async function toggleFrontmatterEndDate() {
   await journal.value.toggleFrontmatterEndDate();
 }
 
+async function onAutoCreate(value: boolean) {
+  if (value) {
+    await journal.value?.autoCreate();
+  }
+}
+
 watch(
   () => journal.value?.config.value.start,
   (value) => {
@@ -366,6 +372,14 @@ watch(
         yet.
       </template>
       <ObsidianToggle v-model="config.confirmCreation" />
+    </ObsidianSetting>
+
+    <ObsidianSetting name="Auto-create current notes">
+      <template #description>
+        When turned on will automatically create notes for current date if they don't exist yet. <br />
+        <div v-if="config.confirmCreation">Confirmation dialog won't be shown for autocreated notes.</div>
+      </template>
+      <ObsidianToggle v-model="config.autoCreate" @update:model-value="onAutoCreate" />
     </ObsidianSetting>
 
     <ObsidianSetting name="Note name template">

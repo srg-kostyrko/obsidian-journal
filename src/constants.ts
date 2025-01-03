@@ -15,6 +15,8 @@ export const FRONTMATTER_INDEX_KEY = "journal-index";
 export const PLUGIN_KEY = Symbol() as InjectionKey<JournalPlugin>;
 export const SHELF_DATA_KEY = Symbol() as InjectionKey<ProvidedShelfData>;
 
+export const AUTO_CREATE_INTERVAL = 1 * 60 * 60 * 1000; // 1 hour
+
 export const calendarFormats: Record<JournalSettings["write"]["type"], string> = {
   day: "D",
   week: "[W]W",

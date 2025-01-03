@@ -101,6 +101,7 @@ export interface JournalSettings {
 
   openMode: OpenMode;
   confirmCreation: boolean;
+  autoCreate: boolean;
 
   nameTemplate: string;
   dateFormat: string;
@@ -121,8 +122,6 @@ export interface JournalSettings {
     secondary: boolean;
     secondaryAncorIndex: number;
   };
-
-  autoCreate: boolean;
 
   commands: JournalCommand[];
 

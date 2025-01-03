@@ -8,7 +8,7 @@ import type { JournalSettings, NotesProcessing, PluginSettings, ShelfSettings } 
 import { defaultJournalSettings, defaultPluginSettings } from "./defaults";
 import { prepareJournalDefaultsBasedOnType } from "./journals/journal-defaults";
 import { JournalsIndex } from "./journals/journals-index";
-import { CALENDAR_VIEW_TYPE } from "./constants";
+import { AUTO_CREATE_INTERVAL, CALENDAR_VIEW_TYPE } from "./constants";
 import { CalendarView } from "./calendar-view/calendar-view";
 import { deepCopy } from "./utils/misc";
 import { TimelineCodeBlockProcessor } from "./code-blocks/timeline/timeline-processor";
@@ -24,6 +24,7 @@ export default class JournalPluginImpl extends Plugin implements JournalPlugin {
   #index!: JournalsIndex;
   #activeNote: Ref<TFile | null> = ref(null);
   #config: Ref<PluginSettings> = ref(deepCopy(defaultPluginSettings));
+  #autoCreateTimer: ReturnType<typeof setTimeout> | undefined;
 
   get showReloadHint(): boolean {
     return this.#config.value.showReloadHint;
@@ -91,6 +92,7 @@ export default class JournalPluginImpl extends Plugin implements JournalPlugin {
       ...this.#journals.value,
       [name]: new Journal(name, this),
     };
+    this.getJournal(name)?.autoCreate().catch(console.error);
     return this.#config.value.journals[name];
   }
 
@@ -243,19 +245,35 @@ export default class JournalPluginImpl extends Plugin implements JournalPlugin {
 
     this.registerView(CALENDAR_VIEW_TYPE, (leaf) => new CalendarView(leaf, this));
 
-    this.app.workspace.onLayoutReady(() => {
+    this.app.workspace.onLayoutReady(async () => {
       this.index.reindex();
       this.placeCalendarView(true);
       this.#activeNote.value = this.app.workspace.getActiveFile();
+      await this.autoCreateNotes();
     });
   }
   onunload(): void {
+    clearTimeout(this.#autoCreateTimer);
     for (const handle of this.#stopHandles) {
       handle();
     }
     for (const leaf of this.app.workspace.getLeavesOfType(CALENDAR_VIEW_TYPE)) {
       leaf.detach();
     }
+  }
+
+  async autoCreateNotes() {
+    for (const journal of Object.values(this.#journals.value)) {
+      await journal.autoCreate();
+    }
+    this.#sheduleNextAutoCreate();
+  }
+
+  #sheduleNextAutoCreate() {
+    clearTimeout(this.#autoCreateTimer);
+    this.#autoCreateTimer = setTimeout(() => {
+      this.autoCreateNotes().catch(console.error);
+    }, AUTO_CREATE_INTERVAL);
   }
 
   async #loadSettings(): Promise<void> {
