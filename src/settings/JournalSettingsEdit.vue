@@ -6,7 +6,6 @@ import {
   FRONTMATTER_START_DATE_KEY,
   FRONTMATTER_END_DATE_KEY,
 } from "@/constants";
-import { canApplyTemplater } from "../utils/template";
 import type { JournalCommand, JournalDecoration, NavBlockRow } from "../types/settings.types";
 import ObsidianSetting from "../components/obsidian/ObsidianSetting.vue";
 import ObsidianTextInput from "../components/obsidian/ObsidianTextInput.vue";
@@ -28,7 +27,6 @@ import { today } from "@/calendar";
 import NavigationBlockEditPreview from "@/code-blocks/navigation/NavigationBlockEditPreview.vue";
 import EditNavBlockRowModal from "@/components/modals/EditNavBlockRow.modal.vue";
 import JournalShelfModal from "@/components/modals/JournalShelf.modal.vue";
-import { useApp } from "@/composables/use-app";
 import { usePlugin } from "@/composables/use-plugin";
 import CollapsibleBlock from "@/components/CollapsibleBlock.vue";
 import IconedRow from "@/components/IconedRow.vue";
@@ -40,6 +38,7 @@ import TemplateInput from "@/components/TemplateInput.vue";
 import { resolveCommandLabel, resolveContextDescription } from "@/journals/journal-commands";
 import { getDecorationConditionDescription } from "@/utils/journal";
 import EditFrontmatterFieldNameModal from "@/components/modals/EditFrontmatterFieldName.vue";
+import TemplaterSupportHint from "@/components/TemplaterSupportHint.vue";
 
 const { journalName } = defineProps<{
   journalName: string;
@@ -49,15 +48,12 @@ const emit = defineEmits<{
   (event: "edit", journalName: string): void;
 }>();
 
-const app = useApp();
 const plugin = usePlugin();
 const journal = computed(() => plugin.getJournal(journalName));
 const config = computed(() => journal.value?.config.value);
 
 const day = today().day();
 const refDate = today().format("YYYY-MM-DD");
-
-const supportsTemplater = canApplyTemplater(app, "<% $>");
 
 const writingDescription = computed(() => {
   if (!journal.value) return "";
@@ -426,9 +422,7 @@ watch(
           When multiple templates are configured - first existing will be used. <br />
           <VariableReferenceHint :type="journal.type" :date-format="journal.dateFormat" /><br />
           <CodeBlockReferenceHint :type="journal.type" :journal-name="journalName" />
-          <template v-if="supportsTemplater">
-            <br />Templater syntax is supported. Check plugin description for more info.
-          </template>
+          <TemplaterSupportHint />
         </template>
       </ObsidianSetting>
       <template v-for="(path, index) in config.templates" :key="index">

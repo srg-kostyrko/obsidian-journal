@@ -28,7 +28,7 @@ Follow the steps below to install Tasks.
 
 ### Templater caveats
 
-There can be cases when Templater starts interfering with plugin actions resulting in partially broken note ot journal related data removed from frontmatter.
+There can be cases when Templater starts interfering with plugin actions resulting in partially broken note or journal related data removed from frontmatter.
 The best setup to avoid such problems would be:
 
 - template configured in journal plugin settings
