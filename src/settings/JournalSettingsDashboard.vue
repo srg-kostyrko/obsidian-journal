@@ -12,6 +12,7 @@ import CollapsibleBlock from "@/components/CollapsibleBlock.vue";
 import { usePlugin } from "@/composables/use-plugin";
 import IconedRow from "@/components/IconedRow.vue";
 import ColorPicker from "@/components/ColorPicker.vue";
+import type { Journal } from "@/journals/journal";
 
 const emit = defineEmits<(event: "edit" | "organize" | "bulk-add", name: string) => void>();
 
@@ -19,6 +20,17 @@ const plugin = usePlugin();
 
 const fow = moment().localeData().firstDayOfWeek();
 const fowText = moment().localeData().weekdays()[fow];
+
+const collidingJournals = computed(() => {
+  const hashed = new Map<string, Journal[]>();
+  for (const journal of plugin.journals) {
+    const hash = `${journal.config.value.nameTemplate}-${journal.config.value.folder}-${journal.config.value.dateFormat}`;
+    const list = hashed.get(hash) ?? [];
+    list.push(journal);
+    hashed.set(hash, list);
+  }
+  return [...hashed.values()].filter((list) => list.length > 1);
+});
 
 const weekStart = computed({
   get() {
@@ -45,6 +57,14 @@ function changeFirstWeekOfYear(value: number): void {
     <template #description> # TODO add description </template>
     <ObsidianToggle v-model="plugin.usesShelves" />
   </ObsidianSetting>
+
+  <div v-if="collidingJournals.length > 0" class="journal-warning">
+    <ObsidianSetting name="Colliding journal settings" heading />
+    <div v-for="(journals, index) in collidingJournals" :key="index">
+      Journals {{ journals.map((j) => j.name).join(" and ") }} has colliding configurations so that notes will be
+      overriding each other. Consider changing folder or name template in one of that journals.
+    </div>
+  </div>
 
   <JournalSettingsWithShelves
     v-if="plugin.usesShelves"
@@ -123,3 +143,13 @@ function changeFirstWeekOfYear(value: number): void {
     </ObsidianSetting>
   </CollapsibleBlock>
 </template>
+
+<style scoped>
+.journal-warning {
+  border: 1px solid var(--text-error);
+  padding: var(--size-2-2);
+}
+.journal-warning :deep(.setting-item--heading .setting-item-name) {
+  color: var(--text-error);
+}
+</style>
