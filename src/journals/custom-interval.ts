@@ -76,10 +76,11 @@ export class CustomIntervalResolver implements AnchorDateResolver {
   calculateOffset(date: string): [positive: number, negative: number] {
     const anchorDate = this.#resolveDate(date);
     if (!anchorDate) return [0, 0];
+    const dateMoment = date_from_string(date);
     const start = date_from_string(anchorDate);
     const end = date_from_string(this.resolveEndDate(anchorDate));
 
-    return [start.diff(date, "days"), end.diff(date, "days")];
+    return [start.diff(dateMoment, "days"), dateMoment.diff(end, "days")];
   }
   countRepeats(startDate: string, endDate: string): number {
     const start = this.#resolveDate(startDate);

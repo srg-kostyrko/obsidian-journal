@@ -44,7 +44,7 @@ export function getDecorationConditionDescription(condition: JournalDecorationCo
       return `weekday is any of ${condition.weekdays.map((day) => moment().localeData().weekdaysShort()[day]).join(", ")}`;
     }
     case "offset": {
-      return `day is ${condition.offset < 0 ? -condition.offset : condition.offset} away from interval ${condition.offset < 0 ? "start" : "end"}`;
+      return `date is ${condition.offset < 0 ? -condition.offset : condition.offset} days away from interval ${condition.offset < 0 ? "end" : "start"}`;
     }
     case "has-note": {
       return "there is a note connected to a date";

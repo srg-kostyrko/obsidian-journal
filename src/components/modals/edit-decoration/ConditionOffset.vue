@@ -24,6 +24,8 @@ const offset = computed({
 });
 </script>
 
-<template><ObsidianNumberInput v-model="offset" /> days</template>
+<template>
+  <div><ObsidianNumberInput v-model="offset" /> days from interval {{ offset >= 0 ? "start" : "end" }}</div>
+</template>
 
 <style scoped></style>

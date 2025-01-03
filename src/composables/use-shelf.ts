@@ -3,6 +3,7 @@ import type { ProvidedShelfData } from "@/types/provided-data.types";
 import { computed, inject, type MaybeRef, provide, toRef } from "vue";
 import { usePlugin } from "./use-plugin";
 import type { Journal } from "@/journals/journal";
+import type { JournalDecoration } from "@/types/settings.types";
 
 export function useShelfProvider(shelfName: MaybeRef<string | null>) {
   const _shelfName = toRef(shelfName);
@@ -23,12 +24,17 @@ export function useShelfProvider(shelfName: MaybeRef<string | null>) {
   const customJournals = computed(() => journals.value.filter((journal) => journal.type === "custom"));
   const weekdaysJournals = computed(() => journals.value.filter((journal) => journal.type === "weekdays"));
 
-  const dailyDecorations = computed(() => prepareDecorations(dailyJournals.value));
+  const dailyDecorations = computed(() => [
+    ...prepareDecorations(dailyJournals.value),
+    ...prepareDecorations(customJournals.value, (decoration) => decoration.conditions.some((c) => c.type === "offset")),
+  ]);
   const weeklyDecorations = computed(() => prepareDecorations(weeklyJournals.value));
   const monthlyDecorations = computed(() => prepareDecorations(monthlyJournals.value));
   const quarterlyDecorations = computed(() => prepareDecorations(quarterlyJournals.value));
   const yearlyDecorations = computed(() => prepareDecorations(yearlyJournals.value));
-  const customDecorations = computed(() => prepareDecorations(customJournals.value));
+  const customDecorations = computed(() =>
+    prepareDecorations(customJournals.value, (decoration) => !decoration.conditions.some((c) => c.type === "offset")),
+  );
   const weekdaysDecorations = computed(() => prepareDecorations(weekdaysJournals.value));
 
   const providedShelfData: ProvidedShelfData = {
@@ -58,12 +64,14 @@ export function useShelfProvider(shelfName: MaybeRef<string | null>) {
   return providedShelfData;
 }
 
-function prepareDecorations(journals: Journal[]) {
+function prepareDecorations(journals: Journal[], filter: (decoration: JournalDecoration) => boolean = () => true) {
   return journals.flatMap((journal) =>
-    journal.decorations.map((decoration) => ({
-      journalName: journal.name,
-      decoration,
-    })),
+    journal.decorations
+      .filter((element) => filter(element))
+      .map((decoration) => ({
+        journalName: journal.name,
+        decoration,
+      })),
   );
 }
 

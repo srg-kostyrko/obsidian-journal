@@ -33,7 +33,7 @@ import { decorationConditionTypeLabels } from "@/components/ui-texts";
 
 const props = defineProps<{
   index: number;
-  writeType: JournalSettings["write"];
+  writeType: JournalSettings["write"]["type"];
   decoration?: JournalDecoration;
 }>();
 const emit = defineEmits<{
@@ -46,10 +46,13 @@ const day = today().day();
 const mode = ref<"and" | "or">(props.decoration?.mode ?? "and");
 
 const conditionTypes = computed(() => {
-  if (props.writeType.type === "day") {
-    return ["title", "tag", "property", "date", "weekday", "has-note", "has-open-task", "all-tasks-completed"] as const;
+  const common = ["title", "tag", "property", "has-note", "has-open-task", "all-tasks-completed"] as const;
+  if (props.writeType === "day") {
+    return [...common, ...(["date", "weekday"] as const)];
+  } else if (props.writeType === "custom") {
+    return [...common, ...(["offset"] as const)];
   }
-  return ["title", "tag", "property", "has-note", "has-open-task", "all-tasks-completed"] as const;
+  return common;
 });
 
 const conditions = ref<JournalDecorationCondition[]>(props.decoration ? deepCopy(props.decoration.conditions) : []);
