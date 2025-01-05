@@ -1,3 +1,4 @@
+import { moment } from "obsidian";
 import type { JournalCommand } from "./settings.types";
 
 export type JournalAnchorDate = string & { _journal_anchor_date: true };
@@ -26,6 +27,9 @@ export interface JournalNoteData {
 }
 
 export interface AnchorDateResolver {
+  readonly repeats: number;
+  readonly duration: moment.unitOfTime.DurationConstructor;
+
   resolveForDate(date: string): JournalAnchorDate | null;
   resolveNext(date: string): JournalAnchorDate | null;
   resolvePrevious(date: string): JournalAnchorDate | null;

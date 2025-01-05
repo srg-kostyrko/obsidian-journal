@@ -6,12 +6,18 @@ import FormattedDate from "./FormattedDate.vue";
 import CalendarButton from "./CalendarButton.vue";
 import { isSamePeriod } from "@/calendar";
 
-const { refDate } = defineProps<{
+const { refDate, min, max } = defineProps<{
   refDate: string;
+  min?: string;
+  max?: string;
 }>();
 defineEmits<(event: "select", date: string) => void>();
 
-const { grid } = useYear(computed(() => refDate));
+const { grid } = useYear(
+  computed(() => refDate),
+  computed(() => min),
+  computed(() => max),
+);
 </script>
 
 <template>

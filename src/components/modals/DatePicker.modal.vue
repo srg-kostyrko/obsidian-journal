@@ -12,6 +12,8 @@ import FormattedDate from "../calendar/FormattedDate.vue";
 const props = defineProps<{
   selectedDate?: string;
   picking: "day" | "week" | "month" | "quarter" | "year";
+  min?: string;
+  max?: string;
 }>();
 const emit = defineEmits<{
   (error: "select", date: string): void;
@@ -51,11 +53,27 @@ function previous(step: "month" | "quarter" | "year" | "decade" = "month") {
       ? currentDateMoment.value.subtract(10, "year").format("YYYY-MM-DD")
       : currentDateMoment.value.subtract(1, step).format("YYYY-MM-DD");
 }
+function canPrevious(step: "month" | "quarter" | "year" | "decade" = "month") {
+  if (!props.min) return true;
+
+  const min = date_from_string(props.min);
+  return step === "decade"
+    ? currentDateMoment.value.clone().subtract(10, "year").isAfter(min, "year")
+    : currentDateMoment.value.clone().subtract(1, step).endOf(step).isAfter(min);
+}
 function next(step: "month" | "quarter" | "year" | "decade" = "month") {
   currentDate.value =
     step === "decade"
       ? currentDateMoment.value.add(10, "year").format("YYYY-MM-DD")
       : currentDateMoment.value.add(1, step).format("YYYY-MM-DD");
+}
+function canNext(step: "month" | "quarter" | "year" | "decade" = "month") {
+  if (!props.max) return true;
+
+  const max = date_from_string(props.max);
+  return step === "decade"
+    ? currentDateMoment.value.clone().add(10, "year").isBefore(max, "year")
+    : currentDateMoment.value.clone().add(1, step).startOf(step).isBefore(max);
 }
 
 function selectDate(date: string) {
@@ -97,7 +115,7 @@ function selectYear(date: string) {
 </script>
 
 <template>
-  <CalendarDecadeView v-if="mode === 'decade'" :ref-date="currentDate" @select="selectYear">
+  <CalendarDecadeView v-if="mode === 'decade'" :ref-date="currentDate" :min :max @select="selectYear">
     <template #header="{ startYear, endYear }">
       <ObsidianIconButton icon="arrow-left" tooltip="Previous decade" @click="previous('decade')" />
       {{ startYear }} - {{ endYear }}
@@ -105,31 +123,46 @@ function selectYear(date: string) {
     </template>
   </CalendarDecadeView>
 
-  <CalendarYearView v-else-if="mode === 'year'" :ref-date="currentDate" @select="selectMonth">
+  <CalendarYearView v-else-if="mode === 'year'" :ref-date="currentDate" :min :max @select="selectMonth">
     <template #header>
-      <ObsidianIconButton icon="arrow-left" tooltip="Previous year" @click="previous('year')" />
+      <ObsidianIconButton
+        v-if="canPrevious('year')"
+        icon="arrow-left"
+        tooltip="Previous year"
+        @click="previous('year')"
+      />
       <ObsidianButton @click="mode = 'decade'">{{ currentDateMoment.format("YYYY") }}</ObsidianButton>
-      <ObsidianIconButton icon="arrow-right" tooltip="Next year" @click="next('year')" />
+      <ObsidianIconButton v-if="canNext('year')" icon="arrow-right" tooltip="Next year" @click="next('year')" />
     </template>
   </CalendarYearView>
 
-  <CalendarQuarterView v-else-if="mode === 'quarter'" :ref-date="currentDate" @select="selectQuarter">
+  <CalendarQuarterView v-else-if="mode === 'quarter'" :ref-date="currentDate" :min :max @select="selectQuarter">
     <template #header>
-      <ObsidianIconButton icon="arrow-left" tooltip="Previous quarter" @click="previous('quarter')" />
+      <ObsidianIconButton
+        v-if="canPrevious('quarter')"
+        icon="arrow-left"
+        tooltip="Previous quarter"
+        @click="previous('quarter')"
+      />
       <ObsidianButton @click="mode = 'year'">
         <FormattedDate :date="currentDate" format="YYYY" />
       </ObsidianButton>
-      <ObsidianIconButton icon="arrow-right" tooltip="Next quarter" @click="next('quarter')" />
+      <ObsidianIconButton
+        v-if="canNext('quarter')"
+        icon="arrow-right"
+        tooltip="Next quarter"
+        @click="next('quarter')"
+      />
     </template>
   </CalendarQuarterView>
 
-  <CalendarMonthView v-else :ref-date="currentDate" :selected-date="selectedDate" @select="selectDate">
+  <CalendarMonthView v-else :ref-date="currentDate" :selected-date="selectedDate" :min :max @select="selectDate">
     <template #header>
-      <ObsidianIconButton icon="arrow-left" tooltip="Previous month" @click="previous" />
+      <ObsidianIconButton v-if="canPrevious('month')" icon="arrow-left" tooltip="Previous month" @click="previous" />
       <ObsidianButton @click="mode = 'year'">
         <FormattedDate :date="currentDate" format="MMMM YYYY" />
       </ObsidianButton>
-      <ObsidianIconButton icon="arrow-right" tooltip="Next month" @click="next" />
+      <ObsidianIconButton v-if="canNext('month')" icon="arrow-right" tooltip="Next month" @click="next" />
     </template>
   </CalendarMonthView>
 </template>

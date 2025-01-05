@@ -58,6 +58,14 @@ const journal = computed(() => {
   if (!journalName.value) return null;
   return plugin.getJournal(journalName.value);
 });
+const journalStartDate = computed(() => {
+  if (!journal.value) return;
+  return journal.value.startDate;
+});
+const journalEndDate = computed(() => {
+  if (!journal.value) return;
+  return journal.value.endDate;
+});
 const anchorDate = computed(() => {
   if (!journal.value) return null;
   if (!refDate.value) return null;
@@ -147,7 +155,7 @@ const onSubmit = handleSubmit(() => {
           <template #description>
             <FormErrors :errors="errorBag.refDate" />
           </template>
-          <DatePicker v-model="refDate" v-bind="anchorDateAttrs" />
+          <DatePicker v-model="refDate" v-bind="anchorDateAttrs" :min="journalStartDate" :max="journalEndDate" />
         </ObsidianSetting>
         <ObsidianSetting v-if="existingNote" name="Override?">
           <template #description>

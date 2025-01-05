@@ -17,6 +17,14 @@ export class CustomIntervalResolver implements AnchorDateResolver {
     this.#settings = settings;
   }
 
+  get repeats() {
+    return this.#settings.value.duration;
+  }
+
+  get duration() {
+    return this.#settings.value.every;
+  }
+
   resolveForDate(date: string): JournalAnchorDate | null {
     return this.#resolveDate(date);
   }

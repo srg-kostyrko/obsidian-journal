@@ -7,6 +7,8 @@ import CalendarButton from "./CalendarButton.vue";
 
 const { refDate } = defineProps<{
   refDate: string;
+  min?: string;
+  max?: string;
 }>();
 defineEmits<(event: "select", date: string) => void>();
 

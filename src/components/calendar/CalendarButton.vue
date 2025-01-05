@@ -17,4 +17,7 @@ button {
 .clickable {
   cursor: pointer;
 }
+button:disabled {
+  cursor: not-allowed;
+}
 </style>

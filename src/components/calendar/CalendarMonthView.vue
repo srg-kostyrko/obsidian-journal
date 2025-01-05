@@ -7,16 +7,22 @@ import CalendarGrid from "./CalendarGrid.vue";
 import CalendarButton from "./CalendarButton.vue";
 import CalendarWeekdays from "./CalendarWeekdays.vue";
 
-const { refDate } = defineProps<{
+const { refDate, min, max } = defineProps<{
   refDate: string;
   selectedDate?: string | null;
+  min?: string;
+  max?: string;
 }>();
 defineEmits<(event: "select", date: string, nativeEvent: MouseEvent) => void>();
 
 const plugin = usePlugin();
 const columns = computed(() => (plugin.calendarViewSettings.weeks === "none" ? 7 : 8));
 
-const { grid } = useMonth(computed(() => refDate));
+const { grid } = useMonth(
+  computed(() => refDate),
+  computed(() => min),
+  computed(() => max),
+);
 </script>
 
 <template>
@@ -32,7 +38,8 @@ const { grid } = useMonth(computed(() => refDate));
     <CalendarButton
       v-for="uiDate of grid"
       :key="uiDate.key + (uiDate.isWeekNumber ? 'week' : 'day')"
-      clickable
+      :clickable="!uiDate.disabled"
+      :disabled="uiDate.disabled"
       :data-outside="uiDate.outside || null"
       :data-today="uiDate.today || null"
       :data-selected="selectedDate === uiDate.key || null"

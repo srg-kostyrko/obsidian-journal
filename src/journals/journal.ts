@@ -84,6 +84,30 @@ export class Journal {
     return this.config.value.shelves[0] ?? "";
   }
 
+  get startDate(): string {
+    return this.config.value.start;
+  }
+
+  get endDate(): string {
+    switch (this.config.value.end.type) {
+      case "date": {
+        return this.config.value.end.date;
+      }
+      case "repeats": {
+        const start = date_from_string(this.startDate);
+        if (!start.isValid()) return "";
+
+        const end = start
+          .clone()
+          .add(this.config.value.end.repeats * this.#anchorDateResolver.repeats, this.#anchorDateResolver.duration);
+
+        return end.format(FRONTMATTER_DATE_FORMAT);
+      }
+    }
+
+    return "";
+  }
+
   get frontmatterDate(): string {
     return this.config.value.frontmatter.dateField || FRONTMATTER_DATE_KEY;
   }

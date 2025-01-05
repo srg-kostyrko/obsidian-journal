@@ -8,10 +8,16 @@ import { date_from_string, relativeDate } from "../calendar";
 // TODO: write tests
 export class FixedIntervalResolver implements AnchorDateResolver {
   #settings: ComputedRef<FixedWriteIntervals>;
+  readonly repeats = 1;
 
   constructor(settings: ComputedRef<FixedWriteIntervals>) {
     this.#settings = settings;
   }
+
+  get duration() {
+    return this.#settings.value.type;
+  }
+
   resolveStartDate(anchorDate: JournalAnchorDate): string {
     const type = this.#settings.value.type;
     const start_date = date_from_string(anchorDate).startOf(type).format(FRONTMATTER_DATE_FORMAT);

@@ -14,12 +14,16 @@ const props = withDefaults(
     previewFormat?: string;
     disabled?: boolean;
     tooltip?: string;
+    min?: string;
+    max?: string;
   }>(),
   {
     picking: "day",
     placeholder: "Pick a date",
     previewFormat: "YYYY-MM-DD",
     tooltip: "Pick a date",
+    min: "",
+    max: "",
   },
 );
 
@@ -47,6 +51,8 @@ function openPickerModal() {
     {
       selectedDate: model.value,
       picking: props.picking,
+      min: props.min,
+      max: props.max,
       onSelect(date: string) {
         model.value = date;
       },
