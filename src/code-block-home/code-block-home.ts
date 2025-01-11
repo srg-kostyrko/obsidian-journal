@@ -38,7 +38,7 @@ export class CodeBlockHome extends MarkdownRenderChild {
 
     const todayLink = parent.createSpan({
       cls: "journal-home-link journal-clickable today-link",
-      text: "Today's Note",
+      text: "Today",
     });
 
     todayLink.dataset.date = this.manager.calendar.today().format("YYYY-MM-DD");
@@ -62,7 +62,7 @@ export class CodeBlockHome extends MarkdownRenderChild {
 
     const weekLink = parent.createSpan({
       cls: "journal-home-link journal-clickable week-link",
-      text: "This Week's Note",
+      text: "This week",
     });
 
     weekLink.dataset.date = this.manager.calendar.today().format("YYYY-MM-DD");
