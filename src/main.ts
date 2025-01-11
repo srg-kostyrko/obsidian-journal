@@ -3,6 +3,7 @@ import { JournalSettingTab } from "./settings/journal-settings";
 import { JournalManager } from "./journal-manager";
 import { CodeBlockTimelineProcessor } from "./code-block-timeline/code-block-timeline-processor";
 import { JournalConfigManager } from "./config/journal-config-manager";
+import { CodeBlockHomeProcessor } from "./code-block-home/code-block-home-processor";
 import { CodeBlockNavProcessor } from "./code-block-nav/code-block-nav-processor";
 import { CodeBlockIntervalProcessor } from "./code-block-interval/code-block-interval-processor";
 import { CALENDAR_VIEW_TYPE } from "./constants";
@@ -38,6 +39,10 @@ export default class JournalPlugin extends Plugin {
 
     this.registerMarkdownCodeBlockProcessor("interval-nav", (source, el, ctx) => {
       const processor = new CodeBlockIntervalProcessor(this.manager, source, el, ctx);
+      ctx.addChild(processor);
+    });
+    this.registerMarkdownCodeBlockProcessor("home", (source, el, ctx) => {
+      const processor = new CodeBlockHomeProcessor(this.manager, source, el, ctx);
       ctx.addChild(processor);
     });
     this.app.workspace.onLayoutReady(async () => {
