@@ -28,9 +28,13 @@ export class CodeBlockHome extends MarkdownRenderChild {
     const journals = this.manager.getByType("calendar").filter((j) => j.config.day.enabled);
     if (journals.length === 0) return;
 
-    const todayLink = parent.createDiv({
+    const todayLink = parent.createSpan({
       cls: "journal-home-link journal-clickable today-link",
       text: "Today's Note",
+    });
+
+    parent.createSpan({
+      text: " • ",
     });
     todayLink.dataset.date = this.manager.calendar.today().format("YYYY-MM-DD");
 
@@ -51,10 +55,11 @@ export class CodeBlockHome extends MarkdownRenderChild {
     const journals = this.manager.getByType("calendar").filter((j) => j.config.week.enabled);
     if (journals.length === 0) return;
 
-    const weekLink = parent.createDiv({
+    const weekLink = parent.createSpan({
       cls: "journal-home-link journal-clickable week-link",
       text: "This Week's Note",
     });
+
     weekLink.dataset.date = this.manager.calendar.today().format("YYYY-MM-DD");
 
     parent.on("click", ".week-link", (_e, _target) => {
