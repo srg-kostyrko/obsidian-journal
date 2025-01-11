@@ -8,6 +8,7 @@ export class CodeBlockHome extends MarkdownRenderChild {
     containerEl: HTMLElement,
     protected manager: JournalManager,
     protected defaultJournal?: CalendarJournal,
+    protected config: { today: boolean; week: boolean } = { today: true, week: false },
   ) {
     super(containerEl);
   }
@@ -20,8 +21,15 @@ export class CodeBlockHome extends MarkdownRenderChild {
       cls: "journal-home-view",
     });
 
-    this.createTodayLink(view);
-    this.createWeekLink(view);
+    if (this.config.today) {
+      this.createTodayLink(view);
+    }
+    if (this.config.week) {
+      if (this.config.today) {
+        view.createSpan({ text: " • " });
+      }
+      this.createWeekLink(view);
+    }
   }
 
   private createTodayLink(parent: HTMLElement) {
@@ -33,9 +41,6 @@ export class CodeBlockHome extends MarkdownRenderChild {
       text: "Today's Note",
     });
 
-    parent.createSpan({
-      text: " • ",
-    });
     todayLink.dataset.date = this.manager.calendar.today().format("YYYY-MM-DD");
 
     parent.on("click", ".today-link", (_e, _target) => {

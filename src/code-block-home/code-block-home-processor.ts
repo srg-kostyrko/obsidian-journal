@@ -34,7 +34,26 @@ export class CodeBlockHomeProcessor extends MarkdownRenderChild {
       }
     }
 
-    const block = new CodeBlockHome(container, this.manager, defaultJournal);
+    // Parse source for configuration
+    const config = {
+      today: true, // Default to only showing today
+      week: false,
+    };
+
+    if (this.source) {
+      const lines = this.source.split("\n");
+      lines.forEach((line) => {
+        const [key, value] = line.split(":").map((s) => s.trim());
+        if (key === "today" || key === "day") {
+          config.today = value === "true";
+        } else if (key === "week") {
+          config.week = value === "true";
+        }
+      });
+    }
+
+    new CodeBlockHome(container, this.manager, defaultJournal, config);
+    const block = new CodeBlockHome(container, this.manager, defaultJournal, config);
     this.ctx.addChild(block);
     block.display();
   }
