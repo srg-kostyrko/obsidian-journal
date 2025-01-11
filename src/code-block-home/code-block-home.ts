@@ -36,9 +36,10 @@ export class CodeBlockHome extends MarkdownRenderChild {
     const journals = this.manager.getByType("calendar").filter((j) => j.config.day.enabled);
     if (journals.length === 0) return;
 
-    const todayLink = parent.createSpan({
-      cls: "journal-home-link journal-clickable today-link",
+    const todayLink = parent.createEl("a", {
+      cls: "journal-home-link today-link",
       text: "Today",
+      href: "#",
     });
 
     todayLink.dataset.date = this.manager.calendar.today().format("YYYY-MM-DD");
@@ -60,9 +61,10 @@ export class CodeBlockHome extends MarkdownRenderChild {
     const journals = this.manager.getByType("calendar").filter((j) => j.config.week.enabled);
     if (journals.length === 0) return;
 
-    const weekLink = parent.createSpan({
-      cls: "journal-home-link journal-clickable week-link",
+    const weekLink = parent.createEl("a", {
+      cls: "journal-home-link week-link",
       text: "This week",
+      href: "#",
     });
 
     weekLink.dataset.date = this.manager.calendar.today().format("YYYY-MM-DD");
