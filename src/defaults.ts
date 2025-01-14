@@ -19,6 +19,7 @@ export const defaultPluginSettings: PluginSettings = {
   },
   useShelves: false,
   showReloadHint: false,
+  openOnStartup: "",
   journals: {},
   shelves: {},
   calendar: {

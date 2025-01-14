@@ -11,6 +11,7 @@ export interface PluginSettings {
 
   useShelves: boolean;
   showReloadHint: boolean;
+  openOnStartup: string;
 
   journals: Record<string, JournalSettings>;
   shelves: Record<string, ShelfSettings>;

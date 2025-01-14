@@ -21,6 +21,7 @@ export interface JournalPlugin extends Plugin {
   removeJournal(name: string, notesProcessing: NotesProcessing): Promise<void>;
 
   usesShelves: boolean;
+  openOnStartup: string;
   readonly shelves: ShelfSettings[];
   hasShelf(name: string): boolean;
   getShelf(name: string): ShelfSettings | undefined;

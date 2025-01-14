@@ -74,6 +74,15 @@ function changeFirstWeekOfYear(value: number): void {
   />
   <JournalSettingsWithoutShelves v-else @edit="emit('edit', $event)" @bulk-add="emit('bulk-add', $event)" />
 
+  <ObsidianSetting name="Open on startup" descripton="Open a note whenever you open this vault?">
+    <ObsidianDropdown v-model="plugin.openOnStartup">
+      <option value="">Don't open</option>
+      <option v-for="journal of plugin.journals" :key="journal.name" :value="journal.name">
+        {{ journal.name }}
+      </option>
+    </ObsidianDropdown>
+  </ObsidianSetting>
+
   <CollapsibleBlock>
     <template #trigger>
       <IconedRow icon="calendar"> Calendar view </IconedRow>

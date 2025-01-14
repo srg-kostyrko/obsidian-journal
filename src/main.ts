@@ -1,14 +1,14 @@
 import { Notice, Plugin, type TFile } from "obsidian";
 import { ref, shallowRef, watch, type Ref, type WatchStopHandle } from "vue";
 import { debounce } from "perfect-debounce";
-import { initCalendarCustomization, restoreLocale, updateLocale } from "./calendar";
+import { initCalendarCustomization, restoreLocale, today, updateLocale } from "./calendar";
 import { JournalSettingTab } from "./settings/journal-settings-tab";
 import { Journal } from "./journals/journal";
 import type { JournalSettings, NotesProcessing, PluginSettings, ShelfSettings } from "./types/settings.types";
 import { defaultJournalSettings, defaultPluginSettings } from "./defaults";
 import { prepareJournalDefaultsBasedOnType } from "./journals/journal-defaults";
 import { JournalsIndex } from "./journals/journals-index";
-import { AUTO_CREATE_INTERVAL, CALENDAR_VIEW_TYPE } from "./constants";
+import { AUTO_CREATE_INTERVAL, CALENDAR_VIEW_TYPE, FRONTMATTER_DATE_FORMAT } from "./constants";
 import { CalendarView } from "./calendar-view/calendar-view";
 import { deepCopy } from "./utils/misc";
 import { TimelineCodeBlockProcessor } from "./code-blocks/timeline/timeline-processor";
@@ -17,6 +17,7 @@ import { VueModal } from "./components/modals/vue-modal";
 import ConnectNoteModal from "./components/modals/ConnectNote.modal.vue";
 import { ShelfSuggestModal } from "./components/suggests/shelf-suggest";
 import type { JournalPlugin } from "./types/plugin.types";
+import { openDateInJournal } from "./journals/open-date";
 
 export default class JournalPluginImpl extends Plugin implements JournalPlugin {
   #stopHandles: WatchStopHandle[] = [];
@@ -43,6 +44,13 @@ export default class JournalPluginImpl extends Plugin implements JournalPlugin {
   }
   set usesShelves(value: boolean) {
     this.#config.value.useShelves = value;
+  }
+
+  get openOnStartup() {
+    return this.#config.value.openOnStartup;
+  }
+  set openOnStartup(value: string) {
+    this.#config.value.openOnStartup = value;
   }
 
   get calendarSettings() {
@@ -113,6 +121,9 @@ export default class JournalPluginImpl extends Plugin implements JournalPlugin {
       ...otherJournals,
       [newName]: new Journal(newName, this),
     };
+    if (this.#config.value.openOnStartup === name) {
+      this.#config.value.openOnStartup = newName;
+    }
   }
 
   async removeJournal(name: string, notesProcessing: NotesProcessing): Promise<void> {
@@ -136,6 +147,9 @@ export default class JournalPluginImpl extends Plugin implements JournalPlugin {
       );
     }
     delete this.#config.value.journals[name];
+    if (this.#config.value.openOnStartup === name) {
+      this.#config.value.openOnStartup = "";
+    }
   }
 
   moveJournal(journalName: string, destinationShelf: string): void {
@@ -206,6 +220,7 @@ export default class JournalPluginImpl extends Plugin implements JournalPlugin {
   }
 
   async onload(): Promise<void> {
+    const appStartup = !this.app.workspace.layoutReady;
     await this.#loadSettings();
     initCalendarCustomization();
     if (this.#config.value.calendar.firstDayOfWeek === -1) {
@@ -250,6 +265,9 @@ export default class JournalPluginImpl extends Plugin implements JournalPlugin {
       this.placeCalendarView(true);
       this.#activeNote.value = this.app.workspace.getActiveFile();
       await this.autoCreateNotes();
+      if (appStartup) {
+        await this.openStartupNote();
+      }
     });
   }
   onunload(): void {
@@ -267,6 +285,16 @@ export default class JournalPluginImpl extends Plugin implements JournalPlugin {
       await journal.autoCreate();
     }
     this.#sheduleNextAutoCreate();
+  }
+
+  async openStartupNote() {
+    const openOnStartup = this.#config.value.openOnStartup;
+    if (openOnStartup) {
+      const journal = this.getJournal(openOnStartup);
+      if (journal) {
+        await openDateInJournal(this, today().format(FRONTMATTER_DATE_FORMAT), openOnStartup);
+      }
+    }
   }
 
   #sheduleNextAutoCreate() {
