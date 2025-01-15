@@ -18,6 +18,7 @@ import ConnectNoteModal from "./components/modals/ConnectNote.modal.vue";
 import { ShelfSuggestModal } from "./components/suggests/shelf-suggest";
 import type { JournalPlugin } from "./types/plugin.types";
 import { openDateInJournal } from "./journals/open-date";
+import { HomeCodeBlockProcessor } from "./code-blocks/home/home-processor";
 
 export default class JournalPluginImpl extends Plugin implements JournalPlugin {
   #stopHandles: WatchStopHandle[] = [];
@@ -255,6 +256,10 @@ export default class JournalPluginImpl extends Plugin implements JournalPlugin {
     });
     this.registerMarkdownCodeBlockProcessor("journal-nav", (source, element, context) => {
       const processor = new NavCodeBlockProcessor(this, element, source, context.sourcePath);
+      context.addChild(processor);
+    });
+    this.registerMarkdownCodeBlockProcessor("journals-home", (source, element, context) => {
+      const processor = new HomeCodeBlockProcessor(this, element, source, context);
       context.addChild(processor);
     });
 
