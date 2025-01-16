@@ -9,3 +9,8 @@ show:
 scale: 2
 ```
 
+```calendar-timeline
+mode: quarter
+```
+
+

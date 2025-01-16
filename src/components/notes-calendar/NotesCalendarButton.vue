@@ -11,6 +11,7 @@ import type { JournalSettings } from "@/types/settings.types";
 import { calendarFormats } from "@/constants";
 import { Menu } from "obsidian";
 import type { JournalNoteData } from "@/types/journal.types";
+import { defineOpenMode } from "@/utils/journals";
 
 const { date, type, inactive } = defineProps<{
   date: string;
@@ -30,6 +31,7 @@ function open(event: MouseEvent) {
     plugin,
     date,
     journals[type].value.map((journal) => journal.name),
+    defineOpenMode(event),
     event,
   ).catch(console.error);
 }
@@ -78,7 +80,13 @@ function showContextMenuForPath(path: string, event: MouseEvent): void {
 </script>
 
 <template>
-  <CalendarButton class="calendar-button" :clickable="isActionable" @click="open" @contextmenu="openContextMenu">
+  <CalendarButton
+    class="calendar-button"
+    :clickable="isActionable"
+    @click="open"
+    @contextmenu="openContextMenu"
+    @auxclick="open"
+  >
     <CalendarDecoration v-if="!inactive" :styles="decorationsStyles">
       <FormattedDate :date :format />
     </CalendarDecoration>

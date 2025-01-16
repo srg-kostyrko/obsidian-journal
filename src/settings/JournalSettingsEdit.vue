@@ -353,15 +353,6 @@ watch(
       </ObsidianSetting>
     </template>
 
-    <ObsidianSetting name="Open note">
-      <ObsidianDropdown v-model="config.openMode">
-        <option value="active">Replacing active note</option>
-        <option value="tab">In new tab</option>
-        <option value="split">Adjacent to active note</option>
-        <option value="window">In popout window</option>
-      </ObsidianDropdown>
-    </ObsidianSetting>
-
     <ObsidianSetting name="Confirm creating new note?">
       <template #description>
         When turned on will show confirmation dialog any time you try navigating to a date that does not have a note

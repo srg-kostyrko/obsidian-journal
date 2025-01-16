@@ -15,6 +15,7 @@ import NotesCalendarButton from "@/components/notes-calendar/NotesCalendarButton
 import CalendarViewCustomIntervals from "./CalendarViewCustomIntervals.vue";
 import { FRONTMATTER_DATE_FORMAT } from "@/constants";
 import { useActiveNoteData } from "@/composables/use-active-note-data";
+import { defineOpenMode } from "@/utils/journals";
 
 const app = useApp();
 const plugin = usePlugin();
@@ -90,7 +91,7 @@ function goToday(event: MouseEvent) {
       if (!index) continue;
       if (index.get(anchorDate)) journals.push(journal.name);
     }
-    openDate(plugin, refDate.value, journals, event).catch(console.error);
+    openDate(plugin, refDate.value, journals, defineOpenMode(event), event).catch(console.error);
   }
 }
 function pickDate(event: MouseEvent) {
@@ -113,7 +114,7 @@ function pickDate(event: MouseEvent) {
             if (!index) continue;
             if (index.get(anchorDate)) journals.push(journal.name);
           }
-          openDate(plugin, date, journals, event).catch(console.error);
+          openDate(plugin, date, journals, event.metaKey ? "tab" : "active", event).catch(console.error);
         }
       },
     },
@@ -126,6 +127,7 @@ function openDay(date: string, event: MouseEvent) {
     plugin,
     date,
     journals.day.value.map((journal) => journal.name),
+    event.metaKey ? "tab" : "active",
     event,
   ).catch(console.error);
 }

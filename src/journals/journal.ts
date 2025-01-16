@@ -4,6 +4,7 @@ import type {
   JournalDecoration,
   JournalSettings,
   NavBlockRow,
+  OpenMode,
   WriteCustom,
 } from "../types/settings.types";
 import type { AnchorDateResolver, JournalAnchorDate, JournalMetadata, JournalNoteData } from "../types/journal.types";
@@ -218,10 +219,10 @@ export class Journal {
     return list;
   }
 
-  async open(metadata: JournalMetadata): Promise<void> {
+  async open(metadata: JournalMetadata, openMode?: OpenMode): Promise<void> {
     const file = await this.#ensureNote(metadata);
     if (!file) return;
-    await this.#openFile(file);
+    await this.#openFile(file, openMode);
   }
 
   resolveAnchorDate(date: string): JournalAnchorDate | null {
@@ -418,8 +419,8 @@ export class Journal {
     await this.#ensureNote(metadata);
   }
 
-  async #openFile(file: TFile): Promise<void> {
-    const mode = this.config.value.openMode === "active" ? undefined : this.config.value.openMode;
+  async #openFile(file: TFile, openMode: OpenMode = "active"): Promise<void> {
+    const mode = openMode === "active" ? undefined : openMode;
     const leaf = this.plugin.app.workspace.getLeaf(mode);
     await leaf.openFile(file, { active: true });
   }
@@ -609,7 +610,7 @@ export class Journal {
     if (!date) return;
     const metadata = this.get(date);
     if (!metadata) return;
-    await this.open(metadata);
+    await this.open(metadata, command.openMode);
   }
 
   #getCommandRefDate(command: JournalCommand): string | null {

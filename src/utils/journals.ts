@@ -6,7 +6,8 @@ import {
   FRONTMATTER_START_DATE_KEY,
 } from "@/constants";
 import type { JournalPlugin } from "@/types/plugin.types";
-import { TFile } from "obsidian";
+import type { OpenMode } from "@/types/settings.types";
+import { Keymap, TFile } from "obsidian";
 
 export async function disconnectNote(plugin: JournalPlugin, path: string): Promise<void> {
   const file = plugin.app.vault.getAbstractFileByPath(path);
@@ -32,4 +33,9 @@ export async function disconnectNote(plugin: JournalPlugin, path: string): Promi
     //   frontmatter[" "] = "";
     // }
   });
+}
+
+export function defineOpenMode(event: MouseEvent): OpenMode {
+  if (Keymap.isModifier(event, "Mod") || event.button === 1) return "tab";
+  return "active";
 }

@@ -58,6 +58,7 @@ const { defineField, errorBag, handleSubmit } = useForm({
         ]),
         context: v.picklist(["today", "open_note", "only_open_note"]),
         showInRibbon: v.boolean(),
+        openMode: v.picklist(["active", "tab", "split", "window"]),
       }),
       v.forward(
         v.partialCheck(
@@ -77,6 +78,7 @@ const [icon, iconAttrs] = defineField("icon");
 const [type, typeAttrs] = defineField("type");
 const [context, contextAttrs] = defineField("context");
 const [showInRibbon, showInRibbonAttrs] = defineField("showInRibbon");
+const [openMode, openModeAttrs] = defineField("openMode");
 
 const supportedCommandTypeOptions = computed(() =>
   supportedCommandTypes.value.map((value) => ({ value, label: resolveCommandLabel(writeType, value, context.value) })),
@@ -133,6 +135,14 @@ const onSubmit = handleSubmit((values) => {
         <option value="today">Today</option>
         <option value="open_note">Currently opened note</option>
         <option value="only_open_note">Only currently opened note</option>
+      </ObsidianDropdown>
+    </ObsidianSetting>
+    <ObsidianSetting name="Open note">
+      <ObsidianDropdown v-model="openMode" v-bind="openModeAttrs">
+        <option value="active">Replacing active note</option>
+        <option value="tab">In new tab</option>
+        <option value="split">Adjacent to active note</option>
+        <option value="window">In popout window</option>
       </ObsidianDropdown>
     </ObsidianSetting>
     <ObsidianSetting>

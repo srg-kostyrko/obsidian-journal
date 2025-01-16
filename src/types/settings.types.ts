@@ -100,7 +100,6 @@ export interface JournalSettings {
 
   write: FixedWriteIntervals | WriteWeekdays | WriteCustom;
 
-  openMode: OpenMode;
   confirmCreation: boolean;
   autoCreate: boolean;
 
@@ -163,6 +162,7 @@ export interface JournalCommand {
     | "same_previous_year";
   context: "today" | "open_note" | "only_open_note";
   showInRibbon: boolean;
+  openMode: OpenMode;
 }
 
 export interface JournalDecoration {

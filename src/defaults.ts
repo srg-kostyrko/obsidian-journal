@@ -51,7 +51,6 @@ export const defaultJournalSettings: JournalSettings = {
     type: "day",
   },
 
-  openMode: "active",
   confirmCreation: false,
 
   nameTemplate: "",
@@ -115,6 +114,7 @@ export const defaultCommand: JournalCommand = {
   type: "same",
   context: "today",
   showInRibbon: false,
+  openMode: "active",
 };
 
 export const defaultConditions: Record<JournalDecorationCondition["type"], JournalDecorationCondition> = {
