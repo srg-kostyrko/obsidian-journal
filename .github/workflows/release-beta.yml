@@ -1,10 +1,7 @@
 permissions: write-all
 name: Release Obsidian plugin
 
-on:
-  push:
-    tags:
-      - "*"
+on: workflow_dispatch
 
 jobs:
   build:
@@ -23,13 +20,15 @@ jobs:
           npm install
           npm run build
 
+      - name: get version
+        run: echo "PACKAGE_VERSION=$(node -p "require('./manifest-beta.json').version")" >> $GITHUB_ENV
       - name: Create release
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
-          tag="${GITHUB_REF#refs/tags/}"
+          version="${process.env.PACKAGE_VERSION}"
 
-          gh release create "$tag" \
-            --title="$tag" \
+          gh release create "$version" \
+            --title="$version" \
             --draft \
             build/main.js manifest.json build/styles.css
