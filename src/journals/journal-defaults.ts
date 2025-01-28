@@ -19,7 +19,7 @@ const defaultDateFormats: Record<JournalSettings["write"]["type"], string> = {
   weekdays: "",
   custom: "YYYY-MM-DD",
 };
-const emptyNavRow: NavBlockRow = {
+export const emptyNavRow: NavBlockRow = {
   template: "",
   fontSize: 1,
   bold: false,
@@ -175,6 +175,7 @@ export function prepareJournalDefaultsBasedOnType(write: JournalSettings["write"
     dateFormat: defaultDateFormats[write.type],
     navBlock: defaultNavBlocks[write.type],
     calendarViewBlock: {
+      decorateWholeBlock: false,
       rows: [
         {
           ...emptyNavRow,

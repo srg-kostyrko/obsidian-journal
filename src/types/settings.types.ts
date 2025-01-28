@@ -1,4 +1,5 @@
 import type { JournalAnchorDate } from "./journal.types";
+import type { PendingMigration } from "./migration.types";
 
 export type OpenMode = "active" | "tab" | "split" | "window";
 
@@ -8,6 +9,7 @@ export interface PluginSettings {
   ui: {
     calendarShelf: string | null;
   };
+  pendingMigrations: PendingMigration[];
 
   useShelves: boolean;
   showReloadHint: boolean;
@@ -119,8 +121,6 @@ export interface JournalSettings {
     allowBefore: boolean;
     type: "increment" | "reset_after";
     resetAfter: number;
-    secondary: boolean;
-    secondaryAncorIndex: number;
   };
 
   commands: JournalCommand[];

@@ -12,11 +12,14 @@ import type {
   JournalDecorationCondition,
 } from "./types/settings.types";
 
+export const CURRENT_DATA_VERSION = 2;
+
 export const defaultPluginSettings: PluginSettings = {
-  version: 2,
+  version: CURRENT_DATA_VERSION,
   ui: {
     calendarShelf: null,
   },
+  pendingMigrations: [],
   useShelves: false,
   showReloadHint: false,
   openOnStartup: "",
@@ -71,15 +74,27 @@ export const defaultJournalSettings: JournalSettings = {
     allowBefore: false,
     type: "increment",
     resetAfter: 2,
-    secondary: false,
-    secondaryAncorIndex: 1,
   },
 
   autoCreate: false,
 
   commands: [],
 
-  decorations: [],
+  decorations: [
+    {
+      mode: "and",
+      conditions: [{ type: "has-note" }],
+      styles: [
+        {
+          type: "shape",
+          shape: "circle",
+          color: { type: "theme", name: "text-on-accent" },
+          placement_x: "center",
+          placement_y: "middle",
+        },
+      ],
+    },
+  ],
 
   navBlock: {
     type: "create",

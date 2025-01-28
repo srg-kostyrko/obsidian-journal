@@ -5,7 +5,7 @@ import { initCalendarCustomization, restoreLocale, today, updateLocale } from ".
 import { JournalSettingTab } from "./settings/journal-settings-tab";
 import { Journal } from "./journals/journal";
 import type { JournalSettings, NotesProcessing, PluginSettings, ShelfSettings } from "./types/settings.types";
-import { defaultJournalSettings, defaultPluginSettings } from "./defaults";
+import { CURRENT_DATA_VERSION, defaultJournalSettings, defaultPluginSettings } from "./defaults";
 import { prepareJournalDefaultsBasedOnType } from "./journals/journal-defaults";
 import { JournalsIndex } from "./journals/journals-index";
 import { AUTO_CREATE_INTERVAL, CALENDAR_VIEW_TYPE, FRONTMATTER_DATE_FORMAT } from "./constants";
@@ -19,6 +19,8 @@ import { ShelfSuggestModal } from "./components/suggests/shelf-suggest";
 import type { JournalPlugin } from "./types/plugin.types";
 import { openDateInJournal } from "./journals/open-date";
 import { HomeCodeBlockProcessor } from "./code-blocks/home/home-processor";
+import { migrateData } from "./migrations/migration-manager";
+import MigrationModal from "./migrations/components/MigrationModal.vue";
 
 export default class JournalPluginImpl extends Plugin implements JournalPlugin {
   #stopHandles: WatchStopHandle[] = [];
@@ -65,6 +67,10 @@ export default class JournalPluginImpl extends Plugin implements JournalPlugin {
     return this.#config.value.ui;
   }
 
+  get pendingMigrations() {
+    return this.#config.value.pendingMigrations;
+  }
+
   get shelves(): ShelfSettings[] {
     return Object.values(this.#config.value.shelves).sort((a, b) => a.name.localeCompare(b.name));
   }
@@ -103,6 +109,23 @@ export default class JournalPluginImpl extends Plugin implements JournalPlugin {
     };
     this.getJournal(name)?.autoCreate().catch(console.error);
     return this.#config.value.journals[name];
+  }
+  registerJournal(settings: JournalSettings): Journal {
+    if (settings.name in this.#config.value.journals) {
+      throw new Error("Name already used");
+    }
+    this.#config.value.journals[settings.name] = settings;
+    const journal = new Journal(settings.name, this);
+    this.#journals.value = {
+      ...this.#journals.value,
+      [settings.name]: new Journal(settings.name, this),
+    };
+    if (settings.shelves.length > 0) {
+      for (const shelf of settings.shelves) {
+        this.#config.value.shelves[shelf].journals.push(settings.name);
+      }
+    }
+    return journal;
   }
 
   async renameJournal(name: string, newName: string): Promise<void> {
@@ -312,8 +335,22 @@ export default class JournalPluginImpl extends Plugin implements JournalPlugin {
   async #loadSettings(): Promise<void> {
     const saved = await this.loadData();
     if (saved) {
+      const version = saved.version ?? 1;
+      if (version === CURRENT_DATA_VERSION) {
+        this.#config.value = saved;
+      } else {
+        const { migratedData, needsUser: needsUserMigration } = migrateData(saved);
+        this.#config.value = migratedData;
+        if (needsUserMigration) {
+          this.#showMigrationModal();
+        }
+      }
       this.#config.value = saved;
     }
+  }
+
+  #showMigrationModal() {
+    new VueModal(this, "Migrate plugin data", MigrationModal).open();
   }
 
   #fillJournals(): void {

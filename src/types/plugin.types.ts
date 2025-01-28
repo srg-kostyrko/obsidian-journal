@@ -2,6 +2,7 @@ import type { Plugin, TFile } from "obsidian";
 import type { JournalsIndex } from "../journals/journals-index";
 import type { JournalSettings, NotesProcessing, PluginSettings, ShelfSettings } from "./settings.types";
 import type { Journal } from "../journals/journal";
+import type { PendingMigration } from "./migration.types";
 
 export interface JournalPlugin extends Plugin {
   readonly calendarSettings: PluginSettings["calendar"];
@@ -17,6 +18,7 @@ export interface JournalPlugin extends Plugin {
   getJournal(name: string): Journal | undefined;
   getJournalConfig(name: string): JournalSettings;
   createJournal(name: string, write: JournalSettings["write"]): JournalSettings;
+  registerJournal(settings: JournalSettings): Journal;
   renameJournal(name: string, newName: string): Promise<void>;
   removeJournal(name: string, notesProcessing: NotesProcessing): Promise<void>;
 
@@ -30,4 +32,6 @@ export interface JournalPlugin extends Plugin {
   removeShelf(name: string, destinationShelf?: string): void;
 
   moveJournal(journalName: string, destinationShelf: string): void;
+
+  readonly pendingMigrations: PendingMigration[];
 }
