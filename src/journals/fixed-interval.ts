@@ -5,7 +5,6 @@ import { FRONTMATTER_DATE_FORMAT } from "../constants";
 import type { MomentDate } from "../types/date.types";
 import { date_from_string, relativeDate } from "../calendar";
 
-// TODO: write tests
 export class FixedIntervalResolver implements AnchorDateResolver {
   #settings: ComputedRef<FixedWriteIntervals>;
   readonly repeats = 1;
@@ -16,22 +15,6 @@ export class FixedIntervalResolver implements AnchorDateResolver {
 
   get duration() {
     return this.#settings.value.type;
-  }
-
-  resolveStartDate(anchorDate: JournalAnchorDate): string {
-    const type = this.#settings.value.type;
-    const start_date = date_from_string(anchorDate).startOf(type).format(FRONTMATTER_DATE_FORMAT);
-    return start_date;
-  }
-  resolveEndDate(anchorDate: JournalAnchorDate): string {
-    const type = this.#settings.value.type;
-    const end_date = date_from_string(anchorDate).endOf(type).format(FRONTMATTER_DATE_FORMAT);
-    return end_date;
-  }
-
-  resolveRelativeDate(anchorDate: JournalAnchorDate): string {
-    const type = this.#settings.value.type;
-    return relativeDate(type, anchorDate);
   }
 
   resolveForDate(date: string): JournalAnchorDate | null {
@@ -52,6 +35,23 @@ export class FixedIntervalResolver implements AnchorDateResolver {
     if (!baseDate.isValid()) return null;
     baseDate.subtract(1, this.#settings.value.type);
     return this.#resolveAnchorDate(baseDate);
+  }
+
+  resolveStartDate(anchorDate: JournalAnchorDate): string {
+    const type = this.#settings.value.type;
+    const start_date = date_from_string(anchorDate).startOf(type).format(FRONTMATTER_DATE_FORMAT);
+    return start_date;
+  }
+
+  resolveEndDate(anchorDate: JournalAnchorDate): string {
+    const type = this.#settings.value.type;
+    const end_date = date_from_string(anchorDate).endOf(type).format(FRONTMATTER_DATE_FORMAT);
+    return end_date;
+  }
+
+  resolveRelativeDate(anchorDate: JournalAnchorDate): string {
+    const type = this.#settings.value.type;
+    return relativeDate(type, anchorDate);
   }
 
   resolveDateForCommand(date: string, command: JournalCommand["type"]): string | null {
@@ -90,26 +90,26 @@ export class FixedIntervalResolver implements AnchorDateResolver {
   countRepeats(startDate: string, endDate: string): number {
     const start = date_from_string(startDate);
     const end = date_from_string(endDate);
-    return Math.ceil(start.diff(end, this.#settings.value.type));
+    return Math.abs(Math.ceil(start.diff(end, this.#settings.value.type)));
   }
 
   calculateOffset(date: string): [positive: number, negative: number] {
     const parsed = date_from_string(date);
     const anchorDate = this.#resolveAnchorDate(parsed);
     if (!anchorDate) return [0, 0];
-    const start = date_from_string(anchorDate).startOf(this.#settings.value.type);
-    const end = start.clone().endOf(this.#settings.value.type);
+    const start = this.resolveStartDate(anchorDate);
+    const end = this.resolveEndDate(anchorDate);
 
     if (parsed.isBefore(start) || parsed.isAfter(end)) return [0, 0];
-    return [start.diff(date, "days"), end.diff(date, "days")];
+    return [parsed.diff(start, "days"), parsed.diff(end, "days")];
   }
 
   #resolveAnchorDate(base: MomentDate): JournalAnchorDate {
     const type = this.#settings.value.type;
-    const start_date = base.startOf(type);
+    const start_date = base.clone().startOf(type);
     if (this.#settings.value.type === "week") {
       const end_date = base.clone().endOf(type);
-      if (!start_date.isSame(end_date, "year") && start_date.week() === 1) {
+      if (!start_date.isSame(end_date, "year") && end_date.clone().add(1, "day").week() === 2) {
         return JournalAnchorDate(end_date.format(FRONTMATTER_DATE_FORMAT));
       }
     }
