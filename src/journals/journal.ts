@@ -27,6 +27,7 @@ import ConfirmNoteCreationModal from "@/components/modals/ConfirmNoteCreation.mo
 import { disconnectNote } from "@/utils/journals";
 import { CustomIntervalResolver } from "./custom-interval";
 import type { JournalPlugin } from "@/types/plugin.types";
+import { findOpenedNote } from "@/utils/obsidian";
 
 export class Journal {
   readonly name$: ComputedRef<string>;
@@ -420,6 +421,8 @@ export class Journal {
   }
 
   async #openFile(file: TFile, openMode: OpenMode = "active"): Promise<void> {
+    const openedLeaf = findOpenedNote(this.plugin.app, file.path);
+    if (openedLeaf) return this.plugin.app.workspace.setActiveLeaf(openedLeaf, { focus: true });
     const mode = openMode === "active" ? undefined : openMode;
     const leaf = this.plugin.app.workspace.getLeaf(mode);
     await leaf.openFile(file, { active: true });
