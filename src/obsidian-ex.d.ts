@@ -17,7 +17,7 @@ declare module "obsidian" {
   }
 
   export interface LeftRibbon {
-    addRibbonItemButton(id: string, icon: string, name: string, callback: () => void): Item;
+    addRibbonItemButton(id: string, icon: string, name: string, callback: () => void): HTMLElement;
     removeRibbonAction(id: string): void;
   }
 }

@@ -33,6 +33,7 @@ export class Journal {
   readonly name$: ComputedRef<string>;
   readonly config: ComputedRef<JournalSettings>;
   #anchorDateResolver: AnchorDateResolver;
+  #ribbons = new Map<string, HTMLElement>();
 
   constructor(
     public readonly name: string,
@@ -132,36 +133,7 @@ export class Journal {
 
   registerCommands(): void {
     for (const command of this.config.value.commands) {
-      this.plugin.addCommand({
-        id: this.name + ":" + command.name,
-        name: `${this.config.value.name}: ${command.name}`,
-        icon: command.icon,
-        checkCallback: (checking: boolean): boolean => {
-          if (checking) {
-            return this.#checkCommand(command);
-          } else {
-            this.#execCommand(command).catch(console.error);
-          }
-          return true;
-        },
-      });
-      if (command.showInRibbon) {
-        const ribbonId = "journals:" + this.name + ":" + command.name;
-        const item = (this.plugin.app.workspace.leftRibbon as LeftRibbon).addRibbonItemButton(
-          ribbonId,
-          command.icon,
-          command.name,
-          () => {
-            if (!this.#checkCommand(command)) return;
-            this.#execCommand(command).catch(console.error);
-          },
-        );
-        this.plugin.register(() => {
-          (this.plugin.app.workspace.leftRibbon as LeftRibbon).removeRibbonAction(ribbonId);
-          // eslint-disable-next-line @typescript-eslint/no-unsafe-call
-          item.detach();
-        });
-      }
+      this.#addCommand(command);
     }
   }
 
@@ -242,17 +214,18 @@ export class Journal {
 
   addCommand(command: JournalCommand): void {
     this.config.value.commands.push(command);
-    this.plugin.requestReloadHint();
+    this.#addCommand(command);
   }
 
   updateCommand(index: number, command: JournalCommand): void {
+    this.#removeCommand(this.config.value.commands[index]);
     this.config.value.commands[index] = command;
-    this.plugin.requestReloadHint();
+    this.#addCommand(command);
   }
 
   deleteCommand(index: number): void {
-    this.config.value.commands.splice(index, 1);
-    this.plugin.requestReloadHint();
+    const [command] = this.config.value.commands.splice(index, 1);
+    this.#removeCommand(command);
   }
 
   addDecoration(decoration: JournalDecoration): void {
@@ -596,6 +569,46 @@ export class Journal {
     return metadata;
   }
 
+  #addCommand(command: JournalCommand) {
+    this.plugin.addCommand({
+      id: this.name + ":" + command.name,
+      name: `${this.config.value.name}: ${command.name}`,
+      icon: command.icon,
+      checkCallback: (checking: boolean): boolean => {
+        if (checking) {
+          return this.#checkCommand(command);
+        } else {
+          this.#execCommand(command).catch(console.error);
+        }
+        return true;
+      },
+    });
+    if (command.showInRibbon) {
+      const ribbonId = "journals:" + this.name + ":" + command.name;
+      const item = (this.plugin.app.workspace.leftRibbon as LeftRibbon).addRibbonItemButton(
+        ribbonId,
+        command.icon,
+        command.name,
+        () => {
+          if (!this.#checkCommand(command)) return;
+          this.#execCommand(command).catch(console.error);
+        },
+      );
+      this.#ribbons.set(ribbonId, item);
+    }
+  }
+
+  #removeCommand(command: JournalCommand) {
+    this.plugin.removeCommand(this.name + ":" + command.name);
+    this.#removeRibbon("journals:" + this.name + ":" + command.name);
+  }
+
+  #removeRibbon(id: string) {
+    (this.plugin.app.workspace.leftRibbon as LeftRibbon).removeRibbonAction(id);
+    this.#ribbons.get(id)?.detach();
+    this.#ribbons.delete(id);
+  }
+
   #checkCommand(command: JournalCommand): boolean {
     if (command.context === "only_open_note") {
       if (!this.plugin.activeNote) return false;
@@ -687,5 +700,12 @@ export class Journal {
       index *= -1;
     }
     return index;
+  }
+
+  dispose() {
+    for (const command of this.commands) {
+      this.#removeCommand(command);
+    }
+    this.#ribbons.clear();
   }
 }

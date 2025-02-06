@@ -131,6 +131,7 @@ export default class JournalPluginImpl extends Plugin implements JournalPlugin {
   async renameJournal(name: string, newName: string): Promise<void> {
     const journal = this.getJournal(name);
     if (!journal) return;
+    journal.dispose();
     await this.#index.renameJournal(name, newName);
     this.#config.value.journals[newName] = this.#config.value.journals[name];
     this.#config.value.journals[newName].name = newName;
@@ -141,10 +142,12 @@ export default class JournalPluginImpl extends Plugin implements JournalPlugin {
       );
     }
     const { [name]: _, ...otherJournals } = this.#journals.value;
+    const newJournal = new Journal(newName, this);
     this.#journals.value = {
       ...otherJournals,
-      [newName]: new Journal(newName, this),
+      [newName]: newJournal,
     };
+    newJournal.registerCommands();
     if (this.#config.value.openOnStartup === name) {
       this.#config.value.openOnStartup = newName;
     }
@@ -163,6 +166,7 @@ export default class JournalPluginImpl extends Plugin implements JournalPlugin {
         break;
       }
     }
+    journal.dispose();
     const { [name]: _, ...otherJournals } = this.#journals.value;
     this.#journals.value = otherJournals;
     for (const shelf of this.#config.value.journals[name].shelves) {
@@ -305,6 +309,9 @@ export default class JournalPluginImpl extends Plugin implements JournalPlugin {
     }
     for (const leaf of this.app.workspace.getLeavesOfType(CALENDAR_VIEW_TYPE)) {
       leaf.detach();
+    }
+    for (const journal of this.journals) {
+      journal.dispose();
     }
   }
 
