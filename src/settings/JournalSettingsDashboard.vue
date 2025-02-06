@@ -1,25 +1,20 @@
 <script setup lang="ts">
-import { moment } from "obsidian";
 import { computed } from "vue";
 import ObsidianSetting from "../components/obsidian/ObsidianSetting.vue";
 import ObsidianDropdown from "../components/obsidian/ObsidianDropdown.vue";
-import ObsidianNumberInput from "../components/obsidian/ObsidianNumberInput.vue";
 import ObsidianToggle from "@/components/obsidian/ObsidianToggle.vue";
-import { restoreLocale, updateLocale } from "../calendar";
 import JournalSettingsWithoutShelves from "./JournalSettingsWithoutShelves.vue";
 import JournalSettingsWithShelves from "./JournalSettingsWithShelves.vue";
 import CollapsibleBlock from "@/components/CollapsibleBlock.vue";
 import { usePlugin } from "@/composables/use-plugin";
 import IconedRow from "@/components/IconedRow.vue";
 import ColorPicker from "@/components/ColorPicker.vue";
+import CalendarWeekSettings from "@/components/CalendarWeekSettings.vue";
 import type { Journal } from "@/journals/journal";
 
 const emit = defineEmits<(event: "edit" | "organize" | "bulk-add", name: string) => void>();
 
 const plugin = usePlugin();
-
-const fow = moment().localeData().firstDayOfWeek();
-const fowText = moment().localeData().weekdays()[fow];
 
 const collidingJournals = computed(() => {
   const hashed = new Map<string, Journal[]>();
@@ -31,25 +26,6 @@ const collidingJournals = computed(() => {
   }
   return [...hashed.values()].filter((list) => list.length > 1);
 });
-
-const weekStart = computed({
-  get() {
-    return String(plugin.calendarSettings.firstDayOfWeek);
-  },
-  set(value) {
-    if (value === "-1") {
-      restoreLocale();
-    } else {
-      updateLocale(Number.parseInt(value, 10), plugin.calendarSettings.firstWeekOfYear);
-    }
-    plugin.calendarSettings.firstDayOfWeek = Number.parseInt(value, 10);
-  },
-});
-const showFirstWeekOfYear = computed(() => plugin.calendarSettings.firstDayOfWeek !== -1);
-function changeFirstWeekOfYear(value: number): void {
-  updateLocale(plugin.calendarSettings.firstDayOfWeek, value);
-  plugin.calendarSettings.firstWeekOfYear = value;
-}
 </script>
 
 <template>
@@ -87,28 +63,7 @@ function changeFirstWeekOfYear(value: number): void {
     <template #trigger>
       <IconedRow icon="calendar"> Calendar view </IconedRow>
     </template>
-    <ObsidianSetting name="Start week on" description="Which day to consider as first day of week.">
-      <ObsidianDropdown v-model="weekStart">
-        <option value="-1">Locale default ({{ fowText }})</option>
-        <option value="0">Sunday</option>
-        <option value="1">Monday</option>
-        <option value="2">Tuesday</option>
-        <option value="3">Wednesday</option>
-        <option value="4">Thursday</option>
-        <option value="5">Friday</option>
-        <option value="6">Saturday</option>
-      </ObsidianDropdown>
-    </ObsidianSetting>
-    <ObsidianSetting
-      v-if="showFirstWeekOfYear"
-      name="First week of year"
-      description="Define what date in January a week should contain to be considered first week of a year."
-    >
-      <ObsidianNumberInput
-        :model-value="plugin.calendarSettings.firstWeekOfYear"
-        @update:model-value="changeFirstWeekOfYear"
-      />
-    </ObsidianSetting>
+    <CalendarWeekSettings />
     <ObsidianSetting name="Show calendar in">
       <ObsidianDropdown v-model="plugin.calendarViewSettings.leaf">
         <option value="left">Left sidebar</option>

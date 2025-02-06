@@ -12,7 +12,7 @@ const defaultNameTemplates: Record<JournalSettings["write"]["type"], string> = {
 
 const defaultDateFormats: Record<JournalSettings["write"]["type"], string> = {
   day: "YYYY-MM-DD",
-  week: "YYYY-[W]W",
+  week: "YYYY-[W]w",
   month: "YYYY-MM",
   quarter: "YYYY-[Q]Q",
   year: "YYYY",

@@ -1,8 +1,8 @@
-import { describe, it, expect } from "vitest";
+import { describe, it, expect, beforeAll, afterAll } from "vitest";
 import { FixedIntervalResolver } from "./fixed-interval";
 import { computed } from "vue";
 import { JournalAnchorDate } from "@/types/journal.types";
-import { today } from "@/calendar";
+import { restoreLocale, today, updateLocale } from "@/calendar";
 import { FRONTMATTER_DATE_FORMAT } from "@/constants";
 import type { JournalCommand } from "@/types/settings.types";
 
@@ -88,6 +88,14 @@ describe("FixedIntervalResolver", () => {
   describe("weekly journal", () => {
     const resolver = new FixedIntervalResolver(computed(() => ({ type: "week" })));
 
+    beforeAll(() => {
+      updateLocale(1, 4);
+    });
+
+    afterAll(() => {
+      restoreLocale();
+    });
+
     it("returns week as duration", () => {
       expect(resolver.duration).toBe("week");
     });
@@ -99,38 +107,38 @@ describe("FixedIntervalResolver", () => {
     });
 
     it("returns first day of week as anchor for weeks in middle of the year", () => {
-      expect(resolver.resolveForDate("2025-01-07")).toBe("2025-01-05");
+      expect(resolver.resolveForDate("2025-01-07")).toBe("2025-01-06");
     });
     it("returns first day of week if week is at year break and belongs to year before", () => {
-      expect(resolver.resolveForDate("2025-01-02")).toBe("2024-12-29");
+      expect(resolver.resolveForDate("2022-12-28")).toBe("2022-12-26");
     });
     it("returns last day of week if week is at year break and belongs to next year", () => {
-      expect(resolver.resolveForDate("2024-01-02")).toBe("2024-01-06");
+      expect(resolver.resolveForDate("2025-01-02")).toBe("2025-01-05");
     });
 
     it("should return first day of next week when resolving next interval", () => {
-      expect(resolver.resolveNext("2025-01-07")).toBe("2025-01-12");
+      expect(resolver.resolveNext("2025-01-07")).toBe("2025-01-13");
     });
 
     it("should return first day of last week when resolving for previous interval", () => {
-      expect(resolver.resolvePrevious("2025-01-14")).toBe("2025-01-05");
+      expect(resolver.resolvePrevious("2025-01-14")).toBe("2025-01-06");
     });
 
     it("should resolve to first day of week when resolving start date", () => {
-      expect(resolver.resolveStartDate(JournalAnchorDate("2025-01-11"))).toBe("2025-01-05");
+      expect(resolver.resolveStartDate(JournalAnchorDate("2025-01-11"))).toBe("2025-01-06");
     });
 
     it("should resolve to last day of week when resolving end date", () => {
-      expect(resolver.resolveEndDate(JournalAnchorDate("2025-01-10"))).toBe("2025-01-11");
+      expect(resolver.resolveEndDate(JournalAnchorDate("2025-01-10"))).toBe("2025-01-12");
     });
 
     describe("relative date", () => {
       it.each([
-        [today().startOf("week").format(FRONTMATTER_DATE_FORMAT), "This week"],
-        [today().startOf("week").add(1, "week").format(FRONTMATTER_DATE_FORMAT), "Next week"],
-        [today().startOf("week").subtract(1, "week").format(FRONTMATTER_DATE_FORMAT), "Last week"],
-        [today().startOf("week").add(2, "week").format(FRONTMATTER_DATE_FORMAT), "2 weeks from now"],
-        [today().startOf("week").subtract(2, "week").format(FRONTMATTER_DATE_FORMAT), "2 weeks ago"],
+        [today().format(FRONTMATTER_DATE_FORMAT), "This week"],
+        [today().add(1, "week").format(FRONTMATTER_DATE_FORMAT), "Next week"],
+        [today().subtract(1, "week").format(FRONTMATTER_DATE_FORMAT), "Last week"],
+        [today().add(2, "week").format(FRONTMATTER_DATE_FORMAT), "2 weeks from now"],
+        [today().subtract(2, "week").format(FRONTMATTER_DATE_FORMAT), "2 weeks ago"],
       ])(`should resolve %s to %s`, (date, expected) => {
         expect(resolver.resolveRelativeDate(JournalAnchorDate(date))).toBe(expected);
       });
@@ -161,8 +169,8 @@ describe("FixedIntervalResolver", () => {
       expect(resolver.countRepeats(startDate, endDate)).toBe(expected);
     });
 
-    it("should return day offset from start and end of month", () => {
-      expect(resolver.calculateOffset("2025-01-07")).toEqual([2, -4]);
+    it("should return day offset from start and end of week", () => {
+      expect(resolver.calculateOffset("2025-01-07")).toEqual([1, -5]);
     });
   });
 

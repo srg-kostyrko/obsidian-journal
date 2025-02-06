@@ -13,3 +13,11 @@ export interface CalendarUiElement {
   outside?: boolean;
   disabled: boolean;
 }
+
+export interface WeekPreset {
+  name: string;
+  description: string;
+  used: string;
+  dow: number;
+  doy: number;
+}

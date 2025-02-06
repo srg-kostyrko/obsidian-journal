@@ -569,8 +569,8 @@ watch(
 
       <ObsidianSetting name="Add start date property?">
         <template #description>
-          In most cases start date is equal to date property. But for weeks journal it might be different for weeks
-          start one year and end in other.
+          In most cases start date is equal to date property. But for weeks journals it might be different for weeks
+          that start one year and end in other - in this case date is equals to end date.
         </template>
         <ObsidianToggle
           :model-value="config.frontmatter.addStartDate"

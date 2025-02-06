@@ -19,8 +19,8 @@ export interface PluginSettings {
   shelves: Record<string, ShelfSettings>;
 
   calendar: {
-    firstDayOfWeek: number;
-    firstWeekOfYear: number;
+    dow: number;
+    doy: number;
   };
 
   calendarView: {

@@ -26,8 +26,8 @@ export const defaultPluginSettings: PluginSettings = {
   journals: {},
   shelves: {},
   calendar: {
-    firstDayOfWeek: -1,
-    firstWeekOfYear: 1,
+    dow: -1,
+    doy: 1,
   },
   calendarView: {
     display: "month",

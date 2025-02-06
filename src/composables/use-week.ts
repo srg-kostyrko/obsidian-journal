@@ -22,10 +22,11 @@ export function useWeek(refDate: Ref<string>) {
 
     if (placeWeeks === "left") {
       days.push({
-        date: start.format("[W]W"),
+        date: start.format("[W]w"),
         key: start.format(FRONTMATTER_DATE_FORMAT),
         outside: false,
         isWeekNumber: true,
+        disabled: false,
       });
     }
 
@@ -37,6 +38,7 @@ export function useWeek(refDate: Ref<string>) {
         today: current.isSame(todayDate, "day"),
         outside: !momentDate.isSame(current, "month"),
         isWeekNumber: false,
+        disabled: false,
       });
 
       current.add(1, "day");
@@ -44,10 +46,11 @@ export function useWeek(refDate: Ref<string>) {
 
     if (placeWeeks === "right") {
       days.push({
-        date: start.format("[W]W"),
+        date: start.format("[W]w"),
         key: start.format(FRONTMATTER_DATE_FORMAT),
         outside: false,
         isWeekNumber: true,
+        disabled: false,
       });
     }
 

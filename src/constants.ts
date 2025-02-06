@@ -19,7 +19,7 @@ export const AUTO_CREATE_INTERVAL = 1 * 60 * 60 * 1000; // 1 hour
 
 export const calendarFormats: Record<JournalSettings["write"]["type"], string> = {
   day: "D",
-  week: "[W]W",
+  week: "[W]w",
   month: "MMMM",
   quarter: "[Q]Q",
   year: "YYYY",

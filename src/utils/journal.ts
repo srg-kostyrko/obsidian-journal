@@ -1,6 +1,8 @@
-import { moment } from "obsidian";
+import { moment, TFile } from "obsidian";
 import type { JournalDecorationCondition, JournalSettings } from "@/types/settings.types";
 import { checkExhaustive } from "./types";
+import type { JournalPlugin } from "@/types/plugin.types";
+import { today } from "@/calendar";
 
 export function getWritingDescription(writing: JournalSettings["write"]): string {
   if (writing.type === "custom") {
@@ -58,6 +60,33 @@ export function getDecorationConditionDescription(condition: JournalDecorationCo
     default: {
       checkExhaustive(condition);
       return "";
+    }
+  }
+}
+
+export async function updateWeeklyJournals(
+  plugin: JournalPlugin,
+  notesToUpdate: Map<string, { year: number; weeks: number; path: string }[]>,
+): Promise<void> {
+  for (const [journalName, notes] of notesToUpdate) {
+    const journal = plugin.getJournal(journalName);
+    if (!journal) continue;
+    for (const { year, weeks, path } of notes) {
+      const file = plugin.app.vault.getAbstractFileByPath(path);
+      if (!file) continue;
+      if (!(file instanceof TFile)) continue;
+      const date = today().year(year).week(weeks).format("YYYY-MM-DD");
+      const anchorDate = journal.resolveAnchorDate(date);
+      if (!anchorDate) continue;
+      await plugin.app.fileManager.processFrontMatter(file, (frontmatter: Record<string, string | number>) => {
+        frontmatter[journal.frontmatterDate] = anchorDate;
+        if (journal.config.value.frontmatter.addStartDate) {
+          frontmatter[journal.frontmatterStartDate] = journal.resolveStartDate(anchorDate);
+        }
+        if (journal.config.value.frontmatter.addEndDate) {
+          frontmatter[journal.frontmatterEndDate] = journal.resolveEndDate(anchorDate);
+        }
+      });
     }
   }
 }

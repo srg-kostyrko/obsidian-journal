@@ -7,7 +7,7 @@ export function useWeekdayNames() {
   const plugin = usePlugin();
 
   watch(
-    () => plugin.calendarSettings.firstDayOfWeek,
+    () => plugin.calendarSettings.dow,
     () => {
       const week = today().startOf("week");
       const weekEnd = week.clone().endOf("week");

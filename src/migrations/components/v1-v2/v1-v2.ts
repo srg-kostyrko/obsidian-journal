@@ -1,3 +1,4 @@
+import { calculateDoy } from "@/calendar";
 import { FRONTMATTER_END_DATE_KEY, FRONTMATTER_NAME_KEY, FRONTMATTER_START_DATE_KEY } from "@/constants";
 import { defaultJournalSettings, defaultPluginSettings } from "@/defaults";
 import type { Journal } from "@/journals/journal";
@@ -33,8 +34,11 @@ export function countSections(settings: CalendarConfig) {
 export function migrateV1toV2(oldData: PluginSettingsV1): PluginSettings {
   const newData = deepCopy(defaultPluginSettings);
 
-  newData.calendar.firstDayOfWeek = oldData.calendar.firstDayOfWeek;
-  newData.calendar.firstWeekOfYear = oldData.calendar.firstWeekOfYear;
+  newData.calendar.dow = oldData.calendar.firstDayOfWeek;
+  newData.calendar.doy =
+    oldData.calendar.firstDayOfWeek === -1
+      ? 1
+      : calculateDoy(oldData.calendar.firstDayOfWeek, oldData.calendar.firstWeekOfYear);
 
   newData.calendarView.leaf = oldData.calendar_view.leaf;
   newData.calendarView.weeks = oldData.calendar_view.weeks;

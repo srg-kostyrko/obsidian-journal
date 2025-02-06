@@ -247,10 +247,10 @@ export default class JournalPluginImpl extends Plugin implements JournalPlugin {
     const appStartup = !this.app.workspace.layoutReady;
     await this.#loadSettings();
     initCalendarCustomization();
-    if (this.#config.value.calendar.firstDayOfWeek === -1) {
+    if (this.#config.value.calendar.dow === -1) {
       restoreLocale();
     } else {
-      updateLocale(this.#config.value.calendar.firstDayOfWeek, this.#config.value.calendar.firstWeekOfYear);
+      updateLocale(this.#config.value.calendar.doy, this.#config.value.calendar.doy);
     }
 
     this.#fillJournals();

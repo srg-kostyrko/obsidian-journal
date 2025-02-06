@@ -1,6 +1,8 @@
 import { moment } from "obsidian";
 import { extractCurrentlocaleData } from "./utils/moment";
 import type { MomentDate } from "./types/date.types";
+import type { WeekPreset } from "./types/calendar-ui.types";
+import type { PluginSettings } from "./types/settings.types";
 
 const CUSTOM_LOCALE = "custom-journal-locale";
 let initialWeekSettings: { dow: number; doy: number } | undefined;
@@ -15,12 +17,19 @@ export function initCalendarCustomization(): void {
   }
 }
 
-export const updateLocale = (firstDayOfWeek: number, firstWeekOfYear: number): void => {
+export function calculateDoy(firstDayOfWeek: number, firstWeekOfYear: number): number {
+  return 7 + firstDayOfWeek - firstWeekOfYear;
+}
+export function doyToDayNumber(dow: number, doy: number): number {
+  return 7 + dow - doy;
+}
+
+export const updateLocale = (dow: number, doy: number): void => {
   const currentLocale = moment.locale();
   moment.updateLocale(CUSTOM_LOCALE, {
     week: {
-      dow: firstDayOfWeek,
-      doy: 7 + firstDayOfWeek - (firstWeekOfYear ?? 1),
+      dow,
+      doy,
     },
   });
   moment.locale(currentLocale);
@@ -83,7 +92,7 @@ function relativeDay(date: string): string {
   });
 }
 function relativeWeek(date: string) {
-  const thisWeek = today().startOf("week");
+  const thisWeek = today();
   const fromNow = date_from_string(date).diff(thisWeek, "week");
   switch (fromNow) {
     case 0: {
@@ -168,4 +177,50 @@ function relativeYear(date: string) {
 
 export function relativeDate(type: keyof typeof relativeDates, date: string) {
   return relativeDates[type](date);
+}
+
+export const weekPresets: WeekPreset[] = [
+  {
+    name: "ISO 8601",
+    description: "Week starts on Monday.\nFirst week of year includes 1st Thursday (Jan 4th)",
+    used: "EU (exc. Portugal) and most of other European countries, most of Asia and Oceania",
+    dow: 1,
+    doy: 4,
+  },
+  {
+    name: "Western traditional",
+    description: "Week starts on Sunday.\nFirst week of year includes 1st Saturday (Jan 1st)",
+    used: "Canada, United States, Iceland, Portugal, Japan, Taiwan, Thailand, Hong Kong, Macau, Israel, Egypt, South Africa, the Philippines, and most of Latin America",
+    dow: 0,
+    doy: 6,
+  },
+  {
+    name: "Middle Eastern",
+    description: "Week starts on Saturday.\nFirst week of year includes 1st Friday (Jan 1st)",
+    used: "Much of the Middle East",
+    dow: 6,
+    doy: 12,
+  },
+];
+
+export function detectCurrentPreset(settings: PluginSettings["calendar"]): WeekPreset {
+  let { dow, doy } = settings;
+  if (dow === -1) {
+    // locale settings used
+    dow = moment().localeData().firstDayOfWeek();
+    doy = moment().localeData().firstDayOfYear();
+  }
+
+  const preset = weekPresets.find((p) => p.dow === dow && p.doy === doy);
+  if (preset) return preset;
+
+  const dayName = moment().locale("en").localeData().weekdays()[dow];
+  const firstWeekOfYear = doyToDayNumber(dow, doy);
+  return {
+    name: "custom",
+    description: `Week starts on ${dayName}.\nFirst week of year includes Jan ${firstWeekOfYear}`,
+    used: "",
+    dow,
+    doy,
+  };
 }
