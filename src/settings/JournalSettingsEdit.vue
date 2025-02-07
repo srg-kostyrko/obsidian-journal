@@ -435,15 +435,6 @@ watch(
       <template #controls>
         <ObsidianButton @click="addCommand">Add command</ObsidianButton>
       </template>
-
-      <ObsidianSetting no-controls>
-        <template #description>
-          <div v-if="plugin.showReloadHint" class="journal-important">
-            Please reload Obsidian for changes to take effect.
-          </div>
-          <div v-else>Changing ribbon settings requires Obsidian restart to take effect.</div>
-        </template>
-      </ObsidianSetting>
       <ObsidianSetting v-if="journal.commands.length === 0">
         <template #description> No commands configured yet. </template>
       </ObsidianSetting>
