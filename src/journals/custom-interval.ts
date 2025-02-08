@@ -1,18 +1,17 @@
 import type { JournalCommand, WriteCustom } from "@/types/settings.types";
 import { JournalAnchorDate, type AnchorDateResolver } from "../types/journal.types";
 import type { ComputedRef } from "vue";
-import { useJournalIndex } from "@/composables/use-journal-index";
 import { date_from_string, today } from "@/calendar";
 import { FRONTMATTER_DATE_FORMAT } from "@/constants";
-import type { JournalPlugin } from "@/types/plugin.types";
+import type { JournalsIndex } from "./journals-index";
 
 export class CustomIntervalResolver implements AnchorDateResolver {
   #settings: ComputedRef<WriteCustom>;
 
   constructor(
-    private plugin: JournalPlugin,
     private journalName: string,
     settings: ComputedRef<WriteCustom>,
+    private index: JournalsIndex,
   ) {
     this.#settings = settings;
   }
@@ -52,7 +51,7 @@ export class CustomIntervalResolver implements AnchorDateResolver {
     return anchorDate;
   }
   resolveEndDate(anchorDate: JournalAnchorDate): string {
-    const existing = this.plugin.index.get(this.journalName, anchorDate);
+    const existing = this.index.get(this.journalName, anchorDate);
     if (existing?.end_date) {
       return existing.end_date;
     }
@@ -104,7 +103,7 @@ export class CustomIntervalResolver implements AnchorDateResolver {
   }
 
   #resolveDate(date: string): JournalAnchorDate | null {
-    const index = useJournalIndex(this.plugin, this.journalName);
+    const index = this.index.getJournalIndex(this.journalName);
 
     const closest = index.findClosestDate(date);
     if (closest) {
@@ -134,7 +133,7 @@ export class CustomIntervalResolver implements AnchorDateResolver {
   #resolveDateAfterKnown(date: JournalAnchorDate): JournalAnchorDate | null {
     let current = date_from_string(date);
     while (current.isSameOrBefore(date, "day")) {
-      const existing = this.plugin.index.get(this.journalName, JournalAnchorDate(current.format("YYYY-MM-DD")));
+      const existing = this.index.get(this.journalName, JournalAnchorDate(current.format("YYYY-MM-DD")));
       if (existing?.end_date) {
         current = date_from_string(existing.end_date).add(1, "day");
       } else {

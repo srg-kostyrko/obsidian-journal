@@ -1,4 +1,4 @@
-import { moment, TFile } from "obsidian";
+import { moment } from "obsidian";
 import type { JournalDecorationCondition, JournalSettings } from "@/types/settings.types";
 import { checkExhaustive } from "./types";
 import type { JournalPlugin } from "@/types/plugin.types";
@@ -72,13 +72,10 @@ export async function updateWeeklyJournals(
     const journal = plugin.getJournal(journalName);
     if (!journal) continue;
     for (const { year, weeks, path } of notes) {
-      const file = plugin.app.vault.getAbstractFileByPath(path);
-      if (!file) continue;
-      if (!(file instanceof TFile)) continue;
       const date = today().year(year).week(weeks).format("YYYY-MM-DD");
       const anchorDate = journal.resolveAnchorDate(date);
       if (!anchorDate) continue;
-      await plugin.app.fileManager.processFrontMatter(file, (frontmatter: Record<string, string | number>) => {
+      await plugin.notesManager.updateNoteFrontmatter(path, (frontmatter) => {
         frontmatter[journal.frontmatterDate] = anchorDate;
         if (journal.config.value.frontmatter.addStartDate) {
           frontmatter[journal.frontmatterStartDate] = journal.resolveStartDate(anchorDate);

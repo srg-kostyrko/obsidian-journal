@@ -20,8 +20,6 @@ import type {
 } from "@/types/settings.types";
 import { checkExhaustive } from "@/utils/types";
 import type { JournalPlugin } from "@/types/plugin.types";
-import { ensureFolderExists } from "@/utils/io";
-import { disconnectNote } from "@/utils/journals";
 
 export function buildNotesList(plugin: JournalPlugin, folderPath = "/"): TFile[] {
   const folder = plugin.app.vault.getFolderByPath(folderPath || "/");
@@ -77,7 +75,7 @@ export function preprocessNotes(
     const dateString: string | undefined =
       parameters.date_place === "title"
         ? note.basename
-        : plugin.app.metadataCache.getFileCache(note)?.frontmatter?.[parameters.property_name];
+        : plugin.notesManager.getNoteMetadata(note.path)?.frontmatter?.[parameters.property_name];
     if (dateString === undefined) {
       noteData.operations.push({
         type: "skiping",
@@ -148,7 +146,7 @@ function checkFilters(
 }
 
 function checkFilter(plugin: JournalPlugin, note: TFile, filter: GenericConditions) {
-  const metadata = plugin.app.metadataCache.getFileCache(note);
+  const metadata = plugin.notesManager.getNoteMetadata(note.path);
   if (!metadata) return false;
   switch (filter.type) {
     case "title": {
@@ -182,7 +180,7 @@ function checkNameFilter(note: TFile, filter: JournalDecorationTitleCondition) {
 }
 
 function checkTagFilter(plugin: JournalPlugin, note: TFile, filter: JournalDecorationTagCondition) {
-  const metadata = plugin.app.metadataCache.getFileCache(note);
+  const metadata = plugin.notesManager.getNoteMetadata(note.path);
   if (!metadata) return false;
   if (!metadata.tags) return false;
   switch (filter.condition) {
@@ -202,7 +200,7 @@ function checkTagFilter(plugin: JournalPlugin, note: TFile, filter: JournalDecor
 }
 
 function checkPropertyFilter(plugin: JournalPlugin, note: TFile, filter: JournalDecorationPropertyCondition) {
-  const metadata = plugin.app.metadataCache.getFileCache(note);
+  const metadata = plugin.notesManager.getNoteMetadata(note.path);
   if (!metadata) return false;
   const propertyValue = metadata.frontmatter?.[filter.name];
   switch (filter.condition) {
@@ -271,7 +269,7 @@ async function relateExistingNote(
     case "override": {
       result.actions.push(`Other note "${operation.other_file.path}" connected to same date disconnected`);
       if (!parameters.dry_run) {
-        await disconnectNote(plugin, noteData.file.path);
+        await plugin.disconnectNote(noteData.file.path);
       }
       break;
     }
@@ -308,8 +306,7 @@ async function processDifferentFolder(
         const path = normalizePath(
           operation.configured_folder ? `${operation.configured_folder}/${filename}` : filename,
         );
-        await ensureFolderExists(plugin.app, path);
-        await plugin.app.vault.rename(noteData.file, path);
+        await plugin.notesManager.renameNote(noteData.file.path, path);
         noteData.file = plugin.app.vault.getAbstractFileByPath(path) as TFile;
       }
       break;
@@ -336,8 +333,7 @@ async function processDifferentName(
       if (!parameters.dry_run) {
         const folder = noteData.file.parent?.path;
         const path = normalizePath(folder ? `${folder}/${operation.configured_name}` : operation.configured_name);
-        await ensureFolderExists(plugin.app, path);
-        await plugin.app.vault.rename(noteData.file, path);
+        await plugin.notesManager.renameNote(noteData.file.path, path);
         noteData.file = plugin.app.vault.getAbstractFileByPath(path) as TFile;
       }
       break;

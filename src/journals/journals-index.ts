@@ -1,19 +1,21 @@
-import { Component, type TAbstractFile, TFile, type CachedMetadata } from "obsidian";
+import { Component, type CachedMetadata } from "obsidian";
 import { computed, ref, shallowRef, type ComputedRef } from "vue";
 import type { JournalAnchorDate, JournalNoteData } from "../types/journal.types";
 import { FRONTMATTER_NAME_KEY } from "../constants";
 import { date_from_string } from "../calendar";
 import { JournalIndex } from "./journal-index";
-import type { JournalPlugin } from "@/types/plugin.types";
+import type { NotesManager } from "@/types/plugin.types";
+import type { Journal } from "./journal";
 
 export class JournalsIndex extends Component {
   #pathIndex = ref(new Map<string, JournalNoteData>());
   #pathComputeds = new Map<string, ComputedRef<JournalNoteData | null>>();
   #journalIndecies = shallowRef(new Map<string, JournalIndex>());
+  #notesManager: NotesManager;
 
-  constructor(private plugin: JournalPlugin) {
+  constructor(notesManager: NotesManager) {
     super();
-    this.#setupListeners();
+    this.#notesManager = notesManager;
   }
 
   getForPath(path: string): JournalNoteData | null {
@@ -54,19 +56,9 @@ export class JournalsIndex extends Component {
     const index = this.getJournalIndex(oldName);
     if (!index) return;
     for (const [, path] of index) {
-      const file = this.plugin.app.vault.getAbstractFileByPath(path);
-      if (!file) continue;
-      if (!(file instanceof TFile)) continue;
-      await this.plugin.app.fileManager.processFrontMatter(file, (frontmatter) => {
+      await this.#notesManager.updateNoteFrontmatter(path, (frontmatter) => {
         frontmatter[FRONTMATTER_NAME_KEY] = name;
       });
-    }
-  }
-
-  reindex(): void {
-    const files = this.plugin.app.vault.getMarkdownFiles();
-    for (const file of files) {
-      this.#onMetadataChanged(file);
     }
   }
 
@@ -87,57 +79,38 @@ export class JournalsIndex extends Component {
     this.#pathIndex.value.delete(path);
   }
 
-  #setupListeners() {
-    this.registerEvent(this.plugin.app.vault.on("rename", this.#onRenamed, this));
-    this.registerEvent(this.plugin.app.vault.on("delete", this.#onDeleted, this));
-    this.registerEvent(this.plugin.app.metadataCache.on("changed", this.#onMetadataChanged, this));
+  clearForPath(path: string): void {
+    const metadata = this.#pathIndex.value.get(path);
+    if (!metadata) return;
+    this.#pathIndex.value.delete(path);
+    this.#pathComputeds.delete(path);
+    this.#journalIndecies.value.get(metadata.journal)?.delete(metadata.date);
   }
 
-  #onRenamed = (file: TAbstractFile, oldPath: string) => {
-    if (file instanceof TFile) {
-      const metadata = this.#pathIndex.value.get(oldPath);
-      if (metadata) {
-        this.#pathIndex.value.delete(oldPath);
-        metadata.path = file.path;
-        this.#pathIndex.value.set(file.path, metadata);
-        const index = this.#journalIndecies.value.get(metadata.journal);
-        if (!index) return;
-        index.deleteForPath(oldPath);
-        index.set(metadata.date, file.path);
-      }
-    }
-  };
-
-  #onDeleted = (file: TAbstractFile) => {
-    if (file instanceof TFile) {
-      const metadata = this.#pathIndex.value.get(file.path);
-      if (!metadata) return;
-      this.#pathIndex.value.delete(file.path);
-      this.#pathComputeds.delete(file.path);
-      this.#journalIndecies.value.get(metadata.journal)?.delete(metadata.date);
-    }
-  };
-
-  #onMetadataChanged = (file: TFile) => {
-    const metadata = this.plugin.app.metadataCache.getFileCache(file);
+  transferPathData(oldPath: string, newPath: string, newTitle: string) {
+    const metadata = this.#pathIndex.value.get(oldPath);
     if (!metadata) return;
-    this.#processMetadata(file.basename, file.path, metadata);
-  };
+    this.#pathIndex.value.delete(oldPath);
+    metadata.path = newPath;
+    metadata.title = newTitle;
+    this.#pathIndex.value.set(newPath, metadata);
+    const index = this.#journalIndecies.value.get(metadata.journal);
+    if (!index) return;
+    index.deleteForPath(oldPath);
+    index.set(metadata.date, newPath);
+  }
 
-  #processMetadata(title: string, path: string, metadata: CachedMetadata): void {
+  updateFromMetadata(journal: Journal, title: string, path: string, metadata: CachedMetadata): void {
     const { frontmatter } = metadata;
     if (!frontmatter) return;
     if (!(FRONTMATTER_NAME_KEY in frontmatter)) return;
-    const journalName = frontmatter[FRONTMATTER_NAME_KEY];
-    const journal = this.plugin.getJournal(journalName);
-    if (!journal) return;
     const date = frontmatter[journal.frontmatterDate];
     const end_date = frontmatter[journal.frontmatterEndDate];
     if (!date_from_string(date).isValid() || (end_date && !date_from_string(end_date).isValid())) return;
 
     const journalMetadata: JournalNoteData = {
       title,
-      journal: journalName,
+      journal: journal.name,
       date,
       end_date,
       path,
@@ -152,7 +125,7 @@ export class JournalsIndex extends Component {
       properties: frontmatter,
     };
     this.#pathIndex.value.set(path, journalMetadata);
-    this.getJournalIndex(journalName).set(date, path);
+    this.getJournalIndex(journal.name).set(date, path);
   }
 
   onunload(): void {

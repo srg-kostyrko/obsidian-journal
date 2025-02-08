@@ -179,9 +179,9 @@ async function updateFrontMatterInterval(
   journal: Journal,
   oldSettings: IntervalConfig,
 ): Promise<void> {
-  const files = plugin.app.vault.getMarkdownFiles();
+  const files = plugin.notesManager.getMarkdownFiles();
   for (const file of files) {
-    const metadata = plugin.app.metadataCache.getFileCache(file);
+    const metadata = plugin.notesManager.getNoteMetadata(file.path);
     if (!metadata) continue;
     const { frontmatter } = metadata;
     if (!frontmatter) continue;
@@ -189,8 +189,8 @@ async function updateFrontMatterInterval(
     const journalId = frontmatter[FRONTMATTER_NAME_KEY];
     if (journalId !== oldSettings.id) continue;
 
-    await plugin.app.fileManager.processFrontMatter(file, (frontmatter) => {
-      const date = frontmatter[FRONTMATTER_START_DATE_KEY];
+    await plugin.notesManager.updateNoteFrontmatter(file.path, (frontmatter) => {
+      const date = frontmatter[FRONTMATTER_START_DATE_KEY] as string;
       const endDate = frontmatter[FRONTMATTER_END_DATE_KEY];
       const anchorDate = journal.resolveAnchorDate(date);
       if (anchorDate) {
@@ -283,9 +283,9 @@ async function updateFrontmatterCalendarSection(
   sectionName: "day" | "week" | "month" | "quarter" | "year",
   oldSettings: CalendarConfig,
 ) {
-  const files = plugin.app.vault.getMarkdownFiles();
+  const files = plugin.notesManager.getMarkdownFiles();
   for (const file of files) {
-    const metadata = plugin.app.metadataCache.getFileCache(file);
+    const metadata = plugin.notesManager.getNoteMetadata(file.path);
     if (!metadata) continue;
     const { frontmatter } = metadata;
     if (!frontmatter) continue;
@@ -295,8 +295,8 @@ async function updateFrontmatterCalendarSection(
     const section = frontmatter[FRONTMATTER_SECTION_KEY];
     if (section !== sectionName) continue;
 
-    await plugin.app.fileManager.processFrontMatter(file, (frontmatter) => {
-      const date = frontmatter[FRONTMATTER_START_DATE_KEY];
+    await plugin.notesManager.updateNoteFrontmatter(file.path, (frontmatter) => {
+      const date = frontmatter[FRONTMATTER_START_DATE_KEY] as string;
       const anchorDate = journal.resolveAnchorDate(date);
       if (anchorDate) {
         frontmatter[FRONTMATTER_NAME_KEY] = journal.name;

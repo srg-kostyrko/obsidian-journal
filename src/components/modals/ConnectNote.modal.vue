@@ -12,7 +12,6 @@ import DatePicker from "../DatePicker.vue";
 import ObsidianToggle from "../obsidian/ObsidianToggle.vue";
 import { computed, watch } from "vue";
 import type { JournalMetadata } from "@/types/journal.types";
-import { disconnectNote } from "@/utils/journals";
 import { usePlugin } from "@/composables/use-plugin";
 
 const props = defineProps<{
@@ -110,7 +109,7 @@ const canSubmit = computed(() => {
 });
 
 function disconnect() {
-  disconnectNote(plugin, props.file.path).catch(console.error);
+  plugin.disconnectNote(props.file.path).catch(console.error);
 }
 const onSubmit = handleSubmit(() => {
   if (!canSubmit.value) return;

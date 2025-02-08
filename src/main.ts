@@ -1,5 +1,5 @@
-import { Notice, Plugin, type TFile } from "obsidian";
-import { ref, shallowRef, watch, type Ref, type WatchStopHandle } from "vue";
+import { Notice, Plugin, TAbstractFile, TFile } from "obsidian";
+import { computed, ref, shallowRef, watch, type Ref, type WatchStopHandle } from "vue";
 import { debounce } from "perfect-debounce";
 import { initCalendarCustomization, restoreLocale, today, updateLocale } from "./calendar";
 import { JournalSettingTab } from "./settings/journal-settings-tab";
@@ -8,7 +8,16 @@ import type { JournalSettings, NotesProcessing, PluginSettings, ShelfSettings } 
 import { CURRENT_DATA_VERSION, defaultJournalSettings, defaultPluginSettings } from "./defaults";
 import { prepareJournalDefaultsBasedOnType } from "./journals/journal-defaults";
 import { JournalsIndex } from "./journals/journals-index";
-import { AUTO_CREATE_INTERVAL, CALENDAR_VIEW_TYPE, FRONTMATTER_DATE_FORMAT } from "./constants";
+import {
+  AUTO_CREATE_INTERVAL,
+  CALENDAR_VIEW_TYPE,
+  FRONTMATTER_DATE_FORMAT,
+  FRONTMATTER_DATE_KEY,
+  FRONTMATTER_END_DATE_KEY,
+  FRONTMATTER_INDEX_KEY,
+  FRONTMATTER_NAME_KEY,
+  FRONTMATTER_START_DATE_KEY,
+} from "./constants";
 import { CalendarView } from "./calendar-view/calendar-view";
 import { deepCopy } from "./utils/misc";
 import { TimelineCodeBlockProcessor } from "./code-blocks/timeline/timeline-processor";
@@ -16,19 +25,31 @@ import { NavCodeBlockProcessor } from "./code-blocks/navigation/nav-processor";
 import { VueModal } from "./components/modals/vue-modal";
 import ConnectNoteModal from "./components/modals/ConnectNote.modal.vue";
 import { ShelfSuggestModal } from "./components/suggests/shelf-suggest";
-import type { JournalPlugin } from "./types/plugin.types";
+import type { AppManager, JournalPlugin, NotesManager } from "./types/plugin.types";
 import { openDateInJournal } from "./journals/open-date";
 import { HomeCodeBlockProcessor } from "./code-blocks/home/home-processor";
 import { migrateData } from "./migrations/migration-manager";
 import MigrationModal from "./migrations/components/MigrationModal.vue";
+import { ObsidianNotesManager } from "./obsidian-notes-manager";
+import { ObsidianManager } from "./obsidian-manager";
 
 export default class JournalPluginImpl extends Plugin implements JournalPlugin {
   #stopHandles: WatchStopHandle[] = [];
   #journals = shallowRef<Record<string, Journal>>({});
   #index!: JournalsIndex;
-  #activeNote: Ref<TFile | null> = ref(null);
+  #activeNote: Ref<string | null> = ref(null);
   #config: Ref<PluginSettings> = ref(deepCopy(defaultPluginSettings));
   #autoCreateTimer: ReturnType<typeof setTimeout> | undefined;
+  #notesManager: NotesManager = new ObsidianNotesManager(this);
+  #appManager: AppManager = new ObsidianManager(this);
+
+  get notesManager() {
+    return this.#notesManager;
+  }
+
+  get appManager() {
+    return this.#appManager;
+  }
 
   get showReloadHint(): boolean {
     return this.#config.value.showReloadHint;
@@ -38,7 +59,7 @@ export default class JournalPluginImpl extends Plugin implements JournalPlugin {
     return this.#index;
   }
 
-  get activeNote(): TFile | null {
+  get activeNote(): string | null {
     return this.#activeNote.value;
   }
 
@@ -105,7 +126,14 @@ export default class JournalPluginImpl extends Plugin implements JournalPlugin {
     this.#config.value.journals[name] = settings;
     this.#journals.value = {
       ...this.#journals.value,
-      [name]: new Journal(name, this),
+      [name]: new Journal(
+        name,
+        computed(() => this.#config.value.journals[name]),
+        this.#index,
+        this.#appManager,
+        this.#notesManager,
+        this.#activeNote,
+      ),
     };
     this.getJournal(name)?.autoCreate().catch(console.error);
     return this.#config.value.journals[name];
@@ -115,10 +143,17 @@ export default class JournalPluginImpl extends Plugin implements JournalPlugin {
       throw new Error("Name already used");
     }
     this.#config.value.journals[settings.name] = settings;
-    const journal = new Journal(settings.name, this);
+    const journal = new Journal(
+      settings.name,
+      computed(() => this.#config.value.journals[settings.name]),
+      this.#index,
+      this.#appManager,
+      this.#notesManager,
+      this.#activeNote,
+    );
     this.#journals.value = {
       ...this.#journals.value,
-      [settings.name]: new Journal(settings.name, this),
+      [settings.name]: journal,
     };
     if (settings.shelves.length > 0) {
       for (const shelf of settings.shelves) {
@@ -142,7 +177,14 @@ export default class JournalPluginImpl extends Plugin implements JournalPlugin {
       );
     }
     const { [name]: _, ...otherJournals } = this.#journals.value;
-    const newJournal = new Journal(newName, this);
+    const newJournal = new Journal(
+      newName,
+      computed(() => this.#config.value.journals[newName]),
+      this.#index,
+      this.#appManager,
+      this.#notesManager,
+      this.#activeNote,
+    );
     this.#journals.value = {
       ...otherJournals,
       [newName]: newJournal,
@@ -263,7 +305,7 @@ export default class JournalPluginImpl extends Plugin implements JournalPlugin {
       this.#config.value.showReloadHint = false;
     }
 
-    this.#index = new JournalsIndex(this);
+    this.#index = new JournalsIndex(this.notesManager);
     this.addChild(this.#index);
 
     this.#configureCommands();
@@ -293,9 +335,12 @@ export default class JournalPluginImpl extends Plugin implements JournalPlugin {
     this.registerView(CALENDAR_VIEW_TYPE, (leaf) => new CalendarView(leaf, this));
 
     this.app.workspace.onLayoutReady(async () => {
-      this.index.reindex();
+      const files = this.#notesManager.getMarkdownFiles();
+      for (const file of files) {
+        this.#processMetadata(file);
+      }
       this.placeCalendarView(true);
-      this.#activeNote.value = this.app.workspace.getActiveFile();
+      this.#activeNote.value = this.app.workspace.getActiveFile()?.path ?? null;
       await this.autoCreateNotes();
       if (appStartup) {
         await this.openStartupNote();
@@ -332,6 +377,27 @@ export default class JournalPluginImpl extends Plugin implements JournalPlugin {
     }
   }
 
+  async disconnectNote(path: string): Promise<void> {
+    const metadata = this.#notesManager.getNoteMetadata(path);
+    if (!metadata) return;
+    const { frontmatter } = metadata;
+    if (!frontmatter) return;
+    const journalName = frontmatter[FRONTMATTER_NAME_KEY];
+    if (!journalName) return;
+    const journal = this.getJournal(journalName);
+    if (journal) {
+      await journal.disconnectNote(path);
+    } else {
+      return this.#notesManager.updateNoteFrontmatter(path, (frontmatter) => {
+        delete frontmatter[FRONTMATTER_NAME_KEY];
+        delete frontmatter[FRONTMATTER_DATE_KEY];
+        delete frontmatter[FRONTMATTER_START_DATE_KEY];
+        delete frontmatter[FRONTMATTER_END_DATE_KEY];
+        delete frontmatter[FRONTMATTER_INDEX_KEY];
+      });
+    }
+  }
+
   #sheduleNextAutoCreate() {
     clearTimeout(this.#autoCreateTimer);
     this.#autoCreateTimer = setTimeout(() => {
@@ -363,7 +429,14 @@ export default class JournalPluginImpl extends Plugin implements JournalPlugin {
   #fillJournals(): void {
     const journals: Record<string, Journal> = {};
     for (const name of Object.keys(this.#config.value.journals)) {
-      journals[name] = new Journal(name, this);
+      journals[name] = new Journal(
+        name,
+        computed(() => this.#config.value.journals[name]),
+        this.#index,
+        this.#appManager,
+        this.#notesManager,
+        this.#activeNote,
+      );
     }
     this.#journals.value = journals;
   }
@@ -387,9 +460,40 @@ export default class JournalPluginImpl extends Plugin implements JournalPlugin {
 
     this.registerEvent(
       this.app.workspace.on("file-open", (file) => {
-        this.#activeNote.value = file;
+        this.#activeNote.value = file?.path ?? null;
       }),
     );
+    this.registerEvent(
+      this.app.vault.on("rename", (file: TAbstractFile, oldPath: string) => {
+        if (file instanceof TFile) {
+          this.index.transferPathData(oldPath, file.path, file.basename);
+        }
+      }),
+    );
+    this.registerEvent(
+      this.app.vault.on("delete", (file: TAbstractFile) => {
+        if (file instanceof TFile) {
+          this.index.clearForPath(file.path);
+        }
+      }),
+    );
+    this.registerEvent(
+      this.app.metadataCache.on("changed", (file: TFile) => {
+        this.#processMetadata(file);
+      }),
+    );
+  }
+
+  #processMetadata(file: TFile) {
+    const metadata = this.#notesManager.getNoteMetadata(file.path);
+    if (!metadata) return;
+    const { frontmatter } = metadata;
+    if (!frontmatter) return;
+    if (!(FRONTMATTER_NAME_KEY in frontmatter)) return;
+    const journalName = frontmatter[FRONTMATTER_NAME_KEY];
+    const journal = this.getJournal(journalName);
+    if (!journal) return;
+    this.index.updateFromMetadata(journal, file.basename, file.path, metadata);
   }
 
   #configureCommands(): void {

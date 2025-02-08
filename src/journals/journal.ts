@@ -1,4 +1,4 @@
-import { computed, type ComputedRef } from "vue";
+import { computed, type ComputedRef, type Ref } from "vue";
 import type {
   JournalCommand,
   JournalDecoration,
@@ -8,9 +8,8 @@ import type {
   WriteCustom,
 } from "../types/settings.types";
 import type { AnchorDateResolver, JournalAnchorDate, JournalMetadata, JournalNoteData } from "../types/journal.types";
-import { normalizePath, TFile, type LeftRibbon } from "obsidian";
-import { ensureFolderExists } from "../utils/io";
-import { replaceTemplateVariables, tryApplyingTemplater } from "../utils/template";
+import { normalizePath, TFile } from "obsidian";
+import { replaceTemplateVariables } from "../utils/template";
 import type { TemplateContext } from "../types/template.types";
 import {
   FRONTMATTER_DATE_FORMAT,
@@ -22,31 +21,27 @@ import {
 } from "../constants";
 import { FixedIntervalResolver } from "./fixed-interval";
 import { date_from_string, today } from "../calendar";
-import { VueModal } from "@/components/modals/vue-modal";
-import ConfirmNoteCreationModal from "@/components/modals/ConfirmNoteCreation.modal.vue";
-import { disconnectNote } from "@/utils/journals";
 import { CustomIntervalResolver } from "./custom-interval";
-import type { JournalPlugin } from "@/types/plugin.types";
-import { findOpenedNote } from "@/utils/obsidian";
+import type { AppManager, NotesManager } from "@/types/plugin.types";
+import type { JournalsIndex } from "./journals-index";
 
 export class Journal {
-  readonly name$: ComputedRef<string>;
-  readonly config: ComputedRef<JournalSettings>;
   #anchorDateResolver: AnchorDateResolver;
-  #ribbons = new Map<string, HTMLElement>();
 
   constructor(
     public readonly name: string,
-    private plugin: JournalPlugin,
+    readonly config: ComputedRef<JournalSettings>,
+    private index: JournalsIndex,
+    private appManager: AppManager,
+    private notesManager: NotesManager,
+    private activeNote: Ref<string | null>,
   ) {
-    this.config = computed(() => plugin.getJournalConfig(name));
-    this.name$ = computed(() => this.config.value.name);
     this.#anchorDateResolver =
       this.config.value.write.type === "custom"
         ? new CustomIntervalResolver(
-            this.plugin,
-            this.name$.value,
+            this.name,
             computed(() => this.config.value.write) as ComputedRef<WriteCustom>,
+            this.index,
           )
         : new FixedIntervalResolver(
             // eslint-disable-next-line @typescript-eslint/ban-ts-comment
@@ -140,7 +135,7 @@ export class Journal {
   get(date: string): JournalNoteData | JournalMetadata | null {
     const anchorDate = this.#anchorDateResolver.resolveForDate(date);
     if (!anchorDate) return null;
-    const metadata = this.plugin.index.get(this.name, anchorDate);
+    const metadata = this.index.get(this.name, anchorDate);
     if (metadata) return metadata;
     if (!this.#checkBounds(anchorDate)) return null;
     return this.#buildMetadata(anchorDate);
@@ -150,11 +145,11 @@ export class Journal {
     const anchorDate = this.#anchorDateResolver.resolveForDate(date);
     if (!anchorDate) return null;
     if (existing) {
-      return this.plugin.index.findNext(this.name, anchorDate);
+      return this.index.findNext(this.name, anchorDate);
     }
     const nextAnchorDate = this.#anchorDateResolver.resolveNext(anchorDate);
     if (!nextAnchorDate) return null;
-    const nextMetadata = this.plugin.index.get(this.name, nextAnchorDate);
+    const nextMetadata = this.index.get(this.name, nextAnchorDate);
     if (nextMetadata) return nextMetadata;
     if (!this.#checkBounds(nextAnchorDate)) return null;
     return this.#buildMetadata(nextAnchorDate);
@@ -164,11 +159,11 @@ export class Journal {
     const anchorDate = this.#anchorDateResolver.resolveForDate(date);
     if (!anchorDate) return null;
     if (existing) {
-      return this.plugin.index.findPrevious(this.name, anchorDate);
+      return this.index.findPrevious(this.name, anchorDate);
     }
     const previousAnchorDate = this.#anchorDateResolver.resolvePrevious(anchorDate);
     if (!previousAnchorDate) return null;
-    const previousMetadata = this.plugin.index.get(this.name, previousAnchorDate);
+    const previousMetadata = this.index.get(this.name, previousAnchorDate);
     if (previousMetadata) return previousMetadata;
     if (!this.#checkBounds(previousAnchorDate)) return null;
     return this.#buildMetadata(previousAnchorDate);
@@ -296,7 +291,7 @@ export class Journal {
 
   async clearNotes(): Promise<void> {
     const promises = [];
-    const paths = this.plugin.index.getAllPaths(this.name);
+    const paths = this.index.getAllPaths(this.name);
     for (const path of paths) {
       promises.push(this.disconnectNote(path));
     }
@@ -305,20 +300,15 @@ export class Journal {
 
   async deleteNotes(): Promise<void> {
     const promises = [];
-    const paths = this.plugin.index.getAllPaths(this.name);
+    const paths = this.index.getAllPaths(this.name);
     for (const path of paths) {
-      const file = this.plugin.app.vault.getAbstractFileByPath(path);
-      if (!file) continue;
-      promises.push(this.plugin.app.vault.delete(file));
+      promises.push(this.notesManager.deleteNote(path));
     }
     await Promise.allSettled(promises);
   }
 
   async disconnectNote(path: string): Promise<void> {
-    const file = this.plugin.app.vault.getAbstractFileByPath(path);
-    if (!file) return;
-    if (!(file instanceof TFile)) return;
-    await this.plugin.app.fileManager.processFrontMatter(file, (frontmatter) => {
+    await this.notesManager.updateNoteFrontmatter(path, (frontmatter) => {
       delete frontmatter[FRONTMATTER_NAME_KEY];
       delete frontmatter[this.frontmatterDate];
       delete frontmatter[this.frontmatterStartDate];
@@ -332,29 +322,23 @@ export class Journal {
     Value extends JournalSettings["frontmatter"][Field],
   >(fieldName: Field, oldName: Value, newName: Value): Promise<void> {
     this.config.value.frontmatter[fieldName] = newName;
-    const index = this.plugin.index.getJournalIndex(this.name);
+    const index = this.index.getJournalIndex(this.name);
     if (!index) return;
     for (const [, path] of index) {
-      const file = this.plugin.app.vault.getAbstractFileByPath(path);
-      if (!file) continue;
-      if (!(file instanceof TFile)) continue;
-      await this.plugin.app.fileManager.processFrontMatter(file, (frontmatter) => {
-        frontmatter[newName] = frontmatter[oldName];
-        delete frontmatter[oldName];
+      await this.notesManager.updateNoteFrontmatter(path, (frontmatter) => {
+        frontmatter[newName as string] = frontmatter[oldName as string];
+        delete frontmatter[oldName as string];
       });
     }
   }
 
   async toggleFrontmatterStartDate(): Promise<void> {
     this.config.value.frontmatter.addStartDate = !this.config.value.frontmatter.addStartDate;
-    const index = this.plugin.index.getJournalIndex(this.name);
+    const index = this.index.getJournalIndex(this.name);
     if (!index) return;
     for (const [, path] of index) {
-      const file = this.plugin.app.vault.getAbstractFileByPath(path);
-      if (!file) continue;
-      if (!(file instanceof TFile)) continue;
-      await this.plugin.app.fileManager.processFrontMatter(file, (frontmatter) => {
-        const anchorDate = this.resolveAnchorDate(frontmatter[this.frontmatterDate]);
+      await this.notesManager.updateNoteFrontmatter(path, (frontmatter) => {
+        const anchorDate = this.resolveAnchorDate(frontmatter[this.frontmatterDate] as string);
         if (!anchorDate) return;
         if (this.config.value.frontmatter.addStartDate) {
           frontmatter[this.frontmatterStartDate] = this.resolveStartDate(anchorDate);
@@ -367,16 +351,13 @@ export class Journal {
 
   async toggleFrontmatterEndDate(): Promise<void> {
     this.config.value.frontmatter.addEndDate = !this.config.value.frontmatter.addEndDate;
-    const index = this.plugin.index.getJournalIndex(this.name);
+    const index = this.index.getJournalIndex(this.name);
     if (!index) return;
     for (const [, path] of index) {
-      const file = this.plugin.app.vault.getAbstractFileByPath(path);
-      if (!file) continue;
-      if (!(file instanceof TFile)) continue;
-      await this.plugin.app.fileManager.processFrontMatter(file, (frontmatter) => {
-        const anchorDate = this.resolveAnchorDate(frontmatter[this.frontmatterDate]);
+      await this.notesManager.updateNoteFrontmatter(path, (frontmatter) => {
+        const anchorDate = this.resolveAnchorDate(frontmatter[this.frontmatterDate] as string);
         if (!anchorDate) return;
-        const metadata = this.plugin.index.getForPath(path);
+        const metadata = this.index.getForPath(path);
         if (this.config.value.frontmatter.addEndDate) {
           frontmatter[this.frontmatterEndDate] = metadata?.end_date ?? this.resolveEndDate(anchorDate);
         } else if (metadata?.end_date && frontmatter[this.frontmatterEndDate] === metadata.end_date) {
@@ -393,58 +374,25 @@ export class Journal {
     await this.#ensureNote(metadata);
   }
 
-  async #openFile(file: TFile, openMode: OpenMode = "active"): Promise<void> {
-    const openedLeaf = findOpenedNote(this.plugin.app, file.path);
-    if (openedLeaf) return this.plugin.app.workspace.setActiveLeaf(openedLeaf, { focus: true });
-    const mode = openMode === "active" ? undefined : openMode;
-    const leaf = this.plugin.app.workspace.getLeaf(mode);
-    await leaf.openFile(file, { active: true });
+  async #openFile(path: string, openMode: OpenMode = "active"): Promise<void> {
+    await this.notesManager.openNote(path, openMode === "active" ? undefined : openMode);
   }
 
-  async #ensureNote(metadata: JournalMetadata): Promise<TFile | null> {
+  async #ensureNote(metadata: JournalMetadata): Promise<string | null> {
     const filePath = this.getNotePath(metadata);
-    let file = this.plugin.app.vault.getAbstractFileByPath(filePath);
-    if (!file) {
+    if (!this.notesManager.nodeExists(filePath)) {
       const templateContext = this.#getTemplateContext(metadata);
       const noteName = replaceTemplateVariables(this.config.value.nameTemplate, templateContext);
-      if (this.config.value.confirmCreation && !(await this.#confirmNoteCreation(noteName))) {
+      if (this.config.value.confirmCreation && !(await this.notesManager.confirmNoteCreation(this.name, noteName))) {
         return null;
       }
-      await ensureFolderExists(this.plugin.app, filePath);
-      file = await this.plugin.app.vault.create(filePath, "");
-      if (!(file instanceof TFile)) throw new Error("File is not a TFile");
-
+      await this.notesManager.createNote(filePath, "");
       templateContext.note_name = { type: "string", value: noteName };
-      const content = await this.#getNoteContent(file, templateContext);
-      if (content) await this.plugin.app.vault.modify(file, content);
+      const content = await this.#getNoteContent(filePath, templateContext);
+      if (content) await this.notesManager.updateNote(filePath, content);
     }
-    if (!(file instanceof TFile)) throw new Error("File is not a TFile");
-    await this.#ensureFrontMatter(file, metadata);
-    return file;
-  }
-
-  #confirmNoteCreation(noteName: string): Promise<boolean> {
-    return new Promise((resolve) => {
-      const modal = new VueModal(
-        this.plugin,
-        "About to create a new note",
-        ConfirmNoteCreationModal,
-        {
-          journalName: this.name$.value,
-          noteName,
-          onConfirm(confirm: boolean) {
-            modal.close();
-            resolve(confirm);
-          },
-          onClose() {
-            modal.close();
-            resolve(false);
-          },
-        },
-        400,
-      );
-      modal.open();
-    });
+    await this.#ensureFrontMatter(filePath, metadata);
+    return filePath;
   }
 
   getConfiguredPathData(metadata: JournalMetadata): [string, string] {
@@ -480,7 +428,7 @@ export class Journal {
     if (!metadata) return false;
     if ("path" in metadata) {
       if (!options.override) return false;
-      await disconnectNote(this.plugin, metadata.path);
+      await this.disconnectNote(metadata.path);
     }
     let path = file.path;
     if (options.rename || options.move) {
@@ -488,12 +436,10 @@ export class Journal {
       const folderPath = options.move ? configuredFolder : file.parent?.path;
       const filename = options.rename ? configuredFilename : file.name;
       path = normalizePath(folderPath ? `${folderPath}/${filename}` : filename);
-      await ensureFolderExists(this.plugin.app, path);
-      await this.plugin.app.vault.rename(file, path);
-      file = this.plugin.app.vault.getAbstractFileByPath(path) as TFile;
+      await this.notesManager.renameNote(file.path, path);
     }
 
-    await this.#ensureFrontMatter(file, metadata);
+    await this.#ensureFrontMatter(path, metadata);
     return true;
   }
 
@@ -525,17 +471,15 @@ export class Journal {
     };
   }
 
-  async #getNoteContent(note: TFile, context: TemplateContext): Promise<string> {
+  async #getNoteContent(path: string, context: TemplateContext): Promise<string> {
     if (this.config.value.templates.length > 0) {
       for (const template of this.config.value.templates) {
-        const path = replaceTemplateVariables(template.endsWith(".md") ? template : template + ".md", context);
-        const templateFile = this.plugin.app.vault.getAbstractFileByPath(path);
-        if (templateFile instanceof TFile) {
-          const templateContent = await this.plugin.app.vault.cachedRead(templateFile);
-          return tryApplyingTemplater(
-            this.plugin.app,
-            templateFile,
-            note,
+        const templatePath = replaceTemplateVariables(template.endsWith(".md") ? template : template + ".md", context);
+        const templateContent = await this.notesManager.getNoteContent(templatePath);
+        if (templateContent) {
+          return this.notesManager.tryApplyingTemplater(
+            templatePath,
+            path,
             replaceTemplateVariables(templateContent, context),
           );
         }
@@ -543,8 +487,8 @@ export class Journal {
     }
     return "";
   }
-  async #ensureFrontMatter(note: TFile, metadata: JournalMetadata): Promise<void> {
-    await this.plugin.app.fileManager.processFrontMatter(note, (frontmatter: Record<string, string | number>) => {
+  async #ensureFrontMatter(path: string, metadata: JournalMetadata): Promise<void> {
+    await this.notesManager.updateNoteFrontmatter(path, (frontmatter) => {
       frontmatter[FRONTMATTER_NAME_KEY] = this.name;
       frontmatter[this.frontmatterDate] = date_from_string(metadata.date).format(FRONTMATTER_DATE_FORMAT);
       if (metadata.end_date) {
@@ -570,49 +514,32 @@ export class Journal {
   }
 
   #addCommand(command: JournalCommand) {
-    this.plugin.addCommand({
-      id: this.name + ":" + command.name,
-      name: `${this.config.value.name}: ${command.name}`,
-      icon: command.icon,
-      checkCallback: (checking: boolean): boolean => {
-        if (checking) {
-          return this.#checkCommand(command);
-        } else {
-          this.#execCommand(command).catch(console.error);
-        }
-        return true;
-      },
+    this.appManager.addCommand(this.name, command, (checking) => {
+      if (checking) {
+        return this.#checkCommand(command);
+      } else {
+        this.#execCommand(command).catch(console.error);
+      }
+      return true;
     });
     if (command.showInRibbon) {
-      const ribbonId = "journals:" + this.name + ":" + command.name;
-      const item = (this.plugin.app.workspace.leftRibbon as LeftRibbon).addRibbonItemButton(
-        ribbonId,
-        command.icon,
-        command.name,
-        () => {
-          if (!this.#checkCommand(command)) return;
-          this.#execCommand(command).catch(console.error);
-        },
-      );
-      this.#ribbons.set(ribbonId, item);
+      this.appManager.addRibbonIcon(this.name, command.icon, command.name, () => {
+        if (!this.#checkCommand(command)) return;
+        this.#execCommand(command).catch(console.error);
+      });
     }
   }
 
   #removeCommand(command: JournalCommand) {
-    this.plugin.removeCommand(this.name + ":" + command.name);
-    this.#removeRibbon("journals:" + this.name + ":" + command.name);
-  }
-
-  #removeRibbon(id: string) {
-    (this.plugin.app.workspace.leftRibbon as LeftRibbon).removeRibbonAction(id);
-    this.#ribbons.get(id)?.detach();
-    this.#ribbons.delete(id);
+    this.appManager.removeCommand(this.name, command);
+    this.appManager.removeRibbonIcon(this.name, command.name);
   }
 
   #checkCommand(command: JournalCommand): boolean {
     if (command.context === "only_open_note") {
-      if (!this.plugin.activeNote) return false;
-      const metadata = this.plugin.index.getForPath(this.plugin.activeNote.path);
+      const activeNote = this.activeNote.value;
+      if (!activeNote) return false;
+      const metadata = this.index.getForPath(activeNote);
       if (!metadata) return false;
       if (metadata.journal !== this.name) return false;
     }
@@ -630,8 +557,8 @@ export class Journal {
   }
 
   #getCommandRefDate(command: JournalCommand): string | null {
-    const activeNode = this.plugin.activeNote;
-    const metadata = activeNode ? this.plugin.index.getForPath(activeNode.path) : null;
+    const activeNote = this.activeNote.value;
+    const metadata = activeNote ? this.index.getForPath(activeNote) : null;
     if (metadata && command.context !== "today") {
       return metadata.date;
     }
@@ -706,6 +633,5 @@ export class Journal {
     for (const command of this.commands) {
       this.#removeCommand(command);
     }
-    this.#ribbons.clear();
   }
 }
