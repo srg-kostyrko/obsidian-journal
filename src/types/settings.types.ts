@@ -100,7 +100,7 @@ export interface JournalSettings {
   name: string;
   shelves: string[];
 
-  write: FixedWriteIntervals | WriteWeekdays | WriteCustom;
+  write: FixedWriteIntervals | WriteCustom;
 
   confirmCreation: boolean;
   autoCreate: boolean;
@@ -299,7 +299,7 @@ export interface NavBlockRow {
   italic: boolean;
   color: ColorSettings;
   background: ColorSettings;
-  link: "none" | "self" | "journal" | JournalSettings["write"]["type"];
+  link: "none" | "self" | "journal" | Exclude<JournalSettings["write"]["type"], "custom">;
   journal: string;
   addDecorations: boolean;
 }

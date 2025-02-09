@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import type { NavBlockRow } from "@/types/settings.types";
+import type { ColorSettings, NavBlockRow } from "@/types/settings.types";
 import { toTypedSchema } from "@vee-validate/valibot";
 import { useForm } from "vee-validate";
 import * as v from "valibot";
@@ -42,7 +42,17 @@ const supportedJournals = computed(() => {
 
 const { defineField, errorBag, handleSubmit } = useForm({
   initialValues: row
-    ? deepCopy(row)
+    ? {
+        template: row.template,
+        fontSize: row.fontSize,
+        bold: row.bold,
+        italic: row.italic,
+        link: row.link,
+        journal: row.journal,
+        color: deepCopy(row.color),
+        background: deepCopy(row.background),
+        addDecorations: row.addDecorations,
+      }
     : {
         template: "",
         fontSize: 1,
@@ -121,10 +131,10 @@ const onSubmit = handleSubmit((values) => {
       <template #description>
         <FormErrors :errors="errorBag.color" />
       </template>
-      <ColorPicker v-model="color" v-bind="colorAttrs" />
+      <ColorPicker v-model="color as ColorSettings" v-bind="colorAttrs" />
     </ObsidianSetting>
     <ObsidianSetting name="Background color">
-      <ColorPicker v-model="background" v-bind="backgroundAttrs" />
+      <ColorPicker v-model="background as ColorSettings" v-bind="backgroundAttrs" />
     </ObsidianSetting>
     <ObsidianSetting name="Link">
       <ObsidianDropdown v-model="link" v-bind="linkAttrs">

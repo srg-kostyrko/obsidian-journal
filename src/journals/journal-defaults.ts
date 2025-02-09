@@ -6,7 +6,6 @@ const defaultNameTemplates: Record<JournalSettings["write"]["type"], string> = {
   month: "{{date}}",
   quarter: "{{date}}",
   year: "{{date}}",
-  weekdays: "",
   custom: "{{journal_name}} {{start_date}} - {{end_date}}",
 };
 
@@ -16,7 +15,6 @@ const defaultDateFormats: Record<JournalSettings["write"]["type"], string> = {
   month: "YYYY-MM",
   quarter: "YYYY-[Q]Q",
   year: "YYYY",
-  weekdays: "",
   custom: "YYYY-MM-DD",
 };
 export const emptyNavRow: NavBlockRow = {
@@ -135,11 +133,6 @@ const defaultNavBlocks: Record<JournalSettings["write"]["type"], JournalSettings
       },
       rowNavRelative,
     ],
-  },
-  weekdays: {
-    type: "create",
-    decorateWholeBlock: false,
-    rows: [],
   },
   custom: {
     type: "create",

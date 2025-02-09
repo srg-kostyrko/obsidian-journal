@@ -29,7 +29,6 @@ const supportedCommands: Record<JournalSettings["write"]["type"], CommandTypes[]
   month: ["same", "next", "previous", "same_next_year", "same_previous_year"],
   quarter: ["same", "next", "previous", "same_next_year", "same_previous_year"],
   year: ["same", "next", "previous"],
-  weekdays: [],
   custom: ["same", "next", "previous"],
 };
 

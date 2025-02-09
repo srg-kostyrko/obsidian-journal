@@ -23,6 +23,5 @@ export const calendarFormats: Record<JournalSettings["write"]["type"], string> =
   month: "MMMM",
   quarter: "[Q]Q",
   year: "YYYY",
-  weekdays: "ddd",
   custom: "",
 };

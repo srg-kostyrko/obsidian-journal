@@ -1,4 +1,4 @@
-import { Notice, Plugin, TAbstractFile, TFile } from "obsidian";
+import { Notice, Plugin, type TAbstractFile, TFile } from "obsidian";
 import { computed, ref, shallowRef, watch, type Ref, type WatchStopHandle } from "vue";
 import { debounce } from "perfect-debounce";
 import { initCalendarCustomization, restoreLocale, today, updateLocale } from "./calendar";

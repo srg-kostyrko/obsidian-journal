@@ -18,26 +18,26 @@ const emit = defineEmits<
 
 const day = computed({
   get() {
-    return props.condition.day;
+    return String(props.condition.day);
   },
-  set(value: number) {
-    emit("change", { prop: "day", value });
+  set(value: string) {
+    emit("change", { prop: "day", value: Number.parseInt(value, 10) });
   },
 });
 const month = computed({
   get() {
-    return props.condition.month;
+    return String(props.condition.month);
   },
-  set(value: number) {
-    emit("change", { prop: "month", value });
+  set(value: string) {
+    emit("change", { prop: "month", value: Number.parseInt(value, 10) });
   },
 });
 const year = computed({
   get() {
-    return props.condition.year;
+    return props.condition.year ?? undefined;
   },
-  set(value: number | null) {
-    emit("change", { prop: "year", value });
+  set(value: number | undefined) {
+    emit("change", { prop: "year", value: value ?? null });
   },
 });
 const months = moment().localeData().months();

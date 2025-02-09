@@ -3,9 +3,7 @@ import ObsidianSetting from "../obsidian/ObsidianSetting.vue";
 import ButtonDropdown from "../ButtonDropdown.vue";
 import ObsidianIconButton from "../obsidian/ObsidianIconButton.vue";
 import type { GenericConditions } from "@/types/settings.types";
-import ConditionNoteName from "./ConditionNoteName.vue";
-import ConditionTag from "./ConditionTag.vue";
-import ConditionProperty from "./ConditionProperty.vue";
+import ConditionItem from "./ConditionItem.vue";
 import { deepCopy } from "@/utils/misc";
 import { defaultConditions } from "@/defaults";
 
@@ -25,20 +23,6 @@ const types = [
   { value: "property", label: "Property" },
 ];
 
-function getConditionComponent(condition: GenericConditions) {
-  switch (condition.type) {
-    case "title": {
-      return ConditionNoteName;
-    }
-    case "tag": {
-      return ConditionTag;
-    }
-    case "property": {
-      return ConditionProperty;
-    }
-  }
-}
-
 function addCondition(type: string) {
   emit("add-condition", deepCopy(defaultConditions[type as GenericConditions["type"]]) as GenericConditions);
 }
@@ -56,10 +40,8 @@ function chengeCondition(index: number, change: { prop: unknown; value: unknown 
   </ObsidianSetting>
   <ObsidianSetting v-for="(condition, i) of conditions" :key="i" class="condition-wrapper">
     <span v-if="i > 0" class="mode-hint">{{ mode }}</span>
-    <component :is="getConditionComponent(condition)" :condition="condition" @change="chengeCondition(i, $event)" />
+    <ConditionItem :condition="condition" @change="chengeCondition(i, $event)" />
     <ObsidianIconButton icon="trash" @click="removeDecorationCondition(i)" />
   </ObsidianSetting>
   <p v-if="conditions.length === 0" class="journal-hint">No conditions defined yet</p>
 </template>
-
-<style scoped></style>

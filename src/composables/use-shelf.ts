@@ -22,7 +22,6 @@ export function useShelfProvider(shelfName: MaybeRef<string | null>) {
   const quarterlyJournals = computed(() => journals.value.filter((journal) => journal.type === "quarter"));
   const yearlyJournals = computed(() => journals.value.filter((journal) => journal.type === "year"));
   const customJournals = computed(() => journals.value.filter((journal) => journal.type === "custom"));
-  const weekdaysJournals = computed(() => journals.value.filter((journal) => journal.type === "weekdays"));
 
   const dailyDecorations = computed(() => [
     ...prepareDecorations(dailyJournals.value),
@@ -35,7 +34,6 @@ export function useShelfProvider(shelfName: MaybeRef<string | null>) {
   const customDecorations = computed(() =>
     prepareDecorations(customJournals.value, (decoration) => !decoration.conditions.some((c) => c.type === "offset")),
   );
-  const weekdaysDecorations = computed(() => prepareDecorations(weekdaysJournals.value));
 
   const providedShelfData: ProvidedShelfData = {
     journals: {
@@ -46,7 +44,6 @@ export function useShelfProvider(shelfName: MaybeRef<string | null>) {
       quarter: quarterlyJournals,
       year: yearlyJournals,
       custom: customJournals,
-      weekdays: weekdaysJournals,
     },
     decorations: {
       day: dailyDecorations,
@@ -55,7 +52,6 @@ export function useShelfProvider(shelfName: MaybeRef<string | null>) {
       quarter: quarterlyDecorations,
       year: yearlyDecorations,
       custom: customDecorations,
-      weekdays: weekdaysDecorations,
     },
   };
 

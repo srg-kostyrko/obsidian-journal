@@ -9,22 +9,11 @@ import type {
 import ObsidianSetting from "../obsidian/ObsidianSetting.vue";
 import ObsidianButton from "../obsidian/ObsidianButton.vue";
 import CalendarDecoration from "../notes-calendar/decorations/CalendarDecoration.vue";
-import DecorationBackground from "./edit-decoration/DecorationBackground.vue";
-import DecorationColor from "./edit-decoration/DecorationColor.vue";
-import DecorationShape from "./edit-decoration/DecorationShape.vue";
-import DecorationCorner from "./edit-decoration/DecorationCorner.vue";
-import DecorationIcon from "./edit-decoration/DecorationIcon.vue";
 import ButtonDropdown from "../ButtonDropdown.vue";
-import ConditionTypeOnly from "./edit-decoration/ConditionTypeOnly.vue";
-import ConditionNoteName from "../conditions/ConditionNoteName.vue";
-import ConditionProperty from "../conditions/ConditionProperty.vue";
-import ConditionTag from "../conditions/ConditionTag.vue";
-import ConditionDate from "./edit-decoration/ConditionDate.vue";
-import ConditionWeekday from "./edit-decoration/ConditionWeekday.vue";
-import ConditionOffset from "./edit-decoration/ConditionOffset.vue";
+import ConditionItem from "./edit-decoration/ConditionItem.vue";
+import DecorationItem from "./edit-decoration/DecorationItem.vue";
 
 import { today } from "@/calendar";
-import DecorationBorder from "./edit-decoration/DecorationBorder.vue";
 import { defaultConditions, defaultDecorations } from "@/defaults";
 import ObsidianIconButton from "../obsidian/ObsidianIconButton.vue";
 import ObsidianDropdown from "../obsidian/ObsidianDropdown.vue";
@@ -62,33 +51,6 @@ const availableConditionTypes = computed(() => {
     .filter((type) => !used.has(type))
     .map((value) => ({ value, label: decorationConditionTypeLabels[value] }));
 });
-function getConditionComponent(condition: JournalDecorationCondition) {
-  switch (condition.type) {
-    case "title": {
-      return ConditionNoteName;
-    }
-    case "tag": {
-      return ConditionTag;
-    }
-    case "date": {
-      return ConditionDate;
-    }
-    case "property": {
-      return ConditionProperty;
-    }
-    case "weekday": {
-      return ConditionWeekday;
-    }
-    case "offset": {
-      return ConditionOffset;
-    }
-    case "all-tasks-completed":
-    case "has-note":
-    case "has-open-task": {
-      return ConditionTypeOnly;
-    }
-  }
-}
 
 function addCondition(type: string) {
   conditions.value.push(deepCopy(defaultConditions[type as JournalDecorationCondition["type"]]));
@@ -109,29 +71,6 @@ const availableTypes = computed(() => {
   const used = new Set(decorations.value.map(({ type }) => type));
   return types.filter((type) => !used.has(type)).map((value) => ({ value, label: value }));
 });
-
-function getStyleComponent(decoration: JournalDecorationsStyle) {
-  switch (decoration.type) {
-    case "background": {
-      return DecorationBackground;
-    }
-    case "color": {
-      return DecorationColor;
-    }
-    case "shape": {
-      return DecorationShape;
-    }
-    case "corner": {
-      return DecorationCorner;
-    }
-    case "icon": {
-      return DecorationIcon;
-    }
-    case "border": {
-      return DecorationBorder;
-    }
-  }
-}
 
 function addDecorationStyle(type: string) {
   decorations.value.push(deepCopy(defaultDecorations[type as JournalDecorationsStyle["type"]]));
@@ -175,11 +114,7 @@ function save() {
     </ObsidianSetting>
     <ObsidianSetting v-for="(condition, i) of conditions" :key="i" class="condition-wrapper">
       <span v-if="i > 0" class="mode-hint">{{ mode }}</span>
-      <component
-        :is="getConditionComponent(condition)"
-        :condition="condition"
-        @change="chengeDecorationCondition(condition, $event)"
-      />
+      <ConditionItem :condition="condition" @change="chengeDecorationCondition(condition, $event)" />
       <ObsidianIconButton icon="trash" @click="removeDecorationCondition(i)" />
     </ObsidianSetting>
     <p v-if="conditions.length === 0" class="journal-hint">No conditions defined yet</p>
@@ -201,11 +136,7 @@ function save() {
             <template #name>Decorating {{ decorationView.type }}</template>
             <ObsidianIconButton icon="trash" @click="removeDecorationStyle(i)" />
           </ObsidianSetting>
-          <component
-            :is="getStyleComponent(decorationView)"
-            :decoration="decorationView"
-            @change="changeDecorationStyle(decorationView, $event)"
-          />
+          <DecorationItem :decoration="decorationView" @change="changeDecorationStyle(decorationView, $event)" />
         </div>
       </div>
     </div>

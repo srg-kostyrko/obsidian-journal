@@ -1,4 +1,4 @@
-import { MarkdownView, TFile, type App, type PaneType } from "obsidian";
+import { type MarkdownView, TFile, type App, type PaneType } from "obsidian";
 import type { JournalPlugin, NotesManager } from "./types/plugin.types";
 import { VueModal } from "./components/modals/vue-modal";
 import ConfirmNoteCreationModal from "./components/modals/ConfirmNoteCreation.modal.vue";

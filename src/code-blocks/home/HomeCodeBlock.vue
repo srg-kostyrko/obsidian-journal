@@ -34,8 +34,6 @@ const listToShow = computed(() => {
           journalNames: [journal.name],
         });
       }
-    } else if (type === "weekdays") {
-      // TODO
     } else {
       list.push({
         type,
