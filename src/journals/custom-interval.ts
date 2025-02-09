@@ -25,17 +25,47 @@ export class CustomIntervalResolver implements AnchorDateResolver {
   }
 
   resolveForDate(date: string): JournalAnchorDate | null {
-    return this.#resolveDate(date);
+    const index = this.index.getJournalIndex(this.journalName);
+
+    const closest = index.findClosestDate(date);
+    if (closest) {
+      if (closest === date) return closest;
+      return closest <= date ? this.#resolveDateAfterKnown(date, closest) : this.#resolveDateBeforeKnown(date, closest);
+    }
+
+    const startDate = this.#settings.value.anchorDate;
+    const endDate = this.resolveEndDate(startDate);
+    if (date >= startDate && date < endDate) {
+      return startDate;
+    } else if (date < startDate) {
+      return this.#resolveDateBeforeKnown(date, startDate);
+    } else {
+      return this.#resolveDateAfterKnown(date, startDate);
+    }
   }
   resolveNext(date: string): JournalAnchorDate | null {
     const anchorDate = this.resolveForDate(date);
     if (!anchorDate) return null;
-    return this.#resolveDateAfterKnown(anchorDate);
+    const currentEnd = this.resolveEndDate(anchorDate);
+    return JournalAnchorDate(date_from_string(currentEnd).add(1, "day").format(FRONTMATTER_DATE_FORMAT));
   }
   resolvePrevious(date: string): JournalAnchorDate | null {
     const anchorDate = this.resolveForDate(date);
     if (!anchorDate) return null;
-    return this.#resolveDateBeforeKnown(anchorDate);
+    const index = this.index.getJournalIndex(this.journalName);
+    const previousEnd = date_from_string(anchorDate).subtract(1, "day");
+    const closest = index.findClosestDate(previousEnd.format(FRONTMATTER_DATE_FORMAT));
+    if (closest) {
+      const closestData = this.index.get(this.journalName, closest);
+      if (closestData?.end_date && previousEnd.isSame(closestData.end_date, "day")) {
+        return closest;
+      }
+    }
+    const previousStart = date_from_string(anchorDate).subtract(
+      this.#settings.value.duration,
+      this.#settings.value.every,
+    );
+    return JournalAnchorDate(previousStart.format(FRONTMATTER_DATE_FORMAT));
   }
   resolveDateForCommand(date: string, command: JournalCommand["type"]): string | null {
     const anchorDate = this.resolveForDate(date);
@@ -52,15 +82,14 @@ export class CustomIntervalResolver implements AnchorDateResolver {
   }
   resolveEndDate(anchorDate: JournalAnchorDate): string {
     const existing = this.index.get(this.journalName, anchorDate);
-    if (existing?.end_date) {
-      return existing.end_date;
-    }
-    return date_from_string(anchorDate)
-      .add(this.#settings.value.duration, this.#settings.value.every)
-      .format(FRONTMATTER_DATE_FORMAT);
+    const currentEnd = existing?.end_date
+      ? date_from_string(existing.end_date)
+      : date_from_string(anchorDate).add(this.#settings.value.duration, this.#settings.value.every).subtract(1, "day");
+
+    return currentEnd.format(FRONTMATTER_DATE_FORMAT);
   }
   resolveRelativeDate(anchorDate: JournalAnchorDate): string {
-    const current = this.#resolveDate(today().format(FRONTMATTER_DATE_FORMAT));
+    const current = this.resolveForDate(today().format(FRONTMATTER_DATE_FORMAT));
     if (!current) return "";
     const fromNow = this.countRepeats(current, anchorDate);
     switch (fromNow) {
@@ -81,65 +110,72 @@ export class CustomIntervalResolver implements AnchorDateResolver {
     return `${fromNow} ${this.journalName}s from now`;
   }
   calculateOffset(date: string): [positive: number, negative: number] {
-    const anchorDate = this.#resolveDate(date);
+    const anchorDate = this.resolveForDate(date);
     if (!anchorDate) return [0, 0];
     const dateMoment = date_from_string(date);
     const start = date_from_string(anchorDate);
     const end = date_from_string(this.resolveEndDate(anchorDate));
 
-    return [start.diff(dateMoment, "days"), dateMoment.diff(end, "days")];
+    return [dateMoment.diff(start, "days") + 1, dateMoment.diff(end, "days") - 1];
   }
   countRepeats(startDate: string, endDate: string): number {
-    const start = this.#resolveDate(startDate);
-    const end = this.#resolveDate(endDate);
+    const start = this.resolveForDate(startDate);
+    const end = this.resolveForDate(endDate);
     if (!start || !end) return 0;
     let startMoment = date_from_string(start);
     let endMoment = date_from_string(end);
     if (startMoment.isAfter(endMoment)) {
       [startMoment, endMoment] = [endMoment, startMoment];
     }
-    const diff = endMoment.diff(startMoment, this.#settings.value.every) / this.#settings.value.duration;
-    return Math.ceil(diff);
+    let count = 0;
+    while (startMoment.isBefore(endMoment)) {
+      ++count;
+      const next = this.resolveNext(startMoment.format(FRONTMATTER_DATE_FORMAT));
+      if (!next) break;
+      startMoment = date_from_string(next);
+    }
+    return startDate > endDate ? -count : count;
   }
 
-  #resolveDate(date: string): JournalAnchorDate | null {
+  #resolveDateBeforeKnown(target: string, known: JournalAnchorDate): JournalAnchorDate | null {
     const index = this.index.getJournalIndex(this.journalName);
 
-    const closest = index.findClosestDate(date);
-    if (closest) {
-      if (closest === date) return closest;
-      return closest <= date ? this.#resolveDateAfterKnown(closest) : this.#resolveDateBeforeKnown(closest);
-    }
+    let knownStart = date_from_string(known);
 
-    const startDate = this.#settings.value.anchorDate;
-    const endDate = this.resolveEndDate(startDate);
-    if (date >= startDate && date < endDate) {
-      return startDate;
-    } else if (date < startDate) {
-      return this.#resolveDateBeforeKnown(startDate);
-    } else {
-      return this.#resolveDateAfterKnown(startDate);
-    }
-  }
+    let found = false;
+    while (!found) {
+      const previousEnd = knownStart.clone().subtract(1, "day");
+      const closest = index.findClosestDate(previousEnd.format(FRONTMATTER_DATE_FORMAT));
+      let previousStart = knownStart.subtract(this.#settings.value.duration, this.#settings.value.every);
+      if (closest) {
+        const closestData = this.index.get(this.journalName, closest);
+        if (closestData?.end_date && previousEnd.isSame(closestData.end_date, "day")) {
+          previousStart = date_from_string(closest);
+        }
+      }
 
-  #resolveDateBeforeKnown(date: JournalAnchorDate): JournalAnchorDate | null {
-    const current = date_from_string(date);
-    while (current.isSameOrAfter(date, "day")) {
-      current.subtract(this.#settings.value.duration, this.#settings.value.every);
-    }
-    return JournalAnchorDate(current.format("YYYY-MM-DD"));
-  }
-
-  #resolveDateAfterKnown(date: JournalAnchorDate): JournalAnchorDate | null {
-    let current = date_from_string(date);
-    while (current.isSameOrBefore(date, "day")) {
-      const existing = this.index.get(this.journalName, JournalAnchorDate(current.format("YYYY-MM-DD")));
-      if (existing?.end_date) {
-        current = date_from_string(existing.end_date).add(1, "day");
+      if (previousStart.isSameOrBefore(target, "day") && previousEnd.isSameOrAfter(target, "day")) {
+        found = true;
       } else {
-        current.add(this.#settings.value.duration, this.#settings.value.every);
+        knownStart = previousStart.clone();
       }
     }
-    return JournalAnchorDate(current.format("YYYY-MM-DD"));
+    return JournalAnchorDate(knownStart.format(FRONTMATTER_DATE_FORMAT));
+  }
+
+  #resolveDateAfterKnown(target: string, known: JournalAnchorDate): JournalAnchorDate | null {
+    let currentStart = date_from_string(known);
+    let found = false;
+    while (!found) {
+      const currentEnd = date_from_string(
+        this.resolveEndDate(JournalAnchorDate(currentStart.format(FRONTMATTER_DATE_FORMAT))),
+      );
+      if (currentStart.isSameOrBefore(target, "day") && currentEnd.isSameOrAfter(target, "day")) {
+        found = true;
+      } else {
+        currentStart = currentEnd.clone().add(1, "day");
+      }
+    }
+    return JournalAnchorDate(currentStart.format(FRONTMATTER_DATE_FORMAT));
   }
 }

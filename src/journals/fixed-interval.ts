@@ -101,7 +101,7 @@ export class FixedIntervalResolver implements AnchorDateResolver {
     const end = this.resolveEndDate(anchorDate);
 
     if (parsed.isBefore(start) || parsed.isAfter(end)) return [0, 0];
-    return [parsed.diff(start, "days"), parsed.diff(end, "days")];
+    return [parsed.diff(start, "days") + 1, parsed.diff(end, "days") - 1];
   }
 
   #resolveAnchorDate(base: MomentDate): JournalAnchorDate {

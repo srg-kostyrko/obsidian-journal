@@ -167,7 +167,7 @@ export default class JournalPluginImpl extends Plugin implements JournalPlugin {
     const journal = this.getJournal(name);
     if (!journal) return;
     journal.dispose();
-    await this.#index.renameJournal(name, newName);
+
     this.#config.value.journals[newName] = this.#config.value.journals[name];
     this.#config.value.journals[newName].name = newName;
     delete this.#config.value.journals[name];
@@ -192,6 +192,13 @@ export default class JournalPluginImpl extends Plugin implements JournalPlugin {
     newJournal.registerCommands();
     if (this.#config.value.openOnStartup === name) {
       this.#config.value.openOnStartup = newName;
+    }
+    const index = this.#index.getJournalIndex(name);
+    if (!index) return;
+    for (const [, path] of index) {
+      await this.#notesManager.updateNoteFrontmatter(path, (frontmatter) => {
+        frontmatter[FRONTMATTER_NAME_KEY] = name;
+      });
     }
   }
 
@@ -305,8 +312,7 @@ export default class JournalPluginImpl extends Plugin implements JournalPlugin {
       this.#config.value.showReloadHint = false;
     }
 
-    this.#index = new JournalsIndex(this.notesManager);
-    this.addChild(this.#index);
+    this.#index = new JournalsIndex();
 
     this.#configureCommands();
 

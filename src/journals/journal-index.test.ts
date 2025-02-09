@@ -74,16 +74,8 @@ describe("JournalIndex", () => {
       expect(index.findClosestDate("2022-01-02")).toBe(JournalAnchorDate("2022-01-02"));
     });
 
-    test("it should return closes previous date", () => {
+    test("it should return closest previous date", () => {
       expect(index.findClosestDate("2022-01-05")).toBe(JournalAnchorDate("2022-01-04"));
-    });
-
-    test("it should return closes next date", () => {
-      expect(index.findClosestDate("2022-09-04")).toBe(JournalAnchorDate("2022-11-10"));
-    });
-
-    test("it should return previous date if distance is same", () => {
-      expect(index.findClosestDate("2022-01-03")).toBe(JournalAnchorDate("2022-01-02"));
     });
   });
 });

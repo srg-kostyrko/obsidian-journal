@@ -1,22 +1,15 @@
-import { Component, type CachedMetadata } from "obsidian";
+import { type CachedMetadata } from "obsidian";
 import { computed, ref, shallowRef, type ComputedRef } from "vue";
 import type { JournalAnchorDate, JournalNoteData } from "../types/journal.types";
 import { FRONTMATTER_NAME_KEY } from "../constants";
 import { date_from_string } from "../calendar";
 import { JournalIndex } from "./journal-index";
-import type { NotesManager } from "@/types/plugin.types";
 import type { Journal } from "./journal";
 
-export class JournalsIndex extends Component {
+export class JournalsIndex {
   #pathIndex = ref(new Map<string, JournalNoteData>());
   #pathComputeds = new Map<string, ComputedRef<JournalNoteData | null>>();
   #journalIndecies = shallowRef(new Map<string, JournalIndex>());
-  #notesManager: NotesManager;
-
-  constructor(notesManager: NotesManager) {
-    super();
-    this.#notesManager = notesManager;
-  }
 
   getForPath(path: string): JournalNoteData | null {
     return this.#pathIndex.value.get(path) ?? null;
@@ -52,16 +45,6 @@ export class JournalsIndex extends Component {
     return this.getForPath(path);
   }
 
-  async renameJournal(oldName: string, name: string): Promise<void> {
-    const index = this.getJournalIndex(oldName);
-    if (!index) return;
-    for (const [, path] of index) {
-      await this.#notesManager.updateNoteFrontmatter(path, (frontmatter) => {
-        frontmatter[FRONTMATTER_NAME_KEY] = name;
-      });
-    }
-  }
-
   getJournalIndex(journalId: string) {
     let index = this.#journalIndecies.value.get(journalId);
     if (!index) {
@@ -73,10 +56,15 @@ export class JournalsIndex extends Component {
 
   registerPathData(path: string, data: JournalNoteData): void {
     this.#pathIndex.value.set(path, data);
+    this.getJournalIndex(data.journal).set(data.date, path);
   }
 
   unregisterPathData(path: string): void {
+    const data = this.#pathIndex.value.get(path);
     this.#pathIndex.value.delete(path);
+    if (data) {
+      this.getJournalIndex(data.journal).delete(data.date);
+    }
   }
 
   clearForPath(path: string): void {

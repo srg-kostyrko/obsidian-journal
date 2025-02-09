@@ -81,7 +81,7 @@ describe("FixedIntervalResolver", () => {
     });
 
     it("should return 0 offset", () => {
-      expect(resolver.calculateOffset("2025-01-03")).toEqual([0, 0]);
+      expect(resolver.calculateOffset("2025-01-03")).toEqual([1, -1]);
     });
   });
 
@@ -170,7 +170,7 @@ describe("FixedIntervalResolver", () => {
     });
 
     it("should return day offset from start and end of week", () => {
-      expect(resolver.calculateOffset("2025-01-07")).toEqual([1, -5]);
+      expect(resolver.calculateOffset("2025-01-07")).toEqual([2, -6]);
     });
   });
 
@@ -245,7 +245,7 @@ describe("FixedIntervalResolver", () => {
     });
 
     it("should return day offset from start and end of month", () => {
-      expect(resolver.calculateOffset("2025-01-03")).toEqual([2, -28]);
+      expect(resolver.calculateOffset("2025-01-03")).toEqual([3, -29]);
     });
   });
 
@@ -320,7 +320,7 @@ describe("FixedIntervalResolver", () => {
     });
 
     it("should return day offset from start and end of quarter", () => {
-      expect(resolver.calculateOffset("2025-02-03")).toEqual([33, -56]);
+      expect(resolver.calculateOffset("2025-02-03")).toEqual([34, -57]);
     });
   });
 
@@ -395,7 +395,7 @@ describe("FixedIntervalResolver", () => {
     });
 
     it("should return day offset from start and end of quarter", () => {
-      expect(resolver.calculateOffset("2025-02-03")).toEqual([33, -331]);
+      expect(resolver.calculateOffset("2025-02-03")).toEqual([34, -332]);
     });
   });
 });

@@ -1,4 +1,3 @@
-import { dateDistance } from "@/calendar";
 import { JournalAnchorDate } from "@/types/journal.types";
 import { ref } from "vue";
 
@@ -66,14 +65,7 @@ export class JournalIndex {
     if (last && date >= last) return JournalAnchorDate(last);
     const index = this.#bsearchSortedDate(date);
     if (index === -1) return;
-    if (this.#sortedDates[index] < date) {
-      return dateDistance(this.#sortedDates[index], date) <= dateDistance(this.#sortedDates[index + 1], date)
-        ? JournalAnchorDate(this.#sortedDates[index])
-        : JournalAnchorDate(this.#sortedDates[index + 1]);
-    }
-    return dateDistance(this.#sortedDates[index], date) < dateDistance(this.#sortedDates[index - 1], date)
-      ? JournalAnchorDate(this.#sortedDates[index])
-      : JournalAnchorDate(this.#sortedDates[index - 1]);
+    return JournalAnchorDate(this.#sortedDates[index]);
   }
 
   *[Symbol.iterator]() {
