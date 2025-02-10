@@ -44,7 +44,7 @@ const onSubmit = handleSubmit((values) => {
 
 <template>
   <form @submit.prevent="onSubmit">
-    <ObsidianSetting name="Journal name">
+    <ObsidianSetting name="Shelf name">
       <template #description>
         <FormErrors :errors="errorBag.name" />
       </template>
