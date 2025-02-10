@@ -120,9 +120,11 @@ function save() {
     <p v-if="conditions.length === 0" class="journal-hint">No conditions defined yet</p>
     <div class="separator" />
     <div class="preview-container">
-      <div class="preview-decoration">
-        <CalendarDecoration :styles="decorations">
-          {{ day }}
+      <div class="preview-decoration-block">
+        <CalendarDecoration class="preview-decoration" :styles="decorations">
+          <span>
+            {{ day }}
+          </span>
         </CalendarDecoration>
       </div>
       <div>
@@ -154,11 +156,16 @@ function save() {
 }
 .preview-decoration {
   position: relative;
+  display: inline-block;
   font-size: 48px;
   width: 1.5em;
   height: 1.5em;
   text-align: center;
   margin: 0 auto;
+}
+.preview-decoration-block {
+  display: flex;
+  justify-content: center;
 }
 .separator {
   width: 100%;

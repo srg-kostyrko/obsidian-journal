@@ -475,7 +475,9 @@ watch(
             <div class="decoration-preview-container">
               <div class="decoration-preview-block">
                 <CalendarDecoration class="decoration-preview" :styles="decoration.styles">
-                  {{ day }}
+                  <span>
+                    {{ day }}
+                  </span>
                 </CalendarDecoration>
               </div>
               when
@@ -596,7 +598,7 @@ watch(
   font-size: 1.5em;
   width: 1.5em;
   height: 1.5em;
-  padding: 0.25em;
+  padding: 0 0.25em;
   line-height: 1;
   text-align: center;
 }
