@@ -88,9 +88,9 @@ export const defaultJournalSettings: JournalSettings = {
         {
           type: "shape",
           shape: "circle",
-          color: { type: "theme", name: "text-on-accent" },
+          color: { type: "theme", name: "interactive-accent" },
           placement_x: "center",
-          placement_y: "middle",
+          placement_y: "bottom",
         },
       ],
     },
