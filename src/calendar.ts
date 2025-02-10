@@ -10,9 +10,9 @@ let initialWeekSettings: { dow: number; doy: number } | undefined;
 export function initCalendarCustomization(): void {
   if (!moment.locales().includes(CUSTOM_LOCALE)) {
     const currentLocale = moment.locale();
-    const currentLccaleData = extractCurrentlocaleData();
-    initialWeekSettings = currentLccaleData.week;
-    moment.defineLocale(CUSTOM_LOCALE, currentLccaleData);
+    const currentLocaleData = extractCurrentlocaleData();
+    initialWeekSettings = currentLocaleData.week;
+    moment.defineLocale(CUSTOM_LOCALE, currentLocaleData);
     moment.locale(currentLocale);
   }
 }
