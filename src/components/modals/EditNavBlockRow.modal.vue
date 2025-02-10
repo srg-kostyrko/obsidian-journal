@@ -16,6 +16,10 @@ import { usePlugin } from "@/composables/use-plugin";
 import { useShelfProvider } from "@/composables/use-shelf";
 import { colorScheme } from "@/utils/color";
 import { deepCopy } from "@/utils/misc";
+import { replaceTemplateVariables } from "@/utils/template";
+import { FRONTMATTER_DATE_FORMAT } from "@/constants";
+import { today } from "@/calendar";
+import WrongWeekWarning from "../WrongWeekWarning.vue";
 
 const { currentJournal, row } = defineProps<{
   row?: NavBlockRow;
@@ -119,6 +123,50 @@ const background = computed<ColorSettings>({
   },
 });
 
+const resolvedTemplate = computed(() => {
+  if (!journal.value) return "";
+  const date = today().format(FRONTMATTER_DATE_FORMAT);
+  const anchorDate = journal.value.resolveAnchorDate(date);
+  const defaultFormat = journal.value?.dateFormat ?? FRONTMATTER_DATE_FORMAT;
+  return replaceTemplateVariables(template.value ?? "", {
+    date: {
+      type: "date",
+      value: date,
+      defaultFormat,
+    },
+    start_date: {
+      type: "date",
+      value: anchorDate ? journal.value.resolveStartDate(anchorDate) : "",
+      defaultFormat,
+    },
+    end_date: {
+      type: "date",
+      value: anchorDate ? journal.value.resolveEndDate(anchorDate) : "",
+      defaultFormat,
+    },
+    relative_date: {
+      type: "string",
+      value: anchorDate ? journal.value.resolveRelativeDate(anchorDate) : "",
+    },
+    journal_name: {
+      type: "string",
+      value: journal.value?.name ?? "",
+    },
+    index: {
+      type: "number",
+      value: journal.value?.config.value.index.enabled ? 1 : undefined,
+    },
+  });
+});
+
+const hasWrongWeek = computed(() => {
+  if (!template.value) return false;
+  const formats = template.value.matchAll(/{{(.*?):(.*?)}}/gi);
+  return [...formats].some(([, , format]) => {
+    return format.replaceAll(/\[.*?\]/gi, "").includes("W");
+  });
+});
+
 const onSubmit = handleSubmit((values) => {
   emit("submit", values);
   emit("close");
@@ -129,6 +177,10 @@ const onSubmit = handleSubmit((values) => {
   <form @submit="onSubmit">
     <ObsidianSetting name="Row template">
       <template #description>
+        <div>
+          With resolved variables: <b class="u-pop"> {{ resolvedTemplate }}</b>
+        </div>
+        <WrongWeekWarning v-if="hasWrongWeek" />
         <FormErrors :errors="errorBag.template" />
       </template>
       <ObsidianTextInput v-model="template" v-bind="templateAttrs" />

@@ -24,6 +24,7 @@ useShelfProvider(shelfName);
 
 <template>
   <div v-if="journal">
+    <div class="setting-item-description">Hover a row to see controls</div>
     <div v-for="(row, index) of rows" :key="index" class="nav-row">
       <div class="nav-row-wrapper">
         <NavigationBlockRow :journal="journal" :row="row" :ref-date="refDate" :default-format="journal.dateFormat" />
@@ -58,12 +59,12 @@ useShelfProvider(shelfName);
   display: none;
 }
 .nav-row:hover {
-  border-top-color: var(--color-accent);
+  border-bottom-color: var(--color-accent);
 }
 .nav-row:hover .controls {
   display: flex;
   position: absolute;
-  top: 0;
+  bottom: 0;
   right: 0;
 }
 </style>

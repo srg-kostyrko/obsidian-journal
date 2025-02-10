@@ -52,6 +52,7 @@ export default [
         },
       ],
       "unicorn/relative-url-style": ["error", "always"],
+      "unicorn/no-unreadable-array-destructuring": "off",
       "unicorn/no-null": "off", // TODO consider enabling
       "unicorn/prevent-abbreviations": [
         "error",
