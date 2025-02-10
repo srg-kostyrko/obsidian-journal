@@ -36,7 +36,7 @@ import { ObsidianManager } from "./obsidian-manager";
 export default class JournalPluginImpl extends Plugin implements JournalPlugin {
   #stopHandles: WatchStopHandle[] = [];
   #journals = shallowRef<Record<string, Journal>>({});
-  #index!: JournalsIndex;
+  #index = new JournalsIndex();
   #activeNote: Ref<string | null> = ref(null);
   #config: Ref<PluginSettings> = ref(deepCopy(defaultPluginSettings));
   #autoCreateTimer: ReturnType<typeof setTimeout> | undefined;
@@ -303,7 +303,7 @@ export default class JournalPluginImpl extends Plugin implements JournalPlugin {
     if (this.#config.value.calendar.dow === -1) {
       restoreLocale();
     } else {
-      updateLocale(this.#config.value.calendar.doy, this.#config.value.calendar.doy);
+      updateLocale(this.#config.value.calendar.dow, this.#config.value.calendar.doy);
     }
 
     this.#fillJournals();
@@ -311,8 +311,6 @@ export default class JournalPluginImpl extends Plugin implements JournalPlugin {
     if (this.#config.value.showReloadHint) {
       this.#config.value.showReloadHint = false;
     }
-
-    this.#index = new JournalsIndex();
 
     this.#configureCommands();
 
