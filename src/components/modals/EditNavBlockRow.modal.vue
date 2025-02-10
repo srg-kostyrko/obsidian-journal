@@ -95,11 +95,29 @@ const [template, templateAttrs] = defineField("template");
 const [fontSize, fontSizeAttrs] = defineField("fontSize");
 const [bold, boldAttrs] = defineField("bold");
 const [italic, italicAttrs] = defineField("italic");
-const [color, colorAttrs] = defineField("color");
-const [background, backgroundAttrs] = defineField("background");
+const [colorRaw, colorAttrs] = defineField("color");
+const [backgroundRaw, backgroundAttrs] = defineField("background");
 const [link, linkAttrs] = defineField("link");
 const [journalField, journalAttrs] = defineField("journal");
 const [addDecorations, addDecorationsAttrs] = defineField("addDecorations");
+
+const color = computed<ColorSettings>({
+  get(): ColorSettings {
+    return (colorRaw.value as ColorSettings) ?? { type: "transparent" };
+  },
+  set(color: ColorSettings) {
+    colorRaw.value = color;
+  },
+});
+
+const background = computed<ColorSettings>({
+  get(): ColorSettings {
+    return (backgroundRaw.value as ColorSettings) ?? { type: "transparent" };
+  },
+  set(color: ColorSettings) {
+    backgroundRaw.value = color;
+  },
+});
 
 const onSubmit = handleSubmit((values) => {
   emit("submit", values);
@@ -131,10 +149,10 @@ const onSubmit = handleSubmit((values) => {
       <template #description>
         <FormErrors :errors="errorBag.color" />
       </template>
-      <ColorPicker v-model="color as ColorSettings" v-bind="colorAttrs" />
+      <ColorPicker v-model="color" v-bind="colorAttrs" />
     </ObsidianSetting>
     <ObsidianSetting name="Background color">
-      <ColorPicker v-model="background as ColorSettings" v-bind="backgroundAttrs" />
+      <ColorPicker v-model="background" v-bind="backgroundAttrs" />
     </ObsidianSetting>
     <ObsidianSetting name="Link">
       <ObsidianDropdown v-model="link" v-bind="linkAttrs">
