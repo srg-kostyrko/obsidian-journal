@@ -17,12 +17,12 @@ function toggle() {
 
 <template>
   <div class="collapsible-root" :data-open="expanded || null">
-    <div class="collapsible-trigger">
-      <ObsidianIcon :name="icon" @click="toggle" />
-      <span class="collapsible-trigger-text" @click="toggle">
+    <div class="collapsible-trigger" @click="toggle">
+      <ObsidianIcon :name="icon" />
+      <span class="collapsible-trigger-text">
         <slot name="trigger"></slot>
       </span>
-      <span class="collapsible-trigger-controls">
+      <span class="collapsible-trigger-controls" @click.stop>
         <slot name="controls"></slot>
       </span>
     </div>
