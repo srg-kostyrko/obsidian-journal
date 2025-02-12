@@ -290,7 +290,10 @@ watch(
           Start date for custom intervals cannot be changes as it is used to calcualte interval
         </div>
       </template>
-      <DatePicker v-model="config.start" :disabled="config.write.type === 'custom'" />
+      <span v-if="config.write.type === 'custom'">
+        {{ config.write.anchorDate }}
+      </span>
+      <DatePicker v-else v-model="config.start" />
       <ObsidianIconButton
         v-if="config.start && config.write.type !== 'custom'"
         icon="trash"
@@ -328,7 +331,8 @@ watch(
           Start date is used as anchor date if defined.
         </template>
         <div :aria-label="config.start ? 'Start date is used' : ''">
-          <DatePicker v-model="config.index.anchorDate" :disabled="!!config.start" />
+          <span v-if="config.start"> {{ config.start }} </span>
+          <DatePicker v-else v-model="config.index.anchorDate" />
         </div>
       </ObsidianSetting>
       <ObsidianSetting name="Start number">
@@ -591,7 +595,7 @@ watch(
   flex-grow: 1;
 }
 .journal-important {
-  color: var(--text-error);
+  color: var(--text-accent);
 }
 .decoration-preview {
   display: inline-block;
