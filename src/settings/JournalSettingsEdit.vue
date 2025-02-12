@@ -381,7 +381,7 @@ watch(
       <ObsidianTextInput v-model="config.nameTemplate" />
     </ObsidianSetting>
 
-    <ObsidianSetting name="Date format">
+    <ObsidianSetting name="Default date format">
       <template #description>
         Used to format dates if not defined in variable.<br />
         <a target="_blank" href="https://momentjs.com/docs/#/displaying/format/">Syntax reference</a><br />
