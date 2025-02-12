@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { computed, watch } from "vue";
+import { computed, reactive, watch } from "vue";
 import {
   FRONTMATTER_DATE_KEY,
   FRONTMATTER_INDEX_KEY,
@@ -54,6 +54,14 @@ const config = computed(() => journal.value?.config.value);
 
 const day = today().day();
 const refDate = today().format("YYYY-MM-DD");
+const expandedState = reactive({
+  templates: false,
+  commands: false,
+  decorations: false,
+  navBlock: false,
+  calendarViewBlock: false,
+  frontmatter: false,
+});
 
 const writingDescription = computed(() => {
   if (!journal.value) return "";
@@ -82,6 +90,13 @@ function place(): void {
   }).open();
 }
 
+function addTemplate() {
+  config.value?.templates.push("");
+  if (!expandedState.templates) {
+    expandedState.templates = true;
+  }
+}
+
 function addCommand(): void {
   if (!journal.value) return;
   new VueModal(plugin, "Add command", EditCommandModal, {
@@ -91,6 +106,9 @@ function addCommand(): void {
     onSubmit: (command: JournalCommand) => {
       if (!journal.value) return;
       journal.value.addCommand(command);
+      if (!expandedState.commands) {
+        expandedState.commands = true;
+      }
     },
   }).open();
 }
@@ -126,6 +144,9 @@ function addCalendarDecoration() {
       onSubmit: (decoration: JournalDecoration) => {
         if (!journal.value) return;
         journal.value.addDecoration(decoration);
+        if (!expandedState.decorations) {
+          expandedState.decorations = true;
+        }
       },
     },
     DECORATIONS_MODAL_WIDTH,
@@ -161,6 +182,9 @@ function addNavRow() {
     onSubmit: (row: NavBlockRow) => {
       if (!journal.value) return;
       journal.value.addNavRow(row);
+      if (!expandedState.navBlock) {
+        expandedState.navBlock = true;
+      }
     },
   }).open();
 }
@@ -195,6 +219,9 @@ function addCalendarViewBlockRow() {
     onSubmit: (row: NavBlockRow) => {
       if (!journal.value) return;
       journal.value.addCalendarViewRow(row);
+      if (!expandedState.calendarViewBlock) {
+        expandedState.calendarViewBlock = true;
+      }
     },
   }).open();
 }
@@ -401,7 +428,7 @@ watch(
       <FolderInput v-model="config.folder" />
     </ObsidianSetting>
 
-    <CollapsibleBlock>
+    <CollapsibleBlock v-model:expanded="expandedState.templates">
       <template #trigger>
         <IconedRow icon="notepad-text-dashed">
           Templates
@@ -409,7 +436,7 @@ watch(
         </IconedRow>
       </template>
       <template #controls>
-        <ObsidianButton @click="config.templates.push('')"> Add template </ObsidianButton>
+        <ObsidianButton @click="addTemplate"> Add template </ObsidianButton>
       </template>
       <ObsidianSetting no-controls>
         <template #description>
@@ -429,7 +456,7 @@ watch(
       </template>
     </CollapsibleBlock>
 
-    <CollapsibleBlock>
+    <CollapsibleBlock v-model:expanded="expandedState.commands">
       <template #trigger>
         <IconedRow icon="terminal">
           Commands
@@ -457,7 +484,7 @@ watch(
       </template>
     </CollapsibleBlock>
 
-    <CollapsibleBlock>
+    <CollapsibleBlock v-model:expanded="expandedState.decorations">
       <template #trigger>
         <IconedRow icon="paintbrush">
           Calendar decorations
@@ -497,7 +524,7 @@ watch(
       </template>
     </CollapsibleBlock>
 
-    <CollapsibleBlock>
+    <CollapsibleBlock v-model:expanded="expandedState.navBlock">
       <template #trigger>
         <IconedRow icon="signpost-big"> Navigation block </IconedRow>
       </template>
@@ -525,7 +552,7 @@ watch(
       </ObsidianSetting>
     </CollapsibleBlock>
 
-    <CollapsibleBlock v-if="journal.type === 'custom'">
+    <CollapsibleBlock v-if="journal.type === 'custom'" v-model:expanded="expandedState.calendarViewBlock">
       <template #trigger>
         <IconedRow icon="signpost-big"> Calendar View block </IconedRow>
       </template>
@@ -549,7 +576,7 @@ watch(
       </ObsidianSetting>
     </CollapsibleBlock>
 
-    <CollapsibleBlock>
+    <CollapsibleBlock v-model:expanded="expandedState.frontmatter">
       <template #trigger>
         <IconedRow icon="table-properties"> Frontmatter </IconedRow>
       </template>
