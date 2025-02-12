@@ -6,7 +6,7 @@ const defaultNameTemplates: Record<JournalSettings["write"]["type"], string> = {
   month: "{{date}}",
   quarter: "{{date}}",
   year: "{{date}}",
-  custom: "{{journal_name}} {{start_date}} - {{end_date}}",
+  custom: "{{journal_name}} {{index}}",
 };
 
 const defaultDateFormats: Record<JournalSettings["write"]["type"], string> = {
@@ -194,6 +194,42 @@ export function prepareJournalDefaultsBasedOnType(write: JournalSettings["write"
         },
       ],
     };
+    defaults.decorations = [
+      {
+        mode: "and",
+        conditions: [{ type: "has-note" }],
+        styles: [
+          {
+            type: "border",
+            border: "different",
+            left: {
+              show: true,
+              width: 2,
+              color: { type: "theme", name: "interactive-accent" },
+              style: "solid",
+            },
+            right: {
+              show: false,
+              width: 1,
+              color: { type: "transparent" },
+              style: "solid",
+            },
+            top: {
+              show: false,
+              width: 1,
+              color: { type: "transparent" },
+              style: "solid",
+            },
+            bottom: {
+              show: false,
+              width: 1,
+              color: { type: "transparent" },
+              style: "solid",
+            },
+          },
+        ],
+      },
+    ];
   }
 
   return defaults;

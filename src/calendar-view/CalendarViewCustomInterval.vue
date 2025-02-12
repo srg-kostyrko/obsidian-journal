@@ -46,7 +46,10 @@ const activeBackground = computed(() => colorToString(plugin.calendarViewSetting
   gap: var(--size-2-2);
 }
 .is-active {
-  color: v-bind(activeColor);
-  background-color: v-bind(activeBackground);
+  color: v-bind(activeColor) !important;
+  background-color: v-bind(activeBackground) !important;
+}
+.is-active :deep(*) {
+  color: v-bind(activeColor) !important;
 }
 </style>

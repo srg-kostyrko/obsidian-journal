@@ -55,7 +55,7 @@ const activeBackground = computed(() => colorToString(plugin.calendarViewSetting
   background-color: v-bind(todayBackground);
 }
 .calendar :deep([data-selected]) {
-  color: v-bind(activeColor);
-  background-color: v-bind(activeBackground);
+  color: v-bind(activeColor) !important;
+  background-color: v-bind(activeBackground) !important;
 }
 </style>

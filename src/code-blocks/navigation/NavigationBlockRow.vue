@@ -99,5 +99,6 @@ function onClick() {
   cursor: v-bind(cursor);
   color: v-bind(color);
   background-color: v-bind(background);
+  position: relative;
 }
 </style>
