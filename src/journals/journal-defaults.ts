@@ -140,7 +140,7 @@ const defaultNavBlocks: Record<JournalSettings["write"]["type"], JournalSettings
     rows: [
       {
         ...emptyNavRow,
-        template: "{{journal_name}}",
+        template: "{{journal_name}} {{index}}",
         link: "self",
         fontSize: 3,
         bold: true,
@@ -167,8 +167,19 @@ export function prepareJournalDefaultsBasedOnType(write: JournalSettings["write"
     nameTemplate: defaultNameTemplates[write.type],
     dateFormat: defaultDateFormats[write.type],
     navBlock: defaultNavBlocks[write.type],
-    calendarViewBlock: {
-      decorateWholeBlock: false,
+  };
+  if (write.type === "custom") {
+    defaults.start = write.anchorDate;
+    defaults.index = {
+      enabled: true,
+      anchorDate: write.anchorDate,
+      anchorIndex: 1,
+      allowBefore: false,
+      type: "increment",
+      resetAfter: 1,
+    };
+    defaults.calendarViewBlock = {
+      decorateWholeBlock: true,
       rows: [
         {
           ...emptyNavRow,
@@ -182,10 +193,7 @@ export function prepareJournalDefaultsBasedOnType(write: JournalSettings["write"
           template: "{{start_date}} to {{end_date}}",
         },
       ],
-    },
-  };
-  if (write.type === "custom") {
-    defaults.start = write.anchorDate;
+    };
   }
 
   return defaults;
