@@ -26,7 +26,7 @@ const { grid } = useMonth(
 </script>
 
 <template>
-  <CalendarGrid :columns>
+  <CalendarGrid :columns compact-first-line>
     <template #header>
       <slot name="header">
         <FormattedDate :date="refDate" format="MMMM YYYY" />

@@ -52,7 +52,7 @@ const isYearActive = computed(
 </script>
 
 <template>
-  <CalendarGrid class="month-grid" :columns="columns">
+  <CalendarGrid class="month-grid" :columns="columns" compact-first-line>
     <template #header>
       <slot name="header">
         <NotesCalendarButton :date="refDate" type="month" :data-selected="isMonthActive ? '' : null" />

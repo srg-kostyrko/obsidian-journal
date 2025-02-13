@@ -3,7 +3,7 @@ import { computed } from "vue";
 import { usePlugin } from "@/composables/use-plugin";
 import { colorToString } from "@/utils/color";
 
-defineProps<{ columns: number }>();
+const { compactFirstLine } = defineProps<{ columns: number; compactFirstLine?: boolean }>();
 
 const plugin = usePlugin();
 
@@ -12,6 +12,8 @@ const todayBackground = computed(() => colorToString(plugin.calendarViewSettings
 
 const activeColor = computed(() => colorToString(plugin.calendarViewSettings.activeStyle.color));
 const activeBackground = computed(() => colorToString(plugin.calendarViewSettings.activeStyle.background));
+
+const templateRows = computed(() => (compactFirstLine ? "1.2em repeat(auto-fill, 28px)" : "repeat(auto-fill, 28px)"));
 </script>
 
 <template>
@@ -35,7 +37,7 @@ const activeBackground = computed(() => colorToString(plugin.calendarViewSetting
 .calendar-grid {
   display: grid;
   grid-template-columns: repeat(v-bind(columns), 1fr);
-  grid-template-rows: 1.2em repeat(auto-fill, 28px);
+  grid-template-rows: v-bind(templateRows);
   gap: var(--size-2-1);
 }
 
