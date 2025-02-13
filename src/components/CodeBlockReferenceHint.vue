@@ -12,10 +12,16 @@ const { type, journalName } = defineProps<{
 const plugin = usePlugin();
 
 function show() {
-  new VueModal(plugin, "Supported code blocks", CodeBlockReferenceModal, {
-    type,
-    journalName,
-  }).open();
+  new VueModal(
+    plugin,
+    "Supported code blocks",
+    CodeBlockReferenceModal,
+    {
+      type,
+      journalName,
+    },
+    780,
+  ).open();
 }
 </script>
 

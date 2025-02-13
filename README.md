@@ -2,12 +2,14 @@
 
 Manage your journals in [Obsidian](https://obsidian.md/) knowledge base.
 
-- Calendar based journals (daily, weekly, monthly, quarterly and yearly notes)
-- Interval based journals (like financial quarters or sprints)
+- Daily, weekly, monthly, quarterly and yearly notes
+- Notes with custom duration (like financial quarters or sprints)
+- Notes can be indexed to provide numbering (like Sprint 1, Sprint 2)
 - You can configure many different journals based on your needs
 - Every note type configured separately (path to store, templates etc)
 - Variables to insert journal related data into paths/note name/template content.
-- Creating current journal notes on vault open
+- Start date and end conditions can be defined for journals so that notes before start date or after end cnditions are met are not created
+- Auto-creating current journal
 - Opening journal note on startup
 - Code blocks for journal notes for easier navigation
 
@@ -43,9 +45,9 @@ There variables can be used in note name template, note storage path, content of
 
 - `{{journal_name}}` - name of journal note belongs to
 - `{{note_name}}` - name of note
-- `{{start_date}}` - first day of week, month, quarter, year or interval depending on note type, formatted using date format from settings. Format can be overridden using following syntax `{{start_date:format}}` where format is string using [Moment.js format rules](https://momentjs.com/docs/#/displaying/format/) (like `{{start_date:YYYY-MM-DD}}`). You can do date manipulations using [Moment.js manipulation rules](https://momentjs.com/docs/#/manipulating/add/), e.g. `{{start_date+5d:format}}` to add 5 days.
-- `{{end_date}}` - last day of week, month, quarter, year or interval depending on note type, formatting rules are the same as in `{{start_date}}`, as well as the calculations
-- `{{date}}` - alias to `{{start_date}}`
+- `{{date}}` - date used as reference to specific period, formatted using date format from settings. In most cases it is first day of month, quarter, year or custom interval. The only exception is week notes where for notes that belong to next year but have some days in previous year it will be set to end of week. Format can be overridden using following syntax `{{start_date:format}}` where format is string using [Moment.js format rules](https://momentjs.com/docs/#/displaying/format/) (like `{{start_date:YYYY-MM-DD}}`). You can do date manipulations using [Moment.js manipulation rules](https://momentjs.com/docs/#/manipulating/add/), e.g. `{{start_date+5d:format}}` to add 5 days.
+- `{{start_date}}` - first day of week, month, quarter, year or interval depending on note type, formatting rules are the same as in `{{date}}`, as well as the calculations
+- `{{end_date}}` - last day of week, month, quarter, year or interval depending on note type, formatting rules are the same as in `{{date}}`, as well as the calculations
 - `{{index}}` - available for interval based journals indicating index of interval (like financial quarter or spring number)
 
 ## Supported code blocks
@@ -53,30 +55,16 @@ There variables can be used in note name template, note storage path, content of
 For easier navigation plugin provides code blocks that can be inserted into note content.
 
 ````markdown
-```calendar-nav
+```journal-nav
 
 ```
 ````
 
-Navigation code block helps navigating relative to current note.
+Navigation code block helps navigating relative to current note. Displayed data is configured in journal settings.
 
 Example look for daily note:
 
 ![Daily note nav](assets/daily-nav.png)
-
----
-
-````markdown
-```interval-nav
-
-```
-````
-
-This block is similar to previous one just for interval based journals.
-
-Example look for interval note (configured as 1 week sprints):
-
-![Sprint note nav](assets/interval-nav.png)
 
 ---
 
@@ -103,6 +91,37 @@ Sample month timeline
 ![Month timeline](assets/month-timeline.png)
 
 Quarter and Calendar timeline repeat month timeline for every month in quarter or year.
+
+---
+
+`````markdown
+```journals-home
+
+```
+
+Displays list of links to current notes in journals.
+Supports following settings:
+
+- `show` - controls what journals are displayed (by default only Today link is displayed). Supported values are - `day`, `week`, `month`, `quarter`, `year`, `custom`.
+- `separator` - used to separate multiple links. Default - `•`.
+- `scale` - allows to increase size of links. Used as multiplier of text size - so to have links twice as big as regular text use `2`. Default - `1`.
+- `shelf` - allows to limit journal displayed in block to some specific shelf.
+
+````markdown
+```journals-home
+show:
+	- day
+	- week
+	- month
+	- quarter
+	- year
+	- custom
+scale: 2
+separator: " | "
+shelf: work
+```
+````
+`````
 
 ## Contributing
 

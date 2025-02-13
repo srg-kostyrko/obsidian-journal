@@ -3,6 +3,7 @@ import type { JournalSettings } from "@/types/settings.types";
 import DisplayCodeBlock from "../DisplayCodeBlock.vue";
 import NavigationCodeBlock from "@/code-blocks/navigation/NavigationCodeBlock.vue";
 import TimelineCodeBlock from "@/code-blocks/timeline/TimelineCodeBlock.vue";
+import HomeCodeBlock from "@/code-blocks/home/HomeCodeBlock.vue";
 import BlockDivider from "../BlockDivider.vue";
 import { useFakePathData } from "@/composables/use-fake-path-data";
 import { timelineModes } from "@/code-blocks/timeline/timeline.types";
@@ -13,6 +14,11 @@ const { journalName } = defineProps<{
 }>();
 
 const path = useFakePathData(journalName);
+const customHomeSettings = `show: 
+  - day 
+  - month
+scale: 2
+separator: " | "`;
 </script>
 
 <template>
@@ -44,6 +50,31 @@ const path = useFakePathData(journalName);
     <ul>
       <li v-for="mode in timelineModes" :key="mode">{{ mode }}</li>
     </ul>
+    <BlockDivider />
+    <DisplayCodeBlock name="journals-home" />
+    <p>Home block displays links to current notes in journals.</p>
+    <p>It looks like this by default:</p>
+    <BlockDivider />
+    <HomeCodeBlock :path :config="{ show: ['day'], separator: ' • ', scale: 1 }" />
+    <BlockDivider />
+    <p>Supported settings:</p>
+    <ul>
+      <li>
+        <code>show</code> - controls what journals are displayed (by default only Today link is displayed). Supported
+        values are - <code>day</code>, <code>week</code>, <code>month</code>, <code>quarter</code>, <code>year</code>,
+        <code>custom</code>.
+      </li>
+      <li><code>separator</code> - used to separate multiple links. Default - <code> • </code>.</li>
+      <li>
+        <code>scale</code> - allows to increase size of links. Used as multiplier of text size - so to have links twice
+        as large use <code>scale: 2</code>.
+      </li>
+      <li><code>shelf</code> - allows to limit journal displayed in block to some specific shelf.</li>
+    </ul>
+    <BlockDivider />
+    <DisplayCodeBlock name="calendar-timeline"> {{ customHomeSettings }} </DisplayCodeBlock>
+    <BlockDivider />
+    <HomeCodeBlock :path :config="{ show: ['day', 'month'], separator: ' | ', scale: 2 }" />
   </div>
 </template>
 

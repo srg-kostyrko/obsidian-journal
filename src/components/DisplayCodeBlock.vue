@@ -31,5 +31,6 @@ async function copy(event: MouseEvent) {
   cursor: pointer;
   padding: var(--size-2-2);
   font-family: monospace;
+  white-space: pre;
 }
 </style>

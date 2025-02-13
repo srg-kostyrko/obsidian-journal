@@ -55,14 +55,14 @@ const list = computed(() => {
   z-index: 1;
 }
 .timeline-quarter > *::after {
-  inline-size: 100vw;
+  inline-size: 100%;
   block-size: var(--line-thickness);
   inset-inline-start: 0;
   inset-block-start: calc(var(--line-offset) * -1);
 }
 .timeline-quarter > *::before {
   inline-size: var(--line-thickness);
-  block-size: 100vh;
+  block-size: 100%;
   inset-block-start: 0;
   inset-inline-start: calc(var(--line-offset) * -1);
 }

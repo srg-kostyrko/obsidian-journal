@@ -43,6 +43,7 @@ export class HomeCodeBlockProcessor extends MarkdownRenderChild {
         ),
         separator: config.separator || " • ",
         scale: config.scale || 1,
+        shelf: config.shelf,
       };
     } catch (error) {
       console.error(error);
