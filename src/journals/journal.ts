@@ -169,6 +169,13 @@ export class Journal {
     return this.#buildMetadata(previousAnchorDate);
   }
 
+  getNoteNameForDate(date: string): string {
+    const metadata = this.get(date);
+    if (!metadata) return "";
+    const templateContext = this.#getTemplateContext(metadata);
+    return replaceTemplateVariables(this.config.value.nameTemplate, templateContext);
+  }
+
   findAll(startDate: string, endDate: string): (JournalNoteData | JournalMetadata)[] {
     const startAnchorDate = this.#anchorDateResolver.resolveForDate(startDate);
     const endAnchorDate = this.#anchorDateResolver.resolveForDate(endDate);

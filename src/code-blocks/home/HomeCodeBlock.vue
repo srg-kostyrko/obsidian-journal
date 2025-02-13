@@ -5,6 +5,7 @@ import { computed } from "vue";
 import { usePlugin } from "@/composables/use-plugin";
 import { relativeDate, today } from "@/calendar";
 import { openDate } from "@/journals/open-date";
+import { FRONTMATTER_DATE_FORMAT } from "@/constants";
 
 const { path, config } = defineProps<{ path: string; config: HomeCodeBlockConfig }>();
 const scale = computed(() => config.scale ?? 1);
@@ -21,6 +22,7 @@ const journals = computed(() => plugin.journals);
 
 const listToShow = computed(() => {
   const list = [];
+  const date = today().format(FRONTMATTER_DATE_FORMAT);
   for (const type of config.show) {
     const journalsByType = journals.value.filter((journal) => {
       return journal.type === type && (!shelf.value || journal.shelfName === shelf.value);
@@ -30,7 +32,7 @@ const listToShow = computed(() => {
       for (const journal of journalsByType) {
         list.push({
           type,
-          text: `Current ${journal.name}`,
+          text: journal.getNoteNameForDate(date),
           journalNames: [journal.name],
         });
       }
@@ -46,12 +48,12 @@ const listToShow = computed(() => {
   return list;
 });
 
-function open(type: HomeCodeBlockConfig["show"][number], journalNames: string[]) {
+function open(type: HomeCodeBlockConfig["show"][number], journalNames: string[], event: MouseEvent) {
   const date = today().format("YYYY-MM-DD");
   if (type !== "custom" && type === currentNoteJournal.value?.type) {
-    openDate(plugin, date, [currentNoteJournal.value.name]).catch(console.error);
+    openDate(plugin, date, [currentNoteJournal.value.name], undefined, event).catch(console.error);
   } else {
-    openDate(plugin, date, journalNames).catch(console.error);
+    openDate(plugin, date, journalNames, undefined, event).catch(console.error);
   }
 }
 </script>
@@ -60,7 +62,7 @@ function open(type: HomeCodeBlockConfig["show"][number], journalNames: string[])
   <div class="home-code-block">
     <template v-for="(item, index) of listToShow" :key="item.text">
       <span v-if="index > 0">{{ config.separator }}</span>
-      <a href="#" @click.stop="open(item.type, item.journalNames)">{{ item.text }}</a>
+      <a href="#" @click.stop.prevent="open(item.type, item.journalNames, $event)">{{ item.text }}</a>
     </template>
   </div>
 </template>
