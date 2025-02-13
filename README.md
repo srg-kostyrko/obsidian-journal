@@ -94,10 +94,11 @@ Quarter and Calendar timeline repeat month timeline for every month in quarter o
 
 ---
 
-`````markdown
+````markdown
 ```journals-home
 
 ```
+````
 
 Displays list of links to current notes in journals.
 Supports following settings:
@@ -121,8 +122,10 @@ separator: " | "
 shelf: work
 ```
 ````
-`````
+
+```
 
 ## Contributing
 
 Contributions via bug reports, bug fixes, documentation, and general improvements are always welcome. For more major feature work, make an issue about the feature idea / reach out to me so we can judge feasibility and how best to implement it.
+```
