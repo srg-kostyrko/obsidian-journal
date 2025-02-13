@@ -19,7 +19,7 @@ const plugin = usePlugin();
 const collidingJournals = computed(() => {
   const hashed = new Map<string, Journal[]>();
   for (const journal of plugin.journals) {
-    const hash = `${journal.config.value.nameTemplate}-${journal.config.value.folder}-${journal.config.value.dateFormat}`;
+    const hash = `${journal.config.value.nameTemplate.replaceAll("{{journal_name}}", journal.name)}-${journal.config.value.folder}-${journal.config.value.dateFormat}`;
     const list = hashed.get(hash) ?? [];
     list.push(journal);
     hashed.set(hash, list);
