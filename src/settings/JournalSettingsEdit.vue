@@ -233,7 +233,7 @@ function editCalendarViewRow(index: number) {
     row: journal.value.calendarViewBlock.rows[index],
     onSubmit: (row: NavBlockRow) => {
       if (!journal.value) return;
-      journal.value.editNavRow(index, row);
+      journal.value.editCalendarViewRow(index, row);
     },
   }).open();
 }
