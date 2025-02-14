@@ -6,9 +6,7 @@ import DatePickerModal from "../components/modals/DatePicker.modal.vue";
 import { VueModal } from "../components/modals/vue-modal";
 import { today, date_from_string } from "../calendar";
 import { openDate } from "@/journals/open-date";
-import { ShelfSuggestModal } from "@/components/suggests/shelf-suggest";
 import { useShelfProvider } from "@/composables/use-shelf";
-import { useApp } from "@/composables/use-app";
 import { usePlugin } from "@/composables/use-plugin";
 import NotesMonthView from "@/components/notes-calendar/NotesMonthView.vue";
 import NotesCalendarButton from "@/components/notes-calendar/NotesCalendarButton.vue";
@@ -16,8 +14,8 @@ import CalendarViewCustomIntervals from "./CalendarViewCustomIntervals.vue";
 import { FRONTMATTER_DATE_FORMAT } from "@/constants";
 import { useActiveNoteData } from "@/composables/use-active-note-data";
 import { defineOpenMode } from "@/utils/journals";
+import { Menu } from "obsidian";
 
-const app = useApp();
 const plugin = usePlugin();
 
 const refDateMoment = ref(today());
@@ -65,14 +63,21 @@ const isYearActive = computed(
   () => activeNoteJournal.value?.type === "year" && activeNoteData.value?.date === yearRefDate.value,
 );
 
-function selectShelf() {
-  new ShelfSuggestModal(
-    app,
-    plugin.shelves.map((s) => s.name),
-    (shelf: string | null) => {
-      selectedShelf.value = shelf;
-    },
-  ).open();
+function selectShelf(event: MouseEvent) {
+  const menu = new Menu();
+  menu.addItem((item) => {
+    item.setTitle("All journals").onClick(() => {
+      selectedShelf.value = null;
+    });
+  });
+  for (const shelf of plugin.shelves) {
+    menu.addItem((item) => {
+      item.setTitle(shelf.name).onClick(() => {
+        selectedShelf.value = shelf.name;
+      });
+    });
+  }
+  menu.showAtMouseEvent(event);
 }
 
 function navigate(amount: number, step: "month" | "year" = "month") {
