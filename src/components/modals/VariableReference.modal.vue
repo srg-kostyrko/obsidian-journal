@@ -1,12 +1,15 @@
 <script setup lang="ts">
 import DisplayVariable from "../DisplayVariable.vue";
 import type { JournalSettings } from "../../types/settings.types";
+import { computed } from "vue";
 
-defineProps<{
+const { type } = defineProps<{
   type: JournalSettings["write"]["type"];
   dateFormat: string;
 }>();
 defineEmits(["close"]);
+
+const typeDescription = computed(() => (type === "custom" ? "interval" : type));
 </script>
 
 <template>
@@ -21,25 +24,31 @@ defineEmits(["close"]);
     </div>
     <div>Name of current note</div>
 
-    <template v-if="type === 'day'">
-      <div>
-        <DisplayVariable name="date" />
-      </div>
-      <div>
-        Note date formatted using default format settings ({{ dateFormat }}).<br />
-        You can also use <DisplayVariable name="date:format" /> to override format once, and use
-        <DisplayVariable name="date+5d:format" /> to add 5 days.<br />
-        <a target="_blank" href="https://momentjs.com/docs/#/displaying/format/">Formatting reference.</a>
+    <div>
+      <DisplayVariable name="date" />
+    </div>
+    <div>
+      Note reference date formatted using default format settings ({{ dateFormat }}).<br />
+      <template v-if="type === 'week'">
+        Is usually the first day of the week. But for weeks that are considered part of next year but have several day
+        of previous year it will be the last day of week<br />
+      </template>
+      <template v-else-if="type !== 'day'">
+        Is same as first day of {{ typeDescription }}.
         <br />
-        <a target="_blank" href="https://momentjs.com/docs/#/manipulating/add/">Date manipulation reference.</a>
-      </div>
-    </template>
-    <template v-else>
+      </template>
+      You can also use <DisplayVariable name="date:format" /> to override format once, and use
+      <DisplayVariable name="date+5d:format" /> to add 5 days.<br />
+      <a target="_blank" href="https://momentjs.com/docs/#/displaying/format/">Formatting reference.</a>
+      <br />
+      <a target="_blank" href="https://momentjs.com/docs/#/manipulating/add/">Date manipulation reference.</a>
+    </div>
+    <template v-if="type !== 'day'">
       <div>
         <DisplayVariable name="start_date" />
       </div>
       <div>
-        First day of {{ type }} formatted using default format settings ({{ dateFormat }}).<br />
+        First day of {{ typeDescription }} formatted using default format settings ({{ dateFormat }}).<br />
         You can also use <DisplayVariable name="start_date:format" /> to override format once, and use
         <DisplayVariable name="start_date+5d:format" /> to add 5 days.<br />
         <a target="_blank" href="https://momentjs.com/docs/#/displaying/format/">Formatting reference.</a>
@@ -50,7 +59,7 @@ defineEmits(["close"]);
         <DisplayVariable name="end_date" />
       </div>
       <div>
-        Last day of {{ type }} formatted using default format settings ({{ dateFormat }}).<br />
+        Last day of {{ typeDescription }} formatted using default format settings ({{ dateFormat }}).<br />
         You can also use <DisplayVariable name="end_date:format" /> to override format once, and use
         <DisplayVariable name="end_date+5d:format" /> to add 5 days.<br />
         <a target="_blank" href="https://momentjs.com/docs/#/displaying/format/">Formatting reference.</a>

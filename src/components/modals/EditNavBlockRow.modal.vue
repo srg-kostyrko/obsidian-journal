@@ -20,6 +20,7 @@ import { replaceTemplateVariables } from "@/utils/template";
 import { FRONTMATTER_DATE_FORMAT } from "@/constants";
 import { today } from "@/calendar";
 import WrongWeekWarning from "../WrongWeekWarning.vue";
+import VariableReferenceHint from "../VariableReferenceHint.vue";
 
 const { currentJournal, row } = defineProps<{
   row?: NavBlockRow;
@@ -178,6 +179,7 @@ const onSubmit = handleSubmit((values) => {
     <ObsidianSetting name="Row template">
       <template #description>
         <div>
+          <VariableReferenceHint v-if="journal" :type="journal.type" :date-format="journal.dateFormat" /><br />
           With resolved variables: <b class="u-pop"> {{ resolvedTemplate }}</b>
         </div>
         <WrongWeekWarning v-if="hasWrongWeek" />
