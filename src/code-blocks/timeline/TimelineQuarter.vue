@@ -24,17 +24,22 @@ const list = computed(() => {
 </script>
 
 <template>
-  <div class="timeline-quarter">
-    <NotesMonthView
-      v-for="date in list"
-      :key="date.format('YYYY-MM-DD')"
-      :ref-date="date.format('YYYY-MM-DD')"
-      hide-outside-dates
-    />
+  <div class="timeline-quarter-container">
+    <div class="timeline-quarter">
+      <NotesMonthView
+        v-for="date in list"
+        :key="date.format('YYYY-MM-DD')"
+        :ref-date="date.format('YYYY-MM-DD')"
+        hide-outside-dates
+      />
+    </div>
   </div>
 </template>
 
 <style scoped>
+.timeline-quarter-container {
+  container-type: inline-size;
+}
 .timeline-quarter {
   --gap: var(--size-4-4);
   --line-offset: calc(var(--gap) / 2);
@@ -42,7 +47,17 @@ const list = computed(() => {
   --line-color: var(--text-faint);
   display: grid;
   gap: 0 var(--gap);
-  grid-template-columns: repeat(3, 1fr);
+  grid-template-columns: repeat(1, 1fr);
+}
+@container (min-width: 420px) {
+  .timeline-quarter {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+@container (min-width: 630px) {
+  .timeline-quarter {
+    grid-template-columns: repeat(3, 1fr);
+  }
 }
 .timeline-quarter > * {
   position: relative;
