@@ -39,13 +39,13 @@ const shouldShowShelf = computed(() => {
 const { journals } = useShelfProvider(selectedShelf);
 
 const monthRefDate = computed(() => {
-  return refDateMoment.value.startOf("month").format(FRONTMATTER_DATE_FORMAT);
+  return refDateMoment.value.clone().startOf("month").format(FRONTMATTER_DATE_FORMAT);
 });
 const quarterRefDate = computed(() => {
-  return refDateMoment.value.startOf("quarter").format(FRONTMATTER_DATE_FORMAT);
+  return refDateMoment.value.clone().startOf("quarter").format(FRONTMATTER_DATE_FORMAT);
 });
 const yearRefDate = computed(() => {
-  return refDateMoment.value.startOf("year").format(FRONTMATTER_DATE_FORMAT);
+  return refDateMoment.value.clone().startOf("year").format(FRONTMATTER_DATE_FORMAT);
 });
 
 const activeNoteData = useActiveNoteData(plugin);
@@ -81,7 +81,13 @@ function selectShelf(event: MouseEvent) {
 }
 
 function navigate(amount: number, step: "month" | "year" = "month") {
-  refDateMoment.value = refDateMoment.value.clone().add(amount, step);
+  const newDate = refDateMoment.value.clone();
+  if (amount < 0) {
+    newDate.subtract(Math.abs(amount), step);
+  } else {
+    newDate.add(amount, step);
+  }
+  refDateMoment.value = newDate;
 }
 function goToday(event: MouseEvent) {
   refDateMoment.value = today();
@@ -180,14 +186,14 @@ watch(activeNoteData, (activeNote) => {
         <ObsidianIconButton icon="chevrons-left" tooltip="Previous year" @click="navigate(-1, 'year')" />
         <ObsidianIconButton icon="chevron-left" tooltip="Previous month" @click="navigate(-1, 'month')" />
         <div class="month-header">
-          <NotesCalendarButton :date="refDate" type="month" :data-selected="isMonthActive ? '' : null" />
+          <NotesCalendarButton :date="monthRefDate" type="month" :data-selected="isMonthActive ? '' : null" />
           <NotesCalendarButton
             v-if="journals.quarter.value.length > 0"
-            :date="refDate"
+            :date="quarterRefDate"
             type="quarter"
             :data-selected="isQuarterActive ? '' : null"
           />
-          <NotesCalendarButton :date="refDate" type="year" :data-selected="isYearActive ? '' : null" />
+          <NotesCalendarButton :date="yearRefDate" type="year" :data-selected="isYearActive ? '' : null" />
         </div>
 
         <ObsidianIconButton icon="chevron-right" tooltip="Next month" @click="navigate(1, 'month')" />
