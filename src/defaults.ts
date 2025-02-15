@@ -34,7 +34,7 @@ export const defaultPluginSettings: PluginSettings = {
     leaf: "right",
     weeks: "left",
     todayMode: "navigate",
-    pickMode: "navigate",
+    pickMode: "create",
     todayStyle: {
       color: { type: "theme", name: "text-accent" },
       background: { type: "transparent" },
