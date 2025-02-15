@@ -6,11 +6,10 @@ defineProps<{
   icon: string;
   tooltip?: string;
 }>();
-const emit = defineEmits(["click"]);
 </script>
 
 <template>
-  <ObsidianButton :tooltip="tooltip" flat class="icon-button" @click="emit('click')">
+  <ObsidianButton :tooltip="tooltip" flat class="icon-button">
     <ObsidianIcon :name="icon" />
   </ObsidianButton>
 </template>
