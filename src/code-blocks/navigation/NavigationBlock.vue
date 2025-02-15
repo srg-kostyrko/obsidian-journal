@@ -7,6 +7,7 @@ import type { NavBlockRow } from "@/types/settings.types";
 import { usePlugin } from "@/composables/use-plugin";
 import { useDecorations } from "@/composables/use-decorations";
 import CalendarDecoration from "@/components/notes-calendar/decorations/CalendarDecoration.vue";
+import { defineOpenMode } from "@/utils/journals";
 
 const { refDate, journalName, preventNavigation } = defineProps<{
   refDate: string;
@@ -31,7 +32,7 @@ const decorationsList = computed(() => {
 });
 const decorationsStyles = useDecorations(plugin, refDate, decorationsList);
 
-async function navigate(type: NavBlockRow["link"], date: string, journalName?: string) {
+async function navigate(type: NavBlockRow["link"], date: string, event: MouseEvent, journalName?: string) {
   if (preventNavigation) return;
   if (type === "none") return;
   if (type === "self") {
@@ -42,7 +43,7 @@ async function navigate(type: NavBlockRow["link"], date: string, journalName?: s
     await openDateInJournal(plugin, date, journalName);
   } else {
     const journalsToUse = journals[type].value.map((journal) => journal.name);
-    await openDate(plugin, date, journalsToUse);
+    await openDate(plugin, date, journalsToUse, false, event && defineOpenMode(event), event);
   }
 }
 </script>

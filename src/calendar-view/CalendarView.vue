@@ -94,15 +94,7 @@ function goToday(event: MouseEvent) {
   if (plugin.calendarViewSettings.todayMode === "create") {
     openDay(refDate.value, event);
   } else if (plugin.calendarViewSettings.todayMode === "navigate") {
-    const journals: string[] = [];
-    for (const journal of plugin.journals) {
-      const anchorDate = journal.resolveAnchorDate(refDate.value);
-      if (!anchorDate) continue;
-      const index = plugin.index.getJournalIndex(journal.name);
-      if (!index) continue;
-      if (index.get(anchorDate)) journals.push(journal.name);
-    }
-    openDate(plugin, refDate.value, journals, defineOpenMode(event), event).catch(console.error);
+    openDay(refDate.value, event, true);
   }
 }
 function pickDate(event: MouseEvent) {
@@ -117,15 +109,7 @@ function pickDate(event: MouseEvent) {
         if (plugin.calendarViewSettings.pickMode === "create") {
           openDay(date, event);
         } else if (plugin.calendarViewSettings.pickMode === "navigate") {
-          const journals: string[] = [];
-          for (const journal of plugin.journals) {
-            const anchorDate = journal.resolveAnchorDate(date);
-            if (!anchorDate) continue;
-            const index = plugin.index.getJournalIndex(journal.name);
-            if (!index) continue;
-            if (index.get(anchorDate)) journals.push(journal.name);
-          }
-          openDate(plugin, date, journals, event.metaKey ? "tab" : "active", event).catch(console.error);
+          openDay(date, event, true);
         }
       },
     },
@@ -133,12 +117,13 @@ function pickDate(event: MouseEvent) {
   ).open();
 }
 
-function openDay(date: string, event: MouseEvent) {
+function openDay(date: string, event: MouseEvent, existing = false) {
   openDate(
     plugin,
     date,
     journals.day.value.map((journal) => journal.name),
-    event.metaKey ? "tab" : "active",
+    existing,
+    defineOpenMode(event),
     event,
   ).catch(console.error);
 }

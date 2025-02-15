@@ -15,7 +15,16 @@ const { journal, refDate, defaultFormat, row } = defineProps<{
   defaultFormat: string;
   journal: Journal;
 }>();
-const emit = defineEmits<(event: "navigate", type: NavBlockRow["link"], date: string, journalName?: string) => void>();
+const emit =
+  defineEmits<
+    (
+      event: "navigate",
+      type: NavBlockRow["link"],
+      date: string,
+      originalEvent: MouseEvent,
+      journalName?: string,
+    ) => void
+  >();
 
 const anchorDate = computed(() => {
   return journal.resolveAnchorDate(refDate);
@@ -72,12 +81,12 @@ const cursor = computed(() => (isClickable.value ? "pointer" : "default"));
 
 const decorationsStyles = useDecorations(plugin, anchorDate, decorations[journal.type]);
 
-function onClick() {
+function onClick(event: MouseEvent) {
   if (row.link === "none") return;
   if (row.link === "journal") {
-    emit("navigate", "journal", refDate, journal.name);
+    emit("navigate", "journal", refDate, event, journal.name);
   } else {
-    emit("navigate", row.link, refDate);
+    emit("navigate", row.link, refDate, event);
   }
 }
 </script>

@@ -6,6 +6,7 @@ import { usePlugin } from "@/composables/use-plugin";
 import { relativeDate, today } from "@/calendar";
 import { openDate } from "@/journals/open-date";
 import { FRONTMATTER_DATE_FORMAT } from "@/constants";
+import { defineOpenMode } from "@/utils/journals";
 
 const { path, config } = defineProps<{ path: string; config: HomeCodeBlockConfig }>();
 const scale = computed(() => config.scale ?? 1);
@@ -51,9 +52,9 @@ const listToShow = computed(() => {
 function open(type: HomeCodeBlockConfig["show"][number], journalNames: string[], event: MouseEvent) {
   const date = today().format("YYYY-MM-DD");
   if (type !== "custom" && type === currentNoteJournal.value?.type) {
-    openDate(plugin, date, [currentNoteJournal.value.name], undefined, event).catch(console.error);
+    openDate(plugin, date, [currentNoteJournal.value.name], false, defineOpenMode(event), event).catch(console.error);
   } else {
-    openDate(plugin, date, journalNames, undefined, event).catch(console.error);
+    openDate(plugin, date, journalNames, false, defineOpenMode(event), event).catch(console.error);
   }
 }
 </script>

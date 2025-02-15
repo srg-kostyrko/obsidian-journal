@@ -32,6 +32,7 @@ function open(event: MouseEvent) {
     plugin,
     date,
     journals[type].value.map((journal) => journal.name),
+    false,
     defineOpenMode(event),
     event,
   ).catch(console.error);
