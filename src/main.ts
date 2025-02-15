@@ -43,6 +43,10 @@ export default class JournalPluginImpl extends Plugin implements JournalPlugin {
   #notesManager: NotesManager = new ObsidianNotesManager(this);
   #appManager: AppManager = new ObsidianManager(this);
 
+  get hasMigrations() {
+    return this.#config.value.pendingMigrations.length > 0;
+  }
+
   get notesManager() {
     return this.#notesManager;
   }
@@ -418,11 +422,11 @@ export default class JournalPluginImpl extends Plugin implements JournalPlugin {
       } else {
         const { migratedData, needsUser: needsUserMigration } = migrateData(saved);
         this.#config.value = migratedData;
+        await this.saveData(migratedData).catch(console.error);
         if (needsUserMigration) {
           this.#showMigrationModal();
         }
       }
-      this.#config.value = saved;
     }
   }
 

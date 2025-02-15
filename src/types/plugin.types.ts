@@ -5,6 +5,8 @@ import type { Journal } from "../journals/journal";
 import type { PendingMigration } from "./migration.types";
 
 export interface JournalPlugin extends Plugin {
+  readonly hasMigrations: boolean;
+
   readonly calendarSettings: PluginSettings["calendar"];
   readonly calendarViewSettings: PluginSettings["calendarView"];
   readonly uiSettings: PluginSettings["ui"];

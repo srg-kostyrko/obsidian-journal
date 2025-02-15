@@ -46,6 +46,7 @@ export function migrateV1toV2(oldData: PluginSettingsV1): PluginSettings {
   newData.pendingMigrations.push({
     type: "v1-v2",
     shelfDecided: false,
+    frontmatterDecided: false,
     journals: Object.values(oldData.journals),
   });
 
@@ -71,8 +72,8 @@ export async function migrateIntervalJournal(
 
   settings.name = oldSettings.name;
   settings.autoCreate = oldSettings.createOnStartup;
-  settings.nameTemplate = oldSettings.nameTemplate;
-  settings.dateFormat = oldSettings.dateFormat;
+  settings.nameTemplate = oldSettings.nameTemplate || "{{journal_name}} {{index}}";
+  settings.dateFormat = oldSettings.dateFormat || "YYYY-MM-DD";
   settings.folder = oldSettings.folder;
   if (oldSettings.template) {
     settings.templates.push(oldSettings.template);
@@ -185,7 +186,7 @@ async function updateFrontMatterInterval(
     if (!metadata) continue;
     const { frontmatter } = metadata;
     if (!frontmatter) continue;
-    if (!(FRONTMATTER_NAME_KEY in frontmatter)) return;
+    if (!(FRONTMATTER_NAME_KEY in frontmatter)) continue;
     const journalId = frontmatter[FRONTMATTER_NAME_KEY];
     if (journalId !== oldSettings.id) continue;
 
@@ -196,10 +197,18 @@ async function updateFrontMatterInterval(
       if (anchorDate) {
         frontmatter[FRONTMATTER_NAME_KEY] = journal.name;
         frontmatter[journal.frontmatterDate] = date;
-        if (endDate !== journal.resolveEndDate(anchorDate)) {
+        if (journal.config.value.frontmatter.addStartDate) {
+          frontmatter[journal.frontmatterStartDate] = journal.resolveStartDate(anchorDate);
+        } else {
+          delete frontmatter[FRONTMATTER_START_DATE_KEY];
+        }
+        if (journal.config.value.frontmatter.addEndDate || endDate !== journal.resolveEndDate(anchorDate)) {
           frontmatter[journal.frontmatterEndDate] = endDate;
+        } else {
+          delete frontmatter[FRONTMATTER_END_DATE_KEY];
         }
         frontmatter[journal.frontmatterIndex] = frontmatter[FRONTMATTER_INDEX_KEY];
+        delete frontmatter[FRONTMATTER_INDEX_KEY];
       } else {
         delete frontmatter[FRONTMATTER_NAME_KEY];
         delete frontmatter[FRONTMATTER_START_DATE_KEY];
@@ -289,7 +298,7 @@ async function updateFrontmatterCalendarSection(
     if (!metadata) continue;
     const { frontmatter } = metadata;
     if (!frontmatter) continue;
-    if (!(FRONTMATTER_NAME_KEY in frontmatter)) return;
+    if (!(FRONTMATTER_NAME_KEY in frontmatter)) continue;
     const journalId = frontmatter[FRONTMATTER_NAME_KEY];
     if (journalId !== oldSettings.id) continue;
     const section = frontmatter[FRONTMATTER_SECTION_KEY];
@@ -301,9 +310,22 @@ async function updateFrontmatterCalendarSection(
       if (anchorDate) {
         frontmatter[FRONTMATTER_NAME_KEY] = journal.name;
         frontmatter[journal.frontmatterDate] = date;
+        if (journal.config.value.frontmatter.addStartDate) {
+          frontmatter[journal.frontmatterStartDate] = journal.resolveStartDate(anchorDate);
+        } else {
+          delete frontmatter[FRONTMATTER_START_DATE_KEY];
+        }
+        if (journal.config.value.frontmatter.addEndDate) {
+          frontmatter[journal.frontmatterEndDate] = journal.resolveEndDate(anchorDate);
+        } else {
+          delete frontmatter[FRONTMATTER_END_DATE_KEY];
+        }
+        delete frontmatter[FRONTMATTER_SECTION_KEY];
       } else {
         delete frontmatter[FRONTMATTER_NAME_KEY];
+        delete frontmatter[FRONTMATTER_SECTION_KEY];
         delete frontmatter[FRONTMATTER_START_DATE_KEY];
+        delete frontmatter[FRONTMATTER_END_DATE_KEY];
         delete frontmatter[FRONTMATTER_INDEX_KEY];
       }
     });

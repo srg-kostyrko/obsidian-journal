@@ -12,7 +12,7 @@ const { journal, keepFrontmatter } = defineProps<{
   journal: CalendarConfig;
   keepFrontmatter: boolean;
 }>();
-const emit = defineEmits<{ next: [] }>();
+const emit = defineEmits<{ next: []; finished: [] }>();
 
 const plugin = usePlugin();
 
@@ -44,6 +44,7 @@ async function startProcessing() {
     },
     keepFrontmatter,
   );
+  emit("finished");
   stage.value = "done";
 }
 
@@ -51,9 +52,7 @@ onMounted(async () => {
   if (sectionCount === 0) {
     emit("next");
   }
-  if (sectionCount > 1) {
-    stage.value = "names";
-  } else if (sectionCount === 1) {
+  if (sectionCount === 1) {
     dayName.value = journal.name;
     weekName.value = journal.name;
     monthName.value = journal.name;
@@ -103,7 +102,7 @@ onMounted(async () => {
     <div v-else-if="stage === 'processing'" class="loader-continer">
       <ObsidianIcon name="loader" />
     </div>
-    <ObsidianSetting v-else description="Done!">
+    <ObsidianSetting v-else name="Done!">
       <ObsidianButton cta @click="$emit('next')">Next</ObsidianButton>
     </ObsidianSetting>
   </div>

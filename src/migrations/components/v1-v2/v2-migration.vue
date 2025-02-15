@@ -19,15 +19,30 @@ let step = ref<"decideFrontmatter" | "decideShelf" | "journal">("decideFrontmatt
 let currentJournal = ref<JournalConfigV1 | null>();
 
 onMounted(() => {
-  if (migration.journals.length > 0) {
-    step.value = "journal";
-    currentJournal.value = migration.journals[0];
-  } else {
+  if (migration.journals.length === 0) {
     emit("finished");
+  } else if (migration.frontmatterDecided) {
+    if (migration.shelfDecided) {
+      step.value = "journal";
+      currentJournal.value = migration.journals[0];
+    } else {
+      step.value = "decideShelf";
+    }
   }
 });
 
+function finished() {
+  if (currentJournal.value) {
+    const { journals } = migration;
+    journals.shift();
+  }
+}
+
 function next() {
+  if (step.value === "decideFrontmatter") {
+    // eslint-disable-next-line vue/no-mutating-props
+    migration.frontmatterDecided = true;
+  }
   if (step.value === "decideShelf") {
     // eslint-disable-next-line vue/no-mutating-props
     migration.shelfDecided = true;
@@ -49,8 +64,6 @@ function next() {
   }
   if (currentJournal.value) {
     currentJournal.value = null;
-    const { journals } = migration;
-    journals.shift();
   }
   if (migration.journals.length > 0) {
     step.value = "journal";
@@ -70,12 +83,14 @@ function next() {
         v-if="currentJournal.type === 'calendar'"
         :journal="currentJournal"
         :keep-frontmatter="keepFrontOldMatter"
+        @finished="finished"
         @next="next"
       />
       <MigrateInterval
         v-else-if="currentJournal.type === 'interval'"
         :journal="currentJournal"
         :keep-frontmatter="keepFrontOldMatter"
+        @finished="finished"
         @next="next"
       />
     </div>

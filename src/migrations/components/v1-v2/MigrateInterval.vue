@@ -11,13 +11,15 @@ const { journal, keepFrontmatter } = defineProps<{
   journal: IntervalConfig;
   keepFrontmatter: boolean;
 }>();
-defineEmits<{ next: [] }>();
+const emit = defineEmits<{ next: []; finished: [] }>();
 
 const plugin = usePlugin();
 const is_processing = ref(true);
 
 onMounted(async () => {
+  is_processing.value = true;
   await migrateIntervalJournal(plugin, journal, keepFrontmatter);
+  emit("finished");
   is_processing.value = false;
 });
 </script>
@@ -30,7 +32,7 @@ onMounted(async () => {
     <div v-if="is_processing" class="loader-continer">
       <ObsidianIcon name="loader" />
     </div>
-    <ObsidianSetting v-else description="Done!">
+    <ObsidianSetting v-else name="Done!">
       <ObsidianButton cta @click="$emit('next')">Next</ObsidianButton>
     </ObsidianSetting>
   </div>

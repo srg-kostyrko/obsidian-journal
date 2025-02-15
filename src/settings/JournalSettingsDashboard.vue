@@ -11,6 +11,9 @@ import IconedRow from "@/components/IconedRow.vue";
 import ColorPicker from "@/components/ColorPicker.vue";
 import CalendarWeekSettings from "@/components/CalendarWeekSettings.vue";
 import type { Journal } from "@/journals/journal";
+import ObsidianButton from "@/components/obsidian/ObsidianButton.vue";
+import { VueModal } from "@/components/modals/vue-modal";
+import MigrationModal from "@/migrations/components/MigrationModal.vue";
 
 const emit = defineEmits<(event: "edit" | "organize" | "bulk-add", name: string) => void>();
 
@@ -26,9 +29,19 @@ const collidingJournals = computed(() => {
   }
   return [...hashed.values()].filter((list) => list.length > 1);
 });
+
+function migrate() {
+  new VueModal(plugin, "Migrate plugin data", MigrationModal).open();
+}
 </script>
 
 <template>
+  <div v-if="plugin.hasMigrations" class="journal-warning">
+    <ObsidianSetting name="Some data is pending migration" heading>
+      <ObsidianButton cta @click="migrate">Migrate</ObsidianButton>
+    </ObsidianSetting>
+  </div>
+
   <ObsidianSetting name="Use shelves?">
     <template #description> # TODO add description </template>
     <ObsidianToggle v-model="plugin.usesShelves" />
@@ -112,6 +125,9 @@ const collidingJournals = computed(() => {
 .journal-warning {
   border: 1px solid var(--text-error);
   padding: var(--size-2-2);
+}
+.journal-warning :deep(.setting-item) {
+  padding: 0;
 }
 .journal-warning :deep(.setting-item--heading .setting-item-name) {
   color: var(--text-error);
