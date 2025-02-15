@@ -7,7 +7,12 @@ import type {
   OpenMode,
   WriteCustom,
 } from "../types/settings.types";
-import type { AnchorDateResolver, JournalAnchorDate, JournalMetadata, JournalNoteData } from "../types/journal.types";
+import {
+  JournalAnchorDate,
+  type AnchorDateResolver,
+  type JournalMetadata,
+  type JournalNoteData,
+} from "../types/journal.types";
 import { normalizePath, TFile } from "obsidian";
 import { replaceTemplateVariables } from "../utils/template";
 import type { TemplateContext } from "../types/template.types";
@@ -27,6 +32,7 @@ import type { JournalsIndex } from "./journals-index";
 
 export class Journal {
   #anchorDateResolver: AnchorDateResolver;
+  #dateIndexCache = new Map<JournalAnchorDate, number | undefined>();
 
   constructor(
     public readonly name: string,
@@ -594,6 +600,8 @@ export class Journal {
   #resolveIndex(anchorDate: JournalAnchorDate): number | undefined {
     if (!this.config.value.index.enabled) return undefined;
     if (!this.config.value.index.anchorDate || !this.config.value.index.anchorIndex) return undefined;
+    if (this.#dateIndexCache.has(anchorDate)) return this.#dateIndexCache.get(anchorDate);
+
     const before = this.previous(anchorDate, true);
     if (before?.index) {
       const repeats = this.#anchorDateResolver.countRepeats(before.date, anchorDate);
@@ -601,6 +609,7 @@ export class Journal {
       if (this.config.value.index.type === "reset_after") {
         index %= this.config.value.index.resetAfter;
       }
+      this.#dateIndexCache.set(anchorDate, index);
       return index;
     }
     const after = this.next(anchorDate, true);
@@ -610,6 +619,7 @@ export class Journal {
       if (this.config.value.index.type === "reset_after" && index < 0) {
         index *= -1;
       }
+      this.#dateIndexCache.set(anchorDate, index);
       return index;
     }
     const anchor = date_from_string(this.config.value.index.anchorDate);
@@ -618,14 +628,17 @@ export class Journal {
       anchor.isAfter(anchorDate) &&
       this.config.value.index.type === "increment" &&
       !this.config.value.index.allowBefore
-    )
+    ) {
+      this.#dateIndexCache.set(anchorDate, undefined);
       return undefined;
+    }
     if (anchor.isBefore(anchorDate)) {
       const repeats = this.#anchorDateResolver.countRepeats(this.config.value.index.anchorDate, anchorDate);
       let index = this.config.value.index.anchorIndex + repeats;
       if (this.config.value.index.type === "reset_after") {
         index %= this.config.value.index.resetAfter;
       }
+      this.#dateIndexCache.set(anchorDate, index);
       return index;
     }
     const repeats = this.#anchorDateResolver.countRepeats(anchorDate, this.config.value.index.anchorDate);
@@ -633,6 +646,7 @@ export class Journal {
     if (this.config.value.index.type === "reset_after" && index < 0) {
       index *= -1;
     }
+    this.#dateIndexCache.set(anchorDate, index);
     return index;
   }
 
