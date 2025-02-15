@@ -23,7 +23,8 @@ const plugin = usePlugin();
 const { journals, decorations } = useShelfData();
 const isActionable = computed(() => !inactive && journals[type].value.length > 0);
 const format = computed(() => calendarFormats[type]);
-const decorationsStyles = useDecorations(plugin, date, decorations[type]);
+const _date = computed(() => date);
+const decorationsStyles = useDecorations(plugin, _date, decorations[type]);
 
 function open(event: MouseEvent) {
   if (!isActionable.value) return;
