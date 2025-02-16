@@ -1,5 +1,10 @@
 <script setup lang="ts">
-import type { BorderSettings, JournalDecorationsStyle } from "@/types/settings.types";
+import type {
+  BorderSettings,
+  JournalDecorationIcon,
+  JournalDecorationShape,
+  JournalDecorationsStyle,
+} from "@/types/settings.types";
 import { computed } from "vue";
 import DecorationShape from "./DecorationShape.vue";
 import DecorationCorner from "./DecorationCorner.vue";
@@ -19,9 +24,29 @@ const textColor = computed(() => {
   return colorToString(decoration.color);
 });
 
-const shapeDecorations = computed(() => props.styles.filter((d) => d.type === "shape"));
 const cornerDecorations = computed(() => props.styles.filter((d) => d.type === "corner"));
-const iconDecorations = computed(() => props.styles.filter((d) => d.type === "icon"));
+
+const placedDecorations = computed(() => {
+  const placed = {
+    left_top: [],
+    left_middle: [],
+    left_bottom: [],
+    center_top: [],
+    center_middle: [],
+    center_bottom: [],
+    right_top: [],
+    right_middle: [],
+    right_bottom: [],
+  } as Record<string, (JournalDecorationShape | JournalDecorationIcon)[]>;
+
+  for (const style of props.styles) {
+    if (style.type === "shape" || style.type === "icon") {
+      placed[`${style.placement_x}_${style.placement_y}`].push(style);
+    }
+  }
+
+  return placed;
+});
 
 const borderDecorations = computed(() => props.styles.filter((d) => d.type === "border"));
 const borderStyle = computed(() => {
@@ -63,10 +88,18 @@ function toBorderStyle(side: BorderSettings) {
 
 <template>
   <span class="calendar-decoration" :style="borderStyle">
-    <slot></slot>
-    <DecorationShape v-for="(decoration, index) in shapeDecorations" :key="index" :decoration="decoration" />
     <DecorationCorner v-for="(decoration, index) in cornerDecorations" :key="index" :decoration="decoration" />
-    <DecorationIcon v-for="(decoration, index) in iconDecorations" :key="index" :decoration="decoration" />
+    <span class="decoration-holder">
+      <template v-for="(placed, key) in placedDecorations" :key="key">
+        <span v-if="placed.length > 0" :class="`place place-${key}`">
+          <template v-for="(decoration, index) in placed" :key="index">
+            <DecorationIcon v-if="decoration.type === 'icon'" :decoration="decoration" />
+            <DecorationShape v-else-if="decoration.type === 'shape'" :decoration="decoration" />
+          </template>
+        </span>
+      </template>
+    </span>
+    <slot></slot>
   </span>
 </template>
 
@@ -79,5 +112,63 @@ function toBorderStyle(side: BorderSettings) {
   align-items: center;
   background-color: v-bind(background);
   color: v-bind(textColor);
+}
+
+.decoration-holder {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  grid-template-rows: repeat(3, 1fr);
+}
+.place {
+  display: flex;
+  gap: 2px;
+}
+.place-left_top {
+  grid-area: 1/1;
+  justify-content: flex-start;
+  align-items: flex-start;
+}
+.place_left-center {
+  grid-area: 2/1;
+  justify-content: flex-start;
+  align-items: center;
+}
+.place-left_bottom {
+  grid-area: 3/1;
+  justify-content: flex-start;
+  align-items: flex-end;
+}
+.place-center_top {
+  grid-area: 1/2;
+  justify-content: center;
+  align-items: flex-start;
+}
+.place-center_middle {
+  grid-area: 2/2;
+  justify-content: center;
+  align-items: center;
+}
+.place-center_bottom {
+  grid-area: 3/2;
+  justify-content: center;
+  align-items: flex-end;
+}
+.place-right_top {
+  grid-area: 1/3;
+  justify-content: flex-end;
+  align-items: flex-start;
+}
+.place-right_middle {
+  grid-area: 2/3;
+  justify-content: flex-end;
+  align-items: center;
+}
+.place-right_bottom {
+  grid-area: 3/3;
+  justify-content: flex-end;
+  align-items: flex-end;
 }
 </style>

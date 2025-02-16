@@ -11,15 +11,11 @@ const color = computed(() => colorToString(props.decoration.color));
 </script>
 
 <template>
-  <div
-    class="shape-decoration"
-    :class="[`shape-${decoration.shape} x-${decoration.placement_x} y-${decoration.placement_y}`]"
-  ></div>
+  <div class="shape-decoration" :class="[`shape-${decoration.shape}`]"></div>
 </template>
 
 <style scoped>
 .shape-decoration {
-  position: absolute;
   --size: 0.4em;
 }
 .shape-circle {
@@ -60,25 +56,5 @@ const color = computed(() => colorToString(props.decoration.color));
   border-top: calc(var(--size) * 0.5) solid transparent;
   border-bottom: calc(var(--size) * 0.5) solid transparent;
   border-left: var(--size) solid v-bind(color);
-}
-.x-left {
-  left: 0;
-}
-.x-center {
-  left: 50%;
-  margin-left: calc(var(--size) * -0.5);
-}
-.x-right {
-  right: 0;
-}
-.y-top {
-  top: 0;
-}
-.y-middle {
-  top: 50%;
-  margin-top: calc(var(--size) * -0.5);
-}
-.y-bottom {
-  bottom: 0;
 }
 </style>
