@@ -22,8 +22,10 @@ jobs:
 
       - name: get version
         run: echo "PACKAGE_VERSION=$(node -p "require('./manifest-beta.json').version")" >> $GITHUB_ENV
-      - run: echo ${env.PACKAGE_VERSION}
-      - run: echo ${process.env.PACKAGE_VERSION}
+      - name: print version
+        run: echo ${env.PACKAGE_VERSION}
+      - name: print env version
+        run: echo ${process.env.PACKAGE_VERSION}
       - name: Create release
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
