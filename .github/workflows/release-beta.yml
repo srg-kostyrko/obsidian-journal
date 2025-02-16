@@ -1,5 +1,5 @@
 permissions: write-all
-name: Release Obsidian plugin
+name: Release Obsidian plugin (beta)
 
 on: workflow_dispatch
 
