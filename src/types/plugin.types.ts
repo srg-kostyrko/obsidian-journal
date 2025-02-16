@@ -55,6 +55,7 @@ export interface NotesManager {
   renameNote(path: string, newPath: string): Promise<void>;
   getNoteContent(path: string): Promise<string>;
   tryApplyingTemplater(templatePath: string, notePath: string, content: string): Promise<string>;
+  tryTemplaterCursorJump(notePath: string): Promise<boolean>;
 }
 
 export interface AppManager {

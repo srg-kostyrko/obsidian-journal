@@ -29,6 +29,7 @@ import { date_from_string, today } from "../calendar";
 import { CustomIntervalResolver } from "./custom-interval";
 import type { AppManager, NotesManager } from "@/types/plugin.types";
 import type { JournalsIndex } from "./journals-index";
+import moment from "moment";
 
 export class Journal {
   #anchorDateResolver: AnchorDateResolver;
@@ -201,9 +202,9 @@ export class Journal {
   }
 
   async open(metadata: JournalMetadata, openMode?: OpenMode): Promise<void> {
-    const file = await this.#ensureNote(metadata);
+    const [file, isNew] = await this.#ensureNote(metadata);
     if (!file) return;
-    await this.#openFile(file, openMode);
+    await this.#openFile(file, openMode, isNew);
   }
 
   resolveAnchorDate(date: string): JournalAnchorDate | null {
@@ -387,25 +388,30 @@ export class Journal {
     await this.#ensureNote(metadata);
   }
 
-  async #openFile(path: string, openMode: OpenMode = "active"): Promise<void> {
+  async #openFile(path: string, openMode: OpenMode = "active", isNew = false): Promise<void> {
     await this.notesManager.openNote(path, openMode === "active" ? undefined : openMode);
+    if (isNew) {
+      await this.notesManager.tryTemplaterCursorJump(path);
+    }
   }
 
-  async #ensureNote(metadata: JournalMetadata): Promise<string | null> {
+  async #ensureNote(metadata: JournalMetadata): Promise<[string | null, boolean]> {
     const filePath = this.getNotePath(metadata);
+    let isNew = false;
     if (!this.notesManager.nodeExists(filePath)) {
       const templateContext = this.#getTemplateContext(metadata);
       const noteName = replaceTemplateVariables(this.config.value.nameTemplate, templateContext);
       if (this.config.value.confirmCreation && !(await this.notesManager.confirmNoteCreation(this.name, noteName))) {
-        return null;
+        return [null, false];
       }
+      isNew = true;
       await this.notesManager.createNote(filePath, "");
       templateContext.note_name = { type: "string", value: noteName };
       const content = await this.#getNoteContent(filePath, templateContext);
       if (content) await this.notesManager.updateNote(filePath, content);
     }
     await this.#ensureFrontMatter(filePath, metadata);
-    return filePath;
+    return [filePath, isNew];
   }
 
   getConfiguredPathData(metadata: JournalMetadata): [string, string] {
@@ -457,7 +463,9 @@ export class Journal {
   }
 
   #getTemplateContext(metadata: JournalMetadata): TemplateContext {
-    return {
+    // eslint-disable-next-line @typescript-eslint/no-base-to-string
+    const now = String(moment());
+    const context: TemplateContext = {
       date: {
         type: "date",
         value: metadata.date,
@@ -481,7 +489,36 @@ export class Journal {
         type: "number",
         value: metadata.index,
       },
+      note_name: {
+        type: "string",
+        value: "",
+      },
+      title: {
+        type: "string",
+        value: "",
+      },
+      time: {
+        type: "date",
+        value: now,
+        defaultFormat: "HH:mm",
+      },
+      current_time: {
+        type: "date",
+        value: now,
+        defaultFormat: "HH:mm",
+      },
+      current_date: {
+        type: "date",
+        value: now,
+        defaultFormat: "YYYY-MM-DD",
+      },
     };
+    const title = replaceTemplateVariables(this.config.value.nameTemplate, context);
+    if (title) {
+      context.title.value = title;
+      context.note_name.value = title;
+    }
+    return context;
   }
 
   async #getNoteContent(path: string, context: TemplateContext): Promise<string> {

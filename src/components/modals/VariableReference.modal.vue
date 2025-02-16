@@ -23,7 +23,10 @@ const typeDescription = computed(() => (type === "custom" ? "interval" : type));
       <DisplayVariable name="note_name" />
     </div>
     <div>Name of current note</div>
-
+    <div>
+      <DisplayVariable name="title" />
+    </div>
+    <div>Name of current note (to support core template variable)</div>
     <div>
       <DisplayVariable name="date" />
     </div>
@@ -71,6 +74,40 @@ const typeDescription = computed(() => (type === "custom" ? "interval" : type));
       <DisplayVariable name="index" />
     </div>
     <div>Index of current {{ type === "custom" ? "interval" : type }} if enabled.</div>
+
+    <div>
+      <DisplayVariable name="current_date" />
+    </div>
+    <div>
+      Current date (in YYYY-MM-DD format)<br />
+      You can also use <DisplayVariable name="current_date:format" /> to override format once, and use
+      <DisplayVariable name="current_date+5d:format" /> to add 5 days.<br />
+      <a target="_blank" href="https://momentjs.com/docs/#/displaying/format/">Formatting reference.</a>
+      <br />
+      <a target="_blank" href="https://momentjs.com/docs/#/manipulating/add/">Date manipulation reference.</a>
+    </div>
+    <div>
+      <DisplayVariable name="time" />
+    </div>
+    <div>
+      Current time (in HH:mm format) <br />
+      You can also use <DisplayVariable name="time:format" /> to override format once, and use
+      <DisplayVariable name="time+5h:format" /> to add 5 hours.<br />
+      <a target="_blank" href="https://momentjs.com/docs/#/displaying/format/">Formatting reference.</a>
+      <br />
+      <a target="_blank" href="https://momentjs.com/docs/#/manipulating/add/">Date manipulation reference.</a>
+    </div>
+    <div>
+      <DisplayVariable name="current_time" />
+    </div>
+    <div>
+      Current time (in HH:mm format) <br />
+      You can also use <DisplayVariable name="time:format" /> to override format once, and use
+      <DisplayVariable name="time+5h:format" /> to add 5 hours.<br />
+      <a target="_blank" href="https://momentjs.com/docs/#/displaying/format/">Formatting reference.</a>
+      <br />
+      <a target="_blank" href="https://momentjs.com/docs/#/manipulating/add/">Date manipulation reference.</a>
+    </div>
   </div>
 </template>
 

@@ -2,6 +2,41 @@
 
 All notable changes to this project will be documented in this file.
 
+## [1.4.3] - 2024-10-23
+
+### Bug Fixes
+
+- Support time and title template variables
+
+### Features
+
+- Support templater cursor
+
+## [1.4.2] - 2024-10-15
+
+### Bug Fixes
+
+- Fix bulk node processing
+
+## [1.4.1] - 2024-10-14
+
+### Bug Fixes
+
+- Fix adding existing notes to journal
+
+## [1.4.0] - 2024-07-07
+
+### Bug Fixes
+
+- Prevent failures on unexpected frontmatter data
+- Fix indexing inconsistencies
+- Improve calendar styles
+- More calendar view improvements
+
+### Features
+
+- Add relative date calculations to date template variables
+
 ## [1.3.0] - 2024-03-31
 
 ### Bug Fixes

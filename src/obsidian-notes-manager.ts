@@ -2,7 +2,7 @@ import { type MarkdownView, TFile, type App, type PaneType } from "obsidian";
 import type { JournalPlugin, NotesManager } from "./types/plugin.types";
 import { VueModal } from "./components/modals/vue-modal";
 import ConfirmNoteCreationModal from "./components/modals/ConfirmNoteCreation.modal.vue";
-import { tryApplyingTemplater } from "./utils/template";
+import { tryApplyingTemplater, tryTemplaterCursorJump } from "./utils/template";
 
 // TODO getAbstractFileByPath replace with getFileByPath using wrapper
 export class ObsidianNotesManager implements NotesManager {
@@ -117,6 +117,13 @@ export class ObsidianNotesManager implements NotesManager {
     if (!note) return content;
     if (!(note instanceof TFile)) return content;
     return tryApplyingTemplater(this.app, templateFile, note, content);
+  }
+
+  async tryTemplaterCursorJump(notePath: string): Promise<boolean> {
+    const note = this.app.vault.getAbstractFileByPath(notePath);
+    if (!note) return false;
+    if (!(note instanceof TFile)) return false;
+    return await tryTemplaterCursorJump(this.app, note);
   }
 
   async #ensureFolderExists(path: string): Promise<void> {

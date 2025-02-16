@@ -1,4 +1,4 @@
-import { type TFile, type App } from "obsidian";
+import { type TFile, type App, moment } from "obsidian";
 import type { TemplaterPlugin } from "../types/templater.types";
 import type { TemplateContext } from "../types/template.types";
 import { date_from_string } from "../calendar";
@@ -27,6 +27,36 @@ export function replaceTemplateVariables(template: string, context: TemplateCont
       }
     }
   }
+  const now = moment();
+  const timeFormat = "HH:mm";
+  content = content.replaceAll(
+    /{{\s*(time|current_time)\s*(([+-]\d+)([yqmwdhs]))?\s*(:(.*?))?}}/gi,
+    (_, _variableName, calc, timeDelta, unit, _customFormat, format) => {
+      const templateVariable = now.clone();
+      if (calc) {
+        templateVariable.add(Number.parseInt(timeDelta, 10), unit);
+      }
+      if (format) {
+        return templateVariable.format(format);
+      }
+      return templateVariable.format(timeFormat);
+    },
+  );
+  const dateFormat = "YYYY-MM-DD";
+  content = content.replaceAll(
+    /{{\s*(current_date)\s*(([+-]\d+)([yqmwdhs]))?\s*(:(.*?))?}}/gi,
+    (_, _variableName, calc, timeDelta, unit, _customFormat, format) => {
+      const templateVariable = now.clone();
+      if (calc) {
+        templateVariable.add(Number.parseInt(timeDelta, 10), unit);
+      }
+      if (format) {
+        return templateVariable.format(format);
+      }
+      return templateVariable.format(dateFormat);
+    },
+  );
+
   return content;
 }
 
@@ -38,6 +68,22 @@ export function canApplyTemplater(app: App, content: string): boolean {
   if (!("templater" in templaterPlugin)) return false;
   if (!("create_running_config" in templaterPlugin.templater)) return false;
   if (!("parse_template" in templaterPlugin.templater)) return false;
+  return true;
+}
+
+export function supportsTemplaterCursor(app: App): boolean {
+  const templaterPlugin = app.plugins.getPlugin("templater-obsidian") as TemplaterPlugin | null;
+  if (!templaterPlugin) return false;
+  if (!("editor_handler" in templaterPlugin)) return false;
+  if (!("jump_to_next_cursor_location" in templaterPlugin.editor_handler)) return false;
+  return true;
+}
+
+export async function tryTemplaterCursorJump(app: App, note: TFile) {
+  if (!supportsTemplaterCursor(app)) return false;
+  const templaterPlugin = app.plugins.getPlugin("templater-obsidian") as TemplaterPlugin | null;
+  if (!templaterPlugin) return false;
+  await templaterPlugin.editor_handler.jump_to_next_cursor_location(note, true);
   return true;
 }
 
