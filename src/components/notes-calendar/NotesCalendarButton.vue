@@ -82,13 +82,7 @@ function showContextMenuForPath(path: string, event: MouseEvent): void {
 </script>
 
 <template>
-  <CalendarButton
-    class="calendar-button"
-    :clickable="isActionable"
-    @click="open"
-    @contextmenu="openContextMenu"
-    @auxclick="open"
-  >
+  <CalendarButton class="calendar-button" :clickable="isActionable" @click="open" @contextmenu="openContextMenu">
     <CalendarDecoration v-if="!inactive" :styles="decorationsStyles">
       <FormattedDate :date :format />
     </CalendarDecoration>
