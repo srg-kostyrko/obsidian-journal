@@ -591,7 +591,7 @@ export class Journal {
     }
     if (this.config.value.end.type === "repeats" && this.config.value.end.repeats && this.config.value.start) {
       const repeats = this.#anchorDateResolver.countRepeats(this.config.value.start, anchorDate);
-      if (repeats > this.config.value.end.repeats) return false;
+      if (repeats >= this.config.value.end.repeats) return false;
     }
 
     return true;
