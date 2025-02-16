@@ -80,22 +80,22 @@ function open(metadata: JournalMetadata) {
   --icon-size: 3em;
 }
 .nav-block {
-  flex-basis: 30%;
+  flex-basis: 25%;
 }
 .nav-block-relative {
-  flex-basis: 30%;
+  flex-basis: 20%;
   position: relative;
   font-size: 0.8em;
   margin-top: 0.5em;
 }
 .nav-prev {
   position: absolute;
-  right: -50px;
+  right: -75px;
   top: 30%;
 }
 .nav-next {
   position: absolute;
-  left: -50px;
+  left: -75px;
   top: 30%;
 }
 </style>
