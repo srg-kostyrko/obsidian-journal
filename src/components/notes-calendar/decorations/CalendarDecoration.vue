@@ -87,7 +87,8 @@ function toBorderStyle(side: BorderSettings) {
 </script>
 
 <template>
-  <span class="calendar-decoration" :style="borderStyle">
+  <span class="calendar-decoration">
+    <span class="decoration-border" :style="borderStyle" />
     <DecorationCorner v-for="(decoration, index) in cornerDecorations" :key="index" :decoration="decoration" />
     <span class="decoration-holder">
       <template v-for="(placed, key) in placedDecorations" :key="key">
@@ -112,6 +113,12 @@ function toBorderStyle(side: BorderSettings) {
   align-items: center;
   background-color: v-bind(background);
   color: v-bind(textColor);
+}
+
+.decoration-border {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
 }
 
 .decoration-holder {
