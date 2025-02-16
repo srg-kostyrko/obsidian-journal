@@ -65,7 +65,7 @@ function chengeDecorationCondition<D extends JournalDecorationCondition, K exten
   condition[change.prop] = change.value;
 }
 
-const types = ["background", "color", "shape", "corner", "shape", "icon", "border"] as const;
+const types = ["background", "color", "shape", "corner", "icon", "border"] as const;
 const decorations = ref<JournalDecorationsStyle[]>(props.decoration ? deepCopy(props.decoration.styles) : []);
 const availableTypes = computed(() => {
   const used = new Set(decorations.value.map(({ type }) => type));
