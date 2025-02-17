@@ -72,7 +72,7 @@ separator: " | "`;
       <li><code>shelf</code> - allows to limit journal displayed in block to some specific shelf.</li>
     </ul>
     <BlockDivider />
-    <DisplayCodeBlock name="calendar-timeline"> {{ customHomeSettings }} </DisplayCodeBlock>
+    <DisplayCodeBlock name="journals-home"> {{ customHomeSettings }} </DisplayCodeBlock>
     <BlockDivider />
     <HomeCodeBlock :path :config="{ show: ['day', 'month'], separator: ' | ', scale: 2 }" />
   </div>

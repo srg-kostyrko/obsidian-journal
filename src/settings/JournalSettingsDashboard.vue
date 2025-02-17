@@ -43,7 +43,14 @@ function migrate() {
   </div>
 
   <ObsidianSetting name="Use shelves?">
-    <template #description> # TODO add description </template>
+    <template #description>
+      Shelves can be used to organize several journals into one logical group (like work or personal).<br />
+      With shelves enabled: <br />
+      <ul>
+        <li>Calendar View can bi limited to display just one shelf</li>
+        <li>Navigation code block will show decorations from journals on current shelf only</li>
+      </ul>
+    </template>
     <ObsidianToggle v-model="plugin.usesShelves" />
   </ObsidianSetting>
 
