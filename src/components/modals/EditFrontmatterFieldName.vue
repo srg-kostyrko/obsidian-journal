@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { computed } from "vue";
+import { computed, onMounted } from "vue";
 import { useForm } from "vee-validate";
 import * as v from "valibot";
 import { toTypedSchema } from "@vee-validate/valibot";
@@ -29,13 +29,18 @@ const [name, nameAttrs] = defineField("name");
 
 const plugin = usePlugin();
 const journal = computed(() => plugin.getJournal(journalName));
-// eslint-disable-next-line @typescript-eslint/prefer-nullish-coalescing
-const currentName = computed(() => journal.value?.config.value.frontmatter[fieldName] || defaultFieldNames[fieldName]);
+const currentName = computed<string>(
+  () => (journal.value?.config.value.frontmatter[fieldName] as string) || defaultFieldNames[fieldName],
+);
 
 const onSubmit = handleSubmit(async (values) => {
   if (!journal.value) return;
   await journal.value.renameFrontmatterField(fieldName, currentName.value, values.name);
   emit("close");
+});
+
+onMounted(() => {
+  name.value = currentName.value;
 });
 </script>
 
