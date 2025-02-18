@@ -158,11 +158,16 @@ function selectYear(date: string) {
 
   <CalendarMonthView v-else :ref-date="currentDate" :selected-date="selectedDate" :min :max @select="selectDate">
     <template #header>
-      <ObsidianIconButton v-if="canPrevious('month')" icon="arrow-left" tooltip="Previous month" @click="previous" />
+      <ObsidianIconButton
+        v-if="canPrevious('month')"
+        icon="arrow-left"
+        tooltip="Previous month"
+        @click="previous('month')"
+      />
       <ObsidianButton @click="mode = 'year'">
         <FormattedDate :date="currentDate" format="MMMM YYYY" />
       </ObsidianButton>
-      <ObsidianIconButton v-if="canNext('month')" icon="arrow-right" tooltip="Next month" @click="next" />
+      <ObsidianIconButton v-if="canNext('month')" icon="arrow-right" tooltip="Next month" @click="next('month')" />
     </template>
   </CalendarMonthView>
 </template>
