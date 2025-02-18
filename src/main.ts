@@ -201,7 +201,7 @@ export default class JournalPluginImpl extends Plugin implements JournalPlugin {
     if (!index) return;
     for (const [, path] of index) {
       await this.#notesManager.updateNoteFrontmatter(path, (frontmatter) => {
-        frontmatter[FRONTMATTER_NAME_KEY] = name;
+        frontmatter[FRONTMATTER_NAME_KEY] = newName;
       });
     }
   }
