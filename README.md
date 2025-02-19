@@ -15,7 +15,7 @@ Manage your journals in [Obsidian](https://obsidian.md/) knowledge base.
 
 ## Installation
 
-Follow the steps below to install Tasks.
+Follow the steps below to install plugin.
 
 1. Search for "Journals" in Obsidian's community plugins browser
 2. Enable the plugin in your Obsidian settings (find "Journals" under "Community plugins").
