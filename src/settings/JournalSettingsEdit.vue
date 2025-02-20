@@ -68,6 +68,21 @@ const writingDescription = computed(() => {
   return getWritingDescription(journal.value.config.value.write);
 });
 
+const dateFormatWithFolders = computed(() => journal.value?.config.value.dateFormat.includes("/"));
+
+function moveFoldersFromFormat() {
+  if (!journal.value) return;
+  const folders = journal.value.config.value.dateFormat.split("/");
+  journal.value.config.value.dateFormat = folders.pop() ?? "";
+  const path = folders.map((format) => `{{date:${format}}}`).join("/");
+  let folder = journal.value.config.value.folder;
+  if (folder && !folder.endsWith("/")) {
+    folder += "/";
+  }
+  folder += path;
+  journal.value.config.value.folder = folder;
+}
+
 function showRenameModal(): void {
   if (!journal.value) return;
   new VueModal(plugin, "Rename journal", RenameJournalModal, {
@@ -413,6 +428,10 @@ watch(
         Used to format dates if not defined in variable.<br />
         <a target="_blank" href="https://momentjs.com/docs/#/displaying/format/">Syntax reference</a><br />
         <DateFormatPreview :format="config.dateFormat" />
+        <div v-if="dateFormatWithFolders" class="journal-important">
+          Looks like you are using date format to create folders. Recommended way to this is to use vaiables in "Folder"
+          field. <a href="#" @click="moveFoldersFromFormat">Apply recomendation</a>
+        </div>
       </template>
       <ObsidianTextInput v-model="config.dateFormat" />
     </ObsidianSetting>
@@ -622,7 +641,7 @@ watch(
   flex-grow: 1;
 }
 .journal-important {
-  color: var(--text-accent);
+  color: var(--text-warning);
 }
 .decoration-preview {
   display: inline-block;
