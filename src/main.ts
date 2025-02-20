@@ -347,7 +347,7 @@ export default class JournalPluginImpl extends Plugin implements JournalPlugin {
       for (const file of files) {
         this.#processMetadata(file);
       }
-      this.placeCalendarView(true);
+      this.placeCalendarView();
       this.#activeNote.value = this.app.workspace.getActiveFile()?.path ?? null;
       await this.autoCreateNotes();
       if (appStartup) {
