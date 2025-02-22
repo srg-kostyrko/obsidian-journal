@@ -1,4 +1,4 @@
-import { type MarkdownView, TFile, type App, type PaneType } from "obsidian";
+import { type MarkdownView, TFile, type App, type PaneType, TFolder, normalizePath } from "obsidian";
 import type { JournalPlugin, NotesManager } from "./types/plugin.types";
 import { VueModal } from "./components/modals/vue-modal";
 import ConfirmNoteCreationModal from "./components/modals/ConfirmNoteCreation.modal.vue";
@@ -11,8 +11,28 @@ export class ObsidianNotesManager implements NotesManager {
     this.app = plugin.app;
   }
 
+  normalizePath(path: string): string {
+    return normalizePath(path);
+  }
+
   nodeExists(path: string): boolean {
     return Boolean(this.app.vault.getAbstractFileByPath(path));
+  }
+
+  getNoteName(path: string): string {
+    const file = this.app.vault.getAbstractFileByPath(path);
+    if (!file) return "";
+    return file instanceof TFile ? file.basename : file.name;
+  }
+
+  getNoteFilename(path: string): string {
+    const file = this.app.vault.getAbstractFileByPath(path);
+    return file?.name ?? "";
+  }
+
+  getNoteFolder(path: string): string {
+    const file = this.app.vault.getAbstractFileByPath(path);
+    return file?.parent?.path ?? "";
   }
 
   async confirmNoteCreation(journalName: string, noteName: string): Promise<boolean> {
@@ -51,6 +71,13 @@ export class ObsidianNotesManager implements NotesManager {
     await this.app.vault.modify(file, content);
   }
 
+  async appendNote(path: string, content: string): Promise<void> {
+    const file = this.app.vault.getAbstractFileByPath(path);
+    if (!file) return;
+    if (!(file instanceof TFile)) return;
+    await this.app.vault.append(file, content);
+  }
+
   async renameNote(path: string, newPath: string): Promise<void> {
     const file = this.app.vault.getAbstractFileByPath(path);
     if (!file) return;
@@ -61,6 +88,27 @@ export class ObsidianNotesManager implements NotesManager {
 
   getMarkdownFiles() {
     return this.app.vault.getMarkdownFiles();
+  }
+
+  getNotesInFolder(folderPath: string): string[] {
+    const folder = this.app.vault.getFolderByPath(folderPath || "/");
+    if (!folder) {
+      throw new Error(`Folder ${folderPath} not found`);
+    }
+    const notes: string[] = [];
+    const queue = [folder];
+    while (queue.length > 0) {
+      const currentFolder = queue.shift();
+      if (!currentFolder) break;
+      for (const child of currentFolder.children) {
+        if (child instanceof TFile) {
+          notes.push(child.path);
+        } else if (child instanceof TFolder) {
+          queue.push(child);
+        }
+      }
+    }
+    return notes;
   }
 
   getNoteMetadata(path: string) {

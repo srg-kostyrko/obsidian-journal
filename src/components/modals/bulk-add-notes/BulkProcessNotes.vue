@@ -6,7 +6,7 @@ import type {
   NoteDataForProcessing,
   NoteProcessingResult,
 } from "./bulk-add-notes.types";
-import { buildNotesList, preprocessNotes, processNote } from "./bulk-add-note-utils";
+import { preprocessNotes, processNote } from "./bulk-add-note-utils";
 import { usePlugin } from "@/composables/use-plugin";
 import ObsidianButton from "@/components/obsidian/ObsidianButton.vue";
 import CollapsibleBlock from "@/components/CollapsibleBlock.vue";
@@ -23,6 +23,7 @@ const plugin = usePlugin();
 const journal = computed(() => plugin.getJournal(journalName));
 const stage = ref("Building list...");
 const notesQueue = ref<NoteDataForProcessing[]>([]);
+
 const currentNote = ref<NoteDataForProcessing | null>(null);
 const currentNoteDesisions = computed(() => {
   if (!currentNote.value) return [];
@@ -33,6 +34,12 @@ const currentNoteDesisions = computed(() => {
       (op.type === "other_name" && op.desision === "ask"),
   );
 });
+const currentNoteName = computed(() =>
+  currentNote.value ? plugin.notesManager.getNoteName(currentNote.value.path) : "",
+);
+const currentNoteFolder = computed(() =>
+  currentNote.value ? plugin.notesManager.getNoteFolder(currentNote.value.path) : "",
+);
 const processed = ref<NoteProcessingResult[]>([]);
 
 const isPendingDecision = computed(() => currentNoteDesisions.value.length > 0);
@@ -68,7 +75,7 @@ function updateDesision(
 
 onMounted(() => {
   if (!journal.value) return;
-  const list = buildNotesList(plugin, parameters.folder);
+  const list = plugin.notesManager.getNotesInFolder(parameters.folder);
   stage.value = "Preprocesing notes...";
   notesQueue.value = preprocessNotes(plugin, journal.value, list, parameters);
   stage.value = "Processing notes...";
@@ -78,10 +85,10 @@ onMounted(() => {
 
 <template>
   <div v-if="currentNote && isPendingDecision">
-    Note: {{ currentNote.file.basename }}<br />
+    Note: {{ currentNoteName }}<br />
     <div v-for="(op, index) of currentNoteDesisions" :key="index">
       <div v-if="op.type === 'existing_note'">
-        Other note with same date existits in journal - {{ op.other_file.basename }}<br />
+        Other note with same date existits in journal - {{ plugin.notesManager.getNoteName(op.other_file) }}<br />
         <div>
           <ObsidianButton @click="updateDesision(op, 'skip')">Skip note</ObsidianButton>
           <ObsidianButton @click="updateDesision(op, 'override')">Override date connection</ObsidianButton>
@@ -91,7 +98,7 @@ onMounted(() => {
       <div v-else-if="op.type === 'other_folder'">
         Note is not in folder from journal setting<br />
         Configured folder: {{ op.configured_folder }}<br />
-        Note folder: {{ currentNote.file.parent?.path }}<br />
+        Note folder: {{ currentNoteFolder }}<br />
         <div>
           <ObsidianButton @click="updateDesision(op, 'keep')">Keep as is</ObsidianButton>
           <ObsidianButton @click="updateDesision(op, 'move')">Move to configured folder</ObsidianButton>
@@ -100,7 +107,7 @@ onMounted(() => {
       <div v-else-if="op.type === 'other_name'">
         Note name differs from journal settings<br />
         Configured name: {{ op.configured_name }}<br />
-        Note name: {{ currentNote.file.basename }}<br />
+        Note name: {{ currentNoteName }}<br />
         <div>
           <ObsidianButton @click="updateDesision(op, 'keep')">Keep as is</ObsidianButton>
           <ObsidianButton @click="updateDesision(op, 'rename')">Rename to configured name</ObsidianButton>

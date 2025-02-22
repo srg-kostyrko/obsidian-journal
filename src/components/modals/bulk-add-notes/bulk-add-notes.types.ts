@@ -1,6 +1,5 @@
 import type { JournalAnchorDate } from "@/types/journal.types";
 import type { GenericConditions } from "@/types/settings.types";
-import type { TFile } from "obsidian";
 
 export interface BulkAddPrams {
   folder: string;
@@ -17,7 +16,7 @@ export interface BulkAddPrams {
 
 export interface RelateToExistingNote {
   type: "existing_note";
-  other_file: TFile;
+  other_file: string;
   desision: BulkAddPrams["existing_note"];
 }
 
@@ -48,7 +47,7 @@ export interface ConnectNote {
 export type NodeProcessingOperations = SkippingNote | ConnectNote | NodeProcessingOperationsWithDesisions;
 
 export interface NoteDataForProcessing {
-  file: TFile;
+  path: string;
   operations: NodeProcessingOperations[];
 }
 

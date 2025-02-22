@@ -42,7 +42,12 @@ export interface JournalPlugin extends Plugin {
 }
 
 export interface NotesManager {
+  normalizePath(path: string): string;
   getMarkdownFiles(): TFile[];
+  getNotesInFolder(folderPath: string): string[];
+  getNoteName(path: string): string;
+  getNoteFilename(path: string): string;
+  getNoteFolder(path: string): string;
   getNoteMetadata(path: string): CachedMetadata | null;
   nodeExists(path: string): boolean;
   updateNoteFrontmatter(path: string, action: (frontmatter: Record<string, unknown>) => void): Promise<void>;
@@ -52,6 +57,7 @@ export interface NotesManager {
   confirmNoteCreation(journalName: string, noteName: string): Promise<boolean>;
   createNote(path: string, content: string): Promise<void>;
   updateNote(path: string, content: string): Promise<void>;
+  appendNote(path: string, content: string): Promise<void>;
   renameNote(path: string, newPath: string): Promise<void>;
   getNoteContent(path: string): Promise<string>;
   tryApplyingTemplater(templatePath: string, notePath: string, content: string): Promise<string>;
@@ -59,8 +65,8 @@ export interface NotesManager {
 }
 
 export interface AppManager {
-  addCommand(journalName: string, command: JournalCommand, checkCallback: (checking: boolean) => void): void;
+  addCommand(journalName: string, command: JournalCommand, checkCallback: (checking: boolean) => boolean): void;
   removeCommand(journalName: string, command: JournalCommand): void;
   addRibbonIcon(journalName: string, icon: string, tooltip: string, action: () => void): string;
-  removeRibbonIcon(journalName: string, icon: string): string;
+  removeRibbonIcon(journalName: string, tooltip: string): string;
 }

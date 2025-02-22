@@ -105,7 +105,7 @@ export default class JournalPluginImpl extends Plugin implements JournalPlugin {
   }
 
   get journals(): Journal[] {
-    return Object.values(this.#journals.value);
+    return Object.values(this.#journals.value).sort((a, b) => a.name.localeCompare(b.name));
   }
 
   hasJournal(name: string): boolean {
@@ -561,7 +561,7 @@ export default class JournalPluginImpl extends Plugin implements JournalPlugin {
         const file = context.file;
         if (file) {
           new VueModal(this, "Connect note to a journal", ConnectNoteModal, {
-            file,
+            path: file.path,
           }).open();
         }
       },

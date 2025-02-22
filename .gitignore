@@ -32,3 +32,5 @@ data.json
 .DS_Store
 
 .eslintcache
+
+coverage

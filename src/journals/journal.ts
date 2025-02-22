@@ -13,7 +13,6 @@ import {
   type JournalMetadata,
   type JournalNoteData,
 } from "../types/journal.types";
-import { normalizePath, TFile } from "obsidian";
 import { replaceTemplateVariables } from "../utils/template";
 import type { TemplateContext } from "../types/template.types";
 import {
@@ -113,22 +112,6 @@ export class Journal {
     return "";
   }
 
-  get frontmatterDate(): string {
-    return this.config.value.frontmatter.dateField || FRONTMATTER_DATE_KEY;
-  }
-
-  get frontmatterIndex(): string {
-    return this.config.value.frontmatter.indexField || FRONTMATTER_INDEX_KEY;
-  }
-
-  get frontmatterStartDate(): string {
-    return this.config.value.frontmatter.startDateField || FRONTMATTER_START_DATE_KEY;
-  }
-
-  get frontmatterEndDate(): string {
-    return this.config.value.frontmatter.endDateField || FRONTMATTER_END_DATE_KEY;
-  }
-
   calculateOffset(date: string): [positive: number, negative: number] {
     return this.#anchorDateResolver.calculateOffset(date);
   }
@@ -221,6 +204,8 @@ export class Journal {
     return this.#anchorDateResolver.resolveRelativeDate(anchorDate);
   }
 
+  //#region commands
+
   addCommand(command: JournalCommand): void {
     this.config.value.commands.push(command);
     this.#addCommand(command);
@@ -237,6 +222,51 @@ export class Journal {
     this.#removeCommand(command);
   }
 
+  #addCommand(command: JournalCommand) {
+    this.appManager.addCommand(this.name, command, (checking) => {
+      if (checking) {
+        return this.#checkCommand(command);
+      } else {
+        this.#execCommand(command).catch(console.error);
+      }
+      return true;
+    });
+    if (command.showInRibbon) {
+      this.appManager.addRibbonIcon(this.name, command.icon, command.name, () => {
+        if (!this.#checkCommand(command)) return;
+        this.#execCommand(command).catch(console.error);
+      });
+    }
+  }
+
+  #removeCommand(command: JournalCommand) {
+    this.appManager.removeCommand(this.name, command);
+    this.appManager.removeRibbonIcon(this.name, command.name);
+  }
+
+  #checkCommand(command: JournalCommand): boolean {
+    if (command.context === "only_open_note") {
+      const activeNote = this.activeNote.value;
+      if (!activeNote) return false;
+      const metadata = this.index.getForPath(activeNote);
+      if (!metadata) return false;
+      if (metadata.journal !== this.name) return false;
+    }
+    return true;
+  }
+
+  async #execCommand(command: JournalCommand): Promise<void> {
+    const refDate = this.#getCommandRefDate(command);
+    if (!refDate) return;
+    const date = this.#anchorDateResolver.resolveDateForCommand(refDate, command.type);
+    if (!date) return;
+    const metadata = this.get(date);
+    if (!metadata) return;
+    await this.open(metadata, command.openMode);
+  }
+  //#endregion
+
+  //#region decorations
   addDecoration(decoration: JournalDecoration): void {
     this.config.value.decorations.push(decoration);
   }
@@ -248,7 +278,9 @@ export class Journal {
   deleteDecoration(index: number): void {
     this.config.value.decorations.splice(index, 1);
   }
+  //#endregion
 
+  //#region NavBlock
   addNavRow(row: NavBlockRow): void {
     this.config.value.navBlock.rows.push(row);
   }
@@ -276,6 +308,9 @@ export class Journal {
     }
   }
 
+  //#endregion
+
+  //#region CalendarView
   addCalendarViewRow(row: NavBlockRow): void {
     this.config.value.calendarViewBlock.rows.push(row);
   }
@@ -302,6 +337,47 @@ export class Journal {
       this.config.value.calendarViewBlock.rows[index + 1] = temporary;
     }
   }
+  //#endregion
+
+  // #region notes management
+  async connectNote(
+    path: string,
+    anchorDate: JournalAnchorDate,
+    options: {
+      override?: boolean;
+      rename?: boolean;
+      move?: boolean;
+    },
+  ): Promise<boolean> {
+    const metadata = this.get(anchorDate);
+    if (!metadata) return false;
+    if ("path" in metadata) {
+      if (!options.override) return false;
+      await this.disconnectNote(metadata.path);
+    }
+
+    if (options.rename || options.move) {
+      const [configuredFolder, configuredFilename] = this.getConfiguredPathData(metadata);
+      const folderPath = options.move ? configuredFolder : this.notesManager.getNoteFolder(path);
+      const filename = options.rename ? configuredFilename : this.notesManager.getNoteFilename(path);
+      const newPath = this.notesManager.normalizePath(folderPath ? `${folderPath}/${filename}` : filename);
+      await this.notesManager.renameNote(path, newPath);
+      path = newPath;
+    }
+
+    await this.#ensureFrontMatter(path, metadata);
+    return true;
+  }
+
+  async disconnectNote(path: string): Promise<void> {
+    await this.notesManager.updateNoteFrontmatter(path, (frontmatter) => {
+      delete frontmatter[FRONTMATTER_NAME_KEY];
+      delete frontmatter[this.frontmatterDate];
+      delete frontmatter[this.frontmatterStartDate];
+      delete frontmatter[this.frontmatterEndDate];
+      delete frontmatter[this.frontmatterIndex];
+    });
+  }
 
   async clearNotes(): Promise<void> {
     const promises = [];
@@ -320,17 +396,24 @@ export class Journal {
     }
     await Promise.allSettled(promises);
   }
+  // #endregion
 
-  async disconnectNote(path: string): Promise<void> {
-    await this.notesManager.updateNoteFrontmatter(path, (frontmatter) => {
-      delete frontmatter[FRONTMATTER_NAME_KEY];
-      delete frontmatter[this.frontmatterDate];
-      delete frontmatter[this.frontmatterStartDate];
-      delete frontmatter[this.frontmatterEndDate];
-      delete frontmatter[this.frontmatterIndex];
-    });
+  // #region frontmatter management
+  get frontmatterDate(): string {
+    return this.config.value.frontmatter.dateField || FRONTMATTER_DATE_KEY;
   }
 
+  get frontmatterIndex(): string {
+    return this.config.value.frontmatter.indexField || FRONTMATTER_INDEX_KEY;
+  }
+
+  get frontmatterStartDate(): string {
+    return this.config.value.frontmatter.startDateField || FRONTMATTER_START_DATE_KEY;
+  }
+
+  get frontmatterEndDate(): string {
+    return this.config.value.frontmatter.endDateField || FRONTMATTER_END_DATE_KEY;
+  }
   async renameFrontmatterField<
     Field extends keyof JournalSettings["frontmatter"],
     Value extends JournalSettings["frontmatter"][Field],
@@ -340,8 +423,10 @@ export class Journal {
     if (!index) return;
     for (const [, path] of index) {
       await this.notesManager.updateNoteFrontmatter(path, (frontmatter) => {
-        frontmatter[newName as string] = frontmatter[oldName as string];
-        delete frontmatter[oldName as string];
+        if (String(oldName) in frontmatter) {
+          frontmatter[newName as string] = frontmatter[oldName as string];
+          delete frontmatter[oldName as string];
+        }
       });
     }
   }
@@ -374,12 +459,19 @@ export class Journal {
         const metadata = this.index.getForPath(path);
         if (this.config.value.frontmatter.addEndDate) {
           frontmatter[this.frontmatterEndDate] = metadata?.end_date ?? this.resolveEndDate(anchorDate);
-        } else if (metadata?.end_date && frontmatter[this.frontmatterEndDate] === metadata.end_date) {
-          delete frontmatter[this.frontmatterEndDate];
+        } else {
+          if (metadata?.end_date) {
+            if (this.resolveEndDate(anchorDate) === metadata.end_date) {
+              delete frontmatter[this.frontmatterEndDate];
+            }
+          } else {
+            delete frontmatter[this.frontmatterEndDate];
+          }
         }
       });
     }
   }
+  // #endregion
 
   async autoCreate() {
     if (!this.config.value.autoCreate) return;
@@ -431,35 +523,7 @@ export class Journal {
     const templateContext = this.#getTemplateContext(metadata);
     const filename = replaceTemplateVariables(this.config.value.nameTemplate, templateContext) + ".md";
     const folderPath = replaceTemplateVariables(this.config.value.folder, templateContext);
-    return normalizePath(folderPath ? `${folderPath}/${filename}` : filename);
-  }
-
-  async connectNote(
-    file: TFile,
-    anchorDate: JournalAnchorDate,
-    options: {
-      override?: boolean;
-      rename?: boolean;
-      move?: boolean;
-    },
-  ): Promise<boolean> {
-    const metadata = this.get(anchorDate);
-    if (!metadata) return false;
-    if ("path" in metadata) {
-      if (!options.override) return false;
-      await this.disconnectNote(metadata.path);
-    }
-    let path = file.path;
-    if (options.rename || options.move) {
-      const [configuredFolder, configuredFilename] = this.getConfiguredPathData(metadata);
-      const folderPath = options.move ? configuredFolder : file.parent?.path;
-      const filename = options.rename ? configuredFilename : file.name;
-      path = normalizePath(folderPath ? `${folderPath}/${filename}` : filename);
-      await this.notesManager.renameNote(file.path, path);
-    }
-
-    await this.#ensureFrontMatter(path, metadata);
-    return true;
+    return this.notesManager.normalizePath(folderPath ? `${folderPath}/${filename}` : filename);
   }
 
   #getTemplateContext(metadata: JournalMetadata): TemplateContext {
@@ -561,49 +625,6 @@ export class Journal {
       index: this.#resolveIndex(anchorDate),
     };
     return metadata;
-  }
-
-  #addCommand(command: JournalCommand) {
-    this.appManager.addCommand(this.name, command, (checking) => {
-      if (checking) {
-        return this.#checkCommand(command);
-      } else {
-        this.#execCommand(command).catch(console.error);
-      }
-      return true;
-    });
-    if (command.showInRibbon) {
-      this.appManager.addRibbonIcon(this.name, command.icon, command.name, () => {
-        if (!this.#checkCommand(command)) return;
-        this.#execCommand(command).catch(console.error);
-      });
-    }
-  }
-
-  #removeCommand(command: JournalCommand) {
-    this.appManager.removeCommand(this.name, command);
-    this.appManager.removeRibbonIcon(this.name, command.name);
-  }
-
-  #checkCommand(command: JournalCommand): boolean {
-    if (command.context === "only_open_note") {
-      const activeNote = this.activeNote.value;
-      if (!activeNote) return false;
-      const metadata = this.index.getForPath(activeNote);
-      if (!metadata) return false;
-      if (metadata.journal !== this.name) return false;
-    }
-    return true;
-  }
-
-  async #execCommand(command: JournalCommand): Promise<void> {
-    const refDate = this.#getCommandRefDate(command);
-    if (!refDate) return;
-    const date = this.#anchorDateResolver.resolveDateForCommand(refDate, command.type);
-    if (!date) return;
-    const metadata = this.get(date);
-    if (!metadata) return;
-    await this.open(metadata, command.openMode);
   }
 
   #getCommandRefDate(command: JournalCommand): string | null {

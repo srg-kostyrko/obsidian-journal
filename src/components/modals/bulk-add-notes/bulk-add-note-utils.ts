@@ -1,4 +1,4 @@
-import { normalizePath, TFile, TFolder } from "obsidian";
+import { normalizePath } from "obsidian";
 import type {
   BulkAddPrams,
   ConnectNote,
@@ -21,42 +21,21 @@ import type {
 import { checkExhaustive } from "@/utils/types";
 import type { JournalPlugin } from "@/types/plugin.types";
 
-export function buildNotesList(plugin: JournalPlugin, folderPath = "/"): TFile[] {
-  const folder = plugin.app.vault.getFolderByPath(folderPath || "/");
-  if (!folder) {
-    throw new Error(`Folder ${folderPath} not found`);
-  }
-  const notes = [];
-  const queue = [folder];
-  while (queue.length > 0) {
-    const currentFolder = queue.shift();
-    if (!currentFolder) break;
-    for (const child of currentFolder.children) {
-      if (child instanceof TFile) {
-        notes.push(child);
-      } else if (child instanceof TFolder) {
-        queue.push(child);
-      }
-    }
-  }
-  return notes;
-}
-
 export function preprocessNotes(
   plugin: JournalPlugin,
   journal: Journal,
-  notes: TFile[],
+  notes: string[],
   parameters: BulkAddPrams,
 ): NoteDataForProcessing[] {
   const data: NoteDataForProcessing[] = [];
   const dateRegexp = formatToRegexp(parameters.date_format);
-  for (const note of notes) {
+  for (const path of notes) {
     const noteData: NoteDataForProcessing = {
-      file: note,
+      path,
       operations: [],
     };
     data.push(noteData);
-    const existing = plugin.index.getForPath(note.path);
+    const existing = plugin.index.getForPath(path);
     if (existing) {
       noteData.operations.push({
         type: "skiping",
@@ -65,7 +44,7 @@ export function preprocessNotes(
       });
       continue;
     }
-    if (!checkFilters(plugin, note, parameters.filter_combinator, parameters.filters)) {
+    if (!checkFilters(plugin, path, parameters.filter_combinator, parameters.filters)) {
       noteData.operations.push({
         type: "skiping",
         reason: "does not match filters",
@@ -74,8 +53,8 @@ export function preprocessNotes(
     }
     const dateString: string | undefined =
       parameters.date_place === "title"
-        ? note.basename
-        : plugin.notesManager.getNoteMetadata(note.path)?.frontmatter?.[parameters.property_name];
+        ? plugin.notesManager.getNoteName(path)
+        : plugin.notesManager.getNoteMetadata(path)?.frontmatter?.[parameters.property_name];
     if (dateString === undefined) {
       noteData.operations.push({
         type: "skiping",
@@ -110,19 +89,19 @@ export function preprocessNotes(
     if ("path" in metadata && metadata.path) {
       noteData.operations.push({
         type: "existing_note",
-        other_file: plugin.app.vault.getAbstractFileByPath(metadata.path) as TFile,
+        other_file: metadata.path,
         desision: parameters.existing_note,
       });
     }
     const [configuredFolder, configuredFilename] = journal.getConfiguredPathData(metadata);
-    if (configuredFolder !== note.parent?.path) {
+    if (configuredFolder !== plugin.notesManager.getNoteFolder(path)) {
       noteData.operations.push({
         type: "other_folder",
         configured_folder: configuredFolder,
         desision: parameters.other_folder,
       });
     }
-    if (configuredFilename !== note.name) {
+    if (configuredFilename !== plugin.notesManager.getNoteName(path)) {
       noteData.operations.push({
         type: "other_name",
         configured_name: configuredFilename,
@@ -135,43 +114,44 @@ export function preprocessNotes(
 
 function checkFilters(
   plugin: JournalPlugin,
-  note: TFile,
+  path: string,
   combinator: BulkAddPrams["filter_combinator"],
   filters: BulkAddPrams["filters"],
 ) {
   if (combinator === "no") return true;
-  if (combinator === "and") return filters.every((f) => checkFilter(plugin, note, f));
-  if (combinator === "or") return filters.some((f) => checkFilter(plugin, note, f));
+  if (combinator === "and") return filters.every((f) => checkFilter(plugin, path, f));
+  if (combinator === "or") return filters.some((f) => checkFilter(plugin, path, f));
   return false;
 }
 
-function checkFilter(plugin: JournalPlugin, note: TFile, filter: GenericConditions) {
-  const metadata = plugin.notesManager.getNoteMetadata(note.path);
+function checkFilter(plugin: JournalPlugin, path: string, filter: GenericConditions) {
+  const metadata = plugin.notesManager.getNoteMetadata(path);
   if (!metadata) return false;
   switch (filter.type) {
     case "title": {
-      return checkNameFilter(note, filter);
+      return checkNameFilter(plugin, path, filter);
     }
     case "tag": {
-      return checkTagFilter(plugin, note, filter);
+      return checkTagFilter(plugin, path, filter);
     }
     case "property": {
-      return checkPropertyFilter(plugin, note, filter);
+      return checkPropertyFilter(plugin, path, filter);
     }
   }
   return true;
 }
 
-function checkNameFilter(note: TFile, filter: JournalDecorationTitleCondition) {
+function checkNameFilter(plugin: JournalPlugin, path: string, filter: JournalDecorationTitleCondition) {
+  const name = plugin.notesManager.getNoteName(path);
   switch (filter.condition) {
     case "contains": {
-      return note.basename.contains(filter.value);
+      return name.contains(filter.value);
     }
     case "starts-with": {
-      return note.basename.startsWith(filter.value);
+      return name.startsWith(filter.value);
     }
     case "ends-with": {
-      return note.basename.endsWith(filter.value);
+      return name.endsWith(filter.value);
     }
     default: {
       checkExhaustive(filter.condition);
@@ -179,8 +159,8 @@ function checkNameFilter(note: TFile, filter: JournalDecorationTitleCondition) {
   }
 }
 
-function checkTagFilter(plugin: JournalPlugin, note: TFile, filter: JournalDecorationTagCondition) {
-  const metadata = plugin.notesManager.getNoteMetadata(note.path);
+function checkTagFilter(plugin: JournalPlugin, path: string, filter: JournalDecorationTagCondition) {
+  const metadata = plugin.notesManager.getNoteMetadata(path);
   if (!metadata) return false;
   if (!metadata.tags) return false;
   switch (filter.condition) {
@@ -199,8 +179,8 @@ function checkTagFilter(plugin: JournalPlugin, note: TFile, filter: JournalDecor
   }
 }
 
-function checkPropertyFilter(plugin: JournalPlugin, note: TFile, filter: JournalDecorationPropertyCondition) {
-  const metadata = plugin.notesManager.getNoteMetadata(note.path);
+function checkPropertyFilter(plugin: JournalPlugin, path: string, filter: JournalDecorationPropertyCondition) {
+  const metadata = plugin.notesManager.getNoteMetadata(path);
   if (!metadata) return false;
   const propertyValue = metadata.frontmatter?.[filter.name];
   switch (filter.condition) {
@@ -250,7 +230,7 @@ async function connectNote(
 ) {
   result.actions.push(`Note connected to journal as ${operation.anchor_date}`);
   if (!parameters.dry_run) {
-    await journal.connectNote(noteData.file, operation.anchor_date, {});
+    await journal.connectNote(noteData.path, operation.anchor_date, {});
   }
 }
 
@@ -267,18 +247,18 @@ async function relateExistingNote(
       break;
     }
     case "override": {
-      result.actions.push(`Other note "${operation.other_file.path}" connected to same date disconnected`);
+      result.actions.push(`Other note "${operation.other_file}" connected to same date disconnected`);
       if (!parameters.dry_run) {
-        await plugin.disconnectNote(noteData.file.path);
+        await plugin.disconnectNote(noteData.path);
       }
       break;
     }
     case "merge": {
-      result.actions.push(`Content of note was merged into "${operation.other_file.path}, note deleted"`);
+      result.actions.push(`Content of note was merged into "${operation.other_file}, note deleted"`);
       if (!parameters.dry_run) {
-        const content = await plugin.app.vault.cachedRead(noteData.file);
-        await plugin.app.vault.append(operation.other_file, content);
-        await plugin.app.vault.delete(noteData.file);
+        const content = await plugin.notesManager.getNoteContent(noteData.path);
+        await plugin.notesManager.appendNote(operation.other_file, content);
+        await plugin.notesManager.deleteNote(noteData.path);
       }
       break;
     }
@@ -295,19 +275,19 @@ async function processDifferentFolder(
   switch (operation.desision) {
     case "keep": {
       result.actions.push(
-        `Notes folder "${noteData.file.parent?.path ?? "/"}" differs from configured folder "${parameters.folder || "/"}" - keeping as is`,
+        `Notes folder "${plugin.notesManager.getNoteFolder(noteData.path) ?? "/"}" differs from configured folder "${parameters.folder || "/"}" - keeping as is`,
       );
       break;
     }
     case "move": {
       result.actions.push(`Moved note to "${operation.configured_folder ?? "/"}"`);
       if (!parameters.dry_run) {
-        const filename = noteData.file.name;
+        const filename = plugin.notesManager.getNoteFilename(noteData.path);
         const path = normalizePath(
           operation.configured_folder ? `${operation.configured_folder}/${filename}` : filename,
         );
-        await plugin.notesManager.renameNote(noteData.file.path, path);
-        noteData.file = plugin.app.vault.getAbstractFileByPath(path) as TFile;
+        await plugin.notesManager.renameNote(noteData.path, path);
+        noteData.path = path;
       }
       break;
     }
@@ -324,17 +304,17 @@ async function processDifferentName(
   switch (operation.desision) {
     case "keep": {
       result.actions.push(
-        `Note name "${noteData.file.basename}" differs from configured name "${parameters.property_name}" - keeping as is`,
+        `Note name "${plugin.notesManager.getNoteName(noteData.path)}" differs from configured name "${parameters.property_name}" - keeping as is`,
       );
       break;
     }
     case "rename": {
       result.actions.push(`Renamed note to "${operation.configured_name}"`);
       if (!parameters.dry_run) {
-        const folder = noteData.file.parent?.path;
+        const folder = plugin.notesManager.getNoteFolder(noteData.path);
         const path = normalizePath(folder ? `${folder}/${operation.configured_name}` : operation.configured_name);
-        await plugin.notesManager.renameNote(noteData.file.path, path);
-        noteData.file = plugin.app.vault.getAbstractFileByPath(path) as TFile;
+        await plugin.notesManager.renameNote(noteData.path, path);
+        noteData.path = path;
       }
       break;
     }
@@ -347,11 +327,11 @@ export async function processNote(
   noteData: NoteDataForProcessing,
   parameters: BulkAddPrams,
 ): Promise<NoteProcessingResult> {
-  const { file, operations } = noteData;
+  const { path, operations } = noteData;
   const result: NoteProcessingResult = {
-    note: file.basename,
-    folder: file.parent?.path ?? "",
-    path: file.path,
+    note: plugin.notesManager.getNoteName(path),
+    folder: plugin.notesManager.getNoteFolder(path),
+    path,
     actions: [],
   };
   try {

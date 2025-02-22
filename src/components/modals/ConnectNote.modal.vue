@@ -1,5 +1,4 @@
 <script setup lang="ts">
-import { TFile } from "obsidian";
 import { usePathData } from "@/composables/use-path-data";
 import ObsidianSetting from "../obsidian/ObsidianSetting.vue";
 import ObsidianButton from "../obsidian/ObsidianButton.vue";
@@ -15,12 +14,15 @@ import type { JournalMetadata } from "@/types/journal.types";
 import { usePlugin } from "@/composables/use-plugin";
 
 const props = defineProps<{
-  file: TFile;
+  path: string;
 }>();
 const emit = defineEmits(["close"]);
 
 const plugin = usePlugin();
-const noteData = usePathData(props.file.path);
+const noteData = usePathData(props.path);
+
+const name = computed(() => plugin.notesManager.getNoteFilename(props.path));
+const folder = computed(() => plugin.notesManager.getNoteFolder(props.path));
 
 const { defineField, errorBag, handleSubmit } = useForm({
   initialValues: {
@@ -92,13 +94,13 @@ const notePath = computed(() => {
 const needRename = computed(() => {
   if (!notePath.value) return false;
   const [, configuredFilename] = notePath.value;
-  return props.file.name !== configuredFilename;
+  return name.value !== configuredFilename;
 });
 
 const needMove = computed(() => {
   if (!notePath.value) return false;
   const [folderPath] = notePath.value;
-  return props.file.parent?.path !== (folderPath ?? "/");
+  return folder.value !== (folderPath ?? "/");
 });
 
 const canSubmit = computed(() => {
@@ -109,13 +111,13 @@ const canSubmit = computed(() => {
 });
 
 function disconnect() {
-  plugin.disconnectNote(props.file.path).catch(console.error);
+  plugin.disconnectNote(props.path).catch(console.error);
 }
 const onSubmit = handleSubmit(() => {
   if (!canSubmit.value) return;
   if (!anchorDate.value) return;
   journal.value
-    ?.connectNote(props.file, anchorDate.value, {
+    ?.connectNote(props.path, anchorDate.value, {
       override: override.value,
       rename: rename.value,
       move: move.value,
@@ -138,6 +140,7 @@ const onSubmit = handleSubmit(() => {
     </ObsidianSetting>
   </div>
   <div v-else>
+    {{ path }}
     <form @submit="onSubmit">
       <ObsidianSetting name="Journal">
         <template #description>
@@ -165,14 +168,14 @@ const onSubmit = handleSubmit(() => {
         </ObsidianSetting>
         <ObsidianSetting v-if="needRename" name="Rename?">
           <template #description>
-            Note name <b class="u-pop">{{ file.name }}</b> differs from journal note name config:
+            Note name <b class="u-pop">{{ name }}</b> differs from journal note name config:
             <b class="u-pop">{{ notePath?.[1] ?? "" }}</b>
           </template>
           <ObsidianToggle v-model="rename" v-bind="renameAttrs" />
         </ObsidianSetting>
         <ObsidianSetting v-if="needMove" name="Move?">
           <template #description>
-            Note folder <b class="u-pop">{{ file.parent?.path }}</b> differs from journal folder path config:
+            Note folder <b class="u-pop">{{ folder }}</b> differs from journal folder path config:
             <b class="u-pop">{{ notePath?.[0] ?? "" }}</b>
           </template>
           <ObsidianToggle v-model="move" v-bind="moveAttrs" />

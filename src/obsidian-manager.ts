@@ -7,7 +7,7 @@ export class ObsidianManager implements AppManager {
 
   constructor(private plugin: JournalPlugin) {}
 
-  addCommand(journalName: string, command: JournalCommand, checkCallback: (checking: boolean) => void): void {
+  addCommand(journalName: string, command: JournalCommand, checkCallback: (checking: boolean) => boolean): void {
     this.plugin.addCommand({
       id: journalName + ":" + command.name,
       name: `${journalName}: ${command.name}`,
