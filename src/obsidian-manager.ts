@@ -9,7 +9,7 @@ export class ObsidianManager implements AppManager {
 
   addCommand(journalName: string, command: JournalCommand, checkCallback: (checking: boolean) => boolean): void {
     this.plugin.addCommand({
-      id: journalName + ":" + command.name,
+      id: this.#prepareId(journalName + ":" + command.name),
       name: `${journalName}: ${command.name}`,
       icon: command.icon,
       checkCallback,
@@ -17,11 +17,11 @@ export class ObsidianManager implements AppManager {
   }
 
   removeCommand(journalName: string, command: JournalCommand): void {
-    this.plugin.removeCommand(journalName + ":" + command.name);
+    this.plugin.removeCommand(this.#prepareId(journalName + ":" + command.name));
   }
 
   addRibbonIcon(journalName: string, icon: string, tooltip: string, action: () => void): string {
-    const ribbonId = "journals:" + journalName + ":" + tooltip;
+    const ribbonId = this.#prepareId("journals:" + journalName + ":" + tooltip);
     const item = (this.plugin.app.workspace.leftRibbon as LeftRibbon).addRibbonItemButton(
       ribbonId,
       icon,
@@ -33,11 +33,15 @@ export class ObsidianManager implements AppManager {
   }
 
   removeRibbonIcon(journalName: string, tooltip: string): string {
-    const id = "journals:" + journalName + ":" + tooltip;
+    const id = this.#prepareId("journals:" + journalName + ":" + tooltip);
     (this.plugin.app.workspace.leftRibbon as LeftRibbon).removeRibbonAction(id);
     this.#ribbons.get(id)?.detach();
     this.#ribbons.delete(id);
     return id;
+  }
+
+  #prepareId(id: string): string {
+    return id.replaceAll(/\s/gi, "-").toLocaleLowerCase();
   }
 
   dispose(): void {
