@@ -1,3 +1,4 @@
+/* eslint-disable no-console */
 import { computed, type ComputedRef, type Ref } from "vue";
 import type {
   JournalCommand,
@@ -488,19 +489,27 @@ export class Journal {
   }
 
   async #ensureNote(metadata: JournalMetadata): Promise<[string | null, boolean]> {
+    console.log("ensuring note -", JSON.stringify(metadata));
     const filePath = this.getNotePath(metadata);
+    console.log("resolved path -", filePath);
     let isNew = false;
     if (!this.notesManager.nodeExists(filePath)) {
+      console.log("creating note -", filePath);
       const templateContext = this.#getTemplateContext(metadata);
       const noteName = replaceTemplateVariables(this.config.value.nameTemplate, templateContext);
       if (this.config.value.confirmCreation && !(await this.notesManager.confirmNoteCreation(this.name, noteName))) {
         return [null, false];
       }
       isNew = true;
-      await this.notesManager.createNote(filePath, "");
-      templateContext.note_name = { type: "string", value: noteName };
-      const content = await this.#getNoteContent(filePath, templateContext);
-      if (content) await this.notesManager.updateNote(filePath, content);
+      try {
+        await this.notesManager.createNote(filePath, "");
+        templateContext.note_name = { type: "string", value: noteName };
+        const content = await this.#getNoteContent(filePath, templateContext);
+        if (content) await this.notesManager.updateNote(filePath, content);
+      } catch (error) {
+        console.error(error);
+        throw new Error("Failed to create note");
+      }
     }
     await this.#ensureFrontMatter(filePath, metadata);
     return [filePath, isNew];
