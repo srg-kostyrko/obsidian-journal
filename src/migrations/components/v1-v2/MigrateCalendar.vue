@@ -4,7 +4,7 @@ import ObsidianButton from "@/components/obsidian/ObsidianButton.vue";
 import ObsidianIcon from "@/components/obsidian/ObsidianIcon.vue";
 import ObsidianTextInput from "@/components/obsidian/ObsidianTextInput.vue";
 import type { CalendarConfig } from "@/types/old-settings.types";
-import { onMounted, ref } from "vue";
+import { nextTick, onMounted, ref } from "vue";
 import { countSections, migrateCalendarJournal } from "./v1-v2";
 import { usePlugin } from "@/composables/use-plugin";
 
@@ -51,7 +51,11 @@ async function startProcessing() {
 
 onMounted(async () => {
   if (sectionCount === 0) {
-    emit("next");
+    emit("finished");
+    void nextTick(() => {
+      emit("next");
+    });
+    return;
   }
   if (sectionCount === 1) {
     dayName.value = journal.name;

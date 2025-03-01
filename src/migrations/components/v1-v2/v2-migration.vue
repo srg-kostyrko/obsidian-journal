@@ -81,6 +81,7 @@ function next() {
     <div v-else-if="step === 'journal' && currentJournal">
       <MigrateCalendar
         v-if="currentJournal.type === 'calendar'"
+        :key="currentJournal.id + 'calendar'"
         :journal="currentJournal"
         :keep-frontmatter="keepFrontOldMatter"
         @finished="finished"
@@ -88,6 +89,7 @@ function next() {
       />
       <MigrateInterval
         v-else-if="currentJournal.type === 'interval'"
+        :key="currentJournal.id + 'interval'"
         :journal="currentJournal"
         :keep-frontmatter="keepFrontOldMatter"
         @finished="finished"
