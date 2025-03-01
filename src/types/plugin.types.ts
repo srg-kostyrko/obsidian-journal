@@ -13,6 +13,7 @@ export interface JournalPlugin extends Plugin {
   readonly showReloadHint: boolean;
   readonly notesManager: NotesManager;
   requestReloadHint(): void;
+  reprocessNotes(): void;
 
   readonly index: JournalsIndex;
   readonly activeNote: string | null;

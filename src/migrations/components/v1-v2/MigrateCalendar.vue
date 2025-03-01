@@ -44,6 +44,7 @@ async function startProcessing() {
     },
     keepFrontmatter,
   );
+  plugin.reprocessNotes();
   emit("finished");
   stage.value = "done";
 }

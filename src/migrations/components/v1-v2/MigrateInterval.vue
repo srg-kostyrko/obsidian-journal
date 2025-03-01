@@ -19,6 +19,7 @@ const is_processing = ref(true);
 onMounted(async () => {
   is_processing.value = true;
   await migrateIntervalJournal(plugin, journal, keepFrontmatter);
+  plugin.reprocessNotes();
   emit("finished");
   is_processing.value = false;
 });

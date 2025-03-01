@@ -42,6 +42,7 @@ export default class JournalPluginImpl extends Plugin implements JournalPlugin {
   #autoCreateTimer: ReturnType<typeof setTimeout> | undefined;
   #notesManager: NotesManager = new ObsidianNotesManager(this);
   #appManager: AppManager = new ObsidianManager(this);
+  #shouldShowMigartionModal = false;
 
   get hasMigrations() {
     return this.#config.value.pendingMigrations.length > 0;
@@ -343,15 +344,16 @@ export default class JournalPluginImpl extends Plugin implements JournalPlugin {
     this.registerView(CALENDAR_VIEW_TYPE, (leaf) => new CalendarView(leaf, this));
 
     this.app.workspace.onLayoutReady(async () => {
-      const files = this.#notesManager.getMarkdownFiles();
-      for (const file of files) {
-        this.#processMetadata(file);
-      }
+      this.reprocessNotes();
       this.placeCalendarView();
       this.#activeNote.value = this.app.workspace.getActiveFile()?.path ?? null;
       await this.autoCreateNotes();
       if (appStartup) {
         await this.openStartupNote();
+      }
+      if (this.#shouldShowMigartionModal) {
+        this.#showMigrationModal();
+        this.#shouldShowMigartionModal = false;
       }
     });
   }
@@ -365,6 +367,13 @@ export default class JournalPluginImpl extends Plugin implements JournalPlugin {
     }
     for (const journal of this.journals) {
       journal.dispose();
+    }
+  }
+
+  reprocessNotes() {
+    const files = this.#notesManager.getMarkdownFiles();
+    for (const file of files) {
+      this.#processMetadata(file);
     }
   }
 
@@ -423,9 +432,7 @@ export default class JournalPluginImpl extends Plugin implements JournalPlugin {
         const { migratedData, needsUser: needsUserMigration } = migrateData(saved);
         this.#config.value = migratedData;
         await this.saveData(migratedData).catch(console.error);
-        if (needsUserMigration) {
-          this.#showMigrationModal();
-        }
+        this.#shouldShowMigartionModal = needsUserMigration;
       }
     }
   }
