@@ -37,7 +37,7 @@ export class NotesManagerMock implements NotesManager {
   }
 
   getMarkdownFiles(): TFile[] {
-    throw new Error("Method not implemented.");
+    return [...this.#notes.keys()].map((path) => ({ path }) as TFile);
   }
 
   nodeExists(path: string): boolean {

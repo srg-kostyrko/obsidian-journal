@@ -5,13 +5,13 @@ import type { Journal } from "@/journals/journal";
 import { emptyNavRow, prepareJournalDefaultsBasedOnType } from "@/journals/journal-defaults";
 import { JournalAnchorDate } from "@/types/journal.types";
 import type { CalendarConfig, IntervalConfig, PluginSettingsV1 } from "@/types/old-settings.types";
-import type { JournalPlugin } from "@/types/plugin.types";
+import type { JournalPlugin, NotesManager } from "@/types/plugin.types";
 import type { JournalSettings, PluginSettings } from "@/types/settings.types";
 import { deepCopy } from "@/utils/misc";
 import { defaultDateFormats } from "@/journals/journal-defaults";
 
 export const FRONTMATTER_SECTION_KEY = "journal-section";
-export const FRONTMATTER_INDEX_KEY = "journal-interval-index";
+export const FRONTMATTER_INTERVAL_INDEX_KEY = "journal-interval-index";
 
 export const DEFAULT_RIBBON_TOOLTIPS = {
   day: "Open today's note",
@@ -21,7 +21,7 @@ export const DEFAULT_RIBBON_TOOLTIPS = {
   year: "Open this year's note",
 };
 
-interface ConfiguredNames {
+export interface ConfiguredNames {
   shelf: string;
   day: string;
   week: string;
@@ -62,11 +62,7 @@ export function migrateV1toV2(oldData: PluginSettingsV1): PluginSettings {
   return newData;
 }
 
-export async function migrateIntervalJournal(
-  plugin: JournalPlugin,
-  oldSettings: IntervalConfig,
-  keepFrontmatter: boolean,
-): Promise<void> {
+export function prepareIntervalJournalSettings(oldSettings: IntervalConfig, keepFrontmatter: boolean): JournalSettings {
   const write: JournalSettings["write"] = {
     type: "custom",
     anchorDate: JournalAnchorDate(oldSettings.start_date),
@@ -170,8 +166,8 @@ export async function migrateIntervalJournal(
 
   if (oldSettings.ribbon.show) {
     settings.commands.push({
-      icon: oldSettings.ribbon.icon,
-      name: oldSettings.ribbon.tooltip,
+      icon: oldSettings.ribbon.icon || "calendar-range",
+      name: oldSettings.ribbon.tooltip || `Open current ${oldSettings.name} note`,
       type: "same",
       context: "today",
       showInRibbon: true,
@@ -179,19 +175,29 @@ export async function migrateIntervalJournal(
     });
   }
 
-  const journal = plugin.registerJournal(settings);
-
-  await updateFrontMatterInterval(plugin, journal, oldSettings);
+  return settings;
 }
 
-async function updateFrontMatterInterval(
+export async function migrateIntervalJournal(
   plugin: JournalPlugin,
+  oldSettings: IntervalConfig,
+  keepFrontmatter: boolean,
+): Promise<void> {
+  const settings = prepareIntervalJournalSettings(oldSettings, keepFrontmatter);
+
+  const journal = plugin.registerJournal(settings);
+
+  await updateFrontMatterInterval(plugin.notesManager, journal, oldSettings);
+}
+
+export async function updateFrontMatterInterval(
+  notesManager: NotesManager,
   journal: Journal,
   oldSettings: IntervalConfig,
 ): Promise<void> {
-  const files = plugin.notesManager.getMarkdownFiles();
+  const files = notesManager.getMarkdownFiles();
   for (const file of files) {
-    const metadata = plugin.notesManager.getNoteMetadata(file.path);
+    const metadata = notesManager.getNoteMetadata(file.path);
     if (!metadata) continue;
     const { frontmatter } = metadata;
     if (!frontmatter) continue;
@@ -199,7 +205,7 @@ async function updateFrontMatterInterval(
     const journalId = frontmatter[FRONTMATTER_NAME_KEY];
     if (journalId !== oldSettings.id) continue;
 
-    await plugin.notesManager.updateNoteFrontmatter(file.path, (frontmatter) => {
+    await notesManager.updateNoteFrontmatter(file.path, (frontmatter) => {
       const date = frontmatter[FRONTMATTER_START_DATE_KEY] as string;
       const endDate = frontmatter[FRONTMATTER_END_DATE_KEY];
       const anchorDate = journal.resolveAnchorDate(date);
@@ -216,13 +222,13 @@ async function updateFrontMatterInterval(
         } else {
           delete frontmatter[FRONTMATTER_END_DATE_KEY];
         }
-        frontmatter[journal.frontmatterIndex] = frontmatter[FRONTMATTER_INDEX_KEY];
-        delete frontmatter[FRONTMATTER_INDEX_KEY];
+        frontmatter[journal.frontmatterIndex] = frontmatter[FRONTMATTER_INTERVAL_INDEX_KEY];
+        delete frontmatter[FRONTMATTER_INTERVAL_INDEX_KEY];
       } else {
         delete frontmatter[FRONTMATTER_NAME_KEY];
         delete frontmatter[FRONTMATTER_START_DATE_KEY];
         delete frontmatter[FRONTMATTER_END_DATE_KEY];
-        delete frontmatter[FRONTMATTER_INDEX_KEY];
+        delete frontmatter[FRONTMATTER_INTERVAL_INDEX_KEY];
       }
     });
   }
@@ -241,13 +247,13 @@ export async function migrateCalendarJournal(
   if (oldSettings.year.enabled) await migrateCalendarSection(plugin, oldSettings, "year", names, keepFrontmatter);
 }
 
-export async function migrateCalendarSection(
-  plugin: JournalPlugin,
+export function prepareCalendarJournalSettings(
   oldSettings: CalendarConfig,
   sectionName: "day" | "week" | "month" | "quarter" | "year",
   names: ConfiguredNames,
+  addShelf: boolean,
   keepFrontmatter: boolean,
-): Promise<void> {
+): JournalSettings {
   const write: JournalSettings["write"] = {
     type: sectionName,
   };
@@ -263,7 +269,7 @@ export async function migrateCalendarSection(
   settings.name = names[sectionName];
   settings.autoCreate = oldSection.createOnStartup;
 
-  if (plugin.usesShelves && names.shelf) {
+  if (addShelf && names.shelf) {
     settings.shelves = [names.shelf];
   }
 
@@ -290,20 +296,32 @@ export async function migrateCalendarSection(
     settings.frontmatter.addEndDate = true;
   }
 
-  const journal = plugin.registerJournal(settings);
-
-  await updateFrontmatterCalendarSection(plugin, journal, sectionName, oldSettings);
+  return settings;
 }
 
-async function updateFrontmatterCalendarSection(
+export async function migrateCalendarSection(
   plugin: JournalPlugin,
+  oldSettings: CalendarConfig,
+  sectionName: "day" | "week" | "month" | "quarter" | "year",
+  names: ConfiguredNames,
+  keepFrontmatter: boolean,
+): Promise<void> {
+  const settings = prepareCalendarJournalSettings(oldSettings, sectionName, names, plugin.usesShelves, keepFrontmatter);
+
+  const journal = plugin.registerJournal(settings);
+
+  await updateFrontmatterCalendarSection(plugin.notesManager, journal, sectionName, oldSettings);
+}
+
+export async function updateFrontmatterCalendarSection(
+  notesManager: NotesManager,
   journal: Journal,
   sectionName: "day" | "week" | "month" | "quarter" | "year",
   oldSettings: CalendarConfig,
 ) {
-  const files = plugin.notesManager.getMarkdownFiles();
+  const files = notesManager.getMarkdownFiles();
   for (const file of files) {
-    const metadata = plugin.notesManager.getNoteMetadata(file.path);
+    const metadata = notesManager.getNoteMetadata(file.path);
     if (!metadata) continue;
     const { frontmatter } = metadata;
     if (!frontmatter) continue;
@@ -313,7 +331,7 @@ async function updateFrontmatterCalendarSection(
     const section = frontmatter[FRONTMATTER_SECTION_KEY];
     if (section !== sectionName) continue;
 
-    await plugin.notesManager.updateNoteFrontmatter(file.path, (frontmatter) => {
+    await notesManager.updateNoteFrontmatter(file.path, (frontmatter) => {
       const date = frontmatter[FRONTMATTER_START_DATE_KEY] as string;
       const anchorDate = journal.resolveAnchorDate(date);
       if (anchorDate) {
@@ -335,7 +353,7 @@ async function updateFrontmatterCalendarSection(
         delete frontmatter[FRONTMATTER_SECTION_KEY];
         delete frontmatter[FRONTMATTER_START_DATE_KEY];
         delete frontmatter[FRONTMATTER_END_DATE_KEY];
-        delete frontmatter[FRONTMATTER_INDEX_KEY];
+        delete frontmatter[FRONTMATTER_INTERVAL_INDEX_KEY];
       }
     });
   }
