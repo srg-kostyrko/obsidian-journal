@@ -8,9 +8,18 @@ import type { CalendarConfig, IntervalConfig, PluginSettingsV1 } from "@/types/o
 import type { JournalPlugin } from "@/types/plugin.types";
 import type { JournalSettings, PluginSettings } from "@/types/settings.types";
 import { deepCopy } from "@/utils/misc";
+import { defaultDateFormats } from "@/journals/journal-defaults";
 
 export const FRONTMATTER_SECTION_KEY = "journal-section";
 export const FRONTMATTER_INDEX_KEY = "journal-interval-index";
+
+export const DEFAULT_RIBBON_TOOLTIPS = {
+  day: "Open today's note",
+  week: "Open this week's note",
+  month: "Open this month's note",
+  quarter: "Open this quarter's note",
+  year: "Open this year's note",
+};
 
 interface ConfiguredNames {
   shelf: string;
@@ -258,8 +267,8 @@ export async function migrateCalendarSection(
     settings.shelves = [names.shelf];
   }
 
-  settings.nameTemplate = oldSection.nameTemplate;
-  settings.dateFormat = oldSection.dateFormat;
+  settings.nameTemplate = oldSection.nameTemplate || "{{date}}";
+  settings.dateFormat = oldSection.dateFormat || defaultDateFormats[sectionName];
   settings.folder = oldSettings.rootFolder ? oldSettings.rootFolder + "/" + oldSection.folder : oldSection.folder;
   if (oldSection.template) {
     settings.templates.push(oldSection.template);
@@ -267,8 +276,8 @@ export async function migrateCalendarSection(
 
   if (oldSection.ribbon.show) {
     settings.commands.push({
-      icon: oldSection.ribbon.icon,
-      name: oldSection.ribbon.tooltip,
+      icon: oldSection.ribbon.icon || "calendar-days",
+      name: oldSection.ribbon.tooltip || DEFAULT_RIBBON_TOOLTIPS[sectionName],
       type: "same",
       context: "today",
       showInRibbon: true,

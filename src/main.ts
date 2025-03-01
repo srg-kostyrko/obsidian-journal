@@ -431,7 +431,7 @@ export default class JournalPluginImpl extends Plugin implements JournalPlugin {
   }
 
   #showMigrationModal() {
-    new VueModal(this, "Migrate plugin data", MigrationModal).open();
+    new VueModal(this, "Migrate Journals plugin data to v2", MigrationModal).open();
   }
 
   #fillJournals(): void {

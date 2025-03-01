@@ -9,7 +9,7 @@ const defaultNameTemplates: Record<JournalSettings["write"]["type"], string> = {
   custom: "{{journal_name}} {{index}}",
 };
 
-const defaultDateFormats: Record<JournalSettings["write"]["type"], string> = {
+export const defaultDateFormats: Record<JournalSettings["write"]["type"], string> = {
   day: "YYYY-MM-DD",
   week: "YYYY-[W]w",
   month: "YYYY-MM",
