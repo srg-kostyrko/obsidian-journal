@@ -302,60 +302,68 @@ export default class JournalPluginImpl extends Plugin implements JournalPlugin {
   }
 
   async onload(): Promise<void> {
-    const appStartup = !this.app.workspace.layoutReady;
-    await this.#loadSettings();
-    initCalendarCustomization();
-    if (this.#config.value.calendar.dow === -1) {
-      restoreLocale();
-    } else {
-      updateLocale(this.#config.value.calendar.dow, this.#config.value.calendar.doy);
-    }
-
-    this.#fillJournals();
-    this.#setupWatchers();
-    if (this.#config.value.showReloadHint) {
-      this.#config.value.showReloadHint = false;
-    }
-
-    this.#configureCommands();
-
-    this.addSettingTab(new JournalSettingTab(this.app, this));
-    this.registerMarkdownCodeBlockProcessor("calendar-timeline", (source, element, context) => {
-      const processor = new TimelineCodeBlockProcessor(this, element, source, context.sourcePath);
-      context.addChild(processor);
-    });
-    this.registerMarkdownCodeBlockProcessor("calendar-nav", (source, element, context) => {
-      const processor = new NavCodeBlockProcessor(this, element, source, context.sourcePath);
-      context.addChild(processor);
-    });
-    this.registerMarkdownCodeBlockProcessor("interval-nav", (source, element, context) => {
-      const processor = new NavCodeBlockProcessor(this, element, source, context.sourcePath);
-      context.addChild(processor);
-    });
-    this.registerMarkdownCodeBlockProcessor("journal-nav", (source, element, context) => {
-      const processor = new NavCodeBlockProcessor(this, element, source, context.sourcePath);
-      context.addChild(processor);
-    });
-    this.registerMarkdownCodeBlockProcessor("journals-home", (source, element, context) => {
-      const processor = new HomeCodeBlockProcessor(this, element, source, context);
-      context.addChild(processor);
-    });
-
-    this.registerView(CALENDAR_VIEW_TYPE, (leaf) => new CalendarView(leaf, this));
-
-    this.app.workspace.onLayoutReady(async () => {
-      this.reprocessNotes();
-      this.placeCalendarView();
-      this.#activeNote.value = this.app.workspace.getActiveFile()?.path ?? null;
-      await this.autoCreateNotes();
-      if (appStartup) {
-        await this.openStartupNote();
+    try {
+      const appStartup = !this.app.workspace.layoutReady;
+      await this.#loadSettings();
+      initCalendarCustomization();
+      if (this.#config.value.calendar.dow === -1) {
+        restoreLocale();
+      } else {
+        updateLocale(this.#config.value.calendar.dow, this.#config.value.calendar.doy);
       }
-      if (this.#shouldShowMigrationModal) {
-        this.#showMigrationModal();
-        this.#shouldShowMigrationModal = false;
+
+      this.#fillJournals();
+      this.#setupWatchers();
+      if (this.#config.value.showReloadHint) {
+        this.#config.value.showReloadHint = false;
       }
-    });
+
+      this.#configureCommands();
+
+      this.addSettingTab(new JournalSettingTab(this.app, this));
+      this.registerMarkdownCodeBlockProcessor("calendar-timeline", (source, element, context) => {
+        const processor = new TimelineCodeBlockProcessor(this, element, source, context.sourcePath);
+        context.addChild(processor);
+      });
+      this.registerMarkdownCodeBlockProcessor("calendar-nav", (source, element, context) => {
+        const processor = new NavCodeBlockProcessor(this, element, source, context.sourcePath);
+        context.addChild(processor);
+      });
+      this.registerMarkdownCodeBlockProcessor("interval-nav", (source, element, context) => {
+        const processor = new NavCodeBlockProcessor(this, element, source, context.sourcePath);
+        context.addChild(processor);
+      });
+      this.registerMarkdownCodeBlockProcessor("journal-nav", (source, element, context) => {
+        const processor = new NavCodeBlockProcessor(this, element, source, context.sourcePath);
+        context.addChild(processor);
+      });
+      this.registerMarkdownCodeBlockProcessor("journals-home", (source, element, context) => {
+        const processor = new HomeCodeBlockProcessor(this, element, source, context);
+        context.addChild(processor);
+      });
+
+      this.registerView(CALENDAR_VIEW_TYPE, (leaf) => new CalendarView(leaf, this));
+
+      this.app.workspace.onLayoutReady(async () => {
+        try {
+          this.reprocessNotes();
+          this.placeCalendarView();
+          this.#activeNote.value = this.app.workspace.getActiveFile()?.path ?? null;
+          await this.autoCreateNotes();
+          if (appStartup) {
+            await this.openStartupNote();
+          }
+          if (this.#shouldShowMigrationModal) {
+            this.#showMigrationModal();
+            this.#shouldShowMigrationModal = false;
+          }
+        } catch (error) {
+          new Notice(error instanceof Error ? error.message : String(error));
+        }
+      });
+    } catch (error) {
+      new Notice(error instanceof Error ? error.message : String(error));
+    }
   }
   onunload(): void {
     clearTimeout(this.#autoCreateTimer);
