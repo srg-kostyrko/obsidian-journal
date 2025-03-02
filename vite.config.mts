@@ -8,7 +8,7 @@ import vue from "@vitejs/plugin-vue";
 const isWatch = process.argv.includes("--watch");
 
 // https://vitejs.dev/config/
-export default defineConfig({
+export default defineConfig(({ mode }) => ({
   plugins: [
     vue(),
     viteStaticCopy({
@@ -20,6 +20,9 @@ export default defineConfig({
       ],
     }),
   ],
+  define: {
+    "process.env.NODE_ENV": JSON.stringify(mode),
+  },
   resolve: {
     alias: {
       "@": fileURLToPath(new URL("./src", import.meta.url)),
@@ -76,4 +79,4 @@ export default defineConfig({
     emptyOutDir: false,
     outDir: isWatch ? "test-vault/.obsidian/plugins/journals" : "build",
   },
-});
+}));
