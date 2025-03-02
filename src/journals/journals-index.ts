@@ -8,18 +8,18 @@ import type { Journal } from "./journal";
 
 export class JournalsIndex {
   #pathIndex = ref(new Map<string, JournalNoteData>());
-  #pathComputeds = new Map<string, ComputedRef<JournalNoteData | null>>();
-  #journalIndecies = shallowRef(new Map<string, JournalIndex>());
+  #pathComputedRefs = new Map<string, ComputedRef<JournalNoteData | null>>();
+  #journalIndices = shallowRef(new Map<string, JournalIndex>());
 
   getForPath(path: string): JournalNoteData | null {
     return this.#pathIndex.value.get(path) ?? null;
   }
 
   getForPathComputed(path: string) {
-    let cmp = this.#pathComputeds.get(path);
+    let cmp = this.#pathComputedRefs.get(path);
     if (cmp) return cmp;
     cmp = computed(() => this.#pathIndex.value.get(path) ?? null);
-    this.#pathComputeds.set(path, cmp);
+    this.#pathComputedRefs.set(path, cmp);
     return cmp;
   }
 
@@ -46,10 +46,10 @@ export class JournalsIndex {
   }
 
   getJournalIndex(journalId: string) {
-    let index = this.#journalIndecies.value.get(journalId);
+    let index = this.#journalIndices.value.get(journalId);
     if (!index) {
       index = new JournalIndex();
-      this.#journalIndecies.value.set(journalId, index);
+      this.#journalIndices.value.set(journalId, index);
     }
     return index;
   }
@@ -71,8 +71,8 @@ export class JournalsIndex {
     const metadata = this.#pathIndex.value.get(path);
     if (!metadata) return;
     this.#pathIndex.value.delete(path);
-    this.#pathComputeds.delete(path);
-    this.#journalIndecies.value.get(metadata.journal)?.delete(metadata.date);
+    this.#pathComputedRefs.delete(path);
+    this.#journalIndices.value.get(metadata.journal)?.delete(metadata.date);
   }
 
   transferPathData(oldPath: string, newPath: string, newTitle: string) {
@@ -82,7 +82,7 @@ export class JournalsIndex {
     metadata.path = newPath;
     metadata.title = newTitle;
     this.#pathIndex.value.set(newPath, metadata);
-    const index = this.#journalIndecies.value.get(metadata.journal);
+    const index = this.#journalIndices.value.get(metadata.journal);
     if (!index) return;
     index.deleteForPath(oldPath);
     index.set(metadata.date, newPath);
@@ -118,7 +118,7 @@ export class JournalsIndex {
 
   onunload(): void {
     this.#pathIndex.value.clear();
-    this.#pathComputeds.clear();
-    this.#journalIndecies.value.clear();
+    this.#pathComputedRefs.clear();
+    this.#journalIndices.value.clear();
   }
 }

@@ -15,6 +15,7 @@ export function replaceTemplateVariables(template: string, context: TemplateCont
         break;
       }
       case "date": {
+        // eslint-disable-next-line @cspell/spellchecker
         const regExp = new RegExp(`{{\\s*(${name})\\s*(([+-]\\d+)([yqmwd]))?\\s*(:(.*?))?}}`, "gi");
         content = content.replaceAll(regExp, (_, _variableName, calc, timeDelta, unit, _customFormat, format) => {
           const templateVariable = date_from_string(variable.value);

@@ -17,25 +17,25 @@ export interface BulkAddPrams {
 export interface RelateToExistingNote {
   type: "existing_note";
   other_file: string;
-  desision: BulkAddPrams["existing_note"];
+  decision: BulkAddPrams["existing_note"];
 }
 
-export interface FolderDeifference {
+export interface FolderDifference {
   type: "other_folder";
   configured_folder: string;
-  desision: BulkAddPrams["other_folder"];
+  decision: BulkAddPrams["other_folder"];
 }
 
 export interface NameDifference {
   type: "other_name";
   configured_name: string;
-  desision: BulkAddPrams["other_name"];
+  decision: BulkAddPrams["other_name"];
 }
 
-export type NodeProcessingOperationsWithDesisions = RelateToExistingNote | FolderDeifference | NameDifference;
+export type NodeProcessingOperationsWithDecisions = RelateToExistingNote | FolderDifference | NameDifference;
 
 export interface SkippingNote {
-  type: "skiping";
+  type: "skipping";
   reason: string;
 }
 
@@ -44,7 +44,7 @@ export interface ConnectNote {
   anchor_date: JournalAnchorDate;
 }
 
-export type NodeProcessingOperations = SkippingNote | ConnectNote | NodeProcessingOperationsWithDesisions;
+export type NodeProcessingOperations = SkippingNote | ConnectNote | NodeProcessingOperationsWithDecisions;
 
 export interface NoteDataForProcessing {
   path: string;

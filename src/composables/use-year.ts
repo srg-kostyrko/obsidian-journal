@@ -13,8 +13,8 @@ export function useYear(refDate: Ref<string>, minDate?: Ref<string | undefined>,
     }
     const start = momentDate.clone().startOf("year");
     const end = momentDate.clone().endOf("year");
-    const lowerBondary = minDate?.value ? date_from_string(minDate.value) : undefined;
-    const upperBondary = maxDate?.value ? date_from_string(maxDate.value) : undefined;
+    const lowerBoundary = minDate?.value ? date_from_string(minDate.value) : undefined;
+    const upperBoundary = maxDate?.value ? date_from_string(maxDate.value) : undefined;
 
     const months: CalendarUiElement[] = [];
 
@@ -24,8 +24,8 @@ export function useYear(refDate: Ref<string>, minDate?: Ref<string | undefined>,
         date: current.format("MMMM"),
         key: current.format(FRONTMATTER_DATE_FORMAT),
         disabled:
-          (!!lowerBondary && current.clone().endOf("year").isBefore(lowerBondary)) ||
-          (!!upperBondary && current.clone().startOf("year").isAfter(upperBondary)),
+          (!!lowerBoundary && current.clone().endOf("year").isBefore(lowerBoundary)) ||
+          (!!upperBoundary && current.clone().startOf("year").isAfter(upperBoundary)),
       });
       current.add(1, "month");
     }

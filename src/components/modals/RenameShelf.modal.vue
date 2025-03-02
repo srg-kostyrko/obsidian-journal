@@ -20,7 +20,7 @@ const newName = ref(props.name);
 const canSave = computed(() => {
   return newName.value.length > 0 && newName.value !== props.name && !plugin.hasShelf(newName.value);
 });
-const showUniqeWarning = computed(() => {
+const showUniqueWarning = computed(() => {
   return newName.value && newName.value !== props.name && plugin.hasShelf(newName.value);
 });
 
@@ -33,7 +33,7 @@ function save() {
 <template>
   <ObsidianSetting name="New name">
     <template #description>
-      <span v-if="showUniqeWarning" class="journal-important">This name is already used.</span>
+      <span v-if="showUniqueWarning" class="journal-important">This name is already used.</span>
     </template>
     <ObsidianTextInput v-model="newName" />
   </ObsidianSetting>

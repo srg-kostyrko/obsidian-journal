@@ -46,10 +46,10 @@ onMounted(() => {
 
 <template>
   <form @submit.prevent="onSubmit">
-    <ObsidianSetting name="Current mame">
+    <ObsidianSetting name="Current name">
       {{ currentName }}
     </ObsidianSetting>
-    <ObsidianSetting name="New mame">
+    <ObsidianSetting name="New name">
       <template #description>
         <FormErrors :errors="errorBag.name" />
       </template>

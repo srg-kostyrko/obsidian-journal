@@ -103,7 +103,7 @@ async function update() {
         <div>
           Here you can define what day of week should be used<br />
           as first and how first week of year should be defined<br />
-          if none of standart presets suits your needs.
+          if none of standard presets suits your needs.
         </div>
       </template>
       <ObsidianButton v-if="currentPreset.name !== 'custom'" @click="useCustomPreset()">Use</ObsidianButton>

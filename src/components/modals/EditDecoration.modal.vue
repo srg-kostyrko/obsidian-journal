@@ -58,7 +58,7 @@ function addCondition(type: string) {
 function removeDecorationCondition(index: number) {
   conditions.value.splice(index, 1);
 }
-function chengeDecorationCondition<D extends JournalDecorationCondition, K extends keyof D>(
+function changeDecorationCondition<D extends JournalDecorationCondition, K extends keyof D>(
   condition: D,
   change: { prop: K; value: D[K] },
 ) {
@@ -107,14 +107,14 @@ function save() {
         <option value="and">all conditions are</option>
         <option value="or">any conditions is</option>
       </ObsidianDropdown>
-      fullfilled
+      fulfilled
     </ObsidianSetting>
     <ObsidianSetting>
       <ButtonDropdown :options="availableConditionTypes" @select="addCondition">Add condition</ButtonDropdown>
     </ObsidianSetting>
     <ObsidianSetting v-for="(condition, i) of conditions" :key="i" class="condition-wrapper">
       <span v-if="i > 0" class="mode-hint">{{ mode }}</span>
-      <ConditionItem :condition="condition" @change="chengeDecorationCondition(condition, $event)" />
+      <ConditionItem :condition="condition" @change="changeDecorationCondition(condition, $event)" />
       <ObsidianIconButton icon="trash" @click="removeDecorationCondition(i)" />
     </ObsidianSetting>
     <p v-if="conditions.length === 0" class="journal-hint">No conditions defined yet</p>

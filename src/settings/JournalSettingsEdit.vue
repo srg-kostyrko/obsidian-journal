@@ -283,7 +283,7 @@ async function toggleFrontmatterEndDate() {
   await journal.value.toggleFrontmatterEndDate();
 }
 
-async function onAutoCreate(value: boolean) {
+async function onAutoCreate(value?: boolean) {
   if (value) {
     await journal.value?.autoCreate();
   }
@@ -329,7 +329,7 @@ watch(
           Start date should be defined for journal that ends after some number of repeats.
         </div>
         <div v-if="config.write.type === 'custom'" class="journal-important">
-          Start date for custom intervals cannot be changes as it is used to calcualte interval
+          Start date for custom intervals cannot be changes as it is used to calculate interval
         </div>
       </template>
       <span v-if="config.write.type === 'custom'">
@@ -429,8 +429,8 @@ watch(
         <a target="_blank" href="https://momentjs.com/docs/#/displaying/format/">Syntax reference</a><br />
         <DateFormatPreview :format="config.dateFormat" />
         <div v-if="dateFormatWithFolders" class="journal-important">
-          Looks like you are using date format to create folders. Recommended way to this is to use vaiables in "Folder"
-          field. <a href="#" @click="moveFoldersFromFormat">Apply recomendation</a>
+          Looks like you are using date format to create folders. Recommended way to this is to use variables in
+          "Folder" field. <a href="#" @click="moveFoldersFromFormat">Apply recommendation</a>
         </div>
       </template>
       <ObsidianTextInput v-model="config.dateFormat" />

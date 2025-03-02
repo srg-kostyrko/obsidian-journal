@@ -1,5 +1,5 @@
 import { moment } from "obsidian";
-import { extractCurrentlocaleData } from "./utils/moment";
+import { extractCurrentLocaleData } from "./utils/moment";
 import type { MomentDate } from "./types/date.types";
 import type { WeekPreset } from "./types/calendar-ui.types";
 import type { PluginSettings } from "./types/settings.types";
@@ -10,7 +10,7 @@ let initialWeekSettings: { dow: number; doy: number } | undefined;
 export function initCalendarCustomization(): void {
   if (!moment.locales().includes(CUSTOM_LOCALE)) {
     const currentLocale = moment.locale();
-    const currentLocaleData = extractCurrentlocaleData();
+    const currentLocaleData = extractCurrentLocaleData();
     initialWeekSettings = currentLocaleData.week;
     moment.defineLocale(CUSTOM_LOCALE, currentLocaleData);
     moment.locale(currentLocale);

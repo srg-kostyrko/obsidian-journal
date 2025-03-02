@@ -70,7 +70,7 @@ function migrate() {
   />
   <JournalSettingsWithoutShelves v-else @edit="emit('edit', $event)" @bulk-add="emit('bulk-add', $event)" />
 
-  <ObsidianSetting name="Open on startup" descripton="Open a note whenever you open this vault?">
+  <ObsidianSetting name="Open on startup" description="Open a note whenever you open this vault?">
     <ObsidianDropdown v-model="plugin.openOnStartup">
       <option value="">Don't open</option>
       <option v-for="journal of plugin.journals" :key="journal.name" :value="journal.name">

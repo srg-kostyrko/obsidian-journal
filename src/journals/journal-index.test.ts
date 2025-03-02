@@ -70,7 +70,7 @@ describe("JournalIndex", () => {
       expect(index.findClosestDate("2023-01-01")).toBe(JournalAnchorDate("2022-11-10"));
     });
 
-    test("it shoould return known date if found", () => {
+    test("it should return known date if found", () => {
       expect(index.findClosestDate("2022-01-02")).toBe(JournalAnchorDate("2022-01-02"));
     });
 

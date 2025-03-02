@@ -104,7 +104,7 @@ onMounted(async () => {
         <ObsidianButton cta @click="startProcessing">Migrate</ObsidianButton>
       </ObsidianSetting>
     </template>
-    <div v-else-if="stage === 'processing'" class="loader-continer">
+    <div v-else-if="stage === 'processing'" class="loader-container">
       <ObsidianIcon name="loader" />
     </div>
     <ObsidianSetting v-else name="Done!">
@@ -114,7 +114,7 @@ onMounted(async () => {
 </template>
 
 <style scoped>
-.loader-continer {
+.loader-container {
   display: flex;
   justify-content: center;
   padding: var(--size-4-2);

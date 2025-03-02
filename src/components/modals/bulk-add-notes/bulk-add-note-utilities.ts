@@ -2,7 +2,7 @@ import { normalizePath } from "obsidian";
 import type {
   BulkAddPrams,
   ConnectNote,
-  FolderDeifference,
+  FolderDifference,
   NameDifference,
   NoteDataForProcessing,
   NoteProcessingResult,
@@ -38,7 +38,7 @@ export function preprocessNotes(
     const existing = plugin.index.getForPath(path);
     if (existing) {
       noteData.operations.push({
-        type: "skiping",
+        type: "skipping",
         reason:
           journal.name === existing.journal ? "already in journal" : "already in another journal " + existing.journal,
       });
@@ -46,7 +46,7 @@ export function preprocessNotes(
     }
     if (!checkFilters(plugin, path, parameters.filter_combinator, parameters.filters)) {
       noteData.operations.push({
-        type: "skiping",
+        type: "skipping",
         reason: "does not match filters",
       });
       continue;
@@ -57,15 +57,15 @@ export function preprocessNotes(
         : plugin.notesManager.getNoteMetadata(path)?.frontmatter?.[parameters.property_name];
     if (dateString === undefined) {
       noteData.operations.push({
-        type: "skiping",
-        reason: "does not have date containing proerty " + parameters.property_name,
+        type: "skipping",
+        reason: "does not have date containing property " + parameters.property_name,
       });
       continue;
     }
     const match = dateString.match(dateRegexp);
     if (!match) {
       noteData.operations.push({
-        type: "skiping",
+        type: "skipping",
         reason: "date with configured format not found",
       });
       continue;
@@ -73,7 +73,7 @@ export function preprocessNotes(
     const date = date_from_string(match[0], parameters.date_format);
     if (!date.isValid()) {
       noteData.operations.push({
-        type: "skiping",
+        type: "skipping",
         reason: "invalid date " + dateString,
       });
       continue;
@@ -81,7 +81,7 @@ export function preprocessNotes(
     const metadata = journal.get(date.format("YYYY-MM-DD"));
     if (!metadata) {
       noteData.operations.push({
-        type: "skiping",
+        type: "skipping",
         reason: "date is outside of journal boundaries " + date.format("YYYY-MM-DD"),
       });
       continue;
@@ -90,7 +90,7 @@ export function preprocessNotes(
       noteData.operations.push({
         type: "existing_note",
         other_file: metadata.path,
-        desision: parameters.existing_note,
+        decision: parameters.existing_note,
       });
     }
     const [configuredFolder, configuredFilename] = journal.getConfiguredPathData(metadata);
@@ -98,14 +98,14 @@ export function preprocessNotes(
       noteData.operations.push({
         type: "other_folder",
         configured_folder: configuredFolder,
-        desision: parameters.other_folder,
+        decision: parameters.other_folder,
       });
     }
     if (configuredFilename !== plugin.notesManager.getNoteName(path)) {
       noteData.operations.push({
         type: "other_name",
         configured_name: configuredFilename,
-        desision: parameters.other_name,
+        decision: parameters.other_name,
       });
     }
   }
@@ -241,7 +241,7 @@ async function relateExistingNote(
   operation: RelateToExistingNote,
   result: NoteProcessingResult,
 ) {
-  switch (operation.desision) {
+  switch (operation.decision) {
     case "skip": {
       result.actions.push(`Skipped: other note connected to same date already exists in journal`);
       break;
@@ -269,10 +269,10 @@ async function processDifferentFolder(
   plugin: JournalPlugin,
   noteData: NoteDataForProcessing,
   parameters: BulkAddPrams,
-  operation: FolderDeifference,
+  operation: FolderDifference,
   result: NoteProcessingResult,
 ) {
-  switch (operation.desision) {
+  switch (operation.decision) {
     case "keep": {
       result.actions.push(
         `Notes folder "${plugin.notesManager.getNoteFolder(noteData.path) ?? "/"}" differs from configured folder "${parameters.folder || "/"}" - keeping as is`,
@@ -301,7 +301,7 @@ async function processDifferentName(
   operation: NameDifference,
   result: NoteProcessingResult,
 ) {
-  switch (operation.desision) {
+  switch (operation.decision) {
     case "keep": {
       result.actions.push(
         `Note name "${plugin.notesManager.getNoteName(noteData.path)}" differs from configured name "${parameters.property_name}" - keeping as is`,
@@ -337,7 +337,7 @@ export async function processNote(
   try {
     for (const op of operations) {
       switch (op.type) {
-        case "skiping": {
+        case "skipping": {
           skipNote(op, result);
           break;
         }

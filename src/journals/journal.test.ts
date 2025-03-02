@@ -3,7 +3,7 @@ import { deepCopy } from "@/utils/misc";
 import { afterAll, beforeAll, describe, expect, it } from "vitest";
 import { computed, ref } from "vue";
 import { JournalsIndex } from "./journals-index";
-import { AppManagerMock } from "@/__mocks__/app-mananger.mock";
+import { AppManagerMock } from "@/__mocks__/app-manager.mock";
 import { NotesManagerMock } from "@/__mocks__/notes-manager.mock";
 import { Journal } from "./journal";
 import { JournalAnchorDate } from "@/types/journal.types";

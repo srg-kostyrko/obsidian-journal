@@ -29,7 +29,7 @@ function addCondition(type: string) {
 function removeDecorationCondition(index: number) {
   emit("remove-condition", index);
 }
-function chengeCondition(index: number, change: { prop: unknown; value: unknown }) {
+function changeCondition(index: number, change: { prop: unknown; value: unknown }) {
   emit("change-condition", index, change);
 }
 </script>
@@ -40,7 +40,7 @@ function chengeCondition(index: number, change: { prop: unknown; value: unknown 
   </ObsidianSetting>
   <ObsidianSetting v-for="(condition, i) of conditions" :key="i" class="condition-wrapper">
     <span v-if="i > 0" class="mode-hint">{{ mode }}</span>
-    <ConditionItem :condition="condition" @change="chengeCondition(i, $event)" />
+    <ConditionItem :condition="condition" @change="changeCondition(i, $event)" />
     <ObsidianIconButton icon="trash" @click="removeDecorationCondition(i)" />
   </ObsidianSetting>
   <p v-if="conditions.length === 0" class="journal-hint">No conditions defined yet</p>

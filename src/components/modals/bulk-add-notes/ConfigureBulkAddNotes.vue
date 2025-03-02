@@ -111,7 +111,7 @@ const onSubmit = handleSubmit(() => {
 
 <template>
   <form @submit.prevent="onSubmit">
-    <ObsidianSetting name="Folder" descripton="">
+    <ObsidianSetting name="Folder" description="">
       <template #description>
         <div>Select folder with existing notes that you want to process</div>
         <FormErrors :errors="errorBag.folder" />
@@ -160,7 +160,7 @@ const onSubmit = handleSubmit(() => {
       @remove-condition="removeFilter"
     />
 
-    <ObsidianSetting name="If other note with same date existits in journal">
+    <ObsidianSetting name="If other note with same date exists in journal">
       <ObsidianDropdown v-model="existingNote" v-bind="existingNoteAttrs">
         <option value="skip">Skip note</option>
         <option value="override">Override date connection</option>

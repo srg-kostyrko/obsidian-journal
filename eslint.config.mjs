@@ -3,6 +3,7 @@ import tseslint from "typescript-eslint";
 import eslintConfigPrettier from "eslint-config-prettier";
 import pluginVue from "eslint-plugin-vue";
 import eslintPluginUnicorn from "eslint-plugin-unicorn";
+import cspellConfigs from "@cspell/eslint-plugin/configs";
 
 export default [
   {
@@ -13,6 +14,7 @@ export default [
   ...tseslint.configs.stylistic,
   ...tseslint.configs.recommendedTypeChecked,
   ...tseslint.configs.stylisticTypeChecked,
+  cspellConfigs.recommended,
   eslintConfigPrettier,
   ...pluginVue.configs["flat/recommended"],
   eslintPluginUnicorn.configs["recommended"],
@@ -66,6 +68,16 @@ export default [
             attrs: false,
             i: false,
             env: false,
+          },
+        },
+      ],
+      "@cspell/spellchecker": [
+        "warn",
+        {
+          checkComments: true,
+          autoFix: false,
+          cspell: {
+            words: ["Keymap", "templater", "chrono", "iconed", "popout"],
           },
         },
       ],

@@ -11,7 +11,7 @@ const emit = defineEmits<{
 const plugin = usePlugin();
 const currentMigration = ref<PendingMigration | null>(null);
 
-const migartionComponent = computed(() => {
+const migrationComponent = computed(() => {
   if (!currentMigration.value) return null;
   switch (currentMigration.value.type) {
     case "v1-v2": {
@@ -42,7 +42,7 @@ onMounted(() => {
 
 <template>
   <div v-if="currentMigration">
-    <component :is="migartionComponent" :migration="currentMigration" @finished="onFinished" />
+    <component :is="migrationComponent" :migration="currentMigration" @finished="onFinished" />
   </div>
 </template>
 

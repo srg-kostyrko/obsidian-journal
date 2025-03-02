@@ -12,7 +12,7 @@ import type { CalendarConfig, IntervalConfig } from "@/types/old-settings.types"
 import { deepCopy } from "@/utils/misc";
 import { NotesManagerMock } from "@/__mocks__/notes-manager.mock";
 import { Journal } from "@/journals/journal";
-import { AppManagerMock } from "@/__mocks__/app-mananger.mock";
+import { AppManagerMock } from "@/__mocks__/app-manager.mock";
 import { computed, ref } from "vue";
 import { defaultJournalSettings } from "@/defaults";
 import { JournalsIndex } from "@/journals/journals-index";
@@ -147,7 +147,7 @@ describe("v1 to v2 migration", () => {
         expect(settings.folder).toBe("test-folder");
       });
 
-      it("adds root folder if configued", () => {
+      it("adds root folder if configured", () => {
         const oldSettingsCopy = deepCopy(oldSettings);
         oldSettingsCopy.rootFolder = "root-folder";
         oldSettingsCopy.day.folder = "test-folder";
@@ -164,7 +164,7 @@ describe("v1 to v2 migration", () => {
         expect(settings.templates).toContain("test-template.md");
       });
 
-      it("knows how to konvert custom ribbon", () => {
+      it("knows how to convert custom ribbon", () => {
         const oldSettingsCopy = deepCopy(oldSettings);
         oldSettingsCopy.day.ribbon.show = true;
         oldSettingsCopy.day.ribbon.icon = "some-icon";
@@ -190,7 +190,7 @@ describe("v1 to v2 migration", () => {
         expect(settings.nameTemplate).toBe("{{date}}");
         expect(settings.dateFormat).toBe("YYYY-MM-DD");
       });
-      it("knows how to convert daliy journal custom settings", () => {
+      it("knows how to convert daily journal custom settings", () => {
         const oldSettingsCopy = deepCopy(oldSettings);
         oldSettingsCopy.day.nameTemplate = "{{journal_name}} {{date}}";
         oldSettingsCopy.day.dateFormat = "YYYY--MM--DD";
@@ -198,7 +198,7 @@ describe("v1 to v2 migration", () => {
         expect(settings.nameTemplate).toBe("{{journal_name}} {{date}}");
         expect(settings.dateFormat).toBe("YYYY--MM--DD");
       });
-      it("knows how to konvert default daily ribbon", () => {
+      it("knows how to convert default daily ribbon", () => {
         const oldSettingsCopy = deepCopy(oldSettings);
         oldSettingsCopy.day.ribbon.show = true;
         const settings = prepareCalendarJournalSettings(oldSettingsCopy, "day", names, false, false);
@@ -224,7 +224,7 @@ describe("v1 to v2 migration", () => {
         expect(settings.nameTemplate).toBe("{{journal_name}} {{date}}");
         expect(settings.dateFormat).toBe("[W]ww");
       });
-      it("knows how to konvert default weekly ribbon", () => {
+      it("knows how to convert default weekly ribbon", () => {
         const oldSettingsCopy = deepCopy(oldSettings);
         oldSettingsCopy.week.ribbon.show = true;
         const settings = prepareCalendarJournalSettings(oldSettingsCopy, "week", names, false, false);
@@ -250,7 +250,7 @@ describe("v1 to v2 migration", () => {
         expect(settings.nameTemplate).toBe("{{journal_name}} {{date}}");
         expect(settings.dateFormat).toBe("MMM");
       });
-      it("knows how to konvert default monthly ribbon", () => {
+      it("knows how to convert default monthly ribbon", () => {
         const oldSettingsCopy = deepCopy(oldSettings);
         oldSettingsCopy.month.ribbon.show = true;
         const settings = prepareCalendarJournalSettings(oldSettingsCopy, "month", names, false, false);
@@ -276,7 +276,7 @@ describe("v1 to v2 migration", () => {
         expect(settings.nameTemplate).toBe("{{journal_name}} {{date}}");
         expect(settings.dateFormat).toBe("[Q]Q");
       });
-      it("knows how to konvert default quartely ribbon", () => {
+      it("knows how to convert default quarterly ribbon", () => {
         const oldSettingsCopy = deepCopy(oldSettings);
         oldSettingsCopy.quarter.ribbon.show = true;
         const settings = prepareCalendarJournalSettings(oldSettingsCopy, "quarter", names, false, false);
@@ -302,7 +302,7 @@ describe("v1 to v2 migration", () => {
         expect(settings.nameTemplate).toBe("{{journal_name}} {{date}}");
         expect(settings.dateFormat).toBe("[My] YYYY");
       });
-      it("knows how to konvert default yearly ribbon", () => {
+      it("knows how to convert default yearly ribbon", () => {
         const oldSettingsCopy = deepCopy(oldSettings);
         oldSettingsCopy.year.ribbon.show = true;
         const settings = prepareCalendarJournalSettings(oldSettingsCopy, "year", names, false, false);
@@ -581,7 +581,7 @@ describe("v1 to v2 migration", () => {
       });
     });
 
-    it("knows how to migarte year rest for days", () => {
+    it("knows how to migrate year rest for days", () => {
       const oldSettingsCopy = deepCopy(oldSettings);
       oldSettingsCopy.numeration_type = "year";
       oldSettingsCopy.granularity = "day";
@@ -655,7 +655,7 @@ describe("v1 to v2 migration", () => {
       ]);
     });
 
-    it("enabled dates in fronmatter if requested", () => {
+    it("enabled dates in frontmatter if requested", () => {
       const settings = prepareIntervalJournalSettings(oldSettings, true);
 
       expect(settings.frontmatter.addStartDate).toBeTruthy();

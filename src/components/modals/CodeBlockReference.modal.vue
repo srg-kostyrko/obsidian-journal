@@ -28,14 +28,14 @@ separator: " | "`;
     <p>Navigation code block helps navigating relative to current note.</p>
     <p>
       It is fully customizable on journal level.<br />
-      Current fonfiguration for {{ journalName }} journal looks like this:
+      Current configuration for {{ journalName }} journal looks like this:
     </p>
     <BlockDivider />
     <NavigationCodeBlock :path />
     <BlockDivider />
     <p>
       Plugin still supports older code blocks <code>calendar-nav</code> and <code>journal-nav</code> that function just
-      as aliasses to <code>journal-nav</code>.
+      as aliases to <code>journal-nav</code>.
     </p>
     <BlockDivider />
     <DisplayCodeBlock name="calendar-timeline" />
@@ -46,7 +46,7 @@ separator: " | "`;
     <BlockDivider />
     <p>You can change default timeline mode by adding mode prop to code block.</p>
     <DisplayCodeBlock name="calendar-timeline">mode: month</DisplayCodeBlock>
-    <p>Suppoerted modes are:</p>
+    <p>Supported modes are:</p>
     <ul>
       <li v-for="mode in timelineModes" :key="mode">{{ mode }}</li>
     </ul>

@@ -15,8 +15,8 @@ export function useDecade(refDate: Ref<string>, minDate?: Ref<string | undefined
     }
 
     const years: CalendarUiElement[] = [];
-    const lowerBondary = minDate?.value ? date_from_string(minDate.value) : undefined;
-    const upperBondary = maxDate?.value ? date_from_string(maxDate.value) : undefined;
+    const lowerBoundary = minDate?.value ? date_from_string(minDate.value) : undefined;
+    const upperBoundary = maxDate?.value ? date_from_string(maxDate.value) : undefined;
 
     for (let i = startYear.value - 1; i <= endYear.value + 1; i++) {
       const date = momentDate.value.clone().year(i);
@@ -25,8 +25,8 @@ export function useDecade(refDate: Ref<string>, minDate?: Ref<string | undefined
         key: date.format(FRONTMATTER_DATE_FORMAT),
         outside: i < startYear.value || i > endYear.value,
         disabled:
-          (!!lowerBondary && date.clone().endOf("year").isBefore(lowerBondary)) ||
-          (!!upperBondary && date.clone().startOf("year").isAfter(upperBondary)),
+          (!!lowerBoundary && date.clone().endOf("year").isBefore(lowerBoundary)) ||
+          (!!upperBoundary && date.clone().startOf("year").isAfter(upperBoundary)),
       });
     }
 

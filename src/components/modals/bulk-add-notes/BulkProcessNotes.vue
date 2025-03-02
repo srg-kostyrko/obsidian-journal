@@ -2,7 +2,7 @@
 import { computed, onMounted, ref } from "vue";
 import type {
   BulkAddPrams,
-  NodeProcessingOperationsWithDesisions,
+  NodeProcessingOperationsWithDecisions,
   NoteDataForProcessing,
   NoteProcessingResult,
 } from "./bulk-add-notes.types";
@@ -25,13 +25,13 @@ const stage = ref("Building list...");
 const notesQueue = ref<NoteDataForProcessing[]>([]);
 
 const currentNote = ref<NoteDataForProcessing | null>(null);
-const currentNoteDesisions = computed(() => {
+const currentNoteDecisions = computed(() => {
   if (!currentNote.value) return [];
   return currentNote.value.operations.filter(
     (op) =>
-      (op.type === "existing_note" && op.desision === "ask") ||
-      (op.type === "other_folder" && op.desision === "ask") ||
-      (op.type === "other_name" && op.desision === "ask"),
+      (op.type === "existing_note" && op.decision === "ask") ||
+      (op.type === "other_folder" && op.decision === "ask") ||
+      (op.type === "other_name" && op.decision === "ask"),
   );
 });
 const currentNoteName = computed(() =>
@@ -42,7 +42,7 @@ const currentNoteFolder = computed(() =>
 );
 const processed = ref<NoteProcessingResult[]>([]);
 
-const isPendingDecision = computed(() => currentNoteDesisions.value.length > 0);
+const isPendingDecision = computed(() => currentNoteDecisions.value.length > 0);
 
 async function scheduleNextNote() {
   await delay(10);
@@ -65,18 +65,18 @@ async function processCurrentNote() {
   scheduleNextNote().catch(console.error);
 }
 
-function updateDesision(
-  op: NodeProcessingOperationsWithDesisions,
-  desision: NodeProcessingOperationsWithDesisions["desision"],
+function updateDecision(
+  op: NodeProcessingOperationsWithDecisions,
+  decision: NodeProcessingOperationsWithDecisions["decision"],
 ) {
-  op.desision = desision;
+  op.decision = decision;
   processCurrentNote().catch(console.error);
 }
 
 onMounted(() => {
   if (!journal.value) return;
   const list = plugin.notesManager.getNotesInFolder(parameters.folder);
-  stage.value = "Preprocesing notes...";
+  stage.value = "Preprocessing notes...";
   notesQueue.value = preprocessNotes(plugin, journal.value, list, parameters);
   stage.value = "Processing notes...";
   scheduleNextNote().catch(console.error);
@@ -86,13 +86,13 @@ onMounted(() => {
 <template>
   <div v-if="currentNote && isPendingDecision">
     Note: {{ currentNoteName }}<br />
-    <div v-for="(op, index) of currentNoteDesisions" :key="index">
+    <div v-for="(op, index) of currentNoteDecisions" :key="index">
       <div v-if="op.type === 'existing_note'">
-        Other note with same date existits in journal - {{ plugin.notesManager.getNoteName(op.other_file) }}<br />
+        Other note with same date exists in journal - {{ plugin.notesManager.getNoteName(op.other_file) }}<br />
         <div>
-          <ObsidianButton @click="updateDesision(op, 'skip')">Skip note</ObsidianButton>
-          <ObsidianButton @click="updateDesision(op, 'override')">Override date connection</ObsidianButton>
-          <ObsidianButton @click="updateDesision(op, 'merge')">Merge note content into existing one</ObsidianButton>
+          <ObsidianButton @click="updateDecision(op, 'skip')">Skip note</ObsidianButton>
+          <ObsidianButton @click="updateDecision(op, 'override')">Override date connection</ObsidianButton>
+          <ObsidianButton @click="updateDecision(op, 'merge')">Merge note content into existing one</ObsidianButton>
         </div>
       </div>
       <div v-else-if="op.type === 'other_folder'">
@@ -100,8 +100,8 @@ onMounted(() => {
         Configured folder: {{ op.configured_folder }}<br />
         Note folder: {{ currentNoteFolder }}<br />
         <div>
-          <ObsidianButton @click="updateDesision(op, 'keep')">Keep as is</ObsidianButton>
-          <ObsidianButton @click="updateDesision(op, 'move')">Move to configured folder</ObsidianButton>
+          <ObsidianButton @click="updateDecision(op, 'keep')">Keep as is</ObsidianButton>
+          <ObsidianButton @click="updateDecision(op, 'move')">Move to configured folder</ObsidianButton>
         </div>
       </div>
       <div v-else-if="op.type === 'other_name'">
@@ -109,8 +109,8 @@ onMounted(() => {
         Configured name: {{ op.configured_name }}<br />
         Note name: {{ currentNoteName }}<br />
         <div>
-          <ObsidianButton @click="updateDesision(op, 'keep')">Keep as is</ObsidianButton>
-          <ObsidianButton @click="updateDesision(op, 'rename')">Rename to configured name</ObsidianButton>
+          <ObsidianButton @click="updateDecision(op, 'keep')">Keep as is</ObsidianButton>
+          <ObsidianButton @click="updateDecision(op, 'rename')">Rename to configured name</ObsidianButton>
         </div>
       </div>
     </div>

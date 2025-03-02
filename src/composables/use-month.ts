@@ -18,8 +18,8 @@ export function useMonth(refDate: Ref<string>, minDate?: Ref<string | undefined>
     const end = momentDate.clone().endOf("month").endOf("week");
     const placeWeeks = plugin.calendarViewSettings.weeks || "left";
 
-    const lowerBondary = minDate?.value ? date_from_string(minDate.value) : null;
-    const upperBondary = maxDate?.value ? date_from_string(maxDate.value) : null;
+    const lowerBoundary = minDate?.value ? date_from_string(minDate.value) : null;
+    const upperBoundary = maxDate?.value ? date_from_string(maxDate.value) : null;
 
     const days: CalendarUiDay[] = [];
 
@@ -32,8 +32,8 @@ export function useMonth(refDate: Ref<string>, minDate?: Ref<string | undefined>
           outside: false,
           isWeekNumber: true,
           disabled:
-            (!!lowerBondary && current.clone().endOf("week").isBefore(lowerBondary, "day")) ||
-            (!!upperBondary && current.clone().startOf("week").isAfter(upperBondary, "day")),
+            (!!lowerBoundary && current.clone().endOf("week").isBefore(lowerBoundary, "day")) ||
+            (!!upperBoundary && current.clone().startOf("week").isAfter(upperBoundary, "day")),
         });
       }
 
@@ -44,8 +44,8 @@ export function useMonth(refDate: Ref<string>, minDate?: Ref<string | undefined>
         outside: !momentDate.isSame(current, "month"),
         isWeekNumber: false,
         disabled:
-          (!!lowerBondary && current.isBefore(lowerBondary, "day")) ||
-          (!!upperBondary && current.isAfter(upperBondary, "day")),
+          (!!lowerBoundary && current.isBefore(lowerBoundary, "day")) ||
+          (!!upperBoundary && current.isAfter(upperBoundary, "day")),
       });
 
       if (placeWeeks === "right" && current.isSame(current.clone().endOf("week"), "day")) {
@@ -55,8 +55,8 @@ export function useMonth(refDate: Ref<string>, minDate?: Ref<string | undefined>
           outside: false,
           isWeekNumber: true,
           disabled:
-            (!!lowerBondary && current.clone().endOf("week").isBefore(lowerBondary, "day")) ||
-            (!!upperBondary && current.clone().startOf("week").isAfter(upperBondary, "day")),
+            (!!lowerBoundary && current.clone().endOf("week").isBefore(lowerBoundary, "day")) ||
+            (!!upperBoundary && current.clone().startOf("week").isAfter(upperBoundary, "day")),
         });
       }
       current.add(1, "day");

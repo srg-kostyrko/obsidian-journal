@@ -1,3 +1,4 @@
+/* eslint-disable @cspell/spellchecker */
 import { fileURLToPath, URL } from "node:url";
 import { defineConfig } from "vite";
 import builtins from "builtin-modules";

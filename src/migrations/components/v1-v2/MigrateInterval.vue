@@ -30,7 +30,7 @@ onMounted(async () => {
     <ObsidianSetting heading>
       <template #name> Migrating {{ journal.name }} </template>
     </ObsidianSetting>
-    <div v-if="is_processing" class="loader-continer">
+    <div v-if="is_processing" class="loader-container">
       <ObsidianIcon name="loader" />
     </div>
     <ObsidianSetting v-else name="Done!">
@@ -40,7 +40,7 @@ onMounted(async () => {
 </template>
 
 <style scoped>
-.loader-continer {
+.loader-container {
   display: flex;
   justify-content: center;
   padding: var(--size-4-2);

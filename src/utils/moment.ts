@@ -1,6 +1,6 @@
 import { moment } from "obsidian";
 
-export function extractCurrentlocaleData() {
+export function extractCurrentLocaleData() {
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const localeData: any = moment.localeData();
   return {

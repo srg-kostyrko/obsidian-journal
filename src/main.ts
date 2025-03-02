@@ -42,7 +42,7 @@ export default class JournalPluginImpl extends Plugin implements JournalPlugin {
   #autoCreateTimer: ReturnType<typeof setTimeout> | undefined;
   #notesManager: NotesManager = new ObsidianNotesManager(this);
   #appManager: AppManager = new ObsidianManager(this);
-  #shouldShowMigartionModal = false;
+  #shouldShowMigrationModal = false;
 
   get hasMigrations() {
     return this.#config.value.pendingMigrations.length > 0;
@@ -351,9 +351,9 @@ export default class JournalPluginImpl extends Plugin implements JournalPlugin {
       if (appStartup) {
         await this.openStartupNote();
       }
-      if (this.#shouldShowMigartionModal) {
+      if (this.#shouldShowMigrationModal) {
         this.#showMigrationModal();
-        this.#shouldShowMigartionModal = false;
+        this.#shouldShowMigrationModal = false;
       }
     });
   }
@@ -381,7 +381,7 @@ export default class JournalPluginImpl extends Plugin implements JournalPlugin {
     for (const journal of Object.values(this.#journals.value)) {
       await journal.autoCreate();
     }
-    this.#sheduleNextAutoCreate();
+    this.#scheduleNextAutoCreate();
   }
 
   async openStartupNote() {
@@ -415,7 +415,7 @@ export default class JournalPluginImpl extends Plugin implements JournalPlugin {
     }
   }
 
-  #sheduleNextAutoCreate() {
+  #scheduleNextAutoCreate() {
     clearTimeout(this.#autoCreateTimer);
     this.#autoCreateTimer = setTimeout(() => {
       this.autoCreateNotes().catch(console.error);
@@ -432,7 +432,7 @@ export default class JournalPluginImpl extends Plugin implements JournalPlugin {
         const { migratedData, needsUser: needsUserMigration } = migrateData(saved);
         this.#config.value = migratedData;
         await this.saveData(migratedData).catch(console.error);
-        this.#shouldShowMigartionModal = needsUserMigration;
+        this.#shouldShowMigrationModal = needsUserMigration;
       }
     }
   }

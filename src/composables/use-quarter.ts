@@ -13,8 +13,8 @@ export function useQuarter(refDate: Ref<string>, minDate?: Ref<string | undefine
     }
 
     const quarters: CalendarUiElement[] = [];
-    const lowerBondary = minDate?.value ? date_from_string(minDate.value) : null;
-    const upperBondary = maxDate?.value ? date_from_string(maxDate.value) : null;
+    const lowerBoundary = minDate?.value ? date_from_string(minDate.value) : null;
+    const upperBoundary = maxDate?.value ? date_from_string(maxDate.value) : null;
 
     for (let i = 0; i < 4; i++) {
       const date = momentDate.value.clone().quarter(i);
@@ -22,8 +22,8 @@ export function useQuarter(refDate: Ref<string>, minDate?: Ref<string | undefine
         date: date.format(calendarFormats.quarter),
         key: date.format(FRONTMATTER_DATE_FORMAT),
         disabled:
-          (!!lowerBondary && date.clone().endOf("quarter").isBefore(lowerBondary)) ||
-          (!!upperBondary && date.isAfter(upperBondary)),
+          (!!lowerBoundary && date.clone().endOf("quarter").isBefore(lowerBoundary)) ||
+          (!!upperBoundary && date.isAfter(upperBoundary)),
       });
     }
 

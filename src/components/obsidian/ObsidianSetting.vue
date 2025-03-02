@@ -1,5 +1,5 @@
 <script setup lang="ts">
-defineProps<{ name?: string; descripton?: string; heading?: boolean; controlsOnly?: boolean; noControls?: boolean }>();
+defineProps<{ name?: string; description?: string; heading?: boolean; controlsOnly?: boolean; noControls?: boolean }>();
 </script>
 
 <template>
@@ -12,7 +12,7 @@ defineProps<{ name?: string; descripton?: string; heading?: boolean; controlsOnl
       </div>
       <div class="setting-item-description">
         <slot name="description">
-          {{ descripton ?? "" }}
+          {{ description ?? "" }}
         </slot>
       </div>
     </div>
