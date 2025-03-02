@@ -6,7 +6,7 @@ import type {
   NoteDataForProcessing,
   NoteProcessingResult,
 } from "./bulk-add-notes.types";
-import { preprocessNotes, processNote } from "./bulk-add-note-utils";
+import { preprocessNotes, processNote } from "./bulk-add-note-utilities";
 import { usePlugin } from "@/composables/use-plugin";
 import ObsidianButton from "@/components/obsidian/ObsidianButton.vue";
 import CollapsibleBlock from "@/components/CollapsibleBlock.vue";

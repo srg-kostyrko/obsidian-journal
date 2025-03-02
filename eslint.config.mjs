@@ -6,7 +6,7 @@ import eslintPluginUnicorn from "eslint-plugin-unicorn";
 
 export default [
   {
-    ignores: ["**/build/**", "**/test-vault/**", "**.mjs", "__mocks__/**", "src/_old-code/**"],
+    ignores: ["**/build/**", "**/test-vault/**", "**.mjs", "__mocks__/**", "src/_old-code/**", "coverage/**"],
   },
   eslint.configs.recommended,
   ...tseslint.configs.strict,
@@ -15,7 +15,7 @@ export default [
   ...tseslint.configs.stylisticTypeChecked,
   eslintConfigPrettier,
   ...pluginVue.configs["flat/recommended"],
-  eslintPluginUnicorn.configs["flat/recommended"],
+  eslintPluginUnicorn.configs["recommended"],
   {
     rules: {
       "no-console": [
