@@ -1,3 +1,4 @@
+import { moment } from "obsidian";
 import { computed, type ComputedRef, type Ref } from "vue";
 import type {
   JournalCommand,
@@ -28,7 +29,6 @@ import { date_from_string, today } from "../calendar";
 import { CustomIntervalResolver } from "./custom-interval";
 import type { AppManager, NotesManager } from "@/types/plugin.types";
 import type { JournalsIndex } from "./journals-index";
-import moment from "moment";
 
 export class Journal {
   #anchorDateResolver: AnchorDateResolver;
