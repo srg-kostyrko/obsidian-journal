@@ -2,6 +2,9 @@
 import DisplayVariable from "../DisplayVariable.vue";
 import type { JournalSettings } from "../../types/settings.types";
 import { computed } from "vue";
+import { VueModal } from "./vue-modal";
+import DateVariableReferenceModal from "./DateVariableReference.modal.vue";
+import { usePlugin } from "@/composables/use-plugin";
 
 const { type } = defineProps<{
   type: JournalSettings["write"]["type"];
@@ -9,7 +12,13 @@ const { type } = defineProps<{
 }>();
 defineEmits(["close"]);
 
+const plugin = usePlugin();
+
 const typeDescription = computed(() => (type === "custom" ? "interval" : type));
+
+function showDateModifications() {
+  new VueModal(plugin, "Date variable modifications", DateVariableReferenceModal, {}).open();
+}
 </script>
 
 <template>
@@ -40,11 +49,7 @@ const typeDescription = computed(() => (type === "custom" ? "interval" : type));
         Is same as first day of {{ typeDescription }}.
         <br />
       </template>
-      You can also use <DisplayVariable name="date:format" /> to override format once, and use
-      <DisplayVariable name="date+5d:format" /> to add 5 days.<br />
-      <a target="_blank" href="https://momentjs.com/docs/#/displaying/format/">Formatting reference.</a>
-      <br />
-      <a target="_blank" href="https://momentjs.com/docs/#/manipulating/add/">Date manipulation reference.</a>
+      Variable supports <a href="#" @click="showDateModifications">additional modifications</a>.
     </div>
     <template v-if="type !== 'day'">
       <div>
@@ -52,22 +57,14 @@ const typeDescription = computed(() => (type === "custom" ? "interval" : type));
       </div>
       <div>
         First day of {{ typeDescription }} formatted using default format settings ({{ dateFormat }}).<br />
-        You can also use <DisplayVariable name="start_date:format" /> to override format once, and use
-        <DisplayVariable name="start_date+5d:format" /> to add 5 days.<br />
-        <a target="_blank" href="https://momentjs.com/docs/#/displaying/format/">Formatting reference.</a>
-        <br />
-        <a target="_blank" href="https://momentjs.com/docs/#/manipulating/add/">Date manipulation reference.</a>
+        Variable supports <a href="#" @click="showDateModifications">additional modifications</a>.
       </div>
       <div>
         <DisplayVariable name="end_date" />
       </div>
       <div>
         Last day of {{ typeDescription }} formatted using default format settings ({{ dateFormat }}).<br />
-        You can also use <DisplayVariable name="end_date:format" /> to override format once, and use
-        <DisplayVariable name="end_date+5d:format" /> to add 5 days.<br />
-        <a target="_blank" href="https://momentjs.com/docs/#/displaying/format/">Formatting reference.</a>
-        <br />
-        <a target="_blank" href="https://momentjs.com/docs/#/manipulating/add/">Date manipulation reference.</a>
+        Variable supports <a href="#" @click="showDateModifications">additional modifications</a>.
       </div>
     </template>
     <div>
@@ -80,40 +77,28 @@ const typeDescription = computed(() => (type === "custom" ? "interval" : type));
     </div>
     <div>
       Current date (in YYYY-MM-DD format)<br />
-      You can also use <DisplayVariable name="current_date:format" /> to override format once, and use
-      <DisplayVariable name="current_date+5d:format" /> to add 5 days.<br />
-      <a target="_blank" href="https://momentjs.com/docs/#/displaying/format/">Formatting reference.</a>
-      <br />
-      <a target="_blank" href="https://momentjs.com/docs/#/manipulating/add/">Date manipulation reference.</a>
+      Variable supports <a href="#" @click="showDateModifications">additional modifications</a>.
     </div>
     <div>
       <DisplayVariable name="time" />
     </div>
     <div>
       Current time (in HH:mm format) <br />
-      You can also use <DisplayVariable name="time:format" /> to override format once, and use
-      <DisplayVariable name="time+5h:format" /> to add 5 hours.<br />
-      <a target="_blank" href="https://momentjs.com/docs/#/displaying/format/">Formatting reference.</a>
-      <br />
-      <a target="_blank" href="https://momentjs.com/docs/#/manipulating/add/">Date manipulation reference.</a>
+      Variable supports <a href="#" @click="showDateModifications">additional modifications</a>.
     </div>
     <div>
       <DisplayVariable name="current_time" />
     </div>
     <div>
       Current time (in HH:mm format) <br />
-      You can also use <DisplayVariable name="time:format" /> to override format once, and use
-      <DisplayVariable name="time+5h:format" /> to add 5 hours.<br />
-      <a target="_blank" href="https://momentjs.com/docs/#/displaying/format/">Formatting reference.</a>
-      <br />
-      <a target="_blank" href="https://momentjs.com/docs/#/manipulating/add/">Date manipulation reference.</a>
+      Variable supports <a href="#" @click="showDateModifications">additional modifications</a>.
     </div>
   </div>
 </template>
 
 <style scoped>
 .hint {
-  color: var(--bold-color);
+  font-weight: bold;
 }
 .grid {
   display: grid;

@@ -1,9 +1,18 @@
-import { describe, expect, it } from "vitest";
+import { afterAll, beforeAll, describe, expect, it } from "vitest";
 import { replaceTemplateVariables } from "./template";
 import type { TemplateContext } from "@/types/template.types";
 import moment from "moment";
+import { restoreLocale, updateLocale } from "@/calendar";
 
 describe("template functions", () => {
+  beforeAll(() => {
+    updateLocale(1, 4);
+  });
+
+  afterAll(() => {
+    restoreLocale();
+  });
+
   describe("template variables", () => {
     it("replaces string template variable", () => {
       const template = "Hello {{name}}";
@@ -62,6 +71,23 @@ describe("template functions", () => {
         ["{{date+1y}}", "2022-01-01", "2023-01-01"],
         ["{{date-1y}}", "2022-01-01", "2021-01-01"],
       ])("supports date arithmetic %s", (template: string, date: string, expected: string) => {
+        const context: TemplateContext = { date: { type: "date", value: date, defaultFormat: "YYYY-MM-DD" } };
+        const result = replaceTemplateVariables(template, context);
+        expect(result).toBe(expected);
+      });
+
+      it.each([
+        ["{{date<startOf=week>}}", "2022-01-05", "2022-01-03"],
+        ["{{date<endOf=week>}}", "2022-01-05", "2022-01-09"],
+        ["{{date<startOf=month>}}", "2022-01-04", "2022-01-01"],
+        ["{{date<endOf=month>}}", "2022-01-04", "2022-01-31"],
+        ["{{date<startOf=quarter>}}", "2022-01-04", "2022-01-01"],
+        ["{{date<endOf=quarter>}}", "2022-01-04", "2022-03-31"],
+        ["{{date<startOf=year>}}", "2022-01-04", "2022-01-01"],
+        ["{{date<endOf=year>}}", "2022-01-04", "2022-12-31"],
+        ["{{date<startOf=decade>}}", "2022-01-04", "2020-01-01"],
+        ["{{date<endOf=decade>}}", "2022-01-04", "2029-12-31"],
+      ])("supports startOf/endOf modifiers of %s", (template: string, date: string, expected: string) => {
         const context: TemplateContext = { date: { type: "date", value: date, defaultFormat: "YYYY-MM-DD" } };
         const result = replaceTemplateVariables(template, context);
         expect(result).toBe(expected);
