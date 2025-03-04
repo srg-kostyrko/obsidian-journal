@@ -3,7 +3,14 @@ import type { TemplaterPlugin } from "../types/templater.types";
 import type { TemplateContext } from "../types/template.types";
 import { date_from_string } from "../calendar";
 
-// TODO add tests
+const momentUnits = {
+  d: "day",
+  m: "month",
+  q: "quarter",
+  w: "week",
+  y: "year",
+  h: "hour",
+} as const;
 
 export function replaceTemplateVariables(template: string, context: TemplateContext): string {
   let content = template ?? "";
@@ -20,7 +27,7 @@ export function replaceTemplateVariables(template: string, context: TemplateCont
         content = content.replaceAll(regExp, (_, _variableName, calc, timeDelta, unit, _customFormat, format) => {
           const templateVariable = date_from_string(variable.value);
           if (calc) {
-            templateVariable.add(Number.parseInt(timeDelta, 10), unit);
+            templateVariable.add(Number.parseInt(timeDelta, 10), momentUnits[unit as keyof typeof momentUnits]);
           }
           return templateVariable.format(format ?? variable.defaultFormat);
         });
@@ -31,11 +38,11 @@ export function replaceTemplateVariables(template: string, context: TemplateCont
   const now = moment();
   const timeFormat = "HH:mm";
   content = content.replaceAll(
-    /{{\s*(time|current_time)\s*(([+-]\d+)([yqmwdhs]))?\s*(:(.*?))?}}/gi,
+    /{{\s*(time|current_time)\s*(([+-]\d+)([yqmwdh]))?\s*(:(.*?))?}}/gi,
     (_, _variableName, calc, timeDelta, unit, _customFormat, format) => {
       const templateVariable = now.clone();
       if (calc) {
-        templateVariable.add(Number.parseInt(timeDelta, 10), unit);
+        templateVariable.add(Number.parseInt(timeDelta, 10), momentUnits[unit as keyof typeof momentUnits]);
       }
       if (format) {
         return templateVariable.format(format);
@@ -45,11 +52,11 @@ export function replaceTemplateVariables(template: string, context: TemplateCont
   );
   const dateFormat = "YYYY-MM-DD";
   content = content.replaceAll(
-    /{{\s*(current_date)\s*(([+-]\d+)([yqmwdhs]))?\s*(:(.*?))?}}/gi,
+    /{{\s*(current_date)\s*(([+-]\d+)([yqmwdh]))?\s*(:(.*?))?}}/gi,
     (_, _variableName, calc, timeDelta, unit, _customFormat, format) => {
       const templateVariable = now.clone();
       if (calc) {
-        templateVariable.add(Number.parseInt(timeDelta, 10), unit);
+        templateVariable.add(Number.parseInt(timeDelta, 10), momentUnits[unit as keyof typeof momentUnits]);
       }
       if (format) {
         return templateVariable.format(format);
