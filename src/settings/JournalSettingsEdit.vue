@@ -312,14 +312,13 @@ watch(
   <div v-if="journal && config">
     <ObsidianSetting heading>
       <template #name> Configuring {{ journal.name }} (writing {{ writingDescription }}) </template>
-      <template #description>
-        <div v-if="plugin.usesShelves">
-          <div v-if="!journal.shelfName">Not on a shelf right not. <a href="#" @click="place">Place</a></div>
-          <div v-else>On {{ journal.shelfName }} shelf right now. <a href="#" @click="place">Place elsewhere</a></div>
-        </div>
-      </template>
       <ObsidianIconButton icon="pencil" tooltip="Rename journal" @click="showRenameModal" />
       <ObsidianIconButton icon="chevron-left" tooltip="Back to list" @click="$emit('back')" />
+    </ObsidianSetting>
+
+    <ObsidianSetting v-if="plugin.usesShelves" name="Shelf">
+      {{ journal.shelfName || "Not on a shelf" }}
+      <ObsidianIconButton icon="pencil" tooltip="Change shelf" @click="place" />
     </ObsidianSetting>
 
     <ObsidianSetting name="Start writing on">
