@@ -25,13 +25,6 @@ A comprehensive journaling solution for [Obsidian](https://obsidian.md/) that tr
 - **Templating**: Powerful variable system for consistent journal entries
 - **Frontmatter**: Automatic metadata for better organization
 
-### Smart Features
-
-- **Auto-creation**: Automatically create current period's journal
-- **Date Boundaries**: Define start/end dates for journal periods
-- **Bulk operations**: Create multiple notes at once
-- **Templater Support**: Works with Obsidian's popular templating plugin
-
 ## Installation
 
 Follow the steps below to install plugin.
@@ -72,12 +65,6 @@ The Journals plugin offers extensive configuration options to customize your jou
 ### Journal Configuration
 
 Each journal can be configured separately with these settings:
-
-- **Journal Type**:
-
-  - Fixed intervals: day, week, month, quarter, year
-  - Custom intervals: specify duration (e.g., 2-week sprints)
-  - Weekday-based: create notes only on specific weekdays
 
 - **Note Creation**:
 
@@ -288,23 +275,6 @@ Shelves are a powerful way to organize journals into logical groups. Here's how 
 4. **Filter Calendar View** by shelf to focus on specific contexts.
 
 5. **Use Shelf Parameter** in journals-home code block to create dashboard notes for specific contexts.
-
-### Bulk Adding Notes
-
-The plugin allows you to create multiple journal notes at once:
-
-1. Go to the journal settings
-2. Click "Bulk Add Notes" next to the journal name
-3. Configure date range and options:
-   - Start and end dates
-   - Options to override existing notes
-   - Choose whether to rename/move files
-
-This is useful for:
-
-- Setting up a new journal with past entries
-- Creating future planning notes for projects
-- Migrating existing notes into a journal
 
 ### Common Setup Examples
 
