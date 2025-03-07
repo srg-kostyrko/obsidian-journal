@@ -14,6 +14,7 @@ test-vault/.obsidian/plugins/journals/*
 build/
 
 test-vault/.obsidian/plugins/*
+test-vault/.obsidian/themes/*
 test-vault/.obsidian/app.json
 test-vault/.obsidian/appearance.json
 test-vault/.obsidian/core-plugins-migration.json
