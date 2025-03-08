@@ -38,11 +38,10 @@ const templateRows = computed(() => (compactFirstLine ? "1.2em repeat(auto-fill,
   display: grid;
   grid-template-columns: repeat(v-bind(columns), 1fr);
   grid-template-rows: v-bind(templateRows);
-  gap: var(--size-2-1);
+  gap: var(--size-2-2);
 }
 
 .calendar-grid > * {
-  font-size: 0.7em;
   border: 1px solid transparent;
   line-height: 26px;
   text-align: center;

@@ -199,6 +199,7 @@ export interface JournalDecorationBorder {
 
 export interface JournalDecorationShape {
   type: "shape";
+  size: number;
   shape: "square" | "circle" | "triangle-up" | "triangle-down" | "triangle-left" | "triangle-right";
   color: ColorSettings;
   placement_x: "left" | "center" | "right";
@@ -216,6 +217,7 @@ export interface JournalDecorationIcon {
   placement_x: "left" | "center" | "right";
   placement_y: "top" | "middle" | "bottom";
   color: ColorSettings;
+  size: number;
 }
 
 export type JournalDecorationsStyle =

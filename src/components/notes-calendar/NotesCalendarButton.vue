@@ -92,5 +92,6 @@ function showContextMenuForPath(path: string, event: MouseEvent): void {
 <style scoped>
 .calendar-button {
   position: relative;
+  font-size: 1em;
 }
 </style>

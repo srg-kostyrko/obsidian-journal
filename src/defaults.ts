@@ -87,6 +87,7 @@ export const defaultJournalSettings: JournalSettings = {
       styles: [
         {
           type: "shape",
+          size: 0.4,
           shape: "circle",
           color: { type: "theme", name: "interactive-accent" },
           placement_x: "center",
@@ -213,6 +214,7 @@ export const defaultDecorations: Record<JournalDecorationsStyle["type"], Journal
   },
   shape: {
     type: "shape",
+    size: 0.4,
     shape: "circle",
     color: { type: "transparent" },
     placement_x: "center",
@@ -226,6 +228,7 @@ export const defaultDecorations: Record<JournalDecorationsStyle["type"], Journal
   icon: {
     type: "icon",
     icon: "",
+    size: 0.5,
     color: { type: "transparent" },
     placement_x: "center",
     placement_y: "top",

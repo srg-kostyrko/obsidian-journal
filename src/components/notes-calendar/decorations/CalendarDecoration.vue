@@ -80,6 +80,57 @@ const borderStyle = computed(() => {
 
   return style;
 });
+const padding = computed(() => {
+  let top = 0;
+  let left = 0;
+  let right = 0;
+  let bottom = 0;
+  let topBorder = 0;
+  let leftBorder = 0;
+  let rightBorder = 0;
+  let bottomBorder = 0;
+
+  for (const style of props.styles) {
+    if (style.type === "background" || style.type === "color") continue;
+    if (style.type === "border") {
+      if (style.border === "uniform") {
+        topBorder = Math.max(topBorder, style.left.width);
+        leftBorder = Math.max(leftBorder, style.left.width);
+        rightBorder = Math.max(rightBorder, style.right.width);
+        bottomBorder = Math.max(bottomBorder, style.bottom.width);
+      } else {
+        topBorder = Math.max(topBorder, style.top.width);
+        leftBorder = Math.max(leftBorder, style.left.width);
+        rightBorder = Math.max(rightBorder, style.right.width);
+        bottomBorder = Math.max(bottomBorder, style.bottom.width);
+      }
+    } else if (style.type === "shape" || style.type === "icon") {
+      const fallback = style.type === "shape" ? 0.4 : 0.5;
+      switch (style.placement_y) {
+        case "top": {
+          top = Math.max(top, style.size ?? fallback);
+          break;
+        }
+        case "bottom": {
+          bottom = Math.max(bottom, style.size ?? fallback);
+          break;
+        }
+      }
+      switch (style.placement_x) {
+        case "left": {
+          left = Math.max(left, style.size ?? fallback);
+          break;
+        }
+        case "right": {
+          right = Math.max(right, style.size ?? fallback);
+          break;
+        }
+      }
+    }
+  }
+
+  return `max(${top + 0.1}em, ${topBorder + 2}px) max(${right + 0.1}em, ${rightBorder + 2}px) max(${bottom + 0.1}em, ${bottomBorder + 2}px) max(${left + 0.1}em, ${leftBorder + 2}px)`;
+});
 function toBorderStyle(side: BorderSettings) {
   if (!side.show) return "none";
   return `${side.width}px ${side.style} ${colorToString(side.color)}`;
@@ -100,7 +151,9 @@ function toBorderStyle(side: BorderSettings) {
         </span>
       </template>
     </span>
-    <slot></slot>
+    <span class="decoration-content">
+      <slot></slot>
+    </span>
   </span>
 </template>
 
@@ -108,11 +161,15 @@ function toBorderStyle(side: BorderSettings) {
 .calendar-decoration {
   width: 100%;
   height: 100%;
+  padding: v-bind(padding);
   display: flex;
   justify-content: center;
   align-items: center;
   background-color: v-bind(background);
   color: v-bind(textColor);
+  line-height: 1;
+  position: relative;
+  box-sizing: border-box;
 }
 
 .decoration-border {
@@ -129,6 +186,11 @@ function toBorderStyle(side: BorderSettings) {
   grid-template-columns: repeat(3, 1fr);
   grid-template-rows: repeat(3, 1fr);
 }
+
+.decoration-content {
+  display: inline-block;
+}
+
 .place {
   display: flex;
   gap: 2px;
@@ -138,7 +200,7 @@ function toBorderStyle(side: BorderSettings) {
   justify-content: flex-start;
   align-items: flex-start;
 }
-.place_left-center {
+.place-left_middle {
   grid-area: 2/1;
   justify-content: flex-start;
   align-items: center;
