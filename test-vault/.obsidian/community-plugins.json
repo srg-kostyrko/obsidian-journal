@@ -1,5 +1,8 @@
 [
   "hot-reload",
   "templater-obsidian",
-  "journals"
+  "journals",
+  "obsidian42-brat",
+  "calendar",
+  "periodic-notes"
 ]

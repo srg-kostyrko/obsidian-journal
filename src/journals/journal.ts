@@ -610,8 +610,19 @@ export class Journal {
     await this.notesManager.updateNoteFrontmatter(path, (frontmatter) => {
       frontmatter[FRONTMATTER_NAME_KEY] = this.name;
       frontmatter[this.frontmatterDate] = date_from_string(metadata.date).format(FRONTMATTER_DATE_FORMAT);
-      if (metadata.end_date) {
-        frontmatter[this.frontmatterEndDate] = date_from_string(metadata.end_date).format(FRONTMATTER_DATE_FORMAT);
+
+      if (this.config.value.frontmatter.addStartDate) {
+        frontmatter[this.frontmatterStartDate] = this.resolveStartDate(metadata.date);
+      } else {
+        delete frontmatter[this.frontmatterStartDate];
+      }
+      if (
+        this.config.value.frontmatter.addEndDate ||
+        (metadata.end_date && metadata.end_date !== this.resolveStartDate(metadata.date))
+      ) {
+        frontmatter[this.frontmatterEndDate] = metadata.end_date
+          ? date_from_string(metadata.end_date).format(FRONTMATTER_DATE_FORMAT)
+          : this.resolveEndDate(metadata.date);
       } else {
         delete frontmatter[this.frontmatterEndDate];
       }
