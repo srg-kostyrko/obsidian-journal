@@ -24,6 +24,13 @@ export class AppManagerMock implements AppManager {
     return ribbonId;
   }
 
+  showContextMenu(_path: string, _event: MouseEvent): void {
+    throw new Error("Method not implemented.");
+  }
+  showPreview(_path: string, _event: MouseEvent): void {
+    throw new Error("Method not implemented.");
+  }
+
   //#region mock methods
   hasCommand(journalName: string, command: JournalCommand): boolean {
     return this.#commands.has(`${journalName}--${command.name}`);
