@@ -8,6 +8,8 @@ import { usePlugin } from "@/composables/use-plugin";
 import { useDecorations } from "@/composables/use-decorations";
 import CalendarDecoration from "@/components/notes-calendar/decorations/CalendarDecoration.vue";
 import { defineOpenMode } from "@/utils/journals";
+import type { JournalNoteData } from "@/types/journal.types";
+import { Menu } from "obsidian";
 
 const { refDate, journalName, preventNavigation } = defineProps<{
   refDate: string;
@@ -46,6 +48,64 @@ async function navigate(type: NavBlockRow["link"], date: string, event: MouseEve
     await openDate(plugin, date, journalsToUse, false, event && defineOpenMode(event), event);
   }
 }
+
+function openContextMenu(type: NavBlockRow["link"], date: string, event: MouseEvent, journalName?: string) {
+  if (preventNavigation) return;
+  if (type === "none") return;
+  if (type === "self") {
+    const metadata = journal.value?.get(refDate);
+    if (metadata && "path" in metadata) plugin.appManager.showContextMenu(metadata.path, event);
+  } else if (type === "journal") {
+    if (!journalName) return;
+    const journal = plugin.getJournal(journalName);
+    if (!journal) return;
+    const metadata = journal.get(date);
+    if (metadata && "path" in metadata) plugin.appManager.showContextMenu(metadata.path, event);
+  } else {
+    const list = journals[type].value
+      .map((journal) => journal.get(date))
+      .filter((metadata): metadata is JournalNoteData => {
+        return !!metadata && "path" in metadata;
+      });
+    if (list.length === 0) return;
+    if (list.length === 1) {
+      plugin.appManager.showContextMenu(list[0].path, event);
+    } else {
+      const menu = new Menu();
+      for (const note of list) {
+        menu.addItem((item) => {
+          item.setTitle(note.path).onClick(() => {
+            plugin.appManager.showContextMenu(note.path, event);
+          });
+        });
+      }
+      menu.showAtMouseEvent(event);
+    }
+  }
+}
+
+function openPreview(type: NavBlockRow["link"], date: string, event: MouseEvent, journalName?: string) {
+  if (preventNavigation) return;
+  if (type === "none") return;
+  if (type === "self") {
+    const metadata = journal.value?.get(refDate);
+    if (metadata && "path" in metadata) plugin.appManager.showPreview(metadata.path, event);
+  } else if (type === "journal") {
+    if (!journalName) return;
+    const journal = plugin.getJournal(journalName);
+    if (!journal) return;
+    const metadata = journal.get(date);
+    if (metadata && "path" in metadata) plugin.appManager.showPreview(metadata.path, event);
+  } else {
+    const metadata = journals[type].value
+      .map((journal) => journal.get(date))
+      .find((metadata): metadata is JournalNoteData => {
+        return !!metadata && "path" in metadata;
+      });
+    if (!metadata) return;
+    plugin.appManager.showPreview(metadata.path, event);
+  }
+}
 </script>
 
 <template>
@@ -58,6 +118,8 @@ async function navigate(type: NavBlockRow["link"], date: string, event: MouseEve
           :ref-date="refDate"
           :default-format="journal.dateFormat"
           @navigate="navigate"
+          @contextmenu="openContextMenu"
+          @preview="openPreview"
         />
       </div>
     </CalendarDecoration>
@@ -69,6 +131,8 @@ async function navigate(type: NavBlockRow["link"], date: string, event: MouseEve
           :ref-date="refDate"
           :default-format="journal.dateFormat"
           @navigate="navigate"
+          @contextmenu="openContextMenu"
+          @preview="openPreview"
         />
       </div>
     </template>

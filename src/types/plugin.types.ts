@@ -12,6 +12,7 @@ export interface JournalPlugin extends Plugin {
   readonly uiSettings: PluginSettings["ui"];
   readonly showReloadHint: boolean;
   readonly notesManager: NotesManager;
+  readonly appManager: AppManager;
   requestReloadHint(): void;
   reprocessNotes(): void;
 
@@ -70,4 +71,6 @@ export interface AppManager {
   removeCommand(journalName: string, command: JournalCommand): void;
   addRibbonIcon(journalName: string, icon: string, tooltip: string, action: () => void): string;
   removeRibbonIcon(journalName: string, tooltip: string): string;
+  showContextMenu(path: string, event: MouseEvent): void;
+  showPreview(path: string, event: MouseEvent): void;
 }
