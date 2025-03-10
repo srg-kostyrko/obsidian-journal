@@ -10,6 +10,7 @@ export interface PluginSettings {
     calendarShelf: string | null;
   };
   pendingMigrations: PendingMigration[];
+  dismissedNotifications: string[];
 
   useShelves: boolean;
   showReloadHint: boolean;

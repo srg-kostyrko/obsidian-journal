@@ -13,6 +13,8 @@ export interface JournalPlugin extends Plugin {
   readonly showReloadHint: boolean;
   readonly notesManager: NotesManager;
   readonly appManager: AppManager;
+  readonly dismissedNotifications: string[];
+  dismissNotification(id: string): void;
   requestReloadHint(): void;
   reprocessNotes(): void;
 

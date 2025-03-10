@@ -55,6 +55,13 @@ export default class JournalPluginImpl extends Plugin implements JournalPlugin {
     return this.#config.value.pendingMigrations.length > 0;
   }
 
+  get dismissedNotifications() {
+    return this.#config.value.dismissedNotifications;
+  }
+  dismissNotification(id: string) {
+    this.#config.value.dismissedNotifications.push(id);
+  }
+
   get notesManager() {
     return this.#notesManager;
   }

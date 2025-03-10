@@ -3,6 +3,8 @@ import { computed, reactive } from "vue";
 import ObsidianSetting from "../components/obsidian/ObsidianSetting.vue";
 import ObsidianDropdown from "../components/obsidian/ObsidianDropdown.vue";
 import ObsidianToggle from "@/components/obsidian/ObsidianToggle.vue";
+import ObsidianIcon from "@/components/obsidian/ObsidianIcon.vue";
+import ObsidianIconButton from "@/components/obsidian/ObsidianIconButton.vue";
 import JournalSettingsWithoutShelves from "./JournalSettingsWithoutShelves.vue";
 import JournalSettingsWithShelves from "./JournalSettingsWithShelves.vue";
 import CollapsibleBlock from "@/components/CollapsibleBlock.vue";
@@ -18,6 +20,7 @@ import { resolveCommandLabel } from "@/journals/journal-commands";
 import EditPluginCommandModal from "@/components/modals/EditPluginCommand.modal.vue";
 import type { PluginCommand } from "@/types/settings.types";
 import { registerPluginCommand, unregisterPluginCommand } from "@/utils/plugin-commands";
+import { currentNotifications } from "@/notifications";
 
 const emit = defineEmits<(event: "edit" | "organize" | "bulk-add", name: string) => void>();
 
@@ -25,6 +28,10 @@ const plugin = usePlugin();
 const expandedState = reactive({
   commands: false,
 });
+
+const visibleNotifications = computed(() =>
+  currentNotifications.filter((notification) => !plugin.dismissedNotifications.includes(notification.id)),
+);
 
 const collidingJournals = computed(() => {
   const hashed = new Map<string, Journal[]>();
@@ -81,6 +88,12 @@ function deleteCommand(index: number): void {
     <ObsidianSetting name="Some data is pending migration" heading>
       <ObsidianButton cta @click="migrate">Migrate</ObsidianButton>
     </ObsidianSetting>
+  </div>
+
+  <div v-for="notification of visibleNotifications" :key="notification.id" class="journal-notification">
+    <ObsidianIcon :name="notification.icon" />
+    {{ notification.message }}
+    <ObsidianIconButton icon="cross" tooltip="Dismiss" @click="plugin.dismissNotification(notification.id)" />
   </div>
 
   <ObsidianSetting name="Use shelves?">
@@ -206,5 +219,12 @@ function deleteCommand(index: number): void {
 }
 .journal-warning :deep(.setting-item--heading .setting-item-name) {
   color: var(--text-error);
+}
+.journal-notification {
+  box-shadow: var(--shadow-s);
+  padding: var(--size-4-2);
+  margin-bottom: var(--size-4-2);
+  display: flex;
+  gap: var(--size-4-2);
 }
 </style>
