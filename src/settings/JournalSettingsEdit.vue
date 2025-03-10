@@ -645,9 +645,8 @@ watch(
 .decoration-preview {
   display: inline-block;
   font-size: 1.5em;
-  width: 1.5em;
-  height: 1.5em;
-  padding: 0 0.25em;
+  min-width: 1.5em;
+  min-height: 1.5em;
   line-height: 1;
   text-align: center;
 }

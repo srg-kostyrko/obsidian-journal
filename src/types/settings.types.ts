@@ -10,6 +10,7 @@ export interface PluginSettings {
     calendarShelf: string | null;
   };
   pendingMigrations: PendingMigration[];
+  dismissedNotifications: string[];
 
   useShelves: boolean;
   showReloadHint: boolean;
@@ -18,9 +19,12 @@ export interface PluginSettings {
   journals: Record<string, JournalSettings>;
   shelves: Record<string, ShelfSettings>;
 
+  commands: PluginCommand[];
+
   calendar: {
     dow: number;
     doy: number;
+    global: boolean;
   };
 
   calendarView: {
@@ -46,6 +50,7 @@ export interface PluginSettings {
 export interface ShelfSettings {
   name: string;
   journals: string[];
+  commands: PluginCommand[];
 }
 
 export interface WriteDaily {
@@ -147,6 +152,15 @@ export interface JournalSettings {
   };
 }
 
+export interface PluginCommand {
+  icon: string;
+  name: string;
+  writeType: FixedWriteIntervals["type"];
+  type: "same" | "next" | "previous";
+  showInRibbon: boolean;
+  openMode: OpenMode;
+}
+
 export interface JournalCommand {
   icon: string;
   name: string;
@@ -199,6 +213,7 @@ export interface JournalDecorationBorder {
 
 export interface JournalDecorationShape {
   type: "shape";
+  size: number;
   shape: "square" | "circle" | "triangle-up" | "triangle-down" | "triangle-left" | "triangle-right";
   color: ColorSettings;
   placement_x: "left" | "center" | "right";
@@ -216,6 +231,7 @@ export interface JournalDecorationIcon {
   placement_x: "left" | "center" | "right";
   placement_y: "top" | "middle" | "bottom";
   color: ColorSettings;
+  size: number;
 }
 
 export type JournalDecorationsStyle =

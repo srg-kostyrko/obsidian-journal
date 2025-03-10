@@ -9,6 +9,7 @@ const props = defineProps<{
 }>();
 
 const color = computed(() => colorToString(props.decoration.color));
+const size = computed(() => `${props.decoration.size ?? 0.5}em`);
 </script>
 
 <template>
@@ -19,8 +20,8 @@ const color = computed(() => colorToString(props.decoration.color));
 .icon-decoration {
   display: block;
   color: v-bind(color);
-  --size: 0.3em;
-  --icon-size: 0.3em;
+  --size: v-bind(size);
+  --icon-size: v-bind(size);
   width: var(--size);
   height: var(--size);
 }

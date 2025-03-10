@@ -2,8 +2,49 @@ import { type TFile, type App, moment } from "obsidian";
 import type { TemplaterPlugin } from "../types/templater.types";
 import type { TemplateContext } from "../types/template.types";
 import { date_from_string } from "../calendar";
+import type { MomentDate } from "@/types/date.types";
 
-// TODO add tests
+const momentUnits = {
+  d: "day",
+  m: "month",
+  q: "quarter",
+  w: "week",
+  y: "year",
+  h: "hour",
+} as const;
+
+function processDateModifications(
+  date: MomentDate,
+  modifiers: {
+    format?: string;
+    math?: string;
+    unit?: string;
+    shift?: "start" | "end";
+    shiftTo?: string;
+  },
+  defaultFormat: string,
+): string {
+  if (modifiers.math && modifiers.unit) {
+    date.add(Number.parseInt(modifiers.math, 10), momentUnits[modifiers.unit as keyof typeof momentUnits]);
+  }
+  if (modifiers.shift && modifiers.shiftTo) {
+    if (modifiers.shiftTo === "decade") {
+      const year =
+        modifiers.shift === "start" ? date.year() - (date.year() % 10) : date.year() + (9 - (date.year() % 10));
+
+      date.year(year);
+      if (modifiers.shift === "start") {
+        date.startOf("year");
+      } else {
+        date.endOf("year");
+      }
+    } else {
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      date[modifiers.shift === "start" ? "startOf" : "endOf"](modifiers.shiftTo as any);
+    }
+  }
+  return date.format(modifiers.format ?? defaultFormat);
+}
 
 export function replaceTemplateVariables(template: string, context: TemplateContext): string {
   let content = template ?? "";
@@ -15,14 +56,15 @@ export function replaceTemplateVariables(template: string, context: TemplateCont
         break;
       }
       case "date": {
-        // eslint-disable-next-line @cspell/spellchecker
-        const regExp = new RegExp(`{{\\s*(${name})\\s*(([+-]\\d+)([yqmwd]))?\\s*(:(.*?))?}}`, "gi");
-        content = content.replaceAll(regExp, (_, _variableName, calc, timeDelta, unit, _customFormat, format) => {
+        const regExp = new RegExp(
+          // eslint-disable-next-line @cspell/spellchecker
+          `{{\\s*(${name})\\s*((?<math>[+-]\\d+)(?<unit>[yqmwd]))?\\s*(<(?<shift>start|end)Of=(?<shiftTo>.*?)>)?\\s*(:(?<format>.*?))?}}`,
+          "gi",
+        );
+        content = content.replaceAll(regExp, (...rest) => {
+          const groups = rest.at(-1);
           const templateVariable = date_from_string(variable.value);
-          if (calc) {
-            templateVariable.add(Number.parseInt(timeDelta, 10), unit);
-          }
-          return templateVariable.format(format ?? variable.defaultFormat);
+          return processDateModifications(templateVariable, groups, variable.defaultFormat);
         });
         break;
       }
@@ -31,30 +73,20 @@ export function replaceTemplateVariables(template: string, context: TemplateCont
   const now = moment();
   const timeFormat = "HH:mm";
   content = content.replaceAll(
-    /{{\s*(time|current_time)\s*(([+-]\d+)([yqmwdhs]))?\s*(:(.*?))?}}/gi,
-    (_, _variableName, calc, timeDelta, unit, _customFormat, format) => {
+    /{{\s*(time|current_time)\s*((?<math>[+-]\d+)(?<unit>[yqmwd]))?\s*(<(?<shift>start|end)Of=(?<shiftTo>.*?)>)?\s*(:(?<format>.*?))?}}/gi,
+    (...rest) => {
+      const groups = rest.at(-1);
       const templateVariable = now.clone();
-      if (calc) {
-        templateVariable.add(Number.parseInt(timeDelta, 10), unit);
-      }
-      if (format) {
-        return templateVariable.format(format);
-      }
-      return templateVariable.format(timeFormat);
+      return processDateModifications(templateVariable, groups, timeFormat);
     },
   );
   const dateFormat = "YYYY-MM-DD";
   content = content.replaceAll(
-    /{{\s*(current_date)\s*(([+-]\d+)([yqmwdhs]))?\s*(:(.*?))?}}/gi,
-    (_, _variableName, calc, timeDelta, unit, _customFormat, format) => {
+    /{{\s*(current_date)\s*((?<math>[+-]\d+)(?<unit>[yqmwd]))?\s*(<(?<shift>start|end)Of=(?<shiftTo>.*?)>)?\s*(:(?<format>.*?))?}}/gi,
+    (...rest) => {
+      const groups = rest.at(-1);
       const templateVariable = now.clone();
-      if (calc) {
-        templateVariable.add(Number.parseInt(timeDelta, 10), unit);
-      }
-      if (format) {
-        return templateVariable.format(format);
-      }
-      return templateVariable.format(dateFormat);
+      return processDateModifications(templateVariable, groups, dateFormat);
     },
   );
 

@@ -13,6 +13,8 @@ button {
   background-color: transparent !important;
   box-shadow: none !important;
   border-radius: 0 !important;
+  height: auto;
+  padding: 0 !important;
 }
 .clickable {
   cursor: pointer;

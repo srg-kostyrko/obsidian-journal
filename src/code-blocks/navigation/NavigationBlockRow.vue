@@ -8,6 +8,7 @@ import { colorToString } from "@/utils/color";
 import { useDecorations } from "@/composables/use-decorations";
 import { usePlugin } from "@/composables/use-plugin";
 import CalendarDecoration from "@/components/notes-calendar/decorations/CalendarDecoration.vue";
+import { isMetaPressed } from "@/utils/ui";
 
 const { journal, refDate, defaultFormat, row } = defineProps<{
   row: NavBlockRow;
@@ -18,7 +19,7 @@ const { journal, refDate, defaultFormat, row } = defineProps<{
 const emit =
   defineEmits<
     (
-      event: "navigate",
+      event: "navigate" | "contextmenu" | "preview",
       type: NavBlockRow["link"],
       date: string,
       originalEvent: MouseEvent,
@@ -89,10 +90,33 @@ function onClick(event: MouseEvent) {
     emit("navigate", row.link, refDate, event);
   }
 }
+function openContextMenu(event: MouseEvent) {
+  if (row.link === "none") return;
+  if (row.link === "journal") {
+    emit("contextmenu", "journal", refDate, event, journal.name);
+  } else {
+    emit("contextmenu", row.link, refDate, event);
+  }
+}
+function openPreview(event: PointerEvent) {
+  if (!isMetaPressed(event)) return;
+  if (row.link === "none") return;
+  if (row.link === "journal") {
+    emit("preview", "journal", refDate, event, journal.name);
+  } else {
+    emit("preview", row.link, refDate, event);
+  }
+}
 </script>
 
 <template>
-  <div v-if="anchorDate" class="row" @click.prevent="onClick">
+  <div
+    v-if="anchorDate"
+    class="row"
+    @click.prevent="onClick"
+    @contextmenu="openContextMenu"
+    @pointerenter="openPreview"
+  >
     <CalendarDecoration v-if="row.addDecorations" :styles="decorationsStyles">{{ text }}</CalendarDecoration>
     <template v-else>
       {{ text }}

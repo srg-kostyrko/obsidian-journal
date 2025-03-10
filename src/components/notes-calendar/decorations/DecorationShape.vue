@@ -8,6 +8,7 @@ const props = defineProps<{
 }>();
 
 const color = computed(() => colorToString(props.decoration.color));
+const size = computed(() => `${props.decoration.size ?? 0.4}em`);
 </script>
 
 <template>
@@ -16,7 +17,7 @@ const color = computed(() => colorToString(props.decoration.color));
 
 <style scoped>
 .shape-decoration {
-  --size: 0.4em;
+  --size: v-bind(size);
 }
 .shape-circle {
   width: var(--size);

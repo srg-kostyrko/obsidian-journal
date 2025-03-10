@@ -1,6 +1,6 @@
 import type { CachedMetadata, PaneType, Plugin, TFile, WorkspaceLeaf } from "obsidian";
 import type { JournalsIndex } from "../journals/journals-index";
-import type { JournalCommand, JournalSettings, NotesProcessing, PluginSettings, ShelfSettings } from "./settings.types";
+import type { JournalSettings, NotesProcessing, PluginCommand, PluginSettings, ShelfSettings } from "./settings.types";
 import type { Journal } from "../journals/journal";
 import type { PendingMigration } from "./migration.types";
 
@@ -12,12 +12,16 @@ export interface JournalPlugin extends Plugin {
   readonly uiSettings: PluginSettings["ui"];
   readonly showReloadHint: boolean;
   readonly notesManager: NotesManager;
+  readonly appManager: AppManager;
+  readonly dismissedNotifications: string[];
+  dismissNotification(id: string): void;
   requestReloadHint(): void;
   reprocessNotes(): void;
 
   readonly index: JournalsIndex;
   readonly activeNote: string | null;
   readonly journals: Journal[];
+  readonly commands: PluginCommand[];
   hasJournal(name: string): boolean;
   getJournal(name: string): Journal | undefined;
   getJournalConfig(name: string): JournalSettings;
@@ -34,6 +38,7 @@ export interface JournalPlugin extends Plugin {
   createShelf(name: string): void;
   renameShelf(name: string, newName: string): void;
   removeShelf(name: string, destinationShelf?: string): void;
+  getShelfJournals(name: string): Journal[];
 
   moveJournal(journalName: string, destinationShelf: string): void;
 
@@ -66,8 +71,14 @@ export interface NotesManager {
 }
 
 export interface AppManager {
-  addCommand(journalName: string, command: JournalCommand, checkCallback: (checking: boolean) => boolean): void;
-  removeCommand(journalName: string, command: JournalCommand): void;
-  addRibbonIcon(journalName: string, icon: string, tooltip: string, action: () => void): string;
+  addCommand(
+    prefix: string,
+    command: { name: string; icon: string },
+    checkCallback: (checking: boolean) => boolean,
+  ): void;
+  removeCommand(prefix: string, command: { name: string; icon: string }): void;
+  addRibbonIcon(prefix: string, icon: string, tooltip: string, action: () => void): string;
   removeRibbonIcon(journalName: string, tooltip: string): string;
+  showContextMenu(path: string, event: MouseEvent): void;
+  showPreview(path: string, event: MouseEvent): void;
 }

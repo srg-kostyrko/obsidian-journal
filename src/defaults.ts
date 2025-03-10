@@ -10,9 +10,10 @@ import type {
   JournalCommand,
   JournalDecorationsStyle,
   JournalDecorationCondition,
+  PluginCommand,
 } from "./types/settings.types";
 
-export const CURRENT_DATA_VERSION = 2;
+export const CURRENT_DATA_VERSION = 3;
 
 export const defaultPluginSettings: PluginSettings = {
   version: CURRENT_DATA_VERSION,
@@ -20,14 +21,138 @@ export const defaultPluginSettings: PluginSettings = {
     calendarShelf: null,
   },
   pendingMigrations: [],
+  dismissedNotifications: [],
   useShelves: false,
   showReloadHint: false,
   openOnStartup: "",
   journals: {},
   shelves: {},
+  commands: [
+    {
+      name: "Open today's note",
+      writeType: "day",
+      type: "same",
+      openMode: "tab",
+      showInRibbon: false,
+      icon: "",
+    },
+    {
+      name: "Open weekly note",
+      writeType: "week",
+      type: "same",
+      openMode: "tab",
+      showInRibbon: false,
+      icon: "",
+    },
+    {
+      name: "Open monthly note",
+      writeType: "month",
+      type: "same",
+      openMode: "tab",
+      showInRibbon: false,
+      icon: "",
+    },
+    {
+      name: "Open quarterly note",
+      writeType: "quarter",
+      type: "same",
+      openMode: "tab",
+      showInRibbon: false,
+      icon: "",
+    },
+    {
+      name: "Open yearly note",
+      writeType: "year",
+      type: "same",
+      openMode: "tab",
+      showInRibbon: false,
+      icon: "",
+    },
+    {
+      name: "Open tomorrow's note",
+      writeType: "day",
+      type: "next",
+      openMode: "tab",
+      showInRibbon: false,
+      icon: "",
+    },
+    {
+      name: "Open next week note",
+      writeType: "week",
+      type: "next",
+      openMode: "tab",
+      showInRibbon: false,
+      icon: "",
+    },
+    {
+      name: "Open next month note",
+      writeType: "month",
+      type: "next",
+      openMode: "tab",
+      showInRibbon: false,
+      icon: "",
+    },
+    {
+      name: "Open next quarter note",
+      writeType: "quarter",
+      type: "next",
+      openMode: "tab",
+      showInRibbon: false,
+      icon: "",
+    },
+    {
+      name: "Open next year note",
+      writeType: "year",
+      type: "next",
+      openMode: "tab",
+      showInRibbon: false,
+      icon: "",
+    },
+    {
+      name: "Open yesterday's note",
+      writeType: "day",
+      type: "previous",
+      openMode: "tab",
+      showInRibbon: false,
+      icon: "",
+    },
+    {
+      name: "Open last week note",
+      writeType: "week",
+      type: "previous",
+      openMode: "tab",
+      showInRibbon: false,
+      icon: "",
+    },
+    {
+      name: "Open last month note",
+      writeType: "month",
+      type: "previous",
+      openMode: "tab",
+      showInRibbon: false,
+      icon: "",
+    },
+    {
+      name: "Open last quarter note",
+      writeType: "quarter",
+      type: "previous",
+      openMode: "tab",
+      showInRibbon: false,
+      icon: "",
+    },
+    {
+      name: "Open last year note",
+      writeType: "year",
+      type: "previous",
+      openMode: "tab",
+      showInRibbon: false,
+      icon: "",
+    },
+  ],
   calendar: {
     dow: -1,
     doy: 1,
+    global: false,
   },
   calendarView: {
     display: "month",
@@ -87,6 +212,7 @@ export const defaultJournalSettings: JournalSettings = {
       styles: [
         {
           type: "shape",
+          size: 0.4,
           shape: "circle",
           color: { type: "theme", name: "interactive-accent" },
           placement_x: "center",
@@ -121,6 +247,15 @@ export const defaultFieldNames: Record<string, string> = {
   indexField: FRONTMATTER_INDEX_KEY,
   startDateField: FRONTMATTER_START_DATE_KEY,
   endDateField: FRONTMATTER_END_DATE_KEY,
+};
+
+export const defaultPluginCommand: PluginCommand = {
+  icon: "",
+  name: "",
+  writeType: "day",
+  type: "same",
+  showInRibbon: false,
+  openMode: "active",
 };
 
 export const defaultCommand: JournalCommand = {
@@ -213,6 +348,7 @@ export const defaultDecorations: Record<JournalDecorationsStyle["type"], Journal
   },
   shape: {
     type: "shape",
+    size: 0.4,
     shape: "circle",
     color: { type: "transparent" },
     placement_x: "center",
@@ -226,6 +362,7 @@ export const defaultDecorations: Record<JournalDecorationsStyle["type"], Journal
   icon: {
     type: "icon",
     icon: "",
+    size: 0.5,
     color: { type: "transparent" },
     placement_x: "center",
     placement_y: "top",
