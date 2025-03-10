@@ -4,7 +4,13 @@ import { debounce } from "perfect-debounce";
 import { initCalendarCustomization, restoreLocale, today, updateLocale } from "./calendar";
 import { JournalSettingTab } from "./settings/journal-settings-tab";
 import { Journal } from "./journals/journal";
-import type { JournalSettings, NotesProcessing, PluginSettings, ShelfSettings } from "./types/settings.types";
+import type {
+  JournalSettings,
+  NotesProcessing,
+  PluginCommand,
+  PluginSettings,
+  ShelfSettings,
+} from "./types/settings.types";
 import { CURRENT_DATA_VERSION, defaultJournalSettings, defaultPluginSettings } from "./defaults";
 import { prepareJournalDefaultsBasedOnType } from "./journals/journal-defaults";
 import { JournalsIndex } from "./journals/journals-index";
@@ -32,6 +38,7 @@ import { migrateData } from "./migrations/migration-manager";
 import MigrationModal from "./migrations/components/MigrationModal.vue";
 import { ObsidianNotesManager } from "./obsidian-notes-manager";
 import { ObsidianManager } from "./obsidian-manager";
+import { registerPluginCommand } from "./utils/plugin-commands";
 
 export default class JournalPluginImpl extends Plugin implements JournalPlugin {
   #stopHandles: WatchStopHandle[] = [];
@@ -99,6 +106,10 @@ export default class JournalPluginImpl extends Plugin implements JournalPlugin {
 
   get shelves(): ShelfSettings[] {
     return Object.values(this.#config.value.shelves).sort((a, b) => a.name.localeCompare(b.name));
+  }
+
+  get commands(): PluginCommand[] {
+    return this.#config.value.commands;
   }
 
   getShelf(name: string): ShelfSettings | undefined {
@@ -234,6 +245,10 @@ export default class JournalPluginImpl extends Plugin implements JournalPlugin {
     }
   }
 
+  getShelfJournals(shelfName: string): Journal[] {
+    return this.journals.filter((journal) => journal.shelfName === shelfName);
+  }
+
   moveJournal(journalName: string, destinationShelf: string): void {
     const journal = this.getJournal(journalName);
     if (!journal) return;
@@ -278,6 +293,7 @@ export default class JournalPluginImpl extends Plugin implements JournalPlugin {
     this.#config.value.shelves[name] = {
       name,
       journals: [],
+      commands: [],
     };
   }
 
@@ -593,6 +609,20 @@ export default class JournalPluginImpl extends Plugin implements JournalPlugin {
 
     for (const journal of Object.values(this.#journals.value)) {
       journal.registerCommands();
+    }
+
+    for (const command of this.commands) {
+      registerPluginCommand(this, command, "", () =>
+        this.journals.filter((journal) => journal.type === command.writeType),
+      );
+    }
+
+    for (const shelf of this.shelves) {
+      for (const command of shelf.commands) {
+        registerPluginCommand(this, command, `Shelf: ${shelf.name}`, () =>
+          this.getShelfJournals(shelf.name).filter((journal) => journal.type === command.writeType),
+        );
+      }
     }
 
     this.addCommand({

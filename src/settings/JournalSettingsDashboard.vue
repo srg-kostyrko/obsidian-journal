@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { computed } from "vue";
+import { computed, reactive } from "vue";
 import ObsidianSetting from "../components/obsidian/ObsidianSetting.vue";
 import ObsidianDropdown from "../components/obsidian/ObsidianDropdown.vue";
 import ObsidianToggle from "@/components/obsidian/ObsidianToggle.vue";
@@ -14,10 +14,17 @@ import type { Journal } from "@/journals/journal";
 import ObsidianButton from "@/components/obsidian/ObsidianButton.vue";
 import { VueModal } from "@/components/modals/vue-modal";
 import MigrationModal from "@/migrations/components/MigrationModal.vue";
+import { resolveCommandLabel } from "@/journals/journal-commands";
+import EditPluginCommandModal from "@/components/modals/EditPluginCommand.modal.vue";
+import type { PluginCommand } from "@/types/settings.types";
+import { registerPluginCommand, unregisterPluginCommand } from "@/utils/plugin-commands";
 
 const emit = defineEmits<(event: "edit" | "organize" | "bulk-add", name: string) => void>();
 
 const plugin = usePlugin();
+const expandedState = reactive({
+  commands: false,
+});
 
 const collidingJournals = computed(() => {
   const hashed = new Map<string, Journal[]>();
@@ -32,6 +39,40 @@ const collidingJournals = computed(() => {
 
 function migrate() {
   new VueModal(plugin, "Migrate plugin data", MigrationModal).open();
+}
+
+function addCommand(): void {
+  new VueModal(plugin, "Add command", EditPluginCommandModal, {
+    index: plugin.commands.length,
+    commands: plugin.commands,
+    onSubmit: (command: PluginCommand) => {
+      plugin.commands.push(command);
+      registerPluginCommand(plugin, command, "global", () =>
+        plugin.journals.filter((journal) => journal.type === command.writeType),
+      );
+      if (!expandedState.commands) {
+        expandedState.commands = true;
+      }
+    },
+  }).open();
+}
+function editCommand(command: PluginCommand, index: number): void {
+  new VueModal(plugin, "Edit command", EditPluginCommandModal, {
+    index,
+    command,
+    commands: plugin.commands,
+    onSubmit: (newCommand: PluginCommand) => {
+      unregisterPluginCommand(plugin, command, "");
+      registerPluginCommand(plugin, newCommand, "", () =>
+        plugin.journals.filter((journal) => journal.type === newCommand.writeType),
+      );
+    },
+  }).open();
+}
+function deleteCommand(index: number): void {
+  const [command] = plugin.commands.splice(index, 1);
+  if (!command) return;
+  unregisterPluginCommand(plugin, command, "");
 }
 </script>
 
@@ -78,6 +119,33 @@ function migrate() {
       </option>
     </ObsidianDropdown>
   </ObsidianSetting>
+
+  <CollapsibleBlock v-model:expanded="expandedState.commands">
+    <template #trigger>
+      <IconedRow icon="terminal">
+        Commands
+        <span class="flair">{{ plugin.commands.length }}</span>
+      </IconedRow>
+    </template>
+    <template #controls>
+      <ObsidianButton @click="addCommand">Add command</ObsidianButton>
+    </template>
+    <ObsidianSetting v-if="plugin.commands.length === 0">
+      <template #description> No commands configured yet. </template>
+    </ObsidianSetting>
+    <template v-else>
+      <ObsidianSetting v-for="(command, index) of plugin.commands" :key="index">
+        <template #name>
+          {{ command.name }}
+        </template>
+        <template #description>
+          {{ resolveCommandLabel(command.writeType, command.type) }}
+        </template>
+        <ObsidianIconButton icon="pencil" tooltip="Edit" @click="editCommand(command, index)" />
+        <ObsidianIconButton icon="trash-2" tooltip="Delete" @click="deleteCommand(index)" />
+      </ObsidianSetting>
+    </template>
+  </CollapsibleBlock>
 
   <CollapsibleBlock>
     <template #trigger>

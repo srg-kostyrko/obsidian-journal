@@ -10,9 +10,10 @@ import type {
   JournalCommand,
   JournalDecorationsStyle,
   JournalDecorationCondition,
+  PluginCommand,
 } from "./types/settings.types";
 
-export const CURRENT_DATA_VERSION = 2;
+export const CURRENT_DATA_VERSION = 3;
 
 export const defaultPluginSettings: PluginSettings = {
   version: CURRENT_DATA_VERSION,
@@ -25,9 +26,11 @@ export const defaultPluginSettings: PluginSettings = {
   openOnStartup: "",
   journals: {},
   shelves: {},
+  commands: [],
   calendar: {
     dow: -1,
     doy: 1,
+    global: false,
   },
   calendarView: {
     display: "month",
@@ -122,6 +125,15 @@ export const defaultFieldNames: Record<string, string> = {
   indexField: FRONTMATTER_INDEX_KEY,
   startDateField: FRONTMATTER_START_DATE_KEY,
   endDateField: FRONTMATTER_END_DATE_KEY,
+};
+
+export const defaultPluginCommand: PluginCommand = {
+  icon: "",
+  name: "",
+  writeType: "day",
+  type: "same",
+  showInRibbon: false,
+  openMode: "active",
 };
 
 export const defaultCommand: JournalCommand = {

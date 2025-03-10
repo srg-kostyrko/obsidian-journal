@@ -18,6 +18,8 @@ export interface PluginSettings {
   journals: Record<string, JournalSettings>;
   shelves: Record<string, ShelfSettings>;
 
+  commands: PluginCommand[];
+
   calendar: {
     dow: number;
     doy: number;
@@ -47,6 +49,7 @@ export interface PluginSettings {
 export interface ShelfSettings {
   name: string;
   journals: string[];
+  commands: PluginCommand[];
 }
 
 export interface WriteDaily {
@@ -146,6 +149,15 @@ export interface JournalSettings {
     endDateField: string;
     indexField: string;
   };
+}
+
+export interface PluginCommand {
+  icon: string;
+  name: string;
+  writeType: FixedWriteIntervals["type"];
+  type: "same" | "next" | "previous";
+  showInRibbon: boolean;
+  openMode: OpenMode;
 }
 
 export interface JournalCommand {
