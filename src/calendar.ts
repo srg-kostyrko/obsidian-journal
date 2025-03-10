@@ -5,13 +5,14 @@ import type { WeekPreset } from "./types/calendar-ui.types";
 import type { PluginSettings } from "./types/settings.types";
 
 const CUSTOM_LOCALE = "custom-journal-locale";
-let initialWeekSettings: { dow: number; doy: number } | undefined;
+export const initialWeekSettings: { dow: number; doy: number } = { dow: 0, doy: 0 };
 
 export function initCalendarCustomization(): void {
   if (!moment.locales().includes(CUSTOM_LOCALE)) {
     const currentLocale = moment.locale();
     const currentLocaleData = extractCurrentLocaleData();
-    initialWeekSettings = currentLocaleData.week;
+    initialWeekSettings.dow = currentLocaleData.week.dow;
+    initialWeekSettings.doy = currentLocaleData.week.doy;
     moment.defineLocale(CUSTOM_LOCALE, currentLocaleData);
     moment.locale(currentLocale);
   }
@@ -24,7 +25,7 @@ export function doyToDayNumber(dow: number, doy: number): number {
   return 7 + dow - doy;
 }
 
-export const updateLocale = (dow: number, doy: number): void => {
+export const updateLocale = (dow: number, doy: number, global?: boolean): void => {
   const currentLocale = moment.locale();
   moment.updateLocale(CUSTOM_LOCALE, {
     week: {
@@ -33,13 +34,23 @@ export const updateLocale = (dow: number, doy: number): void => {
     },
   });
   moment.locale(currentLocale);
+
+  if (global) {
+    moment.updateLocale(currentLocale, {
+      week: {
+        dow,
+        doy,
+      },
+    });
+  }
 };
 
-export const restoreLocale = (): void => {
-  if (initialWeekSettings) {
-    const currentLocale = moment.locale();
-    moment.updateLocale(CUSTOM_LOCALE, initialWeekSettings);
-    moment.locale(currentLocale);
+export const restoreLocale = (global?: boolean): void => {
+  const currentLocale = moment.locale();
+  moment.updateLocale(CUSTOM_LOCALE, initialWeekSettings);
+  moment.locale(currentLocale);
+  if (global) {
+    moment.updateLocale(currentLocale, initialWeekSettings);
   }
 };
 

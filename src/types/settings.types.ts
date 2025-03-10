@@ -21,6 +21,7 @@ export interface PluginSettings {
   calendar: {
     dow: number;
     doy: number;
+    global: boolean;
   };
 
   calendarView: {

@@ -306,9 +306,13 @@ export default class JournalPluginImpl extends Plugin implements JournalPlugin {
     await this.#loadSettings();
     initCalendarCustomization();
     if (this.#config.value.calendar.dow === -1) {
-      restoreLocale();
+      restoreLocale(this.#config.value.calendar.global);
     } else {
-      updateLocale(this.#config.value.calendar.dow, this.#config.value.calendar.doy);
+      updateLocale(
+        this.#config.value.calendar.dow,
+        this.#config.value.calendar.doy,
+        this.#config.value.calendar.global,
+      );
     }
 
     this.#fillJournals();

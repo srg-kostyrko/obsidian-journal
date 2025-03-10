@@ -5,6 +5,7 @@ import {
   date_from_string,
   detectCurrentPreset,
   doyToDayNumber,
+  initialWeekSettings,
   restoreLocale,
   updateLocale,
   weekPresets,
@@ -65,16 +66,16 @@ async function update() {
     currentPreset.value.doy = calculateDoy(currentPreset.value.dow, firstDayOfYear.value);
   }
   const { dow, doy } = currentPreset.value;
-  const localeDow = moment().localeData().firstDayOfWeek();
-  const localeDoy = moment().localeData().firstDayOfYear();
+  const localeDow = plugin.calendarSettings.global ? initialWeekSettings.dow : moment().localeData().firstDayOfWeek();
+  const localeDoy = plugin.calendarSettings.global ? initialWeekSettings.doy : moment().localeData().firstDayOfYear();
 
   if (dow === localeDow && doy === localeDoy) {
     plugin.calendarSettings.dow = -1;
-    restoreLocale();
+    restoreLocale(plugin.calendarSettings.global);
   } else {
     plugin.calendarSettings.dow = dow;
     plugin.calendarSettings.doy = doy;
-    updateLocale(dow, doy);
+    updateLocale(dow, doy, plugin.calendarSettings.global);
   }
 
   await updateWeeklyJournals(plugin, notesToUpdate);
