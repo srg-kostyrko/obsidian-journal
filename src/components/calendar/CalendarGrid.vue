@@ -52,8 +52,8 @@ const templateRows = computed(() => (compactFirstLine ? "1.2em repeat(auto-fill,
   color: var(--code-comment);
 }
 .calendar :deep([data-today]) {
-  color: v-bind(todayColor);
-  background-color: v-bind(todayBackground);
+  color: v-bind(todayColor) !important;
+  background-color: v-bind(todayBackground) !important;
 }
 .calendar :deep([data-selected]) {
   color: v-bind(activeColor) !important;

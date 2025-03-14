@@ -165,8 +165,8 @@ function toBorderStyle(side: BorderSettings) {
   display: flex;
   justify-content: center;
   align-items: center;
-  background-color: v-bind(background);
-  color: v-bind(textColor);
+  background-color: v-bind(background) !important;
+  color: v-bind(textColor) !important;
   line-height: 1;
   position: relative;
   box-sizing: border-box;
