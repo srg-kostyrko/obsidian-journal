@@ -17,14 +17,18 @@ const metadata = computed<JournalMetadata>(() => ({
 
 const resolvedPath = computed(() => {
   if (!journal.value) return "";
-  return journal.value.getConfiguredPathData(metadata.value)[0];
+  return journal.value.getConfiguredPathData(metadata.value)[0] + "/";
 });
 </script>
 
 <template>
   <div>
-    Folder with resolved variables: <b class="u-pop"> {{ resolvedPath }}</b>
+    Folder with resolved variables: <b class="u-pop path-preview"> {{ resolvedPath }}</b>
   </div>
 </template>
 
-<style scoped></style>
+<style scoped>
+.path-preview {
+  white-space: pre;
+}
+</style>
