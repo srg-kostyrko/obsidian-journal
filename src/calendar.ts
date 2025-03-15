@@ -8,11 +8,11 @@ const CUSTOM_LOCALE = "custom-journal-locale";
 export const initialWeekSettings: { dow: number; doy: number } = { dow: 0, doy: 0 };
 
 export function initCalendarCustomization(): void {
+  const currentLocale = moment.locale();
+  const currentLocaleData = extractCurrentLocaleData();
+  initialWeekSettings.dow = currentLocaleData.week.dow;
+  initialWeekSettings.doy = currentLocaleData.week.doy;
   if (!moment.locales().includes(CUSTOM_LOCALE)) {
-    const currentLocale = moment.locale();
-    const currentLocaleData = extractCurrentLocaleData();
-    initialWeekSettings.dow = currentLocaleData.week.dow;
-    initialWeekSettings.doy = currentLocaleData.week.doy;
     moment.defineLocale(CUSTOM_LOCALE, currentLocaleData);
     moment.locale(currentLocale);
   }
@@ -47,10 +47,10 @@ export const updateLocale = (dow: number, doy: number, global?: boolean): void =
 
 export const restoreLocale = (global?: boolean): void => {
   const currentLocale = moment.locale();
-  moment.updateLocale(CUSTOM_LOCALE, initialWeekSettings);
+  moment.updateLocale(CUSTOM_LOCALE, { week: initialWeekSettings });
   moment.locale(currentLocale);
   if (global) {
-    moment.updateLocale(currentLocale, initialWeekSettings);
+    moment.updateLocale(currentLocale, { week: initialWeekSettings });
   }
 };
 

@@ -12,13 +12,14 @@ import {
 } from "@/calendar";
 import { usePlugin } from "@/composables/use-plugin";
 import type { WeekPreset } from "@/types/calendar-ui.types";
-import { onMounted, ref } from "vue";
+import { computed, onMounted, ref } from "vue";
 import ObsidianSetting from "../obsidian/ObsidianSetting.vue";
 import ObsidianButton from "../obsidian/ObsidianButton.vue";
 import ObsidianNumberInput from "../obsidian/ObsidianNumberInput.vue";
 import ObsidianDropdown from "../obsidian/ObsidianDropdown.vue";
 import { deepCopy } from "@/utils/misc";
 import { updateWeeklyJournals } from "@/utils/journal";
+import ObsidianIcon from "../obsidian/ObsidianIcon.vue";
 
 const emit = defineEmits<{
   close: [];
@@ -29,8 +30,15 @@ const currentPreset = ref<WeekPreset>();
 const firstDayOfWeek = ref<string>("0");
 const firstDayOfYear = ref<number>(1);
 
+const currentSavedPreset = detectCurrentPreset(plugin.calendarSettings);
+const hasChanges = computed(
+  () =>
+    currentPreset.value &&
+    (currentPreset.value.dow !== currentSavedPreset.dow || currentPreset.value.doy !== currentSavedPreset.doy),
+);
+
 onMounted(() => {
-  usePreset(detectCurrentPreset(plugin.calendarSettings));
+  usePreset(currentSavedPreset);
 });
 
 function usePreset(preset: WeekPreset) {
@@ -96,7 +104,8 @@ async function update() {
         </div>
         <div>Used in: {{ preset.used }}</div>
       </template>
-      <div v-if="preset.name === currentPreset.name">Currently used</div>
+      <div v-if="preset.name === currentSavedPreset.name">Currently used</div>
+      <ObsidianIcon v-if="preset.name === currentPreset.name" name="lucide-check" />
       <ObsidianButton v-else @click="usePreset(preset)">Use</ObsidianButton>
     </ObsidianSetting>
     <ObsidianSetting name="Custom settings">
@@ -128,12 +137,12 @@ async function update() {
         <ObsidianNumberInput v-model="firstDayOfYear" />
       </ObsidianSetting>
     </template>
-    <ObsidianSetting>
+    <ObsidianSetting v-if="hasChanges">
       <template #description>
         This will update all weekly notes to use current settings - week number of notes will be kept but dates will be
         updated.
       </template>
-      <ObsidianButton @click="update">Update</ObsidianButton>
+      <ObsidianButton cta @click="update">Update</ObsidianButton>
     </ObsidianSetting>
   </div>
 </template>
