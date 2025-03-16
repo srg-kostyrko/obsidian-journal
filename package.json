@@ -1,12 +1,12 @@
 {
   "name": "obsidian-journal",
-  "version": "2.1.0",
+  "version": "2.1.1",
   "description": "Journal plugin for Obsidian (https://obsidian.md)",
   "main": "main.js",
   "scripts": {
     "dev": "vite build --watch",
     "build": "vite build",
-    "version": "node version-bump.mjs && git add manifest.json versions.json",
+    "version": "node version-bump.mjs && git add manifest.json manifest-beta.json versions.json",
     "lint": "eslint .",
     "test": "vitest run",
     "test:watch": "vitest",
