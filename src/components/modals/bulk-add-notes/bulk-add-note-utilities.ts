@@ -101,13 +101,17 @@ export function preprocessNotes(
         decision: parameters.other_folder,
       });
     }
-    if (configuredFilename !== plugin.notesManager.getNoteName(path)) {
+    if (configuredFilename !== plugin.notesManager.getNoteFilename(path)) {
       noteData.operations.push({
         type: "other_name",
         configured_name: configuredFilename,
         decision: parameters.other_name,
       });
     }
+    noteData.operations.push({
+      type: "connect",
+      anchor_date: metadata.date,
+    });
   }
   return data;
 }
@@ -228,7 +232,7 @@ async function connectNote(
   operation: ConnectNote,
   result: NoteProcessingResult,
 ) {
-  result.actions.push(`Note connected to journal as ${operation.anchor_date}`);
+  result.actions.push(`Note connected to journal at ${operation.anchor_date}`);
   if (!parameters.dry_run) {
     await journal.connectNote(noteData.path, operation.anchor_date, {});
   }
@@ -275,7 +279,7 @@ async function processDifferentFolder(
   switch (operation.decision) {
     case "keep": {
       result.actions.push(
-        `Notes folder "${plugin.notesManager.getNoteFolder(noteData.path) ?? "/"}" differs from configured folder "${parameters.folder || "/"}" - keeping as is`,
+        `Notes folder "${plugin.notesManager.getNoteFolder(noteData.path) ?? "/"}" differs from configured folder "${operation.configured_folder ?? "/"}" - keeping as is`,
       );
       break;
     }
@@ -304,7 +308,7 @@ async function processDifferentName(
   switch (operation.decision) {
     case "keep": {
       result.actions.push(
-        `Note name "${plugin.notesManager.getNoteName(noteData.path)}" differs from configured name "${parameters.property_name}" - keeping as is`,
+        `Note name "${plugin.notesManager.getNoteName(noteData.path)}" differs from configured name "${operation.configured_name}" - keeping as is`,
       );
       break;
     }
@@ -329,7 +333,7 @@ export async function processNote(
 ): Promise<NoteProcessingResult> {
   const { path, operations } = noteData;
   const result: NoteProcessingResult = {
-    note: plugin.notesManager.getNoteName(path),
+    note: plugin.notesManager.getNoteFilename(path),
     folder: plugin.notesManager.getNoteFolder(path),
     path,
     actions: [],

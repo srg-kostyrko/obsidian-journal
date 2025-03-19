@@ -35,7 +35,7 @@ const currentNoteDecisions = computed(() => {
   );
 });
 const currentNoteName = computed(() =>
-  currentNote.value ? plugin.notesManager.getNoteName(currentNote.value.path) : "",
+  currentNote.value ? plugin.notesManager.getNoteFilename(currentNote.value.path) : "",
 );
 const currentNoteFolder = computed(() =>
   currentNote.value ? plugin.notesManager.getNoteFolder(currentNote.value.path) : "",
@@ -85,30 +85,40 @@ onMounted(() => {
 
 <template>
   <div v-if="currentNote && isPendingDecision">
-    Note: {{ currentNoteName }}<br />
-    <div v-for="(op, index) of currentNoteDecisions" :key="index">
+    <h4>Note: {{ currentNoteName }}</h4>
+    <div v-for="(op, index) of currentNoteDecisions" :key="index" class="operation">
       <div v-if="op.type === 'existing_note'">
-        Other note with same date exists in journal - {{ plugin.notesManager.getNoteName(op.other_file) }}<br />
-        <div>
+        <p>
+          Other note with same date exists in journal -
+          <span class="u-pop">{{ plugin.notesManager.getNoteName(op.other_file) }}</span>
+        </p>
+        <div class="decision-buttons">
           <ObsidianButton @click="updateDecision(op, 'skip')">Skip note</ObsidianButton>
           <ObsidianButton @click="updateDecision(op, 'override')">Override date connection</ObsidianButton>
           <ObsidianButton @click="updateDecision(op, 'merge')">Merge note content into existing one</ObsidianButton>
         </div>
       </div>
       <div v-else-if="op.type === 'other_folder'">
-        Note is not in folder from journal setting<br />
-        Configured folder: {{ op.configured_folder }}<br />
-        Note folder: {{ currentNoteFolder }}<br />
-        <div>
+        <p>
+          Note is not in folder from journal setting<br />
+          <b>Configured folder:</b>
+          <span class="u-pop">{{ op.configured_folder }}</span>
+          <br />
+          <b>Current folder:</b> <span class="u-pop">{{ currentNoteFolder }}</span>
+        </p>
+        <div class="decision-buttons">
           <ObsidianButton @click="updateDecision(op, 'keep')">Keep as is</ObsidianButton>
           <ObsidianButton @click="updateDecision(op, 'move')">Move to configured folder</ObsidianButton>
         </div>
       </div>
       <div v-else-if="op.type === 'other_name'">
-        Note name differs from journal settings<br />
-        Configured name: {{ op.configured_name }}<br />
-        Note name: {{ currentNoteName }}<br />
-        <div>
+        <p>
+          Note name differs from journal settings<br />
+          <b>Configured name:</b> <span class="u-pop">{{ op.configured_name }}</span>
+          <br />
+          <b>Current name:</b> <span class="u-pop">{{ currentNoteName }}</span>
+        </p>
+        <div class="decision-buttons">
           <ObsidianButton @click="updateDecision(op, 'keep')">Keep as is</ObsidianButton>
           <ObsidianButton @click="updateDecision(op, 'rename')">Rename to configured name</ObsidianButton>
         </div>
@@ -138,5 +148,16 @@ onMounted(() => {
 <style scoped>
 .log-entry {
   padding: 4px 0;
+}
+.operation {
+  padding: 0 var(--size-2-2) var(--size-4-2);
+  border-top: 1px solid var(--color-accent);
+}
+.operation:last-child {
+  border-bottom: 1px solid var(--color-accent);
+}
+.decision-buttons {
+  display: flex;
+  gap: var(--size-2-2);
 }
 </style>
