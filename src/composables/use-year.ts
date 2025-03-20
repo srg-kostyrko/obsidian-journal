@@ -2,15 +2,19 @@ import { ref, watchEffect, type Ref } from "vue";
 import type { CalendarUiElement } from "../types/calendar-ui.types";
 import { date_from_string } from "../calendar";
 import { FRONTMATTER_DATE_FORMAT } from "@/constants";
+import { usePlugin } from "./use-plugin";
 
 export function useYear(refDate: Ref<string>, minDate?: Ref<string | undefined>, maxDate?: Ref<string | undefined>) {
   const grid = ref<CalendarUiElement[]>([]);
+  const plugin = usePlugin();
 
   watchEffect(() => {
     const momentDate = date_from_string(refDate.value);
     if (!momentDate.isValid()) {
       return;
     }
+    // forcing dependency on week settings
+    void plugin.calendarSettings.dow;
     const start = momentDate.clone().startOf("year");
     const end = momentDate.clone().endOf("year");
     const lowerBoundary = minDate?.value ? date_from_string(minDate.value) : undefined;

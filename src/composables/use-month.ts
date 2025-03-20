@@ -13,6 +13,8 @@ export function useMonth(refDate: Ref<string>, minDate?: Ref<string | undefined>
     if (!momentDate.isValid()) {
       return;
     }
+    // forcing dependency on week settings
+    void plugin.calendarSettings.dow;
     const todayDate = today();
     const start = momentDate.clone().startOf("month").startOf("week");
     const end = momentDate.clone().endOf("month").endOf("week");

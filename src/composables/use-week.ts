@@ -13,6 +13,8 @@ export function useWeek(refDate: Ref<string>) {
     if (!momentDate.isValid()) {
       return;
     }
+    // forcing dependency on week settings
+    void plugin.calendarSettings.dow;
     const todayDate = today();
     const start = momentDate.clone().startOf("week");
     const end = momentDate.clone().endOf("week");

@@ -2,16 +2,19 @@ import { date_from_string } from "@/calendar";
 import { calendarFormats, FRONTMATTER_DATE_FORMAT } from "@/constants";
 import type { CalendarUiElement } from "@/types/calendar-ui.types";
 import { computed, ref, watchEffect, type Ref } from "vue";
+import { usePlugin } from "./use-plugin";
 
 export function useQuarter(refDate: Ref<string>, minDate?: Ref<string | undefined>, maxDate?: Ref<string | undefined>) {
   const grid = ref<CalendarUiElement[]>([]);
+  const plugin = usePlugin();
   const momentDate = computed(() => date_from_string(refDate.value));
 
   watchEffect(() => {
     if (!momentDate.value.isValid()) {
       return;
     }
-
+    // forcing dependency on week settings
+    void plugin.calendarSettings.dow;
     const quarters: CalendarUiElement[] = [];
     const lowerBoundary = minDate?.value ? date_from_string(minDate.value) : null;
     const upperBoundary = maxDate?.value ? date_from_string(maxDate.value) : null;
