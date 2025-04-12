@@ -69,6 +69,7 @@ function editCommand(command: PluginCommand, index: number): void {
     command,
     commands: plugin.commands,
     onSubmit: (newCommand: PluginCommand) => {
+      plugin.commands[index] = newCommand;
       unregisterPluginCommand(plugin, command, "");
       registerPluginCommand(plugin, newCommand, "", () =>
         plugin.journals.filter((journal) => journal.type === newCommand.writeType),

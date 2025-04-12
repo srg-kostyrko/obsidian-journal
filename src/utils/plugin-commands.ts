@@ -34,12 +34,13 @@ export function registerPluginCommand(
   prefix: string,
   journalsQuery: () => Journal[],
 ): void {
-  plugin.appManager.addCommand(prefix, command, (checking) => {
+  const callback = (checking: boolean) => {
     const journals = journalsQuery().filter((journal) => resolveDateInJournal(journal, command.type) !== null);
 
     if (checking) {
       return journals.length > 0;
     }
+    if (journals.length === 0) return false;
     if (journals.length === 1) {
       const [journal] = journals;
       const date = resolveDateInJournal(journal, command.type);
@@ -59,7 +60,11 @@ export function registerPluginCommand(
       ).open();
     }
     return true;
-  });
+  };
+  plugin.appManager.addCommand(prefix, command, callback);
+  if (command.showInRibbon) {
+    plugin.appManager.addRibbonIcon(prefix, command.icon, command.name, () => callback(false));
+  }
 }
 
 export function unregisterPluginCommand(plugin: JournalPlugin, command: PluginCommand, prefix: string): void {

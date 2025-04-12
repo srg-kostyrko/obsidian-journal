@@ -84,6 +84,7 @@ function editCommand(command: PluginCommand, index: number): void {
     commands: shelf.value.commands,
     onSubmit: (newCommand: PluginCommand) => {
       if (!shelf.value) return;
+      shelf.value.commands[index] = newCommand;
       unregisterPluginCommand(plugin, command, commandPrefix.value);
       registerPluginCommand(plugin, newCommand, commandPrefix.value, () =>
         plugin.getShelfJournals(shelfName).filter((journal) => journal.type === newCommand.writeType),
