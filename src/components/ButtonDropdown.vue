@@ -18,12 +18,6 @@ onClickOutside(popoutRef, () => {
 });
 
 function open() {
-  if (!buttonRef.value) return;
-  const rect = (buttonRef.value.$el as HTMLElement).getBoundingClientRect();
-  popoutPosition.value = {
-    top: `${rect.top + rect.height}px`,
-    left: `${rect.left}px`,
-  };
   isOpen.value = true;
 }
 function select(option: string) {
@@ -35,19 +29,17 @@ function select(option: string) {
 <template>
   <div class="button-dropdown">
     <ObsidianButton ref="buttonRef" @click="open"><slot /></ObsidianButton>
-    <Teleport to="body">
-      <div v-if="isOpen" ref="popoutRef" class="button-dropdown-popout" :style="popoutPosition">
-        <ObsidianButton
-          v-for="option in options"
-          :key="option.value"
-          flat
-          class="button-dropdown-option"
-          @click="select(option.value)"
-        >
-          {{ option.label }}
-        </ObsidianButton>
-      </div>
-    </Teleport>
+    <div v-if="isOpen" ref="popoutRef" class="button-dropdown-popout" :style="popoutPosition">
+      <ObsidianButton
+        v-for="option in options"
+        :key="option.value"
+        flat
+        class="button-dropdown-option"
+        @click="select(option.value)"
+      >
+        {{ option.label }}
+      </ObsidianButton>
+    </div>
   </div>
 </template>
 
@@ -57,7 +49,9 @@ function select(option: string) {
   display: inline-block;
 }
 .button-dropdown-popout {
-  position: fixed;
+  position: absolute;
+  top: 100%;
+  right: 0;
   z-index: 1000;
   box-shadow: var(--shadow-l);
   background-color: var(--modal-background);
