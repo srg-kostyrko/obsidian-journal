@@ -13,6 +13,14 @@ const momentUnits = {
   h: "hour",
 } as const;
 
+export function buildDateVariableRegexp(name: string): RegExp {
+  return new RegExp(
+    // eslint-disable-next-line @cspell/spellchecker
+    `{{\\s*(${name})\\s*((?<math>[+-]\\d+)(?<unit>[yqmwd]))?\\s*(<(?<shift>start|end)Of=(?<shiftTo>.*?)>)?\\s*(:(?<format>.*?))?}}`,
+    "gi",
+  );
+}
+
 function processDateModifications(
   date: MomentDate,
   modifiers: {
@@ -56,11 +64,7 @@ export function replaceTemplateVariables(template: string, context: TemplateCont
         break;
       }
       case "date": {
-        const regExp = new RegExp(
-          // eslint-disable-next-line @cspell/spellchecker
-          `{{\\s*(${name})\\s*((?<math>[+-]\\d+)(?<unit>[yqmwd]))?\\s*(<(?<shift>start|end)Of=(?<shiftTo>.*?)>)?\\s*(:(?<format>.*?))?}}`,
-          "gi",
-        );
+        const regExp = buildDateVariableRegexp(name);
         content = content.replaceAll(regExp, (...rest) => {
           const groups = rest.at(-1);
           const templateVariable = date_from_string(variable.value);
