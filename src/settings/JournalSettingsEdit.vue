@@ -68,7 +68,21 @@ const writingDescription = computed(() => {
   return getWritingDescription(journal.value.config.value.write);
 });
 
+const nameTemplateWithFolders = computed(() => journal.value?.config.value.nameTemplate.includes("/"));
 const dateFormatWithFolders = computed(() => journal.value?.config.value.dateFormat.includes("/"));
+
+function moveFoldersFromNameTemplate() {
+  if (!journal.value) return;
+  const folders = journal.value.config.value.nameTemplate.split("/");
+  journal.value.config.value.nameTemplate = folders.pop() ?? "";
+  const path = folders.join("/");
+  let folder = journal.value.config.value.folder;
+  if (folder && !folder.endsWith("/")) {
+    folder += "/";
+  }
+  folder += path;
+  journal.value.config.value.folder = folder;
+}
 
 function moveFoldersFromFormat() {
   if (!journal.value) return;
@@ -418,6 +432,10 @@ watch(
       <template #description>
         Template used to generate new note name.<br />
         <VariableReferenceHint :type="config.write.type" :date-format="journal.dateFormat" />
+        <div v-if="nameTemplateWithFolders" class="journal-important">
+          Looks like you are using name template to create folders. Recommended way is to define folder path fully in
+          "Folder" field. <a href="#" @click="moveFoldersFromNameTemplate">Apply recommendation</a>
+        </div>
       </template>
       <ObsidianTextInput v-model="config.nameTemplate" />
     </ObsidianSetting>
