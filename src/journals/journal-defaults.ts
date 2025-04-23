@@ -1,6 +1,6 @@
 import type { JournalSettings, NavBlockRow } from "../types/settings.types";
 
-const defaultNameTemplates: Record<JournalSettings["write"]["type"], string> = {
+export const defaultNameTemplates: Record<JournalSettings["write"]["type"], string> = {
   day: "{{date}}",
   week: "{{date}}",
   month: "{{date}}",

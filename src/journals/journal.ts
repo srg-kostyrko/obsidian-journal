@@ -29,6 +29,7 @@ import { date_from_string, today } from "../calendar";
 import { CustomIntervalResolver } from "./custom-interval";
 import type { AppManager, NotesManager } from "@/types/plugin.types";
 import type { JournalsIndex } from "./journals-index";
+import { defaultNameTemplates } from "./journal-defaults";
 
 export class Journal {
   #anchorDateResolver: AnchorDateResolver;
@@ -513,7 +514,9 @@ export class Journal {
 
   getConfiguredPathData(metadata: JournalMetadata): [string, string] {
     const templateContext = this.#getTemplateContext(metadata);
-    const filename = replaceTemplateVariables(this.config.value.nameTemplate, templateContext) + ".md";
+    const filename =
+      replaceTemplateVariables(this.config.value.nameTemplate ?? defaultNameTemplates[this.type], templateContext) +
+      ".md";
     const folderPath = replaceTemplateVariables(this.config.value.folder, templateContext) || "/";
     return [folderPath, filename];
   }
