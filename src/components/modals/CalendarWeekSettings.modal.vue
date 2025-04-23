@@ -34,7 +34,9 @@ const currentSavedPreset = detectCurrentPreset(plugin.calendarSettings);
 const hasChanges = computed(
   () =>
     currentPreset.value &&
-    (currentPreset.value.dow !== currentSavedPreset.dow || currentPreset.value.doy !== currentSavedPreset.doy),
+    (currentPreset.value.dow !== currentSavedPreset.dow ||
+      currentPreset.value.doy !== currentSavedPreset.doy ||
+      currentPreset.value.name !== currentSavedPreset.name),
 );
 
 onMounted(() => {
