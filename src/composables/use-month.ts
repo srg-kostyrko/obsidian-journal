@@ -52,8 +52,8 @@ export function useMonth(refDate: Ref<string>, minDate?: Ref<string | undefined>
 
       if (placeWeeks === "right" && current.isSame(current.clone().endOf("week"), "day")) {
         days.push({
-          date: current.format("[W]w"),
-          key: current.format(FRONTMATTER_DATE_FORMAT),
+          date: current.clone().startOf("week").format("[W]w"),
+          key: current.clone().startOf("week").format(FRONTMATTER_DATE_FORMAT),
           outside: false,
           isWeekNumber: true,
           disabled:
