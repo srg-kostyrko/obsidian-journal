@@ -1,6 +1,6 @@
 {
   "name": "obsidian-journal",
-  "version": "2.1.5",
+  "version": "2.1.6",
   "description": "Journal plugin for Obsidian (https://obsidian.md)",
   "main": "main.js",
   "scripts": {
