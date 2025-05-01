@@ -39,6 +39,7 @@ import { resolveCommandLabel, resolveContextDescription } from "@/journals/journ
 import { getDecorationConditionDescription } from "@/utils/journal";
 import EditFrontmatterFieldNameModal from "@/components/modals/EditFrontmatterFieldName.vue";
 import TemplaterSupportHint from "@/components/TemplaterSupportHint.vue";
+import NoteNamePreview from "@/components/NoteNamePreview.vue";
 
 const { journalName } = defineProps<{
   journalName: string;
@@ -428,25 +429,14 @@ watch(
       <ObsidianToggle v-model="config.autoCreate" @update:model-value="onAutoCreate" />
     </ObsidianSetting>
 
-    <ObsidianSetting name="Note name template">
-      <template #description>
-        Template used to generate new note name.<br />
-        <VariableReferenceHint :type="config.write.type" :date-format="journal.dateFormat" />
-        <div v-if="nameTemplateWithFolders" class="journal-important">
-          Looks like you are using name template to create folders. Recommended way is to define folder path fully in
-          "Folder" field. <a href="#" @click="moveFoldersFromNameTemplate">Apply recommendation</a>
-        </div>
-      </template>
-      <ObsidianTextInput v-model="config.nameTemplate" />
-    </ObsidianSetting>
-
     <ObsidianSetting name="Default date format">
       <template #description>
-        Used to format dates if not defined in variable.<br />
+        Used to format dates if not defined in variables (like
+        <span v-pre class="u-pop"> {{ date }} </span>).<br />
         <a target="_blank" href="https://momentjs.com/docs/#/displaying/format/">Syntax reference</a><br />
         <DateFormatPreview :format="config.dateFormat" />
         <div v-if="dateFormatWithFolders" class="journal-important">
-          Looks like you are using date format to create folders. Recommended way to this is to use variables in
+          Looks like you are using date format to create folders. Recommended way to do this is to use variables in
           "Folder" field. <a href="#" @click="moveFoldersFromFormat">Apply recommendation</a>
         </div>
       </template>
@@ -462,6 +452,19 @@ watch(
         </template>
       </template>
       <FolderInput v-model="config.folder" />
+    </ObsidianSetting>
+
+    <ObsidianSetting name="Note name template">
+      <template #description>
+        Template used to generate new note name.<br />
+        <VariableReferenceHint :type="config.write.type" :date-format="journal.dateFormat" />
+        <NoteNamePreview :journal-name="journalName" />
+        <div v-if="nameTemplateWithFolders" class="journal-important">
+          Looks like you are using name template to create folders. Recommended way is to define folder path fully in
+          "Folder" field. <a href="#" @click="moveFoldersFromNameTemplate">Apply recommendation</a>
+        </div>
+      </template>
+      <ObsidianTextInput v-model="config.nameTemplate" />
     </ObsidianSetting>
 
     <CollapsibleBlock v-model:expanded="expandedState.templates">
