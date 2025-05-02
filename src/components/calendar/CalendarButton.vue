@@ -15,6 +15,7 @@ button {
   border-radius: 0 !important;
   height: auto;
   padding: 0 !important;
+  color: var(--text-normal) !important;
 }
 .clickable {
   cursor: pointer;
