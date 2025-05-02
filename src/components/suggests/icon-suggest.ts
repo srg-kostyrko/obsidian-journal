@@ -21,8 +21,7 @@ export class IconSuggest extends AbstractInputSuggest<string> {
     const icon = getIcon(value);
     if (icon) {
       icon.classList.add("suggestion-icon");
-      element.classList.add("mod-complex");
-      element.classList.add("journal-suggestion-icon");
+      element.classList.add("mod-complex", "journal-suggestion-icon");
       element.append(icon);
       const name = element.createSpan();
       name.classList.add("journal-suggestion-name");
