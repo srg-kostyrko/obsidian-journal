@@ -130,6 +130,15 @@ watch(activeNoteData, (activeNote) => {
   const journal = plugin.getJournal(activeNote.journal);
   if (!journal) return;
   switch (journal.type) {
+    case "week": {
+      const noteDate = date_from_string(activeNote.date);
+      const displayStart = refDateMoment.value.clone().startOf("month").startOf("week");
+      const displayEnd = refDateMoment.value.clone().endOf("month").endOf("week");
+      if (noteDate.isBefore(displayStart) || noteDate.isAfter(displayEnd)) {
+        refDateMoment.value = noteDate;
+      }
+      break;
+    }
     case "quarter": {
       const start = date_from_string(activeNote.date).startOf("quarter");
       const end = date_from_string(activeNote.date).endOf("quarter");
