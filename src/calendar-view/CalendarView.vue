@@ -30,10 +30,7 @@ const selectedShelf = computed({
   },
 });
 const shouldShowShelf = computed(() => {
-  return (
-    (plugin.usesShelves && Object.values(plugin.shelves).length > 0) ||
-    plugin.journals.some((journal) => !journal.isOnShelf)
-  );
+  return plugin.usesShelves && Object.values(plugin.shelves).length > 0;
 });
 
 const { journals } = useShelfProvider(selectedShelf);
