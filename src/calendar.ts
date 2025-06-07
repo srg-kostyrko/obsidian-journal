@@ -103,7 +103,7 @@ function relativeDay(date: string): string {
   });
 }
 function relativeWeek(date: string) {
-  const thisWeek = today();
+  const thisWeek = today().startOf("week");
   const fromNow = date_from_string(date).diff(thisWeek, "week");
   switch (fromNow) {
     case 0: {
