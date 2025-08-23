@@ -2,13 +2,13 @@
 import type { Journal } from "@/journals/journal";
 import type { NavBlockRow } from "@/types/settings.types";
 import { replaceTemplateVariables } from "@/utils/template";
-import { computed } from "vue";
+import { computed, useTemplateRef } from "vue";
 import { useShelfData } from "@/composables/use-shelf";
 import { colorToString } from "@/utils/color";
 import { useDecorations } from "@/composables/use-decorations";
 import { usePlugin } from "@/composables/use-plugin";
 import CalendarDecoration from "@/components/notes-calendar/decorations/CalendarDecoration.vue";
-import { isMetaPressed } from "@/utils/ui";
+import { useHoverPreview } from "@/composables/use-hover-preview";
 
 const { journal, refDate, defaultFormat, row } = defineProps<{
   row: NavBlockRow;
@@ -26,6 +26,10 @@ const emit =
       journalName?: string,
     ) => void
   >();
+
+const rowRef = useTemplateRef<HTMLElement>("row");
+
+useHoverPreview(rowRef, openPreview);
 
 const anchorDate = computed(() => {
   return journal.resolveAnchorDate(refDate);
@@ -98,8 +102,7 @@ function openContextMenu(event: MouseEvent) {
     emit("contextmenu", row.link, refDate, event);
   }
 }
-function openPreview(event: PointerEvent) {
-  if (!isMetaPressed(event)) return;
+function openPreview(event: MouseEvent) {
   if (row.link === "none") return;
   if (row.link === "journal") {
     emit("preview", "journal", refDate, event, journal.name);
@@ -110,13 +113,7 @@ function openPreview(event: PointerEvent) {
 </script>
 
 <template>
-  <div
-    v-if="anchorDate"
-    class="row"
-    @click.prevent="onClick"
-    @contextmenu="openContextMenu"
-    @pointerenter="openPreview"
-  >
+  <div v-if="anchorDate" ref="row" class="row" @click.prevent="onClick" @contextmenu="openContextMenu">
     <CalendarDecoration v-if="row.addDecorations" :styles="decorationsStyles">{{ text }}</CalendarDecoration>
     <template v-else>
       {{ text }}

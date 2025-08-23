@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { computed } from "vue";
+import { computed, useTemplateRef } from "vue";
 import { useDecorations } from "@/composables/use-decorations";
 import { useShelfData } from "@/composables/use-shelf";
 import FormattedDate from "../calendar/FormattedDate.vue";
@@ -12,7 +12,7 @@ import { calendarFormats } from "@/constants";
 import { Menu } from "obsidian";
 import type { JournalNoteData } from "@/types/journal.types";
 import { defineOpenMode } from "@/utils/journals";
-import { isMetaPressed } from "@/utils/ui";
+import { useHoverPreview } from "@/composables/use-hover-preview";
 
 const { date, type, inactive } = defineProps<{
   date: string;
@@ -20,12 +20,16 @@ const { date, type, inactive } = defineProps<{
   inactive?: boolean;
 }>();
 
+const buttonRef = useTemplateRef<HTMLElement>("button");
+
 const plugin = usePlugin();
 const { journals, decorations } = useShelfData();
 const isActionable = computed(() => !inactive && journals[type].value.length > 0);
 const format = computed(() => calendarFormats[type]);
 const _date = computed(() => date);
 const decorationsStyles = useDecorations(plugin, _date, decorations[type]);
+
+useHoverPreview(buttonRef, openPreview);
 
 function open(event: MouseEvent) {
   if (!isActionable.value) return;
@@ -65,8 +69,7 @@ function openContextMenu(event: MouseEvent) {
   }
 }
 
-function openPreview(event: PointerEvent) {
-  if (!isMetaPressed(event)) return;
+function openPreview(event: MouseEvent) {
   if (!isActionable.value) return;
   const notes: JournalNoteData[] = [];
   for (const journal of journals[type].value) {
@@ -83,11 +86,11 @@ function openPreview(event: PointerEvent) {
 
 <template>
   <CalendarButton
+    ref="button"
     class="calendar-button"
     :clickable="isActionable"
     @click="open"
     @contextmenu="openContextMenu"
-    @pointerenter="openPreview"
   >
     <CalendarDecoration v-if="!inactive" :styles="decorationsStyles">
       <FormattedDate :date :format />
