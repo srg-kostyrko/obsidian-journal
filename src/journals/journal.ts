@@ -213,6 +213,7 @@ export class Journal {
   }
 
   updateCommand(index: number, command: JournalCommand): void {
+    if (!this.config.value.commands[index]) return;
     this.#removeCommand(this.config.value.commands[index]);
     this.config.value.commands[index] = command;
     this.#addCommand(command);
@@ -220,7 +221,7 @@ export class Journal {
 
   deleteCommand(index: number): void {
     const [command] = this.config.value.commands.splice(index, 1);
-    this.#removeCommand(command);
+    if (command) this.#removeCommand(command);
   }
 
   #addCommand(command: JournalCommand) {
@@ -296,15 +297,19 @@ export class Journal {
 
   moveNavRowUp(index: number) {
     if (index > 0) {
-      const temporary = this.config.value.navBlock.rows[index];
-      this.config.value.navBlock.rows[index] = this.config.value.navBlock.rows[index - 1];
+      // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
+      const temporary = this.config.value.navBlock.rows[index]!;
+      // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
+      this.config.value.navBlock.rows[index] = this.config.value.navBlock.rows[index - 1]!;
       this.config.value.navBlock.rows[index - 1] = temporary;
     }
   }
   moveNavRowDown(index: number) {
     if (index < this.config.value.navBlock.rows.length - 1) {
-      const temporary = this.config.value.navBlock.rows[index];
-      this.config.value.navBlock.rows[index] = this.config.value.navBlock.rows[index + 1];
+      // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
+      const temporary = this.config.value.navBlock.rows[index]!;
+      // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
+      this.config.value.navBlock.rows[index] = this.config.value.navBlock.rows[index + 1]!;
       this.config.value.navBlock.rows[index + 1] = temporary;
     }
   }
@@ -326,15 +331,19 @@ export class Journal {
 
   moveCalendarViewRowUp(index: number) {
     if (index > 0) {
-      const temporary = this.config.value.calendarViewBlock.rows[index];
-      this.config.value.calendarViewBlock.rows[index] = this.config.value.calendarViewBlock.rows[index - 1];
+      // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
+      const temporary = this.config.value.calendarViewBlock.rows[index]!;
+      // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
+      this.config.value.calendarViewBlock.rows[index] = this.config.value.calendarViewBlock.rows[index - 1]!;
       this.config.value.calendarViewBlock.rows[index - 1] = temporary;
     }
   }
   moveCalendarViewRowDown(index: number) {
     if (index < this.config.value.calendarViewBlock.rows.length - 1) {
-      const temporary = this.config.value.calendarViewBlock.rows[index];
-      this.config.value.calendarViewBlock.rows[index] = this.config.value.calendarViewBlock.rows[index + 1];
+      // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
+      const temporary = this.config.value.calendarViewBlock.rows[index]!;
+      // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
+      this.config.value.calendarViewBlock.rows[index] = this.config.value.calendarViewBlock.rows[index + 1]!;
       this.config.value.calendarViewBlock.rows[index + 1] = temporary;
     }
   }
@@ -587,8 +596,8 @@ export class Journal {
     };
     const title = replaceTemplateVariables(this.config.value.nameTemplate, context);
     if (title) {
-      context.title.value = title;
-      context.note_name.value = title;
+      if (context.title) context.title.value = title;
+      if (context.note_name) context.note_name.value = title;
     }
     return context;
   }

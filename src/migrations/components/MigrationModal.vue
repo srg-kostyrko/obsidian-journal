@@ -24,19 +24,15 @@ const migrationComponent = computed(() => {
 function onFinished() {
   currentMigration.value = null;
   plugin.pendingMigrations.shift();
-  if (plugin.pendingMigrations.length === 0) {
-    emit("close");
-  } else {
-    currentMigration.value = plugin.pendingMigrations[0];
-  }
+  const nextMigration = plugin.pendingMigrations[0];
+  if (nextMigration) currentMigration.value = nextMigration;
+  else emit("close");
 }
 
 onMounted(() => {
-  if (plugin.pendingMigrations.length === 0) {
-    emit("close");
-  } else {
-    currentMigration.value = plugin.pendingMigrations[0];
-  }
+  const nextMigration = plugin.pendingMigrations[0];
+  if (nextMigration) currentMigration.value = nextMigration;
+  else emit("close");
 });
 </script>
 

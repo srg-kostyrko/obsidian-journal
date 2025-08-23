@@ -203,8 +203,8 @@ describe("v1 to v2 migration", () => {
         oldSettingsCopy.day.ribbon.show = true;
         const settings = prepareCalendarJournalSettings(oldSettingsCopy, "day", names, false, false);
         expect(settings.commands).toHaveLength(1);
-        expect(settings.commands[0].icon).toBe("calendar-days");
-        expect(settings.commands[0].name).toBe("Open today's note");
+        expect(settings.commands[0]?.icon).toBe("calendar-days");
+        expect(settings.commands[0]?.name).toBe("Open today's note");
       });
 
       it("knows how to convert weekly journal default settings", () => {
@@ -229,8 +229,8 @@ describe("v1 to v2 migration", () => {
         oldSettingsCopy.week.ribbon.show = true;
         const settings = prepareCalendarJournalSettings(oldSettingsCopy, "week", names, false, false);
         expect(settings.commands).toHaveLength(1);
-        expect(settings.commands[0].icon).toBe("calendar-days");
-        expect(settings.commands[0].name).toBe("Open this week's note");
+        expect(settings.commands[0]?.icon).toBe("calendar-days");
+        expect(settings.commands[0]?.name).toBe("Open this week's note");
       });
 
       it("knows how to convert monthly journal default settings", () => {
@@ -255,8 +255,8 @@ describe("v1 to v2 migration", () => {
         oldSettingsCopy.month.ribbon.show = true;
         const settings = prepareCalendarJournalSettings(oldSettingsCopy, "month", names, false, false);
         expect(settings.commands).toHaveLength(1);
-        expect(settings.commands[0].icon).toBe("calendar-days");
-        expect(settings.commands[0].name).toBe("Open this month's note");
+        expect(settings.commands[0]?.icon).toBe("calendar-days");
+        expect(settings.commands[0]?.name).toBe("Open this month's note");
       });
 
       it("knows how to convert quarterly journal default settings", () => {
@@ -281,8 +281,8 @@ describe("v1 to v2 migration", () => {
         oldSettingsCopy.quarter.ribbon.show = true;
         const settings = prepareCalendarJournalSettings(oldSettingsCopy, "quarter", names, false, false);
         expect(settings.commands).toHaveLength(1);
-        expect(settings.commands[0].icon).toBe("calendar-days");
-        expect(settings.commands[0].name).toBe("Open this quarter's note");
+        expect(settings.commands[0]?.icon).toBe("calendar-days");
+        expect(settings.commands[0]?.name).toBe("Open this quarter's note");
       });
 
       it("knows how to convert yearly journal default settings", () => {
@@ -307,8 +307,8 @@ describe("v1 to v2 migration", () => {
         oldSettingsCopy.year.ribbon.show = true;
         const settings = prepareCalendarJournalSettings(oldSettingsCopy, "year", names, false, false);
         expect(settings.commands).toHaveLength(1);
-        expect(settings.commands[0].icon).toBe("calendar-days");
-        expect(settings.commands[0].name).toBe("Open this year's note");
+        expect(settings.commands[0]?.icon).toBe("calendar-days");
+        expect(settings.commands[0]?.name).toBe("Open this year's note");
       });
     });
 

@@ -43,6 +43,7 @@ export function registerPluginCommand(
     if (journals.length === 0) return false;
     if (journals.length === 1) {
       const [journal] = journals;
+      if (!journal) return false;
       const date = resolveDateInJournal(journal, command.type);
       if (!date) return false;
       openDateInJournal(plugin, date, journal.name, command.openMode).catch(console.error);

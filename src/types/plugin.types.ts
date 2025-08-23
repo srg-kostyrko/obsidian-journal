@@ -24,7 +24,7 @@ export interface JournalPlugin extends Plugin {
   readonly commands: PluginCommand[];
   hasJournal(name: string): boolean;
   getJournal(name: string): Journal | undefined;
-  getJournalConfig(name: string): JournalSettings;
+  getJournalConfig(name: string): JournalSettings | undefined;
   createJournal(name: string, write: JournalSettings["write"]): JournalSettings;
   registerJournal(settings: JournalSettings): Journal;
   renameJournal(name: string, newName: string): Promise<void>;

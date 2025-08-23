@@ -22,8 +22,8 @@ export class TimelineCodeBlockProcessor extends MarkdownRenderChild {
     const lines = this.source.split("\n");
     for (const line of lines) {
       const [key, value] = line.split(":");
-      if (key.trim() === "mode") {
-        this.mode = value.trim();
+      if (key?.trim() === "mode") {
+        this.mode = value?.trim() ?? "week";
       }
     }
     this._vueApp = createApp(TimelineCodeBlock, {

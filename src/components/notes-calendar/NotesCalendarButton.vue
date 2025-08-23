@@ -49,7 +49,9 @@ function openContextMenu(event: MouseEvent) {
   }
   if (notes.length === 0) return;
   if (notes.length === 1) {
-    plugin.appManager.showContextMenu(notes[0].path, event);
+    const [note] = notes;
+    if (!note) return;
+    plugin.appManager.showContextMenu(note.path, event);
   } else {
     const menu = new Menu();
     for (const note of notes) {

@@ -41,7 +41,7 @@ const placedDecorations = computed(() => {
 
   for (const style of props.styles) {
     if (style.type === "shape" || style.type === "icon") {
-      placed[`${style.placement_x}_${style.placement_y}`].push(style);
+      placed[`${style.placement_x}_${style.placement_y}`]?.push(style);
     }
   }
 

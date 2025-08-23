@@ -164,7 +164,7 @@ const hasWrongWeek = computed(() => {
   if (!template.value) return false;
   const formats = template.value.matchAll(/{{(.*?):(.*?)}}/gi);
   return [...formats].some(([, , format]) => {
-    return format.replaceAll(/\[.*?\]/gi, "").includes("W");
+    return format?.replaceAll(/\[.*?\]/gi, "").includes("W");
   });
 });
 

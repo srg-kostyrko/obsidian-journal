@@ -23,6 +23,7 @@ export async function openDate(
   if (applicableJournals.length === 0) return;
   if (applicableJournals.length === 1) {
     const [name] = applicableJournals;
+    if (!name) return;
     await openDateInJournal(plugin, date, name, openMode);
     return;
   }

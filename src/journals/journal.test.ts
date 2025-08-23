@@ -81,9 +81,10 @@ describe("Journal", () => {
     it("should resolve decorations", () => {
       expect(journal.decorations).toEqual(defaultJournalSettings.decorations);
 
-      config.value.decorations[0].mode = "or";
+      // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
+      config.value.decorations[0]!.mode = "or";
 
-      expect(journal.decorations[0].mode).toBe("or");
+      expect(journal.decorations[0]?.mode).toBe("or");
     });
 
     it("should resolve commands", () => {

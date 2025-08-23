@@ -30,7 +30,7 @@ const [name, nameAttrs] = defineField("name");
 const plugin = usePlugin();
 const journal = computed(() => plugin.getJournal(journalName));
 const currentName = computed<string>(
-  () => (journal.value?.config.value.frontmatter[fieldName] as string) || defaultFieldNames[fieldName],
+  () => ((journal.value?.config.value.frontmatter[fieldName] as string) || defaultFieldNames[fieldName]) ?? "",
 );
 
 const onSubmit = handleSubmit(async (values) => {

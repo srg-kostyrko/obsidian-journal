@@ -135,7 +135,7 @@ export default class JournalPluginImpl extends Plugin implements JournalPlugin {
     return this.#journals.value[name];
   }
 
-  getJournalConfig(name: string): JournalSettings {
+  getJournalConfig(name: string): JournalSettings | undefined {
     return this.#config.value.journals[name];
   }
 
@@ -151,7 +151,8 @@ export default class JournalPluginImpl extends Plugin implements JournalPlugin {
       ...this.#journals.value,
       [name]: new Journal(
         name,
-        computed(() => this.#config.value.journals[name]),
+        // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
+        computed(() => this.#config.value.journals[name]!),
         this.#index,
         this.#appManager,
         this.#notesManager,
@@ -168,7 +169,8 @@ export default class JournalPluginImpl extends Plugin implements JournalPlugin {
     this.#config.value.journals[settings.name] = settings;
     const journal = new Journal(
       settings.name,
-      computed(() => this.#config.value.journals[settings.name]),
+      // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
+      computed(() => this.#config.value.journals[settings.name]!),
       this.#index,
       this.#appManager,
       this.#notesManager,
@@ -180,7 +182,7 @@ export default class JournalPluginImpl extends Plugin implements JournalPlugin {
     };
     if (settings.shelves.length > 0) {
       for (const shelf of settings.shelves) {
-        this.#config.value.shelves[shelf].journals.push(settings.name);
+        this.#config.value.shelves[shelf]?.journals.push(settings.name);
       }
     }
     return journal;
@@ -191,18 +193,21 @@ export default class JournalPluginImpl extends Plugin implements JournalPlugin {
     if (!journal) return;
     journal.dispose();
 
-    this.#config.value.journals[newName] = this.#config.value.journals[name];
+    const config = this.#config.value.journals[name];
+    if (!config) return;
+    this.#config.value.journals[newName] = config;
     this.#config.value.journals[newName].name = newName;
     delete this.#config.value.journals[name];
-    for (const shelf of this.#config.value.journals[newName].shelves) {
-      this.#config.value.shelves[shelf].journals = this.#config.value.shelves[shelf].journals.map((journalName) =>
-        journalName === name ? newName : journalName,
-      );
+    for (const shelf of this.#config.value.journals[newName]?.shelves ?? []) {
+      const shelfConfig = this.#config.value.shelves[shelf];
+      if (!shelfConfig) continue;
+      shelfConfig.journals = shelfConfig.journals.map((journalName) => (journalName === name ? newName : journalName));
     }
     const { [name]: _, ...otherJournals } = this.#journals.value;
     const newJournal = new Journal(
       newName,
-      computed(() => this.#config.value.journals[newName]),
+      // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
+      computed(() => this.#config.value.journals[newName]!),
       this.#index,
       this.#appManager,
       this.#notesManager,
@@ -241,7 +246,8 @@ export default class JournalPluginImpl extends Plugin implements JournalPlugin {
     journal.dispose();
     const { [name]: _, ...otherJournals } = this.#journals.value;
     this.#journals.value = otherJournals;
-    for (const shelf of this.#config.value.journals[name].shelves) {
+    for (const shelf of this.#config.value.journals[name]?.shelves ?? []) {
+      if (!this.#config.value.shelves[shelf]) continue;
       this.#config.value.shelves[shelf].journals = this.#config.value.shelves[shelf].journals.filter(
         (journalName) => journalName !== name,
       );
@@ -261,16 +267,17 @@ export default class JournalPluginImpl extends Plugin implements JournalPlugin {
     if (!journal) return;
 
     const currentShelf = journal.shelfName;
-    if (currentShelf) {
+    if (currentShelf && this.#config.value.shelves[currentShelf]) {
       this.#config.value.shelves[currentShelf].journals = this.#config.value.shelves[currentShelf].journals.filter(
         (name) => name !== journalName,
       );
     }
     if (destinationShelf) {
-      this.#config.value.shelves[destinationShelf].journals.push(journalName);
-      this.#config.value.journals[journalName].shelves = [destinationShelf];
+      this.#config.value.shelves[destinationShelf]?.journals.push(journalName);
+      if (this.#config.value.journals[journalName])
+        this.#config.value.journals[journalName].shelves = [destinationShelf];
     } else {
-      this.#config.value.journals[journalName].shelves = [];
+      if (this.#config.value.journals[journalName]) this.#config.value.journals[journalName].shelves = [];
     }
   }
 
@@ -305,9 +312,12 @@ export default class JournalPluginImpl extends Plugin implements JournalPlugin {
   }
 
   renameShelf(name: string, newName: string): void {
-    this.#config.value.shelves[newName] = this.#config.value.shelves[name];
+    const config = this.#config.value.shelves[name];
+    if (!config) return;
+    this.#config.value.shelves[newName] = config;
     this.#config.value.shelves[newName].name = newName;
     for (const journal of this.#config.value.shelves[newName].journals) {
+      if (!this.#config.value.journals[journal]) continue;
       this.#config.value.journals[journal].shelves = this.#config.value.journals[journal].shelves.map((shelf) =>
         shelf === name ? newName : shelf,
       );
@@ -316,7 +326,8 @@ export default class JournalPluginImpl extends Plugin implements JournalPlugin {
   }
 
   removeShelf(name: string, destinationShelf?: string): void {
-    for (const journal of this.#config.value.shelves[name].journals) {
+    for (const journal of this.#config.value.shelves[name]?.journals ?? []) {
+      if (!this.#config.value.journals[journal]) continue;
       this.#config.value.journals[journal].shelves = destinationShelf
         ? this.#config.value.journals[journal].shelves.map((shelf) => (shelf === name ? destinationShelf : shelf))
         : this.#config.value.journals[journal].shelves.filter((shelf) => shelf !== name);
@@ -473,7 +484,8 @@ export default class JournalPluginImpl extends Plugin implements JournalPlugin {
     for (const name of Object.keys(this.#config.value.journals)) {
       journals[name] = new Journal(
         name,
-        computed(() => this.#config.value.journals[name]),
+        // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
+        computed(() => this.#config.value.journals[name]!),
         this.#index,
         this.#appManager,
         this.#notesManager,
@@ -610,6 +622,7 @@ export default class JournalPluginImpl extends Plugin implements JournalPlugin {
           this.placeCalendarView();
           leaf = this.app.workspace.getLeavesOfType(CALENDAR_VIEW_TYPE)[0];
         }
+        if (!leaf) return;
         this.app.workspace.revealLeaf(leaf).catch(console.error);
       },
     });

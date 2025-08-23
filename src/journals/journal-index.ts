@@ -47,25 +47,28 @@ export class JournalIndex {
     const index = this.#bsearchSortedDate(anchorDate);
     if (index === -1) return null;
     if (index === this.#sortedDates.length - 1) return null;
-    return this.#map.value.get(this.#sortedDates[index + 1]) ?? null;
+    const nextDate = this.#sortedDates[index + 1];
+    return nextDate ? (this.#map.value.get(nextDate) ?? null) : null;
   }
 
   findPrevious(anchorDate: JournalAnchorDate): string | null {
     const index = this.#bsearchSortedDate(anchorDate);
     if (index === -1) return null;
     if (index === 0) return null;
-    return this.#map.value.get(this.#sortedDates[index - 1]) ?? null;
+    const previousDate = this.#sortedDates[index - 1];
+    return previousDate ? (this.#map.value.get(previousDate) ?? null) : null;
   }
 
   findClosestDate(date: string): JournalAnchorDate | undefined {
     if (this.#map.value.size === 0) return;
     if (this.#map.value.has(date)) return JournalAnchorDate(date);
-    if (date <= this.#sortedDates[0]) return JournalAnchorDate(this.#sortedDates[0]);
+    const first = this.#sortedDates[0];
+    if (first && date <= first) return JournalAnchorDate(first);
     const last = this.#sortedDates.at(-1);
     if (last && date >= last) return JournalAnchorDate(last);
     const index = this.#bsearchSortedDate(date);
     if (index === -1) return;
-    return JournalAnchorDate(this.#sortedDates[index]);
+    return this.#sortedDates[index] ? JournalAnchorDate(this.#sortedDates[index]) : undefined;
   }
 
   *[Symbol.iterator]() {
@@ -90,13 +93,15 @@ export class JournalIndex {
     let end = this.#sortedDates.length;
     while (end - start > 1) {
       const mid = Math.floor((start + end) / 2);
-      if (this.#sortedDates[mid] === date) return mid;
-      if (this.#sortedDates[mid] < date) {
+      const midDate = this.#sortedDates[mid];
+      if (!midDate) break;
+      if (midDate === date) return mid;
+      if (midDate < date) {
         start = mid;
       } else {
         end = mid;
       }
     }
-    return start === 0 && this.#sortedDates[0] > date ? -1 : start;
+    return start === 0 && this.#sortedDates[0] && this.#sortedDates[0] > date ? -1 : start;
   }
 }

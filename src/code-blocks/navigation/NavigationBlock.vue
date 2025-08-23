@@ -69,6 +69,7 @@ function openContextMenu(type: NavBlockRow["link"], date: string, event: MouseEv
       });
     if (list.length === 0) return;
     if (list.length === 1) {
+      if (!list[0]) return;
       plugin.appManager.showContextMenu(list[0].path, event);
     } else {
       const menu = new Menu();
