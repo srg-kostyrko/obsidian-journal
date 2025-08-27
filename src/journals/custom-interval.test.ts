@@ -901,4 +901,180 @@ describe("CustomIntervalResolver", () => {
       index.unregisterPathData("2022-05-01.md");
     });
   });
+
+  describe("3 months interval starting at the end of month", () => {
+    const journalName = "3 month";
+    const index = new JournalsIndex();
+    const resolver = new CustomIntervalResolver(
+      journalName,
+      computed(() => ({ type: "custom", every: "month", duration: 3, anchorDate: JournalAnchorDate("2022-01-31") })),
+      index,
+    );
+
+    it("returns correct repeats", () => {
+      expect(resolver.repeats).toBe(3);
+    });
+    it("returns correct duration", () => {
+      expect(resolver.duration).toBe("month");
+    });
+
+    describe("calculating interval anchor date without index records", () => {
+      it("returns journal anchor for date in first interval", () => {
+        expect(resolver.resolveForDate("2022-01-31")).toBe("2022-01-31");
+        expect(resolver.resolveForDate("2022-02-21")).toBe("2022-01-31");
+        expect(resolver.resolveForDate("2022-04-29")).toBe("2022-01-31");
+      });
+
+      it("return next interval anchor date", () => {
+        expect(resolver.resolveForDate("2022-04-30")).toBe("2022-04-30");
+        expect(resolver.resolveForDate("2022-05-24")).toBe("2022-04-30");
+        expect(resolver.resolveForDate("2022-07-30")).toBe("2022-04-30");
+      });
+
+      it("resolves interval after one missing repetition", () => {
+        expect(resolver.resolveForDate("2022-07-31")).toBe("2022-07-31");
+        expect(resolver.resolveForDate("2022-09-07")).toBe("2022-07-31");
+        expect(resolver.resolveForDate("2022-10-30")).toBe("2022-07-31");
+      });
+
+      it("resolves interval after two missing repetitions", () => {
+        expect(resolver.resolveForDate("2022-10-31")).toBe("2022-10-31");
+        expect(resolver.resolveForDate("2022-11-21")).toBe("2022-10-31");
+        expect(resolver.resolveForDate("2023-01-30")).toBe("2022-10-31");
+      });
+
+      it("resolves interval after many missing repetitions", () => {
+        expect(resolver.resolveForDate("2023-07-31")).toBe("2023-07-31");
+        expect(resolver.resolveForDate("2023-09-07")).toBe("2023-07-31");
+        expect(resolver.resolveForDate("2023-10-30")).toBe("2023-07-31");
+      });
+
+      it("return previous interval anchor date", () => {
+        expect(resolver.resolveForDate("2021-10-31")).toBe("2021-10-31");
+        expect(resolver.resolveForDate("2021-11-27")).toBe("2021-10-31");
+        expect(resolver.resolveForDate("2022-01-30")).toBe("2021-10-31");
+      });
+      it("return anchor date for date with one missing interval", () => {
+        expect(resolver.resolveForDate("2021-07-31")).toBe("2021-07-31");
+        expect(resolver.resolveForDate("2021-09-13")).toBe("2021-07-31");
+        expect(resolver.resolveForDate("2021-10-30")).toBe("2021-07-31");
+      });
+      it("return anchor date for date with two missing intervals", () => {
+        expect(resolver.resolveForDate("2021-04-30")).toBe("2021-04-30");
+        expect(resolver.resolveForDate("2021-06-29")).toBe("2021-04-30");
+        expect(resolver.resolveForDate("2021-07-30")).toBe("2021-04-30");
+      });
+      it("return anchor date for date with many missing intervals", () => {
+        expect(resolver.resolveForDate("2020-07-31")).toBe("2020-07-31");
+        expect(resolver.resolveForDate("2020-09-07")).toBe("2020-07-31");
+        expect(resolver.resolveForDate("2020-10-30")).toBe("2020-07-31");
+      });
+    });
+
+    describe("calculating interval anchor date with index records (no custom end date)", () => {
+      beforeAll(() => {
+        index.registerPathData("2023-01-31.md", {
+          journal: journalName,
+          date: JournalAnchorDate("2023-01-31"),
+          title: "2023-01-31",
+          path: "2023-01-31.md",
+          tags: [],
+          properties: {},
+          tasks: [],
+        });
+      });
+
+      afterAll(() => {
+        index.unregisterPathData("2023-01-31.md");
+      });
+
+      it("returns anchor date from index", () => {
+        expect(resolver.resolveForDate("2023-01-31")).toBe("2023-01-31");
+        expect(resolver.resolveForDate("2023-02-21")).toBe("2023-01-31");
+        expect(resolver.resolveForDate("2023-04-29")).toBe("2023-01-31");
+      });
+
+      it("resolves interval right after known", () => {
+        expect(resolver.resolveForDate("2023-04-30")).toBe("2023-04-30");
+        expect(resolver.resolveForDate("2023-05-24")).toBe("2023-04-30");
+        expect(resolver.resolveForDate("2023-07-30")).toBe("2023-04-30");
+      });
+
+      it("resolves interval right before known", () => {
+        expect(resolver.resolveForDate("2022-10-31")).toBe("2022-10-31");
+        expect(resolver.resolveForDate("2022-11-27")).toBe("2022-10-31");
+        expect(resolver.resolveForDate("2023-01-30")).toBe("2022-10-31");
+      });
+    });
+
+    describe("resolve next interval", () => {
+      it("resolves next interval based on anchor date", () => {
+        expect(resolver.resolveNext("2022-01-31")).toBe("2022-04-30");
+      });
+
+      it("resolves next interval based on index record", () => {
+        index.registerPathData("2023-01-31.md", {
+          journal: journalName,
+          date: JournalAnchorDate("2023-01-31"),
+          title: "2023-01-31",
+          path: "2023-01-31.md",
+          tags: [],
+          properties: {},
+          tasks: [],
+        });
+
+        expect(resolver.resolveNext("2023-05-05")).toBe("2023-07-31");
+
+        index.unregisterPathData("2023-01-31.md");
+      });
+    });
+
+    describe("resolve previous interval", () => {
+      it("resolves previous interval based on anchor date", () => {
+        expect(resolver.resolvePrevious("2022-01-31")).toBe("2021-10-31");
+      });
+
+      it("resolves previous interval based on index record", () => {
+        index.registerPathData("2023-01-31.md", {
+          journal: journalName,
+          date: JournalAnchorDate("2023-01-31"),
+          title: "2023-01-31",
+          path: "2023-01-31.md",
+          tags: [],
+          properties: {},
+          tasks: [],
+        });
+
+        expect(resolver.resolvePrevious("2023-05-05")).toBe("2023-01-31");
+
+        index.unregisterPathData("2023-01-31.md");
+      });
+    });
+
+    it("should resolve date for command", () => {
+      expect(resolver.resolveDateForCommand("2022-01-31", "same")).toBe("2022-01-31");
+      expect(resolver.resolveDateForCommand("2022-01-31", "next")).toBe("2022-04-30");
+      expect(resolver.resolveDateForCommand("2022-01-31", "previous")).toBe("2021-10-31");
+    });
+
+    it("should resolve start date of interval", () => {
+      expect(resolver.resolveStartDate(JournalAnchorDate("2022-01-31"))).toBe("2022-01-31");
+    });
+
+    it("should resolve end date of interval", () => {
+      expect(resolver.resolveEndDate(JournalAnchorDate("2022-01-31"))).toBe("2022-04-29");
+    });
+
+    it("should calculate offset", () => {
+      expect(resolver.calculateOffset("2022-02-05")).toStrictEqual([6, -84]);
+    });
+
+    it("should calculate repeats", () => {
+      expect(resolver.countRepeats("2022-08-01", "2022-02-01")).toBe(-2);
+      expect(resolver.countRepeats("2022-05-01", "2022-02-01")).toBe(-1);
+      expect(resolver.countRepeats("2022-02-01", "2022-04-29")).toBe(0);
+      expect(resolver.countRepeats("2022-02-01", "2022-05-01")).toBe(1);
+      expect(resolver.countRepeats("2022-02-01", "2022-08-01")).toBe(2);
+    });
+  });
 });

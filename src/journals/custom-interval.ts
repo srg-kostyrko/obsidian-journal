@@ -4,6 +4,7 @@ import type { ComputedRef } from "vue";
 import { date_from_string, today } from "@/calendar";
 import { FRONTMATTER_DATE_FORMAT } from "@/constants";
 import type { JournalsIndex } from "./journals-index";
+import type { MomentDate } from "@/types/date.types";
 
 export class CustomIntervalResolver implements AnchorDateResolver {
   #settings: ComputedRef<WriteCustom>;
@@ -25,6 +26,8 @@ export class CustomIntervalResolver implements AnchorDateResolver {
   }
 
   resolveForDate(date: string): JournalAnchorDate | null {
+    this.#validateDate(date);
+
     const index = this.index.getJournalIndex(this.journalName);
 
     const closest = index.findClosestDate(date);
@@ -35,6 +38,7 @@ export class CustomIntervalResolver implements AnchorDateResolver {
 
     const startDate = this.#settings.value.anchorDate;
     const endDate = this.resolveEndDate(startDate);
+
     if (date >= startDate && date < endDate) {
       return startDate;
     } else if (date < startDate) {
@@ -61,10 +65,7 @@ export class CustomIntervalResolver implements AnchorDateResolver {
         return closest;
       }
     }
-    const previousStart = date_from_string(anchorDate).subtract(
-      this.#settings.value.duration,
-      this.#settings.value.every,
-    );
+    const previousStart = this.#retractDate(anchorDate);
     return JournalAnchorDate(previousStart.format(FRONTMATTER_DATE_FORMAT));
   }
   resolveDateForCommand(date: string, command: JournalCommand["type"]): string | null {
@@ -84,7 +85,7 @@ export class CustomIntervalResolver implements AnchorDateResolver {
     const existing = this.index.get(this.journalName, anchorDate);
     const currentEnd = existing?.end_date
       ? date_from_string(existing.end_date)
-      : date_from_string(anchorDate).add(this.#settings.value.duration, this.#settings.value.every).subtract(1, "day");
+      : this.#advanceDate(anchorDate).subtract(1, "day");
 
     return currentEnd.format(FRONTMATTER_DATE_FORMAT);
   }
@@ -139,25 +140,22 @@ export class CustomIntervalResolver implements AnchorDateResolver {
 
   #resolveDateBeforeKnown(target: string, known: JournalAnchorDate): JournalAnchorDate | null {
     const index = this.index.getJournalIndex(this.journalName);
-
     let knownStart = date_from_string(known);
 
     let found = false;
     while (!found) {
       const previousEnd = knownStart.clone().subtract(1, "day");
       const closest = index.findClosestDate(previousEnd.format(FRONTMATTER_DATE_FORMAT));
-      let previousStart = knownStart.subtract(this.#settings.value.duration, this.#settings.value.every);
+      let previousStart = this.#retractDate(knownStart);
       if (closest) {
         const closestData = this.index.get(this.journalName, closest);
         if (closestData?.end_date && previousEnd.isSame(closestData.end_date, "day")) {
           previousStart = date_from_string(closest);
         }
       }
-
+      knownStart = previousStart.clone();
       if (previousStart.isSameOrBefore(target, "day") && previousEnd.isSameOrAfter(target, "day")) {
         found = true;
-      } else {
-        knownStart = previousStart.clone();
       }
     }
     return JournalAnchorDate(knownStart.format(FRONTMATTER_DATE_FORMAT));
@@ -166,7 +164,11 @@ export class CustomIntervalResolver implements AnchorDateResolver {
   #resolveDateAfterKnown(target: string, known: JournalAnchorDate): JournalAnchorDate | null {
     let currentStart = date_from_string(known);
     let found = false;
+    let count = 0;
     while (!found) {
+      if (count > 10) {
+        break;
+      }
       const currentEnd = date_from_string(
         this.resolveEndDate(JournalAnchorDate(currentStart.format(FRONTMATTER_DATE_FORMAT))),
       );
@@ -175,7 +177,45 @@ export class CustomIntervalResolver implements AnchorDateResolver {
       } else {
         currentStart = currentEnd.clone().add(1, "day");
       }
+      ++count;
     }
     return JournalAnchorDate(currentStart.format(FRONTMATTER_DATE_FORMAT));
+  }
+
+  #validateDate(date: string): void {
+    if (!date_from_string(date).isValid()) {
+      throw new Error(`Invalid date: ${date}`);
+    }
+  }
+
+  #advanceDate(date: JournalAnchorDate | MomentDate): MomentDate {
+    const current = typeof date === "string" ? date_from_string(date) : date;
+
+    if (this.#settings.value.every === "month" && current.date() > 28) {
+      const monthEnd = current.clone().endOf("month");
+      const delta = monthEnd.diff(current, "days");
+
+      const nextEnd = monthEnd.clone().add(this.#settings.value.duration, this.#settings.value.every).endOf("month");
+      return nextEnd.clone().subtract(delta, "days");
+    }
+
+    return current.clone().add(this.#settings.value.duration, this.#settings.value.every);
+  }
+
+  #retractDate(date: JournalAnchorDate | MomentDate): MomentDate {
+    const current = typeof date === "string" ? date_from_string(date) : date;
+
+    if (this.#settings.value.every === "month" && current.date() > 28) {
+      const monthEnd = current.clone().endOf("month");
+      const delta = monthEnd.diff(current, "days");
+
+      const previousEnd = monthEnd
+        .clone()
+        .subtract(this.#settings.value.duration, this.#settings.value.every)
+        .endOf("month");
+      return previousEnd.clone().add(delta, "days");
+    }
+
+    return current.clone().subtract(this.#settings.value.duration, this.#settings.value.every);
   }
 }
