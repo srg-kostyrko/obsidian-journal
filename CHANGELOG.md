@@ -2,6 +2,169 @@
 
 All notable changes to this project will be documented in this file.
 
+## [unreleased]
+
+### Bug Fixes
+
+- Fix hover preview to support pressing contol key after hover
+- Fix custom interval calculation for month intervals starting on last days of month
+
+## [2.1.9] - 2025-06-07
+
+### Bug Fixes
+
+- Fix relative week calculation
+
+## [2.1.8] - 2025-06-07
+
+### Bug Fixes
+
+- Fix relative weeks calculation
+- Fix displaying shelf selector in calendar view
+- Fix calendar view updating month on week note selection
+
+## [2.1.7] - 2025-05-02
+
+### Bug Fixes
+
+- Force normal text color in calendar to avoid issues with text-on-accent being inverted
+
+## [2.1.6] - 2025-05-01
+
+### Bug Fixes
+
+- Fix active week highlight when weeks are displayed after weekdays
+
+### Ux
+
+- Improve ux of journal settings
+
+## [2.1.5] - 2025-04-26
+
+### Bug Fixes
+
+- Update button dropdow position to solve issue with display on mobile
+- Fix showing Update button in Week configuration modal
+- Add hint about creating folder in name template
+- Add fallback for empty name template
+- Add hint about using W in variables
+
+## [2.1.4] - 2025-04-12
+
+### Bug Fixes
+
+- Fix plugin and shelf commands edit and ribbon icons for them
+
+## [2.1.3] - 2025-03-20
+
+### Bug Fixes
+
+- Fix UI updates on week settings change
+
+## [2.1.2] - 2025-03-19
+
+### Bug Fixes
+
+- Fix bulk adding notes to journal
+
+## [2.1.1] - 2025-03-16
+
+### Bug Fixes
+
+- Fix applying today background color
+- Fix restoring default locale, improve week settings modal ux
+
+### Ux
+
+- Update path preview to make spaces at end more visible
+
+## [2.1.0] - 2025-03-10
+
+### Bug Fixes
+
+- Fix calendar button styles in some themes
+
+### Documentation
+
+- Enhance README with comprehensive documentation
+
+### FEAT
+
+- Add commands on plugin and shelf level
+
+### Features
+
+- Support startOf and endOf modifiers for date variables
+- Add size to icon and shape decoration styles, polish decorations display
+- Add preview functionality
+- Add option to apply week settings to vault
+- Add notification about command ids, restore v1 global commands
+
+## [2.0.2] - 2025-03-06
+
+### Bug Fixes
+
+- Fix adding start/end date to new notes when configured
+
+### Ux
+
+- Make shelf more obvious in journal settings
+
+## [2.0.1.beta3] - 2025-03-02
+
+### Bug Fixes
+
+- Update build for plugin o work on ios
+
+## [2.0.1.beta2] - 2025-03-02
+
+### Bug Fixes
+
+- Import moment from obsidian
+
+## [2.0.0.beta4] - 2025-03-01
+
+### Bug Fixes
+
+- Fix v2 data migration
+- Improve migration flow
+- Fix migartion flow by ensuring step components gets recreated
+
+### Refactor
+
+- Rearrange migration functions, add tests
+
+## [2.0.0.beta3] - 2025-02-28
+
+### Bug Fixes
+
+- Obsidian reload should not move calendar view
+- Replace spaces in command id with dash
+
+### Testing
+
+- Add first portion of journal tests
+
+### Ux
+
+- Add warning about creating folder with date format and link to fix
+
+## [2.0.0.beta2] - 2025-02-19
+
+### Bug Fixes
+
+- Fix next/prev month navigation in date picker
+- Fix renaming journal was not updating notes
+- Fix wrong text
+
+### Documentation
+
+- Add missing shelves description, fix code block example
+
+### Ux
+
+- Prefill frontmatter field name while editing
+
 ## [1.4.3] - 2024-10-23
 
 ### Bug Fixes
