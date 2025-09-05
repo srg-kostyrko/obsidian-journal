@@ -38,7 +38,18 @@ export default [
       "unicorn/no-null": "off", // TODO consider enabling
       "unicorn/prevent-abbreviations": [
         "error",
-        { replacements: { e: { event: false }, props: false, ref: false, attrs: false, i: false, env: false } },
+        {
+          replacements: {
+            e: { event: false },
+            props: false,
+            ref: false,
+            attrs: false,
+            i: false,
+            env: false,
+            args: false,
+            fn: false,
+          },
+        },
       ],
       "@cspell/spellchecker": [
         "warn",

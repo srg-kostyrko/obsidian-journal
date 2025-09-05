@@ -1,3 +1,4 @@
 export function checkExhaustive(_value: never): never {
-  throw new Error(`Unexpected value`);
+  // eslint-disable-next-line @typescript-eslint/restrict-template-expressions
+  throw new Error(`Unexpected value ${_value}`);
 }
