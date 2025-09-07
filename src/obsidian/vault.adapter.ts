@@ -4,7 +4,7 @@ import { JournalPlugin, ObsidianApp, Vault, VaultEvents } from "./obsidian.token
 import { inject } from "@/infra/di/inject";
 import { TFile, TFolder } from "obsidian";
 import { Result, type AsyncResult } from "@/infra/data-structures/result";
-import { VaultError } from "./errors/VaultError";
+import { VaultError } from "./errors/vault.error";
 import { normalizePath } from "vite";
 import { Logger } from "@/infra/logger/logger.tokens";
 

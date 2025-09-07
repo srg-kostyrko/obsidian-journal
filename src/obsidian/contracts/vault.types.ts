@@ -1,6 +1,6 @@
 import type { AsyncResult, Result } from "@/infra/data-structures/result";
 import type { Brand } from "@/types/utility.types";
-import type { VaultError } from "../errors/VaultError";
+import type { VaultError } from "../errors/vault.error";
 
 export type FilePath = Brand<string, "FilePath">;
 export function FilePath(path: string): FilePath {

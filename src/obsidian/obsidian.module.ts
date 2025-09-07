@@ -4,6 +4,7 @@ import type { App, Plugin } from "obsidian";
 import { JournalPlugin, ObsidianApp, VaultEvents } from "./obsidian.tokens";
 import { VaultAdapter } from "./vault.adapter";
 import { createNanoEvents } from "nanoevents";
+import { WorkspaceAdapter } from "./workspace.adapter";
 
 export class ObsidianModule implements Module {
   #app: App;
@@ -14,7 +15,7 @@ export class ObsidianModule implements Module {
     this.#plugin = plugin;
   }
 
-  provides = [VaultAdapter];
+  provides = [VaultAdapter, WorkspaceAdapter];
 
   load(container: Container) {
     container.register(ObsidianApp).useValue(this.#app);
