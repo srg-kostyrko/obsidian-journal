@@ -6,12 +6,14 @@ import { TFile, TFolder } from "obsidian";
 import { Result, type AsyncResult } from "@/infra/data-structures/result";
 import { VaultError } from "./errors/VaultError";
 import { normalizePath } from "vite";
+import { Logger } from "@/infra/logger/logger.tokens";
 
 @Injectable(Vault)
 export class VaultAdapter implements VaultContract {
   #plugin = inject(JournalPlugin);
   #app = inject(ObsidianApp);
   #events = inject(VaultEvents);
+  #logger = inject(Logger).inScope("VaultAdapter");
 
   constructor() {
     this.#setupListeners();
@@ -47,11 +49,13 @@ export class VaultAdapter implements VaultContract {
   }
 
   stats(path: FilePath): Result<{ name: string; fileName: string; folder: string }, VaultError> {
-    return this.#getFile(path).map((file) => ({
-      name: file.name,
-      fileName: file.name,
-      folder: file.parent?.path ?? "/",
-    }));
+    return this.#getFile(path)
+      .map((file) => ({
+        name: file.name,
+        fileName: file.name,
+        folder: file.parent?.path ?? "/",
+      }))
+      .tapErr(this.#logVaultError);
   }
 
   exists(path: FilePath): boolean {
@@ -67,7 +71,7 @@ export class VaultAdapter implements VaultContract {
         await this.#app.vault.create(normalizedPath, content ?? "");
       },
       (error) => VaultError.fromCatch(error),
-    );
+    ).tapErr(this.#logVaultError);
   }
 
   modify(path: string, content: string): AsyncResult<void, VaultError> {
@@ -78,7 +82,7 @@ export class VaultAdapter implements VaultContract {
         await this.#app.vault.modify(file, content);
       },
       (error) => VaultError.fromCatch(error),
-    );
+    ).tapErr(this.#logVaultError);
   }
 
   append(path: string, content: string): AsyncResult<void, VaultError> {
@@ -89,7 +93,7 @@ export class VaultAdapter implements VaultContract {
         await this.#app.vault.append(file, content);
       },
       (error) => VaultError.fromCatch(error),
-    );
+    ).tapErr(this.#logVaultError);
   }
 
   rename(path: string, newPath: string): AsyncResult<void, VaultError> {
@@ -101,7 +105,7 @@ export class VaultAdapter implements VaultContract {
         await this.#app.vault.rename(file, newPath);
       },
       (error) => VaultError.fromCatch(error),
-    );
+    ).tapErr(this.#logVaultError);
   }
 
   trash(path: string): AsyncResult<void, VaultError> {
@@ -112,7 +116,7 @@ export class VaultAdapter implements VaultContract {
         await this.#app.vault.trash(file, true);
       },
       (error) => VaultError.fromCatch(error),
-    );
+    ).tapErr(this.#logVaultError);
   }
 
   delete(path: string): AsyncResult<void, VaultError> {
@@ -123,7 +127,7 @@ export class VaultAdapter implements VaultContract {
         await this.#app.vault.delete(file);
       },
       (error) => VaultError.fromCatch(error),
-    );
+    ).tapErr(this.#logVaultError);
   }
 
   getContent(path: string): AsyncResult<string, VaultError> {
@@ -134,7 +138,7 @@ export class VaultAdapter implements VaultContract {
         return await this.#app.vault.cachedRead(file);
       },
       (error) => VaultError.fromCatch(error),
-    );
+    ).tapErr(this.#logVaultError);
   }
 
   #getFile(path: string): Result<TFile, VaultError> {
@@ -192,4 +196,6 @@ export class VaultAdapter implements VaultContract {
       (error) => VaultError.fromCatch(error),
     );
   }
+
+  #logVaultError = (error: VaultError) => this.#logger.error(error.message, { error });
 }
