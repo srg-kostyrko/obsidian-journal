@@ -31,6 +31,7 @@
     "@vee-validate/valibot": "^4.15.1",
     "@vueuse/core": "^13.7.0",
     "eslint-plugin-vue": "^10.4.0",
+    "nanoevents": "^9.1.0",
     "nanoid": "^5.1.5",
     "obsidian": "^1.8.7",
     "perfect-debounce": "^2.0.0",

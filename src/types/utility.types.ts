@@ -1,3 +1,5 @@
+export type Brand<T, V> = T & { __brand: V };
+
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 export type AnyFunction<Returning = any> = (...args: any[]) => Returning;
 
