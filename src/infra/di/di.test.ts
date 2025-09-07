@@ -10,6 +10,9 @@ import { Inject } from "./decorators/Inject";
 import { TokenNotRegisteredError } from "./errors/TokenNotRegisteredError";
 import { NoProviderRegisteredError } from "./errors/NoProviderRegisteredError";
 import { NoInjectionContextError } from "./errors/NoInjectionContextError";
+import { Injector } from "./injector";
+import { build } from "./token-registry";
+import { useInjectionContext } from "./injection-context";
 
 describe("DI system", () => {
   describe("Registration providers", () => {
@@ -338,6 +341,55 @@ describe("DI system", () => {
 
       const config = container.resolve(Config);
       expect(config.env).toBe("development");
+    });
+  });
+
+  describe("Injector", () => {
+    it("should inject injector", () => {
+      const WizardToken = createToken<Wizard>("Wizard");
+      const WandToken = createToken<Wand>("Wand");
+
+      @Injectable(WizardToken)
+      class Wizard {
+        injector = inject(Injector);
+      }
+
+      @Injectable(WandToken)
+      class Wand {
+        name = "Elder Wand";
+      }
+
+      const container = new Container();
+      container.provide(Wizard);
+      container.provide(Wand);
+
+      const wizard = container.resolve(WizardToken);
+      expect(wizard.injector.inject(WandToken)).toBeInstanceOf(Wand);
+      expect(wizard.injector.injectAll(WandToken)).toEqual([new Wand()]);
+    });
+
+    it("should use current context", () => {
+      const WizardToken = createToken<Wizard>("Wizard");
+
+      @Injectable(WizardToken)
+      class Wizard {
+        injector = inject(Injector);
+
+        context = inject(build(useInjectionContext));
+
+        constructor() {
+          this.injector.inject(
+            build(() => {
+              expect(useInjectionContext()).toBe(this.context);
+            }),
+          );
+        }
+      }
+
+      const container = new Container();
+      container.provide(Wizard);
+
+      container.resolve(WizardToken);
     });
   });
 

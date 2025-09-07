@@ -1,5 +1,8 @@
+export const TokenSymbol = Symbol("Token");
+
 export interface Token<_T> {
   readonly name: string;
+  readonly [TokenSymbol]: true;
 }
 
 export interface Constructor<Instance> {

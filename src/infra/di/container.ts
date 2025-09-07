@@ -14,7 +14,7 @@ import { TokenNotRegisteredError } from "./errors/TokenNotRegisteredError";
 import { createResolution, provideInjectionContext, useInjectionContext } from "./injection-context";
 import { getClassMetadata } from "./metadata";
 import { ContainerRegistration } from "./providers/container-registration";
-import { TokenRegistry } from "./token-registry";
+import { isBuilder, TokenRegistry } from "./token-registry";
 import { NotInjectableClassError } from "./errors/NotInjectableClassError";
 
 export class Container implements ContainerContract {
@@ -108,7 +108,10 @@ export class Container implements ContainerContract {
 
     const scope = provider.scope ?? this.#defaultScope;
 
-    const cleanups = [provideInjectionContext(context), resolution.stack.push(provider, { provider, scope })];
+    const cleanups = [
+      provideInjectionContext(context),
+      !isBuilder(provider) && resolution.stack.push(provider, { provider, scope }),
+    ].filter(Boolean) as (() => void)[];
 
     try {
       switch (scope) {
