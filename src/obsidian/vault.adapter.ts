@@ -19,6 +19,10 @@ export class VaultAdapter implements VaultContract {
     this.#setupListeners();
   }
 
+  getAllFiles(): FilePath[] {
+    return this.#app.vault.getAllLoadedFiles().map((file) => FilePath(file.path));
+  }
+
   getMarkdownFiles(): FilePath[] {
     return this.#app.vault.getMarkdownFiles().map((file) => FilePath(file.path));
   }

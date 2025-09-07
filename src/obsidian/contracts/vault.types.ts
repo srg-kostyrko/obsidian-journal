@@ -8,6 +8,7 @@ export function FilePath(path: string): FilePath {
 }
 
 export interface Vault {
+  getAllFiles(): FilePath[];
   getMarkdownFiles(): FilePath[];
   getNotesInFolder(folderPath: string): Result<FilePath[], VaultError>;
 
