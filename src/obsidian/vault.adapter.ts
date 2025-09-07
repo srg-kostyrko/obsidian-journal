@@ -139,16 +139,18 @@ export class VaultAdapter implements VaultContract {
 
   #getFile(path: string): Result<TFile, VaultError> {
     const normalizedPath = normalizePath(path);
-    const file = this.#app.vault.getFileByPath(normalizedPath);
-    if (!file) return Result.err(new VaultError(`File ${normalizedPath} does not exist.`));
-    return Result.ok(file);
+    return Result.fromNullable(
+      this.#app.vault.getFileByPath(normalizedPath),
+      () => new VaultError(`File ${normalizedPath} does not exist.`),
+    );
   }
 
   #getFolder(path: string): Result<TFolder, VaultError> {
     const normalizedPath = normalizePath(path);
-    const folder = this.#app.vault.getFolderByPath(normalizedPath);
-    if (!folder) return Result.err(new VaultError(`Folder ${normalizedPath} does not exist.`));
-    return Result.ok(folder);
+    return Result.fromNullable(
+      this.#app.vault.getFolderByPath(normalizedPath),
+      () => new VaultError(`Folder ${normalizedPath} does not exist.`),
+    );
   }
 
   #setupListeners() {

@@ -46,6 +46,10 @@ export abstract class Result<Ok, Err> {
     return new ErrorResult(value);
   }
 
+  static fromNullable<T, Err>(value: T | null, errorFn: () => Err): Result<T, Err> {
+    return value == null ? Result.err(errorFn()) : Result.ok(value);
+  }
+
   static isOk<Ok, Err>(result: Result<Ok, Err>): result is OkResult<Ok, Err> {
     return result instanceof OkResult;
   }
