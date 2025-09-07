@@ -48,9 +48,11 @@ export default [
             env: false,
             args: false,
             fn: false,
+            err: false,
           },
         },
       ],
+      "unicorn/no-array-callback-reference": "off",
       "@cspell/spellchecker": [
         "warn",
         {
