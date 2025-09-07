@@ -2,5 +2,9 @@ import { inject } from "vue";
 import { VueAppInjector } from "./vue.tokens";
 
 export function useInjector() {
-  return inject(VueAppInjector);
+  const injector = inject(VueAppInjector);
+  if (!injector) {
+    throw new Error("No injector found");
+  }
+  return injector;
 }
