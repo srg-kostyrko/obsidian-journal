@@ -31,7 +31,7 @@ export class VueModal<TIn extends object, TOut> extends Modal {
     this.#resolvers.push(Promise.withResolvers());
     this.open();
     // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
-    return this.#resolvers.at(-1)!.promise;
+    return Option.fromPromise(this.#resolvers.at(-1)!.promise);
   }
 
   onOpen(): void {

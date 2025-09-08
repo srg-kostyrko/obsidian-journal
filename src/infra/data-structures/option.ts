@@ -78,7 +78,7 @@ export abstract class Option<T> {
   static fromPromise(value: unknown): unknown {
     if (isPromise(value)) {
       return new AsyncOption((resolve, reject) => {
-        value.then((value) => resolve(Option.isOption(value) ? value : Option.fromNullable(value))).catch(reject);
+        value.then((value) => resolve(Option.isOption(value) ? value : Option.some(value))).catch(reject);
       });
     }
 
