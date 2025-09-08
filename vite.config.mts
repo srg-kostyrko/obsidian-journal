@@ -29,7 +29,7 @@ export default defineConfig(({ mode }) => ({
     },
   },
   build: {
-    target: "esnext",
+    target: "ES2022",
     sourcemap: isWatch ? "inline" : false,
     minify: !isWatch,
     commonjsOptions: {
