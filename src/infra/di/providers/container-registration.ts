@@ -7,7 +7,7 @@ import { ClassProvider } from "./class-provider";
 import { FactoryProvider } from "./factory-provider";
 import { ValueProvider } from "./value-provider";
 
-export class ContainerRegistration<T, Args extends unknown[]> implements ContainerRegistrationContract<T, Args> {
+export class ContainerRegistration<T, Args extends unknown[] = []> implements ContainerRegistrationContract<T, Args> {
   #token: Token<T, Args>;
   #provider: RegistrationProvider<T, Args> | null = null;
 

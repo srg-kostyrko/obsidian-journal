@@ -1,27 +1,26 @@
-import { type App, PluginSettingTab } from "obsidian";
-import { createApp, type App as VueApp } from "vue";
+import { PluginSettingTab } from "obsidian";
+
 import JournalSettingsRoot from "./JournalSettingsRoot.vue";
-import { PLUGIN_KEY } from "@/constants";
-import type { JournalPlugin } from "@/types/plugin.types";
+import { Injectable } from "@/infra/di/decorators/Injectable";
+import { JournalSettingsTab as JournalSettingsTabToken } from "./settings.tokens";
+import { JournalPlugin, ObsidianApp } from "@/obsidian/obsidian.tokens";
+import { inject } from "@/infra/di/inject";
+import { VueApp } from "@/infra/ui-framework/vue.tokens";
 
-export class JournalSettingTab extends PluginSettingTab {
-  #vueApp: VueApp | null = null;
-  #plugin: JournalPlugin;
+export
+@Injectable(JournalSettingsTabToken)
+class JournalSettingTab extends PluginSettingTab {
+  #vueApp = inject(VueApp, JournalSettingsRoot, this.containerEl);
 
-  constructor(app: App, plugin: JournalPlugin) {
-    super(app, plugin);
-    this.#plugin = plugin;
+  constructor() {
+    super(inject(ObsidianApp), inject(JournalPlugin));
   }
 
   display() {
-    this.#vueApp = createApp(JournalSettingsRoot);
-    this.#vueApp.provide(PLUGIN_KEY, this.#plugin);
-    this.#vueApp.mount(this.containerEl);
+    this.#vueApp.mount();
   }
 
   hide() {
-    this.#vueApp?.unmount();
-    this.#vueApp = null;
-    this.containerEl.empty();
+    this.#vueApp.unmount();
   }
 }

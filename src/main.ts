@@ -1,8 +1,7 @@
-import { Notice, Plugin, type TAbstractFile, TFile } from "obsidian";
+import { Notice, Plugin, PluginSettingTab, type TAbstractFile, TFile } from "obsidian";
 import { computed, ref, shallowRef, watch, type Ref, type WatchStopHandle } from "vue";
 import { debounce } from "perfect-debounce";
 import { initCalendarCustomization, restoreLocale, today, updateLocale } from "./calendar";
-import { JournalSettingTab } from "./settings/journal-settings-tab";
 import { Journal } from "./journals/journal";
 import type {
   JournalSettings,
@@ -44,6 +43,8 @@ import { LoggerModule } from "./infra/logger/logger.module";
 import { ObsidianModule } from "./obsidian/obsidian.module";
 import { PluginsModule } from "./obsidian/plugins/plugins.module";
 import { VueModule } from "./infra/ui-framework/vue.module";
+import { SettingModule } from "./settings/settings.module";
+import { JournalSettingsTab } from "./settings/settings.tokens";
 
 export default class JournalPluginImpl extends Plugin implements JournalPlugin {
   #container = new Container();
@@ -366,7 +367,7 @@ export default class JournalPluginImpl extends Plugin implements JournalPlugin {
 
     this.#configureCommands();
 
-    this.addSettingTab(new JournalSettingTab(this.app, this));
+    this.addSettingTab(this.#container.resolve(JournalSettingsTab) as PluginSettingTab);
     this.registerMarkdownCodeBlockProcessor("calendar-timeline", (source, element, context) => {
       const processor = new TimelineCodeBlockProcessor(this, element, source, context.sourcePath);
       context.addChild(processor);
@@ -670,6 +671,12 @@ export default class JournalPluginImpl extends Plugin implements JournalPlugin {
   }
 
   #setupDiContainer() {
-    this.#container.addModules([LoggerModule, new ObsidianModule(this.app, this), PluginsModule, VueModule]);
+    this.#container.addModules([
+      LoggerModule,
+      new ObsidianModule(this.app, this),
+      PluginsModule,
+      VueModule,
+      SettingModule,
+    ]);
   }
 }

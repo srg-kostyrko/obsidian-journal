@@ -4,7 +4,7 @@ import { inject } from "@/infra/di/inject";
 import { Option } from "@/infra/data-structures/option";
 import type { LeafType, Workspace } from "./contracts/workspace.types";
 import { Result, type AsyncResult } from "@/infra/data-structures/result";
-import { type WorkspaceLeaf, type PaneType, Menu, MarkdownView, type Side } from "obsidian";
+import { type WorkspaceLeaf, type PaneType, Menu, type MarkdownView, type Side } from "obsidian";
 import { FilePath } from "./contracts/vault.types";
 import { WorkspaceError } from "./errors/workspace.error";
 import { ref } from "vue";
