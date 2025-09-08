@@ -39,8 +39,15 @@ import MigrationModal from "./migrations/components/MigrationModal.vue";
 import { ObsidianNotesManager } from "./obsidian-notes-manager";
 import { ObsidianManager } from "./obsidian-manager";
 import { registerPluginCommand } from "./utils/plugin-commands";
+import { Container } from "./infra/di/container";
+import { LoggerModule } from "./infra/logger/logger.module";
+import { ObsidianModule } from "./obsidian/obsidian.module";
+import { PluginsModule } from "./obsidian/plugins/plugins.module";
+import { VueModule } from "./infra/ui-framework/vue.module";
 
 export default class JournalPluginImpl extends Plugin implements JournalPlugin {
+  #container = new Container();
+
   #stopHandles: WatchStopHandle[] = [];
   #journals = shallowRef<Record<string, Journal>>({});
   #index = new JournalsIndex();
@@ -336,6 +343,8 @@ export default class JournalPluginImpl extends Plugin implements JournalPlugin {
   }
 
   async onload(): Promise<void> {
+    this.#setupDiContainer();
+
     const appStartup = !this.app.workspace.layoutReady;
     await this.#loadSettings();
     initCalendarCustomization();
@@ -658,5 +667,9 @@ export default class JournalPluginImpl extends Plugin implements JournalPlugin {
         return true;
       },
     });
+  }
+
+  #setupDiContainer() {
+    this.#container.addModules([LoggerModule, new ObsidianModule(this.app, this), PluginsModule, VueModule]);
   }
 }

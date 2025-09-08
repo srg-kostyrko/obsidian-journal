@@ -75,11 +75,20 @@ export class Container implements ContainerContract {
     return new Container({ parent: this, defaultScope: this.#defaultScope });
   }
 
-  addModule(module: Module): void {
+  addModule(module: Module): this {
     for (const providedCtor of module.provides ?? []) {
       this.provide(providedCtor);
     }
     module.load?.(this);
+
+    return this;
+  }
+
+  addModules(modules: Module[]): this {
+    for (const module of modules) {
+      this.addModule(module);
+    }
+    return this;
   }
 
   #create<T, Args extends unknown[] = []>(registration: ContainerRegistrationContract<T, Args>, ...args: Args): T {

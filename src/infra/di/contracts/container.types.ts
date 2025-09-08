@@ -21,7 +21,8 @@ export interface Container {
 
   createChild(): Container;
 
-  addModule(module: Module): void;
+  addModule(module: Module): this;
+  addModules(modules: Module[]): this;
 }
 
 export interface ContainerRegistration<T, Args extends unknown[] = []> {
