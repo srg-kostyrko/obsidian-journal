@@ -3,9 +3,6 @@ import { createToken } from "../di/token";
 import type { VueApp as VueAppContract } from "./vue.types";
 import type { Injector } from "../di/contracts/injector.types";
 
-export const RootComponent = createToken<Component>("RootComponent");
-export const RootElement = createToken<HTMLElement>("RootElement");
-
-export const VueApp = createToken<VueAppContract>("VueApp");
+export const VueApp = createToken<VueAppContract, [rootComponent: Component, rootElement: HTMLElement]>("VueApp");
 
 export const VueAppInjector = Symbol("VueAppInjector") as InjectionKey<Injector>;
