@@ -16,8 +16,6 @@ export interface LogRecord {
 }
 
 export interface Logger {
-  inScope(scope: string): this;
-
   debug(message: string, info?: Record<string, unknown>): void;
   info(message: string, info?: Record<string, unknown>): void;
   warn(message: string, info?: Record<string, unknown>): void;

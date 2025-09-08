@@ -13,7 +13,7 @@ export class VaultAdapter implements VaultContract {
   #plugin = inject(JournalPlugin);
   #app = inject(ObsidianApp);
   #events = inject(VaultEvents);
-  #logger = inject(Logger).inScope("VaultAdapter");
+  #logger = inject(Logger, "VaultAdapter");
 
   constructor() {
     this.#setupListeners();

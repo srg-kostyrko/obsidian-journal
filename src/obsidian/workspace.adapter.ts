@@ -15,7 +15,7 @@ export
 class WorkspaceAdapter implements Workspace {
   #app = inject(ObsidianApp);
   #plugin = inject(JournalPlugin);
-  #logger = inject(Logger).inScope("WorkspaceAdapter");
+  #logger = inject(Logger, "WorkspaceAdapter");
 
   #layoutReady = Promise.withResolvers<void>();
 

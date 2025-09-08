@@ -7,6 +7,6 @@ import type {
 
 export const LoggerService = createToken<LoggerServiceContract>("LoggerService");
 
-export const Logger = createToken<LoggerContract>("Logger");
+export const Logger = createToken<LoggerContract, [scope: string]>("Logger");
 
 export const LoggerSettings = createToken<LoggerSettingsContract>("LoggerSettings");

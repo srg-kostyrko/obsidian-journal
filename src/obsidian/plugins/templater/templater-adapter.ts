@@ -15,7 +15,7 @@ export
 @Injectable(TemplaterToken)
 class TemplaterAdapter implements Templater {
   #app = inject(ObsidianApp);
-  #logger = inject(Logger).inScope("TemplaterAdapter");
+  #logger = inject(Logger, "TemplaterAdapter");
 
   get isSupported() {
     return this.#canApply;

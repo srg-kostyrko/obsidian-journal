@@ -13,11 +13,10 @@ export
 @Scoped(Scope.Transient)
 class Logger implements LoggerContract {
   #logger = inject(LoggerService);
-  #scope = "";
+  #scope: string;
 
-  inScope(scope: string): this {
+  constructor(scope: string) {
     this.#scope = scope;
-    return this;
   }
 
   debug(message: string, info?: Record<string, unknown>): void {
