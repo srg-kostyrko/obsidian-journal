@@ -393,6 +393,70 @@ describe("DI system", () => {
     });
   });
 
+  describe("Additional instance arguments", () => {
+    it("should allow to pass additional instance arguments for class provider", () => {
+      const DBToken = createToken<DB, [name: string]>("DB");
+      @Injectable(DBToken)
+      class DB {
+        constructor(public name: string) {}
+      }
+
+      const container = new Container();
+      container.provide(DB);
+
+      const database = container.resolve(DBToken, "test");
+      expect(database.name).toBe("test");
+    });
+
+    it("should allow to pass additional instance arguments for factory provider", () => {
+      const Config = createToken<{ env: string }, [env: string]>("Config");
+
+      const container = new Container();
+      container.register(Config).useFactory((env: string) => ({ env }));
+
+      const config = container.resolve(Config, "development");
+      expect(config.env).toBe("development");
+    });
+
+    it("should allow injecting using additional params", () => {
+      const DatabaseToken = createToken<Database>("Db");
+      const Config = createToken<{ env: string }, [env: string]>("Config");
+
+      @Injectable(DatabaseToken)
+      class Database {
+        config = inject(Config, "development");
+      }
+
+      const container = new Container();
+      container.register(Config).useFactory((env: string) => ({ env }));
+      container.provide(Database);
+
+      const database = container.resolve(DatabaseToken);
+      expect(database.config.env).toBe("development");
+    });
+
+    it("should allow using additional params in injector", () => {
+      const DatabaseToken = createToken<Database>("Db");
+      const Config = createToken<{ env: string }, [env: string]>("Config");
+
+      @Injectable(DatabaseToken)
+      class Database {
+        injector = inject(Injector);
+
+        getEnv() {
+          return this.injector.inject(Config, "development").env;
+        }
+      }
+
+      const container = new Container();
+      container.register(Config).useFactory((env: string) => ({ env }));
+      container.provide(Database);
+
+      const database = container.resolve(DatabaseToken);
+      expect(database.getEnv()).toBe("development");
+    });
+  });
+
   describe("Errors", () => {
     const TestToken = createToken("test");
 

@@ -1,6 +1,6 @@
 import type { Token } from "./token.types";
 
 export interface Injector {
-  inject<Value>(token: Token<Value>): Value;
-  injectAll<Value>(token: Token<Value>): Value[];
+  inject<Value, Args extends unknown[] = []>(token: Token<Value>, ...args: Args): Value;
+  injectAll<Value, Args extends unknown[] = []>(token: Token<Value>, ...args: Args): Value[];
 }

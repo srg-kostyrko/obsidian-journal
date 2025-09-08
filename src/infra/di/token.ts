@@ -2,7 +2,7 @@ import { nanoid } from "nanoid";
 
 import { TokenSymbol, type Token } from "./contracts/token.types";
 
-export function createToken<T>(tokenName: string): Token<T> {
+export function createToken<T, Args extends unknown[] = []>(tokenName: string): Token<T, Args> {
   const instanceId = nanoid(10);
   return {
     name: `Token<${tokenName}>`,
@@ -11,5 +11,5 @@ export function createToken<T>(tokenName: string): Token<T> {
     toString() {
       return this.name;
     },
-  } as Token<T>;
+  } as Token<T, Args>;
 }

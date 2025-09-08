@@ -7,11 +7,11 @@ import { ClassProvider } from "./class-provider";
 import { FactoryProvider } from "./factory-provider";
 import { ValueProvider } from "./value-provider";
 
-export class ContainerRegistration<T> implements ContainerRegistrationContract<T> {
-  #token: Token<T>;
-  #provider: RegistrationProvider<T> | null = null;
+export class ContainerRegistration<T, Args extends unknown[]> implements ContainerRegistrationContract<T, Args> {
+  #token: Token<T, Args>;
+  #provider: RegistrationProvider<T, Args> | null = null;
 
-  constructor(token: Token<T>) {
+  constructor(token: Token<T, Args>) {
     this.#token = token;
   }
 
@@ -20,21 +20,21 @@ export class ContainerRegistration<T> implements ContainerRegistrationContract<T
     return `Registration<${String(this.#token)}>`;
   }
 
-  get provider(): RegistrationProvider<T> | null {
+  get provider(): RegistrationProvider<T, Args> | null {
     return this.#provider;
   }
 
-  use(cls: Constructor<T>): RegistrationProvider<T> {
+  use(cls: Constructor<T, Args>): RegistrationProvider<T, Args> {
     this.#provider = new ClassProvider(this.#token, cls);
 
     return this.#provider;
   }
-  useFactory<Args extends unknown[]>(factory: (...args: Args) => T): RegistrationProvider<T> {
+  useFactory(factory: (...args: Args) => T): RegistrationProvider<T, Args> {
     this.#provider = new FactoryProvider(this.#token, factory);
 
     return this.#provider;
   }
-  useValue(value: T): RegistrationProvider<T> {
+  useValue(value: T): RegistrationProvider<T, Args> {
     this.#provider = new ValueProvider(this.#token, value);
 
     return this.#provider;

@@ -28,7 +28,9 @@ export const Injector: Token<InjectorContact> = build(function Injector() {
   }
 
   return {
-    inject: <T>(token: Token<T>) => withCurrentContext(() => inject(token)),
-    injectAll: <T>(token: Token<T>) => withCurrentContext(() => injectAll(token)),
+    inject: <T, Args extends unknown[] = []>(token: Token<T, Args>, ...args: Args) =>
+      withCurrentContext(() => inject(token, ...args)),
+    injectAll: <T, Args extends unknown[] = []>(token: Token<T, Args>, ...args: Args) =>
+      withCurrentContext(() => injectAll(token, ...args)),
   };
 });

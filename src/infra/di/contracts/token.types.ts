@@ -1,12 +1,11 @@
 export const TokenSymbol = Symbol("Token");
 
-export interface Token<_T> {
+export interface Token<_T, _Args extends unknown[] = []> {
   readonly name: string;
   readonly [TokenSymbol]: true;
 }
 
-export interface Constructor<Instance> {
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  new (...args: any[]): Instance;
+export interface Constructor<Instance, Args extends unknown[] = []> {
+  new (...args: Args): Instance;
   readonly name: string;
 }

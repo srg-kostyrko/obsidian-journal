@@ -12,31 +12,31 @@ export interface ContainerOptions {
 export interface Container {
   readonly registry: TokenRegistry;
 
-  resolve<T>(token: Token<T>): T;
-  resolveAll<T>(token: Token<T>): T[];
+  resolve<T, Args extends unknown[] = []>(token: Token<T, Args>, ...args: Args): T;
+  resolveAll<T, Args extends unknown[] = []>(token: Token<T, Args>, ...args: Args): T[];
 
   isRegistered(token: Token<unknown>): boolean;
-  register<T>(token: Token<T>): ContainerRegistration<T>;
-  provide<T>(ctor: Constructor<T>): RegistrationProvider<T>;
+  register<T, Args extends unknown[] = []>(token: Token<T, Args>): ContainerRegistration<T, Args>;
+  provide<T, Args extends unknown[] = []>(ctor: Constructor<T, Args>): RegistrationProvider<T, Args>;
 
   createChild(): Container;
 
   addModule(module: Module): void;
 }
 
-export interface ContainerRegistration<T> {
-  readonly provider: RegistrationProvider<T> | null;
+export interface ContainerRegistration<T, Args extends unknown[] = []> {
+  readonly provider: RegistrationProvider<T, Args> | null;
 
-  use(cls: Constructor<T>): RegistrationProvider<T>;
-  useFactory<Args extends unknown[]>(factory: (...args: Args) => T): RegistrationProvider<T>;
-  useValue(value: T): RegistrationProvider<T>;
+  use(cls: Constructor<T, Args>): RegistrationProvider<T, Args>;
+  useFactory(factory: (...args: Args) => T): RegistrationProvider<T, Args>;
+  useValue(value: T): RegistrationProvider<T, Args>;
 }
 
-export interface RegistrationProvider<T> {
+export interface RegistrationProvider<T, Args extends unknown[] = []> {
   readonly scope: Scope | null;
 
   instance: InstanceRef<T> | null;
-  create(): T;
+  create(...args: Args): T;
 
-  scoped(scope: Scope): RegistrationProvider<T>;
+  scoped(scope: Scope): RegistrationProvider<T, Args>;
 }

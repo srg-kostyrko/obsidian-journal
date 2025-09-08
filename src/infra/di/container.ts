@@ -37,29 +37,29 @@ export class Container implements ContainerContract {
     return this.#registry;
   }
 
-  resolve<T>(token: Token<T>): T {
+  resolve<T, Args extends unknown[] = []>(token: Token<T, Args>, ...args: Args): T {
     const registration = this.#registry.get(token);
     if (!registration) throw new TokenNotRegisteredError(token);
-    return this.#create(registration);
+    return this.#create(registration, ...args);
   }
 
-  resolveAll<T>(token: Token<T>): T[] {
+  resolveAll<T, Args extends unknown[] = []>(token: Token<T>, ...args: Args): T[] {
     const registrations = this.#registry.getAll(token);
     if (!registrations) throw new TokenNotRegisteredError(token);
-    return registrations.map((registration) => this.#create(registration));
+    return registrations.map((registration) => this.#create(registration, ...args));
   }
 
   isRegistered(token: Token<unknown>): boolean {
     return this.#registry.get(token) !== null;
   }
 
-  register<T>(token: Token<T>): ContainerRegistrationContract<T> {
+  register<T, Args extends unknown[] = []>(token: Token<T, Args>): ContainerRegistrationContract<T, Args> {
     const registration = new ContainerRegistration(token);
     this.#registry.set(token, registration);
     return registration;
   }
 
-  provide<T>(ctor: Constructor<T>): RegistrationProvider<T> {
+  provide<T, Args extends unknown[]>(ctor: Constructor<T, Args>): RegistrationProvider<T, Args> {
     const metadata = getClassMetadata(ctor);
     if (!metadata?.token) {
       throw new NotInjectableClassError(ctor.name);
@@ -82,14 +82,14 @@ export class Container implements ContainerContract {
     module.load?.(this);
   }
 
-  #create<T>(registration: ContainerRegistrationContract<T>): T {
+  #create<T, Args extends unknown[] = []>(registration: ContainerRegistrationContract<T, Args>, ...args: Args): T {
     const provider = registration.provider;
     if (!provider) throw new NoProviderRegisteredError(registration);
 
-    return this.#resolveScopedInstance(provider);
+    return this.#resolveScopedInstance(provider, ...args);
   }
 
-  #resolveScopedInstance<T>(provider: RegistrationProvider<T>): T {
+  #resolveScopedInstance<T, Args extends unknown[]>(provider: RegistrationProvider<T, Args>, ...args: Args): T {
     let context = useInjectionContext();
 
     if (!context || context.container !== this) {
@@ -116,19 +116,19 @@ export class Container implements ContainerContract {
     try {
       switch (scope) {
         case Scope.Transient: {
-          return provider.create();
+          return provider.create(...args);
         }
         case Scope.Resolution: {
           const instanceRef = resolution.instances.get(provider);
           if (instanceRef) return instanceRef.current as T;
-          const instance = provider.create();
+          const instance = provider.create(...args);
           resolution.instances.set(provider, { current: instance });
           return instance;
         }
         case Scope.Container: {
           const instanceRef = provider.instance;
           if (instanceRef) return instanceRef.current;
-          const instance = provider.create();
+          const instance = provider.create(...args);
           provider.instance = { current: instance };
           return instance;
         }
