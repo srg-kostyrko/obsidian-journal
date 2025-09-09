@@ -43,7 +43,7 @@ export class Container implements ContainerContract {
     return this.#create(registration, ...args);
   }
 
-  resolveAll<T, Args extends unknown[] = []>(token: Token<T>, ...args: Args): T[] {
+  resolveAll<T, Args extends unknown[] = []>(token: Token<T, Args>, ...args: Args): T[] {
     const registrations = this.#registry.getAll(token);
     if (!registrations) throw new TokenNotRegisteredError(token);
     return registrations.map((registration) => this.#create(registration, ...args));
@@ -91,7 +91,7 @@ export class Container implements ContainerContract {
     return this;
   }
 
-  #create<T, Args extends unknown[] = []>(registration: ContainerRegistrationContract<T, Args>, ...args: Args): T {
+  #create<T, Args extends unknown[]>(registration: ContainerRegistrationContract<T, Args>, ...args: Args): T {
     const provider = registration.provider;
     if (!provider) throw new NoProviderRegisteredError(registration);
 

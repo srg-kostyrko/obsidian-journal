@@ -8,22 +8,22 @@ const internals = new WeakMap<Token<unknown>, ContainerRegistration<unknown>>();
 const builders = new WeakSet<RegistrationProvider<unknown>>();
 
 export class TokenRegistry {
-  #map = new Map<Token<unknown>, ContainerRegistration<unknown>[]>();
+  #map = new Map<Token<unknown>, ContainerRegistration<unknown, unknown[]>[]>();
   #parent: TokenRegistry | null;
 
   constructor(parent: TokenRegistry | null = null) {
     this.#parent = parent;
   }
 
-  get<T>(token: Token<T>): ContainerRegistration<T> | null {
+  get<T, Args extends unknown[]>(token: Token<T, Args>): ContainerRegistration<T, Args> | null {
     return this.getAll(token)?.at(-1) ?? null;
   }
 
-  getAll<T>(token: Token<T>): ContainerRegistration<T>[] | null {
+  getAll<T, Args extends unknown[]>(token: Token<T, Args>): ContainerRegistration<T, Args>[] | null {
     const internal = internals.get(token);
     return internal
-      ? [internal as ContainerRegistration<T>]
-      : ((this.#map.get(token) as ContainerRegistration<T>[]) ?? this.#parent?.getAll(token) ?? null);
+      ? [internal as ContainerRegistration<T, Args>]
+      : ((this.#map.get(token) as ContainerRegistration<T, Args>[]) ?? this.#parent?.getAll(token) ?? null);
   }
 
   set<T>(token: Token<T>, provider: ContainerRegistration<T>): void {
