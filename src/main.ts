@@ -45,6 +45,7 @@ import { PluginsModule } from "./obsidian/plugins/plugins.module";
 import { VueModule } from "./infra/ui-framework/vue.module";
 import { SettingModule } from "./settings/settings.module";
 import { JournalSettingsTab } from "./settings/settings.tokens";
+import { CommandsModule } from "./infra/commands/commands.module";
 
 export default class JournalPluginImpl extends Plugin implements JournalPlugin {
   #container = new Container();
@@ -676,6 +677,7 @@ export default class JournalPluginImpl extends Plugin implements JournalPlugin {
       new ObsidianModule(this.app, this),
       PluginsModule,
       VueModule,
+      CommandsModule,
       SettingModule,
     ]);
   }
