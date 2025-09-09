@@ -6,7 +6,7 @@ import { computed, watch } from "vue";
 import ObsidianButton from "./obsidian/ObsidianButton.vue";
 import CalendarWeekSettingsModal from "./modals/CalendarWeekSettings.modal.vue";
 import { VueModal } from "./modals/vue-modal";
-import ObsidianToggle from "./obsidian/ObsidianToggle.vue";
+import ObsidianToggle from "../obsidian/components/ObsidianToggle.vue";
 
 // https://en.wikipedia.org/wiki/Week#Other_week_numbering_systems
 

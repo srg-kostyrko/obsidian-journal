@@ -5,7 +5,7 @@ import * as v from "valibot";
 import { toTypedSchema } from "@vee-validate/valibot";
 import ObsidianSetting from "../obsidian/ObsidianSetting.vue";
 import ObsidianButton from "../obsidian/ObsidianButton.vue";
-import ObsidianTextInput from "../obsidian/ObsidianTextInput.vue";
+import ObsidianTextInput from "../../obsidian/components/ObsidianTextInput.vue";
 import FormErrors from "../FormErrors.vue";
 import { defaultFieldNames } from "@/defaults";
 import { usePlugin } from "@/composables/use-plugin";

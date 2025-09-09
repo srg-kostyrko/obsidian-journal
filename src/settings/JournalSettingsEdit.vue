@@ -8,12 +8,12 @@ import {
 } from "@/constants";
 import type { JournalCommand, JournalDecoration, NavBlockRow } from "../types/settings.types";
 import ObsidianSetting from "../components/obsidian/ObsidianSetting.vue";
-import ObsidianTextInput from "../components/obsidian/ObsidianTextInput.vue";
+import ObsidianTextInput from "../obsidian/components/ObsidianTextInput.vue";
 import ObsidianNumberInput from "../components/obsidian/ObsidianNumberInput.vue";
 import ObsidianIconButton from "../components/obsidian/ObsidianIconButton.vue";
 import ObsidianButton from "../components/obsidian/ObsidianButton.vue";
 import ObsidianDropdown from "../components/obsidian/ObsidianDropdown.vue";
-import ObsidianToggle from "../components/obsidian/ObsidianToggle.vue";
+import ObsidianToggle from "../obsidian/components/ObsidianToggle.vue";
 import FolderInput from "../components/FolderInput.vue";
 import DateFormatPreview from "../components/DateFormatPreview.vue";
 import VariableReferenceHint from "../components/VariableReferenceHint.vue";

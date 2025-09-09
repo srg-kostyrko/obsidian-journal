@@ -2,7 +2,7 @@
 import { computed, reactive } from "vue";
 import ObsidianSetting from "../components/obsidian/ObsidianSetting.vue";
 import ObsidianDropdown from "../components/obsidian/ObsidianDropdown.vue";
-import ObsidianToggle from "@/components/obsidian/ObsidianToggle.vue";
+import ObsidianToggle from "@/obsidian/components/ObsidianToggle.vue";
 import ObsidianIcon from "@/components/obsidian/ObsidianIcon.vue";
 import ObsidianIconButton from "@/components/obsidian/ObsidianIconButton.vue";
 import JournalSettingsWithoutShelves from "./JournalSettingsWithoutShelves.vue";

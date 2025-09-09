@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import ObsidianDropdown from "@/components/obsidian/ObsidianDropdown.vue";
-import ObsidianTextInput from "@/components/obsidian/ObsidianTextInput.vue";
+import ObsidianTextInput from "@/obsidian/components/ObsidianTextInput.vue";
 import type { JournalDecorationTagCondition, JournalDecorationTitleCondition } from "@/types/settings.types";
 import { computed } from "vue";
 

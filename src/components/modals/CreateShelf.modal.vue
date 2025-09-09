@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import ObsidianSetting from "../obsidian/ObsidianSetting.vue";
-import ObsidianTextInput from "../obsidian/ObsidianTextInput.vue";
+import ObsidianTextInput from "../../obsidian/components/ObsidianTextInput.vue";
 import ObsidianButton from "../obsidian/ObsidianButton.vue";
 import { useForm } from "vee-validate";
 import { toTypedSchema } from "@vee-validate/valibot";

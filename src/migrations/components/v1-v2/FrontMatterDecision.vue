@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import ObsidianButton from "@/components/obsidian/ObsidianButton.vue";
 import ObsidianSetting from "@/components/obsidian/ObsidianSetting.vue";
-import ObsidianToggle from "@/components/obsidian/ObsidianToggle.vue";
+import ObsidianToggle from "@/obsidian/components/ObsidianToggle.vue";
 
 const keep = defineModel<boolean>();
 defineEmits<{

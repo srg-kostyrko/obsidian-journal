@@ -2,7 +2,7 @@
 import { onMounted, ref } from "vue";
 import { IconSuggest } from "./suggests/icon-suggest";
 import ObsidianIcon from "./obsidian/ObsidianIcon.vue";
-import ObsidianTextInput from "./obsidian/ObsidianTextInput.vue";
+import ObsidianTextInput from "../obsidian/components/ObsidianTextInput.vue";
 import { useApp } from "@/composables/use-app";
 
 defineProps<{

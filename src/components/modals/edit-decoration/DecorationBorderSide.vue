@@ -2,7 +2,7 @@
 import { computed } from "vue";
 import type { BorderSettings, ColorSettings } from "@/types/settings.types";
 import ObsidianSetting from "@/components/obsidian/ObsidianSetting.vue";
-import ObsidianToggle from "@/components/obsidian/ObsidianToggle.vue";
+import ObsidianToggle from "@/obsidian/components/ObsidianToggle.vue";
 import ObsidianNumberInput from "@/components/obsidian/ObsidianNumberInput.vue";
 import ObsidianDropdown from "@/components/obsidian/ObsidianDropdown.vue";
 import ColorPicker from "@/components/ColorPicker.vue";

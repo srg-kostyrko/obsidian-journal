@@ -2,7 +2,7 @@
 import ObsidianSetting from "@/components/obsidian/ObsidianSetting.vue";
 import ObsidianButton from "@/components/obsidian/ObsidianButton.vue";
 import ObsidianIcon from "@/components/obsidian/ObsidianIcon.vue";
-import ObsidianTextInput from "@/components/obsidian/ObsidianTextInput.vue";
+import ObsidianTextInput from "@/obsidian/components/ObsidianTextInput.vue";
 import type { CalendarConfig } from "@/types/old-settings.types";
 import { nextTick, onMounted, ref } from "vue";
 import { countSections, migrateCalendarJournal } from "./v1-v2";

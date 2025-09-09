@@ -8,7 +8,7 @@ import * as v from "valibot";
 import { toTypedSchema } from "@vee-validate/valibot";
 import FormErrors from "../FormErrors.vue";
 import DatePicker from "../DatePicker.vue";
-import ObsidianToggle from "../obsidian/ObsidianToggle.vue";
+import ObsidianToggle from "../../obsidian/components/ObsidianToggle.vue";
 import { computed, watch } from "vue";
 import type { JournalMetadata } from "@/types/journal.types";
 import { usePlugin } from "@/composables/use-plugin";

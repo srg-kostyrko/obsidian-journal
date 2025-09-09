@@ -5,7 +5,7 @@ import { toTypedSchema } from "@vee-validate/valibot";
 import { useForm } from "vee-validate";
 import * as v from "valibot";
 import FolderInput from "@/components/FolderInput.vue";
-import ObsidianTextInput from "@/components/obsidian/ObsidianTextInput.vue";
+import ObsidianTextInput from "@/obsidian/components/ObsidianTextInput.vue";
 import FormErrors from "../../FormErrors.vue";
 import DateFormatPreview from "@/components/DateFormatPreview.vue";
 import ObsidianButton from "@/components/obsidian/ObsidianButton.vue";
@@ -13,7 +13,7 @@ import { computed } from "vue";
 import { ref } from "vue";
 import type { GenericConditions } from "@/types/settings.types";
 import ConditionsList from "@/components/conditions/ConditionsList.vue";
-import ObsidianToggle from "@/components/obsidian/ObsidianToggle.vue";
+import ObsidianToggle from "@/obsidian/components/ObsidianToggle.vue";
 import type { BulkAddPrams } from "./bulk-add-notes.types";
 import { usePlugin } from "@/composables/use-plugin";
 
