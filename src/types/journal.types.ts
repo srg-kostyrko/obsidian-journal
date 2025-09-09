@@ -1,7 +1,10 @@
 import { moment } from "obsidian";
 import type { JournalCommand } from "./settings.types";
+import type { Brand } from "./utility.types";
 
-export type JournalAnchorDate = string & { _journal_anchor_date: true };
+export type JournalName = Brand<string, "JournalName">;
+export type ShelfName = Brand<string, "ShelfName">;
+export type JournalAnchorDate = Brand<string, "JournalAnchorDate">;
 
 export function JournalAnchorDate(date: string): JournalAnchorDate {
   return date as JournalAnchorDate;

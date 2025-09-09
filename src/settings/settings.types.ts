@@ -1,7 +1,8 @@
 import type { AsyncResult } from "@/infra/data-structures/result";
-import type { JournalAnchorDate } from "@/types/journal.types";
+import type { JournalAnchorDate, JournalName, ShelfName } from "@/types/journal.types";
 import type { PendingMigration } from "@/types/migration.types";
 import type { SettingsPersistenceError } from "./errors/settings-persistence.error";
+import type { Ref } from "vue";
 
 export interface SettingTab {
   display(): void;
@@ -17,6 +18,11 @@ export interface SettingsStorage {
 export interface SettingsPersistence {
   load(): AsyncResult<void, SettingsPersistenceError>;
   run(): void;
+}
+
+export interface SettingsUiState {
+  readonly selectedJournal: Ref<JournalName | null>;
+  readonly selectedShelf: Ref<ShelfName | null>;
 }
 
 export type OpenMode = "active" | "tab" | "split" | "window";
