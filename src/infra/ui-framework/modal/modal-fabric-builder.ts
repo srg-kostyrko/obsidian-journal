@@ -1,5 +1,5 @@
 import { inject } from "@/infra/di/inject";
-import { JournalPlugin } from "@/obsidian/obsidian.tokens";
+import { PluginUnloader } from "@/obsidian/obsidian.tokens";
 import { VueModal } from "./vue-modal";
 import type { Component } from "vue";
 
@@ -21,9 +21,9 @@ export class ModalFabricBuilder<TIn extends object, TOut extends object> {
 
   factory() {
     return () => {
-      const plugin = inject(JournalPlugin);
+      const pluginUnloader = inject(PluginUnloader);
       const modal = new VueModal<TIn, TOut>(this.#title, this.#component, this.#customWidth);
-      plugin.register(() => modal.close());
+      pluginUnloader.register(() => modal.close());
       return modal;
     };
   }

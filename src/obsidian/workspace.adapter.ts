@@ -1,5 +1,5 @@
 import { Injectable } from "@/infra/di/decorators/Injectable";
-import { JournalPlugin, ObsidianApp, Workspace as WorkspaceToken } from "./obsidian.tokens";
+import { JournalPlugin, ObsidianApp, PluginUnloader, Workspace as WorkspaceToken } from "./obsidian.tokens";
 import { inject } from "@/infra/di/inject";
 import { Option } from "@/infra/data-structures/option";
 import type { LeafType, Workspace } from "./contracts/workspace.types";
@@ -15,6 +15,7 @@ export
 class WorkspaceAdapter implements Workspace {
   #app = inject(ObsidianApp);
   #plugin = inject(JournalPlugin);
+  #pluginUnloader = inject(PluginUnloader);
   #logger = inject(Logger, "WorkspaceAdapter");
 
   #layoutReady = Promise.withResolvers<void>();
@@ -26,7 +27,7 @@ class WorkspaceAdapter implements Workspace {
       const activeFile = this.#app.workspace.getActiveFile();
       if (activeFile) this.#activeFile.value = FilePath(activeFile.path);
 
-      this.#plugin.registerEvent(
+      this.#pluginUnloader.registerEvent(
         this.#app.workspace.on(
           "file-open",
           (file) => (this.#activeFile.value = file?.path ? FilePath(file.path) : null),

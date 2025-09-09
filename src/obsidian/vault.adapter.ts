@@ -1,6 +1,6 @@
 import { Injectable } from "@/infra/di/decorators/Injectable";
 import { FilePath, type Vault as VaultContract } from "./contracts/vault.types";
-import { JournalPlugin, ObsidianApp, Vault, VaultEvents } from "./obsidian.tokens";
+import { ObsidianApp, PluginUnloader, Vault, VaultEvents } from "./obsidian.tokens";
 import { inject } from "@/infra/di/inject";
 import { normalizePath, TFile, TFolder } from "obsidian";
 import { Result, type AsyncResult } from "@/infra/data-structures/result";
@@ -9,7 +9,7 @@ import { Logger } from "@/infra/logger/logger.tokens";
 
 @Injectable(Vault)
 export class VaultAdapter implements VaultContract {
-  #plugin = inject(JournalPlugin);
+  #pluginUnloader = inject(PluginUnloader);
   #app = inject(ObsidianApp);
   #events = inject(VaultEvents);
   #logger = inject(Logger, "VaultAdapter");
@@ -161,24 +161,25 @@ export class VaultAdapter implements VaultContract {
   }
 
   #setupListeners() {
-    this.#plugin.registerEvent(
-      this.#app.vault.on("create", (file) => {
-        if (!(file instanceof TFile)) return;
-        this.#events.emit("created", FilePath(file.path));
-      }),
-    );
-    this.#plugin.registerEvent(
-      this.#app.vault.on("rename", (file, oldPath) => {
-        if (!(file instanceof TFile)) return;
-        this.#events.emit("renamed", FilePath(oldPath), FilePath(file.path));
-      }),
-    );
-    this.#plugin.registerEvent(
-      this.#app.vault.on("delete", (file) => {
-        if (!(file instanceof TFile)) return;
-        this.#events.emit("deleted", FilePath(file.path));
-      }),
-    );
+    this.#pluginUnloader
+      .registerEvent(
+        this.#app.vault.on("create", (file) => {
+          if (!(file instanceof TFile)) return;
+          this.#events.emit("created", FilePath(file.path));
+        }),
+      )
+      .registerEvent(
+        this.#app.vault.on("rename", (file, oldPath) => {
+          if (!(file instanceof TFile)) return;
+          this.#events.emit("renamed", FilePath(oldPath), FilePath(file.path));
+        }),
+      )
+      .registerEvent(
+        this.#app.vault.on("delete", (file) => {
+          if (!(file instanceof TFile)) return;
+          this.#events.emit("deleted", FilePath(file.path));
+        }),
+      );
   }
 
   #ensureFolderExists(path: string) {
