@@ -1,0 +1,19 @@
+version: "0.2"
+language: en
+words:
+  - chrono
+  - collab
+  - iconed
+  - Keymap
+  - lezer
+  - popout
+  - rangeset
+  - templater
+ignorePaths:
+  - node_modules
+  - build
+  - coverage
+  - test-vault
+  - src/_old-code
+  - "*.snap"
+  - package-lock.json

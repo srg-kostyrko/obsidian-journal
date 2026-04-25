@@ -1,9 +1,9 @@
-/* eslint-disable @cspell/spellchecker */
 import { fileURLToPath, URL } from "node:url";
-import { defineConfig } from "vite";
-import builtins from "builtin-modules";
-import { viteStaticCopy } from "vite-plugin-static-copy";
+
 import vue from "@vitejs/plugin-vue";
+import builtins from "builtin-modules";
+import { defineConfig } from "vite";
+import { viteStaticCopy } from "vite-plugin-static-copy";
 
 const isWatch = process.argv.includes("--watch");
 
