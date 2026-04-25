@@ -1,8 +1,8 @@
 import { type MarkdownView, TFile, type App, type PaneType, TFolder, normalizePath } from "obsidian";
-import type { JournalPlugin, NotesManager } from "./types/plugin.types";
-import { VueModal } from "./components/modals/vue-modal";
-import ConfirmNoteCreationModal from "./components/modals/ConfirmNoteCreation.modal.vue";
-import { tryApplyingTemplater, tryTemplaterCursorJump } from "./utils/template";
+import type { JournalPlugin, NotesManager } from "./_old-code/types/plugin.types";
+import { VueModal } from "./_old-code/components/modals/vue-modal";
+import ConfirmNoteCreationModal from "./_old-code/components/modals/ConfirmNoteCreation.modal.vue";
+import { tryApplyingTemplater, tryTemplaterCursorJump } from "./_old-code/utils/template";
 
 // TODO getAbstractFileByPath replace with getFileByPath using wrapper
 export class ObsidianNotesManager implements NotesManager {

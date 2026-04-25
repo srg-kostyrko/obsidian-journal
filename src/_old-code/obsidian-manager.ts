@@ -1,5 +1,5 @@
 import { Menu, type LeftRibbon } from "obsidian";
-import type { AppManager, JournalPlugin } from "./types/plugin.types";
+import type { AppManager, JournalPlugin } from "./_old-code/types/plugin.types";
 
 export class ObsidianManager implements AppManager {
   #ribbons = new Map<string, HTMLElement>();

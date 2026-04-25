@@ -10,9 +10,9 @@ import {
 } from "./v1-v2";
 import type { CalendarConfig, IntervalConfig } from "@/types/old-settings.types";
 import { deepCopy } from "@/utils/misc";
-import { NotesManagerMock } from "@/__mocks__/notes-manager.mock";
+import { NotesManagerMock } from "@/_old-code/__mocks__/notes-manager.mock";
 import { Journal } from "@/journals/journal";
-import { AppManagerMock } from "@/__mocks__/app-manager.mock";
+import { AppManagerMock } from "@/_old-code/__mocks__/app-manager.mock";
 import { computed, ref } from "vue";
 import { defaultJournalSettings } from "@/defaults";
 import { JournalsIndex } from "@/journals/journals-index";
