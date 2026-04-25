@@ -13,6 +13,6 @@ jobs:
         with:
           node-version: '20.x'
       - run: npm ci
-      - run: npm run ts-check
+      - run: npm run check:types
       - run: npm test
-      - run: npm run lint
+      - run: npm run check:lint
