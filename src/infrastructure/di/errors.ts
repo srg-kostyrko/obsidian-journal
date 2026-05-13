@@ -79,6 +79,13 @@ export class InvalidTokenError extends Error {
   }
 }
 
+export class MissingInjectorProviderError extends Error {
+  constructor() {
+    super("useService / useInjector requires a provideInjector ancestor in the Vue tree.");
+    this.name = "MissingInjectorProviderError";
+  }
+}
+
 function describeValue(value: unknown): string {
   if (value === null) return "null";
   if (typeof value === "object") return "object";
