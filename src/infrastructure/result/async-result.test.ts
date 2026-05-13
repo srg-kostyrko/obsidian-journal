@@ -172,24 +172,32 @@ describe("AsyncResult", () => {
   });
 
   describe("tap", () => {
-    it("invokes the callback with the settled Ok result and returns the same AsyncResult", async () => {
+    it("invokes the callback with the settled Ok result", async () => {
       const seen: Result<number, never>[] = [];
-      const ar = AsyncResult.ok(5).tap((r) => seen.push(r));
-      const r = await ar;
-      expectOk(r);
-      expect(r.value).toBe(5);
+      AsyncResult.ok(5).tap((r) => seen.push(r));
+      await Promise.resolve();
       expect(seen).toHaveLength(1);
       expect(seen[0]?.kind).toBe("ok");
     });
 
-    it("invokes the callback with the settled Err result and returns the same AsyncResult", async () => {
+    it("returns an AsyncResult that resolves to the original Ok", async () => {
+      const r = await AsyncResult.ok(5).tap(() => undefined);
+      expectOk(r);
+      expect(r.value).toBe(5);
+    });
+
+    it("invokes the callback with the settled Err result", async () => {
       const seen: Result<never, TestError>[] = [];
-      const ar = AsyncResult.err(new TestError("boom")).tap((r) => seen.push(r));
-      const r = await ar;
-      expectErr(r);
-      expect(r.error.kind).toBe("test-error");
+      AsyncResult.err(new TestError("boom")).tap((r) => seen.push(r));
+      await Promise.resolve();
       expect(seen).toHaveLength(1);
       expect(seen[0]?.kind).toBe("err");
+    });
+
+    it("returns an AsyncResult that resolves to the original Err", async () => {
+      const r = await AsyncResult.err(new TestError("boom")).tap(() => undefined);
+      expectErr(r);
+      expect(r.error.kind).toBe("test-error");
     });
   });
 });
