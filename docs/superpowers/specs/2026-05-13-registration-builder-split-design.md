@@ -109,11 +109,12 @@ called"` — `useX.useY` is a type error.
   - `.lifetime(Transient)` after `useValue` re-emits with the new lifetime.
   - `.eager()` after `useValue` re-emits with `eager: true`.
   - Default `eager` is `false`.
-    The "two separate classes" rule is enforced by TypeScript; no runtime check
-    is added, no test asserts the return _type_ (that would be testing TS
-    itself, per `feedback_no_wiring_tests`), and no test asserts the class
-    identity via `instanceof` — the split's purpose is to make misuse not
-    compile, which a runtime test cannot exercise.
+
+The "two separate classes" rule is enforced by TypeScript; no runtime check
+is added, no test asserts the return _type_ (that would be testing TS
+itself, per `feedback_no_wiring_tests`), and no test asserts the class
+identity via `instanceof` — the split's purpose is to make misuse not
+compile, which a runtime test cannot exercise.
 
 ## Files touched
 
