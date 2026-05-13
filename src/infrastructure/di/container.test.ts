@@ -174,3 +174,86 @@ describe("Container.resolve (cycle detection)", () => {
     expect((captured as CircularDependencyError).chain).toEqual(["A", "B", "A"]);
   });
 });
+
+describe("Container.autoLoad", () => {
+  it("resolves eager bindings without an explicit resolve()", async () => {
+    const c = new Container();
+    const events: string[] = [];
+    const EagerToken = createToken<unknown>("Eager");
+    c.register(EagerToken)
+      .useFactory(() => {
+        events.push("constructed");
+        return {};
+      })
+      .eager();
+    expect(events).toEqual([]);
+    await c.autoLoad();
+    expect(events).toEqual(["constructed"]);
+  });
+
+  it("does not resolve non-eager bindings", async () => {
+    const c = new Container();
+    let constructed = false;
+    const LazyToken = createToken<unknown>("Lazy");
+    c.register(LazyToken).useFactory(() => {
+      constructed = true;
+      return {};
+    });
+    await c.autoLoad();
+    expect(constructed).toBe(false);
+  });
+
+  it("resolves eager bindings in registration order", async () => {
+    const c = new Container();
+    const order: string[] = [];
+    const A = createToken<unknown>("A");
+    const B = createToken<unknown>("B");
+    c.register(A)
+      .useFactory(() => {
+        order.push("A");
+        return {};
+      })
+      .eager();
+    c.register(B)
+      .useFactory(() => {
+        order.push("B");
+        return {};
+      })
+      .eager();
+    await c.autoLoad();
+    expect(order).toEqual(["A", "B"]);
+  });
+
+  it("shares Container-lifetime instances between eager autoLoad and later resolve", async () => {
+    const c = new Container();
+    const ServiceToken = createToken<object>("Service");
+    c.register(ServiceToken)
+      .useFactory(() => ({}))
+      .eager();
+    await c.autoLoad();
+    const first = c.resolve(ServiceToken);
+    expect(c.resolve(ServiceToken)).toBe(first);
+  });
+
+  it("lets a later eager binding inject() an earlier eager sibling", async () => {
+    const c = new Container();
+    const counter = createToken<{ n: number }>("Counter");
+    const adder = createToken<{ go: () => void }>("Adder");
+    c.register(counter)
+      .useFactory(() => ({ n: 0 }))
+      .eager();
+    c.register(adder)
+      .useFactory(() => {
+        const ctr = inject(counter);
+        ctr.n += 1;
+        return {
+          go: () => {
+            ctr.n += 1;
+          },
+        };
+      })
+      .eager();
+    await c.autoLoad();
+    expect(c.resolve(counter).n).toBe(1);
+  });
+});

@@ -84,6 +84,17 @@ export class Container implements Resolver {
     return instance;
   }
 
+  async autoLoad(): Promise<void> {
+    this.#ensureNotDisposed();
+    const ordered = [...this.#registry.entries()]
+      .flatMap(([token, list]) => list.map((stored) => ({ token, stored })))
+      .filter(({ stored }) => stored.entry.eager && !stored.hasInstance)
+      .toSorted((a, b) => a.stored.registrationIndex - b.stored.registrationIndex);
+    for (const { token, stored } of ordered) {
+      this.#resolveSingle(token, stored);
+    }
+  }
+
   async dispose(): Promise<void> {
     if (this.#disposed) return;
     this.#disposed = true;
