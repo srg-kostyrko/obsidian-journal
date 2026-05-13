@@ -36,6 +36,13 @@ export default [
   eslintComments.recommended,
   importX.flatConfigs.recommended,
   importX.flatConfigs.typescript,
+  {
+    settings: {
+      "import-x/resolver": {
+        typescript: { project: ["tsconfig.app.json", "tsconfig.node.json"], noWarnOnMultipleProjects: true },
+      },
+    },
+  },
   ...obsidianmd.configs.recommended,
   {
     files: ["*.config.{ts,mts,cts}", "vite.config.mts", "vitest.config.mts"],
