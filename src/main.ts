@@ -1,6 +1,7 @@
 import { Plugin } from "obsidian";
 
 import { Container } from "@/infrastructure/di";
+import { LoggerModule } from "@/infrastructure/logger";
 import { ObsidianAppToken, PluginToken } from "@/infrastructure/obsidian-tokens";
 
 export default class JournalPlugin extends Plugin {
@@ -10,6 +11,7 @@ export default class JournalPlugin extends Plugin {
     const container = new Container();
     container.register(PluginToken).useValue(this);
     container.register(ObsidianAppToken).useValue(this.app);
+    container.addModule(LoggerModule);
     await container.autoLoad();
     this.#container = container;
   }
