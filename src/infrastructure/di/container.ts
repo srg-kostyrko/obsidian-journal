@@ -16,12 +16,7 @@ import { type AnyTokenLike, isToken, type MultiToken, type TokenLike, tokenKind 
 
 import type { Module } from "./module";
 
-export interface ContainerInternal {
-  __getStored(token: AnyTokenLike): readonly StoredEntry[] | undefined;
-  __resolveContainerLifetime(resolver: Resolver, token: AnyTokenLike, stored: StoredEntry): unknown;
-}
-
-export class Container implements Resolver, ContainerInternal {
+export class Container implements Resolver {
   readonly #bindings = new Bindings();
   #disposed = false;
 
@@ -67,17 +62,9 @@ export class Container implements Resolver, ContainerInternal {
   }
 
   #resolveSingle(token: AnyTokenLike, stored: StoredEntry): unknown {
-    return this.__resolveContainerLifetime(this, token, stored);
-  }
-
-  __getStored(token: AnyTokenLike): readonly StoredEntry[] | undefined {
-    return this.#bindings.lookup(token);
-  }
-
-  __resolveContainerLifetime(resolver: Resolver, token: AnyTokenLike, stored: StoredEntry): unknown {
     return match(stored.entry.lifetime)
-      .with(Lifetime.Container, () => stored.slot.getOrCreate(resolver, token, stored.entry.factory))
-      .with(Lifetime.Transient, () => withResolutionContext(resolver, token, stored.entry.factory))
+      .with(Lifetime.Container, () => stored.slot.getOrCreate(this, token, stored.entry.factory))
+      .with(Lifetime.Transient, () => withResolutionContext(this, token, stored.entry.factory))
       .with(Lifetime.Scoped, () => {
         throw new ScopedResolutionOutsideScopeError(token);
       })
