@@ -9,10 +9,20 @@ import cspellConfigs from "@cspell/eslint-plugin/configs";
 import eslintComments from "@eslint-community/eslint-plugin-eslint-comments/configs";
 import vitest from "@vitest/eslint-plugin";
 import importX from "eslint-plugin-import-x";
+import obsidianmd from "eslint-plugin-obsidianmd";
 
 export default [
   {
-    ignores: ["**/build/**", "**/test-vault/**", "**/*.mjs", "**/__mocks__/**", "src/_old-code/**", "coverage/**"],
+    ignores: [
+      "**/build/**",
+      "**/test-vault/**",
+      "**/*.mjs",
+      "**/*.json",
+      "**/__mocks__/**",
+      "src/_old-code/**",
+      "src/i18n/paraglide/**",
+      "coverage/**",
+    ],
   },
   eslint.configs.recommended,
   ...tseslint.configs.strict,
@@ -21,11 +31,16 @@ export default [
   ...tseslint.configs.stylisticTypeChecked,
   cspellConfigs.recommended,
   eslintConfigPrettier,
-  ...pluginVue.configs["flat/recommended"],
+  ...pluginVue.configs["flat/recommended"].map((cfg) => ({ ...cfg, files: cfg.files ?? ["**/*.vue"] })),
   eslintPluginUnicorn.configs.recommended,
   eslintComments.recommended,
   importX.flatConfigs.recommended,
   importX.flatConfigs.typescript,
+  ...obsidianmd.configs.recommended,
+  {
+    files: ["*.config.{ts,mts,cts}", "vite.config.mts", "vitest.config.mts"],
+    rules: Object.fromEntries(Object.keys(obsidianmd.rules).map((rule) => [`obsidianmd/${rule}`, "off"])),
+  },
   {
     languageOptions: {
       parserOptions: { projectService: true },
