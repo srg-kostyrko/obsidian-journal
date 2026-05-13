@@ -31,6 +31,13 @@ describe("AsyncResult", () => {
       expectOk(r);
       expect(r.value).toBe(5);
     });
+
+    it("AsyncResult.fromPromiseOfResult wraps a pre-built Promise<Result>", async () => {
+      const ar = AsyncResult.fromPromiseOfResult(Promise.resolve(Result.ok(9)));
+      const r = await ar;
+      expectOk(r);
+      expect(r.value).toBe(9);
+    });
   });
 
   describe("fromPromise", () => {

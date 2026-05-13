@@ -1,5 +1,5 @@
 import { InvariantError } from "./errors";
-import { Err, Ok, type Result } from "./result";
+import { Err, type ErrYield, Ok, type Result } from "./result";
 
 export class AsyncResult<T, E> implements PromiseLike<Result<T, E>> {
   readonly #promise: Promise<Result<T, E>>;
@@ -18,6 +18,10 @@ export class AsyncResult<T, E> implements PromiseLike<Result<T, E>> {
 
   static fromResult<T, E>(result: Result<T, E>): AsyncResult<T, E> {
     return new AsyncResult<T, E>(Promise.resolve(result));
+  }
+
+  static fromPromiseOfResult<T, E>(promise: Promise<Result<T, E>>): AsyncResult<T, E> {
+    return new AsyncResult<T, E>(promise);
   }
 
   static fromPromise<T, E>(promise: Promise<T>, mapErr: (cause: unknown) => E): AsyncResult<T, E> {
@@ -58,7 +62,7 @@ export class AsyncResult<T, E> implements PromiseLike<Result<T, E>> {
     return this.#promise.then((r) => r.match(handlers));
   }
 
-  async *[Symbol.asyncIterator](): AsyncGenerator<Err<T, E>, T, unknown> {
+  async *[Symbol.asyncIterator](): AsyncGenerator<ErrYield<E>, T, unknown> {
     const r = await this.#promise;
     if (r.kind === "err") {
       yield r;
