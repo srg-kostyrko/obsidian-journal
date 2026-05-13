@@ -30,8 +30,17 @@ export class Ok<T, E> {
     return false;
   }
 
-  *[Symbol.iterator](): Generator<never, T, unknown> {
-    return this.value;
+  [Symbol.iterator](): Iterator<never, T> {
+    let consumed = false;
+    return {
+      next: () => {
+        if (consumed) {
+          return { done: true, value: undefined as never };
+        }
+        consumed = true;
+        return { done: true, value: this.value };
+      },
+    };
   }
 }
 

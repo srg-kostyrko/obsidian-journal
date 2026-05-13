@@ -102,10 +102,6 @@ export default [
       ],
       "unicorn/no-array-callback-reference": "off",
 
-      // Monadic short-circuit generators (Ok's [Symbol.iterator]) return the
-      // unwrapped value without yielding; that pattern is load-bearing for do-notation.
-      "require-yield": "off",
-
       "no-restricted-imports": [
         "error",
         {
@@ -144,7 +140,7 @@ export default [
     },
   },
   {
-    files: ["**/*.test.ts", "**/*.bench.ts"],
+    files: ["**/*.test.ts", "**/*.bench.ts", "**/testing.ts", "**/testing/**"],
     plugins: { vitest },
     rules: {
       ...vitest.configs.recommended.rules,

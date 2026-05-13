@@ -193,6 +193,15 @@ describe("Result", () => {
       expect(first.value).toBe(r);
     });
 
+    it("Err iterator yield type is exactly Err<T, E>", () => {
+      const r: Result<number, TestError> = Result.err(new TestError("x"));
+      const iter = r[Symbol.iterator]();
+      const first = iter.next();
+      if (!first.done) {
+        expectTypeOf(first.value).toEqualTypeOf<Err<number, TestError>>();
+      }
+    });
+
     it("Err iterator throws InvariantError if consumed past the yield", () => {
       const r: Result<number, TestError> = Result.err(new TestError("x"));
       const iter = r[Symbol.iterator]();
