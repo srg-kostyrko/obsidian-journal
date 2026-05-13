@@ -156,6 +156,8 @@ export default [
     rules: {
       // ConsoleSink is the single, intentional bridge from LogSink to the
       // DevTools console; the global ban on console.* applies everywhere else.
+      // `obsidianmd/rule-custom-message` wraps `no-console` in this plugin's
+      // ruleset, so both must be off to silence the warning.
       "no-console": "off",
       "obsidianmd/rule-custom-message": "off",
     },
