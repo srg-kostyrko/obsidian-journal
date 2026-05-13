@@ -4,8 +4,7 @@ import type { Option } from "./option";
 import type { BaseIssue, BaseSchema, SafeParseResult } from "valibot";
 
 /**
- * Covariant structural carrier for what the Err iterator yields.
- * Used by attempt.in's runner so the error channel widens across yields.
+ * Used by attempt.in's runner so the error channel widens across yield sites.
  */
 export interface ErrYield<E> {
   readonly kind: "err";
