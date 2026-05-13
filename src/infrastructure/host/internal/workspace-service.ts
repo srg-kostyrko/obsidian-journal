@@ -10,18 +10,14 @@ import { WorkspaceOpenError } from "../errors";
 import { toPaneType } from "./obsidian-bridge";
 import { InternalObsidianAppToken, InternalPluginToken } from "./tokens";
 
+import type { TypedEmitter } from "./typed-emitter";
 import type { OpenMode, Subscribable, VaultPath, WorkspaceEvents } from "../types";
 import type { MarkdownView, WorkspaceLeaf } from "obsidian";
-
-interface TypedEmitter {
-  on<K extends keyof WorkspaceEvents>(event: K, callback: WorkspaceEvents[K]): () => void;
-  emit<K extends keyof WorkspaceEvents>(event: K, ...arguments_: Parameters<WorkspaceEvents[K]>): void;
-}
 
 export class WorkspaceService {
   readonly #app = inject(InternalObsidianAppToken);
   readonly #plugin = inject(InternalPluginToken);
-  readonly #emitter: TypedEmitter = createNanoEvents();
+  readonly #emitter: TypedEmitter<WorkspaceEvents> = createNanoEvents();
 
   readonly events: Subscribable<WorkspaceEvents> = this.#emitter;
 
