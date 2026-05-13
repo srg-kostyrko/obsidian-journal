@@ -1,8 +1,8 @@
 import { match } from "ts-pattern";
 
+import { Bindings, type StoredEntry, disposeSlots } from "./bindings";
 import {
   ContainerDisposedError,
-  DuplicateRegistrationError,
   InvalidTokenError,
   ScopedResolutionOutsideScopeError,
   TokenNotRegisteredError,
@@ -10,28 +10,20 @@ import {
 import { currentChain, currentResolver, type Resolver, withResolutionContext } from "./inject";
 import { createInjector, InjectorToken } from "./injector";
 import { Lifetime } from "./lifetime";
-import { type RegistrationEntry, RegistrationBuilder } from "./registration";
+import { RegistrationBuilder } from "./registration";
 import { Scope } from "./scope";
 import { type AnyTokenLike, isToken, type MultiToken, type TokenLike, tokenKind } from "./token";
 
 import type { Module } from "./module";
 
-export interface StoredEntry {
-  entry: RegistrationEntry<unknown>;
-  instance: unknown;
-  hasInstance: boolean;
-  readonly registrationIndex: number;
-}
-
 export interface ContainerInternal {
-  __getStored(token: AnyTokenLike): StoredEntry[] | undefined;
+  __getStored(token: AnyTokenLike): readonly StoredEntry[] | undefined;
   __resolveContainerLifetime(resolver: Resolver, token: AnyTokenLike, stored: StoredEntry): unknown;
 }
 
 export class Container implements Resolver, ContainerInternal {
-  readonly #registry = new Map<AnyTokenLike, StoredEntry[]>();
+  readonly #bindings = new Bindings();
   #disposed = false;
-  #registrationCounter = 0;
 
   constructor() {
     this.#registerBuiltins();
@@ -56,66 +48,46 @@ export class Container implements Resolver, ContainerInternal {
         stored.entry = entry;
         return;
       }
-      stored = this.#commitNew(token, entry);
+      stored = this.#bindings.commit(token, entry);
     });
-  }
-
-  #commitNew(token: AnyTokenLike, entry: RegistrationEntry<unknown>): StoredEntry {
-    const stored: StoredEntry = {
-      entry,
-      instance: undefined,
-      hasInstance: false,
-      registrationIndex: this.#registrationCounter++,
-    };
-    const list = this.#registry.get(token) ?? [];
-    match(tokenKind(token))
-      .with("single", () => {
-        if (list.length > 0) throw new DuplicateRegistrationError(token);
-        this.#registry.set(token, [stored]);
-      })
-      .with("multi", () => {
-        list.push(stored);
-        this.#registry.set(token, list);
-      })
-      .exhaustive();
-    return stored;
   }
 
   resolve<T>(token: TokenLike<T>): T;
   resolve<T>(token: MultiToken<T>): T[];
   resolve(token: AnyTokenLike): unknown {
     this.#ensureNotDisposed();
-    const stored = this.#registry.get(token);
-    if (!stored || stored.length === 0) {
+    const entries = this.#bindings.lookup(token);
+    if (!entries || entries.length === 0) {
       throw new TokenNotRegisteredError(token, currentChain());
     }
     return match(tokenKind(token))
-      .with("single", () => this.#resolveSingle(token, stored[0]))
-      .with("multi", () => stored.map((s) => this.#resolveSingle(token, s)))
+      .with("single", () => this.#resolveSingle(token, entries[0]))
+      .with("multi", () => entries.map((stored) => this.#resolveSingle(token, stored)))
       .exhaustive();
   }
 
   #resolveSingle(token: AnyTokenLike, stored: StoredEntry): unknown {
-    if (stored.entry.lifetime === Lifetime.Scoped) {
-      throw new ScopedResolutionOutsideScopeError(token);
-    }
-    return this.__resolveContainerLifetime(this, token, stored);
+    return match(stored.entry.lifetime)
+      .with(Lifetime.Container, () => stored.slot.getOrCreate(this, token, stored.entry.factory))
+      .with(Lifetime.Transient, () => withResolutionContext(this, token, stored.entry.factory))
+      .with(Lifetime.Scoped, () => {
+        throw new ScopedResolutionOutsideScopeError(token);
+      })
+      .exhaustive();
   }
 
-  __getStored(token: AnyTokenLike): StoredEntry[] | undefined {
-    return this.#registry.get(token);
+  __getStored(token: AnyTokenLike): readonly StoredEntry[] | undefined {
+    return this.#bindings.lookup(token);
   }
 
   __resolveContainerLifetime(resolver: Resolver, token: AnyTokenLike, stored: StoredEntry): unknown {
-    if (stored.entry.lifetime === Lifetime.Container && stored.hasInstance) {
-      return stored.instance;
-    }
-    const instance = withResolutionContext(resolver, token, () => stored.entry.factory());
-    if (stored.entry.lifetime === Lifetime.Container) {
-      stored.instance = instance;
-      stored.hasInstance = true;
-    }
-    return instance;
+    return match(stored.entry.lifetime)
+      .with(Lifetime.Container, () => stored.slot.getOrCreate(resolver, token, stored.entry.factory))
+      .with(Lifetime.Transient, () => withResolutionContext(resolver, token, stored.entry.factory))
+      .with(Lifetime.Scoped, () => {
+        throw new ScopedResolutionOutsideScopeError(token);
+      })
+      .exhaustive();
   }
 
   createScope(): Scope {
@@ -125,9 +97,9 @@ export class Container implements Resolver, ContainerInternal {
 
   async autoLoad(): Promise<void> {
     this.#ensureNotDisposed();
-    const ordered = [...this.#registry.entries()]
-      .flatMap(([token, list]) => list.map((stored) => ({ token, stored })))
-      .filter(({ stored }) => stored.entry.eager && !stored.hasInstance)
+    const ordered = this.#bindings
+      .all()
+      .filter(({ stored }) => stored.entry.eager && !stored.slot.has)
       .toSorted((a, b) => a.stored.registrationIndex - b.stored.registrationIndex);
     for (const { token, stored } of ordered) {
       this.#resolveSingle(token, stored);
@@ -148,19 +120,13 @@ export class Container implements Resolver, ContainerInternal {
   async dispose(): Promise<void> {
     if (this.#disposed) return;
     this.#disposed = true;
-    const stored = [...this.#registry.values()].flat();
-    const resolved = stored
-      .filter((s) => s.hasInstance && s.instance != null)
-      .toSorted((a, b) => b.registrationIndex - a.registrationIndex);
-    const errors: unknown[] = [];
-    for (const s of resolved) {
-      try {
-        await disposeInstance(s.instance);
-      } catch (error) {
-        errors.push(error);
-      }
-    }
-    this.#registry.clear();
+    const slots = this.#bindings
+      .all()
+      .filter(({ stored }) => stored.slot.has)
+      .toSorted((a, b) => b.stored.registrationIndex - a.stored.registrationIndex)
+      .map(({ stored }) => stored.slot);
+    const errors = await disposeSlots(slots);
+    this.#bindings.clear();
     if (errors.length > 0) {
       throw new AggregateError(errors, "One or more disposers failed.");
     }
@@ -168,18 +134,5 @@ export class Container implements Resolver, ContainerInternal {
 
   #ensureNotDisposed(): void {
     if (this.#disposed) throw new ContainerDisposedError();
-  }
-}
-
-async function disposeInstance(instance: unknown): Promise<void> {
-  if (instance == null || (typeof instance !== "object" && typeof instance !== "function")) return;
-  const asyncDispose = (instance as { [Symbol.asyncDispose]?: () => Promise<void> })[Symbol.asyncDispose];
-  if (typeof asyncDispose === "function") {
-    await asyncDispose.call(instance);
-    return;
-  }
-  const syncDispose = (instance as { [Symbol.dispose]?: () => void })[Symbol.dispose];
-  if (typeof syncDispose === "function") {
-    syncDispose.call(instance);
   }
 }

@@ -3,7 +3,8 @@ import { currentChain, type Resolver, withResolutionContext } from "./inject";
 import { Lifetime } from "./lifetime";
 import { type AnyTokenLike, type MultiToken, type TokenLike, tokenKind } from "./token";
 
-import type { Container, ContainerInternal, StoredEntry } from "./container";
+import type { StoredEntry } from "./bindings";
+import type { Container, ContainerInternal } from "./container";
 
 export class Scope implements Resolver {
   readonly #parent: ContainerInternal;
