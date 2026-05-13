@@ -87,8 +87,19 @@ export default [
       "unicorn/no-null": "off",
       "unicorn/prevent-abbreviations": [
         "error",
-        { replacements: { e: { event: false }, props: false, ref: false, attrs: false, i: false, env: false } },
+        {
+          replacements: {
+            e: { event: false },
+            props: false,
+            ref: false,
+            attrs: false,
+            i: false,
+            env: false,
+            fn: false,
+          },
+        },
       ],
+      "unicorn/no-array-callback-reference": "off",
 
       "no-restricted-imports": [
         "error",
@@ -136,6 +147,7 @@ export default [
       "@typescript-eslint/unbound-method": "off",
       "unicorn/no-useless-undefined": "off",
       "no-restricted-syntax": "off",
+      "vitest/expect-expect": ["error", { assertFunctionNames: ["expect", "expectTypeOf"] }],
     },
   },
 ];
