@@ -7,7 +7,8 @@ import {
   ScopedResolutionOutsideScopeError,
   TokenNotRegisteredError,
 } from "./errors";
-import { type Resolver, withResolutionContext } from "./inject";
+import { currentResolver, type Resolver, withResolutionContext } from "./inject";
+import { createInjector, InjectorToken } from "./injector";
 import { Lifetime } from "./lifetime";
 import { type RegistrationEntry, RegistrationBuilder } from "./registration";
 import { Scope } from "./scope";
@@ -29,6 +30,19 @@ export class Container implements Resolver, ContainerInternal {
   readonly #registry = new Map<AnyTokenLike, StoredEntry[]>();
   #disposed = false;
   #registrationCounter = 0;
+
+  constructor() {
+    this.#registerBuiltins();
+  }
+
+  #registerBuiltins(): void {
+    this.register(InjectorToken)
+      .useFactory(() => {
+        const resolver = currentResolver() ?? this;
+        return createInjector(resolver);
+      })
+      .lifetime(Lifetime.Transient);
+  }
 
   register<T>(token: TokenLike<T> | MultiToken<T>): RegistrationBuilder<T>;
   register<T>(token: AnyTokenLike): RegistrationBuilder<T> {
