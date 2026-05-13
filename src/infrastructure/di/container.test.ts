@@ -12,6 +12,8 @@ import { inject } from "./inject";
 import { Lifetime } from "./lifetime";
 import { createMultiToken, createToken } from "./token";
 
+import type { Module } from "./module";
+
 describe("Container.register + resolve (Container lifetime, single)", () => {
   it("resolves a useValue binding back to the literal", () => {
     const c = new Container();
@@ -391,5 +393,34 @@ describe("Container.dispose", () => {
     await c.dispose();
     await c.dispose();
     expect(calls).toEqual(["disposed"]);
+  });
+});
+
+describe("Container.addModule", () => {
+  it("invokes the module's register hook with the container", () => {
+    const c = new Container();
+    const t = createToken<string>("X");
+    const M: Module = {
+      register(container) {
+        container.register(t).useValue("from-module");
+      },
+    };
+    c.addModule(M);
+    expect(c.resolve(t)).toBe("from-module");
+  });
+
+  it("invokes each module in order via addModules", () => {
+    const c = new Container();
+    const order: string[] = [];
+    const A: Module = { register: () => order.push("A") };
+    const B: Module = { register: () => order.push("B") };
+    c.addModules([A, B]);
+    expect(order).toEqual(["A", "B"]);
+  });
+
+  it("returns the container for chaining", () => {
+    const c = new Container();
+    const M: Module = { register: () => undefined };
+    expect(c.addModule(M)).toBe(c);
   });
 });

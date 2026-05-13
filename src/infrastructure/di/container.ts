@@ -14,6 +14,8 @@ import { type RegistrationEntry, RegistrationBuilder } from "./registration";
 import { Scope } from "./scope";
 import { type AnyTokenLike, isToken, type MultiToken, type TokenLike, tokenKind } from "./token";
 
+import type { Module } from "./module";
+
 export interface StoredEntry {
   entry: RegistrationEntry<unknown>;
   instance: unknown;
@@ -130,6 +132,17 @@ export class Container implements Resolver, ContainerInternal {
     for (const { token, stored } of ordered) {
       this.#resolveSingle(token, stored);
     }
+  }
+
+  addModule(module: Module): this {
+    this.#ensureNotDisposed();
+    module.register(this);
+    return this;
+  }
+
+  addModules(modules: readonly Module[]): this {
+    for (const moduleEntry of modules) this.addModule(moduleEntry);
+    return this;
   }
 
   async dispose(): Promise<void> {
