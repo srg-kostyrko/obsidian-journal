@@ -14,10 +14,6 @@ export class Slot {
     return this.#has;
   }
 
-  get value(): unknown {
-    return this.#value;
-  }
-
   getOrCreate(resolver: Resolver, token: AnyTokenLike, factory: () => unknown): unknown {
     if (this.#has) return this.#value;
     this.#value = withResolutionContext(resolver, token, factory);
@@ -45,11 +41,6 @@ export class StoredEntry {
   }
 }
 
-export interface BindingsRow {
-  readonly token: AnyTokenLike;
-  readonly stored: StoredEntry;
-}
-
 export class Bindings {
   readonly #map = new Map<AnyTokenLike, StoredEntry[]>();
   #counter = 0;
@@ -74,8 +65,8 @@ export class Bindings {
     return this.#map.get(token);
   }
 
-  all(): readonly BindingsRow[] {
-    const rows: BindingsRow[] = [];
+  all(): readonly { readonly token: AnyTokenLike; readonly stored: StoredEntry }[] {
+    const rows: { readonly token: AnyTokenLike; readonly stored: StoredEntry }[] = [];
     for (const [token, list] of this.#map) {
       for (const stored of list) rows.push({ token, stored });
     }
