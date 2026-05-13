@@ -342,3 +342,9 @@ forgotten:
 - **AsyncResult `tap`/`tapErr`.** If implementation produces a clean
   inline version, lift it into `async-result.ts`. Otherwise leave the
   dispatcher's `.then`-and-rewrap inline.
+- **Vue `useFlowState` composable.** When the first Vue surface needs to
+  invoke a flow with reactive `pending` / `lastError` / `lastResult` state,
+  design the composable then. Until then, components use
+  `useService(Flows)` and manage their own reactive state. The shape
+  (queueing, cancellation, abort-vs-error in `lastError`) depends on real
+  consumer needs and is a guess without one.
