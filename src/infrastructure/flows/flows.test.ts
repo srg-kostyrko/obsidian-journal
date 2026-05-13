@@ -61,18 +61,11 @@ describe("Flows", () => {
       sink = built.sink;
     });
 
-    it("passes parameters through to the flow's execute method", async () => {
+    it("returns the Ok produced by the flow", async () => {
       c.register(CompletingFlow).useClass(CompletingFlow);
       const result = await c.resolve(Flows).invoke(CompletingFlow, { value: "x" });
       expectOk(result);
       expect(result.value).toBe("got:x");
-    });
-
-    it("propagates the Ok value through unchanged", async () => {
-      c.register(CompletingFlow).useClass(CompletingFlow);
-      const result = await c.resolve(Flows).invoke(CompletingFlow, { value: "y" });
-      expectOk(result);
-      expect(result.value).toBe("got:y");
     });
 
     it("propagates the Err value through unchanged when the flow returns UserAborted", async () => {
