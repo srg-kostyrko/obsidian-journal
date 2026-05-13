@@ -4,11 +4,13 @@ import {
   ContainerDisposedError,
   DuplicateRegistrationError,
   InvalidTokenError,
+  ScopedResolutionOutsideScopeError,
   TokenNotRegisteredError,
 } from "./errors";
 import { type Resolver, withResolutionContext } from "./inject";
 import { Lifetime } from "./lifetime";
 import { type RegistrationEntry, RegistrationBuilder } from "./registration";
+import { Scope } from "./scope";
 import { type AnyTokenLike, isToken, type MultiToken, type TokenLike, tokenKind } from "./token";
 
 export interface StoredEntry {
@@ -18,7 +20,12 @@ export interface StoredEntry {
   readonly registrationIndex: number;
 }
 
-export class Container implements Resolver {
+export interface ContainerInternal {
+  __getStored(token: AnyTokenLike): StoredEntry[] | undefined;
+  __resolveContainerLifetime(resolver: Resolver, token: AnyTokenLike, stored: StoredEntry): unknown;
+}
+
+export class Container implements Resolver, ContainerInternal {
   readonly #registry = new Map<AnyTokenLike, StoredEntry[]>();
   #disposed = false;
   #registrationCounter = 0;
@@ -73,15 +80,31 @@ export class Container implements Resolver {
   }
 
   #resolveSingle(token: AnyTokenLike, stored: StoredEntry): unknown {
+    if (stored.entry.lifetime === Lifetime.Scoped) {
+      throw new ScopedResolutionOutsideScopeError(token);
+    }
+    return this.__resolveContainerLifetime(this, token, stored);
+  }
+
+  __getStored(token: AnyTokenLike): StoredEntry[] | undefined {
+    return this.#registry.get(token);
+  }
+
+  __resolveContainerLifetime(resolver: Resolver, token: AnyTokenLike, stored: StoredEntry): unknown {
     if (stored.entry.lifetime === Lifetime.Container && stored.hasInstance) {
       return stored.instance;
     }
-    const instance = withResolutionContext(this, token, () => stored.entry.factory());
+    const instance = withResolutionContext(resolver, token, () => stored.entry.factory());
     if (stored.entry.lifetime === Lifetime.Container) {
       stored.instance = instance;
       stored.hasInstance = true;
     }
     return instance;
+  }
+
+  createScope(): Scope {
+    this.#ensureNotDisposed();
+    return new Scope(this);
   }
 
   async autoLoad(): Promise<void> {
