@@ -148,7 +148,14 @@ export default [
       "@typescript-eslint/unbound-method": "off",
       "unicorn/no-useless-undefined": "off",
       "no-restricted-syntax": "off",
-      "vitest/expect-expect": ["error", { assertFunctionNames: ["expect", "expectTypeOf"] }],
+      "vitest/expect-expect": ["error", { assertFunctionNames: ["expect", "expectTypeOf", "expectOk", "expectErr"] }],
+    },
+  },
+  {
+    files: ["src/infrastructure/result/async-result.ts"],
+    rules: {
+      // AsyncResult intentionally implements PromiseLike; `then` is the documented surface.
+      "unicorn/no-thenable": "off",
     },
   },
 ];
