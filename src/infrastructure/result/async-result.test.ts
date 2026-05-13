@@ -170,4 +170,26 @@ describe("AsyncResult", () => {
       await expect(iter.next()).rejects.toThrow(InvariantError);
     });
   });
+
+  describe("tap", () => {
+    it("invokes the callback with the settled Ok result and returns the same AsyncResult", async () => {
+      const seen: Result<number, never>[] = [];
+      const ar = AsyncResult.ok(5).tap((r) => seen.push(r));
+      const r = await ar;
+      expectOk(r);
+      expect(r.value).toBe(5);
+      expect(seen).toHaveLength(1);
+      expect(seen[0]?.kind).toBe("ok");
+    });
+
+    it("invokes the callback with the settled Err result and returns the same AsyncResult", async () => {
+      const seen: Result<never, TestError>[] = [];
+      const ar = AsyncResult.err(new TestError("boom")).tap((r) => seen.push(r));
+      const r = await ar;
+      expectErr(r);
+      expect(r.error.kind).toBe("test-error");
+      expect(seen).toHaveLength(1);
+      expect(seen[0]?.kind).toBe("err");
+    });
+  });
 });

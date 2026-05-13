@@ -51,6 +51,15 @@ export class AsyncResult<T, E> implements PromiseLike<Result<T, E>> {
     return new AsyncResult<T, F>(this.#promise.then((r) => r.mapErr(fn)));
   }
 
+  tap(fn: (result: Result<T, E>) => void): AsyncResult<T, E> {
+    return new AsyncResult<T, E>(
+      this.#promise.then((r) => {
+        fn(r);
+        return r;
+      }),
+    );
+  }
+
   flatMap<U, F>(fn: (value: T) => AsyncResult<U, F> | Result<U, F>): AsyncResult<U, E | F> {
     return new AsyncResult<U, E | F>(
       this.#promise.then(async (r): Promise<Result<U, E | F>> => {
