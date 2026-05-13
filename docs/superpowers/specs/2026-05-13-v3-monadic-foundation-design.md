@@ -50,8 +50,10 @@ Per the project's barrel convention, `index.ts` exports the public surface (Opti
 Discriminated union:
 
 ```ts
-export type Option<T> = Some<T> | None;
+export type Option<T> = Some<T> | None<T>;
 ```
+
+`None<T = unknown>` carries a phantom `T` so `Option<number>` and `Option<string>` are not assignment-compatible. The phantom is declared via `declare readonly _phantomT: T` and has no runtime cost.
 
 Static constructors:
 
@@ -73,7 +75,7 @@ Instance methods:
 - `okOr<E>(err: E): Result<T, E>`
 - `okOrElse<E>(mkErr: () => E): Result<T, E>` — the supported bridge from missing lookup to error
 - `isSome(): this is Some<T>`
-- `isNone(): this is None`
+- `isNone(): this is None<T>`
 
 ### `Result<T, E>`
 
