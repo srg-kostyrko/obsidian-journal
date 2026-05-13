@@ -1,9 +1,5 @@
 import type { Option } from "@/infrastructure/result";
 
-import type { Emitter } from "nanoevents";
-
-type EventsMap = Record<string, (...eventData: unknown[]) => void>;
-
 export type VaultPath = string & { readonly __brand: "VaultPath" };
 
 export interface Note {
@@ -14,7 +10,12 @@ export interface Note {
 
 export type OpenMode = "active" | "tab" | "split" | "window";
 
-export type Subscribable<E extends EventsMap> = Pick<Emitter<E>, "on">;
+export interface Subscribable<E extends object> {
+  on<K extends keyof E & string>(
+    event: K,
+    callback: E[K] extends (...arguments_: infer A) => void ? (...arguments_: A) => void : never,
+  ): () => void;
+}
 
 export interface NotesEvents {
   created: (note: Note) => void;
