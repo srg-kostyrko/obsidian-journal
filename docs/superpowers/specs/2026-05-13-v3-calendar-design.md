@@ -201,13 +201,14 @@ interface PeriodBase<Self> {
   readonly kind: "day" | "week" | "month" | "quarter" | "year" | "decade";
   readonly start: CalendarDate;
   readonly end: CalendarDate;
+  readonly anchor: CalendarDate; // representative day for template formatting
 
   next(): Self;
   previous(): Self;
   contains(d: CalendarDate): boolean;
   isSame(other: Self): boolean;
   days(): Iterable<CalendarDate>;
-  format(pattern: string): string; // formats against start
+  format(pattern: string): string; // formats against anchor
 }
 ```
 
@@ -263,9 +264,19 @@ class DecadePeriod implements PeriodBase<DecadePeriod> {
   namespace duplication.
 - `next`/`previous` are self-typed (same granularity). No cross-granularity
   step operations.
+- **`anchor: CalendarDate`** is the representative day Layer B formats
+  template variables against. For all subtypes except `WeekPeriod` it
+  equals `start` (i.e., `DayPeriod.anchor === its date`,
+  `MonthPeriod.anchor === first of month`, etc.). For `WeekPeriod` it's
+  the locale's owning-day — under ISO 8601 / `doy:4`, the Thursday.
+  Layer B resolves `{{date:fmt}}` as `period.anchor.format(fmt)`
+  uniformly across all granularities; the v2 cross-year week bug
+  (`{{date:YYYY}}` rendering the wrong year) is fixed by construction
+  because `anchor.year === WeekPeriod.year`.
 - `WeekPeriod.year` is the owning year per the locale's week rule (for
-  ISO 8601 / `doy:4`, this is the year of the week's Thursday). Layer B
-  uses it when resolving `{{date:YYYY}}` against a weekly journal.
+  ISO 8601 / `doy:4`, this is the year of the week's Thursday). Equivalent
+  to `weekPeriod.anchor.year`; retained as a convenience accessor
+  symmetric with `MonthPeriod.year` / `YearPeriod.year`.
 - `isSame(other: Self)` only — different-granularity periods are never
   equal.
 - Coarse periods expose iteration into finer ones (`YearPeriod.months()`,
@@ -432,10 +443,12 @@ tests use a real `Calendar` instance.
 - **No tests for mocks, wiring, or barrels**
   ([[feedback_no_wiring_tests]], [[feedback_no_mock_fake_tests]]).
 - **Cross-year week regression**: a dedicated `period-week.test.ts` case
-  covers a Dec-30 → Jan-5 week and asserts `weekPeriod.year` returns the
-  Thursday's year, not `start.year`. This is the type-level fix for the
-  v2 `{{date:YYYY}}` bug — Layer B still needs to use `weekPeriod.year`
-  rather than `weekPeriod.start.year` when resolving template variables.
+  covers a Dec-30 → Jan-5 week and asserts (a) `weekPeriod.anchor` is the
+  Thursday inside the week and (b) `weekPeriod.anchor.format("YYYY")`
+  yields the locale-owning year, not `start.year`. This is the type-level
+  fix for the v2 `{{date:YYYY}}` bug — Layer B formats template variables
+  against `period.anchor`, so the cross-year case requires no special
+  casing at the template site.
 
 ## Open follow-ups
 
