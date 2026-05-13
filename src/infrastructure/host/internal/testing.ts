@@ -95,7 +95,12 @@ export function createFakeHost(): FakeHost {
       current = current ? `${current}/${segment}` : segment;
       if (!folders.has(current)) {
         folders.add(current);
-        folderObjects.set(current, makeFolder(current));
+        const folder = makeFolder(current);
+        folderObjects.set(current, folder);
+        const parentFolder = folderObjects.get(parentPath(current));
+        if (parentFolder && !parentFolder.children.includes(folder)) {
+          parentFolder.children.push(folder);
+        }
       }
     }
   }
@@ -196,6 +201,12 @@ export function createFakeHost(): FakeHost {
       const next = { ...existing.frontmatter };
       mutate(next);
       files.set(file.path, { ...existing, frontmatter: next });
+    },
+    async trashFile(file: TFile): Promise<void> {
+      detachChild(file);
+      files.delete(file.path);
+      fileObjects.delete(file.path);
+      vault.emit("delete", file);
     },
   };
 
