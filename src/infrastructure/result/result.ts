@@ -1,6 +1,7 @@
 import { InvariantError } from "./errors";
 
 import type { Option } from "./option";
+import type { BaseIssue, BaseSchema, SafeParseResult } from "valibot";
 
 export class Ok<T, E> {
   readonly kind = "ok" as const;
@@ -100,5 +101,11 @@ export const Result = {
   },
   fromOption<T, E>(option: Option<T>, mkErr: () => E): Result<T, E> {
     return option.isSome() ? new Ok<T, E>(option.value) : new Err<T, E>(mkErr());
+  },
+  fromValibot<T, E>(
+    parsed: SafeParseResult<BaseSchema<unknown, T, BaseIssue<unknown>>>,
+    mkErr: (issues: readonly BaseIssue<unknown>[]) => E,
+  ): Result<T, E> {
+    return parsed.success ? new Ok<T, E>(parsed.output) : new Err<T, E>(mkErr(parsed.issues));
   },
 };

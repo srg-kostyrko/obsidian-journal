@@ -1,3 +1,4 @@
+import * as v from "valibot";
 import { describe, expect, expectTypeOf, it } from "vitest";
 
 import { InvariantError } from "./errors";
@@ -86,6 +87,35 @@ describe("Result", () => {
     it("does not invoke the factory for Some", () => {
       let called = false;
       Result.fromOption(Option.some(5), () => {
+        called = true;
+        return new TestError("never");
+      });
+      expect(called).toBe(false);
+    });
+  });
+
+  describe("fromValibot", () => {
+    it("converts a successful parse to Ok with the typed output", () => {
+      const Schema = v.object({ id: v.string() });
+      const parsed = v.safeParse(Schema, { id: "x" });
+      const r = Result.fromValibot(parsed, (issues) => new TestError(issues[0].message));
+      expectOk(r);
+      expect(r.value).toEqual({ id: "x" });
+    });
+
+    it("converts a failed parse to Err via the mkErr factory", () => {
+      const Schema = v.object({ id: v.string() });
+      const parsed = v.safeParse(Schema, { id: 5 });
+      const r = Result.fromValibot(parsed, (issues) => new TestError(`${issues.length} issues`));
+      expectErr(r);
+      expect(r.error.message).toBe("1 issues");
+    });
+
+    it("does not invoke mkErr on success", () => {
+      const Schema = v.object({ id: v.string() });
+      const parsed = v.safeParse(Schema, { id: "x" });
+      let called = false;
+      Result.fromValibot(parsed, () => {
         called = true;
         return new TestError("never");
       });
