@@ -361,12 +361,46 @@ assertion.
 - `fields` present → passed as the third console argument (object identity,
   not stringified). `fields` absent → console call has two args.
 
+### Testing module
+
+`testing.ts` also exposes a factory for DI integration tests that want the
+logger fully wired but routed to an inspectable sink instead of `console.*`:
+
+```ts
+export function createLoggerTestingModule(): {
+  module: Module;
+  sink: MemorySink;
+};
+```
+
+Each call mints a fresh `MemorySink`, registers it via `useValue` so the
+returned `sink` is the same instance DI resolves, and registers
+`LoggerFactory`:
+
+```ts
+const { module: loggerModule, sink } = createLoggerTestingModule();
+const c = new Container();
+c.addModule(loggerModule);
+await c.autoLoad();
+c.resolve(LoggerFactoryToken).named("svc").info("hi");
+expect(sink.records).toHaveLength(1);
+```
+
+The testing module **replaces** `LoggerModule` rather than composing on top
+of it — registering both would accumulate bindings on `LogSinkMultiToken` and
+emit to the real console as well. Future feature-module tests that want a
+broader fake graph should compose `createLoggerTestingModule().module` with
+their other test modules and never add `LoggerModule` alongside it.
+
+No test for the factory itself: per the project's "no tests for mocks/fakes"
+and "no wiring tests" rules, it is exercised indirectly by every future test
+that uses it.
+
 ### Not tested
 
 - `index.ts` barrel shape.
 - `LoggerModule` wiring (DI tests already cover container behavior).
-- `MemorySink` itself (it is test infrastructure, used in tests, not the
-  subject of any test).
+- `MemorySink` and `createLoggerTestingModule` (test infrastructure).
 - `Date.now()` / `console.*` / `ts-pattern` framework behavior.
 
 ## Future hooks (informative, not in scope)
