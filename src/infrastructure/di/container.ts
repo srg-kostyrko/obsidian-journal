@@ -67,13 +67,7 @@ export class Container implements Resolver, ContainerInternal {
   }
 
   #resolveSingle(token: AnyTokenLike, stored: StoredEntry): unknown {
-    return match(stored.entry.lifetime)
-      .with(Lifetime.Container, () => stored.slot.getOrCreate(this, token, stored.entry.factory))
-      .with(Lifetime.Transient, () => withResolutionContext(this, token, stored.entry.factory))
-      .with(Lifetime.Scoped, () => {
-        throw new ScopedResolutionOutsideScopeError(token);
-      })
-      .exhaustive();
+    return this.__resolveContainerLifetime(this, token, stored);
   }
 
   __getStored(token: AnyTokenLike): readonly StoredEntry[] | undefined {
