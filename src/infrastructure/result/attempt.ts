@@ -40,7 +40,7 @@ function attemptIn<This, T, Y extends ErrYield<unknown>>(
 ): Result<T, Y["error"]> | AsyncResult<T, Y["error"]> {
   const iter = fn.call(self);
   if (isAsyncIterator(iter)) {
-    return AsyncResult.fromPromiseOfResult(runAsync(iter));
+    return AsyncResult._fromPromiseOfResult(runAsync(iter));
   }
   return runSync(iter);
 }

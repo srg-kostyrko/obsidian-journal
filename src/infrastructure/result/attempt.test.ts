@@ -145,3 +145,65 @@ describe("attempt.in (async)", () => {
     expectTypeOf(ar).toEqualTypeOf<AsyncResult<number, never>>();
   });
 });
+
+describe("attempt.in nested composition", () => {
+  it("composes nested sync attempts via yield*", () => {
+    const outer = attempt.in(null, function* () {
+      const inner = attempt.in(null, function* () {
+        const x = yield* Result.ok(3);
+        const y = yield* Result.ok(4);
+        return x + y;
+      });
+      const value = yield* inner;
+      return value * 2;
+    });
+    expectOk(outer);
+    expect(outer.value).toBe(14);
+  });
+
+  it("short-circuits a sync inner attempt's Err through the outer", () => {
+    const outer = attempt.in(null, function* () {
+      const inner = attempt.in(null, function* () {
+        yield* Result.err(new ErrA("inner-fail"));
+        return 0;
+      });
+      const value = yield* inner;
+      return value * 2;
+    });
+    expectErr(outer);
+    expect(outer.error.kind).toBe("err-a");
+  });
+
+  it("composes nested async attempts via yield*", async () => {
+    const outer = attempt.in(null, async function* () {
+      const inner = attempt.in(null, async function* () {
+        const x = yield* AsyncResult.ok(5);
+        return x;
+      });
+      const value = yield* inner;
+      return value * 2;
+    });
+    const r = await outer;
+    expectOk(r);
+    expect(r.value).toBe(10);
+  });
+});
+
+describe("attempt.in throw propagation", () => {
+  it("lets a synchronous throw inside the sync generator propagate", () => {
+    expect(() =>
+      attempt.in(null, function* () {
+        yield* Result.ok(0);
+        throw new Error("sync-kaboom");
+      }),
+    ).toThrow("sync-kaboom");
+  });
+
+  it("lets a synchronous throw inside the async generator surface as a rejection", async () => {
+    const ar = attempt.in(null, async function* () {
+      yield* AsyncResult.ok(0);
+      throw new Error("async-kaboom");
+    });
+    await expect(ar).rejects.toThrow("async-kaboom");
+  });
+});

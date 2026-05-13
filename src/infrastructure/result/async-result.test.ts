@@ -32,8 +32,8 @@ describe("AsyncResult", () => {
       expect(r.value).toBe(5);
     });
 
-    it("AsyncResult.fromPromiseOfResult wraps a pre-built Promise<Result>", async () => {
-      const ar = AsyncResult.fromPromiseOfResult(Promise.resolve(Result.ok(9)));
+    it("AsyncResult._fromPromiseOfResult (internal) wraps a pre-built Promise<Result>", async () => {
+      const ar = AsyncResult._fromPromiseOfResult(Promise.resolve(Result.ok(9)));
       const r = await ar;
       expectOk(r);
       expect(r.value).toBe(9);
@@ -109,6 +109,12 @@ describe("AsyncResult", () => {
     it("chains Ok -> AsyncResult Err", async () => {
       const r = await AsyncResult.ok<number>(2).flatMap(() => AsyncResult.err(new TestError("nope")));
       expectErr(r);
+    });
+
+    it("chains Ok -> sync Result Err", async () => {
+      const r = await AsyncResult.ok<number>(2).flatMap(() => Result.err(new TestError("sync-nope")));
+      expectErr(r);
+      expect(r.error.kind).toBe("test-error");
     });
 
     it("passes Err through without invoking the function", async () => {

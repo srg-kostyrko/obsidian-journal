@@ -2,6 +2,8 @@ import { InvariantError } from "./errors";
 import { Err, type ErrYield, Ok, type Result } from "./result";
 
 export class AsyncResult<T, E> implements PromiseLike<Result<T, E>> {
+  // Invariant: #promise never rejects. Every constructor either resolves a
+  // Result directly (ok, err, fromResult) or maps rejection into Err (fromPromise).
   readonly #promise: Promise<Result<T, E>>;
 
   private constructor(promise: Promise<Result<T, E>>) {
@@ -20,7 +22,8 @@ export class AsyncResult<T, E> implements PromiseLike<Result<T, E>> {
     return new AsyncResult<T, E>(Promise.resolve(result));
   }
 
-  static fromPromiseOfResult<T, E>(promise: Promise<Result<T, E>>): AsyncResult<T, E> {
+  /** @internal Used by `attempt.in`'s async runner. Do not call directly. */
+  static _fromPromiseOfResult<T, E>(promise: Promise<Result<T, E>>): AsyncResult<T, E> {
     return new AsyncResult<T, E>(promise);
   }
 
