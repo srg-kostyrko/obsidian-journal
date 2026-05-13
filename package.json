@@ -33,6 +33,7 @@
     "eslint-plugin-vue": "^10.9.0",
     "obsidian": "^1.12.3",
     "perfect-debounce": "^2.1.0",
+    "ts-pattern": "^5.9.0",
     "valibot": "^1.3.1",
     "vee-validate": "^4.15.1",
     "vue": "^3.5.33"
