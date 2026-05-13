@@ -185,6 +185,15 @@ describe("NotesService", () => {
       expectErr(result);
       expect(result.error).toBeInstanceOf(NoteNotFoundError);
     });
+
+    it("wraps an underlying append failure in NoteWriteError", async () => {
+      const { service, host } = build();
+      host.putFile(path);
+      vi.spyOn(host.app.vault, "append").mockRejectedValueOnce(new Error("io"));
+      const result = await service.append(path, "x");
+      expectErr(result);
+      expect(result.error).toBeInstanceOf(NoteWriteError);
+    });
   });
 
   describe("rename", () => {
