@@ -1,62 +1,60 @@
+import { match } from "ts-pattern";
+
+import { type Bindings, Slot, type StoredEntry, disposeSlots } from "./bindings";
 import { ContainerDisposedError, TokenNotRegisteredError } from "./errors";
 import { currentChain, type Resolver, withResolutionContext } from "./inject";
 import { Lifetime } from "./lifetime";
 import { type AnyTokenLike, type MultiToken, type TokenLike, tokenKind } from "./token";
 
-import type { StoredEntry } from "./bindings";
-import type { Container, ContainerInternal } from "./container";
-
 export class Scope implements Resolver {
-  readonly #parent: ContainerInternal;
-  readonly #scopedInstances = new Map<StoredEntry, unknown>();
-  readonly #scopedOrder: StoredEntry[] = [];
+  readonly #bindings: Bindings;
+  readonly #scopedSlots = new Map<StoredEntry, Slot>();
+  readonly #scopedOrder: Slot[] = [];
   #disposed = false;
 
-  constructor(parent: Container) {
-    this.#parent = parent;
+  constructor(bindings: Bindings) {
+    this.#bindings = bindings;
   }
 
   resolve<T>(token: TokenLike<T>): T;
   resolve<T>(token: MultiToken<T>): T[];
   resolve(token: AnyTokenLike): unknown {
     this.#ensureNotDisposed();
-    const stored = this.#parent.__getStored(token);
-    if (!stored || stored.length === 0) {
+    const entries = this.#bindings.lookup(token);
+    if (!entries || entries.length === 0) {
       throw new TokenNotRegisteredError(token, currentChain());
     }
-    if (tokenKind(token) === "multi") {
-      return stored.map((record) => this.#resolveSingle(token, record));
-    }
-    return this.#resolveSingle(token, stored[0]);
+    return match(tokenKind(token))
+      .with("single", () => this.#resolveSingle(token, entries[0]))
+      .with("multi", () => entries.map((stored) => this.#resolveSingle(token, stored)))
+      .exhaustive();
   }
 
   #resolveSingle(token: AnyTokenLike, stored: StoredEntry): unknown {
-    if (stored.entry.lifetime === Lifetime.Scoped) {
-      if (this.#scopedInstances.has(stored)) {
-        return this.#scopedInstances.get(stored);
-      }
-      const instance = withResolutionContext(this, token, () => stored.entry.factory());
-      this.#scopedInstances.set(stored, instance);
-      this.#scopedOrder.push(stored);
-      return instance;
+    return match(stored.entry.lifetime)
+      .with(Lifetime.Container, () => stored.slot.getOrCreate(this, token, stored.entry.factory))
+      .with(Lifetime.Transient, () => withResolutionContext(this, token, stored.entry.factory))
+      .with(Lifetime.Scoped, () => this.#scopedSlotFor(stored).getOrCreate(this, token, stored.entry.factory))
+      .exhaustive();
+  }
+
+  #scopedSlotFor(stored: StoredEntry): Slot {
+    let slot = this.#scopedSlots.get(stored);
+    if (!slot) {
+      slot = new Slot();
+      this.#scopedSlots.set(stored, slot);
+      this.#scopedOrder.push(slot);
     }
-    return this.#parent.__resolveContainerLifetime(this, token, stored);
+    return slot;
   }
 
   async dispose(): Promise<void> {
     if (this.#disposed) return;
     this.#disposed = true;
-    const errors: unknown[] = [];
-    for (const stored of this.#scopedOrder.toReversed()) {
-      const instance = this.#scopedInstances.get(stored);
-      try {
-        await disposeInstance(instance);
-      } catch (error) {
-        errors.push(error);
-      }
-    }
-    this.#scopedInstances.clear();
+    const slots = this.#scopedOrder.toReversed();
+    this.#scopedSlots.clear();
     this.#scopedOrder.length = 0;
+    const errors = await disposeSlots(slots);
     if (errors.length > 0) {
       throw new AggregateError(errors, "One or more scope disposers failed.");
     }
@@ -64,18 +62,5 @@ export class Scope implements Resolver {
 
   #ensureNotDisposed(): void {
     if (this.#disposed) throw new ContainerDisposedError();
-  }
-}
-
-async function disposeInstance(instance: unknown): Promise<void> {
-  if (instance == null || (typeof instance !== "object" && typeof instance !== "function")) return;
-  const asyncDispose = (instance as { [Symbol.asyncDispose]?: () => Promise<void> })[Symbol.asyncDispose];
-  if (typeof asyncDispose === "function") {
-    await asyncDispose.call(instance);
-    return;
-  }
-  const syncDispose = (instance as { [Symbol.dispose]?: () => void })[Symbol.dispose];
-  if (typeof syncDispose === "function") {
-    syncDispose.call(instance);
   }
 }

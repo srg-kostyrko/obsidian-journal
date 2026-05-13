@@ -86,7 +86,7 @@ export class Container implements Resolver, ContainerInternal {
 
   createScope(): Scope {
     this.#ensureNotDisposed();
-    return new Scope(this);
+    return new Scope(this.#bindings);
   }
 
   async autoLoad(): Promise<void> {
