@@ -90,6 +90,7 @@ export default [
         {
           replacements: {
             e: { event: false },
+            err: false,
             props: false,
             ref: false,
             attrs: false,
@@ -100,6 +101,10 @@ export default [
         },
       ],
       "unicorn/no-array-callback-reference": "off",
+
+      // Monadic short-circuit generators (Ok's [Symbol.iterator]) return the
+      // unwrapped value without yielding; that pattern is load-bearing for do-notation.
+      "require-yield": "off",
 
       "no-restricted-imports": [
         "error",
