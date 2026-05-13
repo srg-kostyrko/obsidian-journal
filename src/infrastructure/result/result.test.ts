@@ -3,7 +3,7 @@ import { describe, expect, expectTypeOf, it } from "vitest";
 
 import { InvariantError } from "./errors";
 import { Option } from "./option";
-import { type Err, type Ok, Result } from "./result";
+import { type Err, type ErrYield, type Ok, Result } from "./result";
 import { expectErr, expectOk } from "./testing";
 
 class TestError extends Error {
@@ -247,12 +247,12 @@ describe("Result", () => {
       expect(first.value).toBe(r);
     });
 
-    it("Err iterator yield type is exactly Err<T, E>", () => {
+    it("Err iterator yield type carries the error in a covariant slot", () => {
       const r: Result<number, TestError> = Result.err(new TestError("x"));
       const iter = r[Symbol.iterator]();
       const first = iter.next();
       if (!first.done) {
-        expectTypeOf(first.value).toEqualTypeOf<Err<number, TestError>>();
+        expectTypeOf(first.value).toEqualTypeOf<ErrYield<TestError>>();
       }
     });
 

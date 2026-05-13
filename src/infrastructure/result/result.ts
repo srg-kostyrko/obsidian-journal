@@ -3,6 +3,15 @@ import { InvariantError } from "./errors";
 import type { Option } from "./option";
 import type { BaseIssue, BaseSchema, SafeParseResult } from "valibot";
 
+/**
+ * Covariant structural carrier for what the Err iterator yields.
+ * Used by attempt.in's runner so the error channel widens across yields.
+ */
+export interface ErrYield<E> {
+  readonly kind: "err";
+  readonly error: E;
+}
+
 export class Ok<T, E> {
   readonly kind = "ok" as const;
   declare readonly _phantomE: E;
@@ -77,7 +86,7 @@ export class Err<T, E> {
     return true;
   }
 
-  *[Symbol.iterator](): Generator<Err<T, E>, never, unknown> {
+  *[Symbol.iterator](): Generator<ErrYield<E>, never, unknown> {
     yield this;
     throw new InvariantError("Err iterator consumed past the short-circuit yield");
   }
