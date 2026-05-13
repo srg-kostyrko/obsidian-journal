@@ -11,31 +11,35 @@ export interface RegistrationEntry<T> {
 export type OnRegistrationChange<T> = (entry: RegistrationEntry<T>) => void;
 
 export class RegistrationBuilder<T> {
-  #factory: (() => T) | undefined;
-  #lifetime: Lifetime = Lifetime.Container;
-  #eager = false;
   readonly #onChange: OnRegistrationChange<T>;
 
   constructor(onChange: OnRegistrationChange<T>) {
     this.#onChange = onChange;
   }
 
-  useClass(ctor: Class<T>): this {
-    this.#factory = () => new ctor();
-    this.#notify();
-    return this;
+  useClass(ctor: Class<T>): RegistrationOptions<T> {
+    return new RegistrationOptions<T>(() => new ctor(), this.#onChange);
   }
 
-  useFactory(factory: () => T): this {
+  useFactory(factory: () => T): RegistrationOptions<T> {
+    return new RegistrationOptions<T>(factory, this.#onChange);
+  }
+
+  useValue(value: T): RegistrationOptions<T> {
+    return new RegistrationOptions<T>(() => value, this.#onChange);
+  }
+}
+
+export class RegistrationOptions<T> {
+  readonly #factory: () => T;
+  readonly #onChange: OnRegistrationChange<T>;
+  #lifetime: Lifetime = Lifetime.Container;
+  #eager = false;
+
+  constructor(factory: () => T, onChange: OnRegistrationChange<T>) {
     this.#factory = factory;
+    this.#onChange = onChange;
     this.#notify();
-    return this;
-  }
-
-  useValue(value: T): this {
-    this.#factory = () => value;
-    this.#notify();
-    return this;
   }
 
   lifetime(value: Lifetime): this {
@@ -51,7 +55,6 @@ export class RegistrationBuilder<T> {
   }
 
   #notify(): void {
-    if (!this.#factory) return;
     this.#onChange({
       factory: this.#factory,
       lifetime: this.#lifetime,
