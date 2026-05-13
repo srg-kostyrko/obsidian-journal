@@ -13,9 +13,9 @@ class ErrB extends Error {
   readonly kind = "err-b" as const;
 }
 
-describe("attempt.in (sync)", () => {
+describe("attempt (sync)", () => {
   it("returns Ok with the generator's return value when no Err is yielded", () => {
-    const r = attempt.in(null, function* () {
+    const r = attempt(function* () {
       const a = yield* Result.ok(2);
       const b = yield* Result.ok(3);
       return a + b;
@@ -25,7 +25,7 @@ describe("attempt.in (sync)", () => {
   });
 
   it("short-circuits to the first yielded Err", () => {
-    const r = attempt.in(null, function* () {
+    const r = attempt(function* () {
       const a = yield* Result.ok(2);
       yield* Result.err(new ErrA("nope"));
       return a;
@@ -36,7 +36,7 @@ describe("attempt.in (sync)", () => {
 
   it("does not execute code after the first yielded Err", () => {
     let reached = false;
-    attempt.in(null, function* () {
+    attempt(function* () {
       yield* Result.err(new ErrA("x"));
       reached = true;
       return 0;
@@ -45,7 +45,7 @@ describe("attempt.in (sync)", () => {
   });
 
   it("widens the error channel as multiple error types are yielded", () => {
-    const r = attempt.in(null, function* () {
+    const r = attempt(function* () {
       const a = yield* Result.ok(2) as Result<number, ErrA>;
       const b = yield* Result.ok(3) as Result<number, ErrB>;
       return a + b;
@@ -53,7 +53,7 @@ describe("attempt.in (sync)", () => {
     expectTypeOf(r).toEqualTypeOf<Result<number, ErrA | ErrB>>();
   });
 
-  it("rebinds `this` to the provided self argument", () => {
+  it("rebinds `this` to the provided self argument via attempt.in", () => {
     class Holder {
       readonly #value = 7;
       run(): Result<number, ErrA> {
@@ -69,7 +69,7 @@ describe("attempt.in (sync)", () => {
   });
 
   it("interoperates with Option via okOrElse", () => {
-    const r = attempt.in(null, function* () {
+    const r = attempt(function* () {
       const lookup: number | undefined = undefined;
       const value = yield* Option.fromNullable(lookup).okOrElse(() => new ErrA("missing"));
       return value;
@@ -79,9 +79,9 @@ describe("attempt.in (sync)", () => {
   });
 });
 
-describe("attempt.in (async)", () => {
+describe("attempt (async)", () => {
   it("returns AsyncResult Ok with the generator's return value", async () => {
-    const ar = attempt.in(null, async function* () {
+    const ar = attempt(async function* () {
       const a = yield* AsyncResult.ok(2);
       const b = yield* AsyncResult.ok(3);
       return a + b;
@@ -92,7 +92,7 @@ describe("attempt.in (async)", () => {
   });
 
   it("short-circuits on the first yielded AsyncResult Err", async () => {
-    const ar = attempt.in(null, async function* () {
+    const ar = attempt(async function* () {
       yield* AsyncResult.ok(2);
       yield* AsyncResult.err(new ErrA("nope"));
       return 0;
@@ -103,7 +103,7 @@ describe("attempt.in (async)", () => {
   });
 
   it("short-circuits on a sync Result Err yielded inside an async generator", async () => {
-    const ar = attempt.in(null, async function* () {
+    const ar = attempt(async function* () {
       yield* Result.err(new ErrA("sync-err"));
       return 0;
     });
@@ -114,7 +114,7 @@ describe("attempt.in (async)", () => {
 
   it("does not execute code after the first yielded Err", async () => {
     let reached = false;
-    await attempt.in(null, async function* () {
+    await attempt(async function* () {
       yield* AsyncResult.err(new ErrA("x"));
       reached = true;
       return 0;
@@ -122,7 +122,7 @@ describe("attempt.in (async)", () => {
     expect(reached).toBe(false);
   });
 
-  it("rebinds `this` in async generators", async () => {
+  it("rebinds `this` in async generators via attempt.in", async () => {
     class Holder {
       readonly #value = 11;
       run() {
@@ -138,7 +138,7 @@ describe("attempt.in (async)", () => {
   });
 
   it("returns an AsyncResult (thenable) from the async overload", () => {
-    const ar = attempt.in(null, async function* () {
+    const ar = attempt(async function* () {
       yield* AsyncResult.ok(undefined);
       return 0;
     });
@@ -146,10 +146,10 @@ describe("attempt.in (async)", () => {
   });
 });
 
-describe("attempt.in nested composition", () => {
+describe("attempt nested composition", () => {
   it("composes nested sync attempts via yield*", () => {
-    const outer = attempt.in(null, function* () {
-      const inner = attempt.in(null, function* () {
+    const outer = attempt(function* () {
+      const inner = attempt(function* () {
         const x = yield* Result.ok(3);
         const y = yield* Result.ok(4);
         return x + y;
@@ -162,8 +162,8 @@ describe("attempt.in nested composition", () => {
   });
 
   it("short-circuits a sync inner attempt's Err through the outer", () => {
-    const outer = attempt.in(null, function* () {
-      const inner = attempt.in(null, function* () {
+    const outer = attempt(function* () {
+      const inner = attempt(function* () {
         yield* Result.err(new ErrA("inner-fail"));
         return 0;
       });
@@ -175,8 +175,8 @@ describe("attempt.in nested composition", () => {
   });
 
   it("composes nested async attempts via yield*", async () => {
-    const outer = attempt.in(null, async function* () {
-      const inner = attempt.in(null, async function* () {
+    const outer = attempt(async function* () {
+      const inner = attempt(async function* () {
         const x = yield* AsyncResult.ok(5);
         return x;
       });
@@ -189,10 +189,10 @@ describe("attempt.in nested composition", () => {
   });
 });
 
-describe("attempt.in throw propagation", () => {
+describe("attempt throw propagation", () => {
   it("lets a synchronous throw inside the sync generator propagate", () => {
     expect(() =>
-      attempt.in(null, function* () {
+      attempt(function* () {
         yield* Result.ok(0);
         throw new Error("sync-kaboom");
       }),
@@ -200,7 +200,7 @@ describe("attempt.in throw propagation", () => {
   });
 
   it("lets a synchronous throw inside the async generator surface as a rejection", async () => {
-    const ar = attempt.in(null, async function* () {
+    const ar = attempt(async function* () {
       yield* AsyncResult.ok(0);
       throw new Error("async-kaboom");
     });

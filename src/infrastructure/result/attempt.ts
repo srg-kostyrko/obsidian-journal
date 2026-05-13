@@ -22,8 +22,25 @@ async function runAsync<T, Y extends ErrYield<unknown>>(iter: AsyncGen<T, Y>): P
   return new Err<T, Y["error"]>(next.value.error);
 }
 
-function isAsyncIterator(value: object): value is AsyncGen<unknown, ErrYield<unknown>> {
+function isAsyncGenerator(value: object): value is AsyncGen<unknown, ErrYield<unknown>> {
   return Symbol.asyncIterator in value;
+}
+
+function dispatch<T, Y extends ErrYield<unknown>>(
+  iter: SyncGen<T, Y> | AsyncGen<T, Y>,
+): Result<T, Y["error"]> | AsyncResult<T, Y["error"]> {
+  if (isAsyncGenerator(iter)) {
+    return AsyncResult._fromPromiseOfResult(runAsync(iter));
+  }
+  return runSync(iter);
+}
+
+function attemptCall<T, Y extends ErrYield<unknown>>(fn: () => SyncGen<T, Y>): Result<T, Y["error"]>;
+function attemptCall<T, Y extends ErrYield<unknown>>(fn: () => AsyncGen<T, Y>): AsyncResult<T, Y["error"]>;
+function attemptCall<T, Y extends ErrYield<unknown>>(
+  fn: () => SyncGen<T, Y> | AsyncGen<T, Y>,
+): Result<T, Y["error"]> | AsyncResult<T, Y["error"]> {
+  return dispatch(fn());
 }
 
 function attemptIn<This, T, Y extends ErrYield<unknown>>(
@@ -38,13 +55,7 @@ function attemptIn<This, T, Y extends ErrYield<unknown>>(
   self: This,
   fn: (this: This) => SyncGen<T, Y> | AsyncGen<T, Y>,
 ): Result<T, Y["error"]> | AsyncResult<T, Y["error"]> {
-  const iter = fn.call(self);
-  if (isAsyncIterator(iter)) {
-    return AsyncResult._fromPromiseOfResult(runAsync(iter));
-  }
-  return runSync(iter);
+  return dispatch(fn.call(self));
 }
 
-export const attempt = {
-  in: attemptIn,
-};
+export const attempt = Object.assign(attemptCall, { in: attemptIn });
