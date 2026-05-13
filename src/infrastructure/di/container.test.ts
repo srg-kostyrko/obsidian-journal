@@ -257,3 +257,139 @@ describe("Container.autoLoad", () => {
     expect(c.resolve(counter).n).toBe(1);
   });
 });
+
+describe("Container.dispose", () => {
+  it("calls Symbol.dispose on resolved instances that implement it", async () => {
+    const calls: string[] = [];
+    class Service {
+      [Symbol.dispose]() {
+        calls.push("disposed");
+      }
+    }
+    const c = new Container();
+    c.register(Service).useClass(Service);
+    c.resolve(Service);
+    await c.dispose();
+    expect(calls).toEqual(["disposed"]);
+  });
+
+  it("awaits Symbol.asyncDispose when present", async () => {
+    const calls: string[] = [];
+    class Service {
+      async [Symbol.asyncDispose]() {
+        await Promise.resolve();
+        calls.push("async-disposed");
+      }
+    }
+    const c = new Container();
+    c.register(Service).useClass(Service);
+    c.resolve(Service);
+    await c.dispose();
+    expect(calls).toEqual(["async-disposed"]);
+  });
+
+  it("prefers Symbol.asyncDispose over Symbol.dispose when both are defined", async () => {
+    const calls: string[] = [];
+    class Service {
+      [Symbol.dispose]() {
+        calls.push("sync");
+      }
+      async [Symbol.asyncDispose]() {
+        calls.push("async");
+      }
+    }
+    const c = new Container();
+    c.register(Service).useClass(Service);
+    c.resolve(Service);
+    await c.dispose();
+    expect(calls).toEqual(["async"]);
+  });
+
+  it("disposes in reverse registration order", async () => {
+    const order: string[] = [];
+    class A {
+      [Symbol.dispose]() {
+        order.push("A");
+      }
+    }
+    class B {
+      [Symbol.dispose]() {
+        order.push("B");
+      }
+    }
+    class C {
+      [Symbol.dispose]() {
+        order.push("C");
+      }
+    }
+    const c = new Container();
+    c.register(A).useClass(A);
+    c.resolve(A);
+    c.register(B).useClass(B);
+    c.resolve(B);
+    c.register(C).useClass(C);
+    c.resolve(C);
+    await c.dispose();
+    expect(order).toEqual(["C", "B", "A"]);
+  });
+
+  it("skips instances that have neither Symbol.dispose nor Symbol.asyncDispose", async () => {
+    class Plain {
+      readonly id = 1;
+    }
+    const c = new Container();
+    c.register(Plain).useClass(Plain);
+    c.resolve(Plain);
+    await expect(c.dispose()).resolves.toBeUndefined();
+  });
+
+  it("skips bindings that were registered but never resolved", async () => {
+    const calls: string[] = [];
+    class Service {
+      [Symbol.dispose]() {
+        calls.push("disposed");
+      }
+    }
+    const c = new Container();
+    c.register(Service).useClass(Service);
+    await c.dispose();
+    expect(calls).toEqual([]);
+  });
+
+  it("runs every dispose even when an earlier one throws, then rejects with AggregateError", async () => {
+    const order: string[] = [];
+    class A {
+      [Symbol.dispose]() {
+        order.push("A");
+        throw new Error("A-boom");
+      }
+    }
+    class B {
+      [Symbol.dispose]() {
+        order.push("B");
+      }
+    }
+    const c = new Container();
+    c.register(A).useClass(A);
+    c.resolve(A);
+    c.register(B).useClass(B);
+    c.resolve(B);
+    await expect(c.dispose()).rejects.toBeInstanceOf(AggregateError);
+    expect(order).toEqual(["B", "A"]);
+  });
+
+  it("is idempotent — second dispose() resolves without re-running cleanup", async () => {
+    const calls: string[] = [];
+    class Service {
+      [Symbol.dispose]() {
+        calls.push("disposed");
+      }
+    }
+    const c = new Container();
+    c.register(Service).useClass(Service);
+    c.resolve(Service);
+    await c.dispose();
+    await c.dispose();
+    expect(calls).toEqual(["disposed"]);
+  });
+});

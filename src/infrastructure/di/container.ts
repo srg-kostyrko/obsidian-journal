@@ -98,10 +98,38 @@ export class Container implements Resolver {
   async dispose(): Promise<void> {
     if (this.#disposed) return;
     this.#disposed = true;
+    const stored = [...this.#registry.values()].flat();
+    const resolved = stored
+      .filter((s) => s.hasInstance && s.instance != null)
+      .toSorted((a, b) => b.registrationIndex - a.registrationIndex);
+    const errors: unknown[] = [];
+    for (const s of resolved) {
+      try {
+        await disposeInstance(s.instance);
+      } catch (error) {
+        errors.push(error);
+      }
+    }
     this.#registry.clear();
+    if (errors.length > 0) {
+      throw new AggregateError(errors, "One or more disposers failed.");
+    }
   }
 
   #ensureNotDisposed(): void {
     if (this.#disposed) throw new ContainerDisposedError();
+  }
+}
+
+async function disposeInstance(instance: unknown): Promise<void> {
+  if (instance == null || (typeof instance !== "object" && typeof instance !== "function")) return;
+  const asyncDispose = (instance as { [Symbol.asyncDispose]?: () => Promise<void> })[Symbol.asyncDispose];
+  if (typeof asyncDispose === "function") {
+    await asyncDispose.call(instance);
+    return;
+  }
+  const syncDispose = (instance as { [Symbol.dispose]?: () => void })[Symbol.dispose];
+  if (typeof syncDispose === "function") {
+    syncDispose.call(instance);
   }
 }
