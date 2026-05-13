@@ -152,6 +152,15 @@ export default [
     },
   },
   {
+    files: ["src/infrastructure/logger/console-sink.ts"],
+    rules: {
+      // ConsoleSink is the single, intentional bridge from LogSink to the
+      // DevTools console; the global ban on console.* applies everywhere else.
+      "no-console": "off",
+      "obsidianmd/rule-custom-message": "off",
+    },
+  },
+  {
     files: ["src/infrastructure/result/async-result.ts"],
     rules: {
       // AsyncResult intentionally implements PromiseLike; `then` is the documented surface.
