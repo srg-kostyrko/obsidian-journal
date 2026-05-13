@@ -48,7 +48,6 @@ export function tokenName(token: AnyTokenLike): string {
   return token.name;
 }
 
-function isClassConstructor(function_: (...arguments_: unknown[]) => unknown): boolean {
-  const source = Function.prototype.toString.call(function_);
-  return source.startsWith("class");
+function isClassConstructor(value: unknown): boolean {
+  return Function.prototype.toString.call(value).startsWith("class");
 }
