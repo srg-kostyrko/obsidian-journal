@@ -1,0 +1,52 @@
+import { Err, Ok, Option, type Result } from "@/infrastructure/result";
+
+import { IntervalError } from "./errors";
+
+import type { CalendarDate } from "./calendar-date";
+
+export class OpenInterval {
+  readonly kind = "OpenInterval" as const;
+  readonly start: Option<CalendarDate>;
+  readonly end: Option<CalendarDate>;
+
+  private constructor(start: Option<CalendarDate>, end: Option<CalendarDate>) {
+    this.start = start;
+    this.end = end;
+  }
+
+  static from(start: CalendarDate): OpenInterval {
+    return new OpenInterval(Option.some(start), Option.none());
+  }
+
+  static until(end: CalendarDate): OpenInterval {
+    return new OpenInterval(Option.none(), Option.some(end));
+  }
+
+  static between(start: CalendarDate, end: CalendarDate): Result<OpenInterval, IntervalError> {
+    if (start.isAfter(end)) {
+      return new Err(new IntervalError(start, end));
+    }
+    return new Ok(new OpenInterval(Option.some(start), Option.some(end)));
+  }
+
+  contains(d: CalendarDate): boolean {
+    const afterStart = this.start.match({
+      some: (s) => !d.isBefore(s),
+      none: () => true,
+    });
+    const beforeEnd = this.end.match({
+      some: (endDate) => !d.isAfter(endDate),
+      none: () => true,
+    });
+    return afterStart && beforeEnd;
+  }
+
+  isSame(other: OpenInterval): boolean {
+    return OpenInterval.optionDatesEqual(this.start, other.start) && OpenInterval.optionDatesEqual(this.end, other.end);
+  }
+
+  private static optionDatesEqual(a: Option<CalendarDate>, b: Option<CalendarDate>): boolean {
+    if (a.isSome() && b.isSome()) return a.value.isSame(b.value);
+    return a.isNone() && b.isNone();
+  }
+}
