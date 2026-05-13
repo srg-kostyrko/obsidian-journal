@@ -9,7 +9,7 @@ import {
 } from "./errors";
 import { inject } from "./inject";
 import { Lifetime } from "./lifetime";
-import { createToken } from "./token";
+import { createMultiToken, createToken } from "./token";
 
 describe("Container.register + resolve (Container lifetime, single)", () => {
   it("resolves a useValue binding back to the literal", () => {
@@ -110,5 +110,39 @@ describe("Container.resolve (Transient lifetime)", () => {
       .lifetime(Lifetime.Transient);
     expect(c.resolve(top)).toBe(6);
     expect(c.resolve(top)).toBe(6);
+  });
+});
+
+describe("Container.resolve (multi tokens)", () => {
+  it("collects multiple registrations into an array in registration order", () => {
+    const c = new Container();
+    const t = createMultiToken<string>("Plugins");
+    c.register(t).useValue("a");
+    c.register(t).useValue("b");
+    c.register(t).useValue("c");
+    expect(c.resolve(t)).toEqual(["a", "b", "c"]);
+  });
+
+  it("throws TokenNotRegisteredError when a multi-token has no bindings", () => {
+    const c = new Container();
+    const t = createMultiToken<string>("Plugins");
+    expect(() => c.resolve(t)).toThrow(TokenNotRegisteredError);
+  });
+
+  it("resolves a multi-token to an array via inject() inside a factory", () => {
+    const c = new Container();
+    const items = createMultiToken<string>("Items");
+    const list = createToken<string[]>("List");
+    c.register(items).useValue("x");
+    c.register(items).useValue("y");
+    c.register(list).useFactory(() => inject(items));
+    expect(c.resolve(list)).toEqual(["x", "y"]);
+  });
+
+  it("does not throw DuplicateRegistrationError when registering the same multi-token twice", () => {
+    const c = new Container();
+    const t = createMultiToken<string>("Plugins");
+    c.register(t).useValue("a");
+    expect(() => c.register(t).useValue("b")).not.toThrow();
   });
 });
