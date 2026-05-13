@@ -33,7 +33,7 @@ export class Interval {
     let cursor = localMoment(this.start.toAnchor(), "YYYY-MM-DD", true);
     const endAnchor = this.end.toAnchor();
     while (cursor.format("YYYY-MM-DD") <= endAnchor) {
-      yield CalendarDate.fromMoment(cursor);
+      yield CalendarDate._fromMoment(cursor);
       cursor = cursor.clone().add(1, "day");
     }
   }

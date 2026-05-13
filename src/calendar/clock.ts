@@ -1,4 +1,3 @@
-// src/calendar/clock.ts
 import { localMoment } from "./calendar";
 
 export class Clock {
@@ -14,6 +13,6 @@ export class Clock {
   }
 
   format(pattern: string): string {
-    return this.#moment.clone().format(pattern);
+    return this.#moment.format(pattern);
   }
 }

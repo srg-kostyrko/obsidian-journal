@@ -16,8 +16,8 @@ export class QuarterPeriod implements PeriodBase<QuarterPeriod> {
     const start = reference.clone().startOf("quarter");
     const end = reference.clone().endOf("quarter").startOf("day");
 
-    this.start = CalendarDate.fromMoment(start);
-    this.end = CalendarDate.fromMoment(end);
+    this.start = CalendarDate._fromMoment(start);
+    this.end = CalendarDate._fromMoment(end);
     this.anchor = this.start;
     this.quarterOfYear = start.quarter() as 1 | 2 | 3 | 4;
     this.year = start.year();
@@ -47,7 +47,7 @@ export class QuarterPeriod implements PeriodBase<QuarterPeriod> {
     let cursor = localMoment(this.start.toAnchor(), "YYYY-MM-DD", true);
     const endAnchor = this.end.toAnchor();
     while (cursor.format("YYYY-MM-DD") <= endAnchor) {
-      yield CalendarDate.fromMoment(cursor);
+      yield CalendarDate._fromMoment(cursor);
       cursor = cursor.clone().add(1, "day");
     }
   }

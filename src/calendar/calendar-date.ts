@@ -22,7 +22,7 @@ export class CalendarDate {
   }
 
   static today(): CalendarDate {
-    return CalendarDate.fromMoment(localMoment().startOf("day"));
+    return CalendarDate._fromMoment(localMoment().startOf("day"));
   }
 
   static parse(input: string, format?: string): Result<CalendarDate, ParseError> {
@@ -31,14 +31,14 @@ export class CalendarDate {
     if (!m.isValid()) {
       return new Err(new ParseError(input, format));
     }
-    return new Ok(CalendarDate.fromMoment(m.startOf("day")));
+    return new Ok(CalendarDate._fromMoment(m.startOf("day")));
   }
 
   static fromAnchor(s: AnchorString): CalendarDate {
-    return CalendarDate.fromMoment(localMoment(s, ANCHOR_FORMAT, true));
+    return CalendarDate._fromMoment(localMoment(s, ANCHOR_FORMAT, true));
   }
 
-  static fromMoment(m: ReturnType<typeof localMoment>): CalendarDate {
+  static _fromMoment(m: ReturnType<typeof localMoment>): CalendarDate {
     return new CalendarDate(m.year(), m.month() + 1, m.date(), m.format(ANCHOR_FORMAT) as AnchorString);
   }
 

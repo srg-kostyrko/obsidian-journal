@@ -21,12 +21,12 @@ export class DayPeriod implements PeriodBase<DayPeriod> {
 
   next(): DayPeriod {
     const m = localMoment(this.start.toAnchor(), "YYYY-MM-DD", true).add(1, "day");
-    return new DayPeriod(CalendarDate.fromMoment(m));
+    return new DayPeriod(CalendarDate._fromMoment(m));
   }
 
   previous(): DayPeriod {
     const m = localMoment(this.start.toAnchor(), "YYYY-MM-DD", true).subtract(1, "day");
-    return new DayPeriod(CalendarDate.fromMoment(m));
+    return new DayPeriod(CalendarDate._fromMoment(m));
   }
 
   contains(d: CalendarDate): boolean {

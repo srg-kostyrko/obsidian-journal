@@ -132,5 +132,30 @@ describe("WeekPeriod", () => {
 
       expect(WeekPeriod.containing(date("2025-03-14")).end.toAnchor()).toBe("2025-03-15");
     });
+
+    it("anchor is the Friday for a Sun-start week under dow=0, doy=6", () => {
+      teardown();
+      ({ teardown } = installTestCalendar({ dow: 0, doy: 6 }));
+
+      expect(WeekPeriod.containing(date("2025-03-14")).anchor.toAnchor()).toBe("2025-03-14");
+    });
+
+    it("year returns owning year for a cross-year week under dow=0, doy=6", () => {
+      teardown();
+      ({ teardown } = installTestCalendar({ dow: 0, doy: 6 }));
+
+      // Week containing 2025-12-31: starts Sun 2025-12-28, ends Sat 2026-01-03,
+      // owning day (Friday) is 2026-01-02 → owning year is 2026.
+      expect(WeekPeriod.containing(date("2025-12-31")).year).toBe(2026);
+    });
+
+    it("anchor.year matches year for the cross-year week under dow=0, doy=6", () => {
+      teardown();
+      ({ teardown } = installTestCalendar({ dow: 0, doy: 6 }));
+
+      const week = WeekPeriod.containing(date("2025-12-31"));
+
+      expect(week.anchor.year).toBe(week.year);
+    });
   });
 });

@@ -19,8 +19,8 @@ export class DecadePeriod implements PeriodBase<DecadePeriod> {
     const startMoment = localMoment(`${decadeStart}-01-01`, "YYYY-MM-DD", true);
     const endMoment = localMoment(`${decadeStart + DECADE_LENGTH - 1}-12-31`, "YYYY-MM-DD", true);
 
-    this.start = CalendarDate.fromMoment(startMoment);
-    this.end = CalendarDate.fromMoment(endMoment);
+    this.start = CalendarDate._fromMoment(startMoment);
+    this.end = CalendarDate._fromMoment(endMoment);
     this.anchor = this.start;
   }
 
@@ -48,7 +48,7 @@ export class DecadePeriod implements PeriodBase<DecadePeriod> {
     let cursor = localMoment(this.start.toAnchor(), "YYYY-MM-DD", true);
     const endAnchor = this.end.toAnchor();
     while (cursor.format("YYYY-MM-DD") <= endAnchor) {
-      yield CalendarDate.fromMoment(cursor);
+      yield CalendarDate._fromMoment(cursor);
       cursor = cursor.clone().add(1, "day");
     }
   }

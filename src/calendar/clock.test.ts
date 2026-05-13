@@ -1,4 +1,3 @@
-// src/calendar/clock.test.ts
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
 import { Clock } from "./clock";
