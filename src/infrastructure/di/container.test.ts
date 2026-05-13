@@ -2,6 +2,7 @@ import { describe, expect, it } from "vitest";
 
 import { Container } from "./container";
 import {
+  CircularDependencyError,
   ContainerDisposedError,
   DuplicateRegistrationError,
   InvalidTokenError,
@@ -144,5 +145,32 @@ describe("Container.resolve (multi tokens)", () => {
     const t = createMultiToken<string>("Plugins");
     c.register(t).useValue("a");
     expect(() => c.register(t).useValue("b")).not.toThrow();
+  });
+});
+
+describe("Container.resolve (cycle detection)", () => {
+  it("throws CircularDependencyError when A depends on B and B depends on A", () => {
+    const c = new Container();
+    const a = createToken<unknown>("A");
+    const b = createToken<unknown>("B");
+    c.register(a).useFactory(() => ({ b: inject(b) }));
+    c.register(b).useFactory(() => ({ a: inject(a) }));
+    expect(() => c.resolve(a)).toThrow(CircularDependencyError);
+  });
+
+  it("reports the offending chain in the CircularDependencyError", () => {
+    const c = new Container();
+    const a = createToken<unknown>("A");
+    const b = createToken<unknown>("B");
+    c.register(a).useFactory(() => ({ b: inject(b) }));
+    c.register(b).useFactory(() => ({ a: inject(a) }));
+    let captured: unknown;
+    try {
+      c.resolve(a);
+    } catch (error) {
+      captured = error;
+    }
+    expect(captured).toBeInstanceOf(CircularDependencyError);
+    expect((captured as CircularDependencyError).chain).toEqual(["A", "B", "A"]);
   });
 });
