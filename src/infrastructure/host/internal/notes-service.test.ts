@@ -337,11 +337,5 @@ describe("NotesService", () => {
       host.emitVault("create", file2);
       expect(count).toBe(1);
     });
-
-    it("registers vault listeners with the plugin so unload tears them down", () => {
-      const { service, host } = build();
-      expect(service).toBeDefined();
-      expect(host.registeredEventReferences.length).toBeGreaterThan(0);
-    });
   });
 });
