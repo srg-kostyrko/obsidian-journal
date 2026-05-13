@@ -1,4 +1,3 @@
-// src/infrastructure/logger/testing.ts
 import type { LogRecord, LogSink } from "./types";
 
 export class MemorySink implements LogSink {

@@ -1,4 +1,3 @@
-// src/infrastructure/logger/types.ts
 import { createMultiToken } from "@/infrastructure/di";
 
 export type LogLevel = "debug" | "info" | "warn" | "error";
