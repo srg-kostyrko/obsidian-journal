@@ -3,10 +3,9 @@ import { createNanoEvents } from "nanoevents";
 import { AsyncResult, None, Some } from "@/infrastructure/result";
 import type { Option } from "@/infrastructure/result";
 
-import { NoteAlreadyExistsError, NoteNotFoundError } from "./errors";
+import { FolderNotFoundError, NoteAlreadyExistsError, NoteNotFoundError } from "./errors";
 
 import type {
-  FolderNotFoundError,
   FrontmatterError,
   NoteCreateError,
   NoteDeleteError,
@@ -56,12 +55,24 @@ export class FakeNotesService implements Pick<
   | "events"
 > {
   readonly #files = new Map<VaultPath, FakeEntry>();
+  readonly #folders = new Set<VaultPath>(["" as VaultPath]);
   readonly #emitter: TypedEmitter<NotesEvents> = createNanoEvents();
 
   readonly events: Subscribable<NotesEvents> = this.#emitter;
 
   seed(path: VaultPath, content = "", frontmatter: Record<string, unknown> = {}): void {
     this.#files.set(path, { content, frontmatter });
+    this.#registerParentFolders(path);
+  }
+
+  #registerParentFolders(path: VaultPath): void {
+    const segments = path.split("/");
+    segments.pop(); // drop the filename
+    let current = "";
+    for (const segment of segments) {
+      current = current ? `${current}/${segment}` : segment;
+      this.#folders.add(current as VaultPath);
+    }
   }
 
   find(path: VaultPath): Option<Note> {
@@ -69,6 +80,7 @@ export class FakeNotesService implements Pick<
   }
 
   listInFolder(folder: VaultPath): AsyncResult<VaultPath[], FolderNotFoundError> {
+    if (!this.#folders.has(folder)) return AsyncResult.err(new FolderNotFoundError(folder));
     const prefix = folder ? `${folder}/` : "";
     const matches = [...this.#files.keys()].filter((p) => p.startsWith(prefix));
     return AsyncResult.ok(matches);
@@ -80,6 +92,7 @@ export class FakeNotesService implements Pick<
 
   create(path: VaultPath, content: string): AsyncResult<Note, NoteAlreadyExistsError | NoteCreateError> {
     if (this.#files.has(path)) return AsyncResult.err(new NoteAlreadyExistsError(path));
+    this.#registerParentFolders(path);
     this.#files.set(path, { content, frontmatter: {} });
     const note = noteOf(path);
     this.#emitter.emit("created", note);
@@ -159,7 +172,6 @@ export class FakeWorkspaceService implements Pick<WorkspaceService, "activeNote"
   openNote(path: VaultPath, _mode: OpenMode = "active"): AsyncResult<void, WorkspaceOpenError> {
     this.#open.add(path);
     this.#active = new Some<VaultPath>(path);
-    this.#emitter.emit("active-note-changed", this.#active);
     return AsyncResult.ok(undefined);
   }
 
