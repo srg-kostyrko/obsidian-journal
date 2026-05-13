@@ -8,6 +8,7 @@ import {
   TokenNotRegisteredError,
 } from "./errors";
 import { inject } from "./inject";
+import { Lifetime } from "./lifetime";
 import { createToken } from "./token";
 
 describe("Container.register + resolve (Container lifetime, single)", () => {
@@ -85,5 +86,29 @@ describe("Container.register + resolve (Container lifetime, single)", () => {
     await c.dispose();
     expect(() => c.resolve(createToken("X"))).toThrow(ContainerDisposedError);
     expect(() => c.register(createToken("Y"))).toThrow(ContainerDisposedError);
+  });
+});
+
+describe("Container.resolve (Transient lifetime)", () => {
+  it("returns a fresh instance on every resolve when lifetime is Transient", () => {
+    class Service {
+      readonly id = Math.random();
+    }
+    const c = new Container();
+    const t = createToken<Service>("S");
+    c.register(t).useClass(Service).lifetime(Lifetime.Transient);
+    expect(c.resolve(t)).not.toBe(c.resolve(t));
+  });
+
+  it("still injects deps for Transient bindings", () => {
+    const c = new Container();
+    const dep = createToken<number>("Dep");
+    const top = createToken<number>("Top");
+    c.register(dep).useValue(3);
+    c.register(top)
+      .useFactory(() => inject(dep) * 2)
+      .lifetime(Lifetime.Transient);
+    expect(c.resolve(top)).toBe(6);
+    expect(c.resolve(top)).toBe(6);
   });
 });
