@@ -1,5 +1,5 @@
 import { ContainerDisposedError, TokenNotRegisteredError } from "./errors";
-import { type Resolver, withResolutionContext } from "./inject";
+import { currentChain, type Resolver, withResolutionContext } from "./inject";
 import { Lifetime } from "./lifetime";
 import { type AnyTokenLike, type MultiToken, type TokenLike, tokenKind } from "./token";
 
@@ -21,7 +21,7 @@ export class Scope implements Resolver {
     this.#ensureNotDisposed();
     const stored = this.#parent.__getStored(token);
     if (!stored || stored.length === 0) {
-      throw new TokenNotRegisteredError(token, []);
+      throw new TokenNotRegisteredError(token, currentChain());
     }
     if (tokenKind(token) === "multi") {
       return stored.map((record) => this.#resolveSingle(token, record));

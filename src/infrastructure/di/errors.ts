@@ -1,4 +1,3 @@
-// src/infrastructure/di/errors.ts
 import { type AnyTokenLike, tokenName } from "./token";
 
 export class TokenNotRegisteredError extends Error {

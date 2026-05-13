@@ -7,7 +7,7 @@ import {
   ScopedResolutionOutsideScopeError,
   TokenNotRegisteredError,
 } from "./errors";
-import { currentResolver, type Resolver, withResolutionContext } from "./inject";
+import { currentChain, currentResolver, type Resolver, withResolutionContext } from "./inject";
 import { createInjector, InjectorToken } from "./injector";
 import { Lifetime } from "./lifetime";
 import { type RegistrationEntry, RegistrationBuilder } from "./registration";
@@ -87,7 +87,7 @@ export class Container implements Resolver, ContainerInternal {
     this.#ensureNotDisposed();
     const stored = this.#registry.get(token);
     if (!stored || stored.length === 0) {
-      throw new TokenNotRegisteredError(token, []);
+      throw new TokenNotRegisteredError(token, currentChain());
     }
     return match(tokenKind(token))
       .with("single", () => this.#resolveSingle(token, stored[0]))

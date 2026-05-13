@@ -91,4 +91,28 @@ describe("Scope.dispose", () => {
     await scope.dispose();
     expect(() => scope.resolve(createToken("X"))).toThrow(ContainerDisposedError);
   });
+
+  it("disposes scoped instances in reverse insertion order", async () => {
+    const order: string[] = [];
+    class A {
+      readonly kind = "a";
+      [Symbol.dispose]() {
+        order.push("A");
+      }
+    }
+    class B {
+      readonly kind = "b";
+      [Symbol.dispose]() {
+        order.push("B");
+      }
+    }
+    const container = new Container();
+    container.register(A).useClass(A).lifetime(Lifetime.Scoped);
+    container.register(B).useClass(B).lifetime(Lifetime.Scoped);
+    const scope = container.createScope();
+    scope.resolve(A);
+    scope.resolve(B);
+    await scope.dispose();
+    expect(order).toEqual(["B", "A"]);
+  });
 });

@@ -1,4 +1,3 @@
-// src/infrastructure/di/inject.test.ts
 import { describe, expect, it, vi } from "vitest";
 
 import { CircularDependencyError, NoInjectionContextError } from "./errors";

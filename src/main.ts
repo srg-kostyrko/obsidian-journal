@@ -15,7 +15,7 @@ export default class JournalPlugin extends Plugin {
   }
 
   onunload(): void {
-    void this.#container?.dispose();
+    void this.#container?.dispose().catch(() => null);
     this.#container = undefined;
   }
 }

@@ -1,4 +1,4 @@
-import type { Container } from "@/infrastructure/di/container";
+import type { Container } from "./container";
 
 export interface Module {
   register(c: Container): void;
