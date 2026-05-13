@@ -325,8 +325,8 @@ class Interval {
 
 class OpenInterval {
   readonly kind: "OpenInterval";
-  readonly start: CalendarDate | undefined; // undefined = unbounded below
-  readonly end: CalendarDate | undefined; // undefined = unbounded above
+  readonly start: Option<CalendarDate>; // None = unbounded below
+  readonly end: Option<CalendarDate>; // None = unbounded above
 
   static from(start: CalendarDate): OpenInterval; // [start, ∞)
   static until(end: CalendarDate): OpenInterval; // (-∞, end]
@@ -341,7 +341,9 @@ class OpenInterval {
   `start.isAfter(end)`. Same for `OpenInterval.between`.
 - `Interval` and `OpenInterval` are peers, not in a subtype hierarchy.
   Code with an `Interval` knows both bounds exist; code with an
-  `OpenInterval` must handle `undefined`.
+  `OpenInterval` consumes `Option<CalendarDate>` for each bound and
+  composes through `.map` / `.flatMap` / `.filter` per the v3 monadic
+  conventions ([[v3-monadic-foundation-design]]).
 - No `Interval` ↔ `Period` interconversion. `Period` is granularity-tagged
   and self-navigates; `Interval` is granularity-free. If a Layer B feature
   needs to project one to the other, it adds a thin helper at that site.
