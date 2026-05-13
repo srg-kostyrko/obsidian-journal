@@ -10,4 +10,8 @@ describe("UserAborted", () => {
   it("includes the source in the error message", () => {
     expect(new UserAborted("journal-picker").message).toBe("User aborted at journal-picker");
   });
+
+  it("uses 'user-aborted' as its kind discriminant", () => {
+    expect(new UserAborted("journal-picker").kind).toBe("user-aborted");
+  });
 });
