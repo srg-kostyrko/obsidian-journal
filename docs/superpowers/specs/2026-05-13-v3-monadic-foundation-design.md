@@ -139,24 +139,43 @@ export class AsyncResult<T, E> implements PromiseLike<Result<T, E>> {
 
 Async-iteration semantics mirror Result's sync iterator: yields the `Err` (short-circuits) or returns the `Ok` value.
 
-### `attempt.in`
+### `attempt` and `attempt.in`
 
-Do-notation runner with `this` rebinding. Two overloads:
+Do-notation runner. Two entry points:
+
+- `attempt(fn)` — context-free.
+- `attempt.in(self, fn)` — rebinds `this` to `self` inside the generator.
+
+Both have sync and async overloads, selected at runtime by whether the generator is `function*` or `async function*`:
 
 ```ts
-const attempt: {
-  in<This, T, E>(self: This, fn: (this: This) => Generator<Result<unknown, E>, T, unknown>): Result<T, E>;
+function attempt<T, E>(fn: () => Generator<ErrYield<E>, T, unknown>): Result<T, E>;
+function attempt<T, E>(fn: () => AsyncGenerator<ErrYield<E>, T, unknown>): AsyncResult<T, E>;
 
-  in<This, T, E>(
-    self: This,
-    fn: (this: This) => AsyncGenerator<Result<unknown, E> | AsyncResult<unknown, E>, T, unknown>,
-  ): AsyncResult<T, E>;
-};
+attempt.in = function inSelf<This, T, E>(
+  self: This,
+  fn: (this: This) => Generator<ErrYield<E>, T, unknown>,
+): Result<T, E>;
+attempt.in = function inSelf<This, T, E>(
+  self: This,
+  fn: (this: This) => AsyncGenerator<ErrYield<E>, T, unknown>,
+): AsyncResult<T, E>;
 ```
 
-The runner invokes `fn.call(self)` so that `this.#field` references inside `function*` / `async function*` resolve to the caller's instance. Arrow functions are rejected by the signature — the `(this: This) => ...` form requires a `function`-form callee.
+The `.in` form invokes `fn.call(self)` so `this.#field` references inside `function*` / `async function*` resolve to the caller's instance. Arrow functions are rejected by the signature — the `(this: This) => ...` form requires a `function`-form callee.
 
-The `E` channel of the returned Result/AsyncResult is the union of error types yielded inside the generator. A `yield*` on an `Err` short-circuits and the runner returns that `Err` (or `AsyncResult` resolving to it).
+Inside the generator, `yield* result` (where `result: Result<U, E>`) yields nothing on `Ok` and short-circuits on `Err`. The yielded value is a covariant `ErrYield<E>` carrier — TypeScript distributes `Y["error"]` over the union of yielded carriers so the runner's return type's `E` channel is the union of error types across all `yield*` sites.
+
+### `ErrYield<E>`
+
+```ts
+export interface ErrYield<E> {
+  readonly kind: "err";
+  readonly error: E;
+}
+```
+
+The covariant structural carrier yielded by `Result`'s `Symbol.iterator` and `AsyncResult`'s `Symbol.asyncIterator`. `Err<T, E>` is invariant in `E` (because `mapErr` puts `E` in a contravariant position); the carrier strips that invariance so error types union cleanly across `yield*` sites in a do-notation generator. The runtime yield is the `Err` instance itself; only the static type is narrowed.
 
 ### `InvariantError`
 
