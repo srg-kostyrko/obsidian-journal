@@ -1,5 +1,7 @@
 import { InvariantError } from "./errors";
 
+import type { Option } from "./option";
+
 export class Ok<T, E> {
   readonly kind = "ok" as const;
   declare readonly _phantomE: E;
@@ -95,5 +97,8 @@ export const Result = {
     } catch (error) {
       return new Err<T, E>(mapErr(error));
     }
+  },
+  fromOption<T, E>(option: Option<T>, mkErr: () => E): Result<T, E> {
+    return option.isSome() ? new Ok<T, E>(option.value) : new Err<T, E>(mkErr());
   },
 };

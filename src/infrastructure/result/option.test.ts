@@ -2,6 +2,8 @@ import { describe, expect, expectTypeOf, it } from "vitest";
 
 import { Option, type Some, type None } from "./option";
 
+import type { Result } from "./result";
+
 describe("Option", () => {
   describe("constructors", () => {
     it("Option.some wraps a value as Some", () => {
@@ -138,6 +140,43 @@ describe("Option", () => {
 
     it("returns the fallback when None", () => {
       expect(Option.none<number>().getOr(99)).toBe(99);
+    });
+  });
+
+  describe("okOr / okOrElse", () => {
+    it("okOr on Some returns Ok with the inner value", () => {
+      const opt = Option.some(5);
+      const r = opt.okOr(new Error("nope"));
+      expect(r.kind).toBe("ok");
+      expect(r.isOk() && r.value).toBe(5);
+    });
+
+    it("okOr on None returns Err with the provided error", () => {
+      const error = new Error("missing");
+      const r = Option.none<number>().okOr(error);
+      expect(r.kind).toBe("err");
+      expect(r.isErr() && r.error).toBe(error);
+    });
+
+    it("okOrElse on Some returns Ok without invoking the factory", () => {
+      let called = false;
+      const r = Option.some(5).okOrElse(() => {
+        called = true;
+        return new Error("never");
+      });
+      expect(r.kind).toBe("ok");
+      expect(called).toBe(false);
+    });
+
+    it("okOrElse on None invokes the factory and returns Err", () => {
+      const r = Option.none<number>().okOrElse(() => new Error("computed"));
+      expect(r.kind).toBe("err");
+      expect(r.isErr() && r.error.message).toBe("computed");
+    });
+
+    it("okOr is typed Result<T, E>", () => {
+      const r = Option.some(5).okOr(new Error("x"));
+      expectTypeOf(r).toEqualTypeOf<Result<number, Error>>();
     });
   });
 });

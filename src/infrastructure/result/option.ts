@@ -1,3 +1,5 @@
+import { Err, Ok, type Result } from "./result";
+
 export class Some<T> {
   readonly kind = "some" as const;
   constructor(readonly value: T) {}
@@ -28,6 +30,14 @@ export class Some<T> {
 
   isNone(): this is None<T> {
     return false;
+  }
+
+  okOr<E>(_error: E): Result<T, E> {
+    return new Ok<T, E>(this.value);
+  }
+
+  okOrElse<E>(_mkErr: () => E): Result<T, E> {
+    return new Ok<T, E>(this.value);
   }
 }
 
@@ -61,6 +71,14 @@ export class None<T = unknown> {
 
   isNone(): this is None<T> {
     return true;
+  }
+
+  okOr<E>(error: E): Result<T, E> {
+    return new Err<T, E>(error);
+  }
+
+  okOrElse<E>(mkErr: () => E): Result<T, E> {
+    return new Err<T, E>(mkErr());
   }
 }
 

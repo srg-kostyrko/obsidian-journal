@@ -1,6 +1,7 @@
 import { describe, expect, expectTypeOf, it } from "vitest";
 
 import { InvariantError } from "./errors";
+import { Option } from "./option";
 import { type Err, type Ok, Result } from "./result";
 import { expectErr, expectOk } from "./testing";
 
@@ -66,6 +67,29 @@ describe("Result", () => {
       );
       expectErr(r);
       expect(r.error.message).toBe("string-literal");
+    });
+  });
+
+  describe("fromOption", () => {
+    it("converts Some to Ok", () => {
+      const r = Result.fromOption(Option.some(5), () => new TestError("missing"));
+      expectOk(r);
+      expect(r.value).toBe(5);
+    });
+
+    it("converts None to Err via the factory", () => {
+      const r = Result.fromOption(Option.none<number>(), () => new TestError("missing"));
+      expectErr(r);
+      expect(r.error.kind).toBe("test-error");
+    });
+
+    it("does not invoke the factory for Some", () => {
+      let called = false;
+      Result.fromOption(Option.some(5), () => {
+        called = true;
+        return new TestError("never");
+      });
+      expect(called).toBe(false);
     });
   });
 
