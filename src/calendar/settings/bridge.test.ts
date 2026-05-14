@@ -72,4 +72,13 @@ describe("CalendarSettingsBridge", () => {
     await Promise.resolve();
     expect(applySpy).toHaveBeenCalledWith("locale", { propagateToGlobal: false });
   });
+
+  it("does not crash when constructed before SettingsService.initialize", async () => {
+    const { settings } = build();
+    container.resolve(CalendarSettingsBridge);
+    expect(applySpy).not.toHaveBeenCalled();
+    await settings.initialize();
+    await Promise.resolve();
+    expect(applySpy).toHaveBeenCalledWith("locale", { propagateToGlobal: false });
+  });
 });

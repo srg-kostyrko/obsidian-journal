@@ -24,7 +24,8 @@ export class CalendarSettingsBridge {
     this.#stop();
   }
 
-  #sync(state: CalendarSliceState): void {
+  #sync(state: CalendarSliceState | undefined): void {
+    if (state === undefined) return;
     match(state)
       .with({ mode: "locale" }, () => {
         this.#calendar.applyWeekConfig("locale", { propagateToGlobal: false });

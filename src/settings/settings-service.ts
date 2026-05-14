@@ -35,7 +35,7 @@ export class SettingsService {
   readonly #logger = inject(LoggerFactoryToken).named("settings");
 
   readonly #root: Record<string, unknown> = reactive({});
-  readonly #sliceKeys = new Set<string>();
+  readonly #registeredSliceKeys = new Set<string>(this.#slices.map((s) => s.key));
   readonly #collectionHandles = new Map<string, ReactiveCollection<AnySchema>>();
 
   #stopWatch?: WatchStopHandle;
@@ -63,7 +63,7 @@ export class SettingsService {
   getSlice<TKey extends string, TSchema extends AnySchema>(
     slice: SliceDefinition<TKey, TSchema>,
   ): SliceHandle<InferOutput<TSchema>> {
-    if (!this.#sliceKeys.has(slice.key)) throw new UnregisteredSliceError(slice.key);
+    if (!this.#registeredSliceKeys.has(slice.key)) throw new UnregisteredSliceError(slice.key);
     const root = this.#root;
     return {
       get state(): InferOutput<TSchema> {
@@ -99,7 +99,6 @@ export class SettingsService {
   #hydrate(migrated: Record<string, unknown>): void {
     for (const definition of this.#slices) {
       this.#root[definition.key] = parseSliceValue(definition, migrated[definition.key], this.#logger);
-      this.#sliceKeys.add(definition.key);
     }
     for (const definition of this.#collections) {
       this.#root[definition.key] = {};
