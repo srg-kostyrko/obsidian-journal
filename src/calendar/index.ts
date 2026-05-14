@@ -17,3 +17,7 @@ export { type AnchorString } from "./types";
 export { DateTimeError, IntervalError, ParseError } from "./errors";
 
 export { CalendarModule } from "./module";
+
+export { weekPresets, detectCurrentPreset, type WeekPreset } from "./presets";
+export { calendarSlice, type CalendarSliceState } from "./settings/slice";
+export { calendarSettingsModule } from "./settings/module";
