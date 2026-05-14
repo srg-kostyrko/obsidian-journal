@@ -25,6 +25,7 @@
       }
     }
   ],
+  "calendar_preset_custom_summary": "Week starts on {dayName}. First week of year includes Jan {firstDayOfYear}.",
   "calendar_preset_iso_used": "EU (excluding Portugal) and most other European countries, most of Asia and Oceania.",
   "calendar_preset_middle_eastern_used": "Much of the Middle East.",
   "calendar_preset_name": [

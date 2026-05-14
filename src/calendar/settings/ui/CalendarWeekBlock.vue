@@ -1,7 +1,8 @@
 <script setup lang="ts">
 import { computed } from "vue";
 
-import { detectCurrentPreset } from "@/calendar/presets";
+import { Calendar } from "@/calendar/calendar";
+import { detectCurrentPreset, type WeekPreset } from "@/calendar/presets";
 import { m } from "@/i18n";
 import { useService } from "@/infrastructure/di";
 import { useModalService } from "@/infrastructure/host/modals";
@@ -14,16 +15,29 @@ import { calendarSlice } from "../slice";
 
 import { weekPresetPickerModal } from "./week-preset-picker-modal";
 
+type ActivePreset = "locale" | WeekPreset["id"] | "custom";
+
 const settings = useService(SettingsService);
+const calendar = useService(Calendar);
 const modals = useModalService();
 const slice = settings.getSlice(calendarSlice);
 
-const presetSummary = computed(() => {
-  const state = slice.state;
-  if (state.mode === "locale") return m.calendar_preset_description({ preset: "locale" });
-  const detected = detectCurrentPreset({ dow: state.dow, doy: state.doy });
-  const presetId = detected === "custom" ? "custom" : detected.id;
-  return m.calendar_preset_description({ preset: presetId });
+const activePreset = computed<ActivePreset>(() => {
+  if (slice.state.mode === "locale") return "locale";
+  const detected = detectCurrentPreset({ dow: slice.state.dow, doy: slice.state.doy });
+  return detected === "custom" ? "custom" : detected.id;
+});
+
+const activeDescription = computed(() => {
+  const preset = activePreset.value;
+  if (preset === "custom" && slice.state.mode === "custom") {
+    const { dow, doy } = slice.state;
+    return m.calendar_preset_custom_summary({
+      dayName: calendar.weekdays()[dow] ?? "",
+      firstDayOfYear: 7 + dow - doy,
+    });
+  }
+  return m.calendar_preset_description({ preset });
 });
 
 const globalRef = computed({
@@ -43,7 +57,10 @@ function change(): void {
 
 <template>
   <UiSettingRow heading :name="m.calendar_week_config_title()">
-    <template #description>{{ presetSummary }}</template>
+    <template #description>
+      <div class="preset-name">{{ m.calendar_preset_name({ preset: activePreset }) }}</div>
+      <div class="whitespace">{{ activeDescription }}</div>
+    </template>
     <UiButton @click="change">{{ m.calendar_week_config_change() }}</UiButton>
   </UiSettingRow>
   <UiSettingRow v-if="slice.state.mode === 'custom'" :name="m.calendar_apply_globally_title()">
@@ -56,6 +73,13 @@ function change(): void {
 </template>
 
 <style scoped>
+.preset-name {
+  font-weight: var(--font-semibold);
+  margin-bottom: var(--size-2-1);
+}
+.whitespace {
+  white-space: pre-line;
+}
 .journal-hint {
   color: var(--text-warning);
 }

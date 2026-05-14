@@ -22,6 +22,12 @@ export class TFolder extends TAbstractFile {
   }
 }
 
+export function getIcon(name: string): SVGSVGElement | null {
+  const svg = document.createElementNS("http://www.w3.org/2000/svg", "svg");
+  svg.setAttribute("data-icon", name);
+  return svg;
+}
+
 export function normalizePath(path: string): string {
   return path
     .replaceAll(/\\/g, "/")

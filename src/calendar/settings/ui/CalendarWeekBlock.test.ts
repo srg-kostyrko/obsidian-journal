@@ -2,6 +2,7 @@ import userEvent from "@testing-library/user-event";
 import { cleanup, render, screen } from "@testing-library/vue";
 import { afterEach, describe, expect, it, vi } from "vitest";
 
+import { Calendar } from "@/calendar";
 import { m } from "@/i18n";
 import { provideInjectorOnApp, type Container } from "@/infrastructure/di";
 import { ModalService } from "@/infrastructure/host/modals";
@@ -24,6 +25,7 @@ function setupContainer(initial?: CalendarSliceState) {
     open: vi.fn(),
   } as unknown as ModalService;
   container.register(ModalService).useValue(modalService);
+  container.register(Calendar).useValue(new Calendar());
 
   return { container, settings: settings.service, modalService };
 }
@@ -76,6 +78,22 @@ describe("CalendarWeekBlock", () => {
     mount(container);
     await userEvent.click(screen.getByText(m.calendar_week_config_change()));
     expect(modalService.open).toHaveBeenCalledWith(weekPresetPickerModal, { current: { mode: "locale" } });
+  });
+
+  it("shows the active preset name in the description", async () => {
+    const { container, settings } = setupContainer({ mode: "custom", dow: 1, doy: 4, global: false });
+    await settings.initialize();
+    mount(container);
+    expect(screen.getByText(m.calendar_preset_name({ preset: "iso-8601" }))).toBeTruthy();
+  });
+
+  it("shows a dynamic summary when the current week settings do not match a named preset", async () => {
+    const { container, settings } = setupContainer({ mode: "custom", dow: 3, doy: 7, global: false });
+    await settings.initialize();
+    mount(container);
+    expect(screen.getByText(m.calendar_preset_name({ preset: "custom" }))).toBeTruthy();
+    expect(screen.getByText(/Wednesday/)).toBeTruthy();
+    expect(screen.getByText(/Jan 3\b/)).toBeTruthy();
   });
 
   it("updates the slice state when the modal resolves Ok", async () => {

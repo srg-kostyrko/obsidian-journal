@@ -8,6 +8,7 @@ import { useService } from "@/infrastructure/di";
 import { useModal } from "@/infrastructure/host/modals";
 import UiButton from "@/ui/UiButton.vue";
 import UiDropdown from "@/ui/UiDropdown.vue";
+import UiIcon from "@/ui/UiIcon.vue";
 import UiNumberInput from "@/ui/UiNumberInput.vue";
 import UiSettingRow from "@/ui/UiSettingRow.vue";
 
@@ -25,7 +26,8 @@ function initialChoice(): LocalChoice {
 }
 
 const calendar = useService(Calendar);
-const localChoice = ref<LocalChoice>(initialChoice());
+const savedChoice: LocalChoice = initialChoice();
+const localChoice = ref<LocalChoice>(savedChoice);
 const customDow = ref<string>(props.current.mode === "custom" ? String(props.current.dow) : "1");
 const customFirstDay = ref<number>(props.current.mode === "custom" ? 7 + props.current.dow - props.current.doy : 4);
 const stagedGlobal = props.current.mode === "custom" ? props.current.global : false;
@@ -75,7 +77,8 @@ function presetUsed(preset: WeekPreset): string {
   <div>
     <UiSettingRow :name="m.calendar_preset_name({ preset: 'locale' })">
       <template #description>{{ m.calendar_preset_description({ preset: "locale" }) }}</template>
-      <span v-if="localChoice === 'locale'">{{ m.calendar_picker_in_use_marker() }}</span>
+      <span v-if="savedChoice === 'locale'">{{ m.calendar_picker_in_use_marker() }}</span>
+      <UiIcon v-if="localChoice === 'locale'" name="lucide-check" />
       <UiButton v-else @click="pickLocale">{{ m.calendar_picker_use_action() }}</UiButton>
     </UiSettingRow>
 
@@ -84,13 +87,15 @@ function presetUsed(preset: WeekPreset): string {
         <div class="whitespace">{{ m.calendar_preset_description({ preset: preset.id }) }}</div>
         <div>{{ presetUsed(preset) }}</div>
       </template>
-      <span v-if="localChoice === preset.id">{{ m.calendar_picker_in_use_marker() }}</span>
+      <span v-if="savedChoice === preset.id">{{ m.calendar_picker_in_use_marker() }}</span>
+      <UiIcon v-if="localChoice === preset.id" name="lucide-check" />
       <UiButton v-else @click="pickPreset(preset)">{{ m.calendar_picker_use_action() }}</UiButton>
     </UiSettingRow>
 
     <UiSettingRow :name="m.calendar_preset_name({ preset: 'custom' })">
       <template #description>{{ m.calendar_preset_description({ preset: "custom" }) }}</template>
-      <span v-if="localChoice === 'custom'">{{ m.calendar_picker_in_use_marker() }}</span>
+      <span v-if="savedChoice === 'custom'">{{ m.calendar_picker_in_use_marker() }}</span>
+      <UiIcon v-if="localChoice === 'custom'" name="lucide-check" />
       <UiButton v-else @click="pickCustom">{{ m.calendar_picker_use_action() }}</UiButton>
     </UiSettingRow>
 

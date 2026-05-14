@@ -90,6 +90,23 @@ describe("WeekPresetPickerModal", () => {
     expect(api.submit).toHaveBeenCalledWith({ mode: "custom", dow: 3, doy: 8, global: false });
   });
 
+  it("shows the Currently used marker on the saved row, not the staged row", async () => {
+    const api: ModalApi<CalendarSliceState> = { submit: vi.fn(), cancel: vi.fn() };
+    mountModal({ mode: "custom", dow: 1, doy: 4, global: false }, api);
+
+    const isoRow = rowFor(m.calendar_preset_name({ preset: "iso-8601" }));
+    expect(isoRow.textContent).toContain(m.calendar_picker_in_use_marker());
+
+    const westernRow = rowFor(m.calendar_preset_name({ preset: "western" }));
+    await userEvent.click(westernRow.querySelector("button")!);
+    expect(rowFor(m.calendar_preset_name({ preset: "iso-8601" })).textContent).toContain(
+      m.calendar_picker_in_use_marker(),
+    );
+    expect(rowFor(m.calendar_preset_name({ preset: "western" })).textContent).not.toContain(
+      m.calendar_picker_in_use_marker(),
+    );
+  });
+
   it("cancels via the api when the Cancel button is clicked", async () => {
     const api: ModalApi<CalendarSliceState> = { submit: vi.fn(), cancel: vi.fn() };
     mountModal({ mode: "locale" }, api);
