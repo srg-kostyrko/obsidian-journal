@@ -6,7 +6,7 @@
 
 **Architecture:** A discriminated `calendarSlice` (`mode: "locale" | "custom"`) lives in `src/calendar/settings/`. `Calendar` (in `src/calendar/calendar.ts`) gains an `applyWeekConfig(week, { global })` method and captures the boot locale's week. `CalendarSettingsBridge` is eager, `watchEffect`-subscribes to slice state, and calls `applyWeekConfig` — so `Calendar` never resolves settings (the contract from the v3 calendar spec). UI: `CalendarWeekBlock.vue` dashboard block + `WeekPresetPickerModal.vue` opened via `ModalService`. New paraglide messages cover all UI copy.
 
-**Tech Stack:** TypeScript, Vue 3 (SFCs + `<script setup>`), valibot (slice schema), ts-pattern (variant dispatch), moment.js (locale mutation via `Calendar` only), Vitest + @testing-library/vue, paraglide (manually authored `*.js` message files committed under `src/i18n/paraglide/messages/`).
+**Tech Stack:** TypeScript, Vue 3 (SFCs + `<script setup>`), valibot (slice schema), ts-pattern (variant dispatch), moment.js (locale mutation via `Calendar` only), Vitest + @testing-library/vue, paraglide (authored `messages/en.json`, compiled into `src/i18n/paraglide/` via the inlang plugin-message-format and `paraglideVitePlugin`).
 
 **Spec:** `docs/superpowers/specs/2026-05-14-v3-calendar-settings-design.md`
 
@@ -16,6 +16,9 @@
 
 **Create:**
 
+- `messages/en.json` — paraglide source (Task 0 creates the file; Task 4 adds calendar keys)
+- `project.inlang/settings.json` — inlang plugin config (Task 0)
+- `project.inlang/project_id` — inlang generated marker (Task 0)
 - `src/calendar/presets.ts` — `WeekPreset` type, `weekPresets` array, `detectCurrentPreset`
 - `src/calendar/presets.test.ts`
 - `src/calendar/settings/slice.ts` — `calendarSlice`, `calendarSliceSchema`, `CalendarSliceState`
@@ -28,16 +31,122 @@
 - `src/calendar/settings/ui/WeekPresetPickerModal.vue`
 - `src/calendar/settings/ui/WeekPresetPickerModal.test.ts`
 - `src/calendar/settings/ui/week-preset-picker-modal.ts` — `defineModal` definition
-- `src/i18n/paraglide/messages/calendar_week_*.js` — one file per new message (full list in Task 4)
 
 **Modify:**
 
+- `package.json` — add `@inlang/paraglide-js` dep (Task 0)
+- `vite.config.mts` — wire `paraglideVitePlugin({ project: "./project.inlang", outdir: "./src/i18n/paraglide" })` (Task 0)
 - `src/calendar/calendar.ts` — add `applyWeekConfig`, capture boot locale, drop `WeekConfig` constructor arg
 - `src/calendar/calendar.test.ts` — covers `applyWeekConfig` paths (currently missing; add)
 - `src/calendar/testing.ts` — update `installTestCalendar` for new no-arg `Calendar()`
 - `src/calendar/index.ts` — re-export `weekPresets`, `detectCurrentPreset`, `WeekPreset`, `calendarSlice`, `CalendarSliceState`, `calendarSettingsModule`
-- `src/i18n/paraglide/messages/_index.js` — re-export each new message file
 - `src/main.ts` — `container.addModule(calendarSettingsModule)` after `settingsModule` and `CalendarModule`
+
+**Generated (gitignored, not edited by hand):**
+
+- `src/i18n/paraglide/**/*.js` — paraglide-emitted output. The `src/i18n/paraglide/.gitignore` already excludes everything in this directory; the vite plugin from Task 0 regenerates these files on every build (and they need to be regenerated for tests to pick up new keys — see Task 4 Step 4).
+
+---
+
+## Task 0: i18n source scaffolding (prereq)
+
+**Background.** The currently committed `src/i18n/init-locale.ts` + `@/i18n` barrel were wired in commit `58cbb714`, but the paraglide _source_ (`messages/en.json`) + inlang config + vite plugin were never brought to `v3-ai`. They exist on `v3-dev-ai`. Without them, paraglide's vite plugin doesn't run, no `m.*` functions exist, and the `src/i18n/paraglide/messages/*.js` files seen on disk are stale artifacts from an earlier setup (and gitignored). This task brings the minimum scaffolding needed so Task 4 can author messages as data.
+
+**Note.** This task introduces paraglide's compiler. The `src/i18n/paraglide/` directory will be regenerated on every build/test run from `messages/en.json`. Existing untracked `.js` files in that directory will be replaced; that's expected and harmless.
+
+**Files:**
+
+- Create: `messages/en.json`
+- Create: `project.inlang/settings.json`
+- Modify: `package.json`
+- Modify: `vite.config.mts`
+
+- [ ] **Step 1: Install the paraglide dependency**
+
+```bash
+npm install --save @inlang/paraglide-js@^2.15.2
+```
+
+Also add a compile script to `package.json` under `"scripts"` (a one-shot compile is needed before `npm test` because vitest doesn't run vite plugins):
+
+```diff
+   "scripts": {
+     "dev": "vite build --watch",
+     "build": "vite build",
++    "compile:i18n": "paraglide-js compile --project ./project.inlang",
+     "version": "node version-bump.mjs && git add manifest.json manifest-beta.json versions.json",
+     "check:lint": "eslint .",
+     "test": "vitest run",
+```
+
+- [ ] **Step 2: Create `project.inlang/settings.json`**
+
+```json
+{
+  "baseLocale": "en",
+  "locales": ["en"],
+  "modules": ["https://cdn.jsdelivr.net/npm/@inlang/plugin-message-format@latest/dist/index.js"],
+  "plugin.inlang.messageFormat": {
+    "pathPattern": "./messages/{locale}.json"
+  }
+}
+```
+
+The pre-existing `project.inlang/.gitignore` already keeps everything except `settings.json` tracked, so nothing else under that directory needs git attention.
+
+- [ ] **Step 3: Create the minimal `messages/en.json`**
+
+```json
+{
+  "$schema": "https://inlang.com/schema/inlang-message-format"
+}
+```
+
+Task 4 will add the calendar keys. Other parts of the codebase that need i18n will add their own keys in their own work; we deliberately do NOT bulk-import v3-dev-ai's full en.json (out of scope — most of those keys reference v3-dev-ai-only features).
+
+- [ ] **Step 4: Wire `paraglideVitePlugin` in `vite.config.mts`**
+
+```ts
+// vite.config.mts (top of file, additional imports)
+import { paraglideVitePlugin } from "@inlang/paraglide-js";
+
+// inside plugins: [ ... ]
+plugins: [
+  paraglideVitePlugin({
+    project: "./project.inlang",
+    outdir: "./src/i18n/paraglide",
+  }),
+  vue(),
+  viteStaticCopy({ /* unchanged */ }),
+],
+```
+
+`outdir` must be `./src/i18n/paraglide` (not `./src/paraglide`) so the existing `@/i18n` barrel at `src/i18n/index.ts` (which does `export { m } from "./paraglide/messages.js"`) keeps resolving.
+
+- [ ] **Step 5: Run the compiler once and verify the output**
+
+```bash
+npm run compile:i18n
+ls src/i18n/paraglide/
+```
+
+Expected: `messages.js`, `runtime.js`, plus a `messages/` subdirectory. The empty `messages/en.json` produces a barebones output — there are no message functions yet, just the runtime bootstrap.
+
+- [ ] **Step 6: Verify the existing imports still resolve**
+
+```bash
+npm run check:types
+npm test
+```
+
+Expected: both pass. `src/main.ts` imports `initLocale` from `@/i18n`; `src/i18n/index.ts` re-exports `m` from `./paraglide/messages.js` (now regenerated). Existing tests should be unaffected.
+
+- [ ] **Step 7: Commit**
+
+```bash
+git add messages/en.json project.inlang/settings.json package.json package-lock.json vite.config.mts
+git commit -m "feat(i18n): wire paraglide compiler and minimal messages source"
+```
 
 ---
 
@@ -466,155 +575,134 @@ git commit -m "feat(calendar): add calendar settings slice"
 
 ---
 
-## Task 4: Paraglide messages for calendar settings UI
+## Task 4: Calendar settings i18n messages
 
-**Background.** Messages in this repo live as one `.js` file per key under `src/i18n/paraglide/messages/`, each exporting a `snake_case_name` function and re-exported via `_index.js`. Call sites use `m.snake_case_name(...)`. There is no JSON source — files are authored directly. The boilerplate is shown for one file; the same pattern applies to each.
+**Background.** Per Task 0, `messages/en.json` is the authored source; paraglide compiles it to `src/i18n/paraglide/messages/*.js`. To author UI copy, add keys to the JSON file and run `npm run compile:i18n`. Call sites then use `m.<snake_case_key>()` from `@/i18n`.
 
 **Files:**
 
-- Create: 12 new files under `src/i18n/paraglide/messages/`
-- Modify: `src/i18n/paraglide/messages/_index.js`
+- Modify: `messages/en.json`
 
-**Message list** (English copy in the message bodies):
+**Keys to add** (all are plain strings, no inputs):
 
-| File                                            | Function name                                | English output                                                                                                                                                  |
-| ----------------------------------------------- | -------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `calendar_week_config_title.js`                 | `calendar_week_config_title`                 | `Week configuration`                                                                                                                                            |
-| `calendar_week_config_change.js`                | `calendar_week_config_change`                | `Change`                                                                                                                                                        |
-| `calendar_apply_globally_title.js`              | `calendar_apply_globally_title`              | `Apply week configuration to all dates in vault?`                                                                                                               |
-| `calendar_apply_globally_desc.js`               | `calendar_apply_globally_desc`               | `If disabled, week-configuration settings apply only to dates inside journals and do not affect dates created by other plugins or Obsidian itself.`             |
-| `calendar_apply_globally_restart_hint.js`       | `calendar_apply_globally_restart_hint`       | `You might need to restart Obsidian for changes to take effect.`                                                                                                |
-| `calendar_preset_picker_title.js`               | `calendar_preset_picker_title`               | `Week configuration`                                                                                                                                            |
-| `calendar_preset_locale_name.js`                | `calendar_preset_locale_name`                | `Follow system locale`                                                                                                                                          |
-| `calendar_preset_locale_description.js`         | `calendar_preset_locale_description`         | `Use the week settings defined by Obsidian's current locale.`                                                                                                   |
-| `calendar_preset_iso_name.js`                   | `calendar_preset_iso_name`                   | `ISO 8601`                                                                                                                                                      |
-| `calendar_preset_iso_description.js`            | `calendar_preset_iso_description`            | `Week starts on Monday. First week of year includes the first Thursday (Jan 4th).`                                                                              |
-| `calendar_preset_iso_used.js`                   | `calendar_preset_iso_used`                   | `EU (excluding Portugal) and most other European countries, most of Asia and Oceania.`                                                                          |
-| `calendar_preset_western_name.js`               | `calendar_preset_western_name`               | `Western traditional`                                                                                                                                           |
-| `calendar_preset_western_description.js`        | `calendar_preset_western_description`        | `Week starts on Sunday. First week of year includes the first Saturday (Jan 1st).`                                                                              |
-| `calendar_preset_western_used.js`               | `calendar_preset_western_used`               | `Canada, United States, Iceland, Portugal, Japan, Taiwan, Thailand, Hong Kong, Macau, Israel, Egypt, South Africa, the Philippines, and most of Latin America.` |
-| `calendar_preset_middle_eastern_name.js`        | `calendar_preset_middle_eastern_name`        | `Middle Eastern`                                                                                                                                                |
-| `calendar_preset_middle_eastern_description.js` | `calendar_preset_middle_eastern_description` | `Week starts on Saturday. First week of year includes the first Friday (Jan 1st).`                                                                              |
-| `calendar_preset_middle_eastern_used.js`        | `calendar_preset_middle_eastern_used`        | `Much of the Middle East.`                                                                                                                                      |
-| `calendar_preset_custom_name.js`                | `calendar_preset_custom_name`                | `Custom`                                                                                                                                                        |
-| `calendar_preset_custom_description.js`         | `calendar_preset_custom_description`         | `Define what day of week to treat as first and how the first week of year is determined.`                                                                       |
-| `calendar_picker_use_action.js`                 | `calendar_picker_use_action`                 | `Use`                                                                                                                                                           |
-| `calendar_picker_in_use_marker.js`              | `calendar_picker_in_use_marker`              | `Currently used`                                                                                                                                                |
-| `calendar_picker_start_week_on.js`              | `calendar_picker_start_week_on`              | `Start week on`                                                                                                                                                 |
-| `calendar_picker_start_week_on_desc.js`         | `calendar_picker_start_week_on_desc`         | `Which day to treat as the first day of the week.`                                                                                                              |
-| `calendar_picker_first_week_label.js`           | `calendar_picker_first_week_label`           | `First week of year`                                                                                                                                            |
-| `calendar_picker_first_week_desc.js`            | `calendar_picker_first_week_desc`            | `Which day in January the first week of the year must contain (1..7).`                                                                                          |
-| `calendar_picker_update_action.js`              | `calendar_picker_update_action`              | `Update`                                                                                                                                                        |
-| `calendar_day_sunday.js`                        | `calendar_day_sunday`                        | `Sunday`                                                                                                                                                        |
-| `calendar_day_monday.js`                        | `calendar_day_monday`                        | `Monday`                                                                                                                                                        |
-| `calendar_day_tuesday.js`                       | `calendar_day_tuesday`                       | `Tuesday`                                                                                                                                                       |
-| `calendar_day_wednesday.js`                     | `calendar_day_wednesday`                     | `Wednesday`                                                                                                                                                     |
-| `calendar_day_thursday.js`                      | `calendar_day_thursday`                      | `Thursday`                                                                                                                                                      |
-| `calendar_day_friday.js`                        | `calendar_day_friday`                        | `Friday`                                                                                                                                                        |
-| `calendar_day_saturday.js`                      | `calendar_day_saturday`                      | `Saturday`                                                                                                                                                      |
+| Key                                          | English output                                                                                                                                                  |
+| -------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `calendar_week_config_title`                 | `Week configuration`                                                                                                                                            |
+| `calendar_week_config_change`                | `Change`                                                                                                                                                        |
+| `calendar_apply_globally_title`              | `Apply week configuration to all dates in vault?`                                                                                                               |
+| `calendar_apply_globally_desc`               | `If disabled, week-configuration settings apply only to dates inside journals and do not affect dates created by other plugins or Obsidian itself.`             |
+| `calendar_apply_globally_restart_hint`       | `You might need to restart Obsidian for changes to take effect.`                                                                                                |
+| `calendar_preset_picker_title`               | `Week configuration`                                                                                                                                            |
+| `calendar_preset_locale_name`                | `Follow system locale`                                                                                                                                          |
+| `calendar_preset_locale_description`         | `Use the week settings defined by Obsidian's current locale.`                                                                                                   |
+| `calendar_preset_iso_name`                   | `ISO 8601`                                                                                                                                                      |
+| `calendar_preset_iso_description`            | `Week starts on Monday. First week of year includes the first Thursday (Jan 4th).`                                                                              |
+| `calendar_preset_iso_used`                   | `EU (excluding Portugal) and most other European countries, most of Asia and Oceania.`                                                                          |
+| `calendar_preset_western_name`               | `Western traditional`                                                                                                                                           |
+| `calendar_preset_western_description`        | `Week starts on Sunday. First week of year includes the first Saturday (Jan 1st).`                                                                              |
+| `calendar_preset_western_used`               | `Canada, United States, Iceland, Portugal, Japan, Taiwan, Thailand, Hong Kong, Macau, Israel, Egypt, South Africa, the Philippines, and most of Latin America.` |
+| `calendar_preset_middle_eastern_name`        | `Middle Eastern`                                                                                                                                                |
+| `calendar_preset_middle_eastern_description` | `Week starts on Saturday. First week of year includes the first Friday (Jan 1st).`                                                                              |
+| `calendar_preset_middle_eastern_used`        | `Much of the Middle East.`                                                                                                                                      |
+| `calendar_preset_custom_name`                | `Custom`                                                                                                                                                        |
+| `calendar_preset_custom_description`         | `Define what day of week to treat as first and how the first week of year is determined.`                                                                       |
+| `calendar_picker_use_action`                 | `Use`                                                                                                                                                           |
+| `calendar_picker_in_use_marker`              | `Currently used`                                                                                                                                                |
+| `calendar_picker_start_week_on`              | `Start week on`                                                                                                                                                 |
+| `calendar_picker_start_week_on_desc`         | `Which day to treat as the first day of the week.`                                                                                                              |
+| `calendar_picker_first_week_label`           | `First week of year`                                                                                                                                            |
+| `calendar_picker_first_week_desc`            | `Which day in January the first week of the year must contain (1..7).`                                                                                          |
+| `calendar_picker_update_action`              | `Update`                                                                                                                                                        |
+| `calendar_picker_cancel_action`              | `Cancel`                                                                                                                                                        |
+| `calendar_day_sunday`                        | `Sunday`                                                                                                                                                        |
+| `calendar_day_monday`                        | `Monday`                                                                                                                                                        |
+| `calendar_day_tuesday`                       | `Tuesday`                                                                                                                                                       |
+| `calendar_day_wednesday`                     | `Wednesday`                                                                                                                                                     |
+| `calendar_day_thursday`                      | `Thursday`                                                                                                                                                      |
+| `calendar_day_friday`                        | `Friday`                                                                                                                                                        |
+| `calendar_day_saturday`                      | `Saturday`                                                                                                                                                      |
 
-- [ ] **Step 1: Create each message file using this template**
+Per the test-hygiene rules (`feedback_no_wiring_tests`, `feedback_no_trivial_tests`) there are no unit tests for the message file — its content is asserted by the component tests in Tasks 6 and 7 (which `await userEvent.click(screen.getByText(m.calendar_*()))`).
 
-Example for `calendar_week_config_title.js` (replace the `en_…` constant name, the wrapper name, the JSDoc table, and the English string for every file):
+- [ ] **Step 1: Add each key to `messages/en.json`**
 
-```js
-/* eslint-disable */
-import { getLocale, experimentalStaticLocale } from "../runtime.js";
+After Task 0, the file looks like:
 
-/** @typedef {import('../runtime.js').LocalizedString} LocalizedString */
-
-/** @typedef {{}} Calendar_Week_Config_TitleInputs */
-
-const en_calendar_week_config_title =
-  /** @type {(inputs: Calendar_Week_Config_TitleInputs) => LocalizedString} */ () => {
-    return /** @type {LocalizedString} */ (`Week configuration`);
-  };
-
-/**
- * | output |
- * | --- |
- * | "Week configuration" |
- *
- * @param {Calendar_Week_Config_TitleInputs} inputs
- * @param {{ locale?: "en" }} options
- * @returns {LocalizedString}
- */
-export const calendar_week_config_title =
-  /** @type {((inputs?: Calendar_Week_Config_TitleInputs, options?: { locale?: "en" }) => LocalizedString) & import('../runtime.js').MessageMetadata<Calendar_Week_Config_TitleInputs, { locale?: "en" }, {}>} */ (
-    (inputs = {}, options = {}) => {
-      experimentalStaticLocale ?? options.locale ?? getLocale();
-      return en_calendar_week_config_title(inputs);
-    }
-  );
+```json
+{
+  "$schema": "https://inlang.com/schema/inlang-message-format"
+}
 ```
 
-For each row in the table above, copy this template and substitute four things:
+Replace it with the full set (key order doesn't affect output; alphabetical kept for ease of review):
 
-1. Filename and the public `export const <function_name>` name → from the table.
-2. Internal `en_<function_name>` constant name.
-3. PascalCase inputs typedef name (`Calendar_Week_Config_TitleInputs` form).
-4. The English string inside the inner factory and the JSDoc `| "..." |` table row.
+```json
+{
+  "$schema": "https://inlang.com/schema/inlang-message-format",
 
-No message needs parameters, so the inputs type stays `{}` for all of them.
-
-- [ ] **Step 2: Append the new exports to `src/i18n/paraglide/messages/_index.js`**
-
-Locate the end of `_index.js` and append (one line per message file, in the same order as the table; preserve the existing trailing newline pattern):
-
-```js
-export * from "./calendar_week_config_title.js";
-export * from "./calendar_week_config_change.js";
-export * from "./calendar_apply_globally_title.js";
-export * from "./calendar_apply_globally_desc.js";
-export * from "./calendar_apply_globally_restart_hint.js";
-export * from "./calendar_preset_picker_title.js";
-export * from "./calendar_preset_locale_name.js";
-export * from "./calendar_preset_locale_description.js";
-export * from "./calendar_preset_iso_name.js";
-export * from "./calendar_preset_iso_description.js";
-export * from "./calendar_preset_iso_used.js";
-export * from "./calendar_preset_western_name.js";
-export * from "./calendar_preset_western_description.js";
-export * from "./calendar_preset_western_used.js";
-export * from "./calendar_preset_middle_eastern_name.js";
-export * from "./calendar_preset_middle_eastern_description.js";
-export * from "./calendar_preset_middle_eastern_used.js";
-export * from "./calendar_preset_custom_name.js";
-export * from "./calendar_preset_custom_description.js";
-export * from "./calendar_picker_use_action.js";
-export * from "./calendar_picker_in_use_marker.js";
-export * from "./calendar_picker_start_week_on.js";
-export * from "./calendar_picker_start_week_on_desc.js";
-export * from "./calendar_picker_first_week_label.js";
-export * from "./calendar_picker_first_week_desc.js";
-export * from "./calendar_picker_update_action.js";
-export * from "./calendar_day_sunday.js";
-export * from "./calendar_day_monday.js";
-export * from "./calendar_day_tuesday.js";
-export * from "./calendar_day_wednesday.js";
-export * from "./calendar_day_thursday.js";
-export * from "./calendar_day_friday.js";
-export * from "./calendar_day_saturday.js";
+  "calendar_apply_globally_desc": "If disabled, week-configuration settings apply only to dates inside journals and do not affect dates created by other plugins or Obsidian itself.",
+  "calendar_apply_globally_restart_hint": "You might need to restart Obsidian for changes to take effect.",
+  "calendar_apply_globally_title": "Apply week configuration to all dates in vault?",
+  "calendar_day_friday": "Friday",
+  "calendar_day_monday": "Monday",
+  "calendar_day_saturday": "Saturday",
+  "calendar_day_sunday": "Sunday",
+  "calendar_day_thursday": "Thursday",
+  "calendar_day_tuesday": "Tuesday",
+  "calendar_day_wednesday": "Wednesday",
+  "calendar_picker_cancel_action": "Cancel",
+  "calendar_picker_first_week_desc": "Which day in January the first week of the year must contain (1..7).",
+  "calendar_picker_first_week_label": "First week of year",
+  "calendar_picker_in_use_marker": "Currently used",
+  "calendar_picker_start_week_on": "Start week on",
+  "calendar_picker_start_week_on_desc": "Which day to treat as the first day of the week.",
+  "calendar_picker_update_action": "Update",
+  "calendar_picker_use_action": "Use",
+  "calendar_preset_custom_description": "Define what day of week to treat as first and how the first week of year is determined.",
+  "calendar_preset_custom_name": "Custom",
+  "calendar_preset_iso_description": "Week starts on Monday. First week of year includes the first Thursday (Jan 4th).",
+  "calendar_preset_iso_name": "ISO 8601",
+  "calendar_preset_iso_used": "EU (excluding Portugal) and most other European countries, most of Asia and Oceania.",
+  "calendar_preset_locale_description": "Use the week settings defined by Obsidian's current locale.",
+  "calendar_preset_locale_name": "Follow system locale",
+  "calendar_preset_middle_eastern_description": "Week starts on Saturday. First week of year includes the first Friday (Jan 1st).",
+  "calendar_preset_middle_eastern_name": "Middle Eastern",
+  "calendar_preset_middle_eastern_used": "Much of the Middle East.",
+  "calendar_preset_picker_title": "Week configuration",
+  "calendar_preset_western_description": "Week starts on Sunday. First week of year includes the first Saturday (Jan 1st).",
+  "calendar_preset_western_name": "Western traditional",
+  "calendar_preset_western_used": "Canada, United States, Iceland, Portugal, Japan, Taiwan, Thailand, Hong Kong, Macau, Israel, Egypt, South Africa, the Philippines, and most of Latin America.",
+  "calendar_week_config_change": "Change",
+  "calendar_week_config_title": "Week configuration"
+}
 ```
 
-- [ ] **Step 3: Verify the messages compile**
+- [ ] **Step 2: Regenerate paraglide output**
 
-Run: `npm run check:types`
-Expected: type-check passes (paraglide messages flow through JSDoc-typed JS; no TS errors should appear).
+```bash
+npm run compile:i18n
+```
 
-Run: `npm run check:lint`
-Expected: lint clean (each new `.js` file starts with `/* eslint-disable */` matching the existing pattern).
+Expected: paraglide writes `src/i18n/paraglide/messages.js`, `runtime.js`, and one `messages/<key>.js` per JSON key. The `src/i18n/paraglide/` directory is gitignored — these files are not committed.
+
+- [ ] **Step 3: Verify the generated functions resolve**
+
+```bash
+npm run check:types
+```
+
+Expected: type-check passes. The `@/i18n` barrel auto-exposes the new functions; later tasks use them as `m.calendar_week_config_title()` etc.
 
 - [ ] **Step 4: Commit**
 
 ```bash
-git add src/i18n/paraglide/messages/calendar_*.js src/i18n/paraglide/messages/_index.js
-git commit -m "feat(i18n): add calendar settings messages"
+git add messages/en.json
+git commit -m "feat(i18n): add calendar settings message keys"
 ```
 
-Per the test-hygiene rules (`feedback_no_wiring_tests`, `feedback_no_trivial_tests`) we don't write tests over paraglide message files — their content is asserted by use in component tests in later tasks.
+Only `messages/en.json` is committed — the regenerated `.js` files are gitignored build output. Subsequent contributors (and CI) regenerate them via `npm run compile:i18n` or via the vite plugin in `npm run build` / `npm run dev`.
 
----
+**Important for later tasks:** every time `messages/en.json` changes, `npm run compile:i18n` must be run before `npm test` so the test files resolve the new `m.*` functions. The compile step is fast (sub-second) so no caching strategy is needed.
 
 ## Task 5: `CalendarSettingsBridge`
 
@@ -862,13 +950,11 @@ describe("WeekPresetPickerModal", () => {
     const api: ModalApi<CalendarSliceState> = { submit: vi.fn(), cancel: vi.fn() };
     mountModal({ mode: "locale" }, api);
 
-    await userEvent.click(screen.getByText(m.modal_confirm_cancel_action_label()));
+    await userEvent.click(screen.getByText(m.calendar_picker_cancel_action()));
     expect(api.cancel).toHaveBeenCalled();
   });
 });
 ```
-
-> **Note on shared modal-cancel label:** the modal uses the existing `m.modal_confirm_cancel_action_label()` for the Cancel button to match the other modals (verify the key in `src/i18n/paraglide/messages/_index.js` — the first line of `_index.js` lists modal confirm labels). If the actual label key differs, swap it in both the component and the test.
 
 - [ ] **Step 2: Run tests to verify they fail**
 
@@ -1031,7 +1117,7 @@ function presetUsed(preset: WeekPreset): string {
     </template>
 
     <UiSettingRow>
-      <UiButton @click="props.api.cancel()">{{ m.modal_confirm_cancel_action_label() }}</UiButton>
+      <UiButton @click="props.api.cancel()">{{ m.calendar_picker_cancel_action() }}</UiButton>
       <UiButton cta @click="update">{{ m.calendar_picker_update_action() }}</UiButton>
     </UiSettingRow>
   </div>
@@ -1047,7 +1133,7 @@ function presetUsed(preset: WeekPreset): string {
 - [ ] **Step 5: Run tests to verify they pass**
 
 Run: `npm test -- --run src/calendar/settings/ui/WeekPresetPickerModal.test.ts`
-Expected: PASS (5 tests). If a test fails because the cancel label key differs from `modal_confirm_cancel_action_label`, grep `src/i18n/paraglide/messages/_index.js` for the actual key and substitute in both the test and the component.
+Expected: PASS (5 tests).
 
 - [ ] **Step 6: Commit**
 
