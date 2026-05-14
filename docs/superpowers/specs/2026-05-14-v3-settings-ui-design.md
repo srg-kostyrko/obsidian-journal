@@ -225,8 +225,8 @@ export interface SubpageNav {
 ```ts
 // src/settings/tokens.ts (additions; existing slice/collection/migration
 // tokens unchanged)
-export const DashboardBlockToken = createMultiToken<DashboardBlock>("settings.DashboardBlock");
-export const SubpageToken = createMultiToken<Subpage<unknown>>("settings.Subpage");
+export const DashboardBlockToken = createMultiToken<DashboardBlock>("settings.dashboardBlock");
+export const SubpageToken = createMultiToken<Subpage<unknown>>("settings.subpage");
 ```
 
 ```ts
