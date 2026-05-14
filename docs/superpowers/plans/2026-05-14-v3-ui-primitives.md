@@ -881,19 +881,16 @@ git commit -m "feat(ui): add UiIconedRow primitive"
 - Create: `src/ui/UiCollapsibleBlock.vue`
 - Test: `src/ui/UiCollapsibleBlock.test.ts`
 
-This task pins the v3 behavior change vs v2: `defaultExpanded` is forwarded as the `expanded` model's default via `defineModel(..., { default: () => props.defaultExpanded ?? false })`. When the parent does not bind `v-model:expanded`, the default kicks in; when the parent does bind, the parent wins. v2 unconditionally wrote `expanded.value = true` during setup if `defaultExpanded` was true — that path is removed.
+V2 had a `defaultExpanded` prop alongside `v-model:expanded`. v3 drops `defaultExpanded` entirely and keeps only `v-model:expanded`: the parent owns the state. Callers that want an initially-expanded block seed their own ref (`const open = ref(true)` then `<UiCollapsibleBlock v-model:expanded="open">`). v2 callsites split cleanly — none used both — so no caller is left unsupported.
 
 - [ ] **Step 1: Write the failing test**
 
 Write to `src/ui/UiCollapsibleBlock.test.ts`:
 
 ```ts
-import { render } from "@testing-library/vue";
 import userEvent from "@testing-library/user-event";
+import { render } from "@testing-library/vue";
 import { describe, expect, it, vi } from "vitest";
-import { defineComponent, ref } from "vue";
-
-import { renderIcon } from "@/infrastructure/host";
 
 import UiCollapsibleBlock from "./UiCollapsibleBlock.vue";
 
@@ -901,79 +898,51 @@ vi.mock("@/infrastructure/host", () => ({
   renderIcon: vi.fn(() => null),
 }));
 
-function makeUncontrolledHarness(defaultExpanded?: boolean) {
-  const Host = defineComponent({
-    components: { UiCollapsibleBlock },
-    props: { defaultExpanded: { type: Boolean, default: undefined } },
-    template: `
-      <UiCollapsibleBlock :default-expanded="defaultExpanded">
-        <template #trigger>Title</template>
-        <div data-testid="body">Body</div>
-      </UiCollapsibleBlock>
-    `,
-  });
-  return render(Host, { props: { defaultExpanded } });
-}
-
-function makeControlledHarness(initial: boolean, defaultExpanded?: boolean) {
-  const expanded = ref(initial);
-  const Host = defineComponent({
-    components: { UiCollapsibleBlock },
-    props: { defaultExpanded: { type: Boolean, default: undefined } },
-    setup() {
-      return { expanded };
-    },
-    template: `
-      <UiCollapsibleBlock v-model:expanded="expanded" :default-expanded="defaultExpanded">
-        <template #trigger>Title</template>
-        <template #controls>
-          <button data-testid="ctrl" @click="$event => null">Ctrl</button>
-        </template>
-        <div data-testid="body">Body</div>
-      </UiCollapsibleBlock>
-    `,
-  });
-  const utils = render(Host, { props: { defaultExpanded } });
-  return { ...utils, expanded };
-}
-
 describe("UiCollapsibleBlock", () => {
-  describe("initial state", () => {
-    it("is collapsed when neither v-model nor defaultExpanded is provided", () => {
-      const { queryByTestId } = makeUncontrolledHarness();
-      expect(queryByTestId("body")).toBeNull();
+  it("does not render the default slot when expanded is false", () => {
+    const { queryByTestId } = render(UiCollapsibleBlock, {
+      props: { expanded: false },
+      slots: { trigger: "Title", default: "<div data-testid='body'>B</div>" },
     });
-
-    it("starts expanded when only defaultExpanded is true", () => {
-      const { queryByTestId } = makeUncontrolledHarness(true);
-      expect(queryByTestId("body")).not.toBeNull();
-    });
-
-    it("respects v-model=false even when defaultExpanded is true", () => {
-      const { queryByTestId } = makeControlledHarness(false, true);
-      expect(queryByTestId("body")).toBeNull();
-    });
+    expect(queryByTestId("body")).toBeNull();
   });
 
-  describe("interaction", () => {
-    it("flips the model when the trigger is clicked", async () => {
-      const { container, expanded } = makeControlledHarness(false);
-      const trigger = container.querySelector(".collapsible-trigger");
-      expect(trigger).not.toBeNull();
-      await userEvent.click(trigger!);
-      expect(expanded.value).toBe(true);
+  it("renders the default slot when expanded is true", () => {
+    const { queryByTestId } = render(UiCollapsibleBlock, {
+      props: { expanded: true },
+      slots: { trigger: "Title", default: "<div data-testid='body'>B</div>" },
     });
+    expect(queryByTestId("body")).not.toBeNull();
+  });
 
-    it("does not flip the model when clicking inside #controls", async () => {
-      const { getByTestId, expanded } = makeControlledHarness(false);
-      await userEvent.click(getByTestId("ctrl"));
-      expect(expanded.value).toBe(false);
+  it("emits update:expanded(true) when the trigger is clicked while collapsed", async () => {
+    const { container, emitted } = render(UiCollapsibleBlock, {
+      props: { expanded: false },
+      slots: { trigger: "Title" },
     });
+    await userEvent.click(container.querySelector(".collapsible-trigger")!);
+    expect(emitted("update:expanded")).toEqual([[true]]);
+  });
 
-    it("does not render the default slot while collapsed", () => {
-      const { queryByTestId } = makeControlledHarness(false);
-      expect(queryByTestId("body")).toBeNull();
+  it("emits update:expanded(false) when the trigger is clicked while expanded", async () => {
+    const { container, emitted } = render(UiCollapsibleBlock, {
+      props: { expanded: true },
+      slots: { trigger: "Title" },
     });
+    await userEvent.click(container.querySelector(".collapsible-trigger")!);
+    expect(emitted("update:expanded")).toEqual([[false]]);
+  });
+
+  it("does not emit update:expanded when clicking inside #controls", async () => {
+    const { getByTestId, emitted } = render(UiCollapsibleBlock, {
+      props: { expanded: false },
+      slots: {
+        trigger: "Title",
+        controls: "<button data-testid='ctrl'>Ctrl</button>",
+      },
+    });
+    await userEvent.click(getByTestId("ctrl"));
+    expect(emitted("update:expanded")).toBeUndefined();
   });
 });
 ```
@@ -993,8 +962,7 @@ import { computed } from "vue";
 
 import UiIcon from "./UiIcon.vue";
 
-const props = defineProps<{ defaultExpanded?: boolean }>();
-const expanded = defineModel<boolean>("expanded", { default: () => props.defaultExpanded ?? false });
+const expanded = defineModel<boolean>("expanded");
 
 const icon = computed(() => (expanded.value ? "chevron-down" : "chevron-right"));
 
@@ -1049,7 +1017,7 @@ function toggle() {
 - [ ] **Step 4: Run the test and confirm it passes**
 
 Run: `npm run test -- src/ui/UiCollapsibleBlock.test.ts`
-Expected: PASS (6 tests).
+Expected: PASS (5 tests).
 
 - [ ] **Step 5: Verify types and lint**
 
@@ -1063,7 +1031,7 @@ Expected: PASS.
 
 ```bash
 git add src/ui/UiCollapsibleBlock.vue src/ui/UiCollapsibleBlock.test.ts
-git commit -m "feat(ui): add UiCollapsibleBlock with defineModel default"
+git commit -m "feat(ui): add UiCollapsibleBlock with v-model:expanded"
 ```
 
 ---

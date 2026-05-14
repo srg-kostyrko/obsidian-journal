@@ -16,21 +16,21 @@ Port the thin Obsidian-styled Vue primitives from v2 (`src/_old-code/components/
 
 Port 13 primitives from v2, plus one Obsidian-host helper used by `UiIcon`.
 
-| v3 name              | v2 source                          | v3 refinement                                                                                                                                                  |
-| -------------------- | ---------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `UiButton`           | `obsidian/ObsidianButton.vue`      | none                                                                                                                                                           |
-| `UiTextInput`        | `obsidian/ObsidianTextInput.vue`   | none                                                                                                                                                           |
-| `UiNumberInput`      | `obsidian/ObsidianNumberInput.vue` | none                                                                                                                                                           |
-| `UiToggle`           | `obsidian/ObsidianToggle.vue`      | none                                                                                                                                                           |
-| `UiDropdown`         | `obsidian/ObsidianDropdown.vue`    | none                                                                                                                                                           |
-| `UiColorPicker`      | `obsidian/ObsidianColorPicker.vue` | none                                                                                                                                                           |
-| `UiIcon`             | `obsidian/ObsidianIcon.vue`        | reaches Obsidian via `renderIcon` re-export instead of importing `getIcon` directly                                                                            |
-| `UiIconButton`       | `obsidian/ObsidianIconButton.vue`  | composes `UiButton` + `UiIcon`                                                                                                                                 |
-| `UiSettingRow`       | `obsidian/ObsidianSetting.vue`     | `description` becomes a named slot; the `description` prop is dropped                                                                                          |
-| `UiFormErrors`       | `FormErrors.vue`                   | none                                                                                                                                                           |
-| `UiIconedRow`        | `IconedRow.vue`                    | uses `UiIcon`                                                                                                                                                  |
-| `UiCollapsibleBlock` | `CollapsibleBlock.vue`             | uses `UiIcon`; `defaultExpanded` is forwarded as the `expanded` model's default via `defineModel(..., { default })` instead of writing to the model from setup |
-| `UiButtonDropdown`   | `ButtonDropdown.vue`               | uses `UiButton`; unused `popoutPosition` ref dropped                                                                                                           |
+| v3 name              | v2 source                          | v3 refinement                                                                                                                                                            |
+| -------------------- | ---------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| `UiButton`           | `obsidian/ObsidianButton.vue`      | none                                                                                                                                                                     |
+| `UiTextInput`        | `obsidian/ObsidianTextInput.vue`   | none                                                                                                                                                                     |
+| `UiNumberInput`      | `obsidian/ObsidianNumberInput.vue` | none                                                                                                                                                                     |
+| `UiToggle`           | `obsidian/ObsidianToggle.vue`      | none                                                                                                                                                                     |
+| `UiDropdown`         | `obsidian/ObsidianDropdown.vue`    | none                                                                                                                                                                     |
+| `UiColorPicker`      | `obsidian/ObsidianColorPicker.vue` | none                                                                                                                                                                     |
+| `UiIcon`             | `obsidian/ObsidianIcon.vue`        | reaches Obsidian via `renderIcon` re-export instead of importing `getIcon` directly                                                                                      |
+| `UiIconButton`       | `obsidian/ObsidianIconButton.vue`  | composes `UiButton` + `UiIcon`                                                                                                                                           |
+| `UiSettingRow`       | `obsidian/ObsidianSetting.vue`     | `description` becomes a named slot; the `description` prop is dropped                                                                                                    |
+| `UiFormErrors`       | `FormErrors.vue`                   | none                                                                                                                                                                     |
+| `UiIconedRow`        | `IconedRow.vue`                    | uses `UiIcon`                                                                                                                                                            |
+| `UiCollapsibleBlock` | `CollapsibleBlock.vue`             | uses `UiIcon`; `defaultExpanded` is dropped — the component is purely controlled via `v-model:expanded` (parents that want an initial-expanded state seed their own ref) |
+| `UiButtonDropdown`   | `ButtonDropdown.vue`               | uses `UiButton`; unused `popoutPosition` ref dropped                                                                                                                     |
 
 ## Architecture
 
@@ -178,18 +178,10 @@ Renders `<UiIcon :name="icon"/>` plus a default slot in a flex container with `g
 ### `UiCollapsibleBlock`
 
 ```ts
-defineProps<{ defaultExpanded?: boolean }>();
-const expanded = defineModel<boolean>("expanded", { default: false });
+const expanded = defineModel<boolean>("expanded");
 ```
 
-`defaultExpanded` flows into the model via `defineModel`'s `default` option. When the parent does not bind `v-model:expanded`, the block starts in the `defaultExpanded` state. When the parent does bind `v-model:expanded`, the parent's value wins on first render — this is the deliberate behavior change versus v2, where the child would overwrite a `false` parent value with `true` if `defaultExpanded` was set. Concretely:
-
-- The `defineProps`/`defineModel` lines need to read the prop to derive the default. `defineModel`'s `default` factory runs once, only when the parent does not bind `v-model:expanded`:
-
-  ```ts
-  const props = defineProps<{ defaultExpanded?: boolean }>();
-  const expanded = defineModel<boolean>("expanded", { default: () => props.defaultExpanded ?? false });
-  ```
+Purely controlled — the parent owns the expanded state via `v-model:expanded`. v2's `defaultExpanded` prop is dropped: trying to make `defaultExpanded` coexist with `v-model` runs into Vue's Boolean-prop coercion (a missing `expanded` prop becomes `false`, indistinguishable from an explicit `false`), and every working v2 caller used either `v-model` or `defaultExpanded` but never both, so callers that want an initially-expanded block simply seed their own ref (`const open = ref(true)` then `<UiCollapsibleBlock v-model:expanded="open">`).
 
 Slots: `trigger` (label/title row), `controls` (right-aligned controls; click events are stopped from propagating to the toggle), default (renders only while `expanded` is true). The chevron icon (`chevron-down` / `chevron-right`) is rendered via `UiIcon` based on `expanded`.
 
@@ -237,12 +229,11 @@ Setup: `vi.mocked(renderIcon).mockReturnValue(svg)` against the host re-export (
 
 ### `UiCollapsibleBlock.test.ts`
 
-- collapsed by default when neither `defaultExpanded` nor v-model is provided
-- starts expanded when only `defaultExpanded` is true (uncontrolled path)
-- starts collapsed when `defaultExpanded` is true but parent passes `v-model:expanded="false"` (pins the v2 behavior change)
-- clicking the trigger flips the model
-- clicking inside the `controls` slot does not flip the model
-- default slot does not render while collapsed
+- default slot is not rendered when `expanded` is false
+- default slot is rendered when `expanded` is true
+- clicking the trigger emits `update:expanded(true)` while collapsed
+- clicking the trigger emits `update:expanded(false)` while expanded
+- clicking inside the `controls` slot does not emit `update:expanded`
 
 ### `UiButtonDropdown.test.ts`
 
