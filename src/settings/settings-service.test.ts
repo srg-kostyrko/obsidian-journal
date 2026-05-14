@@ -43,10 +43,6 @@ function build(
   for (const col of options.collections ?? [journalCollection]) {
     c.register(CollectionDefinitionToken).useValue(col as never);
   }
-  // The migration multi-token must always have at least one binding to satisfy DI.
-  // The identity entry (from === to) is filtered out by runMigrations.
-  const identity: Migration = { fromVersion: -1, toVersion: -1, migrate: (r) => r };
-  c.register(MigrationToken).useValue(identity);
   for (const m of options.migrations ?? []) {
     c.register(MigrationToken).useValue(m);
   }
