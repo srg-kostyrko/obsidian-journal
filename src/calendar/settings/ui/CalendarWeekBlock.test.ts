@@ -96,6 +96,16 @@ describe("CalendarWeekBlock", () => {
     expect(screen.getByText(/Jan 3\b/)).toBeTruthy();
   });
 
+  it("flips slice.state.global when the apply-globally toggle is clicked", async () => {
+    const { container, settings } = setupContainer({ mode: "custom", dow: 1, doy: 4, global: false });
+    await settings.initialize();
+    mount(container);
+    const toggle = screen.getByRole("checkbox");
+    await userEvent.click(toggle);
+    const state = settings.getSlice(calendarSlice).state;
+    expect(state).toEqual({ mode: "custom", dow: 1, doy: 4, global: true });
+  });
+
   it("updates the slice state when the modal resolves Ok", async () => {
     const { container, settings, modalService } = setupContainer();
     await settings.initialize();
