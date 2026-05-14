@@ -24,7 +24,6 @@ describe("UiToggle", () => {
     it("flips false to true", async () => {
       const { container, model } = renderHarness(false);
       const target = container.querySelector(".checkbox-container");
-      expect(target).not.toBeNull();
       await userEvent.click(target!);
       expect(model.value).toBe(true);
     });
