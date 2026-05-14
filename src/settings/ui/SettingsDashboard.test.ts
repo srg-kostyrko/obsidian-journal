@@ -8,7 +8,7 @@ import { DashboardBlockToken, SubpageToken } from "../tokens";
 
 import { defineDashboardBlock, defineSubpage } from "./schema";
 import { SettingsUiService } from "./settings-ui-service";
-import Shell from "./Shell.vue";
+import SettingsDashboard from "./SettingsDashboard.vue";
 
 import type { DashboardBlock, Subpage } from "./schema";
 
@@ -22,8 +22,8 @@ function block(key: string, order: number, label = key): DashboardBlock {
   return defineDashboardBlock({ key, component: blockComponent(label), order });
 }
 
-function renderShell() {
-  return h(Shell);
+function renderDashboard() {
+  return h(SettingsDashboard);
 }
 
 function buildHarness(
@@ -41,13 +41,13 @@ function buildHarness(
   const Harness = defineComponent({
     setup() {
       provideInjector(injector);
-      return renderShell;
+      return renderDashboard;
     },
   });
   return { Harness, service };
 }
 
-describe("Shell", () => {
+describe("SettingsDashboard", () => {
   describe("dashboard view", () => {
     it("renders blocks in order", () => {
       const { Harness } = buildHarness({

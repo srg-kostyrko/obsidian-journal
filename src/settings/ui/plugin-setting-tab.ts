@@ -5,7 +5,7 @@ import { inject, type Injector, InjectorToken, provideInjectorOnApp } from "@/in
 import { InternalObsidianAppToken, InternalPluginToken } from "@/infrastructure/host";
 
 import { SettingsUiService } from "./settings-ui-service";
-import Shell from "./Shell.vue";
+import SettingsDashboard from "./SettingsDashboard.vue";
 
 export class PluginSettingTabAdapter extends PluginSettingTab {
   readonly #injector: Injector;
@@ -21,7 +21,7 @@ export class PluginSettingTabAdapter extends PluginSettingTab {
   }
 
   display(): void {
-    const app = createApp(Shell as Component);
+    const app = createApp(SettingsDashboard as Component);
     provideInjectorOnApp(app, this.#injector);
     this.#vueApp = app;
     app.mount(this.containerEl);
