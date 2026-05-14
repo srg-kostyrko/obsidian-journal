@@ -64,7 +64,15 @@ export class SettingsService {
     slice: SliceDefinition<TKey, TSchema>,
   ): SliceHandle<InferOutput<TSchema>> {
     if (!this.#sliceKeys.has(slice.key)) throw new UnregisteredSliceError(slice.key);
-    return { state: this.#root[slice.key] };
+    const root = this.#root;
+    return {
+      get state(): InferOutput<TSchema> {
+        return root[slice.key];
+      },
+      set state(value: InferOutput<TSchema>) {
+        root[slice.key] = value;
+      },
+    };
   }
 
   getCollection<TKey extends string, TItem extends AnySchema>(

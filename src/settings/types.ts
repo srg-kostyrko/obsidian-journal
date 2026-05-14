@@ -1,5 +1,5 @@
 export interface SliceHandle<T> {
-  readonly state: T;
+  state: T;
 }
 
 export interface CollectionHandle<T> {
