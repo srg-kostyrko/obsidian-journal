@@ -6,7 +6,7 @@ import { Container, InjectorToken, provideInjector } from "@/infrastructure/di";
 
 import { DashboardBlockToken, SubpageToken } from "../tokens";
 
-import { defineDashboardBlock } from "./schema";
+import { defineDashboardBlock, defineSubpage } from "./schema";
 import { SettingsUiService } from "./settings-ui-service";
 import Shell from "./Shell.vue";
 
@@ -58,6 +58,69 @@ describe("Shell", () => {
 
       const labels = screen.getAllByTestId(/^block-/).map((node) => node.textContent);
       expect(labels).toEqual(["first", "second", "third"]);
+    });
+  });
+
+  describe("subpage routing", () => {
+    it("mounts the active subpage with its props and hides the dashboard", async () => {
+      const EditPage = defineComponent({
+        props: { name: { type: String, required: true } },
+        render() {
+          return h("div", { "data-testid": "edit-page" }, `editing ${this.name}`);
+        },
+      });
+      const editSubpage = defineSubpage<{ name: string }>({ key: "edit", component: EditPage });
+      const dashboardBlock = block("only", 0, "dashboard-tile");
+
+      const { Harness, service } = buildHarness({
+        blocks: [dashboardBlock],
+        subpages: [editSubpage],
+      });
+
+      render(Harness);
+      service.push(editSubpage, { name: "Daily" });
+      await Promise.resolve(); // let Vue flush
+
+      expect(screen.queryByTestId("block-dashboard-tile")).toBeNull();
+      expect(screen.getByTestId("edit-page").textContent).toBe("editing Daily");
+    });
+
+    it("invoking nav.back returns to the previous frame", async () => {
+      const back = { current: null as null | (() => void) };
+      const First = defineComponent({
+        props: { nav: { type: Object, required: true } },
+        render() {
+          back.current = (this.nav as { back: () => void }).back;
+          return h("div", { "data-testid": "first" }, "first");
+        },
+      });
+      const Second = defineComponent({
+        props: { nav: { type: Object, required: true } },
+        render() {
+          back.current = (this.nav as { back: () => void }).back;
+          return h("div", { "data-testid": "second" }, "second");
+        },
+      });
+      const firstSub = defineSubpage({ key: "first", component: First });
+      const secondSub = defineSubpage({ key: "second", component: Second });
+
+      const { Harness, service } = buildHarness({
+        subpages: [firstSub, secondSub],
+      });
+
+      render(Harness);
+      service.push(firstSub, undefined);
+      await Promise.resolve();
+      const _afterFirst = service.current.value;
+      service.push(secondSub, undefined);
+      await Promise.resolve();
+      expect(screen.getByTestId("second")).toBeTruthy();
+
+      back.current?.();
+      await Promise.resolve();
+
+      expect(screen.queryByTestId("second")).toBeNull();
+      expect(screen.getByTestId("first")).toBeTruthy();
     });
   });
 });
