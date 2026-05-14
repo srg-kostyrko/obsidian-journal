@@ -1,3 +1,4 @@
+export { Calendar } from "./calendar";
 export { CalendarDate } from "./calendar-date";
 export { Clock } from "./clock";
 export { Interval } from "./interval";
