@@ -172,32 +172,59 @@ describe("AsyncResult", () => {
   });
 
   describe("tap", () => {
-    it("invokes the callback with the settled Ok result", async () => {
-      const seen: Result<number, never>[] = [];
-      AsyncResult.ok(5).tap((r) => seen.push(r));
-      await Promise.resolve();
-      expect(seen).toHaveLength(1);
-      expect(seen[0]?.kind).toBe("ok");
+    it("invokes the callback with the unwrapped ok value", async () => {
+      const seen: number[] = [];
+      await AsyncResult.ok(5).tap((value) => seen.push(value));
+      expect(seen).toEqual([5]);
     });
 
-    it("returns an AsyncResult that resolves to the original Ok", async () => {
+    it("resolves to the original Ok", async () => {
       const r = await AsyncResult.ok(5).tap(() => undefined);
       expectOk(r);
       expect(r.value).toBe(5);
     });
 
-    it("invokes the callback with the settled Err result", async () => {
-      const seen: Result<never, TestError>[] = [];
-      AsyncResult.err(new TestError("boom")).tap((r) => seen.push(r));
-      await Promise.resolve();
-      expect(seen).toHaveLength(1);
-      expect(seen[0]?.kind).toBe("err");
+    it("does not invoke the callback on Err", async () => {
+      let called = false;
+      await AsyncResult.err(new TestError("boom")).tap(() => {
+        called = true;
+      });
+      expect(called).toBe(false);
     });
 
-    it("returns an AsyncResult that resolves to the original Err", async () => {
+    it("resolves to the original Err", async () => {
       const r = await AsyncResult.err(new TestError("boom")).tap(() => undefined);
       expectErr(r);
       expect(r.error.kind).toBe("test-error");
+    });
+  });
+
+  describe("tapErr", () => {
+    it("invokes the callback with the unwrapped error", async () => {
+      const seen: TestError[] = [];
+      await AsyncResult.err(new TestError("boom")).tapErr((error) => seen.push(error));
+      expect(seen).toHaveLength(1);
+      expect(seen[0]?.message).toBe("boom");
+    });
+
+    it("resolves to the original Err", async () => {
+      const r = await AsyncResult.err(new TestError("boom")).tapErr(() => undefined);
+      expectErr(r);
+      expect(r.error.kind).toBe("test-error");
+    });
+
+    it("does not invoke the callback on Ok", async () => {
+      let called = false;
+      await AsyncResult.ok(5).tapErr(() => {
+        called = true;
+      });
+      expect(called).toBe(false);
+    });
+
+    it("resolves to the original Ok", async () => {
+      const r = await AsyncResult.ok(5).tapErr(() => undefined);
+      expectOk(r);
+      expect(r.value).toBe(5);
     });
   });
 });

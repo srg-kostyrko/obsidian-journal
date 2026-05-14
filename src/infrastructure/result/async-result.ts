@@ -51,10 +51,19 @@ export class AsyncResult<T, E> implements PromiseLike<Result<T, E>> {
     return new AsyncResult<T, F>(this.#promise.then((r) => r.mapErr(fn)));
   }
 
-  tap(fn: (result: Result<T, E>) => void): AsyncResult<T, E> {
+  tap(fn: (value: T) => void): AsyncResult<T, E> {
     return new AsyncResult<T, E>(
       this.#promise.then((r) => {
-        fn(r);
+        if (r.kind === "ok") fn(r.value);
+        return r;
+      }),
+    );
+  }
+
+  tapErr(fn: (error: E) => void): AsyncResult<T, E> {
+    return new AsyncResult<T, E>(
+      this.#promise.then((r) => {
+        if (r.kind === "err") fn(r.error);
         return r;
       }),
     );

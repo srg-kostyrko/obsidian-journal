@@ -18,14 +18,16 @@ export class Flows {
     return this.#injector
       .resolve(cls)
       .execute(parameters)
-      .tap((result) => {
+      .tap(() => {
         const ms = Math.round(performance.now() - started);
-        if (result.kind === "ok") {
-          this.#logger.info("flow completed", { flow: name, ms });
-        } else if (result.error instanceof UserAborted) {
-          this.#logger.info("flow aborted", { flow: name, ms, source: result.error.source });
+        this.#logger.info("flow completed", { flow: name, ms });
+      })
+      .tapErr((error) => {
+        const ms = Math.round(performance.now() - started);
+        if (error instanceof UserAborted) {
+          this.#logger.info("flow aborted", { flow: name, ms, source: error.source });
         } else {
-          this.#logger.error("flow failed", { flow: name, ms, error: result.error });
+          this.#logger.error("flow failed", { flow: name, ms, error });
         }
       });
   }

@@ -25,6 +25,15 @@ export class Ok<T, E> {
     return new Ok<T, F>(this.value);
   }
 
+  tap(fn: (value: T) => void): Result<T, E> {
+    fn(this.value);
+    return this;
+  }
+
+  tapErr(_fn: (error: E) => void): Result<T, E> {
+    return this;
+  }
+
   flatMap<U, F>(fn: (value: T) => Result<U, F>): Result<U, E | F> {
     return fn(this.value);
   }
@@ -67,6 +76,15 @@ export class Err<T, E> {
 
   mapErr<F>(fn: (error: E) => F): Result<T, F> {
     return new Err<T, F>(fn(this.error));
+  }
+
+  tap(_fn: (value: T) => void): Result<T, E> {
+    return this;
+  }
+
+  tapErr(fn: (error: E) => void): Result<T, E> {
+    fn(this.error);
+    return this;
   }
 
   flatMap<U, F>(_fn: (value: T) => Result<U, F>): Result<U, E | F> {

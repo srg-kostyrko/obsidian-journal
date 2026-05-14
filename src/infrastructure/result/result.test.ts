@@ -177,6 +177,65 @@ describe("Result", () => {
     });
   });
 
+  describe("tap", () => {
+    it("invokes the callback with the unwrapped ok value", () => {
+      const seen: number[] = [];
+      Result.ok(5).tap((value) => seen.push(value));
+      expect(seen).toEqual([5]);
+    });
+
+    it("returns the same Ok unchanged", () => {
+      const original = Result.ok(5);
+      const out = original.tap(() => undefined);
+      expect(out).toBe(original);
+    });
+
+    it("does not invoke the callback on Err", () => {
+      let called = false;
+      const r: Result<number, TestError> = Result.err(new TestError("boom"));
+      r.tap(() => {
+        called = true;
+      });
+      expect(called).toBe(false);
+    });
+
+    it("returns the same Err unchanged", () => {
+      const original: Result<number, TestError> = Result.err(new TestError("boom"));
+      const out = original.tap(() => undefined);
+      expect(out).toBe(original);
+    });
+  });
+
+  describe("tapErr", () => {
+    it("invokes the callback with the unwrapped error", () => {
+      const seen: TestError[] = [];
+      const r: Result<number, TestError> = Result.err(new TestError("boom"));
+      r.tapErr((error) => seen.push(error));
+      expect(seen).toHaveLength(1);
+      expect(seen[0]?.message).toBe("boom");
+    });
+
+    it("returns the same Err unchanged", () => {
+      const original: Result<number, TestError> = Result.err(new TestError("boom"));
+      const out = original.tapErr(() => undefined);
+      expect(out).toBe(original);
+    });
+
+    it("does not invoke the callback on Ok", () => {
+      let called = false;
+      Result.ok(5).tapErr(() => {
+        called = true;
+      });
+      expect(called).toBe(false);
+    });
+
+    it("returns the same Ok unchanged", () => {
+      const original = Result.ok(5);
+      const out = original.tapErr(() => undefined);
+      expect(out).toBe(original);
+    });
+  });
+
   describe("flatMap", () => {
     it("chains Ok -> Ok", () => {
       const r = Result.ok(2).flatMap((n) => Result.ok(n + 1));
