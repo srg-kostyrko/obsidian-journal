@@ -397,9 +397,6 @@ uses a modal owns its e2e coverage.
    host _testing_ barrel (separate from the main barrel, per
    `feedback_barrel_files`).
 6. Tests per the testing strategy above.
-7. One-line addition to `.kiro/steering/structure.md`: modal
-   definitions live in `*.modal.ts` files next to the corresponding
-   `*.modal.vue` SFC. Per `feedback_steering_for_decisions`.
 
 ## Open follow-ups
 
