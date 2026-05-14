@@ -24,8 +24,9 @@ v3 replaces that with a settings layer composed from independent slices:
 - A single `SettingsService` collects all slice and migration contributions
   at construction, runs the migration pipeline on the raw root, validates
   each slice independently, and exposes typed reactive handles.
-- Validation failures fall back to that slice's defaults and surface a
-  user-visible notice; load and migration failures are boot-fatal.
+- Validation failures fall back to that slice's defaults and emit a
+  `warn` log record on the `settings` logger; load and migration failures
+  are boot-fatal.
 
 The settings module lives at `src/settings/` (peer of `calendar/`, not under
 `infrastructure/` — it depends on `host/PluginData` and Vue reactivity).
@@ -63,7 +64,6 @@ src/settings/
   collection.test.ts
   migrations.ts            internal: pipeline runner
   migrations.test.ts
-  notices.ts               SettingsNotice type + emitter
   errors.ts                error classes (one place per feedback_errors_in_errors_ts)
   testing.ts               sibling test-helper barrel (FakePluginData, createSettingsService)
   testing/                 (if helpers grow beyond a single file)
@@ -83,8 +83,9 @@ src/settings/
   contains every slice value and every collection's keyed record,
   installs one deep `watch` on that root, and schedules a debounced
   flush through `PluginData.save()` (300 ms). Exposes
-  `getSlice(definition)` / `getCollection(definition)` and a readonly
-  `notices` reactive array.
+  `getSlice(definition)` / `getCollection(definition)`. Slice fallbacks
+  and save failures emit log records through a `LoggerFactoryToken`
+  named `settings`.
 - **`collection.ts`** — `CollectionHandle<T>` implementation that wraps
   a reactive `Record<string, T>` provided by the service (the same
   object stored under `root[key]`, so its mutations fire the root
@@ -93,8 +94,6 @@ src/settings/
 - **`migrations.ts`** — sorts contributed migrations by `fromVersion`,
   runs them in order against the raw root until the version reaches
   `CURRENT_VERSION`.
-- **`notices.ts`** — small value type + a reactive `SettingsNotice[]` that
-  the (future) settings UI can subscribe to.
 - **`errors.ts`** — all `Error` subclasses (see _Errors_ below).
 - **`module.ts`** — exports `settingsModule: Module` that registers
   `SettingsService` eager via `autoLoad`.
@@ -184,8 +183,6 @@ export class SettingsService {
   getCollection<TKey extends string, TItem extends v.BaseSchema>(
     collection: CollectionDefinition<TKey, TItem>,
   ): CollectionHandle<v.InferOutput<TItem>>;
-
-  readonly notices: Readonly<Ref<readonly SettingsNotice[]>>;
 }
 
 export interface SliceHandle<T> {
@@ -197,12 +194,6 @@ export interface CollectionHandle<T> {
   add(id: string, init?: Partial<T>): T;
   remove(id: string): void;
   get(id: string): T | undefined;
-}
-
-export interface SettingsNotice {
-  readonly kind: "slice-reset" | "save-failed";
-  readonly sliceKey: string;
-  readonly detail: string;
 }
 ```
 
@@ -249,13 +240,14 @@ API decisions confirmed during brainstorming:
    service calls `v.safeParse(schema, migrated[key])`.
    - Success: place the parsed value at `root[key]`.
    - Failure: place `defaults` (or an empty object for collections) at
-     `root[key]` and push a `slice-reset` `SettingsNotice` onto `notices`.
+     `root[key]` and emit a `warn` log record on the `settings` logger
+     with `sliceKey` and the valibot issue messages.
 6. **Wire up save.** Install a single deep Vue `watch` on the root. On
    any change, schedule a 300 ms debounced flush. Save serializes the
    whole root: `{ version: CURRENT_VERSION, [sliceKey]: state, ... }`
-   through `PluginData.save()`. A save IO failure pushes a `save-failed`
-   notice and leaves the in-memory state intact; the next mutation
-   re-arms the flush.
+   through `PluginData.save()`. A save IO failure emits an `error` log
+   record carrying a `SettingsSaveError` and leaves the in-memory state
+   intact; the next mutation re-arms the flush.
 
 `CURRENT_VERSION` lives in `settings/version.ts` as a single exported
 constant. Bumping it is a deliberate act paired with adding a `Migration`
@@ -282,9 +274,9 @@ user data.
 
 The slice-level fallback (Q4 → B in brainstorming) only kicks in for
 **validation** failures (step 5), not for load/migration failures.
-Consumers detect that a slice fell back by filtering `notices` for
-`{ kind: "slice-reset", sliceKey: <key> }`; there is no per-slice
-`status` flag — the notice array is the single source of truth.
+Per-slice fallbacks are observed only by reading `getSlice` /
+`getCollection` state; the operational signal that a reset happened is
+the `warn` log record, not a service-exposed status.
 
 ## Data flow
 
@@ -319,11 +311,9 @@ All in `src/settings/errors.ts` per `feedback_errors_in_errors_ts.md`.
   collection key. Boot-fatal, programmer error.
 - `MigrationFailedError` — a migration threw, or the version never reached
   `CURRENT_VERSION`. Carries the version it got stuck at.
-- `SliceValidationError` — internal; not re-thrown. Recorded as a
-  `SettingsNotice` and reflected in `status: "reset"`. Carries the slice
-  key and the valibot issue list for diagnostics.
-- `SettingsSaveError` — wraps save IO failure. Surfaces as a notice but
-  doesn't break the in-memory state; the next mutation re-arms the flush.
+- `SettingsSaveError` — wraps save IO failure. Emitted as an `error` log
+  record but doesn't break the in-memory state; the next mutation re-arms
+  the flush.
 - `UnregisteredSliceError` — `getSlice` / `getCollection` called with a
   definition whose key was never bound to the relevant multi-token.
   Programmer error, thrown synchronously.
@@ -335,10 +325,10 @@ Per `feedback_test_hygiene.md` and `feedback_testing_dir_layout.md`:
 - `settings-service.test.ts`
   - load → migrate → validate happy path returns typed slice handles
   - missing version treated as 0 and migrated up
-  - corrupted slice falls back to defaults and emits a `slice-reset` notice
+  - corrupted slice falls back to defaults
   - duplicate slice key fails boot with `SliceKeyConflictError`
   - save debounce coalesces multiple mutations into one `PluginData.save` call
-  - save IO failure emits a `save-failed` notice; next mutation re-attempts save
+  - save IO failure keeps in-memory state intact; next mutation re-attempts save
 - `collection.test.ts`
   - add/remove/get with reactive iteration
   - default factory called per item

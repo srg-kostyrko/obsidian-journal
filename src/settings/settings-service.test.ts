@@ -4,6 +4,8 @@ import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { Container } from "@/infrastructure/di";
 import { PluginData, PluginDataIOError } from "@/infrastructure/host";
 import { FakePluginData } from "@/infrastructure/host/testing";
+import { LoggerFactory, LoggerFactoryToken, LogSinkMultiToken } from "@/infrastructure/logger";
+import { MemorySink } from "@/infrastructure/logger/testing";
 import { AsyncResult } from "@/infrastructure/result";
 import { expectErr, expectOk } from "@/infrastructure/result/testing";
 
@@ -33,6 +35,8 @@ function build(
   const data = new FakePluginData(options.raw);
   const c = new Container();
   c.register(PluginData).useValue(data as unknown as PluginData);
+  c.register(LogSinkMultiToken).useValue(new MemorySink());
+  c.register(LoggerFactoryToken).useClass(LoggerFactory);
   for (const s of options.slices ?? [calendarSlice]) {
     c.register(SliceDefinitionToken).useValue(s as never);
   }
@@ -85,15 +89,6 @@ describe("SettingsService", () => {
       const { service } = build({ raw: { version: 3, calendar: { dow: "not-a-number" } } });
       await service.initialize();
       expect(service.getSlice(calendarSlice).state.dow).toBe(1);
-    });
-
-    it("emits a slice-reset notice when a slice falls back", async () => {
-      const { service } = build({ raw: { version: 3, calendar: { dow: "x" } } });
-      await service.initialize();
-      const notices = service.notices.value;
-      expect(notices).toHaveLength(1);
-      expect(notices[0].kind).toBe("slice-reset");
-      expect(notices[0].sliceKey).toBe("calendar");
     });
   });
 
@@ -170,7 +165,7 @@ describe("SettingsService", () => {
       vi.useRealTimers();
     });
 
-    it("emits a save-failed notice and keeps state in memory when save fails", async () => {
+    it("keeps state in memory when save fails", async () => {
       const { service, data } = build({ raw: { version: 3 } });
       await service.initialize();
       vi.spyOn(data, "save").mockReturnValue(AsyncResult.err(new PluginDataIOError("save", new Error("disk"))));
@@ -178,8 +173,6 @@ describe("SettingsService", () => {
       await vi.advanceTimersByTimeAsync(300);
       await vi.runAllTimersAsync();
       expect(service.getSlice(calendarSlice).state.dow).toBe(7);
-      const notice = service.notices.value.find((n) => n.kind === "save-failed");
-      expect(notice).toBeDefined();
     });
   });
 

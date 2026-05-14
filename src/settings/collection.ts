@@ -1,6 +1,7 @@
 import * as v from "valibot";
 
-import type { SettingsNotice } from "./notices";
+import type { Logger } from "@/infrastructure/logger";
+
 import type { CollectionDefinition } from "./schema";
 import type { CollectionHandle } from "./types";
 import type { BaseIssue, BaseSchema, InferOutput } from "valibot";
@@ -15,7 +16,7 @@ export class ReactiveCollection<TItem extends AnySchema> implements CollectionHa
     definition: CollectionDefinition<string, TItem>,
     entries: Record<string, InferOutput<TItem>>,
     raw: unknown,
-    pushNotice: (notice: SettingsNotice) => void,
+    logger: Logger,
   ) {
     this.#definition = definition;
     this.#entries = entries;
@@ -26,10 +27,9 @@ export class ReactiveCollection<TItem extends AnySchema> implements CollectionHa
           this.#entries[id] = parsed.output;
         } else {
           this.#entries[id] = definition.defaultItem(id);
-          pushNotice({
-            kind: "slice-reset",
+          logger.warn("collection entry reset to defaults", {
             sliceKey: `${definition.key}/${id}`,
-            detail: parsed.issues.map((issue) => issue.message).join("; "),
+            issues: parsed.issues.map((issue) => issue.message),
           });
         }
       }

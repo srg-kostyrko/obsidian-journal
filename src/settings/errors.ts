@@ -37,17 +37,6 @@ export class MigrationFailedError extends SettingsError {
   }
 }
 
-export class SliceValidationError extends SettingsError {
-  readonly kind = "slice-validation-failed" as const;
-  constructor(
-    readonly sliceKey: string,
-    readonly issues: readonly { readonly message: string }[],
-  ) {
-    super(`Settings slice "${sliceKey}" failed validation`);
-    this.name = "SliceValidationError";
-  }
-}
-
 export class UnregisteredSliceError extends SettingsError {
   readonly kind = "unregistered-slice" as const;
   constructor(readonly key: string) {

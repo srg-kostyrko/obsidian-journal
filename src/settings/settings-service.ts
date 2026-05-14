@@ -1,8 +1,10 @@
 import * as v from "valibot";
-import { reactive, ref, watch, type Ref, type WatchStopHandle } from "vue";
+import { reactive, watch, type WatchStopHandle } from "vue";
 
 import { inject } from "@/infrastructure/di";
 import { PluginData } from "@/infrastructure/host";
+import { LoggerFactoryToken } from "@/infrastructure/logger";
+import type { Logger } from "@/infrastructure/logger";
 import { attempt, Err, type AsyncResult } from "@/infrastructure/result";
 
 import { ReactiveCollection } from "./collection";
@@ -17,7 +19,6 @@ import { runMigrations } from "./migrations";
 import { CollectionDefinitionToken, MigrationToken, SliceDefinitionToken } from "./tokens";
 import { CURRENT_VERSION } from "./version";
 
-import type { SettingsNotice } from "./notices";
 import type { AnyCollectionDefinition, AnySliceDefinition, CollectionDefinition, SliceDefinition } from "./schema";
 import type { CollectionHandle, SliceHandle } from "./types";
 import type { BaseIssue, BaseSchema, InferOutput } from "valibot";
@@ -31,19 +32,15 @@ export class SettingsService {
   readonly #slices: readonly AnySliceDefinition[] = inject(SliceDefinitionToken);
   readonly #collections: readonly AnyCollectionDefinition[] = inject(CollectionDefinitionToken);
   readonly #migrations = inject(MigrationToken);
+  readonly #logger = inject(LoggerFactoryToken).named("settings");
 
   readonly #root: Record<string, unknown> = reactive({});
   readonly #sliceKeys = new Set<string>();
   readonly #collectionHandles = new Map<string, ReactiveCollection<AnySchema>>();
-  readonly #noticesRef = ref<readonly SettingsNotice[]>([]);
 
   #stopWatch?: WatchStopHandle;
   #saveTimer: number | undefined;
   #initialized = false;
-
-  get notices(): Readonly<Ref<readonly SettingsNotice[]>> {
-    return this.#noticesRef;
-  }
 
   initialize(): AsyncResult<void, SettingsLoadError | MigrationFailedError | SliceKeyConflictError> {
     return attempt.in(this, async function* () {
@@ -92,17 +89,14 @@ export class SettingsService {
   }
 
   #hydrate(migrated: Record<string, unknown>): void {
-    const pushNotice = (n: SettingsNotice): void => {
-      this.#noticesRef.value = [...this.#noticesRef.value, n];
-    };
     for (const definition of this.#slices) {
-      this.#root[definition.key] = parseSliceValue(definition, migrated[definition.key], pushNotice);
+      this.#root[definition.key] = parseSliceValue(definition, migrated[definition.key], this.#logger);
       this.#sliceKeys.add(definition.key);
     }
     for (const definition of this.#collections) {
       this.#root[definition.key] = {};
       const entries = this.#root[definition.key] as Record<string, InferOutput<AnySchema>>;
-      const handle = new ReactiveCollection(definition, entries, migrated[definition.key], pushNotice);
+      const handle = new ReactiveCollection(definition, entries, migrated[definition.key], this.#logger);
       this.#collectionHandles.set(definition.key, handle);
     }
   }
@@ -130,14 +124,7 @@ export class SettingsService {
     const out = JSON.parse(JSON.stringify({ ...this.#root, version: CURRENT_VERSION })) as Record<string, unknown>;
     const result = await this.#pluginData.save(out);
     if (result.kind === "err") {
-      this.#noticesRef.value = [
-        ...this.#noticesRef.value,
-        {
-          kind: "save-failed",
-          sliceKey: "",
-          detail: new SettingsSaveError(result.error).message,
-        },
-      ];
+      this.#logger.error("settings save failed", { error: new SettingsSaveError(result.error) });
     }
   }
 }
@@ -145,14 +132,13 @@ export class SettingsService {
 function parseSliceValue<TSchema extends AnySchema>(
   definition: SliceDefinition<string, TSchema>,
   raw: unknown,
-  pushNotice: (notice: SettingsNotice) => void,
+  logger: Logger,
 ): InferOutput<TSchema> {
   const parsed = v.safeParse(definition.schema, raw);
   if (parsed.success) return parsed.output;
-  pushNotice({
-    kind: "slice-reset",
+  logger.warn("slice reset to defaults", {
     sliceKey: definition.key,
-    detail: parsed.issues.map((issue) => issue.message).join("; "),
+    issues: parsed.issues.map((issue) => issue.message),
   });
   return structuredClone(definition.defaults);
 }

@@ -2,10 +2,12 @@ import * as v from "valibot";
 import { describe, expect, it } from "vitest";
 import { reactive } from "vue";
 
+import { Logger } from "@/infrastructure/logger";
+import { MemorySink } from "@/infrastructure/logger/testing";
+
 import { ReactiveCollection } from "./collection";
 import { defineCollection } from "./schema";
 
-import type { SettingsNotice } from "./notices";
 import type { InferOutput } from "valibot";
 
 const journalSchema = v.object({
@@ -19,10 +21,10 @@ const journalCollection = defineCollection("journals", journalSchema, (id) => ({
 }));
 
 function setup(raw: unknown) {
-  const notices: SettingsNotice[] = [];
   const entries = reactive<Record<string, InferOutput<typeof journalSchema>>>({});
-  const collection = new ReactiveCollection(journalCollection, entries, raw, (n) => notices.push(n));
-  return { collection, notices };
+  const logger = new Logger("settings", [new MemorySink()]);
+  const collection = new ReactiveCollection(journalCollection, entries, raw, logger);
+  return { collection };
 }
 
 describe("ReactiveCollection", () => {
@@ -35,13 +37,6 @@ describe("ReactiveCollection", () => {
     it("falls back to defaultItem for an invalid entry", () => {
       const { collection } = setup({ broken: { name: 42 } });
       expect(collection.get("broken")).toEqual({ name: "broken", enabled: true });
-    });
-
-    it("emits a slice-reset notice when an entry is invalid", () => {
-      const { notices } = setup({ broken: { name: 42 } });
-      expect(notices).toHaveLength(1);
-      expect(notices[0].kind).toBe("slice-reset");
-      expect(notices[0].sliceKey).toBe("journals/broken");
     });
 
     it("starts empty when raw is undefined", () => {

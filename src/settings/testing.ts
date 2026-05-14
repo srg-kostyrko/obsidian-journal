@@ -3,6 +3,8 @@ import * as v from "valibot";
 import { Container } from "@/infrastructure/di";
 import { PluginData } from "@/infrastructure/host";
 import { FakePluginData } from "@/infrastructure/host/testing";
+import { LoggerFactory, LoggerFactoryToken, LogSinkMultiToken } from "@/infrastructure/logger";
+import { MemorySink } from "@/infrastructure/logger/testing";
 
 import { defineCollection, defineSlice } from "./schema";
 import { SettingsService } from "./settings-service";
@@ -34,6 +36,8 @@ export function createSettingsService(options: CreateSettingsServiceOptions = {}
   const data = new FakePluginData(options.raw);
   const c = new Container();
   c.register(PluginData).useValue(data as unknown as PluginData);
+  c.register(LogSinkMultiToken).useValue(new MemorySink());
+  c.register(LoggerFactoryToken).useClass(LoggerFactory);
   if (options.slices && options.slices.length > 0) {
     for (const s of options.slices) c.register(SliceDefinitionToken).useValue(s);
   } else {
