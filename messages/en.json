@@ -1,3 +1,47 @@
 {
-  "$schema": "https://inlang.com/schema/inlang-message-format"
+  "$schema": "https://inlang.com/schema/inlang-message-format",
+
+  "calendar_apply_globally_desc": "If disabled, week-configuration settings apply only to dates inside journals and do not affect dates created by other plugins or Obsidian itself.",
+  "calendar_apply_globally_restart_hint": "You might need to restart Obsidian for changes to take effect.",
+  "calendar_apply_globally_title": "Apply week configuration to all dates in vault?",
+  "calendar_picker_cancel_action": "Cancel",
+  "calendar_picker_first_week_desc": "Which day in January the first week of the year must contain (1..7).",
+  "calendar_picker_first_week_label": "First week of year",
+  "calendar_picker_in_use_marker": "Currently used",
+  "calendar_picker_start_week_on": "Start week on",
+  "calendar_picker_start_week_on_desc": "Which day to treat as the first day of the week.",
+  "calendar_picker_update_action": "Update",
+  "calendar_picker_use_action": "Use",
+  "calendar_preset_description": [
+    {
+      "declarations": ["input preset"],
+      "selectors": ["preset"],
+      "match": {
+        "preset=locale": "Use the week settings defined by Obsidian's current locale.",
+        "preset=iso-8601": "Week starts on Monday. First week of year includes the first Thursday (Jan 4th).",
+        "preset=western": "Week starts on Sunday. First week of year includes the first Saturday (Jan 1st).",
+        "preset=middle-eastern": "Week starts on Saturday. First week of year includes the first Friday (Jan 1st).",
+        "preset=custom": "Define what day of week to treat as first and how the first week of year is determined."
+      }
+    }
+  ],
+  "calendar_preset_iso_used": "EU (excluding Portugal) and most other European countries, most of Asia and Oceania.",
+  "calendar_preset_middle_eastern_used": "Much of the Middle East.",
+  "calendar_preset_name": [
+    {
+      "declarations": ["input preset"],
+      "selectors": ["preset"],
+      "match": {
+        "preset=locale": "Follow system locale",
+        "preset=iso-8601": "ISO 8601",
+        "preset=western": "Western traditional",
+        "preset=middle-eastern": "Middle Eastern",
+        "preset=custom": "Custom"
+      }
+    }
+  ],
+  "calendar_preset_picker_title": "Week configuration",
+  "calendar_preset_western_used": "Canada, United States, Iceland, Portugal, Japan, Taiwan, Thailand, Hong Kong, Macau, Israel, Egypt, South Africa, the Philippines, and most of Latin America.",
+  "calendar_week_config_change": "Change",
+  "calendar_week_config_title": "Week configuration"
 }
