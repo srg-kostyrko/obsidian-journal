@@ -6,7 +6,7 @@ import { Calendar } from "@/calendar";
 import { m } from "@/i18n";
 import { Container, provideInjectorOnApp } from "@/infrastructure/di";
 import type { ModalApi } from "@/infrastructure/host/modals";
-import { ModalContextKey } from "@/infrastructure/host/modals/internal/modal-context";
+import { provideModalApiOnApp } from "@/infrastructure/host/modals/testing";
 
 import WeekPresetPickerModal from "./WeekPresetPickerModal.vue";
 
@@ -23,7 +23,7 @@ function mountModal(current: CalendarSliceState, api: ModalApi<CalendarSliceStat
         {
           install(app) {
             provideInjectorOnApp(app, container);
-            app.provide(ModalContextKey, api as ModalApi<unknown>);
+            provideModalApiOnApp(app, api as ModalApi<unknown>);
           },
         },
       ],

@@ -1,8 +1,14 @@
 import { AsyncResult, InvariantError } from "@/infrastructure/result";
 
 import { ModalCancelled } from "./errors";
+import { ModalContextKey } from "./internal/modal-context";
 
-import type { ModalDefinition } from "./types";
+import type { ModalApi, ModalDefinition } from "./types";
+import type { App } from "vue";
+
+export function provideModalApiOnApp(app: App, api: ModalApi<unknown>): void {
+  app.provide(ModalContextKey, api);
+}
 
 export class FakeModalHandle<TProps, TResult> {
   readonly definition: ModalDefinition<TProps, TResult>;
