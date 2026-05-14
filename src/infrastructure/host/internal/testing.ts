@@ -50,6 +50,7 @@ export interface FakeHost {
   emitVault(event: "create" | "rename" | "delete", ...arguments_: unknown[]): void;
   emitMetadata(path: string, metadata?: CachedMetadata): void;
   emitActiveLeafChange(file: TFile | null): void;
+  triggerUnload(): void;
 }
 
 function makeFile(path: string): TFile {
@@ -86,6 +87,7 @@ export function createFakeHost(): FakeHost {
   const workspaceState: FakeWorkspaceState = { activeFile: null, openPaths: new Set(), openCalls: [] };
   const pluginData: FakeHost["pluginData"] = { current: undefined };
   const registeredEventReferences: EventRef[] = [];
+  const unloadCallbacks: (() => void)[] = [];
 
   function ensureFolderChain(path: string): void {
     if (!path) return;
@@ -248,6 +250,9 @@ export function createFakeHost(): FakeHost {
     registerEvent(ref: EventRef): void {
       registeredEventReferences.push(ref);
     },
+    register(callback: () => void): void {
+      unloadCallbacks.push(callback);
+    },
     async loadData(): Promise<unknown> {
       if (pluginData.loadError) throw pluginData.loadError;
       return pluginData.current;
@@ -292,6 +297,10 @@ export function createFakeHost(): FakeHost {
     emitActiveLeafChange(file): void {
       workspaceState.activeFile = file;
       workspaceEvents.emit("active-leaf-change", { view: { file } });
+    },
+    triggerUnload(): void {
+      for (const callback of unloadCallbacks) callback();
+      unloadCallbacks.length = 0;
     },
   };
 }
