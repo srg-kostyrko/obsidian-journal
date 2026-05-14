@@ -316,6 +316,17 @@ describe("Calendar", () => {
       expect(globalWeek()).toEqual(priorGlobal);
     });
   });
+
+  describe("weekdays", () => {
+    it("returns the 7-element localized weekday array from the custom locale, indexed Sunday-first", () => {
+      const calendar = new Calendar();
+      const weekdays = calendar.weekdays();
+      expect(weekdays).toHaveLength(7);
+      // Moment's weekdays() is Sunday=0..Saturday=6 regardless of the locale's dow.
+      // Asserting structure rather than exact strings keeps the test locale-independent.
+      expect(weekdays.every((w) => typeof w === "string" && w.length > 0)).toBe(true);
+    });
+  });
 });
 ```
 
@@ -374,6 +385,10 @@ export class Calendar {
     } else {
       moment.updateLocale(this.#globalLocale, { week: this.#initial });
     }
+  }
+
+  weekdays(): readonly string[] {
+    return moment.localeData(CUSTOM_LOCALE).weekdays();
   }
 }
 
@@ -577,64 +592,47 @@ git commit -m "feat(calendar): add calendar settings slice"
 
 ## Task 4: Calendar settings i18n messages
 
-**Background.** Per Task 0, `messages/en.json` is the authored source; paraglide compiles it to `src/i18n/paraglide/messages/*.js`. To author UI copy, add keys to the JSON file and run `npm run compile:i18n`. Call sites then use `m.<snake_case_key>()` from `@/i18n`.
+**Background.** Per Task 0, `messages/en.json` is the authored source; paraglide compiles it to `src/i18n/paraglide/messages/*.js`. To author UI copy, add keys to the JSON file and run `npm run compile:i18n`. Call sites then use `m.<snake_case_key>()` (or `m.<key>({ <selector>: ... })` for variants) from `@/i18n`.
 
 **Files:**
 
 - Modify: `messages/en.json`
 
-**Keys to add** (all are plain strings, no inputs):
+**What's NOT here (and why):**
 
-| Key                                          | English output                                                                                                                                                  |
-| -------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `calendar_week_config_title`                 | `Week configuration`                                                                                                                                            |
-| `calendar_week_config_change`                | `Change`                                                                                                                                                        |
-| `calendar_apply_globally_title`              | `Apply week configuration to all dates in vault?`                                                                                                               |
-| `calendar_apply_globally_desc`               | `If disabled, week-configuration settings apply only to dates inside journals and do not affect dates created by other plugins or Obsidian itself.`             |
-| `calendar_apply_globally_restart_hint`       | `You might need to restart Obsidian for changes to take effect.`                                                                                                |
-| `calendar_preset_picker_title`               | `Week configuration`                                                                                                                                            |
-| `calendar_preset_locale_name`                | `Follow system locale`                                                                                                                                          |
-| `calendar_preset_locale_description`         | `Use the week settings defined by Obsidian's current locale.`                                                                                                   |
-| `calendar_preset_iso_name`                   | `ISO 8601`                                                                                                                                                      |
-| `calendar_preset_iso_description`            | `Week starts on Monday. First week of year includes the first Thursday (Jan 4th).`                                                                              |
-| `calendar_preset_iso_used`                   | `EU (excluding Portugal) and most other European countries, most of Asia and Oceania.`                                                                          |
-| `calendar_preset_western_name`               | `Western traditional`                                                                                                                                           |
-| `calendar_preset_western_description`        | `Week starts on Sunday. First week of year includes the first Saturday (Jan 1st).`                                                                              |
-| `calendar_preset_western_used`               | `Canada, United States, Iceland, Portugal, Japan, Taiwan, Thailand, Hong Kong, Macau, Israel, Egypt, South Africa, the Philippines, and most of Latin America.` |
-| `calendar_preset_middle_eastern_name`        | `Middle Eastern`                                                                                                                                                |
-| `calendar_preset_middle_eastern_description` | `Week starts on Saturday. First week of year includes the first Friday (Jan 1st).`                                                                              |
-| `calendar_preset_middle_eastern_used`        | `Much of the Middle East.`                                                                                                                                      |
-| `calendar_preset_custom_name`                | `Custom`                                                                                                                                                        |
-| `calendar_preset_custom_description`         | `Define what day of week to treat as first and how the first week of year is determined.`                                                                       |
-| `calendar_picker_use_action`                 | `Use`                                                                                                                                                           |
-| `calendar_picker_in_use_marker`              | `Currently used`                                                                                                                                                |
-| `calendar_picker_start_week_on`              | `Start week on`                                                                                                                                                 |
-| `calendar_picker_start_week_on_desc`         | `Which day to treat as the first day of the week.`                                                                                                              |
-| `calendar_picker_first_week_label`           | `First week of year`                                                                                                                                            |
-| `calendar_picker_first_week_desc`            | `Which day in January the first week of the year must contain (1..7).`                                                                                          |
-| `calendar_picker_update_action`              | `Update`                                                                                                                                                        |
-| `calendar_picker_cancel_action`              | `Cancel`                                                                                                                                                        |
-| `calendar_day_sunday`                        | `Sunday`                                                                                                                                                        |
-| `calendar_day_monday`                        | `Monday`                                                                                                                                                        |
-| `calendar_day_tuesday`                       | `Tuesday`                                                                                                                                                       |
-| `calendar_day_wednesday`                     | `Wednesday`                                                                                                                                                     |
-| `calendar_day_thursday`                      | `Thursday`                                                                                                                                                      |
-| `calendar_day_friday`                        | `Friday`                                                                                                                                                        |
-| `calendar_day_saturday`                      | `Saturday`                                                                                                                                                      |
+- **Day-of-week labels** come from `moment.localeData(CUSTOM_LOCALE).weekdays()` via the `Calendar.weekdays()` method added in Task 2. Date-vocabulary strings are not duplicated in paraglide (per memory `feedback-date-strings-from-moment`).
 
-Per the test-hygiene rules (`feedback_no_wiring_tests`, `feedback_no_trivial_tests`) there are no unit tests for the message file — its content is asserted by the component tests in Tasks 6 and 7 (which `await userEvent.click(screen.getByText(m.calendar_*()))`).
+**Keys to add.** Two of these are variant messages on a `preset` selector; the rest are plain strings.
 
-- [ ] **Step 1: Add each key to `messages/en.json`**
+| Key                                    | Type                | English output                                                                                                                                                  |
+| -------------------------------------- | ------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `calendar_week_config_title`           | string              | `Week configuration`                                                                                                                                            |
+| `calendar_week_config_change`          | string              | `Change`                                                                                                                                                        |
+| `calendar_apply_globally_title`        | string              | `Apply week configuration to all dates in vault?`                                                                                                               |
+| `calendar_apply_globally_desc`         | string              | `If disabled, week-configuration settings apply only to dates inside journals and do not affect dates created by other plugins or Obsidian itself.`             |
+| `calendar_apply_globally_restart_hint` | string              | `You might need to restart Obsidian for changes to take effect.`                                                                                                |
+| `calendar_preset_picker_title`         | string              | `Week configuration`                                                                                                                                            |
+| `calendar_preset_name`                 | variant on `preset` | one arm per preset id                                                                                                                                           |
+| `calendar_preset_description`          | variant on `preset` | one arm per preset id                                                                                                                                           |
+| `calendar_preset_iso_used`             | string              | `EU (excluding Portugal) and most other European countries, most of Asia and Oceania.`                                                                          |
+| `calendar_preset_western_used`         | string              | `Canada, United States, Iceland, Portugal, Japan, Taiwan, Thailand, Hong Kong, Macau, Israel, Egypt, South Africa, the Philippines, and most of Latin America.` |
+| `calendar_preset_middle_eastern_used`  | string              | `Much of the Middle East.`                                                                                                                                      |
+| `calendar_picker_use_action`           | string              | `Use`                                                                                                                                                           |
+| `calendar_picker_in_use_marker`        | string              | `Currently used`                                                                                                                                                |
+| `calendar_picker_start_week_on`        | string              | `Start week on`                                                                                                                                                 |
+| `calendar_picker_start_week_on_desc`   | string              | `Which day to treat as the first day of the week.`                                                                                                              |
+| `calendar_picker_first_week_label`     | string              | `First week of year`                                                                                                                                            |
+| `calendar_picker_first_week_desc`      | string              | `Which day in January the first week of the year must contain (1..7).`                                                                                          |
+| `calendar_picker_update_action`        | string              | `Update`                                                                                                                                                        |
+| `calendar_picker_cancel_action`        | string              | `Cancel`                                                                                                                                                        |
 
-After Task 0, the file looks like:
+The `_used` field is only meaningful for the three named presets (not `locale` / `custom`), so it stays as three flat keys instead of a variant — consumers explicitly skip the row for non-named choices.
 
-```json
-{
-  "$schema": "https://inlang.com/schema/inlang-message-format"
-}
-```
+The `preset` selector domain is `locale | iso-8601 | western | middle-eastern | custom`. The same string literal is the discriminator in `WeekPreset["id"]` and the modal's `localChoice` state, so the call sites are typed straight through.
 
-Replace it with the full set (key order doesn't affect output; alphabetical kept for ease of review):
+Per the test-hygiene rules (`feedback_no_wiring_tests`, `feedback_no_trivial_tests`) there are no unit tests for the message file — its content is asserted by the component tests in Tasks 6 and 7.
+
+- [ ] **Step 1: Replace `messages/en.json` with the full set**
 
 ```json
 {
@@ -643,13 +641,6 @@ Replace it with the full set (key order doesn't affect output; alphabetical kept
   "calendar_apply_globally_desc": "If disabled, week-configuration settings apply only to dates inside journals and do not affect dates created by other plugins or Obsidian itself.",
   "calendar_apply_globally_restart_hint": "You might need to restart Obsidian for changes to take effect.",
   "calendar_apply_globally_title": "Apply week configuration to all dates in vault?",
-  "calendar_day_friday": "Friday",
-  "calendar_day_monday": "Monday",
-  "calendar_day_saturday": "Saturday",
-  "calendar_day_sunday": "Sunday",
-  "calendar_day_thursday": "Thursday",
-  "calendar_day_tuesday": "Tuesday",
-  "calendar_day_wednesday": "Wednesday",
   "calendar_picker_cancel_action": "Cancel",
   "calendar_picker_first_week_desc": "Which day in January the first week of the year must contain (1..7).",
   "calendar_picker_first_week_label": "First week of year",
@@ -658,19 +649,35 @@ Replace it with the full set (key order doesn't affect output; alphabetical kept
   "calendar_picker_start_week_on_desc": "Which day to treat as the first day of the week.",
   "calendar_picker_update_action": "Update",
   "calendar_picker_use_action": "Use",
-  "calendar_preset_custom_description": "Define what day of week to treat as first and how the first week of year is determined.",
-  "calendar_preset_custom_name": "Custom",
-  "calendar_preset_iso_description": "Week starts on Monday. First week of year includes the first Thursday (Jan 4th).",
-  "calendar_preset_iso_name": "ISO 8601",
+  "calendar_preset_description": [
+    {
+      "declarations": ["input preset"],
+      "selectors": ["preset"],
+      "match": {
+        "preset=locale": "Use the week settings defined by Obsidian's current locale.",
+        "preset=iso-8601": "Week starts on Monday. First week of year includes the first Thursday (Jan 4th).",
+        "preset=western": "Week starts on Sunday. First week of year includes the first Saturday (Jan 1st).",
+        "preset=middle-eastern": "Week starts on Saturday. First week of year includes the first Friday (Jan 1st).",
+        "preset=custom": "Define what day of week to treat as first and how the first week of year is determined."
+      }
+    }
+  ],
   "calendar_preset_iso_used": "EU (excluding Portugal) and most other European countries, most of Asia and Oceania.",
-  "calendar_preset_locale_description": "Use the week settings defined by Obsidian's current locale.",
-  "calendar_preset_locale_name": "Follow system locale",
-  "calendar_preset_middle_eastern_description": "Week starts on Saturday. First week of year includes the first Friday (Jan 1st).",
-  "calendar_preset_middle_eastern_name": "Middle Eastern",
   "calendar_preset_middle_eastern_used": "Much of the Middle East.",
+  "calendar_preset_name": [
+    {
+      "declarations": ["input preset"],
+      "selectors": ["preset"],
+      "match": {
+        "preset=locale": "Follow system locale",
+        "preset=iso-8601": "ISO 8601",
+        "preset=western": "Western traditional",
+        "preset=middle-eastern": "Middle Eastern",
+        "preset=custom": "Custom"
+      }
+    }
+  ],
   "calendar_preset_picker_title": "Week configuration",
-  "calendar_preset_western_description": "Week starts on Sunday. First week of year includes the first Saturday (Jan 1st).",
-  "calendar_preset_western_name": "Western traditional",
   "calendar_preset_western_used": "Canada, United States, Iceland, Portugal, Japan, Taiwan, Thailand, Hong Kong, Macau, Israel, Egypt, South Africa, the Philippines, and most of Latin America.",
   "calendar_week_config_change": "Change",
   "calendar_week_config_title": "Week configuration"
@@ -683,7 +690,7 @@ Replace it with the full set (key order doesn't affect output; alphabetical kept
 npm run compile:i18n
 ```
 
-Expected: paraglide writes `src/i18n/paraglide/messages.js`, `runtime.js`, and one `messages/<key>.js` per JSON key. The `src/i18n/paraglide/` directory is gitignored — these files are not committed.
+Expected: paraglide writes `src/i18n/paraglide/messages.js`, `runtime.js`, and one `messages/<key>.js` per JSON key (including the two variant messages, which compile to functions taking an `{ preset }` input).
 
 - [ ] **Step 3: Verify the generated functions resolve**
 
@@ -691,7 +698,7 @@ Expected: paraglide writes `src/i18n/paraglide/messages.js`, `runtime.js`, and o
 npm run check:types
 ```
 
-Expected: type-check passes. The `@/i18n` barrel auto-exposes the new functions; later tasks use them as `m.calendar_week_config_title()` etc.
+Expected: type-check passes. The `@/i18n` barrel auto-exposes `m.calendar_preset_name({ preset })` and `m.calendar_preset_description({ preset })` as typed functions whose `preset` arg accepts `"locale" | "iso-8601" | "western" | "middle-eastern" | "custom"`.
 
 - [ ] **Step 4: Commit**
 
@@ -867,7 +874,9 @@ import userEvent from "@testing-library/user-event";
 import { afterEach, describe, expect, it, vi } from "vitest";
 import { defineComponent, h } from "vue";
 
+import { Calendar } from "@/calendar";
 import { m } from "@/i18n";
+import { Container, provideInjectorOnApp } from "@/infrastructure/di";
 
 import WeekPresetPickerModal from "./WeekPresetPickerModal.vue";
 
@@ -875,13 +884,27 @@ import type { CalendarSliceState } from "../slice";
 import type { ModalApi } from "@/infrastructure/host/modals";
 
 function mountModal(current: CalendarSliceState, api: ModalApi<CalendarSliceState>) {
+  // The modal calls useService(Calendar) to source weekday labels.
+  const container = new Container();
+  container.register(Calendar).useValue(new Calendar());
+
   const Harness = defineComponent({
     components: { WeekPresetPickerModal },
     setup() {
       return () => h(WeekPresetPickerModal, { current, api });
     },
   });
-  return render(Harness);
+  return render(Harness, {
+    global: {
+      plugins: [
+        {
+          install(app) {
+            provideInjectorOnApp(app, container);
+          },
+        },
+      ],
+    },
+  });
 }
 
 function rowFor(name: string): HTMLElement {
@@ -898,7 +921,7 @@ describe("WeekPresetPickerModal", () => {
     const api: ModalApi<CalendarSliceState> = { submit: vi.fn(), cancel: vi.fn() };
     mountModal({ mode: "locale" }, api);
 
-    const useButton = rowFor(m.calendar_preset_iso_name()).querySelector("button");
+    const useButton = rowFor(m.calendar_preset_name({ preset: "iso-8601" })).querySelector("button");
     await userEvent.click(useButton!);
     await userEvent.click(screen.getByText(m.calendar_picker_update_action()));
 
@@ -909,7 +932,7 @@ describe("WeekPresetPickerModal", () => {
     const api: ModalApi<CalendarSliceState> = { submit: vi.fn(), cancel: vi.fn() };
     mountModal({ mode: "custom", dow: 1, doy: 4, global: false }, api);
 
-    const useButton = rowFor(m.calendar_preset_locale_name()).querySelector("button");
+    const useButton = rowFor(m.calendar_preset_name({ preset: "locale" })).querySelector("button");
     await userEvent.click(useButton!);
     await userEvent.click(screen.getByText(m.calendar_picker_update_action()));
 
@@ -920,7 +943,7 @@ describe("WeekPresetPickerModal", () => {
     const api: ModalApi<CalendarSliceState> = { submit: vi.fn(), cancel: vi.fn() };
     mountModal({ mode: "custom", dow: 1, doy: 4, global: false }, api);
 
-    const useButton = rowFor(m.calendar_preset_custom_name()).querySelector("button");
+    const useButton = rowFor(m.calendar_preset_name({ preset: "custom" })).querySelector("button");
     await userEvent.click(useButton!);
 
     // The dropdown + number input only render once custom is the active choice.
@@ -931,7 +954,7 @@ describe("WeekPresetPickerModal", () => {
   it("submits the custom dow/doy when in custom mode with edited values", async () => {
     const api: ModalApi<CalendarSliceState> = { submit: vi.fn(), cancel: vi.fn() };
     mountModal({ mode: "custom", dow: 1, doy: 4, global: false }, api);
-    await userEvent.click(rowFor(m.calendar_preset_custom_name()).querySelector("button")!);
+    await userEvent.click(rowFor(m.calendar_preset_name({ preset: "custom" })).querySelector("button")!);
 
     // Set dow=3 (Wednesday) via the dropdown
     const dropdown = rowFor(m.calendar_picker_start_week_on()).querySelector("select");
@@ -985,17 +1008,18 @@ The local state separates **what the user chose** (`localChoice`) from **what th
 ```vue
 <!-- src/calendar/settings/ui/WeekPresetPickerModal.vue -->
 <script setup lang="ts">
-import { ref } from "vue";
-import { match } from "ts-pattern";
+import { computed, ref } from "vue";
 
+import { Calendar } from "@/calendar";
+import { detectCurrentPreset, weekPresets, type WeekPreset } from "@/calendar/presets";
 import { m } from "@/i18n";
+import { useService } from "@/infrastructure/di";
 import type { ModalApi } from "@/infrastructure/host/modals";
-import UiSettingRow from "@/ui/UiSettingRow.vue";
 import UiButton from "@/ui/UiButton.vue";
 import UiDropdown from "@/ui/UiDropdown.vue";
 import UiNumberInput from "@/ui/UiNumberInput.vue";
+import UiSettingRow from "@/ui/UiSettingRow.vue";
 
-import { detectCurrentPreset, weekPresets, type WeekPreset } from "@/calendar/presets";
 import type { CalendarSliceState } from "../slice";
 
 const props = defineProps<{ current: CalendarSliceState; api: ModalApi<CalendarSliceState> }>();
@@ -1008,10 +1032,14 @@ function initialChoice(): LocalChoice {
   return detected === "custom" ? "custom" : detected.id;
 }
 
+const calendar = useService(Calendar);
 const localChoice = ref<LocalChoice>(initialChoice());
 const customDow = ref<string>(props.current.mode === "custom" ? String(props.current.dow) : "1");
 const customFirstDay = ref<number>(props.current.mode === "custom" ? 7 + props.current.dow - props.current.doy : 4);
 const stagedGlobal = props.current.mode === "custom" ? props.current.global : false;
+
+// Day labels source from moment via Calendar — never duplicated as paraglide keys.
+const dowOptions = computed(() => calendar.weekdays().map((label, dow) => ({ value: String(dow), label })));
 
 function pickLocale(): void {
   localChoice.value = "locale";
@@ -1045,60 +1073,32 @@ function update(): void {
   props.api.submit({ mode: "custom", dow: preset.dow, doy: preset.doy, global: stagedGlobal });
 }
 
-const dowOptions: { value: string; label: () => string }[] = [
-  { value: "0", label: () => m.calendar_day_sunday() },
-  { value: "1", label: () => m.calendar_day_monday() },
-  { value: "2", label: () => m.calendar_day_tuesday() },
-  { value: "3", label: () => m.calendar_day_wednesday() },
-  { value: "4", label: () => m.calendar_day_thursday() },
-  { value: "5", label: () => m.calendar_day_friday() },
-  { value: "6", label: () => m.calendar_day_saturday() },
-];
-
-function presetName(preset: WeekPreset): string {
-  return match(preset.id)
-    .with("iso-8601", () => m.calendar_preset_iso_name())
-    .with("western", () => m.calendar_preset_western_name())
-    .with("middle-eastern", () => m.calendar_preset_middle_eastern_name())
-    .exhaustive();
-}
-
-function presetDescription(preset: WeekPreset): string {
-  return match(preset.id)
-    .with("iso-8601", () => m.calendar_preset_iso_description())
-    .with("western", () => m.calendar_preset_western_description())
-    .with("middle-eastern", () => m.calendar_preset_middle_eastern_description())
-    .exhaustive();
-}
-
 function presetUsed(preset: WeekPreset): string {
-  return match(preset.id)
-    .with("iso-8601", () => m.calendar_preset_iso_used())
-    .with("western", () => m.calendar_preset_western_used())
-    .with("middle-eastern", () => m.calendar_preset_middle_eastern_used())
-    .exhaustive();
+  if (preset.id === "iso-8601") return m.calendar_preset_iso_used();
+  if (preset.id === "western") return m.calendar_preset_western_used();
+  return m.calendar_preset_middle_eastern_used();
 }
 </script>
 
 <template>
   <div>
-    <UiSettingRow :name="m.calendar_preset_locale_name()">
-      <template #description>{{ m.calendar_preset_locale_description() }}</template>
+    <UiSettingRow :name="m.calendar_preset_name({ preset: 'locale' })">
+      <template #description>{{ m.calendar_preset_description({ preset: "locale" }) }}</template>
       <span v-if="localChoice === 'locale'">{{ m.calendar_picker_in_use_marker() }}</span>
       <UiButton v-else @click="pickLocale">{{ m.calendar_picker_use_action() }}</UiButton>
     </UiSettingRow>
 
-    <UiSettingRow v-for="preset in weekPresets" :key="preset.id" :name="presetName(preset)">
+    <UiSettingRow v-for="preset in weekPresets" :key="preset.id" :name="m.calendar_preset_name({ preset: preset.id })">
       <template #description>
-        <div class="whitespace">{{ presetDescription(preset) }}</div>
+        <div class="whitespace">{{ m.calendar_preset_description({ preset: preset.id }) }}</div>
         <div>{{ presetUsed(preset) }}</div>
       </template>
       <span v-if="localChoice === preset.id">{{ m.calendar_picker_in_use_marker() }}</span>
       <UiButton v-else @click="pickPreset(preset)">{{ m.calendar_picker_use_action() }}</UiButton>
     </UiSettingRow>
 
-    <UiSettingRow :name="m.calendar_preset_custom_name()">
-      <template #description>{{ m.calendar_preset_custom_description() }}</template>
+    <UiSettingRow :name="m.calendar_preset_name({ preset: 'custom' })">
+      <template #description>{{ m.calendar_preset_description({ preset: "custom" }) }}</template>
       <span v-if="localChoice === 'custom'">{{ m.calendar_picker_in_use_marker() }}</span>
       <UiButton v-else @click="pickCustom">{{ m.calendar_picker_use_action() }}</UiButton>
     </UiSettingRow>
@@ -1107,7 +1107,7 @@ function presetUsed(preset: WeekPreset): string {
       <UiSettingRow :name="m.calendar_picker_start_week_on()">
         <template #description>{{ m.calendar_picker_start_week_on_desc() }}</template>
         <UiDropdown v-model="customDow">
-          <option v-for="opt in dowOptions" :key="opt.value" :value="opt.value">{{ opt.label() }}</option>
+          <option v-for="opt in dowOptions" :key="opt.value" :value="opt.value">{{ opt.label }}</option>
         </UiDropdown>
       </UiSettingRow>
       <UiSettingRow :name="m.calendar_picker_first_week_label()">
@@ -1129,6 +1129,8 @@ function presetUsed(preset: WeekPreset): string {
 }
 </style>
 ```
+
+`presetUsed` keeps an if-chain (rather than a 3-arm match) because the function is total over only the three named-preset ids — the chain mirrors the data dimension exactly and adding a fourth preset breaks the chain at compile time once the `WeekPreset["id"]` union is expanded.
 
 - [ ] **Step 5: Run tests to verify they pass**
 
@@ -1288,12 +1290,10 @@ const slice = settings.getSlice(calendarSlice);
 
 const presetSummary = computed(() => {
   const state = slice.state;
-  if (state.mode === "locale") return m.calendar_preset_locale_description();
-  const preset = detectCurrentPreset({ dow: state.dow, doy: state.doy });
-  if (preset === "custom") return m.calendar_preset_custom_description();
-  if (preset.id === "iso-8601") return m.calendar_preset_iso_description();
-  if (preset.id === "western") return m.calendar_preset_western_description();
-  return m.calendar_preset_middle_eastern_description();
+  if (state.mode === "locale") return m.calendar_preset_description({ preset: "locale" });
+  const detected = detectCurrentPreset({ dow: state.dow, doy: state.doy });
+  const presetId = detected === "custom" ? "custom" : detected.id;
+  return m.calendar_preset_description({ preset: presetId });
 });
 
 const globalRef = computed({
