@@ -146,6 +146,7 @@ export default [
       ...vitest.configs.recommended.rules,
       "@typescript-eslint/no-non-null-assertion": "off",
       "@typescript-eslint/unbound-method": "off",
+      "@typescript-eslint/no-invalid-void-type": "off",
       "unicorn/no-useless-undefined": "off",
       "no-restricted-syntax": "off",
       "vitest/expect-expect": ["error", { assertFunctionNames: ["expect", "expectTypeOf", "expectOk", "expectErr"] }],
