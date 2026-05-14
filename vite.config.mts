@@ -1,5 +1,6 @@
 import { fileURLToPath, URL } from "node:url";
 
+import { paraglideVitePlugin } from "@inlang/paraglide-js";
 import vue from "@vitejs/plugin-vue";
 import builtins from "builtin-modules";
 import { defineConfig } from "vite";
@@ -10,6 +11,10 @@ const isWatch = process.argv.includes("--watch");
 // https://vitejs.dev/config/
 export default defineConfig(({ mode }) => ({
   plugins: [
+    paraglideVitePlugin({
+      project: "./project.inlang",
+      outdir: "./src/i18n/paraglide",
+    }),
     vue(),
     viteStaticCopy({
       targets: [

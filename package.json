@@ -6,6 +6,7 @@
   "scripts": {
     "dev": "vite build --watch",
     "build": "vite build",
+    "compile:i18n": "paraglide-js compile --project ./project.inlang --outdir ./src/i18n/paraglide",
     "version": "node version-bump.mjs && git add manifest.json manifest-beta.json versions.json",
     "check:lint": "eslint .",
     "test": "vitest run",
@@ -28,6 +29,7 @@
   "author": "Sergii Kostyrko",
   "license": "MIT",
   "dependencies": {
+    "@inlang/paraglide-js": "^2.18.0",
     "@vee-validate/valibot": "^4.15.1",
     "@vueuse/core": "^14.2.1",
     "eslint-plugin-vue": "^10.9.0",
