@@ -31,6 +31,20 @@ export function normalizePath(path: string): string {
 
 export type App = unknown;
 
+export class PluginSettingTab {
+  readonly app: App;
+  readonly containerEl: HTMLElement;
+
+  constructor(app: App, _plugin: unknown) {
+    this.app = app;
+    this.containerEl = document.createElement("div");
+  }
+
+  display(): void {}
+
+  hide(): void {}
+}
+
 const openModals: Modal[] = [];
 
 export const __testing = {
