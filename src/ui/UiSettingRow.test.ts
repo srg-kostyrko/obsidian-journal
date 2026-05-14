@@ -42,5 +42,6 @@ describe("UiSettingRow", () => {
       slots: { default: "<button>Hidden</button>" },
     });
     expect(container.querySelector(".setting-item-control")).toBeNull();
+    expect(container.querySelector(".setting-item-info")).not.toBeNull();
   });
 });
