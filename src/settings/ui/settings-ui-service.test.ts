@@ -108,4 +108,19 @@ describe("SettingsUiService", () => {
       expect(service.current.value).toBeNull();
     });
   });
+
+  describe("reset", () => {
+    it("clears the stack to dashboard", () => {
+      const edit = subpage("edit");
+      const shelf = subpage("shelf");
+      const service = build({ subpages: [edit, shelf] });
+      service.push(edit, undefined);
+      const _afterFirst = service.current.value;
+      service.push(shelf, undefined);
+
+      service.reset();
+
+      expect(service.current.value).toBeNull();
+    });
+  });
 });

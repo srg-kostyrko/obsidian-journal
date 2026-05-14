@@ -2,12 +2,7 @@ import { computed, ref, type ComputedRef } from "vue";
 
 import { inject } from "@/infrastructure/di";
 
-import {
-  DuplicateBlockKeyError,
-  DuplicateSubpageKeyError,
-  NotImplementedError,
-  UnregisteredSubpageError,
-} from "../errors";
+import { DuplicateBlockKeyError, DuplicateSubpageKeyError, UnregisteredSubpageError } from "../errors";
 import { DashboardBlockToken, SubpageToken } from "../tokens";
 
 import type { AnySubpage, DashboardBlock, Subpage } from "./schema";
@@ -64,6 +59,6 @@ export class SettingsUiService {
   }
 
   reset(): void {
-    throw new NotImplementedError();
+    this.#stack.value = [];
   }
 }
