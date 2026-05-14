@@ -45,6 +45,25 @@ const cancelOnMount = defineComponent({
   },
 });
 
+const cancelThenSubmit = defineComponent({
+  setup() {
+    const { submit, cancel } = useModal<string>();
+    cancel();
+    submit("after-cancel");
+    return renderEmpty;
+  },
+});
+
+const submitThenCancel = defineComponent({
+  props: { value: { type: String, required: true } },
+  setup(props) {
+    const { submit, cancel } = useModal<string>();
+    submit(props.value);
+    cancel();
+    return renderEmpty;
+  },
+});
+
 const buttonModal = defineComponent({
   setup() {
     const { submit, cancel } = useModal<string>();
@@ -74,6 +93,16 @@ const buttonDefinition = defineModal<void, string>({
 const titledDefinition = defineModal<{ name: string }, string>({
   component: buttonModal,
   title: ({ name }) => `Modal for ${name}`,
+});
+
+const cancelThenSubmitDefinition = defineModal<void, string>({
+  component: cancelThenSubmit,
+  title: () => "Cancel then submit",
+});
+
+const submitThenCancelDefinition = defineModal<{ value: string }, string>({
+  component: submitThenCancel,
+  title: ({ value }) => `Submit ${value} then cancel`,
 });
 
 describe("ModalService", () => {
@@ -113,6 +142,20 @@ describe("ModalService", () => {
       const result = await pending;
       expectErr(result);
       expect(result.error).toBeInstanceOf(ModalCancelled);
+    });
+
+    it("ignores submit() called after cancel() within the same tick", async () => {
+      const { service } = build();
+      const result = await service.open(cancelThenSubmitDefinition, undefined);
+      expectErr(result);
+      expect(result.error).toBeInstanceOf(ModalCancelled);
+    });
+
+    it("ignores cancel() called after submit() within the same tick", async () => {
+      const { service } = build();
+      const result = await service.open(submitThenCancelDefinition, { value: "first" });
+      expectOk(result);
+      expect(result.value).toBe("first");
     });
 
     it("resolves two concurrent opens independently", async () => {
