@@ -1,4 +1,5 @@
-import { ref, watch, type Ref, type WatchStopHandle } from "vue";
+import * as v from "valibot";
+import { reactive, ref, watch, type Ref, type WatchStopHandle } from "vue";
 
 import { inject } from "@/infrastructure/di";
 import { PluginData } from "@/infrastructure/host";
@@ -13,7 +14,6 @@ import {
   UnregisteredSliceError,
 } from "./errors";
 import { runMigrations } from "./migrations";
-import { ReactiveSlice } from "./reactive-slice";
 import { CollectionDefinitionToken, MigrationToken, SliceDefinitionToken } from "./tokens";
 import { CURRENT_VERSION } from "./version";
 
@@ -32,11 +32,12 @@ export class SettingsService {
   readonly #collections: readonly AnyCollectionDefinition[] = inject(CollectionDefinitionToken);
   readonly #migrations = inject(MigrationToken);
 
-  readonly #sliceHandles = new Map<string, ReactiveSlice<AnySchema>>();
+  readonly #root: Record<string, unknown> = reactive({});
+  readonly #sliceKeys = new Set<string>();
   readonly #collectionHandles = new Map<string, ReactiveCollection<AnySchema>>();
   readonly #noticesRef = ref<readonly SettingsNotice[]>([]);
-  readonly #watchHandles: WatchStopHandle[] = [];
 
+  #stopWatch?: WatchStopHandle;
   #saveTimer: number | undefined;
   #initialized = false;
 
@@ -57,6 +58,7 @@ export class SettingsService {
         : { version: CURRENT_VERSION };
       const migrated = yield* runMigrations(root, this.#migrations, CURRENT_VERSION);
       this.#hydrate(migrated);
+      this.#stopWatch = watch(this.#root, () => this.#scheduleSave(), { deep: true });
       this.#initialized = true;
     });
   }
@@ -64,9 +66,8 @@ export class SettingsService {
   getSlice<TKey extends string, TSchema extends AnySchema>(
     slice: SliceDefinition<TKey, TSchema>,
   ): SliceHandle<InferOutput<TSchema>> {
-    const handle = this.#sliceHandles.get(slice.key);
-    if (!handle) throw new UnregisteredSliceError(slice.key);
-    return handle;
+    if (!this.#sliceKeys.has(slice.key)) throw new UnregisteredSliceError(slice.key);
+    return { state: this.#root[slice.key] };
   }
 
   getCollection<TKey extends string, TItem extends AnySchema>(
@@ -95,26 +96,14 @@ export class SettingsService {
       this.#noticesRef.value = [...this.#noticesRef.value, n];
     };
     for (const definition of this.#slices) {
-      const handle = new ReactiveSlice(definition, migrated[definition.key], pushNotice);
-      this.#sliceHandles.set(definition.key, handle);
-      this.#watchHandles.push(
-        watch(
-          () => handle.state,
-          () => this.#scheduleSave(),
-          { deep: true },
-        ),
-      );
+      this.#root[definition.key] = parseSliceValue(definition, migrated[definition.key], pushNotice);
+      this.#sliceKeys.add(definition.key);
     }
     for (const definition of this.#collections) {
-      const handle = new ReactiveCollection(definition, migrated[definition.key], pushNotice);
+      this.#root[definition.key] = {};
+      const entries = this.#root[definition.key] as Record<string, InferOutput<AnySchema>>;
+      const handle = new ReactiveCollection(definition, entries, migrated[definition.key], pushNotice);
       this.#collectionHandles.set(definition.key, handle);
-      this.#watchHandles.push(
-        watch(
-          () => handle.entries,
-          () => this.#scheduleSave(),
-          { deep: true },
-        ),
-      );
     }
   }
 
@@ -132,16 +121,14 @@ export class SettingsService {
       window.clearTimeout(this.#saveTimer);
       this.#saveTimer = undefined;
     }
-    for (const stop of this.#watchHandles) stop();
-    this.#watchHandles.length = 0;
+    this.#stopWatch?.();
+    this.#stopWatch = undefined;
     this.#initialized = false;
   }
 
   async #flush(): Promise<void> {
-    const root: Record<string, unknown> = { version: CURRENT_VERSION };
-    for (const [key, handle] of this.#sliceHandles) root[key] = handle.serialize();
-    for (const [key, handle] of this.#collectionHandles) root[key] = handle.serialize();
-    const result = await this.#pluginData.save(root);
+    const out = JSON.parse(JSON.stringify({ ...this.#root, version: CURRENT_VERSION })) as Record<string, unknown>;
+    const result = await this.#pluginData.save(out);
     if (result.kind === "err") {
       this.#noticesRef.value = [
         ...this.#noticesRef.value,
@@ -153,4 +140,19 @@ export class SettingsService {
       ];
     }
   }
+}
+
+function parseSliceValue<TSchema extends AnySchema>(
+  definition: SliceDefinition<string, TSchema>,
+  raw: unknown,
+  pushNotice: (notice: SettingsNotice) => void,
+): InferOutput<TSchema> {
+  const parsed = v.safeParse(definition.schema, raw);
+  if (parsed.success) return parsed.output;
+  pushNotice({
+    kind: "slice-reset",
+    sliceKey: definition.key,
+    detail: parsed.issues.map((issue) => issue.message).join("; "),
+  });
+  return structuredClone(definition.defaults);
 }

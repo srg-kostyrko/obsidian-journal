@@ -1,5 +1,4 @@
 import * as v from "valibot";
-import { reactive } from "vue";
 
 import type { SettingsNotice } from "./notices";
 import type { CollectionDefinition } from "./schema";
@@ -10,22 +9,23 @@ type AnySchema = BaseSchema<unknown, unknown, BaseIssue<unknown>>;
 
 export class ReactiveCollection<TItem extends AnySchema> implements CollectionHandle<InferOutput<TItem>> {
   readonly #definition: CollectionDefinition<string, TItem>;
-  readonly #entries: Map<string, InferOutput<TItem>>;
+  readonly #entries: Record<string, InferOutput<TItem>>;
 
   constructor(
     definition: CollectionDefinition<string, TItem>,
+    entries: Record<string, InferOutput<TItem>>,
     raw: unknown,
     pushNotice: (notice: SettingsNotice) => void,
   ) {
     this.#definition = definition;
-    this.#entries = reactive(new Map());
+    this.#entries = entries;
     if (raw !== null && typeof raw === "object" && !Array.isArray(raw)) {
       for (const [id, value] of Object.entries(raw)) {
         const parsed = v.safeParse(definition.itemSchema, value);
         if (parsed.success) {
-          this.#entries.set(id, reactive(parsed.output as object));
+          this.#entries[id] = parsed.output;
         } else {
-          this.#entries.set(id, reactive(definition.defaultItem(id) as object));
+          this.#entries[id] = definition.defaultItem(id);
           pushNotice({
             kind: "slice-reset",
             sliceKey: `${definition.key}/${id}`,
@@ -36,32 +36,21 @@ export class ReactiveCollection<TItem extends AnySchema> implements CollectionHa
     }
   }
 
-  get entries(): ReadonlyMap<string, InferOutput<TItem>> {
+  get entries(): Readonly<Record<string, InferOutput<TItem>>> {
     return this.#entries;
   }
 
   add(id: string, init?: Partial<InferOutput<TItem>>): InferOutput<TItem> {
-    const item = reactive({
-      ...(this.#definition.defaultItem(id) as object),
-      ...init,
-    }) as InferOutput<TItem>;
-    this.#entries.set(id, item);
-    return item;
+    const item = { ...(this.#definition.defaultItem(id) as object), ...init } as InferOutput<TItem>;
+    this.#entries[id] = item;
+    return this.#entries[id];
   }
 
   remove(id: string): void {
-    this.#entries.delete(id);
+    delete this.#entries[id];
   }
 
   get(id: string): InferOutput<TItem> | undefined {
-    return this.#entries.get(id);
-  }
-
-  serialize(): Record<string, unknown> {
-    const out: Record<string, unknown> = {};
-    for (const [id, value] of this.#entries) {
-      out[id] = JSON.parse(JSON.stringify(value));
-    }
-    return out;
+    return this.#entries[id];
   }
 }

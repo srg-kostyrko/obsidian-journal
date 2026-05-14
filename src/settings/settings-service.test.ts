@@ -85,7 +85,6 @@ describe("SettingsService", () => {
       const { service } = build({ raw: { version: 3, calendar: { dow: "not-a-number" } } });
       await service.initialize();
       expect(service.getSlice(calendarSlice).state.dow).toBe(1);
-      expect(service.getSlice(calendarSlice).status.value).toBe("reset");
     });
 
     it("emits a slice-reset notice when a slice falls back", async () => {

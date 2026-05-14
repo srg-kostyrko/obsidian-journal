@@ -1,10 +1,12 @@
 import * as v from "valibot";
 import { describe, expect, it } from "vitest";
+import { reactive } from "vue";
 
 import { ReactiveCollection } from "./collection";
 import { defineCollection } from "./schema";
 
 import type { SettingsNotice } from "./notices";
+import type { InferOutput } from "valibot";
 
 const journalSchema = v.object({
   name: v.string(),
@@ -18,7 +20,8 @@ const journalCollection = defineCollection("journals", journalSchema, (id) => ({
 
 function setup(raw: unknown) {
   const notices: SettingsNotice[] = [];
-  const collection = new ReactiveCollection(journalCollection, raw, (n) => notices.push(n));
+  const entries = reactive<Record<string, InferOutput<typeof journalSchema>>>({});
+  const collection = new ReactiveCollection(journalCollection, entries, raw, (n) => notices.push(n));
   return { collection, notices };
 }
 
@@ -43,7 +46,7 @@ describe("ReactiveCollection", () => {
 
     it("starts empty when raw is undefined", () => {
       const { collection } = setup(undefined);
-      expect(collection.entries.size).toBe(0);
+      expect(Object.keys(collection.entries)).toHaveLength(0);
     });
   });
 
@@ -66,18 +69,7 @@ describe("ReactiveCollection", () => {
       const { collection } = setup({ daily: { name: "Daily", enabled: true } });
       collection.remove("daily");
       expect(collection.get("daily")).toBeUndefined();
-      expect(collection.entries.size).toBe(0);
-    });
-  });
-
-  describe("serialize", () => {
-    it("returns a plain object mirroring entries", () => {
-      const { collection } = setup({ daily: { name: "Daily", enabled: true } });
-      collection.add("weekly");
-      expect(collection.serialize()).toEqual({
-        daily: { name: "Daily", enabled: true },
-        weekly: { name: "weekly", enabled: true },
-      });
+      expect(Object.keys(collection.entries)).toHaveLength(0);
     });
   });
 });

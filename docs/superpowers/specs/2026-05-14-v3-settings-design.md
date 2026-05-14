@@ -59,8 +59,7 @@ src/settings/
   version.ts               CURRENT_VERSION constant
   settings-service.ts      SettingsService (eager, public)
   settings-service.test.ts
-  reactive-slice.ts        internal: Vue reactive wrapper + debounced save
-  collection.ts            internal: keyed reactive collection
+  collection.ts            internal: keyed reactive collection handle
   collection.test.ts
   migrations.ts            internal: pipeline runner
   migrations.test.ts
@@ -80,14 +79,17 @@ src/settings/
   `service.getSlice(...)`.
 - **`tokens.ts`** — three multi-tokens.
 - **`settings-service.ts`** — `SettingsService` resolves all three
-  multi-tokens at construction, holds the reactive state, exposes
+  multi-tokens at construction, holds a single root `reactive({})` that
+  contains every slice value and every collection's keyed record,
+  installs one deep `watch` on that root, and schedules a debounced
+  flush through `PluginData.save()` (300 ms). Exposes
   `getSlice(definition)` / `getCollection(definition)` and a readonly
   `notices` reactive array.
-- **`reactive-slice.ts`** — wraps a parsed slice in Vue `reactive()`,
-  installs a deep `watch`, and schedules a debounced flush through
-  `PluginData.save()` (300 ms).
-- **`collection.ts`** — internal class implementing `CollectionHandle<T>`
-  over a reactive `Map`.
+- **`collection.ts`** — `CollectionHandle<T>` implementation that wraps
+  a reactive `Record<string, T>` provided by the service (the same
+  object stored under `root[key]`, so its mutations fire the root
+  watch). The wire format on disk is already `Record<string, T>`, so no
+  serialize step is required — flush stringifies the root directly.
 - **`migrations.ts`** — sorts contributed migrations by `fromVersion`,
   runs them in order against the raw root until the version reaches
   `CURRENT_VERSION`.
@@ -188,11 +190,10 @@ export class SettingsService {
 
 export interface SliceHandle<T> {
   readonly state: T; // Vue reactive — read/write directly
-  readonly status: Readonly<Ref<"ok" | "reset">>;
 }
 
 export interface CollectionHandle<T> {
-  readonly entries: ReadonlyMap<string, T>; // reactive
+  readonly entries: Readonly<Record<string, T>>; // reactive
   add(id: string, init?: Partial<T>): T;
   remove(id: string): void;
   get(id: string): T | undefined;
@@ -246,15 +247,15 @@ API decisions confirmed during brainstorming:
    wrapped in `MigrationFailedError`.
 5. **Per-slice validate.** For each slice/collection definition, the
    service calls `v.safeParse(schema, migrated[key])`.
-   - Success: seed reactive state with the parsed value.
-   - Failure: seed with `defaults` (or an empty `Map` for collections),
-     set `status: "reset"`, push a `SettingsNotice` onto `notices`.
-6. **Wire up save.** Install a deep Vue `watch` per slice. On change,
-   schedule a 300 ms debounced flush. Save serializes the whole root:
-   `{ version: CURRENT_VERSION, [sliceKey]: state, ... }` through
-   `PluginData.save()`. A save IO failure pushes a `save-failed` notice
-   and leaves the in-memory state intact; the next mutation re-arms the
-   flush.
+   - Success: place the parsed value at `root[key]`.
+   - Failure: place `defaults` (or an empty object for collections) at
+     `root[key]` and push a `slice-reset` `SettingsNotice` onto `notices`.
+6. **Wire up save.** Install a single deep Vue `watch` on the root. On
+   any change, schedule a 300 ms debounced flush. Save serializes the
+   whole root: `{ version: CURRENT_VERSION, [sliceKey]: state, ... }`
+   through `PluginData.save()`. A save IO failure pushes a `save-failed`
+   notice and leaves the in-memory state intact; the next mutation
+   re-arms the flush.
 
 `CURRENT_VERSION` lives in `settings/version.ts` as a single exported
 constant. Bumping it is a deliberate act paired with adding a `Migration`
@@ -281,6 +282,9 @@ user data.
 
 The slice-level fallback (Q4 → B in brainstorming) only kicks in for
 **validation** failures (step 5), not for load/migration failures.
+Consumers detect that a slice fell back by filtering `notices` for
+`{ kind: "slice-reset", sliceKey: <key> }`; there is no per-slice
+`status` flag — the notice array is the single source of truth.
 
 ## Data flow
 
@@ -291,9 +295,9 @@ PluginData.load()  ─►  raw: unknown
                        migrated: { version, [key]: unknown }
                        │
                        ▼  per slice: v.safeParse(schema, migrated[key])
-                       parsed ──► reactive(state) ──► SliceHandle
+                       parsed ──► root[key] (single reactive root)
                        │
-                       │  Vue deep watch (per slice)
+                       │  one Vue deep watch on root
                        ▼
                        debounced 300ms
                        │
@@ -301,9 +305,10 @@ PluginData.load()  ─►  raw: unknown
                        PluginData.save()
 ```
 
-A `CollectionHandle` is a `reactive(new Map())` whose values pass through
-the same per-item validation; the wire format is `{ [id]: item, ... }`,
-matching v2's `journals: Record<string, JournalSettings>` shape on disk.
+A `CollectionHandle` wraps a reactive `Record<string, T>` whose values
+pass through the same per-item validation; the wire format is
+`{ [id]: item, ... }`, matching v2's
+`journals: Record<string, JournalSettings>` shape on disk.
 
 ## Errors
 
@@ -330,7 +335,7 @@ Per `feedback_test_hygiene.md` and `feedback_testing_dir_layout.md`:
 - `settings-service.test.ts`
   - load → migrate → validate happy path returns typed slice handles
   - missing version treated as 0 and migrated up
-  - corrupted slice falls back to defaults, sets `status: "reset"`, emits a `slice-reset` notice
+  - corrupted slice falls back to defaults and emits a `slice-reset` notice
   - duplicate slice key fails boot with `SliceKeyConflictError`
   - save debounce coalesces multiple mutations into one `PluginData.save` call
   - save IO failure emits a `save-failed` notice; next mutation re-attempts save
