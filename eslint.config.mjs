@@ -101,6 +101,7 @@ export default [
         },
       ],
       "unicorn/no-array-callback-reference": "off",
+      "unicorn/prefer-global-this": "off",
 
       "no-restricted-imports": [
         "error",
