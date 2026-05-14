@@ -197,3 +197,5 @@ export class FakePluginData implements Pick<PluginData, "load" | "save"> {
     return AsyncResult.ok(undefined);
   }
 }
+
+export { FakeModalHandle, FakeModalService } from "./modals/testing";
