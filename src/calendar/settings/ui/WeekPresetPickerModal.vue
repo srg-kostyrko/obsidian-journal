@@ -5,7 +5,7 @@ import { Calendar } from "@/calendar";
 import { detectCurrentPreset, weekPresets, type WeekPreset } from "@/calendar/presets";
 import { m } from "@/i18n";
 import { useService } from "@/infrastructure/di";
-import type { ModalApi } from "@/infrastructure/host/modals";
+import { useModal } from "@/infrastructure/host/modals";
 import UiButton from "@/ui/UiButton.vue";
 import UiDropdown from "@/ui/UiDropdown.vue";
 import UiNumberInput from "@/ui/UiNumberInput.vue";
@@ -13,7 +13,8 @@ import UiSettingRow from "@/ui/UiSettingRow.vue";
 
 import type { CalendarSliceState } from "../slice";
 
-const props = defineProps<{ current: CalendarSliceState; api: ModalApi<CalendarSliceState> }>();
+const props = defineProps<{ current: CalendarSliceState }>();
+const api = useModal<CalendarSliceState>();
 
 type LocalChoice = "locale" | WeekPreset["id"] | "custom";
 
@@ -45,22 +46,22 @@ function pickCustom(): void {
 
 function update(): void {
   if (localChoice.value === "locale") {
-    props.api.submit({ mode: "locale" });
+    api.submit({ mode: "locale" });
     return;
   }
   if (localChoice.value === "custom") {
     const dow = Number.parseInt(customDow.value, 10);
     const firstDay = Math.min(7, Math.max(1, Math.round(customFirstDay.value)));
     const doy = 7 + dow - firstDay;
-    props.api.submit({ mode: "custom", dow, doy, global: stagedGlobal });
+    api.submit({ mode: "custom", dow, doy, global: stagedGlobal });
     return;
   }
   const preset = weekPresets.find((p) => p.id === localChoice.value);
   if (!preset) {
-    props.api.cancel();
+    api.cancel();
     return;
   }
-  props.api.submit({ mode: "custom", dow: preset.dow, doy: preset.doy, global: stagedGlobal });
+  api.submit({ mode: "custom", dow: preset.dow, doy: preset.doy, global: stagedGlobal });
 }
 
 function presetUsed(preset: WeekPreset): string {
@@ -107,7 +108,7 @@ function presetUsed(preset: WeekPreset): string {
     </template>
 
     <UiSettingRow>
-      <UiButton @click="props.api.cancel()">{{ m.calendar_picker_cancel_action() }}</UiButton>
+      <UiButton @click="api.cancel()">{{ m.calendar_picker_cancel_action() }}</UiButton>
       <UiButton cta @click="update">{{ m.calendar_picker_update_action() }}</UiButton>
     </UiSettingRow>
   </div>
