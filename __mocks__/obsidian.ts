@@ -80,11 +80,7 @@ export class Modal {
     this.modalEl.remove();
   }
 
-  onOpen(): void {
-    /* override */
-  }
+  onOpen(): void {}
 
-  onClose(): void {
-    /* override */
-  }
+  onClose(): void {}
 }
