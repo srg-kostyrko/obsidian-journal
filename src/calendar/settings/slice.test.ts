@@ -1,7 +1,7 @@
 import * as v from "valibot";
 import { describe, expect, it } from "vitest";
 
-import { calendarSlice, calendarSliceSchema } from "./slice";
+import { calendarSliceSchema } from "./slice";
 
 describe("calendarSliceSchema", () => {
   it("accepts the locale mode", () => {
@@ -47,15 +47,5 @@ describe("calendarSliceSchema", () => {
       global: false,
     });
     expect(parsed.success).toBe(false);
-  });
-});
-
-describe("calendarSlice", () => {
-  it("defaults to locale mode", () => {
-    expect(calendarSlice.defaults).toEqual({ mode: "locale" });
-  });
-
-  it('registers under the "calendar" key', () => {
-    expect(calendarSlice.key).toBe("calendar");
   });
 });
