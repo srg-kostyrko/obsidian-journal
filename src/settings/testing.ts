@@ -1,7 +1,10 @@
+import * as v from "valibot";
+
 import { Container } from "@/infrastructure/di";
 import { PluginData } from "@/infrastructure/host";
 import { FakePluginData } from "@/infrastructure/host/testing";
 
+import { defineCollection, defineSlice } from "./schema";
 import { SettingsService } from "./settings-service";
 import { CollectionDefinitionToken, MigrationToken, SliceDefinitionToken } from "./tokens";
 
@@ -24,6 +27,9 @@ export interface CreatedSettingsService {
 
 const IDENTITY_MIGRATION: Migration = { fromVersion: -1, toVersion: -1, migrate: (r) => r };
 
+const SENTINEL_SLICE = defineSlice("__test_core__", v.object({}), {});
+const SENTINEL_COLLECTION = defineCollection("__test_core_collection__", v.object({}), () => ({}));
+
 export function createSettingsService(options: CreateSettingsServiceOptions = {}): CreatedSettingsService {
   const data = new FakePluginData(options.raw);
   const c = new Container();
@@ -31,24 +37,12 @@ export function createSettingsService(options: CreateSettingsServiceOptions = {}
   if (options.slices && options.slices.length > 0) {
     for (const s of options.slices) c.register(SliceDefinitionToken).useValue(s);
   } else {
-    const sentinelSlice: AnySliceDefinition = {
-      __brand: "slice",
-      key: "__test_core__",
-      schema: { kind: "schema" } as never,
-      defaults: {},
-    };
-    c.register(SliceDefinitionToken).useValue(sentinelSlice);
+    c.register(SliceDefinitionToken).useValue(SENTINEL_SLICE);
   }
   if (options.collections && options.collections.length > 0) {
     for (const col of options.collections) c.register(CollectionDefinitionToken).useValue(col);
   } else {
-    const sentinelCollection: AnyCollectionDefinition = {
-      __brand: "collection",
-      key: "__test_core_collection__",
-      itemSchema: { kind: "schema" } as never,
-      defaultItem: () => ({}),
-    };
-    c.register(CollectionDefinitionToken).useValue(sentinelCollection);
+    c.register(CollectionDefinitionToken).useValue(SENTINEL_COLLECTION);
   }
   const migrations = options.migrations && options.migrations.length > 0 ? options.migrations : [IDENTITY_MIGRATION];
   for (const m of migrations) c.register(MigrationToken).useValue(m);
