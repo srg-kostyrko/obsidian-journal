@@ -126,10 +126,10 @@ describe("Container.resolve (multi tokens)", () => {
     expect(c.resolve(t)).toEqual(["a", "b", "c"]);
   });
 
-  it("throws TokenNotRegisteredError when a multi-token has no bindings", () => {
+  it("returns an empty array when a multi-token has no bindings", () => {
     const c = new Container();
     const t = createMultiToken<string>("Plugins");
-    expect(() => c.resolve(t)).toThrow(TokenNotRegisteredError);
+    expect(c.resolve(t)).toEqual([]);
   });
 
   it("resolves a multi-token to an array via inject() inside a factory", () => {

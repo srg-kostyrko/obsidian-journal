@@ -52,10 +52,12 @@ export class Container implements Resolver {
   resolve(token: AnyTokenLike): unknown {
     this.#ensureNotDisposed();
     const entries = this.#bindings.lookup(token);
+    const kind = tokenKind(token);
     if (!entries || entries.length === 0) {
+      if (kind === "multi") return [];
       throw new TokenNotRegisteredError(token, currentChain());
     }
-    return match(tokenKind(token))
+    return match(kind)
       .with("single", () => this.#resolveSingle(token, entries[0]))
       .with("multi", () => entries.map((stored) => this.#resolveSingle(token, stored)))
       .exhaustive();
