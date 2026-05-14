@@ -1,7 +1,7 @@
 import { Modal } from "obsidian";
-import { type App as VueApp, createApp, defineComponent, h } from "vue";
+import { type App as VueApp, createApp } from "vue";
 
-import { provideInjector } from "@/infrastructure/di";
+import { provideInjectorOnApp } from "@/infrastructure/di";
 import type { Injector } from "@/infrastructure/di";
 
 import { ModalContextKey } from "./modal-context";
@@ -47,19 +47,8 @@ export class VueModalHost<TProps, TResult> extends Modal {
       cancel: () => this.#settle({ kind: "cancel" }),
     };
 
-    const injector = this.#injector;
-    const userComponent = this.#definition.component;
-    const userProps = this.#props as Record<string, unknown>;
-    const renderUser = () => h(userComponent, userProps);
-
-    const root = defineComponent({
-      setup() {
-        provideInjector(injector);
-        return renderUser;
-      },
-    });
-
-    const app = createApp(root);
+    const app = createApp(this.#definition.component, this.#props as Record<string, unknown>);
+    provideInjectorOnApp(app, this.#injector);
     app.provide(ModalContextKey, api as ModalApi<unknown>);
     this.#vueApp = app;
     app.mount(this.contentEl);

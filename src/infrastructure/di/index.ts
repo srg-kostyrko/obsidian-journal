@@ -23,7 +23,7 @@ export { Lifetime } from "./lifetime";
 
 export { InjectorToken, type Injector } from "./injector";
 
-export { provideInjector, useInjector, useService } from "./vue";
+export { provideInjector, provideInjectorOnApp, useInjector, useService } from "./vue";
 
 export {
   CircularDependencyError,

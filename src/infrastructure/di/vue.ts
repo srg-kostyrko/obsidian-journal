@@ -1,4 +1,4 @@
-import { inject as vueInject, provide } from "vue";
+import { type App, inject as vueInject, provide } from "vue";
 
 import { MissingInjectorProviderError } from "./errors";
 
@@ -9,6 +9,10 @@ const InjectorKey = Symbol("di.vue.injector");
 
 export function provideInjector(injector: Injector): void {
   provide(InjectorKey, injector);
+}
+
+export function provideInjectorOnApp(app: App, injector: Injector): void {
+  app.provide(InjectorKey, injector);
 }
 
 export function useInjector(): Injector {
