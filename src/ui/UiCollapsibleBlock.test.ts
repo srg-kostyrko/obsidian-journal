@@ -1,8 +1,10 @@
 import userEvent from "@testing-library/user-event";
-import { render } from "@testing-library/vue";
-import { describe, expect, it, vi } from "vitest";
+import { cleanup, render } from "@testing-library/vue";
+import { afterEach, describe, expect, it, vi } from "vitest";
 
 import UiCollapsibleBlock from "./UiCollapsibleBlock.vue";
+
+afterEach(() => cleanup());
 
 vi.mock("@/infrastructure/host", () => ({
   renderIcon: vi.fn(() => null),

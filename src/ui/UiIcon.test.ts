@@ -1,5 +1,5 @@
-import { render } from "@testing-library/vue";
-import { describe, expect, it, vi } from "vitest";
+import { cleanup, render } from "@testing-library/vue";
+import { afterEach, describe, expect, it, vi } from "vitest";
 import { nextTick } from "vue";
 
 import { renderIcon } from "@/infrastructure/host";
@@ -9,6 +9,8 @@ import UiIcon from "./UiIcon.vue";
 vi.mock("@/infrastructure/host", () => ({
   renderIcon: vi.fn(),
 }));
+
+afterEach(() => cleanup());
 
 const mockRenderIcon = vi.mocked(renderIcon);
 

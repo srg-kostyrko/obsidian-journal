@@ -1,8 +1,10 @@
 import userEvent from "@testing-library/user-event";
-import { render } from "@testing-library/vue";
-import { describe, expect, it } from "vitest";
+import { cleanup, render } from "@testing-library/vue";
+import { afterEach, describe, expect, it } from "vitest";
 
 import UiToggle from "./UiToggle.vue";
+
+afterEach(() => cleanup());
 
 describe("UiToggle", () => {
   describe("click toggles the v-model", () => {
