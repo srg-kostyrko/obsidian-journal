@@ -1,12 +1,14 @@
 import userEvent from "@testing-library/user-event";
-import { render, screen } from "@testing-library/vue";
-import { describe, expect, it, vi } from "vitest";
+import { cleanup, render, screen } from "@testing-library/vue";
+import { afterEach, describe, expect, it, vi } from "vitest";
 import { defineComponent, h, provide } from "vue";
 
 import { ModalContextKey } from "./internal/modal-context";
 import { useModal } from "./use-modal";
 
 import type { ModalApi } from "./types";
+
+afterEach(() => cleanup());
 
 function renderDiv() {
   return h("div");

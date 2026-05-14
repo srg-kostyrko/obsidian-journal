@@ -8,12 +8,3 @@ export class ModalCancelled extends HostError {
     this.name = "ModalCancelled";
   }
 }
-
-export class ModalContextError extends HostError {
-  readonly kind = "modal-context-missing" as const;
-
-  constructor() {
-    super("useModal() must be called inside a modal opened via ModalService.");
-    this.name = "ModalContextError";
-  }
-}
