@@ -10,6 +10,7 @@ words:
   - offref
   - popout
   - rangeset
+  - subpages
   - templater
 ignorePaths:
   - node_modules

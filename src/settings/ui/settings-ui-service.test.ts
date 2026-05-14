@@ -3,12 +3,13 @@ import { defineComponent } from "vue";
 
 import { Container } from "@/infrastructure/di";
 
-import { DashboardBlockToken } from "../tokens";
+import { DuplicateBlockKeyError, DuplicateSubpageKeyError } from "../errors";
+import { DashboardBlockToken, SubpageToken } from "../tokens";
 
-import { defineDashboardBlock } from "./schema";
+import { defineDashboardBlock, defineSubpage } from "./schema";
 import { SettingsUiService } from "./settings-ui-service";
 
-import type { DashboardBlock } from "./schema";
+import type { DashboardBlock, Subpage } from "./schema";
 
 const Stub = defineComponent({ render: () => null });
 
@@ -16,10 +17,19 @@ function block(key: string, order: number): DashboardBlock {
   return defineDashboardBlock({ key, component: Stub, order });
 }
 
-function build(options: { blocks?: readonly DashboardBlock[] } = {}): SettingsUiService {
+function subpage(key: string): Subpage<void> {
+  return defineSubpage({ key, component: Stub });
+}
+
+function build(
+  options: {
+    blocks?: readonly DashboardBlock[];
+    subpages?: readonly Subpage<unknown>[];
+  } = {},
+): SettingsUiService {
   const c = new Container();
   for (const b of options.blocks ?? []) c.register(DashboardBlockToken).useValue(b);
-  // SubpageToken stays empty here; multi-tokens resolve to [] after Task 1.
+  for (const s of options.subpages ?? []) c.register(SubpageToken).useValue(s);
   c.register(SettingsUiService).useClass(SettingsUiService);
   return c.resolve(SettingsUiService);
 }
@@ -34,6 +44,18 @@ describe("SettingsUiService", () => {
       const service = build({ blocks: [a, b, c] });
 
       expect(service.blocks.map((entry) => entry.key)).toEqual(["b", "c", "a"]);
+    });
+
+    it("throws DuplicateBlockKeyError when two blocks share a key", () => {
+      const a = block("dup", 10);
+      const b = block("dup", 20);
+      expect(() => build({ blocks: [a, b] })).toThrow(DuplicateBlockKeyError);
+    });
+
+    it("throws DuplicateSubpageKeyError when two subpages share a key", () => {
+      const a = subpage("dup");
+      const b = subpage("dup");
+      expect(() => build({ subpages: [a, b] })).toThrow(DuplicateSubpageKeyError);
     });
   });
 });
