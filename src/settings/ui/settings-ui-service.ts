@@ -58,7 +58,9 @@ export class SettingsUiService {
   }
 
   pop(): void {
-    throw new NotImplementedError();
+    const stack = this.#stack.value;
+    if (stack.length === 0) return;
+    this.#stack.value = stack.slice(0, -1);
   }
 
   reset(): void {

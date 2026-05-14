@@ -76,4 +76,36 @@ describe("SettingsUiService", () => {
       expect(() => service.push(stray, undefined)).toThrow(UnregisteredSubpageError);
     });
   });
+
+  describe("pop", () => {
+    it("removes the top frame", () => {
+      const edit = subpage("journal-edit");
+      const service = build({ subpages: [edit] });
+      service.push(edit, undefined);
+
+      service.pop();
+
+      expect(service.current.value).toBeNull();
+    });
+
+    it("returns to the prior frame when used on a nested stack", () => {
+      const edit = subpage("edit");
+      const shelf = subpage("shelf");
+      const service = build({ subpages: [edit, shelf] });
+      service.push(edit, undefined);
+      const priorFrame = service.current.value;
+      service.push(shelf, undefined);
+
+      service.pop();
+
+      expect(service.current.value).toEqual(priorFrame);
+    });
+
+    it("is a no-op when the stack is empty", () => {
+      const service = build({});
+
+      expect(() => service.pop()).not.toThrow();
+      expect(service.current.value).toBeNull();
+    });
+  });
 });
