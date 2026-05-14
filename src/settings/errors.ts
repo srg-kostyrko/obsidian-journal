@@ -68,3 +68,11 @@ export class UnregisteredSubpageError extends SettingsError {
     this.name = "UnregisteredSubpageError";
   }
 }
+
+export class NotImplementedError extends SettingsError {
+  readonly kind = "not-implemented" as const;
+  constructor() {
+    super("This method is not yet implemented");
+    this.name = "NotImplementedError";
+  }
+}
