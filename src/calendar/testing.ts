@@ -7,7 +7,8 @@ import type { AnchorString } from "./types";
 
 export function installTestCalendar(week?: Partial<WeekConfig>): { teardown: () => void } {
   const priorLocale = moment.locale();
-  new Calendar({ dow: week?.dow ?? 1, doy: week?.doy ?? 4 });
+  const calendar = new Calendar();
+  calendar.applyWeekConfig({ dow: week?.dow ?? 1, doy: week?.doy ?? 4 }, { propagateToGlobal: false });
 
   return {
     teardown: () => {

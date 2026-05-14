@@ -2,8 +2,6 @@ import { moment } from "obsidian";
 
 export const CUSTOM_LOCALE = "custom-journal-locale";
 
-const DEFAULT_WEEK = { dow: 1, doy: 4 } as const;
-
 export interface WeekConfig {
   readonly dow: number;
   readonly doy: number;
@@ -16,20 +14,43 @@ type MomentConstructor = (
 ) => moment.Moment;
 
 export class Calendar {
-  constructor(week: WeekConfig = DEFAULT_WEEK) {
-    this.#initializeLocale(week);
-  }
+  readonly #initial: WeekConfig;
+  readonly #globalLocale: string;
 
-  #initializeLocale(week: WeekConfig): void {
+  constructor() {
     const systemLocale = moment.locale();
+    this.#globalLocale = systemLocale;
+
+    const data = moment.localeData();
+    this.#initial = { dow: data.firstDayOfWeek(), doy: data.firstDayOfYear() };
 
     if (!moment.locales().includes(CUSTOM_LOCALE)) {
-      const sourceConfig = (moment.localeData() as unknown as { _config: moment.LocaleSpecification })._config;
+      const sourceConfig = (data as unknown as { _config: moment.LocaleSpecification })._config;
       moment.defineLocale(CUSTOM_LOCALE, sourceConfig);
     }
-    moment.updateLocale(CUSTOM_LOCALE, { week: { dow: week.dow, doy: week.doy } });
-
+    moment.updateLocale(CUSTOM_LOCALE, { week: this.#initial });
     moment.locale(systemLocale);
+  }
+
+  applyWeekConfig(week: WeekConfig | "locale", options: { propagateToGlobal: boolean }): void {
+    const effective = week === "locale" ? this.#initial : week;
+    const currentLocale = moment.locale();
+
+    if (week === "locale") {
+      moment.updateLocale(this.#globalLocale, { week: this.#initial });
+      moment.updateLocale(CUSTOM_LOCALE, { week: this.#initial });
+    } else if (options.propagateToGlobal) {
+      moment.updateLocale(this.#globalLocale, { week: effective });
+      moment.updateLocale(CUSTOM_LOCALE, { week: effective });
+    } else {
+      moment.updateLocale(CUSTOM_LOCALE, { week: effective });
+    }
+
+    moment.locale(currentLocale);
+  }
+
+  weekdays(): readonly string[] {
+    return moment.localeData(CUSTOM_LOCALE).weekdays();
   }
 }
 
