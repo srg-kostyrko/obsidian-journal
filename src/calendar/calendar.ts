@@ -26,7 +26,9 @@ export class Calendar {
 
     if (!moment.locales().includes(CUSTOM_LOCALE)) {
       const sourceConfig = (data as unknown as { _config: moment.LocaleSpecification })._config;
-      moment.defineLocale(CUSTOM_LOCALE, sourceConfig);
+      // moment.defineLocale mutates `config.abbr` on the object passed in; clone so
+      // we don't corrupt the global locale's _config.abbr (which breaks moment.locale()).
+      moment.defineLocale(CUSTOM_LOCALE, { ...sourceConfig });
     }
     moment.updateLocale(CUSTOM_LOCALE, { week: this.#initial });
     moment.locale(systemLocale);
@@ -43,6 +45,7 @@ export class Calendar {
       moment.updateLocale(this.#globalLocale, { week: effective });
       moment.updateLocale(CUSTOM_LOCALE, { week: effective });
     } else {
+      moment.updateLocale(this.#globalLocale, { week: this.#initial });
       moment.updateLocale(CUSTOM_LOCALE, { week: effective });
     }
 

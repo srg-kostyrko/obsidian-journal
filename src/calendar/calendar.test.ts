@@ -60,6 +60,20 @@ describe("Calendar", () => {
       calendar.applyWeekConfig("locale", { propagateToGlobal: false });
       expect(globalWeek()).toEqual(priorGlobal);
     });
+
+    it("restores the global locale to the captured initial when toggling propagateToGlobal from true to false", () => {
+      const calendar = new Calendar();
+      calendar.applyWeekConfig({ dow: 0, doy: 6 }, { propagateToGlobal: true });
+      calendar.applyWeekConfig({ dow: 1, doy: 4 }, { propagateToGlobal: false });
+      expect(globalWeek()).toEqual(priorGlobal);
+    });
+
+    it("still sets the custom locale to the new week when toggling propagateToGlobal from true to false", () => {
+      const calendar = new Calendar();
+      calendar.applyWeekConfig({ dow: 0, doy: 6 }, { propagateToGlobal: true });
+      calendar.applyWeekConfig({ dow: 1, doy: 4 }, { propagateToGlobal: false });
+      expect(customWeek()).toEqual({ dow: 1, doy: 4 });
+    });
   });
 
   describe("weekdays", () => {
