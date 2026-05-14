@@ -52,9 +52,9 @@ export class SettingsUiService {
     return this.#current;
   }
 
-  push<TProps>(subpage: Subpage<TProps>, _props: TProps): void {
+  push<TProps>(subpage: Subpage<TProps>, props: TProps): void {
     if (!this.#subpageKeys.has(subpage.key)) throw new UnregisteredSubpageError(subpage.key);
-    throw new NotImplementedError();
+    this.#stack.value = [...this.#stack.value, { subpage: subpage as AnySubpage, props }];
   }
 
   pop(): void {

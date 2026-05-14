@@ -3,7 +3,7 @@ import { defineComponent } from "vue";
 
 import { Container } from "@/infrastructure/di";
 
-import { DuplicateBlockKeyError, DuplicateSubpageKeyError } from "../errors";
+import { DuplicateBlockKeyError, DuplicateSubpageKeyError, UnregisteredSubpageError } from "../errors";
 import { DashboardBlockToken, SubpageToken } from "../tokens";
 
 import { defineDashboardBlock, defineSubpage } from "./schema";
@@ -56,6 +56,24 @@ describe("SettingsUiService", () => {
       const a = subpage("dup");
       const b = subpage("dup");
       expect(() => build({ subpages: [a, b] })).toThrow(DuplicateSubpageKeyError);
+    });
+  });
+
+  describe("push", () => {
+    it("advances current to the new frame", () => {
+      const edit = subpage("journal-edit");
+      const service = build({ subpages: [edit] });
+
+      expect(service.current.value).toBeNull();
+      service.push(edit, undefined);
+      expect(service.current.value).toEqual({ subpage: edit, props: undefined });
+    });
+
+    it("throws UnregisteredSubpageError when the subpage was never bound", () => {
+      const stray = subpage("stray");
+      const service = build({ subpages: [] });
+
+      expect(() => service.push(stray, undefined)).toThrow(UnregisteredSubpageError);
     });
   });
 });
