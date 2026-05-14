@@ -1,6 +1,7 @@
-import { Notice, Plugin } from "obsidian";
+import { getLanguage, Notice, Plugin } from "obsidian";
 
 import { CalendarModule } from "@/calendar";
+import { initLocale } from "@/i18n";
 import { Container } from "@/infrastructure/di";
 import { FlowsModule } from "@/infrastructure/flows";
 import { createHostModule } from "@/infrastructure/host";
@@ -11,6 +12,8 @@ export default class JournalPlugin extends Plugin {
   #container?: Container;
 
   async onload(): Promise<void> {
+    initLocale(getLanguage());
+
     const container = new Container();
     container.addModule(LoggerModule);
     container.addModule(FlowsModule);

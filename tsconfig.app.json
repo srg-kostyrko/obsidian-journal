@@ -9,6 +9,7 @@
     "target": "ES2018",
     "esModuleInterop": true,
     "allowSyntheticDefaultImports": true,
+    "allowJs": true,
 
     "paths": {
       "@/*": ["./src/*"]
