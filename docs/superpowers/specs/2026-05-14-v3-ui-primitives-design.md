@@ -130,7 +130,7 @@ Renders `<input type="color">`.
 defineProps<{ name: string; tooltip?: string }>();
 ```
 
-On mount, watches `name` (immediate) and replaces a `<span>`'s children with the SVG element from `renderIcon(name)`. Clears children when `name` is empty. `tooltip` maps to `aria-label`. Uses `el.empty()` (Obsidian's `HTMLElement` extension) to clear, matching v2.
+On mount, watches `name` (immediate) and replaces a `<span>`'s children with the SVG element from `renderIcon(name)`. Clears children when `name` is empty. `tooltip` maps to `aria-label`. Uses the standard DOM `element.replaceChildren()` to clear — v2 used Obsidian's `element.empty()` extension, which is not available in happy-dom or in standard Vue typings.
 
 ### `UiIconButton`
 
