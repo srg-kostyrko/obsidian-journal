@@ -64,6 +64,10 @@ export default [
         extraFileExtensions: [".vue"],
       },
     },
+    rules: {
+      // Shell.vue is an intentional single-word architectural name; all other SFCs are multi-word.
+      "vue/multi-word-component-names": ["error", { ignores: ["Shell"] }],
+    },
   },
   {
     rules: {
