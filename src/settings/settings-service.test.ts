@@ -183,4 +183,33 @@ describe("SettingsService", () => {
       expect(notice).toBeDefined();
     });
   });
+
+  describe("dispose", () => {
+    beforeEach(() => {
+      vi.useFakeTimers();
+    });
+    afterEach(() => {
+      vi.useRealTimers();
+    });
+
+    it("cancels a pending save so it does not fire after dispose", async () => {
+      const { service, data } = build({ raw: { version: 3 } });
+      await service.initialize();
+      const saveSpy = vi.spyOn(data, "save");
+      service.getSlice(calendarSlice).state.dow = 9;
+      service[Symbol.dispose]();
+      await vi.advanceTimersByTimeAsync(500);
+      expect(saveSpy).not.toHaveBeenCalled();
+    });
+
+    it("stops reacting to mutations after dispose", async () => {
+      const { service, data } = build({ raw: { version: 3 } });
+      await service.initialize();
+      const saveSpy = vi.spyOn(data, "save");
+      service[Symbol.dispose]();
+      service.getSlice(calendarSlice).state.dow = 9;
+      await vi.advanceTimersByTimeAsync(500);
+      expect(saveSpy).not.toHaveBeenCalled();
+    });
+  });
 });

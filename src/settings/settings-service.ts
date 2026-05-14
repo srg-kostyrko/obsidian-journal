@@ -127,6 +127,16 @@ export class SettingsService {
     }, DEBOUNCE_MS);
   }
 
+  [Symbol.dispose](): void {
+    if (this.#saveTimer !== undefined) {
+      window.clearTimeout(this.#saveTimer);
+      this.#saveTimer = undefined;
+    }
+    for (const stop of this.#watchHandles) stop();
+    this.#watchHandles.length = 0;
+    this.#initialized = false;
+  }
+
   async #flush(): Promise<void> {
     const root: Record<string, unknown> = { version: CURRENT_VERSION };
     for (const [key, handle] of this.#sliceHandles) root[key] = handle.serialize();
