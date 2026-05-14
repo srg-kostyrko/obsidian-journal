@@ -317,9 +317,10 @@ const currentPreset = computed<WeekPreset | "custom" | "locale">(() =>
   slice.state.mode === "locale" ? "locale" : detectCurrentPreset({ dow: slice.state.dow, doy: slice.state.doy }),
 );
 
-async function change() {
-  const result = await modals.open(weekPresetPickerModal, { current: slice.state });
-  if (result.kind === "ok") slice.state = result.value;
+function change(): void {
+  void modals.open(weekPresetPickerModal, { current: slice.state }).tap((value) => {
+    slice.state = value;
+  });
 }
 </script>
 
