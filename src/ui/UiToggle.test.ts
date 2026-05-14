@@ -1,45 +1,27 @@
 import userEvent from "@testing-library/user-event";
 import { render } from "@testing-library/vue";
 import { describe, expect, it } from "vitest";
-import { defineComponent, ref } from "vue";
 
 import UiToggle from "./UiToggle.vue";
 
-function renderHarness(initial: boolean, disabled = false) {
-  const model = ref(initial);
-  const Host = defineComponent({
-    components: { UiToggle },
-    props: { disabled: Boolean },
-    setup() {
-      return { model };
-    },
-    template: `<UiToggle v-model="model" :disabled="disabled" />`,
-  });
-  const utilities = render(Host, { props: { disabled } });
-  return { ...utilities, model };
-}
-
 describe("UiToggle", () => {
   describe("click toggles the v-model", () => {
-    it("flips false to true", async () => {
-      const { container, model } = renderHarness(false);
-      const target = container.querySelector(".checkbox-container");
-      await userEvent.click(target!);
-      expect(model.value).toBe(true);
+    it("emits update:modelValue(true) when current value is false", async () => {
+      const { container, emitted } = render(UiToggle, { props: { modelValue: false } });
+      await userEvent.click(container.querySelector(".checkbox-container")!);
+      expect(emitted("update:modelValue")).toEqual([[true]]);
     });
 
-    it("flips true to false", async () => {
-      const { container, model } = renderHarness(true);
-      const target = container.querySelector(".checkbox-container");
-      await userEvent.click(target!);
-      expect(model.value).toBe(false);
+    it("emits update:modelValue(false) when current value is true", async () => {
+      const { container, emitted } = render(UiToggle, { props: { modelValue: true } });
+      await userEvent.click(container.querySelector(".checkbox-container")!);
+      expect(emitted("update:modelValue")).toEqual([[false]]);
     });
   });
 
-  it("does not toggle when disabled", async () => {
-    const { container, model } = renderHarness(false, true);
-    const target = container.querySelector(".checkbox-container");
-    await userEvent.click(target!);
-    expect(model.value).toBe(false);
+  it("does not emit update:modelValue when disabled", async () => {
+    const { container, emitted } = render(UiToggle, { props: { modelValue: false, disabled: true } });
+    await userEvent.click(container.querySelector(".checkbox-container")!);
+    expect(emitted("update:modelValue")).toBeUndefined();
   });
 });
