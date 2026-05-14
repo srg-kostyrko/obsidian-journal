@@ -44,3 +44,27 @@ export class UnregisteredSliceError extends SettingsError {
     this.name = "UnregisteredSliceError";
   }
 }
+
+export class DuplicateBlockKeyError extends SettingsError {
+  readonly kind = "duplicate-block-key" as const;
+  constructor(readonly key: string) {
+    super(`Settings dashboard block key conflict: "${key}" is bound more than once`);
+    this.name = "DuplicateBlockKeyError";
+  }
+}
+
+export class DuplicateSubpageKeyError extends SettingsError {
+  readonly kind = "duplicate-subpage-key" as const;
+  constructor(readonly key: string) {
+    super(`Settings subpage key conflict: "${key}" is bound more than once`);
+    this.name = "DuplicateSubpageKeyError";
+  }
+}
+
+export class UnregisteredSubpageError extends SettingsError {
+  readonly kind = "unregistered-subpage" as const;
+  constructor(readonly key: string) {
+    super(`Settings subpage "${key}" was not registered`);
+    this.name = "UnregisteredSubpageError";
+  }
+}
