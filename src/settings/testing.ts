@@ -5,9 +5,17 @@ import { LoggerFactory, LoggerFactoryToken, LogSinkMultiToken } from "@/infrastr
 import { MemorySink } from "@/infrastructure/logger/testing";
 
 import { SettingsService } from "./settings-service";
-import { CollectionDefinitionToken, MigrationToken, SliceDefinitionToken } from "./tokens";
+import {
+  CollectionDefinitionToken,
+  DashboardBlockToken,
+  MigrationToken,
+  SliceDefinitionToken,
+  SubpageToken,
+} from "./tokens";
+import { SettingsUiService } from "./ui/settings-ui-service";
 
 import type { AnyCollectionDefinition, AnySliceDefinition, Migration } from "./schema";
+import type { AnySubpage, DashboardBlock } from "./ui/schema";
 
 export { FakePluginData } from "@/infrastructure/host/testing";
 
@@ -35,4 +43,22 @@ export function createSettingsService(options: CreateSettingsServiceOptions = {}
   for (const m of options.migrations ?? []) c.register(MigrationToken).useValue(m);
   c.register(SettingsService).useClass(SettingsService);
   return { service: c.resolve(SettingsService), data, container: c };
+}
+
+export interface CreateSettingsUiServiceOptions {
+  blocks?: readonly DashboardBlock[];
+  subpages?: readonly AnySubpage[];
+}
+
+export interface CreatedSettingsUiService {
+  readonly service: SettingsUiService;
+  readonly container: Container;
+}
+
+export function createSettingsUiService(options: CreateSettingsUiServiceOptions = {}): CreatedSettingsUiService {
+  const c = new Container();
+  for (const b of options.blocks ?? []) c.register(DashboardBlockToken).useValue(b);
+  for (const s of options.subpages ?? []) c.register(SubpageToken).useValue(s);
+  c.register(SettingsUiService).useClass(SettingsUiService);
+  return { service: c.resolve(SettingsUiService), container: c };
 }
