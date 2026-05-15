@@ -86,4 +86,50 @@ describe("NumberingService", () => {
       expect(unwrap(n.assignNumbers("s", "2024-01-22" as AnchorString))).toEqual({ index: 1 });
     });
   });
+
+  describe("assignNumbers — multi-source cascade", () => {
+    it("release stays at anchorValue for 6 sprints, then advances", () => {
+      const c = buildContainer({
+        s: customJournal("s", "week", 1, "2024-01-01", {
+          numbering: {
+            enabled: true,
+            anchorDate: "2024-01-01" as AnchorString,
+            allowBefore: false,
+            sources: [
+              { variable: "release", frontmatterKey: "journal-release", anchorValue: 4711, reset: { kind: "never" } },
+              {
+                variable: "sprint",
+                frontmatterKey: "journal-sprint",
+                anchorValue: 1,
+                reset: { kind: "after", count: 6 },
+              },
+            ],
+          },
+        }),
+      });
+      const n = c.resolve(NumberingService);
+      expect(unwrap(n.assignNumbers("s", "2024-01-01" as AnchorString))).toEqual({ release: 4711, sprint: 1 });
+      expect(unwrap(n.assignNumbers("s", "2024-01-29" as AnchorString))).toEqual({ release: 4711, sprint: 5 });
+      expect(unwrap(n.assignNumbers("s", "2024-02-05" as AnchorString))).toEqual({ release: 4711, sprint: 6 });
+      expect(unwrap(n.assignNumbers("s", "2024-02-12" as AnchorString))).toEqual({ release: 4712, sprint: 1 });
+    });
+
+    it("outer source stays at anchorValue when inner reset is never", () => {
+      const c = buildContainer({
+        s: customJournal("s", "week", 1, "2024-01-01", {
+          numbering: {
+            enabled: true,
+            anchorDate: "2024-01-01" as AnchorString,
+            allowBefore: false,
+            sources: [
+              { variable: "phase", frontmatterKey: "journal-phase", anchorValue: 1, reset: { kind: "never" } },
+              { variable: "n", frontmatterKey: "journal-n", anchorValue: 1, reset: { kind: "never" } },
+            ],
+          },
+        }),
+      });
+      const n = c.resolve(NumberingService);
+      expect(unwrap(n.assignNumbers("s", "2024-01-29" as AnchorString))).toEqual({ phase: 1, n: 5 });
+    });
+  });
 });
