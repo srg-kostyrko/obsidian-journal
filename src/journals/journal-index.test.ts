@@ -76,12 +76,21 @@ describe("JournalIndex", () => {
   });
 
   describe("size", () => {
-    it("reports the number of entries", () => {
+    it("starts at zero on an empty index", () => {
+      expect(new JournalIndex().size).toBe(0);
+    });
+
+    it("increments when an entry is added", () => {
       const index = new JournalIndex();
-      expect(index.size).toBe(0);
       index.set(a("2022-01-01"), p("notes/a.md"));
       index.set(a("2022-01-02"), p("notes/b.md"));
       expect(index.size).toBe(2);
+    });
+
+    it("decrements when an entry is deleted", () => {
+      const index = new JournalIndex();
+      index.set(a("2022-01-01"), p("notes/a.md"));
+      index.set(a("2022-01-02"), p("notes/b.md"));
       index.delete(a("2022-01-01"));
       expect(index.size).toBe(1);
     });
