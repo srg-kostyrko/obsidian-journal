@@ -8,6 +8,7 @@ import { Option } from "@/infrastructure/result";
 import { SettingsService } from "@/settings";
 
 import { journalConfigCollection } from "./config";
+import { JournalsIndex } from "./journals-index";
 
 import type { JournalConfig, JournalWrite } from "./config";
 
@@ -74,6 +75,7 @@ function customStepBackward(anchor: AnchorString, every: MomentDurationUnit, dur
 
 export class CycleService {
   readonly #settings = inject(SettingsService);
+  readonly #index = inject(JournalsIndex);
 
   anchorOf(name: string, date: CalendarDate): Option<AnchorString> {
     return this.#cycleFor(name).flatMap((cycle) =>
@@ -110,7 +112,14 @@ export class CycleService {
           const period = PERIOD_CTORS[c.period](CalendarDate.fromAnchor(from));
           return Option.some(period.next().anchor.toAnchor());
         })
-        .with({ kind: "custom" }, (c) => Option.some(customStepForward(from, c.every, c.duration)))
+        .with({ kind: "custom" }, (c) => {
+          const stored = this.#index.entryByAnchor(name, from);
+          if (stored.isSome() && stored.value.endDate !== undefined) {
+            const m = localMoment(stored.value.endDate, "YYYY-MM-DD", true).add(1, "day");
+            return Option.some(m.format("YYYY-MM-DD") as AnchorString);
+          }
+          return Option.some(customStepForward(from, c.every, c.duration));
+        })
         .exhaustive(),
     );
   }

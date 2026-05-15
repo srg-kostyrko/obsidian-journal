@@ -4,6 +4,7 @@ import { CalendarDate } from "@/calendar";
 import type { AnchorString } from "@/calendar";
 import { installTestCalendar } from "@/calendar/testing";
 import { Container } from "@/infrastructure/di";
+import type { VaultPath } from "@/infrastructure/host";
 import { expectOk } from "@/infrastructure/result/testing";
 import { SettingsService } from "@/settings";
 
@@ -129,6 +130,22 @@ describe("CycleService", () => {
       const cycle = c.resolve(CycleService);
       const previous = cycle.previousAnchor("s", "2024-02-15" as AnchorString);
       expect(previous.isSome() && previous.value).toBe("2024-01-15");
+    });
+  });
+
+  describe("custom variant extension awareness", () => {
+    it("nextAnchor after an extended interval starts at endDate + 1 day", () => {
+      const c = buildContainer({ s: customJournal("s", "week", 1, "2024-01-01") });
+      const index = c.resolve(JournalsIndex);
+      index.register({
+        journalName: "s",
+        anchor: "2024-01-01" as AnchorString,
+        path: "S/1.md" as VaultPath,
+        endDate: "2024-01-14" as AnchorString, // extended through Jan 14 instead of Jan 7
+      });
+      const cycle = c.resolve(CycleService);
+      const next = cycle.nextAnchor("s", "2024-01-01" as AnchorString);
+      expect(next.isSome() && next.value).toBe("2024-01-15");
     });
   });
 });
