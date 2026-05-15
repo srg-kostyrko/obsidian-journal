@@ -22,7 +22,11 @@ export class VaultSubscriptionService {
       this.#scan(path);
     }
 
-    this.#unsubscribes.push(this.#notes.events.on("metadata-changed", (path) => this.#scan(path)));
+    this.#unsubscribes.push(
+      this.#notes.events.on("metadata-changed", (path) => this.#scan(path)),
+      this.#notes.events.on("renamed", ({ from, to }) => this.#index.transferPath(from, to)),
+      this.#notes.events.on("deleted", (path) => this.#index.unregister(path)),
+    );
 
     return AsyncResult.ok();
   }
