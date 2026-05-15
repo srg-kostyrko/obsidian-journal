@@ -10,8 +10,10 @@ export class AsyncResult<T, E> implements PromiseLike<Result<T, E>> {
     this.#promise = promise;
   }
 
-  static ok<T>(value: T): AsyncResult<T, never> {
-    return new AsyncResult<T, never>(Promise.resolve(new Ok<T, never>(value)));
+  static ok(): AsyncResult<void, never>;
+  static ok<T>(value: T): AsyncResult<T, never>;
+  static ok<T>(value?: T): AsyncResult<T | void, never> {
+    return new AsyncResult<T | void, never>(Promise.resolve(new Ok<T | void, never>(value)));
   }
 
   static err<E>(error: E): AsyncResult<never, E> {
