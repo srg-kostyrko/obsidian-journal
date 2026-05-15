@@ -10,7 +10,7 @@ import { SettingsService } from "@/settings";
 
 import { CycleService } from "./cycle";
 import { JournalsIndex } from "./journals-index";
-import { customJournal, fakeSettings, fixedJournal } from "./testing";
+import { customJournal, fakeSettings, fixedJournal, unwrap } from "./testing";
 
 function buildContainer(journals: Parameters<typeof fakeSettings>[0]): Container {
   const c = new Container();
@@ -130,6 +130,50 @@ describe("CycleService", () => {
       const cycle = c.resolve(CycleService);
       const previous = cycle.previousAnchor("s", "2024-02-15" as AnchorString);
       expect(previous.isSome() && previous.value).toBe("2024-01-15");
+    });
+  });
+
+  describe("startOf and endOf", () => {
+    it("returns the anchor's period start/end for fixed weekly", () => {
+      const c = buildContainer({ w: fixedJournal("w", { type: "week" }) });
+      const cycle = c.resolve(CycleService);
+      const anchor = unwrap(cycle.anchorOf("w", unwrapResult(CalendarDate.parse("2024-03-06"))));
+      // Adjust expected start/end to match the test calendar's dow=1 doy=4 — week containing
+      // 2024-03-06 (Wednesday) starts Mon 2024-03-04 and ends Sun 2024-03-10.
+      const start = cycle.startOf("w", anchor);
+      const end = cycle.endOf("w", anchor);
+      expect(start.isSome() && start.value.toAnchor()).toBe("2024-03-04");
+      expect(end.isSome() && end.value.toAnchor()).toBe("2024-03-10");
+    });
+
+    it("returns the anchor and computed end for custom monthly", () => {
+      const c = buildContainer({ s: customJournal("s", "month", 1, "2024-01-15") });
+      const cycle = c.resolve(CycleService);
+      const start = cycle.startOf("s", "2024-01-15" as AnchorString);
+      const end = cycle.endOf("s", "2024-01-15" as AnchorString);
+      expect(start.isSome() && start.value.toAnchor()).toBe("2024-01-15");
+      expect(end.isSome() && end.value.toAnchor()).toBe("2024-02-14"); // Feb 15 - 1 day
+    });
+
+    it("returns the stored endDate for custom anchor with extension", () => {
+      const c = buildContainer({ s: customJournal("s", "week", 1, "2024-01-01") });
+      const index = c.resolve(JournalsIndex);
+      index.register({
+        journalName: "s",
+        anchor: "2024-01-01" as AnchorString,
+        path: "S/1.md" as VaultPath,
+        endDate: "2024-01-14" as AnchorString,
+      });
+      const cycle = c.resolve(CycleService);
+      const end = cycle.endOf("s", "2024-01-01" as AnchorString);
+      expect(end.isSome() && end.value.toAnchor()).toBe("2024-01-14");
+    });
+
+    it("returns None for unknown journal", () => {
+      const c = buildContainer({});
+      const cycle = c.resolve(CycleService);
+      expect(cycle.startOf("missing", "2024-01-01" as AnchorString).isNone()).toBe(true);
+      expect(cycle.endOf("missing", "2024-01-01" as AnchorString).isNone()).toBe(true);
     });
   });
 

@@ -136,6 +136,32 @@ export class CycleService {
     );
   }
 
+  startOf(name: string, anchor: AnchorString): Option<CalendarDate> {
+    return this.#cycleFor(name).map((cycle) =>
+      match(cycle)
+        .with({ kind: "fixed" }, (c) => PERIOD_CTORS[c.period](CalendarDate.fromAnchor(anchor)).start)
+        .with({ kind: "custom" }, () => CalendarDate.fromAnchor(anchor))
+        .exhaustive(),
+    );
+  }
+
+  endOf(name: string, anchor: AnchorString): Option<CalendarDate> {
+    return this.#cycleFor(name).map((cycle) =>
+      match(cycle)
+        .with({ kind: "fixed" }, (c) => PERIOD_CTORS[c.period](CalendarDate.fromAnchor(anchor)).end)
+        .with({ kind: "custom" }, (c) => {
+          const stored = this.#index.entryByAnchor(name, anchor);
+          if (stored.isSome() && stored.value.endDate !== undefined) {
+            return CalendarDate.fromAnchor(stored.value.endDate);
+          }
+          const next = customStepForward(anchor, c.every, c.duration);
+          const end = localMoment(next, "YYYY-MM-DD", true).subtract(1, "day");
+          return CalendarDate.fromAnchor(end.format("YYYY-MM-DD") as AnchorString);
+        })
+        .exhaustive(),
+    );
+  }
+
   #cycleFor(name: string): Option<JournalCycle> {
     const config = this.#settings.getCollection(journalConfigCollection).get(name);
     return Option.fromNullable(config as JournalConfig | undefined).map((c) => buildCycle(c.write));
