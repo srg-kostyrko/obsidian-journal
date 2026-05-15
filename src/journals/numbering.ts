@@ -9,17 +9,54 @@ import { journalConfigCollection } from "./config";
 import { CycleService } from "./cycle";
 import { JournalsIndex } from "./journals-index";
 
-import type { JournalConfig, NumberingSource } from "./config";
+import type { JournalConfig, JournalNumberingConfig, NumberingSource } from "./config";
 
 export class NumberingService {
   readonly #settings = inject(SettingsService);
   readonly #cycle = inject(CycleService);
   readonly #index = inject(JournalsIndex);
 
+  readonly #cache = new Map<
+    string,
+    { fp: string; values: Map<AnchorString, Readonly<Record<string, number>> | null> }
+  >();
+
+  constructor() {
+    this.#index.events.on("journalDirty", ({ journalName }) => {
+      this.#cache.delete(journalName);
+    });
+  }
+
   assignNumbers(name: string, anchor: AnchorString): Option<Readonly<Record<string, number>>> {
     const config = this.#settings.getCollection(journalConfigCollection).get(name) as JournalConfig | undefined;
     if (!config) return Option.none();
     const numbering = config.numbering;
+    const fp = JSON.stringify(numbering);
+
+    let bucket = this.#cache.get(name);
+    if (bucket && bucket.fp !== fp) {
+      this.#cache.delete(name);
+      bucket = undefined;
+    }
+    if (!bucket) {
+      bucket = { fp, values: new Map() };
+      this.#cache.set(name, bucket);
+    }
+    const cached = bucket.values.get(anchor);
+    if (cached !== undefined) {
+      return cached === null ? Option.none() : Option.some(cached);
+    }
+
+    const result = this.#compute(name, anchor, numbering);
+    bucket.values.set(anchor, result.isSome() ? result.value : null);
+    return result;
+  }
+
+  #compute(
+    name: string,
+    anchor: AnchorString,
+    numbering: JournalNumberingConfig,
+  ): Option<Readonly<Record<string, number>>> {
     if (!numbering.enabled) return Option.none();
     if (!numbering.allowBefore && anchor < numbering.anchorDate) return Option.none();
 

@@ -155,4 +155,26 @@ describe("NumberingService", () => {
       expect(withBasis).toEqual({ index: 201 });
     });
   });
+
+  describe("cache invalidation", () => {
+    it("recomputes after journalDirty fires", async () => {
+      const c = buildContainer({ s: customJournal("s", "week", 1, "2024-01-01") });
+      const n = c.resolve(NumberingService);
+      const index = c.resolve(JournalsIndex);
+
+      const initial = unwrap(n.assignNumbers("s", "2024-01-08" as AnchorString));
+      expect(initial).toEqual({ index: 2 });
+
+      index.register({
+        journalName: "s",
+        anchor: "2024-01-01" as AnchorString,
+        path: "S/X.md" as VaultPath,
+        numbers: { index: 100 },
+      });
+      await Promise.resolve();
+
+      const recomputed = unwrap(n.assignNumbers("s", "2024-01-08" as AnchorString));
+      expect(recomputed).toEqual({ index: 101 });
+    });
+  });
 });
