@@ -225,4 +225,34 @@ describe("JournalsIndex", () => {
       expect(events.entryChanged).toEqual([]);
     });
   });
+
+  describe("journalDirty coalescing", () => {
+    it("multiple register calls within one microtask emit one journalDirty per journal", async () => {
+      const index = new JournalsIndex();
+      const events = capture(index);
+      index.register(entry("daily", "2022-01-01", "a.md"));
+      index.register(entry("daily", "2022-01-02", "b.md"));
+      index.register(entry("daily", "2022-01-03", "c.md"));
+      await Promise.resolve();
+      expect(events.journalDirty).toEqual([{ journalName: "daily" }]);
+    });
+
+    it("changes across different journals emit one journalDirty each", async () => {
+      const index = new JournalsIndex();
+      const events = capture(index);
+      index.register(entry("daily", "2022-01-01", "a.md"));
+      index.register(entry("weekly", "2022-W01", "w.md"));
+      await Promise.resolve();
+      expect(new Set(events.journalDirty.map((event) => event.journalName))).toEqual(new Set(["daily", "weekly"]));
+      expect(events.journalDirty).toHaveLength(2);
+    });
+
+    it("entryChanged still fires synchronously per mutation during coalescing", () => {
+      const index = new JournalsIndex();
+      const events = capture(index);
+      index.register(entry("daily", "2022-01-01", "a.md"));
+      index.register(entry("daily", "2022-01-02", "b.md"));
+      expect(events.entryChanged).toHaveLength(2);
+    });
+  });
 });
