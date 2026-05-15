@@ -58,7 +58,6 @@ export class JournalIndex {
   findPrevious(from: AnchorString): Option<VaultPath> {
     const result = this.#bsearch(from);
     const previousIndex = (result.found ? result.index : result.insertionPoint) - 1;
-    if (previousIndex < 0) return Option.none<VaultPath>();
     return Option.fromNullable(this.#sortedAnchors[previousIndex]).flatMap((anchor) => this.get(anchor));
   }
 

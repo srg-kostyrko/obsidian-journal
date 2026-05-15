@@ -172,14 +172,9 @@ describe("JournalIndex", () => {
       expect(result.value).toBe(p("notes/a.md"));
     });
 
-    it("returns None when from is at the last anchor", () => {
-      const result = buildFindIndex().findNext(a("2022-01-10"));
-      expect(result.isNone()).toBe(true);
-    });
-
-    it("returns None when from is past the last anchor", () => {
-      const result = buildFindIndex().findNext(a("2099-12-31"));
-      expect(result.isNone()).toBe(true);
+    it("returns None when from is at or past the last anchor", () => {
+      expect(buildFindIndex().findNext(a("2022-01-10")).isNone()).toBe(true);
+      expect(buildFindIndex().findNext(a("2099-12-31")).isNone()).toBe(true);
     });
 
     it("returns None when the index is empty", () => {
@@ -206,14 +201,9 @@ describe("JournalIndex", () => {
       expect(result.value).toBe(p("notes/c.md"));
     });
 
-    it("returns None when from is at the first anchor", () => {
-      const result = buildFindIndex().findPrevious(a("2022-01-01"));
-      expect(result.isNone()).toBe(true);
-    });
-
-    it("returns None when from is before the first anchor", () => {
-      const result = buildFindIndex().findPrevious(a("2021-01-01"));
-      expect(result.isNone()).toBe(true);
+    it("returns None when from is at or before the first anchor", () => {
+      expect(buildFindIndex().findPrevious(a("2022-01-01")).isNone()).toBe(true);
+      expect(buildFindIndex().findPrevious(a("2021-01-01")).isNone()).toBe(true);
     });
 
     it("returns None when the index is empty", () => {
