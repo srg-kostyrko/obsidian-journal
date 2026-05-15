@@ -30,6 +30,18 @@ export class JournalIndex {
     this.#sortedAnchors.length = 0;
   }
 
+  get size(): number {
+    return this.#byAnchor.size;
+  }
+
+  *[Symbol.iterator](): IterableIterator<readonly [AnchorString, VaultPath]> {
+    for (const anchor of this.#sortedAnchors) {
+      const path = this.#byAnchor.get(anchor);
+      if (path === undefined) throw new InvariantError("sorted anchor missing from byAnchor map");
+      yield [anchor, path] as const;
+    }
+  }
+
   #insertSorted(anchor: AnchorString): void {
     const result = this.#bsearch(anchor);
     if (result.found) throw new InvariantError("anchor already present in sorted array");

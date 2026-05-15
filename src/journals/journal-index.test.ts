@@ -74,4 +74,31 @@ describe("JournalIndex", () => {
       expect(index.has(a("2022-01-01"))).toBe(false);
     });
   });
+
+  describe("size", () => {
+    it("reports the number of entries", () => {
+      const index = new JournalIndex();
+      expect(index.size).toBe(0);
+      index.set(a("2022-01-01"), p("notes/a.md"));
+      index.set(a("2022-01-02"), p("notes/b.md"));
+      expect(index.size).toBe(2);
+      index.delete(a("2022-01-01"));
+      expect(index.size).toBe(1);
+    });
+  });
+
+  describe("iteration", () => {
+    it("yields all entries in anchor order", () => {
+      const index = new JournalIndex();
+      index.set(a("2022-02-01"), p("notes/b.md"));
+      index.set(a("2022-01-01"), p("notes/a.md"));
+      index.set(a("2022-03-01"), p("notes/c.md"));
+      const seen = [...index];
+      expect(seen).toEqual([
+        [a("2022-01-01"), p("notes/a.md")],
+        [a("2022-02-01"), p("notes/b.md")],
+        [a("2022-03-01"), p("notes/c.md")],
+      ]);
+    });
+  });
 });
