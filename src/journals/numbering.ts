@@ -68,51 +68,28 @@ export class NumberingService {
     if (basis.isSome()) {
       const stepsFromBasisOpt = this.#cycle.countRepeats(name, basis.value.anchor, anchor);
       if (stepsFromBasisOpt.isSome()) {
-        return Option.some(this.#cascadeFromBasis(numbering.sources, basis.value.numbers, stepsFromBasisOpt.value));
+        return Option.some(this.#cascade(numbering.sources, basis.value.numbers, stepsFromBasisOpt.value));
       }
     }
 
     const stepsOpt = this.#cycle.countRepeats(name, numbering.anchorDate, anchor);
     if (stepsOpt.isNone()) return Option.none();
 
-    return Option.some(this.#cascade(numbering.sources, stepsOpt.value));
+    return Option.some(this.#cascade(numbering.sources, undefined, stepsOpt.value));
   }
 
-  #cascade(sources: readonly NumberingSource[], stepsInnermost: number): Readonly<Record<string, number>> {
-    const result: Record<string, number> = {};
-    let innerSteps = stepsInnermost;
-    for (let i = sources.length - 1; i >= 0; i--) {
-      const source = sources[i];
-      const steps = i === sources.length - 1 ? stepsInnermost : innerSteps;
-      const raw = source.anchorValue + steps;
-      const value = match(source.reset)
-        .with({ kind: "never" }, () => raw)
-        .with(
-          { kind: "after" },
-          ({ count }) => ((((raw - source.anchorValue) % count) + count) % count) + source.anchorValue,
-        )
-        .exhaustive();
-      result[source.variable] = value;
-      innerSteps = match(source.reset)
-        .with({ kind: "after" }, ({ count }) => Math.floor(steps / count))
-        .with({ kind: "never" }, () => 0)
-        .exhaustive();
-    }
-    return result;
-  }
-
-  #cascadeFromBasis(
+  #cascade(
     sources: readonly NumberingSource[],
-    basis: Readonly<Record<string, number>>,
-    stepsFromBasis: number,
+    basis: Readonly<Record<string, number>> | undefined,
+    steps: number,
   ): Readonly<Record<string, number>> {
     const result: Record<string, number> = {};
-    let innerSteps = stepsFromBasis;
+    let innerResetsCrossed = steps;
     for (let i = sources.length - 1; i >= 0; i--) {
       const source = sources[i];
-      const steps = i === sources.length - 1 ? stepsFromBasis : innerSteps;
-      const basisValue = basis[source.variable] ?? source.anchorValue;
-      const raw = basisValue + steps;
+      const sourceSteps = i === sources.length - 1 ? steps : innerResetsCrossed;
+      const basisValue = basis?.[source.variable] ?? source.anchorValue;
+      const raw = basisValue + sourceSteps;
       const value = match(source.reset)
         .with({ kind: "never" }, () => raw)
         .with(
@@ -121,8 +98,11 @@ export class NumberingService {
         )
         .exhaustive();
       result[source.variable] = value;
-      innerSteps = match(source.reset)
-        .with({ kind: "after" }, ({ count }) => Math.floor(steps / count))
+      innerResetsCrossed = match(source.reset)
+        .with({ kind: "after" }, ({ count }) => {
+          const basisPosition = basisValue - source.anchorValue;
+          return Math.floor((basisPosition + sourceSteps) / count) - Math.floor(basisPosition / count);
+        })
         .with({ kind: "never" }, () => 0)
         .exhaustive();
     }

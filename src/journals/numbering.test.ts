@@ -154,6 +154,37 @@ describe("NumberingService", () => {
       const withBasis = unwrap(n2.assignNumbers("s", "2024-01-08" as AnchorString));
       expect(withBasis).toEqual({ index: 201 });
     });
+
+    it("advances outer source when basis sits at inner-source reset boundary", () => {
+      const c = buildContainer({
+        s: customJournal("s", "week", 1, "2024-01-01", {
+          numbering: {
+            enabled: true,
+            anchorDate: "2024-01-01" as AnchorString,
+            allowBefore: false,
+            sources: [
+              { variable: "release", frontmatterKey: "journal-release", anchorValue: 4711, reset: { kind: "never" } },
+              {
+                variable: "sprint",
+                frontmatterKey: "journal-sprint",
+                anchorValue: 1,
+                reset: { kind: "after", count: 6 },
+              },
+            ],
+          },
+        }),
+      });
+      const index = c.resolve(JournalsIndex);
+      index.register({
+        journalName: "s",
+        anchor: "2024-02-05" as AnchorString,
+        path: "S/X.md" as VaultPath,
+        numbers: { release: 4711, sprint: 6 },
+      });
+      const n = c.resolve(NumberingService);
+      const result = n.assignNumbers("s", "2024-02-12" as AnchorString);
+      expect(result.isSome() && result.value).toEqual({ release: 4712, sprint: 1 });
+    });
   });
 
   describe("cache invalidation", () => {
