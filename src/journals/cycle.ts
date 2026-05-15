@@ -51,6 +51,15 @@ const PERIOD_CTORS: Record<PeriodKind, (d: CalendarDate) => PeriodLike> = {
   decade: (d) => DecadePeriod.containing(d),
 };
 
+const PERIOD_MOMENT_UNIT: Record<PeriodKind, MomentDurationUnit> = {
+  day: "day",
+  week: "week",
+  month: "month",
+  quarter: "quarter",
+  year: "year",
+  decade: "year",
+};
+
 function customStepForward(anchor: AnchorString, every: MomentDurationUnit, duration: number): AnchorString {
   const m = localMoment(anchor, "YYYY-MM-DD", true);
   if (every === "month" && m.date() > 28) {
@@ -157,6 +166,52 @@ export class CycleService {
           const next = customStepForward(anchor, c.every, c.duration);
           const end = localMoment(next, "YYYY-MM-DD", true).subtract(1, "day");
           return CalendarDate.fromAnchor(end.format("YYYY-MM-DD") as AnchorString);
+        })
+        .exhaustive(),
+    );
+  }
+
+  offsets(name: string, date: CalendarDate): Option<readonly [positive: number, negative: number]> {
+    return this.anchorOf(name, date).flatMap((anchor) =>
+      this.startOf(name, anchor).flatMap((start) =>
+        this.endOf(name, anchor).map((end) => {
+          const d = localMoment(date.toAnchor(), "YYYY-MM-DD", true);
+          const startM = localMoment(start.toAnchor(), "YYYY-MM-DD", true);
+          const endM = localMoment(end.toAnchor(), "YYYY-MM-DD", true);
+          return [d.diff(startM, "days") + 1, d.diff(endM, "days")] as const;
+        }),
+      ),
+    );
+  }
+
+  countRepeats(name: string, from: AnchorString, to: AnchorString): Option<number> {
+    return this.#cycleFor(name).map((cycle) =>
+      match(cycle)
+        .with({ kind: "fixed" }, (c) => {
+          const unit = PERIOD_MOMENT_UNIT[c.period];
+          const a = localMoment(from, "YYYY-MM-DD", true);
+          const b = localMoment(to, "YYYY-MM-DD", true);
+          return Math.ceil(b.diff(a, unit));
+        })
+        .with({ kind: "custom" }, (c) => {
+          let current = from;
+          let count = 0;
+          if (from <= to) {
+            while (current < to) {
+              const next = customStepForward(current, c.every, c.duration);
+              if (next > to) break;
+              current = next;
+              count++;
+            }
+            return count;
+          }
+          while (current > to) {
+            const previous = customStepBackward(current, c.every, c.duration);
+            if (previous < to) break;
+            current = previous;
+            count++;
+          }
+          return -count;
         })
         .exhaustive(),
     );

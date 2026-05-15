@@ -192,4 +192,39 @@ describe("CycleService", () => {
       expect(next.isSome() && next.value).toBe("2024-01-15");
     });
   });
+
+  describe("offsets", () => {
+    it("returns +day-from-start, -day-to-end for a date inside a weekly anchor", () => {
+      const c = buildContainer({ w: fixedJournal("w", { type: "week" }) });
+      const cycle = c.resolve(CycleService);
+      // 2024-03-06 (Wed) of the Mon 2024-03-04 — Sun 2024-03-10 week.
+      // From start Mon: day 3 (Mon=1, Tue=2, Wed=3). To end Sun: -4 (4 days remaining including Sun).
+      const off = cycle.offsets("w", unwrapResult(CalendarDate.parse("2024-03-06")));
+      expect(off.isSome() && off.value).toEqual([3, -4]);
+    });
+
+    it("returns None for unknown journal", () => {
+      const c = buildContainer({});
+      const cycle = c.resolve(CycleService);
+      expect(cycle.offsets("missing", unwrapResult(CalendarDate.parse("2024-01-01"))).isNone()).toBe(true);
+    });
+  });
+
+  describe("countRepeats", () => {
+    it("counts intervals between two anchors for fixed weekly", () => {
+      const c = buildContainer({ w: fixedJournal("w", { type: "week" }) });
+      const cycle = c.resolve(CycleService);
+      // 2024-01-01 (Mon) and 2024-01-22 (Mon) are 3 weeks apart.
+      const result = cycle.countRepeats("w", "2024-01-01" as AnchorString, "2024-01-22" as AnchorString);
+      expect(result.isSome() && result.value).toBe(3);
+    });
+
+    it("returns equal magnitude regardless of direction", () => {
+      const c = buildContainer({ w: fixedJournal("w", { type: "week" }) });
+      const cycle = c.resolve(CycleService);
+      const forward = unwrap(cycle.countRepeats("w", "2024-01-01" as AnchorString, "2024-01-22" as AnchorString));
+      const backward = unwrap(cycle.countRepeats("w", "2024-01-22" as AnchorString, "2024-01-01" as AnchorString));
+      expect(Math.abs(forward)).toBe(Math.abs(backward));
+    });
+  });
 });
