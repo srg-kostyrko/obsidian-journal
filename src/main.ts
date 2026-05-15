@@ -6,7 +6,8 @@ import { Container } from "@/infrastructure/di";
 import { FlowsModule } from "@/infrastructure/flows";
 import { createHostModule } from "@/infrastructure/host";
 import { LoggerModule } from "@/infrastructure/logger";
-import { journalsIndexModule } from "@/journals/module";
+import { journalsModule } from "@/journals/module";
+import { VaultSubscriptionService } from "@/journals/vault-subscription";
 import { settingsModule, SettingsService } from "@/settings";
 
 export default class JournalPlugin extends Plugin {
@@ -22,7 +23,7 @@ export default class JournalPlugin extends Plugin {
     container.addModule(settingsModule);
     container.addModule(CalendarModule);
     container.addModule(calendarSettingsModule);
-    container.addModule(journalsIndexModule);
+    container.addModule(journalsModule);
     await container.autoLoad();
 
     const init = await container.resolve(SettingsService).initialize();
@@ -31,6 +32,8 @@ export default class JournalPlugin extends Plugin {
       await container.dispose();
       return;
     }
+
+    await container.resolve(VaultSubscriptionService).initialize();
 
     this.#container = container;
   }
