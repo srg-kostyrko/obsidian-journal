@@ -8,6 +8,15 @@ import { JournalIndex } from "./journal-index";
 const a = (s: string) => s as AnchorString;
 const p = (s: string) => s as VaultPath;
 
+function buildRangeIndex(): JournalIndex {
+  const index = new JournalIndex();
+  index.set(a("2022-01-01"), p("notes/a.md"));
+  index.set(a("2022-01-05"), p("notes/b.md"));
+  index.set(a("2022-01-10"), p("notes/c.md"));
+  index.set(a("2022-02-01"), p("notes/d.md"));
+  return index;
+}
+
 describe("JournalIndex", () => {
   describe("get", () => {
     it("returns the path when anchor exists", () => {
@@ -108,6 +117,41 @@ describe("JournalIndex", () => {
         [a("2022-02-01"), p("notes/b.md")],
         [a("2022-03-01"), p("notes/c.md")],
       ]);
+    });
+  });
+
+  describe("getRange", () => {
+    it("returns entries within an inclusive range", () => {
+      const result = buildRangeIndex().getRange(a("2022-01-05"), a("2022-01-10"));
+      expect([...result.entries()]).toEqual([
+        [a("2022-01-05"), p("notes/b.md")],
+        [a("2022-01-10"), p("notes/c.md")],
+      ]);
+    });
+
+    it("includes the start anchor when present", () => {
+      const result = buildRangeIndex().getRange(a("2022-01-01"), a("2022-01-05"));
+      expect(result.has(a("2022-01-01"))).toBe(true);
+    });
+
+    it("includes the end anchor when present", () => {
+      const result = buildRangeIndex().getRange(a("2022-01-05"), a("2022-01-10"));
+      expect(result.has(a("2022-01-10"))).toBe(true);
+    });
+
+    it("returns empty map when range starts after all entries", () => {
+      const result = buildRangeIndex().getRange(a("2023-01-01"), a("2023-12-31"));
+      expect(result.size).toBe(0);
+    });
+
+    it("returns empty map when range ends before all entries", () => {
+      const result = buildRangeIndex().getRange(a("2021-01-01"), a("2021-12-31"));
+      expect(result.size).toBe(0);
+    });
+
+    it("returns empty map when start is after end", () => {
+      const result = buildRangeIndex().getRange(a("2022-02-01"), a("2022-01-01"));
+      expect(result.size).toBe(0);
     });
   });
 });

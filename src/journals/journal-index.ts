@@ -34,6 +34,21 @@ export class JournalIndex {
     return this.#byAnchor.size;
   }
 
+  getRange(start: AnchorString, end: AnchorString): ReadonlyMap<AnchorString, VaultPath> {
+    const out = new Map<AnchorString, VaultPath>();
+    if (start > end) return out;
+    const startResult = this.#bsearch(start);
+    const startIndex = startResult.found ? startResult.index : startResult.insertionPoint;
+    for (let i = startIndex; i < this.#sortedAnchors.length; i++) {
+      const anchor = this.#sortedAnchors[i];
+      if (anchor > end) break;
+      const path = this.#byAnchor.get(anchor);
+      if (path === undefined) throw new InvariantError("sorted anchor missing from byAnchor map");
+      out.set(anchor, path);
+    }
+    return out;
+  }
+
   *[Symbol.iterator](): IterableIterator<readonly [AnchorString, VaultPath]> {
     for (const anchor of this.#sortedAnchors) {
       const path = this.#byAnchor.get(anchor);
