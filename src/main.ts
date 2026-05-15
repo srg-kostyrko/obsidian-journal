@@ -6,6 +6,7 @@ import { Container } from "@/infrastructure/di";
 import { FlowsModule } from "@/infrastructure/flows";
 import { createHostModule } from "@/infrastructure/host";
 import { LoggerModule } from "@/infrastructure/logger";
+import { journalsIndexModule } from "@/journals/module";
 import { settingsModule, SettingsService } from "@/settings";
 
 export default class JournalPlugin extends Plugin {
@@ -21,6 +22,7 @@ export default class JournalPlugin extends Plugin {
     container.addModule(settingsModule);
     container.addModule(CalendarModule);
     container.addModule(calendarSettingsModule);
+    container.addModule(journalsIndexModule);
     await container.autoLoad();
 
     const init = await container.resolve(SettingsService).initialize();
