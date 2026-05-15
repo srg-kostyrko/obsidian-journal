@@ -27,5 +27,5 @@ export {
   type ModalDefinitionInput,
 } from "./modals";
 export { createHostModule } from "./module";
-export type { Note, NotesEvents, OpenMode, Subscribable, VaultPath, WorkspaceEvents } from "./types";
+export type { Note, NotesEvents, OpenMode, VaultPath, WorkspaceEvents } from "./types";
 export { InternalObsidianAppToken, InternalPluginToken } from "./internal/tokens";

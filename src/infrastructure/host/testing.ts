@@ -1,5 +1,6 @@
 import { createNanoEvents } from "nanoevents";
 
+import type { Subscribable, TypedEmitter } from "@/infrastructure/events";
 import { AsyncResult, None, Some } from "@/infrastructure/result";
 import type { Option } from "@/infrastructure/result";
 
@@ -17,9 +18,8 @@ import type {
 } from "./errors";
 import type { NotesService } from "./internal/notes-service";
 import type { PluginData } from "./internal/plugin-data";
-import type { TypedEmitter } from "./internal/typed-emitter";
 import type { WorkspaceService } from "./internal/workspace-service";
-import type { Note, NotesEvents, OpenMode, Subscribable, VaultPath, WorkspaceEvents } from "./types";
+import type { Note, NotesEvents, OpenMode, VaultPath, WorkspaceEvents } from "./types";
 
 interface FakeEntry {
   content: string;

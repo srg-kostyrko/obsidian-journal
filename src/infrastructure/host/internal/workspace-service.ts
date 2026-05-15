@@ -2,6 +2,7 @@ import { createNanoEvents } from "nanoevents";
 import { TFile } from "obsidian";
 
 import { inject } from "@/infrastructure/di";
+import type { Subscribable, TypedEmitter } from "@/infrastructure/events";
 import { AsyncResult, InvariantError, None, Some } from "@/infrastructure/result";
 import type { Option } from "@/infrastructure/result";
 
@@ -10,8 +11,7 @@ import { WorkspaceOpenError } from "../errors";
 import { toPaneType } from "./obsidian-bridge";
 import { InternalObsidianAppToken, InternalPluginToken } from "./tokens";
 
-import type { TypedEmitter } from "./typed-emitter";
-import type { OpenMode, Subscribable, VaultPath, WorkspaceEvents } from "../types";
+import type { OpenMode, VaultPath, WorkspaceEvents } from "../types";
 import type { MarkdownView, WorkspaceLeaf } from "obsidian";
 
 export class WorkspaceService {

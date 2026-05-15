@@ -2,6 +2,7 @@ import { createNanoEvents } from "nanoevents";
 import { TFile, TFolder } from "obsidian";
 
 import { inject } from "@/infrastructure/di";
+import type { Subscribable, TypedEmitter } from "@/infrastructure/events";
 import { AsyncResult, Err, None, Ok, Some } from "@/infrastructure/result";
 import type { Option, Result } from "@/infrastructure/result";
 
@@ -20,8 +21,7 @@ import {
 import { toNote } from "./obsidian-bridge";
 import { InternalObsidianAppToken, InternalPluginToken } from "./tokens";
 
-import type { Note, NotesEvents, Subscribable, VaultPath } from "../types";
-import type { TypedEmitter } from "./typed-emitter";
+import type { Note, NotesEvents, VaultPath } from "../types";
 
 export class NotesService {
   readonly #app = inject(InternalObsidianAppToken);
