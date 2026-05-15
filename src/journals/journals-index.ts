@@ -1,5 +1,6 @@
 import { createNanoEvents } from "nanoevents";
 
+import type { AnchorString } from "@/calendar";
 import type { Subscribable, TypedEmitter } from "@/infrastructure/events";
 import type { VaultPath } from "@/infrastructure/host";
 import { Option } from "@/infrastructure/result";
@@ -82,6 +83,41 @@ export class JournalsIndex {
     for (const journalIndex of this.#journals.values()) journalIndex.clear();
     this.#journals.clear();
     for (const name of names) this.#markDirty(name);
+  }
+
+  has(journalName: string, anchor: AnchorString): boolean {
+    return this.#journals.get(journalName)?.has(anchor) ?? false;
+  }
+
+  get(journalName: string, anchor: AnchorString): Option<VaultPath> {
+    const journalIndex = this.#journals.get(journalName);
+    return journalIndex ? journalIndex.get(anchor) : Option.none();
+  }
+
+  getRange(journalName: string, start: AnchorString, end: AnchorString): ReadonlyMap<AnchorString, VaultPath> {
+    const journalIndex = this.#journals.get(journalName);
+    return journalIndex ? journalIndex.getRange(start, end) : new Map();
+  }
+
+  findNext(journalName: string, from: AnchorString): Option<VaultPath> {
+    const journalIndex = this.#journals.get(journalName);
+    return journalIndex ? journalIndex.findNext(from) : Option.none();
+  }
+
+  findPrevious(journalName: string, from: AnchorString): Option<VaultPath> {
+    const journalIndex = this.#journals.get(journalName);
+    return journalIndex ? journalIndex.findPrevious(from) : Option.none();
+  }
+
+  findClosestAnchor(journalName: string, to: AnchorString): Option<AnchorString> {
+    const journalIndex = this.#journals.get(journalName);
+    return journalIndex ? journalIndex.findClosestAnchor(to) : Option.none();
+  }
+
+  *entriesFor(journalName: string): Iterable<readonly [AnchorString, VaultPath]> {
+    const journalIndex = this.#journals.get(journalName);
+    if (!journalIndex) return;
+    yield* journalIndex;
   }
 
   #markDirty(journalName: string): void {

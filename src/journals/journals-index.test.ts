@@ -255,4 +255,106 @@ describe("JournalsIndex", () => {
       expect(events.entryChanged).toHaveLength(2);
     });
   });
+
+  describe("query passthroughs", () => {
+    it("has returns true for an indexed (journal, anchor) pair", () => {
+      const index = new JournalsIndex();
+      index.register(entry("daily", "2022-01-01", "a.md"));
+      expect(index.has("daily", a("2022-01-01"))).toBe(true);
+    });
+
+    it("has returns false for an unknown journal", () => {
+      const index = new JournalsIndex();
+      expect(index.has("ghost", a("2022-01-01"))).toBe(false);
+    });
+
+    it("get returns the path for an indexed (journal, anchor) pair", () => {
+      const index = new JournalsIndex();
+      index.register(entry("daily", "2022-01-01", "a.md"));
+      const result = index.get("daily", a("2022-01-01"));
+      assert(result.isSome());
+      expect(result.value).toBe(p("a.md"));
+    });
+
+    it("get on an unknown journal returns None", () => {
+      const index = new JournalsIndex();
+      expect(index.get("ghost", a("2022-01-01")).isNone()).toBe(true);
+    });
+
+    it("getRange returns inclusive entries for the journal", () => {
+      const index = new JournalsIndex();
+      index.register(entry("daily", "2022-01-01", "a.md"));
+      index.register(entry("daily", "2022-01-05", "b.md"));
+      index.register(entry("daily", "2022-01-10", "c.md"));
+      index.register(entry("weekly", "2022-W01", "w.md"));
+      const result = index.getRange("daily", a("2022-01-01"), a("2022-01-05"));
+      expect([...result.entries()]).toEqual([
+        [a("2022-01-01"), p("a.md")],
+        [a("2022-01-05"), p("b.md")],
+      ]);
+    });
+
+    it("getRange on an unknown journal returns an empty map", () => {
+      const index = new JournalsIndex();
+      expect(index.getRange("ghost", a("2022-01-01"), a("2022-12-31")).size).toBe(0);
+    });
+
+    it("findNext returns the next path in the named journal", () => {
+      const index = new JournalsIndex();
+      index.register(entry("daily", "2022-01-01", "a.md"));
+      index.register(entry("daily", "2022-01-05", "b.md"));
+      const result = index.findNext("daily", a("2022-01-01"));
+      assert(result.isSome());
+      expect(result.value).toBe(p("b.md"));
+    });
+
+    it("findNext on an unknown journal returns None", () => {
+      const index = new JournalsIndex();
+      expect(index.findNext("ghost", a("2022-01-01")).isNone()).toBe(true);
+    });
+
+    it("findPrevious returns the previous path in the named journal", () => {
+      const index = new JournalsIndex();
+      index.register(entry("daily", "2022-01-01", "a.md"));
+      index.register(entry("daily", "2022-01-05", "b.md"));
+      const result = index.findPrevious("daily", a("2022-01-05"));
+      assert(result.isSome());
+      expect(result.value).toBe(p("a.md"));
+    });
+
+    it("findPrevious on an unknown journal returns None", () => {
+      const index = new JournalsIndex();
+      expect(index.findPrevious("ghost", a("2022-01-05")).isNone()).toBe(true);
+    });
+
+    it("findClosestAnchor returns the closest indexed anchor in the named journal", () => {
+      const index = new JournalsIndex();
+      index.register(entry("daily", "2022-01-01", "a.md"));
+      index.register(entry("daily", "2022-01-05", "b.md"));
+      const result = index.findClosestAnchor("daily", a("2022-01-03"));
+      assert(result.isSome());
+      expect(result.value).toBe(a("2022-01-01"));
+    });
+
+    it("findClosestAnchor on an unknown journal returns None", () => {
+      const index = new JournalsIndex();
+      expect(index.findClosestAnchor("ghost", a("2022-01-01")).isNone()).toBe(true);
+    });
+
+    it("entriesFor yields every entry of the named journal in anchor order", () => {
+      const index = new JournalsIndex();
+      index.register(entry("daily", "2022-01-05", "b.md"));
+      index.register(entry("daily", "2022-01-01", "a.md"));
+      index.register(entry("weekly", "2022-W01", "w.md"));
+      expect([...index.entriesFor("daily")]).toEqual([
+        [a("2022-01-01"), p("a.md")],
+        [a("2022-01-05"), p("b.md")],
+      ]);
+    });
+
+    it("entriesFor on an unknown journal yields nothing", () => {
+      const index = new JournalsIndex();
+      expect([...index.entriesFor("ghost")]).toEqual([]);
+    });
+  });
 });
