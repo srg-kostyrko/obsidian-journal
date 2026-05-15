@@ -51,6 +51,20 @@ export class JournalsIndex {
     this.#markDirty(existing.journalName);
   }
 
+  transferPath(from: VaultPath, to: VaultPath): void {
+    if (from === to) return;
+    const existing = this.#byPath.get(from);
+    if (!existing) return;
+    const next: JournalEntry = { ...existing, path: to };
+    const journalIndex = this.#journals.get(existing.journalName);
+    journalIndex?.set(existing.anchor, to);
+    this.#byPath.delete(from);
+    this.#byPath.set(to, next);
+    this.#emitter.emit("entryChanged", { entry: existing, kind: "removed" });
+    this.#emitter.emit("entryChanged", { entry: next, kind: "added" });
+    this.#markDirty(existing.journalName);
+  }
+
   #markDirty(journalName: string): void {
     this.#dirty.add(journalName);
     if (this.#flushScheduled) return;

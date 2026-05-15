@@ -122,4 +122,52 @@ describe("JournalsIndex", () => {
       expect(events.entryChanged).toEqual([]);
     });
   });
+
+  describe("transferPath", () => {
+    it("updates the path while keeping journal and anchor", () => {
+      const index = new JournalsIndex();
+      index.register(entry("daily", "2022-01-01", "old.md"));
+      index.transferPath(p("old.md"), p("new.md"));
+      const result = index.entryByPath(p("new.md"));
+      assert(result.isSome());
+      expect(result.value.journalName).toBe("daily");
+      expect(result.value.anchor).toBe(a("2022-01-01"));
+      expect(result.value.path).toBe(p("new.md"));
+    });
+
+    it("removes the entry from the old path lookup", () => {
+      const index = new JournalsIndex();
+      index.register(entry("daily", "2022-01-01", "old.md"));
+      index.transferPath(p("old.md"), p("new.md"));
+      expect(index.entryByPath(p("old.md")).isNone()).toBe(true);
+    });
+
+    it("emits removed for the old path and added for the new path", () => {
+      const index = new JournalsIndex();
+      const oldEntry = entry("daily", "2022-01-01", "old.md");
+      index.register(oldEntry);
+      const events = capture(index);
+      index.transferPath(p("old.md"), p("new.md"));
+      const newEntry = entry("daily", "2022-01-01", "new.md");
+      expect(events.entryChanged).toEqual([
+        { entry: oldEntry, kind: "removed" },
+        { entry: newEntry, kind: "added" },
+      ]);
+    });
+
+    it("is a no-op when from path is unknown", () => {
+      const index = new JournalsIndex();
+      const events = capture(index);
+      index.transferPath(p("missing.md"), p("new.md"));
+      expect(events.entryChanged).toEqual([]);
+    });
+
+    it("is a no-op when from equals to", () => {
+      const index = new JournalsIndex();
+      index.register(entry("daily", "2022-01-01", "same.md"));
+      const events = capture(index);
+      index.transferPath(p("same.md"), p("same.md"));
+      expect(events.entryChanged).toEqual([]);
+    });
+  });
 });
