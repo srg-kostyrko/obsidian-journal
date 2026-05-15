@@ -24,11 +24,7 @@ export class JournalsIndex {
   register(entry: JournalEntry): void {
     const existing = this.#byPath.get(entry.path);
     if (existing) {
-      if (
-        existing.journalName === entry.journalName &&
-        existing.anchor === entry.anchor &&
-        existing.path === entry.path
-      ) {
+      if (existing.journalName === entry.journalName && existing.anchor === entry.anchor) {
         return;
       }
       this.#journals.get(existing.journalName)?.delete(existing.anchor);

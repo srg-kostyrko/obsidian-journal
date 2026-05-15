@@ -29,7 +29,7 @@ function capture(index: JournalsIndex): CapturedEvents {
 
 describe("JournalsIndex", () => {
   describe("register", () => {
-    it("indexes the entry under its journal", () => {
+    it("stores the full entry retrievable by path", () => {
       const index = new JournalsIndex();
       index.register(entry("daily", "2022-01-01", "Daily/2022-01-01.md"));
       const result = index.entryByPath(p("Daily/2022-01-01.md"));
@@ -68,7 +68,7 @@ describe("JournalsIndex", () => {
       ]);
     });
 
-    it("re-registering a path under a different journal removes it from the old journal", () => {
+    it("re-registering a path under a different journal returns the new entry", () => {
       const index = new JournalsIndex();
       index.register(entry("daily", "2022-01-01", "shared.md"));
       index.register(entry("weekly", "2022-W01", "shared.md"));
