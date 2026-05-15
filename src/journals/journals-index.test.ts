@@ -97,4 +97,29 @@ describe("JournalsIndex", () => {
       expect(index.entryByPath(p("missing.md")).isNone()).toBe(true);
     });
   });
+
+  describe("unregister", () => {
+    it("removes the entry from path lookup", () => {
+      const index = new JournalsIndex();
+      index.register(entry("daily", "2022-01-01", "Daily/2022-01-01.md"));
+      index.unregister(p("Daily/2022-01-01.md"));
+      expect(index.entryByPath(p("Daily/2022-01-01.md")).isNone()).toBe(true);
+    });
+
+    it("emits entryChanged with kind: removed", () => {
+      const index = new JournalsIndex();
+      const dailyEntry = entry("daily", "2022-01-01", "Daily/2022-01-01.md");
+      index.register(dailyEntry);
+      const events = capture(index);
+      index.unregister(p("Daily/2022-01-01.md"));
+      expect(events.entryChanged).toEqual([{ entry: dailyEntry, kind: "removed" }]);
+    });
+
+    it("is a no-op when path is unknown", () => {
+      const index = new JournalsIndex();
+      const events = capture(index);
+      index.unregister(p("missing.md"));
+      expect(events.entryChanged).toEqual([]);
+    });
+  });
 });

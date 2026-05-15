@@ -42,6 +42,15 @@ export class JournalsIndex {
     this.#markDirty(entry.journalName);
   }
 
+  unregister(path: VaultPath): void {
+    const existing = this.#byPath.get(path);
+    if (!existing) return;
+    this.#journals.get(existing.journalName)?.delete(existing.anchor);
+    this.#byPath.delete(path);
+    this.#emitter.emit("entryChanged", { entry: existing, kind: "removed" });
+    this.#markDirty(existing.journalName);
+  }
+
   #markDirty(journalName: string): void {
     this.#dirty.add(journalName);
     if (this.#flushScheduled) return;
