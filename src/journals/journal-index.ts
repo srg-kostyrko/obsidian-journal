@@ -49,6 +49,19 @@ export class JournalIndex {
     return out;
   }
 
+  findNext(from: AnchorString): Option<VaultPath> {
+    const result = this.#bsearch(from);
+    const nextIndex = result.found ? result.index + 1 : result.insertionPoint;
+    return Option.fromNullable(this.#sortedAnchors[nextIndex]).flatMap((anchor) => this.get(anchor));
+  }
+
+  findPrevious(from: AnchorString): Option<VaultPath> {
+    const result = this.#bsearch(from);
+    const previousIndex = (result.found ? result.index : result.insertionPoint) - 1;
+    if (previousIndex < 0) return Option.none<VaultPath>();
+    return Option.fromNullable(this.#sortedAnchors[previousIndex]).flatMap((anchor) => this.get(anchor));
+  }
+
   *[Symbol.iterator](): IterableIterator<readonly [AnchorString, VaultPath]> {
     for (const anchor of this.#sortedAnchors) {
       const path = this.#byAnchor.get(anchor);

@@ -17,6 +17,14 @@ function buildRangeIndex(): JournalIndex {
   return index;
 }
 
+function buildFindIndex(): JournalIndex {
+  const index = new JournalIndex();
+  index.set(a("2022-01-01"), p("notes/a.md"));
+  index.set(a("2022-01-05"), p("notes/b.md"));
+  index.set(a("2022-01-10"), p("notes/c.md"));
+  return index;
+}
+
 describe("JournalIndex", () => {
   describe("get", () => {
     it("returns the path when anchor exists", () => {
@@ -142,6 +150,74 @@ describe("JournalIndex", () => {
     it("returns empty map when start is after end", () => {
       const result = buildRangeIndex().getRange(a("2022-02-01"), a("2022-01-01"));
       expect(result.size).toBe(0);
+    });
+  });
+
+  describe("findNext", () => {
+    it("returns the next path when from is an existing anchor", () => {
+      const result = buildFindIndex().findNext(a("2022-01-01"));
+      assert(result.isSome());
+      expect(result.value).toBe(p("notes/b.md"));
+    });
+
+    it("returns the next path when from is between entries", () => {
+      const result = buildFindIndex().findNext(a("2022-01-03"));
+      assert(result.isSome());
+      expect(result.value).toBe(p("notes/b.md"));
+    });
+
+    it("returns the first path when from is before any anchor", () => {
+      const result = buildFindIndex().findNext(a("2021-12-31"));
+      assert(result.isSome());
+      expect(result.value).toBe(p("notes/a.md"));
+    });
+
+    it("returns None when from is at the last anchor", () => {
+      const result = buildFindIndex().findNext(a("2022-01-10"));
+      expect(result.isNone()).toBe(true);
+    });
+
+    it("returns None when from is past the last anchor", () => {
+      const result = buildFindIndex().findNext(a("2099-12-31"));
+      expect(result.isNone()).toBe(true);
+    });
+
+    it("returns None when the index is empty", () => {
+      expect(new JournalIndex().findNext(a("2022-01-01")).isNone()).toBe(true);
+    });
+  });
+
+  describe("findPrevious", () => {
+    it("returns the previous path when from is an existing anchor", () => {
+      const result = buildFindIndex().findPrevious(a("2022-01-10"));
+      assert(result.isSome());
+      expect(result.value).toBe(p("notes/b.md"));
+    });
+
+    it("returns the previous path when from is between entries", () => {
+      const result = buildFindIndex().findPrevious(a("2022-01-07"));
+      assert(result.isSome());
+      expect(result.value).toBe(p("notes/b.md"));
+    });
+
+    it("returns the last path when from is after any anchor", () => {
+      const result = buildFindIndex().findPrevious(a("2099-12-31"));
+      assert(result.isSome());
+      expect(result.value).toBe(p("notes/c.md"));
+    });
+
+    it("returns None when from is at the first anchor", () => {
+      const result = buildFindIndex().findPrevious(a("2022-01-01"));
+      expect(result.isNone()).toBe(true);
+    });
+
+    it("returns None when from is before the first anchor", () => {
+      const result = buildFindIndex().findPrevious(a("2021-01-01"));
+      expect(result.isNone()).toBe(true);
+    });
+
+    it("returns None when the index is empty", () => {
+      expect(new JournalIndex().findPrevious(a("2022-01-01")).isNone()).toBe(true);
     });
   });
 });
