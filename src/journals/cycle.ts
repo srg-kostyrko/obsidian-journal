@@ -15,7 +15,7 @@ import type { JournalConfig, JournalWrite } from "./config";
 type MomentDurationUnit = "day" | "week" | "month" | "quarter" | "year";
 
 export type JournalCycle =
-  | { readonly kind: "fixed"; readonly period: PeriodKind }
+  | { readonly kind: "fixed"; readonly period: MomentDurationUnit }
   | {
       readonly kind: "custom";
       readonly every: MomentDurationUnit;
@@ -24,14 +24,17 @@ export type JournalCycle =
     };
 
 export function buildCycle(write: JournalWrite): JournalCycle {
-  return match(write)
-    .with({ type: "custom" }, (w) => ({
-      kind: "custom" as const,
-      every: w.every,
-      duration: w.duration,
-      anchor: w.anchorDate,
-    }))
-    .otherwise((w) => ({ kind: "fixed" as const, period: w.type }));
+  return (
+    match(write)
+      .with({ type: "custom" }, (w) => ({
+        kind: "custom" as const,
+        every: w.every,
+        duration: w.duration,
+        anchor: w.anchorDate,
+      }))
+      // fixed-write schema excludes "decade", so w.type is already a MomentDurationUnit
+      .otherwise((w) => ({ kind: "fixed" as const, period: w.type }))
+  );
 }
 
 interface PeriodLike {
@@ -49,15 +52,6 @@ const PERIOD_CTORS: Record<PeriodKind, (d: CalendarDate) => PeriodLike> = {
   quarter: (d) => QuarterPeriod.containing(d),
   year: (d) => YearPeriod.containing(d),
   decade: (d) => DecadePeriod.containing(d),
-};
-
-const PERIOD_MOMENT_UNIT: Record<PeriodKind, MomentDurationUnit> = {
-  day: "day",
-  week: "week",
-  month: "month",
-  quarter: "quarter",
-  year: "year",
-  decade: "year",
 };
 
 function customStepForward(anchor: AnchorString, every: MomentDurationUnit, duration: number): AnchorString {
@@ -188,10 +182,9 @@ export class CycleService {
     return this.#cycleFor(name).map((cycle) =>
       match(cycle)
         .with({ kind: "fixed" }, (c) => {
-          const unit = PERIOD_MOMENT_UNIT[c.period];
           const a = localMoment(from, "YYYY-MM-DD", true);
           const b = localMoment(to, "YYYY-MM-DD", true);
-          return Math.ceil(b.diff(a, unit));
+          return Math.ceil(b.diff(a, c.period));
         })
         .with({ kind: "custom" }, (c) => {
           let current = from;
