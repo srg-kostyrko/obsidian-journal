@@ -5,6 +5,8 @@ export interface JournalEntry {
   readonly journalName: string;
   readonly anchor: AnchorString;
   readonly path: VaultPath;
+  readonly endDate?: AnchorString;
+  readonly numbers?: Readonly<Record<string, number>>;
 }
 
 export interface JournalsIndexEvents {

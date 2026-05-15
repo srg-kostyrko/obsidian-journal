@@ -393,4 +393,40 @@ describe("JournalsIndex", () => {
       expect([...index.entriesFor("ghost")]).toEqual([]);
     });
   });
+
+  describe("entryByAnchor", () => {
+    it("returns the full entry when the anchor is registered", () => {
+      const index = new JournalsIndex();
+      const dailyEntry = entry("daily", "2022-01-01", "Daily/2022-01-01.md");
+      index.register(dailyEntry);
+      const result = index.entryByAnchor("daily", a("2022-01-01"));
+      assert(result.isSome());
+      expect(result.value).toEqual(dailyEntry);
+    });
+
+    it("returns None for an unknown journal", () => {
+      const index = new JournalsIndex();
+      expect(index.entryByAnchor("missing", a("2022-01-01")).isNone()).toBe(true);
+    });
+
+    it("returns None for an unregistered anchor", () => {
+      const index = new JournalsIndex();
+      index.register(entry("daily", "2022-01-01", "Daily/2022-01-01.md"));
+      expect(index.entryByAnchor("daily", a("2022-01-02")).isNone()).toBe(true);
+    });
+
+    it("returns the entry with endDate when registered with one", () => {
+      const index = new JournalsIndex();
+      const sprintEntry: JournalEntry = {
+        journalName: "sprints",
+        anchor: a("2022-01-01"),
+        path: p("Sprints/S1.md"),
+        endDate: a("2022-01-21"),
+      };
+      index.register(sprintEntry);
+      const result = index.entryByAnchor("sprints", a("2022-01-01"));
+      assert(result.isSome());
+      expect(result.value).toEqual(sprintEntry);
+    });
+  });
 });

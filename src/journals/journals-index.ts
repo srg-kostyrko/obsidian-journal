@@ -22,6 +22,12 @@ export class JournalsIndex {
     return Option.fromNullable(this.#byPath.get(path));
   }
 
+  entryByAnchor(journalName: string, anchor: AnchorString): Option<JournalEntry> {
+    const journalIndex = this.#journals.get(journalName);
+    if (!journalIndex) return Option.none();
+    return journalIndex.get(anchor).flatMap((path) => Option.fromNullable(this.#byPath.get(path)));
+  }
+
   register(entry: JournalEntry): void {
     const existing = this.#byPath.get(entry.path);
     if (existing) {
