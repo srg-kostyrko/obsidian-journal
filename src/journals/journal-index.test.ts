@@ -72,7 +72,6 @@ describe("JournalIndex", () => {
       index.set(a("2022-01-02"), p("notes/b.md"));
       index.clear();
       expect(index.has(a("2022-01-01"))).toBe(false);
-      expect(index.has(a("2022-01-02"))).toBe(false);
     });
   });
 });

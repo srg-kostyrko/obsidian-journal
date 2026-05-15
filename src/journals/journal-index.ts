@@ -1,6 +1,6 @@
 import type { AnchorString } from "@/calendar";
 import type { VaultPath } from "@/infrastructure/host";
-import { Option } from "@/infrastructure/result";
+import { InvariantError, Option } from "@/infrastructure/result";
 
 export class JournalIndex {
   readonly #byAnchor = new Map<AnchorString, VaultPath>();
@@ -32,8 +32,8 @@ export class JournalIndex {
 
   #insertSorted(anchor: AnchorString): void {
     const result = this.#bsearch(anchor);
-    const insertAt = result.found ? result.index : result.insertionPoint;
-    this.#sortedAnchors.splice(insertAt, 0, anchor);
+    if (result.found) throw new InvariantError("anchor already present in sorted array");
+    this.#sortedAnchors.splice(result.insertionPoint, 0, anchor);
   }
 
   #removeSorted(anchor: AnchorString): void {
