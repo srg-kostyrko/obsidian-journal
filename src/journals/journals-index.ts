@@ -65,6 +65,25 @@ export class JournalsIndex {
     this.#markDirty(existing.journalName);
   }
 
+  clearJournal(journalName: string): void {
+    const journalIndex = this.#journals.get(journalName);
+    if (!journalIndex) return;
+    for (const [, path] of journalIndex) {
+      this.#byPath.delete(path);
+    }
+    journalIndex.clear();
+    this.#journals.delete(journalName);
+    this.#markDirty(journalName);
+  }
+
+  clear(): void {
+    const names = [...this.#journals.keys()];
+    this.#byPath.clear();
+    for (const journalIndex of this.#journals.values()) journalIndex.clear();
+    this.#journals.clear();
+    for (const name of names) this.#markDirty(name);
+  }
+
   #markDirty(journalName: string): void {
     this.#dirty.add(journalName);
     if (this.#flushScheduled) return;

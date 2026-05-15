@@ -170,4 +170,59 @@ describe("JournalsIndex", () => {
       expect(events.entryChanged).toEqual([]);
     });
   });
+
+  describe("clearJournal", () => {
+    it("removes all entries for the journal", () => {
+      const index = new JournalsIndex();
+      index.register(entry("daily", "2022-01-01", "a.md"));
+      index.register(entry("daily", "2022-01-02", "b.md"));
+      index.clearJournal("daily");
+      expect(index.entryByPath(p("a.md")).isNone()).toBe(true);
+      expect(index.entryByPath(p("b.md")).isNone()).toBe(true);
+    });
+
+    it("does not affect other journals", () => {
+      const index = new JournalsIndex();
+      index.register(entry("daily", "2022-01-01", "a.md"));
+      index.register(entry("weekly", "2022-W01", "w.md"));
+      index.clearJournal("daily");
+      expect(index.entryByPath(p("w.md")).isSome()).toBe(true);
+    });
+
+    it("does not emit per-entry entryChanged", () => {
+      const index = new JournalsIndex();
+      index.register(entry("daily", "2022-01-01", "a.md"));
+      index.register(entry("daily", "2022-01-02", "b.md"));
+      const events = capture(index);
+      index.clearJournal("daily");
+      expect(events.entryChanged).toEqual([]);
+    });
+
+    it("is a no-op when journal is unknown", () => {
+      const index = new JournalsIndex();
+      const events = capture(index);
+      index.clearJournal("ghost");
+      expect(events.entryChanged).toEqual([]);
+    });
+  });
+
+  describe("clear", () => {
+    it("empties every journal", () => {
+      const index = new JournalsIndex();
+      index.register(entry("daily", "2022-01-01", "a.md"));
+      index.register(entry("weekly", "2022-W01", "w.md"));
+      index.clear();
+      expect(index.entryByPath(p("a.md")).isNone()).toBe(true);
+      expect(index.entryByPath(p("w.md")).isNone()).toBe(true);
+    });
+
+    it("does not emit per-entry entryChanged", () => {
+      const index = new JournalsIndex();
+      index.register(entry("daily", "2022-01-01", "a.md"));
+      index.register(entry("weekly", "2022-W01", "w.md"));
+      const events = capture(index);
+      index.clear();
+      expect(events.entryChanged).toEqual([]);
+    });
+  });
 });
