@@ -178,7 +178,7 @@ export class CycleService {
           const d = localMoment(date.toAnchor(), "YYYY-MM-DD", true);
           const startM = localMoment(start.toAnchor(), "YYYY-MM-DD", true);
           const endM = localMoment(end.toAnchor(), "YYYY-MM-DD", true);
-          return [d.diff(startM, "days") + 1, d.diff(endM, "days")] as const;
+          return [d.diff(startM, "days") + 1, d.diff(endM, "days") - 1] as const;
         }),
       ),
     );

@@ -198,9 +198,10 @@ describe("CycleService", () => {
       const c = buildContainer({ w: fixedJournal("w", { type: "week" }) });
       const cycle = c.resolve(CycleService);
       // 2024-03-06 (Wed) of the Mon 2024-03-04 — Sun 2024-03-10 week.
-      // From start Mon: day 3 (Mon=1, Tue=2, Wed=3). To end Sun: -4 (4 days remaining including Sun).
+      // From start Mon: day 3 (Mon=1, Tue=2, Wed=3). To end Sun: -5 (Wed is 4 days before Sun,
+      // negated and decremented by 1 to match v2 calculateOffset semantics).
       const off = cycle.offsets("w", unwrapResult(CalendarDate.parse("2024-03-06")));
-      expect(off.isSome() && off.value).toEqual([3, -4]);
+      expect(off.isSome() && off.value).toEqual([3, -5]);
     });
 
     it("returns None for unknown journal", () => {
