@@ -4,6 +4,7 @@
   "calendar_apply_globally_desc": "If disabled, week-configuration settings apply only to dates inside journals and do not affect dates created by other plugins or Obsidian itself.",
   "calendar_apply_globally_restart_hint": "You might need to restart Obsidian for changes to take effect.",
   "calendar_apply_globally_title": "Apply week configuration to all dates in vault?",
+  "calendar_dashboard_section_title": "Calendar",
   "calendar_picker_cancel_action": "Cancel",
   "calendar_picker_first_week_desc": "Which day in January the first week of the year must contain (1..7).",
   "calendar_picker_first_week_label": "First week of year",

@@ -44,13 +44,25 @@ function mount(container: Container) {
   });
 }
 
+async function openSection(): Promise<void> {
+  await userEvent.click(screen.getByText(m.calendar_dashboard_section_title()));
+}
+
 afterEach(() => cleanup());
 
 describe("CalendarWeekBlock", () => {
-  it("renders the Change button", async () => {
+  it("starts collapsed and hides the inner settings", async () => {
     const { container, settings } = setupContainer();
     await settings.initialize();
     mount(container);
+    expect(screen.queryByText(m.calendar_week_config_change())).toBeNull();
+  });
+
+  it("renders the Change button once expanded", async () => {
+    const { container, settings } = setupContainer();
+    await settings.initialize();
+    mount(container);
+    await openSection();
     expect(screen.getByText(m.calendar_week_config_change())).toBeTruthy();
   });
 
@@ -58,6 +70,7 @@ describe("CalendarWeekBlock", () => {
     const { container, settings } = setupContainer({ mode: "locale" });
     await settings.initialize();
     mount(container);
+    await openSection();
     expect(screen.queryByText(m.calendar_apply_globally_title())).toBeNull();
   });
 
@@ -65,6 +78,7 @@ describe("CalendarWeekBlock", () => {
     const { container, settings } = setupContainer({ mode: "custom", dow: 1, doy: 4, global: false });
     await settings.initialize();
     mount(container);
+    await openSection();
     expect(screen.getByText(m.calendar_apply_globally_title())).toBeTruthy();
   });
 
@@ -76,6 +90,7 @@ describe("CalendarWeekBlock", () => {
       AsyncResult.fromPromise(pending, () => new Error("never")),
     );
     mount(container);
+    await openSection();
     await userEvent.click(screen.getByText(m.calendar_week_config_change()));
     expect(modalService.open).toHaveBeenCalledWith(weekPresetPickerModal, { current: { mode: "locale" } });
   });
@@ -84,6 +99,7 @@ describe("CalendarWeekBlock", () => {
     const { container, settings } = setupContainer({ mode: "custom", dow: 1, doy: 4, global: false });
     await settings.initialize();
     mount(container);
+    await openSection();
     expect(screen.getByText(m.calendar_preset_name({ preset: "iso-8601" }))).toBeTruthy();
   });
 
@@ -91,6 +107,7 @@ describe("CalendarWeekBlock", () => {
     const { container, settings } = setupContainer({ mode: "custom", dow: 3, doy: 7, global: false });
     await settings.initialize();
     mount(container);
+    await openSection();
     expect(screen.getByText(m.calendar_preset_name({ preset: "custom" }))).toBeTruthy();
     expect(screen.getByText(/Wednesday/)).toBeTruthy();
     expect(screen.getByText(/Jan 3\b/)).toBeTruthy();
@@ -100,6 +117,7 @@ describe("CalendarWeekBlock", () => {
     const { container, settings } = setupContainer({ mode: "custom", dow: 1, doy: 4, global: false });
     await settings.initialize();
     mount(container);
+    await openSection();
     const toggle = screen.getByRole("checkbox");
     await userEvent.click(toggle);
     const state = settings.getSlice(calendarSlice).state;
@@ -113,6 +131,7 @@ describe("CalendarWeekBlock", () => {
       AsyncResult.ok<CalendarSliceState>({ mode: "custom", dow: 0, doy: 6, global: false }),
     );
     mount(container);
+    await openSection();
     await userEvent.click(screen.getByText(m.calendar_week_config_change()));
     await Promise.resolve();
     expect(settings.getSlice(calendarSlice).state).toEqual({

@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { computed } from "vue";
+import { computed, ref } from "vue";
 
 import { Calendar } from "@/calendar/calendar";
 import { detectCurrentPreset, type WeekPreset } from "@/calendar/presets";
@@ -8,6 +8,8 @@ import { useService } from "@/infrastructure/di";
 import { useModalService } from "@/infrastructure/host/modals";
 import { SettingsService } from "@/settings";
 import UiButton from "@/ui/UiButton.vue";
+import UiCollapsibleBlock from "@/ui/UiCollapsibleBlock.vue";
+import UiIcon from "@/ui/UiIcon.vue";
 import UiSettingRow from "@/ui/UiSettingRow.vue";
 import UiToggle from "@/ui/UiToggle.vue";
 
@@ -21,6 +23,7 @@ const settings = useService(SettingsService);
 const calendar = useService(Calendar);
 const modals = useModalService();
 const slice = settings.getSlice(calendarSlice);
+const expanded = ref(false);
 
 const activePreset = computed<ActivePreset>(() => {
   if (slice.state.mode === "locale") return "locale";
@@ -56,23 +59,39 @@ function change(): void {
 </script>
 
 <template>
-  <UiSettingRow heading :name="m.calendar_week_config_title()">
-    <template #description>
-      <div class="preset-name">{{ m.calendar_preset_name({ preset: activePreset }) }}</div>
-      <div class="whitespace">{{ activeDescription }}</div>
+  <UiCollapsibleBlock v-model:expanded="expanded">
+    <template #trigger>
+      <span class="section-heading">
+        <UiIcon name="calendar" />
+        <span class="section-title">{{ m.calendar_dashboard_section_title() }}</span>
+      </span>
     </template>
-    <UiButton @click="change">{{ m.calendar_week_config_change() }}</UiButton>
-  </UiSettingRow>
-  <UiSettingRow v-if="slice.state.mode === 'custom'" :name="m.calendar_apply_globally_title()">
-    <template #description>
-      {{ m.calendar_apply_globally_desc() }}
-      <div class="journal-hint">{{ m.calendar_apply_globally_restart_hint() }}</div>
-    </template>
-    <UiToggle v-model="globalRef" />
-  </UiSettingRow>
+    <UiSettingRow heading :name="m.calendar_week_config_title()">
+      <template #description>
+        <div class="preset-name">{{ m.calendar_preset_name({ preset: activePreset }) }}</div>
+        <div class="whitespace">{{ activeDescription }}</div>
+      </template>
+      <UiButton @click="change">{{ m.calendar_week_config_change() }}</UiButton>
+    </UiSettingRow>
+    <UiSettingRow v-if="slice.state.mode === 'custom'" :name="m.calendar_apply_globally_title()">
+      <template #description>
+        {{ m.calendar_apply_globally_desc() }}
+        <div class="journal-hint">{{ m.calendar_apply_globally_restart_hint() }}</div>
+      </template>
+      <UiToggle v-model="globalRef" />
+    </UiSettingRow>
+  </UiCollapsibleBlock>
 </template>
 
 <style scoped>
+.section-heading {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--size-2-2);
+}
+.section-title {
+  font-weight: var(--font-semibold);
+}
 .preset-name {
   font-weight: var(--font-semibold);
   margin-bottom: var(--size-2-1);

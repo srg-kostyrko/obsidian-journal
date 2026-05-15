@@ -23,9 +23,9 @@ function toggle() {
         <slot name="controls" />
       </span>
     </div>
-    <template v-if="expanded">
+    <div v-if="expanded" class="collapsible-content">
       <slot />
-    </template>
+    </div>
   </div>
 </template>
 
@@ -51,5 +51,8 @@ function toggle() {
 }
 .collapsible-trigger-text {
   flex-grow: 1;
+}
+.collapsible-content {
+  padding-top: var(--size-4-2);
 }
 </style>
