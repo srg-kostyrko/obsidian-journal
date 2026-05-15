@@ -77,10 +77,6 @@ export const journalConfigSchema = v.object({
   numbering: numberingSchema,
 });
 
-// --- Public types ---
-// AnchorString fields are typed with the calendar brand rather than plain string
-// so callers can pass them without re-casting.
-
 export interface FixedWriteIntervals {
   type: "day" | "week" | "month" | "quarter" | "year";
 }
