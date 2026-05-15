@@ -53,11 +53,22 @@ describe("CycleService", () => {
     });
 
     describe("fixed weekly", () => {
-      it("returns the year-correct anchor for a week spanning a year boundary", () => {
+      it("returns a year-2020 anchor for a date the week-year considers 2020", () => {
         const c = buildContainer({ weekly: fixedJournal("weekly", { type: "week" }) });
         const cycle = c.resolve(CycleService);
+        // Week containing Wed 2020-12-30 starts Mon 2020-12-28, ends Sun 2021-01-03.
+        // With dow=1 doy=4, anchor = start + 3 days = Thu 2020-12-31.
         const result = cycle.anchorOf("weekly", unwrapResult(CalendarDate.parse("2020-12-30")));
-        expect(result.isSome() && result.value.startsWith("2020")).toBe(true);
+        expect(result.isSome() && result.value).toBe("2020-12-31");
+      });
+
+      it("returns a year-2021 anchor for a date the week-year considers 2021", () => {
+        const c = buildContainer({ weekly: fixedJournal("weekly", { type: "week" }) });
+        const cycle = c.resolve(CycleService);
+        // Week containing Mon 2021-01-04 starts Mon 2021-01-04, ends Sun 2021-01-10.
+        // With dow=1 doy=4, anchor = start + 3 days = Thu 2021-01-07.
+        const result = cycle.anchorOf("weekly", unwrapResult(CalendarDate.parse("2021-01-04")));
+        expect(result.isSome() && result.value).toBe("2021-01-07");
       });
     });
 
