@@ -25,6 +25,15 @@ function buildFindIndex(): JournalIndex {
   return index;
 }
 
+function buildClosestIndex(): JournalIndex {
+  const index = new JournalIndex();
+  index.set(a("2022-01-01"), p("notes/a.md"));
+  index.set(a("2022-01-02"), p("notes/b.md"));
+  index.set(a("2022-01-04"), p("notes/c.md"));
+  index.set(a("2022-11-10"), p("notes/d.md"));
+  return index;
+}
+
 describe("JournalIndex", () => {
   describe("get", () => {
     it("returns the path when anchor exists", () => {
@@ -208,6 +217,36 @@ describe("JournalIndex", () => {
 
     it("returns None when the index is empty", () => {
       expect(new JournalIndex().findPrevious(a("2022-01-01")).isNone()).toBe(true);
+    });
+  });
+
+  describe("findClosestAnchor", () => {
+    it("returns the exact anchor when present", () => {
+      const result = buildClosestIndex().findClosestAnchor(a("2022-01-02"));
+      assert(result.isSome());
+      expect(result.value).toBe(a("2022-01-02"));
+    });
+
+    it("returns the first anchor when target is before the range", () => {
+      const result = buildClosestIndex().findClosestAnchor(a("2021-12-31"));
+      assert(result.isSome());
+      expect(result.value).toBe(a("2022-01-01"));
+    });
+
+    it("returns the last anchor when target is after the range", () => {
+      const result = buildClosestIndex().findClosestAnchor(a("2023-01-01"));
+      assert(result.isSome());
+      expect(result.value).toBe(a("2022-11-10"));
+    });
+
+    it("returns the previous anchor when target is between entries", () => {
+      const result = buildClosestIndex().findClosestAnchor(a("2022-01-05"));
+      assert(result.isSome());
+      expect(result.value).toBe(a("2022-01-04"));
+    });
+
+    it("returns None when the index is empty", () => {
+      expect(new JournalIndex().findClosestAnchor(a("2022-01-01")).isNone()).toBe(true);
     });
   });
 });

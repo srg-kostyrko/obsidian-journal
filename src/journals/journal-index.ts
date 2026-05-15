@@ -61,6 +61,17 @@ export class JournalIndex {
     return Option.fromNullable(this.#sortedAnchors[previousIndex]).flatMap((anchor) => this.get(anchor));
   }
 
+  findClosestAnchor(to: AnchorString): Option<AnchorString> {
+    if (this.#sortedAnchors.length === 0) return Option.none();
+    const result = this.#bsearch(to);
+    if (result.found) return Option.some(to);
+    const first = this.#sortedAnchors[0];
+    if (to < first) return Option.some(first);
+    const last = this.#sortedAnchors.at(-1);
+    if (last !== undefined && to > last) return Option.some(last);
+    return Option.fromNullable(this.#sortedAnchors[result.insertionPoint - 1]);
+  }
+
   *[Symbol.iterator](): IterableIterator<readonly [AnchorString, VaultPath]> {
     for (const anchor of this.#sortedAnchors) {
       const path = this.#byAnchor.get(anchor);
