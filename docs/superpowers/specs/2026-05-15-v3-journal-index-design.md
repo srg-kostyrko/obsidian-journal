@@ -128,7 +128,7 @@ export interface JournalEntry {
 }
 
 export type JournalsIndexEvents = {
-  entryChanged: { entry: JournalEntry; kind: "added" | "removed" | "moved" };
+  entryChanged: { entry: JournalEntry; kind: "added" | "removed" };
   journalDirty: { journalName: string };
 };
 ```
@@ -225,12 +225,12 @@ API notes:
   Whoever drives the registry (future: a wiring service backed by the
   host bridge) calls `register` / `unregister` / `transferPath`.
 - **`register(entry)` accepts the whole `JournalEntry`,** matching event
-  payloads. If the path is already registered, `register` handles the
-  move internally: at most one `entryChanged` of kind `"moved"`, not a
-  remove+add pair.
+  payloads. If the path is already registered with a different entry,
+  `register` emits `removed` for the old entry and `added` for the new
+  one (one transaction; consumers see a consistent pair).
 - **`transferPath(from, to)` is rename-only.** `journalName` and
-  `anchor` are preserved; only the path moves. Emits one
-  `entryChanged({ kind: "moved" })`.
+  `anchor` are preserved; only the path moves. Emits `removed` for the
+  old path and `added` for the new path.
 - **`unregister(path)` is the consolidated `deleteForPath`.** Vault
   events arrive as paths ("file X was deleted"); the registry resolves
   to `(journal, anchor)` via `#byPath`.
@@ -243,17 +243,17 @@ API notes:
 
 ### Event semantics
 
-| Mutation                                          | `entryChanged`                              | `journalDirty`                                      |
-| ------------------------------------------------- | ------------------------------------------- | --------------------------------------------------- |
-| `register` of a new path                          | once, `kind: "added"`                       | once per microtask, target journal                  |
-| `register` reusing an existing path, same journal | once, `kind: "moved"`                       | once per microtask, target journal                  |
-| `register` reusing a path, different journal      | once, `kind: "removed"` then once `"moved"` | once per microtask each for old and target journals |
-| `register` no-op (identical entry)                | nothing                                     | nothing                                             |
-| `unregister` of a known path                      | once, `kind: "removed"`                     | once per microtask, owning journal                  |
-| `unregister` of an unknown path                   | nothing                                     | nothing                                             |
-| `transferPath`                                    | once, `kind: "moved"`                       | once per microtask, owning journal                  |
-| `clearJournal`                                    | nothing                                     | once per microtask, cleared journal                 |
-| `clear`                                           | nothing                                     | once per microtask per affected journal, one batch  |
+| Mutation                                          | `entryChanged`                        | `journalDirty`                                      |
+| ------------------------------------------------- | ------------------------------------- | --------------------------------------------------- |
+| `register` of a new path                          | once, `kind: "added"`                 | once per microtask, target journal                  |
+| `register` reusing an existing path, same journal | once `"removed"`, then once `"added"` | once per microtask, target journal                  |
+| `register` reusing a path, different journal      | once `"removed"`, then once `"added"` | once per microtask each for old and target journals |
+| `register` no-op (identical entry)                | nothing                               | nothing                                             |
+| `unregister` of a known path                      | once, `kind: "removed"`               | once per microtask, owning journal                  |
+| `unregister` of an unknown path                   | nothing                               | nothing                                             |
+| `transferPath`                                    | once `"removed"`, then once `"added"` | once per microtask, owning journal                  |
+| `clearJournal`                                    | nothing                               | once per microtask, cleared journal                 |
+| `clear`                                           | nothing                               | once per microtask per affected journal, one batch  |
 
 `entryChanged` fires synchronously inside the mutation call (granular
 consumers see every change in order). `journalDirty` is microtask-coalesced
@@ -330,15 +330,12 @@ Mutation specifics:
        `path`): no-op (no emit, no dirty mark).
      - Otherwise:
        - Remove old anchor from old journal's `JournalIndex`.
-       - If old `journalName !== entry.journalName`: emit
-         `entryChanged({ entry: old, kind: "removed" })`; mark old
-         journal dirty. (Single-journal-different-anchor case skips the
-         removed event — the move is the whole story.)
+       - Emit `entryChanged({ entry: old, kind: "removed" })`.
+       - Mark old journal dirty.
   2. Look up or create the target `JournalIndex` in `#journals`.
   3. `targetIndex.set(entry.anchor, entry.path)`.
   4. `#byPath.set(entry.path, entry)`.
-  5. Emit `entryChanged({ entry, kind })` where `kind` is `"moved"` if
-     the path was previously known (any journal), else `"added"`.
+  5. Emit `entryChanged({ entry, kind: "added" })`.
   6. Mark `entry.journalName` dirty.
 
 - `unregister(path)`:
@@ -348,10 +345,13 @@ Mutation specifics:
 
 - `transferPath(from, to)`:
   - If `from === to` or `#byPath` has no `from`: no-op.
-  - Else: build `next = { ...old, path: to }`. Update the per-journal
-    index (the anchor → path value reassigns; no anchor-key change).
+  - Else: look up `old = #byPath.get(from)`; build
+    `next = { ...old, path: to }`. Update the per-journal index (the
+    anchor → path value reassigns; no anchor-key change).
     `#byPath.delete(from)`; `#byPath.set(to, next)`. Emit
-    `entryChanged({ entry: next, kind: "moved" })`. Mark journal dirty.
+    `entryChanged({ entry: old, kind: "removed" })` then
+    `entryChanged({ entry: next, kind: "added" })`. Mark journal dirty
+    once.
 
 - `clearJournal(name)`:
   - For each `[anchor, path]` in the journal's index, `#byPath.delete(path)`.
@@ -478,9 +478,9 @@ describe("JournalsIndex")
     test("makes the entry retrievable by path")
     test("emits entryChanged with kind: added for a new path")
     test("identical re-registration emits nothing")
-    test("re-registering a path with a new anchor emits a single moved event")
+    test("re-registering a path with a new anchor emits removed for the old entry and added for the new")
     test("re-registering a path under a different journal removes it from the old journal")
-    test("re-registering across journals emits removed for the old and moved for the new")
+    test("re-registering across journals emits removed for the old and added for the new")
   describe("unregister")
     test("removes the entry from its journal")
     test("removes the entry from path lookup")
@@ -489,7 +489,7 @@ describe("JournalsIndex")
   describe("transferPath")
     test("updates the path while keeping journal and anchor")
     test("makes the entry retrievable under the new path")
-    test("emits entryChanged with kind: moved")
+    test("emits removed for the old path and added for the new path")
     test("is a no-op when from path is unknown")
     test("is a no-op when from equals to")
   describe("clearJournal")
