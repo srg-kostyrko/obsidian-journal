@@ -3,6 +3,7 @@ import { afterEach, beforeEach, describe, expect, it } from "vitest";
 import type { AnchorString } from "@/calendar";
 import { installTestCalendar } from "@/calendar/testing";
 import { Container } from "@/infrastructure/di";
+import type { VaultPath } from "@/infrastructure/host";
 import { SettingsService } from "@/settings";
 
 import { CycleService } from "./cycle";
@@ -130,6 +131,28 @@ describe("NumberingService", () => {
       });
       const n = c.resolve(NumberingService);
       expect(unwrap(n.assignNumbers("s", "2024-01-29" as AnchorString))).toEqual({ phase: 1, n: 5 });
+    });
+  });
+
+  describe("assignNumbers — stored-basis", () => {
+    it("uses stored numbers as cascade basis when an earlier entry has them", () => {
+      const c = buildContainer({ s: customJournal("s", "week", 1, "2020-01-06") });
+
+      const fresh = c.resolve(NumberingService);
+      const computed = unwrap(fresh.assignNumbers("s", "2024-01-08" as AnchorString));
+      expect(computed.index).toBeGreaterThan(200);
+
+      const c2 = buildContainer({ s: customJournal("s", "week", 1, "2020-01-06") });
+      const index2 = c2.resolve(JournalsIndex);
+      index2.register({
+        journalName: "s",
+        anchor: "2024-01-01" as AnchorString,
+        path: "S/X.md" as VaultPath,
+        numbers: { index: 200 },
+      });
+      const n2 = c2.resolve(NumberingService);
+      const withBasis = unwrap(n2.assignNumbers("s", "2024-01-08" as AnchorString));
+      expect(withBasis).toEqual({ index: 201 });
     });
   });
 });
