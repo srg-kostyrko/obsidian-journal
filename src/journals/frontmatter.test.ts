@@ -136,4 +136,131 @@ describe("FrontmatterService", () => {
       expect(result.isSome() && result.value.numbers).toEqual({ sprint: 3 });
     });
   });
+
+  describe("buildMetadata", () => {
+    it("returns Err(JournalNotFoundError) for unknown journal", () => {
+      const c = buildContainer({});
+      const fm = c.resolve(FrontmatterService);
+      const result = fm.buildMetadata("missing", "2024-01-01" as AnchorString);
+      expect(result.isErr() && result.error.constructor.name).toBe("JournalNotFoundError");
+    });
+
+    it("returns metadata with numbers for an enabled custom journal", () => {
+      const c = buildContainer({ s: customJournal("s", "week", 1, "2024-01-01") });
+      const fm = c.resolve(FrontmatterService);
+      const result = fm.buildMetadata("s", "2024-01-08" as AnchorString);
+      expect(result.isOk() && result.value).toEqual({
+        journalName: "s",
+        anchor: "2024-01-08",
+        numbers: { index: 2 },
+      });
+    });
+
+    it("includes endDate when the stored entry has one", () => {
+      const c = buildContainer({ s: customJournal("s", "week", 1, "2024-01-01") });
+      const index = c.resolve(JournalsIndex);
+      index.register({
+        journalName: "s",
+        anchor: "2024-01-01" as AnchorString,
+        path: "S/1.md" as VaultPath,
+        endDate: "2024-01-14" as AnchorString,
+      });
+      const fm = c.resolve(FrontmatterService);
+      const result = fm.buildMetadata("s", "2024-01-01" as AnchorString);
+      expect(result.isOk() && result.value.endDate).toBe("2024-01-14");
+    });
+
+    it("omits endDate when no stored extension exists", () => {
+      const c = buildContainer({ s: customJournal("s", "week", 1, "2024-01-01") });
+      const fm = c.resolve(FrontmatterService);
+      const result = fm.buildMetadata("s", "2024-01-01" as AnchorString);
+      expect(result.isOk() && result.value.endDate).toBeUndefined();
+    });
+  });
+
+  describe("writeMutator", () => {
+    it("writes journal name and date field", () => {
+      const c = buildContainer({ daily: fixedJournal("daily", { type: "day" }) });
+      const fm = c.resolve(FrontmatterService);
+      const result = fm.writeMutator("daily", {
+        journalName: "daily",
+        anchor: "2024-01-01" as AnchorString,
+      });
+      expect(result.isOk()).toBe(true);
+      if (!result.isOk()) return;
+      const out: Record<string, unknown> = {};
+      result.value(out);
+      expect(out.journal).toBe("daily");
+      expect(out["journal-date"]).toBe("2024-01-01");
+    });
+
+    it("writes startDate when addStartDate is true", () => {
+      const c = buildContainer({
+        daily: fixedJournal(
+          "daily",
+          { type: "day" },
+          {
+            frontmatter: {
+              dateField: "journal-date",
+              startDateField: "journal-start-date",
+              endDateField: "journal-end-date",
+              addStartDate: true,
+              addEndDate: false,
+            },
+          },
+        ),
+      });
+      const fm = c.resolve(FrontmatterService);
+      const result = fm.writeMutator("daily", {
+        journalName: "daily",
+        anchor: "2024-01-01" as AnchorString,
+      });
+      expect(result.isOk()).toBe(true);
+      if (!result.isOk()) return;
+      const out: Record<string, unknown> = {};
+      result.value(out);
+      expect(out["journal-start-date"]).toBe("2024-01-01");
+    });
+
+    it("writes endDate when an extension is present even if addEndDate is false", () => {
+      const c = buildContainer({ s: customJournal("s", "week", 1, "2024-01-01") });
+      const fm = c.resolve(FrontmatterService);
+      const result = fm.writeMutator("s", {
+        journalName: "s",
+        anchor: "2024-01-01" as AnchorString,
+        endDate: "2024-01-14" as AnchorString,
+      });
+      expect(result.isOk()).toBe(true);
+      if (!result.isOk()) return;
+      const out: Record<string, unknown> = {};
+      result.value(out);
+      expect(out["journal-end-date"]).toBe("2024-01-14");
+    });
+
+    it("writes each numbering frontmatterKey when value present, deletes when absent", () => {
+      const c = buildContainer({ s: customJournal("s", "week", 1, "2024-01-01") });
+      const fm = c.resolve(FrontmatterService);
+
+      const withNumbers = fm.writeMutator("s", {
+        journalName: "s",
+        anchor: "2024-01-01" as AnchorString,
+        numbers: { index: 42 },
+      });
+      expect(withNumbers.isOk()).toBe(true);
+      if (!withNumbers.isOk()) return;
+      const out1: Record<string, unknown> = { "journal-index": 99 };
+      withNumbers.value(out1);
+      expect(out1["journal-index"]).toBe(42);
+
+      const withoutNumbers = fm.writeMutator("s", {
+        journalName: "s",
+        anchor: "2024-01-01" as AnchorString,
+      });
+      expect(withoutNumbers.isOk()).toBe(true);
+      if (!withoutNumbers.isOk()) return;
+      const out2: Record<string, unknown> = { "journal-index": 99 };
+      withoutNumbers.value(out2);
+      expect("journal-index" in out2).toBe(false);
+    });
+  });
 });
