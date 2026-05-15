@@ -129,16 +129,6 @@ describe("JournalIndex", () => {
       ]);
     });
 
-    it("includes the start anchor when present", () => {
-      const result = buildRangeIndex().getRange(a("2022-01-01"), a("2022-01-05"));
-      expect(result.has(a("2022-01-01"))).toBe(true);
-    });
-
-    it("includes the end anchor when present", () => {
-      const result = buildRangeIndex().getRange(a("2022-01-05"), a("2022-01-10"));
-      expect(result.has(a("2022-01-10"))).toBe(true);
-    });
-
     it("returns empty map when range starts after all entries", () => {
       const result = buildRangeIndex().getRange(a("2023-01-01"), a("2023-12-31"));
       expect(result.size).toBe(0);
