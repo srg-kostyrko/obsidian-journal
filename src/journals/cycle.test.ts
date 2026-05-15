@@ -8,7 +8,7 @@ import { SettingsService } from "@/settings";
 
 import { CycleService } from "./cycle";
 import { JournalsIndex } from "./journals-index";
-import { fakeSettings, fixedJournal } from "./testing";
+import { customJournal, fakeSettings, fixedJournal } from "./testing";
 
 function buildContainer(journals: Parameters<typeof fakeSettings>[0]): Container {
   const c = new Container();
@@ -56,6 +56,29 @@ describe("CycleService", () => {
         const cycle = c.resolve(CycleService);
         const result = cycle.anchorOf("weekly", unwrapResult(CalendarDate.parse("2020-12-30")));
         expect(result.isSome() && result.value.startsWith("2020")).toBe(true);
+      });
+    });
+
+    describe("custom monthly", () => {
+      it("lands on the configured anchor for dates inside the first step", () => {
+        const c = buildContainer({ s: customJournal("s", "month", 1, "2024-01-15") });
+        const cycle = c.resolve(CycleService);
+        const result = cycle.anchorOf("s", unwrapResult(CalendarDate.parse("2024-01-20")));
+        expect(result.isSome() && result.value).toBe("2024-01-15");
+      });
+
+      it("steps forward to the next anchor for a date past the first interval end", () => {
+        const c = buildContainer({ s: customJournal("s", "month", 1, "2024-01-15") });
+        const cycle = c.resolve(CycleService);
+        const result = cycle.anchorOf("s", unwrapResult(CalendarDate.parse("2024-02-20")));
+        expect(result.isSome() && result.value).toBe("2024-02-15");
+      });
+
+      it("clips month-end when anchor is the 30th and target month is February", () => {
+        const c = buildContainer({ s: customJournal("s", "month", 1, "2024-01-30") });
+        const cycle = c.resolve(CycleService);
+        const result = cycle.anchorOf("s", unwrapResult(CalendarDate.parse("2024-02-28")));
+        expect(result.isSome() && result.value).toBe("2024-02-29");
       });
     });
   });

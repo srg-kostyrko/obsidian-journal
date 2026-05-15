@@ -32,9 +32,11 @@ export function fixedJournal(name: string, write: JournalWrite, overrides: Parti
   return { ...journalDefaultsFor(write, name), ...overrides };
 }
 
+type CustomEvery = "day" | "week" | "month" | "quarter" | "year";
+
 export function customJournal(
   name: string,
-  every: NonNullable<JournalWrite extends { every: infer E } ? E : never>,
+  every: CustomEvery,
   duration: number,
   anchorDate: string,
   overrides: Partial<JournalConfig> = {},
