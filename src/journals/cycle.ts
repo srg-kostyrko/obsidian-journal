@@ -50,28 +50,25 @@ const PERIOD_CTORS: Record<PeriodKind, (d: CalendarDate) => PeriodLike> = {
   decade: (d) => DecadePeriod.containing(d),
 };
 
-// For month-based custom journals, the anchor for a given date is determined by
-// calendar-month distance from the base anchor, not by whether the date falls
-// before or after the clipped day. This preserves the invariant that all dates
-// in a given calendar month map to the same anchor when duration === 1.
-function customMonthAnchorOf(anchor: AnchorString, duration: number, date: CalendarDate): AnchorString {
-  const base = localMoment(anchor, "YYYY-MM-DD", true);
-  const calMonthIndex = (m: ReturnType<typeof localMoment>): number => m.year() * 12 + m.month();
-  const calDiff = calMonthIndex(localMoment(date.toAnchor(), "YYYY-MM-DD", true)) - calMonthIndex(base);
-  const steps = calDiff >= 0 ? Math.floor(calDiff / duration) : Math.ceil(calDiff / duration) - 1;
-  return base
-    .clone()
-    .add(steps * duration, "month")
-    .format("YYYY-MM-DD") as AnchorString;
-}
-
 function customStepForward(anchor: AnchorString, every: MomentDurationUnit, duration: number): AnchorString {
   const m = localMoment(anchor, "YYYY-MM-DD", true);
+  if (every === "month" && m.date() > 28) {
+    const monthEnd = m.clone().endOf("month");
+    const delta = monthEnd.diff(m, "days");
+    const nextEnd = monthEnd.clone().add(duration, "month").endOf("month");
+    return nextEnd.clone().subtract(delta, "days").format("YYYY-MM-DD") as AnchorString;
+  }
   return m.clone().add(duration, every).format("YYYY-MM-DD") as AnchorString;
 }
 
 function customStepBackward(anchor: AnchorString, every: MomentDurationUnit, duration: number): AnchorString {
   const m = localMoment(anchor, "YYYY-MM-DD", true);
+  if (every === "month" && m.date() > 28) {
+    const monthEnd = m.clone().endOf("month");
+    const delta = monthEnd.diff(m, "days");
+    const previousEnd = monthEnd.clone().subtract(duration, "month").endOf("month");
+    return previousEnd.clone().add(delta, "days").format("YYYY-MM-DD") as AnchorString;
+  }
   return m.clone().subtract(duration, every).format("YYYY-MM-DD") as AnchorString;
 }
 
@@ -86,9 +83,6 @@ export class CycleService {
           return Option.some(period.anchor.toAnchor());
         })
         .with({ kind: "custom" }, (c) => {
-          if (c.every === "month") {
-            return Option.some(customMonthAnchorOf(c.anchor, c.duration, date));
-          }
           const target = date.toAnchor();
           if (target < c.anchor) {
             let current = c.anchor;

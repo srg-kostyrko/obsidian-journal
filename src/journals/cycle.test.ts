@@ -75,11 +75,14 @@ describe("CycleService", () => {
         expect(result.isSome() && result.value).toBe("2024-02-15");
       });
 
-      it("clips month-end when anchor is the 30th and target month is February", () => {
+      it("preserves distance-from-month-end when anchor is the 30th and target month is February", () => {
+        // v2 fidelity: anchor 2024-01-30 is 1 day before Jan-31 (end of month). Advancing 1 month
+        // produces 2024-02-28, which is 1 day before Feb-29 (end of leap-year Feb). Date 2024-02-28
+        // falls inside the interval [2024-02-28, 2024-03-27].
         const c = buildContainer({ s: customJournal("s", "month", 1, "2024-01-30") });
         const cycle = c.resolve(CycleService);
         const result = cycle.anchorOf("s", unwrapResult(CalendarDate.parse("2024-02-28")));
-        expect(result.isSome() && result.value).toBe("2024-02-29");
+        expect(result.isSome() && result.value).toBe("2024-02-28");
       });
     });
   });
