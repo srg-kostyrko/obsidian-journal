@@ -73,6 +73,14 @@ describe("JournalIndex", () => {
       assert(result.isSome());
       expect(result.value).toBe(p("notes/b.md"));
     });
+
+    it("does not duplicate the anchor in ordering after overwrite", () => {
+      const index = new JournalIndex();
+      index.set(a("2022-01-01"), p("notes/a.md"));
+      index.set(a("2022-01-01"), p("notes/b.md"));
+      expect(index.size).toBe(1);
+      expect([...index]).toEqual([[a("2022-01-01"), p("notes/b.md")]]);
+    });
   });
 
   describe("delete", () => {

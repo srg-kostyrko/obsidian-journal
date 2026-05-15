@@ -195,7 +195,7 @@ API notes:
 
 ```ts
 export class JournalsIndex {
-  readonly events: TypedEmitter<JournalsIndexEvents>;
+  readonly events: Subscribable<JournalsIndexEvents>;
 
   has(journalName: string, anchor: AnchorString): boolean;
   get(journalName: string, anchor: AnchorString): Option<VaultPath>;

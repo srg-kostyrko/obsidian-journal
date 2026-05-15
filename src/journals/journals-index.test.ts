@@ -89,6 +89,13 @@ describe("JournalsIndex", () => {
         { entry: newEntry, kind: "added" },
       ]);
     });
+
+    it("re-registering across journals removes the anchor from the old journal", () => {
+      const index = new JournalsIndex();
+      index.register(entry("daily", "2022-01-01", "shared.md"));
+      index.register(entry("weekly", "2022-W01", "shared.md"));
+      expect(index.has("daily", a("2022-01-01"))).toBe(false);
+    });
   });
 
   describe("entryByPath", () => {
@@ -120,6 +127,13 @@ describe("JournalsIndex", () => {
       const events = capture(index);
       index.unregister(p("missing.md"));
       expect(events.entryChanged).toEqual([]);
+    });
+
+    it("removes the entry from its journal's anchor index", () => {
+      const index = new JournalsIndex();
+      index.register(entry("daily", "2022-01-01", "Daily/2022-01-01.md"));
+      index.unregister(p("Daily/2022-01-01.md"));
+      expect(index.has("daily", a("2022-01-01"))).toBe(false);
     });
   });
 
@@ -204,6 +218,16 @@ describe("JournalsIndex", () => {
       index.clearJournal("ghost");
       expect(events.entryChanged).toEqual([]);
     });
+
+    it("emits journalDirty for the cleared journal", async () => {
+      const index = new JournalsIndex();
+      index.register(entry("daily", "2022-01-01", "a.md"));
+      await Promise.resolve(); // drain the register's microtask
+      const events = capture(index);
+      index.clearJournal("daily");
+      await Promise.resolve();
+      expect(events.journalDirty).toEqual([{ journalName: "daily" }]);
+    });
   });
 
   describe("clear", () => {
@@ -223,6 +247,18 @@ describe("JournalsIndex", () => {
       const events = capture(index);
       index.clear();
       expect(events.entryChanged).toEqual([]);
+    });
+
+    it("emits journalDirty once per previously-known journal", async () => {
+      const index = new JournalsIndex();
+      index.register(entry("daily", "2022-01-01", "a.md"));
+      index.register(entry("weekly", "2022-W01", "w.md"));
+      await Promise.resolve(); // drain register's coalesced events
+      const events = capture(index);
+      index.clear();
+      await Promise.resolve();
+      expect(new Set(events.journalDirty.map((event) => event.journalName))).toEqual(new Set(["daily", "weekly"]));
+      expect(events.journalDirty).toHaveLength(2);
     });
   });
 
