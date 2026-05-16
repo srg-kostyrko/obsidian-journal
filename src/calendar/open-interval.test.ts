@@ -3,6 +3,7 @@ import { afterEach, beforeEach, describe, expect, it } from "vitest";
 import { expectErr, expectOk } from "@/infrastructure/result/testing";
 
 import { OpenInterval } from "./open-interval";
+import { MonthPeriod } from "./period-month";
 import { date, installTestCalendar } from "./testing";
 
 describe("OpenInterval", () => {
@@ -126,6 +127,53 @@ describe("OpenInterval", () => {
       expectOk(closed);
 
       expect(closed.value.isSame(halfOpen)).toBe(false);
+    });
+  });
+
+  describe("overlapsPeriod", () => {
+    it("returns true when the period and interval share a day (both bounds)", () => {
+      const result = OpenInterval.between(date("2025-03-10"), date("2025-03-14"));
+      expectOk(result);
+
+      expect(result.value.overlapsPeriod(MonthPeriod.containing(date("2025-03-15")))).toBe(true);
+    });
+
+    it("returns false when the period is entirely before the interval", () => {
+      const result = OpenInterval.between(date("2025-03-10"), date("2025-03-14"));
+      expectOk(result);
+
+      expect(result.value.overlapsPeriod(MonthPeriod.containing(date("2025-01-15")))).toBe(false);
+    });
+
+    it("returns false when the period is entirely after the interval", () => {
+      const result = OpenInterval.between(date("2025-03-10"), date("2025-03-14"));
+      expectOk(result);
+
+      expect(result.value.overlapsPeriod(MonthPeriod.containing(date("2025-06-15")))).toBe(false);
+    });
+
+    it("returns true for any period at or after start when end is unbounded", () => {
+      expect(OpenInterval.from(date("2025-03-10")).overlapsPeriod(MonthPeriod.containing(date("2025-06-15")))).toBe(
+        true,
+      );
+    });
+
+    it("returns false for a period entirely before an unbounded-end interval", () => {
+      expect(OpenInterval.from(date("2025-03-10")).overlapsPeriod(MonthPeriod.containing(date("2025-01-15")))).toBe(
+        false,
+      );
+    });
+
+    it("returns true for any period at or before end when start is unbounded", () => {
+      expect(OpenInterval.until(date("2025-03-10")).overlapsPeriod(MonthPeriod.containing(date("2025-01-15")))).toBe(
+        true,
+      );
+    });
+
+    it("returns false for a period entirely after an unbounded-start interval", () => {
+      expect(OpenInterval.until(date("2025-03-10")).overlapsPeriod(MonthPeriod.containing(date("2025-06-15")))).toBe(
+        false,
+      );
     });
   });
 });

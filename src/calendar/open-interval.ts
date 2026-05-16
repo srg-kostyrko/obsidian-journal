@@ -3,6 +3,7 @@ import { Err, Ok, Option, type Result } from "@/infrastructure/result";
 import { IntervalError } from "./errors";
 
 import type { CalendarDate } from "./calendar-date";
+import type { Period } from "./period";
 
 export class OpenInterval {
   readonly kind = "OpenInterval" as const;
@@ -39,6 +40,18 @@ export class OpenInterval {
       none: () => true,
     });
     return afterStart && beforeEnd;
+  }
+
+  overlapsPeriod(p: Period): boolean {
+    const startOk = this.end.match({
+      some: (endDate) => !p.start.isAfter(endDate),
+      none: () => true,
+    });
+    const endOk = this.start.match({
+      some: (s) => !p.end.isBefore(s),
+      none: () => true,
+    });
+    return startOk && endOk;
   }
 
   isSame(other: OpenInterval): boolean {
