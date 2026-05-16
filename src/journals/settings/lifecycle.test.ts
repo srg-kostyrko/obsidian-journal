@@ -1,6 +1,5 @@
 import { describe, expect, it } from "vitest";
 
-import { Err } from "@/infrastructure/result";
 import { journalConfigCollection, type JournalConfig } from "@/journals";
 import { createSettingsService } from "@/settings/testing";
 
@@ -15,7 +14,7 @@ async function buildInitialized(raw?: unknown) {
   container.register(JournalLifecycleService).useClass(JournalLifecycleService);
   const result = await settings.initialize();
   expect(result.kind).toBe("ok");
-  return { service: container.resolve(JournalLifecycleService), settings, container };
+  return { service: container.resolve(JournalLifecycleService), settings };
 }
 
 describe("JournalLifecycleService.create", () => {
@@ -31,7 +30,6 @@ describe("JournalLifecycleService.create", () => {
   it("rejects an empty name with InvalidJournalNameError", async () => {
     const { service } = await buildInitialized();
     const result = service.create("", { type: "day" });
-    expect(result).toBeInstanceOf(Err);
     expect(result.kind === "err" && result.error).toBeInstanceOf(InvalidJournalNameError);
   });
 
@@ -54,6 +52,20 @@ describe("JournalLifecycleService.rename", () => {
     expect(col.get("morning")?.name).toBe("morning");
   });
 
+  it("rejects renaming to an empty string with InvalidJournalNameError", async () => {
+    const { service } = await buildInitialized();
+    service.create("a", { type: "day" });
+    const result = service.rename("a", "");
+    expect(result.kind === "err" && result.error).toBeInstanceOf(InvalidJournalNameError);
+  });
+
+  it("rejects renaming to the same name with InvalidJournalNameError", async () => {
+    const { service } = await buildInitialized();
+    service.create("a", { type: "day" });
+    const result = service.rename("a", "a");
+    expect(result.kind === "err" && result.error).toBeInstanceOf(InvalidJournalNameError);
+  });
+
   it("rejects renaming an unknown journal with UnknownJournalError", async () => {
     const { service } = await buildInitialized();
     const result = service.rename("missing", "x");
@@ -66,20 +78,6 @@ describe("JournalLifecycleService.rename", () => {
     service.create("b", { type: "week" });
     const result = service.rename("a", "b");
     expect(result.kind === "err" && result.error).toBeInstanceOf(JournalNameTakenError);
-  });
-
-  it("rejects renaming to the same name with InvalidJournalNameError", async () => {
-    const { service } = await buildInitialized();
-    service.create("a", { type: "day" });
-    const result = service.rename("a", "a");
-    expect(result.kind === "err" && result.error).toBeInstanceOf(InvalidJournalNameError);
-  });
-
-  it("rejects renaming to an empty string with InvalidJournalNameError", async () => {
-    const { service } = await buildInitialized();
-    service.create("a", { type: "day" });
-    const result = service.rename("a", "");
-    expect(result.kind === "err" && result.error).toBeInstanceOf(InvalidJournalNameError);
   });
 
   it("preserves every non-name field across rename", async () => {
