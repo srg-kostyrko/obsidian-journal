@@ -61,7 +61,6 @@
   "journal_add_modal_title": "Add journal",
   "journal_add_modal_write_custom_option": "Custom intervals",
   "journal_add_modal_write_label": "I'll be writing",
-  "journal_anchor_format_error": "Date must be YYYY-MM-DD.",
   "journal_dashboard_add": "Create new journal",
   "journal_dashboard_delete": "Delete",
   "journal_dashboard_edit": "Edit",
