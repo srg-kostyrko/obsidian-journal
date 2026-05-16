@@ -11,8 +11,7 @@ import {
   type AnchorString,
   type Period,
 } from "@/calendar";
-
-export type Picking = "day" | "week" | "month" | "quarter" | "year";
+import type { Picking } from "@/calendar/ui";
 
 export function useAnchorField(options: {
   anchor: Ref<AnchorString>;

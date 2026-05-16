@@ -2,7 +2,7 @@
 import { computed, ref, watchEffect } from "vue";
 
 import { CalendarDate, OpenInterval, type AnchorString } from "@/calendar";
-import { DatePicker } from "@/calendar/ui";
+import { DatePicker, type Picking } from "@/calendar/ui";
 import { m } from "@/i18n";
 import { useService } from "@/infrastructure/di";
 import { Flows } from "@/infrastructure/flows";
@@ -23,7 +23,7 @@ import { EditSequencePropertyFlow } from "../flows/edit-sequence-property.flow";
 import { RenameJournalFlow } from "../flows/rename-journal.flow";
 
 import DateFormatPreview from "./DateFormatPreview.vue";
-import { useAnchorField, type Picking } from "./use-anchor-field";
+import { useAnchorField } from "./use-anchor-field";
 
 const { journalName, nav } = defineProps<{ journalName: string; nav: SubpageNav }>();
 
