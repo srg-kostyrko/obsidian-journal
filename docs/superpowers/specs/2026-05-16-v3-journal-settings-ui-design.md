@@ -15,12 +15,13 @@ services that read it, but no UI to author it. This spec adds:
   edit / rename / delete affordances.
 - An edit subpage for tuning all entity fields the v3 schema currently
   supports.
-- Four flow classes (`Flow<P, R, FlowError>`) — `AddJournalFlow`,
-  `RenameJournalFlow`, `DeleteJournalFlow`, `EditFrontmatterFieldFlow` —
-  that orchestrate the modal-plus-mutation user paths.
+- Five flow classes (`Flow<P, R, FlowError>`) — `AddJournalFlow`,
+  `RenameJournalFlow`, `DeleteJournalFlow`, `EditFrontmatterFieldFlow`,
+  `EditSequencePropertyFlow` — that orchestrate the modal-plus-mutation
+  user paths.
 - A `JournalLifecycleService` exposing the data ops the flows need
   (`create` / `rename` / `delete`).
-- Four modal definitions wiring through `ModalService`.
+- Five modal definitions wiring through `ModalService`.
 - A small set of i18n message keys (variant-aware where appropriate),
   introducing a `common_*` namespace for generic action labels.
 
@@ -75,6 +76,8 @@ src/journals/settings/
     delete-journal.flow.test.ts
     edit-frontmatter-field.flow.ts
     edit-frontmatter-field.flow.test.ts
+    edit-sequence-property.flow.ts
+    edit-sequence-property.flow.test.ts
   ui/
     JournalsDashboardBlock.vue
     JournalsDashboardBlock.test.ts
@@ -95,6 +98,9 @@ src/journals/settings/
     edit-frontmatter-field-modal.ts
     EditFrontmatterFieldModal.vue
     EditFrontmatterFieldModal.test.ts
+    edit-sequence-property-modal.ts
+    EditSequencePropertyModal.vue
+    EditSequencePropertyModal.test.ts
 ```
 
 `src/main.ts` adds `journalsSettingsModule` to its autoLoad list.
@@ -107,10 +113,11 @@ src/journals/settings/
 - `JournalLifecycleService` (default Container — omitted per
   [[feedback_di_omit_default_lifetime]]).
 - `AddJournalFlow`, `RenameJournalFlow`, `DeleteJournalFlow`,
-  `EditFrontmatterFieldFlow` — same (Container default). Flows are
-  stateless apart from `inject()`-resolved fields; `Flows.invoke` calls
-  `injector.resolve(cls).execute(params)`, and each invocation owns its
-  own `AsyncResult` pipeline, so reusing the instance is safe.
+  `EditFrontmatterFieldFlow`, `EditSequencePropertyFlow` — same
+  (Container default). Flows are stateless apart from `inject()`-resolved
+  fields; `Flows.invoke` calls `injector.resolve(cls).execute(params)`,
+  and each invocation owns its own `AsyncResult` pipeline, so reusing the
+  instance is safe.
 - `DashboardBlockToken` ← `defineDashboardBlock({ key: "journals",
 component: JournalsDashboardBlock, order: 5 })` — renders above
   `CalendarWeekBlock` (order: 10).
@@ -207,19 +214,38 @@ Cancel → `UserAborted("delete-journal-modal")`.
 
 ### `EditFrontmatterFieldFlow` — `Flow<{ journalName: string; fieldName: FrontmatterFieldName }, { newValue: string }, FlowError>`
 
+`FrontmatterFieldName = "dateField" | "startDateField" | "endDateField"`
+— matches the `config.frontmatter` schema exactly.
+
 ```
 1. const config = collection.get(journalName); if (!config) yield* err(new UnknownJournalError(journalName))
 2. const { newValue } = yield* modal.open(editFrontmatterFieldModal, { journalName, fieldName })
-3. apply mutation by fieldName:
-     - "dateField" | "startDateField" | "endDateField"  → config.frontmatter[fieldName] = newValue
-     - "indexFrontmatterKey"                             → config.numbering.sources[0].frontmatterKey = newValue
+3. config.frontmatter[fieldName] = newValue
 4. ok({ newValue })
+```
+
+Cancel → `UserAborted("edit-frontmatter-field-modal")`.
+
+### `EditSequencePropertyFlow` — `Flow<{ journalName: string; sourceIndex: number }, { newValue: string }, FlowError>`
+
+```
+1. const config = collection.get(journalName); if (!config) yield* err(new UnknownJournalError(journalName))
+2. const source = config.numbering.sources[sourceIndex]; if (!source) yield* err(new UnknownSequenceSourceError(journalName, sourceIndex))
+3. const { newValue } = yield* modal.open(editSequencePropertyModal, { journalName, sourceIndex })
+4. source.frontmatterKey = newValue
+5. ok({ newValue })
 ```
 
 Mutates the reactive collection proxy directly — same write path the
 edit subpage's `v-model` bindings use; no `JournalLifecycleService`
 method is added for single-field writes. Cancel →
-`UserAborted("edit-frontmatter-field-modal")`.
+`UserAborted("edit-sequence-property-modal")`. Today the edit subpage
+always passes `sourceIndex: 0` (single-source UI); the
+`sourceIndex` parameter exists from the start so the multi-source UI
+follow-up doesn't widen the flow contract.
+
+A new `UnknownSequenceSourceError extends Error` lives in `errors.ts`
+and maps through `toFlowError`.
 
 `EditJournalFlow` is intentionally **not** introduced — edit is pure
 navigation (`ui.push(...)`) with no orchestration. The dashboard row's
@@ -228,7 +254,7 @@ directly.
 
 ## Modal definitions
 
-All four use `defineModal<TProps, TResult>` from
+All five use `defineModal<TProps, TResult>` from
 `@/infrastructure/host/modals`. Forms use `vee-validate` with valibot
 schemas. Field errors render in the `UiSettingRow #description` slot per
 [[feedback_form_errors_in_description_slot]], passing `errorBag.field`
@@ -267,12 +293,29 @@ directly (no `?? []`).
 
 ### `editFrontmatterFieldModal: defineModal<{ journalName: string; fieldName: FrontmatterFieldName }, { newValue: string }>`
 
-- `FrontmatterFieldName = "dateField" | "startDateField" | "endDateField" | "indexFrontmatterKey"`.
-  The last is a synthetic name the modal translates to
-  `numbering.sources[0].frontmatterKey` (single-source UI).
+- `FrontmatterFieldName = "dateField" | "startDateField" | "endDateField"`
+  — the three static keys on `config.frontmatter`. No synthetic
+  members; this modal is exclusively for those three.
+- Title: `m.journal_fm_field_modal_title({ field: fieldName })` (variant).
 - Fields:
   - Read-only display of current value (with fallback to schema default
     if empty).
+  - `newValue` — TextInput, non-empty.
+- Description includes `m.journal_notes_not_rewritten_hint()`.
+
+### `editSequencePropertyModal: defineModal<{ journalName: string; sourceIndex: number }, { newValue: string }>`
+
+- Dedicated to numbering-source `frontmatterKey` edits. Separate from
+  `editFrontmatterFieldModal` so the multi-source UI follow-up can
+  expand this modal (e.g. show the source's `variable` label, validate
+  uniqueness across sibling `frontmatterKey`s) without touching the
+  static-fields modal.
+- Title: `m.journal_sequence_property_modal_title()` for single-source
+  UI; the future multi-source variant takes the source's `variable` as
+  a parameter and switches to a variant key.
+- Fields:
+  - Read-only display of the current `sources[sourceIndex].frontmatterKey`
+    value (fallback to default if empty).
   - `newValue` — TextInput, non-empty.
 - Description includes `m.journal_notes_not_rewritten_hint()`.
 
@@ -346,7 +389,7 @@ mutations autosave via SettingsService's 300ms debounce.
      `m.journal_edit_end_description({ kind })`. Conditional
      `UiTextInput` (for `date`) or `UiNumberInput` (for `repeats`, min 1).
 
-3. **Numbering (`UiCollapsibleBlock`, icon `hash`)**:
+3. **Sequential numbers (`UiCollapsibleBlock`, icon `hash`)**:
    - **Enabled toggle** — `UiToggle` bound to `numbering.enabled`. When
      the user toggles enabled `false → true` and `sources` is empty,
      push the default source `{ variable: "index", frontmatterKey:
@@ -359,16 +402,15 @@ mutations autosave via SettingsService's 300ms debounce.
        format-error message.
      - **Start number** — `UiNumberInput` bound to
        `sources[0].anchorValue`.
-     - **Index change** — `UiDropdown` over `kind` for
+     - **Reset** — `UiDropdown` over `kind` for
        `sources[0].reset` (`never | after`) using
-       `m.journal_edit_index_change_option({ kind })`. When `after`, a
-       narrow `UiNumberInput` for `count` plus
-       `m.journal_edit_index_change_reset_count_suffix()`.
+       `m.journal_edit_reset_option({ kind })`. When `after`, a narrow
+       `UiNumberInput` for `count` plus
+       `m.journal_edit_reset_count_suffix()`.
      - **Allow before** — `UiToggle` bound to `numbering.allowBefore`,
        visible only when `!timeline.start && reset.kind === "never"`.
-     - **Index property name** — display
-       `sources[0].frontmatterKey`; pencil →
-       `flows.invoke(EditFrontmatterFieldFlow, { journalName, fieldName: "indexFrontmatterKey" })`.
+     - **Property name** — display `sources[0].frontmatterKey`; pencil →
+       `flows.invoke(EditSequencePropertyFlow, { journalName, sourceIndex: 0 })`.
 
 4. **Default date format** — `m.journal_edit_date_format_label()`.
    `UiTextInput` bound to `config.dateFormat`. Description:
@@ -400,15 +442,15 @@ features. Existing per-feature action keys (e.g.
 
 ### Variant keys (paraglide `declarations` + `match`)
 
-| Key                                | Inputs                        | Match on                                                               |
-| ---------------------------------- | ----------------------------- | ---------------------------------------------------------------------- |
-| `journal_write`                    | `type`, `every?`, `duration?` | `type` (and `every` for custom)                                        |
-| `journal_edit_end_kind`            | `kind`                        | `kind` (never/date/repeats)                                            |
-| `journal_edit_end_description`     | `kind`                        | `kind`                                                                 |
-| `journal_edit_index_change_option` | `kind`                        | `kind` (increment/reset-after — bound to `never`/`after` schema kinds) |
-| `journal_delete_mode_option`       | `mode`                        | `mode` (keep/clear/delete)                                             |
-| `journal_fm_field_modal_title`     | `field`                       | `field`                                                                |
-| `journal_fm_field_label`           | `field`                       | `field`                                                                |
+| Key                            | Inputs                        | Match on                                                                 |
+| ------------------------------ | ----------------------------- | ------------------------------------------------------------------------ |
+| `journal_write`                | `type`, `every?`, `duration?` | `type` (and `every` for custom)                                          |
+| `journal_edit_end_kind`        | `kind`                        | `kind` (never/date/repeats)                                              |
+| `journal_edit_end_description` | `kind`                        | `kind`                                                                   |
+| `journal_edit_reset_option`    | `kind`                        | `kind` (continuous/resets-after — bound to `never`/`after` schema kinds) |
+| `journal_delete_mode_option`   | `mode`                        | `mode` (keep/clear/delete)                                               |
+| `journal_fm_field_modal_title` | `field`                       | `field` (dateField/startDateField/endDateField)                          |
+| `journal_fm_field_label`       | `field`                       | `field` (dateField/startDateField/endDateField)                          |
 
 ### Shared keys
 
@@ -419,7 +461,10 @@ common_action_close
 journal_name_required_error
 journal_name_unique_error           — add + rename modals
 journal_anchor_format_error         — add modal + edit subpage start/anchor inputs
-journal_notes_not_rewritten_hint    — rename + frontmatter-field modals
+journal_notes_not_rewritten_hint    — rename + frontmatter-field + sequence-property modals
+journal_property_name_required      — frontmatter-field + sequence-property modals
+journal_property_modal_current_label — frontmatter-field + sequence-property modals (read-only current value row)
+journal_property_modal_new_label    — frontmatter-field + sequence-property modals (new value input row)
 journal_flow_failure { kind }
 ```
 
@@ -445,29 +490,29 @@ journal_rename_modal_same_as_current_error
 journal_delete_modal_title         { name }
 journal_delete_mode_label
 journal_delete_mode_not_implemented_hint
-journal_fm_field_modal_current_label
-journal_fm_field_modal_new_label
+journal_sequence_property_modal_title
 journal_edit_back_tooltip
 journal_edit_rename_tooltip
 journal_edit_header_title          { name, writing }
 journal_edit_section_timeline
-journal_edit_section_numbering
+journal_edit_section_sequential_numbers
 journal_edit_section_frontmatter
 journal_edit_start_writing_label
 journal_edit_start_writing_description
 journal_edit_start_writing_custom_locked
 journal_edit_end_writing_label
-journal_edit_numbering_enabled_label
-journal_edit_numbering_enabled_description
+journal_edit_sequence_enabled_label
+journal_edit_sequence_enabled_description
 journal_edit_anchor_label
 journal_edit_anchor_start_used
 journal_edit_start_number_label
 journal_edit_start_number_description
-journal_edit_index_change_label
-journal_edit_index_change_description
-journal_edit_index_change_reset_count_suffix
+journal_edit_reset_label
+journal_edit_reset_description
+journal_edit_reset_count_suffix
 journal_edit_allow_before_label
 journal_edit_allow_before_description
+journal_edit_sequence_property_label
 journal_edit_date_format_label
 journal_edit_date_format_description
 journal_edit_date_format_moment_doc_link
@@ -476,7 +521,7 @@ journal_edit_fm_start_description
 journal_edit_fm_end_toggle_label
 ```
 
-Roughly **49 keys** total (8 shared + 7 variant + 34 flat). Per
+Roughly **52 keys** total (11 shared + 7 variant + 34 flat). Per
 [[feedback_no_computed_around_i18n]], message calls go inline in templates
 unless arguments include reactive data — the
 `m.journal_edit_header_title({ name, writing: m.journal_write(…) })`
@@ -489,21 +534,23 @@ Colocated `*.test.ts` per [[feedback_test_hygiene]]. Strategy summary
 follows; one-behavior-per-test, black-box assertions, no test-local
 stubs, no tests of mocks/fakes or DI wiring.
 
-| File                                  | Coverage                                                                                                                                                                                                                                                                                                                |
-| ------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `lifecycle.test.ts`                   | Happy + error paths for `create` / `rename` / `delete`. Uses real `SettingsService`. Asserts collection state and error kinds.                                                                                                                                                                                          |
-| `add-journal.flow.test.ts`            | Happy path emits `{ name }` + pushes edit subpage; modal cancel → `UserAborted("add-journal-modal")`; lifecycle error mapped to `JournalLifecycleFlowError`. `FakeModalService` from `src/infrastructure/host/modals/testing.ts`.                                                                                       |
-| `rename-journal.flow.test.ts`         | Happy path emits `{ newName }`; modal cancel → `UserAborted("rename-journal-modal")`; rename of unknown / to taken name surfaces.                                                                                                                                                                                       |
-| `delete-journal.flow.test.ts`         | Happy path returns ok + pops subpage when current is the deleted one; modal cancel; lifecycle error mapped.                                                                                                                                                                                                             |
-| `edit-frontmatter-field.flow.test.ts` | Happy path applies mutation per `fieldName` (flat fields + `indexFrontmatterKey` → `sources[0].frontmatterKey`); modal cancel → `UserAborted("edit-frontmatter-field-modal")`; unknown-journal precheck.                                                                                                                |
-| `describe-write.test.ts`              | Each `write` shape → expected descriptor.                                                                                                                                                                                                                                                                               |
-| `JournalsDashboardBlock.test.ts`      | Renders entries / empty state. Add button invokes `AddJournalFlow` (spy on `Flows.invoke`). Rename/Delete buttons invoke correct flow. Edit button pushes subpage.                                                                                                                                                      |
-| `JournalEditSubpage.test.ts`          | Header rendering; round-trip through SettingsService for each field; format-error surfaces on bad date input; stale-guard pops on missing journal; numbering toggle materializes `sources[0]`; allow-before visibility rule; frontmatter pencil buttons invoke `EditFrontmatterFieldFlow` with the correct `fieldName`. |
-| `DateFormatPreview.test.ts`           | Renders `Clock.now().format(pattern)` for sample pattern.                                                                                                                                                                                                                                                               |
-| `AddJournalModal.test.ts`             | Submits `{name, write}` for fixed and custom shapes; vee-validate errors block submit; cancel emits `ModalCancelled`.                                                                                                                                                                                                   |
-| `RenameJournalModal.test.ts`          | Submits `{newName}`; uniqueness + same-as-current + non-empty errors.                                                                                                                                                                                                                                                   |
-| `DeleteJournalModal.test.ts`          | Disabled options aren't selectable; submit emits `{mode: "keep"}`; cancel works.                                                                                                                                                                                                                                        |
-| `EditFrontmatterFieldModal.test.ts`   | Per-field title; submit emits `{newValue}`; non-empty validation.                                                                                                                                                                                                                                                       |
+| File                                  | Coverage                                                                                                                                                                                                                                                                                                                                                                                                      |
+| ------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `lifecycle.test.ts`                   | Happy + error paths for `create` / `rename` / `delete`. Uses real `SettingsService`. Asserts collection state and error kinds.                                                                                                                                                                                                                                                                                |
+| `add-journal.flow.test.ts`            | Happy path emits `{ name }` + pushes edit subpage; modal cancel → `UserAborted("add-journal-modal")`; lifecycle error mapped to `JournalLifecycleFlowError`. `FakeModalService` from `src/infrastructure/host/modals/testing.ts`.                                                                                                                                                                             |
+| `rename-journal.flow.test.ts`         | Happy path emits `{ newName }`; modal cancel → `UserAborted("rename-journal-modal")`; rename of unknown / to taken name surfaces.                                                                                                                                                                                                                                                                             |
+| `delete-journal.flow.test.ts`         | Happy path returns ok + pops subpage when current is the deleted one; modal cancel; lifecycle error mapped.                                                                                                                                                                                                                                                                                                   |
+| `edit-frontmatter-field.flow.test.ts` | Happy path mutates `config.frontmatter[fieldName]` for each of `dateField` / `startDateField` / `endDateField`; modal cancel → `UserAborted("edit-frontmatter-field-modal")`; unknown-journal precheck.                                                                                                                                                                                                       |
+| `edit-sequence-property.flow.test.ts` | Happy path mutates `config.numbering.sources[sourceIndex].frontmatterKey`; modal cancel → `UserAborted("edit-sequence-property-modal")`; unknown-journal precheck; unknown-source-index precheck.                                                                                                                                                                                                             |
+| `describe-write.test.ts`              | Each `write` shape → expected descriptor.                                                                                                                                                                                                                                                                                                                                                                     |
+| `JournalsDashboardBlock.test.ts`      | Renders entries / empty state. Add button invokes `AddJournalFlow` (spy on `Flows.invoke`). Rename/Delete buttons invoke correct flow. Edit button pushes subpage.                                                                                                                                                                                                                                            |
+| `JournalEditSubpage.test.ts`          | Header rendering; round-trip through SettingsService for each field; format-error surfaces on bad date input; stale-guard pops on missing journal; sequence-numbers toggle materializes `sources[0]`; allow-before visibility rule; static frontmatter pencils invoke `EditFrontmatterFieldFlow` with correct `fieldName`; sequence property pencil invokes `EditSequencePropertyFlow` with `sourceIndex: 0`. |
+| `DateFormatPreview.test.ts`           | Renders `Clock.now().format(pattern)` for sample pattern.                                                                                                                                                                                                                                                                                                                                                     |
+| `AddJournalModal.test.ts`             | Submits `{name, write}` for fixed and custom shapes; vee-validate errors block submit; cancel emits `ModalCancelled`.                                                                                                                                                                                                                                                                                         |
+| `RenameJournalModal.test.ts`          | Submits `{newName}`; uniqueness + same-as-current + non-empty errors.                                                                                                                                                                                                                                                                                                                                         |
+| `DeleteJournalModal.test.ts`          | Disabled options aren't selectable; submit emits `{mode: "keep"}`; cancel works.                                                                                                                                                                                                                                                                                                                              |
+| `EditFrontmatterFieldModal.test.ts`   | Per-field title; submit emits `{newValue}`; non-empty validation.                                                                                                                                                                                                                                                                                                                                             |
+| `EditSequencePropertyModal.test.ts`   | Title rendered; submit emits `{newValue}`; non-empty validation; reads current value from `sources[sourceIndex].frontmatterKey`.                                                                                                                                                                                                                                                                              |
 
 Tests use `@testing-library/vue` + `user-event` per
 [[feedback_testing_library_for_components]]. No `@vue/test-utils`
@@ -521,7 +568,11 @@ CSS-class queries. No `data-test-*` attributes.
   the delete modal, plus the rewrite-existing-notes flow on rename and
   per-field frontmatter rename.
 - **Multi-source numbering UI**, on the next v2→v3 migration spec or
-  when an actual multi-source journal exists.
+  when an actual multi-source journal exists. `EditSequencePropertyFlow`
+  already accepts `sourceIndex`; widening surfaces are (a) the edit
+  subpage's source list/management, (b) the sequence-property modal's
+  title key switching to a variant on the source's `variable`, and
+  (c) cross-source `frontmatterKey` uniqueness validation.
 - **Notice / toast service** for flow failures so users see error
   messages directly instead of relying on the log.
 - **Shelf placement**, **plugin-level commands**, **decorations**,
