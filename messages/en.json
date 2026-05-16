@@ -45,5 +45,145 @@
   "calendar_preset_picker_title": "Week configuration",
   "calendar_preset_western_used": "Canada, United States, Iceland, Portugal, Japan, Taiwan, Thailand, Hong Kong, Macau, Israel, Egypt, South Africa, the Philippines, and most of Latin America.",
   "calendar_week_config_change": "Change",
-  "calendar_week_config_title": "Week configuration"
+  "calendar_week_config_title": "Week configuration",
+
+  "common_action_cancel": "Cancel",
+  "common_action_close": "Close",
+  "common_action_submit": "Save",
+
+  "journal_add_modal_anchor_description": "This date is used to count custom intervals from. It cannot be changed after creating the journal.",
+  "journal_add_modal_anchor_label": "Start date",
+  "journal_add_modal_duration_label": "Duration",
+  "journal_add_modal_every_label": "Every",
+  "journal_add_modal_name_label": "Journal name",
+  "journal_add_modal_title": "Add journal",
+  "journal_add_modal_write_label": "I'll be writing",
+  "journal_anchor_format_error": "Date must be YYYY-MM-DD.",
+  "journal_dashboard_add": "Add journal",
+  "journal_dashboard_delete": "Delete",
+  "journal_dashboard_edit": "Edit",
+  "journal_dashboard_empty": "No journals created yet.",
+  "journal_dashboard_rename": "Rename",
+  "journal_dashboard_section_title": "Journals",
+  "journal_delete_modal_title": "Remove {name}",
+  "journal_delete_mode_label": "What to do with connected notes",
+  "journal_delete_mode_not_implemented_hint": "Clear and Delete modes will land with the notes-IO service.",
+  "journal_delete_mode_option": [
+    {
+      "declarations": ["input mode"],
+      "selectors": ["mode"],
+      "match": {
+        "mode=keep": "Keep notes",
+        "mode=clear": "Clear journal data (not yet supported)",
+        "mode=delete": "Delete notes (not yet supported)"
+      }
+    }
+  ],
+  "journal_edit_allow_before_description": "Allow indexing before the anchor date. May produce negative numbers.",
+  "journal_edit_allow_before_label": "Allow before anchor",
+  "journal_edit_anchor_label": "Anchor date",
+  "journal_edit_anchor_start_used": "Start date is used as anchor date.",
+  "journal_edit_back_tooltip": "Back to list",
+  "journal_edit_date_format_description": "Used to format dates if not defined in variables (like {{date}}).",
+  "journal_edit_date_format_label": "Default date format",
+  "journal_edit_date_format_moment_doc_link": "moment.js format reference",
+  "journal_edit_end_description": [
+    {
+      "declarations": ["input kind"],
+      "selectors": ["kind"],
+      "match": {
+        "kind=never": "Writing continues indefinitely.",
+        "kind=date": "New notes after this date won't be created.",
+        "kind=repeats": "After creating this many notes, new notes won't be created."
+      }
+    }
+  ],
+  "journal_edit_end_kind": [
+    {
+      "declarations": ["input kind"],
+      "selectors": ["kind"],
+      "match": {
+        "kind=never": "Never",
+        "kind=date": "After date",
+        "kind=repeats": "After repeating"
+      }
+    }
+  ],
+  "journal_edit_end_writing_label": "End writing",
+  "journal_edit_fm_end_toggle_label": "Add end date property?",
+  "journal_edit_fm_start_description": "For weekly journals that span two years, the start date can differ from the date property.",
+  "journal_edit_fm_start_toggle_label": "Add start date property?",
+  "journal_edit_header_title": "Configuring {name} (writing {writing})",
+  "journal_edit_rename_tooltip": "Rename journal",
+  "journal_edit_reset_count_suffix": "repeats",
+  "journal_edit_reset_description": "How the number changes over time.",
+  "journal_edit_reset_label": "Reset",
+  "journal_edit_reset_option": [
+    {
+      "declarations": ["input kind"],
+      "selectors": ["kind"],
+      "match": {
+        "kind=never": "Continuous",
+        "kind=after": "Resets after"
+      }
+    }
+  ],
+  "journal_edit_section_frontmatter": "Frontmatter",
+  "journal_edit_section_sequential_numbers": "Sequential numbers",
+  "journal_edit_section_timeline": "Timeline",
+  "journal_edit_sequence_enabled_description": "Assign numbers to notes (e.g. Day 1, Day 2, …).",
+  "journal_edit_sequence_enabled_label": "Enable sequential numbers",
+  "journal_edit_sequence_property_label": "Property name",
+  "journal_edit_start_number_description": "Number assigned at the anchor date.",
+  "journal_edit_start_number_label": "Start number",
+  "journal_edit_start_writing_custom_locked": "Start date for custom intervals cannot be changed: it is used to count intervals from.",
+  "journal_edit_start_writing_description": "New notes prior to this date won't be created.",
+  "journal_edit_start_writing_label": "Start writing on",
+  "journal_flow_failure": "Journal action failed ({kind}).",
+  "journal_fm_field_label": [
+    {
+      "declarations": ["input field"],
+      "selectors": ["field"],
+      "match": {
+        "field=dateField": "Date property name",
+        "field=startDateField": "Start date property name",
+        "field=endDateField": "End date property name"
+      }
+    }
+  ],
+  "journal_fm_field_modal_title": [
+    {
+      "declarations": ["input field"],
+      "selectors": ["field"],
+      "match": {
+        "field=dateField": "Edit date property name",
+        "field=startDateField": "Edit start date property name",
+        "field=endDateField": "Edit end date property name"
+      }
+    }
+  ],
+  "journal_name_required_error": "Journal name is required.",
+  "journal_name_unique_error": "Journal name must be unique.",
+  "journal_notes_not_rewritten_hint": "Existing notes are not rewritten. You may need to update them manually.",
+  "journal_property_modal_current_label": "Current name",
+  "journal_property_modal_new_label": "New name",
+  "journal_property_name_required": "Property name is required.",
+  "journal_rename_modal_new_label": "New name",
+  "journal_rename_modal_same_as_current_error": "New name must differ from current name.",
+  "journal_rename_modal_title": "Rename {name}",
+  "journal_sequence_property_modal_title": "Edit sequential number property name",
+  "journal_write": [
+    {
+      "declarations": ["input type", "input every", "input duration"],
+      "selectors": ["type"],
+      "match": {
+        "type=day": "daily",
+        "type=week": "weekly",
+        "type=month": "monthly",
+        "type=quarter": "quarterly",
+        "type=year": "annually",
+        "type=custom": "every {duration} {every}"
+      }
+    }
+  ]
 }
