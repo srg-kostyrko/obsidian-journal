@@ -1,0 +1,48 @@
+<script setup lang="ts">
+import { computed, toRaw } from "vue";
+
+import { CalendarDate } from "@/calendar";
+import type { MonthPeriod, OpenInterval, Period, WeekPeriod } from "@/calendar";
+
+import CalendarGrid from "./CalendarGrid.vue";
+import { useCalendarGrid } from "./use-calendar-grid";
+
+const props = defineProps<{
+  outerPeriod: MonthPeriod;
+  selected: Period | null;
+  bounds?: OpenInterval;
+}>();
+
+const emit = defineEmits<{ select: [cell: WeekPeriod] }>();
+
+const cells = computed(() => [...toRaw(props.outerPeriod).weeks()]);
+
+const today = CalendarDate.today();
+
+const grid = useCalendarGrid({
+  cells,
+  formatPattern: "[W]w",
+  selected: () => props.selected,
+  today,
+  bounds: () => props.bounds,
+});
+</script>
+
+<template>
+  <CalendarGrid :columns="1">
+    <button
+      v-for="cell in grid"
+      :key="cell.key"
+      type="button"
+      data-testid="week-cell"
+      :data-anchor="cell.period.anchor.toAnchor()"
+      :data-selected="cell.isSelected || null"
+      :data-today="cell.isToday || null"
+      :disabled="cell.isDisabled"
+      @click="emit('select', cell.period as WeekPeriod)"
+    >
+      <span>{{ cell.label }}</span>
+      <span>{{ cell.period.format("MMM D") }} – {{ (cell.period as WeekPeriod).end.format("MMM D") }}</span>
+    </button>
+  </CalendarGrid>
+</template>
