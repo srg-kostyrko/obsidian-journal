@@ -57,11 +57,11 @@ const { defineField, errorBag, handleSubmit, values } = useForm({
   ),
 });
 
-const [name] = defineField("name");
-const [type] = defineField("type");
-const [every] = defineField("every");
-const [duration] = defineField("duration");
-const [anchorDate] = defineField("anchorDate");
+const [name, nameAttrs] = defineField("name");
+const [type, typeAttrs] = defineField("type");
+const [every, everyAttrs] = defineField("every");
+const [duration, durationAttrs] = defineField("duration");
+const [anchorDate, anchorDateAttrs] = defineField("anchorDate");
 
 const isCustom = computed(() => values.type === "custom");
 
@@ -80,10 +80,10 @@ const onSubmit = handleSubmit((vs) => {
       <template #description>
         <span v-for="error of errorBag.name" :key="error" class="journal-form-error">{{ error }}</span>
       </template>
-      <UiTextInput v-model="name" />
+      <UiTextInput v-model="name" v-bind="nameAttrs" />
     </UiSettingRow>
     <UiSettingRow :name="m.journal_add_modal_write_label()">
-      <UiDropdown v-model="type">
+      <UiDropdown v-model="type" v-bind="typeAttrs">
         <option value="day">{{ m.journal_write({ type: "day", every: "day", duration: 1 }) }}</option>
         <option value="week">{{ m.journal_write({ type: "week", every: "day", duration: 1 }) }}</option>
         <option value="month">{{ m.journal_write({ type: "month", every: "day", duration: 1 }) }}</option>
@@ -93,10 +93,10 @@ const onSubmit = handleSubmit((vs) => {
       </UiDropdown>
     </UiSettingRow>
     <UiSettingRow v-if="isCustom" :name="m.journal_add_modal_duration_label()">
-      <UiNumberInput v-model="duration" :min="1" />
+      <UiNumberInput v-model="duration" v-bind="durationAttrs" :min="1" />
     </UiSettingRow>
     <UiSettingRow v-if="isCustom" :name="m.journal_add_modal_every_label()">
-      <UiDropdown v-model="every">
+      <UiDropdown v-model="every" v-bind="everyAttrs">
         <option value="day">day</option>
         <option value="week">week</option>
         <option value="month">month</option>
@@ -109,7 +109,7 @@ const onSubmit = handleSubmit((vs) => {
         <div>{{ m.journal_add_modal_anchor_description() }}</div>
         <span v-for="error of errorBag.anchorDate" :key="error" class="journal-form-error">{{ error }}</span>
       </template>
-      <UiTextInput v-model="anchorDate" placeholder="YYYY-MM-DD" />
+      <UiTextInput v-model="anchorDate" v-bind="anchorDateAttrs" placeholder="YYYY-MM-DD" />
     </UiSettingRow>
     <UiSettingRow controls-only>
       <UiButton @click="api.cancel()">{{ m.common_action_cancel() }}</UiButton>
