@@ -13,7 +13,6 @@ import { createSettingsService } from "@/settings/testing";
 
 import { AddJournalFlow } from "../flows/add-journal.flow";
 import { DeleteJournalFlow } from "../flows/delete-journal.flow";
-import { RenameJournalFlow } from "../flows/rename-journal.flow";
 
 import { journalEditSubpage } from "./journals-subpage";
 import JournalsDashboardBlock from "./JournalsDashboardBlock.vue";
@@ -80,24 +79,25 @@ describe("JournalsDashboardBlock", () => {
     expect(screen.getByText(m.journal_dashboard_empty())).toBeTruthy();
   });
 
-  it("renders one list item per journal", async () => {
+  it("shows a count flair of all journals", async () => {
     const { container } = await setup(["zeta", "alpha"]);
     mount(container);
-    expect(screen.getAllByRole("listitem")).toHaveLength(2);
+    expect(screen.getByText("2")).toBeTruthy();
   });
 
   it("sorts journals alphabetically", async () => {
     const { container } = await setup(["zeta", "alpha"]);
     mount(container);
-    const rows = screen.getAllByRole("listitem");
-    expect(rows[0]?.textContent).toContain("alpha");
-    expect(rows[1]?.textContent).toContain("zeta");
+    const names = screen
+      .getAllByRole("button", { name: new RegExp(`^${m.journal_dashboard_edit()} `) })
+      .map((b) => b.getAttribute("aria-label"));
+    expect(names).toEqual([`${m.journal_dashboard_edit()} alpha`, `${m.journal_dashboard_edit()} zeta`]);
   });
 
-  it("invokes AddJournalFlow when Add is clicked", async () => {
+  it("invokes AddJournalFlow when the add button is clicked", async () => {
     const { container, flows } = await setup();
     mount(container);
-    await userEvent.click(screen.getByText(m.journal_dashboard_add()));
+    await userEvent.click(screen.getByLabelText(m.journal_dashboard_add()));
     expect(flows.invoke).toHaveBeenCalledWith(AddJournalFlow);
   });
 
@@ -107,13 +107,6 @@ describe("JournalsDashboardBlock", () => {
     await userEvent.click(screen.getByLabelText(`${m.journal_dashboard_edit()} daily`));
     expect(ui.current.value?.subpage.key).toBe("journal-edit");
     expect(ui.current.value?.props).toEqual({ journalName: "daily" });
-  });
-
-  it("invokes RenameJournalFlow when Rename is clicked", async () => {
-    const { container, flows } = await setup(["daily"]);
-    mount(container);
-    await userEvent.click(screen.getByLabelText(`${m.journal_dashboard_rename()} daily`));
-    expect(flows.invoke).toHaveBeenCalledWith(RenameJournalFlow, { journalName: "daily" });
   });
 
   it("invokes DeleteJournalFlow when Delete is clicked", async () => {
