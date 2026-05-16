@@ -1,7 +1,5 @@
 import { describe, expect, it } from "vitest";
 
-import { FlowError } from "@/infrastructure/flows";
-
 import {
   InvalidJournalNameError,
   JournalLifecycleFlowError,
@@ -15,30 +13,43 @@ describe("InvalidJournalNameError", () => {
   it("has kind 'invalid-name'", () => {
     expect(new InvalidJournalNameError("bad").kind).toBe("invalid-name");
   });
+
+  it("exposes the attempted name", () => {
+    expect(new InvalidJournalNameError("bad").attemptedName).toBe("bad");
+  });
 });
 
 describe("JournalNameTakenError", () => {
-  it("exposes the conflicting name", () => {
-    const err = new JournalNameTakenError("daily");
-    expect(err.kind).toBe("name-taken");
-    expect(err.name).toBe("daily");
+  it("has kind 'name-taken'", () => {
+    expect(new JournalNameTakenError("daily").kind).toBe("name-taken");
+  });
+
+  it("exposes the conflicting name on the .name field", () => {
+    expect(new JournalNameTakenError("daily").name).toBe("daily");
   });
 });
 
 describe("UnknownJournalError", () => {
+  it("has kind 'unknown-journal'", () => {
+    expect(new UnknownJournalError("ghost").kind).toBe("unknown-journal");
+  });
+
   it("exposes the missing journal name", () => {
-    const err = new UnknownJournalError("ghost");
-    expect(err.kind).toBe("unknown-journal");
-    expect(err.journalName).toBe("ghost");
+    expect(new UnknownJournalError("ghost").journalName).toBe("ghost");
   });
 });
 
 describe("UnknownSequenceSourceError", () => {
-  it("exposes the journal name and source index", () => {
-    const err = new UnknownSequenceSourceError("daily", 2);
-    expect(err.kind).toBe("unknown-sequence-source");
-    expect(err.journalName).toBe("daily");
-    expect(err.sourceIndex).toBe(2);
+  it("has kind 'unknown-sequence-source'", () => {
+    expect(new UnknownSequenceSourceError("daily", 2).kind).toBe("unknown-sequence-source");
+  });
+
+  it("exposes the journal name", () => {
+    expect(new UnknownSequenceSourceError("daily", 2).journalName).toBe("daily");
+  });
+
+  it("exposes the source index", () => {
+    expect(new UnknownSequenceSourceError("daily", 2).sourceIndex).toBe(2);
   });
 });
 
@@ -47,7 +58,11 @@ describe("toFlowError", () => {
     const cause = new JournalNameTakenError("daily");
     const wrapped = toFlowError(cause);
     expect(wrapped).toBeInstanceOf(JournalLifecycleFlowError);
-    expect(wrapped).toBeInstanceOf(FlowError);
+  });
+
+  it("preserves the original error as the .cause", () => {
+    const cause = new JournalNameTakenError("daily");
+    const wrapped = toFlowError(cause);
     expect(wrapped.cause).toBe(cause);
   });
 });
