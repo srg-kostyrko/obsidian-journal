@@ -1,6 +1,8 @@
 <script setup lang="ts">
 import { computed, ref, watchEffect } from "vue";
 
+import { CalendarDate, OpenInterval, type AnchorString } from "@/calendar";
+import { DatePicker } from "@/calendar/ui";
 import { m } from "@/i18n";
 import { useService } from "@/infrastructure/di";
 import { Flows } from "@/infrastructure/flows";
@@ -21,6 +23,7 @@ import { EditSequencePropertyFlow } from "../flows/edit-sequence-property.flow";
 import { RenameJournalFlow } from "../flows/rename-journal.flow";
 
 import DateFormatPreview from "./DateFormatPreview.vue";
+import { useAnchorField, type Picking } from "./use-anchor-field";
 
 const { journalName, nav } = defineProps<{ journalName: string; nav: SubpageNav }>();
 
@@ -33,8 +36,6 @@ watchEffect(() => {
   if (!config.value) nav.back();
 });
 
-const anchorRegex = /^\d{4}-\d{2}-\d{2}$/;
-
 const writing = computed(() => {
   if (!config.value) return "";
   const desc = describeWrite(config.value.write);
@@ -45,25 +46,42 @@ const timelineOpen = ref(true);
 const sequenceOpen = ref(false);
 const frontmatterOpen = ref(false);
 
-const startError = computed(() => {
-  const c = config.value;
-  if (!c || c.timeline.start.length === 0) return "";
-  return anchorRegex.test(c.timeline.start) ? "" : m.journal_anchor_format_error();
+const startPicking = computed<Picking>(() =>
+  config.value?.write.type === "custom" ? "day" : (config.value?.write.type ?? "day"),
+);
+
+const startAnchorRef = computed<AnchorString>({
+  get: () => config.value?.timeline.start ?? ("" as AnchorString),
+  set: (v) => {
+    if (config.value) config.value.timeline.start = v;
+  },
 });
-const endDateError = computed(() => {
-  const c = config.value;
-  if (c?.timeline.end.kind !== "date") return "";
-  return anchorRegex.test(c.timeline.end.date) ? "" : m.journal_anchor_format_error();
+const startModel = useAnchorField({ anchor: startAnchorRef, picking: startPicking });
+
+const endAnchorRef = computed<AnchorString>({
+  get: () => (config.value?.timeline.end.kind === "date" ? config.value.timeline.end.date : ("" as AnchorString)),
+  set: (v) => {
+    if (config.value?.timeline.end.kind === "date") config.value.timeline.end.date = v;
+  },
 });
-const anchorError = computed(() => {
-  const c = config.value;
-  if (!c || c.numbering.anchorDate.length === 0) return "";
-  return anchorRegex.test(c.numbering.anchorDate) ? "" : m.journal_anchor_format_error();
+const endModel = useAnchorField({ anchor: endAnchorRef, picking: startPicking });
+
+const endBounds = computed<OpenInterval | undefined>(() => {
+  const start = config.value?.timeline.start;
+  return start ? OpenInterval.from(CalendarDate.fromAnchor(start)) : undefined;
 });
+
+const numberingAnchorRef = computed<AnchorString>({
+  get: () => config.value?.numbering.anchorDate ?? ("" as AnchorString),
+  set: (v) => {
+    if (config.value) config.value.numbering.anchorDate = v;
+  },
+});
+const numberingAnchorModel = useAnchorField({ anchor: numberingAnchorRef, picking: startPicking });
 
 function clearStart(): void {
   if (config.value && config.value.write.type !== "custom") {
-    config.value.timeline.start = "" as never;
+    startModel.value = null;
   }
 }
 
@@ -126,11 +144,10 @@ function editSequenceKey(): void {
           <div v-if="config.write.type === 'custom'" class="journal-hint">
             {{ m.journal_edit_start_writing_custom_locked() }}
           </div>
-          <span v-if="startError" class="journal-form-error">{{ startError }}</span>
         </template>
         <span v-if="config.write.type === 'custom'">{{ config.write.anchorDate }}</span>
         <template v-else>
-          <UiTextInput v-model="config.timeline.start" placeholder="YYYY-MM-DD" />
+          <DatePicker v-model="startModel" :picking="startPicking" />
           <UiIconButton
             v-if="config.timeline.start"
             icon="trash"
@@ -143,7 +160,6 @@ function editSequenceKey(): void {
       <UiSettingRow :name="m.journal_edit_end_writing_label()">
         <template #description>
           {{ m.journal_edit_end_description({ kind: config.timeline.end.kind }) }}
-          <span v-if="endDateError" class="journal-form-error">{{ endDateError }}</span>
         </template>
         <UiDropdown
           :model-value="config.timeline.end.kind"
@@ -153,10 +169,11 @@ function editSequenceKey(): void {
           <option value="date">{{ m.journal_edit_end_kind({ kind: "date" }) }}</option>
           <option value="repeats">{{ m.journal_edit_end_kind({ kind: "repeats" }) }}</option>
         </UiDropdown>
-        <UiTextInput
+        <DatePicker
           v-if="config.timeline.end.kind === 'date'"
-          v-model="config.timeline.end.date"
-          placeholder="YYYY-MM-DD"
+          v-model="endModel"
+          :picking="startPicking"
+          :bounds="endBounds"
         />
         <UiNumberInput v-if="config.timeline.end.kind === 'repeats'" v-model="config.timeline.end.count" :min="1" />
       </UiSettingRow>
@@ -179,10 +196,9 @@ function editSequenceKey(): void {
         <UiSettingRow :name="m.journal_edit_anchor_label()">
           <template #description>
             <span v-if="config.timeline.start">{{ m.journal_edit_anchor_start_used() }}</span>
-            <span v-else-if="anchorError" class="journal-form-error">{{ anchorError }}</span>
           </template>
           <span v-if="config.timeline.start">{{ config.timeline.start }}</span>
-          <UiTextInput v-else v-model="config.numbering.anchorDate" placeholder="YYYY-MM-DD" />
+          <DatePicker v-else v-model="numberingAnchorModel" :picking="startPicking" />
         </UiSettingRow>
 
         <UiSettingRow :name="m.journal_edit_start_number_label()">
