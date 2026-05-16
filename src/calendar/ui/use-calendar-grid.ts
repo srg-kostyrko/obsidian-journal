@@ -23,10 +23,10 @@ export interface UseCalendarGridOptions {
 
 export function useCalendarGrid(options: UseCalendarGridOptions): ComputedRef<readonly Cell[]> {
   return computed(() => {
-    const periods = toValue(options.cells);
+    const periods = toValue(options.cells).map(toRaw);
     const selected = toRaw(toValue(options.selected));
-    const bounds = options.bounds ? toValue(options.bounds) : undefined;
-    const today = toValue(options.today);
+    const bounds = options.bounds ? toRaw(toValue(options.bounds)) : undefined;
+    const today = toRaw(toValue(options.today));
     const outside = options.outsidePredicate;
 
     return periods.map((period) => {

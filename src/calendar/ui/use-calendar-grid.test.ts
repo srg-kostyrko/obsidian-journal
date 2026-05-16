@@ -146,4 +146,18 @@ describe("useCalendarGrid", () => {
       expect(cells.value.find((c) => c.isSelected)?.period.start.toAnchor()).toBe("2025-03-15");
     });
   });
+
+  describe("with reactive inputs", () => {
+    it("does not throw when today is passed as a ref", () => {
+      const todayRef = ref(date("2025-03-12"));
+      expect(() =>
+        useCalendarGrid({
+          cells: monthCells(date("2025-03-15")),
+          formatPattern: "D",
+          selected: null,
+          today: todayRef,
+        }).value.find((c) => c.isToday),
+      ).not.toThrow();
+    });
+  });
 });
