@@ -523,21 +523,23 @@ No log-on-error, no fallback re-parse, no retry.
 
 ## Calendar-layer additions
 
-This spec adds two methods to the calendar feature module:
+This spec adds one method to the calendar feature module:
 
-1. **`YearPeriod.quarters(): Iterable<QuarterPeriod>`** —
-   mirrors the existing `YearPeriod.months()`. Used by
-   `CalendarQuarterView`. Lives in `src/calendar/period-year.ts`.
-2. **`OpenInterval.overlapsPeriod(p: Period): boolean`** — first
-   range-algebra method on `OpenInterval`. Returns `true` when any day
-   in `p` lies inside the interval. Used by `useCalendarGrid` for cell
-   disabling and by `DatePickerModal` for prev/next button visibility.
-   Lives in `src/calendar/open-interval.ts`. Consistent with
-   [[2026-05-13-v3-calendar-design]]'s "add range algebra when a caller
-   needs it" stance — this is the first caller.
+- **`OpenInterval.overlapsPeriod(p: Period): boolean`** — first
+  range-algebra method on `OpenInterval`. Returns `true` when any day
+  in `p` lies inside the interval. Used by `useCalendarGrid` for cell
+  disabling and by `DatePickerModal` for prev/next button visibility.
+  Lives in `src/calendar/open-interval.ts`. Consistent with
+  [[2026-05-13-v3-calendar-design]]'s "add range algebra when a caller
+  needs it" stance — this is the first caller.
 
-Both additions are independent of the UI and tested in their existing
-test files (`period-year.test.ts`, `open-interval.test.ts`).
+`YearPeriod.quarters()` was originally listed here as a second addition,
+but it already exists in `src/calendar/period-year.ts` (mirrors
+`.months()`); `CalendarQuarterView` consumes it directly with no
+calendar-layer change.
+
+The addition is independent of the UI and tested in its existing test
+file (`open-interval.test.ts`).
 
 ## Testing
 
@@ -625,13 +627,9 @@ DatePickerModal
 
 ### Calendar-layer additions
 
-In existing test files:
-
-- `period-year.test.ts`: `YearPeriod.quarters()` yields four quarters
-  spanning Jan-Mar, Apr-Jun, Jul-Sep, Oct-Dec.
-- `open-interval.test.ts`: `overlapsPeriod` returns true when any day
-  is shared; false when the period is entirely before; false when
-  entirely after; respects unbounded start; respects unbounded end.
+In `open-interval.test.ts`: `overlapsPeriod` returns true when any day
+is shared; false when the period is entirely before; false when
+entirely after; respects unbounded start; respects unbounded end.
 
 ### Consumer refactors
 
