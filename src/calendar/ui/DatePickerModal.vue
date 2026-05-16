@@ -10,7 +10,9 @@ import CalendarMonthView from "./CalendarMonthView.vue";
 import CalendarQuarterView from "./CalendarQuarterView.vue";
 import CalendarWeekView from "./CalendarWeekView.vue";
 import CalendarYearView from "./CalendarYearView.vue";
-import { DatePickerInvariantError, type Picking, type View } from "./errors";
+import { descend } from "./descend";
+
+import type { Picking, View } from "./errors";
 
 const props = defineProps<{
   picking: Picking;
@@ -48,23 +50,6 @@ function outerPeriod(view: View, refDate: CalendarDate): Period {
     .with("quarter", () => YearPeriod.containing(refDate))
     .with("decade", () => DecadePeriod.containing(refDate))
     .exhaustive();
-}
-
-function descend(view: View, picking: Picking, cell: Period): { nextView: View; nextRef: CalendarDate } {
-  const ref = cell.anchor;
-  return match([view, picking] as [View, Picking])
-    .with(["decade", "month"], (): { nextView: View; nextRef: CalendarDate } => ({ nextView: "year", nextRef: ref }))
-    .with(["decade", "quarter"], (): { nextView: View; nextRef: CalendarDate } => ({
-      nextView: "quarter",
-      nextRef: ref,
-    }))
-    .with(["decade", "day"], (): { nextView: View; nextRef: CalendarDate } => ({ nextView: "year", nextRef: ref }))
-    .with(["decade", "week"], (): { nextView: View; nextRef: CalendarDate } => ({ nextView: "year", nextRef: ref }))
-    .with(["year", "day"], (): { nextView: View; nextRef: CalendarDate } => ({ nextView: "month", nextRef: ref }))
-    .with(["year", "week"], (): { nextView: View; nextRef: CalendarDate } => ({ nextView: "week", nextRef: ref }))
-    .otherwise(() => {
-      throw new DatePickerInvariantError(view, picking, cell.kind);
-    });
 }
 
 const selectedForHighlight = computed<Period | null>(() => {
