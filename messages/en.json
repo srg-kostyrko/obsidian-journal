@@ -57,6 +57,7 @@
   "journal_add_modal_every_label": "Every",
   "journal_add_modal_name_label": "Journal name",
   "journal_add_modal_title": "Add journal",
+  "journal_add_modal_write_custom_option": "Custom intervals",
   "journal_add_modal_write_label": "I'll be writing",
   "journal_anchor_format_error": "Date must be YYYY-MM-DD.",
   "journal_dashboard_add": "Add journal",

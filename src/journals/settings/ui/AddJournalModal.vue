@@ -4,6 +4,7 @@ import * as v from "valibot";
 import { useForm } from "vee-validate";
 import { computed } from "vue";
 
+import type { AnchorString } from "@/calendar";
 import { m } from "@/i18n";
 import { useService } from "@/infrastructure/di";
 import { useModal } from "@/infrastructure/host/modals";
@@ -35,10 +36,7 @@ const { defineField, errorBag, handleSubmit, values } = useForm({
         name: v.pipe(
           v.string(),
           v.nonEmpty(m.journal_name_required_error()),
-          v.check(
-            (value) => value.length === 0 || collection.value.get(value) === undefined,
-            m.journal_name_unique_error(),
-          ),
+          v.check((value) => collection.value.get(value) === undefined, m.journal_name_unique_error()),
         ),
         type: v.picklist(["day", "week", "month", "quarter", "year", "custom"]),
         every: v.picklist(["day", "week", "month", "quarter", "year"]),
@@ -68,7 +66,7 @@ const isCustom = computed(() => values.type === "custom");
 const onSubmit = handleSubmit((vs) => {
   const write: JournalWrite =
     vs.type === "custom"
-      ? { type: "custom", every: vs.every, duration: vs.duration, anchorDate: vs.anchorDate as never }
+      ? { type: "custom", every: vs.every, duration: vs.duration, anchorDate: vs.anchorDate as AnchorString }
       : { type: vs.type };
   api.submit({ name: vs.name, write });
 });
@@ -89,7 +87,7 @@ const onSubmit = handleSubmit((vs) => {
         <option value="month">{{ m.journal_write({ type: "month", every: "day", duration: 1 }) }}</option>
         <option value="quarter">{{ m.journal_write({ type: "quarter", every: "day", duration: 1 }) }}</option>
         <option value="year">{{ m.journal_write({ type: "year", every: "day", duration: 1 }) }}</option>
-        <option value="custom">custom</option>
+        <option value="custom">{{ m.journal_add_modal_write_custom_option() }}</option>
       </UiDropdown>
     </UiSettingRow>
     <UiSettingRow v-if="isCustom" :name="m.journal_add_modal_duration_label()">
@@ -113,7 +111,7 @@ const onSubmit = handleSubmit((vs) => {
     </UiSettingRow>
     <UiSettingRow controls-only>
       <UiButton @click="api.cancel()">{{ m.common_action_cancel() }}</UiButton>
-      <UiButton cta type="submit" @click="onSubmit">{{ m.common_action_submit() }}</UiButton>
+      <UiButton cta type="submit">{{ m.common_action_submit() }}</UiButton>
     </UiSettingRow>
   </form>
 </template>

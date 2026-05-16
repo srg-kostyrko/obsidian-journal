@@ -98,7 +98,9 @@ describe("AddJournalModal", () => {
     const { submit } = await mountModal({ journals: { daily: makeJournal("daily") } });
     await userEvent.type(screen.getByRole("textbox"), "daily");
     await userEvent.click(screen.getByText(m.common_action_submit()));
-    expect(screen.getByText(m.journal_name_unique_error())).toBeTruthy();
+    await waitFor(() => {
+      expect(screen.getByText(m.journal_name_unique_error())).toBeTruthy();
+    });
     expect(submit).not.toHaveBeenCalled();
   });
 
