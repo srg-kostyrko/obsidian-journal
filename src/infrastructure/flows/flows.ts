@@ -10,14 +10,16 @@ export class Flows {
   readonly #logger = inject(LoggerFactoryToken).named("flows");
   readonly #injector = inject(InjectorToken);
 
-  invoke<P, R, E>(cls: new () => Flow<P, R, E>, parameters: P): AsyncResult<R, E> {
+  invoke<R, E>(cls: new () => Flow<void, R, E>): AsyncResult<R, E>;
+  invoke<P, R, E>(cls: new () => Flow<P, R, E>, parameters: P): AsyncResult<R, E>;
+  invoke<P, R, E>(cls: new () => Flow<P, R, E>, parameters?: P): AsyncResult<R, E> {
     const name = cls.name;
     const started = performance.now();
     this.#logger.debug("flow started", { flow: name });
 
     return this.#injector
       .resolve(cls)
-      .execute(parameters)
+      .execute(parameters as P)
       .tap(() => {
         const ms = Math.round(performance.now() - started);
         this.#logger.info("flow completed", { flow: name, ms });
