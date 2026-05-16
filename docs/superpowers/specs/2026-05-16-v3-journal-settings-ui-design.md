@@ -15,9 +15,9 @@ services that read it, but no UI to author it. This spec adds:
   edit / rename / delete affordances.
 - An edit subpage for tuning all entity fields the v3 schema currently
   supports.
-- Three flow classes (`Flow<P, R, FlowError>`) — `AddJournalFlow`,
-  `RenameJournalFlow`, `DeleteJournalFlow` — that orchestrate the
-  modal-plus-mutation user paths.
+- Four flow classes (`Flow<P, R, FlowError>`) — `AddJournalFlow`,
+  `RenameJournalFlow`, `DeleteJournalFlow`, `EditFrontmatterFieldFlow` —
+  that orchestrate the modal-plus-mutation user paths.
 - A `JournalLifecycleService` exposing the data ops the flows need
   (`create` / `rename` / `delete`).
 - Four modal definitions wiring through `ModalService`.
