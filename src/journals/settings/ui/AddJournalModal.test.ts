@@ -1,11 +1,14 @@
 import userEvent from "@testing-library/user-event";
 import { cleanup, render, screen, waitFor } from "@testing-library/vue";
-import { afterEach, describe, expect, it, vi } from "vitest";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
+import { Calendar, DayPeriod } from "@/calendar";
+import { date, installTestCalendar } from "@/calendar/testing";
 import { m } from "@/i18n";
 import { provideInjectorOnApp } from "@/infrastructure/di";
 import type { ModalApi } from "@/infrastructure/host/modals";
-import { provideModalApiOnApp } from "@/infrastructure/host/modals/testing";
+import { ModalService } from "@/infrastructure/host/modals";
+import { FakeModalService, provideModalApiOnApp } from "@/infrastructure/host/modals/testing";
 import { journalConfigCollection } from "@/journals";
 import { createSettingsService } from "@/settings/testing";
 
@@ -38,6 +41,11 @@ async function mountModal(initial?: { journals: Record<string, unknown> }) {
     raw,
   });
   await settings.initialize();
+
+  const fakeModalService = new FakeModalService();
+  container.register(Calendar).useValue(new Calendar());
+  container.register(ModalService).useValue(fakeModalService as unknown as ModalService);
+
   const submit = vi.fn();
   const cancel = vi.fn();
   const api: ModalApi<{ name: string; write: unknown }> = { submit, cancel };
@@ -53,7 +61,7 @@ async function mountModal(initial?: { journals: Record<string, unknown> }) {
       ],
     },
   });
-  return { submit, cancel };
+  return { submit, cancel, fakeModalService };
 }
 
 describe("addJournalModal definition", () => {
@@ -63,6 +71,14 @@ describe("addJournalModal definition", () => {
 });
 
 describe("AddJournalModal", () => {
+  let teardown: () => void;
+  beforeEach(() => {
+    ({ teardown } = installTestCalendar());
+  });
+  afterEach(() => {
+    teardown();
+  });
+
   it("submits a fixed-write payload with defaults on save", async () => {
     const { submit } = await mountModal();
     await userEvent.type(screen.getByRole("textbox"), "daily");
@@ -70,14 +86,16 @@ describe("AddJournalModal", () => {
     await waitFor(() => expect(submit).toHaveBeenCalledWith({ name: "daily", write: { type: "day" } }));
   });
 
-  it("submits a custom-write payload with every/duration/anchorDate", async () => {
-    const { submit } = await mountModal();
+  it("submits a custom-write payload with the anchor selected via the picker", async () => {
+    const { submit, fakeModalService } = await mountModal();
     await userEvent.type(screen.getByRole("textbox"), "sprints");
     await userEvent.selectOptions(screen.getByRole("combobox"), "custom");
     await userEvent.clear(screen.getByRole("spinbutton"));
     await userEvent.type(screen.getByRole("spinbutton"), "2");
     await userEvent.selectOptions(screen.getAllByRole("combobox")[1], "week");
-    await userEvent.type(screen.getAllByRole("textbox")[1], "2024-01-01");
+    await userEvent.click(screen.getByRole("button", { name: m.calendar_date_picker_title() }));
+    const period = DayPeriod.containing(date("2024-01-01"));
+    fakeModalService.lastOpen<unknown, typeof period>().submit(period);
     await userEvent.click(screen.getByText(m.common_action_submit()));
     await waitFor(() =>
       expect(submit).toHaveBeenCalledWith({
@@ -104,12 +122,12 @@ describe("AddJournalModal", () => {
     expect(submit).not.toHaveBeenCalled();
   });
 
-  it("surfaces an anchor-format error when custom anchor is missing", async () => {
+  it("surfaces a required-anchor error when submitting a custom journal without picking a date", async () => {
     const { submit } = await mountModal();
     await userEvent.type(screen.getByRole("textbox"), "x");
     await userEvent.selectOptions(screen.getByRole("combobox"), "custom");
     await userEvent.click(screen.getByText(m.common_action_submit()));
-    await waitFor(() => expect(screen.getByText(m.journal_anchor_format_error())).toBeTruthy());
+    await waitFor(() => expect(screen.getByText(m.journal_add_modal_anchor_required_error())).toBeTruthy());
     expect(submit).not.toHaveBeenCalled();
   });
 

@@ -2,9 +2,10 @@
 import { toTypedSchema } from "@vee-validate/valibot";
 import * as v from "valibot";
 import { useForm } from "vee-validate";
-import { computed } from "vue";
+import { computed, type Ref } from "vue";
 
 import type { AnchorString } from "@/calendar";
+import { DatePicker } from "@/calendar/ui";
 import { m } from "@/i18n";
 import { useService } from "@/infrastructure/di";
 import { useModal } from "@/infrastructure/host/modals";
@@ -16,11 +17,11 @@ import UiNumberInput from "@/ui/UiNumberInput.vue";
 import UiSettingRow from "@/ui/UiSettingRow.vue";
 import UiTextInput from "@/ui/UiTextInput.vue";
 
+import { useAnchorField } from "./use-anchor-field";
+
 const api = useModal<{ name: string; write: JournalWrite }>();
 const settings = useService(SettingsService);
 const collection = computed(() => settings.getCollection(journalConfigCollection));
-
-const anchorRegex = /^\d{4}-\d{2}-\d{2}$/;
 
 const { defineField, errorBag, handleSubmit, values } = useForm({
   initialValues: {
@@ -46,8 +47,8 @@ const { defineField, errorBag, handleSubmit, values } = useForm({
       v.forward(
         v.partialCheck(
           [["type"], ["anchorDate"]],
-          ({ type, anchorDate }) => (type === "custom" ? anchorRegex.test(anchorDate) : true),
-          m.journal_anchor_format_error(),
+          ({ type, anchorDate }) => (type === "custom" ? anchorDate.length > 0 : true),
+          m.journal_add_modal_anchor_required_error(),
         ),
         ["anchorDate"],
       ),
@@ -59,7 +60,9 @@ const [name, nameAttrs] = defineField("name");
 const [type, typeAttrs] = defineField("type");
 const [every, everyAttrs] = defineField("every");
 const [duration, durationAttrs] = defineField("duration");
-const [anchorDate, anchorDateAttrs] = defineField("anchorDate");
+const [anchorDate] = defineField("anchorDate");
+
+const anchorDateModel = useAnchorField({ anchor: anchorDate as unknown as Ref<AnchorString>, picking: "day" });
 
 const isCustom = computed(() => values.type === "custom");
 
@@ -107,7 +110,7 @@ const onSubmit = handleSubmit((vs) => {
         <div>{{ m.journal_add_modal_anchor_description() }}</div>
         <span v-for="error of errorBag.anchorDate" :key="error" class="journal-form-error">{{ error }}</span>
       </template>
-      <UiTextInput v-model="anchorDate" v-bind="anchorDateAttrs" placeholder="YYYY-MM-DD" />
+      <DatePicker v-model="anchorDateModel" picking="day" />
     </UiSettingRow>
     <UiSettingRow controls-only>
       <UiButton @click="api.cancel()">{{ m.common_action_cancel() }}</UiButton>
