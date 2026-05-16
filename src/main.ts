@@ -7,6 +7,7 @@ import { FlowsModule } from "@/infrastructure/flows";
 import { createHostModule } from "@/infrastructure/host";
 import { LoggerModule } from "@/infrastructure/logger";
 import { journalsModule } from "@/journals/module";
+import { journalsSettingsModule } from "@/journals/settings/module";
 import { VaultSubscriptionService } from "@/journals/vault-subscription";
 import { settingsModule, SettingsService } from "@/settings";
 
@@ -24,6 +25,7 @@ export default class JournalPlugin extends Plugin {
     container.addModule(CalendarModule);
     container.addModule(calendarSettingsModule);
     container.addModule(journalsModule);
+    container.addModule(journalsSettingsModule);
     await container.autoLoad();
 
     const init = await container.resolve(SettingsService).initialize();
