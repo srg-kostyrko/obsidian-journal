@@ -6,6 +6,7 @@ import { Container } from "@/infrastructure/di";
 import { FlowsModule } from "@/infrastructure/flows";
 import { createHostModule } from "@/infrastructure/host";
 import { LoggerModule } from "@/infrastructure/logger";
+import { AutoAttachService, AutoCreateService } from "@/journals";
 import { journalsModule } from "@/journals/module";
 import { journalsSettingsModule } from "@/journals/settings/module";
 import { VaultSubscriptionService } from "@/journals/vault-subscription";
@@ -38,6 +39,8 @@ export default class JournalPlugin extends Plugin {
     }
 
     await container.resolve(VaultSubscriptionService).initialize();
+    await container.resolve(AutoAttachService).initialize();
+    await container.resolve(AutoCreateService).initialize();
 
     this.#container = container;
   }
