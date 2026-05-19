@@ -31,3 +31,26 @@ export type {
 export type { JournalEntry, JournalMetadata, JournalsIndexEvents } from "./types";
 
 export { JournalsError, JournalNotFoundError } from "./errors";
+
+export {
+  AutoAttachService,
+  AutoCreateService,
+  NoteCreationService,
+  NotePathService,
+  TemplateContentService,
+  journalPickerSuggest,
+  confirmCreationModal,
+  JournalNoteCreationError,
+  NoApplicableJournals,
+  type NoteCreationError,
+} from "./notes";
+
+export {
+  OpenDateFlow,
+  OpenJournalEntryFlow,
+  type OpenDateError,
+  type OpenDateParameters,
+  type OpenDateResult,
+  type OpenJournalEntryParameters,
+  type OpenJournalEntryResult,
+} from "./flows";

@@ -3,8 +3,10 @@ import { CollectionDefinitionToken } from "@/settings";
 
 import { journalConfigCollection } from "./config";
 import { CycleService } from "./cycle";
+import { journalFlowsModule } from "./flows/module";
 import { FrontmatterService } from "./frontmatter";
 import { JournalsIndex } from "./journals-index";
+import { journalNotesModule } from "./notes/module";
 import { NumberingService } from "./numbering";
 import { TimelineService } from "./timeline";
 import { VaultSubscriptionService } from "./vault-subscription";
@@ -18,5 +20,7 @@ export const journalsModule: Module = {
     c.register(NumberingService).useClass(NumberingService);
     c.register(FrontmatterService).useClass(FrontmatterService);
     c.register(VaultSubscriptionService).useClass(VaultSubscriptionService).eager();
+    journalNotesModule.register(c);
+    journalFlowsModule.register(c);
   },
 };
