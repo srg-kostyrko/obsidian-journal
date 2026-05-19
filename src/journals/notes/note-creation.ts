@@ -10,7 +10,7 @@ import type {
   VaultPath,
 } from "@/infrastructure/host";
 import { ModalService } from "@/infrastructure/host/modals";
-import { AsyncResult } from "@/infrastructure/result";
+import { AsyncResult, Err, attempt } from "@/infrastructure/result";
 import type { TemplateRenderError } from "@/templates";
 
 import { FrontmatterService } from "../frontmatter";
@@ -62,31 +62,24 @@ export class NoteCreationService {
       return this.#notes.updateFrontmatter(path, mutator).map(() => ({ path, created: false as const }));
     }
 
-    return AsyncResult.fromPromise(
-      (async (): Promise<{ path: VaultPath; created: boolean }> => {
-        const config = this.#path.configFor(name);
-        if (config?.confirmCreation) {
-          const confirmed = await this.#modals.open(confirmCreationModal, {
-            journalName: name,
-            noteName: this.#basename(path),
-          });
-          if (confirmed.isErr()) throw new UserAborted("confirm-creation");
-          if (!confirmed.value) throw new UserAborted("confirm-creation");
-        }
-        const contentResult = await this.#content.renderFor(name, metadata);
-        if (contentResult.isErr()) throw contentResult.error;
-        this.#markExpected(path);
-        const createResult = await this.#notes.create(path, contentResult.value);
-        if (createResult.isErr()) {
-          this.#clearExpected(path);
-          throw createResult.error;
-        }
-        const fmResult = await this.#notes.updateFrontmatter(path, mutator);
-        if (fmResult.isErr()) throw fmResult.error;
-        return { path, created: true };
-      })(),
-      (cause) => cause as NoteCreationError,
-    );
+    return attempt.in(this, async function* () {
+      const config = this.#path.configFor(name);
+      if (config?.confirmCreation) {
+        const confirmed = yield* this.#modals
+          .open(confirmCreationModal, { journalName: name, noteName: this.#basename(path) })
+          .mapErr(() => new UserAborted("confirm-creation") as NoteCreationError);
+        if (!confirmed) return yield* new Err(new UserAborted("confirm-creation"));
+      }
+      const content = yield* this.#content.renderFor(name, metadata);
+      this.#markExpected(path);
+      const createResult = await this.#notes.create(path, content);
+      if (createResult.isErr()) {
+        this.#clearExpected(path);
+        return yield* new Err(createResult.error as NoteCreationError);
+      }
+      yield* this.#notes.updateFrontmatter(path, mutator);
+      return { path, created: true as const };
+    });
   }
 
   attachNote(name: string, path: VaultPath, metadata: JournalMetadata): AsyncResult<void, NoteCreationError> {
@@ -94,24 +87,14 @@ export class NoteCreationService {
     if (mutatorResult.kind === "err") return AsyncResult.err(mutatorResult.error);
     const mutator = mutatorResult.value;
 
-    return AsyncResult.fromPromise(
-      (async (): Promise<void> => {
-        const fmResult = await this.#notes.updateFrontmatter(path, mutator);
-        if (fmResult.isErr()) throw fmResult.error;
-
-        const readResult = await this.#notes.read(path);
-        if (readResult.isErr()) throw readResult.error;
-        if (readResult.value.trim() !== "") return;
-
-        const contentResult = await this.#content.renderFor(name, metadata);
-        if (contentResult.isErr()) throw contentResult.error;
-        if (contentResult.value === "") return;
-
-        const writeResult = await this.#notes.write(path, contentResult.value);
-        if (writeResult.isErr()) throw writeResult.error;
-      })(),
-      (cause) => cause as NoteCreationError,
-    );
+    return attempt.in(this, async function* () {
+      yield* this.#notes.updateFrontmatter(path, mutator);
+      const existing = yield* this.#notes.read(path);
+      if (existing.trim() !== "") return;
+      const content = yield* this.#content.renderFor(name, metadata);
+      if (content === "") return;
+      yield* this.#notes.write(path, content);
+    });
   }
 
   clearExpected(path: VaultPath): void {

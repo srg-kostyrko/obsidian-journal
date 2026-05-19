@@ -8,6 +8,7 @@ import { ModalService } from "@/infrastructure/host/modals";
 import { FakeModalService } from "@/infrastructure/host/modals/testing";
 import { FakeNotesService } from "@/infrastructure/host/testing";
 import { LoggerModule } from "@/infrastructure/logger";
+import { AsyncResult } from "@/infrastructure/result";
 import { SettingsService } from "@/settings";
 import { TemplateEngine } from "@/templates";
 
@@ -86,5 +87,24 @@ describe("AutoCreateService", () => {
     await vi.advanceTimersByTimeAsync(24 * 60 * 60 * 1000);
     expect(notes.find("2026-05-19.md" as VaultPath).isSome()).toBe(true);
     expect(notes.find("2026-05-20.md" as VaultPath).isNone()).toBe(true);
+  });
+
+  it("isolates errors per-journal — one failing journal does not stop others", async () => {
+    const settings = fakeSettings({
+      a: fixedJournal("a", { type: "day" }, { autoCreate: true, folder: "A" }),
+      b: fixedJournal("b", { type: "day" }, { autoCreate: true, folder: "B" }),
+    });
+    const notes = new FakeNotesService();
+    const container = build(settings, notes);
+    const creation = container.resolve(NoteCreationService);
+    vi.spyOn(creation, "ensureNote").mockImplementationOnce(() =>
+      AsyncResult.err(new Error("forced failure") as never),
+    );
+    await container.resolve(AutoCreateService).initialize();
+    await vi.advanceTimersByTimeAsync(0);
+    const aExists = notes.find("A/2026-05-19.md" as VaultPath).isSome();
+    const bExists = notes.find("B/2026-05-19.md" as VaultPath).isSome();
+    expect(aExists || bExists).toBe(true);
+    expect(aExists && bExists).toBe(false);
   });
 });

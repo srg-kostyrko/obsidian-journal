@@ -132,4 +132,45 @@ describe("AutoAttachService", () => {
     await new Promise((r) => window.setTimeout(r, 0));
     expect(spy).not.toHaveBeenCalled();
   });
+
+  it("does nothing when the path is already indexed", async () => {
+    const settings = fakeSettings({
+      daily: fixedJournal(
+        "daily",
+        { type: "day" },
+        { timeline: { start: anchor("2020-01-01"), end: { kind: "never" } } },
+      ),
+    });
+    const notes = new FakeNotesService();
+    const container = build(settings, notes);
+    container.resolve(JournalsIndex).register({
+      journalName: "daily",
+      anchor: anchor("2026-05-19"),
+      path: "2026-05-19.md" as VaultPath,
+    });
+    const spy = vi.spyOn(container.resolve(NoteCreationService), "attachNote");
+    await container.resolve(AutoAttachService).initialize();
+    await notes.create("2026-05-19.md" as VaultPath, "");
+    await new Promise((r) => window.setTimeout(r, 0));
+    expect(spy).not.toHaveBeenCalled();
+  });
+
+  it("attaches a note that is renamed into a matching path", async () => {
+    const settings = fakeSettings({
+      daily: fixedJournal(
+        "daily",
+        { type: "day" },
+        { timeline: { start: anchor("2020-01-01"), end: { kind: "never" } } },
+      ),
+    });
+    const notes = new FakeNotesService();
+    const container = build(settings, notes);
+    const spy = vi.spyOn(container.resolve(NoteCreationService), "attachNote");
+    notes.seed("Inbox/draft.md" as VaultPath, "");
+    await container.resolve(AutoAttachService).initialize();
+    await notes.rename("Inbox/draft.md" as VaultPath, "2026-05-19.md" as VaultPath);
+    await new Promise((r) => window.setTimeout(r, 0));
+    expect(spy).toHaveBeenCalledTimes(1);
+    expect(spy.mock.calls[0]?.[1]).toBe("2026-05-19.md");
+  });
 });
