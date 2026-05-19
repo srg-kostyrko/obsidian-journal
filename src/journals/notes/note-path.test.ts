@@ -83,7 +83,32 @@ describe("NotePathService.candidateFor", () => {
     });
     const c = buildContainer(settings);
     const result = c.resolve(NotePathService).candidateFor("daily", "Diary/2026/2026-05-19.md" as VaultPath);
-    expect(result.isSome() && result.value.anchor).toBe("2026-05-19");
+    const metadata = unwrap(result);
+    expect(metadata.anchor).toBe("2026-05-19");
+  });
+
+  it("captures numbering variables that appear only in the folder template", () => {
+    const settings = fakeSettings({
+      sprints: fixedJournal(
+        "sprints",
+        { type: "day" },
+        {
+          folder: "{{index}} - Sprints",
+          nameTemplate: "{{date}}",
+          numbering: {
+            enabled: true,
+            anchorDate: "2026-01-01" as AnchorString,
+            allowBefore: false,
+            sources: [{ variable: "index", frontmatterKey: "sprint-number", anchorValue: 1, reset: { kind: "never" } }],
+          },
+        },
+      ),
+    });
+    const c = buildContainer(settings);
+    const result = c.resolve(NotePathService).candidateFor("sprints", "42 - Sprints/2026-05-19.md" as VaultPath);
+    const metadata = unwrap(result);
+    expect(metadata.anchor).toBe("2026-05-19");
+    expect(metadata.numbers?.index).toBe(42);
   });
 
   it("captures numbering variables when present in the template", () => {

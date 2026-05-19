@@ -6,6 +6,7 @@ import type { VaultPath } from "@/infrastructure/host";
 import { Err, Ok, Option, type Result } from "@/infrastructure/result";
 import { SettingsService } from "@/settings";
 import { TemplateContext, TemplateEngine, tokenize } from "@/templates";
+import type { Bindings } from "@/templates";
 
 import { journalConfigCollection } from "../config";
 import { CycleService } from "../cycle";
@@ -35,11 +36,12 @@ export class NotePathService {
     const config = this.configFor(name);
     if (!config) return Option.none();
     const context = this.#parseContext(config);
-    // When a folder template is present, verify the path has a matching folder
-    // prefix, then reverse-parse only the filename against nameTemplate. Folder
-    // templates often use partial date formats (e.g. {{date:YYYY}}) that would
-    // conflict with the full date captured from the nameTemplate during merge.
+    // The template engine can't reconcile two date bindings for the same variable
+    // at different resolutions (e.g. {{date:YYYY}} in the folder vs {{date}} in
+    // the filename). Parsing each part independently avoids the conflict; filename
+    // is the canonical date source, so its bindings take precedence on any overlap.
     let filename: string = path;
+    let folderBindings: Bindings | undefined;
     if (config.folder) {
       const lastSlash = path.lastIndexOf("/");
       if (lastSlash === -1) return Option.none();
@@ -47,6 +49,7 @@ export class NotePathService {
       filename = path.slice(lastSlash + 1);
       const folderParsed = this.#engine.parse(tokenize(config.folder), folderPart, context);
       if (folderParsed.kind === "err") return Option.none();
+      folderBindings = folderParsed.value;
     }
     const parsed = this.#engine.parse(tokenize(`${config.nameTemplate}.md`), filename, context);
     if (parsed.kind === "err") return Option.none();
@@ -55,6 +58,13 @@ export class NotePathService {
     if (dateBinding?.kind !== "date") return Option.none();
     const anchor = dateBinding.value.toAnchor();
     const numbers: Record<string, number> = {};
+    // Seed from folder bindings first so filename bindings take precedence.
+    if (folderBindings) {
+      for (const source of config.numbering.sources) {
+        const captured = folderBindings.get(source.variable);
+        if (captured?.kind === "number") numbers[source.variable] = captured.value;
+      }
+    }
     for (const source of config.numbering.sources) {
       const captured = bindings.get(source.variable);
       if (captured?.kind === "number") numbers[source.variable] = captured.value;
