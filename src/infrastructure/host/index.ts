@@ -33,6 +33,13 @@ export {
   type SuggestDefinition,
   type SuggestDefinitionInput,
 } from "./suggests";
+export {
+  defineInputSuggest,
+  InputSuggestService,
+  type Disposer,
+  type InputSuggestDefinition,
+  type InputSuggestDefinitionInput,
+} from "./input-suggests";
 export { createHostModule } from "./module";
 export type { Note, NotesEvents, OpenMode, VaultPath, WorkspaceEvents } from "./types";
 export { InternalObsidianAppToken, InternalPluginToken } from "./internal/tokens";
