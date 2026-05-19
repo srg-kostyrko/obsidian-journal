@@ -5,7 +5,7 @@ import { inject } from "@/infrastructure/di";
 import type { VaultPath } from "@/infrastructure/host";
 import { Err, Ok, Option, type Result } from "@/infrastructure/result";
 import { SettingsService } from "@/settings";
-import { TemplateContext, TemplateEngine } from "@/templates";
+import { TemplateContext, TemplateEngine, tokenize } from "@/templates";
 
 import { journalConfigCollection } from "../config";
 import { CycleService } from "../cycle";
@@ -31,9 +31,50 @@ export class NotePathService {
     return new Err(new JournalNotFoundError(name));
   }
 
-  candidateFor(_name: string, _path: VaultPath): Option<JournalMetadata> {
-    // Implemented in Task 7.
-    return Option.none();
+  candidateFor(name: string, path: VaultPath): Option<JournalMetadata> {
+    const config = this.configFor(name);
+    if (!config) return Option.none();
+    const context = this.#parseContext(config);
+    // When a folder template is present, verify the path has a matching folder
+    // prefix, then reverse-parse only the filename against nameTemplate. Folder
+    // templates often use partial date formats (e.g. {{date:YYYY}}) that would
+    // conflict with the full date captured from the nameTemplate during merge.
+    let filename: string = path;
+    if (config.folder) {
+      const lastSlash = path.lastIndexOf("/");
+      if (lastSlash === -1) return Option.none();
+      const folderPart = path.slice(0, lastSlash);
+      filename = path.slice(lastSlash + 1);
+      const folderParsed = this.#engine.parse(tokenize(config.folder), folderPart, context);
+      if (folderParsed.kind === "err") return Option.none();
+    }
+    const parsed = this.#engine.parse(tokenize(`${config.nameTemplate}.md`), filename, context);
+    if (parsed.kind === "err") return Option.none();
+    const bindings = parsed.value;
+    const dateBinding = bindings.get("date");
+    if (dateBinding?.kind !== "date") return Option.none();
+    const anchor = dateBinding.value.toAnchor();
+    const numbers: Record<string, number> = {};
+    for (const source of config.numbering.sources) {
+      const captured = bindings.get(source.variable);
+      if (captured?.kind === "number") numbers[source.variable] = captured.value;
+    }
+    const metadata: JournalMetadata = {
+      journalName: name,
+      anchor,
+      ...(Object.keys(numbers).length > 0 ? { numbers } : {}),
+    };
+    return Option.some(metadata);
+  }
+
+  #parseContext(config: JournalConfig): TemplateContext {
+    let context = TemplateContext.empty()
+      .date("date", CalendarDate.today(), config.dateFormat)
+      .string("journal_name", config.name);
+    for (const source of config.numbering.sources) {
+      context = context.number(source.variable, 0);
+    }
+    return context;
   }
 
   configFor(name: string): JournalConfig | undefined {

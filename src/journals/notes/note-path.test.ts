@@ -1,7 +1,9 @@
 import { describe, it, expect } from "vitest";
 
+import type { AnchorString } from "@/calendar";
 import { anchor } from "@/calendar/testing";
 import { Container } from "@/infrastructure/di";
+import type { VaultPath } from "@/infrastructure/host";
 import { LoggerModule } from "@/infrastructure/logger";
 import { SettingsService } from "@/settings";
 import { TemplateEngine } from "@/templates";
@@ -11,7 +13,7 @@ import { JournalNotFoundError } from "../errors";
 import { FrontmatterService } from "../frontmatter";
 import { JournalsIndex } from "../journals-index";
 import { NumberingService } from "../numbering";
-import { fakeSettings, fixedJournal } from "../testing";
+import { fakeSettings, fixedJournal, unwrap } from "../testing";
 
 import { NotePathService } from "./note-path";
 
@@ -55,5 +57,55 @@ describe("NotePathService.pathFor", () => {
     const meta: JournalMetadata = { journalName: "missing", anchor: anchor("2026-05-19") };
     const result = c.resolve(NotePathService).pathFor("missing", meta);
     expect(result.isErr() && result.error instanceof JournalNotFoundError).toBe(true);
+  });
+});
+
+describe("NotePathService.candidateFor", () => {
+  it("inverts a {{date}}.md path into a metadata anchor", () => {
+    const settings = fakeSettings({ daily: fixedJournal("daily", { type: "day" }) });
+    const c = buildContainer(settings);
+    const result = c.resolve(NotePathService).candidateFor("daily", "2026-05-19.md" as VaultPath);
+    const metadata = unwrap(result);
+    expect(metadata.anchor).toBe("2026-05-19");
+    expect(metadata.journalName).toBe("daily");
+  });
+
+  it("returns None when the path doesn't match the template", () => {
+    const settings = fakeSettings({ daily: fixedJournal("daily", { type: "day" }) });
+    const c = buildContainer(settings);
+    const result = c.resolve(NotePathService).candidateFor("daily", "Inbox/note.md" as VaultPath);
+    expect(result.isNone()).toBe(true);
+  });
+
+  it("inverts folder + name combined", () => {
+    const settings = fakeSettings({
+      daily: fixedJournal("daily", { type: "day" }, { folder: "Diary/{{date:YYYY}}" }),
+    });
+    const c = buildContainer(settings);
+    const result = c.resolve(NotePathService).candidateFor("daily", "Diary/2026/2026-05-19.md" as VaultPath);
+    expect(result.isSome() && result.value.anchor).toBe("2026-05-19");
+  });
+
+  it("captures numbering variables when present in the template", () => {
+    const settings = fakeSettings({
+      issues: fixedJournal(
+        "issues",
+        { type: "day" },
+        {
+          nameTemplate: "Issue {{index}} - {{date}}",
+          numbering: {
+            enabled: true,
+            anchorDate: "2026-01-01" as AnchorString,
+            allowBefore: false,
+            sources: [{ variable: "index", frontmatterKey: "issue-number", anchorValue: 1, reset: { kind: "never" } }],
+          },
+        },
+      ),
+    });
+    const c = buildContainer(settings);
+    const result = c.resolve(NotePathService).candidateFor("issues", "Issue 42 - 2026-05-19.md" as VaultPath);
+    const metadata = unwrap(result);
+    expect(metadata.anchor).toBe("2026-05-19");
+    expect(metadata.numbers?.index).toBe(42);
   });
 });
