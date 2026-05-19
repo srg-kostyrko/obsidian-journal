@@ -132,6 +132,40 @@ export class SuggestModal<T> {
   onClose(): void {}
 }
 
+export class AbstractInputSuggest<T> {
+  readonly app: App;
+  readonly inputEl: HTMLInputElement;
+  #attached = false;
+
+  constructor(app: App, inputEl: HTMLInputElement) {
+    this.app = app;
+    this.inputEl = inputEl;
+    this.#attached = true;
+    attachedInputSuggests.push(this as unknown as AbstractInputSuggest<unknown>);
+  }
+
+  getSuggestions(_query: string): T[] | Promise<T[]> {
+    return [];
+  }
+
+  renderSuggestion(_item: T, _element: HTMLElement): void {}
+
+  selectSuggestion(_item: T, _event: MouseEvent | KeyboardEvent): void {}
+
+  close(): void {
+    if (!this.#attached) return;
+    this.#attached = false;
+    const index = attachedInputSuggests.indexOf(this as unknown as AbstractInputSuggest<unknown>);
+    if (index >= 0) attachedInputSuggests.splice(index, 1);
+  }
+
+  get isAttached(): boolean {
+    return this.#attached;
+  }
+}
+
+const attachedInputSuggests: AbstractInputSuggest<unknown>[] = [];
+
 const openModals: Modal[] = [];
 const openSuggestModals: SuggestModal<unknown>[] = [];
 
@@ -152,10 +186,20 @@ export const __testing = {
     if (!last) throw new Error("__testing.lastOpenSuggestModal() called before any suggest opened");
     return last;
   },
+  get attachedInputSuggests(): readonly AbstractInputSuggest<unknown>[] {
+    return attachedInputSuggests;
+  },
+  lastAttachedInputSuggest(): AbstractInputSuggest<unknown> {
+    const last = attachedInputSuggests.at(-1);
+    if (!last) throw new Error("__testing.lastAttachedInputSuggest() called before any input-suggest attached");
+    return last;
+  },
   reset(): void {
     for (const m of [...openModals]) m.close();
     openModals.length = 0;
     for (const m of [...openSuggestModals]) m.close();
     openSuggestModals.length = 0;
+    for (const s of [...attachedInputSuggests]) s.close();
+    attachedInputSuggests.length = 0;
   },
 };
