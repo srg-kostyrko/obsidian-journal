@@ -8,10 +8,12 @@ import { useService } from "@/infrastructure/di";
 import { Flows } from "@/infrastructure/flows";
 import { journalConfigCollection, type JournalConfig, type NumberingReset, type TimelineEnd } from "@/journals";
 import { SettingsService, type SubpageNav } from "@/settings";
+import UiButton from "@/ui/UiButton.vue";
 import UiCollapsibleBlock from "@/ui/UiCollapsibleBlock.vue";
 import UiDropdown from "@/ui/UiDropdown.vue";
 import UiIcon from "@/ui/UiIcon.vue";
 import UiIconButton from "@/ui/UiIconButton.vue";
+import UiIconedRow from "@/ui/UiIconedRow.vue";
 import UiNumberInput from "@/ui/UiNumberInput.vue";
 import UiSettingRow from "@/ui/UiSettingRow.vue";
 import UiTextInput from "@/ui/UiTextInput.vue";
@@ -23,9 +25,11 @@ import { EditSequencePropertyFlow } from "../flows/edit-sequence-property.flow";
 import { RenameJournalFlow } from "../flows/rename-journal.flow";
 
 import DateFormatPreview from "./DateFormatPreview.vue";
+import FileInput from "./FileInput.vue";
 import FolderInput from "./FolderInput.vue";
 import FolderPathPreview from "./FolderPathPreview.vue";
 import NoteNamePreview from "./NoteNamePreview.vue";
+import TemplatePathPreview from "./TemplatePathPreview.vue";
 import { useAnchorField } from "./use-anchor-field";
 import { extractFromDateFormat, extractFromNameTemplate } from "./use-folder-extractor";
 import { useInvertibilityCheck } from "./use-invertibility-check";
@@ -60,9 +64,21 @@ const writing = computed(() => {
 });
 
 const noteCreationOpen = ref(true);
+const templatesOpen = ref(false);
 const timelineOpen = ref(true);
 const sequenceOpen = ref(false);
 const frontmatterOpen = ref(false);
+
+function addTemplate(): void {
+  if (!config.value) return;
+  config.value.templates.push("");
+  templatesOpen.value = true;
+}
+
+function removeTemplate(index: number): void {
+  if (!config.value) return;
+  config.value.templates.splice(index, 1);
+}
 
 const startPicking = computed<Picking>(() =>
   config.value?.write.type === "custom" ? "day" : (config.value?.write.type ?? "day"),
@@ -331,6 +347,41 @@ function editSequenceKey(): void {
       </template>
       <UiTextInput v-model="config.dateFormat" />
     </UiSettingRow>
+
+    <UiCollapsibleBlock v-model:expanded="templatesOpen">
+      <template #trigger>
+        <UiIconedRow icon="notepad-text-dashed">
+          {{ m.journal_edit_section_templates() }}
+          <span class="flair">{{ config.templates.length }}</span>
+        </UiIconedRow>
+      </template>
+      <template #controls>
+        <UiButton @click="addTemplate">{{ m.journal_edit_template_add_button() }}</UiButton>
+      </template>
+
+      <UiSettingRow>
+        <template #description>
+          <div>{{ m.journal_edit_templates_description() }}</div>
+          <VariableReferenceHint
+            :journal-name="journalName"
+            :date-format="config.dateFormat"
+            :has-numbering="config.numbering.enabled"
+          />
+        </template>
+      </UiSettingRow>
+
+      <template v-for="(_path, index) in config.templates" :key="index">
+        <UiSettingRow>
+          <FileInput v-model="config.templates[index]" :placeholder="m.journal_edit_template_path_placeholder()" />
+          <UiIconButton
+            icon="trash"
+            :tooltip="m.journal_edit_template_remove_tooltip()"
+            @click="removeTemplate(index)"
+          />
+        </UiSettingRow>
+        <TemplatePathPreview :journal-name="journalName" :path="config.templates[index] ?? ''" />
+      </template>
+    </UiCollapsibleBlock>
 
     <UiCollapsibleBlock v-model:expanded="frontmatterOpen">
       <template #trigger>
