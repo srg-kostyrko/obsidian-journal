@@ -207,3 +207,55 @@ describe("TemplateEngine.parse", () => {
     });
   });
 });
+
+describe("TemplateEngine.validate", () => {
+  let teardown: () => void;
+  beforeEach(() => {
+    ({ teardown } = installTestCalendar());
+  });
+  afterEach(() => {
+    teardown();
+  });
+
+  it("returns empty problems for valid template", () => {
+    const engine = installTestEngine();
+    const stream = tokenize("{{date:YYYY-MM-DD}}.md");
+    expect(engine.validate(stream, buildFakeContext())).toEqual([]);
+  });
+
+  it("flags unknown variable", () => {
+    const engine = installTestEngine();
+    const stream = tokenize("{{not_a_var}}.md");
+    const problems = engine.validate(stream, buildFakeContext());
+    expect(problems).toHaveLength(1);
+    expect(problems[0].problem).toBe("unknown-variable");
+  });
+
+  it("flags function token when allowFunctions is false", () => {
+    const engine = installTestEngine([FakeHandler.fixed("greet", "x")]);
+    const stream = tokenize("{{greet(x)}}.md");
+    const problems = engine.validate(stream, buildFakeContext(), { allowFunctions: false });
+    expect(problems[0].problem).toBe("function-not-allowed");
+  });
+
+  it("flags unknown function when handler missing", () => {
+    const engine = installTestEngine();
+    const stream = tokenize("{{nope(x)}}.md");
+    const problems = engine.validate(stream, buildFakeContext(), { allowFunctions: true });
+    expect(problems[0].problem).toBe("unknown-function");
+  });
+
+  it("flags format on non-date variable", () => {
+    const engine = installTestEngine();
+    const stream = tokenize("{{journal_name:YYYY}}");
+    const problems = engine.validate(stream, buildFakeContext());
+    expect(problems.some((problem) => problem.problem === "format-on-non-date")).toBe(true);
+  });
+
+  it("flags modifiers on non-date variable", () => {
+    const engine = installTestEngine();
+    const stream = tokenize("{{index+1d}}");
+    const problems = engine.validate(stream, buildFakeContext());
+    expect(problems.some((problem) => problem.problem === "modifiers-on-non-date")).toBe(true);
+  });
+});

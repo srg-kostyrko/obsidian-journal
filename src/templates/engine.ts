@@ -11,7 +11,7 @@ import { parseDate, parseNumber, parseString, patternForKind, renderDate, render
 import { applyModifiers } from "./modifiers";
 
 import type { TemplateContext } from "./context";
-import type { Bindings, BoundValue, Token, TokenStream, VariableSpec } from "./types";
+import type { Bindings, BoundValue, Token, TokenStream, ValidationProblem, VariableSpec } from "./types";
 
 export class TemplateEngine {
   readonly #handlersByName: ReadonlyMap<string, FunctionHandler>;
@@ -75,6 +75,47 @@ export class TemplateEngine {
   #sourceDateFor(context: TemplateContext): CalendarDate {
     const spec = context.get("date");
     return spec?.kind === "date" ? spec.value : CalendarDate.today();
+  }
+
+  validate(
+    stream: TokenStream,
+    context: TemplateContext,
+    options: { allowFunctions?: boolean } = {},
+  ): ValidationProblem[] {
+    const allowFunctions = options.allowFunctions ?? false;
+    const problems: ValidationProblem[] = [];
+    let position = 0;
+    for (const token of stream) {
+      if (token.kind === "literal") {
+        position += token.text.length;
+        continue;
+      }
+      if (token.kind === "function") {
+        if (!allowFunctions) {
+          problems.push({ token, position, problem: "function-not-allowed" });
+        } else if (!this.#handlersByName.has(token.name)) {
+          problems.push({ token, position, problem: "unknown-function" });
+        }
+        position += token.raw.length;
+        continue;
+      }
+      const spec = context.get(token.name);
+      if (!spec) {
+        problems.push({ token, position, problem: "unknown-variable" });
+        position += token.raw.length;
+        continue;
+      }
+      if (spec.kind !== "date") {
+        if (token.format !== undefined) {
+          problems.push({ token, position, problem: "format-on-non-date" });
+        }
+        if (token.modifiers.length > 0) {
+          problems.push({ token, position, problem: "modifiers-on-non-date" });
+        }
+      }
+      position += token.raw.length;
+    }
+    return problems;
   }
 
   parse(stream: TokenStream, input: string, context: TemplateContext): Result<Bindings, TemplateParseError> {
