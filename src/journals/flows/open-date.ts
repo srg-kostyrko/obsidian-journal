@@ -1,0 +1,81 @@
+import type { AnchorString } from "@/calendar";
+import { inject } from "@/infrastructure/di";
+import { Flows, UserAborted } from "@/infrastructure/flows";
+import type { Flow } from "@/infrastructure/flows";
+import { SuggestService } from "@/infrastructure/host";
+import type { OpenMode, VaultPath, WorkspaceOpenError } from "@/infrastructure/host";
+import { AsyncResult } from "@/infrastructure/result";
+import { SettingsService } from "@/settings";
+
+import { journalConfigCollection } from "../config";
+import { JournalsIndex } from "../journals-index";
+import { NoApplicableJournals } from "../notes/errors";
+import { journalPickerSuggest } from "../notes/journal-picker";
+import { TimelineService } from "../timeline";
+
+import { OpenJournalEntryFlow } from "./open-journal-entry";
+
+import type { NoteCreationError } from "../notes/note-creation";
+
+export interface OpenDateParameters {
+  anchor: AnchorString;
+  journalNames?: readonly string[];
+  openMode?: OpenMode;
+  existingOnly?: boolean;
+}
+
+export interface OpenDateResult {
+  path: VaultPath;
+  created: boolean;
+}
+
+export type OpenDateError = NoApplicableJournals | NoteCreationError | WorkspaceOpenError | UserAborted;
+
+export class OpenDateFlow implements Flow<OpenDateParameters, OpenDateResult, OpenDateError> {
+  readonly #settings = inject(SettingsService);
+  readonly #timeline = inject(TimelineService);
+  readonly #index = inject(JournalsIndex);
+  readonly #flows = inject(Flows);
+  readonly #suggests = inject(SuggestService);
+
+  execute(p: OpenDateParameters): AsyncResult<OpenDateResult, OpenDateError> {
+    const all = Object.keys(this.#settings.getCollection(journalConfigCollection).entries);
+    const { journalNames } = p;
+    const candidates = journalNames ? all.filter((n) => journalNames.includes(n)) : all;
+    const applicable = candidates.filter((name) => {
+      if (!this.#timeline.contains(name, p.anchor)) return false;
+      if (p.existingOnly && this.#index.entryByAnchor(name, p.anchor).isNone()) return false;
+      return true;
+    });
+
+    if (applicable.length === 0) {
+      return AsyncResult.err(new NoApplicableJournals(p.anchor, p.journalNames));
+    }
+    if (applicable.length === 1) {
+      const [name] = applicable;
+      if (name === undefined) {
+        return AsyncResult.err(new NoApplicableJournals(p.anchor, p.journalNames));
+      }
+      return this.#flows.invoke(OpenJournalEntryFlow, {
+        journalName: name,
+        anchor: p.anchor,
+        openMode: p.openMode,
+      });
+    }
+
+    return AsyncResult.fromPromise(
+      (async (): Promise<OpenDateResult> => {
+        const choice = await this.#suggests.open(journalPickerSuggest, [...applicable]);
+        if (choice.isErr()) throw new UserAborted("journal-picker");
+        const dispatched = await this.#flows.invoke(OpenJournalEntryFlow, {
+          journalName: choice.value,
+          anchor: p.anchor,
+          openMode: p.openMode,
+        });
+        if (dispatched.isErr()) throw dispatched.error;
+        return dispatched.value;
+      })(),
+      (cause) => cause as OpenDateError,
+    );
+  }
+}
