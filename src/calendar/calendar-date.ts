@@ -66,4 +66,32 @@ export class CalendarDate {
     if (this.#anchor === other.#anchor) return 0;
     return this.#anchor < other.#anchor ? -1 : 1;
   }
+
+  shift(amount: number, unit: "y" | "q" | "m" | "w" | "d" | "h"): CalendarDate {
+    if (unit === "h") return this;
+    // moment uses uppercase "M"/"Q"; map from domain shorthand
+    const unitMap = { y: "y", q: "Q", m: "M", w: "w", d: "d" } as const;
+    const moment = localMoment(this.#anchor, ANCHOR_FORMAT, true).add(amount, unitMap[unit]);
+    return CalendarDate._fromMoment(moment);
+  }
+
+  startOf(unit: "year" | "quarter" | "month" | "week" | "day" | "decade"): CalendarDate {
+    if (unit === "decade") {
+      const moment = localMoment(this.#anchor, ANCHOR_FORMAT, true);
+      const startYear = moment.year() - (moment.year() % 10);
+      return CalendarDate._fromMoment(moment.year(startYear).startOf("year"));
+    }
+    const moment = localMoment(this.#anchor, ANCHOR_FORMAT, true).startOf(unit);
+    return CalendarDate._fromMoment(moment);
+  }
+
+  endOf(unit: "year" | "quarter" | "month" | "week" | "day" | "decade"): CalendarDate {
+    if (unit === "decade") {
+      const moment = localMoment(this.#anchor, ANCHOR_FORMAT, true);
+      const endYear = moment.year() + (9 - (moment.year() % 10));
+      return CalendarDate._fromMoment(moment.year(endYear).endOf("year"));
+    }
+    const moment = localMoment(this.#anchor, ANCHOR_FORMAT, true).endOf(unit);
+    return CalendarDate._fromMoment(moment);
+  }
 }

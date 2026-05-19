@@ -145,6 +145,65 @@ describe("CalendarDate", () => {
     });
   });
 
+  describe("shift", () => {
+    it("adds days", () => {
+      const result = CalendarDate.fromAnchor(anchor("2022-01-01")).shift(1, "d");
+      expect(result.toAnchor()).toBe("2022-01-02");
+    });
+
+    it("subtracts days", () => {
+      const result = CalendarDate.fromAnchor(anchor("2022-01-01")).shift(-1, "d");
+      expect(result.toAnchor()).toBe("2021-12-31");
+    });
+
+    it.each([
+      ["w", 1, "2022-01-08"],
+      ["w", -1, "2021-12-25"],
+      ["m", 1, "2022-02-01"],
+      ["m", -1, "2021-12-01"],
+      ["q", 1, "2022-04-01"],
+      ["q", -1, "2021-10-01"],
+      ["y", 1, "2023-01-01"],
+      ["y", -1, "2021-01-01"],
+    ] as const)("supports %s by %i", (unit, amount, expected) => {
+      const result = CalendarDate.fromAnchor(anchor("2022-01-01")).shift(amount, unit);
+      expect(result.toAnchor()).toBe(expected);
+    });
+
+    it("is a no-op when unit is h", () => {
+      const result = CalendarDate.fromAnchor(anchor("2022-01-01")).shift(5, "h");
+      expect(result.toAnchor()).toBe("2022-01-01");
+    });
+  });
+
+  describe("startOf", () => {
+    it.each([
+      ["week", "2022-01-05", "2022-01-03"],
+      ["month", "2022-01-04", "2022-01-01"],
+      ["quarter", "2022-01-04", "2022-01-01"],
+      ["year", "2022-01-04", "2022-01-01"],
+      ["decade", "2022-01-04", "2020-01-01"],
+      ["day", "2022-01-04", "2022-01-04"],
+    ] as const)("snaps to start of %s", (unit, input, expected) => {
+      const result = CalendarDate.fromAnchor(anchor(input)).startOf(unit);
+      expect(result.toAnchor()).toBe(expected);
+    });
+  });
+
+  describe("endOf", () => {
+    it.each([
+      ["week", "2022-01-05", "2022-01-09"],
+      ["month", "2022-01-04", "2022-01-31"],
+      ["quarter", "2022-01-04", "2022-03-31"],
+      ["year", "2022-01-04", "2022-12-31"],
+      ["decade", "2022-01-04", "2029-12-31"],
+      ["day", "2022-01-04", "2022-01-04"],
+    ] as const)("snaps to end of %s", (unit, input, expected) => {
+      const result = CalendarDate.fromAnchor(anchor(input)).endOf(unit);
+      expect(result.toAnchor()).toBe(expected);
+    });
+  });
+
   describe("AnchorString brand", () => {
     it("toAnchor returns an AnchorString-typed value", () => {
       const date = CalendarDate.fromAnchor(anchor("2025-03-14"));
