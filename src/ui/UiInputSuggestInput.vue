@@ -1,4 +1,4 @@
-<script setup lang="ts">
+<script setup lang="ts" generic="TResult">
 import { onBeforeUnmount, onMounted, ref } from "vue";
 
 import { useService } from "@/infrastructure/di";
@@ -6,7 +6,7 @@ import { InputSuggestService, type Disposer, type InputSuggestDefinition } from 
 
 const props = defineProps<{
   modelValue: string;
-  definition: InputSuggestDefinition<unknown>;
+  definition: InputSuggestDefinition<TResult>;
   placeholder?: string;
   disabled?: boolean;
 }>();

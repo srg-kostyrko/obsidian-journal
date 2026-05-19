@@ -32,7 +32,7 @@ export class FakeInputSuggestService {
         return attached;
       },
     };
-    this.#handles.push(handle as unknown as FakeInputSuggestHandle<unknown>);
+    this.#handles.push(handle);
     return () => {
       attached = false;
     };

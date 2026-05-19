@@ -6,8 +6,8 @@ export interface InputSuggestDefinitionInput<TResult> {
 
 export interface InputSuggestDefinition<TResult> {
   readonly fetch: (query: string) => TResult[];
-  readonly render: (item: TResult, element: HTMLElement) => string | undefined;
-  readonly toValue: (item: TResult) => string;
+  render(item: TResult, element: HTMLElement): string | undefined;
+  toValue(item: TResult): string;
   readonly __result: (witness: never) => TResult;
 }
 
