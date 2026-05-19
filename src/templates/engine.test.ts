@@ -259,3 +259,41 @@ describe("TemplateEngine.validate", () => {
     expect(problems.some((problem) => problem.problem === "modifiers-on-non-date")).toBe(true);
   });
 });
+
+describe("v2 parity", () => {
+  let teardown: () => void;
+  beforeEach(() => {
+    ({ teardown } = installTestCalendar());
+  });
+  afterEach(() => {
+    teardown();
+  });
+
+  it("renders v2 daily anchor in default format", () => {
+    const engine = installTestEngine();
+    expect(engine.renderString("{{date}}", buildFakeContext())).toBe("2022-01-05");
+  });
+
+  it("renders v2 daily anchor with format override", () => {
+    const engine = installTestEngine();
+    expect(engine.renderString("{{date:MMM D, YYYY}}", buildFakeContext())).toBe("Jan 5, 2022");
+  });
+
+  it("renders v2 daily nameTemplate with index plus date", () => {
+    const engine = installTestEngine();
+    expect(engine.renderString("Sprint {{index}} — {{date:YYYY-MM-DD}}", buildFakeContext())).toBe(
+      "Sprint 7 — 2022-01-05",
+    );
+  });
+
+  it("renders v2 weekly anchor with ISO-week format", () => {
+    const engine = installTestEngine();
+    const context = TemplateContext.empty()
+      .date("date", CalendarDate.fromAnchor(anchor("2022-01-05")), "YYYY-[W]w")
+      .date("start_date", CalendarDate.fromAnchor(anchor("2022-01-03")), "YYYY-MM-DD")
+      .date("end_date", CalendarDate.fromAnchor(anchor("2022-01-09")), "YYYY-MM-DD")
+      .string("journal_name", "Weekly")
+      .number("index", 1);
+    expect(engine.renderString("{{date}}", context)).toBe("2022-W1");
+  });
+});
