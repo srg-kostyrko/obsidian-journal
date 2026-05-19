@@ -1,5 +1,8 @@
 import { moment } from "obsidian";
 
+// Locale data is captured at module-import time, matching v2 behavior. Plugin load
+// fixes the locale before this module is imported; runtime locale changes do not
+// affect compiled patterns. Tests therefore exercise locale-insensitive tokens only.
 const localeData = moment.localeData();
 
 const formatRegExpParts = new Map<string, string>([
