@@ -23,7 +23,11 @@ import { EditSequencePropertyFlow } from "../flows/edit-sequence-property.flow";
 import { RenameJournalFlow } from "../flows/rename-journal.flow";
 
 import DateFormatPreview from "./DateFormatPreview.vue";
+import FolderInput from "./FolderInput.vue";
+import FolderPathPreview from "./FolderPathPreview.vue";
+import NoteNamePreview from "./NoteNamePreview.vue";
 import { useAnchorField } from "./use-anchor-field";
+import VariableReferenceHint from "./VariableReferenceHint.vue";
 
 const { journalName, nav } = defineProps<{ journalName: string; nav: SubpageNav }>();
 
@@ -42,6 +46,7 @@ const writing = computed(() => {
   return m.journal_write({ every: "day", duration: 1, ...desc });
 });
 
+const noteCreationOpen = ref(true);
 const timelineOpen = ref(true);
 const sequenceOpen = ref(false);
 const frontmatterOpen = ref(false);
@@ -129,6 +134,54 @@ function editSequenceKey(): void {
       <UiIconButton icon="pencil" :tooltip="m.journal_edit_rename_tooltip()" @click="rename" />
       <UiIconButton icon="chevron-left" :tooltip="m.journal_edit_back_tooltip()" @click="nav.back()" />
     </UiSettingRow>
+
+    <UiCollapsibleBlock v-model:expanded="noteCreationOpen">
+      <template #trigger>
+        <span class="journal-section-heading">
+          <UiIcon name="file-plus" />
+          <span>{{ m.journal_edit_section_note_creation() }}</span>
+        </span>
+      </template>
+
+      <UiSettingRow :name="m.journal_edit_name_template_label()">
+        <template #description>
+          <div>{{ m.journal_edit_name_template_description() }}</div>
+          <VariableReferenceHint
+            :journal-name="journalName"
+            :date-format="config.dateFormat"
+            :has-numbering="config.numbering.enabled"
+          />
+          <NoteNamePreview :journal-name="journalName" />
+        </template>
+        <UiTextInput v-model="config.nameTemplate" />
+      </UiSettingRow>
+
+      <UiSettingRow :name="m.journal_edit_folder_label()">
+        <template #description>
+          <div>{{ m.journal_edit_folder_description() }}</div>
+          <VariableReferenceHint
+            :journal-name="journalName"
+            :date-format="config.dateFormat"
+            :has-numbering="config.numbering.enabled"
+          />
+          <FolderPathPreview :journal-name="journalName" :folder="config.folder" />
+        </template>
+        <FolderInput v-model="config.folder" />
+      </UiSettingRow>
+
+      <UiSettingRow :name="m.journal_edit_confirm_creation_label()">
+        <template #description>{{ m.journal_edit_confirm_creation_description() }}</template>
+        <UiToggle v-model="config.confirmCreation" />
+      </UiSettingRow>
+
+      <UiSettingRow :name="m.journal_edit_auto_create_label()">
+        <template #description>
+          <div>{{ m.journal_edit_auto_create_description() }}</div>
+          <div v-if="config.confirmCreation">{{ m.journal_edit_auto_create_confirmation_skip_note() }}</div>
+        </template>
+        <UiToggle v-model="config.autoCreate" />
+      </UiSettingRow>
+    </UiCollapsibleBlock>
 
     <UiCollapsibleBlock v-model:expanded="timelineOpen">
       <template #trigger>

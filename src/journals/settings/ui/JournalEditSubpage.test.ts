@@ -7,10 +7,22 @@ import { date, installTestCalendar } from "@/calendar/testing";
 import { m } from "@/i18n";
 import { type Container, provideInjectorOnApp } from "@/infrastructure/di";
 import { Flows } from "@/infrastructure/flows";
+import { InputSuggestService, NotesService } from "@/infrastructure/host";
+import { FakeInputSuggestService } from "@/infrastructure/host/input-suggests/testing";
 import { ModalService } from "@/infrastructure/host/modals";
 import { FakeModalService } from "@/infrastructure/host/modals/testing";
-import { journalConfigCollection } from "@/journals";
+import { FakeNotesService } from "@/infrastructure/host/testing";
+import {
+  CycleService,
+  FrontmatterService,
+  JournalsIndex,
+  journalConfigCollection,
+  NotePathService,
+  NumberingService,
+} from "@/journals";
 import { createSettingsService } from "@/settings/testing";
+import { TemplateEngine } from "@/templates";
+import { installTestEngine } from "@/templates/testing";
 
 import { EditFrontmatterFieldFlow } from "../flows/edit-frontmatter-field.flow";
 import { EditSequencePropertyFlow } from "../flows/edit-sequence-property.flow";
@@ -41,6 +53,11 @@ function makeJournal(name: string, overrides: Partial<Record<string, unknown>> =
       addEndDate: false,
     },
     numbering: { enabled: false, anchorDate: "2024-01-01", allowBefore: false, sources: [] },
+    nameTemplate: "{{date}}",
+    folder: "",
+    templates: [],
+    confirmCreation: false,
+    autoCreate: false,
     ...overrides,
   };
 }
@@ -55,8 +72,16 @@ async function setup(raw?: unknown) {
     raw: initial,
   });
   await settings.initialize();
+  container.register(TemplateEngine).useValue(installTestEngine());
+  container.register(JournalsIndex).useClass(JournalsIndex);
+  container.register(CycleService).useClass(CycleService);
+  container.register(NumberingService).useClass(NumberingService);
+  container.register(FrontmatterService).useClass(FrontmatterService);
+  container.register(NotePathService).useClass(NotePathService);
   const fakeModalService = new FakeModalService();
   container.register(ModalService).useValue(fakeModalService as unknown as ModalService);
+  container.register(InputSuggestService).useValue(new FakeInputSuggestService() as unknown as InputSuggestService);
+  container.register(NotesService).useValue(new FakeNotesService() as unknown as NotesService);
   container.register(Flows).useClass(Flows);
   const flows = container.resolve(Flows);
   vi.spyOn(flows, "invoke").mockReturnValue({} as never);
@@ -134,7 +159,8 @@ describe("JournalEditSubpage", () => {
     const { container, settings } = await setup();
     mount(container, "daily");
     await userEvent.click(screen.getByText(m.journal_edit_section_sequential_numbers()));
-    const [sequenceToggle] = screen.getAllByRole("checkbox");
+    const sequenceEnabledRow = screen.getByText(m.journal_edit_sequence_enabled_label()).closest(".setting-item")!;
+    const sequenceToggle = sequenceEnabledRow.querySelector("input[type='checkbox']")!;
     await userEvent.click(sequenceToggle);
     const config = settings.getCollection(journalConfigCollection).get("daily")!;
     expect(config.numbering.enabled).toBe(true);
@@ -297,6 +323,40 @@ describe("JournalEditSubpage", () => {
       fakeModalService.lastOpen<unknown, DayPeriod>().submit(DayPeriod.containing(date("2025-01-10")));
       await waitFor(() => {
         expect(settings.getCollection(journalConfigCollection).get("daily")?.numbering.anchorDate).toBe("2025-01-10");
+      });
+    });
+  });
+
+  describe("note creation collapsible", () => {
+    it("renders the four fields", async () => {
+      const { container } = await setup();
+      mount(container, "daily");
+      expect(screen.getByText(m.journal_edit_section_note_creation())).toBeTruthy();
+      expect(screen.getByText(m.journal_edit_name_template_label())).toBeTruthy();
+      expect(screen.getByText(m.journal_edit_folder_label())).toBeTruthy();
+      expect(screen.getByText(m.journal_edit_confirm_creation_label())).toBeTruthy();
+      expect(screen.getByText(m.journal_edit_auto_create_label())).toBeTruthy();
+    });
+
+    it("persists nameTemplate edits through the reactive collection", async () => {
+      const { container, settings } = await setup();
+      mount(container, "daily");
+      const inputs = screen.getAllByRole("textbox");
+      const nameTemplateInput = inputs.find((element) => (element as HTMLInputElement).value === "{{date}}");
+      if (!nameTemplateInput) throw new Error("nameTemplate input not found");
+      await userEvent.clear(nameTemplateInput);
+      await userEvent.type(nameTemplateInput, "daily-note");
+      expect(settings.getCollection(journalConfigCollection).get("daily")?.nameTemplate).toBe("daily-note");
+    });
+
+    it("auto-create description mentions confirmation skip only when confirmCreation is on", async () => {
+      const { container, settings } = await setup();
+      mount(container, "daily");
+      expect(screen.queryByText(m.journal_edit_auto_create_confirmation_skip_note())).toBeNull();
+      const config = settings.getCollection(journalConfigCollection).get("daily")!;
+      config.confirmCreation = true;
+      await waitFor(() => {
+        expect(screen.getByText(m.journal_edit_auto_create_confirmation_skip_note())).toBeTruthy();
       });
     });
   });
