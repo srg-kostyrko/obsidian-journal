@@ -27,6 +27,8 @@ import FolderInput from "./FolderInput.vue";
 import FolderPathPreview from "./FolderPathPreview.vue";
 import NoteNamePreview from "./NoteNamePreview.vue";
 import { useAnchorField } from "./use-anchor-field";
+import { extractFromNameTemplate } from "./use-folder-extractor";
+import { useInvertibilityCheck } from "./use-invertibility-check";
 import VariableReferenceHint from "./VariableReferenceHint.vue";
 
 const { journalName, nav } = defineProps<{ journalName: string; nav: SubpageNav }>();
@@ -39,6 +41,13 @@ const config = computed<JournalConfig | undefined>(() => collection.get(journalN
 watchEffect(() => {
   if (!config.value) nav.back();
 });
+
+const nameTemplateRef = computed(() => config.value?.nameTemplate ?? "");
+const invertibility = useInvertibilityCheck(nameTemplateRef);
+
+function applyNameTemplateRecommendation(): void {
+  if (config.value) extractFromNameTemplate(config.value);
+}
 
 const writing = computed(() => {
   if (!config.value) return "";
@@ -152,6 +161,15 @@ function editSequenceKey(): void {
             :has-numbering="config.numbering.enabled"
           />
           <NoteNamePreview :journal-name="journalName" />
+          <div v-if="invertibility" class="journal-hint">
+            {{ m.journal_edit_name_template_invertibility_warning(invertibility) }}
+          </div>
+          <div v-if="config.nameTemplate.includes('/')" class="journal-recommendation">
+            {{ m.journal_edit_move_to_folder_recommendation_name_template() }}
+            <a href="#" @click.prevent="applyNameTemplateRecommendation">
+              {{ m.journal_edit_move_to_folder_apply_link() }}
+            </a>
+          </div>
         </template>
         <UiTextInput v-model="config.nameTemplate" />
       </UiSettingRow>
@@ -361,6 +379,10 @@ function editSequenceKey(): void {
 }
 .journal-hint {
   color: var(--text-warning);
+}
+.journal-recommendation {
+  color: var(--text-warning);
+  padding: var(--size-2-2) 0;
 }
 .journal-form-error {
   color: var(--text-error);

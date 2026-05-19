@@ -360,5 +360,47 @@ describe("JournalEditSubpage", () => {
         expect(screen.getByText(m.journal_edit_auto_create_confirmation_skip_note())).toBeTruthy();
       });
     });
+
+    it("shows the invertibility warning for non-invertible name templates", async () => {
+      const initial = {
+        version: 3,
+        journals: { daily: makeJournal("daily", { nameTemplate: "{{date}}-{{mystery}}" }) },
+      };
+      const { container } = await setup(initial);
+      mount(container, "daily");
+      expect(
+        screen.getByText(
+          m.journal_edit_name_template_invertibility_warning({
+            reason: "unknown-variable",
+            offending: "mystery",
+          }),
+        ),
+      ).toBeTruthy();
+    });
+
+    it("shows the move-to-folder recommendation when nameTemplate contains /", async () => {
+      const initial = {
+        version: 3,
+        journals: { daily: makeJournal("daily", { nameTemplate: "year/{{date}}" }) },
+      };
+      const { container } = await setup(initial);
+      mount(container, "daily");
+      expect(screen.getByText(m.journal_edit_move_to_folder_recommendation_name_template())).toBeTruthy();
+    });
+
+    it("apply-recommendation moves the path prefix from nameTemplate to folder", async () => {
+      const initial = {
+        version: 3,
+        journals: { daily: makeJournal("daily", { nameTemplate: "year/{{date}}", folder: "" }) },
+      };
+      const { container, settings } = await setup(initial);
+      mount(container, "daily");
+      const link = screen.getByRole("link", { name: m.journal_edit_move_to_folder_apply_link() });
+      await userEvent.click(link);
+      const config = settings.getCollection(journalConfigCollection).get("daily");
+      if (!config) throw new Error("daily journal disappeared");
+      expect(config.folder).toBe("year");
+      expect(config.nameTemplate).toBe("{{date}}");
+    });
   });
 });
