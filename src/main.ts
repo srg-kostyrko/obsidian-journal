@@ -10,6 +10,7 @@ import { journalsModule } from "@/journals/module";
 import { journalsSettingsModule } from "@/journals/settings/module";
 import { VaultSubscriptionService } from "@/journals/vault-subscription";
 import { settingsModule, SettingsService } from "@/settings";
+import { templatesModule } from "@/templates";
 
 export default class JournalPlugin extends Plugin {
   #container?: Container;
@@ -23,6 +24,7 @@ export default class JournalPlugin extends Plugin {
     container.addModule(createHostModule(this));
     container.addModule(settingsModule);
     container.addModule(CalendarModule);
+    container.addModule(templatesModule);
     container.addModule(calendarSettingsModule);
     container.addModule(journalsModule);
     container.addModule(journalsSettingsModule);
