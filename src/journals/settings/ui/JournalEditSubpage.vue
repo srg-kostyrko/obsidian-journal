@@ -27,7 +27,7 @@ import FolderInput from "./FolderInput.vue";
 import FolderPathPreview from "./FolderPathPreview.vue";
 import NoteNamePreview from "./NoteNamePreview.vue";
 import { useAnchorField } from "./use-anchor-field";
-import { extractFromNameTemplate } from "./use-folder-extractor";
+import { extractFromDateFormat, extractFromNameTemplate } from "./use-folder-extractor";
 import { useInvertibilityCheck } from "./use-invertibility-check";
 import VariableReferenceHint from "./VariableReferenceHint.vue";
 
@@ -47,6 +47,10 @@ const invertibility = useInvertibilityCheck(nameTemplateRef);
 
 function applyNameTemplateRecommendation(): void {
   if (config.value) extractFromNameTemplate(config.value);
+}
+
+function applyDateFormatRecommendation(): void {
+  if (config.value) extractFromDateFormat(config.value);
 }
 
 const writing = computed(() => {
@@ -318,6 +322,12 @@ function editSequenceKey(): void {
           {{ m.journal_edit_date_format_moment_doc_link() }}
         </a>
         <DateFormatPreview :format="config.dateFormat" />
+        <div v-if="config.dateFormat.includes('/')" class="journal-recommendation">
+          {{ m.journal_edit_move_to_folder_recommendation_date_format() }}
+          <a href="#" @click.prevent="applyDateFormatRecommendation">
+            {{ m.journal_edit_move_to_folder_apply_link() }}
+          </a>
+        </div>
       </template>
       <UiTextInput v-model="config.dateFormat" />
     </UiSettingRow>

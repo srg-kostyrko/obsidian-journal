@@ -403,4 +403,29 @@ describe("JournalEditSubpage", () => {
       expect(config.nameTemplate).toBe("{{date}}");
     });
   });
+
+  it("shows the move-to-folder recommendation when dateFormat contains /", async () => {
+    const initial = {
+      version: 3,
+      journals: { daily: makeJournal("daily", { dateFormat: "YYYY/MM/DD" }) },
+    };
+    const { container } = await setup(initial);
+    mount(container, "daily");
+    expect(screen.getByText(m.journal_edit_move_to_folder_recommendation_date_format())).toBeTruthy();
+  });
+
+  it("apply-recommendation moves the path prefix from dateFormat to folder", async () => {
+    const initial = {
+      version: 3,
+      journals: { daily: makeJournal("daily", { dateFormat: "YYYY/MM/DD", folder: "" }) },
+    };
+    const { container, settings } = await setup(initial);
+    mount(container, "daily");
+    const link = screen.getByRole("link", { name: m.journal_edit_move_to_folder_apply_link() });
+    await userEvent.click(link);
+    const config = settings.getCollection(journalConfigCollection).get("daily");
+    if (!config) throw new Error("daily journal disappeared");
+    expect(config.folder).toBe("{{date:YYYY}}/{{date:MM}}");
+    expect(config.dateFormat).toBe("DD");
+  });
 });
