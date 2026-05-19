@@ -75,6 +75,11 @@ export const journalConfigSchema = v.object({
   dateFormat: v.pipe(v.string(), v.minLength(1)),
   frontmatter: frontmatterFieldsSchema,
   numbering: numberingSchema,
+  nameTemplate: v.optional(v.string(), "{{date}}"),
+  folder: v.optional(v.string(), ""),
+  templates: v.optional(v.array(v.string()), []),
+  confirmCreation: v.optional(v.boolean(), false),
+  autoCreate: v.optional(v.boolean(), false),
 });
 
 export interface FixedWriteIntervals {
@@ -128,6 +133,11 @@ export interface JournalConfig {
   dateFormat: string;
   frontmatter: FrontmatterFields;
   numbering: JournalNumberingConfig;
+  nameTemplate: string;
+  folder: string;
+  templates: string[];
+  confirmCreation: boolean;
+  autoCreate: boolean;
 }
 
 // --- Defaults ---
@@ -178,6 +188,11 @@ export function journalDefaultsFor(write: JournalWrite, name = ""): JournalConfi
       addEndDate: false,
     },
     numbering: write.type === "custom" ? numberingForCustom : numberingForFixed,
+    nameTemplate: "{{date}}",
+    folder: "",
+    templates: [],
+    confirmCreation: false,
+    autoCreate: false,
   };
 }
 
