@@ -1,6 +1,5 @@
 import type { Modifier, Token, TokenStream, Unit } from "./types";
 
-const NAME_RE = /^[a-zA-Z_][a-zA-Z0-9_]*$/;
 const MODIFIER_RE = /^([+-])(\d+)([yqmwdh])$/;
 const BOUNDARY_RE = /^<(startOf|endOf)=([a-zA-Z]+)>$/;
 const KNOWN_UNITS: ReadonlySet<Unit> = new Set(["y", "q", "m", "w", "d", "h"]);
@@ -100,8 +99,6 @@ function parseTokenInner(inner: string, raw: string): Token | undefined {
     rest = "";
   }
   if (rest.trim().length > 0) return undefined;
-
-  if (!NAME_RE.test(name)) return undefined;
 
   if (argument !== undefined) {
     return { kind: "function", name, arg: argument, modifiers, format, raw };

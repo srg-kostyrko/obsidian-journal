@@ -76,7 +76,12 @@ describe("tokenize", () => {
   describe("function tokens", () => {
     it("parses a function with single argument", () => {
       const tokens = tokenize("{{journal_link(Daily)}}");
-      expect(tokens[0]).toMatchObject({ kind: "function", name: "journal_link", arg: "Daily" });
+      expect(tokens[0]).toMatchObject({
+        kind: "function",
+        name: "journal_link",
+        arg: "Daily",
+        raw: "{{journal_link(Daily)}}",
+      });
     });
 
     it("trims whitespace inside parens", () => {
@@ -107,7 +112,7 @@ describe("tokenize", () => {
     });
   });
 
-  describe("malformed tokens (v2 fidelity)", () => {
+  describe("malformed tokens", () => {
     it("treats an unclosed brace block as a literal up to end of input", () => {
       const tokens = tokenize("hello {{date");
       expect(tokens).toEqual([{ kind: "literal", text: "hello {{date" }]);
