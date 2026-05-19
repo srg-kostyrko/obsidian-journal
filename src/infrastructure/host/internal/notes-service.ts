@@ -81,6 +81,13 @@ export class NotesService {
     return this.#app.vault.getMarkdownFiles().map((file) => file.path as VaultPath);
   }
 
+  listFolders(): VaultPath[] {
+    return this.#app.vault
+      .getAllLoadedFiles()
+      .filter((file): file is TFolder => file instanceof TFolder)
+      .map((folder) => folder.path as VaultPath);
+  }
+
   create(path: VaultPath, content: string): AsyncResult<Note, NoteAlreadyExistsError | NoteCreateError> {
     if (this.#app.vault.getAbstractFileByPath(path)) {
       return AsyncResult.err(new NoteAlreadyExistsError(path));

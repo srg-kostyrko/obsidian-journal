@@ -44,6 +44,7 @@ export class FakeNotesService implements Pick<
   NotesService,
   | "find"
   | "listInFolder"
+  | "listFolders"
   | "allMarkdownNotes"
   | "create"
   | "read"
@@ -88,6 +89,10 @@ export class FakeNotesService implements Pick<
 
   allMarkdownNotes(): VaultPath[] {
     return [...this.#files.keys()];
+  }
+
+  listFolders(): VaultPath[] {
+    return [...this.#folders];
   }
 
   create(path: VaultPath, content: string): AsyncResult<Note, NoteAlreadyExistsError | NoteCreateError> {

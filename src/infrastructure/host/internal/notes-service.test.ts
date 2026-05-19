@@ -80,6 +80,16 @@ describe("NotesService", () => {
     });
   });
 
+  describe("listFolders", () => {
+    it("returns every loaded folder path including the root as empty string", () => {
+      const { service, host } = build();
+      host.putFolder("Daily");
+      host.putFolder("Daily/Archives");
+      host.putFolder("Other");
+      expect(service.listFolders().toSorted()).toEqual(["", "Daily", "Daily/Archives", "Other"]);
+    });
+  });
+
   describe("create", () => {
     it("creates the file with the given content", async () => {
       const { service, host } = build();

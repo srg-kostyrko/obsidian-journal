@@ -135,6 +135,9 @@ export function createFakeHost(): FakeHost {
     getMarkdownFiles(): TFile[] {
       return [...fileObjects.values()];
     },
+    getAllLoadedFiles(): (TFile | TFolder)[] {
+      return [...folderObjects.values(), ...fileObjects.values()];
+    },
     async create(path: string, content: string): Promise<TFile> {
       if (fileObjects.has(path)) throw new Error(`exists: ${path}`);
       ensureFolderChain(parentPath(path));
