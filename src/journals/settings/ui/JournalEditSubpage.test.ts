@@ -1,5 +1,5 @@
 import userEvent from "@testing-library/user-event";
-import { cleanup, render, screen, waitFor } from "@testing-library/vue";
+import { cleanup, render, screen, waitFor, within } from "@testing-library/vue";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
 import { DayPeriod, type OpenInterval } from "@/calendar";
@@ -159,8 +159,9 @@ describe("JournalEditSubpage", () => {
     const { container, settings } = await setup();
     mount(container, "daily");
     await userEvent.click(screen.getByText(m.journal_edit_section_sequential_numbers()));
-    const sequenceEnabledRow = screen.getByText(m.journal_edit_sequence_enabled_label()).closest(".setting-item")!;
-    const sequenceToggle = sequenceEnabledRow.querySelector("input[type='checkbox']")!;
+    const sequenceEnabledRow = screen.getByText(m.journal_edit_sequence_enabled_label()).closest(".setting-item");
+    if (!sequenceEnabledRow) throw new Error("sequence-enabled row not found");
+    const sequenceToggle = within(sequenceEnabledRow as HTMLElement).getByRole("checkbox");
     await userEvent.click(sequenceToggle);
     const config = settings.getCollection(journalConfigCollection).get("daily")!;
     expect(config.numbering.enabled).toBe(true);
@@ -341,9 +342,9 @@ describe("JournalEditSubpage", () => {
     it("persists nameTemplate edits through the reactive collection", async () => {
       const { container, settings } = await setup();
       mount(container, "daily");
-      const inputs = screen.getAllByRole("textbox");
-      const nameTemplateInput = inputs.find((element) => (element as HTMLInputElement).value === "{{date}}");
-      if (!nameTemplateInput) throw new Error("nameTemplate input not found");
+      const nameTemplateRow = screen.getByText(m.journal_edit_name_template_label()).closest(".setting-item");
+      if (!nameTemplateRow) throw new Error("name-template row not found");
+      const nameTemplateInput = within(nameTemplateRow as HTMLElement).getByRole("textbox");
       await userEvent.clear(nameTemplateInput);
       await userEvent.type(nameTemplateInput, "daily-note");
       expect(settings.getCollection(journalConfigCollection).get("daily")?.nameTemplate).toBe("daily-note");
