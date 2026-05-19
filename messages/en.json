@@ -145,6 +145,15 @@
   "journal_edit_start_writing_custom_locked": "Start date for custom intervals cannot be changed: it is used to count intervals from.",
   "journal_edit_start_writing_description": "New notes prior to this date won't be created.",
   "journal_edit_start_writing_label": "Start writing on",
+  "journal_edit_variable_date_description": "Today's date.",
+  "journal_edit_variable_date_format_description": "Today's date, formatted with the supplied moment.js format string.",
+  "journal_edit_variable_end_date_description": "End of the current period.",
+  "journal_edit_variable_journal_name_description": "The journal name (here: {name}).",
+  "journal_edit_variable_numbering_description": "The configured numbering variable (see the Sequence section).",
+  "journal_edit_variable_reference_intro": "Available variables. Date format defaults to {dateFormat} when no explicit format is given.",
+  "journal_edit_variable_reference_link": "Supported variables.",
+  "journal_edit_variable_reference_modal_title": "Variable reference",
+  "journal_edit_variable_start_date_description": "Start of the current period.",
   "journal_flow_failure": "Journal action failed ({kind}).",
   "journal_fm_field_label": [
     {
