@@ -120,6 +120,7 @@
   "journal_edit_fm_start_description": "For weekly journals that span two years, the start date can differ from the date property.",
   "journal_edit_fm_start_toggle_label": "Add start date property?",
   "journal_edit_header_title": "Configuring {name} (writing {writing})",
+  "journal_edit_note_name_preview_label": "Resolved note name:",
   "journal_edit_rename_tooltip": "Rename journal",
   "journal_edit_reset_count_suffix": "repeats",
   "journal_edit_reset_description": "How the number changes over time.",
