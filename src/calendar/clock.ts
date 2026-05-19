@@ -12,6 +12,12 @@ export class Clock {
     return new Clock(localMoment());
   }
 
+  static msUntilNextLocalMidnight(): number {
+    const now = localMoment();
+    const nextMidnight = now.clone().startOf("day").add(1, "day");
+    return nextMidnight.diff(now);
+  }
+
   format(pattern: string): string {
     return this.#moment.format(pattern);
   }
