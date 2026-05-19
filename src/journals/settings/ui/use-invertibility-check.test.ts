@@ -53,8 +53,6 @@ describe("useInvertibilityCheck", () => {
   });
 
   it("flags a template containing a function token", () => {
-    // Grammar parses `name(arg)` as a function token regardless of handlers installed.
-    // Any name with parentheses produces kind:"function" → not-invertible reason:"function-token".
     const { warning } = probe(ref("{{date}}-{{format(YYYY)}}"));
     expect(warning.value).toMatchObject({ reason: "function-token" });
   });
