@@ -4,9 +4,7 @@ import { inject } from "@/infrastructure/di";
 
 import { InternalObsidianAppToken, InternalPluginToken } from "../../internal/tokens";
 
-import type { InputSuggestDefinition } from "../types";
-
-export type Disposer = () => void;
+import type { Disposer, InputSuggestDefinition } from "../types";
 
 export class InputSuggestService {
   readonly #app = inject(InternalObsidianAppToken);
@@ -34,6 +32,7 @@ export class InputSuggestService {
         element.value = definition.toValue(item);
         element.dispatchEvent(new Event("input", { bubbles: true }));
         this.close();
+        attached.delete(this);
       }
     })(this.#app, element);
     attached.add(suggester);

@@ -10,3 +10,5 @@ export interface InputSuggestDefinition<TResult> {
   readonly toValue: (item: TResult) => string;
   readonly __result: (witness: never) => TResult;
 }
+
+export type Disposer = () => void;

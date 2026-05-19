@@ -33,7 +33,7 @@ describe("InputSuggestService", () => {
     const { service } = build();
     const input = document.createElement("input");
     service.attach(input, stringSuggest);
-    expect((obsidianTesting.attachedInputSuggests as unknown[]).length).toBe(1);
+    expect(obsidianTesting.attachedInputSuggests.length).toBe(1);
   });
 
   it("dispose detaches the suggester", () => {
@@ -41,7 +41,7 @@ describe("InputSuggestService", () => {
     const input = document.createElement("input");
     const dispose = service.attach(input, stringSuggest);
     dispose();
-    expect((obsidianTesting.attachedInputSuggests as unknown[]).length).toBe(0);
+    expect(obsidianTesting.attachedInputSuggests.length).toBe(0);
   });
 
   it("selection writes toValue into the element and dispatches an input event", () => {
@@ -65,6 +65,22 @@ describe("InputSuggestService", () => {
     const input = document.createElement("input");
     service.attach(input, stringSuggest);
     host.triggerUnload();
-    expect((obsidianTesting.attachedInputSuggests as unknown[]).length).toBe(0);
+    expect(obsidianTesting.attachedInputSuggests.length).toBe(0);
+  });
+
+  it("selection removes the suggester from the service's tracking", () => {
+    const { service } = build();
+    const input = document.createElement("input");
+    const dispose = service.attach(input, stringSuggest);
+    const attached = obsidianTesting.lastAttachedInputSuggest() as unknown as {
+      selectSuggestion: (item: string, event: MouseEvent) => void;
+    };
+    attached.selectSuggestion("alpha", new MouseEvent("click"));
+    // Calling dispose after selection should be idempotent and not attempt
+    // to close an already-released suggester. Without selectSuggestion's
+    // cleanup, dispose would still find the suggester in #attached and call
+    // close() on a stale reference.
+    expect(() => dispose()).not.toThrow();
+    expect(obsidianTesting.attachedInputSuggests.length).toBe(0);
   });
 });
