@@ -75,6 +75,9 @@ export const journalConfigSchema = v.object({
   dateFormat: v.pipe(v.string(), v.minLength(1)),
   frontmatter: frontmatterFieldsSchema,
   numbering: numberingSchema,
+  // Back-compat: existing settings tests and persisted configs predate these
+  // five fields. v.optional with a default lets old shapes parse cleanly until
+  // a migration is in place. Drop the optional wrappers once migration lands.
   nameTemplate: v.optional(v.string(), "{{date}}"),
   folder: v.optional(v.string(), ""),
   templates: v.optional(v.array(v.string()), []),

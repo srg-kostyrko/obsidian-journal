@@ -34,13 +34,10 @@ describe("journalConfigSchema", () => {
   it("accepts a config with the new fields populated", () => {
     const cfg = {
       ...journalDefaultsFor({ type: "day" }, "daily"),
+      // timeline.start and numbering.anchorDate default to "" which fails anchorString;
+      // supply valid dates until a migration populates these on load.
       timeline: { start: "2024-01-01", end: { kind: "never" as const } },
-      numbering: {
-        enabled: false,
-        anchorDate: "2024-01-01",
-        allowBefore: false,
-        sources: [],
-      },
+      numbering: { enabled: false, anchorDate: "2024-01-01", allowBefore: false, sources: [] },
       nameTemplate: "diary-{{date}}",
       folder: "Diary/{{date:YYYY}}",
       templates: ["Templates/daily.md"],
