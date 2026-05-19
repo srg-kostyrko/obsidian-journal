@@ -247,6 +247,7 @@ describe("JournalEditSubpage", () => {
     it("writes the picked date to timeline.start", async () => {
       const { container, settings, fakeModalService } = await setup();
       mount(container, "daily");
+      await userEvent.click(screen.getByText(m.journal_edit_section_timeline()));
       await userEvent.click(screen.getByRole("button", { name: "2024-01-01" }));
       fakeModalService.lastOpen<unknown, DayPeriod>().submit(DayPeriod.containing(date("2025-03-15")));
       await waitFor(() => {
@@ -265,6 +266,7 @@ describe("JournalEditSubpage", () => {
       };
       const { container, settings, fakeModalService } = await setup(initial);
       mount(container, "daily");
+      await userEvent.click(screen.getByText(m.journal_edit_section_timeline()));
       await userEvent.click(screen.getByRole("button", { name: "2024-06-01" }));
       fakeModalService.lastOpen<unknown, DayPeriod>().submit(DayPeriod.containing(date("2025-06-01")));
       await waitFor(() => {
@@ -284,6 +286,7 @@ describe("JournalEditSubpage", () => {
       };
       const { container, fakeModalService } = await setup(initial);
       mount(container, "daily");
+      await userEvent.click(screen.getByText(m.journal_edit_section_timeline()));
       await userEvent.click(screen.getByRole("button", { name: "2025-06-01" }));
       const handle = fakeModalService.lastOpen<{ bounds?: OpenInterval }, DayPeriod>();
       const boundsStart = handle.props.bounds?.start;
@@ -317,7 +320,8 @@ describe("JournalEditSubpage", () => {
       };
       const { container, settings, fakeModalService } = await setup(initial);
       mount(container, "daily");
-      // Clear start so the numbering anchor picker becomes visible
+      // Expand Timeline, clear start so the numbering anchor picker becomes visible
+      await userEvent.click(screen.getByText(m.journal_edit_section_timeline()));
       await userEvent.click(screen.getByLabelText(m.common_action_close()));
       await userEvent.click(screen.getByText(m.journal_edit_section_sequential_numbers()));
       await userEvent.click(screen.getByRole("button", { name: "2024-01-01" }));

@@ -65,7 +65,7 @@ const writing = computed(() => {
 
 const noteCreationOpen = ref(true);
 const templatesOpen = ref(false);
-const timelineOpen = ref(true);
+const timelineOpen = ref(false);
 const sequenceOpen = ref(false);
 const frontmatterOpen = ref(false);
 
@@ -221,6 +221,58 @@ function editSequenceKey(): void {
       </UiSettingRow>
     </UiCollapsibleBlock>
 
+    <UiSettingRow :name="m.journal_edit_date_format_label()">
+      <template #description>
+        <div>{{ m.journal_edit_date_format_description({ "{date": config.dateFormat }) }}</div>
+        <a target="_blank" href="https://momentjs.com/docs/#/displaying/format/">
+          {{ m.journal_edit_date_format_moment_doc_link() }}
+        </a>
+        <DateFormatPreview :format="config.dateFormat" />
+        <div v-if="config.dateFormat.includes('/')" class="journal-recommendation">
+          {{ m.journal_edit_move_to_folder_recommendation_date_format() }}
+          <a href="#" @click.prevent="applyDateFormatRecommendation">
+            {{ m.journal_edit_move_to_folder_apply_link() }}
+          </a>
+        </div>
+      </template>
+      <UiTextInput v-model="config.dateFormat" />
+    </UiSettingRow>
+
+    <UiCollapsibleBlock v-model:expanded="templatesOpen">
+      <template #trigger>
+        <UiIconedRow icon="notepad-text-dashed">
+          {{ m.journal_edit_section_templates() }}
+          <span class="flair">{{ config.templates.length }}</span>
+        </UiIconedRow>
+      </template>
+      <template #controls>
+        <UiButton @click="addTemplate">{{ m.journal_edit_template_add_button() }}</UiButton>
+      </template>
+
+      <UiSettingRow>
+        <template #description>
+          <div>{{ m.journal_edit_templates_description() }}</div>
+          <VariableReferenceHint
+            :journal-name="journalName"
+            :date-format="config.dateFormat"
+            :has-numbering="config.numbering.enabled"
+          />
+        </template>
+      </UiSettingRow>
+
+      <template v-for="(_path, index) in config.templates" :key="index">
+        <UiSettingRow>
+          <FileInput v-model="config.templates[index]" :placeholder="m.journal_edit_template_path_placeholder()" />
+          <UiIconButton
+            icon="trash"
+            :tooltip="m.journal_edit_template_remove_tooltip()"
+            @click="removeTemplate(index)"
+          />
+        </UiSettingRow>
+        <TemplatePathPreview :journal-name="journalName" :path="config.templates[index] ?? ''" />
+      </template>
+    </UiCollapsibleBlock>
+
     <UiCollapsibleBlock v-model:expanded="timelineOpen">
       <template #trigger>
         <span class="journal-section-heading">
@@ -328,58 +380,6 @@ function editSequenceKey(): void {
             @click="editSequenceKey"
           />
         </UiSettingRow>
-      </template>
-    </UiCollapsibleBlock>
-
-    <UiSettingRow :name="m.journal_edit_date_format_label()">
-      <template #description>
-        <div>{{ m.journal_edit_date_format_description({ "{date": config.dateFormat }) }}</div>
-        <a target="_blank" href="https://momentjs.com/docs/#/displaying/format/">
-          {{ m.journal_edit_date_format_moment_doc_link() }}
-        </a>
-        <DateFormatPreview :format="config.dateFormat" />
-        <div v-if="config.dateFormat.includes('/')" class="journal-recommendation">
-          {{ m.journal_edit_move_to_folder_recommendation_date_format() }}
-          <a href="#" @click.prevent="applyDateFormatRecommendation">
-            {{ m.journal_edit_move_to_folder_apply_link() }}
-          </a>
-        </div>
-      </template>
-      <UiTextInput v-model="config.dateFormat" />
-    </UiSettingRow>
-
-    <UiCollapsibleBlock v-model:expanded="templatesOpen">
-      <template #trigger>
-        <UiIconedRow icon="notepad-text-dashed">
-          {{ m.journal_edit_section_templates() }}
-          <span class="flair">{{ config.templates.length }}</span>
-        </UiIconedRow>
-      </template>
-      <template #controls>
-        <UiButton @click="addTemplate">{{ m.journal_edit_template_add_button() }}</UiButton>
-      </template>
-
-      <UiSettingRow>
-        <template #description>
-          <div>{{ m.journal_edit_templates_description() }}</div>
-          <VariableReferenceHint
-            :journal-name="journalName"
-            :date-format="config.dateFormat"
-            :has-numbering="config.numbering.enabled"
-          />
-        </template>
-      </UiSettingRow>
-
-      <template v-for="(_path, index) in config.templates" :key="index">
-        <UiSettingRow>
-          <FileInput v-model="config.templates[index]" :placeholder="m.journal_edit_template_path_placeholder()" />
-          <UiIconButton
-            icon="trash"
-            :tooltip="m.journal_edit_template_remove_tooltip()"
-            @click="removeTemplate(index)"
-          />
-        </UiSettingRow>
-        <TemplatePathPreview :journal-name="journalName" :path="config.templates[index] ?? ''" />
       </template>
     </UiCollapsibleBlock>
 
