@@ -10,7 +10,7 @@ declare module "@vue/reactivity" {
 
 // Augment the obsidian module to expose the __testing registry used in unit tests.
 // The actual implementation lives in __mocks__/obsidian.ts (aliased by vitest).
-import type { Modal, SuggestModal } from "obsidian";
+import type { AbstractInputSuggest, Modal, SuggestModal } from "obsidian";
 
 declare module "obsidian" {
   export const __testing: {
@@ -18,6 +18,8 @@ declare module "obsidian" {
     lastOpenModal(): Modal;
     readonly openSuggestModals: readonly SuggestModal<unknown>[];
     lastOpenSuggestModal(): SuggestModal<unknown>;
+    readonly attachedInputSuggests: readonly AbstractInputSuggest<unknown>[];
+    lastAttachedInputSuggest(): AbstractInputSuggest<unknown>;
     reset(): void;
   };
 }
