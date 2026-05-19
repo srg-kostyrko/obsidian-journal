@@ -25,17 +25,6 @@ export type BoundValue =
 
 export type Bindings = ReadonlyMap<string, BoundValue>;
 
-export interface FunctionInput {
-  arg: string;
-  sourceDate: CalendarDate;
-  format?: string;
-  ctx: TemplateContext;
-  engine: TemplateEngine;
-}
-
-export type TemplateContext = unknown;
-export type TemplateEngine = unknown;
-
 export interface ValidationProblem {
   token: Token;
   position: number;
