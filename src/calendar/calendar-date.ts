@@ -68,30 +68,31 @@ export class CalendarDate {
   }
 
   shift(amount: number, unit: "y" | "q" | "m" | "w" | "d" | "h"): CalendarDate {
+    // CalendarDate has day-level precision; hour shifts are accepted for grammar parity but ignored.
     if (unit === "h") return this;
     // moment uses uppercase "M"/"Q"; map from domain shorthand
     const unitMap = { y: "y", q: "Q", m: "M", w: "w", d: "d" } as const;
-    const moment = localMoment(this.#anchor, ANCHOR_FORMAT, true).add(amount, unitMap[unit]);
-    return CalendarDate._fromMoment(moment);
+    const m = localMoment(this.#anchor, ANCHOR_FORMAT, true).add(amount, unitMap[unit]);
+    return CalendarDate._fromMoment(m);
   }
 
   startOf(unit: "year" | "quarter" | "month" | "week" | "day" | "decade"): CalendarDate {
     if (unit === "decade") {
-      const moment = localMoment(this.#anchor, ANCHOR_FORMAT, true);
-      const startYear = moment.year() - (moment.year() % 10);
-      return CalendarDate._fromMoment(moment.year(startYear).startOf("year"));
+      const m = localMoment(this.#anchor, ANCHOR_FORMAT, true);
+      const startYear = m.year() - (m.year() % 10);
+      return CalendarDate._fromMoment(m.year(startYear).startOf("year"));
     }
-    const moment = localMoment(this.#anchor, ANCHOR_FORMAT, true).startOf(unit);
-    return CalendarDate._fromMoment(moment);
+    const m = localMoment(this.#anchor, ANCHOR_FORMAT, true).startOf(unit);
+    return CalendarDate._fromMoment(m);
   }
 
   endOf(unit: "year" | "quarter" | "month" | "week" | "day" | "decade"): CalendarDate {
     if (unit === "decade") {
-      const moment = localMoment(this.#anchor, ANCHOR_FORMAT, true);
-      const endYear = moment.year() + (9 - (moment.year() % 10));
-      return CalendarDate._fromMoment(moment.year(endYear).endOf("year"));
+      const m = localMoment(this.#anchor, ANCHOR_FORMAT, true);
+      const endYear = m.year() + (9 - (m.year() % 10));
+      return CalendarDate._fromMoment(m.year(endYear).endOf("year"));
     }
-    const moment = localMoment(this.#anchor, ANCHOR_FORMAT, true).endOf(unit);
-    return CalendarDate._fromMoment(moment);
+    const m = localMoment(this.#anchor, ANCHOR_FORMAT, true).endOf(unit);
+    return CalendarDate._fromMoment(m);
   }
 }

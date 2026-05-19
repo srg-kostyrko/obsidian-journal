@@ -165,7 +165,7 @@ describe("CalendarDate", () => {
       ["q", -1, "2021-10-01"],
       ["y", 1, "2023-01-01"],
       ["y", -1, "2021-01-01"],
-    ] as const)("supports %s by %i", (unit, amount, expected) => {
+    ] as const)("shifts the date by %i %s", (unit, amount, expected) => {
       const result = CalendarDate.fromAnchor(anchor("2022-01-01")).shift(amount, unit);
       expect(result.toAnchor()).toBe(expected);
     });
@@ -183,6 +183,8 @@ describe("CalendarDate", () => {
       ["quarter", "2022-01-04", "2022-01-01"],
       ["year", "2022-01-04", "2022-01-01"],
       ["decade", "2022-01-04", "2020-01-01"],
+      ["decade", "2020-06-15", "2020-01-01"],
+      ["decade", "2029-06-15", "2020-01-01"],
       ["day", "2022-01-04", "2022-01-04"],
     ] as const)("snaps to start of %s", (unit, input, expected) => {
       const result = CalendarDate.fromAnchor(anchor(input)).startOf(unit);
@@ -197,6 +199,8 @@ describe("CalendarDate", () => {
       ["quarter", "2022-01-04", "2022-03-31"],
       ["year", "2022-01-04", "2022-12-31"],
       ["decade", "2022-01-04", "2029-12-31"],
+      ["decade", "2020-06-15", "2029-12-31"],
+      ["decade", "2029-06-15", "2029-12-31"],
       ["day", "2022-01-04", "2022-01-04"],
     ] as const)("snaps to end of %s", (unit, input, expected) => {
       const result = CalendarDate.fromAnchor(anchor(input)).endOf(unit);
