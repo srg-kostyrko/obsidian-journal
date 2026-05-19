@@ -6,6 +6,7 @@ import type { OpenInterval, Period } from "@/calendar";
 import { m } from "@/i18n";
 import { useService } from "@/infrastructure/di";
 import { ModalService } from "@/infrastructure/host/modals";
+import UiButton from "@/ui/UiButton.vue";
 
 import { datePickerModalDefinition } from "./date-picker-modal-definition";
 
@@ -51,7 +52,7 @@ async function open(): Promise<void> {
 </script>
 
 <template>
-  <button type="button" class="date-picker-trigger" :disabled="disabled" @click="open">
+  <UiButton class="date-picker-trigger" :disabled="disabled" @click="open">
     {{ label }}
-  </button>
+  </UiButton>
 </template>

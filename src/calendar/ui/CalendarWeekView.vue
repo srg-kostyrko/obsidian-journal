@@ -3,6 +3,7 @@ import { computed, toRaw } from "vue";
 
 import { CalendarDate } from "@/calendar";
 import type { MonthPeriod, OpenInterval, Period, WeekPeriod } from "@/calendar";
+import UiButton from "@/ui/UiButton.vue";
 
 import CalendarGrid from "./CalendarGrid.vue";
 import { useCalendarGrid } from "./use-calendar-grid";
@@ -30,10 +31,9 @@ const grid = useCalendarGrid({
 
 <template>
   <CalendarGrid :columns="1">
-    <button
+    <UiButton
       v-for="cell in grid"
       :key="cell.key"
-      type="button"
       data-testid="week-cell"
       :data-anchor="cell.period.anchor.toAnchor()"
       :data-selected="cell.isSelected || null"
@@ -43,6 +43,6 @@ const grid = useCalendarGrid({
     >
       <span>{{ cell.label }}</span>
       <span>{{ cell.period.format("MMM D") }} – {{ (cell.period as WeekPeriod).end.format("MMM D") }}</span>
-    </button>
+    </UiButton>
   </CalendarGrid>
 </template>

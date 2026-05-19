@@ -3,6 +3,7 @@ import { computed, toRaw } from "vue";
 
 import { CalendarDate } from "@/calendar";
 import type { MonthPeriod, OpenInterval, Period, YearPeriod } from "@/calendar";
+import UiButton from "@/ui/UiButton.vue";
 
 import CalendarGrid from "./CalendarGrid.vue";
 import { useCalendarGrid } from "./use-calendar-grid";
@@ -30,10 +31,9 @@ const grid = useCalendarGrid({
 
 <template>
   <CalendarGrid :columns="3">
-    <button
+    <UiButton
       v-for="cell in grid"
       :key="cell.key"
-      type="button"
       data-testid="year-cell"
       :data-selected="cell.isSelected || null"
       :data-today="cell.isToday || null"
@@ -41,6 +41,6 @@ const grid = useCalendarGrid({
       @click="emit('select', cell.period as MonthPeriod)"
     >
       {{ cell.label }}
-    </button>
+    </UiButton>
   </CalendarGrid>
 </template>

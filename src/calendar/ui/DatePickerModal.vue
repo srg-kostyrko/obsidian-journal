@@ -4,6 +4,8 @@ import { computed, ref, toRaw } from "vue";
 
 import { CalendarDate, DecadePeriod, MonthPeriod, type OpenInterval, type Period, YearPeriod } from "@/calendar";
 import { useModal } from "@/infrastructure/host/modals";
+import UiButton from "@/ui/UiButton.vue";
+import UiIconButton from "@/ui/UiIconButton.vue";
 
 import CalendarDecadeView from "./CalendarDecadeView.vue";
 import CalendarMonthView from "./CalendarMonthView.vue";
@@ -121,12 +123,18 @@ function onCellSelect(cell: Period): void {
 <template>
   <div class="date-picker-modal">
     <div class="date-picker-modal__header">
-      <button v-if="canPrevious" type="button" data-testid="modal-prev" @click="onPrevious">&lsaquo;</button>
-      <button v-if="canAscend !== null" type="button" data-testid="modal-title-button" @click="onTitleClick">
+      <UiIconButton v-if="canPrevious" icon="chevron-left" data-testid="modal-prev" @click="onPrevious" />
+      <UiButton
+        v-if="canAscend !== null"
+        flat
+        class="date-picker-modal__title-button"
+        data-testid="modal-title-button"
+        @click="onTitleClick"
+      >
         <span data-testid="modal-title-label">{{ titleLabel }}</span>
-      </button>
+      </UiButton>
       <span v-else data-testid="modal-title-label">{{ titleLabel }}</span>
-      <button v-if="canNext" type="button" data-testid="modal-next" @click="onNext">&rsaquo;</button>
+      <UiIconButton v-if="canNext" icon="chevron-right" data-testid="modal-next" @click="onNext" />
     </div>
     <div class="date-picker-modal__body">
       <CalendarMonthView
@@ -175,5 +183,8 @@ function onCellSelect(cell: Period): void {
   justify-content: space-between;
   gap: 8px;
   margin-bottom: 8px;
+}
+.date-picker-modal__title-button {
+  width: auto;
 }
 </style>

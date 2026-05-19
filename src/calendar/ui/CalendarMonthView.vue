@@ -4,6 +4,7 @@ import { computed, toRaw } from "vue";
 import { Calendar, CalendarDate, DayPeriod } from "@/calendar";
 import type { MonthPeriod, OpenInterval, Period } from "@/calendar";
 import { useService } from "@/infrastructure/di";
+import UiButton from "@/ui/UiButton.vue";
 
 import CalendarGrid from "./CalendarGrid.vue";
 import { useCalendarGrid } from "./use-calendar-grid";
@@ -47,10 +48,9 @@ const grid = useCalendarGrid({
         >{{ day.slice(0, 3) }}</span
       >
     </div>
-    <button
+    <UiButton
       v-for="cell in grid"
       :key="cell.key"
-      type="button"
       data-testid="month-cell"
       :data-anchor="cell.period.start.toAnchor()"
       :data-selected="cell.isSelected || null"
@@ -60,7 +60,7 @@ const grid = useCalendarGrid({
       @click="emit('select', cell.period as DayPeriod)"
     >
       {{ cell.label }}
-    </button>
+    </UiButton>
   </CalendarGrid>
 </template>
 
