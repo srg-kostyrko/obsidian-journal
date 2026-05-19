@@ -1,0 +1,54 @@
+import { SuggestModal } from "obsidian";
+
+import { inject } from "@/infrastructure/di";
+import { AsyncResult } from "@/infrastructure/result";
+
+import { InternalObsidianAppToken, InternalPluginToken } from "../../internal/tokens";
+import { SuggestCancelled } from "../errors";
+
+import type { SuggestDefinition } from "../types";
+
+export class SuggestService {
+  readonly #app = inject(InternalObsidianAppToken);
+  readonly #plugin = inject(InternalPluginToken);
+  readonly #open = new Set<SuggestModal<unknown>>();
+
+  constructor() {
+    this.#plugin.register(() => {
+      for (const modal of this.#open) modal.close();
+    });
+  }
+
+  open<TInput, TResult>(
+    definition: SuggestDefinition<TInput, TResult>,
+    input: TInput,
+  ): AsyncResult<TResult, SuggestCancelled> {
+    return AsyncResult.fromPromise(
+      new Promise<TResult>((resolve, reject) => {
+        const openSet = this.#open;
+        const modal = new (class extends SuggestModal<TResult> {
+          #picked = false;
+          getSuggestions(query: string): TResult[] | Promise<TResult[]> {
+            return definition.fetch(query, input);
+          }
+          renderSuggestion(item: TResult, element: HTMLElement): void {
+            const rendered = definition.render(item, element);
+            if (typeof rendered === "string") element.setText(rendered);
+          }
+          onChooseSuggestion(item: TResult): void {
+            this.#picked = true;
+            resolve(item);
+          }
+          onClose(): void {
+            openSet.delete(this);
+            if (!this.#picked) reject(new SuggestCancelled());
+          }
+        })(this.#app);
+        if (definition.placeholder) modal.setPlaceholder(definition.placeholder(input));
+        openSet.add(modal);
+        modal.open();
+      }),
+      (cause) => (cause instanceof SuggestCancelled ? cause : new SuggestCancelled()),
+    );
+  }
+}

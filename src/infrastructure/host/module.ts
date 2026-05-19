@@ -5,6 +5,7 @@ import { PluginData } from "./internal/plugin-data";
 import { InternalObsidianAppToken, InternalPluginToken } from "./internal/tokens";
 import { WorkspaceService } from "./internal/workspace-service";
 import { modalsModule } from "./modals/module";
+import { SuggestService } from "./suggests/internal/suggest-service";
 
 import type { Plugin } from "obsidian";
 
@@ -16,6 +17,7 @@ export function createHostModule(plugin: Plugin): Module {
       c.register(NotesService).useClass(NotesService).eager();
       c.register(WorkspaceService).useClass(WorkspaceService).eager();
       c.register(PluginData).useClass(PluginData);
+      c.register(SuggestService).useClass(SuggestService);
       modalsModule.register(c);
     },
   };

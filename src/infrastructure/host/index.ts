@@ -26,6 +26,13 @@ export {
   type ModalDefinition,
   type ModalDefinitionInput,
 } from "./modals";
+export {
+  defineSuggest,
+  SuggestCancelled,
+  SuggestService,
+  type SuggestDefinition,
+  type SuggestDefinitionInput,
+} from "./suggests";
 export { createHostModule } from "./module";
 export type { Note, NotesEvents, OpenMode, VaultPath, WorkspaceEvents } from "./types";
 export { InternalObsidianAppToken, InternalPluginToken } from "./internal/tokens";
