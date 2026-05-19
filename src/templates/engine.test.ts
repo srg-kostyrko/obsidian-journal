@@ -1,9 +1,20 @@
 import { afterEach, beforeEach, describe, expect, it } from "vitest";
 
-import { installTestCalendar } from "@/calendar/testing";
+import { CalendarDate } from "@/calendar";
+import { anchor, installTestCalendar } from "@/calendar/testing";
 import { Ok } from "@/infrastructure/result";
+import { expectErr, expectOk } from "@/infrastructure/result/testing";
 
+import { TemplateContext } from "./context";
+import { tokenize } from "./grammar";
 import { buildFakeContext, FakeHandler, installTestEngine } from "./testing";
+
+import type { BoundValue } from "./types";
+
+function asDateBinding(bound: BoundValue | undefined): CalendarDate {
+  if (bound?.kind !== "date") throw new Error("expected date binding");
+  return bound.value;
+}
 
 describe("TemplateEngine.renderString", () => {
   let teardown: () => void;
@@ -94,6 +105,105 @@ describe("TemplateEngine.renderString", () => {
       const handler = new FakeHandler("show_date", (input) => new Ok(input.sourceDate.toAnchor()));
       const engine = installTestEngine([handler]);
       expect(engine.renderString("{{show_date(x)+1w}}", buildFakeContext())).toBe("2022-01-12");
+    });
+  });
+});
+
+describe("TemplateEngine.parse", () => {
+  let teardown: () => void;
+  beforeEach(() => {
+    ({ teardown } = installTestCalendar());
+  });
+  afterEach(() => {
+    teardown();
+  });
+
+  it("parses a single date variable from a path", () => {
+    const engine = installTestEngine();
+    const context = buildFakeContext();
+    const result = engine.parse(tokenize("{{date:YYYY-MM-DD}}.md"), "2022-01-05.md", context);
+    expectOk(result);
+    expect(asDateBinding(result.value.get("date")).toAnchor()).toBe("2022-01-05");
+  });
+
+  it("un-applies modifiers during parse", () => {
+    const engine = installTestEngine();
+    const context = buildFakeContext();
+    const result = engine.parse(tokenize("{{date+1w:YYYY-MM-DD}}.md"), "2022-01-12.md", context);
+    expectOk(result);
+    expect(asDateBinding(result.value.get("date")).toAnchor()).toBe("2022-01-05");
+  });
+
+  it("parses index and date from a multi-variable name", () => {
+    const engine = installTestEngine();
+    const context = buildFakeContext();
+    const stream = tokenize("Sprint {{index}} - {{date:YYYY-MM-DD}}.md");
+    const result = engine.parse(stream, "Sprint 7 - 2022-01-05.md", context);
+    expectOk(result);
+    expect(result.value.get("index")).toEqual({ kind: "number", value: 7 });
+    expect(asDateBinding(result.value.get("date")).toAnchor()).toBe("2022-01-05");
+  });
+
+  it("treats current_date as a wildcard (no capture)", () => {
+    const engine = installTestEngine();
+    const context = buildFakeContext().date(
+      "current_date",
+      CalendarDate.fromAnchor(anchor("2022-01-05")),
+      "YYYY-MM-DD",
+    );
+    const stream = tokenize("{{date:YYYY-MM-DD}}-{{current_date:YYYY-MM-DD}}.md");
+    const result = engine.parse(stream, "2022-01-05-anything-here.md", context);
+    expectOk(result);
+    expect(result.value.has("current_date")).toBe(false);
+  });
+
+  it("returns no-match when literal text does not match", () => {
+    const engine = installTestEngine();
+    const result = engine.parse(tokenize("prefix-{{date:YYYY-MM-DD}}.md"), "other-2022-01-05.md", buildFakeContext());
+    expectErr(result);
+    expect(result.error.detail.kind).toBe("no-match");
+  });
+
+  it("returns invalid-date when capture cannot be parsed strictly", () => {
+    const engine = installTestEngine();
+    const context = buildFakeContext();
+    const result = engine.parse(tokenize("{{date:YYYY-MM-DD}}.md"), "9999-99-99.md", context);
+    expectErr(result);
+    expect(["invalid-date", "no-match"]).toContain(result.error.detail.kind);
+  });
+
+  it("returns not-invertible for templates containing function tokens", () => {
+    const engine = installTestEngine([FakeHandler.fixed("greet", "x")]);
+    const result = engine.parse(tokenize("{{greet(arg)}}.md"), "x.md", buildFakeContext());
+    expectErr(result);
+    expect(result.error.detail.kind).toBe("not-invertible");
+  });
+
+  it("returns not-invertible for unknown variables", () => {
+    const engine = installTestEngine();
+    const context = TemplateContext.empty();
+    const result = engine.parse(tokenize("{{date:YYYY-MM-DD}}.md"), "2022-01-05.md", context);
+    expectErr(result);
+    expect(result.error.detail.kind).toBe("not-invertible");
+  });
+
+  describe("multi-binding resolution", () => {
+    it("resolves consistent boundary captures to start-of-range source", () => {
+      const engine = installTestEngine();
+      const context = buildFakeContext();
+      const stream = tokenize("{{date<startOf=week>:YYYY-MM-DD}}-{{date<endOf=week>:YYYY-MM-DD}}.md");
+      const result = engine.parse(stream, "2022-01-03-2022-01-09.md", context);
+      expectOk(result);
+      expect(asDateBinding(result.value.get("date")).toAnchor()).toBe("2022-01-03");
+    });
+
+    it("returns conflict for inconsistent captures of same variable", () => {
+      const engine = installTestEngine();
+      const context = buildFakeContext();
+      const stream = tokenize("{{date:YYYY-MM-DD}}-{{date:YYYY-MM-DD}}.md");
+      const result = engine.parse(stream, "2022-01-05-2022-02-10.md", context);
+      expectErr(result);
+      expect(result.error.detail.kind).toBe("conflict");
     });
   });
 });
