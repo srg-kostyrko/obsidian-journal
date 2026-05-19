@@ -53,11 +53,14 @@ describe("AutoAttachService", () => {
     });
     const notes = new FakeNotesService();
     const container = build(settings, notes);
+    const spy = vi.spyOn(container.resolve(NoteCreationService), "attachNote");
     await container.resolve(AutoAttachService).initialize();
     await notes.create("2026-05-19.md" as VaultPath, "");
     await new Promise((r) => window.setTimeout(r, 0));
-    const index = container.resolve(JournalsIndex);
-    expect(index.entryByPath("2026-05-19.md" as VaultPath).isSome()).toBe(true);
+    expect(spy).toHaveBeenCalledTimes(1);
+    expect(spy.mock.calls[0]?.[0]).toBe("daily");
+    expect(spy.mock.calls[0]?.[1]).toBe("2026-05-19.md");
+    expect(spy.mock.calls[0]?.[2]).toMatchObject({ journalName: "daily", anchor: "2026-05-19" });
   });
 
   it("does nothing for a path that doesn't match any journal", async () => {

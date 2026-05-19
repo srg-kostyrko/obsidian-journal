@@ -73,7 +73,6 @@ export class AutoAttachService {
     if (result.isErr()) {
       this.#logger.error("auto-attach failed", { path, error: result.error });
     } else {
-      this.#index.register({ ...match.metadata, path });
       this.#logger.info("auto-attach succeeded", { path, journal: match.name });
     }
   }
