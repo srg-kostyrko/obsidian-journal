@@ -1,0 +1,90 @@
+import { afterEach, beforeEach, describe, it, expect, vi } from "vitest";
+
+import { installTestCalendar } from "@/calendar/testing";
+import { Container } from "@/infrastructure/di";
+import { NotesService } from "@/infrastructure/host";
+import type { VaultPath } from "@/infrastructure/host";
+import { ModalService } from "@/infrastructure/host/modals";
+import { FakeModalService } from "@/infrastructure/host/modals/testing";
+import { FakeNotesService } from "@/infrastructure/host/testing";
+import { LoggerModule } from "@/infrastructure/logger";
+import { SettingsService } from "@/settings";
+import { TemplateEngine } from "@/templates";
+
+import { CycleService } from "../cycle";
+import { FrontmatterService } from "../frontmatter";
+import { JournalsIndex } from "../journals-index";
+import { NumberingService } from "../numbering";
+import { fakeSettings, fixedJournal } from "../testing";
+
+import { AutoCreateService } from "./auto-create";
+import { NoteCreationService } from "./note-creation";
+import { NotePathService } from "./note-path";
+import { TemplateContentService } from "./template-content";
+
+function build(settings: SettingsService, notes: FakeNotesService): Container {
+  const c = new Container();
+  c.addModule(LoggerModule);
+  c.register(SettingsService).useValue(settings);
+  c.register(NotesService).useValue(notes as unknown as NotesService);
+  c.register(ModalService).useValue(new FakeModalService() as unknown as ModalService);
+  c.register(JournalsIndex).useClass(JournalsIndex);
+  c.register(CycleService).useClass(CycleService);
+  c.register(NumberingService).useClass(NumberingService);
+  c.register(FrontmatterService).useClass(FrontmatterService);
+  c.register(TemplateEngine).useClass(TemplateEngine);
+  c.register(NotePathService).useClass(NotePathService);
+  c.register(TemplateContentService).useClass(TemplateContentService);
+  c.register(NoteCreationService).useClass(NoteCreationService);
+  c.register(AutoCreateService).useClass(AutoCreateService);
+  return c;
+}
+
+describe("AutoCreateService", () => {
+  let teardown: () => void;
+  beforeEach(() => {
+    ({ teardown } = installTestCalendar());
+    vi.useFakeTimers();
+    vi.setSystemTime(new Date(2026, 4, 19, 9, 0, 0));
+  });
+  afterEach(() => {
+    teardown();
+    vi.useRealTimers();
+  });
+
+  it("creates today's note for journals with autoCreate=true", async () => {
+    const settings = fakeSettings({
+      daily: fixedJournal("daily", { type: "day" }, { autoCreate: true }),
+      monthly: fixedJournal("monthly", { type: "month" }, { autoCreate: false }),
+    });
+    const notes = new FakeNotesService();
+    const container = build(settings, notes);
+    await container.resolve(AutoCreateService).initialize();
+    await vi.advanceTimersByTimeAsync(0);
+    expect(notes.find("2026-05-19.md" as VaultPath).isSome()).toBe(true);
+    expect(notes.find("2026-05.md" as VaultPath).isNone()).toBe(true);
+  });
+
+  it("re-ticks at the next local midnight", async () => {
+    const settings = fakeSettings({ daily: fixedJournal("daily", { type: "day" }, { autoCreate: true }) });
+    const notes = new FakeNotesService();
+    const container = build(settings, notes);
+    await container.resolve(AutoCreateService).initialize();
+    await vi.advanceTimersByTimeAsync(0);
+    expect(notes.find("2026-05-19.md" as VaultPath).isSome()).toBe(true);
+    await vi.advanceTimersByTimeAsync(15 * 60 * 60 * 1000);
+    expect(notes.find("2026-05-20.md" as VaultPath).isSome()).toBe(true);
+  });
+
+  it("stops ticking after dispose", async () => {
+    const settings = fakeSettings({ daily: fixedJournal("daily", { type: "day" }, { autoCreate: true }) });
+    const notes = new FakeNotesService();
+    const container = build(settings, notes);
+    const service = container.resolve(AutoCreateService);
+    await service.initialize();
+    await service[Symbol.asyncDispose]();
+    await vi.advanceTimersByTimeAsync(24 * 60 * 60 * 1000);
+    expect(notes.find("2026-05-19.md" as VaultPath).isSome()).toBe(true);
+    expect(notes.find("2026-05-20.md" as VaultPath).isNone()).toBe(true);
+  });
+});
