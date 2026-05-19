@@ -52,6 +52,11 @@
   "common_action_close": "Close",
   "common_action_submit": "Save",
 
+  "confirm_note_creation_body": "Create '{noteName}' in journal '{journalName}'?",
+  "confirm_note_creation_cancel": "Cancel",
+  "confirm_note_creation_confirm": "Create",
+  "confirm_note_creation_title": "Create a new journal note?",
+
   "journal_add_modal_anchor_description": "This date is used to count custom intervals from. It cannot be changed after creating the journal.",
   "journal_add_modal_anchor_label": "Start date",
   "journal_add_modal_anchor_required_error": "Select a start date.",
@@ -166,6 +171,7 @@
   "journal_name_required_error": "Journal name is required.",
   "journal_name_unique_error": "Journal name must be unique.",
   "journal_notes_not_rewritten_hint": "Existing notes are not rewritten. You may need to update them manually.",
+  "journal_picker_placeholder": "Search journals",
   "journal_property_modal_current_label": "Current name",
   "journal_property_modal_new_label": "New name",
   "journal_property_name_required": "Property name is required.",
