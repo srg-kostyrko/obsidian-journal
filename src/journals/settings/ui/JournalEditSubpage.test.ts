@@ -33,8 +33,11 @@ import JournalEditSubpage from "./JournalEditSubpage.vue";
 let teardown: () => void;
 beforeEach(() => {
   ({ teardown } = installTestCalendar());
+  vi.useFakeTimers({ toFake: ["Date"] });
+  vi.setSystemTime(new Date("2026-05-19T12:00:00"));
 });
 afterEach(() => {
+  vi.useRealTimers();
   teardown();
   cleanup();
 });
@@ -406,6 +409,24 @@ describe("JournalEditSubpage", () => {
       expect(config.folder).toBe("year");
       expect(config.nameTemplate).toBe("{{date}}");
     });
+
+    it("live-renders the note name preview when nameTemplate changes", async () => {
+      const { container, settings } = await setup();
+      mount(container, "daily");
+      const nameTemplateRow = screen.getByText(m.journal_edit_name_template_label()).closest(".setting-item");
+      if (!nameTemplateRow) throw new Error("name-template row not found");
+      const nameTemplateInput = within(nameTemplateRow as HTMLElement).getByRole("textbox");
+      await userEvent.clear(nameTemplateInput);
+      await userEvent.type(nameTemplateInput, "note-prefix");
+      await waitFor(() => {
+        const config = settings.getCollection(journalConfigCollection).get("daily");
+        expect(config?.nameTemplate).toBe("note-prefix");
+      });
+      // Preview text appears somewhere in the document
+      await waitFor(() => {
+        expect(screen.getByText("note-prefix")).toBeTruthy();
+      });
+    });
   });
 
   it("shows the move-to-folder recommendation when dateFormat contains /", async () => {
@@ -463,6 +484,26 @@ describe("JournalEditSubpage", () => {
       await userEvent.click(screen.getByText(m.journal_edit_section_templates()));
       await userEvent.click(screen.getByLabelText(m.journal_edit_template_remove_tooltip()));
       expect(settings.getCollection(journalConfigCollection).get("daily")?.templates).toEqual([]);
+    });
+
+    it("renders the template path preview only when the path contains a variable", async () => {
+      const initial = {
+        version: 3,
+        journals: {
+          daily: makeJournal("daily", {
+            templates: ["{{date:YYYY}}-template.md", "static-template.md"],
+          }),
+        },
+      };
+      const { container } = await setup(initial);
+      mount(container, "daily");
+      await userEvent.click(screen.getByText(m.journal_edit_section_templates()));
+      // Preview for the first (variable-containing) template renders
+      await waitFor(() => {
+        expect(screen.getByText("2026-template.md")).toBeTruthy();
+      });
+      // Preview for the second (static) template should NOT appear
+      expect(screen.queryByText("static-template.md", { exact: false, selector: "b.u-pop" })).toBeNull();
     });
   });
 });

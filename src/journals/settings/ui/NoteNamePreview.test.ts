@@ -1,4 +1,4 @@
-import { cleanup, render, screen } from "@testing-library/vue";
+import { cleanup, render, screen, waitFor } from "@testing-library/vue";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
 import { installTestCalendar } from "@/calendar/testing";
@@ -11,6 +11,7 @@ import {
   NotePathService,
   NumberingService,
 } from "@/journals";
+import { SettingsService } from "@/settings";
 import { createSettingsService } from "@/settings/testing";
 import { TemplateEngine } from "@/templates";
 import { installTestEngine } from "@/templates/testing";
@@ -83,5 +84,45 @@ describe("NoteNamePreview", () => {
       },
     });
     expect(screen.getByText("2026-05-19")).toBeTruthy();
+  });
+
+  it("updates reactively when the journal's nameTemplate changes", async () => {
+    const container = await setupDaily("{{date}}");
+    render(NoteNamePreview, {
+      props: { journalName: "daily" },
+      global: {
+        plugins: [
+          {
+            install(app) {
+              provideInjectorOnApp(app, container);
+            },
+          },
+        ],
+      },
+    });
+    expect(screen.getByText("2026-05-19")).toBeTruthy();
+    const settings = container.resolve(SettingsService);
+    const config = settings.getCollection(journalConfigCollection).get("daily")!;
+    config.nameTemplate = "note-{{date}}";
+    await waitFor(() => {
+      expect(screen.getByText("note-2026-05-19")).toBeTruthy();
+    });
+  });
+
+  it("renders nothing when the journal no longer exists", async () => {
+    const container = await setupDaily();
+    const { container: dom } = render(NoteNamePreview, {
+      props: { journalName: "ghost" },
+      global: {
+        plugins: [
+          {
+            install(app) {
+              provideInjectorOnApp(app, container);
+            },
+          },
+        ],
+      },
+    });
+    expect(dom.textContent ?? "").toBe("");
   });
 });

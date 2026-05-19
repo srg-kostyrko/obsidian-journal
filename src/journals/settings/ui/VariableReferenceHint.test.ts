@@ -39,4 +39,22 @@ describe("VariableReferenceHint", () => {
     expect(lastOpen.definition).toBe(variableReferenceModal);
     expect(lastOpen.props).toEqual({ journalName: "daily", dateFormat: "YYYY-MM-DD", hasNumbering: false });
   });
+
+  it("includes the numbering variable entry in the modal props when hasNumbering is true", async () => {
+    const { modals, container } = build();
+    render(VariableReferenceHint, {
+      props: { journalName: "daily", dateFormat: "YYYY-MM-DD", hasNumbering: true },
+      global: {
+        plugins: [
+          {
+            install(app) {
+              provideInjectorOnApp(app, container);
+            },
+          },
+        ],
+      },
+    });
+    await userEvent.click(screen.getByRole("link"));
+    expect(modals.lastOpen().props).toMatchObject({ hasNumbering: true });
+  });
 });
