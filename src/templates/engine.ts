@@ -8,7 +8,7 @@ import { TemplateParseError } from "./errors";
 import { tokenize } from "./grammar";
 import { FunctionHandlerToken, type FunctionHandler } from "./handlers";
 import { parseDate, parseNumber, parseString, patternForKind, renderDate, renderNumber, renderString } from "./kinds";
-import { applyModifiers } from "./modifiers";
+import { applyModifiers, isBoundaryUnit } from "./modifiers";
 
 import type { TemplateContext } from "./context";
 import type { Bindings, BoundValue, Token, TokenStream, ValidationProblem, VariableSpec } from "./types";
@@ -65,7 +65,7 @@ export class TemplateEngine {
       arg: token.arg,
       sourceDate: shifted,
       format: token.format,
-      ctx: context,
+      context,
       engine: this,
     });
     if (result.kind === "err") return token.raw;
@@ -191,19 +191,21 @@ export class TemplateEngine {
     spec: VariableSpec,
     token: Extract<Token, { kind: "variable" }>,
   ): Result<BoundValue, TemplateParseError> {
-    switch (spec.kind) {
-      case "string": {
+    const ok = (value: BoundValue): Result<BoundValue, TemplateParseError> => new Ok(value);
+    const err = (error: TemplateParseError): Result<BoundValue, TemplateParseError> => new Err(error);
+    return match(spec)
+      .with({ kind: "string" }, () => {
         const result = parseString(capture, token.name);
-        return result.kind === "ok" ? new Ok({ kind: "string", value: result.value }) : new Err(result.error);
-      }
-      case "number": {
+        return result.kind === "ok" ? ok({ kind: "string", value: result.value }) : err(result.error);
+      })
+      .with({ kind: "number" }, () => {
         const result = parseNumber(capture, token.name);
-        return result.kind === "ok" ? new Ok({ kind: "number", value: result.value }) : new Err(result.error);
-      }
-      case "date": {
-        const format = token.format ?? spec.defaultFormat;
+        return result.kind === "ok" ? ok({ kind: "number", value: result.value }) : err(result.error);
+      })
+      .with({ kind: "date" }, (dateSpec) => {
+        const format = token.format ?? dateSpec.defaultFormat;
         const result = parseDate(capture, format, token.modifiers, token.name);
-        if (result.kind === "err") return new Err(result.error);
+        if (result.kind === "err") return err(result.error);
         // Normalize to "lower bound of source range" so multi-binding resolution
         // can compare candidates by value equality. A bare `<endOf=unit>` modifier
         // makes parsed value the upper bound of the source's range; bring it back
@@ -212,17 +214,15 @@ export class TemplateEngine {
         // remains is unmodified or boundary-only.
         let lowerBound = result.value;
         for (const modifier of token.modifiers) {
-          if (modifier.kind === "boundary" && modifier.direction === "end" && BOUNDARY_UNITS.has(modifier.unit)) {
-            lowerBound = lowerBound.startOf(modifier.unit as "year" | "quarter" | "month" | "week" | "day" | "decade");
+          if (modifier.kind === "boundary" && modifier.direction === "end" && isBoundaryUnit(modifier.unit)) {
+            lowerBound = lowerBound.startOf(modifier.unit);
           }
         }
-        return new Ok({ kind: "date", value: lowerBound });
-      }
-    }
+        return ok({ kind: "date", value: lowerBound });
+      })
+      .exhaustive();
   }
 }
-
-const BOUNDARY_UNITS = new Set(["year", "quarter", "month", "week", "day", "decade"]);
 
 function escapeRegex(source: string): string {
   return source.replaceAll(/[.*+?^${}()|[\]\\]/g, String.raw`\$&`);
@@ -235,7 +235,7 @@ function mergeCandidates(name: string, candidates: BoundValue[]): Result<BoundVa
   if (first.kind === "string" || first.kind === "number") {
     for (const candidate of candidates) {
       if (candidate.kind !== first.kind || candidate.value !== (first as { value: unknown }).value) {
-        return new Err(new TemplateParseError({ kind: "conflict", varName: name, candidates }));
+        return new Err(new TemplateParseError({ kind: "conflict", variableName: name, candidates }));
       }
     }
     return new Ok(first);
@@ -246,7 +246,7 @@ function mergeCandidates(name: string, candidates: BoundValue[]): Result<BoundVa
   const firstAnchor = first.value.toAnchor();
   for (const candidate of candidates) {
     if (candidate.kind !== "date" || candidate.value.toAnchor() !== firstAnchor) {
-      return new Err(new TemplateParseError({ kind: "conflict", varName: name, candidates }));
+      return new Err(new TemplateParseError({ kind: "conflict", variableName: name, candidates }));
     }
   }
   return new Ok(first);

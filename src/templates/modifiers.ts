@@ -4,15 +4,20 @@ import type { CalendarDate } from "@/calendar";
 
 import type { Modifier } from "./types";
 
-const BOUNDARY_UNITS = new Set(["year", "quarter", "month", "week", "day", "decade"]);
+export type BoundaryUnit = "year" | "quarter" | "month" | "week" | "day" | "decade";
+
+export const BOUNDARY_UNITS = new Set<BoundaryUnit>(["year", "quarter", "month", "week", "day", "decade"]);
+
+export function isBoundaryUnit(unit: string): unit is BoundaryUnit {
+  return BOUNDARY_UNITS.has(unit as BoundaryUnit);
+}
 
 export function applyModifier(date: CalendarDate, modifier: Modifier): CalendarDate {
   return match(modifier)
     .with({ kind: "shift" }, ({ sign, amount, unit }) => date.shift(sign * amount, unit))
     .with({ kind: "boundary" }, ({ direction, unit }) => {
-      if (!BOUNDARY_UNITS.has(unit)) return date;
-      const u = unit as "year" | "quarter" | "month" | "week" | "day" | "decade";
-      return direction === "start" ? date.startOf(u) : date.endOf(u);
+      if (!isBoundaryUnit(unit)) return date;
+      return direction === "start" ? date.startOf(unit) : date.endOf(unit);
     })
     .exhaustive();
 }

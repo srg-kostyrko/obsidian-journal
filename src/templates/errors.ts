@@ -9,9 +9,9 @@ export class TemplatesError extends Error {
 
 export type TemplateParseErrorDetail =
   | { kind: "no-match"; input: string }
-  | { kind: "invalid-number"; capture: string; varName: string }
-  | { kind: "invalid-date"; capture: string; varName: string; format: string }
-  | { kind: "conflict"; varName: string; candidates: BoundValue[] }
+  | { kind: "invalid-number"; capture: string; variableName: string }
+  | { kind: "invalid-date"; capture: string; variableName: string; format: string }
+  | { kind: "conflict"; variableName: string; candidates: BoundValue[] }
   | { kind: "not-invertible"; reason: "function-token" | "unknown-variable"; offending: string };
 
 export class TemplateParseError extends TemplatesError {
@@ -36,15 +36,15 @@ function formatParseError(detail: TemplateParseErrorDetail): string {
     }
 
     case "invalid-number": {
-      return `Variable ${detail.varName}: cannot parse "${detail.capture}" as number`;
+      return `Variable ${detail.variableName}: cannot parse "${detail.capture}" as number`;
     }
 
     case "invalid-date": {
-      return `Variable ${detail.varName}: cannot parse "${detail.capture}" with format "${detail.format}"`;
+      return `Variable ${detail.variableName}: cannot parse "${detail.capture}" with format "${detail.format}"`;
     }
 
     case "conflict": {
-      return `Variable ${detail.varName}: conflicting captures`;
+      return `Variable ${detail.variableName}: conflicting captures`;
     }
 
     case "not-invertible": {

@@ -46,7 +46,7 @@ export function parseString(capture: string, _variableName: string): Result<stri
 export function parseNumber(capture: string, variableName: string): Result<number, TemplateParseError> {
   const value = Number.parseInt(capture, 10);
   if (Number.isNaN(value)) {
-    return new Err(new TemplateParseError({ kind: "invalid-number", capture, varName: variableName }));
+    return new Err(new TemplateParseError({ kind: "invalid-number", capture, variableName }));
   }
   return new Ok(value);
 }
@@ -59,7 +59,7 @@ export function parseDate(
 ): Result<CalendarDate, TemplateParseError> {
   const parsed = CalendarDate.parse(capture, format);
   if (parsed.kind === "err") {
-    return new Err(new TemplateParseError({ kind: "invalid-date", capture, varName: variableName, format }));
+    return new Err(new TemplateParseError({ kind: "invalid-date", capture, variableName, format }));
   }
   return new Ok(unapplyModifiers(parsed.value, modifiers));
 }

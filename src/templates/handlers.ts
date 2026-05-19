@@ -10,7 +10,7 @@ export interface FunctionInput {
   arg: string;
   sourceDate: CalendarDate;
   format?: string;
-  ctx: TemplateContext;
+  context: TemplateContext;
   engine: TemplateEngine;
 }
 
