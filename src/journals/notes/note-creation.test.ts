@@ -92,3 +92,50 @@ describe("NoteCreationService.ensureNote", () => {
     expect(result.isOk() && result.value.created).toBe(true);
   });
 });
+
+describe("NoteCreationService.attachNote", () => {
+  it("writes frontmatter and content when the existing file is empty", async () => {
+    const settings = fakeSettings({
+      daily: fixedJournal("daily", { type: "day" }, { templates: ["Templates/daily.md"] }),
+    });
+    const notes = new FakeNotesService();
+    notes.seed("Templates/daily.md" as VaultPath, "# Daily {{date}}");
+    notes.seed("2026-05-19.md" as VaultPath, "");
+    const result = await build(settings, notes, new FakeModalService())
+      .resolve(NoteCreationService)
+      .attachNote("daily", "2026-05-19.md" as VaultPath, meta);
+    expect(result.isOk()).toBe(true);
+    const read = await notes.read("2026-05-19.md" as VaultPath);
+    expect(read.isOk() && read.value).toBe("# Daily 2026-05-19");
+  });
+
+  it("writes frontmatter only when the existing file has content", async () => {
+    const settings = fakeSettings({
+      daily: fixedJournal("daily", { type: "day" }, { templates: ["Templates/daily.md"] }),
+    });
+    const notes = new FakeNotesService();
+    notes.seed("Templates/daily.md" as VaultPath, "# Daily {{date}}");
+    notes.seed("2026-05-19.md" as VaultPath, "user-typed content");
+    const result = await build(settings, notes, new FakeModalService())
+      .resolve(NoteCreationService)
+      .attachNote("daily", "2026-05-19.md" as VaultPath, meta);
+    expect(result.isOk()).toBe(true);
+    const read = await notes.read("2026-05-19.md" as VaultPath);
+    expect(read.isOk() && read.value).toBe("user-typed content");
+  });
+
+  it("treats whitespace-only content as empty", async () => {
+    const settings = fakeSettings({
+      daily: fixedJournal("daily", { type: "day" }, { templates: ["Templates/daily.md"] }),
+    });
+    const notes = new FakeNotesService();
+    notes.seed("Templates/daily.md" as VaultPath, "body");
+    notes.seed("2026-05-19.md" as VaultPath, "   \n  \n");
+    const result = await build(settings, notes, new FakeModalService())
+      .resolve(NoteCreationService)
+      .attachNote("daily", "2026-05-19.md" as VaultPath, meta);
+    expect(result.isOk()).toBe(true);
+    const read = await notes.read("2026-05-19.md" as VaultPath);
+    expect(read.isOk() && read.value).toBe("body");
+  });
+});

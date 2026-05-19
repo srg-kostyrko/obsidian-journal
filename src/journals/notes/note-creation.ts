@@ -89,9 +89,29 @@ export class NoteCreationService {
     );
   }
 
-  attachNote(_name: string, _path: VaultPath, _metadata: JournalMetadata): AsyncResult<void, NoteCreationError> {
-    // Implemented in Task 11.
-    return AsyncResult.ok();
+  attachNote(name: string, path: VaultPath, metadata: JournalMetadata): AsyncResult<void, NoteCreationError> {
+    const mutatorResult = this.#frontmatter.writeMutator(name, metadata);
+    if (mutatorResult.kind === "err") return AsyncResult.err(mutatorResult.error);
+    const mutator = mutatorResult.value;
+
+    return AsyncResult.fromPromise(
+      (async (): Promise<void> => {
+        const fmResult = await this.#notes.updateFrontmatter(path, mutator);
+        if (fmResult.isErr()) throw fmResult.error;
+
+        const readResult = await this.#notes.read(path);
+        if (readResult.isErr()) throw readResult.error;
+        if (readResult.value.trim() !== "") return;
+
+        const contentResult = await this.#content.renderFor(name, metadata);
+        if (contentResult.isErr()) throw contentResult.error;
+        if (contentResult.value === "") return;
+
+        const writeResult = await this.#notes.write(path, contentResult.value);
+        if (writeResult.isErr()) throw writeResult.error;
+      })(),
+      (cause) => cause as NoteCreationError,
+    );
   }
 
   clearExpected(path: VaultPath): void {
