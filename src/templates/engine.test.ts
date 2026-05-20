@@ -1,6 +1,6 @@
-import { afterEach, beforeEach, describe, expect, it } from "vitest";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
-import { CalendarDate } from "@/calendar";
+import { CalendarDate, Clock, type AnchorString } from "@/calendar";
 import { anchor, installTestCalendar } from "@/calendar/testing";
 import { Ok } from "@/infrastructure/result";
 import { expectErr, expectOk } from "@/infrastructure/result/testing";
@@ -150,6 +150,7 @@ describe("TemplateEngine.parse", () => {
       "current_date",
       CalendarDate.fromAnchor(anchor("2022-01-05")),
       "YYYY-MM-DD",
+      { invertible: false },
     );
     const stream = tokenize("{{date:YYYY-MM-DD}}-{{current_date:YYYY-MM-DD}}.md");
     const result = engine.parse(stream, "2022-01-05-anything-here.md", context);
@@ -295,5 +296,89 @@ describe("v2 parity", () => {
       .string("journal_name", "Weekly")
       .number("index", 1);
     expect(engine.renderString("{{date}}", context)).toBe("2022-W1");
+  });
+});
+
+describe("renders clock variables", () => {
+  let engine: ReturnType<typeof installTestEngine>;
+  beforeEach(() => {
+    vi.useFakeTimers();
+    engine = installTestEngine();
+  });
+  afterEach(() => {
+    vi.useRealTimers();
+  });
+
+  it("renders with default format", () => {
+    vi.setSystemTime(new Date("2026-05-20T10:37:42"));
+    const context = TemplateContext.empty().clock("time", Clock.now(), "HH:mm");
+    expect(engine.renderString("now is {{time}}", context)).toBe("now is 10:37");
+  });
+
+  it("renders with format override", () => {
+    vi.setSystemTime(new Date("2026-05-20T10:37:42"));
+    const context = TemplateContext.empty().clock("time", Clock.now(), "HH:mm");
+    expect(engine.renderString("{{time:HH:mm:ss}}", context)).toBe("10:37:42");
+  });
+
+  it("applies modifiers and format", () => {
+    vi.setSystemTime(new Date("2026-05-20T10:37:42"));
+    const context = TemplateContext.empty().clock("time", Clock.now(), "HH:mm");
+    expect(engine.renderString("{{time-1h:HH:mm}}", context)).toBe("09:37");
+  });
+});
+
+describe("non-invertible date and clock variables in parse path", () => {
+  let engine: ReturnType<typeof installTestEngine>;
+  beforeEach(() => {
+    vi.useFakeTimers();
+    engine = installTestEngine();
+  });
+  afterEach(() => {
+    vi.useRealTimers();
+  });
+
+  it("treats date with invertible:false as a wildcard", () => {
+    const context = TemplateContext.empty()
+      .date("date", CalendarDate.fromAnchor("2026-05-20" as AnchorString), "YYYY-MM-DD")
+      .date("current_date", CalendarDate.today(), "YYYY-MM-DD", { invertible: false });
+    const result = engine.parse(tokenize("{{current_date}}/{{date:YYYY-MM-DD}}.md"), "anything/2026-05-20.md", context);
+    expectOk(result);
+    const date = result.value.get("date");
+    expect(date?.kind === "date" && date.value.toAnchor()).toBe("2026-05-20");
+  });
+
+  it("treats clock as a wildcard", () => {
+    vi.setSystemTime(new Date("2026-05-20T10:37:42"));
+    const context = TemplateContext.empty()
+      .date("date", CalendarDate.fromAnchor("2026-05-20" as AnchorString), "YYYY-MM-DD")
+      .clock("time", Clock.now(), "HH:mm");
+    const result = engine.parse(tokenize("{{time}}-{{date:YYYY-MM-DD}}.md"), "anything-2026-05-20.md", context);
+    expect(result.kind).toBe("ok");
+  });
+});
+
+describe("validation", () => {
+  let engine: ReturnType<typeof installTestEngine>;
+  beforeEach(() => {
+    vi.useFakeTimers();
+    engine = installTestEngine();
+  });
+  afterEach(() => {
+    vi.useRealTimers();
+  });
+
+  it("accepts :FORMAT on clock variables", () => {
+    vi.setSystemTime(new Date("2026-05-20T10:37:42"));
+    const context = TemplateContext.empty().clock("time", Clock.now(), "HH:mm");
+    const problems = engine.validate(tokenize("{{time:HH:mm:ss}}"), context);
+    expect(problems).toEqual([]);
+  });
+
+  it("accepts modifiers on clock variables", () => {
+    vi.setSystemTime(new Date("2026-05-20T10:37:42"));
+    const context = TemplateContext.empty().clock("time", Clock.now(), "HH:mm");
+    const problems = engine.validate(tokenize("{{time-1h}}"), context);
+    expect(problems).toEqual([]);
   });
 });

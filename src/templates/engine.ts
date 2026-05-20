@@ -7,7 +7,16 @@ import { Err, Ok, type Result } from "@/infrastructure/result";
 import { TemplateParseError } from "./errors";
 import { tokenize } from "./grammar";
 import { FunctionHandlerToken, type FunctionHandler } from "./handlers";
-import { parseDate, parseNumber, parseString, patternForKind, renderDate, renderNumber, renderString } from "./kinds";
+import {
+  parseDate,
+  parseNumber,
+  parseString,
+  patternForKind,
+  renderClock,
+  renderDate,
+  renderNumber,
+  renderString,
+} from "./kinds";
 import { applyModifiers, isBoundaryUnit } from "./modifiers";
 
 import type { TemplateContext } from "./context";
@@ -53,7 +62,7 @@ export class TemplateEngine {
       .with({ kind: "string" }, (s) => renderString(s))
       .with({ kind: "number" }, (s) => renderNumber(s))
       .with({ kind: "date" }, (s) => renderDate(s, token.modifiers, token.format))
-      .with({ kind: "clock" }, () => token.raw)
+      .with({ kind: "clock" }, (s) => renderClock(s, token.modifiers, token.format))
       .exhaustive();
   }
 
@@ -156,7 +165,6 @@ export class TemplateEngine {
   ): Result<{ regex: RegExp; captureTokens: Extract<Token, { kind: "variable" }>[] }, TemplateParseError> {
     const parts: string[] = ["^"];
     const captureTokens: Extract<Token, { kind: "variable" }>[] = [];
-    const wildcardNames = new Set(["current_date", "current_time", "time"]);
 
     for (const token of stream) {
       if (token.kind === "literal") {
@@ -168,11 +176,11 @@ export class TemplateEngine {
           new TemplateParseError({ kind: "not-invertible", reason: "function-token", offending: token.name }),
         );
       }
-      if (wildcardNames.has(token.name)) {
+      const spec = context.get(token.name);
+      if (isWildcard(spec)) {
         parts.push(".+?");
         continue;
       }
-      const spec = context.get(token.name);
       if (!spec) {
         return new Err(
           new TemplateParseError({ kind: "not-invertible", reason: "unknown-variable", offending: token.name }),
@@ -226,6 +234,10 @@ export class TemplateEngine {
       )
       .exhaustive();
   }
+}
+
+function isWildcard(spec: VariableSpec | undefined): boolean {
+  return spec?.kind === "clock" || (spec?.kind === "date" && spec.invertible === false);
 }
 
 function escapeRegex(source: string): string {
