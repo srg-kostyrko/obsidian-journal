@@ -1,4 +1,4 @@
-import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
+import { describe, it, expect, vi, beforeEach, afterEach, assert } from "vitest";
 
 import type { AnchorString } from "@/calendar";
 import { anchor } from "@/calendar/testing";
@@ -137,7 +137,7 @@ describe("NotePathService.candidateFor", () => {
 });
 
 function buildFixture(): { service: NotePathService; config: JournalConfig; metadata: JournalMetadata } {
-  const config = fixedJournal("daily", { type: "day" });
+  const config = fixedJournal("daily", { type: "day" }, { dateFormat: "DD/MM/YYYY" });
   const settings = fakeSettings({ daily: config });
   const service = buildContainer(settings).resolve(NotePathService);
   const metadata: JournalMetadata = { journalName: "daily", anchor: anchor("2026-05-20") };
@@ -153,14 +153,15 @@ describe("contextFor — render-time variables", () => {
     vi.useRealTimers();
   });
 
-  it("exposes current_date with the dateFormat as default", () => {
+  it("exposes current_date as a non-invertible YYYY-MM-DD date snapshot", () => {
     vi.setSystemTime(new Date("2026-05-20T10:37:42"));
     const { service, config, metadata } = buildFixture();
     const context = service.contextFor(config, metadata);
     const spec = context.get("current_date");
     expect(spec?.kind).toBe("date");
-    expect(spec?.kind === "date" && spec.value.toAnchor()).toBe("2026-05-20");
-    expect(spec?.kind === "date" && spec.invertible).toBe(false);
+    assert(spec?.kind === "date");
+    expect(spec.value.toAnchor()).toBe("2026-05-20");
+    expect(spec.invertible).toBe(false);
   });
 
   it("exposes time and current_time as the same clock spec object", () => {
@@ -170,7 +171,8 @@ describe("contextFor — render-time variables", () => {
     const time = context.get("time");
     const currentTime = context.get("current_time");
     expect(time?.kind).toBe("clock");
+    assert(time?.kind === "clock");
     expect(time).toBe(currentTime);
-    expect(time?.kind === "clock" && time.defaultFormat).toBe("HH:mm");
+    expect(time.defaultFormat).toBe("HH:mm");
   });
 });
