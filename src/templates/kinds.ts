@@ -24,6 +24,15 @@ export function renderDate(
   return shifted.format(format ?? spec.defaultFormat);
 }
 
+export function renderClock(
+  spec: Extract<VariableSpec, { kind: "clock" }>,
+  modifiers: readonly Modifier[],
+  format?: string,
+): string {
+  const shifted = applyModifiers(spec.value, modifiers);
+  return shifted.format(format ?? spec.defaultFormat);
+}
+
 export function patternForKind(spec: VariableSpec, format?: string): string {
   switch (spec.kind) {
     case "string": {
@@ -52,15 +61,6 @@ export function parseNumber(capture: string, variableName: string): Result<numbe
     return new Err(new TemplateParseError({ kind: "invalid-number", capture, variableName }));
   }
   return new Ok(value);
-}
-
-export function renderClock(
-  spec: Extract<VariableSpec, { kind: "clock" }>,
-  modifiers: readonly Modifier[],
-  format?: string,
-): string {
-  const shifted = applyModifiers(spec.value, modifiers);
-  return shifted.format(format ?? spec.defaultFormat);
 }
 
 export function parseDate(
