@@ -3,6 +3,7 @@ import { localMoment } from "./calendar";
 type ShiftUnit = "y" | "q" | "m" | "w" | "d" | "h";
 type BoundaryUnit = "year" | "quarter" | "month" | "week" | "day" | "hour";
 
+// moment uses uppercase "M"/"Q"; map from domain shorthand
 const SHIFT_UNIT_MAP = { y: "y", q: "Q", m: "M", w: "w", d: "d", h: "h" } as const;
 
 export class Clock {

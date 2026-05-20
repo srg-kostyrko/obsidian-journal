@@ -73,12 +73,28 @@ describe("Clock", () => {
       expect(Clock.now().shift(-3, "h").format("HH:mm")).toBe("07:00");
     });
 
-    it("adds days, weeks, months, quarters, years", () => {
+    it("adds days", () => {
       vi.setSystemTime(new Date("2026-05-20T10:30:00"));
       expect(Clock.now().shift(1, "d").format("YYYY-MM-DD HH:mm")).toBe("2026-05-21 10:30");
+    });
+
+    it("adds weeks", () => {
+      vi.setSystemTime(new Date("2026-05-20T10:30:00"));
       expect(Clock.now().shift(1, "w").format("YYYY-MM-DD")).toBe("2026-05-27");
+    });
+
+    it("adds months", () => {
+      vi.setSystemTime(new Date("2026-05-20T10:30:00"));
       expect(Clock.now().shift(1, "m").format("YYYY-MM-DD")).toBe("2026-06-20");
+    });
+
+    it("adds quarters", () => {
+      vi.setSystemTime(new Date("2026-05-20T10:30:00"));
       expect(Clock.now().shift(1, "q").format("YYYY-MM-DD")).toBe("2026-08-20");
+    });
+
+    it("adds years", () => {
+      vi.setSystemTime(new Date("2026-05-20T10:30:00"));
       expect(Clock.now().shift(1, "y").format("YYYY-MM-DD")).toBe("2027-05-20");
     });
   });
@@ -91,10 +107,28 @@ describe("Clock", () => {
       expect(Clock.now().startOf("hour").format("HH:mm:ss")).toBe("10:00:00");
     });
 
-    it("rounds down to day, week, month, quarter, year", () => {
+    it("rounds down to start of day", () => {
       vi.setSystemTime(new Date("2026-05-20T10:37:42"));
       expect(Clock.now().startOf("day").format("YYYY-MM-DD HH:mm:ss")).toBe("2026-05-20 00:00:00");
+    });
+
+    it("rounds down to start of week", () => {
+      vi.setSystemTime(new Date("2026-05-20T10:37:42"));
+      expect(Clock.now().startOf("week").format("YYYY-MM-DD")).toBe("2026-05-18");
+    });
+
+    it("rounds down to start of month", () => {
+      vi.setSystemTime(new Date("2026-05-20T10:37:42"));
       expect(Clock.now().startOf("month").format("YYYY-MM-DD")).toBe("2026-05-01");
+    });
+
+    it("rounds down to start of quarter", () => {
+      vi.setSystemTime(new Date("2026-05-20T10:37:42"));
+      expect(Clock.now().startOf("quarter").format("YYYY-MM-DD")).toBe("2026-04-01");
+    });
+
+    it("rounds down to start of year", () => {
+      vi.setSystemTime(new Date("2026-05-20T10:37:42"));
       expect(Clock.now().startOf("year").format("YYYY-MM-DD")).toBe("2026-01-01");
     });
   });
