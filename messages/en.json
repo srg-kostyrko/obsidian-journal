@@ -50,6 +50,7 @@
 
   "common_action_cancel": "Cancel",
   "common_action_close": "Close",
+  "common_action_delete": "Delete",
   "common_action_submit": "Save",
 
   "confirm_note_creation_body": "Create '{noteName}' in journal '{journalName}'?",

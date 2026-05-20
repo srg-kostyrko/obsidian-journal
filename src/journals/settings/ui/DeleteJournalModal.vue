@@ -28,6 +28,6 @@ function submit(): void {
   </UiSettingRow>
   <UiSettingRow controls-only>
     <UiButton @click="api.cancel()">{{ m.common_action_cancel() }}</UiButton>
-    <UiButton cta @click="submit">{{ m.common_action_submit() }}</UiButton>
+    <UiButton cta warning @click="submit">{{ m.common_action_delete() }}</UiButton>
   </UiSettingRow>
 </template>

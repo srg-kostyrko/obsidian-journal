@@ -37,9 +37,9 @@ describe("deleteJournalModal definition", () => {
 });
 
 describe("DeleteJournalModal", () => {
-  it("submits with mode keep on Remove", async () => {
+  it("submits with mode keep on Delete", async () => {
     const { submit } = mountModal("daily");
-    await userEvent.click(screen.getByText(m.common_action_submit()));
+    await userEvent.click(screen.getByText(m.common_action_delete()));
     expect(submit).toHaveBeenCalledWith({ mode: "keep" });
   });
 
