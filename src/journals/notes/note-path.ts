@@ -87,12 +87,6 @@ export class NotePathService {
     return context;
   }
 
-  bodyContextFor(config: JournalConfig, metadata: JournalMetadata, noteName: string): TemplateContext {
-    const base = this.contextFor(config, metadata);
-    const noteSpec = { kind: "string", value: noteName } as const;
-    return base.withSpec("note_name", noteSpec).withSpec("title", noteSpec);
-  }
-
   configFor(name: string): JournalConfig | undefined {
     return this.#settings.getCollection(journalConfigCollection).get(name) as JournalConfig | undefined;
   }
@@ -118,5 +112,11 @@ export class NotePathService {
     const clockSpec = { kind: "clock", value: Clock.now(), defaultFormat: "HH:mm" } as const;
     context = context.withSpec("time", clockSpec).withSpec("current_time", clockSpec);
     return context;
+  }
+
+  bodyContextFor(config: JournalConfig, metadata: JournalMetadata, noteName: string): TemplateContext {
+    const base = this.contextFor(config, metadata);
+    const noteSpec = { kind: "string", value: noteName } as const;
+    return base.withSpec("note_name", noteSpec).withSpec("title", noteSpec);
   }
 }
