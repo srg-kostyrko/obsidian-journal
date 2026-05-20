@@ -54,6 +54,15 @@ export function parseNumber(capture: string, variableName: string): Result<numbe
   return new Ok(value);
 }
 
+export function renderClock(
+  spec: Extract<VariableSpec, { kind: "clock" }>,
+  modifiers: readonly Modifier[],
+  format?: string,
+): string {
+  const shifted = applyModifiers(spec.value, modifiers);
+  return shifted.format(format ?? spec.defaultFormat);
+}
+
 export function parseDate(
   capture: string,
   format: string,

@@ -1,10 +1,19 @@
-import { afterEach, beforeEach, describe, expect, it } from "vitest";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
-import { CalendarDate } from "@/calendar";
+import { CalendarDate, Clock } from "@/calendar";
 import { anchor, installTestCalendar } from "@/calendar/testing";
 import { expectErr, expectOk } from "@/infrastructure/result/testing";
 
-import { parseDate, parseNumber, parseString, patternForKind, renderDate, renderNumber, renderString } from "./kinds";
+import {
+  parseDate,
+  parseNumber,
+  parseString,
+  patternForKind,
+  renderClock,
+  renderDate,
+  renderNumber,
+  renderString,
+} from "./kinds";
 
 import type { Modifier, VariableSpec } from "./types";
 
@@ -76,6 +85,34 @@ describe("kinds", () => {
       };
       const pattern = patternForKind(spec);
       expect(new RegExp(`^${pattern}$`).test("2022-01-01")).toBe(true);
+    });
+  });
+
+  describe("renderClock", () => {
+    beforeEach(() => {
+      vi.useFakeTimers();
+    });
+    afterEach(() => {
+      vi.useRealTimers();
+    });
+
+    it("renders Clock with default format when no override", () => {
+      vi.setSystemTime(new Date("2026-05-20T10:37:42"));
+      const spec = { kind: "clock" as const, value: Clock.now(), defaultFormat: "HH:mm" };
+      expect(renderClock(spec, [])).toBe("10:37");
+    });
+
+    it("renders Clock with format override", () => {
+      vi.setSystemTime(new Date("2026-05-20T10:37:42"));
+      const spec = { kind: "clock" as const, value: Clock.now(), defaultFormat: "HH:mm" };
+      expect(renderClock(spec, [], "HH:mm:ss")).toBe("10:37:42");
+    });
+
+    it("applies modifiers before rendering", () => {
+      vi.setSystemTime(new Date("2026-05-20T10:37:42"));
+      const spec = { kind: "clock" as const, value: Clock.now(), defaultFormat: "HH:mm" };
+      const result = renderClock(spec, [{ kind: "shift", sign: -1, amount: 1, unit: "h" }]);
+      expect(result).toBe("09:37");
     });
   });
 
