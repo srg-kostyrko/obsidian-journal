@@ -211,6 +211,7 @@
   "journal_rename_modal_same_as_current_error": "New name must differ from current name.",
   "journal_rename_modal_title": "Rename {name}",
   "journal_sequence_property_modal_title": "Edit sequential number property name",
+  "variable_chip_copied": "Copied",
   "journal_write": [
     {
       "declarations": ["input type", "input every", "input duration"],
