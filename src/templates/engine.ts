@@ -44,15 +44,16 @@ export class TemplateEngine {
   #renderVariable(token: Extract<Token, { kind: "variable" }>, context: TemplateContext): string {
     const spec = context.get(token.name);
     if (!spec) return token.raw;
-    // v2 fidelity: modifiers and :format are only meaningful on date kind.
+    // v2 fidelity: modifiers and :format are only meaningful on date/clock kinds.
     // For string/number variables with either present, emit the raw token unchanged.
-    if (spec.kind !== "date" && (token.modifiers.length > 0 || token.format !== undefined)) {
+    if (spec.kind !== "date" && spec.kind !== "clock" && (token.modifiers.length > 0 || token.format !== undefined)) {
       return token.raw;
     }
     return match(spec)
       .with({ kind: "string" }, (s) => renderString(s))
       .with({ kind: "number" }, (s) => renderNumber(s))
       .with({ kind: "date" }, (s) => renderDate(s, token.modifiers, token.format))
+      .with({ kind: "clock" }, () => token.raw)
       .exhaustive();
   }
 
@@ -105,7 +106,7 @@ export class TemplateEngine {
         position += token.raw.length;
         continue;
       }
-      if (spec.kind !== "date") {
+      if (spec.kind !== "date" && spec.kind !== "clock") {
         if (token.format !== undefined) {
           problems.push({ token, position, problem: "format-on-non-date" });
         }
@@ -177,6 +178,11 @@ export class TemplateEngine {
           new TemplateParseError({ kind: "not-invertible", reason: "unknown-variable", offending: token.name }),
         );
       }
+      if (spec.kind === "clock") {
+        // Clock variables are non-invertible; match but don't capture.
+        parts.push(".+?");
+        continue;
+      }
       const captureIndex = captureTokens.length;
       const pattern = patternForKind(spec, token.format);
       parts.push(`(?<v_${captureIndex}>${pattern})`);
@@ -220,6 +226,9 @@ export class TemplateEngine {
         }
         return ok({ kind: "date", value: lowerBound });
       })
+      .with({ kind: "clock" }, () =>
+        err(new TemplateParseError({ kind: "not-invertible", reason: "clock-variable", offending: token.name })),
+      )
       .exhaustive();
   }
 }

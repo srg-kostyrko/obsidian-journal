@@ -1,4 +1,4 @@
-import type { CalendarDate } from "@/calendar";
+import type { CalendarDate, Clock } from "@/calendar";
 
 export type Unit = "y" | "q" | "m" | "w" | "d" | "h";
 
@@ -16,7 +16,8 @@ export type TokenStream = readonly Token[];
 export type VariableSpec =
   | { kind: "string"; value: string }
   | { kind: "number"; value: number }
-  | { kind: "date"; value: CalendarDate; defaultFormat: string };
+  | { kind: "date"; value: CalendarDate; defaultFormat: string; invertible?: boolean }
+  | { kind: "clock"; value: Clock; defaultFormat: string };
 
 export type BoundValue =
   | { kind: "string"; value: string }

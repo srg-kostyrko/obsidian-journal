@@ -12,7 +12,7 @@ export type TemplateParseErrorDetail =
   | { kind: "invalid-number"; capture: string; variableName: string }
   | { kind: "invalid-date"; capture: string; variableName: string; format: string }
   | { kind: "conflict"; variableName: string; candidates: BoundValue[] }
-  | { kind: "not-invertible"; reason: "function-token" | "unknown-variable"; offending: string };
+  | { kind: "not-invertible"; reason: "function-token" | "unknown-variable" | "clock-variable"; offending: string };
 
 export class TemplateParseError extends TemplatesError {
   constructor(readonly detail: TemplateParseErrorDetail) {

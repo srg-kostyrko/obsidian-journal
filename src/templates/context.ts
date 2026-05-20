@@ -1,4 +1,4 @@
-import type { CalendarDate } from "@/calendar";
+import type { CalendarDate, Clock } from "@/calendar";
 
 import type { VariableSpec } from "./types";
 
@@ -21,8 +21,21 @@ export class TemplateContext {
     return this.#with(name, { kind: "number", value });
   }
 
-  date(name: string, value: CalendarDate, defaultFormat: string): TemplateContext {
-    return this.#with(name, { kind: "date", value, defaultFormat });
+  date(name: string, value: CalendarDate, defaultFormat: string, options?: { invertible?: boolean }): TemplateContext {
+    return this.#with(name, {
+      kind: "date",
+      value,
+      defaultFormat,
+      ...(options?.invertible === false ? { invertible: false } : {}),
+    });
+  }
+
+  clock(name: string, value: Clock, defaultFormat: string): TemplateContext {
+    return this.#with(name, { kind: "clock", value, defaultFormat });
+  }
+
+  withSpec(name: string, spec: VariableSpec): TemplateContext {
+    return this.#with(name, spec);
   }
 
   get(name: string): VariableSpec | undefined {

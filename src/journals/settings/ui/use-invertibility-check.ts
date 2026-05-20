@@ -5,7 +5,7 @@ import { useService } from "@/infrastructure/di";
 import { TemplateContext, TemplateEngine, tokenize } from "@/templates";
 
 export interface InvertibilityWarning {
-  reason: "function-token" | "unknown-variable";
+  reason: "function-token" | "unknown-variable" | "clock-variable";
   offending: string;
 }
 

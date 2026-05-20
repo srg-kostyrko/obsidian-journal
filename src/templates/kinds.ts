@@ -36,6 +36,9 @@ export function patternForKind(spec: VariableSpec, format?: string): string {
       const effective = format ?? spec.defaultFormat;
       return formatToRegexp(effective).source;
     }
+    case "clock": {
+      return ".+?";
+    }
   }
 }
 
