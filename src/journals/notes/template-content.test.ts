@@ -6,6 +6,7 @@ import { NotesService } from "@/infrastructure/host";
 import type { VaultPath } from "@/infrastructure/host";
 import { FakeNotesService } from "@/infrastructure/host/testing";
 import { LoggerModule } from "@/infrastructure/logger";
+import { expectOk } from "@/infrastructure/result/testing";
 import { SettingsService } from "@/settings";
 import { TemplateEngine } from "@/templates";
 
@@ -41,7 +42,7 @@ describe("TemplateContentService.renderFor", () => {
   it("resolves to empty string when no templates are configured", async () => {
     const settings = fakeSettings({ daily: fixedJournal("daily", { type: "day" }) });
     const notes = new FakeNotesService();
-    const result = await build(settings, notes).resolve(TemplateContentService).renderFor("daily", meta);
+    const result = await build(settings, notes).resolve(TemplateContentService).renderFor("daily", meta, "2026-05-19");
     expect(result.isOk() && result.value).toBe("");
   });
 
@@ -51,7 +52,7 @@ describe("TemplateContentService.renderFor", () => {
     });
     const notes = new FakeNotesService();
     notes.seed("Templates/daily.md" as VaultPath, "# {{date}}\n");
-    const result = await build(settings, notes).resolve(TemplateContentService).renderFor("daily", meta);
+    const result = await build(settings, notes).resolve(TemplateContentService).renderFor("daily", meta, "2026-05-19");
     expect(result.isOk() && result.value).toBe("# 2026-05-19\n");
   });
 
@@ -61,7 +62,7 @@ describe("TemplateContentService.renderFor", () => {
     });
     const notes = new FakeNotesService();
     notes.seed("Templates/2026/daily.md" as VaultPath, "body");
-    const result = await build(settings, notes).resolve(TemplateContentService).renderFor("daily", meta);
+    const result = await build(settings, notes).resolve(TemplateContentService).renderFor("daily", meta, "2026-05-19");
     expect(result.isOk() && result.value).toBe("body");
   });
 
@@ -70,7 +71,41 @@ describe("TemplateContentService.renderFor", () => {
       daily: fixedJournal("daily", { type: "day" }, { templates: ["Templates/missing.md"] }),
     });
     const notes = new FakeNotesService();
-    const result = await build(settings, notes).resolve(TemplateContentService).renderFor("daily", meta);
+    const result = await build(settings, notes).resolve(TemplateContentService).renderFor("daily", meta, "2026-05-19");
     expect(result.isOk() && result.value).toBe("");
+  });
+});
+
+describe("TemplateContentService.renderFor — note_name binding", () => {
+  it("exposes note_name to template body matching the rendered basename", async () => {
+    const settings = fakeSettings({
+      daily: fixedJournal("daily", { type: "day" }, { templates: ["Templates/daily.md"] }),
+    });
+    const notes = new FakeNotesService();
+    notes.seed("Templates/daily.md" as VaultPath, "{{note_name}}");
+    const result = await build(settings, notes).resolve(TemplateContentService).renderFor("daily", meta, "2026-05-20");
+    expectOk(result);
+    expect(result.value).toBe("2026-05-20");
+  });
+
+  it("aliases title to note_name in template body", async () => {
+    const settings = fakeSettings({
+      daily: fixedJournal("daily", { type: "day" }, { templates: ["Templates/daily.md"] }),
+    });
+    const notes = new FakeNotesService();
+    notes.seed("Templates/daily.md" as VaultPath, "{{title}}");
+    const result = await build(settings, notes).resolve(TemplateContentService).renderFor("daily", meta, "my-note");
+    expectOk(result);
+    expect(result.value).toBe("my-note");
+  });
+
+  it("does not expose note_name when resolving the templatePath itself", async () => {
+    const settings = fakeSettings({
+      daily: fixedJournal("daily", { type: "day" }, { templates: ["Templates/{{note_name}}.md"] }),
+    });
+    const notes = new FakeNotesService();
+    const result = await build(settings, notes).resolve(TemplateContentService).renderFor("daily", meta, "2026-05-20");
+    expectOk(result);
+    expect(result.value).toBe("");
   });
 });
