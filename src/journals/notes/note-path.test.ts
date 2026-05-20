@@ -1,4 +1,4 @@
-import { describe, it, expect } from "vitest";
+import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
 
 import type { AnchorString } from "@/calendar";
 import { anchor } from "@/calendar/testing";
@@ -17,6 +17,7 @@ import { fakeSettings, fixedJournal, unwrap } from "../testing";
 
 import { NotePathService } from "./note-path";
 
+import type { JournalConfig } from "../config";
 import type { JournalMetadata } from "../types";
 
 function buildContainer(settings: SettingsService): Container {
@@ -132,5 +133,44 @@ describe("NotePathService.candidateFor", () => {
     const metadata = unwrap(result);
     expect(metadata.anchor).toBe("2026-05-19");
     expect(metadata.numbers?.index).toBe(42);
+  });
+});
+
+function buildFixture(): { service: NotePathService; config: JournalConfig; metadata: JournalMetadata } {
+  const config = fixedJournal("daily", { type: "day" });
+  const settings = fakeSettings({ daily: config });
+  const service = buildContainer(settings).resolve(NotePathService);
+  const metadata: JournalMetadata = { journalName: "daily", anchor: anchor("2026-05-20") };
+  return { service, config, metadata };
+}
+
+describe("contextFor — render-time variables", () => {
+  beforeEach(() => {
+    vi.useFakeTimers();
+  });
+
+  afterEach(() => {
+    vi.useRealTimers();
+  });
+
+  it("exposes current_date with the dateFormat as default", () => {
+    vi.setSystemTime(new Date("2026-05-20T10:37:42"));
+    const { service, config, metadata } = buildFixture();
+    const context = service.contextFor(config, metadata);
+    const spec = context.get("current_date");
+    expect(spec?.kind).toBe("date");
+    expect(spec?.kind === "date" && spec.value.toAnchor()).toBe("2026-05-20");
+    expect(spec?.kind === "date" && spec.invertible).toBe(false);
+  });
+
+  it("exposes time and current_time as the same clock spec object", () => {
+    vi.setSystemTime(new Date("2026-05-20T10:37:42"));
+    const { service, config, metadata } = buildFixture();
+    const context = service.contextFor(config, metadata);
+    const time = context.get("time");
+    const currentTime = context.get("current_time");
+    expect(time?.kind).toBe("clock");
+    expect(time).toBe(currentTime);
+    expect(time?.kind === "clock" && time.defaultFormat).toBe("HH:mm");
   });
 });

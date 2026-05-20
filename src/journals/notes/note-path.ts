@@ -1,6 +1,6 @@
 import { normalizePath } from "obsidian";
 
-import { CalendarDate } from "@/calendar";
+import { CalendarDate, Clock } from "@/calendar";
 import { inject } from "@/infrastructure/di";
 import type { VaultPath } from "@/infrastructure/host";
 import { Err, Ok, Option, type Result } from "@/infrastructure/result";
@@ -107,6 +107,10 @@ export class NotePathService {
       const value = metadata.numbers?.[source.variable];
       if (value !== undefined) context = context.number(source.variable, value);
     }
+    // Render-time snapshots — invertible:false so they don't enter the filename→date round-trip.
+    context = context.date("current_date", CalendarDate.today(), "YYYY-MM-DD", { invertible: false });
+    const clockSpec = { kind: "clock", value: Clock.now(), defaultFormat: "HH:mm" } as const;
+    context = context.withSpec("time", clockSpec).withSpec("current_time", clockSpec);
     return context;
   }
 }
