@@ -354,7 +354,7 @@ describe("non-invertible date and clock variables in parse path", () => {
       .date("date", CalendarDate.fromAnchor("2026-05-20" as AnchorString), "YYYY-MM-DD")
       .clock("time", Clock.now(), "HH:mm");
     const result = engine.parse(tokenize("{{time}}-{{date:YYYY-MM-DD}}.md"), "anything-2026-05-20.md", context);
-    expect(result.kind).toBe("ok");
+    expectOk(result);
   });
 });
 
