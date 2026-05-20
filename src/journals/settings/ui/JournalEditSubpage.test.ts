@@ -336,12 +336,13 @@ describe("JournalEditSubpage", () => {
   });
 
   describe("note creation collapsible", () => {
-    it("renders the four fields", async () => {
+    it("renders the five fields", async () => {
       const { container } = await setup();
       mount(container, "daily");
       expect(screen.getByText(m.journal_edit_section_note_creation())).toBeTruthy();
       expect(screen.getByText(m.journal_edit_name_template_label())).toBeTruthy();
       expect(screen.getByText(m.journal_edit_folder_label())).toBeTruthy();
+      expect(screen.getByText(m.journal_edit_date_format_label())).toBeTruthy();
       expect(screen.getByText(m.journal_edit_confirm_creation_label())).toBeTruthy();
       expect(screen.getByText(m.journal_edit_auto_create_label())).toBeTruthy();
     });

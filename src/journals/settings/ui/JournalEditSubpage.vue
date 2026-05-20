@@ -207,6 +207,23 @@ function editSequenceKey(): void {
         <FolderInput v-model="config.folder" />
       </UiSettingRow>
 
+      <UiSettingRow :name="m.journal_edit_date_format_label()">
+        <template #description>
+          <div>{{ m.journal_edit_date_format_description({ "{date": config.dateFormat }) }}</div>
+          <a target="_blank" href="https://momentjs.com/docs/#/displaying/format/">
+            {{ m.journal_edit_date_format_moment_doc_link() }}
+          </a>
+          <DateFormatPreview :format="config.dateFormat" />
+          <div v-if="config.dateFormat.includes('/')" class="journal-recommendation">
+            {{ m.journal_edit_move_to_folder_recommendation_date_format() }}
+            <a href="#" @click.prevent="applyDateFormatRecommendation">
+              {{ m.journal_edit_move_to_folder_apply_link() }}
+            </a>
+          </div>
+        </template>
+        <UiTextInput v-model="config.dateFormat" />
+      </UiSettingRow>
+
       <UiSettingRow :name="m.journal_edit_confirm_creation_label()">
         <template #description>{{ m.journal_edit_confirm_creation_description() }}</template>
         <UiToggle v-model="config.confirmCreation" />
@@ -220,23 +237,6 @@ function editSequenceKey(): void {
         <UiToggle v-model="config.autoCreate" />
       </UiSettingRow>
     </UiCollapsibleBlock>
-
-    <UiSettingRow :name="m.journal_edit_date_format_label()">
-      <template #description>
-        <div>{{ m.journal_edit_date_format_description({ "{date": config.dateFormat }) }}</div>
-        <a target="_blank" href="https://momentjs.com/docs/#/displaying/format/">
-          {{ m.journal_edit_date_format_moment_doc_link() }}
-        </a>
-        <DateFormatPreview :format="config.dateFormat" />
-        <div v-if="config.dateFormat.includes('/')" class="journal-recommendation">
-          {{ m.journal_edit_move_to_folder_recommendation_date_format() }}
-          <a href="#" @click.prevent="applyDateFormatRecommendation">
-            {{ m.journal_edit_move_to_folder_apply_link() }}
-          </a>
-        </div>
-      </template>
-      <UiTextInput v-model="config.dateFormat" />
-    </UiSettingRow>
 
     <UiCollapsibleBlock v-model:expanded="templatesOpen">
       <template #trigger>
