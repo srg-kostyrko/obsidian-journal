@@ -9,6 +9,7 @@ import { ModalService } from "@/infrastructure/host/modals";
 import { FakeModalService } from "@/infrastructure/host/modals/testing";
 import { FakeNotesService } from "@/infrastructure/host/testing";
 import { LoggerModule } from "@/infrastructure/logger";
+import { expectOk } from "@/infrastructure/result/testing";
 import { SettingsService } from "@/settings";
 import { TemplateEngine } from "@/templates";
 
@@ -137,5 +138,23 @@ describe("NoteCreationService.attachNote", () => {
     expect(result.isOk()).toBe(true);
     const read = await notes.read("2026-05-19.md" as VaultPath);
     expect(read.isOk() && read.value).toBe("body");
+  });
+});
+
+describe("NoteCreationService.ensureNote — note_name binding", () => {
+  it("substitutes {{note_name}} in template body with the file's basename", async () => {
+    const noteMeta: JournalMetadata = { journalName: "daily", anchor: anchor("2026-05-20") };
+    const settings = fakeSettings({
+      daily: fixedJournal("daily", { type: "day" }, { templates: ["Templates/daily.md"] }),
+    });
+    const notes = new FakeNotesService();
+    notes.seed("Templates/daily.md" as VaultPath, "Hello {{note_name}}");
+    const result = await build(settings, notes, new FakeModalService())
+      .resolve(NoteCreationService)
+      .ensureNote("daily", noteMeta);
+    expectOk(result);
+    const read = await notes.read("2026-05-20.md" as VaultPath);
+    expectOk(read);
+    expect(read.value).toBe("Hello 2026-05-20");
   });
 });
