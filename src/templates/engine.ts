@@ -178,11 +178,6 @@ export class TemplateEngine {
           new TemplateParseError({ kind: "not-invertible", reason: "unknown-variable", offending: token.name }),
         );
       }
-      if (spec.kind === "clock") {
-        // Clock variables are non-invertible; match but don't capture.
-        parts.push(".+?");
-        continue;
-      }
       const captureIndex = captureTokens.length;
       const pattern = patternForKind(spec, token.format);
       parts.push(`(?<v_${captureIndex}>${pattern})`);
