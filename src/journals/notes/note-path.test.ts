@@ -176,3 +176,41 @@ describe("contextFor — render-time variables", () => {
     expect(time.defaultFormat).toBe("HH:mm");
   });
 });
+
+describe("bodyContextFor", () => {
+  beforeEach(() => {
+    vi.useFakeTimers();
+  });
+
+  afterEach(() => {
+    vi.useRealTimers();
+  });
+
+  it("aliases note_name and title to the same string spec", () => {
+    vi.setSystemTime(new Date("2026-05-20T10:37:42"));
+    const { service, config, metadata } = buildFixture();
+    const body = service.bodyContextFor(config, metadata, "2026-05-20");
+    const noteName = body.get("note_name");
+    const title = body.get("title");
+    expect(noteName?.kind).toBe("string");
+    assert(noteName?.kind === "string");
+    expect(noteName.value).toBe("2026-05-20");
+    expect(noteName).toBe(title);
+  });
+
+  it("inherits path-context variables", () => {
+    vi.setSystemTime(new Date("2026-05-20T10:37:42"));
+    const { service, config, metadata } = buildFixture();
+    const body = service.bodyContextFor(config, metadata, "2026-05-20");
+    expect(body.get("date")).toBeDefined();
+    expect(body.get("current_date")).toBeDefined();
+    expect(body.get("time")).toBeDefined();
+  });
+
+  it("does not expose note_name in the path context", () => {
+    const { service, config, metadata } = buildFixture();
+    const path = service.contextFor(config, metadata);
+    expect(path.get("note_name")).toBeUndefined();
+    expect(path.get("title")).toBeUndefined();
+  });
+});

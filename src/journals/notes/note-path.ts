@@ -87,6 +87,12 @@ export class NotePathService {
     return context;
   }
 
+  bodyContextFor(config: JournalConfig, metadata: JournalMetadata, noteName: string): TemplateContext {
+    const base = this.contextFor(config, metadata);
+    const noteSpec = { kind: "string", value: noteName } as const;
+    return base.withSpec("note_name", noteSpec).withSpec("title", noteSpec);
+  }
+
   configFor(name: string): JournalConfig | undefined {
     return this.#settings.getCollection(journalConfigCollection).get(name) as JournalConfig | undefined;
   }
