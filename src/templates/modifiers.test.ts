@@ -1,6 +1,6 @@
-import { afterEach, beforeEach, describe, expect, it } from "vitest";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
-import { CalendarDate } from "@/calendar";
+import { CalendarDate, Clock } from "@/calendar";
 import { anchor, installTestCalendar } from "@/calendar/testing";
 
 import { applyModifiers, unapplyModifiers } from "./modifiers";
@@ -59,5 +59,35 @@ describe("applyModifiers / unapplyModifiers", () => {
       const back = unapplyModifiers(after, [modifier]);
       expect(back.toAnchor()).toBe(source);
     });
+  });
+});
+
+describe("applyModifiers on Clock", () => {
+  let teardown: () => void;
+
+  beforeEach(() => {
+    ({ teardown } = installTestCalendar());
+    vi.useFakeTimers();
+  });
+  afterEach(() => {
+    teardown();
+    vi.useRealTimers();
+  });
+
+  it("applies shifts then boundaries to a Clock", () => {
+    vi.setSystemTime(new Date("2026-05-20T10:37:42"));
+    const clock = Clock.now();
+    const result = applyModifiers(clock, [
+      { kind: "shift", sign: 1, amount: 1, unit: "d" },
+      { kind: "boundary", direction: "start", unit: "day" },
+    ]);
+    expect(result.format("YYYY-MM-DD HH:mm:ss")).toBe("2026-05-21 00:00:00");
+  });
+
+  it("silently ignores unknown boundary units on Clock", () => {
+    vi.setSystemTime(new Date("2026-05-20T10:37:42"));
+    const clock = Clock.now();
+    const result = applyModifiers(clock, [{ kind: "boundary", direction: "start", unit: "decade" }]);
+    expect(result.format("YYYY-MM-DD HH:mm:ss")).toBe("2026-05-20 10:37:42");
   });
 });

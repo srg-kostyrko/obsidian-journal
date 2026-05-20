@@ -76,7 +76,9 @@ export class CalendarDate {
     return CalendarDate._fromMoment(m);
   }
 
-  startOf(unit: "year" | "quarter" | "month" | "week" | "day" | "decade"): CalendarDate {
+  startOf(unit: "year" | "quarter" | "month" | "week" | "day" | "decade" | "hour"): CalendarDate {
+    // CalendarDate has day-level precision; hour boundaries are accepted for Shiftable parity but are no-ops.
+    if (unit === "hour") return this;
     if (unit === "decade") {
       const m = localMoment(this.#anchor, ANCHOR_FORMAT, true);
       const startYear = m.year() - (m.year() % 10);
@@ -86,7 +88,9 @@ export class CalendarDate {
     return CalendarDate._fromMoment(m);
   }
 
-  endOf(unit: "year" | "quarter" | "month" | "week" | "day" | "decade"): CalendarDate {
+  endOf(unit: "year" | "quarter" | "month" | "week" | "day" | "decade" | "hour"): CalendarDate {
+    // CalendarDate has day-level precision; hour boundaries are accepted for Shiftable parity but are no-ops.
+    if (unit === "hour") return this;
     if (unit === "decade") {
       const m = localMoment(this.#anchor, ANCHOR_FORMAT, true);
       const endYear = m.year() + (9 - (m.year() % 10));
