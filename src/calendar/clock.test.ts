@@ -59,4 +59,66 @@ describe("Clock", () => {
       expect(Clock.msUntilNextLocalMidnight()).toBe(500);
     });
   });
+
+  describe("shift", () => {
+    beforeEach(() => vi.useFakeTimers());
+
+    it("adds hours", () => {
+      vi.setSystemTime(new Date("2026-05-20T10:00:00"));
+      expect(Clock.now().shift(2, "h").format("HH:mm")).toBe("12:00");
+    });
+
+    it("subtracts hours via negative amount", () => {
+      vi.setSystemTime(new Date("2026-05-20T10:00:00"));
+      expect(Clock.now().shift(-3, "h").format("HH:mm")).toBe("07:00");
+    });
+
+    it("adds days, weeks, months, quarters, years", () => {
+      vi.setSystemTime(new Date("2026-05-20T10:30:00"));
+      expect(Clock.now().shift(1, "d").format("YYYY-MM-DD HH:mm")).toBe("2026-05-21 10:30");
+      expect(Clock.now().shift(1, "w").format("YYYY-MM-DD")).toBe("2026-05-27");
+      expect(Clock.now().shift(1, "m").format("YYYY-MM-DD")).toBe("2026-06-20");
+      expect(Clock.now().shift(1, "q").format("YYYY-MM-DD")).toBe("2026-08-20");
+      expect(Clock.now().shift(1, "y").format("YYYY-MM-DD")).toBe("2027-05-20");
+    });
+  });
+
+  describe("startOf", () => {
+    beforeEach(() => vi.useFakeTimers());
+
+    it("rounds down to hour", () => {
+      vi.setSystemTime(new Date("2026-05-20T10:37:42"));
+      expect(Clock.now().startOf("hour").format("HH:mm:ss")).toBe("10:00:00");
+    });
+
+    it("rounds down to day, week, month, quarter, year", () => {
+      vi.setSystemTime(new Date("2026-05-20T10:37:42"));
+      expect(Clock.now().startOf("day").format("YYYY-MM-DD HH:mm:ss")).toBe("2026-05-20 00:00:00");
+      expect(Clock.now().startOf("month").format("YYYY-MM-DD")).toBe("2026-05-01");
+      expect(Clock.now().startOf("year").format("YYYY-MM-DD")).toBe("2026-01-01");
+    });
+  });
+
+  describe("endOf", () => {
+    beforeEach(() => vi.useFakeTimers());
+
+    it("rounds up to end of hour", () => {
+      vi.setSystemTime(new Date("2026-05-20T10:37:42"));
+      expect(Clock.now().endOf("hour").format("HH:mm:ss")).toBe("10:59:59");
+    });
+
+    it("rounds up to end of day", () => {
+      vi.setSystemTime(new Date("2026-05-20T10:37:42"));
+      expect(Clock.now().endOf("day").format("YYYY-MM-DD HH:mm:ss")).toBe("2026-05-20 23:59:59");
+    });
+  });
+
+  describe("shifts and boundaries stack", () => {
+    beforeEach(() => vi.useFakeTimers());
+
+    it("applies shift then boundary in caller order", () => {
+      vi.setSystemTime(new Date("2026-05-20T10:37:42"));
+      expect(Clock.now().shift(1, "d").startOf("day").format("YYYY-MM-DD HH:mm:ss")).toBe("2026-05-21 00:00:00");
+    });
+  });
 });
