@@ -1142,12 +1142,16 @@ git commit -m "test(journals/notes/note-creation): body renders with file basena
 
 ---
 
-## Task 10: Add VariableChip component with click-to-copy
+## Task 10: Add VariableChip + I18nWithSlot shared primitives
+
+Two shared infra components: `VariableChip` (click-to-copy variable token) and `I18nWithSlot` (interpolates a Vue slot into a paraglide message at a `{slot}` placeholder, so translators get full sentences instead of fragments).
 
 **Files:**
 
 - Create: `src/journals/settings/ui/VariableChip.vue`
 - Create: `src/journals/settings/ui/VariableChip.test.ts`
+- Create: `src/journals/settings/ui/I18nWithSlot.vue`
+- Create: `src/journals/settings/ui/I18nWithSlot.test.ts`
 - Modify: `messages/en.json`
 
 - [ ] **Step 1: Write failing tests**
@@ -1248,11 +1252,102 @@ npm run check:types
 npm run check:lint
 ```
 
-- [ ] **Step 6: Commit**
+- [ ] **Step 6: Write failing tests for I18nWithSlot**
+
+Create `src/journals/settings/ui/I18nWithSlot.test.ts`:
+
+```ts
+import { cleanup, render, screen } from "@testing-library/vue";
+import { afterEach, describe, expect, it } from "vitest";
+import { defineComponent, h } from "vue";
+
+import I18nWithSlot from "./I18nWithSlot.vue";
+
+afterEach(() => cleanup());
+
+describe("I18nWithSlot", () => {
+  it("interpolates the default slot at the {slot} placeholder", () => {
+    const message = (args: { slot: string }) => `before ${args.slot} after`;
+    render(I18nWithSlot, {
+      props: { message },
+      slots: { default: () => h("strong", "INSERTED") },
+    });
+    expect(screen.getByText(/before/i)).toBeInTheDocument();
+    expect(screen.getByText("INSERTED")).toBeInTheDocument();
+    expect(screen.getByText(/after/i)).toBeInTheDocument();
+  });
+
+  it("preserves prose order when the slot is at the start of the message", () => {
+    const message = (args: { slot: string }) => `${args.slot} comes first`;
+    render(I18nWithSlot, {
+      props: { message },
+      slots: { default: () => h("em", "X") },
+    });
+    const container = screen.getByText("X").parentElement;
+    expect(container?.textContent).toBe("X comes first");
+  });
+
+  it("renders the message unchanged when no slot placeholder is present", () => {
+    const message = (_args: { slot: string }) => "no slot here";
+    render(I18nWithSlot, {
+      props: { message },
+      slots: { default: () => h("span", "UNUSED") },
+    });
+    expect(screen.getByText("no slot here")).toBeInTheDocument();
+  });
+});
+```
+
+- [ ] **Step 7: Run tests, verify failure**
 
 ```bash
-git add src/journals/settings/ui/VariableChip.vue src/journals/settings/ui/VariableChip.test.ts messages/en.json
-git commit -m "feat(journals/settings/ui): VariableChip with click-to-copy"
+npm run test -- --run src/journals/settings/ui/I18nWithSlot.test.ts
+```
+
+Expected: module-not-found.
+
+- [ ] **Step 8: Implement I18nWithSlot**
+
+Create `src/journals/settings/ui/I18nWithSlot.vue`:
+
+```vue
+<script setup lang="ts">
+import { computed } from "vue";
+
+type MessageFn = (args: { slot: string }) => string;
+
+const props = defineProps<{ message: MessageFn }>();
+
+const SENTINEL = "__i18n_slot__";
+
+const parts = computed(() => {
+  const rendered = props.message({ slot: SENTINEL });
+  const idx = rendered.indexOf(SENTINEL);
+  if (idx === -1) return { before: rendered, after: "" };
+  return { before: rendered.slice(0, idx), after: rendered.slice(idx + SENTINEL.length) };
+});
+</script>
+
+<template>
+  <span>{{ parts.before }}<slot />{{ parts.after }}</span>
+</template>
+```
+
+`__i18n_slot__` is contrived enough that no translator would write it inadvertently. Whitespace around the slot is owned entirely by the translator's text — the helper substitutes only the sentinel itself, so a translation `"For example {slot} renders…"` produces `before = "For example "` and `after = " renders…"`. The component is a pure interpolation helper — it doesn't know about variables or chips; it just lets any slot content land at the `{slot}` position the translator chose.
+
+- [ ] **Step 9: Run tests + typecheck + lint**
+
+```bash
+npm run test -- --run src/journals/settings/ui/I18nWithSlot.test.ts
+npm run check:types
+npm run check:lint
+```
+
+- [ ] **Step 10: Commit**
+
+```bash
+git add src/journals/settings/ui/VariableChip.vue src/journals/settings/ui/VariableChip.test.ts src/journals/settings/ui/I18nWithSlot.vue src/journals/settings/ui/I18nWithSlot.test.ts messages/en.json
+git commit -m "feat(journals/settings/ui): VariableChip and I18nWithSlot primitives"
 ```
 
 ---
@@ -1272,19 +1367,19 @@ Append to `messages/en.json` (alphabetic placement):
 
 ```json
 "variable_modifications_boundary_body": "Snap a date variable to the start or end of a calendar period by adding `<startOf=unit>` or `<endOf=unit>`.",
-"variable_modifications_boundary_example_caption": "For example {{date<startOf=year>}} renders January 1st of the date's year.",
+"variable_modifications_boundary_example": "For example {slot} renders January 1st of the date's year.",
 "variable_modifications_boundary_heading": "Snap to start or end of period",
 "variable_modifications_boundary_units_intro": "Supported units:",
 "variable_modifications_combined_body": "All three modifications can be combined. Shifts apply first, then boundaries, then the format override.",
-"variable_modifications_combined_example_caption": "For example {{date+1w<startOf=week>:MMM DD, YYYY}} shifts the date one week forward, snaps to the start of that week, and formats it.",
+"variable_modifications_combined_example": "For example {slot} shifts the date one week forward, snaps to the start of that week, and formats it.",
 "variable_modifications_combined_heading": "Combined",
 "variable_modifications_format_body": "Override the default date format by adding a colon and a moment.js format string.",
-"variable_modifications_format_example_caption": "For example {{date:YYYY}} renders only the year.",
+"variable_modifications_format_example": "For example {slot} renders only the year.",
 "variable_modifications_format_heading": "Format override",
 "variable_modifications_format_link": "moment.js format reference",
 "variable_modifications_intro": "Date and clock variables support three kinds of modifications. They can be combined in a single token.",
 "variable_modifications_shift_body": "Add or subtract a number of units by appending `+N<unit>` or `-N<unit>`.",
-"variable_modifications_shift_example_caption": "For example {{date+1w}} shifts the date forward by one week.",
+"variable_modifications_shift_example": "For example {slot} shifts the date forward by one week.",
 "variable_modifications_shift_heading": "Arithmetic shifts",
 "variable_modifications_shift_units_intro": "Supported units:",
 "variable_modifications_unit_d": "d — days",
@@ -1386,6 +1481,7 @@ Create `src/journals/settings/ui/DateModificationsModal.vue`:
 <script setup lang="ts">
 import { m } from "@/i18n";
 
+import I18nWithSlot from "./I18nWithSlot.vue";
 import VariableChip from "./VariableChip.vue";
 
 const shiftUnits = [
@@ -1415,9 +1511,10 @@ const boundaryUnits = [
     <h4>{{ m.variable_modifications_format_heading() }}</h4>
     <p>{{ m.variable_modifications_format_body() }}</p>
     <p>
-      <VariableChip name="date:YYYY" />
+      <I18nWithSlot :message="m.variable_modifications_format_example">
+        <VariableChip name="date:YYYY" />
+      </I18nWithSlot>
     </p>
-    <p>{{ m.variable_modifications_format_example_caption() }}</p>
     <p>
       <a href="https://momentjs.com/docs/#/displaying/format/" target="_blank" rel="noopener">
         {{ m.variable_modifications_format_link() }}
@@ -1427,9 +1524,10 @@ const boundaryUnits = [
     <h4>{{ m.variable_modifications_shift_heading() }}</h4>
     <p>{{ m.variable_modifications_shift_body() }}</p>
     <p>
-      <VariableChip name="date+1w" />
+      <I18nWithSlot :message="m.variable_modifications_shift_example">
+        <VariableChip name="date+1w" />
+      </I18nWithSlot>
     </p>
-    <p>{{ m.variable_modifications_shift_example_caption() }}</p>
     <p>{{ m.variable_modifications_shift_units_intro() }}</p>
     <ul>
       <li v-for="unit in shiftUnits" :key="unit.key">{{ unit.label() }}</li>
@@ -1438,9 +1536,10 @@ const boundaryUnits = [
     <h4>{{ m.variable_modifications_boundary_heading() }}</h4>
     <p>{{ m.variable_modifications_boundary_body() }}</p>
     <p>
-      <VariableChip name="date<startOf=year>" />
+      <I18nWithSlot :message="m.variable_modifications_boundary_example">
+        <VariableChip name="date<startOf=year>" />
+      </I18nWithSlot>
     </p>
-    <p>{{ m.variable_modifications_boundary_example_caption() }}</p>
     <p>{{ m.variable_modifications_boundary_units_intro() }}</p>
     <ul>
       <li v-for="unit in boundaryUnits" :key="unit.key">{{ unit.label() }}</li>
@@ -1449,9 +1548,10 @@ const boundaryUnits = [
     <h4>{{ m.variable_modifications_combined_heading() }}</h4>
     <p>{{ m.variable_modifications_combined_body() }}</p>
     <p>
-      <VariableChip name="date+1w<startOf=week>:MMM DD, YYYY" />
+      <I18nWithSlot :message="m.variable_modifications_combined_example">
+        <VariableChip name="date+1w<startOf=week>:MMM DD, YYYY" />
+      </I18nWithSlot>
     </p>
-    <p>{{ m.variable_modifications_combined_example_caption() }}</p>
   </div>
 </template>
 ```
@@ -1497,16 +1597,12 @@ Append to `messages/en.json`:
 ```json
 "journal_edit_variable_additional_modifications_link": "additional modifications",
 "journal_edit_variable_current_date_description": "Today's date (in YYYY-MM-DD by default).",
-"journal_edit_variable_current_time_description": "Current wall-clock time (alias of {{time}}, in HH:mm by default).",
+"journal_edit_variable_current_time_description": "Current wall-clock time (alias of {slot}, in HH:mm by default).",
 "journal_edit_variable_non_invertible_warning": "Using this here prevents the journal from recovering the date from the filename.",
-"journal_edit_variable_note_name_description": "The note's own filename. (Body templates only.)",
 "journal_edit_variable_time_description": "Current wall-clock time (in HH:mm by default).",
-"journal_edit_variable_title_description": "Alias of {{note_name}}, for core-template compatibility. (Body templates only.)",
 ```
 
-(Existing key `journal_edit_variable_numbering_description` already exists; `note_name`/`title` keys are added but only consumed by tests that confirm the rules table — actual modal doesn't render them since they're filtered. We keep them for symmetry and so a future body-template modal can reuse them.)
-
-Actually since `note_name`/`title` are hidden in all three current contexts, you may omit those two keys. Add them only if a test asserts the description text. Keep this minimal — drop the two `_note_name_/_title_` keys unless used.
+`note_name` and `title` are hidden in all three current contexts (body-only variables, filtered out by the rules table), so no description keys are needed for them. `current_time_description` references `time` via a `{slot}` placeholder — the modal renders the chip via `<I18nWithSlot>` (introduced in Task 10).
 
 - [ ] **Step 3: Update modal definition's prop shape**
 
@@ -1605,7 +1701,10 @@ describe("VariableReferenceModal — rules table", () => {
       it("renders current_date, time, current_time", () => {
         renderModal({ context });
         expect(screen.getByText("{{current_date}}")).toBeInTheDocument();
-        expect(screen.getByText("{{time}}")).toBeInTheDocument();
+        // {{time}} appears twice: once as the standalone row chip and once inside the
+        // current_time row's "alias of …" description via <I18nWithSlot>. Both are real
+        // copy-on-click chips — the test only needs to confirm presence.
+        expect(screen.getAllByText("{{time}}").length).toBeGreaterThanOrEqual(1);
         expect(screen.getByText("{{current_time}}")).toBeInTheDocument();
       });
     });
@@ -1661,6 +1760,7 @@ import { useService } from "@/infrastructure/di";
 import { ModalService } from "@/infrastructure/host/modals";
 
 import { dateModificationsModal } from "./date-modifications-modal";
+import I18nWithSlot from "./I18nWithSlot.vue";
 import VariableChip from "./VariableChip.vue";
 import type { VariableModalContext } from "./variable-context";
 
@@ -1761,7 +1861,9 @@ function openModifications(event: Event): void {
       <div class="variable-reference__row">
         <dt><VariableChip name="current_time" /></dt>
         <dd>
-          {{ m.journal_edit_variable_current_time_description() }}
+          <I18nWithSlot :message="m.journal_edit_variable_current_time_description">
+            <VariableChip name="time" />
+          </I18nWithSlot>
           <a href="#" @click="openModifications">
             {{ m.journal_edit_variable_additional_modifications_link() }}
           </a>
