@@ -1,5 +1,6 @@
 import type { Module } from "@/infrastructure/di";
 
+import { CommandService } from "./commands/internal/command-service";
 import { InputSuggestService } from "./input-suggests/internal/input-suggest-service";
 import { NotesService } from "./internal/notes-service";
 import { PluginData } from "./internal/plugin-data";
@@ -22,6 +23,7 @@ export function createHostModule(plugin: Plugin): Module {
       c.register(PluginData).useClass(PluginData);
       c.register(SuggestService).useClass(SuggestService);
       c.register(InputSuggestService).useClass(InputSuggestService);
+      c.register(CommandService).useClass(CommandService);
       modalsModule.register(c);
     },
   };

@@ -41,6 +41,7 @@ export {
   type InputSuggestDefinition,
   type InputSuggestDefinitionInput,
 } from "./input-suggests";
+export { CommandService, type CommandRegistration } from "./commands";
 export { createHostModule } from "./module";
 export type { Note, NotesEvents, OpenMode, VaultPath, WorkspaceEvents } from "./types";
 export { InternalObsidianAppToken, InternalPluginToken } from "./internal/tokens";
