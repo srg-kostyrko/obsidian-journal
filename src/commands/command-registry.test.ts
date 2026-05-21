@@ -193,6 +193,17 @@ describe("DynamicCommandRegistry journal cascade", () => {
     expect(host.commands.get("cmd-1")).toBeDefined();
   });
 
+  it("leaves a journal-target command for an unrelated journal untouched on rename", async () => {
+    const { commands, lifecycle } = await build();
+    lifecycle.create("daily", { type: "day" });
+    lifecycle.create("weekly", { type: "week" });
+    commands.add("cmd-1", makeCommand({ target: { kind: "journal", journalName: "weekly" } }));
+
+    lifecycle.rename("daily", "morning");
+
+    expect(commands.get("cmd-1")?.target).toEqual({ kind: "journal", journalName: "weekly" });
+  });
+
   it("removes a journal-target command when its journal is deleted", async () => {
     const { host, commands, lifecycle } = await build();
     lifecycle.create("daily", { type: "day" });
