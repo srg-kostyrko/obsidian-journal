@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { ref } from "vue";
+import { onUnmounted, ref } from "vue";
 
 import { m } from "@/i18n";
 
@@ -19,6 +19,10 @@ function copy(): void {
     }, 1500);
   });
 }
+
+onUnmounted(() => {
+  if (copiedTimer !== null) window.clearTimeout(copiedTimer);
+});
 </script>
 
 <template>
