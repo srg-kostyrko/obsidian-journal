@@ -70,13 +70,14 @@ export class NoteCreationService {
           .mapErr(() => new UserAborted("confirm-creation") as NoteCreationError);
         if (!confirmed) return yield* new Err(new UserAborted("confirm-creation"));
       }
-      const content = yield* this.#content.renderFor(name, metadata, this.#basename(path), path);
       this.#markExpected(path);
-      const createResult = await this.#notes.create(path, content);
+      const createResult = await this.#notes.create(path, "");
       if (createResult.isErr()) {
         this.#clearExpected(path);
         return yield* new Err(createResult.error as NoteCreationError);
       }
+      const content = yield* this.#content.renderFor(name, metadata, this.#basename(path), path);
+      if (content !== "") yield* this.#notes.write(path, content);
       yield* this.#notes.updateFrontmatter(path, mutator);
       return { path, created: true as const };
     });

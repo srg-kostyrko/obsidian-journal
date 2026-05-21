@@ -164,3 +164,37 @@ describe("NoteCreationService.ensureNote — note_name binding", () => {
     expect(read.value).toBe("Hello 2026-05-20");
   });
 });
+
+describe("NoteCreationService.ensureNote — Templater", () => {
+  it("applies Templater to the created note's content", async () => {
+    const settings = fakeSettings({
+      daily: fixedJournal("daily", { type: "day" }, { templates: ["Templates/daily.md"] }),
+    });
+    const notes = new FakeNotesService();
+    notes.seed("Templates/daily.md" as VaultPath, "# {{date}}");
+    const templater = new FakeTemplaterService();
+    templater.setTransform((content) => `${content}\n<!-- templated -->`);
+    const result = await build(settings, notes, new FakeModalService(), templater)
+      .resolve(NoteCreationService)
+      .ensureNote("daily", meta);
+    expectOk(result);
+    const read = await notes.read("2026-05-19.md" as VaultPath);
+    expectOk(read);
+    expect(read.value).toBe("# 2026-05-19\n<!-- templated -->");
+  });
+
+  it("targets the created note path when applying Templater", async () => {
+    const settings = fakeSettings({
+      daily: fixedJournal("daily", { type: "day" }, { templates: ["Templates/daily.md"] }),
+    });
+    const notes = new FakeNotesService();
+    notes.seed("Templates/daily.md" as VaultPath, "body");
+    const templater = new FakeTemplaterService();
+    await build(settings, notes, new FakeModalService(), templater)
+      .resolve(NoteCreationService)
+      .ensureNote("daily", meta);
+    expect(templater.applyCalls).toEqual([
+      { templatePath: "Templates/daily.md", targetPath: "2026-05-19.md", content: "body" },
+    ]);
+  });
+});
