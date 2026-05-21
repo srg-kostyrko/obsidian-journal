@@ -92,4 +92,59 @@ describe("CommandService", () => {
     const { service } = build();
     expect(() => service.unregister("missing")).not.toThrow();
   });
+
+  it("adds a ribbon icon when ribbon is enabled", () => {
+    const { service, host } = build();
+    service.register({ id: "demo", name: "Demo", icon: "star", ribbon: true, execute: vi.fn() });
+    expect(host.ribbonIcons).toHaveLength(1);
+    expect(host.ribbonIcons[0]?.icon).toBe("star");
+    expect(host.ribbonIcons[0]?.title).toBe("Demo");
+  });
+
+  it("does not add a ribbon icon when ribbon is disabled", () => {
+    const { service, host } = build();
+    service.register({ id: "demo", name: "Demo", icon: "star", ribbon: false, execute: vi.fn() });
+    expect(host.ribbonIcons).toHaveLength(0);
+  });
+
+  it("runs execute when the ribbon icon is clicked", () => {
+    const { service, host } = build();
+    let ran = false;
+    service.register({
+      id: "demo",
+      name: "Demo",
+      icon: "star",
+      ribbon: true,
+      execute: () => {
+        ran = true;
+      },
+    });
+    host.ribbonIcons[0]?.callback(new MouseEvent("click"));
+    expect(ran).toBe(true);
+  });
+
+  it("skips execute on ribbon click when the check fails", () => {
+    const { service, host } = build();
+    let ran = false;
+    service.register({
+      id: "demo",
+      name: "Demo",
+      icon: "star",
+      ribbon: true,
+      check: () => false,
+      execute: () => {
+        ran = true;
+      },
+    });
+    host.ribbonIcons[0]?.callback(new MouseEvent("click"));
+    expect(ran).toBe(false);
+  });
+
+  it("removes the ribbon element on unregister", () => {
+    const { service, host } = build();
+    service.register({ id: "demo", name: "Demo", icon: "star", ribbon: true, execute: vi.fn() });
+    const element = host.ribbonIcons[0]?.element;
+    service.unregister("demo");
+    expect(element?.isConnected).toBe(false);
+  });
 });
