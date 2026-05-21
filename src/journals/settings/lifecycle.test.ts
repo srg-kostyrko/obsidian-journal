@@ -139,4 +139,12 @@ describe("JournalLifecycleService events", () => {
     service.delete("daily");
     expect(events).toEqual([{ journalName: "daily" }]);
   });
+
+  it("does not emit journalDeleted when the delete fails", async () => {
+    const { service } = await buildInitialized();
+    const events: unknown[] = [];
+    service.events.on("journalDeleted", (payload) => events.push(payload));
+    service.delete("missing");
+    expect(events).toEqual([]);
+  });
 });
