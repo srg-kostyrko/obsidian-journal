@@ -46,6 +46,11 @@ watchEffect(() => {
   if (!config.value) nav.back();
 });
 
+const hasCycle = computed(() => config.value !== undefined && config.value.write.type !== "day");
+const numberingVariableNames = computed<readonly string[]>(() =>
+  config.value?.numbering.enabled ? config.value.numbering.sources.map((source) => source.variable) : [],
+);
+
 const nameTemplateRef = computed(() => config.value?.nameTemplate ?? "");
 const invertibility = useInvertibilityCheck(nameTemplateRef);
 
@@ -176,9 +181,11 @@ function editSequenceKey(): void {
         <template #description>
           <div>{{ m.journal_edit_name_template_description() }}</div>
           <VariableReferenceHint
+            context="name-template"
             :journal-name="journalName"
             :date-format="config.dateFormat"
-            :has-numbering="config.numbering.enabled"
+            :has-cycle="hasCycle"
+            :numbering-variable-names="numberingVariableNames"
           />
           <NoteNamePreview :journal-name="journalName" />
           <div v-if="invertibility" class="journal-hint">
@@ -198,9 +205,11 @@ function editSequenceKey(): void {
         <template #description>
           <div>{{ m.journal_edit_folder_description() }}</div>
           <VariableReferenceHint
+            context="folder-path"
             :journal-name="journalName"
             :date-format="config.dateFormat"
-            :has-numbering="config.numbering.enabled"
+            :has-cycle="hasCycle"
+            :numbering-variable-names="numberingVariableNames"
           />
           <FolderPathPreview :journal-name="journalName" :folder="config.folder" />
         </template>
@@ -253,9 +262,11 @@ function editSequenceKey(): void {
         <template #description>
           <div>{{ m.journal_edit_templates_description() }}</div>
           <VariableReferenceHint
+            context="template-path"
             :journal-name="journalName"
             :date-format="config.dateFormat"
-            :has-numbering="config.numbering.enabled"
+            :has-cycle="hasCycle"
+            :numbering-variable-names="numberingVariableNames"
           />
         </template>
       </UiSettingRow>
