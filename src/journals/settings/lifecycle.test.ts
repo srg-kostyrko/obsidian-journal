@@ -111,3 +111,32 @@ describe("JournalLifecycleService.delete", () => {
     expect(result.kind === "err" && result.error).toBeInstanceOf(UnknownJournalError);
   });
 });
+
+describe("JournalLifecycleService events", () => {
+  it("emits journalRenamed after a successful rename", async () => {
+    const { service } = await buildInitialized();
+    service.create("daily", { type: "day" });
+    const events: { oldName: string; newName: string }[] = [];
+    service.events.on("journalRenamed", (payload) => events.push(payload));
+    service.rename("daily", "morning");
+    expect(events).toEqual([{ oldName: "daily", newName: "morning" }]);
+  });
+
+  it("does not emit journalRenamed when the rename fails", async () => {
+    const { service } = await buildInitialized();
+    service.create("daily", { type: "day" });
+    const events: unknown[] = [];
+    service.events.on("journalRenamed", (payload) => events.push(payload));
+    service.rename("daily", "");
+    expect(events).toEqual([]);
+  });
+
+  it("emits journalDeleted after a successful delete", async () => {
+    const { service } = await buildInitialized();
+    service.create("daily", { type: "day" });
+    const events: { journalName: string }[] = [];
+    service.events.on("journalDeleted", (payload) => events.push(payload));
+    service.delete("daily");
+    expect(events).toEqual([{ journalName: "daily" }]);
+  });
+});

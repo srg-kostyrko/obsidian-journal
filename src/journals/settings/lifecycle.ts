@@ -1,12 +1,22 @@
+import { createNanoEvents } from "nanoevents";
+
 import { inject } from "@/infrastructure/di";
+import type { Subscribable, TypedEmitter } from "@/infrastructure/events";
 import { attempt, Err, Ok, Option, type Result } from "@/infrastructure/result";
 import { journalConfigCollection, journalDefaultsFor, type JournalConfig, type JournalWrite } from "@/journals";
 import { SettingsService } from "@/settings";
 
 import { InvalidJournalNameError, JournalNameTakenError, UnknownJournalError } from "./errors";
 
+export interface JournalLifecycleEvents {
+  journalRenamed: (payload: { oldName: string; newName: string }) => void;
+  journalDeleted: (payload: { journalName: string }) => void;
+}
+
 export class JournalLifecycleService {
   readonly #settings = inject(SettingsService);
+  readonly #emitter: TypedEmitter<JournalLifecycleEvents> = createNanoEvents();
+  readonly events: Subscribable<JournalLifecycleEvents> = this.#emitter;
 
   create(name: string, write: JournalWrite): Result<JournalConfig, InvalidJournalNameError | JournalNameTakenError> {
     return attempt.in(this, function* () {
@@ -39,6 +49,7 @@ export class JournalLifecycleService {
       }
       collection.add(newName, { ...existing, name: newName });
       collection.remove(oldName);
+      this.#emitter.emit("journalRenamed", { oldName, newName });
     });
   }
 
@@ -46,6 +57,7 @@ export class JournalLifecycleService {
     const collection = this.#settings.getCollection(journalConfigCollection);
     if (collection.get(name) === undefined) return new Err(new UnknownJournalError(name));
     collection.remove(name);
+    this.#emitter.emit("journalDeleted", { journalName: name });
     return new Ok(undefined);
   }
 }
