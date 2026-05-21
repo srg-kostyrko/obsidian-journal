@@ -18,11 +18,19 @@ function build() {
   return { modals, container };
 }
 
+const baseProps = {
+  context: "name-template" as const,
+  journalName: "daily",
+  dateFormat: "YYYY-MM-DD",
+  hasCycle: false,
+  numberingVariableNames: [] as readonly string[],
+};
+
 describe("VariableReferenceHint", () => {
-  it("opens the variable reference modal when clicked", async () => {
+  it("opens the variable reference modal with forwarded props", async () => {
     const { modals, container } = build();
     render(VariableReferenceHint, {
-      props: { journalName: "daily", dateFormat: "YYYY-MM-DD", hasNumbering: false },
+      props: baseProps,
       global: {
         plugins: [
           {
@@ -37,13 +45,13 @@ describe("VariableReferenceHint", () => {
     expect(modals.opens.length).toBe(1);
     const lastOpen = modals.lastOpen();
     expect(lastOpen.definition).toBe(variableReferenceModal);
-    expect(lastOpen.props).toEqual({ journalName: "daily", dateFormat: "YYYY-MM-DD", hasNumbering: false });
+    expect(lastOpen.props).toEqual(baseProps);
   });
 
-  it("includes the numbering variable entry in the modal props when hasNumbering is true", async () => {
+  it("forwards numberingVariableNames when provided", async () => {
     const { modals, container } = build();
     render(VariableReferenceHint, {
-      props: { journalName: "daily", dateFormat: "YYYY-MM-DD", hasNumbering: true },
+      props: { ...baseProps, numberingVariableNames: ["week_no"] },
       global: {
         plugins: [
           {
@@ -55,6 +63,6 @@ describe("VariableReferenceHint", () => {
       },
     });
     await userEvent.click(screen.getByRole("link"));
-    expect(modals.lastOpen().props).toMatchObject({ hasNumbering: true });
+    expect(modals.lastOpen().props).toMatchObject({ numberingVariableNames: ["week_no"] });
   });
 });

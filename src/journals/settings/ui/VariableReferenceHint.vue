@@ -5,16 +5,26 @@ import { ModalService } from "@/infrastructure/host/modals";
 
 import { variableReferenceModal } from "./variable-reference-modal";
 
-const props = defineProps<{ journalName: string; dateFormat: string; hasNumbering: boolean }>();
+import type { VariableModalContext } from "./variable-context";
+
+const props = defineProps<{
+  context: VariableModalContext;
+  journalName: string;
+  dateFormat: string;
+  hasCycle: boolean;
+  numberingVariableNames: readonly string[];
+}>();
 
 const modals = useService(ModalService);
 
 function show(event: Event): void {
   event.preventDefault();
   void modals.open(variableReferenceModal, {
+    context: props.context,
     journalName: props.journalName,
     dateFormat: props.dateFormat,
-    hasNumbering: props.hasNumbering,
+    hasCycle: props.hasCycle,
+    numberingVariableNames: props.numberingVariableNames,
   });
 }
 </script>
