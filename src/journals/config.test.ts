@@ -1,6 +1,8 @@
 import * as v from "valibot";
 import { describe, it, expect } from "vitest";
 
+import type { AnchorString } from "@/calendar";
+
 import { journalConfigSchema, journalDefaultsFor } from "./config";
 
 describe("journalDefaultsFor", () => {
@@ -31,13 +33,25 @@ describe("journalDefaultsFor", () => {
 });
 
 describe("journalConfigSchema", () => {
+  for (const type of ["day", "week", "month", "quarter", "year"] as const) {
+    it(`accepts the unmodified defaults for a ${type} journal`, () => {
+      const parsed = v.safeParse(journalConfigSchema, journalDefaultsFor({ type }, type));
+      expect(parsed.success).toBe(true);
+    });
+  }
+
+  it("accepts the unmodified defaults for a custom journal", () => {
+    const cfg = journalDefaultsFor(
+      { type: "custom", every: "week", duration: 2, anchorDate: "2024-01-01" as AnchorString },
+      "custom",
+    );
+    const parsed = v.safeParse(journalConfigSchema, cfg);
+    expect(parsed.success).toBe(true);
+  });
+
   it("accepts a config with the new fields populated", () => {
     const cfg = {
       ...journalDefaultsFor({ type: "day" }, "daily"),
-      // timeline.start and numbering.anchorDate default to "" which fails anchorString;
-      // supply valid dates until a migration populates these on load.
-      timeline: { start: "2024-01-01", end: { kind: "never" as const } },
-      numbering: { enabled: false, anchorDate: "2024-01-01", allowBefore: false, sources: [] },
       nameTemplate: "diary-{{date}}",
       folder: "Diary/{{date:YYYY}}",
       templates: ["Templates/daily.md"],

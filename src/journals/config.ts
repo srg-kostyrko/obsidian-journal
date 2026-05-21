@@ -7,6 +7,10 @@ export const FRONTMATTER_NAME_KEY = "journal";
 
 const anchorString = v.pipe(v.string(), v.regex(/^\d{4}-\d{2}-\d{2}$/, "must be YYYY-MM-DD"));
 
+// "" is the sentinel for an unset anchor — the start of a timeline and the
+// numbering anchor are both legitimately empty until the user picks a date.
+const optionalAnchorString = v.union([v.literal(""), anchorString]);
+
 const writeFixed = v.object({
   type: v.picklist(["day", "week", "month", "quarter", "year"]),
 });
@@ -27,7 +31,7 @@ const timelineEnd = v.union([
 ]);
 
 const timelineSchema = v.object({
-  start: anchorString,
+  start: optionalAnchorString,
   end: timelineEnd,
 });
 
@@ -54,7 +58,7 @@ const numberingSource = v.object({
 const numberingSchema = v.pipe(
   v.object({
     enabled: v.boolean(),
-    anchorDate: anchorString,
+    anchorDate: optionalAnchorString,
     allowBefore: v.boolean(),
     sources: v.array(numberingSource),
   }),
