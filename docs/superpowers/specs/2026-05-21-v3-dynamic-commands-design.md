@@ -108,19 +108,26 @@ Location: `commands/resolve.ts`. Pure functions, no DI.
   - `week`, `year`, `custom` → `same`, `next`, `previous`.
   - `month`, `quarter` → those three plus `same_next_year`,
     `same_previous_year`.
-- `resolveAnchor(type, writeType, referenceAnchor)` → `Option<AnchorString>` —
-  applies the offset:
-  - `same` → the reference anchor.
-  - `next` / `previous` → ± one journal interval. For a fixed write type this
-    is the fixed period; for a custom journal it is the cycle step.
-  - `same_next_week` / `same_previous_week` → ± one week.
-  - `same_next_month` / `same_previous_month` → ± one month.
-  - `same_next_year` / `same_previous_year` → ± one year.
+- `compoundShift(type)` → `{ amount, unit } | null` — maps the six compound
+  variants to a calendar shift (`same_next_week` → `+1 w`, `same_previous_year`
+  → `-1 y`, etc.); returns `null` for `same`/`next`/`previous`.
 
-  Resolution yields a single anchor date; `OpenDateFlow` snaps that anchor to
-  each journal's period entry.
+Applying the offset to produce an anchor is **not** pure — `next`/`previous` on
+a custom journal depends on that journal's cycle. The registry (Component 3)
+owns anchor resolution, delegating to the existing `CycleService`, which
+already handles fixed and custom write types uniformly by journal name:
 
-The reference anchor depends on `context`:
+- `same` → `CycleService.anchorOf(journalName, referenceDate)`.
+- `next` → `anchorOf` then `CycleService.nextAnchor`.
+- `previous` → `anchorOf` then `CycleService.previousAnchor`.
+- a compound variant → shift the reference date by `compoundShift(type)`, then
+  `anchorOf`.
+
+For an `all` target every candidate journal shares one fixed write type, so any
+candidate's name resolves the same anchor. Resolution yields a single anchor
+date; `OpenDateFlow` snaps it to each journal's period entry.
+
+The reference date depends on `context`:
 
 - `today` → `CalendarDate.today()`.
 - `open_note` → the active note's journal-entry anchor, falling back to today
@@ -131,7 +138,7 @@ The reference anchor depends on `context`:
 
 Location: `commands/command-registry.ts`. An eager service. It injects
 `CommandService`, `SettingsService`, `Flows`, `WorkspaceService`,
-`JournalsIndex`, `JournalLifecycleService`, and a `Logger`.
+`JournalsIndex`, `CycleService`, `JournalLifecycleService`, and a `Logger`.
 
 It owns two responsibilities: keeping the command collection consistent with
 the journals it references, and keeping Obsidian's registered commands
@@ -210,12 +217,13 @@ registers `DynamicCommandRegistry` eager. `main.ts` adds `commandsModule`.
 
 ## Testing
 
-- `resolve.ts` — `supportedTypes` for each write type; `resolveAnchor` offsets
-  for representative variants across fixed and custom write types.
+- `resolve.ts` — `supportedTypes` for each write type; `compoundShift` for the
+  compound and the non-compound variants.
 - `DynamicCommandRegistry` — the `watch` reconcile registers a new command,
   unregisters a removed one, and re-registers a changed one; `check` gating by
-  `only_open_note` context and by unsupported `type`; `execute` invokes
-  `OpenDateFlow` with the correct `journalNames` and `anchor`; the
+  `only_open_note` context and by unsupported `type`; anchor resolution for
+  representative variants; `execute` invokes `OpenDateFlow` with the correct
+  `journalNames` and `anchor`; the
   `journalRenamed` and `journalDeleted` subscriptions rewrite and remove
   `journal`-target commands.
 - `JournalLifecycleService` — `rename` emits `journalRenamed` and `delete`
