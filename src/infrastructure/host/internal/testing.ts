@@ -1,4 +1,13 @@
-import { TFile, TFolder, type App, type CachedMetadata, type EventRef, type PaneType, type Plugin } from "obsidian";
+import {
+  TFile,
+  TFolder,
+  type App,
+  type CachedMetadata,
+  type Command,
+  type EventRef,
+  type PaneType,
+  type Plugin,
+} from "obsidian";
 
 type AnyHandler = (...arguments_: unknown[]) => void;
 
@@ -36,6 +45,13 @@ export interface FakeFileSystemEntry {
   readonly metadata: CachedMetadata;
 }
 
+export interface FakeRibbonIcon {
+  readonly icon: string;
+  readonly title: string;
+  readonly callback: (event_: MouseEvent) => void;
+  readonly element: HTMLElement;
+}
+
 export interface FakeHost {
   readonly app: App;
   readonly plugin: Plugin;
@@ -44,6 +60,8 @@ export interface FakeHost {
   readonly workspace: FakeWorkspaceState;
   readonly pluginData: { current: unknown; loadError?: Error; saveError?: Error };
   readonly registeredEventReferences: EventRef[];
+  readonly commands: Map<string, Command>;
+  readonly ribbonIcons: FakeRibbonIcon[];
 
   putFile(path: string, content?: string, frontmatter?: Record<string, unknown>): TFile;
   putFolder(path: string): TFolder;
@@ -87,6 +105,8 @@ export function createFakeHost(): FakeHost {
   const workspaceState: FakeWorkspaceState = { activeFile: null, openPaths: new Set(), openCalls: [] };
   const pluginData: FakeHost["pluginData"] = { current: undefined };
   const registeredEventReferences: EventRef[] = [];
+  const commands = new Map<string, Command>();
+  const ribbonIcons: FakeRibbonIcon[] = [];
   const unloadCallbacks: (() => void)[] = [];
 
   function ensureFolderChain(path: string): void {
@@ -256,6 +276,19 @@ export function createFakeHost(): FakeHost {
     register(callback: () => void): void {
       unloadCallbacks.push(callback);
     },
+    addCommand(command: Command): Command {
+      commands.set(command.id, command);
+      return command;
+    },
+    removeCommand(commandId: string): void {
+      commands.delete(commandId);
+    },
+    addRibbonIcon(icon: string, title: string, callback: (event_: MouseEvent) => void): HTMLElement {
+      const element = document.createElement("div");
+      document.body.append(element);
+      ribbonIcons.push({ icon, title, callback, element });
+      return element;
+    },
     async loadData(): Promise<unknown> {
       if (pluginData.loadError) throw pluginData.loadError;
       return pluginData.current;
@@ -274,6 +307,8 @@ export function createFakeHost(): FakeHost {
     workspace: workspaceState,
     pluginData,
     registeredEventReferences,
+    commands,
+    ribbonIcons,
     putFile(path, content = "", frontmatter = {}): TFile {
       ensureFolderChain(parentPath(path));
       files.set(path, { content, frontmatter, metadata: {} });
