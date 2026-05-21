@@ -59,19 +59,22 @@ the target fixed to `{ kind: "all" }`.
 
 ### Journal commands — journal-editor section
 
-`commands/ui/JournalCommandsSection.vue`. A collapsible section appended to
+`commands/ui/JournalCommandsSection.vue`. A section appended to
 `JournalEditSubpage` through the new `JournalEditSectionToken`. It receives the
 `journalName` prop and lists only `journal`-target commands pointing at that
-journal. Its "add" button opens the edit flow with the target fixed to
+journal. Like the journal editor's built-in sections, it wraps its content in a
+`UiCollapsibleBlock` with an entry-count flair and an "add" icon button in
+`#controls`. Its "add" button opens the edit flow with the target fixed to
 `{ kind: "journal"; journalName }`.
 
 ### Shared list
 
-`commands/ui/CommandList.vue`. A presentational component both surfaces wrap. It
-takes the already-filtered `[id, CommandConfig][]` entries and renders one
-`UiSettingRow` per command — the command name, a resolved description flair,
-and edit/delete `UiIconButton`s — plus an empty-state row. It emits `edit(id)`
-and `delete(id)`; it owns no service access and no collection mutation.
+`commands/ui/CommandList.vue`. A presentational component both surfaces render
+inside their `UiCollapsibleBlock` body. It takes the already-filtered
+`[id, CommandConfig][]` entries and renders one `UiSettingRow` per command — the
+command name, a resolved description flair, and edit/delete `UiIconButton`s —
+plus an empty-state row. It emits `edit(id)` and `delete(id)`; it owns no
+service access and no collection mutation.
 
 ## The journal-edit extension point
 
