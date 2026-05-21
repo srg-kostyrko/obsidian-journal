@@ -48,7 +48,7 @@ export interface FakeFileSystemEntry {
 export interface FakeRibbonIcon {
   readonly icon: string;
   readonly title: string;
-  readonly callback: (event_: MouseEvent) => void;
+  readonly callback: (event: MouseEvent) => void;
   readonly element: HTMLElement;
 }
 
@@ -283,8 +283,9 @@ export function createFakeHost(): FakeHost {
     removeCommand(commandId: string): void {
       commands.delete(commandId);
     },
-    addRibbonIcon(icon: string, title: string, callback: (event_: MouseEvent) => void): HTMLElement {
+    addRibbonIcon(icon: string, title: string, callback: (event: MouseEvent) => void): HTMLElement {
       const element = document.createElement("div");
+      // attached so ribbon-removal can be observed via element.isConnected
       document.body.append(element);
       ribbonIcons.push({ icon, title, callback, element });
       return element;
