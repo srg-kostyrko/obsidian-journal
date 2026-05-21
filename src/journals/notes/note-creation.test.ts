@@ -3,11 +3,11 @@ import { describe, it, expect } from "vitest";
 import { anchor } from "@/calendar/testing";
 import { Container } from "@/infrastructure/di";
 import { UserAborted } from "@/infrastructure/flows";
-import { NotesService } from "@/infrastructure/host";
+import { NotesService, TemplaterService } from "@/infrastructure/host";
 import type { VaultPath } from "@/infrastructure/host";
 import { ModalService } from "@/infrastructure/host/modals";
 import { FakeModalService } from "@/infrastructure/host/modals/testing";
-import { FakeNotesService } from "@/infrastructure/host/testing";
+import { FakeNotesService, FakeTemplaterService } from "@/infrastructure/host/testing";
 import { LoggerModule } from "@/infrastructure/logger";
 import { expectOk } from "@/infrastructure/result/testing";
 import { SettingsService } from "@/settings";
@@ -25,12 +25,18 @@ import { TemplateContentService } from "./template-content";
 
 import type { JournalMetadata } from "../types";
 
-function build(settings: SettingsService, notes: FakeNotesService, modals: FakeModalService): Container {
+function build(
+  settings: SettingsService,
+  notes: FakeNotesService,
+  modals: FakeModalService,
+  templater = new FakeTemplaterService(),
+): Container {
   const c = new Container();
   c.addModule(LoggerModule);
   c.register(SettingsService).useValue(settings);
   c.register(NotesService).useValue(notes as unknown as NotesService);
   c.register(ModalService).useValue(modals as unknown as ModalService);
+  c.register(TemplaterService).useValue(templater as unknown as TemplaterService);
   c.register(JournalsIndex).useClass(JournalsIndex);
   c.register(CycleService).useClass(CycleService);
   c.register(NumberingService).useClass(NumberingService);

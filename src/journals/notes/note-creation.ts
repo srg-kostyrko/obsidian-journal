@@ -70,7 +70,7 @@ export class NoteCreationService {
           .mapErr(() => new UserAborted("confirm-creation") as NoteCreationError);
         if (!confirmed) return yield* new Err(new UserAborted("confirm-creation"));
       }
-      const content = yield* this.#content.renderFor(name, metadata, this.#basename(path));
+      const content = yield* this.#content.renderFor(name, metadata, this.#basename(path), path);
       this.#markExpected(path);
       const createResult = await this.#notes.create(path, content);
       if (createResult.isErr()) {
@@ -91,7 +91,7 @@ export class NoteCreationService {
       yield* this.#notes.updateFrontmatter(path, mutator);
       const existing = yield* this.#notes.read(path);
       if (existing.trim() !== "") return;
-      const content = yield* this.#content.renderFor(name, metadata, this.#basename(path));
+      const content = yield* this.#content.renderFor(name, metadata, this.#basename(path), path);
       if (content === "") return;
       yield* this.#notes.write(path, content);
     });

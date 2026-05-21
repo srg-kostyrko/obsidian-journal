@@ -1,5 +1,5 @@
 import { inject } from "@/infrastructure/di";
-import { NotesService } from "@/infrastructure/host";
+import { NotesService, TemplaterService } from "@/infrastructure/host";
 import type { NoteReadError, VaultPath } from "@/infrastructure/host";
 import { AsyncResult } from "@/infrastructure/result";
 import { SettingsService } from "@/settings";
@@ -18,11 +18,13 @@ export class TemplateContentService {
   readonly #notes = inject(NotesService);
   readonly #engine = inject(TemplateEngine);
   readonly #path = inject(NotePathService);
+  readonly #templater = inject(TemplaterService);
 
   renderFor(
     name: string,
     metadata: JournalMetadata,
     noteName: string,
+    targetPath: VaultPath,
   ): AsyncResult<string, JournalNotFoundError | NoteReadError> {
     const config = this.#settings.getCollection(journalConfigCollection).get(name) as JournalConfig | undefined;
     if (!config) return AsyncResult.err(new JournalNotFoundError(name));
@@ -39,11 +41,13 @@ export class TemplateContentService {
           if (this.#notes.find(renderedPath).isNone()) continue;
           const readResult = await this.#notes.read(renderedPath);
           if (readResult.isErr()) throw readResult.error;
-          return this.#engine.renderString(readResult.value, bodyContext);
+          const rendered = this.#engine.renderString(readResult.value, bodyContext);
+          const applied = await this.#templater.apply(renderedPath, targetPath, rendered);
+          return applied.match({ ok: (content) => content, err: () => rendered });
         }
         return "";
       })(),
-      (cause) => cause as JournalNotFoundError | NoteReadError,
+      (error) => error as JournalNotFoundError | NoteReadError,
     );
   }
 }

@@ -3,11 +3,11 @@ import { describe, it, expect } from "vitest";
 import { anchor } from "@/calendar/testing";
 import { Container } from "@/infrastructure/di";
 import { Flows, FlowsModule, UserAborted } from "@/infrastructure/flows";
-import { NotesService, WorkspaceService } from "@/infrastructure/host";
+import { NotesService, TemplaterService, WorkspaceService } from "@/infrastructure/host";
 import type { VaultPath } from "@/infrastructure/host";
 import { ModalService } from "@/infrastructure/host/modals";
 import { FakeModalService } from "@/infrastructure/host/modals/testing";
-import { FakeNotesService, FakeWorkspaceService } from "@/infrastructure/host/testing";
+import { FakeNotesService, FakeTemplaterService, FakeWorkspaceService } from "@/infrastructure/host/testing";
 import { LoggerModule } from "@/infrastructure/logger";
 import { SettingsService } from "@/settings";
 import { TemplateEngine } from "@/templates";
@@ -28,6 +28,7 @@ function build(
   notes: FakeNotesService,
   workspace: FakeWorkspaceService,
   modals: FakeModalService,
+  templater = new FakeTemplaterService(),
 ) {
   const c = new Container();
   c.addModule(LoggerModule);
@@ -36,6 +37,7 @@ function build(
   c.register(NotesService).useValue(notes as unknown as NotesService);
   c.register(WorkspaceService).useValue(workspace as unknown as WorkspaceService);
   c.register(ModalService).useValue(modals as unknown as ModalService);
+  c.register(TemplaterService).useValue(templater as unknown as TemplaterService);
   c.register(JournalsIndex).useClass(JournalsIndex);
   c.register(CycleService).useClass(CycleService);
   c.register(NumberingService).useClass(NumberingService);

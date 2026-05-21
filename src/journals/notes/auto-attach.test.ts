@@ -2,11 +2,11 @@ import { describe, it, expect, vi } from "vitest";
 
 import { anchor } from "@/calendar/testing";
 import { Container } from "@/infrastructure/di";
-import { NotesService } from "@/infrastructure/host";
+import { NotesService, TemplaterService } from "@/infrastructure/host";
 import type { VaultPath } from "@/infrastructure/host";
 import { ModalService } from "@/infrastructure/host/modals";
 import { FakeModalService } from "@/infrastructure/host/modals/testing";
-import { FakeNotesService } from "@/infrastructure/host/testing";
+import { FakeNotesService, FakeTemplaterService } from "@/infrastructure/host/testing";
 import { LoggerModule } from "@/infrastructure/logger";
 import { SettingsService } from "@/settings";
 import { TemplateEngine } from "@/templates";
@@ -29,6 +29,7 @@ function build(settings: SettingsService, notes: FakeNotesService): Container {
   c.register(SettingsService).useValue(settings);
   c.register(NotesService).useValue(notes as unknown as NotesService);
   c.register(ModalService).useValue(new FakeModalService() as unknown as ModalService);
+  c.register(TemplaterService).useValue(new FakeTemplaterService() as unknown as TemplaterService);
   c.register(JournalsIndex).useClass(JournalsIndex);
   c.register(CycleService).useClass(CycleService);
   c.register(NumberingService).useClass(NumberingService);
