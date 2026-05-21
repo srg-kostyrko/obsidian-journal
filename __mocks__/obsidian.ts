@@ -22,6 +22,15 @@ export class TFolder extends TAbstractFile {
   }
 }
 
+export class Notice {
+  constructor(public message: string | DocumentFragment) {}
+  setMessage(message: string | DocumentFragment): this {
+    this.message = message;
+    return this;
+  }
+  hide(): void {}
+}
+
 export function getIcon(name: string): SVGSVGElement | null {
   const svg = document.createElementNS("http://www.w3.org/2000/svg", "svg");
   svg.setAttribute("data-icon", name);

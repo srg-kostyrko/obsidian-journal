@@ -216,7 +216,7 @@
   "journal_rename_modal_same_as_current_error": "New name must differ from current name.",
   "journal_rename_modal_title": "Rename {name}",
   "journal_sequence_property_modal_title": "Edit sequential number property name",
-  "variable_chip_copied": "Copied",
+  "variable_chip_copied": "Copied to clipboard",
   "variable_modifications_boundary_body": "Snap a date variable to the start or end of a calendar period by adding `<startOf=unit>` or `<endOf=unit>`.",
   "variable_modifications_boundary_example": "For example {slot} renders January 1st of the date's year.",
   "variable_modifications_boundary_heading": "Snap to start or end of period",
