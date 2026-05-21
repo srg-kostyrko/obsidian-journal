@@ -239,4 +239,4 @@ after `SettingsService.initialize()` succeeds, calls
 - `JournalLifecycleService` — `rename` emits `journalRenamed` and `delete`
   emits `journalDeleted` (added to the existing `lifecycle.test.ts`).
 
-Quality gates: `test`, `check:types`, `check:lint`, `test:e2e:smoke`.
+Quality gates: `test`, `check:types`, `check:lint`.
