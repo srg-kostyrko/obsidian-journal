@@ -3,6 +3,7 @@ import { describe, it, expect } from "vitest";
 
 import { Container } from "@/infrastructure/di";
 import { LoggerModule } from "@/infrastructure/logger";
+import { expectOk } from "@/infrastructure/result/testing";
 
 import { TemplaterService } from "./templater-service";
 import { InternalObsidianAppToken } from "./tokens";
@@ -45,20 +46,23 @@ describe("TemplaterService.apply", () => {
   it("returns content unchanged when it has no Templater directives", async () => {
     const service = build(fakeApp());
     const result = await service.apply("T.md" as VaultPath, "N.md" as VaultPath, "plain content");
-    expect(result.isOk() && result.value).toBe("plain content");
+    expectOk(result);
+    expect(result.value).toBe("plain content");
   });
 
   it("returns content unchanged when the Templater plugin is absent", async () => {
     const service = build(fakeApp({ files: { "T.md": tfile("T.md"), "N.md": tfile("N.md") } }));
     const result = await service.apply("T.md" as VaultPath, "N.md" as VaultPath, "<% tp.date.now() %>");
-    expect(result.isOk() && result.value).toBe("<% tp.date.now() %>");
+    expectOk(result);
+    expect(result.value).toBe("<% tp.date.now() %>");
   });
 
   it("returns content unchanged when the plugin lacks the parse API", async () => {
     const plugin = { templater: { create_running_config: () => ({}) } };
     const service = build(fakeApp({ plugin, files: { "T.md": tfile("T.md"), "N.md": tfile("N.md") } }));
     const result = await service.apply("T.md" as VaultPath, "N.md" as VaultPath, "<% x %>");
-    expect(result.isOk() && result.value).toBe("<% x %>");
+    expectOk(result);
+    expect(result.value).toBe("<% x %>");
   });
 
   it("returns the parsed result when Templater is available", async () => {
@@ -70,7 +74,8 @@ describe("TemplaterService.apply", () => {
     };
     const service = build(fakeApp({ plugin, files: { "T.md": tfile("T.md"), "N.md": tfile("N.md") } }));
     const result = await service.apply("T.md" as VaultPath, "N.md" as VaultPath, "<% x %>");
-    expect(result.isOk() && result.value).toBe("parsed:<% x %>");
+    expectOk(result);
+    expect(result.value).toBe("parsed:<% x %>");
   });
 
   it("passes the resolved template and target files to create_running_config", async () => {
@@ -102,7 +107,8 @@ describe("TemplaterService.apply", () => {
     };
     const service = build(fakeApp({ plugin, files: { "T.md": tfile("T.md"), "N.md": tfile("N.md") } }));
     const result = await service.apply("T.md" as VaultPath, "N.md" as VaultPath, "<% x %>");
-    expect(result.isOk() && result.value).toBe("<% x %>");
+    expectOk(result);
+    expect(result.value).toBe("<% x %>");
   });
 });
 
@@ -127,7 +133,7 @@ describe("TemplaterService.cursorJump", () => {
     const plugin = { templater: { create_running_config: () => ({}), parse_template: async () => "" } };
     const service = build(fakeApp({ plugin, files: { "N.md": tfile("N.md") } }));
     const result = await service.cursorJump("N.md" as VaultPath);
-    expect(result.isOk()).toBe(true);
+    expectOk(result);
   });
 
   it("absorbs errors thrown by the cursor jump", async () => {
@@ -141,7 +147,7 @@ describe("TemplaterService.cursorJump", () => {
     };
     const service = build(fakeApp({ plugin, files: { "N.md": tfile("N.md") } }));
     const result = await service.cursorJump("N.md" as VaultPath);
-    expect(result.isOk()).toBe(true);
+    expectOk(result);
   });
 });
 

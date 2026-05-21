@@ -74,12 +74,12 @@ export class TemplaterService {
     return plugin as TemplaterPlugin;
   }
 
-  #cursorCapablePlugin(): TemplaterPlugin | null {
+  #cursorCapablePlugin(): Pick<TemplaterPlugin, "editor_handler"> | null {
     const plugin = this.#rawPlugin();
     const handler = (plugin as { editor_handler?: unknown } | null)?.editor_handler;
     if (!handler || typeof handler !== "object") return null;
     if (typeof (handler as Record<string, unknown>).jump_to_next_cursor_location !== "function") return null;
-    return plugin as TemplaterPlugin;
+    return plugin as Pick<TemplaterPlugin, "editor_handler">;
   }
 
   #rawPlugin(): object | null {
