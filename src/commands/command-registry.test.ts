@@ -144,4 +144,39 @@ describe("DynamicCommandRegistry execution", () => {
 
     expect(invokeSpy).not.toHaveBeenCalled();
   });
+
+  it("resolves the anchor from the active note for open_note context", async () => {
+    const { host, commands, lifecycle, index, workspace, flows } = await build();
+    lifecycle.create("daily", { type: "day" });
+    const path = "daily/2026-05-10.md" as VaultPath;
+    index.register({ journalName: "daily", anchor: anchor("2026-05-10"), path });
+    workspace.setActive(path);
+    const invokeSpy = vi.spyOn(flows, "invoke").mockReturnValue(AsyncResult.ok({ path: "daily/x.md", created: false }));
+    commands.add("cmd-1", makeCommand({ type: "same", context: "open_note" }));
+
+    host.commands.get("cmd-1")?.checkCallback?.(false);
+
+    expect(invokeSpy).toHaveBeenCalledWith(OpenDateFlow, {
+      anchor: anchor("2026-05-10"),
+      journalNames: ["daily"],
+      openMode: "active",
+      existingOnly: false,
+    });
+  });
+
+  it("falls back to today for open_note context without an active journal note", async () => {
+    const { host, commands, lifecycle, flows } = await build();
+    lifecycle.create("daily", { type: "day" });
+    const invokeSpy = vi.spyOn(flows, "invoke").mockReturnValue(AsyncResult.ok({ path: "daily/x.md", created: false }));
+    commands.add("cmd-1", makeCommand({ type: "same", context: "open_note" }));
+
+    host.commands.get("cmd-1")?.checkCallback?.(false);
+
+    expect(invokeSpy).toHaveBeenCalledWith(OpenDateFlow, {
+      anchor: CalendarDate.today().toAnchor(),
+      journalNames: ["daily"],
+      openMode: "active",
+      existingOnly: false,
+    });
+  });
 });

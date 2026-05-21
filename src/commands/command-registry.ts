@@ -122,11 +122,20 @@ export class DynamicCommandRegistry {
       .with("previous", () =>
         this.#cycle.anchorOf(journalName, reference).flatMap((a) => this.#cycle.previousAnchor(journalName, a)),
       )
-      .otherwise((type) => {
-        const shift = compoundShift(type);
-        if (shift === null) return Option.none<AnchorString>();
-        return this.#cycle.anchorOf(journalName, reference.shift(shift.amount, shift.unit));
-      });
+      .with(
+        "same_next_week",
+        "same_previous_week",
+        "same_next_month",
+        "same_previous_month",
+        "same_next_year",
+        "same_previous_year",
+        (type) => {
+          const shift = compoundShift(type);
+          if (shift === null) return Option.none<AnchorString>();
+          return this.#cycle.anchorOf(journalName, reference.shift(shift.amount, shift.unit));
+        },
+      )
+      .exhaustive();
   }
 
   async #run(command: CommandConfig): Promise<void> {
