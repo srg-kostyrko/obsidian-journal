@@ -18,6 +18,7 @@ import type {
 } from "./errors";
 import type { NotesService } from "./internal/notes-service";
 import type { PluginData } from "./internal/plugin-data";
+import type { TemplaterService } from "./internal/templater-service";
 import type { WorkspaceService } from "./internal/workspace-service";
 import type { Note, NotesEvents, OpenMode, VaultPath, WorkspaceEvents } from "./types";
 
@@ -200,6 +201,35 @@ export class FakePluginData implements Pick<PluginData, "load" | "save"> {
   save(data: unknown): AsyncResult<void, PluginDataIOError> {
     this.#current = data;
     return AsyncResult.ok(undefined);
+  }
+}
+
+export class FakeTemplaterService implements Pick<TemplaterService, "apply" | "cursorJump" | "isSupported"> {
+  #supported = false;
+  #transform: (content: string) => string = (content) => content;
+  readonly applyCalls: { templatePath: VaultPath; targetPath: VaultPath; content: string }[] = [];
+  readonly cursorJumps: VaultPath[] = [];
+
+  setSupported(value: boolean): void {
+    this.#supported = value;
+  }
+
+  setTransform(transform: (content: string) => string): void {
+    this.#transform = transform;
+  }
+
+  apply(templatePath: VaultPath, targetPath: VaultPath, content: string): AsyncResult<string, never> {
+    this.applyCalls.push({ templatePath, targetPath, content });
+    return AsyncResult.ok(this.#transform(content));
+  }
+
+  cursorJump(path: VaultPath): AsyncResult<void, never> {
+    this.cursorJumps.push(path);
+    return AsyncResult.ok();
+  }
+
+  isSupported(): boolean {
+    return this.#supported;
   }
 }
 

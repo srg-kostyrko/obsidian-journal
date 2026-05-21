@@ -15,6 +15,7 @@ export {
 export { NotesService } from "./internal/notes-service";
 export { PluginData } from "./internal/plugin-data";
 export { WorkspaceService } from "./internal/workspace-service";
+export { TemplaterService } from "./internal/templater-service";
 export { renderIcon } from "./internal/icons";
 export {
   defineModal,
