@@ -144,13 +144,21 @@ It owns two responsibilities: keeping the command collection consistent with
 the journals it references, and keeping Obsidian's registered commands
 consistent with the collection.
 
+It exposes an explicit `initialize()`. `SettingsService.getCollection` throws
+until settings have loaded, and `container.autoLoad()` constructs eager
+services before that — so the constructor does no work, and `main.ts` calls
+`initialize()` after `SettingsService.initialize()`, alongside the other
+settings-dependent services (`VaultSubscriptionService`, `AutoAttachService`,
+`AutoCreateService`).
+
 ### Reconciling registrations
 
-On construction it Vue-`watch`es the command collection deeply. On every change
-it reconciles: it tracks each registered id against the command's serialized
-value, calls `CommandService.unregister` for ids that vanished or changed, and
-`register` for ids that are new or changed (a change is an unregister followed
-by a register).
+`initialize()` runs a first reconcile, then Vue-`watch`es the command
+collection deeply (`flush: "sync"`). On every change it reconciles: it tracks
+each registered id against the command's serialized value, calls
+`CommandService.unregister` for ids that vanished or changed, and `register`
+for ids that are new or changed (a change is an unregister followed by a
+register).
 
 Each `CommandRegistration` it builds:
 
@@ -176,7 +184,7 @@ Candidate journals:
 
 ### Cascading journal lifecycle changes
 
-The constructor subscribes to `JournalLifecycleService.events`:
+`initialize()` also subscribes to `JournalLifecycleService.events`:
 
 - `journalRenamed` → rewrite `journalName` on every `journal`-target command
   pointing at the old name.
@@ -213,7 +221,9 @@ correct.
 
 `commands/module.ts` exports `commandsModule` — a zero-arg `Module` value. It
 registers the collection definition via `CollectionDefinitionToken` and
-registers `DynamicCommandRegistry` eager. `main.ts` adds `commandsModule`.
+registers `DynamicCommandRegistry` eager. `main.ts` adds `commandsModule` and,
+after `SettingsService.initialize()` succeeds, calls
+`container.resolve(DynamicCommandRegistry).initialize()`.
 
 ## Testing
 
