@@ -55,6 +55,10 @@ describe("compoundShift", () => {
     expect(compoundShift("same_previous_month")).toEqual({ amount: -1, unit: "m" });
   });
 
+  it("maps same_next_year to a one-year forward shift", () => {
+    expect(compoundShift("same_next_year")).toEqual({ amount: 1, unit: "y" });
+  });
+
   it("maps same_previous_year to a one-year backward shift", () => {
     expect(compoundShift("same_previous_year")).toEqual({ amount: -1, unit: "y" });
   });
