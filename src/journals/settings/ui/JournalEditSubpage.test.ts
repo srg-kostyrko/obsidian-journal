@@ -1,6 +1,7 @@
 import userEvent from "@testing-library/user-event";
 import { cleanup, render, screen, waitFor, within } from "@testing-library/vue";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
+import { defineComponent, h } from "vue";
 
 import { DayPeriod, type OpenInterval } from "@/calendar";
 import { date, installTestCalendar } from "@/calendar/testing";
@@ -28,6 +29,7 @@ import { EditFrontmatterFieldFlow } from "../flows/edit-frontmatter-field.flow";
 import { EditSequencePropertyFlow } from "../flows/edit-sequence-property.flow";
 import { RenameJournalFlow } from "../flows/rename-journal.flow";
 
+import { JournalEditSectionToken, defineJournalEditSection } from "./journal-edit-section";
 import JournalEditSubpage from "./JournalEditSubpage.vue";
 
 let teardown: () => void;
@@ -507,5 +509,20 @@ describe("JournalEditSubpage", () => {
       // Preview for the second (static) template should NOT appear
       expect(screen.queryByText("static-template.md", { exact: false, selector: "b.u-pop" })).toBeNull();
     });
+  });
+});
+
+describe("JournalEditSubpage extension sections", () => {
+  it("renders sections contributed through JournalEditSectionToken", async () => {
+    const { container } = await setup();
+    const Stub = defineComponent({
+      props: { journalName: { type: String, required: true } },
+      setup: (props) => () => h("div", `section for ${props.journalName}`),
+    });
+    container
+      .register(JournalEditSectionToken)
+      .useValue(defineJournalEditSection({ key: "stub", component: Stub, order: 1 }));
+    mount(container, "daily");
+    expect(screen.getByText("section for daily")).toBeTruthy();
   });
 });

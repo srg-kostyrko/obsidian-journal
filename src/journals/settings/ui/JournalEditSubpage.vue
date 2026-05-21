@@ -28,6 +28,7 @@ import DateFormatPreview from "./DateFormatPreview.vue";
 import FileInput from "./FileInput.vue";
 import FolderInput from "./FolderInput.vue";
 import FolderPathPreview from "./FolderPathPreview.vue";
+import { JournalEditSectionToken } from "./journal-edit-section";
 import NoteNamePreview from "./NoteNamePreview.vue";
 import TemplatePathPreview from "./TemplatePathPreview.vue";
 import TemplaterSupportHint from "./TemplaterSupportHint.vue";
@@ -40,6 +41,7 @@ const { journalName, nav } = defineProps<{ journalName: string; nav: SubpageNav 
 
 const settings = useService(SettingsService);
 const flows = useService(Flows);
+const editSections = useService(JournalEditSectionToken).toSorted((a, b) => a.order - b.order);
 const collection = settings.getCollection(journalConfigCollection);
 const config = computed<JournalConfig | undefined>(() => collection.get(journalName) as JournalConfig | undefined);
 
@@ -441,6 +443,8 @@ function editSequenceKey(): void {
         />
       </UiSettingRow>
     </UiCollapsibleBlock>
+
+    <component :is="section.component" v-for="section in editSections" :key="section.key" :journal-name="journalName" />
   </div>
 </template>
 
