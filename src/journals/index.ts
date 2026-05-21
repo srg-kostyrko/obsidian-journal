@@ -13,6 +13,12 @@ export { JournalsIndex } from "./journals-index";
 
 export { journalsModule } from "./module";
 
+export {
+  JournalEditSectionToken,
+  defineJournalEditSection,
+  type JournalEditSection,
+} from "./settings/ui/journal-edit-section";
+
 export { journalConfigCollection, journalDefaultsFor, FRONTMATTER_NAME_KEY } from "./config";
 
 export type {
