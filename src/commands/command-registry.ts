@@ -11,6 +11,7 @@ import { LoggerFactoryToken } from "@/infrastructure/logger";
 import { Option } from "@/infrastructure/result";
 import { CycleService, JournalsIndex, NoApplicableJournals, OpenDateFlow, journalConfigCollection } from "@/journals";
 import type { JournalEntry } from "@/journals";
+import { JournalLifecycleService } from "@/journals/settings/lifecycle";
 import { SettingsService } from "@/settings";
 
 import { commandCollection } from "./config";
@@ -30,12 +31,15 @@ export class DynamicCommandRegistry {
   readonly #workspace = inject(WorkspaceService);
   readonly #index = inject(JournalsIndex);
   readonly #cycle = inject(CycleService);
+  readonly #lifecycle = inject(JournalLifecycleService);
   readonly #logger = inject(LoggerFactoryToken).named("dynamic-commands");
   readonly #registered = new Map<string, string>();
 
   initialize(): void {
     this.#reconcile();
     watch(this.#commandEntries(), () => this.#reconcile(), { deep: true, flush: "sync" });
+    this.#lifecycle.events.on("journalRenamed", ({ oldName, newName }) => this.#onJournalRenamed(oldName, newName));
+    this.#lifecycle.events.on("journalDeleted", ({ journalName }) => this.#onJournalDeleted(journalName));
   }
 
   #commandEntries(): Readonly<Record<string, CommandConfig>> {
@@ -151,6 +155,26 @@ export class DynamicCommandRegistry {
       const { error } = result;
       if (error instanceof UserAborted || error instanceof NoApplicableJournals) return;
       this.#logger.error("dynamic command failed", { command: command.name, error });
+    }
+  }
+
+  #onJournalRenamed(oldName: string, newName: string): void {
+    const collection = this.#settings.getCollection(commandCollection);
+    for (const id of Object.keys(collection.entries)) {
+      const command = collection.get(id);
+      if (command?.target.kind === "journal" && command.target.journalName === oldName) {
+        command.target.journalName = newName;
+      }
+    }
+  }
+
+  #onJournalDeleted(journalName: string): void {
+    const collection = this.#settings.getCollection(commandCollection);
+    for (const id of Object.keys(collection.entries)) {
+      const command = collection.get(id);
+      if (command?.target.kind === "journal" && command.target.journalName === journalName) {
+        collection.remove(id);
+      }
     }
   }
 }

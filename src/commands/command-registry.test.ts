@@ -180,3 +180,37 @@ describe("DynamicCommandRegistry execution", () => {
     });
   });
 });
+
+describe("DynamicCommandRegistry journal cascade", () => {
+  it("rewrites the journal name on rename and keeps the command registered", async () => {
+    const { host, commands, lifecycle } = await build();
+    lifecycle.create("daily", { type: "day" });
+    commands.add("cmd-1", makeCommand({ target: { kind: "journal", journalName: "daily" } }));
+
+    lifecycle.rename("daily", "morning");
+
+    expect(commands.get("cmd-1")?.target).toEqual({ kind: "journal", journalName: "morning" });
+    expect(host.commands.get("cmd-1")).toBeDefined();
+  });
+
+  it("removes a journal-target command when its journal is deleted", async () => {
+    const { host, commands, lifecycle } = await build();
+    lifecycle.create("daily", { type: "day" });
+    commands.add("cmd-1", makeCommand({ target: { kind: "journal", journalName: "daily" } }));
+
+    lifecycle.delete("daily");
+
+    expect(commands.get("cmd-1")).toBeUndefined();
+    expect(host.commands.get("cmd-1")).toBeUndefined();
+  });
+
+  it("leaves an all-target command untouched when a journal is deleted", async () => {
+    const { commands, lifecycle } = await build();
+    lifecycle.create("daily", { type: "day" });
+    commands.add("cmd-1", makeCommand({ target: { kind: "all", writeType: "day" } }));
+
+    lifecycle.delete("daily");
+
+    expect(commands.get("cmd-1")).toBeDefined();
+  });
+});
