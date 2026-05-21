@@ -6,6 +6,7 @@ import { CycleService } from "./cycle";
 import { journalFlowsModule } from "./flows/module";
 import { FrontmatterService } from "./frontmatter";
 import { JournalsIndex } from "./journals-index";
+import { JournalNavigationCommands } from "./navigation-commands";
 import { journalNotesModule } from "./notes/module";
 import { NumberingService } from "./numbering";
 import { TimelineService } from "./timeline";
@@ -20,6 +21,7 @@ export const journalsModule: Module = {
     c.register(NumberingService).useClass(NumberingService);
     c.register(FrontmatterService).useClass(FrontmatterService);
     c.register(VaultSubscriptionService).useClass(VaultSubscriptionService).eager();
+    c.register(JournalNavigationCommands).useClass(JournalNavigationCommands).eager();
     journalNotesModule.register(c);
     journalFlowsModule.register(c);
   },
