@@ -1,6 +1,8 @@
 import { getLanguage, Notice, Plugin } from "obsidian";
 
 import { CalendarModule, calendarSettingsModule } from "@/calendar";
+import { commandsModule } from "@/commands";
+import { DynamicCommandRegistry } from "@/commands/command-registry";
 import { initLocale } from "@/i18n";
 import { Container } from "@/infrastructure/di";
 import { FlowsModule } from "@/infrastructure/flows";
@@ -29,6 +31,7 @@ export default class JournalPlugin extends Plugin {
     container.addModule(calendarSettingsModule);
     container.addModule(journalsModule);
     container.addModule(journalsSettingsModule);
+    container.addModule(commandsModule);
     await container.autoLoad();
 
     const init = await container.resolve(SettingsService).initialize();
@@ -41,6 +44,7 @@ export default class JournalPlugin extends Plugin {
     await container.resolve(VaultSubscriptionService).initialize();
     await container.resolve(AutoAttachService).initialize();
     await container.resolve(AutoCreateService).initialize();
+    container.resolve(DynamicCommandRegistry).initialize();
 
     this.#container = container;
   }
