@@ -30,6 +30,7 @@ import FolderInput from "./FolderInput.vue";
 import FolderPathPreview from "./FolderPathPreview.vue";
 import NoteNamePreview from "./NoteNamePreview.vue";
 import TemplatePathPreview from "./TemplatePathPreview.vue";
+import TemplaterSupportHint from "./TemplaterSupportHint.vue";
 import { useAnchorField } from "./use-anchor-field";
 import { extractFromDateFormat, extractFromNameTemplate } from "./use-folder-extractor";
 import { useInvertibilityCheck } from "./use-invertibility-check";
@@ -268,6 +269,7 @@ function editSequenceKey(): void {
             :has-cycle="hasCycle"
             :numbering-variable-names="numberingVariableNames"
           />
+          <TemplaterSupportHint />
         </template>
       </UiSettingRow>
 
