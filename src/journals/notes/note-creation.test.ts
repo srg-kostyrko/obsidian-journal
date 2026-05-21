@@ -1,14 +1,15 @@
-import { describe, it, expect } from "vitest";
+import { describe, it, expect, vi } from "vitest";
 
 import { anchor } from "@/calendar/testing";
 import { Container } from "@/infrastructure/di";
 import { UserAborted } from "@/infrastructure/flows";
-import { NotesService, TemplaterService } from "@/infrastructure/host";
+import { NoteReadError, NoteWriteError, NotesService, TemplaterService } from "@/infrastructure/host";
 import type { VaultPath } from "@/infrastructure/host";
 import { ModalService } from "@/infrastructure/host/modals";
 import { FakeModalService } from "@/infrastructure/host/modals/testing";
 import { FakeNotesService, FakeTemplaterService } from "@/infrastructure/host/testing";
 import { LoggerModule } from "@/infrastructure/logger";
+import { AsyncResult } from "@/infrastructure/result";
 import { expectOk } from "@/infrastructure/result/testing";
 import { SettingsService } from "@/settings";
 import { TemplateEngine } from "@/templates";
@@ -198,5 +199,37 @@ describe("NoteCreationService.ensureNote — Templater", () => {
     expect(templater.applyCalls).toEqual([
       { templatePath: "Templates/daily.md", targetPath: "2026-05-19.md", content: "body" },
     ]);
+  });
+});
+
+describe("NoteCreationService.ensureNote — expected-set cleanup", () => {
+  it("clears the expected path when the content write fails", async () => {
+    const settings = fakeSettings({
+      daily: fixedJournal("daily", { type: "day" }, { templates: ["Templates/daily.md"] }),
+    });
+    const notes = new FakeNotesService();
+    notes.seed("Templates/daily.md" as VaultPath, "body");
+    const service = build(settings, notes, new FakeModalService()).resolve(NoteCreationService);
+    vi.spyOn(notes, "write").mockReturnValue(
+      AsyncResult.err(new NoteWriteError("2026-05-19.md" as VaultPath, new Error("write failed"))),
+    );
+    const result = await service.ensureNote("daily", meta);
+    expect(result.isErr()).toBe(true);
+    expect(service.expects("2026-05-19.md" as VaultPath)).toBe(false);
+  });
+
+  it("clears the expected path when content rendering fails", async () => {
+    const settings = fakeSettings({
+      daily: fixedJournal("daily", { type: "day" }, { templates: ["Templates/daily.md"] }),
+    });
+    const notes = new FakeNotesService();
+    notes.seed("Templates/daily.md" as VaultPath, "body");
+    const service = build(settings, notes, new FakeModalService()).resolve(NoteCreationService);
+    vi.spyOn(notes, "read").mockReturnValue(
+      AsyncResult.err(new NoteReadError("Templates/daily.md" as VaultPath, new Error("read failed"))),
+    );
+    const result = await service.ensureNote("daily", meta);
+    expect(result.isErr()).toBe(true);
+    expect(service.expects("2026-05-19.md" as VaultPath)).toBe(false);
   });
 });

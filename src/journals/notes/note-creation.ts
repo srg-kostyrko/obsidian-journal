@@ -82,7 +82,7 @@ export class NoteCreationService {
       if (content !== "") {
         yield* this.#notes.write(path, content).tapErr(() => this.#clearExpected(path));
       }
-      yield* this.#notes.updateFrontmatter(path, mutator);
+      yield* this.#notes.updateFrontmatter(path, mutator).tapErr(() => this.#clearExpected(path));
       return { path, created: true as const };
     });
   }
