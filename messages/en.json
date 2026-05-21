@@ -48,8 +48,90 @@
   "calendar_week_config_change": "Change",
   "calendar_week_config_title": "Week configuration",
 
+  "command_add_modal_title": "Add command",
+  "command_context_option": [
+    {
+      "declarations": ["input context"],
+      "selectors": ["context"],
+      "match": {
+        "context=today": "Today",
+        "context=open_note": "Currently open note",
+        "context=only_open_note": "Only the open note"
+      }
+    }
+  ],
+  "command_dashboard_add": "Add command",
+  "command_dashboard_empty": "No global commands created yet.",
+  "command_dashboard_section_title": "Commands",
+  "command_delete_modal_confirm": "Delete the command \"{name}\"?",
+  "command_delete_modal_title": "Delete command",
+  "command_edit_modal_title": "Edit command",
+  "command_icon_required_error": "Pick an icon to show this command in the ribbon.",
+  "command_journal_add": "Add command",
+  "command_journal_empty": "No commands created for this journal yet.",
+  "command_journal_section_title": "Commands",
+  "command_label_today": "Open today's note",
+  "command_label_tomorrow": "Open tomorrow's note",
+  "command_label_yesterday": "Open yesterday's note",
+  "command_list_delete": "Delete command",
+  "command_list_edit": "Edit command",
+  "command_modal_context_description": "Choose which note's date the command treats as the current date.",
+  "command_modal_context_label": "Context",
+  "command_modal_context_only_open_note_hint": "Runs only while a journal note is open, using that note's date.",
+  "command_modal_context_open_note_hint": "Uses the open journal note's date, or today's date when no journal note is open.",
+  "command_modal_icon_label": "Icon",
+  "command_modal_name_label": "Name",
+  "command_modal_open_mode_label": "Open note",
+  "command_modal_ribbon_label": "Show in ribbon",
+  "command_modal_type_label": "When the command runs",
+  "command_modal_write_type_label": "Note type",
+  "command_name_required_error": "Command name is required",
+  "command_name_unique_error": "Command name must be unique",
+  "command_open_mode_option": [
+    {
+      "declarations": ["input mode"],
+      "selectors": ["mode"],
+      "match": {
+        "mode=active": "Replacing the active note",
+        "mode=tab": "In a new tab",
+        "mode=split": "Next to the active note",
+        "mode=window": "In a popout window"
+      }
+    }
+  ],
   "command_open_next": "Open next note",
   "command_open_previous": "Open previous note",
+  "command_type_label": [
+    {
+      "declarations": ["input type", "input writeType"],
+      "selectors": ["type"],
+      "match": {
+        "type=same": "Open current {writeType}'s note",
+        "type=next": "Open next {writeType}'s note",
+        "type=previous": "Open last {writeType}'s note",
+        "type=same_next_week": "Open same {writeType} next week",
+        "type=same_previous_week": "Open same {writeType} last week",
+        "type=same_next_month": "Open same {writeType} next month",
+        "type=same_previous_month": "Open same {writeType} last month",
+        "type=same_next_year": "Open same {writeType} next year",
+        "type=same_previous_year": "Open same {writeType} last year"
+      }
+    }
+  ],
+  "command_write_type_option": [
+    {
+      "declarations": ["input writeType"],
+      "selectors": ["writeType"],
+      "match": {
+        "writeType=day": "Daily note",
+        "writeType=week": "Weekly note",
+        "writeType=month": "Monthly note",
+        "writeType=quarter": "Quarterly note",
+        "writeType=year": "Yearly note",
+        "writeType=custom": "Custom note"
+      }
+    }
+  ],
 
   "common_action_cancel": "Cancel",
   "common_action_close": "Close",
