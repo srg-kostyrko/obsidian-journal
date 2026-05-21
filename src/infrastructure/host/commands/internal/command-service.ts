@@ -10,6 +10,8 @@ export class CommandService {
   readonly #logger = inject(LoggerFactoryToken).named("command-service");
   readonly #ribbons = new Map<string, HTMLElement>();
 
+  // No plugin-unload teardown: Obsidian removes a plugin's commands and ribbon
+  // icons automatically when the plugin unloads.
   register(registration: CommandRegistration): void {
     const run = (): void => {
       try {

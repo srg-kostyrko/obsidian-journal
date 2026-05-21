@@ -44,6 +44,12 @@ describe("CommandService", () => {
     expect(host.commands.get("demo")?.checkCallback?.(true)).toBe(false);
   });
 
+  it("reports availability as available when the check passes", () => {
+    const { service, host } = build();
+    service.register({ id: "demo", name: "Demo", check: () => true, execute: vi.fn() });
+    expect(host.commands.get("demo")?.checkCallback?.(true)).toBe(true);
+  });
+
   it("skips execute when the check fails", () => {
     const { service, host } = build();
     let ran = false;
