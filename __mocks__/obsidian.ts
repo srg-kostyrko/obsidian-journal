@@ -37,6 +37,10 @@ export function getIcon(name: string): SVGSVGElement | null {
   return svg;
 }
 
+export function getIconIds(): string[] {
+  return ["calendar", "calendar-days", "book-open", "file-text", "terminal"];
+}
+
 export function normalizePath(path: string): string {
   return path
     .replaceAll(/\\/g, "/")
