@@ -50,6 +50,31 @@ function build(
   return c;
 }
 
+describe("OpenJournalEntryFlow — cursor jump", () => {
+  it("jumps the cursor after opening a newly created note", async () => {
+    const settings = fakeSettings({ daily: fixedJournal("daily", { type: "day" }) });
+    const notes = new FakeNotesService();
+    const workspace = new FakeWorkspaceService();
+    const templater = new FakeTemplaterService();
+    await build(settings, notes, workspace, new FakeModalService(), templater)
+      .resolve(Flows)
+      .invoke(OpenJournalEntryFlow, { journalName: "daily", anchor: anchor("2026-05-19") });
+    expect(templater.cursorJumps).toEqual(["2026-05-19.md"]);
+  });
+
+  it("does not jump the cursor when the note already existed", async () => {
+    const settings = fakeSettings({ daily: fixedJournal("daily", { type: "day" }) });
+    const notes = new FakeNotesService();
+    notes.seed("2026-05-19.md" as VaultPath, "existing");
+    const workspace = new FakeWorkspaceService();
+    const templater = new FakeTemplaterService();
+    await build(settings, notes, workspace, new FakeModalService(), templater)
+      .resolve(Flows)
+      .invoke(OpenJournalEntryFlow, { journalName: "daily", anchor: anchor("2026-05-19") });
+    expect(templater.cursorJumps).toEqual([]);
+  });
+});
+
 describe("OpenJournalEntryFlow", () => {
   it("ensures the note and opens it in the workspace", async () => {
     const settings = fakeSettings({ daily: fixedJournal("daily", { type: "day" }) });
