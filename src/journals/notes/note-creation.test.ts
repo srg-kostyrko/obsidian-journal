@@ -190,9 +190,11 @@ describe("NoteCreationService.ensureNote — Templater", () => {
     const notes = new FakeNotesService();
     notes.seed("Templates/daily.md" as VaultPath, "body");
     const templater = new FakeTemplaterService();
-    await build(settings, notes, new FakeModalService(), templater)
-      .resolve(NoteCreationService)
-      .ensureNote("daily", meta);
+    expectOk(
+      await build(settings, notes, new FakeModalService(), templater)
+        .resolve(NoteCreationService)
+        .ensureNote("daily", meta),
+    );
     expect(templater.applyCalls).toEqual([
       { templatePath: "Templates/daily.md", targetPath: "2026-05-19.md", content: "body" },
     ]);

@@ -76,8 +76,12 @@ export class NoteCreationService {
         this.#clearExpected(path);
         return yield* new Err(createResult.error as NoteCreationError);
       }
-      const content = yield* this.#content.renderFor(name, metadata, this.#basename(path), path);
-      if (content !== "") yield* this.#notes.write(path, content);
+      const content = yield* this.#content
+        .renderFor(name, metadata, this.#basename(path), path)
+        .tapErr(() => this.#clearExpected(path));
+      if (content !== "") {
+        yield* this.#notes.write(path, content).tapErr(() => this.#clearExpected(path));
+      }
       yield* this.#notes.updateFrontmatter(path, mutator);
       return { path, created: true as const };
     });
