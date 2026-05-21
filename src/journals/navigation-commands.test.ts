@@ -52,6 +52,12 @@ describe("JournalNavigationCommands", () => {
     expect(host.commands.get("open-next")?.checkCallback?.(true)).toBe(false);
   });
 
+  it("makes open-prev unavailable when no preceding entry exists", () => {
+    const { host, workspace } = build();
+    workspace.setActive(FIRST);
+    expect(host.commands.get("open-prev")?.checkCallback?.(true)).toBe(false);
+  });
+
   it("makes open-next unavailable when the active note is not a journal note", () => {
     const { host, workspace } = build();
     workspace.setActive(ORPHAN);
