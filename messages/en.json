@@ -48,6 +48,9 @@
   "calendar_week_config_change": "Change",
   "calendar_week_config_title": "Week configuration",
 
+  "command_open_next": "Open next note",
+  "command_open_previous": "Open previous note",
+
   "common_action_cancel": "Cancel",
   "common_action_close": "Close",
   "common_action_delete": "Delete",
