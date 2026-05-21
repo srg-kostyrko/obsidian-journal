@@ -124,15 +124,17 @@ function openModifications(event: Event): void {
 </template>
 
 <style scoped>
+/* One shared grid so every row's chip column is the same width and the
+   descriptions line up on a single left edge across all rows. */
 .variable-reference__list {
   display: grid;
-  gap: 0.75em;
+  grid-template-columns: auto 1fr;
+  column-gap: 0.75em;
+  row-gap: 0.75em;
+  align-items: baseline;
 }
 .variable-reference__row {
-  display: grid;
-  grid-template-columns: auto 1fr;
-  gap: 0.75em;
-  align-items: baseline;
+  display: contents;
 }
 .variable-reference__warning {
   margin-top: 0.25em;
