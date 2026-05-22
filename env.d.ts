@@ -10,9 +10,16 @@ declare module "@vue/reactivity" {
 
 // Augment the obsidian module to expose the __testing registry used in unit tests.
 // The actual implementation lives in __mocks__/obsidian.ts (aliased by vitest).
-import type { AbstractInputSuggest, Modal, SuggestModal } from "obsidian";
+import type { AbstractInputSuggest, IconName, Modal, SuggestModal } from "obsidian";
 
 declare module "obsidian" {
+  // `Plugin.addRibbonIcon` has no counterpart for mid-lifetime removal, so the
+  // ribbon-action registry methods are accessed directly to add and remove icons.
+  interface WorkspaceRibbon {
+    addRibbonItemButton(id: string, icon: IconName, title: string, callback: (event: MouseEvent) => void): HTMLElement;
+    removeRibbonAction(id: string): void;
+  }
+
   export const __testing: {
     readonly openModals: readonly Modal[];
     lastOpenModal(): Modal;

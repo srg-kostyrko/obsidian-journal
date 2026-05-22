@@ -147,4 +147,26 @@ describe("CommandService", () => {
     service.unregister("demo");
     expect(element?.isConnected).toBe(false);
   });
+
+  it("removes the ribbon registration on unregister", () => {
+    const { service, host } = build();
+    service.register({ id: "demo", name: "Demo", icon: "star", ribbon: true, execute: vi.fn() });
+    service.unregister("demo");
+    expect(host.ribbonIcons).toHaveLength(0);
+  });
+
+  it("keeps a single ribbon icon when a command is unregistered and registered again", () => {
+    const { service, host } = build();
+    service.register({ id: "demo", name: "Demo", icon: "star", ribbon: true, execute: vi.fn() });
+    service.unregister("demo");
+    service.register({ id: "demo", name: "Demo", icon: "star", ribbon: true, execute: vi.fn() });
+    expect(host.ribbonIcons).toHaveLength(1);
+  });
+
+  it("removes ribbon registrations when the plugin unloads", () => {
+    const { service, host } = build();
+    service.register({ id: "demo", name: "Demo", icon: "star", ribbon: true, execute: vi.fn() });
+    host.triggerUnload();
+    expect(host.ribbonIcons).toHaveLength(0);
+  });
 });

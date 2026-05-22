@@ -5,13 +5,22 @@ import { InternalPluginToken } from "../../internal/tokens";
 
 import type { CommandRegistration } from "../types";
 
+interface RibbonHandle {
+  readonly actionId: string;
+  readonly element: HTMLElement;
+}
+
 export class CommandService {
   readonly #plugin = inject(InternalPluginToken);
   readonly #logger = inject(LoggerFactoryToken).named("command-service");
-  readonly #ribbons = new Map<string, HTMLElement>();
+  readonly #ribbons = new Map<string, RibbonHandle>();
 
-  // No plugin-unload teardown: Obsidian removes a plugin's commands and ribbon
-  // icons automatically when the plugin unloads.
+  constructor() {
+    // Obsidian auto-removes a plugin's commands on unload, but ribbon icons added
+    // through the ribbon registry directly are ours to tear down.
+    this.#plugin.register(() => this.#teardownRibbons());
+  }
+
   register(registration: CommandRegistration): void {
     const run = (): void => {
       try {
@@ -49,11 +58,17 @@ export class CommandService {
     }
 
     if (registration.ribbon && registration.icon) {
-      const element = this.#plugin.addRibbonIcon(registration.icon, registration.name, () => {
-        if (check && !check()) return;
-        run();
-      });
-      this.#ribbons.set(registration.id, element);
+      const actionId = ribbonActionId(registration.id);
+      const element = this.#plugin.app.workspace.leftRibbon.addRibbonItemButton(
+        actionId,
+        registration.icon,
+        registration.name,
+        () => {
+          if (check && !check()) return;
+          run();
+        },
+      );
+      this.#ribbons.set(registration.id, { actionId, element });
     }
   }
 
@@ -61,8 +76,22 @@ export class CommandService {
     this.#plugin.removeCommand(id);
     const ribbon = this.#ribbons.get(id);
     if (ribbon) {
-      ribbon.remove();
+      this.#removeRibbon(ribbon);
       this.#ribbons.delete(id);
     }
   }
+
+  #teardownRibbons(): void {
+    for (const ribbon of this.#ribbons.values()) this.#removeRibbon(ribbon);
+    this.#ribbons.clear();
+  }
+
+  #removeRibbon(ribbon: RibbonHandle): void {
+    this.#plugin.app.workspace.leftRibbon.removeRibbonAction(ribbon.actionId);
+    ribbon.element.remove();
+  }
+}
+
+function ribbonActionId(commandId: string): string {
+  return `journal-command:${commandId}`;
 }

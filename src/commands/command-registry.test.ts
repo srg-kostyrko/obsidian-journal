@@ -77,6 +77,14 @@ describe("DynamicCommandRegistry registration", () => {
     if (stored) stored.name = "New";
     expect(host.commands.get("cmd-1")?.name).toBe("New");
   });
+
+  it("keeps a single ribbon icon when a ribbon command is updated", async () => {
+    const { host, commands } = await build();
+    commands.add("cmd-1", makeCommand({ name: "Old", icon: "star", showInRibbon: true }));
+    const stored = commands.get("cmd-1");
+    if (stored) stored.name = "New";
+    expect(host.ribbonIcons).toHaveLength(1);
+  });
 });
 
 describe("DynamicCommandRegistry availability", () => {

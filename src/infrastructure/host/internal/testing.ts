@@ -46,6 +46,7 @@ export interface FakeFileSystemEntry {
 }
 
 export interface FakeRibbonIcon {
+  readonly id: string;
   readonly icon: string;
   readonly title: string;
   readonly callback: (event: MouseEvent) => void;
@@ -235,7 +236,22 @@ export function createFakeHost(): FakeHost {
     },
   };
 
+  const leftRibbon = {
+    addRibbonItemButton(id: string, icon: string, title: string, callback: (event: MouseEvent) => void): HTMLElement {
+      const element = document.createElement("div");
+      // attached so ribbon-removal can be observed via element.isConnected
+      document.body.append(element);
+      ribbonIcons.push({ id, icon, title, callback, element });
+      return element;
+    },
+    removeRibbonAction(id: string): void {
+      const index = ribbonIcons.findIndex((ribbon) => ribbon.id === id);
+      if (index !== -1) ribbonIcons.splice(index, 1);
+    },
+  };
+
   const workspaceApi = {
+    leftRibbon,
     on: (event: string, callback: AnyHandler): EventRef => workspaceEvents.on(event, callback),
     offref: (ref: EventRef): void => workspaceEvents.detach(ref),
     getActiveFile(): TFile | null {
@@ -282,13 +298,6 @@ export function createFakeHost(): FakeHost {
     },
     removeCommand(commandId: string): void {
       commands.delete(commandId);
-    },
-    addRibbonIcon(icon: string, title: string, callback: (event: MouseEvent) => void): HTMLElement {
-      const element = document.createElement("div");
-      // attached so ribbon-removal can be observed via element.isConnected
-      document.body.append(element);
-      ribbonIcons.push({ icon, title, callback, element });
-      return element;
     },
     async loadData(): Promise<unknown> {
       if (pluginData.loadError) throw pluginData.loadError;
