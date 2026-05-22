@@ -1,3 +1,6 @@
+import { FlowError } from "@/infrastructure/flows";
+import type { UnknownJournalError } from "@/journals/settings/errors";
+
 export class InvalidShelfNameError extends Error {
   readonly kind = "invalid-name" as const;
   constructor(public readonly attemptedName: string) {
@@ -20,4 +23,22 @@ export class UnknownShelfError extends Error {
     super(`Unknown shelf: ${shelfName}`);
     this.name = "UnknownShelfError";
   }
+}
+
+export type ShelvesLifecycleError =
+  | InvalidShelfNameError
+  | ShelfNameTakenError
+  | UnknownShelfError
+  | UnknownJournalError;
+
+export class ShelvesLifecycleFlowError extends FlowError {
+  readonly kind = "shelves-lifecycle" as const;
+  constructor(public override readonly cause: ShelvesLifecycleError) {
+    super(cause.message);
+    this.name = "ShelvesLifecycleFlowError";
+  }
+}
+
+export function toFlowError(cause: ShelvesLifecycleError): ShelvesLifecycleFlowError {
+  return new ShelvesLifecycleFlowError(cause);
 }
