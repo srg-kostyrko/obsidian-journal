@@ -41,7 +41,9 @@ function journalWriteType(): JournalWrite["type"] {
   return settings.getCollection(journalConfigCollection).get(props.target.journalName)?.write.type ?? "day";
 }
 
-const writeType = ref<JournalWrite["type"]>(props.target.kind === "all" ? props.target.writeType : journalWriteType());
+const writeType = ref<JournalWrite["type"]>(
+  props.target.kind === "journal" ? journalWriteType() : props.target.writeType,
+);
 
 const initial = props.command ?? commandCollection.defaultItem("");
 
@@ -118,7 +120,11 @@ const onSubmit = handleSubmit((values) => {
       writeType: writeType.value as Exclude<JournalWrite["type"], "custom">,
     }))
     .with({ kind: "journal" }, (t) => ({ kind: "journal" as const, journalName: t.journalName }))
-    .with({ kind: "shelf" }, (t) => ({ kind: "shelf" as const, shelfName: t.shelfName, writeType: t.writeType }))
+    .with({ kind: "shelf" }, (t) => ({
+      kind: "shelf" as const,
+      shelfName: t.shelfName,
+      writeType: writeType.value as Exclude<JournalWrite["type"], "custom">,
+    }))
     .exhaustive();
   api.submit({
     name: values.name,
@@ -142,7 +148,7 @@ const onSubmit = handleSubmit((values) => {
     </UiSettingRow>
 
     <UiSettingRow :name="m.command_modal_write_type_label()">
-      <UiDropdown v-if="props.target.kind === 'all'" v-model="writeType">
+      <UiDropdown v-if="props.target.kind !== 'journal'" v-model="writeType">
         <option value="day">{{ m.command_write_type_option({ writeType: "day" }) }}</option>
         <option value="week">{{ m.command_write_type_option({ writeType: "week" }) }}</option>
         <option value="month">{{ m.command_write_type_option({ writeType: "month" }) }}</option>

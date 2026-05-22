@@ -163,4 +163,33 @@ describe("EditCommandModal", () => {
     await userEvent.click(screen.getByText(m.common_action_cancel()));
     expect(cancel).toHaveBeenCalledTimes(1);
   });
+
+  it("submits a shelf-target command with the entered values", async () => {
+    const { submit } = await mountModal({ target: { kind: "shelf", shelfName: "work", writeType: "day" } });
+    await userEvent.type(screen.getByRole("textbox"), "Open work");
+    await userEvent.click(screen.getByText(m.common_action_submit()));
+    await waitFor(() =>
+      expect(submit).toHaveBeenCalledWith({
+        name: "Open work",
+        icon: "",
+        showInRibbon: false,
+        openMode: "active",
+        target: { kind: "shelf", shelfName: "work", writeType: "day" },
+        type: "same",
+        context: "today",
+      }),
+    );
+  });
+
+  it("submits the write type chosen for a shelf target", async () => {
+    const { submit } = await mountModal({ target: { kind: "shelf", shelfName: "work", writeType: "day" } });
+    await userEvent.type(screen.getByRole("textbox"), "Open work weekly");
+    await userEvent.selectOptions(screen.getAllByRole("combobox")[0], "week");
+    await userEvent.click(screen.getByText(m.common_action_submit()));
+    await waitFor(() =>
+      expect(submit).toHaveBeenCalledWith(
+        expect.objectContaining({ target: { kind: "shelf", shelfName: "work", writeType: "week" } }),
+      ),
+    );
+  });
 });
