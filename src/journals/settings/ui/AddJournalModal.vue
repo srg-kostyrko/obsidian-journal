@@ -9,13 +9,14 @@ import { DatePicker } from "@/calendar/ui";
 import { m } from "@/i18n";
 import { useService } from "@/infrastructure/di";
 import { useModal } from "@/infrastructure/host/modals";
-import { journalConfigCollection, type JournalWrite } from "@/journals";
 import { SettingsService } from "@/settings";
 import UiButton from "@/ui/UiButton.vue";
 import UiDropdown from "@/ui/UiDropdown.vue";
 import UiNumberInput from "@/ui/UiNumberInput.vue";
 import UiSettingRow from "@/ui/UiSettingRow.vue";
 import UiTextInput from "@/ui/UiTextInput.vue";
+
+import { journalConfigCollection, type JournalWrite } from "../../config";
 
 import { useAnchorField } from "./use-anchor-field";
 

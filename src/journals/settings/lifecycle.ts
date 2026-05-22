@@ -3,8 +3,9 @@ import { createNanoEvents } from "nanoevents";
 import { inject } from "@/infrastructure/di";
 import type { Subscribable, TypedEmitter } from "@/infrastructure/events";
 import { attempt, Err, Ok, Option, type Result } from "@/infrastructure/result";
-import { journalConfigCollection, journalDefaultsFor, type JournalConfig, type JournalWrite } from "@/journals";
 import { SettingsService } from "@/settings";
+
+import { journalConfigCollection, journalDefaultsFor, type JournalConfig, type JournalWrite } from "../config";
 
 import { InvalidJournalNameError, JournalNameTakenError, UnknownJournalError } from "./errors";
 

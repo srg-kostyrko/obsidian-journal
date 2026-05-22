@@ -6,7 +6,6 @@ import { DatePicker, type Picking } from "@/calendar/ui";
 import { m } from "@/i18n";
 import { useService } from "@/infrastructure/di";
 import { Flows } from "@/infrastructure/flows";
-import { journalConfigCollection, type JournalConfig, type NumberingReset, type TimelineEnd } from "@/journals";
 import { SettingsService, type SubpageNav } from "@/settings";
 import UiButton from "@/ui/UiButton.vue";
 import UiCollapsibleBlock from "@/ui/UiCollapsibleBlock.vue";
@@ -19,6 +18,7 @@ import UiSettingRow from "@/ui/UiSettingRow.vue";
 import UiTextInput from "@/ui/UiTextInput.vue";
 import UiToggle from "@/ui/UiToggle.vue";
 
+import { journalConfigCollection, type JournalConfig, type NumberingReset, type TimelineEnd } from "../../config";
 import { describeWrite } from "../describe-write";
 import { EditFrontmatterFieldFlow } from "../flows/edit-frontmatter-field.flow";
 import { EditSequencePropertyFlow } from "../flows/edit-sequence-property.flow";

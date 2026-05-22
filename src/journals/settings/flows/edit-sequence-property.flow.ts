@@ -2,9 +2,9 @@ import { inject } from "@/infrastructure/di";
 import { UserAborted, type Flow, type FlowError } from "@/infrastructure/flows";
 import { ModalService } from "@/infrastructure/host/modals";
 import { AsyncResult, attempt } from "@/infrastructure/result";
-import { journalConfigCollection } from "@/journals";
 import { SettingsService } from "@/settings";
 
+import { journalConfigCollection } from "../../config";
 import { toFlowError, UnknownJournalError, UnknownSequenceSourceError } from "../errors";
 import { editSequencePropertyModal } from "../ui/edit-sequence-property-modal";
 
