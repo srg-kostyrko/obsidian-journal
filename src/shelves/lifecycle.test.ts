@@ -1,6 +1,7 @@
 import { describe, expect, it } from "vitest";
 
 import { journalConfigCollection } from "@/journals";
+import { UnknownJournalError } from "@/journals/settings/errors";
 import { JournalLifecycleService } from "@/journals/settings/lifecycle";
 import { createSettingsService } from "@/settings/testing";
 
@@ -128,6 +129,53 @@ describe("ShelvesLifecycleService.delete", () => {
     const { shelves } = await buildInitialized();
     shelves.create("work");
     const result = shelves.delete("work", "missing");
+    expect(result.kind === "err" && result.error).toBeInstanceOf(UnknownShelfError);
+  });
+});
+
+describe("ShelvesLifecycleService.assign", () => {
+  it("places a journal on a shelf", async () => {
+    const { shelves, journals, settings } = await buildInitialized();
+    journals.create("daily", { type: "day" });
+    shelves.create("work");
+    const result = shelves.assign("daily", "work");
+    expect(result.kind).toBe("ok");
+    expect(settings.getCollection(shelvesCollection).get("work")?.journals).toEqual(["daily"]);
+  });
+
+  it("moves a journal off its previous shelf onto the new one", async () => {
+    const { shelves, journals, settings } = await buildInitialized();
+    journals.create("daily", { type: "day" });
+    shelves.create("work");
+    shelves.create("home");
+    shelves.assign("daily", "work");
+    shelves.assign("daily", "home");
+    const col = settings.getCollection(shelvesCollection);
+    expect(col.get("work")?.journals).toEqual([]);
+    expect(col.get("home")?.journals).toEqual(["daily"]);
+  });
+
+  it("removes a journal from all shelves when the shelf name is empty", async () => {
+    const { shelves, journals, settings } = await buildInitialized();
+    journals.create("daily", { type: "day" });
+    shelves.create("work");
+    shelves.assign("daily", "work");
+    const result = shelves.assign("daily", "");
+    expect(result.kind).toBe("ok");
+    expect(settings.getCollection(shelvesCollection).get("work")?.journals).toEqual([]);
+  });
+
+  it("rejects an unknown journal with UnknownJournalError", async () => {
+    const { shelves } = await buildInitialized();
+    shelves.create("work");
+    const result = shelves.assign("missing", "work");
+    expect(result.kind === "err" && result.error).toBeInstanceOf(UnknownJournalError);
+  });
+
+  it("rejects an unknown shelf with UnknownShelfError", async () => {
+    const { shelves, journals } = await buildInitialized();
+    journals.create("daily", { type: "day" });
+    const result = shelves.assign("daily", "missing");
     expect(result.kind === "err" && result.error).toBeInstanceOf(UnknownShelfError);
   });
 });

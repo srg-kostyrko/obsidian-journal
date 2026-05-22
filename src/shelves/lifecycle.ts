@@ -1,5 +1,7 @@
 import { inject } from "@/infrastructure/di";
 import { attempt, Err, Option, type Result } from "@/infrastructure/result";
+import { journalConfigCollection } from "@/journals";
+import { UnknownJournalError } from "@/journals/settings/errors";
 import { SettingsService } from "@/settings";
 
 import { shelvesCollection, type ShelfConfig } from "./config";
@@ -53,5 +55,32 @@ export class ShelvesLifecycleService {
       }
       collection.remove(name);
     });
+  }
+
+  assign(journalName: string, shelfName: string): Result<void, UnknownJournalError | UnknownShelfError> {
+    return attempt.in(this, function* () {
+      const journals = this.#settings.getCollection(journalConfigCollection);
+      if (journals.get(journalName) === undefined) {
+        yield* new Err<never, UnknownJournalError>(new UnknownJournalError(journalName));
+      }
+      const shelves = this.#settings.getCollection(shelvesCollection);
+      if (shelfName === "") {
+        this.#removeJournalFromShelves(journalName);
+        return;
+      }
+      const target = yield* Option.fromNullable(shelves.get(shelfName)).okOrElse(
+        () => new UnknownShelfError(shelfName),
+      );
+      this.#removeJournalFromShelves(journalName);
+      target.journals.push(journalName);
+    });
+  }
+
+  #removeJournalFromShelves(journalName: string): void {
+    const shelves = this.#settings.getCollection(shelvesCollection);
+    for (const shelf of Object.values(shelves.entries)) {
+      const index = shelf.journals.indexOf(journalName);
+      if (index !== -1) shelf.journals.splice(index, 1);
+    }
   }
 }
