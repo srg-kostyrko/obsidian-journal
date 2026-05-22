@@ -302,4 +302,14 @@ describe("DynamicCommandRegistry shelf targets", () => {
     container.resolve(ShelvesLifecycleService).delete("work");
     expect(commands.get("cmd-1")).toBeUndefined();
   });
+
+  it("keeps a renamed shelf's command operational", async () => {
+    const { host, container, settings, commands, shelves } = await build();
+    settings.getCollection(journalConfigCollection).add("daily", makeJournal("daily", "day"));
+    shelves.add("work", { name: "work", journals: ["daily"] });
+    commands.add("cmd-1", makeCommand({ target: { kind: "shelf", shelfName: "work", writeType: "day" } }));
+    container.resolve(ShelvesLifecycleService).rename("work", "office");
+    expect(host.commands.get("cmd-1")).toBeDefined();
+    expect(host.commands.get("cmd-1")?.checkCallback?.(true)).toBe(true);
+  });
 });
