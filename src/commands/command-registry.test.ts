@@ -12,7 +12,7 @@ import { AsyncResult } from "@/infrastructure/result";
 import { CycleService, JournalsIndex, OpenDateFlow, journalConfigCollection } from "@/journals";
 import { JournalLifecycleService } from "@/journals/settings/lifecycle";
 import { createSettingsService } from "@/settings/testing";
-import { shelvesCollection } from "@/shelves";
+import { ShelvesLifecycleService, shelvesCollection } from "@/shelves";
 
 import { DynamicCommandRegistry } from "./command-registry";
 import { commandCollection } from "./config";
@@ -44,6 +44,7 @@ async function build() {
   container.register(JournalsIndex).useClass(JournalsIndex);
   container.register(CycleService).useClass(CycleService);
   container.register(JournalLifecycleService).useClass(JournalLifecycleService);
+  container.register(ShelvesLifecycleService).useClass(ShelvesLifecycleService);
   container.addModule(FlowsModule);
   container.register(DynamicCommandRegistry).useClass(DynamicCommandRegistry);
 
@@ -55,6 +56,7 @@ async function build() {
   registry.initialize();
 
   return {
+    container,
     host,
     workspace,
     settings,
@@ -282,5 +284,22 @@ describe("DynamicCommandRegistry shelf targets", () => {
       makeCommand({ name: "Open work weekly", target: { kind: "shelf", shelfName: "work", writeType: "week" } }),
     );
     expect(host.commands.get("cmd-1")?.checkCallback?.(true)).toBe(false);
+  });
+
+  it("updates the shelf name on a shelf-targeted command when its shelf is renamed", async () => {
+    const { container, commands, shelves } = await build();
+    shelves.add("work", { name: "work", journals: [] });
+    commands.add("cmd-1", makeCommand({ target: { kind: "shelf", shelfName: "work", writeType: "day" } }));
+    container.resolve(ShelvesLifecycleService).rename("work", "office");
+    const target = commands.get("cmd-1")?.target;
+    expect(target).toEqual({ kind: "shelf", shelfName: "office", writeType: "day" });
+  });
+
+  it("removes a shelf-targeted command when its shelf is deleted", async () => {
+    const { container, commands, shelves } = await build();
+    shelves.add("work", { name: "work", journals: [] });
+    commands.add("cmd-1", makeCommand({ target: { kind: "shelf", shelfName: "work", writeType: "day" } }));
+    container.resolve(ShelvesLifecycleService).delete("work");
+    expect(commands.get("cmd-1")).toBeUndefined();
   });
 });

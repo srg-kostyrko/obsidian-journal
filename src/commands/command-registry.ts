@@ -13,7 +13,7 @@ import { CycleService, JournalsIndex, NoApplicableJournals, OpenDateFlow, journa
 import type { JournalEntry } from "@/journals";
 import { JournalLifecycleService } from "@/journals/settings/lifecycle";
 import { SettingsService } from "@/settings";
-import { shelvesCollection } from "@/shelves";
+import { ShelvesLifecycleService, shelvesCollection } from "@/shelves";
 
 import { commandCollection } from "./config";
 import { compoundShift, supportedTypes } from "./resolve";
@@ -33,6 +33,7 @@ export class DynamicCommandRegistry {
   readonly #index = inject(JournalsIndex);
   readonly #cycle = inject(CycleService);
   readonly #lifecycle = inject(JournalLifecycleService);
+  readonly #shelfLifecycle = inject(ShelvesLifecycleService);
   readonly #logger = inject(LoggerFactoryToken).named("dynamic-commands");
   readonly #registered = new Map<string, string>();
 
@@ -41,6 +42,8 @@ export class DynamicCommandRegistry {
     watch(this.#commandEntries(), () => this.#reconcile(), { deep: true, flush: "sync" });
     this.#lifecycle.events.on("journalRenamed", ({ oldName, newName }) => this.#onJournalRenamed(oldName, newName));
     this.#lifecycle.events.on("journalDeleted", ({ journalName }) => this.#onJournalDeleted(journalName));
+    this.#shelfLifecycle.events.on("shelfRenamed", ({ oldName, newName }) => this.#onShelfRenamed(oldName, newName));
+    this.#shelfLifecycle.events.on("shelfDeleted", ({ shelfName }) => this.#onShelfDeleted(shelfName));
   }
 
   #commandEntries(): Readonly<Record<string, CommandConfig>> {
@@ -179,6 +182,26 @@ export class DynamicCommandRegistry {
     for (const id of Object.keys(collection.entries)) {
       const command = collection.get(id);
       if (command?.target.kind === "journal" && command.target.journalName === journalName) {
+        collection.remove(id);
+      }
+    }
+  }
+
+  #onShelfRenamed(oldName: string, newName: string): void {
+    const collection = this.#settings.getCollection(commandCollection);
+    for (const id of Object.keys(collection.entries)) {
+      const command = collection.get(id);
+      if (command?.target.kind === "shelf" && command.target.shelfName === oldName) {
+        command.target.shelfName = newName;
+      }
+    }
+  }
+
+  #onShelfDeleted(shelfName: string): void {
+    const collection = this.#settings.getCollection(commandCollection);
+    for (const id of Object.keys(collection.entries)) {
+      const command = collection.get(id);
+      if (command?.target.kind === "shelf" && command.target.shelfName === shelfName) {
         collection.remove(id);
       }
     }
