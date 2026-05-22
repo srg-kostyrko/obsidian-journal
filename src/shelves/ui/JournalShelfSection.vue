@@ -1,0 +1,57 @@
+<script setup lang="ts">
+import { computed, ref } from "vue";
+
+import { m } from "@/i18n";
+import { useService } from "@/infrastructure/di";
+import { Flows } from "@/infrastructure/flows";
+import { SettingsService } from "@/settings";
+import UiCollapsibleBlock from "@/ui/UiCollapsibleBlock.vue";
+import UiIcon from "@/ui/UiIcon.vue";
+import UiIconButton from "@/ui/UiIconButton.vue";
+import UiSettingRow from "@/ui/UiSettingRow.vue";
+
+import { shelvesCollection } from "../config";
+
+import { PlaceJournalFlow } from "./place-journal.flow";
+
+const { journalName } = defineProps<{ journalName: string }>();
+
+const settings = useService(SettingsService);
+const flows = useService(Flows);
+const shelves = settings.getCollection(shelvesCollection);
+
+const currentShelf = computed(
+  () => Object.keys(shelves.entries).find((name) => shelves.get(name)?.journals.includes(journalName)) ?? "",
+);
+
+const expanded = ref(true);
+
+function place(): void {
+  void flows.invoke(PlaceJournalFlow, { journalName });
+}
+</script>
+
+<template>
+  <UiCollapsibleBlock v-model:expanded="expanded">
+    <template #trigger>
+      <span class="journal-section-heading">
+        <UiIcon name="library" />
+        <span>{{ m.shelf_section_title() }}</span>
+      </span>
+    </template>
+
+    <UiSettingRow :name="m.shelf_section_title()">
+      <span>{{ currentShelf === "" ? m.shelf_section_not_on_shelf() : currentShelf }}</span>
+      <UiIconButton icon="pencil" :tooltip="m.shelf_section_place_tooltip()" @click="place" />
+    </UiSettingRow>
+  </UiCollapsibleBlock>
+</template>
+
+<style scoped>
+.journal-section-heading {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--size-2-2);
+  font-weight: var(--font-semibold);
+}
+</style>
