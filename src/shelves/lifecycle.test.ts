@@ -113,7 +113,8 @@ describe("ShelvesLifecycleService.delete", () => {
     shelves.create("home");
     const col = settings.getCollection(shelvesCollection);
     col.get("work")!.journals.push("daily");
-    shelves.delete("work", "home");
+    const result = shelves.delete("work", "home");
+    expect(result.kind).toBe("ok");
     expect(col.get("home")?.journals).toEqual(["daily"]);
   });
 
