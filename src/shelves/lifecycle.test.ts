@@ -61,8 +61,8 @@ describe("ShelvesLifecycleService.rename", () => {
   it("preserves the journal list across rename", async () => {
     const { shelves, settings } = await buildInitialized();
     shelves.create("work");
-    const created = settings.getCollection(shelvesCollection).get("work");
-    if (created) created.journals.push("daily");
+    const created = settings.getCollection(shelvesCollection).get("work")!;
+    created.journals.push("daily");
     shelves.rename("work", "office");
     expect(settings.getCollection(shelvesCollection).get("office")?.journals).toEqual(["daily"]);
   });
