@@ -180,6 +180,24 @@ describe("ShelvesLifecycleService.assign", () => {
   });
 });
 
+describe("ShelvesLifecycleService events", () => {
+  it("emits shelfRenamed when a shelf is renamed", async () => {
+    const { shelves } = await buildInitialized({ version: 3, shelves: { work: { name: "work", journals: [] } } });
+    const events: { oldName: string; newName: string }[] = [];
+    shelves.events.on("shelfRenamed", (payload) => events.push(payload));
+    shelves.rename("work", "office");
+    expect(events).toEqual([{ oldName: "work", newName: "office" }]);
+  });
+
+  it("emits shelfDeleted when a shelf is deleted", async () => {
+    const { shelves } = await buildInitialized({ version: 3, shelves: { work: { name: "work", journals: [] } } });
+    const events: { shelfName: string }[] = [];
+    shelves.events.on("shelfDeleted", (payload) => events.push(payload));
+    shelves.delete("work");
+    expect(events).toEqual([{ shelfName: "work" }]);
+  });
+});
+
 describe("ShelvesLifecycleService reconciliation", () => {
   it("replaces a renamed journal's name in every shelf", async () => {
     const { shelves, journals, settings } = await buildInitialized();

@@ -1,4 +1,7 @@
+import { createNanoEvents } from "nanoevents";
+
 import { inject } from "@/infrastructure/di";
+import type { Subscribable, TypedEmitter } from "@/infrastructure/events";
 import { attempt, Err, Option, type Result } from "@/infrastructure/result";
 import { journalConfigCollection } from "@/journals";
 import { UnknownJournalError } from "@/journals/settings/errors";
@@ -8,7 +11,14 @@ import { SettingsService } from "@/settings";
 import { shelvesCollection, type ShelfConfig } from "./config";
 import { InvalidShelfNameError, ShelfNameTakenError, UnknownShelfError } from "./errors";
 
+export interface ShelvesLifecycleEvents {
+  shelfRenamed: (payload: { oldName: string; newName: string }) => void;
+  shelfDeleted: (payload: { shelfName: string }) => void;
+}
+
 export class ShelvesLifecycleService {
+  readonly #emitter: TypedEmitter<ShelvesLifecycleEvents> = createNanoEvents();
+  readonly events: Subscribable<ShelvesLifecycleEvents> = this.#emitter;
   readonly #settings = inject(SettingsService);
   readonly #journalLifecycle = inject(JournalLifecycleService);
 
@@ -51,6 +61,7 @@ export class ShelvesLifecycleService {
       }
       collection.add(newName, { ...existing, name: newName });
       collection.remove(oldName);
+      this.#emitter.emit("shelfRenamed", { oldName, newName });
     });
   }
 
@@ -65,6 +76,7 @@ export class ShelvesLifecycleService {
         destination.journals.push(...shelf.journals);
       }
       collection.remove(name);
+      this.#emitter.emit("shelfDeleted", { shelfName: name });
     });
   }
 
