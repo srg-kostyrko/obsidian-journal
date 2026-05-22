@@ -22,6 +22,7 @@ import { ShelvesLifecycleService } from "../lifecycle";
 
 import { EditShelfNameFlow } from "./edit-shelf-name.flow";
 import JournalList from "./JournalList.vue";
+import { ShelfEditSectionToken } from "./shelf-edit-section";
 
 const props = defineProps<{ shelfName: string; nav: SubpageNav }>();
 const { shelfName } = props;
@@ -32,6 +33,7 @@ const flows = useService(Flows);
 const shelvesLifecycle = useService(ShelvesLifecycleService);
 const shelves = settings.getCollection(shelvesCollection);
 const journals = settings.getCollection(journalConfigCollection);
+const editSections = useService(ShelfEditSectionToken).toSorted((a, b) => a.order - b.order);
 
 const shelf = computed(() => shelves.get(shelfName));
 
@@ -86,5 +88,6 @@ function remove(journalName: string): void {
       </template>
       <JournalList :entries="entries" :empty-text="m.journal_dashboard_empty()" @edit="edit" @delete="remove" />
     </UiCollapsibleBlock>
+    <component :is="section.component" v-for="section in editSections" :key="section.key" :shelf-name="shelfName" />
   </div>
 </template>
