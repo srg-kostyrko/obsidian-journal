@@ -179,3 +179,23 @@ describe("ShelvesLifecycleService.assign", () => {
     expect(result.kind === "err" && result.error).toBeInstanceOf(UnknownShelfError);
   });
 });
+
+describe("ShelvesLifecycleService reconciliation", () => {
+  it("replaces a renamed journal's name in every shelf", async () => {
+    const { shelves, journals, settings } = await buildInitialized();
+    journals.create("daily", { type: "day" });
+    shelves.create("work");
+    shelves.assign("daily", "work");
+    journals.rename("daily", "morning");
+    expect(settings.getCollection(shelvesCollection).get("work")?.journals).toEqual(["morning"]);
+  });
+
+  it("removes a deleted journal from every shelf", async () => {
+    const { shelves, journals, settings } = await buildInitialized();
+    journals.create("daily", { type: "day" });
+    shelves.create("work");
+    shelves.assign("daily", "work");
+    journals.delete("daily");
+    expect(settings.getCollection(shelvesCollection).get("work")?.journals).toEqual([]);
+  });
+});

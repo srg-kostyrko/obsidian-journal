@@ -2,6 +2,7 @@ import { inject } from "@/infrastructure/di";
 import { attempt, Err, Option, type Result } from "@/infrastructure/result";
 import { journalConfigCollection } from "@/journals";
 import { UnknownJournalError } from "@/journals/settings/errors";
+import { JournalLifecycleService } from "@/journals/settings/lifecycle";
 import { SettingsService } from "@/settings";
 
 import { shelvesCollection, type ShelfConfig } from "./config";
@@ -9,6 +10,16 @@ import { InvalidShelfNameError, ShelfNameTakenError, UnknownShelfError } from ".
 
 export class ShelvesLifecycleService {
   readonly #settings = inject(SettingsService);
+  readonly #journalLifecycle = inject(JournalLifecycleService);
+
+  constructor() {
+    this.#journalLifecycle.events.on("journalRenamed", ({ oldName, newName }) => {
+      this.#renameJournalInShelves(oldName, newName);
+    });
+    this.#journalLifecycle.events.on("journalDeleted", ({ journalName }) => {
+      this.#removeJournalFromShelves(journalName);
+    });
+  }
 
   create(name: string): Result<ShelfConfig, InvalidShelfNameError | ShelfNameTakenError> {
     return attempt.in(this, function* () {
@@ -73,6 +84,14 @@ export class ShelvesLifecycleService {
       this.#removeJournalFromShelves(journalName);
       target.journals.push(journalName);
     });
+  }
+
+  #renameJournalInShelves(oldName: string, newName: string): void {
+    const shelves = this.#settings.getCollection(shelvesCollection);
+    for (const shelf of Object.values(shelves.entries)) {
+      const index = shelf.journals.indexOf(oldName);
+      if (index !== -1) shelf.journals[index] = newName;
+    }
   }
 
   #removeJournalFromShelves(journalName: string): void {
