@@ -163,12 +163,12 @@ const commandTargetSchema = v.union([
 ]);
 ```
 
-- [ ] **Step 2: Update the registry test harness to register the shelves collection**
+- [ ] **Step 2: Update the registry test harness with the shelves collection**
 
-In `src/commands/command-registry.test.ts`, add these imports alongside the existing ones:
+In `src/commands/command-registry.test.ts`, add this import alongside the existing ones:
 
 ```ts
-import { ShelvesLifecycleService, shelvesCollection } from "@/shelves";
+import { shelvesCollection } from "@/shelves";
 ```
 
 In the `build()` function, change the `collections` array to include `shelvesCollection`:
@@ -177,12 +177,6 @@ In the `build()` function, change the `collections` array to include `shelvesCol
 const { service: settings, container } = createSettingsService({
   collections: [journalConfigCollection, commandCollection, shelvesCollection],
 });
-```
-
-and register the shelf lifecycle service just before the `DynamicCommandRegistry` registration:
-
-```ts
-container.register(ShelvesLifecycleService).useClass(ShelvesLifecycleService);
 ```
 
 Add `shelves` to the object returned by `build()`:
@@ -254,20 +248,14 @@ function makeJournal(name: string, writeType: "day" | "week") {
 - [ ] **Step 4: Run the test to verify it fails**
 
 Run: `npm test -- src/commands/command-registry.test.ts`
-Expected: FAIL — `DynamicCommandRegistry` cannot resolve `ShelvesLifecycleService` / shelf candidates are empty.
+Expected: FAIL — shelf candidates are empty, so the shelf-targeted command is not registered.
 
 - [ ] **Step 5: Resolve shelf candidates in the registry**
 
 In `src/commands/command-registry.ts`, add this import alongside the other `@/` imports:
 
 ```ts
-import { ShelvesLifecycleService, shelvesCollection } from "@/shelves";
-```
-
-Add an injected field to the `DynamicCommandRegistry` class, after `#lifecycle`:
-
-```ts
-  readonly #shelfLifecycle = inject(ShelvesLifecycleService);
+import { shelvesCollection } from "@/shelves";
 ```
 
 In `#candidates`, add a `shelf` branch to the `match(command.target)` expression, before `.exhaustive()`:
@@ -306,7 +294,21 @@ git commit -m "feat(commands): resolve shelf-targeted command candidates"
 - Modify: `src/commands/command-registry.ts`
 - Test: `src/commands/command-registry.test.ts`
 
-- [ ] **Step 1: Write the failing tests**
+- [ ] **Step 1: Register the shelf lifecycle service in the test harness**
+
+In `src/commands/command-registry.test.ts`, add `ShelvesLifecycleService` to the existing `@/shelves` import:
+
+```ts
+import { ShelvesLifecycleService, shelvesCollection } from "@/shelves";
+```
+
+In the `build()` function, register the shelf lifecycle service just before the `DynamicCommandRegistry` registration:
+
+```ts
+container.register(ShelvesLifecycleService).useClass(ShelvesLifecycleService);
+```
+
+- [ ] **Step 2: Write the failing tests**
 
 Add to the `describe("DynamicCommandRegistry shelf targets", ...)` block in `src/commands/command-registry.test.ts`:
 
@@ -331,14 +333,26 @@ it("removes a shelf-targeted command when its shelf is deleted", async () => {
 
 The `build()` return object already exposes `container` (used elsewhere in the file); if it does not, add `container` to the returned object.
 
-- [ ] **Step 2: Run the tests to verify they fail**
+- [ ] **Step 3: Run the tests to verify they fail**
 
 Run: `npm test -- src/commands/command-registry.test.ts`
-Expected: FAIL — the rename test still sees `shelfName: "work"`; the delete test still finds `cmd-1`.
+Expected: FAIL — `DynamicCommandRegistry` cannot resolve `ShelvesLifecycleService` (the injected field does not exist yet).
 
-- [ ] **Step 3: Subscribe to shelf lifecycle events**
+- [ ] **Step 4: Subscribe to shelf lifecycle events**
 
-In `src/commands/command-registry.ts`, in `initialize()`, add these two lines after the existing journal-event subscriptions:
+In `src/commands/command-registry.ts`, add `ShelvesLifecycleService` to the existing `@/shelves` import:
+
+```ts
+import { ShelvesLifecycleService, shelvesCollection } from "@/shelves";
+```
+
+Add an injected field to the `DynamicCommandRegistry` class, after `#lifecycle`:
+
+```ts
+  readonly #shelfLifecycle = inject(ShelvesLifecycleService);
+```
+
+In `initialize()`, add these two lines after the existing journal-event subscriptions:
 
 ```ts
 this.#shelfLifecycle.events.on("shelfRenamed", ({ oldName, newName }) => this.#onShelfRenamed(oldName, newName));
@@ -369,17 +383,17 @@ Add these two methods at the end of the `DynamicCommandRegistry` class, after `#
   }
 ```
 
-- [ ] **Step 4: Run the tests to verify they pass**
+- [ ] **Step 5: Run the tests to verify they pass**
 
 Run: `npm test -- src/commands/command-registry.test.ts`
 Expected: PASS.
 
-- [ ] **Step 5: Run the quality gates**
+- [ ] **Step 6: Run the quality gates**
 
 Run: `npm run check:types && npm run check:lint`
 Expected: no errors.
 
-- [ ] **Step 6: Commit**
+- [ ] **Step 7: Commit**
 
 ```bash
 git add src/commands/command-registry.ts src/commands/command-registry.test.ts
