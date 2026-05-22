@@ -13,6 +13,7 @@ import { CycleService, JournalsIndex, NoApplicableJournals, OpenDateFlow, journa
 import type { JournalEntry } from "@/journals";
 import { JournalLifecycleService } from "@/journals/settings/lifecycle";
 import { SettingsService } from "@/settings";
+import { shelvesCollection } from "@/shelves";
 
 import { commandCollection } from "./config";
 import { compoundShift, supportedTypes } from "./resolve";
@@ -92,6 +93,11 @@ export class DynamicCommandRegistry {
         Object.keys(journals.entries).filter((name) => journals.get(name)?.write.type === target.writeType),
       )
       .with({ kind: "journal" }, (target) => (journals.get(target.journalName) ? [target.journalName] : []))
+      .with({ kind: "shelf" }, (target) => {
+        const shelf = this.#settings.getCollection(shelvesCollection).get(target.shelfName);
+        if (shelf === undefined) return [];
+        return shelf.journals.filter((name) => journals.get(name)?.write.type === target.writeType);
+      })
       .exhaustive();
   }
 

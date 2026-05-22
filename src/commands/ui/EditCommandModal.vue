@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { toTypedSchema } from "@vee-validate/valibot";
 import { getIconIds } from "obsidian";
+import { match } from "ts-pattern";
 import * as v from "valibot";
 import { useForm } from "vee-validate";
 import { computed, ref, watch } from "vue";
@@ -111,10 +112,14 @@ watch(writeType, () => {
 });
 
 const onSubmit = handleSubmit((values) => {
-  const submittedTarget: CommandTarget =
-    props.target.kind === "all"
-      ? { kind: "all", writeType: writeType.value as Exclude<JournalWrite["type"], "custom"> }
-      : { kind: "journal", journalName: props.target.journalName };
+  const submittedTarget: CommandTarget = match(props.target)
+    .with({ kind: "all" }, () => ({
+      kind: "all" as const,
+      writeType: writeType.value as Exclude<JournalWrite["type"], "custom">,
+    }))
+    .with({ kind: "journal" }, (t) => ({ kind: "journal" as const, journalName: t.journalName }))
+    .with({ kind: "shelf" }, (t) => ({ kind: "shelf" as const, shelfName: t.shelfName, writeType: t.writeType }))
+    .exhaustive();
   api.submit({
     name: values.name,
     icon: values.icon,

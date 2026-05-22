@@ -11,6 +11,11 @@ const commandTargetSchema = v.union([
     kind: v.literal("journal"),
     journalName: v.pipe(v.string(), v.minLength(1)),
   }),
+  v.object({
+    kind: v.literal("shelf"),
+    shelfName: v.pipe(v.string(), v.minLength(1)),
+    writeType: v.picklist(["day", "week", "month", "quarter", "year"]),
+  }),
 ]);
 
 const commandTypeSchema = v.picklist([

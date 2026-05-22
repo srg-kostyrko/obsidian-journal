@@ -12,6 +12,7 @@ import { AsyncResult } from "@/infrastructure/result";
 import { CycleService, JournalsIndex, OpenDateFlow, journalConfigCollection } from "@/journals";
 import { JournalLifecycleService } from "@/journals/settings/lifecycle";
 import { createSettingsService } from "@/settings/testing";
+import { shelvesCollection } from "@/shelves";
 
 import { DynamicCommandRegistry } from "./command-registry";
 import { commandCollection } from "./config";
@@ -33,7 +34,7 @@ function makeCommand(overrides: Partial<CommandConfig>): CommandConfig {
 
 async function build() {
   const { service: settings, container } = createSettingsService({
-    collections: [journalConfigCollection, commandCollection],
+    collections: [journalConfigCollection, commandCollection, shelvesCollection],
   });
   const host = createFakeHost();
   const workspace = new FakeWorkspaceService();
@@ -53,7 +54,16 @@ async function build() {
   const registry = container.resolve(DynamicCommandRegistry);
   registry.initialize();
 
-  return { host, workspace, settings, lifecycle, index, flows, commands: settings.getCollection(commandCollection) };
+  return {
+    host,
+    workspace,
+    settings,
+    lifecycle,
+    index,
+    flows,
+    commands: settings.getCollection(commandCollection),
+    shelves: settings.getCollection(shelvesCollection),
+  };
 }
 
 describe("DynamicCommandRegistry registration", () => {
@@ -189,6 +199,23 @@ describe("DynamicCommandRegistry execution", () => {
   });
 });
 
+function makeJournal(name: string, writeType: "day" | "week") {
+  return {
+    name,
+    write: { type: writeType },
+    timeline: { start: "", end: { kind: "never" as const } },
+    dateFormat: "YYYY-MM-DD",
+    frontmatter: {
+      dateField: "journal-date",
+      startDateField: "journal-start-date",
+      endDateField: "journal-end-date",
+      addStartDate: false,
+      addEndDate: false,
+    },
+    numbering: { enabled: false, anchorDate: "", allowBefore: false, sources: [] },
+  };
+}
+
 describe("DynamicCommandRegistry journal cascade", () => {
   it("rewrites the journal name on rename and keeps the command registered", async () => {
     const { host, commands, lifecycle } = await build();
@@ -231,5 +258,29 @@ describe("DynamicCommandRegistry journal cascade", () => {
     lifecycle.delete("daily");
 
     expect(commands.get("cmd-1")).toBeDefined();
+  });
+});
+
+describe("DynamicCommandRegistry shelf targets", () => {
+  it("registers a shelf-targeted command when the shelf has a matching journal", async () => {
+    const { host, settings, commands, shelves } = await build();
+    settings.getCollection(journalConfigCollection).add("daily", makeJournal("daily", "day"));
+    shelves.add("work", { name: "work", journals: ["daily"] });
+    commands.add(
+      "cmd-1",
+      makeCommand({ name: "Open work daily", target: { kind: "shelf", shelfName: "work", writeType: "day" } }),
+    );
+    expect(host.commands.get("cmd-1")?.name).toBe("Open work daily");
+  });
+
+  it("hides a shelf-targeted command when the shelf has no journal of the write type", async () => {
+    const { host, settings, commands, shelves } = await build();
+    settings.getCollection(journalConfigCollection).add("daily", makeJournal("daily", "day"));
+    shelves.add("work", { name: "work", journals: ["daily"] });
+    commands.add(
+      "cmd-1",
+      makeCommand({ name: "Open work weekly", target: { kind: "shelf", shelfName: "work", writeType: "week" } }),
+    );
+    expect(host.commands.get("cmd-1")?.checkCallback?.(true)).toBe(false);
   });
 });
