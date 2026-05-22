@@ -60,10 +60,9 @@ export class ShelvesLifecycleService {
   assign(journalName: string, shelfName: string): Result<void, UnknownJournalError | UnknownShelfError> {
     return attempt.in(this, function* () {
       const journals = this.#settings.getCollection(journalConfigCollection);
-      if (journals.get(journalName) === undefined) {
-        yield* new Err<never, UnknownJournalError>(new UnknownJournalError(journalName));
-      }
+      yield* Option.fromNullable(journals.get(journalName)).okOrElse(() => new UnknownJournalError(journalName));
       const shelves = this.#settings.getCollection(shelvesCollection);
+      // An empty shelfName means unassign — remove the journal from every shelf with no replacement.
       if (shelfName === "") {
         this.#removeJournalFromShelves(journalName);
         return;
