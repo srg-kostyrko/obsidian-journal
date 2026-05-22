@@ -24,7 +24,7 @@ const currentShelf = computed(
   () => Object.keys(shelves.entries).find((name) => shelves.get(name)?.journals.includes(journalName)) ?? "",
 );
 
-const expanded = ref(true);
+const expanded = ref(false);
 
 function place(): void {
   void flows.invoke(PlaceJournalFlow, { journalName });
