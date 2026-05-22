@@ -40,4 +40,18 @@ export class ShelvesLifecycleService {
       collection.remove(oldName);
     });
   }
+
+  delete(name: string, destinationShelf?: string): Result<void, UnknownShelfError> {
+    return attempt.in(this, function* () {
+      const collection = this.#settings.getCollection(shelvesCollection);
+      const shelf = yield* Option.fromNullable(collection.get(name)).okOrElse(() => new UnknownShelfError(name));
+      if (destinationShelf) {
+        const destination = yield* Option.fromNullable(collection.get(destinationShelf)).okOrElse(
+          () => new UnknownShelfError(destinationShelf),
+        );
+        destination.journals.push(...shelf.journals);
+      }
+      collection.remove(name);
+    });
+  }
 }

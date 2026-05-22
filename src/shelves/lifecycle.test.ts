@@ -95,3 +95,38 @@ describe("ShelvesLifecycleService.rename", () => {
     expect(result.kind === "err" && result.error).toBeInstanceOf(ShelfNameTakenError);
   });
 });
+
+describe("ShelvesLifecycleService.delete", () => {
+  it("removes the shelf, leaving its journals unassigned", async () => {
+    const { shelves, settings } = await buildInitialized();
+    shelves.create("work");
+    const col = settings.getCollection(shelvesCollection);
+    col.get("work")!.journals.push("daily");
+    const result = shelves.delete("work");
+    expect(result.kind).toBe("ok");
+    expect(col.get("work")).toBeUndefined();
+  });
+
+  it("moves member journals to the destination shelf", async () => {
+    const { shelves, settings } = await buildInitialized();
+    shelves.create("work");
+    shelves.create("home");
+    const col = settings.getCollection(shelvesCollection);
+    col.get("work")!.journals.push("daily");
+    shelves.delete("work", "home");
+    expect(col.get("home")?.journals).toEqual(["daily"]);
+  });
+
+  it("rejects deleting an unknown shelf with UnknownShelfError", async () => {
+    const { shelves } = await buildInitialized();
+    const result = shelves.delete("missing");
+    expect(result.kind === "err" && result.error).toBeInstanceOf(UnknownShelfError);
+  });
+
+  it("rejects an unknown destination shelf with UnknownShelfError", async () => {
+    const { shelves } = await buildInitialized();
+    shelves.create("work");
+    const result = shelves.delete("work", "missing");
+    expect(result.kind === "err" && result.error).toBeInstanceOf(UnknownShelfError);
+  });
+});
