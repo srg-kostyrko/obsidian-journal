@@ -6,6 +6,7 @@ export { shelvesModule } from "./module";
 export { ShelvesRepository } from "./repository";
 export type { ShelvesEvents } from "./repository";
 export { ShelvesEventsToken } from "./tokens";
+export { ShelvesService } from "./service";
 export { ShelvesViewModel } from "./view-model";
 export { ShelfEditSectionToken, defineShelfEditSection } from "./ui/shelf-edit-section";
 export type { ShelfEditSection } from "./ui/shelf-edit-section";
