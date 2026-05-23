@@ -39,8 +39,8 @@ export abstract class BaseRepository<
   }
 
   update(id: Id, changes: Partial<Entity>): Result<void, EUnknown | EInvalidUpdate> {
+    if (!(id in this.storage)) return new Err(this.unknownEntityError(id));
     const existing = this.storage[id];
-    if (!existing) return new Err(this.unknownEntityError(id));
     if (this.idKey !== undefined && this.idKey in changes) {
       const next = (changes as Record<keyof Entity, unknown>)[this.idKey];
       if (next !== existing[this.idKey]) {
