@@ -39,6 +39,22 @@ export type { JournalEntry, JournalMetadata, JournalsIndexEvents } from "./types
 export { JournalsError, JournalNotFoundError } from "./errors";
 
 export {
+  InvalidJournalNameError,
+  InvalidJournalUpdateError,
+  JournalNameTakenError,
+  UnknownJournalError,
+  UnknownSequenceSourceError,
+  type JournalLifecycleError,
+  JournalLifecycleFlowError,
+  toFlowError as toJournalFlowError,
+} from "./errors";
+
+export { JournalsRepository } from "./repository";
+export type { JournalsEvents } from "./repository";
+export { JournalsViewModel } from "./view-model";
+export { JournalsEventsToken } from "./tokens";
+
+export {
   AutoAttachService,
   AutoCreateService,
   NoteCreationService,
