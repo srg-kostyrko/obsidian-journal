@@ -3,16 +3,15 @@ import { match } from "ts-pattern";
 import type { AnchorString } from "@/calendar";
 import { inject } from "@/infrastructure/di";
 import { Option } from "@/infrastructure/result";
-import { SettingsService } from "@/settings";
 
-import { journalConfigCollection } from "./config";
 import { CycleService } from "./cycle";
 import { JournalsIndex } from "./journals-index";
+import { JournalsRepository } from "./repository";
 
-import type { JournalConfig, JournalNumberingConfig, NumberingSource } from "./config";
+import type { JournalNumberingConfig, NumberingSource } from "./config";
 
 export class NumberingService {
-  readonly #settings = inject(SettingsService);
+  readonly #journals = inject(JournalsRepository);
   readonly #cycle = inject(CycleService);
   readonly #index = inject(JournalsIndex);
 
@@ -28,8 +27,9 @@ export class NumberingService {
   }
 
   assignNumbers(name: string, anchor: AnchorString): Option<Readonly<Record<string, number>>> {
-    const config = this.#settings.getCollection(journalConfigCollection).get(name) as JournalConfig | undefined;
-    if (!config) return Option.none();
+    const configOpt = this.#journals.get(name);
+    if (configOpt.isNone()) return Option.none();
+    const config = configOpt.value;
     const numbering = config.numbering;
     const fp = JSON.stringify(numbering);
 

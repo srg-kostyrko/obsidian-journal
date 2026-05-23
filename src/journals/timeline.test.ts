@@ -4,16 +4,16 @@ import { CalendarDate } from "@/calendar";
 import type { AnchorString } from "@/calendar";
 import { installTestCalendar } from "@/calendar/testing";
 import { Container } from "@/infrastructure/di";
-import { SettingsService } from "@/settings";
 
 import { CycleService } from "./cycle";
 import { JournalsIndex } from "./journals-index";
-import { fakeSettings, fixedJournal, unwrap } from "./testing";
+import { JournalsRepository } from "./repository";
+import { fakeRepo, fixedJournal, unwrap } from "./testing";
 import { TimelineService } from "./timeline";
 
-function buildContainer(journals: Parameters<typeof fakeSettings>[0]): Container {
+function buildContainer(journals: Parameters<typeof fakeRepo>[0]): Container {
   const c = new Container();
-  c.register(SettingsService).useValue(fakeSettings(journals));
+  c.register(JournalsRepository).useValue(fakeRepo(journals));
   c.register(JournalsIndex).useClass(JournalsIndex);
   c.register(CycleService).useClass(CycleService);
   c.register(TimelineService).useClass(TimelineService);

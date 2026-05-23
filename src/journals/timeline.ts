@@ -4,20 +4,18 @@ import { CalendarDate } from "@/calendar";
 import type { AnchorString } from "@/calendar";
 import { inject } from "@/infrastructure/di";
 import { Option } from "@/infrastructure/result";
-import { SettingsService } from "@/settings";
 
-import { journalConfigCollection } from "./config";
 import { CycleService } from "./cycle";
-
-import type { JournalConfig } from "./config";
+import { JournalsRepository } from "./repository";
 
 export class TimelineService {
-  readonly #settings = inject(SettingsService);
+  readonly #journals = inject(JournalsRepository);
   readonly #cycle = inject(CycleService);
 
   contains(name: string, anchor: AnchorString): boolean {
-    const config = this.#settings.getCollection(journalConfigCollection).get(name) as JournalConfig | undefined;
-    if (!config) return false;
+    const configOpt = this.#journals.get(name);
+    if (configOpt.isNone()) return false;
+    const config = configOpt.value;
     if (anchor < config.timeline.start) return false;
     return match(config.timeline.end)
       .with({ kind: "never" }, () => true)
@@ -30,13 +28,13 @@ export class TimelineService {
   }
 
   startOf(name: string): Option<CalendarDate> {
-    const config = this.#settings.getCollection(journalConfigCollection).get(name) as JournalConfig | undefined;
-    return Option.fromNullable(config).map((c) => CalendarDate.fromAnchor(c.timeline.start));
+    return this.#journals.get(name).map((c) => CalendarDate.fromAnchor(c.timeline.start));
   }
 
   endOf(name: string): Option<CalendarDate> {
-    const config = this.#settings.getCollection(journalConfigCollection).get(name) as JournalConfig | undefined;
-    if (!config) return Option.none();
+    const configOpt = this.#journals.get(name);
+    if (configOpt.isNone()) return Option.none();
+    const config = configOpt.value;
     return match(config.timeline.end)
       .with({ kind: "never" }, () => Option.none<CalendarDate>())
       .with({ kind: "date" }, ({ date }) => Option.some(CalendarDate.fromAnchor(date)))

@@ -1,9 +1,11 @@
+import { createNanoEvents } from "nanoevents";
 import { assert, vi } from "vitest";
 
 import type { Option } from "@/infrastructure/result";
 import type { CollectionDefinition, SettingsService } from "@/settings";
 
 import { journalConfigCollection, journalDefaultsFor } from "./config";
+import { JournalsRepository } from "./repository";
 
 import type { JournalConfig, JournalWrite } from "./config";
 
@@ -26,6 +28,10 @@ export function fakeSettings(journals: Record<string, JournalConfig>): SettingsS
       throw new Error(`unexpected collection: ${collection.key}`);
     }),
   } as unknown as SettingsService;
+}
+
+export function fakeRepo(journals: Record<string, JournalConfig>): JournalsRepository {
+  return JournalsRepository.fromParts(journals, createNanoEvents());
 }
 
 export function fixedJournal(name: string, write: JournalWrite, overrides: Partial<JournalConfig> = {}): JournalConfig {

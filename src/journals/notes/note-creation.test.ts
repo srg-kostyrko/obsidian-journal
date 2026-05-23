@@ -11,14 +11,14 @@ import { FakeNotesService, FakeTemplaterService } from "@/infrastructure/host/te
 import { LoggerModule } from "@/infrastructure/logger";
 import { AsyncResult } from "@/infrastructure/result";
 import { expectOk } from "@/infrastructure/result/testing";
-import { SettingsService } from "@/settings";
 import { TemplateEngine } from "@/templates";
 
 import { CycleService } from "../cycle";
 import { FrontmatterService } from "../frontmatter";
 import { JournalsIndex } from "../journals-index";
 import { NumberingService } from "../numbering";
-import { fakeSettings, fixedJournal } from "../testing";
+import { JournalsRepository } from "../repository";
+import { fakeRepo, fixedJournal } from "../testing";
 
 import { NoteCreationService } from "./note-creation";
 import { NotePathService } from "./note-path";
@@ -27,14 +27,14 @@ import { TemplateContentService } from "./template-content";
 import type { JournalMetadata } from "../types";
 
 function build(
-  settings: SettingsService,
+  repo: JournalsRepository,
   notes: FakeNotesService,
   modals: FakeModalService,
   templater = new FakeTemplaterService(),
 ): Container {
   const c = new Container();
   c.addModule(LoggerModule);
-  c.register(SettingsService).useValue(settings);
+  c.register(JournalsRepository).useValue(repo);
   c.register(NotesService).useValue(notes as unknown as NotesService);
   c.register(ModalService).useValue(modals as unknown as ModalService);
   c.register(TemplaterService).useValue(templater as unknown as TemplaterService);
@@ -53,10 +53,10 @@ const meta: JournalMetadata = { journalName: "daily", anchor: anchor("2026-05-19
 
 describe("NoteCreationService.ensureNote", () => {
   it("creates the file and writes frontmatter when the path is missing", async () => {
-    const settings = fakeSettings({ daily: fixedJournal("daily", { type: "day" }) });
+    const repo = fakeRepo({ daily: fixedJournal("daily", { type: "day" }) });
     const notes = new FakeNotesService();
     const modals = new FakeModalService();
-    const result = await build(settings, notes, modals).resolve(NoteCreationService).ensureNote("daily", meta);
+    const result = await build(repo, notes, modals).resolve(NoteCreationService).ensureNote("daily", meta);
     expect(result.isOk()).toBe(true);
     expect(result.isOk() && result.value.created).toBe(true);
     expect(result.isOk() && result.value.path).toBe("2026-05-19.md");
@@ -64,19 +64,19 @@ describe("NoteCreationService.ensureNote", () => {
   });
 
   it("skips create but still writes frontmatter when the file already exists", async () => {
-    const settings = fakeSettings({ daily: fixedJournal("daily", { type: "day" }) });
+    const repo = fakeRepo({ daily: fixedJournal("daily", { type: "day" }) });
     const notes = new FakeNotesService();
     notes.seed("2026-05-19.md" as VaultPath, "existing");
     const modals = new FakeModalService();
-    const result = await build(settings, notes, modals).resolve(NoteCreationService).ensureNote("daily", meta);
+    const result = await build(repo, notes, modals).resolve(NoteCreationService).ensureNote("daily", meta);
     expect(result.isOk() && result.value.created).toBe(false);
   });
 
   it("opens confirm modal when confirmCreation is true and returns UserAborted on cancel", async () => {
-    const settings = fakeSettings({ daily: fixedJournal("daily", { type: "day" }, { confirmCreation: true }) });
+    const repo = fakeRepo({ daily: fixedJournal("daily", { type: "day" }, { confirmCreation: true }) });
     const notes = new FakeNotesService();
     const modals = new FakeModalService();
-    const container = build(settings, notes, modals);
+    const container = build(repo, notes, modals);
     const promise = container.resolve(NoteCreationService).ensureNote("daily", meta);
     await Promise.resolve();
     await Promise.resolve();
@@ -88,10 +88,10 @@ describe("NoteCreationService.ensureNote", () => {
   });
 
   it("creates the file when confirmCreation is true and the modal is submitted", async () => {
-    const settings = fakeSettings({ daily: fixedJournal("daily", { type: "day" }, { confirmCreation: true }) });
+    const repo = fakeRepo({ daily: fixedJournal("daily", { type: "day" }, { confirmCreation: true }) });
     const notes = new FakeNotesService();
     const modals = new FakeModalService();
-    const container = build(settings, notes, modals);
+    const container = build(repo, notes, modals);
     const promise = container.resolve(NoteCreationService).ensureNote("daily", meta);
     await Promise.resolve();
     await Promise.resolve();
@@ -103,13 +103,13 @@ describe("NoteCreationService.ensureNote", () => {
 
 describe("NoteCreationService.attachNote", () => {
   it("writes frontmatter and content when the existing file is empty", async () => {
-    const settings = fakeSettings({
+    const repo = fakeRepo({
       daily: fixedJournal("daily", { type: "day" }, { templates: ["Templates/daily.md"] }),
     });
     const notes = new FakeNotesService();
     notes.seed("Templates/daily.md" as VaultPath, "# Daily {{date}}");
     notes.seed("2026-05-19.md" as VaultPath, "");
-    const result = await build(settings, notes, new FakeModalService())
+    const result = await build(repo, notes, new FakeModalService())
       .resolve(NoteCreationService)
       .attachNote("daily", "2026-05-19.md" as VaultPath, meta);
     expect(result.isOk()).toBe(true);
@@ -118,13 +118,13 @@ describe("NoteCreationService.attachNote", () => {
   });
 
   it("writes frontmatter only when the existing file has content", async () => {
-    const settings = fakeSettings({
+    const repo = fakeRepo({
       daily: fixedJournal("daily", { type: "day" }, { templates: ["Templates/daily.md"] }),
     });
     const notes = new FakeNotesService();
     notes.seed("Templates/daily.md" as VaultPath, "# Daily {{date}}");
     notes.seed("2026-05-19.md" as VaultPath, "user-typed content");
-    const result = await build(settings, notes, new FakeModalService())
+    const result = await build(repo, notes, new FakeModalService())
       .resolve(NoteCreationService)
       .attachNote("daily", "2026-05-19.md" as VaultPath, meta);
     expect(result.isOk()).toBe(true);
@@ -133,13 +133,13 @@ describe("NoteCreationService.attachNote", () => {
   });
 
   it("treats whitespace-only content as empty", async () => {
-    const settings = fakeSettings({
+    const repo = fakeRepo({
       daily: fixedJournal("daily", { type: "day" }, { templates: ["Templates/daily.md"] }),
     });
     const notes = new FakeNotesService();
     notes.seed("Templates/daily.md" as VaultPath, "body");
     notes.seed("2026-05-19.md" as VaultPath, "   \n  \n");
-    const result = await build(settings, notes, new FakeModalService())
+    const result = await build(repo, notes, new FakeModalService())
       .resolve(NoteCreationService)
       .attachNote("daily", "2026-05-19.md" as VaultPath, meta);
     expect(result.isOk()).toBe(true);
@@ -151,12 +151,12 @@ describe("NoteCreationService.attachNote", () => {
 describe("NoteCreationService.ensureNote — note_name binding", () => {
   it("substitutes {{note_name}} in template body with the file's basename", async () => {
     const noteMeta: JournalMetadata = { journalName: "daily", anchor: anchor("2026-05-20") };
-    const settings = fakeSettings({
+    const repo = fakeRepo({
       daily: fixedJournal("daily", { type: "day" }, { templates: ["Templates/daily.md"] }),
     });
     const notes = new FakeNotesService();
     notes.seed("Templates/daily.md" as VaultPath, "Hello {{note_name}}");
-    const result = await build(settings, notes, new FakeModalService())
+    const result = await build(repo, notes, new FakeModalService())
       .resolve(NoteCreationService)
       .ensureNote("daily", noteMeta);
     expectOk(result);
@@ -168,14 +168,14 @@ describe("NoteCreationService.ensureNote — note_name binding", () => {
 
 describe("NoteCreationService.ensureNote — Templater", () => {
   it("applies Templater to the created note's content", async () => {
-    const settings = fakeSettings({
+    const repo = fakeRepo({
       daily: fixedJournal("daily", { type: "day" }, { templates: ["Templates/daily.md"] }),
     });
     const notes = new FakeNotesService();
     notes.seed("Templates/daily.md" as VaultPath, "# {{date}}");
     const templater = new FakeTemplaterService();
     templater.setTransform((content) => `${content}\n<!-- templated -->`);
-    const result = await build(settings, notes, new FakeModalService(), templater)
+    const result = await build(repo, notes, new FakeModalService(), templater)
       .resolve(NoteCreationService)
       .ensureNote("daily", meta);
     expectOk(result);
@@ -185,14 +185,14 @@ describe("NoteCreationService.ensureNote — Templater", () => {
   });
 
   it("targets the created note path when applying Templater", async () => {
-    const settings = fakeSettings({
+    const repo = fakeRepo({
       daily: fixedJournal("daily", { type: "day" }, { templates: ["Templates/daily.md"] }),
     });
     const notes = new FakeNotesService();
     notes.seed("Templates/daily.md" as VaultPath, "body");
     const templater = new FakeTemplaterService();
     expectOk(
-      await build(settings, notes, new FakeModalService(), templater)
+      await build(repo, notes, new FakeModalService(), templater)
         .resolve(NoteCreationService)
         .ensureNote("daily", meta),
     );
@@ -204,12 +204,12 @@ describe("NoteCreationService.ensureNote — Templater", () => {
 
 describe("NoteCreationService.ensureNote — expected-set cleanup", () => {
   it("clears the expected path when the content write fails", async () => {
-    const settings = fakeSettings({
+    const repo = fakeRepo({
       daily: fixedJournal("daily", { type: "day" }, { templates: ["Templates/daily.md"] }),
     });
     const notes = new FakeNotesService();
     notes.seed("Templates/daily.md" as VaultPath, "body");
-    const service = build(settings, notes, new FakeModalService()).resolve(NoteCreationService);
+    const service = build(repo, notes, new FakeModalService()).resolve(NoteCreationService);
     vi.spyOn(notes, "write").mockReturnValue(
       AsyncResult.err(new NoteWriteError("2026-05-19.md" as VaultPath, new Error("write failed"))),
     );
@@ -219,12 +219,12 @@ describe("NoteCreationService.ensureNote — expected-set cleanup", () => {
   });
 
   it("clears the expected path when content rendering fails", async () => {
-    const settings = fakeSettings({
+    const repo = fakeRepo({
       daily: fixedJournal("daily", { type: "day" }, { templates: ["Templates/daily.md"] }),
     });
     const notes = new FakeNotesService();
     notes.seed("Templates/daily.md" as VaultPath, "body");
-    const service = build(settings, notes, new FakeModalService()).resolve(NoteCreationService);
+    const service = build(repo, notes, new FakeModalService()).resolve(NoteCreationService);
     vi.spyOn(notes, "read").mockReturnValue(
       AsyncResult.err(new NoteReadError("Templates/daily.md" as VaultPath, new Error("read failed"))),
     );

@@ -1,4 +1,5 @@
 import { cleanup, render, screen } from "@testing-library/vue";
+import { createNanoEvents } from "nanoevents";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
 import { installTestCalendar } from "@/calendar/testing";
@@ -11,6 +12,8 @@ import {
   NumberingService,
   journalConfigCollection,
 } from "@/journals";
+import { JournalsRepository } from "@/journals/repository";
+import { JournalsEventsToken } from "@/journals/tokens";
 import { createSettingsService } from "@/settings/testing";
 import { TemplateEngine } from "@/templates";
 import { installTestEngine } from "@/templates/testing";
@@ -59,6 +62,8 @@ async function setupDaily(folder: string) {
   });
   await service.initialize();
   container.register(TemplateEngine).useValue(installTestEngine());
+  container.register(JournalsEventsToken).useFactory(() => createNanoEvents());
+  container.register(JournalsRepository).useClass(JournalsRepository);
   container.register(JournalsIndex).useClass(JournalsIndex);
   container.register(CycleService).useClass(CycleService);
   container.register(NumberingService).useClass(NumberingService);

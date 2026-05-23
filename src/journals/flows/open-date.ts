@@ -5,12 +5,11 @@ import type { Flow } from "@/infrastructure/flows";
 import { SuggestService } from "@/infrastructure/host";
 import type { OpenMode, VaultPath, WorkspaceOpenError } from "@/infrastructure/host";
 import { AsyncResult } from "@/infrastructure/result";
-import { SettingsService } from "@/settings";
 
-import { journalConfigCollection } from "../config";
 import { JournalsIndex } from "../journals-index";
 import { NoApplicableJournals } from "../notes/errors";
 import { journalPickerSuggest } from "../notes/journal-picker";
+import { JournalsRepository } from "../repository";
 import { TimelineService } from "../timeline";
 
 import { OpenJournalEntryFlow } from "./open-journal-entry";
@@ -32,14 +31,14 @@ export interface OpenDateResult {
 export type OpenDateError = NoApplicableJournals | NoteCreationError | WorkspaceOpenError | UserAborted;
 
 export class OpenDateFlow implements Flow<OpenDateParameters, OpenDateResult, OpenDateError> {
-  readonly #settings = inject(SettingsService);
+  readonly #journals = inject(JournalsRepository);
   readonly #timeline = inject(TimelineService);
   readonly #index = inject(JournalsIndex);
   readonly #flows = inject(Flows);
   readonly #suggests = inject(SuggestService);
 
   execute(p: OpenDateParameters): AsyncResult<OpenDateResult, OpenDateError> {
-    const all = Object.keys(this.#settings.getCollection(journalConfigCollection).entries);
+    const all = [...this.#journals.find().ids()];
     const { journalNames } = p;
     const candidates = journalNames ? all.filter((n) => journalNames.includes(n)) : all;
     const applicable = candidates.filter((name) => {

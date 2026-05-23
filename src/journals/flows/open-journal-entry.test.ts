@@ -9,7 +9,6 @@ import { ModalService } from "@/infrastructure/host/modals";
 import { FakeModalService } from "@/infrastructure/host/modals/testing";
 import { FakeNotesService, FakeTemplaterService, FakeWorkspaceService } from "@/infrastructure/host/testing";
 import { LoggerModule } from "@/infrastructure/logger";
-import { SettingsService } from "@/settings";
 import { TemplateEngine } from "@/templates";
 
 import { CycleService } from "../cycle";
@@ -19,12 +18,13 @@ import { NoteCreationService } from "../notes/note-creation";
 import { NotePathService } from "../notes/note-path";
 import { TemplateContentService } from "../notes/template-content";
 import { NumberingService } from "../numbering";
-import { fakeSettings, fixedJournal } from "../testing";
+import { JournalsRepository } from "../repository";
+import { fakeRepo, fixedJournal } from "../testing";
 
 import { OpenJournalEntryFlow } from "./open-journal-entry";
 
 function build(
-  settings: SettingsService,
+  repo: JournalsRepository,
   notes: FakeNotesService,
   workspace: FakeWorkspaceService,
   modals: FakeModalService,
@@ -33,7 +33,7 @@ function build(
   const c = new Container();
   c.addModule(LoggerModule);
   c.addModule(FlowsModule);
-  c.register(SettingsService).useValue(settings);
+  c.register(JournalsRepository).useValue(repo);
   c.register(NotesService).useValue(notes as unknown as NotesService);
   c.register(WorkspaceService).useValue(workspace as unknown as WorkspaceService);
   c.register(ModalService).useValue(modals as unknown as ModalService);
@@ -52,23 +52,23 @@ function build(
 
 describe("OpenJournalEntryFlow — cursor jump", () => {
   it("jumps the cursor after opening a newly created note", async () => {
-    const settings = fakeSettings({ daily: fixedJournal("daily", { type: "day" }) });
+    const repo = fakeRepo({ daily: fixedJournal("daily", { type: "day" }) });
     const notes = new FakeNotesService();
     const workspace = new FakeWorkspaceService();
     const templater = new FakeTemplaterService();
-    await build(settings, notes, workspace, new FakeModalService(), templater)
+    await build(repo, notes, workspace, new FakeModalService(), templater)
       .resolve(Flows)
       .invoke(OpenJournalEntryFlow, { journalName: "daily", anchor: anchor("2026-05-19") });
     expect(templater.cursorJumps).toEqual(["2026-05-19.md"]);
   });
 
   it("does not jump the cursor when the note already existed", async () => {
-    const settings = fakeSettings({ daily: fixedJournal("daily", { type: "day" }) });
+    const repo = fakeRepo({ daily: fixedJournal("daily", { type: "day" }) });
     const notes = new FakeNotesService();
     notes.seed("2026-05-19.md" as VaultPath, "existing");
     const workspace = new FakeWorkspaceService();
     const templater = new FakeTemplaterService();
-    await build(settings, notes, workspace, new FakeModalService(), templater)
+    await build(repo, notes, workspace, new FakeModalService(), templater)
       .resolve(Flows)
       .invoke(OpenJournalEntryFlow, { journalName: "daily", anchor: anchor("2026-05-19") });
     expect(templater.cursorJumps).toEqual([]);
@@ -77,11 +77,11 @@ describe("OpenJournalEntryFlow — cursor jump", () => {
 
 describe("OpenJournalEntryFlow", () => {
   it("ensures the note and opens it in the workspace", async () => {
-    const settings = fakeSettings({ daily: fixedJournal("daily", { type: "day" }) });
+    const repo = fakeRepo({ daily: fixedJournal("daily", { type: "day" }) });
     const notes = new FakeNotesService();
     const workspace = new FakeWorkspaceService();
     const modals = new FakeModalService();
-    const container = build(settings, notes, workspace, modals);
+    const container = build(repo, notes, workspace, modals);
     const result = await container
       .resolve(Flows)
       .invoke(OpenJournalEntryFlow, { journalName: "daily", anchor: anchor("2026-05-19") });
@@ -90,11 +90,11 @@ describe("OpenJournalEntryFlow", () => {
   });
 
   it("does not open the workspace when ensureNote returns UserAborted", async () => {
-    const settings = fakeSettings({ daily: fixedJournal("daily", { type: "day" }, { confirmCreation: true }) });
+    const repo = fakeRepo({ daily: fixedJournal("daily", { type: "day" }, { confirmCreation: true }) });
     const notes = new FakeNotesService();
     const workspace = new FakeWorkspaceService();
     const modals = new FakeModalService();
-    const container = build(settings, notes, workspace, modals);
+    const container = build(repo, notes, workspace, modals);
     const promise = container
       .resolve(Flows)
       .invoke(OpenJournalEntryFlow, { journalName: "daily", anchor: anchor("2026-05-19") });

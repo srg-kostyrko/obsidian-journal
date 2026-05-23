@@ -4,19 +4,18 @@ import { CalendarDate, Clock } from "@/calendar";
 import { inject } from "@/infrastructure/di";
 import type { VaultPath } from "@/infrastructure/host";
 import { Err, Ok, Option, type Result } from "@/infrastructure/result";
-import { SettingsService } from "@/settings";
 import { TemplateContext, TemplateEngine, tokenize } from "@/templates";
 import type { Bindings } from "@/templates";
 
-import { journalConfigCollection } from "../config";
 import { CycleService } from "../cycle";
 import { JournalNotFoundError } from "../errors";
+import { JournalsRepository } from "../repository";
 
 import type { JournalConfig } from "../config";
 import type { JournalMetadata } from "../types";
 
 export class NotePathService {
-  readonly #settings = inject(SettingsService);
+  readonly #journals = inject(JournalsRepository);
   readonly #cycle = inject(CycleService);
   readonly #engine = inject(TemplateEngine);
 
@@ -88,7 +87,8 @@ export class NotePathService {
   }
 
   configFor(name: string): JournalConfig | undefined {
-    return this.#settings.getCollection(journalConfigCollection).get(name) as JournalConfig | undefined;
+    const opt = this.#journals.get(name);
+    return opt.isSome() ? opt.value : undefined;
   }
 
   contextFor(config: JournalConfig, metadata: JournalMetadata): TemplateContext {

@@ -13,7 +13,8 @@ import { CycleService } from "./cycle";
 import { FrontmatterService } from "./frontmatter";
 import { JournalsIndex } from "./journals-index";
 import { NumberingService } from "./numbering";
-import { fakeSettings, fixedJournal } from "./testing";
+import { JournalsRepository } from "./repository";
+import { fakeRepo, fakeSettings, fixedJournal } from "./testing";
 import { VaultSubscriptionService } from "./vault-subscription";
 
 function fakeTFile(path: string): TFile {
@@ -31,7 +32,7 @@ interface TestRig {
   setMarkdownNotes(paths: VaultPath[]): void;
 }
 
-function buildRig(journals: Parameters<typeof fakeSettings>[0], initialPaths: VaultPath[] = []): TestRig {
+function buildRig(journals: Parameters<typeof fakeRepo>[0], initialPaths: VaultPath[] = []): TestRig {
   const emitter = createNanoEvents<NotesEvents>();
   let markdownNotes = [...initialPaths];
   const frontmatterByPath = new Map<string, Record<string, unknown>>();
@@ -64,6 +65,7 @@ function buildRig(journals: Parameters<typeof fakeSettings>[0], initialPaths: Va
 
   const c = new Container();
   c.register(SettingsService).useValue(fakeSettings(journals));
+  c.register(JournalsRepository).useValue(fakeRepo(journals));
   c.register(JournalsIndex).useClass(JournalsIndex);
   c.register(CycleService).useClass(CycleService);
   c.register(NumberingService).useClass(NumberingService);

@@ -5,12 +5,11 @@ import type { AnchorString, PeriodKind } from "@/calendar";
 import { localMoment } from "@/calendar/calendar";
 import { inject } from "@/infrastructure/di";
 import { Option } from "@/infrastructure/result";
-import { SettingsService } from "@/settings";
 
-import { journalConfigCollection } from "./config";
 import { JournalsIndex } from "./journals-index";
+import { JournalsRepository } from "./repository";
 
-import type { JournalConfig, JournalWrite } from "./config";
+import type { JournalWrite } from "./config";
 
 type MomentDurationUnit = "day" | "week" | "month" | "quarter" | "year";
 
@@ -77,7 +76,7 @@ function customStepBackward(anchor: AnchorString, every: MomentDurationUnit, dur
 }
 
 export class CycleService {
-  readonly #settings = inject(SettingsService);
+  readonly #journals = inject(JournalsRepository);
   readonly #index = inject(JournalsIndex);
 
   anchorOf(name: string, date: CalendarDate): Option<AnchorString> {
@@ -211,7 +210,6 @@ export class CycleService {
   }
 
   #cycleFor(name: string): Option<JournalCycle> {
-    const config = this.#settings.getCollection(journalConfigCollection).get(name);
-    return Option.fromNullable(config as JournalConfig | undefined).map((c) => buildCycle(c.write));
+    return this.#journals.get(name).map((c) => buildCycle(c.write));
   }
 }

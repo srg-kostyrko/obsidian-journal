@@ -6,15 +6,15 @@ import { installTestCalendar } from "@/calendar/testing";
 import { Container } from "@/infrastructure/di";
 import type { VaultPath } from "@/infrastructure/host";
 import { expectOk } from "@/infrastructure/result/testing";
-import { SettingsService } from "@/settings";
 
 import { CycleService } from "./cycle";
 import { JournalsIndex } from "./journals-index";
-import { customJournal, fakeSettings, fixedJournal, unwrap } from "./testing";
+import { JournalsRepository } from "./repository";
+import { customJournal, fakeRepo, fixedJournal, unwrap } from "./testing";
 
-function buildContainer(journals: Parameters<typeof fakeSettings>[0]): Container {
+function buildContainer(journals: Parameters<typeof fakeRepo>[0]): Container {
   const c = new Container();
-  c.register(SettingsService).useValue(fakeSettings(journals));
+  c.register(JournalsRepository).useValue(fakeRepo(journals));
   c.register(JournalsIndex).useClass(JournalsIndex);
   c.register(CycleService).useClass(CycleService);
   return c;

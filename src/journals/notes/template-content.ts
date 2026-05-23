@@ -2,19 +2,17 @@ import { inject } from "@/infrastructure/di";
 import { NotesService, TemplaterService } from "@/infrastructure/host";
 import type { NoteReadError, VaultPath } from "@/infrastructure/host";
 import { AsyncResult } from "@/infrastructure/result";
-import { SettingsService } from "@/settings";
 import { TemplateEngine } from "@/templates";
 
-import { journalConfigCollection } from "../config";
 import { JournalNotFoundError } from "../errors";
+import { JournalsRepository } from "../repository";
 
 import { NotePathService } from "./note-path";
 
-import type { JournalConfig } from "../config";
 import type { JournalMetadata } from "../types";
 
 export class TemplateContentService {
-  readonly #settings = inject(SettingsService);
+  readonly #journals = inject(JournalsRepository);
   readonly #notes = inject(NotesService);
   readonly #engine = inject(TemplateEngine);
   readonly #path = inject(NotePathService);
@@ -26,8 +24,9 @@ export class TemplateContentService {
     noteName: string,
     targetPath: VaultPath,
   ): AsyncResult<string, JournalNotFoundError | NoteReadError> {
-    const config = this.#settings.getCollection(journalConfigCollection).get(name) as JournalConfig | undefined;
-    if (!config) return AsyncResult.err(new JournalNotFoundError(name));
+    const configOpt = this.#journals.get(name);
+    if (configOpt.isNone()) return AsyncResult.err(new JournalNotFoundError(name));
+    const config = configOpt.value;
     if (config.templates.length === 0) return AsyncResult.ok("");
 
     const pathContext = this.#path.contextFor(config, metadata);

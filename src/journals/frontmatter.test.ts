@@ -4,17 +4,17 @@ import type { AnchorString } from "@/calendar";
 import { installTestCalendar } from "@/calendar/testing";
 import { Container } from "@/infrastructure/di";
 import type { VaultPath } from "@/infrastructure/host";
-import { SettingsService } from "@/settings";
 
 import { CycleService } from "./cycle";
 import { FrontmatterService } from "./frontmatter";
 import { JournalsIndex } from "./journals-index";
 import { NumberingService } from "./numbering";
-import { customJournal, fakeSettings, fixedJournal } from "./testing";
+import { JournalsRepository } from "./repository";
+import { customJournal, fakeRepo, fixedJournal } from "./testing";
 
-function buildContainer(journals: Parameters<typeof fakeSettings>[0]): Container {
+function buildContainer(journals: Parameters<typeof fakeRepo>[0]): Container {
   const c = new Container();
-  c.register(SettingsService).useValue(fakeSettings(journals));
+  c.register(JournalsRepository).useValue(fakeRepo(journals));
   c.register(JournalsIndex).useClass(JournalsIndex);
   c.register(CycleService).useClass(CycleService);
   c.register(NumberingService).useClass(NumberingService);

@@ -4,19 +4,18 @@ import { inject } from "@/infrastructure/di";
 import type { VaultPath } from "@/infrastructure/host";
 import { Err, Ok, Option } from "@/infrastructure/result";
 import type { Result } from "@/infrastructure/result";
-import { SettingsService } from "@/settings";
 
-import { FRONTMATTER_NAME_KEY, journalConfigCollection } from "./config";
+import { FRONTMATTER_NAME_KEY } from "./config";
 import { CycleService } from "./cycle";
 import { JournalNotFoundError } from "./errors";
 import { JournalsIndex } from "./journals-index";
 import { NumberingService } from "./numbering";
+import { JournalsRepository } from "./repository";
 
-import type { JournalConfig } from "./config";
 import type { JournalEntry, JournalMetadata } from "./types";
 
 export class FrontmatterService {
-  readonly #settings = inject(SettingsService);
+  readonly #journals = inject(JournalsRepository);
   readonly #cycle = inject(CycleService);
   readonly #numbering = inject(NumberingService);
   readonly #index = inject(JournalsIndex);
@@ -24,8 +23,9 @@ export class FrontmatterService {
   parseEntry(path: VaultPath, frontmatter: Record<string, unknown>): Option<JournalEntry> {
     const journalName = frontmatter[FRONTMATTER_NAME_KEY];
     if (typeof journalName !== "string") return Option.none();
-    const config = this.#settings.getCollection(journalConfigCollection).get(journalName) as JournalConfig | undefined;
-    if (!config) return Option.none();
+    const configOpt = this.#journals.get(journalName);
+    if (configOpt.isNone()) return Option.none();
+    const config = configOpt.value;
 
     const rawDate = frontmatter[config.frontmatter.dateField];
     if (typeof rawDate !== "string") return Option.none();
@@ -59,8 +59,7 @@ export class FrontmatterService {
   }
 
   buildMetadata(name: string, anchor: AnchorString): Result<JournalMetadata, JournalNotFoundError> {
-    const config = this.#settings.getCollection(journalConfigCollection).get(name) as JournalConfig | undefined;
-    if (!config) return new Err(new JournalNotFoundError(name));
+    if (this.#journals.get(name).isNone()) return new Err(new JournalNotFoundError(name));
 
     const numbers = this.#numbering.assignNumbers(name, anchor);
     const storedEntry = this.#index.entryByAnchor(name, anchor);
@@ -79,8 +78,9 @@ export class FrontmatterService {
     name: string,
     metadata: JournalMetadata,
   ): Result<(fm: Record<string, unknown>) => void, JournalNotFoundError> {
-    const config = this.#settings.getCollection(journalConfigCollection).get(name) as JournalConfig | undefined;
-    if (!config) return new Err(new JournalNotFoundError(name));
+    const configOpt = this.#journals.get(name);
+    if (configOpt.isNone()) return new Err(new JournalNotFoundError(name));
+    const config = configOpt.value;
     const fields = config.frontmatter;
     const cycle = this.#cycle;
 

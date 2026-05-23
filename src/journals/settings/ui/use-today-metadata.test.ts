@@ -7,8 +7,8 @@ import { Container, provideInjectorOnApp } from "@/infrastructure/di";
 import { LoggerModule } from "@/infrastructure/logger";
 import { CycleService, FrontmatterService, JournalsIndex, NumberingService } from "@/journals";
 import type { JournalMetadata } from "@/journals";
-import { fakeSettings, fixedJournal } from "@/journals/testing";
-import { SettingsService } from "@/settings";
+import { JournalsRepository } from "@/journals/repository";
+import { fakeRepo, fixedJournal } from "@/journals/testing";
 
 import { useTodayMetadata } from "./use-today-metadata";
 
@@ -25,10 +25,9 @@ afterEach(() => {
 });
 
 function buildContainer(): Container {
-  const settings = fakeSettings({ daily: fixedJournal("daily", { type: "day" }) });
   const c = new Container();
   c.addModule(LoggerModule);
-  c.register(SettingsService).useValue(settings);
+  c.register(JournalsRepository).useValue(fakeRepo({ daily: fixedJournal("daily", { type: "day" }) }));
   c.register(JournalsIndex).useClass(JournalsIndex);
   c.register(CycleService).useClass(CycleService);
   c.register(NumberingService).useClass(NumberingService);

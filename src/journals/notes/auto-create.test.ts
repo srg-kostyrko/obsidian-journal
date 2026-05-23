@@ -9,24 +9,24 @@ import { FakeModalService } from "@/infrastructure/host/modals/testing";
 import { FakeNotesService, FakeTemplaterService } from "@/infrastructure/host/testing";
 import { LoggerModule } from "@/infrastructure/logger";
 import { AsyncResult } from "@/infrastructure/result";
-import { SettingsService } from "@/settings";
 import { TemplateEngine } from "@/templates";
 
 import { CycleService } from "../cycle";
 import { FrontmatterService } from "../frontmatter";
 import { JournalsIndex } from "../journals-index";
 import { NumberingService } from "../numbering";
-import { fakeSettings, fixedJournal } from "../testing";
+import { JournalsRepository } from "../repository";
+import { fakeRepo, fixedJournal } from "../testing";
 
 import { AutoCreateService } from "./auto-create";
 import { NoteCreationService } from "./note-creation";
 import { NotePathService } from "./note-path";
 import { TemplateContentService } from "./template-content";
 
-function build(settings: SettingsService, notes: FakeNotesService): Container {
+function build(repo: JournalsRepository, notes: FakeNotesService): Container {
   const c = new Container();
   c.addModule(LoggerModule);
-  c.register(SettingsService).useValue(settings);
+  c.register(JournalsRepository).useValue(repo);
   c.register(NotesService).useValue(notes as unknown as NotesService);
   c.register(ModalService).useValue(new FakeModalService() as unknown as ModalService);
   c.register(TemplaterService).useValue(new FakeTemplaterService() as unknown as TemplaterService);
@@ -55,12 +55,12 @@ describe("AutoCreateService", () => {
   });
 
   it("creates today's note for journals with autoCreate=true", async () => {
-    const settings = fakeSettings({
+    const repo = fakeRepo({
       daily: fixedJournal("daily", { type: "day" }, { autoCreate: true }),
       monthly: fixedJournal("monthly", { type: "month" }, { autoCreate: false }),
     });
     const notes = new FakeNotesService();
-    const container = build(settings, notes);
+    const container = build(repo, notes);
     await container.resolve(AutoCreateService).initialize();
     await vi.advanceTimersByTimeAsync(0);
     expect(notes.find("2026-05-19.md" as VaultPath).isSome()).toBe(true);
@@ -68,9 +68,9 @@ describe("AutoCreateService", () => {
   });
 
   it("re-ticks at the next local midnight", async () => {
-    const settings = fakeSettings({ daily: fixedJournal("daily", { type: "day" }, { autoCreate: true }) });
+    const repo = fakeRepo({ daily: fixedJournal("daily", { type: "day" }, { autoCreate: true }) });
     const notes = new FakeNotesService();
-    const container = build(settings, notes);
+    const container = build(repo, notes);
     await container.resolve(AutoCreateService).initialize();
     await vi.advanceTimersByTimeAsync(0);
     expect(notes.find("2026-05-19.md" as VaultPath).isSome()).toBe(true);
@@ -79,9 +79,9 @@ describe("AutoCreateService", () => {
   });
 
   it("stops ticking after dispose", async () => {
-    const settings = fakeSettings({ daily: fixedJournal("daily", { type: "day" }, { autoCreate: true }) });
+    const repo = fakeRepo({ daily: fixedJournal("daily", { type: "day" }, { autoCreate: true }) });
     const notes = new FakeNotesService();
-    const container = build(settings, notes);
+    const container = build(repo, notes);
     const service = container.resolve(AutoCreateService);
     await service.initialize();
     await service[Symbol.asyncDispose]();
@@ -91,12 +91,12 @@ describe("AutoCreateService", () => {
   });
 
   it("isolates errors per-journal — one failing journal does not stop others", async () => {
-    const settings = fakeSettings({
+    const repo = fakeRepo({
       a: fixedJournal("a", { type: "day" }, { autoCreate: true, folder: "A" }),
       b: fixedJournal("b", { type: "day" }, { autoCreate: true, folder: "B" }),
     });
     const notes = new FakeNotesService();
-    const container = build(settings, notes);
+    const container = build(repo, notes);
     const creation = container.resolve(NoteCreationService);
     vi.spyOn(creation, "ensureNote").mockImplementationOnce(() =>
       AsyncResult.err(new Error("forced failure") as never),

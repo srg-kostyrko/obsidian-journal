@@ -5,7 +5,6 @@ import { anchor } from "@/calendar/testing";
 import { Container } from "@/infrastructure/di";
 import type { VaultPath } from "@/infrastructure/host";
 import { LoggerModule } from "@/infrastructure/logger";
-import { SettingsService } from "@/settings";
 import { TemplateEngine } from "@/templates";
 
 import { CycleService } from "../cycle";
@@ -13,17 +12,18 @@ import { JournalNotFoundError } from "../errors";
 import { FrontmatterService } from "../frontmatter";
 import { JournalsIndex } from "../journals-index";
 import { NumberingService } from "../numbering";
-import { fakeSettings, fixedJournal, unwrap } from "../testing";
+import { JournalsRepository } from "../repository";
+import { fakeRepo, fixedJournal, unwrap } from "../testing";
 
 import { NotePathService } from "./note-path";
 
 import type { JournalConfig } from "../config";
 import type { JournalMetadata } from "../types";
 
-function buildContainer(settings: SettingsService): Container {
+function buildContainer(repo: JournalsRepository): Container {
   const c = new Container();
   c.addModule(LoggerModule);
-  c.register(SettingsService).useValue(settings);
+  c.register(JournalsRepository).useValue(repo);
   c.register(JournalsIndex).useClass(JournalsIndex);
   c.register(CycleService).useClass(CycleService);
   c.register(NumberingService).useClass(NumberingService);
@@ -35,26 +35,26 @@ function buildContainer(settings: SettingsService): Container {
 
 describe("NotePathService.pathFor", () => {
   it("renders nameTemplate with .md suffix when folder is empty", () => {
-    const settings = fakeSettings({ daily: fixedJournal("daily", { type: "day" }) });
-    const c = buildContainer(settings);
+    const repo = fakeRepo({ daily: fixedJournal("daily", { type: "day" }) });
+    const c = buildContainer(repo);
     const meta: JournalMetadata = { journalName: "daily", anchor: anchor("2026-05-19") };
     const result = c.resolve(NotePathService).pathFor("daily", meta);
     expect(result.isOk() && result.value).toBe("2026-05-19.md");
   });
 
   it("prefixes folder when configured", () => {
-    const settings = fakeSettings({
+    const repo = fakeRepo({
       daily: fixedJournal("daily", { type: "day" }, { folder: "Diary/{{date:YYYY}}" }),
     });
-    const c = buildContainer(settings);
+    const c = buildContainer(repo);
     const meta: JournalMetadata = { journalName: "daily", anchor: anchor("2026-05-19") };
     const result = c.resolve(NotePathService).pathFor("daily", meta);
     expect(result.isOk() && result.value).toBe("Diary/2026/2026-05-19.md");
   });
 
   it("returns JournalNotFoundError for an unknown journal", () => {
-    const settings = fakeSettings({});
-    const c = buildContainer(settings);
+    const repo = fakeRepo({});
+    const c = buildContainer(repo);
     const meta: JournalMetadata = { journalName: "missing", anchor: anchor("2026-05-19") };
     const result = c.resolve(NotePathService).pathFor("missing", meta);
     expect(result.isErr() && result.error instanceof JournalNotFoundError).toBe(true);
@@ -63,8 +63,8 @@ describe("NotePathService.pathFor", () => {
 
 describe("NotePathService.candidateFor", () => {
   it("inverts a {{date}}.md path into a metadata anchor", () => {
-    const settings = fakeSettings({ daily: fixedJournal("daily", { type: "day" }) });
-    const c = buildContainer(settings);
+    const repo = fakeRepo({ daily: fixedJournal("daily", { type: "day" }) });
+    const c = buildContainer(repo);
     const result = c.resolve(NotePathService).candidateFor("daily", "2026-05-19.md" as VaultPath);
     const metadata = unwrap(result);
     expect(metadata.anchor).toBe("2026-05-19");
@@ -72,24 +72,24 @@ describe("NotePathService.candidateFor", () => {
   });
 
   it("returns None when the path doesn't match the template", () => {
-    const settings = fakeSettings({ daily: fixedJournal("daily", { type: "day" }) });
-    const c = buildContainer(settings);
+    const repo = fakeRepo({ daily: fixedJournal("daily", { type: "day" }) });
+    const c = buildContainer(repo);
     const result = c.resolve(NotePathService).candidateFor("daily", "Inbox/note.md" as VaultPath);
     expect(result.isNone()).toBe(true);
   });
 
   it("inverts folder + name combined", () => {
-    const settings = fakeSettings({
+    const repo = fakeRepo({
       daily: fixedJournal("daily", { type: "day" }, { folder: "Diary/{{date:YYYY}}" }),
     });
-    const c = buildContainer(settings);
+    const c = buildContainer(repo);
     const result = c.resolve(NotePathService).candidateFor("daily", "Diary/2026/2026-05-19.md" as VaultPath);
     const metadata = unwrap(result);
     expect(metadata.anchor).toBe("2026-05-19");
   });
 
   it("captures numbering variables that appear only in the folder template", () => {
-    const settings = fakeSettings({
+    const repo = fakeRepo({
       sprints: fixedJournal(
         "sprints",
         { type: "day" },
@@ -105,7 +105,7 @@ describe("NotePathService.candidateFor", () => {
         },
       ),
     });
-    const c = buildContainer(settings);
+    const c = buildContainer(repo);
     const result = c.resolve(NotePathService).candidateFor("sprints", "42 - Sprints/2026-05-19.md" as VaultPath);
     const metadata = unwrap(result);
     expect(metadata.anchor).toBe("2026-05-19");
@@ -113,7 +113,7 @@ describe("NotePathService.candidateFor", () => {
   });
 
   it("captures numbering variables when present in the template", () => {
-    const settings = fakeSettings({
+    const repo = fakeRepo({
       issues: fixedJournal(
         "issues",
         { type: "day" },
@@ -128,7 +128,7 @@ describe("NotePathService.candidateFor", () => {
         },
       ),
     });
-    const c = buildContainer(settings);
+    const c = buildContainer(repo);
     const result = c.resolve(NotePathService).candidateFor("issues", "Issue 42 - 2026-05-19.md" as VaultPath);
     const metadata = unwrap(result);
     expect(metadata.anchor).toBe("2026-05-19");
@@ -138,8 +138,8 @@ describe("NotePathService.candidateFor", () => {
 
 function buildFixture(): { service: NotePathService; config: JournalConfig; metadata: JournalMetadata } {
   const config = fixedJournal("daily", { type: "day" }, { dateFormat: "DD/MM/YYYY" });
-  const settings = fakeSettings({ daily: config });
-  const service = buildContainer(settings).resolve(NotePathService);
+  const repo = fakeRepo({ daily: config });
+  const service = buildContainer(repo).resolve(NotePathService);
   const metadata: JournalMetadata = { journalName: "daily", anchor: anchor("2026-05-20") };
   return { service, config, metadata };
 }

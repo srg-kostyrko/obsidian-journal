@@ -3,11 +3,10 @@ import { NotesService } from "@/infrastructure/host";
 import type { VaultPath } from "@/infrastructure/host";
 import { LoggerFactoryToken } from "@/infrastructure/logger";
 import { AsyncResult } from "@/infrastructure/result";
-import { SettingsService } from "@/settings";
 
-import { journalConfigCollection } from "../config";
 import { FrontmatterService } from "../frontmatter";
 import { JournalsIndex } from "../journals-index";
+import { JournalsRepository } from "../repository";
 import { TimelineService } from "../timeline";
 
 import { NoteCreationService } from "./note-creation";
@@ -22,7 +21,7 @@ export class AutoAttachService {
   readonly #creation = inject(NoteCreationService);
   readonly #frontmatter = inject(FrontmatterService);
   readonly #index = inject(JournalsIndex);
-  readonly #settings = inject(SettingsService);
+  readonly #journals = inject(JournalsRepository);
   readonly #logger = inject(LoggerFactoryToken).named("auto-attach");
   readonly #unsubscribes: (() => void)[] = [];
 
@@ -47,7 +46,7 @@ export class AutoAttachService {
     if (this.#creation.expects(path)) return;
     if (this.#index.entryByPath(path).isSome()) return;
     const matches: { name: string; metadata: JournalMetadata }[] = [];
-    for (const name of Object.keys(this.#settings.getCollection(journalConfigCollection).entries)) {
+    for (const name of this.#journals.find().ids()) {
       const candidate = this.#path.candidateFor(name, path);
       if (candidate.isNone()) continue;
       if (!this.#timeline.contains(name, candidate.value.anchor)) continue;
