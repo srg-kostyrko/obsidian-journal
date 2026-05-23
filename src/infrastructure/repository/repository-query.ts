@@ -2,6 +2,7 @@ import { Option } from "@/infrastructure/result";
 
 import type { RepositoryQueryContract } from "./types";
 
+// Single-use iterator: every terminal method consumes the source. Call find() again for a fresh query.
 export class RepositoryQuery<Id extends string, Entity> implements RepositoryQueryContract<Id, Entity> {
   constructor(
     protected source: IterableIterator<[Id, Entity]>,
@@ -11,7 +12,7 @@ export class RepositoryQuery<Id extends string, Entity> implements RepositoryQue
   first(): Option<Entity> {
     const next = this.source.next();
     if (next.done) return Option.none();
-    return Option.fromNullable(next.value[1]);
+    return Option.some(next.value[1]);
   }
 
   *ids(): IterableIterator<Id> {
