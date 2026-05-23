@@ -1,9 +1,13 @@
+import { createNanoEvents } from "nanoevents";
+
 import type { Module } from "@/infrastructure/di";
 import { JournalEditSectionToken, defineJournalEditSection } from "@/journals";
 import { CollectionDefinitionToken, DashboardBlockToken, SubpageToken, defineDashboardBlock } from "@/settings";
 
 import { shelvesCollection } from "./config";
 import { ShelvesLifecycleService } from "./lifecycle";
+import { ShelvesRepository, type ShelvesEvents } from "./repository";
+import { ShelvesEventsToken } from "./tokens";
 import { DeleteShelfFlow } from "./ui/delete-shelf.flow";
 import { EditShelfNameFlow } from "./ui/edit-shelf-name.flow";
 import JournalsDashboardBlock from "./ui/JournalsDashboardBlock.vue";
@@ -11,12 +15,16 @@ import JournalShelfSection from "./ui/JournalShelfSection.vue";
 import { PlaceJournalFlow } from "./ui/place-journal.flow";
 import { shelfEditSubpage } from "./ui/shelf-edit-subpage";
 import ShelvesDashboardBlock from "./ui/ShelvesDashboardBlock.vue";
+import { ShelvesViewModel } from "./view-model";
 
 import type { Component } from "vue";
 
 export const shelvesModule: Module = {
   register(c) {
     c.register(CollectionDefinitionToken).useValue(shelvesCollection);
+    c.register(ShelvesEventsToken).useFactory(() => createNanoEvents<ShelvesEvents>());
+    c.register(ShelvesRepository).useClass(ShelvesRepository).eager();
+    c.register(ShelvesViewModel).useClass(ShelvesViewModel).eager();
     c.register(ShelvesLifecycleService).useClass(ShelvesLifecycleService).eager();
     c.register(EditShelfNameFlow).useClass(EditShelfNameFlow);
     c.register(DeleteShelfFlow).useClass(DeleteShelfFlow);

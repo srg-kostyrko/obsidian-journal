@@ -1,7 +1,11 @@
 export { shelvesCollection } from "./config";
 export type { ShelfConfig } from "./config";
-export { InvalidShelfNameError, ShelfNameTakenError, UnknownShelfError } from "./errors";
+export { InvalidShelfNameError, InvalidShelfUpdateError, ShelfNameTakenError, UnknownShelfError } from "./errors";
 export { ShelvesLifecycleService } from "./lifecycle";
 export { shelvesModule } from "./module";
+export { ShelvesRepository } from "./repository";
+export type { ShelvesEvents } from "./repository";
+export { ShelvesEventsToken } from "./tokens";
+export { ShelvesViewModel } from "./view-model";
 export { ShelfEditSectionToken, defineShelfEditSection } from "./ui/shelf-edit-section";
 export type { ShelfEditSection } from "./ui/shelf-edit-section";

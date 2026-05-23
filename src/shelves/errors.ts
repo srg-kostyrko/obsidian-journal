@@ -25,10 +25,19 @@ export class UnknownShelfError extends Error {
   }
 }
 
+export class InvalidShelfUpdateError extends Error {
+  readonly kind = "invalid-update" as const;
+  constructor(public readonly shelfName: string) {
+    super(`Invalid update for shelf ${shelfName}: name field is immutable via update — use rename`);
+    this.name = "InvalidShelfUpdateError";
+  }
+}
+
 export type ShelvesLifecycleError =
   | InvalidShelfNameError
   | ShelfNameTakenError
   | UnknownShelfError
+  | InvalidShelfUpdateError
   | UnknownJournalError;
 
 export class ShelvesLifecycleFlowError extends FlowError {
