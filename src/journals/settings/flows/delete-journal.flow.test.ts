@@ -1,50 +1,39 @@
+import { createNanoEvents } from "nanoevents";
 import { describe, expect, it } from "vitest";
+import { reactive } from "vue";
 
 import { Flows, UserAborted } from "@/infrastructure/flows";
 import { ModalService } from "@/infrastructure/host/modals";
 import { FakeModalService } from "@/infrastructure/host/modals/testing";
-import { journalConfigCollection } from "@/journals";
-import { JournalLifecycleFlowError, UnknownJournalError } from "@/journals/errors";
+import {
+  JournalLifecycleFlowError,
+  JournalsRepository,
+  UnknownJournalError,
+  journalDefaultsFor,
+  type JournalConfig,
+  type JournalsEvents,
+} from "@/journals";
 import { SettingsUiService, SubpageToken } from "@/settings";
 import { createSettingsService } from "@/settings/testing";
 
-import { JournalLifecycleService } from "../lifecycle";
 import { journalEditSubpage } from "../ui/journals-subpage";
 
 import { DeleteJournalFlow } from "./delete-journal.flow";
 
-function makeJournalConfig(name: string) {
-  return {
-    name,
-    write: { type: "day" as const },
-    timeline: { start: "2024-01-01", end: { kind: "never" as const } },
-    dateFormat: "YYYY-MM-DD",
-    frontmatter: {
-      dateField: "journal-date",
-      startDateField: "journal-start-date",
-      endDateField: "journal-end-date",
-      addStartDate: false,
-      addEndDate: false,
-    },
-    numbering: { enabled: false, anchorDate: "2024-01-01", allowBefore: false, sources: [] },
-  };
-}
-
-async function build(raw?: unknown) {
-  const { service: settings, container } = createSettingsService({
-    collections: [journalConfigCollection],
-    raw,
-  });
-  await settings.initialize();
+async function build(initial: Record<string, JournalConfig> = {}) {
+  const { container } = createSettingsService({ collections: [] });
+  const storage = reactive<Record<string, JournalConfig>>({ ...initial });
+  const events = createNanoEvents<JournalsEvents>();
+  const repo = JournalsRepository.fromParts(storage, events);
   const modals = new FakeModalService();
   container.register(ModalService).useValue(modals as unknown as ModalService);
+  container.register(JournalsRepository).useValue(repo);
   container.register(SubpageToken).useValue(journalEditSubpage);
   container.register(SettingsUiService).useClass(SettingsUiService);
-  container.register(JournalLifecycleService).useClass(JournalLifecycleService);
   container.register(Flows).useClass(Flows);
   container.register(DeleteJournalFlow).useClass(DeleteJournalFlow);
   return {
-    settings,
+    storage,
     modals,
     flows: container.resolve(Flows),
     ui: container.resolve(SettingsUiService),
@@ -52,18 +41,16 @@ async function build(raw?: unknown) {
 }
 
 describe("DeleteJournalFlow", () => {
-  it("removes the journal from the collection on submit", async () => {
-    const raw = { version: 3, journals: { daily: makeJournalConfig("daily") } };
-    const { flows, modals, settings } = await build(raw);
+  it("removes the journal from storage on submit", async () => {
+    const { flows, modals, storage } = await build({ daily: journalDefaultsFor({ type: "day" }, "daily") });
     const promise = flows.invoke(DeleteJournalFlow, { journalName: "daily" });
     modals.lastOpen<{ journalName: string }, { mode: "keep" }>().submit({ mode: "keep" });
     await promise;
-    expect(settings.getCollection(journalConfigCollection).get("daily")).toBeUndefined();
+    expect(storage.daily).toBeUndefined();
   });
 
   it("pops the edit subpage when it shows the deleted journal", async () => {
-    const raw = { version: 3, journals: { daily: makeJournalConfig("daily") } };
-    const { flows, modals, ui } = await build(raw);
+    const { flows, modals, ui } = await build({ daily: journalDefaultsFor({ type: "day" }, "daily") });
     ui.push(journalEditSubpage, { journalName: "daily" });
     const promise = flows.invoke(DeleteJournalFlow, { journalName: "daily" });
     modals.lastOpen<{ journalName: string }, { mode: "keep" }>().submit({ mode: "keep" });
@@ -72,11 +59,10 @@ describe("DeleteJournalFlow", () => {
   });
 
   it("leaves another journal's subpage on the stack untouched", async () => {
-    const raw = {
-      version: 3,
-      journals: { daily: makeJournalConfig("daily"), morning: makeJournalConfig("morning") },
-    };
-    const { flows, modals, ui } = await build(raw);
+    const { flows, modals, ui } = await build({
+      daily: journalDefaultsFor({ type: "day" }, "daily"),
+      morning: journalDefaultsFor({ type: "day" }, "morning"),
+    });
     ui.push(journalEditSubpage, { journalName: "morning" });
     const promise = flows.invoke(DeleteJournalFlow, { journalName: "daily" });
     modals.lastOpen<{ journalName: string }, { mode: "keep" }>().submit({ mode: "keep" });
@@ -86,8 +72,7 @@ describe("DeleteJournalFlow", () => {
   });
 
   it("returns UserAborted('delete-journal-modal') when the modal is cancelled", async () => {
-    const raw = { version: 3, journals: { daily: makeJournalConfig("daily") } };
-    const { flows, modals } = await build(raw);
+    const { flows, modals } = await build({ daily: journalDefaultsFor({ type: "day" }, "daily") });
     const promise = flows.invoke(DeleteJournalFlow, { journalName: "daily" });
     modals.lastOpen().cancel();
     const result = await promise;

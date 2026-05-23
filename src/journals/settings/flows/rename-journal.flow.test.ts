@@ -1,62 +1,47 @@
+import { createNanoEvents } from "nanoevents";
 import { describe, expect, it } from "vitest";
+import { reactive } from "vue";
 
 import { Flows, UserAborted } from "@/infrastructure/flows";
 import { ModalService } from "@/infrastructure/host/modals";
 import { FakeModalService } from "@/infrastructure/host/modals/testing";
-import { journalConfigCollection } from "@/journals";
-import { JournalLifecycleFlowError, UnknownJournalError } from "@/journals/errors";
+import {
+  JournalLifecycleFlowError,
+  JournalsRepository,
+  UnknownJournalError,
+  journalDefaultsFor,
+  type JournalConfig,
+  type JournalsEvents,
+} from "@/journals";
 import { createSettingsService } from "@/settings/testing";
-
-import { JournalLifecycleService } from "../lifecycle";
 
 import { RenameJournalFlow } from "./rename-journal.flow";
 
-function makeJournalConfig(name: string) {
-  return {
-    name,
-    write: { type: "day" as const },
-    timeline: { start: "2024-01-01", end: { kind: "never" as const } },
-    dateFormat: "YYYY-MM-DD",
-    frontmatter: {
-      dateField: "journal-date",
-      startDateField: "journal-start-date",
-      endDateField: "journal-end-date",
-      addStartDate: false,
-      addEndDate: false,
-    },
-    numbering: { enabled: false, anchorDate: "2024-01-01", allowBefore: false, sources: [] },
-  };
-}
-
-async function build(raw?: unknown) {
-  const { service: settings, container } = createSettingsService({
-    collections: [journalConfigCollection],
-    raw,
-  });
-  await settings.initialize();
+async function build(initial: Record<string, JournalConfig> = {}) {
+  const { container } = createSettingsService({ collections: [] });
+  const storage = reactive<Record<string, JournalConfig>>({ ...initial });
+  const events = createNanoEvents<JournalsEvents>();
+  const repo = JournalsRepository.fromParts(storage, events);
   const modals = new FakeModalService();
   container.register(ModalService).useValue(modals as unknown as ModalService);
-  container.register(JournalLifecycleService).useClass(JournalLifecycleService);
+  container.register(JournalsRepository).useValue(repo);
   container.register(Flows).useClass(Flows);
   container.register(RenameJournalFlow).useClass(RenameJournalFlow);
-  return { settings, modals, flows: container.resolve(Flows) };
+  return { storage, modals, flows: container.resolve(Flows) };
 }
 
 describe("RenameJournalFlow", () => {
-  it("renames the journal in the collection on submit", async () => {
-    const raw = { version: 3, journals: { daily: makeJournalConfig("daily") } };
-    const { flows, modals, settings } = await build(raw);
+  it("renames the journal in storage on submit", async () => {
+    const { flows, modals, storage } = await build({ daily: journalDefaultsFor({ type: "day" }, "daily") });
     const promise = flows.invoke(RenameJournalFlow, { journalName: "daily" });
     modals.lastOpen<{ currentName: string }, { newName: string }>().submit({ newName: "morning" });
     await promise;
-    const collection = settings.getCollection(journalConfigCollection);
-    expect(collection.get("daily")).toBeUndefined();
-    expect(collection.get("morning")?.name).toBe("morning");
+    expect(storage.daily).toBeUndefined();
+    expect(storage.morning?.name).toBe("morning");
   });
 
   it("returns the new name on submit", async () => {
-    const raw = { version: 3, journals: { daily: makeJournalConfig("daily") } };
-    const { flows, modals } = await build(raw);
+    const { flows, modals } = await build({ daily: journalDefaultsFor({ type: "day" }, "daily") });
     const promise = flows.invoke(RenameJournalFlow, { journalName: "daily" });
     modals.lastOpen<{ currentName: string }, { newName: string }>().submit({ newName: "morning" });
     const result = await promise;
@@ -64,8 +49,7 @@ describe("RenameJournalFlow", () => {
   });
 
   it("returns UserAborted('rename-journal-modal') when the modal is cancelled", async () => {
-    const raw = { version: 3, journals: { daily: makeJournalConfig("daily") } };
-    const { flows, modals } = await build(raw);
+    const { flows, modals } = await build({ daily: journalDefaultsFor({ type: "day" }, "daily") });
     const promise = flows.invoke(RenameJournalFlow, { journalName: "daily" });
     modals.lastOpen().cancel();
     const result = await promise;

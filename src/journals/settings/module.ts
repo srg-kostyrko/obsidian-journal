@@ -6,12 +6,10 @@ import { DeleteJournalFlow } from "./flows/delete-journal.flow";
 import { EditFrontmatterFieldFlow } from "./flows/edit-frontmatter-field.flow";
 import { EditSequencePropertyFlow } from "./flows/edit-sequence-property.flow";
 import { RenameJournalFlow } from "./flows/rename-journal.flow";
-import { JournalLifecycleService } from "./lifecycle";
 import { journalEditSubpage } from "./ui/journals-subpage";
 
 export const journalsSettingsModule: Module = {
   register(c) {
-    c.register(JournalLifecycleService).useClass(JournalLifecycleService);
     c.register(AddJournalFlow).useClass(AddJournalFlow);
     c.register(RenameJournalFlow).useClass(RenameJournalFlow);
     c.register(DeleteJournalFlow).useClass(DeleteJournalFlow);

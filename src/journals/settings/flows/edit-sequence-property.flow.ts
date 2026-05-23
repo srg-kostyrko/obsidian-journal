@@ -3,9 +3,8 @@ import { UserAborted, type Flow, type FlowError } from "@/infrastructure/flows";
 import { ModalService } from "@/infrastructure/host/modals";
 import { AsyncResult, attempt } from "@/infrastructure/result";
 import { toFlowError, UnknownJournalError, UnknownSequenceSourceError } from "@/journals/errors";
-import { SettingsService } from "@/settings";
+import { JournalsRepository } from "@/journals/repository";
 
-import { journalConfigCollection } from "../../config";
 import { editSequencePropertyModal } from "../ui/edit-sequence-property-modal";
 
 export class EditSequencePropertyFlow implements Flow<
@@ -14,16 +13,15 @@ export class EditSequencePropertyFlow implements Flow<
   FlowError
 > {
   readonly #modals = inject(ModalService);
-  readonly #settings = inject(SettingsService);
+  readonly #repository = inject(JournalsRepository);
 
   execute(parameters: { journalName: string; sourceIndex: number }): AsyncResult<{ newValue: string }, FlowError> {
-    const collection = this.#settings.getCollection(journalConfigCollection);
-    const config = collection.get(parameters.journalName);
-    if (!config) {
+    const configOpt = this.#repository.get(parameters.journalName);
+    if (configOpt.isNone()) {
       return AsyncResult.err(toFlowError(new UnknownJournalError(parameters.journalName)));
     }
-    const source = config.numbering.sources[parameters.sourceIndex];
-    if (!source) {
+    const config = configOpt.getOr(undefined as never);
+    if (!config.numbering.sources[parameters.sourceIndex]) {
       return AsyncResult.err(
         toFlowError(new UnknownSequenceSourceError(parameters.journalName, parameters.sourceIndex)),
       );
@@ -35,7 +33,12 @@ export class EditSequencePropertyFlow implements Flow<
           sourceIndex: parameters.sourceIndex,
         })
         .mapErr(() => new UserAborted("edit-sequence-property-modal"));
-      source.frontmatterKey = submitted.newValue;
+      const updatedSources = config.numbering.sources.map((s, i) =>
+        i === parameters.sourceIndex ? { ...s, frontmatterKey: submitted.newValue } : s,
+      );
+      this.#repository.update(parameters.journalName, {
+        numbering: { ...config.numbering, sources: updatedSources },
+      });
       return { newValue: submitted.newValue };
     });
   }
