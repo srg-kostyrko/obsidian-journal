@@ -45,6 +45,10 @@ export class RepositoryQuery<Id extends string, Entity> implements RepositoryQue
     return new Ctor(filtered, this.nameKey);
   }
 
+  *entries(): IterableIterator<[Id, Entity]> {
+    for (const pair of this.source) yield pair;
+  }
+
   *[Symbol.iterator](): Iterator<Entity> {
     for (const [, entity] of this.source) yield entity;
   }

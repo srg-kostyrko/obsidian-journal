@@ -107,6 +107,22 @@ describe("RepositoryQuery", () => {
     });
   });
 
+  describe("entries", () => {
+    it("yields [id, entity] pairs", () => {
+      const q = new RepositoryQuery<string, Item>(
+        buildSource([
+          ["a", { name: "A", count: 1 }],
+          ["b", { name: "B", count: 2 }],
+        ]),
+        "name",
+      );
+      expect([...q.entries()]).toEqual([
+        ["a", { name: "A", count: 1 }],
+        ["b", { name: "B", count: 2 }],
+      ]);
+    });
+  });
+
   describe("[Symbol.iterator]", () => {
     it("iterates entities directly", () => {
       const q = new RepositoryQuery<string, Item>(

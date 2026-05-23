@@ -1,5 +1,4 @@
 import { match } from "ts-pattern";
-import { watch } from "vue";
 
 import { CalendarDate } from "@/calendar";
 import type { AnchorString } from "@/calendar";
@@ -9,14 +8,20 @@ import { CommandService, WorkspaceService } from "@/infrastructure/host";
 import type { CommandRegistration } from "@/infrastructure/host";
 import { LoggerFactoryToken } from "@/infrastructure/logger";
 import { Option } from "@/infrastructure/result";
-import { CycleService, JournalsIndex, NoApplicableJournals, OpenDateFlow, journalConfigCollection } from "@/journals";
+import {
+  CycleService,
+  JournalsIndex,
+  JournalsEventsToken,
+  JournalsRepository,
+  NoApplicableJournals,
+  OpenDateFlow,
+} from "@/journals";
 import type { JournalEntry } from "@/journals";
-import { JournalLifecycleService } from "@/journals/settings/lifecycle";
-import { SettingsService } from "@/settings";
-import { ShelvesLifecycleService, shelvesCollection } from "@/shelves";
+import { ShelvesEventsToken, ShelvesRepository } from "@/shelves";
 
-import { commandCollection } from "./config";
+import { CommandsRepository } from "./repository";
 import { compoundShift, supportedTypes } from "./resolve";
+import { CommandsEventsToken } from "./tokens";
 
 import type { CommandConfig } from "./config";
 
@@ -27,42 +32,45 @@ interface CommandPlan {
 
 export class DynamicCommandRegistry {
   readonly #commands = inject(CommandService);
-  readonly #settings = inject(SettingsService);
   readonly #flows = inject(Flows);
   readonly #workspace = inject(WorkspaceService);
   readonly #index = inject(JournalsIndex);
   readonly #cycle = inject(CycleService);
-  readonly #lifecycle = inject(JournalLifecycleService);
-  readonly #shelfLifecycle = inject(ShelvesLifecycleService);
   readonly #logger = inject(LoggerFactoryToken).named("dynamic-commands");
   readonly #registered = new Map<string, string>();
+  readonly #commandsRepo = inject(CommandsRepository);
+  readonly #commandsEvents = inject(CommandsEventsToken);
+  readonly #journalsRepo = inject(JournalsRepository);
+  readonly #journalsEvents = inject(JournalsEventsToken);
+  readonly #shelvesRepo = inject(ShelvesRepository);
+  readonly #shelvesEvents = inject(ShelvesEventsToken);
 
   initialize(): void {
     this.#reconcile();
-    watch(this.#commandEntries(), () => this.#reconcile(), { deep: true, flush: "sync" });
-    this.#lifecycle.events.on("journalRenamed", ({ oldName, newName }) => this.#onJournalRenamed(oldName, newName));
-    this.#lifecycle.events.on("journalDeleted", ({ journalName }) => this.#onJournalDeleted(journalName));
-    this.#shelfLifecycle.events.on("shelfRenamed", ({ oldName, newName }) => this.#onShelfRenamed(oldName, newName));
-    this.#shelfLifecycle.events.on("shelfDeleted", ({ shelfName }) => this.#onShelfDeleted(shelfName));
-  }
-
-  #commandEntries(): Readonly<Record<string, CommandConfig>> {
-    return this.#settings.getCollection(commandCollection).entries;
+    this.#commandsEvents.on("created", () => this.#reconcile());
+    this.#commandsEvents.on("updated", () => this.#reconcile());
+    this.#commandsEvents.on("deleted", () => this.#reconcile());
+    this.#journalsEvents.on("renamed", (oldName, newName) => this.#onJournalRenamed(oldName, newName));
+    this.#journalsEvents.on("deleted", (journalName) => this.#onJournalDeleted(journalName));
+    this.#shelvesEvents.on("renamed", (oldName, newName) => this.#onShelfRenamed(oldName, newName));
+    this.#shelvesEvents.on("deleted", (shelfName) => this.#onShelfDeleted(shelfName));
   }
 
   #reconcile(): void {
-    const entries = this.#commandEntries();
-    const toRemove = [...this.#registered.keys()].filter((id) => !(id in entries));
-    for (const id of toRemove) {
-      this.#commands.unregister(id);
-      this.#registered.delete(id);
-    }
-    for (const [id, command] of Object.entries(entries)) {
+    const present = new Set<string>();
+    for (const [id, command] of this.#commandsRepo.find().entries()) {
+      present.add(id);
       const serialized = JSON.stringify(command);
       if (this.#registered.get(id) === serialized) continue;
       if (this.#registered.has(id)) this.#commands.unregister(id);
       this.#commands.register(this.#registration(id, command));
       this.#registered.set(id, serialized);
+    }
+    for (const id of this.#registered.keys()) {
+      if (!present.has(id)) {
+        this.#commands.unregister(id);
+        this.#registered.delete(id);
+      }
     }
   }
 
@@ -81,25 +89,34 @@ export class DynamicCommandRegistry {
     const journalNames = this.#candidates(command);
     const [rep] = journalNames;
     if (rep === undefined) return Option.none();
-    const config = this.#settings.getCollection(journalConfigCollection).get(rep);
-    if (config === undefined) return Option.none();
-    if (!supportedTypes(config.write.type).includes(command.type)) return Option.none();
-    return this.#reference(command, journalNames).flatMap((reference) =>
-      this.#anchor(command, rep, reference).map((resolved) => ({ anchor: resolved, journalNames })),
-    );
+    return this.#journalsRepo.get(rep).flatMap((config) => {
+      if (!supportedTypes(config.write.type).includes(command.type)) return Option.none();
+      return this.#reference(command, journalNames).flatMap((reference) =>
+        this.#anchor(command, rep, reference).map((resolved) => ({ anchor: resolved, journalNames })),
+      );
+    });
   }
 
   #candidates(command: CommandConfig): string[] {
-    const journals = this.#settings.getCollection(journalConfigCollection);
     return match(command.target)
       .with({ kind: "all" }, (target) =>
-        Object.keys(journals.entries).filter((name) => journals.get(name)?.write.type === target.writeType),
+        [...this.#journalsRepo.find().entries()]
+          .filter(([, journal]) => journal.write.type === target.writeType)
+          .map(([name]) => name),
       )
-      .with({ kind: "journal" }, (target) => (journals.get(target.journalName) ? [target.journalName] : []))
+      .with({ kind: "journal" }, (target) =>
+        this.#journalsRepo.get(target.journalName).isSome() ? [target.journalName] : [],
+      )
       .with({ kind: "shelf" }, (target) => {
-        const shelf = this.#settings.getCollection(shelvesCollection).get(target.shelfName);
-        if (shelf === undefined) return [];
-        return shelf.journals.filter((name) => journals.get(name)?.write.type === target.writeType);
+        const shelfOpt = this.#shelvesRepo.get(target.shelfName);
+        if (shelfOpt.isNone()) return [];
+        const shelf = shelfOpt.getOr({ name: target.shelfName, journals: [] });
+        return shelf.journals.filter((name) =>
+          this.#journalsRepo
+            .get(name)
+            .map((journal) => journal.write.type === target.writeType)
+            .getOr(false),
+        );
       })
       .exhaustive();
   }
@@ -168,41 +185,33 @@ export class DynamicCommandRegistry {
   }
 
   #onJournalRenamed(oldName: string, newName: string): void {
-    const collection = this.#settings.getCollection(commandCollection);
-    for (const id of Object.keys(collection.entries)) {
-      const command = collection.get(id);
-      if (command?.target.kind === "journal" && command.target.journalName === oldName) {
-        command.target.journalName = newName;
+    for (const [id, command] of this.#commandsRepo.find().entries()) {
+      if (command.target.kind === "journal" && command.target.journalName === oldName) {
+        this.#commandsRepo.update(id, { target: { ...command.target, journalName: newName } });
       }
     }
   }
 
   #onJournalDeleted(journalName: string): void {
-    const collection = this.#settings.getCollection(commandCollection);
-    for (const id of Object.keys(collection.entries)) {
-      const command = collection.get(id);
-      if (command?.target.kind === "journal" && command.target.journalName === journalName) {
-        collection.remove(id);
+    for (const [id, command] of this.#commandsRepo.find().entries()) {
+      if (command.target.kind === "journal" && command.target.journalName === journalName) {
+        this.#commandsRepo.delete(id);
       }
     }
   }
 
   #onShelfRenamed(oldName: string, newName: string): void {
-    const collection = this.#settings.getCollection(commandCollection);
-    for (const id of Object.keys(collection.entries)) {
-      const command = collection.get(id);
-      if (command?.target.kind === "shelf" && command.target.shelfName === oldName) {
-        command.target.shelfName = newName;
+    for (const [id, command] of this.#commandsRepo.find().entries()) {
+      if (command.target.kind === "shelf" && command.target.shelfName === oldName) {
+        this.#commandsRepo.update(id, { target: { ...command.target, shelfName: newName } });
       }
     }
   }
 
   #onShelfDeleted(shelfName: string): void {
-    const collection = this.#settings.getCollection(commandCollection);
-    for (const id of Object.keys(collection.entries)) {
-      const command = collection.get(id);
-      if (command?.target.kind === "shelf" && command.target.shelfName === shelfName) {
-        collection.remove(id);
+    for (const [id, command] of this.#commandsRepo.find().entries()) {
+      if (command.target.kind === "shelf" && command.target.shelfName === shelfName) {
+        this.#commandsRepo.delete(id);
       }
     }
   }

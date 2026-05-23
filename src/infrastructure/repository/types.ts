@@ -10,6 +10,7 @@ export interface RepositoryQueryContract<Id extends string, Entity> {
   first(): Option<Entity>;
   ids(): IterableIterator<Id>;
   list(): IterableIterator<Entity>;
+  entries(): IterableIterator<[Id, Entity]>;
   options(): IterableIterator<{ value: Id; label: string }>;
   map<T>(fn: (entity: Entity) => T): IterableIterator<T>;
   filter(predicate: (entity: Entity) => boolean): this;
