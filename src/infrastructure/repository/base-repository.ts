@@ -19,7 +19,7 @@ export abstract class BaseRepository<
   protected abstract storage: Record<Id, Entity>;
   protected abstract events: Emitter<E>;
   protected abstract unknownEntityError: (id: Id) => EUnknown;
-  protected abstract invalidUpdateError: (id: Id, changes: Partial<Entity>) => EInvalidUpdate;
+  protected abstract invalidUpdateError: (id: Id) => EInvalidUpdate;
 
   count(): number {
     return Object.keys(this.storage).length;
@@ -44,7 +44,7 @@ export abstract class BaseRepository<
     if (this.idKey !== undefined && this.idKey in changes) {
       const next = (changes as Record<keyof Entity, unknown>)[this.idKey];
       if (next !== existing[this.idKey]) {
-        return new Err(this.invalidUpdateError(id, changes));
+        return new Err(this.invalidUpdateError(id));
       }
     }
     this.storage[id] = { ...existing, ...changes };

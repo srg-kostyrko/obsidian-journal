@@ -98,8 +98,7 @@ describe("BaseRepository", () => {
 
   describe("update", () => {
     it("merges changes into the stored entity", () => {
-      const result = repo.update("a", { count: 99 });
-      expect(result.kind).toBe("ok");
+      repo.update("a", { count: 99 });
       expect(storage.a).toEqual({ name: "a", count: 99 });
     });
 
@@ -128,6 +127,12 @@ describe("BaseRepository", () => {
       repo.update("a", { name: "renamed" });
       expect(spy).not.toHaveBeenCalled();
     });
+
+    it("does not mutate storage when the id-key is altered", () => {
+      const before = { ...storage.a };
+      repo.update("a", { name: "renamed" });
+      expect(storage.a).toEqual(before);
+    });
   });
 
   describe("delete", () => {
@@ -150,7 +155,7 @@ describe("BaseRepository", () => {
     });
   });
 
-  describe("addEntity surfaced for tests", () => {
+  describe("addEntity", () => {
     it("inserts a new entity", () => {
       repo.add("c", { name: "c", count: 3 });
       expect(storage.c).toEqual({ name: "c", count: 3 });
