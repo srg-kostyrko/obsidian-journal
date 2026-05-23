@@ -107,17 +107,19 @@ export class DynamicCommandRegistry {
       .with({ kind: "journal" }, (target) =>
         this.#journalsRepo.get(target.journalName).isSome() ? [target.journalName] : [],
       )
-      .with({ kind: "shelf" }, (target) => {
-        const shelfOpt = this.#shelvesRepo.get(target.shelfName);
-        if (shelfOpt.isNone()) return [];
-        const shelf = shelfOpt.getOr({ name: target.shelfName, journals: [] });
-        return shelf.journals.filter((name) =>
-          this.#journalsRepo
-            .get(name)
-            .map((journal) => journal.write.type === target.writeType)
-            .getOr(false),
-        );
-      })
+      .with({ kind: "shelf" }, (target) =>
+        this.#shelvesRepo
+          .get(target.shelfName)
+          .map((shelf) =>
+            shelf.journals.filter((name) =>
+              this.#journalsRepo
+                .get(name)
+                .map((journal) => journal.write.type === target.writeType)
+                .getOr(false),
+            ),
+          )
+          .getOr([] as string[]),
+      )
       .exhaustive();
   }
 

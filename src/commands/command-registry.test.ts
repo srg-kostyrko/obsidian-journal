@@ -17,7 +17,6 @@ import {
   JournalsEventsToken,
   OpenDateFlow,
   journalConfigCollection,
-  journalDefaultsFor,
 } from "@/journals";
 import type { JournalConfig, JournalsEvents } from "@/journals";
 import { createSettingsService } from "@/settings/testing";
@@ -93,10 +92,6 @@ async function build() {
     index,
     flows,
   };
-}
-
-function makeJournalConfig(name: string, writeType: "day" | "week") {
-  return journalDefaultsFor({ type: writeType }, name);
 }
 
 describe("DynamicCommandRegistry registration", () => {
@@ -334,5 +329,3 @@ describe("DynamicCommandRegistry shelf targets", () => {
     expect(host.commands.get("cmd-1")?.checkCallback?.(true)).toBe(true);
   });
 });
-
-export { makeJournalConfig };
