@@ -83,6 +83,15 @@ export class SettingsService {
     return handle;
   }
 
+  recordOf<TKey extends string, TItem extends AnySchema>(
+    collection: CollectionDefinition<TKey, TItem>,
+  ): Record<string, InferOutput<TItem>> {
+    if (!this.#collectionHandles.has(collection.key)) {
+      throw new UnregisteredSliceError(collection.key);
+    }
+    return this.#root[collection.key] as Record<string, InferOutput<TItem>>;
+  }
+
   #findKeyConflict(): SliceKeyConflictError | undefined {
     const seen = new Set<string>();
     for (const s of this.#slices) {

@@ -122,6 +122,39 @@ describe("SettingsService", () => {
     });
   });
 
+  describe("recordOf", () => {
+    it("returns the reactive Record for a registered collection", async () => {
+      const { service } = build({ slices: [calendarSlice], collections: [journalCollection] });
+      const init = await service.initialize();
+      expect(init.kind).toBe("ok");
+      const record = service.recordOf(journalCollection);
+      expect(record).toEqual({});
+    });
+
+    it("returns the same reference across calls", async () => {
+      const { service } = build({ slices: [], collections: [journalCollection] });
+      await service.initialize();
+      const first = service.recordOf(journalCollection);
+      const second = service.recordOf(journalCollection);
+      expect(first).toBe(second);
+    });
+
+    it("reflects mutations made to the record", async () => {
+      const { service } = build({ slices: [], collections: [journalCollection] });
+      await service.initialize();
+      const record = service.recordOf(journalCollection);
+      record.alpha = { name: "alpha" };
+      expect(service.recordOf(journalCollection).alpha).toEqual({ name: "alpha" });
+    });
+
+    it("throws UnregisteredSliceError when the collection key is not registered", async () => {
+      const { service } = build({ slices: [], collections: [journalCollection] });
+      await service.initialize();
+      const other = defineCollection("ghost", v.object({}), () => ({}));
+      expect(() => service.recordOf(other)).toThrow(UnregisteredSliceError);
+    });
+  });
+
   describe("debounced save", () => {
     beforeEach(() => {
       vi.useFakeTimers();
