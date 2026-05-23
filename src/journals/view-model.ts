@@ -1,4 +1,4 @@
-import { computed, shallowRef, type ComputedRef } from "vue";
+import { computed, type ComputedRef } from "vue";
 
 import { inject } from "@/infrastructure/di";
 import type { Option } from "@/infrastructure/result";
@@ -10,33 +10,15 @@ import type { JournalConfig } from "./config";
 export class JournalsViewModel {
   readonly #repository: JournalsRepository;
 
-  // Incremented on every repository mutation so computed refs re-evaluate.
-  readonly #version = shallowRef(0);
-
   readonly journals: ComputedRef<JournalConfig[]>;
   readonly journalOptions: ComputedRef<{ value: string; label: string }[]>;
   readonly journalCount: ComputedRef<number>;
 
   constructor(repository: JournalsRepository = inject(JournalsRepository)) {
     this.#repository = repository;
-
-    const bump = () => {
-      this.#version.value++;
-    };
-    repository.onChange(bump);
-
-    this.journals = computed(() => {
-      void this.#version.value;
-      return [...repository.find().list()];
-    });
-    this.journalOptions = computed(() => {
-      void this.#version.value;
-      return [...repository.find().options()];
-    });
-    this.journalCount = computed(() => {
-      void this.#version.value;
-      return repository.count();
-    });
+    this.journals = computed(() => [...repository.find().list()]);
+    this.journalOptions = computed(() => [...repository.find().options()]);
+    this.journalCount = computed(() => repository.count());
   }
 
   static fromRepository(repository: JournalsRepository): JournalsViewModel {

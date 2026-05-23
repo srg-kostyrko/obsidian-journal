@@ -1,5 +1,6 @@
 import { createNanoEvents, type Emitter } from "nanoevents";
 import { describe, expect, it, vi } from "vitest";
+import { reactive } from "vue";
 
 import { journalDefaultsFor, type JournalConfig } from "./config";
 import {
@@ -11,7 +12,7 @@ import {
 import { JournalsRepository, type JournalsEvents } from "./repository";
 
 function buildRepo(initial: Record<string, JournalConfig> = {}) {
-  const storage: Record<string, JournalConfig> = { ...initial };
+  const storage = reactive<Record<string, JournalConfig>>({ ...initial });
   const events: Emitter<JournalsEvents> = createNanoEvents();
   const repo = JournalsRepository.fromParts(storage, events);
   return { repo, storage, events };
@@ -48,12 +49,17 @@ describe("JournalsRepository", () => {
   });
 
   describe("rename", () => {
-    it("moves the entity to the new key with the new name field", () => {
+    it("stores the entity under the new key with the updated name field", () => {
       const original = journalDefaultsFor({ type: "day" }, "daily");
       const { repo, storage } = buildRepo({ daily: original });
-      const result = repo.rename("daily", "renamed");
-      expect(result.kind).toBe("ok");
+      repo.rename("daily", "renamed");
       expect(storage.renamed?.name).toBe("renamed");
+    });
+
+    it("removes the old key on rename", () => {
+      const original = journalDefaultsFor({ type: "day" }, "daily");
+      const { repo, storage } = buildRepo({ daily: original });
+      repo.rename("daily", "renamed");
       expect(storage.daily).toBeUndefined();
     });
 
@@ -126,12 +132,17 @@ describe("JournalsRepository", () => {
   });
 
   describe("inherited delete", () => {
-    it("removes the entity and emits deleted", () => {
-      const { repo, storage, events } = buildRepo({ daily: journalDefaultsFor({ type: "day" }, "daily") });
+    it("removes the entity", () => {
+      const { repo, storage } = buildRepo({ daily: journalDefaultsFor({ type: "day" }, "daily") });
+      repo.delete("daily");
+      expect(storage.daily).toBeUndefined();
+    });
+
+    it("emits deleted with the journal name", () => {
+      const { repo, events } = buildRepo({ daily: journalDefaultsFor({ type: "day" }, "daily") });
       const spy = vi.fn();
       events.on("deleted", spy);
       repo.delete("daily");
-      expect(storage.daily).toBeUndefined();
       expect(spy).toHaveBeenCalledWith("daily");
     });
 

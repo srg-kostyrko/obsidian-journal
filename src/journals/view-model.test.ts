@@ -1,12 +1,13 @@
 import { createNanoEvents } from "nanoevents";
 import { describe, expect, it } from "vitest";
+import { reactive } from "vue";
 
 import { journalDefaultsFor, type JournalConfig } from "./config";
 import { JournalsRepository, type JournalsEvents } from "./repository";
 import { JournalsViewModel } from "./view-model";
 
 function buildViewModel(initial: Record<string, JournalConfig> = {}) {
-  const storage = { ...initial };
+  const storage = reactive<Record<string, JournalConfig>>({ ...initial });
   const events = createNanoEvents<JournalsEvents>();
   const repo = JournalsRepository.fromParts(storage, events);
   const vm = JournalsViewModel.fromRepository(repo);
@@ -20,7 +21,7 @@ describe("JournalsViewModel", () => {
       expect(vm.journals.value.map((journal) => journal.name)).toEqual(["daily"]);
     });
 
-    it("reflects added journals after create", () => {
+    it("reflects mutations after create", () => {
       const { vm, repo } = buildViewModel();
       repo.create("daily", { type: "day" });
       expect(vm.journals.value.map((journal) => journal.name)).toEqual(["daily"]);

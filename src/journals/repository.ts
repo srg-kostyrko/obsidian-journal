@@ -65,13 +65,6 @@ export class JournalsRepository extends BaseRepository<
     return new Ok(entity);
   }
 
-  onChange(fn: () => void): void {
-    this.events.on("created", fn);
-    this.events.on("updated", fn);
-    this.events.on("deleted", fn);
-    this.events.on("renamed", fn);
-  }
-
   rename(
     oldName: string,
     newName: string,
