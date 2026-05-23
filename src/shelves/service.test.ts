@@ -73,6 +73,15 @@ describe("ShelvesService", () => {
       expect(shelvesStorage.Personal?.journals).toEqual([]);
     });
 
+    it("does not duplicate when assigning to the same shelf the journal is already on", () => {
+      const { service, shelvesStorage } = setup({
+        journals: { daily: journalConfig("daily") },
+        shelves: { Personal: shelf("Personal", ["daily"]) },
+      });
+      service.assign("daily", "Personal");
+      expect(shelvesStorage.Personal?.journals).toEqual(["daily"]);
+    });
+
     it("rejects unknown journal", () => {
       const { service } = setup({ shelves: { Personal: shelf("Personal") } });
       const result = service.assign("nope", "Personal");

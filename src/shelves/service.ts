@@ -36,22 +36,19 @@ export class ShelvesService {
       this.#removeJournalFromShelves(journalName);
       return new Ok(undefined);
     }
-    const targetOpt = this.#shelves.get(shelfName);
-    if (targetOpt.isNone()) return new Err(new UnknownShelfError(shelfName));
+    if (this.#shelves.get(shelfName).isNone()) return new Err(new UnknownShelfError(shelfName));
     this.#removeJournalFromShelves(journalName);
-    const target = targetOpt.getOr({ name: shelfName, journals: [] });
+    // Re-read AFTER the remove step — #removeJournalFromShelves may have replaced storage[shelfName] via update().
+    const target = this.#shelves.get(shelfName).getOr({ name: shelfName, journals: [] });
     this.#shelves.update(shelfName, { journals: [...target.journals, journalName] });
     return new Ok(undefined);
   }
 
   #renameJournalInShelves(oldName: string, newName: string): void {
     for (const shelf of this.#shelves.find().list()) {
-      const index = shelf.journals.indexOf(oldName);
-      if (index !== -1) {
-        const journals = [...shelf.journals];
-        journals[index] = newName;
-        this.#shelves.update(shelf.name, { journals });
-      }
+      if (!shelf.journals.includes(oldName)) continue;
+      const journals = shelf.journals.map((entry) => (entry === oldName ? newName : entry));
+      this.#shelves.update(shelf.name, { journals });
     }
   }
 
