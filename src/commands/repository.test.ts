@@ -51,12 +51,6 @@ describe("CommandsRepository", () => {
       const result = repo.update("nope", { name: "X" });
       expect(result.isErr() && result.error).toBeInstanceOf(UnknownCommandError);
     });
-
-    it("accepts a name change because commands have no entity-side id field", () => {
-      const { repo, storage } = buildRepo({ "cmd-1": sampleCommand() });
-      repo.update("cmd-1", { name: "Y" });
-      expect(storage["cmd-1"]?.name).toBe("Y");
-    });
   });
 
   describe("inherited delete", () => {

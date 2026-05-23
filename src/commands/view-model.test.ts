@@ -41,4 +41,14 @@ describe("CommandsViewModel", () => {
       expect(vm.getCommand("nope").isNone()).toBe(true);
     });
   });
+
+  describe("commandIds", () => {
+    it("yields the ids of all current commands", () => {
+      const { vm } = buildVM({
+        a: commandCollection.defaultItem("ignored"),
+        b: commandCollection.defaultItem("ignored"),
+      });
+      expect(vm.commandIds.value).toEqual(["a", "b"]);
+    });
+  });
 });

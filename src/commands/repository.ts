@@ -50,7 +50,6 @@ export class CommandsRepository extends BaseRepository<
   }
 
   create(id: string, init: CommandConfig): Result<CommandConfig, CommandIdTakenError> {
-    if (id in this.storage) return new Err(new CommandIdTakenError(id));
     const result = this.addEntity(id, init);
     if (result.kind === "err") return new Err(new CommandIdTakenError(id));
     return new Ok(init);

@@ -58,7 +58,6 @@ export class JournalsRepository extends BaseRepository<
 
   create(name: string, write: JournalWrite): Result<JournalConfig, InvalidJournalNameError | JournalNameTakenError> {
     if (name.length === 0) return new Err(new InvalidJournalNameError(name));
-    if (name in this.storage) return new Err(new JournalNameTakenError(name));
     const entity = journalDefaultsFor(write, name);
     const result = this.addEntity(name, entity);
     if (result.kind === "err") return new Err(new JournalNameTakenError(name));
