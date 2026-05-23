@@ -4,7 +4,7 @@ import { inject } from "@/infrastructure/di";
 import type { Subscribable, TypedEmitter } from "@/infrastructure/events";
 import { attempt, Err, Option, type Result } from "@/infrastructure/result";
 import { journalConfigCollection } from "@/journals";
-import { UnknownJournalError } from "@/journals/settings/errors";
+import { UnknownJournalError } from "@/journals/errors";
 import { JournalLifecycleService } from "@/journals/settings/lifecycle";
 import { SettingsService } from "@/settings";
 

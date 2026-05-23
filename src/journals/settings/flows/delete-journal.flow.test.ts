@@ -4,10 +4,10 @@ import { Flows, UserAborted } from "@/infrastructure/flows";
 import { ModalService } from "@/infrastructure/host/modals";
 import { FakeModalService } from "@/infrastructure/host/modals/testing";
 import { journalConfigCollection } from "@/journals";
+import { JournalLifecycleFlowError, UnknownJournalError } from "@/journals/errors";
 import { SettingsUiService, SubpageToken } from "@/settings";
 import { createSettingsService } from "@/settings/testing";
 
-import { JournalLifecycleFlowError, UnknownJournalError } from "../errors";
 import { JournalLifecycleService } from "../lifecycle";
 import { journalEditSubpage } from "../ui/journals-subpage";
 

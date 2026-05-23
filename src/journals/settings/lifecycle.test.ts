@@ -1,9 +1,9 @@
 import { describe, expect, it } from "vitest";
 
 import { journalConfigCollection, type JournalConfig } from "@/journals";
+import { InvalidJournalNameError, JournalNameTakenError, UnknownJournalError } from "@/journals/errors";
 import { createSettingsService } from "@/settings/testing";
 
-import { InvalidJournalNameError, JournalNameTakenError, UnknownJournalError } from "./errors";
 import { JournalLifecycleService } from "./lifecycle";
 
 async function buildInitialized(raw?: unknown) {

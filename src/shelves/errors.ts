@@ -1,5 +1,5 @@
 import { FlowError } from "@/infrastructure/flows";
-import type { UnknownJournalError } from "@/journals/settings/errors";
+import type { UnknownJournalError } from "@/journals/errors";
 
 export class InvalidShelfNameError extends Error {
   readonly kind = "invalid-name" as const;

@@ -2,9 +2,9 @@ import { inject } from "@/infrastructure/di";
 import { UserAborted, type Flow, type FlowError } from "@/infrastructure/flows";
 import { ModalService } from "@/infrastructure/host/modals";
 import { attempt, type AsyncResult } from "@/infrastructure/result";
+import { toFlowError } from "@/journals/errors";
 import { SettingsUiService } from "@/settings";
 
-import { toFlowError } from "../errors";
 import { JournalLifecycleService } from "../lifecycle";
 import { addJournalModal } from "../ui/add-journal-modal";
 import { journalEditSubpage } from "../ui/journals-subpage";

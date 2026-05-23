@@ -1,7 +1,7 @@
 import { describe, expect, it } from "vitest";
 
 import { journalConfigCollection } from "@/journals";
-import { UnknownJournalError } from "@/journals/settings/errors";
+import { UnknownJournalError } from "@/journals/errors";
 import { JournalLifecycleService } from "@/journals/settings/lifecycle";
 import { createSettingsService } from "@/settings/testing";
 

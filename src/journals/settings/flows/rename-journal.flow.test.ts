@@ -4,9 +4,9 @@ import { Flows, UserAborted } from "@/infrastructure/flows";
 import { ModalService } from "@/infrastructure/host/modals";
 import { FakeModalService } from "@/infrastructure/host/modals/testing";
 import { journalConfigCollection } from "@/journals";
+import { JournalLifecycleFlowError, UnknownJournalError } from "@/journals/errors";
 import { createSettingsService } from "@/settings/testing";
 
-import { JournalLifecycleFlowError, UnknownJournalError } from "../errors";
 import { JournalLifecycleService } from "../lifecycle";
 
 import { RenameJournalFlow } from "./rename-journal.flow";

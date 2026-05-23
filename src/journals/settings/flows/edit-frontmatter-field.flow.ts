@@ -2,10 +2,10 @@ import { inject } from "@/infrastructure/di";
 import { UserAborted, type Flow, type FlowError } from "@/infrastructure/flows";
 import { ModalService } from "@/infrastructure/host/modals";
 import { AsyncResult, attempt } from "@/infrastructure/result";
+import { toFlowError, UnknownJournalError } from "@/journals/errors";
 import { SettingsService } from "@/settings";
 
 import { journalConfigCollection } from "../../config";
-import { toFlowError, UnknownJournalError } from "../errors";
 import { editFrontmatterFieldModal, type FrontmatterFieldName } from "../ui/edit-frontmatter-field-modal";
 
 export class EditFrontmatterFieldFlow implements Flow<

@@ -4,9 +4,8 @@ import { Flows, UserAborted } from "@/infrastructure/flows";
 import { ModalService } from "@/infrastructure/host/modals";
 import { FakeModalService } from "@/infrastructure/host/modals/testing";
 import { journalConfigCollection } from "@/journals";
+import { JournalLifecycleFlowError, UnknownJournalError, UnknownSequenceSourceError } from "@/journals/errors";
 import { createSettingsService } from "@/settings/testing";
-
-import { JournalLifecycleFlowError, UnknownJournalError, UnknownSequenceSourceError } from "../errors";
 
 import { EditSequencePropertyFlow } from "./edit-sequence-property.flow";
 
