@@ -4,29 +4,31 @@ import { computed, ref } from "vue";
 import { m } from "@/i18n";
 import { useService } from "@/infrastructure/di";
 import { Flows } from "@/infrastructure/flows";
-import { journalConfigCollection, type JournalWrite } from "@/journals";
-import { SettingsService } from "@/settings";
+import { JournalsViewModel, type JournalWrite } from "@/journals";
 import UiCollapsibleBlock from "@/ui/UiCollapsibleBlock.vue";
 import UiIconButton from "@/ui/UiIconButton.vue";
 import UiIconedRow from "@/ui/UiIconedRow.vue";
 
-import { commandCollection, type CommandConfig } from "../config";
+import { CommandsRepository } from "../repository";
 
 import CommandList from "./CommandList.vue";
 import { DeleteCommandFlow } from "./delete-command.flow";
 import { EditCommandFlow } from "./edit-command.flow";
 
+import type { CommandConfig } from "../config";
+
 const { journalName } = defineProps<{ journalName: string }>();
 
-const settings = useService(SettingsService);
 const flows = useService(Flows);
-const collection = settings.getCollection(commandCollection);
-const journals = settings.getCollection(journalConfigCollection);
+const commandsRepo = useService(CommandsRepository);
+const journalsVM = useService(JournalsViewModel);
 
-const writeType = computed<JournalWrite["type"]>(() => journals.get(journalName)?.write.type ?? "day");
+const writeType = computed<JournalWrite["type"]>(
+  () => journalsVM.getJournal(journalName).getOr(undefined as never)?.write.type ?? "day",
+);
 
 const entries = computed<readonly [string, CommandConfig, JournalWrite["type"]][]>(() =>
-  Object.entries(collection.entries)
+  [...commandsRepo.find().entries()]
     .filter(([, command]) => command.target.kind === "journal" && command.target.journalName === journalName)
     .map(([id, command]): [string, CommandConfig, JournalWrite["type"]] => [id, command, writeType.value])
     .toSorted((a, b) => a[1].name.localeCompare(b[1].name)),

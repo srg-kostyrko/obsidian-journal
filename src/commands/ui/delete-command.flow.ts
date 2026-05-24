@@ -2,23 +2,23 @@ import { inject } from "@/infrastructure/di";
 import { UserAborted, type Flow, type FlowError } from "@/infrastructure/flows";
 import { ModalService } from "@/infrastructure/host/modals";
 import { attempt, type AsyncResult } from "@/infrastructure/result";
-import { SettingsService } from "@/settings";
 
-import { commandCollection } from "../config";
+import { CommandsRepository } from "../repository";
 
 import { deleteCommandModal } from "./delete-command-modal";
 
 export class DeleteCommandFlow implements Flow<{ commandId: string }, void, FlowError> {
   readonly #modals = inject(ModalService);
-  readonly #settings = inject(SettingsService);
+  readonly #repo = inject(CommandsRepository);
 
   execute(parameters: { commandId: string }): AsyncResult<void, FlowError> {
-    const collection = this.#settings.getCollection(commandCollection);
     return attempt.in(this, async function* (this: DeleteCommandFlow) {
       yield* this.#modals
-        .open(deleteCommandModal, { commandName: collection.get(parameters.commandId)?.name ?? "" })
+        .open(deleteCommandModal, {
+          commandName: this.#repo.get(parameters.commandId).getOr(undefined as never)?.name ?? "",
+        })
         .mapErr(() => new UserAborted("delete-command-modal"));
-      collection.remove(parameters.commandId);
+      this.#repo.delete(parameters.commandId);
       return;
     });
   }

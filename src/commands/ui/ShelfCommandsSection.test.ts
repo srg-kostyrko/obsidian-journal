@@ -1,5 +1,6 @@
 import userEvent from "@testing-library/user-event";
 import { cleanup, render, screen } from "@testing-library/vue";
+import { createNanoEvents } from "nanoevents";
 import { afterEach, describe, expect, it, vi } from "vitest";
 
 import { m } from "@/i18n";
@@ -11,6 +12,8 @@ import { createSettingsService } from "@/settings/testing";
 import { shelvesCollection } from "@/shelves";
 
 import { commandCollection, type CommandConfig } from "../config";
+import { CommandsRepository } from "../repository";
+import { CommandsEventsToken } from "../tokens";
 
 import { DeleteCommandFlow } from "./delete-command.flow";
 import { EditCommandFlow } from "./edit-command.flow";
@@ -29,6 +32,8 @@ async function setup(commands: Record<string, CommandConfig> = {}) {
   });
   await settings.initialize();
   container.register(ModalService).useValue(new FakeModalService() as unknown as ModalService);
+  container.register(CommandsEventsToken).useFactory(() => createNanoEvents());
+  container.register(CommandsRepository).useClass(CommandsRepository);
   container.register(Flows).useClass(Flows);
   const flows = container.resolve(Flows);
   vi.spyOn(flows, "invoke").mockReturnValue({} as never);

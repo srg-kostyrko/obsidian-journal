@@ -9,8 +9,7 @@ import { computed, ref, watch } from "vue";
 import { m } from "@/i18n";
 import { useService } from "@/infrastructure/di";
 import { useModal } from "@/infrastructure/host/modals";
-import { journalConfigCollection, type JournalWrite } from "@/journals";
-import { SettingsService } from "@/settings";
+import { JournalsViewModel, type JournalWrite } from "@/journals";
 import UiButton from "@/ui/UiButton.vue";
 import UiDropdown from "@/ui/UiDropdown.vue";
 import UiIconSuggest from "@/ui/UiIconSuggest.vue";
@@ -33,12 +32,12 @@ const props = withDefaults(
 );
 
 const api = useModal<CommandConfig>();
-const settings = useService(SettingsService);
+const journalsVM = useService(JournalsViewModel);
 const validIcons = new Set(getIconIds());
 
 function journalWriteType(): JournalWrite["type"] {
   if (props.target.kind !== "journal") return "day";
-  return settings.getCollection(journalConfigCollection).get(props.target.journalName)?.write.type ?? "day";
+  return journalsVM.getJournal(props.target.journalName).getOr(undefined as never)?.write.type ?? "day";
 }
 
 const writeType = ref<JournalWrite["type"]>(

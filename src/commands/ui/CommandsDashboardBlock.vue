@@ -5,23 +5,23 @@ import { m } from "@/i18n";
 import { useService } from "@/infrastructure/di";
 import { Flows } from "@/infrastructure/flows";
 import type { JournalWrite } from "@/journals";
-import { SettingsService } from "@/settings";
 import UiCollapsibleBlock from "@/ui/UiCollapsibleBlock.vue";
 import UiIconButton from "@/ui/UiIconButton.vue";
 import UiIconedRow from "@/ui/UiIconedRow.vue";
 
-import { commandCollection, type CommandConfig } from "../config";
+import { CommandsRepository } from "../repository";
 
 import CommandList from "./CommandList.vue";
 import { DeleteCommandFlow } from "./delete-command.flow";
 import { EditCommandFlow } from "./edit-command.flow";
 
-const settings = useService(SettingsService);
+import type { CommandConfig } from "../config";
+
 const flows = useService(Flows);
-const collection = settings.getCollection(commandCollection);
+const commandsRepo = useService(CommandsRepository);
 
 const entries = computed<readonly [string, CommandConfig, JournalWrite["type"]][]>(() =>
-  Object.entries(collection.entries)
+  [...commandsRepo.find().entries()]
     .filter(([, command]) => command.target.kind === "all")
     .map(([id, command]): [string, CommandConfig, JournalWrite["type"]] => [
       id,

@@ -1,5 +1,6 @@
 import userEvent from "@testing-library/user-event";
 import { cleanup, render, screen } from "@testing-library/vue";
+import { createNanoEvents } from "nanoevents";
 import { afterEach, describe, expect, it, vi } from "vitest";
 
 import { m } from "@/i18n";
@@ -8,9 +9,14 @@ import { Flows } from "@/infrastructure/flows";
 import { ModalService } from "@/infrastructure/host/modals";
 import { FakeModalService } from "@/infrastructure/host/modals/testing";
 import { journalConfigCollection } from "@/journals";
+import { JournalsRepository } from "@/journals/repository";
+import { JournalsEventsToken } from "@/journals/tokens";
+import { JournalsViewModel } from "@/journals/view-model";
 import { createSettingsService } from "@/settings/testing";
 
 import { commandCollection, type CommandConfig } from "../config";
+import { CommandsRepository } from "../repository";
+import { CommandsEventsToken } from "../tokens";
 
 import { DeleteCommandFlow } from "./delete-command.flow";
 import { EditCommandFlow } from "./edit-command.flow";
@@ -46,6 +52,11 @@ async function setup(commands: Record<string, CommandConfig> = {}) {
   });
   await settings.initialize();
   container.register(ModalService).useValue(new FakeModalService() as unknown as ModalService);
+  container.register(JournalsEventsToken).useFactory(() => createNanoEvents());
+  container.register(JournalsRepository).useClass(JournalsRepository);
+  container.register(JournalsViewModel).useClass(JournalsViewModel);
+  container.register(CommandsEventsToken).useFactory(() => createNanoEvents());
+  container.register(CommandsRepository).useClass(CommandsRepository);
   container.register(Flows).useClass(Flows);
   const flows = container.resolve(Flows);
   vi.spyOn(flows, "invoke").mockReturnValue({} as never);
