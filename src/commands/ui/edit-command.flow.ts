@@ -1,3 +1,5 @@
+import { nanoid } from "nanoid";
+
 import { inject } from "@/infrastructure/di";
 import { UserAborted, type Flow, type FlowError } from "@/infrastructure/flows";
 import { ModalService } from "@/infrastructure/host/modals";
@@ -29,7 +31,7 @@ export class EditCommandFlow implements Flow<EditCommandParameters, { id: string
       const config = yield* this.#modals
         .open(editCommandModal, { command: existing, target, takenNames })
         .mapErr(() => new UserAborted("edit-command-modal"));
-      const id = parameters.commandId ?? crypto.randomUUID();
+      const id = parameters.commandId ?? nanoid();
       if (parameters.commandId === undefined) {
         this.#repo.create(id, config);
       } else {

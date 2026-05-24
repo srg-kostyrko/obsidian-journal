@@ -34,6 +34,7 @@
     "@vueuse/core": "^14.2.1",
     "eslint-plugin-vue": "^10.9.0",
     "nanoevents": "^9.1.0",
+    "nanoid": "^5.1.11",
     "obsidian": "^1.12.3",
     "perfect-debounce": "^2.1.0",
     "ts-pattern": "^5.9.0",
