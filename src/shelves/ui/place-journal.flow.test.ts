@@ -1,14 +1,18 @@
+import { createNanoEvents } from "nanoevents";
 import { describe, expect, it } from "vitest";
 
 import { Flows, UserAborted } from "@/infrastructure/flows";
 import { ModalService } from "@/infrastructure/host/modals";
 import { FakeModalService } from "@/infrastructure/host/modals/testing";
 import { journalConfigCollection } from "@/journals";
-import { JournalLifecycleService } from "@/journals/settings/lifecycle";
+import { JournalsRepository } from "@/journals/repository";
+import { JournalsEventsToken } from "@/journals/tokens";
 import { createSettingsService } from "@/settings/testing";
 
 import { shelvesCollection } from "../config";
-import { ShelvesLifecycleService } from "../lifecycle";
+import { ShelvesRepository } from "../repository";
+import { ShelvesService } from "../service";
+import { ShelvesEventsToken } from "../tokens";
 
 import { PlaceJournalFlow } from "./place-journal.flow";
 
@@ -47,28 +51,32 @@ async function build() {
   await settings.initialize();
   const modals = new FakeModalService();
   container.register(ModalService).useValue(modals as unknown as ModalService);
-  container.register(JournalLifecycleService).useClass(JournalLifecycleService);
-  container.register(ShelvesLifecycleService).useClass(ShelvesLifecycleService);
+  container.register(JournalsEventsToken).useFactory(() => createNanoEvents());
+  container.register(JournalsRepository).useClass(JournalsRepository);
+  container.register(ShelvesEventsToken).useFactory(() => createNanoEvents());
+  container.register(ShelvesRepository).useClass(ShelvesRepository);
+  container.register(ShelvesService).useClass(ShelvesService);
   container.register(Flows).useClass(Flows);
   container.register(PlaceJournalFlow).useClass(PlaceJournalFlow);
-  return { settings, modals, flows: container.resolve(Flows) };
+  const shelvesRepo = container.resolve(ShelvesRepository);
+  return { shelvesRepo, modals, flows: container.resolve(Flows) };
 }
 
 describe("PlaceJournalFlow", () => {
   it("assigns the journal to the chosen shelf", async () => {
-    const { flows, modals, settings } = await build();
+    const { flows, modals, shelvesRepo } = await build();
     const promise = flows.invoke(PlaceJournalFlow, { journalName: "daily" });
     modals.lastOpen<unknown, string>().submit("Work");
     await promise;
-    expect(settings.getCollection(shelvesCollection).get("Work")?.journals).toEqual(["daily"]);
+    expect(shelvesRepo.get("Work").getOr(undefined as never)?.journals).toEqual(["daily"]);
   });
 
   it("leaves shelf membership unchanged when the modal is cancelled", async () => {
-    const { flows, modals, settings } = await build();
+    const { flows, modals, shelvesRepo } = await build();
     const promise = flows.invoke(PlaceJournalFlow, { journalName: "daily" });
     modals.lastOpen().cancel();
     const result = await promise;
     expect(result.kind === "err" && result.error).toBeInstanceOf(UserAborted);
-    expect(settings.getCollection(shelvesCollection).get("Work")?.journals).toEqual([]);
+    expect(shelvesRepo.get("Work").getOr(undefined as never)?.journals).toEqual([]);
   });
 });

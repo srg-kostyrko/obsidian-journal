@@ -4,21 +4,16 @@ import { computed, ref, watchEffect } from "vue";
 import { m } from "@/i18n";
 import { useService } from "@/infrastructure/di";
 import { Flows } from "@/infrastructure/flows";
-import {
-  AddJournalFlow,
-  DeleteJournalFlow,
-  journalConfigCollection,
-  journalEditSubpage,
-  type JournalConfig,
-} from "@/journals";
-import { SettingsService, type SubpageNav } from "@/settings";
+import { AddJournalFlow, DeleteJournalFlow, JournalsViewModel, journalEditSubpage } from "@/journals";
+import type { JournalConfig } from "@/journals";
+import type { SubpageNav } from "@/settings";
 import UiCollapsibleBlock from "@/ui/UiCollapsibleBlock.vue";
 import UiIconButton from "@/ui/UiIconButton.vue";
 import UiIconedRow from "@/ui/UiIconedRow.vue";
 import UiSettingRow from "@/ui/UiSettingRow.vue";
 
-import { shelvesCollection } from "../config";
-import { ShelvesLifecycleService } from "../lifecycle";
+import { ShelvesService } from "../service";
+import { ShelvesViewModel } from "../view-model";
 
 import { EditShelfNameFlow } from "./edit-shelf-name.flow";
 import JournalList from "./JournalList.vue";
@@ -28,14 +23,13 @@ const props = defineProps<{ shelfName: string; nav: SubpageNav }>();
 const { shelfName } = props;
 const nav: SubpageNav = props.nav;
 
-const settings = useService(SettingsService);
 const flows = useService(Flows);
-const shelvesLifecycle = useService(ShelvesLifecycleService);
-const shelves = settings.getCollection(shelvesCollection);
-const journals = settings.getCollection(journalConfigCollection);
+const shelvesVM = useService(ShelvesViewModel);
+const shelvesService = useService(ShelvesService);
+const journalsVM = useService(JournalsViewModel);
 const editSections = useService(ShelfEditSectionToken).toSorted((a, b) => a.order - b.order);
 
-const shelf = computed(() => shelves.get(shelfName));
+const shelf = computed(() => shelvesVM.getShelf(shelfName).getOr(undefined as never));
 
 watchEffect(() => {
   if (!shelf.value) nav.back();
@@ -44,7 +38,7 @@ watchEffect(() => {
 const entries = computed<readonly [string, JournalConfig][]>(() =>
   (shelf.value?.journals ?? [])
     .map((name): [string, JournalConfig] | undefined => {
-      const config = journals.get(name) as JournalConfig | undefined;
+      const config = journalsVM.getJournal(name).getOr(undefined as never);
       return config ? [name, config] : undefined;
     })
     .filter((entry): entry is [string, JournalConfig] => entry !== undefined),
@@ -57,7 +51,7 @@ function rename(): void {
 }
 function add(): void {
   void flows.invoke(AddJournalFlow).tap(({ name }) => {
-    shelvesLifecycle.assign(name, shelfName);
+    shelvesService.assign(name, shelfName);
   });
 }
 function edit(journalName: string): void {

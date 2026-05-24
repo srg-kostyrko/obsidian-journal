@@ -7,32 +7,32 @@ import { Flows } from "@/infrastructure/flows";
 import {
   AddJournalFlow,
   DeleteJournalFlow,
-  journalConfigCollection,
+  JournalsViewModel,
   journalEditSubpage,
   type JournalConfig,
 } from "@/journals";
-import { SettingsService, SettingsUiService } from "@/settings";
+import { SettingsUiService } from "@/settings";
 import UiCollapsibleBlock from "@/ui/UiCollapsibleBlock.vue";
 import UiIconButton from "@/ui/UiIconButton.vue";
 import UiIconedRow from "@/ui/UiIconedRow.vue";
 
-import { shelvesCollection } from "../config";
+import { ShelvesViewModel } from "../view-model";
 
 import JournalList from "./JournalList.vue";
 
-const settings = useService(SettingsService);
 const ui = useService(SettingsUiService);
 const flows = useService(Flows);
-const journals = settings.getCollection(journalConfigCollection);
-const shelves = settings.getCollection(shelvesCollection);
+const journalsVM = useService(JournalsViewModel);
+const shelvesVM = useService(ShelvesViewModel);
 
-const shelvedNames = computed(() => new Set(Object.values(shelves.entries).flatMap((shelf) => shelf.journals)));
-const hasShelves = computed(() => Object.keys(shelves.entries).length > 0);
+const shelvedNames = computed(() => new Set(shelvesVM.shelves.value.flatMap((shelf) => shelf.journals)));
+const hasShelves = computed(() => shelvesVM.shelfCount.value > 0);
 
 const entries = computed<readonly [string, JournalConfig][]>(() =>
-  (Object.entries(journals.entries) as [string, JournalConfig][])
-    .filter(([name]) => !shelvedNames.value.has(name))
-    .toSorted(([a], [b]) => a.localeCompare(b)),
+  journalsVM.journals.value
+    .filter((index) => !shelvedNames.value.has(index.name))
+    .toSorted((a, b) => a.name.localeCompare(b.name))
+    .map((index): [string, JournalConfig] => [index.name, index]),
 );
 
 const expanded = ref(true);

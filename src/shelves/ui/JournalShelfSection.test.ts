@@ -1,5 +1,6 @@
 import userEvent from "@testing-library/user-event";
 import { cleanup, render, screen } from "@testing-library/vue";
+import { createNanoEvents } from "nanoevents";
 import { afterEach, describe, expect, it, vi } from "vitest";
 
 import { m } from "@/i18n";
@@ -10,6 +11,9 @@ import { FakeModalService } from "@/infrastructure/host/modals/testing";
 import { createSettingsService } from "@/settings/testing";
 
 import { shelvesCollection } from "../config";
+import { ShelvesRepository } from "../repository";
+import { ShelvesEventsToken } from "../tokens";
+import { ShelvesViewModel } from "../view-model";
 
 import JournalShelfSection from "./JournalShelfSection.vue";
 import { PlaceJournalFlow } from "./place-journal.flow";
@@ -23,6 +27,9 @@ async function setup(shelves: Record<string, { name: string; journals: string[] 
   });
   await settings.initialize();
   container.register(ModalService).useValue(new FakeModalService() as unknown as ModalService);
+  container.register(ShelvesEventsToken).useFactory(() => createNanoEvents());
+  container.register(ShelvesRepository).useClass(ShelvesRepository);
+  container.register(ShelvesViewModel).useClass(ShelvesViewModel);
   container.register(Flows).useClass(Flows);
   const flows = container.resolve(Flows);
   vi.spyOn(flows, "invoke").mockReturnValue({} as never);

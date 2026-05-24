@@ -4,24 +4,22 @@ import { computed, ref } from "vue";
 import { m } from "@/i18n";
 import { useService } from "@/infrastructure/di";
 import { Flows } from "@/infrastructure/flows";
-import { SettingsService } from "@/settings";
 import UiCollapsibleBlock from "@/ui/UiCollapsibleBlock.vue";
 import UiIcon from "@/ui/UiIcon.vue";
 import UiIconButton from "@/ui/UiIconButton.vue";
 import UiSettingRow from "@/ui/UiSettingRow.vue";
 
-import { shelvesCollection } from "../config";
+import { ShelvesViewModel } from "../view-model";
 
 import { PlaceJournalFlow } from "./place-journal.flow";
 
 const { journalName } = defineProps<{ journalName: string }>();
 
-const settings = useService(SettingsService);
 const flows = useService(Flows);
-const shelves = settings.getCollection(shelvesCollection);
+const shelvesVM = useService(ShelvesViewModel);
 
 const currentShelf = computed(
-  () => Object.keys(shelves.entries).find((name) => shelves.get(name)?.journals.includes(journalName)) ?? "",
+  () => shelvesVM.shelves.value.find((shelf) => shelf.journals.includes(journalName))?.name ?? "",
 );
 
 const expanded = ref(false);

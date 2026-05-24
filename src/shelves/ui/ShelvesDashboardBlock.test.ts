@@ -1,5 +1,6 @@
 import userEvent from "@testing-library/user-event";
 import { cleanup, render, screen } from "@testing-library/vue";
+import { createNanoEvents } from "nanoevents";
 import { afterEach, describe, expect, it, vi } from "vitest";
 
 import { m } from "@/i18n";
@@ -11,6 +12,9 @@ import { SettingsUiService, SubpageToken } from "@/settings";
 import { createSettingsService } from "@/settings/testing";
 
 import { shelvesCollection } from "../config";
+import { ShelvesRepository } from "../repository";
+import { ShelvesEventsToken } from "../tokens";
+import { ShelvesViewModel } from "../view-model";
 
 import { DeleteShelfFlow } from "./delete-shelf.flow";
 import { EditShelfNameFlow } from "./edit-shelf-name.flow";
@@ -26,6 +30,9 @@ async function setup(shelves: Record<string, { name: string; journals: string[] 
   });
   await settings.initialize();
   container.register(ModalService).useValue(new FakeModalService() as unknown as ModalService);
+  container.register(ShelvesEventsToken).useFactory(() => createNanoEvents());
+  container.register(ShelvesRepository).useClass(ShelvesRepository);
+  container.register(ShelvesViewModel).useClass(ShelvesViewModel);
   container.register(SubpageToken).useValue(shelfEditSubpage);
   container.register(SettingsUiService).useClass(SettingsUiService);
   container.register(Flows).useClass(Flows);

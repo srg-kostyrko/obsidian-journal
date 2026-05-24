@@ -4,25 +4,28 @@ import { computed, ref } from "vue";
 import { m } from "@/i18n";
 import { useService } from "@/infrastructure/di";
 import { Flows } from "@/infrastructure/flows";
-import { SettingsService, SettingsUiService } from "@/settings";
+import { SettingsUiService } from "@/settings";
 import UiCollapsibleBlock from "@/ui/UiCollapsibleBlock.vue";
 import UiIconButton from "@/ui/UiIconButton.vue";
 import UiIconedRow from "@/ui/UiIconedRow.vue";
 import UiSettingRow from "@/ui/UiSettingRow.vue";
 
-import { shelvesCollection, type ShelfConfig } from "../config";
+import { ShelvesViewModel } from "../view-model";
 
 import { DeleteShelfFlow } from "./delete-shelf.flow";
 import { EditShelfNameFlow } from "./edit-shelf-name.flow";
 import { shelfEditSubpage } from "./shelf-edit-subpage";
 
-const settings = useService(SettingsService);
+import type { ShelfConfig } from "../config";
+
 const ui = useService(SettingsUiService);
 const flows = useService(Flows);
-const collection = settings.getCollection(shelvesCollection);
+const shelvesVM = useService(ShelvesViewModel);
 
 const entries = computed<readonly [string, ShelfConfig][]>(() =>
-  Object.entries(collection.entries).toSorted(([a], [b]) => a.localeCompare(b)),
+  [...shelvesVM.shelves.value]
+    .toSorted((a, b) => a.name.localeCompare(b.name))
+    .map((shelf): [string, ShelfConfig] => [shelf.name, shelf]),
 );
 
 const expanded = ref(true);
