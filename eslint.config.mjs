@@ -217,4 +217,18 @@ export default [
       ],
     },
   },
+  {
+    files: ["src/**/*.ts"],
+    ignores: ["**/*.test.ts", "**/*.bench.ts", "src/_old-code/**", "src/i18n/paraglide/**"],
+    rules: {
+      "unicorn/filename-case": ["error", { case: "kebabCase" }],
+    },
+  },
+  {
+    files: ["src/**/*.vue"],
+    ignores: ["src/_old-code/**"],
+    rules: {
+      "unicorn/filename-case": ["error", { case: "pascalCase" }],
+    },
+  },
 ];
