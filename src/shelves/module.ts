@@ -5,7 +5,6 @@ import { JournalEditSectionToken, defineJournalEditSection } from "@/journals";
 import { CollectionDefinitionToken, DashboardBlockToken, SubpageToken, defineDashboardBlock } from "@/settings";
 
 import { shelvesCollection } from "./config";
-import { ShelvesLifecycleService } from "./lifecycle";
 import { ShelvesRepository, type ShelvesEvents } from "./repository";
 import { ShelvesService } from "./service";
 import { ShelvesEventsToken } from "./tokens";
@@ -27,7 +26,6 @@ export const shelvesModule: Module = {
     c.register(ShelvesRepository).useClass(ShelvesRepository).eager();
     c.register(ShelvesViewModel).useClass(ShelvesViewModel).eager();
     c.register(ShelvesService).useClass(ShelvesService).eager();
-    c.register(ShelvesLifecycleService).useClass(ShelvesLifecycleService).eager();
     c.register(EditShelfNameFlow).useClass(EditShelfNameFlow);
     c.register(DeleteShelfFlow).useClass(DeleteShelfFlow);
     c.register(PlaceJournalFlow).useClass(PlaceJournalFlow);
