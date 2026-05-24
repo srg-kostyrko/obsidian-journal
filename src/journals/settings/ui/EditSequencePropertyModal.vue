@@ -7,19 +7,19 @@ import { computed } from "vue";
 import { m } from "@/i18n";
 import { useService } from "@/infrastructure/di";
 import { useModal } from "@/infrastructure/host/modals";
-import { journalConfigCollection } from "@/journals";
-import { SettingsService } from "@/settings";
+import { JournalsViewModel } from "@/journals/view-model";
 import UiButton from "@/ui/UiButton.vue";
 import UiSettingRow from "@/ui/UiSettingRow.vue";
 import UiTextInput from "@/ui/UiTextInput.vue";
 
 const { journalName, sourceIndex } = defineProps<{ journalName: string; sourceIndex: number }>();
 const api = useModal<{ newValue: string }>();
-const settings = useService(SettingsService);
+const journalsVM = useService(JournalsViewModel);
 
 const currentValue = computed(() => {
-  const config = settings.getCollection(journalConfigCollection).get(journalName);
-  return config?.numbering.sources[sourceIndex]?.frontmatterKey ?? "";
+  return (
+    journalsVM.getJournal(journalName).getOr(undefined as never)?.numbering.sources[sourceIndex]?.frontmatterKey ?? ""
+  );
 });
 
 const { defineField, errorBag, handleSubmit } = useForm({

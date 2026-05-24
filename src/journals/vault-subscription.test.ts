@@ -7,14 +7,13 @@ import { Container } from "@/infrastructure/di";
 import { InternalObsidianAppToken, NotesService } from "@/infrastructure/host";
 import type { NotesEvents, VaultPath } from "@/infrastructure/host";
 import { LoggerFactoryToken } from "@/infrastructure/logger";
-import { SettingsService } from "@/settings";
 
 import { CycleService } from "./cycle";
 import { FrontmatterService } from "./frontmatter";
 import { JournalsIndex } from "./journals-index";
 import { NumberingService } from "./numbering";
 import { JournalsRepository } from "./repository";
-import { fakeRepo, fakeSettings, fixedJournal } from "./testing";
+import { fakeRepo, fixedJournal } from "./testing";
 import { VaultSubscriptionService } from "./vault-subscription";
 
 function fakeTFile(path: string): TFile {
@@ -64,7 +63,6 @@ function buildRig(journals: Parameters<typeof fakeRepo>[0], initialPaths: VaultP
   };
 
   const c = new Container();
-  c.register(SettingsService).useValue(fakeSettings(journals));
   c.register(JournalsRepository).useValue(fakeRepo(journals));
   c.register(JournalsIndex).useClass(JournalsIndex);
   c.register(CycleService).useClass(CycleService);

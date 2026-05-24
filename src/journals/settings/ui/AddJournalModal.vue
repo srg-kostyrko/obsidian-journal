@@ -9,20 +9,19 @@ import { DatePicker } from "@/calendar/ui";
 import { m } from "@/i18n";
 import { useService } from "@/infrastructure/di";
 import { useModal } from "@/infrastructure/host/modals";
-import { SettingsService } from "@/settings";
+import { JournalsViewModel } from "@/journals/view-model";
 import UiButton from "@/ui/UiButton.vue";
 import UiDropdown from "@/ui/UiDropdown.vue";
 import UiNumberInput from "@/ui/UiNumberInput.vue";
 import UiSettingRow from "@/ui/UiSettingRow.vue";
 import UiTextInput from "@/ui/UiTextInput.vue";
 
-import { journalConfigCollection, type JournalWrite } from "../../config";
-
 import { useAnchorField } from "./use-anchor-field";
 
+import type { JournalWrite } from "../../config";
+
 const api = useModal<{ name: string; write: JournalWrite }>();
-const settings = useService(SettingsService);
-const collection = computed(() => settings.getCollection(journalConfigCollection));
+const journalsVM = useService(JournalsViewModel);
 
 const { defineField, errorBag, handleSubmit, values } = useForm({
   initialValues: {
@@ -38,7 +37,7 @@ const { defineField, errorBag, handleSubmit, values } = useForm({
         name: v.pipe(
           v.string(),
           v.nonEmpty(m.journal_name_required_error()),
-          v.check((value) => collection.value.get(value) === undefined, m.journal_name_unique_error()),
+          v.check((value) => journalsVM.isJournalNameAvailable(value), m.journal_name_unique_error()),
         ),
         type: v.picklist(["day", "week", "month", "quarter", "year", "custom"]),
         every: v.picklist(["day", "week", "month", "quarter", "year"]),

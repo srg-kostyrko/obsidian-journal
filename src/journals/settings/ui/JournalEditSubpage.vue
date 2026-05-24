@@ -6,7 +6,8 @@ import { DatePicker, type Picking } from "@/calendar/ui";
 import { m } from "@/i18n";
 import { useService } from "@/infrastructure/di";
 import { Flows } from "@/infrastructure/flows";
-import { SettingsService, type SubpageNav } from "@/settings";
+import { JournalsViewModel } from "@/journals/view-model";
+import type { SubpageNav } from "@/settings";
 import UiButton from "@/ui/UiButton.vue";
 import UiCollapsibleBlock from "@/ui/UiCollapsibleBlock.vue";
 import UiDropdown from "@/ui/UiDropdown.vue";
@@ -18,7 +19,6 @@ import UiSettingRow from "@/ui/UiSettingRow.vue";
 import UiTextInput from "@/ui/UiTextInput.vue";
 import UiToggle from "@/ui/UiToggle.vue";
 
-import { journalConfigCollection, type JournalConfig, type NumberingReset, type TimelineEnd } from "../../config";
 import { describeWrite } from "../describe-write";
 import { EditFrontmatterFieldFlow } from "../flows/edit-frontmatter-field.flow";
 import { EditSequencePropertyFlow } from "../flows/edit-sequence-property.flow";
@@ -37,13 +37,14 @@ import { extractFromDateFormat, extractFromNameTemplate } from "./use-folder-ext
 import { useInvertibilityCheck } from "./use-invertibility-check";
 import VariableReferenceHint from "./VariableReferenceHint.vue";
 
+import type { JournalConfig, NumberingReset, TimelineEnd } from "../../config";
+
 const { journalName, nav } = defineProps<{ journalName: string; nav: SubpageNav }>();
 
-const settings = useService(SettingsService);
 const flows = useService(Flows);
+const journalsVM = useService(JournalsViewModel);
 const editSections = useService(JournalEditSectionToken).toSorted((a, b) => a.order - b.order);
-const collection = settings.getCollection(journalConfigCollection);
-const config = computed<JournalConfig | undefined>(() => collection.get(journalName) as JournalConfig | undefined);
+const config = computed<JournalConfig | undefined>(() => journalsVM.getJournal(journalName).getOr(undefined as never));
 
 watchEffect(() => {
   if (!config.value) nav.back();

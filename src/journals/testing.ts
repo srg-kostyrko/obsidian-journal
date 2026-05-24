@@ -1,10 +1,9 @@
 import { createNanoEvents } from "nanoevents";
-import { assert, vi } from "vitest";
+import { assert } from "vitest";
 
 import type { Option } from "@/infrastructure/result";
-import type { CollectionDefinition, SettingsService } from "@/settings";
 
-import { journalConfigCollection, journalDefaultsFor } from "./config";
+import { journalDefaultsFor } from "./config";
 import { JournalsRepository } from "./repository";
 
 import type { JournalConfig, JournalWrite } from "./config";
@@ -12,22 +11,6 @@ import type { JournalConfig, JournalWrite } from "./config";
 export function unwrap<T>(opt: Option<T>): T {
   assert(opt.isSome(), "expected Some");
   return opt.value;
-}
-
-export function fakeSettings(journals: Record<string, JournalConfig>): SettingsService {
-  return {
-    getCollection: vi.fn((collection: CollectionDefinition<string, never>) => {
-      if (collection === journalConfigCollection) {
-        return {
-          entries: journals,
-          add: vi.fn(),
-          remove: vi.fn(),
-          get: (id: string) => journals[id],
-        };
-      }
-      throw new Error(`unexpected collection: ${collection.key}`);
-    }),
-  } as unknown as SettingsService;
 }
 
 export function fakeRepo(journals: Record<string, JournalConfig>): JournalsRepository {

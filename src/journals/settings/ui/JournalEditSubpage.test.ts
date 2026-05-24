@@ -23,7 +23,9 @@ import {
   NumberingService,
 } from "@/journals";
 import { JournalsRepository } from "@/journals/repository";
+import { unwrap } from "@/journals/testing";
 import { JournalsEventsToken } from "@/journals/tokens";
+import { JournalsViewModel } from "@/journals/view-model";
 import { createSettingsService } from "@/settings/testing";
 import { TemplateEngine } from "@/templates";
 import { installTestEngine } from "@/templates/testing";
@@ -83,6 +85,7 @@ async function setup(raw?: unknown) {
   container.register(TemplateEngine).useValue(installTestEngine());
   container.register(JournalsEventsToken).useFactory(() => createNanoEvents());
   container.register(JournalsRepository).useClass(JournalsRepository);
+  container.register(JournalsViewModel).useClass(JournalsViewModel);
   container.register(JournalsIndex).useClass(JournalsIndex);
   container.register(CycleService).useClass(CycleService);
   container.register(NumberingService).useClass(NumberingService);
@@ -96,7 +99,8 @@ async function setup(raw?: unknown) {
   container.register(Flows).useClass(Flows);
   const flows = container.resolve(Flows);
   vi.spyOn(flows, "invoke").mockReturnValue({} as never);
-  return { container, settings, flows, fakeModalService };
+  const journalsRepo = container.resolve(JournalsRepository);
+  return { container, journalsRepo, flows, fakeModalService };
 }
 
 const noopNav = { back: () => undefined, push: () => undefined };
@@ -147,34 +151,34 @@ describe("JournalEditSubpage", () => {
 
   it("calls nav.back when the underlying journal disappears", async () => {
     const back = vi.fn();
-    const { container, settings } = await setup();
+    const { container, journalsRepo } = await setup();
     mount(container, "daily", { back, push: () => undefined });
-    settings.getCollection(journalConfigCollection).remove("daily");
+    journalsRepo.delete("daily");
     await waitFor(() => {
       expect(back).toHaveBeenCalled();
     });
   });
 
-  it("persists changes to dateFormat through the reactive collection", async () => {
-    const { container, settings } = await setup();
+  it("persists changes to dateFormat through the repository", async () => {
+    const { container, journalsRepo } = await setup();
     mount(container, "daily");
     const inputs = screen.getAllByRole("textbox");
     const dateFormatInput = inputs.find((element) => (element as HTMLInputElement).value === "YYYY-MM-DD");
     if (!dateFormatInput) throw new Error("dateFormat input not found");
     await userEvent.clear(dateFormatInput);
     await userEvent.type(dateFormatInput, "YYYY/MM");
-    expect(settings.getCollection(journalConfigCollection).get("daily")?.dateFormat).toBe("YYYY/MM");
+    expect(unwrap(journalsRepo.get("daily")).dateFormat).toBe("YYYY/MM");
   });
 
   it("materializes the default source when sequential numbers is toggled on", async () => {
-    const { container, settings } = await setup();
+    const { container, journalsRepo } = await setup();
     mount(container, "daily");
     await userEvent.click(screen.getByText(m.journal_edit_section_sequential_numbers()));
     const sequenceEnabledRow = screen.getByText(m.journal_edit_sequence_enabled_label()).closest(".setting-item");
     if (!sequenceEnabledRow) throw new Error("sequence-enabled row not found");
     const sequenceToggle = within(sequenceEnabledRow as HTMLElement).getByRole("checkbox");
     await userEvent.click(sequenceToggle);
-    const config = settings.getCollection(journalConfigCollection).get("daily")!;
+    const config = unwrap(journalsRepo.get("daily"));
     expect(config.numbering.enabled).toBe(true);
     expect(config.numbering.sources[0]).toEqual({
       variable: "index",
@@ -256,13 +260,13 @@ describe("JournalEditSubpage", () => {
 
   describe("timeline.start DatePicker", () => {
     it("writes the picked date to timeline.start", async () => {
-      const { container, settings, fakeModalService } = await setup();
+      const { container, journalsRepo, fakeModalService } = await setup();
       mount(container, "daily");
       await userEvent.click(screen.getByText(m.journal_edit_section_timeline()));
       await userEvent.click(screen.getByRole("button", { name: "2024-01-01" }));
       fakeModalService.lastOpen<unknown, DayPeriod>().submit(DayPeriod.containing(date("2025-03-15")));
       await waitFor(() => {
-        expect(settings.getCollection(journalConfigCollection).get("daily")?.timeline.start).toBe("2025-03-15");
+        expect(unwrap(journalsRepo.get("daily")).timeline.start).toBe("2025-03-15");
       });
     });
   });
@@ -275,13 +279,13 @@ describe("JournalEditSubpage", () => {
           daily: makeJournal("daily", { timeline: { start: "2024-01-01", end: { kind: "date", date: "2024-06-01" } } }),
         },
       };
-      const { container, settings, fakeModalService } = await setup(initial);
+      const { container, journalsRepo, fakeModalService } = await setup(initial);
       mount(container, "daily");
       await userEvent.click(screen.getByText(m.journal_edit_section_timeline()));
       await userEvent.click(screen.getByRole("button", { name: "2024-06-01" }));
       fakeModalService.lastOpen<unknown, DayPeriod>().submit(DayPeriod.containing(date("2025-06-01")));
       await waitFor(() => {
-        const config = settings.getCollection(journalConfigCollection).get("daily")!;
+        const config = unwrap(journalsRepo.get("daily"));
         expect(config.timeline.end.kind === "date" ? config.timeline.end.date : null).toBe("2025-06-01");
       });
     });
@@ -329,7 +333,7 @@ describe("JournalEditSubpage", () => {
           }),
         },
       };
-      const { container, settings, fakeModalService } = await setup(initial);
+      const { container, journalsRepo, fakeModalService } = await setup(initial);
       mount(container, "daily");
       // Expand Timeline, clear start so the numbering anchor picker becomes visible
       await userEvent.click(screen.getByText(m.journal_edit_section_timeline()));
@@ -338,7 +342,7 @@ describe("JournalEditSubpage", () => {
       await userEvent.click(screen.getByRole("button", { name: "2024-01-01" }));
       fakeModalService.lastOpen<unknown, DayPeriod>().submit(DayPeriod.containing(date("2025-01-10")));
       await waitFor(() => {
-        expect(settings.getCollection(journalConfigCollection).get("daily")?.numbering.anchorDate).toBe("2025-01-10");
+        expect(unwrap(journalsRepo.get("daily")).numbering.anchorDate).toBe("2025-01-10");
       });
     });
   });
@@ -355,23 +359,22 @@ describe("JournalEditSubpage", () => {
       expect(screen.getByText(m.journal_edit_auto_create_label())).toBeTruthy();
     });
 
-    it("persists nameTemplate edits through the reactive collection", async () => {
-      const { container, settings } = await setup();
+    it("persists nameTemplate edits through the repository", async () => {
+      const { container, journalsRepo } = await setup();
       mount(container, "daily");
       const nameTemplateRow = screen.getByText(m.journal_edit_name_template_label()).closest(".setting-item");
       if (!nameTemplateRow) throw new Error("name-template row not found");
       const nameTemplateInput = within(nameTemplateRow as HTMLElement).getByRole("textbox");
       await userEvent.clear(nameTemplateInput);
       await userEvent.type(nameTemplateInput, "daily-note");
-      expect(settings.getCollection(journalConfigCollection).get("daily")?.nameTemplate).toBe("daily-note");
+      expect(unwrap(journalsRepo.get("daily")).nameTemplate).toBe("daily-note");
     });
 
     it("auto-create description mentions confirmation skip only when confirmCreation is on", async () => {
-      const { container, settings } = await setup();
+      const { container, journalsRepo } = await setup();
       mount(container, "daily");
       expect(screen.queryByText(m.journal_edit_auto_create_confirmation_skip_note())).toBeNull();
-      const config = settings.getCollection(journalConfigCollection).get("daily")!;
-      config.confirmCreation = true;
+      journalsRepo.update("daily", { confirmCreation: true });
       await waitFor(() => {
         expect(screen.getByText(m.journal_edit_auto_create_confirmation_skip_note())).toBeTruthy();
       });
@@ -409,18 +412,17 @@ describe("JournalEditSubpage", () => {
         version: 3,
         journals: { daily: makeJournal("daily", { nameTemplate: "year/{{date}}", folder: "" }) },
       };
-      const { container, settings } = await setup(initial);
+      const { container, journalsRepo } = await setup(initial);
       mount(container, "daily");
       const link = screen.getByRole("link", { name: m.journal_edit_move_to_folder_apply_link() });
       await userEvent.click(link);
-      const config = settings.getCollection(journalConfigCollection).get("daily");
-      if (!config) throw new Error("daily journal disappeared");
+      const config = unwrap(journalsRepo.get("daily"));
       expect(config.folder).toBe("year");
       expect(config.nameTemplate).toBe("{{date}}");
     });
 
     it("live-renders the note name preview when nameTemplate changes", async () => {
-      const { container, settings } = await setup();
+      const { container, journalsRepo } = await setup();
       mount(container, "daily");
       const nameTemplateRow = screen.getByText(m.journal_edit_name_template_label()).closest(".setting-item");
       if (!nameTemplateRow) throw new Error("name-template row not found");
@@ -428,8 +430,7 @@ describe("JournalEditSubpage", () => {
       await userEvent.clear(nameTemplateInput);
       await userEvent.type(nameTemplateInput, "note-prefix");
       await waitFor(() => {
-        const config = settings.getCollection(journalConfigCollection).get("daily");
-        expect(config?.nameTemplate).toBe("note-prefix");
+        expect(unwrap(journalsRepo.get("daily")).nameTemplate).toBe("note-prefix");
       });
       // Preview text appears somewhere in the document
       await waitFor(() => {
@@ -453,12 +454,11 @@ describe("JournalEditSubpage", () => {
       version: 3,
       journals: { daily: makeJournal("daily", { dateFormat: "YYYY/MM/DD", folder: "" }) },
     };
-    const { container, settings } = await setup(initial);
+    const { container, journalsRepo } = await setup(initial);
     mount(container, "daily");
     const link = screen.getByRole("link", { name: m.journal_edit_move_to_folder_apply_link() });
     await userEvent.click(link);
-    const config = settings.getCollection(journalConfigCollection).get("daily");
-    if (!config) throw new Error("daily journal disappeared");
+    const config = unwrap(journalsRepo.get("daily"));
     expect(config.folder).toBe("{{date:YYYY}}/{{date:MM}}");
     expect(config.dateFormat).toBe("DD");
   });
@@ -476,11 +476,11 @@ describe("JournalEditSubpage", () => {
     });
 
     it("appends an empty entry when Add template is clicked", async () => {
-      const { container, settings } = await setup();
+      const { container, journalsRepo } = await setup();
       mount(container, "daily");
       await userEvent.click(screen.getByText(m.journal_edit_section_templates()));
       await userEvent.click(screen.getByText(m.journal_edit_template_add_button()));
-      expect(settings.getCollection(journalConfigCollection).get("daily")?.templates).toEqual([""]);
+      expect(unwrap(journalsRepo.get("daily")).templates).toEqual([""]);
     });
 
     it("removes an entry when the trash button is clicked", async () => {
@@ -488,11 +488,11 @@ describe("JournalEditSubpage", () => {
         version: 3,
         journals: { daily: makeJournal("daily", { templates: ["templates/a.md"] }) },
       };
-      const { container, settings } = await setup(initial);
+      const { container, journalsRepo } = await setup(initial);
       mount(container, "daily");
       await userEvent.click(screen.getByText(m.journal_edit_section_templates()));
       await userEvent.click(screen.getByLabelText(m.journal_edit_template_remove_tooltip()));
-      expect(settings.getCollection(journalConfigCollection).get("daily")?.templates).toEqual([]);
+      expect(unwrap(journalsRepo.get("daily")).templates).toEqual([]);
     });
 
     it("renders the template path preview only when the path contains a variable", async () => {

@@ -2,21 +2,18 @@
 import { toTypedSchema } from "@vee-validate/valibot";
 import * as v from "valibot";
 import { useForm } from "vee-validate";
-import { computed } from "vue";
 
 import { m } from "@/i18n";
 import { useService } from "@/infrastructure/di";
 import { useModal } from "@/infrastructure/host/modals";
-import { journalConfigCollection } from "@/journals";
-import { SettingsService } from "@/settings";
+import { JournalsViewModel } from "@/journals/view-model";
 import UiButton from "@/ui/UiButton.vue";
 import UiSettingRow from "@/ui/UiSettingRow.vue";
 import UiTextInput from "@/ui/UiTextInput.vue";
 
 const { currentName } = defineProps<{ currentName: string }>();
 const api = useModal<{ newName: string }>();
-const settings = useService(SettingsService);
-const collection = computed(() => settings.getCollection(journalConfigCollection));
+const journalsVM = useService(JournalsViewModel);
 
 const { defineField, errorBag, handleSubmit } = useForm({
   initialValues: { newName: currentName },
@@ -26,10 +23,7 @@ const { defineField, errorBag, handleSubmit } = useForm({
         v.string(),
         v.nonEmpty(m.journal_name_required_error()),
         v.check((value) => value !== currentName, m.journal_rename_modal_same_as_current_error()),
-        v.check(
-          (value) => value === currentName || collection.value.get(value) === undefined,
-          m.journal_name_unique_error(),
-        ),
+        v.check((value) => journalsVM.isJournalNameAvailable(value, currentName), m.journal_name_unique_error()),
       ),
     }),
   ),

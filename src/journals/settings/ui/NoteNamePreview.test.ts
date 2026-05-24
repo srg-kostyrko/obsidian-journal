@@ -14,7 +14,6 @@ import {
 } from "@/journals";
 import { JournalsRepository } from "@/journals/repository";
 import { JournalsEventsToken } from "@/journals/tokens";
-import { SettingsService } from "@/settings";
 import { createSettingsService } from "@/settings/testing";
 import { TemplateEngine } from "@/templates";
 import { installTestEngine } from "@/templates/testing";
@@ -106,9 +105,7 @@ describe("NoteNamePreview", () => {
       },
     });
     expect(screen.getByText("2026-05-19")).toBeTruthy();
-    const settings = container.resolve(SettingsService);
-    const config = settings.getCollection(journalConfigCollection).get("daily")!;
-    config.nameTemplate = "note-{{date}}";
+    container.resolve(JournalsRepository).update("daily", { nameTemplate: "note-{{date}}" });
     await waitFor(() => {
       expect(screen.getByText("note-2026-05-19")).toBeTruthy();
     });

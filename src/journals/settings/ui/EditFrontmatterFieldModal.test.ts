@@ -1,5 +1,6 @@
 import userEvent from "@testing-library/user-event";
 import { cleanup, render, screen, waitFor } from "@testing-library/vue";
+import { createNanoEvents } from "nanoevents";
 import { afterEach, describe, expect, it, vi } from "vitest";
 
 import { m } from "@/i18n";
@@ -7,6 +8,9 @@ import { provideInjectorOnApp } from "@/infrastructure/di";
 import type { ModalApi } from "@/infrastructure/host/modals";
 import { provideModalApiOnApp } from "@/infrastructure/host/modals/testing";
 import { journalConfigCollection } from "@/journals";
+import { JournalsRepository } from "@/journals/repository";
+import { JournalsEventsToken } from "@/journals/tokens";
+import { JournalsViewModel } from "@/journals/view-model";
 import { createSettingsService } from "@/settings/testing";
 
 import { editFrontmatterFieldModal, type FrontmatterFieldName } from "./edit-frontmatter-field-modal";
@@ -46,6 +50,9 @@ async function mountModal(
     raw,
   });
   await settings.initialize();
+  container.register(JournalsEventsToken).useFactory(() => createNanoEvents());
+  container.register(JournalsRepository).useClass(JournalsRepository);
+  container.register(JournalsViewModel).useClass(JournalsViewModel);
   const submit = vi.fn();
   const cancel = vi.fn();
   const api: ModalApi<{ newValue: string }> = { submit, cancel };
