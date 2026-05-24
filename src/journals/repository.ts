@@ -29,7 +29,7 @@ export class JournalsRepository extends BaseRepository<
   protected idKey: keyof JournalConfig = "name";
   protected nameKey: keyof JournalConfig = "name";
   protected QueryConstructor = RepositoryQuery;
-  protected storage = inject(SettingsService).recordOf(journalConfigCollection) as Record<string, JournalConfig>;
+  protected storage = inject(SettingsService).recordOf(journalConfigCollection);
   protected events = inject(JournalsEventsToken);
   protected unknownEntityError = (name: string) => new UnknownJournalError(name);
   protected invalidUpdateError = (name: string) => new InvalidJournalUpdateError(name);

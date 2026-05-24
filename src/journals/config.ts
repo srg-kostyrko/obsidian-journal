@@ -5,11 +5,18 @@ import { defineCollection } from "@/settings";
 
 export const FRONTMATTER_NAME_KEY = "journal";
 
-const anchorString = v.pipe(v.string(), v.regex(/^\d{4}-\d{2}-\d{2}$/, "must be YYYY-MM-DD"));
+const anchorString = v.pipe(
+  v.string(),
+  v.regex(/^\d{4}-\d{2}-\d{2}$/, "must be YYYY-MM-DD"),
+  v.transform((s) => s as AnchorString),
+);
 
 // "" is the sentinel for an unset anchor — the start of a timeline and the
 // numbering anchor are both legitimately empty until the user picks a date.
-const optionalAnchorString = v.union([v.literal(""), anchorString]);
+const optionalAnchorString = v.pipe(
+  v.union([v.literal(""), anchorString]),
+  v.transform((s) => s as AnchorString),
+);
 
 const writeFixed = v.object({
   type: v.picklist(["day", "week", "month", "quarter", "year"]),
@@ -89,63 +96,16 @@ export const journalConfigSchema = v.object({
   autoCreate: v.optional(v.boolean(), false),
 });
 
-export interface FixedWriteIntervals {
-  type: "day" | "week" | "month" | "quarter" | "year";
-}
-
-export interface WriteCustom {
-  type: "custom";
-  every: "day" | "week" | "month" | "quarter" | "year";
-  duration: number;
-  anchorDate: AnchorString;
-}
-
-export type JournalWrite = FixedWriteIntervals | WriteCustom;
-
-export type TimelineEnd = { kind: "never" } | { kind: "date"; date: AnchorString } | { kind: "repeats"; count: number };
-
-export interface JournalTimeline {
-  start: AnchorString;
-  end: TimelineEnd;
-}
-
-export interface FrontmatterFields {
-  dateField: string;
-  startDateField: string;
-  endDateField: string;
-  addStartDate: boolean;
-  addEndDate: boolean;
-}
-
-export type NumberingReset = { kind: "never" } | { kind: "after"; count: number };
-
-export interface NumberingSource {
-  variable: string;
-  frontmatterKey: string;
-  anchorValue: number;
-  reset: NumberingReset;
-}
-
-export interface JournalNumberingConfig {
-  enabled: boolean;
-  anchorDate: AnchorString;
-  allowBefore: boolean;
-  sources: NumberingSource[];
-}
-
-export interface JournalConfig {
-  name: string;
-  write: JournalWrite;
-  timeline: JournalTimeline;
-  dateFormat: string;
-  frontmatter: FrontmatterFields;
-  numbering: JournalNumberingConfig;
-  nameTemplate: string;
-  folder: string;
-  templates: string[];
-  confirmCreation: boolean;
-  autoCreate: boolean;
-}
+export type FixedWriteIntervals = v.InferOutput<typeof writeFixed>;
+export type WriteCustom = v.InferOutput<typeof writeCustom>;
+export type JournalWrite = v.InferOutput<typeof writeSchema>;
+export type TimelineEnd = v.InferOutput<typeof timelineEnd>;
+export type JournalTimeline = v.InferOutput<typeof timelineSchema>;
+export type FrontmatterFields = v.InferOutput<typeof frontmatterFieldsSchema>;
+export type NumberingReset = v.InferOutput<typeof numberingReset>;
+export type NumberingSource = v.InferOutput<typeof numberingSource>;
+export type JournalNumberingConfig = v.InferOutput<typeof numberingSchema>;
+export type JournalConfig = v.InferOutput<typeof journalConfigSchema>;
 
 // --- Defaults ---
 

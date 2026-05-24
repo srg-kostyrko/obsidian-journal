@@ -18,7 +18,7 @@ import {
   OpenDateFlow,
   journalConfigCollection,
 } from "@/journals";
-import type { JournalConfig, JournalsEvents } from "@/journals";
+import type { JournalsEvents } from "@/journals";
 import { createSettingsService } from "@/settings/testing";
 import { ShelvesRepository, ShelvesEventsToken, shelvesCollection } from "@/shelves";
 import type { ShelvesEvents } from "@/shelves";
@@ -49,7 +49,7 @@ async function build() {
   });
   await settings.initialize();
 
-  const journalsStorage = settings.recordOf(journalConfigCollection) as Record<string, JournalConfig>;
+  const journalsStorage = settings.recordOf(journalConfigCollection);
   const shelvesStorage = settings.recordOf(shelvesCollection);
   const commandsStorage = settings.recordOf(commandCollection);
 
