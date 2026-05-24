@@ -17,12 +17,12 @@ import { SettingsUiService, SubpageToken } from "@/settings";
 import { createSettingsService } from "@/settings/testing";
 
 import { shelvesCollection } from "../config";
+import { EditShelfNameFlow } from "../flows/edit-shelf-name.flow";
 import { ShelvesRepository } from "../repository";
 import { ShelvesService } from "../service";
 import { ShelvesEventsToken } from "../tokens";
 import { ShelvesViewModel } from "../view-model";
 
-import { EditShelfNameFlow } from "./edit-shelf-name.flow";
 import { shelfEditSubpage } from "./shelf-edit-subpage";
 import ShelfEditSubpage from "./ShelfEditSubpage.vue";
 

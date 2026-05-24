@@ -24,8 +24,8 @@ import { JournalsRepository } from "../repository";
 import { fakeRepo, fixedJournal } from "../testing";
 import { TimelineService } from "../timeline";
 
-import { OpenDateFlow } from "./open-date";
-import { OpenJournalEntryFlow } from "./open-journal-entry";
+import { OpenDateFlow } from "./open-date.flow";
+import { OpenJournalEntryFlow } from "./open-journal-entry.flow";
 
 function build(repo: JournalsRepository, suggests: FakeSuggestService) {
   const c = new Container();

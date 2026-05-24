@@ -11,12 +11,12 @@ import { FakeModalService } from "@/infrastructure/host/modals/testing";
 import { createSettingsService } from "@/settings/testing";
 
 import { shelvesCollection } from "../config";
+import { PlaceJournalFlow } from "../flows/place-journal.flow";
 import { ShelvesRepository } from "../repository";
 import { ShelvesEventsToken } from "../tokens";
 import { ShelvesViewModel } from "../view-model";
 
 import JournalShelfSection from "./JournalShelfSection.vue";
-import { PlaceJournalFlow } from "./place-journal.flow";
 
 afterEach(() => cleanup());
 

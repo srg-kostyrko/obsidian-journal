@@ -5,8 +5,7 @@ import { attempt, type AsyncResult } from "@/infrastructure/result";
 
 import { toFlowError } from "../errors";
 import { ShelvesRepository } from "../repository";
-
-import { deleteShelfModal } from "./modals";
+import { deleteShelfModal } from "../ui/modals";
 
 export class DeleteShelfFlow implements Flow<{ shelfName: string }, void, FlowError> {
   readonly #modals = inject(ModalService);

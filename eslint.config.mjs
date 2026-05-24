@@ -204,4 +204,17 @@ export default [
       ],
     },
   },
+  {
+    files: ["src/**/*.flow.ts", "src/**/*.flow.test.ts"],
+    ignores: ["src/**/flows/**", "src/_old-code/**"],
+    rules: {
+      "no-restricted-syntax": [
+        "error",
+        {
+          selector: "Program",
+          message: "Flow files (`*.flow.ts`) must live under a <feature>/flows/ directory.",
+        },
+      ],
+    },
+  },
 ];

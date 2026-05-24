@@ -7,11 +7,11 @@ import { ShelfEditSectionToken, defineShelfEditSection } from "@/shelves";
 
 import { DynamicCommandRegistry } from "./command-registry";
 import { commandCollection } from "./config";
+import { DeleteCommandFlow } from "./flows/delete-command.flow";
+import { EditCommandFlow } from "./flows/edit-command.flow";
 import { CommandsRepository, type CommandsEvents } from "./repository";
 import { CommandsEventsToken } from "./tokens";
 import CommandsDashboardBlock from "./ui/CommandsDashboardBlock.vue";
-import { DeleteCommandFlow } from "./ui/delete-command.flow";
-import { EditCommandFlow } from "./ui/edit-command.flow";
 import JournalCommandsSection from "./ui/JournalCommandsSection.vue";
 import ShelfCommandsSection from "./ui/ShelfCommandsSection.vue";
 import { CommandsViewModel } from "./view-model";

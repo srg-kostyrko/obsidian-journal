@@ -10,10 +10,10 @@ import UiIconButton from "@/ui/UiIconButton.vue";
 import UiIconedRow from "@/ui/UiIconedRow.vue";
 import UiSettingRow from "@/ui/UiSettingRow.vue";
 
+import { DeleteShelfFlow } from "../flows/delete-shelf.flow";
+import { EditShelfNameFlow } from "../flows/edit-shelf-name.flow";
 import { ShelvesViewModel } from "../view-model";
 
-import { DeleteShelfFlow } from "./delete-shelf.flow";
-import { EditShelfNameFlow } from "./edit-shelf-name.flow";
 import { shelfEditSubpage } from "./shelf-edit-subpage";
 
 import type { ShelfConfig } from "../config";

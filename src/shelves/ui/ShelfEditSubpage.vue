@@ -12,10 +12,10 @@ import UiIconButton from "@/ui/UiIconButton.vue";
 import UiIconedRow from "@/ui/UiIconedRow.vue";
 import UiSettingRow from "@/ui/UiSettingRow.vue";
 
+import { EditShelfNameFlow } from "../flows/edit-shelf-name.flow";
 import { ShelvesService } from "../service";
 import { ShelvesViewModel } from "../view-model";
 
-import { EditShelfNameFlow } from "./edit-shelf-name.flow";
 import JournalList from "./JournalList.vue";
 import { ShelfEditSectionToken } from "./shelf-edit-section";
 

@@ -12,7 +12,7 @@ import { journalPickerSuggest } from "../notes/journal-picker";
 import { JournalsRepository } from "../repository";
 import { TimelineService } from "../timeline";
 
-import { OpenJournalEntryFlow } from "./open-journal-entry";
+import { OpenJournalEntryFlow } from "./open-journal-entry.flow";
 
 import type { NoteCreationError } from "../notes/note-creation";
 

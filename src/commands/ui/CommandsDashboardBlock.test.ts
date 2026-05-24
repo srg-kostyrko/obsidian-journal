@@ -11,12 +11,12 @@ import { FakeModalService } from "@/infrastructure/host/modals/testing";
 import { createSettingsService } from "@/settings/testing";
 
 import { commandCollection, type CommandConfig } from "../config";
+import { DeleteCommandFlow } from "../flows/delete-command.flow";
+import { EditCommandFlow } from "../flows/edit-command.flow";
 import { CommandsRepository } from "../repository";
 import { CommandsEventsToken } from "../tokens";
 
 import CommandsDashboardBlock from "./CommandsDashboardBlock.vue";
-import { DeleteCommandFlow } from "./delete-command.flow";
-import { EditCommandFlow } from "./edit-command.flow";
 
 afterEach(() => cleanup());
 

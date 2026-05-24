@@ -5,14 +5,14 @@ import { JournalEditSectionToken, defineJournalEditSection } from "@/journals";
 import { CollectionDefinitionToken, DashboardBlockToken, SubpageToken, defineDashboardBlock } from "@/settings";
 
 import { shelvesCollection } from "./config";
+import { DeleteShelfFlow } from "./flows/delete-shelf.flow";
+import { EditShelfNameFlow } from "./flows/edit-shelf-name.flow";
+import { PlaceJournalFlow } from "./flows/place-journal.flow";
 import { ShelvesRepository, type ShelvesEvents } from "./repository";
 import { ShelvesService } from "./service";
 import { ShelvesEventsToken } from "./tokens";
-import { DeleteShelfFlow } from "./ui/delete-shelf.flow";
-import { EditShelfNameFlow } from "./ui/edit-shelf-name.flow";
 import JournalsDashboardBlock from "./ui/JournalsDashboardBlock.vue";
 import JournalShelfSection from "./ui/JournalShelfSection.vue";
-import { PlaceJournalFlow } from "./ui/place-journal.flow";
 import { shelfEditSubpage } from "./ui/shelf-edit-subpage";
 import ShelvesDashboardBlock from "./ui/ShelvesDashboardBlock.vue";
 import { ShelvesViewModel } from "./view-model";

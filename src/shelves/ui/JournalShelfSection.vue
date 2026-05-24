@@ -9,9 +9,8 @@ import UiIcon from "@/ui/UiIcon.vue";
 import UiIconButton from "@/ui/UiIconButton.vue";
 import UiSettingRow from "@/ui/UiSettingRow.vue";
 
+import { PlaceJournalFlow } from "../flows/place-journal.flow";
 import { ShelvesViewModel } from "../view-model";
-
-import { PlaceJournalFlow } from "./place-journal.flow";
 
 const { journalName } = defineProps<{ journalName: string }>();
 

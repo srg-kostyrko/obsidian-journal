@@ -6,8 +6,7 @@ import { ModalService } from "@/infrastructure/host/modals";
 import { attempt, type AsyncResult } from "@/infrastructure/result";
 
 import { CommandsRepository } from "../repository";
-
-import { editCommandModal } from "./modals";
+import { editCommandModal } from "../ui/modals";
 
 import type { CommandTarget } from "../config";
 

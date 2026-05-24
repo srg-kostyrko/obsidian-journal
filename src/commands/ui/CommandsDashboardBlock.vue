@@ -9,11 +9,11 @@ import UiCollapsibleBlock from "@/ui/UiCollapsibleBlock.vue";
 import UiIconButton from "@/ui/UiIconButton.vue";
 import UiIconedRow from "@/ui/UiIconedRow.vue";
 
+import { DeleteCommandFlow } from "../flows/delete-command.flow";
+import { EditCommandFlow } from "../flows/edit-command.flow";
 import { CommandsRepository } from "../repository";
 
 import CommandList from "./CommandList.vue";
-import { DeleteCommandFlow } from "./delete-command.flow";
-import { EditCommandFlow } from "./edit-command.flow";
 
 import type { CommandConfig } from "../config";
 

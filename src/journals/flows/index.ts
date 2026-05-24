@@ -1,5 +1,5 @@
-export { OpenDateFlow } from "./open-date";
-export { OpenJournalEntryFlow } from "./open-journal-entry";
+export { OpenDateFlow } from "./open-date.flow";
+export { OpenJournalEntryFlow } from "./open-journal-entry.flow";
 export { journalFlowsModule } from "./module";
-export type { OpenDateError, OpenDateParameters, OpenDateResult } from "./open-date";
-export type { OpenJournalEntryParameters, OpenJournalEntryResult } from "./open-journal-entry";
+export type { OpenDateError, OpenDateParameters, OpenDateResult } from "./open-date.flow";
+export type { OpenJournalEntryParameters, OpenJournalEntryResult } from "./open-journal-entry.flow";

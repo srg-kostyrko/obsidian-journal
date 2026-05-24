@@ -12,12 +12,12 @@ import { SettingsUiService, SubpageToken } from "@/settings";
 import { createSettingsService } from "@/settings/testing";
 
 import { shelvesCollection } from "../config";
+import { DeleteShelfFlow } from "../flows/delete-shelf.flow";
+import { EditShelfNameFlow } from "../flows/edit-shelf-name.flow";
 import { ShelvesRepository } from "../repository";
 import { ShelvesEventsToken } from "../tokens";
 import { ShelvesViewModel } from "../view-model";
 
-import { DeleteShelfFlow } from "./delete-shelf.flow";
-import { EditShelfNameFlow } from "./edit-shelf-name.flow";
 import { shelfEditSubpage } from "./shelf-edit-subpage";
 import ShelvesDashboardBlock from "./ShelvesDashboardBlock.vue";
 

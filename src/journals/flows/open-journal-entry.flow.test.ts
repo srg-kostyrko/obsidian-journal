@@ -21,7 +21,7 @@ import { NumberingService } from "../numbering";
 import { JournalsRepository } from "../repository";
 import { fakeRepo, fixedJournal } from "../testing";
 
-import { OpenJournalEntryFlow } from "./open-journal-entry";
+import { OpenJournalEntryFlow } from "./open-journal-entry.flow";
 
 function build(
   repo: JournalsRepository,
