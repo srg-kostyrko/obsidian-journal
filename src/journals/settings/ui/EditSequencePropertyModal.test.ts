@@ -13,8 +13,8 @@ import { JournalsEventsToken } from "@/journals/tokens";
 import { JournalsViewModel } from "@/journals/view-model";
 import { createSettingsService } from "@/settings/testing";
 
-import { editSequencePropertyModal } from "./edit-sequence-property-modal";
 import EditSequencePropertyModal from "./EditSequencePropertyModal.vue";
+import { editSequencePropertyModal } from "./modals";
 
 afterEach(() => cleanup());
 

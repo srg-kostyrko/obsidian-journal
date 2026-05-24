@@ -17,8 +17,8 @@ import { createSettingsService } from "@/settings/testing";
 
 import { commandCollection, type CommandConfig, type CommandTarget } from "../config";
 
-import { editCommandModal } from "./edit-command-modal";
 import EditCommandModal from "./EditCommandModal.vue";
+import { editCommandModal } from "./modals";
 
 afterEach(() => cleanup());
 

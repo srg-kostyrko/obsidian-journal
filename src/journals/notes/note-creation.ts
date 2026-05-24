@@ -15,9 +15,9 @@ import type { TemplateRenderError } from "@/templates";
 
 import { FrontmatterService } from "../frontmatter";
 
-import { confirmCreationModal } from "./confirm-creation-modal";
 import { NotePathService } from "./note-path";
 import { TemplateContentService } from "./template-content";
+import { confirmCreationModal } from "./ui/modals";
 
 import type { JournalNotFoundError } from "../errors";
 import type { JournalMetadata } from "../types";

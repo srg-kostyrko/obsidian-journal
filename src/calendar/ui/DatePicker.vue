@@ -8,7 +8,7 @@ import { useService } from "@/infrastructure/di";
 import { ModalService } from "@/infrastructure/host/modals";
 import UiButton from "@/ui/UiButton.vue";
 
-import { datePickerModalDefinition } from "./date-picker-modal-definition";
+import { datePickerModal } from "./modals";
 
 import type { Picking } from "./errors";
 
@@ -40,7 +40,7 @@ const label = computed<string>(() => {
 });
 
 async function open(): Promise<void> {
-  const result = await modalService.open(datePickerModalDefinition, {
+  const result = await modalService.open(datePickerModal, {
     picking: props.picking,
     bounds: props.bounds,
     selected: toRaw(modelValue.value) ?? null,

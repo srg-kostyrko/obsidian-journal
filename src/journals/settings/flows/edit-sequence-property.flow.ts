@@ -5,7 +5,7 @@ import { AsyncResult, attempt } from "@/infrastructure/result";
 import { toFlowError, UnknownJournalError, UnknownSequenceSourceError } from "@/journals/errors";
 import { JournalsRepository } from "@/journals/repository";
 
-import { editSequencePropertyModal } from "../ui/edit-sequence-property-modal";
+import { editSequencePropertyModal } from "../ui/modals";
 
 export class EditSequencePropertyFlow implements Flow<
   { journalName: string; sourceIndex: number },

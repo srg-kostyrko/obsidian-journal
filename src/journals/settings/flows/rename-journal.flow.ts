@@ -5,7 +5,7 @@ import { attempt, type AsyncResult } from "@/infrastructure/result";
 import { toFlowError } from "@/journals/errors";
 import { JournalsRepository } from "@/journals/repository";
 
-import { renameJournalModal } from "../ui/rename-journal-modal";
+import { renameJournalModal } from "../ui/modals";
 
 export class RenameJournalFlow implements Flow<{ journalName: string }, { newName: string }, FlowError> {
   readonly #modals = inject(ModalService);

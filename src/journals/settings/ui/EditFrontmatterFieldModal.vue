@@ -12,7 +12,7 @@ import UiButton from "@/ui/UiButton.vue";
 import UiSettingRow from "@/ui/UiSettingRow.vue";
 import UiTextInput from "@/ui/UiTextInput.vue";
 
-import type { FrontmatterFieldName } from "./edit-frontmatter-field-modal";
+import type { FrontmatterFieldName } from "./modals";
 
 const { journalName, fieldName } = defineProps<{ journalName: string; fieldName: FrontmatterFieldName }>();
 const api = useModal<{ newValue: string }>();

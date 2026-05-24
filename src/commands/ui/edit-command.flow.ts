@@ -7,7 +7,7 @@ import { attempt, type AsyncResult } from "@/infrastructure/result";
 
 import { CommandsRepository } from "../repository";
 
-import { editCommandModal } from "./edit-command-modal";
+import { editCommandModal } from "./modals";
 
 import type { CommandTarget } from "../config";
 

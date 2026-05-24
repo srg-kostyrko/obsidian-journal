@@ -4,7 +4,7 @@ import { useService } from "@/infrastructure/di";
 import { ModalService, TemplaterService } from "@/infrastructure/host";
 
 import I18nWithSlot from "./I18nWithSlot.vue";
-import { templaterSupportModal } from "./templater-support-modal";
+import { templaterSupportModal } from "./modals";
 
 const templater = useService(TemplaterService);
 const modals = useService(ModalService);

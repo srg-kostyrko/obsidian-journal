@@ -124,6 +124,10 @@ export default [
           selector: "NewExpression[callee.name='Error']",
           message: "Throw a named Error subclass instead of raw `new Error()`.",
         },
+        {
+          selector: "CallExpression[callee.name='defineModal']",
+          message: "`defineModal()` is only allowed in `<feature>/ui/modals.ts`. Move the modal definition there.",
+        },
       ],
 
       "@eslint-community/eslint-comments/no-use": ["error", { allow: [] }],
@@ -173,6 +177,18 @@ export default [
     rules: {
       // AsyncResult intentionally implements PromiseLike; `then` is the documented surface.
       "unicorn/no-thenable": "off",
+    },
+  },
+  {
+    files: ["**/ui/modals.ts", "src/infrastructure/host/modals/**/*.ts"],
+    rules: {
+      "no-restricted-syntax": [
+        "error",
+        {
+          selector: "NewExpression[callee.name='Error']",
+          message: "Throw a named Error subclass instead of raw `new Error()`.",
+        },
+      ],
     },
   },
 ];

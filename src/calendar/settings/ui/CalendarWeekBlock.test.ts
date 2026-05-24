@@ -12,7 +12,7 @@ import { createSettingsService } from "@/settings/testing";
 import { calendarSlice } from "../slice";
 
 import CalendarWeekBlock from "./CalendarWeekBlock.vue";
-import { weekPresetPickerModal } from "./week-preset-picker-modal";
+import { weekPresetPickerModal } from "./modals";
 
 import type { CalendarSliceState } from "../slice";
 

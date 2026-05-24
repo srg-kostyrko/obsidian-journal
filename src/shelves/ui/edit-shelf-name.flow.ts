@@ -6,7 +6,7 @@ import { attempt, type AsyncResult } from "@/infrastructure/result";
 import { toFlowError } from "../errors";
 import { ShelvesRepository } from "../repository";
 
-import { shelfNameModal } from "./shelf-name-modal";
+import { shelfNameModal } from "./modals";
 
 export interface EditShelfNameParameters {
   readonly shelfName?: string;

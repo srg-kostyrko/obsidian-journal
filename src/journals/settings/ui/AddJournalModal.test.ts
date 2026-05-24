@@ -16,8 +16,8 @@ import { JournalsEventsToken } from "@/journals/tokens";
 import { JournalsViewModel } from "@/journals/view-model";
 import { createSettingsService } from "@/settings/testing";
 
-import { addJournalModal } from "./add-journal-modal";
 import AddJournalModal from "./AddJournalModal.vue";
+import { addJournalModal } from "./modals";
 
 afterEach(() => cleanup());
 
@@ -73,7 +73,7 @@ async function mountModal(initial?: { journals: Record<string, unknown> }) {
 
 describe("addJournalModal definition", () => {
   it("uses the add-journal modal title", () => {
-    expect(addJournalModal.title()).toBe(m.journal_add_modal_title());
+    expect(addJournalModal.title(undefined)).toBe(m.journal_add_modal_title());
   });
 });
 

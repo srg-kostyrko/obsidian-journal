@@ -7,7 +7,7 @@ import { toFlowError } from "../errors";
 import { ShelvesRepository } from "../repository";
 import { ShelvesService } from "../service";
 
-import { placeJournalModal } from "./place-journal-modal";
+import { placeJournalModal } from "./modals";
 
 export class PlaceJournalFlow implements Flow<{ journalName: string }, void, FlowError> {
   readonly #modals = inject(ModalService);

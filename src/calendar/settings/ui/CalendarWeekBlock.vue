@@ -15,7 +15,7 @@ import UiToggle from "@/ui/UiToggle.vue";
 
 import { calendarSlice } from "../slice";
 
-import { weekPresetPickerModal } from "./week-preset-picker-modal";
+import { weekPresetPickerModal } from "./modals";
 
 type ActivePreset = "locale" | WeekPreset["id"] | "custom";
 

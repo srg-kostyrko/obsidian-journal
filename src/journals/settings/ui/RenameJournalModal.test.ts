@@ -13,7 +13,7 @@ import { JournalsEventsToken } from "@/journals/tokens";
 import { JournalsViewModel } from "@/journals/view-model";
 import { createSettingsService } from "@/settings/testing";
 
-import { renameJournalModal } from "./rename-journal-modal";
+import { renameJournalModal } from "./modals";
 import RenameJournalModal from "./RenameJournalModal.vue";
 
 afterEach(() => cleanup());

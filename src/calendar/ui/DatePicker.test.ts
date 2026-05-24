@@ -12,8 +12,8 @@ import { FakeModalService } from "@/infrastructure/host/modals/testing";
 
 import DatePicker from "./DatePicker.vue";
 
-import type { DatePickerModalProps } from "./date-picker-modal-definition";
 import type { Picking } from "./errors";
+import type { DatePickerModalProps } from "./modals";
 
 interface MountProps {
   picking: Picking;

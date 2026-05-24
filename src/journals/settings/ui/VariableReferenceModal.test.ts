@@ -1,12 +1,7 @@
 import userEvent from "@testing-library/user-event";
 import { cleanup, render, screen } from "@testing-library/vue";
-import { afterEach, describe, expect, it } from "vitest";
+import { afterEach, describe, expect, it, vi } from "vitest";
 
-import { Container, provideInjectorOnApp } from "@/infrastructure/di";
-import { ModalService } from "@/infrastructure/host/modals";
-import { FakeModalService } from "@/infrastructure/host/modals/testing";
-
-import { dateModificationsModal } from "./date-modifications-modal";
 import VariableReferenceModal from "./VariableReferenceModal.vue";
 
 import type { VariableModalContext } from "./variable-context";
@@ -17,10 +12,9 @@ function renderModal(props: {
   context: VariableModalContext;
   hasCycle?: boolean;
   numberingVariableNames?: readonly string[];
+  openModifications?: () => void;
 }) {
-  const modals = new FakeModalService();
-  const container = new Container();
-  container.register(ModalService).useValue(modals as unknown as ModalService);
+  const openModifications = props.openModifications ?? vi.fn();
   render(VariableReferenceModal, {
     props: {
       journalName: "daily",
@@ -28,18 +22,10 @@ function renderModal(props: {
       hasCycle: false,
       numberingVariableNames: [],
       ...props,
-    },
-    global: {
-      plugins: [
-        {
-          install(app) {
-            provideInjectorOnApp(app, container);
-          },
-        },
-      ],
+      openModifications,
     },
   });
-  return { modals };
+  return { openModifications };
 }
 
 describe("VariableReferenceModal — rules table", () => {
@@ -118,11 +104,11 @@ describe("VariableReferenceModal — rules table", () => {
       expect(links.length).toBe(4);
     });
 
-    it("opens the modifications sub-modal when the link is clicked", async () => {
-      const { modals } = renderModal({ context: "name-template" });
+    it("invokes openModifications when the link is clicked", async () => {
+      const openModifications = vi.fn();
+      renderModal({ context: "name-template", openModifications });
       await userEvent.click(screen.getAllByRole("link", { name: /additional modifications/i })[0]);
-      expect(modals.opens.length).toBe(1);
-      expect(modals.lastOpen().definition).toBe(dateModificationsModal);
+      expect(openModifications).toHaveBeenCalledTimes(1);
     });
   });
 });

@@ -2,30 +2,20 @@
 import { computed } from "vue";
 
 import { m } from "@/i18n";
-import { useService } from "@/infrastructure/di";
-import { ModalService } from "@/infrastructure/host/modals";
 
-import { dateModificationsModal } from "./date-modifications-modal";
 import I18nWithSlot from "./I18nWithSlot.vue";
 import VariableChip from "./VariableChip.vue";
 
-import type { VariableModalContext } from "./variable-context";
+import type { VariableReferenceModalProps } from "./modals";
 
-const props = defineProps<{
-  context: VariableModalContext;
-  journalName: string;
-  dateFormat: string;
-  hasCycle: boolean;
-  numberingVariableNames: readonly string[];
-}>();
+const props = defineProps<VariableReferenceModalProps>();
 
-const modals = useService(ModalService);
-const NON_INVERTIBLE_CONTEXTS = new Set<VariableModalContext>(["name-template", "folder-path"]);
+const NON_INVERTIBLE_CONTEXTS = new Set<VariableReferenceModalProps["context"]>(["name-template", "folder-path"]);
 const showInvertibilityWarning = computed(() => NON_INVERTIBLE_CONTEXTS.has(props.context));
 
-function openModifications(event: Event): void {
+function handleModificationsClick(event: Event): void {
   event.preventDefault();
-  void modals.open(dateModificationsModal, {});
+  props.openModifications();
 }
 </script>
 
@@ -37,7 +27,7 @@ function openModifications(event: Event): void {
         <dt><VariableChip name="date" /></dt>
         <dd>
           {{ m.journal_edit_variable_date_description() }}
-          <a href="#" @click="openModifications">
+          <a href="#" @click="handleModificationsClick">
             {{ m.journal_edit_variable_additional_modifications_link() }}
           </a>
         </dd>
@@ -58,7 +48,7 @@ function openModifications(event: Event): void {
           <dt><VariableChip name="start_date" /></dt>
           <dd>
             {{ m.journal_edit_variable_start_date_description() }}
-            <a href="#" @click="openModifications">
+            <a href="#" @click="handleModificationsClick">
               {{ m.journal_edit_variable_additional_modifications_link() }}
             </a>
           </dd>
@@ -67,7 +57,7 @@ function openModifications(event: Event): void {
           <dt><VariableChip name="end_date" /></dt>
           <dd>
             {{ m.journal_edit_variable_end_date_description() }}
-            <a href="#" @click="openModifications">
+            <a href="#" @click="handleModificationsClick">
               {{ m.journal_edit_variable_additional_modifications_link() }}
             </a>
           </dd>
@@ -83,7 +73,7 @@ function openModifications(event: Event): void {
         <dt><VariableChip name="current_date" /></dt>
         <dd>
           {{ m.journal_edit_variable_current_date_description() }}
-          <a href="#" @click="openModifications">
+          <a href="#" @click="handleModificationsClick">
             {{ m.journal_edit_variable_additional_modifications_link() }}
           </a>
           <p v-if="showInvertibilityWarning" class="variable-reference__warning">
@@ -96,7 +86,7 @@ function openModifications(event: Event): void {
         <dt><VariableChip name="time" /></dt>
         <dd>
           {{ m.journal_edit_variable_time_description() }}
-          <a href="#" @click="openModifications">
+          <a href="#" @click="handleModificationsClick">
             {{ m.journal_edit_variable_additional_modifications_link() }}
           </a>
           <p v-if="showInvertibilityWarning" class="variable-reference__warning">
@@ -111,7 +101,7 @@ function openModifications(event: Event): void {
           <I18nWithSlot :message="m.journal_edit_variable_current_time_description">
             <VariableChip name="time" />
           </I18nWithSlot>
-          <a href="#" @click="openModifications">
+          <a href="#" @click="handleModificationsClick">
             {{ m.journal_edit_variable_additional_modifications_link() }}
           </a>
           <p v-if="showInvertibilityWarning" class="variable-reference__warning">

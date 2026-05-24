@@ -3,7 +3,7 @@ import { m } from "@/i18n";
 import { useService } from "@/infrastructure/di";
 import { ModalService } from "@/infrastructure/host/modals";
 
-import { variableReferenceModal } from "./variable-reference-modal";
+import { dateModificationsModal, variableReferenceModal } from "./modals";
 
 import type { VariableModalContext } from "./variable-context";
 
@@ -25,6 +25,9 @@ function show(event: Event): void {
     dateFormat: props.dateFormat,
     hasCycle: props.hasCycle,
     numberingVariableNames: props.numberingVariableNames,
+    openModifications: () => {
+      void modals.open(dateModificationsModal, {});
+    },
   });
 }
 </script>

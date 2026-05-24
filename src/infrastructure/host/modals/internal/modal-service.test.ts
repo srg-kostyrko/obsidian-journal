@@ -75,34 +75,34 @@ const buttonModal = defineComponent({
   },
 });
 
-const submitDefinition = defineModal<{ value: string }, string>({
+const submitDefinition = defineModal<string>()({
   component: submitOnMount,
-  title: ({ value }) => `Submit ${value}`,
+  title: ({ value }: { value: string }) => `Submit ${value}`,
 });
-const cancelDefinition = defineModal<void, void>({
+const cancelDefinition = defineModal()({
   component: cancelOnMount,
   title: () => "Cancel",
 });
-const buttonDefinition = defineModal<void, string>({
+const buttonDefinition = defineModal<string>()({
   component: buttonModal,
   title: () => "Buttons",
   width: 520,
   cssClass: ["mod-test"],
 });
 
-const titledDefinition = defineModal<{ name: string }, string>({
+const titledDefinition = defineModal<string>()({
   component: buttonModal,
-  title: ({ name }) => `Modal for ${name}`,
+  title: ({ name }: { name: string }) => `Modal for ${name}`,
 });
 
-const cancelThenSubmitDefinition = defineModal<void, string>({
+const cancelThenSubmitDefinition = defineModal<string>()({
   component: cancelThenSubmit,
   title: () => "Cancel then submit",
 });
 
-const submitThenCancelDefinition = defineModal<{ value: string }, string>({
+const submitThenCancelDefinition = defineModal<string>()({
   component: submitThenCancel,
-  title: ({ value }) => `Submit ${value} then cancel`,
+  title: ({ value }: { value: string }) => `Submit ${value} then cancel`,
 });
 
 describe("ModalService", () => {

@@ -13,8 +13,8 @@ import { JournalsEventsToken } from "@/journals/tokens";
 import { JournalsViewModel } from "@/journals/view-model";
 import { createSettingsService } from "@/settings/testing";
 
-import { editFrontmatterFieldModal, type FrontmatterFieldName } from "./edit-frontmatter-field-modal";
 import EditFrontmatterFieldModal from "./EditFrontmatterFieldModal.vue";
+import { editFrontmatterFieldModal, type FrontmatterFieldName } from "./modals";
 
 afterEach(() => cleanup());
 

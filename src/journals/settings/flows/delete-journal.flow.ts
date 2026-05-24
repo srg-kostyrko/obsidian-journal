@@ -6,7 +6,7 @@ import { toFlowError } from "@/journals/errors";
 import { JournalsRepository } from "@/journals/repository";
 import { SettingsUiService } from "@/settings";
 
-import { deleteJournalModal } from "../ui/delete-journal-modal";
+import { deleteJournalModal } from "../ui/modals";
 
 export class DeleteJournalFlow implements Flow<{ journalName: string }, void, FlowError> {
   readonly #modals = inject(ModalService);

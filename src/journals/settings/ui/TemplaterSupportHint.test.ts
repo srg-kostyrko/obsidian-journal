@@ -7,7 +7,7 @@ import { ModalService, TemplaterService } from "@/infrastructure/host";
 import { FakeModalService } from "@/infrastructure/host/modals/testing";
 import { FakeTemplaterService } from "@/infrastructure/host/testing";
 
-import { templaterSupportModal } from "./templater-support-modal";
+import { templaterSupportModal } from "./modals";
 import TemplaterSupportHint from "./TemplaterSupportHint.vue";
 
 afterEach(() => cleanup());

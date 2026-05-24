@@ -6,7 +6,7 @@ import { Container, provideInjectorOnApp } from "@/infrastructure/di";
 import { ModalService } from "@/infrastructure/host/modals";
 import { FakeModalService } from "@/infrastructure/host/modals/testing";
 
-import { variableReferenceModal } from "./variable-reference-modal";
+import { dateModificationsModal, variableReferenceModal } from "./modals";
 import VariableReferenceHint from "./VariableReferenceHint.vue";
 
 afterEach(() => cleanup());
@@ -45,7 +45,27 @@ describe("VariableReferenceHint", () => {
     expect(modals.opens.length).toBe(1);
     const lastOpen = modals.lastOpen();
     expect(lastOpen.definition).toBe(variableReferenceModal);
-    expect(lastOpen.props).toEqual(baseProps);
+    expect(lastOpen.props).toMatchObject(baseProps);
+  });
+
+  it("supplies an openModifications callback that opens the date modifications modal", async () => {
+    const { modals, container } = build();
+    render(VariableReferenceHint, {
+      props: baseProps,
+      global: {
+        plugins: [
+          {
+            install(app) {
+              provideInjectorOnApp(app, container);
+            },
+          },
+        ],
+      },
+    });
+    await userEvent.click(screen.getByRole("link"));
+    const { openModifications } = modals.lastOpen<{ openModifications: () => void }, void>().props;
+    openModifications();
+    expect(modals.lastOpen().definition).toBe(dateModificationsModal);
   });
 
   it("forwards numberingVariableNames when provided", async () => {

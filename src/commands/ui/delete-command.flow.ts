@@ -5,7 +5,7 @@ import { attempt, type AsyncResult } from "@/infrastructure/result";
 
 import { CommandsRepository } from "../repository";
 
-import { deleteCommandModal } from "./delete-command-modal";
+import { deleteCommandModal } from "./modals";
 
 export class DeleteCommandFlow implements Flow<{ commandId: string }, void, FlowError> {
   readonly #modals = inject(ModalService);

@@ -1,6 +1,6 @@
 import type { OpenInterval, Period } from "@/calendar";
 import { m } from "@/i18n";
-import { defineModal, type ModalDefinition } from "@/infrastructure/host/modals";
+import { defineModal } from "@/infrastructure/host/modals";
 
 import DatePickerModal from "./DatePickerModal.vue";
 
@@ -12,8 +12,8 @@ export interface DatePickerModalProps {
   selected?: Period | null;
 }
 
-export const datePickerModalDefinition: ModalDefinition<DatePickerModalProps, Period> = defineModal({
+export const datePickerModal = defineModal<Period>()({
   component: DatePickerModal,
-  title: () => m.calendar_date_picker_title(),
+  title: (_: DatePickerModalProps) => m.calendar_date_picker_title(),
   width: 400,
 });

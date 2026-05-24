@@ -6,8 +6,8 @@ import { toFlowError } from "@/journals/errors";
 import { JournalsRepository } from "@/journals/repository";
 import { SettingsUiService } from "@/settings";
 
-import { addJournalModal } from "../ui/add-journal-modal";
 import { journalEditSubpage } from "../ui/journals-subpage";
+import { addJournalModal } from "../ui/modals";
 
 export class AddJournalFlow implements Flow<void, { name: string }, FlowError> {
   readonly #modals = inject(ModalService);

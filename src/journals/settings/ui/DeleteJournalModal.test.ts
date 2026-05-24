@@ -6,8 +6,8 @@ import { m } from "@/i18n";
 import type { ModalApi } from "@/infrastructure/host/modals";
 import { provideModalApiOnApp } from "@/infrastructure/host/modals/testing";
 
-import { deleteJournalModal } from "./delete-journal-modal";
 import DeleteJournalModal from "./DeleteJournalModal.vue";
+import { deleteJournalModal } from "./modals";
 
 afterEach(() => cleanup());
 

@@ -6,7 +6,7 @@ import { m } from "@/i18n";
 import type { ModalApi } from "@/infrastructure/host/modals";
 import { provideModalApiOnApp } from "@/infrastructure/host/modals/testing";
 
-import { shelfNameModal } from "./shelf-name-modal";
+import { shelfNameModal } from "./modals";
 import ShelfNameModal from "./ShelfNameModal.vue";
 
 afterEach(() => cleanup());

@@ -1,6 +1,6 @@
 export { AutoAttachService } from "./auto-attach";
 export { AutoCreateService } from "./auto-create";
-export { confirmCreationModal } from "./confirm-creation-modal";
+export { confirmCreationModal } from "./ui/modals";
 export { journalPickerSuggest } from "./journal-picker";
 export { NoteCreationService } from "./note-creation";
 export { NotePathService } from "./note-path";

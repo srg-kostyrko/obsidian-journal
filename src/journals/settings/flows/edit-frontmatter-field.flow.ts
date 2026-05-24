@@ -5,7 +5,7 @@ import { AsyncResult, attempt } from "@/infrastructure/result";
 import { toFlowError, UnknownJournalError } from "@/journals/errors";
 import { JournalsRepository } from "@/journals/repository";
 
-import { editFrontmatterFieldModal, type FrontmatterFieldName } from "../ui/edit-frontmatter-field-modal";
+import { editFrontmatterFieldModal, type FrontmatterFieldName } from "../ui/modals";
 
 export class EditFrontmatterFieldFlow implements Flow<
   { journalName: string; fieldName: FrontmatterFieldName },
