@@ -7,7 +7,6 @@ import { LoggerFactoryToken } from "@/infrastructure/logger";
 import type { Logger } from "@/infrastructure/logger";
 import { attempt, Err, type AsyncResult } from "@/infrastructure/result";
 
-import { ReactiveCollection } from "./collection";
 import {
   type MigrationFailedError,
   SettingsLoadError,
@@ -20,7 +19,7 @@ import { CollectionDefinitionToken, MigrationToken, SliceDefinitionToken } from 
 import { CURRENT_VERSION } from "./version";
 
 import type { AnyCollectionDefinition, AnySliceDefinition, CollectionDefinition, SliceDefinition } from "./schema";
-import type { CollectionHandle, SliceHandle } from "./types";
+import type { SliceHandle } from "./types";
 import type { BaseIssue, BaseSchema, InferOutput } from "valibot";
 
 type AnySchema = BaseSchema<unknown, unknown, BaseIssue<unknown>>;
@@ -36,7 +35,7 @@ export class SettingsService {
 
   readonly #root: Record<string, unknown> = reactive({});
   readonly #registeredSliceKeys = new Set<string>(this.#slices.map((s) => s.key));
-  readonly #collectionHandles = new Map<string, ReactiveCollection<AnySchema>>();
+  readonly #registeredCollectionKeys = new Set<string>(this.#collections.map((c) => c.key));
 
   #stopWatch?: WatchStopHandle;
   #saveTimer: number | undefined;
@@ -75,18 +74,10 @@ export class SettingsService {
     };
   }
 
-  getCollection<TKey extends string, TItem extends AnySchema>(
-    collection: CollectionDefinition<TKey, TItem>,
-  ): CollectionHandle<InferOutput<TItem>> {
-    const handle = this.#collectionHandles.get(collection.key);
-    if (!handle) throw new UnregisteredSliceError(collection.key);
-    return handle;
-  }
-
   recordOf<TKey extends string, TItem extends AnySchema>(
     collection: CollectionDefinition<TKey, TItem>,
   ): Record<string, InferOutput<TItem>> {
-    if (!this.#collectionHandles.has(collection.key)) {
+    if (!this.#registeredCollectionKeys.has(collection.key)) {
       throw new UnregisteredSliceError(collection.key);
     }
     return this.#root[collection.key] as Record<string, InferOutput<TItem>>;
@@ -110,10 +101,7 @@ export class SettingsService {
       this.#root[definition.key] = parseSliceValue(definition, migrated[definition.key], this.#logger);
     }
     for (const definition of this.#collections) {
-      this.#root[definition.key] = {};
-      const entries = this.#root[definition.key] as Record<string, InferOutput<AnySchema>>;
-      const handle = new ReactiveCollection(definition, entries, migrated[definition.key], this.#logger);
-      this.#collectionHandles.set(definition.key, handle);
+      this.#root[definition.key] = parseCollectionValue(definition, migrated[definition.key], this.#logger);
     }
   }
 
@@ -143,6 +131,28 @@ export class SettingsService {
       this.#logger.error("settings save failed", { error: new SettingsSaveError(result.error) });
     }
   }
+}
+
+function parseCollectionValue<TItem extends AnySchema>(
+  definition: CollectionDefinition<string, TItem>,
+  raw: unknown,
+  logger: Logger,
+): Record<string, InferOutput<TItem>> {
+  const out: Record<string, InferOutput<TItem>> = {};
+  if (raw === null || typeof raw !== "object" || Array.isArray(raw)) return out;
+  for (const [id, value] of Object.entries(raw)) {
+    const parsed = v.safeParse(definition.itemSchema, value);
+    if (parsed.success) {
+      out[id] = parsed.output;
+    } else {
+      out[id] = definition.defaultItem(id);
+      logger.warn("collection entry reset to defaults", {
+        sliceKey: `${definition.key}/${id}`,
+        issues: parsed.issues.map((issue) => issue.message),
+      });
+    }
+  }
+  return out;
 }
 
 function parseSliceValue<TSchema extends AnySchema>(

@@ -105,20 +105,12 @@ describe("SettingsService", () => {
     });
   });
 
-  describe("getSlice / getCollection", () => {
+  describe("getSlice", () => {
     it("throws UnregisteredSliceError for a slice that was never bound", async () => {
       const ghost = defineSlice("ghost", v.object({}), {});
       const { service } = build();
       await service.initialize();
       expect(() => service.getSlice(ghost)).toThrow(UnregisteredSliceError);
-    });
-
-    it("returns a CollectionHandle whose add() updates entries", async () => {
-      const { service } = build();
-      await service.initialize();
-      const handle = service.getCollection(journalCollection);
-      handle.add("daily");
-      expect(handle.get("daily")?.name).toBe("daily");
     });
   });
 
