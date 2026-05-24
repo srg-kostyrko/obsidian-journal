@@ -191,4 +191,17 @@ export default [
       ],
     },
   },
+  {
+    files: ["src/**/*.vue"],
+    ignores: ["src/**/ui/**", "src/_old-code/**"],
+    rules: {
+      "no-restricted-syntax": [
+        "error",
+        {
+          selector: "Program",
+          message: "Vue SFCs must live under a <feature>/ui/ directory.",
+        },
+      ],
+    },
+  },
 ];

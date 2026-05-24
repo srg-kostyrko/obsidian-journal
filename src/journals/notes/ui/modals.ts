@@ -1,7 +1,7 @@
 import { m } from "@/i18n";
 import { defineModal } from "@/infrastructure/host/modals";
 
-import ConfirmCreationModal from "../ConfirmCreationModal.vue";
+import ConfirmCreationModal from "./ConfirmCreationModal.vue";
 
 export const confirmCreationModal = defineModal<boolean>()({
   component: ConfirmCreationModal,
