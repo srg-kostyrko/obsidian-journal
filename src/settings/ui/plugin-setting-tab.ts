@@ -1,5 +1,5 @@
 import { PluginSettingTab } from "obsidian";
-import { type App as VueApp, type Component, createApp } from "vue";
+import { type App as VueApp, createApp } from "vue";
 
 import { inject, type Injector, InjectorToken, provideInjectorOnApp } from "@/infrastructure/di";
 import { InternalObsidianAppToken, InternalPluginToken } from "@/infrastructure/host";
@@ -21,7 +21,7 @@ export class PluginSettingTabAdapter extends PluginSettingTab {
   }
 
   display(): void {
-    const app = createApp(SettingsDashboard as Component);
+    const app = createApp(SettingsDashboard);
     provideInjectorOnApp(app, this.#injector);
     this.#vueApp = app;
     app.mount(this.containerEl);

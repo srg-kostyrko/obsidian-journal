@@ -4,9 +4,8 @@ import { defineModal } from "@/infrastructure/host/modals";
 import WeekPresetPickerModal from "./WeekPresetPickerModal.vue";
 
 import type { CalendarSliceState } from "../slice";
-import type { Component } from "vue";
 
 export const weekPresetPickerModal = defineModal<{ current: CalendarSliceState }, CalendarSliceState>({
-  component: WeekPresetPickerModal as Component,
+  component: WeekPresetPickerModal,
   title: () => m.calendar_preset_picker_title(),
 });

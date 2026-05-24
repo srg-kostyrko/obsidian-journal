@@ -4,7 +4,6 @@ import { defineModal, type ModalDefinition } from "@/infrastructure/host/modals"
 import VariableReferenceModal from "./VariableReferenceModal.vue";
 
 import type { VariableModalContext } from "./variable-context";
-import type { Component } from "vue";
 
 export const variableReferenceModal: ModalDefinition<
   {
@@ -16,6 +15,6 @@ export const variableReferenceModal: ModalDefinition<
   },
   void
 > = defineModal({
-  component: VariableReferenceModal as Component,
+  component: VariableReferenceModal,
   title: () => m.journal_edit_variable_reference_modal_title(),
 });

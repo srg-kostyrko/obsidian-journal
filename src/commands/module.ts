@@ -16,8 +16,6 @@ import JournalCommandsSection from "./ui/JournalCommandsSection.vue";
 import ShelfCommandsSection from "./ui/ShelfCommandsSection.vue";
 import { CommandsViewModel } from "./view-model";
 
-import type { Component } from "vue";
-
 export const commandsModule: Module = {
   register(c) {
     c.register(CollectionDefinitionToken).useValue(commandCollection);
@@ -25,13 +23,13 @@ export const commandsModule: Module = {
     c.register(EditCommandFlow).useClass(EditCommandFlow);
     c.register(DeleteCommandFlow).useClass(DeleteCommandFlow);
     c.register(DashboardBlockToken).useValue(
-      defineDashboardBlock({ key: "commands", component: CommandsDashboardBlock as Component, order: 6 }),
+      defineDashboardBlock({ key: "commands", component: CommandsDashboardBlock, order: 6 }),
     );
     c.register(JournalEditSectionToken).useValue(
-      defineJournalEditSection({ key: "commands", component: JournalCommandsSection as Component, order: 10 }),
+      defineJournalEditSection({ key: "commands", component: JournalCommandsSection, order: 10 }),
     );
     c.register(ShelfEditSectionToken).useValue(
-      defineShelfEditSection({ key: "commands", component: ShelfCommandsSection as Component, order: 10 }),
+      defineShelfEditSection({ key: "commands", component: ShelfCommandsSection, order: 10 }),
     );
     c.register(CommandsEventsToken).useFactory(() => createNanoEvents<CommandsEvents>());
     c.register(CommandsRepository).useClass(CommandsRepository).eager();

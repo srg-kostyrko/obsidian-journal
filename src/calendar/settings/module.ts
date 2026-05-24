@@ -5,15 +5,13 @@ import { CalendarSettingsBridge } from "./bridge";
 import { calendarSlice } from "./slice";
 import CalendarWeekBlock from "./ui/CalendarWeekBlock.vue";
 
-import type { Component } from "vue";
-
 export const calendarSettingsModule: Module = {
   register(c) {
     c.register(SliceDefinitionToken).useValue(calendarSlice);
     c.register(DashboardBlockToken).useValue(
       defineDashboardBlock({
         key: "calendar-week",
-        component: CalendarWeekBlock as Component,
+        component: CalendarWeekBlock,
         order: 10,
       }),
     );

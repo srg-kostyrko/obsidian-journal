@@ -4,9 +4,8 @@ import { defineModal, type ModalDefinition } from "@/infrastructure/host/modals"
 import AddJournalModal from "./AddJournalModal.vue";
 
 import type { JournalWrite } from "../../config";
-import type { Component } from "vue";
 
 export const addJournalModal: ModalDefinition<void, { name: string; write: JournalWrite }> = defineModal({
-  component: AddJournalModal as Component,
+  component: AddJournalModal,
   title: () => m.journal_add_modal_title(),
 });
