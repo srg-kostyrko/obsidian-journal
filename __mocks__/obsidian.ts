@@ -177,10 +177,62 @@ export class AbstractInputSuggest<T> {
   }
 }
 
+export interface FakeMenuItemConfig {
+  title?: string;
+  icon?: string;
+  onClick?: (event: MouseEvent | KeyboardEvent) => void;
+}
+
+export class MenuItem {
+  title = "";
+  icon = "";
+  #onClick: (event: MouseEvent | KeyboardEvent) => void = () => {};
+
+  setTitle(title: string): this {
+    this.title = title;
+    return this;
+  }
+  setIcon(icon: string): this {
+    this.icon = icon;
+    return this;
+  }
+  onClick(callback: (event: MouseEvent | KeyboardEvent) => void): this {
+    this.#onClick = callback;
+    return this;
+  }
+  click(event: MouseEvent | KeyboardEvent = new MouseEvent("click")): void {
+    this.#onClick(event);
+  }
+}
+
+export class Menu {
+  readonly items: MenuItem[] = [];
+  showAtMouseEventCalls: MouseEvent[] = [];
+
+  addItem(build: (item: MenuItem) => unknown): this {
+    const item = new MenuItem();
+    build(item);
+    this.items.push(item);
+    return this;
+  }
+  showAtMouseEvent(event: MouseEvent): void {
+    this.showAtMouseEventCalls.push(event);
+    openMenus.push(this);
+  }
+  showAtPosition(_position: { x: number; y: number }): void {
+    openMenus.push(this);
+  }
+  hide(): void {
+    const index = openMenus.indexOf(this);
+    if (index >= 0) openMenus.splice(index, 1);
+  }
+}
+
 const attachedInputSuggests: AbstractInputSuggest<unknown>[] = [];
 
 const openModals: Modal[] = [];
 const openSuggestModals: SuggestModal<unknown>[] = [];
+const openMenus: Menu[] = [];
 
 export const __testing = {
   get openModals(): readonly Modal[] {
@@ -207,6 +259,14 @@ export const __testing = {
     if (!last) throw new Error("__testing.lastAttachedInputSuggest() called before any input-suggest attached");
     return last;
   },
+  get openMenus(): readonly Menu[] {
+    return openMenus;
+  },
+  lastOpenMenu(): Menu {
+    const last = openMenus.at(-1);
+    if (!last) throw new Error("__testing.lastOpenMenu() called before any menu opened");
+    return last;
+  },
   reset(): void {
     for (const m of [...openModals]) m.close();
     openModals.length = 0;
@@ -214,5 +274,7 @@ export const __testing = {
     openSuggestModals.length = 0;
     for (const s of [...attachedInputSuggests]) s.close();
     attachedInputSuggests.length = 0;
+    for (const m of [...openMenus]) m.hide();
+    openMenus.length = 0;
   },
 };
