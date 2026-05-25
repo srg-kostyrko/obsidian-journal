@@ -1,0 +1,33 @@
+export {
+  borderSideSchema,
+  colorSchema,
+  decorationConditionSchema,
+  decorationSchema,
+  decorationStyleSchema,
+  type BorderSide,
+  type ColorSettings,
+  type JournalDecoration,
+  type JournalDecorationBackground,
+  type JournalDecorationBooleanPropertyCondition,
+  type JournalDecorationBorder,
+  type JournalDecorationColor,
+  type JournalDecorationCondition,
+  type JournalDecorationCorner,
+  type JournalDecorationDateCondition,
+  type JournalDecorationIcon,
+  type JournalDecorationNumberPropertyCondition,
+  type JournalDecorationOffsetCondition,
+  type JournalDecorationPropertyCondition,
+  type JournalDecorationShape,
+  type JournalDecorationStringPropertyCondition,
+  type JournalDecorationStyle,
+  type JournalDecorationTagCondition,
+  type JournalDecorationTitleCondition,
+  type JournalDecorationWeekdayCondition,
+} from "./config";
+export { defaultCondition, defaultDecoration, defaultStyle } from "./defaults";
+export { DecorationEngine, periodMatchesWrite, type DecorationBinding } from "./engine";
+export { decorationsModule } from "./module";
+export { CellDecorationMapKey, type CellStyleRef } from "./ui/cell-decoration-map-key";
+export { default as CellDecoration } from "./ui/CellDecoration.vue";
+export { useCellDecorations } from "./use-cell-decorations";

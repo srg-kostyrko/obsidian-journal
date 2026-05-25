@@ -40,7 +40,7 @@ const grid = useCalendarGrid({
       :disabled="cell.isDisabled"
       @click="emit('select', cell.period as QuarterPeriod)"
     >
-      {{ cell.label }}
+      <slot name="cell" :period="cell.period" :label="cell.label">{{ cell.label }}</slot>
     </UiButton>
   </CalendarGrid>
 </template>

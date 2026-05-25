@@ -1,0 +1,135 @@
+import { match, P } from "ts-pattern";
+
+import type { Period } from "@/calendar";
+import type { NoteMetadata } from "@/infrastructure/host";
+import type { CycleService } from "@/journals";
+import type { JournalConfig } from "@/journals/config";
+
+import type {
+  JournalDecorationDateCondition,
+  JournalDecorationOffsetCondition,
+  JournalDecorationPropertyCondition,
+  JournalDecorationTagCondition,
+  JournalDecorationTitleCondition,
+  JournalDecorationWeekdayCondition,
+} from "./config";
+
+export function checkTitle(condition: JournalDecorationTitleCondition, metadata: NoteMetadata | null): boolean {
+  if (!metadata) return false;
+  const title = metadata.title.toLowerCase();
+  const value = condition.value.toLowerCase();
+  return match(condition.condition)
+    .with("contains", () => title.includes(value))
+    .with("starts-with", () => title.startsWith(value))
+    .with("ends-with", () => title.endsWith(value))
+    .exhaustive();
+}
+
+export function checkTag(condition: JournalDecorationTagCondition, metadata: NoteMetadata | null): boolean {
+  if (!metadata) return false;
+  const value = condition.value.toLowerCase();
+  return match(condition.condition)
+    .with("contains", () => metadata.tags.some((tag) => tag.toLowerCase().includes(value)))
+    .with("starts-with", () => metadata.tags.some((tag) => tag.toLowerCase().startsWith(value)))
+    .with("ends-with", () => metadata.tags.some((tag) => tag.toLowerCase().endsWith(value)))
+    .exhaustive();
+}
+
+export function checkProperty(condition: JournalDecorationPropertyCondition, metadata: NoteMetadata | null): boolean {
+  if (!metadata) return false;
+  const present = condition.name in metadata.properties;
+  if (condition.condition === "exists") return present;
+  if (condition.condition === "does-not-exist") return !present;
+  if (!present) return false;
+  const raw = metadata.properties[condition.name];
+
+  return match(condition)
+    .with({ valueType: "text" }, (c) => checkTextProperty(c, raw))
+    .with({ valueType: "number" }, (c) => checkNumberProperty(c, raw))
+    .with({ valueType: "checkbox" }, (c) => checkBooleanProperty(c, raw))
+    .exhaustive();
+}
+
+function checkTextProperty(
+  c: Extract<JournalDecorationPropertyCondition, { valueType: "text" }>,
+  raw: unknown,
+): boolean {
+  const matchOne = (value: string): boolean =>
+    match(c.condition)
+      .with("eq", () => value === c.value)
+      .with("neq", () => value !== c.value)
+      .with("contains", () => value.toLowerCase().includes(c.value.toLowerCase()))
+      .with("does-not-contain", () => !value.toLowerCase().includes(c.value.toLowerCase()))
+      .with("starts-with", () => value.toLowerCase().startsWith(c.value.toLowerCase()))
+      .with("ends-with", () => value.toLowerCase().endsWith(c.value.toLowerCase()))
+      .with(P.union("exists", "does-not-exist"), () => false)
+      .exhaustive();
+  if (typeof raw === "string") return matchOne(raw);
+  if (Array.isArray(raw)) return raw.some((item) => typeof item === "string" && matchOne(item));
+  return false;
+}
+
+function checkNumberProperty(
+  c: Extract<JournalDecorationPropertyCondition, { valueType: "number" }>,
+  raw: unknown,
+): boolean {
+  if (typeof raw !== "number" || !Number.isFinite(raw)) return false;
+  return match(c.condition)
+    .with("eq", () => raw === c.value)
+    .with("neq", () => raw !== c.value)
+    .with("lt", () => raw < c.value)
+    .with("lte", () => raw <= c.value)
+    .with("gt", () => raw > c.value)
+    .with("gte", () => raw >= c.value)
+    .with(P.union("exists", "does-not-exist"), () => false)
+    .exhaustive();
+}
+
+function checkBooleanProperty(
+  c: Extract<JournalDecorationPropertyCondition, { valueType: "checkbox" }>,
+  raw: unknown,
+): boolean {
+  if (typeof raw !== "boolean") return false;
+  return match(c.condition)
+    .with("is-true", () => raw === true)
+    .with("is-false", () => raw === false)
+    .with(P.union("exists", "does-not-exist"), () => false)
+    .exhaustive();
+}
+
+export function checkDate(condition: JournalDecorationDateCondition, period: Period): boolean {
+  const anchor = period.anchor;
+  const dayOk = condition.day === -1 || Number(anchor.format("D")) === condition.day;
+  const monthOk = condition.month === -1 || Number(anchor.format("M")) - 1 === condition.month;
+  const yearOk = condition.year === null || Number(anchor.format("YYYY")) === condition.year;
+  return dayOk && monthOk && yearOk;
+}
+
+export function checkWeekday(condition: JournalDecorationWeekdayCondition, period: Period): boolean {
+  if (condition.weekdays.length === 0) return false;
+  const weekday = Number(period.anchor.format("d"));
+  return condition.weekdays.includes(weekday);
+}
+
+export function checkOffset(
+  condition: JournalDecorationOffsetCondition,
+  period: Period,
+  journal: JournalConfig,
+  cycle: Pick<CycleService, "offsets">,
+): boolean {
+  const result = cycle.offsets(journal.name, period.anchor);
+  if (result.isNone()) return false;
+  const [positive, negative] = result.value;
+  if (condition.offset < 0) return negative === condition.offset;
+  return positive === condition.offset;
+}
+
+export function hasOpenTask(metadata: NoteMetadata): boolean {
+  if (metadata.tasks.length === 0) return false;
+  return metadata.tasks.some((task) => !task.completed);
+}
+
+export function allTasksCompleted(metadata: NoteMetadata): boolean {
+  if (metadata.tasks.length === 0) return false;
+  return metadata.tasks.every((task) => task.completed);
+}

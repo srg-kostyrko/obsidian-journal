@@ -23,6 +23,7 @@ function baseConfig(overrides: Partial<JournalConfig>): JournalConfig {
     templates: [],
     confirmCreation: false,
     autoCreate: false,
+    decorations: [],
     ...overrides,
   };
 }

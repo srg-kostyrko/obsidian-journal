@@ -33,6 +33,7 @@ function makeJournal(name: string): JournalConfig {
     folder: "",
     templates: [],
     confirmCreation: false,
+    decorations: [],
     autoCreate: false,
   };
 }

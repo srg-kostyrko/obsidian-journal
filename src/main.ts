@@ -3,6 +3,7 @@ import { getLanguage, Notice, Plugin } from "obsidian";
 import { CalendarModule, calendarSettingsModule } from "@/calendar";
 import { commandsModule } from "@/commands";
 import { DynamicCommandRegistry } from "@/commands/command-registry";
+import { decorationsModule } from "@/decorations";
 import { initLocale } from "@/i18n";
 import { Container } from "@/infrastructure/di";
 import { FlowsModule } from "@/infrastructure/flows";
@@ -32,6 +33,7 @@ export default class JournalPlugin extends Plugin {
     container.addModule(calendarSettingsModule);
     container.addModule(journalsModule);
     container.addModule(journalsSettingsModule);
+    container.addModule(decorationsModule);
     container.addModule(shelvesModule);
     container.addModule(commandsModule);
     await container.autoLoad();

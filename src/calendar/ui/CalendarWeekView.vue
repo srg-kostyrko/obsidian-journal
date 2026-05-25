@@ -41,8 +41,10 @@ const grid = useCalendarGrid({
       :disabled="cell.isDisabled"
       @click="emit('select', cell.period as WeekPeriod)"
     >
-      <span>{{ cell.label }}</span>
-      <span>{{ cell.period.format("MMM D") }} – {{ (cell.period as WeekPeriod).end.format("MMM D") }}</span>
+      <slot name="cell" :period="cell.period" :label="cell.label">
+        <span>{{ cell.label }}</span>
+        <span>{{ cell.period.format("MMM D") }} – {{ (cell.period as WeekPeriod).end.format("MMM D") }}</span>
+      </slot>
     </UiButton>
   </CalendarGrid>
 </template>

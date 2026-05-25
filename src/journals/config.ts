@@ -1,6 +1,7 @@
 import * as v from "valibot";
 
 import type { AnchorString } from "@/calendar";
+import { decorationSchema } from "@/decorations/config";
 import { defineCollection } from "@/settings";
 
 export const FRONTMATTER_NAME_KEY = "journal";
@@ -94,6 +95,7 @@ export const journalConfigSchema = v.object({
   templates: v.optional(v.array(v.string()), []),
   confirmCreation: v.optional(v.boolean(), false),
   autoCreate: v.optional(v.boolean(), false),
+  decorations: v.optional(v.array(decorationSchema), []),
 });
 
 export type FixedWriteIntervals = v.InferOutput<typeof writeFixed>;
@@ -160,6 +162,7 @@ export function journalDefaultsFor(write: JournalWrite, name = ""): JournalConfi
     templates: [],
     confirmCreation: false,
     autoCreate: false,
+    decorations: [],
   };
 }
 
