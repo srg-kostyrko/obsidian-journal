@@ -58,6 +58,14 @@ export function useNotesCell(options: { journalNames: MaybeRefOrGetter<readonly 
     });
   };
 
+  const openPreview = (period: Period, event: MouseEvent): void => {
+    if (!event.ctrlKey && !event.metaKey) return;
+    const paths = existingPathsAt(period);
+    const [first] = paths;
+    if (first === undefined) return;
+    workspace.triggerHoverPreview(first, event);
+  };
+
   const openContextMenu = (period: Period, event: MouseEvent): void => {
     const paths = existingPathsAt(period);
     if (paths.length === 0) return;
@@ -77,8 +85,4 @@ export function useNotesCell(options: { journalNames: MaybeRefOrGetter<readonly 
   };
 
   return { open, openContextMenu, openPreview, isActive, isActionable };
-}
-
-function openPreview(_period: Period, _event: MouseEvent): void {
-  // implemented in task 4.3
 }

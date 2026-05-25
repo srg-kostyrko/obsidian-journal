@@ -204,4 +204,38 @@ describe("useNotesCell", () => {
       expect(menu.items.map((i) => i.title)).toEqual([dailyPath, secondPath]);
     });
   });
+
+  describe("openPreview", () => {
+    it("does nothing when no modifier key is held", () => {
+      const { c, workspace, index } = buildHarness();
+      index.register({ journalName: "daily", anchor: may25.anchor.toAnchor(), path: dailyPath });
+      const { api } = mountWithApi(c, () => ["daily"]);
+      api.openPreview(may25, new MouseEvent("mouseenter"));
+      expect(workspace.hoverPreviewCalls).toEqual([]);
+    });
+
+    it("does nothing when no existing entry is present even with ctrl held", () => {
+      const { c, workspace } = buildHarness();
+      const { api } = mountWithApi(c, () => ["daily"]);
+      api.openPreview(may25, new MouseEvent("mouseenter", { ctrlKey: true }));
+      expect(workspace.hoverPreviewCalls).toEqual([]);
+    });
+
+    it("invokes triggerHoverPreview with the first existing path when ctrl is held", () => {
+      const { c, workspace, index } = buildHarness();
+      index.register({ journalName: "daily", anchor: may25.anchor.toAnchor(), path: dailyPath });
+      const { api } = mountWithApi(c, () => ["daily"]);
+      const event = new MouseEvent("mouseenter", { ctrlKey: true });
+      api.openPreview(may25, event);
+      expect(workspace.hoverPreviewCalls).toEqual([{ path: dailyPath, event }]);
+    });
+
+    it("invokes triggerHoverPreview when meta is held", () => {
+      const { c, workspace, index } = buildHarness();
+      index.register({ journalName: "daily", anchor: may25.anchor.toAnchor(), path: dailyPath });
+      const { api } = mountWithApi(c, () => ["daily"]);
+      api.openPreview(may25, new MouseEvent("mouseenter", { metaKey: true }));
+      expect(workspace.hoverPreviewCalls).toHaveLength(1);
+    });
+  });
 });
