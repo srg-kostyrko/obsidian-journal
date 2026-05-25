@@ -60,7 +60,7 @@ describe("CalendarWeekView", () => {
       const cells = screen.getAllByTestId("week-cell");
       await userEvent.click(cells[0]);
 
-      const events = emitted<[WeekPeriod]>("select");
+      const events = emitted<[WeekPeriod, MouseEvent]>("select");
       expect(events).toHaveLength(1);
       expect(events[0][0].kind).toBe("week");
     });

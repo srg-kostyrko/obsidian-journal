@@ -56,7 +56,7 @@ describe("CalendarQuarterView", () => {
       const cells = screen.getAllByTestId("quarter-cell");
       await userEvent.click(cells[2]);
 
-      const events = emitted<[QuarterPeriod]>("select");
+      const events = emitted<[QuarterPeriod, MouseEvent]>("select");
       expect(events).toHaveLength(1);
       expect(events[0][0].kind).toBe("quarter");
     });

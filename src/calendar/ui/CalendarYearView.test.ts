@@ -56,7 +56,7 @@ describe("CalendarYearView", () => {
       const cells = screen.getAllByTestId("year-cell");
       await userEvent.click(cells[4]);
 
-      const events = emitted<[MonthPeriod]>("select");
+      const events = emitted<[MonthPeriod, MouseEvent]>("select");
       expect(events).toHaveLength(1);
       expect(events[0][0].start.toAnchor()).toBe("2025-05-01");
     });

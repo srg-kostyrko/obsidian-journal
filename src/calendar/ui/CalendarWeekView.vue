@@ -14,7 +14,7 @@ const props = defineProps<{
   bounds?: OpenInterval;
 }>();
 
-const emit = defineEmits<{ select: [cell: WeekPeriod] }>();
+const emit = defineEmits<{ select: [cell: WeekPeriod, event: MouseEvent] }>();
 
 const cells = computed(() => [...toRaw(props.outerPeriod).weeks()]);
 
@@ -39,7 +39,7 @@ const grid = useCalendarGrid({
       :data-selected="cell.isSelected || null"
       :data-today="cell.isToday || null"
       :disabled="cell.isDisabled"
-      @click="emit('select', cell.period as WeekPeriod)"
+      @click="emit('select', cell.period as WeekPeriod, $event)"
     >
       <slot name="cell" :period="cell.period" :label="cell.label">
         <span>{{ cell.label }}</span>

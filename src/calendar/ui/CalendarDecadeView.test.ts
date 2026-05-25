@@ -56,7 +56,7 @@ describe("CalendarDecadeView", () => {
       const cells = screen.getAllByTestId("decade-cell");
       await userEvent.click(cells[5]);
 
-      const events = emitted<[YearPeriod]>("select");
+      const events = emitted<[YearPeriod, MouseEvent]>("select");
       expect(events).toHaveLength(1);
       expect(events[0][0].kind).toBe("year");
     });

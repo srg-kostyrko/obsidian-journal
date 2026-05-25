@@ -64,16 +64,17 @@ describe("CalendarMonthView", () => {
   });
 
   describe("emit", () => {
-    it("emits select with the clicked day's DayPeriod", async () => {
+    it("emits select with the clicked day's DayPeriod and the MouseEvent", async () => {
       const outerPeriod = MonthPeriod.containing(date("2024-05-15"));
       const { emitted } = mount({ outerPeriod, selected: null });
 
       const targetCell = screen.getAllByTestId("month-cell").find((c) => c.dataset.anchor === "2024-05-07")!;
       await userEvent.click(targetCell);
 
-      const events = emitted<[DayPeriod]>("select");
+      const events = emitted<[DayPeriod, MouseEvent]>("select");
       expect(events).toHaveLength(1);
       expect(events[0][0].start.toAnchor()).toBe("2024-05-07");
+      expect(events[0][1]).toBeInstanceOf(MouseEvent);
     });
   });
 

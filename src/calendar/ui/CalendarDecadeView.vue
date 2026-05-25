@@ -14,7 +14,7 @@ const props = defineProps<{
   bounds?: OpenInterval;
 }>();
 
-const emit = defineEmits<{ select: [cell: YearPeriod] }>();
+const emit = defineEmits<{ select: [cell: YearPeriod, event: MouseEvent] }>();
 
 const cells = computed(() => [...toRaw(props.outerPeriod).years()]);
 
@@ -38,7 +38,7 @@ const grid = useCalendarGrid({
       :data-selected="cell.isSelected || null"
       :data-today="cell.isToday || null"
       :disabled="cell.isDisabled"
-      @click="emit('select', cell.period as YearPeriod)"
+      @click="emit('select', cell.period as YearPeriod, $event)"
     >
       <slot name="cell" :period="cell.period" :label="cell.label">{{ cell.label }}</slot>
     </UiButton>

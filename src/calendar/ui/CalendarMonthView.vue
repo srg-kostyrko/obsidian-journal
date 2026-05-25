@@ -15,7 +15,7 @@ const props = defineProps<{
   bounds?: OpenInterval;
 }>();
 
-const emit = defineEmits<{ select: [cell: DayPeriod] }>();
+const emit = defineEmits<{ select: [cell: DayPeriod, event: MouseEvent] }>();
 
 const calendar = useService(Calendar);
 const weekdays = computed(() => calendar.weekdays());
@@ -57,7 +57,7 @@ const grid = useCalendarGrid({
       :data-outside="cell.isOutside || null"
       :data-today="cell.isToday || null"
       :disabled="cell.isDisabled"
-      @click="emit('select', cell.period as DayPeriod)"
+      @click="emit('select', cell.period as DayPeriod, $event)"
     >
       <slot name="cell" :period="cell.period" :label="cell.label">{{ cell.label }}</slot>
     </UiButton>
