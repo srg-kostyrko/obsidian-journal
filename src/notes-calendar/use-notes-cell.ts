@@ -1,9 +1,11 @@
+import { Menu } from "obsidian";
 import { toValue, type MaybeRefOrGetter } from "vue";
 
 import type { Period } from "@/calendar";
 import { useService } from "@/infrastructure/di";
 import { Flows } from "@/infrastructure/flows";
 import { defineOpenMode, WorkspaceService } from "@/infrastructure/host";
+import type { VaultPath } from "@/infrastructure/host";
 import { JournalsIndex, OpenDateFlow, TimelineService } from "@/journals";
 
 import { ActiveEntryViewModel } from "./active-entry";
@@ -37,9 +39,9 @@ export function useNotesCell(options: { journalNames: MaybeRefOrGetter<readonly 
     return a.anchor === period.anchor.toAnchor();
   };
 
-  const existingPathsAt = (period: Period): readonly string[] => {
+  const existingPathsAt = (period: Period): readonly VaultPath[] => {
     const anchor = period.anchor.toAnchor();
-    const paths: string[] = [];
+    const paths: VaultPath[] = [];
     for (const name of toValue(options.journalNames)) {
       const opt = index.entryByAnchor(name, anchor);
       if (opt.isSome()) paths.push(opt.value.path);
@@ -56,14 +58,25 @@ export function useNotesCell(options: { journalNames: MaybeRefOrGetter<readonly 
     });
   };
 
-  void workspace;
-  void existingPathsAt;
+  const openContextMenu = (period: Period, event: MouseEvent): void => {
+    const paths = existingPathsAt(period);
+    if (paths.length === 0) return;
+    const [first] = paths;
+    if (first === undefined) return;
+    if (paths.length === 1) {
+      workspace.openFileMenu(first, event);
+      return;
+    }
+    const menu = new Menu();
+    for (const path of paths) {
+      menu.addItem((item) => {
+        item.setTitle(path).onClick(() => workspace.openFileMenu(path, event));
+      });
+    }
+    menu.showAtMouseEvent(event);
+  };
 
   return { open, openContextMenu, openPreview, isActive, isActionable };
-}
-
-function openContextMenu(_period: Period, _event: MouseEvent): void {
-  // implemented in task 4.2
 }
 
 function openPreview(_period: Period, _event: MouseEvent): void {

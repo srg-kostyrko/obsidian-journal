@@ -88,6 +88,7 @@ function mountWithApi(c: Container, journalNames: () => readonly string[]): { ap
 }
 
 const may25 = DayPeriod.containing(date("2026-05-25"));
+const dailyPath = "Daily/2026-05-25.md" as VaultPath;
 
 describe("useNotesCell", () => {
   let teardown: () => void;
@@ -167,6 +168,40 @@ describe("useNotesCell", () => {
       const { api } = mountWithApi(c, () => []);
       api.open(may25, new MouseEvent("click"));
       expect(invokeSpy).not.toHaveBeenCalled();
+    });
+  });
+
+  describe("openContextMenu", () => {
+    it("does nothing when no entry exists at the period's anchor", () => {
+      const { c, workspace } = buildHarness();
+      const { api } = mountWithApi(c, () => ["daily"]);
+      api.openContextMenu(may25, new MouseEvent("contextmenu"));
+      expect(workspace.fileMenuCalls).toEqual([]);
+    });
+
+    it("opens the file menu directly when exactly one entry exists", () => {
+      const { c, workspace, index } = buildHarness();
+      index.register({ journalName: "daily", anchor: may25.anchor.toAnchor(), path: dailyPath });
+      const { api } = mountWithApi(c, () => ["daily"]);
+      const event = new MouseEvent("contextmenu");
+      api.openContextMenu(may25, event);
+
+      expect(workspace.fileMenuCalls).toEqual([{ path: dailyPath, event }]);
+    });
+
+    it("shows a chooser menu when multiple entries exist at the same anchor", async () => {
+      const { c, index } = buildHarness();
+      index.register({ journalName: "daily", anchor: may25.anchor.toAnchor(), path: dailyPath });
+      const secondPath = "Daily2/2026-05-25.md" as VaultPath;
+      index.register({ journalName: "secondary", anchor: may25.anchor.toAnchor(), path: secondPath });
+      const { api } = mountWithApi(c, () => ["daily", "secondary"]);
+      const { __testing } = await import("obsidian");
+      __testing.reset();
+
+      api.openContextMenu(may25, new MouseEvent("contextmenu"));
+
+      const menu = __testing.lastOpenMenu();
+      expect(menu.items.map((i) => i.title)).toEqual([dailyPath, secondPath]);
     });
   });
 });
