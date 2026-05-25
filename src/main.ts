@@ -13,6 +13,7 @@ import { AutoAttachService, AutoCreateService } from "@/journals";
 import { journalsModule } from "@/journals/module";
 import { journalsSettingsModule } from "@/journals/settings/module";
 import { VaultSubscriptionService } from "@/journals/vault-subscription";
+import { notesCalendarModule } from "@/notes-calendar";
 import { settingsModule, SettingsService } from "@/settings";
 import { shelvesModule } from "@/shelves";
 import { templatesModule } from "@/templates";
@@ -34,6 +35,7 @@ export default class JournalPlugin extends Plugin {
     container.addModule(journalsModule);
     container.addModule(journalsSettingsModule);
     container.addModule(decorationsModule);
+    container.addModule(notesCalendarModule);
     container.addModule(shelvesModule);
     container.addModule(commandsModule);
     await container.autoLoad();
