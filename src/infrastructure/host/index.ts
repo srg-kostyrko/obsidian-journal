@@ -18,6 +18,7 @@ export { PluginData } from "./internal/plugin-data";
 export { WorkspaceService } from "./internal/workspace-service";
 export { TemplaterService } from "./internal/templater-service";
 export { renderIcon } from "./internal/icons";
+export { defineOpenMode } from "./define-open-mode";
 export {
   defineModal,
   ModalCancelled,
