@@ -115,4 +115,20 @@ describe("WorkspaceService", () => {
       expect(count).toBe(1);
     });
   });
+
+  describe("triggerHoverPreview", () => {
+    it("invokes app.workspace.trigger with the link-hover signal", () => {
+      const { service, host } = build();
+      const event = new MouseEvent("mouseenter");
+      service.triggerHoverPreview(path, event);
+
+      expect(host.workspace.triggerCalls).toHaveLength(1);
+      const [recorded] = host.workspace.triggerCalls;
+      expect(recorded.event).toBe("link-hover");
+      expect(recorded.arguments_[0]).toBe(host.plugin);
+      expect(recorded.arguments_[1]).toBe(event.target);
+      expect(recorded.arguments_[2]).toBe(path);
+      expect(recorded.arguments_[3]).toBe(path);
+    });
+  });
 });

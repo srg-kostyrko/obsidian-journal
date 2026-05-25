@@ -41,6 +41,10 @@ export class WorkspaceService {
     return AsyncResult.fromPromise(this.#open(path, mode), (cause) => new WorkspaceOpenError(path, cause));
   }
 
+  triggerHoverPreview(path: VaultPath, event: MouseEvent): void {
+    this.#app.workspace.trigger("link-hover", this.#plugin, event.target, path, path);
+  }
+
   async #open(path: VaultPath, mode: OpenMode): Promise<void> {
     const existing = this.#findOpenLeaf(path);
     if (existing) {

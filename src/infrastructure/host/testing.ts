@@ -161,12 +161,16 @@ export class FakeNotesService implements Pick<
   }
 }
 
-export class FakeWorkspaceService implements Pick<WorkspaceService, "activeNote" | "isOpen" | "openNote" | "events"> {
+export class FakeWorkspaceService implements Pick<
+  WorkspaceService,
+  "activeNote" | "isOpen" | "openNote" | "events" | "triggerHoverPreview"
+> {
   readonly #open = new Set<VaultPath>();
   readonly #emitter: TypedEmitter<WorkspaceEvents> = createNanoEvents();
   #active: Option<VaultPath> = new None<VaultPath>();
 
   readonly events: Subscribable<WorkspaceEvents> = this.#emitter;
+  readonly hoverPreviewCalls: { path: VaultPath; event: MouseEvent }[] = [];
 
   activeNote(): Option<VaultPath> {
     return this.#active;
@@ -185,6 +189,10 @@ export class FakeWorkspaceService implements Pick<WorkspaceService, "activeNote"
   setActive(path: VaultPath | null): void {
     this.#active = path === null ? new None<VaultPath>() : new Some<VaultPath>(path);
     this.#emitter.emit("active-note-changed", this.#active);
+  }
+
+  triggerHoverPreview(path: VaultPath, event: MouseEvent): void {
+    this.hoverPreviewCalls.push({ path, event });
   }
 }
 
