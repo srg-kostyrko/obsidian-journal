@@ -1,5 +1,5 @@
 import { createNanoEvents } from "nanoevents";
-import { TFile } from "obsidian";
+import { Menu, TFile } from "obsidian";
 
 import { inject } from "@/infrastructure/di";
 import type { Subscribable, TypedEmitter } from "@/infrastructure/events";
@@ -43,6 +43,14 @@ export class WorkspaceService {
 
   triggerHoverPreview(path: VaultPath, event: MouseEvent): void {
     this.#app.workspace.trigger("link-hover", this.#plugin, event.target, path, path);
+  }
+
+  openFileMenu(path: VaultPath, event: MouseEvent): void {
+    const file = this.#app.vault.getAbstractFileByPath(path);
+    if (!(file instanceof TFile)) return;
+    const menu = new Menu();
+    this.#app.workspace.trigger("file-menu", menu, file, "file-explorer-context-menu", null);
+    menu.showAtMouseEvent(event);
   }
 
   async #open(path: VaultPath, mode: OpenMode): Promise<void> {

@@ -131,4 +131,33 @@ describe("WorkspaceService", () => {
       expect(recorded.arguments_[3]).toBe(path);
     });
   });
+
+  describe("openFileMenu", () => {
+    it("invokes app.workspace.trigger with the file-menu signal and shows the menu at the event", async () => {
+      const { __testing } = await import("obsidian");
+      __testing.reset();
+
+      const { service, host } = build();
+      host.putFile(path);
+      const event = new MouseEvent("contextmenu");
+      service.openFileMenu(path, event);
+
+      expect(host.workspace.triggerCalls).toHaveLength(1);
+      const [recorded] = host.workspace.triggerCalls;
+      expect(recorded.event).toBe("file-menu");
+      const menu = __testing.lastOpenMenu();
+      expect(menu.showAtMouseEventCalls).toEqual([event]);
+    });
+
+    it("no-ops when the path does not resolve to a TFile", async () => {
+      const { __testing } = await import("obsidian");
+      __testing.reset();
+
+      const { service, host } = build();
+      service.openFileMenu("Missing/file.md" as VaultPath, new MouseEvent("contextmenu"));
+
+      expect(host.workspace.triggerCalls).toHaveLength(0);
+      expect(__testing.openMenus).toHaveLength(0);
+    });
+  });
 });

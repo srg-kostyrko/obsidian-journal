@@ -20,6 +20,11 @@ declare module "obsidian" {
     removeRibbonAction(id: string): void;
   }
 
+  interface Menu {
+    readonly items: { title: string; icon: string }[];
+    showAtMouseEventCalls: MouseEvent[];
+  }
+
   export const __testing: {
     readonly openModals: readonly Modal[];
     lastOpenModal(): Modal;
@@ -27,6 +32,8 @@ declare module "obsidian" {
     lastOpenSuggestModal(): SuggestModal<unknown>;
     readonly attachedInputSuggests: readonly AbstractInputSuggest<unknown>[];
     lastAttachedInputSuggest(): AbstractInputSuggest<unknown>;
+    readonly openMenus: readonly Menu[];
+    lastOpenMenu(): Menu;
     reset(): void;
   };
 }

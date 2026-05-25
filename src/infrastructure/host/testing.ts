@@ -163,7 +163,7 @@ export class FakeNotesService implements Pick<
 
 export class FakeWorkspaceService implements Pick<
   WorkspaceService,
-  "activeNote" | "isOpen" | "openNote" | "events" | "triggerHoverPreview"
+  "activeNote" | "isOpen" | "openNote" | "events" | "triggerHoverPreview" | "openFileMenu"
 > {
   readonly #open = new Set<VaultPath>();
   readonly #emitter: TypedEmitter<WorkspaceEvents> = createNanoEvents();
@@ -171,6 +171,7 @@ export class FakeWorkspaceService implements Pick<
 
   readonly events: Subscribable<WorkspaceEvents> = this.#emitter;
   readonly hoverPreviewCalls: { path: VaultPath; event: MouseEvent }[] = [];
+  readonly fileMenuCalls: { path: VaultPath; event: MouseEvent }[] = [];
 
   activeNote(): Option<VaultPath> {
     return this.#active;
@@ -193,6 +194,10 @@ export class FakeWorkspaceService implements Pick<
 
   triggerHoverPreview(path: VaultPath, event: MouseEvent): void {
     this.hoverPreviewCalls.push({ path, event });
+  }
+
+  openFileMenu(path: VaultPath, event: MouseEvent): void {
+    this.fileMenuCalls.push({ path, event });
   }
 }
 
