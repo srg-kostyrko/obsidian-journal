@@ -20,3 +20,14 @@ export interface NotesEvents {
 export interface WorkspaceEvents {
   "active-note-changed": (path: Option<VaultPath>) => void;
 }
+
+export interface NoteTask {
+  readonly completed: boolean;
+}
+
+export interface NoteMetadata {
+  readonly title: string;
+  readonly tags: readonly string[];
+  readonly properties: Readonly<Record<string, unknown>>;
+  readonly tasks: readonly NoteTask[];
+}

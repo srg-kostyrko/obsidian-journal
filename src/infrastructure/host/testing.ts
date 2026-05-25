@@ -16,11 +16,12 @@ import type {
   PluginDataIOError,
   WorkspaceOpenError,
 } from "./errors";
+import type { NoteMetadataService } from "./internal/note-metadata-service";
 import type { NotesService } from "./internal/notes-service";
 import type { PluginData } from "./internal/plugin-data";
 import type { TemplaterService } from "./internal/templater-service";
 import type { WorkspaceService } from "./internal/workspace-service";
-import type { Note, NotesEvents, OpenMode, VaultPath, WorkspaceEvents } from "./types";
+import type { Note, NoteMetadata, NotesEvents, OpenMode, VaultPath, WorkspaceEvents } from "./types";
 
 interface FakeEntry {
   content: string;
@@ -230,6 +231,23 @@ export class FakeTemplaterService implements Pick<TemplaterService, "apply" | "c
 
   isSupported(): boolean {
     return this.#supported;
+  }
+}
+
+export class FakeNoteMetadataService implements Pick<NoteMetadataService, "get"> {
+  readonly #entries = new Map<VaultPath, NoteMetadata>();
+
+  setMetadata(path: VaultPath, metadata: NoteMetadata): void {
+    this.#entries.set(path, metadata);
+  }
+
+  clear(): void {
+    this.#entries.clear();
+  }
+
+  get(path: VaultPath): Option<NoteMetadata> {
+    const hit = this.#entries.get(path);
+    return hit ? new Some(hit) : new None<NoteMetadata>();
   }
 }
 

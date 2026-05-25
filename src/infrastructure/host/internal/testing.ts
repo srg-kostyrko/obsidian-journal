@@ -218,6 +218,9 @@ export function createFakeHost(): FakeHost {
     getCache(path: string): CachedMetadata | null {
       return files.get(path)?.metadata ?? null;
     },
+    getFileCache(file: TFile): CachedMetadata | null {
+      return files.get(file.path)?.metadata ?? null;
+    },
   };
 
   const fileManagerApi = {

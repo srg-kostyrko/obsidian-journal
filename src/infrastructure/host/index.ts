@@ -12,6 +12,7 @@ export {
   PluginDataIOError,
   WorkspaceOpenError,
 } from "./errors";
+export { NoteMetadataService } from "./internal/note-metadata-service";
 export { NotesService } from "./internal/notes-service";
 export { PluginData } from "./internal/plugin-data";
 export { WorkspaceService } from "./internal/workspace-service";
@@ -43,5 +44,5 @@ export {
 } from "./input-suggests";
 export { CommandService, type CommandRegistration } from "./commands";
 export { createHostModule } from "./module";
-export type { Note, NotesEvents, OpenMode, VaultPath, WorkspaceEvents } from "./types";
+export type { Note, NoteMetadata, NoteTask, NotesEvents, OpenMode, VaultPath, WorkspaceEvents } from "./types";
 export { InternalObsidianAppToken, InternalPluginToken } from "./internal/tokens";
