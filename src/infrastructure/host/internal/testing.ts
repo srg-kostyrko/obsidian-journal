@@ -37,6 +37,7 @@ export interface FakeWorkspaceState {
   activeFile: TFile | null;
   openPaths: Set<string>;
   openCalls: { path: string; mode: PaneType | false }[];
+  triggerCalls: { event: string; arguments_: unknown[] }[];
 }
 
 export interface FakeFileSystemEntry {
@@ -103,7 +104,12 @@ export function createFakeHost(): FakeHost {
   const vault = new FakeDispatcher();
   const metadata = new FakeDispatcher();
   const workspaceEvents = new FakeDispatcher();
-  const workspaceState: FakeWorkspaceState = { activeFile: null, openPaths: new Set(), openCalls: [] };
+  const workspaceState: FakeWorkspaceState = {
+    activeFile: null,
+    openPaths: new Set(),
+    openCalls: [],
+    triggerCalls: [],
+  };
   const pluginData: FakeHost["pluginData"] = { current: undefined };
   const registeredEventReferences: EventRef[] = [];
   const commands = new Map<string, Command>();
@@ -277,6 +283,9 @@ export function createFakeHost(): FakeHost {
           workspaceState.activeFile = file;
         },
       };
+    },
+    trigger(event: string, ...arguments_: unknown[]): void {
+      workspaceState.triggerCalls.push({ event, arguments_ });
     },
   };
 
