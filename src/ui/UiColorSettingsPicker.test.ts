@@ -9,9 +9,8 @@ import UiColorSettingsPicker from "./UiColorSettingsPicker.vue";
 afterEach(() => cleanup());
 
 function lastEmitted(emitted: ReturnType<typeof render>["emitted"]): ColorSettings | undefined {
-  const events = emitted("update:modelValue");
-  const last = events.at(-1);
-  return last?.[0] as ColorSettings | undefined;
+  const events = emitted<[ColorSettings]>("update:modelValue");
+  return events.at(-1)?.[0];
 }
 
 function mount(initial: ColorSettings) {
