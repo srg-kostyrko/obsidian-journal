@@ -146,6 +146,256 @@
   "confirm_note_creation_confirm": "Create",
   "confirm_note_creation_title": "Create a new journal note?",
 
+  "decoration_add_button": "Add decoration",
+  "decoration_add_modal_title": "Add decoration",
+  "decoration_border_mode_label": [
+    {
+      "declarations": ["input mode"],
+      "selectors": ["mode"],
+      "match": {
+        "mode=uniform": "Uniform",
+        "mode=different": "Different per side"
+      }
+    }
+  ],
+  "decoration_border_side_label": [
+    {
+      "declarations": ["input side"],
+      "selectors": ["side"],
+      "match": {
+        "side=top": "Top",
+        "side=bottom": "Bottom",
+        "side=left": "Left",
+        "side=right": "Right"
+      }
+    }
+  ],
+  "decoration_border_style_label": [
+    {
+      "declarations": ["input style"],
+      "selectors": ["style"],
+      "match": {
+        "style=solid": "Solid",
+        "style=dashed": "Dashed",
+        "style=dotted": "Dotted",
+        "style=double": "Double"
+      }
+    }
+  ],
+  "decoration_condition_all_tasks_completed_describe": "all tasks are completed",
+  "decoration_condition_date_describe": [
+    {
+      "declarations": ["input day", "input month", "input year"],
+      "selectors": ["year"],
+      "match": {
+        "year=null": "date is {day}/{month}",
+        "year=*": "date is {day}/{month}/{year}"
+      }
+    }
+  ],
+  "decoration_condition_date_day_label": "Day",
+  "decoration_condition_date_month_label": "Month",
+  "decoration_condition_date_year_label": "Year",
+  "decoration_condition_has_note_describe": "a note exists",
+  "decoration_condition_has_open_task_describe": "the note has an open task",
+  "decoration_condition_offset_describe": "offset from start is {offset}",
+  "decoration_condition_offset_label": "Offset",
+  "decoration_condition_property_condition_label": "Condition",
+  "decoration_condition_property_describe": "property {name} {op} {value}",
+  "decoration_condition_property_name_label": "Name",
+  "decoration_condition_property_value_label": "Value",
+  "decoration_condition_property_value_type_label": "Type",
+  "decoration_condition_tag_describe": "tag {op} {value}",
+  "decoration_condition_tag_value_label": "Tag value",
+  "decoration_condition_title_describe": "title {op} {value}",
+  "decoration_condition_title_value_label": "Title value",
+  "decoration_condition_type_label": [
+    {
+      "declarations": ["input type"],
+      "selectors": ["type"],
+      "match": {
+        "type=title": "Title",
+        "type=tag": "Tag",
+        "type=property": "Property",
+        "type=date": "Date",
+        "type=weekday": "Weekday",
+        "type=offset": "Offset",
+        "type=has-note": "Has note",
+        "type=has-open-task": "Has open task",
+        "type=all-tasks-completed": "All tasks completed"
+      }
+    }
+  ],
+  "decoration_condition_weekday_describe": "weekday is {weekdays}",
+  "decoration_condition_weekday_label": "Weekdays",
+  "decoration_corner_placement_label": [
+    {
+      "declarations": ["input placement"],
+      "selectors": ["placement"],
+      "match": {
+        "placement=top-left": "Top-left",
+        "placement=top-right": "Top-right",
+        "placement=bottom-left": "Bottom-left",
+        "placement=bottom-right": "Bottom-right"
+      }
+    }
+  ],
+  "decoration_delete_modal_title": "Delete decoration",
+  "decoration_delete_modal_warning": "This will permanently remove the decoration.",
+  "decoration_delete_tooltip": "Delete decoration",
+  "decoration_describe_mode": [
+    {
+      "declarations": ["input kind"],
+      "selectors": ["kind"],
+      "match": {
+        "kind=and": "and",
+        "kind=or": "or"
+      }
+    }
+  ],
+  "decoration_describe_when": "when",
+  "decoration_edit_modal_title": "Edit decoration",
+  "decoration_edit_tooltip": "Edit decoration",
+  "decoration_modal_add_condition": "Add condition",
+  "decoration_modal_add_style": "Add style",
+  "decoration_modal_mode_option": [
+    {
+      "declarations": ["input kind"],
+      "selectors": ["kind"],
+      "match": {
+        "kind=and": "all conditions are",
+        "kind=or": "any condition is"
+      }
+    }
+  ],
+  "decoration_modal_mode_prefix": "Decorate elements in calendar when",
+  "decoration_modal_mode_suffix": "fulfilled",
+  "decoration_modal_no_conditions": "No conditions defined yet",
+  "decoration_modal_no_styles": "No styles defined yet",
+  "decoration_no_conditions_error": "At least one condition is required",
+  "decoration_no_styles_error": "At least one style is required",
+  "decoration_placement_x_label": [
+    {
+      "declarations": ["input value"],
+      "selectors": ["value"],
+      "match": {
+        "value=left": "Left",
+        "value=center": "Center",
+        "value=right": "Right"
+      }
+    }
+  ],
+  "decoration_placement_y_label": [
+    {
+      "declarations": ["input value"],
+      "selectors": ["value"],
+      "match": {
+        "value=top": "Top",
+        "value=middle": "Middle",
+        "value=bottom": "Bottom"
+      }
+    }
+  ],
+  "decoration_section_description": "Use decorations to highlight dates in calendar that meet certain conditions.",
+  "decoration_section_empty": "No calendar decorations configured yet.",
+  "decoration_section_title": "Calendar decorations",
+  "decoration_shape_label": [
+    {
+      "declarations": ["input shape"],
+      "selectors": ["shape"],
+      "match": {
+        "shape=square": "Square",
+        "shape=circle": "Circle",
+        "shape=triangle-up": "Triangle up",
+        "shape=triangle-down": "Triangle down",
+        "shape=triangle-left": "Triangle left",
+        "shape=triangle-right": "Triangle right"
+      }
+    }
+  ],
+  "decoration_string_op_label": [
+    {
+      "declarations": ["input op"],
+      "selectors": ["op"],
+      "match": {
+        "op=contains": "contains",
+        "op=starts-with": "starts with",
+        "op=ends-with": "ends with",
+        "op=exists": "exists",
+        "op=does-not-exist": "does not exist",
+        "op=eq": "equals",
+        "op=neq": "not equals",
+        "op=lt": "<",
+        "op=lte": "<=",
+        "op=gt": ">",
+        "op=gte": ">=",
+        "op=is-true": "is true",
+        "op=is-false": "is false",
+        "op=does-not-contain": "does not contain"
+      }
+    }
+  ],
+  "decoration_style_background_color_label": "Background color",
+  "decoration_style_border_color_label": "Color",
+  "decoration_style_border_mode_label": "Border mode",
+  "decoration_style_border_show_label": "Show",
+  "decoration_style_border_style_label": "Style",
+  "decoration_style_border_width_label": "Width",
+  "decoration_style_color_label": "Text color",
+  "decoration_style_corner_color_label": "Color",
+  "decoration_style_corner_placement_label": "Placement",
+  "decoration_style_header": [
+    {
+      "declarations": ["input type"],
+      "selectors": ["type"],
+      "match": {
+        "type=background": "Decorating background",
+        "type=color": "Decorating text color",
+        "type=shape": "Decorating shape",
+        "type=corner": "Decorating corner",
+        "type=icon": "Decorating icon",
+        "type=border": "Decorating border"
+      }
+    }
+  ],
+  "decoration_style_icon_color_label": "Color",
+  "decoration_style_icon_icon_label": "Icon",
+  "decoration_style_icon_placement_x_label": "Horizontal placement",
+  "decoration_style_icon_placement_y_label": "Vertical placement",
+  "decoration_style_icon_size_label": "Size",
+  "decoration_style_shape_color_label": "Color",
+  "decoration_style_shape_placement_x_label": "Horizontal placement",
+  "decoration_style_shape_placement_y_label": "Vertical placement",
+  "decoration_style_shape_shape_label": "Shape",
+  "decoration_style_shape_size_label": "Size",
+  "decoration_style_type_label": [
+    {
+      "declarations": ["input type"],
+      "selectors": ["type"],
+      "match": {
+        "type=background": "Background",
+        "type=color": "Color",
+        "type=shape": "Shape",
+        "type=corner": "Corner",
+        "type=icon": "Icon",
+        "type=border": "Border"
+      }
+    }
+  ],
+  "ui_color_custom_label": "Color",
+  "ui_color_kind_label": [
+    {
+      "declarations": ["input kind"],
+      "selectors": ["kind"],
+      "match": {
+        "kind=transparent": "Transparent",
+        "kind=theme": "Theme variable",
+        "kind=custom": "Custom"
+      }
+    }
+  ],
+  "ui_color_theme_variable_label": "CSS variable",
+
   "journal_add_modal_anchor_description": "This date is used to count custom intervals from. It cannot be changed after creating the journal.",
   "shelf_add_modal_title": "Add shelf",
   "shelf_dashboard_add": "Add shelf",
