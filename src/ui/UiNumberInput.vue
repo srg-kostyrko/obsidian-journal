@@ -4,6 +4,7 @@ defineProps<{
   disabled?: boolean;
   min?: number;
   max?: number;
+  step?: number;
   narrow?: boolean;
 }>();
 
@@ -19,6 +20,7 @@ const model = defineModel<number>();
     :disabled="disabled"
     :min="min"
     :max="max"
+    :step="step"
     spellcheck="false"
   />
 </template>
