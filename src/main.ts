@@ -4,6 +4,7 @@ import { CalendarModule, calendarSettingsModule } from "@/calendar";
 import { commandsModule } from "@/commands";
 import { DynamicCommandRegistry } from "@/commands/command-registry";
 import { decorationsModule } from "@/decorations";
+import { decorationsSettingsModule } from "@/decorations/settings/module";
 import { initLocale } from "@/i18n";
 import { Container } from "@/infrastructure/di";
 import { FlowsModule } from "@/infrastructure/flows";
@@ -35,6 +36,7 @@ export default class JournalPlugin extends Plugin {
     container.addModule(journalsModule);
     container.addModule(journalsSettingsModule);
     container.addModule(decorationsModule);
+    container.addModule(decorationsSettingsModule);
     container.addModule(notesCalendarModule);
     container.addModule(shelvesModule);
     container.addModule(commandsModule);
