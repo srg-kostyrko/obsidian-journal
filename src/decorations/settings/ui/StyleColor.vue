@@ -1,0 +1,17 @@
+<script setup lang="ts">
+import { useField } from "vee-validate";
+
+import type { ColorSettings } from "@/decorations";
+import { m } from "@/i18n";
+import UiColorSettingsPicker from "@/ui/UiColorSettingsPicker.vue";
+import UiSettingRow from "@/ui/UiSettingRow.vue";
+
+const { name } = defineProps<{ name: string }>();
+const { value: color } = useField<ColorSettings>(`${name}.color`);
+</script>
+
+<template>
+  <UiSettingRow :name="m.decoration_style_color_label()">
+    <UiColorSettingsPicker v-model="color" />
+  </UiSettingRow>
+</template>
