@@ -31,3 +31,9 @@ export { decorationsModule } from "./module";
 export { CellDecorationMapKey, type CellStyleRef } from "./ui/cell-decoration-map-key";
 export { default as CellDecoration } from "./ui/CellDecoration.vue";
 export { useCellDecorations } from "./use-cell-decorations";
+export {
+  DecorationLifecycleFlowError,
+  toDecorationFlowError,
+  UnknownDecorationError,
+  type DecorationLifecycleError,
+} from "./errors";
