@@ -495,3 +495,86 @@ describe("NavigationCodeBlock context menu", () => {
     addItemSpy.mockRestore();
   });
 });
+
+describe("NavigationCodeBlock hover preview", () => {
+  beforeEach(() => {
+    vi.useFakeTimers();
+    vi.setSystemTime(new Date("2026-05-27T10:00:00Z"));
+  });
+
+  it("triggers hover preview when pointer enters a row with ctrl held", async () => {
+    const base = journalDefaultsFor({ type: "day" }, "daily");
+    const journal: JournalConfig = {
+      ...base,
+      navBlock: {
+        ...base.navBlock,
+        rows: [
+          {
+            template: "today",
+            fontSize: 1,
+            bold: false,
+            italic: false,
+            color: { type: "transparent" },
+            background: { type: "transparent" },
+            link: "self",
+            journal: "",
+            addDecorations: false,
+          },
+        ],
+      },
+    };
+    const h = buildHarness({ daily: journal });
+    const entry = {
+      journalName: "daily",
+      anchor: "2026-05-27" as AnchorString,
+      path: "Daily/2026-05-27.md" as VaultPath,
+    };
+    h.index.byPath.set("Daily/2026-05-27.md", entry);
+    h.index.byAnchor.set("daily::2026-05-27", entry);
+    h.shelves.shelves = [{ name: "main", journals: ["daily"] }];
+    mount(h, "Daily/2026-05-27.md");
+
+    const target = screen.getAllByText("today")[1];
+    if (target) await fireEvent.pointerEnter(target, { ctrlKey: true });
+
+    expect(h.workspace.hoverCalls.map((c) => c.path)).toEqual(["Daily/2026-05-27.md"]);
+  });
+
+  it("does not trigger hover preview without ctrl/meta", async () => {
+    const base = journalDefaultsFor({ type: "day" }, "daily");
+    const journal: JournalConfig = {
+      ...base,
+      navBlock: {
+        ...base.navBlock,
+        rows: [
+          {
+            template: "today",
+            fontSize: 1,
+            bold: false,
+            italic: false,
+            color: { type: "transparent" },
+            background: { type: "transparent" },
+            link: "self",
+            journal: "",
+            addDecorations: false,
+          },
+        ],
+      },
+    };
+    const h = buildHarness({ daily: journal });
+    const entry = {
+      journalName: "daily",
+      anchor: "2026-05-27" as AnchorString,
+      path: "Daily/2026-05-27.md" as VaultPath,
+    };
+    h.index.byPath.set("Daily/2026-05-27.md", entry);
+    h.index.byAnchor.set("daily::2026-05-27", entry);
+    h.shelves.shelves = [{ name: "main", journals: ["daily"] }];
+    mount(h, "Daily/2026-05-27.md");
+
+    const target = screen.getAllByText("today")[1];
+    if (target) await fireEvent.pointerEnter(target);
+
+    expect(h.workspace.hoverCalls).toHaveLength(0);
+  });
+});
