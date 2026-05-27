@@ -12,6 +12,7 @@ export { YearPeriod } from "./period-year";
 export { DecadePeriod } from "./period-decade";
 
 export { periodKinds, type Period, type PeriodKind, type PeriodBase } from "./period";
+export { relativeDate, type RelativePeriod } from "./relative-date";
 export { type AnchorString } from "./types";
 
 export { DateTimeError, IntervalError, ParseError } from "./errors";
