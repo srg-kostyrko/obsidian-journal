@@ -137,5 +137,19 @@ describe("CodeBlockService", () => {
       expect(el.querySelector(".stub")).toBeNull();
       expect(el.querySelector(".code-block-error")?.textContent).toContain("Failed to parse code block YAML");
     });
+
+    it("renders an error div with issue paths when the schema rejects the parsed yaml", () => {
+      const schema = v.object({ scale: v.number() });
+      const definition = defineCodeBlock({ keys: ["journals-home"], schema, component: StubComponent });
+      context.container.register(CodeBlockDefinitionToken).useValue(definition);
+      context.container.resolve(CodeBlockService);
+
+      const { el } = context.host.runCodeBlockProcessor("journals-home", "scale: notANumber");
+
+      const errorElement = el.querySelector(".code-block-error");
+      expect(errorElement).not.toBeNull();
+      expect(errorElement?.textContent).toContain("scale");
+      expect(el.querySelector(".stub")).toBeNull();
+    });
   });
 });
