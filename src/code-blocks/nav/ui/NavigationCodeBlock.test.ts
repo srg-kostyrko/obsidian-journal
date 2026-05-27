@@ -1,6 +1,7 @@
 import userEvent from "@testing-library/user-event";
-import { cleanup, render, screen } from "@testing-library/vue";
+import { cleanup, fireEvent, render, screen } from "@testing-library/vue";
 import { createNanoEvents } from "nanoevents";
+import { Menu } from "obsidian";
 import { afterEach, beforeAll, beforeEach, describe, expect, it, vi } from "vitest";
 
 import type { AnchorString } from "@/calendar";
@@ -389,5 +390,108 @@ describe("NavigationCodeBlock row click routing", () => {
     if (target) await user.click(target);
     expect(h.workspace.openNoteCalls).toHaveLength(0);
     expect(h.flows.calls).toHaveLength(0);
+  });
+});
+
+describe("NavigationCodeBlock context menu", () => {
+  beforeEach(() => {
+    vi.useFakeTimers();
+    vi.setSystemTime(new Date("2026-05-27T10:00:00Z"));
+  });
+
+  it("opens the file menu for a single matching path", async () => {
+    const base = journalDefaultsFor({ type: "day" }, "daily");
+    const journal: JournalConfig = {
+      ...base,
+      navBlock: {
+        ...base.navBlock,
+        rows: [
+          {
+            template: "today",
+            fontSize: 1,
+            bold: false,
+            italic: false,
+            color: { type: "transparent" },
+            background: { type: "transparent" },
+            link: "self",
+            journal: "",
+            addDecorations: false,
+          },
+        ],
+      },
+    };
+    const h = buildHarness({ daily: journal });
+    const entry = {
+      journalName: "daily",
+      anchor: "2026-05-27" as AnchorString,
+      path: "Daily/2026-05-27.md" as VaultPath,
+    };
+    h.index.byPath.set("Daily/2026-05-27.md", entry);
+    h.index.byAnchor.set("daily::2026-05-27", entry);
+    h.shelves.shelves = [{ name: "main", journals: ["daily"] }];
+    mount(h, "Daily/2026-05-27.md");
+
+    const target = screen.getAllByText("today")[1];
+    if (target) await fireEvent.contextMenu(target);
+
+    expect(h.workspace.fileMenuCalls.map((c) => c.path)).toEqual(["Daily/2026-05-27.md"]);
+  });
+
+  it("opens an obsidian Menu listing every matching path when there are multiple", async () => {
+    const showAtSpy = vi.spyOn(Menu.prototype, "showAtMouseEvent");
+    const addItemSpy = vi.spyOn(Menu.prototype, "addItem");
+
+    const base = journalDefaultsFor({ type: "day" }, "daily");
+    const journal: JournalConfig = {
+      ...base,
+      navBlock: {
+        ...base.navBlock,
+        rows: [
+          {
+            template: "wk",
+            fontSize: 1,
+            bold: false,
+            italic: false,
+            color: { type: "transparent" },
+            background: { type: "transparent" },
+            link: "week",
+            journal: "",
+            addDecorations: false,
+          },
+        ],
+      },
+    };
+    const h = buildHarness({
+      daily: journal,
+      weekly1: journalDefaultsFor({ type: "week" }, "weekly1"),
+      weekly2: journalDefaultsFor({ type: "week" }, "weekly2"),
+    });
+    h.index.byPath.set("Daily/2026-05-27.md", {
+      journalName: "daily",
+      anchor: "2026-05-27" as AnchorString,
+      path: "Daily/2026-05-27.md" as VaultPath,
+    });
+    h.index.byAnchor.set("weekly1::2026-05-27", {
+      journalName: "weekly1",
+      anchor: "2026-05-27" as AnchorString,
+      path: "Weekly1/W22.md" as VaultPath,
+    });
+    h.index.byAnchor.set("weekly2::2026-05-27", {
+      journalName: "weekly2",
+      anchor: "2026-05-27" as AnchorString,
+      path: "Weekly2/W22.md" as VaultPath,
+    });
+    h.shelves.shelves = [{ name: "main", journals: ["daily", "weekly1", "weekly2"] }];
+    mount(h, "Daily/2026-05-27.md");
+
+    const target = screen.getAllByText("wk")[1];
+    if (target) await fireEvent.contextMenu(target);
+
+    expect(addItemSpy).toHaveBeenCalledTimes(2);
+    expect(showAtSpy).toHaveBeenCalledTimes(1);
+    expect(h.workspace.fileMenuCalls).toHaveLength(0);
+
+    showAtSpy.mockRestore();
+    addItemSpy.mockRestore();
   });
 });
