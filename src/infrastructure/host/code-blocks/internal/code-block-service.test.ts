@@ -121,4 +121,21 @@ describe("CodeBlockService", () => {
       expect(el.querySelector(".stub-path")?.textContent).toBe("Vault/Daily/2026-05-27.md");
     });
   });
+
+  describe("errors", () => {
+    it("renders an error div and skips mounting when yaml is invalid", () => {
+      const definition = defineCodeBlock({
+        keys: ["journals-home"],
+        schema: v.object({}),
+        component: StubComponent,
+      });
+      context.container.register(CodeBlockDefinitionToken).useValue(definition);
+      context.container.resolve(CodeBlockService);
+
+      const { el } = context.host.runCodeBlockProcessor("journals-home", "key: [a, b, c");
+
+      expect(el.querySelector(".stub")).toBeNull();
+      expect(el.querySelector(".code-block-error")?.textContent).toContain("Failed to parse code block YAML");
+    });
+  });
 });
