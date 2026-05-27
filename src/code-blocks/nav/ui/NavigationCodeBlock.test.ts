@@ -578,3 +578,80 @@ describe("NavigationCodeBlock hover preview", () => {
     expect(h.workspace.hoverCalls).toHaveLength(0);
   });
 });
+
+describe("NavigationCodeBlock decorations", () => {
+  beforeEach(() => {
+    vi.useFakeTimers();
+    vi.setSystemTime(new Date("2026-05-27T10:00:00Z"));
+  });
+
+  it("wraps individual row text with CellDecoration when addDecorations is true", () => {
+    const base = journalDefaultsFor({ type: "day" }, "daily");
+    const journal: JournalConfig = {
+      ...base,
+      navBlock: {
+        ...base.navBlock,
+        decorateWholeBlock: false,
+        rows: [
+          {
+            template: "today",
+            fontSize: 1,
+            bold: false,
+            italic: false,
+            color: { type: "transparent" },
+            background: { type: "transparent" },
+            link: "self",
+            journal: "",
+            addDecorations: true,
+          },
+        ],
+      },
+    };
+    const h = buildHarness({ daily: journal });
+    h.index.byPath.set("Daily/2026-05-27.md", {
+      journalName: "daily",
+      anchor: "2026-05-27" as AnchorString,
+      path: "Daily/2026-05-27.md" as VaultPath,
+    });
+    h.shelves.shelves = [{ name: "main", journals: ["daily"] }];
+    mount(h, "Daily/2026-05-27.md");
+
+    const decorations = document.querySelectorAll("[data-testid='cell-decoration']");
+    expect(decorations.length).toBe(3);
+  });
+
+  it("wraps the entire column with CellDecoration when decorateWholeBlock is true", () => {
+    const base = journalDefaultsFor({ type: "day" }, "daily");
+    const journal: JournalConfig = {
+      ...base,
+      navBlock: {
+        ...base.navBlock,
+        decorateWholeBlock: true,
+        rows: [
+          {
+            template: "today",
+            fontSize: 1,
+            bold: false,
+            italic: false,
+            color: { type: "transparent" },
+            background: { type: "transparent" },
+            link: "none",
+            journal: "",
+            addDecorations: false,
+          },
+        ],
+      },
+    };
+    const h = buildHarness({ daily: journal });
+    h.index.byPath.set("Daily/2026-05-27.md", {
+      journalName: "daily",
+      anchor: "2026-05-27" as AnchorString,
+      path: "Daily/2026-05-27.md" as VaultPath,
+    });
+    h.shelves.shelves = [{ name: "main", journals: ["daily"] }];
+    mount(h, "Daily/2026-05-27.md");
+
+    const decorations = document.querySelectorAll("[data-testid='cell-decoration']");
+    expect(decorations.length).toBe(3);
+  });
+});
