@@ -75,6 +75,66 @@ describe("journalConfigSchema", () => {
   });
 });
 
+describe("journalDefaultsFor navBlock per write type", () => {
+  it("day journal has weekday + big day-number + relative + week + month + year rows", () => {
+    const { navBlock } = journalDefaultsFor({ type: "day" }, "daily");
+    expect(navBlock.type).toBe("create");
+    expect(navBlock.decorateWholeBlock).toBe(false);
+    expect(navBlock.rows.map((r) => r.template)).toEqual([
+      "{{date:ddd}}",
+      "{{date:D}}",
+      "{{relative_date}}",
+      "{{date:[W]w}}",
+      "{{date:MMMM}}",
+      "{{date:YYYY}}",
+    ]);
+    expect(navBlock.rows[1]).toMatchObject({ fontSize: 3, bold: true, link: "self", addDecorations: true });
+  });
+
+  it("week journal has big week + relative + month + year rows", () => {
+    const { navBlock } = journalDefaultsFor({ type: "week" }, "weekly");
+    expect(navBlock.rows.map((r) => r.template)).toEqual([
+      "{{date:[W]w}}",
+      "{{relative_date}}",
+      "{{date:MMMM}}",
+      "{{date:YYYY}}",
+    ]);
+    expect(navBlock.rows[0]).toMatchObject({ fontSize: 3, bold: true, link: "self", addDecorations: true });
+  });
+
+  it("month journal has big month + relative + year rows", () => {
+    const { navBlock } = journalDefaultsFor({ type: "month" }, "monthly");
+    expect(navBlock.rows.map((r) => r.template)).toEqual(["{{date:MMMM}}", "{{relative_date}}", "{{date:YYYY}}"]);
+    expect(navBlock.rows[0]).toMatchObject({ fontSize: 3, bold: true, link: "self", addDecorations: true });
+  });
+
+  it("quarter journal has big quarter + relative + year rows", () => {
+    const { navBlock } = journalDefaultsFor({ type: "quarter" }, "quarterly");
+    expect(navBlock.rows.map((r) => r.template)).toEqual(["{{date:[Q]Q}}", "{{relative_date}}", "{{date:YYYY}}"]);
+    expect(navBlock.rows[0]).toMatchObject({ fontSize: 3, bold: true, link: "self", addDecorations: true });
+  });
+
+  it("year journal has big year + relative rows", () => {
+    const { navBlock } = journalDefaultsFor({ type: "year" }, "yearly");
+    expect(navBlock.rows.map((r) => r.template)).toEqual(["{{date:YYYY}}", "{{relative_date}}"]);
+    expect(navBlock.rows[0]).toMatchObject({ fontSize: 3, bold: true, link: "self", addDecorations: true });
+  });
+
+  it("custom journal has big title + start_date + 'to' + end_date rows", () => {
+    const { navBlock } = journalDefaultsFor(
+      { type: "custom", every: "week", duration: 2, anchorDate: "2024-01-01" as AnchorString },
+      "biweekly",
+    );
+    expect(navBlock.rows.map((r) => r.template)).toEqual([
+      "{{journal_name}} {{index}}",
+      "{{start_date}}",
+      "to",
+      "{{end_date}}",
+    ]);
+    expect(navBlock.rows[0]).toMatchObject({ fontSize: 3, bold: true, link: "self", addDecorations: true });
+  });
+});
+
 describe("journalConfigSchema navBlock default", () => {
   it("fills navBlock with an empty-create default when absent", () => {
     const cfg = journalDefaultsFor({ type: "day" }, "daily");
