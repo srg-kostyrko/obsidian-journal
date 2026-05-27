@@ -13,6 +13,14 @@ function journal(name: string, type: "day" | "week" | "month" | "quarter" | "yea
   return journalDefaultsFor({ type }, name);
 }
 
+function customJournal(name: string): JournalConfig {
+  return journalDefaultsFor({ type: "custom", every: "day", duration: 1, anchorDate: today }, name);
+}
+
+const contextFor = (labels: Record<string, string | null>): HomeItemContext => ({
+  pathForCustom: (journal) => labels[journal.name] ?? null,
+});
+
 const context: HomeItemContext = {
   pathForCustom: () => null,
 };
@@ -88,5 +96,48 @@ describe("buildHomeItems", () => {
       context,
     );
     expect(items).toEqual([]);
+  });
+
+  describe("custom", () => {
+    it("returns one item per custom journal, labeled by pathForCustom", () => {
+      const items = buildHomeItems(
+        { show: ["custom"], separator: " • ", scale: 1 },
+        [customJournal("Trips"), customJournal("Reviews")],
+        today,
+        null,
+        new Map(),
+        contextFor({ Trips: "Trip 12", Reviews: "Review 2026-05-27" }),
+      );
+      expect(items).toHaveLength(2);
+      expect(items[0]).toEqual({ entry: "custom", label: "Trip 12", journalNames: ["Trips"] });
+      expect(items[1]).toEqual({ entry: "custom", label: "Review 2026-05-27", journalNames: ["Reviews"] });
+    });
+
+    it("omits a custom journal when pathForCustom returns null", () => {
+      const items = buildHomeItems(
+        { show: ["custom"], separator: " • ", scale: 1 },
+        [customJournal("Bad"), customJournal("Good")],
+        today,
+        null,
+        new Map(),
+        contextFor({ Bad: null, Good: "label" }),
+      );
+      expect(items.map((i) => i.journalNames[0])).toEqual(["Good"]);
+    });
+
+    it("filters custom journals by shelf", () => {
+      const items = buildHomeItems(
+        { show: ["custom"], separator: " • ", scale: 1 },
+        [customJournal("Work-Custom"), customJournal("Home-Custom")],
+        today,
+        "Work",
+        new Map([
+          ["Work-Custom", "Work"],
+          ["Home-Custom", "Personal"],
+        ]),
+        contextFor({ "Work-Custom": "label-w", "Home-Custom": "label-h" }),
+      );
+      expect(items.map((i) => i.journalNames[0])).toEqual(["Work-Custom"]);
+    });
   });
 });

@@ -54,10 +54,18 @@ function buildFixedItem(
 }
 
 function buildCustomItems(
-  _journals: readonly JournalConfig[],
-  _today: AnchorString,
-  _onShelf: (journal: JournalConfig) => boolean,
-  _context: HomeItemContext,
+  journals: readonly JournalConfig[],
+  today: AnchorString,
+  onShelf: (journal: JournalConfig) => boolean,
+  context: HomeItemContext,
 ): readonly HomeItem[] {
-  return [];
+  const items: HomeItem[] = [];
+  for (const journal of journals) {
+    if (journal.write.type !== "custom") continue;
+    if (!onShelf(journal)) continue;
+    const label = context.pathForCustom(journal, today);
+    if (label === null) continue;
+    items.push({ entry: "custom", label, journalNames: [journal.name] });
+  }
+  return items;
 }
