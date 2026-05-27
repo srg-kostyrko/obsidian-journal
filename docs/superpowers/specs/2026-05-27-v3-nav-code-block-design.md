@@ -123,14 +123,47 @@ navBlock: v.optional(navBlockSchema, () => ({
 
 The optional default is intentionally **empty rows** — same dual-default pattern v3 already uses for `templates`, `folder`, etc. Existing parsed configs that lack `navBlock` get the empty value; user intent is never silently overwritten with stock rows on first load.
 
-The **rich** per-write-type rows port v2's `defaultNavBlocks` shape (weekday + big day-number + relative + week + month + year for `day`, big-week + relative + month + year for `week`, …; for `custom`, four rows including `{{journal_name}} {{index}}`). They live in `journalDefaultsFor(write, name)` and apply only when callers explicitly construct a default config (new-journal flow, new-write-type switch).
+The **rich** per-write-type rows port v2's `defaultNavBlocks` 1:1 and live in `journalDefaultsFor(write, name)`. They apply only when callers explicitly construct a default config (new-journal flow, new-write-type switch). Every default block uses `type: "create"` and `decorateWholeBlock: false`.
+
+Shared row fragments (v3 ports of v2's helpers in `journal-defaults.ts`):
+
+```ts
+const emptyNavRow: NavBlockRow = {
+  template: "",
+  fontSize: 1,
+  bold: false,
+  italic: false,
+  link: "none",
+  journal: "",
+  color: { type: "theme", name: "text-normal" },
+  background: { type: "transparent" },
+  addDecorations: false,
+};
+
+const rowNavWeek = { ...emptyNavRow, template: "{{date:[W]w}}", link: "week" } as const;
+const rowNavMonth = { ...emptyNavRow, template: "{{date:MMMM}}", link: "month" } as const;
+const rowNavYear = { ...emptyNavRow, template: "{{date:YYYY}}", link: "year" } as const;
+const rowNavRelative = { ...emptyNavRow, template: "{{relative_date}}", fontSize: 0.7 } as const;
+```
+
+Per-write-type rows:
+
+| Write type | Rows (in order)                                                                                                                                |
+| ---------- | ---------------------------------------------------------------------------------------------------------------------------------------------- |
+| `day`      | `{{date:ddd}}` · `{{date:D}}` (fontSize 3, bold, link `self`, addDecorations) · `rowNavRelative` · `rowNavWeek` · `rowNavMonth` · `rowNavYear` |
+| `week`     | `rowNavWeek` overridden with fontSize 3 + bold + link `self` + addDecorations · `rowNavRelative` · `rowNavMonth` · `rowNavYear`                |
+| `month`    | `rowNavMonth` overridden with fontSize 3 + bold + link `self` + addDecorations · `rowNavRelative` · `rowNavYear`                               |
+| `quarter`  | `{{date:[Q]Q}}` (fontSize 3, bold, link `self`, addDecorations) · `rowNavRelative` · `rowNavYear`                                              |
+| `year`     | `rowNavYear` overridden with fontSize 3 + bold + link `self` + addDecorations · `rowNavRelative`                                               |
+| `custom`   | `{{journal_name}} {{index}}` (fontSize 3, bold, link `self`, addDecorations) · `{{start_date}}` · `to` · `{{end_date}}`                        |
+
+These rows are copied directly from `src/_old-code/journals/journal-defaults.ts` (lines 53–163). The constants (`emptyNavRow`, `rowNavWeek`, `rowNavMonth`, `rowNavYear`, `rowNavRelative`) live alongside `journalDefaultsFor` in `src/journals/config.ts`.
 
 `journals/config.test.ts` adds cases:
 
 - `safeParse` accepts a full `navBlock` round-trip.
 - `safeParse` of a config without `navBlock` fills the empty default.
-- `journalDefaultsFor({ type: "day" })` returns the day-shaped default rows.
-- one assertion per write type confirming the row count + first-row template.
+- one test per write type asserts `journalDefaultsFor(write).navBlock.rows` matches the v2-equivalent row list (row count, every template string, every `link`, every `addDecorations`/`bold`/`fontSize` override).
 
 ## Code-block definition — `src/code-blocks/nav/nav-block.ts`
 
