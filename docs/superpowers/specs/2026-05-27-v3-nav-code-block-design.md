@@ -25,7 +25,8 @@ v3 has the code-block foundation in place but does not yet define `navBlock` on 
 In scope:
 
 - `src/journals/config.ts` — add `colorSettingsSchema`, `navBlockRowSchema`, `navBlockSchema`, and the `navBlock` field on `journalConfigSchema`. Extend `journalDefaultsFor(write, name)` to return per-write-type default rows (ports v2's `defaultNavBlocks`).
-- `src/code-blocks/nav/` — new sub-folder owning the code-block definition, pure helpers (`link-targets`, `nav-row-context`), and Vue UI (`NavigationCodeBlock.vue`, `NavBlock.vue`, `NavBlockRow.vue`).
+- `src/code-blocks/nav/` — new sub-folder owning the code-block definition, pure helpers (`link-targets`, `nav-row-context`, `period-for-journal`), and Vue UI (`NavigationCodeBlock.vue`, `NavBlock.vue`, `NavBlockRow.vue`).
+- `src/decorations/index.ts` — re-export `colorToString` from `./ui/color` so nav-row CSS can reuse it.
 - `src/code-blocks/module.ts` — register the navigation definition next to the home one.
 - i18n key for the "note not connected to a journal" fallback message.
 
@@ -73,12 +74,10 @@ Data flow on render:
 
 ## Schema changes — `src/journals/config.ts`
 
+`colorSchema` / `ColorSettings` already live in `src/decorations/config.ts` (re-exported from `@/decorations`); reuse them. `colorToString` lives in `src/decorations/ui/color.ts` and needs to be added to the `@/decorations` barrel for nav-row consumption.
+
 ```ts
-const colorSettingsSchema = v.union([
-  v.object({ type: v.literal("transparent") }),
-  v.object({ type: v.literal("theme"), name: v.string() }),
-  v.object({ type: v.literal("custom"), color: v.string() }),
-]);
+import { colorSchema } from "@/decorations/config"; // existing
 
 const navBlockRowLinkSchema = v.union([
   v.literal("none"),
@@ -92,8 +91,8 @@ const navBlockRowSchema = v.object({
   fontSize: v.number(),
   bold: v.boolean(),
   italic: v.boolean(),
-  color: colorSettingsSchema,
-  background: colorSettingsSchema,
+  color: colorSchema,
+  background: colorSchema,
   link: navBlockRowLinkSchema,
   journal: v.string(),
   addDecorations: v.boolean(),
@@ -105,7 +104,6 @@ const navBlockSchema = v.object({
   decorateWholeBlock: v.boolean(),
 });
 
-export type ColorSettings = v.InferOutput<typeof colorSettingsSchema>;
 export type NavBlockRowLink = v.InferOutput<typeof navBlockRowLinkSchema>;
 export type NavBlockRow = v.InferOutput<typeof navBlockRowSchema>;
 export type JournalNavBlock = v.InferOutput<typeof navBlockSchema>;
@@ -195,7 +193,7 @@ Reactive derivations:
 - `currentPeriod` / `previousPeriod` / `nextPeriod`: built from each ref anchor via `periodForJournal(journal.write, anchor)` (see _Period construction_ below). The decoration engine keys by anchor string only, so the chosen `Period.kind` matters only for `periodMatchesWrite`.
 - `previousRef` / `nextRef`: pair of `{ anchor, period }` resolved by `navBlock.type`:
   - `"create"`: `cycle.previousAnchor(name, anchor)` / `.nextAnchor(...)`.
-  - `"existing"`: `index.findPrevious(name, anchor)` / `.findNext(...)` (returns the **adjacent existing** entry's anchor; column renders empty when `none`).
+  - `"existing"`: `index.findPrevious(name, anchor)` / `.findNext(...)` returns `Option<VaultPath>`; chain through `index.entryByPath(path)` to recover the entry's anchor. Column renders empty when none.
 - `shelfJournals`: lookup the note's shelf via `ShelvesRepository.find().list()`, filter to journals sharing the note journal's `write.type`. This is the `journalNames` set passed to `useCellDecorations` (matches v2's `decorations[journal.type]` semantics).
 
 `useCellDecorations(periodsRef, shelfJournals)` is called once. The provided `CellDecorationMapKey` map covers all three anchors; `<CellDecoration>` inside `NavBlock`/`NavBlockRow` reads it.
