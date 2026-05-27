@@ -125,6 +125,11 @@ export const journalConfigSchema = v.object({
   confirmCreation: v.optional(v.boolean(), false),
   autoCreate: v.optional(v.boolean(), false),
   decorations: v.optional(v.array(decorationSchema), []),
+  navBlock: v.optional(navBlockSchema, () => ({
+    type: "create" as const,
+    rows: [] as NavBlockRow[],
+    decorateWholeBlock: false,
+  })),
 });
 
 export type FixedWriteIntervals = v.InferOutput<typeof writeFixed>;
@@ -192,6 +197,7 @@ export function journalDefaultsFor(write: JournalWrite, name = ""): JournalConfi
     confirmCreation: false,
     autoCreate: false,
     decorations: [],
+    navBlock: { type: "create", rows: [], decorateWholeBlock: false },
   };
 }
 

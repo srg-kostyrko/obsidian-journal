@@ -75,6 +75,19 @@ describe("journalConfigSchema", () => {
   });
 });
 
+describe("journalConfigSchema navBlock default", () => {
+  it("fills navBlock with an empty-create default when absent", () => {
+    const cfg = journalDefaultsFor({ type: "day" }, "daily");
+    const { navBlock: _omit, ...withoutNavBlock } = cfg;
+    const parsed = v.parse(journalConfigSchema, withoutNavBlock);
+    expect(parsed.navBlock).toEqual({
+      type: "create",
+      rows: [],
+      decorateWholeBlock: false,
+    });
+  });
+});
+
 describe("navBlockSchema", () => {
   it("accepts a populated nav block", () => {
     const value = {
