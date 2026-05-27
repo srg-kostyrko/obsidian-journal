@@ -1,4 +1,5 @@
 import moment from "moment";
+import { load as yamlLoad } from "js-yaml";
 
 export { moment };
 
@@ -226,6 +227,41 @@ export class Menu {
     const index = openMenus.indexOf(this);
     if (index >= 0) openMenus.splice(index, 1);
   }
+}
+
+export class MarkdownRenderChild {
+  readonly containerEl: HTMLElement;
+  #loaded = false;
+
+  constructor(containerEl: HTMLElement) {
+    this.containerEl = containerEl;
+  }
+
+  load(): void {
+    if (this.#loaded) return;
+    this.#loaded = true;
+    this.onload();
+  }
+
+  unload(): void {
+    if (!this.#loaded) return;
+    this.#loaded = false;
+    this.onunload();
+  }
+
+  onload(): void {}
+
+  onunload(): void {}
+}
+
+export interface MarkdownPostProcessorContext {
+  readonly sourcePath: string;
+  addChild(child: MarkdownRenderChild): void;
+}
+
+export function parseYaml(source: string): unknown {
+  if (source.trim() === "") return null;
+  return yamlLoad(source);
 }
 
 const attachedInputSuggests: AbstractInputSuggest<unknown>[] = [];

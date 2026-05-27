@@ -5,9 +5,17 @@ import {
   type CachedMetadata,
   type Command,
   type EventRef,
+  type MarkdownPostProcessorContext,
+  type MarkdownRenderChild,
   type PaneType,
   type Plugin,
 } from "obsidian";
+
+type CodeBlockProcessor = (
+  source: string,
+  element: HTMLElement,
+  context: MarkdownPostProcessorContext,
+) => void | Promise<void>;
 
 type AnyHandler = (...arguments_: unknown[]) => void;
 
@@ -64,6 +72,7 @@ export interface FakeHost {
   readonly registeredEventReferences: EventRef[];
   readonly commands: Map<string, Command>;
   readonly ribbonIcons: FakeRibbonIcon[];
+  readonly codeBlockProcessors: Map<string, CodeBlockProcessor>;
 
   putFile(path: string, content?: string, frontmatter?: Record<string, unknown>): TFile;
   putFolder(path: string): TFolder;
@@ -71,6 +80,11 @@ export interface FakeHost {
   emitMetadata(path: string, metadata?: CachedMetadata): void;
   emitActiveLeafChange(file: TFile | null): void;
   triggerUnload(): void;
+  runCodeBlockProcessor(
+    language: string,
+    source: string,
+    sourcePath?: string,
+  ): { el: HTMLElement; ctx: MarkdownPostProcessorContext; child?: MarkdownRenderChild };
 }
 
 function makeFile(path: string): TFile {
@@ -114,6 +128,7 @@ export function createFakeHost(): FakeHost {
   const registeredEventReferences: EventRef[] = [];
   const commands = new Map<string, Command>();
   const ribbonIcons: FakeRibbonIcon[] = [];
+  const codeBlockProcessors = new Map<string, CodeBlockProcessor>();
   const unloadCallbacks: (() => void)[] = [];
 
   function ensureFolderChain(path: string): void {
@@ -319,6 +334,9 @@ export function createFakeHost(): FakeHost {
       if (pluginData.saveError) throw pluginData.saveError;
       pluginData.current = data;
     },
+    registerMarkdownCodeBlockProcessor(language: string, handler: CodeBlockProcessor): void {
+      codeBlockProcessors.set(language, handler);
+    },
   } as unknown as Plugin;
 
   return {
@@ -331,6 +349,7 @@ export function createFakeHost(): FakeHost {
     registeredEventReferences,
     commands,
     ribbonIcons,
+    codeBlockProcessors,
     putFile(path, content = "", frontmatter = {}): TFile {
       ensureFolderChain(parentPath(path));
       files.set(path, { content, frontmatter, metadata: {} });
@@ -361,6 +380,26 @@ export function createFakeHost(): FakeHost {
     triggerUnload(): void {
       for (const callback of unloadCallbacks) callback();
       unloadCallbacks.length = 0;
+    },
+    runCodeBlockProcessor(language, source, sourcePath = "Some/Note.md") {
+      const handler = codeBlockProcessors.get(language);
+      if (!handler) throw new Error(`No processor registered for "${language}"`);
+      const element = document.createElement("div");
+      let attached: MarkdownRenderChild | undefined;
+      const context: MarkdownPostProcessorContext = {
+        docId: "fake-doc",
+        sourcePath,
+        frontmatter: null,
+        addChild(child) {
+          attached = child;
+          child.load();
+        },
+        getSectionInfo() {
+          return null;
+        },
+      };
+      void handler(source, element, context);
+      return { el: element, ctx: context, child: attached };
     },
   };
 }
