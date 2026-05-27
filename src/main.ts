@@ -40,7 +40,6 @@ export default class JournalPlugin extends Plugin {
     container.addModule(notesCalendarModule);
     container.addModule(shelvesModule);
     container.addModule(commandsModule);
-    await container.autoLoad();
 
     const init = await container.resolve(SettingsService).initialize();
     if (init.kind === "err") {
@@ -48,6 +47,8 @@ export default class JournalPlugin extends Plugin {
       await container.dispose();
       return;
     }
+
+    await container.autoLoad();
 
     await container.resolve(VaultSubscriptionService).initialize();
     await container.resolve(AutoAttachService).initialize();
