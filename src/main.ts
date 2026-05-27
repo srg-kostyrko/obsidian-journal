@@ -2,6 +2,7 @@ import { getLanguage, Notice, Plugin } from "obsidian";
 
 import { CalendarModule, calendarSettingsModule } from "@/calendar";
 import { codeBlocksModule } from "@/code-blocks";
+import { navBlockSettingsModule } from "@/code-blocks/nav/settings/module";
 import { commandsModule } from "@/commands";
 import { DynamicCommandRegistry } from "@/commands/command-registry";
 import { decorationsModule } from "@/decorations";
@@ -41,6 +42,7 @@ export default class JournalPlugin extends Plugin {
     container.addModule(notesCalendarModule);
     container.addModule(shelvesModule);
     container.addModule(codeBlocksModule);
+    container.addModule(navBlockSettingsModule);
     container.addModule(commandsModule);
 
     const init = await container.resolve(SettingsService).initialize();
