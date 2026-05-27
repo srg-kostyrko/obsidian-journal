@@ -152,4 +152,24 @@ describe("CodeBlockService", () => {
       expect(el.querySelector(".stub")).toBeNull();
     });
   });
+
+  describe("lifecycle", () => {
+    it("unmounts the Vue app and clears the container when the render child unloads", () => {
+      const definition = defineCodeBlock({
+        keys: ["journals-home"],
+        schema: v.object({}),
+        component: StubComponent,
+      });
+      context.container.register(CodeBlockDefinitionToken).useValue(definition);
+      context.container.resolve(CodeBlockService);
+
+      const { el, child } = context.host.runCodeBlockProcessor("journals-home", "");
+      expect(el.querySelector(".stub")).not.toBeNull();
+
+      child?.unload();
+
+      expect(el.querySelector(".stub")).toBeNull();
+      expect(el.children.length).toBe(0);
+    });
+  });
 });
