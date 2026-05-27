@@ -30,7 +30,7 @@ describe("buildHomeItems", () => {
 
   it("returns one item per fixed-period entry that has matching journals", () => {
     const items = buildHomeItems(
-      { show: ["day", "week"], separator: " • ", scale: 1 },
+      { show: ["day", "week"] },
       [journal("Daily", "day"), journal("Weekly", "week")],
       today,
       null,
@@ -48,7 +48,7 @@ describe("buildHomeItems", () => {
 
   it("collects multiple journals of the same type into one item", () => {
     const items = buildHomeItems(
-      { show: ["day"], separator: " • ", scale: 1 },
+      { show: ["day"] },
       [journal("Daily-A", "day"), journal("Daily-B", "day")],
       today,
       null,
@@ -61,7 +61,7 @@ describe("buildHomeItems", () => {
 
   it("omits entries that have no matching journals", () => {
     const items = buildHomeItems(
-      { show: ["day", "month"], separator: " • ", scale: 1 },
+      { show: ["day", "month"] },
       [journal("Daily", "day")],
       today,
       null,
@@ -73,7 +73,7 @@ describe("buildHomeItems", () => {
 
   it("filters by shelf when one is selected", () => {
     const items = buildHomeItems(
-      { show: ["day"], separator: " • ", scale: 1 },
+      { show: ["day"] },
       [journal("Daily-A", "day"), journal("Daily-B", "day")],
       today,
       "Work",
@@ -87,21 +87,14 @@ describe("buildHomeItems", () => {
   });
 
   it("returns an empty list when show is empty", () => {
-    const items = buildHomeItems(
-      { show: [], separator: " • ", scale: 1 },
-      [journal("Daily", "day")],
-      today,
-      null,
-      new Map(),
-      context,
-    );
+    const items = buildHomeItems({ show: [] }, [journal("Daily", "day")], today, null, new Map(), context);
     expect(items).toEqual([]);
   });
 
   describe("custom", () => {
     it("returns one item per custom journal, labeled by pathForCustom", () => {
       const items = buildHomeItems(
-        { show: ["custom"], separator: " • ", scale: 1 },
+        { show: ["custom"] },
         [customJournal("Trips"), customJournal("Reviews")],
         today,
         null,
@@ -115,7 +108,7 @@ describe("buildHomeItems", () => {
 
     it("omits a custom journal when pathForCustom returns null", () => {
       const items = buildHomeItems(
-        { show: ["custom"], separator: " • ", scale: 1 },
+        { show: ["custom"] },
         [customJournal("Bad"), customJournal("Good")],
         today,
         null,
@@ -127,7 +120,7 @@ describe("buildHomeItems", () => {
 
     it("filters custom journals by shelf", () => {
       const items = buildHomeItems(
-        { show: ["custom"], separator: " • ", scale: 1 },
+        { show: ["custom"] },
         [customJournal("Work-Custom"), customJournal("Home-Custom")],
         today,
         "Work",
