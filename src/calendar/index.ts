@@ -11,7 +11,7 @@ export { QuarterPeriod } from "./period-quarter";
 export { YearPeriod } from "./period-year";
 export { DecadePeriod } from "./period-decade";
 
-export { type Period, type PeriodKind, type PeriodBase } from "./period";
+export { periodKinds, type Period, type PeriodKind, type PeriodBase } from "./period";
 export { type AnchorString } from "./types";
 
 export { DateTimeError, IntervalError, ParseError } from "./errors";

@@ -6,7 +6,8 @@ import type { QuarterPeriod } from "./period-quarter";
 import type { WeekPeriod } from "./period-week";
 import type { YearPeriod } from "./period-year";
 
-export type PeriodKind = "day" | "week" | "month" | "quarter" | "year" | "decade";
+export const periodKinds = ["day", "week", "month", "quarter", "year", "decade"] as const;
+export type PeriodKind = (typeof periodKinds)[number];
 
 export interface PeriodBase<Self> {
   readonly kind: PeriodKind;
