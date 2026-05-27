@@ -1,5 +1,6 @@
 import type { Module } from "@/infrastructure/di";
 
+import { CodeBlockService } from "./code-blocks/internal/code-block-service";
 import { CommandService } from "./commands/internal/command-service";
 import { InputSuggestService } from "./input-suggests/internal/input-suggest-service";
 import { NoteMetadataService } from "./internal/note-metadata-service";
@@ -26,6 +27,7 @@ export function createHostModule(plugin: Plugin): Module {
       c.register(SuggestService).useClass(SuggestService);
       c.register(InputSuggestService).useClass(InputSuggestService);
       c.register(CommandService).useClass(CommandService);
+      c.register(CodeBlockService).useClass(CodeBlockService).eager();
       modalsModule.register(c);
     },
   };

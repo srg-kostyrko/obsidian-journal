@@ -43,6 +43,17 @@ export {
   type InputSuggestDefinition,
   type InputSuggestDefinitionInput,
 } from "./input-suggests";
+export {
+  CodeBlockDefinitionToken,
+  CodeBlockSchemaError,
+  CodeBlockService,
+  CodeBlockYamlError,
+  defineCodeBlock,
+  type CodeBlockConfig,
+  type CodeBlockDefinition,
+  type CodeBlockDefinitionInput,
+  type CodeBlockProps,
+} from "./code-blocks";
 export { CommandService, type CommandRegistration } from "./commands";
 export { createHostModule } from "./module";
 export type { Note, NoteMetadata, NoteTask, NotesEvents, OpenMode, VaultPath, WorkspaceEvents } from "./types";
