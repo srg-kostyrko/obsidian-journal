@@ -5,10 +5,12 @@ import type { AnchorString, Period } from "@/calendar";
 import { useCellDecorations } from "@/decorations";
 import { m } from "@/i18n";
 import { useService } from "@/infrastructure/di";
-import type { CodeBlockProps } from "@/infrastructure/host";
-import { CycleService, JournalsIndex, JournalsRepository } from "@/journals";
+import { Flows } from "@/infrastructure/flows";
+import { defineOpenMode, type CodeBlockProps } from "@/infrastructure/host";
+import { CycleService, JournalsIndex, JournalsRepository, OpenDateFlow } from "@/journals";
 import type { JournalConfig } from "@/journals";
 import { ShelvesRepository } from "@/shelves";
+import UiIconButton from "@/ui/UiIconButton.vue";
 
 import { periodForJournal } from "../period-for-journal";
 
@@ -20,6 +22,7 @@ const index = useService(JournalsIndex);
 const journals = useService(JournalsRepository);
 const cycle = useService(CycleService);
 const shelves = useService(ShelvesRepository);
+const flows = useService(Flows);
 
 const entryOpt = computed(() => index.entryByPath(path));
 const journalOpt = computed(() => (entryOpt.value.isSome() ? journals.get(entryOpt.value.value.journalName) : null));
@@ -77,27 +80,44 @@ useCellDecorations(
   () => periods.value,
   () => shelfJournalNames.value,
 );
+
+function openAdjacent(anchor: AnchorString | null, event: MouseEvent): void {
+  const currentJournal = journal.value;
+  if (!currentJournal || !anchor) return;
+  void flows.invoke(OpenDateFlow, {
+    anchor,
+    journalNames: [currentJournal.name],
+    existingOnly: currentJournal.navBlock.type === "existing",
+    openMode: defineOpenMode(event),
+  });
+}
 </script>
 
 <template>
   <div v-if="!isConnected" class="journal-nav-not-connected">{{ m.code_blocks_nav_not_connected() }}</div>
   <div v-else-if="journal && currentAnchor" class="nav-view">
-    <NavBlock
-      v-if="adjacent.previous"
-      :journal
-      :ref-date="adjacent.previous"
-      :period="periodForJournal(journal.write, adjacent.previous)"
-    />
+    <div v-if="adjacent.previous" class="nav-block-relative">
+      <NavBlock :journal :ref-date="adjacent.previous" :period="periodForJournal(journal.write, adjacent.previous)" />
+      <UiIconButton
+        icon="arrow-left"
+        class="nav-prev"
+        :tooltip="m.code_blocks_nav_previous()"
+        @click="(event: MouseEvent) => openAdjacent(adjacent.previous, event)"
+      />
+    </div>
     <div v-else class="nav-block-placeholder" />
 
     <NavBlock :journal :ref-date="currentAnchor" :period="periodForJournal(journal.write, currentAnchor)" />
 
-    <NavBlock
-      v-if="adjacent.next"
-      :journal
-      :ref-date="adjacent.next"
-      :period="periodForJournal(journal.write, adjacent.next)"
-    />
+    <div v-if="adjacent.next" class="nav-block-relative">
+      <UiIconButton
+        icon="arrow-right"
+        class="nav-next"
+        :tooltip="m.code_blocks_nav_next()"
+        @click="(event: MouseEvent) => openAdjacent(adjacent.next, event)"
+      />
+      <NavBlock :journal :ref-date="adjacent.next" :period="periodForJournal(journal.write, adjacent.next)" />
+    </div>
     <div v-else class="nav-block-placeholder" />
   </div>
 </template>

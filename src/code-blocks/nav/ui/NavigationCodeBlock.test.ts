@@ -1,3 +1,4 @@
+import userEvent from "@testing-library/user-event";
 import { cleanup, render, screen } from "@testing-library/vue";
 import { createNanoEvents } from "nanoevents";
 import { afterEach, beforeAll, beforeEach, describe, expect, it, vi } from "vitest";
@@ -190,5 +191,62 @@ describe("NavigationCodeBlock columns", () => {
     expect(screen.queryByText("26")).toBeNull();
     expect(screen.queryByText("28")).toBeNull();
     expect(screen.getByText("27")).toBeTruthy();
+  });
+});
+
+describe("NavigationCodeBlock arrows", () => {
+  beforeEach(() => {
+    vi.useFakeTimers();
+    vi.setSystemTime(new Date("2026-05-27T10:00:00Z"));
+  });
+
+  it("invokes OpenDateFlow with the previous anchor and existingOnly=false in 'create' mode", async () => {
+    const daily = journalDefaultsFor({ type: "day" }, "daily");
+    const h = buildHarness({ daily });
+    h.index.byPath.set("Daily/2026-05-27.md", {
+      journalName: "daily",
+      anchor: "2026-05-27" as AnchorString,
+      path: "Daily/2026-05-27.md" as VaultPath,
+    });
+    h.shelves.shelves = [{ name: "main", journals: ["daily"] }];
+    mount(h, "Daily/2026-05-27.md");
+
+    const user = userEvent.setup({ advanceTimers: vi.advanceTimersByTime });
+    await user.click(screen.getByRole("button", { name: /previous/i }));
+
+    expect(h.flows.calls).toHaveLength(1);
+    const parameters = h.flows.calls[0]?.parameters as {
+      anchor: string;
+      journalNames: string[];
+      existingOnly?: boolean;
+    };
+    expect(parameters.anchor).toBe("2026-05-26");
+    expect(parameters.journalNames).toEqual(["daily"]);
+    expect(parameters.existingOnly).toBe(false);
+  });
+
+  it("invokes OpenDateFlow with existingOnly=true in 'existing' mode", async () => {
+    const daily: JournalConfig = { ...journalDefaultsFor({ type: "day" }, "daily") };
+    daily.navBlock = { ...daily.navBlock, type: "existing" };
+    const h = buildHarness({ daily });
+    h.index.byPath.set("Daily/2026-05-27.md", {
+      journalName: "daily",
+      anchor: "2026-05-27" as AnchorString,
+      path: "Daily/2026-05-27.md" as VaultPath,
+    });
+    h.index.byPath.set("Daily/2026-05-25.md", {
+      journalName: "daily",
+      anchor: "2026-05-25" as AnchorString,
+      path: "Daily/2026-05-25.md" as VaultPath,
+    });
+    h.index.prevByAnchor.set("daily::2026-05-27", "Daily/2026-05-25.md" as VaultPath);
+    h.shelves.shelves = [{ name: "main", journals: ["daily"] }];
+    mount(h, "Daily/2026-05-27.md");
+
+    const user = userEvent.setup({ advanceTimers: vi.advanceTimersByTime });
+    await user.click(screen.getByRole("button", { name: /previous/i }));
+
+    const parameters = h.flows.calls[0]?.parameters as { existingOnly?: boolean };
+    expect(parameters.existingOnly).toBe(true);
   });
 });

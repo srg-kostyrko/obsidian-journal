@@ -49,6 +49,8 @@
   "calendar_week_config_title": "Week configuration",
 
   "code_blocks_nav_not_connected": "Note is not connected to a journal",
+  "code_blocks_nav_next": "Next",
+  "code_blocks_nav_previous": "Previous",
 
   "command_add_modal_title": "Add command",
   "command_context_option": [
