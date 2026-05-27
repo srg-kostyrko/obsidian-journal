@@ -19,7 +19,7 @@ export {
   type JournalEditSection,
 } from "./settings/ui/journal-edit-section";
 
-export { journalConfigCollection, journalDefaultsFor, FRONTMATTER_NAME_KEY } from "./config";
+export { journalConfigCollection, journalDefaultsFor, navBlockRowSchema, FRONTMATTER_NAME_KEY } from "./config";
 
 export type {
   FixedWriteIntervals,

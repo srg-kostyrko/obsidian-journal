@@ -87,7 +87,7 @@ const navBlockRowLinkSchema = v.union([
   v.picklist(["day", "week", "month", "quarter", "year"]),
 ]);
 
-const navBlockRowSchema = v.object({
+export const navBlockRowSchema = v.object({
   template: v.string(),
   fontSize: v.number(),
   bold: v.boolean(),
