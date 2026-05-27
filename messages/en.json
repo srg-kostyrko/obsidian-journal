@@ -48,6 +48,8 @@
   "calendar_week_config_change": "Change",
   "calendar_week_config_title": "Week configuration",
 
+  "code_blocks_nav_not_connected": "Note is not connected to a journal",
+
   "command_add_modal_title": "Add command",
   "command_context_option": [
     {
