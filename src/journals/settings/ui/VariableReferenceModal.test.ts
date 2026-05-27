@@ -2,6 +2,8 @@ import userEvent from "@testing-library/user-event";
 import { cleanup, render, screen } from "@testing-library/vue";
 import { afterEach, describe, expect, it, vi } from "vitest";
 
+import { m } from "@/i18n";
+
 import VariableReferenceModal from "./VariableReferenceModal.vue";
 
 import type { VariableModalContext } from "./variable-context";
@@ -110,5 +112,29 @@ describe("VariableReferenceModal — rules table", () => {
       await userEvent.click(screen.getAllByRole("link", { name: /additional modifications/i })[0]);
       expect(openModifications).toHaveBeenCalledTimes(1);
     });
+  });
+});
+
+describe("VariableReferenceModal nav-row context", () => {
+  it("renders relative_date row when context is nav-row", () => {
+    renderModal({ context: "nav-row", hasCycle: true });
+    expect(screen.getByText("{{relative_date}}")).toBeTruthy();
+    expect(screen.getByText(m.journal_edit_variable_relative_date_description())).toBeTruthy();
+  });
+
+  it("renders index row when context is nav-row", () => {
+    renderModal({ context: "nav-row", hasCycle: true });
+    expect(screen.getByText("{{index}}")).toBeTruthy();
+    expect(screen.getByText(m.journal_edit_variable_index_description())).toBeTruthy();
+  });
+
+  it("does not render relative_date when context is name-template", () => {
+    renderModal({ context: "name-template" });
+    expect(screen.queryByText("{{relative_date}}")).toBeNull();
+  });
+
+  it("does not render index when context is name-template", () => {
+    renderModal({ context: "name-template" });
+    expect(screen.queryByText("{{index}}")).toBeNull();
   });
 });

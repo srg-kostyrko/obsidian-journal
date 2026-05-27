@@ -12,6 +12,7 @@ const props = defineProps<VariableReferenceModalProps>();
 
 const NON_INVERTIBLE_CONTEXTS = new Set<VariableReferenceModalProps["context"]>(["name-template", "folder-path"]);
 const showInvertibilityWarning = computed(() => NON_INVERTIBLE_CONTEXTS.has(props.context));
+const showNavRowVariables = computed(() => props.context === "nav-row");
 
 function handleModificationsClick(event: Event): void {
   event.preventDefault();
@@ -42,6 +43,17 @@ function handleModificationsClick(event: Event): void {
         <dt><VariableChip name="journal_name" /></dt>
         <dd>{{ m.journal_edit_variable_journal_name_description({ name: journalName }) }}</dd>
       </div>
+
+      <template v-if="showNavRowVariables">
+        <div class="variable-reference__row">
+          <dt><VariableChip name="relative_date" /></dt>
+          <dd>{{ m.journal_edit_variable_relative_date_description() }}</dd>
+        </div>
+        <div class="variable-reference__row">
+          <dt><VariableChip name="index" /></dt>
+          <dd>{{ m.journal_edit_variable_index_description() }}</dd>
+        </div>
+      </template>
 
       <template v-if="hasCycle">
         <div class="variable-reference__row">
