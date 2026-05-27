@@ -3,7 +3,6 @@ import { match } from "ts-pattern";
 import { m } from "@/i18n";
 
 import { localMoment } from "./calendar";
-import { DateTimeError } from "./errors";
 
 import type { PeriodKind } from "./period";
 import type { AnchorString } from "./types";
@@ -60,6 +59,14 @@ function formatYear(anchor: AnchorString, today: AnchorString): string {
   return m.relative_date_n_years_from_now({ count: diff });
 }
 
-function formatDay(_anchor: AnchorString, _today: AnchorString): string {
-  throw new DateTimeError("relativeDate('day', ...) not yet implemented");
+function formatDay(anchor: AnchorString, today: AnchorString): string {
+  const anchorMoment = localMoment(anchor).startOf("day");
+  const todayMoment = localMoment(today).startOf("day");
+  const diff = anchorMoment.diff(todayMoment, "day");
+  if (diff === 0) return m.relative_date_today();
+  if (diff === -1) return m.relative_date_yesterday();
+  if (diff === 1) return m.relative_date_tomorrow();
+  if (diff >= -7 && diff < 0) return m.relative_date_last_named_day({ weekday: anchorMoment.format("dddd") });
+  if (diff > 1 && diff <= 7) return m.relative_date_named_day({ weekday: anchorMoment.format("dddd") });
+  return anchorMoment.from(todayMoment);
 }

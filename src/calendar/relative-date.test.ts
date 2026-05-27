@@ -69,6 +69,24 @@ describe("relativeDate", () => {
     });
   });
 
+  describe("day", () => {
+    it("returns 'Today' when anchor equals today", () => {
+      expect(relativeDate("day", anchor("2026-05-27"), anchor("2026-05-27"))).toBe("Today");
+    });
+    it("returns 'Yesterday' for the immediately previous day", () => {
+      expect(relativeDate("day", anchor("2026-05-26"), anchor("2026-05-27"))).toBe("Yesterday");
+    });
+    it("returns 'Tomorrow' for the immediately following day", () => {
+      expect(relativeDate("day", anchor("2026-05-28"), anchor("2026-05-27"))).toBe("Tomorrow");
+    });
+    it("returns 'Last <weekday>' for a day 2-7 days in the past", () => {
+      expect(relativeDate("day", anchor("2026-05-22"), anchor("2026-05-27"))).toBe("Last Friday");
+    });
+    it("returns '<weekday>' for a day 2-7 days in the future", () => {
+      expect(relativeDate("day", anchor("2026-05-30"), anchor("2026-05-27"))).toBe("Saturday");
+    });
+  });
+
   describe("year", () => {
     it("returns 'This year' for same year", () => {
       expect(relativeDate("year", anchor("2026-01-15"), anchor("2026-05-27"))).toBe("This year");
