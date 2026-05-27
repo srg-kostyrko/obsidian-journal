@@ -32,6 +32,9 @@ export type {
   NumberingSource,
   JournalNumberingConfig,
   JournalConfig,
+  NavBlockRowLink,
+  NavBlockRow,
+  JournalNavBlock,
 } from "./config";
 
 export type { JournalEntry, JournalMetadata, JournalsIndexEvents } from "./types";

@@ -3,7 +3,7 @@ import { describe, it, expect } from "vitest";
 
 import type { AnchorString } from "@/calendar";
 
-import { journalConfigSchema, journalDefaultsFor } from "./config";
+import { journalConfigSchema, journalDefaultsFor, navBlockSchema } from "./config";
 
 describe("journalDefaultsFor", () => {
   it("defaults nameTemplate to {{date}}", () => {
@@ -72,5 +72,49 @@ describe("journalConfigSchema", () => {
     const cfg = { ...journalDefaultsFor({ type: "day" }, "daily"), templates: [42] };
     const parsed = v.safeParse(journalConfigSchema, cfg);
     expect(parsed.success).toBe(false);
+  });
+});
+
+describe("navBlockSchema", () => {
+  it("accepts a populated nav block", () => {
+    const value = {
+      type: "create" as const,
+      decorateWholeBlock: false,
+      rows: [
+        {
+          template: "{{date}}",
+          fontSize: 1,
+          bold: false,
+          italic: false,
+          color: { type: "theme" as const, name: "text-normal" },
+          background: { type: "transparent" as const },
+          link: "self" as const,
+          journal: "",
+          addDecorations: false,
+        },
+      ],
+    };
+    expect(v.safeParse(navBlockSchema, value).success).toBe(true);
+  });
+
+  it("rejects unknown link kinds", () => {
+    const value = {
+      type: "create" as const,
+      decorateWholeBlock: false,
+      rows: [
+        {
+          template: "",
+          fontSize: 1,
+          bold: false,
+          italic: false,
+          color: { type: "transparent" as const },
+          background: { type: "transparent" as const },
+          link: "nonsense" as unknown as "self",
+          journal: "",
+          addDecorations: false,
+        },
+      ],
+    };
+    expect(v.safeParse(navBlockSchema, value).success).toBe(false);
   });
 });

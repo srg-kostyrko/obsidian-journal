@@ -1,7 +1,7 @@
 import * as v from "valibot";
 
 import type { AnchorString } from "@/calendar";
-import { decorationSchema } from "@/decorations/config";
+import { colorSchema, decorationSchema } from "@/decorations/config";
 import { defineCollection } from "@/settings";
 
 export const FRONTMATTER_NAME_KEY = "journal";
@@ -79,6 +79,35 @@ const numberingSchema = v.pipe(
     "numbering source `frontmatterKey` values must be unique",
   ),
 );
+
+const navBlockRowLinkSchema = v.union([
+  v.literal("none"),
+  v.literal("self"),
+  v.literal("journal"),
+  v.picklist(["day", "week", "month", "quarter", "year"]),
+]);
+
+const navBlockRowSchema = v.object({
+  template: v.string(),
+  fontSize: v.number(),
+  bold: v.boolean(),
+  italic: v.boolean(),
+  color: colorSchema,
+  background: colorSchema,
+  link: navBlockRowLinkSchema,
+  journal: v.string(),
+  addDecorations: v.boolean(),
+});
+
+export const navBlockSchema = v.object({
+  type: v.picklist(["create", "existing"]),
+  rows: v.array(navBlockRowSchema),
+  decorateWholeBlock: v.boolean(),
+});
+
+export type NavBlockRowLink = v.InferOutput<typeof navBlockRowLinkSchema>;
+export type NavBlockRow = v.InferOutput<typeof navBlockRowSchema>;
+export type JournalNavBlock = v.InferOutput<typeof navBlockSchema>;
 
 export const journalConfigSchema = v.object({
   name: v.pipe(v.string(), v.minLength(1)),
