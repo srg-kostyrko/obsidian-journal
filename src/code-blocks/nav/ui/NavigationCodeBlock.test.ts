@@ -2,6 +2,7 @@ import { cleanup, render, screen } from "@testing-library/vue";
 import { createNanoEvents } from "nanoevents";
 import { afterEach, beforeAll, beforeEach, describe, expect, it, vi } from "vitest";
 
+import type { AnchorString } from "@/calendar";
 import { installTestCalendar } from "@/calendar/testing";
 import { DecorationEngine } from "@/decorations";
 import { initLocale } from "@/i18n";
@@ -22,6 +23,7 @@ import {
   JournalsIndex,
   JournalsRepository,
   OpenDateFlow,
+  journalDefaultsFor,
   type JournalConfig,
   type JournalEntry,
 } from "@/journals";
@@ -149,5 +151,44 @@ describe("NavigationCodeBlock", () => {
     const h = buildHarness({});
     mount(h, "Random/Note.md");
     expect(screen.getByText("Note is not connected to a journal")).toBeTruthy();
+  });
+});
+
+describe("NavigationCodeBlock columns", () => {
+  beforeEach(() => {
+    vi.useFakeTimers();
+    vi.setSystemTime(new Date("2026-05-27T10:00:00Z"));
+  });
+
+  it("renders the current journal date in 'create' mode with prev/next periods from CycleService", () => {
+    const daily = journalDefaultsFor({ type: "day" }, "daily");
+    const h = buildHarness({ daily });
+    h.index.byPath.set("Daily/2026-05-27.md", {
+      journalName: "daily",
+      anchor: "2026-05-27" as AnchorString,
+      path: "Daily/2026-05-27.md" as VaultPath,
+    });
+    h.shelves.shelves = [{ name: "main", journals: ["daily"] }];
+    mount(h, "Daily/2026-05-27.md");
+
+    const dayNumbers = screen.getAllByText(/^(26|27|28)$/);
+    expect(dayNumbers.map((element) => element.textContent).toSorted()).toEqual(["26", "27", "28"]);
+  });
+
+  it("renders empty side columns in 'existing' mode when there are no adjacent existing entries", () => {
+    const daily: JournalConfig = { ...journalDefaultsFor({ type: "day" }, "daily") };
+    daily.navBlock = { ...daily.navBlock, type: "existing" };
+    const h = buildHarness({ daily });
+    h.index.byPath.set("Daily/2026-05-27.md", {
+      journalName: "daily",
+      anchor: "2026-05-27" as AnchorString,
+      path: "Daily/2026-05-27.md" as VaultPath,
+    });
+    h.shelves.shelves = [{ name: "main", journals: ["daily"] }];
+    mount(h, "Daily/2026-05-27.md");
+
+    expect(screen.queryByText("26")).toBeNull();
+    expect(screen.queryByText("28")).toBeNull();
+    expect(screen.getByText("27")).toBeTruthy();
   });
 });
