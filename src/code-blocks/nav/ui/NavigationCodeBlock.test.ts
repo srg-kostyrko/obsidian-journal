@@ -250,3 +250,144 @@ describe("NavigationCodeBlock arrows", () => {
     expect(parameters.existingOnly).toBe(true);
   });
 });
+
+function dailyWithRows(rows: JournalConfig["navBlock"]["rows"]): JournalConfig {
+  const base = journalDefaultsFor({ type: "day" }, "daily");
+  return { ...base, navBlock: { ...base.navBlock, rows } };
+}
+
+describe("NavigationCodeBlock row click routing", () => {
+  beforeEach(() => {
+    vi.useFakeTimers();
+    vi.setSystemTime(new Date("2026-05-27T10:00:00Z"));
+  });
+
+  it("opens the current entry via WorkspaceService.openNote on a 'self' row click", async () => {
+    const journal = dailyWithRows([
+      {
+        template: "today",
+        fontSize: 1,
+        bold: false,
+        italic: false,
+        color: { type: "transparent" },
+        background: { type: "transparent" },
+        link: "self",
+        journal: "",
+        addDecorations: false,
+      },
+    ]);
+    const h = buildHarness({ daily: journal });
+    h.index.byPath.set("Daily/2026-05-27.md", {
+      journalName: "daily",
+      anchor: "2026-05-27" as AnchorString,
+      path: "Daily/2026-05-27.md" as VaultPath,
+    });
+    h.index.byAnchor.set("daily::2026-05-27", {
+      journalName: "daily",
+      anchor: "2026-05-27" as AnchorString,
+      path: "Daily/2026-05-27.md" as VaultPath,
+    });
+    h.shelves.shelves = [{ name: "main", journals: ["daily"] }];
+    mount(h, "Daily/2026-05-27.md");
+
+    const user = userEvent.setup({ advanceTimers: vi.advanceTimersByTime });
+    const target = screen.getAllByText("today")[1];
+    if (target) await user.click(target);
+    expect(h.workspace.openNoteCalls.map((c) => c.path)).toEqual(["Daily/2026-05-27.md"]);
+    expect(h.flows.calls).toHaveLength(0);
+  });
+
+  it("invokes OpenDateFlow with the row's journal for link 'journal'", async () => {
+    const journal = dailyWithRows([
+      {
+        template: "go",
+        fontSize: 1,
+        bold: false,
+        italic: false,
+        color: { type: "transparent" },
+        background: { type: "transparent" },
+        link: "journal",
+        journal: "weekly",
+        addDecorations: false,
+      },
+    ]);
+    const h = buildHarness({ daily: journal, weekly: journalDefaultsFor({ type: "week" }, "weekly") });
+    h.index.byPath.set("Daily/2026-05-27.md", {
+      journalName: "daily",
+      anchor: "2026-05-27" as AnchorString,
+      path: "Daily/2026-05-27.md" as VaultPath,
+    });
+    h.shelves.shelves = [{ name: "main", journals: ["daily", "weekly"] }];
+    mount(h, "Daily/2026-05-27.md");
+
+    const user = userEvent.setup({ advanceTimers: vi.advanceTimersByTime });
+    const target = screen.getAllByText("go")[0];
+    if (target) await user.click(target);
+    const parameters = h.flows.calls[0]?.parameters as { journalNames: string[] };
+    expect(parameters.journalNames).toEqual(["weekly"]);
+  });
+
+  it("invokes OpenDateFlow with all matching shelf journals for a period kind link", async () => {
+    const journal = dailyWithRows([
+      {
+        template: "wk",
+        fontSize: 1,
+        bold: false,
+        italic: false,
+        color: { type: "transparent" },
+        background: { type: "transparent" },
+        link: "week",
+        journal: "",
+        addDecorations: false,
+      },
+    ]);
+    const h = buildHarness({
+      daily: journal,
+      weekly1: journalDefaultsFor({ type: "week" }, "weekly1"),
+      weekly2: journalDefaultsFor({ type: "week" }, "weekly2"),
+    });
+    h.index.byPath.set("Daily/2026-05-27.md", {
+      journalName: "daily",
+      anchor: "2026-05-27" as AnchorString,
+      path: "Daily/2026-05-27.md" as VaultPath,
+    });
+    h.shelves.shelves = [{ name: "main", journals: ["daily", "weekly1", "weekly2"] }];
+    mount(h, "Daily/2026-05-27.md");
+
+    const user = userEvent.setup({ advanceTimers: vi.advanceTimersByTime });
+    const target = screen.getAllByText("wk")[0];
+    if (target) await user.click(target);
+    const parameters = h.flows.calls[0]?.parameters as { journalNames: string[] };
+    expect(parameters.journalNames.toSorted()).toEqual(["weekly1", "weekly2"]);
+  });
+
+  it("does nothing for a 'none' row click", async () => {
+    const journal = dailyWithRows([
+      {
+        template: "static",
+        fontSize: 1,
+        bold: false,
+        italic: false,
+        color: { type: "transparent" },
+        background: { type: "transparent" },
+        link: "none",
+        journal: "",
+        addDecorations: false,
+      },
+    ]);
+    const h = buildHarness({ daily: journal });
+    h.index.byPath.set("Daily/2026-05-27.md", {
+      journalName: "daily",
+      anchor: "2026-05-27" as AnchorString,
+      path: "Daily/2026-05-27.md" as VaultPath,
+    });
+    h.shelves.shelves = [{ name: "main", journals: ["daily"] }];
+    mount(h, "Daily/2026-05-27.md");
+
+    const user = userEvent.setup({ advanceTimers: vi.advanceTimersByTime });
+    const target = screen.getAllByText("static")[0];
+    if (target) await user.click(target);
+    expect(h.workspace.openNoteCalls).toHaveLength(0);
+    expect(h.flows.calls).toHaveLength(0);
+  });
+});
