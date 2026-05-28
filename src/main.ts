@@ -20,6 +20,7 @@ import { notesCalendarModule } from "@/notes-calendar";
 import { settingsModule, SettingsService } from "@/settings";
 import { shelvesModule } from "@/shelves";
 import { templatesModule } from "@/templates";
+import { viewsModule } from "@/views";
 
 export default class JournalPlugin extends Plugin {
   #container?: Container;
@@ -41,6 +42,7 @@ export default class JournalPlugin extends Plugin {
     container.addModule(decorationsSettingsModule);
     container.addModule(notesCalendarModule);
     container.addModule(shelvesModule);
+    container.addModule(viewsModule);
     container.addModule(codeBlocksModule);
     container.addModule(navBlockSettingsModule);
     container.addModule(commandsModule);
