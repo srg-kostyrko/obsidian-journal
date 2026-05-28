@@ -97,29 +97,51 @@ describe("NotesMonthView", () => {
   });
 
   describe("header badges", () => {
-    it("renders the month and year header badges", () => {
-      const h = buildNotesCalendarHarness({
-        journals: {
-          monthly: fixedJournal("monthly", { type: "month" }),
-          yearly: fixedJournal("yearly", { type: "year" }),
-        },
-      });
+    it("renders the month header badge", () => {
+      const h = buildNotesCalendarHarness({ journals: { monthly: fixedJournal("monthly", { type: "month" }) } });
       const { container } = mount(h, { shelf: null, month });
       expect(container.querySelector('[data-testid="header-month"]')).toBeTruthy();
+    });
+
+    it("renders the year header badge", () => {
+      const h = buildNotesCalendarHarness({ journals: { yearly: fixedJournal("yearly", { type: "year" }) } });
+      const { container } = mount(h, { shelf: null, month });
       expect(container.querySelector('[data-testid="header-year"]')).toBeTruthy();
     });
 
-    it("renders the quarter header badge only when scope has a quarter journal", () => {
-      const without = buildNotesCalendarHarness({ journals: { daily: fixedJournal("daily", { type: "day" }) } });
-      const r1 = mount(without, { shelf: null, month });
-      expect(r1.container.querySelector('[data-testid="header-quarter"]')).toBeNull();
-      cleanup();
-
-      const withQuarter = buildNotesCalendarHarness({
+    it("renders the quarter header badge when scope has a quarter journal", () => {
+      const h = buildNotesCalendarHarness({
         journals: { quarterly: fixedJournal("quarterly", { type: "quarter" }) },
       });
-      const r2 = mount(withQuarter, { shelf: null, month });
-      expect(r2.container.querySelector('[data-testid="header-quarter"]')).toBeTruthy();
+      const { container } = mount(h, { shelf: null, month });
+      expect(container.querySelector('[data-testid="header-quarter"]')).toBeTruthy();
+    });
+
+    it("omits the quarter header badge when scope has no quarter journal", () => {
+      const h = buildNotesCalendarHarness({ journals: { daily: fixedJournal("daily", { type: "day" }) } });
+      const { container } = mount(h, { shelf: null, month });
+      expect(container.querySelector('[data-testid="header-quarter"]')).toBeNull();
+    });
+  });
+
+  describe("header slot", () => {
+    it("replaces the default header row when #header is provided", () => {
+      const h = buildNotesCalendarHarness({ journals: { daily: fixedJournal("daily", { type: "day" }) } });
+      const { container } = render(NotesMonthView, {
+        props: { shelf: null, month },
+        slots: { header: "<div data-testid='custom-header'>X</div>" },
+        global: {
+          plugins: [
+            {
+              install(app) {
+                provideInjectorOnApp(app, h.container);
+              },
+            },
+          ],
+        },
+      });
+      expect(container.querySelector('[data-testid="custom-header"]')).toBeTruthy();
+      expect(container.querySelector('[data-testid="header-month"]')).toBeNull();
     });
   });
 });

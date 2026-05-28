@@ -19,9 +19,9 @@ const scope = useShelfScope(() => props.shelf);
 
 const dayCell = useNotesCell({ journalNames: () => scope.day.value });
 const weekCell = useNotesCell({ journalNames: () => scope.week.value });
-const monthCellApi = useNotesCell({ journalNames: () => scope.month.value });
-const quarterCellApi = useNotesCell({ journalNames: () => scope.quarter.value });
-const yearCellApi = useNotesCell({ journalNames: () => scope.year.value });
+const monthCell = useNotesCell({ journalNames: () => scope.month.value });
+const quarterCell = useNotesCell({ journalNames: () => scope.quarter.value });
+const yearCell = useNotesCell({ journalNames: () => scope.year.value });
 
 const rawMonth = computed(() => toRaw(props.month));
 const showWeekNumber = computed(() => scope.week.value.length > 0);
@@ -85,14 +85,14 @@ const inactiveDay = inactiveCell();
   <div class="notes-month-view">
     <div class="notes-month-view__header">
       <slot name="header">
-        <NotesCalendarCell data-testid="header-month" :period="monthPeriod" :cell="monthCellApi" />
+        <NotesCalendarCell data-testid="header-month" :period="monthPeriod" :cell="monthCell" />
         <NotesCalendarCell
           v-if="showQuarter"
           data-testid="header-quarter"
           :period="quarterPeriod"
-          :cell="quarterCellApi"
+          :cell="quarterCell"
         />
-        <NotesCalendarCell data-testid="header-year" :period="yearPeriod" :cell="yearCellApi" />
+        <NotesCalendarCell data-testid="header-year" :period="yearPeriod" :cell="yearCell" />
       </slot>
     </div>
     <div class="notes-month-view__grid" :data-with-weeks="showWeekNumber || null">
