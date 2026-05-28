@@ -5,10 +5,12 @@ import {
   type CachedMetadata,
   type Command,
   type EventRef,
+  type ItemView,
   type MarkdownPostProcessorContext,
   type MarkdownRenderChild,
   type PaneType,
   type Plugin,
+  type WorkspaceLeaf,
 } from "obsidian";
 
 type CodeBlockProcessor = (
@@ -46,6 +48,13 @@ export interface FakeWorkspaceState {
   openPaths: Set<string>;
   openCalls: { path: string; mode: PaneType | false }[];
   triggerCalls: { event: string; arguments_: unknown[] }[];
+  detachedTypes: string[];
+  saveLayoutCalls: number;
+}
+
+export interface FakeRegisteredView {
+  readonly type: string;
+  readonly factory: (leaf: WorkspaceLeaf) => ItemView;
 }
 
 export interface FakeFileSystemEntry {
@@ -73,6 +82,7 @@ export interface FakeHost {
   readonly commands: Map<string, Command>;
   readonly ribbonIcons: FakeRibbonIcon[];
   readonly codeBlockProcessors: Map<string, CodeBlockProcessor>;
+  readonly registeredViews: Map<string, FakeRegisteredView>;
 
   putFile(path: string, content?: string, frontmatter?: Record<string, unknown>): TFile;
   putFolder(path: string): TFolder;
@@ -123,12 +133,15 @@ export function createFakeHost(): FakeHost {
     openPaths: new Set(),
     openCalls: [],
     triggerCalls: [],
+    detachedTypes: [],
+    saveLayoutCalls: 0,
   };
   const pluginData: FakeHost["pluginData"] = { current: undefined };
   const registeredEventReferences: EventRef[] = [];
   const commands = new Map<string, Command>();
   const ribbonIcons: FakeRibbonIcon[] = [];
   const codeBlockProcessors = new Map<string, CodeBlockProcessor>();
+  const registeredViews = new Map<string, FakeRegisteredView>();
   const unloadCallbacks: (() => void)[] = [];
 
   function ensureFolderChain(path: string): void {
@@ -302,6 +315,12 @@ export function createFakeHost(): FakeHost {
     trigger(event: string, ...arguments_: unknown[]): void {
       workspaceState.triggerCalls.push({ event, arguments_ });
     },
+    detachLeavesOfType(type: string): void {
+      workspaceState.detachedTypes.push(type);
+    },
+    requestSaveLayout(): void {
+      workspaceState.saveLayoutCalls++;
+    },
   };
 
   const app = {
@@ -337,6 +356,10 @@ export function createFakeHost(): FakeHost {
     registerMarkdownCodeBlockProcessor(language: string, handler: CodeBlockProcessor): void {
       codeBlockProcessors.set(language, handler);
     },
+    registerView(type: string, factory: (leaf: WorkspaceLeaf) => ItemView): void {
+      registeredViews.set(type, { type, factory });
+      unloadCallbacks.push(() => registeredViews.delete(type));
+    },
   } as unknown as Plugin;
 
   return {
@@ -350,6 +373,7 @@ export function createFakeHost(): FakeHost {
     commands,
     ribbonIcons,
     codeBlockProcessors,
+    registeredViews,
     putFile(path, content = "", frontmatter = {}): TFile {
       ensureFolderChain(parentPath(path));
       files.set(path, { content, frontmatter, metadata: {} });
