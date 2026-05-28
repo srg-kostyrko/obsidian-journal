@@ -229,6 +229,43 @@ export class Menu {
   }
 }
 
+export interface WorkspaceLeaf {
+  readonly containerEl: HTMLElement;
+}
+
+export class ItemView {
+  readonly leaf: WorkspaceLeaf;
+  readonly containerEl: HTMLElement;
+  readonly contentEl: HTMLElement;
+
+  constructor(leaf: WorkspaceLeaf) {
+    this.leaf = leaf;
+    this.containerEl = (leaf as { containerEl?: HTMLElement }).containerEl ?? document.createElement("div");
+    this.contentEl = document.createElement("div");
+    this.containerEl.append(this.contentEl);
+  }
+
+  getViewType(): string {
+    return "";
+  }
+
+  getDisplayText(): string {
+    return "";
+  }
+
+  getIcon(): string {
+    return "";
+  }
+
+  onOpen(): Promise<void> {
+    return Promise.resolve();
+  }
+
+  onClose(): Promise<void> {
+    return Promise.resolve();
+  }
+}
+
 export class MarkdownRenderChild {
   readonly containerEl: HTMLElement;
   #loaded = false;
