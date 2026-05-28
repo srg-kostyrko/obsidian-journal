@@ -1,3 +1,5 @@
+import { FlowError } from "@/infrastructure/flows";
+
 import type { BlockInstanceId, ViewId } from "./config";
 import type { BaseIssue } from "valibot";
 
@@ -73,3 +75,15 @@ export class MissingViewContextProviderError extends Error {
 }
 
 export type ViewsLifecycleError = InvalidViewNameError;
+
+export class ViewsLifecycleFlowError extends FlowError {
+  readonly kind = "views-lifecycle" as const;
+  constructor(public override readonly cause: ViewsLifecycleError | UnknownViewError) {
+    super(cause.message);
+    this.name = "ViewsLifecycleFlowError";
+  }
+}
+
+export function toFlowError(cause: ViewsLifecycleError | UnknownViewError): ViewsLifecycleFlowError {
+  return new ViewsLifecycleFlowError(cause);
+}
