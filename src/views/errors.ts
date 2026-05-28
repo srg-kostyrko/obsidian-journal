@@ -64,4 +64,12 @@ export class ViewsInvariantError extends Error {
   }
 }
 
+export class MissingViewContextProviderError extends Error {
+  readonly kind = "missing-view-context-provider" as const;
+  constructor() {
+    super("useViewContext called outside a provideViewContext scope");
+    this.name = "MissingViewContextProviderError";
+  }
+}
+
 export type ViewsLifecycleError = InvalidViewNameError;
