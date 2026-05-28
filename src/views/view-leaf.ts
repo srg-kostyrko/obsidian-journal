@@ -1,6 +1,6 @@
 import { ItemView, type WorkspaceLeaf } from "obsidian";
 import * as v from "valibot";
-import { computed, createApp, defineComponent, h, type App as VueApp, type VNode } from "vue";
+import { computed, createApp, defineComponent, h, reactive, type App as VueApp, type VNode } from "vue";
 
 import { CalendarDate } from "@/calendar/calendar-date";
 import type { AnchorString } from "@/calendar/types";
@@ -20,7 +20,9 @@ interface JournalViewLeafState {
 }
 
 export class JournalViewLeaf extends ItemView {
-  #state: JournalViewLeafState = {};
+  // reactive() so that closures in buildRootComponent hold the same object reference
+  // across setState calls — Vue computed refs track property reads on the proxy.
+  #state: JournalViewLeafState = reactive({});
   #vueApp: VueApp | null = null;
 
   constructor(
@@ -55,7 +57,13 @@ export class JournalViewLeaf extends ItemView {
 
   setState(state: unknown, _result: unknown): Promise<void> {
     if (state && typeof state === "object") {
-      this.#state = { ...(state as JournalViewLeafState) };
+      // Obsidian sends the full persisted state (replace, not patch).
+      // Mutate in-place so the reactive() proxy — and all closures captured in
+      // buildRootComponent — observe the update without needing a new reference.
+      for (const key of Object.keys(this.#state) as (keyof JournalViewLeafState)[]) {
+        delete this.#state[key];
+      }
+      Object.assign(this.#state, state);
       this.container.resolve(InternalObsidianAppToken).workspace.requestSaveLayout();
     }
     return Promise.resolve();

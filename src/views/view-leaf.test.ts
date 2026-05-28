@@ -12,6 +12,7 @@ import { ViewsEventsToken, type ViewsEvents } from "./tokens";
 import { JournalViewLeaf } from "./view-leaf";
 
 import type { View, ViewId } from "./config";
+import type { WorkspaceLeaf } from "obsidian";
 
 function seedView(overrides: Partial<View> = {}): View {
   return {
@@ -36,7 +37,7 @@ function build(view: View = seedView()) {
   c.register(ViewsRepository).useValue(repo);
   c.register(ViewsService).useClass(ViewsService);
   const leaf = { containerEl: document.createElement("div") };
-  return { leafInstance: new JournalViewLeaf(leaf as never, view.id, c), host };
+  return { leafInstance: new JournalViewLeaf(leaf as unknown as WorkspaceLeaf, view.id, c), host };
 }
 
 describe("JournalViewLeaf", () => {
@@ -53,6 +54,15 @@ describe("JournalViewLeaf", () => {
       const before = host.workspace.saveLayoutCalls;
       await leafInstance.setState({ refDate: "2026-06-01" }, {});
       expect(host.workspace.saveLayoutCalls).toBe(before + 1);
+    });
+
+    it("replaces full state on each call (keys absent from incoming state are dropped)", async () => {
+      const { leafInstance } = build();
+      await leafInstance.setState({ refDate: "2026-06-01", shelf: "A" }, {});
+      await leafInstance.setState({ shelf: "B" }, {});
+      const state = leafInstance.getState() as { refDate?: AnchorString; shelf?: string | null };
+      expect(state.refDate).toBeUndefined();
+      expect(state.shelf).toBe("B");
     });
   });
 
