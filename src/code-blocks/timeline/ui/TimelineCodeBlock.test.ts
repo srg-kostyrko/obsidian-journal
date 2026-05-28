@@ -17,6 +17,7 @@ const HOST_PATH = "host-note.md" as VaultPath;
 const HOST_ANCHOR = anchor("2026-05-27");
 
 function mount(h: NotesCalendarHarness, props: { path: VaultPath; config: TimelineBlockConfig }) {
+  h.container.register(OpenDateFlow).useValue({} as OpenDateFlow);
   return render(TimelineCodeBlock, {
     props,
     global: {
@@ -29,10 +30,6 @@ function mount(h: NotesCalendarHarness, props: { path: VaultPath; config: Timeli
       ],
     },
   });
-}
-
-function registerOpenDateFlow(h: NotesCalendarHarness): void {
-  h.container.register(OpenDateFlow).useValue({} as OpenDateFlow);
 }
 
 afterEach(() => {
@@ -54,7 +51,6 @@ describe("TimelineCodeBlock", () => {
   describe("mode derivation", () => {
     it("derives 'week' mode when host journal is day journal", () => {
       const h = buildNotesCalendarHarness({ journals: { daily: fixedJournal("daily", { type: "day" }) } });
-      registerOpenDateFlow(h);
       h.index.register({ journalName: "daily", anchor: HOST_ANCHOR, path: HOST_PATH });
 
       const { container } = mount(h, { path: HOST_PATH, config: {} });
@@ -64,7 +60,6 @@ describe("TimelineCodeBlock", () => {
 
     it("derives 'week' mode when host journal is week journal", () => {
       const h = buildNotesCalendarHarness({ journals: { weekly: fixedJournal("weekly", { type: "week" }) } });
-      registerOpenDateFlow(h);
       h.index.register({ journalName: "weekly", anchor: HOST_ANCHOR, path: HOST_PATH });
 
       const { container } = mount(h, { path: HOST_PATH, config: {} });
@@ -74,7 +69,6 @@ describe("TimelineCodeBlock", () => {
 
     it("derives 'month' mode when host journal is month journal", () => {
       const h = buildNotesCalendarHarness({ journals: { monthly: fixedJournal("monthly", { type: "month" }) } });
-      registerOpenDateFlow(h);
       h.index.register({ journalName: "monthly", anchor: HOST_ANCHOR, path: HOST_PATH });
 
       const { container } = mount(h, { path: HOST_PATH, config: {} });
@@ -84,7 +78,6 @@ describe("TimelineCodeBlock", () => {
 
     it("derives 'quarter' mode when host journal is quarter journal", () => {
       const h = buildNotesCalendarHarness({ journals: { quarterly: fixedJournal("quarterly", { type: "quarter" }) } });
-      registerOpenDateFlow(h);
       h.index.register({ journalName: "quarterly", anchor: HOST_ANCHOR, path: HOST_PATH });
 
       const { container } = mount(h, { path: HOST_PATH, config: {} });
@@ -94,7 +87,6 @@ describe("TimelineCodeBlock", () => {
 
     it("derives 'calendar' mode when host journal is year journal", () => {
       const h = buildNotesCalendarHarness({ journals: { yearly: fixedJournal("yearly", { type: "year" }) } });
-      registerOpenDateFlow(h);
       h.index.register({ journalName: "yearly", anchor: HOST_ANCHOR, path: HOST_PATH });
 
       const { container } = mount(h, { path: HOST_PATH, config: {} });
@@ -104,7 +96,6 @@ describe("TimelineCodeBlock", () => {
 
     it("uses config.mode over the derived mode", () => {
       const h = buildNotesCalendarHarness({ journals: { daily: fixedJournal("daily", { type: "day" }) } });
-      registerOpenDateFlow(h);
       h.index.register({ journalName: "daily", anchor: HOST_ANCHOR, path: HOST_PATH });
 
       const { container } = mount(h, { path: HOST_PATH, config: { mode: "month" } });
@@ -115,7 +106,6 @@ describe("TimelineCodeBlock", () => {
 
     it("falls back to 'week' when host note is not connected to any journal", () => {
       const h = buildNotesCalendarHarness({ journals: { daily: fixedJournal("daily", { type: "day" }) } });
-      registerOpenDateFlow(h);
 
       const { container } = mount(h, { path: HOST_PATH, config: {} });
 
@@ -128,16 +118,19 @@ describe("TimelineCodeBlock", () => {
       const h = buildNotesCalendarHarness({
         journals: {
           daily: fixedJournal("daily", { type: "day" }),
-          weekly: fixedJournal("weekly", { type: "week" }),
+          otherDaily: fixedJournal("otherDaily", { type: "day" }),
+          otherWeekly: fixedJournal("otherWeekly", { type: "week" }),
         },
-        shelves: { work: { name: "work", journals: ["daily", "weekly"] } },
+        shelves: {
+          work: { name: "work", journals: ["daily"] },
+          home: { name: "home", journals: ["otherDaily", "otherWeekly"] },
+        },
       });
-      registerOpenDateFlow(h);
       h.index.register({ journalName: "daily", anchor: HOST_ANCHOR, path: HOST_PATH });
 
       const { container } = mount(h, { path: HOST_PATH, config: {} });
 
-      expect(container.querySelector('[data-testid="week-number-cell"]')).toBeTruthy();
+      expect(container.querySelector('[data-testid="week-number-cell"]')).toBeNull();
     });
 
     it("uses config.shelf over the derived shelf", () => {
@@ -151,7 +144,6 @@ describe("TimelineCodeBlock", () => {
           override: { name: "override", journals: ["weekly"] },
         },
       });
-      registerOpenDateFlow(h);
       h.index.register({ journalName: "daily", anchor: HOST_ANCHOR, path: HOST_PATH });
 
       const { container } = mount(h, { path: HOST_PATH, config: { shelf: "override" } });

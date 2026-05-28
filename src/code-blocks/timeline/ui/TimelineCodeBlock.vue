@@ -5,7 +5,7 @@ import { computed } from "vue";
 import { Clock, type AnchorString } from "@/calendar";
 import { useService } from "@/infrastructure/di";
 import type { CodeBlockProps } from "@/infrastructure/host";
-import { JournalsIndex, JournalsRepository, type JournalConfig } from "@/journals";
+import { JournalsIndex, JournalsRepository } from "@/journals";
 import { ShelvesRepository } from "@/shelves";
 
 import TimelineCalendar from "./TimelineCalendar.vue";
@@ -23,11 +23,11 @@ const shelves = useService(ShelvesRepository);
 
 const entry = computed(() => index.entryByPath(path));
 
-const journal = computed<JournalConfig | null>(() =>
+const journal = computed(() =>
   entry.value
     .flatMap((hostEntry) => journals.get(hostEntry.journalName))
     .match({
-      some: (config_) => config_,
+      some: (journalConfig) => journalConfig,
       none: () => null,
     }),
 );
@@ -51,16 +51,16 @@ const derivedMode = computed<TimelineMode>(() => {
     .exhaustive();
 });
 
-const mode = computed<TimelineMode>(() => config.mode ?? derivedMode.value);
+const mode = computed(() => config.mode ?? derivedMode.value);
 
-const derivedShelf = computed<string | null>(() => {
+const derivedShelf = computed(() => {
   const hostJournal = journal.value;
   if (!hostJournal) return null;
   const owning = [...shelves.find().list()].find((shelf) => shelf.journals.includes(hostJournal.name));
   return owning?.name ?? null;
 });
 
-const shelf = computed<string | null>(() => config.shelf ?? derivedShelf.value);
+const shelf = computed(() => config.shelf ?? derivedShelf.value);
 </script>
 
 <template>
