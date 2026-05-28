@@ -8,7 +8,7 @@
     "build": "vite build",
     "compile:i18n": "paraglide-js compile --project ./project.inlang --outdir ./src/i18n/paraglide",
     "version": "node version-bump.mjs && git add manifest.json manifest-beta.json versions.json",
-    "check:lint": "eslint .",
+    "check:lint": "eslint . --cache --cache-location node_modules/.cache/eslint/",
     "test": "vitest run",
     "test:watch": "vitest",
     "coverage": "vitest run --coverage",
