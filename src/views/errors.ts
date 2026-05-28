@@ -74,7 +74,7 @@ export class MissingViewContextProviderError extends Error {
   }
 }
 
-export type ViewsLifecycleError = InvalidViewNameError | UnknownViewError;
+export type ViewsLifecycleError = InvalidViewNameError | UnknownViewError | UnknownViewBlockKeyError;
 
 export class ViewsLifecycleFlowError extends FlowError {
   readonly kind = "views-lifecycle" as const;
