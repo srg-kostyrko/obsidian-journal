@@ -74,16 +74,16 @@ export class MissingViewContextProviderError extends Error {
   }
 }
 
-export type ViewsLifecycleError = InvalidViewNameError;
+export type ViewsLifecycleError = InvalidViewNameError | UnknownViewError;
 
 export class ViewsLifecycleFlowError extends FlowError {
   readonly kind = "views-lifecycle" as const;
-  constructor(public override readonly cause: ViewsLifecycleError | UnknownViewError) {
+  constructor(public override readonly cause: ViewsLifecycleError) {
     super(cause.message);
     this.name = "ViewsLifecycleFlowError";
   }
 }
 
-export function toFlowError(cause: ViewsLifecycleError | UnknownViewError): ViewsLifecycleFlowError {
+export function toFlowError(cause: ViewsLifecycleError): ViewsLifecycleFlowError {
   return new ViewsLifecycleFlowError(cause);
 }
