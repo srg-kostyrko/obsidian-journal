@@ -1,7 +1,7 @@
 import { inject } from "@/infrastructure/di";
 import { attempt, Err, Option, type AsyncResult } from "@/infrastructure/result";
 
-import { InvalidViewNameError, UnknownViewError, type ViewsLifecycleError } from "./errors";
+import { InvalidViewNameError, UnknownViewError, ViewsInvariantError, type ViewsLifecycleError } from "./errors";
 import { ViewsRepository } from "./repository";
 import { ViewBlockDefinitionToken } from "./tokens";
 
@@ -65,11 +65,11 @@ export class ViewsService {
       if (patch.name?.trim().length === 0) {
         yield* new Err<never, ViewsLifecycleError>(new InvalidViewNameError(patch.name));
       }
-      yield* this.#repo
-        .update(id, patch)
-        .mapErr((cause): UnknownViewError | ViewsLifecycleError =>
-          cause.kind === "unknown-view" ? cause : new InvalidViewNameError(patch.name ?? ""),
-        );
+      yield* this.#repo.update(id, patch).mapErr((cause): UnknownViewError => {
+        if (cause.kind === "unknown-view") return cause;
+        // patch type excludes `id`, so BaseRepository's id-collision branch is unreachable.
+        throw new ViewsInvariantError(`unreachable: repo.update returned ${cause.kind}`);
+      });
     });
   }
 

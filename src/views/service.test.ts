@@ -81,13 +81,21 @@ describe("ViewsService", () => {
       expect(result.error.kind).toBe("unknown-view");
     });
 
-    it("returns Ok with a fresh view id", async () => {
-      const { service, repo } = build();
+    it("generates a different id from the source", async () => {
+      const { service } = build();
       const created = await service.create({ name: "Source" });
       expectOk(created);
       const result = await service.clone(created.value);
       expectOk(result);
       expect(result.value).not.toBe(created.value);
+    });
+
+    it("persists the cloned view through the repository", async () => {
+      const { service, repo } = build();
+      const created = await service.create({ name: "Source" });
+      expectOk(created);
+      const result = await service.clone(created.value);
+      expectOk(result);
       expect(repo.get(result.value).match({ some: (v) => v, none: () => null })).not.toBeNull();
     });
 
@@ -142,6 +150,14 @@ describe("ViewsService", () => {
   });
 
   describe("delete", () => {
+    it("removes the view from the repository", async () => {
+      const { service, repo } = build();
+      const created = await service.create({ name: "X" });
+      expectOk(created);
+      await service.delete(created.value);
+      expect(repo.get(created.value).match({ some: () => true, none: () => false })).toBe(false);
+    });
+
     it("returns UnknownViewError when called twice", async () => {
       const { service } = build();
       const created = await service.create({ name: "X" });

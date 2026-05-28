@@ -57,4 +57,11 @@ export class InvalidViewUpdateError extends Error {
   }
 }
 
+export class ViewsInvariantError extends Error {
+  constructor(message: string) {
+    super(message);
+    this.name = "ViewsInvariantError";
+  }
+}
+
 export type ViewsLifecycleError = InvalidViewNameError;
