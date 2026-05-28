@@ -212,13 +212,15 @@ describe("ViewsService", () => {
       expect(result.error.kind).toBe("unknown-view-block-key");
     });
 
-    it("returns Ok with a fresh BlockInstanceId on success", async () => {
+    it("generates a fresh BlockInstanceId per call", async () => {
       const { service } = build({ blocks: [trivialBlock] });
       const created = await service.create({ name: "X" });
       expectOk(created);
-      const result = await service.addBlock(created.value, "test-block");
-      expectOk(result);
-      expect(typeof result.value).toBe("string");
+      const first = await service.addBlock(created.value, "test-block");
+      const second = await service.addBlock(created.value, "test-block");
+      expectOk(first);
+      expectOk(second);
+      expect(first.value).not.toBe(second.value);
     });
 
     it("appends to the view's blocks list with the block's defaultConfig", async () => {
@@ -258,7 +260,17 @@ describe("ViewsService", () => {
       expect(repo.get(created.value).match({ some: (v) => v.blocks, none: () => null })).toEqual([]);
     });
 
-    it("is a no-op when block id is not present", async () => {
+    it("does not emit updated when block id is not present", async () => {
+      const { service, events } = build({ blocks: [trivialBlock] });
+      const created = await service.create({ name: "X" });
+      expectOk(created);
+      const listener = vi.fn();
+      events.on("updated", listener);
+      await service.removeBlock(created.value, "missing-id" as BlockInstanceId);
+      expect(listener).not.toHaveBeenCalled();
+    });
+
+    it("leaves the blocks list unchanged when block id is not present", async () => {
       const { service, repo } = build({ blocks: [trivialBlock] });
       const created = await service.create({ name: "X" });
       expectOk(created);

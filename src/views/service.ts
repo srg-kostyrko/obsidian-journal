@@ -90,9 +90,7 @@ export class ViewsService {
 
   addBlock(id: ViewId, key: string): AsyncResult<BlockInstanceId, UnknownViewError | UnknownViewBlockKeyError> {
     return attempt.in(this, async function* () {
-      const current = yield* Option.fromNullable(
-        this.#repo.get(id).match({ some: (v) => v, none: () => null }),
-      ).okOrElse(() => new UnknownViewError(id));
+      const current = yield* this.#repo.get(id).okOrElse(() => new UnknownViewError(id));
       const definition = yield* Option.fromNullable(this.#blocks.get(key) ?? null).okOrElse(
         () => new UnknownViewBlockKeyError(key),
       );
@@ -111,9 +109,7 @@ export class ViewsService {
 
   removeBlock(id: ViewId, blockId: BlockInstanceId): AsyncResult<void, UnknownViewError> {
     return attempt.in(this, async function* () {
-      const current = yield* Option.fromNullable(
-        this.#repo.get(id).match({ some: (v) => v, none: () => null }),
-      ).okOrElse(() => new UnknownViewError(id));
+      const current = yield* this.#repo.get(id).okOrElse(() => new UnknownViewError(id));
       const blocks = current.blocks.filter((b) => b.id !== blockId);
       if (blocks.length === current.blocks.length) return;
       yield* this.#repo.update(id, { blocks }).mapErr((cause): UnknownViewError => {
@@ -137,9 +133,7 @@ export class ViewsService {
     config: unknown,
   ): AsyncResult<void, UnknownViewError | InvalidViewBlockConfigError> {
     return attempt.in(this, async function* () {
-      const current = yield* Option.fromNullable(
-        this.#repo.get(id).match({ some: (v) => v, none: () => null }),
-      ).okOrElse(() => new UnknownViewError(id));
+      const current = yield* this.#repo.get(id).okOrElse(() => new UnknownViewError(id));
       const target = current.blocks.find((b) => b.id === blockId);
       if (!target) return;
       const definition = this.#blocks.get(target.key);
@@ -163,9 +157,7 @@ export class ViewsService {
 
   #move(id: ViewId, blockId: BlockInstanceId, delta: -1 | 1): AsyncResult<void, UnknownViewError> {
     return attempt.in(this, async function* () {
-      const current = yield* Option.fromNullable(
-        this.#repo.get(id).match({ some: (v) => v, none: () => null }),
-      ).okOrElse(() => new UnknownViewError(id));
+      const current = yield* this.#repo.get(id).okOrElse(() => new UnknownViewError(id));
       const index = current.blocks.findIndex((b) => b.id === blockId);
       const target = index + delta;
       if (index < 0 || target < 0 || target >= current.blocks.length) return;
