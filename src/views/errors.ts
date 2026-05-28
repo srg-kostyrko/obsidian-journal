@@ -50,7 +50,7 @@ export class InvalidViewNameError extends Error {
 }
 
 export class InvalidViewUpdateError extends Error {
-  readonly kind = "invalid-update" as const;
+  readonly kind = "invalid-view-update" as const;
   constructor(public readonly viewId: ViewId) {
     super(`Invalid update for view ${viewId}: id field is immutable via update`);
     this.name = "InvalidViewUpdateError";
