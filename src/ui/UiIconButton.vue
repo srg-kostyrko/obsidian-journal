@@ -5,11 +5,12 @@ import UiIcon from "./UiIcon.vue";
 defineProps<{
   icon: string;
   tooltip?: string;
+  disabled?: boolean;
 }>();
 </script>
 
 <template>
-  <UiButton :tooltip="tooltip" flat class="icon-button">
+  <UiButton :tooltip="tooltip" :disabled="disabled" flat class="icon-button">
     <UiIcon :name="icon" />
   </UiButton>
 </template>
