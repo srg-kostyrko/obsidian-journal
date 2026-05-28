@@ -4,7 +4,7 @@ import { computed, createApp, defineComponent, h, reactive, type App as VueApp, 
 
 import { CalendarDate } from "@/calendar/calendar-date";
 import type { AnchorString } from "@/calendar/types";
-import { provideInjectorOnApp, type Container } from "@/infrastructure/di";
+import { provideInjectorOnApp, type Injector } from "@/infrastructure/di";
 import { InternalObsidianAppToken } from "@/infrastructure/host/internal/tokens";
 import { LoggerFactoryToken } from "@/infrastructure/logger";
 
@@ -28,7 +28,7 @@ export class JournalViewLeaf extends ItemView {
   constructor(
     leaf: WorkspaceLeaf,
     private readonly viewId: ViewId,
-    private readonly container: Container,
+    private readonly injector: Injector,
   ) {
     super(leaf);
   }
@@ -38,14 +38,14 @@ export class JournalViewLeaf extends ItemView {
   }
 
   getDisplayText(): string {
-    return this.container
+    return this.injector
       .resolve(ViewsRepository)
       .get(this.viewId)
       .match({ some: (view) => view.name, none: () => "Journal view" });
   }
 
   getIcon(): string {
-    return this.container
+    return this.injector
       .resolve(ViewsRepository)
       .get(this.viewId)
       .match({ some: (view) => view.icon, none: () => "calendar-days" });
@@ -64,14 +64,14 @@ export class JournalViewLeaf extends ItemView {
         delete this.#state[key];
       }
       Object.assign(this.#state, state);
-      this.container.resolve(InternalObsidianAppToken).workspace.requestSaveLayout();
+      this.injector.resolve(InternalObsidianAppToken).workspace.requestSaveLayout();
     }
     return Promise.resolve();
   }
 
   protected onOpen(): Promise<void> {
-    const app = createApp(buildRootComponent(this.viewId, this.#state, this.container));
-    provideInjectorOnApp(app, this.container);
+    const app = createApp(buildRootComponent(this.viewId, this.#state, this.injector));
+    provideInjectorOnApp(app, this.injector);
     app.mount(this.contentEl);
     this.#vueApp = app;
     return Promise.resolve();
@@ -89,12 +89,12 @@ function todayAnchor(): AnchorString {
   return CalendarDate.today().toAnchor();
 }
 
-function buildRootComponent(viewId: ViewId, leafState: JournalViewLeafState, container: Container) {
+function buildRootComponent(viewId: ViewId, leafState: JournalViewLeafState, injector: Injector) {
   return defineComponent({
     setup() {
-      const repo = container.resolve(ViewsRepository);
-      const service = container.resolve(ViewsService);
-      const logger = container.resolve(LoggerFactoryToken).named("view-leaf");
+      const repo = injector.resolve(ViewsRepository);
+      const service = injector.resolve(ViewsService);
+      const logger = injector.resolve(LoggerFactoryToken).named("view-leaf");
 
       const view = computed(() => repo.get(viewId).match({ some: (current) => current, none: () => null }));
 

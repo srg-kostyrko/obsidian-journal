@@ -27,8 +27,9 @@ function seedView(id: string, overrides: Partial<View> = {}): View {
 
 function build(seeds: Record<string, View> = {}) {
   const host = createFakeHost();
+  const storage: Record<string, View> = { ...seeds };
   const events = createNanoEvents<ViewsEvents>();
-  const repo = ViewsRepository.fromParts(seeds, events);
+  const repo = ViewsRepository.fromParts(storage, events);
   const c = new Container();
   c.register(InternalPluginToken).useValue(host.plugin);
   c.register(InternalObsidianAppToken).useValue(host.app);
@@ -38,8 +39,7 @@ function build(seeds: Record<string, View> = {}) {
   c.register(ViewsEventsToken).useValue(events);
   c.register(ViewHostService).useClass(ViewHostService);
   const service = c.resolve(ViewHostService);
-  service.setContainer(c);
-  return { service, host, events, repo };
+  return { service, host, events, repo, storage };
 }
 
 describe("ViewHostService", () => {
@@ -69,8 +69,8 @@ describe("ViewHostService", () => {
 
   describe("created event", () => {
     it("registers the new view type", () => {
-      const { host, events, repo } = build();
-      (repo as unknown as { storage: Record<string, View> }).storage.new = seedView("new");
+      const { host, events, storage } = build();
+      storage.new = seedView("new");
       events.emit("created", "new" as ViewId);
       expect(host.registeredViews.has("journal-view:new")).toBe(true);
     });
@@ -78,9 +78,9 @@ describe("ViewHostService", () => {
 
   describe("updated event", () => {
     it("re-syncs the command label without re-registering the view type", () => {
-      const { host, events, repo } = build({ a: seedView("a", { name: "Old" }) });
+      const { host, events, storage } = build({ a: seedView("a", { name: "Old" }) });
       const before = host.registeredViews.size;
-      (repo as unknown as { storage: Record<string, View> }).storage.a.name = "New";
+      storage.a.name = "New";
       events.emit("updated", "a" as ViewId, { name: "New" });
       expect(host.registeredViews.size).toBe(before);
       expect(host.commands.get("journal:open-view:a")?.name).toBe("Open New");

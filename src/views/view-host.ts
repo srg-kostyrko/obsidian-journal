@@ -1,6 +1,6 @@
 import { ItemView, type WorkspaceLeaf } from "obsidian";
 
-import { inject, type Container } from "@/infrastructure/di";
+import { inject, InjectorToken } from "@/infrastructure/di";
 import { CommandService } from "@/infrastructure/host/commands";
 import { InternalObsidianAppToken, InternalPluginToken } from "@/infrastructure/host/internal/tokens";
 import { LoggerFactoryToken, type Logger } from "@/infrastructure/logger";
@@ -9,7 +9,7 @@ import { ViewsRepository } from "./repository";
 import { ViewsEventsToken } from "./tokens";
 import { JournalViewLeaf } from "./view-leaf";
 
-import type { ViewId } from "./config";
+import type { View, ViewId } from "./config";
 
 type Disposer = () => void;
 
@@ -20,9 +20,9 @@ export class ViewHostService {
   readonly #repo = inject(ViewsRepository);
   readonly #events = inject(ViewsEventsToken);
   readonly #logger = inject(LoggerFactoryToken).named("view-host");
+  readonly #injector = inject(InjectorToken);
   readonly #disposers = new Map<ViewId, Disposer>();
   readonly #stale = new Set<string>();
-  #container: Container | null = null;
 
   constructor() {
     this.#events.on("created", (id) => {
@@ -40,12 +40,6 @@ export class ViewHostService {
     this.#registerAll();
   }
 
-  // Container can't self-inject without a circular DI dependency at boot;
-  // module wiring sets it on the eagerly-resolved instance via autoLoad.
-  setContainer(container: Container): void {
-    this.#container = container;
-  }
-
   dispose(): void {
     for (const [, disposeOne] of this.#disposers) disposeOne();
     this.#disposers.clear();
@@ -57,22 +51,14 @@ export class ViewHostService {
 
   #register(id: ViewId): void {
     if (this.#disposers.has(id)) return;
-    const view = this.#repo.get(id).match({ some: (v) => v, none: () => null });
+    const view = this.#getView(id);
     if (!view) {
       this.#logger.warn("register called for unknown view", { id });
       return;
     }
     const viewType = viewTypeOf(id);
     this.#plugin.registerView(viewType, (leaf) => this.#buildLeaf(leaf, id, viewType));
-    this.#commands.register({
-      id: commandIdOf(id),
-      name: `Open ${view.name}`,
-      icon: view.icon,
-      ribbon: view.showInRibbon,
-      execute: () => {
-        void this.#open(id);
-      },
-    });
+    this.#commands.register(this.#commandDescriptorFor(id, view));
     this.#disposers.set(id, () => {
       this.#tearDown(id, viewType);
     });
@@ -87,19 +73,10 @@ export class ViewHostService {
 
   #resync(id: ViewId): void {
     if (!this.#disposers.has(id)) return;
-    const view = this.#repo.get(id).match({ some: (v) => v, none: () => null });
+    const view = this.#getView(id);
     if (!view) return;
-    const commandId = commandIdOf(id);
-    this.#commands.unregister(commandId);
-    this.#commands.register({
-      id: commandId,
-      name: `Open ${view.name}`,
-      icon: view.icon,
-      ribbon: view.showInRibbon,
-      execute: () => {
-        void this.#open(id);
-      },
-    });
+    this.#commands.unregister(commandIdOf(id));
+    this.#commands.register(this.#commandDescriptorFor(id, view));
   }
 
   #tearDown(id: ViewId, viewType: string): void {
@@ -110,11 +87,25 @@ export class ViewHostService {
     this.#stale.add(viewType);
   }
 
+  #getView(id: ViewId): View | null {
+    return this.#repo.get(id).match({ some: (v) => v, none: () => null });
+  }
+
+  #commandDescriptorFor(id: ViewId, view: View) {
+    return {
+      id: commandIdOf(id),
+      name: `Open ${view.name}`,
+      icon: view.icon,
+      ribbon: view.showInRibbon,
+      execute: () => void this.#open(id),
+    };
+  }
+
   #buildLeaf(leaf: WorkspaceLeaf, id: ViewId, viewType: string): ItemView {
-    if (this.#stale.has(viewType) || !this.#container) {
+    if (this.#stale.has(viewType)) {
       return new StaleLeaf(leaf, viewType, this.#logger);
     }
-    return new JournalViewLeaf(leaf, id, this.#container);
+    return new JournalViewLeaf(leaf, id, this.#injector);
   }
 
   async #open(id: ViewId): Promise<void> {

@@ -2,7 +2,7 @@ import { createNanoEvents } from "nanoevents";
 import { describe, expect, it } from "vitest";
 
 import type { AnchorString } from "@/calendar/types";
-import { Container } from "@/infrastructure/di";
+import { Container, InjectorToken } from "@/infrastructure/di";
 import { createFakeHost } from "@/infrastructure/host/internal/testing";
 import { InternalObsidianAppToken, InternalPluginToken } from "@/infrastructure/host/internal/tokens";
 
@@ -37,7 +37,8 @@ function build(view: View = seedView()) {
   c.register(ViewsRepository).useValue(repo);
   c.register(ViewsService).useClass(ViewsService);
   const leaf = { containerEl: document.createElement("div") };
-  return { leafInstance: new JournalViewLeaf(leaf as unknown as WorkspaceLeaf, view.id, c), host };
+  const injector = c.resolve(InjectorToken);
+  return { leafInstance: new JournalViewLeaf(leaf as unknown as WorkspaceLeaf, view.id, injector), host };
 }
 
 describe("JournalViewLeaf", () => {
