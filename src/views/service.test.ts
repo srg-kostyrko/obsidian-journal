@@ -10,7 +10,7 @@ import { ViewsRepository } from "./repository";
 import { ViewsService } from "./service";
 import { ViewBlockDefinitionToken, ViewsEventsToken, type ViewsEvents } from "./tokens";
 
-import type { View, ViewId } from "./config";
+import type { BlockInstanceId, View, ViewId } from "./config";
 
 const noop = () => null;
 
@@ -18,7 +18,7 @@ const trivialBlock = defineViewBlock<unknown>({
   key: "test-block",
   label: "Test Block",
   schema: v.object({ x: v.number() }),
-  defaultConfig: {},
+  defaultConfig: { x: 0 },
   component: { setup: () => noop },
 });
 
@@ -192,6 +192,156 @@ describe("ViewsService", () => {
       const { service } = build({ blocks: [trivialBlock] });
       const result = service.getBlockDefinition("test-block");
       expect(result.isNone()).toBe(false);
+    });
+  });
+
+  describe("addBlock", () => {
+    it("returns UnknownViewError for missing view", async () => {
+      const { service } = build({ blocks: [trivialBlock] });
+      const result = await service.addBlock("missing" as ViewId, "test-block");
+      expectErr(result);
+      expect(result.error.kind).toBe("unknown-view");
+    });
+
+    it("returns UnknownViewBlockKeyError for an unknown block key", async () => {
+      const { service } = build();
+      const created = await service.create({ name: "X" });
+      expectOk(created);
+      const result = await service.addBlock(created.value, "nope");
+      expectErr(result);
+      expect(result.error.kind).toBe("unknown-view-block-key");
+    });
+
+    it("returns Ok with a fresh BlockInstanceId on success", async () => {
+      const { service } = build({ blocks: [trivialBlock] });
+      const created = await service.create({ name: "X" });
+      expectOk(created);
+      const result = await service.addBlock(created.value, "test-block");
+      expectOk(result);
+      expect(typeof result.value).toBe("string");
+    });
+
+    it("appends to the view's blocks list with the block's defaultConfig", async () => {
+      const { service, repo } = build({ blocks: [trivialBlock] });
+      const created = await service.create({ name: "X" });
+      expectOk(created);
+      const added = await service.addBlock(created.value, "test-block");
+      expectOk(added);
+      const view = repo.get(created.value).match({ some: (v) => v, none: () => null });
+      expect(view?.blocks).toHaveLength(1);
+      expect(view?.blocks[0]?.config).toEqual({ x: 0 });
+    });
+
+    it("emits updated with the view id and the new blocks list", async () => {
+      const { service, events } = build({ blocks: [trivialBlock] });
+      const created = await service.create({ name: "X" });
+      expectOk(created);
+      const listener = vi.fn();
+      events.on("updated", listener);
+      const added = await service.addBlock(created.value, "test-block");
+      expectOk(added);
+      expect(listener).toHaveBeenCalledOnce();
+      const [calledId, calledView] = listener.mock.calls[0] as [unknown, { blocks: unknown[] }];
+      expect(calledId).toBe(created.value);
+      expect(Array.isArray(calledView.blocks)).toBe(true);
+    });
+  });
+
+  describe("removeBlock", () => {
+    it("removes the matching instance", async () => {
+      const { service, repo } = build({ blocks: [trivialBlock] });
+      const created = await service.create({ name: "X" });
+      expectOk(created);
+      const added = await service.addBlock(created.value, "test-block");
+      expectOk(added);
+      await service.removeBlock(created.value, added.value);
+      expect(repo.get(created.value).match({ some: (v) => v.blocks, none: () => null })).toEqual([]);
+    });
+
+    it("is a no-op when block id is not present", async () => {
+      const { service, repo } = build({ blocks: [trivialBlock] });
+      const created = await service.create({ name: "X" });
+      expectOk(created);
+      await service.removeBlock(created.value, "missing-id" as BlockInstanceId);
+      expect(repo.get(created.value).match({ some: (v) => v.blocks, none: () => null })).toEqual([]);
+    });
+  });
+
+  describe("moveBlockUp", () => {
+    it("swaps with the previous block", async () => {
+      const { service, repo } = build({ blocks: [trivialBlock] });
+      const created = await service.create({ name: "X" });
+      expectOk(created);
+      const a = await service.addBlock(created.value, "test-block");
+      const b = await service.addBlock(created.value, "test-block");
+      expectOk(a);
+      expectOk(b);
+      await service.moveBlockUp(created.value, b.value);
+      const ids = repo.get(created.value).match({ some: (v) => v.blocks.map((x) => x.id), none: () => [] });
+      expect(ids).toEqual([b.value, a.value]);
+    });
+
+    it("is an Ok no-op at index 0", async () => {
+      const { service, repo } = build({ blocks: [trivialBlock] });
+      const created = await service.create({ name: "X" });
+      expectOk(created);
+      const a = await service.addBlock(created.value, "test-block");
+      expectOk(a);
+      const result = await service.moveBlockUp(created.value, a.value);
+      expectOk(result);
+      const firstId = repo.get(created.value).match({ some: (v) => v.blocks[0]?.id, none: () => null });
+      expect(firstId).toBe(a.value);
+    });
+  });
+
+  describe("moveBlockDown", () => {
+    it("swaps with the next block", async () => {
+      const { service, repo } = build({ blocks: [trivialBlock] });
+      const created = await service.create({ name: "X" });
+      expectOk(created);
+      const a = await service.addBlock(created.value, "test-block");
+      const b = await service.addBlock(created.value, "test-block");
+      expectOk(a);
+      expectOk(b);
+      await service.moveBlockDown(created.value, a.value);
+      const ids = repo.get(created.value).match({ some: (v) => v.blocks.map((x) => x.id), none: () => [] });
+      expect(ids).toEqual([b.value, a.value]);
+    });
+
+    it("is an Ok no-op at the last index", async () => {
+      const { service, repo } = build({ blocks: [trivialBlock] });
+      const created = await service.create({ name: "X" });
+      expectOk(created);
+      const a = await service.addBlock(created.value, "test-block");
+      expectOk(a);
+      const result = await service.moveBlockDown(created.value, a.value);
+      expectOk(result);
+      const firstId = repo.get(created.value).match({ some: (v) => v.blocks[0]?.id, none: () => null });
+      expect(firstId).toBe(a.value);
+    });
+  });
+
+  describe("updateBlockConfig", () => {
+    it("returns InvalidViewBlockConfigError when config fails block schema", async () => {
+      const { service } = build({ blocks: [trivialBlock] });
+      const created = await service.create({ name: "X" });
+      expectOk(created);
+      const added = await service.addBlock(created.value, "test-block");
+      expectOk(added);
+      const result = await service.updateBlockConfig(created.value, added.value, { x: "not a number" });
+      expectErr(result);
+      expect(result.error.kind).toBe("invalid-view-block-config");
+    });
+
+    it("persists the new config on success", async () => {
+      const { service, repo } = build({ blocks: [trivialBlock] });
+      const created = await service.create({ name: "X" });
+      expectOk(created);
+      const added = await service.addBlock(created.value, "test-block");
+      expectOk(added);
+      await service.updateBlockConfig(created.value, added.value, { x: 42 });
+      const config = repo.get(created.value).match({ some: (v) => v.blocks[0]?.config, none: () => null });
+      expect(config).toEqual({ x: 42 });
     });
   });
 });
