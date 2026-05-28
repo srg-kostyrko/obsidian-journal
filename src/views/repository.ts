@@ -50,6 +50,8 @@ export class ViewsRepository extends BaseRepository<
   create(view: View): Result<ViewId, ViewsLifecycleError> {
     if (view.name.trim().length === 0) return new Err(new InvalidViewNameError(view.name));
     const result = this.addEntity(view.id, view);
+    // addEntity rejects on id collision; callers always supply a fresh UUID, so
+    // reaching this branch indicates a name we can no longer accept.
     if (result.kind === "err") return new Err(new InvalidViewNameError(view.name));
     return new Ok(view.id);
   }

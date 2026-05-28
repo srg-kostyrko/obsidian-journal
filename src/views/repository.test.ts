@@ -29,12 +29,10 @@ describe("ViewsRepository", () => {
       expect(repo.get("missing" as ViewId).isNone()).toBe(true);
     });
 
-    it("returns Some with the stored view when found", () => {
+    it("returns the stored view for a known id", () => {
       const stored = view("abc");
       const repo = buildRepo({ abc: stored });
-      const result = repo.get("abc" as ViewId);
-      expect(result.isSome()).toBe(true);
-      expect(result.getOr(view("fallback"))).toEqual(stored);
+      expect(repo.get("abc" as ViewId).match({ some: (v) => v, none: () => null })).toEqual(stored);
     });
   });
 
