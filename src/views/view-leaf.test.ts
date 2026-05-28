@@ -1,18 +1,23 @@
 import { createNanoEvents } from "nanoevents";
+import * as v from "valibot";
 import { describe, expect, it } from "vitest";
 
 import type { AnchorString } from "@/calendar/types";
 import { Container, InjectorToken } from "@/infrastructure/di";
 import { createFakeHost } from "@/infrastructure/host/internal/testing";
 import { InternalObsidianAppToken, InternalPluginToken } from "@/infrastructure/host/internal/tokens";
+import { LoggerFactory, LoggerFactoryToken } from "@/infrastructure/logger";
 
+import { defineViewBlock, type ViewBlockDefinition } from "./define-view-block";
 import { ViewsRepository } from "./repository";
 import { ViewsService } from "./service";
-import { ViewsEventsToken, type ViewsEvents } from "./tokens";
+import { ViewBlockDefinitionToken, ViewsEventsToken, type ViewsEvents } from "./tokens";
 import { JournalViewLeaf } from "./view-leaf";
 
-import type { View, ViewId } from "./config";
+import type { BlockInstanceId, View, ViewId } from "./config";
 import type { WorkspaceLeaf } from "obsidian";
+
+const noop = () => null;
 
 function seedView(overrides: Partial<View> = {}): View {
   return {
@@ -33,12 +38,20 @@ function build(view: View = seedView()) {
   const c = new Container();
   c.register(InternalPluginToken).useValue(host.plugin);
   c.register(InternalObsidianAppToken).useValue(host.app);
+  c.register(LoggerFactoryToken).useClass(LoggerFactory);
   c.register(ViewsEventsToken).useValue(events);
   c.register(ViewsRepository).useValue(repo);
   c.register(ViewsService).useClass(ViewsService);
-  const leaf = { containerEl: document.createElement("div") };
+  const containerEl = document.createElement("div");
+  const leafStub = { containerEl };
   const injector = c.resolve(InjectorToken);
-  return { leafInstance: new JournalViewLeaf(leaf as unknown as WorkspaceLeaf, view.id, injector), host };
+  return {
+    leafInstance: new JournalViewLeaf(leafStub as unknown as WorkspaceLeaf, view.id, injector),
+    host,
+    containerEl,
+    injector,
+    c,
+  };
 }
 
 describe("JournalViewLeaf", () => {
@@ -78,6 +91,83 @@ describe("JournalViewLeaf", () => {
       const { leafInstance } = build();
       const state = leafInstance.getState() as { shelf?: string | null };
       expect(state.shelf).toBeUndefined();
+    });
+  });
+
+  describe("rendering", () => {
+    it("renders the View was deleted placeholder when the view is None", async () => {
+      const host = createFakeHost();
+      const events = createNanoEvents<ViewsEvents>();
+      const repo = ViewsRepository.fromParts({}, events);
+      const c = new Container();
+      c.register(InternalPluginToken).useValue(host.plugin);
+      c.register(InternalObsidianAppToken).useValue(host.app);
+      c.register(LoggerFactoryToken).useClass(LoggerFactory);
+      c.register(ViewsEventsToken).useValue(events);
+      c.register(ViewsRepository).useValue(repo);
+      c.register(ViewsService).useClass(ViewsService);
+      const injector = c.resolve(InjectorToken);
+      const containerEl = document.createElement("div");
+      const leafStub = { containerEl };
+      // onOpen/onClose are protected on ItemView; cast to reach them from tests.
+      const leaf = new JournalViewLeaf(
+        leafStub as unknown as WorkspaceLeaf,
+        "missing" as ViewId,
+        injector,
+      ) as unknown as {
+        onOpen(): Promise<void>;
+        onClose(): Promise<void>;
+      };
+      await leaf.onOpen();
+      expect(containerEl.textContent).toContain("View was deleted");
+      await leaf.onClose();
+    });
+
+    it("silently skips a block whose key is not registered", async () => {
+      const view = seedView({
+        blocks: [{ id: "block-id" as BlockInstanceId, key: "missing-block", config: {} }],
+      });
+      const { leafInstance, containerEl } = build(view);
+      const leaf = leafInstance as unknown as { onOpen(): Promise<void>; onClose(): Promise<void> };
+      await leaf.onOpen();
+      expect(containerEl.innerHTML).not.toContain("missing-block");
+      await leaf.onClose();
+    });
+
+    it("silently skips a block whose config fails the registered schema", async () => {
+      const trivialBlock = defineViewBlock<{ x: number }>({
+        key: "trivial-block",
+        label: "Trivial",
+        schema: v.object({ x: v.number() }),
+        defaultConfig: { x: 0 },
+        component: { setup: () => noop },
+      });
+      const view = seedView({
+        blocks: [{ id: "block-id" as BlockInstanceId, key: "trivial-block", config: { x: "not-a-number" } }],
+      });
+      const host = createFakeHost();
+      const events = createNanoEvents<ViewsEvents>();
+      const repo = ViewsRepository.fromParts({ [view.id]: view }, events);
+      const c = new Container();
+      c.register(InternalPluginToken).useValue(host.plugin);
+      c.register(InternalObsidianAppToken).useValue(host.app);
+      c.register(LoggerFactoryToken).useClass(LoggerFactory);
+      c.register(ViewsEventsToken).useValue(events);
+      c.register(ViewsRepository).useValue(repo);
+      c.register(ViewBlockDefinitionToken).useValue(trivialBlock as unknown as ViewBlockDefinition);
+      c.register(ViewsService).useClass(ViewsService);
+      const containerEl = document.createElement("div");
+      const leafStub = { containerEl };
+      const injector = c.resolve(InjectorToken);
+      const leaf = new JournalViewLeaf(leafStub as unknown as WorkspaceLeaf, view.id, injector) as unknown as {
+        onOpen(): Promise<void>;
+        onClose(): Promise<void>;
+      };
+      await leaf.onOpen();
+      // journal-view-root is rendered but no block child node should appear
+      expect(containerEl.querySelector(".journal-view-root")).not.toBeNull();
+      expect(containerEl.querySelector(".journal-view-root")!.children).toHaveLength(0);
+      await leaf.onClose();
     });
   });
 });

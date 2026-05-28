@@ -1,6 +1,7 @@
 import * as v from "valibot";
 
 import { inject } from "@/infrastructure/di";
+import { LoggerFactoryToken } from "@/infrastructure/logger";
 import { attempt, Err, Option, type AsyncResult } from "@/infrastructure/result";
 
 import {
@@ -20,6 +21,7 @@ import type { ViewBlockDefinition } from "./define-view-block";
 export class ViewsService {
   readonly #repo = inject(ViewsRepository);
   readonly #blockList = inject(ViewBlockDefinitionToken);
+  readonly #logger = inject(LoggerFactoryToken).named("views-service");
   readonly #blocks: ReadonlyMap<string, ViewBlockDefinition>;
 
   constructor() {
@@ -144,6 +146,12 @@ export class ViewsService {
             new InvalidViewBlockConfigError(id, blockId, target.key, parsed.issues),
           );
         }
+      } else {
+        this.#logger.warn("updateBlockConfig: block definition not registered; persisting without validation", {
+          viewId: id,
+          blockId,
+          key: target.key,
+        });
       }
       const blocks = current.blocks.map((b) =>
         b.id === blockId ? { ...b, config: config as Record<string, unknown> } : b,

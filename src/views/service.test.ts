@@ -3,6 +3,7 @@ import * as v from "valibot";
 import { describe, expect, it, vi } from "vitest";
 
 import { Container } from "@/infrastructure/di";
+import { LoggerFactory, LoggerFactoryToken } from "@/infrastructure/logger";
 import { expectErr, expectOk } from "@/infrastructure/result/testing";
 
 import { defineViewBlock, type ViewBlockDefinition } from "./define-view-block";
@@ -33,6 +34,7 @@ function build(
   const c = new Container();
   c.register(ViewsRepository).useValue(repo);
   c.register(ViewsEventsToken).useValue(events);
+  c.register(LoggerFactoryToken).useClass(LoggerFactory);
   for (const block of options.blocks ?? []) {
     c.register(ViewBlockDefinitionToken).useValue(block);
   }

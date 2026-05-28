@@ -301,6 +301,12 @@ export function parseYaml(source: string): unknown {
   return yamlLoad(source);
 }
 
+// Obsidian augments HTMLElement with a handful of helpers. Stub them here so
+// tests that exercise code calling these APIs don't fail in happy-dom.
+HTMLElement.prototype.empty = function (): void {
+  while (this.firstChild) this.removeChild(this.firstChild);
+};
+
 const attachedInputSuggests: AbstractInputSuggest<unknown>[] = [];
 
 const openModals: Modal[] = [];

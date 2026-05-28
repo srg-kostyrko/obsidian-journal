@@ -94,6 +94,7 @@ export default [
         {
           replacements: {
             e: { event: false },
+            el: false,
             err: false,
             props: false,
             ref: false,

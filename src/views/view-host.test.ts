@@ -12,6 +12,7 @@ import { ViewsEventsToken, type ViewsEvents } from "./tokens";
 import { ViewHostService } from "./view-host";
 
 import type { View, ViewId } from "./config";
+import type { WorkspaceLeaf } from "obsidian";
 
 function seedView(id: string, overrides: Partial<View> = {}): View {
   return {
@@ -98,6 +99,24 @@ describe("ViewHostService", () => {
       const { host, events } = build({ a: seedView("a") });
       events.emit("deleted", "a" as ViewId);
       expect(host.commands.has("journal:open-view:a")).toBe(false);
+    });
+
+    it("removes the ribbon icon if it was added", () => {
+      const { host, events } = build({ a: seedView("a", { showInRibbon: true }) });
+      expect(host.ribbonIcons.some((r) => r.id === "journal-command:journal:open-view:a")).toBe(true);
+      events.emit("deleted", "a" as ViewId);
+      expect(host.ribbonIcons.some((r) => r.id === "journal-command:journal:open-view:a")).toBe(false);
+    });
+  });
+
+  describe("stale viewType", () => {
+    it("renders an empty leaf when the view type is opened after deletion", () => {
+      const { host, events } = build({ a: seedView("a") });
+      const factory = host.registeredViews.get("journal-view:a")!.factory;
+      events.emit("deleted", "a" as ViewId);
+      const leafStub = { containerEl: document.createElement("div") } as unknown as WorkspaceLeaf;
+      const result = factory(leafStub);
+      expect(result.getDisplayText()).toBe("Stale view");
     });
   });
 
