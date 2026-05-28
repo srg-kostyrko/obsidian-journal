@@ -1,0 +1,36 @@
+import { m } from "@/i18n";
+import { defineModal } from "@/infrastructure/host/modals";
+
+import AddBlockPickerModal from "./AddBlockPickerModal.vue";
+import DeleteViewModal from "./DeleteViewModal.vue";
+import ViewNameModal from "./ViewNameModal.vue";
+
+import type { ViewBlockDefinition } from "../define-view-block";
+
+export interface ViewNameModalProps {
+  currentName?: string;
+}
+
+export const viewNameModal = defineModal<string>()({
+  component: ViewNameModal,
+  title: ({ currentName }: ViewNameModalProps) =>
+    currentName === undefined ? m.view_add_modal_title() : m.view_rename_modal_title(),
+});
+
+export interface DeleteViewModalProps {
+  viewName: string;
+}
+
+export const deleteViewModal = defineModal()({
+  component: DeleteViewModal,
+  title: ({ viewName }: DeleteViewModalProps) => m.view_delete_modal_title({ name: viewName }),
+});
+
+export interface AddBlockPickerModalProps {
+  definitions: readonly ViewBlockDefinition[];
+}
+
+export const addBlockPickerModal = defineModal<string>()({
+  component: AddBlockPickerModal,
+  title: (_: AddBlockPickerModalProps) => m.view_add_block_modal_title(),
+});
