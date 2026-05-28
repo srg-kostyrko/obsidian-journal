@@ -532,7 +532,6 @@
   "view_add_block_empty": "No block types are registered.",
   "view_edit_header_title": "View: {name}",
   "view_edit_rename_tooltip": "Rename view",
-  "view_edit_name_label": "Name",
   "view_edit_icon_label": "Icon",
   "view_edit_default_shelf_label": "Default shelf",
   "view_edit_default_shelf_all": "All journals",

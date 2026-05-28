@@ -29,11 +29,10 @@ interface RowEntry {
 }
 
 const rows = computed<RowEntry[]>(() => {
-  const blocks =
-    viewsVM
-      .getView(props.viewId)
-      .map((view) => view.blocks)
-      .getOr(undefined as never) ?? [];
+  const blocks = viewsVM
+    .getView(props.viewId)
+    .map((view) => view.blocks)
+    .getOr([]);
   return blocks.map((block) => ({
     id: block.id,
     key: block.key,
