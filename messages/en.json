@@ -567,6 +567,10 @@
   "view_block_config_window_current_quarter": "Current quarter",
   "view_block_config_window_current_year": "Current year",
   "view_block_config_hide_empty_label": "Hide empty journals",
+
+  "view_toolbar_shelf_selector_label": "Shelf selector",
+  "view_toolbar_shelf_selector_description": "Switches which shelf scopes the view's journals.",
+  "view_toolbar_shelf_selector_all": "All journals",
   "view_block_config_before_label": "Months before",
   "view_block_config_after_label": "Months after",
   "view_block_config_before_weeks_label": "Weeks before",
