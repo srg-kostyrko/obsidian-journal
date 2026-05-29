@@ -88,4 +88,12 @@ describe("AddToolbarItemPickerModal", () => {
       expect(screen.getByText(m.view_add_toolbar_item_empty())).toBeTruthy();
     });
   });
+
+  describe("when the Cancel button is clicked", () => {
+    it("calls api.cancel()", async () => {
+      const { cancel } = mountModal([toolbarItemDefinition("shelf-selector", "Shelf selector")]);
+      await userEvent.click(screen.getByText(m.common_action_cancel()));
+      expect(cancel).toHaveBeenCalledTimes(1);
+    });
+  });
 });

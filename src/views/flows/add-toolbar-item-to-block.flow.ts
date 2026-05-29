@@ -21,7 +21,7 @@ export class AddToolbarItemToBlockFlow implements Flow<AddToolbarItemParameters,
   readonly #definitions = inject(ToolbarItemDefinitionToken);
 
   execute(p: AddToolbarItemParameters): AsyncResult<void, FlowError> {
-    return attempt.in(this, async function* () {
+    return attempt.in(this, async function* (this: AddToolbarItemToBlockFlow) {
       const choice = yield* this.#modals
         .open(addToolbarItemPickerModal, { definitions: this.#definitions })
         .mapErr(() => new UserAborted("add-toolbar-item-picker-modal"));
