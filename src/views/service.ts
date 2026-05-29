@@ -202,16 +202,16 @@ export class ViewsService {
     blockId: BlockInstanceId,
     itemKey: string,
     defaultConfig?: Record<string, unknown>,
-  ): AsyncResult<BlockInstanceId, UnknownViewError | UnknownToolbarItemKeyError> {
+  ): AsyncResult<BlockInstanceId | null, UnknownViewError | UnknownToolbarItemKeyError> {
     return attempt.in(this, async function* () {
       const current = yield* this.#repo.get(id).okOrElse(() => new UnknownViewError(id));
       const definition = yield* Option.fromNullable(this.#items.get(itemKey) ?? null).okOrElse(
         () => new UnknownToolbarItemKeyError(itemKey),
       );
       const targetBlock = current.blocks.find((b) => b.id === blockId);
-      if (!targetBlock) return crypto.randomUUID() as BlockInstanceId;
+      if (!targetBlock) return null;
       const items = (targetBlock.config as { items?: unknown }).items;
-      if (!Array.isArray(items)) return crypto.randomUUID() as BlockInstanceId;
+      if (!Array.isArray(items)) return null;
       const itemId = crypto.randomUUID() as BlockInstanceId;
       const newItem: ToolbarItemInstance = {
         id: itemId,
@@ -333,10 +333,10 @@ export class ViewsService {
       if (!Array.isArray(items)) return;
       const typedItems = items as ToolbarItemInstance[];
       const index = typedItems.findIndex((i) => i.id === itemId);
-      const target = index + delta;
-      if (index < 0 || target < 0 || target >= typedItems.length) return;
+      const nextIndex = index + delta;
+      if (index < 0 || nextIndex < 0 || nextIndex >= typedItems.length) return;
       const newItems = [...typedItems];
-      [newItems[index], newItems[target]] = [newItems[target], newItems[index]];
+      [newItems[index], newItems[nextIndex]] = [newItems[nextIndex], newItems[index]];
       const blocks = this.#withToolbarBlock(current, blockId, () => newItems);
       yield* this.#repo.update(id, { blocks }).mapErr((cause): UnknownViewError => {
         if (cause.kind === "unknown-view") return cause;
