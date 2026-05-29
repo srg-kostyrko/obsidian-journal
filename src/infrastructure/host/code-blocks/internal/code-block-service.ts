@@ -78,18 +78,18 @@ export class CodeBlockService {
 
   #renderError(element: HTMLElement, message: string, issues?: readonly BaseIssue<unknown>[]): void {
     element.replaceChildren();
-    const root = document.createElement("div");
+    const root = activeDocument.createElement("div");
     root.className = "code-block-error";
-    const head = document.createElement("div");
+    const head = activeDocument.createElement("div");
     head.textContent = message;
     root.append(head);
     if (issues && issues.length > 0) {
-      const list = document.createElement("ul");
+      const list = activeDocument.createElement("ul");
       for (const issue of issues) {
         const pathSegments = Array.isArray(issue.path)
           ? issue.path.map((segment: { key?: unknown }) => String(segment.key)).join(".")
           : "";
-        const item = document.createElement("li");
+        const item = activeDocument.createElement("li");
         item.textContent = pathSegments ? `${pathSegments}: ${issue.message}` : issue.message;
         list.append(item);
       }

@@ -159,6 +159,7 @@ export default [
       "@typescript-eslint/no-invalid-void-type": "off",
       "unicorn/no-useless-undefined": "off",
       "no-restricted-syntax": "off",
+      "obsidianmd/prefer-active-doc": "off",
       "vitest/expect-expect": ["error", { assertFunctionNames: ["expect", "expectTypeOf", "expectOk", "expectErr"] }],
     },
   },

@@ -5,6 +5,7 @@ export default defineConfig({
   plugins: [vue()],
   test: {
     environment: "happy-dom",
+    setupFiles: ["./vitest.setup.ts"],
     alias: {
       obsidian: new URL("./__mocks__/obsidian.ts", import.meta.url).pathname,
       "@": new URL("./src", import.meta.url).pathname,

@@ -19,7 +19,7 @@ function prepareTenYearsOfAnchors(): string[] {
   return dates;
 }
 
-describe.skip("JournalIndex - filling in", () => {
+describe.todo("JournalIndex - filling in", () => {
   const dates = prepareTenYearsOfAnchors();
 
   bench("fill in journal - 1 year", () => {

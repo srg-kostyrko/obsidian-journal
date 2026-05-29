@@ -65,8 +65,8 @@ const sections = computed<readonly Section[]>(() => {
           :period="periodForJournal(section.journal.write, entry.anchor)"
         >
           <NavBlockRow
-            v-for="(row, index) of section.block.rows"
-            :key="index"
+            v-for="(row, rowIndex) of section.block.rows"
+            :key="rowIndex"
             :journal="section.journal"
             :row="row"
             :ref-date="entry.anchor"
@@ -75,8 +75,8 @@ const sections = computed<readonly Section[]>(() => {
         </CellDecoration>
         <template v-else>
           <NavBlockRow
-            v-for="(row, index) of section.block.rows"
-            :key="index"
+            v-for="(row, rowIndex) of section.block.rows"
+            :key="rowIndex"
             :journal="section.journal"
             :row="row"
             :ref-date="entry.anchor"

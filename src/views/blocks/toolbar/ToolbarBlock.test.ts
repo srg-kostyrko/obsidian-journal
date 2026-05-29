@@ -36,7 +36,7 @@ const stubItem = defineToolbarItem<{ name: string }>({
   }),
 });
 
-const defaultRegistry: readonly ToolbarItemDefinition[] = [stubItem as ToolbarItemDefinition];
+const defaultRegistry: readonly ToolbarItemDefinition[] = [stubItem];
 
 function buildContainer(registry: readonly ToolbarItemDefinition[]) {
   const container = new Container();
