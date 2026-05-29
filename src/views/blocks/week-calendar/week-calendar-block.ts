@@ -1,0 +1,28 @@
+import * as v from "valibot";
+
+import { m } from "@/i18n";
+
+import { defineViewBlock } from "../../define-view-block";
+
+import WeekCalendarBlock from "./ui/WeekCalendarBlock.vue";
+import WeekCalendarBlockConfig from "./ui/WeekCalendarBlockConfig.vue";
+
+const schema = v.object({
+  before: v.pipe(v.number(), v.integer(), v.minValue(0)),
+  after: v.pipe(v.number(), v.integer(), v.minValue(0)),
+  hideWeekends: v.boolean(),
+});
+
+export type WeekCalendarConfig = v.InferOutput<typeof schema>;
+export type WeekCalendarConfigChange = (next: WeekCalendarConfig) => void;
+
+export const weekCalendarBlock = defineViewBlock<WeekCalendarConfig>({
+  key: "week-calendar",
+  label: m.view_block_week_calendar_label(),
+  description: m.view_block_week_calendar_description(),
+  icon: "calendar-range",
+  schema,
+  defaultConfig: { before: 0, after: 0, hideWeekends: false },
+  component: WeekCalendarBlock,
+  configComponent: WeekCalendarBlockConfig,
+});

@@ -557,8 +557,12 @@
 
   "view_block_month_calendar_label": "Month calendar",
   "view_block_month_calendar_description": "Stacks one or more month grids around the reference date.",
+  "view_block_week_calendar_label": "Week calendar",
+  "view_block_week_calendar_description": "Stacks one or more week strips around the reference date.",
   "view_block_config_before_label": "Months before",
   "view_block_config_after_label": "Months after",
+  "view_block_config_before_weeks_label": "Weeks before",
+  "view_block_config_after_weeks_label": "Weeks after",
   "view_block_config_hide_weekends_label": "Hide weekends",
 
   "journal_add_modal_anchor_label": "Start date",
