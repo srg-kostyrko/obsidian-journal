@@ -36,6 +36,7 @@ function makeJournal(name: string): JournalConfig {
     decorations: [],
     autoCreate: false,
     navBlock: { type: "create", rows: [], decorateWholeBlock: false },
+    intervalBlock: { type: "create", rows: [], decorateWholeBlock: false },
   };
 }
 
