@@ -1,0 +1,39 @@
+<script setup lang="ts">
+import { m } from "@/i18n";
+import UiDropdown from "@/ui/UiDropdown.vue";
+import UiSettingRow from "@/ui/UiSettingRow.vue";
+import UiToggle from "@/ui/UiToggle.vue";
+
+import type { CustomIntervalsConfig, CustomIntervalsConfigChange } from "../custom-intervals-block";
+
+const props = defineProps<{
+  config: CustomIntervalsConfig;
+  onChange: CustomIntervalsConfigChange;
+}>();
+
+const update = (patch: Partial<CustomIntervalsConfig>): void => props.onChange({ ...props.config, ...patch });
+</script>
+
+<template>
+  <UiSettingRow>
+    <template #name>{{ m.view_block_config_window_label() }}</template>
+    <UiDropdown
+      :model-value="config.window"
+      @update:model-value="
+        (value: string | undefined) => value && update({ window: value as CustomIntervalsConfig['window'] })
+      "
+    >
+      <option value="current-week">{{ m.view_block_config_window_current_week() }}</option>
+      <option value="current-month">{{ m.view_block_config_window_current_month() }}</option>
+      <option value="current-quarter">{{ m.view_block_config_window_current_quarter() }}</option>
+      <option value="current-year">{{ m.view_block_config_window_current_year() }}</option>
+    </UiDropdown>
+  </UiSettingRow>
+  <UiSettingRow>
+    <template #name>{{ m.view_block_config_hide_empty_label() }}</template>
+    <UiToggle
+      :model-value="config.hideEmpty"
+      @update:model-value="(value: boolean | undefined) => update({ hideEmpty: value ?? false })"
+    />
+  </UiSettingRow>
+</template>
