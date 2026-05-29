@@ -27,16 +27,6 @@ export function provideViewContextStub(partial: Partial<ViewContext> = {}): View
   };
 }
 
-function renderBlock(
-  context: ViewContext,
-  definition: ViewBlockDefinition<unknown>,
-  instanceId: BlockInstanceId,
-  config: unknown,
-) {
-  provideViewContext(context);
-  return h(definition.component, { instanceId, config });
-}
-
 export function mountViewBlock<TConfig>(
   definition: ViewBlockDefinition<TConfig>,
   props: { instanceId?: BlockInstanceId; config?: TConfig },
@@ -46,8 +36,12 @@ export function mountViewBlock<TConfig>(
   const instanceId = (props.instanceId ?? "stub-block") as BlockInstanceId;
   const config = props.config ?? definition.defaultConfig;
   const castedDefinition = definition as ViewBlockDefinition<unknown>;
+  const renderRoot = () => h(castedDefinition.component, { instanceId, config });
   const Wrapper = defineComponent({
-    render: renderBlock.bind(null, resolvedContext, castedDefinition, instanceId, config),
+    setup() {
+      provideViewContext(resolvedContext);
+      return renderRoot;
+    },
   });
   return render(Wrapper);
 }
