@@ -1,0 +1,235 @@
+import userEvent from "@testing-library/user-event";
+import { cleanup, render } from "@testing-library/vue";
+import { __testing as obsidianTesting } from "obsidian";
+import { afterEach, beforeAll, describe, expect, it, vi } from "vitest";
+import { computed, defineComponent, h, ref } from "vue";
+
+import { CalendarDate, DayPeriod, MonthPeriod, WeekPeriod } from "@/calendar";
+import { installTestCalendar } from "@/calendar/testing";
+import type { AnchorString } from "@/calendar/types";
+import { Container, provideInjectorOnApp } from "@/infrastructure/di";
+import { Flows } from "@/infrastructure/flows";
+import { ModalService } from "@/infrastructure/host/modals";
+import { FakeModalService } from "@/infrastructure/host/modals/testing";
+import { AsyncResult } from "@/infrastructure/result";
+import { OpenDateFlow } from "@/journals";
+
+import { provideViewContextStub } from "../../testing";
+import { provideViewContext, type ViewContext } from "../../view-context";
+
+import { buttonItem } from "./button-item";
+
+import type { ButtonConfig } from "./button-config";
+import type { BlockInstanceId } from "../../config";
+
+const SCOPE = {
+  day: ["daily"] as readonly string[],
+  week: ["weekly"] as readonly string[],
+  month: ["monthly"] as readonly string[],
+  quarter: [] as readonly string[],
+  year: [] as readonly string[],
+  custom: [] as readonly string[],
+};
+
+vi.mock("@/notes-calendar/use-shelf-scope", () => ({
+  useShelfScope: () => ({
+    all: computed<readonly string[]>(() => [...SCOPE.day, ...SCOPE.week, ...SCOPE.month]),
+    day: computed(() => SCOPE.day),
+    week: computed(() => SCOPE.week),
+    month: computed(() => SCOPE.month),
+    quarter: computed(() => SCOPE.quarter),
+    year: computed(() => SCOPE.year),
+    custom: computed(() => SCOPE.custom),
+  }),
+}));
+
+class FakeFlows {
+  calls: { flow: unknown; parameters: unknown }[] = [];
+  invoke(flow: unknown, parameters: unknown) {
+    this.calls.push({ flow, parameters });
+    return AsyncResult.ok({ path: "x", created: false });
+  }
+}
+
+const renderRoot = (config: ButtonConfig): ReturnType<typeof h> =>
+  h(buttonItem.component, { instanceId: "i-1" as BlockInstanceId, config });
+
+function mountItem(config: ButtonConfig, contextOverride: Partial<ViewContext> = {}) {
+  const container = new Container();
+  const flows = new FakeFlows();
+  const modals = new FakeModalService();
+  container.register(Flows).useValue(flows as unknown as Flows);
+  container.register(ModalService).useValue(modals as unknown as ModalService);
+  const context = provideViewContextStub(contextOverride);
+  const wrapperRender = (): ReturnType<typeof h> => renderRoot(config);
+  const Wrapper = defineComponent({
+    setup() {
+      provideViewContext(context);
+      return wrapperRender;
+    },
+  });
+  const result = render(Wrapper, {
+    global: { plugins: [{ install: (app) => provideInjectorOnApp(app, container) }] },
+  });
+  return { result, flows, modals, context };
+}
+
+beforeAll(() => {
+  installTestCalendar();
+});
+
+afterEach(() => cleanup());
+
+describe("ButtonItem", () => {
+  describe("rendering defaults", () => {
+    it("renders the default 'Today' label for current[day]", () => {
+      const { result } = mountItem({ action: { type: "current", mode: "create", levels: ["day"] } });
+      expect(result.getByText("Today")).toBeTruthy();
+    });
+
+    it("overrides default label with config.label when provided", () => {
+      const { result } = mountItem({
+        action: { type: "current", mode: "create", levels: ["day"] },
+        label: "Right now",
+      });
+      expect(result.getByText("Right now")).toBeTruthy();
+      expect(result.queryByText("Today")).toBeNull();
+    });
+
+    it("uses config.tooltip as aria-label when provided", () => {
+      const { result } = mountItem({
+        action: { type: "current", mode: "create", levels: ["day"] },
+        tooltip: "Jump to today",
+      });
+      expect(result.getByLabelText("Jump to today")).toBeTruthy();
+    });
+  });
+
+  describe("click — single level", () => {
+    it("invokes OpenDateFlow with existingOnly=true when mode is 'navigate'", async () => {
+      const { result, flows } = mountItem(
+        { action: { type: "current", mode: "navigate", levels: ["day"] } },
+        { refDate: ref("2026-05-15" as AnchorString) },
+      );
+      await userEvent.click(result.getByText("Today"));
+      expect(flows.calls).toHaveLength(1);
+      expect(flows.calls[0]?.flow).toBe(OpenDateFlow);
+      const parameters = flows.calls[0]?.parameters as { existingOnly?: boolean };
+      expect(parameters.existingOnly).toBe(true);
+    });
+
+    it("invokes OpenDateFlow with existingOnly=false when mode is 'create'", async () => {
+      const { result, flows } = mountItem({
+        action: { type: "current", mode: "create", levels: ["day"] },
+      });
+      await userEvent.click(result.getByText("Today"));
+      const parameters = flows.calls[0]?.parameters as { existingOnly?: boolean };
+      expect(parameters.existingOnly).toBe(false);
+    });
+
+    it("calls setRefDate without invoking OpenDateFlow when mode is 'select-only'", async () => {
+      const setRefDate = vi.fn();
+      const { result, flows } = mountItem(
+        { action: { type: "current", mode: "select-only", levels: ["day"] } },
+        { setRefDate },
+      );
+      await userEvent.click(result.getByText("Today"));
+      expect(flows.calls).toHaveLength(0);
+      expect(setRefDate).toHaveBeenCalledWith(CalendarDate.today().toAnchor());
+    });
+  });
+
+  describe("click — current uses today, not refDate", () => {
+    it("computes the day from CalendarDate.today() and not from refDate", async () => {
+      const setRefDate = vi.fn();
+      const { result } = mountItem(
+        { action: { type: "current", mode: "select-only", levels: ["day"] } },
+        { refDate: ref("2020-01-01" as AnchorString), setRefDate },
+      );
+      await userEvent.click(result.getByText("Today"));
+      expect(setRefDate).toHaveBeenCalledWith(CalendarDate.today().toAnchor());
+    });
+  });
+
+  describe("click — navigate-step", () => {
+    it("walks refDate forward by amount×unit", async () => {
+      const setRefDate = vi.fn();
+      const { result } = mountItem(
+        { action: { type: "navigate-step", direction: "next", unit: "month", amount: 2 } },
+        { refDate: ref("2026-05-15" as AnchorString), setRefDate },
+      );
+      // No label; tooltip is rendered as text fallback when there's no label
+      await userEvent.click(result.getByRole("button"));
+      // refDate 2026-05-15 → MonthPeriod May → next twice → July → anchor = 2026-07-01
+      const expected = MonthPeriod.containing(CalendarDate.fromAnchor("2026-05-15" as AnchorString))
+        .next()
+        .next()
+        .anchor.toAnchor();
+      expect(setRefDate).toHaveBeenCalledWith(expected);
+    });
+
+    it("walks refDate backward by amount×unit", async () => {
+      const setRefDate = vi.fn();
+      const { result } = mountItem(
+        { action: { type: "navigate-step", direction: "prev", unit: "week", amount: 1 } },
+        { refDate: ref("2026-05-15" as AnchorString), setRefDate },
+      );
+      await userEvent.click(result.getByRole("button"));
+      const expected = WeekPeriod.containing(CalendarDate.fromAnchor("2026-05-15" as AnchorString))
+        .previous()
+        .anchor.toAnchor();
+      expect(setRefDate).toHaveBeenCalledWith(expected);
+    });
+  });
+
+  describe("click — pick-date", () => {
+    it("opens the date picker modal with the configured level", async () => {
+      const { result, modals } = mountItem({
+        action: { type: "pick-date", mode: "navigate", levels: ["day"] },
+      });
+      await userEvent.click(result.getByRole("button"));
+      expect(modals.opens).toHaveLength(1);
+      expect((modals.lastOpen().props as { picking: string }).picking).toBe("day");
+    });
+
+    it("dispatches the picked date through OpenDateFlow when mode is 'create'", async () => {
+      const { result, modals, flows } = mountItem({
+        action: { type: "pick-date", mode: "create", levels: ["day"] },
+      });
+      await userEvent.click(result.getByRole("button"));
+      const picked = DayPeriod.containing(CalendarDate.fromAnchor("2026-06-10" as AnchorString));
+      modals.lastOpen().submit(picked);
+      await new Promise((r) => window.setTimeout(r, 0));
+      expect(flows.calls).toHaveLength(1);
+      const parameters = flows.calls[0]?.parameters as { anchor: string; existingOnly?: boolean };
+      expect(parameters.anchor).toBe("2026-06-10");
+      expect(parameters.existingOnly).toBe(false);
+    });
+  });
+
+  describe("click — multi level", () => {
+    it("opens an obsidian Menu with one entry per configured level for current", async () => {
+      const { result } = mountItem({
+        action: { type: "current", mode: "create", levels: ["day", "week", "month"] },
+      });
+      await userEvent.click(result.getByRole("button"));
+      const menu = obsidianTesting.lastOpenMenu();
+      expect(menu.items.map((i) => i.title).slice(0, 3)).toEqual(["Today", "This week", "This month"]);
+    });
+
+    it("fires the chosen level's action when a menu item is selected", async () => {
+      const setRefDate = vi.fn();
+      const { result } = mountItem(
+        { action: { type: "current", mode: "select-only", levels: ["day", "week"] } },
+        { setRefDate },
+      );
+      await userEvent.click(result.getByRole("button"));
+      const menu = obsidianTesting.lastOpenMenu();
+      (menu.items[1] as unknown as { click(): void }).click(); // "This week"
+      // wait for async fire
+      await new Promise((r) => window.setTimeout(r, 0));
+      const expected = WeekPeriod.containing(CalendarDate.today()).anchor.toAnchor();
+      expect(setRefDate).toHaveBeenCalledWith(expected);
+    });
+  });
+});
