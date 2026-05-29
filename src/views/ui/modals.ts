@@ -2,9 +2,11 @@ import { m } from "@/i18n";
 import { defineModal } from "@/infrastructure/host/modals";
 
 import AddBlockPickerModal from "./AddBlockPickerModal.vue";
+import AddToolbarItemPickerModal from "./AddToolbarItemPickerModal.vue";
 import DeleteViewModal from "./DeleteViewModal.vue";
 import ViewNameModal from "./ViewNameModal.vue";
 
+import type { ToolbarItemDefinition } from "../define-toolbar-item";
 import type { ViewBlockDefinition } from "../define-view-block";
 
 export interface ViewNameModalProps {
@@ -33,4 +35,13 @@ export interface AddBlockPickerModalProps {
 export const addBlockPickerModal = defineModal<string>()({
   component: AddBlockPickerModal,
   title: (_: AddBlockPickerModalProps) => m.view_add_block_modal_title(),
+});
+
+export interface AddToolbarItemPickerModalProps {
+  definitions: readonly ToolbarItemDefinition[];
+}
+
+export const addToolbarItemPickerModal = defineModal<{ key: string; defaultConfig: unknown }>()({
+  component: AddToolbarItemPickerModal,
+  title: (_: AddToolbarItemPickerModalProps) => m.view_add_toolbar_item_modal_title(),
 });

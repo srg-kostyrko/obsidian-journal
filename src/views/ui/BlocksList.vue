@@ -13,6 +13,8 @@ import { AddBlockToViewFlow } from "../flows/add-block-to-view.flow";
 import { ViewsService } from "../service";
 import { ViewsViewModel } from "../view-model";
 
+import ToolbarItemsList from "./ToolbarItemsList.vue";
+
 import type { BlockInstanceId, ViewId } from "../config";
 import type { ViewBlockDefinition } from "../define-view-block";
 
@@ -58,23 +60,31 @@ function add(): void {
   <UiSettingRow v-if="rows.length === 0">
     <template #description>{{ m.view_edit_blocks_empty() }}</template>
   </UiSettingRow>
-  <UiSettingRow v-for="(row, index) of rows" :key="row.id">
-    <template #name>
-      <template v-if="row.definition">
-        <UiIcon v-if="row.definition.icon" :name="row.definition.icon" />
-        {{ row.definition.label }}
+  <template v-for="(row, index) of rows" :key="row.id">
+    <UiSettingRow>
+      <template #name>
+        <template v-if="row.definition">
+          <UiIcon v-if="row.definition.icon" :name="row.definition.icon" />
+          {{ row.definition.label }}
+        </template>
+        <template v-else>{{ m.view_block_unknown_label({ key: row.key }) }}</template>
       </template>
-      <template v-else>{{ m.view_block_unknown_label({ key: row.key }) }}</template>
-    </template>
-    <UiIconButton icon="chevron-up" :tooltip="m.view_block_move_up()" :disabled="index === 0" @click="moveUp(row.id)" />
-    <UiIconButton
-      icon="chevron-down"
-      :tooltip="m.view_block_move_down()"
-      :disabled="index === rows.length - 1"
-      @click="moveDown(row.id)"
-    />
-    <UiIconButton icon="trash-2" :tooltip="m.view_block_remove()" @click="remove(row.id)" />
-  </UiSettingRow>
+      <UiIconButton
+        icon="chevron-up"
+        :tooltip="m.view_block_move_up()"
+        :disabled="index === 0"
+        @click="moveUp(row.id)"
+      />
+      <UiIconButton
+        icon="chevron-down"
+        :tooltip="m.view_block_move_down()"
+        :disabled="index === rows.length - 1"
+        @click="moveDown(row.id)"
+      />
+      <UiIconButton icon="trash-2" :tooltip="m.view_block_remove()" @click="remove(row.id)" />
+    </UiSettingRow>
+    <ToolbarItemsList v-if="row.key === 'toolbar'" :view-id="props.viewId" :block-id="row.id" />
+  </template>
 
   <UiSettingRow controls-only>
     <UiButton cta @click="add">{{ m.view_edit_blocks_add() }}</UiButton>
