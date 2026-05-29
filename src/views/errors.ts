@@ -74,7 +74,33 @@ export class MissingViewContextProviderError extends Error {
   }
 }
 
-export type ViewsLifecycleError = InvalidViewNameError | UnknownViewError | UnknownViewBlockKeyError;
+export class UnknownToolbarItemKeyError extends Error {
+  readonly kind = "unknown-toolbar-item-key" as const;
+  constructor(public readonly key: string) {
+    super(`Unknown toolbar item key: ${key}`);
+    this.name = "UnknownToolbarItemKeyError";
+  }
+}
+
+export class InvalidToolbarItemConfigError extends Error {
+  readonly kind = "invalid-toolbar-item-config" as const;
+  constructor(
+    public readonly viewId: ViewId,
+    public readonly blockId: BlockInstanceId,
+    public readonly itemId: BlockInstanceId,
+    public readonly key: string,
+    public readonly issues: readonly BaseIssue<unknown>[],
+  ) {
+    super(`Invalid config for toolbar item ${key} in view ${viewId} (block ${blockId}, item ${itemId})`);
+    this.name = "InvalidToolbarItemConfigError";
+  }
+}
+
+export type ViewsLifecycleError =
+  | InvalidViewNameError
+  | UnknownViewError
+  | UnknownViewBlockKeyError
+  | UnknownToolbarItemKeyError;
 
 export class ViewsLifecycleFlowError extends FlowError {
   readonly kind = "views-lifecycle" as const;

@@ -6,10 +6,11 @@ import { Container } from "@/infrastructure/di";
 import { LoggerFactory, LoggerFactoryToken } from "@/infrastructure/logger";
 import { expectErr, expectOk } from "@/infrastructure/result/testing";
 
+import { defineToolbarItem, type ToolbarItemDefinition } from "./define-toolbar-item";
 import { defineViewBlock, type ViewBlockDefinition } from "./define-view-block";
 import { ViewsRepository } from "./repository";
 import { ViewsService } from "./service";
-import { ViewBlockDefinitionToken, ViewsEventsToken, type ViewsEvents } from "./tokens";
+import { ToolbarItemDefinitionToken, ViewBlockDefinitionToken, ViewsEventsToken, type ViewsEvents } from "./tokens";
 
 import type { BlockInstanceId, View, ViewId } from "./config";
 
@@ -27,6 +28,7 @@ function build(
   options: {
     seeds?: Record<string, View>;
     blocks?: readonly ViewBlockDefinition[];
+    items?: readonly ToolbarItemDefinition[];
   } = {},
 ): { service: ViewsService; events: ReturnType<typeof createNanoEvents<ViewsEvents>>; repo: ViewsRepository } {
   const events = createNanoEvents<ViewsEvents>();
@@ -37,6 +39,9 @@ function build(
   c.register(LoggerFactoryToken).useClass(LoggerFactory);
   for (const block of options.blocks ?? []) {
     c.register(ViewBlockDefinitionToken).useValue(block);
+  }
+  for (const item of options.items ?? []) {
+    c.register(ToolbarItemDefinitionToken).useValue(item);
   }
   c.register(ViewsService).useClass(ViewsService);
   return { service: c.resolve(ViewsService), events, repo };
@@ -356,6 +361,286 @@ describe("ViewsService", () => {
       await service.updateBlockConfig(created.value, added.value, { x: 42 });
       const config = repo.get(created.value).match({ some: (v) => v.blocks[0]?.config, none: () => null });
       expect(config).toEqual({ x: 42 });
+    });
+  });
+});
+
+// ─── Toolbar-item operations ──────────────────────────────────────────────────
+
+const toolbarBlock = defineViewBlock<{ items: { id: string; key: string; config: Record<string, unknown> }[] }>({
+  key: "toolbar",
+  label: "Toolbar",
+  schema: v.object({
+    items: v.array(
+      v.object({
+        id: v.pipe(v.string(), v.uuid()),
+        key: v.pipe(v.string(), v.minLength(1)),
+        config: v.record(v.string(), v.unknown()),
+      }),
+    ),
+  }),
+  defaultConfig: { items: [] },
+  component: { setup: () => noop },
+}) as ViewBlockDefinition;
+
+const dummyItem = defineToolbarItem<{ x: number }>({
+  key: "dummy",
+  label: "Dummy",
+  schema: v.object({ x: v.number() }),
+  defaultConfig: { x: 0 },
+  component: { setup: () => noop },
+}) as ToolbarItemDefinition;
+
+describe("ViewsService – toolbar-item operations", () => {
+  describe("addToolbarItem", () => {
+    it("appends a new item to the toolbar block's items array", async () => {
+      const { service, repo } = build({ blocks: [toolbarBlock], items: [dummyItem] });
+      const created = await service.create({ name: "X" });
+      expectOk(created);
+      const blockAdded = await service.addBlock(created.value, "toolbar");
+      expectOk(blockAdded);
+
+      const itemAdded = await service.addToolbarItem(created.value, blockAdded.value, "dummy");
+      expectOk(itemAdded);
+
+      const items = repo
+        .get(created.value)
+        .match({ some: (v) => (v.blocks[0]?.config as { items: unknown[] }).items, none: () => null });
+      expect(items).toHaveLength(1);
+      expect((items as { key: string; config: unknown }[])[0]?.key).toBe("dummy");
+      expect((items as { key: string; config: { x: number } }[])[0]?.config).toEqual({ x: 0 });
+    });
+
+    it("returns UnknownToolbarItemKeyError when the key is not registered", async () => {
+      const { service } = build({ blocks: [toolbarBlock] });
+      const created = await service.create({ name: "X" });
+      expectOk(created);
+      const blockAdded = await service.addBlock(created.value, "toolbar");
+      expectOk(blockAdded);
+
+      const result = await service.addToolbarItem(created.value, blockAdded.value, "nope");
+      expectErr(result);
+      expect(result.error.kind).toBe("unknown-toolbar-item-key");
+    });
+
+    it("uses the supplied defaultConfig override when provided", async () => {
+      const { service, repo } = build({ blocks: [toolbarBlock], items: [dummyItem] });
+      const created = await service.create({ name: "X" });
+      expectOk(created);
+      const blockAdded = await service.addBlock(created.value, "toolbar");
+      expectOk(blockAdded);
+
+      const itemAdded = await service.addToolbarItem(created.value, blockAdded.value, "dummy", { x: 99 });
+      expectOk(itemAdded);
+
+      const items = repo
+        .get(created.value)
+        .match({ some: (v) => (v.blocks[0]?.config as { items: unknown[] }).items, none: () => null });
+      expect((items as { config: { x: number } }[])[0]?.config).toEqual({ x: 99 });
+    });
+
+    it("is a no-op when the block id is not present on the view", async () => {
+      const { service } = build({ blocks: [toolbarBlock], items: [dummyItem] });
+      const created = await service.create({ name: "X" });
+      expectOk(created);
+
+      const result = await service.addToolbarItem(created.value, "missing-block" as BlockInstanceId, "dummy");
+      expectOk(result);
+    });
+  });
+
+  describe("removeToolbarItem", () => {
+    it("removes the matching item", async () => {
+      const { service, repo } = build({ blocks: [toolbarBlock], items: [dummyItem] });
+      const created = await service.create({ name: "X" });
+      expectOk(created);
+      const blockAdded = await service.addBlock(created.value, "toolbar");
+      expectOk(blockAdded);
+      const itemAdded = await service.addToolbarItem(created.value, blockAdded.value, "dummy");
+      expectOk(itemAdded);
+
+      const result = await service.removeToolbarItem(created.value, blockAdded.value, itemAdded.value);
+      expectOk(result);
+
+      const items = repo
+        .get(created.value)
+        .match({ some: (v) => (v.blocks[0]?.config as { items: unknown[] }).items, none: () => null });
+      expect(items).toHaveLength(0);
+    });
+
+    it("is a no-op when the item id is absent", async () => {
+      const { service, repo } = build({ blocks: [toolbarBlock], items: [dummyItem] });
+      const created = await service.create({ name: "X" });
+      expectOk(created);
+      const blockAdded = await service.addBlock(created.value, "toolbar");
+      expectOk(blockAdded);
+      const itemAdded = await service.addToolbarItem(created.value, blockAdded.value, "dummy");
+      expectOk(itemAdded);
+
+      const result = await service.removeToolbarItem(
+        created.value,
+        blockAdded.value,
+        "missing-item" as BlockInstanceId,
+      );
+      expectOk(result);
+
+      const items = repo
+        .get(created.value)
+        .match({ some: (v) => (v.blocks[0]?.config as { items: unknown[] }).items, none: () => null });
+      expect(items).toHaveLength(1);
+    });
+  });
+
+  describe("moveToolbarItemUp / moveToolbarItemDown", () => {
+    it("swaps with the previous item when moving up", async () => {
+      const { service, repo } = build({ blocks: [toolbarBlock], items: [dummyItem] });
+      const created = await service.create({ name: "X" });
+      expectOk(created);
+      const blockAdded = await service.addBlock(created.value, "toolbar");
+      expectOk(blockAdded);
+      const itemA = await service.addToolbarItem(created.value, blockAdded.value, "dummy");
+      const itemB = await service.addToolbarItem(created.value, blockAdded.value, "dummy");
+      expectOk(itemA);
+      expectOk(itemB);
+
+      await service.moveToolbarItemUp(created.value, blockAdded.value, itemB.value);
+
+      const ids = repo
+        .get(created.value)
+        .match({
+          some: (v) => (v.blocks[0]?.config as { items: { id: string }[] }).items.map((i) => i.id),
+          none: () => [],
+        });
+      expect(ids).toEqual([itemB.value, itemA.value]);
+    });
+
+    it("does nothing when the item is already first", async () => {
+      const { service, repo } = build({ blocks: [toolbarBlock], items: [dummyItem] });
+      const created = await service.create({ name: "X" });
+      expectOk(created);
+      const blockAdded = await service.addBlock(created.value, "toolbar");
+      expectOk(blockAdded);
+      const itemA = await service.addToolbarItem(created.value, blockAdded.value, "dummy");
+      expectOk(itemA);
+
+      const result = await service.moveToolbarItemUp(created.value, blockAdded.value, itemA.value);
+      expectOk(result);
+
+      const firstId = repo
+        .get(created.value)
+        .match({ some: (v) => (v.blocks[0]?.config as { items: { id: string }[] }).items[0]?.id, none: () => null });
+      expect(firstId).toBe(itemA.value);
+    });
+
+    it("swaps with the next item when moving down", async () => {
+      const { service, repo } = build({ blocks: [toolbarBlock], items: [dummyItem] });
+      const created = await service.create({ name: "X" });
+      expectOk(created);
+      const blockAdded = await service.addBlock(created.value, "toolbar");
+      expectOk(blockAdded);
+      const itemA = await service.addToolbarItem(created.value, blockAdded.value, "dummy");
+      const itemB = await service.addToolbarItem(created.value, blockAdded.value, "dummy");
+      expectOk(itemA);
+      expectOk(itemB);
+
+      await service.moveToolbarItemDown(created.value, blockAdded.value, itemA.value);
+
+      const ids = repo
+        .get(created.value)
+        .match({
+          some: (v) => (v.blocks[0]?.config as { items: { id: string }[] }).items.map((i) => i.id),
+          none: () => [],
+        });
+      expect(ids).toEqual([itemB.value, itemA.value]);
+    });
+  });
+
+  describe("updateToolbarItemConfig", () => {
+    it("persists a valid config", async () => {
+      const { service, repo } = build({ blocks: [toolbarBlock], items: [dummyItem] });
+      const created = await service.create({ name: "X" });
+      expectOk(created);
+      const blockAdded = await service.addBlock(created.value, "toolbar");
+      expectOk(blockAdded);
+      const itemAdded = await service.addToolbarItem(created.value, blockAdded.value, "dummy");
+      expectOk(itemAdded);
+
+      const result = await service.updateToolbarItemConfig(created.value, blockAdded.value, itemAdded.value, { x: 42 });
+      expectOk(result);
+
+      const config = repo
+        .get(created.value)
+        .match({
+          some: (v) => (v.blocks[0]?.config as { items: { config: unknown }[] }).items[0]?.config,
+          none: () => null,
+        });
+      expect(config).toEqual({ x: 42 });
+    });
+
+    it("returns InvalidToolbarItemConfigError when the new config fails schema validation", async () => {
+      const { service } = build({ blocks: [toolbarBlock], items: [dummyItem] });
+      const created = await service.create({ name: "X" });
+      expectOk(created);
+      const blockAdded = await service.addBlock(created.value, "toolbar");
+      expectOk(blockAdded);
+      const itemAdded = await service.addToolbarItem(created.value, blockAdded.value, "dummy");
+      expectOk(itemAdded);
+
+      const result = await service.updateToolbarItemConfig(created.value, blockAdded.value, itemAdded.value, {
+        x: "not-a-number",
+      });
+      expectErr(result);
+      expect(result.error.kind).toBe("invalid-toolbar-item-config");
+    });
+
+    it("persists without validation and logs when the toolbar-item key is unregistered", async () => {
+      const { service, repo } = build({ blocks: [toolbarBlock], items: [dummyItem] });
+      const created = await service.create({ name: "X" });
+      expectOk(created);
+      const blockAdded = await service.addBlock(created.value, "toolbar");
+      expectOk(blockAdded);
+      const itemAdded = await service.addToolbarItem(created.value, blockAdded.value, "dummy");
+      expectOk(itemAdded);
+
+      // Manually mutate repo to change the item's key to something unregistered
+      const view = repo.get(created.value).match({ some: (v) => v, none: () => null })!;
+      const blocks = view.blocks.map((b) => ({
+        ...b,
+        config: {
+          ...b.config,
+          items: (b.config as { items: { id: string; key: string; config: Record<string, unknown> }[] }).items.map(
+            (i) => (i.id === itemAdded.value ? { ...i, key: "unregistered-key" } : i),
+          ),
+        },
+      }));
+      repo.update(created.value, { blocks });
+
+      const result = await service.updateToolbarItemConfig(created.value, blockAdded.value, itemAdded.value, {
+        anything: true,
+      });
+      expectOk(result);
+
+      const config = repo
+        .get(created.value)
+        .match({
+          some: (v) => (v.blocks[0]?.config as { items: { config: unknown }[] }).items[0]?.config,
+          none: () => null,
+        });
+      expect(config).toEqual({ anything: true });
+    });
+  });
+
+  describe("getToolbarItemDefinition", () => {
+    it("returns Some for a registered key", () => {
+      const { service } = build({ items: [dummyItem] });
+      const result = service.getToolbarItemDefinition("dummy");
+      expect(result.isNone()).toBe(false);
+    });
+
+    it("returns None for an unknown key", () => {
+      const { service } = build();
+      const result = service.getToolbarItemDefinition("nope");
+      expect(result.isNone()).toBe(true);
     });
   });
 });

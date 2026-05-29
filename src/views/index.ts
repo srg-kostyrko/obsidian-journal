@@ -11,9 +11,11 @@ export type {
 } from "./define-toolbar-item";
 export {
   DuplicateBlockInstanceIdError,
+  InvalidToolbarItemConfigError,
   InvalidViewBlockConfigError,
   InvalidViewNameError,
   MissingViewContextProviderError,
+  UnknownToolbarItemKeyError,
   UnknownViewBlockKeyError,
   UnknownViewError,
   ViewsInvariantError,
