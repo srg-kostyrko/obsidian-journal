@@ -2,6 +2,13 @@ export type { BlockInstanceId, View, ViewBlockInstance, ViewId } from "./config"
 export { viewSchema, viewsCollection } from "./config";
 export { defineViewBlock } from "./define-view-block";
 export type { ViewBlockDefinition, ViewBlockDefinitionInput, ViewBlockProps } from "./define-view-block";
+export { defineToolbarItem } from "./define-toolbar-item";
+export type {
+  ToolbarItemDefinition,
+  ToolbarItemDefinitionInput,
+  ToolbarItemPreset,
+  ToolbarItemProps,
+} from "./define-toolbar-item";
 export {
   DuplicateBlockInstanceIdError,
   InvalidViewBlockConfigError,
@@ -12,7 +19,7 @@ export {
   ViewsInvariantError,
 } from "./errors";
 export type { ViewsLifecycleError } from "./errors";
-export { ViewBlockDefinitionToken, ViewsEventsToken } from "./tokens";
+export { ViewBlockDefinitionToken, ToolbarItemDefinitionToken, ViewsEventsToken } from "./tokens";
 export type { ViewsEvents } from "./tokens";
 export { ViewsRepository } from "./repository";
 export { ViewsService } from "./service";
