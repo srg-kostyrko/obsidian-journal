@@ -7,11 +7,16 @@ import { Container, InjectorToken } from "@/infrastructure/di";
 import { createFakeHost } from "@/infrastructure/host/internal/testing";
 import { InternalObsidianAppToken, InternalPluginToken } from "@/infrastructure/host/internal/tokens";
 import { LoggerFactory, LoggerFactoryToken } from "@/infrastructure/logger";
+import { ShelvesRepository } from "@/shelves";
+import type { ShelvesEvents } from "@/shelves";
 
-import { defineViewBlock, type ViewBlockDefinition } from "./define-view-block";
+import { dividerBlock } from "./blocks/divider/divider-block";
+import { toolbarBlock } from "./blocks/toolbar/toolbar-block";
+import { defineViewBlock } from "./define-view-block";
 import { ViewsRepository } from "./repository";
 import { ViewsService } from "./service";
-import { ViewBlockDefinitionToken, ViewsEventsToken, type ViewsEvents } from "./tokens";
+import { ToolbarItemDefinitionToken, ViewBlockDefinitionToken, ViewsEventsToken, type ViewsEvents } from "./tokens";
+import { shelfSelectorItem } from "./toolbar-items/shelf-selector/shelf-selector-item";
 import { JournalViewLeaf } from "./view-leaf";
 
 import type { BlockInstanceId, View, ViewId } from "./config";
@@ -134,6 +139,49 @@ describe("JournalViewLeaf", () => {
       await leaf.onClose();
     });
 
+    it("renders a Calendar-shaped view containing a toolbar (with shelf-selector) + divider", async () => {
+      const view = seedView({
+        blocks: [
+          {
+            id: "11111111-1111-1111-1111-111111111111" as BlockInstanceId,
+            key: "toolbar",
+            config: {
+              items: [{ id: "22222222-2222-2222-2222-222222222222", key: "shelf-selector", config: {} }],
+            },
+          },
+          { id: "33333333-3333-3333-3333-333333333333" as BlockInstanceId, key: "divider", config: {} },
+        ],
+      });
+      const host = createFakeHost();
+      const events = createNanoEvents<ViewsEvents>();
+      const repo = ViewsRepository.fromParts({ [view.id]: view }, events);
+      const shelves = ShelvesRepository.fromParts({}, createNanoEvents<ShelvesEvents>());
+      const c = new Container();
+      c.register(InternalPluginToken).useValue(host.plugin);
+      c.register(InternalObsidianAppToken).useValue(host.app);
+      c.register(LoggerFactoryToken).useClass(LoggerFactory);
+      c.register(ViewsEventsToken).useValue(events);
+      c.register(ViewsRepository).useValue(repo);
+      c.register(ShelvesRepository).useValue(shelves);
+      c.register(ViewBlockDefinitionToken).useValue(toolbarBlock);
+      c.register(ViewBlockDefinitionToken).useValue(dividerBlock);
+      c.register(ToolbarItemDefinitionToken).useValue(shelfSelectorItem);
+      c.register(ViewsService).useClass(ViewsService);
+      const containerEl = document.createElement("div");
+      const leafStub = { containerEl };
+      const injector = c.resolve(InjectorToken);
+      const leaf = new JournalViewLeaf(leafStub as unknown as WorkspaceLeaf, view.id, injector) as unknown as {
+        onOpen(): Promise<void>;
+        onClose(): Promise<void>;
+      };
+      await leaf.onOpen();
+      expect(containerEl.querySelector(".journal-view-toolbar")).not.toBeNull();
+      expect(containerEl.querySelector(".journal-view-divider")).not.toBeNull();
+      // shelf-selector renders "All journals" because shelf is null and there are no shelves
+      expect(containerEl.textContent).toContain("All journals");
+      await leaf.onClose();
+    });
+
     it("silently skips a block whose config fails the registered schema", async () => {
       const trivialBlock = defineViewBlock<{ x: number }>({
         key: "trivial-block",
@@ -154,7 +202,7 @@ describe("JournalViewLeaf", () => {
       c.register(LoggerFactoryToken).useClass(LoggerFactory);
       c.register(ViewsEventsToken).useValue(events);
       c.register(ViewsRepository).useValue(repo);
-      c.register(ViewBlockDefinitionToken).useValue(trivialBlock as unknown as ViewBlockDefinition);
+      c.register(ViewBlockDefinitionToken).useValue(trivialBlock);
       c.register(ViewsService).useClass(ViewsService);
       const containerEl = document.createElement("div");
       const leafStub = { containerEl };
