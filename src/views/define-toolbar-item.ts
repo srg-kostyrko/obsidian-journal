@@ -19,8 +19,8 @@ export interface ToolbarItemDefinitionInput<TConfig> {
   readonly icon?: string;
   readonly schema: BaseSchema<unknown, TConfig, BaseIssue<unknown>>;
   readonly defaultConfig: TConfig;
-  readonly component: Component<ToolbarItemProps<TConfig>>;
-  readonly configComponent?: Component<{ config: TConfig; onChange: (next: TConfig) => void }>;
+  readonly component: Component;
+  readonly configComponent?: Component;
   readonly presets?: readonly ToolbarItemPreset<TConfig>[];
 }
 
