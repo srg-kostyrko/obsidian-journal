@@ -20,7 +20,7 @@ import { ViewsViewModel } from "../view-model";
 
 import BlocksList from "./BlocksList.vue";
 
-import type { ViewId } from "../config";
+import type { View, ViewId } from "../config";
 
 const { viewId, nav } = defineProps<{ viewId: ViewId; nav: SubpageNav }>();
 
@@ -59,7 +59,7 @@ const ribbonValue = computed<boolean>({
 const leafValue = computed<string>({
   get: () => view.value?.leaf ?? "right",
   set: (next) => {
-    void viewsService.update(viewId, { leaf: next as "left" | "right" | "tab" });
+    void viewsService.update(viewId, { leaf: next as View["leaf"] });
   },
 });
 
