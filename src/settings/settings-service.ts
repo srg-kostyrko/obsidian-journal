@@ -139,6 +139,20 @@ function parseCollectionValue<TItem extends AnySchema>(
   logger: Logger,
 ): Record<string, InferOutput<TItem>> {
   const out: Record<string, InferOutput<TItem>> = {};
+  if (raw === undefined && definition.seed) {
+    for (const [id, value] of Object.entries(definition.seed())) {
+      const parsed = v.safeParse(definition.itemSchema, value);
+      if (parsed.success) {
+        out[id] = parsed.output;
+      } else {
+        logger.warn("collection seed entry failed validation; omitting", {
+          sliceKey: `${definition.key}/${id}`,
+          issues: parsed.issues.map((issue) => issue.message),
+        });
+      }
+    }
+    return out;
+  }
   if (raw === null || typeof raw !== "object" || Array.isArray(raw)) return out;
   for (const [id, value] of Object.entries(raw)) {
     const parsed = v.safeParse(definition.itemSchema, value);

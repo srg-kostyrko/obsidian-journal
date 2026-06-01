@@ -147,6 +147,24 @@ describe("SettingsService", () => {
     });
   });
 
+  describe("collection seed-on-absent", () => {
+    const seededCollection = defineCollection("seeded", journalSchema, (id) => ({ name: id }), {
+      seed: () => ({ alpha: { name: "seeded-alpha" } }),
+    });
+
+    it("seeds a collection when its key is absent from stored data", async () => {
+      const { service } = build({ slices: [], collections: [seededCollection], raw: { version: 3 } });
+      await service.initialize();
+      expect(service.recordOf(seededCollection)).toEqual({ alpha: { name: "seeded-alpha" } });
+    });
+
+    it("does not seed when the collection key is present but empty", async () => {
+      const { service } = build({ slices: [], collections: [seededCollection], raw: { version: 3, seeded: {} } });
+      await service.initialize();
+      expect(service.recordOf(seededCollection)).toEqual({});
+    });
+  });
+
   describe("debounced save", () => {
     beforeEach(() => {
       vi.useFakeTimers();

@@ -14,6 +14,7 @@ export interface CollectionDefinition<TKey extends string, TItem extends AnySche
   readonly key: TKey;
   readonly itemSchema: TItem;
   readonly defaultItem: (id: string) => InferOutput<TItem>;
+  readonly seed?: () => Record<string, InferOutput<TItem>>;
 }
 
 export type AnySliceDefinition = SliceDefinition<string, AnySchema>;
@@ -31,8 +32,9 @@ export function defineCollection<TKey extends string, TItem extends AnySchema>(
   key: TKey,
   itemSchema: TItem,
   defaultItem: (id: string) => InferOutput<TItem>,
+  options?: { seed?: () => Record<string, InferOutput<TItem>> },
 ): CollectionDefinition<TKey, TItem> {
-  return { __brand: "collection", key, itemSchema, defaultItem };
+  return { __brand: "collection", key, itemSchema, defaultItem, seed: options?.seed };
 }
 
 export interface Migration {
