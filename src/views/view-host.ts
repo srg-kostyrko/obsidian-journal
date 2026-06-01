@@ -1,4 +1,5 @@
 import { ItemView, type WorkspaceLeaf } from "obsidian";
+import { match } from "ts-pattern";
 
 import { inject, InjectorToken } from "@/infrastructure/di";
 import { CommandService } from "@/infrastructure/host/commands";
@@ -109,8 +110,19 @@ export class ViewHostService {
   }
 
   async #open(id: ViewId): Promise<void> {
-    const leaf = this.#app.workspace.getLeaf(true);
+    const view = this.#getView(id);
+    const leaf = this.#leafFor(view?.leaf ?? "right");
     await leaf.setViewState({ type: viewTypeOf(id), active: true });
+    await this.#app.workspace.revealLeaf(leaf);
+  }
+
+  #leafFor(placement: "left" | "right" | "tab"): WorkspaceLeaf {
+    const leaf = match(placement)
+      .with("left", () => this.#app.workspace.getLeftLeaf(false))
+      .with("right", () => this.#app.workspace.getRightLeaf(false))
+      .with("tab", () => null)
+      .exhaustive();
+    return leaf ?? this.#app.workspace.getLeaf(true);
   }
 }
 

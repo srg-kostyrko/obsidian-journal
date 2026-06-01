@@ -49,6 +49,9 @@ export interface FakeWorkspaceState {
   openCalls: { path: string; mode: PaneType | false }[];
   triggerCalls: { event: string; arguments_: unknown[] }[];
   detachedTypes: string[];
+  viewStateCalls: { type: string; placement: "left" | "right" | "tab" }[];
+  revealedLeaves: number;
+  sidebarLeafAvailable: boolean;
   saveLayoutCalls: number;
 }
 
@@ -134,6 +137,9 @@ export function createFakeHost(): FakeHost {
     openCalls: [],
     triggerCalls: [],
     detachedTypes: [],
+    viewStateCalls: [],
+    revealedLeaves: 0,
+    sidebarLeafAvailable: true,
     saveLayoutCalls: 0,
   };
   const pluginData: FakeHost["pluginData"] = { current: undefined };
@@ -287,6 +293,19 @@ export function createFakeHost(): FakeHost {
     },
   };
 
+  function makeLeaf(placement: "left" | "right" | "tab", openMode: PaneType | false = false) {
+    return {
+      async openFile(file: TFile): Promise<void> {
+        workspaceState.openPaths.add(file.path);
+        workspaceState.openCalls.push({ path: file.path, mode: openMode });
+        workspaceState.activeFile = file;
+      },
+      async setViewState(state: { type: string }): Promise<void> {
+        workspaceState.viewStateCalls.push({ type: state.type, placement });
+      },
+    };
+  }
+
   const workspaceApi = {
     leftRibbon,
     on: (event: string, callback: AnyHandler): EventRef => workspaceEvents.on(event, callback),
@@ -304,13 +323,16 @@ export function createFakeHost(): FakeHost {
       /* no-op */
     },
     getLeaf(mode: PaneType | false) {
-      return {
-        async openFile(file: TFile): Promise<void> {
-          workspaceState.openPaths.add(file.path);
-          workspaceState.openCalls.push({ path: file.path, mode });
-          workspaceState.activeFile = file;
-        },
-      };
+      return makeLeaf("tab", mode);
+    },
+    getLeftLeaf(_split: boolean) {
+      return workspaceState.sidebarLeafAvailable ? makeLeaf("left") : null;
+    },
+    getRightLeaf(_split: boolean) {
+      return workspaceState.sidebarLeafAvailable ? makeLeaf("right") : null;
+    },
+    revealLeaf(_leaf: unknown): void {
+      workspaceState.revealedLeaves++;
     },
     trigger(event: string, ...arguments_: unknown[]): void {
       workspaceState.triggerCalls.push({ event, arguments_ });

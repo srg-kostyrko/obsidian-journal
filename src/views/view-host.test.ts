@@ -27,6 +27,10 @@ function seedView(id: string, overrides: Partial<View> = {}): View {
   };
 }
 
+function openVia(host: ReturnType<typeof build>["host"], id: string): void {
+  host.commands.get(`journal:open-view:${id}`)?.callback?.();
+}
+
 function build(seeds: Record<string, View> = {}) {
   const host = createFakeHost();
   const storage: Record<string, View> = { ...seeds };
@@ -118,6 +122,37 @@ describe("ViewHostService", () => {
       const leafStub = { containerEl: document.createElement("div") } as unknown as WorkspaceLeaf;
       const result = factory(leafStub);
       expect(result.getDisplayText()).toBe("Stale view");
+    });
+  });
+
+  describe("open placement", () => {
+    it("opens a left-placed view via the left sidebar leaf", async () => {
+      const { host } = build({ a: seedView("a", { leaf: "left" }) });
+      openVia(host, "a");
+      await Promise.resolve();
+      expect(host.workspace.viewStateCalls).toEqual([{ type: "journal-view:a", placement: "left" }]);
+    });
+
+    it("opens a right-placed view via the right sidebar leaf", async () => {
+      const { host } = build({ a: seedView("a", { leaf: "right" }) });
+      openVia(host, "a");
+      await Promise.resolve();
+      expect(host.workspace.viewStateCalls).toEqual([{ type: "journal-view:a", placement: "right" }]);
+    });
+
+    it("opens a tab-placed view via a main-area tab", async () => {
+      const { host } = build({ a: seedView("a", { leaf: "tab" }) });
+      openVia(host, "a");
+      await Promise.resolve();
+      expect(host.workspace.viewStateCalls).toEqual([{ type: "journal-view:a", placement: "tab" }]);
+    });
+
+    it("falls back to a main-area tab when the sidebar leaf is unavailable", async () => {
+      const { host } = build({ a: seedView("a", { leaf: "right" }) });
+      host.workspace.sidebarLeafAvailable = false;
+      openVia(host, "a");
+      await Promise.resolve();
+      expect(host.workspace.viewStateCalls).toEqual([{ type: "journal-view:a", placement: "tab" }]);
     });
   });
 
