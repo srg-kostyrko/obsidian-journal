@@ -74,6 +74,21 @@ export class FrontmatterService {
     return new Ok(metadata);
   }
 
+  clearMutator(name: string): Result<(fm: Record<string, unknown>) => void, JournalNotFoundError> {
+    const configOpt = this.#journals.get(name);
+    if (configOpt.isNone()) return new Err(new JournalNotFoundError(name));
+    const config = configOpt.value;
+    const fields = config.frontmatter;
+
+    return new Ok((fm: Record<string, unknown>) => {
+      delete fm[FRONTMATTER_NAME_KEY];
+      delete fm[fields.dateField];
+      delete fm[fields.startDateField];
+      delete fm[fields.endDateField];
+      for (const source of config.numbering.sources) delete fm[source.frontmatterKey];
+    });
+  }
+
   writeMutator(
     name: string,
     metadata: JournalMetadata,
