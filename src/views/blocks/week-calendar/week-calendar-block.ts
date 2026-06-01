@@ -11,6 +11,7 @@ const schema = v.object({
   before: v.pipe(v.number(), v.integer(), v.minValue(0)),
   after: v.pipe(v.number(), v.integer(), v.minValue(0)),
   hideWeekends: v.boolean(),
+  weeks: v.optional(v.picklist(["none", "left", "right"]), "left"),
 });
 
 export type WeekCalendarConfig = v.InferOutput<typeof schema>;
@@ -22,7 +23,7 @@ export const weekCalendarBlock = defineViewBlock<WeekCalendarConfig>({
   description: m.view_block_week_calendar_description(),
   icon: "calendar-range",
   schema,
-  defaultConfig: { before: 0, after: 0, hideWeekends: false },
+  defaultConfig: { before: 0, after: 0, hideWeekends: false, weeks: "left" as const },
   component: WeekCalendarBlock,
   configComponent: WeekCalendarBlockConfig,
 });

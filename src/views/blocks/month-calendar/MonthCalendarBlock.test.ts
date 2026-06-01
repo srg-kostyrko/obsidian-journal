@@ -38,14 +38,14 @@ afterEach(() => cleanup());
 describe("MonthCalendarBlock", () => {
   it("renders a single NotesMonthView when before=0 and after=0", () => {
     const { getAllByTestId } = mountViewBlock(monthCalendarBlock, {
-      config: { before: 0, after: 0, hideWeekends: false },
+      config: { before: 0, after: 0, hideWeekends: false, weeks: "left" as const },
     });
     expect(getAllByTestId("month-stub").length).toBe(1);
   });
 
   it("renders before + after + 1 NotesMonthView instances", () => {
     const { getAllByTestId } = mountViewBlock(monthCalendarBlock, {
-      config: { before: 1, after: 1, hideWeekends: false },
+      config: { before: 1, after: 1, hideWeekends: false, weeks: "left" as const },
     });
     expect(getAllByTestId("month-stub").length).toBe(3);
   });
@@ -53,7 +53,7 @@ describe("MonthCalendarBlock", () => {
   it("anchors the first NotesMonthView at refDate shifted back by before months", () => {
     const { getAllByTestId } = mountViewBlock(
       monthCalendarBlock,
-      { config: { before: 2, after: 0, hideWeekends: false } },
+      { config: { before: 2, after: 0, hideWeekends: false, weeks: "left" as const } },
       { refDate: ref("2026-05-15" as AnchorString) },
     );
     const stubs = getAllByTestId("month-stub");
@@ -63,7 +63,7 @@ describe("MonthCalendarBlock", () => {
   it("passes the current shelf to each NotesMonthView", () => {
     const { getAllByTestId } = mountViewBlock(
       monthCalendarBlock,
-      { config: { before: 0, after: 1, hideWeekends: false } },
+      { config: { before: 0, after: 1, hideWeekends: false, weeks: "left" as const } },
       { shelf: ref("my-shelf") },
     );
     const stubs = getAllByTestId("month-stub");
@@ -72,7 +72,7 @@ describe("MonthCalendarBlock", () => {
 
   it("sets data-hide-weekends on the wrapper when config.hideWeekends is true", () => {
     const { container } = mountViewBlock(monthCalendarBlock, {
-      config: { before: 0, after: 0, hideWeekends: true },
+      config: { before: 0, after: 0, hideWeekends: true, weeks: "left" as const },
     });
     const wrapper = container.querySelector<HTMLElement>(".journal-view-month-calendar");
     expect(wrapper?.dataset.hideWeekends).toBe("true");

@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import { m } from "@/i18n";
+import UiDropdown from "@/ui/UiDropdown.vue";
 import UiNumberInput from "@/ui/UiNumberInput.vue";
 import UiSettingRow from "@/ui/UiSettingRow.vue";
 import UiToggle from "@/ui/UiToggle.vue";
@@ -26,5 +27,16 @@ const update = (patch: Partial<WeekCalendarConfig>): void => props.onChange({ ..
   <UiSettingRow>
     <template #name>{{ m.view_block_config_hide_weekends_label() }}</template>
     <UiToggle :model-value="config.hideWeekends" @update:model-value="(v) => update({ hideWeekends: v })" />
+  </UiSettingRow>
+  <UiSettingRow>
+    <template #name>{{ m.view_block_config_weeks_label() }}</template>
+    <UiDropdown
+      :model-value="config.weeks"
+      @update:model-value="(v) => update({ weeks: v as WeekCalendarConfig['weeks'] })"
+    >
+      <option value="none">{{ m.view_block_config_weeks_none() }}</option>
+      <option value="left">{{ m.view_block_config_weeks_left() }}</option>
+      <option value="right">{{ m.view_block_config_weeks_right() }}</option>
+    </UiDropdown>
   </UiSettingRow>
 </template>

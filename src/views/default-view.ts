@@ -71,7 +71,11 @@ export function defaultCalendarView(): View {
           ],
         },
       },
-      { id: MONTH_CALENDAR_BLOCK_ID, key: "month-calendar", config: { before: 0, after: 0, hideWeekends: false } },
+      {
+        id: MONTH_CALENDAR_BLOCK_ID,
+        key: "month-calendar",
+        config: { before: 0, after: 0, hideWeekends: false, weeks: "left" },
+      },
       { id: DIVIDER_BLOCK_ID, key: "divider", config: {} },
       { id: CUSTOM_INTERVALS_BLOCK_ID, key: "custom-intervals", config: { window: "current-month", hideEmpty: true } },
     ],

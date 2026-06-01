@@ -663,6 +663,10 @@
   "view_block_config_before_weeks_label": "Weeks before",
   "view_block_config_after_weeks_label": "Weeks after",
   "view_block_config_hide_weekends_label": "Hide weekends",
+  "view_block_config_weeks_label": "Week numbers",
+  "view_block_config_weeks_none": "Hidden",
+  "view_block_config_weeks_left": "Before weekdays",
+  "view_block_config_weeks_right": "After weekdays",
 
   "journal_add_modal_anchor_label": "Start date",
   "journal_add_modal_anchor_required_error": "Select a start date.",
