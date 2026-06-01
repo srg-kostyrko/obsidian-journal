@@ -139,6 +139,84 @@ describe("BulkAddService", () => {
       expect(note?.kind === "action" && note.folder).toBe("move"); // src != configured "Journal"
     });
 
+    it("skips a note whose date string cannot be parsed", async () => {
+      const { service, notes, metadata } = build();
+      notes.seed("src/2026-06-45.md" as VaultPath);
+      metadata.setMetadata("src/2026-06-45.md" as VaultPath, {
+        title: "2026-06-45",
+        tags: [],
+        properties: {},
+        tasks: [],
+      });
+      const planResult = await service.plan("daily", makeParameters({ folder: "src" }));
+      expectOk(planResult);
+      const note = planResult.value.notes.find((n) => n.path === "src/2026-06-45.md");
+      expect(note?.kind === "skip" && note.reason).toBe("invalid-date");
+    });
+
+    it("skips a note whose date is outside the journal's timeline", async () => {
+      const repo = fakeRepo({
+        daily: fixedJournal(
+          "daily",
+          { type: "day" },
+          { folder: "Journal", timeline: { start: anchor("2027-01-01"), end: { kind: "never" } } },
+        ),
+      });
+      const notes = new FakeNotesService();
+      const modals = new FakeModalService();
+      const metadata = new FakeNoteMetadataService();
+
+      const c = new Container();
+      c.addModule(LoggerModule);
+      c.register(JournalsRepository).useValue(repo);
+      c.register(NotesService).useValue(notes as unknown as NotesService);
+      c.register(ModalService).useValue(modals as unknown as ModalService);
+      c.register(TemplaterService).useValue(new FakeTemplaterService() as unknown as TemplaterService);
+      c.register(NoteMetadataService).useValue(metadata as unknown as NoteMetadataService);
+      c.register(JournalsIndex).useClass(JournalsIndex);
+      c.register(CycleService).useClass(CycleService);
+      c.register(NumberingService).useClass(NumberingService);
+      c.register(FrontmatterService).useClass(FrontmatterService);
+      c.register(TemplateContentService).useClass(TemplateContentService);
+      c.register(TemplateEngine).useClass(TemplateEngine);
+      c.register(NotePathService).useClass(NotePathService);
+      c.register(NoteCreationService).useClass(NoteCreationService);
+      c.register(NoteConnectionService).useClass(NoteConnectionService);
+      c.register(TimelineService).useClass(TimelineService);
+      c.register(BulkAddService).useClass(BulkAddService);
+
+      const service = c.resolve(BulkAddService);
+      notes.seed("src/2026-06-01.md" as VaultPath);
+      metadata.setMetadata("src/2026-06-01.md" as VaultPath, {
+        title: "2026-06-01",
+        tags: [],
+        properties: {},
+        tasks: [],
+      });
+      const planResult = await service.plan("daily", makeParameters({ folder: "src" }));
+      expectOk(planResult);
+      const note = planResult.value.notes.find((n) => n.path === "src/2026-06-01.md");
+      expect(note?.kind === "skip" && note.reason).toBe("out-of-bounds");
+    });
+
+    it("skips a property-dated note when the property is missing", async () => {
+      const { service, notes, metadata } = build();
+      notes.seed("src/2026-06-01.md" as VaultPath);
+      metadata.setMetadata("src/2026-06-01.md" as VaultPath, {
+        title: "x",
+        tags: [],
+        properties: {},
+        tasks: [],
+      });
+      const planResult = await service.plan(
+        "daily",
+        makeParameters({ folder: "src", datePlace: "property", propertyName: "when" }),
+      );
+      expectOk(planResult);
+      const note = planResult.value.notes.find((n) => n.path === "src/2026-06-01.md");
+      expect(note?.kind === "skip" && note.reason).toBe("no-date");
+    });
+
     it("marks the existing-note decision as ask when an occupant exists and params say ask", async () => {
       const { service, notes, metadata, index } = build();
       notes.seed("Journal/2026-06-01.md" as VaultPath, "", { journal: "daily", "journal-date": "2026-06-01" });

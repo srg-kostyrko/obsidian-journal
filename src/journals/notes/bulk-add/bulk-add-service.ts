@@ -6,7 +6,7 @@ import { checkProperty, checkTag, checkTitle } from "@/decorations/engine-checks
 import { inject } from "@/infrastructure/di";
 import { NoteMetadataService, NotesService } from "@/infrastructure/host";
 import type { FolderNotFoundError, NoteMetadata, VaultPath } from "@/infrastructure/host";
-import { AsyncResult, Ok, attempt } from "@/infrastructure/result";
+import { AsyncResult, InvariantError, attempt } from "@/infrastructure/result";
 
 import { CycleService } from "../../cycle";
 import { JournalsIndex } from "../../journals-index";
@@ -75,15 +75,15 @@ export class BulkAddService {
   }
 
   apply(journalName: string, actions: ResolvedAction[], dryRun: boolean): AsyncResult<BulkLogEntry[], never> {
-    return AsyncResult._fromPromiseOfResult(
-      (async () => {
-        const log: BulkLogEntry[] = [];
-        for (const action of actions) {
-          log.push(await this.#applyOne(journalName, action, dryRun));
-        }
-        return new Ok<BulkLogEntry[], never>(log);
-      })(),
-    );
+    return AsyncResult.fromPromise(this.#applyAll(journalName, actions, dryRun), () => {
+      throw new InvariantError("bulk apply never rejects");
+    });
+  }
+
+  async #applyAll(journalName: string, actions: ResolvedAction[], dryRun: boolean): Promise<BulkLogEntry[]> {
+    const log: BulkLogEntry[] = [];
+    for (const action of actions) log.push(await this.#applyOne(journalName, action, dryRun));
+    return log;
   }
 
   #planNote(journalName: string, path: VaultPath, parameters: BulkAddParameters, dateRegexp: RegExp): PlannedNote {
@@ -163,7 +163,7 @@ export class BulkAddService {
           const occupantPath = occupant.value.path;
           const result = await attempt.in(this, async function* (this: BulkAddService) {
             const content = yield* this.#notes.read(action.path);
-            yield* this.#notes.append(occupantPath, `\n${content}`);
+            yield* this.#notes.append(occupantPath, `\n\n${content}`);
             yield* this.#notes.delete(action.path);
             return;
           });
