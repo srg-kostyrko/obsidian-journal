@@ -1,6 +1,6 @@
 import { CalendarDate } from "@/calendar";
 import { inject } from "@/infrastructure/di";
-import { Flows } from "@/infrastructure/flows";
+import { Flows, UserAborted } from "@/infrastructure/flows";
 import { WorkspaceService } from "@/infrastructure/host";
 import { LoggerFactoryToken } from "@/infrastructure/logger";
 import { AsyncResult } from "@/infrastructure/result";
@@ -16,11 +16,10 @@ export class StartupOpenService {
   readonly #workspace = inject(WorkspaceService);
   readonly #flows = inject(Flows);
   readonly #journals = inject(JournalsRepository);
-  readonly #settings = inject(SettingsService);
   readonly #events = inject(JournalsEventsToken);
   readonly #logger = inject(LoggerFactoryToken).named("startup-open");
 
-  readonly #slice = this.#settings.getSlice(startupSlice);
+  readonly #slice = inject(SettingsService).getSlice(startupSlice);
 
   constructor() {
     this.#events.on("renamed", (oldName, newName) => {
@@ -49,7 +48,7 @@ export class StartupOpenService {
     if (journalName === "" || !this.#journals.exists(journalName)) return;
     const anchor = CalendarDate.today().toAnchor();
     const result = await this.#flows.invoke(OpenJournalEntryFlow, { journalName, anchor, openMode: "active" });
-    if (result.isErr()) {
+    if (result.isErr() && !(result.error instanceof UserAborted)) {
       this.#logger.error("startup-open: failed to open note", { journalName, error: result.error });
     }
   }
