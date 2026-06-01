@@ -2,6 +2,8 @@ import * as v from "valibot";
 
 import { defineCollection } from "@/settings";
 
+import { DEFAULT_CALENDAR_VIEW_ID, defaultCalendarView } from "./default-view";
+
 export type ViewId = string & { readonly __viewId: true };
 export type BlockInstanceId = string & { readonly __blockInstanceId: true };
 
@@ -35,11 +37,16 @@ export const viewSchema = v.object({
 export type View = v.InferOutput<typeof viewSchema>;
 export type ViewBlockInstance = v.InferOutput<typeof viewBlockInstanceSchema>;
 
-export const viewsCollection = defineCollection("views", viewSchema, (id) => ({
-  id: id as ViewId,
-  name: id,
-  icon: "calendar-days",
-  defaultShelf: null,
-  showInRibbon: false,
-  blocks: [],
-}));
+export const viewsCollection = defineCollection(
+  "views",
+  viewSchema,
+  (id) => ({
+    id: id as ViewId,
+    name: id,
+    icon: "calendar-days",
+    defaultShelf: null,
+    showInRibbon: false,
+    blocks: [],
+  }),
+  { seed: () => ({ [DEFAULT_CALENDAR_VIEW_ID]: defaultCalendarView() }) },
+);
