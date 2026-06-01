@@ -1,13 +1,14 @@
-import { afterEach, beforeEach, describe, expect, it } from "vitest";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
 import { anchor, installTestCalendar } from "@/calendar/testing";
 import { Container } from "@/infrastructure/di";
-import { NotesService, TemplaterService } from "@/infrastructure/host";
+import { NoteDeleteError, NoteNotFoundError, NotesService, TemplaterService } from "@/infrastructure/host";
 import type { VaultPath } from "@/infrastructure/host";
 import { ModalService } from "@/infrastructure/host/modals";
 import { FakeModalService } from "@/infrastructure/host/modals/testing";
 import { FakeNotesService, FakeTemplaterService } from "@/infrastructure/host/testing";
 import { LoggerModule } from "@/infrastructure/logger";
+import { AsyncResult } from "@/infrastructure/result";
 import { expectOk } from "@/infrastructure/result/testing";
 import { TemplateEngine } from "@/templates";
 
@@ -102,6 +103,84 @@ describe("NoteConnectionService", () => {
       expect(result.isOk()).toBe(true);
       const fm = await readFrontmatter(notes, path);
       expect(fm).toEqual({ body: "keep" });
+    });
+  });
+
+  describe("disconnectAll", () => {
+    it("strips the journal's frontmatter keys from every connected note", async () => {
+      const repo = fakeRepo({ daily: fixedJournal("daily", { type: "day" }) });
+      const notes = new FakeNotesService();
+      const first = "a.md" as VaultPath;
+      const second = "b.md" as VaultPath;
+      notes.seed(first, "content", { journal: "daily", "journal-date": "2026-06-01", title: "keep" });
+      notes.seed(second, "content", { journal: "daily", "journal-date": "2026-06-02", title: "keep" });
+      const { container, index } = build(repo, notes, new FakeModalService());
+      index.register({ journalName: "daily", anchor: anchor("2026-06-01"), path: first });
+      index.register({ journalName: "daily", anchor: anchor("2026-06-02"), path: second });
+
+      await container.resolve(NoteConnectionService).disconnectAll("daily");
+
+      expect(await readFrontmatter(notes, first)).toEqual({ title: "keep" });
+      expect(await readFrontmatter(notes, second)).toEqual({ title: "keep" });
+    });
+
+    it("clears the remaining notes when one note's update fails", async () => {
+      const repo = fakeRepo({ daily: fixedJournal("daily", { type: "day" }) });
+      const notes = new FakeNotesService();
+      const failing = "a.md" as VaultPath;
+      const surviving = "b.md" as VaultPath;
+      notes.seed(failing, "content", { journal: "daily", "journal-date": "2026-06-01", title: "keep" });
+      notes.seed(surviving, "content", { journal: "daily", "journal-date": "2026-06-02", title: "keep" });
+      const { container, index } = build(repo, notes, new FakeModalService());
+      index.register({ journalName: "daily", anchor: anchor("2026-06-01"), path: failing });
+      index.register({ journalName: "daily", anchor: anchor("2026-06-02"), path: surviving });
+      const original = notes.updateFrontmatter.bind(notes);
+      vi.spyOn(notes, "updateFrontmatter").mockImplementation((path, mutate) =>
+        path === failing ? AsyncResult.err(new NoteNotFoundError(failing)) : original(path, mutate),
+      );
+
+      await container.resolve(NoteConnectionService).disconnectAll("daily");
+
+      expect(await readFrontmatter(notes, surviving)).toEqual({ title: "keep" });
+    });
+  });
+
+  describe("deleteAll", () => {
+    it("trashes every connected note", async () => {
+      const repo = fakeRepo({ daily: fixedJournal("daily", { type: "day" }) });
+      const notes = new FakeNotesService();
+      const first = "a.md" as VaultPath;
+      const second = "b.md" as VaultPath;
+      notes.seed(first, "content", { journal: "daily", "journal-date": "2026-06-01" });
+      notes.seed(second, "content", { journal: "daily", "journal-date": "2026-06-02" });
+      const { container, index } = build(repo, notes, new FakeModalService());
+      index.register({ journalName: "daily", anchor: anchor("2026-06-01"), path: first });
+      index.register({ journalName: "daily", anchor: anchor("2026-06-02"), path: second });
+
+      await container.resolve(NoteConnectionService).deleteAll("daily");
+
+      expect(notes.find(first).isNone()).toBe(true);
+      expect(notes.find(second).isNone()).toBe(true);
+    });
+
+    it("trashes the remaining notes when one note's deletion fails", async () => {
+      const repo = fakeRepo({ daily: fixedJournal("daily", { type: "day" }) });
+      const notes = new FakeNotesService();
+      const failing = "a.md" as VaultPath;
+      const surviving = "b.md" as VaultPath;
+      notes.seed(failing, "content", { journal: "daily", "journal-date": "2026-06-01" });
+      notes.seed(surviving, "content", { journal: "daily", "journal-date": "2026-06-02" });
+      const { container, index } = build(repo, notes, new FakeModalService());
+      index.register({ journalName: "daily", anchor: anchor("2026-06-01"), path: failing });
+      index.register({ journalName: "daily", anchor: anchor("2026-06-02"), path: surviving });
+      const original = notes.delete.bind(notes);
+      vi.spyOn(notes, "delete").mockImplementation((path) =>
+        path === failing ? AsyncResult.err(new NoteDeleteError(failing, new Error("boom"))) : original(path),
+      );
+
+      await container.resolve(NoteConnectionService).deleteAll("daily");
+
+      expect(notes.find(surviving).isNone()).toBe(true);
     });
   });
 

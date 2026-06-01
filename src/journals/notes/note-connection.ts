@@ -94,6 +94,25 @@ export class NoteConnectionService {
     return this.#notes.updateFrontmatter(path, mutator);
   }
 
+  disconnectAll(journalName: string): AsyncResult<void, never> {
+    return this.#purge(journalName, (path) => this.disconnect(path));
+  }
+
+  deleteAll(journalName: string): AsyncResult<void, never> {
+    return this.#purge(journalName, (path) => this.#notes.delete(path));
+  }
+
+  #purge(journalName: string, op: (path: VaultPath) => AsyncResult<void, unknown>): AsyncResult<void, never> {
+    const paths = [...this.#index.entriesFor(journalName)].map(([, path]) => path);
+    // Best-effort, matching v2: an AsyncResult never rejects, so Promise.all settles even when
+    // individual notes fail. We discard the per-note Results so one bad note can't strand the
+    // journal config. Spreading entriesFor up front snapshots paths before the ops mutate the index.
+    const all: Promise<void> = Promise.all(paths.map((path) => op(path))).then(() => {
+      return;
+    });
+    return AsyncResult.fromPromise(all, () => undefined as never);
+  }
+
   #combine(current: VaultPath, configured: VaultPath, options: ConnectOptions): string {
     const [currentFolder, currentName] = splitVaultPath(current);
     const [configuredFolder, configuredName] = splitVaultPath(configured);
