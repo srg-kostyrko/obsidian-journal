@@ -46,6 +46,7 @@ describe("NotesCalendarCell", () => {
     ({ teardown } = installTestCalendar());
   });
   afterEach(() => {
+    vi.restoreAllMocks();
     teardown();
     cleanup();
   });
