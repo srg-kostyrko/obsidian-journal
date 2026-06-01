@@ -50,7 +50,6 @@ export interface FakeWorkspaceState {
   triggerCalls: { event: string; arguments_: unknown[] }[];
   detachedTypes: string[];
   viewStateCalls: { type: string; placement: "left" | "right" | "tab" }[];
-  revealedLeaves: number;
   sidebarLeafAvailable: boolean;
   saveLayoutCalls: number;
 }
@@ -138,7 +137,6 @@ export function createFakeHost(): FakeHost {
     triggerCalls: [],
     detachedTypes: [],
     viewStateCalls: [],
-    revealedLeaves: 0,
     sidebarLeafAvailable: true,
     saveLayoutCalls: 0,
   };
@@ -331,8 +329,8 @@ export function createFakeHost(): FakeHost {
     getRightLeaf(_split: boolean) {
       return workspaceState.sidebarLeafAvailable ? makeLeaf("right") : null;
     },
-    revealLeaf(_leaf: unknown): void {
-      workspaceState.revealedLeaves++;
+    async revealLeaf(_leaf: unknown): Promise<void> {
+      /* no-op */
     },
     trigger(event: string, ...arguments_: unknown[]): void {
       workspaceState.triggerCalls.push({ event, arguments_ });

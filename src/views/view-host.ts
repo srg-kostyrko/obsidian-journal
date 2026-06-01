@@ -116,7 +116,7 @@ export class ViewHostService {
     await this.#app.workspace.revealLeaf(leaf);
   }
 
-  #leafFor(placement: "left" | "right" | "tab"): WorkspaceLeaf {
+  #leafFor(placement: View["leaf"]): WorkspaceLeaf {
     const leaf = match(placement)
       .with("left", () => this.#app.workspace.getLeftLeaf(false))
       .with("right", () => this.#app.workspace.getRightLeaf(false))
