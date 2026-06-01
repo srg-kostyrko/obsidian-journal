@@ -46,21 +46,21 @@ reading code, not inferred.
   - v2: `renameJournal` looped the index and rewrote `FRONTMATTER_NAME_KEY` in every connected note (`src/_old-code/main.ts:224-230`).
   - v3: `NoteConnectionService.reconnectAll(oldName, newName)` (best-effort, snapshots the journal index via `entriesFor`, reuses the shared `#forEachConnected` helper) rewrites only `FRONTMATTER_NAME_KEY` in every connected note — config field names are unchanged by rename, matching v2. `RenameJournalFlow` calls it after a successful `repository.rename`, so a rejected rename (name taken / unknown) leaves notes untouched.
 
-- [ ] **7. Calendar sidebar placement (left/right)** — gone.
+- [x] **7. Calendar sidebar placement (left/right)** — ported.
   - v2: `calendarView.leaf: "left" | "right"` + `placeCalendarView()` using `getLeftLeaf`/`getRightLeaf`, auto-placed on load.
-  - v3: `ViewHostService.#open()` (`src/views/view-host.ts:112`) always `getLeaf(true)` → main-area tab. No `leaf` field in `viewSchema`, no sidebar logic.
+  - v3: per-view `leaf: "left" | "right" | "tab"` field on `viewSchema` (default `right`); `ViewHostService.#leafFor` resolves the leaf via the matching workspace getter (`?? getLeaf(true)` fallback) and `revealLeaf`s it on `#open`; "Open in" selector in `ViewEditSubpage`. Delta: applies on open, not via a live watcher.
 
-- [ ] **8. Today highlight in calendar view** — gone.
+- [x] **8. Today highlight in calendar view** — ported.
   - v2: side-panel month grid set `data-today` on the current day (`_old-code` `NotesMonthView.vue:78`).
-  - v3: `NotesCalendarCell.vue` / `NotesMonthView.vue` / `NotesWeekView.vue` never compute/emit a today marker. (`isToday`/`data-today` exists only in the unrelated date-picker grid.)
+  - v3: `NotesCalendarCell` emits `data-today` for any cell whose period contains `CalendarDate.today()` (day/week/month/quarter/year). Extension over v2's day-only highlight.
 
-- [ ] **9. today/active cell color customization** — gone.
+- [x] **9. today/active cell color customization** — ported.
   - v2: `calendarView.todayStyle` + `activeStyle` (each `{ color, background }` `ColorSettings`), edited with color pickers, applied via `v-bind` on `[data-today]`/`[data-selected]`.
-  - v3: cells emit `data-active` only; no configurable color/background, no settings.
+  - v3: global `appearance` slice (`src/notes-calendar/appearance/`) with today/active `{ color, background }` (defaults ported from v2), edited via `AppearanceBlock` dashboard block (reuses `UiColorSettingsPicker`); `CalendarAppearanceBridge` applies them as `--journal-cell-*` CSS vars on the active document body; `NotesCalendarCell` consumes them on `[data-active]`/`[data-today]` (today wins). Scoped to calendar cells.
 
-- [ ] **10. Week-number column position** — reduced.
+- [x] **10. Week-number column position** — ported.
   - v2: `calendarView.weeks: "none" | "left" | "right"`.
-  - v3: `NotesMonthView.vue` auto-derives `showWeekNumber = scope.week.length > 0`, always left. Cannot force-hide, and "right / after weekdays" is gone.
+  - v3: per-block `weeks: "none" | "left" | "right"` (default `left`) on the month/week-calendar blocks; `NotesMonthView`/`NotesWeekView` drive visibility + position from it (`data-weeks`), superseding the journal-presence auto-hide (a week number with no week journal now shows as an inactive label, matching v2). Delta: the timeline code block renders these views with no `weeks` control, so it now always shows a left week column (open follow-up).
 
 - [ ] **11. Code-block reference help modal** — gone.
   - v2: `CodeBlockReference.modal.vue` (+ `CodeBlockReferenceHint.vue`) — in-settings syntax docs, timeline mode list, home-block options, alias notes, click-to-copy snippets, live previews.
