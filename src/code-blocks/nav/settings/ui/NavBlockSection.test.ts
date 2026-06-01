@@ -83,7 +83,7 @@ describe("NavBlockSection", () => {
   it("shows the empty-state message and 'use defaults' button when rows are empty", async () => {
     mount([]);
     await userEvent.click(screen.getByText(m.nav_block_section_title()));
-    expect(screen.getByText(m.nav_block_section_empty())).toBeTruthy();
+    expect(screen.getByText(m.block_rows_empty())).toBeTruthy();
     expect(screen.getByText(m.nav_block_section_use_defaults({ writeType: "day" }))).toBeTruthy();
   });
 
@@ -97,21 +97,21 @@ describe("NavBlockSection", () => {
   it("invokes the flow with rowIndex when an edit button is clicked", async () => {
     const { invoke } = mount([sampleRow]);
     await userEvent.click(screen.getByText(m.nav_block_section_title()));
-    await userEvent.click(screen.getByLabelText(m.nav_block_section_edit_tooltip()));
-    expect(invoke).toHaveBeenCalledWith(EditNavBlockRowFlow, { journalName: "daily", rowIndex: 0 });
+    await userEvent.click(screen.getByLabelText(m.block_rows_edit_tooltip()));
+    expect(invoke).toHaveBeenCalledWith(EditNavBlockRowFlow, { journalName: "daily", field: "navBlock", rowIndex: 0 });
   });
 
   it("invokes the flow without rowIndex when 'add row' is clicked", async () => {
     const { invoke } = mount([sampleRow]);
     await userEvent.click(screen.getByText(m.nav_block_section_title()));
-    await userEvent.click(screen.getByText(m.nav_block_section_add_row()));
-    expect(invoke).toHaveBeenCalledWith(EditNavBlockRowFlow, { journalName: "daily" });
+    await userEvent.click(screen.getByText(m.block_rows_add_row()));
+    expect(invoke).toHaveBeenCalledWith(EditNavBlockRowFlow, { journalName: "daily", field: "navBlock" });
   });
 
   it("removes a row when its delete button is clicked", async () => {
     const { storage } = mount([sampleRow, { ...sampleRow, template: "{{date:MM}}" }]);
     await userEvent.click(screen.getByText(m.nav_block_section_title()));
-    const deleteButtons = screen.getAllByLabelText(m.nav_block_section_delete_tooltip());
+    const deleteButtons = screen.getAllByLabelText(m.block_rows_delete_tooltip());
     await userEvent.click(deleteButtons[0]);
     expect(storage.daily?.navBlock.rows.length).toBe(1);
     expect(storage.daily?.navBlock.rows[0]?.template).toBe("{{date:MM}}");
@@ -122,7 +122,7 @@ describe("NavBlockSection", () => {
     const b = { ...sampleRow, template: "B" };
     const { storage } = mount([a, b]);
     await userEvent.click(screen.getByText(m.nav_block_section_title()));
-    const ups = screen.getAllByLabelText(m.nav_block_section_move_up_tooltip());
+    const ups = screen.getAllByLabelText(m.block_rows_move_up_tooltip());
     await userEvent.click(ups[0]);
     expect(storage.daily?.navBlock.rows.map((r) => r.template)).toEqual(["B", "A"]);
   });
@@ -133,7 +133,7 @@ describe("NavBlockSection", () => {
       { ...sampleRow, template: "B" },
     ]);
     await userEvent.click(screen.getByText(m.nav_block_section_title()));
-    expect(screen.getAllByLabelText(m.nav_block_section_move_up_tooltip()).length).toBe(1);
-    expect(screen.getAllByLabelText(m.nav_block_section_move_down_tooltip()).length).toBe(1);
+    expect(screen.getAllByLabelText(m.block_rows_move_up_tooltip()).length).toBe(1);
+    expect(screen.getAllByLabelText(m.block_rows_move_down_tooltip()).length).toBe(1);
   });
 });
