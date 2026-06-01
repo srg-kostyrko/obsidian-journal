@@ -56,6 +56,13 @@ const ribbonValue = computed<boolean>({
   },
 });
 
+const leafValue = computed<string>({
+  get: () => view.value?.leaf ?? "right",
+  set: (next) => {
+    void viewsService.update(viewId, { leaf: next as "left" | "right" | "tab" });
+  },
+});
+
 const blocksOpen = ref(true);
 
 function rename(): void {
@@ -86,6 +93,14 @@ function rename(): void {
 
     <UiSettingRow :name="m.view_edit_show_in_ribbon_label()">
       <UiToggle v-model="ribbonValue" />
+    </UiSettingRow>
+
+    <UiSettingRow :name="m.view_edit_leaf_label()">
+      <UiDropdown v-model="leafValue">
+        <option value="left">{{ m.view_edit_leaf_left() }}</option>
+        <option value="right">{{ m.view_edit_leaf_right() }}</option>
+        <option value="tab">{{ m.view_edit_leaf_tab() }}</option>
+      </UiDropdown>
     </UiSettingRow>
 
     <UiCollapsibleBlock v-model:expanded="blocksOpen">

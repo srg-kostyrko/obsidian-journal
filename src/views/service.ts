@@ -86,7 +86,7 @@ export class ViewsService {
 
   update(
     id: ViewId,
-    patch: Partial<Pick<View, "name" | "icon" | "defaultShelf" | "showInRibbon">>,
+    patch: Partial<Pick<View, "name" | "icon" | "defaultShelf" | "showInRibbon" | "leaf">>,
   ): AsyncResult<void, UnknownViewError | ViewsLifecycleError> {
     return attempt.in(this, async function* () {
       if (patch.name?.trim().length === 0) {
