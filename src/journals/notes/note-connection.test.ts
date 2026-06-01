@@ -142,6 +142,12 @@ describe("NoteConnectionService", () => {
       await container.resolve(NoteConnectionService).disconnectAll("daily");
 
       expect(await readFrontmatter(notes, surviving)).toEqual({ title: "keep" });
+      vi.mocked(notes.updateFrontmatter).mockRestore();
+      expect(await readFrontmatter(notes, failing)).toEqual({
+        journal: "daily",
+        "journal-date": "2026-06-01",
+        title: "keep",
+      });
     });
   });
 
@@ -181,6 +187,7 @@ describe("NoteConnectionService", () => {
       await container.resolve(NoteConnectionService).deleteAll("daily");
 
       expect(notes.find(surviving).isNone()).toBe(true);
+      expect(notes.find(failing).isSome()).toBe(true);
     });
   });
 
