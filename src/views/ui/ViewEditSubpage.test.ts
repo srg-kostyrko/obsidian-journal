@@ -107,4 +107,13 @@ describe("ViewEditSubpage", () => {
     await userEvent.selectOptions(dropdown, "Personal");
     expect(repo.get(viewId).getOr(undefined as never)?.defaultShelf).toBe("Personal");
   });
+
+  it("updates the leaf placement when the Open-in dropdown changes", async () => {
+    const { container } = await setup();
+    mount(container);
+    const repo = container.resolve(ViewsRepository);
+    const dropdown = within(row(m.view_edit_leaf_label())).getByRole("combobox");
+    await userEvent.selectOptions(dropdown, "left");
+    expect(repo.get(viewId).getOr(undefined as never)?.leaf).toBe("left");
+  });
 });
