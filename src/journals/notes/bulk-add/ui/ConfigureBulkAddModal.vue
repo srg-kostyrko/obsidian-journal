@@ -9,8 +9,10 @@ import { m } from "@/i18n";
 import { useModal } from "@/infrastructure/host/modals";
 import FolderInput from "@/journals/settings/ui/FolderInput.vue";
 import UiButton from "@/ui/UiButton.vue";
+import UiDropdown from "@/ui/UiDropdown.vue";
 import UiIconButton from "@/ui/UiIconButton.vue";
 import UiSettingRow from "@/ui/UiSettingRow.vue";
+import UiTextInput from "@/ui/UiTextInput.vue";
 import UiToggle from "@/ui/UiToggle.vue";
 
 import { bulkAddParametersSchema, defaultBulkAddParameters, type BulkAddParameters } from "../config";
@@ -18,10 +20,20 @@ import { bulkAddParametersSchema, defaultBulkAddParameters, type BulkAddParamete
 defineProps<{ journalName: string }>();
 const api = useModal<BulkAddParameters>();
 
-const { values, handleSubmit, setFieldValue } = useForm<BulkAddParameters>({
+const { values, defineField, handleSubmit } = useForm<BulkAddParameters>({
   initialValues: defaultBulkAddParameters(),
   validationSchema: toTypedSchema(bulkAddParametersSchema),
 });
+
+const [folder] = defineField("folder");
+const [datePlace] = defineField("datePlace");
+const [propertyName] = defineField("propertyName");
+const [dateFormat] = defineField("dateFormat");
+const [filterCombinator] = defineField("filterCombinator");
+const [existingNote] = defineField("existingNote");
+const [otherFolder] = defineField("otherFolder");
+const [otherName] = defineField("otherName");
+const [dryRun] = defineField("dryRun");
 
 const filters = useFieldArray<FilterCondition>("filters");
 
@@ -38,56 +50,34 @@ const onSubmit = handleSubmit((parameters) => {
   <form @submit.prevent="onSubmit">
     <UiSettingRow>
       <template #name>{{ m.bulk_add_folder_label() }}</template>
-      <FolderInput :model-value="values.folder" @update:model-value="(v) => setFieldValue('folder', v)" />
+      <FolderInput v-model="folder" />
     </UiSettingRow>
 
     <UiSettingRow>
       <template #name>{{ m.bulk_add_date_place_label() }}</template>
-      <select
-        class="dropdown"
-        :value="values.datePlace"
-        @change="
-          (e) => setFieldValue('datePlace', (e.target as HTMLSelectElement).value as BulkAddParameters['datePlace'])
-        "
-      >
+      <UiDropdown v-model="datePlace" :aria-label="m.bulk_add_date_place_label()">
         <option value="title">{{ m.bulk_add_date_place_title() }}</option>
         <option value="property">{{ m.bulk_add_date_place_property() }}</option>
-      </select>
+      </UiDropdown>
     </UiSettingRow>
 
     <UiSettingRow v-if="values.datePlace === 'property'">
       <template #name>{{ m.bulk_add_property_name_label() }}</template>
-      <input
-        :value="values.propertyName"
-        @input="(e) => setFieldValue('propertyName', (e.target as HTMLInputElement).value)"
-      />
+      <UiTextInput v-model="propertyName" :aria-label="m.bulk_add_property_name_label()" />
     </UiSettingRow>
 
     <UiSettingRow>
       <template #name>{{ m.bulk_add_date_format_label() }}</template>
-      <input
-        :value="values.dateFormat"
-        @input="(e) => setFieldValue('dateFormat', (e.target as HTMLInputElement).value)"
-      />
+      <UiTextInput v-model="dateFormat" :aria-label="m.bulk_add_date_format_label()" />
     </UiSettingRow>
 
     <UiSettingRow>
       <template #name>{{ m.bulk_add_filter_combinator_label() }}</template>
-      <select
-        class="dropdown"
-        :value="values.filterCombinator"
-        @change="
-          (e) =>
-            setFieldValue(
-              'filterCombinator',
-              (e.target as HTMLSelectElement).value as BulkAddParameters['filterCombinator'],
-            )
-        "
-      >
+      <UiDropdown v-model="filterCombinator" :aria-label="m.bulk_add_filter_combinator_label()">
         <option value="no">{{ m.bulk_add_filter_combinator_no() }}</option>
         <option value="and">{{ m.bulk_add_filter_combinator_and() }}</option>
         <option value="or">{{ m.bulk_add_filter_combinator_or() }}</option>
-      </select>
+      </UiDropdown>
     </UiSettingRow>
 
     <template v-if="values.filterCombinator !== 'no'">
@@ -104,54 +94,35 @@ const onSubmit = handleSubmit((parameters) => {
 
     <UiSettingRow>
       <template #name>{{ m.bulk_add_existing_label() }}</template>
-      <select
-        class="dropdown"
-        :value="values.existingNote"
-        @change="
-          (e) =>
-            setFieldValue('existingNote', (e.target as HTMLSelectElement).value as BulkAddParameters['existingNote'])
-        "
-      >
+      <UiDropdown v-model="existingNote" :aria-label="m.bulk_add_existing_label()">
         <option value="skip">{{ m.bulk_add_option_skip() }}</option>
         <option value="override">{{ m.bulk_add_option_override() }}</option>
         <option value="merge">{{ m.bulk_add_option_merge() }}</option>
         <option value="ask">{{ m.bulk_add_option_ask() }}</option>
-      </select>
+      </UiDropdown>
     </UiSettingRow>
 
     <UiSettingRow>
       <template #name>{{ m.bulk_add_other_folder_label() }}</template>
-      <select
-        class="dropdown"
-        :value="values.otherFolder"
-        @change="
-          (e) => setFieldValue('otherFolder', (e.target as HTMLSelectElement).value as BulkAddParameters['otherFolder'])
-        "
-      >
+      <UiDropdown v-model="otherFolder" :aria-label="m.bulk_add_other_folder_label()">
         <option value="keep">{{ m.bulk_add_option_keep() }}</option>
         <option value="move">{{ m.bulk_add_option_move() }}</option>
         <option value="ask">{{ m.bulk_add_option_ask() }}</option>
-      </select>
+      </UiDropdown>
     </UiSettingRow>
 
     <UiSettingRow>
       <template #name>{{ m.bulk_add_other_name_label() }}</template>
-      <select
-        class="dropdown"
-        :value="values.otherName"
-        @change="
-          (e) => setFieldValue('otherName', (e.target as HTMLSelectElement).value as BulkAddParameters['otherName'])
-        "
-      >
+      <UiDropdown v-model="otherName" :aria-label="m.bulk_add_other_name_label()">
         <option value="keep">{{ m.bulk_add_option_keep() }}</option>
         <option value="rename">{{ m.bulk_add_option_rename() }}</option>
         <option value="ask">{{ m.bulk_add_option_ask() }}</option>
-      </select>
+      </UiDropdown>
     </UiSettingRow>
 
     <UiSettingRow>
       <template #name>{{ m.bulk_add_dry_run_label() }}</template>
-      <UiToggle :model-value="values.dryRun" @update:model-value="(v) => setFieldValue('dryRun', v ?? false)" />
+      <UiToggle v-model="dryRun" />
     </UiSettingRow>
 
     <UiSettingRow>

@@ -62,7 +62,7 @@ describe("ConfigureBulkAddModal", () => {
   it("reveals the property-name field only when reading the date from a property", async () => {
     mountModal();
     expect(screen.queryByText(m.bulk_add_property_name_label())).toBeNull();
-    const datePlace = screen.getAllByRole("combobox")[0];
+    const datePlace = screen.getByRole("combobox", { name: m.bulk_add_date_place_label() });
     await userEvent.selectOptions(datePlace, "property");
     expect(screen.getByText(m.bulk_add_property_name_label())).toBeTruthy();
   });
