@@ -18,6 +18,7 @@ import { journalsSettingsModule } from "@/journals/settings/module";
 import { startupModule } from "@/journals/startup/module";
 import { VaultSubscriptionService } from "@/journals/vault-subscription";
 import { notesCalendarModule } from "@/notes-calendar";
+import { calendarAppearanceModule } from "@/notes-calendar/appearance/module";
 import { settingsModule, SettingsService } from "@/settings";
 import { shelvesModule } from "@/shelves";
 import { templatesModule } from "@/templates";
@@ -42,6 +43,7 @@ export default class JournalPlugin extends Plugin {
     container.addModule(decorationsModule);
     container.addModule(decorationsSettingsModule);
     container.addModule(notesCalendarModule);
+    container.addModule(calendarAppearanceModule);
     container.addModule(shelvesModule);
     container.addModule(viewsModule);
     container.addModule(codeBlocksModule);
