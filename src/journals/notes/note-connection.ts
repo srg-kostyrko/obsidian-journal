@@ -17,6 +17,7 @@ import { JournalsIndex } from "../journals-index";
 import { AnchorOccupiedError } from "./errors";
 import { NoteCreationService } from "./note-creation";
 import { NotePathService } from "./note-path";
+import { splitVaultPath } from "./vault-path";
 
 import type { JournalNotFoundError } from "../errors";
 import type { NoteCreationError } from "./note-creation";
@@ -35,11 +36,6 @@ export interface ConnectOptions {
   override?: boolean;
   rename?: boolean;
   move?: boolean;
-}
-
-function splitPath(p: string): [string, string] {
-  const i = p.lastIndexOf("/");
-  return i === -1 ? ["", p] : [p.slice(0, i), p.slice(i + 1)];
 }
 
 export class NoteConnectionService {
@@ -93,8 +89,8 @@ export class NoteConnectionService {
   }
 
   #combine(current: VaultPath, configured: VaultPath, options: ConnectOptions): string {
-    const [currentFolder, currentName] = splitPath(current);
-    const [configuredFolder, configuredName] = splitPath(configured);
+    const [currentFolder, currentName] = splitVaultPath(current);
+    const [configuredFolder, configuredName] = splitVaultPath(configured);
     const folder = options.move ? configuredFolder : currentFolder;
     const name = options.rename ? configuredName : currentName;
     return folder ? `${folder}/${name}` : name;

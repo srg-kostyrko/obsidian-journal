@@ -7,13 +7,16 @@ import { useService } from "@/infrastructure/di";
 import type { VaultPath } from "@/infrastructure/host";
 import { useModal } from "@/infrastructure/host/modals";
 import UiButton from "@/ui/UiButton.vue";
+import UiDropdown from "@/ui/UiDropdown.vue";
 import UiSettingRow from "@/ui/UiSettingRow.vue";
+import UiToggle from "@/ui/UiToggle.vue";
 
 import { CycleService } from "../../cycle";
 import { FrontmatterService } from "../../frontmatter";
 import { JournalsIndex } from "../../journals-index";
 import { JournalsRepository } from "../../repository";
 import { NotePathService } from "../note-path";
+import { splitVaultPath } from "../vault-path";
 
 import type { ConnectNoteResult } from "./modals";
 
@@ -36,7 +39,7 @@ const override = ref(false);
 const rename = ref(false);
 const move = ref(false);
 
-watch(dateString, () => {
+watch([dateString, selected], () => {
   override.value = false;
   rename.value = false;
   move.value = false;
@@ -67,19 +70,14 @@ const configuredPath = computed(() => {
   return path.isOk() ? path.value : undefined;
 });
 
-function split(p: string): [string, string] {
-  const i = p.lastIndexOf("/");
-  return i === -1 ? ["", p] : [p.slice(0, i), p.slice(i + 1)];
-}
-
 const needRename = computed(() => {
   if (!configuredPath.value) return false;
-  return split(props.path)[1] !== split(configuredPath.value)[1];
+  return splitVaultPath(props.path)[1] !== splitVaultPath(configuredPath.value)[1];
 });
 
 const needMove = computed(() => {
   if (!configuredPath.value) return false;
-  return split(props.path)[0] !== split(configuredPath.value)[0];
+  return splitVaultPath(props.path)[0] !== splitVaultPath(configuredPath.value)[0];
 });
 
 const canConnect = computed(() => Boolean(anchor.value) && (!occupant.value || override.value));
@@ -116,9 +114,9 @@ function connect(): void {
   <div v-else>
     <UiSettingRow>
       <template #name>{{ m.connect_note_modal_journal_label() }}</template>
-      <select v-model="selected" :aria-label="m.connect_note_modal_journal_label()">
+      <UiDropdown v-model="selected">
         <option v-for="name in journalNames" :key="name" :value="name">{{ name }}</option>
-      </select>
+      </UiDropdown>
     </UiSettingRow>
     <UiSettingRow>
       <template #name>{{ m.connect_note_modal_date_label() }}</template>
@@ -126,15 +124,15 @@ function connect(): void {
     </UiSettingRow>
     <UiSettingRow v-if="occupant">
       <template #name>{{ m.connect_note_modal_override_label() }}</template>
-      <input v-model="override" type="checkbox" :aria-label="m.connect_note_modal_override_label()" />
+      <UiToggle v-model="override" :tooltip="m.connect_note_modal_override_label()" />
     </UiSettingRow>
     <UiSettingRow v-if="needRename">
       <template #name>{{ m.connect_note_modal_rename_label() }}</template>
-      <input v-model="rename" type="checkbox" :aria-label="m.connect_note_modal_rename_label()" />
+      <UiToggle v-model="rename" :tooltip="m.connect_note_modal_rename_label()" />
     </UiSettingRow>
     <UiSettingRow v-if="needMove">
       <template #name>{{ m.connect_note_modal_move_label() }}</template>
-      <input v-model="move" type="checkbox" :aria-label="m.connect_note_modal_move_label()" />
+      <UiToggle v-model="move" :tooltip="m.connect_note_modal_move_label()" />
     </UiSettingRow>
     <UiSettingRow>
       <UiButton cta :disabled="!canConnect" @click="connect">{{ m.connect_note_modal_connect() }}</UiButton>

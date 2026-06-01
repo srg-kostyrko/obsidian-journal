@@ -97,7 +97,7 @@ describe("ConnectNoteModal", () => {
       const api: ModalApi<ConnectNoteResult> = { submit: vi.fn(), cancel: vi.fn() };
 
       mountModal("Journal/2026-06-01.md" as VaultPath, container, api);
-      expect(screen.queryByLabelText(m.connect_note_modal_journal_label())).toBeNull();
+      expect(screen.queryByRole("combobox")).toBeNull();
     });
   });
 
