@@ -38,9 +38,9 @@ reading code, not inferred.
   - v2: `PluginSettings.openOnStartup` + `openStartupNote()` opened a chosen journal's note in the `onLayoutReady` hook (`src/_old-code/main.ts:425-433`); kept in sync on rename/remove.
   - v3: `src/journals/startup/` — `startupSlice` ({ journalName }), `StartupOpenService` (opens today's note via `OpenJournalEntryFlow` only on genuine launch, gated on `appStartup = !workspace.layoutReady`; reconciles the stored name on journal `renamed`/`deleted`), `StartupBlock` dashboard block. `WorkspaceService` gained `layoutReady`/`onLayoutReady`. Initialized from `main.ts`.
 
-- [ ] **5. Delete journal: `clear` / `delete` note handling** — stubbed.
+- [x] **5. Delete journal: `clear` / `delete` note handling** — ported.
   - v2: `removeJournal(name, notesProcessing)` with `keep | clear | delete` via `Journal.clearNotes()` / `deleteNotes()` (`src/_old-code/main.ts:233-259`).
-  - v3: `src/journals/settings/ui/DeleteJournalModal.vue` hardcodes `{ mode: "keep" }`; `clear`/`delete` options rendered `disabled` with `journal_delete_mode_not_implemented_hint()`. No `clearNotes`/`deleteNotes` equivalent exists.
+  - v3: `NoteConnectionService.disconnectAll` / `deleteAll` (best-effort, snapshot the journal index via `entriesFor`); `DeleteJournalFlow` dispatches on the modal mode and purges before `repository.delete`. `DeleteJournalModal` returns the chosen mode with all options enabled. Delta: `delete` trashes (recoverable) via `NotesService.delete` rather than v2's permanent `vault.delete`.
 
 - [ ] **6. Rename journal does not rewrite note frontmatter** — data-integrity regression. **(highest priority)**
   - v2: `renameJournal` looped the index and rewrote `FRONTMATTER_NAME_KEY` in every connected note (`src/_old-code/main.ts:224-230`).
