@@ -90,4 +90,30 @@ describe("ProcessBulkAddModal", () => {
     expect(screen.getByText("src/x.md")).toBeTruthy();
     expect(screen.getByText(m.bulk_add_skip_reason_no_date())).toBeTruthy();
   });
+
+  it("resolves a per-note folder ask decision into the apply call", async () => {
+    const apply = vi.fn(() => AsyncResult.ok([]));
+    mountModal({
+      apply,
+      plan: {
+        notes: [
+          {
+            kind: "action",
+            path: "src/a.md" as VaultPath,
+            anchor: "2026-06-01" as AnchorString,
+            existing: "none",
+            folder: "ask",
+            name: "n/a",
+          },
+        ],
+      },
+    });
+    await userEvent.selectOptions(screen.getByRole("combobox", { name: m.bulk_add_other_folder_label() }), "move");
+    await userEvent.click(screen.getByText(m.bulk_add_run()));
+    expect(apply).toHaveBeenCalledWith(
+      "daily",
+      [expect.objectContaining({ path: "src/a.md", move: true })],
+      expect.any(Boolean),
+    );
+  });
 });

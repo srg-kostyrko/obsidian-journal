@@ -41,6 +41,14 @@ const existing = ref<Record<string, "skip" | "override" | "merge">>(
   Object.fromEntries(actions.map((a) => [a.path, a.existing === "ask" || a.existing === "none" ? "skip" : a.existing])),
 );
 
+const folderDecision = ref<Record<string, "keep" | "move">>(
+  Object.fromEntries(actions.map((a) => [a.path, a.folder === "move" ? "move" : "keep"])),
+);
+
+const nameDecision = ref<Record<string, "keep" | "rename">>(
+  Object.fromEntries(actions.map((a) => [a.path, a.name === "rename" ? "rename" : "keep"])),
+);
+
 const log = ref<BulkLogEntry[] | null>(null);
 
 function setExisting(path: string, value: string): void {
@@ -49,13 +57,21 @@ function setExisting(path: string, value: string): void {
   }
 }
 
+function setFolder(path: string, value: "keep" | "move"): void {
+  folderDecision.value[path] = value;
+}
+
+function setName(path: string, value: "keep" | "rename"): void {
+  nameDecision.value[path] = value;
+}
+
 async function run(): Promise<void> {
   const resolved = actions.map((a) => ({
     path: a.path,
     anchor: a.anchor,
     existing: a.occupant === undefined ? ("none" as const) : (existing.value[a.path] ?? "skip"),
-    move: a.folder === "ask" ? false : a.folder === "move",
-    rename: a.name === "ask" ? false : a.name === "rename",
+    move: a.folder === "ask" ? folderDecision.value[a.path] === "move" : a.folder === "move",
+    rename: a.name === "ask" ? nameDecision.value[a.path] === "rename" : a.name === "rename",
   }));
   const result = await service.apply(props.journalName, resolved, props.parameters.dryRun);
   if (result.kind === "ok") log.value = result.value;
@@ -88,6 +104,24 @@ function close(): void {
           <option value="skip">{{ m.bulk_add_option_skip() }}</option>
           <option value="override">{{ m.bulk_add_option_override() }}</option>
           <option value="merge">{{ m.bulk_add_option_merge() }}</option>
+        </UiDropdown>
+        <UiDropdown
+          v-if="action.folder === 'ask'"
+          :aria-label="m.bulk_add_other_folder_label()"
+          :value="folderDecision[action.path]"
+          @change="setFolder(action.path, ($event.target as HTMLSelectElement).value as 'keep' | 'move')"
+        >
+          <option value="keep">{{ m.bulk_add_option_keep() }}</option>
+          <option value="move">{{ m.bulk_add_option_move() }}</option>
+        </UiDropdown>
+        <UiDropdown
+          v-if="action.name === 'ask'"
+          :aria-label="m.bulk_add_other_name_label()"
+          :value="nameDecision[action.path]"
+          @change="setName(action.path, ($event.target as HTMLSelectElement).value as 'keep' | 'rename')"
+        >
+          <option value="keep">{{ m.bulk_add_option_keep() }}</option>
+          <option value="rename">{{ m.bulk_add_option_rename() }}</option>
         </UiDropdown>
       </UiSettingRow>
       <UiSettingRow v-for="skip of skips" :key="skip.path" no-controls>
