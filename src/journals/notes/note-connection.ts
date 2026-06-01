@@ -10,6 +10,7 @@ import type {
 } from "@/infrastructure/host";
 import { AsyncResult, attempt } from "@/infrastructure/result";
 
+import { DEFAULT_FRONTMATTER_KEYS } from "../config";
 import { FrontmatterService } from "../frontmatter";
 import { JournalsIndex } from "../journals-index";
 
@@ -19,8 +20,6 @@ import { NotePathService } from "./note-path";
 
 import type { JournalNotFoundError } from "../errors";
 import type { NoteCreationError } from "./note-creation";
-
-const DEFAULT_JOURNAL_KEYS = ["journal", "journal-date", "journal-start-date", "journal-end-date", "journal-index"];
 
 export type ConnectError =
   | NoteCreationError
@@ -57,6 +56,8 @@ export class NoteConnectionService {
     options: ConnectOptions = {},
   ): AsyncResult<{ path: VaultPath }, ConnectError | JournalNotFoundError> {
     return attempt.in(this, async function* (this: NoteConnectionService) {
+      // Metadata is resolved from the anchor's stored entry (incl. any endDate), so an
+      // overridden slot's period metadata transfers to the new note — matching v2 connect.
       const metadata = yield* this.#frontmatter.buildMetadata(journalName, anchor);
 
       const occupant = this.#index.entryByAnchor(journalName, anchor);
@@ -100,6 +101,6 @@ export class NoteConnectionService {
   }
 
   readonly #defaultClear = (fm: Record<string, unknown>): void => {
-    for (const key of DEFAULT_JOURNAL_KEYS) delete fm[key];
+    for (const key of DEFAULT_FRONTMATTER_KEYS) delete fm[key];
   };
 }

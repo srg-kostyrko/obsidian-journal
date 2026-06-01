@@ -159,6 +159,34 @@ describe("NoteConnectionService", () => {
       expect(incomingFm.journal).toBe("daily");
     });
 
+    it("transfers the anchor's stored endDate to the new note when overriding", async () => {
+      const repo = fakeRepo({ daily: fixedJournal("daily", { type: "day" }) });
+      const notes = new FakeNotesService();
+      const occupantPath = "2026-06-01.md" as VaultPath;
+      const incomingPath = "inbox/note.md" as VaultPath;
+      notes.seed(occupantPath, "content", {
+        journal: "daily",
+        "journal-date": "2026-06-01",
+        "journal-end-date": "2026-06-05",
+      });
+      notes.seed(incomingPath, "");
+      const { container, index } = build(repo, notes, new FakeModalService());
+      index.register({
+        journalName: "daily",
+        anchor: anchor("2026-06-01"),
+        path: occupantPath,
+        endDate: anchor("2026-06-05"),
+      });
+
+      const result = await container
+        .resolve(NoteConnectionService)
+        .connect("daily", incomingPath, anchor("2026-06-01"), { override: true });
+
+      expect(result.isOk()).toBe(true);
+      const incomingFm = await readFrontmatter(notes, incomingPath);
+      expect(incomingFm["journal-end-date"]).toBe("2026-06-05");
+    });
+
     it("renames and moves the note to the configured path when rename and move are true", async () => {
       const repo = fakeRepo({
         daily: fixedJournal("daily", { type: "day" }, { folder: "Journal" }),

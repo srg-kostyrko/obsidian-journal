@@ -6,6 +6,17 @@ import { defineCollection } from "@/settings";
 
 export const FRONTMATTER_NAME_KEY = "journal";
 
+// Frontmatter keys an orphaned note may still carry when no journal config exists.
+// Used to strip journal data in NoteConnectionService.disconnect for orphaned notes.
+// Keep in sync with the default frontmatter field names below.
+export const DEFAULT_FRONTMATTER_KEYS = [
+  FRONTMATTER_NAME_KEY,
+  "journal-date",
+  "journal-start-date",
+  "journal-end-date",
+  "journal-index",
+] as const;
+
 const anchorString = v.pipe(
   v.string(),
   v.regex(/^\d{4}-\d{2}-\d{2}$/, "must be YYYY-MM-DD"),
