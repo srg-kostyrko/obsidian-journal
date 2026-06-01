@@ -2,6 +2,7 @@ import type { Module } from "@/infrastructure/di";
 
 import { AutoAttachService } from "./auto-attach";
 import { AutoCreateService } from "./auto-create";
+import { bulkAddModule } from "./bulk-add/module";
 import { journalNotesFlowsModule } from "./flows/module";
 import { NoteConnectionService } from "./note-connection";
 import { NoteConnectionCommands } from "./note-connection-commands";
@@ -19,5 +20,6 @@ export const journalNotesModule: Module = {
     c.register(AutoCreateService).useClass(AutoCreateService);
     journalNotesFlowsModule.register(c);
     c.register(NoteConnectionCommands).useClass(NoteConnectionCommands).eager();
+    bulkAddModule.register(c);
   },
 };
