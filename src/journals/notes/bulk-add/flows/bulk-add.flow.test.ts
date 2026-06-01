@@ -29,10 +29,9 @@ describe("BulkAddFlow", () => {
     const { flows, modals, service } = build();
     const promise = flows.invoke(BulkAddFlow, { journalName: "daily" });
     modals.lastOpen().submit({ ...defaultBulkAddParameters(), folder: "src" });
-    // flush microtask ticks: modal promise → mapErr → async-iter → plan AsyncResult → second open
-    for (let i = 0; i < 8; i++) await Promise.resolve();
+    await vi.waitFor(() => expect(modals.opens).toHaveLength(2));
     expect(service.plan).toHaveBeenCalledWith("daily", expect.objectContaining({ folder: "src" }));
-    modals.lastOpen<unknown, void>().submit(undefined); // process modal closes (void submit)
+    modals.lastOpen<unknown, void>().submit(undefined);
     await promise;
   });
 
