@@ -2,6 +2,7 @@ import { createNanoEvents } from "nanoevents";
 import { describe, expect, it } from "vitest";
 import { reactive } from "vue";
 
+import type { AnchorString } from "@/calendar";
 import { Flows, UserAborted } from "@/infrastructure/flows";
 import { ModalService } from "@/infrastructure/host/modals";
 import { FakeModalService } from "@/infrastructure/host/modals/testing";
@@ -23,6 +24,14 @@ import { EditNavBlockRowFlow } from "./edit-nav-row.flow";
 function buildJournal(name: string, rows: NavBlockRow[]): JournalConfig {
   const base = journalDefaultsFor({ type: "day" }, name);
   return { ...base, navBlock: { ...base.navBlock, rows } };
+}
+
+function buildCustomJournal(name: string, rows: NavBlockRow[]): JournalConfig {
+  const base = journalDefaultsFor(
+    { type: "custom", every: "day", duration: 1, anchorDate: "2026-01-01" as AnchorString },
+    name,
+  );
+  return { ...base, intervalBlock: { ...base.intervalBlock, rows } };
 }
 
 function build(initial: Record<string, JournalConfig> = {}) {
@@ -84,6 +93,15 @@ describe("EditNavBlockRowFlow", () => {
     const result = await promise;
     expect(result.kind === "ok" && result.value.index).toBe(1);
     expect(storage.daily?.navBlock.rows.length).toBe(2);
+  });
+
+  it("appends to intervalBlock rows when the field is intervalBlock", async () => {
+    const { flows, modals, storage } = build({ custom: buildCustomJournal("custom", [sampleRow]) });
+    const promise = flows.invoke(EditNavBlockRowFlow, { journalName: "custom", field: "intervalBlock" });
+    modals.lastOpen<{ journalName: string }, { row: NavBlockRow }>().submit({ row: sampleRow });
+    const result = await promise;
+    expect(result.kind === "ok" && result.value.index).toBe(1);
+    expect(storage.custom?.intervalBlock.rows.length).toBe(2);
   });
 
   it("replaces the row at rowIndex when a rowIndex is provided", async () => {
