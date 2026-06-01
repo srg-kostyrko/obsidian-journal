@@ -2,7 +2,7 @@ import userEvent from "@testing-library/user-event";
 import { cleanup, render, screen } from "@testing-library/vue";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
-import { DayPeriod } from "@/calendar";
+import { CalendarDate, DayPeriod } from "@/calendar";
 import type { Period } from "@/calendar";
 import { date, installTestCalendar } from "@/calendar/testing";
 import { Container, provideInjectorOnApp } from "@/infrastructure/di";
@@ -85,6 +85,22 @@ describe("NotesCalendarCell", () => {
       });
       const cell = container.querySelector<HTMLElement>(".notes-calendar-cell");
       expect(cell?.dataset.inactive).toBe("true");
+    });
+  });
+
+  describe("today marker", () => {
+    it("renders data-today when the cell's period contains today", () => {
+      vi.spyOn(CalendarDate, "today").mockReturnValue(date("2026-05-25"));
+      const { container } = mount({ period: may25, cell: stubApi() });
+      const cell = container.querySelector<HTMLElement>(".notes-calendar-cell");
+      expect(cell?.dataset.today).toBe("true");
+    });
+
+    it("omits data-today when the cell's period does not contain today", () => {
+      vi.spyOn(CalendarDate, "today").mockReturnValue(date("2026-01-01"));
+      const { container } = mount({ period: may25, cell: stubApi() });
+      const cell = container.querySelector<HTMLElement>(".notes-calendar-cell");
+      expect(cell?.dataset.today).toBeUndefined();
     });
   });
 

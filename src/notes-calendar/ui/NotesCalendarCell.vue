@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { computed, toRaw } from "vue";
 
+import { CalendarDate } from "@/calendar";
 import type { Period } from "@/calendar";
 import { CellDecoration } from "@/decorations";
 
@@ -18,6 +19,7 @@ const rawPeriod = computed(() => toRaw(props.period));
 const label = computed(() => rawPeriod.value.format(props.format ?? defaultFormatPattern(rawPeriod.value.kind)));
 const isActive = computed(() => props.cell.isActive(rawPeriod.value));
 const isInactive = computed(() => !props.cell.isActionable(rawPeriod.value));
+const isToday = computed(() => rawPeriod.value.contains(CalendarDate.today()));
 </script>
 
 <template>
@@ -25,6 +27,7 @@ const isInactive = computed(() => !props.cell.isActionable(rawPeriod.value));
     class="notes-calendar-cell"
     :data-active="isActive || null"
     :data-inactive="isInactive || null"
+    :data-today="isToday || null"
     @contextmenu.prevent="cell.openContextMenu(rawPeriod, $event)"
     @mouseenter="cell.openPreview(rawPeriod, $event)"
   >
