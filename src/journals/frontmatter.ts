@@ -81,6 +81,7 @@ export class FrontmatterService {
     const fields = config.frontmatter;
 
     return new Ok((fm: Record<string, unknown>) => {
+      // Clear every key this journal could own under any config, regardless of current add* flags.
       delete fm[FRONTMATTER_NAME_KEY];
       delete fm[fields.dateField];
       delete fm[fields.startDateField];

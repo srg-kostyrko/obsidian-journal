@@ -179,12 +179,12 @@ describe("FrontmatterService", () => {
   });
 
   describe("clearMutator", () => {
-    it("deletes every journal-owned frontmatter key and leaves others intact", () => {
+    it("deletes only journal-owned frontmatter keys", () => {
       const c = buildContainer({ weekly: customJournal("weekly", "week", 1, "2024-01-01") });
-      const service = c.resolve(FrontmatterService);
-      const mutator = service.clearMutator("weekly");
+      const fm = c.resolve(FrontmatterService);
+      const mutator = fm.clearMutator("weekly");
       expect(mutator.isOk()).toBe(true);
-      const fm: Record<string, unknown> = {
+      const frontmatter: Record<string, unknown> = {
         journal: "weekly",
         "journal-date": "2026-06-01",
         "journal-start-date": "2026-06-01",
@@ -193,14 +193,14 @@ describe("FrontmatterService", () => {
         title: "keep me",
       };
       if (!mutator.isOk()) return;
-      mutator.value(fm);
-      expect(fm).toEqual({ title: "keep me" });
+      mutator.value(frontmatter);
+      expect(frontmatter).toEqual({ title: "keep me" });
     });
 
     it("returns an error for an unknown journal", () => {
       const c = buildContainer({ daily: fixedJournal("daily", { type: "day" }) });
-      const service = c.resolve(FrontmatterService);
-      expect(service.clearMutator("nope").isErr()).toBe(true);
+      const fm = c.resolve(FrontmatterService);
+      expect(fm.clearMutator("nope").isErr()).toBe(true);
     });
   });
 
