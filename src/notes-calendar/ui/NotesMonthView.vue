@@ -13,6 +13,7 @@ const props = defineProps<{
   shelf: string | null;
   month: MonthPeriod;
   hideOutsideDates?: boolean;
+  weeks?: "none" | "left" | "right";
 }>();
 
 const scope = useShelfScope(() => props.shelf);
@@ -24,7 +25,8 @@ const quarterCell = useNotesCell({ journalNames: () => scope.quarter.value });
 const yearCell = useNotesCell({ journalNames: () => scope.year.value });
 
 const rawMonth = computed(() => toRaw(props.month));
-const showWeekNumber = computed(() => scope.week.value.length > 0);
+const weeksPos = computed(() => props.weeks ?? "left");
+const showWeekNumber = computed(() => weeksPos.value !== "none");
 const showQuarter = computed(() => scope.quarter.value.length > 0);
 
 interface WeekRow {
@@ -95,10 +97,10 @@ const inactiveDay = inactiveCell();
         <NotesCalendarCell data-testid="header-year" :period="yearPeriod" :cell="yearCell" />
       </slot>
     </div>
-    <div class="notes-month-view__grid" :data-with-weeks="showWeekNumber || null">
+    <div class="notes-month-view__grid" :data-weeks="showWeekNumber ? weeksPos : null">
       <template v-for="row in rows" :key="row.key">
         <NotesCalendarCell
-          v-if="showWeekNumber"
+          v-if="showWeekNumber && weeksPos === 'left'"
           data-testid="week-number-cell"
           class="notes-month-view__week-number"
           :period="row.weekPeriod"
@@ -111,6 +113,13 @@ const inactiveDay = inactiveCell();
           :data-outside="day.isOutside || null"
           :period="day.period"
           :cell="hideOutsideDates && day.isOutside ? inactiveDay : dayCell"
+        />
+        <NotesCalendarCell
+          v-if="showWeekNumber && weeksPos === 'right'"
+          data-testid="week-number-cell"
+          class="notes-month-view__week-number"
+          :period="row.weekPeriod"
+          :cell="weekCell"
         />
       </template>
     </div>
@@ -133,8 +142,11 @@ const inactiveDay = inactiveCell();
   grid-template-columns: repeat(7, 1fr);
   gap: var(--size-2-1);
 }
-.notes-month-view__grid[data-with-weeks] {
+.notes-month-view__grid[data-weeks="left"] {
   grid-template-columns: auto repeat(7, 1fr);
+}
+.notes-month-view__grid[data-weeks="right"] {
+  grid-template-columns: repeat(7, 1fr) auto;
 }
 .notes-month-view__week-number {
   font-weight: var(--font-bold);

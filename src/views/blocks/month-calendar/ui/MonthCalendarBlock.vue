@@ -10,7 +10,7 @@ import type { BlockInstanceId } from "../../../config";
 
 const props = defineProps<{
   instanceId: BlockInstanceId;
-  config: { before: number; after: number; hideWeekends: boolean };
+  config: { before: number; after: number; hideWeekends: boolean; weeks: "none" | "left" | "right" };
 }>();
 
 const viewContext = useViewContext();
@@ -35,6 +35,7 @@ const months = computed<readonly MonthPeriod[]>(() => {
       :key="month.start.toAnchor()"
       :month="month"
       :shelf="viewContext.shelf.value"
+      :weeks="config.weeks"
     />
   </div>
 </template>

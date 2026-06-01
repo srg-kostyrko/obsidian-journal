@@ -13,7 +13,7 @@ import NotesMonthView from "./NotesMonthView.vue";
 
 function mount(
   h: NotesCalendarHarness,
-  props: { shelf: string | null; month: MonthPeriod; hideOutsideDates?: boolean },
+  props: { shelf: string | null; month: MonthPeriod; hideOutsideDates?: boolean; weeks?: "none" | "left" | "right" },
 ) {
   return render(NotesMonthView, {
     props,
@@ -78,21 +78,42 @@ describe("NotesMonthView", () => {
   });
 
   describe("week-number column", () => {
-    it("renders one week-number cell per row when scope has a week journal", () => {
-      const h = buildNotesCalendarHarness({
-        journals: {
-          daily: fixedJournal("daily", { type: "day" }),
-          weekly: fixedJournal("weekly", { type: "week" }),
-        },
-      });
-      const { container } = mount(h, { shelf: null, month });
+    it("renders one week-number cell per row when weeks is left", () => {
+      const h = buildNotesCalendarHarness({ journals: { daily: fixedJournal("daily", { type: "day" }) } });
+      const { container } = mount(h, { shelf: null, month, weeks: "left" });
       expect(container.querySelectorAll('[data-testid="week-number-cell"]').length).toBe(6);
     });
 
-    it("omits the week-number column when scope has no week journal", () => {
+    it("renders one week-number cell per row when weeks is right", () => {
+      const h = buildNotesCalendarHarness({ journals: { daily: fixedJournal("daily", { type: "day" }) } });
+      const { container } = mount(h, { shelf: null, month, weeks: "right" });
+      expect(container.querySelectorAll('[data-testid="week-number-cell"]').length).toBe(6);
+    });
+
+    it("omits the week-number column when weeks is none", () => {
+      const h = buildNotesCalendarHarness({ journals: { daily: fixedJournal("daily", { type: "day" }) } });
+      const { container } = mount(h, { shelf: null, month, weeks: "none" });
+      expect(container.querySelectorAll('[data-testid="week-number-cell"]').length).toBe(0);
+    });
+
+    it("positions the column via data-weeks", () => {
+      const h = buildNotesCalendarHarness({ journals: { daily: fixedJournal("daily", { type: "day" }) } });
+      const { container } = mount(h, { shelf: null, month, weeks: "right" });
+      expect(container.querySelector<HTMLElement>(".notes-month-view__grid")?.dataset.weeks).toBe("right");
+    });
+
+    it("shows the week number even without a week journal as an inactive label", () => {
+      const h = buildNotesCalendarHarness({ journals: { daily: fixedJournal("daily", { type: "day" }) } });
+      const { container } = mount(h, { shelf: null, month, weeks: "left" });
+      const weekCell = container.querySelector<HTMLElement>('[data-testid="week-number-cell"]');
+      expect(weekCell).toBeTruthy();
+      expect(weekCell?.dataset.active).toBeUndefined();
+    });
+
+    it("defaults to a left-positioned column when weeks is omitted", () => {
       const h = buildNotesCalendarHarness({ journals: { daily: fixedJournal("daily", { type: "day" }) } });
       const { container } = mount(h, { shelf: null, month });
-      expect(container.querySelectorAll('[data-testid="week-number-cell"]').length).toBe(0);
+      expect(container.querySelector<HTMLElement>(".notes-month-view__grid")?.dataset.weeks).toBe("left");
     });
   });
 
