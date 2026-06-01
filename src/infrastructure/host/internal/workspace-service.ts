@@ -33,6 +33,14 @@ export class WorkspaceService {
     return this.#pathOf(this.#app.workspace.getActiveFile());
   }
 
+  get layoutReady(): boolean {
+    return this.#app.workspace.layoutReady;
+  }
+
+  onLayoutReady(callback: () => void): void {
+    this.#app.workspace.onLayoutReady(callback);
+  }
+
   isOpen(path: VaultPath): boolean {
     return this.#findOpenLeaf(path) !== null;
   }

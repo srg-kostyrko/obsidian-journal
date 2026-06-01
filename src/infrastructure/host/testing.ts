@@ -163,15 +163,44 @@ export class FakeNotesService implements Pick<
 
 export class FakeWorkspaceService implements Pick<
   WorkspaceService,
-  "activeNote" | "isOpen" | "openNote" | "events" | "triggerHoverPreview" | "openFileMenu"
+  | "activeNote"
+  | "isOpen"
+  | "openNote"
+  | "events"
+  | "triggerHoverPreview"
+  | "openFileMenu"
+  | "layoutReady"
+  | "onLayoutReady"
 > {
   readonly #open = new Set<VaultPath>();
   readonly #emitter: TypedEmitter<WorkspaceEvents> = createNanoEvents();
   #active: Option<VaultPath> = new None<VaultPath>();
+  #layoutReady = false;
+  #layoutReadyCallbacks: (() => void)[] = [];
 
   readonly events: Subscribable<WorkspaceEvents> = this.#emitter;
   readonly hoverPreviewCalls: { path: VaultPath; event: MouseEvent }[] = [];
   readonly fileMenuCalls: { path: VaultPath; event: MouseEvent }[] = [];
+
+  get layoutReady(): boolean {
+    return this.#layoutReady;
+  }
+
+  onLayoutReady(callback: () => void): void {
+    if (this.#layoutReady) {
+      callback();
+      return;
+    }
+    this.#layoutReadyCallbacks.push(callback);
+  }
+
+  setLayoutReady(value: boolean): void {
+    this.#layoutReady = value;
+    if (!value) return;
+    const pending = this.#layoutReadyCallbacks;
+    this.#layoutReadyCallbacks = [];
+    for (const callback of pending) callback();
+  }
 
   activeNote(): Option<VaultPath> {
     return this.#active;
