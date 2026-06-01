@@ -60,7 +60,7 @@ reading code, not inferred.
 
 - [x] **10. Week-number column position** — ported.
   - v2: `calendarView.weeks: "none" | "left" | "right"`.
-  - v3: per-block `weeks: "none" | "left" | "right"` (default `left`) on the month/week-calendar blocks; `NotesMonthView`/`NotesWeekView` drive visibility + position from it (`data-weeks`), superseding the journal-presence auto-hide (a week number with no week journal now shows as an inactive label, matching v2). Delta: the timeline code block renders these views with no `weeks` control, so it now always shows a left week column (open follow-up).
+  - v3: per-block `weeks: "none" | "left" | "right"` (default `left`) on the month/week-calendar blocks; `NotesMonthView`/`NotesWeekView` drive visibility + position from it (`data-weeks`), superseding the journal-presence auto-hide (a week number with no week journal now shows as an inactive label, matching v2). The `calendar-timeline` code block gained its own `weeks` field (source-authored) threaded through all four modes, so its week column is author-controllable too.
 
 - [ ] **11. Code-block reference help modal** — gone.
   - v2: `CodeBlockReference.modal.vue` (+ `CodeBlockReferenceHint.vue`) — in-settings syntax docs, timeline mode list, home-block options, alias notes, click-to-copy snippets, live previews.
