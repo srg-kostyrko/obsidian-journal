@@ -130,7 +130,8 @@ describe("TimelineCodeBlock", () => {
 
       const { container } = mount(h, { path: HOST_PATH, config: {} });
 
-      expect(container.querySelector('[data-testid="week-number-cell"]')).toBeNull();
+      const weekCell = container.querySelector<HTMLElement>('[data-testid="week-number-cell"]');
+      expect(weekCell?.dataset.inactive).toBe("true");
     });
 
     it("uses config.shelf over the derived shelf", () => {
@@ -148,7 +149,8 @@ describe("TimelineCodeBlock", () => {
 
       const { container } = mount(h, { path: HOST_PATH, config: { shelf: "override" } });
 
-      expect(container.querySelector('[data-testid="week-number-cell"]')).toBeTruthy();
+      const weekCell = container.querySelector<HTMLElement>('[data-testid="week-number-cell"]');
+      expect(weekCell?.dataset.inactive).toBeUndefined();
     });
   });
 });

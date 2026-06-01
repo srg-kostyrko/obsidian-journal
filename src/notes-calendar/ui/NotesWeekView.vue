@@ -12,6 +12,7 @@ import NotesCalendarCell from "./NotesCalendarCell.vue";
 const props = defineProps<{
   shelf: string | null;
   week: WeekPeriod;
+  weeks?: "none" | "left" | "right";
 }>();
 
 const scope = useShelfScope(() => props.shelf);
@@ -27,7 +28,8 @@ const days = computed(() => [...rawWeek.value.days()].map((d) => DayPeriod.conta
 const monthPeriod = computed(() => MonthPeriod.containing(rawWeek.value.anchor));
 const quarterPeriod = computed(() => QuarterPeriod.containing(rawWeek.value.anchor));
 const yearPeriod = computed(() => YearPeriod.containing(rawWeek.value.anchor));
-const showWeekNumber = computed(() => scope.week.value.length > 0);
+const weeksPos = computed(() => props.weeks ?? "left");
+const showWeekNumber = computed(() => weeksPos.value !== "none");
 const showQuarter = computed(() => scope.quarter.value.length > 0);
 
 const allPeriods = computed<readonly Period[]>(() => {
@@ -57,15 +59,22 @@ useCellDecorations(
         <NotesCalendarCell data-testid="header-year" :period="yearPeriod" :cell="yearCell" />
       </slot>
     </div>
-    <div class="notes-week-view__row">
+    <div class="notes-week-view__row" :data-weeks="showWeekNumber ? weeksPos : null">
       <NotesCalendarCell
-        v-if="showWeekNumber"
+        v-if="showWeekNumber && weeksPos === 'left'"
         data-testid="week-number-cell"
         class="notes-week-view__week-number"
         :period="rawWeek"
         :cell="weekCell"
       />
       <NotesCalendarCell v-for="day in days" :key="day.anchor.toAnchor()" :period="day" :cell="dayCell" />
+      <NotesCalendarCell
+        v-if="showWeekNumber && weeksPos === 'right'"
+        data-testid="week-number-cell"
+        class="notes-week-view__week-number"
+        :period="rawWeek"
+        :cell="weekCell"
+      />
     </div>
   </div>
 </template>
