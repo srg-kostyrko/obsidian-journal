@@ -34,3 +34,15 @@ const isToday = computed(() => rawPeriod.value.contains(CalendarDate.today()));
     <CellDecoration :period="rawPeriod">{{ label }}</CellDecoration>
   </span>
 </template>
+
+<style scoped>
+/* [data-today] follows [data-active] so a cell that is both resolves to the today colors. */
+.notes-calendar-cell[data-active] {
+  color: var(--journal-cell-active-color);
+  background-color: var(--journal-cell-active-bg);
+}
+.notes-calendar-cell[data-today] {
+  color: var(--journal-cell-today-color);
+  background-color: var(--journal-cell-today-bg);
+}
+</style>
