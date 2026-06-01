@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import { match } from "ts-pattern";
 import { ref } from "vue";
 
 import { m } from "@/i18n";
@@ -8,7 +9,14 @@ import UiButton from "@/ui/UiButton.vue";
 import UiDropdown from "@/ui/UiDropdown.vue";
 import UiSettingRow from "@/ui/UiSettingRow.vue";
 
-import { BulkAddService, type BulkLogEntry, type BulkPlan, type PlannedAction } from "../bulk-add-service";
+import {
+  BulkAddService,
+  type BulkLogEntry,
+  type BulkPlan,
+  type PlannedAction,
+  type PlannedSkip,
+  type SkipReason,
+} from "../bulk-add-service";
 
 import type { BulkAddParameters } from "../config";
 
@@ -17,7 +25,17 @@ const api = useModal();
 const service = useService(BulkAddService);
 
 const actions = props.plan.notes.filter((n): n is PlannedAction => n.kind === "action");
-const skips = props.plan.notes.filter((n) => n.kind === "skip");
+const skips = props.plan.notes.filter((n): n is PlannedSkip => n.kind === "skip");
+
+function skipReasonLabel(reason: SkipReason): string {
+  return match(reason)
+    .with("already-connected", () => m.bulk_add_skip_reason_already_connected())
+    .with("filtered", () => m.bulk_add_skip_reason_filtered())
+    .with("no-date", () => m.bulk_add_skip_reason_no_date())
+    .with("invalid-date", () => m.bulk_add_skip_reason_invalid_date())
+    .with("out-of-bounds", () => m.bulk_add_skip_reason_out_of_bounds())
+    .exhaustive();
+}
 
 const existing = ref<Record<string, "skip" | "override" | "merge">>(
   Object.fromEntries(actions.map((a) => [a.path, a.existing === "ask" || a.existing === "none" ? "skip" : a.existing])),
@@ -71,6 +89,10 @@ function close(): void {
           <option value="override">{{ m.bulk_add_option_override() }}</option>
           <option value="merge">{{ m.bulk_add_option_merge() }}</option>
         </UiDropdown>
+      </UiSettingRow>
+      <UiSettingRow v-for="skip of skips" :key="skip.path" no-controls>
+        <template #name>{{ skip.path }}</template>
+        <template #description>{{ skipReasonLabel(skip.reason) }}</template>
       </UiSettingRow>
       <UiSettingRow>
         <UiButton cta @click="run">{{ m.bulk_add_run() }}</UiButton>

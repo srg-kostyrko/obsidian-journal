@@ -13,14 +13,9 @@ export const configureBulkAddModal = defineModal<BulkAddParameters>()({
   width: 700,
 });
 
-export interface ProcessBulkAddProps {
-  journalName: string;
-  plan: BulkPlan;
-  parameters: BulkAddParameters;
-}
-
 export const processBulkAddModal = defineModal()({
   component: ProcessBulkAddModal,
-  title: ({ journalName }: ProcessBulkAddProps) => m.bulk_add_process_title({ journalName }),
+  title: ({ journalName }: { journalName: string; plan: BulkPlan; parameters: BulkAddParameters }) =>
+    m.bulk_add_process_title({ journalName }),
   width: 700,
 });

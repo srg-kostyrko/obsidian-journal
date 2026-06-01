@@ -10,7 +10,7 @@ import type { ModalApi } from "@/infrastructure/host/modals";
 import { provideModalApiOnApp } from "@/infrastructure/host/modals/testing";
 import { AsyncResult } from "@/infrastructure/result";
 
-import { BulkAddService, type BulkPlan } from "../bulk-add-service";
+import { BulkAddService, type BulkPlan, type PlannedSkip } from "../bulk-add-service";
 import { defaultBulkAddParameters } from "../config";
 
 import ProcessBulkAddModal from "./ProcessBulkAddModal.vue";
@@ -81,5 +81,13 @@ describe("ProcessBulkAddModal", () => {
     mountModal({ apply, dryRun: true, plan: { notes: [] } });
     await userEvent.click(screen.getByText(m.bulk_add_run()));
     expect(apply).toHaveBeenCalledWith("daily", expect.any(Array), true);
+  });
+
+  it("shows the skip reason for each skipped note", () => {
+    const apply = vi.fn(() => AsyncResult.ok([]));
+    const skip: PlannedSkip = { kind: "skip", path: "src/x.md" as VaultPath, reason: "no-date" };
+    mountModal({ apply, plan: { notes: [skip] } });
+    expect(screen.getByText("src/x.md")).toBeTruthy();
+    expect(screen.getByText(m.bulk_add_skip_reason_no_date())).toBeTruthy();
   });
 });
