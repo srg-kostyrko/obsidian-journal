@@ -7,6 +7,7 @@ import { NotesWeekView } from "@/notes-calendar";
 const props = defineProps<{
   refDate: AnchorString;
   shelf: string | null;
+  weeks?: "none" | "left" | "right";
 }>();
 
 const week = computed(() => WeekPeriod.containing(CalendarDate.fromAnchor(props.refDate)));
@@ -14,7 +15,7 @@ const week = computed(() => WeekPeriod.containing(CalendarDate.fromAnchor(props.
 
 <template>
   <div class="timeline-week">
-    <NotesWeekView :shelf :week />
+    <NotesWeekView :shelf :week :weeks="weeks" />
   </div>
 </template>
 

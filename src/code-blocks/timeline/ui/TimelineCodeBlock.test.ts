@@ -153,4 +153,44 @@ describe("TimelineCodeBlock", () => {
       expect(weekCell?.dataset.inactive).toBeUndefined();
     });
   });
+
+  describe("weeks position", () => {
+    it("hides the month week column when config.weeks is none", () => {
+      const h = buildNotesCalendarHarness({ journals: { daily: fixedJournal("daily", { type: "day" }) } });
+      h.index.register({ journalName: "daily", anchor: HOST_ANCHOR, path: HOST_PATH });
+
+      const { container } = mount(h, { path: HOST_PATH, config: { mode: "month", weeks: "none" } });
+
+      expect(container.querySelector('[data-testid="week-number-cell"]')).toBeNull();
+    });
+
+    it("positions the month week column right when config.weeks is right", () => {
+      const h = buildNotesCalendarHarness({ journals: { daily: fixedJournal("daily", { type: "day" }) } });
+      h.index.register({ journalName: "daily", anchor: HOST_ANCHOR, path: HOST_PATH });
+
+      const { container } = mount(h, { path: HOST_PATH, config: { mode: "month", weeks: "right" } });
+
+      const grid = container.querySelector<HTMLElement>(".notes-month-view__grid");
+      expect(grid?.dataset.weeks).toBe("right");
+    });
+
+    it("hides the week-view week column when config.weeks is none", () => {
+      const h = buildNotesCalendarHarness({ journals: { daily: fixedJournal("daily", { type: "day" }) } });
+      h.index.register({ journalName: "daily", anchor: HOST_ANCHOR, path: HOST_PATH });
+
+      const { container } = mount(h, { path: HOST_PATH, config: { mode: "week", weeks: "none" } });
+
+      expect(container.querySelector('[data-testid="week-number-cell"]')).toBeNull();
+    });
+
+    it("positions the week-view week column right when config.weeks is right", () => {
+      const h = buildNotesCalendarHarness({ journals: { daily: fixedJournal("daily", { type: "day" }) } });
+      h.index.register({ journalName: "daily", anchor: HOST_ANCHOR, path: HOST_PATH });
+
+      const { container } = mount(h, { path: HOST_PATH, config: { mode: "week", weeks: "right" } });
+
+      const row = container.querySelector<HTMLElement>(".notes-week-view__row");
+      expect(row?.dataset.weeks).toBe("right");
+    });
+  });
 });

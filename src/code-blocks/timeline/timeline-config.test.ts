@@ -23,6 +23,19 @@ describe("timelineBlockSchema", () => {
     expect(result.shelf).toBe("work");
   });
 
+  it("accepts a weeks position", () => {
+    const result = v.parse(timelineBlockSchema, { weeks: "right" });
+    expect(result.weeks).toBe("right");
+  });
+
+  it("rejects an unknown weeks value", () => {
+    expect(v.safeParse(timelineBlockSchema, { weeks: "center" }).success).toBe(false);
+  });
+
+  it("accepts a config without weeks", () => {
+    expect(v.safeParse(timelineBlockSchema, { mode: "month" }).success).toBe(true);
+  });
+
   it("infers TimelineMode as the mode union", () => {
     expectTypeOf<TimelineMode>().toEqualTypeOf<"week" | "month" | "quarter" | "calendar">();
   });
@@ -31,6 +44,7 @@ describe("timelineBlockSchema", () => {
     expectTypeOf<TimelineBlockConfig>().toEqualTypeOf<{
       mode?: TimelineMode | undefined;
       shelf?: string | undefined;
+      weeks?: "none" | "left" | "right" | undefined;
     }>();
   });
 });

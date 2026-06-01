@@ -7,6 +7,7 @@ import { NotesMonthView } from "@/notes-calendar";
 const props = defineProps<{
   refDate: AnchorString;
   shelf: string | null;
+  weeks?: "none" | "left" | "right";
 }>();
 
 const months = computed<readonly MonthPeriod[]>(() => {
@@ -18,7 +19,14 @@ const months = computed<readonly MonthPeriod[]>(() => {
 <template>
   <div class="timeline-quarter-container">
     <div class="timeline-quarter">
-      <NotesMonthView v-for="month in months" :key="month.anchor.toAnchor()" :shelf :month hide-outside-dates />
+      <NotesMonthView
+        v-for="month in months"
+        :key="month.anchor.toAnchor()"
+        :shelf
+        :month
+        :weeks="weeks"
+        hide-outside-dates
+      />
     </div>
   </div>
 </template>
