@@ -140,6 +140,9 @@ const booleanPropertyCondition = v.object({
 
 const propertyCondition = v.union([stringPropertyCondition, numberPropertyCondition, booleanPropertyCondition]);
 
+export const filterConditionSchema = v.union([titleCondition, tagCondition, propertyCondition]);
+export type FilterCondition = v.InferOutput<typeof filterConditionSchema>;
+
 const dateCondition = v.object({
   type: v.literal("date"),
   day: v.number(),
