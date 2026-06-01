@@ -22,17 +22,17 @@ reading code, not inferred.
 
 ## 🔴 Functional regressions (user-facing features lost)
 
-- [ ] **1. Bulk add notes** — entire feature gone.
+- [x] **1. Bulk add notes** — ported (`20afa42b..7e497b0a`).
   - v2: `src/_old-code/components/modals/bulk-add-notes/` (`ConfigureBulkAddNotes.vue`, `BulkProcessNotes.vue`, `bulk-add-note-utilities.ts`) — extract date from title/property, filter by conditions, dry-run preview, per-note connect/merge/override/move/rename.
-  - v3: no modal, flow, command, or utility. `AutoAttachService` covers only single-note filename matching — no date extraction, filtering, dry-run, merge, or bulk move/rename.
+  - v3: `src/journals/notes/bulk-add/` — `BulkAddService` (`plan`/`apply`), ported `formatToRegexp`, two-stage configure/process modals (filters reuse decoration title/tag/property conditions; per-note skip reasons; all three "ask" decisions; merge; dry-run), `BulkAddFlow`, launched from the per-journal settings page. Reuses `NoteConnectionService`.
 
-- [ ] **2. Connect note to a journal** — command + modal gone.
+- [x] **2. Connect note to a journal** — ported (`8ae32da9..ffb8cb30`).
   - v2: `connect-note` command (`src/_old-code/main.ts` `#configureCommands`) + `ConnectNote.modal.vue`.
-  - v3: no command/modal/flow.
+  - v3: `connect-note` command (`NoteConnectionCommands`) → `ConnectNoteModal` (journal/date pickers + conditional override/rename/move toggles, or Disconnect when already connected) → `ConnectNoteFlow` → `NoteConnectionService.connect`.
 
-- [ ] **3. Disconnect note** — gone.
+- [x] **3. Disconnect note** — ported (`8ae32da9..ffb8cb30`).
   - v2: `JournalPlugin.disconnectNote` / `Journal.disconnectNote` strips all journal frontmatter keys from a note.
-  - v3: no disconnect service/command/flow. Index entries drop when frontmatter changes, but nothing removes frontmatter from a note.
+  - v3: `NoteConnectionService.disconnect` strips the journal's frontmatter keys via `FrontmatterService.clearMutator` (with an orphan fallback to the default key set); surfaced through the connect modal's Disconnect button and reused by connect-override and bulk-add. No standalone command (v2 parity).
 
 - [ ] **4. Open on startup** — gone.
   - v2: `PluginSettings.openOnStartup` + `openStartupNote()` opened a chosen journal's note in the `onLayoutReady` hook (`src/_old-code/main.ts:425-433`); kept in sync on rename/remove.
