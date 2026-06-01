@@ -12,9 +12,10 @@ import { Container } from "@/infrastructure/di";
 import { FlowsModule } from "@/infrastructure/flows";
 import { createHostModule } from "@/infrastructure/host";
 import { LoggerModule } from "@/infrastructure/logger";
-import { AutoAttachService, AutoCreateService } from "@/journals";
+import { AutoAttachService, AutoCreateService, StartupOpenService } from "@/journals";
 import { journalsModule } from "@/journals/module";
 import { journalsSettingsModule } from "@/journals/settings/module";
+import { startupModule } from "@/journals/startup/module";
 import { VaultSubscriptionService } from "@/journals/vault-subscription";
 import { notesCalendarModule } from "@/notes-calendar";
 import { settingsModule, SettingsService } from "@/settings";
@@ -46,6 +47,7 @@ export default class JournalPlugin extends Plugin {
     container.addModule(codeBlocksModule);
     container.addModule(navBlockSettingsModule);
     container.addModule(commandsModule);
+    container.addModule(startupModule);
 
     const init = await container.resolve(SettingsService).initialize();
     if (init.kind === "err") {
@@ -59,6 +61,7 @@ export default class JournalPlugin extends Plugin {
     await container.resolve(VaultSubscriptionService).initialize();
     await container.resolve(AutoAttachService).initialize();
     await container.resolve(AutoCreateService).initialize();
+    await container.resolve(StartupOpenService).initialize();
     container.resolve(DynamicCommandRegistry).initialize();
 
     this.#container = container;

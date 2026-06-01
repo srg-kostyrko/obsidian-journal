@@ -70,6 +70,8 @@ export {
   type NoteCreationError,
 } from "./notes";
 
+export { StartupOpenService } from "./startup/startup-open";
+
 export {
   OpenDateFlow,
   OpenJournalEntryFlow,
