@@ -21,3 +21,15 @@ export class NoApplicableJournals extends JournalNoteCreationError {
     );
   }
 }
+
+export class AnchorOccupiedError extends JournalsError {
+  override name = "AnchorOccupiedError";
+
+  constructor(
+    readonly journalName: string,
+    readonly anchor: AnchorString,
+    readonly occupantPath: string,
+  ) {
+    super(`Anchor ${anchor} in journal ${journalName} is already held by ${occupantPath}`);
+  }
+}
