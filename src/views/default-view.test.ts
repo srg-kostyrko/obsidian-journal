@@ -48,7 +48,7 @@ describe("defaultCalendarView", () => {
     expect(actionOf(pick!)?.mode).toBe("navigate");
   });
 
-  it("seeds the today button in create mode", () => {
+  it("seeds the current button in create mode", () => {
     const current = toolbarItems().find((item) => actionOf(item)?.type === "current");
     expect(actionOf(current!)?.mode).toBe("create");
   });
