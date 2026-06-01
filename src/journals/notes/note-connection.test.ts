@@ -191,6 +191,63 @@ describe("NoteConnectionService", () => {
     });
   });
 
+  describe("reconnectAll", () => {
+    it("rewrites the journal name in every connected note to the new name", async () => {
+      const repo = fakeRepo({ daily: fixedJournal("daily", { type: "day" }) });
+      const notes = new FakeNotesService();
+      const first = "a.md" as VaultPath;
+      const second = "b.md" as VaultPath;
+      notes.seed(first, "content", { journal: "daily", "journal-date": "2026-06-01", title: "keep" });
+      notes.seed(second, "content", { journal: "daily", "journal-date": "2026-06-02", title: "keep" });
+      const { container, index } = build(repo, notes, new FakeModalService());
+      index.register({ journalName: "daily", anchor: anchor("2026-06-01"), path: first });
+      index.register({ journalName: "daily", anchor: anchor("2026-06-02"), path: second });
+
+      await container.resolve(NoteConnectionService).reconnectAll("daily", "morning");
+
+      expect(await readFrontmatter(notes, first)).toEqual({
+        journal: "morning",
+        "journal-date": "2026-06-01",
+        title: "keep",
+      });
+      expect(await readFrontmatter(notes, second)).toEqual({
+        journal: "morning",
+        "journal-date": "2026-06-02",
+        title: "keep",
+      });
+    });
+
+    it("rewrites the remaining notes when one note's update fails", async () => {
+      const repo = fakeRepo({ daily: fixedJournal("daily", { type: "day" }) });
+      const notes = new FakeNotesService();
+      const failing = "a.md" as VaultPath;
+      const surviving = "b.md" as VaultPath;
+      notes.seed(failing, "content", { journal: "daily", "journal-date": "2026-06-01", title: "keep" });
+      notes.seed(surviving, "content", { journal: "daily", "journal-date": "2026-06-02", title: "keep" });
+      const { container, index } = build(repo, notes, new FakeModalService());
+      index.register({ journalName: "daily", anchor: anchor("2026-06-01"), path: failing });
+      index.register({ journalName: "daily", anchor: anchor("2026-06-02"), path: surviving });
+      const original = notes.updateFrontmatter.bind(notes);
+      vi.spyOn(notes, "updateFrontmatter").mockImplementation((path, mutate) =>
+        path === failing ? AsyncResult.err(new NoteNotFoundError(failing)) : original(path, mutate),
+      );
+
+      await container.resolve(NoteConnectionService).reconnectAll("daily", "morning");
+
+      expect(await readFrontmatter(notes, surviving)).toEqual({
+        journal: "morning",
+        "journal-date": "2026-06-02",
+        title: "keep",
+      });
+      vi.mocked(notes.updateFrontmatter).mockRestore();
+      expect(await readFrontmatter(notes, failing)).toEqual({
+        journal: "daily",
+        "journal-date": "2026-06-01",
+        title: "keep",
+      });
+    });
+  });
+
   describe("connect", () => {
     it("attaches the note at the resolved anchor when the slot is free", async () => {
       const repo = fakeRepo({ daily: fixedJournal("daily", { type: "day" }) });

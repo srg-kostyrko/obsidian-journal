@@ -42,9 +42,9 @@ reading code, not inferred.
   - v2: `removeJournal(name, notesProcessing)` with `keep | clear | delete` via `Journal.clearNotes()` / `deleteNotes()` (`src/_old-code/main.ts:233-259`).
   - v3: `NoteConnectionService.disconnectAll` / `deleteAll` (best-effort, snapshot the journal index via `entriesFor`); `DeleteJournalFlow` dispatches on the modal mode and purges before `repository.delete`. `DeleteJournalModal` returns the chosen mode with all options enabled. Delta: `delete` trashes (recoverable) via `NotesService.delete` rather than v2's permanent `vault.delete`.
 
-- [ ] **6. Rename journal does not rewrite note frontmatter** — data-integrity regression. **(highest priority)**
+- [x] **6. Rename journal does not rewrite note frontmatter** — ported.
   - v2: `renameJournal` looped the index and rewrote `FRONTMATTER_NAME_KEY` in every connected note (`src/_old-code/main.ts:224-230`).
-  - v3: `JournalsRepository.rename` (`src/journals/repository.ts:67-80`) only mutates in-memory config and emits `renamed`; the only listener is `shelves/service.ts`. Existing notes keep the old `journal:` value and become orphaned (`FrontmatterService.parseEntry` looks up config by stored name, `src/journals/frontmatter.ts:24-28`).
+  - v3: `NoteConnectionService.reconnectAll(oldName, newName)` (best-effort, snapshots the journal index via `entriesFor`, reuses the shared `#forEachConnected` helper) rewrites only `FRONTMATTER_NAME_KEY` in every connected note — config field names are unchanged by rename, matching v2. `RenameJournalFlow` calls it after a successful `repository.rename`, so a rejected rename (name taken / unknown) leaves notes untouched.
 
 - [ ] **7. Calendar sidebar placement (left/right)** — gone.
   - v2: `calendarView.leaf: "left" | "right"` + `placeCalendarView()` using `getLeftLeaf`/`getRightLeaf`, auto-placed on load.

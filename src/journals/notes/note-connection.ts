@@ -11,7 +11,7 @@ import type {
 } from "@/infrastructure/host";
 import { AsyncResult, attempt } from "@/infrastructure/result";
 
-import { DEFAULT_FRONTMATTER_KEYS } from "../config";
+import { DEFAULT_FRONTMATTER_KEYS, FRONTMATTER_NAME_KEY } from "../config";
 import { FrontmatterService } from "../frontmatter";
 import { JournalsIndex } from "../journals-index";
 
@@ -95,18 +95,29 @@ export class NoteConnectionService {
   }
 
   disconnectAll(journalName: string): AsyncResult<void, never> {
-    return this.#purge(journalName, (path) => this.disconnect(path));
+    return this.#forEachConnected(journalName, (path) => this.disconnect(path));
   }
 
   deleteAll(journalName: string): AsyncResult<void, never> {
-    return this.#purge(journalName, (path) => this.#notes.delete(path));
+    return this.#forEachConnected(journalName, (path) => this.#notes.delete(path));
   }
 
-  #purge(journalName: string, op: (path: VaultPath) => AsyncResult<void, unknown>): AsyncResult<void, never> {
+  reconnectAll(oldName: string, newName: string): AsyncResult<void, never> {
+    return this.#forEachConnected(oldName, (path) =>
+      this.#notes.updateFrontmatter(path, (fm) => {
+        fm[FRONTMATTER_NAME_KEY] = newName;
+      }),
+    );
+  }
+
+  #forEachConnected(
+    journalName: string,
+    op: (path: VaultPath) => AsyncResult<void, unknown>,
+  ): AsyncResult<void, never> {
     const paths = [...this.#index.entriesFor(journalName)].map(([, path]) => path);
     // Best-effort, matching v2: an AsyncResult never rejects, so Promise.all settles even when
     // individual notes fail. We discard the per-note Results so one bad note can't strand the
-    // journal config. Spreading entriesFor up front snapshots paths before the ops mutate the index.
+    // journal-wide operation. Spreading entriesFor up front snapshots paths before the ops mutate the index.
     const all: Promise<void> = Promise.all(paths.map((path) => op(path))).then(() => {
       return;
     });
