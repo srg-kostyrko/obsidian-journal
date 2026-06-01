@@ -64,14 +64,15 @@
       }
     }
   ],
-  "nav_block_section_decorate_whole_label": "Decorate whole block",
   "nav_block_section_use_defaults": "Use defaults for {writeType}",
-  "nav_block_section_empty": "No rows. Add one or use the defaults above.",
-  "nav_block_section_add_row": "Add row",
-  "nav_block_section_edit_tooltip": "Edit row",
-  "nav_block_section_delete_tooltip": "Delete row",
-  "nav_block_section_move_up_tooltip": "Move up",
-  "nav_block_section_move_down_tooltip": "Move down",
+  "block_rows_decorate_whole_label": "Decorate whole block",
+  "block_rows_empty": "No rows yet. Add one.",
+  "block_rows_add_row": "Add row",
+  "block_rows_edit_tooltip": "Edit row",
+  "block_rows_delete_tooltip": "Delete row",
+  "block_rows_move_up_tooltip": "Move up",
+  "block_rows_move_down_tooltip": "Move down",
+  "interval_block_section_title": "Calendar interval rows",
   "nav_block_row_modal_title": [
     {
       "declarations": ["input mode"],
