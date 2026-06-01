@@ -532,6 +532,7 @@
   "view_add_block_modal_title": "Add block",
   "view_add_block_empty": "No block types are registered.",
   "view_block_divider_label": "Divider",
+  "view_default_calendar_name": "Calendar",
   "view_block_toolbar_label": "Toolbar",
   "view_block_toolbar_description": "Container for toolbar items such as buttons and the shelf selector.",
   "view_add_toolbar_item_modal_title": "Add toolbar item",
