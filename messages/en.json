@@ -200,6 +200,16 @@
     }
   ],
 
+  "command_connect_note": "Connect note to a journal",
+  "connect_note_modal_journal_label": "Journal",
+  "connect_note_modal_date_label": "Date",
+  "connect_note_modal_override_label": "Replace the note already connected to this date",
+  "connect_note_modal_rename_label": "Rename file to match the journal",
+  "connect_note_modal_move_label": "Move file into the journal's folder",
+  "connect_note_modal_connect": "Connect",
+  "connect_note_modal_connected_to": "This note is connected to \"{journalName}\".",
+  "connect_note_modal_disconnect": "Disconnect",
+
   "common_action_cancel": "Cancel",
   "common_action_close": "Close",
   "common_action_delete": "Delete",
