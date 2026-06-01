@@ -31,6 +31,9 @@ export class CalendarAppearanceBridge {
 
   #sync(state: AppearanceSliceState | undefined): void {
     if (state === undefined) return;
+    // Global aesthetic, applied as CSS vars on the active document body. A calendar
+    // rendered in a popout opened after the last change won't pick these up until the
+    // next change — acceptable for a purely cosmetic highlight.
     const root = activeDocument.body.style;
     root.setProperty(VARS.todayColor, colorToString(state.today.color));
     root.setProperty(VARS.todayBg, colorToString(state.today.background));
