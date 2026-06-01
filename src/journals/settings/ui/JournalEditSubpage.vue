@@ -6,6 +6,7 @@ import { DatePicker, type Picking } from "@/calendar/ui";
 import { m } from "@/i18n";
 import { useService } from "@/infrastructure/di";
 import { Flows } from "@/infrastructure/flows";
+import { BulkAddFlow } from "@/journals/notes/bulk-add/flows/bulk-add.flow";
 import { JournalsViewModel } from "@/journals/view-model";
 import type { SubpageNav } from "@/settings";
 import UiButton from "@/ui/UiButton.vue";
@@ -157,6 +158,9 @@ function onSequenceToggle(value: boolean | undefined): void {
 function rename(): void {
   void flows.invoke(RenameJournalFlow, { journalName });
 }
+function bulkAdd(): void {
+  void flows.invoke(BulkAddFlow, { journalName });
+}
 function editFm(fieldName: "dateField" | "startDateField" | "endDateField"): void {
   void flows.invoke(EditFrontmatterFieldFlow, { journalName, fieldName });
 }
@@ -169,6 +173,7 @@ function editSequenceKey(): void {
   <div v-if="config">
     <UiSettingRow heading>
       <template #name>{{ m.journal_edit_header_title({ name: journalName, writing }) }}</template>
+      <UiButton @click="bulkAdd">{{ m.bulk_add_command() }}</UiButton>
       <UiIconButton icon="pencil" :tooltip="m.journal_edit_rename_tooltip()" @click="rename" />
       <UiIconButton icon="chevron-left" :tooltip="m.journal_edit_back_tooltip()" @click="nav.back()" />
     </UiSettingRow>
