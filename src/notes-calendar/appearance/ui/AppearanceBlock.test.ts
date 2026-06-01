@@ -53,13 +53,15 @@ describe("AppearanceBlock", () => {
     expect(screen.getByText(m.calendar_appearance_today_text())).toBeTruthy();
   });
 
-  it("writes a today text color change back to the slice", async () => {
+  it("writes a today text color change through the picker to the slice", async () => {
     const { container, settings } = setup();
     await settings.initialize();
     mount(container);
-    await openSection();
-    const slice = settings.getSlice(appearanceSlice);
-    slice.state = { ...slice.state, today: { ...slice.state.today, color: { type: "custom", color: "#abcdef" } } };
-    expect(settings.getSlice(appearanceSlice).state.today.color).toEqual({ type: "custom", color: "#abcdef" });
+    await userEvent.click(screen.getByText(m.calendar_appearance_section_title()));
+
+    const pickers = screen.getAllByRole("combobox");
+    await userEvent.selectOptions(pickers[0], "transparent");
+
+    expect(settings.getSlice(appearanceSlice).state.today.color).toEqual({ type: "transparent" });
   });
 });
