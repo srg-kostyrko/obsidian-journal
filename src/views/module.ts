@@ -1,9 +1,11 @@
 import { createNanoEvents } from "nanoevents";
 
 import type { Module } from "@/infrastructure/di";
+import { JournalEditSectionToken, defineJournalEditSection } from "@/journals";
 import { CollectionDefinitionToken, DashboardBlockToken, SubpageToken, defineDashboardBlock } from "@/settings";
 
 import { customIntervalsBlock } from "./blocks/custom-intervals/custom-intervals-block";
+import IntervalBlockSection from "./blocks/custom-intervals/ui/IntervalBlockSection.vue";
 import { dividerBlock } from "./blocks/divider/divider-block";
 import { monthCalendarBlock } from "./blocks/month-calendar/month-calendar-block";
 import { toolbarBlock } from "./blocks/toolbar/toolbar-block";
@@ -51,5 +53,8 @@ export const viewsModule: Module = {
       defineDashboardBlock({ key: "views", component: ViewsDashboardBlock, order: 7 }),
     );
     c.register(SubpageToken).useValue(viewEditSubpage);
+    c.register(JournalEditSectionToken).useValue(
+      defineJournalEditSection({ key: "interval-block", order: 41, component: IntervalBlockSection }),
+    );
   },
 };
