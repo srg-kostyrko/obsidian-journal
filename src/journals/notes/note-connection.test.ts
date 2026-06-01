@@ -8,6 +8,7 @@ import { ModalService } from "@/infrastructure/host/modals";
 import { FakeModalService } from "@/infrastructure/host/modals/testing";
 import { FakeNotesService, FakeTemplaterService } from "@/infrastructure/host/testing";
 import { LoggerModule } from "@/infrastructure/logger";
+import { expectOk } from "@/infrastructure/result/testing";
 import { TemplateEngine } from "@/templates";
 
 import { CycleService } from "../cycle";
@@ -205,6 +206,32 @@ describe("NoteConnectionService", () => {
       expect(notes.find(sourcePath).isNone()).toBe(true);
       expect(notes.find(configuredPath).isSome()).toBe(true);
       const fm = await readFrontmatter(notes, configuredPath);
+      expect(fm.journal).toBe("daily");
+    });
+
+    it("trashes the occupant when overriding and relocating onto its path", async () => {
+      const repo = fakeRepo({
+        daily: fixedJournal("daily", { type: "day" }, { folder: "Journal" }),
+      });
+      const notes = new FakeNotesService();
+      const occupantPath = "Journal/2026-06-01.md" as VaultPath;
+      const incomingPath = "inbox/note.md" as VaultPath;
+      notes.seed(occupantPath, "OCCUPANT", { journal: "daily", "journal-date": "2026-06-01" });
+      notes.seed(incomingPath, "INCOMING");
+      const { container, index } = build(repo, notes, new FakeModalService());
+      index.register({ journalName: "daily", anchor: anchor("2026-06-01"), path: occupantPath });
+
+      const result = await container
+        .resolve(NoteConnectionService)
+        .connect("daily", incomingPath, anchor("2026-06-01"), { override: true, rename: true, move: true });
+
+      expectOk(result);
+      expect(notes.find(incomingPath).isNone()).toBe(true);
+      expect(notes.find(occupantPath).isSome()).toBe(true);
+      const content = await notes.read(occupantPath);
+      expectOk(content);
+      expect(content.value).toBe("INCOMING");
+      const fm = await readFrontmatter(notes, occupantPath);
       expect(fm.journal).toBe("daily");
     });
   });

@@ -4,6 +4,7 @@ import { NotesService } from "@/infrastructure/host";
 import type {
   FrontmatterError,
   NoteAlreadyExistsError,
+  NoteDeleteError,
   NoteNotFoundError,
   NoteRenameError,
   VaultPath,
@@ -19,7 +20,6 @@ import { NoteCreationService } from "./note-creation";
 import { NotePathService } from "./note-path";
 import { splitVaultPath } from "./vault-path";
 
-import type { JournalNotFoundError } from "../errors";
 import type { NoteCreationError } from "./note-creation";
 
 export type ConnectError =
@@ -28,6 +28,7 @@ export type ConnectError =
   | NoteRenameError
   | NoteAlreadyExistsError
   | NoteNotFoundError
+  | NoteDeleteError
   | FrontmatterError;
 
 export type DisconnectError = NoteNotFoundError | FrontmatterError;
@@ -50,27 +51,32 @@ export class NoteConnectionService {
     path: VaultPath,
     anchor: AnchorString,
     options: ConnectOptions = {},
-  ): AsyncResult<{ path: VaultPath }, ConnectError | JournalNotFoundError> {
+  ): AsyncResult<{ path: VaultPath }, ConnectError> {
     return attempt.in(this, async function* (this: NoteConnectionService) {
       // Metadata is resolved from the anchor's stored entry (incl. any endDate), so an
       // overridden slot's period metadata transfers to the new note — matching v2 connect.
       const metadata = yield* this.#frontmatter.buildMetadata(journalName, anchor);
+
+      let target = path;
+      if (options.rename || options.move) {
+        const configured = yield* this.#path.pathFor(journalName, metadata);
+        target = this.#combine(path, configured, options) as VaultPath;
+      }
 
       const occupant = this.#index.entryByAnchor(journalName, anchor);
       if (occupant.isSome() && occupant.value.path !== path) {
         if (!options.override) {
           return yield* AsyncResult.err(new AnchorOccupiedError(journalName, anchor, occupant.value.path));
         }
-        yield* this.disconnect(occupant.value.path);
+        // Override replaces the occupant. If we're relocating the incoming note onto the
+        // occupant's own path, trash the occupant (recoverable) to free the slot; otherwise
+        // just disconnect it, leaving its file in place.
+        yield* target === occupant.value.path
+          ? this.#notes.delete(occupant.value.path)
+          : this.disconnect(occupant.value.path);
       }
 
-      let target = path;
-      if (options.rename || options.move) {
-        const configured = yield* this.#path.pathFor(journalName, metadata);
-        target = this.#combine(path, configured, options) as VaultPath;
-        if (target !== path) yield* this.#notes.rename(path, target);
-      }
-
+      if (target !== path) yield* this.#notes.rename(path, target);
       yield* this.#creation.attachNote(journalName, target, metadata);
       return { path: target };
     });
