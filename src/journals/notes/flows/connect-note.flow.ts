@@ -28,7 +28,7 @@ export class ConnectNoteFlow implements Flow<{ path: VaultPath }, void, ConnectE
           }),
         )
         .with({ action: "disconnect" }, () => this.#connection.disconnect(parameters.path))
-        .exhaustive() as AsyncResult<void, ConnectError | DisconnectError>;
+        .exhaustive();
       return;
     });
   }

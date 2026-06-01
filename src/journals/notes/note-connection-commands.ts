@@ -4,7 +4,6 @@ import { Flows, UserAborted } from "@/infrastructure/flows";
 import { CommandService, WorkspaceService } from "@/infrastructure/host";
 import { LoggerFactoryToken } from "@/infrastructure/logger";
 
-import { AnchorOccupiedError } from "./errors";
 import { ConnectNoteFlow } from "./flows/connect-note.flow";
 
 export class NoteConnectionCommands {
@@ -22,17 +21,12 @@ export class NoteConnectionCommands {
     });
   }
 
-  #run(): void {
+  async #run(): Promise<void> {
     const path = this.#workspace.activeNote();
     if (path.isNone()) return;
-    void this.#flows.invoke(ConnectNoteFlow, { path: path.value }).then((result) => {
-      if (
-        result.kind === "err" &&
-        !(result.error instanceof UserAborted) &&
-        !(result.error instanceof AnchorOccupiedError)
-      ) {
-        this.#logger.error("connect-note failed", { error: result.error });
-      }
-    });
+    const result = await this.#flows.invoke(ConnectNoteFlow, { path: path.value });
+    if (result.kind === "err" && !(result.error instanceof UserAborted)) {
+      this.#logger.error("connect-note failed", { error: result.error });
+    }
   }
 }
