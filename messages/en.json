@@ -675,15 +675,14 @@
   "journal_dashboard_section_title": "Journals",
   "journal_delete_modal_title": "Remove {name}",
   "journal_delete_mode_label": "What to do with connected notes",
-  "journal_delete_mode_not_implemented_hint": "Clear and Delete modes will land with the notes-IO service.",
   "journal_delete_mode_option": [
     {
       "declarations": ["input mode"],
       "selectors": ["mode"],
       "match": {
         "mode=keep": "Keep notes",
-        "mode=clear": "Clear journal data (not yet supported)",
-        "mode=delete": "Delete notes (not yet supported)"
+        "mode=clear": "Clear journal data",
+        "mode=delete": "Delete notes"
       }
     }
   ],

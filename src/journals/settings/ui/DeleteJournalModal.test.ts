@@ -14,7 +14,7 @@ afterEach(() => cleanup());
 function mountModal(journalName: string) {
   const submit = vi.fn();
   const cancel = vi.fn();
-  const api: ModalApi<{ mode: "keep" }> = { submit, cancel };
+  const api: ModalApi<{ mode: "keep" | "clear" | "delete" }> = { submit, cancel };
   render(DeleteJournalModal, {
     props: { journalName },
     global: {
@@ -37,27 +37,29 @@ describe("deleteJournalModal definition", () => {
 });
 
 describe("DeleteJournalModal", () => {
-  it("submits with mode keep on Delete", async () => {
+  it("submits with mode keep by default on Delete", async () => {
     const { submit } = mountModal("daily");
     await userEvent.click(screen.getByText(m.common_action_delete()));
     expect(submit).toHaveBeenCalledWith({ mode: "keep" });
   });
 
-  it("renders the not-implemented hint", () => {
-    mountModal("daily");
-    expect(screen.getByText(m.journal_delete_mode_not_implemented_hint())).toBeTruthy();
+  it("submits with the selected mode on Delete", async () => {
+    const { submit } = mountModal("daily");
+    await userEvent.selectOptions(screen.getByRole("combobox"), "clear");
+    await userEvent.click(screen.getByText(m.common_action_delete()));
+    expect(submit).toHaveBeenCalledWith({ mode: "clear" });
   });
 
-  it("renders the clear option as disabled", () => {
+  it("renders the clear option as enabled", () => {
     mountModal("daily");
     const option = screen.getByText(m.journal_delete_mode_option({ mode: "clear" }));
-    expect(option.hasAttribute("disabled")).toBe(true);
+    expect(option.hasAttribute("disabled")).toBe(false);
   });
 
-  it("renders the delete option as disabled", () => {
+  it("renders the delete option as enabled", () => {
     mountModal("daily");
     const option = screen.getByText(m.journal_delete_mode_option({ mode: "delete" }));
-    expect(option.hasAttribute("disabled")).toBe(true);
+    expect(option.hasAttribute("disabled")).toBe(false);
   });
 
   it("renders the keep option as enabled", () => {

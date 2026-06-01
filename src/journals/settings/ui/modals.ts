@@ -23,7 +23,7 @@ export const dateModificationsModal = defineModal()({
   title: () => m.variable_modifications_modal_title(),
 });
 
-export const deleteJournalModal = defineModal<{ mode: "keep" }>()({
+export const deleteJournalModal = defineModal<{ mode: "keep" | "clear" | "delete" }>()({
   component: DeleteJournalModal,
   title: ({ journalName }: { journalName: string }) => m.journal_delete_modal_title({ name: journalName }),
 });
