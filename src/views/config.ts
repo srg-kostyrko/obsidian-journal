@@ -31,6 +31,7 @@ export const viewSchema = v.object({
   icon: v.pipe(v.string(), v.minLength(1)),
   defaultShelf: v.nullable(v.string()),
   showInRibbon: v.boolean(),
+  leaf: v.optional(v.picklist(["left", "right", "tab"]), "right"),
   blocks: v.array(viewBlockInstanceSchema),
 });
 
@@ -46,6 +47,7 @@ export const viewsCollection = defineCollection(
     icon: "calendar-days",
     defaultShelf: null,
     showInRibbon: false,
+    leaf: "right" as const,
     blocks: [],
   }),
   { seed: () => ({ [DEFAULT_CALENDAR_VIEW_ID]: defaultCalendarView() }) },

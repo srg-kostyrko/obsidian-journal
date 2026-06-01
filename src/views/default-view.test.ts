@@ -57,4 +57,8 @@ describe("defaultCalendarView", () => {
     const period = toolbarItems().find((item) => item.key === "period-buttons");
     expect(period!.config).toEqual({ week: false, month: true, quarter: true, year: true });
   });
+
+  it("seeds the default calendar view into the right sidebar", () => {
+    expect(defaultCalendarView().leaf).toBe("right");
+  });
 });

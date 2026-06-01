@@ -15,6 +15,7 @@ function makeView(id: string, name: string): View {
     icon: "calendar-days",
     defaultShelf: null,
     showInRibbon: false,
+    leaf: "right",
     blocks: [],
   };
 }

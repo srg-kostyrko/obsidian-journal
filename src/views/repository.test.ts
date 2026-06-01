@@ -13,6 +13,7 @@ function view(id: string, overrides: Partial<View> = {}): View {
     icon: "calendar-days",
     defaultShelf: null,
     showInRibbon: false,
+    leaf: "right",
     blocks: [],
     ...overrides,
   };

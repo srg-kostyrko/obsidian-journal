@@ -30,6 +30,11 @@ describe("viewsCollection", () => {
       expect(seed.showInRibbon).toBe(false);
     });
 
+    it("defaults a new view's leaf placement to right", () => {
+      const created = viewsCollection.defaultItem("11111111-1111-4111-8111-111111111111");
+      expect(created.leaf).toBe("right");
+    });
+
     it("seeds icon as calendar-days", () => {
       const seed = viewsCollection.defaultItem("abc");
       expect(seed.icon).toBe("calendar-days");

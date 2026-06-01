@@ -59,6 +59,7 @@ export class ViewsService {
         icon: input.icon ?? "calendar-days",
         defaultShelf: input.defaultShelf ?? null,
         showInRibbon: input.showInRibbon ?? false,
+        leaf: "right",
         blocks: [],
       };
       return yield* this.#repo.create(view);

@@ -25,6 +25,7 @@ export function defaultCalendarView(): View {
     icon: "calendar-days",
     defaultShelf: null,
     showInRibbon: true,
+    leaf: "right",
     blocks: [
       {
         id: TOOLBAR_BLOCK_ID,
