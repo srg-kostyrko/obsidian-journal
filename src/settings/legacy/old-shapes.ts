@@ -107,19 +107,19 @@ export interface OldPluginSettings {
   };
 
   calendarView: {
-    display: "month" | "week" | "day";
+    display?: "month" | "week" | "day";
 
     leaf: "left" | "right";
     weeks: "none" | "left" | "right";
 
-    todayMode: "navigate" | "create" | "switch_date";
-    pickMode: "navigate" | "create" | "switch_date";
+    todayMode?: "navigate" | "create" | "switch_date";
+    pickMode?: "navigate" | "create" | "switch_date";
 
-    todayStyle: {
+    todayStyle?: {
       color: ColorSettings;
       background: ColorSettings;
     };
-    activeStyle: {
+    activeStyle?: {
       color: ColorSettings;
       background: ColorSettings;
     };

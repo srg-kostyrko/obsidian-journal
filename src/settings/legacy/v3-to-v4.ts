@@ -106,8 +106,8 @@ function patchToolbarModes(toolbar: ViewBlockInstance, cv: NonNullable<OldPlugin
   if (!Array.isArray(items)) return;
   for (const item of items as ToolbarItem[]) {
     const action = item.config?.action;
-    if (action?.type === "current") action.mode = mapMode(cv.todayMode);
-    if (action?.type === "pick-date") action.mode = mapMode(cv.pickMode);
+    if (action?.type === "current" && cv.todayMode !== undefined) action.mode = mapMode(cv.todayMode);
+    if (action?.type === "pick-date" && cv.pickMode !== undefined) action.mode = mapMode(cv.pickMode);
   }
 }
 
