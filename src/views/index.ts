@@ -1,5 +1,6 @@
 export type { BlockInstanceId, View, ViewBlockInstance, ViewId } from "./config";
 export { viewSchema, viewsCollection } from "./config";
+export { DEFAULT_CALENDAR_VIEW_ID, defaultCalendarView } from "./default-view";
 export { defineViewBlock } from "./define-view-block";
 export type { ViewBlockDefinition, ViewBlockDefinitionInput, ViewBlockProps } from "./define-view-block";
 export { defineToolbarItem } from "./define-toolbar-item";

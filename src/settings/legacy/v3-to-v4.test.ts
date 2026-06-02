@@ -1,0 +1,137 @@
+import { describe, expect, it } from "vitest";
+
+import type { View } from "@/views";
+import { DEFAULT_CALENDAR_VIEW_ID } from "@/views";
+
+import { v3ToV4Migration } from "./v3-to-v4";
+
+interface ToolbarItem {
+  config?: { action?: { type?: string; mode?: string } };
+}
+
+function monolithV3() {
+  return {
+    version: 3,
+    journals: {
+      "My Journal Day": {
+        name: "My Journal Day",
+        write: { type: "day" },
+        confirmCreation: false,
+        autoCreate: false,
+        nameTemplate: "{{date}}",
+        dateFormat: "YYYY-MM-DD",
+        folder: "",
+        templates: [],
+        start: "",
+        end: { type: "never" },
+        index: { enabled: false, anchorDate: "", anchorIndex: 1, allowBefore: false, type: "increment", resetAfter: 0 },
+        commands: [],
+        decorations: [],
+        navBlock: { type: "create", rows: [], decorateWholeBlock: false },
+        calendarViewBlock: { rows: [], decorateWholeBlock: false },
+        frontmatter: {
+          dateField: "journal-date",
+          addStartDate: false,
+          startDateField: "journal-start-date",
+          addEndDate: false,
+          endDateField: "journal-end-date",
+          indexField: "journal-index",
+        },
+      },
+    },
+    shelves: { "My Journal": { name: "My Journal", journals: ["My Journal Day"], commands: [] } },
+    commands: [
+      { name: "Open today's note", writeType: "day", type: "same", openMode: "tab", showInRibbon: false, icon: "" },
+    ],
+    calendar: { dow: 1, doy: 4, global: false },
+    calendarView: {
+      display: "month",
+      leaf: "left",
+      weeks: "left",
+      todayMode: "create",
+      pickMode: "navigate",
+      todayStyle: { color: { type: "theme", name: "a" }, background: { type: "transparent" } },
+      activeStyle: { color: { type: "theme", name: "b" }, background: { type: "transparent" } },
+    },
+    openOnStartup: "My Journal Day",
+    pendingNoteMigration: [{ oldJournalId: "cal", kind: "calendar", sectionToName: { day: "My Journal Day" } }],
+  };
+}
+
+describe("v3ToV4Migration", () => {
+  it("targets version 3 -> 4", () => {
+    expect(v3ToV4Migration.fromVersion).toBe(3);
+    expect(v3ToV4Migration.toVersion).toBe(4);
+  });
+
+  it("reshapes a journal into the new config shape", () => {
+    const out = v3ToV4Migration.migrate(monolithV3());
+    const journals = Object.values(out.journals as Record<string, Record<string, unknown>>);
+    expect(journals).toHaveLength(1);
+    const journal = journals[0];
+    expect(journal.timeline).toEqual({ start: "", end: { kind: "never" } });
+    expect(journal.numbering).toMatchObject({
+      enabled: false,
+      sources: [{ variable: "index", frontmatterKey: "journal-index", anchorValue: 1, reset: { kind: "never" } }],
+    });
+    expect(journal.intervalBlock).toEqual({ type: "create", rows: [], decorateWholeBlock: false });
+    expect(journal).not.toHaveProperty("start");
+    expect(journal).not.toHaveProperty("index");
+  });
+
+  it("maps a plugin command to an all-target command", () => {
+    const out = v3ToV4Migration.migrate(monolithV3());
+    const cmd = Object.values(out.commands as Record<string, Record<string, unknown>>)[0];
+    expect(cmd.target).toEqual({ kind: "all", writeType: "day" });
+    expect(cmd.context).toBe("today");
+  });
+
+  it("maps a custom-week calendar to the custom mode", () => {
+    const out = v3ToV4Migration.migrate(monolithV3());
+    expect(out.calendar).toEqual({ mode: "custom", dow: 1, doy: 4, global: false });
+  });
+
+  it("maps the locale sentinel to locale mode", () => {
+    const data = monolithV3();
+    data.calendar = { dow: -1, doy: 1, global: false };
+    const out = v3ToV4Migration.migrate(data);
+    expect(out.calendar).toEqual({ mode: "locale" });
+  });
+
+  it("moves calendar styles into the appearance slice", () => {
+    const out = v3ToV4Migration.migrate(monolithV3());
+    expect(out.appearance).toMatchObject({ today: { color: { type: "theme", name: "a" } } });
+  });
+
+  it("patches the seeded default view's leaf, weeks and button modes", () => {
+    const out = v3ToV4Migration.migrate(monolithV3());
+    const view = (out.views as Record<string, View>)[DEFAULT_CALENDAR_VIEW_ID];
+    expect(view.leaf).toBe("left");
+    const monthBlock = view.blocks.find((b) => b.key === "month-calendar");
+    expect(monthBlock?.config.weeks).toBe("left");
+    const toolbar = view.blocks.find((b) => b.key === "toolbar");
+    const items = toolbar?.config.items as ToolbarItem[];
+    expect(items.find((i) => i.config?.action?.type === "current")?.config?.action?.mode).toBe("create");
+    expect(items.find((i) => i.config?.action?.type === "pick-date")?.config?.action?.mode).toBe("navigate");
+  });
+
+  it("maps openOnStartup into the startup slice", () => {
+    const out = v3ToV4Migration.migrate(monolithV3());
+    expect(out.startup).toEqual({ journalName: "My Journal Day" });
+  });
+
+  it("carries the pendingNoteMigration marker forward", () => {
+    const out = v3ToV4Migration.migrate(monolithV3());
+    expect(out.pendingNoteMigration).toEqual([
+      { oldJournalId: "cal", kind: "calendar", sectionToName: { day: "My Journal Day" } },
+    ]);
+  });
+
+  it("drops legacy-only keys", () => {
+    const data = { ...monolithV3(), ui: { calendarShelf: null }, useShelves: true, dismissedNotifications: ["x"] };
+    const out = v3ToV4Migration.migrate(data);
+    expect(out).not.toHaveProperty("ui");
+    expect(out).not.toHaveProperty("useShelves");
+    expect(out).not.toHaveProperty("dismissedNotifications");
+  });
+});
