@@ -1,6 +1,8 @@
 import * as v from "valibot";
 
-const timelineModeSchema = v.picklist(["week", "month", "quarter", "calendar"] as const);
+export const timelineModes = ["week", "month", "quarter", "calendar"] as const;
+
+const timelineModeSchema = v.picklist(timelineModes);
 
 export const timelineBlockSchema = v.object({
   mode: v.optional(timelineModeSchema),
