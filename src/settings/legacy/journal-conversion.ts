@@ -7,7 +7,7 @@ import {
 
 import type { CalendarConfig, IntervalConfig, OldJournalSettings } from "./old-shapes";
 
-export const DEFAULT_RIBBON_TOOLTIPS = {
+const DEFAULT_RIBBON_TOOLTIPS = {
   day: "Open today's note",
   week: "Open this week's note",
   month: "Open this month's note",
