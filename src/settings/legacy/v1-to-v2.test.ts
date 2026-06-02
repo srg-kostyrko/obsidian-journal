@@ -100,4 +100,21 @@ describe("v1ToV2Migration", () => {
     });
     expect(marker).toContainEqual({ oldJournalId: "int", kind: "interval", name: "Sprints" });
   });
+
+  it("de-duplicates journal names across calendar and interval journals", () => {
+    const v1 = v1Fixture();
+    const cal = v1.journals.cal;
+    if (cal.type !== "calendar") throw new Error("fixture calendar journal missing");
+    cal.week = section(false);
+    const int = v1.journals.int;
+    if (int.type !== "interval") throw new Error("fixture interval journal missing");
+    int.name = "My Journal Day";
+
+    const out = v1ToV2Migration.migrate(v1 as unknown as Record<string, unknown>);
+
+    const journals = out.journals as Record<string, unknown>;
+    expect(Object.keys(journals)).toEqual(expect.arrayContaining(["My Journal Day", "My Journal Day 2"]));
+    const marker = out.pendingNoteMigration as Record<string, unknown>[];
+    expect(marker).toContainEqual({ oldJournalId: "int", kind: "interval", name: "My Journal Day 2" });
+  });
 });
