@@ -182,6 +182,14 @@ export default [
     },
   },
   {
+    files: ["src/settings/legacy/old-shapes.ts"],
+    rules: {
+      // Frozen snapshot of legacy persisted shapes; `calendar.global` is a data
+      // field name, not the JS global object the rule means to catch.
+      "obsidianmd/no-global-this": "off",
+    },
+  },
+  {
     files: ["**/ui/modals.ts", "src/infrastructure/host/modals/**/*.ts"],
     rules: {
       "no-restricted-syntax": [
