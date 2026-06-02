@@ -2,6 +2,7 @@ import { m } from "@/i18n";
 import { defineModal } from "@/infrastructure/host/modals";
 
 import AddJournalModal from "./AddJournalModal.vue";
+import CodeBlockReferenceModal from "./CodeBlockReferenceModal.vue";
 import DateModificationsModal from "./DateModificationsModal.vue";
 import DeleteJournalModal from "./DeleteJournalModal.vue";
 import EditFrontmatterFieldModal from "./EditFrontmatterFieldModal.vue";
@@ -63,4 +64,10 @@ export interface VariableReferenceModalProps {
 export const variableReferenceModal = defineModal()({
   component: VariableReferenceModal,
   title: (_: VariableReferenceModalProps) => m.journal_edit_variable_reference_modal_title(),
+});
+
+export const codeBlockReferenceModal = defineModal()({
+  component: CodeBlockReferenceModal,
+  title: (_: { journalName: string }) => m.journal_edit_code_block_reference_modal_title(),
+  width: 780,
 });

@@ -3,7 +3,8 @@ import { onUnmounted } from "vue";
 import { CalendarDate, type AnchorString } from "@/calendar";
 import { useService } from "@/infrastructure/di";
 import type { VaultPath } from "@/infrastructure/host";
-import { CycleService, JournalsIndex } from "@/journals";
+import { CycleService } from "@/journals/cycle";
+import { JournalsIndex } from "@/journals/journals-index";
 
 let counter = 0;
 
