@@ -25,6 +25,7 @@ import { EditFrontmatterFieldFlow } from "../flows/edit-frontmatter-field.flow";
 import { EditSequencePropertyFlow } from "../flows/edit-sequence-property.flow";
 import { RenameJournalFlow } from "../flows/rename-journal.flow";
 
+import CodeBlockReferenceHint from "./CodeBlockReferenceHint.vue";
 import DateFormatPreview from "./DateFormatPreview.vue";
 import FileInput from "./FileInput.vue";
 import FolderInput from "./FolderInput.vue";
@@ -277,6 +278,7 @@ function editSequenceKey(): void {
             :has-cycle="hasCycle"
             :numbering-variable-names="numberingVariableNames"
           />
+          <CodeBlockReferenceHint :journal-name="journalName" />
           <TemplaterSupportHint />
         </template>
       </UiSettingRow>
