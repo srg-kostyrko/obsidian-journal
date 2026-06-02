@@ -1,7 +1,7 @@
 import { describe, expect, it } from "vitest";
 
 import type { View } from "@/views";
-import { DEFAULT_CALENDAR_VIEW_ID } from "@/views";
+import { DEFAULT_CALENDAR_VIEW_ID } from "@/views/default-view";
 
 import { v3ToV4Migration } from "./v3-to-v4";
 
@@ -125,6 +125,28 @@ describe("v3ToV4Migration", () => {
     expect(out.pendingNoteMigration).toEqual([
       { oldJournalId: "cal", kind: "calendar", sectionToName: { day: "My Journal Day" } },
     ]);
+  });
+
+  it("maps switch_date today/pick modes to select-only buttons", () => {
+    const data = monolithV3();
+    data.calendarView.todayMode = "switch_date";
+    data.calendarView.pickMode = "switch_date";
+    const out = v3ToV4Migration.migrate(data);
+    const view = (out.views as Record<string, View>)[DEFAULT_CALENDAR_VIEW_ID];
+    const items = (view.blocks.find((b) => b.key === "toolbar")!.config as { items: ToolbarItem[] }).items;
+    expect(items.find((i) => i.config?.action?.type === "current")!.config!.action!.mode).toBe("select-only");
+    expect(items.find((i) => i.config?.action?.type === "pick-date")!.config!.action!.mode).toBe("select-only");
+  });
+
+  it("swaps the month-calendar block for a week-calendar block when display is week", () => {
+    const data = monolithV3();
+    data.calendarView.display = "week";
+    const out = v3ToV4Migration.migrate(data);
+    const view = (out.views as Record<string, View>)[DEFAULT_CALENDAR_VIEW_ID];
+    expect(view.blocks.find((b) => b.key === "month-calendar")).toBeUndefined();
+    const week = view.blocks.find((b) => b.key === "week-calendar");
+    expect(week).toBeDefined();
+    expect(week!.config).toEqual({ before: 0, after: 0, hideWeekends: false, weeks: "left" });
   });
 
   it("drops legacy-only keys", () => {

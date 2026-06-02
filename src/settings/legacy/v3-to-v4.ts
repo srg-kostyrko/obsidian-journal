@@ -3,7 +3,7 @@ import { match } from "ts-pattern";
 
 import type { Migration } from "@/settings";
 import type { View, ViewBlockInstance } from "@/views";
-import { DEFAULT_CALENDAR_VIEW_ID, defaultCalendarView } from "@/views";
+import { DEFAULT_CALENDAR_VIEW_ID, defaultCalendarView } from "@/views/default-view";
 
 import type { OldJournalCommand, OldJournalSettings, OldPluginCommand, OldPluginSettings } from "./old-shapes";
 
@@ -128,7 +128,7 @@ function reshapeViews(cv: OldPluginSettings["calendarView"] | undefined): Record
     view.blocks[index] = {
       id: monthBlock.id,
       key: "week-calendar",
-      config: { before: 0, after: 0, hideWeekends: false, weeks: cv.weeks ?? "left" },
+      config: { before: 0, after: 0, hideWeekends: false, weeks: cv.weeks },
     };
   }
 
