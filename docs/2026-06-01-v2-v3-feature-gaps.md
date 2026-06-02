@@ -62,9 +62,9 @@ reading code, not inferred.
   - v2: `calendarView.weeks: "none" | "left" | "right"`.
   - v3: per-block `weeks: "none" | "left" | "right"` (default `left`) on the month/week-calendar blocks; `NotesMonthView`/`NotesWeekView` drive visibility + position from it (`data-weeks`), superseding the journal-presence auto-hide (a week number with no week journal now shows as an inactive label, matching v2). The `calendar-timeline` code block gained its own `weeks` field (source-authored) threaded through all four modes, so its week column is author-controllable too.
 
-- [ ] **11. Code-block reference help modal** — gone.
+- [x] **11. Code-block reference help modal** — ported.
   - v2: `CodeBlockReference.modal.vue` (+ `CodeBlockReferenceHint.vue`) — in-settings syntax docs, timeline mode list, home-block options, alias notes, click-to-copy snippets, live previews.
-  - v3: no reference/help surface. Only modal under v3 code-blocks is `editNavBlockRowModal`.
+  - v3: `src/journals/settings/ui/` — `CodeBlockReferenceHint` (in the Templates section, between the variable-reference and Templater-support hints, matching v2 placement) opens `codeBlockReferenceModal` → `CodeBlockReferenceModal`. Documents `journal-nav` (+ `calendar-nav`/`interval-nav` aliases), `calendar-timeline` (modes from the shared `timelineModes` + the v3 `weeks` option), and `journals-home` (show/separator/scale/shelf), with click-to-copy `CodeBlockSnippet`s and live previews rendered via `use-code-block-preview-path` (registers a synthetic `JournalsIndex` entry at today's anchor for the open journal, unregistered on close — v2-literal). Delta: registering the synthetic entry at today's anchor temporarily repoints that anchor's index mapping while the modal is open (v2's latent behavior, explicitly chosen).
 
 ---
 
