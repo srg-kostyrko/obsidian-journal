@@ -20,7 +20,7 @@ import { VaultSubscriptionService } from "@/journals/vault-subscription";
 import { notesCalendarModule } from "@/notes-calendar";
 import { calendarAppearanceModule } from "@/notes-calendar/appearance/module";
 import { settingsModule, SettingsService } from "@/settings";
-import { legacyMigrationsModule } from "@/settings/legacy";
+import { DataMigrationService, legacyMigrationsModule } from "@/settings/legacy";
 import { shelvesModule } from "@/shelves";
 import { templatesModule } from "@/templates";
 import { viewsModule } from "@/views";
@@ -63,6 +63,7 @@ export default class JournalPlugin extends Plugin {
     await container.autoLoad();
 
     await container.resolve(VaultSubscriptionService).initialize();
+    await container.resolve(DataMigrationService).initialize();
     await container.resolve(AutoAttachService).initialize();
     await container.resolve(AutoCreateService).initialize();
     await container.resolve(StartupOpenService).initialize();
