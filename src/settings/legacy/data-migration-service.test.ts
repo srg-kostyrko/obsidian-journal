@@ -124,24 +124,30 @@ describe("DataMigrationService", () => {
 
   it("moves the interval index into the journal's configured index field", async () => {
     const marker: PendingNoteMigration = { oldJournalId: "int", kind: "interval", name: "Sprints" };
+    const sprintsConfig = journalDefaultsFor(
+      { type: "custom", every: "week", duration: 2, anchorDate: "2022-02-01" as AnchorString },
+      "Sprints",
+    );
+    sprintsConfig.numbering.sources[0].frontmatterKey = "sprint-number";
     const { service, notesByPath } = build({
       notes: {
         "sprint.md": {
           journal: "int",
-          "journal-start-date": "2022-01-01",
+          "journal-start-date": "2022-02-01",
           "journal-interval-index": 1,
         },
       },
       markers: [marker],
-      configs: { Sprints: config() },
-      anchors: { Sprints: "2022-01-01" as AnchorString },
+      configs: { Sprints: sprintsConfig },
+      anchors: { Sprints: "2022-02-01" as AnchorString },
     });
 
     await service.initialize();
 
     const result = notesByPath.get("sprint.md");
-    expect(result?.["journal-index"]).toBe(1);
+    expect(result?.["sprint-number"]).toBe(1);
     expect(result).not.toHaveProperty("journal-interval-index");
+    expect(result).not.toHaveProperty("journal-index");
   });
 
   it("strips all journal keys when the anchor cannot be resolved", async () => {
