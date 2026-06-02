@@ -59,7 +59,7 @@ const stubToolbarItemDefinition = {
 
 async function setup(blocks: { id: string; key: string; config: Record<string, unknown> }[]) {
   const raw = {
-    version: 3,
+    version: 4,
     views: {
       [viewId]: { id: viewId, name: "Weekly", icon: "calendar-days", defaultShelf: null, showInRibbon: false, blocks },
     },

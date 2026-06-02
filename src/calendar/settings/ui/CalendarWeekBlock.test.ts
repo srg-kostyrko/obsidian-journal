@@ -17,7 +17,7 @@ import { weekPresetPickerModal } from "./modals";
 import type { CalendarSliceState } from "../slice";
 
 function setupContainer(initial?: CalendarSliceState) {
-  const raw = initial ? { version: 3, calendar: initial } : undefined;
+  const raw = initial ? { version: 4, calendar: initial } : undefined;
   const settings = createSettingsService({ slices: [calendarSlice], raw });
   const container = settings.container;
 

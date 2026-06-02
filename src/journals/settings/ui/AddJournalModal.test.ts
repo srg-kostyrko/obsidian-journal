@@ -39,7 +39,7 @@ function makeJournal(name: string) {
 }
 
 async function mountModal(initial?: { journals: Record<string, unknown> }) {
-  const raw = initial ? { version: 3, ...initial } : { version: 3, journals: {} };
+  const raw = initial ? { version: 4, ...initial } : { version: 4, journals: {} };
   const { service: settings, container } = createSettingsService({
     collections: [journalConfigCollection],
     raw,

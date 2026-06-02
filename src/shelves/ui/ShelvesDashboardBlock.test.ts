@@ -26,7 +26,7 @@ afterEach(() => cleanup());
 async function setup(shelves: Record<string, { name: string; journals: string[] }> = {}) {
   const { service: settings, container } = createSettingsService({
     collections: [shelvesCollection],
-    raw: { version: 3, shelves },
+    raw: { version: 4, shelves },
   });
   await settings.initialize();
   container.register(ModalService).useValue(new FakeModalService() as unknown as ModalService);

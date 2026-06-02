@@ -51,7 +51,7 @@ const shelfSelectorDefinition = {
 
 async function setup(items: { id: BlockInstanceId; key: string; config: Record<string, unknown> }[]) {
   const raw = {
-    version: 3,
+    version: 4,
     views: {
       [viewId]: {
         id: viewId,

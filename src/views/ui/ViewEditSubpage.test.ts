@@ -30,7 +30,7 @@ const viewId = "11111111-1111-1111-1111-111111111111" as ViewId;
 
 async function setup() {
   const raw = {
-    version: 3,
+    version: 4,
     views: {
       [viewId]: {
         id: viewId,

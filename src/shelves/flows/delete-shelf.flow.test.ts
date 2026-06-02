@@ -31,7 +31,7 @@ async function build(raw?: unknown) {
 describe("DeleteShelfFlow", () => {
   it("removes the shelf and moves its journals to the chosen destination", async () => {
     const raw = {
-      version: 3,
+      version: 4,
       shelves: {
         Work: { name: "Work", journals: ["daily"] },
         Personal: { name: "Personal", journals: [] },
@@ -46,7 +46,7 @@ describe("DeleteShelfFlow", () => {
   });
 
   it("leaves the shelf in place when the modal is cancelled", async () => {
-    const raw = { version: 3, shelves: { Work: { name: "Work", journals: [] } } };
+    const raw = { version: 4, shelves: { Work: { name: "Work", journals: [] } } };
     const { flows, modals, repo } = await build(raw);
     const promise = flows.invoke(DeleteShelfFlow, { shelfName: "Work" });
     modals.lastOpen().cancel();

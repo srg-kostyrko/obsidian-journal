@@ -75,7 +75,7 @@ function makeJournal(name: string, overrides: Partial<Record<string, unknown>> =
 
 async function setup(raw?: unknown) {
   const initial = raw ?? {
-    version: 3,
+    version: 4,
     journals: { daily: makeJournal("daily") },
   };
   const { service: settings, container } = createSettingsService({
@@ -198,7 +198,7 @@ describe("JournalEditSubpage", () => {
 
   it("hides the allow-before toggle when start date is set", async () => {
     const initial = {
-      version: 3,
+      version: 4,
       journals: {
         daily: makeJournal("daily", {
           timeline: { start: "2024-01-01", end: { kind: "never" } },
@@ -237,7 +237,7 @@ describe("JournalEditSubpage", () => {
 
   it("invokes EditSequencePropertyFlow when the sequence property pencil is clicked", async () => {
     const initial = {
-      version: 3,
+      version: 4,
       journals: {
         daily: makeJournal("daily", {
           numbering: {
@@ -282,7 +282,7 @@ describe("JournalEditSubpage", () => {
   describe("timeline.end.date DatePicker", () => {
     it("writes the picked date to timeline.end.date", async () => {
       const initial = {
-        version: 3,
+        version: 4,
         journals: {
           daily: makeJournal("daily", { timeline: { start: "2024-01-01", end: { kind: "date", date: "2024-06-01" } } }),
         },
@@ -300,7 +300,7 @@ describe("JournalEditSubpage", () => {
 
     it("bounds the end-date picker to start when start is set", async () => {
       const initial = {
-        version: 3,
+        version: 4,
         journals: {
           daily: makeJournal("daily", {
             timeline: { start: "2025-03-15", end: { kind: "date", date: "2025-06-01" } },
@@ -321,7 +321,7 @@ describe("JournalEditSubpage", () => {
   describe("numbering anchor DatePicker", () => {
     it("writes the picked date to numbering.anchorDate", async () => {
       const initial = {
-        version: 3,
+        version: 4,
         journals: {
           daily: makeJournal("daily", {
             timeline: { start: "2024-01-01", end: { kind: "never" } },
@@ -390,7 +390,7 @@ describe("JournalEditSubpage", () => {
 
     it("shows the invertibility warning for non-invertible name templates", async () => {
       const initial = {
-        version: 3,
+        version: 4,
         journals: { daily: makeJournal("daily", { nameTemplate: "{{date}}-{{mystery}}" }) },
       };
       const { container } = await setup(initial);
@@ -407,7 +407,7 @@ describe("JournalEditSubpage", () => {
 
     it("shows the move-to-folder recommendation when nameTemplate contains /", async () => {
       const initial = {
-        version: 3,
+        version: 4,
         journals: { daily: makeJournal("daily", { nameTemplate: "year/{{date}}" }) },
       };
       const { container } = await setup(initial);
@@ -417,7 +417,7 @@ describe("JournalEditSubpage", () => {
 
     it("apply-recommendation moves the path prefix from nameTemplate to folder", async () => {
       const initial = {
-        version: 3,
+        version: 4,
         journals: { daily: makeJournal("daily", { nameTemplate: "year/{{date}}", folder: "" }) },
       };
       const { container, journalsRepo } = await setup(initial);
@@ -449,7 +449,7 @@ describe("JournalEditSubpage", () => {
 
   it("shows the move-to-folder recommendation when dateFormat contains /", async () => {
     const initial = {
-      version: 3,
+      version: 4,
       journals: { daily: makeJournal("daily", { dateFormat: "YYYY/MM/DD" }) },
     };
     const { container } = await setup(initial);
@@ -459,7 +459,7 @@ describe("JournalEditSubpage", () => {
 
   it("apply-recommendation moves the path prefix from dateFormat to folder", async () => {
     const initial = {
-      version: 3,
+      version: 4,
       journals: { daily: makeJournal("daily", { dateFormat: "YYYY/MM/DD", folder: "" }) },
     };
     const { container, journalsRepo } = await setup(initial);
@@ -474,7 +474,7 @@ describe("JournalEditSubpage", () => {
   describe("templates collapsible", () => {
     it("renders the section heading with count", async () => {
       const initial = {
-        version: 3,
+        version: 4,
         journals: { daily: makeJournal("daily", { templates: ["a.md", "b.md"] }) },
       };
       const { container } = await setup(initial);
@@ -493,7 +493,7 @@ describe("JournalEditSubpage", () => {
 
     it("removes an entry when the trash button is clicked", async () => {
       const initial = {
-        version: 3,
+        version: 4,
         journals: { daily: makeJournal("daily", { templates: ["templates/a.md"] }) },
       };
       const { container, journalsRepo } = await setup(initial);
@@ -505,7 +505,7 @@ describe("JournalEditSubpage", () => {
 
     it("renders the template path preview only when the path contains a variable", async () => {
       const initial = {
-        version: 3,
+        version: 4,
         journals: {
           daily: makeJournal("daily", {
             templates: ["{{date:YYYY}}-template.md", "static-template.md"],

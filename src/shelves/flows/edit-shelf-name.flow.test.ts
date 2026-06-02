@@ -38,7 +38,7 @@ describe("EditShelfNameFlow", () => {
   });
 
   it("renames an existing shelf and keeps its journals", async () => {
-    const raw = { version: 3, shelves: { Work: { name: "Work", journals: ["daily"] } } };
+    const raw = { version: 4, shelves: { Work: { name: "Work", journals: ["daily"] } } };
     const { flows, modals, repo } = await build(raw);
     const promise = flows.invoke(EditShelfNameFlow, { shelfName: "Work" });
     modals.lastOpen<unknown, string>().submit("Office");

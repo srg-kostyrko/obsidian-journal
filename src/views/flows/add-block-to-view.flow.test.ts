@@ -29,7 +29,7 @@ const dividerDefinition = {
 
 async function build() {
   const raw = {
-    version: 3,
+    version: 4,
     views: {
       [id]: { id, name: "Weekly", icon: "calendar-days", defaultShelf: null, showInRibbon: false, blocks: [] },
     },

@@ -41,7 +41,7 @@ const shelfSelectorDefinition = {
 
 async function build(withDefinition = true) {
   const raw = {
-    version: 3,
+    version: 4,
     views: {
       [viewId]: {
         id: viewId,

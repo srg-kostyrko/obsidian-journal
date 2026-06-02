@@ -53,7 +53,7 @@ function build(
 describe("SettingsService", () => {
   describe("initialize — happy path", () => {
     it("hydrates a slice from a stored root", async () => {
-      const { service } = build({ raw: { version: 3, calendar: { dow: 0, global: false } } });
+      const { service } = build({ raw: { version: 4, calendar: { dow: 0, global: false } } });
       const init = await service.initialize();
       expectOk(init);
       expect(service.getSlice(calendarSlice).state.dow).toBe(0);
@@ -68,12 +68,12 @@ describe("SettingsService", () => {
     });
 
     it("treats a missing root version as 0 and runs migrations up to current", async () => {
-      const bumpToV3: Migration = {
+      const bumpToCurrent: Migration = {
         fromVersion: 0,
-        toVersion: 3,
+        toVersion: 4,
         migrate: (r) => ({ ...r, calendar: { dow: 5, global: true } }),
       };
-      const { service } = build({ raw: { calendar: { dow: 0, global: false } }, migrations: [bumpToV3] });
+      const { service } = build({ raw: { calendar: { dow: 0, global: false } }, migrations: [bumpToCurrent] });
       const init = await service.initialize();
       expectOk(init);
       expect(service.getSlice(calendarSlice).state.dow).toBe(5);
@@ -82,7 +82,7 @@ describe("SettingsService", () => {
 
   describe("initialize — slice validation fallback", () => {
     it("falls back to defaults when a stored slice fails validation", async () => {
-      const { service } = build({ raw: { version: 3, calendar: { dow: "not-a-number" } } });
+      const { service } = build({ raw: { version: 4, calendar: { dow: "not-a-number" } } });
       await service.initialize();
       expect(service.getSlice(calendarSlice).state.dow).toBe(1);
     });
@@ -153,13 +153,13 @@ describe("SettingsService", () => {
     });
 
     it("seeds a collection when its key is absent from stored data", async () => {
-      const { service } = build({ slices: [], collections: [seededCollection], raw: { version: 3 } });
+      const { service } = build({ slices: [], collections: [seededCollection], raw: { version: 4 } });
       await service.initialize();
       expect(service.recordOf(seededCollection)).toEqual({ alpha: { name: "seeded-alpha" } });
     });
 
     it("does not seed when the collection key is present but empty", async () => {
-      const { service } = build({ slices: [], collections: [seededCollection], raw: { version: 3, seeded: {} } });
+      const { service } = build({ slices: [], collections: [seededCollection], raw: { version: 4, seeded: {} } });
       await service.initialize();
       expect(service.recordOf(seededCollection)).toEqual({});
     });
@@ -174,7 +174,7 @@ describe("SettingsService", () => {
     });
 
     it("coalesces multiple mutations within the debounce window into one save", async () => {
-      const { service, data } = build({ raw: { version: 3 } });
+      const { service, data } = build({ raw: { version: 4 } });
       await service.initialize();
       const saveSpy = vi.spyOn(data, "save");
       const slice = service.getSlice(calendarSlice);
@@ -187,7 +187,7 @@ describe("SettingsService", () => {
     });
 
     it("does not save during the debounce window", async () => {
-      const { service, data } = build({ raw: { version: 3 } });
+      const { service, data } = build({ raw: { version: 4 } });
       await service.initialize();
       const saveSpy = vi.spyOn(data, "save");
       service.getSlice(calendarSlice).state.dow = 2;
@@ -205,7 +205,7 @@ describe("SettingsService", () => {
     });
 
     it("keeps state in memory when save fails", async () => {
-      const { service, data } = build({ raw: { version: 3 } });
+      const { service, data } = build({ raw: { version: 4 } });
       await service.initialize();
       vi.spyOn(data, "save").mockReturnValue(AsyncResult.err(new PluginDataIOError("save", new Error("disk"))));
       service.getSlice(calendarSlice).state.dow = 7;
@@ -224,7 +224,7 @@ describe("SettingsService", () => {
     });
 
     it("cancels a pending save so it does not fire after dispose", async () => {
-      const { service, data } = build({ raw: { version: 3 } });
+      const { service, data } = build({ raw: { version: 4 } });
       await service.initialize();
       const saveSpy = vi.spyOn(data, "save");
       service.getSlice(calendarSlice).state.dow = 9;
@@ -234,7 +234,7 @@ describe("SettingsService", () => {
     });
 
     it("stops reacting to mutations after dispose", async () => {
-      const { service, data } = build({ raw: { version: 3 } });
+      const { service, data } = build({ raw: { version: 4 } });
       await service.initialize();
       const saveSpy = vi.spyOn(data, "save");
       service[Symbol.dispose]();

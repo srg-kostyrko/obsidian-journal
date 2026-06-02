@@ -50,7 +50,7 @@ describe("EditCommandFlow", () => {
   });
 
   it("overwrites the existing entry when editing", async () => {
-    const raw = { version: 3, commands: { "cmd-1": makeConfig("Old") } };
+    const raw = { version: 4, commands: { "cmd-1": makeConfig("Old") } };
     const { flows, modals, repo } = await build(raw);
     const promise = flows.invoke(EditCommandFlow, {
       commandId: "cmd-1",

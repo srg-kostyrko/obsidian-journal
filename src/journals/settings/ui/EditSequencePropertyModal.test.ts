@@ -41,7 +41,7 @@ function makeJournal(name: string, frontmatterKey = "journal-index") {
 }
 
 async function mountModal(journalName: string, sourceIndex = 0, frontmatterKey = "journal-index") {
-  const raw = { version: 3, journals: { [journalName]: makeJournal(journalName, frontmatterKey) } };
+  const raw = { version: 4, journals: { [journalName]: makeJournal(journalName, frontmatterKey) } };
   const { service: settings, container } = createSettingsService({
     collections: [journalConfigCollection],
     raw,

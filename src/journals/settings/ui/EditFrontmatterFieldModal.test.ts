@@ -44,7 +44,7 @@ async function mountModal(
   fieldName: FrontmatterFieldName,
   fmOverride: Partial<{ dateField: string; startDateField: string; endDateField: string }> = {},
 ) {
-  const raw = { version: 3, journals: { [journalName]: makeJournal(journalName, fmOverride) } };
+  const raw = { version: 4, journals: { [journalName]: makeJournal(journalName, fmOverride) } };
   const { service: settings, container } = createSettingsService({
     collections: [journalConfigCollection],
     raw,
