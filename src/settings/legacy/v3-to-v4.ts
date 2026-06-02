@@ -48,7 +48,7 @@ function reshapeJournal(old: OldJournalSettings): Record<string, unknown> {
       sources: [
         {
           variable: "index",
-          frontmatterKey: old.frontmatter.indexField,
+          frontmatterKey: old.frontmatter.indexField || "journal-index",
           anchorValue: old.index.anchorIndex,
           reset: old.index.type === "reset_after" ? { kind: "after", count: old.index.resetAfter } : { kind: "never" },
         },
@@ -60,9 +60,9 @@ function reshapeJournal(old: OldJournalSettings): Record<string, unknown> {
       decorateWholeBlock: old.calendarViewBlock.decorateWholeBlock,
     },
     frontmatter: {
-      dateField: old.frontmatter.dateField,
-      startDateField: old.frontmatter.startDateField,
-      endDateField: old.frontmatter.endDateField,
+      dateField: old.frontmatter.dateField || "journal-date",
+      startDateField: old.frontmatter.startDateField || "journal-start-date",
+      endDateField: old.frontmatter.endDateField || "journal-end-date",
       addStartDate: old.frontmatter.addStartDate,
       addEndDate: old.frontmatter.addEndDate,
     },
