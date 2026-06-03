@@ -112,6 +112,20 @@ describe("TimelineService", () => {
       });
     });
 
+    it("includes the period containing the start date when the start falls after that period's anchor", () => {
+      // Start date Sat 2024-01-06 lies in the week Mon 2024-01-01–Sun 2024-01-07, whose anchor
+      // (Thu 2024-01-04) precedes it. The week that contains the start date must stay in-timeline.
+      const c = buildContainer({
+        weekly: fixedJournal(
+          "weekly",
+          { type: "week" },
+          { timeline: { start: "2024-01-06" as AnchorString, end: { kind: "never" } } },
+        ),
+      });
+      const timeline = c.resolve(TimelineService);
+      expect(timeline.contains("weekly", "2024-01-04" as AnchorString)).toBe(true);
+    });
+
     it("returns false for unknown journal", () => {
       const c = buildContainer({});
       const timeline = c.resolve(TimelineService);

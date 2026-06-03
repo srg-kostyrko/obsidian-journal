@@ -16,7 +16,10 @@ export class TimelineService {
     const configOpt = this.#journals.get(name);
     if (configOpt.isNone()) return false;
     const config = configOpt.value;
-    if (anchor < config.timeline.start) return false;
+    // Gate on the period's last day, not its anchor, so a period that straddles the start
+    // date (e.g. a week whose anchor precedes a mid-week timeline start) stays in-timeline.
+    const periodEnd = this.#cycle.endOf(name, anchor);
+    if (periodEnd.isSome() && periodEnd.value.toAnchor() < config.timeline.start) return false;
     return match(config.timeline.end)
       .with({ kind: "never" }, () => true)
       .with({ kind: "date" }, ({ date }) => anchor <= date)

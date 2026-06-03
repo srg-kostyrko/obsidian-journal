@@ -86,6 +86,30 @@ describe("NumberingService", () => {
       expect(unwrap(n.assignNumbers("s", "2024-01-15" as AnchorString))).toEqual({ index: 3 });
       expect(unwrap(n.assignNumbers("s", "2024-01-22" as AnchorString))).toEqual({ index: 1 });
     });
+
+    it("returns to anchorValue rather than 0 after a full cycle for reset.after { count: 4 }", () => {
+      // Post-reset value must wrap back to anchorValue (1), not collapse to 0.
+      const c = buildContainer({
+        s: customJournal("s", "week", 1, "2024-01-01", {
+          numbering: {
+            enabled: true,
+            anchorDate: "2024-01-01" as AnchorString,
+            allowBefore: false,
+            sources: [
+              {
+                variable: "index",
+                frontmatterKey: "journal-index",
+                anchorValue: 1,
+                reset: { kind: "after", count: 4 },
+              },
+            ],
+          },
+        }),
+      });
+      const n = c.resolve(NumberingService);
+      expect(unwrap(n.assignNumbers("s", "2024-01-22" as AnchorString))).toEqual({ index: 4 });
+      expect(unwrap(n.assignNumbers("s", "2024-01-29" as AnchorString))).toEqual({ index: 1 });
+    });
   });
 
   describe("assignNumbers — multi-source cascade", () => {

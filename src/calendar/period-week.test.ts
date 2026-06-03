@@ -71,6 +71,16 @@ describe("WeekPeriod", () => {
     it("previous yields the prior week", () => {
       expect(WeekPeriod.containing(date("2025-03-14")).previous().start.toAnchor()).toBe("2025-03-03");
     });
+
+    it("steps back onto ISO week 53 at a 53-week year boundary", () => {
+      // 2026 is a 53-week ISO year (W53 = Mon 2026-12-28–Sun 2027-01-03). Stepping back from
+      // 2027-W01 must land on W53, not skip straight to W52.
+      expect(WeekPeriod.containing(date("2027-01-04")).previous().weekOfYear).toBe(53);
+    });
+
+    it("reaches week 52 only after week 53 when stepping back across the boundary", () => {
+      expect(WeekPeriod.containing(date("2027-01-04")).previous().previous().weekOfYear).toBe(52);
+    });
   });
 
   describe("contains", () => {
