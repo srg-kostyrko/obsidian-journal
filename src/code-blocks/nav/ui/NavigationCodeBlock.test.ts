@@ -226,6 +226,25 @@ describe("NavigationCodeBlock arrows", () => {
     expect(parameters.existingOnly).toBe(false);
   });
 
+  it("opens the previous entry in a new tab on a middle-click of the arrow", async () => {
+    const daily = journalDefaultsFor({ type: "day" }, "daily");
+    const h = buildHarness({ daily });
+    h.index.byPath.set("Daily/2026-05-27.md", {
+      journalName: "daily",
+      anchor: "2026-05-27" as AnchorString,
+      path: "Daily/2026-05-27.md" as VaultPath,
+    });
+    h.shelves.shelves = [{ name: "main", journals: ["daily"] }];
+    mount(h, "Daily/2026-05-27.md");
+
+    const arrow = screen.getByRole("button", { name: /previous/i });
+    await fireEvent(arrow, new MouseEvent("auxclick", { bubbles: true, cancelable: true, button: 1 }));
+
+    expect(h.flows.calls).toHaveLength(1);
+    const parameters = h.flows.calls[0]?.parameters as { openMode: string };
+    expect(parameters.openMode).toBe("tab");
+  });
+
   it("invokes OpenDateFlow with existingOnly=true in 'existing' mode", async () => {
     const daily: JournalConfig = { ...journalDefaultsFor({ type: "day" }, "daily") };
     daily.navBlock = { ...daily.navBlock, type: "existing" };
@@ -296,6 +315,76 @@ describe("NavigationCodeBlock row click routing", () => {
     if (target) await user.click(target);
     expect(h.workspace.openNoteCalls.map((c) => c.path)).toEqual(["Daily/2026-05-27.md"]);
     expect(h.flows.calls).toHaveLength(0);
+  });
+
+  it("opens the current entry in a new tab on a middle-click of a 'self' row", async () => {
+    const journal = dailyWithRows([
+      {
+        template: "today",
+        fontSize: 1,
+        bold: false,
+        italic: false,
+        color: { type: "transparent" },
+        background: { type: "transparent" },
+        link: "self",
+        journal: "",
+        addDecorations: false,
+      },
+    ]);
+    const h = buildHarness({ daily: journal });
+    h.index.byPath.set("Daily/2026-05-27.md", {
+      journalName: "daily",
+      anchor: "2026-05-27" as AnchorString,
+      path: "Daily/2026-05-27.md" as VaultPath,
+    });
+    h.index.byAnchor.set("daily::2026-05-27", {
+      journalName: "daily",
+      anchor: "2026-05-27" as AnchorString,
+      path: "Daily/2026-05-27.md" as VaultPath,
+    });
+    h.shelves.shelves = [{ name: "main", journals: ["daily"] }];
+    mount(h, "Daily/2026-05-27.md");
+
+    const target = screen.getAllByText("today")[1];
+    if (target) await fireEvent(target, new MouseEvent("auxclick", { bubbles: true, cancelable: true, button: 1 }));
+
+    expect(h.workspace.openNoteCalls).toHaveLength(1);
+    expect(h.workspace.openNoteCalls[0]?.mode).toBe("tab");
+  });
+
+  it("opens the current entry in a split on a ctrl+alt click of a 'self' row", async () => {
+    const journal = dailyWithRows([
+      {
+        template: "today",
+        fontSize: 1,
+        bold: false,
+        italic: false,
+        color: { type: "transparent" },
+        background: { type: "transparent" },
+        link: "self",
+        journal: "",
+        addDecorations: false,
+      },
+    ]);
+    const h = buildHarness({ daily: journal });
+    h.index.byPath.set("Daily/2026-05-27.md", {
+      journalName: "daily",
+      anchor: "2026-05-27" as AnchorString,
+      path: "Daily/2026-05-27.md" as VaultPath,
+    });
+    h.index.byAnchor.set("daily::2026-05-27", {
+      journalName: "daily",
+      anchor: "2026-05-27" as AnchorString,
+      path: "Daily/2026-05-27.md" as VaultPath,
+    });
+    h.shelves.shelves = [{ name: "main", journals: ["daily"] }];
+    mount(h, "Daily/2026-05-27.md");
+
+    const target = screen.getAllByText("today")[1];
+    if (target) await fireEvent.click(target, { ctrlKey: true, altKey: true });
+
+    expect(h.workspace.openNoteCalls).toHaveLength(1);
+    expect(h.workspace.openNoteCalls[0]?.mode).toBe("split");
   });
 
   it("invokes OpenDateFlow with the row's journal for link 'journal'", async () => {

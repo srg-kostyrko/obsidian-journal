@@ -128,7 +128,13 @@ function onPointerEnter(event: PointerEvent): void {
 </script>
 
 <template>
-  <div class="nav-row" @click.prevent="onClick" @contextmenu="onContextMenu" @pointerenter="onPointerEnter">
+  <div
+    class="nav-row"
+    @click.prevent="onClick"
+    @auxclick.middle.prevent="onClick"
+    @contextmenu="onContextMenu"
+    @pointerenter="onPointerEnter"
+  >
     <CellDecoration v-if="row.addDecorations" :period="period">{{ text }}</CellDecoration>
     <template v-else>{{ text }}</template>
   </div>

@@ -72,7 +72,9 @@ function open(item: HomeItem, event: MouseEvent): void {
   <div class="home-code-block">
     <template v-for="(item, position) of items" :key="`${item.entry}-${item.journalNames.join('|')}`">
       <span v-if="position > 0" class="home-code-block__separator">{{ config.separator }}</span>
-      <a href="#" @click.stop.prevent="open(item, $event)">{{ item.label }}</a>
+      <a href="#" @click.stop.prevent="open(item, $event)" @auxclick.middle.stop.prevent="open(item, $event)">{{
+        item.label
+      }}</a>
     </template>
   </div>
 </template>

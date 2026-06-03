@@ -103,6 +103,7 @@ function openAdjacent(anchor: AnchorString | null, event: MouseEvent): void {
         class="nav-prev"
         :tooltip="m.code_blocks_nav_previous()"
         @click="(event: MouseEvent) => openAdjacent(adjacent.previous, event)"
+        @auxclick.middle.prevent="(event: MouseEvent) => openAdjacent(adjacent.previous, event)"
       />
     </div>
     <div v-else class="nav-block-placeholder" />
@@ -115,6 +116,7 @@ function openAdjacent(anchor: AnchorString | null, event: MouseEvent): void {
         class="nav-next"
         :tooltip="m.code_blocks_nav_next()"
         @click="(event: MouseEvent) => openAdjacent(adjacent.next, event)"
+        @auxclick.middle.prevent="(event: MouseEvent) => openAdjacent(adjacent.next, event)"
       />
       <NavBlock :journal :ref-date="adjacent.next" :period="periodForJournal(journal.write, adjacent.next)" />
     </div>

@@ -74,6 +74,7 @@ function open(badge: Badge, event: MouseEvent): void {
     :data-period="badge.key"
     :data-active="isActive(badge) || null"
     @click="(event: MouseEvent) => open(badge, event)"
+    @auxclick.middle.prevent="(event: MouseEvent) => open(badge, event)"
   >
     {{ badge.label }}
   </UiButton>

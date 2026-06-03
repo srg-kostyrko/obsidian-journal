@@ -22,4 +22,24 @@ describe("defineOpenMode", () => {
     const event = new MouseEvent("click", { button: 1 });
     expect(defineOpenMode(event)).toBe("tab");
   });
+
+  it("returns 'split' when ctrl and alt are held together", () => {
+    const event = new MouseEvent("click", { button: 0, ctrlKey: true, altKey: true });
+    expect(defineOpenMode(event)).toBe("split");
+  });
+
+  it("returns 'split' when meta and alt are held together", () => {
+    const event = new MouseEvent("click", { button: 0, metaKey: true, altKey: true });
+    expect(defineOpenMode(event)).toBe("split");
+  });
+
+  it("returns 'split' for an alt middle-click", () => {
+    const event = new MouseEvent("click", { button: 1, altKey: true });
+    expect(defineOpenMode(event)).toBe("split");
+  });
+
+  it("returns 'active' when only alt is held", () => {
+    const event = new MouseEvent("click", { button: 0, altKey: true });
+    expect(defineOpenMode(event)).toBe("active");
+  });
 });
