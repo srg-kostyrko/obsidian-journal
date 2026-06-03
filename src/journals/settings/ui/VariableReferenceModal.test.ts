@@ -115,6 +115,23 @@ describe("VariableReferenceModal — rules table", () => {
   });
 });
 
+describe("VariableReferenceModal template-path context", () => {
+  it("renders the journal_link variable in template-path", () => {
+    renderModal({ context: "template-path" });
+    expect(screen.getByText("{{journal_link(journal_name)}}")).toBeTruthy();
+  });
+
+  it("does not render journal_link in name-template", () => {
+    renderModal({ context: "name-template" });
+    expect(screen.queryByText("{{journal_link(journal_name)}}")).toBeNull();
+  });
+
+  it("does not render journal_link in folder-path", () => {
+    renderModal({ context: "folder-path" });
+    expect(screen.queryByText("{{journal_link(journal_name)}}")).toBeNull();
+  });
+});
+
 describe("VariableReferenceModal nav-row context", () => {
   it("renders relative_date row when context is nav-row", () => {
     renderModal({ context: "nav-row", hasCycle: true });

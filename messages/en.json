@@ -811,6 +811,7 @@
   "journal_edit_variable_date_format_description": "The note's reference date, formatted with the supplied moment.js format string.",
   "journal_edit_variable_end_date_description": "The last day of the period this note covers.",
   "journal_edit_variable_index_description": "Sequential number for the note when the journal has numbering enabled.",
+  "journal_edit_variable_journal_link_description": "Inside a template file's content, resolves to the path of another journal's note for this note's date. Wrap it yourself in a link or embed (for example ![[ … ]]), and add date modifiers like +1w to point at a neighbouring period.",
   "journal_edit_variable_journal_name_description": "The journal name (here: {name}).",
   "journal_edit_variable_non_invertible_warning": "Using this here prevents the journal from recovering the date from the filename.",
   "journal_edit_variable_numbering_description": "The configured numbering variable (see the Sequence section).",

@@ -8,9 +8,7 @@ import { SuggestService, WorkspaceService } from "@/infrastructure/host";
 import { ModalService } from "@/infrastructure/host/modals";
 import { attempt, type AsyncResult } from "@/infrastructure/result";
 
-import { CycleService } from "../../cycle";
 import { JournalNotFoundError } from "../../errors";
-import { FrontmatterService } from "../../frontmatter";
 import { JournalsRepository } from "../../repository";
 import { journalPickerSuggest } from "../journal-picker";
 import { NotePathService } from "../note-path";
@@ -32,8 +30,6 @@ export class InsertJournalLinkFlow implements Flow<void, void, InsertJournalLink
   readonly #suggests = inject(SuggestService);
   readonly #modals = inject(ModalService);
   readonly #journals = inject(JournalsRepository);
-  readonly #cycle = inject(CycleService);
-  readonly #frontmatter = inject(FrontmatterService);
   readonly #path = inject(NotePathService);
   readonly #workspace = inject(WorkspaceService);
 
@@ -53,11 +49,7 @@ export class InsertJournalLinkFlow implements Flow<void, void, InsertJournalLink
         .open(datePickerModal, { picking: pickingFor(config.write) })
         .mapErr(() => new UserAborted("insert-journal-link"));
 
-      const anchor = yield* this.#cycle
-        .anchorOf(journalName, period.anchor)
-        .okOrElse(() => new JournalNotFoundError(journalName));
-      const metadata = yield* this.#frontmatter.buildMetadata(journalName, anchor);
-      const path = yield* this.#path.pathFor(journalName, metadata);
+      const path = yield* this.#path.pathForDate(journalName, period.anchor);
       this.#workspace.insertNoteLinkAtCursor(path);
       return;
     });

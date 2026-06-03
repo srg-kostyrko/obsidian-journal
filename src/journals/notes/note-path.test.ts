@@ -1,6 +1,6 @@
 import { describe, it, expect, vi, beforeEach, afterEach, assert } from "vitest";
 
-import type { AnchorString } from "@/calendar";
+import { CalendarDate, type AnchorString } from "@/calendar";
 import { anchor } from "@/calendar/testing";
 import { Container } from "@/infrastructure/di";
 import type { VaultPath } from "@/infrastructure/host";
@@ -57,6 +57,29 @@ describe("NotePathService.pathFor", () => {
     const c = buildContainer(repo);
     const meta: JournalMetadata = { journalName: "missing", anchor: anchor("2026-05-19") };
     const result = c.resolve(NotePathService).pathFor("missing", meta);
+    expect(result.isErr() && result.error instanceof JournalNotFoundError).toBe(true);
+  });
+});
+
+describe("NotePathService.pathForDate", () => {
+  it("resolves the note path for a date in a fixed day journal", () => {
+    const repo = fakeRepo({ daily: fixedJournal("daily", { type: "day" }) });
+    const c = buildContainer(repo);
+    const result = c.resolve(NotePathService).pathForDate("daily", CalendarDate.fromAnchor(anchor("2026-05-19")));
+    expect(result.isOk() && result.value).toBe("2026-05-19.md");
+  });
+
+  it("resolves the enclosing week note when the journal writes weeks", () => {
+    const repo = fakeRepo({ weekly: fixedJournal("weekly", { type: "week" }) });
+    const c = buildContainer(repo);
+    const result = c.resolve(NotePathService).pathForDate("weekly", CalendarDate.fromAnchor(anchor("2026-05-19")));
+    expect(result.isOk() && result.value).toMatch(/^\d{4}-W\d{1,2}\.md$/);
+  });
+
+  it("returns JournalNotFoundError for an unknown journal", () => {
+    const repo = fakeRepo({});
+    const c = buildContainer(repo);
+    const result = c.resolve(NotePathService).pathForDate("missing", CalendarDate.fromAnchor(anchor("2026-05-19")));
     expect(result.isErr() && result.error instanceof JournalNotFoundError).toBe(true);
   });
 });

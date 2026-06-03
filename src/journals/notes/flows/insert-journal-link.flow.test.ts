@@ -1,7 +1,6 @@
 import { describe, expect, it, vi } from "vitest";
 
 import { DayPeriod } from "@/calendar";
-import type { AnchorString } from "@/calendar";
 import { date, installTestCalendar } from "@/calendar/testing";
 import { Container } from "@/infrastructure/di";
 import { Flows } from "@/infrastructure/flows";
@@ -11,10 +10,8 @@ import { ModalService } from "@/infrastructure/host/modals";
 import { FakeModalService } from "@/infrastructure/host/modals/testing";
 import { FakeSuggestService } from "@/infrastructure/host/suggests/testing";
 import { LoggerModule } from "@/infrastructure/logger";
-import { Ok, Option } from "@/infrastructure/result";
+import { Ok } from "@/infrastructure/result";
 
-import { CycleService } from "../../cycle";
-import { FrontmatterService } from "../../frontmatter";
 import { JournalsRepository } from "../../repository";
 import { fakeRepo, fixedJournal } from "../../testing";
 import { NotePathService } from "../note-path";
@@ -22,7 +19,6 @@ import { NotePathService } from "../note-path";
 import { InsertJournalLinkFlow } from "./insert-journal-link.flow";
 
 import type { JournalConfig } from "../../config";
-import type { JournalMetadata } from "../../types";
 
 function build(journals: Record<string, JournalConfig>) {
   installTestCalendar();
@@ -31,18 +27,12 @@ function build(journals: Record<string, JournalConfig>) {
   const modals = new FakeModalService();
   const suggests = new FakeSuggestService();
   const workspace = { insertNoteLinkAtCursor: vi.fn(() => true) };
-  const cycle = { anchorOf: vi.fn(() => Option.some("2026-01-01" as AnchorString)) };
-  const frontmatter = {
-    buildMetadata: vi.fn(() => new Ok({ journalName: "daily", anchor: "2026-01-01" } as JournalMetadata)),
-  };
-  const path = { pathFor: vi.fn(() => new Ok("Journals/2026-01-01.md" as VaultPath)) };
+  const path = { pathForDate: vi.fn(() => new Ok("Journals/2026-01-01.md" as VaultPath)) };
 
   c.register(JournalsRepository).useValue(fakeRepo(journals));
   c.register(ModalService).useValue(modals as unknown as ModalService);
   c.register(SuggestService).useValue(suggests as unknown as SuggestService);
   c.register(WorkspaceService).useValue(workspace as unknown as WorkspaceService);
-  c.register(CycleService).useValue(cycle as unknown as CycleService);
-  c.register(FrontmatterService).useValue(frontmatter as unknown as FrontmatterService);
   c.register(NotePathService).useValue(path as unknown as NotePathService);
   c.register(Flows).useClass(Flows);
   c.register(InsertJournalLinkFlow).useClass(InsertJournalLinkFlow);
@@ -72,7 +62,7 @@ describe("InsertJournalLinkFlow", () => {
     await tick();
     modals.lastOpen().submit(DayPeriod.containing(date("2026-01-01")));
     await promise;
-    expect(path.pathFor).toHaveBeenCalledWith("weekly", expect.anything());
+    expect(path.pathForDate).toHaveBeenCalledWith("weekly", expect.anything());
   });
 
   it("does not insert when the journal picker is cancelled", async () => {

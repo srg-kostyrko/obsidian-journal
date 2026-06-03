@@ -7,6 +7,7 @@ import { expectErr, expectOk } from "@/infrastructure/result/testing";
 
 import { TemplateContext } from "./context";
 import { tokenize } from "./grammar";
+import { applyModifiers } from "./modifiers";
 import { buildFakeContext, FakeHandler, installTestEngine } from "./testing";
 
 import type { BoundValue } from "./types";
@@ -101,10 +102,19 @@ describe("TemplateEngine.renderString", () => {
       expect(engine.renderString("{{greet(world)}}", buildFakeContext())).toBe("hi");
     });
 
-    it("passes the modifier-shifted source date to handler", () => {
+    it("passes the source date without applying modifiers to handler", () => {
       const handler = new FakeHandler("show_date", (input) => new Ok(input.sourceDate.toAnchor()));
       const engine = installTestEngine([handler]);
-      expect(engine.renderString("{{show_date(x)+1w}}", buildFakeContext())).toBe("2022-01-12");
+      expect(engine.renderString("{{show_date(x)+1w}}", buildFakeContext())).toBe("2022-01-05");
+    });
+
+    it("passes the raw modifiers to handler", () => {
+      const handler = new FakeHandler(
+        "show_shift",
+        (input) => new Ok(applyModifiers(input.sourceDate, input.modifiers).toAnchor()),
+      );
+      const engine = installTestEngine([handler]);
+      expect(engine.renderString("{{show_shift(x)+1w}}", buildFakeContext())).toBe("2022-01-12");
     });
   });
 });

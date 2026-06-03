@@ -1,6 +1,7 @@
 export { TemplateEngine } from "./engine";
 export { TemplateContext } from "./context";
 export { tokenize } from "./grammar";
+export { applyModifiers } from "./modifiers";
 export { FunctionHandlerToken, type FunctionHandler, type FunctionInput } from "./handlers";
 export { templatesModule } from "./module";
 

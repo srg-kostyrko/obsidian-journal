@@ -3,12 +3,13 @@ import { normalizePath } from "obsidian";
 import { CalendarDate, Clock } from "@/calendar";
 import { inject } from "@/infrastructure/di";
 import type { VaultPath } from "@/infrastructure/host";
-import { Err, Ok, Option, type Result } from "@/infrastructure/result";
+import { attempt, Err, Ok, Option, type Result } from "@/infrastructure/result";
 import { TemplateContext, TemplateEngine, tokenize } from "@/templates";
 import type { Bindings } from "@/templates";
 
 import { CycleService } from "../cycle";
 import { JournalNotFoundError } from "../errors";
+import { FrontmatterService } from "../frontmatter";
 import { JournalsRepository } from "../repository";
 
 import type { JournalConfig } from "../config";
@@ -17,7 +18,16 @@ import type { JournalMetadata } from "../types";
 export class NotePathService {
   readonly #journals = inject(JournalsRepository);
   readonly #cycle = inject(CycleService);
+  readonly #frontmatter = inject(FrontmatterService);
   readonly #engine = inject(TemplateEngine);
+
+  pathForDate(name: string, date: CalendarDate): Result<VaultPath, JournalNotFoundError> {
+    return attempt.in(this, function* (this: NotePathService) {
+      const anchor = yield* this.#cycle.anchorOf(name, date).okOrElse(() => new JournalNotFoundError(name));
+      const metadata = yield* this.#frontmatter.buildMetadata(name, anchor);
+      return yield* this.pathFor(name, metadata);
+    });
+  }
 
   pathFor(name: string, metadata: JournalMetadata): Result<VaultPath, JournalNotFoundError> {
     const config = this.configFor(name);

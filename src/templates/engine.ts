@@ -17,7 +17,7 @@ import {
   renderNumber,
   renderString,
 } from "./kinds";
-import { applyModifiers, isBoundaryUnit } from "./modifiers";
+import { isBoundaryUnit } from "./modifiers";
 
 import type { TemplateContext } from "./context";
 import type { Bindings, BoundValue, Token, TokenStream, ValidationProblem, VariableSpec } from "./types";
@@ -69,11 +69,10 @@ export class TemplateEngine {
   #renderFunction(token: Extract<Token, { kind: "function" }>, context: TemplateContext): string {
     const handler = this.#handlersByName.get(token.name);
     if (!handler) return token.raw;
-    const sourceDate = this.#sourceDateFor(context);
-    const shifted = applyModifiers(sourceDate, token.modifiers);
     const result = handler.render({
       arg: token.arg,
-      sourceDate: shifted,
+      sourceDate: this.#sourceDateFor(context),
+      modifiers: token.modifiers,
       format: token.format,
       context,
       engine: this,
