@@ -8,11 +8,17 @@ import type { Option } from "@/infrastructure/result";
 
 import { WorkspaceOpenError } from "../errors";
 
+import { buildMarkdownLink, type NewLinkFormat } from "./markdown-link";
 import { toPaneType } from "./obsidian-bridge";
 import { InternalObsidianAppToken, InternalPluginToken } from "./tokens";
 
 import type { OpenMode, VaultPath, WorkspaceEvents } from "../types";
-import type { MarkdownView, WorkspaceLeaf } from "obsidian";
+import type { Editor, MarkdownView, WorkspaceLeaf } from "obsidian";
+
+// Obsidian exposes link-preference settings only through the untyped Vault.getConfig.
+interface ConfigurableVault {
+  getConfig?(key: string): unknown;
+}
 
 export class WorkspaceService {
   readonly #app = inject(InternalObsidianAppToken);
@@ -49,6 +55,17 @@ export class WorkspaceService {
     return AsyncResult.fromPromise(this.#open(path, mode), (cause) => new WorkspaceOpenError(path, cause));
   }
 
+  hasActiveEditor(): boolean {
+    return this.#activeEditor() !== undefined;
+  }
+
+  insertNoteLinkAtCursor(targetPath: VaultPath): boolean {
+    const editor = this.#activeEditor();
+    if (editor === undefined) return false;
+    editor.replaceSelection(this.#noteLink(targetPath));
+    return true;
+  }
+
   triggerHoverPreview(path: VaultPath, event: MouseEvent): void {
     this.#app.workspace.trigger("link-hover", this.#plugin, event.target, path, path);
   }
@@ -78,6 +95,38 @@ export class WorkspaceService {
       if (file?.path === path) return leaf;
     }
     return null;
+  }
+
+  #activeEditor(): Editor | undefined {
+    return this.#app.workspace.activeEditor?.editor;
+  }
+
+  // Honors the vault's link preferences for a target that may not exist yet: an existing file goes
+  // through Obsidian's own generator; otherwise the format is reconstructed from the link settings.
+  #noteLink(targetPath: VaultPath): string {
+    const sourcePath = this.activeNote().getOr("" as VaultPath);
+    const target = this.#app.vault.getAbstractFileByPath(targetPath);
+    if (target instanceof TFile) {
+      return this.#app.fileManager.generateMarkdownLink(target, sourcePath);
+    }
+    const basename = (targetPath.split("/").pop() ?? targetPath).replace(/\.md$/, "");
+    const resolved = this.#app.metadataCache.getFirstLinkpathDest(basename, sourcePath);
+    return buildMarkdownLink({
+      pathWithoutExtension: targetPath.replace(/\.md$/, ""),
+      basename,
+      useMarkdownLinks: this.#vaultConfig("useMarkdownLinks") === true,
+      format: this.#newLinkFormat(),
+      ambiguous: resolved !== null && (resolved.path as VaultPath) !== targetPath,
+    });
+  }
+
+  #newLinkFormat(): NewLinkFormat {
+    const raw = this.#vaultConfig("newLinkFormat");
+    return raw === "absolute" || raw === "relative" ? raw : "shortest";
+  }
+
+  #vaultConfig(key: string): unknown {
+    return (this.#app.vault as unknown as ConfigurableVault).getConfig?.(key);
   }
 
   #fileOf(leaf: WorkspaceLeaf | null): TFile | null {

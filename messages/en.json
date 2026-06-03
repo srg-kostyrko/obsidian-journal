@@ -136,6 +136,7 @@
   "command_delete_modal_title": "Delete command",
   "command_edit_modal_title": "Edit command",
   "command_icon_required_error": "Pick an icon to show this command in the ribbon.",
+  "command_insert_date_link": "Insert link to journal note",
   "command_journal_add": "Add command",
   "command_journal_empty": "No commands created for this journal yet.",
   "command_journal_section_title": "Commands",

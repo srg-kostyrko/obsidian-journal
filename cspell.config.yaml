@@ -12,6 +12,7 @@ words:
   - invertibility
   - Keymap
   - lezer
+  - linkpath
   - offref
   - paraglide
   - passthroughs
@@ -21,6 +22,7 @@ words:
   - subpages
   - templater
   - tfile
+  - wikilinks
 ignorePaths:
   - node_modules
   - build
