@@ -915,5 +915,19 @@
         "type=custom": "every {duration} {every}"
       }
     }
-  ]
+  ],
+
+  "logging_dump_button": "Dump logs to note",
+  "logging_dump_desc": "Write the recently recorded log messages to a new note in your vault.",
+  "logging_dump_empty": "No log messages have been recorded yet.",
+  "logging_dump_failed": "Failed to write the log note.",
+  "logging_dump_succeeded": "Logs written to {path}",
+  "logging_dump_title": "Export logs",
+  "logging_level_debug": "Debug",
+  "logging_level_desc": "Only log messages at or above this level are printed to the console and kept for export.",
+  "logging_level_error": "Error",
+  "logging_level_info": "Info",
+  "logging_level_title": "Log level",
+  "logging_level_warn": "Warning",
+  "logging_section_title": "Logging"
 }
