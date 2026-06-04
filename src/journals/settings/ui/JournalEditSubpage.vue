@@ -12,6 +12,7 @@ import type { SubpageNav } from "@/settings";
 import UiButton from "@/ui/UiButton.vue";
 import UiCollapsibleBlock from "@/ui/UiCollapsibleBlock.vue";
 import UiDropdown from "@/ui/UiDropdown.vue";
+import UiFileInput from "@/ui/UiFileInput.vue";
 import UiIcon from "@/ui/UiIcon.vue";
 import UiIconButton from "@/ui/UiIconButton.vue";
 import UiIconedRow from "@/ui/UiIconedRow.vue";
@@ -27,7 +28,6 @@ import { RenameJournalFlow } from "../flows/rename-journal.flow";
 
 import CodeBlockReferenceHint from "./CodeBlockReferenceHint.vue";
 import DateFormatPreview from "./DateFormatPreview.vue";
-import FileInput from "./FileInput.vue";
 import FolderInput from "./FolderInput.vue";
 import FolderPathPreview from "./FolderPathPreview.vue";
 import { JournalEditSectionToken } from "./journal-edit-section";
@@ -285,7 +285,7 @@ function editSequenceKey(): void {
 
       <template v-for="(_path, index) in config.templates" :key="index">
         <UiSettingRow>
-          <FileInput v-model="config.templates[index]" :placeholder="m.journal_edit_template_path_placeholder()" />
+          <UiFileInput v-model="config.templates[index]" :placeholder="m.journal_edit_template_path_placeholder()" />
           <UiIconButton
             icon="trash"
             :tooltip="m.journal_edit_template_remove_tooltip()"

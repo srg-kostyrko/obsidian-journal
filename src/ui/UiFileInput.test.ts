@@ -6,7 +6,7 @@ import { InputSuggestService, NotesService } from "@/infrastructure/host";
 import { FakeInputSuggestService } from "@/infrastructure/host/input-suggests/testing";
 import { FakeNotesService } from "@/infrastructure/host/testing";
 
-import FileInput from "./FileInput.vue";
+import UiFileInput from "./UiFileInput.vue";
 
 afterEach(() => cleanup());
 
@@ -21,20 +21,12 @@ function build() {
   return { inputSuggest, container };
 }
 
-describe("FileInput", () => {
+describe("UiFileInput", () => {
   it("offers markdown notes from NotesService.allMarkdownNotes, filtered by query", () => {
     const { inputSuggest, container } = build();
-    render(FileInput, {
+    render(UiFileInput, {
       props: { modelValue: "", "onUpdate:modelValue": vi.fn() },
-      global: {
-        plugins: [
-          {
-            install(app) {
-              provideInjectorOnApp(app, container);
-            },
-          },
-        ],
-      },
+      global: { plugins: [{ install: (app) => provideInjectorOnApp(app, container) }] },
     });
     const handle = inputSuggest.attachments[0];
     expect(handle.query("").toSorted()).toEqual(["templates/daily.md", "templates/weekly.md"]);
