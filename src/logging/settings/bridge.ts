@@ -14,9 +14,7 @@ export class LoggingSettingsBridge {
   constructor() {
     const slice = this.#settings.getSlice(loggingSlice);
     this.#stop = watchEffect(() => {
-      const state = slice.state;
-      if (state === undefined) return;
-      this.#gate.setThreshold(state.level);
+      this.#gate.setThreshold(slice.state.level);
     });
   }
 

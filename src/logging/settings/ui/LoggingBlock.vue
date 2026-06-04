@@ -19,9 +19,9 @@ const flows = useService(Flows);
 const slice = settings.getSlice(loggingSlice);
 const expanded = ref(false);
 
-const level = computed<string>({
-  get: () => slice.state.level,
-  set: (value) => {
+const level = computed({
+  get: (): LoggingSliceState["level"] => slice.state.level,
+  set: (value: string) => {
     slice.state = { ...slice.state, level: value as LoggingSliceState["level"] };
   },
 });
