@@ -23,4 +23,11 @@ describe("formatLogDump", () => {
     const record: LogRecord = { timestamp: at, level: "info", name: "", message: "hi", fields: { a: 1 } };
     expect(formatLogDump([record])).toContain('hi {"a":1}');
   });
+
+  it("falls back to a marker when fields cannot be serialized", () => {
+    const circular: Record<string, unknown> = {};
+    circular.self = circular;
+    const record: LogRecord = { timestamp: at, level: "info", name: "", message: "hi", fields: circular };
+    expect(formatLogDump([record])).toContain("hi [unserializable fields]");
+  });
 });
