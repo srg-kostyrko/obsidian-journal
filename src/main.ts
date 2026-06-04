@@ -17,6 +17,7 @@ import { journalsModule } from "@/journals/module";
 import { journalsSettingsModule } from "@/journals/settings/module";
 import { startupModule } from "@/journals/startup/module";
 import { VaultSubscriptionService } from "@/journals/vault-subscription";
+import { loggingModule } from "@/logging";
 import { notesCalendarModule } from "@/notes-calendar";
 import { calendarAppearanceModule } from "@/notes-calendar/appearance/module";
 import { settingsModule, SettingsService } from "@/settings";
@@ -52,6 +53,7 @@ export default class JournalPlugin extends Plugin {
     container.addModule(navBlockSettingsModule);
     container.addModule(commandsModule);
     container.addModule(startupModule);
+    container.addModule(loggingModule);
 
     const init = await container.resolve(SettingsService).initialize();
     if (init.kind === "err") {
