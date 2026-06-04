@@ -32,7 +32,6 @@ export class DumpLogsFlow implements Flow<void, void, DumpLogsError> {
         .create(path, formatLogDump(records))
         .tapErr(() => this.#notices.show(m.logging_dump_failed()));
       this.#notices.show(m.logging_dump_succeeded({ path: note.path }));
-      return;
     });
   }
 }

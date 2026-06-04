@@ -70,7 +70,7 @@ describe("DumpLogsFlow", () => {
     it("shows a notice", async () => {
       const { flow, notices } = build([]);
       await flow.execute();
-      expect(notices.show).toHaveBeenCalledOnce();
+      expect(notices.show).toHaveBeenCalledWith(expect.stringContaining("No log messages"));
     });
   });
 
