@@ -66,8 +66,7 @@ message, and fields (when present), inside a fenced block so note rendering does
 not reinterpret the content.
 
 On success a notice confirms the note was written and names it. Pressing the
-button with an empty buffer still writes a note (with an empty body and a short
-"no records" note), so the user gets unambiguous feedback rather than silence.
+button with an empty buffer writes no note and shows a "nothing to dump" notice.
 
 ## Errors
 
@@ -87,8 +86,8 @@ button with an empty buffer still writes a note (with an empty body and a short
   `journal-log-<timestamp>.md` containing the buffered records, and a confirming
   notice names it.
 - Two presses produce two distinct notes; neither overwrites the other.
-- Pressing the button with an empty buffer writes a note indicating there are no
-  records and confirms via notice.
+- Pressing the button with an empty buffer writes no note and shows a "nothing to
+  dump" notice.
 - A vault write failure surfaces a notice and leaves no note.
 
 ## Design notes
@@ -103,10 +102,10 @@ This mirrors the existing calendar/commands bridge pattern.
 
 - **`LogLevelGate`** (new, singleton token). Holds the current threshold and
   answers `isEnabled(level): boolean` using numeric ranks
-  (`debug` < `info` < `warn` < `error`). `setThreshold(level)` mutates it. Default
-  threshold is `debug` (allow all) so that records emitted during boot, before
-  settings load and the bridge runs, are not silently lost; the settings bridge
-  then narrows it to the persisted level (warn by default).
+  (`debug` < `info` < `warn` < `error`). `setThreshold(level)` mutates it. The
+  boot default is `warn` — the same quiet level the slice defaults to — so there
+  is no allow-all startup phase; below-warn records emitted before settings load
+  are dropped. The settings bridge then applies the user's persisted level.
 - **`Logger`**. `#emit` early-returns when `!gate.isEnabled(level)`, before the
   sink fan-out. The gate is injected through `LoggerFactory`, which constructs
   loggers as `new Logger(name, sinks, gate)`. `child()` passes the gate along.
@@ -138,15 +137,17 @@ A subfolder with its own `module.ts`, following the canonical feature layout.
   `{ level: "warn" }`. The level type is inferred from the schema.
 - **`settings/bridge.ts`** — `LoggingSettingsBridge`, registered eager. A
   `watchEffect` reads the slice and calls `gate.setThreshold(state.level)`;
-  `Symbol.dispose` stops the watch. This is the only place that narrows the gate
-  from its boot default to the persisted level.
+  `Symbol.dispose` stops the watch. This is the only place that applies the
+  persisted level to the gate after its `warn` boot default.
 - **`settings/ui/LoggingBlock.vue`** — a dashboard block (registered via
   `DashboardBlockToken`). A `UiSettingRow` + `UiDropdown` bound to the slice's
   level, and a `UiSettingRow` + `UiButton` ("Dump logs to note") that invokes the
   dump flow via `useService`. Level labels and the button/notice text are added as
   `m.logging_*` paraglide messages in `messages/en.json`.
 - **`flows/dump-logs.flow.ts`** — `DumpLogsFlow`, composed as an `attempt.in`
-  do-notation block. Reads `BufferSink.snapshot()`, formats the markdown body
+  do-notation block. Reads `BufferSink.snapshot()`; when it is empty, shows the
+  "nothing to dump" notice and returns without creating a note. Otherwise formats
+  the markdown body
   (fenced block; one line per record:
   `<ISO timestamp> [<level>] [<name>] <message> <fields-as-JSON?>`), derives the
   filename `journal-log-<YYYYMMDD-HHmmss>.md` from the current moment, creates the
@@ -165,7 +166,8 @@ Colocated `*.test.ts`:
   every sink (black-box via a recording fake sink).
 - `BufferSink`: retains order, evicts oldest past capacity, `snapshot`/`clear`.
 - `DumpLogsFlow`: body formatting, filename shape, note creation against a fake
-  `NotesService`, empty-buffer note, and the write-failure error branch.
+  `NotesService`, the empty-buffer no-op (no note created, notice shown), and the
+  write-failure error branch.
 - `LoggingSettingsBridge`: a slice level change drives `gate.setThreshold`.
 
 Quality gates: `npm run test`, `npm run check:types`, `npm run check:lint`.
