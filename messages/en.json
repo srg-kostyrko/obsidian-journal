@@ -575,6 +575,15 @@
   "startup_open_note_desc": "Open a note whenever you open this vault?",
   "startup_dont_open_option": "Don't open",
 
+  "uri_missing_target": "Journal URI needs a \"journal\" or \"type\" parameter.",
+  "uri_unknown_write_type": "Unknown journal type \"{type}\" in the URI.",
+  "uri_invalid_date": "Could not understand the date \"{date}\" in the URI.",
+  "uri_invalid_mode": "Unknown open mode \"{mode}\" in the URI.",
+  "uri_unknown_journal": "There is no journal named \"{journal}\".",
+  "uri_no_journal": "No journal covers that date.",
+  "uri_no_journal_of_type": "There is no {type} journal.",
+  "uri_open_failed": "Could not open the journal entry.",
+
   "view_dashboard_section_title": "Views",
   "view_dashboard_empty": "No views yet.",
   "view_dashboard_add": "Add a view",
