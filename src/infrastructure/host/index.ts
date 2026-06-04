@@ -13,6 +13,7 @@ export {
   WorkspaceOpenError,
 } from "./errors";
 export { NoteMetadataService } from "./internal/note-metadata-service";
+export { NoticeService } from "./internal/notice-service";
 export { NotesService } from "./internal/notes-service";
 export { PluginData } from "./internal/plugin-data";
 export { WorkspaceService } from "./internal/workspace-service";

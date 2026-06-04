@@ -18,6 +18,7 @@ import type {
 } from "./errors";
 import type { NoteMetadataService } from "./internal/note-metadata-service";
 import type { NotesService } from "./internal/notes-service";
+import type { NoticeService } from "./internal/notice-service";
 import type { PluginData } from "./internal/plugin-data";
 import type { TemplaterService } from "./internal/templater-service";
 import type { WorkspaceService } from "./internal/workspace-service";
@@ -290,6 +291,14 @@ export class FakeNoteMetadataService implements Pick<NoteMetadataService, "get">
   get(path: VaultPath): Option<NoteMetadata> {
     const hit = this.#entries.get(path);
     return hit ? new Some(hit) : new None<NoteMetadata>();
+  }
+}
+
+export class FakeNoticeService implements Pick<NoticeService, "show"> {
+  readonly messages: string[] = [];
+
+  show(message: string): void {
+    this.messages.push(message);
   }
 }
 

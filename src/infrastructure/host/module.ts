@@ -5,6 +5,7 @@ import { CommandService } from "./commands/internal/command-service";
 import { InputSuggestService } from "./input-suggests/internal/input-suggest-service";
 import { NoteMetadataService } from "./internal/note-metadata-service";
 import { NotesService } from "./internal/notes-service";
+import { NoticeService } from "./internal/notice-service";
 import { PluginData } from "./internal/plugin-data";
 import { TemplaterService } from "./internal/templater-service";
 import { InternalObsidianAppToken, InternalPluginToken } from "./internal/tokens";
@@ -21,6 +22,7 @@ export function createHostModule(plugin: Plugin): Module {
       c.register(InternalObsidianAppToken).useValue(plugin.app);
       c.register(NotesService).useClass(NotesService).eager();
       c.register(NoteMetadataService).useClass(NoteMetadataService);
+      c.register(NoticeService).useClass(NoticeService);
       c.register(WorkspaceService).useClass(WorkspaceService).eager();
       c.register(TemplaterService).useClass(TemplaterService);
       c.register(PluginData).useClass(PluginData);
