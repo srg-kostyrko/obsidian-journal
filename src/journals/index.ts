@@ -82,6 +82,8 @@ export {
   type OpenJournalEntryResult,
 } from "./flows";
 
+export { JournalUriHandler } from "./uri";
+
 export { describeWrite } from "./settings/describe-write";
 
 export { AddJournalFlow } from "./settings/flows/add-journal.flow";

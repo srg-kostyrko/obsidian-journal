@@ -14,6 +14,7 @@ import { NumberingService } from "./numbering";
 import { JournalsRepository, type JournalsEvents } from "./repository";
 import { TimelineService } from "./timeline";
 import { JournalsEventsToken } from "./tokens";
+import { journalUriModule } from "./uri/module";
 import { VaultSubscriptionService } from "./vault-subscription";
 import { JournalsViewModel } from "./view-model";
 
@@ -32,5 +33,6 @@ export const journalsModule: Module = {
     c.register(JournalsViewModel).useClass(JournalsViewModel).eager();
     journalNotesModule.register(c);
     journalFlowsModule.register(c);
+    journalUriModule.register(c);
   },
 };

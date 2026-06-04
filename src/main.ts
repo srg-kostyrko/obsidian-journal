@@ -12,7 +12,7 @@ import { Container } from "@/infrastructure/di";
 import { FlowsModule } from "@/infrastructure/flows";
 import { createHostModule } from "@/infrastructure/host";
 import { LoggerModule } from "@/infrastructure/logger";
-import { AutoAttachService, AutoCreateService, StartupOpenService } from "@/journals";
+import { AutoAttachService, AutoCreateService, JournalUriHandler, StartupOpenService } from "@/journals";
 import { journalsModule } from "@/journals/module";
 import { journalsSettingsModule } from "@/journals/settings/module";
 import { startupModule } from "@/journals/startup/module";
@@ -68,6 +68,7 @@ export default class JournalPlugin extends Plugin {
     await container.resolve(AutoCreateService).initialize();
     await container.resolve(StartupOpenService).initialize();
     container.resolve(DynamicCommandRegistry).initialize();
+    container.resolve(JournalUriHandler).initialize();
 
     this.#container = container;
   }
