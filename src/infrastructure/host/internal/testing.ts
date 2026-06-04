@@ -82,6 +82,7 @@ export interface FakeHost {
   readonly pluginData: { current: unknown; loadError?: Error; saveError?: Error };
   readonly registeredEventReferences: EventRef[];
   readonly commands: Map<string, Command>;
+  readonly protocolHandlers: Map<string, (parameters: Record<string, string>) => void>;
   readonly ribbonIcons: FakeRibbonIcon[];
   readonly codeBlockProcessors: Map<string, CodeBlockProcessor>;
   readonly registeredViews: Map<string, FakeRegisteredView>;
@@ -91,6 +92,7 @@ export interface FakeHost {
   emitVault(event: "create" | "rename" | "delete", ...arguments_: unknown[]): void;
   emitMetadata(path: string, metadata?: CachedMetadata): void;
   emitActiveLeafChange(file: TFile | null): void;
+  emitProtocol(action: string, parameters: Record<string, string>): void;
   triggerUnload(): void;
   runCodeBlockProcessor(
     language: string,
@@ -143,6 +145,7 @@ export function createFakeHost(): FakeHost {
   const pluginData: FakeHost["pluginData"] = { current: undefined };
   const registeredEventReferences: EventRef[] = [];
   const commands = new Map<string, Command>();
+  const protocolHandlers = new Map<string, (parameters: Record<string, string>) => void>();
   const ribbonIcons: FakeRibbonIcon[] = [];
   const codeBlockProcessors = new Map<string, CodeBlockProcessor>();
   const registeredViews = new Map<string, FakeRegisteredView>();
@@ -362,6 +365,9 @@ export function createFakeHost(): FakeHost {
       commands.set(command.id, command);
       return command;
     },
+    registerObsidianProtocolHandler(action: string, handler: (parameters: Record<string, string>) => void): void {
+      protocolHandlers.set(action, handler);
+    },
     removeCommand(commandId: string): void {
       commands.delete(commandId);
     },
@@ -391,6 +397,7 @@ export function createFakeHost(): FakeHost {
     pluginData,
     registeredEventReferences,
     commands,
+    protocolHandlers,
     ribbonIcons,
     codeBlockProcessors,
     registeredViews,
@@ -420,6 +427,9 @@ export function createFakeHost(): FakeHost {
     emitActiveLeafChange(file): void {
       workspaceState.activeFile = file;
       workspaceEvents.emit("active-leaf-change", { view: { file } });
+    },
+    emitProtocol(action, parameters): void {
+      protocolHandlers.get(action)?.(parameters);
     },
     triggerUnload(): void {
       for (const callback of unloadCallbacks) callback();

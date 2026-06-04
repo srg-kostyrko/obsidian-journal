@@ -12,6 +12,7 @@ import { InternalObsidianAppToken, InternalPluginToken } from "./internal/tokens
 import { WorkspaceService } from "./internal/workspace-service";
 import { modalsModule } from "./modals/module";
 import { SuggestService } from "./suggests/internal/suggest-service";
+import { UriService } from "./uri/internal/uri-service";
 
 import type { Plugin } from "obsidian";
 
@@ -29,6 +30,7 @@ export function createHostModule(plugin: Plugin): Module {
       c.register(SuggestService).useClass(SuggestService);
       c.register(InputSuggestService).useClass(InputSuggestService);
       c.register(CommandService).useClass(CommandService);
+      c.register(UriService).useClass(UriService);
       c.register(CodeBlockService).useClass(CodeBlockService).eager();
       modalsModule.register(c);
     },
