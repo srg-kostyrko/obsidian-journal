@@ -7,6 +7,7 @@ import { CollectionDefinitionToken, DashboardBlockToken, SubpageToken, defineDas
 import { customIntervalsBlock } from "./blocks/custom-intervals/custom-intervals-block";
 import IntervalBlockSection from "./blocks/custom-intervals/ui/IntervalBlockSection.vue";
 import { dividerBlock } from "./blocks/divider/divider-block";
+import { markdownTemplateBlock } from "./blocks/markdown-template/markdown-template-block";
 import { monthCalendarBlock } from "./blocks/month-calendar/month-calendar-block";
 import { toolbarBlock } from "./blocks/toolbar/toolbar-block";
 import { weekCalendarBlock } from "./blocks/week-calendar/week-calendar-block";
@@ -44,6 +45,7 @@ export const viewsModule: Module = {
     c.register(ViewBlockDefinitionToken).useValue(monthCalendarBlock);
     c.register(ViewBlockDefinitionToken).useValue(weekCalendarBlock);
     c.register(ViewBlockDefinitionToken).useValue(customIntervalsBlock);
+    c.register(ViewBlockDefinitionToken).useValue(markdownTemplateBlock);
 
     c.register(ToolbarItemDefinitionToken).useValue(shelfSelectorItem);
     c.register(ToolbarItemDefinitionToken).useValue(periodButtonsItem);
