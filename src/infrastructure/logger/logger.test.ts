@@ -64,6 +64,14 @@ describe("Logger", () => {
       new Logger("a", [sink]).child("b").info("hi");
       expect(sink.records).toHaveLength(1);
     });
+
+    it("inherits the parent's gate so a threshold change filters child records", () => {
+      const gate = new LogLevelGate("debug");
+      const child = new Logger("a", [sink], gate).child("b");
+      gate.setThreshold("warn");
+      child.info("filtered");
+      expect(sink.records).toHaveLength(0);
+    });
   });
 
   describe("level filtering", () => {
