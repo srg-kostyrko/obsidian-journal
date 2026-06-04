@@ -55,21 +55,26 @@ const rendered = computed(() => {
   return engine.renderString(rawTemplate.value, context);
 });
 
+const unsubscribes: (() => void)[] = [];
+
 onMounted(() => {
   void load();
   const reloadIfMatch = (path: string): void => {
     if (path === props.config.templatePath) void load();
   };
-  const offMeta = notes.events.on("metadata-changed", reloadIfMatch);
-  const offCreated = notes.events.on("created", (note) => reloadIfMatch(note.path));
-  const offRenamed = notes.events.on("renamed", (event) => {
-    if (event.to === props.config.templatePath || event.from === props.config.templatePath) void load();
-  });
-  onUnmounted(() => {
-    offMeta();
-    offCreated();
-    offRenamed();
-  });
+  unsubscribes.push(
+    notes.events.on("metadata-changed", reloadIfMatch),
+    notes.events.on("created", (note) => reloadIfMatch(note.path)),
+    notes.events.on("renamed", (event) => {
+      if (event.to === props.config.templatePath || event.from === props.config.templatePath) void load();
+    }),
+    notes.events.on("deleted", reloadIfMatch),
+  );
+});
+
+onUnmounted(() => {
+  for (const unsubscribe of unsubscribes) unsubscribe();
+  unsubscribes.length = 0;
 });
 
 watch(
