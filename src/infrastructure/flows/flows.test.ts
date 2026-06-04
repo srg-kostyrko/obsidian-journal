@@ -1,8 +1,7 @@
 import { beforeEach, describe, expect, it } from "vitest";
 
 import { Container } from "@/infrastructure/di";
-import { LoggerFactory, LoggerFactoryToken, LogSinkMultiToken } from "@/infrastructure/logger";
-import { MemorySink } from "@/infrastructure/logger/testing";
+import { createLoggerTestingModule, type MemorySink } from "@/infrastructure/logger/testing";
 import { AsyncResult } from "@/infrastructure/result";
 import { expectErr, expectOk } from "@/infrastructure/result/testing";
 
@@ -38,10 +37,9 @@ class FailingFlow implements Flow<null, never, DomainError> {
 }
 
 function buildContainer(): { c: Container; sink: MemorySink } {
-  const sink = new MemorySink();
+  const { module, sink } = createLoggerTestingModule();
   const c = new Container();
-  c.register(LogSinkMultiToken).useValue(sink);
-  c.register(LoggerFactoryToken).useClass(LoggerFactory);
+  c.addModule(module);
   c.register(Flows).useClass(Flows);
   return { c, sink };
 }

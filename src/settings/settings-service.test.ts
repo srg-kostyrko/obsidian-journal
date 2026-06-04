@@ -4,8 +4,7 @@ import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { Container } from "@/infrastructure/di";
 import { PluginData, PluginDataIOError } from "@/infrastructure/host";
 import { FakePluginData } from "@/infrastructure/host/testing";
-import { LoggerFactory, LoggerFactoryToken, LogSinkMultiToken } from "@/infrastructure/logger";
-import { MemorySink } from "@/infrastructure/logger/testing";
+import { createLoggerTestingModule } from "@/infrastructure/logger/testing";
 import { AsyncResult } from "@/infrastructure/result";
 import { expectErr, expectOk } from "@/infrastructure/result/testing";
 
@@ -35,8 +34,7 @@ function build(
   const data = new FakePluginData(options.raw);
   const c = new Container();
   c.register(PluginData).useValue(data as unknown as PluginData);
-  c.register(LogSinkMultiToken).useValue(new MemorySink());
-  c.register(LoggerFactoryToken).useClass(LoggerFactory);
+  c.addModule(createLoggerTestingModule().module);
   for (const s of options.slices ?? [calendarSlice]) {
     c.register(SliceDefinitionToken).useValue(s as never);
   }

@@ -6,7 +6,7 @@ import type { AnchorString } from "@/calendar/types";
 import { Container, InjectorToken } from "@/infrastructure/di";
 import { createFakeHost } from "@/infrastructure/host/internal/testing";
 import { InternalObsidianAppToken, InternalPluginToken } from "@/infrastructure/host/internal/tokens";
-import { LoggerFactory, LoggerFactoryToken } from "@/infrastructure/logger";
+import { createLoggerTestingModule } from "@/infrastructure/logger/testing";
 import { ShelvesRepository } from "@/shelves";
 import type { ShelvesEvents } from "@/shelves";
 
@@ -44,7 +44,7 @@ function build(view: View = seedView()) {
   const c = new Container();
   c.register(InternalPluginToken).useValue(host.plugin);
   c.register(InternalObsidianAppToken).useValue(host.app);
-  c.register(LoggerFactoryToken).useClass(LoggerFactory);
+  c.addModule(createLoggerTestingModule().module);
   c.register(ViewsEventsToken).useValue(events);
   c.register(ViewsRepository).useValue(repo);
   c.register(ViewsService).useClass(ViewsService);
@@ -108,7 +108,7 @@ describe("JournalViewLeaf", () => {
       const c = new Container();
       c.register(InternalPluginToken).useValue(host.plugin);
       c.register(InternalObsidianAppToken).useValue(host.app);
-      c.register(LoggerFactoryToken).useClass(LoggerFactory);
+      c.addModule(createLoggerTestingModule().module);
       c.register(ViewsEventsToken).useValue(events);
       c.register(ViewsRepository).useValue(repo);
       c.register(ViewsService).useClass(ViewsService);
@@ -160,7 +160,7 @@ describe("JournalViewLeaf", () => {
       const c = new Container();
       c.register(InternalPluginToken).useValue(host.plugin);
       c.register(InternalObsidianAppToken).useValue(host.app);
-      c.register(LoggerFactoryToken).useClass(LoggerFactory);
+      c.addModule(createLoggerTestingModule().module);
       c.register(ViewsEventsToken).useValue(events);
       c.register(ViewsRepository).useValue(repo);
       c.register(ShelvesRepository).useValue(shelves);
@@ -200,7 +200,7 @@ describe("JournalViewLeaf", () => {
       const c = new Container();
       c.register(InternalPluginToken).useValue(host.plugin);
       c.register(InternalObsidianAppToken).useValue(host.app);
-      c.register(LoggerFactoryToken).useClass(LoggerFactory);
+      c.addModule(createLoggerTestingModule().module);
       c.register(ViewsEventsToken).useValue(events);
       c.register(ViewsRepository).useValue(repo);
       c.register(ViewBlockDefinitionToken).useValue(trivialBlock);

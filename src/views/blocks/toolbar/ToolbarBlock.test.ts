@@ -4,7 +4,7 @@ import { afterEach, describe, expect, it } from "vitest";
 import { defineComponent, h } from "vue";
 
 import { Container, provideInjectorOnApp } from "@/infrastructure/di";
-import { LoggerFactory, LoggerFactoryToken } from "@/infrastructure/logger";
+import { createLoggerTestingModule } from "@/infrastructure/logger/testing";
 
 import { defineToolbarItem, type ToolbarItemDefinition } from "../../define-toolbar-item";
 import { provideViewContextStub } from "../../testing";
@@ -40,7 +40,7 @@ const defaultRegistry: readonly ToolbarItemDefinition[] = [stubItem];
 
 function buildContainer(registry: readonly ToolbarItemDefinition[]) {
   const container = new Container();
-  container.register(LoggerFactoryToken).useClass(LoggerFactory);
+  container.addModule(createLoggerTestingModule().module);
   for (const item of registry) container.register(ToolbarItemDefinitionToken).useValue(item);
   return container;
 }

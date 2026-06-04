@@ -4,7 +4,7 @@ import type { AnchorString } from "@/calendar";
 import { Container } from "@/infrastructure/di";
 import { NoteMetadataService, NotesService } from "@/infrastructure/host";
 import type { NoteMetadata, VaultPath } from "@/infrastructure/host";
-import { LoggerFactory, LoggerFactoryToken } from "@/infrastructure/logger";
+import { createLoggerTestingModule } from "@/infrastructure/logger/testing";
 import { AsyncResult, None, Option, Some } from "@/infrastructure/result";
 import { CycleService, JournalsRepository } from "@/journals";
 import { journalDefaultsFor, type JournalConfig } from "@/journals/config";
@@ -81,7 +81,7 @@ function build(options: BuildOptions): Stubs {
   container.register(NoteMetadataService).useValue(metadata);
   container.register(CycleService).useValue(cycle);
   container.register(JournalsRepository).useValue(repository);
-  container.register(LoggerFactoryToken).useClass(LoggerFactory);
+  container.addModule(createLoggerTestingModule().module);
   container.register(DataMigrationService).useClass(DataMigrationService);
 
   const service = container.resolve(DataMigrationService);

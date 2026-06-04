@@ -3,7 +3,7 @@ import { beforeEach, describe, expect, it } from "vitest";
 import { defineComponent, h } from "vue";
 
 import { Container } from "@/infrastructure/di";
-import { LoggerFactory, LoggerFactoryToken } from "@/infrastructure/logger";
+import { createLoggerTestingModule } from "@/infrastructure/logger/testing";
 
 import { createFakeHost, type FakeHost } from "../../internal/testing";
 import { InternalObsidianAppToken, InternalPluginToken } from "../../internal/tokens";
@@ -24,7 +24,7 @@ function build(): { container: Container; host: FakeHost } {
   const container = new Container();
   container.register(InternalPluginToken).useValue(host.plugin);
   container.register(InternalObsidianAppToken).useValue(host.app);
-  container.register(LoggerFactoryToken).useClass(LoggerFactory);
+  container.addModule(createLoggerTestingModule().module);
   container.register(CodeBlockService).useClass(CodeBlockService);
   return { container, host };
 }

@@ -5,7 +5,7 @@ import { Container } from "@/infrastructure/di";
 import { CommandService } from "@/infrastructure/host/commands";
 import { createFakeHost } from "@/infrastructure/host/internal/testing";
 import { InternalObsidianAppToken, InternalPluginToken } from "@/infrastructure/host/internal/tokens";
-import { LoggerFactory, LoggerFactoryToken } from "@/infrastructure/logger";
+import { createLoggerTestingModule } from "@/infrastructure/logger/testing";
 
 import { ViewsRepository } from "./repository";
 import { ViewsEventsToken, type ViewsEvents } from "./tokens";
@@ -39,7 +39,7 @@ function build(seeds: Record<string, View> = {}) {
   const c = new Container();
   c.register(InternalPluginToken).useValue(host.plugin);
   c.register(InternalObsidianAppToken).useValue(host.app);
-  c.register(LoggerFactoryToken).useClass(LoggerFactory);
+  c.addModule(createLoggerTestingModule().module);
   c.register(CommandService).useClass(CommandService);
   c.register(ViewsRepository).useValue(repo);
   c.register(ViewsEventsToken).useValue(events);
