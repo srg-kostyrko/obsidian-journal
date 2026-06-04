@@ -16,6 +16,8 @@ import type {
   PluginDataIOError,
   WorkspaceOpenError,
 } from "./errors";
+import type { Disposer } from "./input-suggests/types";
+import type { MarkdownRenderService } from "./internal/markdown-render-service";
 import type { NoteMetadataService } from "./internal/note-metadata-service";
 import type { NotesService } from "./internal/notes-service";
 import type { NoticeService } from "./internal/notice-service";
@@ -67,6 +69,12 @@ export class FakeNotesService implements Pick<
   seed(path: VaultPath, content = "", frontmatter: Record<string, unknown> = {}): void {
     this.#files.set(path, { content, frontmatter });
     this.#registerParentFolders(path);
+  }
+
+  externalEdit(path: VaultPath, content: string): void {
+    const entry = this.#files.get(path);
+    this.#files.set(path, { content, frontmatter: entry?.frontmatter ?? {} });
+    this.#emitter.emit("metadata-changed", path);
   }
 
   #registerParentFolders(path: VaultPath): void {
@@ -159,6 +167,15 @@ export class FakeNotesService implements Pick<
     this.#files.set(path, { ...entry, frontmatter: next });
     this.#emitter.emit("metadata-changed", path);
     return AsyncResult.ok(undefined);
+  }
+}
+
+export class FakeMarkdownRenderService implements Pick<MarkdownRenderService, "render"> {
+  render(element: HTMLElement, markdown: string, _sourcePath: string): Disposer {
+    element.textContent = markdown;
+    return () => {
+      element.replaceChildren();
+    };
   }
 }
 

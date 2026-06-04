@@ -3,6 +3,7 @@ import type { Module } from "@/infrastructure/di";
 import { CodeBlockService } from "./code-blocks/internal/code-block-service";
 import { CommandService } from "./commands/internal/command-service";
 import { InputSuggestService } from "./input-suggests/internal/input-suggest-service";
+import { MarkdownRenderService } from "./internal/markdown-render-service";
 import { NoteMetadataService } from "./internal/note-metadata-service";
 import { NotesService } from "./internal/notes-service";
 import { NoticeService } from "./internal/notice-service";
@@ -23,6 +24,7 @@ export function createHostModule(plugin: Plugin): Module {
       c.register(InternalObsidianAppToken).useValue(plugin.app);
       c.register(NotesService).useClass(NotesService).eager();
       c.register(NoteMetadataService).useClass(NoteMetadataService);
+      c.register(MarkdownRenderService).useClass(MarkdownRenderService);
       c.register(NoticeService).useClass(NoticeService);
       c.register(WorkspaceService).useClass(WorkspaceService).eager();
       c.register(TemplaterService).useClass(TemplaterService);
