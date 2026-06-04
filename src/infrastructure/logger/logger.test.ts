@@ -1,5 +1,6 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
+import { LogLevelGate } from "./log-level-gate";
 import { Logger } from "./logger";
 import { MemorySink } from "./testing";
 
@@ -61,6 +62,18 @@ describe("Logger", () => {
 
     it("shares the parent's sinks", () => {
       new Logger("a", [sink]).child("b").info("hi");
+      expect(sink.records).toHaveLength(1);
+    });
+  });
+
+  describe("level filtering", () => {
+    it("drops a record below the gate threshold before any sink sees it", () => {
+      new Logger("svc", [sink], new LogLevelGate("warn")).info("hi");
+      expect(sink.records).toHaveLength(0);
+    });
+
+    it("passes a record at or above the gate threshold to the sinks", () => {
+      new Logger("svc", [sink], new LogLevelGate("warn")).error("boom");
       expect(sink.records).toHaveLength(1);
     });
   });

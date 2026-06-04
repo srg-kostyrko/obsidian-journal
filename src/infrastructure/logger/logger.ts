@@ -1,13 +1,18 @@
+import { LogLevelGate } from "./log-level-gate";
+
 import type { Fields, LogLevel, LogRecord, LogSink } from "./types";
 
 export class Logger {
   readonly #sinks: readonly LogSink[];
+  readonly #gate: LogLevelGate;
 
   constructor(
     readonly name: string,
     sinks: readonly LogSink[],
+    gate: LogLevelGate = new LogLevelGate("debug"),
   ) {
     this.#sinks = sinks;
+    this.#gate = gate;
   }
 
   debug(message: string, fields?: Fields): void {
@@ -28,10 +33,11 @@ export class Logger {
 
   child(name: string): Logger {
     const composed = this.name === "" ? name : `${this.name}.${name}`;
-    return new Logger(composed, this.#sinks);
+    return new Logger(composed, this.#sinks, this.#gate);
   }
 
   #emit(level: LogLevel, message: string, fields?: Fields): void {
+    if (!this.#gate.isEnabled(level)) return;
     const record: LogRecord = {
       timestamp: Date.now(),
       level,
