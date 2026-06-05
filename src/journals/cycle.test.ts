@@ -202,6 +202,53 @@ describe("CycleService", () => {
       const next = cycle.nextAnchor("s", "2024-01-01" as AnchorString);
       expect(next.isSome() && next.value).toBe("2024-01-15");
     });
+
+    it("anchorOf maps a date inside an extended interval to that interval's anchor", () => {
+      const c = buildContainer({ s: customJournal("s", "week", 1, "2024-01-01") });
+      const index = c.resolve(JournalsIndex);
+      index.register({
+        journalName: "s",
+        anchor: "2024-01-01" as AnchorString,
+        path: "S/1.md" as VaultPath,
+        endDate: "2024-01-14" as AnchorString, // extended through Jan 14 instead of Jan 7
+      });
+      const cycle = c.resolve(CycleService);
+      // 2024-01-10 lies in the extended first interval [2024-01-01, 2024-01-14], not a
+      // phantom computed week starting 2024-01-08.
+      const anchor = cycle.anchorOf("s", unwrapResult(CalendarDate.parse("2024-01-10")));
+      expect(anchor.isSome() && anchor.value).toBe("2024-01-01");
+    });
+
+    it("anchorOf steps past an extended interval to the next computed anchor", () => {
+      const c = buildContainer({ s: customJournal("s", "week", 1, "2024-01-01") });
+      const index = c.resolve(JournalsIndex);
+      index.register({
+        journalName: "s",
+        anchor: "2024-01-01" as AnchorString,
+        path: "S/1.md" as VaultPath,
+        endDate: "2024-01-14" as AnchorString,
+      });
+      const cycle = c.resolve(CycleService);
+      // The interval after the extension starts 2024-01-15; 2024-01-20 falls inside it.
+      const anchor = cycle.anchorOf("s", unwrapResult(CalendarDate.parse("2024-01-20")));
+      expect(anchor.isSome() && anchor.value).toBe("2024-01-15");
+    });
+
+    it("anchorOf maps a date inside an extended interval that precedes the configured anchor", () => {
+      const c = buildContainer({ s: customJournal("s", "week", 1, "2024-01-15") });
+      const index = c.resolve(JournalsIndex);
+      index.register({
+        journalName: "s",
+        anchor: "2023-12-18" as AnchorString,
+        path: "S/prev.md" as VaultPath,
+        endDate: "2024-01-14" as AnchorString, // extended right up to the day before the anchor
+      });
+      const cycle = c.resolve(CycleService);
+      // 2024-01-05 lies in the stored interval [2023-12-18, 2024-01-14], reached by walking
+      // backward from the configured anchor 2024-01-15.
+      const anchor = cycle.anchorOf("s", unwrapResult(CalendarDate.parse("2024-01-05")));
+      expect(anchor.isSome() && anchor.value).toBe("2023-12-18");
+    });
   });
 
   describe("offsets", () => {
