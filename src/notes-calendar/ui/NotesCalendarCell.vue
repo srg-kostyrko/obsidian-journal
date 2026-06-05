@@ -28,6 +28,7 @@ const isToday = computed(() => rawPeriod.value.contains(CalendarDate.today()));
     :data-active="isActive || null"
     :data-inactive="isInactive || null"
     :data-today="isToday || null"
+    @click="cell.open(rawPeriod, $event)"
     @contextmenu.prevent="cell.openContextMenu(rawPeriod, $event)"
     @mouseenter="cell.openPreview(rawPeriod, $event)"
   >

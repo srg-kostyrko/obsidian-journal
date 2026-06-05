@@ -106,6 +106,17 @@ describe("NotesCalendarCell", () => {
   });
 
   describe("event handlers", () => {
+    it("invokes cell.open on click", async () => {
+      const open = vi.fn();
+      const { container } = mount({ period: may25, cell: stubApi({ open }) });
+      const cell = container.querySelector<HTMLElement>(".notes-calendar-cell")!;
+      await userEvent.click(cell);
+      expect(open).toHaveBeenCalled();
+      const firstCall = open.mock.calls[0] as [Period, MouseEvent];
+      expect(firstCall[0]).toBe(may25);
+      expect(firstCall[1]).toBeInstanceOf(MouseEvent);
+    });
+
     it("invokes cell.openContextMenu and prevents the browser default on contextmenu", () => {
       const openContextMenu = vi.fn();
       const { container } = mount({ period: may25, cell: stubApi({ openContextMenu }) });
