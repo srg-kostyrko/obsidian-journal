@@ -4,7 +4,7 @@ import type { JournalWrite } from "@/journals";
 import UiIconButton from "@/ui/UiIconButton.vue";
 import UiSettingRow from "@/ui/UiSettingRow.vue";
 
-import { commandTypeLabel } from "./command-type-label";
+import { commandContextLabel, commandTypeLabel } from "./command-type-label";
 
 import type { CommandConfig } from "../config";
 
@@ -24,6 +24,9 @@ defineEmits<{ edit: [id: string]; delete: [id: string] }>();
       <template #name>
         {{ command.name }}
         <span class="flair">{{ commandTypeLabel(writeType, command.type, command.context) }}</span>
+        <span v-if="commandContextLabel(command.context)" class="command-context">
+          {{ commandContextLabel(command.context) }}
+        </span>
       </template>
       <UiIconButton icon="pencil" :tooltip="`${m.command_list_edit()} ${command.name}`" @click="$emit('edit', id)" />
       <UiIconButton
@@ -34,3 +37,9 @@ defineEmits<{ edit: [id: string]; delete: [id: string] }>();
     </UiSettingRow>
   </template>
 </template>
+
+<style scoped>
+.command-context {
+  color: var(--text-muted);
+}
+</style>

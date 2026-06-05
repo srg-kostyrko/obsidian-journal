@@ -114,5 +114,16 @@ describe("ConnectNoteModal", () => {
       await userEvent.click(screen.getByText(m.connect_note_modal_connect()));
       expect(submit).toHaveBeenCalledWith(expect.objectContaining({ action: "connect", journalName: "daily" }));
     });
+
+    it("spells out the current and configured folder on the move toggle", () => {
+      const repo = fakeRepo({ daily: fixedJournal("daily", { type: "day" }, { folder: "journals" }) });
+      const container = buildContainer(repo);
+      const api: ModalApi<ConnectNoteResult> = { submit: vi.fn(), cancel: vi.fn() };
+
+      mountModal("inbox/note.md" as VaultPath, container, api);
+      expect(
+        screen.getByText(m.connect_note_modal_move_description({ current: "inbox", configured: "journals" })),
+      ).toBeTruthy();
+    });
   });
 });

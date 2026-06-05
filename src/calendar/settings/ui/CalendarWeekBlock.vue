@@ -68,6 +68,7 @@ function change(): void {
     </template>
     <UiSettingRow heading :name="m.calendar_week_config_title()">
       <template #description>
+        <div class="rationale">{{ m.calendar_week_config_description() }}</div>
         <div class="preset-name">{{ m.calendar_preset_name({ preset: activePreset }) }}</div>
         <div class="whitespace">{{ activeDescription }}</div>
       </template>
@@ -91,6 +92,9 @@ function change(): void {
 }
 .section-title {
   font-weight: var(--font-semibold);
+}
+.rationale {
+  margin-bottom: var(--size-2-2);
 }
 .preset-name {
   font-weight: var(--font-semibold);

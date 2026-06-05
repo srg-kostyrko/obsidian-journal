@@ -24,4 +24,14 @@ describe("DateFormatPreview", () => {
     render(DateFormatPreview, { props: { format: "YYYY/MM" } });
     expect(screen.getByText(/^\d{4}\/\d{2}$/)).toBeTruthy();
   });
+
+  it("warns when the pattern uses the ISO week token W", () => {
+    render(DateFormatPreview, { props: { format: "GGGG-[W]WW" } });
+    expect(screen.getByText(/does not respect custom week settings/)).toBeTruthy();
+  });
+
+  it("does not warn when the pattern uses the locale week token w", () => {
+    render(DateFormatPreview, { props: { format: "GGGG-[W]ww" } });
+    expect(screen.queryByText(/does not respect custom week settings/)).toBeNull();
+  });
 });

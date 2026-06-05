@@ -50,6 +50,7 @@ const onSubmit = handleSubmit((parameters) => {
   <form @submit.prevent="onSubmit">
     <UiSettingRow>
       <template #name>{{ m.bulk_add_folder_label() }}</template>
+      <template #description>{{ m.bulk_add_folder_description() }}</template>
       <FolderInput v-model="folder" />
     </UiSettingRow>
 
@@ -68,6 +69,13 @@ const onSubmit = handleSubmit((parameters) => {
 
     <UiSettingRow>
       <template #name>{{ m.bulk_add_date_format_label() }}</template>
+      <template #description>
+        <a target="_blank" href="https://momentjs.com/docs/#/displaying/format/">
+          {{ m.journal_edit_date_format_moment_doc_link() }}
+        </a>
+        <div>{{ m.bulk_add_date_format_omit_time() }}</div>
+        <div v-if="values.datePlace === 'property'">{{ m.bulk_add_date_format_property_note() }}</div>
+      </template>
       <UiTextInput v-model="dateFormat" :aria-label="m.bulk_add_date_format_label()" />
     </UiSettingRow>
 
@@ -122,6 +130,7 @@ const onSubmit = handleSubmit((parameters) => {
 
     <UiSettingRow>
       <template #name>{{ m.bulk_add_dry_run_label() }}</template>
+      <template #description>{{ m.bulk_add_dry_run_description() }}</template>
       <UiToggle v-model="dryRun" />
     </UiSettingRow>
 

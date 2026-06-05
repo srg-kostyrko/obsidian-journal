@@ -7,6 +7,7 @@ import { afterEach, describe, expect, it } from "vitest";
 import { defineComponent, h } from "vue";
 
 import { decorationConditionSchema, type JournalDecorationCondition } from "@/decorations";
+import { m } from "@/i18n";
 
 import ConditionOffset from "./ConditionOffset.vue";
 
@@ -39,5 +40,15 @@ describe("ConditionOffset", () => {
     await userEvent.clear(input);
     await userEvent.type(input, "5");
     expect(host.values.c.offset).toBe(5);
+  });
+
+  it("explains a non-negative offset as measured from the interval start", () => {
+    mount({ type: "offset", offset: 3 });
+    expect(screen.getByText(m.decoration_condition_offset_hint({ days: 3, side: "start" }))).toBeTruthy();
+  });
+
+  it("explains a negative offset as measured from the interval end", () => {
+    mount({ type: "offset", offset: -2 });
+    expect(screen.getByText(m.decoration_condition_offset_hint({ days: 2, side: "end" }))).toBeTruthy();
   });
 });

@@ -8,6 +8,8 @@ import { TemplateEngine } from "@/templates";
 
 import { renderForPreview } from "./render-for-preview";
 import { useTodayMetadata } from "./use-today-metadata";
+import { templateHasWrongWeek } from "./wrong-week";
+import WrongWeekWarning from "./WrongWeekWarning.vue";
 
 const props = defineProps<{ journalName: string; folder: string }>();
 
@@ -24,6 +26,8 @@ const resolved = computed(() => {
   const context = pathSvc.contextFor(config, md);
   return renderForPreview(engine, props.folder, context);
 });
+
+const wrongWeek = computed(() => templateHasWrongWeek(props.folder));
 </script>
 
 <template>
@@ -31,4 +35,5 @@ const resolved = computed(() => {
     {{ m.journal_edit_folder_path_preview_label() }}
     <b class="u-pop">{{ resolved }}</b>
   </div>
+  <WrongWeekWarning v-if="wrongWeek" />
 </template>

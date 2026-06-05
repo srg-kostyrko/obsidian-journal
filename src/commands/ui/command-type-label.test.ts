@@ -2,7 +2,7 @@ import { describe, expect, it } from "vitest";
 
 import { m } from "@/i18n";
 
-import { commandTypeLabel } from "./command-type-label";
+import { commandContextLabel, commandTypeLabel } from "./command-type-label";
 
 describe("commandTypeLabel", () => {
   it("labels a same-type daily command as today", () => {
@@ -29,5 +29,19 @@ describe("commandTypeLabel", () => {
     expect(commandTypeLabel("month", "same_next_year", "today")).toBe(
       m.command_type_label({ type: "same_next_year", writeType: "month" }),
     );
+  });
+});
+
+describe("commandContextLabel", () => {
+  it("has no clarifier for the today context", () => {
+    expect(commandContextLabel("today")).toBeNull();
+  });
+
+  it("clarifies that the open-note context can fall back to today", () => {
+    expect(commandContextLabel("open_note")).toBe(m.command_context_open_note_clarifier());
+  });
+
+  it("clarifies that the only-open-note context uses the open note's date", () => {
+    expect(commandContextLabel("only_open_note")).toBe(m.command_context_only_open_note_clarifier());
   });
 });

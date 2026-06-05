@@ -325,7 +325,10 @@ function editSequenceKey(): void {
 
       <UiSettingRow :name="m.journal_edit_end_writing_label()">
         <template #description>
-          {{ m.journal_edit_end_description({ kind: config.timeline.end.kind }) }}
+          <div>{{ m.journal_edit_end_description({ kind: config.timeline.end.kind }) }}</div>
+          <div v-if="config.timeline.end.kind === 'repeats' && !config.timeline.start" class="journal-hint">
+            {{ m.journal_edit_end_repeats_needs_start_warning() }}
+          </div>
         </template>
         <UiDropdown
           :model-value="config.timeline.end.kind"

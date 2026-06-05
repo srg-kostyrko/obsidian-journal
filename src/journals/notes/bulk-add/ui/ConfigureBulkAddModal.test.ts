@@ -66,4 +66,12 @@ describe("ConfigureBulkAddModal", () => {
     await userEvent.selectOptions(datePlace, "property");
     expect(screen.getByText(m.bulk_add_property_name_label())).toBeTruthy();
   });
+
+  it("notes the stored-format caveat only when reading the date from a property", async () => {
+    mountModal();
+    expect(screen.queryByText(m.bulk_add_date_format_property_note())).toBeNull();
+    const datePlace = screen.getByRole("combobox", { name: m.bulk_add_date_place_label() });
+    await userEvent.selectOptions(datePlace, "property");
+    expect(screen.getByText(m.bulk_add_date_format_property_note())).toBeTruthy();
+  });
 });

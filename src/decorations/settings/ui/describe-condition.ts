@@ -27,8 +27,8 @@ export function describeCondition(condition: JournalDecorationCondition, calenda
     )
     .with({ type: "date" }, (c) =>
       m.decoration_condition_date_describe({
-        day: c.day,
-        month: c.month,
+        day: c.day === -1 ? m.decoration_condition_date_any() : String(c.day),
+        month: c.month === -1 ? m.decoration_condition_date_any() : String(c.month + 1),
         year: c.year === null ? "null" : String(c.year),
       }),
     )

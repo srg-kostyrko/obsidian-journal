@@ -17,6 +17,8 @@ import {
   type NavBlockRow,
 } from "@/journals";
 import VariableReferenceHint from "@/journals/settings/ui/VariableReferenceHint.vue";
+import { templateHasWrongWeek } from "@/journals/settings/ui/wrong-week";
+import WrongWeekWarning from "@/journals/settings/ui/WrongWeekWarning.vue";
 import { TemplateEngine } from "@/templates";
 import UiButton from "@/ui/UiButton.vue";
 import UiColorSettingsPicker from "@/ui/UiColorSettingsPicker.vue";
@@ -93,6 +95,8 @@ const numberingVariableNames = computed<readonly string[]>(() =>
 
 const hasCycle = computed(() => config.value !== undefined && config.value.write.type !== "day");
 
+const wrongWeek = computed(() => templateHasWrongWeek(template.value ?? ""));
+
 const resolved = computed(() => {
   if (!config.value) return "";
   const today = Clock.now().format("YYYY-MM-DD") as AnchorString;
@@ -127,6 +131,7 @@ const onSubmit = handleSubmit((row) => {
           :numbering-variable-names="numberingVariableNames"
         />
         <div>{{ m.nav_block_row_resolved_preview({ text: resolved }) }}</div>
+        <WrongWeekWarning v-if="wrongWeek" />
         <span v-for="error of errorBag.template" :key="error" class="form-error">{{ error }}</span>
       </template>
       <UiTextInput v-model="template" :aria-label="m.nav_block_row_field_template()" />

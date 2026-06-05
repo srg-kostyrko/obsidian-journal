@@ -318,6 +318,34 @@ describe("JournalEditSubpage", () => {
     });
   });
 
+  describe("repeats end mode", () => {
+    it("warns to set a start date when ending after repeats with no start", async () => {
+      const initial = {
+        version: 4,
+        journals: {
+          daily: makeJournal("daily", { timeline: { start: "", end: { kind: "repeats", count: 3 } } }),
+        },
+      };
+      const { container } = await setup(initial);
+      mount(container, "daily");
+      await userEvent.click(screen.getByText(m.journal_edit_section_timeline()));
+      expect(screen.getByText(m.journal_edit_end_repeats_needs_start_warning())).toBeTruthy();
+    });
+
+    it("omits the start-date warning when a start date is set", async () => {
+      const initial = {
+        version: 4,
+        journals: {
+          daily: makeJournal("daily", { timeline: { start: "2024-01-01", end: { kind: "repeats", count: 3 } } }),
+        },
+      };
+      const { container } = await setup(initial);
+      mount(container, "daily");
+      await userEvent.click(screen.getByText(m.journal_edit_section_timeline()));
+      expect(screen.queryByText(m.journal_edit_end_repeats_needs_start_warning())).toBeNull();
+    });
+  });
+
   describe("numbering anchor DatePicker", () => {
     it("writes the picked date to numbering.anchorDate", async () => {
       const initial = {

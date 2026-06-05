@@ -80,6 +80,11 @@ const needMove = computed(() => {
   return splitVaultPath(props.path)[0] !== splitVaultPath(configuredPath.value)[0];
 });
 
+const currentName = computed(() => splitVaultPath(props.path)[1]);
+const configuredName = computed(() => (configuredPath.value ? splitVaultPath(configuredPath.value)[1] : ""));
+const currentFolder = computed(() => splitVaultPath(props.path)[0]);
+const configuredFolder = computed(() => (configuredPath.value ? splitVaultPath(configuredPath.value)[0] : ""));
+
 const canConnect = computed(() => Boolean(anchor.value) && (!occupant.value || override.value));
 
 function disconnect(): void {
@@ -124,14 +129,21 @@ function connect(): void {
     </UiSettingRow>
     <UiSettingRow v-if="occupant">
       <template #name>{{ m.connect_note_modal_override_label() }}</template>
+      <template #description>{{ m.connect_note_modal_override_description({ path: occupant }) }}</template>
       <UiToggle v-model="override" :tooltip="m.connect_note_modal_override_label()" />
     </UiSettingRow>
     <UiSettingRow v-if="needRename">
       <template #name>{{ m.connect_note_modal_rename_label() }}</template>
+      <template #description>
+        {{ m.connect_note_modal_rename_description({ current: currentName, configured: configuredName }) }}
+      </template>
       <UiToggle v-model="rename" :tooltip="m.connect_note_modal_rename_label()" />
     </UiSettingRow>
     <UiSettingRow v-if="needMove">
       <template #name>{{ m.connect_note_modal_move_label() }}</template>
+      <template #description>
+        {{ m.connect_note_modal_move_description({ current: currentFolder, configured: configuredFolder }) }}
+      </template>
       <UiToggle v-model="move" :tooltip="m.connect_note_modal_move_label()" />
     </UiSettingRow>
     <UiSettingRow>

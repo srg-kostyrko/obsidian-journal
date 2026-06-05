@@ -11,3 +11,9 @@ export function commandTypeLabel(writeType: JournalWrite["type"], type: CommandT
   }
   return m.command_type_label({ type, writeType });
 }
+
+export function commandContextLabel(context: CommandContext): string | null {
+  if (context === "open_note") return m.command_context_open_note_clarifier();
+  if (context === "only_open_note") return m.command_context_only_open_note_clarifier();
+  return null;
+}

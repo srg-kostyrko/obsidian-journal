@@ -33,17 +33,56 @@ function mount(initial: DateCond) {
 }
 
 describe("ConditionDate", () => {
-  it("updates day, month, and year as the user types", async () => {
+  it("stores the typed day verbatim", async () => {
     const host = mount({ type: "date", day: 1, month: 1, year: null });
-    const inputs = screen.getAllByRole("spinbutton");
-    await userEvent.clear(inputs[0]);
-    await userEvent.type(inputs[0], "14");
-    await userEvent.clear(inputs[1]);
-    await userEvent.type(inputs[1], "2");
-    await userEvent.clear(inputs[2]);
-    await userEvent.type(inputs[2], "2026");
+    const [dayInput] = screen.getAllByRole("spinbutton");
+    await userEvent.clear(dayInput);
+    await userEvent.type(dayInput, "14");
     expect(host.values.c.day).toBe(14);
-    expect(host.values.c.month).toBe(2);
+  });
+
+  it("stores the month zero-based while displaying it one-based", async () => {
+    const host = mount({ type: "date", day: 1, month: 2, year: null });
+    const monthInput = screen.getAllByRole("spinbutton")[1];
+    expect((monthInput as HTMLInputElement).value).toBe("3");
+    await userEvent.clear(monthInput);
+    await userEvent.type(monthInput, "5");
+    expect(host.values.c.month).toBe(4);
+  });
+
+  it("stores the typed year verbatim", async () => {
+    const host = mount({ type: "date", day: 1, month: 1, year: null });
+    const yearInput = screen.getAllByRole("spinbutton")[2];
+    await userEvent.clear(yearInput);
+    await userEvent.type(yearInput, "2026");
     expect(host.values.c.year).toBe(2026);
+  });
+
+  it("stores the wildcard sentinel for a day cleared to empty", async () => {
+    const host = mount({ type: "date", day: 14, month: 1, year: null });
+    const [dayInput] = screen.getAllByRole("spinbutton");
+    await userEvent.clear(dayInput);
+    expect(host.values.c.day).toBe(-1);
+  });
+
+  it("stores the wildcard sentinel for a month cleared to empty", async () => {
+    const host = mount({ type: "date", day: 1, month: 5, year: null });
+    const monthInput = screen.getAllByRole("spinbutton")[1];
+    await userEvent.clear(monthInput);
+    expect(host.values.c.month).toBe(-1);
+  });
+
+  it("stores null for a year cleared to empty", async () => {
+    const host = mount({ type: "date", day: 1, month: 1, year: 2026 });
+    const yearInput = screen.getAllByRole("spinbutton")[2];
+    await userEvent.clear(yearInput);
+    expect(host.values.c.year).toBeNull();
+  });
+
+  it("renders empty inputs for wildcard day, month, and year", () => {
+    mount({ type: "date", day: -1, month: -1, year: null });
+    for (const input of screen.getAllByRole("spinbutton")) {
+      expect((input as HTMLInputElement).value).toBe("");
+    }
   });
 });

@@ -22,6 +22,7 @@ const { value: placementY } = useField<JournalDecorationIcon["placement_y"]>(`${
     <UiIconSuggest v-model="icon" />
   </UiSettingRow>
   <UiSettingRow :name="m.decoration_style_icon_size_label()">
+    <template #description>{{ m.decoration_style_icon_size_hint() }}</template>
     <UiNumberInput v-model="size" :min="0" :step="0.1" />
   </UiSettingRow>
   <UiSettingRow :name="m.decoration_style_icon_color_label()">

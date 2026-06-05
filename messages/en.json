@@ -51,6 +51,7 @@
   "calendar_preset_picker_title": "Week configuration",
   "calendar_preset_western_used": "Canada, United States, Iceland, Portugal, Japan, Taiwan, Thailand, Hong Kong, Macau, Israel, Egypt, South Africa, the Philippines, and most of Latin America.",
   "calendar_week_config_change": "Change",
+  "calendar_week_config_description": "Define which day starts the week and how the first week of the year is determined — this affects week numbers.",
   "calendar_week_config_title": "Week configuration",
 
   "code_blocks_nav_not_connected": "Note is not connected to a journal",
@@ -118,6 +119,8 @@
   "nav_block_row_resolved_preview": "Resolved: {text}",
 
   "command_add_modal_title": "Add command",
+  "command_context_open_note_clarifier": "(uses the open note's date, or today)",
+  "command_context_only_open_note_clarifier": "(uses the open note's date)",
   "command_context_option": [
     {
       "declarations": ["input context"],
@@ -209,7 +212,10 @@
   "command_connect_note": "Connect note to a journal",
   "connect_note_modal_journal_label": "Journal",
   "connect_note_modal_date_label": "Date",
+  "connect_note_modal_move_description": "The note's folder ({current}) differs from the journal's configured folder ({configured}).",
+  "connect_note_modal_override_description": "Another note ({path}) is connected to this date. It will be disconnected if you enable this.",
   "connect_note_modal_override_label": "Replace the note already connected to this date",
+  "connect_note_modal_rename_description": "The note's name ({current}) differs from the journal's configured name ({configured}).",
   "connect_note_modal_rename_label": "Rename file to match the journal",
   "connect_note_modal_move_label": "Move file into the journal's folder",
   "connect_note_modal_connect": "Connect",
@@ -219,11 +225,14 @@
   "bulk_add_command": "Bulk add notes to this journal",
   "bulk_add_configure_title": "Add notes to {journalName}",
   "bulk_add_folder_label": "Source folder",
+  "bulk_add_folder_description": "Select the folder with existing notes you want to process.",
   "bulk_add_date_place_label": "Read the date from",
   "bulk_add_date_place_title": "Note title",
   "bulk_add_date_place_property": "A property",
   "bulk_add_property_name_label": "Property name",
   "bulk_add_date_format_label": "Date format",
+  "bulk_add_date_format_omit_time": "If your dates include a time component, omit it from the format.",
+  "bulk_add_date_format_property_note": "Dates may differ from how they're stored — check the format in Source display mode.",
   "bulk_add_filter_combinator_label": "Filter notes",
   "bulk_add_filter_combinator_no": "No filter",
   "bulk_add_filter_combinator_and": "Match all conditions",
@@ -242,6 +251,7 @@
   "bulk_add_option_rename": "Rename",
   "bulk_add_option_ask": "Ask for each",
   "bulk_add_dry_run_label": "Dry run (preview only)",
+  "bulk_add_dry_run_description": "Don't change any notes — just report the changes that would be made.",
   "bulk_add_next": "Continue",
   "bulk_add_process_title": "Add notes to {journalName}",
   "bulk_add_run": "Run",
@@ -311,12 +321,27 @@
       }
     }
   ],
+  "decoration_condition_date_any": "any",
+  "decoration_condition_date_any_day": "Any day",
+  "decoration_condition_date_any_month": "Any month",
+  "decoration_condition_date_any_year": "Any year",
   "decoration_condition_date_day_label": "Day",
+  "decoration_condition_date_hint": "Leave a field empty to match any day, month, or year.",
   "decoration_condition_date_month_label": "Month",
   "decoration_condition_date_year_label": "Year",
   "decoration_condition_has_note_describe": "a note exists",
   "decoration_condition_has_open_task_describe": "the note has an open task",
   "decoration_condition_offset_describe": "offset from start is {offset}",
+  "decoration_condition_offset_hint": [
+    {
+      "declarations": ["input days", "input side"],
+      "selectors": ["side"],
+      "match": {
+        "side=start": "Matches {days} days from the start of the interval.",
+        "side=end": "Matches {days} days from the end of the interval."
+      }
+    }
+  ],
   "decoration_condition_offset_label": "Offset",
   "decoration_condition_property_condition_label": "Condition",
   "decoration_condition_property_describe": "property {name} {op} {value}",
@@ -480,11 +505,13 @@
   "decoration_style_icon_icon_label": "Icon",
   "decoration_style_icon_placement_x_label": "Horizontal placement",
   "decoration_style_icon_placement_y_label": "Vertical placement",
+  "decoration_style_icon_size_hint": "Size is relative to the font size — 1 makes the icon the same size as a letter.",
   "decoration_style_icon_size_label": "Size",
   "decoration_style_shape_color_label": "Color",
   "decoration_style_shape_placement_x_label": "Horizontal placement",
   "decoration_style_shape_placement_y_label": "Vertical placement",
   "decoration_style_shape_shape_label": "Shape",
+  "decoration_style_shape_size_hint": "Size is relative to the font size — 1 makes the shape the same size as a letter.",
   "decoration_style_shape_size_label": "Size",
   "decoration_style_type_label": [
     {
@@ -698,6 +725,8 @@
   "journal_add_modal_title": "Add journal",
   "journal_add_modal_write_custom_option": "Custom intervals",
   "journal_add_modal_write_label": "I'll be writing",
+  "journal_colliding_heading": "Colliding journal settings",
+  "journal_colliding_warning": "Journals {names} have colliding configurations, so their notes will overwrite each other. Change the folder or name template in one of them.",
   "journal_dashboard_add": "Create new journal",
   "journal_dashboard_delete": "Delete",
   "journal_dashboard_edit": "Edit",
@@ -751,6 +780,7 @@
       }
     }
   ],
+  "journal_edit_end_repeats_needs_start_warning": "Set a start date — a journal that ends after a number of repeats needs one to count from.",
   "journal_edit_end_writing_label": "End writing",
   "journal_edit_fm_end_toggle_label": "Add end date property?",
   "journal_edit_fm_start_description": "For weekly journals that span two years, the start date can differ from the date property.",
@@ -837,6 +867,7 @@
   "journal_edit_variable_relative_date_description": "yesterday / today / tomorrow / N days ago for fixed-cycle journals; empty for custom journals.",
   "journal_edit_variable_start_date_description": "The first day of the period this note covers.",
   "journal_edit_variable_time_description": "Current wall-clock time (in HH:mm by default).",
+  "journal_edit_wrong_week_warning": "You use `W` to format weeks, which does not respect custom week settings and may show a different week number than the Calendar view. Use `w` instead (and change the start of the week in the plugin settings if needed).",
   "journal_flow_failure": "Journal action failed ({kind}).",
   "journal_fm_field_label": [
     {
