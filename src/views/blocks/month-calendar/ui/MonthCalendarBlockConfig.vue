@@ -17,11 +17,11 @@ const update = (patch: Partial<MonthCalendarConfig>): void => props.onChange({ .
 
 <template>
   <UiSettingRow>
-    <template #name>{{ m.view_block_config_before_label() }}</template>
+    <template #name>{{ m.view_block_config_before({ unit: "month" }) }}</template>
     <UiNumberInput :model-value="config.before" :min="0" @update:model-value="(v) => update({ before: v })" />
   </UiSettingRow>
   <UiSettingRow>
-    <template #name>{{ m.view_block_config_after_label() }}</template>
+    <template #name>{{ m.view_block_config_after({ unit: "month" }) }}</template>
     <UiNumberInput :model-value="config.after" :min="0" @update:model-value="(v) => update({ after: v })" />
   </UiSettingRow>
   <UiSettingRow>

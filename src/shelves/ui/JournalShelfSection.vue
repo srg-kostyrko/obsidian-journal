@@ -33,11 +33,11 @@ function place(): void {
     <template #trigger>
       <span class="journal-section-heading">
         <UiIcon name="library" />
-        <span>{{ m.shelf_section_title() }}</span>
+        <span>{{ m.common_label_shelf() }}</span>
       </span>
     </template>
 
-    <UiSettingRow :name="m.shelf_section_title()">
+    <UiSettingRow :name="m.common_label_shelf()">
       <span>{{ currentShelf === "" ? m.shelf_section_not_on_shelf() : currentShelf }}</span>
       <UiIconButton icon="pencil" :tooltip="m.shelf_section_place_tooltip()" @click="place" />
     </UiSettingRow>

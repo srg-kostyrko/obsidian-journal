@@ -57,7 +57,7 @@ describe("CommandsDashboardBlock", () => {
   it("shows the empty state when no global commands exist", async () => {
     const { container } = await setup();
     mount(container);
-    expect(screen.getByText(m.command_dashboard_empty())).toBeTruthy();
+    expect(screen.getByText(m.command_empty({ scope: "global" }))).toBeTruthy();
   });
 
   it("lists only all-target commands", async () => {
@@ -73,7 +73,7 @@ describe("CommandsDashboardBlock", () => {
   it("invokes EditCommandFlow with an all target when add is clicked", async () => {
     const { container, flows } = await setup();
     mount(container);
-    await userEvent.click(screen.getByLabelText(m.command_dashboard_add()));
+    await userEvent.click(screen.getByLabelText(m.command_add()));
     expect(flows.invoke).toHaveBeenCalledWith(EditCommandFlow, {
       target: { kind: "all", writeType: "day" },
     });
@@ -82,7 +82,7 @@ describe("CommandsDashboardBlock", () => {
   it("invokes EditCommandFlow with the command id when edit is clicked", async () => {
     const { container, flows } = await setup({ "c-1": makeConfig("Global one", "all") });
     mount(container);
-    await userEvent.click(screen.getByLabelText(`${m.command_list_edit()} Global one`));
+    await userEvent.click(screen.getByLabelText(`${m.command_edit()} Global one`));
     expect(flows.invoke).toHaveBeenCalledWith(EditCommandFlow, {
       commandId: "c-1",
       target: { kind: "all", writeType: "day" },
@@ -92,7 +92,7 @@ describe("CommandsDashboardBlock", () => {
   it("invokes DeleteCommandFlow when delete is clicked", async () => {
     const { container, flows } = await setup({ "c-1": makeConfig("Global one", "all") });
     mount(container);
-    await userEvent.click(screen.getByLabelText(`${m.command_list_delete()} Global one`));
+    await userEvent.click(screen.getByLabelText(`${m.command_delete()} Global one`));
     expect(flows.invoke).toHaveBeenCalledWith(DeleteCommandFlow, { commandId: "c-1" });
   });
 });

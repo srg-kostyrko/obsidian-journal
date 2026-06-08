@@ -117,11 +117,11 @@ function moveDown(index: number): void {
           />
         </div>
       </template>
-      <UiIconButton v-if="index > 0" icon="arrow-up" :tooltip="m.block_rows_move_up_tooltip()" @click="moveUp(index)" />
+      <UiIconButton v-if="index > 0" icon="arrow-up" :tooltip="m.common_action_move_up()" @click="moveUp(index)" />
       <UiIconButton
         v-if="index < config[field].rows.length - 1"
         icon="arrow-down"
-        :tooltip="m.block_rows_move_down_tooltip()"
+        :tooltip="m.common_action_move_down()"
         @click="moveDown(index)"
       />
       <UiIconButton icon="pencil" :tooltip="m.block_rows_edit_tooltip()" @click="edit(index)" />

@@ -51,13 +51,13 @@ function remove(id: string): void {
   <UiCollapsibleBlock v-model:expanded="expanded">
     <template #trigger>
       <UiIconedRow icon="terminal">
-        {{ m.command_journal_section_title() }}
+        {{ m.command_section_title() }}
         <span class="flair">{{ entries.length }}</span>
       </UiIconedRow>
     </template>
     <template #controls>
-      <UiIconButton icon="plus" cta :tooltip="m.command_journal_add()" @click="add" />
+      <UiIconButton icon="plus" cta :tooltip="m.command_add()" @click="add" />
     </template>
-    <CommandList :entries="entries" :empty-text="m.command_journal_empty()" @edit="edit" @delete="remove" />
+    <CommandList :entries="entries" :empty-text="m.command_empty({ scope: 'journal' })" @edit="edit" @delete="remove" />
   </UiCollapsibleBlock>
 </template>

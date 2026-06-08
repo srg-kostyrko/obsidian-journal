@@ -100,7 +100,7 @@ describe("ShelfEditSubpage", () => {
     const { container, flows } = await setup({ shelves: { Work: { name: "Work", journals: [] } } });
     vi.spyOn(flows, "invoke").mockReturnValue(AsyncResult.ok({ shelfName: "Work" }));
     mount(container, "Work");
-    await userEvent.click(screen.getByLabelText(m.shelf_edit_rename_tooltip()));
+    await userEvent.click(screen.getByLabelText(m.shelf_rename()));
     expect(flows.invoke).toHaveBeenCalledWith(EditShelfNameFlow, { shelfName: "Work" });
   });
 
@@ -126,7 +126,7 @@ describe("ShelfEditSubpage", () => {
     });
     vi.spyOn(flows, "invoke").mockReturnValue(AsyncResult.ok({ name: "daily" }));
     mount(container, "Work");
-    await userEvent.click(screen.getByLabelText(m.shelf_edit_journals_add()));
+    await userEvent.click(screen.getByLabelText(m.journal_create()));
     await vi.waitFor(() => expect(shelvesRepo.get("Work").getOr(undefined as never)?.journals).toEqual(["daily"]));
     expect(flows.invoke).toHaveBeenCalledWith(AddJournalFlow);
   });

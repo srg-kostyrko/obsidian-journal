@@ -53,12 +53,12 @@ describe("ConditionItem", () => {
 
   it("renders ConditionProperty for a property condition", () => {
     mount({ type: "property", name: "x", valueType: "text", condition: "exists", value: "" });
-    expect(screen.getByText(m.decoration_condition_property_name_label())).toBeTruthy();
+    expect(screen.getByText(m.common_label_name())).toBeTruthy();
   });
 
   it("renders ConditionDate for a date condition", () => {
     mount({ type: "date", day: 1, month: 1, year: null });
-    expect(screen.getByText(m.decoration_condition_date_day_label())).toBeTruthy();
+    expect(screen.getByText(m.decoration_condition_date_unit_label({ unit: "day" }))).toBeTruthy();
   });
 
   it("renders ConditionWeekday for a weekday condition", () => {

@@ -21,7 +21,7 @@ export const buttonItem = defineToolbarItem<ButtonConfig>({
       defaultConfig: { action: { type: "pick-date", mode: "navigate", levels: ["day"] } },
     },
     {
-      label: m.view_toolbar_button_preset_today(),
+      label: m.common_label_today(),
       defaultConfig: { action: { type: "current", mode: "create", levels: ["day"] } },
     },
     {

@@ -94,7 +94,7 @@ describe("ViewEditSubpage", () => {
     const { container } = await setup();
     mount(container);
     const repo = container.resolve(ViewsRepository);
-    const toggle = within(row(m.view_edit_show_in_ribbon_label())).getByRole("checkbox");
+    const toggle = within(row(m.common_show_in_ribbon())).getByRole("checkbox");
     await userEvent.click(toggle);
     expect(repo.get(viewId).getOr(undefined as never)?.showInRibbon).toBe(true);
   });

@@ -52,7 +52,7 @@ function remove(index: number): void {
       </span>
     </template>
     <template #controls>
-      <UiButton @click="add">{{ m.decoration_add_button() }}</UiButton>
+      <UiButton @click="add">{{ m.decoration_add() }}</UiButton>
     </template>
 
     <UiSettingRow no-controls>
@@ -76,8 +76,8 @@ function remove(index: number): void {
           </template>
         </div>
       </template>
-      <UiIconButton icon="pencil" :tooltip="m.decoration_edit_tooltip()" @click="edit(index)" />
-      <UiIconButton icon="trash" :tooltip="m.decoration_delete_tooltip()" @click="remove(index)" />
+      <UiIconButton icon="pencil" :tooltip="m.decoration_edit()" @click="edit(index)" />
+      <UiIconButton icon="trash" :tooltip="m.decoration_delete()" @click="remove(index)" />
     </UiSettingRow>
   </UiCollapsibleBlock>
 </template>

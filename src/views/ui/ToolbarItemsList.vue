@@ -64,19 +64,19 @@ const add = (): void => void flows.invoke(AddToolbarItemToBlockFlow, { viewId: p
     </template>
     <UiIconButton
       icon="chevron-up"
-      :tooltip="m.view_toolbar_item_move_up()"
+      :tooltip="m.common_action_move_up()"
       :disabled="index === 0"
       @click="moveUp(row.id)"
     />
     <UiIconButton
       icon="chevron-down"
-      :tooltip="m.view_toolbar_item_move_down()"
+      :tooltip="m.common_action_move_down()"
       :disabled="index === rows.length - 1"
       @click="moveDown(row.id)"
     />
     <UiIconButton icon="trash-2" :tooltip="m.view_toolbar_item_remove()" @click="remove(row.id)" />
   </UiSettingRow>
   <UiSettingRow controls-only>
-    <UiButton cta @click="add">{{ m.view_toolbar_item_add() }}</UiButton>
+    <UiButton cta @click="add">{{ m.view_add_toolbar_item() }}</UiButton>
   </UiSettingRow>
 </template>

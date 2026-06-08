@@ -38,7 +38,7 @@ const onSubmit = handleSubmit((values) => {
 
 <template>
   <form @submit.prevent="onSubmit">
-    <UiSettingRow :name="m.view_modal_name_label()">
+    <UiSettingRow :name="m.common_label_name()">
       <template #description>
         <span v-for="error of errorBag.name" :key="error" class="view-form-error">{{ error }}</span>
       </template>

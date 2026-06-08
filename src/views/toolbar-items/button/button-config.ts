@@ -41,31 +41,31 @@ export function resolveButtonAppearance(action: ButtonAction): ButtonAppearance 
   return match(action)
     .with({ type: "pick-date", levels: P.when((l) => l.length === 1 && l[0] === "day") }, () => ({
       icon: "crosshair",
-      tooltip: m.view_toolbar_button_default_tooltip_pick_day(),
+      tooltip: m.common_pick_a_date(),
     }))
     .with({ type: "pick-date" }, () => ({
       icon: "crosshair",
       tooltip: m.view_toolbar_button_default_tooltip_pick_multi(),
     }))
     .with({ type: "current", levels: P.when((l) => l.length === 1 && l[0] === "day") }, () => ({
-      label: m.view_toolbar_button_default_label_today(),
-      tooltip: m.view_toolbar_button_default_label_today(),
+      label: m.common_label_today(),
+      tooltip: m.common_label_today(),
     }))
     .with({ type: "current", levels: P.when((l) => l.length === 1 && l[0] === "week") }, () => ({
-      label: m.view_toolbar_button_default_label_this_week(),
-      tooltip: m.view_toolbar_button_default_label_this_week(),
+      label: m.relative_date_this({ period: "week" }),
+      tooltip: m.relative_date_this({ period: "week" }),
     }))
     .with({ type: "current", levels: P.when((l) => l.length === 1 && l[0] === "month") }, () => ({
-      label: m.view_toolbar_button_default_label_this_month(),
-      tooltip: m.view_toolbar_button_default_label_this_month(),
+      label: m.relative_date_this({ period: "month" }),
+      tooltip: m.relative_date_this({ period: "month" }),
     }))
     .with({ type: "current", levels: P.when((l) => l.length === 1 && l[0] === "quarter") }, () => ({
-      label: m.view_toolbar_button_default_label_this_quarter(),
-      tooltip: m.view_toolbar_button_default_label_this_quarter(),
+      label: m.relative_date_this({ period: "quarter" }),
+      tooltip: m.relative_date_this({ period: "quarter" }),
     }))
     .with({ type: "current", levels: P.when((l) => l.length === 1 && l[0] === "year") }, () => ({
-      label: m.view_toolbar_button_default_label_this_year(),
-      tooltip: m.view_toolbar_button_default_label_this_year(),
+      label: m.relative_date_this({ period: "year" }),
+      tooltip: m.relative_date_this({ period: "year" }),
     }))
     .with({ type: "current" }, () => ({
       label: m.view_toolbar_button_default_label_current(),

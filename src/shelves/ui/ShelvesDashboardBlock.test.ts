@@ -64,7 +64,7 @@ describe("ShelvesDashboardBlock", () => {
   it("invokes EditShelfNameFlow when the add button is clicked", async () => {
     const { container, flows } = await setup();
     mount(container);
-    await userEvent.click(screen.getByLabelText(m.shelf_dashboard_add()));
+    await userEvent.click(screen.getByLabelText(m.shelf_add()));
     expect(flows.invoke).toHaveBeenCalledWith(EditShelfNameFlow, {});
   });
 
@@ -79,7 +79,7 @@ describe("ShelvesDashboardBlock", () => {
   it("invokes DeleteShelfFlow when the delete button is clicked", async () => {
     const { container, flows } = await setup({ Work: { name: "Work", journals: [] } });
     mount(container);
-    await userEvent.click(screen.getByLabelText(m.shelf_dashboard_delete({ name: "Work" })));
+    await userEvent.click(screen.getByLabelText(m.common_delete_name({ name: "Work" })));
     expect(flows.invoke).toHaveBeenCalledWith(DeleteShelfFlow, { shelfName: "Work" });
   });
 });

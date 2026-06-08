@@ -125,7 +125,7 @@ describe("BlocksList", () => {
       { id: blockIdB, key: "divider", config: {} },
     ]);
     mount(container);
-    const upButtons = screen.getAllByLabelText(m.view_block_move_up());
+    const upButtons = screen.getAllByLabelText(m.common_action_move_up());
     expect(upButtons[0]).toHaveProperty("disabled", true);
     expect(upButtons[1]).toHaveProperty("disabled", false);
   });
@@ -136,7 +136,7 @@ describe("BlocksList", () => {
       { id: blockIdB, key: "divider", config: {} },
     ]);
     mount(container);
-    const downButtons = screen.getAllByLabelText(m.view_block_move_down());
+    const downButtons = screen.getAllByLabelText(m.common_action_move_down());
     expect(downButtons[0]).toHaveProperty("disabled", false);
     expect(downButtons[1]).toHaveProperty("disabled", true);
   });
@@ -146,7 +146,7 @@ describe("BlocksList", () => {
     mount(container);
     const flows = container.resolve(Flows);
     const spy = vi.spyOn(flows, "invoke").mockReturnValue({ tap: () => undefined } as never);
-    await userEvent.click(screen.getByText(m.view_edit_blocks_add()));
+    await userEvent.click(screen.getByText(m.view_add_block()));
     expect(spy).toHaveBeenCalledWith(AddBlockToViewFlow, { viewId });
   });
 

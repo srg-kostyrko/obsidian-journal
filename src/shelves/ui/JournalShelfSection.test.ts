@@ -47,21 +47,21 @@ describe("JournalShelfSection", () => {
   it("shows the not-on-a-shelf message when the journal is unassigned", async () => {
     const { container } = await setup({ Work: { name: "Work", journals: [] } });
     mount(container, "daily");
-    await userEvent.click(screen.getByText(m.shelf_section_title()));
+    await userEvent.click(screen.getByText(m.common_label_shelf()));
     expect(screen.getByText(m.shelf_section_not_on_shelf())).toBeTruthy();
   });
 
   it("shows the current shelf when the journal is on one", async () => {
     const { container } = await setup({ Work: { name: "Work", journals: ["daily"] } });
     mount(container, "daily");
-    await userEvent.click(screen.getByText(m.shelf_section_title()));
+    await userEvent.click(screen.getByText(m.common_label_shelf()));
     expect(screen.getByText("Work")).toBeTruthy();
   });
 
   it("invokes PlaceJournalFlow when the place button is clicked", async () => {
     const { container, flows } = await setup({ Work: { name: "Work", journals: [] } });
     mount(container, "daily");
-    await userEvent.click(screen.getByText(m.shelf_section_title()));
+    await userEvent.click(screen.getByText(m.common_label_shelf()));
     await userEvent.click(screen.getByLabelText(m.shelf_section_place_tooltip()));
     expect(flows.invoke).toHaveBeenCalledWith(PlaceJournalFlow, { journalName: "daily" });
   });

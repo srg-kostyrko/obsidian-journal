@@ -9,9 +9,8 @@
   "calendar_appearance_section_title": "Calendar highlighting",
   "calendar_appearance_today_background": "Today — background",
   "calendar_appearance_today_text": "Today — text",
-  "calendar_dashboard_section_title": "Calendar",
-  "calendar_date_picker_title": "Pick a date",
-  "calendar_picker_cancel_action": "Cancel",
+  "common_label_calendar": "Calendar",
+  "common_pick_a_date": "Pick a date",
   "calendar_picker_first_week_desc": "Which day in January the first week of the year must contain (1..7).",
   "calendar_picker_first_week_label": "First week of year",
   "calendar_picker_in_use_marker": "Currently used",
@@ -48,11 +47,10 @@
       }
     }
   ],
-  "calendar_preset_picker_title": "Week configuration",
+  "common_week_configuration": "Week configuration",
   "calendar_preset_western_used": "Canada, United States, Iceland, Portugal, Japan, Taiwan, Thailand, Hong Kong, Macau, Israel, Egypt, South Africa, the Philippines, and most of Latin America.",
   "calendar_week_config_change": "Change",
   "calendar_week_config_description": "Define which day starts the week and how the first week of the year is determined — this affects week numbers.",
-  "calendar_week_config_title": "Week configuration",
 
   "code_blocks_nav_not_connected": "Note is not connected to a journal",
   "code_blocks_nav_next": "Next",
@@ -76,8 +74,8 @@
   "block_rows_add_row": "Add row",
   "block_rows_edit_tooltip": "Edit row",
   "block_rows_delete_tooltip": "Delete row",
-  "block_rows_move_up_tooltip": "Move up",
-  "block_rows_move_down_tooltip": "Move down",
+  "common_action_move_up": "Move up",
+  "common_action_move_down": "Move down",
   "interval_block_section_title": "Calendar interval rows",
   "nav_block_row_modal_title": [
     {
@@ -93,10 +91,10 @@
   "nav_block_row_field_font_size": "Font size",
   "nav_block_row_field_bold": "Bold",
   "nav_block_row_field_italic": "Italic",
-  "nav_block_row_field_color": "Text color",
-  "nav_block_row_field_background": "Background color",
+  "common_label_text_color": "Text color",
+  "common_label_background_color": "Background color",
   "nav_block_row_field_link": "Link",
-  "nav_block_row_field_journal": "Journal",
+  "common_label_journal": "Journal",
   "nav_block_row_field_add_decorations": "Add decorations",
   "nav_block_row_link_option": [
     {
@@ -118,7 +116,7 @@
   "nav_block_row_journal_required": "Please select a journal",
   "nav_block_row_resolved_preview": "Resolved: {text}",
 
-  "command_add_modal_title": "Add command",
+  "command_add": "Add command",
   "command_context_open_note_clarifier": "(uses the open note's date, or today)",
   "command_context_only_open_note_clarifier": "(uses the open note's date)",
   "command_context_option": [
@@ -132,33 +130,34 @@
       }
     }
   ],
-  "command_dashboard_add": "Add command",
-  "command_dashboard_empty": "No global commands created yet.",
-  "command_dashboard_section_title": "Commands",
+  "command_empty": [
+    {
+      "declarations": ["input scope"],
+      "selectors": ["scope"],
+      "match": {
+        "scope=global": "No global commands created yet.",
+        "scope=journal": "No commands created for this journal yet.",
+        "scope=shelf": "No commands created for this shelf yet."
+      }
+    }
+  ],
+  "command_section_title": "Commands",
   "command_delete_modal_confirm": "Delete the command \"{name}\"?",
-  "command_delete_modal_title": "Delete command",
-  "command_edit_modal_title": "Edit command",
+  "command_delete": "Delete command",
+  "command_edit": "Edit command",
   "command_icon_required_error": "Pick an icon to show this command in the ribbon.",
   "command_insert_date_link": "Insert link to journal note",
-  "command_journal_add": "Add command",
-  "command_journal_empty": "No commands created for this journal yet.",
-  "command_journal_section_title": "Commands",
-  "command_shelf_add": "Add command",
-  "command_shelf_empty": "No commands created for this shelf yet.",
-  "command_shelf_section_title": "Commands",
   "command_label_today": "Open today's note",
   "command_label_tomorrow": "Open tomorrow's note",
   "command_label_yesterday": "Open yesterday's note",
-  "command_list_delete": "Delete command",
-  "command_list_edit": "Edit command",
   "command_modal_context_description": "Choose which note's date the command treats as the current date.",
   "command_modal_context_label": "Context",
   "command_modal_context_only_open_note_hint": "Runs only while a journal note is open, using that note's date.",
   "command_modal_context_open_note_hint": "Uses the open journal note's date, or today's date when no journal note is open.",
-  "command_modal_icon_label": "Icon",
-  "command_modal_name_label": "Name",
+  "common_label_icon": "Icon",
+  "common_label_name": "Name",
   "command_modal_open_mode_label": "Open note",
-  "command_modal_ribbon_label": "Show in ribbon",
+  "common_show_in_ribbon": "Show in ribbon",
   "command_modal_type_label": "When the command runs",
   "command_modal_write_type_label": "Note type",
   "command_name_required_error": "Command name is required",
@@ -210,7 +209,6 @@
   ],
 
   "command_connect_note": "Connect note to a journal",
-  "connect_note_modal_journal_label": "Journal",
   "connect_note_modal_date_label": "Date",
   "connect_note_modal_move_description": "The note's folder ({current}) differs from the journal's configured folder ({configured}).",
   "connect_note_modal_override_description": "Another note ({path}) is connected to this date. It will be disconnected if you enable this.",
@@ -223,13 +221,13 @@
   "connect_note_modal_disconnect": "Disconnect",
 
   "bulk_add_command": "Bulk add notes to this journal",
-  "bulk_add_configure_title": "Add notes to {journalName}",
+  "bulk_add_notes_to_title": "Add notes to {journalName}",
   "bulk_add_folder_label": "Source folder",
   "bulk_add_folder_description": "Select the folder with existing notes you want to process.",
   "bulk_add_date_place_label": "Read the date from",
   "bulk_add_date_place_title": "Note title",
   "bulk_add_date_place_property": "A property",
-  "bulk_add_property_name_label": "Property name",
+  "common_label_property_name": "Property name",
   "bulk_add_date_format_label": "Date format",
   "bulk_add_date_format_omit_time": "If your dates include a time component, omit it from the format.",
   "bulk_add_date_format_property_note": "Dates may differ from how they're stored — check the format in Source display mode.",
@@ -253,9 +251,7 @@
   "bulk_add_dry_run_label": "Dry run (preview only)",
   "bulk_add_dry_run_description": "Don't change any notes — just report the changes that would be made.",
   "bulk_add_next": "Continue",
-  "bulk_add_process_title": "Add notes to {journalName}",
   "bulk_add_run": "Run",
-  "bulk_add_close": "Close",
   "bulk_add_skipped_count": "{count} note(s) skipped",
   "bulk_add_planned_count": "{count} note(s) to process",
   "bulk_add_skip_reason_already_connected": "Already connected",
@@ -270,12 +266,10 @@
   "common_action_submit": "Save",
 
   "confirm_note_creation_body": "Create '{noteName}' in journal '{journalName}'?",
-  "confirm_note_creation_cancel": "Cancel",
   "confirm_note_creation_confirm": "Create",
   "confirm_note_creation_title": "Create a new journal note?",
 
-  "decoration_add_button": "Add decoration",
-  "decoration_add_modal_title": "Add decoration",
+  "decoration_add": "Add decoration",
   "decoration_border_mode_label": [
     {
       "declarations": ["input mode"],
@@ -322,13 +316,29 @@
     }
   ],
   "decoration_condition_date_any": "any",
-  "decoration_condition_date_any_day": "Any day",
-  "decoration_condition_date_any_month": "Any month",
-  "decoration_condition_date_any_year": "Any year",
-  "decoration_condition_date_day_label": "Day",
+  "decoration_condition_date_any_unit": [
+    {
+      "declarations": ["input unit"],
+      "selectors": ["unit"],
+      "match": {
+        "unit=day": "Any day",
+        "unit=month": "Any month",
+        "unit=year": "Any year"
+      }
+    }
+  ],
+  "decoration_condition_date_unit_label": [
+    {
+      "declarations": ["input unit"],
+      "selectors": ["unit"],
+      "match": {
+        "unit=day": "Day",
+        "unit=month": "Month",
+        "unit=year": "Year"
+      }
+    }
+  ],
   "decoration_condition_date_hint": "Leave a field empty to match any day, month, or year.",
-  "decoration_condition_date_month_label": "Month",
-  "decoration_condition_date_year_label": "Year",
   "decoration_condition_has_note_describe": "a note exists",
   "decoration_condition_has_open_task_describe": "the note has an open task",
   "decoration_condition_offset_describe": "offset from start is {offset}",
@@ -345,7 +355,6 @@
   "decoration_condition_offset_label": "Offset",
   "decoration_condition_property_condition_label": "Condition",
   "decoration_condition_property_describe": "property {name} {op} {value}",
-  "decoration_condition_property_name_label": "Name",
   "decoration_condition_property_value_label": "Value",
   "decoration_condition_property_value_type_label": "Type",
   "decoration_condition_tag_describe": "tag {op} {value}",
@@ -383,9 +392,8 @@
       }
     }
   ],
-  "decoration_delete_modal_title": "Delete decoration",
+  "decoration_delete": "Delete decoration",
   "decoration_delete_modal_warning": "This will permanently remove the decoration.",
-  "decoration_delete_tooltip": "Delete decoration",
   "decoration_describe_mode": [
     {
       "declarations": ["input kind"],
@@ -397,8 +405,7 @@
     }
   ],
   "decoration_describe_when": "when",
-  "decoration_edit_modal_title": "Edit decoration",
-  "decoration_edit_tooltip": "Edit decoration",
+  "decoration_edit": "Edit decoration",
   "decoration_modal_add_condition": "Add condition",
   "decoration_modal_add_style": "Add style",
   "decoration_modal_mode_option": [
@@ -478,14 +485,11 @@
       }
     }
   ],
-  "decoration_style_background_color_label": "Background color",
-  "decoration_style_border_color_label": "Color",
+  "common_label_color": "Color",
   "decoration_style_border_mode_label": "Border mode",
   "decoration_style_border_show_label": "Show",
   "decoration_style_border_style_label": "Style",
   "decoration_style_border_width_label": "Width",
-  "decoration_style_color_label": "Text color",
-  "decoration_style_corner_color_label": "Color",
   "decoration_style_corner_placement_label": "Placement",
   "decoration_style_header": [
     {
@@ -501,18 +505,20 @@
       }
     }
   ],
-  "decoration_style_icon_color_label": "Color",
-  "decoration_style_icon_icon_label": "Icon",
-  "decoration_style_icon_placement_x_label": "Horizontal placement",
-  "decoration_style_icon_placement_y_label": "Vertical placement",
-  "decoration_style_icon_size_hint": "Size is relative to the font size — 1 makes the icon the same size as a letter.",
-  "decoration_style_icon_size_label": "Size",
-  "decoration_style_shape_color_label": "Color",
-  "decoration_style_shape_placement_x_label": "Horizontal placement",
-  "decoration_style_shape_placement_y_label": "Vertical placement",
+  "common_label_horizontal_placement": "Horizontal placement",
+  "common_label_vertical_placement": "Vertical placement",
+  "decoration_style_size_hint": [
+    {
+      "declarations": ["input kind"],
+      "selectors": ["kind"],
+      "match": {
+        "kind=icon": "Size is relative to the font size \u2014 1 makes the icon the same size as a letter.",
+        "kind=shape": "Size is relative to the font size \u2014 1 makes the shape the same size as a letter."
+      }
+    }
+  ],
+  "common_label_size": "Size",
   "decoration_style_shape_shape_label": "Shape",
-  "decoration_style_shape_size_hint": "Size is relative to the font size — 1 makes the shape the same size as a letter.",
-  "decoration_style_shape_size_label": "Size",
   "decoration_style_type_label": [
     {
       "declarations": ["input type"],
@@ -527,7 +533,6 @@
       }
     }
   ],
-  "ui_color_custom_label": "Color",
   "ui_color_kind_label": [
     {
       "declarations": ["input kind"],
@@ -543,35 +548,74 @@
 
   "journal_add_modal_anchor_description": "This date is used to count custom intervals from. It cannot be changed after creating the journal.",
 
-  "relative_date_today": "Today",
+  "common_label_today": "Today",
   "relative_date_yesterday": "Yesterday",
   "relative_date_tomorrow": "Tomorrow",
   "relative_date_last_named_day": "Last {weekday}",
   "relative_date_named_day": "{weekday}",
-  "relative_date_this_week": "This week",
-  "relative_date_last_week": "Last week",
-  "relative_date_next_week": "Next week",
-  "relative_date_n_weeks_ago": "{count} weeks ago",
-  "relative_date_n_weeks_from_now": "{count} weeks from now",
-  "relative_date_this_month": "This month",
-  "relative_date_last_month": "Last month",
-  "relative_date_next_month": "Next month",
-  "relative_date_n_months_ago": "{count} months ago",
-  "relative_date_n_months_from_now": "{count} months from now",
-  "relative_date_this_quarter": "This quarter",
-  "relative_date_last_quarter": "Last quarter",
-  "relative_date_next_quarter": "Next quarter",
-  "relative_date_n_quarters_ago": "{count} quarters ago",
-  "relative_date_n_quarters_from_now": "{count} quarters from now",
-  "relative_date_this_year": "This year",
-  "relative_date_last_year": "Last year",
-  "relative_date_next_year": "Next year",
-  "relative_date_n_years_ago": "{count} years ago",
-  "relative_date_n_years_from_now": "{count} years from now",
+  "relative_date_this": [
+    {
+      "declarations": ["input period"],
+      "selectors": ["period"],
+      "match": {
+        "period=week": "This week",
+        "period=month": "This month",
+        "period=quarter": "This quarter",
+        "period=year": "This year"
+      }
+    }
+  ],
+  "relative_date_last": [
+    {
+      "declarations": ["input period"],
+      "selectors": ["period"],
+      "match": {
+        "period=week": "Last week",
+        "period=month": "Last month",
+        "period=quarter": "Last quarter",
+        "period=year": "Last year"
+      }
+    }
+  ],
+  "relative_date_next": [
+    {
+      "declarations": ["input period"],
+      "selectors": ["period"],
+      "match": {
+        "period=week": "Next week",
+        "period=month": "Next month",
+        "period=quarter": "Next quarter",
+        "period=year": "Next year"
+      }
+    }
+  ],
+  "relative_date_ago": [
+    {
+      "declarations": ["input period", "input count"],
+      "selectors": ["period"],
+      "match": {
+        "period=week": "{count} weeks ago",
+        "period=month": "{count} months ago",
+        "period=quarter": "{count} quarters ago",
+        "period=year": "{count} years ago"
+      }
+    }
+  ],
+  "relative_date_from_now": [
+    {
+      "declarations": ["input period", "input count"],
+      "selectors": ["period"],
+      "match": {
+        "period=week": "{count} weeks from now",
+        "period=month": "{count} months from now",
+        "period=quarter": "{count} quarters from now",
+        "period=year": "{count} years from now"
+      }
+    }
+  ],
 
-  "shelf_add_modal_title": "Add shelf",
-  "shelf_dashboard_add": "Add shelf",
-  "shelf_dashboard_delete": "Delete {name}",
+  "shelf_add": "Add shelf",
+  "common_delete_name": "Delete {name}",
   "shelf_dashboard_empty": "No shelves created yet.",
   "shelf_dashboard_open": "Organize {name}",
   "shelf_dashboard_section_title": "Journal shelves",
@@ -580,22 +624,19 @@
   "shelf_delete_modal_moved_out": "Journals will be moved off the shelf.",
   "shelf_delete_modal_title": "Delete shelf {name}",
   "shelf_edit_header_title": "Configuring {name}",
-  "shelf_edit_journals_add": "Create new journal",
-  "shelf_edit_journals_title": "Journals",
-  "shelf_edit_rename_tooltip": "Rename shelf",
-  "shelf_journals_block_title": "Journals",
+  "journal_create": "Create new journal",
+  "common_label_journals": "Journals",
+  "shelf_rename": "Rename shelf",
   "shelf_journals_block_title_filtered": "Journals not on a shelf",
   "shelf_member_count": "{count} journals",
   "shelf_modal_name_label": "Shelf name",
   "shelf_name_required_error": "Shelf name is required",
   "shelf_name_unchanged_error": "Enter a different name",
   "shelf_name_unique_error": "Shelf name must be unique",
-  "shelf_place_modal_label": "Shelf",
+  "common_label_shelf": "Shelf",
   "shelf_place_modal_title": "Place journal",
-  "shelf_rename_modal_title": "Rename shelf",
   "shelf_section_not_on_shelf": "Not on a shelf",
   "shelf_section_place_tooltip": "Place on a shelf",
-  "shelf_section_title": "Shelf",
 
   "startup_dashboard_section_title": "Startup",
   "startup_open_note_title": "Open on startup",
@@ -616,51 +657,39 @@
   "view_dashboard_add": "Add a view",
   "view_dashboard_open": "Open {name}",
   "view_dashboard_clone": "Clone {name}",
-  "view_dashboard_delete": "Delete {name}",
   "view_add_modal_title": "Add view",
-  "view_rename_modal_title": "Rename view",
-  "view_modal_name_label": "Name",
+  "view_rename": "Rename view",
   "view_name_required_error": "Name is required.",
   "view_name_unchanged_error": "Pick a different name.",
   "view_delete_modal_title": "Delete view {name}?",
   "view_delete_modal_description": "This action cannot be undone.",
-  "view_add_block_modal_title": "Add block",
+  "view_add_block": "Add block",
   "view_add_block_empty": "No block types are registered.",
   "view_block_divider_label": "Divider",
-  "view_default_calendar_name": "Calendar",
   "view_block_toolbar_label": "Toolbar",
   "view_block_toolbar_description": "Container for toolbar items such as buttons and the shelf selector.",
-  "view_add_toolbar_item_modal_title": "Add toolbar item",
+  "view_add_toolbar_item": "Add toolbar item",
   "view_add_toolbar_item_empty": "No toolbar items are registered.",
   "view_edit_header_title": "View: {name}",
-  "view_edit_rename_tooltip": "Rename view",
-  "view_edit_icon_label": "Icon",
   "view_edit_default_shelf_label": "Default shelf",
-  "view_edit_default_shelf_all": "All journals",
-  "view_edit_show_in_ribbon_label": "Show in ribbon",
+  "common_label_all_journals": "All journals",
   "view_edit_leaf_label": "Open in",
   "view_edit_leaf_left": "Left sidebar",
   "view_edit_leaf_right": "Right sidebar",
   "view_edit_leaf_tab": "New tab",
   "view_edit_blocks_title": "Blocks",
-  "view_edit_blocks_add": "Add block",
   "view_edit_blocks_empty": "No blocks yet.",
   "view_block_unknown_label": "Unknown block: {key}",
-  "view_block_move_up": "Move up",
-  "view_block_move_down": "Move down",
   "view_block_remove": "Remove block",
   "view_toolbar_item_unknown_label": "Unknown toolbar item: {key}",
-  "view_toolbar_item_move_up": "Move up",
-  "view_toolbar_item_move_down": "Move down",
   "view_toolbar_item_remove": "Remove toolbar item",
-  "view_toolbar_item_add": "Add toolbar item",
   "view_toolbar_item_empty": "No toolbar items yet.",
 
   "view_block_month_calendar_label": "Month calendar",
   "view_block_month_calendar_description": "Stacks one or more month grids around the reference date.",
   "view_block_week_calendar_label": "Week calendar",
   "view_block_week_calendar_description": "Stacks one or more week strips around the reference date.",
-  "view_block_custom_intervals_label": "Custom intervals",
+  "common_custom_intervals": "Custom intervals",
   "view_block_custom_intervals_description": "Lists custom-journal entries that overlap a configurable window.",
   "view_block_markdown_template_label": "Markdown template",
   "view_block_markdown_template_description": "Render a template note as markdown, with journal variables processed.",
@@ -670,31 +699,43 @@
   "view_block_markdown_template_empty": "No template selected",
   "view_block_markdown_template_read_error": "Could not read the template file.",
   "view_block_config_window_label": "Window",
-  "view_block_config_window_current_week": "Current week",
-  "view_block_config_window_current_month": "Current month",
-  "view_block_config_window_current_quarter": "Current quarter",
-  "view_block_config_window_current_year": "Current year",
+  "view_block_config_window_current": [
+    {
+      "declarations": ["input period"],
+      "selectors": ["period"],
+      "match": {
+        "period=week": "Current week",
+        "period=month": "Current month",
+        "period=quarter": "Current quarter",
+        "period=year": "Current year"
+      }
+    }
+  ],
   "view_block_config_hide_empty_label": "Hide empty journals",
 
   "view_toolbar_shelf_selector_label": "Shelf selector",
   "view_toolbar_shelf_selector_description": "Switches which shelf scopes the view's journals.",
-  "view_toolbar_shelf_selector_all": "All journals",
   "view_toolbar_period_buttons_label": "Period buttons",
   "view_toolbar_period_buttons_description": "Shows clickable badges for the current week, month, quarter, year periods.",
-  "view_toolbar_period_buttons_config_week": "Show week",
-  "view_toolbar_period_buttons_config_month": "Show month",
-  "view_toolbar_period_buttons_config_quarter": "Show quarter",
-  "view_toolbar_period_buttons_config_year": "Show year",
+  "view_toolbar_period_buttons_config": [
+    {
+      "declarations": ["input period"],
+      "selectors": ["period"],
+      "match": {
+        "period=week": "Show week",
+        "period=month": "Show month",
+        "period=quarter": "Show quarter",
+        "period=year": "Show year"
+      }
+    }
+  ],
 
   "view_toolbar_button_label": "Button",
   "view_toolbar_button_description": "Generic action button (pick a date, jump to current, navigate by step).",
   "view_toolbar_button_preset_pick_date": "Pick date",
-  "view_toolbar_button_preset_today": "Today",
   "view_toolbar_button_preset_prev_month": "Navigate previous month",
   "view_toolbar_button_preset_next_month": "Navigate next month",
-  "view_toolbar_button_default_tooltip_pick_day": "Pick a date",
   "view_toolbar_button_default_tooltip_pick_multi": "Open a note",
-  "view_toolbar_button_default_label_today": "Today",
   "view_toolbar_button_default_label_this_week": "This week",
   "view_toolbar_button_default_label_this_month": "This month",
   "view_toolbar_button_default_label_this_quarter": "This quarter",
@@ -704,13 +745,28 @@
   "view_toolbar_button_default_tooltip_prev_unit": "Previous {unit}",
   "view_toolbar_button_default_tooltip_next_unit": "Next {unit}",
   "view_toolbar_button_menu_pick": "Pick {unit}",
-  "view_toolbar_button_config_icon_label": "Icon",
   "view_toolbar_button_config_label_label": "Label",
   "view_toolbar_button_config_tooltip_label": "Tooltip",
-  "view_block_config_before_label": "Months before",
-  "view_block_config_after_label": "Months after",
-  "view_block_config_before_weeks_label": "Weeks before",
-  "view_block_config_after_weeks_label": "Weeks after",
+  "view_block_config_before": [
+    {
+      "declarations": ["input unit"],
+      "selectors": ["unit"],
+      "match": {
+        "unit=month": "Months before",
+        "unit=week": "Weeks before"
+      }
+    }
+  ],
+  "view_block_config_after": [
+    {
+      "declarations": ["input unit"],
+      "selectors": ["unit"],
+      "match": {
+        "unit=month": "Months after",
+        "unit=week": "Weeks after"
+      }
+    }
+  ],
   "view_block_config_hide_weekends_label": "Hide weekends",
   "view_block_config_weeks_label": "Week numbers",
   "view_block_config_weeks_none": "Hidden",
@@ -723,15 +779,11 @@
   "journal_add_modal_every_label": "Every",
   "journal_add_modal_name_label": "Journal name",
   "journal_add_modal_title": "Add journal",
-  "journal_add_modal_write_custom_option": "Custom intervals",
   "journal_add_modal_write_label": "I'll be writing",
   "journal_colliding_heading": "Colliding journal settings",
   "journal_colliding_warning": "Journals {names} have colliding configurations, so their notes will overwrite each other. Change the folder or name template in one of them.",
-  "journal_dashboard_add": "Create new journal",
-  "journal_dashboard_delete": "Delete",
   "journal_dashboard_edit": "Edit",
   "journal_dashboard_empty": "No journals created yet.",
-  "journal_dashboard_section_title": "Journals",
   "journal_delete_modal_title": "Remove {name}",
   "journal_delete_mode_label": "What to do with connected notes",
   "journal_delete_mode_option": [
@@ -757,7 +809,7 @@
   "journal_edit_confirm_creation_label": "Confirm creating new note?",
   "journal_edit_date_format_description": "Used to format dates if not defined in variables (like {{date}}).",
   "journal_edit_date_format_label": "Default date format",
-  "journal_edit_date_format_moment_doc_link": "moment.js format reference",
+  "common_moment_format_reference": "moment.js format reference",
   "journal_edit_end_description": [
     {
       "declarations": ["input kind"],
@@ -837,7 +889,6 @@
   "journal_edit_section_timeline": "Timeline",
   "journal_edit_sequence_enabled_description": "Assign numbers to notes (e.g. Day 1, Day 2, …).",
   "journal_edit_sequence_enabled_label": "Enable sequential numbers",
-  "journal_edit_sequence_property_label": "Property name",
   "journal_edit_start_number_description": "Number assigned at the anchor date.",
   "journal_edit_start_number_label": "Start number",
   "journal_edit_start_writing_custom_locked": "Start date for custom intervals cannot be changed: it is used to count intervals from.",
@@ -896,9 +947,8 @@
   "journal_notes_not_rewritten_hint": "Existing notes are not rewritten. You may need to update them manually.",
   "journal_picker_placeholder": "Search journals",
   "journal_property_modal_current_label": "Current name",
-  "journal_property_modal_new_label": "New name",
+  "common_label_new_name": "New name",
   "journal_property_name_required": "Property name is required.",
-  "journal_rename_modal_new_label": "New name",
   "journal_rename_modal_same_as_current_error": "New name must differ from current name.",
   "journal_rename_modal_title": "Rename {name}",
   "journal_sequence_property_modal_title": "Edit sequential number property name",
@@ -913,27 +963,33 @@
   "variable_modifications_boundary_body": "Snap a date variable to the start or end of a calendar period by adding `<startOf=unit>` or `<endOf=unit>`.",
   "variable_modifications_boundary_example": "For example {slot} renders January 1st of the date's year.",
   "variable_modifications_boundary_heading": "Snap to start or end of period",
-  "variable_modifications_boundary_unit_day": "day",
-  "variable_modifications_boundary_unit_decade": "decade (date only)",
-  "variable_modifications_boundary_unit_hour": "hour (clock only)",
-  "variable_modifications_boundary_unit_month": "month",
-  "variable_modifications_boundary_unit_quarter": "quarter",
-  "variable_modifications_boundary_unit_week": "week",
-  "variable_modifications_boundary_unit_year": "year",
-  "variable_modifications_boundary_units_intro": "Supported units:",
+  "variable_modifications_boundary_unit": [
+    {
+      "declarations": ["input unit"],
+      "selectors": ["unit"],
+      "match": {
+        "unit=day": "day",
+        "unit=week": "week",
+        "unit=month": "month",
+        "unit=quarter": "quarter",
+        "unit=year": "year",
+        "unit=decade": "decade (date only)",
+        "unit=hour": "hour (clock only)"
+      }
+    }
+  ],
+  "common_supported_units": "Supported units:",
   "variable_modifications_combined_body": "All three modifications can be combined. Shifts apply first, then boundaries, then the format override.",
   "variable_modifications_combined_example": "For example {slot} shifts the date one week forward, snaps to the start of that week, and formats it.",
   "variable_modifications_combined_heading": "Combined",
   "variable_modifications_format_body": "Override the default date format by adding a colon and a moment.js format string.",
   "variable_modifications_format_example": "For example {slot} renders only the year.",
   "variable_modifications_format_heading": "Format override",
-  "variable_modifications_format_link": "moment.js format reference",
   "variable_modifications_intro": "Date and clock variables support three kinds of modifications. They can be combined in a single token.",
   "variable_modifications_modal_title": "Date variable modifications",
   "variable_modifications_shift_body": "Add or subtract a number of units by appending `+N<unit>` or `-N<unit>`.",
   "variable_modifications_shift_example": "For example {slot} shifts the date forward by one week.",
   "variable_modifications_shift_heading": "Arithmetic shifts",
-  "variable_modifications_shift_units_intro": "Supported units:",
   "variable_modifications_unit_d": "d — days",
   "variable_modifications_unit_h": "h — hours",
   "variable_modifications_unit_m": "m — months",

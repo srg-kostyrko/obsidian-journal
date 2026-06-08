@@ -106,11 +106,8 @@ function menuLabelFor(action: ButtonAction, level: ButtonLevel): string {
     .with({ type: "pick-date" }, () => m.view_toolbar_button_menu_pick({ unit: level }))
     .with({ type: "current" }, () =>
       match(level)
-        .with("day", () => m.view_toolbar_button_default_label_today())
-        .with("week", () => m.view_toolbar_button_default_label_this_week())
-        .with("month", () => m.view_toolbar_button_default_label_this_month())
-        .with("quarter", () => m.view_toolbar_button_default_label_this_quarter())
-        .with("year", () => m.view_toolbar_button_default_label_this_year())
+        .with("day", () => m.common_label_today())
+        .with("week", "month", "quarter", "year", (period) => m.relative_date_this({ period }))
         .exhaustive(),
     )
     .otherwise(() => level);

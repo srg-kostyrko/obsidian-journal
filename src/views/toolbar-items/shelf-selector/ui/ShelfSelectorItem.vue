@@ -16,11 +16,11 @@ defineProps<{ instanceId: BlockInstanceId; config: Record<string, never> }>();
 const context = useViewContext();
 const shelves = useService(ShelvesRepository);
 
-const label = computed(() => context.shelf.value ?? m.view_toolbar_shelf_selector_all());
+const label = computed(() => context.shelf.value ?? m.common_label_all_journals());
 
 function open(event: MouseEvent): void {
   const menu = new Menu();
-  menu.addItem((item) => item.setTitle(m.view_toolbar_shelf_selector_all()).onClick(() => context.setShelf(null)));
+  menu.addItem((item) => item.setTitle(m.common_label_all_journals()).onClick(() => context.setShelf(null)));
   for (const shelf of shelves.find().list()) {
     menu.addItem((item) => item.setTitle(shelf.name).onClick(() => context.setShelf(shelf.name)));
   }

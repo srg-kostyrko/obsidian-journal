@@ -74,24 +74,24 @@ function rename(): void {
   <div v-if="view">
     <UiSettingRow heading>
       <template #name>{{ m.view_edit_header_title({ name: view.name }) }}</template>
-      <UiIconButton icon="pencil" :tooltip="m.view_edit_rename_tooltip()" @click="rename" />
+      <UiIconButton icon="pencil" :tooltip="m.view_rename()" @click="rename" />
       <UiIconButton icon="chevron-left" :tooltip="m.journal_edit_back_tooltip()" @click="nav.back()" />
     </UiSettingRow>
 
-    <UiSettingRow :name="m.view_edit_icon_label()">
+    <UiSettingRow :name="m.common_label_icon()">
       <UiIconSuggest v-model="iconValue" />
     </UiSettingRow>
 
     <UiSettingRow :name="m.view_edit_default_shelf_label()">
       <UiDropdown v-model="shelfValue">
-        <option value="">{{ m.view_edit_default_shelf_all() }}</option>
+        <option value="">{{ m.common_label_all_journals() }}</option>
         <option v-for="opt of shelvesVM.shelfOptions.value" :key="opt.value" :value="opt.value">
           {{ opt.label }}
         </option>
       </UiDropdown>
     </UiSettingRow>
 
-    <UiSettingRow :name="m.view_edit_show_in_ribbon_label()">
+    <UiSettingRow :name="m.common_show_in_ribbon()">
       <UiToggle v-model="ribbonValue" />
     </UiSettingRow>
 

@@ -66,7 +66,7 @@ describe("JournalList", () => {
     const { emitted } = render(JournalList, {
       props: { entries: [["Journal A", makeJournal("Journal A")]], emptyText: "Nothing here" },
     });
-    await userEvent.click(screen.getByLabelText(`${m.journal_dashboard_delete()} Journal A`));
+    await userEvent.click(screen.getByLabelText(`${m.common_action_delete()} Journal A`));
     expect(emitted().delete).toEqual([["Journal A"]]);
   });
 });

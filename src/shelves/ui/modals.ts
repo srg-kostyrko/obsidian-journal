@@ -32,6 +32,5 @@ export interface ShelfNameModalProps {
 
 export const shelfNameModal = defineModal<string>()({
   component: ShelfNameModal,
-  title: ({ currentName }: ShelfNameModalProps) =>
-    currentName === undefined ? m.shelf_add_modal_title() : m.shelf_rename_modal_title(),
+  title: ({ currentName }: ShelfNameModalProps) => (currentName === undefined ? m.shelf_add() : m.shelf_rename()),
 });

@@ -149,11 +149,11 @@ const onSubmit = handleSubmit((row) => {
       <UiToggle v-model="italic" />
     </UiSettingRow>
 
-    <UiSettingRow :name="m.nav_block_row_field_color()">
+    <UiSettingRow :name="m.common_label_text_color()">
       <UiColorSettingsPicker v-model="color" />
     </UiSettingRow>
 
-    <UiSettingRow :name="m.nav_block_row_field_background()">
+    <UiSettingRow :name="m.common_label_background_color()">
       <UiColorSettingsPicker v-model="background" />
     </UiSettingRow>
 
@@ -165,11 +165,11 @@ const onSubmit = handleSubmit((row) => {
       </UiDropdown>
     </UiSettingRow>
 
-    <UiSettingRow v-if="link === 'journal'" :name="m.nav_block_row_field_journal()">
+    <UiSettingRow v-if="link === 'journal'" :name="m.common_label_journal()">
       <template #description>
         <span v-for="error of errorBag.journal" :key="error" class="form-error">{{ error }}</span>
       </template>
-      <UiDropdown v-model="journal" :aria-label="m.nav_block_row_field_journal()">
+      <UiDropdown v-model="journal" :aria-label="m.common_label_journal()">
         <option value="" disabled>—</option>
         <option v-for="name of shelfMates" :key="name" :value="name">{{ name }}</option>
       </UiDropdown>

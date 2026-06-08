@@ -59,7 +59,7 @@ describe("StyleShape", () => {
 
   it("updates size as the user changes the number", async () => {
     const host = mount(initialShape);
-    const sizeRow = rowFor(m.decoration_style_shape_size_label());
+    const sizeRow = rowFor(m.common_label_size());
     const number = within(sizeRow).getByRole("spinbutton");
     await userEvent.clear(number);
     await userEvent.type(number, "0.8");

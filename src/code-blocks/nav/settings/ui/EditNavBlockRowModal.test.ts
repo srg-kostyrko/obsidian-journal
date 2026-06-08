@@ -120,7 +120,7 @@ describe("EditNavBlockRowModal", () => {
 
   it("hides the journal dropdown when link is not 'journal'", () => {
     mountModal({});
-    expect(screen.queryByLabelText(m.nav_block_row_field_journal())).toBeNull();
+    expect(screen.queryByLabelText(m.common_label_journal())).toBeNull();
   });
 
   it("shows shelf-mates excluding the current journal in the journal dropdown", async () => {
@@ -132,7 +132,7 @@ describe("EditNavBlockRowModal", () => {
       shelves: { home: { name: "home", journals: ["daily", "weekly"] } },
     });
     await userEvent.selectOptions(screen.getByLabelText(m.nav_block_row_field_link()), "journal");
-    const dropdown = await screen.findByLabelText<HTMLSelectElement>(m.nav_block_row_field_journal());
+    const dropdown = await screen.findByLabelText<HTMLSelectElement>(m.common_label_journal());
     const optionValues = [...dropdown.options].map((option) => option.value);
     expect(optionValues).toContain("weekly");
     expect(optionValues).not.toContain("daily");

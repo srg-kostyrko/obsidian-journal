@@ -55,7 +55,7 @@ describe("ShelfCommandsSection", () => {
       "c-3": makeConfig("Global", { kind: "all", writeType: "day" }),
     });
     mount(container);
-    await userEvent.click(screen.getByText(m.command_shelf_section_title()));
+    await userEvent.click(screen.getByText(m.command_section_title()));
     expect(screen.getByText("Mine")).toBeTruthy();
     expect(screen.queryByText("Other shelf")).toBeNull();
     expect(screen.queryByText("Global")).toBeNull();
@@ -64,7 +64,7 @@ describe("ShelfCommandsSection", () => {
   it("invokes EditCommandFlow with a shelf target when add is clicked", async () => {
     const { container, flows } = await setup();
     mount(container);
-    await userEvent.click(screen.getByLabelText(m.command_shelf_add()));
+    await userEvent.click(screen.getByLabelText(m.command_add()));
     expect(flows.invoke).toHaveBeenCalledWith(EditCommandFlow, {
       target: { kind: "shelf", shelfName: "work", writeType: "day" },
     });
@@ -75,8 +75,8 @@ describe("ShelfCommandsSection", () => {
       "c-1": makeConfig("Mine", { kind: "shelf", shelfName: "work", writeType: "day" }),
     });
     mount(container);
-    await userEvent.click(screen.getByText(m.command_shelf_section_title()));
-    await userEvent.click(screen.getByLabelText(`${m.command_list_edit()} Mine`));
+    await userEvent.click(screen.getByText(m.command_section_title()));
+    await userEvent.click(screen.getByLabelText(`${m.command_edit()} Mine`));
     expect(flows.invoke).toHaveBeenCalledWith(EditCommandFlow, {
       commandId: "c-1",
       target: { kind: "shelf", shelfName: "work", writeType: "day" },
@@ -88,8 +88,8 @@ describe("ShelfCommandsSection", () => {
       "c-1": makeConfig("Mine", { kind: "shelf", shelfName: "work", writeType: "day" }),
     });
     mount(container);
-    await userEvent.click(screen.getByText(m.command_shelf_section_title()));
-    await userEvent.click(screen.getByLabelText(`${m.command_list_delete()} Mine`));
+    await userEvent.click(screen.getByText(m.command_section_title()));
+    await userEvent.click(screen.getByLabelText(`${m.command_delete()} Mine`));
     expect(flows.invoke).toHaveBeenCalledWith(DeleteCommandFlow, { commandId: "c-1" });
   });
 });

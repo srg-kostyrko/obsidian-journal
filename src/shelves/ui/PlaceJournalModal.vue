@@ -18,7 +18,7 @@ const selected = ref(props.currentShelf);
 
 <template>
   <div>
-    <UiSettingRow :name="m.shelf_place_modal_label()">
+    <UiSettingRow :name="m.common_label_shelf()">
       <UiDropdown v-model="selected">
         <option value="">{{ m.shelf_section_not_on_shelf() }}</option>
         <option v-for="shelf of props.shelfNames" :key="shelf" :value="shelf">{{ shelf }}</option>

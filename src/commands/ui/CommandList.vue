@@ -28,12 +28,8 @@ defineEmits<{ edit: [id: string]; delete: [id: string] }>();
           {{ commandContextLabel(command.context) }}
         </span>
       </template>
-      <UiIconButton icon="pencil" :tooltip="`${m.command_list_edit()} ${command.name}`" @click="$emit('edit', id)" />
-      <UiIconButton
-        icon="trash-2"
-        :tooltip="`${m.command_list_delete()} ${command.name}`"
-        @click="$emit('delete', id)"
-      />
+      <UiIconButton icon="pencil" :tooltip="`${m.command_edit()} ${command.name}`" @click="$emit('edit', id)" />
+      <UiIconButton icon="trash-2" :tooltip="`${m.command_delete()} ${command.name}`" @click="$emit('delete', id)" />
     </UiSettingRow>
   </template>
 </template>

@@ -106,7 +106,7 @@ describe("ViewsDashboardBlock", () => {
     mount(container);
     const flows = container.resolve(Flows);
     const spy = vi.spyOn(flows, "invoke").mockReturnValue({ tap: () => undefined } as never);
-    await userEvent.click(screen.getByLabelText(m.view_dashboard_delete({ name: "Weekly" })));
+    await userEvent.click(screen.getByLabelText(m.common_delete_name({ name: "Weekly" })));
     expect(spy).toHaveBeenCalledWith(DeleteViewFlow, { viewId: id });
   });
 });

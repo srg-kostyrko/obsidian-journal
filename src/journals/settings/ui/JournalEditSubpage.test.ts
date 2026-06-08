@@ -259,7 +259,7 @@ describe("JournalEditSubpage", () => {
     const { container, flows } = await setup(initial);
     mount(container, "daily");
     await userEvent.click(screen.getByText(m.journal_edit_section_sequential_numbers()));
-    await userEvent.click(screen.getByLabelText(`${m.journal_edit_sequence_property_label()} edit`));
+    await userEvent.click(screen.getByLabelText(`${m.common_label_property_name()} edit`));
     expect(flows.invoke).toHaveBeenCalledWith(EditSequencePropertyFlow, {
       journalName: "daily",
       sourceIndex: 0,

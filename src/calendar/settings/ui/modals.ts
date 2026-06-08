@@ -7,5 +7,5 @@ import type { CalendarSliceState } from "../slice";
 
 export const weekPresetPickerModal = defineModal<CalendarSliceState>()({
   component: WeekPresetPickerModal,
-  title: (_: { current: CalendarSliceState }) => m.calendar_preset_picker_title(),
+  title: (_: { current: CalendarSliceState }) => m.common_week_configuration(),
 });

@@ -21,7 +21,7 @@ const { value: color } = useField<ColorSettings>(`${name}.color`);
       <option value="bottom-right">{{ m.decoration_corner_placement_label({ placement: "bottom-right" }) }}</option>
     </UiDropdown>
   </UiSettingRow>
-  <UiSettingRow :name="m.decoration_style_corner_color_label()">
+  <UiSettingRow :name="m.common_label_color()">
     <UiColorSettingsPicker v-model="color" />
   </UiSettingRow>
 </template>

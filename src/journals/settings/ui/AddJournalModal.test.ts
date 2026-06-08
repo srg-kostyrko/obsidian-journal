@@ -100,7 +100,7 @@ describe("AddJournalModal", () => {
     await userEvent.clear(screen.getByRole("spinbutton"));
     await userEvent.type(screen.getByRole("spinbutton"), "2");
     await userEvent.selectOptions(screen.getAllByRole("combobox")[1], "week");
-    await userEvent.click(screen.getByRole("button", { name: m.calendar_date_picker_title() }));
+    await userEvent.click(screen.getByRole("button", { name: m.common_pick_a_date() }));
     const period = DayPeriod.containing(date("2024-01-01"));
     fakeModalService.lastOpen<unknown, typeof period>().submit(period);
     await userEvent.click(screen.getByText(m.common_action_submit()));

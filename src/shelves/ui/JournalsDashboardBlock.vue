@@ -52,12 +52,12 @@ function remove(journalName: string): void {
   <UiCollapsibleBlock v-model:expanded="expanded">
     <template #trigger>
       <UiIconedRow icon="book-open">
-        {{ hasShelves ? m.shelf_journals_block_title_filtered() : m.shelf_journals_block_title() }}
+        {{ hasShelves ? m.shelf_journals_block_title_filtered() : m.common_label_journals() }}
         <span class="flair">{{ entries.length }}</span>
       </UiIconedRow>
     </template>
     <template #controls>
-      <UiIconButton icon="plus" cta :tooltip="m.journal_dashboard_add()" @click="add" />
+      <UiIconButton icon="plus" cta :tooltip="m.journal_create()" @click="add" />
     </template>
     <JournalList :entries="entries" :empty-text="m.journal_dashboard_empty()" @edit="edit" @delete="remove" />
   </UiCollapsibleBlock>

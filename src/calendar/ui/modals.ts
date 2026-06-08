@@ -14,6 +14,6 @@ export interface DatePickerModalProps {
 
 export const datePickerModal = defineModal<Period>()({
   component: DatePickerModal,
-  title: (_: DatePickerModalProps) => m.calendar_date_picker_title(),
+  title: (_: DatePickerModalProps) => m.common_pick_a_date(),
   width: 400,
 });

@@ -111,7 +111,7 @@ describe("WeekPresetPickerModal", () => {
     const api: ModalApi<CalendarSliceState> = { submit: vi.fn(), cancel: vi.fn() };
     mountModal({ mode: "locale" }, api);
 
-    await userEvent.click(screen.getByText(m.calendar_picker_cancel_action()));
+    await userEvent.click(screen.getByText(m.common_action_cancel()));
     expect(api.cancel).toHaveBeenCalled();
   });
 });

@@ -139,7 +139,7 @@ const onSubmit = handleSubmit((values) => {
 
 <template>
   <form @submit.prevent="onSubmit">
-    <UiSettingRow :name="m.command_modal_name_label()">
+    <UiSettingRow :name="m.common_label_name()">
       <template #description>
         <span v-for="error of errorBag.name" :key="error" class="command-form-error">{{ error }}</span>
       </template>
@@ -178,11 +178,11 @@ const onSubmit = handleSubmit((values) => {
       </UiDropdown>
     </UiSettingRow>
 
-    <UiSettingRow :name="m.command_modal_ribbon_label()">
-      <UiToggle v-model="showInRibbon" v-bind="showInRibbonAttrs" :tooltip="m.command_modal_ribbon_label()" />
+    <UiSettingRow :name="m.common_show_in_ribbon()">
+      <UiToggle v-model="showInRibbon" v-bind="showInRibbonAttrs" :tooltip="m.common_show_in_ribbon()" />
     </UiSettingRow>
 
-    <UiSettingRow v-if="showInRibbon" :name="m.command_modal_icon_label()">
+    <UiSettingRow v-if="showInRibbon" :name="m.common_label_icon()">
       <template #description>
         <span v-for="error of errorBag.icon" :key="error" class="command-form-error">{{ error }}</span>
       </template>

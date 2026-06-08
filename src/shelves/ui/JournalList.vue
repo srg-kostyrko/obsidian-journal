@@ -22,11 +22,7 @@ defineEmits<{ edit: [name: string]; delete: [name: string] }>();
         <span class="flair">{{ m.journal_write({ every: "day", duration: 1, ...describeWrite(config.write) }) }}</span>
       </template>
       <UiIconButton icon="pencil" :tooltip="`${m.journal_dashboard_edit()} ${name}`" @click="$emit('edit', name)" />
-      <UiIconButton
-        icon="trash-2"
-        :tooltip="`${m.journal_dashboard_delete()} ${name}`"
-        @click="$emit('delete', name)"
-      />
+      <UiIconButton icon="trash-2" :tooltip="`${m.common_action_delete()} ${name}`" @click="$emit('delete', name)" />
     </UiSettingRow>
   </template>
 </template>

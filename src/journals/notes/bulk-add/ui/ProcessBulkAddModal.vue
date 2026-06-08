@@ -141,7 +141,7 @@ function close(): void {
         </template>
       </UiSettingRow>
       <UiSettingRow>
-        <UiButton cta @click="close">{{ m.bulk_add_close() }}</UiButton>
+        <UiButton cta @click="close">{{ m.common_action_close() }}</UiButton>
       </UiSettingRow>
     </template>
   </div>

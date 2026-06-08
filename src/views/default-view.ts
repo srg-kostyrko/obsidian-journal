@@ -21,7 +21,7 @@ const ITEM_NEXT_YEAR = "e9c0d1f2-9a0b-4c3d-9e4f-6a7b8c9d0e1f";
 export function defaultCalendarView(): View {
   return {
     id: DEFAULT_CALENDAR_VIEW_ID,
-    name: m.view_default_calendar_name(),
+    name: m.common_label_calendar(),
     icon: "calendar-days",
     defaultShelf: null,
     showInRibbon: true,

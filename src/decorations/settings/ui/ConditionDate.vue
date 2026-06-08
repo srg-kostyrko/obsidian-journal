@@ -40,14 +40,24 @@ const yearModel = computed<number | undefined>({
 </script>
 
 <template>
-  <UiSettingRow :name="m.decoration_condition_date_day_label()">
+  <UiSettingRow :name="m.decoration_condition_date_unit_label({ unit: 'day' })">
     <template #description>{{ m.decoration_condition_date_hint() }}</template>
-    <UiNumberInput v-model="dayModel" :min="1" :max="31" :placeholder="m.decoration_condition_date_any_day()" />
+    <UiNumberInput
+      v-model="dayModel"
+      :min="1"
+      :max="31"
+      :placeholder="m.decoration_condition_date_any_unit({ unit: 'day' })"
+    />
   </UiSettingRow>
-  <UiSettingRow :name="m.decoration_condition_date_month_label()">
-    <UiNumberInput v-model="monthModel" :min="1" :max="12" :placeholder="m.decoration_condition_date_any_month()" />
+  <UiSettingRow :name="m.decoration_condition_date_unit_label({ unit: 'month' })">
+    <UiNumberInput
+      v-model="monthModel"
+      :min="1"
+      :max="12"
+      :placeholder="m.decoration_condition_date_any_unit({ unit: 'month' })"
+    />
   </UiSettingRow>
-  <UiSettingRow :name="m.decoration_condition_date_year_label()">
-    <UiNumberInput v-model="yearModel" :placeholder="m.decoration_condition_date_any_year()" />
+  <UiSettingRow :name="m.decoration_condition_date_unit_label({ unit: 'year' })">
+    <UiNumberInput v-model="yearModel" :placeholder="m.decoration_condition_date_any_unit({ unit: 'year' })" />
   </UiSettingRow>
 </template>

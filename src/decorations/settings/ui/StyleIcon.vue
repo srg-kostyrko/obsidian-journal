@@ -18,24 +18,24 @@ const { value: placementY } = useField<JournalDecorationIcon["placement_y"]>(`${
 </script>
 
 <template>
-  <UiSettingRow :name="m.decoration_style_icon_icon_label()">
+  <UiSettingRow :name="m.common_label_icon()">
     <UiIconSuggest v-model="icon" />
   </UiSettingRow>
-  <UiSettingRow :name="m.decoration_style_icon_size_label()">
-    <template #description>{{ m.decoration_style_icon_size_hint() }}</template>
+  <UiSettingRow :name="m.common_label_size()">
+    <template #description>{{ m.decoration_style_size_hint({ kind: "icon" }) }}</template>
     <UiNumberInput v-model="size" :min="0" :step="0.1" />
   </UiSettingRow>
-  <UiSettingRow :name="m.decoration_style_icon_color_label()">
+  <UiSettingRow :name="m.common_label_color()">
     <UiColorSettingsPicker v-model="color" />
   </UiSettingRow>
-  <UiSettingRow :name="m.decoration_style_icon_placement_x_label()">
+  <UiSettingRow :name="m.common_label_horizontal_placement()">
     <UiDropdown v-model="placementX">
       <option value="left">{{ m.decoration_placement_x_label({ value: "left" }) }}</option>
       <option value="center">{{ m.decoration_placement_x_label({ value: "center" }) }}</option>
       <option value="right">{{ m.decoration_placement_x_label({ value: "right" }) }}</option>
     </UiDropdown>
   </UiSettingRow>
-  <UiSettingRow :name="m.decoration_style_icon_placement_y_label()">
+  <UiSettingRow :name="m.common_label_vertical_placement()">
     <UiDropdown v-model="placementY">
       <option value="top">{{ m.decoration_placement_y_label({ value: "top" }) }}</option>
       <option value="middle">{{ m.decoration_placement_y_label({ value: "middle" }) }}</option>

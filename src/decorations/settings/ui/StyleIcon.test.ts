@@ -67,7 +67,7 @@ function rowFor(label: string): HTMLElement {
 describe("StyleIcon", () => {
   it("updates the size as the user changes the number", async () => {
     const host = mount(initialIcon);
-    const sizeRow = rowFor(m.decoration_style_icon_size_label());
+    const sizeRow = rowFor(m.common_label_size());
     const number = within(sizeRow).getByRole("spinbutton");
     await userEvent.clear(number);
     await userEvent.type(number, "0.9");

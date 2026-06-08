@@ -14,13 +14,13 @@ const shiftUnits = [
 ];
 
 const boundaryUnits = [
-  { key: "day", label: () => m.variable_modifications_boundary_unit_day() },
-  { key: "week", label: () => m.variable_modifications_boundary_unit_week() },
-  { key: "month", label: () => m.variable_modifications_boundary_unit_month() },
-  { key: "quarter", label: () => m.variable_modifications_boundary_unit_quarter() },
-  { key: "year", label: () => m.variable_modifications_boundary_unit_year() },
-  { key: "decade", label: () => m.variable_modifications_boundary_unit_decade() },
-  { key: "hour", label: () => m.variable_modifications_boundary_unit_hour() },
+  { key: "day", label: () => m.variable_modifications_boundary_unit({ unit: "day" }) },
+  { key: "week", label: () => m.variable_modifications_boundary_unit({ unit: "week" }) },
+  { key: "month", label: () => m.variable_modifications_boundary_unit({ unit: "month" }) },
+  { key: "quarter", label: () => m.variable_modifications_boundary_unit({ unit: "quarter" }) },
+  { key: "year", label: () => m.variable_modifications_boundary_unit({ unit: "year" }) },
+  { key: "decade", label: () => m.variable_modifications_boundary_unit({ unit: "decade" }) },
+  { key: "hour", label: () => m.variable_modifications_boundary_unit({ unit: "hour" }) },
 ];
 </script>
 
@@ -37,7 +37,7 @@ const boundaryUnits = [
     </p>
     <p>
       <a href="https://momentjs.com/docs/#/displaying/format/" target="_blank" rel="noopener">
-        {{ m.variable_modifications_format_link() }}
+        {{ m.common_moment_format_reference() }}
       </a>
     </p>
 
@@ -48,7 +48,7 @@ const boundaryUnits = [
         <VariableChip name="date+1w" />
       </I18nWithSlot>
     </p>
-    <p>{{ m.variable_modifications_shift_units_intro() }}</p>
+    <p>{{ m.common_supported_units() }}</p>
     <ul>
       <li v-for="unit in shiftUnits" :key="unit.key">{{ unit.label() }}</li>
     </ul>
@@ -60,7 +60,7 @@ const boundaryUnits = [
         <VariableChip name="date<startOf=year>" />
       </I18nWithSlot>
     </p>
-    <p>{{ m.variable_modifications_boundary_units_intro() }}</p>
+    <p>{{ m.common_supported_units() }}</p>
     <ul>
       <li v-for="unit in boundaryUnits" :key="unit.key">{{ unit.label() }}</li>
     </ul>

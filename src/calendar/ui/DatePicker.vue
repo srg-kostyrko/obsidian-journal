@@ -35,7 +35,7 @@ function previewFor(picking: Picking): string {
 
 const label = computed<string>(() => {
   const value = toRaw(modelValue.value);
-  if (!value) return props.placeholder ?? m.calendar_date_picker_title();
+  if (!value) return props.placeholder ?? m.common_pick_a_date();
   return value.format(previewFor(props.picking));
 });
 

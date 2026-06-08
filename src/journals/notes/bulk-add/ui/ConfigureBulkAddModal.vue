@@ -63,15 +63,15 @@ const onSubmit = handleSubmit((parameters) => {
     </UiSettingRow>
 
     <UiSettingRow v-if="values.datePlace === 'property'">
-      <template #name>{{ m.bulk_add_property_name_label() }}</template>
-      <UiTextInput v-model="propertyName" :aria-label="m.bulk_add_property_name_label()" />
+      <template #name>{{ m.common_label_property_name() }}</template>
+      <UiTextInput v-model="propertyName" :aria-label="m.common_label_property_name()" />
     </UiSettingRow>
 
     <UiSettingRow>
       <template #name>{{ m.bulk_add_date_format_label() }}</template>
       <template #description>
         <a target="_blank" href="https://momentjs.com/docs/#/displaying/format/">
-          {{ m.journal_edit_date_format_moment_doc_link() }}
+          {{ m.common_moment_format_reference() }}
         </a>
         <div>{{ m.bulk_add_date_format_omit_time() }}</div>
         <div v-if="values.datePlace === 'property'">{{ m.bulk_add_date_format_property_note() }}</div>

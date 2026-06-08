@@ -90,7 +90,7 @@ const onSubmit = handleSubmit((vs) => {
         <option value="month">{{ m.journal_write({ type: "month", every: "day", duration: 1 }) }}</option>
         <option value="quarter">{{ m.journal_write({ type: "quarter", every: "day", duration: 1 }) }}</option>
         <option value="year">{{ m.journal_write({ type: "year", every: "day", duration: 1 }) }}</option>
-        <option value="custom">{{ m.journal_add_modal_write_custom_option() }}</option>
+        <option value="custom">{{ m.common_custom_intervals() }}</option>
       </UiDropdown>
     </UiSettingRow>
     <UiSettingRow v-if="isCustom" :name="m.journal_add_modal_duration_label()">

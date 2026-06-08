@@ -43,7 +43,7 @@ function rowFor(label: string): HTMLElement {
 describe("ConditionProperty", () => {
   it("updates the property name as the user types", async () => {
     const host = mount({ type: "property", name: "", valueType: "text", condition: "exists", value: "" });
-    const nameRow = rowFor(m.decoration_condition_property_name_label());
+    const nameRow = rowFor(m.common_label_name());
     await userEvent.type(within(nameRow).getByRole("textbox"), "mood");
     expect(host.values.c.name).toBe("mood");
   });

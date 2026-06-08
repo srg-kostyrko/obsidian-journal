@@ -58,7 +58,7 @@ describe("DatePicker", () => {
   describe("label", () => {
     it("shows the placeholder when modelValue is null and no placeholder is provided", () => {
       mount({ picking: "day", modelValue: null });
-      expect(screen.getByRole("button").textContent?.trim()).toBe(m.calendar_date_picker_title());
+      expect(screen.getByRole("button").textContent?.trim()).toBe(m.common_pick_a_date());
     });
 
     it("shows the explicit placeholder when modelValue is null and a placeholder is provided", () => {

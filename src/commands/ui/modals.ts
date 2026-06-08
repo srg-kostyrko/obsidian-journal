@@ -8,7 +8,7 @@ import type { CommandConfig, CommandTarget } from "../config";
 
 export const deleteCommandModal = defineModal()({
   component: DeleteCommandModal,
-  title: (_: { commandName: string }) => m.command_delete_modal_title(),
+  title: (_: { commandName: string }) => m.command_delete(),
 });
 
 export interface EditCommandModalProps {
@@ -19,5 +19,5 @@ export interface EditCommandModalProps {
 
 export const editCommandModal = defineModal<CommandConfig>()({
   component: EditCommandModal,
-  title: ({ command }: EditCommandModalProps) => (command ? m.command_edit_modal_title() : m.command_add_modal_title()),
+  title: ({ command }: EditCommandModalProps) => (command ? m.command_edit() : m.command_add()),
 });

@@ -45,7 +45,7 @@ function mount(container: Container) {
 }
 
 async function openSection(): Promise<void> {
-  await userEvent.click(screen.getByText(m.calendar_dashboard_section_title()));
+  await userEvent.click(screen.getByText(m.common_label_calendar()));
 }
 
 afterEach(() => cleanup());

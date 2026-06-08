@@ -113,7 +113,7 @@ function presetUsed(preset: WeekPreset): string {
     </template>
 
     <UiSettingRow>
-      <UiButton @click="api.cancel()">{{ m.calendar_picker_cancel_action() }}</UiButton>
+      <UiButton @click="api.cancel()">{{ m.common_action_cancel() }}</UiButton>
       <UiButton cta @click="update">{{ m.calendar_picker_update_action() }}</UiButton>
     </UiSettingRow>
   </div>

@@ -15,7 +15,7 @@ const update = (patch: Partial<ButtonConfig>): void => props.onChange({ ...props
 
 <template>
   <UiSettingRow>
-    <template #name>{{ m.view_toolbar_button_config_icon_label() }}</template>
+    <template #name>{{ m.common_label_icon() }}</template>
     <UiTextInput
       :model-value="config.icon ?? ''"
       @update:model-value="(value: string | undefined) => update({ icon: value || undefined })"

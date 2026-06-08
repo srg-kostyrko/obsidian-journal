@@ -39,7 +39,7 @@ function onValueTypeChange(next: ValueType): void {
 </script>
 
 <template>
-  <UiSettingRow :name="m.decoration_condition_property_name_label()">
+  <UiSettingRow :name="m.common_label_name()">
     <UiTextInput v-model="propertyName" />
   </UiSettingRow>
   <UiSettingRow :name="m.decoration_condition_property_value_type_label()">

@@ -52,7 +52,7 @@ function remove(shelfName: string): void {
       </UiIconedRow>
     </template>
     <template #controls>
-      <UiIconButton icon="plus" cta :tooltip="m.shelf_dashboard_add()" @click="add" />
+      <UiIconButton icon="plus" cta :tooltip="m.shelf_add()" @click="add" />
     </template>
     <UiSettingRow v-if="entries.length === 0">
       <template #description>{{ m.shelf_dashboard_empty() }}</template>
@@ -64,7 +64,7 @@ function remove(shelfName: string): void {
           <span class="flair">{{ m.shelf_member_count({ count: shelf.journals.length }) }}</span>
         </template>
         <UiIconButton icon="library" :tooltip="m.shelf_dashboard_open({ name })" @click="open(name)" />
-        <UiIconButton icon="trash-2" :tooltip="m.shelf_dashboard_delete({ name })" @click="remove(name)" />
+        <UiIconButton icon="trash-2" :tooltip="m.common_delete_name({ name })" @click="remove(name)" />
       </UiSettingRow>
     </template>
   </UiCollapsibleBlock>

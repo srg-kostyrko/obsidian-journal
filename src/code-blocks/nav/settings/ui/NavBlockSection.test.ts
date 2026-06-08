@@ -122,7 +122,7 @@ describe("NavBlockSection", () => {
     const b = { ...sampleRow, template: "B" };
     const { storage } = mount([a, b]);
     await userEvent.click(screen.getByText(m.nav_block_section_title()));
-    const ups = screen.getAllByLabelText(m.block_rows_move_up_tooltip());
+    const ups = screen.getAllByLabelText(m.common_action_move_up());
     await userEvent.click(ups[0]);
     expect(storage.daily?.navBlock.rows.map((r) => r.template)).toEqual(["B", "A"]);
   });
@@ -133,7 +133,7 @@ describe("NavBlockSection", () => {
       { ...sampleRow, template: "B" },
     ]);
     await userEvent.click(screen.getByText(m.nav_block_section_title()));
-    expect(screen.getAllByLabelText(m.block_rows_move_up_tooltip()).length).toBe(1);
-    expect(screen.getAllByLabelText(m.block_rows_move_down_tooltip()).length).toBe(1);
+    expect(screen.getAllByLabelText(m.common_action_move_up()).length).toBe(1);
+    expect(screen.getAllByLabelText(m.common_action_move_down()).length).toBe(1);
   });
 });

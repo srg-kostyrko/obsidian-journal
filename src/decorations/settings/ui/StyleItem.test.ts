@@ -48,12 +48,12 @@ function mount(initial: JournalDecorationStyle) {
 describe("StyleItem", () => {
   it("renders StyleBackground for a background style", () => {
     mount({ type: "background", color: transparent });
-    expect(screen.getByText(m.decoration_style_background_color_label())).toBeTruthy();
+    expect(screen.getByText(m.common_label_background_color())).toBeTruthy();
   });
 
   it("renders StyleColor for a color style", () => {
     mount({ type: "color", color: transparent });
-    expect(screen.getByText(m.decoration_style_color_label())).toBeTruthy();
+    expect(screen.getByText(m.common_label_text_color())).toBeTruthy();
   });
 
   it("renders StyleCorner for a corner style", () => {
@@ -82,7 +82,7 @@ describe("StyleItem", () => {
       color: transparent,
       size: 0.5,
     });
-    expect(screen.getByText(m.decoration_style_icon_icon_label())).toBeTruthy();
+    expect(screen.getByText(m.common_label_icon())).toBeTruthy();
   });
 
   it("renders StyleBorder for a border style", () => {

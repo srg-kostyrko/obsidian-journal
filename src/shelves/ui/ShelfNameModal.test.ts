@@ -26,11 +26,11 @@ function mountModal(props: { currentName?: string; takenNames?: string[] }) {
 
 describe("shelfNameModal definition", () => {
   it("uses the add title when no current name is supplied", () => {
-    expect(shelfNameModal.title({ takenNames: [] })).toBe(m.shelf_add_modal_title());
+    expect(shelfNameModal.title({ takenNames: [] })).toBe(m.shelf_add());
   });
 
   it("uses the rename title when a current name is supplied", () => {
-    expect(shelfNameModal.title({ currentName: "Work", takenNames: [] })).toBe(m.shelf_rename_modal_title());
+    expect(shelfNameModal.title({ currentName: "Work", takenNames: [] })).toBe(m.shelf_rename());
   });
 });
 

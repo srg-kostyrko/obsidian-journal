@@ -18,7 +18,7 @@ export type CustomIntervalsConfigChange = (next: CustomIntervalsConfig) => void;
 
 export const customIntervalsBlock = defineViewBlock<CustomIntervalsConfig>({
   key: "custom-intervals",
-  label: m.view_block_custom_intervals_label(),
+  label: m.common_custom_intervals(),
   description: m.view_block_custom_intervals_description(),
   icon: "list",
   schema,

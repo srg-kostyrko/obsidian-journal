@@ -9,7 +9,7 @@ describe("resolveButtonAppearance", () => {
     it("uses crosshair + 'pick day' tooltip for single day level", () => {
       expect(resolveButtonAppearance({ type: "pick-date", mode: "navigate", levels: ["day"] })).toEqual({
         icon: "crosshair",
-        tooltip: m.view_toolbar_button_default_tooltip_pick_day(),
+        tooltip: m.common_pick_a_date(),
       });
     });
 
@@ -24,31 +24,31 @@ describe("resolveButtonAppearance", () => {
   describe("current single-level", () => {
     it("uses 'Today' label for current[day]", () => {
       const a = resolveButtonAppearance({ type: "current", mode: "create", levels: ["day"] });
-      expect(a.label).toBe(m.view_toolbar_button_default_label_today());
+      expect(a.label).toBe(m.common_label_today());
       expect(a.icon).toBeUndefined();
     });
 
     it("uses 'This week' label for current[week]", () => {
       expect(resolveButtonAppearance({ type: "current", mode: "create", levels: ["week"] }).label).toBe(
-        m.view_toolbar_button_default_label_this_week(),
+        m.relative_date_this({ period: "week" }),
       );
     });
 
     it("uses 'This month' label for current[month]", () => {
       expect(resolveButtonAppearance({ type: "current", mode: "create", levels: ["month"] }).label).toBe(
-        m.view_toolbar_button_default_label_this_month(),
+        m.relative_date_this({ period: "month" }),
       );
     });
 
     it("uses 'This quarter' label for current[quarter]", () => {
       expect(resolveButtonAppearance({ type: "current", mode: "create", levels: ["quarter"] }).label).toBe(
-        m.view_toolbar_button_default_label_this_quarter(),
+        m.relative_date_this({ period: "quarter" }),
       );
     });
 
     it("uses 'This year' label for current[year]", () => {
       expect(resolveButtonAppearance({ type: "current", mode: "create", levels: ["year"] }).label).toBe(
-        m.view_toolbar_button_default_label_this_year(),
+        m.relative_date_this({ period: "year" }),
       );
     });
   });

@@ -24,7 +24,7 @@ function cancel(): void {
       </template>
     </UiSettingRow>
     <UiSettingRow>
-      <UiButton @click="cancel">{{ m.confirm_note_creation_cancel() }}</UiButton>
+      <UiButton @click="cancel">{{ m.common_action_cancel() }}</UiButton>
       <UiButton cta @click="confirm">{{ m.confirm_note_creation_confirm() }}</UiButton>
     </UiSettingRow>
   </div>

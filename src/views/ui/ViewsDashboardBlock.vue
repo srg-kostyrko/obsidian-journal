@@ -65,7 +65,7 @@ function remove(viewId: ViewId): void {
           @click="open(view.id)"
         />
         <UiIconButton icon="copy" :tooltip="m.view_dashboard_clone({ name: view.name })" @click="clone(view.id)" />
-        <UiIconButton icon="trash-2" :tooltip="m.view_dashboard_delete({ name: view.name })" @click="remove(view.id)" />
+        <UiIconButton icon="trash-2" :tooltip="m.common_delete_name({ name: view.name })" @click="remove(view.id)" />
       </UiSettingRow>
     </template>
   </UiCollapsibleBlock>

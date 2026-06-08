@@ -75,9 +75,7 @@ async function mountModal(options: {
 
 describe("editCommandModal definition", () => {
   it("uses the add title when no command is supplied", () => {
-    expect(editCommandModal.title({ target: { kind: "all", writeType: "day" }, takenNames: [] })).toBe(
-      m.command_add_modal_title(),
-    );
+    expect(editCommandModal.title({ target: { kind: "all", writeType: "day" }, takenNames: [] })).toBe(m.command_add());
   });
 
   it("uses the edit title when a command is supplied", () => {
@@ -91,7 +89,7 @@ describe("editCommandModal definition", () => {
       context: "today",
     };
     expect(editCommandModal.title({ command, target: { kind: "all", writeType: "day" }, takenNames: [] })).toBe(
-      m.command_edit_modal_title(),
+      m.command_edit(),
     );
   });
 });
@@ -135,7 +133,7 @@ describe("EditCommandModal", () => {
   it("requires an icon when show-in-ribbon is enabled", async () => {
     const { submit } = await mountModal({ target: { kind: "all", writeType: "day" } });
     await userEvent.type(screen.getByRole("textbox"), "Ribboned");
-    await userEvent.click(screen.getByLabelText(m.command_modal_ribbon_label()));
+    await userEvent.click(screen.getByLabelText(m.common_show_in_ribbon()));
     await userEvent.click(screen.getByText(m.common_action_submit()));
     await waitFor(() => expect(screen.getByText(m.command_icon_required_error())).toBeTruthy());
     expect(submit).not.toHaveBeenCalled();

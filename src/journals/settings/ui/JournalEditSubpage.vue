@@ -230,7 +230,7 @@ function editSequenceKey(): void {
         <template #description>
           <div>{{ m.journal_edit_date_format_description({ "{date": config.dateFormat }) }}</div>
           <a target="_blank" href="https://momentjs.com/docs/#/displaying/format/">
-            {{ m.journal_edit_date_format_moment_doc_link() }}
+            {{ m.common_moment_format_reference() }}
           </a>
           <DateFormatPreview :format="config.dateFormat" />
           <div v-if="config.dateFormat.includes('/')" class="journal-recommendation">
@@ -398,13 +398,9 @@ function editSequenceKey(): void {
           <UiToggle v-model="config.numbering.allowBefore" />
         </UiSettingRow>
 
-        <UiSettingRow :name="m.journal_edit_sequence_property_label()">
+        <UiSettingRow :name="m.common_label_property_name()">
           {{ config.numbering.sources[0].frontmatterKey }}
-          <UiIconButton
-            icon="pencil"
-            :tooltip="`${m.journal_edit_sequence_property_label()} edit`"
-            @click="editSequenceKey"
-          />
+          <UiIconButton icon="pencil" :tooltip="`${m.common_label_property_name()} edit`" @click="editSequenceKey" />
         </UiSettingRow>
       </template>
     </UiCollapsibleBlock>

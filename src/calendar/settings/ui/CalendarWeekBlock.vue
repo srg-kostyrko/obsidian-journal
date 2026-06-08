@@ -63,10 +63,10 @@ function change(): void {
     <template #trigger>
       <span class="section-heading">
         <UiIcon name="calendar" />
-        <span class="section-title">{{ m.calendar_dashboard_section_title() }}</span>
+        <span class="section-title">{{ m.common_label_calendar() }}</span>
       </span>
     </template>
-    <UiSettingRow heading :name="m.calendar_week_config_title()">
+    <UiSettingRow heading :name="m.common_week_configuration()">
       <template #description>
         <div class="rationale">{{ m.calendar_week_config_description() }}</div>
         <div class="preset-name">{{ m.calendar_preset_name({ preset: activePreset }) }}</div>

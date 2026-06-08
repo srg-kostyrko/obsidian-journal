@@ -66,19 +66,19 @@ function remove(journalName: string): void {
   <div v-if="shelf">
     <UiSettingRow heading>
       <template #name>{{ m.shelf_edit_header_title({ name: shelf.name }) }}</template>
-      <UiIconButton icon="pencil" :tooltip="m.shelf_edit_rename_tooltip()" @click="rename" />
+      <UiIconButton icon="pencil" :tooltip="m.shelf_rename()" @click="rename" />
       <UiIconButton icon="chevron-left" :tooltip="m.journal_edit_back_tooltip()" @click="nav.back()" />
     </UiSettingRow>
 
     <UiCollapsibleBlock v-model:expanded="expanded">
       <template #trigger>
         <UiIconedRow icon="book-open">
-          {{ m.shelf_edit_journals_title() }}
+          {{ m.common_label_journals() }}
           <span class="flair">{{ entries.length }}</span>
         </UiIconedRow>
       </template>
       <template #controls>
-        <UiIconButton icon="plus" cta :tooltip="m.shelf_edit_journals_add()" @click="add" />
+        <UiIconButton icon="plus" cta :tooltip="m.journal_create()" @click="add" />
       </template>
       <JournalList :entries="entries" :empty-text="m.journal_dashboard_empty()" @edit="edit" @delete="remove" />
     </UiCollapsibleBlock>

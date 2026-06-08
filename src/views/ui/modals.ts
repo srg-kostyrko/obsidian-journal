@@ -16,7 +16,7 @@ export interface ViewNameModalProps {
 export const viewNameModal = defineModal<string>()({
   component: ViewNameModal,
   title: ({ currentName }: ViewNameModalProps) =>
-    currentName === undefined ? m.view_add_modal_title() : m.view_rename_modal_title(),
+    currentName === undefined ? m.view_add_modal_title() : m.view_rename(),
 });
 
 export interface DeleteViewModalProps {
@@ -34,7 +34,7 @@ export interface AddBlockPickerModalProps {
 
 export const addBlockPickerModal = defineModal<string>()({
   component: AddBlockPickerModal,
-  title: (_: AddBlockPickerModalProps) => m.view_add_block_modal_title(),
+  title: (_: AddBlockPickerModalProps) => m.view_add_block(),
 });
 
 export interface AddToolbarItemPickerModalProps {
@@ -43,5 +43,5 @@ export interface AddToolbarItemPickerModalProps {
 
 export const addToolbarItemPickerModal = defineModal<{ key: string; defaultConfig: unknown }>()({
   component: AddToolbarItemPickerModal,
-  title: (_: AddToolbarItemPickerModalProps) => m.view_add_toolbar_item_modal_title(),
+  title: (_: AddToolbarItemPickerModalProps) => m.view_add_toolbar_item(),
 });

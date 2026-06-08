@@ -71,13 +71,13 @@ function add(): void {
       </template>
       <UiIconButton
         icon="chevron-up"
-        :tooltip="m.view_block_move_up()"
+        :tooltip="m.common_action_move_up()"
         :disabled="index === 0"
         @click="moveUp(row.id)"
       />
       <UiIconButton
         icon="chevron-down"
-        :tooltip="m.view_block_move_down()"
+        :tooltip="m.common_action_move_down()"
         :disabled="index === rows.length - 1"
         @click="moveDown(row.id)"
       />
@@ -87,6 +87,6 @@ function add(): void {
   </template>
 
   <UiSettingRow controls-only>
-    <UiButton cta @click="add">{{ m.view_edit_blocks_add() }}</UiButton>
+    <UiButton cta @click="add">{{ m.view_add_block() }}</UiButton>
   </UiSettingRow>
 </template>

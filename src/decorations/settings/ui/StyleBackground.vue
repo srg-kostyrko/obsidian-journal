@@ -11,7 +11,7 @@ const { value: color } = useField<ColorSettings>(`${name}.color`);
 </script>
 
 <template>
-  <UiSettingRow :name="m.decoration_style_background_color_label()">
+  <UiSettingRow :name="m.common_label_background_color()">
     <UiColorSettingsPicker v-model="color" />
   </UiSettingRow>
 </template>

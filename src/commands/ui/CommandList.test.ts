@@ -39,7 +39,7 @@ describe("CommandList", () => {
     const { emitted } = render(CommandList, {
       props: { entries: [["id-1", makeCommand("Open daily"), "day"]], emptyText: "x" },
     });
-    await userEvent.click(screen.getByLabelText(`${m.command_list_edit()} Open daily`));
+    await userEvent.click(screen.getByLabelText(`${m.command_edit()} Open daily`));
     expect(emitted().edit).toEqual([["id-1"]]);
   });
 
@@ -47,7 +47,7 @@ describe("CommandList", () => {
     const { emitted } = render(CommandList, {
       props: { entries: [["id-1", makeCommand("Open daily"), "day"]], emptyText: "x" },
     });
-    await userEvent.click(screen.getByLabelText(`${m.command_list_delete()} Open daily`));
+    await userEvent.click(screen.getByLabelText(`${m.command_delete()} Open daily`));
     expect(emitted().delete).toEqual([["id-1"]]);
   });
 });

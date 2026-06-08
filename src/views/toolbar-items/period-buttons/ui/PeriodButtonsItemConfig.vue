@@ -15,28 +15,28 @@ const update = (patch: Partial<PeriodButtonsConfig>): void => props.onChange({ .
 
 <template>
   <UiSettingRow>
-    <template #name>{{ m.view_toolbar_period_buttons_config_week() }}</template>
+    <template #name>{{ m.view_toolbar_period_buttons_config({ period: "week" }) }}</template>
     <UiToggle
       :model-value="config.week"
       @update:model-value="(value: boolean | undefined) => update({ week: value ?? false })"
     />
   </UiSettingRow>
   <UiSettingRow>
-    <template #name>{{ m.view_toolbar_period_buttons_config_month() }}</template>
+    <template #name>{{ m.view_toolbar_period_buttons_config({ period: "month" }) }}</template>
     <UiToggle
       :model-value="config.month"
       @update:model-value="(value: boolean | undefined) => update({ month: value ?? false })"
     />
   </UiSettingRow>
   <UiSettingRow>
-    <template #name>{{ m.view_toolbar_period_buttons_config_quarter() }}</template>
+    <template #name>{{ m.view_toolbar_period_buttons_config({ period: "quarter" }) }}</template>
     <UiToggle
       :model-value="config.quarter"
       @update:model-value="(value: boolean | undefined) => update({ quarter: value ?? false })"
     />
   </UiSettingRow>
   <UiSettingRow>
-    <template #name>{{ m.view_toolbar_period_buttons_config_year() }}</template>
+    <template #name>{{ m.view_toolbar_period_buttons_config({ period: "year" }) }}</template>
     <UiToggle
       :model-value="config.year"
       @update:model-value="(value: boolean | undefined) => update({ year: value ?? false })"

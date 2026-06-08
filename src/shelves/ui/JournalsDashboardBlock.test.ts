@@ -91,7 +91,7 @@ describe("JournalsDashboardBlock", () => {
   it("uses the plain title when no shelves exist", async () => {
     const { container } = await setup({ journals: ["daily"] });
     mount(container);
-    expect(screen.getByText(m.shelf_journals_block_title())).toBeTruthy();
+    expect(screen.getByText(m.common_label_journals())).toBeTruthy();
   });
 
   it("uses the not-on-a-shelf title once a shelf exists", async () => {
@@ -106,7 +106,7 @@ describe("JournalsDashboardBlock", () => {
   it("invokes AddJournalFlow when the add button is clicked", async () => {
     const { container, flows } = await setup({});
     mount(container);
-    await userEvent.click(screen.getByLabelText(m.journal_dashboard_add()));
+    await userEvent.click(screen.getByLabelText(m.journal_create()));
     expect(flows.invoke).toHaveBeenCalledWith(AddJournalFlow);
   });
 
@@ -121,7 +121,7 @@ describe("JournalsDashboardBlock", () => {
   it("invokes DeleteJournalFlow when Delete is clicked", async () => {
     const { container, flows } = await setup({ journals: ["daily"] });
     mount(container);
-    await userEvent.click(screen.getByLabelText(`${m.journal_dashboard_delete()} daily`));
+    await userEvent.click(screen.getByLabelText(`${m.common_action_delete()} daily`));
     expect(flows.invoke).toHaveBeenCalledWith(DeleteJournalFlow, { journalName: "daily" });
   });
 });

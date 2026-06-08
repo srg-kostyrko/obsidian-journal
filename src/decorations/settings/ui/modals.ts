@@ -14,12 +14,11 @@ export interface EditDecorationModalProps {
 
 export const editDecorationModal = defineModal<{ decoration: JournalDecoration }>()({
   component: EditDecorationModal,
-  title: ({ decoration }: EditDecorationModalProps) =>
-    decoration ? m.decoration_edit_modal_title() : m.decoration_add_modal_title(),
+  title: ({ decoration }: EditDecorationModalProps) => (decoration ? m.decoration_edit() : m.decoration_add()),
   width: 800,
 });
 
 export const deleteDecorationModal = defineModal<{ confirmed: true }>()({
   component: DeleteDecorationModal,
-  title: (_: { journalName: string }) => m.decoration_delete_modal_title(),
+  title: (_: { journalName: string }) => m.decoration_delete(),
 });
