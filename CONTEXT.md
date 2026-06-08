@@ -51,6 +51,24 @@ possible and was deliberately deferred — the 5s window was kept byte-for-byte.
 > `match(write)`, with arms delegating to `periodOfKind`, rather than collapsing
 > into the factory.
 
+**JournalIndex / JournalsIndex (two-layer split — deliberate, decided 2026-06-08
+not to merge).** `JournalIndex` (inner) is a **deep** per-journal data structure:
+a `Map<anchor, path>` plus a binary-search-maintained `sortedAnchors` array,
+giving ordered `getRange` / `findNext` / `findPrevious` / `findClosestAnchor` /
+ordered iteration a plain map can't. It is performance-critical (see
+`journal-index.bench.ts`). `JournalsIndex` (outer) is a **composite with its own
+responsibilities** — a second index `#byPath`, the `entryChanged`/`journalDirty`
+emitter, microtask dirty-batching, and the coordinating mutations
+`register`/`transferPath`/`clearJournal`. Its `get`/`has`/`findNext`/… are not
+pass-throughs but **parameterized adapters** (`journalName → its index`, `?? none`
+= no such journal).
+
+> Do not merge the two layers. The inner sorted-map can't be inlined without
+> re-creating it per journal (per-journal `findNext` needs per-journal ordering,
+> not a global composite key), and merging would fuse two distinct concerns. The
+> separate `journal-index.test.ts` / `journals-index.test.ts` test each layer at
+> its own interface — correct, not coupling.
+
 ## Views
 
 **View block** — a registered, config-bearing entry in a `View`'s `blocks[]`
