@@ -80,6 +80,23 @@ casts; `ToolbarItemsList.vue` reads via `itemsOf`. The leak it closes: the
 > `ToolbarItemInstance` is structurally identical to a `ViewBlockInstance`
 > (`{ id, key, config }`) but is not (yet) treated as one type.
 
+## Shelves
+
+A journal belongs to **at most one shelf** — `ShelvesService.assign` enforces it by
+removing the journal from every shelf before adding it to the target. Membership
+_mutations_ live in `ShelvesService` (`assign` + the rename/delete cascade event
+handlers). The membership _query_ "which shelf holds this journal" is
+**`ShelvesService.shelfOf(journalName): string`** (`""` = on no shelf — `""` is a
+safe sentinel since shelf names are non-empty). It is the single home for the
+`find(s => s.journals.includes(name))?.name ?? ""` logic that was duplicated in
+`PlaceJournalFlow` and `JournalShelfSection.vue`; both now call it (the component
+inside a `computed`, reactive because the repo reads the reactive settings record).
+
+> Reading a shelf's _own_ `journals` array (e.g. `ShelfEditSubpage`,
+> `JournalsDashboardBlock` aggregation, `command-registry` write-type filtering) is
+> legitimate entity access, **not** scattering — left as direct reads. Listing shelf
+> names for a picker is plain repo enumeration and stays on the repository.
+
 ## Decorations
 
 **Decision (decided against, 2026-06-08): decoration-condition dispatch stays as
