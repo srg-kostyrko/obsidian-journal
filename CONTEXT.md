@@ -35,3 +35,32 @@ before/after loops in the month- and week-calendar blocks.
 > shares the _shape_ of `periodOfKind` but not the _concept_ — it keeps its own
 > `match(write)`, with arms delegating to `periodOfKind`, rather than collapsing
 > into the factory.
+
+## Views
+
+**View block** — a registered, config-bearing entry in a `View`'s `blocks[]`
+(`{ id, key, config }`). Block kinds are an **open DI registry**
+(`ViewBlockDefinitionToken`): `key → config schema` is resolved at runtime, so a
+view's stored `block.config` is typed `Record<string, unknown>` and **cannot** be
+statically typed by `key`. Reaching a block's real config shape therefore requires
+a runtime parse against that block kind's own schema — that parse, and the
+config's invariants, belong in **that block kind's own module**, not in
+`ViewsService`. (Don't re-suggest "just type the block configs" — the open
+registry forbids it.)
+
+**ToolbarItemsService** — owns the toolbar block's items concern end to end.
+Injects the toolbar-item registry (`ToolbarItemDefinitionToken`); is the single
+home for parsing a toolbar block's `config.items` (validated against the toolbar
+block's `itemSchema` — the source of truth for `ToolbarItemInstance`, which is
+`v.InferOutput`-ed, not re-declared), validating item config on update, and the
+add/remove/move mutations (storage-free `View → blocks` transforms). `ViewsService`
+delegates its five `*ToolbarItem*` methods to it (`repo.get → toolbarItems.op →
+repo.update`) and no longer holds the item registry or the untyped `config.items`
+casts; `ToolbarItemsList.vue` reads via `itemsOf`. The leak it closes: the
+`config.items as …` + `Array.isArray` cast was hand-rolled in six places.
+
+> **Don't fuse by shape (views).** `BlocksList` (manages a view's blocks) and
+> `ToolbarItemsList` (manages a toolbar block's items) share a resolve-definition +
+> move/remove/add row shape but are different concepts — kept separate. Likewise a
+> `ToolbarItemInstance` is structurally identical to a `ViewBlockInstance`
+> (`{ id, key, config }`) but is not (yet) treated as one type.
