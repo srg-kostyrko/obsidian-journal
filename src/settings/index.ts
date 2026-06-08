@@ -22,8 +22,10 @@ export {
   CollectionDefinitionToken,
   DashboardBlockToken,
   MigrationToken,
+  SettingsEventsToken,
   SliceDefinitionToken,
   SubpageToken,
+  type SettingsEvents,
 } from "./tokens";
 export type { SliceHandle } from "./types";
 export { CURRENT_VERSION } from "./version";

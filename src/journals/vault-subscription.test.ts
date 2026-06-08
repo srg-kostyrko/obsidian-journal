@@ -7,6 +7,7 @@ import { Container } from "@/infrastructure/di";
 import { InternalObsidianAppToken, NotesService } from "@/infrastructure/host";
 import type { NotesEvents, VaultPath } from "@/infrastructure/host";
 import { LoggerFactoryToken } from "@/infrastructure/logger";
+import { SettingsEventsToken, type SettingsEvents } from "@/settings";
 
 import { CycleService } from "./cycle";
 import { FrontmatterService } from "./frontmatter";
@@ -27,6 +28,7 @@ function fakeTFile(path: string): TFile {
 interface TestRig {
   container: Container;
   emit: <K extends keyof NotesEvents>(event: K, ...arguments_: Parameters<NotesEvents[K]>) => void;
+  emitSettingsReloaded: () => void;
   setFrontmatter(path: string, fm: Record<string, unknown> | null): void;
   setMarkdownNotes(paths: VaultPath[]): void;
 }
@@ -62,6 +64,8 @@ function buildRig(journals: Parameters<typeof fakeRepo>[0], initialPaths: VaultP
     named: () => ({ debug: vi.fn(), info: vi.fn(), warn: vi.fn(), error: vi.fn() }),
   };
 
+  const settingsEvents = createNanoEvents<SettingsEvents>();
+
   const c = new Container();
   c.register(JournalsRepository).useValue(fakeRepo(journals));
   c.register(JournalsIndex).useClass(JournalsIndex);
@@ -70,12 +74,14 @@ function buildRig(journals: Parameters<typeof fakeRepo>[0], initialPaths: VaultP
   c.register(FrontmatterService).useClass(FrontmatterService);
   c.register(NotesService).useValue(notes as never);
   c.register(InternalObsidianAppToken).useValue(app as never);
+  c.register(SettingsEventsToken).useValue(settingsEvents);
   c.register(LoggerFactoryToken).useValue(fakeLogger as never);
   c.register(VaultSubscriptionService).useClass(VaultSubscriptionService);
 
   return {
     container: c,
     emit: (event, ...arguments_) => emitter.emit(event, ...arguments_),
+    emitSettingsReloaded: () => settingsEvents.emit("reloaded"),
     setFrontmatter: (path, fm) => {
       if (fm === null) frontmatterByPath.delete(path);
       else frontmatterByPath.set(path, fm);
@@ -153,6 +159,19 @@ describe("VaultSubscriptionService", () => {
     rig.emit("deleted", "D/A.md" as VaultPath);
 
     expect(index.entryByPath("D/A.md" as VaultPath).isNone()).toBe(true);
+  });
+
+  it("reindexes notes when settings are reloaded from an external sync", async () => {
+    const rig = buildRig({ daily: fixedJournal("daily", { type: "day" }) });
+    const sub = rig.container.resolve(VaultSubscriptionService);
+    await sub.initialize();
+
+    rig.setFrontmatter("D/X.md", { journal: "daily", "journal-date": "2024-01-03" });
+    rig.setMarkdownNotes(["D/X.md" as VaultPath]);
+    rig.emitSettingsReloaded();
+
+    const index = rig.container.resolve(JournalsIndex);
+    expect(index.entryByPath("D/X.md" as VaultPath).isSome()).toBe(true);
   });
 
   it("does not register on created (waits for metadata-changed)", async () => {

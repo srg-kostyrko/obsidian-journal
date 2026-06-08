@@ -19,6 +19,7 @@ import {
   journalConfigCollection,
 } from "@/journals";
 import type { JournalsEvents } from "@/journals";
+import { SettingsEventsToken } from "@/settings";
 import { createSettingsService } from "@/settings/testing";
 import { ShelvesRepository, ShelvesEventsToken, shelvesCollection } from "@/shelves";
 import type { ShelvesEvents } from "@/shelves";
@@ -80,6 +81,7 @@ async function build() {
 
   const index = container.resolve(JournalsIndex);
   const flows = container.resolve(Flows);
+  const settingsEvents = container.resolve(SettingsEventsToken);
   const registry = container.resolve(DynamicCommandRegistry);
   registry.initialize();
 
@@ -89,6 +91,8 @@ async function build() {
     journalsRepo,
     shelvesRepo,
     commandsRepo,
+    commandsStorage,
+    settingsEvents,
     index,
     flows,
   };
@@ -113,6 +117,21 @@ describe("DynamicCommandRegistry registration", () => {
     commandsRepo.create("cmd-1", makeCommand({ name: "Old" }));
     commandsRepo.update("cmd-1", { name: "New" });
     expect(host.commands.get("cmd-1")?.name).toBe("New");
+  });
+
+  it("registers a command synced into storage when settings are reloaded", async () => {
+    const { host, commandsStorage, settingsEvents } = await build();
+    commandsStorage["cmd-1"] = makeCommand({ name: "Synced" });
+    settingsEvents.emit("reloaded");
+    expect(host.commands.get("cmd-1")?.name).toBe("Synced");
+  });
+
+  it("unregisters a command removed by a settings reload", async () => {
+    const { host, commandsRepo, commandsStorage, settingsEvents } = await build();
+    commandsRepo.create("cmd-1", makeCommand({}));
+    delete commandsStorage["cmd-1"];
+    settingsEvents.emit("reloaded");
+    expect(host.commands.get("cmd-1")).toBeUndefined();
   });
 
   it("keeps a single ribbon icon when a ribbon command is updated", async () => {

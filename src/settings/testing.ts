@@ -1,3 +1,5 @@
+import { createNanoEvents } from "nanoevents";
+
 import { Container } from "@/infrastructure/di";
 import { PluginData } from "@/infrastructure/host";
 import { FakePluginData } from "@/infrastructure/host/testing";
@@ -8,8 +10,10 @@ import {
   CollectionDefinitionToken,
   DashboardBlockToken,
   MigrationToken,
+  SettingsEventsToken,
   SliceDefinitionToken,
   SubpageToken,
+  type SettingsEvents,
 } from "./tokens";
 import { SettingsUiService } from "./ui/settings-ui-service";
 
@@ -35,6 +39,7 @@ export function createSettingsService(options: CreateSettingsServiceOptions = {}
   const data = new FakePluginData(options.raw);
   const c = new Container();
   c.register(PluginData).useValue(data as unknown as PluginData);
+  c.register(SettingsEventsToken).useFactory(() => createNanoEvents<SettingsEvents>());
   c.addModule(createLoggerTestingModule().module);
   for (const s of options.slices ?? []) c.register(SliceDefinitionToken).useValue(s);
   for (const col of options.collections ?? []) c.register(CollectionDefinitionToken).useValue(col);

@@ -15,7 +15,7 @@ import {
   UnregisteredSliceError,
 } from "./errors";
 import { runMigrations } from "./migrations";
-import { CollectionDefinitionToken, MigrationToken, SliceDefinitionToken } from "./tokens";
+import { CollectionDefinitionToken, MigrationToken, SettingsEventsToken, SliceDefinitionToken } from "./tokens";
 import { CURRENT_VERSION } from "./version";
 
 import type { AnyCollectionDefinition, AnySliceDefinition, CollectionDefinition, SliceDefinition } from "./schema";
@@ -31,6 +31,7 @@ export class SettingsService {
   readonly #slices: readonly AnySliceDefinition[] = inject(SliceDefinitionToken);
   readonly #collections: readonly AnyCollectionDefinition[] = inject(CollectionDefinitionToken);
   readonly #migrations = inject(MigrationToken);
+  readonly #events = inject(SettingsEventsToken);
   readonly #logger = inject(LoggerFactoryToken).named("settings");
 
   readonly #root: Record<string, unknown> = reactive({});
@@ -45,17 +46,31 @@ export class SettingsService {
     return attempt.in(this, async function* () {
       const conflict = this.#findKeyConflict();
       if (conflict) yield* new Err<never, SliceKeyConflictError>(conflict);
-      const raw = yield* this.#pluginData.load().mapErr((cause) => new SettingsLoadError(cause));
-      const isStoredObject = raw !== null && typeof raw === "object" && !Array.isArray(raw);
-      // Absent storage (no loadData payload yet) is a fresh install at the current version,
-      // not a v0 record that needs migration. v0→N migrations only apply to actual stored data.
-      const root: Record<string, unknown> = isStoredObject
-        ? (raw as Record<string, unknown>)
-        : { version: CURRENT_VERSION };
-      const migrated = yield* runMigrations(root, this.#migrations, CURRENT_VERSION);
+      const migrated = yield* this.#loadAndMigrate();
       this.#hydrate(migrated);
       this.#stopWatch = watch(this.#root, () => this.#scheduleSave(), { deep: true });
       this.#initialized = true;
+    });
+  }
+
+  // Obsidian Sync rewrites data.json on disk without touching our in-memory state; this
+  // re-reads it and refreshes #root so synced changes are picked up without a plugin reload.
+  reload(): AsyncResult<void, SettingsLoadError | MigrationFailedError> {
+    return attempt.in(this, async function* () {
+      if (!this.#initialized) return;
+      const migrated = yield* this.#loadAndMigrate();
+      // Suspend the save watcher across the refresh so reloading external data does not
+      // echo a saveData back to disk (which Sync would treat as a fresh local change).
+      this.#stopWatch?.();
+      if (this.#saveTimer !== undefined) {
+        window.clearTimeout(this.#saveTimer);
+        this.#saveTimer = undefined;
+      }
+      this.#refresh(migrated);
+      this.#stopWatch = watch(this.#root, () => this.#scheduleSave(), { deep: true });
+      // Reactive consumers pick up #root mutations on their own, but event-driven
+      // subsystems (command registry, journal index) only re-derive on an explicit signal.
+      this.#events.emit("reloaded");
     });
   }
 
@@ -96,12 +111,41 @@ export class SettingsService {
     return undefined;
   }
 
+  #loadAndMigrate(): AsyncResult<Record<string, unknown>, SettingsLoadError | MigrationFailedError> {
+    return attempt.in(this, async function* () {
+      const raw = yield* this.#pluginData.load().mapErr((cause) => new SettingsLoadError(cause));
+      const isStoredObject = raw !== null && typeof raw === "object" && !Array.isArray(raw);
+      // Absent storage (no loadData payload yet) is a fresh install at the current version,
+      // not a v0 record that needs migration. v0→N migrations only apply to actual stored data.
+      const root: Record<string, unknown> = isStoredObject
+        ? (raw as Record<string, unknown>)
+        : { version: CURRENT_VERSION };
+      return yield* runMigrations(root, this.#migrations, CURRENT_VERSION);
+    });
+  }
+
   #hydrate(migrated: Record<string, unknown>): void {
     for (const definition of this.#slices) {
       this.#root[definition.key] = parseSliceValue(definition, migrated[definition.key], this.#logger);
     }
     for (const definition of this.#collections) {
       this.#root[definition.key] = parseCollectionValue(definition, migrated[definition.key], this.#logger);
+    }
+  }
+
+  #refresh(migrated: Record<string, unknown>): void {
+    for (const definition of this.#slices) {
+      this.#root[definition.key] = parseSliceValue(definition, migrated[definition.key], this.#logger);
+    }
+    for (const definition of this.#collections) {
+      const next = parseCollectionValue(definition, migrated[definition.key], this.#logger);
+      // recordOf() hands the collection record out by reference and repositories capture it
+      // once, so the existing object must be mutated in place rather than replaced.
+      const target = this.#root[definition.key] as Record<string, unknown>;
+      for (const key of Object.keys(target)) {
+        if (!(key in next)) delete target[key];
+      }
+      Object.assign(target, next);
     }
   }
 

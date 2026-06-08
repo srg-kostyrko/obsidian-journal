@@ -75,6 +75,15 @@ export default class JournalPlugin extends Plugin {
     this.#container = container;
   }
 
+  onExternalSettingsChange(): void {
+    const container = this.#container;
+    if (!container) return;
+    void container
+      .resolve(SettingsService)
+      .reload()
+      .tapErr((error) => new Notice(`Journal: failed to reload settings — ${error.message}`));
+  }
+
   onunload(): void {
     void this.#container?.dispose().catch(() => null);
     this.#container = undefined;

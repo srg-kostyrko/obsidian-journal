@@ -17,6 +17,7 @@ import {
   OpenDateFlow,
 } from "@/journals";
 import type { JournalEntry } from "@/journals";
+import { SettingsEventsToken } from "@/settings";
 import { ShelvesEventsToken, ShelvesRepository } from "@/shelves";
 
 import { CommandsRepository } from "./repository";
@@ -44,6 +45,7 @@ export class DynamicCommandRegistry {
   readonly #journalsEvents = inject(JournalsEventsToken);
   readonly #shelvesRepo = inject(ShelvesRepository);
   readonly #shelvesEvents = inject(ShelvesEventsToken);
+  readonly #settingsEvents = inject(SettingsEventsToken);
 
   initialize(): void {
     this.#reconcile();
@@ -54,6 +56,9 @@ export class DynamicCommandRegistry {
     this.#journalsEvents.on("deleted", (journalName) => this.#onJournalDeleted(journalName));
     this.#shelvesEvents.on("renamed", (oldName, newName) => this.#onShelfRenamed(oldName, newName));
     this.#shelvesEvents.on("deleted", (shelfName) => this.#onShelfDeleted(shelfName));
+    // An external settings sync rewrites the collections without firing repository
+    // events, so re-reconcile every registration against the freshly loaded data.
+    this.#settingsEvents.on("reloaded", () => this.#reconcile());
   }
 
   #reconcile(): void {

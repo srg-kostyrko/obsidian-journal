@@ -1,3 +1,4 @@
+import { createNanoEvents } from "nanoevents";
 import * as v from "valibot";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
@@ -11,7 +12,13 @@ import { expectErr, expectOk } from "@/infrastructure/result/testing";
 import { SliceKeyConflictError, MigrationFailedError, UnregisteredSliceError } from "./errors";
 import { defineCollection, defineSlice, type Migration } from "./schema";
 import { SettingsService } from "./settings-service";
-import { CollectionDefinitionToken, MigrationToken, SliceDefinitionToken } from "./tokens";
+import {
+  CollectionDefinitionToken,
+  MigrationToken,
+  SettingsEventsToken,
+  SliceDefinitionToken,
+  type SettingsEvents,
+} from "./tokens";
 
 const calendarSchema = v.object({
   dow: v.number(),
@@ -30,10 +37,12 @@ function build(
     collections?: readonly unknown[];
     migrations?: readonly Migration[];
   } = {},
-): { service: SettingsService; data: FakePluginData } {
+): { service: SettingsService; data: FakePluginData; events: ReturnType<typeof createNanoEvents<SettingsEvents>> } {
   const data = new FakePluginData(options.raw);
+  const events = createNanoEvents<SettingsEvents>();
   const c = new Container();
   c.register(PluginData).useValue(data as unknown as PluginData);
+  c.register(SettingsEventsToken).useValue(events);
   c.addModule(createLoggerTestingModule().module);
   for (const s of options.slices ?? [calendarSlice]) {
     c.register(SliceDefinitionToken).useValue(s as never);
@@ -45,7 +54,7 @@ function build(
     c.register(MigrationToken).useValue(m);
   }
   c.register(SettingsService).useClass(SettingsService);
-  return { service: c.resolve(SettingsService), data };
+  return { service: c.resolve(SettingsService), data, events };
 }
 
 describe("SettingsService", () => {
@@ -160,6 +169,89 @@ describe("SettingsService", () => {
       const { service } = build({ slices: [], collections: [seededCollection], raw: { version: 4, seeded: {} } });
       await service.initialize();
       expect(service.recordOf(seededCollection)).toEqual({});
+    });
+  });
+
+  describe("reload", () => {
+    it("returns ok and does nothing before initialize", async () => {
+      const { service } = build();
+      const reload = await service.reload();
+      expectOk(reload);
+    });
+
+    it("applies externally changed slice values to in-memory state", async () => {
+      const { service, data } = build({ raw: { version: 4, calendar: { dow: 0, global: false } } });
+      await service.initialize();
+      await data.save({ version: 4, calendar: { dow: 6, global: true } });
+      const reload = await service.reload();
+      expectOk(reload);
+      expect(service.getSlice(calendarSlice).state.dow).toBe(6);
+    });
+
+    it("applies externally added collection entries through the recordOf reference", async () => {
+      const { service, data } = build({
+        slices: [],
+        collections: [journalCollection],
+        raw: { version: 4, journals: { a: { name: "a" } } },
+      });
+      await service.initialize();
+      const record = service.recordOf(journalCollection);
+      await data.save({ version: 4, journals: { a: { name: "a-renamed" }, b: { name: "b" } } });
+      await service.reload();
+      expect(record.a).toEqual({ name: "a-renamed" });
+      expect(record.b).toEqual({ name: "b" });
+    });
+
+    it("removes collection entries deleted on another device through the recordOf reference", async () => {
+      const { service, data } = build({
+        slices: [],
+        collections: [journalCollection],
+        raw: { version: 4, journals: { a: { name: "a" }, b: { name: "b" } } },
+      });
+      await service.initialize();
+      const record = service.recordOf(journalCollection);
+      await data.save({ version: 4, journals: { a: { name: "a" } } });
+      await service.reload();
+      expect(record.b).toBeUndefined();
+    });
+
+    it("propagates a migration failure as an error", async () => {
+      const { service, data } = build({ raw: { version: 4 } });
+      await service.initialize();
+      await data.save({ version: 99 });
+      const reload = await service.reload();
+      expectErr(reload);
+      expect(reload.error).toBeInstanceOf(MigrationFailedError);
+    });
+
+    it("emits reloaded so event-driven subsystems can re-derive", async () => {
+      const { service, data, events } = build({ raw: { version: 4 } });
+      await service.initialize();
+      const listener = vi.fn();
+      events.on("reloaded", listener);
+      await data.save({ version: 4, calendar: { dow: 3, global: true } });
+      await service.reload();
+      expect(listener).toHaveBeenCalledTimes(1);
+    });
+  });
+
+  describe("reload — no save echo", () => {
+    beforeEach(() => {
+      vi.useFakeTimers();
+    });
+    afterEach(() => {
+      vi.useRealTimers();
+    });
+
+    it("does not write back to disk when refreshing from an external change", async () => {
+      const { service, data } = build({ raw: { version: 4, calendar: { dow: 0, global: false } } });
+      await service.initialize();
+      await data.save({ version: 4, calendar: { dow: 2, global: true } });
+      const saveSpy = vi.spyOn(data, "save");
+      const reload = await service.reload();
+      expectOk(reload);
+      await vi.advanceTimersByTimeAsync(300);
+      expect(saveSpy).not.toHaveBeenCalled();
     });
   });
 

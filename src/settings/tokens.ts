@@ -1,7 +1,14 @@
-import { createMultiToken } from "@/infrastructure/di";
+import { createMultiToken, createToken } from "@/infrastructure/di";
 
 import type { AnyCollectionDefinition, AnySliceDefinition, Migration } from "./schema";
 import type { DashboardBlock, AnySubpage } from "./ui/schema";
+import type { Emitter } from "nanoevents";
+
+export interface SettingsEvents {
+  reloaded: () => void;
+}
+
+export const SettingsEventsToken = createToken<Emitter<SettingsEvents>>("settings.events");
 
 export const SliceDefinitionToken = createMultiToken<AnySliceDefinition>("settings.slice");
 export const CollectionDefinitionToken = createMultiToken<AnyCollectionDefinition>("settings.collection");

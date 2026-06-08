@@ -5,6 +5,7 @@ import { InternalObsidianAppToken, NotesService } from "@/infrastructure/host";
 import type { VaultPath } from "@/infrastructure/host";
 import { LoggerFactoryToken } from "@/infrastructure/logger";
 import { AsyncResult } from "@/infrastructure/result";
+import { SettingsEventsToken } from "@/settings";
 
 import { FrontmatterService } from "./frontmatter";
 import { JournalsIndex } from "./journals-index";
@@ -14,21 +15,29 @@ export class VaultSubscriptionService {
   readonly #app = inject(InternalObsidianAppToken);
   readonly #frontmatter = inject(FrontmatterService);
   readonly #index = inject(JournalsIndex);
+  readonly #settingsEvents = inject(SettingsEventsToken);
   readonly #logger = inject(LoggerFactoryToken).named("vault-subscription");
   readonly #unsubscribes: (() => void)[] = [];
 
   initialize(): AsyncResult<void, never> {
-    for (const path of this.#notes.allMarkdownNotes()) {
-      this.#scan(path);
-    }
+    this.#rebuild();
 
     this.#unsubscribes.push(
       this.#notes.events.on("metadata-changed", (path) => this.#scan(path)),
       this.#notes.events.on("renamed", ({ from, to }) => this.#index.transferPath(from, to)),
       this.#notes.events.on("deleted", (path) => this.#index.unregister(path)),
+      // An external settings sync changes journal configs without any vault event, so
+      // re-scan every note to reindex against the freshly loaded journals.
+      this.#settingsEvents.on("reloaded", () => this.#rebuild()),
     );
 
     return AsyncResult.ok();
+  }
+
+  #rebuild(): void {
+    for (const path of this.#notes.allMarkdownNotes()) {
+      this.#scan(path);
+    }
   }
 
   async [Symbol.asyncDispose](): Promise<void> {
