@@ -9,6 +9,7 @@ import UiIcon from "@/ui/UiIcon.vue";
 import UiIconButton from "@/ui/UiIconButton.vue";
 import UiSettingRow from "@/ui/UiSettingRow.vue";
 
+import { ToolbarItemsService } from "../blocks/toolbar/toolbar-items-service";
 import { AddToolbarItemToBlockFlow } from "../flows/add-toolbar-item-to-block.flow";
 import { ViewsService } from "../service";
 import { ViewsViewModel } from "../view-model";
@@ -19,6 +20,7 @@ import type { ToolbarItemDefinition } from "../define-toolbar-item";
 const props = defineProps<{ viewId: ViewId; blockId: BlockInstanceId }>();
 
 const flows = useService(Flows);
+const toolbarItems = useService(ToolbarItemsService);
 const viewsService = useService(ViewsService);
 const viewsVM = useService(ViewsViewModel);
 
@@ -32,10 +34,7 @@ const rows = computed<Row[]>(() => {
   const items = viewsVM
     .getView(props.viewId)
     .map((view) => view.blocks.find((b) => b.id === props.blockId))
-    .map((block) => {
-      const raw = block?.config.items;
-      return Array.isArray(raw) ? (raw as { id: BlockInstanceId; key: string; config: Record<string, unknown> }[]) : [];
-    })
+    .map((block) => (block ? toolbarItems.itemsOf(block) : []))
     .getOr([]);
   return items.map((item) => ({
     id: item.id,
