@@ -11,6 +11,7 @@ import { NoteConnectionService } from "./note-connection";
 import { NoteConnectionCommands } from "./note-connection-commands";
 import { NoteCreationService } from "./note-creation";
 import { NotePathService } from "./note-path";
+import { SelfWriteGuard } from "./self-write-guard";
 import { TemplateContentService } from "./template-content";
 
 export const journalNotesModule: Module = {
@@ -18,6 +19,7 @@ export const journalNotesModule: Module = {
     c.register(NotePathService).useClass(NotePathService);
     c.register(FunctionHandlerToken).useClass(JournalLinkHandler);
     c.register(TemplateContentService).useClass(TemplateContentService);
+    c.register(SelfWriteGuard).useClass(SelfWriteGuard);
     c.register(NoteCreationService).useClass(NoteCreationService);
     c.register(NoteConnectionService).useClass(NoteConnectionService);
     c.register(AutoAttachService).useClass(AutoAttachService).eager();
