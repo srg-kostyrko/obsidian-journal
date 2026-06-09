@@ -10,16 +10,14 @@ import UiIconButton from "@/ui/UiIconButton.vue";
 import UiSettingRow from "@/ui/UiSettingRow.vue";
 
 import { PlaceJournalFlow } from "../flows/place-journal.flow";
-import { ShelvesViewModel } from "../view-model";
+import { ShelvesService } from "../service";
 
 const { journalName } = defineProps<{ journalName: string }>();
 
 const flows = useService(Flows);
-const shelvesVM = useService(ShelvesViewModel);
+const shelvesService = useService(ShelvesService);
 
-const currentShelf = computed(
-  () => shelvesVM.shelves.value.find((shelf) => shelf.journals.includes(journalName))?.name ?? "",
-);
+const currentShelf = computed(() => shelvesService.shelfOf(journalName));
 
 const expanded = ref(false);
 

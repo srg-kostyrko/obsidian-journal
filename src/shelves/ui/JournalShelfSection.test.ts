@@ -8,13 +8,16 @@ import { type Container, provideInjectorOnApp } from "@/infrastructure/di";
 import { Flows } from "@/infrastructure/flows";
 import { ModalService } from "@/infrastructure/host/modals";
 import { FakeModalService } from "@/infrastructure/host/modals/testing";
+import { journalConfigCollection } from "@/journals";
+import { JournalsRepository } from "@/journals/repository";
+import { JournalsEventsToken } from "@/journals/tokens";
 import { createSettingsService } from "@/settings/testing";
 
 import { shelvesCollection } from "../config";
 import { PlaceJournalFlow } from "../flows/place-journal.flow";
 import { ShelvesRepository } from "../repository";
+import { ShelvesService } from "../service";
 import { ShelvesEventsToken } from "../tokens";
-import { ShelvesViewModel } from "../view-model";
 
 import JournalShelfSection from "./JournalShelfSection.vue";
 
@@ -22,14 +25,16 @@ afterEach(() => cleanup());
 
 async function setup(shelves: Record<string, { name: string; journals: string[] }> = {}) {
   const { service: settings, container } = createSettingsService({
-    collections: [shelvesCollection],
+    collections: [journalConfigCollection, shelvesCollection],
     raw: { version: 4, shelves },
   });
   await settings.initialize();
   container.register(ModalService).useValue(new FakeModalService() as unknown as ModalService);
+  container.register(JournalsEventsToken).useFactory(() => createNanoEvents());
+  container.register(JournalsRepository).useClass(JournalsRepository);
   container.register(ShelvesEventsToken).useFactory(() => createNanoEvents());
   container.register(ShelvesRepository).useClass(ShelvesRepository);
-  container.register(ShelvesViewModel).useClass(ShelvesViewModel);
+  container.register(ShelvesService).useClass(ShelvesService);
   container.register(Flows).useClass(Flows);
   const flows = container.resolve(Flows);
   vi.spyOn(flows, "invoke").mockReturnValue({} as never);

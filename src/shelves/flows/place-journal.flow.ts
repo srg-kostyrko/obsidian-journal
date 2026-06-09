@@ -15,13 +15,7 @@ export class PlaceJournalFlow implements Flow<{ journalName: string }, void, Flo
 
   execute(parameters: { journalName: string }): AsyncResult<void, FlowError> {
     const shelfNames = [...this.#repo.find().ids()];
-    const currentShelf =
-      shelfNames.find((name) =>
-        this.#repo
-          .get(name)
-          .getOr(undefined as never)
-          ?.journals.includes(parameters.journalName),
-      ) ?? "";
+    const currentShelf = this.#service.shelfOf(parameters.journalName);
     return attempt.in(this, async function* (this: PlaceJournalFlow) {
       const selected = yield* this.#modals
         .open(placeJournalModal, { currentShelf, shelfNames })
