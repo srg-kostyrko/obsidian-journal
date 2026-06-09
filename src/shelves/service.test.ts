@@ -95,6 +95,24 @@ describe("ShelvesService", () => {
     });
   });
 
+  describe("shelfOf", () => {
+    it("returns the name of the shelf containing the journal", () => {
+      const { service } = setup({
+        journals: { daily: journalConfig("daily") },
+        shelves: { Personal: shelf("Personal", ["daily"]) },
+      });
+      expect(service.shelfOf("daily")).toBe("Personal");
+    });
+
+    it("returns an empty string when the journal is on no shelf", () => {
+      const { service } = setup({
+        journals: { daily: journalConfig("daily") },
+        shelves: { Personal: shelf("Personal") },
+      });
+      expect(service.shelfOf("daily")).toBe("");
+    });
+  });
+
   describe("cascade on journal rename", () => {
     it("replaces the old name with the new one in every shelf", () => {
       const { journalsRepo, shelvesStorage } = setup({

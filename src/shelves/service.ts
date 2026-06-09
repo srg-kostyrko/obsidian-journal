@@ -44,6 +44,13 @@ export class ShelvesService {
     return new Ok(undefined);
   }
 
+  shelfOf(journalName: string): string {
+    for (const shelf of this.#shelves.find().list()) {
+      if (shelf.journals.includes(journalName)) return shelf.name;
+    }
+    return "";
+  }
+
   #renameJournalInShelves(oldName: string, newName: string): void {
     for (const shelf of this.#shelves.find().list()) {
       if (!shelf.journals.includes(oldName)) continue;
