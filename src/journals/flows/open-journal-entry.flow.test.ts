@@ -16,6 +16,7 @@ import { FrontmatterService } from "../frontmatter";
 import { JournalsIndex } from "../journals-index";
 import { NoteCreationService } from "../notes/note-creation";
 import { NotePathService } from "../notes/note-path";
+import { SelfWriteGuard } from "../notes/self-write-guard";
 import { TemplateContentService } from "../notes/template-content";
 import { NumberingService } from "../numbering";
 import { JournalsRepository } from "../repository";
@@ -45,6 +46,7 @@ function build(
   c.register(TemplateEngine).useClass(TemplateEngine);
   c.register(NotePathService).useClass(NotePathService);
   c.register(TemplateContentService).useClass(TemplateContentService);
+  c.register(SelfWriteGuard).useClass(SelfWriteGuard);
   c.register(NoteCreationService).useClass(NoteCreationService);
   c.register(OpenJournalEntryFlow).useClass(OpenJournalEntryFlow);
   return c;

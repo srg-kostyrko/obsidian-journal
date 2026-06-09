@@ -21,6 +21,7 @@ import { TimelineService } from "../../timeline";
 import { NoteConnectionService } from "../note-connection";
 import { NoteCreationService } from "../note-creation";
 import { NotePathService } from "../note-path";
+import { SelfWriteGuard } from "../self-write-guard";
 import { TemplateContentService } from "../template-content";
 
 import { BulkAddService } from "./bulk-add-service";
@@ -57,6 +58,7 @@ function build(): {
   c.register(TemplateContentService).useClass(TemplateContentService);
   c.register(TemplateEngine).useClass(TemplateEngine);
   c.register(NotePathService).useClass(NotePathService);
+  c.register(SelfWriteGuard).useClass(SelfWriteGuard);
   c.register(NoteCreationService).useClass(NoteCreationService);
   c.register(NoteConnectionService).useClass(NoteConnectionService);
   c.register(TimelineService).useClass(TimelineService);
@@ -180,6 +182,7 @@ describe("BulkAddService", () => {
       c.register(TemplateContentService).useClass(TemplateContentService);
       c.register(TemplateEngine).useClass(TemplateEngine);
       c.register(NotePathService).useClass(NotePathService);
+      c.register(SelfWriteGuard).useClass(SelfWriteGuard);
       c.register(NoteCreationService).useClass(NoteCreationService);
       c.register(NoteConnectionService).useClass(NoteConnectionService);
       c.register(TimelineService).useClass(TimelineService);

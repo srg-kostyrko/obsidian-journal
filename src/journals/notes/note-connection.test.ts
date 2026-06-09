@@ -23,6 +23,7 @@ import { AnchorOccupiedError } from "./errors";
 import { NoteConnectionService } from "./note-connection";
 import { NoteCreationService } from "./note-creation";
 import { NotePathService } from "./note-path";
+import { SelfWriteGuard } from "./self-write-guard";
 import { TemplateContentService } from "./template-content";
 
 function build(
@@ -44,6 +45,7 @@ function build(
   c.register(TemplateEngine).useClass(TemplateEngine);
   c.register(TemplateContentService).useClass(TemplateContentService);
   c.register(NotePathService).useClass(NotePathService);
+  c.register(SelfWriteGuard).useClass(SelfWriteGuard);
   c.register(NoteCreationService).useClass(NoteCreationService);
   c.register(NoteConnectionService).useClass(NoteConnectionService);
   const index = c.resolve(JournalsIndex);

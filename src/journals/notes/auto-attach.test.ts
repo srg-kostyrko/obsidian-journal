@@ -21,6 +21,7 @@ import { TimelineService } from "../timeline";
 import { AutoAttachService } from "./auto-attach";
 import { NoteCreationService } from "./note-creation";
 import { NotePathService } from "./note-path";
+import { SelfWriteGuard } from "./self-write-guard";
 import { TemplateContentService } from "./template-content";
 
 function build(repo: JournalsRepository, notes: FakeNotesService): Container {
@@ -38,6 +39,7 @@ function build(repo: JournalsRepository, notes: FakeNotesService): Container {
   c.register(TimelineService).useClass(TimelineService);
   c.register(NotePathService).useClass(NotePathService);
   c.register(TemplateContentService).useClass(TemplateContentService);
+  c.register(SelfWriteGuard).useClass(SelfWriteGuard);
   c.register(NoteCreationService).useClass(NoteCreationService);
   c.register(AutoAttachService).useClass(AutoAttachService);
   return c;

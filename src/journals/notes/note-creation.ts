@@ -16,6 +16,7 @@ import type { TemplateRenderError } from "@/templates";
 import { FrontmatterService } from "../frontmatter";
 
 import { NotePathService } from "./note-path";
+import { SelfWriteGuard } from "./self-write-guard";
 import { TemplateContentService } from "./template-content";
 import { confirmCreationModal } from "./ui/modals";
 
@@ -32,20 +33,13 @@ export type NoteCreationError =
   | FrontmatterError
   | UserAborted;
 
-const EXPECTS_TIMEOUT_MS = 5000;
-
 export class NoteCreationService {
   readonly #notes = inject(NotesService);
   readonly #path = inject(NotePathService);
   readonly #content = inject(TemplateContentService);
   readonly #frontmatter = inject(FrontmatterService);
   readonly #modals = inject(ModalService);
-
-  readonly #expected = new Map<VaultPath, ReturnType<typeof window.setTimeout>>();
-
-  expects(path: VaultPath): boolean {
-    return this.#expected.has(path);
-  }
+  readonly #guard = inject(SelfWriteGuard);
 
   ensureNote(
     name: string,
@@ -70,19 +64,19 @@ export class NoteCreationService {
           .mapErr(() => new UserAborted("confirm-creation") as NoteCreationError);
         if (!confirmed) return yield* new Err(new UserAborted("confirm-creation"));
       }
-      this.#markExpected(path);
+      this.#guard.mark(path);
       const createResult = await this.#notes.create(path, "");
       if (createResult.isErr()) {
-        this.#clearExpected(path);
+        this.#guard.release(path);
         return yield* new Err(createResult.error as NoteCreationError);
       }
       const content = yield* this.#content
         .renderFor(name, metadata, this.#basename(path), path)
-        .tapErr(() => this.#clearExpected(path));
+        .tapErr(() => this.#guard.release(path));
       if (content !== "") {
-        yield* this.#notes.write(path, content).tapErr(() => this.#clearExpected(path));
+        yield* this.#notes.write(path, content).tapErr(() => this.#guard.release(path));
       }
-      yield* this.#notes.updateFrontmatter(path, mutator).tapErr(() => this.#clearExpected(path));
+      yield* this.#notes.updateFrontmatter(path, mutator).tapErr(() => this.#guard.release(path));
       return { path, created: true as const };
     });
   }
@@ -100,24 +94,6 @@ export class NoteCreationService {
       if (content === "") return;
       yield* this.#notes.write(path, content);
     });
-  }
-
-  clearExpected(path: VaultPath): void {
-    this.#clearExpected(path);
-  }
-
-  #markExpected(path: VaultPath): void {
-    this.#clearExpected(path);
-    this.#expected.set(
-      path,
-      window.setTimeout(() => this.#expected.delete(path), EXPECTS_TIMEOUT_MS),
-    );
-  }
-
-  #clearExpected(path: VaultPath): void {
-    const handle = this.#expected.get(path);
-    if (handle !== undefined) window.clearTimeout(handle);
-    this.#expected.delete(path);
   }
 
   #basename(path: VaultPath): string {

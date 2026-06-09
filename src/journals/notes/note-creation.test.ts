@@ -22,6 +22,7 @@ import { fakeRepo, fixedJournal } from "../testing";
 
 import { NoteCreationService } from "./note-creation";
 import { NotePathService } from "./note-path";
+import { SelfWriteGuard } from "./self-write-guard";
 import { TemplateContentService } from "./template-content";
 
 import type { JournalMetadata } from "../types";
@@ -45,6 +46,7 @@ function build(
   c.register(TemplateEngine).useClass(TemplateEngine);
   c.register(NotePathService).useClass(NotePathService);
   c.register(TemplateContentService).useClass(TemplateContentService);
+  c.register(SelfWriteGuard).useClass(SelfWriteGuard);
   c.register(NoteCreationService).useClass(NoteCreationService);
   return c;
 }
@@ -203,33 +205,37 @@ describe("NoteCreationService.ensureNote — Templater", () => {
 });
 
 describe("NoteCreationService.ensureNote — expected-set cleanup", () => {
-  it("clears the expected path when the content write fails", async () => {
+  it("releases the suppression guard when the content write fails", async () => {
     const repo = fakeRepo({
       daily: fixedJournal("daily", { type: "day" }, { templates: ["Templates/daily.md"] }),
     });
     const notes = new FakeNotesService();
     notes.seed("Templates/daily.md" as VaultPath, "body");
-    const service = build(repo, notes, new FakeModalService()).resolve(NoteCreationService);
+    const container = build(repo, notes, new FakeModalService());
+    const service = container.resolve(NoteCreationService);
+    const guard = container.resolve(SelfWriteGuard);
     vi.spyOn(notes, "write").mockReturnValue(
       AsyncResult.err(new NoteWriteError("2026-05-19.md" as VaultPath, new Error("write failed"))),
     );
     const result = await service.ensureNote("daily", meta);
     expect(result.isErr()).toBe(true);
-    expect(service.expects("2026-05-19.md" as VaultPath)).toBe(false);
+    expect(guard.suppresses("2026-05-19.md" as VaultPath)).toBe(false);
   });
 
-  it("clears the expected path when content rendering fails", async () => {
+  it("releases the suppression guard when content rendering fails", async () => {
     const repo = fakeRepo({
       daily: fixedJournal("daily", { type: "day" }, { templates: ["Templates/daily.md"] }),
     });
     const notes = new FakeNotesService();
     notes.seed("Templates/daily.md" as VaultPath, "body");
-    const service = build(repo, notes, new FakeModalService()).resolve(NoteCreationService);
+    const container = build(repo, notes, new FakeModalService());
+    const service = container.resolve(NoteCreationService);
+    const guard = container.resolve(SelfWriteGuard);
     vi.spyOn(notes, "read").mockReturnValue(
       AsyncResult.err(new NoteReadError("Templates/daily.md" as VaultPath, new Error("read failed"))),
     );
     const result = await service.ensureNote("daily", meta);
     expect(result.isErr()).toBe(true);
-    expect(service.expects("2026-05-19.md" as VaultPath)).toBe(false);
+    expect(guard.suppresses("2026-05-19.md" as VaultPath)).toBe(false);
   });
 });

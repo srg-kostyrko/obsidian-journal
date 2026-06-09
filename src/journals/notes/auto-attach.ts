@@ -11,6 +11,7 @@ import { TimelineService } from "../timeline";
 
 import { NoteCreationService } from "./note-creation";
 import { NotePathService } from "./note-path";
+import { SelfWriteGuard } from "./self-write-guard";
 
 import type { JournalMetadata } from "../types";
 
@@ -19,6 +20,7 @@ export class AutoAttachService {
   readonly #path = inject(NotePathService);
   readonly #timeline = inject(TimelineService);
   readonly #creation = inject(NoteCreationService);
+  readonly #guard = inject(SelfWriteGuard);
   readonly #frontmatter = inject(FrontmatterService);
   readonly #index = inject(JournalsIndex);
   readonly #journals = inject(JournalsRepository);
@@ -43,7 +45,7 @@ export class AutoAttachService {
   }
 
   async #handle(path: VaultPath): Promise<void> {
-    if (this.#creation.expects(path)) return;
+    if (this.#guard.suppresses(path)) return;
     if (this.#index.entryByPath(path).isSome()) return;
     const matches: { name: string; metadata: JournalMetadata }[] = [];
     for (const name of this.#journals.find().ids()) {
