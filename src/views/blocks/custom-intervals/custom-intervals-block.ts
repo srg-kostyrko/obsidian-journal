@@ -6,10 +6,17 @@ import { defineViewBlock } from "../../define-view-block";
 
 import CustomIntervalsBlock from "./ui/CustomIntervalsBlock.vue";
 import CustomIntervalsBlockConfig from "./ui/CustomIntervalsBlockConfig.vue";
+import { windowKinds } from "./window-resolution";
 
 const schema = v.object({
   journals: v.optional(v.array(v.pipe(v.string(), v.minLength(1)))),
-  window: v.picklist(["current-week", "current-month", "current-quarter", "current-year"] as const),
+  window: v.union([
+    v.picklist(windowKinds),
+    v.pipe(
+      v.picklist(["current-week", "current-month", "current-quarter", "current-year"] as const),
+      v.transform((legacy) => legacy.replace("current-", "") as (typeof windowKinds)[number]),
+    ),
+  ]),
   hideEmpty: v.boolean(),
 });
 
@@ -22,7 +29,7 @@ export const customIntervalsBlock = defineViewBlock<CustomIntervalsConfig>({
   description: m.view_block_custom_intervals_description(),
   icon: "list",
   schema,
-  defaultConfig: { window: "current-month", hideEmpty: true },
+  defaultConfig: { window: "month", hideEmpty: true },
   component: CustomIntervalsBlock,
   configComponent: CustomIntervalsBlockConfig,
 });

@@ -137,7 +137,7 @@ describe("CustomIntervalsBlock", () => {
       { journalName: "bar", anchors: ["2026-05-12" as AnchorString] },
     );
     const { container } = mountBlock(
-      { window: "current-month", hideEmpty: false },
+      { window: "month", hideEmpty: false },
       { refDate: ref("2026-05-15" as AnchorString) },
     );
     expect(container.querySelectorAll("[data-journal]").length).toBe(2);
@@ -152,7 +152,7 @@ describe("CustomIntervalsBlock", () => {
       { journalName: "bar", anchors: ["2026-05-12" as AnchorString] },
     );
     const { container } = mountBlock(
-      { journals: ["foo"], window: "current-month", hideEmpty: false },
+      { journals: ["foo"], window: "month", hideEmpty: false },
       { refDate: ref("2026-05-15" as AnchorString) },
     );
     const sections = container.querySelectorAll("[data-journal]");
@@ -167,7 +167,7 @@ describe("CustomIntervalsBlock", () => {
     RANGES.push({ journalName: "foo", anchors: ["2026-05-10" as AnchorString] });
     // bar has no entries
     const { container } = mountBlock(
-      { window: "current-month", hideEmpty: true },
+      { window: "month", hideEmpty: true },
       { refDate: ref("2026-05-15" as AnchorString) },
     );
     expect(container.querySelectorAll("[data-journal]").length).toBe(1);
@@ -179,7 +179,7 @@ describe("CustomIntervalsBlock", () => {
     JOURNALS.bar = makeJournal("bar", [{ template: "{{date}}" }]);
     RANGES.push({ journalName: "foo", anchors: ["2026-05-10" as AnchorString] });
     const { container } = mountBlock(
-      { window: "current-month", hideEmpty: false },
+      { window: "month", hideEmpty: false },
       { refDate: ref("2026-05-15" as AnchorString) },
     );
     expect(container.querySelectorAll("[data-journal]").length).toBe(2);
@@ -190,7 +190,7 @@ describe("CustomIntervalsBlock", () => {
     JOURNALS.foo = makeJournal("foo", [{ template: "{{date}}" }]);
     const spy = vi.spyOn(FakeJournalsIndex.prototype, "getRange");
     RANGES.push({ journalName: "foo", anchors: ["2026-05-10" as AnchorString] });
-    mountBlock({ window: "current-month", hideEmpty: false }, { refDate: ref("2026-05-15" as AnchorString) });
+    mountBlock({ window: "month", hideEmpty: false }, { refDate: ref("2026-05-15" as AnchorString) });
     expect(spy).toHaveBeenCalledWith("foo", "2026-05-01", "2026-05-31");
     spy.mockRestore();
   });
