@@ -2,47 +2,37 @@ import * as v from "valibot";
 
 import { inject } from "@/infrastructure/di";
 import { LoggerFactoryToken } from "@/infrastructure/logger";
-import { attempt, Err, Option, type AsyncResult } from "@/infrastructure/result";
+import { attempt, Err, Option, type AsyncResult, type Result } from "@/infrastructure/result";
 
+import { ToolbarItemsService } from "./blocks/toolbar/toolbar-items-service";
 import {
-  InvalidToolbarItemConfigError,
+  type InvalidToolbarItemConfigError,
   InvalidViewBlockConfigError,
   InvalidViewNameError,
-  UnknownToolbarItemKeyError,
+  type UnknownToolbarItemKeyError,
   UnknownViewBlockKeyError,
   UnknownViewError,
   ViewsInvariantError,
   type ViewsLifecycleError,
 } from "./errors";
 import { ViewsRepository } from "./repository";
-import { ToolbarItemDefinitionToken, ViewBlockDefinitionToken } from "./tokens";
+import { ViewBlockDefinitionToken } from "./tokens";
 
 import type { BlockInstanceId, View, ViewId } from "./config";
 import type { ToolbarItemDefinition } from "./define-toolbar-item";
 import type { ViewBlockDefinition } from "./define-view-block";
 
-interface ToolbarItemInstance {
-  id: BlockInstanceId;
-  key: string;
-  config: Record<string, unknown>;
-}
-
 export class ViewsService {
   readonly #repo = inject(ViewsRepository);
   readonly #blockList = inject(ViewBlockDefinitionToken);
-  readonly #itemList = inject(ToolbarItemDefinitionToken);
+  readonly #toolbarItems = inject(ToolbarItemsService);
   readonly #logger = inject(LoggerFactoryToken).named("views-service");
   readonly #blocks: ReadonlyMap<string, ViewBlockDefinition>;
-  readonly #items: ReadonlyMap<string, ToolbarItemDefinition>;
 
   constructor() {
     const blockMap = new Map<string, ViewBlockDefinition>();
     for (const definition of this.#blockList) blockMap.set(definition.key, definition);
     this.#blocks = blockMap;
-
-    const itemMap = new Map<string, ToolbarItemDefinition>();
-    for (const definition of this.#itemList) itemMap.set(definition.key, definition);
-    this.#items = itemMap;
   }
 
   create(input: {
@@ -198,6 +188,13 @@ export class ViewsService {
     return Option.fromNullable(this.#blocks.get(key));
   }
 
+  #persistBlocks(id: ViewId, blocks: View["blocks"]): Result<void, UnknownViewError> {
+    return this.#repo.update(id, { blocks }).mapErr((cause): UnknownViewError => {
+      if (cause.kind === "unknown-view") return cause;
+      throw new ViewsInvariantError(`unreachable: repo.update returned ${cause.kind}`);
+    });
+  }
+
   addToolbarItem(
     id: ViewId,
     blockId: BlockInstanceId,
@@ -206,25 +203,10 @@ export class ViewsService {
   ): AsyncResult<BlockInstanceId | null, UnknownViewError | UnknownToolbarItemKeyError> {
     return attempt.in(this, async function* () {
       const current = yield* this.#repo.get(id).okOrElse(() => new UnknownViewError(id));
-      const definition = yield* Option.fromNullable(this.#items.get(itemKey) ?? null).okOrElse(
-        () => new UnknownToolbarItemKeyError(itemKey),
-      );
-      const targetBlock = current.blocks.find((b) => b.id === blockId);
-      if (!targetBlock) return null;
-      const items = (targetBlock.config as { items?: unknown }).items;
-      if (!Array.isArray(items)) return null;
-      const itemId = crypto.randomUUID() as BlockInstanceId;
-      const newItem: ToolbarItemInstance = {
-        id: itemId,
-        key: itemKey,
-        config: defaultConfig ?? (definition.defaultConfig as Record<string, unknown>),
-      };
-      const blocks = this.#withToolbarBlock(current, blockId, (existing) => [...existing, newItem]);
-      yield* this.#repo.update(id, { blocks }).mapErr((cause): UnknownViewError => {
-        if (cause.kind === "unknown-view") return cause;
-        throw new ViewsInvariantError(`unreachable: repo.update returned ${cause.kind}`);
-      });
-      return itemId;
+      const outcome = yield* this.#toolbarItems.addItem(current, blockId, itemKey, defaultConfig);
+      if (outcome === null) return null;
+      yield* this.#persistBlocks(id, outcome.blocks);
+      return outcome.itemId;
     });
   }
 
@@ -235,17 +217,9 @@ export class ViewsService {
   ): AsyncResult<void, UnknownViewError> {
     return attempt.in(this, async function* () {
       const current = yield* this.#repo.get(id).okOrElse(() => new UnknownViewError(id));
-      const targetBlock = current.blocks.find((b) => b.id === blockId);
-      if (!targetBlock) return;
-      const items = (targetBlock.config as { items?: unknown }).items;
-      if (!Array.isArray(items)) return;
-      const filtered = (items as ToolbarItemInstance[]).filter((i) => i.id !== itemId);
-      if (filtered.length === items.length) return;
-      const blocks = this.#withToolbarBlock(current, blockId, () => filtered);
-      yield* this.#repo.update(id, { blocks }).mapErr((cause): UnknownViewError => {
-        if (cause.kind === "unknown-view") return cause;
-        throw new ViewsInvariantError(`unreachable: repo.update returned ${cause.kind}`);
-      });
+      const blocks = this.#toolbarItems.removeItem(current, blockId, itemId);
+      if (blocks === null) return;
+      yield* this.#persistBlocks(id, blocks);
     });
   }
 
@@ -273,51 +247,14 @@ export class ViewsService {
   ): AsyncResult<void, UnknownViewError | InvalidToolbarItemConfigError> {
     return attempt.in(this, async function* () {
       const current = yield* this.#repo.get(id).okOrElse(() => new UnknownViewError(id));
-      const targetBlock = current.blocks.find((b) => b.id === blockId);
-      if (!targetBlock) return;
-      const items = (targetBlock.config as { items?: unknown }).items;
-      if (!Array.isArray(items)) return;
-      const targetItem = (items as ToolbarItemInstance[]).find((i) => i.id === itemId);
-      if (!targetItem) return;
-      const definition = this.#items.get(targetItem.key);
-      if (definition) {
-        const parsed = v.safeParse(definition.schema, config);
-        if (!parsed.success) {
-          yield* new Err<never, InvalidToolbarItemConfigError>(
-            new InvalidToolbarItemConfigError(id, blockId, itemId, targetItem.key, parsed.issues),
-          );
-        }
-      } else {
-        this.#logger.warn(
-          "updateToolbarItemConfig: toolbar-item definition not registered; persisting without validation",
-          { viewId: id, blockId, itemId, key: targetItem.key },
-        );
-      }
-      const blocks = this.#withToolbarBlock(current, blockId, (existing) =>
-        existing.map((i) => (i.id === itemId ? { ...i, config: config as Record<string, unknown> } : i)),
-      );
-      yield* this.#repo.update(id, { blocks }).mapErr((cause): UnknownViewError => {
-        if (cause.kind === "unknown-view") return cause;
-        throw new ViewsInvariantError(`unreachable: repo.update returned ${cause.kind}`);
-      });
+      const blocks = yield* this.#toolbarItems.updateItemConfig(current, blockId, itemId, config);
+      if (blocks === null) return;
+      yield* this.#persistBlocks(id, blocks);
     });
   }
 
   getToolbarItemDefinition(key: string): Option<ToolbarItemDefinition> {
-    return Option.fromNullable(this.#items.get(key));
-  }
-
-  #withToolbarBlock(
-    current: View,
-    blockId: BlockInstanceId,
-    mutate: (items: ToolbarItemInstance[]) => ToolbarItemInstance[],
-  ): View["blocks"] {
-    return current.blocks.map((b) => {
-      if (b.id !== blockId) return b;
-      const items = (b.config as { items?: unknown }).items;
-      if (!Array.isArray(items)) return b;
-      return { ...b, config: { ...b.config, items: mutate(items as ToolbarItemInstance[]) } };
-    });
+    return this.#toolbarItems.getDefinition(key);
   }
 
   #moveToolbarItem(
@@ -328,21 +265,9 @@ export class ViewsService {
   ): AsyncResult<void, UnknownViewError> {
     return attempt.in(this, async function* () {
       const current = yield* this.#repo.get(id).okOrElse(() => new UnknownViewError(id));
-      const targetBlock = current.blocks.find((b) => b.id === blockId);
-      if (!targetBlock) return;
-      const items = (targetBlock.config as { items?: unknown }).items;
-      if (!Array.isArray(items)) return;
-      const typedItems = items as ToolbarItemInstance[];
-      const index = typedItems.findIndex((i) => i.id === itemId);
-      const nextIndex = index + delta;
-      if (index < 0 || nextIndex < 0 || nextIndex >= typedItems.length) return;
-      const newItems = [...typedItems];
-      [newItems[index], newItems[nextIndex]] = [newItems[nextIndex], newItems[index]];
-      const blocks = this.#withToolbarBlock(current, blockId, () => newItems);
-      yield* this.#repo.update(id, { blocks }).mapErr((cause): UnknownViewError => {
-        if (cause.kind === "unknown-view") return cause;
-        throw new ViewsInvariantError(`unreachable: repo.update returned ${cause.kind}`);
-      });
+      const blocks = this.#toolbarItems.moveItem(current, blockId, itemId, delta);
+      if (blocks === null) return;
+      yield* this.#persistBlocks(id, blocks);
     });
   }
 }

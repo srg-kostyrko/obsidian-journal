@@ -7,6 +7,7 @@ import { ModalService } from "@/infrastructure/host/modals";
 import { FakeModalService } from "@/infrastructure/host/modals/testing";
 import { createSettingsService } from "@/settings/testing";
 
+import { ToolbarItemsService } from "../blocks/toolbar/toolbar-items-service";
 import { viewsCollection } from "../config";
 import { ViewsRepository } from "../repository";
 import { ViewsService } from "../service";
@@ -41,6 +42,7 @@ async function build() {
   container.register(ViewsEventsToken).useFactory(() => createNanoEvents());
   container.register(ViewBlockDefinitionToken).useValue(dividerDefinition);
   container.register(ViewsRepository).useClass(ViewsRepository);
+  container.register(ToolbarItemsService).useClass(ToolbarItemsService);
   container.register(ViewsService).useClass(ViewsService);
   container.register(Flows).useClass(Flows);
   container.register(AddBlockToViewFlow).useClass(AddBlockToViewFlow);

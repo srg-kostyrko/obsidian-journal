@@ -6,6 +6,7 @@ import { Container } from "@/infrastructure/di";
 import { createLoggerTestingModule } from "@/infrastructure/logger/testing";
 import { expectErr, expectOk } from "@/infrastructure/result/testing";
 
+import { ToolbarItemsService } from "./blocks/toolbar/toolbar-items-service";
 import { defineToolbarItem, type ToolbarItemDefinition } from "./define-toolbar-item";
 import { defineViewBlock, type ViewBlockDefinition } from "./define-view-block";
 import { ViewsRepository } from "./repository";
@@ -43,6 +44,7 @@ function build(
   for (const item of options.items ?? []) {
     c.register(ToolbarItemDefinitionToken).useValue(item);
   }
+  c.register(ToolbarItemsService).useClass(ToolbarItemsService);
   c.register(ViewsService).useClass(ViewsService);
   return { service: c.resolve(ViewsService), events, repo };
 }

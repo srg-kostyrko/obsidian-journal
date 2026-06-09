@@ -12,6 +12,7 @@ import type { ShelvesEvents } from "@/shelves";
 
 import { dividerBlock } from "./blocks/divider/divider-block";
 import { toolbarBlock } from "./blocks/toolbar/toolbar-block";
+import { ToolbarItemsService } from "./blocks/toolbar/toolbar-items-service";
 import { defineViewBlock } from "./define-view-block";
 import { ViewsRepository } from "./repository";
 import { ViewsService } from "./service";
@@ -47,6 +48,7 @@ function build(view: View = seedView()) {
   c.addModule(createLoggerTestingModule().module);
   c.register(ViewsEventsToken).useValue(events);
   c.register(ViewsRepository).useValue(repo);
+  c.register(ToolbarItemsService).useClass(ToolbarItemsService);
   c.register(ViewsService).useClass(ViewsService);
   const containerEl = document.createElement("div");
   const leafStub = { containerEl };
@@ -111,6 +113,7 @@ describe("JournalViewLeaf", () => {
       c.addModule(createLoggerTestingModule().module);
       c.register(ViewsEventsToken).useValue(events);
       c.register(ViewsRepository).useValue(repo);
+      c.register(ToolbarItemsService).useClass(ToolbarItemsService);
       c.register(ViewsService).useClass(ViewsService);
       const injector = c.resolve(InjectorToken);
       const containerEl = document.createElement("div");
@@ -167,6 +170,7 @@ describe("JournalViewLeaf", () => {
       c.register(ViewBlockDefinitionToken).useValue(toolbarBlock);
       c.register(ViewBlockDefinitionToken).useValue(dividerBlock);
       c.register(ToolbarItemDefinitionToken).useValue(shelfSelectorItem);
+      c.register(ToolbarItemsService).useClass(ToolbarItemsService);
       c.register(ViewsService).useClass(ViewsService);
       const containerEl = document.createElement("div");
       const leafStub = { containerEl };
@@ -204,6 +208,7 @@ describe("JournalViewLeaf", () => {
       c.register(ViewsEventsToken).useValue(events);
       c.register(ViewsRepository).useValue(repo);
       c.register(ViewBlockDefinitionToken).useValue(trivialBlock);
+      c.register(ToolbarItemsService).useClass(ToolbarItemsService);
       c.register(ViewsService).useClass(ViewsService);
       const containerEl = document.createElement("div");
       const leafStub = { containerEl };

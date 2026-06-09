@@ -7,6 +7,7 @@ import { ModalService } from "@/infrastructure/host/modals";
 import { FakeModalService } from "@/infrastructure/host/modals/testing";
 import { createSettingsService } from "@/settings/testing";
 
+import { ToolbarItemsService } from "../blocks/toolbar/toolbar-items-service";
 import { viewsCollection } from "../config";
 import { UnknownToolbarItemKeyError } from "../errors";
 import { ViewsRepository } from "../repository";
@@ -63,6 +64,7 @@ async function build(withDefinition = true) {
     container.register(ToolbarItemDefinitionToken).useValue(shelfSelectorDefinition);
   }
   container.register(ViewsRepository).useClass(ViewsRepository);
+  container.register(ToolbarItemsService).useClass(ToolbarItemsService);
   container.register(ViewsService).useClass(ViewsService);
   container.register(Flows).useClass(Flows);
   container.register(AddToolbarItemToBlockFlow).useClass(AddToolbarItemToBlockFlow);

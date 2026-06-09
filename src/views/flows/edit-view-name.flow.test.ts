@@ -6,6 +6,7 @@ import { ModalService } from "@/infrastructure/host/modals";
 import { FakeModalService } from "@/infrastructure/host/modals/testing";
 import { createSettingsService } from "@/settings/testing";
 
+import { ToolbarItemsService } from "../blocks/toolbar/toolbar-items-service";
 import { viewsCollection } from "../config";
 import { ViewsRepository } from "../repository";
 import { ViewsService } from "../service";
@@ -26,6 +27,7 @@ async function build(raw?: unknown) {
   container.register(ModalService).useValue(modals as unknown as ModalService);
   container.register(ViewsEventsToken).useFactory(() => createNanoEvents());
   container.register(ViewsRepository).useClass(ViewsRepository);
+  container.register(ToolbarItemsService).useClass(ToolbarItemsService);
   container.register(ViewsService).useClass(ViewsService);
   container.register(ViewsViewModel).useClass(ViewsViewModel);
   container.register(Flows).useClass(Flows);

@@ -11,6 +11,7 @@ import { ModalService } from "@/infrastructure/host/modals";
 import { FakeModalService } from "@/infrastructure/host/modals/testing";
 import { createSettingsService } from "@/settings/testing";
 
+import { ToolbarItemsService } from "../blocks/toolbar/toolbar-items-service";
 import { viewsCollection } from "../config";
 import { AddToolbarItemToBlockFlow } from "../flows/add-toolbar-item-to-block.flow";
 import { ViewsRepository } from "../repository";
@@ -70,6 +71,7 @@ async function setup(items: { id: BlockInstanceId; key: string; config: Record<s
   container.register(ViewBlockDefinitionToken).useValue(toolbarBlockDefinition);
   container.register(ToolbarItemDefinitionToken).useValue(shelfSelectorDefinition);
   container.register(ViewsRepository).useClass(ViewsRepository);
+  container.register(ToolbarItemsService).useClass(ToolbarItemsService);
   container.register(ViewsService).useClass(ViewsService);
   container.register(ViewsViewModel).useClass(ViewsViewModel);
   container.register(Flows).useClass(Flows);

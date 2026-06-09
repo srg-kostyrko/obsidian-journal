@@ -14,6 +14,7 @@ import { FakeModalService } from "@/infrastructure/host/modals/testing";
 import { createSettingsService } from "@/settings/testing";
 import { ShelvesEventsToken, ShelvesRepository, ShelvesViewModel, shelvesCollection } from "@/shelves";
 
+import { ToolbarItemsService } from "../blocks/toolbar/toolbar-items-service";
 import { viewsCollection } from "../config";
 import { ViewsRepository } from "../repository";
 import { ViewsService } from "../service";
@@ -54,6 +55,7 @@ async function setup() {
   container.register(ShelvesEventsToken).useFactory(() => createNanoEvents());
   container.register(ViewsRepository).useClass(ViewsRepository);
   container.register(ShelvesRepository).useClass(ShelvesRepository);
+  container.register(ToolbarItemsService).useClass(ToolbarItemsService);
   container.register(ViewsService).useClass(ViewsService);
   container.register(ViewsViewModel).useClass(ViewsViewModel);
   container.register(ShelvesViewModel).useClass(ShelvesViewModel);

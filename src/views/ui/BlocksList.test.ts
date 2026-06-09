@@ -11,6 +11,7 @@ import { ModalService } from "@/infrastructure/host/modals";
 import { FakeModalService } from "@/infrastructure/host/modals/testing";
 import { createSettingsService } from "@/settings/testing";
 
+import { ToolbarItemsService } from "../blocks/toolbar/toolbar-items-service";
 import { viewsCollection } from "../config";
 import { AddBlockToViewFlow } from "../flows/add-block-to-view.flow";
 import { AddToolbarItemToBlockFlow } from "../flows/add-toolbar-item-to-block.flow";
@@ -70,6 +71,7 @@ async function setup(blocks: { id: string; key: string; config: Record<string, u
   container.register(ViewsEventsToken).useFactory(() => createNanoEvents());
   container.register(ViewBlockDefinitionToken).useValue(dividerDefinition);
   container.register(ViewsRepository).useClass(ViewsRepository);
+  container.register(ToolbarItemsService).useClass(ToolbarItemsService);
   container.register(ViewsService).useClass(ViewsService);
   container.register(ViewsViewModel).useClass(ViewsViewModel);
   container.register(Flows).useClass(Flows);

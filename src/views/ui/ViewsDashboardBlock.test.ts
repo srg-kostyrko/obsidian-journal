@@ -11,6 +11,7 @@ import { FakeModalService } from "@/infrastructure/host/modals/testing";
 import { SettingsUiService, SubpageToken } from "@/settings";
 import { createSettingsService } from "@/settings/testing";
 
+import { ToolbarItemsService } from "../blocks/toolbar/toolbar-items-service";
 import { viewsCollection } from "../config";
 import { DeleteViewFlow } from "../flows/delete-view.flow";
 import { EditViewNameFlow } from "../flows/edit-view-name.flow";
@@ -33,6 +34,7 @@ async function setup(views: Record<string, unknown> = {}) {
   container.register(ModalService).useValue(new FakeModalService() as unknown as ModalService);
   container.register(ViewsEventsToken).useFactory(() => createNanoEvents());
   container.register(ViewsRepository).useClass(ViewsRepository);
+  container.register(ToolbarItemsService).useClass(ToolbarItemsService);
   container.register(ViewsService).useClass(ViewsService);
   container.register(ViewsViewModel).useClass(ViewsViewModel);
   container.register(SubpageToken).useValue(viewEditSubpage);
