@@ -6,13 +6,21 @@ import { defineViewBlock } from "../../define-view-block";
 
 import ToolbarBlock from "./ui/ToolbarBlock.vue";
 
-const itemSchema = v.object({
-  id: v.pipe(v.string(), v.uuid()),
+import type { BlockInstanceId } from "../../config";
+
+export const toolbarItemSchema = v.object({
+  id: v.pipe(
+    v.string(),
+    v.uuid(),
+    v.transform((s) => s as BlockInstanceId),
+  ),
   key: v.pipe(v.string(), v.minLength(1)),
   config: v.record(v.string(), v.unknown()),
 });
 
-const schema = v.object({ items: v.array(itemSchema) });
+export type ToolbarItemInstance = v.InferOutput<typeof toolbarItemSchema>;
+
+const schema = v.object({ items: v.array(toolbarItemSchema) });
 
 type ToolbarConfig = v.InferOutput<typeof schema>;
 
