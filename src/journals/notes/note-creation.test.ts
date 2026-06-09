@@ -3,7 +3,14 @@ import { describe, it, expect, vi } from "vitest";
 import { anchor } from "@/calendar/testing";
 import { Container } from "@/infrastructure/di";
 import { UserAborted } from "@/infrastructure/flows";
-import { NoteReadError, NoteWriteError, NotesService, TemplaterService } from "@/infrastructure/host";
+import {
+  FrontmatterError,
+  NoteCreateError,
+  NoteReadError,
+  NoteWriteError,
+  NotesService,
+  TemplaterService,
+} from "@/infrastructure/host";
 import type { VaultPath } from "@/infrastructure/host";
 import { ModalService } from "@/infrastructure/host/modals";
 import { FakeModalService } from "@/infrastructure/host/modals/testing";
@@ -233,6 +240,34 @@ describe("NoteCreationService.ensureNote — suppression guard cleanup", () => {
     const guard = container.resolve(SelfWriteGuard);
     vi.spyOn(notes, "read").mockReturnValue(
       AsyncResult.err(new NoteReadError("Templates/daily.md" as VaultPath, new Error("read failed"))),
+    );
+    const result = await service.ensureNote("daily", meta);
+    expect(result.isErr()).toBe(true);
+    expect(guard.suppresses("2026-05-19.md" as VaultPath)).toBe(false);
+  });
+
+  it("releases the suppression guard when note creation fails", async () => {
+    const repo = fakeRepo({ daily: fixedJournal("daily", { type: "day" }) });
+    const notes = new FakeNotesService();
+    const container = build(repo, notes, new FakeModalService());
+    const service = container.resolve(NoteCreationService);
+    const guard = container.resolve(SelfWriteGuard);
+    vi.spyOn(notes, "create").mockReturnValue(
+      AsyncResult.err(new NoteCreateError("2026-05-19.md" as VaultPath, new Error("create failed"))),
+    );
+    const result = await service.ensureNote("daily", meta);
+    expect(result.isErr()).toBe(true);
+    expect(guard.suppresses("2026-05-19.md" as VaultPath)).toBe(false);
+  });
+
+  it("releases the suppression guard when frontmatter update fails", async () => {
+    const repo = fakeRepo({ daily: fixedJournal("daily", { type: "day" }) });
+    const notes = new FakeNotesService();
+    const container = build(repo, notes, new FakeModalService());
+    const service = container.resolve(NoteCreationService);
+    const guard = container.resolve(SelfWriteGuard);
+    vi.spyOn(notes, "updateFrontmatter").mockReturnValue(
+      AsyncResult.err(new FrontmatterError("2026-05-19.md" as VaultPath, new Error("frontmatter failed"))),
     );
     const result = await service.ensureNote("daily", meta);
     expect(result.isErr()).toBe(true);
