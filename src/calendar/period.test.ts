@@ -1,7 +1,7 @@
 import { match } from "ts-pattern";
 import { afterEach, beforeEach, describe, expect, expectTypeOf, it } from "vitest";
 
-import { periodKinds, periodOfKind } from "./period";
+import { advance, periodKinds, periodOfKind, window } from "./period";
 import { date, installTestCalendar } from "./testing";
 
 import type { Period, PeriodKind } from "./period";
@@ -68,5 +68,65 @@ describe("periodOfKind", () => {
 
   it("returns the period containing the given date", () => {
     expect(periodOfKind("month", date("2025-03-14")).start.toAnchor()).toBe("2025-03-01");
+  });
+});
+
+describe("advance", () => {
+  let teardown: () => void;
+  beforeEach(() => {
+    ({ teardown } = installTestCalendar());
+  });
+  afterEach(() => {
+    teardown();
+  });
+
+  it("returns the same period for zero steps", () => {
+    const start = periodOfKind("month", date("2025-03-14"));
+    expect(advance(start, 0).start.toAnchor()).toBe("2025-03-01");
+  });
+
+  it("steps forward for positive steps", () => {
+    const start = periodOfKind("month", date("2025-03-14"));
+    expect(advance(start, 2).start.toAnchor()).toBe("2025-05-01");
+  });
+
+  it("steps backward for negative steps", () => {
+    const start = periodOfKind("month", date("2025-03-14"));
+    expect(advance(start, -2).start.toAnchor()).toBe("2025-01-01");
+  });
+});
+
+describe("window", () => {
+  let teardown: () => void;
+  beforeEach(() => {
+    ({ teardown } = installTestCalendar());
+  });
+  afterEach(() => {
+    teardown();
+  });
+
+  it("returns before + after + 1 periods", () => {
+    const focus = periodOfKind("month", date("2025-03-14"));
+    expect(window(focus, 2, 1)).toHaveLength(4);
+  });
+
+  it("places the focus at index `before`", () => {
+    const focus = periodOfKind("month", date("2025-03-14"));
+    expect(window(focus, 2, 1)[2].start.toAnchor()).toBe("2025-03-01");
+  });
+
+  it("spans from `before` prior to `after` after, in order", () => {
+    const focus = periodOfKind("month", date("2025-03-14"));
+    expect(window(focus, 2, 1).map((p) => p.start.toAnchor())).toEqual([
+      "2025-01-01",
+      "2025-02-01",
+      "2025-03-01",
+      "2025-04-01",
+    ]);
+  });
+
+  it("returns just the focus for a zero window", () => {
+    const focus = periodOfKind("month", date("2025-03-14"));
+    expect(window(focus, 0, 0).map((p) => p.start.toAnchor())).toEqual(["2025-03-01"]);
   });
 });

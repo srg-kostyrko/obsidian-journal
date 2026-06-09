@@ -38,3 +38,22 @@ const PERIOD_OF_KIND: Record<PeriodKind, (date: CalendarDate) => Period> = {
 export function periodOfKind(kind: PeriodKind, date: CalendarDate): Period {
   return PERIOD_OF_KIND[kind](date);
 }
+
+export function advance<P extends PeriodBase<P>>(period: P, steps: number): P {
+  let cursor = period;
+  const magnitude = Math.abs(steps);
+  for (let i = 0; i < magnitude; i += 1) {
+    cursor = steps < 0 ? cursor.previous() : cursor.next();
+  }
+  return cursor;
+}
+
+export function window<P extends PeriodBase<P>>(focus: P, before: number, after: number): P[] {
+  const out: P[] = [];
+  let cursor = advance(focus, -before);
+  for (let i = 0; i < before + after + 1; i += 1) {
+    out.push(cursor);
+    cursor = cursor.next();
+  }
+  return out;
+}
