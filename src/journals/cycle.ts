@@ -1,7 +1,7 @@
 import { match } from "ts-pattern";
 
-import { CalendarDate, DayPeriod, DecadePeriod, MonthPeriod, QuarterPeriod, WeekPeriod, YearPeriod } from "@/calendar";
-import type { AnchorString, PeriodKind } from "@/calendar";
+import { CalendarDate, periodOfKind } from "@/calendar";
+import type { AnchorString } from "@/calendar";
 import { localMoment } from "@/calendar/calendar";
 import { inject } from "@/infrastructure/di";
 import { Option } from "@/infrastructure/result";
@@ -38,23 +38,6 @@ export function buildCycle(write: JournalWrite): JournalCycle {
   );
 }
 
-interface PeriodLike {
-  readonly anchor: CalendarDate;
-  readonly start: CalendarDate;
-  readonly end: CalendarDate;
-  next(): PeriodLike;
-  previous(): PeriodLike;
-}
-
-const PERIOD_CTORS: Record<PeriodKind, (d: CalendarDate) => PeriodLike> = {
-  day: (d) => DayPeriod.containing(d),
-  week: (d) => WeekPeriod.containing(d),
-  month: (d) => MonthPeriod.containing(d),
-  quarter: (d) => QuarterPeriod.containing(d),
-  year: (d) => YearPeriod.containing(d),
-  decade: (d) => DecadePeriod.containing(d),
-};
-
 function customStepForward(anchor: AnchorString, every: MomentDurationUnit, duration: number): AnchorString {
   const m = localMoment(anchor, "YYYY-MM-DD", true);
   if (every === "month" && m.date() > 28) {
@@ -85,7 +68,7 @@ export class CycleService {
     return this.#cycleFor(name).flatMap((cycle) =>
       match(cycle)
         .with({ kind: "fixed" }, (c) => {
-          const period = PERIOD_CTORS[c.period](date);
+          const period = periodOfKind(c.period, date);
           return Option.some(period.anchor.toAnchor());
         })
         .with({ kind: "custom" }, (c) => {
@@ -113,7 +96,7 @@ export class CycleService {
     return this.#cycleFor(name).flatMap((cycle) =>
       match(cycle)
         .with({ kind: "fixed" }, (c) => {
-          const period = PERIOD_CTORS[c.period](CalendarDate.fromAnchor(from));
+          const period = periodOfKind(c.period, CalendarDate.fromAnchor(from));
           return Option.some(period.next().anchor.toAnchor());
         })
         .with({ kind: "custom" }, (c) => Option.some(this.#customNext(name, c, from)))
@@ -125,7 +108,7 @@ export class CycleService {
     return this.#cycleFor(name).flatMap((cycle) =>
       match(cycle)
         .with({ kind: "fixed" }, (c) => {
-          const period = PERIOD_CTORS[c.period](CalendarDate.fromAnchor(from));
+          const period = periodOfKind(c.period, CalendarDate.fromAnchor(from));
           return Option.some(period.previous().anchor.toAnchor());
         })
         .with({ kind: "custom" }, (c) => Option.some(this.#customPrevious(name, c, from)))
@@ -136,7 +119,7 @@ export class CycleService {
   startOf(name: string, anchor: AnchorString): Option<CalendarDate> {
     return this.#cycleFor(name).map((cycle) =>
       match(cycle)
-        .with({ kind: "fixed" }, (c) => PERIOD_CTORS[c.period](CalendarDate.fromAnchor(anchor)).start)
+        .with({ kind: "fixed" }, (c) => periodOfKind(c.period, CalendarDate.fromAnchor(anchor)).start)
         .with({ kind: "custom" }, () => CalendarDate.fromAnchor(anchor))
         .exhaustive(),
     );
@@ -145,7 +128,7 @@ export class CycleService {
   endOf(name: string, anchor: AnchorString): Option<CalendarDate> {
     return this.#cycleFor(name).map((cycle) =>
       match(cycle)
-        .with({ kind: "fixed" }, (c) => PERIOD_CTORS[c.period](CalendarDate.fromAnchor(anchor)).end)
+        .with({ kind: "fixed" }, (c) => periodOfKind(c.period, CalendarDate.fromAnchor(anchor)).end)
         .with({ kind: "custom" }, (c) => {
           const stored = this.#index.entryByAnchor(name, anchor);
           if (stored.isSome() && stored.value.endDate !== undefined) {
