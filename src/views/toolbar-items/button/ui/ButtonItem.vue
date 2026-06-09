@@ -3,8 +3,8 @@ import { Menu } from "obsidian";
 import { match } from "ts-pattern";
 import { computed } from "vue";
 
-import { CalendarDate, DayPeriod, MonthPeriod, QuarterPeriod, WeekPeriod, YearPeriod } from "@/calendar";
-import type { AnchorString, Period } from "@/calendar";
+import { advance, CalendarDate, periodOfKind } from "@/calendar";
+import type { AnchorString } from "@/calendar";
 import { datePickerModal } from "@/calendar/ui/modals";
 import { m } from "@/i18n";
 import { useService } from "@/infrastructure/di";
@@ -36,14 +36,8 @@ const icon = computed(() => props.config.icon ?? appearance.value.icon);
 const label = computed(() => props.config.label ?? appearance.value.label);
 const tooltip = computed(() => props.config.tooltip ?? appearance.value.tooltip);
 
-function periodFor(level: ButtonLevel, date: CalendarDate): Period {
-  return match(level)
-    .with("day", () => DayPeriod.containing(date) as Period)
-    .with("week", () => WeekPeriod.containing(date) as Period)
-    .with("month", () => MonthPeriod.containing(date) as Period)
-    .with("quarter", () => QuarterPeriod.containing(date) as Period)
-    .with("year", () => YearPeriod.containing(date) as Period)
-    .exhaustive();
+function periodFor(level: ButtonLevel, date: CalendarDate) {
+  return periodOfKind(level, date);
 }
 
 function journalsFor(level: ButtonLevel): readonly string[] {
@@ -87,15 +81,11 @@ async function fire(level: ButtonLevel, event: MouseEvent): Promise<void> {
     })
     .with({ type: "navigate-step" }, (action) => {
       const date = CalendarDate.fromAnchor(context.refDate.value);
-      let cursor = periodFor(action.unit, date);
       const direction = match(action.direction)
         .with("prev", () => -1)
         .with("next", () => 1)
         .exhaustive();
-      const amount = action.amount;
-      for (let index = 0; index < amount; index += 1) {
-        cursor = direction < 0 ? (cursor as { previous(): Period }).previous() : (cursor as { next(): Period }).next();
-      }
+      const cursor = advance(periodFor(action.unit, date), direction * action.amount);
       context.setRefDate(cursor.anchor.toAnchor());
     })
     .exhaustive();
