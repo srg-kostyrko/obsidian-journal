@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { computed } from "vue";
 
-import { CalendarDate, MonthPeriod, QuarterPeriod, WeekPeriod, YearPeriod } from "@/calendar";
+import { CalendarDate, periodOfKind } from "@/calendar";
 import type { Period } from "@/calendar";
 import { useService } from "@/infrastructure/di";
 import { Flows } from "@/infrastructure/flows";
@@ -43,10 +43,10 @@ const badges = computed<readonly Badge[]>(() => {
     if (journals.length === 0) return;
     out.push({ key, period, journals, label: period.format(format) });
   };
-  add("week", WeekPeriod.containing(date), scope.week.value, "[W]ww YYYY");
-  add("month", MonthPeriod.containing(date), scope.month.value, "MMM YYYY");
-  add("quarter", QuarterPeriod.containing(date), scope.quarter.value, "[Q]Q YYYY");
-  add("year", YearPeriod.containing(date), scope.year.value, "YYYY");
+  add("week", periodOfKind("week", date), scope.week.value, "[W]ww YYYY");
+  add("month", periodOfKind("month", date), scope.month.value, "MMM YYYY");
+  add("quarter", periodOfKind("quarter", date), scope.quarter.value, "[Q]Q YYYY");
+  add("year", periodOfKind("year", date), scope.year.value, "YYYY");
   return out;
 });
 
