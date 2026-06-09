@@ -10,6 +10,7 @@ import { dividerBlock } from "./blocks/divider/divider-block";
 import { markdownTemplateBlock } from "./blocks/markdown-template/markdown-template-block";
 import { monthCalendarBlock } from "./blocks/month-calendar/month-calendar-block";
 import { toolbarBlock } from "./blocks/toolbar/toolbar-block";
+import { ToolbarItemsService } from "./blocks/toolbar/toolbar-items-service";
 import { weekCalendarBlock } from "./blocks/week-calendar/week-calendar-block";
 import { viewsCollection } from "./config";
 import { AddBlockToViewFlow } from "./flows/add-block-to-view.flow";
@@ -34,6 +35,7 @@ export const viewsModule: Module = {
     c.register(ViewsRepository).useClass(ViewsRepository).eager();
     c.register(ViewsViewModel).useClass(ViewsViewModel).eager();
     c.register(ViewsService).useClass(ViewsService).eager();
+    c.register(ToolbarItemsService).useClass(ToolbarItemsService);
     c.register(ViewHostService).useClass(ViewHostService).eager();
     c.register(EditViewNameFlow).useClass(EditViewNameFlow);
     c.register(DeleteViewFlow).useClass(DeleteViewFlow);
