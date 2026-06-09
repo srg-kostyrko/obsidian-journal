@@ -204,7 +204,7 @@ describe("NoteCreationService.ensureNote — Templater", () => {
   });
 });
 
-describe("NoteCreationService.ensureNote — expected-set cleanup", () => {
+describe("NoteCreationService.ensureNote — suppression guard cleanup", () => {
   it("releases the suppression guard when the content write fails", async () => {
     const repo = fakeRepo({
       daily: fixedJournal("daily", { type: "day" }, { templates: ["Templates/daily.md"] }),

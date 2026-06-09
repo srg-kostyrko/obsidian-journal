@@ -35,4 +35,14 @@ describe("SelfWriteGuard", () => {
     vi.advanceTimersByTime(5000);
     expect(guard.suppresses(p("a.md"))).toBe(false);
   });
+
+  it("resets the suppression window when marked a second time", () => {
+    vi.useFakeTimers();
+    const guard = new SelfWriteGuard();
+    guard.mark(p("a.md"));
+    vi.advanceTimersByTime(4000);
+    guard.mark(p("a.md"));
+    vi.advanceTimersByTime(4000);
+    expect(guard.suppresses(p("a.md"))).toBe(true);
+  });
 });
