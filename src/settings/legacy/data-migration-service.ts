@@ -3,7 +3,7 @@ import { match } from "ts-pattern";
 import { CalendarDate } from "@/calendar";
 import type { AnchorString } from "@/calendar";
 import { inject } from "@/infrastructure/di";
-import { NoteMetadataService, NotesService } from "@/infrastructure/host";
+import { NoteMetadataService, NotesService, WorkspaceService } from "@/infrastructure/host";
 import type { VaultPath } from "@/infrastructure/host";
 import { LoggerFactoryToken } from "@/infrastructure/logger";
 import { AsyncResult } from "@/infrastructure/result";
@@ -33,12 +33,36 @@ export class DataMigrationService {
   readonly #metadata = inject(NoteMetadataService);
   readonly #cycle = inject(CycleService);
   readonly #journals = inject(JournalsRepository);
+  readonly #workspace = inject(WorkspaceService);
   readonly #logger = inject(LoggerFactoryToken).named("data-migration");
 
   readonly #slice = inject(SettingsService).getSlice(pendingNoteMigrationSlice);
 
+  // The walk needs the whole vault visible and parsed, both of which Obsidian loads
+  // asynchronously after onload. onLayoutReady is the point at which the file list is
+  // complete (before it, getMarkdownFiles is empty and a walk clears the markers
+  // having migrated nothing). Even then metadataCache resolves frontmatter
+  // incrementally and fires "resolved" in batches, so wait until every note is parsed
+  // before walking — otherwise not-yet-indexed notes are skipped yet marked done.
   initialize(): AsyncResult<void, never> {
-    return AsyncResult.fromPromise(this.#run(), () => undefined as never);
+    this.#workspace.onLayoutReady(() => this.#runWhenResolved());
+    return AsyncResult.ok();
+  }
+
+  #runWhenResolved(): void {
+    if (this.#allNotesResolved()) {
+      void this.#run();
+      return;
+    }
+    const dispose = this.#metadata.onResolved(() => {
+      if (!this.#allNotesResolved()) return;
+      dispose();
+      void this.#run();
+    });
+  }
+
+  #allNotesResolved(): boolean {
+    return this.#notes.allMarkdownNotes().every((path) => this.#metadata.get(path).isSome());
   }
 
   async #run(): Promise<void> {

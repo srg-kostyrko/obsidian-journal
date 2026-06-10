@@ -2,8 +2,9 @@ import { describe, expect, it } from "vitest";
 
 import type { AnchorString } from "@/calendar";
 import { Container } from "@/infrastructure/di";
-import { NoteMetadataService, NotesService } from "@/infrastructure/host";
+import { NoteMetadataService, NotesService, WorkspaceService } from "@/infrastructure/host";
 import type { NoteMetadata, VaultPath } from "@/infrastructure/host";
+import { FakeWorkspaceService } from "@/infrastructure/host/testing";
 import { createLoggerTestingModule } from "@/infrastructure/logger/testing";
 import { AsyncResult, None, Option, Some } from "@/infrastructure/result";
 import { CycleService, JournalsRepository } from "@/journals";
@@ -19,6 +20,8 @@ interface Stubs {
   notesByPath: Map<string, Record<string, unknown>>;
   updateCalls: VaultPath[];
   sliceState: { current: PendingNoteMigration[] };
+  workspace: FakeWorkspaceService;
+  resolveMetadata: () => void;
 }
 
 interface BuildOptions {
@@ -56,11 +59,22 @@ function build(options: BuildOptions): Stubs {
     },
   } as unknown as NotesService;
 
+  // metadataCache resolves incrementally; model that by withholding every note's
+  // metadata until resolveMetadata() signals the cache has caught up.
+  let resolved = false;
+  const resolvedListeners: (() => void)[] = [];
   const metadata = {
     get: (path: VaultPath): Option<NoteMetadata> => {
       const fm = notesByPath.get(path);
-      if (!fm) return new None<NoteMetadata>();
+      if (!resolved || !fm) return new None<NoteMetadata>();
       return new Some<NoteMetadata>({ title: "", tags: [], properties: fm, tasks: [] });
+    },
+    onResolved: (callback: () => void): (() => void) => {
+      resolvedListeners.push(callback);
+      return () => {
+        const index = resolvedListeners.indexOf(callback);
+        if (index !== -1) resolvedListeners.splice(index, 1);
+      };
     },
   } as unknown as NoteMetadataService;
 
@@ -75,17 +89,34 @@ function build(options: BuildOptions): Stubs {
     get: (name: string): Option<JournalConfig> => Option.fromNullable(options.configs?.[name]),
   } as unknown as JournalsRepository;
 
+  const workspace = new FakeWorkspaceService();
+
   const container = new Container();
   container.register(SettingsService).useValue(settings);
   container.register(NotesService).useValue(notes);
   container.register(NoteMetadataService).useValue(metadata);
   container.register(CycleService).useValue(cycle);
   container.register(JournalsRepository).useValue(repository);
+  container.register(WorkspaceService).useValue(workspace as unknown as WorkspaceService);
   container.addModule(createLoggerTestingModule().module);
   container.register(DataMigrationService).useClass(DataMigrationService);
 
   const service = container.resolve(DataMigrationService);
-  return { service, notesByPath, updateCalls, sliceState };
+  const resolveMetadata = (): void => {
+    resolved = true;
+    // Drain into a fresh array so a listener disposing itself mid-iteration is safe.
+    for (const listener of resolvedListeners.splice(0)) listener();
+  };
+  return { service, notesByPath, updateCalls, sliceState, workspace, resolveMetadata };
+}
+
+// The walk waits for the layout (vault file list complete) and then for metadataCache
+// to finish parsing; drive both signals, then drain the fire-and-forget walk's microtasks.
+async function migrate(stubs: Pick<Stubs, "service" | "workspace" | "resolveMetadata">): Promise<void> {
+  await stubs.service.initialize();
+  stubs.workspace.setLayoutReady(true);
+  stubs.resolveMetadata();
+  await new Promise((resolve) => window.setTimeout(resolve, 0));
 }
 
 function config(overrides: Partial<JournalConfig["frontmatter"]> = {}): JournalConfig {
@@ -100,7 +131,7 @@ describe("DataMigrationService", () => {
       kind: "calendar",
       sectionToName: { month: "My Journal Month" },
     };
-    const { service, notesByPath } = build({
+    const { service, notesByPath, workspace, resolveMetadata } = build({
       notes: {
         "note.md": {
           journal: "cal",
@@ -114,7 +145,7 @@ describe("DataMigrationService", () => {
       anchors: { "My Journal Month": "2022-01-01" as AnchorString },
     });
 
-    await service.initialize();
+    await migrate({ service, workspace, resolveMetadata });
 
     expect(notesByPath.get("note.md")).toEqual({
       journal: "My Journal Month",
@@ -129,7 +160,7 @@ describe("DataMigrationService", () => {
       "Sprints",
     );
     sprintsConfig.numbering.sources[0].frontmatterKey = "sprint-number";
-    const { service, notesByPath } = build({
+    const { service, notesByPath, workspace, resolveMetadata } = build({
       notes: {
         "sprint.md": {
           journal: "int",
@@ -142,7 +173,7 @@ describe("DataMigrationService", () => {
       anchors: { Sprints: "2022-02-01" as AnchorString },
     });
 
-    await service.initialize();
+    await migrate({ service, workspace, resolveMetadata });
 
     const result = notesByPath.get("sprint.md");
     expect(result?.["sprint-number"]).toBe(1);
@@ -156,7 +187,7 @@ describe("DataMigrationService", () => {
       kind: "calendar",
       sectionToName: { month: "My Journal Month" },
     };
-    const { service, notesByPath } = build({
+    const { service, notesByPath, workspace, resolveMetadata } = build({
       notes: {
         "orphan.md": {
           journal: "cal",
@@ -172,31 +203,82 @@ describe("DataMigrationService", () => {
       anchors: { "My Journal Month": null },
     });
 
-    await service.initialize();
+    await migrate({ service, workspace, resolveMetadata });
 
     expect(notesByPath.get("orphan.md")).toEqual({ title: "kept" });
   });
 
   it("clears the marker slice after running", async () => {
     const marker: PendingNoteMigration = { oldJournalId: "int", kind: "interval", name: "Sprints" };
-    const { service, sliceState } = build({
+    const { service, sliceState, workspace, resolveMetadata } = build({
       notes: {},
       markers: [marker],
     });
 
-    await service.initialize();
+    await migrate({ service, workspace, resolveMetadata });
 
     expect(sliceState.current).toEqual([]);
   });
 
   it("does not touch any note when there are no markers", async () => {
-    const { service, updateCalls } = build({
+    const { service, updateCalls, workspace, resolveMetadata } = build({
       notes: { "note.md": { journal: "cal" } },
       markers: [],
     });
 
-    await service.initialize();
+    await migrate({ service, workspace, resolveMetadata });
 
     expect(updateCalls).toEqual([]);
+  });
+
+  const calendarMarker: PendingNoteMigration = {
+    oldJournalId: "cal",
+    kind: "calendar",
+    sectionToName: { month: "My Journal Month" },
+  };
+
+  function deferralStubs(): Stubs {
+    return build({
+      notes: { "note.md": { journal: "cal", "journal-start-date": "2022-01-01", "journal-section": "month" } },
+      markers: [calendarMarker],
+      configs: { "My Journal Month": config() },
+      anchors: { "My Journal Month": "2022-01-01" as AnchorString },
+    });
+  }
+
+  it("does not walk before the layout is ready", async () => {
+    const { service, sliceState } = deferralStubs();
+
+    await service.initialize();
+
+    expect(sliceState.current).toEqual([calendarMarker]);
+  });
+
+  it("defers the walk until every note has resolved in metadataCache", async () => {
+    const { service, sliceState, workspace, resolveMetadata } = deferralStubs();
+
+    await service.initialize();
+    workspace.setLayoutReady(true);
+    expect(sliceState.current).toEqual([calendarMarker]);
+
+    resolveMetadata();
+    await new Promise((resolve) => window.setTimeout(resolve, 0));
+
+    expect(sliceState.current).toEqual([]);
+  });
+
+  it("runs once the layout and metadata are already ready", async () => {
+    const marker: PendingNoteMigration = { oldJournalId: "int", kind: "interval", name: "Sprints" };
+    const { service, sliceState, workspace, resolveMetadata } = build({
+      notes: { "note.md": { journal: "other" } },
+      markers: [marker],
+    });
+    workspace.setLayoutReady(true);
+    resolveMetadata();
+
+    await service.initialize();
+    await new Promise((resolve) => window.setTimeout(resolve, 0));
+
+    expect(sliceState.current).toEqual([]);
   });
 });

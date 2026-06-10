@@ -24,4 +24,13 @@ export class NoteMetadataService {
         [],
     });
   }
+
+  // metadataCache resolves frontmatter incrementally and fires "resolved" each time
+  // its queue drains — several times during a cold boot, not once at the end. A
+  // whole-vault walk that needs every note indexed must re-check its own precondition
+  // on each firing, so this keeps firing (returns a disposer) rather than running once.
+  onResolved(callback: () => void): () => void {
+    const ref = this.#app.metadataCache.on("resolved", callback);
+    return () => this.#app.metadataCache.offref(ref);
+  }
 }
