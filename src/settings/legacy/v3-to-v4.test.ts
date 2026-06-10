@@ -79,6 +79,16 @@ describe("v3ToV4Migration", () => {
     expect(journal).not.toHaveProperty("index");
   });
 
+  it("keys each journal by its name so the repository resolves it", () => {
+    const out = v3ToV4Migration.migrate(monolithV3());
+    expect(Object.keys(out.journals as Record<string, unknown>)).toEqual(["My Journal Day"]);
+  });
+
+  it("keys each shelf by its name", () => {
+    const out = v3ToV4Migration.migrate(monolithV3());
+    expect(Object.keys(out.shelves as Record<string, unknown>)).toEqual(["My Journal"]);
+  });
+
   it("maps a plugin command to an all-target command", () => {
     const out = v3ToV4Migration.migrate(monolithV3());
     const cmd = Object.values(out.commands as Record<string, Record<string, unknown>>)[0];

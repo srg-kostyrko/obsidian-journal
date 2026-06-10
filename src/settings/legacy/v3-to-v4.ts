@@ -145,15 +145,20 @@ export const v3ToV4Migration: Migration = {
     const shelves: Record<string, unknown> = {};
     const commands: Record<string, unknown> = {};
 
+    // Journals and shelves are stored keyed by name — JournalsRepository and
+    // ShelvesRepository look entities up via storage[name] (see their get/rename).
+    // v1->v2 and v2->v3 already key them by name; preserving that here is what keeps
+    // every migrated entity resolvable. Commands carry no name-key invariant (they
+    // are referenced by record id), so they keep generated ids.
     for (const journal of Object.values(old.journals ?? {})) {
-      journals[nanoid()] = reshapeJournal(journal);
+      journals[journal.name] = reshapeJournal(journal);
       for (const cmd of journal.commands ?? []) {
         commands[nanoid()] = reshapeCommand(cmd, { kind: "journal", journalName: journal.name }, cmd.context);
       }
     }
 
     for (const shelf of Object.values(old.shelves ?? {})) {
-      shelves[nanoid()] = { name: shelf.name, journals: shelf.journals };
+      shelves[shelf.name] = { name: shelf.name, journals: shelf.journals };
       for (const cmd of shelf.commands ?? []) {
         commands[nanoid()] = reshapeCommand(
           cmd,
