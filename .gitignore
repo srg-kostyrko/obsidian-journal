@@ -23,6 +23,10 @@ test-vault/.obsidian/workspace.json
 test-vault/.obsidian/workspace-mobile.json
 test-vault/**/*.md
 
+# e2e (WebdriverIO + Obsidian)
+.obsidian-cache/
+e2e/.reports/
+
 # Exclude sourcemaps
 *.map
 

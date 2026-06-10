@@ -150,6 +150,19 @@ export default [
     },
   },
   {
+    // e2e specs and the WebdriverIO config are not part of the plugin bundle:
+    // Mocha drives them, `WebdriverIO` is an ambient type namespace, and `e2e`/
+    // `wdio`/`conf` are intentional domain names, not abbreviations to expand.
+    files: ["e2e/**/*.ts", "wdio.conf.mts"],
+    languageOptions: {
+      globals: { ...globals.mocha, WebdriverIO: "readonly" },
+    },
+    rules: {
+      ...Object.fromEntries(Object.keys(obsidianmd.rules).map((rule) => [`obsidianmd/${rule}`, "off"])),
+      "unicorn/prevent-abbreviations": "off",
+    },
+  },
+  {
     files: ["**/*.test.ts", "**/*.bench.ts", "**/testing.ts", "**/testing/**"],
     plugins: { vitest },
     rules: {

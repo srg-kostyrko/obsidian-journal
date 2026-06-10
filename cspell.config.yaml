@@ -22,6 +22,7 @@ words:
   - subpages
   - templater
   - tfile
+  - wdio
   - wikilinks
 ignorePaths:
   - node_modules

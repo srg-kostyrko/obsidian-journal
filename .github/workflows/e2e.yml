@@ -1,0 +1,54 @@
+name: E2E
+
+on:
+  pull_request:
+  schedule:
+    # Nightly drift-detection against the version matrix (07:00 UTC).
+    - cron: "0 7 * * *"
+  workflow_dispatch:
+
+concurrency:
+  group: e2e-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  e2e:
+    runs-on: ubuntu-latest
+    env:
+      # PR gate: latest app on latest installer. Nightly widens to the floor and
+      # the newest-app/oldest-installer mismatch combo (see
+      # docs/e2e-testing-strategy.md).
+      OBSIDIAN_VERSIONS: ${{ github.event_name == 'schedule' && 'earliest/earliest latest/earliest' || 'latest/latest' }}
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Use Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: "20.x"
+          cache: npm
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Cache Obsidian binaries
+        uses: actions/cache@v4
+        with:
+          path: .obsidian-cache
+          key: obsidian-cache-${{ runner.os }}-${{ env.OBSIDIAN_VERSIONS }}
+          restore-keys: obsidian-cache-${{ runner.os }}-
+
+      - name: Build plugin
+        run: npm run build
+
+      - name: Run e2e (smoke)
+        run: xvfb-run -a npx wdio run ./wdio.conf.mts --suite smoke
+
+      - name: Upload e2e reports
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: e2e-reports
+          path: e2e/.reports/
+          if-no-files-found: ignore
