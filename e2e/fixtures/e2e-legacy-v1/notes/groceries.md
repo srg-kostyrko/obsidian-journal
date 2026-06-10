@@ -1,0 +1,7 @@
+---
+tags:
+  - shopping
+---
+
+- milk
+- eggs

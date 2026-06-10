@@ -47,7 +47,7 @@ jobs:
         run: npm run build
 
       - name: Run e2e (stable suites)
-        run: xvfb-run -a npx wdio run ./wdio.conf.mts --suite smoke --suite integration
+        run: xvfb-run -a npx wdio run ./wdio.conf.mts --suite smoke --suite integration --suite migration
 
       - name: Publish e2e results
         if: always()

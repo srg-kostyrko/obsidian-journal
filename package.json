@@ -14,6 +14,7 @@
     "test:e2e": "npm run build && wdio run ./wdio.conf.mts",
     "test:e2e:smoke": "npm run build && wdio run ./wdio.conf.mts --suite smoke",
     "test:e2e:integration": "npm run build && wdio run ./wdio.conf.mts --suite integration",
+    "test:e2e:migration": "npm run build && wdio run ./wdio.conf.mts --suite migration",
     "coverage": "vitest run --coverage",
     "bench": "vitest bench",
     "check:types": "vue-tsc -b",
