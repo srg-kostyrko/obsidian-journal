@@ -10,6 +10,7 @@ import eslintComments from "@eslint-community/eslint-plugin-eslint-comments/conf
 import vitest from "@vitest/eslint-plugin";
 import importX from "eslint-plugin-import-x";
 import obsidianmd from "eslint-plugin-obsidianmd";
+import mocha from "eslint-plugin-mocha";
 
 export default [
   {
@@ -154,12 +155,20 @@ export default [
     // Mocha drives them, `WebdriverIO` is an ambient type namespace, and `e2e`/
     // `wdio`/`conf` are intentional domain names, not abbreviations to expand.
     files: ["e2e/**/*.ts", "wdio.conf.mts"],
+    plugins: { mocha },
     languageOptions: {
       globals: { ...globals.mocha, WebdriverIO: "readonly" },
     },
     rules: {
+      ...mocha.configs.recommended.rules,
       ...Object.fromEntries(Object.keys(obsidianmd.rules).map((rule) => [`obsidianmd/${rule}`, "off"])),
       "unicorn/prevent-abbreviations": "off",
+      // A forgotten `.only` silently shrinks the CI run, so fail the lint gate on it.
+      "mocha/no-exclusive-tests": "error",
+      "mocha/no-pending-tests": "error",
+      // Timeouts are configured globally in wdio.conf.mts, never via `this.timeout()`
+      // inside a spec, so arrow callbacks carry no `this`-binding hazard here.
+      "mocha/no-mocha-arrows": "off",
     },
   },
   {
