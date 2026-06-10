@@ -1,7 +1,7 @@
 import { match } from "ts-pattern";
 
 import { CalendarDate } from "@/calendar";
-import { inject } from "@/infrastructure/di";
+import { inject, InjectorToken } from "@/infrastructure/di";
 import { Err, Ok, type Result } from "@/infrastructure/result";
 
 import { TemplateParseError } from "./errors";
@@ -23,11 +23,14 @@ import type { TemplateContext } from "./context";
 import type { Bindings, BoundValue, Token, TokenStream, ValidationProblem, VariableSpec } from "./types";
 
 export class TemplateEngine {
-  readonly #handlersByName: ReadonlyMap<string, FunctionHandler>;
+  readonly #injector = inject(InjectorToken);
+  #handlersByName?: ReadonlyMap<string, FunctionHandler>;
 
-  constructor() {
-    const handlers = inject(FunctionHandlerToken);
-    this.#handlersByName = new Map(handlers.map((h) => [h.name, h]));
+  // Resolved lazily on first render, not at construction: a handler
+  // (JournalLinkHandler) depends on this engine transitively via NotePathService,
+  // so eager resolution would form a DI cycle and abort plugin load.
+  #handlers(): ReadonlyMap<string, FunctionHandler> {
+    return (this.#handlersByName ??= new Map(this.#injector.resolve(FunctionHandlerToken).map((h) => [h.name, h])));
   }
 
   renderString(template: string, context: TemplateContext): string {
@@ -67,7 +70,7 @@ export class TemplateEngine {
   }
 
   #renderFunction(token: Extract<Token, { kind: "function" }>, context: TemplateContext): string {
-    const handler = this.#handlersByName.get(token.name);
+    const handler = this.#handlers().get(token.name);
     if (!handler) return token.raw;
     const result = handler.render({
       arg: token.arg,
@@ -102,7 +105,7 @@ export class TemplateEngine {
       if (token.kind === "function") {
         if (!allowFunctions) {
           problems.push({ token, position, problem: "function-not-allowed" });
-        } else if (!this.#handlersByName.has(token.name)) {
+        } else if (!this.#handlers().has(token.name)) {
           problems.push({ token, position, problem: "unknown-function" });
         }
         position += token.raw.length;
