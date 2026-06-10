@@ -39,8 +39,11 @@ export const config: WebdriverIO.Config = {
       installerVersion,
       // Templater is installed from the community registry but starts disabled; the
       // interop specs enable it per-boot via reloadObsidian so other suites are
-      // unaffected. reloadObsidian can only enable plugins declared here.
-      plugins: ["./build", { id: "templater-obsidian", enabled: false }],
+      // unaffected. reloadObsidian can only enable plugins declared here. Pinned to
+      // 2.18.0: it requires Obsidian >= 1.5.0, the newest Templater that still loads
+      // across the whole matrix (our floor 1.8.7 .. latest stable). Templater 2.21+
+      // require the 1.13 beta and silently stay unloaded on stable Obsidian.
+      plugins: ["./build", { id: "templater-obsidian", version: "2.18.0", enabled: false }],
       vault: "./e2e/fixtures/e2e-empty",
     },
   })),
