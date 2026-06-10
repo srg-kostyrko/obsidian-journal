@@ -38,7 +38,7 @@ export const config: WebdriverIO.Config = {
     "wdio:obsidianOptions": {
       installerVersion,
       plugins: ["./build"],
-      vault: "./e2e/fixtures/empty",
+      vault: "./e2e/fixtures/e2e-empty",
     },
   })),
 

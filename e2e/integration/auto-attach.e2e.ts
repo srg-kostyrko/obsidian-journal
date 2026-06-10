@@ -2,14 +2,14 @@ import { browser, expect } from "@wdio/globals";
 
 import { createNote, frontmatterOf, renameNote, waitForJournalFrontmatter } from "../support/vault.js";
 
-// Slice A — the integration seam. The `daily` fixture commits a journal whose
+// Slice A — the integration seam. The `e2e-daily` fixture commits a journal whose
 // notes live at `{{date}}.md` (YYYY-MM-DD), so a foreign vault mutation at a
 // matching path must drive real metadataCache indexing -> auto-attach -> a
 // frontmatter write the test observes. None of this would fail against
 // __mocks__/obsidian.ts, which can't reproduce the indexing window.
 describe("auto-attach", () => {
   before(async () => {
-    await browser.reloadObsidian({ vault: "./e2e/fixtures/daily", plugins: ["journals"] });
+    await browser.reloadObsidian({ vault: "./e2e/fixtures/e2e-daily", plugins: ["journals"] });
   });
 
   it("attaches journal frontmatter to a foreign note created at a matching path", async () => {
