@@ -13,6 +13,7 @@
     "test:watch": "vitest",
     "test:e2e": "npm run build && wdio run ./wdio.conf.mts",
     "test:e2e:smoke": "npm run build && wdio run ./wdio.conf.mts --suite smoke",
+    "test:e2e:integration": "npm run build && wdio run ./wdio.conf.mts --suite integration",
     "coverage": "vitest run --coverage",
     "bench": "vitest bench",
     "check:types": "vue-tsc -b",

@@ -1,7 +1,11 @@
+import { mkdir, writeFile } from "node:fs/promises";
 import path from "node:path";
 import { env } from "node:process";
 
+import { browser } from "@wdio/globals";
 import { parseObsidianVersions } from "wdio-obsidian-service";
+
+const SCREENSHOT_DIR = "./e2e/.reports/screenshots";
 
 // Version matrix is data-driven so CI jobs select it via OBSIDIAN_VERSIONS without
 // editing this file: PR gate -> "latest/latest"; nightly -> the floor + mismatch
@@ -62,5 +66,16 @@ export const config: WebdriverIO.Config = {
   mochaOpts: {
     ui: "bdd",
     timeout: 60_000,
+  },
+
+  // Headless CI failures are near-impossible to debug without a capture (see
+  // docs/e2e-testing-strategy.md, Authoring conventions). Saved as a junit-sibling
+  // artifact under e2e/.reports.
+  afterTest: async function (test, _context, result: { passed: boolean }) {
+    if (result.passed) return;
+    const screenshot = await browser.takeScreenshot();
+    const name = `${test.parent} ${test.title}`.replaceAll(/[^\w]+/g, "-").toLowerCase();
+    await mkdir(SCREENSHOT_DIR, { recursive: true });
+    await writeFile(path.join(SCREENSHOT_DIR, `${name}.png`), screenshot, "base64");
   },
 };

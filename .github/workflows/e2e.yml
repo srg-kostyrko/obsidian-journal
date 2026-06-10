@@ -42,8 +42,8 @@ jobs:
       - name: Build plugin
         run: npm run build
 
-      - name: Run e2e (smoke)
-        run: xvfb-run -a npx wdio run ./wdio.conf.mts --suite smoke
+      - name: Run e2e (stable suites)
+        run: xvfb-run -a npx wdio run ./wdio.conf.mts --suite smoke --suite integration
 
       - name: Upload e2e reports
         if: always()

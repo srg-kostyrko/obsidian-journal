@@ -32,6 +32,8 @@ e2e/.reports/
 
 # obsidian
 data.json
+# e2e fixtures commit a curated plugin config as their starting state.
+!e2e/fixtures/**/data.json
 
 # Exclude macOS Finder (System Explorer) View States
 .DS_Store

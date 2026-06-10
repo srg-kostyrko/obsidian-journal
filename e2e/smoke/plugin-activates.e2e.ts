@@ -15,4 +15,15 @@ describe("plugin activation", () => {
 
     expect(enabled).toBe(true);
   });
+
+  // `enabledPlugins` only reflects the user's enabled-list — it stays true even
+  // when onload throws. Asserting the absence of Obsidian's plugin-load failure is
+  // what actually proves the plugin booted; a DI cycle once hid behind a green
+  // membership check here.
+  it("boots without a plugin load failure", async () => {
+    const logs = (await browser.getLogs("browser")) as { message?: string }[];
+    const failures = logs.filter((entry) => /Plugin failure: journals/i.test(entry.message ?? ""));
+
+    expect(failures).toEqual([]);
+  });
 });
