@@ -10,9 +10,9 @@ Every existing test runs against `__mocks__/obsidian.ts` — a hand-written fake
 `App`/`Vault`/`Workspace`/`metadataCache`/`Modal`/`ItemView`. That fake is the
 largest unverified assumption in the suite: it cannot reproduce real
 `metadataCache` indexing lag (the unobservable async window `SelfWriteGuard`
-exists to cover), real vault write/rename event ordering, Templater/Calendar
-interop, real view mounting in a workspace, or a real v1/v2 → v3 migration over an
-actual `data.json`.
+exists to cover), real vault write/rename event ordering, Templater interop, real
+view mounting in a workspace, or a real v1/v2 → v3 migration over an actual
+`data.json`.
 
 e2e exists to **test that seam, not the logic**. Domain logic stays covered by the
 fast unit suite. We only spend a real Obsidian boot on things that genuinely
@@ -28,7 +28,9 @@ All four are in scope, sequenced (see Roadmap):
 - **(B) User journeys** — clicked-through flows (create a note → auto-attach →
   calendar renders → reopen, still correct).
 - **(C) Migration** — real v1/v2 vaults upgrade to v3 without data loss.
-- **(D) Interop** — Templater/Calendar coexistence.
+- **(D) Interop** — real Templater coexistence (template parsing + cursor jump).
+  There is no community-Calendar-plugin interop in v3, so "Calendar" is dropped
+  from this slice.
 
 ## Decisions
 
@@ -288,8 +290,12 @@ Sequenced by (value only-real-Obsidian can prove) ÷ (fixture/flakiness cost).
    value.
 2. **(C) Migration v1/v2 → v3.** High value; needs curated real legacy-vault
    fixtures.
-3. **(D) Templater/Calendar interop.** Requires installing other plugins into the
-   fixture.
+3. **(D) Templater interop.** Requires installing the real Templater plugin into
+   the fixture (community registry, pinned to a version compatible across the
+   Obsidian matrix, enabled per-boot). v3 has no community-Calendar interop, so the
+   slice is Templater-only. Cursor jump is gated behind Templater's
+   `auto_jump_to_cursor` setting (the fixture enables it), matching v2 and
+   Templater's own create-from-template flow — not a plugin bug.
 4. **(B) Full click-through journeys.** Flakiest and slowest; rides on
    infrastructure the earlier slices hardened.
 
