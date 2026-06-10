@@ -14,6 +14,10 @@ concurrency:
 jobs:
   e2e:
     runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      checks: write
+      pull-requests: write
     env:
       # PR gate: latest app on latest installer. Nightly widens to the floor and
       # the newest-app/oldest-installer mismatch combo (see
@@ -44,6 +48,16 @@ jobs:
 
       - name: Run e2e (stable suites)
         run: xvfb-run -a npx wdio run ./wdio.conf.mts --suite smoke --suite integration
+
+      - name: Publish e2e results
+        if: always()
+        uses: mikepenz/action-junit-report@v5
+        with:
+          report_paths: e2e/.reports/e2e-junit.xml
+          check_name: e2e results
+          # Tolerate a suite that crashed before emitting XML; the run step
+          # already failed the job in that case.
+          require_tests: false
 
       - name: Upload e2e reports
         if: always()
