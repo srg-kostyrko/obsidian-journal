@@ -33,4 +33,19 @@ describe("templater interop", () => {
     expect(content).toContain("templater-ran");
     expect(content).not.toContain("<%");
   });
+
+  it("renders the plugin engine first, then Templater, in one template", async () => {
+    await runCommand("journals:open-compose");
+
+    const path = await waitForActiveNoteIn("compose");
+    await waitForContent(
+      path,
+      (content) => content.includes("compose / templater-ran"),
+      "waited for the compose note to render {{ }} then <% %>",
+    );
+
+    const content = await contentOf(path);
+    expect(content).not.toContain("<%");
+    expect(content).not.toContain("{{");
+  });
 });
