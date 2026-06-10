@@ -1,6 +1,14 @@
 import { browser, expect } from "@wdio/globals";
 
-import { contentOf, runCommand, waitForActiveNoteIn, waitForContent } from "../support/templater.js";
+import {
+  contentOf,
+  cursorOf,
+  editorValue,
+  runCommand,
+  waitForActiveNoteIn,
+  waitForContent,
+  waitForCursorLine,
+} from "../support/templater.js";
 
 // Slice D — the Templater interop seam. The `e2e-templater` fixture commits day
 // journals whose templates carry Templater `<% %>` syntax; booting the real
@@ -47,5 +55,23 @@ describe("templater interop", () => {
     const content = await contentOf(path);
     expect(content).not.toContain("<%");
     expect(content).not.toContain("{{");
+  });
+
+  it("jumps the editor cursor to the Templater cursor marker", async () => {
+    await runCommand("journals:open-cursor");
+
+    await waitForActiveNoteIn("cursor");
+    // Frontmatter occupies lines 0-3 and "intro" is line 4, so the marker sat on
+    // line 5; the jump removes it and lands the cursor at the start of "tail". The
+    // fixture enables Templater's auto_jump_to_cursor, which gates the jump our
+    // bridge requests — matching v2 and Templater's own create-from-template flow.
+    await waitForCursorLine(5, "waited for the editor cursor to jump to the Templater marker");
+
+    const cursor = await cursorOf();
+    expect(cursor).toEqual({ line: 5, ch: 0 });
+
+    const value = await editorValue();
+    expect(value).not.toContain("tp.file.cursor");
+    expect(value).not.toContain("<%");
   });
 });
