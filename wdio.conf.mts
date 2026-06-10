@@ -37,7 +37,10 @@ export const config: WebdriverIO.Config = {
     browserVersion: appVersion,
     "wdio:obsidianOptions": {
       installerVersion,
-      plugins: ["./build"],
+      // Templater is installed from the community registry but starts disabled; the
+      // interop specs enable it per-boot via reloadObsidian so other suites are
+      // unaffected. reloadObsidian can only enable plugins declared here.
+      plugins: ["./build", { id: "templater-obsidian", enabled: false }],
       vault: "./e2e/fixtures/e2e-empty",
     },
   })),
