@@ -297,7 +297,10 @@ Sequenced by (value only-real-Obsidian can prove) ÷ (fixture/flakiness cost).
    `auto_jump_to_cursor` setting (the fixture enables it), matching v2 and
    Templater's own create-from-template flow — not a plugin bug.
 4. **(B) Full click-through journeys.** Flakiest and slowest; rides on
-   infrastructure the earlier slices hardened.
+   infrastructure the earlier slices hardened. Designed in
+   `docs/e2e-slice-b-journeys.md` — real-DOM render across the view leaf, code
+   blocks, decorations, and settings, decomposed by mount context; a thin
+   `journeys-smoke` on the PR gate with the full suite nightly.
 
 ### Phase 1 — definition of done
 
