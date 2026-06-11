@@ -1,0 +1,99 @@
+# E2E slice B — build order
+
+Sequencing plan for implementing slice B (see the full design in
+`docs/e2e-slice-b-journeys.md`). Slices A/C/D are green; the `journeys` suite is
+registered in `wdio.conf.mts` but empty, and there is no `e2e/journeys/` dir,
+`e2e-journeys` fixture, or journeys support layer yet.
+
+This doc only fixes **order and dependencies** — each chunk is independently
+green-able. Per-test detail stays in the journeys design; per-chunk
+implementation detail comes from `writing-plans` when each chunk is started.
+
+## Principles
+
+- **One load-bearing production change, first.** `data-anchor="<ISO>"` on
+  `NotesCalendarCell` (it has `data-active` but no `data-anchor`;
+  `CalendarMonthView`/`CalendarWeekView` already carry one). It gates every
+  cell-click and cell-identity assertion, so it lands in chunk 0.
+- **Grow the `e2e-journeys` fixture per chunk**, not rich up front. Each chunk
+  adds exactly the journals/notes/decorations/commands its specs need. Accepts
+  some fixture churn in exchange for a small first-green; deliberate deviation
+  from the design's "deliberately rich" framing.
+- **Render seams before config/command seams** — matches the design's priority
+  (a) real render, (b) real click path, then the independent settings and
+  command seams.
+- **Shared support grows in place.** `support/decorations.ts` and
+  `support/vault.ts` are authored in chunk 1 and reused by chunk 2.
+
+## Chunks
+
+### Chunk 0 — Infra + canonical journey (also the PR-gate smoke core)
+
+- **Production:** `data-anchor="<ISO>"` on `NotesCalendarCell` — the slice's only
+  source edit.
+- **Fixture `e2e-journeys` (core):** one journal per period kind
+  (day/week/month/quarter/year), the two `navBlock.type` variants, ≥2 shelves
+  with disjoint journals. No decorations/commands/custom-view yet.
+- **Support:** `support/view.ts` — ribbon open, find/click cell by anchor, read
+  `data-active`.
+- **Specs:** `view.e2e.ts` part 1 — canonical day journey + 4 other period types.
+- **Proves:** view-leaf mount, real ribbon click path, cell-click →
+  create+open+live-active.
+
+### Chunk 1 — View-leaf decorations
+
+- **Fixture +:** 12 decorations (6 condition, 6 style) + the notes matching each
+  condition.
+- **Support:** `support/decorations.ts` (computed-style helper + condition
+  seeding); extend `support/vault.ts` (tags/tasks/properties/title).
+- **Specs:** `view.e2e.ts` part 2 — 6 condition + 6 style decorations +
+  interactive shelf-scope.
+- **Proves:** plugin `styles.css` surviving Obsidian's real cascade — the thing
+  jsdom component tests structurally cannot verify.
+
+### Chunk 2 — Code-block mount context
+
+- **Support:** `support/code-blocks.ts` — reading-mode render, locate block,
+  assert not the `renderError` fallback.
+- **Fixture +:** notes embedding `calendar-nav` / `journals-home` /
+  `calendar-timeline`.
+- **Specs:** `code-blocks.e2e.ts` — fence renders (3), nav click (2),
+  condition+style decorations on `calendar-nav` (12), mode-derivation (2),
+  derived shelf-scope (1).
+- Reuses chunk 1's decoration helper. Decorations/clicks are **not** repeated on
+  `calendar-timeline` (identical `VueCodeBlockHost` mount).
+
+### Chunk 3 — Settings SPA (independent seam)
+
+- **Fixture +:** seeded commands + one custom view (beyond the auto-seeded
+  default).
+- **Support:** `support/settings.ts` — open settings tab via API, navigate the
+  subpage SPA, poll persisted `data.json`, read list rows.
+- **Specs:** `settings.e2e.ts` (journals/shelves/views/decorations/commands/
+  nav-row flows) + `settings-first-journal.e2e.ts` (boot `e2e-empty`).
+- **Proves:** subpage-nav SPA + async `saveData` persistence round-trip.
+
+### Chunk 4 — Command palette + bulk-add
+
+- **Support:** `support/commands.ts` — command-palette driver.
+- **Fixture +:** unconnected note, adjacent journal entries, editor-openable
+  note.
+- **Specs:** `commands.e2e.ts` (insert-date-link, connect-note, open-next/prev +
+  `check()` absence) + `bulk-add.e2e.ts` (vault-scan + 2-modal).
+
+### Chunk 5 — CI split
+
+- Wire the chunk-0 happy paths + one code-block render + the add-journal
+  round-trip into a thin `journeys-smoke` on the **PR gate**; the full `journeys`
+  suite to **nightly** across the version matrix.
+
+## Dependency summary
+
+```
+chunk 0  data-anchor + view.ts + fixture core   ──┬─> chunk 1  decorations (view leaf)
+                                                   │       │
+                                                   │       └─> chunk 2  code-block mount (reuses deco helper)
+                                                   ├─> chunk 3  settings SPA      (independent)
+                                                   └─> chunk 4  palette + bulk-add (independent; after 3)
+chunk 5  CI split  ── after all specs exist
+```
