@@ -58,10 +58,15 @@ mutations between its tests. Settings flows are config-only — they need no
 - **Decorations** arranged so each decoration test isolates exactly one
   decoration on a distinct cell:
   - 6 _condition_ decorations (`title`, `tag`, `property`, `has-note`,
-    `has-open-task`, `all-tasks-completed`), each with a constant **icon** style.
+    `has-open-task`, `all-tasks-completed`), each carrying a constant **corner**
+    marker style so the assertion is element presence.
   - 6 _style_ decorations (`background`, `color`, `border`, `shape`, `corner`,
-    `icon`) on a constant simple condition (`has-note`), each targeting a
-    distinct journal/cell so they don't stack.
+    `icon`). Decorations are **per-journal scoped** and same-kind journals share a
+    grid cell, so isolation is by **crafted condition per cell**, not distinct
+    journal: each decoration is wired to a journal + condition that exactly one
+    seeded note matches (style decos use a unique inline tag per day cell; the
+    `background` style rides the yearly `has-note` on the year header). Any empty
+    day cell is the universal control.
 - **Seeded commands** (for edit/delete-command flows) and **one custom view**
   beyond the auto-seeded default (for edit-name/delete/add-block flows).
 

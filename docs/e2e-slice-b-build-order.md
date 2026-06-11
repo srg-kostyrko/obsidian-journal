@@ -49,12 +49,24 @@ implementation detail comes from `writing-plans` when each chunk is started.
 
 - **Fixture +:** 12 decorations (6 condition, 6 style) + the notes matching each
   condition.
-- **Support:** `support/decorations.ts` (computed-style helper + condition
-  seeding); extend `support/vault.ts` (tags/tasks/properties/title).
+- **Support:** the calendar/view/decoration helpers are colocated under
+  `e2e/journeys/` (not `support/`) per the journeys-design layout: `calendar.ts`
+  (the `calendarSurface(root)` factory), `view.ts` (moved from `support/`;
+  `openCalendarView` + the bound `calendar`), and `decorations.ts` (seeding +
+  computed-style readers). The only `support/` change is a folder-aware
+  `seedNote`. The factory is built in chunk 1 (ahead of chunk 2's second mount
+  root) rather than deferred.
 - **Specs:** `view.e2e.ts` part 2 — 6 condition + 6 style decorations +
   interactive shelf-scope.
 - **Proves:** plugin `styles.css` surviving Obsidian's real cascade — the thing
   jsdom component tests structurally cannot verify.
+- **Caught + fixed a live-update bug** (commit `fa84a023`): the incremental
+  decoration path (`use-cell-decorations.ts`) keyed `periodsByAnchor` one-per-anchor,
+  so a week/month period whose anchor collides with a visible day cell was
+  overwritten by the day period and its decorations never re-rendered on live
+  create/edit. Fixed by grouping periods per anchor and re-evaluating all of them.
+  Unit suites (single day periods) couldn't see it; the e2e did. This is exactly
+  the real-Obsidian seam slice B exists to cover.
 
 ### Chunk 2 — Code-block mount context
 
