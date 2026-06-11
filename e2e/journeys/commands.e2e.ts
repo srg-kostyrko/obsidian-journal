@@ -2,7 +2,8 @@ import { $, browser, expect } from "@wdio/globals";
 
 import { openPalette, paletteLists, promptChoose, waitForPrompt } from "../support/commands.js";
 import { editorValue } from "../support/editor.js";
-import { closeAllLeaves, openNote, seedNote, waitForJournalFrontmatter } from "../support/vault.js";
+import { clickDialogButton, selectModalSelect, waitForDialogClosed } from "../support/settings.js";
+import { closeAllLeaves, openNote, seedNote, waitForFrontmatter, waitForJournalFrontmatter } from "../support/vault.js";
 
 import { dayAnchor } from "./decorations.js";
 
@@ -12,6 +13,7 @@ import { dayAnchor } from "./decorations.js";
 // palette. Single boot; each it sets up its own active-leaf state, so order is irrelevant.
 
 const INSERT = "Insert link to journal note";
+const CONNECT = "Connect note to a journal";
 
 // Far-future, fixed dates (the daily timeline is unbounded) — well clear of today's anchor
 // (which connect-note attaches) so their next/prev neighbors never shift.
@@ -63,6 +65,25 @@ describe("commands", () => {
     it("is absent from the palette without an active editor", async () => {
       await closeAllLeaves();
       expect(await paletteLists(INSERT)).toBe(false);
+    });
+  });
+
+  describe("connect note", () => {
+    it("connects an unconnected note to a journal", async () => {
+      await openNote("unconnected.md");
+      await openPalette();
+      await promptChoose(CONNECT);
+      // ConnectNoteModal: the first <select> is the journal dropdown; the date defaults to today,
+      // and rename/move default off, so the note stays in place and only gains frontmatter.
+      await selectModalSelect("daily");
+      await clickDialogButton("Connect");
+      await waitForDialogClosed();
+
+      await waitForFrontmatter(
+        "unconnected.md",
+        (fm) => fm.journal === "daily",
+        "connect-note did not attach journal=daily frontmatter",
+      );
     });
   });
 });
