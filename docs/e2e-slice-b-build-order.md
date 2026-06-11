@@ -127,19 +127,21 @@ implementation detail comes from `writing-plans` when each chunk is started.
 - **Fixture:** no `data.json` change — every precondition note (editor note, plain note,
   unconnected note, three indexed adjacents, bulk-add source folders) is runtime-seeded per
   spec (like `seedDecorationFixture`), so chunks 0–3 are untouched.
-- **Specs (8 `it`s, all green):** `commands.e2e.ts` — insert-date-link (palette flow-dispatch +
-  no-editor `check()` absence), connect-note, open-next/prev + off-journal `check()` absence.
-  `bulk-add.e2e.ts` — matching notes attach, an unparseable note is skipped. The per-note
-  commands are palette-driven precisely because the palette honors `check()`, which
-  `executeCommandById` (slices A/C/D) bypasses.
-- **Deliberate deviation — insert-date-link insertion not asserted end-to-end.** Driving a
-  choice in the plugin's own `SuggestModal` (the journal picker) is not a reliable
-  wdio-obsidian seam: typing filters it, but neither click, Enter, nor ArrowDown→Enter
-  propagates the choice into opening the follow-on date-picker modal (the choice resolves as a
-  silent cancel; Obsidian's command palette, a different `SuggestModal`, drives fine — that is
-  why connect-note/open-next/prev pass). The e2e therefore asserts the **real palette click
-  dispatches into `InsertJournalLinkFlow`** (the journal picker opens) and stops there; the
-  suggest→date-picker→cursor insertion is jsdom-covered by `insert-journal-link.flow.test.ts`.
+- **Specs (8 `it`s, all green):** `commands.e2e.ts` — insert-date-link (full journey: palette →
+  journal picker → date picker → link inserted at the cursor) + no-editor `check()` absence,
+  connect-note, open-next/prev + off-journal `check()` absence. `bulk-add.e2e.ts` — matching notes
+  attach, an unparseable note is skipped. The per-note commands are palette-driven precisely
+  because the palette honors `check()`, which `executeCommandById` (slices A/C/D) bypasses.
+- **Production bug found by this e2e — `SuggestService` mis-reported a choice as cancelled.** The
+  insert-date-link journey wedged because Obsidian (1.12.x) invokes a `SuggestModal`'s `onClose`
+  **before** `onChooseSuggestion` on a mouse-selected suggestion. `SuggestService.onClose` decided
+  "cancelled" synchronously while `#picked` was still `false`, so the later `resolve(item)` was a
+  no-op on an already-rejected promise — the flow's `mapErr(() => UserAborted)` then short-circuited
+  silently and the journal picker never opened the date picker. This broke the journal picker for
+  real users clicking on this Obsidian version, not just the test. Fixed by deferring the
+  cancellation verdict a microtask (`suggest-service.ts`), with a regression test for the
+  close-before-choose ordering. This is exactly the real-Obsidian seam slice B exists to catch —
+  the jsdom mock invoked `onChooseSuggestion` directly, so unit tests couldn't see it.
 
 ### Chunk 5 — CI split
 

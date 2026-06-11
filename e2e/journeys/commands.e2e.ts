@@ -1,6 +1,7 @@
-import { browser, expect } from "@wdio/globals";
+import { $, browser, expect } from "@wdio/globals";
 
 import { openPalette, paletteLists, promptChoose, waitForPrompt } from "../support/commands.js";
+import { editorValue } from "../support/editor.js";
 import { clickDialogButton, selectModalSelect, waitForDialogClosed } from "../support/settings.js";
 import {
   closeAllLeaves,
@@ -10,6 +11,8 @@ import {
   waitForFrontmatter,
   waitForJournalFrontmatter,
 } from "../support/vault.js";
+
+import { dayAnchor } from "./decorations.js";
 
 // Slice B chunk 4 — the command-palette real-click seam. Each per-note command is check()-gated;
 // the palette honors check() and only lists an available command, which executeCommandById (used
@@ -48,16 +51,26 @@ describe("commands", () => {
   });
 
   describe("insert date link", () => {
-    it("dispatches into the journal-link flow when invoked from the palette with an active editor", async () => {
+    it("inserts a journal date link at the editor cursor", async () => {
+      const anchor = dayAnchor(15);
       await openNote("editor-note.md");
       await openPalette();
       await promptChoose(INSERT);
-      // The real palette click dispatched into InsertJournalLinkFlow: with five journals in scope,
-      // the flow opens the journal picker. The subsequent suggest-choice -> date-picker -> cursor
-      // insertion is jsdom-covered (insert-journal-link.flow.test.ts); driving a plugin SuggestModal
-      // choice is not a reliable wdio-obsidian seam, so the e2e stops at the proven flow dispatch.
+      // Five journals are in scope, so the flow first opens the journal picker; pick the day journal.
       await waitForPrompt("Search journals");
-      await browser.keys("Escape");
+      await promptChoose("daily");
+      // Day picking shows the month view; click the in-month cell by its production data-anchor.
+      const cell = $(`.modal-container [data-testid="month-cell"][data-anchor="${anchor}"]`);
+      await cell.waitForClickable({ timeoutMsg: `date picker did not render the ${anchor} cell` });
+      await cell.click();
+
+      await browser.waitUntil(
+        async () => {
+          const value = await editorValue();
+          return value?.includes(anchor) ?? false;
+        },
+        { timeoutMsg: `editor never received a link containing ${anchor}` },
+      );
     });
 
     it("is absent from the palette without an active editor", async () => {
