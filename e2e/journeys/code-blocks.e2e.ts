@@ -18,8 +18,9 @@ import {
   openInReadingMode,
   plainNote,
   renderBlock,
+  timelineCalendar,
 } from "./code-blocks.js";
-import { STYLE_HEX, expectTextHex } from "./decorations.js";
+import { STYLE_HEX, assertDecorationMatrix, expectTextHex, seedDecorationFixture } from "./decorations.js";
 
 // Slice B chunk 2 — the code-block mount seam. Our Vue surfaces mount via
 // VueCodeBlockHost (a reading-mode MarkdownRenderChild) instead of createApp on an
@@ -151,6 +152,22 @@ describe("code blocks", () => {
         });
         await expect($(`${TIMELINE_BLOCK} .notes-month-view`)).not.toExist();
       });
+    });
+
+    describe("decorations", () => {
+      before(async () => {
+        // Seed the 12 precondition notes (also opens the view leaf to read period anchors),
+        // then render an unconnected month-mode timeline: null shelf ⇒ all journals in scope,
+        // refDate ⇒ current month — the same grid (and the same 12 matches) as the view leaf.
+        await seedDecorationFixture();
+        await renderBlock(
+          "blocks/timeline-matrix.md",
+          plainNote(TIMELINE_FENCE),
+          `${TIMELINE_BLOCK} .notes-month-view`,
+        );
+      });
+
+      assertDecorationMatrix(timelineCalendar);
     });
   });
 });
