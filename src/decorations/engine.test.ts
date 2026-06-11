@@ -89,23 +89,4 @@ describe("DecorationEngine", () => {
       expect(result.size).toBe(0);
     });
   });
-
-  describe("evaluateAnchor", () => {
-    it("returns the style list for a single period when weekday condition matches", () => {
-      const decoration = buildDecoration({
-        mode: "or",
-        conditions: [buildCondition("weekday", { weekdays: [1] })],
-        styles: [buildStyle("background"), buildStyle("color")],
-      });
-      const { c } = buildContainer({
-        daily: fixedJournal("daily", { type: "day" }, { decorations: [decoration] }),
-      });
-      const engine = c.resolve(DecorationEngine);
-
-      const period = DayPeriod.containing(date("2026-05-25"));
-      const styles = engine.evaluateAnchor(period, [{ journalName: "daily", decoration }]);
-
-      expect(styles.map((s) => s.type)).toEqual(["background", "color"]);
-    });
-  });
 });

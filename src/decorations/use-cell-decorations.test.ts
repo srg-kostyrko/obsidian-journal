@@ -3,7 +3,7 @@ import { createNanoEvents, type Emitter } from "nanoevents";
 import { afterEach, beforeEach, describe, expect, it } from "vitest";
 import { defineComponent, h, inject as vInject, nextTick, ref, type Ref } from "vue";
 
-import { CalendarDate, DayPeriod } from "@/calendar";
+import { CalendarDate, DayPeriod, WeekPeriod } from "@/calendar";
 import type { AnchorString } from "@/calendar";
 import { installTestCalendar } from "@/calendar/testing";
 import { Container, provideInjectorOnApp } from "@/infrastructure/di";
@@ -36,6 +36,24 @@ function buildHarness(decorations: JournalConfig["decorations"] = []): Harness {
   c.register(JournalsRepository).useValue(
     fakeRepo({
       daily: fixedJournal("daily", { type: "day" }, { decorations }),
+    }),
+  );
+  c.register(JournalsIndex).useClass(JournalsIndex);
+  c.register(CycleService).useClass(CycleService);
+  const fakeMetadata = new FakeNoteMetadataService();
+  c.register(NoteMetadataService).useValue(fakeMetadata as unknown as NoteMetadataService);
+  c.register(NotesService).useValue({ events: notesEmitter } as unknown as NotesService);
+  c.register(DecorationEngine).useClass(DecorationEngine);
+  return { c, notesEmitter, fakeMetadata };
+}
+
+function buildWeeklyHarness(weeklyDecorations: JournalConfig["decorations"]): Harness {
+  const notesEmitter: Emitter<NotesEvents> = createNanoEvents<NotesEvents>();
+  const c = new Container();
+  c.register(JournalsRepository).useValue(
+    fakeRepo({
+      daily: fixedJournal("daily", { type: "day" }),
+      weekly: fixedJournal("weekly", { type: "week" }, { decorations: weeklyDecorations }),
     }),
   );
   c.register(JournalsIndex).useClass(JournalsIndex);
@@ -220,6 +238,37 @@ describe("useCellDecorations", () => {
       await nextTick();
 
       expect(slot.value).not.toBe(initial);
+    });
+
+    it("decorates a week cell whose anchor collides with a day cell when its entry is added", async () => {
+      const decoration = buildDecoration({
+        mode: "or",
+        conditions: [buildCondition("has-note")],
+        styles: [buildStyle("background")],
+      });
+      const h = buildWeeklyHarness([decoration]);
+      const weekPeriod = WeekPeriod.containing(date("2026-06-10"));
+      const weekAnchor = weekPeriod.anchor.toAnchor();
+      const dayPeriods = [...weekPeriod.days()].map((d) => DayPeriod.containing(d));
+      const collidingDay = dayPeriods.find((d) => d.anchor.toAnchor() === weekAnchor);
+      expect(collidingDay).toBeDefined();
+
+      const { captured } = mount(h.c, () =>
+        useCellDecorations(
+          () => [weekPeriod, ...dayPeriods],
+          () => ["daily", "weekly"],
+        ),
+      );
+      await nextTick();
+      const slot = captured.value!.get(weekAnchor)!;
+      expect(slot.value).toHaveLength(0);
+
+      const path = "Weekly/2026-W24.md" as VaultPath;
+      h.fakeMetadata.setMetadata(path, { title: "2026-W24", tags: [], properties: {}, tasks: [] });
+      h.c.resolve(JournalsIndex).register({ journalName: "weekly", anchor: weekAnchor, path });
+      await nextTick();
+
+      expect(slot.value).toHaveLength(1);
     });
 
     it("detaches subscriptions on unmount", async () => {

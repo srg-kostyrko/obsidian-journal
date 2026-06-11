@@ -86,11 +86,6 @@ export class DecorationEngine {
     return result;
   }
 
-  evaluateAnchor(period: Period, decorations: readonly DecorationBinding[]): JournalDecorationStyle[] {
-    const map = this.evaluateRange([period], decorations);
-    return map.get(period.anchor.toAnchor()) ?? [];
-  }
-
   #matches(
     decoration: JournalDecoration,
     period: Period,

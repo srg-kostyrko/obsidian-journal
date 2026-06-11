@@ -21,7 +21,7 @@ export function useCellDecorations(
   const notes = useService(NotesService);
 
   const cells = new Map<AnchorString, CellStyleRef>();
-  let periodsByAnchor = new Map<AnchorString, Period>();
+  let periodsByAnchor = new Map<AnchorString, Period[]>();
   let anchorsByPath = new Map<VaultPath, AnchorString>();
   let journalNamesInScope = new Set<string>();
 
@@ -57,7 +57,13 @@ export function useCellDecorations(
   function reseed(): void {
     const periods = readPeriods();
     rebuildScopeMaps(periods);
-    periodsByAnchor = new Map(periods.map((p) => [p.anchor.toAnchor(), p]));
+    periodsByAnchor = new Map<AnchorString, Period[]>();
+    for (const p of periods) {
+      const a = p.anchor.toAnchor();
+      const bucket = periodsByAnchor.get(a);
+      if (bucket) bucket.push(p);
+      else periodsByAnchor.set(a, [p]);
+    }
 
     const decorations = gatherDecorations();
     const initial = engine.evaluateRange(periods, decorations);
@@ -91,20 +97,20 @@ export function useCellDecorations(
     const offMeta = notes.events.on("metadata-changed", (path) => {
       const anchor = anchorsByPath.get(path);
       if (anchor === undefined) return;
-      const period = periodsByAnchor.get(anchor);
+      const periodsAtAnchor = periodsByAnchor.get(anchor);
       const slot = cells.get(anchor);
-      if (!period || !slot) return;
-      slot.value = engine.evaluateAnchor(period, gatherDecorations());
+      if (!periodsAtAnchor || !slot) return;
+      slot.value = engine.evaluateRange(periodsAtAnchor, gatherDecorations()).get(anchor) ?? [];
     });
     const offIndex = index.events.on("entryChanged", ({ entry, kind }) => {
       if (!journalNamesInScope.has(entry.journalName)) return;
       if (!periodsByAnchor.has(entry.anchor)) return;
       if (kind === "added") anchorsByPath.set(entry.path, entry.anchor);
       else anchorsByPath.delete(entry.path);
-      const period = periodsByAnchor.get(entry.anchor);
+      const periodsAtAnchor = periodsByAnchor.get(entry.anchor);
       const slot = cells.get(entry.anchor);
-      if (!period || !slot) return;
-      slot.value = engine.evaluateAnchor(period, gatherDecorations());
+      if (!periodsAtAnchor || !slot) return;
+      slot.value = engine.evaluateRange(periodsAtAnchor, gatherDecorations()).get(entry.anchor) ?? [];
     });
     onUnmounted(() => {
       offMeta();
