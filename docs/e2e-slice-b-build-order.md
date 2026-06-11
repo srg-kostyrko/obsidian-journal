@@ -113,11 +113,33 @@ implementation detail comes from `writing-plans` when each chunk is started.
 
 ### Chunk 4 — Command palette + bulk-add
 
-- **Support:** `support/commands.ts` — command-palette driver.
-- **Fixture +:** unconnected note, adjacent journal entries, editor-openable
-  note.
-- **Specs:** `commands.e2e.ts` (insert-date-link, connect-note, open-next/prev +
-  `check()` absence) + `bulk-add.e2e.ts` (vault-scan + 2-modal).
+- **Correction — bulk-add is not a palette command.** It is the header button on the
+  journal edit subpage (`JournalEditSubpage.vue`, `m.bulk_add_command()` = "Bulk add notes
+  to this journal"), so `bulk-add.e2e.ts` reaches `BulkAddFlow` through the chunk-3 settings
+  SPA and reuses the `support/settings.ts` dialog driver. Only the per-note commands are
+  palette-driven.
+- **Support:** `support/commands.ts` grows a palette/suggest driver (`openPalette` via the
+  built-in `command-palette:open`; `promptChoose`/`waitForPrompt`/`paletteLists` over the
+  shared `.prompt` DOM — `promptItem` chains `$(PROMPT).$(".suggestion-item*=…")` because a
+  `*=` text query can't be combined with a descendant prefix). `support/vault.ts` gains
+  `openNote`/`closeAllLeaves`/`waitForActiveNote`; `support/settings.ts` gains generic
+  `clickDialogButton`/`waitForDialogClosed`/`toggleModalCheckbox`.
+- **Fixture:** no `data.json` change — every precondition note (editor note, plain note,
+  unconnected note, three indexed adjacents, bulk-add source folders) is runtime-seeded per
+  spec (like `seedDecorationFixture`), so chunks 0–3 are untouched.
+- **Specs (8 `it`s, all green):** `commands.e2e.ts` — insert-date-link (palette flow-dispatch +
+  no-editor `check()` absence), connect-note, open-next/prev + off-journal `check()` absence.
+  `bulk-add.e2e.ts` — matching notes attach, an unparseable note is skipped. The per-note
+  commands are palette-driven precisely because the palette honors `check()`, which
+  `executeCommandById` (slices A/C/D) bypasses.
+- **Deliberate deviation — insert-date-link insertion not asserted end-to-end.** Driving a
+  choice in the plugin's own `SuggestModal` (the journal picker) is not a reliable
+  wdio-obsidian seam: typing filters it, but neither click, Enter, nor ArrowDown→Enter
+  propagates the choice into opening the follow-on date-picker modal (the choice resolves as a
+  silent cancel; Obsidian's command palette, a different `SuggestModal`, drives fine — that is
+  why connect-note/open-next/prev pass). The e2e therefore asserts the **real palette click
+  dispatches into `InsertJournalLinkFlow`** (the journal picker opens) and stops there; the
+  suggest→date-picker→cursor insertion is jsdom-covered by `insert-journal-link.flow.test.ts`.
 
 ### Chunk 5 — CI split
 
