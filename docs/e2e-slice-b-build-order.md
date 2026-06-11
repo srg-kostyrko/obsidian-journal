@@ -88,13 +88,28 @@ implementation detail comes from `writing-plans` when each chunk is started.
 
 ### Chunk 3 — Settings SPA (independent seam)
 
-- **Fixture +:** seeded commands + one custom view (beyond the auto-seeded
-  default).
-- **Support:** `support/settings.ts` — open settings tab via API, navigate the
-  subpage SPA, poll persisted `data.json`, read list rows.
-- **Specs:** `settings.e2e.ts` (journals/shelves/views/decorations/commands/
-  nav-row flows) + `settings-first-journal.e2e.ts` (boot `e2e-empty`).
-- **Proves:** subpage-nav SPA + async `saveData` persistence round-trip.
+- **Fixture +:** two empty shelves (`rename-me`/`delete-me`), `numbering` enabled on
+  `monthly` (one source, to surface the sequence-edit row), and a `commands` collection
+  (`cmd-edit`/`cmd-delete`). **No new journals** — a 6th would duplicate a write-type and
+  break chunk-0's single-journal-per-kind cell-click. Views are left to auto-seed (adding a
+  `views` key would suppress the default view and chunk-0's ribbon path).
+- **Support:** `support/settings.ts` (open/close the tab — close resets the SPA stack via
+  `hide()`; click-by-aria-label / by-text; expand collapsibles; navigate dashboard→shelf→
+  journal; drive plugin-dialog-scoped modals) + a widened `support/plugin-data.ts`
+  (`StoredSettings` views/commands shape + a generic `waitForSettings` poller).
+- **Specs:** `settings.e2e.ts` (single `e2e-journeys` boot; per-`it` distinct entity so the
+  accumulating `data.json` is order-independent; per-`it` open/close resets to the dashboard):
+  journals (add/rename/delete/edit-frontmatter/edit-sequence), shelves (rename/delete/place),
+  views (rename/delete/add-block/add-toolbar-item), decorations (edit/delete), commands
+  (edit/delete), nav-row (edit) — 17 `it`s. Plus `settings-first-journal.e2e.ts` (`e2e-empty`
+  boot, 1 `it`). Every `it` asserts both halves: persisted `data.json` (polled) + DOM.
+- **Surface note:** journals are all shelved in `e2e-journeys`, so the `JournalsDashboardBlock`
+  list is empty and journal subpages are reached through `Organize <shelf>` → `Edit <journal>`;
+  the block's `+ Create new journal` control still renders for the add flow. Two
+  load-bearing findings during build: (a) Obsidian's settings panel is itself a
+  `.modal-container`, so modal helpers scope to the non-settings dialog; (b) `AddJournalFlow`
+  pushes the new journal's edit subpage on success, so add-journal asserts the name on the
+  subpage, not the dashboard.
 
 ### Chunk 4 — Command palette + bulk-add
 
