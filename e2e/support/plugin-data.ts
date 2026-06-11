@@ -5,10 +5,40 @@ import { waitForState } from "./wait.js";
 
 const PLUGIN_DATA_PATH = ".obsidian/plugins/journals/data.json";
 
+export interface StoredJournal {
+  name?: string;
+  frontmatter?: { dateField?: string };
+  numbering?: { sources?: { frontmatterKey?: string }[] };
+  decorations?: { mode?: string }[];
+  navBlock?: { rows?: { template?: string }[] };
+}
+
+export interface StoredShelf {
+  name?: string;
+  journals?: string[];
+}
+
+export interface StoredViewBlock {
+  key?: string;
+  config?: { items?: unknown[] };
+}
+
+export interface StoredView {
+  id?: string;
+  name?: string;
+  blocks?: StoredViewBlock[];
+}
+
+export interface StoredCommand {
+  name?: string;
+}
+
 export interface StoredSettings {
   version?: number;
-  journals?: Record<string, { name?: string }>;
-  shelves?: Record<string, { name?: string }>;
+  journals?: Record<string, StoredJournal>;
+  shelves?: Record<string, StoredShelf>;
+  views?: Record<string, StoredView>;
+  commands?: Record<string, StoredCommand>;
 }
 
 // Reads the persisted data.json the plugin wrote back via saveData — the
@@ -53,4 +83,10 @@ export function waitForSettingsVersion(version: number): Promise<void> {
     (settings) => settings.version === version,
     `waited for ${PLUGIN_DATA_PATH} to migrate to version ${version}`,
   );
+}
+
+// Settings flows persist via debounced saveData, so the data.json change lands a tick
+// after the modal closes — poll the parsed object until the predicate holds.
+export function waitForSettings(predicate: (settings: StoredSettings) => boolean, timeoutMsg: string): Promise<void> {
+  return waitForState(readSettings, predicate, timeoutMsg);
 }
