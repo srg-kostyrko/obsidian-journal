@@ -97,7 +97,24 @@
             }
           ]
         }
-      ]
+      ],
+      "navBlock": {
+        "type": "create",
+        "decorateWholeBlock": true,
+        "rows": [
+          {
+            "template": "{{date}}",
+            "fontSize": 1,
+            "bold": false,
+            "italic": false,
+            "color": { "type": "transparent" },
+            "background": { "type": "transparent" },
+            "link": "self",
+            "journal": "",
+            "addDecorations": false
+          }
+        ]
+      }
     },
     "weekly": {
       "name": "weekly",
@@ -141,7 +158,24 @@
           "conditions": [{ "type": "all-tasks-completed" }],
           "styles": [{ "type": "corner", "placement": "top-left", "color": { "type": "custom", "color": "#ff0000" } }]
         }
-      ]
+      ],
+      "navBlock": {
+        "type": "existing",
+        "decorateWholeBlock": false,
+        "rows": [
+          {
+            "template": "{{date}}",
+            "fontSize": 1,
+            "bold": false,
+            "italic": false,
+            "color": { "type": "transparent" },
+            "background": { "type": "transparent" },
+            "link": "self",
+            "journal": "",
+            "addDecorations": false
+          }
+        ]
+      }
     },
     "quarterly": {
       "name": "quarterly",
