@@ -27,7 +27,7 @@ export async function promptType(text: string): Promise<void> {
 }
 
 export function promptItem(text: string): ReturnType<typeof $> {
-  return $(`${PROMPT} .suggestion-item*=${text}`);
+  return $(PROMPT).$(`.suggestion-item*=${text}`);
 }
 
 // Filter the active prompt to `text` and choose the matching suggestion. The palette lists a
