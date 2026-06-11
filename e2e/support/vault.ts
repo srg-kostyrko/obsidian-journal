@@ -95,3 +95,20 @@ export function waitForContent(
 ): Promise<void> {
   return waitForState(() => contentOf(path), predicate, timeoutMsg);
 }
+
+// Folder-aware create: the fixture carries no note folders and vault.create does not
+// create missing parents. Used to seed precondition notes with crafted frontmatter/body.
+export async function seedNote(path: string, content: string): Promise<void> {
+  await browser.executeObsidian(
+    async ({ app }, notePath, body) => {
+      const slash = notePath.lastIndexOf("/");
+      if (slash > 0) {
+        const dir = notePath.slice(0, slash);
+        if (!(await app.vault.adapter.exists(dir))) await app.vault.createFolder(dir);
+      }
+      await app.vault.create(notePath, body);
+    },
+    path,
+    content,
+  );
+}
