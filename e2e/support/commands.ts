@@ -22,11 +22,11 @@ export async function openPalette(): Promise<void> {
   await $(`${PROMPT} input`).waitForExist({ timeoutMsg: "command palette did not open" });
 }
 
-export async function promptType(text: string): Promise<void> {
+async function promptType(text: string): Promise<void> {
   await $(`${PROMPT} input`).setValue(text);
 }
 
-export function promptItem(text: string): ReturnType<typeof $> {
+function promptItem(text: string): ReturnType<typeof $> {
   return $(PROMPT).$(`.suggestion-item*=${text}`);
 }
 
@@ -47,7 +47,7 @@ export async function waitForPrompt(placeholder: string): Promise<void> {
   });
 }
 
-export async function closePalette(): Promise<void> {
+async function closePalette(): Promise<void> {
   await browser.keys("Escape");
   await $(PROMPT).waitForExist({ reverse: true, timeoutMsg: "command palette did not close" });
 }

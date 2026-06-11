@@ -90,11 +90,15 @@ export async function deleteInModal(): Promise<void> {
   await activeModal().waitForExist({ reverse: true, timeoutMsg: "modal did not close after Delete" });
 }
 
-// Click a button by text inside the active (non-settings) dialog. Unlike submitModal it does
-// not wait for the dialog to close — multi-step dialogs (bulk-add) swap content in place, and
-// closing callers wait explicitly via waitForDialogClosed.
+// Click a button by text inside the active (non-settings) dialog. It waits for the button to be
+// clickable first, so callers needn't pre-wait when a multi-step dialog (bulk-add) only renders
+// the next button after its async step (plan()) completes. Unlike submitModal it does not wait
+// for the dialog to close — multi-step dialogs swap content in place, and closing callers wait
+// explicitly via waitForDialogClosed.
 export async function clickDialogButton(label: string): Promise<void> {
-  await activeModal().$(`button=${label}`).click();
+  const button = activeModal().$(`button=${label}`);
+  await button.waitForClickable({ timeoutMsg: `dialog button "${label}" did not become clickable` });
+  await button.click();
 }
 
 export async function waitForDialogClosed(): Promise<void> {

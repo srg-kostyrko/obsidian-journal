@@ -77,9 +77,11 @@ describe("commands", () => {
       await clickDialogButton("Connect");
       await waitForDialogClosed();
 
+      // The date defaults to today's (run-time) anchor, so assert the journal tag and that the
+      // date field was written, without pinning the unknown date value.
       await waitForFrontmatter(
         "unconnected.md",
-        (fm) => fm.journal === "daily",
+        (fm) => fm.journal === "daily" && "journal-date" in fm,
         "connect-note did not attach journal=daily frontmatter",
       );
     });
@@ -101,6 +103,8 @@ describe("commands", () => {
     });
 
     it("hides navigation commands on a non-journal note", async () => {
+      // One behavior — off-journal navigation is unavailable — verified across both commands,
+      // which share the same #resolve(direction) guard, so neither can list independently.
       await openNote("plain-note.md");
       expect(await paletteLists(OPEN_NEXT)).toBe(false);
       expect(await paletteLists(OPEN_PREV)).toBe(false);

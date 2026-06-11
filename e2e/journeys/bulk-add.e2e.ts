@@ -1,4 +1,4 @@
-import { $, browser, expect } from "@wdio/globals";
+import { browser, expect } from "@wdio/globals";
 
 import {
   clickButton,
@@ -30,8 +30,8 @@ async function runBulkAdd(folder: string): Promise<void> {
   // turn it off so the run actually writes.
   await toggleModalCheckbox();
   await clickDialogButton("Continue");
-  // The process modal opens after plan() scans the vault; Run commits the connections.
-  await $("button=Run").waitForExist({ timeoutMsg: "bulk-add process modal did not open" });
+  // The process modal opens after plan() scans the vault; clickDialogButton("Run") waits for the
+  // Run button to become clickable, which is the signal the process modal has rendered.
   await clickDialogButton("Run");
 }
 
