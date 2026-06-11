@@ -7,6 +7,7 @@ import {
   HOME_BLOCK,
   HOME_FENCE,
   NAV_BLOCK,
+  NAV_CURRENT,
   NAV_FENCE,
   NAV_NEXT,
   NAV_VIEW,
@@ -18,6 +19,7 @@ import {
   plainNote,
   renderBlock,
 } from "./code-blocks.js";
+import { STYLE_HEX, expectTextHex } from "./decorations.js";
 
 // Slice B chunk 2 — the code-block mount seam. Our Vue surfaces mount via
 // VueCodeBlockHost (a reading-mode MarkdownRenderChild) instead of createApp on an
@@ -101,6 +103,26 @@ describe("code blocks", () => {
         await browser.waitUntil(async () => (await activeNotePath()) === monthPath(4), {
           timeoutMsg: `existing-type nav did not open the adjacent note ${monthPath(4)}`,
         });
+      });
+    });
+
+    describe("decorations", () => {
+      it("decorates the current nav block when its note matches a corner condition", async () => {
+        // The daily ctag→corner decoration matches the host's inline #ctag; decorateWholeBlock
+        // wraps the current period's block. The host basename is "deco-corner" (not -07), so the
+        // title condition can't also fire — only #ctag matches.
+        await renderBlock("nav/deco-corner.md", navHost("2026-06-08", "#ctag"), NAV_VIEW);
+        await $(NAV_CURRENT).$(".decoration-corner.top-left").waitForExist({
+          timeoutMsg: "nav whole-block corner decoration did not render on the matching host",
+        });
+      });
+
+      it("renders the nav decoration's text color through Obsidian's real CSS cascade", async () => {
+        // cspell:disable
+        // The daily scolor→color(#112233) decoration matches the host's inline #scolor.
+        await renderBlock("nav/deco-color.md", navHost("2026-06-09", "#scolor"), NAV_VIEW);
+        // cspell:enable
+        await expectTextHex($(NAV_CURRENT), STYLE_HEX.color);
       });
     });
   });
