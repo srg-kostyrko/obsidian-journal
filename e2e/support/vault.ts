@@ -112,3 +112,22 @@ export async function seedNote(path: string, content: string): Promise<void> {
     content,
   );
 }
+
+// Opens a note in a markdown editor leaf — the active-editor / active-file precondition for
+// the per-note command guards (insert-date-link, connect-note, open-next/prev).
+export async function openNote(path: string): Promise<void> {
+  await browser.executeObsidian(async ({ app, obsidian }, notePath) => {
+    const file = app.vault.getAbstractFileByPath(notePath);
+    if (file instanceof obsidian.TFile) await app.workspace.getLeaf(false).openFile(file);
+  }, path);
+}
+
+// Detaches every markdown editor leaf, leaving no active editor and no active file — the
+// negative precondition for the editor / active-note command guards.
+export async function closeAllLeaves(): Promise<void> {
+  await browser.executeObsidian(({ app }) => app.workspace.detachLeavesOfType("markdown"));
+}
+
+export function waitForActiveNote(path: string): Promise<void> {
+  return waitForState(activeNotePath, (active) => active === path, `waited for ${path} to become the active note`);
+}
