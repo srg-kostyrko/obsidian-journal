@@ -3,7 +3,12 @@ import { $ } from "@wdio/globals";
 import { waitForState } from "./wait.js";
 
 const RIBBON_OPEN_CALENDAR = '[aria-label="Open Calendar"]';
-const MONTH_VIEW = ".notes-month-view";
+// Re-clicking the ribbon leaves Obsidian's previous (deferred) calendar leaf in the
+// DOM, hidden via an inline `display: none` on its `.workspace-leaf`, so a bare
+// `.notes-month-view` resolves to that stale, zero-size copy. The live leaf is the
+// one whose `.workspace-leaf` is not inline-hidden — independent of focus, which
+// moves to the opened note (so `.mod-active` is wrong here).
+const MONTH_VIEW = '.workspace-leaf:not([style*="display: none"]) .notes-month-view';
 
 // The auto-seeded default view registers a left-ribbon button whose accessible
 // name is its command name ("Open Calendar"). Clicking it is the real click path
@@ -21,8 +26,10 @@ export function dayCell(anchor: string): ReturnType<typeof $> {
   return $(`${MONTH_VIEW} .notes-month-view__day[data-anchor="${anchor}"]`);
 }
 
-// Header (month/quarter/year) and week-number cells already carry production
-// data-testid hooks; exactly one of each renders in a month.
+// Header (month/quarter/year) and week-number cells carry production data-testid
+// hooks. The three header cells render once each; week-number-cell repeats per week
+// row, so $() resolves to the first week — fine while callers only need "a week
+// note was created", not a specific row.
 export function periodCell(
   testId: "header-month" | "header-quarter" | "header-year" | "week-number-cell",
 ): ReturnType<typeof $> {
