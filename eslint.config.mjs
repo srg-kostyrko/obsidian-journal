@@ -23,6 +23,7 @@ export default [
       "src/_old-code/**",
       "src/i18n/paraglide/**",
       "coverage/**",
+      ".obsidian-cache/**",
     ],
   },
   eslint.configs.recommended,
