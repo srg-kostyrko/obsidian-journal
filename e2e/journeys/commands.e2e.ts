@@ -3,7 +3,14 @@ import { $, browser, expect } from "@wdio/globals";
 import { openPalette, paletteLists, promptChoose, waitForPrompt } from "../support/commands.js";
 import { editorValue } from "../support/editor.js";
 import { clickDialogButton, selectModalSelect, waitForDialogClosed } from "../support/settings.js";
-import { closeAllLeaves, openNote, seedNote, waitForFrontmatter, waitForJournalFrontmatter } from "../support/vault.js";
+import {
+  closeAllLeaves,
+  openNote,
+  seedNote,
+  waitForActiveNote,
+  waitForFrontmatter,
+  waitForJournalFrontmatter,
+} from "../support/vault.js";
 
 import { dayAnchor } from "./decorations.js";
 
@@ -14,6 +21,8 @@ import { dayAnchor } from "./decorations.js";
 
 const INSERT = "Insert link to journal note";
 const CONNECT = "Connect note to a journal";
+const OPEN_NEXT = "Open next note";
+const OPEN_PREV = "Open previous note";
 
 // Far-future, fixed dates (the daily timeline is unbounded) — well clear of today's anchor
 // (which connect-note attaches) so their next/prev neighbors never shift.
@@ -84,6 +93,28 @@ describe("commands", () => {
         (fm) => fm.journal === "daily",
         "connect-note did not attach journal=daily frontmatter",
       );
+    });
+  });
+
+  describe("navigate adjacent entries", () => {
+    it("opens the next adjacent journal entry", async () => {
+      await openNote(NAV_MID);
+      await openPalette();
+      await promptChoose(OPEN_NEXT);
+      await waitForActiveNote(NAV_NEXT);
+    });
+
+    it("opens the previous adjacent journal entry", async () => {
+      await openNote(NAV_MID);
+      await openPalette();
+      await promptChoose(OPEN_PREV);
+      await waitForActiveNote(NAV_PREV);
+    });
+
+    it("hides navigation commands on a non-journal note", async () => {
+      await openNote("plain-note.md");
+      expect(await paletteLists(OPEN_NEXT)).toBe(false);
+      expect(await paletteLists(OPEN_PREV)).toBe(false);
     });
   });
 });
