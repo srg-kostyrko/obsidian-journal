@@ -151,7 +151,14 @@
         "addStartDate": false,
         "addEndDate": false
       },
-      "numbering": { "enabled": false, "anchorDate": "", "allowBefore": false, "sources": [] },
+      "numbering": {
+        "enabled": true,
+        "anchorDate": "2026-01-01",
+        "allowBefore": false,
+        "sources": [
+          { "variable": "index", "frontmatterKey": "journal-index", "anchorValue": 1, "reset": { "kind": "never" } }
+        ]
+      },
       "decorations": [
         {
           "mode": "and",
@@ -224,6 +231,28 @@
   },
   "shelves": {
     "core": { "name": "core", "journals": ["daily", "weekly"] },
-    "extra": { "name": "extra", "journals": ["monthly", "quarterly", "yearly"] }
+    "extra": { "name": "extra", "journals": ["monthly", "quarterly", "yearly"] },
+    "rename-me": { "name": "rename-me", "journals": [] },
+    "delete-me": { "name": "delete-me", "journals": [] }
+  },
+  "commands": {
+    "cmd-edit": {
+      "name": "Editable command",
+      "icon": "calendar-days",
+      "showInRibbon": false,
+      "openMode": "active",
+      "target": { "kind": "all", "writeType": "day" },
+      "type": "same",
+      "context": "today"
+    },
+    "cmd-delete": {
+      "name": "Disposable command",
+      "icon": "calendar-days",
+      "showInRibbon": false,
+      "openMode": "active",
+      "target": { "kind": "all", "writeType": "day" },
+      "type": "same",
+      "context": "today"
+    }
   }
 }
