@@ -27,6 +27,7 @@ const isToday = computed(() => rawPeriod.value.contains(CalendarDate.today()));
     class="notes-calendar-cell"
     :data-active="isActive || null"
     :data-inactive="isInactive || null"
+    :data-anchor="rawPeriod.start.toAnchor()"
     :data-today="isToday || null"
     @click="cell.open(rawPeriod, $event)"
     @contextmenu.prevent="cell.openContextMenu(rawPeriod, $event)"
