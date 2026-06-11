@@ -88,7 +88,7 @@ describe("NotesCalendarCell", () => {
       expect(cell?.dataset.inactive).toBe("true");
     });
 
-    it("renders data-anchor with the period's start anchor", () => {
+    it("renders data-anchor with the period's anchor", () => {
       const { container } = mount({ period: may25, cell: stubApi() });
       const cell = container.querySelector<HTMLElement>(".notes-calendar-cell");
       expect(cell?.dataset.anchor).toBe("2026-05-25");
