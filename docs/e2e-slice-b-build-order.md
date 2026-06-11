@@ -70,17 +70,21 @@ implementation detail comes from `writing-plans` when each chunk is started.
 
 ### Chunk 2 — Code-block mount context
 
-- **Support:** `support/code-blocks.ts` — reading-mode render, locate block,
-  assert not the `renderError` fallback.
+- **Support:** `journeys/code-blocks.ts` (reading-mode `openInReadingMode`, fenced-content
+  builders, block-root selectors scoped to the visible leaf, the
+  `timelineCalendar = calendarSurface(TIMELINE_BLOCK)` surface). Chunk 1's decoration
+  matrix is extracted into `assertDecorationMatrix(surface)` in `journeys/decorations.ts`
+  and the view-leaf spec is retrofitted onto it.
 - **Fixture +:** notes embedding `calendar-nav` / `journals-home` /
   `calendar-timeline`; plus the two `navBlock.type` variants (one `existing`, one
   create) on the nav-bearing journals — this is the first chunk that renders a nav
   block.
-- **Specs:** `code-blocks.e2e.ts` — fence renders (3), nav click (2),
-  condition+style decorations on `calendar-nav` (12), mode-derivation (2),
-  derived shelf-scope (1).
-- Reuses chunk 1's decoration helper. Decorations/clicks are **not** repeated on
-  `calendar-timeline` (identical `VueCodeBlockHost` mount).
+- **Specs:** `code-blocks.e2e.ts` — fence renders (4, incl. the malformed-fence
+  `.code-block-error` case), nav navigation (4: `navBlock.type` × create/existing + day/
+  month derivation), nav decorations (2), and the full timeline matrix (13).
+- **Surface correction:** the code-block grid is `calendar-timeline`, not `calendar-nav`
+  (the journeys-design had these inverted). `calendar-nav` is text rows + `CellDecoration`
+  wrappers; it carries its own nav/decoration tests, not the grid matrix.
 
 ### Chunk 3 — Settings SPA (independent seam)
 

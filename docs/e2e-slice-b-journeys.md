@@ -33,10 +33,14 @@ only **how Vue is mounted**:
    markdown post-processor (`code-block-service.ts`). **`calendar-nav` and
    `calendar-timeline` share this exact path.**
 
-Therefore decoration rendering and cell-click dispatch are tested **once per
-mount context** (view leaf, and `calendar-nav` for the code-block context) — not
-once per surface. Re-running them on `calendar-timeline` would re-test the
-identical `VueCodeBlockHost` mount and is forbidden by "don't test the wiring."
+Therefore decoration rendering is tested **once per mount context**. The code-block
+mount's `NotesCalendarCell` grid is **`calendar-timeline` (`mode: month`)** — it embeds
+the same `NotesMonthView` as the view leaf — so the full decoration matrix re-runs there
+(re-rooted via `calendarSurface`). `calendar-nav` is a **different** surface: it renders
+text rows (`NavBlock`/`NavBlockRow`) with `CellDecoration` wrappers and a write-type-
+filtered scope, so it gets its **own** targeted tests (fence render, `navBlock.type`
+navigation, `periodForJournal` derivation, and the whole-block decoration path) rather
+than the grid matrix.
 
 ## Fixtures (2)
 
@@ -116,17 +120,21 @@ All under `e2e/journeys/`, suite `journeys`. ≈60–65 `it`s, ~6 boots.
 - **Fence renders** (3): `journals-home`, `calendar-nav`, `calendar-timeline`
   each render real content **and not** the `renderError` fallback (per-processor
   registration seam — the only thing that differs between nav and timeline).
-- **Nav click** (2) on `calendar-nav` only: existing-note cell → opens (no
-  create); empty cell → creates+opens+active. Proves clicks inside a
-  `MarkdownRenderChild` reach `OpenDateFlow`. The existing-vs-create choice for
-  adjacent nav is the journal's `navBlock.type`.
-- **Condition decorations** (6) + **style decorations** (6) on `calendar-nav` —
-  the code-block mount context. **Not** repeated on timeline.
-- **Mode-derivation** (2): `calendar-nav` in a daily note shows day-level nav; in
-  a monthly note shows month-level (proves the host-connection read against the
-  real index). Full per-type derivation is pure `match(write.type)` — unit-tested.
-- **Derived shelf-scope** (1): nav in a note belonging to journal X (shelf A)
-  scopes its calendar to shelf A, excluding Y.
+- **Nav navigation** (4) on `calendar-nav`: `create`-type offers the next period with no
+  neighbour and **creates+opens** the next-day note on click (day-period derivation);
+  `existing`-type **hides** the next button with no neighbour and **navigates** to the
+  adjacent existing month note on click (month-period derivation). The two
+  `navBlock.type` branches are the discriminator.
+- **Nav decorations** (2) on `calendar-nav`: a `decorateWholeBlock` host matching a corner
+  condition renders `.nav-view > .nav-block .decoration-corner`; a color condition's
+  computed hex survives the real cascade. (The nav decoration path is `CellDecoration` on
+  text rows — distinct from the grid; it is **not** the 12-matrix.)
+- **Timeline decorations** (13) on `calendar-timeline` (`mode: month`): the full 6
+  condition + 6 style + 1 control matrix, re-run on the code-block grid via the shared
+  `assertDecorationMatrix` runner.
+- **Out of scope for nav:** cross-journal shelf re-scoping (a grid concept; covered by the
+  view-leaf shelf-scope test and the timeline matrix). A nav renders only its host
+  journal's own prev/current/next periods.
 
 ### `settings.e2e.ts` (boot `e2e-journeys`, single boot)
 
@@ -289,8 +297,8 @@ per-PR signal on the core flows.
 - **Pure-date decoration conditions** (`date`, `weekday`, `offset`) — computed
   from the cell's period, no Obsidian dependency; they'd pass against the mock.
   Unit-tested.
-- **`calendar-timeline` decorations/clicks** — identical `VueCodeBlockHost` mount
-  - `NotesCalendarCell` as `calendar-nav`; covered there.
+- **`calendar-nav` grid decorations/clicks** — `calendar-nav` is text rows, not a
+  `NotesCalendarCell` grid; the grid matrix runs on `calendar-timeline`.
 - **The three nav-key aliases** (`journal-nav`/`calendar-nav`/`interval-nav`) —
   one component, one registration loop; testing all three re-tests the wiring.
 - **Per-style element/inline-style rendering** — already in `CellDecoration.test.ts`
