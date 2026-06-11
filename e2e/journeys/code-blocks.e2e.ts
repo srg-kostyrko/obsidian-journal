@@ -59,6 +59,29 @@ describe("code blocks", () => {
         await renderBlock("nav/render.md", navHost("2026-06-04", ""), NAV_VIEW);
         await expect($(`${NAV_BLOCK} ${CODE_BLOCK_ERROR}`)).not.toExist();
       });
+
+      it("renders the host period's date as visible text in the current nav block", async () => {
+        await renderBlock("nav/render-text.md", navHost("2026-06-05", ""), NAV_VIEW);
+        const row = $(NAV_CURRENT).$(".nav-row");
+        await row.waitForExist({ timeoutMsg: "nav row did not render" });
+        // wdio getText() uses innerText (visibility-aware); read textContent via execute
+        // so the assertion is layout-independent and not gated on CSS rendering.
+        const rowSelector = `${NAV_CURRENT} .nav-row`;
+        await browser.waitUntil(
+          async () => {
+            const text = await browser.execute(
+              (sel: string) => document.querySelector(sel)?.textContent ?? "",
+              rowSelector,
+            );
+            return text.includes("2026-06-05");
+          },
+          { timeoutMsg: "nav row did not render the host date '2026-06-05'" },
+        );
+        const color = await row.getCSSProperty("color");
+        // Transparent ink (the bug) has alpha 0; any visible theme color has alpha 1.
+        // Don't assert a specific hex — theme vars resolve differently across the matrix.
+        expect((color.parsed as { alpha?: number }).alpha).toBeGreaterThan(0);
+      });
     });
 
     describe("navigation", () => {
