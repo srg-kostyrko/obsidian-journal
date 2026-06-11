@@ -89,3 +89,20 @@ export async function deleteInModal(): Promise<void> {
   await activeModal().$("button=Delete").click();
   await activeModal().waitForExist({ reverse: true, timeoutMsg: "modal did not close after Delete" });
 }
+
+// Click a button by text inside the active (non-settings) dialog. Unlike submitModal it does
+// not wait for the dialog to close — multi-step dialogs (bulk-add) swap content in place, and
+// closing callers wait explicitly via waitForDialogClosed.
+export async function clickDialogButton(label: string): Promise<void> {
+  await activeModal().$(`button=${label}`).click();
+}
+
+export async function waitForDialogClosed(): Promise<void> {
+  await activeModal().waitForExist({ reverse: true, timeoutMsg: "dialog did not close" });
+}
+
+// Click the dialog's sole checkbox toggle (UiToggle renders a .checkbox-container). Used by
+// bulk-add to turn off the default dry-run; valid only when the dialog has exactly one toggle.
+export async function toggleModalCheckbox(): Promise<void> {
+  await activeModal().$(".checkbox-container").click();
+}
