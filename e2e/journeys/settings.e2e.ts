@@ -91,4 +91,38 @@ describe("settings", () => {
       );
     });
   });
+
+  describe("shelves", () => {
+    it("renames a shelf and re-keys it in data.json", async () => {
+      await openShelfSubpage("rename-me");
+      await clickIcon("Rename shelf");
+      await setModalText("rename-done");
+      await submitModal();
+
+      await waitForSettings(
+        (s) => "rename-done" in (s.shelves ?? {}) && !("rename-me" in (s.shelves ?? {})),
+        "shelf rename did not re-key data.json",
+      );
+    });
+
+    it("deletes a shelf and removes it from data.json", async () => {
+      await clickIcon("Delete delete-me");
+      await deleteInModal();
+
+      await waitForSettings((s) => !("delete-me" in (s.shelves ?? {})), "deleted shelf still present in data.json");
+    });
+
+    it("places a journal onto a shelf and records it on the target", async () => {
+      await openJournalSubpage("extra", "yearly");
+      await expandSection("Shelf");
+      await clickIcon("Place on a shelf");
+      await selectModalSelect("core");
+      await submitModal();
+
+      await waitForSettings(
+        (s) => (s.shelves?.core?.journals ?? []).includes("yearly"),
+        "placed journal not recorded on the target shelf",
+      );
+    });
+  });
 });
