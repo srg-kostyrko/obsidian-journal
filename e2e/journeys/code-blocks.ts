@@ -73,3 +73,15 @@ export async function renderBlock(path: string, content: string, blockRoot: stri
   await openInReadingMode(path);
   await $(blockRoot).waitForExist({ timeoutMsg: `code block did not render: ${blockRoot} (${path})` });
 }
+
+// A real `$(NAV_NEXT).click()` fails for the nav-next icon button: WebDriver's pointer
+// click can't reach it in the reading-mode nav layout (the Electron harness lacks the
+// window/rect command scrollIntoView relies on). Every other e2e click uses a real
+// WebDriver click — this button is the lone exception. A native DOM click still fires the
+// Vue @click handler, so OpenDateFlow is genuinely driven; only the pointer hit-test is
+// bypassed.
+export async function clickNavNext(): Promise<void> {
+  await browser.execute((sel: string) => {
+    document.querySelector<HTMLElement>(sel)?.click();
+  }, NAV_NEXT);
+}

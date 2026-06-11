@@ -149,7 +149,7 @@ export function expectBackgroundCleared(cell: CellLocator, hex: string): Promise
 
 // The decoration matrix is mount-context-agnostic: the view leaf and the
 // calendar-timeline code block render the same NotesMonthView/NotesCalendarCell grid,
-// so the same 13 assertions run against either surface (chunk 1 = view leaf, chunk 2 =
+// so the same assertions run against either surface (chunk 1 = view leaf, chunk 2 =
 // timeline). Shelf-scope stays out — it drives the view-leaf toolbar, which the
 // timeline has no equivalent of.
 export function assertDecorationMatrix(surface: CalendarSurface): void {

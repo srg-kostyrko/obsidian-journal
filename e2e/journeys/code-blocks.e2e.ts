@@ -14,6 +14,7 @@ import {
   TIMELINE_BAD_FENCE,
   TIMELINE_BLOCK,
   TIMELINE_FENCE,
+  clickNavNext,
   hostNote,
   openInReadingMode,
   plainNote,
@@ -47,9 +48,6 @@ function monthPath(offset: number): string {
   return `month/${monthAnchor(offset).slice(0, 7)}.md`;
 }
 
-// A bare nav fence as a note body (monthly hosts carry no inline tags/tasks).
-const NAV_FENCE_BODY = NAV_FENCE;
-
 describe("code blocks", () => {
   describe("navigation code block", () => {
     before(async () => {
@@ -73,17 +71,14 @@ describe("code blocks", () => {
 
       it("creates and opens the next-day note when a create-type nav's next is clicked", async () => {
         await renderBlock("nav/create-click.md", navHost("2026-06-14", ""), NAV_VIEW);
-        await browser.execute((sel: string) => {
-          const el = document.querySelector<HTMLElement>(sel);
-          el?.click();
-        }, NAV_NEXT);
+        await clickNavNext();
 
         await waitForJournalFrontmatter("day/2026-06-15.md", { journal: "daily", date: "2026-06-15" });
         expect(await activeNotePath()).toBe("day/2026-06-15.md");
       });
 
       it("hides the next button on an existing-type nav when no neighbor note exists", async () => {
-        await seedNote(monthPath(0), hostNote("monthly", monthAnchor(0), NAV_FENCE_BODY));
+        await seedNote(monthPath(0), hostNote("monthly", monthAnchor(0), NAV_FENCE));
         await openInReadingMode(monthPath(0));
         await $(NAV_VIEW).waitForExist({ timeoutMsg: "monthly nav view did not render" });
         await expect($(NAV_NEXT)).not.toExist();
@@ -91,15 +86,12 @@ describe("code blocks", () => {
 
       it("navigates to the adjacent existing note when an existing-type nav's next is clicked", async () => {
         await seedNote(monthPath(4), hostNote("monthly", monthAnchor(4), "neighbor"));
-        await seedNote(monthPath(3), hostNote("monthly", monthAnchor(3), NAV_FENCE_BODY));
+        await seedNote(monthPath(3), hostNote("monthly", monthAnchor(3), NAV_FENCE));
         await openInReadingMode(monthPath(3));
         await $(NAV_NEXT).waitForExist({
           timeoutMsg: "existing-type nav did not offer a next button with a neighbor seeded",
         });
-        await browser.execute((sel: string) => {
-          const el = document.querySelector<HTMLElement>(sel);
-          el?.click();
-        }, NAV_NEXT);
+        await clickNavNext();
 
         await browser.waitUntil(async () => (await activeNotePath()) === monthPath(4), {
           timeoutMsg: `existing-type nav did not open the adjacent note ${monthPath(4)}`,
