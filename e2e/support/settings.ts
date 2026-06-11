@@ -16,7 +16,7 @@ function activeModal(): ReturnType<typeof $> {
 // The dashboard wrapper renders only when the SPA stack is empty (current === null);
 // entering a subpage replaces it with the subpage component, so its presence is the
 // "am I on the dashboard?" signal.
-export const DASHBOARD = ".journal-settings-dashboard";
+const DASHBOARD = ".journal-settings-dashboard";
 
 // Open the plugin's settings tab. Obsidian calls PluginSettingTab.display(), which mounts
 // the SettingsDashboard Vue app. open()/openTabById are runtime-only (cast like commands.ts).
@@ -82,10 +82,10 @@ export async function selectModalSelect(value: string): Promise<void> {
 
 export async function submitModal(): Promise<void> {
   await activeModal().$("button=Save").click();
-  await $(DIALOG).waitForExist({ reverse: true, timeoutMsg: "modal did not close after Save" });
+  await activeModal().waitForExist({ reverse: true, timeoutMsg: "modal did not close after Save" });
 }
 
 export async function deleteInModal(): Promise<void> {
   await activeModal().$("button=Delete").click();
-  await $(DIALOG).waitForExist({ reverse: true, timeoutMsg: "modal did not close after Delete" });
+  await activeModal().waitForExist({ reverse: true, timeoutMsg: "modal did not close after Delete" });
 }

@@ -24,7 +24,6 @@ export interface StoredViewBlock {
 }
 
 export interface StoredView {
-  id?: string;
   name?: string;
   blocks?: StoredViewBlock[];
 }
