@@ -1,4 +1,4 @@
-import { browser, expect } from "@wdio/globals";
+import { $, browser, expect } from "@wdio/globals";
 
 import {
   activeNotePath,
@@ -11,6 +11,7 @@ import {
   DECO_DAY,
   STYLE_HEX,
   dayAnchor,
+  expectBackgroundCleared,
   expectBackgroundHex,
   expectBorderTop,
   expectTextHex,
@@ -160,6 +161,26 @@ describe("calendar view", () => {
         await calendar.cell(dayAnchor(DECO_DAY.icon)).$(".icon-decoration").waitForExist({
           timeoutMsg: "icon decoration did not render on the matching day cell",
         });
+      });
+    });
+
+    describe("interactive shelf scope", () => {
+      it("re-scopes decorations when a shelf is picked from the toolbar menu", async () => {
+        // Precondition: with the default (null) shelf, both the out-of-scope (yearly,
+        // shelf "extra") and the in-scope (daily, shelf "core") decorations render.
+        await expectBackgroundHex(calendar.periodCell("header-year"), STYLE_HEX.background);
+        await expectTextHex(calendar.cell(dayAnchor(DECO_DAY.color)), STYLE_HEX.color);
+
+        // Drive the real toolbar shelf menu — the click dispatch through Obsidian's own
+        // Menu is slice B's seam. Obsidian's Menu exposes no ARIA roles, so the text-
+        // pinned .menu-item-title is the only stable handle on chrome we don't own.
+        await $("button*=All journals").click();
+        const menu = $(".menu");
+        await menu.waitForExist({ timeoutMsg: "shelf selector menu did not open" });
+        await menu.$(".menu-item-title=core").click();
+
+        await expectBackgroundCleared(calendar.periodCell("header-year"), STYLE_HEX.background);
+        await expectTextHex(calendar.cell(dayAnchor(DECO_DAY.color)), STYLE_HEX.color);
       });
     });
   });
