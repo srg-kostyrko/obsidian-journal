@@ -1,7 +1,17 @@
 import { $, browser } from "@wdio/globals";
 
 const PLUGIN_ID = "journals";
-const MODAL = ".modal-container";
+
+// The settings panel is itself an Obsidian modal (a .modal-container wrapping .mod-settings),
+// so a plugin dialog opened on top is a SECOND .modal-container. Scope every modal interaction
+// to the dialog container — the one NOT wrapping the settings panel — or `$(".modal-container")`
+// would resolve to the settings panel behind it, whose Save/Delete buttons don't exist and
+// whose container never closes.
+const DIALOG = ".modal-container:not(:has(.mod-settings))";
+
+function activeModal(): ReturnType<typeof $> {
+  return $(DIALOG);
+}
 
 // The dashboard wrapper renders only when the SPA stack is empty (current === null);
 // entering a subpage replaces it with the subpage component, so its presence is the
@@ -62,20 +72,20 @@ export async function openJournalSubpage(shelf: string, journal: string): Promis
 
 // Set the first text input in the open modal (the primary field — name/template/new-name).
 export async function setModalText(value: string): Promise<void> {
-  await $(`${MODAL} input[type="text"]`).setValue(value);
+  await activeModal().$('input[type="text"]').setValue(value);
 }
 
 // Pick an <option> by its value in the modal's first <select> (journal type, shelf, ...).
 export async function selectModalSelect(value: string): Promise<void> {
-  await $(`${MODAL} select`).selectByAttribute("value", value);
+  await activeModal().$("select").selectByAttribute("value", value);
 }
 
 export async function submitModal(): Promise<void> {
-  await $(MODAL).$("button=Save").click();
-  await $(MODAL).waitForExist({ reverse: true, timeoutMsg: "modal did not close after Save" });
+  await activeModal().$("button=Save").click();
+  await $(DIALOG).waitForExist({ reverse: true, timeoutMsg: "modal did not close after Save" });
 }
 
 export async function deleteInModal(): Promise<void> {
-  await $(MODAL).$("button=Delete").click();
-  await $(MODAL).waitForExist({ reverse: true, timeoutMsg: "modal did not close after Delete" });
+  await activeModal().$("button=Delete").click();
+  await $(DIALOG).waitForExist({ reverse: true, timeoutMsg: "modal did not close after Delete" });
 }
