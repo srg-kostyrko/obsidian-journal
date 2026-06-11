@@ -1,11 +1,13 @@
 import { $, browser, expect } from "@wdio/globals";
 
-import { waitForSettings } from "../support/plugin-data.js";
+import { getSettings, waitForSettings } from "../support/plugin-data.js";
 import {
+  clickButton,
   clickIcon,
   closeSettings,
   deleteInModal,
   expandSection,
+  goBack,
   openJournalSubpage,
   openSettings,
   openShelfSubpage,
@@ -13,6 +15,14 @@ import {
   setModalText,
   submitModal,
 } from "../support/settings.js";
+
+import type { StoredView } from "../support/plugin-data.js";
+
+// Views are UUID-keyed; the specs know views by name, so resolve the id from the persisted
+// settings before/after a flow.
+function viewIdByName(views: Record<string, { name?: string }> | undefined, name: string): string | undefined {
+  return Object.keys(views ?? {}).find((id) => views?.[id]?.name === name);
+}
 
 // Slice B chunk 3 — the settings subpage-nav SPA. The PluginSettingTab mounts a Vue app
 // whose navigation is a SettingsUiService push/pop stack; no __mocks__/obsidian.ts setting
@@ -123,6 +133,68 @@ describe("settings", () => {
         (s) => (s.shelves?.core?.journals ?? []).includes("yearly"),
         "placed journal not recorded on the target shelf",
       );
+    });
+  });
+
+  describe("views", () => {
+    it("renames a view and persists the new name", async () => {
+      await clickIcon("Add a view");
+      await setModalText("rename-view-src");
+      await submitModal();
+      // Add auto-pushes the new view's subpage; rename from its header.
+      await clickIcon("Rename view");
+      await setModalText("rename-view-done");
+      await submitModal();
+
+      await waitForSettings(
+        (s) => viewIdByName(s.views, "rename-view-done") !== undefined,
+        "view rename not persisted",
+      );
+    });
+
+    it("deletes a view and removes it from data.json", async () => {
+      await clickIcon("Add a view");
+      await setModalText("delete-view-src");
+      await submitModal();
+      await goBack();
+      await clickIcon("Delete delete-view-src");
+      await deleteInModal();
+
+      await waitForSettings(
+        (s) => viewIdByName(s.views, "delete-view-src") === undefined,
+        "deleted view still present in data.json",
+      );
+    });
+
+    it("adds a block to the default calendar view", async () => {
+      const initial = await getSettings();
+      const calId = viewIdByName(initial.views, "Calendar");
+      const before = initial.views?.[calId ?? ""]?.blocks?.length ?? 0;
+
+      await clickIcon("Open Calendar");
+      await clickButton("Add block");
+      await clickButton("Week calendar");
+
+      await waitForSettings(
+        (s) => (s.views?.[calId ?? ""]?.blocks?.length ?? 0) === before + 1,
+        "added block not persisted to the default view",
+      );
+    });
+
+    it("adds a toolbar item to the default calendar view's toolbar block", async () => {
+      const initial = await getSettings();
+      const calId = viewIdByName(initial.views, "Calendar") ?? "";
+      const itemCount = (views: Record<string, StoredView> | undefined): number => {
+        const tb = (views?.[calId]?.blocks ?? []).find((b) => b.key === "toolbar");
+        return tb?.config?.items?.length ?? 0;
+      };
+      const before = itemCount(initial.views);
+
+      await clickIcon("Open Calendar");
+      await clickButton("Add toolbar item");
+      await clickButton("Period buttons");
+
+      await waitForSettings((s) => itemCount(s.views) === before + 1, "added toolbar item not persisted");
     });
   });
 });
