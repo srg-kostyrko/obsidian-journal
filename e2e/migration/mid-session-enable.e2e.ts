@@ -1,7 +1,9 @@
 import { browser } from "@wdio/globals";
 import { obsidianPage } from "wdio-obsidian-service";
 
-import { waitForMigratedNote, waitForSettingsVersion } from "../support/migration.js";
+import { waitForSettingsVersion } from "../support/plugin-data.js";
+
+import { waitForMigratedNote } from "./helpers.js";
 
 // Slice C — the migration seam, mid-session. The community-store upgrade path does
 // not restart Obsidian: it disables the old plugin and enables the new one while the

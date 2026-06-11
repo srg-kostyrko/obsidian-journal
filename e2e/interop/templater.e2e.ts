@@ -1,14 +1,8 @@
 import { browser, expect } from "@wdio/globals";
 
-import {
-  contentOf,
-  cursorOf,
-  editorValue,
-  runCommand,
-  waitForActiveNoteIn,
-  waitForContent,
-  waitForCursorLine,
-} from "../support/templater.js";
+import { runCommand } from "../support/commands.js";
+import { cursorOf, editorValue, waitForCursorLine } from "../support/editor.js";
+import { contentOf, waitForActiveNoteIn, waitForContent } from "../support/vault.js";
 
 // Slice D — the Templater interop seam. The `e2e-templater` fixture commits day
 // journals whose templates carry Templater `<% %>` syntax; booting the real

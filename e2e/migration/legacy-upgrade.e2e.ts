@@ -5,11 +5,11 @@ import {
   journalKeysOf,
   journalNamesOf,
   shelfKeysOf,
-  waitForMigratedIntervalNote,
-  waitForMigratedNote,
   waitForSettingsVersion,
-} from "../support/migration.js";
+} from "../support/plugin-data.js";
 import { frontmatterOf } from "../support/vault.js";
+
+import { waitForMigratedIntervalNote, waitForMigratedNote } from "./helpers.js";
 
 const calendarNotes = [
   { section: "day", journal: "My Journal Day", path: "archive/day-note.md", date: "2024-03-10" },
