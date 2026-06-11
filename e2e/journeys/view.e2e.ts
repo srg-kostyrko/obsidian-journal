@@ -6,7 +6,8 @@ import {
   waitForFrontmatter,
   waitForJournalFrontmatter,
 } from "../support/vault.js";
-import { dayCell, openCalendarView, periodCell, waitForActiveCell } from "../support/view.js";
+
+import { calendar, openCalendarView } from "./view.js";
 
 // Slice B chunk 0 — the view-leaf render + real ribbon-click seam. Our Vue calendar
 // mounts in a real Obsidian leaf, a real ribbon click opens it, and a real cell
@@ -32,16 +33,16 @@ describe("calendar view journeys", () => {
     const path = `day/${anchor}.md`;
 
     await openCalendarView();
-    await dayCell(anchor).click();
+    await calendar.cell(anchor).click();
 
     await waitForJournalFrontmatter(path, { journal: "daily", date: anchor });
-    await waitForActiveCell(anchor);
+    await calendar.waitForActive(anchor);
     expect(await activeNotePath()).toBe(path);
   });
 
   it("creates and opens a week note when the week-number cell is clicked", async () => {
     await openCalendarView();
-    await periodCell("week-number-cell").click();
+    await calendar.periodCell("week-number-cell").click();
 
     const path = await waitForActiveNoteIn("week");
     await waitForFrontmatter(path, (fm) => fm.journal === "weekly", `waited for ${path} to attach journal=weekly`);
@@ -49,7 +50,7 @@ describe("calendar view journeys", () => {
 
   it("creates and opens a month note when the month header cell is clicked", async () => {
     await openCalendarView();
-    await periodCell("header-month").click();
+    await calendar.periodCell("header-month").click();
 
     const path = await waitForActiveNoteIn("month");
     await waitForFrontmatter(path, (fm) => fm.journal === "monthly", `waited for ${path} to attach journal=monthly`);
@@ -57,7 +58,7 @@ describe("calendar view journeys", () => {
 
   it("creates and opens a quarter note when the quarter header cell is clicked", async () => {
     await openCalendarView();
-    await periodCell("header-quarter").click();
+    await calendar.periodCell("header-quarter").click();
 
     const path = await waitForActiveNoteIn("quarter");
     await waitForFrontmatter(
@@ -69,7 +70,7 @@ describe("calendar view journeys", () => {
 
   it("creates and opens a year note when the year header cell is clicked", async () => {
     await openCalendarView();
-    await periodCell("header-year").click();
+    await calendar.periodCell("header-year").click();
 
     const path = await waitForActiveNoteIn("year");
     await waitForFrontmatter(path, (fm) => fm.journal === "yearly", `waited for ${path} to attach journal=yearly`);
