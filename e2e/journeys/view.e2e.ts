@@ -7,7 +7,15 @@ import {
   waitForJournalFrontmatter,
 } from "../support/vault.js";
 
-import { DECO_DAY, dayAnchor, seedDecorationFixture } from "./decorations.js";
+import {
+  DECO_DAY,
+  STYLE_HEX,
+  dayAnchor,
+  expectBackgroundHex,
+  expectBorderTop,
+  expectTextHex,
+  seedDecorationFixture,
+} from "./decorations.js";
 import { calendar, openCalendarView } from "./view.js";
 
 // Slice B chunk 0 — the view-leaf render + real ribbon-click seam. Our Vue calendar
@@ -120,6 +128,38 @@ describe("calendar view", () => {
           timeoutMsg: "decoration engine never ran (title cell undecorated before the control assertion)",
         });
         await expect(calendar.cell(dayAnchor(DECO_DAY.control)).$(".decoration-corner")).not.toExist();
+      });
+    });
+
+    describe("style decorations", () => {
+      it("renders the background color through Obsidian's real CSS cascade", async () => {
+        await expectBackgroundHex(calendar.periodCell("header-year"), STYLE_HEX.background);
+      });
+
+      it("renders the text color through Obsidian's real CSS cascade", async () => {
+        await expectTextHex(calendar.cell(dayAnchor(DECO_DAY.color)), STYLE_HEX.color);
+      });
+
+      it("renders the border through Obsidian's real CSS cascade", async () => {
+        await expectBorderTop(calendar.cell(dayAnchor(DECO_DAY.border)), "3px", STYLE_HEX.border);
+      });
+
+      it("renders a shape decoration element", async () => {
+        await calendar.cell(dayAnchor(DECO_DAY.shape)).$(".shape-decoration.shape-circle").waitForExist({
+          timeoutMsg: "shape decoration did not render on the matching day cell",
+        });
+      });
+
+      it("renders a corner decoration element at the configured placement", async () => {
+        await calendar.cell(dayAnchor(DECO_DAY.corner)).$(".decoration-corner.bottom-right").waitForExist({
+          timeoutMsg: "corner-style decoration did not render at bottom-right",
+        });
+      });
+
+      it("renders an icon decoration element", async () => {
+        await calendar.cell(dayAnchor(DECO_DAY.icon)).$(".icon-decoration").waitForExist({
+          timeoutMsg: "icon decoration did not render on the matching day cell",
+        });
       });
     });
   });

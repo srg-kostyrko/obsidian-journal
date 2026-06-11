@@ -100,8 +100,12 @@ export function decorationTextHex(cell: CellLocator): Promise<string | undefined
 async function borderTop(cell: CellLocator): Promise<{ width: string; hex: string | undefined }> {
   const border = cell.$(".cell-decoration__border");
   const widthProp = await border.getCSSProperty("border-top-width");
+  // Obsidian's default editor zoom scales the inline 3px down to a sub-pixel
+  // value (e.g. 2.66667px); round back to the authored integer px so the
+  // assertion stays deterministic across DPI/zoom.
+  const px = typeof widthProp.parsed.value === "number" ? `${Math.round(widthProp.parsed.value)}px` : widthProp.value;
   return {
-    width: widthProp.value ?? "",
+    width: px ?? "",
     hex: await hexProp(border, "border-top-color"),
   };
 }
