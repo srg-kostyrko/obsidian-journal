@@ -1,4 +1,4 @@
-import { $, browser, expect } from "@wdio/globals";
+import { $, $$, browser, expect } from "@wdio/globals";
 
 import { getSettings, waitForSettings } from "../support/plugin-data.js";
 import {
@@ -195,6 +195,80 @@ describe("settings", () => {
       await clickButton("Period buttons");
 
       await waitForSettings((s) => itemCount(s.views) === before + 1, "added toolbar item not persisted");
+    });
+  });
+
+  describe("decorations", () => {
+    it("edits a decoration's match mode and persists it", async () => {
+      await openJournalSubpage("core", "daily");
+      await expandSection("Calendar decorations");
+      // The first decoration row's edit pencil; multiple rows share the tooltip, so clickIcon
+      // (which targets the first match) lands on index 0. The modal's first <select> is the
+      // and/or mode dropdown.
+      await clickIcon("Edit decoration");
+      await selectModalSelect("or");
+      await submitModal();
+
+      await waitForSettings(
+        (s) => s.journals?.daily?.decorations?.[0]?.mode === "or",
+        "decoration mode change not persisted",
+      );
+    });
+
+    it("deletes a decoration and shrinks the list in data.json", async () => {
+      const initial = await getSettings();
+      const before = initial.journals?.daily?.decorations?.length ?? 0;
+      await openJournalSubpage("core", "daily");
+      await expandSection("Calendar decorations");
+      // Delete the LAST decoration row so the index doesn't collide with the edit test's index 0.
+      // These trash buttons are subpage rows (not in a modal), so query them page-scoped.
+      const trash = await $$('button[aria-label="Delete decoration"]').getElements();
+      await trash.at(-1)?.click();
+      await deleteInModal();
+
+      await waitForSettings(
+        (s) => (s.journals?.daily?.decorations?.length ?? 0) === before - 1,
+        "decoration delete not persisted",
+      );
+    });
+  });
+
+  describe("commands", () => {
+    it("edits a command's name and persists it", async () => {
+      await clickIcon("Edit command Editable command");
+      await setModalText("Renamed command");
+      await submitModal();
+
+      await waitForSettings(
+        (s) => Object.values(s.commands ?? {}).some((c) => c.name === "Renamed command"),
+        "command name change not persisted",
+      );
+    });
+
+    it("deletes a command and removes it from data.json", async () => {
+      await clickIcon("Delete command Disposable command");
+      await deleteInModal();
+
+      await waitForSettings(
+        (s) => !Object.values(s.commands ?? {}).some((c) => c.name === "Disposable command"),
+        "deleted command still present in data.json",
+      );
+    });
+  });
+
+  describe("navigation block row", () => {
+    it("edits a nav block row template and persists it", async () => {
+      await openJournalSubpage("core", "daily");
+      await expandSection("Navigation block");
+      await clickIcon("Edit row");
+      // The EditNavBlockRowModal's first text input is the template field.
+      await setModalText("{{date}} edited");
+      await submitModal();
+
+      await waitForSettings(
+        (s) => s.journals?.daily?.navBlock?.rows?.[0]?.template === "{{date}} edited",
+        "nav row template change not persisted",
+      );
     });
   });
 });
