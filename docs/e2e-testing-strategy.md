@@ -222,8 +222,8 @@ ever installed into an e2e fixture.
    can run ahead of Obsidian's parsed view, which is exactly the timing slice A
    exists to test.
 7. **Behavior-named tests, declarative specs.** Specs read as intent
-   (`given/when/then` helpers); selector and timing mechanics live in the
-   helper/POM layer, never in the spec.
+   (`given/when/then` helpers); selector and timing mechanics live in the helper
+   layer — plain functions, not page-object classes — never in the spec.
 
 ### Selectors (B slices)
 

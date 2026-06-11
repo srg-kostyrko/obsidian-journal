@@ -32,11 +32,16 @@ implementation detail comes from `writing-plans` when each chunk is started.
 - **Production:** `data-anchor="<ISO>"` on `NotesCalendarCell` — the slice's only
   source edit.
 - **Fixture `e2e-journeys` (core):** one journal per period kind
-  (day/week/month/quarter/year), the two `navBlock.type` variants, ≥2 shelves
-  with disjoint journals. No decorations/commands/custom-view yet.
+  (day/week/month/quarter/year), each in its own folder; ≥2 shelves with disjoint
+  journals. The default calendar view auto-seeds (no `views` key). No
+  decorations/commands/custom-view, and no `navBlock` variants yet — nothing
+  renders a nav block until chunk 2, so the two `navBlock.type` variants move there.
 - **Support:** `support/view.ts` — ribbon open, find/click cell by anchor, read
   `data-active`.
-- **Specs:** `view.e2e.ts` part 1 — canonical day journey + 4 other period types.
+- **Specs:** `view.e2e.ts` part 1 — canonical day journey (cell → create + open +
+  live-active) + the 4 non-day period types via the month view's header
+  (`header-month`/`header-quarter`/`header-year`) and week-number cells. (v3 has
+  no grid-level period switch; `PeriodButtonsItem` is a direct create-shortcut.)
 - **Proves:** view-leaf mount, real ribbon click path, cell-click →
   create+open+live-active.
 
@@ -56,7 +61,9 @@ implementation detail comes from `writing-plans` when each chunk is started.
 - **Support:** `support/code-blocks.ts` — reading-mode render, locate block,
   assert not the `renderError` fallback.
 - **Fixture +:** notes embedding `calendar-nav` / `journals-home` /
-  `calendar-timeline`.
+  `calendar-timeline`; plus the two `navBlock.type` variants (one `existing`, one
+  create) on the nav-bearing journals — this is the first chunk that renders a nav
+  block.
 - **Specs:** `code-blocks.e2e.ts` — fence renders (3), nav click (2),
   condition+style decorations on `calendar-nav` (12), mode-derivation (2),
   derived shelf-scope (1).

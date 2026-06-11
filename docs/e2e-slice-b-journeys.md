@@ -90,8 +90,13 @@ All under `e2e/journeys/`, suite `journeys`. ≈60–65 `it`s, ~6 boots.
   active leaf, **(iii)** the clicked cell flips to `data-active` **immediately**
   (live `ActiveEntryViewModel` reactivity off the real active-leaf event — no
   remount).
-- **Other period types** (4): switch level via the toolbar period-buttons →
-  grid renders that period → click cell → correct-type note created.
+- **Other period types** (4): the month view surfaces each non-day period as its
+  own cell — month/quarter/year as header cells (`data-testid` `header-month` /
+  `header-quarter` / `header-year`, the last gated on a quarter journal in scope)
+  and week as the week-number cell (`data-testid="week-number-cell"`). Click each
+  → correct-type note created. (v3 has no grid-level switch; `PeriodButtonsItem`
+  is a direct create-shortcut, not a grid mode — the header/week cells already
+  carry production `data-testid` hooks, so only the day cell needs `data-anchor`.)
 - **Condition decorations** (6, one behavior each): seed a note matching
   condition X → its cell renders the decoration; a control cell does not.
 - **Style decorations** (6, one behavior each): assert the **computed**
@@ -173,33 +178,93 @@ role/text genuinely can't pin the element:
 
 - **Cell identity**: a day number repeats across outside-month spill, so role/text
   can't disambiguate. **Production change**: add `data-anchor="<ISO>"` to
-  `NotesCalendarCell` (mirroring `CalendarMonthView`, which already carries it).
-  This is the only production edit slice B requires.
+  `NotesCalendarCell`, emitting the period's `anchor` (the calendar views already
+  carry `data-anchor`; `CalendarWeekView` uses `.anchor`, the right rule for a cell
+  polymorphic across all period kinds). This is the only production edit slice B
+  requires.
 - **Obsidian chrome** (ribbon, palette, `Menu`, settings modal) never gets a
   hook — role/text/ARIA only.
 
-## Decoration helper — contained brittleness
-
-`support/decorations.ts` exposes intent-level assertions and hides the
-rgb/color-string normalization the computed-style assertions need:
-
-- `expectCellStyle(anchor, kind, expected)` — normalizes computed
-  `background-color`/`color`/border values before comparing.
-- element-presence checks for `icon`/`shape`/`corner` (`DecorationIcon` etc.).
-
 ## Support layer
 
-Continue the existing plain-function style (`support/vault.ts`,
-`migration.ts`, `templater.ts`); one module per surface, specs read as intent:
+E2E helpers are **plain functions, never page-object classes.** Navigation is a
+one-level push/pop stack (`SettingsUiService`), selectors are handled by functions
+returning lazy wdio locators, and classes would clash with the codebase's
+functional style. The single stateful exception is the calendar root-binding
+factory below — and it's a closure, not a class.
 
-- `support/commands.ts` — command-palette driver.
-- `support/view.ts` — ribbon open, find/click cell by anchor, read `data-active`.
-- `support/code-blocks.ts` — open a note in reading mode, locate a rendered
-  block, assert not-error.
-- `support/decorations.ts` — the helper above + condition-note seeding.
-- `support/settings.ts` — open settings tab via API, navigate subpages, poll
-  persisted `data.json`, read list rows.
-- extend `support/vault.ts` — seed notes with tags/tasks/properties/title.
+### Layout — colocation, not a central junk drawer
+
+`support/` holds **only cross-slice surface drivers** (helpers used by ≥2 slices).
+Slice-specific helpers live **in their slice folder**. An import from `../support`
+versus a sibling import then signals shared-vs-local at a glance.
+
+- `support/wait.ts` — the one polling primitive (below).
+- `support/vault.ts` — `createNote`/`renameNote`, `frontmatterOf`/`contentOf`,
+  `activeNotePath`, their `waitFor*` wrappers; (slice B) seed notes with
+  tags/tasks/properties/title.
+- `support/plugin-data.ts` — read persisted `data.json`, `journalNamesOf`/`*KeysOf`,
+  `waitForSettingsVersion`; (slice B) navigate settings subpages, read list rows.
+- `support/editor.ts` — `cursorOf`, `editorValue`, `waitForCursorLine`.
+- `support/commands.ts` — `runCommand` (`executeCommandById`) and (slice B) the
+  command-palette driver.
+- `e2e/migration/` — `waitForMigrated*` legacy-schema pollers, colocated with the
+  migration specs; they change with the migration schema, not vault mechanics.
+- `e2e/journeys/` — the calendar factory, decorations, view, and code-block helpers
+  (below), colocated with the journey specs.
+
+There is **no `templater.ts`**: Templater interop drives the same command / editor /
+vault surfaces as everything else, and the `<%`-evaluated assertions live in the
+spec predicates. A slice-named helper bag (`migration.ts`, `templater.ts`) is the
+anti-pattern this layout removes — each was several surfaces in a trench coat.
+
+### One polling primitive
+
+No fixed sleeps; every wait polls real state until it converges. All `waitFor*`
+helpers are thin wrappers over a single primitive:
+
+```ts
+function waitForState<T>(
+  read: () => Promise<T | undefined>,
+  predicate: (value: T) => boolean,
+  timeoutMsg: string,
+): Promise<void>;
+```
+
+Semantic names survive (`waitForMigratedNote`, `waitForJournalFrontmatter`,
+`waitForCursorLine`) — they keep the predicate out of the spec (Authoring
+convention #7) — but their bodies collapse to one line each. DOM pollers
+(`data-active`, persisted `data.json`) build on the same primitive.
+
+### Calendar surface — the one root-bound factory
+
+`NotesCalendarCell` renders in two mount contexts (view leaf, code block). A
+factory binds the mount root **once** so cell-finding isn't re-threaded through
+every call:
+
+```ts
+const cal = calendarSurface(root); // root = view-leaf contentEl OR code-block el
+cal.cell(anchor); // scoped locator by data-anchor
+cal.waitForActive(anchor); // over waitForState
+```
+
+Each context's spec constructs it against its own root and shares every method.
+Everywhere else uses **plain functions with explicit args** — a bound object for a
+single-context surface is ceremony.
+
+### Decoration helper — contained brittleness
+
+A **context-free** helper, fed an already-located cell, so it needs no root binding
+(rgb normalizes the same in either mount context):
+
+```ts
+expectCellStyle(cal.cell(anchor), kind, expected); // factory finds, helper asserts
+```
+
+It normalizes computed `background-color`/`color`/border before comparing, plus
+element-presence checks for `icon`/`shape`/`corner` (`DecorationIcon` etc.).
+Cell-finding (context-bound, on the factory) and style-normalization (context-free)
+change for different reasons, so they stay separate.
 
 ## CI placement — split
 
