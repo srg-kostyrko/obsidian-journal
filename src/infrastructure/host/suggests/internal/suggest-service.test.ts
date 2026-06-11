@@ -43,6 +43,22 @@ describe("SuggestService", () => {
     expect(result.value).toBe("alpha");
   });
 
+  it("resolves with the chosen item when the modal closes before the choose callback fires", async () => {
+    const { service } = build();
+    const open = service.open(stringSuggest, ["alpha", "beta"]);
+    const modal = obsidianTesting.lastOpenSuggestModal() as unknown as {
+      close: () => void;
+      onChooseSuggestion: (item: string, event: MouseEvent) => void;
+    };
+    // Obsidian runs onClose before onChooseSuggestion when a suggestion is chosen by mouse;
+    // a real choice must not be reported as a cancellation.
+    modal.close();
+    modal.onChooseSuggestion("beta", {} as MouseEvent);
+    const result = await open;
+    expectOk(result);
+    expect(result.value).toBe("beta");
+  });
+
   it("rejects with SuggestCancelled when closed without a choice", async () => {
     const { service } = build();
     const open = service.open(stringSuggest, ["alpha", "beta"]);

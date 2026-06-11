@@ -41,7 +41,12 @@ export class SuggestService {
           }
           onClose(): void {
             openSet.delete(this);
-            if (!this.#picked) reject(new SuggestCancelled());
+            // Obsidian can invoke onClose before onChooseSuggestion when a suggestion is chosen by
+            // mouse (observed on 1.12.x), so deciding "cancelled" synchronously here mis-reports a
+            // real choice. Defer the verdict a microtask to let onChooseSuggestion set #picked first.
+            queueMicrotask(() => {
+              if (!this.#picked) reject(new SuggestCancelled());
+            });
           }
         })(this.#app);
         if (definition.placeholder) modal.setPlaceholder(definition.placeholder(input));
