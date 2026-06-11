@@ -35,7 +35,7 @@ export function promptItem(text: string): ReturnType<typeof $> {
 export async function promptChoose(text: string): Promise<void> {
   await promptType(text);
   const item = promptItem(text);
-  await item.waitForExist({ timeoutMsg: `prompt did not list "${text}"` });
+  await item.waitForClickable({ timeoutMsg: `prompt did not list "${text}"` });
   await item.click();
 }
 
