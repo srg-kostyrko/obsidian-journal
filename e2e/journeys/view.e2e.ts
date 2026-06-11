@@ -10,10 +10,10 @@ import {
 import {
   DECO_DAY,
   STYLE_HEX,
+  assertDecorationMatrix,
   dayAnchor,
   expectBackgroundCleared,
   expectBackgroundHex,
-  expectBorderTop,
   expectTextHex,
   seedDecorationFixture,
 } from "./decorations.js";
@@ -85,84 +85,7 @@ describe("calendar view", () => {
       await seedDecorationFixture();
     });
 
-    describe("condition decorations", () => {
-      it("decorates a day cell whose note title matches the title condition", async () => {
-        await calendar.cell(dayAnchor(DECO_DAY.title)).$(".decoration-corner.top-left").waitForExist({
-          timeoutMsg: "title-condition decoration did not render on the matching day cell",
-        });
-      });
-
-      it("decorates a day cell whose note carries the matching tag", async () => {
-        await calendar.cell(dayAnchor(DECO_DAY.tag)).$(".decoration-corner.top-left").waitForExist({
-          timeoutMsg: "tag-condition decoration did not render on the matching day cell",
-        });
-      });
-
-      it("decorates a day cell whose note has the matching frontmatter property", async () => {
-        await calendar.cell(dayAnchor(DECO_DAY.property)).$(".decoration-corner.top-left").waitForExist({
-          timeoutMsg: "property-condition decoration did not render on the matching day cell",
-        });
-      });
-
-      it("decorates the quarter header when the quarter journal has a note", async () => {
-        await calendar.periodCell("header-quarter").$(".decoration-corner.top-left").waitForExist({
-          timeoutMsg: "has-note decoration did not render on the quarter header",
-        });
-      });
-
-      it("decorates the week cell when its note has an open task", async () => {
-        await calendar.periodCell("week-number-cell").$(".decoration-corner.top-left").waitForExist({
-          timeoutMsg: "has-open-task decoration did not render on the week cell",
-        });
-      });
-
-      it("decorates the month header when its note's tasks are all completed", async () => {
-        await calendar.periodCell("header-month").$(".decoration-corner.top-left").waitForExist({
-          timeoutMsg: "all-tasks-completed decoration did not render on the month header",
-        });
-      });
-
-      it("leaves a cell with no matching note undecorated", async () => {
-        // First prove the engine has run (a matched cell is decorated), then assert the
-        // control cell — with no seeded note — carries no decoration.
-        await calendar.cell(dayAnchor(DECO_DAY.title)).$(".decoration-corner.top-left").waitForExist({
-          timeoutMsg: "decoration engine never ran (title cell undecorated before the control assertion)",
-        });
-        await expect(calendar.cell(dayAnchor(DECO_DAY.control)).$(".decoration-corner")).not.toExist();
-      });
-    });
-
-    describe("style decorations", () => {
-      it("renders the background color through Obsidian's real CSS cascade", async () => {
-        await expectBackgroundHex(calendar.periodCell("header-year"), STYLE_HEX.background);
-      });
-
-      it("renders the text color through Obsidian's real CSS cascade", async () => {
-        await expectTextHex(calendar.cell(dayAnchor(DECO_DAY.color)), STYLE_HEX.color);
-      });
-
-      it("renders the border through Obsidian's real CSS cascade", async () => {
-        await expectBorderTop(calendar.cell(dayAnchor(DECO_DAY.border)), "3px", STYLE_HEX.border);
-      });
-
-      it("renders a shape decoration element", async () => {
-        await calendar.cell(dayAnchor(DECO_DAY.shape)).$(".shape-decoration.shape-circle").waitForExist({
-          timeoutMsg: "shape decoration did not render on the matching day cell",
-        });
-      });
-
-      it("renders a corner decoration element at the configured placement", async () => {
-        await calendar.cell(dayAnchor(DECO_DAY.corner)).$(".decoration-corner.bottom-right").waitForExist({
-          timeoutMsg: "corner-style decoration did not render at bottom-right",
-        });
-      });
-
-      it("renders an icon decoration element", async () => {
-        await calendar.cell(dayAnchor(DECO_DAY.icon)).$(".icon-decoration").waitForExist({
-          timeoutMsg: "icon decoration did not render on the matching day cell",
-        });
-      });
-    });
+    assertDecorationMatrix(calendar);
 
     describe("interactive shelf scope", () => {
       it("re-scopes decorations when a shelf is picked from the toolbar menu", async () => {

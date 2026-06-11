@@ -173,6 +173,26 @@ export default [
     },
   },
   {
+    // Shared e2e helper modules (not spec files) export surface builders, fixtures,
+    // and parameterized suite runners. Turn off the mocha rules that only make sense
+    // for top-level spec entry points.
+    files: ["e2e/**/*.ts"],
+    ignores: ["e2e/**/*.e2e.ts"],
+    rules: {
+      // Helper modules are not spec entry points; exports are their public API.
+      "mocha/no-exports": "off",
+    },
+  },
+  {
+    files: ["e2e/**/*.e2e.ts"],
+    rules: {
+      // Suite-runner calls (e.g. assertDecorationMatrix()) inside describe are the
+      // intended programmatic-suite pattern; no-setup-in-describe cannot distinguish
+      // them from accidental setup, so it is disabled for spec files only.
+      "mocha/no-setup-in-describe": "off",
+    },
+  },
+  {
     files: ["**/*.test.ts", "**/*.bench.ts", "**/testing.ts", "**/testing/**"],
     plugins: { vitest },
     rules: {

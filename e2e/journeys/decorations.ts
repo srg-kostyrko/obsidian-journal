@@ -1,9 +1,11 @@
+import { expect } from "@wdio/globals";
+
 import { seedNote } from "../support/vault.js";
 import { waitForState } from "../support/wait.js";
 
 import { calendar, openCalendarView } from "./view.js";
 
-import type { CellLocator, PeriodTestId } from "./calendar.js";
+import type { CalendarSurface, CellLocator, PeriodTestId } from "./calendar.js";
 
 // Custom hex (never theme vars) so the computed rgb is deterministic across the
 // version matrix. These MUST match the fixture data.json style colors.
@@ -143,4 +145,90 @@ export function expectBackgroundCleared(cell: CellLocator, hex: string): Promise
     (v) => v !== hex,
     `waited for cell background to clear from ${hex}`,
   );
+}
+
+// The decoration matrix is mount-context-agnostic: the view leaf and the
+// calendar-timeline code block render the same NotesMonthView/NotesCalendarCell grid,
+// so the same 13 assertions run against either surface (chunk 1 = view leaf, chunk 2 =
+// timeline). Shelf-scope stays out — it drives the view-leaf toolbar, which the
+// timeline has no equivalent of.
+export function assertDecorationMatrix(surface: CalendarSurface): void {
+  describe("condition decorations", () => {
+    it("decorates a day cell whose note title matches the title condition", async () => {
+      await surface.cell(dayAnchor(DECO_DAY.title)).$(".decoration-corner.top-left").waitForExist({
+        timeoutMsg: "title-condition decoration did not render on the matching day cell",
+      });
+    });
+
+    it("decorates a day cell whose note carries the matching tag", async () => {
+      await surface.cell(dayAnchor(DECO_DAY.tag)).$(".decoration-corner.top-left").waitForExist({
+        timeoutMsg: "tag-condition decoration did not render on the matching day cell",
+      });
+    });
+
+    it("decorates a day cell whose note has the matching frontmatter property", async () => {
+      await surface.cell(dayAnchor(DECO_DAY.property)).$(".decoration-corner.top-left").waitForExist({
+        timeoutMsg: "property-condition decoration did not render on the matching day cell",
+      });
+    });
+
+    it("decorates the quarter header when the quarter journal has a note", async () => {
+      await surface.periodCell("header-quarter").$(".decoration-corner.top-left").waitForExist({
+        timeoutMsg: "has-note decoration did not render on the quarter header",
+      });
+    });
+
+    it("decorates the week cell when its note has an open task", async () => {
+      await surface.periodCell("week-number-cell").$(".decoration-corner.top-left").waitForExist({
+        timeoutMsg: "has-open-task decoration did not render on the week cell",
+      });
+    });
+
+    it("decorates the month header when its note's tasks are all completed", async () => {
+      await surface.periodCell("header-month").$(".decoration-corner.top-left").waitForExist({
+        timeoutMsg: "all-tasks-completed decoration did not render on the month header",
+      });
+    });
+
+    it("leaves a cell with no matching note undecorated", async () => {
+      // First prove the engine has run (a matched cell is decorated), then assert the
+      // control cell — with no seeded note — carries no decoration.
+      await surface.cell(dayAnchor(DECO_DAY.title)).$(".decoration-corner.top-left").waitForExist({
+        timeoutMsg: "decoration engine never ran (title cell undecorated before the control assertion)",
+      });
+      await expect(surface.cell(dayAnchor(DECO_DAY.control)).$(".decoration-corner")).not.toExist();
+    });
+  });
+
+  describe("style decorations", () => {
+    it("renders the background color through Obsidian's real CSS cascade", async () => {
+      await expectBackgroundHex(surface.periodCell("header-year"), STYLE_HEX.background);
+    });
+
+    it("renders the text color through Obsidian's real CSS cascade", async () => {
+      await expectTextHex(surface.cell(dayAnchor(DECO_DAY.color)), STYLE_HEX.color);
+    });
+
+    it("renders the border through Obsidian's real CSS cascade", async () => {
+      await expectBorderTop(surface.cell(dayAnchor(DECO_DAY.border)), "3px", STYLE_HEX.border);
+    });
+
+    it("renders a shape decoration element", async () => {
+      await surface.cell(dayAnchor(DECO_DAY.shape)).$(".shape-decoration.shape-circle").waitForExist({
+        timeoutMsg: "shape decoration did not render on the matching day cell",
+      });
+    });
+
+    it("renders a corner decoration element at the configured placement", async () => {
+      await surface.cell(dayAnchor(DECO_DAY.corner)).$(".decoration-corner.bottom-right").waitForExist({
+        timeoutMsg: "corner-style decoration did not render at bottom-right",
+      });
+    });
+
+    it("renders an icon decoration element", async () => {
+      await surface.cell(dayAnchor(DECO_DAY.icon)).$(".icon-decoration").waitForExist({
+        timeoutMsg: "icon decoration did not render on the matching day cell",
+      });
+    });
+  });
 }
