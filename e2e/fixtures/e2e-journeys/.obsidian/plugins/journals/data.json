@@ -1,0 +1,84 @@
+{
+  "version": 4,
+  "journals": {
+    "daily": {
+      "name": "daily",
+      "write": { "type": "day" },
+      "folder": "day",
+      "timeline": { "start": "", "end": { "kind": "never" } },
+      "dateFormat": "YYYY-MM-DD",
+      "frontmatter": {
+        "dateField": "journal-date",
+        "startDateField": "journal-start-date",
+        "endDateField": "journal-end-date",
+        "addStartDate": false,
+        "addEndDate": false
+      },
+      "numbering": { "enabled": false, "anchorDate": "", "allowBefore": false, "sources": [] }
+    },
+    "weekly": {
+      "name": "weekly",
+      "write": { "type": "week" },
+      "folder": "week",
+      "timeline": { "start": "", "end": { "kind": "never" } },
+      "dateFormat": "YYYY-[W]ww",
+      "frontmatter": {
+        "dateField": "journal-date",
+        "startDateField": "journal-start-date",
+        "endDateField": "journal-end-date",
+        "addStartDate": false,
+        "addEndDate": false
+      },
+      "numbering": { "enabled": false, "anchorDate": "", "allowBefore": false, "sources": [] }
+    },
+    "monthly": {
+      "name": "monthly",
+      "write": { "type": "month" },
+      "folder": "month",
+      "timeline": { "start": "", "end": { "kind": "never" } },
+      "dateFormat": "YYYY-MM",
+      "frontmatter": {
+        "dateField": "journal-date",
+        "startDateField": "journal-start-date",
+        "endDateField": "journal-end-date",
+        "addStartDate": false,
+        "addEndDate": false
+      },
+      "numbering": { "enabled": false, "anchorDate": "", "allowBefore": false, "sources": [] }
+    },
+    "quarterly": {
+      "name": "quarterly",
+      "write": { "type": "quarter" },
+      "folder": "quarter",
+      "timeline": { "start": "", "end": { "kind": "never" } },
+      "dateFormat": "YYYY-[Q]Q",
+      "frontmatter": {
+        "dateField": "journal-date",
+        "startDateField": "journal-start-date",
+        "endDateField": "journal-end-date",
+        "addStartDate": false,
+        "addEndDate": false
+      },
+      "numbering": { "enabled": false, "anchorDate": "", "allowBefore": false, "sources": [] }
+    },
+    "yearly": {
+      "name": "yearly",
+      "write": { "type": "year" },
+      "folder": "year",
+      "timeline": { "start": "", "end": { "kind": "never" } },
+      "dateFormat": "YYYY",
+      "frontmatter": {
+        "dateField": "journal-date",
+        "startDateField": "journal-start-date",
+        "endDateField": "journal-end-date",
+        "addStartDate": false,
+        "addEndDate": false
+      },
+      "numbering": { "enabled": false, "anchorDate": "", "allowBefore": false, "sources": [] }
+    }
+  },
+  "shelves": {
+    "core": { "name": "core", "journals": ["daily", "weekly"] },
+    "extra": { "name": "extra", "journals": ["monthly", "quarterly", "yearly"] }
+  }
+}
