@@ -79,8 +79,7 @@ Obsidian.
     matchers. Jasmine ships its own global `expect`, so the two shadow each other
     and you must track which matchers retry; with Mocha (no built-in assertions)
     `expect` is unambiguously `expect-webdriverio`. Jasmine's other strength —
-    built-in spies — is irrelevant to a black-box, no-internals suite. Retry is a
-    wash (we use WDIO-level `specFileRetries`, framework-agnostic).
+    built-in spies — is irrelevant to a black-box, no-internals suite.
   - vs **Cucumber**: reuse is solved by typed helpers/Page Objects either way;
     Gherkin's binding layer only buys non-engineer-readable scenarios, and there is
     no such audience on a solo-maintained plugin. B journeys stay plain
@@ -89,11 +88,12 @@ Obsidian.
   auto-retry up to `waitforTimeout` — they **are** the condition-polling for DOM.
   Non-DOM conditions (vault file/frontmatter reads) poll via `browser.waitUntil`.
   Neither uses fixed sleeps.
-- **Retries: `specFileRetries: 1` + `specFileRetriesDeferRerun: true`.** The
-  concrete form of "max 1 visible retry": retries the whole spec file (a fresh
-  boot — the right unit, since a flaky boot taints the file), batched to the end.
-  Reporters surface which files retried. Not Mocha per-test `retries` (silent, no
-  reboot).
+- **No retries.** The suite runs in well under a minute and is held to zero
+  tolerated flakiness, so a failure is a real signal we want to see immediately,
+  not absorb behind a silent rerun. A test that can only pass on a second boot is a
+  bug (test or plugin) to triage, or a candidate for the nightly-only `quarantine`
+  lane — never a retry. (Earlier iterations used `specFileRetries: 1`; it masked
+  more than it surfaced and is gone.)
 - **Parallelism: `maxInstances: 1` to start.** Each instance is a full Obsidian
   boot under xvfb; "one shared Obsidian process" is therefore **per worker**.
   Revisit sharding only if nightly wall-clock forces it.
@@ -121,11 +121,12 @@ Obsidian.
   }
   ```
 
-  The **PR gate** names the stable suites (`--suite smoke --suite integration …`),
-  omitting `quarantine`. **Nightly** runs all suites, including `quarantine`,
-  across the version matrix. Quarantining a flaky test = moving its file into the
-  `quarantine` suite; it keeps running nightly and never blocks a merge — no
-  separate mechanism needed.
+  **PR and merge-to-main** name every stable suite (`--suite smoke --suite
+integration --suite migration --suite interop --suite journeys`), omitting
+  `quarantine`. **Nightly** runs the bare glob — all suites, including
+  `quarantine` — across the OS + version matrix. Quarantining a flaky test = moving
+  its file into the `quarantine` suite; it keeps running nightly and never blocks a
+  merge — no separate mechanism needed.
 
 - **Targeted dev runs:** `--spec ./path/or/pattern` for one file/pattern;
   `--mochaOpts.grep "<title>"` to filter by `describe`/`it` title across files.
@@ -168,14 +169,15 @@ Obsidian.
 
 ### Waiting and flakiness budget
 
-e2e is a **PR merge gate**, so flakiness discipline is defined up front:
+e2e is a **PR + merge gate**, so flakiness discipline is defined up front:
 
 - **Condition polling only** (`browser.waitUntil(() => …observable outcome…)`).
   **No fixed sleeps.** For slice A this is mandatory: the metadataCache catch-up is
   async and unobservable-by-duration, so we poll vault state until it converges —
   faithfully reproducing the timing the mock fakes.
-- **Max 1 retry, always reported** — a retry is a recorded warning, never silent. A
-  test that retries repeatedly is triaged as a bug (test or plugin), not absorbed.
+- **No retries** — a failure fails the run, full stop. Because the gate runs on
+  every PR and every merge with zero retry cushion, a flaky test is felt
+  immediately and triaged as a bug (test or plugin), not absorbed behind a rerun.
 - **Nightly-only quarantine lane** — a test too flaky to stabilize moves to
   nightly with a tracking issue. It is not left flaking on the gate and not
   `.skip`-and-forgotten. Quarantine keeps coverage without eroding gate
@@ -241,28 +243,36 @@ hook (we don't own its markup); there, role/text/ARIA is the only option.
 
 Three deliberate clocks:
 
-| Clock               | Runs                                             | Notes                                                              |
-| ------------------- | ------------------------------------------------ | ------------------------------------------------------------------ |
-| Local per-task gate | `test` / `check:types` / `check:lint`            | **Unchanged** — mock-only and fast. e2e is _not_ in it.            |
-| Local on-demand     | `npm run test:e2e`                               | A dev runs it when touching the integration seam. Never automatic. |
-| CI                  | `pull_request` (merge gate) + nightly `schedule` | Separate job, **not** wired into the every-push `checks.yml`.      |
+| Clock               | Runs                                                                | Notes                                                              |
+| ------------------- | ------------------------------------------------------------------- | ------------------------------------------------------------------ |
+| Local per-task gate | `test` / `check:types` / `check:lint`                               | **Unchanged** — mock-only and fast. e2e is _not_ in it.            |
+| Local on-demand     | `npm run test:e2e`                                                  | A dev runs it when touching the integration seam. Never automatic. |
+| CI                  | `pull_request` + `push` to `main` (full suite) + nightly `schedule` | Separate job, **not** wired into the every-push `checks.yml`.      |
 
-The skeleton smoke test is cheap enough to _also_ run per-push as an early-warning
-canary; the full A–B matrix is not.
+The whole stable suite runs on **every PR and every merge to `main`** — it finishes
+in well under a minute, so there is no longer a reason to split a thin smoke gate
+from a fuller nightly pass. Both run `latest/latest` on Linux for a fast signal.
 
 The nightly run is specifically the defense against **Obsidian** shipping a
-breaking change under us — it can go red with zero code change.
+breaking change under us — it can go red with zero code change. It is also the only
+clock that exercises the **OS matrix** (Windows / macOS / Linux) and the
+older-version combos, neither of which the per-PR fast path covers.
 
 ### Version matrix
 
 Each entry is an `(appVersion, installerVersion)` pair (see Install and version
-modes). `earliest` resolves the manifest's `minAppVersion`.
+modes). `appVersion: earliest` resolves the manifest's `minAppVersion`;
+`installerVersion: earliest` resolves to the **oldest installer still compatible
+with that app version** — so `latest/earliest` is always a real, bootable combo,
+never an impossible one. The PR/merge fast path runs one combo on Linux; nightly
+multiplies the version combos below by the OS matrix (Windows / macOS / Linux).
 
-| Clock   | appVersion | installerVersion | Catches                                                                                |
-| ------- | ---------- | ---------------- | -------------------------------------------------------------------------------------- |
-| PR gate | `latest`   | `latest`         | the common, modern case — fast merge signal                                            |
-| Nightly | `earliest` | `earliest`       | the advertised floor must not be a lie                                                 |
-| Nightly | `latest`   | `earliest`       | newest JS on the oldest Electron — the subtle-mismatch combo the tool exists to expose |
+| Clock      | OS              | appVersion | installerVersion | Catches                                                                                                                               |
+| ---------- | --------------- | ---------- | ---------------- | ------------------------------------------------------------------------------------------------------------------------------------- |
+| PR + merge | Linux           | `latest`   | `latest`         | the common, modern case — fast merge signal                                                                                           |
+| Nightly    | Win/macOS/Linux | `latest`   | `latest`         | the modern case re-confirmed on every OS                                                                                              |
+| Nightly    | Win/macOS/Linux | `earliest` | `earliest`       | a contract test, not a real user — proves the advertised `minAppVersion` floor isn't a lie                                            |
+| Nightly    | Win/macOS/Linux | `latest`   | `earliest`       | **the common real user**: Obsidian auto-updates the app but not the installer, so a long-time user runs today's JS on an old Electron |
 
 **Beta / Insider** — deferred to phase two. Requires `OBSIDIAN_EMAIL` /
 `OBSIDIAN_PASSWORD` as CI secrets **with 2FA disabled**, i.e. a dedicated bot
@@ -299,8 +309,9 @@ Sequenced by (value only-real-Obsidian can prove) ÷ (fixture/flakiness cost).
 4. **(B) Full click-through journeys.** Flakiest and slowest; rides on
    infrastructure the earlier slices hardened. Designed in
    `docs/e2e-slice-b-journeys.md` — real-DOM render across the view leaf, code
-   blocks, decorations, and settings, decomposed by mount context; a thin
-   `journeys-smoke` on the PR gate with the full suite nightly.
+   blocks, decorations, and settings, decomposed by mount context. The full
+   `journeys` suite runs on every PR and merge (it is fast enough), with the OS +
+   version matrix layered on nightly.
 
 ### Phase 1 — definition of done
 

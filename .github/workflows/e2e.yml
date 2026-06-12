@@ -2,27 +2,39 @@ name: E2E
 
 on:
   pull_request:
+  push:
+    branches: [main]
   schedule:
-    # Nightly drift-detection against the version matrix (07:00 UTC).
+    # Nightly drift-detection across the OS + version matrix (07:00 UTC).
     - cron: "0 7 * * *"
   workflow_dispatch:
 
 concurrency:
-  group: e2e-${{ github.ref }}
+  group: e2e-${{ github.ref }}-${{ github.event_name }}
   cancel-in-progress: true
 
 jobs:
   e2e:
-    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        # PR + merge run a single fast combo (Linux, latest app on latest installer).
+        # Nightly widens to every OS and to the floor + the newest-app/oldest-installer
+        # mismatch, re-confirming latest/latest across platforms too (see
+        # docs/e2e-testing-strategy.md).
+        os: ${{ (github.event_name == 'schedule') && fromJSON('["ubuntu-latest", "windows-latest", "macos-latest"]') || fromJSON('["ubuntu-latest"]') }}
+        obsidian: ${{ (github.event_name == 'schedule') && fromJSON('["earliest/earliest", "latest/earliest", "latest/latest"]') || fromJSON('["latest/latest"]') }}
+
+    runs-on: ${{ matrix.os }}
     permissions:
       contents: read
       checks: write
       pull-requests: write
     env:
-      # PR gate: latest app on latest installer. Nightly widens to the floor and
-      # the newest-app/oldest-installer mismatch combo (see
-      # docs/e2e-testing-strategy.md).
-      OBSIDIAN_VERSIONS: ${{ github.event_name == 'schedule' && 'earliest/earliest latest/earliest' || 'latest/latest' }}
+      OBSIDIAN_VERSIONS: ${{ matrix.obsidian }}
+      # PR + merge run the full set of stable suites. Nightly (empty -> bare glob)
+      # additionally picks up the non-blocking `quarantine` lane.
+      WDIO_SUITES: ${{ (github.event_name == 'schedule') && '' || '--suite smoke --suite integration --suite migration --suite interop --suite journeys' }}
 
     steps:
       - uses: actions/checkout@v4
@@ -46,15 +58,20 @@ jobs:
       - name: Build plugin
         run: npm run build
 
-      - name: Run e2e (stable suites)
-        run: xvfb-run -a npx wdio run ./wdio.conf.mts --suite smoke --suite integration --suite migration
+      - name: Run e2e (Linux)
+        if: runner.os == 'Linux'
+        run: xvfb-run -a npx wdio run ./wdio.conf.mts ${{ env.WDIO_SUITES }}
+
+      - name: Run e2e (Windows/macOS)
+        if: runner.os != 'Linux'
+        run: npx wdio run ./wdio.conf.mts ${{ env.WDIO_SUITES }}
 
       - name: Publish e2e results
         if: always()
         uses: mikepenz/action-junit-report@v5
         with:
           report_paths: e2e/.reports/e2e-junit.xml
-          check_name: e2e results
+          check_name: e2e results (${{ matrix.os }}, ${{ matrix.obsidian }})
           # Tolerate a suite that crashed before emitting XML; the run step
           # already failed the job in that case.
           require_tests: false
@@ -63,6 +80,6 @@ jobs:
         if: always()
         uses: actions/upload-artifact@v4
         with:
-          name: e2e-reports
+          name: e2e-reports-${{ matrix.os }}-${{ strategy.job-index }}
           path: e2e/.reports/
           if-no-files-found: ignore

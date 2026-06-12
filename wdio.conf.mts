@@ -17,8 +17,8 @@ export const config: WebdriverIO.Config = {
   runner: "local",
   framework: "mocha",
 
-  // Suites are the grouping axis (see docs/e2e-testing-strategy.md). The PR gate
-  // names the stable suites; nightly adds `quarantine`.
+  // Suites are the grouping axis (see docs/e2e-testing-strategy.md). PR and merge
+  // runs name the stable suites; nightly runs the bare glob and so adds `quarantine`.
   specs: ["./e2e/**/*.e2e.ts"],
   suites: {
     smoke: ["./e2e/smoke/**/*.e2e.ts"],
@@ -61,10 +61,6 @@ export const config: WebdriverIO.Config = {
 
   logLevel: "warn",
   injectGlobals: false,
-
-  // A flaky boot taints the whole spec file, so retry at file granularity, batched.
-  specFileRetries: 1,
-  specFileRetriesDeferred: true,
 
   waitforTimeout: 15_000,
   waitforInterval: 250,

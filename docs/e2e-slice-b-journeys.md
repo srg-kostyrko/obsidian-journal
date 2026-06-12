@@ -279,18 +279,17 @@ element-presence checks for `icon`/`shape`/`corner` (`DecorationIcon` etc.).
 Cell-finding (context-bound, on the factory) and style-normalization (context-free)
 change for different reasons, so they stay separate.
 
-## CI placement — split
+## CI placement
 
-- **PR gate** — a thin `journeys-smoke` (~3–5 highest-signal happy paths: the
-  canonical view journey, one code-block render, the add-journal round-trip),
-  latest/latest. The per-PR guard that core journeys still work.
-- **Nightly** — the full `journeys` suite across the version matrix. The 24-`it`
-  decoration matrix, full settings coverage, and command journeys are largely
-  **drift-detection** (does our DOM survive Obsidian's cascade / real modal
-  stacking) — nightly's job, and where flake is triaged without blocking merges.
+The full `journeys` suite runs on **every PR and every merge to `main`**
+(latest/latest, Linux) — the whole e2e run finishes in well under a minute, so
+there is no smoke/nightly split to maintain. The 24-`it` decoration matrix, full
+settings coverage, and command journeys all gate merges directly.
 
-Keeps the gate fast and credible (the doc's explicit value) while keeping
-per-PR signal on the core flows.
+**Nightly** re-runs the same suite across the OS matrix (Windows / macOS / Linux)
+and the older-version combos. That layer is pure **drift-detection** (does our DOM
+survive Obsidian's cascade / real modal stacking on every platform) — it can go red
+with zero code change and is where such flake is triaged without blocking merges.
 
 ## Explicitly out of scope
 
