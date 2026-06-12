@@ -4,6 +4,7 @@ import {
   activeNotePath,
   renameNote,
   seedNote,
+  waitForActiveNote,
   waitForActiveNoteIn,
   waitForFrontmatter,
   waitForJournalFrontmatter,
@@ -270,6 +271,22 @@ describe("calendar view", () => {
 
       const path = await waitForActiveNoteIn("day");
       await waitForFrontmatter(path, (fm) => fm.journal === "daily", `waited for ${path} to attach journal=daily`);
+    });
+
+    it("navigates to an existing day note picked from the date-picker modal", async () => {
+      const anchor = dayAnchor(20);
+      const path = `day/${anchor}.md`;
+      await seedNote(path, note("daily", anchor));
+      await waitForFrontmatter(path, (fm) => fm.journal === "daily", `waited for ${path} to be indexed`);
+
+      await openCalendarView();
+      await $(`${TOOLBAR} [aria-label="Pick a date"]`).click();
+
+      const modal = $(".date-picker-modal");
+      await modal.waitForExist({ timeoutMsg: "date-picker modal did not open" });
+      await modal.$(`[data-testid="month-cell"][data-anchor="${anchor}"]`).click();
+
+      await waitForActiveNote(path);
     });
   });
 });
