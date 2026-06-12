@@ -9,6 +9,7 @@ import {
   waitForJournalFrontmatter,
   writeNote,
 } from "../support/vault.js";
+import { waitForState } from "../support/wait.js";
 
 import {
   DECO_DAY,
@@ -23,12 +24,15 @@ import {
   note,
   seedDecorationFixture,
 } from "./decorations.js";
-import { calendar, openCalendarView } from "./view.js";
+import { calendar, openCalendarView, TOOLBAR } from "./view.js";
 
 // Slice B chunk 0 — the view-leaf render + real ribbon-click seam. Our Vue calendar
 // mounts in a real Obsidian leaf, a real ribbon click opens it, and a real cell
 // click drives OpenDateFlow -> note create+open. None of this is reachable through
 // __mocks__/obsidian.ts, which renders no leaf and has no ribbon.
+
+const headerMonthAnchor = async (): Promise<string | undefined> =>
+  (await calendar.periodCell("header-month").getAttribute("data-anchor")) ?? undefined;
 
 describe("calendar view", () => {
   describe("journeys", () => {
@@ -217,6 +221,33 @@ describe("calendar view", () => {
       await writeNote(path, note("monthly", month, "- [x] done"));
 
       await expectDecorated(calendar.periodCell("header-month"));
+    });
+  });
+
+  describe("toolbar", () => {
+    before(async () => {
+      await browser.reloadObsidian({ vault: "./e2e/fixtures/e2e-journeys", plugins: ["journals"] });
+    });
+
+    it("advances the calendar a month when the next-month button is clicked", async () => {
+      await openCalendarView();
+      const start = await headerMonthAnchor();
+
+      await $(`${TOOLBAR} [aria-label="Next month"]`).click();
+
+      await waitForState(headerMonthAnchor, (anchor) => anchor !== start, "header-month did not advance");
+    });
+
+    it("rewinds the calendar a month when the previous-month button is clicked", async () => {
+      await openCalendarView();
+      const start = await headerMonthAnchor();
+
+      await $(`${TOOLBAR} [aria-label="Next month"]`).click();
+      await waitForState(headerMonthAnchor, (anchor) => anchor !== start, "header-month did not advance");
+
+      await $(`${TOOLBAR} [aria-label="Previous month"]`).click();
+
+      await waitForState(headerMonthAnchor, (anchor) => anchor === start, "header-month did not return");
     });
   });
 });
