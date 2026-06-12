@@ -25,7 +25,7 @@ import {
   note,
   seedDecorationFixture,
 } from "./decorations.js";
-import { calendar, openCalendarView, TOOLBAR } from "./view.js";
+import { calendar, LIVE_LEAF, openCalendarView, TOOLBAR } from "./view.js";
 
 // Slice B chunk 0 — the view-leaf render + real ribbon-click seam. Our Vue calendar
 // mounts in a real Obsidian leaf, a real ribbon click opens it, and a real cell
@@ -287,6 +287,25 @@ describe("calendar view", () => {
       await modal.$(`[data-testid="month-cell"][data-anchor="${anchor}"]`).click();
 
       await waitForActiveNote(path);
+    });
+  });
+
+  describe("custom intervals block", () => {
+    before(async () => {
+      await browser.reloadObsidian({ vault: "./e2e/fixtures/e2e-journeys", plugins: ["journals"] });
+    });
+
+    it("renders a section with an entry for an indexed custom-interval note", async () => {
+      const anchor = dayAnchor(10);
+      const path = `sprint/${anchor}.md`;
+      await seedNote(path, note("sprint", anchor));
+      await waitForFrontmatter(path, (fm) => fm.journal === "sprint", `waited for ${path} to be indexed`);
+
+      await openCalendarView();
+
+      const section = $(`${LIVE_LEAF} .journal-view-custom-intervals [data-journal="sprint"]`);
+      await section.waitForExist({ timeoutMsg: "custom-intervals section for sprint did not render" });
+      await expect(section.$(".journal-view-custom-intervals__entry")).toBeExisting();
     });
   });
 });

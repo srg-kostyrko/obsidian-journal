@@ -227,6 +227,38 @@
           "styles": [{ "type": "background", "color": { "type": "custom", "color": "#203040" } }]
         }
       ]
+    },
+    "sprint": {
+      "name": "sprint",
+      "write": { "type": "custom", "every": "week", "duration": 2, "anchorDate": "2026-01-05" },
+      "folder": "sprint",
+      "timeline": { "start": "", "end": { "kind": "never" } },
+      "dateFormat": "YYYY-MM-DD",
+      "frontmatter": {
+        "dateField": "journal-date",
+        "startDateField": "journal-start-date",
+        "endDateField": "journal-end-date",
+        "addStartDate": false,
+        "addEndDate": false
+      },
+      "numbering": { "enabled": false, "anchorDate": "", "allowBefore": false, "sources": [] },
+      "intervalBlock": {
+        "type": "create",
+        "decorateWholeBlock": false,
+        "rows": [
+          {
+            "template": "{{date}}",
+            "fontSize": 1,
+            "bold": false,
+            "italic": false,
+            "color": { "type": "theme", "name": "text-normal" },
+            "background": { "type": "transparent" },
+            "link": "self",
+            "journal": "",
+            "addDecorations": false
+          }
+        ]
+      }
     }
   },
   "shelves": {
