@@ -1,0 +1,49 @@
+{
+  "version": 4,
+  "journals": {
+    "daily": {
+      "name": "daily",
+      "write": { "type": "day" },
+      "folder": "day",
+      "timeline": { "start": "", "end": { "kind": "never" } },
+      "dateFormat": "YYYY-MM-DD",
+      "frontmatter": {
+        "dateField": "journal-date",
+        "startDateField": "journal-start-date",
+        "endDateField": "journal-end-date",
+        "addStartDate": false,
+        "addEndDate": false
+      },
+      "numbering": { "enabled": false, "anchorDate": "", "allowBefore": false, "sources": [] }
+    }
+  },
+  "commands": {
+    "open-today": {
+      "name": "Jump to today",
+      "icon": "calendar-days",
+      "showInRibbon": false,
+      "openMode": "active",
+      "target": { "kind": "all", "writeType": "day" },
+      "type": "same",
+      "context": "today"
+    },
+    "open-next": {
+      "name": "Jump to the following day",
+      "icon": "calendar-days",
+      "showInRibbon": false,
+      "openMode": "active",
+      "target": { "kind": "all", "writeType": "day" },
+      "type": "next",
+      "context": "open_note"
+    },
+    "advance-from-entry": {
+      "name": "Advance from the open entry only",
+      "icon": "calendar-days",
+      "showInRibbon": false,
+      "openMode": "active",
+      "target": { "kind": "all", "writeType": "day" },
+      "type": "next",
+      "context": "only_open_note"
+    }
+  }
+}
