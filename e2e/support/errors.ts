@@ -11,3 +11,10 @@ export class PluginDataMissingError extends Error {
     this.name = "PluginDataMissingError";
   }
 }
+
+export class UriHandlerMissingError extends Error {
+  constructor() {
+    super('no "journals" obsidian:// protocol handler was registered at boot');
+    this.name = "UriHandlerMissingError";
+  }
+}

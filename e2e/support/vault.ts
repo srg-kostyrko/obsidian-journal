@@ -56,6 +56,12 @@ export function activeNotePath(): Promise<string | undefined> {
   return browser.executeObsidian(({ app }) => app.workspace.getActiveFile()?.path);
 }
 
+// Open in "active" mode reuses the current leaf; "tab" mode adds one. Counting markdown leaves
+// before and after is how a test tells those two open modes apart.
+export function markdownLeafCount(): Promise<number> {
+  return browser.executeObsidian(({ app }) => app.workspace.getLeavesOfType("markdown").length);
+}
+
 export function waitForFrontmatter(
   path: string,
   predicate: (frontmatter: Frontmatter) => boolean,
