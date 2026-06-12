@@ -1,8 +1,8 @@
 import { $, browser, expect } from "@wdio/globals";
 
-import { activeNotePath, waitForJournalFrontmatter } from "../support/vault.js";
+import { activeNotePath, seedNote, waitForJournalFrontmatter } from "../support/vault.js";
 
-import { openBlocksView, weekCalendar, WEEK_CALENDAR } from "./view-blocks.js";
+import { DIVIDER, MARKDOWN_TEMPLATE, openBlocksView, weekCalendar, WEEK_CALENDAR } from "./view-blocks.js";
 
 // The Blocks view (e2e-views fixture) mounts the three blocks that never appear in the
 // default Calendar view. The view-leaf mount is the real seam: a ribbon click renders
@@ -40,6 +40,30 @@ describe("blocks view", () => {
       await waitForJournalFrontmatter(path, { journal: "daily", date: anchor });
       await weekCalendar.waitForActive(anchor);
       expect(await activeNotePath()).toBe(path);
+    });
+  });
+
+  describe("markdown-template block", () => {
+    before(async () => {
+      await browser.reloadObsidian({ vault: "./e2e/fixtures/e2e-views", plugins: ["journals"] });
+      await seedNote("templates/view-template.md", "# View block template heading\n");
+    });
+
+    it("renders the template's content rather than the empty or error state", async () => {
+      await openBlocksView();
+
+      const block = $(MARKDOWN_TEMPLATE);
+      await block.waitForExist({ timeoutMsg: "markdown-template block did not render" });
+      await expect(block.$(".journal-view-markdown-template__empty")).not.toBeExisting();
+      await expect(block.$(".journal-view-markdown-template__error")).not.toBeExisting();
+      await expect(block.$("h1")).toHaveText("View block template heading");
+    });
+  });
+
+  describe("divider block", () => {
+    it("renders a separator element", async () => {
+      await openBlocksView();
+      await expect($(`${DIVIDER}[role="separator"]`)).toBeExisting();
     });
   });
 });
