@@ -79,6 +79,45 @@ export function markdownLeafCount(): Promise<number> {
   return browser.executeObsidian(({ app }) => app.workspace.getLeavesOfType("markdown").length);
 }
 
+// A "split" open creates a pane beside the active one, so the main root split gains a child; a
+// "tab" open reuses the existing tab group and leaves this count unchanged. A leaf count alone
+// cannot tell split from tab — both add a leaf — so this is the signal that distinguishes them.
+// Reaching workspace.rootSplit.children mirrors uri.ts's protocolHandlers cast: internal runtime
+// shape, deliberately so, since the regression we guard against is Obsidian changing that routing.
+export function rootSplitChildCount(): Promise<number> {
+  return browser.executeObsidian(({ app }) => {
+    const workspace = app.workspace as unknown as { rootSplit: { children: readonly unknown[] } };
+    return workspace.rootSplit.children.length;
+  });
+}
+
+// A "window" open hosts the note in a popout window, which Obsidian tracks under
+// workspace.floatingSplit. Counting those windows confirms the popout opened rather than the note
+// falling back into the main window — the exact fallback an Obsidian API change once introduced.
+export function popoutWindowCount(): Promise<number> {
+  return browser.executeObsidian(({ app }) => {
+    const workspace = app.workspace as unknown as { floatingSplit?: { children: readonly unknown[] } };
+    return workspace.floatingSplit?.children.length ?? 0;
+  });
+}
+
+// Detaches every leaf rooted outside the main window, which closes its popout. A test that opens a
+// popout must call this before finishing: an open popout stays the active window, so the next
+// test's modals render in the popout's document where the main-window selectors can't reach them.
+export async function closePopoutWindows(): Promise<void> {
+  await browser.executeObsidian(({ app }) => {
+    const workspace = app.workspace as unknown as {
+      rootSplit: unknown;
+      iterateAllLeaves(callback: (leaf: { getRoot(): unknown; detach(): void }) => void): void;
+    };
+    const popoutLeaves: { detach(): void }[] = [];
+    workspace.iterateAllLeaves((leaf) => {
+      if (leaf.getRoot() !== workspace.rootSplit) popoutLeaves.push(leaf);
+    });
+    for (const leaf of popoutLeaves) leaf.detach();
+  });
+}
+
 export function waitForFrontmatter(
   path: string,
   predicate: (frontmatter: Frontmatter) => boolean,
