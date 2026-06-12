@@ -249,5 +249,27 @@ describe("calendar view", () => {
 
       await waitForState(headerMonthAnchor, (anchor) => anchor === start, "header-month did not return");
     });
+
+    it("creates and opens this month's note when the month period button is clicked", async () => {
+      await openCalendarView();
+      await $(`${TOOLBAR} [data-period="month"]`).click();
+
+      const path = await waitForActiveNoteIn("month");
+      await waitForFrontmatter(path, (fm) => fm.journal === "monthly", `waited for ${path} to attach journal=monthly`);
+
+      await waitForState(
+        async () => (await $(`${TOOLBAR} [data-period="month"]`).getAttribute("data-active")) ?? undefined,
+        (active) => active === "true",
+        "month period button did not become active after its note opened",
+      );
+    });
+
+    it("creates and opens today's day note when the Today button is clicked", async () => {
+      await openCalendarView();
+      await $(`${TOOLBAR} [aria-label="Today"]`).click();
+
+      const path = await waitForActiveNoteIn("day");
+      await waitForFrontmatter(path, (fm) => fm.journal === "daily", `waited for ${path} to attach journal=daily`);
+    });
   });
 });
