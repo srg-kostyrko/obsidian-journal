@@ -2,7 +2,7 @@ import { onMounted, onUnmounted, provide, shallowRef, toRaw, toValue, watchEffec
 
 import type { AnchorString, Period } from "@/calendar";
 import { useService } from "@/infrastructure/di";
-import { NotesService, type VaultPath } from "@/infrastructure/host";
+import { NoteMetadataService, NotesService, type VaultPath } from "@/infrastructure/host";
 import { JournalsIndex, JournalsRepository } from "@/journals";
 
 import { DecorationEngine, type DecorationBinding } from "./engine";
@@ -19,6 +19,7 @@ export function useCellDecorations(
   const journals = useService(JournalsRepository);
   const index = useService(JournalsIndex);
   const notes = useService(NotesService);
+  const metadata = useService(NoteMetadataService);
 
   const cells = new Map<AnchorString, CellStyleRef>();
   let periodsByAnchor = new Map<AnchorString, Period[]>();
@@ -90,6 +91,16 @@ export function useCellDecorations(
     }
   }
 
+  // Re-evaluate every live cell against the current metadata without rebuilding the
+  // scope maps — used when the backing notes are unchanged in scope but their parsed
+  // metadata has caught up (e.g. after a rename, see below).
+  function recomputeSlots(): void {
+    const result = engine.evaluateRange(readPeriods(), gatherDecorations());
+    for (const [anchor, slot] of cells) {
+      slot.value = result.get(anchor) ?? [];
+    }
+  }
+
   watchEffect(reseed);
   provide(CellDecorationMapKey, cells);
 
@@ -112,9 +123,24 @@ export function useCellDecorations(
       if (!periodsAtAnchor || !slot) return;
       slot.value = engine.evaluateRange(periodsAtAnchor, gatherDecorations()).get(entry.anchor) ?? [];
     });
+    // A rename re-keys the index (entryChanged above) before metadataCache has re-parsed
+    // the new path, so the synchronous re-eval reads stale (often empty) metadata and a
+    // pure rename fires no metadata-changed to correct it. metadataCache "resolved" is the
+    // "cache caught up" signal — recompute the affected cells once it lands.
+    let recomputeAfterRename = false;
+    const offRename = notes.events.on("renamed", ({ from, to }) => {
+      if (anchorsByPath.has(from) || anchorsByPath.has(to)) recomputeAfterRename = true;
+    });
+    const offResolved = metadata.onResolved(() => {
+      if (!recomputeAfterRename) return;
+      recomputeAfterRename = false;
+      recomputeSlots();
+    });
     onUnmounted(() => {
       offMeta();
       offIndex();
+      offRename();
+      offResolved();
     });
   });
 

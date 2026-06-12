@@ -271,6 +271,47 @@ describe("useCellDecorations", () => {
       expect(slot.value).toHaveLength(1);
     });
 
+    it("recomputes a renamed cell on the next resolved when the rename re-keyed it before the cache caught up", async () => {
+      const decoration = buildDecoration({
+        mode: "or",
+        conditions: [buildCondition("title", { condition: "ends-with", value: "-match" })],
+        styles: [buildStyle("background")],
+      });
+      const h = buildHarness([decoration]);
+      const period = DayPeriod.containing(date("2026-05-25"));
+      const anchor = period.anchor.toAnchor();
+      const index = h.c.resolve(JournalsIndex);
+
+      const oldPath = "Daily/plain.md" as VaultPath;
+      index.register({ journalName: "daily", anchor, path: oldPath });
+      h.fakeMetadata.setMetadata(oldPath, { title: "plain", tags: [], properties: {}, tasks: [] });
+
+      const { captured } = mount(h.c, () =>
+        useCellDecorations(
+          () => [period],
+          () => ["daily"],
+        ),
+      );
+      await nextTick();
+      const slot = captured.value!.get(anchor)!;
+      expect(slot.value).toHaveLength(0);
+
+      // The rename re-keys the entry before the new path's metadata exists, so the
+      // synchronous entryChanged re-eval reads nothing and the slot stays empty.
+      const newPath = "Daily/renamed-match.md" as VaultPath;
+      index.transferPath(oldPath, newPath);
+      await nextTick();
+      expect(slot.value).toHaveLength(0);
+
+      // Cache catches up, then metadataCache "resolved" lands after the rename event.
+      h.fakeMetadata.setMetadata(newPath, { title: "renamed-match", tags: [], properties: {}, tasks: [] });
+      h.notesEmitter.emit("renamed", { from: oldPath, to: newPath });
+      h.fakeMetadata.emitResolved();
+      await nextTick();
+
+      expect(slot.value).toHaveLength(1);
+    });
+
     it("detaches subscriptions on unmount", async () => {
       const { h, period, path } = withHasNote();
       const { captured, unmount } = mount(h.c, () =>

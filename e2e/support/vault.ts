@@ -17,6 +17,23 @@ export async function createNote(path: string, content = ""): Promise<void> {
   );
 }
 
+// Overwrites a note's whole content in place — a foreign edit (vault.modify, not the
+// plugin's own writers) so metadataCache re-reads the note and the live "metadata-changed"
+// event fires, exactly as a user typing into the note would drive it.
+export async function writeNote(path: string, content: string): Promise<void> {
+  const written = await browser.executeObsidian(
+    async ({ app, obsidian }, notePath, body) => {
+      const file = app.vault.getAbstractFileByPath(notePath);
+      if (!(file instanceof obsidian.TFile)) return false;
+      await app.vault.modify(file, body);
+      return true;
+    },
+    path,
+    content,
+  );
+  if (!written) throw new FixtureFileMissingError(path);
+}
+
 export async function renameNote(from: string, to: string): Promise<void> {
   // The TFile lookup must run in-browser, but the callback is stringified and
   // can't reach an imported error; report via sentinel and raise in Node.

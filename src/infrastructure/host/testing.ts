@@ -294,8 +294,9 @@ export class FakeTemplaterService implements Pick<TemplaterService, "apply" | "c
   }
 }
 
-export class FakeNoteMetadataService implements Pick<NoteMetadataService, "get"> {
+export class FakeNoteMetadataService implements Pick<NoteMetadataService, "get" | "onResolved"> {
   readonly #entries = new Map<VaultPath, NoteMetadata>();
+  readonly #resolvedCallbacks = new Set<() => void>();
 
   setMetadata(path: VaultPath, metadata: NoteMetadata): void {
     this.#entries.set(path, metadata);
@@ -308,6 +309,15 @@ export class FakeNoteMetadataService implements Pick<NoteMetadataService, "get">
   get(path: VaultPath): Option<NoteMetadata> {
     const hit = this.#entries.get(path);
     return hit ? new Some(hit) : new None<NoteMetadata>();
+  }
+
+  onResolved(callback: () => void): () => void {
+    this.#resolvedCallbacks.add(callback);
+    return () => this.#resolvedCallbacks.delete(callback);
+  }
+
+  emitResolved(): void {
+    for (const callback of this.#resolvedCallbacks) callback();
   }
 }
 

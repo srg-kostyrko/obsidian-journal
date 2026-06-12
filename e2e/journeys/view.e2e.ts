@@ -2,9 +2,12 @@ import { $, browser, expect } from "@wdio/globals";
 
 import {
   activeNotePath,
+  renameNote,
+  seedNote,
   waitForActiveNoteIn,
   waitForFrontmatter,
   waitForJournalFrontmatter,
+  writeNote,
 } from "../support/vault.js";
 
 import {
@@ -14,7 +17,10 @@ import {
   dayAnchor,
   expectBackgroundCleared,
   expectBackgroundHex,
+  expectDecorated,
   expectTextHex,
+  expectUndecorated,
+  note,
   seedDecorationFixture,
 } from "./decorations.js";
 import { calendar, openCalendarView } from "./view.js";
@@ -105,6 +111,112 @@ describe("calendar view", () => {
         await expectBackgroundCleared(calendar.periodCell("header-year"), STYLE_HEX.background);
         await expectTextHex(calendar.cell(dayAnchor(DECO_DAY.color)), STYLE_HEX.color);
       });
+    });
+  });
+
+  // Distinct from the matrix above, which renders against notes seeded before the cells
+  // mount. Here the view is already open and we edit a note in place — the cell must
+  // re-decorate off the live metadata-changed / index entryChanged events, no remount.
+  // View-leaf surface only: the live re-eval lives in the shared useCellDecorations
+  // composable, so proving it on one mount covers the code-block mount too.
+  describe("live editing", () => {
+    before(async () => {
+      await browser.reloadObsidian({ vault: "./e2e/fixtures/e2e-journeys", plugins: ["journals"] });
+      await openCalendarView();
+    });
+
+    it("decorates a day cell when a matching tag is added to its note", async () => {
+      const anchor = dayAnchor(8);
+      const path = "day/tag-add.md";
+      await seedNote(path, note("daily", anchor));
+      await waitForFrontmatter(path, (fm) => fm.journal === "daily", `waited for ${path} to be indexed`);
+      await expectUndecorated(calendar.cell(anchor));
+
+      await writeNote(path, note("daily", anchor, "marker #ctag"));
+
+      await expectDecorated(calendar.cell(anchor));
+    });
+
+    it("clears a day cell's decoration when the matching tag is removed from its note", async () => {
+      const anchor = dayAnchor(9);
+      const path = "day/tag-remove.md";
+      await seedNote(path, note("daily", anchor, "marker #ctag"));
+      await expectDecorated(calendar.cell(anchor));
+
+      await writeNote(path, note("daily", anchor, "marker with no tag"));
+
+      await expectUndecorated(calendar.cell(anchor));
+    });
+
+    it("decorates a day cell when its note is renamed to match the title condition", async () => {
+      const anchor = dayAnchor(11);
+      const from = "day/rename-target.md";
+      await seedNote(from, note("daily", anchor));
+      await waitForFrontmatter(from, (fm) => fm.journal === "daily", `waited for ${from} to be indexed`);
+      await expectUndecorated(calendar.cell(anchor));
+
+      await renameNote(from, "day/rename-target-07.md");
+
+      await expectDecorated(calendar.cell(anchor));
+    });
+
+    it("clears a day cell's decoration when its note is renamed off the title condition", async () => {
+      const anchor = dayAnchor(12);
+      const from = "day/keep-07.md";
+      await seedNote(from, note("daily", anchor));
+      await expectDecorated(calendar.cell(anchor));
+
+      await renameNote(from, "day/keep-plain.md");
+
+      await expectUndecorated(calendar.cell(anchor));
+    });
+
+    it("decorates a day cell when a matching property is added to its note", async () => {
+      const anchor = dayAnchor(14);
+      const path = "day/property-add.md";
+      await seedNote(path, note("daily", anchor));
+      await waitForFrontmatter(path, (fm) => fm.journal === "daily", `waited for ${path} to be indexed`);
+      await expectUndecorated(calendar.cell(anchor));
+
+      // cspell:disable-next-line
+      await writeNote(path, note("daily", anchor, "", ["cprop: present"]));
+
+      await expectDecorated(calendar.cell(anchor));
+    });
+
+    it("clears a day cell's decoration when the matching property is removed from its note", async () => {
+      const anchor = dayAnchor(17);
+      const path = "day/property-remove.md";
+      // cspell:disable-next-line
+      await seedNote(path, note("daily", anchor, "", ["cprop: present"]));
+      await expectDecorated(calendar.cell(anchor));
+
+      await writeNote(path, note("daily", anchor));
+
+      await expectUndecorated(calendar.cell(anchor));
+    });
+
+    it("clears the week cell's decoration when its note's open task is checked off", async () => {
+      const week = (await calendar.periodCell("week-number-cell").getAttribute("data-anchor")) ?? "";
+      const path = "week/live-weekly.md";
+      await seedNote(path, note("weekly", week, "- [ ] open"));
+      await expectDecorated(calendar.periodCell("week-number-cell"));
+
+      await writeNote(path, note("weekly", week, "- [x] done"));
+
+      await expectUndecorated(calendar.periodCell("week-number-cell"));
+    });
+
+    it("decorates the month header when its note's last open task is checked off", async () => {
+      const month = (await calendar.periodCell("header-month").getAttribute("data-anchor")) ?? "";
+      const path = "month/live-monthly.md";
+      await seedNote(path, note("monthly", month, "- [ ] open"));
+      await waitForFrontmatter(path, (fm) => fm.journal === "monthly", `waited for ${path} to be indexed`);
+      await expectUndecorated(calendar.periodCell("header-month"));
+
+      await writeNote(path, note("monthly", month, "- [x] done"));
+
+      await expectDecorated(calendar.periodCell("header-month"));
     });
   });
 });

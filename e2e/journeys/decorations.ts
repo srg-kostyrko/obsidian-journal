@@ -37,7 +37,7 @@ export function dayAnchor(day: number): string {
   return `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, "0")}-${String(day).padStart(2, "0")}`;
 }
 
-function note(journal: string, anchor: string, body = "", extraFrontmatter: readonly string[] = []): string {
+export function note(journal: string, anchor: string, body = "", extraFrontmatter: readonly string[] = []): string {
   const fm = [`journal: ${journal}`, `journal-date: ${anchor}`, ...extraFrontmatter];
   return `---\n${fm.join("\n")}\n---\n${body}\n`;
 }
@@ -145,6 +145,25 @@ export function expectBackgroundCleared(cell: CellLocator, hex: string): Promise
     (v) => v !== hex,
     `waited for cell background to clear from ${hex}`,
   );
+}
+
+// The title / tag / property / open-task / all-tasks-completed conditions all render a
+// top-left corner, so it is the single handle the live-edit tests watch: present once an
+// edit makes the condition match, gone once the match is removed. waitForExist polls both
+// directions off the event-driven re-eval (no remount), which is the seam under test.
+const LIVE_DECORATION = ".decoration-corner.top-left";
+
+export async function expectDecorated(cell: CellLocator): Promise<void> {
+  await cell.$(LIVE_DECORATION).waitForExist({
+    timeoutMsg: "expected the cell to gain its decoration after the edit",
+  });
+}
+
+export async function expectUndecorated(cell: CellLocator): Promise<void> {
+  await cell.$(LIVE_DECORATION).waitForExist({
+    reverse: true,
+    timeoutMsg: "expected the cell to lose its decoration after the edit",
+  });
 }
 
 // The decoration matrix is mount-context-agnostic: the view leaf and the
