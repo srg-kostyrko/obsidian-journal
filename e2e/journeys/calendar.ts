@@ -22,8 +22,12 @@ export interface CalendarSurface {
 // Binds the calendar mount root once so cell-finding isn't re-threaded through every
 // call. The view-leaf and (chunk 2) code-block mounts each construct one against
 // their own root and share every method.
-export function calendarSurface(root: string): CalendarSurface {
-  const cell = (anchor: string): CellLocator => $(`${root} .notes-month-view__day[data-anchor="${anchor}"]`);
+// The day-cell scope differs per mount: the month grid wraps each cell in
+// `.notes-month-view__day`; the week view renders bare `.notes-calendar-cell`s in its
+// row. Callers pass the scope so a week anchor that coincides with a day anchor never
+// resolves to the wrong cell.
+export function calendarSurface(root: string, daySelector = ".notes-month-view__day"): CalendarSurface {
+  const cell = (anchor: string): CellLocator => $(`${root} ${daySelector}[data-anchor="${anchor}"]`);
   const periodCell = (testId: PeriodTestId): CellLocator => $(`${root} [data-testid="${testId}"]`);
   const waitForActive = (anchor: string): Promise<void> =>
     waitForState(
