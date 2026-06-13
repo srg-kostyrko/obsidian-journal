@@ -8,6 +8,7 @@ const props = defineProps<{
   refDate: AnchorString;
   shelf: string | null;
   weeks?: "none" | "left" | "right";
+  hiddenWeekdays?: readonly number[];
 }>();
 
 const week = computed(() => WeekPeriod.containing(CalendarDate.fromAnchor(props.refDate)));
@@ -15,7 +16,7 @@ const week = computed(() => WeekPeriod.containing(CalendarDate.fromAnchor(props.
 
 <template>
   <div class="timeline-week">
-    <NotesWeekView :shelf :week :weeks="weeks" />
+    <NotesWeekView :shelf :week :weeks="weeks" :hidden-weekdays="hiddenWeekdays" />
   </div>
 </template>
 

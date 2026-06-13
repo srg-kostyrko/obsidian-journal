@@ -911,6 +911,7 @@
   "journal_edit_code_block_timeline_mode_lead": "Change the timeline mode by adding a mode option to the block.",
   "journal_edit_code_block_timeline_modes_lead": "Supported modes:",
   "journal_edit_code_block_timeline_weeks": "controls the week-number column (left, right, or none).",
+  "journal_edit_code_block_timeline_hidden_weekdays": "hides the listed days of the week (0 = Sunday … 6 = Saturday), e.g. [0, 6] to drop weekends.",
   "journal_edit_code_block_home_description": "The home block displays links to the current notes in your journals.",
   "journal_edit_code_block_home_default": "By default it looks like this:",
   "journal_edit_code_block_home_options_lead": "Supported options:",

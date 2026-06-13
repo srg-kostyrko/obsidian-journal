@@ -49,6 +49,7 @@ const customHomeBody = `show:\n  - day\n  - month\nscale: 2\nseparator: " | "`;
         </li>
       </ul>
       <p><code>weeks</code> — {{ m.journal_edit_code_block_timeline_weeks() }}</p>
+      <p><code>hiddenWeekdays</code> — {{ m.journal_edit_code_block_timeline_hidden_weekdays() }}</p>
     </section>
 
     <section class="code-block-reference__section">

@@ -1,6 +1,7 @@
 import { cleanup, render } from "@testing-library/vue";
 import { afterEach, beforeAll, beforeEach, describe, expect, it, vi } from "vitest";
 
+import { CalendarDate, type AnchorString } from "@/calendar";
 import { anchor, installTestCalendar } from "@/calendar/testing";
 import { initLocale } from "@/i18n";
 import { provideInjectorOnApp } from "@/infrastructure/di";
@@ -191,6 +192,31 @@ describe("TimelineCodeBlock", () => {
 
       const row = container.querySelector<HTMLElement>(".notes-week-view__row");
       expect(row?.dataset.weeks).toBe("right");
+    });
+  });
+
+  describe("hidden weekdays", () => {
+    it("drops the hidden weekdays' day cells from the month grid", () => {
+      const h = buildNotesCalendarHarness({ journals: { daily: fixedJournal("daily", { type: "day" }) } });
+      h.index.register({ journalName: "daily", anchor: HOST_ANCHOR, path: HOST_PATH });
+
+      const { container } = mount(h, { path: HOST_PATH, config: { mode: "month", hiddenWeekdays: [0, 6] } });
+
+      const cells = [...container.querySelectorAll<HTMLElement>(".notes-month-view__day")];
+      const weekdays = cells.map((cell) =>
+        Number(CalendarDate.fromAnchor(cell.dataset.anchor as AnchorString).format("d")),
+      );
+      expect(cells.length).toBeGreaterThan(0);
+      expect(weekdays.some((day) => day === 0 || day === 6)).toBe(false);
+    });
+
+    it("drops the hidden weekdays' header labels from the week grid", () => {
+      const h = buildNotesCalendarHarness({ journals: { daily: fixedJournal("daily", { type: "day" }) } });
+      h.index.register({ journalName: "daily", anchor: HOST_ANCHOR, path: HOST_PATH });
+
+      const { container } = mount(h, { path: HOST_PATH, config: { mode: "week", hiddenWeekdays: [0, 6] } });
+
+      expect(container.querySelectorAll(".notes-week-view__weekday").length).toBe(5);
     });
   });
 });

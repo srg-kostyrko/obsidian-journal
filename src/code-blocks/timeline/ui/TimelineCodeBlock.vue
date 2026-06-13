@@ -64,8 +64,32 @@ const shelf = computed(() => config.shelf ?? derivedShelf.value);
 </script>
 
 <template>
-  <TimelineWeek v-if="mode === 'week'" :ref-date="refDate" :shelf="shelf" :weeks="config.weeks" />
-  <TimelineMonth v-else-if="mode === 'month'" :ref-date="refDate" :shelf="shelf" :weeks="config.weeks" />
-  <TimelineQuarter v-else-if="mode === 'quarter'" :ref-date="refDate" :shelf="shelf" :weeks="config.weeks" />
-  <TimelineCalendar v-else :ref-date="refDate" :shelf="shelf" :weeks="config.weeks" />
+  <TimelineWeek
+    v-if="mode === 'week'"
+    :ref-date="refDate"
+    :shelf="shelf"
+    :weeks="config.weeks"
+    :hidden-weekdays="config.hiddenWeekdays"
+  />
+  <TimelineMonth
+    v-else-if="mode === 'month'"
+    :ref-date="refDate"
+    :shelf="shelf"
+    :weeks="config.weeks"
+    :hidden-weekdays="config.hiddenWeekdays"
+  />
+  <TimelineQuarter
+    v-else-if="mode === 'quarter'"
+    :ref-date="refDate"
+    :shelf="shelf"
+    :weeks="config.weeks"
+    :hidden-weekdays="config.hiddenWeekdays"
+  />
+  <TimelineCalendar
+    v-else
+    :ref-date="refDate"
+    :shelf="shelf"
+    :weeks="config.weeks"
+    :hidden-weekdays="config.hiddenWeekdays"
+  />
 </template>

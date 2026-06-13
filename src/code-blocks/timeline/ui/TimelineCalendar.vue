@@ -8,6 +8,7 @@ const props = defineProps<{
   refDate: AnchorString;
   shelf: string | null;
   weeks?: "none" | "left" | "right";
+  hiddenWeekdays?: readonly number[];
 }>();
 
 const months = computed<readonly MonthPeriod[]>(() => {
@@ -25,6 +26,7 @@ const months = computed<readonly MonthPeriod[]>(() => {
         :shelf
         :month
         :weeks="weeks"
+        :hidden-weekdays="hiddenWeekdays"
         hide-outside-dates
       />
     </div>

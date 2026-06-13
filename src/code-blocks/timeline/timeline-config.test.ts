@@ -36,6 +36,15 @@ describe("timelineBlockSchema", () => {
     expect(v.safeParse(timelineBlockSchema, { mode: "month" }).success).toBe(true);
   });
 
+  it("accepts a hiddenWeekdays array", () => {
+    const result = v.parse(timelineBlockSchema, { hiddenWeekdays: [0, 6] });
+    expect(result.hiddenWeekdays).toEqual([0, 6]);
+  });
+
+  it("rejects a weekday index outside the 0-6 range", () => {
+    expect(v.safeParse(timelineBlockSchema, { hiddenWeekdays: [7] }).success).toBe(false);
+  });
+
   it("infers TimelineMode as the mode union", () => {
     expectTypeOf<TimelineMode>().toEqualTypeOf<"week" | "month" | "quarter" | "calendar">();
   });
@@ -45,6 +54,7 @@ describe("timelineBlockSchema", () => {
       mode?: TimelineMode | undefined;
       shelf?: string | undefined;
       weeks?: "none" | "left" | "right" | undefined;
+      hiddenWeekdays?: number[] | undefined;
     }>();
   });
 });
