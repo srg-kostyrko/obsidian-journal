@@ -110,3 +110,9 @@ export async function waitForDialogClosed(): Promise<void> {
 export async function toggleModalCheckbox(): Promise<void> {
   await activeModal().$(".checkbox-container").click();
 }
+
+// Click a plain checkbox in the dialog by its wrapping <label>'s visible text (e.g. a weekday
+// short name like "Sat"). Clicking the label toggles its nested <input type="checkbox">.
+export async function clickModalCheckboxByLabel(label: string): Promise<void> {
+  await activeModal().$(`label*=${label}`).click();
+}

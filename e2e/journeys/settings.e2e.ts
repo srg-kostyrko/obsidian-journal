@@ -4,6 +4,7 @@ import { getSettings, waitForSettings } from "../support/plugin-data.js";
 import {
   clickButton,
   clickIcon,
+  clickModalCheckboxByLabel,
   closeSettings,
   deleteInModal,
   expandSection,
@@ -253,6 +254,34 @@ describe("settings", () => {
       await submitModal();
 
       await waitForSettings((s) => lastBlock(s.views)?.config?.weeks === "right", "edited block config not persisted");
+    });
+
+    it("hides a weekday via a calendar block's config picker and persists it", async () => {
+      const initial = await getSettings();
+      const calId = viewIdByName(initial.views, "Calendar") ?? "";
+      const lastBlockHidden = (views: Record<string, StoredView> | undefined): number[] | undefined => {
+        const blocks = views?.[calId]?.blocks ?? [];
+        return (blocks.at(-1) as { config?: { hiddenWeekdays?: number[] } } | undefined)?.config?.hiddenWeekdays;
+      };
+
+      await clickIcon("Open Calendar");
+      await clickButton("Add block");
+      await clickButton("Week calendar");
+      await waitForSettings(
+        (s) => Array.isArray(lastBlockHidden(s.views)) && lastBlockHidden(s.views)?.length === 0,
+        "added week-calendar block did not default to no hidden weekdays",
+      );
+
+      const pencils = await $$('button[aria-label="Edit block"]').getElements();
+      await pencils.at(-1)?.click();
+      // Saturday is weekday index 6 (Sunday-based); checking it should persist [6].
+      await clickModalCheckboxByLabel("Sat");
+      await submitModal();
+
+      await waitForSettings(
+        (s) => JSON.stringify(lastBlockHidden(s.views)) === "[6]",
+        "hidden weekday not persisted to the block config",
+      );
     });
   });
 
