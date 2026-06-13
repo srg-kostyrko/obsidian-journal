@@ -58,6 +58,24 @@ describe("NotesWeekView", () => {
     });
   });
 
+  describe("weekday header", () => {
+    it("renders a label for each of the seven day columns", () => {
+      const h = buildNotesCalendarHarness({ journals: { daily: fixedJournal("daily", { type: "day" }) } });
+      const { container } = mount(h, { shelf: null, week });
+      expect(container.querySelectorAll(".notes-week-view__weekday").length).toBe(7);
+    });
+
+    it("orders weekday labels to match the weekdays of the rendered day cells", () => {
+      const h = buildNotesCalendarHarness({ journals: { daily: fixedJournal("daily", { type: "day" }) } });
+      const { container } = mount(h, { shelf: null, week });
+      const labels = [...container.querySelectorAll(".notes-week-view__weekday")].map((element) =>
+        element.textContent?.trim(),
+      );
+      const expected = [...week.days()].map((d) => d.format("ddd"));
+      expect(labels).toEqual(expected);
+    });
+  });
+
   describe("week-number cell", () => {
     it("renders the week-number cell when weeks is left", () => {
       const h = buildNotesCalendarHarness({ journals: { daily: fixedJournal("daily", { type: "day" }) } });

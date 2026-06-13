@@ -47,6 +47,8 @@ const rows = computed<readonly WeekRow[]>(() => {
   return out;
 });
 
+const weekdayNames = computed(() => (rows.value[0]?.days ?? []).map((d) => d.period.start.format("ddd")));
+
 const monthPeriod = computed(() => rawMonth.value);
 const quarterPeriod = computed(() => QuarterPeriod.containing(rawMonth.value.anchor));
 const yearPeriod = computed(() => YearPeriod.containing(rawMonth.value.anchor));
@@ -98,6 +100,17 @@ const inactiveDay = inactiveCell();
       </slot>
     </div>
     <div class="notes-month-view__grid" :data-weeks="showWeekNumber ? weeksPos : null">
+      <div
+        v-if="showWeekNumber && weeksPos === 'left'"
+        class="notes-month-view__weekday-spacer"
+        aria-hidden="true"
+      ></div>
+      <span v-for="(day, i) in weekdayNames" :key="i" class="notes-month-view__weekday">{{ day }}</span>
+      <div
+        v-if="showWeekNumber && weeksPos === 'right'"
+        class="notes-month-view__weekday-spacer"
+        aria-hidden="true"
+      ></div>
       <template v-for="row in rows" :key="row.key">
         <NotesCalendarCell
           v-if="showWeekNumber && weeksPos === 'left'"
@@ -147,6 +160,15 @@ const inactiveDay = inactiveCell();
 }
 .notes-month-view__grid[data-weeks="right"] {
   grid-template-columns: repeat(7, 1fr) auto;
+}
+.notes-month-view__weekday {
+  font-size: 0.6em;
+  line-height: 1;
+  text-align: center;
+  color: var(--text-muted);
+  display: flex;
+  justify-content: center;
+  align-items: end;
 }
 .notes-month-view__week-number {
   font-weight: var(--font-bold);

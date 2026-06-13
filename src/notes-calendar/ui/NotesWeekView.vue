@@ -25,6 +25,7 @@ const yearCell = useNotesCell({ journalNames: () => scope.year.value });
 
 const rawWeek = computed(() => toRaw(props.week));
 const days = computed(() => [...rawWeek.value.days()].map((d) => DayPeriod.containing(d)));
+const weekdayNames = computed(() => days.value.map((d) => d.start.format("ddd")));
 const monthPeriod = computed(() => MonthPeriod.containing(rawWeek.value.anchor));
 const quarterPeriod = computed(() => QuarterPeriod.containing(rawWeek.value.anchor));
 const yearPeriod = computed(() => YearPeriod.containing(rawWeek.value.anchor));
@@ -59,6 +60,19 @@ useCellDecorations(
         <NotesCalendarCell data-testid="header-year" :period="yearPeriod" :cell="yearCell" />
       </slot>
     </div>
+    <div class="notes-week-view__weekdays" :data-weeks="showWeekNumber ? weeksPos : null">
+      <div
+        v-if="showWeekNumber && weeksPos === 'left'"
+        class="notes-week-view__weekday-spacer"
+        aria-hidden="true"
+      ></div>
+      <span v-for="(day, i) in weekdayNames" :key="i" class="notes-week-view__weekday">{{ day }}</span>
+      <div
+        v-if="showWeekNumber && weeksPos === 'right'"
+        class="notes-week-view__weekday-spacer"
+        aria-hidden="true"
+      ></div>
+    </div>
     <div class="notes-week-view__row" :data-weeks="showWeekNumber ? weeksPos : null">
       <NotesCalendarCell
         v-if="showWeekNumber && weeksPos === 'left'"
@@ -89,6 +103,17 @@ useCellDecorations(
   display: flex;
   justify-content: space-around;
   gap: var(--size-2-2);
+}
+.notes-week-view__weekdays {
+  display: flex;
+  gap: var(--size-2-1);
+}
+.notes-week-view__weekdays > * {
+  flex: 1;
+  font-size: 0.6em;
+  line-height: 1;
+  text-align: center;
+  color: var(--text-muted);
 }
 .notes-week-view__row {
   display: flex;
