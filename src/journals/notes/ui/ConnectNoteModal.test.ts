@@ -1,5 +1,5 @@
 import userEvent from "@testing-library/user-event";
-import { cleanup, render, screen } from "@testing-library/vue";
+import { cleanup, fireEvent, render, screen } from "@testing-library/vue";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
 import { installTestCalendar, anchor } from "@/calendar/testing";
@@ -17,6 +17,7 @@ import { JournalsIndex } from "../../journals-index";
 import { NumberingService } from "../../numbering";
 import { JournalsRepository } from "../../repository";
 import { fakeRepo, fixedJournal } from "../../testing";
+import { TimelineService } from "../../timeline";
 import { NotePathService } from "../note-path";
 
 import ConnectNoteModal from "./ConnectNoteModal.vue";
@@ -29,6 +30,7 @@ function buildContainer(repo: JournalsRepository): Container {
   c.register(JournalsRepository).useValue(repo);
   c.register(JournalsIndex).useClass(JournalsIndex);
   c.register(CycleService).useClass(CycleService);
+  c.register(TimelineService).useClass(TimelineService);
   c.register(NumberingService).useClass(NumberingService);
   c.register(FrontmatterService).useClass(FrontmatterService);
   c.register(TemplateEngine).useClass(TemplateEngine);
@@ -113,6 +115,41 @@ describe("ConnectNoteModal", () => {
       mountModal("inbox/note.md" as VaultPath, container, api);
       await userEvent.click(screen.getByText(m.connect_note_modal_connect()));
       expect(submit).toHaveBeenCalledWith(expect.objectContaining({ action: "connect", journalName: "daily" }));
+    });
+
+    it("disables Connect when the chosen date is outside the journal timeline", async () => {
+      const repo = fakeRepo({
+        daily: fixedJournal(
+          "daily",
+          { type: "day" },
+          { timeline: { start: anchor(""), end: { kind: "date", date: anchor("2026-06-01") } } },
+        ),
+      });
+      const container = buildContainer(repo);
+      const api: ModalApi<ConnectNoteResult> = { submit: vi.fn(), cancel: vi.fn() };
+
+      mountModal("inbox/note.md" as VaultPath, container, api);
+      await fireEvent.update(screen.getByLabelText(m.connect_note_modal_date_label()), "2026-09-15");
+
+      const connect = screen.getByRole("button", { name: m.connect_note_modal_connect() });
+      expect((connect as HTMLButtonElement).disabled).toBe(true);
+    });
+
+    it("explains that the chosen date is outside the journal timeline", async () => {
+      const repo = fakeRepo({
+        daily: fixedJournal(
+          "daily",
+          { type: "day" },
+          { timeline: { start: anchor(""), end: { kind: "date", date: anchor("2026-06-01") } } },
+        ),
+      });
+      const container = buildContainer(repo);
+      const api: ModalApi<ConnectNoteResult> = { submit: vi.fn(), cancel: vi.fn() };
+
+      mountModal("inbox/note.md" as VaultPath, container, api);
+      await fireEvent.update(screen.getByLabelText(m.connect_note_modal_date_label()), "2026-09-15");
+
+      expect(screen.getByText(m.connect_note_modal_out_of_bounds())).toBeTruthy();
     });
 
     it("spells out the current and configured folder on the move toggle", () => {

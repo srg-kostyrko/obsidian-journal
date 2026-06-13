@@ -219,6 +219,7 @@
   "connect_note_modal_connect": "Connect",
   "connect_note_modal_connected_to": "This note is connected to \"{journalName}\".",
   "connect_note_modal_disconnect": "Disconnect",
+  "connect_note_modal_out_of_bounds": "This date is outside the journal's active timeline.",
 
   "bulk_add_command": "Bulk add notes to this journal",
   "bulk_add_notes_to_title": "Add notes to {journalName}",

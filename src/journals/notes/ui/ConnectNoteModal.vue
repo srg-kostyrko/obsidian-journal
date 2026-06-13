@@ -15,6 +15,7 @@ import { CycleService } from "../../cycle";
 import { FrontmatterService } from "../../frontmatter";
 import { JournalsIndex } from "../../journals-index";
 import { JournalsRepository } from "../../repository";
+import { TimelineService } from "../../timeline";
 import { NotePathService } from "../note-path";
 import { splitVaultPath } from "../vault-path";
 
@@ -26,6 +27,7 @@ const api = useModal<ConnectNoteResult>();
 const journals = useService(JournalsRepository);
 const index = useService(JournalsIndex);
 const cycle = useService(CycleService);
+const timeline = useService(TimelineService);
 const frontmatter = useService(FrontmatterService);
 const paths = useService(NotePathService);
 
@@ -85,7 +87,13 @@ const configuredName = computed(() => (configuredPath.value ? splitVaultPath(con
 const currentFolder = computed(() => splitVaultPath(props.path)[0]);
 const configuredFolder = computed(() => (configuredPath.value ? splitVaultPath(configuredPath.value)[0] : ""));
 
-const canConnect = computed(() => Boolean(anchor.value) && (!occupant.value || override.value));
+const outOfBounds = computed(() => {
+  const a = anchor.value;
+  if (!a) return false;
+  return !timeline.contains(selected.value, a);
+});
+
+const canConnect = computed(() => Boolean(anchor.value) && !outOfBounds.value && (!occupant.value || override.value));
 
 function disconnect(): void {
   api.submit({ action: "disconnect" });
@@ -126,6 +134,9 @@ function connect(): void {
     <UiSettingRow>
       <template #name>{{ m.connect_note_modal_date_label() }}</template>
       <input v-model="dateString" type="date" :aria-label="m.connect_note_modal_date_label()" />
+    </UiSettingRow>
+    <UiSettingRow v-if="outOfBounds">
+      <template #description>{{ m.connect_note_modal_out_of_bounds() }}</template>
     </UiSettingRow>
     <UiSettingRow v-if="occupant">
       <template #name>{{ m.connect_note_modal_override_label() }}</template>
