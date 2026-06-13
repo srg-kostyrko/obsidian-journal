@@ -4,7 +4,7 @@ import { defineModal } from "@/infrastructure/host/modals";
 import AddBlockPickerModal from "./AddBlockPickerModal.vue";
 import AddToolbarItemPickerModal from "./AddToolbarItemPickerModal.vue";
 import DeleteViewModal from "./DeleteViewModal.vue";
-import EditToolbarItemModal from "./EditToolbarItemModal.vue";
+import EditConfigModal from "./EditConfigModal.vue";
 import ViewNameModal from "./ViewNameModal.vue";
 
 import type { ToolbarItemDefinition } from "../define-toolbar-item";
@@ -48,12 +48,17 @@ export const addToolbarItemPickerModal = defineModal<{ key: string; defaultConfi
   title: (_: AddToolbarItemPickerModalProps) => m.view_add_toolbar_item(),
 });
 
-export interface EditToolbarItemModalProps {
+export interface EditConfigModalProps {
   component: Component;
   config: Record<string, unknown>;
 }
 
 export const editToolbarItemModal = defineModal<Record<string, unknown>>()({
-  component: EditToolbarItemModal,
-  title: (_: EditToolbarItemModalProps) => m.view_toolbar_item_edit(),
+  component: EditConfigModal,
+  title: (_: EditConfigModalProps) => m.view_toolbar_item_edit(),
+});
+
+export const editBlockModal = defineModal<Record<string, unknown>>()({
+  component: EditConfigModal,
+  title: (_: EditConfigModalProps) => m.view_block_edit(),
 });

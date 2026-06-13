@@ -1,5 +1,5 @@
 import userEvent from "@testing-library/user-event";
-import { cleanup, render, screen } from "@testing-library/vue";
+import { cleanup, render, screen, waitFor } from "@testing-library/vue";
 import { createNanoEvents } from "nanoevents";
 import * as v from "valibot";
 import { afterEach, describe, expect, it, vi } from "vitest";
@@ -49,6 +49,16 @@ const toolbarBlockDefinition = {
   component: { render: () => null },
 } as unknown as ViewBlockDefinition;
 
+const calendarDefinition = {
+  key: "week-calendar",
+  label: "Week calendar",
+  icon: "calendar",
+  schema: v.object({ weeks: v.optional(v.string()) }),
+  defaultConfig: { weeks: "left" },
+  component: { render: () => null },
+  configComponent: { render: () => null },
+} as unknown as ViewBlockDefinition;
+
 const stubToolbarItemDefinition = {
   key: "stub-item",
   label: "Stub item",
@@ -70,6 +80,7 @@ async function setup(blocks: { id: string; key: string; config: Record<string, u
   container.register(ModalService).useValue(new FakeModalService() as unknown as ModalService);
   container.register(ViewsEventsToken).useFactory(() => createNanoEvents());
   container.register(ViewBlockDefinitionToken).useValue(dividerDefinition);
+  container.register(ViewBlockDefinitionToken).useValue(calendarDefinition);
   container.register(ViewsRepository).useClass(ViewsRepository);
   container.register(ToolbarItemsService).useClass(ToolbarItemsService);
   container.register(ViewsService).useClass(ViewsService);
@@ -156,5 +167,35 @@ describe("BlocksList", () => {
     const { container } = await setupWithToolbar([{ id: blockIdA, key: "toolbar", config: { items: [] } }]);
     mount(container);
     expect(screen.getByText(m.view_toolbar_item_empty())).toBeTruthy();
+  });
+
+  describe("editing a block's config", () => {
+    it("offers an edit button for blocks whose definition has a config editor", async () => {
+      const { container } = await setup([{ id: blockIdA, key: "week-calendar", config: { weeks: "left" } }]);
+      mount(container);
+      expect(screen.getByLabelText(m.view_block_edit())).toBeTruthy();
+    });
+
+    it("offers no edit button for blocks without a config editor", async () => {
+      const { container } = await setup([{ id: blockIdA, key: "divider", config: {} }]);
+      mount(container);
+      expect(screen.queryByLabelText(m.view_block_edit())).toBeNull();
+    });
+
+    it("persists the edited config when the edit modal is saved", async () => {
+      const { container } = await setup([{ id: blockIdA, key: "week-calendar", config: { weeks: "left" } }]);
+      mount(container);
+      await userEvent.click(screen.getByLabelText(m.view_block_edit()));
+      const modals = container.resolve(ModalService) as unknown as FakeModalService;
+      modals.lastOpen<unknown, Record<string, unknown>>().submit({ weeks: "right" });
+      const repo = container.resolve(ViewsRepository);
+      await waitFor(() => {
+        const block = repo
+          .get(viewId)
+          .getOr(undefined as never)
+          ?.blocks.find((b) => b.id === blockIdA);
+        expect((block?.config as { weeks?: string }).weeks).toBe("right");
+      });
+    });
   });
 });

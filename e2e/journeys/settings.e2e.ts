@@ -227,6 +227,33 @@ describe("settings", () => {
 
       await waitForSettings((s) => lastButtonMode(s.views) === "create", "edited button mode not persisted");
     });
+
+    it("edits a block's config and persists the change", async () => {
+      const initial = await getSettings();
+      const calId = viewIdByName(initial.views, "Calendar") ?? "";
+      const lastBlock = (
+        views: Record<string, StoredView> | undefined,
+      ): { key?: string; config?: { weeks?: string } } | undefined => {
+        const blocks = views?.[calId]?.blocks ?? [];
+        return blocks.at(-1) as { key?: string; config?: { weeks?: string } } | undefined;
+      };
+
+      await clickIcon("Open Calendar");
+      await clickButton("Add block");
+      await clickButton("Week calendar");
+      await waitForSettings((s) => {
+        const block = lastBlock(s.views);
+        return block?.key === "week-calendar" && block.config?.weeks === "left";
+      }, "added week-calendar block not persisted");
+
+      // Edit pencils show only for blocks with a config editor; the one just added is last.
+      const pencils = await $$('button[aria-label="Edit block"]').getElements();
+      await pencils.at(-1)?.click();
+      await selectModalSelect("right");
+      await submitModal();
+
+      await waitForSettings((s) => lastBlock(s.views)?.config?.weeks === "right", "edited block config not persisted");
+    });
   });
 
   describe("decorations", () => {

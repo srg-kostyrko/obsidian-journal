@@ -7,7 +7,7 @@ import { m } from "@/i18n";
 import type { ModalApi } from "@/infrastructure/host/modals";
 import { provideModalApiOnApp } from "@/infrastructure/host/modals/testing";
 
-import EditToolbarItemModal from "./EditToolbarItemModal.vue";
+import EditConfigModal from "./EditConfigModal.vue";
 
 afterEach(() => cleanup());
 
@@ -33,14 +33,14 @@ function mountModal(config: Record<string, unknown>) {
   const submit = vi.fn();
   const cancel = vi.fn();
   const api: ModalApi<Record<string, unknown>> = { submit, cancel };
-  render(EditToolbarItemModal, {
+  render(EditConfigModal, {
     props: { component: StubConfig, config },
     global: { plugins: [{ install: (app) => provideModalApiOnApp(app, api as ModalApi<unknown>) }] },
   });
   return { submit, cancel };
 }
 
-describe("EditToolbarItemModal", () => {
+describe("EditConfigModal", () => {
   it("renders the config component with the current config", () => {
     mountModal({ label: "original" });
     expect(screen.getByText("original")).toBeTruthy();
