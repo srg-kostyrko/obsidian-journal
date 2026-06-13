@@ -126,12 +126,12 @@ else is tracked here.
 
 ## 🔴 Functional regressions (user-facing features lost)
 
-- [ ] **21. Fresh installs get zero command-palette commands.** Likely an oversight, not a design choice — the `views` collection seeds a default (`src/views/config.ts:53`) but `commands` does not.
+- [x] **21. Fresh installs get zero command-palette commands.** Fixed (`25e4a9d3`): added a `seed` to `commandCollection` with the 15 v2 defaults. Likely an oversight, not a design choice — the `views` collection seeds a default (`src/views/config.ts:53`) but `commands` did not.
   - v2: 15 seeded defaults on fresh install (Open today's/weekly/monthly/quarterly/yearly + next-period ×5 + last-period ×5) — `src/_old-code/defaults.ts:30-205`.
   - v3: `commandCollection = defineCollection("commands", …)` passes no `options.seed` (`src/commands/config.ts:52`; signature `src/settings/schema.ts:31-38`). Migrated users keep theirs via v2→v3 backfill; new users get none.
   - Fix: add a `seed` to `commandCollection` mirroring the 15 v2 defaults.
 
-- [ ] **22. Weekday header row (Mon/Tue/…) gone from every in-view calendar.**
+- [x] **22. Weekday header row (Mon/Tue/…) gone from every in-view calendar.** Fixed (`581b3af5`): both grids now render a weekday header derived from the actual rendered days (stays aligned with the configured first-day-of-week).
   - v2: `<CalendarWeekdays/>` rendered inside both grids — `src/_old-code/components/notes-calendar/NotesMonthView.vue:69`, `NotesWeekView.vue:68`.
   - v3: neither `src/notes-calendar/ui/NotesMonthView.vue` nor `NotesWeekView.vue` renders a weekday header. Affects month-calendar block, week-calendar block, and timeline month/quarter/calendar modes (all reuse `NotesMonthView`). The primitive still exists in the date-picker (`src/calendar/ui/CalendarMonthView.vue:42`) — just not wired into the notes calendar.
 
