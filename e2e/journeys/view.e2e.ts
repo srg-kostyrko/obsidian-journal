@@ -1,4 +1,4 @@
-import { $, browser, expect } from "@wdio/globals";
+import { $, $$, browser, expect } from "@wdio/globals";
 
 import {
   activeNotePath,
@@ -87,6 +87,12 @@ describe("calendar view", () => {
 
       const path = await waitForActiveNoteIn("year");
       await waitForFrontmatter(path, (fm) => fm.journal === "yearly", `waited for ${path} to attach journal=yearly`);
+    });
+
+    it("renders a weekday header of seven labels above the month grid", async () => {
+      await openCalendarView();
+
+      await expect($$(`${LIVE_LEAF} .notes-month-view__weekday`)).toBeElementsArrayOfSize(7);
     });
   });
 

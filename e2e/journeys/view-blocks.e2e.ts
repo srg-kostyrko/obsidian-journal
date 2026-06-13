@@ -1,4 +1,4 @@
-import { $, browser, expect } from "@wdio/globals";
+import { $, $$, browser, expect } from "@wdio/globals";
 
 import { activeNotePath, seedNote, waitForJournalFrontmatter } from "../support/vault.js";
 
@@ -21,6 +21,12 @@ describe("blocks view", () => {
       await expect($(`${WEEK_CALENDAR} .notes-week-view`)).toBeExisting();
       await expect(weekCalendar.periodCell("week-number-cell")).toBeExisting();
       await expect(weekCalendar.periodCell("header-month")).toBeExisting();
+    });
+
+    it("renders a weekday header of seven labels above the week grid", async () => {
+      await openBlocksView();
+
+      await expect($$(`${WEEK_CALENDAR} .notes-week-view__weekday`)).toBeElementsArrayOfSize(7);
     });
 
     it("creates and opens a day note when a week-grid day cell is clicked", async () => {
