@@ -1,5 +1,5 @@
 import userEvent from "@testing-library/user-event";
-import { cleanup, render, screen } from "@testing-library/vue";
+import { cleanup, render, screen, waitFor } from "@testing-library/vue";
 import { createNanoEvents } from "nanoevents";
 import * as v from "valibot";
 import { afterEach, describe, expect, it, vi } from "vitest";
@@ -50,6 +50,17 @@ const shelfSelectorDefinition = {
   __brand: "toolbar-item",
 } as unknown as ToolbarItemDefinition;
 
+const buttonDefinition = {
+  key: "button",
+  label: "Button",
+  icon: "square",
+  schema: v.object({ label: v.optional(v.string()) }),
+  defaultConfig: {},
+  component: { render: () => null },
+  configComponent: { render: () => null },
+  __brand: "toolbar-item",
+} as unknown as ToolbarItemDefinition;
+
 async function setup(items: { id: BlockInstanceId; key: string; config: Record<string, unknown> }[]) {
   const raw = {
     version: 4,
@@ -70,6 +81,7 @@ async function setup(items: { id: BlockInstanceId; key: string; config: Record<s
   container.register(ViewsEventsToken).useFactory(() => createNanoEvents());
   container.register(ViewBlockDefinitionToken).useValue(toolbarBlockDefinition);
   container.register(ToolbarItemDefinitionToken).useValue(shelfSelectorDefinition);
+  container.register(ToolbarItemDefinitionToken).useValue(buttonDefinition);
   container.register(ViewsRepository).useClass(ViewsRepository);
   container.register(ToolbarItemsService).useClass(ToolbarItemsService);
   container.register(ViewsService).useClass(ViewsService);
@@ -148,5 +160,37 @@ describe("ToolbarItemsList", () => {
     const spy = vi.spyOn(flows, "invoke").mockReturnValue({ tap: () => undefined } as never);
     await userEvent.click(screen.getByText(m.view_add_toolbar_item()));
     expect(spy).toHaveBeenCalledWith(AddToolbarItemToBlockFlow, { viewId, blockId });
+  });
+
+  describe("editing an item's config", () => {
+    it("offers an edit button for items whose definition has a config editor", async () => {
+      const { container } = await setup([{ id: itemIdA, key: "button", config: { label: "Go" } }]);
+      mount(container);
+      expect(screen.getByLabelText(m.view_toolbar_item_edit())).toBeTruthy();
+    });
+
+    it("offers no edit button for items without a config editor", async () => {
+      const { container } = await setup([{ id: itemIdA, key: "shelf-selector", config: {} }]);
+      mount(container);
+      expect(screen.queryByLabelText(m.view_toolbar_item_edit())).toBeNull();
+    });
+
+    it("persists the edited config when the edit modal is saved", async () => {
+      const { container } = await setup([{ id: itemIdA, key: "button", config: { label: "Go" } }]);
+      mount(container);
+      await userEvent.click(screen.getByLabelText(m.view_toolbar_item_edit()));
+      const modals = container.resolve(ModalService) as unknown as FakeModalService;
+      modals.lastOpen<unknown, Record<string, unknown>>().submit({ label: "Done" });
+      const repo = container.resolve(ViewsRepository);
+      await waitFor(() => {
+        const rawConfig =
+          repo
+            .get(viewId)
+            .getOr(undefined as never)
+            ?.blocks.find((b) => b.id === blockId)?.config ?? {};
+        const items = Array.isArray(rawConfig.items) ? (rawConfig.items as { config: { label?: string } }[]) : [];
+        expect(items[0]?.config.label).toBe("Done");
+      });
+    });
   });
 });

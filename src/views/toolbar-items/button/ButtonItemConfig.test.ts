@@ -51,4 +51,63 @@ describe("ButtonItemConfig", () => {
     await userEvent.clear(iconInput);
     expect(onChange).toHaveBeenLastCalledWith({ ...baseConfig, icon: undefined });
   });
+
+  describe("action mode", () => {
+    it("emits onChange with the selected mode when the behavior dropdown changes", async () => {
+      const onChange = vi.fn();
+      mountConfig(baseConfig, onChange);
+      await userEvent.selectOptions(screen.getByRole("combobox"), "navigate");
+      expect(onChange).toHaveBeenLastCalledWith({
+        action: { type: "current", mode: "navigate", levels: ["day"] },
+      });
+    });
+  });
+
+  describe("action levels", () => {
+    it("adds a period level when its toggle is enabled", async () => {
+      const onChange = vi.fn();
+      mountConfig(baseConfig, onChange);
+      const [, weekToggle] = screen.getAllByRole("checkbox");
+      await userEvent.click(weekToggle);
+      expect(onChange).toHaveBeenLastCalledWith({
+        action: { type: "current", mode: "create", levels: ["day", "week"] },
+      });
+    });
+
+    it("orders enabled levels canonically regardless of toggle order", async () => {
+      const onChange = vi.fn();
+      mountConfig({ action: { type: "current", mode: "create", levels: ["month"] } }, onChange);
+      const [dayToggle] = screen.getAllByRole("checkbox");
+      await userEvent.click(dayToggle);
+      expect(onChange).toHaveBeenLastCalledWith({
+        action: { type: "current", mode: "create", levels: ["day", "month"] },
+      });
+    });
+
+    it("removes a period level when its toggle is disabled", async () => {
+      const onChange = vi.fn();
+      mountConfig({ action: { type: "current", mode: "create", levels: ["day", "week"] } }, onChange);
+      const [dayToggle] = screen.getAllByRole("checkbox");
+      await userEvent.click(dayToggle);
+      expect(onChange).toHaveBeenLastCalledWith({
+        action: { type: "current", mode: "create", levels: ["week"] },
+      });
+    });
+
+    it("keeps the last remaining level when its toggle is disabled", async () => {
+      const onChange = vi.fn();
+      mountConfig(baseConfig, onChange);
+      const [dayToggle] = screen.getAllByRole("checkbox");
+      await userEvent.click(dayToggle);
+      expect(onChange).not.toHaveBeenCalled();
+    });
+  });
+
+  describe("navigate-step action", () => {
+    it("renders no behavior or period controls", () => {
+      mountConfig({ action: { type: "navigate-step", direction: "next", unit: "month", amount: 1 } }, vi.fn());
+      expect(screen.queryByRole("combobox")).toBeNull();
+      expect(screen.queryAllByRole("checkbox")).toHaveLength(0);
+    });
+  });
 });

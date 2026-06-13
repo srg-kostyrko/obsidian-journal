@@ -196,6 +196,37 @@ describe("settings", () => {
 
       await waitForSettings((s) => itemCount(s.views) === before + 1, "added toolbar item not persisted");
     });
+
+    it("edits a toolbar button's behavior and persists the new mode", async () => {
+      const initial = await getSettings();
+      const calId = viewIdByName(initial.views, "Calendar") ?? "";
+      const toolbarItems = (views: Record<string, StoredView> | undefined): { key?: string; config?: unknown }[] => {
+        const tb = (views?.[calId]?.blocks ?? []).find((b) => b.key === "toolbar");
+        return (tb?.config?.items ?? []) as { key?: string; config?: unknown }[];
+      };
+      const lastButtonMode = (views: Record<string, StoredView> | undefined): string | undefined => {
+        const buttons = toolbarItems(views).filter((i) => i.key === "button");
+        const config = buttons.at(-1)?.config as { action?: { mode?: string } } | undefined;
+        return config?.action?.mode;
+      };
+      const before = toolbarItems(initial.views).length;
+
+      await clickIcon("Open Calendar");
+      await clickButton("Add toolbar item");
+      await clickButton("Pick date");
+      await waitForSettings(
+        (s) => toolbarItems(s.views).length === before + 1 && lastButtonMode(s.views) === "navigate",
+        "added pick-date button not persisted",
+      );
+
+      // Multiple toolbar items carry the edit pencil; the one just added is last.
+      const pencils = await $$('button[aria-label="Edit toolbar item"]').getElements();
+      await pencils.at(-1)?.click();
+      await selectModalSelect("create");
+      await submitModal();
+
+      await waitForSettings((s) => lastButtonMode(s.views) === "create", "edited button mode not persisted");
+    });
   });
 
   describe("decorations", () => {
