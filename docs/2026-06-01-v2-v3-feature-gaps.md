@@ -78,7 +78,7 @@ reading code, not inferred.
   - v2: single fixed `open-calendar` command.
   - v3: `view-host.ts` registers `journal:open-view:<id>` per view. Works because a default Calendar view is seeded, but the stable id is gone and disappears if all views are deleted.
 
-- [ ] **14. `useShelves` toggle** — removed.
+- [x] **14. `useShelves` toggle** — removed. **Decided won't-do (2026-06-13): always-on shelves is an intentional design decision.**
   - v2: `PluginSettings.useShelves` gated the whole shelves UI; explanatory copy described shelf scoping.
   - v3: no toggle/slice field; shelves always available (`ShelvesDashboardBlock` unconditionally registered). Explanatory copy gone.
 
@@ -106,11 +106,68 @@ reading code, not inferred.
 
 ## ✅ Verified fully ported (no action)
 
-- **Decorations** — all 9 condition types + every operator, all 6 style types + options, border modes, shapes/placements, corner placements, icon options, all 3 `ColorSettings` modes, or/and. v3 adds number/boolean property conditions.
+- **Decorations** — all 9 condition types + every operator, all 6 style types + options, border modes, shapes/placements, corner placements, icon options, all 3 `ColorSettings` modes, or/and. v3 adds number/boolean property conditions. _Caveats: the `theme` color picker is now free-text (#26); weekday/date condition inputs and border options changed cosmetically (#31–#33)._
 - **Write intervals & end conditions** — day/week/month/quarter/year/custom; never/date/repeats; start bound; custom-interval stored-end anchoring + month-end clamping preserved. (v2 `weekdays` write type was dead code — correctly absent.)
 - **Numbering** — enabled/anchor/allowBefore/increment/reset_after, generalized to multi-source.
 - **Templates** — nameTemplate, dateFormat, folder, templates[], confirmCreation, autoCreate (now midnight-scheduled), all frontmatter fields, all template variables + modifiers, Templater cursor jump.
 - **Code blocks** — all 5 names/aliases (`calendar-timeline`, `calendar-nav`/`interval-nav`/`journal-nav`, `journals-home`); all NavBlockRow fields + link variants; timeline week/month/quarter/calendar modes; home options. Edit-row modal preserved.
-- **Commands** — open-next/open-prev; all 9 per-journal `type` variants; all 3 contexts; all 4 open modes; ribbon/icon; plugin-level + shelf-scoped commands (unified superset).
+- **Commands** — open-next/open-prev; all 9 per-journal `type` variants; all 3 contexts; all 4 open modes; ribbon/icon; plugin-level + shelf-scoped commands (unified superset). _Caveat: fresh installs no longer get the 15 seeded default commands — see #21._
 - **Calendar week customization** — dow/doy/global locale with presets.
 - **Shelves CRUD** — create/rename/remove (with reassign-on-remove), move journal, settings dashboard, create-journal modal, date picker (richer than v2).
+
+---
+
+# Second-pass audit — 2026-06-13
+
+Deeper UI-focused diff of `_old-code/` vs `src/`. Items below were not caught in
+the 2026-06-01 pass. `useShelves` (#14) and the markdown-only template suggester
+were reviewed and **dismissed** (intentional design / acceptable). Everything
+else is tracked here.
+
+## 🔴 Functional regressions (user-facing features lost)
+
+- [ ] **21. Fresh installs get zero command-palette commands.** Likely an oversight, not a design choice — the `views` collection seeds a default (`src/views/config.ts:53`) but `commands` does not.
+  - v2: 15 seeded defaults on fresh install (Open today's/weekly/monthly/quarterly/yearly + next-period ×5 + last-period ×5) — `src/_old-code/defaults.ts:30-205`.
+  - v3: `commandCollection = defineCollection("commands", …)` passes no `options.seed` (`src/commands/config.ts:52`; signature `src/settings/schema.ts:31-38`). Migrated users keep theirs via v2→v3 backfill; new users get none.
+  - Fix: add a `seed` to `commandCollection` mirroring the 15 v2 defaults.
+
+- [ ] **22. Weekday header row (Mon/Tue/…) gone from every in-view calendar.**
+  - v2: `<CalendarWeekdays/>` rendered inside both grids — `src/_old-code/components/notes-calendar/NotesMonthView.vue:69`, `NotesWeekView.vue:68`.
+  - v3: neither `src/notes-calendar/ui/NotesMonthView.vue` nor `NotesWeekView.vue` renders a weekday header. Affects month-calendar block, week-calendar block, and timeline month/quarter/calendar modes (all reuse `NotesMonthView`). The primitive still exists in the date-picker (`src/calendar/ui/CalendarMonthView.vue:42`) — just not wired into the notes calendar.
+
+- [ ] **23. Connect-note date is no longer bounded to the journal timeline.** Correctness gap — worth a test.
+  - v2: picker bound `:min`/`:max` to journal start/end — `src/_old-code/components/modals/ConnectNote.modal.vue:160`.
+  - v3: bare `<input type="date">` with no bounds (`src/journals/notes/ui/ConnectNoteModal.vue:128`); `anchor` resolves via `cycle.anchorOf` with no `timeline.contains` check, and `buildMetadata` doesn't validate bounds (`src/journals/notes/frontmatter.ts:61-75`). A note can be connected to a date outside the journal's span, then won't surface in bounded views.
+
+- [ ] **24. Custom-intervals block lost the active-note highlight.**
+  - v2: the interval row matching the open note got an `is-active` class using the configured active color/background — `src/_old-code/calendar-view/CalendarViewCustomInterval.vue:36,51-57`.
+  - v3: `src/views/blocks/custom-intervals/ui/CustomIntervalsBlock.vue` has no active-entry highlighting. (Month-calendar cells still highlight; only this section regressed.)
+
+## 🟡 Architectural changes — capability survives in a different shape (confirm intent)
+
+- [ ] **25. Toolbar button action-mode + period-button levels not editable after creation.**
+  - v2: persisted `todayMode`/`pickMode` settings (`navigate`/`create`/`switch_date`) — `src/_old-code/types/settings.types.ts:36-37`.
+  - v3: the `mode` field exists in the schema (`src/views/toolbar-items/button/button-config.ts:8`) but `ButtonItemConfig.vue` only edits icon/label/tooltip; mode/levels are fixed by the add-time preset. Defaults match v2, so out-of-box behavior is fine — only reconfigurability is lost.
+
+- [ ] **26. Theme color picker downgraded to free-text.** Documented as an intentional design choice (`docs/superpowers/specs/2026-05-26-decoration-settings-ui-design.md`) — listed here to confirm the usability shrink is acceptable.
+  - v2: dropdown of ~32 named Obsidian theme colors + live swatch — `src/_old-code/components/ColorPicker.vue:66-71`.
+  - v3: single free-text CSS-variable input, no dropdown/swatch — `src/ui/UiColorSettingsPicker.vue:44`. Affects every color control; typos silently yield `var(--typo)`.
+
+## 🟢 Behavioral / cosmetic deltas
+
+- [ ] **27. open-next/open-prev lost feedback + editor gating.** v2 used `editorCallback` and surfaced `Notice`s ("not connected to a journal", "no next/previous note") — `src/_old-code/main.ts:555-601`. v3 uses `check`/`execute` and silently hides/no-ops with no notice (`src/journals/navigation-commands.ts:19-31`).
+- [ ] **28. Bulk-add: date-format live preview dropped.** v2 `ConfigureBulkAddNotes.vue:137` had `<DateFormatPreview>`; v3 `src/journals/notes/bulk-add/ui/ConfigureBulkAddModal.vue:71-80` keeps the syntax link but no live preview.
+- [ ] **29. Bulk-add: dry-run default flipped `false`→`true`.** `src/journals/notes/bulk-add/config.ts:47`. Safer, but a deviation — confirm intended.
+- [ ] **30. Bulk-add: live per-note progress indicator removed.** v2 `BulkProcessNotes.vue:24,79-82` showed stage progress; v3 plans synchronously with no progress UI. No feedback during apply on very large folders.
+- [ ] **31. Decoration weekday-condition labels changed.** v2 used short names reordered to the configured week-start (`src/_old-code/components/modals/edit-decoration/ConditionWeekday.vue:19-28`); v3 uses full Sunday-first names (`src/decorations/settings/ui/ConditionWeekday.vue:12`). Stored indexes unaffected.
+- [ ] **32. Decoration date-condition month is now a number input.** v2 offered a localized month-name dropdown (`ConditionDate.vue:46-55`); v3 is a bare number 1–12 (`src/decorations/settings/ui/ConditionDate.vue:42-59`).
+- [ ] **33. Decoration border `groove` option dropped (`double` added).** v3 `src/decorations/settings/ui/StyleBorderSide.vue:30-35` = solid/dashed/dotted/double. (v2's `ridge` was already a dead duplicate-value option; net real loss is `groove`. Existing `groove` data still renders but isn't re-selectable.)
+- [ ] **34. Icon suggestions no longer alphabetically sorted.** v2 `icon-suggest.ts:14` ended `.toSorted()`; v3 `src/ui/UiIconSuggest.vue:18` returns raw `getIconIds()` order. Sibling inputs still sort — isolated one-line omission.
+- [ ] **35. `UiCollapsibleBlock` dropped `defaultExpanded`.** v2 `CollapsibleBlock.vue:6-9` set initial expanded state; v3 only has the `expanded` model. Check call sites that relied on expanded-by-default.
+- [ ] **36. Folder suggester now includes vault root `/`.** v2 `folder-suggest.ts` excluded `"/"`; v3 `NotesService.listFolders` returns root (`src/infrastructure/host/internal/notes-service.ts:84-89`). Selecting it yields an empty folder path.
+- [ ] **37. Timeline quarter/calendar connector lines dropped (cosmetic).** v2 `TimelineQuarter.vue`/`TimelineCalendar.vue` drew faint divider lines; v3 equivalents omit them.
+- [ ] **38. Home-block click always opens all journals of an entry.** v2 `HomeCodeBlock.vue:54-62` opened only the current note's journal on a matching type; v3 `src/code-blocks/home/ui/HomeCodeBlock.vue:62-68` always opens all. Likely an intentional simplification — confirm.
+
+## 🐛 Not a regression — new v3 feature that ships non-functional
+
+- [ ] **39. `hideWeekends` toggle is dead.** Both calendar blocks emit `data-hide-weekends` (`src/views/blocks/month-calendar/ui/MonthCalendarBlock.vue:26`, `week-calendar/ui/WeekCalendarBlock.vue:27`) and the config UI exposes the toggle, but no CSS rule consumes the attribute. New in v3 (not a v2 feature), so not a regression — but it does nothing.
