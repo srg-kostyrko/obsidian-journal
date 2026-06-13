@@ -135,7 +135,7 @@ else is tracked here.
   - v2: `<CalendarWeekdays/>` rendered inside both grids — `src/_old-code/components/notes-calendar/NotesMonthView.vue:69`, `NotesWeekView.vue:68`.
   - v3: neither `src/notes-calendar/ui/NotesMonthView.vue` nor `NotesWeekView.vue` renders a weekday header. Affects month-calendar block, week-calendar block, and timeline month/quarter/calendar modes (all reuse `NotesMonthView`). The primitive still exists in the date-picker (`src/calendar/ui/CalendarMonthView.vue:42`) — just not wired into the notes calendar.
 
-- [ ] **23. Connect-note date is no longer bounded to the journal timeline.** Correctness gap — worth a test.
+- [x] **23. Connect-note date is no longer bounded to the journal timeline.** Fixed (`a3a367e7`): the Connect button is gated on `TimelineService.contains`, with an explanation when the chosen date is out of bounds. Enforced at the modal (where v2 enforced it via the picker); bulk-add's connect path was already timeline-gated in its plan phase.
   - v2: picker bound `:min`/`:max` to journal start/end — `src/_old-code/components/modals/ConnectNote.modal.vue:160`.
   - v3: bare `<input type="date">` with no bounds (`src/journals/notes/ui/ConnectNoteModal.vue:128`); `anchor` resolves via `cycle.anchorOf` with no `timeline.contains` check, and `buildMetadata` doesn't validate bounds (`src/journals/notes/frontmatter.ts:61-75`). A note can be connected to a date outside the journal's span, then won't surface in bounded views.
 
