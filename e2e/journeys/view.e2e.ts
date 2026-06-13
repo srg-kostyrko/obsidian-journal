@@ -2,6 +2,7 @@ import { $, $$, browser, expect } from "@wdio/globals";
 
 import {
   activeNotePath,
+  openNote,
   renameNote,
   seedNote,
   waitForActiveNote,
@@ -312,6 +313,27 @@ describe("calendar view", () => {
       const section = $(`${LIVE_LEAF} .journal-view-custom-intervals [data-journal="sprint"]`);
       await section.waitForExist({ timeoutMsg: "custom-intervals section for sprint did not render" });
       await expect(section.$(".journal-view-custom-intervals__entry")).toBeExisting();
+    });
+
+    it("highlights the entry of the custom-interval note that is open", async () => {
+      const anchor = dayAnchor(13);
+      const path = `sprint/${anchor}.md`;
+      await seedNote(path, note("sprint", anchor));
+      await waitForFrontmatter(path, (fm) => fm.journal === "sprint", `waited for ${path} to be indexed`);
+
+      // Open the calendar first: focusing its (file-less) leaf would clear the active
+      // entry, so the note must be opened after the block has mounted — the real flow of
+      // navigating notes while the calendar sits in the sidebar.
+      await openCalendarView();
+      await openNote(path);
+
+      const entry = $(`${LIVE_LEAF} .journal-view-custom-intervals [data-journal="sprint"] [data-anchor="${anchor}"]`);
+      await entry.waitForExist({ timeoutMsg: "custom-intervals entry for the sprint note did not render" });
+      await waitForState(
+        async () => (await entry.getAttribute("data-active")) ?? undefined,
+        (value) => value === "true",
+        "the open custom-interval note's entry did not become active",
+      );
     });
   });
 });
