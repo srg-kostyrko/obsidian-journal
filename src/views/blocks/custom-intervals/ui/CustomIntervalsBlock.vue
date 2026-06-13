@@ -8,6 +8,7 @@ import { CellDecoration } from "@/decorations";
 import { useService } from "@/infrastructure/di";
 import { JournalsIndex, JournalsRepository } from "@/journals";
 import type { JournalConfig, JournalNavBlock } from "@/journals";
+import { ActiveEntryViewModel } from "@/notes-calendar/active-entry";
 import { useShelfScope } from "@/notes-calendar/use-shelf-scope";
 
 import { useViewContext } from "../../../view-context";
@@ -24,7 +25,13 @@ const props = defineProps<{
 const context = useViewContext();
 const index = useService(JournalsIndex);
 const journalsRepo = useService(JournalsRepository);
+const activeEntry = useService(ActiveEntryViewModel);
 const scope = useShelfScope(() => context.shelf.value);
+
+function isEntryActive(journalName: string, anchor: AnchorString): boolean {
+  const current = activeEntry.active.value;
+  return current !== null && current.journalName === journalName && current.anchor === anchor;
+}
 
 const window = computed(() => resolveWindow(props.config.window, context.refDate.value));
 
@@ -59,7 +66,13 @@ const sections = computed<readonly Section[]>(() => {
       class="journal-view-custom-intervals__section"
       :data-journal="section.journalName"
     >
-      <div v-for="entry of section.entries" :key="entry.anchor" class="journal-view-custom-intervals__entry">
+      <div
+        v-for="entry of section.entries"
+        :key="entry.anchor"
+        class="journal-view-custom-intervals__entry"
+        :data-anchor="entry.anchor"
+        :data-active="isEntryActive(section.journalName, entry.anchor) || null"
+      >
         <CellDecoration
           v-if="section.block.decorateWholeBlock"
           :period="periodForJournal(section.journal.write, entry.anchor)"
@@ -103,5 +116,14 @@ const sections = computed<readonly Section[]>(() => {
 }
 .journal-view-custom-intervals__section:last-child {
   border-bottom: 0;
+}
+.journal-view-custom-intervals__entry[data-active] {
+  color: var(--journal-cell-active-color);
+  background-color: var(--journal-cell-active-bg);
+}
+/* The nav rows set their own per-row color, so the active highlight forces its color on
+   the nested content to win, matching v2's active interval row. */
+.journal-view-custom-intervals__entry[data-active] :deep(*) {
+  color: var(--journal-cell-active-color) !important;
 }
 </style>
