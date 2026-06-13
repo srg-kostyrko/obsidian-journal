@@ -42,7 +42,7 @@ async function build(raw?: unknown) {
 
 describe("EditCommandFlow", () => {
   it("adds a new command to the collection on submit", async () => {
-    const { flows, modals, repo } = await build();
+    const { flows, modals, repo } = await build({ version: 4, commands: {} });
     const promise = flows.invoke(EditCommandFlow, { target: { kind: "all", writeType: "day" } });
     modals.lastOpen<unknown, CommandConfig>().submit(makeConfig("Added"));
     await promise;
@@ -62,7 +62,7 @@ describe("EditCommandFlow", () => {
   });
 
   it("leaves the collection untouched when the modal is cancelled", async () => {
-    const { flows, modals, repo } = await build();
+    const { flows, modals, repo } = await build({ version: 4, commands: {} });
     const promise = flows.invoke(EditCommandFlow, { target: { kind: "all", writeType: "day" } });
     modals.lastOpen().cancel();
     const result = await promise;

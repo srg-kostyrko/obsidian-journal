@@ -23,4 +23,18 @@ describe("commandCollection", () => {
     const parsed = v.safeParse(commandCollection.itemSchema, command);
     expect(parsed.success).toBe(false);
   });
+
+  describe("seed", () => {
+    it("seeds the fifteen default commands on a fresh install", () => {
+      const seeded = commandCollection.seed?.() ?? {};
+      expect(Object.keys(seeded)).toHaveLength(15);
+    });
+
+    it("produces schema-valid configs for every seeded command", () => {
+      const seeded = commandCollection.seed?.() ?? {};
+      for (const command of Object.values(seeded)) {
+        expect(v.safeParse(commandCollection.itemSchema, command).success).toBe(true);
+      }
+    });
+  });
 });
