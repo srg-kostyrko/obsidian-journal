@@ -9,7 +9,7 @@ import UiSettingRow from "@/ui/UiSettingRow.vue";
 const { name } = defineProps<{ name: string }>();
 const { value: weekdays } = useField<number[]>(`${name}.weekdays`);
 
-const allNames = useService(Calendar).weekdays();
+const orderedWeekdays = useService(Calendar).weekdaysShort();
 
 function toggle(index: number, checked: boolean): void {
   const next = new Set(weekdays.value);
@@ -25,7 +25,7 @@ function isChecked(index: number): boolean {
 
 <template>
   <UiSettingRow :name="m.decoration_condition_weekday_label()">
-    <label v-for="(label, index) in allNames" :key="index">
+    <label v-for="{ index, label } in orderedWeekdays" :key="index">
       <input
         type="checkbox"
         :checked="isChecked(index)"

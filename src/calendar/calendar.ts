@@ -55,6 +55,20 @@ export class Calendar {
   weekdays(): readonly string[] {
     return moment.localeData(CUSTOM_LOCALE).weekdays();
   }
+
+  weekdaysShort(): readonly { index: number; label: string }[] {
+    const data = moment.localeData(CUSTOM_LOCALE);
+    const first = data.firstDayOfWeek();
+    const short = data.weekdaysShort();
+    return Array.from({ length: 7 }, (_, offset) => {
+      const index = (first + offset) % 7;
+      return { index, label: short[index] };
+    });
+  }
+
+  months(): readonly string[] {
+    return moment.localeData(CUSTOM_LOCALE).months();
+  }
 }
 
 export function localMoment(

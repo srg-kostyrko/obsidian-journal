@@ -37,7 +37,7 @@ describe("FolderInput", () => {
       },
     });
     const handle = inputSuggest.attachments[0];
-    expect(handle.query("").toSorted()).toEqual(["", "Daily", "Other"]);
+    expect(handle.query("").toSorted()).toEqual(["Daily", "Other"]);
     expect(handle.query("ai")).toEqual(["Daily"]);
   });
 });

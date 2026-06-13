@@ -15,7 +15,7 @@ const definition = computed(() =>
   defineInputSuggest<string>({
     fetch: (query) => {
       const q = query.toLowerCase();
-      return allIcons.filter((icon) => icon.toLowerCase().includes(q));
+      return allIcons.filter((icon) => icon.toLowerCase().includes(q)).toSorted();
     },
     render: (icon, element) => {
       const svg = renderIcon(icon);

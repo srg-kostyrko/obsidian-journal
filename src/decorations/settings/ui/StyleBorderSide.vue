@@ -31,6 +31,7 @@ const { value: borderStyle } = useField<string>(`${name}.style`);
       <option value="solid">{{ m.decoration_border_style_label({ style: "solid" }) }}</option>
       <option value="dashed">{{ m.decoration_border_style_label({ style: "dashed" }) }}</option>
       <option value="dotted">{{ m.decoration_border_style_label({ style: "dotted" }) }}</option>
+      <option value="groove">{{ m.decoration_border_style_label({ style: "groove" }) }}</option>
       <option value="double">{{ m.decoration_border_style_label({ style: "double" }) }}</option>
     </UiDropdown>
   </UiSettingRow>

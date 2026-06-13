@@ -49,13 +49,13 @@ function mount(initial: Weekday) {
 describe("ConditionWeekday", () => {
   it("adds a weekday index when its checkbox is clicked", async () => {
     const host = mount({ type: "weekday", weekdays: [] });
-    await userEvent.click(screen.getByLabelText("Monday"));
+    await userEvent.click(screen.getByLabelText("Mon"));
     expect(host.values.c.weekdays).toEqual([1]);
   });
 
   it("removes a weekday index when its checkbox is unchecked", async () => {
     const host = mount({ type: "weekday", weekdays: [1] });
-    await userEvent.click(screen.getByLabelText("Monday"));
+    await userEvent.click(screen.getByLabelText("Mon"));
     expect(host.values.c.weekdays).toEqual([]);
   });
 });

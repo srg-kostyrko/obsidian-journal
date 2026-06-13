@@ -16,7 +16,7 @@ const definition = computed(() =>
       const q = query.toLowerCase();
       return notes
         .listFolders()
-        .filter((folder) => folder.toLowerCase().includes(q))
+        .filter((folder) => folder !== "" && folder !== "/" && folder.toLowerCase().includes(q))
         .toSorted();
     },
     render: (folder, element) => {

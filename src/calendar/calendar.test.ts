@@ -85,4 +85,30 @@ describe("Calendar", () => {
       expect(weekdays.every((w) => typeof w === "string" && w.length > 0)).toBe(true);
     });
   });
+
+  describe("weekdaysShort", () => {
+    it("carries each weekday's true Sunday-first index alongside its short label", () => {
+      const calendar = new Calendar();
+      const ordered = calendar.weekdaysShort();
+      expect(ordered).toHaveLength(7);
+      expect(ordered.map((w) => w.index).toSorted((a, b) => a - b)).toEqual([0, 1, 2, 3, 4, 5, 6]);
+      expect(ordered.every((w) => typeof w.label === "string" && w.label.length > 0)).toBe(true);
+    });
+
+    it("orders the weekdays starting from the locale's first day of week", () => {
+      const calendar = new Calendar();
+      const indices = calendar.weekdaysShort().map((w) => w.index);
+      const first = indices[0];
+      expect(indices).toEqual([0, 1, 2, 3, 4, 5, 6].map((offset) => (first + offset) % 7));
+    });
+  });
+
+  describe("months", () => {
+    it("returns the 12 localized month names", () => {
+      const calendar = new Calendar();
+      const months = calendar.months();
+      expect(months).toHaveLength(12);
+      expect(months.every((name) => typeof name === "string" && name.length > 0)).toBe(true);
+    });
+  });
 });
