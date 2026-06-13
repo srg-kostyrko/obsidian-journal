@@ -3,6 +3,7 @@ import { cleanup, render, screen } from "@testing-library/vue";
 import { afterEach, describe, expect, it } from "vitest";
 
 import type { ColorSettings } from "@/decorations";
+import { m } from "@/i18n";
 
 import UiColorSettingsPicker from "./UiColorSettingsPicker.vue";
 
@@ -39,10 +40,19 @@ describe("UiColorSettingsPicker", () => {
   });
 
   describe("theme variant", () => {
-    it("emits an updated theme variable name as the user types", async () => {
+    it("emits the selected theme variable name when chosen from the dropdown", async () => {
       const { emitted } = mount({ type: "theme", name: "" });
-      await userEvent.type(screen.getByRole("textbox"), "x");
-      expect(lastEmitted(emitted)).toEqual({ type: "theme", name: "x" });
+      await userEvent.selectOptions(
+        screen.getByRole("combobox", { name: m.ui_color_theme_variable_label() }),
+        "text-accent",
+      );
+      expect(lastEmitted(emitted)).toEqual({ type: "theme", name: "text-accent" });
+    });
+
+    it("keeps a previously stored variable selectable even when it is not a known theme color", () => {
+      mount({ type: "theme", name: "my-custom-var" });
+      const dropdown = screen.getByRole<HTMLSelectElement>("combobox", { name: m.ui_color_theme_variable_label() });
+      expect(dropdown.value).toBe("my-custom-var");
     });
   });
 

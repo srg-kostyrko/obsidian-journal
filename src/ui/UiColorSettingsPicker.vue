@@ -4,11 +4,13 @@ import { computed } from "vue";
 import type { ColorSettings } from "@/decorations";
 import { m } from "@/i18n";
 
+import { THEME_COLOR_NAMES } from "./theme-colors";
 import UiColorPicker from "./UiColorPicker.vue";
 import UiDropdown from "./UiDropdown.vue";
-import UiTextInput from "./UiTextInput.vue";
 
 const model = defineModel<ColorSettings>({ required: true });
+
+const themeColorNames = THEME_COLOR_NAMES;
 
 const kind = computed<ColorSettings["type"]>({
   get: () => model.value.type,
@@ -41,7 +43,18 @@ const customColor = computed<string>({
       <option value="theme">{{ m.ui_color_kind_label({ kind: "theme" }) }}</option>
       <option value="custom">{{ m.ui_color_kind_label({ kind: "custom" }) }}</option>
     </UiDropdown>
-    <UiTextInput v-if="model.type === 'theme'" v-model="themeName" :placeholder="m.ui_color_theme_variable_label()" />
+    <template v-if="model.type === 'theme'">
+      <UiDropdown v-model="themeName" :aria-label="m.ui_color_theme_variable_label()">
+        <option value="">{{ m.ui_color_theme_variable_label() }}</option>
+        <option v-for="colorName of themeColorNames" :key="colorName" :value="colorName">{{ colorName }}</option>
+        <option v-if="themeName && !themeColorNames.includes(themeName)" :value="themeName">{{ themeName }}</option>
+      </UiDropdown>
+      <span
+        v-if="themeName"
+        class="ui-color-settings-picker__swatch"
+        :style="{ backgroundColor: `var(--${themeName})` }"
+      />
+    </template>
     <UiColorPicker v-if="model.type === 'custom'" v-model="customColor" />
   </span>
 </template>
@@ -51,5 +64,12 @@ const customColor = computed<string>({
   display: inline-flex;
   gap: var(--size-2-2);
   align-items: center;
+}
+.ui-color-settings-picker__swatch {
+  inline-size: 28px;
+  block-size: 28px;
+  border-radius: 50%;
+  border: 1px solid var(--background-modifier-border);
+  flex-shrink: 0;
 }
 </style>

@@ -37,8 +37,11 @@ const months = computed<readonly MonthPeriod[]>(() => {
 }
 .timeline-quarter {
   --gap: var(--size-4-4);
+  --line-offset: calc(var(--gap) / 2);
+  --line-thickness: 1px;
+  --line-color: var(--text-faint);
   display: grid;
-  gap: var(--gap);
+  gap: 0 var(--gap);
   grid-template-columns: repeat(1, 1fr);
 }
 @container (min-width: 420px) {
@@ -50,5 +53,27 @@ const months = computed<readonly MonthPeriod[]>(() => {
   .timeline-quarter {
     grid-template-columns: repeat(3, 1fr);
   }
+}
+.timeline-quarter > * {
+  position: relative;
+}
+.timeline-quarter > *::before,
+.timeline-quarter > *::after {
+  content: "";
+  position: absolute;
+  background-color: var(--line-color);
+  z-index: 1;
+}
+.timeline-quarter > *::after {
+  inline-size: 100%;
+  block-size: var(--line-thickness);
+  inset-inline-start: 0;
+  inset-block-start: calc(var(--line-offset) * -1);
+}
+.timeline-quarter > *::before {
+  inline-size: var(--line-thickness);
+  block-size: 100%;
+  inset-block-start: 0;
+  inset-inline-start: calc(var(--line-offset) * -1);
 }
 </style>
