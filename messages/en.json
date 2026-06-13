@@ -176,6 +176,9 @@
   ],
   "command_open_next": "Open next note",
   "command_open_previous": "Open previous note",
+  "command_open_not_connected": "This note is not connected to any journal.",
+  "command_open_no_next": "There is no next note after this one.",
+  "command_open_no_previous": "There is no previous note before this one.",
   "command_type_label": [
     {
       "declarations": ["input type", "input writeType"],
@@ -253,6 +256,7 @@
   "bulk_add_dry_run_description": "Don't change any notes — just report the changes that would be made.",
   "bulk_add_next": "Continue",
   "bulk_add_run": "Run",
+  "bulk_add_progress": "Processing {done} of {total}…",
   "bulk_add_skipped_count": "{count} note(s) skipped",
   "bulk_add_planned_count": "{count} note(s) to process",
   "bulk_add_skip_reason_already_connected": "Already connected",

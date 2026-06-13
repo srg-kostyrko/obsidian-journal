@@ -262,6 +262,26 @@ describe("BulkAddService", () => {
       expect(log[0]?.path).toBe("src/note.md");
     });
 
+    it("reports progress after each note as it is applied", async () => {
+      const { service, notes } = build();
+      notes.seed("src/a.md" as VaultPath, "a");
+      notes.seed("src/b.md" as VaultPath, "b");
+      const progress: { done: number; total: number }[] = [];
+      await service.apply(
+        "daily",
+        [
+          { path: "src/a.md" as VaultPath, anchor: anchor("2026-06-01"), existing: "none", move: false, rename: false },
+          { path: "src/b.md" as VaultPath, anchor: anchor("2026-06-02"), existing: "none", move: false, rename: false },
+        ],
+        true,
+        (done, total) => progress.push({ done, total }),
+      );
+      expect(progress).toEqual([
+        { done: 1, total: 2 },
+        { done: 2, total: 2 },
+      ]);
+    });
+
     it("merges into the occupant and deletes the source", async () => {
       const { service, notes, index } = build();
       notes.seed("Journal/2026-06-01.md" as VaultPath, "OCCUPANT", {

@@ -80,7 +80,7 @@ describe("ProcessBulkAddModal", () => {
     const apply = vi.fn(() => AsyncResult.ok([]));
     mountModal({ apply, dryRun: true, plan: { notes: [] } });
     await userEvent.click(screen.getByText(m.bulk_add_run()));
-    expect(apply).toHaveBeenCalledWith("daily", expect.any(Array), true);
+    expect(apply).toHaveBeenCalledWith("daily", expect.any(Array), true, expect.any(Function));
   });
 
   it("shows the skip reason for each skipped note", () => {
@@ -114,6 +114,7 @@ describe("ProcessBulkAddModal", () => {
       "daily",
       [expect.objectContaining({ path: "src/a.md", move: true })],
       expect.any(Boolean),
+      expect.any(Function),
     );
   });
 });

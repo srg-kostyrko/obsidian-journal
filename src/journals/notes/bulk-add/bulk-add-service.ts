@@ -74,15 +74,28 @@ export class BulkAddService {
     });
   }
 
-  apply(journalName: string, actions: ResolvedAction[], dryRun: boolean): AsyncResult<BulkLogEntry[], never> {
-    return AsyncResult.fromPromise(this.#applyAll(journalName, actions, dryRun), () => {
+  apply(
+    journalName: string,
+    actions: ResolvedAction[],
+    dryRun: boolean,
+    onProgress?: (done: number, total: number) => void,
+  ): AsyncResult<BulkLogEntry[], never> {
+    return AsyncResult.fromPromise(this.#applyAll(journalName, actions, dryRun, onProgress), () => {
       throw new InvariantError("bulk apply never rejects");
     });
   }
 
-  async #applyAll(journalName: string, actions: ResolvedAction[], dryRun: boolean): Promise<BulkLogEntry[]> {
+  async #applyAll(
+    journalName: string,
+    actions: ResolvedAction[],
+    dryRun: boolean,
+    onProgress?: (done: number, total: number) => void,
+  ): Promise<BulkLogEntry[]> {
     const log: BulkLogEntry[] = [];
-    for (const action of actions) log.push(await this.#applyOne(journalName, action, dryRun));
+    for (const action of actions) {
+      log.push(await this.#applyOne(journalName, action, dryRun));
+      onProgress?.(log.length, actions.length);
+    }
     return log;
   }
 

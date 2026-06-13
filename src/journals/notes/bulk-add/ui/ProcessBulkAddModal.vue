@@ -50,6 +50,7 @@ const nameDecision = ref<Record<string, "keep" | "rename">>(
 );
 
 const log = ref<BulkLogEntry[] | null>(null);
+const progress = ref<{ done: number; total: number } | null>(null);
 
 function setExisting(path: string, value: string): void {
   if (value === "skip" || value === "override" || value === "merge") {
@@ -73,7 +74,11 @@ async function run(): Promise<void> {
     move: a.folder === "ask" ? folderDecision.value[a.path] === "move" : a.folder === "move",
     rename: a.name === "ask" ? nameDecision.value[a.path] === "rename" : a.name === "rename",
   }));
-  const result = await service.apply(props.journalName, resolved, props.parameters.dryRun);
+  progress.value = { done: 0, total: resolved.length };
+  const result = await service.apply(props.journalName, resolved, props.parameters.dryRun, (done, total) => {
+    progress.value = { done, total };
+  });
+  progress.value = null;
   if (result.kind === "ok") log.value = result.value;
 }
 
@@ -128,7 +133,10 @@ function close(): void {
         <template #name>{{ skip.path }}</template>
         <template #description>{{ skipReasonLabel(skip.reason) }}</template>
       </UiSettingRow>
-      <UiSettingRow>
+      <UiSettingRow v-if="progress" no-controls>
+        <template #description>{{ m.bulk_add_progress({ done: progress.done, total: progress.total }) }}</template>
+      </UiSettingRow>
+      <UiSettingRow v-else>
         <UiButton cta @click="run">{{ m.bulk_add_run() }}</UiButton>
       </UiSettingRow>
     </template>

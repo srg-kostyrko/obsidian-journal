@@ -1,12 +1,13 @@
 import { describe, expect, it } from "vitest";
 
 import { anchor } from "@/calendar/testing";
+import { m } from "@/i18n";
 import { Container } from "@/infrastructure/di";
-import { CommandService, WorkspaceService } from "@/infrastructure/host";
+import { CommandService, NoticeService, WorkspaceService } from "@/infrastructure/host";
 import type { VaultPath } from "@/infrastructure/host";
 import { createFakeHost } from "@/infrastructure/host/internal/testing";
 import { InternalPluginToken } from "@/infrastructure/host/internal/tokens";
-import { FakeWorkspaceService } from "@/infrastructure/host/testing";
+import { FakeNoticeService, FakeWorkspaceService } from "@/infrastructure/host/testing";
 import { LoggerModule } from "@/infrastructure/logger";
 
 import { JournalsIndex } from "./journals-index";
@@ -19,15 +20,18 @@ const ORPHAN = "notes/orphan.md" as VaultPath;
 function build(): {
   host: ReturnType<typeof createFakeHost>;
   workspace: FakeWorkspaceService;
+  notices: FakeNoticeService;
   index: JournalsIndex;
 } {
   const host = createFakeHost();
   const workspace = new FakeWorkspaceService();
+  const notices = new FakeNoticeService();
   const c = new Container();
   c.addModule(LoggerModule);
   c.register(InternalPluginToken).useValue(host.plugin);
   c.register(CommandService).useClass(CommandService);
   c.register(WorkspaceService).useValue(workspace as unknown as WorkspaceService);
+  c.register(NoticeService).useValue(notices);
   c.register(JournalsIndex).useClass(JournalsIndex);
   c.register(JournalNavigationCommands).useClass(JournalNavigationCommands);
 
@@ -36,31 +40,31 @@ function build(): {
   index.register({ journalName: "daily", anchor: anchor("2026-05-02"), path: SECOND });
 
   c.resolve(JournalNavigationCommands);
-  return { host, workspace, index };
+  return { host, workspace, notices, index };
 }
 
 describe("JournalNavigationCommands", () => {
-  it("makes open-next available when a following entry exists", () => {
+  it("makes open-next available whenever a note is active", () => {
     const { host, workspace } = build();
     workspace.setActive(FIRST);
     expect(host.commands.get("open-next")?.checkCallback?.(true)).toBe(true);
   });
 
-  it("makes open-next unavailable when no following entry exists", () => {
+  it("keeps open-next available even when the active note has no following entry", () => {
     const { host, workspace } = build();
     workspace.setActive(SECOND);
-    expect(host.commands.get("open-next")?.checkCallback?.(true)).toBe(false);
+    expect(host.commands.get("open-next")?.checkCallback?.(true)).toBe(true);
   });
 
-  it("makes open-prev unavailable when no preceding entry exists", () => {
-    const { host, workspace } = build();
-    workspace.setActive(FIRST);
-    expect(host.commands.get("open-prev")?.checkCallback?.(true)).toBe(false);
-  });
-
-  it("makes open-next unavailable when the active note is not a journal note", () => {
+  it("keeps open-next available even when the active note is not a journal note", () => {
     const { host, workspace } = build();
     workspace.setActive(ORPHAN);
+    expect(host.commands.get("open-next")?.checkCallback?.(true)).toBe(true);
+  });
+
+  it("makes open-next unavailable when no note is active", () => {
+    const { host, workspace } = build();
+    workspace.setActive(null);
     expect(host.commands.get("open-next")?.checkCallback?.(true)).toBe(false);
   });
 
@@ -76,5 +80,26 @@ describe("JournalNavigationCommands", () => {
     workspace.setActive(SECOND);
     host.commands.get("open-prev")?.checkCallback?.(false);
     expect(workspace.isOpen(FIRST)).toBe(true);
+  });
+
+  it("notifies when open-next runs on a note with no following entry", () => {
+    const { host, workspace, notices } = build();
+    workspace.setActive(SECOND);
+    host.commands.get("open-next")?.checkCallback?.(false);
+    expect(notices.messages).toContain(m.command_open_no_next());
+  });
+
+  it("notifies when open-prev runs on a note with no preceding entry", () => {
+    const { host, workspace, notices } = build();
+    workspace.setActive(FIRST);
+    host.commands.get("open-prev")?.checkCallback?.(false);
+    expect(notices.messages).toContain(m.command_open_no_previous());
+  });
+
+  it("notifies when open-next runs on a note not connected to a journal", () => {
+    const { host, workspace, notices } = build();
+    workspace.setActive(ORPHAN);
+    host.commands.get("open-next")?.checkCallback?.(false);
+    expect(notices.messages).toContain(m.command_open_not_connected());
   });
 });

@@ -7,6 +7,7 @@ import { defaultCondition } from "@/decorations/defaults";
 import ConditionItem from "@/decorations/settings/ui/ConditionItem.vue";
 import { m } from "@/i18n";
 import { useModal } from "@/infrastructure/host/modals";
+import DateFormatPreview from "@/journals/settings/ui/DateFormatPreview.vue";
 import FolderInput from "@/journals/settings/ui/FolderInput.vue";
 import UiButton from "@/ui/UiButton.vue";
 import UiDropdown from "@/ui/UiDropdown.vue";
@@ -75,6 +76,7 @@ const onSubmit = handleSubmit((parameters) => {
         </a>
         <div>{{ m.bulk_add_date_format_omit_time() }}</div>
         <div v-if="values.datePlace === 'property'">{{ m.bulk_add_date_format_property_note() }}</div>
+        <DateFormatPreview :format="values.dateFormat" />
       </template>
       <UiTextInput v-model="dateFormat" :aria-label="m.bulk_add_date_format_label()" />
     </UiSettingRow>
