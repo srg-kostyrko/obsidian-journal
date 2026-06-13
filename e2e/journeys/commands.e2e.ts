@@ -115,12 +115,13 @@ describe("commands", () => {
       await waitForActiveNote(NAV_PREV);
     });
 
-    it("hides navigation commands on a non-journal note", async () => {
-      // One behavior — off-journal navigation is unavailable — verified across both commands,
-      // which share the same #resolve(direction) guard, so neither can list independently.
+    it("still lists navigation commands on a non-journal note", async () => {
+      // v2-faithful: the commands are editor-gated (available whenever a note is active) and
+      // surface a Notice when there's nothing to navigate to, rather than hiding themselves.
+      // Verified across both commands, which share the same active-note guard.
       await openNote("plain-note.md");
-      expect(await paletteLists(OPEN_NEXT)).toBe(false);
-      expect(await paletteLists(OPEN_PREV)).toBe(false);
+      expect(await paletteLists(OPEN_NEXT)).toBe(true);
+      expect(await paletteLists(OPEN_PREV)).toBe(true);
     });
   });
 });

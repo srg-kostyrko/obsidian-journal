@@ -149,24 +149,24 @@ else is tracked here.
   - v2: persisted `todayMode`/`pickMode` settings (`navigate`/`create`/`switch_date`) — `src/_old-code/types/settings.types.ts:36-37`.
   - v3: the `mode` field exists in the schema (`src/views/toolbar-items/button/button-config.ts:8`) but its config editor was unreachable, so mode/levels were frozen at the add-time preset.
 
-- [ ] **26. Theme color picker downgraded to free-text.** Documented as an intentional design choice (`docs/superpowers/specs/2026-05-26-decoration-settings-ui-design.md`) — listed here to confirm the usability shrink is acceptable.
+- [x] **26. Theme color picker downgraded to free-text.** Fixed (`5933d96d`). Restored the named-theme-color dropdown + live swatch (`THEME_COLOR_NAMES` + `UiColorSettingsPicker`), reversing the earlier free-text decision per explicit user request. The dropdown lists the ~32 Obsidian theme variables by name; a previously stored variable that isn't a known theme color stays selectable so existing data round-trips.
   - v2: dropdown of ~32 named Obsidian theme colors + live swatch — `src/_old-code/components/ColorPicker.vue:66-71`.
   - v3: single free-text CSS-variable input, no dropdown/swatch — `src/ui/UiColorSettingsPicker.vue:44`. Affects every color control; typos silently yield `var(--typo)`.
 
 ## 🟢 Behavioral / cosmetic deltas
 
-- [ ] **27. open-next/open-prev lost feedback + editor gating.** v2 used `editorCallback` and surfaced `Notice`s ("not connected to a journal", "no next/previous note") — `src/_old-code/main.ts:555-601`. v3 uses `check`/`execute` and silently hides/no-ops with no notice (`src/journals/navigation-commands.ts:19-31`).
-- [ ] **28. Bulk-add: date-format live preview dropped.** v2 `ConfigureBulkAddNotes.vue:137` had `<DateFormatPreview>`; v3 `src/journals/notes/bulk-add/ui/ConfigureBulkAddModal.vue:71-80` keeps the syntax link but no live preview.
-- [ ] **29. Bulk-add: dry-run default flipped `false`→`true`.** `src/journals/notes/bulk-add/config.ts:47`. Safer, but a deviation — confirm intended.
-- [ ] **30. Bulk-add: live per-note progress indicator removed.** v2 `BulkProcessNotes.vue:24,79-82` showed stage progress; v3 plans synchronously with no progress UI. No feedback during apply on very large folders.
-- [ ] **31. Decoration weekday-condition labels changed.** v2 used short names reordered to the configured week-start (`src/_old-code/components/modals/edit-decoration/ConditionWeekday.vue:19-28`); v3 uses full Sunday-first names (`src/decorations/settings/ui/ConditionWeekday.vue:12`). Stored indexes unaffected.
-- [ ] **32. Decoration date-condition month is now a number input.** v2 offered a localized month-name dropdown (`ConditionDate.vue:46-55`); v3 is a bare number 1–12 (`src/decorations/settings/ui/ConditionDate.vue:42-59`).
-- [ ] **33. Decoration border `groove` option dropped (`double` added).** v3 `src/decorations/settings/ui/StyleBorderSide.vue:30-35` = solid/dashed/dotted/double. (v2's `ridge` was already a dead duplicate-value option; net real loss is `groove`. Existing `groove` data still renders but isn't re-selectable.)
-- [ ] **34. Icon suggestions no longer alphabetically sorted.** v2 `icon-suggest.ts:14` ended `.toSorted()`; v3 `src/ui/UiIconSuggest.vue:18` returns raw `getIconIds()` order. Sibling inputs still sort — isolated one-line omission.
-- [ ] **35. `UiCollapsibleBlock` dropped `defaultExpanded`.** v2 `CollapsibleBlock.vue:6-9` set initial expanded state; v3 only has the `expanded` model. Check call sites that relied on expanded-by-default.
-- [ ] **36. Folder suggester now includes vault root `/`.** v2 `folder-suggest.ts` excluded `"/"`; v3 `NotesService.listFolders` returns root (`src/infrastructure/host/internal/notes-service.ts:84-89`). Selecting it yields an empty folder path.
-- [ ] **37. Timeline quarter/calendar connector lines dropped (cosmetic).** v2 `TimelineQuarter.vue`/`TimelineCalendar.vue` drew faint divider lines; v3 equivalents omit them.
-- [ ] **38. Home-block click always opens all journals of an entry.** v2 `HomeCodeBlock.vue:54-62` opened only the current note's journal on a matching type; v3 `src/code-blocks/home/ui/HomeCodeBlock.vue:62-68` always opens all. Likely an intentional simplification — confirm.
+- [x] **27. open-next/open-prev lost feedback + editor gating.** Fixed (`124e8166`). The commands stay available whenever a note is active (editor gating, mirroring v2's `editorCallback`) and `execute` shows a `Notice` for each no-op — "not connected to a journal" / "no next/previous note" — instead of silently disabling. v2 ref: `src/_old-code/main.ts:555-601`.
+- [x] **28. Bulk-add: date-format live preview dropped.** Fixed (`124e8166`). The existing `DateFormatPreview` now renders live under the date-format field in `ConfigureBulkAddModal`.
+- [~] **29. Bulk-add: dry-run default flipped `false`→`true`.** Kept as the intentional v3 default (user confirmed). Preview-first is the safer default; not reverted. `src/journals/notes/bulk-add/config.ts:47`.
+- [x] **30. Bulk-add: live per-note progress indicator removed.** Fixed (`124e8166`). `BulkAddService.apply` takes an `onProgress(done, total)` callback fired after each note; `ProcessBulkAddModal` shows "Processing X of N…" while the batch runs.
+- [x] **31. Decoration weekday-condition labels changed.** Fixed (`52c4d782`). Short weekday names ordered from the locale's first-day-of-week, carrying each weekday's true Sunday-first index, via a new `Calendar.weekdaysShort()`. Stored indexes unaffected.
+- [x] **32. Decoration date-condition month is now a number input.** Fixed (`52c4d782`). Restored the localized month-name dropdown (`Calendar.months()`) in place of the bare 1–12 number input.
+- [x] **33. Decoration border `groove` option dropped (`double` added).** Fixed (`52c4d782`). Re-added the `groove` option (kept v3's added `double`); `style` is `v.string()` so no schema change was needed.
+- [x] **34. Icon suggestions no longer alphabetically sorted.** Fixed (`52c4d782`). `UiIconSuggest` sorts its filtered results again.
+- [x] **35. `UiCollapsibleBlock` dropped `defaultExpanded`.** Verified — no change needed. Audited every call site: the sections v2 opened-by-default (journals/shelves/commands/views dashboards) all initialize their own `expanded` ref to `true` in v3, a superset of v2's "open when non-empty". The dropped prop lost no capability.
+- [x] **36. Folder suggester now includes vault root `/`.** Fixed (`52c4d782`). `FolderInput` drops the vault root (`""`/`"/"`) from candidates, matching v2; `listFolders` is unchanged.
+- [x] **37. Timeline quarter/calendar connector lines dropped (cosmetic).** Fixed (`5933d96d`). Re-added the faint grid divider-line CSS to `TimelineQuarter`/`TimelineCalendar`.
+- [~] **38. Home-block click always opens all journals of an entry.** Kept as the intentional v3 behavior (user confirmed). Opening all journals of an entry is the deliberate simplification; not reverted. `src/code-blocks/home/ui/HomeCodeBlock.vue:62-68`.
 
 ## 🐛 Not a regression — new v3 feature that ships non-functional
 
