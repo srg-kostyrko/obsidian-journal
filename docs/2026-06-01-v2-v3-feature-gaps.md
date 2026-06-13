@@ -139,7 +139,7 @@ else is tracked here.
   - v2: picker bound `:min`/`:max` to journal start/end — `src/_old-code/components/modals/ConnectNote.modal.vue:160`.
   - v3: bare `<input type="date">` with no bounds (`src/journals/notes/ui/ConnectNoteModal.vue:128`); `anchor` resolves via `cycle.anchorOf` with no `timeline.contains` check, and `buildMetadata` doesn't validate bounds (`src/journals/notes/frontmatter.ts:61-75`). A note can be connected to a date outside the journal's span, then won't surface in bounded views.
 
-- [ ] **24. Custom-intervals block lost the active-note highlight.**
+- [x] **24. Custom-intervals block lost the active-note highlight.** Fixed (`d2d8a9af`): the entry whose (journal, anchor) matches `ActiveEntryViewModel` gets `data-active` and the shared `--journal-cell-active-*` highlight, mirroring `NotesCalendarCell`.
   - v2: the interval row matching the open note got an `is-active` class using the configured active color/background — `src/_old-code/calendar-view/CalendarViewCustomInterval.vue:36,51-57`.
   - v3: `src/views/blocks/custom-intervals/ui/CustomIntervalsBlock.vue` has no active-entry highlighting. (Month-calendar cells still highlight; only this section regressed.)
 
