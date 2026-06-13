@@ -156,7 +156,7 @@ describe("v3ToV4Migration", () => {
     expect(view.blocks.find((b) => b.key === "month-calendar")).toBeUndefined();
     const week = view.blocks.find((b) => b.key === "week-calendar");
     expect(week).toBeDefined();
-    expect(week!.config).toEqual({ before: 0, after: 0, hideWeekends: false, weeks: "left" });
+    expect(week!.config).toEqual({ before: 0, after: 0, hiddenWeekdays: [], weeks: "left" });
   });
 
   it("drops legacy-only keys", () => {

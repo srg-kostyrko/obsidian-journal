@@ -1,9 +1,10 @@
 <script setup lang="ts">
+import { Calendar } from "@/calendar";
 import { m } from "@/i18n";
+import { useService } from "@/infrastructure/di";
 import UiDropdown from "@/ui/UiDropdown.vue";
 import UiNumberInput from "@/ui/UiNumberInput.vue";
 import UiSettingRow from "@/ui/UiSettingRow.vue";
-import UiToggle from "@/ui/UiToggle.vue";
 
 import type { MonthCalendarConfig, MonthCalendarConfigChange } from "../month-calendar-block";
 
@@ -13,6 +14,15 @@ const props = defineProps<{
 }>();
 
 const update = (patch: Partial<MonthCalendarConfig>): void => props.onChange({ ...props.config, ...patch });
+
+const orderedWeekdays = useService(Calendar).weekdaysShort();
+
+function toggleWeekday(index: number, hidden: boolean): void {
+  const next = new Set(props.config.hiddenWeekdays);
+  if (hidden) next.add(index);
+  else next.delete(index);
+  update({ hiddenWeekdays: [...next].toSorted((a, b) => a - b) });
+}
 </script>
 
 <template>
@@ -25,8 +35,15 @@ const update = (patch: Partial<MonthCalendarConfig>): void => props.onChange({ .
     <UiNumberInput :model-value="config.after" :min="0" @update:model-value="(v) => update({ after: v })" />
   </UiSettingRow>
   <UiSettingRow>
-    <template #name>{{ m.view_block_config_hide_weekends_label() }}</template>
-    <UiToggle :model-value="config.hideWeekends" @update:model-value="(v) => update({ hideWeekends: v })" />
+    <template #name>{{ m.view_block_config_hidden_weekdays_label() }}</template>
+    <label v-for="{ index, label } in orderedWeekdays" :key="index">
+      <input
+        type="checkbox"
+        :checked="config.hiddenWeekdays.includes(index)"
+        @change="toggleWeekday(index, ($event.target as HTMLInputElement).checked)"
+      />
+      {{ label }}
+    </label>
   </UiSettingRow>
   <UiSettingRow>
     <template #name>{{ m.view_block_config_weeks_label() }}</template>

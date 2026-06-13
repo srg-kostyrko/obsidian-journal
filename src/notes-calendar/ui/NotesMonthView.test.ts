@@ -13,7 +13,13 @@ import NotesMonthView from "./NotesMonthView.vue";
 
 function mount(
   h: NotesCalendarHarness,
-  props: { shelf: string | null; month: MonthPeriod; hideOutsideDates?: boolean; weeks?: "none" | "left" | "right" },
+  props: {
+    shelf: string | null;
+    month: MonthPeriod;
+    hideOutsideDates?: boolean;
+    weeks?: "none" | "left" | "right";
+    hiddenWeekdays?: readonly number[];
+  },
 ) {
   return render(NotesMonthView, {
     props,
@@ -91,6 +97,27 @@ describe("NotesMonthView", () => {
         element.textContent?.trim(),
       );
       const expected = [...[...month.weeks()][0].days()].map((d) => d.format("ddd"));
+      expect(labels).toEqual(expected);
+    });
+  });
+
+  describe("hidden weekdays", () => {
+    it("renders no day cell for a hidden weekday across every week row", () => {
+      const h = buildNotesCalendarHarness({ journals: { daily: fixedJournal("daily", { type: "day" }) } });
+      const { container } = mount(h, { shelf: null, month, hiddenWeekdays: [0, 6] });
+      // 6 week rows × (7 − 2 hidden) visible day columns.
+      expect(container.querySelectorAll(".notes-month-view__day").length).toBe(30);
+    });
+
+    it("omits hidden weekdays from the header labels", () => {
+      const h = buildNotesCalendarHarness({ journals: { daily: fixedJournal("daily", { type: "day" }) } });
+      const { container } = mount(h, { shelf: null, month, hiddenWeekdays: [0, 6] });
+      const labels = [...container.querySelectorAll(".notes-month-view__weekday")].map((element) =>
+        element.textContent?.trim(),
+      );
+      const expected = [...[...month.weeks()][0].days()]
+        .filter((d) => ![0, 6].includes(Number(d.format("d"))))
+        .map((d) => d.format("ddd"));
       expect(labels).toEqual(expected);
     });
   });

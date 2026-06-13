@@ -13,7 +13,10 @@ const props = defineProps<{
   shelf: string | null;
   week: WeekPeriod;
   weeks?: "none" | "left" | "right";
+  hiddenWeekdays?: readonly number[];
 }>();
+
+const hiddenWeekdays = computed(() => new Set(props.hiddenWeekdays));
 
 const scope = useShelfScope(() => props.shelf);
 
@@ -24,7 +27,11 @@ const quarterCell = useNotesCell({ journalNames: () => scope.quarter.value });
 const yearCell = useNotesCell({ journalNames: () => scope.year.value });
 
 const rawWeek = computed(() => toRaw(props.week));
-const days = computed(() => [...rawWeek.value.days()].map((d) => DayPeriod.containing(d)));
+const days = computed(() =>
+  [...rawWeek.value.days()]
+    .map((d) => DayPeriod.containing(d))
+    .filter((d) => !hiddenWeekdays.value.has(Number(d.start.format("d")))),
+);
 const weekdayNames = computed(() => days.value.map((d) => d.start.format("ddd")));
 const monthPeriod = computed(() => MonthPeriod.containing(rawWeek.value.anchor));
 const quarterPeriod = computed(() => QuarterPeriod.containing(rawWeek.value.anchor));

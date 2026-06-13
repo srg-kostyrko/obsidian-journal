@@ -128,7 +128,7 @@ function reshapeViews(cv: OldPluginSettings["calendarView"] | undefined): Record
     view.blocks[index] = {
       id: monthBlock.id,
       key: "week-calendar",
-      config: { before: 0, after: 0, hideWeekends: false, weeks: cv.weeks },
+      config: { before: 0, after: 0, hiddenWeekdays: [], weeks: cv.weeks },
     };
   }
 

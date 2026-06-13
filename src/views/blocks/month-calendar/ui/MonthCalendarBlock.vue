@@ -8,10 +8,11 @@ import NotesMonthView from "@/notes-calendar/ui/NotesMonthView.vue";
 import { useViewContext } from "../../../view-context";
 
 import type { BlockInstanceId } from "../../../config";
+import type { MonthCalendarConfig } from "../month-calendar-block";
 
 const props = defineProps<{
   instanceId: BlockInstanceId;
-  config: { before: number; after: number; hideWeekends: boolean; weeks: "none" | "left" | "right" };
+  config: MonthCalendarConfig;
 }>();
 
 const viewContext = useViewContext();
@@ -23,13 +24,14 @@ const months = computed<readonly MonthPeriod[]>(() => {
 </script>
 
 <template>
-  <div class="journal-view-month-calendar" :data-hide-weekends="config.hideWeekends || null">
+  <div class="journal-view-month-calendar">
     <NotesMonthView
       v-for="month of months"
       :key="month.start.toAnchor()"
       :month="month"
       :shelf="viewContext.shelf.value"
       :weeks="config.weeks"
+      :hidden-weekdays="config.hiddenWeekdays"
     />
   </div>
 </template>

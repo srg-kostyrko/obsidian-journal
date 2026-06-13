@@ -14,7 +14,11 @@ const props = defineProps<{
   month: MonthPeriod;
   hideOutsideDates?: boolean;
   weeks?: "none" | "left" | "right";
+  hiddenWeekdays?: readonly number[];
 }>();
+
+const hiddenWeekdays = computed(() => new Set(props.hiddenWeekdays));
+const dayColumns = computed(() => 7 - [0, 1, 2, 3, 4, 5, 6].filter((i) => hiddenWeekdays.value.has(i)).length);
 
 const scope = useShelfScope(() => props.shelf);
 
@@ -38,10 +42,12 @@ interface WeekRow {
 const rows = computed<readonly WeekRow[]>(() => {
   const out: WeekRow[] = [];
   for (const week of rawMonth.value.weeks()) {
-    const days = [...week.days()].map((d) => ({
-      period: DayPeriod.containing(d),
-      isOutside: !rawMonth.value.contains(d),
-    }));
+    const days = [...week.days()]
+      .map((d) => ({
+        period: DayPeriod.containing(d),
+        isOutside: !rawMonth.value.contains(d),
+      }))
+      .filter(({ period }) => !hiddenWeekdays.value.has(Number(period.start.format("d"))));
     out.push({ key: week.anchor.toAnchor(), weekPeriod: week, days });
   }
   return out;
@@ -99,7 +105,11 @@ const inactiveDay = inactiveCell();
         <NotesCalendarCell data-testid="header-year" :period="yearPeriod" :cell="yearCell" />
       </slot>
     </div>
-    <div class="notes-month-view__grid" :data-weeks="showWeekNumber ? weeksPos : null">
+    <div
+      class="notes-month-view__grid"
+      :data-weeks="showWeekNumber ? weeksPos : null"
+      :style="{ '--day-columns': dayColumns }"
+    >
       <div
         v-if="showWeekNumber && weeksPos === 'left'"
         class="notes-month-view__weekday-spacer"
@@ -152,14 +162,14 @@ const inactiveDay = inactiveCell();
 }
 .notes-month-view__grid {
   display: grid;
-  grid-template-columns: repeat(7, 1fr);
+  grid-template-columns: repeat(var(--day-columns, 7), 1fr);
   gap: var(--size-2-1);
 }
 .notes-month-view__grid[data-weeks="left"] {
-  grid-template-columns: auto repeat(7, 1fr);
+  grid-template-columns: auto repeat(var(--day-columns, 7), 1fr);
 }
 .notes-month-view__grid[data-weeks="right"] {
-  grid-template-columns: repeat(7, 1fr) auto;
+  grid-template-columns: repeat(var(--day-columns, 7), 1fr) auto;
 }
 .notes-month-view__weekday {
   font-size: 0.6em;

@@ -800,7 +800,7 @@
       }
     }
   ],
-  "view_block_config_hide_weekends_label": "Hide weekends",
+  "view_block_config_hidden_weekdays_label": "Hide days of the week",
   "view_block_config_weeks_label": "Week numbers",
   "view_block_config_weeks_none": "Hidden",
   "view_block_config_weeks_left": "Before weekdays",

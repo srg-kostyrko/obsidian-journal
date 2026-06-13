@@ -24,13 +24,14 @@ const weeks = computed<readonly WeekPeriod[]>(() => {
 </script>
 
 <template>
-  <div class="journal-view-week-calendar" :data-hide-weekends="config.hideWeekends || null">
+  <div class="journal-view-week-calendar">
     <NotesWeekView
       v-for="week of weeks"
       :key="week.start.toAnchor()"
       :week="week"
       :shelf="viewContext.shelf.value"
       :weeks="config.weeks"
+      :hidden-weekdays="config.hiddenWeekdays"
     />
   </div>
 </template>
