@@ -14,6 +14,7 @@ import {
   TIMELINE_BAD_FENCE,
   TIMELINE_BLOCK,
   TIMELINE_FENCE,
+  TIMELINE_HIDDEN_WEEKDAYS_FENCE,
   clickNavNext,
   hostNote,
   openInReadingMode,
@@ -157,6 +158,18 @@ describe("code blocks", () => {
       it("renders the journals-home block and not the error fallback", async () => {
         await renderBlock("blocks/home.md", plainNote(HOME_FENCE), `${HOME_BLOCK} .home-code-block`);
         await expect($(`${HOME_BLOCK} ${CODE_BLOCK_ERROR}`)).not.toExist();
+      });
+
+      it("drops the hidden weekdays' columns from the timeline month grid", async () => {
+        await renderBlock(
+          "blocks/timeline-hidden-weekdays.md",
+          plainNote(TIMELINE_HIDDEN_WEEKDAYS_FENCE),
+          `${TIMELINE_BLOCK} .notes-month-view`,
+        );
+        // hiddenWeekdays [0, 6] removes two of the seven weekday columns. Scope the count to a
+        // single grid — reading mode can mount the block's view in more than one render context.
+        const grid = $(`${TIMELINE_BLOCK} .notes-month-view`);
+        await expect(grid.$$(".notes-month-view__weekday")).toBeElementsArrayOfSize(5);
       });
 
       it("renders the error fallback for a timeline fence with an invalid mode", async () => {

@@ -36,6 +36,9 @@ export const timelineCalendar: CalendarSurface = calendarSurface(TIMELINE_BLOCK)
 // must show the week column for the has-open-task weekly decoration.
 export const NAV_FENCE = "```calendar-nav\n```";
 export const TIMELINE_FENCE = "```calendar-timeline\nmode: month\nweeks: left\n```";
+// Hide Sunday (0) and Saturday (6): the month grid should drop those two weekday columns.
+export const TIMELINE_HIDDEN_WEEKDAYS_FENCE =
+  "```calendar-timeline\nmode: month\nweeks: left\nhiddenWeekdays: [0, 6]\n```";
 export const TIMELINE_BAD_FENCE = "```calendar-timeline\nmode: bogus\n```";
 export const HOME_FENCE = "```journals-home\n```";
 
