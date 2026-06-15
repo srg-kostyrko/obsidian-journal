@@ -1,0 +1,50 @@
+{
+  "version": 4,
+  "journals": {
+    "daily": {
+      "name": "daily",
+      "write": { "type": "day" },
+      "folder": "day",
+      "timeline": { "start": "", "end": { "kind": "never" } },
+      "dateFormat": "YYYY-MM-DD",
+      "frontmatter": {
+        "dateField": "journal-date",
+        "startDateField": "journal-start-date",
+        "endDateField": "journal-end-date",
+        "addStartDate": false,
+        "addEndDate": false
+      },
+      "numbering": { "enabled": false, "anchorDate": "", "allowBefore": false, "sources": [] }
+    }
+  },
+  "views": {
+    "f1e2d3c4-0b1a-4c2d-8e3f-4a5b6c7d8e9f": {
+      "id": "f1e2d3c4-0b1a-4c2d-8e3f-4a5b6c7d8e9f",
+      "name": "Defined Nav",
+      "icon": "chevrons-left-right",
+      "defaultShelf": null,
+      "showInRibbon": true,
+      "leaf": "right",
+      "blocks": [
+        {
+          "id": "a2b3c4d5-1e2f-4a3b-9c4d-5e6f7a8b9c0d",
+          "key": "toolbar",
+          "config": {
+            "items": [
+              {
+                "id": "b3c4d5e6-2f3a-4b4c-8d5e-6f7a8b9c0d1e",
+                "key": "defined-navigation",
+                "config": { "target": "day", "previous": true, "next": true }
+              }
+            ]
+          }
+        },
+        {
+          "id": "c4d5e6f7-3a4b-4c5d-9e6f-7a8b9c0d1e2f",
+          "key": "month-calendar",
+          "config": { "before": 0, "after": 0, "hiddenWeekdays": [], "weeks": "left" }
+        }
+      ]
+    }
+  }
+}
