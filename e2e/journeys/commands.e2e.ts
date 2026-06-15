@@ -2,9 +2,15 @@ import { $, browser, expect } from "@wdio/globals";
 
 import { openPalette, paletteLists, promptChoose, waitForPrompt } from "../support/commands.js";
 import { editorValue } from "../support/editor.js";
-import { clickDialogButton, selectModalSelect, waitForDialogClosed } from "../support/settings.js";
+import {
+  clickDialogButton,
+  selectModalSelect,
+  toggleNamedModalToggle,
+  waitForDialogClosed,
+} from "../support/settings.js";
 import {
   closeAllLeaves,
+  frontmatterOf,
   openNote,
   seedNote,
   waitForActiveNote,
@@ -97,6 +103,37 @@ describe("commands", () => {
         (fm) => fm.journal === "daily" && "journal-date" in fm,
         "connect-note did not attach journal=daily frontmatter",
       );
+    });
+
+    it("moves and renames the note into the journal when both options are enabled", async () => {
+      // Use a fixed far-future date (unused by any other test in this spec) so the prior test's
+      // connection of unconnected.md to today's anchor does not produce an override toggle here.
+      const anchor = "2030-05-01";
+      await seedNote("inbox/loose-note.md", "move me\n");
+      await openNote("inbox/loose-note.md");
+      await openPalette();
+      await promptChoose(CONNECT);
+      await selectModalSelect("daily");
+      // Set the date via JS so the Vue model updates and the watch fires before toggling.
+      // (Chrome date inputs are locale-dependent via keyboard; direct value + event is reliable.)
+      const dateInput = $(".modal-container input[aria-label='Date']");
+      await browser.execute(
+        (el, v) => {
+          (el as HTMLInputElement).value = v;
+          el.dispatchEvent(new Event("input", { bubbles: true }));
+          el.dispatchEvent(new Event("change", { bubbles: true }));
+        },
+        await dateInput.getElement(),
+        anchor,
+      );
+      await toggleNamedModalToggle("Rename file to match the journal");
+      await toggleNamedModalToggle("Move file into the journal's folder");
+      await clickDialogButton("Connect");
+      await waitForDialogClosed();
+
+      // The destination is day/<anchor>.md; the original path is gone.
+      await waitForJournalFrontmatter(`day/${anchor}.md`, { journal: "daily", date: anchor });
+      expect(await frontmatterOf("inbox/loose-note.md")).toBeNull();
     });
   });
 
