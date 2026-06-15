@@ -3,12 +3,13 @@ import { describe, expect, it, vi } from "vitest";
 
 import { CalendarDate } from "@/calendar";
 import { anchor } from "@/calendar/testing";
+import { m } from "@/i18n";
 import { Flows, FlowsModule } from "@/infrastructure/flows";
-import { CommandService, WorkspaceService } from "@/infrastructure/host";
+import { CommandService, NoticeService, WorkspaceService } from "@/infrastructure/host";
 import type { VaultPath } from "@/infrastructure/host";
 import { createFakeHost } from "@/infrastructure/host/internal/testing";
 import { InternalPluginToken } from "@/infrastructure/host/internal/tokens";
-import { FakeWorkspaceService } from "@/infrastructure/host/testing";
+import { FakeNoticeService, FakeWorkspaceService } from "@/infrastructure/host/testing";
 import { AsyncResult } from "@/infrastructure/result";
 import {
   CycleService,
@@ -64,10 +65,12 @@ async function build() {
 
   const host = createFakeHost();
   const workspace = new FakeWorkspaceService();
+  const notices = new FakeNoticeService();
 
   container.register(InternalPluginToken).useValue(host.plugin);
   container.register(CommandService).useClass(CommandService);
   container.register(WorkspaceService).useValue(workspace as unknown as WorkspaceService);
+  container.register(NoticeService).useValue(notices);
   container.register(JournalsIndex).useClass(JournalsIndex);
   container.register(CycleService).useClass(CycleService);
   container.register(JournalsEventsToken).useValue(journalsEvents);
@@ -88,6 +91,7 @@ async function build() {
   return {
     host,
     workspace,
+    notices,
     journalsRepo,
     shelvesRepo,
     commandsRepo,
@@ -241,6 +245,53 @@ describe("DynamicCommandRegistry execution", () => {
       openMode: "active",
       existingOnly: false,
     });
+  });
+});
+
+describe("DynamicCommandRegistry available types", () => {
+  it("opens the nearest earlier existing note for a previous_available command", async () => {
+    const { host, commandsRepo, journalsRepo, index, workspace, flows } = await build();
+    journalsRepo.create("daily", { type: "day" });
+    const activePath = "daily/2030-03-12.md" as VaultPath;
+    index.register({ journalName: "daily", anchor: anchor("2030-03-12"), path: activePath });
+    index.register({ journalName: "daily", anchor: anchor("2030-03-10"), path: "daily/2030-03-10.md" as VaultPath });
+    workspace.setActive(activePath);
+    const invokeSpy = vi
+      .spyOn(flows, "invoke")
+      .mockReturnValue(AsyncResult.ok({ path: "daily/2030-03-10.md", created: false }));
+    commandsRepo.create("cmd-1", makeCommand({ type: "previous_available", context: "open_note" }));
+
+    host.commands.get("cmd-1")?.checkCallback?.(false);
+
+    expect(invokeSpy).toHaveBeenCalledWith(OpenDateFlow, {
+      anchor: anchor("2030-03-10"),
+      journalNames: ["daily"],
+      openMode: "active",
+      existingOnly: true,
+    });
+  });
+
+  it("notices instead of opening when no earlier note exists for a previous_available command", async () => {
+    const { host, commandsRepo, journalsRepo, index, workspace, notices, flows } = await build();
+    journalsRepo.create("daily", { type: "day" });
+    const activePath = "daily/2030-03-12.md" as VaultPath;
+    index.register({ journalName: "daily", anchor: anchor("2030-03-12"), path: activePath });
+    workspace.setActive(activePath);
+    const invokeSpy = vi.spyOn(flows, "invoke");
+    commandsRepo.create("cmd-1", makeCommand({ type: "previous_available", context: "open_note" }));
+
+    host.commands.get("cmd-1")?.checkCallback?.(false);
+
+    expect(notices.messages).toContain(m.command_open_no_previous());
+    expect(invokeSpy).not.toHaveBeenCalled();
+  });
+
+  it("stays listed for a next_available command when the target has a journal but no note is found", async () => {
+    const { host, commandsRepo, journalsRepo } = await build();
+    journalsRepo.create("daily", { type: "day" });
+    commandsRepo.create("cmd-1", makeCommand({ type: "next_available", context: "today" }));
+
+    expect(host.commands.get("cmd-1")?.checkCallback?.(true)).toBe(true);
   });
 });
 

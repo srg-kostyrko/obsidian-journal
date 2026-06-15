@@ -2,9 +2,10 @@ import { match } from "ts-pattern";
 
 import { CalendarDate } from "@/calendar";
 import type { AnchorString } from "@/calendar";
+import { m } from "@/i18n";
 import { inject } from "@/infrastructure/di";
 import { Flows, UserAborted } from "@/infrastructure/flows";
-import { CommandService, WorkspaceService } from "@/infrastructure/host";
+import { CommandService, NoticeService, WorkspaceService } from "@/infrastructure/host";
 import type { CommandRegistration } from "@/infrastructure/host";
 import { LoggerFactoryToken } from "@/infrastructure/logger";
 import { Option } from "@/infrastructure/result";
@@ -21,7 +22,7 @@ import { SettingsEventsToken } from "@/settings";
 import { ShelvesEventsToken, ShelvesRepository } from "@/shelves";
 
 import { CommandsRepository } from "./repository";
-import { compoundShift, supportedTypes } from "./resolve";
+import { compoundShift, isAvailableType, supportedTypes } from "./resolve";
 import { CommandsEventsToken } from "./tokens";
 
 import type { CommandConfig } from "./config";
@@ -35,6 +36,7 @@ export class DynamicCommandRegistry {
   readonly #commands = inject(CommandService);
   readonly #flows = inject(Flows);
   readonly #workspace = inject(WorkspaceService);
+  readonly #notices = inject(NoticeService);
   readonly #index = inject(JournalsIndex);
   readonly #cycle = inject(CycleService);
   readonly #logger = inject(LoggerFactoryToken).named("dynamic-commands");
@@ -85,7 +87,7 @@ export class DynamicCommandRegistry {
       name: command.name,
       icon: command.icon,
       ribbon: command.showInRibbon,
-      check: () => this.#plan(command).isSome(),
+      check: () => this.#listable(command),
       execute: () => this.#run(command),
     };
   }
@@ -97,9 +99,23 @@ export class DynamicCommandRegistry {
     return this.#journalsRepo.get(rep).flatMap((config) => {
       if (!supportedTypes(config.write.type).includes(command.type)) return Option.none();
       return this.#reference(command, journalNames).flatMap((reference) =>
-        this.#anchor(command, rep, reference).map((resolved) => ({ anchor: resolved, journalNames })),
+        this.#anchor(command, rep, reference, journalNames).map((resolved) => ({ anchor: resolved, journalNames })),
       );
     });
+  }
+
+  #listable(command: CommandConfig): boolean {
+    if (!isAvailableType(command.type)) return this.#plan(command).isSome();
+    const journalNames = this.#candidates(command);
+    const [rep] = journalNames;
+    if (rep === undefined) return false;
+    return this.#journalsRepo
+      .get(rep)
+      .map(
+        (config) =>
+          supportedTypes(config.write.type).includes(command.type) && this.#reference(command, journalNames).isSome(),
+      )
+      .getOr(false);
   }
 
   #candidates(command: CommandConfig): string[] {
@@ -150,7 +166,12 @@ export class DynamicCommandRegistry {
     return this.#workspace.activeNote().flatMap((path) => this.#index.entryByPath(path));
   }
 
-  #anchor(command: CommandConfig, journalName: string, reference: CalendarDate): Option<AnchorString> {
+  #anchor(
+    command: CommandConfig,
+    journalName: string,
+    reference: CalendarDate,
+    journalNames: readonly string[],
+  ): Option<AnchorString> {
     return match(command.type)
       .with("same", () => this.#cycle.anchorOf(journalName, reference))
       .with("next", () =>
@@ -159,7 +180,13 @@ export class DynamicCommandRegistry {
       .with("previous", () =>
         this.#cycle.anchorOf(journalName, reference).flatMap((a) => this.#cycle.previousAnchor(journalName, a)),
       )
-      .with("previous_available", "next_available", () => Option.none<AnchorString>())
+      .with("previous_available", "next_available", (type) =>
+        this.#index.findNearestExisting(
+          journalNames,
+          reference.toAnchor(),
+          type === "previous_available" ? "previous" : "next",
+        ),
+      )
       .with(
         "same_next_week",
         "same_previous_week",
@@ -178,12 +205,19 @@ export class DynamicCommandRegistry {
 
   async #run(command: CommandConfig): Promise<void> {
     const plan = this.#plan(command);
-    if (!plan.isSome()) return;
+    if (!plan.isSome()) {
+      if (isAvailableType(command.type) && this.#listable(command)) {
+        this.#notices.show(
+          command.type === "previous_available" ? m.command_open_no_previous() : m.command_open_no_next(),
+        );
+      }
+      return;
+    }
     const result = await this.#flows.invoke(OpenDateFlow, {
       anchor: plan.value.anchor,
       journalNames: plan.value.journalNames,
       openMode: command.openMode,
-      existingOnly: false,
+      existingOnly: isAvailableType(command.type),
     });
     if (result.kind === "err") {
       const { error } = result;
