@@ -146,7 +146,7 @@ describe("EditCommandModal", () => {
     });
     const typeSelect = screen.getAllByRole("combobox")[0]; // the type dropdown is the first combobox
     const optionValues = [...typeSelect.querySelectorAll("option")].map((o) => o.getAttribute("value"));
-    expect(optionValues).toEqual(["same", "next", "previous"]);
+    expect(optionValues).toEqual(["same", "next", "previous", "previous_available", "next_available"]);
   });
 
   it("pre-populates the name from an existing command in edit mode", async () => {
