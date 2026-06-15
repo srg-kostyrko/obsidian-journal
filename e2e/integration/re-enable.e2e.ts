@@ -20,6 +20,12 @@ describe("plugin re-enable", () => {
       timeoutMsg: "plugin did not disable",
     });
 
+    // While disabled, Obsidian unregisters the plugin's commands, so the palette must not list it —
+    // this is what makes the post-enable presence a genuine re-registration proof, not a no-op.
+    await browser.waitUntil(async () => !(await paletteLists(COMMAND)), {
+      timeoutMsg: "command was still listed while the plugin was disabled",
+    });
+
     await enablePlugin();
     await browser.waitUntil(async () => isPluginEnabled(), {
       timeoutMsg: "plugin did not re-enable",
