@@ -290,6 +290,15 @@
       "target": { "kind": "all", "writeType": "day" },
       "type": "same",
       "context": "today"
+    },
+    "e2e-open-last-available-day": {
+      "name": "Open last available day's note",
+      "icon": "",
+      "showInRibbon": false,
+      "openMode": "active",
+      "target": { "kind": "all", "writeType": "day" },
+      "type": "previous_available",
+      "context": "open_note"
     }
   }
 }
