@@ -159,6 +159,7 @@ export class DynamicCommandRegistry {
       .with("previous", () =>
         this.#cycle.anchorOf(journalName, reference).flatMap((a) => this.#cycle.previousAnchor(journalName, a)),
       )
+      .with("previous_available", "next_available", () => Option.none<AnchorString>())
       .with(
         "same_next_week",
         "same_previous_week",

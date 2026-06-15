@@ -15,6 +15,8 @@ export function supportedTypes(writeType: JournalWrite["type"]): CommandType[] {
       "same",
       "next",
       "previous",
+      "previous_available",
+      "next_available",
       "same_next_week",
       "same_previous_week",
       "same_next_month",
@@ -22,9 +24,21 @@ export function supportedTypes(writeType: JournalWrite["type"]): CommandType[] {
       "same_next_year",
       "same_previous_year",
     ])
-    .with("month", "quarter", () => ["same", "next", "previous", "same_next_year", "same_previous_year"])
-    .with("week", "year", "custom", () => ["same", "next", "previous"])
+    .with("month", "quarter", () => [
+      "same",
+      "next",
+      "previous",
+      "previous_available",
+      "next_available",
+      "same_next_year",
+      "same_previous_year",
+    ])
+    .with("week", "year", "custom", () => ["same", "next", "previous", "previous_available", "next_available"])
     .exhaustive();
+}
+
+export function isAvailableType(type: CommandType): boolean {
+  return type === "previous_available" || type === "next_available";
 }
 
 export function compoundShift(type: CommandType): CompoundShift | null {

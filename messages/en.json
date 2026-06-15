@@ -192,7 +192,9 @@
         "type=same_next_month": "Open same {writeType} next month",
         "type=same_previous_month": "Open same {writeType} last month",
         "type=same_next_year": "Open same {writeType} next year",
-        "type=same_previous_year": "Open same {writeType} last year"
+        "type=same_previous_year": "Open same {writeType} last year",
+        "type=previous_available": "Open last available {writeType}'s note",
+        "type=next_available": "Open next available {writeType}'s note"
       }
     }
   ],

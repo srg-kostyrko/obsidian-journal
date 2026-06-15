@@ -1,13 +1,15 @@
 import { describe, expect, it } from "vitest";
 
-import { compoundShift, supportedTypes } from "./resolve";
+import { compoundShift, isAvailableType, supportedTypes } from "./resolve";
 
 describe("supportedTypes", () => {
-  it("offers all nine variants for day journals", () => {
+  it("offers all eleven variants for day journals", () => {
     expect(supportedTypes("day")).toEqual([
       "same",
       "next",
       "previous",
+      "previous_available",
+      "next_available",
       "same_next_week",
       "same_previous_week",
       "same_next_month",
@@ -17,24 +19,56 @@ describe("supportedTypes", () => {
     ]);
   });
 
-  it("offers only same/next/previous for week journals", () => {
-    expect(supportedTypes("week")).toEqual(["same", "next", "previous"]);
+  it("offers same/next/previous/available for week journals", () => {
+    expect(supportedTypes("week")).toEqual(["same", "next", "previous", "previous_available", "next_available"]);
   });
 
-  it("offers only same/next/previous for custom journals", () => {
-    expect(supportedTypes("custom")).toEqual(["same", "next", "previous"]);
+  it("offers same/next/previous/available for custom journals", () => {
+    expect(supportedTypes("custom")).toEqual(["same", "next", "previous", "previous_available", "next_available"]);
   });
 
-  it("adds the same-year variants for month journals", () => {
-    expect(supportedTypes("month")).toEqual(["same", "next", "previous", "same_next_year", "same_previous_year"]);
+  it("adds the available and same-year variants for month journals", () => {
+    expect(supportedTypes("month")).toEqual([
+      "same",
+      "next",
+      "previous",
+      "previous_available",
+      "next_available",
+      "same_next_year",
+      "same_previous_year",
+    ]);
   });
 
-  it("adds the same-year variants for quarter journals", () => {
-    expect(supportedTypes("quarter")).toEqual(["same", "next", "previous", "same_next_year", "same_previous_year"]);
+  it("adds the available and same-year variants for quarter journals", () => {
+    expect(supportedTypes("quarter")).toEqual([
+      "same",
+      "next",
+      "previous",
+      "previous_available",
+      "next_available",
+      "same_next_year",
+      "same_previous_year",
+    ]);
   });
 
-  it("offers only same/next/previous for year journals", () => {
-    expect(supportedTypes("year")).toEqual(["same", "next", "previous"]);
+  it("offers same/next/previous/available for year journals", () => {
+    expect(supportedTypes("year")).toEqual(["same", "next", "previous", "previous_available", "next_available"]);
+  });
+
+  it("offers available types for every write type", () => {
+    for (const write of ["day", "week", "month", "quarter", "year", "custom"] as const) {
+      expect(supportedTypes(write)).toContain("previous_available");
+      expect(supportedTypes(write)).toContain("next_available");
+    }
+  });
+});
+
+describe("isAvailableType", () => {
+  it("is true only for the available types", () => {
+    expect(isAvailableType("previous_available")).toBe(true);
+    expect(isAvailableType("next_available")).toBe(true);
+    expect(isAvailableType("previous")).toBe(false);
+    expect(isAvailableType("same")).toBe(false);
   });
 });
 

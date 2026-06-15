@@ -67,6 +67,8 @@ const { defineField, errorBag, handleSubmit } = useForm({
           "same",
           "next",
           "previous",
+          "previous_available",
+          "next_available",
           "same_next_week",
           "same_previous_week",
           "same_next_month",
