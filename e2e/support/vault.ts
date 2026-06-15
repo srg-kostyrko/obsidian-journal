@@ -193,3 +193,14 @@ export async function closeAllLeaves(): Promise<void> {
 export function waitForActiveNote(path: string): Promise<void> {
   return waitForState(activeNotePath, (active) => active === path, `waited for ${path} to become the active note`);
 }
+
+// Today's date as a YYYY-MM-DD anchor, computed in the Node test process. The runner and the
+// Obsidian renderer share the machine's local date, so this matches the plugin's notion of today
+// (modulo the midnight boundary, same assumption the decoration fixtures already rely on).
+export function todayAnchor(): string {
+  const now = new Date();
+  const y = now.getFullYear();
+  const m = String(now.getMonth() + 1).padStart(2, "0");
+  const d = String(now.getDate()).padStart(2, "0");
+  return `${y}-${m}-${d}`;
+}

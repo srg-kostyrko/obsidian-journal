@@ -111,6 +111,20 @@ export async function toggleModalCheckbox(): Promise<void> {
   await activeModal().$(".checkbox-container").click();
 }
 
+// Select an <option> by value inside a specific UiDropdown in the open dialog, identified by its
+// aria-label. Unlike selectModalSelect (first <select>), this disambiguates a modal with several
+// dropdowns (the bulk-add configure modal's date-place / combinator / existing-note selects).
+export async function selectModalDropdownByLabel(ariaLabel: string, value: string): Promise<void> {
+  await activeModal().$(`select[aria-label="${ariaLabel}"]`).selectByAttribute("value", value);
+}
+
+// Toggle a specific UiToggle in the open dialog by its tooltip, which UiToggle renders as the
+// .checkbox-container's aria-label. Needed when a modal has several toggles (connect-note's
+// rename + move) that the single-checkbox toggleModalCheckbox cannot disambiguate.
+export async function toggleNamedModalToggle(ariaLabel: string): Promise<void> {
+  await activeModal().$(`.checkbox-container[aria-label="${ariaLabel}"]`).click();
+}
+
 // Click a plain checkbox in the dialog by its wrapping <label>'s visible text (e.g. a weekday
 // short name like "Sat"). Clicking the label toggles its nested <input type="checkbox">.
 export async function clickModalCheckboxByLabel(label: string): Promise<void> {

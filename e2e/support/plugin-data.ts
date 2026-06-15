@@ -89,3 +89,22 @@ export function waitForSettingsVersion(version: number): Promise<void> {
 export function waitForSettings(predicate: (settings: StoredSettings) => boolean, timeoutMsg: string): Promise<void> {
   return waitForState(readSettings, predicate, timeoutMsg);
 }
+
+// Raw read/write of the persisted data.json, for the external-reload (Obsidian Sync) seam where a
+// test simulates an out-of-band edit and then triggers the plugin's reload hook.
+export async function readRawSettings(): Promise<string | undefined> {
+  return browser.executeObsidian(async ({ app }, dataPath) => {
+    if (!(await app.vault.adapter.exists(dataPath))) return;
+    return app.vault.adapter.read(dataPath);
+  }, PLUGIN_DATA_PATH);
+}
+
+export async function writeRawSettings(raw: string): Promise<void> {
+  await browser.executeObsidian(
+    async ({ app }, dataPath, body) => {
+      await app.vault.adapter.write(dataPath, body);
+    },
+    PLUGIN_DATA_PATH,
+    raw,
+  );
+}
