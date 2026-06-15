@@ -115,6 +115,24 @@ export class JournalsIndex {
     return journalIndex ? journalIndex.findPrevious(from) : Option.none();
   }
 
+  findNearestExisting(
+    journalNames: readonly string[],
+    from: AnchorString,
+    direction: "previous" | "next",
+  ): Option<AnchorString> {
+    let best: AnchorString | undefined;
+    for (const name of journalNames) {
+      const path = direction === "previous" ? this.findPrevious(name, from) : this.findNext(name, from);
+      const anchor = path.flatMap((found) => this.entryByPath(found)).map((found) => found.anchor);
+      if (anchor.isNone()) continue;
+      const candidate = anchor.value;
+      if (best === undefined || (direction === "previous" ? candidate > best : candidate < best)) {
+        best = candidate;
+      }
+    }
+    return Option.fromNullable(best);
+  }
+
   findClosestAnchor(journalName: string, to: AnchorString): Option<AnchorString> {
     const journalIndex = this.#journals.get(journalName);
     return journalIndex ? journalIndex.findClosestAnchor(to) : Option.none();

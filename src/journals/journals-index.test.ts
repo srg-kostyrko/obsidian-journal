@@ -394,6 +394,54 @@ describe("JournalsIndex", () => {
     });
   });
 
+  describe("findNearestExisting", () => {
+    it("returns the closest earlier anchor across journals for previous", () => {
+      const index = new JournalsIndex();
+      index.register(entry("daily", "2022-01-01", "d/2022-01-01.md"));
+      index.register(entry("work", "2022-01-05", "w/2022-01-05.md"));
+      const result = index.findNearestExisting(["daily", "work"], a("2022-01-08"), "previous");
+      assert(result.isSome());
+      expect(result.value).toBe(a("2022-01-05"));
+    });
+
+    it("returns the closest later anchor across journals for next", () => {
+      const index = new JournalsIndex();
+      index.register(entry("daily", "2022-01-10", "d/2022-01-10.md"));
+      index.register(entry("work", "2022-01-05", "w/2022-01-05.md"));
+      const result = index.findNearestExisting(["daily", "work"], a("2022-01-01"), "next");
+      assert(result.isSome());
+      expect(result.value).toBe(a("2022-01-05"));
+    });
+
+    it("excludes the reference anchor itself (strictly before/after)", () => {
+      const index = new JournalsIndex();
+      index.register(entry("daily", "2022-01-05", "d/2022-01-05.md"));
+      index.register(entry("daily", "2022-01-02", "d/2022-01-02.md"));
+      const result = index.findNearestExisting(["daily"], a("2022-01-05"), "previous");
+      assert(result.isSome());
+      expect(result.value).toBe(a("2022-01-02"));
+    });
+
+    it("returns none when no entry exists in the direction", () => {
+      const index = new JournalsIndex();
+      index.register(entry("daily", "2022-01-05", "d/2022-01-05.md"));
+      expect(index.findNearestExisting(["daily"], a("2022-01-01"), "previous").isNone()).toBe(true);
+    });
+
+    it("skips unknown journal names", () => {
+      const index = new JournalsIndex();
+      index.register(entry("daily", "2022-01-02", "d/2022-01-02.md"));
+      const result = index.findNearestExisting(["daily", "missing"], a("2022-01-05"), "previous");
+      assert(result.isSome());
+      expect(result.value).toBe(a("2022-01-02"));
+    });
+
+    it("returns none for an empty journal list", () => {
+      const index = new JournalsIndex();
+      expect(index.findNearestExisting([], a("2022-01-05"), "next").isNone()).toBe(true);
+    });
+  });
+
   describe("entryByAnchor", () => {
     it("returns the full entry when the anchor is registered", () => {
       const index = new JournalsIndex();
