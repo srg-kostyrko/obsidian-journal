@@ -132,7 +132,7 @@ function onPointerEnter(event: PointerEvent): void {
     class="nav-row"
     @click.prevent="onClick"
     @auxclick.middle.prevent="onClick"
-    @contextmenu="onContextMenu"
+    @contextmenu.prevent="onContextMenu"
     @pointerenter="onPointerEnter"
   >
     <CellDecoration v-if="row.addDecorations" :period="period">{{ text }}</CellDecoration>

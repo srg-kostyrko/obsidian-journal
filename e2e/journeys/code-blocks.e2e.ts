@@ -123,6 +123,34 @@ describe("code blocks", () => {
       });
     });
 
+    describe("context menu", () => {
+      it("opens a single context menu when a nav row is right-clicked", async () => {
+        await renderBlock("nav/context-menu.md", navHost("2026-06-20", ""), NAV_VIEW);
+        const row = `${NAV_CURRENT} .nav-row`;
+        await $(row).waitForExist({ timeoutMsg: "nav row did not render" });
+
+        // Right-click the current nav row. Without @contextmenu.prevent the plugin's own file
+        // menu and Obsidian's reading-view context menu both open — issue #193's double menu.
+        await browser.execute((sel: string) => {
+          document
+            .querySelector(sel)
+            ?.dispatchEvent(new MouseEvent("contextmenu", { bubbles: true, cancelable: true }));
+        }, row);
+
+        await browser.waitUntil(
+          async () => (await browser.execute(() => document.querySelectorAll(".menu").length)) >= 1,
+          { timeoutMsg: "right-click did not open any context menu" },
+        );
+        const menuCount = await browser.execute(() => document.querySelectorAll(".menu").length);
+        expect(menuCount).toBe(1);
+
+        // Leave no open menu to bleed into the next test.
+        await browser.execute(() => {
+          for (const menu of document.querySelectorAll(".menu")) menu.remove();
+        });
+      });
+    });
+
     describe("decorations", () => {
       it("decorates the current nav block when its note matches a corner condition", async () => {
         // The daily ctag→corner decoration matches the host's inline #ctag; decorateWholeBlock
