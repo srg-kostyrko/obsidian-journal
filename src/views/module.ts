@@ -21,6 +21,7 @@ import { ViewsRepository } from "./repository";
 import { ViewsService } from "./service";
 import { ToolbarItemDefinitionToken, ViewBlockDefinitionToken, ViewsEventsToken, type ViewsEvents } from "./tokens";
 import { buttonItem } from "./toolbar-items/button/button-item";
+import { definedNavigationItem } from "./toolbar-items/defined-navigation/defined-navigation-item";
 import { periodButtonsItem } from "./toolbar-items/period-buttons/period-buttons-item";
 import { shelfSelectorItem } from "./toolbar-items/shelf-selector/shelf-selector-item";
 import { viewEditSubpage } from "./ui/view-edit-subpage";
@@ -51,6 +52,7 @@ export const viewsModule: Module = {
 
     c.register(ToolbarItemDefinitionToken).useValue(shelfSelectorItem);
     c.register(ToolbarItemDefinitionToken).useValue(periodButtonsItem);
+    c.register(ToolbarItemDefinitionToken).useValue(definedNavigationItem);
     c.register(ToolbarItemDefinitionToken).useValue(buttonItem);
 
     c.register(DashboardBlockToken).useValue(
