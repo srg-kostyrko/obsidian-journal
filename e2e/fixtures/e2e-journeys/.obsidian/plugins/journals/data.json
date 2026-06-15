@@ -96,6 +96,11 @@
               "size": 1
             }
           ]
+        },
+        {
+          "mode": "and",
+          "conditions": [{ "type": "date", "day": 4, "month": -1, "year": null }],
+          "styles": [{ "type": "corner", "placement": "top-left", "color": { "type": "custom", "color": "#ff0000" } }]
         }
       ],
       "navBlock": {

@@ -191,6 +191,12 @@ export function assertDecorationMatrix(surface: CalendarSurface): void {
       });
     });
 
+    it("decorates the configured day-of-month via the date condition", async () => {
+      await surface.cell(dayAnchor(4)).$(".decoration-corner.top-left").waitForExist({
+        timeoutMsg: "date-condition decoration did not render on the 4th",
+      });
+    });
+
     it("decorates the quarter header when the quarter journal has a note", async () => {
       await surface.periodCell("header-quarter").$(".decoration-corner.top-left").waitForExist({
         timeoutMsg: "has-note decoration did not render on the quarter header",
