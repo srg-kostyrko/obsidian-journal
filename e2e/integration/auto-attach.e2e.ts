@@ -18,6 +18,23 @@ describe("auto-attach", () => {
     await waitForJournalFrontmatter("2024-01-15.md", { journal: "daily", date: "2024-01-15" });
   });
 
+  it("attaches journal frontmatter when an unresolved date link is clicked", async () => {
+    await createNote("links.md", "see [[2024-02-20]]\n");
+    // openLinkText is exactly what Obsidian's internal-link click handler invokes; for a
+    // missing destination it creates the note at the new-file location, reproducing the
+    // user clicking [[2024-02-20]]. The created note lands at a path the daily journal owns
+    // (it has no folder, so the vault root matches), so the "created" event must drive auto-attach.
+    await browser.executeObsidian(
+      async ({ app }, linkText, source) => {
+        await app.workspace.openLinkText(linkText, source, false);
+      },
+      "2024-02-20",
+      "links.md",
+    );
+
+    await waitForJournalFrontmatter("2024-02-20.md", { journal: "daily", date: "2024-02-20" });
+  });
+
   it("attaches journal frontmatter when a note is renamed into a matching path", async () => {
     await createNote("draft.md");
 

@@ -1,0 +1,32 @@
+{
+  "version": 4,
+  "journals": {
+    "weekly": {
+      "name": "weekly",
+      "write": {
+        "type": "week"
+      },
+      "folder": "week",
+      "timeline": {
+        "start": "2026-06-10",
+        "end": {
+          "kind": "never"
+        }
+      },
+      "dateFormat": "YYYY-[W]ww",
+      "frontmatter": {
+        "dateField": "journal-date",
+        "startDateField": "journal-start-date",
+        "endDateField": "journal-end-date",
+        "addStartDate": false,
+        "addEndDate": false
+      },
+      "numbering": {
+        "enabled": false,
+        "anchorDate": "",
+        "allowBefore": false,
+        "sources": []
+      }
+    }
+  }
+}

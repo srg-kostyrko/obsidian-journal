@@ -18,6 +18,7 @@ import {
   waitForJournalFrontmatter,
 } from "../support/vault.js";
 
+import { openInReadingMode } from "./code-blocks.js";
 import { dayAnchor } from "./decorations.js";
 
 // Slice B chunk 4 — the command-palette real-click seam. Each per-note command is check()-gated;
@@ -150,6 +151,13 @@ describe("commands", () => {
       await openPalette();
       await promptChoose(OPEN_PREV);
       await waitForActiveNote(NAV_PREV);
+    });
+
+    it("still lists navigation commands while a journal note is open in reading mode", async () => {
+      // v3 registers open-next/prev via checkCallback gated on an active note, not v2's
+      // editor-only editorCallback, so reading (preview) mode must still surface them.
+      await openInReadingMode(NAV_MID);
+      expect(await paletteLists(OPEN_NEXT)).toBe(true);
     });
 
     it("still lists navigation commands on a non-journal note", async () => {
