@@ -158,6 +158,7 @@ describe("settings", () => {
       await setModalText("delete-view-src");
       await submitModal();
       await goBack();
+      await expandSection("Views");
       await clickIcon("Delete delete-view-src");
       await deleteInModal();
 
@@ -172,6 +173,7 @@ describe("settings", () => {
       const calId = viewIdByName(initial.views, "Calendar");
       const before = initial.views?.[calId ?? ""]?.blocks?.length ?? 0;
 
+      await expandSection("Views");
       await clickIcon("Open Calendar");
       await clickButton("Add block");
       await clickButton("Week calendar");
@@ -191,6 +193,7 @@ describe("settings", () => {
       };
       const before = itemCount(initial.views);
 
+      await expandSection("Views");
       await clickIcon("Open Calendar");
       await clickButton("Add toolbar item");
       await clickButton("Period buttons");
@@ -212,6 +215,7 @@ describe("settings", () => {
       };
       const before = toolbarItems(initial.views).length;
 
+      await expandSection("Views");
       await clickIcon("Open Calendar");
       await clickButton("Add toolbar item");
       await clickButton("Pick date");
@@ -239,6 +243,7 @@ describe("settings", () => {
         return blocks.at(-1) as { key?: string; config?: { weeks?: string } } | undefined;
       };
 
+      await expandSection("Views");
       await clickIcon("Open Calendar");
       await clickButton("Add block");
       await clickButton("Week calendar");
@@ -264,6 +269,7 @@ describe("settings", () => {
         return (blocks.at(-1) as { config?: { hiddenWeekdays?: number[] } } | undefined)?.config?.hiddenWeekdays;
       };
 
+      await expandSection("Views");
       await clickIcon("Open Calendar");
       await clickButton("Add block");
       await clickButton("Week calendar");
@@ -322,6 +328,7 @@ describe("settings", () => {
 
   describe("commands", () => {
     it("edits a command's name and persists it", async () => {
+      await expandSection("Commands");
       await clickIcon("Edit command Editable command");
       await setModalText("Renamed command");
       await submitModal();
@@ -333,6 +340,7 @@ describe("settings", () => {
     });
 
     it("deletes a command and removes it from data.json", async () => {
+      await expandSection("Commands");
       await clickIcon("Delete command Disposable command");
       await deleteInModal();
 

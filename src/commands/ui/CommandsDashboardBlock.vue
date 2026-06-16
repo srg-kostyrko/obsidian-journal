@@ -31,7 +31,7 @@ const entries = computed<readonly [string, CommandConfig, JournalWrite["type"]][
     .toSorted((a, b) => a[1].name.localeCompare(b[1].name)),
 );
 
-const expanded = ref(true);
+const expanded = ref(false);
 
 function add(): void {
   void flows.invoke(EditCommandFlow, { target: { kind: "all", writeType: "day" } });

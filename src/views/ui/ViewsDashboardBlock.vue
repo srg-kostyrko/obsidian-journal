@@ -24,7 +24,7 @@ const flows = useService(Flows);
 const viewsService = useService(ViewsService);
 const viewsVM = useService(ViewsViewModel);
 
-const expanded = ref(true);
+const expanded = ref(false);
 
 function add(): void {
   void flows.invoke(EditViewNameFlow, {}).tap(({ viewId }) => {
