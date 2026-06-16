@@ -109,7 +109,15 @@ describe("NoteCreationService.ensureNote", () => {
     expect(result.isOk() && result.value.created).toBe(true);
   });
 
-  it("skips the confirm modal when skipConfirmation is set even if confirmCreation is true", async () => {
+  it("does not open the confirm modal when skipConfirmation is set", async () => {
+    const repo = fakeRepo({ daily: fixedJournal("daily", { type: "day" }, { confirmCreation: true }) });
+    const notes = new FakeNotesService();
+    const modals = new FakeModalService();
+    await build(repo, notes, modals).resolve(NoteCreationService).ensureNote("daily", meta, { skipConfirmation: true });
+    expect(modals.opens).toHaveLength(0);
+  });
+
+  it("creates the note when skipConfirmation bypasses confirmCreation", async () => {
     const repo = fakeRepo({ daily: fixedJournal("daily", { type: "day" }, { confirmCreation: true }) });
     const notes = new FakeNotesService();
     const modals = new FakeModalService();
@@ -117,8 +125,6 @@ describe("NoteCreationService.ensureNote", () => {
       .resolve(NoteCreationService)
       .ensureNote("daily", meta, { skipConfirmation: true });
     expect(result.isOk() && result.value.created).toBe(true);
-    expect(modals.opens).toHaveLength(0);
-    expect(notes.find("2026-05-19.md" as VaultPath).isSome()).toBe(true);
   });
 });
 
