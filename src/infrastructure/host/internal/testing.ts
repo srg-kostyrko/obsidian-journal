@@ -149,6 +149,7 @@ export function createFakeHost(): FakeHost {
   const ribbonIcons: FakeRibbonIcon[] = [];
   const codeBlockProcessors = new Map<string, CodeBlockProcessor>();
   const registeredViews = new Map<string, FakeRegisteredView>();
+  const viewLeavesByType = new Map<string, unknown[]>();
   const unloadCallbacks: (() => void)[] = [];
 
   function ensureFolderChain(path: string): void {
@@ -295,7 +296,7 @@ export function createFakeHost(): FakeHost {
   };
 
   function makeLeaf(placement: "left" | "right" | "tab", openMode: PaneType | false = false) {
-    return {
+    const leaf = {
       async openFile(file: TFile): Promise<void> {
         workspaceState.openPaths.add(file.path);
         workspaceState.openCalls.push({ path: file.path, mode: openMode });
@@ -303,8 +304,12 @@ export function createFakeHost(): FakeHost {
       },
       async setViewState(state: { type: string }): Promise<void> {
         workspaceState.viewStateCalls.push({ type: state.type, placement });
+        const leaves = viewLeavesByType.get(state.type) ?? [];
+        leaves.push(leaf);
+        viewLeavesByType.set(state.type, leaves);
       },
     };
+    return leaf;
   }
 
   const workspaceApi = {
@@ -314,7 +319,9 @@ export function createFakeHost(): FakeHost {
     getActiveFile(): TFile | null {
       return workspaceState.activeFile;
     },
-    getLeavesOfType(_type: string): { view: { file: TFile | null }; openFile: () => Promise<undefined> }[] {
+    getLeavesOfType(type: string): { view: { file: TFile | null }; openFile: () => Promise<undefined> }[] {
+      const tracked = viewLeavesByType.get(type);
+      if (tracked) return tracked as { view: { file: TFile | null }; openFile: () => Promise<undefined> }[];
       return [...workspaceState.openPaths].map((path) => ({
         view: { file: fileObjects.get(path) ?? null },
         openFile: async () => undefined,
@@ -340,6 +347,7 @@ export function createFakeHost(): FakeHost {
     },
     detachLeavesOfType(type: string): void {
       workspaceState.detachedTypes.push(type);
+      viewLeavesByType.delete(type);
     },
     requestSaveLayout(): void {
       workspaceState.saveLayoutCalls++;

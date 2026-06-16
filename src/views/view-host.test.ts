@@ -157,6 +157,17 @@ describe("ViewHostService", () => {
     });
   });
 
+  describe("open dedupe", () => {
+    it("reveals the existing leaf instead of opening a second one", async () => {
+      const { host } = build({ a: seedView("a", { leaf: "right" }) });
+      openVia(host, "a");
+      await Promise.resolve();
+      openVia(host, "a");
+      await Promise.resolve();
+      expect(host.workspace.viewStateCalls).toEqual([{ type: "journal-view:a", placement: "right" }]);
+    });
+  });
+
   describe("dispose", () => {
     it("detaches every registered view type", () => {
       const { service, host } = build({ a: seedView("a"), b: seedView("b") });

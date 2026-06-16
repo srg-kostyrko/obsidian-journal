@@ -98,7 +98,7 @@ export class ViewHostService {
       name: `Open ${view.name}`,
       icon: view.icon,
       ribbon: view.showInRibbon,
-      execute: () => void this.#open(id),
+      execute: () => void this.open(id),
     };
   }
 
@@ -109,10 +109,16 @@ export class ViewHostService {
     return new JournalViewLeaf(leaf, id, this.#injector);
   }
 
-  async #open(id: ViewId): Promise<void> {
+  async open(id: ViewId): Promise<void> {
+    const viewType = viewTypeOf(id);
+    const [existing] = this.#app.workspace.getLeavesOfType(viewType);
+    if (existing) {
+      await this.#app.workspace.revealLeaf(existing);
+      return;
+    }
     const view = this.#getView(id);
     const leaf = this.#leafFor(view?.leaf ?? "right");
-    await leaf.setViewState({ type: viewTypeOf(id), active: true });
+    await leaf.setViewState({ type: viewType, active: true });
     await this.#app.workspace.revealLeaf(leaf);
   }
 
