@@ -24,7 +24,7 @@ import { settingsModule, SettingsService } from "@/settings";
 import { DataMigrationService, legacyMigrationsModule } from "@/settings/legacy";
 import { shelvesModule } from "@/shelves";
 import { templatesModule } from "@/templates";
-import { viewsModule } from "@/views";
+import { viewsModule, ViewHostService } from "@/views";
 
 export default class JournalPlugin extends Plugin {
   #container?: Container;
@@ -69,6 +69,7 @@ export default class JournalPlugin extends Plugin {
     await container.resolve(AutoAttachService).initialize();
     await container.resolve(AutoCreateService).initialize();
     await container.resolve(StartupOpenService).initialize();
+    container.resolve(ViewHostService).initialize();
     container.resolve(DynamicCommandRegistry).initialize();
     container.resolve(JournalUriHandler).initialize();
 

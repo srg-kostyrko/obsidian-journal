@@ -168,6 +168,34 @@ describe("ViewHostService", () => {
     });
   });
 
+  describe("initialize", () => {
+    it("opens an opted-in view once layout becomes ready at launch", async () => {
+      const { service, host } = build({ a: seedView("a", { openOnStartup: true }) });
+      host.workspace.layoutReady = false;
+      service.initialize();
+      host.setLayoutReady();
+      await Promise.resolve();
+      expect(host.workspace.viewStateCalls).toEqual([{ type: "journal-view:a", placement: "right" }]);
+    });
+
+    it("does not open a view that has not opted in", async () => {
+      const { service, host } = build({ a: seedView("a", { openOnStartup: false }) });
+      host.workspace.layoutReady = false;
+      service.initialize();
+      host.setLayoutReady();
+      await Promise.resolve();
+      expect(host.workspace.viewStateCalls).toEqual([]);
+    });
+
+    it("does not open views when layout was already ready before initialize", async () => {
+      const { service, host } = build({ a: seedView("a", { openOnStartup: true }) });
+      host.workspace.layoutReady = true;
+      service.initialize();
+      await Promise.resolve();
+      expect(host.workspace.viewStateCalls).toEqual([]);
+    });
+  });
+
   describe("dispose", () => {
     it("detaches every registered view type", () => {
       const { service, host } = build({ a: seedView("a"), b: seedView("b") });

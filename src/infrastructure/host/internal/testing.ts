@@ -52,11 +52,17 @@ export interface FakeWorkspaceState {
   viewStateCalls: { type: string; placement: "left" | "right" | "tab" }[];
   sidebarLeafAvailable: boolean;
   saveLayoutCalls: number;
+  layoutReady: boolean;
 }
 
 export interface FakeRegisteredView {
   readonly type: string;
   readonly factory: (leaf: WorkspaceLeaf) => ItemView;
+}
+
+interface FakeLeaf {
+  openFile(file: TFile): Promise<void>;
+  setViewState(state: { type: string }): Promise<void>;
 }
 
 export interface FakeFileSystemEntry {
@@ -94,6 +100,7 @@ export interface FakeHost {
   emitActiveLeafChange(file: TFile | null): void;
   emitProtocol(action: string, parameters: Record<string, string>): void;
   triggerUnload(): void;
+  setLayoutReady(): void;
   runCodeBlockProcessor(
     language: string,
     source: string,
@@ -141,6 +148,7 @@ export function createFakeHost(): FakeHost {
     viewStateCalls: [],
     sidebarLeafAvailable: true,
     saveLayoutCalls: 0,
+    layoutReady: true,
   };
   const pluginData: FakeHost["pluginData"] = { current: undefined };
   const registeredEventReferences: EventRef[] = [];
@@ -149,8 +157,9 @@ export function createFakeHost(): FakeHost {
   const ribbonIcons: FakeRibbonIcon[] = [];
   const codeBlockProcessors = new Map<string, CodeBlockProcessor>();
   const registeredViews = new Map<string, FakeRegisteredView>();
-  const viewLeavesByType = new Map<string, unknown[]>();
+  const viewLeavesByType = new Map<string, FakeLeaf[]>();
   const unloadCallbacks: (() => void)[] = [];
+  const layoutReadyCallbacks: (() => void)[] = [];
 
   function ensureFolderChain(path: string): void {
     if (!path) return;
@@ -319,9 +328,11 @@ export function createFakeHost(): FakeHost {
     getActiveFile(): TFile | null {
       return workspaceState.activeFile;
     },
-    getLeavesOfType(type: string): { view: { file: TFile | null }; openFile: () => Promise<undefined> }[] {
+    getLeavesOfType(type: string): FakeLeaf[] | { view: { file: TFile | null }; openFile: () => Promise<undefined> }[] {
+      // The tracked branch is keyed by registered journal view types (`journal-view:*`),
+      // so it never collides with the note-path fallback used for `"markdown"` lookups.
       const tracked = viewLeavesByType.get(type);
-      if (tracked) return tracked as { view: { file: TFile | null }; openFile: () => Promise<undefined> }[];
+      if (tracked) return tracked;
       return [...workspaceState.openPaths].map((path) => ({
         view: { file: fileObjects.get(path) ?? null },
         openFile: async () => undefined,
@@ -351,6 +362,13 @@ export function createFakeHost(): FakeHost {
     },
     requestSaveLayout(): void {
       workspaceState.saveLayoutCalls++;
+    },
+    get layoutReady(): boolean {
+      return workspaceState.layoutReady;
+    },
+    onLayoutReady(callback: () => void): void {
+      if (workspaceState.layoutReady) callback();
+      else layoutReadyCallbacks.push(callback);
     },
   };
 
@@ -442,6 +460,12 @@ export function createFakeHost(): FakeHost {
     triggerUnload(): void {
       for (const callback of unloadCallbacks) callback();
       unloadCallbacks.length = 0;
+    },
+    setLayoutReady(): void {
+      workspaceState.layoutReady = true;
+      const callbacks = [...layoutReadyCallbacks];
+      layoutReadyCallbacks.length = 0;
+      for (const callback of callbacks) callback();
     },
     runCodeBlockProcessor(language, source, sourcePath = "Some/Note.md") {
       const handler = codeBlockProcessors.get(language);

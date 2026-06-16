@@ -46,6 +46,25 @@ export class ViewHostService {
     this.#disposers.clear();
   }
 
+  initialize(): void {
+    const appStartup = !this.#app.workspace.layoutReady;
+    this.#app.workspace.onLayoutReady(() => {
+      if (!appStartup) return;
+      void this.#openStartupViews();
+    });
+  }
+
+  async #openStartupViews(): Promise<void> {
+    for (const [id, view] of this.#repo.find().entries()) {
+      if (!view.openOnStartup) continue;
+      try {
+        await this.open(id);
+      } catch (error) {
+        this.#logger.error("failed to open view on startup", { id, error });
+      }
+    }
+  }
+
   #registerAll(): void {
     for (const [id] of this.#repo.find().entries()) this.#register(id);
   }
