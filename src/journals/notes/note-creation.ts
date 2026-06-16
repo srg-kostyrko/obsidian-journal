@@ -44,6 +44,7 @@ export class NoteCreationService {
   ensureNote(
     name: string,
     metadata: JournalMetadata,
+    options?: { skipConfirmation?: boolean },
   ): AsyncResult<{ path: VaultPath; created: boolean }, NoteCreationError> {
     const pathResult = this.#path.pathFor(name, metadata);
     if (pathResult.kind === "err") return AsyncResult.err(pathResult.error);
@@ -58,7 +59,7 @@ export class NoteCreationService {
 
     return attempt.in(this, async function* () {
       const config = this.#path.configFor(name);
-      if (config?.confirmCreation) {
+      if (!options?.skipConfirmation && config?.confirmCreation) {
         const confirmed = yield* this.#modals
           .open(confirmCreationModal, { journalName: name, noteName: this.#basename(path) })
           .mapErr(() => new UserAborted("confirm-creation") as NoteCreationError);
