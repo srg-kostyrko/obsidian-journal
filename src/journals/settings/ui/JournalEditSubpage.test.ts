@@ -22,6 +22,7 @@ import {
   NotePathService,
   NumberingService,
 } from "@/journals";
+import { AutoCreateService } from "@/journals/notes/auto-create";
 import { BulkAddFlow } from "@/journals/notes/bulk-add/flows/bulk-add.flow";
 import { JournalsRepository } from "@/journals/repository";
 import { unwrap } from "@/journals/testing";
@@ -97,6 +98,9 @@ async function setup(raw?: unknown) {
   container.register(TemplaterService).useValue(new FakeTemplaterService() as unknown as TemplaterService);
   container.register(InputSuggestService).useValue(new FakeInputSuggestService() as unknown as InputSuggestService);
   container.register(NotesService).useValue(new FakeNotesService() as unknown as NotesService);
+  container
+    .register(AutoCreateService)
+    .useValue({ createCurrent: () => Promise.resolve() } as unknown as AutoCreateService);
   container.register(Flows).useClass(Flows);
   const flows = container.resolve(Flows);
   vi.spyOn(flows, "invoke").mockReturnValue({} as never);

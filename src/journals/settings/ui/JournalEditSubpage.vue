@@ -35,6 +35,7 @@ import NoteNamePreview from "./NoteNamePreview.vue";
 import TemplatePathPreview from "./TemplatePathPreview.vue";
 import TemplaterSupportHint from "./TemplaterSupportHint.vue";
 import { useAnchorField } from "./use-anchor-field";
+import { useAutoCreateOnEnable } from "./use-auto-create-on-enable";
 import { extractFromDateFormat, extractFromNameTemplate } from "./use-folder-extractor";
 import { useInvertibilityCheck } from "./use-invertibility-check";
 import VariableReferenceHint from "./VariableReferenceHint.vue";
@@ -47,6 +48,7 @@ const flows = useService(Flows);
 const journalsVM = useService(JournalsViewModel);
 const editSections = useService(JournalEditSectionToken).toSorted((a, b) => a.order - b.order);
 const config = computed<JournalConfig | undefined>(() => journalsVM.getJournal(journalName).getOr(undefined as never));
+useAutoCreateOnEnable(config);
 
 watchEffect(() => {
   if (!config.value) nav.back();
