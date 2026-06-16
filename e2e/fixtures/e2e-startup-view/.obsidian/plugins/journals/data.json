@@ -1,0 +1,21 @@
+{
+  "version": 4,
+  "views": {
+    "c0ffee00-0000-4000-8000-000000000001": {
+      "id": "c0ffee00-0000-4000-8000-000000000001",
+      "name": "Calendar",
+      "icon": "calendar-days",
+      "defaultShelf": null,
+      "showInRibbon": false,
+      "leaf": "right",
+      "openOnStartup": true,
+      "blocks": [
+        {
+          "id": "c0ffee00-0000-4000-8000-000000000002",
+          "key": "month-calendar",
+          "config": { "before": 0, "after": 0, "hiddenWeekdays": [], "weeks": "left" }
+        }
+      ]
+    }
+  }
+}
