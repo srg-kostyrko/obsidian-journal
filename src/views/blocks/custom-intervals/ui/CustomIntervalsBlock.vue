@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { computed } from "vue";
+import { computed, onMounted, onUnmounted, shallowRef } from "vue";
 
 import type { AnchorString } from "@/calendar";
 import { periodForJournal } from "@/code-blocks/nav/period-for-journal";
@@ -35,6 +35,14 @@ function isEntryActive(journalName: string, anchor: AnchorString): boolean {
 
 const window = computed(() => resolveWindow(props.config.window, context.refDate.value));
 
+const indexVersion = shallowRef(0);
+onMounted(() => {
+  const off = index.events.on("entryChanged", () => {
+    indexVersion.value++;
+  });
+  onUnmounted(off);
+});
+
 interface Section {
   readonly journalName: string;
   readonly journal: JournalConfig;
@@ -43,6 +51,8 @@ interface Section {
 }
 
 const sections = computed<readonly Section[]>(() => {
+  // JournalsIndex is event-based, not Vue-reactive; re-run when it signals an entry change.
+  void indexVersion.value;
   const filter = props.config.journals;
   const candidates = scope.custom.value.filter((name) => !filter || filter.includes(name));
   const out: Section[] = [];

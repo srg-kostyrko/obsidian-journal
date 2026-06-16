@@ -1,6 +1,7 @@
 import { cleanup, render } from "@testing-library/vue";
+import { createNanoEvents, type Emitter } from "nanoevents";
 import { afterEach, beforeAll, describe, expect, it, vi } from "vitest";
-import { computed, defineComponent, h, ref } from "vue";
+import { computed, defineComponent, h, nextTick, ref } from "vue";
 
 import { installTestCalendar } from "@/calendar/testing";
 import type { AnchorString } from "@/calendar/types";
@@ -8,7 +9,7 @@ import { Container, provideInjectorOnApp } from "@/infrastructure/di";
 import type { VaultPath } from "@/infrastructure/host";
 import { Option } from "@/infrastructure/result";
 import { JournalsIndex, JournalsRepository } from "@/journals";
-import type { JournalConfig } from "@/journals";
+import type { JournalConfig, JournalsIndexEvents } from "@/journals";
 import { ActiveEntryViewModel, type ActiveEntryRef } from "@/notes-calendar";
 
 import { provideViewContextStub } from "../../testing";
@@ -45,7 +46,12 @@ interface FakeRange {
 }
 const RANGES: FakeRange[] = [];
 
+let INDEX_EVENTS: Emitter<JournalsIndexEvents> = createNanoEvents<JournalsIndexEvents>();
+
 class FakeJournalsIndex {
+  get events(): Emitter<JournalsIndexEvents> {
+    return INDEX_EVENTS;
+  }
   getRange(name: string, _start: AnchorString, _end: AnchorString): ReadonlyMap<AnchorString, VaultPath> {
     const range = RANGES.find((r) => r.journalName === name);
     if (!range) return new Map();
@@ -129,6 +135,7 @@ afterEach(() => {
   SCOPE.custom = [];
   RANGES.length = 0;
   ACTIVE.value = null;
+  INDEX_EVENTS = createNanoEvents<JournalsIndexEvents>();
   for (const k of Object.keys(JOURNALS)) delete JOURNALS[k];
 });
 
@@ -214,6 +221,29 @@ describe("CustomIntervalsBlock", () => {
       { refDate: ref("2026-05-15" as AnchorString) },
     );
     expect(container.querySelectorAll(".journal-view-custom-intervals__entry[data-active]").length).toBe(0);
+  });
+
+  it("adds a journal section when an index entry is added after mount", async () => {
+    SCOPE.custom = ["foo"];
+    JOURNALS.foo = makeJournal("foo", [{ template: "{{date}}" }]);
+    const { container } = mountBlock(
+      { window: "month", hideEmpty: true },
+      { refDate: ref("2026-05-15" as AnchorString) },
+    );
+    expect(container.querySelectorAll("[data-journal]").length).toBe(0);
+
+    RANGES.push({ journalName: "foo", anchors: ["2026-05-10" as AnchorString] });
+    INDEX_EVENTS.emit("entryChanged", {
+      entry: {
+        path: "/foo/2026-05-10.md" as VaultPath,
+        journalName: "foo",
+        anchor: "2026-05-10" as AnchorString,
+      },
+      kind: "added",
+    });
+    await nextTick();
+
+    expect(container.querySelectorAll("[data-journal]").length).toBe(1);
   });
 
   it("uses the configured window relative to refDate to fetch entries", () => {
