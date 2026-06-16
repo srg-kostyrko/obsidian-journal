@@ -39,6 +39,11 @@ describe("viewsCollection", () => {
       const seed = viewsCollection.defaultItem("abc");
       expect(seed.icon).toBe("calendar-days");
     });
+
+    it("seeds openOnStartup as false", () => {
+      const seed = viewsCollection.defaultItem("abc");
+      expect(seed.openOnStartup).toBe(false);
+    });
   });
 
   describe("viewSchema validation", () => {
@@ -69,6 +74,16 @@ describe("viewsCollection", () => {
     it("accepts a default-seeded view", () => {
       const result = v.safeParse(viewSchema, viewsCollection.defaultItem("3f8c8b7e-1c1a-4d5e-9b9b-1c1a4d5e9b9b"));
       expect(result.success).toBe(true);
+    });
+  });
+
+  describe("openOnStartup back-compat", () => {
+    it("defaults openOnStartup to false when the stored field is absent", () => {
+      const { openOnStartup: _omit, ...withoutField } = viewsCollection.defaultItem(
+        "3f8c8b7e-1c1a-4d5e-9b9b-1c1a4d5e9b9b",
+      );
+      const result = v.safeParse(viewSchema, withoutField);
+      expect(result.success && result.output.openOnStartup).toBe(false);
     });
   });
 });

@@ -61,4 +61,8 @@ describe("defaultCalendarView", () => {
   it("seeds the default calendar view into the right sidebar", () => {
     expect(defaultCalendarView().leaf).toBe("right");
   });
+
+  it("opts the default calendar view into open-on-startup", () => {
+    expect(defaultCalendarView().openOnStartup).toBe(true);
+  });
 });

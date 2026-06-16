@@ -22,6 +22,7 @@ function seedView(id: string, overrides: Partial<View> = {}): View {
     defaultShelf: null,
     showInRibbon: false,
     leaf: "right",
+    openOnStartup: false,
     blocks: [],
     ...overrides,
   };

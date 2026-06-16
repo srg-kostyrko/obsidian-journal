@@ -43,6 +43,7 @@ function viewWith(items: ToolbarItemInstance[]): View {
     defaultShelf: null,
     showInRibbon: false,
     leaf: "right",
+    openOnStartup: false,
     blocks: [{ id: "b1" as BlockInstanceId, key: "toolbar", config: { items } }],
   };
 }

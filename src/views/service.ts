@@ -50,6 +50,7 @@ export class ViewsService {
         defaultShelf: input.defaultShelf ?? null,
         showInRibbon: input.showInRibbon ?? false,
         leaf: "right",
+        openOnStartup: false,
         blocks: [],
       };
       return yield* this.#repo.create(view);
@@ -76,7 +77,7 @@ export class ViewsService {
 
   update(
     id: ViewId,
-    patch: Partial<Pick<View, "name" | "icon" | "defaultShelf" | "showInRibbon" | "leaf">>,
+    patch: Partial<Pick<View, "name" | "icon" | "defaultShelf" | "showInRibbon" | "leaf" | "openOnStartup">>,
   ): AsyncResult<void, UnknownViewError | ViewsLifecycleError> {
     return attempt.in(this, async function* () {
       if (patch.name?.trim().length === 0) {

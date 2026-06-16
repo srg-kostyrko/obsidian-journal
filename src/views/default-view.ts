@@ -26,6 +26,7 @@ export function defaultCalendarView(): View {
     defaultShelf: null,
     showInRibbon: true,
     leaf: "right",
+    openOnStartup: true,
     blocks: [
       {
         id: TOOLBAR_BLOCK_ID,

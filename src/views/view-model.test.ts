@@ -16,6 +16,7 @@ function makeView(id: string, name: string): View {
     defaultShelf: null,
     showInRibbon: false,
     leaf: "right",
+    openOnStartup: false,
     blocks: [],
   };
 }

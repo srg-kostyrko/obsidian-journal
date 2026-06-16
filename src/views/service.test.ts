@@ -156,6 +156,15 @@ describe("ViewsService", () => {
       expectErr(result);
       expect(result.error.kind).toBe("invalid-view-name");
     });
+
+    it("persists openOnStartup through a patch", async () => {
+      const { service, repo } = build();
+      const created = await service.create({ name: "V" });
+      expectOk(created);
+      const result = await service.update(created.value, { openOnStartup: true });
+      expectOk(result);
+      expect(repo.get(created.value).match({ some: (v) => v.openOnStartup, none: () => null })).toBe(true);
+    });
   });
 
   describe("delete", () => {
