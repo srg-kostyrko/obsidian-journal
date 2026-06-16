@@ -16,6 +16,7 @@ import UiToggle from "@/ui/UiToggle.vue";
 
 import { EditViewNameFlow } from "../flows/edit-view-name.flow";
 import { ViewsService } from "../service";
+import { ViewHostService } from "../view-host";
 import { ViewsViewModel } from "../view-model";
 
 import BlocksList from "./BlocksList.vue";
@@ -28,6 +29,7 @@ const flows = useService(Flows);
 const viewsService = useService(ViewsService);
 const viewsVM = useService(ViewsViewModel);
 const shelvesVM = useService(ShelvesViewModel);
+const viewHost = useService(ViewHostService);
 
 const view = computed(() => viewsVM.getView(viewId).getOr(undefined as never));
 
@@ -53,6 +55,14 @@ const ribbonValue = computed<boolean>({
   get: () => view.value?.showInRibbon ?? false,
   set: (next) => {
     void viewsService.update(viewId, { showInRibbon: next });
+  },
+});
+
+const openOnStartupValue = computed<boolean>({
+  get: () => view.value?.openOnStartup ?? false,
+  set: (next) => {
+    void viewsService.update(viewId, { openOnStartup: next });
+    if (next) void viewHost.open(viewId);
   },
 });
 
@@ -93,6 +103,10 @@ function rename(): void {
 
     <UiSettingRow :name="m.common_show_in_ribbon()">
       <UiToggle v-model="ribbonValue" />
+    </UiSettingRow>
+
+    <UiSettingRow :name="m.view_edit_open_on_startup_label()">
+      <UiToggle v-model="openOnStartupValue" />
     </UiSettingRow>
 
     <UiSettingRow :name="m.view_edit_leaf_label()">

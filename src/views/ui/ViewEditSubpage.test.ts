@@ -19,6 +19,7 @@ import { viewsCollection } from "../config";
 import { ViewsRepository } from "../repository";
 import { ViewsService } from "../service";
 import { ViewsEventsToken } from "../tokens";
+import { ViewHostService } from "../view-host";
 import { ViewsViewModel } from "../view-model";
 
 import ViewEditSubpage from "./ViewEditSubpage.vue";
@@ -29,7 +30,7 @@ afterEach(() => cleanup());
 
 const viewId = "11111111-1111-1111-1111-111111111111" as ViewId;
 
-async function setup() {
+async function setup(viewOverrides: Record<string, unknown> = {}) {
   const raw = {
     version: 4,
     views: {
@@ -40,6 +41,7 @@ async function setup() {
         defaultShelf: null,
         showInRibbon: false,
         blocks: [],
+        ...viewOverrides,
       },
     },
     shelves: { Personal: { name: "Personal", journals: [] } },
@@ -49,6 +51,7 @@ async function setup() {
     raw,
   });
   await settings.initialize();
+  const open = vi.fn();
   container.register(ModalService).useValue(new FakeModalService() as unknown as ModalService);
   container.register(InputSuggestService).useValue(new FakeInputSuggestService() as unknown as InputSuggestService);
   container.register(ViewsEventsToken).useFactory(() => createNanoEvents());
@@ -60,7 +63,8 @@ async function setup() {
   container.register(ViewsViewModel).useClass(ViewsViewModel);
   container.register(ShelvesViewModel).useClass(ShelvesViewModel);
   container.register(Flows).useClass(Flows);
-  return { container };
+  container.register(ViewHostService).useValue({ open } as unknown as ViewHostService);
+  return { container, open };
 }
 
 function makeNav() {
@@ -117,5 +121,30 @@ describe("ViewEditSubpage", () => {
     const dropdown = within(row(m.view_edit_leaf_label())).getByRole("combobox");
     await userEvent.selectOptions(dropdown, "left");
     expect(repo.get(viewId).getOr(undefined as never)?.leaf).toBe("left");
+  });
+
+  it("persists openOnStartup when the toggle is switched on", async () => {
+    const { container } = await setup();
+    mount(container);
+    const repo = container.resolve(ViewsRepository);
+    const toggle = within(row(m.view_edit_open_on_startup_label())).getByRole("checkbox");
+    await userEvent.click(toggle);
+    expect(repo.get(viewId).getOr(undefined as never)?.openOnStartup).toBe(true);
+  });
+
+  it("opens the view immediately when the toggle is switched on", async () => {
+    const { container, open } = await setup();
+    mount(container);
+    const toggle = within(row(m.view_edit_open_on_startup_label())).getByRole("checkbox");
+    await userEvent.click(toggle);
+    expect(open).toHaveBeenCalledWith(viewId);
+  });
+
+  it("does not open the view when the toggle is switched off", async () => {
+    const { container, open } = await setup({ openOnStartup: true });
+    mount(container);
+    const toggle = within(row(m.view_edit_open_on_startup_label())).getByRole("checkbox");
+    await userEvent.click(toggle);
+    expect(open).not.toHaveBeenCalled();
   });
 });

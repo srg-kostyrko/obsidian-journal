@@ -681,6 +681,7 @@
   "view_edit_header_title": "View: {name}",
   "view_edit_default_shelf_label": "Default shelf",
   "common_label_all_journals": "All journals",
+  "view_edit_open_on_startup_label": "Open on startup",
   "view_edit_leaf_label": "Open in",
   "view_edit_leaf_left": "Left sidebar",
   "view_edit_leaf_right": "Right sidebar",
