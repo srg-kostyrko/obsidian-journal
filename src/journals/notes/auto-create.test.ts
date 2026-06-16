@@ -110,4 +110,17 @@ describe("AutoCreateService", () => {
     expect(aExists || bExists).toBe(true);
     expect(aExists && bExists).toBe(false);
   });
+
+  it("creates the note without opening the confirm modal even when confirmCreation is true", async () => {
+    const repo = fakeRepo({
+      daily: fixedJournal("daily", { type: "day" }, { autoCreate: true, confirmCreation: true }),
+    });
+    const notes = new FakeNotesService();
+    const container = build(repo, notes);
+    const modals = container.resolve(ModalService) as unknown as FakeModalService;
+    await container.resolve(AutoCreateService).initialize();
+    await vi.advanceTimersByTimeAsync(0);
+    expect(notes.find("2026-05-19.md" as VaultPath).isSome()).toBe(true);
+    expect(modals.opens).toHaveLength(0);
+  });
 });

@@ -30,19 +30,23 @@ export class AutoCreateService {
     }
   }
 
-  async #tick(): Promise<void> {
+  async createCurrent(name: string): Promise<void> {
     const anchor = CalendarDate.today().toAnchor();
+    const metadata = this.#frontmatter.buildMetadata(name, anchor);
+    if (metadata.kind === "err") {
+      this.#logger.debug("auto-create: build metadata failed", { name, error: metadata.error });
+      return;
+    }
+    const result = await this.#creation.ensureNote(name, metadata.value, { skipConfirmation: true });
+    if (result.isErr()) {
+      this.#logger.error("auto-create: ensureNote failed", { name, error: result.error });
+    }
+  }
+
+  async #tick(): Promise<void> {
     for (const [name, config] of this.#journals.find().entries()) {
       if (!config.autoCreate) continue;
-      const metadata = this.#frontmatter.buildMetadata(name, anchor);
-      if (metadata.kind === "err") {
-        this.#logger.debug("auto-create: build metadata failed", { name, error: metadata.error });
-        continue;
-      }
-      const result = await this.#creation.ensureNote(name, metadata.value);
-      if (result.isErr()) {
-        this.#logger.error("auto-create: ensureNote failed", { name, error: result.error });
-      }
+      await this.createCurrent(name);
     }
     if (this.#disposed) return;
     this.#timer = window.setTimeout(() => {
