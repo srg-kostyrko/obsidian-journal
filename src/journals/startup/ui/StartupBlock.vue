@@ -4,6 +4,7 @@ import { computed, ref } from "vue";
 import { m } from "@/i18n";
 import { useService } from "@/infrastructure/di";
 import { SettingsService } from "@/settings";
+import { icons } from "@/ui/icons";
 import UiCollapsibleBlock from "@/ui/UiCollapsibleBlock.vue";
 import UiDropdown from "@/ui/UiDropdown.vue";
 import UiIcon from "@/ui/UiIcon.vue";
@@ -31,7 +32,7 @@ const journalName = computed({
   <UiCollapsibleBlock v-model:expanded="expanded">
     <template #trigger>
       <span class="section-heading">
-        <UiIcon name="log-in" />
+        <UiIcon :name="icons.section.startup" />
         <span class="section-title">{{ m.startup_dashboard_section_title() }}</span>
       </span>
     </template>

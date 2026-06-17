@@ -5,6 +5,7 @@ import type { ColorSettings } from "@/decorations";
 import { m } from "@/i18n";
 import { useService } from "@/infrastructure/di";
 import { SettingsService } from "@/settings";
+import { icons } from "@/ui/icons";
 import UiCollapsibleBlock from "@/ui/UiCollapsibleBlock.vue";
 import UiColorSettingsPicker from "@/ui/UiColorSettingsPicker.vue";
 import UiIcon from "@/ui/UiIcon.vue";
@@ -34,7 +35,7 @@ function setActiveBackground(background: ColorSettings): void {
   <UiCollapsibleBlock v-model:expanded="expanded">
     <template #trigger>
       <span class="section-heading">
-        <UiIcon name="palette" />
+        <UiIcon :name="icons.section.appearance" />
         <span class="section-title">{{ m.calendar_appearance_section_title() }}</span>
       </span>
     </template>

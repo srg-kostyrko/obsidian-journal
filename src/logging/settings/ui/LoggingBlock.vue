@@ -5,6 +5,7 @@ import { m } from "@/i18n";
 import { useService } from "@/infrastructure/di";
 import { Flows } from "@/infrastructure/flows";
 import { SettingsService } from "@/settings";
+import { icons } from "@/ui/icons";
 import UiButton from "@/ui/UiButton.vue";
 import UiCollapsibleBlock from "@/ui/UiCollapsibleBlock.vue";
 import UiDropdown from "@/ui/UiDropdown.vue";
@@ -35,7 +36,7 @@ function dump(): void {
   <UiCollapsibleBlock v-model:expanded="expanded">
     <template #trigger>
       <span class="section-heading">
-        <UiIcon name="scroll-text" />
+        <UiIcon :name="icons.section.logging" />
         <span class="section-title">{{ m.logging_section_title() }}</span>
       </span>
     </template>
