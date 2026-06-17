@@ -15,6 +15,7 @@ import DecorationPreview from "@/decorations/ui/DecorationPreview.vue";
 import { m } from "@/i18n";
 import { useModal } from "@/infrastructure/host/modals";
 import type { JournalConfig } from "@/journals/config";
+import { icons } from "@/ui/icons";
 import UiButton from "@/ui/UiButton.vue";
 import UiButtonDropdown from "@/ui/UiButtonDropdown.vue";
 import UiDropdown from "@/ui/UiDropdown.vue";
@@ -110,7 +111,7 @@ const onSubmit = handleSubmit((decoration) => {
       </UiSettingRow>
       <UiSettingRow>
         <ConditionItem :name="`conditions.${i}`" :condition="condition" />
-        <UiIconButton icon="trash" @click="conditions.remove(i)" />
+        <UiIconButton :icon="icons.action.delete" @click="conditions.remove(i)" />
       </UiSettingRow>
     </template>
 
@@ -132,7 +133,7 @@ const onSubmit = handleSubmit((decoration) => {
         <template v-for="(style, i) of values.styles" :key="i">
           <UiSettingRow heading>
             <template #name>{{ m.decoration_style_header({ type: style.type }) }}</template>
-            <UiIconButton icon="trash" @click="styles.remove(i)" />
+            <UiIconButton :icon="icons.action.delete" @click="styles.remove(i)" />
           </UiSettingRow>
           <StyleItem :name="`styles.${i}`" :style="style" />
         </template>

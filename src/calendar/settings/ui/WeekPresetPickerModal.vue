@@ -6,6 +6,7 @@ import { detectCurrentPreset, weekPresets, type WeekPreset } from "@/calendar/pr
 import { m } from "@/i18n";
 import { useService } from "@/infrastructure/di";
 import { useModal } from "@/infrastructure/host/modals";
+import { icons } from "@/ui/icons";
 import UiButton from "@/ui/UiButton.vue";
 import UiDropdown from "@/ui/UiDropdown.vue";
 import UiIcon from "@/ui/UiIcon.vue";
@@ -78,7 +79,7 @@ function presetUsed(preset: WeekPreset): string {
     <UiSettingRow :name="m.calendar_preset_name({ preset: 'locale' })">
       <template #description>{{ m.calendar_preset_description({ preset: "locale" }) }}</template>
       <span v-if="savedChoice === 'locale'">{{ m.calendar_picker_in_use_marker() }}</span>
-      <UiIcon v-if="localChoice === 'locale'" name="lucide-check" />
+      <UiIcon v-if="localChoice === 'locale'" :name="icons.action.check" />
       <UiButton v-else @click="pickLocale">{{ m.calendar_picker_use_action() }}</UiButton>
     </UiSettingRow>
 
@@ -88,14 +89,14 @@ function presetUsed(preset: WeekPreset): string {
         <div>{{ presetUsed(preset) }}</div>
       </template>
       <span v-if="savedChoice === preset.id">{{ m.calendar_picker_in_use_marker() }}</span>
-      <UiIcon v-if="localChoice === preset.id" name="lucide-check" />
+      <UiIcon v-if="localChoice === preset.id" :name="icons.action.check" />
       <UiButton v-else @click="pickPreset(preset)">{{ m.calendar_picker_use_action() }}</UiButton>
     </UiSettingRow>
 
     <UiSettingRow :name="m.calendar_preset_name({ preset: 'custom' })">
       <template #description>{{ m.calendar_preset_description({ preset: "custom" }) }}</template>
       <span v-if="savedChoice === 'custom'">{{ m.calendar_picker_in_use_marker() }}</span>
-      <UiIcon v-if="localChoice === 'custom'" name="lucide-check" />
+      <UiIcon v-if="localChoice === 'custom'" :name="icons.action.check" />
       <UiButton v-else @click="pickCustom">{{ m.calendar_picker_use_action() }}</UiButton>
     </UiSettingRow>
 

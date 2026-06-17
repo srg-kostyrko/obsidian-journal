@@ -7,6 +7,7 @@ import { m } from "@/i18n";
 import { useService } from "@/infrastructure/di";
 import { Flows } from "@/infrastructure/flows";
 import { JournalsViewModel } from "@/journals";
+import { icons } from "@/ui/icons";
 import UiButton from "@/ui/UiButton.vue";
 import UiCollapsibleBlock from "@/ui/UiCollapsibleBlock.vue";
 import UiIcon from "@/ui/UiIcon.vue";
@@ -46,7 +47,7 @@ function remove(index: number): void {
   <UiCollapsibleBlock v-model:expanded="expanded">
     <template #trigger>
       <span class="journal-section-heading">
-        <UiIcon name="paintbrush" />
+        <UiIcon :name="icons.section.decorations" />
         <span>{{ m.decoration_section_title() }}</span>
         <span class="count">{{ decorations.length }}</span>
       </span>
@@ -76,8 +77,8 @@ function remove(index: number): void {
           </template>
         </div>
       </template>
-      <UiIconButton icon="pencil" :tooltip="m.decoration_edit()" @click="edit(index)" />
-      <UiIconButton icon="trash" :tooltip="m.decoration_delete()" @click="remove(index)" />
+      <UiIconButton :icon="icons.action.edit" :tooltip="m.decoration_edit()" @click="edit(index)" />
+      <UiIconButton :icon="icons.action.delete" :tooltip="m.decoration_delete()" @click="remove(index)" />
     </UiSettingRow>
   </UiCollapsibleBlock>
 </template>

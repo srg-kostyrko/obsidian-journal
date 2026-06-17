@@ -4,6 +4,7 @@ import { computed, ref, toRaw } from "vue";
 
 import { CalendarDate, DecadePeriod, MonthPeriod, type OpenInterval, type Period, YearPeriod } from "@/calendar";
 import { useModal } from "@/infrastructure/host/modals";
+import { icons } from "@/ui/icons";
 import UiButton from "@/ui/UiButton.vue";
 import UiIconButton from "@/ui/UiIconButton.vue";
 
@@ -123,7 +124,7 @@ function onCellSelect(cell: Period): void {
 <template>
   <div class="date-picker-modal">
     <div class="date-picker-modal__header">
-      <UiIconButton v-if="canPrevious" icon="chevron-left" data-testid="modal-prev" @click="onPrevious" />
+      <UiIconButton v-if="canPrevious" :icon="icons.nav.prev" data-testid="modal-prev" @click="onPrevious" />
       <UiButton
         v-if="canAscend !== null"
         flat
@@ -134,7 +135,7 @@ function onCellSelect(cell: Period): void {
         <span data-testid="modal-title-label">{{ titleLabel }}</span>
       </UiButton>
       <span v-else data-testid="modal-title-label">{{ titleLabel }}</span>
-      <UiIconButton v-if="canNext" icon="chevron-right" data-testid="modal-next" @click="onNext" />
+      <UiIconButton v-if="canNext" :icon="icons.nav.next" data-testid="modal-next" @click="onNext" />
     </div>
     <div class="date-picker-modal__body">
       <CalendarMonthView
