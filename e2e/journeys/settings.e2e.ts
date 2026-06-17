@@ -25,6 +25,14 @@ function viewIdByName(views: Record<string, { name?: string }> | undefined, name
   return Object.keys(views ?? {}).find((id) => views?.[id]?.name === name);
 }
 
+// The Calendar view's toolbar block holds the ordered items; each carries a stable id used to
+// assert the persisted drag reorder.
+function calendarToolbarItems(views: Record<string, StoredView> | undefined): { id: string }[] {
+  const calId = viewIdByName(views, "Calendar") ?? "";
+  const toolbar = (views?.[calId]?.blocks ?? []).find((block) => block.key === "toolbar");
+  return (toolbar?.config?.items ?? []) as { id: string }[];
+}
+
 // Slice B chunk 3 — the settings subpage-nav SPA. The PluginSettingTab mounts a Vue app
 // whose navigation is a SettingsUiService push/pop stack; no __mocks__/obsidian.ts setting
 // tab exists. Each it asserts both contract halves: the change persisted to data.json
@@ -259,6 +267,26 @@ describe("settings", () => {
       await submitModal();
 
       await waitForSettings((s) => lastBlock(s.views)?.config?.weeks === "right", "edited block config not persisted");
+    });
+
+    it("renders real component previews inside the toolbar editor strip", async () => {
+      // Earlier view flows in this shared boot add toolbar items to the same Calendar view, so the
+      // count is read from persisted settings rather than hardcoded to the seeded eight.
+      const initial = await getSettings();
+      const itemCount = calendarToolbarItems(initial.views).length;
+      expect(itemCount).toBeGreaterThanOrEqual(8);
+
+      await expandSection("Views");
+      await clickIcon("Open Calendar");
+
+      // The editor mounts one frame per persisted item.
+      await browser.waitUntil(async () => (await $$(".jv-item-frame").length) === itemCount, {
+        timeoutMsg: "toolbar editor did not mount one frame per persisted item",
+      });
+
+      // WYSIWYG previews render the REAL toolbar-item components: button / period-buttons items
+      // each render genuine <button>s inside their preview, so at least one must be present.
+      expect(await $$(".jv-item-frame .jv-item-preview button").length).toBeGreaterThan(0);
     });
 
     it("hides a weekday via a calendar block's config picker and persists it", async () => {
