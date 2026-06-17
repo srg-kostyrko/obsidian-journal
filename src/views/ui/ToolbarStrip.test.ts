@@ -19,11 +19,13 @@ import { ViewsService } from "../service";
 import { ToolbarItemDefinitionToken, ViewBlockDefinitionToken, ViewsEventsToken } from "../tokens";
 import { ViewsViewModel } from "../view-model";
 
-import ToolbarItemsList from "./ToolbarItemsList.vue";
+import ToolbarStrip from "./ToolbarStrip.vue";
 
 import type { BlockInstanceId, ViewId } from "../config";
 import type { ToolbarItemDefinition } from "../define-toolbar-item";
 import type { ViewBlockDefinition } from "../define-view-block";
+
+vi.mock("./use-sortable-list", () => ({ useSortableList: () => undefined }));
 
 afterEach(() => cleanup());
 
@@ -92,68 +94,38 @@ async function setup(items: { id: BlockInstanceId; key: string; config: Record<s
 }
 
 function mount(container: Container) {
-  return render(ToolbarItemsList, {
+  return render(ToolbarStrip, {
     props: { viewId, blockId },
     global: { plugins: [{ install: (app) => provideInjectorOnApp(app, container) }] },
   });
 }
 
-describe("ToolbarItemsList", () => {
-  it("shows the empty state when the toolbar block has no items", async () => {
+describe("ToolbarStrip", () => {
+  it("shows the empty state when the toolbar has no items", async () => {
     const { container } = await setup([]);
     mount(container);
     expect(screen.getByText(m.view_toolbar_item_empty())).toBeTruthy();
   });
 
-  it("renders the definition label for each known item", async () => {
-    const { container } = await setup([{ id: itemIdA, key: "shelf-selector", config: {} }]);
+  it("renders a frame per toolbar item", async () => {
+    const { container } = await setup([
+      { id: itemIdA, key: "shelf-selector", config: {} },
+      { id: itemIdB, key: "button", config: {} },
+    ]);
     mount(container);
-    expect(screen.getByText("Shelf selector")).toBeTruthy();
+    expect(screen.getAllByLabelText(m.view_toolbar_item_remove())).toHaveLength(2);
   });
 
-  it("renders an unknown-key fallback label", async () => {
-    const { container } = await setup([{ id: itemIdA, key: "unknown-item", config: {} }]);
-    mount(container);
-    expect(screen.getByText(m.view_toolbar_item_unknown_label({ key: "unknown-item" }))).toBeTruthy();
-  });
-
-  it("removes an item when the remove button is clicked", async () => {
+  it("removes an item when its delete button is clicked", async () => {
     const { container } = await setup([{ id: itemIdA, key: "shelf-selector", config: {} }]);
     mount(container);
     await userEvent.click(screen.getByLabelText(m.view_toolbar_item_remove()));
     const repo = container.resolve(ViewsRepository);
-    const rawConfig =
-      repo
-        .get(viewId)
-        .getOr(undefined as never)
-        ?.blocks.find((b) => b.id === blockId)?.config ?? {};
-    const items = Array.isArray(rawConfig.items) ? rawConfig.items : [];
+    const items = (repo.get(viewId).getOr(undefined as never)?.blocks[0]?.config as { items: unknown[] }).items;
     expect(items).toEqual([]);
   });
 
-  it("disables Move up on the first row", async () => {
-    const { container } = await setup([
-      { id: itemIdA, key: "shelf-selector", config: {} },
-      { id: itemIdB, key: "shelf-selector", config: {} },
-    ]);
-    mount(container);
-    const upButtons = screen.getAllByLabelText(m.common_action_move_up());
-    expect(upButtons[0]).toHaveProperty("disabled", true);
-    expect(upButtons[1]).toHaveProperty("disabled", false);
-  });
-
-  it("disables Move down on the last row", async () => {
-    const { container } = await setup([
-      { id: itemIdA, key: "shelf-selector", config: {} },
-      { id: itemIdB, key: "shelf-selector", config: {} },
-    ]);
-    mount(container);
-    const downButtons = screen.getAllByLabelText(m.common_action_move_down());
-    expect(downButtons[0]).toHaveProperty("disabled", false);
-    expect(downButtons[1]).toHaveProperty("disabled", true);
-  });
-
-  it("invokes AddToolbarItemToBlockFlow when Add item is clicked", async () => {
+  it("invokes AddToolbarItemToBlockFlow when Add is clicked", async () => {
     const { container } = await setup([]);
     mount(container);
     const flows = container.resolve(Flows);
@@ -162,35 +134,18 @@ describe("ToolbarItemsList", () => {
     expect(spy).toHaveBeenCalledWith(AddToolbarItemToBlockFlow, { viewId, blockId });
   });
 
-  describe("editing an item's config", () => {
-    it("offers an edit button for items whose definition has a config editor", async () => {
-      const { container } = await setup([{ id: itemIdA, key: "button", config: { label: "Go" } }]);
-      mount(container);
-      expect(screen.getByLabelText(m.view_toolbar_item_edit())).toBeTruthy();
-    });
-
-    it("offers no edit button for items without a config editor", async () => {
-      const { container } = await setup([{ id: itemIdA, key: "shelf-selector", config: {} }]);
-      mount(container);
-      expect(screen.queryByLabelText(m.view_toolbar_item_edit())).toBeNull();
-    });
-
-    it("persists the edited config when the edit modal is saved", async () => {
-      const { container } = await setup([{ id: itemIdA, key: "button", config: { label: "Go" } }]);
-      mount(container);
-      await userEvent.click(screen.getByLabelText(m.view_toolbar_item_edit()));
-      const modals = container.resolve(ModalService) as unknown as FakeModalService;
-      modals.lastOpen<unknown, Record<string, unknown>>().submit({ label: "Done" });
-      const repo = container.resolve(ViewsRepository);
-      await waitFor(() => {
-        const rawConfig =
-          repo
-            .get(viewId)
-            .getOr(undefined as never)
-            ?.blocks.find((b) => b.id === blockId)?.config ?? {};
-        const items = Array.isArray(rawConfig.items) ? (rawConfig.items as { config: { label?: string } }[]) : [];
-        expect(items[0]?.config.label).toBe("Done");
-      });
+  it("persists the edited config when the edit modal is saved", async () => {
+    const { container } = await setup([{ id: itemIdA, key: "button", config: { label: "A" } }]);
+    mount(container);
+    await userEvent.click(screen.getByLabelText(m.view_toolbar_item_edit()));
+    const modals = container.resolve(ModalService) as unknown as FakeModalService;
+    modals.lastOpen<unknown, Record<string, unknown>>().submit({ label: "B" });
+    const repo = container.resolve(ViewsRepository);
+    await waitFor(() => {
+      const items = (
+        repo.get(viewId).getOr(undefined as never)?.blocks[0]?.config as { items: { config: { label?: string } }[] }
+      ).items;
+      expect(items[0]?.config.label).toBe("B");
     });
   });
 });

@@ -1,15 +1,11 @@
 <script setup lang="ts">
-import { computed } from "vue";
+import { computed, ref, watch } from "vue";
 
 import { m } from "@/i18n";
 import { useService } from "@/infrastructure/di";
 import { Flows } from "@/infrastructure/flows";
 import { useModalService } from "@/infrastructure/host/modals";
-import { icons } from "@/ui/icons";
 import UiButton from "@/ui/UiButton.vue";
-import UiIcon from "@/ui/UiIcon.vue";
-import UiIconButton from "@/ui/UiIconButton.vue";
-import UiSettingRow from "@/ui/UiSettingRow.vue";
 
 import { ToolbarItemsService } from "../blocks/toolbar/toolbar-items-service";
 import { AddToolbarItemToBlockFlow } from "../flows/add-toolbar-item-to-block.flow";
@@ -17,6 +13,8 @@ import { ViewsService } from "../service";
 import { ViewsViewModel } from "../view-model";
 
 import { editToolbarItemModal } from "./modals";
+import ToolbarItemFrame from "./ToolbarItemFrame.vue";
+import { useSortableList } from "./use-sortable-list";
 
 import type { BlockInstanceId, ViewId } from "../config";
 import type { ToolbarItemDefinition } from "../define-toolbar-item";
@@ -36,7 +34,7 @@ interface Row {
   definition: ToolbarItemDefinition | undefined;
 }
 
-const rows = computed<Row[]>(() => {
+const source = computed<Row[]>(() => {
   const items = viewsVM
     .getView(props.viewId)
     .map((view) => view.blocks.find((b) => b.id === props.blockId))
@@ -50,10 +48,16 @@ const rows = computed<Row[]>(() => {
   }));
 });
 
-const moveUp = (id: BlockInstanceId): void => void viewsService.moveToolbarItemUp(props.viewId, props.blockId, id);
-const moveDown = (id: BlockInstanceId): void => void viewsService.moveToolbarItemDown(props.viewId, props.blockId, id);
-const remove = (id: BlockInstanceId): void => void viewsService.removeToolbarItem(props.viewId, props.blockId, id);
+const rows = ref<Row[]>([]);
+watch(source, (next) => (rows.value = [...next]), { immediate: true, deep: true });
+
+const stripEl = ref<HTMLElement | null>(null);
+useSortableList(stripEl, rows, (orderedIds) => {
+  void viewsService.setToolbarItemOrder(props.viewId, props.blockId, orderedIds as BlockInstanceId[]);
+});
+
 const add = (): void => void flows.invoke(AddToolbarItemToBlockFlow, { viewId: props.viewId, blockId: props.blockId });
+const remove = (id: BlockInstanceId): void => void viewsService.removeToolbarItem(props.viewId, props.blockId, id);
 
 function edit(row: Row): void {
   if (!row.definition?.configComponent) return;
@@ -64,38 +68,36 @@ function edit(row: Row): void {
 </script>
 
 <template>
-  <UiSettingRow v-if="rows.length === 0">
-    <template #description>{{ m.view_toolbar_item_empty() }}</template>
-  </UiSettingRow>
-  <UiSettingRow v-for="(row, index) of rows" :key="row.id">
-    <template #name>
-      <template v-if="row.definition">
-        <UiIcon v-if="row.definition.icon" :name="row.definition.icon" />
-        {{ row.definition.label }}
-      </template>
-      <template v-else>{{ m.view_toolbar_item_unknown_label({ key: row.key }) }}</template>
-    </template>
-    <UiIconButton
-      :icon="icons.action.moveUp"
-      :tooltip="m.common_action_move_up()"
-      :disabled="index === 0"
-      @click="moveUp(row.id)"
-    />
-    <UiIconButton
-      :icon="icons.action.moveDown"
-      :tooltip="m.common_action_move_down()"
-      :disabled="index === rows.length - 1"
-      @click="moveDown(row.id)"
-    />
-    <UiIconButton
-      v-if="row.definition?.configComponent"
-      :icon="icons.action.edit"
-      :tooltip="m.view_toolbar_item_edit()"
-      @click="edit(row)"
-    />
-    <UiIconButton :icon="icons.action.delete" :tooltip="m.view_toolbar_item_remove()" @click="remove(row.id)" />
-  </UiSettingRow>
-  <UiSettingRow controls-only>
-    <UiButton cta @click="add">{{ m.view_add_toolbar_item() }}</UiButton>
-  </UiSettingRow>
+  <div class="jv-toolbar-strip">
+    <div v-if="rows.length === 0" class="jv-strip-empty">{{ m.view_toolbar_item_empty() }}</div>
+    <div ref="stripEl" class="jv-strip-items">
+      <ToolbarItemFrame
+        v-for="row of rows"
+        :key="row.id"
+        :item="row"
+        :definition="row.definition"
+        @edit="edit(row)"
+        @remove="remove(row.id)"
+      />
+    </div>
+    <UiButton @click="add">{{ m.view_add_toolbar_item() }}</UiButton>
+  </div>
 </template>
+
+<style scoped>
+.jv-toolbar-strip {
+  display: flex;
+  flex-direction: column;
+  gap: var(--size-2-2);
+  padding-left: var(--size-4-4);
+}
+.jv-strip-items {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--size-2-2);
+}
+.jv-strip-empty {
+  color: var(--text-muted);
+}
+</style>
