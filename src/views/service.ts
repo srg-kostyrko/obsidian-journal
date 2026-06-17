@@ -132,7 +132,11 @@ export class ViewsService {
     return attempt.in(this, async function* () {
       const current = yield* this.#repo.get(id).okOrElse(() => new UnknownViewError(id));
       const byId = new Map(current.blocks.map((b) => [b.id, b]));
-      if (orderedIds.length !== current.blocks.length || orderedIds.some((blockId) => !byId.has(blockId))) {
+      if (
+        orderedIds.length !== current.blocks.length ||
+        new Set(orderedIds).size !== orderedIds.length ||
+        orderedIds.some((blockId) => !byId.has(blockId))
+      ) {
         this.#logger.warn("setBlockOrder: ids are not a permutation of current blocks; ignoring", { viewId: id });
         return;
       }

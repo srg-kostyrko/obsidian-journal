@@ -325,6 +325,37 @@ describe("ViewsService", () => {
       expect(ids).toEqual([a.value, b.value]);
     });
 
+    it("is an Ok no-op when an id is foreign to the view", async () => {
+      const { service, repo } = build({ blocks: [trivialBlock] });
+      const created = await service.create({ name: "X" });
+      expectOk(created);
+      const a = await service.addBlock(created.value, "test-block");
+      const b = await service.addBlock(created.value, "test-block");
+      expectOk(a);
+      expectOk(b);
+      const result = await service.setBlockOrder(created.value, [
+        a.value,
+        "cccccccc-cccc-cccc-cccc-cccccccccccc" as BlockInstanceId,
+      ]);
+      expectOk(result);
+      const ids = repo.get(created.value).match({ some: (v) => v.blocks.map((x) => x.id), none: () => [] });
+      expect(ids).toEqual([a.value, b.value]);
+    });
+
+    it("is an Ok no-op when an id is repeated", async () => {
+      const { service, repo } = build({ blocks: [trivialBlock] });
+      const created = await service.create({ name: "X" });
+      expectOk(created);
+      const a = await service.addBlock(created.value, "test-block");
+      const b = await service.addBlock(created.value, "test-block");
+      expectOk(a);
+      expectOk(b);
+      const result = await service.setBlockOrder(created.value, [a.value, a.value]);
+      expectOk(result);
+      const ids = repo.get(created.value).match({ some: (v) => v.blocks.map((x) => x.id), none: () => [] });
+      expect(ids).toEqual([a.value, b.value]);
+    });
+
     it("returns UnknownViewError for an unknown view", async () => {
       const { service } = build({ blocks: [trivialBlock] });
       const result = await service.setBlockOrder("nope" as ViewId, []);
