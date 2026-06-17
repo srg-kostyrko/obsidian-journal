@@ -5,6 +5,7 @@ import { m } from "@/i18n";
 import { useService } from "@/infrastructure/di";
 import { Flows } from "@/infrastructure/flows";
 import { useModalService } from "@/infrastructure/host/modals";
+import { icons } from "@/ui/icons";
 import UiButton from "@/ui/UiButton.vue";
 import UiIcon from "@/ui/UiIcon.vue";
 import UiIconButton from "@/ui/UiIconButton.vue";
@@ -81,24 +82,24 @@ function edit(row: RowEntry): void {
         <template v-else>{{ m.view_block_unknown_label({ key: row.key }) }}</template>
       </template>
       <UiIconButton
-        icon="chevron-up"
+        :icon="icons.action.moveUp"
         :tooltip="m.common_action_move_up()"
         :disabled="index === 0"
         @click="moveUp(row.id)"
       />
       <UiIconButton
-        icon="chevron-down"
+        :icon="icons.action.moveDown"
         :tooltip="m.common_action_move_down()"
         :disabled="index === rows.length - 1"
         @click="moveDown(row.id)"
       />
       <UiIconButton
         v-if="row.definition?.configComponent"
-        icon="pencil"
+        :icon="icons.action.edit"
         :tooltip="m.view_block_edit()"
         @click="edit(row)"
       />
-      <UiIconButton icon="trash-2" :tooltip="m.view_block_remove()" @click="remove(row.id)" />
+      <UiIconButton :icon="icons.action.delete" :tooltip="m.view_block_remove()" @click="remove(row.id)" />
     </UiSettingRow>
     <ToolbarItemsList v-if="row.key === 'toolbar'" :view-id="props.viewId" :block-id="row.id" />
   </template>

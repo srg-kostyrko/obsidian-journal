@@ -5,6 +5,7 @@ import { m } from "@/i18n";
 import { useService } from "@/infrastructure/di";
 import { Flows } from "@/infrastructure/flows";
 import { SettingsUiService } from "@/settings";
+import { icons } from "@/ui/icons";
 import UiCollapsibleBlock from "@/ui/UiCollapsibleBlock.vue";
 import UiIconButton from "@/ui/UiIconButton.vue";
 import UiIconedRow from "@/ui/UiIconedRow.vue";
@@ -45,13 +46,13 @@ function remove(viewId: ViewId): void {
 <template>
   <UiCollapsibleBlock v-model:expanded="expanded">
     <template #trigger>
-      <UiIconedRow icon="layout-dashboard">
+      <UiIconedRow :icon="icons.entity.view">
         {{ m.view_dashboard_section_title() }}
         <span class="flair">{{ viewsVM.viewCount.value }}</span>
       </UiIconedRow>
     </template>
     <template #controls>
-      <UiIconButton icon="plus" cta :tooltip="m.view_dashboard_add()" @click="add" />
+      <UiIconButton :icon="icons.action.add" cta :tooltip="m.view_dashboard_add()" @click="add" />
     </template>
     <UiSettingRow v-if="viewsVM.views.value.length === 0">
       <template #description>{{ m.view_dashboard_empty() }}</template>
@@ -60,12 +61,20 @@ function remove(viewId: ViewId): void {
       <UiSettingRow v-for="view of viewsVM.views.value" :key="view.id">
         <template #name>{{ view.name }}</template>
         <UiIconButton
-          icon="external-link"
+          :icon="icons.action.openExternal"
           :tooltip="m.view_dashboard_open({ name: view.name })"
           @click="open(view.id)"
         />
-        <UiIconButton icon="copy" :tooltip="m.view_dashboard_clone({ name: view.name })" @click="clone(view.id)" />
-        <UiIconButton icon="trash-2" :tooltip="m.common_delete_name({ name: view.name })" @click="remove(view.id)" />
+        <UiIconButton
+          :icon="icons.action.copy"
+          :tooltip="m.view_dashboard_clone({ name: view.name })"
+          @click="clone(view.id)"
+        />
+        <UiIconButton
+          :icon="icons.action.delete"
+          :tooltip="m.common_delete_name({ name: view.name })"
+          @click="remove(view.id)"
+        />
       </UiSettingRow>
     </template>
   </UiCollapsibleBlock>

@@ -6,6 +6,7 @@ import { useService } from "@/infrastructure/di";
 import { Flows } from "@/infrastructure/flows";
 import type { SubpageNav } from "@/settings";
 import { ShelvesViewModel } from "@/shelves";
+import { icons } from "@/ui/icons";
 import UiCollapsibleBlock from "@/ui/UiCollapsibleBlock.vue";
 import UiDropdown from "@/ui/UiDropdown.vue";
 import UiIconButton from "@/ui/UiIconButton.vue";
@@ -84,8 +85,8 @@ function rename(): void {
   <div v-if="view">
     <UiSettingRow heading>
       <template #name>{{ m.view_edit_header_title({ name: view.name }) }}</template>
-      <UiIconButton icon="pencil" :tooltip="m.view_rename()" @click="rename" />
-      <UiIconButton icon="chevron-left" :tooltip="m.journal_edit_back_tooltip()" @click="nav.back()" />
+      <UiIconButton :icon="icons.action.edit" :tooltip="m.view_rename()" @click="rename" />
+      <UiIconButton :icon="icons.nav.back" :tooltip="m.journal_edit_back_tooltip()" @click="nav.back()" />
     </UiSettingRow>
 
     <UiSettingRow :name="m.common_label_icon()">
@@ -119,7 +120,7 @@ function rename(): void {
 
     <UiCollapsibleBlock v-model:expanded="blocksOpen">
       <template #trigger>
-        <UiIconedRow icon="layout-dashboard">
+        <UiIconedRow :icon="icons.entity.view">
           {{ m.view_edit_blocks_title() }}
           <span class="flair">{{ view.blocks.length }}</span>
         </UiIconedRow>
