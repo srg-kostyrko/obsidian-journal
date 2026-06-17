@@ -32,8 +32,7 @@ two-level structure (blocks, with the toolbar block containing items).
   `config.items`), persistence, or the runtime view (`view-leaf.ts`).
 - No change to what configuration each block/item supports.
 - No keyboard-driven reordering (the rest of the plugin has none; SortableJS
-  covers mouse + touch). The up/down move APIs may remain on the service but are
-  no longer surfaced in this UI.
+  covers mouse + touch). The up/down move APIs are removed, not retained.
 
 ## Chosen approach (Direction A3)
 
@@ -112,14 +111,17 @@ Reordering by drag yields a full new ordering, so the persistence contract is
 - `ViewsService.setBlockOrder(id, orderedIds: BlockInstanceId[]): AsyncResult<void, UnknownViewError>`
   — reorders `view.blocks` to match `orderedIds`. Guards: the argument must be a
   permutation of the current block ids; on mismatch it no-ops and logs (same
-  defensive posture as the existing `#move`). Implemented alongside the existing
-  `moveBlockUp/Down` (which stay).
+  defensive posture as today's `#move`). The shared `#move` helper folds into
+  this method.
 - `ViewsService.setToolbarItemOrder(id, blockId, orderedIds): AsyncResult<void, UnknownViewError>`
   — delegates to a new `ToolbarItemsService.reorder(view, blockId, orderedIds)`
   built on the existing `#withItems` helper, then persists via `#persistBlocks`.
 
-The legacy `moveBlockUp/Down` / `moveToolbarItemUp/Down` methods are retained
-(still unit-tested) but unused by the new UI.
+The step-wise move methods become dead once the new UI lands, so they are
+removed: `ViewsService.moveBlockUp/Down` and `moveToolbarItemUp/Down`, the
+private `#move` / `#moveToolbarItem` helpers, `ToolbarItemsService.moveItem`, and
+their unit tests. (No other caller exists — they are only used by the lists this
+redesign replaces.)
 
 ## Definition change — block summaries
 
@@ -213,8 +215,13 @@ New:
 Changed:
 
 - `src/views/ui/BlocksList.vue` (rewrite to sortable + frames)
-- `src/views/service.ts` (`setBlockOrder`, `setToolbarItemOrder`)
-- `src/views/blocks/toolbar/toolbar-items-service.ts` (`reorder`)
+- `src/views/service.ts` (add `setBlockOrder` / `setToolbarItemOrder`; remove
+  `moveBlockUp/Down`, `moveToolbarItemUp/Down`, `#move`, `#moveToolbarItem`)
+- `src/views/service.test.ts` (drop move-method tests; add set-order tests)
+- `src/views/blocks/toolbar/toolbar-items-service.ts` (add `reorder`; remove
+  `moveItem`)
+- `src/views/blocks/toolbar/toolbar-items-service.test.ts` (drop `moveItem`
+  tests; add `reorder` tests)
 - `src/views/define-view-block.ts` (optional `summary`)
 - each block definition that gains a summary
 - `src/ui/icons.ts` (`action.dragHandle`)
