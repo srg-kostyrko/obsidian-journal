@@ -22,6 +22,7 @@ words:
   - subpages
   - templater
   - tfile
+  - vueuse
   - wdio
   - wikilinks
 ignorePaths:
