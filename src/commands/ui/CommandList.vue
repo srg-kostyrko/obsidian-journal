@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { m } from "@/i18n";
 import type { JournalWrite } from "@/journals";
+import { icons } from "@/ui/icons";
 import UiIconButton from "@/ui/UiIconButton.vue";
 import UiSettingRow from "@/ui/UiSettingRow.vue";
 
@@ -28,8 +29,16 @@ defineEmits<{ edit: [id: string]; delete: [id: string] }>();
           {{ commandContextLabel(command.context) }}
         </span>
       </template>
-      <UiIconButton icon="pencil" :tooltip="`${m.command_edit()} ${command.name}`" @click="$emit('edit', id)" />
-      <UiIconButton icon="trash-2" :tooltip="`${m.command_delete()} ${command.name}`" @click="$emit('delete', id)" />
+      <UiIconButton
+        :icon="icons.action.edit"
+        :tooltip="`${m.command_edit()} ${command.name}`"
+        @click="$emit('edit', id)"
+      />
+      <UiIconButton
+        :icon="icons.action.delete"
+        :tooltip="`${m.command_delete()} ${command.name}`"
+        @click="$emit('delete', id)"
+      />
     </UiSettingRow>
   </template>
 </template>

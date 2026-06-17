@@ -5,6 +5,7 @@ import { m } from "@/i18n";
 import { useService } from "@/infrastructure/di";
 import { Flows } from "@/infrastructure/flows";
 import type { JournalWrite } from "@/journals";
+import { icons } from "@/ui/icons";
 import UiCollapsibleBlock from "@/ui/UiCollapsibleBlock.vue";
 import UiIconButton from "@/ui/UiIconButton.vue";
 import UiIconedRow from "@/ui/UiIconedRow.vue";
@@ -47,13 +48,13 @@ function remove(id: string): void {
 <template>
   <UiCollapsibleBlock v-model:expanded="expanded">
     <template #trigger>
-      <UiIconedRow icon="terminal">
+      <UiIconedRow :icon="icons.entity.command">
         {{ m.command_section_title() }}
         <span class="flair">{{ entries.length }}</span>
       </UiIconedRow>
     </template>
     <template #controls>
-      <UiIconButton icon="plus" cta :tooltip="m.command_add()" @click="add" />
+      <UiIconButton :icon="icons.action.add" cta :tooltip="m.command_add()" @click="add" />
     </template>
     <CommandList :entries="entries" :empty-text="m.command_empty({ scope: 'global' })" @edit="edit" @delete="remove" />
   </UiCollapsibleBlock>
