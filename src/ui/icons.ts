@@ -10,6 +10,7 @@ export const icons = {
     check: "lucide-check",
     moveUp: "chevron-up",
     moveDown: "chevron-down",
+    dragHandle: "grip-vertical",
   },
   nav: {
     prev: "chevron-left",
