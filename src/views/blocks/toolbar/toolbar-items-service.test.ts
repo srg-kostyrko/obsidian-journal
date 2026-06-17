@@ -139,6 +139,24 @@ describe("ToolbarItemsService", () => {
       expect(blocks).toBeNull();
     });
 
+    it("returns null when an id is repeated", () => {
+      const service = build();
+      const blocks = service.reorder(viewWith([item(ID_A), item(ID_B)]), "b1" as BlockInstanceId, [
+        ID_A as BlockInstanceId,
+        ID_A as BlockInstanceId,
+      ]);
+      expect(blocks).toBeNull();
+    });
+
+    it("returns null when an id is foreign to the block", () => {
+      const service = build();
+      const blocks = service.reorder(viewWith([item(ID_A), item(ID_B)]), "b1" as BlockInstanceId, [
+        ID_A as BlockInstanceId,
+        ID_ABSENT as BlockInstanceId,
+      ]);
+      expect(blocks).toBeNull();
+    });
+
     it("returns null when the block id is absent", () => {
       const service = build();
       const blocks = service.reorder(viewWith([item(ID_A)]), "missing" as BlockInstanceId, [ID_A as BlockInstanceId]);
