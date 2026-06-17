@@ -22,4 +22,5 @@ export const markdownTemplateBlock = defineViewBlock<MarkdownTemplateConfig>({
   defaultConfig: { templatePath: "" },
   component: MarkdownTemplateBlock,
   configComponent: MarkdownTemplateBlockConfig,
+  summary: (config) => config.templatePath || m.view_block_markdown_template_empty(),
 });

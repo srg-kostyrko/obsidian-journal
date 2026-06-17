@@ -4,6 +4,7 @@ import { m } from "@/i18n";
 import { icons } from "@/ui/icons";
 
 import { defineViewBlock } from "../../define-view-block";
+import { calendarBlockSummary } from "../calendar-block-summary";
 
 import WeekCalendarBlock from "./ui/WeekCalendarBlock.vue";
 import WeekCalendarBlockConfig from "./ui/WeekCalendarBlockConfig.vue";
@@ -27,4 +28,5 @@ export const weekCalendarBlock = defineViewBlock<WeekCalendarConfig>({
   defaultConfig: { before: 0, after: 0, hiddenWeekdays: [], weeks: "left" as const },
   component: WeekCalendarBlock,
   configComponent: WeekCalendarBlockConfig,
+  summary: calendarBlockSummary,
 });

@@ -17,12 +17,14 @@ export interface ViewBlockDefinitionInput<TConfig> {
   readonly component: Component;
   readonly configComponent?: Component;
   readonly cssClass?: string | readonly string[];
+  readonly summary?: (config: TConfig) => string | undefined;
 }
 
-export interface ViewBlockDefinition<TConfig = unknown> extends ViewBlockDefinitionInput<TConfig> {
+export interface ViewBlockDefinition<TConfig = unknown> extends Omit<ViewBlockDefinitionInput<TConfig>, "summary"> {
   readonly __brand: "view-block";
+  readonly summary?: (config: unknown) => string | undefined;
 }
 
 export function defineViewBlock<TConfig>(input: ViewBlockDefinitionInput<TConfig>): ViewBlockDefinition<TConfig> {
-  return { ...input, __brand: "view-block" };
+  return { ...input, __brand: "view-block" } as ViewBlockDefinition<TConfig>;
 }
