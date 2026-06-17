@@ -26,11 +26,12 @@ import type { BlockInstanceId, ViewId } from "../config";
 import type { ToolbarItemDefinition } from "../define-toolbar-item";
 import type { ViewBlockDefinition } from "../define-view-block";
 
+vi.mock("./use-sortable-list", () => ({ useSortableList: () => undefined }));
+
 afterEach(() => cleanup());
 
 const viewId = "11111111-1111-1111-1111-111111111111" as ViewId;
 const blockIdA = "aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa" as BlockInstanceId;
-const blockIdB = "bbbbbbbb-bbbb-bbbb-bbbb-bbbbbbbbbbbb" as BlockInstanceId;
 
 const dividerDefinition = {
   key: "divider",
@@ -132,28 +133,6 @@ describe("BlocksList", () => {
     expect(repo.get(viewId).getOr(undefined as never)?.blocks).toEqual([]);
   });
 
-  it("disables Move up on the first row", async () => {
-    const { container } = await setup([
-      { id: blockIdA, key: "divider", config: {} },
-      { id: blockIdB, key: "divider", config: {} },
-    ]);
-    mount(container);
-    const upButtons = screen.getAllByLabelText(m.common_action_move_up());
-    expect(upButtons[0]).toHaveProperty("disabled", true);
-    expect(upButtons[1]).toHaveProperty("disabled", false);
-  });
-
-  it("disables Move down on the last row", async () => {
-    const { container } = await setup([
-      { id: blockIdA, key: "divider", config: {} },
-      { id: blockIdB, key: "divider", config: {} },
-    ]);
-    mount(container);
-    const downButtons = screen.getAllByLabelText(m.common_action_move_down());
-    expect(downButtons[0]).toHaveProperty("disabled", false);
-    expect(downButtons[1]).toHaveProperty("disabled", true);
-  });
-
   it("invokes AddBlockToViewFlow when Add block is clicked", async () => {
     const { container } = await setup([]);
     mount(container);
@@ -163,10 +142,25 @@ describe("BlocksList", () => {
     expect(spy).toHaveBeenCalledWith(AddBlockToViewFlow, { viewId });
   });
 
-  it("renders a ToolbarItemsList when a block's key is 'toolbar'", async () => {
+  it("renders a ToolbarStrip when a block's key is 'toolbar'", async () => {
     const { container } = await setupWithToolbar([{ id: blockIdA, key: "toolbar", config: { items: [] } }]);
     mount(container);
     expect(screen.getByText(m.view_toolbar_item_empty())).toBeTruthy();
+  });
+
+  it("renders a block's config summary", async () => {
+    const summaryDefinition = {
+      key: "with-summary",
+      label: "Summary block",
+      schema: v.object({}),
+      defaultConfig: {},
+      component: { render: () => null },
+      summary: () => "the summary",
+    } as unknown as ViewBlockDefinition;
+    const { container } = await setup([{ id: blockIdA, key: "with-summary", config: {} }]);
+    container.register(ViewBlockDefinitionToken).useValue(summaryDefinition);
+    mount(container);
+    expect(screen.getByText("the summary")).toBeTruthy();
   });
 
   describe("editing a block's config", () => {

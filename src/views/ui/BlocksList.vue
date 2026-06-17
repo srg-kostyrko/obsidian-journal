@@ -1,27 +1,28 @@
 <script setup lang="ts">
-import { computed } from "vue";
+import { computed, ref, watch } from "vue";
 
 import { m } from "@/i18n";
 import { useService } from "@/infrastructure/di";
 import { Flows } from "@/infrastructure/flows";
 import { useModalService } from "@/infrastructure/host/modals";
-import { icons } from "@/ui/icons";
 import UiButton from "@/ui/UiButton.vue";
-import UiIcon from "@/ui/UiIcon.vue";
-import UiIconButton from "@/ui/UiIconButton.vue";
-import UiSettingRow from "@/ui/UiSettingRow.vue";
 
 import { AddBlockToViewFlow } from "../flows/add-block-to-view.flow";
 import { ViewsService } from "../service";
 import { ViewsViewModel } from "../view-model";
 
+import BlockFrame from "./BlockFrame.vue";
 import { editBlockModal } from "./modals";
-import ToolbarItemsList from "./ToolbarItemsList.vue";
+import { provideViewPreviewContext } from "./preview-view-context";
+import ToolbarStrip from "./ToolbarStrip.vue";
+import { useSortableList } from "./use-sortable-list";
 
 import type { BlockInstanceId, ViewId } from "../config";
 import type { ViewBlockDefinition } from "../define-view-block";
 
 const props = defineProps<{ viewId: ViewId }>();
+
+provideViewPreviewContext(props.viewId);
 
 const flows = useService(Flows);
 const modals = useModalService();
@@ -35,7 +36,7 @@ interface RowEntry {
   definition: ViewBlockDefinition | undefined;
 }
 
-const rows = computed<RowEntry[]>(() => {
+const source = computed<RowEntry[]>(() => {
   const blocks = viewsVM
     .getView(props.viewId)
     .map((view) => view.blocks)
@@ -48,18 +49,29 @@ const rows = computed<RowEntry[]>(() => {
   }));
 });
 
-function moveUp(id: BlockInstanceId): void {
-  void viewsService.moveBlockUp(props.viewId, id);
+const rows = ref<RowEntry[]>([]);
+watch(source, (next) => (rows.value = [...next]), { immediate: true, deep: true });
+
+const listEl = ref<HTMLElement | null>(null);
+useSortableList(listEl, rows, (orderedIds) => {
+  void viewsService.setBlockOrder(props.viewId, orderedIds as BlockInstanceId[]);
+});
+
+function labelOf(row: RowEntry): string {
+  return row.definition ? row.definition.label : m.view_block_unknown_label({ key: row.key });
 }
-function moveDown(id: BlockInstanceId): void {
-  void viewsService.moveBlockDown(props.viewId, id);
+
+function summaryOf(row: RowEntry): string | undefined {
+  if (row.key === "toolbar") {
+    const items = (row.config.items as unknown[] | undefined) ?? [];
+    return m.view_block_toolbar_item_count({ count: items.length });
+  }
+  return row.definition?.summary?.(row.config);
 }
-function remove(id: BlockInstanceId): void {
-  void viewsService.removeBlock(props.viewId, id);
-}
-function add(): void {
-  void flows.invoke(AddBlockToViewFlow, { viewId: props.viewId });
-}
+
+const add = (): void => void flows.invoke(AddBlockToViewFlow, { viewId: props.viewId });
+const remove = (id: BlockInstanceId): void => void viewsService.removeBlock(props.viewId, id);
+
 function edit(row: RowEntry): void {
   if (!row.definition?.configComponent) return;
   void modals
@@ -69,42 +81,37 @@ function edit(row: RowEntry): void {
 </script>
 
 <template>
-  <UiSettingRow v-if="rows.length === 0">
-    <template #description>{{ m.view_edit_blocks_empty() }}</template>
-  </UiSettingRow>
-  <template v-for="(row, index) of rows" :key="row.id">
-    <UiSettingRow>
-      <template #name>
-        <template v-if="row.definition">
-          <UiIcon v-if="row.definition.icon" :name="row.definition.icon" />
-          {{ row.definition.label }}
-        </template>
-        <template v-else>{{ m.view_block_unknown_label({ key: row.key }) }}</template>
-      </template>
-      <UiIconButton
-        :icon="icons.action.moveUp"
-        :tooltip="m.common_action_move_up()"
-        :disabled="index === 0"
-        @click="moveUp(row.id)"
+  <div v-if="rows.length === 0" class="jv-blocks-empty">{{ m.view_edit_blocks_empty() }}</div>
+  <div ref="listEl" class="jv-blocks-list">
+    <div v-for="row of rows" :key="row.id" class="jv-block-entry">
+      <BlockFrame
+        :icon="row.definition?.icon"
+        :label="labelOf(row)"
+        :summary="summaryOf(row)"
+        :editable="!!row.definition?.configComponent"
+        @edit="edit(row)"
+        @remove="remove(row.id)"
       />
-      <UiIconButton
-        :icon="icons.action.moveDown"
-        :tooltip="m.common_action_move_down()"
-        :disabled="index === rows.length - 1"
-        @click="moveDown(row.id)"
-      />
-      <UiIconButton
-        v-if="row.definition?.configComponent"
-        :icon="icons.action.edit"
-        :tooltip="m.view_block_edit()"
-        @click="edit(row)"
-      />
-      <UiIconButton :icon="icons.action.delete" :tooltip="m.view_block_remove()" @click="remove(row.id)" />
-    </UiSettingRow>
-    <ToolbarItemsList v-if="row.key === 'toolbar'" :view-id="props.viewId" :block-id="row.id" />
-  </template>
-
-  <UiSettingRow controls-only>
-    <UiButton cta @click="add">{{ m.view_add_block() }}</UiButton>
-  </UiSettingRow>
+      <ToolbarStrip v-if="row.key === 'toolbar'" :view-id="props.viewId" :block-id="row.id" />
+    </div>
+  </div>
+  <UiButton cta @click="add">{{ m.view_add_block() }}</UiButton>
 </template>
+
+<style scoped>
+.jv-blocks-list {
+  display: flex;
+  flex-direction: column;
+  gap: var(--size-2-3);
+  margin-bottom: var(--size-4-2);
+}
+.jv-block-entry {
+  display: flex;
+  flex-direction: column;
+  gap: var(--size-2-2);
+}
+.jv-blocks-empty {
+  color: var(--text-muted);
+  margin-bottom: var(--size-4-2);
+}
+</style>
