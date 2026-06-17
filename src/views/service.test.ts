@@ -297,8 +297,8 @@ describe("ViewsService", () => {
     });
   });
 
-  describe("moveBlockUp", () => {
-    it("swaps with the previous block", async () => {
+  describe("setBlockOrder", () => {
+    it("reorders blocks to the given permutation", async () => {
       const { service, repo } = build({ blocks: [trivialBlock] });
       const created = await service.create({ name: "X" });
       expectOk(created);
@@ -306,26 +306,12 @@ describe("ViewsService", () => {
       const b = await service.addBlock(created.value, "test-block");
       expectOk(a);
       expectOk(b);
-      await service.moveBlockUp(created.value, b.value);
+      await service.setBlockOrder(created.value, [b.value, a.value]);
       const ids = repo.get(created.value).match({ some: (v) => v.blocks.map((x) => x.id), none: () => [] });
       expect(ids).toEqual([b.value, a.value]);
     });
 
-    it("is an Ok no-op at index 0", async () => {
-      const { service, repo } = build({ blocks: [trivialBlock] });
-      const created = await service.create({ name: "X" });
-      expectOk(created);
-      const a = await service.addBlock(created.value, "test-block");
-      expectOk(a);
-      const result = await service.moveBlockUp(created.value, a.value);
-      expectOk(result);
-      const firstId = repo.get(created.value).match({ some: (v) => v.blocks[0]?.id, none: () => null });
-      expect(firstId).toBe(a.value);
-    });
-  });
-
-  describe("moveBlockDown", () => {
-    it("swaps with the next block", async () => {
+    it("is an Ok no-op when the ids are not a permutation of the blocks", async () => {
       const { service, repo } = build({ blocks: [trivialBlock] });
       const created = await service.create({ name: "X" });
       expectOk(created);
@@ -333,21 +319,17 @@ describe("ViewsService", () => {
       const b = await service.addBlock(created.value, "test-block");
       expectOk(a);
       expectOk(b);
-      await service.moveBlockDown(created.value, a.value);
+      const result = await service.setBlockOrder(created.value, [a.value]);
+      expectOk(result);
       const ids = repo.get(created.value).match({ some: (v) => v.blocks.map((x) => x.id), none: () => [] });
-      expect(ids).toEqual([b.value, a.value]);
+      expect(ids).toEqual([a.value, b.value]);
     });
 
-    it("is an Ok no-op at the last index", async () => {
-      const { service, repo } = build({ blocks: [trivialBlock] });
-      const created = await service.create({ name: "X" });
-      expectOk(created);
-      const a = await service.addBlock(created.value, "test-block");
-      expectOk(a);
-      const result = await service.moveBlockDown(created.value, a.value);
-      expectOk(result);
-      const firstId = repo.get(created.value).match({ some: (v) => v.blocks[0]?.id, none: () => null });
-      expect(firstId).toBe(a.value);
+    it("returns UnknownViewError for an unknown view", async () => {
+      const { service } = build({ blocks: [trivialBlock] });
+      const result = await service.setBlockOrder("nope" as ViewId, []);
+      expectErr(result);
+      expect(result.error.kind).toBe("unknown-view");
     });
   });
 

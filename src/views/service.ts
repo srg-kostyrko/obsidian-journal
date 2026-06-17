@@ -128,12 +128,20 @@ export class ViewsService {
     });
   }
 
-  moveBlockUp(id: ViewId, blockId: BlockInstanceId): AsyncResult<void, UnknownViewError> {
-    return this.#move(id, blockId, -1);
-  }
-
-  moveBlockDown(id: ViewId, blockId: BlockInstanceId): AsyncResult<void, UnknownViewError> {
-    return this.#move(id, blockId, +1);
+  setBlockOrder(id: ViewId, orderedIds: BlockInstanceId[]): AsyncResult<void, UnknownViewError> {
+    return attempt.in(this, async function* () {
+      const current = yield* this.#repo.get(id).okOrElse(() => new UnknownViewError(id));
+      const byId = new Map(current.blocks.map((b) => [b.id, b]));
+      if (orderedIds.length !== current.blocks.length || orderedIds.some((blockId) => !byId.has(blockId))) {
+        this.#logger.warn("setBlockOrder: ids are not a permutation of current blocks; ignoring", { viewId: id });
+        return;
+      }
+      const blocks = orderedIds.flatMap((blockId) => {
+        const block = byId.get(blockId);
+        return block ? [block] : [];
+      });
+      yield* this.#persistBlocks(id, blocks);
+    });
   }
 
   updateBlockConfig(
@@ -163,21 +171,6 @@ export class ViewsService {
       const blocks = current.blocks.map((b) =>
         b.id === blockId ? { ...b, config: config as Record<string, unknown> } : b,
       );
-      yield* this.#repo.update(id, { blocks }).mapErr((cause): UnknownViewError => {
-        if (cause.kind === "unknown-view") return cause;
-        throw new ViewsInvariantError(`unreachable: repo.update returned ${cause.kind}`);
-      });
-    });
-  }
-
-  #move(id: ViewId, blockId: BlockInstanceId, delta: -1 | 1): AsyncResult<void, UnknownViewError> {
-    return attempt.in(this, async function* () {
-      const current = yield* this.#repo.get(id).okOrElse(() => new UnknownViewError(id));
-      const index = current.blocks.findIndex((b) => b.id === blockId);
-      const target = index + delta;
-      if (index < 0 || target < 0 || target >= current.blocks.length) return;
-      const blocks = [...current.blocks];
-      [blocks[index], blocks[target]] = [blocks[target], blocks[index]];
       yield* this.#repo.update(id, { blocks }).mapErr((cause): UnknownViewError => {
         if (cause.kind === "unknown-view") return cause;
         throw new ViewsInvariantError(`unreachable: repo.update returned ${cause.kind}`);
