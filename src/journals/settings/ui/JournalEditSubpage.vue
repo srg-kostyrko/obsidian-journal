@@ -9,6 +9,7 @@ import { Flows } from "@/infrastructure/flows";
 import { BulkAddFlow } from "@/journals/notes/bulk-add/flows/bulk-add.flow";
 import { JournalsViewModel } from "@/journals/view-model";
 import type { SubpageNav } from "@/settings";
+import { icons } from "@/ui/icons";
 import UiButton from "@/ui/UiButton.vue";
 import UiCollapsibleBlock from "@/ui/UiCollapsibleBlock.vue";
 import UiDropdown from "@/ui/UiDropdown.vue";
@@ -177,14 +178,14 @@ function editSequenceKey(): void {
     <UiSettingRow heading>
       <template #name>{{ m.journal_edit_header_title({ name: journalName, writing }) }}</template>
       <UiButton @click="bulkAdd">{{ m.bulk_add_command() }}</UiButton>
-      <UiIconButton icon="pencil" :tooltip="m.journal_edit_rename_tooltip()" @click="rename" />
-      <UiIconButton icon="chevron-left" :tooltip="m.journal_edit_back_tooltip()" @click="nav.back()" />
+      <UiIconButton :icon="icons.action.edit" :tooltip="m.journal_edit_rename_tooltip()" @click="rename" />
+      <UiIconButton :icon="icons.nav.back" :tooltip="m.journal_edit_back_tooltip()" @click="nav.back()" />
     </UiSettingRow>
 
     <UiCollapsibleBlock v-model:expanded="noteCreationOpen">
       <template #trigger>
         <span class="journal-section-heading">
-          <UiIcon name="file-plus" />
+          <UiIcon :name="icons.action.addFile" />
           <span>{{ m.journal_edit_section_note_creation() }}</span>
         </span>
       </template>
@@ -261,7 +262,7 @@ function editSequenceKey(): void {
 
     <UiCollapsibleBlock v-model:expanded="templatesOpen">
       <template #trigger>
-        <UiIconedRow icon="notepad-text-dashed">
+        <UiIconedRow :icon="icons.section.templates">
           {{ m.journal_edit_section_templates() }}
           <span class="flair">{{ config.templates.length }}</span>
         </UiIconedRow>
@@ -289,7 +290,7 @@ function editSequenceKey(): void {
         <UiSettingRow>
           <UiFileInput v-model="config.templates[index]" :placeholder="m.journal_edit_template_path_placeholder()" />
           <UiIconButton
-            icon="trash"
+            :icon="icons.action.delete"
             :tooltip="m.journal_edit_template_remove_tooltip()"
             @click="removeTemplate(index)"
           />
@@ -301,7 +302,7 @@ function editSequenceKey(): void {
     <UiCollapsibleBlock v-model:expanded="timelineOpen">
       <template #trigger>
         <span class="journal-section-heading">
-          <UiIcon name="calendar-range" />
+          <UiIcon :name="icons.section.timeline" />
           <span>{{ m.journal_edit_section_timeline() }}</span>
         </span>
       </template>
@@ -318,7 +319,7 @@ function editSequenceKey(): void {
           <DatePicker v-model="startModel" :picking="startPicking" />
           <UiIconButton
             v-if="config.timeline.start"
-            icon="trash"
+            :icon="icons.action.delete"
             :tooltip="m.common_action_close()"
             @click="clearStart"
           />
@@ -353,7 +354,7 @@ function editSequenceKey(): void {
     <UiCollapsibleBlock v-model:expanded="sequenceOpen">
       <template #trigger>
         <span class="journal-section-heading">
-          <UiIcon name="hash" />
+          <UiIcon :name="icons.section.numbering" />
           <span>{{ m.journal_edit_section_sequential_numbers() }}</span>
         </span>
       </template>
@@ -402,7 +403,11 @@ function editSequenceKey(): void {
 
         <UiSettingRow :name="m.common_label_property_name()">
           {{ config.numbering.sources[0].frontmatterKey }}
-          <UiIconButton icon="pencil" :tooltip="`${m.common_label_property_name()} edit`" @click="editSequenceKey" />
+          <UiIconButton
+            :icon="icons.action.edit"
+            :tooltip="`${m.common_label_property_name()} edit`"
+            @click="editSequenceKey"
+          />
         </UiSettingRow>
       </template>
     </UiCollapsibleBlock>
@@ -410,7 +415,7 @@ function editSequenceKey(): void {
     <UiCollapsibleBlock v-model:expanded="frontmatterOpen">
       <template #trigger>
         <span class="journal-section-heading">
-          <UiIcon name="table-properties" />
+          <UiIcon :name="icons.section.properties" />
           <span>{{ m.journal_edit_section_frontmatter() }}</span>
         </span>
       </template>
@@ -418,7 +423,7 @@ function editSequenceKey(): void {
       <UiSettingRow :name="m.journal_fm_field_label({ field: 'dateField' })">
         {{ config.frontmatter.dateField }}
         <UiIconButton
-          icon="pencil"
+          :icon="icons.action.edit"
           :tooltip="`${m.journal_fm_field_label({ field: 'dateField' })} edit`"
           @click="editFm('dateField')"
         />
@@ -434,7 +439,7 @@ function editSequenceKey(): void {
       >
         {{ config.frontmatter.startDateField }}
         <UiIconButton
-          icon="pencil"
+          :icon="icons.action.edit"
           :tooltip="`${m.journal_fm_field_label({ field: 'startDateField' })} edit`"
           @click="editFm('startDateField')"
         />
@@ -446,7 +451,7 @@ function editSequenceKey(): void {
       <UiSettingRow v-if="config.frontmatter.addEndDate" :name="m.journal_fm_field_label({ field: 'endDateField' })">
         {{ config.frontmatter.endDateField }}
         <UiIconButton
-          icon="pencil"
+          :icon="icons.action.edit"
           :tooltip="`${m.journal_fm_field_label({ field: 'endDateField' })} edit`"
           @click="editFm('endDateField')"
         />

@@ -4,6 +4,7 @@ import { computed, ref } from "vue";
 import { m } from "@/i18n";
 import { useService } from "@/infrastructure/di";
 import { Flows } from "@/infrastructure/flows";
+import { icons } from "@/ui/icons";
 import UiCollapsibleBlock from "@/ui/UiCollapsibleBlock.vue";
 import UiIcon from "@/ui/UiIcon.vue";
 import UiIconButton from "@/ui/UiIconButton.vue";
@@ -37,7 +38,7 @@ function place(): void {
 
     <UiSettingRow :name="m.common_label_shelf()">
       <span>{{ currentShelf === "" ? m.shelf_section_not_on_shelf() : currentShelf }}</span>
-      <UiIconButton icon="pencil" :tooltip="m.shelf_section_place_tooltip()" @click="place" />
+      <UiIconButton :icon="icons.action.edit" :tooltip="m.shelf_section_place_tooltip()" @click="place" />
     </UiSettingRow>
   </UiCollapsibleBlock>
 </template>

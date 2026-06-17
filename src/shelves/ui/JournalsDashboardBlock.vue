@@ -12,6 +12,7 @@ import {
   type JournalConfig,
 } from "@/journals";
 import { SettingsUiService } from "@/settings";
+import { icons } from "@/ui/icons";
 import UiCollapsibleBlock from "@/ui/UiCollapsibleBlock.vue";
 import UiIconButton from "@/ui/UiIconButton.vue";
 import UiIconedRow from "@/ui/UiIconedRow.vue";
@@ -51,13 +52,13 @@ function remove(journalName: string): void {
 <template>
   <UiCollapsibleBlock v-model:expanded="expanded">
     <template #trigger>
-      <UiIconedRow icon="book-open">
+      <UiIconedRow :icon="icons.entity.journal">
         {{ hasShelves ? m.shelf_journals_block_title_filtered() : m.common_label_journals() }}
         <span class="flair">{{ entries.length }}</span>
       </UiIconedRow>
     </template>
     <template #controls>
-      <UiIconButton icon="plus" cta :tooltip="m.journal_create()" @click="add" />
+      <UiIconButton :icon="icons.action.add" cta :tooltip="m.journal_create()" @click="add" />
     </template>
     <JournalList :entries="entries" :empty-text="m.journal_dashboard_empty()" @edit="edit" @delete="remove" />
   </UiCollapsibleBlock>

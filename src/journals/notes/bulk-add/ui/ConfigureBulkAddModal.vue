@@ -9,6 +9,7 @@ import { m } from "@/i18n";
 import { useModal } from "@/infrastructure/host/modals";
 import DateFormatPreview from "@/journals/settings/ui/DateFormatPreview.vue";
 import FolderInput from "@/journals/settings/ui/FolderInput.vue";
+import { icons } from "@/ui/icons";
 import UiButton from "@/ui/UiButton.vue";
 import UiDropdown from "@/ui/UiDropdown.vue";
 import UiIconButton from "@/ui/UiIconButton.vue";
@@ -93,7 +94,7 @@ const onSubmit = handleSubmit((parameters) => {
     <template v-if="values.filterCombinator !== 'no'">
       <UiSettingRow v-for="(filter, i) of values.filters" :key="i">
         <ConditionItem :name="`filters.${i}`" :condition="filter" />
-        <UiIconButton icon="trash" @click="filters.remove(i)" />
+        <UiIconButton :icon="icons.action.delete" @click="filters.remove(i)" />
       </UiSettingRow>
       <UiSettingRow>
         <UiButton @click="addFilter('title')">{{ m.bulk_add_add_filter_title() }}</UiButton>

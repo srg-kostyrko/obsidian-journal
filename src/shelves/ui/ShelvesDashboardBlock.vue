@@ -5,6 +5,7 @@ import { m } from "@/i18n";
 import { useService } from "@/infrastructure/di";
 import { Flows } from "@/infrastructure/flows";
 import { SettingsUiService } from "@/settings";
+import { icons } from "@/ui/icons";
 import UiCollapsibleBlock from "@/ui/UiCollapsibleBlock.vue";
 import UiIconButton from "@/ui/UiIconButton.vue";
 import UiIconedRow from "@/ui/UiIconedRow.vue";
@@ -46,13 +47,13 @@ function remove(shelfName: string): void {
 <template>
   <UiCollapsibleBlock v-model:expanded="expanded">
     <template #trigger>
-      <UiIconedRow icon="library">
+      <UiIconedRow :icon="icons.entity.shelf">
         {{ m.shelf_dashboard_section_title() }}
         <span class="flair">{{ entries.length }}</span>
       </UiIconedRow>
     </template>
     <template #controls>
-      <UiIconButton icon="plus" cta :tooltip="m.shelf_add()" @click="add" />
+      <UiIconButton :icon="icons.action.add" cta :tooltip="m.shelf_add()" @click="add" />
     </template>
     <UiSettingRow v-if="entries.length === 0">
       <template #description>{{ m.shelf_dashboard_empty() }}</template>
@@ -63,8 +64,8 @@ function remove(shelfName: string): void {
           {{ name }}
           <span class="flair">{{ m.shelf_member_count({ count: shelf.journals.length }) }}</span>
         </template>
-        <UiIconButton icon="library" :tooltip="m.shelf_dashboard_open({ name })" @click="open(name)" />
-        <UiIconButton icon="trash-2" :tooltip="m.common_delete_name({ name })" @click="remove(name)" />
+        <UiIconButton :icon="icons.entity.shelf" :tooltip="m.shelf_dashboard_open({ name })" @click="open(name)" />
+        <UiIconButton :icon="icons.action.delete" :tooltip="m.common_delete_name({ name })" @click="remove(name)" />
       </UiSettingRow>
     </template>
   </UiCollapsibleBlock>
