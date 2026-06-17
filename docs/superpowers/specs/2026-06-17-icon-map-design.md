@@ -51,33 +51,37 @@ export const icons = {
     edit: "pencil",
     delete: "trash-2",
     add: "plus",
+    addFile: "file-plus",
     copy: "copy",
-    import: "import",
-    close: "x",
     openExternal: "external-link",
     pickDate: "crosshair",
-    command: "terminal",
+    check: "lucide-check",
+    moveUp: "chevron-up",
+    moveDown: "chevron-down",
   },
   nav: {
     prev: "chevron-left",
     next: "chevron-right",
     prevLeap: "chevrons-left",
     nextLeap: "chevrons-right",
-    expand: "chevron-down",
-    collapse: "chevron-up",
-    up: "arrow-up",
-    down: "arrow-down",
-    left: "arrow-left",
-    right: "arrow-right",
+    back: "chevron-left",
   },
   entity: {
-    journal: "notebook",
+    journal: "book-open",
     shelf: "library",
     view: "layout-dashboard",
+    command: "terminal",
     month: "calendar-days",
     week: "calendar-range",
-    day: "calendar",
     customInterval: "list",
+    navBlock: "signpost-big",
+  },
+  block: {
+    divider: "minus",
+    toolbar: "panel-top",
+    markdownTemplate: "file-text",
+    button: "square",
+    definedNavigation: "chevrons-left-right",
   },
   section: {
     numbering: "hash",
@@ -86,6 +90,8 @@ export const icons = {
     logging: "scroll-text",
     startup: "log-in",
     properties: "table-properties",
+    templates: "notepad-text-dashed",
+    timeline: "calendar-range",
   },
 } as const;
 
@@ -98,18 +104,28 @@ export type IconName = {
 available for any consumer that wants to type an icon prop against the known set. Consumers
 reference icons positionally: `icons.action.edit`, `icons.entity.journal`, `icons.nav.next`.
 
+The map has five groups: `action` (interactive affordances), `nav` (period/page
+navigation), `entity` (domain things: journal/shelf/view/command/period/nav-block),
+`block` (view-building-block type glyphs shown in pickers), and `section` (settings
+section-header label icons).
+
 ### Consolidation decisions
 
-The migration converges inconsistent spellings onto one name each:
+The migration unifies icons **by meaning** — one glyph per meaning, even where the code
+currently uses two different glyphs for the same action. Decisions:
 
-| Meaning | Chosen name | Replaces           |
-| ------- | ----------- | ------------------ |
-| delete  | `trash-2`   | `trash`, `trash-2` |
-| close   | `x`         | `x`, `cross`       |
-| back    | `nav.prev`  | `chevron-left`     |
+| Meaning          | Chosen name               | Replaces                                 | Visible change?               |
+| ---------------- | ------------------------- | ---------------------------------------- | ----------------------------- |
+| delete           | `trash-2`                 | `trash`, `trash-2`                       | yes, at the `trash` sites     |
+| reorder up/down  | `chevron-up` / `-down`    | `chevron-up/down`, `arrow-up/down`       | yes, in the nav-rows editor   |
+| period prev/next | `chevron-left` / `-right` | `chevron-left/right`, `arrow-left/right` | yes, in the in-note nav block |
 
-No separate `nav.back` alias is added — back-navigation uses `nav.prev` (same glyph, same
-meaning).
+As a result the map has **no `arrow-*` keys**: the in-note navigation block's
+`arrow-left/right` and the nav-rows editor's `arrow-up/down` both converge on the chevron
+equivalents.
+
+A separate `nav.back` key **is** kept (subpage back buttons). It shares the `chevron-left`
+glyph with `nav.prev` but is a distinct meaning, so it gets its own name.
 
 ## Scope of migration
 
@@ -140,8 +156,10 @@ project conventions exclude. Correctness is enforced by:
 
 ## Risks
 
-- A consolidation swap (`trash` → `trash-2`, `cross` → `x`) changes the glyph at some call
-  sites. `cross` → `x` is a fix (cross likely rendered nothing). `trash` → `trash-2` is a
-  cosmetic convergence; verify nothing asserts on the old name in tests/e2e.
+- The unify-by-meaning swaps change visible glyphs at some sites: `trash` → `trash-2`
+  (row deletes), `arrow-up/down` → `chevron-up/down` (nav-rows editor reorder), and
+  `arrow-left/right` → `chevron-left/right` (in-note navigation block). Before each commit,
+  grep tests/e2e for the old literal to confirm nothing asserts on it; the in-note nav
+  block change is end-user-visible, so the e2e suite is the gate.
 - The map only helps code we author; user-facing icon inputs remain unconstrained by
   design. This is intentional, not a gap.
