@@ -120,22 +120,28 @@ describe("ToolbarItemsService", () => {
     });
   });
 
-  describe("moveItem", () => {
-    it("swaps toward the delta", () => {
+  describe("reorder", () => {
+    it("reorders items to the given permutation", () => {
       const service = build();
-      const blocks = service.moveItem(
-        viewWith([item(ID_A), item(ID_B)]),
-        "b1" as BlockInstanceId,
+      const blocks = service.reorder(viewWith([item(ID_A), item(ID_B)]), "b1" as BlockInstanceId, [
         ID_B as BlockInstanceId,
-        -1,
-      );
+        ID_A as BlockInstanceId,
+      ]);
       expect(blocks).not.toBeNull();
       expect(service.itemsOf(blocks![0]).map((i) => i.id)).toEqual([ID_B, ID_A]);
     });
 
-    it("returns null at an out-of-range edge", () => {
+    it("returns null when the ids are not a permutation", () => {
       const service = build();
-      const blocks = service.moveItem(viewWith([item(ID_A)]), "b1" as BlockInstanceId, ID_A as BlockInstanceId, -1);
+      const blocks = service.reorder(viewWith([item(ID_A), item(ID_B)]), "b1" as BlockInstanceId, [
+        ID_A as BlockInstanceId,
+      ]);
+      expect(blocks).toBeNull();
+    });
+
+    it("returns null when the block id is absent", () => {
+      const service = build();
+      const blocks = service.reorder(viewWith([item(ID_A)]), "missing" as BlockInstanceId, [ID_A as BlockInstanceId]);
       expect(blocks).toBeNull();
     });
   });

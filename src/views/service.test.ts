@@ -466,6 +466,33 @@ describe("ViewsService – toolbar-item operations", () => {
     });
   });
 
+  describe("setToolbarItemOrder", () => {
+    it("reorders the toolbar items to the given permutation", async () => {
+      const { service, repo } = build({ blocks: [toolbarBlock], items: [dummyItem] });
+      const created = await service.create({ name: "X" });
+      expectOk(created);
+      const block = await service.addBlock(created.value, "toolbar");
+      expectOk(block);
+      const a = await service.addToolbarItem(created.value, block.value, "dummy");
+      const b = await service.addToolbarItem(created.value, block.value, "dummy");
+      expectOk(a);
+      expectOk(b);
+      await service.setToolbarItemOrder(created.value, block.value, [b.value!, a.value!]);
+      const ids = repo.get(created.value).match({
+        some: (v) => ((v.blocks[0]?.config as { items: { id: string }[] }).items ?? []).map((i) => i.id),
+        none: () => [],
+      });
+      expect(ids).toEqual([b.value, a.value]);
+    });
+
+    it("returns UnknownViewError for an unknown view", async () => {
+      const { service } = build({ blocks: [toolbarBlock], items: [dummyItem] });
+      const result = await service.setToolbarItemOrder("nope" as ViewId, "b" as BlockInstanceId, []);
+      expectErr(result);
+      expect(result.error.kind).toBe("unknown-view");
+    });
+  });
+
   describe("updateToolbarItemConfig", () => {
     it("persists a valid config", async () => {
       const { service, repo } = build({ blocks: [toolbarBlock], items: [dummyItem] });

@@ -221,20 +221,17 @@ export class ViewsService {
     });
   }
 
-  moveToolbarItemUp(
+  setToolbarItemOrder(
     id: ViewId,
     blockId: BlockInstanceId,
-    itemId: BlockInstanceId,
+    orderedIds: BlockInstanceId[],
   ): AsyncResult<void, UnknownViewError> {
-    return this.#moveToolbarItem(id, blockId, itemId, -1);
-  }
-
-  moveToolbarItemDown(
-    id: ViewId,
-    blockId: BlockInstanceId,
-    itemId: BlockInstanceId,
-  ): AsyncResult<void, UnknownViewError> {
-    return this.#moveToolbarItem(id, blockId, itemId, +1);
+    return attempt.in(this, async function* () {
+      const current = yield* this.#repo.get(id).okOrElse(() => new UnknownViewError(id));
+      const blocks = this.#toolbarItems.reorder(current, blockId, orderedIds);
+      if (blocks === null) return;
+      yield* this.#persistBlocks(id, blocks);
+    });
   }
 
   updateToolbarItemConfig(
@@ -253,19 +250,5 @@ export class ViewsService {
 
   getToolbarItemDefinition(key: string): Option<ToolbarItemDefinition> {
     return this.#toolbarItems.getDefinition(key);
-  }
-
-  #moveToolbarItem(
-    id: ViewId,
-    blockId: BlockInstanceId,
-    itemId: BlockInstanceId,
-    delta: -1 | 1,
-  ): AsyncResult<void, UnknownViewError> {
-    return attempt.in(this, async function* () {
-      const current = yield* this.#repo.get(id).okOrElse(() => new UnknownViewError(id));
-      const blocks = this.#toolbarItems.moveItem(current, blockId, itemId, delta);
-      if (blocks === null) return;
-      yield* this.#persistBlocks(id, blocks);
-    });
   }
 }

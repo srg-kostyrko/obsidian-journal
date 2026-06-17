@@ -58,14 +58,15 @@ export class ToolbarItemsService {
     });
   }
 
-  moveItem(view: View, blockId: BlockInstanceId, itemId: BlockInstanceId, delta: -1 | 1): View["blocks"] | null {
+  reorder(view: View, blockId: BlockInstanceId, orderedIds: BlockInstanceId[]): View["blocks"] | null {
     return this.#withItems(view, blockId, (items) => {
-      const index = items.findIndex((i) => i.id === itemId);
-      const nextIndex = index + delta;
-      if (index < 0 || nextIndex < 0 || nextIndex >= items.length) return null;
-      const next = [...items];
-      [next[index], next[nextIndex]] = [next[nextIndex], next[index]];
-      return next;
+      if (orderedIds.length !== items.length) return null;
+      const byId = new Map(items.map((i) => [i.id, i]));
+      if (new Set(orderedIds).size !== orderedIds.length || orderedIds.some((itemId) => !byId.has(itemId))) return null;
+      return orderedIds.flatMap((itemId) => {
+        const found = byId.get(itemId);
+        return found ? [found] : [];
+      });
     });
   }
 
