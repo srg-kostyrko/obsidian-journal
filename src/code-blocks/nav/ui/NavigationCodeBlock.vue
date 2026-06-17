@@ -10,6 +10,7 @@ import { defineOpenMode, type CodeBlockProps } from "@/infrastructure/host";
 import { CycleService, JournalsIndex, JournalsRepository, OpenDateFlow } from "@/journals";
 import type { JournalConfig } from "@/journals";
 import { ShelvesRepository } from "@/shelves";
+import { icons } from "@/ui/icons";
 import UiIconButton from "@/ui/UiIconButton.vue";
 
 import { periodForJournal } from "../period-for-journal";
@@ -99,7 +100,7 @@ function openAdjacent(anchor: AnchorString | null, event: MouseEvent): void {
     <div v-if="adjacent.previous" class="nav-block-relative">
       <NavBlock :journal :ref-date="adjacent.previous" :period="periodForJournal(journal.write, adjacent.previous)" />
       <UiIconButton
-        icon="arrow-left"
+        :icon="icons.nav.prev"
         class="nav-prev"
         :tooltip="m.code_blocks_nav_previous()"
         @click="(event: MouseEvent) => openAdjacent(adjacent.previous, event)"
@@ -112,7 +113,7 @@ function openAdjacent(anchor: AnchorString | null, event: MouseEvent): void {
 
     <div v-if="adjacent.next" class="nav-block-relative">
       <UiIconButton
-        icon="arrow-right"
+        :icon="icons.nav.next"
         class="nav-next"
         :tooltip="m.code_blocks_nav_next()"
         @click="(event: MouseEvent) => openAdjacent(adjacent.next, event)"

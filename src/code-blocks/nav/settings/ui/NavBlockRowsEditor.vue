@@ -6,6 +6,7 @@ import { m } from "@/i18n";
 import { useService } from "@/infrastructure/di";
 import { Flows } from "@/infrastructure/flows";
 import { JournalsViewModel, journalDefaultsFor, type JournalConfig } from "@/journals";
+import { icons } from "@/ui/icons";
 import UiButton from "@/ui/UiButton.vue";
 import UiCollapsibleBlock from "@/ui/UiCollapsibleBlock.vue";
 import UiDropdown from "@/ui/UiDropdown.vue";
@@ -117,15 +118,20 @@ function moveDown(index: number): void {
           />
         </div>
       </template>
-      <UiIconButton v-if="index > 0" icon="arrow-up" :tooltip="m.common_action_move_up()" @click="moveUp(index)" />
+      <UiIconButton
+        v-if="index > 0"
+        :icon="icons.action.moveUp"
+        :tooltip="m.common_action_move_up()"
+        @click="moveUp(index)"
+      />
       <UiIconButton
         v-if="index < config[field].rows.length - 1"
-        icon="arrow-down"
+        :icon="icons.action.moveDown"
         :tooltip="m.common_action_move_down()"
         @click="moveDown(index)"
       />
-      <UiIconButton icon="pencil" :tooltip="m.block_rows_edit_tooltip()" @click="edit(index)" />
-      <UiIconButton icon="trash" :tooltip="m.block_rows_delete_tooltip()" @click="remove(index)" />
+      <UiIconButton :icon="icons.action.edit" :tooltip="m.block_rows_edit_tooltip()" @click="edit(index)" />
+      <UiIconButton :icon="icons.action.delete" :tooltip="m.block_rows_delete_tooltip()" @click="remove(index)" />
     </UiSettingRow>
   </UiCollapsibleBlock>
 </template>
