@@ -31,7 +31,7 @@ function place(): void {
   <UiCollapsibleBlock v-model:expanded="expanded">
     <template #trigger>
       <span class="journal-section-heading">
-        <UiIcon name="library" />
+        <UiIcon :name="icons.entity.shelf" />
         <span>{{ m.common_label_shelf() }}</span>
       </span>
     </template>
