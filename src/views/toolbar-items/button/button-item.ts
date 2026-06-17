@@ -1,4 +1,5 @@
 import { m } from "@/i18n";
+import { icons } from "@/ui/icons";
 
 import { defineToolbarItem } from "../../define-toolbar-item";
 
@@ -10,7 +11,7 @@ export const buttonItem = defineToolbarItem<ButtonConfig>({
   key: "button",
   label: m.view_toolbar_button_label(),
   description: m.view_toolbar_button_description(),
-  icon: "square",
+  icon: icons.block.button,
   schema: buttonItemConfigSchema,
   defaultConfig: { action: { type: "current", mode: "create", levels: ["day"] } },
   component: ButtonItem,

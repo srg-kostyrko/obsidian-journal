@@ -1,6 +1,7 @@
 import * as v from "valibot";
 
 import { m } from "@/i18n";
+import { icons } from "@/ui/icons";
 
 import { defineViewBlock } from "../../define-view-block";
 
@@ -16,7 +17,7 @@ export const markdownTemplateBlock = defineViewBlock<MarkdownTemplateConfig>({
   key: "markdown-template",
   label: m.view_block_markdown_template_label(),
   description: m.view_block_markdown_template_description(),
-  icon: "file-text",
+  icon: icons.block.markdownTemplate,
   schema,
   defaultConfig: { templatePath: "" },
   component: MarkdownTemplateBlock,

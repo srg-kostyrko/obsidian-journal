@@ -1,6 +1,7 @@
 import * as v from "valibot";
 
 import { m } from "@/i18n";
+import { icons } from "@/ui/icons";
 
 import { defineViewBlock } from "../../define-view-block";
 
@@ -27,7 +28,7 @@ export const customIntervalsBlock = defineViewBlock<CustomIntervalsConfig>({
   key: "custom-intervals",
   label: m.common_custom_intervals(),
   description: m.view_block_custom_intervals_description(),
-  icon: "list",
+  icon: icons.entity.customInterval,
   schema,
   defaultConfig: { window: "month", hideEmpty: true },
   component: CustomIntervalsBlock,

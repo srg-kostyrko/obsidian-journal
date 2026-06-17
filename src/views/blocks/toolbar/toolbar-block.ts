@@ -1,6 +1,7 @@
 import * as v from "valibot";
 
 import { m } from "@/i18n";
+import { icons } from "@/ui/icons";
 
 import { defineViewBlock } from "../../define-view-block";
 
@@ -28,7 +29,7 @@ export const toolbarBlock = defineViewBlock<ToolbarConfig>({
   key: "toolbar",
   label: m.view_block_toolbar_label(),
   description: m.view_block_toolbar_description(),
-  icon: "panel-top",
+  icon: icons.block.toolbar,
   schema,
   defaultConfig: { items: [] },
   component: ToolbarBlock,

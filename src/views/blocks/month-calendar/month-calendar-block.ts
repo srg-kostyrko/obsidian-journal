@@ -1,6 +1,7 @@
 import * as v from "valibot";
 
 import { m } from "@/i18n";
+import { icons } from "@/ui/icons";
 
 import { defineViewBlock } from "../../define-view-block";
 
@@ -21,7 +22,7 @@ export const monthCalendarBlock = defineViewBlock<MonthCalendarConfig>({
   key: "month-calendar",
   label: m.view_block_month_calendar_label(),
   description: m.view_block_month_calendar_description(),
-  icon: "calendar-days",
+  icon: icons.entity.month,
   schema,
   defaultConfig: { before: 0, after: 0, hiddenWeekdays: [], weeks: "left" as const },
   component: MonthCalendarBlock,

@@ -5,6 +5,7 @@ import NavBlockRowsEditor from "@/code-blocks/nav/settings/ui/NavBlockRowsEditor
 import { m } from "@/i18n";
 import { useService } from "@/infrastructure/di";
 import { JournalsViewModel, type JournalConfig } from "@/journals";
+import { icons } from "@/ui/icons";
 
 const { journalName } = defineProps<{ journalName: string }>();
 
@@ -19,6 +20,6 @@ const isCustom = computed(() => config.value?.write.type === "custom");
     :journal-name="journalName"
     field="intervalBlock"
     :title="m.interval_block_section_title()"
-    icon="list"
+    :icon="icons.entity.customInterval"
   />
 </template>

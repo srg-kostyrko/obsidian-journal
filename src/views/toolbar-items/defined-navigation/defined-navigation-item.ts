@@ -1,6 +1,7 @@
 import * as v from "valibot";
 
 import { m } from "@/i18n";
+import { icons } from "@/ui/icons";
 
 import { defineToolbarItem } from "../../define-toolbar-item";
 
@@ -23,7 +24,7 @@ export const definedNavigationItem = defineToolbarItem<DefinedNavigationConfig>(
   key: "defined-navigation",
   label: m.view_toolbar_defined_navigation_label(),
   description: m.view_toolbar_defined_navigation_description(),
-  icon: "chevrons-left-right",
+  icon: icons.block.definedNavigation,
   schema,
   defaultConfig: { target: "day", previous: true, next: true },
   component: DefinedNavigationItem,
