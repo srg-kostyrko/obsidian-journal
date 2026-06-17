@@ -319,6 +319,74 @@ describe("settings", () => {
     });
   });
 
+  describe("view editor drag reorder", () => {
+    it("persists a new toolbar item order after dragging an item", async () => {
+      const initial = await getSettings();
+      const ids = calendarToolbarItems(initial.views).map((item) => item.id);
+      const firstId = ids[0];
+      const secondId = ids[1];
+
+      await expandSection("Views");
+      await clickIcon("Open Calendar");
+      await $(".jv-item-frame").waitForExist({ timeoutMsg: "toolbar editor strip did not mount" });
+
+      // SortableJS runs in native HTML5 drag mode here; WDIO's pointer Actions don't trigger it,
+      // so the drag is driven by synthetic native DragEvents dispatched at element coordinates,
+      // sharing one DataTransfer across the sequence. SortableJS finishes its drag-start setup
+      // (BZ.active, the document dragover listener) inside a requestAnimationFrame scheduled from
+      // its dragstart handler, so the move/onEnd only run if dragover is dispatched a frame later.
+      await browser.execute(async () => {
+        const frames = [...document.querySelectorAll<HTMLElement>(".jv-item-frame")];
+        const sourceFrame = frames[0];
+        const targetFrame = frames[1];
+        const grip = sourceFrame.querySelector<HTMLElement>("[data-drag-handle]") ?? sourceFrame;
+
+        const centerOf = (el: HTMLElement): { x: number; y: number } => {
+          const rect = el.getBoundingClientRect();
+          return { x: rect.left + rect.width / 2, y: rect.top + rect.height / 2 };
+        };
+        const source = centerOf(sourceFrame);
+        const target = centerOf(targetFrame);
+        const dataTransfer = new DataTransfer();
+
+        const firePointer = (el: HTMLElement, type: string, point: { x: number; y: number }): void => {
+          el.dispatchEvent(
+            new PointerEvent(type, { bubbles: true, cancelable: true, clientX: point.x, clientY: point.y }),
+          );
+        };
+        const fireDrag = (el: HTMLElement, type: string, point: { x: number; y: number }): void => {
+          el.dispatchEvent(
+            new DragEvent(type, {
+              bubbles: true,
+              cancelable: true,
+              dataTransfer,
+              clientX: point.x,
+              clientY: point.y,
+            }),
+          );
+        };
+
+        // pointerdown on the grip flips SortableJS into drag-start prep (sets draggable=true).
+        firePointer(grip, "pointerdown", source);
+        fireDrag(sourceFrame, "dragstart", source);
+        await new Promise<void>((resolve) => requestAnimationFrame(() => resolve()));
+        await new Promise<void>((resolve) => requestAnimationFrame(() => resolve()));
+        fireDrag(targetFrame, "dragenter", target);
+        fireDrag(targetFrame, "dragover", target);
+        await new Promise<void>((resolve) => requestAnimationFrame(() => resolve()));
+        fireDrag(targetFrame, "dragover", target);
+        fireDrag(targetFrame, "drop", target);
+        fireDrag(sourceFrame, "dragend", target);
+        firePointer(sourceFrame, "pointerup", target);
+      });
+
+      await waitForSettings((s) => {
+        const now = calendarToolbarItems(s.views).map((item) => item.id);
+        return now[0] === secondId && now[1] === firstId;
+      }, "drag reorder did not persist a swapped toolbar item order");
+    });
+  });
+
   describe("decorations", () => {
     it("edits a decoration's match mode and persists it", async () => {
       await openJournalSubpage("core", "daily");
