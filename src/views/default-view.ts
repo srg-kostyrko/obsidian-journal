@@ -1,4 +1,5 @@
 import { m } from "@/i18n";
+import { icons } from "@/ui/icons";
 
 import type { BlockInstanceId, View, ViewId } from "./config";
 
@@ -22,7 +23,7 @@ export function defaultCalendarView(): View {
   return {
     id: DEFAULT_CALENDAR_VIEW_ID,
     name: m.common_label_calendar(),
-    icon: "calendar-days",
+    icon: icons.entity.month,
     defaultShelf: null,
     showInRibbon: true,
     leaf: "right",

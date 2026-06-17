@@ -2,6 +2,7 @@ import { match, P } from "ts-pattern";
 import * as v from "valibot";
 
 import { m } from "@/i18n";
+import { icons } from "@/ui/icons";
 
 const levelField = v.picklist(["day", "week", "month", "quarter", "year"] as const);
 const levelsField = v.pipe(v.array(levelField), v.minLength(1));
@@ -40,11 +41,11 @@ export interface ButtonAppearance {
 export function resolveButtonAppearance(action: ButtonAction): ButtonAppearance {
   return match(action)
     .with({ type: "pick-date", levels: P.when((l) => l.length === 1 && l[0] === "day") }, () => ({
-      icon: "crosshair",
+      icon: icons.action.pickDate,
       tooltip: m.common_pick_a_date(),
     }))
     .with({ type: "pick-date" }, () => ({
-      icon: "crosshair",
+      icon: icons.action.pickDate,
       tooltip: m.view_toolbar_button_default_tooltip_pick_multi(),
     }))
     .with({ type: "current", levels: P.when((l) => l.length === 1 && l[0] === "day") }, () => ({
@@ -72,19 +73,19 @@ export function resolveButtonAppearance(action: ButtonAction): ButtonAppearance 
       tooltip: m.view_toolbar_button_default_tooltip_current_multi(),
     }))
     .with({ type: "navigate-step", direction: "prev", unit: P.union("day", "week", "month") }, ({ unit }) => ({
-      icon: "chevron-left",
+      icon: icons.nav.prev,
       tooltip: m.view_toolbar_button_default_tooltip_prev_unit({ unit }),
     }))
     .with({ type: "navigate-step", direction: "prev", unit: P.union("quarter", "year") }, ({ unit }) => ({
-      icon: "chevrons-left",
+      icon: icons.nav.prevLeap,
       tooltip: m.view_toolbar_button_default_tooltip_prev_unit({ unit }),
     }))
     .with({ type: "navigate-step", direction: "next", unit: P.union("day", "week", "month") }, ({ unit }) => ({
-      icon: "chevron-right",
+      icon: icons.nav.next,
       tooltip: m.view_toolbar_button_default_tooltip_next_unit({ unit }),
     }))
     .with({ type: "navigate-step", direction: "next", unit: P.union("quarter", "year") }, ({ unit }) => ({
-      icon: "chevrons-right",
+      icon: icons.nav.nextLeap,
       tooltip: m.view_toolbar_button_default_tooltip_next_unit({ unit }),
     }))
     .exhaustive();

@@ -1,6 +1,7 @@
 import * as v from "valibot";
 
 import { defineCollection } from "@/settings";
+import { icons } from "@/ui/icons";
 
 import { DEFAULT_CALENDAR_VIEW_ID, defaultCalendarView } from "./default-view";
 
@@ -45,7 +46,7 @@ export const viewsCollection = defineCollection(
   (id) => ({
     id: id as ViewId,
     name: id,
-    icon: "calendar-days",
+    icon: icons.entity.month,
     defaultShelf: null,
     showInRibbon: false,
     leaf: "right" as const,
