@@ -27,6 +27,17 @@ const SCOPE = {
   custom: [] as readonly string[],
 };
 
+vi.mock("@/decorations", () => ({
+  useCellDecorations: () => new Map(),
+  CellDecoration: defineComponent({
+    props: { period: { type: Object, required: true } },
+    setup:
+      (_props, { slots }) =>
+      () =>
+        h("span", slots.default?.()),
+  }),
+}));
+
 vi.mock("@/notes-calendar/use-shelf-scope", () => ({
   useShelfScope: () => ({
     all: computed<readonly string[]>(() => [

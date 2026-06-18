@@ -3,6 +3,7 @@ import { computed } from "vue";
 
 import { CalendarDate, periodOfKind } from "@/calendar";
 import type { Period } from "@/calendar";
+import { CellDecoration, useCellDecorations } from "@/decorations";
 import { useService } from "@/infrastructure/di";
 import { Flows } from "@/infrastructure/flows";
 import { defineOpenMode } from "@/infrastructure/host";
@@ -50,6 +51,11 @@ const badges = computed<readonly Badge[]>(() => {
   return out;
 });
 
+useCellDecorations(
+  () => badges.value.map((badge) => badge.period),
+  () => scope.all.value,
+);
+
 function isActive(badge: Badge): boolean {
   const active = activeVM.active.value;
   if (active === null) return false;
@@ -76,6 +82,6 @@ function open(badge: Badge, event: MouseEvent): void {
     @click="(event: MouseEvent) => open(badge, event)"
     @auxclick.middle.prevent="(event: MouseEvent) => open(badge, event)"
   >
-    {{ badge.label }}
+    <CellDecoration :period="badge.period">{{ badge.label }}</CellDecoration>
   </UiButton>
 </template>
