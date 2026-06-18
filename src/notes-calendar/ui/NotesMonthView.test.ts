@@ -19,6 +19,7 @@ function mount(
     hideOutsideDates?: boolean;
     weeks?: "none" | "left" | "right";
     hiddenWeekdays?: readonly number[];
+    showHeader?: boolean;
   },
 ) {
   return render(NotesMonthView, {
@@ -187,6 +188,20 @@ describe("NotesMonthView", () => {
       const h = buildNotesCalendarHarness({ journals: { daily: fixedJournal("daily", { type: "day" }) } });
       const { container } = mount(h, { shelf: null, month });
       expect(container.querySelector('[data-testid="header-quarter"]')).toBeNull();
+    });
+  });
+
+  describe("header visibility", () => {
+    it("hides the default header row when showHeader is false", () => {
+      const h = buildNotesCalendarHarness({ journals: { monthly: fixedJournal("monthly", { type: "month" }) } });
+      const { container } = mount(h, { shelf: null, month, showHeader: false });
+      expect(container.querySelector(".notes-month-view__header")).toBeNull();
+    });
+
+    it("renders the default header row when showHeader is omitted", () => {
+      const h = buildNotesCalendarHarness({ journals: { monthly: fixedJournal("monthly", { type: "month" }) } });
+      const { container } = mount(h, { shelf: null, month });
+      expect(container.querySelector(".notes-month-view__header")).not.toBeNull();
     });
   });
 

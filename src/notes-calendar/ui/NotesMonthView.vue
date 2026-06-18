@@ -9,13 +9,17 @@ import { useShelfScope } from "../use-shelf-scope";
 
 import NotesCalendarCell from "./NotesCalendarCell.vue";
 
-const props = defineProps<{
-  shelf: string | null;
-  month: MonthPeriod;
-  hideOutsideDates?: boolean;
-  weeks?: "none" | "left" | "right";
-  hiddenWeekdays?: readonly number[];
-}>();
+const props = withDefaults(
+  defineProps<{
+    shelf: string | null;
+    month: MonthPeriod;
+    hideOutsideDates?: boolean;
+    weeks?: "none" | "left" | "right";
+    hiddenWeekdays?: readonly number[];
+    showHeader?: boolean;
+  }>(),
+  { hideOutsideDates: undefined, weeks: undefined, hiddenWeekdays: undefined, showHeader: true },
+);
 
 const hiddenWeekdays = computed(() => new Set(props.hiddenWeekdays));
 const dayColumns = computed(() => 7 - [0, 1, 2, 3, 4, 5, 6].filter((i) => hiddenWeekdays.value.has(i)).length);
@@ -93,7 +97,7 @@ const inactiveDay = inactiveCell();
 
 <template>
   <div class="notes-month-view">
-    <div class="notes-month-view__header">
+    <div v-if="showHeader !== false" class="notes-month-view__header">
       <slot name="header">
         <NotesCalendarCell data-testid="header-month" :period="monthPeriod" :cell="monthCell" />
         <NotesCalendarCell
