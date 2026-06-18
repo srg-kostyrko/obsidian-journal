@@ -269,6 +269,15 @@ describe("CycleService", () => {
     });
   });
 
+  describe("intervalsInRange", () => {
+    it("projects every scheduled interval overlapping the range when no notes exist", () => {
+      const c = buildContainer({ s: customJournal("s", "week", 1, "2024-01-01") });
+      const cycle = c.resolve(CycleService);
+      const result = cycle.intervalsInRange("s", "2024-01-05" as AnchorString, "2024-01-20" as AnchorString);
+      expect([...result]).toEqual(["2024-01-01", "2024-01-08", "2024-01-15"]);
+    });
+  });
+
   describe("countRepeats", () => {
     it("counts intervals between two anchors for fixed weekly", () => {
       const c = buildContainer({ w: fixedJournal("w", { type: "week" }) });

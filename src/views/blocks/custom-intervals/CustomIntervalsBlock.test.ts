@@ -1,15 +1,13 @@
 import { cleanup, render } from "@testing-library/vue";
-import { createNanoEvents, type Emitter } from "nanoevents";
 import { afterEach, beforeAll, describe, expect, it, vi } from "vitest";
-import { computed, defineComponent, h, nextTick, ref } from "vue";
+import { computed, defineComponent, h, ref } from "vue";
 
 import { installTestCalendar } from "@/calendar/testing";
 import type { AnchorString } from "@/calendar/types";
 import { Container, provideInjectorOnApp } from "@/infrastructure/di";
-import type { VaultPath } from "@/infrastructure/host";
-import { Option } from "@/infrastructure/result";
-import { JournalsIndex, JournalsRepository } from "@/journals";
-import type { JournalConfig, JournalsIndexEvents } from "@/journals";
+import { CycleService, JournalsIndex, JournalsRepository, TimelineService } from "@/journals";
+import type { JournalConfig } from "@/journals";
+import { customJournal, fakeRepo } from "@/journals/testing";
 import { ActiveEntryViewModel, type ActiveEntryRef } from "@/notes-calendar";
 
 import { provideViewContextStub } from "../../testing";
@@ -34,84 +32,23 @@ vi.mock("@/notes-calendar/use-shelf-scope", () => ({
 vi.mock("@/code-blocks/nav/ui/NavBlockRow.vue", () => ({
   default: defineComponent({
     props: { journal: { type: Object, required: true }, row: { type: Object, required: true } },
-    setup: (p) => () => h("div", { "data-testid": "row-stub", "data-row": (p.row as { template: string }).template }),
+    setup: (p) => () =>
+      h("div", { "data-testid": "row-stub", "data-row-journal": (p.journal as { name: string }).name }),
   }),
 }));
 
 const SCOPE: { custom: readonly string[] } = { custom: [] };
 
-interface FakeRange {
-  readonly journalName: string;
-  readonly anchors: readonly AnchorString[];
-}
-const RANGES: FakeRange[] = [];
-
-let INDEX_EVENTS: Emitter<JournalsIndexEvents> = createNanoEvents<JournalsIndexEvents>();
-
-class FakeJournalsIndex {
-  get events(): Emitter<JournalsIndexEvents> {
-    return INDEX_EVENTS;
-  }
-  getRange(name: string, _start: AnchorString, _end: AnchorString): ReadonlyMap<AnchorString, VaultPath> {
-    const range = RANGES.find((r) => r.journalName === name);
-    if (!range) return new Map();
-    return new Map(range.anchors.map((a) => [a, ("/" + name + "/" + a + ".md") as VaultPath]));
-  }
-}
-
 const JOURNALS: Record<string, JournalConfig> = {};
 
 const ACTIVE = ref<ActiveEntryRef | null>(null);
 
-class FakeJournalsRepository {
-  get(name: string): Option<JournalConfig> {
-    return Option.fromNullable(JOURNALS[name] ?? null);
-  }
-}
-
-function makeJournal(name: string, rows: { template: string }[]): JournalConfig {
-  return {
-    name,
-    write: { type: "custom", every: "day", duration: 1, anchorDate: "2026-01-01" as AnchorString },
-    timeline: { start: "2026-01-01" as AnchorString, end: { kind: "never" } },
-    dateFormat: "YYYY-MM-DD",
-    frontmatter: {
-      dateField: "date",
-      startDateField: "start",
-      endDateField: "end",
-      addStartDate: false,
-      addEndDate: false,
-    },
-    numbering: { enabled: false, anchorDate: "2026-01-01" as AnchorString, allowBefore: false, sources: [] },
-    nameTemplate: "{{date}}",
-    folder: "",
-    templates: [],
-    confirmCreation: false,
-    autoCreate: false,
-    decorations: [],
-    navBlock: { type: "create", rows: [], decorateWholeBlock: false },
-    intervalBlock: {
-      type: "create",
-      rows: rows.map((r) => ({
-        template: r.template,
-        fontSize: 1,
-        bold: false,
-        italic: false,
-        link: "none",
-        journal: "",
-        color: { type: "theme", name: "text-normal" },
-        background: { type: "transparent" },
-        addDecorations: false,
-      })),
-      decorateWholeBlock: false,
-    },
-  };
-}
-
 function mountBlock(config: CustomIntervalsConfig, contextOverride: Partial<ViewContext> = {}) {
   const container = new Container();
-  container.register(JournalsIndex).useValue(new FakeJournalsIndex() as unknown as JournalsIndex);
-  container.register(JournalsRepository).useValue(new FakeJournalsRepository() as unknown as JournalsRepository);
+  container.register(JournalsRepository).useValue(fakeRepo(JOURNALS));
+  container.register(JournalsIndex).useClass(JournalsIndex);
+  container.register(CycleService).useClass(CycleService);
+  container.register(TimelineService).useClass(TimelineService);
   container.register(ActiveEntryViewModel).useValue({ active: ACTIVE } as unknown as ActiveEntryViewModel);
   const context = provideViewContextStub(contextOverride);
   const renderRoot = () => h(customIntervalsBlock.component, { instanceId: "block-1" as BlockInstanceId, config });
@@ -133,21 +70,15 @@ beforeAll(() => {
 afterEach(() => {
   cleanup();
   SCOPE.custom = [];
-  RANGES.length = 0;
   ACTIVE.value = null;
-  INDEX_EVENTS = createNanoEvents<JournalsIndexEvents>();
   for (const k of Object.keys(JOURNALS)) delete JOURNALS[k];
 });
 
 describe("CustomIntervalsBlock", () => {
   it("renders one section per custom journal in the active shelf when journals is omitted", () => {
     SCOPE.custom = ["foo", "bar"];
-    JOURNALS.foo = makeJournal("foo", [{ template: "{{date}}" }]);
-    JOURNALS.bar = makeJournal("bar", [{ template: "{{date}}" }]);
-    RANGES.push(
-      { journalName: "foo", anchors: ["2026-05-10" as AnchorString] },
-      { journalName: "bar", anchors: ["2026-05-12" as AnchorString] },
-    );
+    JOURNALS.foo = customJournal("foo", "day", 1, "2026-01-01");
+    JOURNALS.bar = customJournal("bar", "day", 1, "2026-01-01");
     const { container } = mountBlock(
       { window: "month", hideEmpty: false },
       { refDate: ref("2026-05-15" as AnchorString) },
@@ -157,12 +88,8 @@ describe("CustomIntervalsBlock", () => {
 
   it("filters to the configured journals list when provided", () => {
     SCOPE.custom = ["foo", "bar"];
-    JOURNALS.foo = makeJournal("foo", [{ template: "{{date}}" }]);
-    JOURNALS.bar = makeJournal("bar", [{ template: "{{date}}" }]);
-    RANGES.push(
-      { journalName: "foo", anchors: ["2026-05-10" as AnchorString] },
-      { journalName: "bar", anchors: ["2026-05-12" as AnchorString] },
-    );
+    JOURNALS.foo = customJournal("foo", "day", 1, "2026-01-01");
+    JOURNALS.bar = customJournal("bar", "day", 1, "2026-01-01");
     const { container } = mountBlock(
       { journals: ["foo"], window: "month", hideEmpty: false },
       { refDate: ref("2026-05-15" as AnchorString) },
@@ -172,24 +99,61 @@ describe("CustomIntervalsBlock", () => {
     expect((sections[0] as HTMLElement).dataset.journal).toBe("foo");
   });
 
-  it("hides a journal section with no entries when hideEmpty is true", () => {
-    SCOPE.custom = ["foo", "bar"];
-    JOURNALS.foo = makeJournal("foo", [{ template: "{{date}}" }]);
-    JOURNALS.bar = makeJournal("bar", [{ template: "{{date}}" }]);
-    RANGES.push({ journalName: "foo", anchors: ["2026-05-10" as AnchorString] });
-    // bar has no entries
+  it("lists every scheduled interval in the window even when no notes exist", () => {
+    SCOPE.custom = ["foo"];
+    JOURNALS.foo = customJournal("foo", "day", 1, "2026-01-01");
     const { container } = mountBlock(
       { window: "month", hideEmpty: true },
       { refDate: ref("2026-05-15" as AnchorString) },
     );
-    expect(container.querySelectorAll("[data-journal]").length).toBe(1);
+    expect(container.querySelectorAll("[data-anchor]").length).toBe(31);
   });
 
-  it("shows a journal section with no entries when hideEmpty is false", () => {
+  it("clips projected intervals to the journal timeline end", () => {
+    SCOPE.custom = ["foo"];
+    JOURNALS.foo = customJournal("foo", "day", 1, "2026-01-01", {
+      timeline: { start: "2026-01-01" as AnchorString, end: { kind: "date", date: "2026-05-10" as AnchorString } },
+    });
+    const { container } = mountBlock(
+      { window: "month", hideEmpty: true },
+      { refDate: ref("2026-05-15" as AnchorString) },
+    );
+    const anchors = [...container.querySelectorAll<HTMLElement>("[data-anchor]")].map((el) => el.dataset.anchor);
+    expect(anchors).toEqual([
+      "2026-05-01",
+      "2026-05-02",
+      "2026-05-03",
+      "2026-05-04",
+      "2026-05-05",
+      "2026-05-06",
+      "2026-05-07",
+      "2026-05-08",
+      "2026-05-09",
+      "2026-05-10",
+    ]);
+  });
+
+  it("hides a journal with no in-window intervals when hideEmpty is true", () => {
     SCOPE.custom = ["foo", "bar"];
-    JOURNALS.foo = makeJournal("foo", [{ template: "{{date}}" }]);
-    JOURNALS.bar = makeJournal("bar", [{ template: "{{date}}" }]);
-    RANGES.push({ journalName: "foo", anchors: ["2026-05-10" as AnchorString] });
+    JOURNALS.foo = customJournal("foo", "day", 1, "2026-01-01");
+    JOURNALS.bar = customJournal("bar", "day", 1, "2026-01-01", {
+      timeline: { start: "2020-01-01" as AnchorString, end: { kind: "date", date: "2020-01-01" as AnchorString } },
+    });
+    const { container } = mountBlock(
+      { window: "month", hideEmpty: true },
+      { refDate: ref("2026-05-15" as AnchorString) },
+    );
+    const sections = container.querySelectorAll("[data-journal]");
+    expect(sections.length).toBe(1);
+    expect((sections[0] as HTMLElement).dataset.journal).toBe("foo");
+  });
+
+  it("shows an empty journal section when hideEmpty is false", () => {
+    SCOPE.custom = ["foo", "bar"];
+    JOURNALS.foo = customJournal("foo", "day", 1, "2026-01-01");
+    JOURNALS.bar = customJournal("bar", "day", 1, "2026-01-01", {
+      timeline: { start: "2020-01-01" as AnchorString, end: { kind: "date", date: "2020-01-01" as AnchorString } },
+    });
     const { container } = mountBlock(
       { window: "month", hideEmpty: false },
       { refDate: ref("2026-05-15" as AnchorString) },
@@ -199,8 +163,7 @@ describe("CustomIntervalsBlock", () => {
 
   it("marks the entry matching the active note as active", () => {
     SCOPE.custom = ["foo"];
-    JOURNALS.foo = makeJournal("foo", [{ template: "{{date}}" }]);
-    RANGES.push({ journalName: "foo", anchors: ["2026-05-10" as AnchorString, "2026-05-12" as AnchorString] });
+    JOURNALS.foo = customJournal("foo", "day", 1, "2026-01-01");
     ACTIVE.value = { journalName: "foo", anchor: "2026-05-12" as AnchorString };
     const { container } = mountBlock(
       { window: "month", hideEmpty: false },
@@ -213,46 +176,12 @@ describe("CustomIntervalsBlock", () => {
 
   it("marks no entry active when the active note belongs to another journal", () => {
     SCOPE.custom = ["foo"];
-    JOURNALS.foo = makeJournal("foo", [{ template: "{{date}}" }]);
-    RANGES.push({ journalName: "foo", anchors: ["2026-05-12" as AnchorString] });
+    JOURNALS.foo = customJournal("foo", "day", 1, "2026-01-01");
     ACTIVE.value = { journalName: "bar", anchor: "2026-05-12" as AnchorString };
     const { container } = mountBlock(
       { window: "month", hideEmpty: false },
       { refDate: ref("2026-05-15" as AnchorString) },
     );
     expect(container.querySelectorAll(".journal-view-custom-intervals__entry[data-active]").length).toBe(0);
-  });
-
-  it("adds a journal section when an index entry is added after mount", async () => {
-    SCOPE.custom = ["foo"];
-    JOURNALS.foo = makeJournal("foo", [{ template: "{{date}}" }]);
-    const { container } = mountBlock(
-      { window: "month", hideEmpty: true },
-      { refDate: ref("2026-05-15" as AnchorString) },
-    );
-    expect(container.querySelectorAll("[data-journal]").length).toBe(0);
-
-    RANGES.push({ journalName: "foo", anchors: ["2026-05-10" as AnchorString] });
-    INDEX_EVENTS.emit("entryChanged", {
-      entry: {
-        path: "/foo/2026-05-10.md" as VaultPath,
-        journalName: "foo",
-        anchor: "2026-05-10" as AnchorString,
-      },
-      kind: "added",
-    });
-    await nextTick();
-
-    expect(container.querySelectorAll("[data-journal]").length).toBe(1);
-  });
-
-  it("uses the configured window relative to refDate to fetch entries", () => {
-    SCOPE.custom = ["foo"];
-    JOURNALS.foo = makeJournal("foo", [{ template: "{{date}}" }]);
-    const spy = vi.spyOn(FakeJournalsIndex.prototype, "getRange");
-    RANGES.push({ journalName: "foo", anchors: ["2026-05-10" as AnchorString] });
-    mountBlock({ window: "month", hideEmpty: false }, { refDate: ref("2026-05-15" as AnchorString) });
-    expect(spy).toHaveBeenCalledWith("foo", "2026-05-01", "2026-05-31");
-    spy.mockRestore();
   });
 });

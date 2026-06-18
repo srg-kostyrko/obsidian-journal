@@ -6,7 +6,7 @@ import { periodForJournal } from "@/code-blocks/nav/period-for-journal";
 import NavBlockRow from "@/code-blocks/nav/ui/NavBlockRow.vue";
 import { CellDecoration } from "@/decorations";
 import { useService } from "@/infrastructure/di";
-import { JournalsIndex, JournalsRepository } from "@/journals";
+import { CycleService, JournalsIndex, JournalsRepository, TimelineService } from "@/journals";
 import type { JournalConfig, JournalNavBlock } from "@/journals";
 import { ActiveEntryViewModel } from "@/notes-calendar/active-entry";
 import { useShelfScope } from "@/notes-calendar/use-shelf-scope";
@@ -25,6 +25,8 @@ const props = defineProps<{
 const context = useViewContext();
 const index = useService(JournalsIndex);
 const journalsRepo = useService(JournalsRepository);
+const cycle = useService(CycleService);
+const timeline = useService(TimelineService);
 const activeEntry = useService(ActiveEntryViewModel);
 const scope = useShelfScope(() => context.shelf.value);
 
@@ -59,8 +61,10 @@ const sections = computed<readonly Section[]>(() => {
   for (const name of candidates) {
     const cfg = journalsRepo.get(name).getOr(undefined as never) as JournalConfig | undefined;
     if (!cfg) continue;
-    const range = index.getRange(name, window.value.start, window.value.end);
-    const entries = [...range.keys()].map((anchor) => ({ anchor: anchor }));
+    const entries = cycle
+      .intervalsInRange(name, window.value.start, window.value.end)
+      .filter((anchor) => timeline.contains(name, anchor))
+      .map((anchor) => ({ anchor }));
     if (entries.length === 0 && props.config.hideEmpty) continue;
     out.push({ journalName: name, journal: cfg, block: cfg.intervalBlock, entries });
   }

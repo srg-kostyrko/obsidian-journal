@@ -155,6 +155,21 @@ export class CycleService {
     );
   }
 
+  intervalsInRange(name: string, start: AnchorString, end: AnchorString): readonly AnchorString[] {
+    if (start > end) return [];
+    const firstOpt = this.anchorOf(name, CalendarDate.fromAnchor(start));
+    if (firstOpt.isNone()) return [];
+    const out: AnchorString[] = [];
+    let current = firstOpt.value;
+    while (current <= end) {
+      out.push(current);
+      const nextOpt = this.nextAnchor(name, current);
+      if (nextOpt.isNone() || nextOpt.value <= current) break;
+      current = nextOpt.value;
+    }
+    return out;
+  }
+
   countRepeats(name: string, from: AnchorString, to: AnchorString): Option<number> {
     return this.#cycleFor(name).map((cycle) =>
       match(cycle)
