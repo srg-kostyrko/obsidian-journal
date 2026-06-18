@@ -732,6 +732,8 @@
 
   "view_toolbar_shelf_selector_label": "Shelf selector",
   "view_toolbar_shelf_selector_description": "Switches which shelf scopes the view's journals.",
+  "view_toolbar_spacer_label": "Spacer",
+  "view_toolbar_spacer_description": "Flexible gap that pushes neighbouring items apart.",
   "view_toolbar_period_buttons_label": "Period buttons",
   "view_toolbar_period_buttons_description": "Shows clickable badges for the current week, month, quarter, year periods.",
   "view_toolbar_period_buttons_config": [
