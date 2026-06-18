@@ -10,9 +10,13 @@ interface ToolbarItem {
   config: Record<string, unknown>;
 }
 
-function toolbarItems(): ToolbarItem[] {
-  const [toolbar] = defaultCalendarView().blocks;
-  return (toolbar.config as { items: ToolbarItem[] }).items;
+function itemsOf(blockIndex: number): ToolbarItem[] {
+  const block = defaultCalendarView().blocks[blockIndex];
+  return (block.config as { items: ToolbarItem[] }).items;
+}
+
+function allItems(): ToolbarItem[] {
+  return [...itemsOf(0), ...itemsOf(1)];
 }
 
 function actionOf(item: ToolbarItem): { type: string; mode?: string } | undefined {
@@ -25,37 +29,45 @@ describe("defaultCalendarView", () => {
     expect(result.success).toBe(true);
   });
 
-  it("orders blocks as toolbar, month grid, divider, then intervals", () => {
+  it("orders blocks as two toolbars, month grid, divider, then intervals", () => {
     const keys = defaultCalendarView().blocks.map((block) => block.key);
-    expect(keys).toEqual(["toolbar", "month-calendar", "divider", "custom-intervals"]);
+    expect(keys).toEqual(["toolbar", "toolbar", "month-calendar", "divider", "custom-intervals"]);
   });
 
-  it("mirrors the v2 header controls in order", () => {
-    expect(toolbarItems().map((item) => item.key)).toEqual([
-      "shelf-selector",
+  it("lays out the actions row as shelf, spacer, then the two action buttons", () => {
+    expect(itemsOf(0).map((item) => item.key)).toEqual(["shelf-selector", "spacer", "button", "button"]);
+  });
+
+  it("centres the period buttons between the nav buttons with flanking spacers", () => {
+    expect(itemsOf(1).map((item) => item.key)).toEqual([
       "button",
       "button",
-      "button",
-      "button",
+      "spacer",
       "period-buttons",
+      "spacer",
       "button",
       "button",
     ]);
   });
 
   it("seeds the pick-date button in navigate mode", () => {
-    const pick = toolbarItems().find((item) => actionOf(item)?.type === "pick-date");
+    const pick = allItems().find((item) => actionOf(item)?.type === "pick-date");
     expect(actionOf(pick!)?.mode).toBe("navigate");
   });
 
   it("seeds the current button in create mode", () => {
-    const current = toolbarItems().find((item) => actionOf(item)?.type === "current");
+    const current = allItems().find((item) => actionOf(item)?.type === "current");
     expect(actionOf(current!)?.mode).toBe("create");
   });
 
   it("seeds period buttons for month, quarter, and year but not week", () => {
-    const period = toolbarItems().find((item) => item.key === "period-buttons");
+    const period = allItems().find((item) => item.key === "period-buttons");
     expect(period!.config).toEqual({ week: false, month: true, quarter: true, year: true });
+  });
+
+  it("hides the month grid's own heading in favour of the toolbar period buttons", () => {
+    const monthGrid = defaultCalendarView().blocks.find((block) => block.key === "month-calendar");
+    expect((monthGrid!.config as { showHeading: boolean }).showHeading).toBe(false);
   });
 
   it("seeds the default calendar view into the right sidebar", () => {
