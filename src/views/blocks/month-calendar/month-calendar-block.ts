@@ -14,6 +14,7 @@ const schema = v.object({
   after: v.pipe(v.number(), v.integer(), v.minValue(0)),
   hiddenWeekdays: v.optional(v.array(v.pipe(v.number(), v.integer(), v.minValue(0), v.maxValue(6))), []),
   weeks: v.optional(v.picklist(["none", "left", "right"]), "left"),
+  showHeading: v.optional(v.boolean(), true),
 });
 
 export type MonthCalendarConfig = v.InferOutput<typeof schema>;
@@ -25,7 +26,7 @@ export const monthCalendarBlock = defineViewBlock<MonthCalendarConfig>({
   description: m.view_block_month_calendar_description(),
   icon: icons.entity.month,
   schema,
-  defaultConfig: { before: 0, after: 0, hiddenWeekdays: [], weeks: "left" as const },
+  defaultConfig: { before: 0, after: 0, hiddenWeekdays: [], weeks: "left" as const, showHeading: true },
   component: MonthCalendarBlock,
   configComponent: MonthCalendarBlockConfig,
   summary: calendarBlockSummary,

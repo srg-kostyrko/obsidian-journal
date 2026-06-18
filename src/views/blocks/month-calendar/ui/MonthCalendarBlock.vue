@@ -32,6 +32,7 @@ const months = computed<readonly MonthPeriod[]>(() => {
       :shelf="viewContext.shelf.value"
       :weeks="config.weeks"
       :hidden-weekdays="config.hiddenWeekdays"
+      :show-header="config.showHeading"
     />
   </div>
 </template>

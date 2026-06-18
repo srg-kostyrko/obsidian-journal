@@ -822,6 +822,7 @@
   "view_block_config_weeks_none": "Hidden",
   "view_block_config_weeks_left": "Before weekdays",
   "view_block_config_weeks_right": "After weekdays",
+  "view_block_config_show_heading_label": "Show month/year heading",
 
   "journal_add_modal_anchor_label": "Start date",
   "journal_add_modal_anchor_required_error": "Select a start date.",

@@ -32,4 +32,9 @@ describe("monthCalendarBlock", () => {
     const result = v.safeParse(monthCalendarBlock.schema, { before: 0, after: 0, hiddenWeekdays: [7] });
     expect(result.success).toBe(false);
   });
+
+  it("defaults showHeading to true when omitted", () => {
+    const parsed = v.parse(monthCalendarBlock.schema, { before: 0, after: 0 });
+    expect(parsed.showHeading).toBe(true);
+  });
 });
