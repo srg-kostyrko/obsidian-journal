@@ -12,6 +12,13 @@ The v3 default calendar view replicates v2's controls but presents them differen
 - **Duplication.** The month grid (`NotesMonthView`) renders its own default header with
   clickable month / quarter / year cells. With the toolbar now carrying period buttons for the
   same periods, the grid heading duplicates them.
+- **Decoration regression (discovered during planning).** The "duplication" is not symmetric.
+  v2's period header buttons (`NotesCalendarButton` → `CalendarDecoration`) rendered journal
+  decorations (corners, background, borders, icons). v3's toolbar `period-buttons` are plain
+  `UiButton`s with **no** decorations — only the grid header's `NotesCalendarCell`s are
+  decorated. So hiding the grid header to remove the duplication would silently drop decorated
+  month/quarter/year badges, which is a v2 regression. The faithful fix must first make the
+  toolbar period-buttons decorated, after which the grid header is genuinely redundant.
 
 Constraint from the user: the navigation controls **must stay in the configurable toolbar** —
 they cannot move into the month grid's header the way v2 did, because users configure them.
@@ -24,14 +31,17 @@ without removing any configurability.
 
 ## Approach
 
-Three cohesive changes:
+Four cohesive changes:
 
 1. A new composable `spacer` toolbar item that consumes horizontal slack, giving the toolbar the
    alignment primitive it currently lacks.
 2. The default preset restructured into **two** toolbar blocks (already supported — blocks are
    keyed by id, no key-uniqueness constraint), using spacers to reproduce v2's alignment.
-3. A `showHeading` toggle on the month-calendar block, defaulting on, but **off** in the default
-   view so the grid no longer duplicates the toolbar's period buttons.
+3. Toolbar `period-buttons` made decorated (reusing the existing `CellDecoration` +
+   `useCellDecorations` engine), restoring v2's decorated period badges so the grid header
+   becomes genuinely redundant.
+4. A `showHeading` toggle on the month-calendar block, defaulting on, but **off** in the default
+   view so the grid no longer duplicates the (now-decorated) toolbar period buttons.
 
 Rejected alternatives: block-level `justify`/grouping config (more schema surface, less
 composable than a reusable spacer); regroup-only with no spacer (only a partial match — rows stay
@@ -116,7 +126,24 @@ spacer instance UUIDs. All existing toolbar items (pick-date, current/Today, nav
 buttons, period-buttons, shelf-selector) are reused unchanged — the Today button already renders
 the "Today" text, matching v2.
 
-## 3. Month-calendar `showHeading` toggle
+## 3. Decorate toolbar period-buttons (v2 parity)
+
+`PeriodButtonsItem.vue` keeps its `UiButton` badges (button styling + click/active logic
+unchanged) but its label is wrapped so each badge renders journal decorations, exactly as v2
+nested `CalendarDecoration` inside its `CalendarButton`.
+
+- At setup, call `useCellDecorations(() => badges.value.map((b) => b.period), () => scope.all.value)`.
+  This is the same call `NotesMonthView` makes; it `provide()`s the `CellDecorationMapKey` map that
+  `CellDecoration` reads.
+- In the template, wrap each badge's label: `<CellDecoration :period="badge.period">{{ badge.label }}</CellDecoration>`
+  inside the existing `UiButton`. `CellDecoration` renders the background, border, corners, icons,
+  and shapes for that period from the injected map.
+- Keep `data-period` and `data-active` on the `UiButton` (e2e + active styling depend on them).
+
+No new schema, config, or i18n — purely a rendering change reusing `@/decorations`. Net effect: a
+month/quarter/year/week journal decoration now shows on the toolbar period button, matching v2.
+
+## 4. Month-calendar `showHeading` toggle
 
 - **Schema** (`src/views/blocks/month-calendar/month-calendar-block.ts`): add
   `showHeading: v.optional(v.boolean(), true)`.
@@ -172,15 +199,44 @@ is an empty `flex:1` div, so it appears as an empty frame — still draggable/re
 frame's grip and delete button, and added via the picker's "Spacer" label. Deliberately **not**
 gold-plating with an editor-only placeholder visual (YAGNI).
 
+## e2e constraint: the shared decoration matrix
+
+`assertDecorationMatrix` (`e2e/journeys/decorations.ts`) is mount-context-agnostic: it runs
+against **both** the calendar view leaf (`view.e2e.ts`) and the calendar-timeline code block
+(`code-blocks.e2e.ts`). It asserts decorations on the grid's `header-month` / `header-quarter` /
+`header-year` cells. The timeline code block has no toolbar, so those assertions **cannot** be
+repointed to toolbar period buttons. The grid header therefore stays a first-class, kept feature;
+only the default _preset_ hides it.
+
+The `e2e-journeys` fixture currently has **no `views` key**, so it renders the auto-seeded default.
+If the default hides the header, the journeys view leaf loses the cells that the matrix and ~6
+other tests (header-click creation, `headerMonthAnchor` nav detection, live-edit month-header,
+shelf-scope `header-year`) depend on.
+
+Resolution: **pin a header-on view in the journeys fixture.** Pre-seed
+`e2e/fixtures/e2e-journeys/.obsidian/plugins/journals/data.json` with an explicit calendar view
+(`views` dict keyed by id — same shape as `e2e-views`) that uses the new two-toolbar + spacer
+layout but sets `month-calendar` `showHeading: true`, named `Calendar` with `showInRibbon: true`
+(so `[aria-label="Open Calendar"]` still resolves). This keeps the matrix and all existing journeys
+tests valid and decoupled from the preset's cosmetic choice. Precedent: `e2e-views`,
+`e2e-defined-nav`, `e2e-startup-view` already pin their own views.
+
 ## Verification
 
 - `npm run test`, `npm run check:types`, `npm run check:lint`.
-- **Unit** (`MonthCalendarBlock.test.ts`, @testing-library/vue): the heading cells
-  (`data-testid="header-month"` / `header-year`) are absent when `showHeading: false` and present
-  when `true`. One focused behavior per test. No unit test for the spacer itself — a trivial
-  empty-div component.
-- **e2e** (v3-ai wdio suite, runtime-touching): the default calendar view renders two toolbar
-  rows; the shelf sits at the left of row 1 while Today sits near its right edge; the period
-  buttons are horizontally centered in row 2; and the month grid shows **no** month/year heading.
-  Assert positions/structure rather than exact pixels (stays black-box; dodges the editor-zoom
-  rounding gotcha).
+- **Unit** — `NotesMonthView.test.ts` (@testing-library/vue, existing harness): a new `showHeader`
+  describe — the default header row is absent when `showHeader: false` and present (default) when
+  omitted. The `MonthCalendarBlock` → `NotesMonthView` prop pass-through is thin wiring, not
+  separately tested. `PeriodButtonsItem` decoration is covered by e2e (decoration rendering needs
+  the real `@/decorations` cascade); no unit test for the spacer — a trivial empty-div component.
+- **e2e, existing journeys suite** — unchanged behavior, guaranteed by pinning the header-on view
+  (above). Existing toolbar selectors (`${TOOLBAR} [data-period]`, `[aria-label=...]`) still match
+  because the descendant combinator spans both toolbar rows.
+- **e2e, new coverage:**
+  - On the journeys (header-on, decorated period-buttons) view: a seeded month note's decoration
+    renders on the toolbar `[data-period="month"]` button (`.decoration-corner` present) — proves
+    the v2-parity decoration fix.
+  - On a fresh-seed fixture (auto-seeded real default, e.g. a `views`-less vault): the leaf renders
+    **two** `.journal-view-toolbar` rows, the three `.jv-toolbar-spacer` elements are present, and
+    the grid shows **no** `.notes-month-view__header`. Assert structure/presence, not exact pixels
+    (black-box; dodges the editor-zoom rounding gotcha).
