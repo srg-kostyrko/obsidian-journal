@@ -97,7 +97,7 @@ const inactiveDay = inactiveCell();
 
 <template>
   <div class="notes-month-view">
-    <div v-if="showHeader !== false" class="notes-month-view__header">
+    <div v-if="showHeader" class="notes-month-view__header">
       <slot name="header">
         <NotesCalendarCell data-testid="header-month" :period="monthPeriod" :cell="monthCell" />
         <NotesCalendarCell
