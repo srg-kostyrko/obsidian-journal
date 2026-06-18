@@ -9,7 +9,7 @@ const RIBBON_OPEN_CALENDAR = '[aria-label="Open Calendar"]';
 // hidden — independent of focus, which moves to the opened note (so `.mod-active`
 // is wrong here).
 export const LIVE_LEAF = '.workspace-leaf:not([style*="display: none"])';
-const MONTH_VIEW = `${LIVE_LEAF} .notes-month-view`;
+export const MONTH_VIEW = `${LIVE_LEAF} .notes-month-view`;
 
 // The view-leaf toolbar block, scoped to the live leaf so a stale hidden leaf's
 // toolbar never shadows it.

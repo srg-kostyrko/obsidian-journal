@@ -26,7 +26,7 @@ import {
   note,
   seedDecorationFixture,
 } from "./decorations.js";
-import { calendar, LIVE_LEAF, openCalendarView, TOOLBAR } from "./view.js";
+import { calendar, LIVE_LEAF, MONTH_VIEW, openCalendarView, TOOLBAR } from "./view.js";
 
 // Slice B chunk 0 — the view-leaf render + real ribbon-click seam. Our Vue calendar
 // mounts in a real Obsidian leaf, a real ribbon click opens it, and a real cell
@@ -104,6 +104,13 @@ describe("calendar view", () => {
     });
 
     assertDecorationMatrix(calendar);
+
+    it("renders the month decoration on the toolbar period button", async () => {
+      await openCalendarView();
+      await $(`${TOOLBAR} [data-period="month"] .decoration-corner`).waitForExist({
+        timeoutMsg: "month decoration did not render on the toolbar period button",
+      });
+    });
 
     describe("interactive shelf scope", () => {
       it("re-scopes decorations when a shelf is picked from the toolbar menu", async () => {
@@ -298,42 +305,69 @@ describe("calendar view", () => {
   });
 
   describe("custom intervals block", () => {
+    const sprintSection = `${LIVE_LEAF} .journal-view-custom-intervals [data-journal="sprint"]`;
+
     before(async () => {
       await browser.reloadObsidian({ vault: "./e2e/fixtures/e2e-journeys", plugins: ["journals"] });
     });
 
-    it("renders a section with an entry for an indexed custom-interval note", async () => {
-      const anchor = dayAnchor(10);
-      const path = `sprint/${anchor}.md`;
-      await seedNote(path, note("sprint", anchor));
-      await waitForFrontmatter(path, (fm) => fm.journal === "sprint", `waited for ${path} to be indexed`);
-
+    // The block projects the sprint's recurring schedule (every 2 weeks, never-ending) through
+    // CycleService + TimelineService — resolved from the real view-leaf container, a seam the
+    // unit test fakes. Any displayed month overlaps at least two 14-day intervals, so the section
+    // must list them with no note created yet (the v2-parity behavior this restored).
+    it("lists projected interval entries when no note has been created yet", async () => {
       await openCalendarView();
 
-      const section = $(`${LIVE_LEAF} .journal-view-custom-intervals [data-journal="sprint"]`);
+      const section = $(sprintSection);
       await section.waitForExist({ timeoutMsg: "custom-intervals section for sprint did not render" });
-      await expect(section.$(".journal-view-custom-intervals__entry")).toBeExisting();
+      await expect(section.$$(".journal-view-custom-intervals__entry")).toBeElementsArrayOfSize({ gte: 2 });
     });
 
-    it("highlights the entry of the custom-interval note that is open", async () => {
-      const anchor = dayAnchor(13);
+    it("highlights the entry of the open sprint note at its interval anchor", async () => {
+      await openCalendarView();
+
+      // Seed at an anchor the schedule actually projects, read back from a rendered entry, so the
+      // opened note's index anchor coincides with a listed interval rather than an off-cycle date.
+      const firstEntry = $(`${sprintSection} .journal-view-custom-intervals__entry`);
+      await firstEntry.waitForExist({ timeoutMsg: "no projected sprint entry to anchor the test on" });
+      const anchor = (await firstEntry.getAttribute("data-anchor")) ?? "";
       const path = `sprint/${anchor}.md`;
       await seedNote(path, note("sprint", anchor));
       await waitForFrontmatter(path, (fm) => fm.journal === "sprint", `waited for ${path} to be indexed`);
 
-      // Open the calendar first: focusing its (file-less) leaf would clear the active
-      // entry, so the note must be opened after the block has mounted — the real flow of
-      // navigating notes while the calendar sits in the sidebar.
-      await openCalendarView();
+      // Focusing the calendar's file-less leaf would clear the active entry, so open the note
+      // after the block has mounted — the real flow of navigating notes from the sidebar.
       await openNote(path);
 
-      const entry = $(`${LIVE_LEAF} .journal-view-custom-intervals [data-journal="sprint"] [data-anchor="${anchor}"]`);
+      const entry = $(`${sprintSection} [data-anchor="${anchor}"]`);
       await entry.waitForExist({ timeoutMsg: "custom-intervals entry for the sprint note did not render" });
       await waitForState(
         async () => (await entry.getAttribute("data-active")) ?? undefined,
         (value) => value === "true",
         "the open custom-interval note's entry did not become active",
       );
+    });
+  });
+
+  describe("default preset layout", () => {
+    before(async () => {
+      await browser.reloadObsidian({ vault: "./e2e/fixtures/e2e-daily", plugins: ["journals"] });
+    });
+
+    it("seeds two toolbar rows above the month grid", async () => {
+      await openCalendarView();
+      await expect($$(`${LIVE_LEAF} .journal-view-toolbar`)).toBeElementsArrayOfSize(2);
+    });
+
+    it("seeds three flexible spacers across the two toolbar rows", async () => {
+      await openCalendarView();
+      await expect($$(`${LIVE_LEAF} .jv-toolbar-spacer`)).toBeElementsArrayOfSize(3);
+    });
+
+    it("hides the month grid's own month/year heading", async () => {
+      await openCalendarView();
+      await $(`${MONTH_VIEW}`).waitForExist({ timeoutMsg: "month grid did not render" });
+      await expect($(`${LIVE_LEAF} .notes-month-view__header`)).not.toBeExisting();
     });
   });
 });
