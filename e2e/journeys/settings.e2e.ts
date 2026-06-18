@@ -25,12 +25,13 @@ function viewIdByName(views: Record<string, { name?: string }> | undefined, name
   return Object.keys(views ?? {}).find((id) => views?.[id]?.name === name);
 }
 
-// The Calendar view's toolbar block holds the ordered items; each carries a stable id used to
-// assert the persisted drag reorder.
+// The Calendar view has two toolbar blocks; their items, concatenated in block order, are the
+// ordered strip the editor renders one frame per. Each item carries a stable id used to assert
+// the persisted drag reorder.
 function calendarToolbarItems(views: Record<string, StoredView> | undefined): { id: string }[] {
   const calId = viewIdByName(views, "Calendar") ?? "";
-  const toolbar = (views?.[calId]?.blocks ?? []).find((block) => block.key === "toolbar");
-  return (toolbar?.config?.items ?? []) as { id: string }[];
+  const toolbars = (views?.[calId]?.blocks ?? []).filter((block) => block.key === "toolbar");
+  return toolbars.flatMap((toolbar) => (toolbar?.config?.items ?? []) as { id: string }[]);
 }
 
 // Slice B chunk 3 — the settings subpage-nav SPA. The PluginSettingTab mounts a Vue app
@@ -213,8 +214,8 @@ describe("settings", () => {
       const initial = await getSettings();
       const calId = viewIdByName(initial.views, "Calendar") ?? "";
       const toolbarItems = (views: Record<string, StoredView> | undefined): { key?: string; config?: unknown }[] => {
-        const tb = (views?.[calId]?.blocks ?? []).find((b) => b.key === "toolbar");
-        return (tb?.config?.items ?? []) as { key?: string; config?: unknown }[];
+        const tbs = (views?.[calId]?.blocks ?? []).filter((b) => b.key === "toolbar");
+        return tbs.flatMap((tb) => (tb?.config?.items ?? []) as { key?: string; config?: unknown }[]);
       };
       const lastButtonMode = (views: Record<string, StoredView> | undefined): string | undefined => {
         const buttons = toolbarItems(views).filter((i) => i.key === "button");
@@ -225,7 +226,10 @@ describe("settings", () => {
 
       await expandSection("Views");
       await clickIcon("Open Calendar");
-      await clickButton("Add toolbar item");
+      // Two toolbar blocks each render an "Add toolbar item" button; add to the last strip so the
+      // new item is globally last — matching the last edit pencil and last-button reads below.
+      const adders = await $$("button=Add toolbar item").getElements();
+      await adders.at(-1)?.click();
       await clickButton("Pick date");
       await waitForSettings(
         (s) => toolbarItems(s.views).length === before + 1 && lastButtonMode(s.views) === "navigate",
