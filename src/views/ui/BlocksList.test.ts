@@ -13,7 +13,6 @@ import { createSettingsService } from "@/settings/testing";
 
 import { ToolbarItemsService } from "../blocks/toolbar/toolbar-items-service";
 import { viewsCollection } from "../config";
-import { AddBlockToViewFlow } from "../flows/add-block-to-view.flow";
 import { AddToolbarItemToBlockFlow } from "../flows/add-toolbar-item-to-block.flow";
 import { ViewsRepository } from "../repository";
 import { ViewsService } from "../service";
@@ -26,7 +25,7 @@ import type { BlockInstanceId, ViewId } from "../config";
 import type { ToolbarItemDefinition } from "../define-toolbar-item";
 import type { ViewBlockDefinition } from "../define-view-block";
 
-vi.mock("./use-sortable-list", () => ({ useSortableList: () => undefined }));
+vi.mock("./use-sortable-list", () => ({ useSortableList: () => ({ dragging: false }) }));
 
 afterEach(() => cleanup());
 
@@ -87,7 +86,6 @@ async function setup(blocks: { id: string; key: string; config: Record<string, u
   container.register(ViewsService).useClass(ViewsService);
   container.register(ViewsViewModel).useClass(ViewsViewModel);
   container.register(Flows).useClass(Flows);
-  container.register(AddBlockToViewFlow).useClass(AddBlockToViewFlow);
   return { container };
 }
 
@@ -131,15 +129,6 @@ describe("BlocksList", () => {
     await userEvent.click(screen.getByLabelText(m.view_block_remove()));
     const repo = container.resolve(ViewsRepository);
     expect(repo.get(viewId).getOr(undefined as never)?.blocks).toEqual([]);
-  });
-
-  it("invokes AddBlockToViewFlow when Add block is clicked", async () => {
-    const { container } = await setup([]);
-    mount(container);
-    const flows = container.resolve(Flows);
-    const spy = vi.spyOn(flows, "invoke").mockReturnValue({ tap: () => undefined } as never);
-    await userEvent.click(screen.getByText(m.view_add_block()));
-    expect(spy).toHaveBeenCalledWith(AddBlockToViewFlow, { viewId });
   });
 
   it("renders a ToolbarStrip when a block's key is 'toolbar'", async () => {

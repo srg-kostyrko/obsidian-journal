@@ -35,6 +35,7 @@ export const icons = {
     markdownTemplate: "file-text",
     button: "square",
     definedNavigation: "chevrons-left-right",
+    spacer: "move-horizontal",
   },
   section: {
     numbering: "hash",

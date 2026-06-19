@@ -20,6 +20,7 @@ export function provideViewPreviewContext(viewId: ViewId): void {
     viewName: computed(() => view.value?.name ?? ""),
     refDate: computed(() => Clock.now().format("YYYY-MM-DD") as AnchorString),
     shelf: computed(() => view.value?.defaultShelf ?? null),
+    preview: true,
     setRefDate: noop,
     setShelf: noop,
   });

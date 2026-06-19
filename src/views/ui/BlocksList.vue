@@ -3,11 +3,8 @@ import { computed, ref, watch } from "vue";
 
 import { m } from "@/i18n";
 import { useService } from "@/infrastructure/di";
-import { Flows } from "@/infrastructure/flows";
 import { useModalService } from "@/infrastructure/host/modals";
-import UiButton from "@/ui/UiButton.vue";
 
-import { AddBlockToViewFlow } from "../flows/add-block-to-view.flow";
 import { ViewsService } from "../service";
 import { ViewsViewModel } from "../view-model";
 
@@ -24,7 +21,6 @@ const props = defineProps<{ viewId: ViewId }>();
 
 provideViewPreviewContext(props.viewId);
 
-const flows = useService(Flows);
 const modals = useModalService();
 const viewsService = useService(ViewsService);
 const viewsVM = useService(ViewsViewModel);
@@ -69,13 +65,16 @@ function summaryOf(row: RowEntry): string | undefined {
   return row.definition?.summary?.(row.config);
 }
 
-const add = (): void => void flows.invoke(AddBlockToViewFlow, { viewId: props.viewId });
 const remove = (id: BlockInstanceId): void => void viewsService.removeBlock(props.viewId, id);
 
 function edit(row: RowEntry): void {
   if (!row.definition?.configComponent) return;
   void modals
-    .open(editBlockModal, { component: row.definition.configComponent, config: row.config })
+    .open(editBlockModal, {
+      component: row.definition.configComponent,
+      config: row.config,
+      typeLabel: row.definition.label,
+    })
     .tap((next) => void viewsService.updateBlockConfig(props.viewId, row.id, next));
 }
 </script>
@@ -95,7 +94,6 @@ function edit(row: RowEntry): void {
       <ToolbarStrip v-if="row.key === 'toolbar'" :view-id="props.viewId" :block-id="row.id" />
     </div>
   </div>
-  <UiButton cta @click="add">{{ m.view_add_block() }}</UiButton>
 </template>
 
 <style scoped>

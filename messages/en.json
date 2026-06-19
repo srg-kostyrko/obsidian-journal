@@ -690,9 +690,11 @@
   "view_edit_blocks_empty": "No blocks yet.",
   "view_block_unknown_label": "Unknown block: {key}",
   "view_block_edit": "Edit block",
+  "view_block_edit_title": "Edit block: {type}",
   "view_block_remove": "Remove block",
   "view_toolbar_item_unknown_label": "Unknown toolbar item: {key}",
   "view_toolbar_item_edit": "Edit toolbar item",
+  "view_toolbar_item_edit_title": "Edit toolbar item: {type}",
   "view_toolbar_item_remove": "Remove toolbar item",
   "view_toolbar_item_empty": "No toolbar items yet.",
 

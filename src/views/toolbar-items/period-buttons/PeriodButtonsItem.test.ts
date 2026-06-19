@@ -107,19 +107,25 @@ afterEach(() => {
 
 describe("PeriodButtonsItem", () => {
   describe("rendering", () => {
-    it("renders a badge for each configured period whose scope has at least one journal", () => {
-      SCOPE.month = ["monthly"];
-      SCOPE.year = ["yearly"];
-      const { result } = mountItem({ week: false, month: true, quarter: true, year: true });
-      const badges = result.container.querySelectorAll("[data-period]");
-      // quarter has no scope; month + year rendered
-      expect([...badges].map((b) => (b as HTMLElement).dataset.period)).toEqual(["month", "year"]);
+    it("renders a journal-less month button rather than hiding it", () => {
+      const { result } = mountItem({ week: false, month: true, quarter: false, year: false });
+      expect(result.container.querySelector("[data-period='month']")).not.toBeNull();
     });
 
-    it("self-hides a configured period when its scope is empty", () => {
-      SCOPE.month = ["monthly"]; // quarter has no journal
+    it("renders a journal-less year button rather than hiding it", () => {
+      const { result } = mountItem({ week: false, month: false, quarter: false, year: true });
+      expect(result.container.querySelector("[data-period='year']")).not.toBeNull();
+    });
+
+    it("hides the quarter button when it has no journal", () => {
       const { result } = mountItem({ week: false, month: false, quarter: true, year: false });
-      expect(result.container.querySelectorAll("[data-period]").length).toBe(0);
+      expect(result.container.querySelector("[data-period='quarter']")).toBeNull();
+    });
+
+    it("renders the quarter button when its scope has a journal", () => {
+      SCOPE.quarter = ["quarterly"];
+      const { result } = mountItem({ week: false, month: false, quarter: true, year: false });
+      expect(result.container.querySelector("[data-period='quarter']")).not.toBeNull();
     });
 
     it("does not render periods turned off in config even when scope has journals", () => {
@@ -168,6 +174,14 @@ describe("PeriodButtonsItem", () => {
       const parameters = flows.calls[0]?.parameters as { anchor: string; journalNames: readonly string[] };
       expect(parameters.anchor).toBe("2026-05-01");
       expect(parameters.journalNames).toEqual(["monthly"]);
+    });
+
+    it("does not open anything when a journal-less badge is clicked", async () => {
+      const { result, flows } = mountItem({ week: false, month: true, quarter: false, year: false });
+      const badge = result.container.querySelector<HTMLElement>("[data-period='month']");
+      expect(badge).not.toBeNull();
+      await userEvent.click(badge!);
+      expect(flows.calls).toHaveLength(0);
     });
   });
 });

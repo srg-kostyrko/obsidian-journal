@@ -5,7 +5,8 @@ import { m } from "@/i18n";
 import { useService } from "@/infrastructure/di";
 import { Flows } from "@/infrastructure/flows";
 import { useModalService } from "@/infrastructure/host/modals";
-import UiButton from "@/ui/UiButton.vue";
+import { icons } from "@/ui/icons";
+import UiIconButton from "@/ui/UiIconButton.vue";
 
 import { ToolbarItemsService } from "../blocks/toolbar/toolbar-items-service";
 import { AddToolbarItemToBlockFlow } from "../flows/add-toolbar-item-to-block.flow";
@@ -52,7 +53,7 @@ const rows = ref<Row[]>([]);
 watch(source, (next) => (rows.value = [...next]), { immediate: true, deep: true });
 
 const stripEl = ref<HTMLElement | null>(null);
-useSortableList(stripEl, rows, (orderedIds) => {
+const { dragging } = useSortableList(stripEl, rows, (orderedIds) => {
   void viewsService.setToolbarItemOrder(props.viewId, props.blockId, orderedIds as BlockInstanceId[]);
 });
 
@@ -62,32 +63,38 @@ const remove = (id: BlockInstanceId): void => void viewsService.removeToolbarIte
 function edit(row: Row): void {
   if (!row.definition?.configComponent) return;
   void modals
-    .open(editToolbarItemModal, { component: row.definition.configComponent, config: row.config })
+    .open(editToolbarItemModal, {
+      component: row.definition.configComponent,
+      config: row.config,
+      typeLabel: row.definition.summary?.(row.config) ?? row.definition.label,
+    })
     .tap((next) => void viewsService.updateToolbarItemConfig(props.viewId, props.blockId, row.id, next));
 }
 </script>
 
 <template>
   <div class="jv-toolbar-strip">
-    <div v-if="rows.length === 0" class="jv-strip-empty">{{ m.view_toolbar_item_empty() }}</div>
+    <span v-if="rows.length === 0" class="jv-strip-empty">{{ m.view_toolbar_item_empty() }}</span>
     <div ref="stripEl" class="jv-strip-items">
       <ToolbarItemFrame
         v-for="row of rows"
         :key="row.id"
         :item="row"
         :definition="row.definition"
+        :dragging="dragging"
         @edit="edit(row)"
         @remove="remove(row.id)"
       />
     </div>
-    <UiButton @click="add">{{ m.view_add_toolbar_item() }}</UiButton>
+    <UiIconButton :icon="icons.action.add" :tooltip="m.view_add_toolbar_item()" @click="add" />
   </div>
 </template>
 
 <style scoped>
 .jv-toolbar-strip {
   display: flex;
-  flex-direction: column;
+  flex-wrap: wrap;
+  align-items: center;
   gap: var(--size-2-2);
   padding-left: var(--size-4-4);
 }

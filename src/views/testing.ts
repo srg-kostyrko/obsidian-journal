@@ -21,6 +21,7 @@ export function provideViewContextStub(partial: Partial<ViewContext> = {}): View
     viewName: ref("Stub"),
     refDate: ref("2026-01-01" as AnchorString),
     shelf: ref(null),
+    preview: false,
     setRefDate: () => undefined,
     setShelf: () => undefined,
     ...partial,

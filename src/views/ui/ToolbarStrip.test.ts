@@ -25,7 +25,7 @@ import type { BlockInstanceId, ViewId } from "../config";
 import type { ToolbarItemDefinition } from "../define-toolbar-item";
 import type { ViewBlockDefinition } from "../define-view-block";
 
-vi.mock("./use-sortable-list", () => ({ useSortableList: () => undefined }));
+vi.mock("./use-sortable-list", () => ({ useSortableList: () => ({ dragging: false }) }));
 
 afterEach(() => cleanup());
 
@@ -56,10 +56,12 @@ const buttonDefinition = {
   key: "button",
   label: "Button",
   icon: "square",
-  schema: v.object({ label: v.optional(v.string()) }),
+  schema: v.object({ label: v.optional(v.string()), action: v.optional(v.unknown()) }),
   defaultConfig: {},
   component: { render: () => null },
   configComponent: { render: () => null },
+  summary: (config: unknown) =>
+    (config as { action?: { type?: string } }).action?.type === "pick-date" ? "Pick a date" : "Today",
   __brand: "toolbar-item",
 } as unknown as ToolbarItemDefinition;
 
@@ -130,8 +132,16 @@ describe("ToolbarStrip", () => {
     mount(container);
     const flows = container.resolve(Flows);
     const spy = vi.spyOn(flows, "invoke").mockReturnValue({ tap: () => undefined } as never);
-    await userEvent.click(screen.getByText(m.view_add_toolbar_item()));
+    await userEvent.click(screen.getByLabelText(m.view_add_toolbar_item()));
     expect(spy).toHaveBeenCalledWith(AddToolbarItemToBlockFlow, { viewId, blockId });
+  });
+
+  it("titles the edit modal with the item's config-specific summary", async () => {
+    const { container } = await setup([{ id: itemIdA, key: "button", config: { action: { type: "pick-date" } } }]);
+    mount(container);
+    await userEvent.click(screen.getByLabelText(m.view_toolbar_item_edit()));
+    const modals = container.resolve(ModalService) as unknown as FakeModalService;
+    expect(modals.lastOpen().resolvedTitle).toBe(m.view_toolbar_item_edit_title({ type: "Pick a date" }));
   });
 
   it("persists the edited config when the edit modal is saved", async () => {

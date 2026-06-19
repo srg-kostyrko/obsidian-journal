@@ -15,6 +15,7 @@ function buildContext(overrides: Partial<ViewContext> = {}): ViewContext {
     viewName: ref("Calendar"),
     refDate: ref("2026-05-28" as AnchorString),
     shelf: ref(null),
+    preview: false,
     setRefDate: vi.fn(),
     setShelf: vi.fn(),
     ...overrides,

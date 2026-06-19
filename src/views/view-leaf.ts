@@ -103,6 +103,7 @@ function buildRootComponent(viewId: ViewId, leafState: JournalViewLeafState, inj
         viewName: computed(() => view.value?.name ?? ""),
         refDate: computed(() => leafState.refDate ?? todayAnchor()),
         shelf: computed(() => leafState.shelf ?? view.value?.defaultShelf ?? null),
+        preview: false,
         setRefDate: (date) => {
           leafState.refDate = date;
         },

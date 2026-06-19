@@ -3,7 +3,7 @@ import { icons } from "@/ui/icons";
 
 import { defineToolbarItem } from "../../define-toolbar-item";
 
-import { buttonItemConfigSchema, type ButtonConfig } from "./button-config";
+import { buttonItemConfigSchema, resolveButtonAppearance, type ButtonConfig } from "./button-config";
 import ButtonItem from "./ui/ButtonItem.vue";
 import ButtonItemConfig from "./ui/ButtonItemConfig.vue";
 
@@ -16,6 +16,7 @@ export const buttonItem = defineToolbarItem<ButtonConfig>({
   defaultConfig: { action: { type: "current", mode: "create", levels: ["day"] } },
   component: ButtonItem,
   configComponent: ButtonItemConfig,
+  summary: (config) => resolveButtonAppearance(config.action).tooltip,
   presets: [
     {
       label: m.view_toolbar_button_preset_pick_date(),

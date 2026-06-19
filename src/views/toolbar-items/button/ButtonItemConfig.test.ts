@@ -2,12 +2,23 @@ import userEvent from "@testing-library/user-event";
 import { cleanup, render, screen } from "@testing-library/vue";
 import { afterEach, describe, expect, it, vi } from "vitest";
 
+import { m } from "@/i18n";
+import { Container, provideInjectorOnApp } from "@/infrastructure/di";
+import { InputSuggestService } from "@/infrastructure/host";
+import { FakeInputSuggestService } from "@/infrastructure/host/input-suggests/testing";
+import { icons } from "@/ui/icons";
+
 import ButtonItemConfig from "./ui/ButtonItemConfig.vue";
 
 import type { ButtonConfig, ButtonConfigChange } from "./button-config";
 
 function mountConfig(config: ButtonConfig, onChange: ButtonConfigChange) {
-  return render(ButtonItemConfig, { props: { config, onChange } });
+  const container = new Container();
+  container.register(InputSuggestService).useValue(new FakeInputSuggestService() as unknown as InputSuggestService);
+  return render(ButtonItemConfig, {
+    props: { config, onChange },
+    global: { plugins: [{ install: (app) => provideInjectorOnApp(app, container) }] },
+  });
 }
 
 const baseConfig: ButtonConfig = {
@@ -50,6 +61,18 @@ describe("ButtonItemConfig", () => {
     const [iconInput] = screen.getAllByRole("textbox");
     await userEvent.clear(iconInput);
     expect(onChange).toHaveBeenLastCalledWith({ ...baseConfig, icon: undefined });
+  });
+
+  describe("default display", () => {
+    it("shows the action's default icon as the icon-field placeholder", () => {
+      mountConfig({ action: { type: "pick-date", mode: "navigate", levels: ["day"] } }, vi.fn());
+      expect(screen.getByPlaceholderText(icons.action.pickDate)).toBeTruthy();
+    });
+
+    it("shows the action's default tooltip as the tooltip-field placeholder", () => {
+      mountConfig({ action: { type: "pick-date", mode: "navigate", levels: ["day"] } }, vi.fn());
+      expect(screen.getByPlaceholderText(m.common_pick_a_date())).toBeTruthy();
+    });
   });
 
   describe("action mode", () => {

@@ -10,12 +10,13 @@ import type { ToolbarItemDefinition } from "../define-toolbar-item";
 defineProps<{
   item: { id: BlockInstanceId; key: string; config: Record<string, unknown> };
   definition: ToolbarItemDefinition | undefined;
+  dragging?: boolean;
 }>();
 defineEmits<{ edit: []; remove: [] }>();
 </script>
 
 <template>
-  <div class="jv-item-frame">
+  <div class="jv-item-frame" :class="{ 'is-dragging': dragging }">
     <span class="jv-frame-grip" data-drag-handle><UiIcon :name="icons.action.dragHandle" /></span>
     <div class="jv-item-preview">
       <component :is="definition.component" v-if="definition" :instance-id="item.id" :config="item.config" />
@@ -35,6 +36,7 @@ defineEmits<{ edit: []; remove: [] }>();
 
 <style scoped>
 .jv-item-frame {
+  position: relative;
   display: inline-flex;
   align-items: center;
   gap: var(--size-2-2);
@@ -45,6 +47,13 @@ defineEmits<{ edit: []; remove: [] }>();
 }
 .jv-item-frame:hover {
   border-color: var(--interactive-accent);
+  /* Raise above later siblings so the right-side tools are not painted over by the next item. */
+  z-index: 1;
+}
+/* Suppress all hover affordances while a drag is in progress. */
+.jv-item-frame.is-dragging:hover {
+  border-color: var(--background-modifier-border);
+  z-index: auto;
 }
 .jv-frame-grip {
   display: inline-flex;
@@ -57,11 +66,41 @@ defineEmits<{ edit: []; remove: [] }>();
   pointer-events: none;
 }
 .jv-frame-tools {
+  position: absolute;
+  top: 50%;
+  left: 100%;
+  transform: translateY(-50%);
+  margin-left: var(--size-2-2);
   display: inline-flex;
   gap: var(--size-2-1);
+  padding: var(--size-2-1);
+  border: 1px solid var(--interactive-accent);
+  border-radius: var(--radius-m);
+  background: var(--background-primary-alt);
+  box-shadow: var(--shadow-l);
   opacity: 0;
+  /* Hidden tools must not intercept hover/clicks meant for neighbours (e.g. the add button). */
+  pointer-events: none;
+}
+/* Transparent bridge spanning the gap to the frame so the pointer can cross onto the tools without
+   leaving the hover region. As a child it shares the tools' pointer-events, so it blocks nothing
+   while hidden. */
+.jv-frame-tools::before {
+  content: "";
+  position: absolute;
+  right: 100%;
+  top: 0;
+  bottom: 0;
+  width: var(--size-2-2);
 }
 .jv-item-frame:hover .jv-frame-tools {
   opacity: 1;
+  pointer-events: auto;
+}
+/* While a drag is in progress no frame should reveal its tools on hover — the dragged item
+   passing over a neighbour would otherwise pop that neighbour's controls. */
+.jv-item-frame.is-dragging:hover .jv-frame-tools {
+  opacity: 0;
+  pointer-events: none;
 }
 </style>

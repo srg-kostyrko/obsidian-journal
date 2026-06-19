@@ -51,14 +51,15 @@ export const addToolbarItemPickerModal = defineModal<{ key: string; defaultConfi
 export interface EditConfigModalProps {
   component: Component;
   config: Record<string, unknown>;
+  typeLabel: string;
 }
 
 export const editToolbarItemModal = defineModal<Record<string, unknown>>()({
   component: EditConfigModal,
-  title: (_: EditConfigModalProps) => m.view_toolbar_item_edit(),
+  title: ({ typeLabel }: EditConfigModalProps) => m.view_toolbar_item_edit_title({ type: typeLabel }),
 });
 
 export const editBlockModal = defineModal<Record<string, unknown>>()({
   component: EditConfigModal,
-  title: (_: EditConfigModalProps) => m.view_block_edit(),
+  title: ({ typeLabel }: EditConfigModalProps) => m.view_block_edit_title({ type: typeLabel }),
 });

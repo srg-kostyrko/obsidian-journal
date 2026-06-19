@@ -15,6 +15,7 @@ import UiIconSuggest from "@/ui/UiIconSuggest.vue";
 import UiSettingRow from "@/ui/UiSettingRow.vue";
 import UiToggle from "@/ui/UiToggle.vue";
 
+import { AddBlockToViewFlow } from "../flows/add-block-to-view.flow";
 import { EditViewNameFlow } from "../flows/edit-view-name.flow";
 import { ViewsService } from "../service";
 import { ViewHostService } from "../view-host";
@@ -79,6 +80,10 @@ const blocksOpen = ref(true);
 function rename(): void {
   void flows.invoke(EditViewNameFlow, { viewId });
 }
+
+function addBlock(): void {
+  void flows.invoke(AddBlockToViewFlow, { viewId });
+}
 </script>
 
 <template>
@@ -124,6 +129,9 @@ function rename(): void {
           {{ m.view_edit_blocks_title() }}
           <span class="flair">{{ view.blocks.length }}</span>
         </UiIconedRow>
+      </template>
+      <template #controls>
+        <UiIconButton :icon="icons.action.add" :tooltip="m.view_add_block()" @click="addBlock" />
       </template>
       <BlocksList :view-id="viewId" />
     </UiCollapsibleBlock>

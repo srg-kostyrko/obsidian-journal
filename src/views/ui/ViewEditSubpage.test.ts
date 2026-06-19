@@ -16,6 +16,7 @@ import { ShelvesEventsToken, ShelvesRepository, ShelvesViewModel, shelvesCollect
 
 import { ToolbarItemsService } from "../blocks/toolbar/toolbar-items-service";
 import { viewsCollection } from "../config";
+import { AddBlockToViewFlow } from "../flows/add-block-to-view.flow";
 import { ViewsRepository } from "../repository";
 import { ViewsService } from "../service";
 import { ViewsEventsToken } from "../tokens";
@@ -63,6 +64,7 @@ async function setup(viewOverrides: Record<string, unknown> = {}) {
   container.register(ViewsViewModel).useClass(ViewsViewModel);
   container.register(ShelvesViewModel).useClass(ShelvesViewModel);
   container.register(Flows).useClass(Flows);
+  container.register(AddBlockToViewFlow).useClass(AddBlockToViewFlow);
   container.register(ViewHostService).useValue({ open } as unknown as ViewHostService);
   return { container, open };
 }
@@ -146,5 +148,14 @@ describe("ViewEditSubpage", () => {
     const toggle = within(row(m.view_edit_open_on_startup_label())).getByRole("checkbox");
     await userEvent.click(toggle);
     expect(open).not.toHaveBeenCalled();
+  });
+
+  it("invokes AddBlockToViewFlow from the blocks header control", async () => {
+    const { container } = await setup();
+    mount(container);
+    const flows = container.resolve(Flows);
+    const spy = vi.spyOn(flows, "invoke").mockReturnValue({ tap: () => undefined } as never);
+    await userEvent.click(screen.getByLabelText(m.view_add_block()));
+    expect(spy).toHaveBeenCalledWith(AddBlockToViewFlow, { viewId });
   });
 });

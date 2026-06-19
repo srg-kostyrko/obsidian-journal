@@ -3,11 +3,17 @@ import { computed } from "vue";
 
 import { m } from "@/i18n";
 import UiDropdown from "@/ui/UiDropdown.vue";
+import UiIconSuggest from "@/ui/UiIconSuggest.vue";
 import UiSettingRow from "@/ui/UiSettingRow.vue";
 import UiTextInput from "@/ui/UiTextInput.vue";
 import UiToggle from "@/ui/UiToggle.vue";
 
-import type { ButtonConfig, ButtonConfigChange, ButtonLevel } from "../button-config";
+import {
+  resolveButtonAppearance,
+  type ButtonConfig,
+  type ButtonConfigChange,
+  type ButtonLevel,
+} from "../button-config";
 
 const props = defineProps<{
   config: ButtonConfig;
@@ -15,6 +21,10 @@ const props = defineProps<{
 }>();
 
 const allLevels: readonly ButtonLevel[] = ["day", "week", "month", "quarter", "year"];
+
+// Defaults the action would display when the field is left blank, surfaced as placeholders so the
+// per-action display is visible while editing.
+const appearance = computed(() => resolveButtonAppearance(props.config.action));
 
 const update = (patch: Partial<ButtonConfig>): void => props.onChange({ ...props.config, ...patch });
 
@@ -46,8 +56,9 @@ function toggleLevel(level: ButtonLevel, enabled: boolean): void {
 <template>
   <UiSettingRow>
     <template #name>{{ m.common_label_icon() }}</template>
-    <UiTextInput
+    <UiIconSuggest
       :model-value="config.icon ?? ''"
+      :placeholder="appearance.icon"
       @update:model-value="(value: string | undefined) => update({ icon: value || undefined })"
     />
   </UiSettingRow>
@@ -55,6 +66,7 @@ function toggleLevel(level: ButtonLevel, enabled: boolean): void {
     <template #name>{{ m.view_toolbar_button_config_label_label() }}</template>
     <UiTextInput
       :model-value="config.label ?? ''"
+      :placeholder="appearance.label"
       @update:model-value="(value: string | undefined) => update({ label: value || undefined })"
     />
   </UiSettingRow>
@@ -62,6 +74,7 @@ function toggleLevel(level: ButtonLevel, enabled: boolean): void {
     <template #name>{{ m.view_toolbar_button_config_tooltip_label() }}</template>
     <UiTextInput
       :model-value="config.tooltip ?? ''"
+      :placeholder="appearance.tooltip"
       @update:model-value="(value: string | undefined) => update({ tooltip: value || undefined })"
     />
   </UiSettingRow>

@@ -11,6 +11,9 @@ export interface ViewContext {
   readonly viewName: Readonly<Ref<string>>;
   readonly refDate: Readonly<Ref<AnchorString>>;
   readonly shelf: Readonly<Ref<string | null>>;
+  // The settings-page preview renders items detached from any live journal scope. Items use
+  // this to show their configured shape (e.g. as placeholders) instead of self-hiding.
+  readonly preview: boolean;
   setRefDate(date: AnchorString): void;
   setShelf(shelf: string | null): void;
 }

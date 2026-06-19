@@ -24,6 +24,7 @@ interface Badge {
   readonly period: Period;
   readonly journals: readonly string[];
   readonly label: string;
+  readonly navigable: boolean;
 }
 
 const props = defineProps<{
@@ -41,12 +42,15 @@ const badges = computed<readonly Badge[]>(() => {
   const out: Badge[] = [];
   const add = (key: PeriodKey, period: Period, journals: readonly string[], format: string): void => {
     if (!props.config[key]) return;
-    if (journals.length === 0) return;
-    out.push({ key, period, journals, label: period.format(format) });
+    // Only quarter self-hides when no journal of its kind exists; week/month/year stay visible
+    // (but inert) so the toolbar layout does not shift.
+    if (key === "quarter" && journals.length === 0) return;
+    out.push({ key, period, journals, label: period.format(format), navigable: journals.length > 0 });
   };
-  add("week", periodOfKind("week", date), scope.week.value, "[W]ww YYYY");
-  add("month", periodOfKind("month", date), scope.month.value, "MMM YYYY");
-  add("quarter", periodOfKind("quarter", date), scope.quarter.value, "[Q]Q YYYY");
+  // The year button already carries the year, so the others omit it to avoid repeating it.
+  add("week", periodOfKind("week", date), scope.week.value, "[W]ww");
+  add("month", periodOfKind("month", date), scope.month.value, "MMMM");
+  add("quarter", periodOfKind("quarter", date), scope.quarter.value, "[Q]Q");
   add("year", periodOfKind("year", date), scope.year.value, "YYYY");
   return out;
 });
@@ -64,6 +68,7 @@ function isActive(badge: Badge): boolean {
 }
 
 function open(badge: Badge, event: MouseEvent): void {
+  if (!badge.navigable) return;
   void flows.invoke(OpenDateFlow, {
     anchor: badge.period.anchor.toAnchor(),
     journalNames: [...badge.journals],
@@ -77,6 +82,7 @@ function open(badge: Badge, event: MouseEvent): void {
     v-for="badge of badges"
     :key="badge.key"
     flat
+    :class="{ 'jv-period-inert': !badge.navigable }"
     :data-period="badge.key"
     :data-active="isActive(badge) || null"
     @click="(event: MouseEvent) => open(badge, event)"
@@ -85,3 +91,11 @@ function open(badge: Badge, event: MouseEvent): void {
     <CellDecoration :period="badge.period">{{ badge.label }}</CellDecoration>
   </UiButton>
 </template>
+
+<style scoped>
+/* A period with no journal of its kind stays visible but inert — not clickable, and no
+   not-allowed cursor (it is not a disabled control, just nothing to open). */
+.jv-period-inert {
+  pointer-events: none;
+}
+</style>

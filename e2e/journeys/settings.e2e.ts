@@ -184,7 +184,7 @@ describe("settings", () => {
 
       await expandSection("Views");
       await clickIcon("Open Calendar");
-      await clickButton("Add block");
+      await clickIcon("Add block");
       await clickButton("Week calendar");
 
       await waitForSettings(
@@ -204,7 +204,7 @@ describe("settings", () => {
 
       await expandSection("Views");
       await clickIcon("Open Calendar");
-      await clickButton("Add toolbar item");
+      await clickIcon("Add toolbar item");
       await clickButton("Period buttons");
 
       await waitForSettings((s) => itemCount(s.views) === before + 1, "added toolbar item not persisted");
@@ -228,7 +228,7 @@ describe("settings", () => {
       await clickIcon("Open Calendar");
       // Two toolbar blocks each render an "Add toolbar item" button; add to the last strip so the
       // new item is globally last — matching the last edit pencil and last-button reads below.
-      const adders = await $$("button=Add toolbar item").getElements();
+      const adders = await $$('button[aria-label="Add toolbar item"]').getElements();
       await adders.at(-1)?.click();
       await clickButton("Pick date");
       await waitForSettings(
@@ -236,9 +236,13 @@ describe("settings", () => {
         "added pick-date button not persisted",
       );
 
-      // Multiple toolbar items carry the edit pencil; the one just added is last.
-      const pencils = await $$('button[aria-label="Edit toolbar item"]').getElements();
-      await pencils.at(-1)?.click();
+      // Multiple toolbar items carry the edit pencil; the one just added is last. The pencil is
+      // pointer-events:none until its frame is hovered, and this harness's pointer Actions can't
+      // hover (see the drag test below), so fire the click programmatically on the last pencil.
+      await browser.execute(() => {
+        const pencils = [...document.querySelectorAll<HTMLElement>('button[aria-label="Edit toolbar item"]')];
+        pencils.at(-1)?.click();
+      });
       await selectModalSelect("create");
       await submitModal();
 
@@ -257,7 +261,7 @@ describe("settings", () => {
 
       await expandSection("Views");
       await clickIcon("Open Calendar");
-      await clickButton("Add block");
+      await clickIcon("Add block");
       await clickButton("Week calendar");
       await waitForSettings((s) => {
         const block = lastBlock(s.views);
@@ -303,7 +307,7 @@ describe("settings", () => {
 
       await expandSection("Views");
       await clickIcon("Open Calendar");
-      await clickButton("Add block");
+      await clickIcon("Add block");
       await clickButton("Week calendar");
       await waitForSettings(
         (s) => Array.isArray(lastBlockHidden(s.views)) && lastBlockHidden(s.views)?.length === 0,
