@@ -10,7 +10,7 @@ export const navBlockSettingsModule: Module = {
     c.register(JournalEditSectionToken).useValue(
       defineJournalEditSection({
         key: "nav-block",
-        order: 40,
+        order: 80,
         component: NavBlockSection,
       }),
     );

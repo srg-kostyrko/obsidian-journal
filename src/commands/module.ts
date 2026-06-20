@@ -26,7 +26,7 @@ export const commandsModule: Module = {
       defineDashboardBlock({ key: "commands", component: CommandsDashboardBlock, order: 6 }),
     );
     c.register(JournalEditSectionToken).useValue(
-      defineJournalEditSection({ key: "commands", component: JournalCommandsSection, order: 10 }),
+      defineJournalEditSection({ key: "commands", component: JournalCommandsSection, order: 70 }),
     );
     c.register(ShelfEditSectionToken).useValue(
       defineShelfEditSection({ key: "commands", component: ShelfCommandsSection, order: 10 }),

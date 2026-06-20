@@ -35,7 +35,7 @@ export const shelvesModule: Module = {
     );
     c.register(SubpageToken).useValue(shelfEditSubpage);
     c.register(JournalEditSectionToken).useValue(
-      defineJournalEditSection({ key: "shelf", component: JournalShelfSection, order: 5 }),
+      defineJournalEditSection({ key: "shelf", component: JournalShelfSection, order: 10 }),
     );
   },
 };

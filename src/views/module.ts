@@ -62,7 +62,7 @@ export const viewsModule: Module = {
     );
     c.register(SubpageToken).useValue(viewEditSubpage);
     c.register(JournalEditSectionToken).useValue(
-      defineJournalEditSection({ key: "interval-block", order: 41, component: IntervalBlockSection }),
+      defineJournalEditSection({ key: "interval-block", order: 90, component: IntervalBlockSection }),
     );
   },
 };

@@ -12,7 +12,7 @@ export const decorationsSettingsModule: Module = {
     c.register(JournalEditSectionToken).useValue(
       defineJournalEditSection({
         key: "decorations",
-        order: 50,
+        order: 100,
         component: DecorationsSection,
       }),
     );
