@@ -288,7 +288,11 @@ function editSequenceKey(): void {
 
       <template v-for="(_path, index) in config.templates" :key="index">
         <UiSettingRow>
-          <UiFileInput v-model="config.templates[index]" :placeholder="m.journal_edit_template_path_placeholder()" />
+          <UiFileInput
+            v-model="config.templates[index]"
+            class="grow"
+            :placeholder="m.journal_edit_template_path_placeholder()"
+          />
           <UiIconButton
             :icon="icons.action.delete"
             :tooltip="m.journal_edit_template_remove_tooltip()"
@@ -479,5 +483,8 @@ function editSequenceKey(): void {
 .journal-form-error {
   color: var(--text-error);
   display: block;
+}
+.grow {
+  flex-grow: 1;
 }
 </style>

@@ -101,7 +101,7 @@ function change(): void {
   margin-bottom: var(--size-2-1);
 }
 .whitespace {
-  white-space: pre-line;
+  white-space: pre-wrap;
 }
 .journal-hint {
   color: var(--text-warning);

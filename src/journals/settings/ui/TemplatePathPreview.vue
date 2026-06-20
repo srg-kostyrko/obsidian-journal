@@ -43,5 +43,6 @@ const wrongWeek = computed(() => templateHasWrongWeek(props.path));
   padding: var(--size-2-2);
   color: var(--text-muted);
   font-size: var(--font-ui-smaller);
+  line-height: var(--line-height-tight);
 }
 </style>
