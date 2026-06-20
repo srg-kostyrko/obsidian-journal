@@ -14,6 +14,7 @@ import { NumberingService } from "./numbering";
 import { JournalsRepository, type JournalsEvents } from "./repository";
 import { JournalEditSectionToken, defineJournalEditSection } from "./settings/ui/journal-edit-section";
 import NoteCreationSection from "./settings/ui/sections/NoteCreationSection.vue";
+import TemplatesSection from "./settings/ui/sections/TemplatesSection.vue";
 import { TimelineService } from "./timeline";
 import { JournalsEventsToken } from "./tokens";
 import { journalUriModule } from "./uri/module";
@@ -38,6 +39,9 @@ export const journalsModule: Module = {
     journalUriModule.register(c);
     c.register(JournalEditSectionToken).useValue(
       defineJournalEditSection({ key: "note-creation", order: 20, component: NoteCreationSection }),
+    );
+    c.register(JournalEditSectionToken).useValue(
+      defineJournalEditSection({ key: "templates", order: 30, component: TemplatesSection }),
     );
   },
 };

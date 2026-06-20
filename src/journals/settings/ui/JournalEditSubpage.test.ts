@@ -375,59 +375,6 @@ describe("JournalEditSubpage", () => {
       });
     });
   });
-
-  describe("templates collapsible", () => {
-    it("renders the section heading with count", async () => {
-      const initial = {
-        version: 4,
-        journals: { daily: makeJournal("daily", { templates: ["a.md", "b.md"] }) },
-      };
-      const { container } = await setup(initial);
-      mount(container, "daily");
-      expect(screen.getByText(m.journal_edit_section_templates())).toBeTruthy();
-      expect(screen.getByText("2")).toBeTruthy();
-    });
-
-    it("appends an empty entry when Add template is clicked", async () => {
-      const { container, journalsRepo } = await setup();
-      mount(container, "daily");
-      await userEvent.click(screen.getByText(m.journal_edit_section_templates()));
-      await userEvent.click(screen.getByText(m.journal_edit_template_add_button()));
-      expect(unwrap(journalsRepo.get("daily")).templates).toEqual([""]);
-    });
-
-    it("removes an entry when the trash button is clicked", async () => {
-      const initial = {
-        version: 4,
-        journals: { daily: makeJournal("daily", { templates: ["templates/a.md"] }) },
-      };
-      const { container, journalsRepo } = await setup(initial);
-      mount(container, "daily");
-      await userEvent.click(screen.getByText(m.journal_edit_section_templates()));
-      await userEvent.click(screen.getByLabelText(m.journal_edit_template_remove_tooltip()));
-      expect(unwrap(journalsRepo.get("daily")).templates).toEqual([]);
-    });
-
-    it("renders the template path preview only when the path contains a variable", async () => {
-      const initial = {
-        version: 4,
-        journals: {
-          daily: makeJournal("daily", {
-            templates: ["{{date:YYYY}}-template.md", "static-template.md"],
-          }),
-        },
-      };
-      const { container } = await setup(initial);
-      mount(container, "daily");
-      await userEvent.click(screen.getByText(m.journal_edit_section_templates()));
-      // Preview for the first (variable-containing) template renders
-      await waitFor(() => {
-        expect(screen.getByText("2026-template.md")).toBeTruthy();
-      });
-      // Preview for the second (static) template should NOT appear
-      expect(screen.queryByText("static-template.md", { exact: false, selector: "b.u-pop" })).toBeNull();
-    });
-  });
 });
 
 describe("JournalEditSubpage extension sections", () => {

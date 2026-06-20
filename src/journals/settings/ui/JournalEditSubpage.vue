@@ -13,10 +13,8 @@ import { icons } from "@/ui/icons";
 import UiButton from "@/ui/UiButton.vue";
 import UiCollapsibleBlock from "@/ui/UiCollapsibleBlock.vue";
 import UiDropdown from "@/ui/UiDropdown.vue";
-import UiFileInput from "@/ui/UiFileInput.vue";
 import UiIcon from "@/ui/UiIcon.vue";
 import UiIconButton from "@/ui/UiIconButton.vue";
-import UiIconedRow from "@/ui/UiIconedRow.vue";
 import UiNumberInput from "@/ui/UiNumberInput.vue";
 import UiSettingRow from "@/ui/UiSettingRow.vue";
 import UiToggle from "@/ui/UiToggle.vue";
@@ -26,12 +24,8 @@ import { EditFrontmatterFieldFlow } from "../flows/edit-frontmatter-field.flow";
 import { EditSequencePropertyFlow } from "../flows/edit-sequence-property.flow";
 import { RenameJournalFlow } from "../flows/rename-journal.flow";
 
-import CodeBlockReferenceHint from "./CodeBlockReferenceHint.vue";
 import { JournalEditSectionToken } from "./journal-edit-section";
-import TemplatePathPreview from "./TemplatePathPreview.vue";
-import TemplaterSupportHint from "./TemplaterSupportHint.vue";
 import { useAnchorField } from "./use-anchor-field";
-import VariableReferenceHint from "./VariableReferenceHint.vue";
 
 import type { JournalConfig, NumberingReset, TimelineEnd } from "../../config";
 
@@ -46,32 +40,15 @@ watchEffect(() => {
   if (!config.value) nav.back();
 });
 
-const hasCycle = computed(() => config.value !== undefined && config.value.write.type !== "day");
-const numberingVariableNames = computed<readonly string[]>(() =>
-  config.value?.numbering.enabled ? config.value.numbering.sources.map((source) => source.variable) : [],
-);
-
 const writing = computed(() => {
   if (!config.value) return "";
   const desc = describeWrite(config.value.write);
   return m.journal_write({ every: "day", duration: 1, ...desc });
 });
 
-const templatesOpen = ref(false);
 const timelineOpen = ref(false);
 const sequenceOpen = ref(false);
 const frontmatterOpen = ref(false);
-
-function addTemplate(): void {
-  if (!config.value) return;
-  config.value.templates.push("");
-  templatesOpen.value = true;
-}
-
-function removeTemplate(index: number): void {
-  if (!config.value) return;
-  config.value.templates.splice(index, 1);
-}
 
 const startPicking = computed<Picking>(() =>
   config.value?.write.type === "custom" ? "day" : (config.value?.write.type ?? "day"),
@@ -160,49 +137,6 @@ function editSequenceKey(): void {
       <UiIconButton :icon="icons.action.edit" :tooltip="m.journal_edit_rename_tooltip()" @click="rename" />
       <UiIconButton :icon="icons.nav.back" :tooltip="m.journal_edit_back_tooltip()" @click="nav.back()" />
     </UiSettingRow>
-
-    <UiCollapsibleBlock v-model:expanded="templatesOpen">
-      <template #trigger>
-        <UiIconedRow :icon="icons.section.templates">
-          {{ m.journal_edit_section_templates() }}
-          <span class="flair">{{ config.templates.length }}</span>
-        </UiIconedRow>
-      </template>
-      <template #controls>
-        <UiButton @click="addTemplate">{{ m.journal_edit_template_add_button() }}</UiButton>
-      </template>
-
-      <UiSettingRow>
-        <template #description>
-          <div>{{ m.journal_edit_templates_description() }}</div>
-          <VariableReferenceHint
-            context="template-path"
-            :journal-name="journalName"
-            :date-format="config.dateFormat"
-            :has-cycle="hasCycle"
-            :numbering-variable-names="numberingVariableNames"
-          />
-          <CodeBlockReferenceHint :journal-name="journalName" />
-          <TemplaterSupportHint />
-        </template>
-      </UiSettingRow>
-
-      <template v-for="(_path, index) in config.templates" :key="index">
-        <UiSettingRow>
-          <UiFileInput
-            v-model="config.templates[index]"
-            class="grow"
-            :placeholder="m.journal_edit_template_path_placeholder()"
-          />
-          <UiIconButton
-            :icon="icons.action.delete"
-            :tooltip="m.journal_edit_template_remove_tooltip()"
-            @click="removeTemplate(index)"
-          />
-        </UiSettingRow>
-        <TemplatePathPreview :journal-name="journalName" :path="config.templates[index] ?? ''" />
-      </template>
-    </UiCollapsibleBlock>
 
     <UiCollapsibleBlock v-model:expanded="timelineOpen">
       <template #trigger>
