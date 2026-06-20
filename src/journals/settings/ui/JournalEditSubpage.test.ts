@@ -4,7 +4,7 @@ import { createNanoEvents } from "nanoevents";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { defineComponent, h } from "vue";
 
-import { DayPeriod, type OpenInterval } from "@/calendar";
+import { DayPeriod } from "@/calendar";
 import { date, installTestCalendar } from "@/calendar/testing";
 import { m } from "@/i18n";
 import { type Container, provideInjectorOnApp } from "@/infrastructure/di";
@@ -259,93 +259,13 @@ describe("JournalEditSubpage", () => {
     });
   });
 
-  describe("timeline.start DatePicker", () => {
-    it("writes the picked date to timeline.start", async () => {
-      const { container, journalsRepo, fakeModalService } = await setup();
-      mount(container, "daily");
-      await userEvent.click(screen.getByText(m.journal_edit_section_timeline()));
-      await userEvent.click(screen.getByRole("button", { name: "2024-01-01" }));
-      fakeModalService.lastOpen<unknown, DayPeriod>().submit(DayPeriod.containing(date("2025-03-15")));
-      await waitFor(() => {
-        expect(unwrap(journalsRepo.get("daily")).timeline.start).toBe("2025-03-15");
-      });
-    });
-  });
-
-  describe("timeline.end.date DatePicker", () => {
-    it("writes the picked date to timeline.end.date", async () => {
-      const initial = {
-        version: 4,
-        journals: {
-          daily: makeJournal("daily", { timeline: { start: "2024-01-01", end: { kind: "date", date: "2024-06-01" } } }),
-        },
-      };
-      const { container, journalsRepo, fakeModalService } = await setup(initial);
-      mount(container, "daily");
-      await userEvent.click(screen.getByText(m.journal_edit_section_timeline()));
-      await userEvent.click(screen.getByRole("button", { name: "2024-06-01" }));
-      fakeModalService.lastOpen<unknown, DayPeriod>().submit(DayPeriod.containing(date("2025-06-01")));
-      await waitFor(() => {
-        const config = unwrap(journalsRepo.get("daily"));
-        expect(config.timeline.end.kind === "date" ? config.timeline.end.date : null).toBe("2025-06-01");
-      });
-    });
-
-    it("bounds the end-date picker to start when start is set", async () => {
-      const initial = {
-        version: 4,
-        journals: {
-          daily: makeJournal("daily", {
-            timeline: { start: "2025-03-15", end: { kind: "date", date: "2025-06-01" } },
-          }),
-        },
-      };
-      const { container, fakeModalService } = await setup(initial);
-      mount(container, "daily");
-      await userEvent.click(screen.getByText(m.journal_edit_section_timeline()));
-      await userEvent.click(screen.getByRole("button", { name: "2025-06-01" }));
-      const handle = fakeModalService.lastOpen<{ bounds?: OpenInterval }, DayPeriod>();
-      const boundsStart = handle.props.bounds?.start;
-      expect(boundsStart?.isSome()).toBe(true);
-      expect(boundsStart?.match({ some: (d) => d.toAnchor(), none: () => null })).toBe("2025-03-15");
-    });
-  });
-
-  describe("repeats end mode", () => {
-    it("warns to set a start date when ending after repeats with no start", async () => {
-      const initial = {
-        version: 4,
-        journals: {
-          daily: makeJournal("daily", { timeline: { start: "", end: { kind: "repeats", count: 3 } } }),
-        },
-      };
-      const { container } = await setup(initial);
-      mount(container, "daily");
-      await userEvent.click(screen.getByText(m.journal_edit_section_timeline()));
-      expect(screen.getByText(m.journal_edit_end_repeats_needs_start_warning())).toBeTruthy();
-    });
-
-    it("omits the start-date warning when a start date is set", async () => {
-      const initial = {
-        version: 4,
-        journals: {
-          daily: makeJournal("daily", { timeline: { start: "2024-01-01", end: { kind: "repeats", count: 3 } } }),
-        },
-      };
-      const { container } = await setup(initial);
-      mount(container, "daily");
-      await userEvent.click(screen.getByText(m.journal_edit_section_timeline()));
-      expect(screen.queryByText(m.journal_edit_end_repeats_needs_start_warning())).toBeNull();
-    });
-  });
-
   describe("numbering anchor DatePicker", () => {
     it("writes the picked date to numbering.anchorDate", async () => {
       const initial = {
         version: 4,
         journals: {
           daily: makeJournal("daily", {
-            timeline: { start: "2024-01-01", end: { kind: "never" } },
+            timeline: { start: "", end: { kind: "never" } },
             numbering: {
               enabled: true,
               anchorDate: "2024-01-01",
@@ -364,9 +284,6 @@ describe("JournalEditSubpage", () => {
       };
       const { container, journalsRepo, fakeModalService } = await setup(initial);
       mount(container, "daily");
-      // Expand Timeline, clear start so the numbering anchor picker becomes visible
-      await userEvent.click(screen.getByText(m.journal_edit_section_timeline()));
-      await userEvent.click(screen.getByLabelText(m.common_action_close()));
       await userEvent.click(screen.getByText(m.journal_edit_section_sequential_numbers()));
       await userEvent.click(screen.getByRole("button", { name: "2024-01-01" }));
       fakeModalService.lastOpen<unknown, DayPeriod>().submit(DayPeriod.containing(date("2025-01-10")));
