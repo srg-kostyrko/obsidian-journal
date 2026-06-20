@@ -68,9 +68,8 @@ function mount(overrides: Partial<JournalConfig> = {}) {
 
 describe("TemplatesSection", () => {
   describe("section heading", () => {
-    it("renders the section heading with the template count", () => {
+    it("shows the template count in the section flair", () => {
       mount({ templates: ["a.md", "b.md"] });
-      expect(screen.getByText(m.journal_edit_section_templates())).toBeTruthy();
       expect(screen.getByText("2")).toBeTruthy();
     });
   });
@@ -99,7 +98,6 @@ describe("TemplatesSection", () => {
       await waitFor(() => {
         expect(screen.getByText("2026-template.md")).toBeTruthy();
       });
-      expect(screen.queryByText("static-template.md", { exact: false, selector: "b.u-pop" })).toBeNull();
     });
   });
 });

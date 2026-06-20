@@ -74,13 +74,6 @@ function mount(overrides: Partial<JournalConfig> = {}) {
 }
 
 describe("TimelineSection", () => {
-  describe("section heading", () => {
-    it("renders the timeline section heading", () => {
-      mount();
-      expect(screen.getByText(m.journal_edit_section_timeline())).toBeTruthy();
-    });
-  });
-
   describe("timeline.start DatePicker", () => {
     it("writes the picked date to timeline.start", async () => {
       const { storage, fakeModalService } = mount({

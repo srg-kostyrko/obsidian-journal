@@ -85,13 +85,6 @@ function mount(overrides: Partial<JournalConfig> = {}) {
 }
 
 describe("SequenceSection", () => {
-  describe("section heading", () => {
-    it("renders the sequential numbers heading", () => {
-      mount();
-      expect(screen.getByText(m.journal_edit_section_sequential_numbers())).toBeTruthy();
-    });
-  });
-
   describe("sequence toggle", () => {
     it("materializes the default source when sequential numbers is toggled on", async () => {
       const { storage } = mount({

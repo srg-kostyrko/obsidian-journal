@@ -45,7 +45,7 @@ export class ShelvesService {
   }
 
   hasShelves(): boolean {
-    return !this.#shelves.find().ids().next().done;
+    return this.#shelves.count() > 0;
   }
 
   shelfOf(journalName: string): string {
