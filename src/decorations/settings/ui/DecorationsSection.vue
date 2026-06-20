@@ -49,7 +49,7 @@ function remove(index: number): void {
       <span class="journal-section-heading">
         <UiIcon :name="icons.section.decorations" />
         <span>{{ m.decoration_section_title() }}</span>
-        <span class="count">{{ decorations.length }}</span>
+        <span class="flair">{{ decorations.length }}</span>
       </span>
     </template>
     <template #controls>
@@ -89,10 +89,6 @@ function remove(index: number): void {
   align-items: center;
   gap: var(--size-2-2);
   font-weight: var(--font-semibold);
-}
-.count {
-  font-weight: normal;
-  color: var(--text-muted);
 }
 .row-preview {
   display: inline-block;

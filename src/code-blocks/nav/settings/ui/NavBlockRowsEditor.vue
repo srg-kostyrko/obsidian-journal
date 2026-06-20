@@ -78,7 +78,7 @@ function moveDown(index: number): void {
       <span class="journal-section-heading">
         <UiIcon :name="icon" />
         <span>{{ title }}</span>
-        <span class="count">{{ config[field].rows.length }}</span>
+        <span class="flair">{{ config[field].rows.length }}</span>
       </span>
     </template>
     <template #controls>
@@ -142,10 +142,6 @@ function moveDown(index: number): void {
   align-items: center;
   gap: var(--size-2-2);
   font-weight: var(--font-semibold);
-}
-.count {
-  font-weight: normal;
-  color: var(--text-muted);
 }
 .nav-row-preview {
   display: flex;
