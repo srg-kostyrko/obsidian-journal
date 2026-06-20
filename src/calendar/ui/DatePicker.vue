@@ -55,7 +55,7 @@ async function open(): Promise<void> {
 
 <template>
   <UiButton class="date-picker-trigger" :disabled="disabled" @click="open">
-    <UiIcon :name="icons.action.pickDate" />
+    <UiIcon :name="icons.action.calendar" />
     <span>{{ label }}</span>
   </UiButton>
 </template>

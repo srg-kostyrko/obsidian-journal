@@ -7,6 +7,7 @@ export const icons = {
     copy: "copy",
     openExternal: "external-link",
     pickDate: "crosshair",
+    calendar: "calendar",
     check: "lucide-check",
     moveUp: "chevron-up",
     moveDown: "chevron-down",
