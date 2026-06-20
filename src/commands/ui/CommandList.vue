@@ -30,7 +30,7 @@ defineEmits<{ edit: [id: string]; delete: [id: string] }>();
         </span>
       </template>
       <UiIconButton
-        :icon="icons.action.edit"
+        :icon="icons.action.configure"
         :tooltip="`${m.command_edit()} ${command.name}`"
         @click="$emit('edit', id)"
       />

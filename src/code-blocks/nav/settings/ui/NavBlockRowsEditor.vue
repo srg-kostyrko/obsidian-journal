@@ -130,7 +130,7 @@ function moveDown(index: number): void {
         :tooltip="m.common_action_move_down()"
         @click="moveDown(index)"
       />
-      <UiIconButton :icon="icons.action.edit" :tooltip="m.block_rows_edit_tooltip()" @click="edit(index)" />
+      <UiIconButton :icon="icons.action.configure" :tooltip="m.block_rows_edit_tooltip()" @click="edit(index)" />
       <UiIconButton :icon="icons.action.delete" :tooltip="m.block_rows_delete_tooltip()" @click="remove(index)" />
     </UiSettingRow>
   </UiCollapsibleBlock>

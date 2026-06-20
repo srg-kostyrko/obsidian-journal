@@ -1,6 +1,7 @@
 export const icons = {
   action: {
     edit: "pencil",
+    configure: "settings",
     delete: "trash-2",
     add: "plus",
     addFile: "file-plus",

@@ -227,7 +227,7 @@ describe("settings", () => {
       await expandSection("Views");
       await clickIcon("Open Calendar");
       // Two toolbar blocks each render an "Add toolbar item" button; add to the last strip so the
-      // new item is globally last — matching the last edit pencil and last-button reads below.
+      // new item is globally last — matching the last edit button and last-button reads below.
       const adders = await $$('button[aria-label="Add toolbar item"]').getElements();
       await adders.at(-1)?.click();
       await clickButton("Pick date");
@@ -236,12 +236,12 @@ describe("settings", () => {
         "added pick-date button not persisted",
       );
 
-      // Multiple toolbar items carry the edit pencil; the one just added is last. The pencil is
+      // Multiple toolbar items carry the edit button; the one just added is last. The button is
       // pointer-events:none until its frame is hovered, and this harness's pointer Actions can't
-      // hover (see the drag test below), so fire the click programmatically on the last pencil.
+      // hover (see the drag test below), so fire the click programmatically on the last one.
       await browser.execute(() => {
-        const pencils = [...document.querySelectorAll<HTMLElement>('button[aria-label="Edit toolbar item"]')];
-        pencils.at(-1)?.click();
+        const editButtons = [...document.querySelectorAll<HTMLElement>('button[aria-label="Edit toolbar item"]')];
+        editButtons.at(-1)?.click();
       });
       await selectModalSelect("create");
       await submitModal();
@@ -268,9 +268,9 @@ describe("settings", () => {
         return block?.key === "week-calendar" && block.config?.weeks === "left";
       }, "added week-calendar block not persisted");
 
-      // Edit pencils show only for blocks with a config editor; the one just added is last.
-      const pencils = await $$('button[aria-label="Edit block"]').getElements();
-      await pencils.at(-1)?.click();
+      // Edit buttons show only for blocks with a config editor; the one just added is last.
+      const editButtons = await $$('button[aria-label="Edit block"]').getElements();
+      await editButtons.at(-1)?.click();
       await selectModalSelect("right");
       await submitModal();
 
@@ -314,8 +314,8 @@ describe("settings", () => {
         "added week-calendar block did not default to no hidden weekdays",
       );
 
-      const pencils = await $$('button[aria-label="Edit block"]').getElements();
-      await pencils.at(-1)?.click();
+      const editButtons = await $$('button[aria-label="Edit block"]').getElements();
+      await editButtons.at(-1)?.click();
       // Saturday is weekday index 6 (Sunday-based); checking it should persist [6].
       await clickModalCheckboxByLabel("Sat");
       await submitModal();
@@ -399,7 +399,7 @@ describe("settings", () => {
     it("edits a decoration's match mode and persists it", async () => {
       await openJournalSubpage("core", "daily");
       await expandSection("Calendar decorations");
-      // The first decoration row's edit pencil; multiple rows share the tooltip, so clickIcon
+      // The first decoration row's edit button; multiple rows share the tooltip, so clickIcon
       // (which targets the first match) lands on index 0. The modal's first <select> is the
       // and/or mode dropdown.
       await clickIcon("Edit decoration");

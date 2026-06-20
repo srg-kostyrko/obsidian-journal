@@ -25,7 +25,7 @@ defineEmits<{ edit: []; remove: [] }>();
     <span class="jv-frame-tools">
       <UiIconButton
         v-if="definition?.configComponent"
-        :icon="icons.action.edit"
+        :icon="icons.action.configure"
         :tooltip="m.view_toolbar_item_edit()"
         @click="$emit('edit')"
       />

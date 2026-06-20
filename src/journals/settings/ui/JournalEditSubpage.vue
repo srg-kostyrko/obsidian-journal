@@ -408,7 +408,7 @@ function editSequenceKey(): void {
         <UiSettingRow :name="m.common_label_property_name()">
           {{ config.numbering.sources[0].frontmatterKey }}
           <UiIconButton
-            :icon="icons.action.edit"
+            :icon="icons.action.configure"
             :tooltip="`${m.common_label_property_name()} edit`"
             @click="editSequenceKey"
           />
@@ -427,7 +427,7 @@ function editSequenceKey(): void {
       <UiSettingRow :name="m.journal_fm_field_label({ field: 'dateField' })">
         {{ config.frontmatter.dateField }}
         <UiIconButton
-          :icon="icons.action.edit"
+          :icon="icons.action.configure"
           :tooltip="`${m.journal_fm_field_label({ field: 'dateField' })} edit`"
           @click="editFm('dateField')"
         />
@@ -443,7 +443,7 @@ function editSequenceKey(): void {
       >
         {{ config.frontmatter.startDateField }}
         <UiIconButton
-          :icon="icons.action.edit"
+          :icon="icons.action.configure"
           :tooltip="`${m.journal_fm_field_label({ field: 'startDateField' })} edit`"
           @click="editFm('startDateField')"
         />
@@ -455,7 +455,7 @@ function editSequenceKey(): void {
       <UiSettingRow v-if="config.frontmatter.addEndDate" :name="m.journal_fm_field_label({ field: 'endDateField' })">
         {{ config.frontmatter.endDateField }}
         <UiIconButton
-          :icon="icons.action.edit"
+          :icon="icons.action.configure"
           :tooltip="`${m.journal_fm_field_label({ field: 'endDateField' })} edit`"
           @click="editFm('endDateField')"
         />

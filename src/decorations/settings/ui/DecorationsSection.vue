@@ -77,7 +77,7 @@ function remove(index: number): void {
           </template>
         </div>
       </template>
-      <UiIconButton :icon="icons.action.edit" :tooltip="m.decoration_edit()" @click="edit(index)" />
+      <UiIconButton :icon="icons.action.configure" :tooltip="m.decoration_edit()" @click="edit(index)" />
       <UiIconButton :icon="icons.action.delete" :tooltip="m.decoration_delete()" @click="remove(index)" />
     </UiSettingRow>
   </UiCollapsibleBlock>

@@ -38,7 +38,7 @@ function place(): void {
 
     <UiSettingRow :name="m.common_label_shelf()">
       <span>{{ currentShelf === "" ? m.shelf_section_not_on_shelf() : currentShelf }}</span>
-      <UiIconButton :icon="icons.action.edit" :tooltip="m.shelf_section_place_tooltip()" @click="place" />
+      <UiIconButton :icon="icons.action.configure" :tooltip="m.shelf_section_place_tooltip()" @click="place" />
     </UiSettingRow>
   </UiCollapsibleBlock>
 </template>

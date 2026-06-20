@@ -16,7 +16,12 @@ defineEmits<{ edit: []; remove: [] }>();
     <span v-if="summary" class="jv-block-summary">{{ summary }}</span>
     <span class="jv-frame-spacer" />
     <span class="jv-frame-tools">
-      <UiIconButton v-if="editable" :icon="icons.action.edit" :tooltip="m.view_block_edit()" @click="$emit('edit')" />
+      <UiIconButton
+        v-if="editable"
+        :icon="icons.action.configure"
+        :tooltip="m.view_block_edit()"
+        @click="$emit('edit')"
+      />
       <UiIconButton :icon="icons.action.delete" :tooltip="m.view_block_remove()" @click="$emit('remove')" />
     </span>
   </div>
