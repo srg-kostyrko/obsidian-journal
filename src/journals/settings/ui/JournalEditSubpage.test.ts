@@ -168,17 +168,27 @@ describe("JournalEditSubpage", () => {
   });
 });
 
-describe("JournalEditSubpage extension sections", () => {
-  it("renders sections contributed through JournalEditSectionToken", async () => {
+function makeSectionComponent(label: string) {
+  return defineComponent({
+    props: { journalName: { type: String, default: "" } },
+    render() {
+      return h("div", label);
+    },
+  });
+}
+
+describe("JournalEditSubpage section ordering", () => {
+  it("renders registered sections in ascending order", async () => {
     const { container } = await setup();
-    const Stub = defineComponent({
-      props: { journalName: { type: String, required: true } },
-      setup: (props) => () => h("div", `section for ${props.journalName}`),
-    });
     container
       .register(JournalEditSectionToken)
-      .useValue(defineJournalEditSection({ key: "stub", component: Stub, order: 1 }));
+      .useValue(defineJournalEditSection({ key: "b", order: 20, component: makeSectionComponent("B") }));
+    container
+      .register(JournalEditSectionToken)
+      .useValue(defineJournalEditSection({ key: "a", order: 10, component: makeSectionComponent("A") }));
     mount(container, "daily");
-    expect(screen.getByText("section for daily")).toBeTruthy();
+    const a = screen.getByText("A");
+    const b = screen.getByText("B");
+    expect(a.compareDocumentPosition(b) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
   });
 });
