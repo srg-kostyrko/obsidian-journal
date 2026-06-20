@@ -30,7 +30,6 @@ import { createSettingsService } from "@/settings/testing";
 import { TemplateEngine } from "@/templates";
 import { installTestEngine } from "@/templates/testing";
 
-import { EditFrontmatterFieldFlow } from "../flows/edit-frontmatter-field.flow";
 import { RenameJournalFlow } from "../flows/rename-journal.flow";
 
 import { JournalEditSectionToken, defineJournalEditSection } from "./journal-edit-section";
@@ -165,17 +164,6 @@ describe("JournalEditSubpage", () => {
     journalsRepo.delete("daily");
     await waitFor(() => {
       expect(back).toHaveBeenCalled();
-    });
-  });
-
-  it("invokes EditFrontmatterFieldFlow when the date-field pencil is clicked", async () => {
-    const { container, flows } = await setup();
-    mount(container, "daily");
-    await userEvent.click(screen.getByText(m.journal_edit_section_frontmatter()));
-    await userEvent.click(screen.getByLabelText(`${m.journal_fm_field_label({ field: "dateField" })} edit`));
-    expect(flows.invoke).toHaveBeenCalledWith(EditFrontmatterFieldFlow, {
-      journalName: "daily",
-      fieldName: "dateField",
     });
   });
 });

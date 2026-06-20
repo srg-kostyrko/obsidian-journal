@@ -13,6 +13,7 @@ import { journalNotesModule } from "./notes/module";
 import { NumberingService } from "./numbering";
 import { JournalsRepository, type JournalsEvents } from "./repository";
 import { JournalEditSectionToken, defineJournalEditSection } from "./settings/ui/journal-edit-section";
+import FrontmatterSection from "./settings/ui/sections/FrontmatterSection.vue";
 import NoteCreationSection from "./settings/ui/sections/NoteCreationSection.vue";
 import SequenceSection from "./settings/ui/sections/SequenceSection.vue";
 import TemplatesSection from "./settings/ui/sections/TemplatesSection.vue";
@@ -50,6 +51,9 @@ export const journalsModule: Module = {
     );
     c.register(JournalEditSectionToken).useValue(
       defineJournalEditSection({ key: "sequence", order: 50, component: SequenceSection }),
+    );
+    c.register(JournalEditSectionToken).useValue(
+      defineJournalEditSection({ key: "frontmatter", order: 60, component: FrontmatterSection }),
     );
   },
 };
