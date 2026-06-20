@@ -58,7 +58,7 @@ function remove(journalName: string): void {
       </UiIconedRow>
     </template>
     <template #controls>
-      <UiIconButton :icon="icons.action.add" cta :tooltip="m.journal_create()" @click="add" />
+      <UiIconButton :icon="icons.action.add" :tooltip="m.journal_create()" @click="add" />
     </template>
     <JournalList :entries="entries" :empty-text="m.journal_dashboard_empty()" @edit="edit" @delete="remove" />
   </UiCollapsibleBlock>

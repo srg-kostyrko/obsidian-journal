@@ -53,7 +53,7 @@ function remove(shelfName: string): void {
       </UiIconedRow>
     </template>
     <template #controls>
-      <UiIconButton :icon="icons.action.add" cta :tooltip="m.shelf_add()" @click="add" />
+      <UiIconButton :icon="icons.action.add" :tooltip="m.shelf_add()" @click="add" />
     </template>
     <UiSettingRow v-if="entries.length === 0">
       <template #description>{{ m.shelf_dashboard_empty() }}</template>

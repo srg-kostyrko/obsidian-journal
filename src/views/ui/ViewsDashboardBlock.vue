@@ -52,7 +52,7 @@ function remove(viewId: ViewId): void {
       </UiIconedRow>
     </template>
     <template #controls>
-      <UiIconButton :icon="icons.action.add" cta :tooltip="m.view_dashboard_add()" @click="add" />
+      <UiIconButton :icon="icons.action.add" :tooltip="m.view_dashboard_add()" @click="add" />
     </template>
     <UiSettingRow v-if="viewsVM.views.value.length === 0">
       <template #description>{{ m.view_dashboard_empty() }}</template>
