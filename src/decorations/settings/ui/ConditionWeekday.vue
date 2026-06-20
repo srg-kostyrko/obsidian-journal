@@ -25,13 +25,29 @@ function isChecked(index: number): boolean {
 
 <template>
   <UiSettingRow :name="m.decoration_condition_weekday_label()">
-    <label v-for="{ index, label } in orderedWeekdays" :key="index">
-      <input
-        type="checkbox"
-        :checked="isChecked(index)"
-        @change="toggle(index, ($event.target as HTMLInputElement).checked)"
-      />
-      {{ label }}
-    </label>
+    <div class="weekday-grid">
+      <label v-for="{ index, label } in orderedWeekdays" :key="index">
+        <input
+          type="checkbox"
+          :checked="isChecked(index)"
+          @change="toggle(index, ($event.target as HTMLInputElement).checked)"
+        />
+        {{ label }}
+      </label>
+    </div>
   </UiSettingRow>
 </template>
+
+<style scoped>
+.weekday-grid {
+  display: grid;
+  grid-template-columns: repeat(7, 1fr);
+  gap: var(--size-2-3);
+}
+/* column-reverse keeps the day label above its checkbox (the template emits the input first). */
+.weekday-grid label {
+  display: flex;
+  flex-direction: column-reverse;
+  align-items: center;
+}
+</style>

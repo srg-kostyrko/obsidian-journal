@@ -98,4 +98,11 @@ function open(badge: Badge, event: MouseEvent): void {
 .jv-period-inert {
   pointer-events: none;
 }
+/* Mirror the in-grid cell highlight: a period button whose note is the active one picks up
+   the configured active colors (bridged onto the document body as CSS vars). The
+   button[data-active] specificity clears the flat clickable-icon background. */
+button[data-active] {
+  color: var(--journal-cell-active-color);
+  background-color: var(--journal-cell-active-bg);
+}
 </style>

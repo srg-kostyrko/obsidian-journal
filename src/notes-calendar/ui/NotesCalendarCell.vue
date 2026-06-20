@@ -38,6 +38,13 @@ const isToday = computed(() => rawPeriod.value.contains(CalendarDate.today()));
 </template>
 
 <style scoped>
+/* Actionable cells open a note on click; inactive (non-actionable) cells offer nothing. */
+.notes-calendar-cell {
+  cursor: pointer;
+}
+.notes-calendar-cell[data-inactive] {
+  cursor: not-allowed;
+}
 /* [data-today] follows [data-active] so a cell that is both resolves to the today colors. */
 .notes-calendar-cell[data-active] {
   color: var(--journal-cell-active-color);

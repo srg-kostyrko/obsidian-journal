@@ -28,3 +28,10 @@ const basename = computed(() => {
     <b class="u-pop">{{ basename }}</b>
   </div>
 </template>
+
+<style scoped>
+/* Preserve significant whitespace in a resolved filename so spaces render literally. */
+b {
+  white-space: pre;
+}
+</style>

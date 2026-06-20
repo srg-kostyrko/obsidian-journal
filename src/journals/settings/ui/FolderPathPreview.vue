@@ -37,3 +37,10 @@ const wrongWeek = computed(() => templateHasWrongWeek(props.folder));
   </div>
   <WrongWeekWarning v-if="wrongWeek" />
 </template>
+
+<style scoped>
+/* Preserve significant whitespace in a resolved folder path so spaces render literally. */
+b {
+  white-space: pre;
+}
+</style>

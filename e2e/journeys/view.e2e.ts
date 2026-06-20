@@ -279,6 +279,39 @@ describe("calendar view", () => {
       );
     });
 
+    it("paints the active period button with the configured active background", async () => {
+      await openCalendarView();
+      await $(`${TOOLBAR} [data-period="month"]`).click();
+      await waitForState(
+        async () => (await $(`${TOOLBAR} [data-period="month"]`).getAttribute("data-active")) ?? undefined,
+        (active) => active === "true",
+        "month period button did not become active",
+      );
+
+      // The active background is bridged onto the document body as --journal-cell-active-bg;
+      // a probe resolves it so the assertion stays theme-independent.
+      const verdict = await browser.execute(() => {
+        const button = document.querySelector(".journal-view-toolbar [data-period='month']");
+        if (!button) return "no-button";
+        const probe = document.createElement("div");
+        probe.style.backgroundColor = "var(--journal-cell-active-bg)";
+        document.body.append(probe);
+        const expected = getComputedStyle(probe).backgroundColor;
+        probe.remove();
+        return getComputedStyle(button).backgroundColor === expected ? "match" : "mismatch";
+      });
+      expect(verdict).toBe("match");
+    });
+
+    it("shows a pointer cursor on actionable calendar cells", async () => {
+      await openCalendarView();
+      const cursor = await browser.execute(() => {
+        const cell = document.querySelector(".notes-calendar-cell:not([data-inactive])");
+        return cell ? getComputedStyle(cell).cursor : "none";
+      });
+      expect(cursor).toBe("pointer");
+    });
+
     it("creates and opens today's day note when the Today button is clicked", async () => {
       await openCalendarView();
       await $(`${TOOLBAR} [aria-label="Today"]`).click();
