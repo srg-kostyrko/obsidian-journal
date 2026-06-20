@@ -44,6 +44,10 @@ export class ShelvesService {
     return new Ok(undefined);
   }
 
+  hasShelves(): boolean {
+    return !this.#shelves.find().ids().next().done;
+  }
+
   shelfOf(journalName: string): string {
     for (const shelf of this.#shelves.find().list()) {
       if (shelf.journals.includes(journalName)) return shelf.name;

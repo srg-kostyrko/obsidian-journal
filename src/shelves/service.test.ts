@@ -138,4 +138,16 @@ describe("ShelvesService", () => {
       expect(shelvesStorage.Personal?.journals).toEqual(["other"]);
     });
   });
+
+  describe("hasShelves", () => {
+    it("returns false when no shelves exist", () => {
+      const { service } = setup({ shelves: {} });
+      expect(service.hasShelves()).toBe(false);
+    });
+
+    it("returns true when at least one shelf exists", () => {
+      const { service } = setup({ shelves: { Personal: shelf("Personal") } });
+      expect(service.hasShelves()).toBe(true);
+    });
+  });
 });

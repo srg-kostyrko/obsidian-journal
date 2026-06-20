@@ -19,6 +19,7 @@ const flows = useService(Flows);
 const shelvesService = useService(ShelvesService);
 
 const currentShelf = computed(() => shelvesService.shelfOf(journalName));
+const hasShelves = computed(() => shelvesService.hasShelves());
 
 const expanded = ref(false);
 
@@ -28,7 +29,7 @@ function place(): void {
 </script>
 
 <template>
-  <UiCollapsibleBlock v-model:expanded="expanded">
+  <UiCollapsibleBlock v-if="hasShelves" v-model:expanded="expanded">
     <template #trigger>
       <span class="journal-section-heading">
         <UiIcon :name="icons.entity.shelf" />

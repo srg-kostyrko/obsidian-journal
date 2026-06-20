@@ -49,6 +49,12 @@ function mount(container: Container, journalName: string) {
 }
 
 describe("JournalShelfSection", () => {
+  it("renders nothing when no shelves exist", async () => {
+    const { container } = await setup({});
+    mount(container, "daily");
+    expect(screen.queryByText(m.common_label_shelf())).toBeNull();
+  });
+
   it("shows the not-on-a-shelf message when the journal is unassigned", async () => {
     const { container } = await setup({ Work: { name: "Work", journals: [] } });
     mount(container, "daily");
