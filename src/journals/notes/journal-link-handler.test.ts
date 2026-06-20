@@ -43,7 +43,7 @@ const ALL_JOURNALS = {
   yearly: fixedJournal("yearly", { type: "year" }),
   monthly: fixedJournal("monthly", { type: "month" }),
   daily: fixedJournal("daily", { type: "day" }),
-  custom_daily: customJournal("custom_daily", "day", 1, "2020-01-01"),
+  custom_daily: customJournal("custom_daily", "day", 1, "2020-01-01", { nameTemplate: "{{date}}" }),
 };
 
 function hostContext(name: string, anchorDate: string, startDate: string): TemplateContext {

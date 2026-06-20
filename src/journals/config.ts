@@ -1,7 +1,7 @@
 import * as v from "valibot";
 
 import type { AnchorString } from "@/calendar";
-import { colorSchema, decorationSchema } from "@/decorations/config";
+import { colorSchema, decorationSchema, type JournalDecoration } from "@/decorations/config";
 import { defineCollection } from "@/settings";
 
 export const FRONTMATTER_NAME_KEY = "journal";
@@ -170,6 +170,15 @@ const DATE_FORMATS: Record<JournalWrite["type"], string> = {
   custom: "YYYY-MM-DD",
 };
 
+const NAME_TEMPLATES: Record<JournalWrite["type"], string> = {
+  day: "{{date}}",
+  week: "{{date}}",
+  month: "{{date}}",
+  quarter: "{{date}}",
+  year: "{{date}}",
+  custom: "{{journal_name}} {{index}}",
+};
+
 const EMPTY_ANCHOR = "" as AnchorString;
 
 const emptyNavRow: NavBlockRow = {
@@ -250,6 +259,51 @@ const defaultNavBlocks: Record<JournalWrite["type"], JournalNavBlock> = {
   },
 };
 
+const emptyIntervalBlock: JournalNavBlock = { type: "create", rows: [], decorateWholeBlock: false };
+
+const customIntervalBlock: JournalNavBlock = {
+  type: "create",
+  decorateWholeBlock: true,
+  rows: [
+    { ...emptyNavRow, template: "{{journal_name}} {{index}}", link: "self", fontSize: 1.2, bold: true },
+    { ...emptyNavRow, template: "{{start_date}} to {{end_date}}" },
+  ],
+};
+
+const fixedDecorations: JournalDecoration[] = [
+  {
+    mode: "and",
+    conditions: [{ type: "has-note" }],
+    styles: [
+      {
+        type: "shape",
+        size: 0.4,
+        shape: "circle",
+        color: { type: "theme", name: "interactive-accent" },
+        placement_x: "center",
+        placement_y: "bottom",
+      },
+    ],
+  },
+];
+
+const customDecorations: JournalDecoration[] = [
+  {
+    mode: "and",
+    conditions: [{ type: "has-note" }],
+    styles: [
+      {
+        type: "border",
+        border: "different",
+        left: { show: true, width: 2, color: { type: "theme", name: "interactive-accent" }, style: "solid" },
+        right: { show: false, width: 1, color: { type: "transparent" }, style: "solid" },
+        top: { show: false, width: 1, color: { type: "transparent" }, style: "solid" },
+        bottom: { show: false, width: 1, color: { type: "transparent" }, style: "solid" },
+      },
+    ],
+  },
+];
+
 export function journalDefaultsFor(write: JournalWrite, name = ""): JournalConfig {
   const numberingForCustom: JournalNumberingConfig = {
     enabled: true,
@@ -272,10 +326,12 @@ export function journalDefaultsFor(write: JournalWrite, name = ""): JournalConfi
     sources: [],
   };
 
+  const isCustom = write.type === "custom";
+
   return {
     name,
     write,
-    timeline: { start: EMPTY_ANCHOR, end: { kind: "never" } },
+    timeline: { start: isCustom ? write.anchorDate : EMPTY_ANCHOR, end: { kind: "never" } },
     dateFormat: DATE_FORMATS[write.type],
     frontmatter: {
       dateField: "journal-date",
@@ -284,19 +340,15 @@ export function journalDefaultsFor(write: JournalWrite, name = ""): JournalConfi
       addStartDate: false,
       addEndDate: false,
     },
-    numbering: write.type === "custom" ? numberingForCustom : numberingForFixed,
-    nameTemplate: "{{date}}",
+    numbering: isCustom ? numberingForCustom : numberingForFixed,
+    nameTemplate: NAME_TEMPLATES[write.type],
     folder: "",
     templates: [],
     confirmCreation: false,
     autoCreate: false,
-    decorations: [],
+    decorations: isCustom ? customDecorations : fixedDecorations,
     navBlock: defaultNavBlocks[write.type],
-    intervalBlock: {
-      type: "create" as const,
-      rows: [] as NavBlockRow[],
-      decorateWholeBlock: false,
-    },
+    intervalBlock: isCustom ? customIntervalBlock : emptyIntervalBlock,
   };
 }
 

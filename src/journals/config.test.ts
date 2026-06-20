@@ -135,6 +135,57 @@ describe("journalDefaultsFor navBlock per write type", () => {
   });
 });
 
+describe("journalDefaultsFor custom-interval defaults", () => {
+  const customWrite = { type: "custom", every: "week", duration: 2, anchorDate: "2024-01-01" as AnchorString } as const;
+
+  it("names notes by journal name and index", () => {
+    const cfg = journalDefaultsFor(customWrite, "biweekly");
+    expect(cfg.nameTemplate).toBe("{{journal_name}} {{index}}");
+  });
+
+  it("starts the timeline at the cycle anchor date", () => {
+    const cfg = journalDefaultsFor(customWrite, "biweekly");
+    expect(cfg.timeline.start).toBe("2024-01-01");
+  });
+
+  it("seeds the interval block with a title row and a start-to-end row", () => {
+    const { intervalBlock } = journalDefaultsFor(customWrite, "biweekly");
+    expect(intervalBlock.type).toBe("create");
+    expect(intervalBlock.decorateWholeBlock).toBe(true);
+    expect(intervalBlock.rows.map((r) => r.template)).toEqual([
+      "{{journal_name}} {{index}}",
+      "{{start_date}} to {{end_date}}",
+    ]);
+    expect(intervalBlock.rows[0]).toMatchObject({ fontSize: 1.2, bold: true, link: "self" });
+  });
+
+  it("seeds a left-border accent decoration for notes that exist", () => {
+    const cfg = journalDefaultsFor(customWrite, "biweekly");
+    expect(cfg.decorations).toHaveLength(1);
+    const [decoration] = cfg.decorations;
+    expect(decoration.conditions).toEqual([{ type: "has-note" }]);
+    expect(decoration.styles[0]).toMatchObject({
+      type: "border",
+      border: "different",
+      left: { show: true, width: 2, color: { type: "theme", name: "interactive-accent" } },
+    });
+  });
+});
+
+describe("journalDefaultsFor fixed-interval decorations", () => {
+  it("seeds an accent circle decoration for notes that exist", () => {
+    const cfg = journalDefaultsFor({ type: "day" }, "daily");
+    expect(cfg.decorations).toHaveLength(1);
+    const [decoration] = cfg.decorations;
+    expect(decoration.conditions).toEqual([{ type: "has-note" }]);
+    expect(decoration.styles[0]).toMatchObject({
+      type: "shape",
+      shape: "circle",
+      color: { type: "theme", name: "interactive-accent" },
+    });
+  });
+});
+
 describe("journalConfigSchema navBlock default", () => {
   it("fills navBlock with an empty-create default when absent", () => {
     const cfg = journalDefaultsFor({ type: "day" }, "daily");

@@ -35,7 +35,7 @@ function buildCustomJournal(name: string, rows: NavBlockRow[]): JournalConfig {
     { type: "custom", every: "day", duration: 1, anchorDate: "2026-01-01" as AnchorString },
     name,
   );
-  return { ...base, intervalBlock: { ...base.intervalBlock, rows } };
+  return { ...base, intervalBlock: { ...base.intervalBlock, rows, decorateWholeBlock: false } };
 }
 
 function mount(rows: NavBlockRow[]) {
