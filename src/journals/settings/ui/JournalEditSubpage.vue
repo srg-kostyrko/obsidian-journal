@@ -19,7 +19,6 @@ import UiIconButton from "@/ui/UiIconButton.vue";
 import UiIconedRow from "@/ui/UiIconedRow.vue";
 import UiNumberInput from "@/ui/UiNumberInput.vue";
 import UiSettingRow from "@/ui/UiSettingRow.vue";
-import UiTextInput from "@/ui/UiTextInput.vue";
 import UiToggle from "@/ui/UiToggle.vue";
 
 import { describeWrite } from "../describe-write";
@@ -28,17 +27,10 @@ import { EditSequencePropertyFlow } from "../flows/edit-sequence-property.flow";
 import { RenameJournalFlow } from "../flows/rename-journal.flow";
 
 import CodeBlockReferenceHint from "./CodeBlockReferenceHint.vue";
-import DateFormatPreview from "./DateFormatPreview.vue";
-import FolderInput from "./FolderInput.vue";
-import FolderPathPreview from "./FolderPathPreview.vue";
 import { JournalEditSectionToken } from "./journal-edit-section";
-import NoteNamePreview from "./NoteNamePreview.vue";
 import TemplatePathPreview from "./TemplatePathPreview.vue";
 import TemplaterSupportHint from "./TemplaterSupportHint.vue";
 import { useAnchorField } from "./use-anchor-field";
-import { useAutoCreateOnEnable } from "./use-auto-create-on-enable";
-import { extractFromDateFormat, extractFromNameTemplate } from "./use-folder-extractor";
-import { useInvertibilityCheck } from "./use-invertibility-check";
 import VariableReferenceHint from "./VariableReferenceHint.vue";
 
 import type { JournalConfig, NumberingReset, TimelineEnd } from "../../config";
@@ -49,7 +41,6 @@ const flows = useService(Flows);
 const journalsVM = useService(JournalsViewModel);
 const editSections = useService(JournalEditSectionToken).toSorted((a, b) => a.order - b.order);
 const config = computed<JournalConfig | undefined>(() => journalsVM.getJournal(journalName).getOr(undefined as never));
-useAutoCreateOnEnable(config);
 
 watchEffect(() => {
   if (!config.value) nav.back();
@@ -60,24 +51,12 @@ const numberingVariableNames = computed<readonly string[]>(() =>
   config.value?.numbering.enabled ? config.value.numbering.sources.map((source) => source.variable) : [],
 );
 
-const nameTemplateRef = computed(() => config.value?.nameTemplate ?? "");
-const invertibility = useInvertibilityCheck(nameTemplateRef);
-
-function applyNameTemplateRecommendation(): void {
-  if (config.value) extractFromNameTemplate(config.value);
-}
-
-function applyDateFormatRecommendation(): void {
-  if (config.value) extractFromDateFormat(config.value);
-}
-
 const writing = computed(() => {
   if (!config.value) return "";
   const desc = describeWrite(config.value.write);
   return m.journal_write({ every: "day", duration: 1, ...desc });
 });
 
-const noteCreationOpen = ref(true);
 const templatesOpen = ref(false);
 const timelineOpen = ref(false);
 const sequenceOpen = ref(false);
@@ -181,84 +160,6 @@ function editSequenceKey(): void {
       <UiIconButton :icon="icons.action.edit" :tooltip="m.journal_edit_rename_tooltip()" @click="rename" />
       <UiIconButton :icon="icons.nav.back" :tooltip="m.journal_edit_back_tooltip()" @click="nav.back()" />
     </UiSettingRow>
-
-    <UiCollapsibleBlock v-model:expanded="noteCreationOpen">
-      <template #trigger>
-        <span class="journal-section-heading">
-          <UiIcon :name="icons.action.addFile" />
-          <span>{{ m.journal_edit_section_note_creation() }}</span>
-        </span>
-      </template>
-
-      <UiSettingRow :name="m.journal_edit_name_template_label()">
-        <template #description>
-          <div>{{ m.journal_edit_name_template_description() }}</div>
-          <VariableReferenceHint
-            context="name-template"
-            :journal-name="journalName"
-            :date-format="config.dateFormat"
-            :has-cycle="hasCycle"
-            :numbering-variable-names="numberingVariableNames"
-          />
-          <NoteNamePreview :journal-name="journalName" />
-          <div v-if="invertibility" class="journal-hint">
-            {{ m.journal_edit_name_template_invertibility_warning(invertibility) }}
-          </div>
-          <div v-if="config.nameTemplate.includes('/')" class="journal-recommendation">
-            {{ m.journal_edit_move_to_folder_recommendation_name_template() }}
-            <a href="#" @click.prevent="applyNameTemplateRecommendation">
-              {{ m.journal_edit_move_to_folder_apply_link() }}
-            </a>
-          </div>
-        </template>
-        <UiTextInput v-model="config.nameTemplate" />
-      </UiSettingRow>
-
-      <UiSettingRow :name="m.journal_edit_folder_label()">
-        <template #description>
-          <div>{{ m.journal_edit_folder_description() }}</div>
-          <VariableReferenceHint
-            context="folder-path"
-            :journal-name="journalName"
-            :date-format="config.dateFormat"
-            :has-cycle="hasCycle"
-            :numbering-variable-names="numberingVariableNames"
-          />
-          <FolderPathPreview :journal-name="journalName" :folder="config.folder" />
-        </template>
-        <FolderInput v-model="config.folder" />
-      </UiSettingRow>
-
-      <UiSettingRow :name="m.journal_edit_date_format_label()">
-        <template #description>
-          <div>{{ m.journal_edit_date_format_description({ "{date": config.dateFormat }) }}</div>
-          <a target="_blank" href="https://momentjs.com/docs/#/displaying/format/">
-            {{ m.common_moment_format_reference() }}
-          </a>
-          <DateFormatPreview :format="config.dateFormat" />
-          <div v-if="config.dateFormat.includes('/')" class="journal-recommendation">
-            {{ m.journal_edit_move_to_folder_recommendation_date_format() }}
-            <a href="#" @click.prevent="applyDateFormatRecommendation">
-              {{ m.journal_edit_move_to_folder_apply_link() }}
-            </a>
-          </div>
-        </template>
-        <UiTextInput v-model="config.dateFormat" />
-      </UiSettingRow>
-
-      <UiSettingRow :name="m.journal_edit_confirm_creation_label()">
-        <template #description>{{ m.journal_edit_confirm_creation_description() }}</template>
-        <UiToggle v-model="config.confirmCreation" />
-      </UiSettingRow>
-
-      <UiSettingRow :name="m.journal_edit_auto_create_label()">
-        <template #description>
-          <div>{{ m.journal_edit_auto_create_description() }}</div>
-          <div v-if="config.confirmCreation">{{ m.journal_edit_auto_create_confirmation_skip_note() }}</div>
-        </template>
-        <UiToggle v-model="config.autoCreate" />
-      </UiSettingRow>
-    </UiCollapsibleBlock>
 
     <UiCollapsibleBlock v-model:expanded="templatesOpen">
       <template #trigger>
