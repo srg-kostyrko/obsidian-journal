@@ -1,11 +1,10 @@
 import userEvent from "@testing-library/user-event";
-import { cleanup, render, screen, waitFor, within } from "@testing-library/vue";
+import { cleanup, render, screen, waitFor } from "@testing-library/vue";
 import { createNanoEvents } from "nanoevents";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { defineComponent, h } from "vue";
 
-import { DayPeriod } from "@/calendar";
-import { date, installTestCalendar } from "@/calendar/testing";
+import { installTestCalendar } from "@/calendar/testing";
 import { m } from "@/i18n";
 import { type Container, provideInjectorOnApp } from "@/infrastructure/di";
 import { Flows } from "@/infrastructure/flows";
@@ -25,7 +24,6 @@ import {
 import { AutoCreateService } from "@/journals/notes/auto-create";
 import { BulkAddFlow } from "@/journals/notes/bulk-add/flows/bulk-add.flow";
 import { JournalsRepository } from "@/journals/repository";
-import { unwrap } from "@/journals/testing";
 import { JournalsEventsToken } from "@/journals/tokens";
 import { JournalsViewModel } from "@/journals/view-model";
 import { createSettingsService } from "@/settings/testing";
@@ -33,7 +31,6 @@ import { TemplateEngine } from "@/templates";
 import { installTestEngine } from "@/templates/testing";
 
 import { EditFrontmatterFieldFlow } from "../flows/edit-frontmatter-field.flow";
-import { EditSequencePropertyFlow } from "../flows/edit-sequence-property.flow";
 import { RenameJournalFlow } from "../flows/rename-journal.flow";
 
 import { JournalEditSectionToken, defineJournalEditSection } from "./journal-edit-section";
@@ -171,52 +168,6 @@ describe("JournalEditSubpage", () => {
     });
   });
 
-  it("materializes the default source when sequential numbers is toggled on", async () => {
-    const { container, journalsRepo } = await setup();
-    mount(container, "daily");
-    await userEvent.click(screen.getByText(m.journal_edit_section_sequential_numbers()));
-    const sequenceEnabledRow = screen.getByText(m.journal_edit_sequence_enabled_label()).closest(".setting-item");
-    if (!sequenceEnabledRow) throw new Error("sequence-enabled row not found");
-    const sequenceToggle = within(sequenceEnabledRow as HTMLElement).getByRole("checkbox");
-    await userEvent.click(sequenceToggle);
-    const config = unwrap(journalsRepo.get("daily"));
-    expect(config.numbering.enabled).toBe(true);
-    expect(config.numbering.sources[0]).toEqual({
-      variable: "index",
-      frontmatterKey: "journal-index",
-      anchorValue: 1,
-      reset: { kind: "never" },
-    });
-  });
-
-  it("hides the allow-before toggle when start date is set", async () => {
-    const initial = {
-      version: 4,
-      journals: {
-        daily: makeJournal("daily", {
-          timeline: { start: "2024-01-01", end: { kind: "never" } },
-          numbering: {
-            enabled: true,
-            anchorDate: "2024-01-01",
-            allowBefore: false,
-            sources: [
-              {
-                variable: "index",
-                frontmatterKey: "journal-index",
-                anchorValue: 1,
-                reset: { kind: "never" },
-              },
-            ],
-          },
-        }),
-      },
-    };
-    const { container } = await setup(initial);
-    mount(container, "daily");
-    await userEvent.click(screen.getByText(m.journal_edit_section_sequential_numbers()));
-    expect(screen.queryByText(m.journal_edit_allow_before_label())).toBeNull();
-  });
-
   it("invokes EditFrontmatterFieldFlow when the date-field pencil is clicked", async () => {
     const { container, flows } = await setup();
     mount(container, "daily");
@@ -225,71 +176,6 @@ describe("JournalEditSubpage", () => {
     expect(flows.invoke).toHaveBeenCalledWith(EditFrontmatterFieldFlow, {
       journalName: "daily",
       fieldName: "dateField",
-    });
-  });
-
-  it("invokes EditSequencePropertyFlow when the sequence property pencil is clicked", async () => {
-    const initial = {
-      version: 4,
-      journals: {
-        daily: makeJournal("daily", {
-          numbering: {
-            enabled: true,
-            anchorDate: "2024-01-01",
-            allowBefore: false,
-            sources: [
-              {
-                variable: "index",
-                frontmatterKey: "journal-index",
-                anchorValue: 1,
-                reset: { kind: "never" },
-              },
-            ],
-          },
-        }),
-      },
-    };
-    const { container, flows } = await setup(initial);
-    mount(container, "daily");
-    await userEvent.click(screen.getByText(m.journal_edit_section_sequential_numbers()));
-    await userEvent.click(screen.getByLabelText(`${m.common_label_property_name()} edit`));
-    expect(flows.invoke).toHaveBeenCalledWith(EditSequencePropertyFlow, {
-      journalName: "daily",
-      sourceIndex: 0,
-    });
-  });
-
-  describe("numbering anchor DatePicker", () => {
-    it("writes the picked date to numbering.anchorDate", async () => {
-      const initial = {
-        version: 4,
-        journals: {
-          daily: makeJournal("daily", {
-            timeline: { start: "", end: { kind: "never" } },
-            numbering: {
-              enabled: true,
-              anchorDate: "2024-01-01",
-              allowBefore: false,
-              sources: [
-                {
-                  variable: "index",
-                  frontmatterKey: "journal-index",
-                  anchorValue: 1,
-                  reset: { kind: "never" },
-                },
-              ],
-            },
-          }),
-        },
-      };
-      const { container, journalsRepo, fakeModalService } = await setup(initial);
-      mount(container, "daily");
-      await userEvent.click(screen.getByText(m.journal_edit_section_sequential_numbers()));
-      await userEvent.click(screen.getByRole("button", { name: "2024-01-01" }));
-      fakeModalService.lastOpen<unknown, DayPeriod>().submit(DayPeriod.containing(date("2025-01-10")));
-      await waitFor(() => {
-        expect(unwrap(journalsRepo.get("daily")).numbering.anchorDate).toBe("2025-01-10");
-      });
     });
   });
 });

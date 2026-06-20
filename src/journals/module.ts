@@ -14,6 +14,7 @@ import { NumberingService } from "./numbering";
 import { JournalsRepository, type JournalsEvents } from "./repository";
 import { JournalEditSectionToken, defineJournalEditSection } from "./settings/ui/journal-edit-section";
 import NoteCreationSection from "./settings/ui/sections/NoteCreationSection.vue";
+import SequenceSection from "./settings/ui/sections/SequenceSection.vue";
 import TemplatesSection from "./settings/ui/sections/TemplatesSection.vue";
 import TimelineSection from "./settings/ui/sections/TimelineSection.vue";
 import { TimelineService } from "./timeline";
@@ -46,6 +47,9 @@ export const journalsModule: Module = {
     );
     c.register(JournalEditSectionToken).useValue(
       defineJournalEditSection({ key: "timeline", order: 40, component: TimelineSection }),
+    );
+    c.register(JournalEditSectionToken).useValue(
+      defineJournalEditSection({ key: "sequence", order: 50, component: SequenceSection }),
     );
   },
 };
