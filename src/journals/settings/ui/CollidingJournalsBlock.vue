@@ -20,3 +20,16 @@ const groups = computed(() => findCollidingJournals(journalsVM.journals.value));
     </div>
   </div>
 </template>
+
+<style scoped>
+.journal-warning {
+  border: 1px solid var(--text-error);
+  padding: var(--size-2-2);
+}
+.journal-warning :deep(.setting-item) {
+  padding: 0;
+}
+.journal-warning :deep(.setting-item--heading .setting-item-name) {
+  color: var(--text-error);
+}
+</style>

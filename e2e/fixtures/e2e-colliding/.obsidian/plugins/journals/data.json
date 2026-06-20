@@ -1,0 +1,38 @@
+{
+  "version": 4,
+  "journals": {
+    "alpha": {
+      "name": "alpha",
+      "write": { "type": "day" },
+      "folder": "shared",
+      "dateFormat": "YYYY-MM-DD",
+      "timeline": { "start": "", "end": { "kind": "never" } },
+      "frontmatter": {
+        "dateField": "journal-date",
+        "startDateField": "journal-start-date",
+        "endDateField": "journal-end-date",
+        "addStartDate": false,
+        "addEndDate": false
+      },
+      "numbering": { "enabled": false, "anchorDate": "", "allowBefore": false, "sources": [] }
+    },
+    "beta": {
+      "name": "beta",
+      "write": { "type": "day" },
+      "folder": "shared",
+      "dateFormat": "YYYY-MM-DD",
+      "timeline": { "start": "", "end": { "kind": "never" } },
+      "frontmatter": {
+        "dateField": "journal-date",
+        "startDateField": "journal-start-date",
+        "endDateField": "journal-end-date",
+        "addStartDate": false,
+        "addEndDate": false
+      },
+      "numbering": { "enabled": false, "anchorDate": "", "allowBefore": false, "sources": [] }
+    }
+  },
+  "shelves": {},
+  "commands": {},
+  "views": {}
+}
