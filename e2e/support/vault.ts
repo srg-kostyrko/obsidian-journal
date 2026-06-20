@@ -158,11 +158,17 @@ export function waitForContent(
   return waitForState(() => contentOf(path), predicate, timeoutMsg);
 }
 
-// Folder-aware create: the fixture carries no note folders and vault.create does not
-// create missing parents. Used to seed precondition notes with crafted frontmatter/body.
+// Folder-aware create-or-overwrite: the fixture carries no note folders and vault.create does
+// not create missing parents. Idempotent so a seed can't collide with a note the run already
+// produced (e.g. today's note when today's day-of-month matches a seeded dayAnchor).
 export async function seedNote(path: string, content: string): Promise<void> {
   await browser.executeObsidian(
-    async ({ app }, notePath, body) => {
+    async ({ app, obsidian }, notePath, body) => {
+      const existing = app.vault.getAbstractFileByPath(notePath);
+      if (existing instanceof obsidian.TFile) {
+        await app.vault.modify(existing, body);
+        return;
+      }
       const slash = notePath.lastIndexOf("/");
       if (slash > 0) {
         const dir = notePath.slice(0, slash);
