@@ -30,6 +30,14 @@ jobs:
         run: |
           npm run build
 
+      - name: Attest build provenance
+        uses: actions/attest-build-provenance@v2
+        with:
+          subject-path: |
+            build/main.js
+            manifest.json
+            build/styles.css
+
       - name: Create release
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
