@@ -1,8 +1,8 @@
+import { builtinModules as builtins } from "node:module";
 import { fileURLToPath, URL } from "node:url";
 
 import { paraglideVitePlugin } from "@inlang/paraglide-js";
 import vue from "@vitejs/plugin-vue";
-import builtins from "builtin-modules";
 import { defineConfig } from "vite";
 import { viteStaticCopy } from "vite-plugin-static-copy";
 

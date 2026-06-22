@@ -71,7 +71,6 @@
     "@wdio/junit-reporter": "^9.29.0",
     "@wdio/local-runner": "^9.29.0",
     "@wdio/mocha-framework": "^9.29.0",
-    "builtin-modules": "^5.2.0",
     "eslint": "^10.5.0",
     "eslint-config-prettier": "^10.1.8",
     "eslint-import-resolver-typescript": "^4.4.5",
