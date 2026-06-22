@@ -41,9 +41,12 @@ export function createSettingsService(options: CreateSettingsServiceOptions = {}
   c.register(PluginData).useValue(data as unknown as PluginData);
   c.register(SettingsEventsToken).useFactory(() => createNanoEvents<SettingsEvents>());
   c.addModule(createLoggerTestingModule().module);
-  for (const s of options.slices ?? []) c.register(SliceDefinitionToken).useValue(s);
-  for (const col of options.collections ?? []) c.register(CollectionDefinitionToken).useValue(col);
-  for (const m of options.migrations ?? []) c.register(MigrationToken).useValue(m);
+  const slices = options.slices ?? [];
+  for (const s of slices) c.register(SliceDefinitionToken).useValue(s);
+  const collections = options.collections ?? [];
+  for (const col of collections) c.register(CollectionDefinitionToken).useValue(col);
+  const migrations = options.migrations ?? [];
+  for (const m of migrations) c.register(MigrationToken).useValue(m);
   c.register(SettingsService).useClass(SettingsService);
   return { service: c.resolve(SettingsService), data, container: c };
 }
@@ -60,8 +63,10 @@ export interface CreatedSettingsUiService {
 
 export function createSettingsUiService(options: CreateSettingsUiServiceOptions = {}): CreatedSettingsUiService {
   const c = new Container();
-  for (const b of options.blocks ?? []) c.register(DashboardBlockToken).useValue(b);
-  for (const s of options.subpages ?? []) c.register(SubpageToken).useValue(s);
+  const blocks = options.blocks ?? [];
+  for (const b of blocks) c.register(DashboardBlockToken).useValue(b);
+  const subpages = options.subpages ?? [];
+  for (const s of subpages) c.register(SubpageToken).useValue(s);
   c.register(SettingsUiService).useClass(SettingsUiService);
   return { service: c.resolve(SettingsUiService), container: c };
 }

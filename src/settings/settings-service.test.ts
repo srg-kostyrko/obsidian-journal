@@ -44,13 +44,16 @@ function build(
   c.register(PluginData).useValue(data as unknown as PluginData);
   c.register(SettingsEventsToken).useValue(events);
   c.addModule(createLoggerTestingModule().module);
-  for (const s of options.slices ?? [calendarSlice]) {
+  const slices = options.slices ?? [calendarSlice];
+  for (const s of slices) {
     c.register(SliceDefinitionToken).useValue(s as never);
   }
-  for (const col of options.collections ?? [journalCollection]) {
+  const collections = options.collections ?? [journalCollection];
+  for (const col of collections) {
     c.register(CollectionDefinitionToken).useValue(col as never);
   }
-  for (const m of options.migrations ?? []) {
+  const migrations = options.migrations ?? [];
+  for (const m of migrations) {
     c.register(MigrationToken).useValue(m);
   }
   c.register(SettingsService).useClass(SettingsService);

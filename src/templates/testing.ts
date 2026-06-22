@@ -28,8 +28,13 @@ export function installTestEngine(handlers: FunctionHandler[] = []): TemplateEng
 }
 
 export class FakeHandler implements FunctionHandler {
-  readonly name: string;
+  static fixed(name: string, output: string): FakeHandler {
+    return new FakeHandler(name, () => new Ok(output));
+  }
+
   readonly #implementation: (input: FunctionInput) => Result<string, TemplateRenderError>;
+
+  readonly name: string;
 
   constructor(name: string, implementation: (input: FunctionInput) => Result<string, TemplateRenderError>) {
     this.name = name;
@@ -38,9 +43,5 @@ export class FakeHandler implements FunctionHandler {
 
   render(input: FunctionInput): Result<string, TemplateRenderError> {
     return this.#implementation(input);
-  }
-
-  static fixed(name: string, output: string): FakeHandler {
-    return new FakeHandler(name, () => new Ok(output));
   }
 }

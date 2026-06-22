@@ -66,6 +66,16 @@ export class FakeNotesService implements Pick<
 
   readonly events: Subscribable<NotesEvents> = this.#emitter;
 
+  #registerParentFolders(path: VaultPath): void {
+    const segments = path.split("/");
+    segments.pop(); // drop the filename
+    let current = "";
+    for (const segment of segments) {
+      current = current ? `${current}/${segment}` : segment;
+      this.#folders.add(current as VaultPath);
+    }
+  }
+
   seed(path: VaultPath, content = "", frontmatter: Record<string, unknown> = {}): void {
     this.#files.set(path, { content, frontmatter });
     this.#registerParentFolders(path);
@@ -75,16 +85,6 @@ export class FakeNotesService implements Pick<
     const entry = this.#files.get(path);
     this.#files.set(path, { content, frontmatter: entry?.frontmatter ?? {} });
     this.#emitter.emit("metadata-changed", path);
-  }
-
-  #registerParentFolders(path: VaultPath): void {
-    const segments = path.split("/");
-    segments.pop(); // drop the filename
-    let current = "";
-    for (const segment of segments) {
-      current = current ? `${current}/${segment}` : segment;
-      this.#folders.add(current as VaultPath);
-    }
   }
 
   find(path: VaultPath): Option<Note> {

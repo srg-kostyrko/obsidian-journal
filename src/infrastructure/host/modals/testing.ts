@@ -11,15 +11,15 @@ export function provideModalApiOnApp(app: App, api: ModalApi<unknown>): void {
 }
 
 export class FakeModalHandle<TProps, TResult> {
+  #settled = false;
+  readonly #resolve: (value: TResult) => void;
+  readonly #reject: (error: ModalCancelled) => void;
+
   readonly definition: ModalDefinition<TProps, TResult>;
   readonly props: TProps;
   readonly resolvedTitle: string;
   readonly resolvedWidth: number | undefined;
   readonly resolvedCssClass: readonly string[];
-
-  #settled = false;
-  readonly #resolve: (value: TResult) => void;
-  readonly #reject: (error: ModalCancelled) => void;
 
   constructor(
     definition: ModalDefinition<TProps, TResult>,

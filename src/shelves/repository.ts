@@ -21,16 +21,8 @@ export class ShelvesRepository extends BaseRepository<
   RepositoryQuery<string, ShelfConfig>,
   ShelvesEvents
 > {
-  protected idKey: keyof ShelfConfig = "name";
-  protected nameKey: keyof ShelfConfig = "name";
-  protected QueryConstructor = RepositoryQuery;
-  protected storage = inject(SettingsService).recordOf(shelvesCollection);
-  protected events = inject(ShelvesEventsToken);
-  protected unknownEntityError = (name: string) => new UnknownShelfError(name);
-  protected invalidUpdateError = (name: string) => new InvalidShelfUpdateError(name);
-
   static fromParts(storage: Record<string, ShelfConfig>, events: Emitter<ShelvesEvents>): ShelvesRepository {
-    const repo = Object.create(ShelvesRepository.prototype) as ShelvesRepository;
+    const repo = Object.create(this.prototype) as ShelvesRepository;
     interface Mutable {
       idKey: keyof ShelfConfig;
       nameKey: keyof ShelfConfig;
@@ -51,6 +43,14 @@ export class ShelvesRepository extends BaseRepository<
     return repo;
   }
 
+  protected idKey: keyof ShelfConfig = "name";
+  protected nameKey: keyof ShelfConfig = "name";
+  protected QueryConstructor = RepositoryQuery;
+  protected storage = inject(SettingsService).recordOf(shelvesCollection);
+  protected events = inject(ShelvesEventsToken);
+  protected unknownEntityError = (name: string) => new UnknownShelfError(name);
+  protected invalidUpdateError = (name: string) => new InvalidShelfUpdateError(name);
+
   create(name: string): Result<ShelfConfig, InvalidShelfNameError | ShelfNameTakenError> {
     if (name.length === 0) return new Err(new InvalidShelfNameError(name));
     const entity: ShelfConfig = { name, journals: [] };
@@ -64,8 +64,8 @@ export class ShelvesRepository extends BaseRepository<
     newName: string,
   ): Result<void, UnknownShelfError | InvalidShelfNameError | ShelfNameTakenError> {
     if (newName.length === 0 || newName === oldName) return new Err(new InvalidShelfNameError(newName));
-    if (!(oldName in this.storage)) return new Err(new UnknownShelfError(oldName));
-    if (newName in this.storage) return new Err(new ShelfNameTakenError(newName));
+    if (!Object.hasOwn(this.storage, oldName)) return new Err(new UnknownShelfError(oldName));
+    if (Object.hasOwn(this.storage, newName)) return new Err(new ShelfNameTakenError(newName));
     const existing = this.storage[oldName];
     existing.name = newName;
     delete this.storage[oldName];
@@ -75,10 +75,10 @@ export class ShelvesRepository extends BaseRepository<
   }
 
   deleteWith(name: string, destinationShelf?: string): Result<void, UnknownShelfError> {
-    if (!(name in this.storage)) return new Err(new UnknownShelfError(name));
+    if (!Object.hasOwn(this.storage, name)) return new Err(new UnknownShelfError(name));
     const source = this.storage[name];
     if (destinationShelf !== undefined) {
-      if (!(destinationShelf in this.storage)) return new Err(new UnknownShelfError(destinationShelf));
+      if (!Object.hasOwn(this.storage, destinationShelf)) return new Err(new UnknownShelfError(destinationShelf));
       this.storage[destinationShelf].journals.push(...source.journals);
     }
     delete this.storage[name];

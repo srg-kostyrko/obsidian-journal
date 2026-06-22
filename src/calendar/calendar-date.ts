@@ -8,21 +8,8 @@ import type { AnchorString } from "./types";
 const ANCHOR_FORMAT = "YYYY-MM-DD";
 
 export class CalendarDate {
-  readonly kind = "CalendarDate" as const;
-  readonly year: number;
-  readonly month: number;
-  readonly day: number;
-  readonly #anchor: AnchorString;
-
-  private constructor(year: number, month: number, day: number, anchor: AnchorString) {
-    this.year = year;
-    this.month = month;
-    this.day = day;
-    this.#anchor = anchor;
-  }
-
   static today(): CalendarDate {
-    return CalendarDate._fromMoment(localMoment().startOf("day"));
+    return this._fromMoment(localMoment().startOf("day"));
   }
 
   static parse(input: string, format?: string): Result<CalendarDate, ParseError> {
@@ -31,15 +18,29 @@ export class CalendarDate {
     if (!m.isValid()) {
       return new Err(new ParseError(input, format));
     }
-    return new Ok(CalendarDate._fromMoment(m.startOf("day")));
+    return new Ok(this._fromMoment(m.startOf("day")));
   }
 
   static fromAnchor(s: AnchorString): CalendarDate {
-    return CalendarDate._fromMoment(localMoment(s, ANCHOR_FORMAT, true));
+    return this._fromMoment(localMoment(s, ANCHOR_FORMAT, true));
   }
 
   static _fromMoment(m: ReturnType<typeof localMoment>): CalendarDate {
     return new CalendarDate(m.year(), m.month() + 1, m.date(), m.format(ANCHOR_FORMAT) as AnchorString);
+  }
+
+  readonly #anchor: AnchorString;
+
+  readonly kind = "CalendarDate" as const;
+  readonly year: number;
+  readonly month: number;
+  readonly day: number;
+
+  private constructor(year: number, month: number, day: number, anchor: AnchorString) {
+    this.year = year;
+    this.month = month;
+    this.day = day;
+    this.#anchor = anchor;
   }
 
   toAnchor(): AnchorString {

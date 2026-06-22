@@ -52,8 +52,8 @@ export class FrontmatterService {
       journalName,
       anchor,
       path,
-      ...(endDate === undefined ? {} : { endDate }),
-      ...(Object.keys(numbers).length > 0 ? { numbers } : {}),
+      ...(endDate !== undefined && { endDate }),
+      ...(Object.keys(numbers).length > 0 && { numbers }),
     };
     return Option.some(entry);
   }
@@ -68,8 +68,8 @@ export class FrontmatterService {
     const metadata: JournalMetadata = {
       journalName: name,
       anchor,
-      ...(endDate === undefined ? {} : { endDate }),
-      ...(numbers.isSome() ? { numbers: numbers.value } : {}),
+      ...(endDate !== undefined && { endDate }),
+      ...(numbers.isSome() && { numbers: numbers.value }),
     };
     return new Ok(metadata);
   }

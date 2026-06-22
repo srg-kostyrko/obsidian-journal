@@ -5,6 +5,10 @@ import { WeekPeriod } from "./period-week";
 import type { PeriodBase } from "./period";
 
 export class MonthPeriod implements PeriodBase<MonthPeriod> {
+  static containing(date: CalendarDate): MonthPeriod {
+    return new MonthPeriod(localMoment(date.toAnchor(), "YYYY-MM-DD", true));
+  }
+
   readonly kind = "month" as const;
   readonly start: CalendarDate;
   readonly end: CalendarDate;
@@ -21,10 +25,6 @@ export class MonthPeriod implements PeriodBase<MonthPeriod> {
     this.anchor = this.start;
     this.monthOfYear = start.month() + 1;
     this.year = start.year();
-  }
-
-  static containing(date: CalendarDate): MonthPeriod {
-    return new MonthPeriod(localMoment(date.toAnchor(), "YYYY-MM-DD", true));
   }
 
   next(): MonthPeriod {

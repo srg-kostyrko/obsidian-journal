@@ -35,6 +35,13 @@ export class ViewsService {
     this.#blocks = blockMap;
   }
 
+  #persistBlocks(id: ViewId, blocks: View["blocks"]): Result<void, UnknownViewError> {
+    return this.#repo.update(id, { blocks }).mapErr((cause): UnknownViewError => {
+      if (cause.kind === "unknown-view") return cause;
+      throw new ViewsInvariantError(`unreachable: repo.update returned ${cause.kind}`);
+    });
+  }
+
   create(input: {
     name: string;
     icon?: string;
@@ -184,13 +191,6 @@ export class ViewsService {
 
   getBlockDefinition(key: string): Option<ViewBlockDefinition> {
     return Option.fromNullable(this.#blocks.get(key));
-  }
-
-  #persistBlocks(id: ViewId, blocks: View["blocks"]): Result<void, UnknownViewError> {
-    return this.#repo.update(id, { blocks }).mapErr((cause): UnknownViewError => {
-      if (cause.kind === "unknown-view") return cause;
-      throw new ViewsInvariantError(`unreachable: repo.update returned ${cause.kind}`);
-    });
   }
 
   addToolbarItem(

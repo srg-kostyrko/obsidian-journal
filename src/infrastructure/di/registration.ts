@@ -42,6 +42,14 @@ export class RegistrationOptions<T> {
     this.#notify();
   }
 
+  #notify(): void {
+    this.#onChange({
+      factory: this.#factory,
+      lifetime: this.#lifetime,
+      eager: this.#eager,
+    });
+  }
+
   lifetime(value: Lifetime): this {
     this.#lifetime = value;
     this.#notify();
@@ -52,13 +60,5 @@ export class RegistrationOptions<T> {
     this.#eager = true;
     this.#notify();
     return this;
-  }
-
-  #notify(): void {
-    this.#onChange({
-      factory: this.#factory,
-      lifetime: this.#lifetime,
-      eager: this.#eager,
-    });
   }
 }

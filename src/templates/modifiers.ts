@@ -30,7 +30,7 @@ export function applyModifier<S extends Shiftable<S>>(value: S, modifier: Modifi
 
 export function unapplyModifier(date: CalendarDate, modifier: Modifier): CalendarDate {
   return match(modifier)
-    .with({ kind: "shift" }, ({ sign, amount, unit }) => date.shift(-1 * sign * amount, unit))
+    .with({ kind: "shift" }, ({ sign, amount, unit }) => date.shift(-(sign * amount), unit))
     .with({ kind: "boundary" }, () => date)
     .exhaustive();
 }

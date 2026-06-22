@@ -11,7 +11,7 @@ export function findCollidingJournals<T extends JournalCollisionFields>(configs:
   const groups = new Map<string, T[]>();
   for (const config of configs) {
     const key = [
-      config.nameTemplate.replaceAll("{{journal_name}}", config.name),
+      config.nameTemplate.replaceAll("{{journal_name}}", () => config.name),
       config.folder,
       config.dateFormat,
     ].join("\0");

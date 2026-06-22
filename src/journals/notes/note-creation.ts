@@ -41,6 +41,11 @@ export class NoteCreationService {
   readonly #modals = inject(ModalService);
   readonly #guard = inject(SelfWriteGuard);
 
+  #basename(path: VaultPath): string {
+    const filename = path.split("/").pop() ?? path;
+    return filename.replace(/\.md$/, "");
+  }
+
   ensureNote(
     name: string,
     metadata: JournalMetadata,
@@ -95,10 +100,5 @@ export class NoteCreationService {
       if (content === "") return;
       yield* this.#notes.write(path, content);
     });
-  }
-
-  #basename(path: VaultPath): string {
-    const filename = path.split("/").pop() ?? path;
-    return filename.replace(/\.md$/, "");
   }
 }

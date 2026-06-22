@@ -80,7 +80,8 @@ function mountItem(
   const flows = new FakeFlows();
   const notices = new FakeNoticeService();
   const index = new JournalsIndex();
-  for (const entry of options.entries ?? []) {
+  const entries = options.entries ?? [];
+  for (const entry of entries) {
     index.register({
       journalName: entry.journalName,
       anchor: entry.anchor as AnchorString,

@@ -6,6 +6,31 @@ export class JournalIndex {
   readonly #byAnchor = new Map<AnchorString, VaultPath>();
   readonly #sortedAnchors: AnchorString[] = [];
 
+  #insertSorted(anchor: AnchorString): void {
+    const result = this.#bsearch(anchor);
+    if (result.found) throw new InvariantError("anchor already present in sorted array");
+    this.#sortedAnchors.splice(result.insertionPoint, 0, anchor);
+  }
+
+  #removeSorted(anchor: AnchorString): void {
+    const result = this.#bsearch(anchor);
+    if (!result.found) return;
+    this.#sortedAnchors.splice(result.index, 1);
+  }
+
+  #bsearch(target: AnchorString): { found: true; index: number } | { found: false; insertionPoint: number } {
+    let lo = 0;
+    let hi = this.#sortedAnchors.length;
+    while (lo < hi) {
+      const mid = (lo + hi) >>> 1;
+      const current = this.#sortedAnchors[mid];
+      if (current === target) return { found: true, index: mid };
+      if (current < target) lo = mid + 1;
+      else hi = mid;
+    }
+    return { found: false, insertionPoint: lo };
+  }
+
   has(anchor: AnchorString): boolean {
     return this.#byAnchor.has(anchor);
   }
@@ -78,30 +103,5 @@ export class JournalIndex {
       if (path === undefined) throw new InvariantError("sorted anchor missing from byAnchor map");
       yield [anchor, path] as const;
     }
-  }
-
-  #insertSorted(anchor: AnchorString): void {
-    const result = this.#bsearch(anchor);
-    if (result.found) throw new InvariantError("anchor already present in sorted array");
-    this.#sortedAnchors.splice(result.insertionPoint, 0, anchor);
-  }
-
-  #removeSorted(anchor: AnchorString): void {
-    const result = this.#bsearch(anchor);
-    if (!result.found) return;
-    this.#sortedAnchors.splice(result.index, 1);
-  }
-
-  #bsearch(target: AnchorString): { found: true; index: number } | { found: false; insertionPoint: number } {
-    let lo = 0;
-    let hi = this.#sortedAnchors.length;
-    while (lo < hi) {
-      const mid = (lo + hi) >>> 1;
-      const current = this.#sortedAnchors[mid];
-      if (current === target) return { found: true, index: mid };
-      if (current < target) lo = mid + 1;
-      else hi = mid;
-    }
-    return { found: false, insertionPoint: lo };
   }
 }

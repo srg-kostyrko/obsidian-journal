@@ -42,6 +42,41 @@ export class DecorationEngine {
   readonly #metadata = inject(NoteMetadataService);
   readonly #cycle = inject(CycleService);
 
+  #matches(
+    decoration: JournalDecoration,
+    period: Period,
+    journal: JournalConfig,
+    metadata: () => Option<NoteMetadata>,
+  ): boolean {
+    const { mode, conditions } = decoration;
+    if (conditions.length === 0) return false;
+    const test = (c: JournalDecorationCondition): boolean => this.#check(c, period, journal, metadata);
+    return mode === "or" ? conditions.some(test) : conditions.every(test);
+  }
+
+  #check(
+    condition: JournalDecorationCondition,
+    period: Period,
+    journal: JournalConfig,
+    metadata: () => Option<NoteMetadata>,
+  ): boolean {
+    const meta = (): NoteMetadata | null => {
+      const opt = metadata();
+      return opt.isSome() ? opt.value : null;
+    };
+    return match(condition)
+      .with({ type: "title" }, (c) => checkTitle(c, meta()))
+      .with({ type: "tag" }, (c) => checkTag(c, meta()))
+      .with({ type: "property" }, (c) => checkProperty(c, meta()))
+      .with({ type: "date" }, (c) => checkDate(c, period))
+      .with({ type: "weekday" }, (c) => checkWeekday(c, period))
+      .with({ type: "offset" }, (c) => checkOffset(c, period, journal, this.#cycle))
+      .with({ type: "has-note" }, () => metadata().isSome())
+      .with({ type: "has-open-task" }, () => metadata().match({ none: () => false, some: hasOpenTask }))
+      .with({ type: "all-tasks-completed" }, () => metadata().match({ none: () => false, some: allTasksCompleted }))
+      .exhaustive();
+  }
+
   evaluateRange(
     periods: readonly Period[],
     decorations: readonly DecorationBinding[],
@@ -84,40 +119,5 @@ export class DecorationEngine {
       }
     }
     return result;
-  }
-
-  #matches(
-    decoration: JournalDecoration,
-    period: Period,
-    journal: JournalConfig,
-    metadata: () => Option<NoteMetadata>,
-  ): boolean {
-    const { mode, conditions } = decoration;
-    if (conditions.length === 0) return false;
-    const test = (c: JournalDecorationCondition): boolean => this.#check(c, period, journal, metadata);
-    return mode === "or" ? conditions.some(test) : conditions.every(test);
-  }
-
-  #check(
-    condition: JournalDecorationCondition,
-    period: Period,
-    journal: JournalConfig,
-    metadata: () => Option<NoteMetadata>,
-  ): boolean {
-    const meta = (): NoteMetadata | null => {
-      const opt = metadata();
-      return opt.isSome() ? opt.value : null;
-    };
-    return match(condition)
-      .with({ type: "title" }, (c) => checkTitle(c, meta()))
-      .with({ type: "tag" }, (c) => checkTag(c, meta()))
-      .with({ type: "property" }, (c) => checkProperty(c, meta()))
-      .with({ type: "date" }, (c) => checkDate(c, period))
-      .with({ type: "weekday" }, (c) => checkWeekday(c, period))
-      .with({ type: "offset" }, (c) => checkOffset(c, period, journal, this.#cycle))
-      .with({ type: "has-note" }, () => metadata().isSome())
-      .with({ type: "has-open-task" }, () => metadata().match({ none: () => false, some: hasOpenTask }))
-      .with({ type: "all-tasks-completed" }, () => metadata().match({ none: () => false, some: allTasksCompleted }))
-      .exhaustive();
   }
 }

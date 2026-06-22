@@ -33,6 +33,20 @@ export class Container implements Resolver {
       .lifetime(Lifetime.Transient);
   }
 
+  #resolveSingle(token: AnyTokenLike, stored: StoredEntry): unknown {
+    return match(stored.entry.lifetime)
+      .with(Lifetime.Container, () => stored.slot.getOrCreate(this, token, stored.entry.factory))
+      .with(Lifetime.Transient, () => withResolutionContext(this, token, stored.entry.factory))
+      .with(Lifetime.Scoped, () => {
+        throw new ScopedResolutionOutsideScopeError(token);
+      })
+      .exhaustive();
+  }
+
+  #ensureNotDisposed(): void {
+    if (this.#disposed) throw new ContainerDisposedError();
+  }
+
   register<T>(token: TokenLike<T> | MultiToken<T>): RegistrationBuilder<T>;
   register<T>(token: AnyTokenLike): RegistrationBuilder<T> {
     this.#ensureNotDisposed();
@@ -60,16 +74,6 @@ export class Container implements Resolver {
     return match(kind)
       .with("single", () => this.#resolveSingle(token, entries[0]))
       .with("multi", () => entries.map((stored) => this.#resolveSingle(token, stored)))
-      .exhaustive();
-  }
-
-  #resolveSingle(token: AnyTokenLike, stored: StoredEntry): unknown {
-    return match(stored.entry.lifetime)
-      .with(Lifetime.Container, () => stored.slot.getOrCreate(this, token, stored.entry.factory))
-      .with(Lifetime.Transient, () => withResolutionContext(this, token, stored.entry.factory))
-      .with(Lifetime.Scoped, () => {
-        throw new ScopedResolutionOutsideScopeError(token);
-      })
       .exhaustive();
   }
 
@@ -113,9 +117,5 @@ export class Container implements Resolver {
     if (errors.length > 0) {
       throw new AggregateError(errors, "One or more disposers failed.");
     }
-  }
-
-  #ensureNotDisposed(): void {
-    if (this.#disposed) throw new ContainerDisposedError();
   }
 }

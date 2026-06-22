@@ -8,6 +8,14 @@ import { ShelvesRepository } from "./repository";
 import type { Emitter } from "nanoevents";
 
 export class ShelvesService {
+  static fromParts(
+    shelves: ShelvesRepository,
+    journals: JournalsRepository,
+    journalEvents: Emitter<JournalsEvents>,
+  ): ShelvesService {
+    return new ShelvesService(shelves, journals, journalEvents);
+  }
+
   readonly #shelves: ShelvesRepository;
   readonly #journals: JournalsRepository;
 
@@ -22,12 +30,21 @@ export class ShelvesService {
     journalEvents.on("deleted", (journalName) => this.#removeJournalFromShelves(journalName));
   }
 
-  static fromParts(
-    shelves: ShelvesRepository,
-    journals: JournalsRepository,
-    journalEvents: Emitter<JournalsEvents>,
-  ): ShelvesService {
-    return new ShelvesService(shelves, journals, journalEvents);
+  #renameJournalInShelves(oldName: string, newName: string): void {
+    for (const shelf of this.#shelves.find().list()) {
+      if (!shelf.journals.includes(oldName)) continue;
+      const journals = shelf.journals.map((entry) => (entry === oldName ? newName : entry));
+      this.#shelves.update(shelf.name, { journals });
+    }
+  }
+
+  #removeJournalFromShelves(journalName: string): void {
+    for (const shelf of this.#shelves.find().list()) {
+      const index = shelf.journals.indexOf(journalName);
+      if (index !== -1) {
+        this.#shelves.update(shelf.name, { journals: shelf.journals.filter((entry) => entry !== journalName) });
+      }
+    }
   }
 
   assign(journalName: string, shelfName: string): Result<void, UnknownJournalError | UnknownShelfError> {
@@ -53,22 +70,5 @@ export class ShelvesService {
       if (shelf.journals.includes(journalName)) return shelf.name;
     }
     return "";
-  }
-
-  #renameJournalInShelves(oldName: string, newName: string): void {
-    for (const shelf of this.#shelves.find().list()) {
-      if (!shelf.journals.includes(oldName)) continue;
-      const journals = shelf.journals.map((entry) => (entry === oldName ? newName : entry));
-      this.#shelves.update(shelf.name, { journals });
-    }
-  }
-
-  #removeJournalFromShelves(journalName: string): void {
-    for (const shelf of this.#shelves.find().list()) {
-      const index = shelf.journals.indexOf(journalName);
-      if (index !== -1) {
-        this.#shelves.update(shelf.name, { journals: shelf.journals.filter((entry) => entry !== journalName) });
-      }
-    }
   }
 }

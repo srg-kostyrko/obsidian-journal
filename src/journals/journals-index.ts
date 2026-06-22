@@ -13,10 +13,23 @@ export class JournalsIndex {
   readonly #journals = new Map<string, JournalIndex>();
   readonly #byPath = new Map<VaultPath, JournalEntry>();
   readonly #emitter: TypedEmitter<JournalsIndexEvents> = createNanoEvents();
-  readonly events: Subscribable<JournalsIndexEvents> = this.#emitter;
-
   readonly #dirty = new Set<string>();
   #flushScheduled = false;
+  readonly events: Subscribable<JournalsIndexEvents> = this.#emitter;
+
+  #markDirty(journalName: string): void {
+    this.#dirty.add(journalName);
+    if (this.#flushScheduled) return;
+    this.#flushScheduled = true;
+    queueMicrotask(() => {
+      this.#flushScheduled = false;
+      const names = [...this.#dirty];
+      this.#dirty.clear();
+      for (const name of names) {
+        this.#emitter.emit("journalDirty", { journalName: name });
+      }
+    });
+  }
 
   entryByPath(path: VaultPath): Option<JournalEntry> {
     return Option.fromNullable(this.#byPath.get(path));
@@ -142,19 +155,5 @@ export class JournalsIndex {
     const journalIndex = this.#journals.get(journalName);
     if (!journalIndex) return;
     yield* journalIndex;
-  }
-
-  #markDirty(journalName: string): void {
-    this.#dirty.add(journalName);
-    if (this.#flushScheduled) return;
-    this.#flushScheduled = true;
-    queueMicrotask(() => {
-      this.#flushScheduled = false;
-      const names = [...this.#dirty];
-      this.#dirty.clear();
-      for (const name of names) {
-        this.#emitter.emit("journalDirty", { journalName: name });
-      }
-    });
   }
 }

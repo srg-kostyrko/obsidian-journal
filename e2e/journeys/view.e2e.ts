@@ -399,7 +399,7 @@ describe("calendar view", () => {
 
     it("hides the month grid's own month/year heading", async () => {
       await openCalendarView();
-      await $(`${MONTH_VIEW}`).waitForExist({ timeoutMsg: "month grid did not render" });
+      await $(MONTH_VIEW).waitForExist({ timeoutMsg: "month grid did not render" });
       await expect($(`${LIVE_LEAF} .notes-month-view__header`)).not.toBeExisting();
     });
   });

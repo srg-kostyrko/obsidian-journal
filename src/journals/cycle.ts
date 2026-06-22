@@ -64,6 +64,34 @@ export class CycleService {
   readonly #journals = inject(JournalsRepository);
   readonly #index = inject(JournalsIndex);
 
+  // A custom interval can be manually extended/shrunk, recorded as the note's stored endDate.
+  // Stepping must consult the index so anchorOf/nextAnchor/previousAnchor agree on irregular
+  // period boundaries rather than computing phantom anchors from the fixed duration.
+  #customNext(name: string, c: CustomCycle, from: AnchorString): AnchorString {
+    const stored = this.#index.entryByAnchor(name, from);
+    if (stored.isSome() && stored.value.endDate !== undefined) {
+      const m = localMoment(stored.value.endDate, "YYYY-MM-DD", true).add(1, "day");
+      return m.format("YYYY-MM-DD") as AnchorString;
+    }
+    return customStepForward(from, c.every, c.duration);
+  }
+
+  #customPrevious(name: string, c: CustomCycle, from: AnchorString): AnchorString {
+    const previousEnd = localMoment(from, "YYYY-MM-DD", true).subtract(1, "day").format("YYYY-MM-DD") as AnchorString;
+    const closest = this.#index.findClosestAnchor(name, previousEnd);
+    if (closest.isSome()) {
+      const entry = this.#index.entryByAnchor(name, closest.value);
+      if (entry.isSome() && entry.value.endDate === previousEnd) {
+        return closest.value;
+      }
+    }
+    return customStepBackward(from, c.every, c.duration);
+  }
+
+  #cycleFor(name: string): Option<JournalCycle> {
+    return this.#journals.get(name).map((c) => buildCycle(c.write));
+  }
+
   anchorOf(name: string, date: CalendarDate): Option<AnchorString> {
     return this.#cycleFor(name).flatMap((cycle) =>
       match(cycle)
@@ -200,33 +228,5 @@ export class CycleService {
         })
         .exhaustive(),
     );
-  }
-
-  // A custom interval can be manually extended/shrunk, recorded as the note's stored endDate.
-  // Stepping must consult the index so anchorOf/nextAnchor/previousAnchor agree on irregular
-  // period boundaries rather than computing phantom anchors from the fixed duration.
-  #customNext(name: string, c: CustomCycle, from: AnchorString): AnchorString {
-    const stored = this.#index.entryByAnchor(name, from);
-    if (stored.isSome() && stored.value.endDate !== undefined) {
-      const m = localMoment(stored.value.endDate, "YYYY-MM-DD", true).add(1, "day");
-      return m.format("YYYY-MM-DD") as AnchorString;
-    }
-    return customStepForward(from, c.every, c.duration);
-  }
-
-  #customPrevious(name: string, c: CustomCycle, from: AnchorString): AnchorString {
-    const previousEnd = localMoment(from, "YYYY-MM-DD", true).subtract(1, "day").format("YYYY-MM-DD") as AnchorString;
-    const closest = this.#index.findClosestAnchor(name, previousEnd);
-    if (closest.isSome()) {
-      const entry = this.#index.entryByAnchor(name, closest.value);
-      if (entry.isSome() && entry.value.endDate === previousEnd) {
-        return closest.value;
-      }
-    }
-    return customStepBackward(from, c.every, c.duration);
-  }
-
-  #cycleFor(name: string): Option<JournalCycle> {
-    return this.#journals.get(name).map((c) => buildCycle(c.write));
   }
 }

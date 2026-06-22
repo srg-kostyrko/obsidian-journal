@@ -34,15 +34,6 @@ export class StartupOpenService {
     });
   }
 
-  initialize(): AsyncResult<void, never> {
-    const appStartup = !this.#workspace.layoutReady;
-    this.#workspace.onLayoutReady(() => {
-      if (!appStartup) return;
-      void this.#open();
-    });
-    return AsyncResult.ok();
-  }
-
   async #open(): Promise<void> {
     const { journalName } = this.#slice.state;
     if (journalName === "" || !this.#journals.exists(journalName)) return;
@@ -51,5 +42,14 @@ export class StartupOpenService {
     if (result.isErr() && !(result.error instanceof UserAborted)) {
       this.#logger.error("startup-open: failed to open note", { journalName, error: result.error });
     }
+  }
+
+  initialize(): AsyncResult<void, never> {
+    const appStartup = !this.#workspace.layoutReady;
+    this.#workspace.onLayoutReady(() => {
+      if (!appStartup) return;
+      void this.#open();
+    });
+    return AsyncResult.ok();
   }
 }

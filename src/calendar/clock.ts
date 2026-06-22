@@ -7,13 +7,6 @@ type BoundaryUnit = "year" | "quarter" | "month" | "week" | "day" | "hour";
 const SHIFT_UNIT_MAP = { y: "y", q: "Q", m: "M", w: "w", d: "d", h: "h" } as const;
 
 export class Clock {
-  readonly kind = "Clock" as const;
-  readonly #moment: ReturnType<typeof localMoment>;
-
-  private constructor(m: ReturnType<typeof localMoment>) {
-    this.#moment = m;
-  }
-
   static now(): Clock {
     return new Clock(localMoment());
   }
@@ -22,6 +15,14 @@ export class Clock {
     const now = localMoment();
     const nextMidnight = now.clone().startOf("day").add(1, "day");
     return nextMidnight.diff(now);
+  }
+
+  readonly #moment: ReturnType<typeof localMoment>;
+
+  readonly kind = "Clock" as const;
+
+  private constructor(m: ReturnType<typeof localMoment>) {
+    this.#moment = m;
   }
 
   format(pattern: string): string {

@@ -26,32 +26,6 @@ export class NumberingService {
     });
   }
 
-  assignNumbers(name: string, anchor: AnchorString): Option<Readonly<Record<string, number>>> {
-    const configOpt = this.#journals.get(name);
-    if (configOpt.isNone()) return Option.none();
-    const config = configOpt.value;
-    const numbering = config.numbering;
-    const fp = JSON.stringify(numbering);
-
-    let bucket = this.#cache.get(name);
-    if (bucket && bucket.fp !== fp) {
-      this.#cache.delete(name);
-      bucket = undefined;
-    }
-    if (!bucket) {
-      bucket = { fp, values: new Map() };
-      this.#cache.set(name, bucket);
-    }
-    const cached = bucket.values.get(anchor);
-    if (cached !== undefined) {
-      return cached === null ? Option.none() : Option.some(cached);
-    }
-
-    const result = this.#compute(name, anchor, numbering);
-    bucket.values.set(anchor, result.isSome() ? result.value : null);
-    return result;
-  }
-
   #compute(
     name: string,
     anchor: AnchorString,
@@ -106,6 +80,32 @@ export class NumberingService {
         .with({ kind: "never" }, () => 0)
         .exhaustive();
     }
+    return result;
+  }
+
+  assignNumbers(name: string, anchor: AnchorString): Option<Readonly<Record<string, number>>> {
+    const configOpt = this.#journals.get(name);
+    if (configOpt.isNone()) return Option.none();
+    const config = configOpt.value;
+    const numbering = config.numbering;
+    const fp = JSON.stringify(numbering);
+
+    let bucket = this.#cache.get(name);
+    if (bucket && bucket.fp !== fp) {
+      this.#cache.delete(name);
+      bucket = undefined;
+    }
+    if (!bucket) {
+      bucket = { fp, values: new Map() };
+      this.#cache.set(name, bucket);
+    }
+    const cached = bucket.values.get(anchor);
+    if (cached !== undefined) {
+      return cached === null ? Option.none() : Option.some(cached);
+    }
+
+    const result = this.#compute(name, anchor, numbering);
+    bucket.values.set(anchor, result.isSome() ? result.value : null);
     return result;
   }
 }

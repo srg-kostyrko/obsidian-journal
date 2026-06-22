@@ -8,6 +8,10 @@ import { ViewsRepository } from "./repository";
 import type { View, ViewId } from "./config";
 
 export class ViewsViewModel {
+  static fromRepository(repository: ViewsRepository): ViewsViewModel {
+    return new ViewsViewModel(repository);
+  }
+
   readonly #repository: ViewsRepository;
 
   readonly views: ComputedRef<View[]>;
@@ -17,10 +21,6 @@ export class ViewsViewModel {
     this.#repository = repository;
     this.views = computed(() => [...repository.find().list()].toSorted((a, b) => a.name.localeCompare(b.name)));
     this.viewCount = computed(() => repository.count());
-  }
-
-  static fromRepository(repository: ViewsRepository): ViewsViewModel {
-    return new ViewsViewModel(repository);
   }
 
   getView(id: ViewId): Option<View> {

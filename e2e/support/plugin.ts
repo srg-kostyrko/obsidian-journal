@@ -9,7 +9,7 @@ export function isPluginEnabled(): Promise<boolean> {
     // remove it). plugins.plugins[id] is the runtime instance: present when loaded, absent when
     // unloaded, so it reliably tracks the loaded/unloaded state across a disable/enable cycle.
     const runtime = app as unknown as { plugins: { plugins: Record<string, unknown> } };
-    return id in runtime.plugins.plugins;
+    return Object.hasOwn(runtime.plugins.plugins, id);
   }, PLUGIN_ID);
 }
 

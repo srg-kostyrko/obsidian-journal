@@ -19,16 +19,8 @@ export class CommandsRepository extends BaseRepository<
   RepositoryQuery<string, CommandConfig>,
   CommandsEvents
 > {
-  protected idKey: keyof CommandConfig | undefined = undefined;
-  protected nameKey: keyof CommandConfig = "name";
-  protected QueryConstructor = RepositoryQuery;
-  protected storage = inject(SettingsService).recordOf(commandCollection);
-  protected events = inject(CommandsEventsToken);
-  protected unknownEntityError = (id: string) => new UnknownCommandError(id);
-  protected invalidUpdateError = (id: string) => new InvalidCommandUpdateError(id);
-
   static fromParts(storage: Record<string, CommandConfig>, events: Emitter<CommandsEvents>): CommandsRepository {
-    const repo = Object.create(CommandsRepository.prototype) as CommandsRepository;
+    const repo = Object.create(this.prototype) as CommandsRepository;
     interface Mutable {
       idKey: keyof CommandConfig | undefined;
       nameKey: keyof CommandConfig;
@@ -48,6 +40,14 @@ export class CommandsRepository extends BaseRepository<
     w.invalidUpdateError = (id) => new InvalidCommandUpdateError(id);
     return repo;
   }
+
+  protected idKey: keyof CommandConfig | undefined = undefined;
+  protected nameKey: keyof CommandConfig = "name";
+  protected QueryConstructor = RepositoryQuery;
+  protected storage = inject(SettingsService).recordOf(commandCollection);
+  protected events = inject(CommandsEventsToken);
+  protected unknownEntityError = (id: string) => new UnknownCommandError(id);
+  protected invalidUpdateError = (id: string) => new InvalidCommandUpdateError(id);
 
   create(id: string, init: CommandConfig): Result<CommandConfig, CommandIdTakenError> {
     const result = this.addEntity(id, init);

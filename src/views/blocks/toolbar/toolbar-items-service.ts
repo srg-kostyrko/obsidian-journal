@@ -23,6 +23,18 @@ export class ToolbarItemsService {
     this.#items = map;
   }
 
+  #withItems(
+    view: View,
+    blockId: BlockInstanceId,
+    mutate: (items: ToolbarItemInstance[]) => ToolbarItemInstance[] | null,
+  ): View["blocks"] | null {
+    const block = view.blocks.find((b) => b.id === blockId);
+    if (!block) return null;
+    const next = mutate(this.itemsOf(block));
+    if (next === null) return null;
+    return view.blocks.map((b) => (b.id === blockId ? { ...b, config: { ...b.config, items: next } } : b));
+  }
+
   getDefinition(key: string): Option<ToolbarItemDefinition> {
     return Option.fromNullable(this.#items.get(key));
   }
@@ -100,17 +112,5 @@ export class ToolbarItemsService {
       items.map((i) => (i.id === itemId ? { ...i, config: config as Record<string, unknown> } : i)),
     );
     return new Ok(blocks);
-  }
-
-  #withItems(
-    view: View,
-    blockId: BlockInstanceId,
-    mutate: (items: ToolbarItemInstance[]) => ToolbarItemInstance[] | null,
-  ): View["blocks"] | null {
-    const block = view.blocks.find((b) => b.id === blockId);
-    if (!block) return null;
-    const next = mutate(this.itemsOf(block));
-    if (next === null) return null;
-    return view.blocks.map((b) => (b.id === blockId ? { ...b, config: { ...b.config, items: next } } : b));
   }
 }

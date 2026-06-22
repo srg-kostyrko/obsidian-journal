@@ -37,7 +37,8 @@ class FakeDispatcher {
   }
 
   emit(event: string, ...arguments_: unknown[]): void {
-    for (const handler of this.#handlers.get(event) ?? new Set<AnyHandler>()) {
+    const handlers = this.#handlers.get(event) ?? new Set<AnyHandler>();
+    for (const handler of handlers) {
       handler(...arguments_);
     }
   }

@@ -23,7 +23,7 @@ vi.mock("@/notes-calendar/ui/NotesWeekView.vue", () => ({
         h("div", {
           "data-testid": "week-stub",
           "data-week": (p.week as unknown as WeekLike).start.toAnchor(),
-          "data-shelf": String(p.shelf ?? ""),
+          "data-shelf": p.shelf ?? "",
         });
     },
   }),

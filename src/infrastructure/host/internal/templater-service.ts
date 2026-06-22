@@ -16,22 +16,6 @@ export class TemplaterService {
   readonly #app = inject(InternalObsidianAppToken);
   readonly #logger = inject(LoggerFactoryToken).named("templater");
 
-  apply(templatePath: VaultPath, targetPath: VaultPath, content: string): AsyncResult<string, never> {
-    return AsyncResult.fromPromise(this.#apply(templatePath, targetPath, content), () => {
-      throw new InvariantError("unreachable: #apply never rejects");
-    });
-  }
-
-  cursorJump(path: VaultPath): AsyncResult<void, never> {
-    return AsyncResult.fromPromise(this.#cursorJump(path), () => {
-      throw new InvariantError("unreachable: #cursorJump never rejects");
-    });
-  }
-
-  isSupported(): boolean {
-    return this.#applyCapablePlugin() !== null;
-  }
-
   async #apply(templatePath: VaultPath, targetPath: VaultPath, content: string): Promise<string> {
     if (!content.includes("<%") && !content.includes("%>")) return content;
     const plugin = this.#applyCapablePlugin();
@@ -86,5 +70,21 @@ export class TemplaterService {
     const plugins = (this.#app as { plugins?: { getPlugin?: (id: string) => unknown } }).plugins;
     const plugin = plugins?.getPlugin?.(TEMPLATER_PLUGIN_ID);
     return plugin && typeof plugin === "object" ? plugin : null;
+  }
+
+  apply(templatePath: VaultPath, targetPath: VaultPath, content: string): AsyncResult<string, never> {
+    return AsyncResult.fromPromise(this.#apply(templatePath, targetPath, content), () => {
+      throw new InvariantError("unreachable: #apply never rejects");
+    });
+  }
+
+  cursorJump(path: VaultPath): AsyncResult<void, never> {
+    return AsyncResult.fromPromise(this.#cursorJump(path), () => {
+      throw new InvariantError("unreachable: #cursorJump never rejects");
+    });
+  }
+
+  isSupported(): boolean {
+    return this.#applyCapablePlugin() !== null;
   }
 }

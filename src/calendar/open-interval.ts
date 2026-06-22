@@ -6,15 +6,6 @@ import type { CalendarDate } from "./calendar-date";
 import type { Period } from "./period";
 
 export class OpenInterval {
-  readonly kind = "OpenInterval" as const;
-  readonly start: Option<CalendarDate>;
-  readonly end: Option<CalendarDate>;
-
-  private constructor(start: Option<CalendarDate>, end: Option<CalendarDate>) {
-    this.start = start;
-    this.end = end;
-  }
-
   static from(start: CalendarDate): OpenInterval {
     return new OpenInterval(Option.some(start), Option.none());
   }
@@ -28,6 +19,20 @@ export class OpenInterval {
       return new Err(new IntervalError(start, end));
     }
     return new Ok(new OpenInterval(Option.some(start), Option.some(end)));
+  }
+
+  private static optionDatesEqual(a: Option<CalendarDate>, b: Option<CalendarDate>): boolean {
+    if (a.isSome() && b.isSome()) return a.value.isSame(b.value);
+    return a.isNone() && b.isNone();
+  }
+
+  readonly kind = "OpenInterval" as const;
+  readonly start: Option<CalendarDate>;
+  readonly end: Option<CalendarDate>;
+
+  private constructor(start: Option<CalendarDate>, end: Option<CalendarDate>) {
+    this.start = start;
+    this.end = end;
   }
 
   contains(d: CalendarDate): boolean {
@@ -56,10 +61,5 @@ export class OpenInterval {
 
   isSame(other: OpenInterval): boolean {
     return OpenInterval.optionDatesEqual(this.start, other.start) && OpenInterval.optionDatesEqual(this.end, other.end);
-  }
-
-  private static optionDatesEqual(a: Option<CalendarDate>, b: Option<CalendarDate>): boolean {
-    if (a.isSome() && b.isSome()) return a.value.isSame(b.value);
-    return a.isNone() && b.isNone();
   }
 }

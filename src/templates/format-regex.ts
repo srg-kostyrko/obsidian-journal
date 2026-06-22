@@ -38,12 +38,11 @@ export function formatToRegexp(format: string): RegExp {
   let exactText = "";
 
   const flushSymbol = () => {
-    if (lastCharCount > 0) {
-      const prepared = formatRegExpParts.get(lastChar.repeat(lastCharCount));
-      if (prepared) parts.push(prepared);
-      lastCharCount = 0;
-      lastChar = "";
-    }
+    if (lastCharCount <= 0) return;
+    const prepared = formatRegExpParts.get(lastChar.repeat(lastCharCount));
+    if (prepared) parts.push(prepared);
+    lastCharCount = 0;
+    lastChar = "";
   };
 
   for (const char of format) {

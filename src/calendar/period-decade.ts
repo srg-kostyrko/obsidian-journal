@@ -7,6 +7,10 @@ import type { PeriodBase } from "./period";
 const DECADE_LENGTH = 10;
 
 export class DecadePeriod implements PeriodBase<DecadePeriod> {
+  static containing(date: CalendarDate): DecadePeriod {
+    return new DecadePeriod(Math.floor(date.year / DECADE_LENGTH) * DECADE_LENGTH);
+  }
+
   readonly kind = "decade" as const;
   readonly start: CalendarDate;
   readonly end: CalendarDate;
@@ -22,10 +26,6 @@ export class DecadePeriod implements PeriodBase<DecadePeriod> {
     this.start = CalendarDate._fromMoment(startMoment);
     this.end = CalendarDate._fromMoment(endMoment);
     this.anchor = this.start;
-  }
-
-  static containing(date: CalendarDate): DecadePeriod {
-    return new DecadePeriod(Math.floor(date.year / DECADE_LENGTH) * DECADE_LENGTH);
   }
 
   next(): DecadePeriod {

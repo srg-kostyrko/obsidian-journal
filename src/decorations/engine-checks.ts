@@ -37,7 +37,7 @@ export function checkTag(condition: JournalDecorationTagCondition, metadata: Not
 
 export function checkProperty(condition: JournalDecorationPropertyCondition, metadata: NoteMetadata | null): boolean {
   if (!metadata) return false;
-  const present = condition.name in metadata.properties;
+  const present = Object.hasOwn(metadata.properties, condition.name);
   if (condition.condition === "exists") return present;
   if (condition.condition === "does-not-exist") return !present;
   if (!present) return false;
@@ -91,8 +91,8 @@ function checkBooleanProperty(
 ): boolean {
   if (typeof raw !== "boolean") return false;
   return match(c.condition)
-    .with("is-true", () => raw === true)
-    .with("is-false", () => raw === false)
+    .with("is-true", () => raw)
+    .with("is-false", () => !raw)
     .with(P.union("exists", "does-not-exist"), () => false)
     .exhaustive();
 }

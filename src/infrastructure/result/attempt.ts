@@ -23,7 +23,7 @@ async function runAsync<T, Y extends ErrYield<unknown>>(iter: AsyncGen<T, Y>): P
 }
 
 function isAsyncGenerator(value: object): value is AsyncGen<unknown, ErrYield<unknown>> {
-  return Symbol.asyncIterator in value;
+  return typeof (value as Partial<AsyncIterable<unknown>>)[Symbol.asyncIterator] === "function";
 }
 
 function dispatch<T, Y extends ErrYield<unknown>>(

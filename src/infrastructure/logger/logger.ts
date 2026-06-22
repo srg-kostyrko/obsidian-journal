@@ -15,6 +15,24 @@ export class Logger {
     this.#gate = gate;
   }
 
+  #emit(level: LogLevel, message: string, fields?: Fields): void {
+    if (!this.#gate.isEnabled(level)) return;
+    const record: LogRecord = {
+      timestamp: Date.now(),
+      level,
+      name: this.name,
+      message,
+      fields,
+    };
+    for (const sink of this.#sinks) {
+      try {
+        sink.write(record);
+      } catch {
+        // A throwing sink must not break the caller and must not block sibling sinks.
+      }
+    }
+  }
+
   debug(message: string, fields?: Fields): void {
     this.#emit("debug", message, fields);
   }
@@ -34,23 +52,5 @@ export class Logger {
   child(name: string): Logger {
     const composed = this.name === "" ? name : `${this.name}.${name}`;
     return new Logger(composed, this.#sinks, this.#gate);
-  }
-
-  #emit(level: LogLevel, message: string, fields?: Fields): void {
-    if (!this.#gate.isEnabled(level)) return;
-    const record: LogRecord = {
-      timestamp: Date.now(),
-      level,
-      name: this.name,
-      message,
-      fields,
-    };
-    for (const sink of this.#sinks) {
-      try {
-        sink.write(record);
-      } catch {
-        // A throwing sink must not break the caller and must not block sibling sinks.
-      }
-    }
   }
 }

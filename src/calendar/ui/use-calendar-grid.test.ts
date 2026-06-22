@@ -99,7 +99,7 @@ describe("useCalendarGrid", () => {
         today: date("2099-01-01"),
       });
 
-      expect(cells.value.every((c) => c.isOutside === false)).toBe(true);
+      expect(cells.value.every((c) => !c.isOutside)).toBe(true);
     });
   });
 

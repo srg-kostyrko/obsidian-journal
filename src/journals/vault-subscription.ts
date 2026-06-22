@@ -19,30 +19,10 @@ export class VaultSubscriptionService {
   readonly #logger = inject(LoggerFactoryToken).named("vault-subscription");
   readonly #unsubscribes: (() => void)[] = [];
 
-  initialize(): AsyncResult<void, never> {
-    this.#rebuild();
-
-    this.#unsubscribes.push(
-      this.#notes.events.on("metadata-changed", (path) => this.#scan(path)),
-      this.#notes.events.on("renamed", ({ from, to }) => this.#index.transferPath(from, to)),
-      this.#notes.events.on("deleted", (path) => this.#index.unregister(path)),
-      // An external settings sync changes journal configs without any vault event, so
-      // re-scan every note to reindex against the freshly loaded journals.
-      this.#settingsEvents.on("reloaded", () => this.#rebuild()),
-    );
-
-    return AsyncResult.ok();
-  }
-
   #rebuild(): void {
     for (const path of this.#notes.allMarkdownNotes()) {
       this.#scan(path);
     }
-  }
-
-  async [Symbol.asyncDispose](): Promise<void> {
-    for (const off of this.#unsubscribes) off();
-    this.#unsubscribes.length = 0;
   }
 
   #scan(path: VaultPath): void {
@@ -64,5 +44,25 @@ export class VaultSubscriptionService {
     const file = this.#app.vault.getAbstractFileByPath(path);
     if (!(file instanceof TFile)) return undefined;
     return this.#app.metadataCache.getFileCache(file)?.frontmatter ?? undefined;
+  }
+
+  initialize(): AsyncResult<void, never> {
+    this.#rebuild();
+
+    this.#unsubscribes.push(
+      this.#notes.events.on("metadata-changed", (path) => this.#scan(path)),
+      this.#notes.events.on("renamed", ({ from, to }) => this.#index.transferPath(from, to)),
+      this.#notes.events.on("deleted", (path) => this.#index.unregister(path)),
+      // An external settings sync changes journal configs without any vault event, so
+      // re-scan every note to reindex against the freshly loaded journals.
+      this.#settingsEvents.on("reloaded", () => this.#rebuild()),
+    );
+
+    return AsyncResult.ok();
+  }
+
+  async [Symbol.asyncDispose](): Promise<void> {
+    for (const off of this.#unsubscribes) off();
+    this.#unsubscribes.length = 0;
   }
 }

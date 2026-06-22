@@ -3,14 +3,20 @@ import type { CalendarDate, Clock } from "@/calendar";
 import type { VariableSpec } from "./types";
 
 export class TemplateContext {
+  static empty(): TemplateContext {
+    return new TemplateContext(new Map());
+  }
+
   readonly #variables: ReadonlyMap<string, VariableSpec>;
 
   private constructor(variables: ReadonlyMap<string, VariableSpec>) {
     this.#variables = variables;
   }
 
-  static empty(): TemplateContext {
-    return new TemplateContext(new Map());
+  #with(name: string, spec: VariableSpec): TemplateContext {
+    const next = new Map(this.#variables);
+    next.set(name, spec);
+    return new TemplateContext(next);
   }
 
   string(name: string, value: string): TemplateContext {
@@ -26,7 +32,7 @@ export class TemplateContext {
       kind: "date",
       value,
       defaultFormat,
-      ...(options?.invertible === false ? { invertible: false } : {}),
+      ...(options?.invertible === false && { invertible: false }),
     });
   }
 
@@ -44,11 +50,5 @@ export class TemplateContext {
 
   has(name: string): boolean {
     return this.#variables.has(name);
-  }
-
-  #with(name: string, spec: VariableSpec): TemplateContext {
-    const next = new Map(this.#variables);
-    next.set(name, spec);
-    return new TemplateContext(next);
   }
 }

@@ -86,12 +86,12 @@ export default [
       "vue/html-indent": "off",
 
       "unicorn/prefer-structured-clone": "off",
-      "unicorn/filename-case": ["error", { cases: { kebabCase: true, pascalCase: true } }],
+      "unicorn/filename-case": ["error", { cases: { kebabCase: true, pascalCase: true }, checkDirectories: false }],
       "unicorn/relative-url-style": ["error", "always"],
       "unicorn/no-unreadable-array-destructuring": "off",
       // Obsidian API surface uses `null` heavily; staying off is intentional.
       "unicorn/no-null": "off",
-      "unicorn/prevent-abbreviations": [
+      "unicorn/name-replacements": [
         "error",
         {
           replacements: {
@@ -104,11 +104,41 @@ export default [
             i: false,
             env: false,
             fn: false,
+            // `Repository` is the deliberate descriptive form; do not abbreviate to `Repo`.
+            repository: false,
+            // Abbreviations worth expanding, but renaming them collides with existing
+            // `command`/`config`/`dependency` identifiers; deferred to a dedicated pass.
+            cfg: false,
+            cmd: false,
+            dep: false,
           },
         },
       ],
       "unicorn/no-array-callback-reference": "off",
       "unicorn/prefer-global-this": "off",
+
+      // Rules newly added to unicorn's recommended set (v65–v68) that are not adopted:
+      // they impose stylistic opinions on a working codebase or fight deliberate patterns.
+      "unicorn/no-this-outside-of-class": "off", // fights `attempt.in(this, function*)` do-notation
+      "unicorn/no-nonstandard-builtin-properties": "off", // false positives on Symbol.dispose/asyncDispose
+      "unicorn/prefer-iterator-to-array": "off", // Iterator#toArray() is ES2025; runtime-support risk
+      "unicorn/prefer-await": "off", // Result/AsyncResult pipelines compose `.then`/`.catch` deliberately
+      "unicorn/consistent-boolean-name": "off",
+      "unicorn/max-nested-calls": "off",
+      "unicorn/no-non-function-verb-prefix": "off",
+      "unicorn/no-top-level-assignment-in-function": "off",
+      "unicorn/no-declarations-before-early-exit": "off",
+      "unicorn/no-break-in-nested-loop": "off",
+      "unicorn/prefer-scoped-selector": "off",
+      "unicorn/prefer-private-class-fields": "off",
+      "unicorn/prefer-minimal-ternary": "off",
+      // All `.sort()`/`.toSorted()` sites sort strings deliberately (folder/file/icon
+      // pickers); the rule only catches numeric-sorted-as-string, of which there are none.
+      "unicorn/require-array-sort-compare": "off",
+      // `Number.parseInt(x, 10)` is used for its leniency/truncation; `Number()` is not equivalent.
+      "unicorn/prefer-number-coercion": "off",
+      // Replacing `===` chains with `.includes()` drops the union narrowing the call sites rely on.
+      "unicorn/prefer-includes-over-repeated-comparisons": "off",
 
       "no-restricted-imports": [
         "error",
@@ -163,7 +193,7 @@ export default [
     rules: {
       ...mocha.configs.recommended.rules,
       ...Object.fromEntries(Object.keys(obsidianmd.rules).map((rule) => [`obsidianmd/${rule}`, "off"])),
-      "unicorn/prevent-abbreviations": "off",
+      "unicorn/name-replacements": "off",
       // A forgotten `.only` silently shrinks the CI run, so fail the lint gate on it.
       "mocha/no-exclusive-tests": "error",
       "mocha/no-pending-tests": "error",
@@ -201,6 +231,13 @@ export default [
       "@typescript-eslint/unbound-method": "off",
       "@typescript-eslint/no-invalid-void-type": "off",
       "unicorn/no-useless-undefined": "off",
+      // Test mocks push to capture arrays as fire-and-forget arrow bodies; the discarded
+      // length return is harmless here, and production code keeps the rule's protection.
+      "unicorn/no-return-array-push": "off",
+      // Tests probe that monadic `Option.filter`/etc. ignore their return; not array methods.
+      "unicorn/no-unused-array-method-return": "off",
+      // `splice(0)` deliberately drains-and-snapshots a listener array mid-iteration.
+      "unicorn/no-unnecessary-splice": "off",
       "no-restricted-syntax": "off",
       "obsidianmd/prefer-active-doc": "off",
       "vitest/expect-expect": ["error", { assertFunctionNames: ["expect", "expectTypeOf", "expectOk", "expectErr"] }],
@@ -274,14 +311,14 @@ export default [
     files: ["src/**/*.ts"],
     ignores: ["**/*.test.ts", "**/*.bench.ts", "src/_old-code/**", "src/i18n/paraglide/**"],
     rules: {
-      "unicorn/filename-case": ["error", { case: "kebabCase" }],
+      "unicorn/filename-case": ["error", { case: "kebabCase", checkDirectories: false }],
     },
   },
   {
     files: ["src/**/*.vue"],
     ignores: ["src/_old-code/**"],
     rules: {
-      "unicorn/filename-case": ["error", { case: "pascalCase" }],
+      "unicorn/filename-case": ["error", { case: "pascalCase", checkDirectories: false }],
     },
   },
 ];

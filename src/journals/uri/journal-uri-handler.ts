@@ -27,12 +27,6 @@ export class JournalUriHandler {
   readonly #notices = inject(NoticeService);
   readonly #logger = inject(LoggerFactoryToken).named("journal-uri");
 
-  initialize(): void {
-    this.#uri.register(URI_ACTION, (parameters) => {
-      void this.#handle(parameters);
-    });
-  }
-
   async #handle(parameters: UriParameters): Promise<void> {
     const parsed = parseJournalUriRequest(parameters);
     if (parsed.isErr()) {
@@ -98,5 +92,11 @@ export class JournalUriHandler {
       .with({ kind: "invalid-date" }, (dateError) => m.uri_invalid_date({ date: dateError.value }))
       .with({ kind: "invalid-mode" }, (modeError) => m.uri_invalid_mode({ mode: modeError.value }))
       .exhaustive();
+  }
+
+  initialize(): void {
+    this.#uri.register(URI_ACTION, (parameters) => {
+      void this.#handle(parameters);
+    });
   }
 }

@@ -5,12 +5,12 @@ import { SuggestCancelled } from "./errors";
 import type { SuggestDefinition } from "./types";
 
 export class FakeSuggestHandle<TInput, TResult> {
-  readonly definition: SuggestDefinition<TInput, TResult>;
-  readonly input: TInput;
-
   #settled = false;
   readonly #resolve: (value: TResult) => void;
   readonly #reject: (error: SuggestCancelled) => void;
+
+  readonly definition: SuggestDefinition<TInput, TResult>;
+  readonly input: TInput;
 
   constructor(
     definition: SuggestDefinition<TInput, TResult>,

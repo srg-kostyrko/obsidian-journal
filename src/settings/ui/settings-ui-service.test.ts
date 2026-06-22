@@ -28,8 +28,10 @@ function build(
   } = {},
 ): SettingsUiService {
   const c = new Container();
-  for (const b of options.blocks ?? []) c.register(DashboardBlockToken).useValue(b);
-  for (const s of options.subpages ?? []) c.register(SubpageToken).useValue(s);
+  const blocks = options.blocks ?? [];
+  for (const b of blocks) c.register(DashboardBlockToken).useValue(b);
+  const subpages = options.subpages ?? [];
+  for (const s of subpages) c.register(SubpageToken).useValue(s);
   c.register(SettingsUiService).useClass(SettingsUiService);
   return c.resolve(SettingsUiService);
 }

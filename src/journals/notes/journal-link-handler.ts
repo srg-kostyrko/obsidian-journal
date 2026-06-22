@@ -18,17 +18,9 @@ const GRANULARITY_RANK: Record<FixedWriteIntervals["type"], number> = {
 };
 
 export class JournalLinkHandler implements FunctionHandler {
-  readonly name = "journal_link";
   readonly #journals = inject(JournalsRepository);
   readonly #path = inject(NotePathService);
-
-  render(input: FunctionInput): Result<string, TemplateRenderError> {
-    const base = applyModifiers(this.#baseDate(input), input.modifiers);
-    return this.#path
-      .pathForDate(input.arg, base)
-      .map((path) => path.replace(/\.md$/, ""))
-      .mapErr((error) => new TemplateRenderError("journal-link-unresolved", error));
-  }
+  readonly name = "journal_link";
 
   // Finer targets base off the host period start so day modifiers enumerate it
   // cleanly; coarser-or-equal targets base off the anchor so cross-year periods
@@ -49,5 +41,13 @@ export class JournalLinkHandler implements FunctionHandler {
     const targetWrite = target.value.write;
     if (hostWrite.type === "custom" || targetWrite.type === "custom") return false;
     return GRANULARITY_RANK[targetWrite.type] < GRANULARITY_RANK[hostWrite.type];
+  }
+
+  render(input: FunctionInput): Result<string, TemplateRenderError> {
+    const base = applyModifiers(this.#baseDate(input), input.modifiers);
+    return this.#path
+      .pathForDate(input.arg, base)
+      .map((path) => path.replace(/\.md$/, ""))
+      .mapErr((error) => new TemplateRenderError("journal-link-unresolved", error));
   }
 }

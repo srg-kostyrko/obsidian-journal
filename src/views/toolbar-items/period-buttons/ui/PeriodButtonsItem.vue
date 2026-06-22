@@ -41,7 +41,8 @@ const badges = computed<readonly Badge[]>(() => {
   const date = CalendarDate.fromAnchor(context.refDate.value);
   const out: Badge[] = [];
   const add = (key: PeriodKey, period: Period, journals: readonly string[], format: string): void => {
-    if (!props.config[key]) return;
+    const enabled = props.config[key];
+    if (!enabled) return;
     // Only quarter self-hides when no journal of its kind exists; week/month/year stay visible
     // (but inert) so the toolbar layout does not shift.
     if (key === "quarter" && journals.length === 0) return;

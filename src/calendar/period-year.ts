@@ -6,6 +6,10 @@ import { QuarterPeriod } from "./period-quarter";
 import type { PeriodBase } from "./period";
 
 export class YearPeriod implements PeriodBase<YearPeriod> {
+  static containing(date: CalendarDate): YearPeriod {
+    return new YearPeriod(localMoment(date.toAnchor(), "YYYY-MM-DD", true));
+  }
+
   readonly kind = "year" as const;
   readonly start: CalendarDate;
   readonly end: CalendarDate;
@@ -20,10 +24,6 @@ export class YearPeriod implements PeriodBase<YearPeriod> {
     this.end = CalendarDate._fromMoment(end);
     this.anchor = this.start;
     this.year = start.year();
-  }
-
-  static containing(date: CalendarDate): YearPeriod {
-    return new YearPeriod(localMoment(date.toAnchor(), "YYYY-MM-DD", true));
   }
 
   next(): YearPeriod {

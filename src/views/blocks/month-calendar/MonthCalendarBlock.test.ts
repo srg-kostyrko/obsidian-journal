@@ -23,7 +23,7 @@ vi.mock("@/notes-calendar/ui/NotesMonthView.vue", () => ({
         h("div", {
           "data-testid": "month-stub",
           "data-month": (p.month as unknown as MonthLike).start.toAnchor(),
-          "data-shelf": String(p.shelf ?? ""),
+          "data-shelf": p.shelf ?? "",
         });
     },
   }),

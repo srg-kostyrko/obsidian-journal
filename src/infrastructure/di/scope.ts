@@ -16,20 +16,6 @@ export class Scope implements Resolver {
     this.#bindings = bindings;
   }
 
-  resolve<T>(token: TokenLike<T>): T;
-  resolve<T>(token: MultiToken<T>): T[];
-  resolve(token: AnyTokenLike): unknown {
-    this.#ensureNotDisposed();
-    const entries = this.#bindings.lookup(token);
-    if (!entries || entries.length === 0) {
-      throw new TokenNotRegisteredError(token, currentChain());
-    }
-    return match(tokenKind(token))
-      .with("single", () => this.#resolveSingle(token, entries[0]))
-      .with("multi", () => entries.map((stored) => this.#resolveSingle(token, stored)))
-      .exhaustive();
-  }
-
   #resolveSingle(token: AnyTokenLike, stored: StoredEntry): unknown {
     return match(stored.entry.lifetime)
       .with(Lifetime.Container, () => stored.slot.getOrCreate(this, token, stored.entry.factory))
@@ -48,6 +34,24 @@ export class Scope implements Resolver {
     return slot;
   }
 
+  #ensureNotDisposed(): void {
+    if (this.#disposed) throw new ContainerDisposedError();
+  }
+
+  resolve<T>(token: TokenLike<T>): T;
+  resolve<T>(token: MultiToken<T>): T[];
+  resolve(token: AnyTokenLike): unknown {
+    this.#ensureNotDisposed();
+    const entries = this.#bindings.lookup(token);
+    if (!entries || entries.length === 0) {
+      throw new TokenNotRegisteredError(token, currentChain());
+    }
+    return match(tokenKind(token))
+      .with("single", () => this.#resolveSingle(token, entries[0]))
+      .with("multi", () => entries.map((stored) => this.#resolveSingle(token, stored)))
+      .exhaustive();
+  }
+
   async dispose(): Promise<void> {
     if (this.#disposed) return;
     this.#disposed = true;
@@ -58,9 +62,5 @@ export class Scope implements Resolver {
     if (errors.length > 0) {
       throw new AggregateError(errors, "One or more scope disposers failed.");
     }
-  }
-
-  #ensureNotDisposed(): void {
-    if (this.#disposed) throw new ContainerDisposedError();
   }
 }

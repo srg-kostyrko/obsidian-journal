@@ -24,11 +24,6 @@ export class CalendarAppearanceBridge {
     });
   }
 
-  [Symbol.dispose](): void {
-    this.#stop();
-    for (const name of Object.values(VARS)) activeDocument.body.style.removeProperty(name);
-  }
-
   #sync(state: AppearanceSliceState | undefined): void {
     if (state === undefined) return;
     // Global aesthetic, applied as CSS vars on the active document body. A calendar
@@ -39,5 +34,10 @@ export class CalendarAppearanceBridge {
     root.setProperty(VARS.todayBg, colorToString(state.today.background));
     root.setProperty(VARS.activeColor, colorToString(state.active.color));
     root.setProperty(VARS.activeBg, colorToString(state.active.background));
+  }
+
+  [Symbol.dispose](): void {
+    this.#stop();
+    for (const name of Object.values(VARS)) activeDocument.body.style.removeProperty(name);
   }
 }

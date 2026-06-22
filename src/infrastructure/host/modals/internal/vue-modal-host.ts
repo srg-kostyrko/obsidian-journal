@@ -35,6 +35,16 @@ export class VueModalHost<TProps, TResult> extends Modal {
     this.#onOutcome = onOutcome;
   }
 
+  #settle(outcome: { kind: "submit"; value: TResult } | { kind: "cancel" }): void {
+    if (this.#settled) return;
+    this.#settled = true;
+    this.#onOutcome(outcome);
+    // Defer close so submit/cancel called inside setup() doesn't re-enter Vue's mount cycle.
+    queueMicrotask(() => {
+      if (this.#vueApp) this.close();
+    });
+  }
+
   onOpen(): void {
     this.titleEl.textContent = this.#definition.title(this.#props);
     if (this.#definition.width !== undefined) {
@@ -64,15 +74,5 @@ export class VueModalHost<TProps, TResult> extends Modal {
 
   dismiss(): void {
     this.close();
-  }
-
-  #settle(outcome: { kind: "submit"; value: TResult } | { kind: "cancel" }): void {
-    if (this.#settled) return;
-    this.#settled = true;
-    this.#onOutcome(outcome);
-    // Defer close so submit/cancel called inside setup() doesn't re-enter Vue's mount cycle.
-    queueMicrotask(() => {
-      if (this.#vueApp) this.close();
-    });
   }
 }

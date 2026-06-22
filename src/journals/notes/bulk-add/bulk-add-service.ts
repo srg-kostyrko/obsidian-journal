@@ -65,26 +65,6 @@ export class BulkAddService {
   readonly #path = inject(NotePathService);
   readonly #connection = inject(NoteConnectionService);
 
-  plan(journalName: string, parameters: BulkAddParameters): AsyncResult<BulkPlan, FolderNotFoundError> {
-    return attempt.in(this, async function* (this: BulkAddService) {
-      const paths = yield* this.#notes.listInFolder(parameters.folder as VaultPath);
-      const dateRegexp = formatToRegexp(parameters.dateFormat);
-      const notes = paths.map((path) => this.#planNote(journalName, path, parameters, dateRegexp));
-      return { notes };
-    });
-  }
-
-  apply(
-    journalName: string,
-    actions: ResolvedAction[],
-    dryRun: boolean,
-    onProgress?: (done: number, total: number) => void,
-  ): AsyncResult<BulkLogEntry[], never> {
-    return AsyncResult.fromPromise(this.#applyAll(journalName, actions, dryRun, onProgress), () => {
-      throw new InvariantError("bulk apply never rejects");
-    });
-  }
-
   async #applyAll(
     journalName: string,
     actions: ResolvedAction[],
@@ -135,7 +115,7 @@ export class BulkAddService {
       kind: "action",
       path,
       anchor,
-      ...(occupant === undefined ? {} : { occupant }),
+      ...(occupant !== undefined && { occupant }),
       existing: occupant === undefined ? "none" : parameters.existingNote,
       folder: configuredFolder === currentFolder ? "n/a" : parameters.otherFolder,
       name: configuredName === currentName ? "n/a" : parameters.otherName,
@@ -157,7 +137,7 @@ export class BulkAddService {
   }
 
   #stringProperty(metadata: NoteMetadata | null, name: string): string | undefined {
-    if (!metadata || !(name in metadata.properties)) return undefined;
+    if (!metadata || !Object.hasOwn(metadata.properties, name)) return undefined;
     const raw = metadata.properties[name];
     return typeof raw === "string" ? raw : undefined;
   }
@@ -203,5 +183,25 @@ export class BulkAddService {
       if (result.kind === "err") actions.push(`Failed: ${result.error.message}`);
     }
     return { path: action.path, actions };
+  }
+
+  plan(journalName: string, parameters: BulkAddParameters): AsyncResult<BulkPlan, FolderNotFoundError> {
+    return attempt.in(this, async function* (this: BulkAddService) {
+      const paths = yield* this.#notes.listInFolder(parameters.folder as VaultPath);
+      const dateRegexp = formatToRegexp(parameters.dateFormat);
+      const notes = paths.map((path) => this.#planNote(journalName, path, parameters, dateRegexp));
+      return { notes };
+    });
+  }
+
+  apply(
+    journalName: string,
+    actions: ResolvedAction[],
+    dryRun: boolean,
+    onProgress?: (done: number, total: number) => void,
+  ): AsyncResult<BulkLogEntry[], never> {
+    return AsyncResult.fromPromise(this.#applyAll(journalName, actions, dryRun, onProgress), () => {
+      throw new InvariantError("bulk apply never rejects");
+    });
   }
 }

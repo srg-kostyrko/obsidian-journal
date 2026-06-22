@@ -55,6 +55,35 @@ export class NotesService {
     );
   }
 
+  #requireFile(path: VaultPath): Result<TFile, NoteNotFoundError> {
+    const file = this.#app.vault.getAbstractFileByPath(path);
+    if (file instanceof TFile) return new Ok<TFile, NoteNotFoundError>(file);
+    return new Err<TFile, NoteNotFoundError>(new NoteNotFoundError(path));
+  }
+
+  async #create(path: VaultPath, content: string): Promise<Note> {
+    await this.#ensureFolderExists(path);
+    const file = await this.#app.vault.create(path, content);
+    return toNote(file);
+  }
+
+  async #rename(file: TFile, newPath: VaultPath): Promise<Note> {
+    await this.#ensureFolderExists(newPath);
+    await this.#app.vault.rename(file, newPath);
+    return toNote(file);
+  }
+
+  async #ensureFolderExists(path: VaultPath): Promise<void> {
+    const segments = path.split("/");
+    if (path.endsWith(".md")) segments.pop();
+    if (segments.length === 0) return;
+    const folderPath = segments.join("/");
+    if (!folderPath) return;
+    if (!this.#app.vault.getAbstractFileByPath(folderPath)) {
+      await this.#app.vault.createFolder(folderPath);
+    }
+  }
+
   find(path: VaultPath): Option<Note> {
     const file = this.#app.vault.getAbstractFileByPath(path);
     if (!(file instanceof TFile)) return new None<Note>();
@@ -153,34 +182,5 @@ export class NotesService {
       this.#app.fileManager.processFrontMatter(file.value, mutate),
       (cause) => new FrontmatterError(path, cause),
     );
-  }
-
-  #requireFile(path: VaultPath): Result<TFile, NoteNotFoundError> {
-    const file = this.#app.vault.getAbstractFileByPath(path);
-    if (file instanceof TFile) return new Ok<TFile, NoteNotFoundError>(file);
-    return new Err<TFile, NoteNotFoundError>(new NoteNotFoundError(path));
-  }
-
-  async #create(path: VaultPath, content: string): Promise<Note> {
-    await this.#ensureFolderExists(path);
-    const file = await this.#app.vault.create(path, content);
-    return toNote(file);
-  }
-
-  async #rename(file: TFile, newPath: VaultPath): Promise<Note> {
-    await this.#ensureFolderExists(newPath);
-    await this.#app.vault.rename(file, newPath);
-    return toNote(file);
-  }
-
-  async #ensureFolderExists(path: VaultPath): Promise<void> {
-    const segments = path.split("/");
-    if (path.endsWith(".md")) segments.pop();
-    if (segments.length === 0) return;
-    const folderPath = segments.join("/");
-    if (!folderPath) return;
-    if (!this.#app.vault.getAbstractFileByPath(folderPath)) {
-      await this.#app.vault.createFolder(folderPath);
-    }
   }
 }

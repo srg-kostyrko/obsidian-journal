@@ -19,7 +19,7 @@ const StubConfig = defineComponent({
   setup(props) {
     return () =>
       h("div", [
-        h("span", String((props.config as { label?: string }).label ?? "")),
+        h("span", (props.config as { label?: string }).label ?? ""),
         h(
           "button",
           { type: "button", onClick: () => (props.onChange as (next: unknown) => void)({ label: "edited" }) },

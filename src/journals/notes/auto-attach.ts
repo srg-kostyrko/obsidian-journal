@@ -27,23 +27,6 @@ export class AutoAttachService {
   readonly #logger = inject(LoggerFactoryToken).named("auto-attach");
   readonly #unsubscribes: (() => void)[] = [];
 
-  initialize(): AsyncResult<void, never> {
-    this.#unsubscribes.push(
-      this.#notes.events.on("created", (note) => {
-        void this.#handle(note.path);
-      }),
-      this.#notes.events.on("renamed", ({ to }) => {
-        void this.#handle(to);
-      }),
-    );
-    return AsyncResult.ok();
-  }
-
-  async [Symbol.asyncDispose](): Promise<void> {
-    for (const off of this.#unsubscribes) off();
-    this.#unsubscribes.length = 0;
-  }
-
   async #handle(path: VaultPath): Promise<void> {
     if (this.#guard.suppresses(path)) return;
     if (this.#index.entryByPath(path).isSome()) return;
@@ -56,7 +39,7 @@ export class AutoAttachService {
       if (builtResult.kind === "err") continue;
       const merged: JournalMetadata = {
         ...builtResult.value,
-        ...(candidate.value.numbers ? { numbers: candidate.value.numbers } : {}),
+        ...(candidate.value.numbers && { numbers: candidate.value.numbers }),
       };
       matches.push({ name, metadata: merged });
     }
@@ -76,5 +59,22 @@ export class AutoAttachService {
     } else {
       this.#logger.info("auto-attach succeeded", { path, journal: match.name });
     }
+  }
+
+  initialize(): AsyncResult<void, never> {
+    this.#unsubscribes.push(
+      this.#notes.events.on("created", (note) => {
+        void this.#handle(note.path);
+      }),
+      this.#notes.events.on("renamed", ({ to }) => {
+        void this.#handle(to);
+      }),
+    );
+    return AsyncResult.ok();
+  }
+
+  async [Symbol.asyncDispose](): Promise<void> {
+    for (const off of this.#unsubscribes) off();
+    this.#unsubscribes.length = 0;
   }
 }

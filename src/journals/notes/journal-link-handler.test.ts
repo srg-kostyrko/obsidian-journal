@@ -87,7 +87,7 @@ describe("JournalLinkHandler", () => {
       modifiers,
       context,
       engine,
-      ...(format === undefined ? {} : { format }),
+      ...(format !== undefined && { format }),
     };
     const result = handler.render(input);
     if (result.isErr()) throw new Error(`expected ok, got ${result.error.message}`);

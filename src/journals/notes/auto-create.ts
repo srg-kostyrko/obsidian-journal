@@ -17,6 +17,17 @@ export class AutoCreateService {
   #timer: ReturnType<typeof window.setTimeout> | undefined;
   #disposed = false;
 
+  async #tick(): Promise<void> {
+    for (const [name, config] of this.#journals.find().entries()) {
+      if (!config.autoCreate) continue;
+      await this.createCurrent(name);
+    }
+    if (this.#disposed) return;
+    this.#timer = window.setTimeout(() => {
+      void this.#tick();
+    }, Clock.msUntilNextLocalMidnight());
+  }
+
   initialize(): AsyncResult<void, never> {
     void this.#tick();
     return AsyncResult.ok();
@@ -41,16 +52,5 @@ export class AutoCreateService {
     if (result.isErr()) {
       this.#logger.error("auto-create: ensureNote failed", { name, error: result.error });
     }
-  }
-
-  async #tick(): Promise<void> {
-    for (const [name, config] of this.#journals.find().entries()) {
-      if (!config.autoCreate) continue;
-      await this.createCurrent(name);
-    }
-    if (this.#disposed) return;
-    this.#timer = window.setTimeout(() => {
-      void this.#tick();
-    }, Clock.msUntilNextLocalMidnight());
   }
 }

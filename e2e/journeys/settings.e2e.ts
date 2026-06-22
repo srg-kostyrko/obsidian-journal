@@ -449,7 +449,7 @@ describe("settings", () => {
       await deleteInModal();
 
       await waitForSettings(
-        (s) => !Object.values(s.commands ?? {}).some((c) => c.name === "Disposable command"),
+        (s) => Object.values(s.commands ?? {}).every((c) => c.name !== "Disposable command"),
         "deleted command still present in data.json",
       );
     });

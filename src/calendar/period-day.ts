@@ -4,6 +4,10 @@ import { CalendarDate } from "./calendar-date";
 import type { PeriodBase } from "./period";
 
 export class DayPeriod implements PeriodBase<DayPeriod> {
+  static containing(date: CalendarDate): DayPeriod {
+    return new DayPeriod(date);
+  }
+
   readonly kind = "day" as const;
   readonly start: CalendarDate;
   readonly end: CalendarDate;
@@ -13,10 +17,6 @@ export class DayPeriod implements PeriodBase<DayPeriod> {
     this.start = date;
     this.end = date;
     this.anchor = date;
-  }
-
-  static containing(date: CalendarDate): DayPeriod {
-    return new DayPeriod(date);
   }
 
   next(): DayPeriod {

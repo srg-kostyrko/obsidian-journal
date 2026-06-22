@@ -35,49 +35,6 @@ export class WorkspaceService {
     );
   }
 
-  activeNote(): Option<VaultPath> {
-    return this.#pathOf(this.#app.workspace.getActiveFile());
-  }
-
-  get layoutReady(): boolean {
-    return this.#app.workspace.layoutReady;
-  }
-
-  onLayoutReady(callback: () => void): void {
-    this.#app.workspace.onLayoutReady(callback);
-  }
-
-  isOpen(path: VaultPath): boolean {
-    return this.#findOpenLeaf(path) !== null;
-  }
-
-  openNote(path: VaultPath, mode: OpenMode = "active"): AsyncResult<void, WorkspaceOpenError> {
-    return AsyncResult.fromPromise(this.#open(path, mode), (cause) => new WorkspaceOpenError(path, cause));
-  }
-
-  hasActiveEditor(): boolean {
-    return this.#activeEditor() !== undefined;
-  }
-
-  insertNoteLinkAtCursor(targetPath: VaultPath): boolean {
-    const editor = this.#activeEditor();
-    if (editor === undefined) return false;
-    editor.replaceSelection(this.#noteLink(targetPath));
-    return true;
-  }
-
-  triggerHoverPreview(path: VaultPath, event: MouseEvent): void {
-    this.#app.workspace.trigger("link-hover", this.#plugin, event.target, path, path);
-  }
-
-  openFileMenu(path: VaultPath, event: MouseEvent): void {
-    const file = this.#app.vault.getAbstractFileByPath(path);
-    if (!(file instanceof TFile)) return;
-    const menu = new Menu();
-    this.#app.workspace.trigger("file-menu", menu, file, "file-explorer-context-menu", null);
-    menu.showAtMouseEvent(event);
-  }
-
   async #open(path: VaultPath, mode: OpenMode): Promise<void> {
     const existing = this.#findOpenLeaf(path);
     if (existing) {
@@ -137,5 +94,48 @@ export class WorkspaceService {
   #pathOf(file: TFile | null): Option<VaultPath> {
     if (!(file instanceof TFile)) return new None<VaultPath>();
     return new Some<VaultPath>(file.path as VaultPath);
+  }
+
+  activeNote(): Option<VaultPath> {
+    return this.#pathOf(this.#app.workspace.getActiveFile());
+  }
+
+  get layoutReady(): boolean {
+    return this.#app.workspace.layoutReady;
+  }
+
+  onLayoutReady(callback: () => void): void {
+    this.#app.workspace.onLayoutReady(callback);
+  }
+
+  isOpen(path: VaultPath): boolean {
+    return this.#findOpenLeaf(path) !== null;
+  }
+
+  openNote(path: VaultPath, mode: OpenMode = "active"): AsyncResult<void, WorkspaceOpenError> {
+    return AsyncResult.fromPromise(this.#open(path, mode), (cause) => new WorkspaceOpenError(path, cause));
+  }
+
+  hasActiveEditor(): boolean {
+    return this.#activeEditor() !== undefined;
+  }
+
+  insertNoteLinkAtCursor(targetPath: VaultPath): boolean {
+    const editor = this.#activeEditor();
+    if (editor === undefined) return false;
+    editor.replaceSelection(this.#noteLink(targetPath));
+    return true;
+  }
+
+  triggerHoverPreview(path: VaultPath, event: MouseEvent): void {
+    this.#app.workspace.trigger("link-hover", this.#plugin, event.target, path, path);
+  }
+
+  openFileMenu(path: VaultPath, event: MouseEvent): void {
+    const file = this.#app.vault.getAbstractFileByPath(path);
+    if (!(file instanceof TFile)) return;
+    const menu = new Menu();
+    this.#app.workspace.trigger("file-menu", menu, file, "file-explorer-context-menu", null);
+    menu.showAtMouseEvent(event);
   }
 }

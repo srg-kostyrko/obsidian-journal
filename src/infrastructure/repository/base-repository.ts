@@ -26,7 +26,7 @@ export abstract class BaseRepository<
   }
 
   exists(id: Id): boolean {
-    return id in this.storage;
+    return Object.hasOwn(this.storage, id);
   }
 
   get(id: Id): Option<Entity> {
@@ -39,9 +39,9 @@ export abstract class BaseRepository<
   }
 
   update(id: Id, changes: Partial<Entity>): Result<void, EUnknown | EInvalidUpdate> {
-    if (!(id in this.storage)) return new Err(this.unknownEntityError(id));
+    if (!Object.hasOwn(this.storage, id)) return new Err(this.unknownEntityError(id));
     const existing = this.storage[id];
-    if (this.idKey !== undefined && this.idKey in changes) {
+    if (this.idKey !== undefined && Object.hasOwn(changes, this.idKey)) {
       const next = (changes as Record<keyof Entity, unknown>)[this.idKey];
       if (next !== existing[this.idKey]) {
         return new Err(this.invalidUpdateError(id));
@@ -53,14 +53,14 @@ export abstract class BaseRepository<
   }
 
   delete(id: Id): Result<void, EUnknown> {
-    if (!(id in this.storage)) return new Err(this.unknownEntityError(id));
+    if (!Object.hasOwn(this.storage, id)) return new Err(this.unknownEntityError(id));
     delete this.storage[id];
     (this.events as Emitter<RepositoryEvents<Id, Entity>>).emit("deleted", id);
     return new Ok(undefined);
   }
 
   protected addEntity(id: Id, entity: Entity): Result<Id, EUnknown> {
-    if (id in this.storage) return new Err(this.unknownEntityError(id));
+    if (Object.hasOwn(this.storage, id)) return new Err(this.unknownEntityError(id));
     this.storage[id] = entity;
     (this.events as Emitter<RepositoryEvents<Id, Entity>>).emit("created", id);
     return new Ok(id);

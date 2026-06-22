@@ -21,6 +21,16 @@ export class CommandService {
     this.#plugin.register(() => this.#teardownRibbons());
   }
 
+  #teardownRibbons(): void {
+    for (const ribbon of this.#ribbons.values()) this.#removeRibbon(ribbon);
+    this.#ribbons.clear();
+  }
+
+  #removeRibbon(ribbon: RibbonHandle): void {
+    this.#plugin.app.workspace.leftRibbon.removeRibbonAction(ribbon.actionId);
+    ribbon.element.remove();
+  }
+
   register(registration: CommandRegistration): void {
     const run = (): void => {
       try {
@@ -79,16 +89,6 @@ export class CommandService {
       this.#removeRibbon(ribbon);
       this.#ribbons.delete(id);
     }
-  }
-
-  #teardownRibbons(): void {
-    for (const ribbon of this.#ribbons.values()) this.#removeRibbon(ribbon);
-    this.#ribbons.clear();
-  }
-
-  #removeRibbon(ribbon: RibbonHandle): void {
-    this.#plugin.app.workspace.leftRibbon.removeRibbonAction(ribbon.actionId);
-    ribbon.element.remove();
   }
 }
 

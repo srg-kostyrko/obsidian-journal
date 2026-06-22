@@ -49,20 +49,6 @@ export class DynamicCommandRegistry {
   readonly #shelvesEvents = inject(ShelvesEventsToken);
   readonly #settingsEvents = inject(SettingsEventsToken);
 
-  initialize(): void {
-    this.#reconcile();
-    this.#commandsEvents.on("created", () => this.#reconcile());
-    this.#commandsEvents.on("updated", () => this.#reconcile());
-    this.#commandsEvents.on("deleted", () => this.#reconcile());
-    this.#journalsEvents.on("renamed", (oldName, newName) => this.#onJournalRenamed(oldName, newName));
-    this.#journalsEvents.on("deleted", (journalName) => this.#onJournalDeleted(journalName));
-    this.#shelvesEvents.on("renamed", (oldName, newName) => this.#onShelfRenamed(oldName, newName));
-    this.#shelvesEvents.on("deleted", (shelfName) => this.#onShelfDeleted(shelfName));
-    // An external settings sync rewrites the collections without firing repository
-    // events, so re-reconcile every registration against the freshly loaded data.
-    this.#settingsEvents.on("reloaded", () => this.#reconcile());
-  }
-
   #reconcile(): void {
     const present = new Set<string>();
     for (const [id, command] of this.#commandsRepo.find().entries()) {
@@ -74,10 +60,9 @@ export class DynamicCommandRegistry {
       this.#registered.set(id, serialized);
     }
     for (const id of this.#registered.keys()) {
-      if (!present.has(id)) {
-        this.#commands.unregister(id);
-        this.#registered.delete(id);
-      }
+      if (present.has(id)) continue;
+      this.#commands.unregister(id);
+      this.#registered.delete(id);
     }
   }
 
@@ -256,5 +241,19 @@ export class DynamicCommandRegistry {
         this.#commandsRepo.delete(id);
       }
     }
+  }
+
+  initialize(): void {
+    this.#reconcile();
+    this.#commandsEvents.on("created", () => this.#reconcile());
+    this.#commandsEvents.on("updated", () => this.#reconcile());
+    this.#commandsEvents.on("deleted", () => this.#reconcile());
+    this.#journalsEvents.on("renamed", (oldName, newName) => this.#onJournalRenamed(oldName, newName));
+    this.#journalsEvents.on("deleted", (journalName) => this.#onJournalDeleted(journalName));
+    this.#shelvesEvents.on("renamed", (oldName, newName) => this.#onShelfRenamed(oldName, newName));
+    this.#shelvesEvents.on("deleted", (shelfName) => this.#onShelfDeleted(shelfName));
+    // An external settings sync rewrites the collections without firing repository
+    // events, so re-reconcile every registration against the freshly loaded data.
+    this.#settingsEvents.on("reloaded", () => this.#reconcile());
   }
 }

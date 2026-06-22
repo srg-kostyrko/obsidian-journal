@@ -43,8 +43,7 @@ export class OpenDateFlow implements Flow<OpenDateParameters, OpenDateResult, Op
     const candidates = journalNames ? all.filter((n) => journalNames.includes(n)) : all;
     const applicable = candidates.filter((name) => {
       if (!this.#timeline.contains(name, p.anchor)) return false;
-      if (p.existingOnly && this.#index.entryByAnchor(name, p.anchor).isNone()) return false;
-      return true;
+      return !(p.existingOnly && this.#index.entryByAnchor(name, p.anchor).isNone());
     });
 
     if (applicable.length === 0) {

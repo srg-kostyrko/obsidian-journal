@@ -33,18 +33,6 @@ export class TemplateEngine {
     return (this.#handlersByName ??= new Map(this.#injector.resolve(FunctionHandlerToken).map((h) => [h.name, h])));
   }
 
-  renderString(template: string, context: TemplateContext): string {
-    return this.renderStream(tokenize(template), context);
-  }
-
-  renderStream(stream: TokenStream, context: TemplateContext): string {
-    let output = "";
-    for (const token of stream) {
-      output += this.#renderToken(token, context);
-    }
-    return output;
-  }
-
   #renderToken(token: Token, context: TemplateContext): string {
     return match(token)
       .with({ kind: "literal" }, (t) => t.text)
@@ -87,78 +75,6 @@ export class TemplateEngine {
   #sourceDateFor(context: TemplateContext): CalendarDate {
     const spec = context.get("date");
     return spec?.kind === "date" ? spec.value : CalendarDate.today();
-  }
-
-  validate(
-    stream: TokenStream,
-    context: TemplateContext,
-    options: { allowFunctions?: boolean } = {},
-  ): ValidationProblem[] {
-    const allowFunctions = options.allowFunctions ?? false;
-    const problems: ValidationProblem[] = [];
-    let position = 0;
-    for (const token of stream) {
-      if (token.kind === "literal") {
-        position += token.text.length;
-        continue;
-      }
-      if (token.kind === "function") {
-        if (!allowFunctions) {
-          problems.push({ token, position, problem: "function-not-allowed" });
-        } else if (!this.#handlers().has(token.name)) {
-          problems.push({ token, position, problem: "unknown-function" });
-        }
-        position += token.raw.length;
-        continue;
-      }
-      const spec = context.get(token.name);
-      if (!spec) {
-        problems.push({ token, position, problem: "unknown-variable" });
-        position += token.raw.length;
-        continue;
-      }
-      if (spec.kind !== "date" && spec.kind !== "clock") {
-        if (token.format !== undefined) {
-          problems.push({ token, position, problem: "format-on-non-date" });
-        }
-        if (token.modifiers.length > 0) {
-          problems.push({ token, position, problem: "modifiers-on-non-date" });
-        }
-      }
-      position += token.raw.length;
-    }
-    return problems;
-  }
-
-  parse(stream: TokenStream, input: string, context: TemplateContext): Result<Bindings, TemplateParseError> {
-    const compiled = this.#compileMatcher(stream, context);
-    if (compiled.kind === "err") return new Err(compiled.error);
-    const { regex, captureTokens } = compiled.value;
-    const matched = regex.exec(input);
-    if (!matched?.groups) {
-      return new Err(new TemplateParseError({ kind: "no-match", input }));
-    }
-
-    const candidates = new Map<string, BoundValue[]>();
-    for (const [index, token] of captureTokens.entries()) {
-      const capture = matched.groups[`v_${index}`];
-      if (capture === undefined) continue;
-      const spec = context.get(token.name);
-      if (!spec) continue;
-      const value = this.#parseCapture(capture, spec, token);
-      if (value.kind === "err") return new Err(value.error);
-      const list = candidates.get(token.name) ?? [];
-      list.push(value.value);
-      candidates.set(token.name, list);
-    }
-
-    const resolved = new Map<string, BoundValue>();
-    for (const [name, list] of candidates) {
-      const merged = mergeCandidates(name, list);
-      if (merged.kind === "err") return new Err(merged.error);
-      resolved.set(name, merged.value);
-    }
-    return new Ok(resolved);
   }
 
   #compileMatcher(
@@ -235,6 +151,90 @@ export class TemplateEngine {
         err(new TemplateParseError({ kind: "not-invertible", reason: "clock-variable", offending: token.name })),
       )
       .exhaustive();
+  }
+
+  renderString(template: string, context: TemplateContext): string {
+    return this.renderStream(tokenize(template), context);
+  }
+
+  renderStream(stream: TokenStream, context: TemplateContext): string {
+    let output = "";
+    for (const token of stream) {
+      output += this.#renderToken(token, context);
+    }
+    return output;
+  }
+
+  validate(
+    stream: TokenStream,
+    context: TemplateContext,
+    options: { allowFunctions?: boolean } = {},
+  ): ValidationProblem[] {
+    const allowFunctions = options.allowFunctions ?? false;
+    const problems: ValidationProblem[] = [];
+    let position = 0;
+    for (const token of stream) {
+      if (token.kind === "literal") {
+        position += token.text.length;
+        continue;
+      }
+      if (token.kind === "function") {
+        if (!allowFunctions) {
+          problems.push({ token, position, problem: "function-not-allowed" });
+        } else if (!this.#handlers().has(token.name)) {
+          problems.push({ token, position, problem: "unknown-function" });
+        }
+        position += token.raw.length;
+        continue;
+      }
+      const spec = context.get(token.name);
+      if (!spec) {
+        problems.push({ token, position, problem: "unknown-variable" });
+        position += token.raw.length;
+        continue;
+      }
+      if (spec.kind !== "date" && spec.kind !== "clock") {
+        if (token.format !== undefined) {
+          problems.push({ token, position, problem: "format-on-non-date" });
+        }
+        if (token.modifiers.length > 0) {
+          problems.push({ token, position, problem: "modifiers-on-non-date" });
+        }
+      }
+      position += token.raw.length;
+    }
+    return problems;
+  }
+
+  parse(stream: TokenStream, input: string, context: TemplateContext): Result<Bindings, TemplateParseError> {
+    const compiled = this.#compileMatcher(stream, context);
+    if (compiled.kind === "err") return new Err(compiled.error);
+    const { regex, captureTokens } = compiled.value;
+    const matched = regex.exec(input);
+    if (!matched?.groups) {
+      return new Err(new TemplateParseError({ kind: "no-match", input }));
+    }
+
+    const candidates = new Map<string, BoundValue[]>();
+    for (const [index, token] of captureTokens.entries()) {
+      const capture = matched.groups[`v_${index}`];
+      if (capture === undefined) continue;
+      const spec = context.get(token.name);
+      if (!spec) continue;
+      const value = this.#parseCapture(capture, spec, token);
+      if (value.kind === "err") return new Err(value.error);
+      const list = candidates.get(token.name) ?? [];
+      list.push(value.value);
+      candidates.set(token.name, list);
+    }
+
+    const resolved = new Map<string, BoundValue>();
+    for (const [name, list] of candidates) {
+      const merged = mergeCandidates(name, list);
+      if (merged.kind === "err") return new Err(merged.error);
+      resolved.set(name, merged.value);
+    }
+    return new Ok(resolved);
   }
 }
 

@@ -38,17 +38,6 @@ export class DataMigrationService {
 
   readonly #slice = inject(SettingsService).getSlice(pendingNoteMigrationSlice);
 
-  // The walk needs the whole vault visible and parsed, both of which Obsidian loads
-  // asynchronously after onload. onLayoutReady is the point at which the file list is
-  // complete (before it, getMarkdownFiles is empty and a walk clears the markers
-  // having migrated nothing). Even then metadataCache resolves frontmatter
-  // incrementally and fires "resolved" in batches, so wait until every note is parsed
-  // before walking — otherwise not-yet-indexed notes are skipped yet marked done.
-  initialize(): AsyncResult<void, never> {
-    this.#workspace.onLayoutReady(() => this.#runWhenResolved());
-    return AsyncResult.ok();
-  }
-
   #runWhenResolved(): void {
     if (this.#allNotesResolved()) {
       void this.#run();
@@ -107,7 +96,7 @@ export class DataMigrationService {
       fm[FRONTMATTER_NAME_KEY] = targetName;
       fm[config.frontmatter.dateField] = date;
 
-      if (INTERVAL_INDEX_KEY in fm) {
+      if (Object.hasOwn(fm, INTERVAL_INDEX_KEY)) {
         const indexKey = config.numbering.sources[0]?.frontmatterKey ?? "journal-index";
         fm[indexKey] = fm[INTERVAL_INDEX_KEY];
         delete fm[INTERVAL_INDEX_KEY];
@@ -129,6 +118,17 @@ export class DataMigrationService {
     if (!parsed.isOk()) return undefined;
     const anchor = this.#cycle.anchorOf(targetName, parsed.value);
     return anchor.isSome() ? anchor.value : undefined;
+  }
+
+  // The walk needs the whole vault visible and parsed, both of which Obsidian loads
+  // asynchronously after onload. onLayoutReady is the point at which the file list is
+  // complete (before it, getMarkdownFiles is empty and a walk clears the markers
+  // having migrated nothing). Even then metadataCache resolves frontmatter
+  // incrementally and fires "resolved" in batches, so wait until every note is parsed
+  // before walking — otherwise not-yet-indexed notes are skipped yet marked done.
+  initialize(): AsyncResult<void, never> {
+    this.#workspace.onLayoutReady(() => this.#runWhenResolved());
+    return AsyncResult.ok();
   }
 }
 

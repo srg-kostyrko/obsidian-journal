@@ -20,10 +20,6 @@ export class CalendarSettingsBridge {
     });
   }
 
-  [Symbol.dispose](): void {
-    this.#stop();
-  }
-
   #sync(state: CalendarSliceState | undefined): void {
     if (state === undefined) return;
     match(state)
@@ -34,5 +30,9 @@ export class CalendarSettingsBridge {
         this.#calendar.applyWeekConfig({ dow, doy }, { propagateToGlobal });
       })
       .exhaustive();
+  }
+
+  [Symbol.dispose](): void {
+    this.#stop();
   }
 }

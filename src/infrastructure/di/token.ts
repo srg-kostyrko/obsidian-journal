@@ -32,14 +32,14 @@ export function isToken(value: unknown): value is AnyTokenLike {
     return isClassConstructor(value);
   }
   if (typeof value !== "object" || value === null) return false;
-  return TOKEN_BRAND in value || MULTI_TOKEN_BRAND in value;
+  return Object.hasOwn(value, TOKEN_BRAND) || Object.hasOwn(value, MULTI_TOKEN_BRAND);
 }
 
 export type TokenKind = "single" | "multi";
 
 export function tokenKind(token: AnyTokenLike): TokenKind {
   if (typeof token === "function") return "single";
-  if (MULTI_TOKEN_BRAND in token) return "multi";
+  if (Object.hasOwn(token, MULTI_TOKEN_BRAND)) return "multi";
   return "single";
 }
 

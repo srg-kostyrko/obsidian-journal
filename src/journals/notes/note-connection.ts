@@ -46,6 +46,32 @@ export class NoteConnectionService {
   readonly #creation = inject(NoteCreationService);
   readonly #index = inject(JournalsIndex);
 
+  readonly #defaultClear = (fm: Record<string, unknown>): void => {
+    for (const key of DEFAULT_FRONTMATTER_KEYS) delete fm[key];
+  };
+
+  #forEachConnected(
+    journalName: string,
+    op: (path: VaultPath) => AsyncResult<void, unknown>,
+  ): AsyncResult<void, never> {
+    const paths = [...this.#index.entriesFor(journalName)].map(([, path]) => path);
+    // Best-effort, matching v2: an AsyncResult never rejects, so Promise.all settles even when
+    // individual notes fail. We discard the per-note Results so one bad note can't strand the
+    // journal-wide operation. Spreading entriesFor up front snapshots paths before the ops mutate the index.
+    const all: Promise<void> = Promise.all(paths.map((path) => op(path))).then(() => {
+      return;
+    });
+    return AsyncResult.fromPromise(all, () => undefined as never);
+  }
+
+  #combine(current: VaultPath, configured: VaultPath, options: ConnectOptions): string {
+    const [currentFolder, currentName] = splitVaultPath(current);
+    const [configuredFolder, configuredName] = splitVaultPath(configured);
+    const folder = options.move ? configuredFolder : currentFolder;
+    const name = options.rename ? configuredName : currentName;
+    return folder ? `${folder}/${name}` : name;
+  }
+
   connect(
     journalName: string,
     path: VaultPath,
@@ -109,30 +135,4 @@ export class NoteConnectionService {
       }),
     );
   }
-
-  #forEachConnected(
-    journalName: string,
-    op: (path: VaultPath) => AsyncResult<void, unknown>,
-  ): AsyncResult<void, never> {
-    const paths = [...this.#index.entriesFor(journalName)].map(([, path]) => path);
-    // Best-effort, matching v2: an AsyncResult never rejects, so Promise.all settles even when
-    // individual notes fail. We discard the per-note Results so one bad note can't strand the
-    // journal-wide operation. Spreading entriesFor up front snapshots paths before the ops mutate the index.
-    const all: Promise<void> = Promise.all(paths.map((path) => op(path))).then(() => {
-      return;
-    });
-    return AsyncResult.fromPromise(all, () => undefined as never);
-  }
-
-  #combine(current: VaultPath, configured: VaultPath, options: ConnectOptions): string {
-    const [currentFolder, currentName] = splitVaultPath(current);
-    const [configuredFolder, configuredName] = splitVaultPath(configured);
-    const folder = options.move ? configuredFolder : currentFolder;
-    const name = options.rename ? configuredName : currentName;
-    return folder ? `${folder}/${name}` : name;
-  }
-
-  readonly #defaultClear = (fm: Record<string, unknown>): void => {
-    for (const key of DEFAULT_FRONTMATTER_KEYS) delete fm[key];
-  };
 }

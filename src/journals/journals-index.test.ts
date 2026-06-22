@@ -324,7 +324,7 @@ describe("JournalsIndex", () => {
       index.register(entry("daily", "2022-01-10", "c.md"));
       index.register(entry("weekly", "2022-W01", "w.md"));
       const result = index.getRange("daily", a("2022-01-01"), a("2022-01-05"));
-      expect([...result.entries()]).toEqual([
+      expect([...result]).toEqual([
         [a("2022-01-01"), p("a.md")],
         [a("2022-01-05"), p("b.md")],
       ]);

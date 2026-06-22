@@ -38,10 +38,12 @@ function build(
   c.register(ViewsRepository).useValue(repo);
   c.register(ViewsEventsToken).useValue(events);
   c.addModule(createLoggerTestingModule().module);
-  for (const block of options.blocks ?? []) {
+  const blocks = options.blocks ?? [];
+  for (const block of blocks) {
     c.register(ViewBlockDefinitionToken).useValue(block);
   }
-  for (const item of options.items ?? []) {
+  const items = options.items ?? [];
+  for (const item of items) {
     c.register(ToolbarItemDefinitionToken).useValue(item);
   }
   c.register(ToolbarItemsService).useClass(ToolbarItemsService);

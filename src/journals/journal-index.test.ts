@@ -148,7 +148,7 @@ describe("JournalIndex", () => {
   describe("getRange", () => {
     it("returns entries within an inclusive range", () => {
       const result = buildRangeIndex().getRange(a("2022-01-05"), a("2022-01-10"));
-      expect([...result.entries()]).toEqual([
+      expect([...result]).toEqual([
         [a("2022-01-05"), p("notes/b.md")],
         [a("2022-01-10"), p("notes/c.md")],
       ]);

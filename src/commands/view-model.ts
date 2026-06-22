@@ -8,6 +8,10 @@ import { CommandsRepository } from "./repository";
 import type { CommandConfig } from "./config";
 
 export class CommandsViewModel {
+  static fromRepository(repository: CommandsRepository): CommandsViewModel {
+    return new CommandsViewModel(repository);
+  }
+
   readonly #repository: CommandsRepository;
 
   readonly commands: ComputedRef<CommandConfig[]>;
@@ -19,10 +23,6 @@ export class CommandsViewModel {
     this.commands = computed(() => [...repository.find().list()]);
     this.commandIds = computed(() => [...repository.find().ids()]);
     this.commandCount = computed(() => repository.count());
-  }
-
-  static fromRepository(repository: CommandsRepository): CommandsViewModel {
-    return new CommandsViewModel(repository);
   }
 
   getCommand(id: string): Option<CommandConfig> {

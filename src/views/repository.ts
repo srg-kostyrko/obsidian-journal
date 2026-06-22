@@ -17,16 +17,8 @@ export class ViewsRepository extends BaseRepository<
   RepositoryQuery<ViewId, View>,
   ViewsEvents
 > {
-  protected idKey: keyof View = "id";
-  protected nameKey: keyof View = "name";
-  protected QueryConstructor = RepositoryQuery<ViewId, View>;
-  protected storage = inject(SettingsService).recordOf(viewsCollection);
-  protected events = inject(ViewsEventsToken);
-  protected unknownEntityError = (id: ViewId) => new UnknownViewError(id);
-  protected invalidUpdateError = (id: ViewId) => new InvalidViewUpdateError(id);
-
   static fromParts(storage: Record<string, View>, events: Emitter<ViewsEvents>): ViewsRepository {
-    const repo = Object.create(ViewsRepository.prototype) as ViewsRepository;
+    const repo = Object.create(this.prototype) as ViewsRepository;
     interface Mutable {
       idKey: keyof View;
       nameKey: keyof View;
@@ -46,6 +38,14 @@ export class ViewsRepository extends BaseRepository<
     w.invalidUpdateError = (id) => new InvalidViewUpdateError(id);
     return repo;
   }
+
+  protected idKey: keyof View = "id";
+  protected nameKey: keyof View = "name";
+  protected QueryConstructor = RepositoryQuery<ViewId, View>;
+  protected storage = inject(SettingsService).recordOf(viewsCollection);
+  protected events = inject(ViewsEventsToken);
+  protected unknownEntityError = (id: ViewId) => new UnknownViewError(id);
+  protected invalidUpdateError = (id: ViewId) => new InvalidViewUpdateError(id);
 
   create(view: View): Result<ViewId, ViewsLifecycleError> {
     if (view.name.trim().length === 0) return new Err(new InvalidViewNameError(view.name));

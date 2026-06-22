@@ -41,19 +41,6 @@ export class ViewHostService {
     this.#registerAll();
   }
 
-  dispose(): void {
-    for (const [, disposeOne] of this.#disposers) disposeOne();
-    this.#disposers.clear();
-  }
-
-  initialize(): void {
-    const appStartup = !this.#app.workspace.layoutReady;
-    this.#app.workspace.onLayoutReady(() => {
-      if (!appStartup) return;
-      void this.#openStartupViews();
-    });
-  }
-
   async #openStartupViews(): Promise<void> {
     for (const [id, view] of this.#repo.find().entries()) {
       if (!view.openOnStartup) continue;
@@ -128,6 +115,28 @@ export class ViewHostService {
     return new JournalViewLeaf(leaf, id, this.#injector);
   }
 
+  #leafFor(placement: View["leaf"]): WorkspaceLeaf {
+    const leaf = match(placement)
+      .with("left", () => this.#app.workspace.getLeftLeaf(false))
+      .with("right", () => this.#app.workspace.getRightLeaf(false))
+      .with("tab", () => null)
+      .exhaustive();
+    return leaf ?? this.#app.workspace.getLeaf(true);
+  }
+
+  dispose(): void {
+    for (const [, disposeOne] of this.#disposers) disposeOne();
+    this.#disposers.clear();
+  }
+
+  initialize(): void {
+    const appStartup = !this.#app.workspace.layoutReady;
+    this.#app.workspace.onLayoutReady(() => {
+      if (!appStartup) return;
+      void this.#openStartupViews();
+    });
+  }
+
   async open(id: ViewId): Promise<void> {
     const viewType = viewTypeOf(id);
     const [existing] = this.#app.workspace.getLeavesOfType(viewType);
@@ -139,15 +148,6 @@ export class ViewHostService {
     const leaf = this.#leafFor(view?.leaf ?? "right");
     await leaf.setViewState({ type: viewType, active: true });
     await this.#app.workspace.revealLeaf(leaf);
-  }
-
-  #leafFor(placement: View["leaf"]): WorkspaceLeaf {
-    const leaf = match(placement)
-      .with("left", () => this.#app.workspace.getLeftLeaf(false))
-      .with("right", () => this.#app.workspace.getRightLeaf(false))
-      .with("tab", () => null)
-      .exhaustive();
-    return leaf ?? this.#app.workspace.getLeaf(true);
   }
 }
 

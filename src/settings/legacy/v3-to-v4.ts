@@ -150,16 +150,20 @@ export const v3ToV4Migration: Migration = {
     // v1->v2 and v2->v3 already key them by name; preserving that here is what keeps
     // every migrated entity resolvable. Commands carry no name-key invariant (they
     // are referenced by record id), so they keep generated ids.
-    for (const journal of Object.values(old.journals ?? {})) {
+    const oldJournals = Object.values(old.journals ?? {});
+    for (const journal of oldJournals) {
       journals[journal.name] = reshapeJournal(journal);
-      for (const cmd of journal.commands ?? []) {
+      const journalCommands = journal.commands ?? [];
+      for (const cmd of journalCommands) {
         commands[nanoid()] = reshapeCommand(cmd, { kind: "journal", journalName: journal.name }, cmd.context);
       }
     }
 
-    for (const shelf of Object.values(old.shelves ?? {})) {
+    const oldShelves = Object.values(old.shelves ?? {});
+    for (const shelf of oldShelves) {
       shelves[shelf.name] = { name: shelf.name, journals: shelf.journals };
-      for (const cmd of shelf.commands ?? []) {
+      const shelfCommands = shelf.commands ?? [];
+      for (const cmd of shelfCommands) {
         commands[nanoid()] = reshapeCommand(
           cmd,
           { kind: "shelf", shelfName: shelf.name, writeType: cmd.writeType },
@@ -168,7 +172,8 @@ export const v3ToV4Migration: Migration = {
       }
     }
 
-    for (const cmd of old.commands ?? []) {
+    const looseCommands = old.commands ?? [];
+    for (const cmd of looseCommands) {
       commands[nanoid()] = reshapeCommand(cmd, { kind: "all", writeType: cmd.writeType }, "today");
     }
 

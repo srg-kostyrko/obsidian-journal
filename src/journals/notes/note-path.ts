@@ -21,6 +21,16 @@ export class NotePathService {
   readonly #frontmatter = inject(FrontmatterService);
   readonly #engine = inject(TemplateEngine);
 
+  #parseContext(config: JournalConfig): TemplateContext {
+    let context = TemplateContext.empty()
+      .date("date", CalendarDate.today(), config.dateFormat)
+      .string("journal_name", config.name);
+    for (const source of config.numbering.sources) {
+      context = context.number(source.variable, 0);
+    }
+    return context;
+  }
+
   pathForDate(name: string, date: CalendarDate): Result<VaultPath, JournalNotFoundError> {
     return attempt.in(this, function* (this: NotePathService) {
       const anchor = yield* this.#cycle.anchorOf(name, date).okOrElse(() => new JournalNotFoundError(name));
@@ -81,19 +91,9 @@ export class NotePathService {
     const metadata: JournalMetadata = {
       journalName: name,
       anchor,
-      ...(Object.keys(numbers).length > 0 ? { numbers } : {}),
+      ...(Object.keys(numbers).length > 0 && { numbers }),
     };
     return Option.some(metadata);
-  }
-
-  #parseContext(config: JournalConfig): TemplateContext {
-    let context = TemplateContext.empty()
-      .date("date", CalendarDate.today(), config.dateFormat)
-      .string("journal_name", config.name);
-    for (const source of config.numbering.sources) {
-      context = context.number(source.variable, 0);
-    }
-    return context;
   }
 
   configFor(name: string): JournalConfig | undefined {

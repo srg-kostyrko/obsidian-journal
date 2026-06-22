@@ -5,6 +5,13 @@ import { CalendarDate } from "./calendar-date";
 import { IntervalError } from "./errors";
 
 export class Interval {
+  static between(start: CalendarDate, end: CalendarDate): Result<Interval, IntervalError> {
+    if (start.isAfter(end)) {
+      return new Err(new IntervalError(start, end));
+    }
+    return new Ok(new Interval(start, end));
+  }
+
   readonly kind = "Interval" as const;
   readonly start: CalendarDate;
   readonly end: CalendarDate;
@@ -12,13 +19,6 @@ export class Interval {
   private constructor(start: CalendarDate, end: CalendarDate) {
     this.start = start;
     this.end = end;
-  }
-
-  static between(start: CalendarDate, end: CalendarDate): Result<Interval, IntervalError> {
-    if (start.isAfter(end)) {
-      return new Err(new IntervalError(start, end));
-    }
-    return new Ok(new Interval(start, end));
   }
 
   contains(d: CalendarDate): boolean {

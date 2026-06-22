@@ -8,6 +8,10 @@ import { ShelvesRepository } from "./repository";
 import type { ShelfConfig } from "./config";
 
 export class ShelvesViewModel {
+  static fromRepository(repository: ShelvesRepository): ShelvesViewModel {
+    return new ShelvesViewModel(repository);
+  }
+
   readonly #repository: ShelvesRepository;
 
   readonly shelves: ComputedRef<ShelfConfig[]>;
@@ -19,10 +23,6 @@ export class ShelvesViewModel {
     this.shelves = computed(() => [...repository.find().list()]);
     this.shelfOptions = computed(() => [...repository.find().options()]);
     this.shelfCount = computed(() => repository.count());
-  }
-
-  static fromRepository(repository: ShelvesRepository): ShelvesViewModel {
-    return new ShelvesViewModel(repository);
   }
 
   getShelf(name: string): Option<ShelfConfig> {

@@ -26,16 +26,8 @@ export class JournalsRepository extends BaseRepository<
   RepositoryQuery<string, JournalConfig>,
   JournalsEvents
 > {
-  protected idKey: keyof JournalConfig = "name";
-  protected nameKey: keyof JournalConfig = "name";
-  protected QueryConstructor = RepositoryQuery;
-  protected storage = inject(SettingsService).recordOf(journalConfigCollection);
-  protected events = inject(JournalsEventsToken);
-  protected unknownEntityError = (name: string) => new UnknownJournalError(name);
-  protected invalidUpdateError = (name: string) => new InvalidJournalUpdateError(name);
-
   static fromParts(storage: Record<string, JournalConfig>, events: Emitter<JournalsEvents>): JournalsRepository {
-    const repo = Object.create(JournalsRepository.prototype) as JournalsRepository;
+    const repo = Object.create(this.prototype) as JournalsRepository;
     interface Mutable {
       idKey: keyof JournalConfig;
       nameKey: keyof JournalConfig;
@@ -56,6 +48,14 @@ export class JournalsRepository extends BaseRepository<
     return repo;
   }
 
+  protected idKey: keyof JournalConfig = "name";
+  protected nameKey: keyof JournalConfig = "name";
+  protected QueryConstructor = RepositoryQuery;
+  protected storage = inject(SettingsService).recordOf(journalConfigCollection);
+  protected events = inject(JournalsEventsToken);
+  protected unknownEntityError = (name: string) => new UnknownJournalError(name);
+  protected invalidUpdateError = (name: string) => new InvalidJournalUpdateError(name);
+
   create(name: string, write: JournalWrite): Result<JournalConfig, InvalidJournalNameError | JournalNameTakenError> {
     if (name.length === 0) return new Err(new InvalidJournalNameError(name));
     const entity = journalDefaultsFor(write, name);
@@ -69,8 +69,8 @@ export class JournalsRepository extends BaseRepository<
     newName: string,
   ): Result<void, UnknownJournalError | InvalidJournalNameError | JournalNameTakenError> {
     if (newName.length === 0 || newName === oldName) return new Err(new InvalidJournalNameError(newName));
-    if (!(oldName in this.storage)) return new Err(new UnknownJournalError(oldName));
-    if (newName in this.storage) return new Err(new JournalNameTakenError(newName));
+    if (!Object.hasOwn(this.storage, oldName)) return new Err(new UnknownJournalError(oldName));
+    if (Object.hasOwn(this.storage, newName)) return new Err(new JournalNameTakenError(newName));
     const existing = this.storage[oldName];
     existing.name = newName;
     delete this.storage[oldName];

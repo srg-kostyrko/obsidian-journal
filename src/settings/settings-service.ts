@@ -42,6 +42,74 @@ export class SettingsService {
   #saveTimer: number | undefined;
   #initialized = false;
 
+  #findKeyConflict(): SliceKeyConflictError | undefined {
+    const seen = new Set<string>();
+    for (const s of this.#slices) {
+      if (seen.has(s.key)) return new SliceKeyConflictError(s.key);
+      seen.add(s.key);
+    }
+    for (const c of this.#collections) {
+      if (seen.has(c.key)) return new SliceKeyConflictError(c.key);
+      seen.add(c.key);
+    }
+    return undefined;
+  }
+
+  #loadAndMigrate(): AsyncResult<Record<string, unknown>, SettingsLoadError | MigrationFailedError> {
+    return attempt.in(this, async function* () {
+      const raw = yield* this.#pluginData.load().mapErr((cause) => new SettingsLoadError(cause));
+      const isStoredObject = raw !== null && typeof raw === "object" && !Array.isArray(raw);
+      // Absent storage (no loadData payload yet) is a fresh install at the current version,
+      // not a v0 record that needs migration. v0→N migrations only apply to actual stored data.
+      const root: Record<string, unknown> = isStoredObject
+        ? (raw as Record<string, unknown>)
+        : { version: CURRENT_VERSION };
+      return yield* runMigrations(root, this.#migrations, CURRENT_VERSION);
+    });
+  }
+
+  #hydrate(migrated: Record<string, unknown>): void {
+    for (const definition of this.#slices) {
+      this.#root[definition.key] = parseSliceValue(definition, migrated[definition.key], this.#logger);
+    }
+    for (const definition of this.#collections) {
+      this.#root[definition.key] = parseCollectionValue(definition, migrated[definition.key], this.#logger);
+    }
+  }
+
+  #refresh(migrated: Record<string, unknown>): void {
+    for (const definition of this.#slices) {
+      this.#root[definition.key] = parseSliceValue(definition, migrated[definition.key], this.#logger);
+    }
+    for (const definition of this.#collections) {
+      const next = parseCollectionValue(definition, migrated[definition.key], this.#logger);
+      // recordOf() hands the collection record out by reference and repositories capture it
+      // once, so the existing object must be mutated in place rather than replaced.
+      const target = this.#root[definition.key] as Record<string, unknown>;
+      for (const key of Object.keys(target)) {
+        if (!Object.hasOwn(next, key)) delete target[key];
+      }
+      Object.assign(target, next);
+    }
+  }
+
+  #scheduleSave(): void {
+    if (!this.#initialized) return;
+    if (this.#saveTimer !== undefined) window.clearTimeout(this.#saveTimer);
+    this.#saveTimer = window.setTimeout(() => {
+      this.#saveTimer = undefined;
+      void this.#flush();
+    }, DEBOUNCE_MS);
+  }
+
+  async #flush(): Promise<void> {
+    const out = JSON.parse(JSON.stringify({ ...this.#root, version: CURRENT_VERSION })) as Record<string, unknown>;
+    const result = await this.#pluginData.save(out);
+    if (result.kind === "err") {
+      this.#logger.error("settings save failed", { error: new SettingsSaveError(result.error) });
+    }
+  }
+
   initialize(): AsyncResult<void, SettingsLoadError | MigrationFailedError | SliceKeyConflictError> {
     return attempt.in(this, async function* () {
       const conflict = this.#findKeyConflict();
@@ -98,66 +166,6 @@ export class SettingsService {
     return this.#root[collection.key] as Record<string, InferOutput<TItem>>;
   }
 
-  #findKeyConflict(): SliceKeyConflictError | undefined {
-    const seen = new Set<string>();
-    for (const s of this.#slices) {
-      if (seen.has(s.key)) return new SliceKeyConflictError(s.key);
-      seen.add(s.key);
-    }
-    for (const c of this.#collections) {
-      if (seen.has(c.key)) return new SliceKeyConflictError(c.key);
-      seen.add(c.key);
-    }
-    return undefined;
-  }
-
-  #loadAndMigrate(): AsyncResult<Record<string, unknown>, SettingsLoadError | MigrationFailedError> {
-    return attempt.in(this, async function* () {
-      const raw = yield* this.#pluginData.load().mapErr((cause) => new SettingsLoadError(cause));
-      const isStoredObject = raw !== null && typeof raw === "object" && !Array.isArray(raw);
-      // Absent storage (no loadData payload yet) is a fresh install at the current version,
-      // not a v0 record that needs migration. v0→N migrations only apply to actual stored data.
-      const root: Record<string, unknown> = isStoredObject
-        ? (raw as Record<string, unknown>)
-        : { version: CURRENT_VERSION };
-      return yield* runMigrations(root, this.#migrations, CURRENT_VERSION);
-    });
-  }
-
-  #hydrate(migrated: Record<string, unknown>): void {
-    for (const definition of this.#slices) {
-      this.#root[definition.key] = parseSliceValue(definition, migrated[definition.key], this.#logger);
-    }
-    for (const definition of this.#collections) {
-      this.#root[definition.key] = parseCollectionValue(definition, migrated[definition.key], this.#logger);
-    }
-  }
-
-  #refresh(migrated: Record<string, unknown>): void {
-    for (const definition of this.#slices) {
-      this.#root[definition.key] = parseSliceValue(definition, migrated[definition.key], this.#logger);
-    }
-    for (const definition of this.#collections) {
-      const next = parseCollectionValue(definition, migrated[definition.key], this.#logger);
-      // recordOf() hands the collection record out by reference and repositories capture it
-      // once, so the existing object must be mutated in place rather than replaced.
-      const target = this.#root[definition.key] as Record<string, unknown>;
-      for (const key of Object.keys(target)) {
-        if (!(key in next)) delete target[key];
-      }
-      Object.assign(target, next);
-    }
-  }
-
-  #scheduleSave(): void {
-    if (!this.#initialized) return;
-    if (this.#saveTimer !== undefined) window.clearTimeout(this.#saveTimer);
-    this.#saveTimer = window.setTimeout(() => {
-      this.#saveTimer = undefined;
-      void this.#flush();
-    }, DEBOUNCE_MS);
-  }
-
   [Symbol.dispose](): void {
     if (this.#saveTimer !== undefined) {
       window.clearTimeout(this.#saveTimer);
@@ -166,14 +174,6 @@ export class SettingsService {
     this.#stopWatch?.();
     this.#stopWatch = undefined;
     this.#initialized = false;
-  }
-
-  async #flush(): Promise<void> {
-    const out = JSON.parse(JSON.stringify({ ...this.#root, version: CURRENT_VERSION })) as Record<string, unknown>;
-    const result = await this.#pluginData.save(out);
-    if (result.kind === "err") {
-      this.#logger.error("settings save failed", { error: new SettingsSaveError(result.error) });
-    }
   }
 }
 
