@@ -65,7 +65,18 @@ export function borderStylesFrom(styles: readonly JournalDecorationStyle[]): {
   return result;
 }
 
-export function paddingFrom(styles: readonly JournalDecorationStyle[]): string {
+interface PaddingExtents {
+  top: number;
+  right: number;
+  bottom: number;
+  left: number;
+  topBorder: number;
+  rightBorder: number;
+  bottomBorder: number;
+  leftBorder: number;
+}
+
+function paddingExtentsFrom(styles: readonly JournalDecorationStyle[]): PaddingExtents {
   let top = 0;
   let right = 0;
   let bottom = 0;
@@ -99,7 +110,43 @@ export function paddingFrom(styles: readonly JournalDecorationStyle[]): string {
     else if (style.placement_x === "right") right = Math.max(right, size);
   }
 
-  return `max(${top + 0.1}em, ${topBorder + 2}px) max(${right + 0.1}em, ${rightBorder + 2}px) max(${bottom + 0.1}em, ${bottomBorder + 2}px) max(${left + 0.1}em, ${leftBorder + 2}px)`;
+  return { top, right, bottom, left, topBorder, rightBorder, bottomBorder, leftBorder };
+}
+
+function formatPaddingExtents(extents: PaddingExtents): string {
+  return `max(${extents.top + 0.1}em, ${extents.topBorder + 2}px) max(${extents.right + 0.1}em, ${extents.rightBorder + 2}px) max(${extents.bottom + 0.1}em, ${extents.bottomBorder + 2}px) max(${extents.left + 0.1}em, ${extents.leftBorder + 2}px)`;
+}
+
+export function paddingFrom(styles: readonly JournalDecorationStyle[]): string {
+  return formatPaddingExtents(paddingExtentsFrom(styles));
+}
+
+// Reserve the same padding on every cell — the per-side maximum across all cells — so a
+// decoration on one cell shifts its content identically to its siblings instead of
+// inflating only its own grid row (the v2 calendar kept rows aligned via fixed row height).
+export function paddingFromAll(cellStyles: Iterable<readonly JournalDecorationStyle[]>): string {
+  const merged: PaddingExtents = {
+    top: 0,
+    right: 0,
+    bottom: 0,
+    left: 0,
+    topBorder: 0,
+    rightBorder: 0,
+    bottomBorder: 0,
+    leftBorder: 0,
+  };
+  for (const styles of cellStyles) {
+    const extents = paddingExtentsFrom(styles);
+    merged.top = Math.max(merged.top, extents.top);
+    merged.right = Math.max(merged.right, extents.right);
+    merged.bottom = Math.max(merged.bottom, extents.bottom);
+    merged.left = Math.max(merged.left, extents.left);
+    merged.topBorder = Math.max(merged.topBorder, extents.topBorder);
+    merged.rightBorder = Math.max(merged.rightBorder, extents.rightBorder);
+    merged.bottomBorder = Math.max(merged.bottomBorder, extents.bottomBorder);
+    merged.leftBorder = Math.max(merged.leftBorder, extents.leftBorder);
+  }
+  return formatPaddingExtents(merged);
 }
 
 export function placedFrom(

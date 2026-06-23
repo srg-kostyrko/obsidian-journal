@@ -12,7 +12,7 @@ import {
   textColorFrom,
 } from "../derive-styles";
 
-import { CellDecorationMapKey } from "./cell-decoration-map-key";
+import { CellDecorationMapKey, CellPaddingKey } from "./cell-decoration-map-key";
 import DecorationCorner from "./DecorationCorner.vue";
 import DecorationIcon from "./DecorationIcon.vue";
 import DecorationShape from "./DecorationShape.vue";
@@ -21,6 +21,7 @@ import type { JournalDecorationStyle } from "../config";
 
 const props = defineProps<{ period: Period }>();
 const cells = inject(CellDecorationMapKey, null);
+const sharedPadding = inject(CellPaddingKey, null);
 
 const styles = computed<readonly JournalDecorationStyle[]>(
   () => cells?.get(props.period.anchor.toAnchor())?.value ?? [],
@@ -29,7 +30,9 @@ const styles = computed<readonly JournalDecorationStyle[]>(
 const background = computed(() => backgroundFrom(styles.value));
 const textColor = computed(() => textColorFrom(styles.value));
 const border = computed(() => borderStylesFrom(styles.value));
-const padding = computed(() => paddingFrom(styles.value));
+// Within a decorated grid every cell shares one reservation so a single decoration never
+// inflates only its own row; standalone use (e.g. previews) falls back to its own styles.
+const padding = computed(() => sharedPadding?.value ?? paddingFrom(styles.value));
 const corners = computed(() => cornersFrom(styles.value));
 const placed = computed(() => placedFrom(styles.value));
 </script>

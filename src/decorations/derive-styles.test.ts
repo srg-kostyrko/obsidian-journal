@@ -1,6 +1,14 @@
 import { describe, expect, it } from "vitest";
 
-import { backgroundFrom, borderStylesFrom, cornersFrom, paddingFrom, placedFrom, textColorFrom } from "./derive-styles";
+import {
+  backgroundFrom,
+  borderStylesFrom,
+  cornersFrom,
+  paddingFrom,
+  paddingFromAll,
+  placedFrom,
+  textColorFrom,
+} from "./derive-styles";
 import { buildStyle } from "./testing";
 
 describe("backgroundFrom", () => {
@@ -82,6 +90,20 @@ describe("paddingFrom", () => {
     const shape = buildStyle("shape", { size: 0.6, placement_y: "top", placement_x: "center" });
     const padding = paddingFrom([shape]);
     expect(padding).toMatch(/max\(0\.7em, 2px\)/);
+  });
+});
+
+describe("paddingFromAll", () => {
+  it("takes the per-side maximum reservation across every cell", () => {
+    const bottomShape = buildStyle("shape", { size: 0.4, placement_y: "bottom", placement_x: "center" });
+    const topShape = buildStyle("shape", { size: 0.6, placement_y: "top", placement_x: "center" });
+    const padding = paddingFromAll([[bottomShape], [topShape]]);
+    expect(padding).toMatch(/max\(0\.7em, 2px\)/);
+    expect(padding).toMatch(/max\(0\.5em, 2px\)/);
+  });
+
+  it("falls back to the base reservation when no cell is decorated", () => {
+    expect(paddingFromAll([[], []])).toBe(paddingFrom([]));
   });
 });
 
