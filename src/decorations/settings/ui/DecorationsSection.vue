@@ -8,7 +8,6 @@ import { useService } from "@/infrastructure/di";
 import { Flows } from "@/infrastructure/flows";
 import { JournalsViewModel } from "@/journals";
 import { icons } from "@/ui/icons";
-import UiButton from "@/ui/UiButton.vue";
 import UiCollapsibleBlock from "@/ui/UiCollapsibleBlock.vue";
 import UiIcon from "@/ui/UiIcon.vue";
 import UiIconButton from "@/ui/UiIconButton.vue";
@@ -53,7 +52,7 @@ function remove(index: number): void {
       </span>
     </template>
     <template #controls>
-      <UiButton @click="add">{{ m.decoration_add() }}</UiButton>
+      <UiIconButton :icon="icons.action.add" :tooltip="m.decoration_add()" @click="add" />
     </template>
 
     <UiSettingRow no-controls>

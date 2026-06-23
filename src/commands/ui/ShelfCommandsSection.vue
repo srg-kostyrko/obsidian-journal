@@ -56,7 +56,7 @@ function remove(id: string): void {
       </UiIconedRow>
     </template>
     <template #controls>
-      <UiIconButton :icon="icons.action.add" cta :tooltip="m.command_add()" @click="add" />
+      <UiIconButton :icon="icons.action.add" :tooltip="m.command_add()" @click="add" />
     </template>
     <CommandList :entries="entries" :empty-text="m.command_empty({ scope: 'shelf' })" @edit="edit" @delete="remove" />
   </UiCollapsibleBlock>

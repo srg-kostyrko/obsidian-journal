@@ -77,7 +77,7 @@ describe("TemplatesSection", () => {
   describe("adding a template", () => {
     it("appends an empty entry when Add template is clicked", async () => {
       const { storage } = mount({ templates: [] });
-      await userEvent.click(screen.getByText(m.journal_edit_template_add_button()));
+      await userEvent.click(screen.getByLabelText(m.journal_edit_template_add_button()));
       expect(storage.daily?.templates).toEqual([""]);
     });
   });

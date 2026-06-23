@@ -82,7 +82,7 @@ function moveDown(index: number): void {
       </span>
     </template>
     <template #controls>
-      <UiButton @click="add">{{ m.block_rows_add_row() }}</UiButton>
+      <UiIconButton :icon="icons.action.add" :tooltip="m.block_rows_add_row()" @click="add" />
     </template>
 
     <UiSettingRow v-if="mode" :name="m.nav_block_section_mode_label()">

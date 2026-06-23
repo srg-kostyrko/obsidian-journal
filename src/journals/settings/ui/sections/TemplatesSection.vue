@@ -4,7 +4,6 @@ import { computed, ref } from "vue";
 import { m } from "@/i18n";
 import { useService } from "@/infrastructure/di";
 import { icons } from "@/ui/icons";
-import UiButton from "@/ui/UiButton.vue";
 import UiCollapsibleBlock from "@/ui/UiCollapsibleBlock.vue";
 import UiFileInput from "@/ui/UiFileInput.vue";
 import UiIconButton from "@/ui/UiIconButton.vue";
@@ -51,7 +50,7 @@ function removeTemplate(index: number): void {
       </UiIconedRow>
     </template>
     <template #controls>
-      <UiButton @click="addTemplate">{{ m.journal_edit_template_add_button() }}</UiButton>
+      <UiIconButton :icon="icons.action.add" :tooltip="m.journal_edit_template_add_button()" @click="addTemplate" />
     </template>
 
     <UiSettingRow>

@@ -104,7 +104,7 @@ describe("NavBlockSection", () => {
   it("invokes the flow without rowIndex when 'add row' is clicked", async () => {
     const { invoke } = mount([sampleRow]);
     await userEvent.click(screen.getByText(m.nav_block_section_title()));
-    await userEvent.click(screen.getByText(m.block_rows_add_row()));
+    await userEvent.click(screen.getByLabelText(m.block_rows_add_row()));
     expect(invoke).toHaveBeenCalledWith(EditNavBlockRowFlow, { journalName: "daily", field: "navBlock" });
   });
 

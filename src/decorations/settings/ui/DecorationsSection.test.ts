@@ -76,7 +76,7 @@ describe("DecorationsSection", () => {
 
   it("invokes EditDecorationFlow with no index when Add is clicked", async () => {
     const { flows } = mount([sampleDecoration]);
-    await userEvent.click(screen.getByText(m.decoration_add()));
+    await userEvent.click(screen.getByLabelText(m.decoration_add()));
     expect(flows.invoke).toHaveBeenCalledWith(EditDecorationFlow, { journalName: "daily" });
   });
 
