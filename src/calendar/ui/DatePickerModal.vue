@@ -124,7 +124,9 @@ function onCellSelect(cell: Period): void {
 <template>
   <div class="date-picker-modal">
     <div class="date-picker-modal__header">
-      <UiIconButton v-if="canPrevious" :icon="icons.nav.prev" data-testid="modal-prev" @click="onPrevious" />
+      <div class="date-picker-modal__nav">
+        <UiIconButton v-if="canPrevious" :icon="icons.nav.prev" data-testid="modal-prev" @click="onPrevious" />
+      </div>
       <UiButton
         v-if="canAscend !== null"
         flat
@@ -135,7 +137,9 @@ function onCellSelect(cell: Period): void {
         <span data-testid="modal-title-label">{{ titleLabel }}</span>
       </UiButton>
       <span v-else data-testid="modal-title-label">{{ titleLabel }}</span>
-      <UiIconButton v-if="canNext" :icon="icons.nav.next" data-testid="modal-next" @click="onNext" />
+      <div class="date-picker-modal__nav date-picker-modal__nav--next">
+        <UiIconButton v-if="canNext" :icon="icons.nav.next" data-testid="modal-next" @click="onNext" />
+      </div>
     </div>
     <div class="date-picker-modal__body">
       <CalendarMonthView
@@ -184,6 +188,13 @@ function onCellSelect(cell: Period): void {
   justify-content: space-between;
   gap: 8px;
   margin-bottom: 8px;
+}
+.date-picker-modal__nav {
+  flex: 1;
+  display: flex;
+}
+.date-picker-modal__nav--next {
+  justify-content: flex-end;
 }
 .date-picker-modal__title-button {
   width: auto;
