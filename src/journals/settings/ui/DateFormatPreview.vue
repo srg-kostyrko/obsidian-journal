@@ -2,6 +2,7 @@
 import { computed } from "vue";
 
 import { Clock } from "@/calendar";
+import { m } from "@/i18n";
 
 import { formatHasWrongWeek } from "./wrong-week";
 import WrongWeekWarning from "./WrongWeekWarning.vue";
@@ -13,6 +14,9 @@ const wrongWeek = computed(() => formatHasWrongWeek(format));
 </script>
 
 <template>
-  <span class="journal-date-format-preview">{{ rendered }}</span>
+  <div class="journal-date-format-preview">
+    {{ m.journal_edit_date_format_preview_label() }}
+    <b class="u-pop">{{ rendered }}</b>
+  </div>
   <WrongWeekWarning v-if="wrongWeek" />
 </template>

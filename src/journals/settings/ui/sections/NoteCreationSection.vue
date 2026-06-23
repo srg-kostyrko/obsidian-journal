@@ -96,10 +96,15 @@ function applyDateFormatRecommendation(): void {
 
     <UiSettingRow :name="m.journal_edit_date_format_label()">
       <template #description>
-        <div>{{ m.journal_edit_date_format_description({ "{date": config.dateFormat }) }}</div>
-        <a target="_blank" href="https://momentjs.com/docs/#/displaying/format/">
-          {{ m.common_moment_format_reference() }}
-        </a>
+        <div>
+          {{ m.journal_edit_date_format_description() }}
+          <code v-pre class="u-pop">{{ date }}</code>
+        </div>
+        <div>
+          <a target="_blank" href="https://momentjs.com/docs/#/displaying/format/">
+            {{ m.common_moment_format_reference() }}
+          </a>
+        </div>
         <DateFormatPreview :format="config.dateFormat" />
         <div v-if="config.dateFormat.includes('/')" class="journal-recommendation">
           {{ m.journal_edit_move_to_folder_recommendation_date_format() }}

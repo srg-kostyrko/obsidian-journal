@@ -860,8 +860,9 @@
   "journal_edit_back_tooltip": "Back to list",
   "journal_edit_confirm_creation_description": "Show a confirmation dialog when navigating to a date that does not yet have a note.",
   "journal_edit_confirm_creation_label": "Confirm creating new note?",
-  "journal_edit_date_format_description": "Used to format dates if not defined in variables (like {{date}}).",
+  "journal_edit_date_format_description": "Used to format dates if not defined in variables, like:",
   "journal_edit_date_format_label": "Default date format",
+  "journal_edit_date_format_preview_label": "Formatted date:",
   "common_moment_format_reference": "moment.js format reference",
   "journal_edit_end_description": [
     {

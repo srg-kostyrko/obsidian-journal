@@ -57,15 +57,17 @@ function removeTemplate(index: number): void {
     <UiSettingRow>
       <template #description>
         <div>{{ m.journal_edit_templates_description() }}</div>
-        <VariableReferenceHint
-          context="template-path"
-          :journal-name="journalName"
-          :date-format="config.dateFormat"
-          :has-cycle="hasCycle"
-          :numbering-variable-names="numberingVariableNames"
-        />
-        <CodeBlockReferenceHint :journal-name="journalName" />
-        <TemplaterSupportHint />
+        <div>
+          <VariableReferenceHint
+            context="template-path"
+            :journal-name="journalName"
+            :date-format="config.dateFormat"
+            :has-cycle="hasCycle"
+            :numbering-variable-names="numberingVariableNames"
+          />
+        </div>
+        <div><CodeBlockReferenceHint :journal-name="journalName" /></div>
+        <div><TemplaterSupportHint /></div>
       </template>
     </UiSettingRow>
 
