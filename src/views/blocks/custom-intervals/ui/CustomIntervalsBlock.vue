@@ -3,8 +3,7 @@ import { computed, onMounted, onUnmounted, shallowRef } from "vue";
 
 import type { AnchorString } from "@/calendar";
 import { periodForJournal } from "@/code-blocks/nav/period-for-journal";
-import NavBlockRow from "@/code-blocks/nav/ui/NavBlockRow.vue";
-import { CellDecoration } from "@/decorations";
+import NavBlock from "@/code-blocks/nav/ui/NavBlock.vue";
 import { useService } from "@/infrastructure/di";
 import { CycleService, JournalsIndex, JournalsRepository, TimelineService } from "@/journals";
 import type { JournalConfig, JournalNavBlock } from "@/journals";
@@ -87,29 +86,12 @@ const sections = computed<readonly Section[]>(() => {
         :data-anchor="entry.anchor"
         :data-active="isEntryActive(section.journalName, entry.anchor) || null"
       >
-        <CellDecoration
-          v-if="section.block.decorateWholeBlock"
+        <NavBlock
+          :block="section.block"
+          :journal="section.journal"
+          :ref-date="entry.anchor"
           :period="periodForJournal(section.journal.write, entry.anchor)"
-        >
-          <NavBlockRow
-            v-for="(row, rowIndex) of section.block.rows"
-            :key="rowIndex"
-            :journal="section.journal"
-            :row="row"
-            :ref-date="entry.anchor"
-            :period="periodForJournal(section.journal.write, entry.anchor)"
-          />
-        </CellDecoration>
-        <template v-else>
-          <NavBlockRow
-            v-for="(row, rowIndex) of section.block.rows"
-            :key="rowIndex"
-            :journal="section.journal"
-            :row="row"
-            :ref-date="entry.anchor"
-            :period="periodForJournal(section.journal.write, entry.anchor)"
-          />
-        </template>
+        />
       </div>
     </section>
   </div>

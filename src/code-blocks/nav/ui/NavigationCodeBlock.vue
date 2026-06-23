@@ -98,7 +98,12 @@ function openAdjacent(anchor: AnchorString | null, event: MouseEvent): void {
   <div v-if="!isConnected" class="journal-nav-not-connected">{{ m.code_blocks_nav_not_connected() }}</div>
   <div v-else-if="journal && currentAnchor" class="nav-view">
     <div v-if="adjacent.previous" class="nav-block-relative">
-      <NavBlock :journal :ref-date="adjacent.previous" :period="periodForJournal(journal.write, adjacent.previous)" />
+      <NavBlock
+        :block="journal.navBlock"
+        :journal
+        :ref-date="adjacent.previous"
+        :period="periodForJournal(journal.write, adjacent.previous)"
+      />
       <UiIconButton
         :icon="icons.nav.prev"
         class="nav-prev"
@@ -109,7 +114,12 @@ function openAdjacent(anchor: AnchorString | null, event: MouseEvent): void {
     </div>
     <div v-else class="nav-block-placeholder" />
 
-    <NavBlock :journal :ref-date="currentAnchor" :period="periodForJournal(journal.write, currentAnchor)" />
+    <NavBlock
+      :block="journal.navBlock"
+      :journal
+      :ref-date="currentAnchor"
+      :period="periodForJournal(journal.write, currentAnchor)"
+    />
 
     <div v-if="adjacent.next" class="nav-block-relative">
       <UiIconButton
@@ -119,7 +129,12 @@ function openAdjacent(anchor: AnchorString | null, event: MouseEvent): void {
         @click="(event: MouseEvent) => openAdjacent(adjacent.next, event)"
         @auxclick.middle.prevent="(event: MouseEvent) => openAdjacent(adjacent.next, event)"
       />
-      <NavBlock :journal :ref-date="adjacent.next" :period="periodForJournal(journal.write, adjacent.next)" />
+      <NavBlock
+        :block="journal.navBlock"
+        :journal
+        :ref-date="adjacent.next"
+        :period="periodForJournal(journal.write, adjacent.next)"
+      />
     </div>
     <div v-else class="nav-block-placeholder" />
   </div>

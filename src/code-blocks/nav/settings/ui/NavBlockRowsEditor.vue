@@ -16,7 +16,7 @@ import UiSettingRow from "@/ui/UiSettingRow.vue";
 import UiToggle from "@/ui/UiToggle.vue";
 
 import { periodForJournal } from "../../period-for-journal";
-import NavBlockRow from "../../ui/NavBlockRow.vue";
+import NavBlock from "../../ui/NavBlock.vue";
 import { EditNavBlockRowFlow } from "../flows/edit-nav-row.flow";
 
 const {
@@ -106,33 +106,34 @@ function moveDown(index: number): void {
       <template #description>{{ m.block_rows_empty() }}</template>
     </UiSettingRow>
 
-    <UiSettingRow v-for="(row, index) of config[field].rows" :key="index">
-      <template #description>
-        <div class="nav-row-preview">
-          <NavBlockRow
-            :journal="config"
-            :row="row"
-            :ref-date="todayAnchor"
-            :period="previewPeriod!"
-            :prevent-navigation="true"
-          />
-        </div>
-      </template>
-      <UiIconButton
-        v-if="index > 0"
-        :icon="icons.action.moveUp"
-        :tooltip="m.common_action_move_up()"
-        @click="moveUp(index)"
-      />
-      <UiIconButton
-        v-if="index < config[field].rows.length - 1"
-        :icon="icons.action.moveDown"
-        :tooltip="m.common_action_move_down()"
-        @click="moveDown(index)"
-      />
-      <UiIconButton :icon="icons.action.configure" :tooltip="m.block_rows_edit_tooltip()" @click="edit(index)" />
-      <UiIconButton :icon="icons.action.delete" :tooltip="m.block_rows_delete_tooltip()" @click="remove(index)" />
-    </UiSettingRow>
+    <div v-else class="nav-block-preview">
+      <NavBlock
+        :block="config[field]"
+        :journal="config"
+        :ref-date="todayAnchor"
+        :period="previewPeriod!"
+        prevent-navigation
+      >
+        <template #rowAction="{ index, isFirst, isLast }">
+          <span class="nav-row-gutter">
+            <UiIconButton
+              v-if="!isFirst"
+              :icon="icons.action.moveUp"
+              :tooltip="m.common_action_move_up()"
+              @click="moveUp(index)"
+            />
+            <UiIconButton
+              v-if="!isLast"
+              :icon="icons.action.moveDown"
+              :tooltip="m.common_action_move_down()"
+              @click="moveDown(index)"
+            />
+            <UiIconButton :icon="icons.action.configure" :tooltip="m.block_rows_edit_tooltip()" @click="edit(index)" />
+            <UiIconButton :icon="icons.action.delete" :tooltip="m.block_rows_delete_tooltip()" @click="remove(index)" />
+          </span>
+        </template>
+      </NavBlock>
+    </div>
   </UiCollapsibleBlock>
 </template>
 
@@ -143,10 +144,24 @@ function moveDown(index: number): void {
   gap: var(--size-2-2);
   font-weight: var(--font-semibold);
 }
-.nav-row-preview {
-  display: flex;
-  justify-content: center;
-  max-width: 240px;
-  margin: 0 auto;
+.nav-block-preview {
+  padding: var(--size-4-2) 0;
+}
+.nav-block-preview :deep(.nav-block-line) {
+  padding-block: var(--size-2-3);
+}
+.nav-row-gutter {
+  position: absolute;
+  top: 50%;
+  right: 0;
+  transform: translateY(-50%);
+  display: inline-flex;
+  align-items: center;
+  gap: var(--size-2-1);
+  color: var(--text-muted);
+  --icon-size: var(--icon-s);
+}
+.nav-row-gutter :deep(.icon-button) {
+  padding: var(--size-2-1) var(--size-2-2);
 }
 </style>
