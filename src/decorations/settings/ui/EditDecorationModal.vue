@@ -105,15 +105,13 @@ const onSubmit = handleSubmit((decoration) => {
     <UiSettingRow v-if="values.conditions.length === 0" no-controls>
       <template #description>{{ m.decoration_modal_no_conditions() }}</template>
     </UiSettingRow>
-    <template v-for="(condition, i) of values.conditions" :key="i">
-      <UiSettingRow v-if="i > 0" heading>
-        <template #name>{{ m.decoration_describe_mode({ kind: mode }) }}</template>
-      </UiSettingRow>
-      <UiSettingRow>
+    <div v-for="(condition, i) of values.conditions" :key="i" class="condition-row">
+      <span v-if="i > 0" class="mode-hint">{{ m.decoration_describe_mode({ kind: mode }) }}</span>
+      <UiSettingRow :name="m.decoration_condition_type_short({ type: condition.type })">
         <ConditionItem :name="`conditions.${i}`" :condition="condition" />
         <UiIconButton :icon="icons.action.delete" @click="conditions.remove(i)" />
       </UiSettingRow>
-    </template>
+    </div>
 
     <hr />
 
@@ -162,5 +160,22 @@ const onSubmit = handleSubmit((decoration) => {
 .form-error {
   color: var(--text-error);
   display: block;
+}
+.condition-row {
+  position: relative;
+}
+.mode-hint {
+  position: absolute;
+  top: 0;
+  left: 30px;
+  z-index: 1;
+  transform: translateY(-50%);
+  padding: var(--size-2-1) var(--size-2-2);
+  border: 1px solid var(--color-accent);
+  border-radius: var(--radius-s);
+  background-color: var(--background-primary);
+  text-transform: uppercase;
+  font-size: 75%;
+  line-height: 1;
 }
 </style>

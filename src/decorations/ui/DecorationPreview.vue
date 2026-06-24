@@ -46,8 +46,6 @@ const placed = computed(() => placedFrom(props.styles));
 
 <style scoped>
 .decoration-preview {
-  width: 100%;
-  height: 100%;
   padding: v-bind(padding);
   display: inline-flex;
   justify-content: center;

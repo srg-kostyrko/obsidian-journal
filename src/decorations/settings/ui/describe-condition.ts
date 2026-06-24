@@ -21,7 +21,10 @@ export function describeCondition(condition: JournalDecorationCondition, calenda
     .with({ type: "property" }, (c) =>
       m.decoration_condition_property_describe({
         name: c.name,
-        op: m.decoration_string_op_label({ op: c.condition }),
+        op:
+          c.valueType === "date"
+            ? m.decoration_date_op_label({ op: c.condition })
+            : m.decoration_string_op_label({ op: c.condition }),
         value: "value" in c ? String(c.value) : "",
       }),
     )

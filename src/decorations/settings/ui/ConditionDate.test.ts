@@ -39,62 +39,64 @@ function mount(initial: DateCond) {
 }
 
 describe("ConditionDate", () => {
-  it("stores the typed day verbatim", async () => {
+  it("stores the selected day verbatim", async () => {
     const host = mount({ type: "date", day: 1, month: 1, year: null });
-    const [dayInput] = screen.getAllByRole("spinbutton");
-    await userEvent.clear(dayInput);
-    await userEvent.type(dayInput, "14");
+    const [dayDropdown] = screen.getAllByRole("combobox");
+    await userEvent.selectOptions(dayDropdown, "14");
     expect(host.values.c.day).toBe(14);
   });
 
   it("displays the month one-based in the dropdown", () => {
     mount({ type: "date", day: 1, month: 2, year: null });
-    expect(screen.getByRole<HTMLSelectElement>("combobox").value).toBe("3");
+    const monthDropdown = screen.getAllByRole<HTMLSelectElement>("combobox")[1];
+    expect(monthDropdown.value).toBe("3");
   });
 
   it("stores the selected month zero-based", async () => {
     const host = mount({ type: "date", day: 1, month: 2, year: null });
-    await userEvent.selectOptions(screen.getByRole("combobox"), "5");
+    await userEvent.selectOptions(screen.getAllByRole("combobox")[1], "5");
     expect(host.values.c.month).toBe(4);
   });
 
   it("stores the typed year verbatim", async () => {
     const host = mount({ type: "date", day: 1, month: 1, year: null });
-    const yearInput = screen.getAllByRole("spinbutton")[1];
+    const yearInput = screen.getByRole("spinbutton");
     await userEvent.clear(yearInput);
     await userEvent.type(yearInput, "2026");
     expect(host.values.c.year).toBe(2026);
   });
 
-  it("stores the wildcard sentinel for a day cleared to empty", async () => {
+  it("stores the wildcard sentinel when the day is set to any", async () => {
     const host = mount({ type: "date", day: 14, month: 1, year: null });
-    const [dayInput] = screen.getAllByRole("spinbutton");
-    await userEvent.clear(dayInput);
+    await userEvent.selectOptions(screen.getAllByRole("combobox")[0], "");
     expect(host.values.c.day).toBe(-1);
   });
 
   it("stores the wildcard sentinel when the month is set to any", async () => {
     const host = mount({ type: "date", day: 1, month: 5, year: null });
-    await userEvent.selectOptions(screen.getByRole("combobox"), "");
+    await userEvent.selectOptions(screen.getAllByRole("combobox")[1], "");
     expect(host.values.c.month).toBe(-1);
   });
 
   it("stores null for a year cleared to empty", async () => {
     const host = mount({ type: "date", day: 1, month: 1, year: 2026 });
-    const yearInput = screen.getAllByRole("spinbutton")[1];
+    const yearInput = screen.getByRole("spinbutton");
     await userEvent.clear(yearInput);
     expect(host.values.c.year).toBeNull();
   });
 
-  it("renders empty day and year inputs for a wildcard condition", () => {
+  it("selects the any-day option for a wildcard day", () => {
     mount({ type: "date", day: -1, month: -1, year: null });
-    for (const input of screen.getAllByRole("spinbutton")) {
-      expect((input as HTMLInputElement).value).toBe("");
-    }
+    expect(screen.getAllByRole<HTMLSelectElement>("combobox")[0].value).toBe("");
   });
 
   it("selects the any-month option for a wildcard month", () => {
     mount({ type: "date", day: -1, month: -1, year: null });
-    expect(screen.getByRole<HTMLSelectElement>("combobox").value).toBe("");
+    expect(screen.getAllByRole<HTMLSelectElement>("combobox")[1].value).toBe("");
+  });
+
+  it("renders an empty year input for a wildcard condition", () => {
+    mount({ type: "date", day: -1, month: -1, year: null });
+    expect(screen.getByRole<HTMLInputElement>("spinbutton").value).toBe("");
   });
 });

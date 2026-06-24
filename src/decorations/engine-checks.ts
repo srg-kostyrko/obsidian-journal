@@ -47,6 +47,7 @@ export function checkProperty(condition: JournalDecorationPropertyCondition, met
     .with({ valueType: "text" }, (c) => checkTextProperty(c, raw))
     .with({ valueType: "number" }, (c) => checkNumberProperty(c, raw))
     .with({ valueType: "checkbox" }, (c) => checkBooleanProperty(c, raw))
+    .with({ valueType: "date" }, (c) => checkDateProperty(c, raw))
     .exhaustive();
 }
 
@@ -93,6 +94,25 @@ function checkBooleanProperty(
   return match(c.condition)
     .with("is-true", () => raw)
     .with("is-false", () => !raw)
+    .with(P.union("exists", "does-not-exist"), () => false)
+    .exhaustive();
+}
+
+function checkDateProperty(
+  c: Extract<JournalDecorationPropertyCondition, { valueType: "date" }>,
+  raw: unknown,
+): boolean {
+  // Obsidian stores date properties as ISO strings ("YYYY-MM-DD"[…]); lexicographic order on
+  // those strings matches chronological order, so plain string comparison is correct.
+  const value = raw instanceof Date ? raw.toISOString().slice(0, 10) : raw;
+  if (typeof value !== "string") return false;
+  return match(c.condition)
+    .with("eq", () => value === c.value)
+    .with("neq", () => value !== c.value)
+    .with("lt", () => value < c.value)
+    .with("lte", () => value <= c.value)
+    .with("gt", () => value > c.value)
+    .with("gte", () => value >= c.value)
     .with(P.union("exists", "does-not-exist"), () => false)
     .exhaustive();
 }

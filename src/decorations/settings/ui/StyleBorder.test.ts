@@ -55,7 +55,7 @@ describe("StyleBorder", () => {
   });
 
   it("mirrors width changes from top to other sides in uniform mode", async () => {
-    const host = mount(uniform);
+    const host = mount({ ...uniform, top: { ...blankSide(), show: true } });
     const number = screen.getByRole("spinbutton");
     await userEvent.clear(number);
     await userEvent.type(number, "5");

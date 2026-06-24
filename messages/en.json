@@ -283,7 +283,7 @@
       "selectors": ["mode"],
       "match": {
         "mode=uniform": "Uniform",
-        "mode=different": "Different per side"
+        "mode=different": "Per side setup"
       }
     }
   ],
@@ -369,7 +369,7 @@
   "decoration_condition_tag_value_label": "Tag value",
   "decoration_condition_title_describe": "title {op} {value}",
   "decoration_condition_title_value_label": "Title value",
-  "decoration_condition_type_label": [
+  "decoration_condition_type_short": [
     {
       "declarations": ["input type"],
       "selectors": ["type"],
@@ -386,6 +386,23 @@
       }
     }
   ],
+  "decoration_condition_type_label": [
+    {
+      "declarations": ["input type"],
+      "selectors": ["type"],
+      "match": {
+        "type=title": "Check title",
+        "type=tag": "Check tags",
+        "type=property": "Check frontmatter property",
+        "type=date": "Check date",
+        "type=weekday": "Check weekday",
+        "type=offset": "Check interval offset",
+        "type=has-note": "Check if note exists",
+        "type=has-open-task": "Check if note has open tasks",
+        "type=all-tasks-completed": "Check if all tasks are completed"
+      }
+    }
+  ],
   "decoration_condition_weekday_describe": "weekday is {weekdays}",
   "decoration_condition_weekday_label": "Weekdays",
   "decoration_corner_placement_label": [
@@ -393,10 +410,10 @@
       "declarations": ["input placement"],
       "selectors": ["placement"],
       "match": {
-        "placement=top-left": "Top-left",
-        "placement=top-right": "Top-right",
-        "placement=bottom-left": "Bottom-left",
-        "placement=bottom-right": "Bottom-right"
+        "placement=top-left": "Top Left",
+        "placement=top-right": "Top Right",
+        "placement=bottom-left": "Bottom Left",
+        "placement=bottom-right": "Bottom Right"
       }
     }
   ],
@@ -464,10 +481,26 @@
       "match": {
         "shape=square": "Square",
         "shape=circle": "Circle",
-        "shape=triangle-up": "Triangle up",
-        "shape=triangle-down": "Triangle down",
-        "shape=triangle-left": "Triangle left",
-        "shape=triangle-right": "Triangle right"
+        "shape=triangle-up": "Triangle Up",
+        "shape=triangle-down": "Triangle Down",
+        "shape=triangle-left": "Triangle Left",
+        "shape=triangle-right": "Triangle Right"
+      }
+    }
+  ],
+  "decoration_date_op_label": [
+    {
+      "declarations": ["input op"],
+      "selectors": ["op"],
+      "match": {
+        "op=exists": "exists",
+        "op=does-not-exist": "does not exist",
+        "op=eq": "on",
+        "op=neq": "not on",
+        "op=lt": "before",
+        "op=lte": "on or before",
+        "op=gt": "after",
+        "op=gte": "on or after"
       }
     }
   ],
@@ -482,7 +515,7 @@
         "op=exists": "exists",
         "op=does-not-exist": "does not exist",
         "op=eq": "equals",
-        "op=neq": "not equals",
+        "op=neq": "does not equal",
         "op=lt": "<",
         "op=lte": "<=",
         "op=gt": ">",
@@ -505,7 +538,7 @@
       "selectors": ["type"],
       "match": {
         "type=background": "Decorating background",
-        "type=color": "Decorating text color",
+        "type=color": "Decorating color",
         "type=shape": "Decorating shape",
         "type=corner": "Decorating corner",
         "type=icon": "Decorating icon",
@@ -513,15 +546,14 @@
       }
     }
   ],
-  "common_label_horizontal_placement": "Horizontal placement",
-  "common_label_vertical_placement": "Vertical placement",
+  "common_label_placement": "Placement",
   "decoration_style_size_hint": [
     {
       "declarations": ["input kind"],
       "selectors": ["kind"],
       "match": {
-        "kind=icon": "Size is relative to the font size \u2014 1 makes the icon the same size as a letter.",
-        "kind=shape": "Size is relative to the font size \u2014 1 makes the shape the same size as a letter."
+        "kind=icon": "Icon size is relative to font size where 1 means that an icon is same size as a letter",
+        "kind=shape": "Shape size is relative to font size where 1 means that a figure is same size as a letter"
       }
     }
   ],

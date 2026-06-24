@@ -138,7 +138,29 @@ const booleanPropertyCondition = v.object({
   condition: v.union([v.literal("exists"), v.literal("does-not-exist"), v.literal("is-true"), v.literal("is-false")]),
 });
 
-const propertyCondition = v.union([stringPropertyCondition, numberPropertyCondition, booleanPropertyCondition]);
+const datePropertyCondition = v.object({
+  type: v.literal("property"),
+  name: v.pipe(v.string(), v.minLength(1)),
+  valueType: v.literal("date"),
+  condition: v.union([
+    v.literal("exists"),
+    v.literal("does-not-exist"),
+    v.literal("eq"),
+    v.literal("neq"),
+    v.literal("lt"),
+    v.literal("lte"),
+    v.literal("gt"),
+    v.literal("gte"),
+  ]),
+  value: v.string(),
+});
+
+const propertyCondition = v.union([
+  stringPropertyCondition,
+  numberPropertyCondition,
+  booleanPropertyCondition,
+  datePropertyCondition,
+]);
 
 export const filterConditionSchema = v.union([titleCondition, tagCondition, propertyCondition]);
 export type FilterCondition = v.InferOutput<typeof filterConditionSchema>;

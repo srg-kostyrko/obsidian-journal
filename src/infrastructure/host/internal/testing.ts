@@ -96,6 +96,7 @@ export interface FakeHost {
 
   putFile(path: string, content?: string, frontmatter?: Record<string, unknown>): TFile;
   putFolder(path: string): TFolder;
+  setPropertyType(name: string, type: string): void;
   emitVault(event: "create" | "rename" | "delete", ...arguments_: unknown[]): void;
   emitMetadata(path: string, metadata?: CachedMetadata): void;
   emitActiveLeafChange(file: TFile | null): void;
@@ -275,6 +276,14 @@ export function createFakeHost(): FakeHost {
     },
   };
 
+  const propertyTypes = new Map<string, string>();
+  const metadataTypeManagerApi = {
+    getPropertyInfo(name: string): { name: string; type: string; count: number } | undefined {
+      const type = propertyTypes.get(name.toLowerCase());
+      return type === undefined ? undefined : { name, type, count: 1 };
+    },
+  };
+
   const fileManagerApi = {
     async processFrontMatter(file: TFile, mutate: (fm: Record<string, unknown>) => void): Promise<void> {
       const existing = files.get(file.path);
@@ -377,6 +386,7 @@ export function createFakeHost(): FakeHost {
     vault: vaultApi,
     workspace: workspaceApi,
     metadataCache: metadataCacheApi,
+    metadataTypeManager: metadataTypeManagerApi,
     fileManager: fileManagerApi,
   } as unknown as App;
 
@@ -440,6 +450,9 @@ export function createFakeHost(): FakeHost {
     putFolder(path): TFolder {
       ensureFolderChain(path);
       return folderObjects.get(path)!;
+    },
+    setPropertyType(name, type): void {
+      propertyTypes.set(name.toLowerCase(), type);
     },
     emitVault(event, ...arguments_): void {
       vault.emit(event, ...arguments_);

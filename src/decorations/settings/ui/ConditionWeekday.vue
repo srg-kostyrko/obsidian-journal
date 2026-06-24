@@ -2,9 +2,7 @@
 import { useField } from "vee-validate";
 
 import { Calendar } from "@/calendar";
-import { m } from "@/i18n";
 import { useService } from "@/infrastructure/di";
-import UiSettingRow from "@/ui/UiSettingRow.vue";
 
 const { name } = defineProps<{ name: string }>();
 const { value: weekdays } = useField<number[]>(`${name}.weekdays`);
@@ -24,18 +22,16 @@ function isChecked(index: number): boolean {
 </script>
 
 <template>
-  <UiSettingRow :name="m.decoration_condition_weekday_label()">
-    <div class="weekday-grid">
-      <label v-for="{ index, label } in orderedWeekdays" :key="index">
-        <input
-          type="checkbox"
-          :checked="isChecked(index)"
-          @change="toggle(index, ($event.target as HTMLInputElement).checked)"
-        />
-        {{ label }}
-      </label>
-    </div>
-  </UiSettingRow>
+  <div class="weekday-grid">
+    <label v-for="{ index, label } in orderedWeekdays" :key="index">
+      <input
+        type="checkbox"
+        :checked="isChecked(index)"
+        @change="toggle(index, ($event.target as HTMLInputElement).checked)"
+      />
+      {{ label }}
+    </label>
+  </div>
 </template>
 
 <style scoped>

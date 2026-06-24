@@ -167,6 +167,48 @@ describe("engine-checks", () => {
         expect(checkProperty(condition, meta({ properties: { done: false } }))).toBe(true);
       });
     });
+
+    describe("date", () => {
+      it("matches eq on the ISO date string", () => {
+        const condition = buildCondition("property", {
+          name: "due",
+          valueType: "date",
+          condition: "eq",
+          value: "2026-06-24",
+        });
+        expect(checkProperty(condition, meta({ properties: { due: "2026-06-24" } }))).toBe(true);
+      });
+
+      it("matches lt when the property date is earlier", () => {
+        const condition = buildCondition("property", {
+          name: "due",
+          valueType: "date",
+          condition: "lt",
+          value: "2026-06-24",
+        });
+        expect(checkProperty(condition, meta({ properties: { due: "2026-01-01" } }))).toBe(true);
+      });
+
+      it("does not match gt when the dates are equal", () => {
+        const condition = buildCondition("property", {
+          name: "due",
+          valueType: "date",
+          condition: "gt",
+          value: "2026-06-24",
+        });
+        expect(checkProperty(condition, meta({ properties: { due: "2026-06-24" } }))).toBe(false);
+      });
+
+      it("returns false when valueType is date but the property is a number", () => {
+        const condition = buildCondition("property", {
+          name: "due",
+          valueType: "date",
+          condition: "eq",
+          value: "2026-06-24",
+        });
+        expect(checkProperty(condition, meta({ properties: { due: 2026 } }))).toBe(false);
+      });
+    });
   });
 
   describe("checkDate", () => {

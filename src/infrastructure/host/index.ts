@@ -13,6 +13,7 @@ export {
   WorkspaceOpenError,
 } from "./errors";
 export { MarkdownRenderService } from "./internal/markdown-render-service";
+export { MetadataTypeService } from "./internal/metadata-type-service";
 export { NoteMetadataService } from "./internal/note-metadata-service";
 export { NoticeService } from "./internal/notice-service";
 export { NotesService } from "./internal/notes-service";

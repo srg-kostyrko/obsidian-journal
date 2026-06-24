@@ -1,5 +1,5 @@
 import userEvent from "@testing-library/user-event";
-import { cleanup, render, screen, within } from "@testing-library/vue";
+import { cleanup, render, screen } from "@testing-library/vue";
 import { toTypedSchema } from "@vee-validate/valibot";
 import * as v from "valibot";
 import { useForm } from "vee-validate";
@@ -7,7 +7,10 @@ import { afterEach, describe, expect, it } from "vitest";
 import { defineComponent, h } from "vue";
 
 import { decorationConditionSchema, type JournalDecorationCondition } from "@/decorations";
-import { m } from "@/i18n";
+import { Container, provideInjectorOnApp } from "@/infrastructure/di";
+import { MetadataTypeService } from "@/infrastructure/host";
+import { createFakeHost, type FakeHost } from "@/infrastructure/host/internal/testing";
+import { InternalObsidianAppToken } from "@/infrastructure/host/internal/tokens";
 
 import ConditionProperty from "./ConditionProperty.vue";
 
@@ -17,8 +20,13 @@ afterEach(() => cleanup());
 
 type Property = Extract<JournalDecorationCondition, { type: "property" }>;
 
-function mount(initial: Property) {
+function mount(initial: Property, seed: (host: FakeHost) => void = () => undefined) {
   const exposed: { values: { c: Property } } = { values: { c: initial } };
+  const host = createFakeHost();
+  seed(host);
+  const container = new Container();
+  container.register(InternalObsidianAppToken).useValue(host.app);
+  container.register(MetadataTypeService).useClass(MetadataTypeService);
   const Host = defineComponent({
     setup() {
       const form = useForm({
@@ -29,46 +37,58 @@ function mount(initial: Property) {
       return renderConditionPropertyHost;
     },
   });
-  render(Host);
-  return exposed;
-}
-
-function rowFor(label: string): HTMLElement {
-  const labelElement = screen.getByText(label);
-  const row = labelElement.closest(".setting-item");
-  if (!row) throw new Error(`No row containing label ${label}`);
-  return row as HTMLElement;
+  const utilities = render(Host, {
+    global: { plugins: [{ install: (app) => provideInjectorOnApp(app, container) }] },
+  });
+  return { exposed, ...utilities };
 }
 
 describe("ConditionProperty", () => {
   it("updates the property name as the user types", async () => {
-    const host = mount({ type: "property", name: "", valueType: "text", condition: "exists", value: "" });
-    const nameRow = rowFor(m.common_label_name());
-    await userEvent.type(within(nameRow).getByRole("textbox"), "mood");
-    expect(host.values.c.name).toBe("mood");
+    const { exposed } = mount({ type: "property", name: "", valueType: "text", condition: "exists", value: "" });
+    await userEvent.type(screen.getAllByRole("textbox")[0], "mood");
+    expect(exposed.values.c.name).toBe("mood");
   });
 
-  it("resets condition and value when switching value type to number", async () => {
-    const host = mount({ type: "property", name: "mood", valueType: "text", condition: "contains", value: "good" });
-    const typeRow = rowFor(m.decoration_condition_property_value_type_label());
-    await userEvent.selectOptions(within(typeRow).getByRole("combobox"), "number");
-    expect(host.values.c).toEqual({
+  it("derives the number value type from the vault property", async () => {
+    const { exposed } = mount(
+      { type: "property", name: "", valueType: "text", condition: "exists", value: "" },
+      (host) => host.setPropertyType("rating", "number"),
+    );
+    await userEvent.type(screen.getAllByRole("textbox")[0], "rating");
+    expect(exposed.values.c).toEqual({
       type: "property",
-      name: "mood",
+      name: "rating",
       valueType: "number",
       condition: "exists",
       value: 0,
     });
   });
 
-  it("renders a number input when the value type is number", () => {
-    mount({ type: "property", name: "x", valueType: "number", condition: "eq", value: 0 });
-    const valueRow = rowFor(m.decoration_condition_property_value_label());
-    expect(within(valueRow).getByRole("spinbutton")).toBeTruthy();
+  it("derives the date value type from the vault property", async () => {
+    const { exposed, container } = mount(
+      { type: "property", name: "", valueType: "text", condition: "exists", value: "" },
+      (host) => host.setPropertyType("due", "date"),
+    );
+    await userEvent.type(screen.getAllByRole("textbox")[0], "due");
+    expect(exposed.values.c.valueType).toBe("date");
+    expect(container.querySelector("input[type=date]")).toBeTruthy();
   });
 
-  it("renders no value input for checkbox type", () => {
+  it("falls back to the text value type for an unknown property", async () => {
+    const { exposed } = mount({ type: "property", name: "", valueType: "text", condition: "exists", value: "" });
+    await userEvent.type(screen.getAllByRole("textbox")[0], "whatever");
+    expect(exposed.values.c.valueType).toBe("text");
+  });
+
+  it("renders a number input when the value type is number", () => {
+    mount({ type: "property", name: "x", valueType: "number", condition: "eq", value: 0 });
+    expect(screen.getByRole("spinbutton")).toBeTruthy();
+  });
+
+  it("renders only the name input and operator for checkbox type", () => {
     mount({ type: "property", name: "x", valueType: "checkbox", condition: "is-true" });
-    expect(screen.queryByText(m.decoration_condition_property_value_label())).toBeNull();
+    expect(screen.getAllByRole("textbox")).toHaveLength(1);
+    expect(screen.queryByRole("spinbutton")).toBeNull();
   });
 });

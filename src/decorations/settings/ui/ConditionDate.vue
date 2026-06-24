@@ -7,7 +7,6 @@ import { m } from "@/i18n";
 import { useService } from "@/infrastructure/di";
 import UiDropdown from "@/ui/UiDropdown.vue";
 import UiNumberInput from "@/ui/UiNumberInput.vue";
-import UiSettingRow from "@/ui/UiSettingRow.vue";
 
 const { name } = defineProps<{ name: string }>();
 const { value: day } = useField<number>(`${name}.day`);
@@ -20,26 +19,19 @@ function isNumber(value: number | undefined): value is number {
   return typeof value === "number" && Number.isFinite(value);
 }
 
-// Day is stored 1-based, month 0-based (matching the date the period falls on); an empty
-// field stores the wildcard sentinel (-1 / null) meaning "match any".
-const dayModel = computed<number | undefined>({
-  get: () => (day.value === -1 ? undefined : day.value),
+// Day is stored 1-based, month 0-based (matching the date the period falls on); the empty
+// option stores the wildcard sentinel (-1 / null) meaning "match any".
+const daySelect = computed<string>({
+  get: () => (day.value === -1 ? "" : String(day.value)),
   set: (next) => {
-    day.value = isNumber(next) ? next : -1;
-  },
-});
-
-const monthModel = computed<number | undefined>({
-  get: () => (month.value === -1 ? undefined : month.value + 1),
-  set: (next) => {
-    month.value = isNumber(next) ? next - 1 : -1;
+    day.value = next === "" ? -1 : Number(next);
   },
 });
 
 const monthSelect = computed<string>({
-  get: () => (monthModel.value === undefined ? "" : String(monthModel.value)),
+  get: () => (month.value === -1 ? "" : String(month.value + 1)),
   set: (next) => {
-    monthModel.value = next === "" ? undefined : Number(next);
+    month.value = next === "" ? -1 : Number(next) - 1;
   },
 });
 
@@ -52,24 +44,15 @@ const yearModel = computed<number | undefined>({
 </script>
 
 <template>
-  <UiSettingRow :name="m.decoration_condition_date_unit_label({ unit: 'day' })">
-    <template #description>{{ m.decoration_condition_date_hint() }}</template>
-    <UiNumberInput
-      v-model="dayModel"
-      :min="1"
-      :max="31"
-      :placeholder="m.decoration_condition_date_any_unit({ unit: 'day' })"
-    />
-  </UiSettingRow>
-  <UiSettingRow :name="m.decoration_condition_date_unit_label({ unit: 'month' })">
-    <UiDropdown v-model="monthSelect">
-      <option value="">{{ m.decoration_condition_date_any_unit({ unit: "month" }) }}</option>
-      <option v-for="(monthName, monthIndex) in monthNames" :key="monthIndex" :value="String(monthIndex + 1)">
-        {{ monthName }}
-      </option>
-    </UiDropdown>
-  </UiSettingRow>
-  <UiSettingRow :name="m.decoration_condition_date_unit_label({ unit: 'year' })">
-    <UiNumberInput v-model="yearModel" :placeholder="m.decoration_condition_date_any_unit({ unit: 'year' })" />
-  </UiSettingRow>
+  <UiDropdown v-model="daySelect">
+    <option value="">{{ m.decoration_condition_date_any_unit({ unit: "day" }) }}</option>
+    <option v-for="dayNumber in 31" :key="dayNumber" :value="String(dayNumber)">{{ dayNumber }}</option>
+  </UiDropdown>
+  <UiDropdown v-model="monthSelect">
+    <option value="">{{ m.decoration_condition_date_any_unit({ unit: "month" }) }}</option>
+    <option v-for="(monthName, monthIndex) in monthNames" :key="monthIndex" :value="String(monthIndex + 1)">
+      {{ monthName }}
+    </option>
+  </UiDropdown>
+  <UiNumberInput v-model="yearModel" :placeholder="m.decoration_condition_date_any_unit({ unit: 'year' })" />
 </template>

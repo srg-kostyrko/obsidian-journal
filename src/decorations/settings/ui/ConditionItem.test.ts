@@ -9,6 +9,7 @@ import { Calendar } from "@/calendar";
 import { decorationConditionSchema, type JournalDecorationCondition } from "@/decorations";
 import { m } from "@/i18n";
 import { Container, provideInjectorOnApp } from "@/infrastructure/di";
+import { MetadataTypeService } from "@/infrastructure/host";
 
 import ConditionItem from "./ConditionItem.vue";
 
@@ -17,6 +18,7 @@ afterEach(() => cleanup());
 function mount(initial: JournalDecorationCondition) {
   const container = new Container();
   container.register(Calendar).useValue(new Calendar());
+  container.register(MetadataTypeService).useValue({ getPropertyType: () => null } as unknown as MetadataTypeService);
   const renderHost = () => h(ConditionItem, { name: "c", condition: initial });
   const Host = defineComponent({
     setup() {
@@ -43,32 +45,32 @@ function mount(initial: JournalDecorationCondition) {
 describe("ConditionItem", () => {
   it("renders ConditionTitle for a title condition", () => {
     mount({ type: "title", condition: "contains", value: "" });
-    expect(screen.getByText(m.decoration_condition_title_value_label())).toBeTruthy();
+    expect(screen.getByText(m.decoration_string_op_label({ op: "contains" }))).toBeTruthy();
   });
 
   it("renders ConditionTag for a tag condition", () => {
     mount({ type: "tag", condition: "contains", value: "" });
-    expect(screen.getByText(m.decoration_condition_tag_value_label())).toBeTruthy();
+    expect(screen.getByText(m.decoration_string_op_label({ op: "contains" }))).toBeTruthy();
   });
 
   it("renders ConditionProperty for a property condition", () => {
     mount({ type: "property", name: "x", valueType: "text", condition: "exists", value: "" });
-    expect(screen.getByText(m.common_label_name())).toBeTruthy();
+    expect(screen.getByText(m.decoration_string_op_label({ op: "exists" }))).toBeTruthy();
   });
 
   it("renders ConditionDate for a date condition", () => {
     mount({ type: "date", day: 1, month: 1, year: null });
-    expect(screen.getByText(m.decoration_condition_date_unit_label({ unit: "day" }))).toBeTruthy();
+    expect(screen.getByText(m.decoration_condition_date_any_unit({ unit: "day" }))).toBeTruthy();
   });
 
   it("renders ConditionWeekday for a weekday condition", () => {
     mount({ type: "weekday", weekdays: [] });
-    expect(screen.getByText(m.decoration_condition_weekday_label())).toBeTruthy();
+    expect(screen.getAllByRole("checkbox")).toHaveLength(7);
   });
 
   it("renders ConditionOffset for an offset condition", () => {
     mount({ type: "offset", offset: 0 });
-    expect(screen.getByText(m.decoration_condition_offset_label())).toBeTruthy();
+    expect(screen.getByRole("spinbutton")).toBeTruthy();
   });
 
   it("renders ConditionTypeOnly for has-note", () => {
