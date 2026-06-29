@@ -147,14 +147,24 @@ function moveDown(index: number): void {
 .nav-block-preview {
   padding: var(--size-4-2) 0;
 }
+/* Decorated blocks wrap rows in a centered, shrink-wrapped CellDecoration; stretch it so the
+   action gutter reaches the row edge instead of bunching after the centered preview text. */
+.nav-block-preview :deep(.nav-block-inner > .cell-decoration__content) {
+  flex: 1 1 auto;
+  width: 100%;
+  min-width: 0;
+}
 .nav-block-preview :deep(.nav-block-line) {
+  display: flex;
+  align-items: center;
+  gap: var(--size-2-2);
   padding-block: var(--size-2-3);
 }
+.nav-block-preview :deep(.nav-row) {
+  flex: 1 1 auto;
+  min-width: 0;
+}
 .nav-row-gutter {
-  position: absolute;
-  top: 50%;
-  right: 0;
-  transform: translateY(-50%);
   display: inline-flex;
   align-items: center;
   gap: var(--size-2-1);
