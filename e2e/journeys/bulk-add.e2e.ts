@@ -1,10 +1,9 @@
 import { browser, expect } from "@wdio/globals";
 
 import {
-  clickButton,
   clickDialogButton,
+  clickIcon,
   closeSettings,
-  openJournalSubpage,
   openSettings,
   selectModalDropdownByLabel,
   setModalText,
@@ -13,19 +12,19 @@ import {
 } from "../support/settings.js";
 import { frontmatterOf, seedNote, waitForContent, waitForJournalFrontmatter } from "../support/vault.js";
 
-// Slice B chunk 4 — bulk-add is NOT a palette command: it is the header button on the journal
-// edit subpage (m.bulk_add_command()), so the flow is reached through the chunk-3 settings SPA.
-// The seam under test is the real-vault scan (BulkAddService.plan) + the two-modal write
-// (process modal -> BulkAddService.apply -> saveData), which __mocks__/obsidian.ts can't drive.
+// Slice B chunk 4 — bulk-add is NOT a palette command: it is the per-journal icon button in the
+// journals list of the settings dashboard (m.journal_dashboard_bulk_add()), so the flow is reached
+// through the chunk-3 settings SPA. The seam under test is the real-vault scan (BulkAddService.plan)
+// + the two-modal write (process modal -> BulkAddService.apply -> saveData), which
+// __mocks__/obsidian.ts can't drive.
 // Single boot; each it scans its own folder so the accumulating connections stay independent.
 
-const BULK_ADD = "Bulk add notes to this journal";
+const BULK_ADD = "Bulk add notes to daily";
 const EXISTING_LABEL = "When a note is already connected to that date";
 
 async function runBulkAdd(folder: string, options: { existing?: "override" | "merge" } = {}): Promise<void> {
   await openSettings();
-  await openJournalSubpage("core", "daily");
-  await clickButton(BULK_ADD);
+  await clickIcon(BULK_ADD);
   await setModalText(folder);
   // Set the occupant policy up front in the configure modal so the process modal needs no per-note
   // picker (the per-note dropdown renders only when the policy is "ask").

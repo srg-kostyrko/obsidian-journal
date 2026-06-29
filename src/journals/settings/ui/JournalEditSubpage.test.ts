@@ -22,7 +22,6 @@ import {
   NumberingService,
 } from "@/journals";
 import { AutoCreateService } from "@/journals/notes/auto-create";
-import { BulkAddFlow } from "@/journals/notes/bulk-add/flows/bulk-add.flow";
 import { JournalsRepository } from "@/journals/repository";
 import { JournalsEventsToken } from "@/journals/tokens";
 import { JournalsViewModel } from "@/journals/view-model";
@@ -148,13 +147,6 @@ describe("JournalEditSubpage", () => {
     mount(container, "daily");
     await userEvent.click(screen.getByLabelText(m.journal_edit_rename_tooltip()));
     expect(flows.invoke).toHaveBeenCalledWith(RenameJournalFlow, { journalName: "daily" });
-  });
-
-  it("invokes BulkAddFlow when the bulk-add button is clicked", async () => {
-    const { container, flows } = await setup();
-    mount(container, "daily");
-    await userEvent.click(screen.getByText(m.bulk_add_command()));
-    expect(flows.invoke).toHaveBeenCalledWith(BulkAddFlow, { journalName: "daily" });
   });
 
   it("calls nav.back when the underlying journal disappears", async () => {

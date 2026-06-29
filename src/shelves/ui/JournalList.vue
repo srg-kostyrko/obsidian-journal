@@ -9,7 +9,7 @@ defineProps<{
   entries: readonly [string, JournalConfig][];
   emptyText: string;
 }>();
-defineEmits<{ edit: [name: string]; delete: [name: string] }>();
+defineEmits<{ "bulk-add": [name: string]; edit: [name: string]; delete: [name: string] }>();
 </script>
 
 <template>
@@ -22,6 +22,11 @@ defineEmits<{ edit: [name: string]; delete: [name: string] }>();
         {{ name }}
         <span class="flair">{{ m.journal_write({ every: "day", duration: 1, ...describeWrite(config.write) }) }}</span>
       </template>
+      <UiIconButton
+        :icon="icons.action.bulkAdd"
+        :tooltip="`${m.journal_dashboard_bulk_add()} ${name}`"
+        @click="$emit('bulk-add', name)"
+      />
       <UiIconButton
         :icon="icons.action.configure"
         :tooltip="`${m.journal_dashboard_edit()} ${name}`"

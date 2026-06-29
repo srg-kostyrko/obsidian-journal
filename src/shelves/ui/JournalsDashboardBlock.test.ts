@@ -9,6 +9,7 @@ import { Flows } from "@/infrastructure/flows";
 import { ModalService } from "@/infrastructure/host/modals";
 import { FakeModalService } from "@/infrastructure/host/modals/testing";
 import { AddJournalFlow, DeleteJournalFlow, journalConfigCollection, journalEditSubpage } from "@/journals";
+import { BulkAddFlow } from "@/journals/notes/bulk-add/flows/bulk-add.flow";
 import { JournalsRepository } from "@/journals/repository";
 import { JournalsEventsToken } from "@/journals/tokens";
 import { JournalsViewModel } from "@/journals/view-model";
@@ -123,5 +124,12 @@ describe("JournalsDashboardBlock", () => {
     mount(container);
     await userEvent.click(screen.getByLabelText(`${m.common_action_delete()} daily`));
     expect(flows.invoke).toHaveBeenCalledWith(DeleteJournalFlow, { journalName: "daily" });
+  });
+
+  it("invokes BulkAddFlow when bulk-add is clicked", async () => {
+    const { container, flows } = await setup({ journals: ["daily"] });
+    mount(container);
+    await userEvent.click(screen.getByLabelText(`${m.journal_dashboard_bulk_add()} daily`));
+    expect(flows.invoke).toHaveBeenCalledWith(BulkAddFlow, { journalName: "daily" });
   });
 });

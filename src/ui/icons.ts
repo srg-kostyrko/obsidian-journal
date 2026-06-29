@@ -5,6 +5,7 @@ export const icons = {
     delete: "trash-2",
     add: "plus",
     addFile: "file-plus",
+    bulkAdd: "import",
     copy: "copy",
     openExternal: "external-link",
     pickDate: "crosshair",

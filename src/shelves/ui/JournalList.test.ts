@@ -54,6 +54,14 @@ describe("JournalList", () => {
     expect(screen.queryByText("Nothing here")).toBeNull();
   });
 
+  it("emits bulk-add with the journal name", async () => {
+    const { emitted } = render(JournalList, {
+      props: { entries: [["Journal A", makeJournal("Journal A")]], emptyText: "Nothing here" },
+    });
+    await userEvent.click(screen.getByLabelText(`${m.journal_dashboard_bulk_add()} Journal A`));
+    expect(emitted()["bulk-add"]).toEqual([["Journal A"]]);
+  });
+
   it("emits edit with the journal name", async () => {
     const { emitted } = render(JournalList, {
       props: { entries: [["Journal A", makeJournal("Journal A")]], emptyText: "Nothing here" },

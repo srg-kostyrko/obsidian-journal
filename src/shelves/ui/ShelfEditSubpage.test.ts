@@ -10,6 +10,7 @@ import { ModalService } from "@/infrastructure/host/modals";
 import { FakeModalService } from "@/infrastructure/host/modals/testing";
 import { AsyncResult } from "@/infrastructure/result";
 import { AddJournalFlow, journalConfigCollection } from "@/journals";
+import { BulkAddFlow } from "@/journals/notes/bulk-add/flows/bulk-add.flow";
 import { JournalsRepository } from "@/journals/repository";
 import { JournalsEventsToken } from "@/journals/tokens";
 import { JournalsViewModel } from "@/journals/view-model";
@@ -94,6 +95,17 @@ describe("ShelfEditSubpage", () => {
     });
     mount(container, "Work");
     expect(screen.getByLabelText(`${m.journal_dashboard_edit()} daily`)).toBeTruthy();
+  });
+
+  it("invokes BulkAddFlow when a member journal's bulk-add is clicked", async () => {
+    const { container, flows } = await setup({
+      journals: ["daily"],
+      shelves: { Work: { name: "Work", journals: ["daily"] } },
+    });
+    vi.spyOn(flows, "invoke").mockReturnValue(AsyncResult.ok(undefined));
+    mount(container, "Work");
+    await userEvent.click(screen.getByLabelText(`${m.journal_dashboard_bulk_add()} daily`));
+    expect(flows.invoke).toHaveBeenCalledWith(BulkAddFlow, { journalName: "daily" });
   });
 
   it("invokes EditShelfNameFlow with the shelf name when rename is clicked", async () => {

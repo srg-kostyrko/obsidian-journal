@@ -6,6 +6,7 @@ import { useService } from "@/infrastructure/di";
 import { Flows } from "@/infrastructure/flows";
 import { AddJournalFlow, DeleteJournalFlow, JournalsViewModel, journalEditSubpage } from "@/journals";
 import type { JournalConfig } from "@/journals";
+import { BulkAddFlow } from "@/journals/notes/bulk-add/flows/bulk-add.flow";
 import type { SubpageNav } from "@/settings";
 import { icons } from "@/ui/icons";
 import UiCollapsibleBlock from "@/ui/UiCollapsibleBlock.vue";
@@ -58,6 +59,9 @@ function add(): void {
 function edit(journalName: string): void {
   nav.push(journalEditSubpage, { journalName });
 }
+function bulkAdd(journalName: string): void {
+  void flows.invoke(BulkAddFlow, { journalName });
+}
 function remove(journalName: string): void {
   void flows.invoke(DeleteJournalFlow, { journalName });
 }
@@ -81,7 +85,13 @@ function remove(journalName: string): void {
       <template #controls>
         <UiIconButton :icon="icons.action.add" :tooltip="m.journal_create()" @click="add" />
       </template>
-      <JournalList :entries="entries" :empty-text="m.journal_dashboard_empty()" @edit="edit" @delete="remove" />
+      <JournalList
+        :entries="entries"
+        :empty-text="m.journal_dashboard_empty()"
+        @bulk-add="bulkAdd"
+        @edit="edit"
+        @delete="remove"
+      />
     </UiCollapsibleBlock>
     <component :is="section.component" v-for="section in editSections" :key="section.key" :shelf-name="shelfName" />
   </div>

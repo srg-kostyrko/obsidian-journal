@@ -4,11 +4,9 @@ import { computed, watchEffect } from "vue";
 import { m } from "@/i18n";
 import { useService } from "@/infrastructure/di";
 import { Flows } from "@/infrastructure/flows";
-import { BulkAddFlow } from "@/journals/notes/bulk-add/flows/bulk-add.flow";
 import { JournalsViewModel } from "@/journals/view-model";
 import type { SubpageNav } from "@/settings";
 import { icons } from "@/ui/icons";
-import UiButton from "@/ui/UiButton.vue";
 import UiIconButton from "@/ui/UiIconButton.vue";
 import UiSettingRow from "@/ui/UiSettingRow.vue";
 
@@ -39,16 +37,12 @@ const writing = computed(() => {
 function rename(): void {
   void flows.invoke(RenameJournalFlow, { journalName });
 }
-function bulkAdd(): void {
-  void flows.invoke(BulkAddFlow, { journalName });
-}
 </script>
 
 <template>
   <div v-if="config">
     <UiSettingRow heading>
       <template #name>{{ m.journal_edit_header_title({ name: journalName, writing }) }}</template>
-      <UiButton @click="bulkAdd">{{ m.bulk_add_command() }}</UiButton>
       <UiIconButton :icon="icons.action.edit" :tooltip="m.journal_edit_rename_tooltip()" @click="rename" />
       <UiIconButton :icon="icons.nav.back" :tooltip="m.journal_edit_back_tooltip()" @click="nav.back()" />
     </UiSettingRow>

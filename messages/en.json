@@ -256,7 +256,6 @@
   "connect_note_modal_disconnect": "Disconnect",
   "connect_note_modal_out_of_bounds": "This date is outside the journal's active timeline.",
 
-  "bulk_add_command": "Bulk add notes to this journal",
   "bulk_add_notes_to_title": "Add notes to {journalName}",
   "bulk_add_folder_label": "Source folder",
   "bulk_add_folder_description": "Select the folder with existing notes you want to process.",
@@ -897,6 +896,7 @@
   "journal_add_modal_write_label": "I'll be writing",
   "journal_colliding_heading": "Colliding journal settings",
   "journal_colliding_warning": "Journals {names} have colliding configurations, so their notes will overwrite each other. Change the folder or name template in one of them.",
+  "journal_dashboard_bulk_add": "Bulk add notes to",
   "journal_dashboard_edit": "Edit",
   "journal_dashboard_empty": "No journals created yet.",
   "journal_delete_modal_title": "Remove {name}",
