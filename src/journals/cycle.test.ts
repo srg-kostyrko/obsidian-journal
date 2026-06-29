@@ -295,4 +295,40 @@ describe("CycleService", () => {
       expect(Math.abs(forward)).toBe(Math.abs(backward));
     });
   });
+
+  describe("anchorAtOffset", () => {
+    it("advances a custom anchor forward by the given number of intervals", () => {
+      const c = buildContainer({ s: customJournal("s", "week", 1, "2024-01-01") });
+      const cycle = c.resolve(CycleService);
+      const result = cycle.anchorAtOffset("s", "2024-01-01" as AnchorString, 3);
+      expect(result.isSome() && result.value).toBe("2024-01-22");
+    });
+
+    it("steps a custom anchor backward for a negative offset", () => {
+      const c = buildContainer({ s: customJournal("s", "week", 1, "2024-01-01") });
+      const cycle = c.resolve(CycleService);
+      const result = cycle.anchorAtOffset("s", "2024-01-22" as AnchorString, -3);
+      expect(result.isSome() && result.value).toBe("2024-01-01");
+    });
+
+    it("returns the same anchor for a zero offset", () => {
+      const c = buildContainer({ s: customJournal("s", "week", 1, "2024-01-01") });
+      const cycle = c.resolve(CycleService);
+      const result = cycle.anchorAtOffset("s", "2024-01-08" as AnchorString, 0);
+      expect(result.isSome() && result.value).toBe("2024-01-08");
+    });
+
+    it("inverts countRepeats for a fixed cycle", () => {
+      const c = buildContainer({ d: fixedJournal("d", { type: "day" }) });
+      const cycle = c.resolve(CycleService);
+      const result = cycle.anchorAtOffset("d", "2024-01-01" as AnchorString, 3);
+      expect(result.isSome() && result.value).toBe("2024-01-04");
+    });
+
+    it("returns None for an unknown journal", () => {
+      const c = buildContainer({});
+      const cycle = c.resolve(CycleService);
+      expect(cycle.anchorAtOffset("missing", "2024-01-01" as AnchorString, 2).isNone()).toBe(true);
+    });
+  });
 });

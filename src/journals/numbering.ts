@@ -10,6 +10,18 @@ import { JournalsRepository } from "./repository";
 
 import type { JournalNumberingConfig, NumberingSource } from "./config";
 
+// Only a single, never-resetting source is reversible: its value increases monotonically
+// with the cycle count, so subtracting anchorValue recovers the step offset. Cyclic (reset
+// "after") sources wrap modulo a count and multiple sources can't be disentangled from one
+// captured number, so neither can be inverted back to a unique anchor.
+export function invertibleNumberingVariable(numbering: JournalNumberingConfig): string | null {
+  if (!numbering.enabled) return null;
+  if (numbering.sources.length !== 1) return null;
+  const [source] = numbering.sources;
+  if (source.reset.kind !== "never") return null;
+  return source.variable;
+}
+
 export class NumberingService {
   readonly #journals = inject(JournalsRepository);
   readonly #cycle = inject(CycleService);
@@ -107,5 +119,19 @@ export class NumberingService {
     const result = this.#compute(name, anchor, numbering);
     bucket.values.set(anchor, result.isSome() ? result.value : null);
     return result;
+  }
+
+  anchorForNumbers(name: string, numbers: Readonly<Record<string, number>>): Option<AnchorString> {
+    const configOpt = this.#journals.get(name);
+    if (configOpt.isNone()) return Option.none();
+    const numbering = configOpt.value.numbering;
+    const variable = invertibleNumberingVariable(numbering);
+    if (variable === null || !numbering.anchorDate) return Option.none();
+    const value = numbers[variable];
+    if (value === undefined) return Option.none();
+    const [source] = numbering.sources;
+    const steps = value - source.anchorValue;
+    if (steps < 0 && !numbering.allowBefore) return Option.none();
+    return this.#cycle.anchorAtOffset(name, numbering.anchorDate, steps);
   }
 }

@@ -198,6 +198,30 @@ export class CycleService {
     return out;
   }
 
+  anchorAtOffset(name: string, from: AnchorString, steps: number): Option<AnchorString> {
+    return this.#cycleFor(name).map((cycle) =>
+      match(cycle)
+        .with({ kind: "fixed" }, (c) => {
+          let period = periodOfKind(c.period, CalendarDate.fromAnchor(from));
+          for (let i = 0; i < Math.abs(steps); i++) {
+            period = steps >= 0 ? period.next() : period.previous();
+          }
+          return period.anchor.toAnchor();
+        })
+        .with({ kind: "custom" }, (c) => {
+          let current = from;
+          for (let i = 0; i < Math.abs(steps); i++) {
+            current =
+              steps >= 0
+                ? customStepForward(current, c.every, c.duration)
+                : customStepBackward(current, c.every, c.duration);
+          }
+          return current;
+        })
+        .exhaustive(),
+    );
+  }
+
   countRepeats(name: string, from: AnchorString, to: AnchorString): Option<number> {
     return this.#cycleFor(name).map((cycle) =>
       match(cycle)

@@ -13,7 +13,7 @@ import { FrontmatterService } from "../frontmatter";
 import { JournalsIndex } from "../journals-index";
 import { NumberingService } from "../numbering";
 import { JournalsRepository } from "../repository";
-import { fakeRepo, fixedJournal, unwrap } from "../testing";
+import { customJournal, fakeRepo, fixedJournal, unwrap } from "../testing";
 
 import { NotePathService } from "./note-path";
 
@@ -156,6 +156,40 @@ describe("NotePathService.candidateFor", () => {
     const metadata = unwrap(result);
     expect(metadata.anchor).toBe("2026-05-19");
     expect(metadata.numbers?.index).toBe(42);
+  });
+
+  it("recovers the anchor from an index-only template via numbering inversion", () => {
+    const repo = fakeRepo({
+      sprints: customJournal("sprints", "week", 1, "2024-01-01", { nameTemplate: "Sprint {{index}}" }),
+    });
+    const c = buildContainer(repo);
+    const result = c.resolve(NotePathService).candidateFor("sprints", "Sprint 3.md" as VaultPath);
+    const metadata = unwrap(result);
+    expect(metadata.anchor).toBe("2024-01-15");
+    expect(metadata.numbers?.index).toBe(3);
+  });
+
+  it("returns None for an index-only template when numbering is cyclic", () => {
+    const repo = fakeRepo({
+      sprints: customJournal("sprints", "week", 1, "2024-01-01", {
+        nameTemplate: "Sprint {{index}}",
+        numbering: {
+          enabled: true,
+          anchorDate: "2024-01-01" as AnchorString,
+          allowBefore: false,
+          sources: [
+            { variable: "index", frontmatterKey: "sprint-number", anchorValue: 1, reset: { kind: "after", count: 3 } },
+          ],
+        },
+      }),
+    });
+    const c = buildContainer(repo);
+    expect(
+      c
+        .resolve(NotePathService)
+        .candidateFor("sprints", "Sprint 2.md" as VaultPath)
+        .isNone(),
+    ).toBe(true);
   });
 });
 

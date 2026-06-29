@@ -960,6 +960,7 @@
   "journal_edit_name_template_description": "Template used to generate new note names.",
   "journal_edit_name_template_collision_warning": "Template has no date or numbering variable, so every entry resolves to the same note. Add a date variable to give each entry its own note.",
   "journal_edit_name_template_invertibility_warning": "Template cannot be reverse-parsed ({reason}: \"{offending}\"). Auto-attach will silently skip externally created notes that match this pattern.",
+  "journal_edit_name_template_no_anchor_warning": "Template has no date variable and its numbering variable can't be reversed to a date, so auto-attach will silently skip externally created notes that match this pattern.",
   "journal_edit_name_template_label": "Note name template",
   "journal_edit_note_name_preview_label": "Resolved note name:",
   "journal_edit_rename_tooltip": "Rename journal",

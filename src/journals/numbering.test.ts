@@ -232,4 +232,108 @@ describe("NumberingService", () => {
       expect(recomputed).toEqual({ index: 101 });
     });
   });
+
+  describe("anchorForNumbers", () => {
+    it("recovers the anchorDate for the anchorValue of a single non-cyclic source", () => {
+      const c = buildContainer({ s: customJournal("s", "week", 1, "2024-01-01") });
+      const n = c.resolve(NumberingService);
+      const result = n.anchorForNumbers("s", { index: 1 });
+      expect(result.isSome() && result.value).toBe("2024-01-01");
+    });
+
+    it("recovers the anchor an index maps to for a single non-cyclic source", () => {
+      const c = buildContainer({ s: customJournal("s", "week", 1, "2024-01-01") });
+      const n = c.resolve(NumberingService);
+      const result = n.anchorForNumbers("s", { index: 3 });
+      expect(result.isSome() && result.value).toBe("2024-01-15");
+    });
+
+    it("round-trips assignNumbers for an arbitrary anchor", () => {
+      const c = buildContainer({ s: customJournal("s", "week", 1, "2024-01-01") });
+      const n = c.resolve(NumberingService);
+      const numbers = unwrap(n.assignNumbers("s", "2024-02-19" as AnchorString));
+      const result = n.anchorForNumbers("s", numbers);
+      expect(result.isSome() && result.value).toBe("2024-02-19");
+    });
+
+    it("returns None for cyclic numbering", () => {
+      const c = buildContainer({
+        s: customJournal("s", "week", 1, "2024-01-01", {
+          numbering: {
+            enabled: true,
+            anchorDate: "2024-01-01" as AnchorString,
+            allowBefore: false,
+            sources: [
+              {
+                variable: "index",
+                frontmatterKey: "journal-index",
+                anchorValue: 1,
+                reset: { kind: "after", count: 3 },
+              },
+            ],
+          },
+        }),
+      });
+      const n = c.resolve(NumberingService);
+      expect(n.anchorForNumbers("s", { index: 2 }).isNone()).toBe(true);
+    });
+
+    it("returns None for multiple numbering sources", () => {
+      const c = buildContainer({
+        s: customJournal("s", "week", 1, "2024-01-01", {
+          numbering: {
+            enabled: true,
+            anchorDate: "2024-01-01" as AnchorString,
+            allowBefore: false,
+            sources: [
+              { variable: "phase", frontmatterKey: "journal-phase", anchorValue: 1, reset: { kind: "never" } },
+              { variable: "n", frontmatterKey: "journal-n", anchorValue: 1, reset: { kind: "never" } },
+            ],
+          },
+        }),
+      });
+      const n = c.resolve(NumberingService);
+      expect(n.anchorForNumbers("s", { phase: 1, n: 5 }).isNone()).toBe(true);
+    });
+
+    it("returns None when numbering is disabled", () => {
+      const c = buildContainer({ w: fixedJournal("w", { type: "week" }) });
+      const n = c.resolve(NumberingService);
+      expect(n.anchorForNumbers("w", { index: 3 }).isNone()).toBe(true);
+    });
+
+    it("returns None when the captured numbers omit the source variable", () => {
+      const c = buildContainer({ s: customJournal("s", "week", 1, "2024-01-01") });
+      const n = c.resolve(NumberingService);
+      expect(n.anchorForNumbers("s", { other: 3 }).isNone()).toBe(true);
+    });
+
+    it("returns None for an unknown journal", () => {
+      const c = buildContainer({});
+      const n = c.resolve(NumberingService);
+      expect(n.anchorForNumbers("missing", { index: 3 }).isNone()).toBe(true);
+    });
+
+    it("returns None for an index before the anchorValue when allowBefore is false", () => {
+      const c = buildContainer({ s: customJournal("s", "week", 1, "2024-01-15") });
+      const n = c.resolve(NumberingService);
+      expect(n.anchorForNumbers("s", { index: 0 }).isNone()).toBe(true);
+    });
+
+    it("recovers an earlier anchor for an index below the anchorValue when allowBefore is true", () => {
+      const c = buildContainer({
+        s: customJournal("s", "week", 1, "2024-01-15", {
+          numbering: {
+            enabled: true,
+            anchorDate: "2024-01-15" as AnchorString,
+            allowBefore: true,
+            sources: [{ variable: "index", frontmatterKey: "journal-index", anchorValue: 1, reset: { kind: "never" } }],
+          },
+        }),
+      });
+      const n = c.resolve(NumberingService);
+      const result = n.anchorForNumbers("s", { index: -1 });
+      expect(result.isSome() && result.value).toBe("2024-01-01");
+    });
+  });
 });

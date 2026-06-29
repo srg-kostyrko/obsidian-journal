@@ -1,6 +1,7 @@
 import { normalizePath } from "obsidian";
 
 import { CalendarDate, Clock } from "@/calendar";
+import type { AnchorString } from "@/calendar";
 import { inject } from "@/infrastructure/di";
 import type { VaultPath } from "@/infrastructure/host";
 import { attempt, Err, Ok, Option, type Result } from "@/infrastructure/result";
@@ -10,6 +11,7 @@ import type { Bindings } from "@/templates";
 import { CycleService } from "../cycle";
 import { JournalNotFoundError } from "../errors";
 import { FrontmatterService } from "../frontmatter";
+import { NumberingService } from "../numbering";
 import { JournalsRepository } from "../repository";
 
 import type { JournalConfig } from "../config";
@@ -18,6 +20,7 @@ import type { JournalMetadata } from "../types";
 export class NotePathService {
   readonly #journals = inject(JournalsRepository);
   readonly #cycle = inject(CycleService);
+  readonly #numbering = inject(NumberingService);
   readonly #frontmatter = inject(FrontmatterService);
   readonly #engine = inject(TemplateEngine);
 
@@ -73,9 +76,6 @@ export class NotePathService {
     const parsed = this.#engine.parse(tokenize(`${config.nameTemplate}.md`), filename, context);
     if (parsed.kind === "err") return Option.none();
     const bindings = parsed.value;
-    const dateBinding = bindings.get("date");
-    if (dateBinding?.kind !== "date") return Option.none();
-    const anchor = dateBinding.value.toAnchor();
     const numbers: Record<string, number> = {};
     // Seed from folder bindings first so filename bindings take precedence.
     if (folderBindings) {
@@ -87,6 +87,17 @@ export class NotePathService {
     for (const source of config.numbering.sources) {
       const captured = bindings.get(source.variable);
       if (captured?.kind === "number") numbers[source.variable] = captured.value;
+    }
+    // The date variable is the canonical anchor source; a template without one (e.g.
+    // "Sprint {{index}}") falls back to inverting the captured numbering value.
+    const dateBinding = bindings.get("date");
+    let anchor: AnchorString;
+    if (dateBinding?.kind === "date") {
+      anchor = dateBinding.value.toAnchor();
+    } else {
+      const inverted = this.#numbering.anchorForNumbers(name, numbers);
+      if (inverted.isNone()) return Option.none();
+      anchor = inverted.value;
     }
     const metadata: JournalMetadata = {
       journalName: name,

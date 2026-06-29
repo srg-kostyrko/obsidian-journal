@@ -37,7 +37,7 @@ const numberingVariableNames = computed<readonly string[]>(() =>
 );
 
 const nameTemplateRef = computed(() => config.value?.nameTemplate ?? "");
-const invertibility = useInvertibilityCheck(nameTemplateRef);
+const invertibility = useInvertibilityCheck(config);
 const templateCollides = computed(() => nameTemplateCollides(nameTemplateRef.value, numberingVariableNames.value));
 
 function applyNameTemplateRecommendation(): void {
@@ -72,7 +72,12 @@ function applyDateFormatRecommendation(): void {
           {{ m.journal_edit_name_template_collision_warning() }}
         </div>
         <div v-if="invertibility" class="journal-hint">
-          {{ m.journal_edit_name_template_invertibility_warning(invertibility) }}
+          <template v-if="invertibility.kind === 'non-invertible'">
+            {{ m.journal_edit_name_template_invertibility_warning(invertibility) }}
+          </template>
+          <template v-else>
+            {{ m.journal_edit_name_template_no_anchor_warning() }}
+          </template>
         </div>
         <div v-if="config.nameTemplate.includes('/')" class="journal-recommendation">
           {{ m.journal_edit_move_to_folder_recommendation_name_template() }}
