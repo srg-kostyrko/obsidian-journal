@@ -69,8 +69,8 @@ describe("kinds", () => {
   });
 
   describe("patternForKind", () => {
-    it("returns non-greedy any-match for string", () => {
-      expect(patternForKind({ kind: "string", value: "" })).toBe(".+?");
+    it("returns the bound value as an escaped literal for string", () => {
+      expect(patternForKind({ kind: "string", value: "My Journal." })).toBe(String.raw`My Journal\.`);
     });
 
     it("returns signed-integer pattern for number", () => {

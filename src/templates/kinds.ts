@@ -2,7 +2,7 @@ import { CalendarDate } from "@/calendar";
 import { Err, Ok, type Result } from "@/infrastructure/result";
 
 import { TemplateParseError } from "./errors";
-import { formatToRegexp } from "./format-regex";
+import { escapeRegexLiteral, formatToRegexp } from "./format-regex";
 import { applyModifiers, unapplyModifiers } from "./modifiers";
 
 import type { Modifier, VariableSpec } from "./types";
@@ -36,7 +36,9 @@ export function renderClock(
 export function patternForKind(spec: VariableSpec, format?: string): string {
   switch (spec.kind) {
     case "string": {
-      return ".+?";
+      // A bound string (e.g. {{journal_name}}) has a known value; match it as a
+      // literal so inversion can't capture arbitrary text in its place.
+      return escapeRegexLiteral(spec.value);
     }
     case "number": {
       return String.raw`-?\d+`;

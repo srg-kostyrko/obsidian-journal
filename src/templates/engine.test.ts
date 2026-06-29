@@ -154,6 +154,22 @@ describe("TemplateEngine.parse", () => {
     expect(asDateBinding(result.value.get("date")).toAnchor()).toBe("2022-01-05");
   });
 
+  it("matches a string variable against its bound literal", () => {
+    const engine = installTestEngine();
+    const context = buildFakeContext();
+    const result = engine.parse(tokenize("{{journal_name}} {{index}}.md"), "Daily 1.md", context);
+    expectOk(result);
+    expect(result.value.get("index")).toEqual({ kind: "number", value: 1 });
+  });
+
+  it("returns no-match when a string variable's text differs from its bound literal", () => {
+    const engine = installTestEngine();
+    const context = buildFakeContext();
+    const result = engine.parse(tokenize("{{journal_name}} {{index}}.md"), "Other 1.md", context);
+    expectErr(result);
+    expect(result.error.detail.kind).toBe("no-match");
+  });
+
   it("treats current_date as a wildcard (no capture)", () => {
     const engine = installTestEngine();
     const context = buildFakeContext().date(

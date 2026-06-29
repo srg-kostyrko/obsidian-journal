@@ -169,6 +169,29 @@ describe("NotePathService.candidateFor", () => {
     expect(metadata.numbers?.index).toBe(3);
   });
 
+  it("returns None when the filename's journal name differs from the journal", () => {
+    const repo = fakeRepo({
+      sprints: customJournal("sprints", "week", 1, "2024-01-01", { nameTemplate: "{{journal_name}} {{index}}" }),
+    });
+    const c = buildContainer(repo);
+    expect(
+      c
+        .resolve(NotePathService)
+        .candidateFor("sprints", "Other 3.md" as VaultPath)
+        .isNone(),
+    ).toBe(true);
+  });
+
+  it("recovers the anchor when the filename's journal name matches", () => {
+    const repo = fakeRepo({
+      sprints: customJournal("sprints", "week", 1, "2024-01-01", { nameTemplate: "{{journal_name}} {{index}}" }),
+    });
+    const c = buildContainer(repo);
+    const result = c.resolve(NotePathService).candidateFor("sprints", "sprints 3.md" as VaultPath);
+    const metadata = unwrap(result);
+    expect(metadata.numbers?.index).toBe(3);
+  });
+
   it("returns None for an index-only template when numbering is cyclic", () => {
     const repo = fakeRepo({
       sprints: customJournal("sprints", "week", 1, "2024-01-01", {

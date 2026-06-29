@@ -78,6 +78,6 @@ export function formatToRegexp(format: string): RegExp {
   return new RegExp(parts.join(""));
 }
 
-function escapeRegexLiteral(s: string): string {
+export function escapeRegexLiteral(s: string): string {
   return s.replaceAll(/[.*+?^${}()|[\]\\]/g, String.raw`\$&`);
 }
