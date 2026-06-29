@@ -187,12 +187,12 @@ describe("ViewHostService", () => {
       expect(host.workspace.viewStateCalls).toEqual([]);
     });
 
-    it("does not open views when layout was already ready before initialize", async () => {
+    it("opens an opted-in view when layout was already ready before initialize", async () => {
       const { service, host } = build({ a: seedView("a", { openOnStartup: true }) });
       host.workspace.layoutReady = true;
       service.initialize();
       await Promise.resolve();
-      expect(host.workspace.viewStateCalls).toEqual([]);
+      expect(host.workspace.viewStateCalls).toEqual([{ type: "journal-view:a", placement: "right" }]);
     });
   });
 

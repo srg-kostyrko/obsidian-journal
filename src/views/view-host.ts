@@ -130,9 +130,7 @@ export class ViewHostService {
   }
 
   initialize(): void {
-    const appStartup = !this.#app.workspace.layoutReady;
     this.#app.workspace.onLayoutReady(() => {
-      if (!appStartup) return;
       void this.#openStartupViews();
     });
   }
