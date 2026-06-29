@@ -27,6 +27,11 @@ export const NAV_NEXT = `${NAV_BLOCK} .nav-next`;
 // The current period's block is the *direct* child of .nav-view; prev/next blocks live
 // inside .nav-block-relative, so the `>` combinator keeps their unstyled decorations out.
 export const NAV_CURRENT = `${NAV_BLOCK} .nav-view > .nav-block`;
+// Per-slot CSS styling hooks (#170): each block carries a modifier class so a snippet can
+// target previous/current/next independently.
+export const NAV_PREVIOUS_BLOCK = `${NAV_BLOCK} .nav-block-previous`;
+export const NAV_CURRENT_BLOCK = `${NAV_BLOCK} .nav-block-current`;
+export const NAV_NEXT_BLOCK = `${NAV_BLOCK} .nav-block-next`;
 
 // calendar-timeline (mode:month) embeds the same NotesMonthView/NotesCalendarCell grid
 // as the view leaf, so chunk 1's factory binds to it unchanged.

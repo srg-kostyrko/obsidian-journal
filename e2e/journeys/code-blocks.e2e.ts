@@ -8,8 +8,11 @@ import {
   HOME_FENCE,
   NAV_BLOCK,
   NAV_CURRENT,
+  NAV_CURRENT_BLOCK,
   NAV_FENCE,
   NAV_NEXT,
+  NAV_NEXT_BLOCK,
+  NAV_PREVIOUS_BLOCK,
   NAV_VIEW,
   TIMELINE_BAD_FENCE,
   TIMELINE_BLOCK,
@@ -83,6 +86,15 @@ describe("code blocks", () => {
         // Transparent ink (the bug) has alpha 0; any visible theme color has alpha 1.
         // Don't assert a specific hex — theme vars resolve differently across the matrix.
         expect((color.parsed as { alpha?: number }).alpha).toBeGreaterThan(0);
+      });
+    });
+
+    describe("styling hooks", () => {
+      it("exposes distinct previous, current, and next block classes for CSS targeting", async () => {
+        await renderBlock("nav/styling-hooks.md", navHost("2026-07-10", ""), NAV_VIEW);
+        await $(NAV_PREVIOUS_BLOCK).waitForExist({ timeoutMsg: "nav-block-previous hook did not render" });
+        await $(NAV_CURRENT_BLOCK).waitForExist({ timeoutMsg: "nav-block-current hook did not render" });
+        await $(NAV_NEXT_BLOCK).waitForExist({ timeoutMsg: "nav-block-next hook did not render" });
       });
     });
 

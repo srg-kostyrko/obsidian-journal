@@ -99,6 +99,7 @@ function openAdjacent(anchor: AnchorString | null, event: MouseEvent): void {
   <div v-else-if="journal && currentAnchor" class="nav-view">
     <div v-if="adjacent.previous" class="nav-block-relative">
       <NavBlock
+        class="nav-block-previous"
         :block="journal.navBlock"
         :journal
         :ref-date="adjacent.previous"
@@ -115,6 +116,7 @@ function openAdjacent(anchor: AnchorString | null, event: MouseEvent): void {
     <div v-else class="nav-block-placeholder" />
 
     <NavBlock
+      class="nav-block-current"
       :block="journal.navBlock"
       :journal
       :ref-date="currentAnchor"
@@ -130,6 +132,7 @@ function openAdjacent(anchor: AnchorString | null, event: MouseEvent): void {
         @auxclick.middle.prevent="(event: MouseEvent) => openAdjacent(adjacent.next, event)"
       />
       <NavBlock
+        class="nav-block-next"
         :block="journal.navBlock"
         :journal
         :ref-date="adjacent.next"
