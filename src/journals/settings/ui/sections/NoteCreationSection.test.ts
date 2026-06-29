@@ -104,6 +104,16 @@ describe("NoteCreationSection", () => {
       ).toBeTruthy();
     });
 
+    it("shows the collision warning for a template with no date or numbering variable", () => {
+      mount({ nameTemplate: "MyNote" });
+      expect(screen.getByText(m.journal_edit_name_template_collision_warning())).toBeTruthy();
+    });
+
+    it("does not show the collision warning for the default date template", () => {
+      mount();
+      expect(screen.queryByText(m.journal_edit_name_template_collision_warning())).toBeNull();
+    });
+
     it("shows the move-to-folder recommendation when nameTemplate contains a slash", () => {
       mount({ nameTemplate: "year/{{date}}" });
       expect(screen.getByText(m.journal_edit_move_to_folder_recommendation_name_template())).toBeTruthy();

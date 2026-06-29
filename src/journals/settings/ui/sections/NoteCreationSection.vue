@@ -14,6 +14,7 @@ import { JournalsViewModel } from "../../../view-model";
 import DateFormatPreview from "../DateFormatPreview.vue";
 import FolderInput from "../FolderInput.vue";
 import FolderPathPreview from "../FolderPathPreview.vue";
+import { nameTemplateCollides } from "../name-template-collision";
 import NoteNamePreview from "../NoteNamePreview.vue";
 import { useAutoCreateOnEnable } from "../use-auto-create-on-enable";
 import { extractFromDateFormat, extractFromNameTemplate } from "../use-folder-extractor";
@@ -37,6 +38,7 @@ const numberingVariableNames = computed<readonly string[]>(() =>
 
 const nameTemplateRef = computed(() => config.value?.nameTemplate ?? "");
 const invertibility = useInvertibilityCheck(nameTemplateRef);
+const templateCollides = computed(() => nameTemplateCollides(nameTemplateRef.value, numberingVariableNames.value));
 
 function applyNameTemplateRecommendation(): void {
   if (config.value) extractFromNameTemplate(config.value);
@@ -66,6 +68,9 @@ function applyDateFormatRecommendation(): void {
           :numbering-variable-names="numberingVariableNames"
         />
         <NoteNamePreview :journal-name="journalName" />
+        <div v-if="templateCollides" class="journal-hint">
+          {{ m.journal_edit_name_template_collision_warning() }}
+        </div>
         <div v-if="invertibility" class="journal-hint">
           {{ m.journal_edit_name_template_invertibility_warning(invertibility) }}
         </div>
