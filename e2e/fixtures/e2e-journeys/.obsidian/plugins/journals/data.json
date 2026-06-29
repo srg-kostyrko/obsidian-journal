@@ -3,9 +3,16 @@
   "journals": {
     "daily": {
       "name": "daily",
-      "write": { "type": "day" },
+      "write": {
+        "type": "day"
+      },
       "folder": "day",
-      "timeline": { "start": "", "end": { "kind": "never" } },
+      "timeline": {
+        "start": "",
+        "end": {
+          "kind": "never"
+        }
+      },
       "dateFormat": "YYYY-MM-DD",
       "frontmatter": {
         "dateField": "journal-date",
@@ -14,63 +21,164 @@
         "addStartDate": false,
         "addEndDate": false
       },
-      "numbering": { "enabled": false, "anchorDate": "", "allowBefore": false, "sources": [] },
+      "numbering": {
+        "enabled": false,
+        "anchorDate": "",
+        "allowBefore": false,
+        "sources": []
+      },
       "decorations": [
         {
           "mode": "and",
-          "conditions": [{ "type": "title", "condition": "ends-with", "value": "-07" }],
-          "styles": [{ "type": "corner", "placement": "top-left", "color": { "type": "custom", "color": "#ff0000" } }]
-        },
-        {
-          "mode": "and",
-          "conditions": [{ "type": "tag", "condition": "contains", "value": "ctag" }],
-          "styles": [{ "type": "corner", "placement": "top-left", "color": { "type": "custom", "color": "#ff0000" } }]
-        },
-        {
-          "mode": "and",
           "conditions": [
-            { "type": "property", "name": "cprop", "valueType": "text", "condition": "exists", "value": "" }
+            {
+              "type": "title",
+              "condition": "ends-with",
+              "value": "-07"
+            }
           ],
-          "styles": [{ "type": "corner", "placement": "top-left", "color": { "type": "custom", "color": "#ff0000" } }]
-        },
-        {
-          "mode": "and",
-          "conditions": [{ "type": "tag", "condition": "contains", "value": "scolor" }],
-          "styles": [{ "type": "color", "color": { "type": "custom", "color": "#112233" } }]
-        },
-        {
-          "mode": "and",
-          "conditions": [{ "type": "tag", "condition": "contains", "value": "sborder" }],
           "styles": [
             {
-              "type": "border",
-              "border": "uniform",
-              "left": { "show": true, "width": 3, "style": "solid", "color": { "type": "custom", "color": "#445566" } },
-              "right": {
-                "show": true,
-                "width": 3,
-                "style": "solid",
-                "color": { "type": "custom", "color": "#445566" }
-              },
-              "top": { "show": true, "width": 3, "style": "solid", "color": { "type": "custom", "color": "#445566" } },
-              "bottom": {
-                "show": true,
-                "width": 3,
-                "style": "solid",
-                "color": { "type": "custom", "color": "#445566" }
+              "type": "corner",
+              "placement": "top-left",
+              "color": {
+                "type": "custom",
+                "color": "#ff0000"
               }
             }
           ]
         },
         {
           "mode": "and",
-          "conditions": [{ "type": "tag", "condition": "contains", "value": "sshape" }],
+          "conditions": [
+            {
+              "type": "tag",
+              "condition": "contains",
+              "value": "ctag"
+            }
+          ],
+          "styles": [
+            {
+              "type": "corner",
+              "placement": "top-left",
+              "color": {
+                "type": "custom",
+                "color": "#ff0000"
+              }
+            }
+          ]
+        },
+        {
+          "mode": "and",
+          "conditions": [
+            {
+              "type": "property",
+              "name": "cprop",
+              "valueType": "text",
+              "condition": "exists",
+              "value": ""
+            }
+          ],
+          "styles": [
+            {
+              "type": "corner",
+              "placement": "top-left",
+              "color": {
+                "type": "custom",
+                "color": "#ff0000"
+              }
+            }
+          ]
+        },
+        {
+          "mode": "and",
+          "conditions": [
+            {
+              "type": "tag",
+              "condition": "contains",
+              "value": "scolor"
+            }
+          ],
+          "styles": [
+            {
+              "type": "color",
+              "color": {
+                "type": "custom",
+                "color": "#112233"
+              }
+            }
+          ]
+        },
+        {
+          "mode": "and",
+          "conditions": [
+            {
+              "type": "tag",
+              "condition": "contains",
+              "value": "sborder"
+            }
+          ],
+          "styles": [
+            {
+              "type": "border",
+              "border": "uniform",
+              "left": {
+                "show": true,
+                "width": 3,
+                "style": "solid",
+                "color": {
+                  "type": "custom",
+                  "color": "#445566"
+                }
+              },
+              "right": {
+                "show": true,
+                "width": 3,
+                "style": "solid",
+                "color": {
+                  "type": "custom",
+                  "color": "#445566"
+                }
+              },
+              "top": {
+                "show": true,
+                "width": 3,
+                "style": "solid",
+                "color": {
+                  "type": "custom",
+                  "color": "#445566"
+                }
+              },
+              "bottom": {
+                "show": true,
+                "width": 3,
+                "style": "solid",
+                "color": {
+                  "type": "custom",
+                  "color": "#445566"
+                }
+              }
+            }
+          ]
+        },
+        {
+          "mode": "and",
+          "conditions": [
+            {
+              "type": "tag",
+              "condition": "contains",
+              "value": "sshape"
+            }
+          ],
           "styles": [
             {
               "type": "shape",
               "size": 1,
               "shape": "circle",
-              "color": { "type": "custom", "color": "#778899" },
+              "color": {
+                "type": "custom",
+                "color": "#778899"
+              },
               "placement_x": "center",
               "placement_y": "middle"
             }
@@ -78,29 +186,88 @@
         },
         {
           "mode": "and",
-          "conditions": [{ "type": "tag", "condition": "contains", "value": "scorner" }],
+          "conditions": [
+            {
+              "type": "tag",
+              "condition": "contains",
+              "value": "scorner"
+            }
+          ],
           "styles": [
-            { "type": "corner", "placement": "bottom-right", "color": { "type": "custom", "color": "#99aabb" } }
+            {
+              "type": "corner",
+              "placement": "bottom-right",
+              "color": {
+                "type": "custom",
+                "color": "#99aabb"
+              }
+            }
           ]
         },
         {
           "mode": "and",
-          "conditions": [{ "type": "tag", "condition": "contains", "value": "sicon" }],
+          "conditions": [
+            {
+              "type": "tag",
+              "condition": "contains",
+              "value": "sicon"
+            }
+          ],
           "styles": [
             {
               "type": "icon",
               "icon": "star",
               "placement_x": "right",
               "placement_y": "top",
-              "color": { "type": "custom", "color": "#aabbcc" },
+              "color": {
+                "type": "custom",
+                "color": "#aabbcc"
+              },
               "size": 1
             }
           ]
         },
         {
           "mode": "and",
-          "conditions": [{ "type": "date", "day": 4, "month": -1, "year": null }],
-          "styles": [{ "type": "corner", "placement": "top-left", "color": { "type": "custom", "color": "#ff0000" } }]
+          "conditions": [
+            {
+              "type": "date",
+              "day": 4,
+              "month": -1,
+              "year": null
+            }
+          ],
+          "styles": [
+            {
+              "type": "corner",
+              "placement": "top-left",
+              "color": {
+                "type": "custom",
+                "color": "#ff0000"
+              }
+            }
+          ]
+        },
+        {
+          "mode": "and",
+          "conditions": [
+            {
+              "type": "property",
+              "name": "holiday",
+              "valueType": "checkbox",
+              "condition": "is-true"
+            }
+          ],
+          "styles": [
+            {
+              "type": "corner",
+              "placement": "top-left",
+              "color": {
+                "type": "custom",
+                "color": "#00ff00"
+              }
+            }
+          ]
         }
       ],
       "navBlock": {
@@ -112,8 +279,13 @@
             "fontSize": 1,
             "bold": false,
             "italic": false,
-            "color": { "type": "theme", "name": "text-normal" },
-            "background": { "type": "transparent" },
+            "color": {
+              "type": "theme",
+              "name": "text-normal"
+            },
+            "background": {
+              "type": "transparent"
+            },
             "link": "self",
             "journal": "",
             "addDecorations": false
@@ -123,9 +295,16 @@
     },
     "weekly": {
       "name": "weekly",
-      "write": { "type": "week" },
+      "write": {
+        "type": "week"
+      },
       "folder": "week",
-      "timeline": { "start": "", "end": { "kind": "never" } },
+      "timeline": {
+        "start": "",
+        "end": {
+          "kind": "never"
+        }
+      },
       "dateFormat": "YYYY-[W]ww",
       "frontmatter": {
         "dateField": "journal-date",
@@ -134,20 +313,45 @@
         "addStartDate": false,
         "addEndDate": false
       },
-      "numbering": { "enabled": false, "anchorDate": "", "allowBefore": false, "sources": [] },
+      "numbering": {
+        "enabled": false,
+        "anchorDate": "",
+        "allowBefore": false,
+        "sources": []
+      },
       "decorations": [
         {
           "mode": "and",
-          "conditions": [{ "type": "has-open-task" }],
-          "styles": [{ "type": "corner", "placement": "top-left", "color": { "type": "custom", "color": "#ff0000" } }]
+          "conditions": [
+            {
+              "type": "has-open-task"
+            }
+          ],
+          "styles": [
+            {
+              "type": "corner",
+              "placement": "top-left",
+              "color": {
+                "type": "custom",
+                "color": "#ff0000"
+              }
+            }
+          ]
         }
       ]
     },
     "monthly": {
       "name": "monthly",
-      "write": { "type": "month" },
+      "write": {
+        "type": "month"
+      },
       "folder": "month",
-      "timeline": { "start": "", "end": { "kind": "never" } },
+      "timeline": {
+        "start": "",
+        "end": {
+          "kind": "never"
+        }
+      },
       "dateFormat": "YYYY-MM",
       "frontmatter": {
         "dateField": "journal-date",
@@ -161,14 +365,34 @@
         "anchorDate": "2026-01-01",
         "allowBefore": false,
         "sources": [
-          { "variable": "index", "frontmatterKey": "journal-index", "anchorValue": 1, "reset": { "kind": "never" } }
+          {
+            "variable": "index",
+            "frontmatterKey": "journal-index",
+            "anchorValue": 1,
+            "reset": {
+              "kind": "never"
+            }
+          }
         ]
       },
       "decorations": [
         {
           "mode": "and",
-          "conditions": [{ "type": "all-tasks-completed" }],
-          "styles": [{ "type": "corner", "placement": "top-left", "color": { "type": "custom", "color": "#ff0000" } }]
+          "conditions": [
+            {
+              "type": "all-tasks-completed"
+            }
+          ],
+          "styles": [
+            {
+              "type": "corner",
+              "placement": "top-left",
+              "color": {
+                "type": "custom",
+                "color": "#ff0000"
+              }
+            }
+          ]
         }
       ],
       "navBlock": {
@@ -180,8 +404,13 @@
             "fontSize": 1,
             "bold": false,
             "italic": false,
-            "color": { "type": "theme", "name": "text-normal" },
-            "background": { "type": "transparent" },
+            "color": {
+              "type": "theme",
+              "name": "text-normal"
+            },
+            "background": {
+              "type": "transparent"
+            },
             "link": "self",
             "journal": "",
             "addDecorations": false
@@ -191,9 +420,16 @@
     },
     "quarterly": {
       "name": "quarterly",
-      "write": { "type": "quarter" },
+      "write": {
+        "type": "quarter"
+      },
       "folder": "quarter",
-      "timeline": { "start": "", "end": { "kind": "never" } },
+      "timeline": {
+        "start": "",
+        "end": {
+          "kind": "never"
+        }
+      },
       "dateFormat": "YYYY-[Q]Q",
       "frontmatter": {
         "dateField": "journal-date",
@@ -202,20 +438,45 @@
         "addStartDate": false,
         "addEndDate": false
       },
-      "numbering": { "enabled": false, "anchorDate": "", "allowBefore": false, "sources": [] },
+      "numbering": {
+        "enabled": false,
+        "anchorDate": "",
+        "allowBefore": false,
+        "sources": []
+      },
       "decorations": [
         {
           "mode": "and",
-          "conditions": [{ "type": "has-note" }],
-          "styles": [{ "type": "corner", "placement": "top-left", "color": { "type": "custom", "color": "#ff0000" } }]
+          "conditions": [
+            {
+              "type": "has-note"
+            }
+          ],
+          "styles": [
+            {
+              "type": "corner",
+              "placement": "top-left",
+              "color": {
+                "type": "custom",
+                "color": "#ff0000"
+              }
+            }
+          ]
         }
       ]
     },
     "yearly": {
       "name": "yearly",
-      "write": { "type": "year" },
+      "write": {
+        "type": "year"
+      },
       "folder": "year",
-      "timeline": { "start": "", "end": { "kind": "never" } },
+      "timeline": {
+        "start": "",
+        "end": {
+          "kind": "never"
+        }
+      },
       "dateFormat": "YYYY",
       "frontmatter": {
         "dateField": "journal-date",
@@ -224,20 +485,47 @@
         "addStartDate": false,
         "addEndDate": false
       },
-      "numbering": { "enabled": false, "anchorDate": "", "allowBefore": false, "sources": [] },
+      "numbering": {
+        "enabled": false,
+        "anchorDate": "",
+        "allowBefore": false,
+        "sources": []
+      },
       "decorations": [
         {
           "mode": "and",
-          "conditions": [{ "type": "has-note" }],
-          "styles": [{ "type": "background", "color": { "type": "custom", "color": "#203040" } }]
+          "conditions": [
+            {
+              "type": "has-note"
+            }
+          ],
+          "styles": [
+            {
+              "type": "background",
+              "color": {
+                "type": "custom",
+                "color": "#203040"
+              }
+            }
+          ]
         }
       ]
     },
     "sprint": {
       "name": "sprint",
-      "write": { "type": "custom", "every": "week", "duration": 2, "anchorDate": "2026-01-05" },
+      "write": {
+        "type": "custom",
+        "every": "week",
+        "duration": 2,
+        "anchorDate": "2026-01-05"
+      },
       "folder": "sprint",
-      "timeline": { "start": "", "end": { "kind": "never" } },
+      "timeline": {
+        "start": "",
+        "end": {
+          "kind": "never"
+        }
+      },
       "dateFormat": "YYYY-MM-DD",
       "frontmatter": {
         "dateField": "journal-date",
@@ -246,7 +534,12 @@
         "addStartDate": false,
         "addEndDate": false
       },
-      "numbering": { "enabled": false, "anchorDate": "", "allowBefore": false, "sources": [] },
+      "numbering": {
+        "enabled": false,
+        "anchorDate": "",
+        "allowBefore": false,
+        "sources": []
+      },
       "intervalBlock": {
         "type": "create",
         "decorateWholeBlock": false,
@@ -256,8 +549,13 @@
             "fontSize": 1,
             "bold": false,
             "italic": false,
-            "color": { "type": "theme", "name": "text-normal" },
-            "background": { "type": "transparent" },
+            "color": {
+              "type": "theme",
+              "name": "text-normal"
+            },
+            "background": {
+              "type": "transparent"
+            },
             "link": "self",
             "journal": "",
             "addDecorations": false
@@ -267,10 +565,29 @@
     }
   },
   "shelves": {
-    "core": { "name": "core", "journals": ["daily", "weekly"] },
-    "extra": { "name": "extra", "journals": ["monthly", "quarterly", "yearly"] },
-    "rename-me": { "name": "rename-me", "journals": [] },
-    "delete-me": { "name": "delete-me", "journals": [] }
+    "core": {
+      "name": "core",
+      "journals": [
+        "daily",
+        "weekly"
+      ]
+    },
+    "extra": {
+      "name": "extra",
+      "journals": [
+        "monthly",
+        "quarterly",
+        "yearly"
+      ]
+    },
+    "rename-me": {
+      "name": "rename-me",
+      "journals": []
+    },
+    "delete-me": {
+      "name": "delete-me",
+      "journals": []
+    }
   },
   "commands": {
     "cmd-edit": {
@@ -278,7 +595,10 @@
       "icon": "calendar-days",
       "showInRibbon": false,
       "openMode": "active",
-      "target": { "kind": "all", "writeType": "day" },
+      "target": {
+        "kind": "all",
+        "writeType": "day"
+      },
       "type": "same",
       "context": "today"
     },
@@ -287,7 +607,10 @@
       "icon": "calendar-days",
       "showInRibbon": false,
       "openMode": "active",
-      "target": { "kind": "all", "writeType": "day" },
+      "target": {
+        "kind": "all",
+        "writeType": "day"
+      },
       "type": "same",
       "context": "today"
     },
@@ -296,7 +619,10 @@
       "icon": "",
       "showInRibbon": false,
       "openMode": "active",
-      "target": { "kind": "all", "writeType": "day" },
+      "target": {
+        "kind": "all",
+        "writeType": "day"
+      },
       "type": "previous_available",
       "context": "open_note"
     }
@@ -316,10 +642,42 @@
           "key": "toolbar",
           "config": {
             "items": [
-              { "id": "d2b3c4e5-2f3a-4b6c-8d7e-9f0a1b2c3d4e", "key": "shelf-selector", "config": {} },
-              { "id": "1b2c3d4e-5f6a-4b7c-8d9e-0f1a2b3c4d5e", "key": "spacer", "config": {} },
-              { "id": "e3c4d5f6-3a4b-4c7d-9e8f-0a1b2c3d4e5f", "key": "button", "config": { "action": { "type": "pick-date", "mode": "navigate", "levels": ["day"] } } },
-              { "id": "f4d5e6a7-4b5c-4d8e-8f9a-1b2c3d4e5f6a", "key": "button", "config": { "action": { "type": "current", "mode": "create", "levels": ["day"] } } }
+              {
+                "id": "d2b3c4e5-2f3a-4b6c-8d7e-9f0a1b2c3d4e",
+                "key": "shelf-selector",
+                "config": {}
+              },
+              {
+                "id": "1b2c3d4e-5f6a-4b7c-8d9e-0f1a2b3c4d5e",
+                "key": "spacer",
+                "config": {}
+              },
+              {
+                "id": "e3c4d5f6-3a4b-4c7d-9e8f-0a1b2c3d4e5f",
+                "key": "button",
+                "config": {
+                  "action": {
+                    "type": "pick-date",
+                    "mode": "navigate",
+                    "levels": [
+                      "day"
+                    ]
+                  }
+                }
+              },
+              {
+                "id": "f4d5e6a7-4b5c-4d8e-8f9a-1b2c3d4e5f6a",
+                "key": "button",
+                "config": {
+                  "action": {
+                    "type": "current",
+                    "mode": "create",
+                    "levels": [
+                      "day"
+                    ]
+                  }
+                }
+              }
             ]
           }
         },
@@ -328,23 +686,101 @@
           "key": "toolbar",
           "config": {
             "items": [
-              { "id": "a5e6f7b8-5c6d-4e9f-9a0b-2c3d4e5f6a7b", "key": "button", "config": { "action": { "type": "navigate-step", "direction": "prev", "unit": "year", "amount": 1 } } },
-              { "id": "b6f7a8c9-6d7e-4f0a-8b1c-3d4e5f6a7b8c", "key": "button", "config": { "action": { "type": "navigate-step", "direction": "prev", "unit": "month", "amount": 1 } } },
-              { "id": "2c3d4e5f-6a7b-4c8d-9e0f-1a2b3c4d5e6f", "key": "spacer", "config": {} },
-              { "id": "c7a8b9d0-7e8f-4a1b-9c2d-4e5f6a7b8c9d", "key": "period-buttons", "config": { "week": false, "month": true, "quarter": true, "year": true } },
-              { "id": "3d4e5f6a-7b8c-4d9e-8f0a-2b3c4d5e6f7a", "key": "spacer", "config": {} },
-              { "id": "d8b9c0e1-8f9a-4b2c-8d3e-5f6a7b8c9d0e", "key": "button", "config": { "action": { "type": "navigate-step", "direction": "next", "unit": "month", "amount": 1 } } },
-              { "id": "e9c0d1f2-9a0b-4c3d-9e4f-6a7b8c9d0e1f", "key": "button", "config": { "action": { "type": "navigate-step", "direction": "next", "unit": "year", "amount": 1 } } }
+              {
+                "id": "a5e6f7b8-5c6d-4e9f-9a0b-2c3d4e5f6a7b",
+                "key": "button",
+                "config": {
+                  "action": {
+                    "type": "navigate-step",
+                    "direction": "prev",
+                    "unit": "year",
+                    "amount": 1
+                  }
+                }
+              },
+              {
+                "id": "b6f7a8c9-6d7e-4f0a-8b1c-3d4e5f6a7b8c",
+                "key": "button",
+                "config": {
+                  "action": {
+                    "type": "navigate-step",
+                    "direction": "prev",
+                    "unit": "month",
+                    "amount": 1
+                  }
+                }
+              },
+              {
+                "id": "2c3d4e5f-6a7b-4c8d-9e0f-1a2b3c4d5e6f",
+                "key": "spacer",
+                "config": {}
+              },
+              {
+                "id": "c7a8b9d0-7e8f-4a1b-9c2d-4e5f6a7b8c9d",
+                "key": "period-buttons",
+                "config": {
+                  "week": false,
+                  "month": true,
+                  "quarter": true,
+                  "year": true
+                }
+              },
+              {
+                "id": "3d4e5f6a-7b8c-4d9e-8f0a-2b3c4d5e6f7a",
+                "key": "spacer",
+                "config": {}
+              },
+              {
+                "id": "d8b9c0e1-8f9a-4b2c-8d3e-5f6a7b8c9d0e",
+                "key": "button",
+                "config": {
+                  "action": {
+                    "type": "navigate-step",
+                    "direction": "next",
+                    "unit": "month",
+                    "amount": 1
+                  }
+                }
+              },
+              {
+                "id": "e9c0d1f2-9a0b-4c3d-9e4f-6a7b8c9d0e1f",
+                "key": "button",
+                "config": {
+                  "action": {
+                    "type": "navigate-step",
+                    "direction": "next",
+                    "unit": "year",
+                    "amount": 1
+                  }
+                }
+              }
             ]
           }
         },
         {
           "id": "fa0d1e2b-0b1c-4d4e-8f5a-7b8c9d0e1f2a",
           "key": "month-calendar",
-          "config": { "before": 0, "after": 0, "hiddenWeekdays": [], "weeks": "left", "showHeading": true }
+          "config": {
+            "before": 0,
+            "after": 0,
+            "hiddenWeekdays": [],
+            "weeks": "left",
+            "showHeading": true
+          }
         },
-        { "id": "ab1e2f3c-1c2d-4e5f-9a6b-8c9d0e1f2a3b", "key": "divider", "config": {} },
-        { "id": "bc2f3a4d-2d3e-4f6a-8b7c-9d0e1f2a3b4c", "key": "custom-intervals", "config": { "window": "current-month", "hideEmpty": true } }
+        {
+          "id": "ab1e2f3c-1c2d-4e5f-9a6b-8c9d0e1f2a3b",
+          "key": "divider",
+          "config": {}
+        },
+        {
+          "id": "bc2f3a4d-2d3e-4f6a-8b7c-9d0e1f2a3b4c",
+          "key": "custom-intervals",
+          "config": {
+            "window": "current-month",
+            "hideEmpty": true
+          }
+        }
       ]
     }
   }

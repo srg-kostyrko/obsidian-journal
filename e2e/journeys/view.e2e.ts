@@ -215,6 +215,29 @@ describe("calendar view", () => {
       await expectUndecorated(calendar.cell(anchor));
     });
 
+    // #143: a checkbox-typed property is stored as a real YAML boolean. The is-true
+    // condition must match it through Obsidian's metadataCache, not just the unit fake.
+    it("decorates a day cell when its checkbox property is set true", async () => {
+      const anchor = dayAnchor(18);
+      const path = "day/checkbox-true.md";
+      await seedNote(path, note("daily", anchor));
+      await waitForFrontmatter(path, (fm) => fm.journal === "daily", `waited for ${path} to be indexed`);
+      await expectUndecorated(calendar.cell(anchor));
+
+      await writeNote(path, note("daily", anchor, "", ["holiday: true"]));
+
+      await expectDecorated(calendar.cell(anchor));
+    });
+
+    it("leaves a day cell undecorated when its checkbox property is false", async () => {
+      const anchor = dayAnchor(21);
+      const path = "day/checkbox-false.md";
+      await seedNote(path, note("daily", anchor, "", ["holiday: false"]));
+      await waitForFrontmatter(path, (fm) => fm.journal === "daily", `waited for ${path} to be indexed`);
+
+      await expectUndecorated(calendar.cell(anchor));
+    });
+
     it("clears the week cell's decoration when its note's open task is checked off", async () => {
       const week = (await calendar.periodCell("week-number-cell").getAttribute("data-anchor")) ?? "";
       const path = "week/live-weekly.md";
