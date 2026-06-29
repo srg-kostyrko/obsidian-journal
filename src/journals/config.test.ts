@@ -131,7 +131,7 @@ describe("journalDefaultsFor navBlock per write type", () => {
       "to",
       "{{end_date}}",
     ]);
-    expect(navBlock.rows[0]).toMatchObject({ fontSize: 3, bold: true, link: "self", addDecorations: true });
+    expect(navBlock.rows[0]).toMatchObject({ fontSize: 2, bold: true, link: "self", addDecorations: true });
   });
 });
 

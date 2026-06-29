@@ -147,16 +147,34 @@ function openAdjacent(anchor: AnchorString | null, event: MouseEvent): void {
 .nav-view {
   display: flex;
   flex-wrap: wrap;
-  justify-content: space-around;
-  align-items: flex-start;
-  gap: 1rem 50px;
+  justify-content: center;
+  align-items: center;
+  gap: 16px;
   --icon-size: 3em;
 }
-.nav-block-relative {
-  min-width: 0;
+/* Three equal columns that share the row and shrink to fit, so wide content
+   (e.g. custom-interval titles) wraps inside its block instead of pushing the
+   third block onto a second row. The min-width is the readability floor: once a
+   column can no longer stay that wide, flex-wrap stacks the blocks — preserving
+   the narrow-pane stacking from #216. */
+.nav-block-relative,
+.nav-block-current {
+  flex: 1 1 0;
+  min-width: 130px;
 }
 .nav-block-placeholder {
-  flex-basis: 20%;
+  flex: 1 1 0;
+  min-width: 0;
+}
+/* Keep each chevron inline and vertically centered between its block and the
+   current block, rather than absolutely offset (which overflowed the pane). */
+.nav-block-relative {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+.nav-block-relative > .nav-block {
+  flex: 1 1 auto;
   min-width: 0;
 }
 </style>

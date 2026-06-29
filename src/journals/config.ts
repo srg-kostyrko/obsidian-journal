@@ -248,7 +248,7 @@ const defaultNavBlocks: Record<JournalWrite["type"], JournalNavBlock> = {
         ...emptyNavRow,
         template: "{{journal_name}} {{index}}",
         link: "self",
-        fontSize: 3,
+        fontSize: 2,
         bold: true,
         addDecorations: true,
       },
