@@ -3,9 +3,16 @@
   "journals": {
     "work": {
       "name": "work",
-      "write": { "type": "day" },
+      "write": {
+        "type": "day"
+      },
       "folder": "work",
-      "timeline": { "start": "", "end": { "kind": "never" } },
+      "timeline": {
+        "start": "",
+        "end": {
+          "kind": "never"
+        }
+      },
       "dateFormat": "YYYY-MM-DD",
       "frontmatter": {
         "dateField": "journal-date",
@@ -14,13 +21,25 @@
         "addStartDate": false,
         "addEndDate": false
       },
-      "numbering": { "enabled": false, "anchorDate": "", "allowBefore": false, "sources": [] }
+      "numbering": {
+        "enabled": false,
+        "anchorDate": "",
+        "allowBefore": false,
+        "sources": []
+      }
     },
     "personal": {
       "name": "personal",
-      "write": { "type": "day" },
+      "write": {
+        "type": "day"
+      },
       "folder": "personal",
-      "timeline": { "start": "", "end": { "kind": "never" } },
+      "timeline": {
+        "start": "",
+        "end": {
+          "kind": "never"
+        }
+      },
       "dateFormat": "YYYY-MM-DD",
       "frontmatter": {
         "dateField": "journal-date",
@@ -29,13 +48,25 @@
         "addStartDate": false,
         "addEndDate": false
       },
-      "numbering": { "enabled": false, "anchorDate": "", "allowBefore": false, "sources": [] }
+      "numbering": {
+        "enabled": false,
+        "anchorDate": "",
+        "allowBefore": false,
+        "sources": []
+      }
     },
     "weekly": {
       "name": "weekly",
-      "write": { "type": "week" },
+      "write": {
+        "type": "week"
+      },
       "folder": "week",
-      "timeline": { "start": "", "end": { "kind": "never" } },
+      "timeline": {
+        "start": "",
+        "end": {
+          "kind": "never"
+        }
+      },
       "dateFormat": "YYYY-[W]ww",
       "frontmatter": {
         "dateField": "journal-date",
@@ -44,7 +75,15 @@
         "addStartDate": false,
         "addEndDate": false
       },
-      "numbering": { "enabled": false, "anchorDate": "", "allowBefore": false, "sources": [] }
+      "numbering": {
+        "enabled": false,
+        "anchorDate": "",
+        "allowBefore": false,
+        "sources": []
+      },
+      "templates": [
+        "uri-weekly-template"
+      ]
     }
   }
 }

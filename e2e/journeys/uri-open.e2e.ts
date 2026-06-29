@@ -12,6 +12,7 @@ import {
   seedNote,
   waitForActiveNote,
   waitForActiveNoteIn,
+  waitForContent,
   waitForFrontmatter,
   waitForJournalFrontmatter,
 } from "../support/vault.js";
@@ -25,6 +26,9 @@ describe("open via uri", () => {
   before(async () => {
     await browser.reloadObsidian({ vault: "./e2e/fixtures/e2e-uri", plugins: ["journals"] });
     await seedNote("baseline.md", "baseline\n");
+    // The weekly journal points at this template; seed it so a URI-created weekly entry
+    // has a template body to apply (issue #85).
+    await seedNote("uri-weekly-template.md", "Weekly template for {{journal_name}}.\n");
   });
 
   describe("by journal name", () => {
@@ -102,6 +106,18 @@ describe("open via uri", () => {
 
       await waitForActiveNote("personal/2027-04-05.md");
       await waitForJournalFrontmatter("personal/2027-04-05.md", { journal: "personal", date: "2027-04-05" });
+    });
+  });
+
+  describe("template application", () => {
+    it("applies the journal's note template to a URI-created entry", async () => {
+      await openViaUri({ journal: "weekly", date: "2027-09-06" });
+      const path = await waitForActiveNoteIn("week");
+      await waitForContent(
+        path,
+        (content) => content.includes("Weekly template for weekly."),
+        `${path} did not receive the rendered template body`,
+      );
     });
   });
 });

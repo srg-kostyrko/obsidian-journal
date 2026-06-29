@@ -4,7 +4,7 @@ import { CalendarDate } from "@/calendar";
 import { anchor, installTestCalendar } from "@/calendar/testing";
 import { Container } from "@/infrastructure/di";
 import { LoggerModule } from "@/infrastructure/logger";
-import { TemplateContext, TemplateEngine, type FunctionInput, type Modifier } from "@/templates";
+import { FunctionHandlerToken, TemplateContext, TemplateEngine, type FunctionInput, type Modifier } from "@/templates";
 
 import { CycleService } from "../cycle";
 import { FrontmatterService } from "../frontmatter";
@@ -29,6 +29,14 @@ function buildContainer(journals: Record<string, JournalConfig>): Container {
   c.register(NotePathService).useClass(NotePathService);
   c.register(TemplateEngine).useClass(TemplateEngine);
   c.register(JournalLinkHandler).useClass(JournalLinkHandler);
+  return c;
+}
+
+// Mirrors notes/module.ts: the engine resolves handlers from FunctionHandlerToken, so a
+// {{journal_link}} token only dispatches when the handler is bound under that token.
+function buildEngineContainer(journals: Record<string, JournalConfig>): Container {
+  const c = buildContainer(journals);
+  c.register(FunctionHandlerToken).useClass(JournalLinkHandler);
   return c;
 }
 
@@ -152,5 +160,27 @@ describe("JournalLinkHandler", () => {
       engine,
     });
     expect(result.isErr()).toBe(true);
+  });
+
+  // The prod wiring registers the handler under FunctionHandlerToken (notes/module.ts), and
+  // the engine resolves handlers from that token. These render through engine.renderString
+  // so a {{journal_link(...)}} token in a note body actually dispatches to the handler.
+  describe("through the template engine (FunctionHandlerToken wiring)", () => {
+    it("resolves a {{journal_link}} token to the target note path", () => {
+      const tokenEngine = buildEngineContainer(ALL_JOURNALS).resolve(TemplateEngine);
+      expect(tokenEngine.renderString("{{journal_link(yearly)}}", crossYearWeek())).toBe("2026");
+    });
+
+    it("resolves a {{journal_link}} token embedded in note body text", () => {
+      const tokenEngine = buildEngineContainer(ALL_JOURNALS).resolve(TemplateEngine);
+      expect(tokenEngine.renderString("See [[{{journal_link(daily)}}]]", crossYearWeek())).toBe("See [[2025-12-29]]");
+    });
+
+    it("leaves the token unresolved when no handler is registered under the token", () => {
+      // Guards the assertions above: without the FunctionHandlerToken binding the engine
+      // cannot dispatch, so a passing render proves the wiring, not the grammar alone.
+      const bareEngine = buildContainer(ALL_JOURNALS).resolve(TemplateEngine);
+      expect(bareEngine.renderString("{{journal_link(yearly)}}", crossYearWeek())).toBe("{{journal_link(yearly)}}");
+    });
   });
 });
