@@ -4,7 +4,7 @@ import { afterEach, beforeEach, describe, expect, it } from "vitest";
 import { defineComponent, h, inject as vInject, nextTick, ref, type Ref } from "vue";
 
 import { CalendarDate, DayPeriod, WeekPeriod } from "@/calendar";
-import type { AnchorString } from "@/calendar";
+import type { Period } from "@/calendar";
 import { installTestCalendar } from "@/calendar/testing";
 import { Container, provideInjectorOnApp } from "@/infrastructure/di";
 import { NoteMetadataService, NotesService, type NotesEvents, type VaultPath } from "@/infrastructure/host";
@@ -13,10 +13,15 @@ import { CycleService, JournalsIndex, JournalsRepository } from "@/journals";
 import type { JournalConfig } from "@/journals/config";
 import { fakeRepo, fixedJournal } from "@/journals/testing";
 
-import { DecorationEngine } from "./engine";
+import { cellKey, DecorationEngine } from "./engine";
 import { buildCondition, buildDecoration, buildStyle } from "./testing";
 import { CellDecorationMapKey, type CellStyleRef } from "./ui/cell-decoration-map-key";
 import { useCellDecorations } from "./use-cell-decorations";
+
+// The cell map is keyed by period kind + anchor; mirror that for lookups.
+function key(period: Period): string {
+  return cellKey(period.kind, period.anchor.toAnchor());
+}
 
 interface Harness {
   c: Container;
@@ -65,7 +70,7 @@ function buildWeeklyHarness(weeklyDecorations: JournalConfig["decorations"]): Ha
   return { c, notesEmitter, fakeMetadata };
 }
 
-function makeChild(captured: { value: ReadonlyMap<AnchorString, CellStyleRef> | null }) {
+function makeChild(captured: { value: ReadonlyMap<string, CellStyleRef> | null }) {
   return defineComponent({
     template: "<div />",
     setup() {
@@ -86,12 +91,12 @@ function makeHost(Child: ReturnType<typeof makeChild>, setup: () => unknown) {
 
 function mount(
   container: Container,
-  setup: () => ReadonlyMap<AnchorString, CellStyleRef>,
+  setup: () => ReadonlyMap<string, CellStyleRef>,
 ): {
-  captured: { value: ReadonlyMap<AnchorString, CellStyleRef> | null };
+  captured: { value: ReadonlyMap<string, CellStyleRef> | null };
   unmount: () => void;
 } {
-  const captured = { value: null as ReadonlyMap<AnchorString, CellStyleRef> | null };
+  const captured = { value: null as ReadonlyMap<string, CellStyleRef> | null };
   const Child = makeChild(captured);
   const Host = makeHost(Child, setup);
   const utilities = render(Host, {
@@ -150,7 +155,7 @@ describe("useCellDecorations", () => {
       );
       await nextTick();
 
-      const slot = captured.value!.get(period.anchor.toAnchor());
+      const slot = captured.value!.get(key(period));
       expect(slot).toBeDefined();
       expect(slot!.value).toHaveLength(1);
     });
@@ -168,13 +173,13 @@ describe("useCellDecorations", () => {
 
       const { captured } = mount(c, () => useCellDecorations(periodsRef, () => ["daily"]));
       await nextTick();
-      expect(captured.value!.has(p1.anchor.toAnchor())).toBe(true);
-      expect(captured.value!.has(p2.anchor.toAnchor())).toBe(false);
+      expect(captured.value!.has(key(p1))).toBe(true);
+      expect(captured.value!.has(key(p2))).toBe(false);
 
       periodsRef.value = [p2];
       await nextTick();
-      expect(captured.value!.has(p1.anchor.toAnchor())).toBe(false);
-      expect(captured.value!.has(p2.anchor.toAnchor())).toBe(true);
+      expect(captured.value!.has(key(p1))).toBe(false);
+      expect(captured.value!.has(key(p2))).toBe(true);
     });
   });
 
@@ -189,7 +194,7 @@ describe("useCellDecorations", () => {
       );
       await nextTick();
 
-      const slot = captured.value!.get(period.anchor.toAnchor())!;
+      const slot = captured.value!.get(key(period))!;
       const initial = slot.value;
       h.notesEmitter.emit("metadata-changed", path);
       await nextTick();
@@ -206,7 +211,7 @@ describe("useCellDecorations", () => {
       );
       await nextTick();
 
-      const slot = captured.value!.get(period.anchor.toAnchor())!;
+      const slot = captured.value!.get(key(period))!;
       const initial = slot.value;
       h.notesEmitter.emit("metadata-changed", "Other/random.md" as VaultPath);
       await nextTick();
@@ -229,7 +234,7 @@ describe("useCellDecorations", () => {
         ),
       );
       await nextTick();
-      const slot = captured.value!.get(period.anchor.toAnchor())!;
+      const slot = captured.value!.get(key(period))!;
       const initial = slot.value;
 
       const path = "Daily/2026-05-25.md" as VaultPath;
@@ -260,15 +265,19 @@ describe("useCellDecorations", () => {
         ),
       );
       await nextTick();
-      const slot = captured.value!.get(weekAnchor)!;
-      expect(slot.value).toHaveLength(0);
+      const weekSlot = captured.value!.get(cellKey("week", weekAnchor))!;
+      const daySlot = captured.value!.get(key(collidingDay!))!;
+      expect(weekSlot.value).toHaveLength(0);
+      expect(daySlot.value).toHaveLength(0);
 
       const path = "Weekly/2026-W24.md" as VaultPath;
       h.fakeMetadata.setMetadata(path, { title: "2026-W24", tags: [], properties: {}, tasks: [] });
       h.c.resolve(JournalsIndex).register({ journalName: "weekly", anchor: weekAnchor, path });
       await nextTick();
 
-      expect(slot.value).toHaveLength(1);
+      expect(weekSlot.value).toHaveLength(1);
+      // The weekly decoration must not leak onto the day cell that shares the week's anchor.
+      expect(daySlot.value).toHaveLength(0);
     });
 
     it("recomputes a renamed cell on the next resolved when the rename re-keyed it before the cache caught up", async () => {
@@ -293,7 +302,7 @@ describe("useCellDecorations", () => {
         ),
       );
       await nextTick();
-      const slot = captured.value!.get(anchor)!;
+      const slot = captured.value!.get(key(period))!;
       expect(slot.value).toHaveLength(0);
 
       // The rename re-keys the entry before the new path's metadata exists, so the
@@ -321,7 +330,7 @@ describe("useCellDecorations", () => {
         ),
       );
       await nextTick();
-      const slot = captured.value!.get(period.anchor.toAnchor())!;
+      const slot = captured.value!.get(key(period))!;
       const initial = slot.value;
 
       unmount();

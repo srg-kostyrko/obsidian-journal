@@ -36,6 +36,17 @@ export function periodMatchesWrite(kind: PeriodKind, writeType: JournalWrite["ty
     .otherwise(() => false);
 }
 
+export function periodKindForWrite(writeType: JournalWrite["type"]): PeriodKind {
+  return writeType === "custom" ? "day" : writeType;
+}
+
+// A week and a day period can share an anchor date (a week's anchor is one of its days),
+// so the cell map is keyed by period kind + anchor — keying by anchor alone would merge a
+// daily decoration onto the colliding week cell and vice versa.
+export function cellKey(kind: PeriodKind, anchor: AnchorString): string {
+  return `${kind}:${anchor}`;
+}
+
 export class DecorationEngine {
   readonly #journals = inject(JournalsRepository);
   readonly #index = inject(JournalsIndex);
@@ -80,8 +91,8 @@ export class DecorationEngine {
   evaluateRange(
     periods: readonly Period[],
     decorations: readonly DecorationBinding[],
-  ): Map<AnchorString, JournalDecorationStyle[]> {
-    const result = new Map<AnchorString, JournalDecorationStyle[]>();
+  ): Map<string, JournalDecorationStyle[]> {
+    const result = new Map<string, JournalDecorationStyle[]>();
     if (periods.length === 0 || decorations.length === 0) return result;
 
     const configs = new Map<string, JournalConfig>();
@@ -110,10 +121,11 @@ export class DecorationEngine {
         if (!periodMatchesWrite(period.kind, config.write.type)) continue;
         const anchorString = period.anchor.toAnchor();
         if (!this.#matches(decoration, period, config, () => metadataFor(journalName, anchorString))) continue;
-        let bucket = result.get(anchorString);
+        const key = cellKey(period.kind, anchorString);
+        let bucket = result.get(key);
         if (!bucket) {
           bucket = [];
-          result.set(anchorString, bucket);
+          result.set(key, bucket);
         }
         bucket.push(...decoration.styles);
       }

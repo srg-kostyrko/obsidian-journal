@@ -11,6 +11,7 @@ import {
   placedFrom,
   textColorFrom,
 } from "../derive-styles";
+import { cellKey } from "../engine";
 
 import { CellDecorationMapKey, CellPaddingKey } from "./cell-decoration-map-key";
 import DecorationCorner from "./DecorationCorner.vue";
@@ -24,7 +25,7 @@ const cells = inject(CellDecorationMapKey, null);
 const sharedPadding = inject(CellPaddingKey, null);
 
 const styles = computed<readonly JournalDecorationStyle[]>(
-  () => cells?.get(props.period.anchor.toAnchor())?.value ?? [],
+  () => cells?.get(cellKey(props.period.kind, props.period.anchor.toAnchor()))?.value ?? [],
 );
 
 const background = computed(() => backgroundFrom(styles.value));

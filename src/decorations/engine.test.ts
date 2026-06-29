@@ -1,6 +1,6 @@
 import { afterEach, beforeEach, describe, expect, it } from "vitest";
 
-import { DayPeriod } from "@/calendar";
+import { DayPeriod, WeekPeriod } from "@/calendar";
 import { date, installTestCalendar } from "@/calendar/testing";
 import { Container } from "@/infrastructure/di";
 import { NoteMetadataService } from "@/infrastructure/host";
@@ -74,6 +74,39 @@ describe("DecorationEngine", () => {
       const result = engine.evaluateRange([dayPeriod], [{ journalName: "weekly", decoration }]);
 
       expect(result.size).toBe(0);
+    });
+
+    it("keeps day and week decorations in separate cells when their anchors coincide", () => {
+      const dayDeco = buildDecoration({
+        mode: "or",
+        conditions: [buildCondition("date", { day: -1, month: -1, year: null })],
+        styles: [buildStyle("corner", { placement: "top-left" })],
+      });
+      const weekDeco = buildDecoration({
+        mode: "or",
+        conditions: [buildCondition("date", { day: -1, month: -1, year: null })],
+        styles: [buildStyle("background")],
+      });
+      const { c } = buildContainer({
+        daily: fixedJournal("daily", { type: "day" }, { decorations: [dayDeco] }),
+        weekly: fixedJournal("weekly", { type: "week" }, { decorations: [weekDeco] }),
+      });
+      const engine = c.resolve(DecorationEngine);
+
+      const weekPeriod = WeekPeriod.containing(date("2026-05-25"));
+      const dayPeriod = DayPeriod.containing(date(weekPeriod.anchor.toAnchor()));
+      // Precondition: a week's anchor coincides with one day cell's anchor.
+      expect(dayPeriod.anchor.toAnchor()).toBe(weekPeriod.anchor.toAnchor());
+
+      const result = engine.evaluateRange(
+        [dayPeriod, weekPeriod],
+        [
+          { journalName: "daily", decoration: dayDeco },
+          { journalName: "weekly", decoration: weekDeco },
+        ],
+      );
+
+      expect(result.size).toBe(2);
     });
 
     it("returns no entries when conditions list is empty (v2 parity)", () => {
