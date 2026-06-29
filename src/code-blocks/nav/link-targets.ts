@@ -11,14 +11,16 @@ export type LinkTarget =
 
 export function resolveLinkTarget(
   row: NavBlockRow,
-  _noteJournal: JournalConfig,
+  noteJournal: JournalConfig,
   shelfJournals: readonly JournalConfig[],
   noteEntry: Option<JournalEntry>,
 ): LinkTarget {
   return match(row.link)
     .with("none", () => ({ kind: "none" }) as const)
     .with("self", () =>
-      noteEntry.isSome() ? ({ kind: "self", path: noteEntry.value.path } as const) : ({ kind: "none" } as const),
+      noteEntry.isSome()
+        ? ({ kind: "self", path: noteEntry.value.path } as const)
+        : ({ kind: "open", journalNames: [noteJournal.name] } as const),
     )
     .with("journal", () =>
       row.journal.length > 0

@@ -8,6 +8,7 @@ const RIBBON_OPEN_BLOCKS = '[aria-label="Open Blocks"]';
 export const WEEK_CALENDAR = `${LIVE_LEAF} .journal-view-week-calendar`;
 export const MARKDOWN_TEMPLATE = `${LIVE_LEAF} .journal-view-markdown-template`;
 export const DIVIDER = `${LIVE_LEAF} .journal-view-divider`;
+export const CUSTOM_INTERVALS = `${LIVE_LEAF} .journal-view-custom-intervals`;
 
 // The week view's day cells are bare `.notes-calendar-cell`s in the row; the
 // week-number cell is also a `.notes-calendar-cell`, so exclude it by its class.

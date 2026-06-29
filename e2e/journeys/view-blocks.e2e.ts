@@ -2,7 +2,14 @@ import { $, $$, browser, expect } from "@wdio/globals";
 
 import { activeNotePath, seedNote, waitForJournalFrontmatter } from "../support/vault.js";
 
-import { DIVIDER, MARKDOWN_TEMPLATE, openBlocksView, weekCalendar, WEEK_CALENDAR } from "./view-blocks.js";
+import {
+  CUSTOM_INTERVALS,
+  DIVIDER,
+  MARKDOWN_TEMPLATE,
+  openBlocksView,
+  weekCalendar,
+  WEEK_CALENDAR,
+} from "./view-blocks.js";
 
 // The Blocks view (e2e-views fixture) mounts the three blocks that never appear in the
 // default Calendar view. The view-leaf mount is the real seam: a ribbon click renders
@@ -70,6 +77,25 @@ describe("blocks view", () => {
     it("renders a separator element", async () => {
       await openBlocksView();
       await expect($(`${DIVIDER}[role="separator"]`)).toBeExisting();
+    });
+  });
+
+  describe("custom-intervals block", () => {
+    it("creates and opens the interval note when an un-created entry is clicked", async () => {
+      await openBlocksView();
+
+      // The sprint journal seeds no notes, so every rendered interval is un-created; its
+      // "self" row must create-or-open rather than sit inert. Read a real entry's anchor
+      // instead of assuming which sprint falls in the current year window.
+      const entry = $(`${CUSTOM_INTERVALS} .journal-view-custom-intervals__entry`);
+      await entry.waitForExist({ timeoutMsg: "no custom-interval entry rendered" });
+      const anchor = (await entry.getAttribute("data-anchor")) ?? "";
+      const path = `sprint/${anchor}.md`;
+
+      await entry.$(".nav-row").click();
+
+      await waitForJournalFrontmatter(path, { journal: "sprint", date: anchor });
+      expect(await activeNotePath()).toBe(path);
     });
   });
 });

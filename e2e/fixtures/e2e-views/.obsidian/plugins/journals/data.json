@@ -30,6 +30,61 @@
         "addEndDate": false
       },
       "numbering": { "enabled": false, "anchorDate": "", "allowBefore": false, "sources": [] }
+    },
+    "sprint": {
+      "name": "sprint",
+      "write": { "type": "custom", "every": "week", "duration": 2, "anchorDate": "2026-01-05" },
+      "folder": "sprint",
+      "timeline": { "start": "", "end": { "kind": "never" } },
+      "dateFormat": "YYYY-MM-DD",
+      "frontmatter": {
+        "dateField": "journal-date",
+        "startDateField": "journal-start-date",
+        "endDateField": "journal-end-date",
+        "addStartDate": false,
+        "addEndDate": false
+      },
+      "numbering": {
+        "enabled": true,
+        "anchorDate": "2026-01-05",
+        "allowBefore": false,
+        "sources": [
+          {
+            "variable": "index",
+            "frontmatterKey": "journal-index",
+            "anchorValue": 1,
+            "reset": { "kind": "never" }
+          }
+        ]
+      },
+      "intervalBlock": {
+        "type": "create",
+        "decorateWholeBlock": true,
+        "rows": [
+          {
+            "template": "{{journal_name}} {{index}}",
+            "fontSize": 1.2,
+            "bold": true,
+            "italic": false,
+            "link": "self",
+            "journal": "",
+            "color": { "type": "theme", "name": "text-normal" },
+            "background": { "type": "transparent" },
+            "addDecorations": false
+          },
+          {
+            "template": "{{start_date}} to {{end_date}}",
+            "fontSize": 1,
+            "bold": false,
+            "italic": false,
+            "link": "none",
+            "journal": "",
+            "color": { "type": "theme", "name": "text-normal" },
+            "background": { "type": "transparent" },
+            "addDecorations": false
+          }
+        ]
+      }
     }
   },
   "views": {
@@ -55,6 +110,11 @@
           "id": "d4e5f6a7-3b4c-4d5e-9f6a-7b8c9d0e1f2a",
           "key": "divider",
           "config": {}
+        },
+        {
+          "id": "e5f6a7b8-4c5d-4e6f-8a7b-8c9d0e1f2a3b",
+          "key": "custom-intervals",
+          "config": { "window": "year", "hideEmpty": true }
         }
       ]
     }

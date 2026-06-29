@@ -35,10 +35,9 @@ describe("resolveLinkTarget", () => {
     expect(result).toEqual({ kind: "self", path: "Daily/2026-05-27.md" });
   });
 
-  it("collapses link 'self' to 'none' when entry is absent", () => {
-    expect(resolveLinkTarget({ ...baseRow, link: "self" }, noteJournal, [noteJournal], Option.none()).kind).toBe(
-      "none",
-    );
+  it("opens the note's own journal for link 'self' when entry is absent", () => {
+    const result = resolveLinkTarget({ ...baseRow, link: "self" }, noteJournal, [noteJournal], Option.none());
+    expect(result).toEqual({ kind: "open", journalNames: ["daily"] });
   });
 
   it("returns kind 'open' with the row's journal for link 'journal' when journal is set", () => {
