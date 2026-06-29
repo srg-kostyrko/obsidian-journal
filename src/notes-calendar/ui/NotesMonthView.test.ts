@@ -1,11 +1,14 @@
 import { cleanup, render } from "@testing-library/vue";
 import { afterEach, beforeAll, beforeEach, describe, expect, it, vi } from "vitest";
+import { nextTick } from "vue";
 
 import { CalendarDate, MonthPeriod } from "@/calendar";
 import { anchor, installTestCalendar } from "@/calendar/testing";
+import { buildCondition, buildDecoration, buildStyle } from "@/decorations/testing";
 import { initLocale } from "@/i18n";
 import { provideInjectorOnApp } from "@/infrastructure/di";
-import { fixedJournal } from "@/journals/testing";
+import type { VaultPath } from "@/infrastructure/host";
+import { customJournal, fixedJournal } from "@/journals/testing";
 
 import { buildNotesCalendarHarness, type NotesCalendarHarness } from "../testing";
 
@@ -202,6 +205,31 @@ describe("NotesMonthView", () => {
       const h = buildNotesCalendarHarness({ journals: { monthly: fixedJournal("monthly", { type: "month" }) } });
       const { container } = mount(h, { shelf: null, month });
       expect(container.querySelector(".notes-month-view__header")).not.toBeNull();
+    });
+  });
+
+  describe("custom interval decorations", () => {
+    // A custom interval is anchored to its start date, which coincides with one day cell's
+    // anchor. The day calendar grid renders fixed-period journals only; a custom interval's
+    // decoration belongs in the interval list, never on the day cell sharing its anchor.
+    it("does not decorate the day cell sharing a custom interval's start anchor", async () => {
+      const decoration = buildDecoration({
+        mode: "or",
+        conditions: [buildCondition("has-note")],
+        styles: [buildStyle("corner")],
+      });
+      const h = buildNotesCalendarHarness({
+        journals: { sprint: customJournal("sprint", "week", 2, "2026-08-03", { decorations: [decoration] }) },
+      });
+      const path = "sprint/2026-08-03.md" as VaultPath;
+      h.index.register({ journalName: "sprint", anchor: anchor("2026-08-03"), path });
+      h.metadata.setMetadata(path, { title: "2026-08-03", tags: [], properties: {}, tasks: [] });
+
+      const { container } = mount(h, { shelf: null, month });
+      await nextTick();
+
+      const cell = container.querySelector('.notes-month-view__day[data-anchor="2026-08-03"]');
+      expect(cell?.querySelector(".decoration-corner")).toBeNull();
     });
   });
 

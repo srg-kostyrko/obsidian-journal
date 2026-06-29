@@ -4,6 +4,7 @@ import { computed, onMounted, onUnmounted, shallowRef } from "vue";
 import type { AnchorString } from "@/calendar";
 import { periodForJournal } from "@/code-blocks/nav/period-for-journal";
 import NavBlock from "@/code-blocks/nav/ui/NavBlock.vue";
+import { useCellDecorations } from "@/decorations";
 import { useService } from "@/infrastructure/di";
 import { CycleService, JournalsIndex, JournalsRepository, TimelineService } from "@/journals";
 import type { JournalConfig, JournalNavBlock } from "@/journals";
@@ -69,6 +70,17 @@ const sections = computed<readonly Section[]>(() => {
   }
   return out;
 });
+
+// Each interval is a "day"-kind period at its start anchor, so the engine and CellDecoration
+// agree on the cell key; scoping to the rendered custom journals keeps fixed-period decorations
+// (which live on the calendar grid) out of the interval list.
+useCellDecorations(
+  () =>
+    sections.value.flatMap((section) =>
+      section.entries.map((entry) => periodForJournal(section.journal.write, entry.anchor)),
+    ),
+  () => sections.value.map((section) => section.journalName),
+);
 </script>
 
 <template>

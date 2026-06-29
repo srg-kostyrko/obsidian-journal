@@ -7,6 +7,7 @@ import { ShelvesRepository } from "@/shelves";
 
 export interface ShelfScope {
   readonly all: ComputedRef<readonly string[]>;
+  readonly fixed: ComputedRef<readonly string[]>;
   readonly day: ComputedRef<readonly string[]>;
   readonly week: ComputedRef<readonly string[]>;
   readonly month: ComputedRef<readonly string[]>;
@@ -31,6 +32,11 @@ export function useShelfScope(shelfName: MaybeRefOrGetter<string | null>): Shelf
 
   return {
     all: computed(() => scopedJournals.value.map((journal) => journal.name)),
+    // Journals that own a calendar-grid cell. Custom intervals are anchored to a start date
+    // that collides with a day cell, so they are excluded — they render in the interval list.
+    fixed: computed(() =>
+      scopedJournals.value.filter((journal) => journal.write.type !== "custom").map((journal) => journal.name),
+    ),
     day: namesOfWrite(scopedJournals, "day"),
     week: namesOfWrite(scopedJournals, "week"),
     month: namesOfWrite(scopedJournals, "month"),

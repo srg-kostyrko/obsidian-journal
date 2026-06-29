@@ -49,7 +49,7 @@ const allPeriods = computed<readonly Period[]>(() => {
 
 useCellDecorations(
   () => allPeriods.value,
-  () => scope.all.value,
+  () => scope.fixed.value,
 );
 </script>
 

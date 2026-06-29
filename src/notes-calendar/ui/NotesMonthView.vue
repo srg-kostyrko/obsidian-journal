@@ -75,7 +75,7 @@ const visiblePeriods = computed<readonly Period[]>(() => {
 
 useCellDecorations(
   () => visiblePeriods.value,
-  () => scope.all.value,
+  () => scope.fixed.value,
 );
 
 const noop = (): void => {

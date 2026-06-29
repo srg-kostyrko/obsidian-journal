@@ -1,10 +1,15 @@
 import { cleanup, render } from "@testing-library/vue";
+import { createNanoEvents } from "nanoevents";
 import { afterEach, beforeAll, describe, expect, it, vi } from "vitest";
-import { computed, defineComponent, h, ref } from "vue";
+import { computed, defineComponent, h, nextTick, ref } from "vue";
 
 import { installTestCalendar } from "@/calendar/testing";
 import type { AnchorString } from "@/calendar/types";
+import { DecorationEngine } from "@/decorations";
+import { buildCondition, buildDecoration, buildStyle } from "@/decorations/testing";
 import { Container, provideInjectorOnApp } from "@/infrastructure/di";
+import { NoteMetadataService, NotesService, type NotesEvents, type VaultPath } from "@/infrastructure/host";
+import { FakeNoteMetadataService } from "@/infrastructure/host/testing";
 import { CycleService, JournalsIndex, JournalsRepository, TimelineService } from "@/journals";
 import type { JournalConfig } from "@/journals";
 import { customJournal, fakeRepo } from "@/journals/testing";
@@ -20,6 +25,7 @@ import type { BlockInstanceId } from "../../config";
 vi.mock("@/notes-calendar/use-shelf-scope", () => ({
   useShelfScope: () => ({
     all: computed(() => SCOPE.custom),
+    fixed: computed<readonly string[]>(() => []),
     day: computed<readonly string[]>(() => []),
     week: computed<readonly string[]>(() => []),
     month: computed<readonly string[]>(() => []),
@@ -37,6 +43,9 @@ vi.mock("@/code-blocks/nav/ui/NavBlockRow.vue", () => ({
   }),
 }));
 
+const cornerHasNote = (): JournalConfig["decorations"][number] =>
+  buildDecoration({ mode: "or", conditions: [buildCondition("has-note")], styles: [buildStyle("corner")] });
+
 const SCOPE: { custom: readonly string[] } = { custom: [] };
 
 const JOURNALS: Record<string, JournalConfig> = {};
@@ -50,6 +59,11 @@ function mountBlock(config: CustomIntervalsConfig, contextOverride: Partial<View
   container.register(CycleService).useClass(CycleService);
   container.register(TimelineService).useClass(TimelineService);
   container.register(ActiveEntryViewModel).useValue({ active: ACTIVE } as unknown as ActiveEntryViewModel);
+  container.register(DecorationEngine).useClass(DecorationEngine);
+  const metadata = new FakeNoteMetadataService();
+  container.register(NoteMetadataService).useValue(metadata as unknown as NoteMetadataService);
+  container.register(NotesService).useValue({ events: createNanoEvents<NotesEvents>() } as unknown as NotesService);
+  const index = container.resolve(JournalsIndex);
   const context = provideViewContextStub(contextOverride);
   const renderRoot = () => h(customIntervalsBlock.component, { instanceId: "block-1" as BlockInstanceId, config });
   const Wrapper = defineComponent({
@@ -58,9 +72,13 @@ function mountBlock(config: CustomIntervalsConfig, contextOverride: Partial<View
       return renderRoot;
     },
   });
-  return render(Wrapper, {
-    global: { plugins: [{ install: (app) => provideInjectorOnApp(app, container) }] },
-  });
+  return {
+    ...render(Wrapper, {
+      global: { plugins: [{ install: (app) => provideInjectorOnApp(app, container) }] },
+    }),
+    index,
+    metadata,
+  };
 }
 
 beforeAll(() => {
@@ -183,5 +201,35 @@ describe("CustomIntervalsBlock", () => {
       { refDate: ref("2026-05-15" as AnchorString) },
     );
     expect(container.querySelectorAll(".journal-view-custom-intervals__entry[data-active]").length).toBe(0);
+  });
+
+  describe("decorations", () => {
+    it("decorates the interval entry whose note matches the journal decoration", async () => {
+      SCOPE.custom = ["foo"];
+      JOURNALS.foo = customJournal("foo", "day", 1, "2026-01-01", { decorations: [cornerHasNote()] });
+      const view = mountBlock({ window: "month", hideEmpty: false }, { refDate: ref("2026-05-15" as AnchorString) });
+
+      const path = "foo/2026-05-12.md" as VaultPath;
+      view.metadata.setMetadata(path, { title: "2026-05-12", tags: [], properties: {}, tasks: [] });
+      view.index.register({ journalName: "foo", anchor: "2026-05-12" as AnchorString, path });
+      await nextTick();
+
+      const entry = view.container.querySelector('.journal-view-custom-intervals__entry[data-anchor="2026-05-12"]');
+      expect(entry?.querySelector(".decoration-corner")).not.toBeNull();
+    });
+
+    it("leaves an interval entry without a note undecorated", async () => {
+      SCOPE.custom = ["foo"];
+      JOURNALS.foo = customJournal("foo", "day", 1, "2026-01-01", { decorations: [cornerHasNote()] });
+      const view = mountBlock({ window: "month", hideEmpty: false }, { refDate: ref("2026-05-15" as AnchorString) });
+
+      const path = "foo/2026-05-12.md" as VaultPath;
+      view.metadata.setMetadata(path, { title: "2026-05-12", tags: [], properties: {}, tasks: [] });
+      view.index.register({ journalName: "foo", anchor: "2026-05-12" as AnchorString, path });
+      await nextTick();
+
+      const bare = view.container.querySelector('.journal-view-custom-intervals__entry[data-anchor="2026-05-13"]');
+      expect(bare?.querySelector(".decoration-corner")).toBeNull();
+    });
   });
 });

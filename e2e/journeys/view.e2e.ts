@@ -36,6 +36,21 @@ import { calendar, LIVE_LEAF, MONTH_VIEW, openCalendarView, TOOLBAR } from "./vi
 const headerMonthAnchor = async (): Promise<string | undefined> =>
   (await calendar.periodCell("header-month").getAttribute("data-anchor")) ?? undefined;
 
+const pad2 = (n: number): string => String(n).padStart(2, "0");
+
+// The sprint runs in 2-week intervals anchored at 2026-01-05 (see the fixture). The first start
+// on or after the displayed month always lands inside it, so its day cell is on the grid and the
+// interval list projects it for the current month.
+function sprintAnchorThisMonth(): string {
+  const day = 24 * 60 * 60 * 1000;
+  const seriesStart = Date.UTC(2026, 0, 5);
+  const now = new Date();
+  const monthStart = Date.UTC(now.getFullYear(), now.getMonth(), 1);
+  const steps = Math.max(0, Math.ceil((monthStart - seriesStart) / (14 * day)));
+  const d = new Date(seriesStart + steps * 14 * day);
+  return `${d.getUTCFullYear()}-${pad2(d.getUTCMonth() + 1)}-${pad2(d.getUTCDate())}`;
+}
+
 describe("calendar view", () => {
   describe("journeys", () => {
     before(async () => {
@@ -402,6 +417,59 @@ describe("calendar view", () => {
         (value) => value === "true",
         "the open custom-interval note's entry did not become active",
       );
+    });
+
+    // The interval list is where a custom journal's decoration belongs (sprint decorates its
+    // whole block on has-note); the entry gains its decoration once the seeded note is indexed.
+    it("decorates the interval entry once its sprint note exists", async () => {
+      await openCalendarView();
+
+      const firstEntry = $(`${sprintSection} .journal-view-custom-intervals__entry`);
+      await firstEntry.waitForExist({ timeoutMsg: "no projected sprint entry to anchor the test on" });
+      const anchor = (await firstEntry.getAttribute("data-anchor")) ?? "";
+      const path = `sprint/${anchor}.md`;
+      await seedNote(path, note("sprint", anchor));
+      await waitForFrontmatter(path, (fm) => fm.journal === "sprint", `waited for ${path} to be indexed`);
+
+      await $(`${sprintSection} [data-anchor="${anchor}"] .decoration-corner`).waitForExist({
+        timeoutMsg: "interval entry did not gain its has-note decoration after the note was indexed",
+      });
+    });
+  });
+
+  describe("custom interval grid decorations", () => {
+    const sprintSection = `${LIVE_LEAF} .journal-view-custom-intervals [data-journal="sprint"]`;
+
+    // Own boot so the calendar's ref date is today (the sibling describe navigates it), keeping
+    // the grid and the interval list on the same month as the anchor computed below.
+    before(async () => {
+      await browser.reloadObsidian({ vault: "./e2e/fixtures/e2e-journeys", plugins: ["journals"] });
+    });
+
+    // A custom interval is anchored to its start date, which coincides with one day cell's
+    // anchor. v2 only ever rendered a custom interval's decoration in the interval list, never
+    // on the day calendar grid; the day cell sharing that anchor must stay undecorated even
+    // though the interval note (matching the sprint's has-note decoration) exists.
+    it("keeps the custom interval's decoration off the day cell at its start anchor", async () => {
+      await openCalendarView();
+
+      const anchor = sprintAnchorThisMonth();
+      const path = `sprint/${anchor}.md`;
+      await seedNote(path, note("sprint", anchor));
+      await waitForFrontmatter(path, (fm) => fm.journal === "sprint", `waited for ${path} to be indexed`);
+      await openNote(path);
+
+      // The interval entry going active proves the index and view have processed the seeded
+      // note, so the day cell's decoration eval (driven off the same index event) has settled
+      // before we assert it carries nothing.
+      const entry = $(`${sprintSection} [data-anchor="${anchor}"]`);
+      await waitForState(
+        async () => (await entry.getAttribute("data-active")) ?? undefined,
+        (value) => value === "true",
+        "the open custom-interval note's entry did not become active",
+      );
+
+      await expect(calendar.cell(anchor).$(".decoration-corner")).not.toExist();
     });
   });
 

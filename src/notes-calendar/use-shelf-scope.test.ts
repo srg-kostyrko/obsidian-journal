@@ -84,6 +84,18 @@ describe("useShelfScope", () => {
     expect([...scope.month.value]).toEqual([]);
   });
 
+  it("excludes custom-interval journals from the fixed bucket", () => {
+    const { c } = build({
+      daily: fixedJournal("daily", { type: "day" }),
+      weekly: fixedJournal("weekly", { type: "week" }),
+      custom1: customJournal("custom1", "day", 3, "2026-01-01"),
+    });
+
+    const { scope } = mountAndCapture(c, () => null);
+
+    expect([...scope.fixed.value]).toEqual(["daily", "weekly"]);
+  });
+
   it("filters journals to those listed by the named shelf", () => {
     const { c } = build(
       {

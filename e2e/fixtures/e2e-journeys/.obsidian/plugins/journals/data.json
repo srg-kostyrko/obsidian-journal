@@ -540,9 +540,29 @@
         "allowBefore": false,
         "sources": []
       },
+      "decorations": [
+        {
+          "mode": "and",
+          "conditions": [
+            {
+              "type": "has-note"
+            }
+          ],
+          "styles": [
+            {
+              "type": "corner",
+              "placement": "top-left",
+              "color": {
+                "type": "custom",
+                "color": "#ff00ff"
+              }
+            }
+          ]
+        }
+      ],
       "intervalBlock": {
         "type": "create",
-        "decorateWholeBlock": false,
+        "decorateWholeBlock": true,
         "rows": [
           {
             "template": "{{date}}",
