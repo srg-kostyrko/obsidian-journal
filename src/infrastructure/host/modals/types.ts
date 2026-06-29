@@ -1,6 +1,6 @@
 import type { Component } from "vue";
 
-export interface ModalDefinitionInput<TProps, _TResult> {
+export interface ModalDefinitionInput<TProps> {
   component: Component;
   title: (props: TProps) => string;
   width?: number | ((props: TProps) => number);

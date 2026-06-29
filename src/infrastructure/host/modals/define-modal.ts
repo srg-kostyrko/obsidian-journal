@@ -1,9 +1,9 @@
 import type { ModalDefinition, ModalDefinitionInput } from "./types";
 
 export function defineModal<TResult = void>(): <TProps>(
-  input: ModalDefinitionInput<TProps, TResult>,
+  input: ModalDefinitionInput<TProps>,
 ) => ModalDefinition<TProps, TResult> {
-  return <TProps>(input: ModalDefinitionInput<TProps, TResult>): ModalDefinition<TProps, TResult> => {
+  return <TProps>(input: ModalDefinitionInput<TProps>): ModalDefinition<TProps, TResult> => {
     const rawWidth = input.width;
     let width: ((props: TProps) => number) | undefined;
     if (rawWidth === undefined) {
