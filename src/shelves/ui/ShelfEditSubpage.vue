@@ -9,6 +9,7 @@ import type { JournalConfig } from "@/journals";
 import { BulkAddFlow } from "@/journals/notes/bulk-add/flows/bulk-add.flow";
 import type { SubpageNav } from "@/settings";
 import { icons } from "@/ui/icons";
+import UiBackLink from "@/ui/UiBackLink.vue";
 import UiCollapsibleBlock from "@/ui/UiCollapsibleBlock.vue";
 import UiIconButton from "@/ui/UiIconButton.vue";
 import UiIconedRow from "@/ui/UiIconedRow.vue";
@@ -69,10 +70,11 @@ function remove(journalName: string): void {
 
 <template>
   <div v-if="shelf">
+    <UiBackLink @click="nav.back()" />
+
     <UiSettingRow heading>
-      <template #name>{{ m.shelf_edit_header_title({ name: shelf.name }) }}</template>
+      <template #name>{{ shelf.name }}</template>
       <UiIconButton :icon="icons.action.edit" :tooltip="m.shelf_rename()" @click="rename" />
-      <UiIconButton :icon="icons.nav.back" :tooltip="m.journal_edit_back_tooltip()" @click="nav.back()" />
     </UiSettingRow>
 
     <UiCollapsibleBlock v-model:expanded="expanded">

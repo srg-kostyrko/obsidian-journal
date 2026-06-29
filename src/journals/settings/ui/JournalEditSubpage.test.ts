@@ -121,24 +121,29 @@ function mount(container: Container, journalName: string, nav: { back: () => voi
 }
 
 describe("JournalEditSubpage", () => {
-  it("renders the header with name and write description", async () => {
-    const { container } = await setup();
-    mount(container, "daily");
-    expect(
-      screen.getByText(
-        m.journal_edit_header_title({
-          name: "daily",
-          writing: m.journal_write({ type: "day", every: "day", duration: 1 }),
-        }),
-      ),
-    ).toBeTruthy();
+  it("renders the journal name", async () => {
+    const { container } = await setup({
+      version: 4,
+      journals: { work: makeJournal("work", { write: { type: "week" } }) },
+    });
+    mount(container, "work");
+    expect(screen.getByText("work")).toBeTruthy();
   });
 
-  it("calls nav.back when the back button is clicked", async () => {
+  it("renders the write frequency", async () => {
+    const { container } = await setup({
+      version: 4,
+      journals: { work: makeJournal("work", { write: { type: "week" } }) },
+    });
+    mount(container, "work");
+    expect(screen.getByText(m.journal_write({ type: "week", every: "day", duration: 1 }))).toBeTruthy();
+  });
+
+  it("calls nav.back when the back breadcrumb is clicked", async () => {
     const back = vi.fn();
     const { container } = await setup();
     mount(container, "daily", { back, push: () => undefined });
-    await userEvent.click(screen.getByLabelText(m.journal_edit_back_tooltip()));
+    await userEvent.click(screen.getByRole("button", { name: m.common_label_back() }));
     expect(back).toHaveBeenCalledTimes(1);
   });
 

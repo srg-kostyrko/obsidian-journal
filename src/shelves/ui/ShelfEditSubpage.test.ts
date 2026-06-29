@@ -116,11 +116,11 @@ describe("ShelfEditSubpage", () => {
     expect(flows.invoke).toHaveBeenCalledWith(EditShelfNameFlow, { shelfName: "Work" });
   });
 
-  it("calls nav.back when the back button is clicked", async () => {
+  it("calls nav.back when the back breadcrumb is clicked", async () => {
     const { container } = await setup({ shelves: { Work: { name: "Work", journals: [] } } });
     const back = vi.fn();
     mount(container, "Work", { back, push: () => undefined });
-    await userEvent.click(screen.getByLabelText(m.journal_edit_back_tooltip()));
+    await userEvent.click(screen.getByRole("button", { name: m.common_label_back() }));
     expect(back).toHaveBeenCalled();
   });
 

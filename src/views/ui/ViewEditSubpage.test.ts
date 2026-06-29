@@ -98,6 +98,13 @@ describe("ViewEditSubpage", () => {
     expect(nav.back).toHaveBeenCalled();
   });
 
+  it("calls nav.back when the back breadcrumb is clicked", async () => {
+    const { container } = await setup();
+    const { nav } = mount(container);
+    await userEvent.click(screen.getByRole("button", { name: m.common_label_back() }));
+    expect(nav.back).toHaveBeenCalled();
+  });
+
   it("toggles showInRibbon", async () => {
     const { container } = await setup();
     mount(container);

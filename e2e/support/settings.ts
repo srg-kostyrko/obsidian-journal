@@ -56,8 +56,10 @@ export async function expandSection(title: string): Promise<void> {
   await $(`.collapsible-trigger*=${title}`).click();
 }
 
+// Every edit subpage opens with a breadcrumb back link (UiBackLink): an icon plus the
+// "Back to list" label, so it's a text button rather than an icon button.
 export async function goBack(): Promise<void> {
-  await clickIcon("Back to list");
+  await clickButton("Back to list");
 }
 
 export async function openShelfSubpage(shelf: string): Promise<void> {

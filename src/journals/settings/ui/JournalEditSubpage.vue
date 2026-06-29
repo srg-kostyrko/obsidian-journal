@@ -7,6 +7,7 @@ import { Flows } from "@/infrastructure/flows";
 import { JournalsViewModel } from "@/journals/view-model";
 import type { SubpageNav } from "@/settings";
 import { icons } from "@/ui/icons";
+import UiBackLink from "@/ui/UiBackLink.vue";
 import UiIconButton from "@/ui/UiIconButton.vue";
 import UiSettingRow from "@/ui/UiSettingRow.vue";
 
@@ -41,10 +42,14 @@ function rename(): void {
 
 <template>
   <div v-if="config">
+    <UiBackLink @click="nav.back()" />
+
     <UiSettingRow heading>
-      <template #name>{{ m.journal_edit_header_title({ name: journalName, writing }) }}</template>
+      <template #name>
+        {{ journalName }}
+        <span class="flair">{{ writing }}</span>
+      </template>
       <UiIconButton :icon="icons.action.edit" :tooltip="m.journal_edit_rename_tooltip()" @click="rename" />
-      <UiIconButton :icon="icons.nav.back" :tooltip="m.journal_edit_back_tooltip()" @click="nav.back()" />
     </UiSettingRow>
 
     <component :is="section.component" v-for="section in editSections" :key="section.key" :journal-name="journalName" />
