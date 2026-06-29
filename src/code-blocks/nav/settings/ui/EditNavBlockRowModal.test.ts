@@ -12,6 +12,7 @@ import { FakeModalService, provideModalApiOnApp } from "@/infrastructure/host/mo
 import {
   CycleService,
   JournalsIndex,
+  NumberingService,
   JournalsRepository,
   JournalsViewModel,
   journalDefaultsFor,
@@ -47,6 +48,7 @@ function mountModal(options: {
   container.register(TemplateEngine).useClass(TemplateEngine);
   container.register(CycleService).useClass(CycleService);
   container.register(JournalsIndex).useClass(JournalsIndex);
+  container.register(NumberingService).useClass(NumberingService);
   render(EditNavBlockRowModal, {
     props: { journalName: "daily", row: options.row },
     global: {

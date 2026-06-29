@@ -11,6 +11,7 @@ import {
   CycleService,
   JournalsIndex,
   JournalsRepository,
+  NumberingService,
   journalDefaultsFor,
   type JournalConfig,
   type JournalEntry,
@@ -21,13 +22,14 @@ import { buildNavRowContext } from "./nav-row-context";
 
 installTestCalendar();
 
-function makeCycle(journals: Record<string, JournalConfig>): CycleService {
+function makeServices(journals: Record<string, JournalConfig>): { cycle: CycleService; numbering: NumberingService } {
   const c = new Container();
   c.register(LoggerFactoryToken).useClass(LoggerFactory);
   c.register(JournalsRepository).useValue(fakeRepo(journals));
   c.register(JournalsIndex).useClass(JournalsIndex);
   c.register(CycleService).useClass(CycleService);
-  return c.resolve(CycleService);
+  c.register(NumberingService).useClass(NumberingService);
+  return { cycle: c.resolve(CycleService), numbering: c.resolve(NumberingService) };
 }
 
 const today = "2026-05-27" as AnchorString;
@@ -37,10 +39,17 @@ describe("buildNavRowContext", () => {
   beforeAll(() => initLocale("en"));
 
   const dailyConfig = journalDefaultsFor({ type: "day" }, "daily");
-  const cycle = makeCycle({ daily: dailyConfig });
+  const { cycle, numbering } = makeServices({ daily: dailyConfig });
 
   it("exposes refDate as the `date` variable using the journal's dateFormat", () => {
-    const context = buildNavRowContext({ journal: dailyConfig, refDate, entry: Option.none(), cycle, today });
+    const context = buildNavRowContext({
+      journal: dailyConfig,
+      refDate,
+      entry: Option.none(),
+      cycle,
+      numbering,
+      today,
+    });
     const spec = context.get("date");
     assert(spec?.kind === "date");
     expect(spec.value.toAnchor()).toBe("2026-05-26");
@@ -48,12 +57,26 @@ describe("buildNavRowContext", () => {
   });
 
   it("renders journal_name as the journal's name", () => {
-    const context = buildNavRowContext({ journal: dailyConfig, refDate, entry: Option.none(), cycle, today });
+    const context = buildNavRowContext({
+      journal: dailyConfig,
+      refDate,
+      entry: Option.none(),
+      cycle,
+      numbering,
+      today,
+    });
     expect(context.get("journal_name")).toEqual({ kind: "string", value: "daily" });
   });
 
   it("renders relative_date for a fixed journal", () => {
-    const context = buildNavRowContext({ journal: dailyConfig, refDate, entry: Option.none(), cycle, today });
+    const context = buildNavRowContext({
+      journal: dailyConfig,
+      refDate,
+      entry: Option.none(),
+      cycle,
+      numbering,
+      today,
+    });
     expect(context.get("relative_date")).toEqual({ kind: "string", value: "Yesterday" });
   });
 
@@ -62,12 +85,13 @@ describe("buildNavRowContext", () => {
       { type: "custom", every: "week", duration: 2, anchorDate: "2024-01-01" as AnchorString },
       "biweekly",
     );
-    const cycleCustom = makeCycle({ biweekly: customConfig });
+    const custom = makeServices({ biweekly: customConfig });
     const context = buildNavRowContext({
       journal: customConfig,
       refDate,
       entry: Option.none(),
-      cycle: cycleCustom,
+      cycle: custom.cycle,
+      numbering: custom.numbering,
       today,
     });
     expect(context.get("relative_date")).toEqual({ kind: "string", value: "" });
@@ -80,12 +104,43 @@ describe("buildNavRowContext", () => {
       path: "Daily/2026-05-26.md" as VaultPath,
       numbers: { index: 42 },
     };
-    const context = buildNavRowContext({ journal: dailyConfig, refDate, entry: Option.some(entry), cycle, today });
+    const context = buildNavRowContext({
+      journal: dailyConfig,
+      refDate,
+      entry: Option.some(entry),
+      cycle,
+      numbering,
+      today,
+    });
     expect(context.get("index")).toEqual({ kind: "number", value: 42 });
   });
 
-  it("omits index when entry has no numbers", () => {
-    const context = buildNavRowContext({ journal: dailyConfig, refDate, entry: Option.none(), cycle, today });
+  it("omits index when entry has no numbers for a fixed journal", () => {
+    const context = buildNavRowContext({
+      journal: dailyConfig,
+      refDate,
+      entry: Option.none(),
+      cycle,
+      numbering,
+      today,
+    });
     expect(context.get("index")).toBeUndefined();
+  });
+
+  it("computes index for a custom journal even when no note entry exists", () => {
+    const customConfig = journalDefaultsFor(
+      { type: "custom", every: "week", duration: 2, anchorDate: "2024-01-01" as AnchorString },
+      "biweekly",
+    );
+    const custom = makeServices({ biweekly: customConfig });
+    const context = buildNavRowContext({
+      journal: customConfig,
+      refDate: "2024-01-15" as AnchorString,
+      entry: Option.none(),
+      cycle: custom.cycle,
+      numbering: custom.numbering,
+      today,
+    });
+    expect(context.get("index")).toEqual({ kind: "number", value: 2 });
   });
 });

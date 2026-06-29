@@ -11,6 +11,7 @@ import {
   CycleService,
   JournalsIndex,
   JournalsRepository,
+  NumberingService,
   OpenDateFlow,
   type JournalConfig,
   type JournalEntry,
@@ -33,6 +34,7 @@ const props = defineProps<{
 const journals = useService(JournalsRepository);
 const index = useService(JournalsIndex);
 const cycle = useService(CycleService);
+const numbering = useService(NumberingService);
 const shelves = useService(ShelvesRepository);
 const engine = useService(TemplateEngine);
 const flows = useService(Flows);
@@ -59,6 +61,7 @@ const text = computed(() =>
       refDate: props.refDate,
       entry: entry.value,
       cycle,
+      numbering,
       today: today.value,
     }),
   ),

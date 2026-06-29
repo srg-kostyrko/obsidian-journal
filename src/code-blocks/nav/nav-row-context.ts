@@ -1,8 +1,8 @@
 import { match } from "ts-pattern";
 
 import { CalendarDate, relativeDate, type AnchorString, type PeriodKind } from "@/calendar";
-import type { Option } from "@/infrastructure/result";
-import type { CycleService, JournalConfig, JournalEntry, JournalWrite } from "@/journals";
+import { Option } from "@/infrastructure/result";
+import type { CycleService, JournalConfig, JournalEntry, NumberingService, JournalWrite } from "@/journals";
 import { TemplateContext } from "@/templates";
 
 export interface NavRowContextInputs {
@@ -10,6 +10,7 @@ export interface NavRowContextInputs {
   readonly refDate: AnchorString;
   readonly entry: Option<JournalEntry>;
   readonly cycle: CycleService;
+  readonly numbering: NumberingService;
   readonly today: AnchorString;
 }
 
@@ -25,7 +26,7 @@ function fixedPeriodKindFor(write: JournalWrite): Exclude<PeriodKind, "decade"> 
 }
 
 export function buildNavRowContext(inputs: NavRowContextInputs): TemplateContext {
-  const { journal, refDate, entry, cycle, today } = inputs;
+  const { journal, refDate, entry, cycle, numbering, today } = inputs;
   const refCalendarDate = CalendarDate.fromAnchor(refDate);
   const startDate = cycle.startOf(journal.name, refDate).getOr(refCalendarDate);
   const endDate = cycle.endOf(journal.name, refDate).getOr(refCalendarDate);
@@ -39,9 +40,16 @@ export function buildNavRowContext(inputs: NavRowContextInputs): TemplateContext
     .string("relative_date", relative)
     .string("journal_name", journal.name);
 
-  if (entry.isSome()) {
-    const indexValue = entry.value.numbers?.index;
-    if (typeof indexValue === "number") context = context.number("index", indexValue);
+  // A note's stored numbers are authoritative (manual extension/renumber); fall back to the
+  // computed numbering so the row resolves the index even before the note exists.
+  const numbers =
+    entry.isSome() && entry.value.numbers
+      ? Option.some(entry.value.numbers)
+      : numbering.assignNumbers(journal.name, refDate);
+  if (numbers.isSome()) {
+    for (const [variable, value] of Object.entries(numbers.value)) {
+      if (typeof value === "number") context = context.number(variable, value);
+    }
   }
   return context;
 }

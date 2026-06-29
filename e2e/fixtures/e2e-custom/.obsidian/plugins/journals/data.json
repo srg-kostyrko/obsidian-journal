@@ -38,6 +38,28 @@
         "end": {
           "kind": "never"
         }
+      },
+      "navBlock": {
+        "type": "create",
+        "decorateWholeBlock": false,
+        "rows": [
+          {
+            "template": "Sprint {{index}}",
+            "fontSize": 1,
+            "bold": false,
+            "italic": false,
+            "color": {
+              "type": "theme",
+              "name": "text-normal"
+            },
+            "background": {
+              "type": "transparent"
+            },
+            "link": "self",
+            "journal": "",
+            "addDecorations": false
+          }
+        ]
       }
     }
   }

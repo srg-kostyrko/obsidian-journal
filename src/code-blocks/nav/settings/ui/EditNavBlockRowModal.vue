@@ -12,6 +12,7 @@ import {
   CycleService,
   JournalsIndex,
   JournalsViewModel,
+  NumberingService,
   navBlockRowSchema,
   type JournalConfig,
   type NavBlockRow,
@@ -38,6 +39,7 @@ const api = useModal<{ row: NavBlockRow }>();
 const journalsVM = useService(JournalsViewModel);
 const engine = useService(TemplateEngine);
 const cycle = useService(CycleService);
+const numbering = useService(NumberingService);
 const index = useService(JournalsIndex);
 
 const config = computed<JournalConfig | undefined>(() =>
@@ -107,6 +109,7 @@ const resolved = computed(() => {
       refDate: today,
       entry: index.entryByAnchor(config.value.name, today),
       cycle,
+      numbering,
       today,
     }),
   );

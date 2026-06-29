@@ -12,6 +12,7 @@ import { WorkspaceService } from "@/infrastructure/host";
 import {
   CycleService,
   JournalsIndex,
+  NumberingService,
   JournalsRepository,
   JournalsViewModel,
   journalDefaultsFor,
@@ -51,6 +52,7 @@ function mount(rows: NavBlockRow[]) {
   container.register(TemplateEngine).useClass(TemplateEngine);
   container.register(CycleService).useClass(CycleService);
   container.register(JournalsIndex).useClass(JournalsIndex);
+  container.register(NumberingService).useClass(NumberingService);
   container.register(WorkspaceService).useValue({} as WorkspaceService);
   render(NavBlockSection, {
     props: { journalName: "daily" },

@@ -24,6 +24,7 @@ import {
   CycleService,
   JournalsIndex,
   JournalsRepository,
+  NumberingService,
   OpenDateFlow,
   journalDefaultsFor,
   type JournalConfig,
@@ -106,6 +107,7 @@ function buildHarness(journals: Record<string, JournalConfig>): Harness {
   const index = new FakeJournalsIndex();
   container.register(JournalsIndex).useValue(index as unknown as JournalsIndex);
   container.register(CycleService).useClass(CycleService);
+  container.register(NumberingService).useClass(NumberingService);
   const shelves = new FakeShelves();
   container.register(ShelvesRepository).useValue(shelves as unknown as ShelvesRepository);
   const workspace = new FakeWorkspace();
