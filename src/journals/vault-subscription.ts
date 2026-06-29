@@ -1,7 +1,7 @@
 import { TFile } from "obsidian";
 
 import { inject } from "@/infrastructure/di";
-import { InternalObsidianAppToken, NotesService } from "@/infrastructure/host";
+import { InternalObsidianAppToken, NoteMetadataService, NotesService, WorkspaceService } from "@/infrastructure/host";
 import type { VaultPath } from "@/infrastructure/host";
 import { LoggerFactoryToken } from "@/infrastructure/logger";
 import { AsyncResult } from "@/infrastructure/result";
@@ -13,6 +13,8 @@ import { JournalsIndex } from "./journals-index";
 export class VaultSubscriptionService {
   readonly #notes = inject(NotesService);
   readonly #app = inject(InternalObsidianAppToken);
+  readonly #metadata = inject(NoteMetadataService);
+  readonly #workspace = inject(WorkspaceService);
   readonly #frontmatter = inject(FrontmatterService);
   readonly #index = inject(JournalsIndex);
   readonly #settingsEvents = inject(SettingsEventsToken);
@@ -23,6 +25,29 @@ export class VaultSubscriptionService {
     for (const path of this.#notes.allMarkdownNotes()) {
       this.#scan(path);
     }
+  }
+
+  // The boot walk needs the file list complete (onLayoutReady — before it
+  // getMarkdownFiles is empty) and every note's frontmatter parsed. metadataCache
+  // resolves incrementally, so a note imported/synced before this launch reads as
+  // unresolved at boot; walking then would unregister it as frontmatter-less. Wait
+  // until every note is resolved — re-checking on each "resolved" batch — before the
+  // first walk, exactly as DataMigrationService does.
+  #rebuildWhenResolved(): void {
+    if (this.#allNotesResolved()) {
+      this.#rebuild();
+      return;
+    }
+    const dispose = this.#metadata.onResolved(() => {
+      if (!this.#allNotesResolved()) return;
+      dispose();
+      this.#rebuild();
+    });
+    this.#unsubscribes.push(dispose);
+  }
+
+  #allNotesResolved(): boolean {
+    return this.#notes.allMarkdownNotes().every((path) => this.#metadata.get(path).isSome());
   }
 
   #scan(path: VaultPath): void {
@@ -47,8 +72,6 @@ export class VaultSubscriptionService {
   }
 
   initialize(): AsyncResult<void, never> {
-    this.#rebuild();
-
     this.#unsubscribes.push(
       this.#notes.events.on("metadata-changed", (path) => this.#scan(path)),
       this.#notes.events.on("renamed", ({ from, to }) => this.#index.transferPath(from, to)),
@@ -57,6 +80,8 @@ export class VaultSubscriptionService {
       // re-scan every note to reindex against the freshly loaded journals.
       this.#settingsEvents.on("reloaded", () => this.#rebuild()),
     );
+
+    this.#workspace.onLayoutReady(() => this.#rebuildWhenResolved());
 
     return AsyncResult.ok();
   }
