@@ -18,9 +18,10 @@ const definition = computed(() =>
       return allIcons.filter((icon) => icon.toLowerCase().includes(q)).toSorted();
     },
     render: (icon, element) => {
+      element.classList.add("journal-suggestion-icon");
       const svg = renderIcon(icon);
       if (svg) element.append(svg);
-      element.append(activeDocument.createTextNode(icon));
+      element.createSpan({ text: icon });
     },
     toValue: (icon) => icon,
   }),
@@ -45,5 +46,12 @@ const definition = computed(() =>
   display: inline-flex;
   align-items: center;
   gap: var(--size-2-2);
+}
+
+/* Suggestion rows render in Obsidian's popup, outside this component's scope. */
+:global(.journal-suggestion-icon) {
+  display: flex;
+  align-items: center;
+  gap: var(--size-2-3);
 }
 </style>
