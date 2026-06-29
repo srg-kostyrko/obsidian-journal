@@ -88,3 +88,33 @@ export async function clickNavNext(): Promise<void> {
     document.querySelector<HTMLElement>(sel)?.click();
   }, NAV_NEXT);
 }
+
+export interface NavLayout {
+  // px the content overflows its box horizontally; 0 means nothing is clipped.
+  overflowX: number;
+  // distinct row offsets the prev/current/next blocks occupy; > 1 means they wrapped.
+  rows: number;
+}
+
+// The mobile overflow guard (#216) can't resize the window — this wdio-obsidian build
+// rejects setWindowSize, and app.emulateMobile() reloads the app and detaches the
+// executeObsidian bridge. Reading mode also auto-sizes .nav-view to its content, so it
+// never overflows at desktop width. Forcing the block root to a phone-pane width is the
+// only way to drive the production flex reflow: with flex-wrap the blocks stack and stay
+// clip-free; without it they'd hold one row.
+export async function narrowNavLayout(widthPx: number): Promise<NavLayout> {
+  return browser.execute(
+    (sel: string, width: number) => {
+      const views = [...document.querySelectorAll<HTMLElement>(sel)];
+      const view = views.find((v) => v.clientWidth > 0) ?? views[0];
+      if (!view) return { overflowX: -1, rows: 0 };
+      const block = view.closest<HTMLElement>(".block-language-calendar-nav");
+      if (block) block.style.width = `${width}px`;
+      void view.offsetHeight;
+      const tops = [...view.children].map((child) => Math.round(child.getBoundingClientRect().top));
+      return { overflowX: view.scrollWidth - view.clientWidth, rows: new Set(tops).size };
+    },
+    NAV_VIEW,
+    widthPx,
+  );
+}

@@ -143,11 +143,17 @@ function openAdjacent(anchor: AnchorString | null, event: MouseEvent): void {
 <style scoped>
 .nav-view {
   display: flex;
+  flex-wrap: wrap;
   justify-content: space-around;
-  gap: 50px;
+  align-items: flex-start;
+  gap: 1rem 50px;
   --icon-size: 3em;
+}
+.nav-block-relative {
+  min-width: 0;
 }
 .nav-block-placeholder {
   flex-basis: 20%;
+  min-width: 0;
 }
 </style>

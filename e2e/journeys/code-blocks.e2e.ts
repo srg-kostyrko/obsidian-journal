@@ -17,6 +17,7 @@ import {
   TIMELINE_HIDDEN_WEEKDAYS_FENCE,
   clickNavNext,
   hostNote,
+  narrowNavLayout,
   openInReadingMode,
   plainNote,
   renderBlock,
@@ -82,6 +83,17 @@ describe("code blocks", () => {
         // Transparent ink (the bug) has alpha 0; any visible theme color has alpha 1.
         // Don't assert a specific hex — theme vars resolve differently across the matrix.
         expect((color.parsed as { alpha?: number }).alpha).toBeGreaterThan(0);
+      });
+    });
+
+    describe("responsive layout", () => {
+      it("stacks the weekly nav blocks without clipping when the pane is too narrow for one row", async () => {
+        await renderBlock("nav/narrow-weekly.md", hostNote("weekly", "2025-12-29", NAV_FENCE), NAV_VIEW);
+        const layout = await narrowNavLayout(180);
+        // Blocks wrap onto more than one row (impossible without flex-wrap) ...
+        expect(layout.rows).toBeGreaterThan(1);
+        // ... and nothing spills past the pane edge (the #216 "right-side cut off").
+        expect(layout.overflowX).toBe(0);
       });
     });
 
