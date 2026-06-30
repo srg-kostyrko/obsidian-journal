@@ -20,7 +20,7 @@ import {
 import { ShelvesRepository } from "@/shelves";
 import { TemplateEngine } from "@/templates";
 
-import { resolveLinkTarget } from "../link-targets";
+import { resolveLinkCandidates, resolveLinkTarget } from "../link-targets";
 import { buildNavRowContext } from "../nav-row-context";
 
 const props = defineProps<{
@@ -47,12 +47,9 @@ const today = computed(() => Clock.now().format("YYYY-MM-DD") as AnchorString);
 
 const entry = computed(() => index.entryByAnchor(props.journal.name, props.refDate));
 
-const shelfJournals = computed<readonly JournalConfig[]>(() => {
-  const all = [...journals.find().list()];
-  const owning = [...shelves.find().list()].find((shelf) => shelf.journals.includes(props.journal.name));
-  if (!owning) return [];
-  return all.filter((journal) => owning.journals.includes(journal.name));
-});
+const shelfJournals = computed<readonly JournalConfig[]>(() =>
+  resolveLinkCandidates(props.journal.name, [...journals.find().list()], [...shelves.find().list()]),
+);
 
 const target = computed(() => resolveLinkTarget(props.row, props.journal, shelfJournals.value, entry.value));
 

@@ -4,8 +4,9 @@ import type { AnchorString } from "@/calendar";
 import type { VaultPath } from "@/infrastructure/host";
 import { Option } from "@/infrastructure/result";
 import { journalDefaultsFor, type JournalConfig, type JournalEntry, type NavBlockRow } from "@/journals";
+import type { ShelfConfig } from "@/shelves";
 
-import { resolveLinkTarget } from "./link-targets";
+import { resolveLinkCandidates, resolveLinkTarget } from "./link-targets";
 
 const noteJournal: JournalConfig = journalDefaultsFor({ type: "day" }, "daily");
 const noteEntry: Option<JournalEntry> = Option.some({
@@ -70,5 +71,26 @@ describe("resolveLinkTarget", () => {
 
   it("collapses to 'none' when no shelf journal matches the period kind", () => {
     expect(resolveLinkTarget({ ...baseRow, link: "year" }, noteJournal, [noteJournal], noteEntry).kind).toBe("none");
+  });
+});
+
+const shelf = (name: string, journals: string[]): ShelfConfig => ({ name, journals });
+
+describe("resolveLinkCandidates", () => {
+  const weekly = journalDefaultsFor({ type: "week" }, "weekly");
+  const yearly = journalDefaultsFor({ type: "year" }, "yearly");
+
+  it("returns every journal when the note's journal belongs to no shelf", () => {
+    const result = resolveLinkCandidates("daily", [noteJournal, weekly, yearly], []);
+    expect(result).toEqual([noteJournal, weekly, yearly]);
+  });
+
+  it("returns only the owning shelf's journals when the note's journal is shelved", () => {
+    const result = resolveLinkCandidates(
+      "daily",
+      [noteJournal, weekly, yearly],
+      [shelf("personal", ["daily", "weekly"])],
+    );
+    expect(result).toEqual([noteJournal, weekly]);
   });
 });

@@ -3,11 +3,24 @@ import { match, P } from "ts-pattern";
 import type { VaultPath } from "@/infrastructure/host";
 import type { Option } from "@/infrastructure/result";
 import type { JournalConfig, JournalEntry, NavBlockRow } from "@/journals";
+import type { ShelfConfig } from "@/shelves";
 
 export type LinkTarget =
   | { readonly kind: "none" }
   | { readonly kind: "self"; readonly path: VaultPath }
   | { readonly kind: "open"; readonly journalNames: readonly string[] };
+
+// A journal on a shelf links only to its shelf-mates; an off-shelf journal links across every
+// journal, matching v2's all-journals fallback.
+export function resolveLinkCandidates(
+  noteJournalName: string,
+  allJournals: readonly JournalConfig[],
+  shelves: readonly ShelfConfig[],
+): readonly JournalConfig[] {
+  const owning = shelves.find((shelf) => shelf.journals.includes(noteJournalName));
+  if (!owning) return allJournals;
+  return allJournals.filter((journal) => owning.journals.includes(journal.name));
+}
 
 export function resolveLinkTarget(
   row: NavBlockRow,
