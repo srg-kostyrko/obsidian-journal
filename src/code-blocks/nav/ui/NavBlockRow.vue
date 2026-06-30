@@ -3,7 +3,7 @@ import { Menu } from "obsidian";
 import { computed } from "vue";
 
 import { Clock, type AnchorString, type Period } from "@/calendar";
-import { CellDecoration, colorToString } from "@/decorations";
+import { CellDecoration, colorToString, type CellDecorationScope } from "@/decorations";
 import { useService } from "@/infrastructure/di";
 import { Flows } from "@/infrastructure/flows";
 import { defineOpenMode, WorkspaceService, type VaultPath } from "@/infrastructure/host";
@@ -29,6 +29,9 @@ const props = defineProps<{
   refDate: AnchorString;
   period: Period;
   preventNavigation?: boolean;
+  // Which provided decoration map a per-row decoration draws from. Omitted (the custom-interval
+  // view) falls back to the default scope; the nav code block passes its per-row scope.
+  decorationScope?: CellDecorationScope;
 }>();
 
 const journals = useService(JournalsRepository);
@@ -138,7 +141,7 @@ function onPointerEnter(event: PointerEvent): void {
     @contextmenu.prevent="onContextMenu"
     @pointerenter="onPointerEnter"
   >
-    <CellDecoration v-if="row.addDecorations" :period="period">{{ text }}</CellDecoration>
+    <CellDecoration v-if="row.addDecorations" :period="period" :scope="decorationScope">{{ text }}</CellDecoration>
     <template v-else>{{ text }}</template>
   </div>
 </template>

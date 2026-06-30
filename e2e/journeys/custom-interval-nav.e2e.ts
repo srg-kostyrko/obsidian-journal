@@ -1,6 +1,14 @@
 import { $, browser } from "@wdio/globals";
 
-import { NAV_FENCE, NAV_NEXT_BLOCK, NAV_PREVIOUS_BLOCK, NAV_VIEW, hostNote, renderBlock } from "./code-blocks.js";
+import {
+  NAV_CURRENT,
+  NAV_FENCE,
+  NAV_NEXT_BLOCK,
+  NAV_PREVIOUS_BLOCK,
+  NAV_VIEW,
+  hostNote,
+  renderBlock,
+} from "./code-blocks.js";
 
 // The nav block's previous/next slots reference adjacent intervals that have no note yet.
 // Their `Sprint {{index}}` row must resolve the index from NumberingService at render time;
@@ -31,5 +39,14 @@ describe("custom interval navigation block", () => {
     await browser.waitUntil(async () => (await navRowText(NAV_NEXT_BLOCK)) === "Sprint 3", {
       timeoutMsg: "next nav row did not resolve the computed index (expected 'Sprint 3')",
     });
+  });
+
+  // The sprint journal belongs to no shelf (e2e-custom has no shelves). Its has-note→corner
+  // decoration must still render on the current block, whose interval #2 note exists. Scoping
+  // nav decorations to the owning shelf silently dropped them for shelf-less journals.
+  it("decorates the current nav block of a journal that belongs to no shelf", async () => {
+    await $(NAV_CURRENT)
+      .$(".decoration-corner.top-left")
+      .waitForExist({ timeoutMsg: "shelf-less journal's own nav decoration did not render on the current block" });
   });
 });

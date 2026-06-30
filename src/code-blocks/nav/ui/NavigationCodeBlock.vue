@@ -13,6 +13,7 @@ import { ShelvesRepository } from "@/shelves";
 import { icons } from "@/ui/icons";
 import UiIconButton from "@/ui/UiIconButton.vue";
 
+import { navBlockDecorationScope, navRowDecorationScope } from "../decoration-scopes";
 import { periodForJournal } from "../period-for-journal";
 
 import NavBlock from "./NavBlock.vue";
@@ -67,19 +68,32 @@ const periods = computed<Period[]>(() => {
   return list;
 });
 
-const shelfJournalNames = computed<readonly string[]>(() => {
+// v2's whole-block decoration (NavigationBlock) draws on the current journal's own decorations
+// only: `decorations[type].filter(d => d.journalName === journalName)`.
+const blockJournalNames = computed<readonly string[]>(() => (journal.value ? [journal.value.name] : []));
+
+// v2's per-row decoration (NavigationBlockRow) draws on every same-write-type journal in scope:
+// `decorations[type]`, which useShelfProvider builds from the owning shelf's journals, or from
+// all journals when the journal belongs to no shelf.
+const rowJournalNames = computed<readonly string[]>(() => {
   const currentJournal = journal.value;
   if (!currentJournal) return [];
   const owning = [...shelves.find().list()].find((shelf) => shelf.journals.includes(currentJournal.name));
-  if (!owning) return [];
-  return [...journals.find().list()]
-    .filter((other) => owning.journals.includes(other.name) && other.write.type === currentJournal.write.type)
-    .map((other) => other.name);
+  const inScope = owning
+    ? [...journals.find().list()].filter((other) => owning.journals.includes(other.name))
+    : [...journals.find().list()];
+  return inScope.filter((other) => other.write.type === currentJournal.write.type).map((other) => other.name);
 });
 
 useCellDecorations(
   () => periods.value,
-  () => shelfJournalNames.value,
+  () => blockJournalNames.value,
+  navBlockDecorationScope,
+);
+useCellDecorations(
+  () => periods.value,
+  () => rowJournalNames.value,
+  navRowDecorationScope,
 );
 
 function openAdjacent(anchor: AnchorString | null, event: MouseEvent): void {
@@ -104,6 +118,8 @@ function openAdjacent(anchor: AnchorString | null, event: MouseEvent): void {
         :journal
         :ref-date="adjacent.previous"
         :period="periodForJournal(journal.write, adjacent.previous)"
+        :block-scope="navBlockDecorationScope"
+        :row-scope="navRowDecorationScope"
       />
       <UiIconButton
         :icon="icons.nav.prev"
@@ -121,6 +137,8 @@ function openAdjacent(anchor: AnchorString | null, event: MouseEvent): void {
       :journal
       :ref-date="currentAnchor"
       :period="periodForJournal(journal.write, currentAnchor)"
+      :block-scope="navBlockDecorationScope"
+      :row-scope="navRowDecorationScope"
     />
 
     <div v-if="adjacent.next" class="nav-block-relative">
@@ -137,6 +155,8 @@ function openAdjacent(anchor: AnchorString | null, event: MouseEvent): void {
         :journal
         :ref-date="adjacent.next"
         :period="periodForJournal(journal.write, adjacent.next)"
+        :block-scope="navBlockDecorationScope"
+        :row-scope="navRowDecorationScope"
       />
     </div>
     <div v-else class="nav-block-placeholder" />

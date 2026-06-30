@@ -7,6 +7,7 @@ import { afterEach, beforeAll, beforeEach, describe, expect, it, vi } from "vite
 import type { AnchorString } from "@/calendar";
 import { installTestCalendar } from "@/calendar/testing";
 import { DecorationEngine } from "@/decorations";
+import { buildCondition, buildDecoration, buildStyle } from "@/decorations/testing";
 import { initLocale } from "@/i18n";
 import { Container, provideInjectorOnApp } from "@/infrastructure/di";
 import { Flows } from "@/infrastructure/flows";
@@ -29,6 +30,7 @@ import {
   journalDefaultsFor,
   type JournalConfig,
   type JournalEntry,
+  type NavBlockRow,
 } from "@/journals";
 import { fakeRepo } from "@/journals/testing";
 import { ShelvesRepository } from "@/shelves";
@@ -144,6 +146,33 @@ afterEach(() => {
 });
 
 beforeAll(() => initLocale("en"));
+
+function navRow(overrides: Partial<NavBlockRow> = {}): NavBlockRow {
+  return {
+    template: "today",
+    fontSize: 1,
+    bold: false,
+    italic: false,
+    color: { type: "transparent" },
+    background: { type: "transparent" },
+    link: "none",
+    journal: "",
+    addDecorations: false,
+    ...overrides,
+  };
+}
+
+function withWholeBlockDecoration(base: JournalConfig): JournalConfig {
+  return { ...base, decorations: [], navBlock: { ...base.navBlock, decorateWholeBlock: true, rows: [navRow()] } };
+}
+
+function withPerRowDecoration(base: JournalConfig): JournalConfig {
+  return {
+    ...base,
+    decorations: [],
+    navBlock: { ...base.navBlock, decorateWholeBlock: false, rows: [navRow({ addDecorations: true })] },
+  };
+}
 
 describe("NavigationCodeBlock", () => {
   beforeEach(() => {
@@ -709,6 +738,91 @@ describe("NavigationCodeBlock decorations", () => {
 
     const decorations = document.querySelectorAll("[data-testid='cell-decoration']");
     expect(decorations.length).toBe(3);
+  });
+
+  it("applies the journal's own decorations when the journal belongs to no shelf", () => {
+    const base = journalDefaultsFor({ type: "day" }, "daily");
+    const journal: JournalConfig = {
+      ...base,
+      decorations: [
+        buildDecoration({
+          conditions: [buildCondition("date")],
+          styles: [buildStyle("corner", { placement: "top-left" })],
+        }),
+      ],
+      navBlock: {
+        ...base.navBlock,
+        decorateWholeBlock: true,
+        rows: [
+          {
+            template: "today",
+            fontSize: 1,
+            bold: false,
+            italic: false,
+            color: { type: "transparent" },
+            background: { type: "transparent" },
+            link: "none",
+            journal: "",
+            addDecorations: false,
+          },
+        ],
+      },
+    };
+    const h = buildHarness({ daily: journal });
+    h.index.byPath.set("Daily/2026-05-27.md", {
+      journalName: "daily",
+      anchor: "2026-05-27" as AnchorString,
+      path: "Daily/2026-05-27.md" as VaultPath,
+    });
+    mount(h, "Daily/2026-05-27.md");
+
+    expect(document.querySelector(".decoration-corner.top-left")).not.toBeNull();
+  });
+
+  it("excludes a same-type shelf mate's decorations from a whole-block decoration", () => {
+    const daily = withWholeBlockDecoration(journalDefaultsFor({ type: "day" }, "daily"));
+    const other: JournalConfig = {
+      ...journalDefaultsFor({ type: "day" }, "other"),
+      decorations: [
+        buildDecoration({
+          conditions: [buildCondition("date")],
+          styles: [buildStyle("corner", { placement: "top-left" })],
+        }),
+      ],
+    };
+    const h = buildHarness({ daily, other });
+    h.index.byPath.set("Daily/2026-05-27.md", {
+      journalName: "daily",
+      anchor: "2026-05-27" as AnchorString,
+      path: "Daily/2026-05-27.md" as VaultPath,
+    });
+    h.shelves.shelves = [{ name: "main", journals: ["daily", "other"] }];
+    mount(h, "Daily/2026-05-27.md");
+
+    expect(document.querySelector(".decoration-corner.top-left")).toBeNull();
+  });
+
+  it("includes a same-type shelf mate's decorations in a per-row decoration", () => {
+    const daily = withPerRowDecoration(journalDefaultsFor({ type: "day" }, "daily"));
+    const other: JournalConfig = {
+      ...journalDefaultsFor({ type: "day" }, "other"),
+      decorations: [
+        buildDecoration({
+          conditions: [buildCondition("date")],
+          styles: [buildStyle("corner", { placement: "top-left" })],
+        }),
+      ],
+    };
+    const h = buildHarness({ daily, other });
+    h.index.byPath.set("Daily/2026-05-27.md", {
+      journalName: "daily",
+      anchor: "2026-05-27" as AnchorString,
+      path: "Daily/2026-05-27.md" as VaultPath,
+    });
+    h.shelves.shelves = [{ name: "main", journals: ["daily", "other"] }];
+    mount(h, "Daily/2026-05-27.md");
+
+    expect(document.querySelector(".decoration-corner.top-left")).not.toBeNull();
   });
 
   it("wraps the entire column with CellDecoration when decorateWholeBlock is true", () => {

@@ -7,7 +7,7 @@ import { JournalsIndex, JournalsRepository } from "@/journals";
 
 import { paddingFromAll } from "./derive-styles";
 import { cellKey, DecorationEngine, periodKindForWrite, periodMatchesWrite, type DecorationBinding } from "./engine";
-import { CellDecorationMapKey, CellPaddingKey, type CellStyleRef } from "./ui/cell-decoration-map-key";
+import { defaultCellDecorationScope, type CellDecorationScope, type CellStyleRef } from "./ui/cell-decoration-map-key";
 
 import type { JournalDecoration, JournalDecorationStyle } from "./config";
 import type { MaybeRefOrGetter } from "vue";
@@ -15,6 +15,7 @@ import type { MaybeRefOrGetter } from "vue";
 export function useCellDecorations(
   periodsRef: MaybeRefOrGetter<readonly Period[]>,
   journalNamesRef: MaybeRefOrGetter<readonly string[]>,
+  scope: CellDecorationScope = defaultCellDecorationScope,
 ): ReadonlyMap<string, CellStyleRef> {
   const engine = useService(DecorationEngine);
   const journals = useService(JournalsRepository);
@@ -106,7 +107,7 @@ export function useCellDecorations(
   }
 
   watchEffect(reseed);
-  provide(CellDecorationMapKey, cells);
+  provide(scope.map, cells);
 
   // Reading periodsRef re-tracks membership whenever the visible range changes (e.g. month
   // navigation re-keys the whole map), while the per-cell slot reads keep it live as
@@ -115,7 +116,7 @@ export function useCellDecorations(
     void toValue(periodsRef);
     return paddingFromAll(Array.from(cells.values(), (slot) => slot.value));
   });
-  provide(CellPaddingKey, sharedPadding);
+  provide(scope.padding, sharedPadding);
 
   onMounted(() => {
     const offMeta = notes.events.on("metadata-changed", (path) => {

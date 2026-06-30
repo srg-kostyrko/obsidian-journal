@@ -30,7 +30,13 @@ export {
 export { defaultCondition, defaultDecoration, defaultStyle } from "./defaults";
 export { DecorationEngine, periodMatchesWrite, type DecorationBinding } from "./engine";
 export { decorationsModule } from "./module";
-export { CellDecorationMapKey, type CellStyleRef } from "./ui/cell-decoration-map-key";
+export {
+  CellDecorationMapKey,
+  createCellDecorationScope,
+  defaultCellDecorationScope,
+  type CellDecorationScope,
+  type CellStyleRef,
+} from "./ui/cell-decoration-map-key";
 export { default as CellDecoration } from "./ui/CellDecoration.vue";
 export { colorToString } from "./ui/color";
 export { default as DecorationPreview } from "./ui/DecorationPreview.vue";

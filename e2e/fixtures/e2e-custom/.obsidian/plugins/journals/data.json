@@ -41,7 +41,7 @@
       },
       "navBlock": {
         "type": "create",
-        "decorateWholeBlock": false,
+        "decorateWholeBlock": true,
         "rows": [
           {
             "template": "Sprint {{index}}",
@@ -60,7 +60,27 @@
             "addDecorations": false
           }
         ]
-      }
+      },
+      "decorations": [
+        {
+          "mode": "and",
+          "conditions": [
+            {
+              "type": "has-note"
+            }
+          ],
+          "styles": [
+            {
+              "type": "corner",
+              "placement": "top-left",
+              "color": {
+                "type": "custom",
+                "color": "#cc44aa"
+              }
+            }
+          ]
+        }
+      ]
     }
   }
 }

@@ -13,16 +13,16 @@ import {
 } from "../derive-styles";
 import { cellKey } from "../engine";
 
-import { CellDecorationMapKey, CellPaddingKey } from "./cell-decoration-map-key";
+import { CellDecorationMapKey, CellPaddingKey, type CellDecorationScope } from "./cell-decoration-map-key";
 import DecorationCorner from "./DecorationCorner.vue";
 import DecorationIcon from "./DecorationIcon.vue";
 import DecorationShape from "./DecorationShape.vue";
 
 import type { JournalDecorationStyle } from "../config";
 
-const props = defineProps<{ period: Period }>();
-const cells = inject(CellDecorationMapKey, null);
-const sharedPadding = inject(CellPaddingKey, null);
+const props = defineProps<{ period: Period; scope?: CellDecorationScope }>();
+const cells = inject(props.scope?.map ?? CellDecorationMapKey, null);
+const sharedPadding = inject(props.scope?.padding ?? CellPaddingKey, null);
 
 const styles = computed<readonly JournalDecorationStyle[]>(
   () => cells?.get(cellKey(props.period.kind, props.period.anchor.toAnchor()))?.value ?? [],
