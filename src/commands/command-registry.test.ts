@@ -194,12 +194,16 @@ describe("DynamicCommandRegistry execution", () => {
 
     host.commands.get("cmd-1")?.checkCallback?.(false);
 
-    expect(invokeSpy).toHaveBeenCalledWith(OpenDateFlow, {
-      anchor: CalendarDate.today().toAnchor(),
-      journalNames: ["daily"],
-      openMode: "split",
-      existingOnly: false,
-    });
+    expect(invokeSpy).toHaveBeenCalledWith(
+      OpenDateFlow,
+      {
+        anchor: CalendarDate.today().toAnchor(),
+        journalNames: ["daily"],
+        openMode: "split",
+        existingOnly: false,
+      },
+      { context: { command: "Cmd" } },
+    );
   });
 
   it("does not invoke OpenDateFlow when the command is unavailable", async () => {
@@ -223,12 +227,16 @@ describe("DynamicCommandRegistry execution", () => {
 
     host.commands.get("cmd-1")?.checkCallback?.(false);
 
-    expect(invokeSpy).toHaveBeenCalledWith(OpenDateFlow, {
-      anchor: anchor("2026-05-10"),
-      journalNames: ["daily"],
-      openMode: "active",
-      existingOnly: false,
-    });
+    expect(invokeSpy).toHaveBeenCalledWith(
+      OpenDateFlow,
+      {
+        anchor: anchor("2026-05-10"),
+        journalNames: ["daily"],
+        openMode: "active",
+        existingOnly: false,
+      },
+      { context: { command: "Cmd" } },
+    );
   });
 
   it("falls back to today for open_note context without an active journal note", async () => {
@@ -239,12 +247,16 @@ describe("DynamicCommandRegistry execution", () => {
 
     host.commands.get("cmd-1")?.checkCallback?.(false);
 
-    expect(invokeSpy).toHaveBeenCalledWith(OpenDateFlow, {
-      anchor: CalendarDate.today().toAnchor(),
-      journalNames: ["daily"],
-      openMode: "active",
-      existingOnly: false,
-    });
+    expect(invokeSpy).toHaveBeenCalledWith(
+      OpenDateFlow,
+      {
+        anchor: CalendarDate.today().toAnchor(),
+        journalNames: ["daily"],
+        openMode: "active",
+        existingOnly: false,
+      },
+      { context: { command: "Cmd" } },
+    );
   });
 });
 
@@ -263,12 +275,16 @@ describe("DynamicCommandRegistry available types", () => {
 
     host.commands.get("cmd-1")?.checkCallback?.(false);
 
-    expect(invokeSpy).toHaveBeenCalledWith(OpenDateFlow, {
-      anchor: anchor("2030-03-10"),
-      journalNames: ["daily"],
-      openMode: "active",
-      existingOnly: true,
-    });
+    expect(invokeSpy).toHaveBeenCalledWith(
+      OpenDateFlow,
+      {
+        anchor: anchor("2030-03-10"),
+        journalNames: ["daily"],
+        openMode: "active",
+        existingOnly: true,
+      },
+      { context: { command: "Cmd" } },
+    );
   });
 
   it("notices instead of opening when no earlier note exists for a previous_available command", async () => {

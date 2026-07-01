@@ -5,7 +5,7 @@ import { createLoggerTestingModule, type MemorySink } from "@/infrastructure/log
 import { AsyncResult } from "@/infrastructure/result";
 import { expectErr, expectOk } from "@/infrastructure/result/testing";
 
-import { FlowError, UserAborted } from "./errors";
+import { FlowError, UserAborted, type BenignFlowError } from "./errors";
 import { Flows } from "./flows";
 
 import type { Flow } from "./types";
@@ -33,6 +33,21 @@ class DomainError extends FlowError {
 class FailingFlow implements Flow<null, never, DomainError> {
   execute(): AsyncResult<never, DomainError> {
     return AsyncResult.err(new DomainError());
+  }
+}
+
+class BenignError extends FlowError implements BenignFlowError {
+  readonly kind = "benign-error" as const;
+  readonly benign = true as const;
+  constructor() {
+    super("benign failure");
+    this.name = "BenignError";
+  }
+}
+
+class BenignFailingFlow implements Flow<null, never, BenignError> {
+  execute(): AsyncResult<never, BenignError> {
+    return AsyncResult.err(new BenignError());
   }
 }
 
@@ -96,6 +111,24 @@ describe("Flows", () => {
       c.register(FailingFlow).useClass(FailingFlow);
       await c.resolve(Flows).invoke(FailingFlow, null);
       expect(settledRecord(sink)?.level).toBe("error");
+    });
+
+    it("logs at info level when the flow returns a FlowError marked benign", async () => {
+      c.register(BenignFailingFlow).useClass(BenignFailingFlow);
+      await c.resolve(Flows).invoke(BenignFailingFlow, null);
+      expect(settledRecord(sink)?.level).toBe("info");
+    });
+
+    it("merges caller-supplied context into the completion log fields", async () => {
+      c.register(CompletingFlow).useClass(CompletingFlow);
+      await c.resolve(Flows).invoke(CompletingFlow, { value: "x" }, { context: { command: "open-today" } });
+      expect(settledRecord(sink)?.fields).toMatchObject({ command: "open-today" });
+    });
+
+    it("merges caller-supplied context into the failure log fields", async () => {
+      c.register(FailingFlow).useClass(FailingFlow);
+      await c.resolve(Flows).invoke(FailingFlow, null, { context: { command: "open-today" } });
+      expect(settledRecord(sink)?.fields).toMatchObject({ command: "open-today" });
     });
   });
 });

@@ -3,12 +3,9 @@ import { describe, expect, it, vi } from "vitest";
 import { Container } from "@/infrastructure/di";
 import { Flows } from "@/infrastructure/flows";
 import { CommandService, WorkspaceService, type CommandRegistration, type VaultPath } from "@/infrastructure/host";
-import { LoggerFactoryToken } from "@/infrastructure/logger";
 import { AsyncResult, Option } from "@/infrastructure/result";
 
 import { NoteConnectionCommands } from "./note-connection-commands";
-
-const fakeLogger = { named: () => ({ error: vi.fn(), info: vi.fn(), debug: vi.fn(), warn: vi.fn() }) };
 
 function build(active: VaultPath | undefined) {
   const c = new Container();
@@ -21,7 +18,6 @@ function build(active: VaultPath | undefined) {
   } as unknown as WorkspaceService);
   const invoke = vi.fn(() => AsyncResult.ok());
   c.register(Flows).useValue({ invoke } as unknown as Flows);
-  c.register(LoggerFactoryToken).useValue(fakeLogger as never);
   c.register(NoteConnectionCommands).useClass(NoteConnectionCommands).eager();
   c.resolve(NoteConnectionCommands);
   return { registered, invoke };

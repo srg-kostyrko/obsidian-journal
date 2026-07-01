@@ -1,8 +1,7 @@
 import { m } from "@/i18n";
 import { inject } from "@/infrastructure/di";
-import { Flows, UserAborted } from "@/infrastructure/flows";
+import { Flows } from "@/infrastructure/flows";
 import { CommandService, WorkspaceService } from "@/infrastructure/host";
-import { LoggerFactoryToken } from "@/infrastructure/logger";
 
 import { JournalsRepository } from "../repository";
 
@@ -13,7 +12,6 @@ export class JournalLinkCommands {
   readonly #workspace = inject(WorkspaceService);
   readonly #journals = inject(JournalsRepository);
   readonly #flows = inject(Flows);
-  readonly #logger = inject(LoggerFactoryToken).named("journal-link");
 
   constructor() {
     this.#commands.register({
@@ -25,9 +23,6 @@ export class JournalLinkCommands {
   }
 
   async #run(): Promise<void> {
-    const result = await this.#flows.invoke(InsertJournalLinkFlow);
-    if (result.isErr() && !(result.error instanceof UserAborted)) {
-      this.#logger.error("insert-date-link failed", { error: result.error });
-    }
+    await this.#flows.invoke(InsertJournalLinkFlow);
   }
 }

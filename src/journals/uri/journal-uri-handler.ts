@@ -5,7 +5,6 @@ import { inject } from "@/infrastructure/di";
 import { Flows, UserAborted } from "@/infrastructure/flows";
 import { NoticeService, UriService } from "@/infrastructure/host";
 import type { UriParameters } from "@/infrastructure/host";
-import { LoggerFactoryToken } from "@/infrastructure/logger";
 
 import { CycleService } from "../cycle";
 import { OpenDateFlow } from "../flows/open-date.flow";
@@ -25,7 +24,6 @@ export class JournalUriHandler {
   readonly #journals = inject(JournalsRepository);
   readonly #cycle = inject(CycleService);
   readonly #notices = inject(NoticeService);
-  readonly #logger = inject(LoggerFactoryToken).named("journal-uri");
 
   async #handle(parameters: UriParameters): Promise<void> {
     const parsed = parseJournalUriRequest(parameters);
@@ -70,7 +68,6 @@ export class JournalUriHandler {
         this.#notices.show(m.uri_no_journal());
         return;
       }
-      this.#logger.error("journal uri open failed", { error });
       this.#notices.show(m.uri_open_failed());
     }
   }

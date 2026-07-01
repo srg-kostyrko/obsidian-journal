@@ -1,4 +1,5 @@
 import type { AnchorString } from "@/calendar";
+import type { BenignFlowError } from "@/infrastructure/flows";
 
 import { JournalsError } from "../errors";
 
@@ -6,9 +7,10 @@ export abstract class JournalNoteCreationError extends JournalsError {
   override name = "JournalNoteCreationError";
 }
 
-export class NoApplicableJournals extends JournalNoteCreationError {
+export class NoApplicableJournals extends JournalNoteCreationError implements BenignFlowError {
   override name = "NoApplicableJournals";
   readonly kind = "no-applicable-journals" as const;
+  readonly benign = true as const;
 
   constructor(
     readonly anchor: AnchorString,

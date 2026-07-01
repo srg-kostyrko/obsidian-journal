@@ -9,3 +9,11 @@ export class UserAborted extends FlowError {
     this.name = "UserAborted";
   }
 }
+
+export interface BenignFlowError {
+  readonly benign: true;
+}
+
+export function isBenignFlowError(error: unknown): error is BenignFlowError {
+  return typeof error === "object" && error !== null && "benign" in error && error.benign === true;
+}

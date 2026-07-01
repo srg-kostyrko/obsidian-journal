@@ -4,19 +4,11 @@ import { CalendarDate } from "@/calendar";
 import type { AnchorString } from "@/calendar";
 import { m } from "@/i18n";
 import { inject } from "@/infrastructure/di";
-import { Flows, UserAborted } from "@/infrastructure/flows";
+import { Flows } from "@/infrastructure/flows";
 import { CommandService, NoticeService, WorkspaceService } from "@/infrastructure/host";
 import type { CommandRegistration } from "@/infrastructure/host";
-import { LoggerFactoryToken } from "@/infrastructure/logger";
 import { Option } from "@/infrastructure/result";
-import {
-  CycleService,
-  JournalsIndex,
-  JournalsEventsToken,
-  JournalsRepository,
-  NoApplicableJournals,
-  OpenDateFlow,
-} from "@/journals";
+import { CycleService, JournalsIndex, JournalsEventsToken, JournalsRepository, OpenDateFlow } from "@/journals";
 import type { JournalEntry } from "@/journals";
 import { SettingsEventsToken } from "@/settings";
 import { ShelvesEventsToken, ShelvesRepository } from "@/shelves";
@@ -39,7 +31,6 @@ export class DynamicCommandRegistry {
   readonly #notices = inject(NoticeService);
   readonly #index = inject(JournalsIndex);
   readonly #cycle = inject(CycleService);
-  readonly #logger = inject(LoggerFactoryToken).named("dynamic-commands");
   readonly #registered = new Map<string, string>();
   readonly #commandsRepo = inject(CommandsRepository);
   readonly #commandsEvents = inject(CommandsEventsToken);
@@ -198,17 +189,16 @@ export class DynamicCommandRegistry {
       }
       return;
     }
-    const result = await this.#flows.invoke(OpenDateFlow, {
-      anchor: plan.value.anchor,
-      journalNames: plan.value.journalNames,
-      openMode: command.openMode,
-      existingOnly: isAvailableType(command.type),
-    });
-    if (result.kind === "err") {
-      const { error } = result;
-      if (error instanceof UserAborted || error instanceof NoApplicableJournals) return;
-      this.#logger.error("dynamic command failed", { command: command.name, error });
-    }
+    await this.#flows.invoke(
+      OpenDateFlow,
+      {
+        anchor: plan.value.anchor,
+        journalNames: plan.value.journalNames,
+        openMode: command.openMode,
+        existingOnly: isAvailableType(command.type),
+      },
+      { context: { command: command.name } },
+    );
   }
 
   #onJournalRenamed(oldName: string, newName: string): void {
