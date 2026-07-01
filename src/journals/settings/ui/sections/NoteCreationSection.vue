@@ -13,9 +13,9 @@ import UiToggle from "@/ui/UiToggle.vue";
 import { JournalsViewModel } from "../../../view-model";
 import DateFormatPreview from "../DateFormatPreview.vue";
 import FolderInput from "../FolderInput.vue";
-import FolderPathPreview from "../FolderPathPreview.vue";
 import { nameTemplateCollides } from "../name-template-collision";
 import NoteNamePreview from "../NoteNamePreview.vue";
+import TemplateStringPreview from "../TemplateStringPreview.vue";
 import { useAutoCreateOnEnable } from "../use-auto-create-on-enable";
 import { extractFromDateFormat, extractFromNameTemplate } from "../use-folder-extractor";
 import { useInvertibilityCheck } from "../use-invertibility-check";
@@ -99,7 +99,11 @@ function applyDateFormatRecommendation(): void {
           :has-cycle="hasCycle"
           :numbering-variable-names="numberingVariableNames"
         />
-        <FolderPathPreview :journal-name="journalName" :folder="config.folder" />
+        <TemplateStringPreview
+          :journal-name="journalName"
+          :value="config.folder"
+          :label="m.journal_edit_folder_path_preview_label()"
+        />
       </template>
       <FolderInput v-model="config.folder" />
     </UiSettingRow>

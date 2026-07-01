@@ -3,7 +3,7 @@ import { createNanoEvents } from "nanoevents";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
 import { installTestCalendar } from "@/calendar/testing";
-import { provideInjectorOnApp } from "@/infrastructure/di";
+import { type Container, provideInjectorOnApp } from "@/infrastructure/di";
 import {
   CycleService,
   FrontmatterService,
@@ -18,7 +18,7 @@ import { createSettingsService } from "@/settings/testing";
 import { TemplateEngine } from "@/templates";
 import { installTestEngine } from "@/templates/testing";
 
-import TemplatePathPreview from "./TemplatePathPreview.vue";
+import TemplateStringPreview from "./TemplateStringPreview.vue";
 
 let teardown: () => void;
 beforeEach(() => {
@@ -32,7 +32,7 @@ afterEach(() => {
   cleanup();
 });
 
-async function setupDaily() {
+async function setupDaily(folder: string) {
   const { service, container } = createSettingsService({
     collections: [journalConfigCollection],
     raw: {
@@ -52,8 +52,8 @@ async function setupDaily() {
           },
           numbering: { enabled: false, anchorDate: "2026-01-01", allowBefore: false, sources: [] },
           nameTemplate: "{{date}}",
-          folder: "",
-          templates: ["templates/{{date:YYYY}}-daily.md"],
+          folder,
+          templates: [],
           confirmCreation: false,
           autoCreate: false,
         },
@@ -72,38 +72,32 @@ async function setupDaily() {
   return container;
 }
 
-describe("TemplatePathPreview", () => {
-  it("renders the resolved template path when it contains a variable", async () => {
-    const container = await setupDaily();
-    render(TemplatePathPreview, {
-      props: { journalName: "daily", path: "templates/{{date:YYYY}}-daily.md" },
-      global: {
-        plugins: [
-          {
-            install(app) {
-              provideInjectorOnApp(app, container);
-            },
+function mount(container: Container, props: { journalName: string; value: string; label: string }) {
+  return render(TemplateStringPreview, {
+    props,
+    global: {
+      plugins: [
+        {
+          install(app) {
+            provideInjectorOnApp(app, container);
           },
-        ],
-      },
-    });
-    expect(screen.getByText("templates/2026-daily.md")).toBeTruthy();
+        },
+      ],
+    },
+  });
+}
+
+describe("TemplateStringPreview", () => {
+  it("renders the resolved value when it contains a variable", async () => {
+    const container = await setupDaily("{{date:YYYY}}/journal");
+    mount(container, { journalName: "daily", value: "{{date:YYYY}}/journal", label: "Preview:" });
+    expect(screen.getByText("2026/journal")).toBeTruthy();
+    expect(screen.getByText("Preview:")).toBeTruthy();
   });
 
-  it("does not render when path has no variables", async () => {
-    const container = await setupDaily();
-    const { container: dom } = render(TemplatePathPreview, {
-      props: { journalName: "daily", path: "templates/daily.md" },
-      global: {
-        plugins: [
-          {
-            install(app) {
-              provideInjectorOnApp(app, container);
-            },
-          },
-        ],
-      },
-    });
+  it("does not render when the value has no variables", async () => {
+    const container = await setupDaily("static/folder");
+    const { container: dom } = mount(container, { journalName: "daily", value: "static/folder", label: "Preview:" });
     expect(dom.textContent ?? "").toBe("");
   });
 });

@@ -12,8 +12,8 @@ import UiSettingRow from "@/ui/UiSettingRow.vue";
 
 import { JournalsViewModel } from "../../../view-model";
 import CodeBlockReferenceHint from "../CodeBlockReferenceHint.vue";
-import TemplatePathPreview from "../TemplatePathPreview.vue";
 import TemplaterSupportHint from "../TemplaterSupportHint.vue";
+import TemplateStringPreview from "../TemplateStringPreview.vue";
 import VariableReferenceHint from "../VariableReferenceHint.vue";
 
 import type { JournalConfig } from "../../../config";
@@ -83,7 +83,13 @@ function removeTemplate(index: number): void {
           @click="removeTemplate(index)"
         />
       </UiSettingRow>
-      <TemplatePathPreview :journal-name="journalName" :path="config.templates[index] ?? ''" />
+      <div class="template-path-preview">
+        <TemplateStringPreview
+          :journal-name="journalName"
+          :value="config.templates[index] ?? ''"
+          :label="m.journal_edit_template_path_preview_label()"
+        />
+      </div>
     </template>
   </UiCollapsibleBlock>
 </template>
@@ -91,5 +97,12 @@ function removeTemplate(index: number): void {
 <style scoped>
 .grow {
   flex-grow: 1;
+}
+
+.template-path-preview {
+  padding: var(--size-2-2);
+  color: var(--text-muted);
+  font-size: var(--font-ui-smaller);
+  line-height: var(--line-height-tight);
 }
 </style>
