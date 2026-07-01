@@ -1,8 +1,5 @@
 <script setup lang="ts">
-import { computed } from "vue";
-
-import { CalendarDate, periodOfKind, window } from "@/calendar";
-import type { MonthPeriod } from "@/calendar";
+import { usePeriodWindow } from "@/calendar/ui";
 import NotesMonthView from "@/notes-calendar/ui/NotesMonthView.vue";
 
 import { useViewContext } from "../../../view-context";
@@ -17,10 +14,12 @@ const props = defineProps<{
 
 const viewContext = useViewContext();
 
-const months = computed<readonly MonthPeriod[]>(() => {
-  const focus = periodOfKind("month", CalendarDate.fromAnchor(viewContext.refDate.value)) as MonthPeriod;
-  return window(focus, props.config.before, props.config.after);
-});
+const months = usePeriodWindow(
+  "month",
+  viewContext.refDate,
+  () => props.config.before,
+  () => props.config.after,
+);
 </script>
 
 <template>

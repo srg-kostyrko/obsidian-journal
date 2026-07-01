@@ -4,17 +4,13 @@ import { m } from "@/i18n";
 import { icons } from "@/ui/icons";
 
 import { defineViewBlock } from "../../define-view-block";
+import { calendarBlockBaseSchema } from "../calendar-block-schema";
 import { calendarBlockSummary } from "../calendar-block-summary";
 
 import WeekCalendarBlock from "./ui/WeekCalendarBlock.vue";
 import WeekCalendarBlockConfig from "./ui/WeekCalendarBlockConfig.vue";
 
-const schema = v.object({
-  before: v.pipe(v.number(), v.integer(), v.minValue(0)),
-  after: v.pipe(v.number(), v.integer(), v.minValue(0)),
-  hiddenWeekdays: v.optional(v.array(v.pipe(v.number(), v.integer(), v.minValue(0), v.maxValue(6))), []),
-  weeks: v.optional(v.picklist(["none", "left", "right"]), "left"),
-});
+const schema = v.object({ ...calendarBlockBaseSchema });
 
 export type WeekCalendarConfig = v.InferOutput<typeof schema>;
 export type WeekCalendarConfigChange = (next: WeekCalendarConfig) => void;

@@ -4,16 +4,14 @@ import { m } from "@/i18n";
 import { icons } from "@/ui/icons";
 
 import { defineViewBlock } from "../../define-view-block";
+import { calendarBlockBaseSchema } from "../calendar-block-schema";
 import { calendarBlockSummary } from "../calendar-block-summary";
 
 import MonthCalendarBlock from "./ui/MonthCalendarBlock.vue";
 import MonthCalendarBlockConfig from "./ui/MonthCalendarBlockConfig.vue";
 
 const schema = v.object({
-  before: v.pipe(v.number(), v.integer(), v.minValue(0)),
-  after: v.pipe(v.number(), v.integer(), v.minValue(0)),
-  hiddenWeekdays: v.optional(v.array(v.pipe(v.number(), v.integer(), v.minValue(0), v.maxValue(6))), []),
-  weeks: v.optional(v.picklist(["none", "left", "right"]), "left"),
+  ...calendarBlockBaseSchema,
   showHeading: v.optional(v.boolean(), true),
 });
 

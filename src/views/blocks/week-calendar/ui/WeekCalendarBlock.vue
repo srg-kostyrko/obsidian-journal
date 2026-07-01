@@ -1,8 +1,5 @@
 <script setup lang="ts">
-import { computed } from "vue";
-
-import { CalendarDate, periodOfKind, window } from "@/calendar";
-import type { WeekPeriod } from "@/calendar";
+import { usePeriodWindow } from "@/calendar/ui";
 import NotesWeekView from "@/notes-calendar/ui/NotesWeekView.vue";
 
 import { useViewContext } from "../../../view-context";
@@ -17,10 +14,12 @@ const props = defineProps<{
 
 const viewContext = useViewContext();
 
-const weeks = computed<readonly WeekPeriod[]>(() => {
-  const focus = periodOfKind("week", CalendarDate.fromAnchor(viewContext.refDate.value)) as WeekPeriod;
-  return window(focus, props.config.before, props.config.after);
-});
+const weeks = usePeriodWindow(
+  "week",
+  viewContext.refDate,
+  () => props.config.before,
+  () => props.config.after,
+);
 </script>
 
 <template>
