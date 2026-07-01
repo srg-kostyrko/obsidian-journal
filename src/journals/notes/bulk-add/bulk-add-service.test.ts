@@ -27,7 +27,20 @@ import { TemplateContentService } from "../template-content";
 import { BulkAddService } from "./bulk-add-service";
 import { defaultBulkAddParameters } from "./config";
 
+import type { PlannedAction } from "./bulk-add-service";
 import type { BulkAddParameters } from "./config";
+
+function plannedAction(overrides: Partial<PlannedAction> = {}): PlannedAction {
+  return {
+    kind: "action",
+    path: "src/note.md" as VaultPath,
+    anchor: anchor("2026-06-01"),
+    existing: "none",
+    folder: "n/a",
+    name: "n/a",
+    ...overrides,
+  };
+}
 
 function makeParameters(overrides: Partial<BulkAddParameters> = {}): BulkAddParameters {
   return { ...defaultBulkAddParameters(), ...overrides };
@@ -235,6 +248,88 @@ describe("BulkAddService", () => {
       const note = planResult.value.notes.find((n) => n.path === "src/note.md");
       expect(note?.kind === "action" && note.occupant).toBe("Journal/2026-06-01.md");
       expect(note?.kind === "action" && note.existing).toBe("ask");
+    });
+  });
+
+  describe("resolve", () => {
+    it("keeps the path and anchor from the planned action", () => {
+      const { service } = build();
+      const action = plannedAction({ path: "src/note.md" as VaultPath, anchor: anchor("2026-06-10") });
+      const [resolved] = service.resolve([action], { existing: {}, folder: {}, name: {} });
+      expect(resolved).toMatchObject({ path: "src/note.md", anchor: "2026-06-10" });
+    });
+
+    it("defaults an ask existing decision to skip when no choice was made", () => {
+      const { service } = build();
+      const action = plannedAction({ existing: "ask" });
+      const [resolved] = service.resolve([action], { existing: {}, folder: {}, name: {} });
+      expect(resolved?.existing).toBe("skip");
+    });
+
+    it("resolves an ask existing decision to the chosen value", () => {
+      const { service } = build();
+      const action = plannedAction({ path: "src/note.md" as VaultPath, existing: "ask" });
+      const [resolved] = service.resolve([action], {
+        existing: { "src/note.md": "merge" },
+        folder: {},
+        name: {},
+      });
+      expect(resolved?.existing).toBe("merge");
+    });
+
+    it("keeps a plan-decided existing value without consulting the decision map", () => {
+      const { service } = build();
+      const action = plannedAction({ path: "src/note.md" as VaultPath, existing: "override" });
+      const [resolved] = service.resolve([action], {
+        existing: { "src/note.md": "skip" },
+        folder: {},
+        name: {},
+      });
+      expect(resolved?.existing).toBe("override");
+    });
+
+    it("resolves an ask folder decision to move only when chosen", () => {
+      const { service } = build();
+      const action = plannedAction({ path: "src/note.md" as VaultPath, folder: "ask" });
+      const [resolved] = service.resolve([action], {
+        existing: {},
+        folder: { "src/note.md": "move" },
+        name: {},
+      });
+      expect(resolved?.move).toBe(true);
+    });
+
+    it("keeps a plan-decided move flag without consulting the folder decision map", () => {
+      const { service } = build();
+      const action = plannedAction({ path: "src/note.md" as VaultPath, folder: "move" });
+      const [resolved] = service.resolve([action], {
+        existing: {},
+        folder: { "src/note.md": "keep" },
+        name: {},
+      });
+      expect(resolved?.move).toBe(true);
+    });
+
+    it("resolves an ask name decision to rename only when chosen", () => {
+      const { service } = build();
+      const action = plannedAction({ path: "src/note.md" as VaultPath, name: "ask" });
+      const [resolved] = service.resolve([action], {
+        existing: {},
+        folder: {},
+        name: { "src/note.md": "rename" },
+      });
+      expect(resolved?.rename).toBe(true);
+    });
+
+    it("keeps a plan-decided rename flag without consulting the name decision map", () => {
+      const { service } = build();
+      const action = plannedAction({ path: "src/note.md" as VaultPath, name: "rename" });
+      const [resolved] = service.resolve([action], {
+        existing: {},
+        folder: {},
+        name: { "src/note.md": "keep" },
+      });
+      expect(resolved?.rename).toBe(true);
     });
   });
 

@@ -27,7 +27,9 @@ function mountModal({ apply, plan, dryRun }: MountOptions) {
   const api: ModalApi<void> = { submit, cancel };
 
   const container = new Container();
-  container.register(BulkAddService).useValue({ apply } as unknown as BulkAddService);
+  container
+    .register(BulkAddService)
+    .useValue({ apply, resolve: BulkAddService.prototype.resolve } as unknown as BulkAddService);
 
   render(ProcessBulkAddModal, {
     props: {
@@ -113,6 +115,61 @@ describe("ProcessBulkAddModal", () => {
     expect(apply).toHaveBeenCalledWith(
       "daily",
       [expect.objectContaining({ path: "src/a.md", move: true })],
+      expect.any(Boolean),
+      expect.any(Function),
+    );
+  });
+
+  it("resolves a per-note existing ask decision into the apply call", async () => {
+    const apply = vi.fn(() => AsyncResult.ok([]));
+    mountModal({
+      apply,
+      plan: {
+        notes: [
+          {
+            kind: "action",
+            path: "src/a.md" as VaultPath,
+            anchor: "2026-06-01" as AnchorString,
+            occupant: "daily/2026-06-01.md" as VaultPath,
+            existing: "ask",
+            folder: "n/a",
+            name: "n/a",
+          },
+        ],
+      },
+    });
+    await userEvent.selectOptions(screen.getByRole("combobox", { name: m.bulk_add_existing_label() }), "merge");
+    await userEvent.click(screen.getByText(m.bulk_add_run()));
+    expect(apply).toHaveBeenCalledWith(
+      "daily",
+      [expect.objectContaining({ path: "src/a.md", existing: "merge" })],
+      expect.any(Boolean),
+      expect.any(Function),
+    );
+  });
+
+  it("resolves a per-note name ask decision into the apply call", async () => {
+    const apply = vi.fn(() => AsyncResult.ok([]));
+    mountModal({
+      apply,
+      plan: {
+        notes: [
+          {
+            kind: "action",
+            path: "src/a.md" as VaultPath,
+            anchor: "2026-06-01" as AnchorString,
+            existing: "none",
+            folder: "n/a",
+            name: "ask",
+          },
+        ],
+      },
+    });
+    await userEvent.selectOptions(screen.getByRole("combobox", { name: m.bulk_add_other_name_label() }), "rename");
+    await userEvent.click(screen.getByText(m.bulk_add_run()));
+    expect(apply).toHaveBeenCalledWith(
+      "daily",
+      [expect.objectContaining({ path: "src/a.md", rename: true })],
       expect.any(Boolean),
       expect.any(Function),
     );

@@ -51,6 +51,12 @@ export interface ResolvedAction {
   rename: boolean;
 }
 
+export interface BulkAddDecisions {
+  existing: Readonly<Record<string, "skip" | "override" | "merge">>;
+  folder: Readonly<Record<string, "keep" | "move">>;
+  name: Readonly<Record<string, "keep" | "rename">>;
+}
+
 export interface BulkLogEntry {
   path: VaultPath;
   actions: string[];
@@ -183,6 +189,16 @@ export class BulkAddService {
       if (result.kind === "err") actions.push(`Failed: ${result.error.message}`);
     }
     return { path: action.path, actions };
+  }
+
+  resolve(actions: readonly PlannedAction[], decisions: BulkAddDecisions): ResolvedAction[] {
+    return actions.map((a) => ({
+      path: a.path,
+      anchor: a.anchor,
+      existing: a.existing === "ask" ? (decisions.existing[a.path] ?? "skip") : a.existing,
+      move: a.folder === "ask" ? decisions.folder[a.path] === "move" : a.folder === "move",
+      rename: a.name === "ask" ? decisions.name[a.path] === "rename" : a.name === "rename",
+    }));
   }
 
   plan(journalName: string, parameters: BulkAddParameters): AsyncResult<BulkPlan, FolderNotFoundError> {

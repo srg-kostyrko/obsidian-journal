@@ -67,13 +67,11 @@ function setName(path: string, value: "keep" | "rename"): void {
 }
 
 async function run(): Promise<void> {
-  const resolved = actions.map((a) => ({
-    path: a.path,
-    anchor: a.anchor,
-    existing: a.occupant === undefined ? ("none" as const) : (existing.value[a.path] ?? "skip"),
-    move: a.folder === "ask" ? folderDecision.value[a.path] === "move" : a.folder === "move",
-    rename: a.name === "ask" ? nameDecision.value[a.path] === "rename" : a.name === "rename",
-  }));
+  const resolved = service.resolve(actions, {
+    existing: existing.value,
+    folder: folderDecision.value,
+    name: nameDecision.value,
+  });
   progress.value = { done: 0, total: resolved.length };
   const result = await service.apply(props.journalName, resolved, props.parameters.dryRun, (done, total) => {
     progress.value = { done, total };
