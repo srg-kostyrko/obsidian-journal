@@ -1,7 +1,6 @@
 import userEvent from "@testing-library/user-event";
 import { cleanup, fireEvent, render, screen } from "@testing-library/vue";
 import { createNanoEvents } from "nanoevents";
-import { Menu } from "obsidian";
 import { afterEach, beforeAll, beforeEach, describe, expect, it, vi } from "vitest";
 
 import type { AnchorString } from "@/calendar";
@@ -53,6 +52,14 @@ class FakeJournalsIndex {
   entryByAnchor(name: string, anchor: string) {
     return Option.fromNullable(this.byAnchor.get(`${name}::${anchor}`));
   }
+  pathsAt(names: readonly string[], anchor: string) {
+    const paths: VaultPath[] = [];
+    for (const name of names) {
+      const found = this.entryByAnchor(name, anchor);
+      if (found.isSome()) paths.push(found.value.path);
+    }
+    return paths;
+  }
   findNext(name: string, anchor: string) {
     return Option.fromNullable(this.nextByAnchor.get(`${name}::${anchor}`));
   }
@@ -63,17 +70,17 @@ class FakeJournalsIndex {
 
 class FakeWorkspace {
   openNoteCalls: { path: VaultPath; mode: unknown }[] = [];
-  hoverCalls: { path: VaultPath }[] = [];
-  fileMenuCalls: { path: VaultPath }[] = [];
+  pathsMenuCalls: { paths: readonly VaultPath[] }[] = [];
+  previewFirstPathCalls: { paths: readonly VaultPath[] }[] = [];
   openNote(path: VaultPath, mode?: unknown) {
     this.openNoteCalls.push({ path, mode });
     return AsyncResult.ok(undefined);
   }
-  triggerHoverPreview(path: VaultPath) {
-    this.hoverCalls.push({ path });
+  openPathsMenu(paths: readonly VaultPath[]) {
+    this.pathsMenuCalls.push({ paths });
   }
-  openFileMenu(path: VaultPath) {
-    this.fileMenuCalls.push({ path });
+  previewFirstPath(paths: readonly VaultPath[]) {
+    this.previewFirstPathCalls.push({ paths });
   }
 }
 
@@ -519,7 +526,7 @@ describe("NavigationCodeBlock context menu", () => {
     vi.setSystemTime(new Date("2026-05-27T10:00:00Z"));
   });
 
-  it("opens the file menu for a single matching path", async () => {
+  it("resolves the single matching path for openPathsMenu", async () => {
     const base = journalDefaultsFor({ type: "day" }, "daily");
     const journal: JournalConfig = {
       ...base,
@@ -554,13 +561,10 @@ describe("NavigationCodeBlock context menu", () => {
     const target = screen.getAllByText("today")[1];
     if (target) await fireEvent.contextMenu(target);
 
-    expect(h.workspace.fileMenuCalls.map((c) => c.path)).toEqual(["Daily/2026-05-27.md"]);
+    expect(h.workspace.pathsMenuCalls).toEqual([{ paths: ["Daily/2026-05-27.md"] }]);
   });
 
-  it("opens an obsidian Menu listing every matching path when there are multiple", async () => {
-    const showAtSpy = vi.spyOn(Menu.prototype, "showAtMouseEvent");
-    const addItemSpy = vi.spyOn(Menu.prototype, "addItem");
-
+  it("resolves every matching path for openPathsMenu when there are multiple", async () => {
     const base = journalDefaultsFor({ type: "day" }, "daily");
     const journal: JournalConfig = {
       ...base,
@@ -607,12 +611,7 @@ describe("NavigationCodeBlock context menu", () => {
     const target = screen.getAllByText("wk")[1];
     if (target) await fireEvent.contextMenu(target);
 
-    expect(addItemSpy).toHaveBeenCalledTimes(2);
-    expect(showAtSpy).toHaveBeenCalledTimes(1);
-    expect(h.workspace.fileMenuCalls).toHaveLength(0);
-
-    showAtSpy.mockRestore();
-    addItemSpy.mockRestore();
+    expect(h.workspace.pathsMenuCalls).toEqual([{ paths: ["Weekly1/W22.md", "Weekly2/W22.md"] }]);
   });
 });
 
@@ -622,7 +621,7 @@ describe("NavigationCodeBlock hover preview", () => {
     vi.setSystemTime(new Date("2026-05-27T10:00:00Z"));
   });
 
-  it("triggers hover preview when pointer enters a row with ctrl held", async () => {
+  it("resolves the target path for previewFirstPath when pointer enters a row", async () => {
     const base = journalDefaultsFor({ type: "day" }, "daily");
     const journal: JournalConfig = {
       ...base,
@@ -657,45 +656,7 @@ describe("NavigationCodeBlock hover preview", () => {
     const target = screen.getAllByText("today")[1];
     if (target) await fireEvent.pointerEnter(target, { ctrlKey: true });
 
-    expect(h.workspace.hoverCalls.map((c) => c.path)).toEqual(["Daily/2026-05-27.md"]);
-  });
-
-  it("does not trigger hover preview without ctrl/meta", async () => {
-    const base = journalDefaultsFor({ type: "day" }, "daily");
-    const journal: JournalConfig = {
-      ...base,
-      navBlock: {
-        ...base.navBlock,
-        rows: [
-          {
-            template: "today",
-            fontSize: 1,
-            bold: false,
-            italic: false,
-            color: { type: "transparent" },
-            background: { type: "transparent" },
-            link: "self",
-            journal: "",
-            addDecorations: false,
-          },
-        ],
-      },
-    };
-    const h = buildHarness({ daily: journal });
-    const entry = {
-      journalName: "daily",
-      anchor: "2026-05-27" as AnchorString,
-      path: "Daily/2026-05-27.md" as VaultPath,
-    };
-    h.index.byPath.set("Daily/2026-05-27.md", entry);
-    h.index.byAnchor.set("daily::2026-05-27", entry);
-    h.shelves.shelves = [{ name: "main", journals: ["daily"] }];
-    mount(h, "Daily/2026-05-27.md");
-
-    const target = screen.getAllByText("today")[1];
-    if (target) await fireEvent.pointerEnter(target);
-
-    expect(h.workspace.hoverCalls).toHaveLength(0);
+    expect(h.workspace.previewFirstPathCalls).toEqual([{ paths: ["Daily/2026-05-27.md"] }]);
   });
 });
 

@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { Menu } from "obsidian";
+import { match } from "ts-pattern";
 import { computed } from "vue";
 
 import { Clock, type AnchorString, type Period } from "@/calendar";
@@ -14,13 +14,12 @@ import {
   NumberingService,
   OpenDateFlow,
   type JournalConfig,
-  type JournalEntry,
   type NavBlockRow,
 } from "@/journals";
 import { ShelvesRepository } from "@/shelves";
 import { TemplateEngine } from "@/templates";
 
-import { resolveLinkCandidates, resolveLinkTarget } from "../link-targets";
+import { resolveLinkCandidates, resolveLinkTarget, type LinkTarget } from "../link-targets";
 import { buildNavRowContext } from "../nav-row-context";
 
 const props = defineProps<{
@@ -74,13 +73,12 @@ const color = computed(() => colorToString(props.row.color));
 const background = computed(() => colorToString(props.row.background));
 const cursor = computed(() => (target.value.kind === "none" ? "default" : "pointer"));
 
-function entriesForOpen(anchor: AnchorString, names: readonly string[]): readonly JournalEntry[] {
-  const out: JournalEntry[] = [];
-  for (const name of names) {
-    const opt = index.entryByAnchor(name, anchor);
-    if (opt.isSome()) out.push(opt.value);
-  }
-  return out;
+function pathsForTarget(t: LinkTarget): readonly VaultPath[] {
+  return match(t)
+    .with({ kind: "none" }, () => [])
+    .with({ kind: "self" }, ({ path }) => [path])
+    .with({ kind: "open" }, ({ journalNames }) => index.pathsAt(journalNames, props.refDate))
+    .exhaustive();
 }
 
 function onClick(event: MouseEvent): void {
@@ -100,33 +98,12 @@ function onClick(event: MouseEvent): void {
 
 function onContextMenu(event: MouseEvent): void {
   if (props.preventNavigation) return;
-  const t = target.value;
-  if (t.kind === "none") return;
-  const paths: VaultPath[] =
-    t.kind === "self" ? [t.path] : entriesForOpen(props.refDate, t.journalNames).map((entry) => entry.path);
-  if (paths.length === 0) return;
-  if (paths.length === 1) {
-    const [first] = paths;
-    if (first !== undefined) workspace.openFileMenu(first, event);
-    return;
-  }
-  const menu = new Menu();
-  for (const path of paths) {
-    menu.addItem((item) => {
-      item.setTitle(path).onClick(() => workspace.openFileMenu(path, event));
-    });
-  }
-  menu.showAtMouseEvent(event);
+  workspace.openPathsMenu(pathsForTarget(target.value), event);
 }
 
 function onPointerEnter(event: PointerEvent): void {
   if (props.preventNavigation) return;
-  if (!event.ctrlKey && !event.metaKey) return;
-  const t = target.value;
-  if (t.kind === "none") return;
-  const path = t.kind === "self" ? t.path : entriesForOpen(props.refDate, t.journalNames).map((entry) => entry.path)[0];
-  if (path === undefined) return;
-  workspace.triggerHoverPreview(path, event);
+  workspace.previewFirstPath(pathsForTarget(target.value), event);
 }
 </script>
 

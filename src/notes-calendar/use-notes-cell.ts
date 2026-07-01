@@ -1,4 +1,3 @@
-import { Menu } from "obsidian";
 import { toValue, type MaybeRefOrGetter } from "vue";
 
 import type { Period } from "@/calendar";
@@ -39,15 +38,8 @@ export function useNotesCell(options: { journalNames: MaybeRefOrGetter<readonly 
     return a.anchor === period.anchor.toAnchor();
   };
 
-  const existingPathsAt = (period: Period): readonly VaultPath[] => {
-    const anchor = period.anchor.toAnchor();
-    const paths: VaultPath[] = [];
-    for (const name of toValue(options.journalNames)) {
-      const opt = index.entryByAnchor(name, anchor);
-      if (opt.isSome()) paths.push(opt.value.path);
-    }
-    return paths;
-  };
+  const existingPathsAt = (period: Period): readonly VaultPath[] =>
+    index.pathsAt(toValue(options.journalNames), period.anchor.toAnchor());
 
   const open = (period: Period, event: MouseEvent): void => {
     if (!isActionable(period)) return;
@@ -59,29 +51,11 @@ export function useNotesCell(options: { journalNames: MaybeRefOrGetter<readonly 
   };
 
   const openPreview = (period: Period, event: MouseEvent): void => {
-    if (!event.ctrlKey && !event.metaKey) return;
-    const paths = existingPathsAt(period);
-    const [first] = paths;
-    if (first === undefined) return;
-    workspace.triggerHoverPreview(first, event);
+    workspace.previewFirstPath(existingPathsAt(period), event);
   };
 
   const openContextMenu = (period: Period, event: MouseEvent): void => {
-    const paths = existingPathsAt(period);
-    if (paths.length === 0) return;
-    const [first] = paths;
-    if (first === undefined) return;
-    if (paths.length === 1) {
-      workspace.openFileMenu(first, event);
-      return;
-    }
-    const menu = new Menu();
-    for (const path of paths) {
-      menu.addItem((item) => {
-        item.setTitle(path).onClick(() => workspace.openFileMenu(path, event));
-      });
-    }
-    menu.showAtMouseEvent(event);
+    workspace.openPathsMenu(existingPathsAt(period), event);
   };
 
   return { open, openContextMenu, openPreview, isActive, isActionable };

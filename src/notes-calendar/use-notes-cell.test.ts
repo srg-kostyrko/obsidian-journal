@@ -172,70 +172,38 @@ describe("useNotesCell", () => {
   });
 
   describe("openContextMenu", () => {
-    it("does nothing when no entry exists at the period's anchor", () => {
+    it("resolves no paths when no entry exists at the period's anchor", () => {
       const { c, workspace } = buildHarness();
-      const { api } = mountWithApi(c, () => ["daily"]);
-      api.openContextMenu(may25, new MouseEvent("contextmenu"));
-      expect(workspace.fileMenuCalls).toEqual([]);
-    });
-
-    it("opens the file menu directly when exactly one entry exists", () => {
-      const { c, workspace, index } = buildHarness();
-      index.register({ journalName: "daily", anchor: may25.anchor.toAnchor(), path: dailyPath });
       const { api } = mountWithApi(c, () => ["daily"]);
       const event = new MouseEvent("contextmenu");
       api.openContextMenu(may25, event);
-
-      expect(workspace.fileMenuCalls).toEqual([{ path: dailyPath, event }]);
+      expect(workspace.pathsMenuCalls).toEqual([{ paths: [], event }]);
     });
 
-    it("shows a chooser menu when multiple entries exist at the same anchor", async () => {
-      const { c, index } = buildHarness();
+    it("resolves the existing paths across every in-scope journal at the period's anchor", () => {
+      const { c, workspace, index } = buildHarness();
       index.register({ journalName: "daily", anchor: may25.anchor.toAnchor(), path: dailyPath });
       const secondPath = "Daily2/2026-05-25.md" as VaultPath;
       index.register({ journalName: "secondary", anchor: may25.anchor.toAnchor(), path: secondPath });
       const { api } = mountWithApi(c, () => ["daily", "secondary"]);
-      const { __testing } = await import("obsidian");
-      __testing.reset();
+      const event = new MouseEvent("contextmenu");
 
-      api.openContextMenu(may25, new MouseEvent("contextmenu"));
+      api.openContextMenu(may25, event);
 
-      const menu = __testing.lastOpenMenu();
-      expect(menu.items.map((i) => i.title)).toEqual([dailyPath, secondPath]);
+      expect(workspace.pathsMenuCalls).toEqual([{ paths: [dailyPath, secondPath], event }]);
     });
   });
 
   describe("openPreview", () => {
-    it("does nothing when no modifier key is held", () => {
-      const { c, workspace, index } = buildHarness();
-      index.register({ journalName: "daily", anchor: may25.anchor.toAnchor(), path: dailyPath });
-      const { api } = mountWithApi(c, () => ["daily"]);
-      api.openPreview(may25, new MouseEvent("mouseenter"));
-      expect(workspace.hoverPreviewCalls).toEqual([]);
-    });
-
-    it("does nothing when no existing entry is present even with ctrl held", () => {
-      const { c, workspace } = buildHarness();
-      const { api } = mountWithApi(c, () => ["daily"]);
-      api.openPreview(may25, new MouseEvent("mouseenter", { ctrlKey: true }));
-      expect(workspace.hoverPreviewCalls).toEqual([]);
-    });
-
-    it("invokes triggerHoverPreview with the first existing path when ctrl is held", () => {
+    it("delegates the modifier-key gate and existing paths to previewFirstPath", () => {
       const { c, workspace, index } = buildHarness();
       index.register({ journalName: "daily", anchor: may25.anchor.toAnchor(), path: dailyPath });
       const { api } = mountWithApi(c, () => ["daily"]);
       const event = new MouseEvent("mouseenter", { ctrlKey: true });
-      api.openPreview(may25, event);
-      expect(workspace.hoverPreviewCalls).toEqual([{ path: dailyPath, event }]);
-    });
 
-    it("invokes triggerHoverPreview when meta is held", () => {
-      const { c, workspace, index } = buildHarness();
-      index.register({ journalName: "daily", anchor: may25.anchor.toAnchor(), path: dailyPath });
-      const { api } = mountWithApi(c, () => ["daily"]);
-      api.openPreview(may25, new MouseEvent("mouseenter", { metaKey: true }));
-      expect(workspace.hoverPreviewCalls).toHaveLength(1);
+      api.openPreview(may25, event);
+
+      expect(workspace.previewFirstPathCalls).toEqual([{ paths: [dailyPath], event }]);
     });
   });
 });

@@ -151,6 +151,15 @@ export class JournalsIndex {
     return journalIndex ? journalIndex.findClosestAnchor(to) : Option.none();
   }
 
+  pathsAt(journalNames: readonly string[], anchor: AnchorString): readonly VaultPath[] {
+    const paths: VaultPath[] = [];
+    for (const name of journalNames) {
+      const found = this.entryByAnchor(name, anchor);
+      if (found.isSome()) paths.push(found.value.path);
+    }
+    return paths;
+  }
+
   *entriesFor(journalName: string): Iterable<readonly [AnchorString, VaultPath]> {
     const journalIndex = this.#journals.get(journalName);
     if (!journalIndex) return;

@@ -187,6 +187,8 @@ export class FakeWorkspaceService implements Pick<
   | "events"
   | "triggerHoverPreview"
   | "openFileMenu"
+  | "openPathsMenu"
+  | "previewFirstPath"
   | "layoutReady"
   | "onLayoutReady"
 > {
@@ -199,6 +201,8 @@ export class FakeWorkspaceService implements Pick<
   readonly events: Subscribable<WorkspaceEvents> = this.#emitter;
   readonly hoverPreviewCalls: { path: VaultPath; event: MouseEvent }[] = [];
   readonly fileMenuCalls: { path: VaultPath; event: MouseEvent }[] = [];
+  readonly pathsMenuCalls: { paths: readonly VaultPath[]; event: MouseEvent }[] = [];
+  readonly previewFirstPathCalls: { paths: readonly VaultPath[]; event: MouseEvent }[] = [];
 
   get layoutReady(): boolean {
     return this.#layoutReady;
@@ -245,6 +249,14 @@ export class FakeWorkspaceService implements Pick<
 
   openFileMenu(path: VaultPath, event: MouseEvent): void {
     this.fileMenuCalls.push({ path, event });
+  }
+
+  openPathsMenu(paths: readonly VaultPath[], event: MouseEvent): void {
+    this.pathsMenuCalls.push({ paths, event });
+  }
+
+  previewFirstPath(paths: readonly VaultPath[], event: MouseEvent): void {
+    this.previewFirstPathCalls.push({ paths, event });
   }
 }
 

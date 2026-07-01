@@ -477,4 +477,27 @@ describe("JournalsIndex", () => {
       expect(result.value).toEqual(sprintEntry);
     });
   });
+
+  describe("pathsAt", () => {
+    it("collects the path from each journal that has an entry at the anchor", () => {
+      const index = new JournalsIndex();
+      index.register(entry("daily", "2022-01-01", "Daily/2022-01-01.md"));
+      index.register(entry("work", "2022-01-01", "Work/2022-01-01.md"));
+      expect(index.pathsAt(["daily", "work"], a("2022-01-01"))).toEqual([
+        p("Daily/2022-01-01.md"),
+        p("Work/2022-01-01.md"),
+      ]);
+    });
+
+    it("omits journals with no entry at the anchor", () => {
+      const index = new JournalsIndex();
+      index.register(entry("daily", "2022-01-01", "Daily/2022-01-01.md"));
+      expect(index.pathsAt(["daily", "work"], a("2022-01-01"))).toEqual([p("Daily/2022-01-01.md")]);
+    });
+
+    it("returns an empty array when no journal has an entry at the anchor", () => {
+      const index = new JournalsIndex();
+      expect(index.pathsAt(["daily"], a("2022-01-01"))).toEqual([]);
+    });
+  });
 });

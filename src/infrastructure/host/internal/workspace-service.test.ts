@@ -160,4 +160,83 @@ describe("WorkspaceService", () => {
       expect(__testing.openMenus).toHaveLength(0);
     });
   });
+
+  describe("openPathsMenu", () => {
+    it("no-ops when given no paths", async () => {
+      const { __testing } = await import("obsidian");
+      __testing.reset();
+
+      const { service } = build();
+      service.openPathsMenu([], new MouseEvent("contextmenu"));
+
+      expect(__testing.openMenus).toHaveLength(0);
+    });
+
+    it("opens the file menu directly when given exactly one path", async () => {
+      const { __testing } = await import("obsidian");
+      __testing.reset();
+
+      const { service, host } = build();
+      host.putFile(path);
+      service.openPathsMenu([path], new MouseEvent("contextmenu"));
+
+      expect(host.workspace.triggerCalls).toHaveLength(1);
+      expect(host.workspace.triggerCalls[0]?.event).toBe("file-menu");
+    });
+
+    it("shows a chooser menu with one item per path when given multiple paths", async () => {
+      const { __testing } = await import("obsidian");
+      __testing.reset();
+
+      const { service } = build();
+      const other = "Daily/2026-05-14.md" as VaultPath;
+      service.openPathsMenu([path, other], new MouseEvent("contextmenu"));
+
+      const menu = __testing.lastOpenMenu();
+      expect(menu.items.map((item) => item.title)).toEqual([path, other]);
+    });
+
+    it("opens the clicked path's file menu from the chooser", async () => {
+      const { __testing } = await import("obsidian");
+      __testing.reset();
+
+      const { service, host } = build();
+      const other = "Daily/2026-05-14.md" as VaultPath;
+      host.putFile(other);
+      service.openPathsMenu([path, other], new MouseEvent("contextmenu"));
+
+      const [, otherItem] = __testing.lastOpenMenu().items;
+      (otherItem as unknown as { click(): void }).click();
+
+      expect(host.workspace.triggerCalls).toHaveLength(1);
+      expect(host.workspace.triggerCalls[0]?.event).toBe("file-menu");
+    });
+  });
+
+  describe("previewFirstPath", () => {
+    it("no-ops when neither ctrl nor meta is held", () => {
+      const { service, host } = build();
+      service.previewFirstPath([path], new MouseEvent("pointerenter"));
+
+      expect(host.workspace.triggerCalls).toHaveLength(0);
+    });
+
+    it("no-ops when given no paths even while ctrl is held", () => {
+      const { service, host } = build();
+      service.previewFirstPath([], new MouseEvent("pointerenter", { ctrlKey: true }));
+
+      expect(host.workspace.triggerCalls).toHaveLength(0);
+    });
+
+    it("previews the first path when ctrl is held", () => {
+      const { service, host } = build();
+      const other = "Daily/2026-05-14.md" as VaultPath;
+      service.previewFirstPath([path, other], new MouseEvent("pointerenter", { ctrlKey: true }));
+
+      expect(host.workspace.triggerCalls).toHaveLength(1);
+      const [recorded] = host.workspace.triggerCalls;
+      expect(recorded?.event).toBe("link-hover");
+      expect(recorded?.arguments_[2]).toBe(path);
+    });
+  });
 });

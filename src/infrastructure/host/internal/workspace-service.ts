@@ -138,4 +138,25 @@ export class WorkspaceService {
     this.#app.workspace.trigger("file-menu", menu, file, "file-explorer-context-menu", null);
     menu.showAtMouseEvent(event);
   }
+
+  openPathsMenu(paths: readonly VaultPath[], event: MouseEvent): void {
+    const [first] = paths;
+    if (first === undefined) return;
+    if (paths.length === 1) {
+      this.openFileMenu(first, event);
+      return;
+    }
+    const menu = new Menu();
+    for (const path of paths) {
+      menu.addItem((item) => item.setTitle(path).onClick(() => this.openFileMenu(path, event)));
+    }
+    menu.showAtMouseEvent(event);
+  }
+
+  previewFirstPath(paths: readonly VaultPath[], event: MouseEvent): void {
+    if (!event.ctrlKey && !event.metaKey) return;
+    const [first] = paths;
+    if (first === undefined) return;
+    this.triggerHoverPreview(first, event);
+  }
 }
