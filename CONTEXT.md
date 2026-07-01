@@ -254,6 +254,20 @@ year/month/quarter.
 > The `JournalIndex`/`JournalsIndex` two-layer split and `SelfWriteGuard` are
 > documented above under **Calendar periods** (they predate this section).
 
+**Journal-edit warnings** — `src/journals/settings/ui/` hosts several independent
+template-diagnostic checks surfaced while editing a journal: `useInvertibilityCheck`
+(can auto-attach recover an anchor from this name/folder template?),
+`templateHasWrongWeek` (does a format use the `W` token, which breaks under custom
+week configs — the v2 cross-year bug), `nameTemplateCollides` (does one journal's own
+template collapse every entry onto one note?), and `findCollidingJournals` (do two
+different journals resolve to the same path?).
+
+> **Don't fuse by shape.** These look alike — each is a warning predicate over a
+> template string — but check unrelated failure modes (invertibility vs. week-format
+> correctness vs. within-journal vs. across-journal collision). Kept as independent,
+> single-purpose files; a "template health" unification was considered and rejected
+> during an architecture review (2026-07-01).
+
 ## Templates
 
 The throughline of the whole feature: **render is total and forgiving; parse/invert
