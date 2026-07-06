@@ -127,10 +127,33 @@ describe("ButtonItemConfig", () => {
   });
 
   describe("navigate-step action", () => {
-    it("renders no behavior or period controls", () => {
-      mountConfig({ action: { type: "navigate-step", direction: "next", unit: "month", amount: 1 } }, vi.fn());
-      expect(screen.queryByRole("combobox")).toBeNull();
+    const stepConfig: ButtonConfig = {
+      action: { type: "navigate-step", direction: "next", unit: "month", amount: 1 },
+    };
+
+    it("renders no period-level toggles", () => {
+      mountConfig(stepConfig, vi.fn());
       expect(screen.queryAllByRole("checkbox")).toHaveLength(0);
+    });
+
+    it("emits onChange with the selected direction when the direction dropdown changes", async () => {
+      const onChange = vi.fn();
+      mountConfig(stepConfig, onChange);
+      const [directionDropdown] = screen.getAllByRole("combobox");
+      await userEvent.selectOptions(directionDropdown, "prev");
+      expect(onChange).toHaveBeenLastCalledWith({
+        action: { type: "navigate-step", direction: "prev", unit: "month", amount: 1 },
+      });
+    });
+
+    it("emits onChange with the selected granularity when the granularity dropdown changes", async () => {
+      const onChange = vi.fn();
+      mountConfig(stepConfig, onChange);
+      const [, granularityDropdown] = screen.getAllByRole("combobox");
+      await userEvent.selectOptions(granularityDropdown, "quarter");
+      expect(onChange).toHaveBeenLastCalledWith({
+        action: { type: "navigate-step", direction: "next", unit: "quarter", amount: 1 },
+      });
     });
   });
 });

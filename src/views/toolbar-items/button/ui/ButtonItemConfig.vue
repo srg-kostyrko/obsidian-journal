@@ -13,6 +13,7 @@ import {
   type ButtonConfig,
   type ButtonConfigChange,
   type ButtonLevel,
+  type ButtonStepUnit,
 } from "../button-config";
 
 const props = defineProps<{
@@ -32,6 +33,25 @@ const periodAction = computed(() => {
   const action = props.config.action;
   return action.type === "navigate-step" ? null : action;
 });
+
+const stepAction = computed(() => {
+  const action = props.config.action;
+  return action.type === "navigate-step" ? action : null;
+});
+
+const stepUnits: readonly ButtonStepUnit[] = ["week", "month", "quarter", "year"];
+
+function setDirection(direction: "prev" | "next"): void {
+  const action = stepAction.value;
+  if (!action) return;
+  update({ action: { ...action, direction } });
+}
+
+function setUnit(unit: ButtonStepUnit): void {
+  const action = stepAction.value;
+  if (!action) return;
+  update({ action: { ...action, unit } });
+}
 
 function setMode(mode: "select-only" | "navigate" | "create"): void {
   const action = periodAction.value;
@@ -99,6 +119,31 @@ function toggleLevel(level: ButtonLevel, enabled: boolean): void {
         :tooltip="m.view_toolbar_button_config_level_option({ level })"
         @update:model-value="(enabled: boolean | undefined) => toggleLevel(level, enabled ?? false)"
       />
+    </UiSettingRow>
+  </template>
+  <template v-if="stepAction">
+    <UiSettingRow>
+      <template #name>{{ m.view_toolbar_button_config_direction_label() }}</template>
+      <UiDropdown
+        :model-value="stepAction.direction"
+        @update:model-value="(value: string | undefined) => value && setDirection(value as 'prev' | 'next')"
+      >
+        <option value="prev">{{ m.view_toolbar_button_config_direction_option({ direction: "prev" }) }}</option>
+        <option value="next">{{ m.view_toolbar_button_config_direction_option({ direction: "next" }) }}</option>
+      </UiDropdown>
+    </UiSettingRow>
+    <UiSettingRow>
+      <template #name>{{ m.view_toolbar_button_config_granularity_label() }}</template>
+      <UiDropdown
+        :model-value="stepAction.unit"
+        @update:model-value="
+          (value: string | undefined) => value && setUnit(value as 'week' | 'month' | 'quarter' | 'year')
+        "
+      >
+        <option v-for="unit of stepUnits" :key="unit" :value="unit">
+          {{ m.view_toolbar_button_config_level_option({ level: unit }) }}
+        </option>
+      </UiDropdown>
     </UiSettingRow>
   </template>
 </template>
