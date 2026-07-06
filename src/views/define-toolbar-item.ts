@@ -9,6 +9,7 @@ export interface ToolbarItemProps<TConfig> {
 
 export interface ToolbarItemPreset<TConfig> {
   readonly label: string;
+  readonly description?: string;
   readonly defaultConfig: TConfig;
 }
 

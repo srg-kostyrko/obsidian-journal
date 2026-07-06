@@ -835,9 +835,11 @@
   ],
 
   "view_toolbar_button_label": "Button",
-  "view_toolbar_button_description": "Generic action button (pick a date, jump to current, navigate by step).",
   "view_toolbar_button_preset_pick_date": "Pick date",
+  "view_toolbar_button_preset_pick_date_description": "Opens a date picker to jump to any note.",
+  "view_toolbar_button_preset_today_description": "Jumps to the current period's note.",
   "view_toolbar_button_preset_navigate": "Navigate by step",
+  "view_toolbar_button_preset_navigate_description": "Steps forward or back by a fixed interval.",
   "view_toolbar_button_default_tooltip_pick_multi": "Open a note",
   "view_toolbar_button_default_label_this_week": "This week",
   "view_toolbar_button_default_label_this_month": "This month",

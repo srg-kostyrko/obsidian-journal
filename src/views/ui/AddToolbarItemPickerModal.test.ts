@@ -27,7 +27,7 @@ function toolbarItemDefinition(key: string, label: string): ToolbarItemDefinitio
 function toolbarItemDefinitionWithPresets(
   key: string,
   label: string,
-  presets: { label: string; defaultConfig: unknown }[],
+  presets: { label: string; description?: string; defaultConfig: unknown }[],
 ): ToolbarItemDefinition {
   return {
     key,
@@ -71,6 +71,17 @@ describe("AddToolbarItemPickerModal", () => {
       expect(screen.getByText("Today")).toBeTruthy();
       expect(screen.getByText("Previous")).toBeTruthy();
       expect(screen.getByText("Next")).toBeTruthy();
+    });
+
+    it("renders each preset's own description", () => {
+      mountModal([
+        toolbarItemDefinitionWithPresets("button", "Button", [
+          { label: "Today", description: "Jump to now", defaultConfig: { action: "today" } },
+          { label: "Navigate", description: "Step by interval", defaultConfig: { action: "next" } },
+        ]),
+      ]);
+      expect(screen.getByText("Jump to now")).toBeTruthy();
+      expect(screen.getByText("Step by interval")).toBeTruthy();
     });
   });
 

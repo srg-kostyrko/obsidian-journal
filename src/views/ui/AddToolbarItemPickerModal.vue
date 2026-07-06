@@ -30,7 +30,7 @@ const rows = computed<readonly Row[]>(() => {
           key: d.key,
           label: preset.label,
           icon: d.icon,
-          description: d.description,
+          description: preset.description ?? d.description,
           defaultConfig: preset.defaultConfig,
         });
       }
