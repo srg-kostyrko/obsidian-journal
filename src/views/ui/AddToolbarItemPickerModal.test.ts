@@ -74,10 +74,12 @@ describe("AddToolbarItemPickerModal", () => {
     });
   });
 
-  describe("when a row is clicked", () => {
+  describe("when the add button is clicked", () => {
     it("calls api.submit with the key and defaultConfig", async () => {
       const { submit } = mountModal([toolbarItemDefinition("shelf-selector", "Shelf selector")]);
-      await userEvent.click(screen.getByText("Shelf selector"));
+      await userEvent.click(
+        screen.getByRole("button", { name: m.view_add_picker_action({ label: "Shelf selector" }) }),
+      );
       expect(submit).toHaveBeenCalledWith({ key: "shelf-selector", defaultConfig: {} });
     });
   });

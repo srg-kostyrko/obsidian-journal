@@ -2,7 +2,6 @@ import { $, $$, browser, expect } from "@wdio/globals";
 
 import { getSettings, waitForSettings } from "../support/plugin-data.js";
 import {
-  clickButton,
   clickIcon,
   clickModalCheckboxByLabel,
   closeSettings,
@@ -185,7 +184,7 @@ describe("settings", () => {
       await expandSection("Views");
       await clickIcon("Open Calendar");
       await clickIcon("Add block");
-      await clickButton("Week calendar");
+      await clickIcon("Add Week calendar");
 
       await waitForSettings(
         (s) => (s.views?.[calId ?? ""]?.blocks?.length ?? 0) === before + 1,
@@ -205,7 +204,7 @@ describe("settings", () => {
       await expandSection("Views");
       await clickIcon("Open Calendar");
       await clickIcon("Add toolbar item");
-      await clickButton("Period buttons");
+      await clickIcon("Add Period buttons");
 
       await waitForSettings((s) => itemCount(s.views) === before + 1, "added toolbar item not persisted");
     });
@@ -230,7 +229,7 @@ describe("settings", () => {
       // new item is globally last — matching the last edit button and last-button reads below.
       const adders = await $$('button[aria-label="Add toolbar item"]').getElements();
       await adders.at(-1)?.click();
-      await clickButton("Pick date");
+      await clickIcon("Add Pick date");
       await waitForSettings(
         (s) => toolbarItems(s.views).length === before + 1 && lastButtonMode(s.views) === "navigate",
         "added pick-date button not persisted",
@@ -262,7 +261,7 @@ describe("settings", () => {
       await expandSection("Views");
       await clickIcon("Open Calendar");
       await clickIcon("Add block");
-      await clickButton("Week calendar");
+      await clickIcon("Add Week calendar");
       await waitForSettings((s) => {
         const block = lastBlock(s.views);
         return block?.key === "week-calendar" && block.config?.weeks === "left";
@@ -308,7 +307,7 @@ describe("settings", () => {
       await expandSection("Views");
       await clickIcon("Open Calendar");
       await clickIcon("Add block");
-      await clickButton("Week calendar");
+      await clickIcon("Add Week calendar");
       await waitForSettings(
         (s) => Array.isArray(lastBlockHidden(s.views)) && lastBlockHidden(s.views)?.length === 0,
         "added week-calendar block did not default to no hidden weekdays",

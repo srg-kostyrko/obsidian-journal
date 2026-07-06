@@ -40,7 +40,7 @@ describe("AddBlockPickerModal", () => {
       blockDefinition("month-calendar", "Month calendar"),
       blockDefinition("divider", "Divider"),
     ]);
-    await userEvent.click(screen.getByText("Divider"));
+    await userEvent.click(screen.getByRole("button", { name: m.view_add_picker_action({ label: "Divider" }) }));
     expect(submit).toHaveBeenCalledWith("divider");
   });
 

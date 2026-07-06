@@ -43,8 +43,9 @@ export async function clickIcon(label: string): Promise<void> {
   await $(`button[aria-label="${label}"]`).click();
 }
 
-// UiButton renders its label as text content (Save / a picker option, ...). Icon adders
-// like "Add block" / "Add toolbar item" carry no text — reach them via clickIcon instead.
+// UiButton renders its label as text content (Save / Back to list, ...). Icon adders like
+// "Add block" / "Add toolbar item" and picker rows (whose "Add <name>" action is a
+// UiIconButton) carry no text — reach them via clickIcon instead.
 export async function clickButton(text: string): Promise<void> {
   await $(`button=${text}`).click();
 }

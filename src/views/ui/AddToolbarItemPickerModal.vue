@@ -3,8 +3,10 @@ import { computed } from "vue";
 
 import { m } from "@/i18n";
 import { useModal } from "@/infrastructure/host/modals";
+import { icons } from "@/ui/icons";
 import UiButton from "@/ui/UiButton.vue";
 import UiIcon from "@/ui/UiIcon.vue";
+import UiIconButton from "@/ui/UiIconButton.vue";
 import UiSettingRow from "@/ui/UiSettingRow.vue";
 
 import type { ToolbarItemDefinition } from "../define-toolbar-item";
@@ -56,30 +58,17 @@ const api = useModal<{ key: string; defaultConfig: unknown }>();
     <UiSettingRow v-for="(row, idx) of rows" :key="`${row.key}::${idx}`">
       <template #name>
         <UiIcon v-if="row.icon" :name="row.icon" />
-        <button
-          type="button"
-          class="picker-row"
-          @click="api.submit({ key: row.key, defaultConfig: row.defaultConfig })"
-        >
-          {{ row.label }}
-        </button>
+        {{ row.label }}
       </template>
       <template v-if="row.description" #description>{{ row.description }}</template>
+      <UiIconButton
+        :icon="icons.action.add"
+        :tooltip="m.view_add_picker_action({ label: row.label })"
+        @click="api.submit({ key: row.key, defaultConfig: row.defaultConfig })"
+      />
     </UiSettingRow>
     <UiSettingRow controls-only>
       <UiButton @click="api.cancel()">{{ m.common_action_cancel() }}</UiButton>
     </UiSettingRow>
   </div>
 </template>
-
-<style scoped>
-.picker-row {
-  background: none;
-  border: 0;
-  padding: 0;
-  cursor: pointer;
-  text-align: left;
-  font: inherit;
-  color: inherit;
-}
-</style>

@@ -734,6 +734,7 @@
   "view_delete_modal_description": "This action cannot be undone.",
   "view_add_block": "Add block",
   "view_add_block_empty": "No block types are registered.",
+  "view_add_picker_action": "Add {label}",
   "view_block_divider_label": "Divider",
   "view_block_toolbar_label": "Toolbar",
   "view_block_toolbar_description": "Container for toolbar items such as buttons and the shelf selector.",

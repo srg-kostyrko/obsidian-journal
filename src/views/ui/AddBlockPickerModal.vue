@@ -1,8 +1,10 @@
 <script setup lang="ts">
 import { m } from "@/i18n";
 import { useModal } from "@/infrastructure/host/modals";
+import { icons } from "@/ui/icons";
 import UiButton from "@/ui/UiButton.vue";
 import UiIcon from "@/ui/UiIcon.vue";
+import UiIconButton from "@/ui/UiIconButton.vue";
 import UiSettingRow from "@/ui/UiSettingRow.vue";
 
 import type { ViewBlockDefinition } from "../define-view-block";
@@ -20,9 +22,14 @@ const api = useModal<string>();
     <UiSettingRow v-for="d of definitions" :key="d.key">
       <template #name>
         <UiIcon v-if="d.icon" :name="d.icon" />
-        <button type="button" class="block-picker-row" @click="api.submit(d.key)">{{ d.label }}</button>
+        {{ d.label }}
       </template>
       <template v-if="d.description" #description>{{ d.description }}</template>
+      <UiIconButton
+        :icon="icons.action.add"
+        :tooltip="m.view_add_picker_action({ label: d.label })"
+        @click="api.submit(d.key)"
+      />
     </UiSettingRow>
 
     <UiSettingRow controls-only>
@@ -30,15 +37,3 @@ const api = useModal<string>();
     </UiSettingRow>
   </div>
 </template>
-
-<style scoped>
-.block-picker-row {
-  background: none;
-  border: 0;
-  padding: 0;
-  cursor: pointer;
-  text-align: left;
-  font: inherit;
-  color: inherit;
-}
-</style>
