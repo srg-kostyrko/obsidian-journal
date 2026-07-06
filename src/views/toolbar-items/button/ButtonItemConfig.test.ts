@@ -90,8 +90,7 @@ describe("ButtonItemConfig", () => {
     it("adds a period level when its toggle is enabled", async () => {
       const onChange = vi.fn();
       mountConfig(baseConfig, onChange);
-      const [, weekToggle] = screen.getAllByRole("checkbox");
-      await userEvent.click(weekToggle);
+      await userEvent.click(screen.getByRole("button", { name: "Week" }));
       expect(onChange).toHaveBeenLastCalledWith({
         action: { type: "current", mode: "create", levels: ["day", "week"] },
       });
@@ -100,8 +99,7 @@ describe("ButtonItemConfig", () => {
     it("orders enabled levels canonically regardless of toggle order", async () => {
       const onChange = vi.fn();
       mountConfig({ action: { type: "current", mode: "create", levels: ["month"] } }, onChange);
-      const [dayToggle] = screen.getAllByRole("checkbox");
-      await userEvent.click(dayToggle);
+      await userEvent.click(screen.getByRole("button", { name: "Day" }));
       expect(onChange).toHaveBeenLastCalledWith({
         action: { type: "current", mode: "create", levels: ["day", "month"] },
       });
@@ -110,8 +108,7 @@ describe("ButtonItemConfig", () => {
     it("removes a period level when its toggle is disabled", async () => {
       const onChange = vi.fn();
       mountConfig({ action: { type: "current", mode: "create", levels: ["day", "week"] } }, onChange);
-      const [dayToggle] = screen.getAllByRole("checkbox");
-      await userEvent.click(dayToggle);
+      await userEvent.click(screen.getByRole("button", { name: "Day" }));
       expect(onChange).toHaveBeenLastCalledWith({
         action: { type: "current", mode: "create", levels: ["week"] },
       });
@@ -120,8 +117,7 @@ describe("ButtonItemConfig", () => {
     it("keeps the last remaining level when its toggle is disabled", async () => {
       const onChange = vi.fn();
       mountConfig(baseConfig, onChange);
-      const [dayToggle] = screen.getAllByRole("checkbox");
-      await userEvent.click(dayToggle);
+      await userEvent.click(screen.getByRole("button", { name: "Day" }));
       expect(onChange).not.toHaveBeenCalled();
     });
   });
@@ -133,7 +129,7 @@ describe("ButtonItemConfig", () => {
 
     it("renders no period-level toggles", () => {
       mountConfig(stepConfig, vi.fn());
-      expect(screen.queryAllByRole("checkbox")).toHaveLength(0);
+      expect(screen.queryByRole("button", { name: "Day" })).toBeNull();
     });
 
     it("renders exactly the direction and granularity dropdowns", () => {

@@ -6,7 +6,7 @@ import UiDropdown from "@/ui/UiDropdown.vue";
 import UiIconSuggest from "@/ui/UiIconSuggest.vue";
 import UiSettingRow from "@/ui/UiSettingRow.vue";
 import UiTextInput from "@/ui/UiTextInput.vue";
-import UiToggle from "@/ui/UiToggle.vue";
+import UiToggleGroup from "@/ui/UiToggleGroup.vue";
 
 import {
   resolveButtonAppearance,
@@ -59,17 +59,15 @@ function setMode(mode: "select-only" | "navigate" | "create"): void {
   update({ action: { ...action, mode } });
 }
 
-function toggleLevel(level: ButtonLevel, enabled: boolean): void {
+const levelOptions = allLevels.map((level) => ({
+  value: level,
+  label: m.view_toolbar_button_config_level_option({ level }),
+}));
+
+function setLevels(levels: ButtonLevel[]): void {
   const action = periodAction.value;
-  if (!action) return;
-  const selected = new Set(action.levels);
-  if (enabled) {
-    selected.add(level);
-  } else {
-    if (selected.size === 1) return;
-    selected.delete(level);
-  }
-  update({ action: { ...action, levels: allLevels.filter((l) => selected.has(l)) } });
+  if (!action || levels.length === 0) return;
+  update({ action: { ...action, levels: allLevels.filter((level) => levels.includes(level)) } });
 }
 </script>
 
@@ -112,13 +110,9 @@ function toggleLevel(level: ButtonLevel, enabled: boolean): void {
         <option value="create">{{ m.view_toolbar_button_config_mode_option({ mode: "create" }) }}</option>
       </UiDropdown>
     </UiSettingRow>
-    <UiSettingRow v-for="level of allLevels" :key="level">
-      <template #name>{{ m.view_toolbar_button_config_level_option({ level }) }}</template>
-      <UiToggle
-        :model-value="periodAction.levels.includes(level)"
-        :tooltip="m.view_toolbar_button_config_level_option({ level })"
-        @update:model-value="(enabled: boolean | undefined) => toggleLevel(level, enabled ?? false)"
-      />
+    <UiSettingRow>
+      <template #name>{{ m.view_toolbar_button_config_levels_label() }}</template>
+      <UiToggleGroup :model-value="periodAction.levels" :options="levelOptions" @update:model-value="setLevels" />
     </UiSettingRow>
   </template>
   <template v-if="stepAction">
