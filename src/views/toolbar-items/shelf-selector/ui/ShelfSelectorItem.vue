@@ -16,6 +16,7 @@ defineProps<{ instanceId: BlockInstanceId; config: Record<string, never> }>();
 const context = useViewContext();
 const shelves = useService(ShelvesRepository);
 
+const hasShelves = computed(() => shelves.count() > 0);
 const label = computed(() => context.shelf.value ?? m.common_label_all_journals());
 
 function open(event: MouseEvent): void {
@@ -29,5 +30,5 @@ function open(event: MouseEvent): void {
 </script>
 
 <template>
-  <UiButton flat @click="open">{{ label }}</UiButton>
+  <UiButton v-if="hasShelves" flat @click="open">{{ label }}</UiButton>
 </template>

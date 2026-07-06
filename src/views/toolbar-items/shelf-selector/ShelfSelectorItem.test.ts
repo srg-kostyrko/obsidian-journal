@@ -56,6 +56,11 @@ describe("ShelfSelectorItem", () => {
       mountItem(makeShelves(["work"]), { shelf: ref("work") });
       expect(screen.getByText("work")).toBeTruthy();
     });
+
+    it("renders nothing when there are no shelves", () => {
+      mountItem(makeShelves([]), { shelf: ref(null) });
+      expect(screen.queryByText("All journals")).toBeNull();
+    });
   });
 
   describe("click", () => {

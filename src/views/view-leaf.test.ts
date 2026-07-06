@@ -160,7 +160,10 @@ describe("JournalViewLeaf", () => {
       const host = createFakeHost();
       const events = createNanoEvents<ViewsEvents>();
       const repo = ViewsRepository.fromParts({ [view.id]: view }, events);
-      const shelves = ShelvesRepository.fromParts({}, createNanoEvents<ShelvesEvents>());
+      const shelves = ShelvesRepository.fromParts(
+        { Personal: { name: "Personal", journals: [] } },
+        createNanoEvents<ShelvesEvents>(),
+      );
       const c = new Container();
       c.register(InternalPluginToken).useValue(host.plugin);
       c.register(InternalObsidianAppToken).useValue(host.app);
@@ -183,7 +186,7 @@ describe("JournalViewLeaf", () => {
       await leaf.onOpen();
       expect(containerEl.querySelector(".journal-view-toolbar")).not.toBeNull();
       expect(containerEl.querySelector(".journal-view-divider")).not.toBeNull();
-      // shelf-selector renders "All journals" because shelf is null and there are no shelves
+      // shelf-selector renders "All journals" because shelf is null while a shelf exists
       expect(containerEl.textContent).toContain("All journals");
       await leaf.onClose();
     });
