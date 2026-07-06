@@ -2,7 +2,6 @@
 import { m } from "@/i18n";
 import UiDropdown from "@/ui/UiDropdown.vue";
 import UiSettingRow from "@/ui/UiSettingRow.vue";
-import UiToggle from "@/ui/UiToggle.vue";
 
 import { DEFINED_NAVIGATION_TARGETS } from "../defined-navigation-targets";
 
@@ -14,6 +13,7 @@ const props = defineProps<{
 }>();
 
 const targets = DEFINED_NAVIGATION_TARGETS;
+const directions = ["previous", "next"] as const;
 
 const update = (patch: Partial<DefinedNavigationConfig>): void => props.onChange({ ...props.config, ...patch });
 </script>
@@ -33,17 +33,16 @@ const update = (patch: Partial<DefinedNavigationConfig>): void => props.onChange
     </UiDropdown>
   </UiSettingRow>
   <UiSettingRow>
-    <template #name>{{ m.view_toolbar_defined_navigation_previous() }}</template>
-    <UiToggle
-      :model-value="config.previous"
-      @update:model-value="(value: boolean | undefined) => update({ previous: value ?? false })"
-    />
-  </UiSettingRow>
-  <UiSettingRow>
-    <template #name>{{ m.view_toolbar_defined_navigation_next() }}</template>
-    <UiToggle
-      :model-value="config.next"
-      @update:model-value="(value: boolean | undefined) => update({ next: value ?? false })"
-    />
+    <template #name>{{ m.view_toolbar_defined_navigation_direction() }}</template>
+    <UiDropdown
+      :model-value="config.direction"
+      @update:model-value="
+        (value: string | undefined) => value && update({ direction: value as DefinedNavigationConfig['direction'] })
+      "
+    >
+      <option v-for="direction of directions" :key="direction" :value="direction">
+        {{ m.view_toolbar_defined_navigation_direction_option({ direction }) }}
+      </option>
+    </UiDropdown>
   </UiSettingRow>
 </template>

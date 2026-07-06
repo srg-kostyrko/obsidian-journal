@@ -10,30 +10,31 @@ function mountConfig(config: DefinedNavigationConfig, onChange: DefinedNavigatio
   return render(DefinedNavigationItemConfig, { props: { config, onChange } });
 }
 
-// Toggles render in order: previous, next.
-const TOGGLE_INDEX = { previous: 0, next: 1 } as const;
-
+// Dropdowns render in order: target, direction.
 afterEach(() => cleanup());
 
 describe("DefinedNavigationItemConfig", () => {
-  it("emits onChange with the chosen target when the dropdown changes", async () => {
+  it("emits onChange with the chosen target when the target dropdown changes", async () => {
     const onChange = vi.fn();
-    mountConfig({ target: "day", previous: true, next: true }, onChange);
-    await userEvent.selectOptions(screen.getByRole("combobox"), "week");
-    expect(onChange).toHaveBeenCalledWith({ target: "week", previous: true, next: true });
+    mountConfig({ target: "day", direction: "next" }, onChange);
+    const [targetDropdown] = screen.getAllByRole("combobox");
+    await userEvent.selectOptions(targetDropdown, "week");
+    expect(onChange).toHaveBeenCalledWith({ target: "week", direction: "next" });
   });
 
-  it("emits onChange when the previous toggle is flipped", async () => {
+  it("emits onChange with previous when the direction dropdown selects previous", async () => {
     const onChange = vi.fn();
-    mountConfig({ target: "day", previous: true, next: true }, onChange);
-    await userEvent.click(screen.getAllByRole("checkbox")[TOGGLE_INDEX.previous]);
-    expect(onChange).toHaveBeenCalledWith({ target: "day", previous: false, next: true });
+    mountConfig({ target: "day", direction: "next" }, onChange);
+    const [, directionDropdown] = screen.getAllByRole("combobox");
+    await userEvent.selectOptions(directionDropdown, "previous");
+    expect(onChange).toHaveBeenCalledWith({ target: "day", direction: "previous" });
   });
 
-  it("emits onChange when the next toggle is flipped", async () => {
+  it("emits onChange with next when the direction dropdown selects next", async () => {
     const onChange = vi.fn();
-    mountConfig({ target: "day", previous: true, next: true }, onChange);
-    await userEvent.click(screen.getAllByRole("checkbox")[TOGGLE_INDEX.next]);
-    expect(onChange).toHaveBeenCalledWith({ target: "day", previous: true, next: false });
+    mountConfig({ target: "day", direction: "previous" }, onChange);
+    const [, directionDropdown] = screen.getAllByRole("combobox");
+    await userEvent.selectOptions(directionDropdown, "next");
+    expect(onChange).toHaveBeenCalledWith({ target: "day", direction: "next" });
   });
 });

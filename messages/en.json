@@ -813,10 +813,19 @@
   ],
 
   "view_toolbar_defined_navigation_label": "Defined-note navigation",
-  "view_toolbar_defined_navigation_description": "Buttons that jump to the previous/next note that already exists.",
+  "view_toolbar_defined_navigation_description": "A button that jumps to the previous or next note that already exists.",
   "view_toolbar_defined_navigation_target": "Walk which notes",
-  "view_toolbar_defined_navigation_previous": "Show previous button",
-  "view_toolbar_defined_navigation_next": "Show next button",
+  "view_toolbar_defined_navigation_direction": "Direction",
+  "view_toolbar_defined_navigation_direction_option": [
+    {
+      "declarations": ["input direction"],
+      "selectors": ["direction"],
+      "match": {
+        "direction=previous": "Previous",
+        "direction=next": "Next"
+      }
+    }
+  ],
 
   "view_toolbar_button_label": "Button",
   "view_toolbar_button_description": "Generic action button (pick a date, jump to current, navigate by step).",

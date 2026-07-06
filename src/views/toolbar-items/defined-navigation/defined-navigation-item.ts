@@ -13,8 +13,7 @@ export { DEFINED_NAVIGATION_TARGETS } from "./defined-navigation-targets";
 
 const schema = v.object({
   target: v.picklist(DEFINED_NAVIGATION_TARGETS),
-  previous: v.boolean(),
-  next: v.boolean(),
+  direction: v.picklist(["previous", "next"] as const),
 });
 
 export type DefinedNavigationConfig = v.InferOutput<typeof schema>;
@@ -26,7 +25,7 @@ export const definedNavigationItem = defineToolbarItem<DefinedNavigationConfig>(
   description: m.view_toolbar_defined_navigation_description(),
   icon: icons.block.definedNavigation,
   schema,
-  defaultConfig: { target: "day", previous: true, next: true },
+  defaultConfig: { target: "day", direction: "next" },
   component: DefinedNavigationItem,
   configComponent: DefinedNavigationItemConfig,
 });

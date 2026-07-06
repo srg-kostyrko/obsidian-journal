@@ -119,7 +119,7 @@ describe("DefinedNavigationItem", () => {
   it("opens the nearest earlier existing note when the previous button is clicked", async () => {
     SCOPE.day = ["daily"];
     const { result, flows, notices } = mountItem(
-      { target: "day", previous: true, next: true },
+      { target: "day", direction: "previous" },
       {
         active: { journalName: "daily", anchor: "2030-03-12" as AnchorString },
         entries: [
@@ -140,14 +140,14 @@ describe("DefinedNavigationItem", () => {
   });
 
   it("disables the previous button when the target resolves no journals", () => {
-    const { result } = mountItem({ target: "day", previous: true, next: false });
+    const { result } = mountItem({ target: "day", direction: "previous" });
     const button = result.container.querySelector<HTMLButtonElement>("[data-direction='previous']");
     expect(button?.disabled).toBe(true);
   });
 
   it("shows a notice when no earlier note exists", async () => {
     SCOPE.day = ["daily"];
-    const { result, flows, notices } = mountItem({ target: "day", previous: true, next: false }, { entries: [] });
+    const { result, flows, notices } = mountItem({ target: "day", direction: "previous" }, { entries: [] });
     const button = result.container.querySelector<HTMLElement>("[data-direction='previous']");
     expect(button).not.toBeNull();
     await userEvent.click(button!);
@@ -158,7 +158,7 @@ describe("DefinedNavigationItem", () => {
   it("opens the nearest later existing note when the next button is clicked", async () => {
     SCOPE.day = ["daily"];
     const { result, flows, notices } = mountItem(
-      { target: "day", previous: true, next: true },
+      { target: "day", direction: "next" },
       {
         active: { journalName: "daily", anchor: "2030-03-10" as AnchorString },
         entries: [
@@ -180,7 +180,7 @@ describe("DefinedNavigationItem", () => {
 
   it("shows a notice when no later note exists", async () => {
     SCOPE.day = ["daily"];
-    const { result, flows, notices } = mountItem({ target: "day", previous: false, next: true }, { entries: [] });
+    const { result, flows, notices } = mountItem({ target: "day", direction: "next" }, { entries: [] });
     const button = result.container.querySelector<HTMLElement>("[data-direction='next']");
     expect(button).not.toBeNull();
     await userEvent.click(button!);

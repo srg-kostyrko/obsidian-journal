@@ -54,25 +54,13 @@ function navigate(direction: "previous" | "next", event: MouseEvent): void {
 
 <template>
   <UiButton
-    v-if="config.previous"
     flat
-    :tooltip="m.command_open_previous()"
+    :tooltip="config.direction === 'previous' ? m.command_open_previous() : m.command_open_next()"
     :disabled="candidates.length === 0"
-    data-direction="previous"
-    @click="(event: MouseEvent) => navigate('previous', event)"
-    @auxclick.middle.prevent="(event: MouseEvent) => navigate('previous', event)"
+    :data-direction="config.direction"
+    @click="(event: MouseEvent) => navigate(config.direction, event)"
+    @auxclick.middle.prevent="(event: MouseEvent) => navigate(config.direction, event)"
   >
-    ‹
-  </UiButton>
-  <UiButton
-    v-if="config.next"
-    flat
-    :tooltip="m.command_open_next()"
-    :disabled="candidates.length === 0"
-    data-direction="next"
-    @click="(event: MouseEvent) => navigate('next', event)"
-    @auxclick.middle.prevent="(event: MouseEvent) => navigate('next', event)"
-  >
-    ›
+    {{ config.direction === "previous" ? "‹" : "›" }}
   </UiButton>
 </template>
