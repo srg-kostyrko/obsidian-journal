@@ -123,7 +123,7 @@ function onClick(event: MouseEvent): void {
 </script>
 
 <template>
-  <UiButton flat :aria-label="tooltip" :title="tooltip" @click="onClick" @auxclick.middle.prevent="onClick">
+  <UiButton flat :tooltip="tooltip" @click="onClick" @auxclick.middle.prevent="onClick">
     <UiIcon v-if="icon" :name="icon" />
     <span v-if="label">{{ label }}</span>
     <span v-else-if="!icon">{{ tooltip }}</span>
