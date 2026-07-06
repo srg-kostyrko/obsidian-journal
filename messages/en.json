@@ -819,6 +819,8 @@
     }
   ],
 
+  "view_toolbar_period_buttons_config_label": "Periods",
+
   "view_toolbar_defined_navigation_label": "Defined-note navigation",
   "view_toolbar_defined_navigation_description": "A button that jumps to the previous or next note that already exists.",
   "view_toolbar_defined_navigation_target": "Walk which notes",
