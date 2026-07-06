@@ -49,17 +49,17 @@ describe("CalendarBlockConfigFields", () => {
     expect(onChange).toHaveBeenLastCalledWith({ after: 3 });
   });
 
-  it("adds a weekday index to hiddenWeekdays when its checkbox is checked", async () => {
+  it("hides a weekday when its shown button is clicked", async () => {
     const onChange = vi.fn();
     mountFields(baseConfig, onChange);
-    await userEvent.click(screen.getByLabelText("Sat"));
+    await userEvent.click(screen.getByRole("button", { name: "Sat" }));
     expect(onChange).toHaveBeenCalledWith({ hiddenWeekdays: [6] });
   });
 
-  it("removes a weekday index from hiddenWeekdays when its checkbox is unchecked", async () => {
+  it("shows a hidden weekday when its dimmed button is clicked", async () => {
     const onChange = vi.fn();
     mountFields({ ...baseConfig, hiddenWeekdays: [6] }, onChange);
-    await userEvent.click(screen.getByLabelText("Sat"));
+    await userEvent.click(screen.getByRole("button", { name: "Sat" }));
     expect(onChange).toHaveBeenCalledWith({ hiddenWeekdays: [] });
   });
 

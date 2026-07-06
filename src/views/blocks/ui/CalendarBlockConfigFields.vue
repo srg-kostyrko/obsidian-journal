@@ -5,6 +5,7 @@ import { useService } from "@/infrastructure/di";
 import UiDropdown from "@/ui/UiDropdown.vue";
 import UiNumberInput from "@/ui/UiNumberInput.vue";
 import UiSettingRow from "@/ui/UiSettingRow.vue";
+import UiToggleGroup from "@/ui/UiToggleGroup.vue";
 
 import type { CalendarBlockFields, CalendarBlockFieldsChange } from "./calendar-block-fields";
 
@@ -15,12 +16,12 @@ const props = defineProps<{
 }>();
 
 const orderedWeekdays = useService(Calendar).weekdaysShort();
+const weekdayOptions = orderedWeekdays.map((weekday) => ({ value: weekday.index, label: weekday.label }));
+const allWeekdayIndices = orderedWeekdays.map((weekday) => weekday.index);
 
-function toggleWeekday(index: number, hidden: boolean): void {
-  const next = new Set(props.config.hiddenWeekdays);
-  if (hidden) next.add(index);
-  else next.delete(index);
-  props.onChange({ hiddenWeekdays: [...next].toSorted((a, b) => a - b) });
+function setShownWeekdays(shown: number[]): void {
+  const hiddenWeekdays = allWeekdayIndices.filter((index) => !shown.includes(index)).toSorted((a, b) => a - b);
+  props.onChange({ hiddenWeekdays });
 }
 </script>
 
@@ -35,14 +36,11 @@ function toggleWeekday(index: number, hidden: boolean): void {
   </UiSettingRow>
   <UiSettingRow>
     <template #name>{{ m.view_block_config_hidden_weekdays_label() }}</template>
-    <label v-for="{ index, label } in orderedWeekdays" :key="index">
-      <input
-        type="checkbox"
-        :checked="config.hiddenWeekdays.includes(index)"
-        @change="toggleWeekday(index, ($event.target as HTMLInputElement).checked)"
-      />
-      {{ label }}
-    </label>
+    <UiToggleGroup
+      :model-value="allWeekdayIndices.filter((index) => !config.hiddenWeekdays.includes(index))"
+      :options="weekdayOptions"
+      @update:model-value="setShownWeekdays"
+    />
   </UiSettingRow>
   <UiSettingRow>
     <template #name>{{ m.view_block_config_weeks_label() }}</template>
