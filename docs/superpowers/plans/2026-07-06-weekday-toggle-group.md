@@ -380,15 +380,20 @@ function setShownPeriods(shown: Period[]): void {
 Run: `npm run check:types && npm run check:lint`
 Expected: both pass.
 
-- [ ] **Step 5: Run the toolbar tests as a sanity check**
+- [ ] **Step 5: Update the pre-existing config test**
+
+There **is** a pre-existing test file — `src/views/toolbar-items/period-buttons/PeriodButtonsItemConfig.test.ts` (note: it sits one directory up from the SFC, not under `ui/`). Its four tests drive the old `UiToggle` via `getAllByRole("checkbox")` and will break on this change. Switch each to the new button, queried by its accessible name — which is the tooltip surfaced as `aria-label`, i.e. `screen.getByRole("button", { name: "Show week" })` (and `Show month`/`Show quarter`/`Show year`). Keep every `onChange` payload identical, and delete the now-unused `TOGGLE_INDEX` map.
+
+- [ ] **Step 6: Run the toolbar tests**
 
 Run: `npm test -- src/views/toolbar-items`
-Expected: PASS (no test drives this component directly; confirms nothing else broke).
+Expected: PASS — the updated `PeriodButtonsItemConfig` tests plus the rest of the toolbar suite.
 
-- [ ] **Step 6: Commit**
+- [ ] **Step 7: Commit**
 
 ```bash
 git add src/views/toolbar-items/period-buttons/ui/PeriodButtonsItemConfig.vue \
+  src/views/toolbar-items/period-buttons/PeriodButtonsItemConfig.test.ts \
   messages/en.json src/i18n/paraglide
 git commit -m "refactor(views): use UiToggleGroup for period-buttons config"
 ```
@@ -499,15 +504,28 @@ with:
     </UiSettingRow>
 ```
 
-- [ ] **Step 6: Type-check and lint**
+- [ ] **Step 6: Update the pre-existing config test**
+
+There **is** a pre-existing test file — `src/views/toolbar-items/button/ButtonItemConfig.test.ts` (one directory up from the SFC, not under `ui/`). Its `describe("action levels")` block and the `navigate-step` "renders no period-level toggles" test drive the old `UiToggle` via `getAllByRole("checkbox")` and will break. Unlike the period-buttons buttons, the level buttons carry **no tooltip**, so each button's accessible name is its **visible label** (`"Day"`, `"Week"`, `"Month"`, `"Quarter"`, `"Year"`). Button order matches `allLevels` (day, week, month, quarter, year), so:
+
+- `"adds a period level…"`: `getAllByRole("checkbox")[1]` → `getByRole("button", { name: "Week" })`; payload stays `levels: ["day", "week"]`.
+- `"orders enabled levels canonically…"`: `checkbox[0]` → `getByRole("button", { name: "Day" })`; payload stays `["day", "month"]`.
+- `"removes a period level…"`: `checkbox[0]` → `getByRole("button", { name: "Day" })`; payload stays `["week"]`.
+- `"keeps the last remaining level…"` (the min-1 guard): `checkbox[0]` → `getByRole("button", { name: "Day" })`; assertion stays `expect(onChange).not.toHaveBeenCalled()` (clicking the only active level makes `UiToggleGroup` emit `[]`, which `setLevels` ignores).
+- `"renders no period-level toggles"`: `queryAllByRole("checkbox")` is now vacuously empty — assert on a level button instead, e.g. `expect(screen.queryByRole("button", { name: "Day" })).toBeNull()`.
+
+Do not weaken any assertion to paper over a behavior change; if a payload or the min-1 assertion does not hold, the implementation is wrong.
+
+- [ ] **Step 7: Type-check and lint**
 
 Run: `npm run check:types && npm run check:lint`
 Expected: both pass (no dangling `UiToggle` import).
 
-- [ ] **Step 7: Commit**
+- [ ] **Step 8: Commit**
 
 ```bash
 git add src/views/toolbar-items/button/ui/ButtonItemConfig.vue \
+  src/views/toolbar-items/button/ButtonItemConfig.test.ts \
   messages/en.json src/i18n/paraglide
 git commit -m "refactor(views): use UiToggleGroup for button period levels"
 ```
@@ -528,4 +546,4 @@ Open a calendar view's block config and confirm: all weekday buttons are highlig
 ## Notes on scope
 
 - `hiddenWeekdays`, the Valibot schemas, and runtime calendar rendering are untouched — this is a settings-UI swap only. The existing view-blocks e2e (asserts the rendered weekday header) is unaffected, so no e2e change is included.
-- `PeriodButtonsItemConfig` and `ButtonItemConfig` have no existing test files; their changes are wiring around the already-tested `UiToggleGroup`, verified by type-check and the preserved min-1 guard. No new component-test harness is introduced for them.
+- `PeriodButtonsItemConfig` and `ButtonItemConfig` **already have** test files — colocated one directory up from each SFC (`toolbar-items/<item>/XxxConfig.test.ts`, not under `ui/`). Both drive the old `UiToggle` via `getAllByRole("checkbox")`, so Tasks 3 and 4 update them to the new buttons (Task 3 Step 5, Task 4 Step 6) rather than adding new suites. No new component-test harness is introduced; the `ButtonItemConfig` min-1 guard keeps its existing `keeps the last remaining level` test.
