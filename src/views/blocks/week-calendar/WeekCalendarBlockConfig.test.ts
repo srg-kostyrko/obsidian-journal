@@ -43,4 +43,18 @@ describe("WeekCalendarBlockConfig", () => {
       showHeading: true,
     });
   });
+
+  it("emits onChange turning the heading off when the toggle is switched off", async () => {
+    const onChange = vi.fn();
+    mountConfig({ before: 0, after: 0, hiddenWeekdays: [], weeks: "left" as const, showHeading: true }, onChange);
+    const checkboxes = screen.getAllByRole("checkbox");
+    await userEvent.click(checkboxes.at(-1)!);
+    expect(onChange).toHaveBeenCalledWith({
+      before: 0,
+      after: 0,
+      hiddenWeekdays: [],
+      weeks: "left",
+      showHeading: false,
+    });
+  });
 });
