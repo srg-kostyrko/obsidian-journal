@@ -44,6 +44,10 @@ defineProps<{ columns: number }>();
 .calendar-grid__body :deep(button:hover:not(:disabled)) {
   background-color: var(--background-modifier-hover) !important;
 }
+.calendar-grid__body :deep(button:focus-visible) {
+  outline: 2px solid var(--background-modifier-border-focus);
+  outline-offset: -1px;
+}
 .calendar-grid__body :deep(button:disabled) {
   cursor: not-allowed;
   opacity: 0.5;
