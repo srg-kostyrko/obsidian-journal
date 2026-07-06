@@ -3,8 +3,8 @@ import { m } from "@/i18n";
 import { useModal } from "@/infrastructure/host/modals";
 import { icons } from "@/ui/icons";
 import UiButton from "@/ui/UiButton.vue";
-import UiIcon from "@/ui/UiIcon.vue";
 import UiIconButton from "@/ui/UiIconButton.vue";
+import UiIconedRow from "@/ui/UiIconedRow.vue";
 import UiSettingRow from "@/ui/UiSettingRow.vue";
 
 import type { ViewBlockDefinition } from "../define-view-block";
@@ -21,8 +21,8 @@ const api = useModal<string>();
     </UiSettingRow>
     <UiSettingRow v-for="d of definitions" :key="d.key">
       <template #name>
-        <UiIcon v-if="d.icon" :name="d.icon" />
-        {{ d.label }}
+        <UiIconedRow v-if="d.icon" :icon="d.icon">{{ d.label }}</UiIconedRow>
+        <template v-else>{{ d.label }}</template>
       </template>
       <template v-if="d.description" #description>{{ d.description }}</template>
       <UiIconButton

@@ -5,8 +5,8 @@ import { m } from "@/i18n";
 import { useModal } from "@/infrastructure/host/modals";
 import { icons } from "@/ui/icons";
 import UiButton from "@/ui/UiButton.vue";
-import UiIcon from "@/ui/UiIcon.vue";
 import UiIconButton from "@/ui/UiIconButton.vue";
+import UiIconedRow from "@/ui/UiIconedRow.vue";
 import UiSettingRow from "@/ui/UiSettingRow.vue";
 
 import type { ToolbarItemDefinition } from "../define-toolbar-item";
@@ -57,8 +57,8 @@ const api = useModal<{ key: string; defaultConfig: unknown }>();
     </UiSettingRow>
     <UiSettingRow v-for="(row, idx) of rows" :key="`${row.key}::${idx}`">
       <template #name>
-        <UiIcon v-if="row.icon" :name="row.icon" />
-        {{ row.label }}
+        <UiIconedRow v-if="row.icon" :icon="row.icon">{{ row.label }}</UiIconedRow>
+        <template v-else>{{ row.label }}</template>
       </template>
       <template v-if="row.description" #description>{{ row.description }}</template>
       <UiIconButton
