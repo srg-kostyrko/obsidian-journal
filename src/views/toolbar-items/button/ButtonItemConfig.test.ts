@@ -136,6 +136,11 @@ describe("ButtonItemConfig", () => {
       expect(screen.queryAllByRole("checkbox")).toHaveLength(0);
     });
 
+    it("renders exactly the direction and granularity dropdowns", () => {
+      mountConfig(stepConfig, vi.fn());
+      expect(screen.getAllByRole("combobox")).toHaveLength(2);
+    });
+
     it("emits onChange with the selected direction when the direction dropdown changes", async () => {
       const onChange = vi.fn();
       mountConfig(stepConfig, onChange);
