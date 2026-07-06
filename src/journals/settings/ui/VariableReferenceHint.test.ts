@@ -5,8 +5,9 @@ import { afterEach, describe, expect, it } from "vitest";
 import { Container, provideInjectorOnApp } from "@/infrastructure/di";
 import { ModalService } from "@/infrastructure/host/modals";
 import { FakeModalService } from "@/infrastructure/host/modals/testing";
+import { dateModificationsModal } from "@/templates/ui/modals";
 
-import { dateModificationsModal, variableReferenceModal } from "./modals";
+import { variableReferenceModal } from "./modals";
 import VariableReferenceHint from "./VariableReferenceHint.vue";
 
 afterEach(() => cleanup());

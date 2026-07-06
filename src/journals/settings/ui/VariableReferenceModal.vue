@@ -2,9 +2,8 @@
 import { computed } from "vue";
 
 import { m } from "@/i18n";
-
-import I18nWithSlot from "./I18nWithSlot.vue";
-import VariableChip from "./VariableChip.vue";
+import VariableChip from "@/templates/ui/VariableChip.vue";
+import I18nWithSlot from "@/ui/I18nWithSlot.vue";
 
 import type { VariableReferenceModalProps } from "./modals";
 

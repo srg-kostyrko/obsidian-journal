@@ -2,8 +2,9 @@
 import { m } from "@/i18n";
 import { useService } from "@/infrastructure/di";
 import { ModalService } from "@/infrastructure/host/modals";
+import { dateModificationsModal } from "@/templates/ui/modals";
 
-import { dateModificationsModal, variableReferenceModal } from "./modals";
+import { variableReferenceModal } from "./modals";
 
 import type { VariableModalContext } from "./variable-context";
 

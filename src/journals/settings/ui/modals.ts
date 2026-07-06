@@ -3,7 +3,6 @@ import { defineModal } from "@/infrastructure/host/modals";
 
 import AddJournalModal from "./AddJournalModal.vue";
 import CodeBlockReferenceModal from "./CodeBlockReferenceModal.vue";
-import DateModificationsModal from "./DateModificationsModal.vue";
 import DeleteJournalModal from "./DeleteJournalModal.vue";
 import EditFrontmatterFieldModal from "./EditFrontmatterFieldModal.vue";
 import EditSequencePropertyModal from "./EditSequencePropertyModal.vue";
@@ -17,11 +16,6 @@ import type { JournalWrite } from "../../config";
 export const addJournalModal = defineModal<{ name: string; write: JournalWrite }>()({
   component: AddJournalModal,
   title: () => m.journal_add_modal_title(),
-});
-
-export const dateModificationsModal = defineModal()({
-  component: DateModificationsModal,
-  title: () => m.variable_modifications_modal_title(),
 });
 
 export const deleteJournalModal = defineModal<{ mode: "keep" | "clear" | "delete" }>()({

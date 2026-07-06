@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { m } from "@/i18n";
+import I18nWithSlot from "@/ui/I18nWithSlot.vue";
 
-import I18nWithSlot from "./I18nWithSlot.vue";
 import VariableChip from "./VariableChip.vue";
 
 const shiftUnits = [
