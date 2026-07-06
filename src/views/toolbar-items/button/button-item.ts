@@ -27,13 +27,7 @@ export const buttonItem = defineToolbarItem<ButtonConfig>({
       defaultConfig: { action: { type: "current", mode: "create", levels: ["day"] } },
     },
     {
-      label: m.view_toolbar_button_preset_prev_month(),
-      defaultConfig: {
-        action: { type: "navigate-step", direction: "prev", unit: "month", amount: 1 },
-      },
-    },
-    {
-      label: m.view_toolbar_button_preset_next_month(),
+      label: m.view_toolbar_button_preset_navigate(),
       defaultConfig: {
         action: { type: "navigate-step", direction: "next", unit: "month", amount: 1 },
       },
