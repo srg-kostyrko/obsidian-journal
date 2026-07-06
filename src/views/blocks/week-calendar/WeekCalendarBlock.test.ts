@@ -38,14 +38,14 @@ afterEach(() => cleanup());
 describe("WeekCalendarBlock", () => {
   it("renders a single NotesWeekView when before=0 and after=0", () => {
     const { getAllByTestId } = mountViewBlock(weekCalendarBlock, {
-      config: { before: 0, after: 0, hiddenWeekdays: [], weeks: "left" as const },
+      config: { before: 0, after: 0, hiddenWeekdays: [], weeks: "left" as const, showHeading: true },
     });
     expect(getAllByTestId("week-stub").length).toBe(1);
   });
 
   it("renders before + after + 1 NotesWeekView instances", () => {
     const { getAllByTestId } = mountViewBlock(weekCalendarBlock, {
-      config: { before: 1, after: 1, hiddenWeekdays: [], weeks: "left" as const },
+      config: { before: 1, after: 1, hiddenWeekdays: [], weeks: "left" as const, showHeading: true },
     });
     expect(getAllByTestId("week-stub").length).toBe(3);
   });
@@ -53,7 +53,7 @@ describe("WeekCalendarBlock", () => {
   it("anchors the first NotesWeekView at the week shifted back by before weeks", () => {
     const { getAllByTestId } = mountViewBlock(
       weekCalendarBlock,
-      { config: { before: 2, after: 0, hiddenWeekdays: [], weeks: "left" as const } },
+      { config: { before: 2, after: 0, hiddenWeekdays: [], weeks: "left" as const, showHeading: true } },
       { refDate: ref("2026-05-15" as AnchorString) },
     );
     const stubs = getAllByTestId("week-stub");
@@ -67,7 +67,7 @@ describe("WeekCalendarBlock", () => {
   it("passes the current shelf to each NotesWeekView", () => {
     const { getAllByTestId } = mountViewBlock(
       weekCalendarBlock,
-      { config: { before: 0, after: 1, hiddenWeekdays: [], weeks: "left" as const } },
+      { config: { before: 0, after: 1, hiddenWeekdays: [], weeks: "left" as const, showHeading: true } },
       { shelf: ref("my-shelf") },
     );
     const stubs = getAllByTestId("week-stub");

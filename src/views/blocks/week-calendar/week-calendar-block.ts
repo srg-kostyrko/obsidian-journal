@@ -10,7 +10,10 @@ import { calendarBlockSummary } from "../calendar-block-summary";
 import WeekCalendarBlock from "./ui/WeekCalendarBlock.vue";
 import WeekCalendarBlockConfig from "./ui/WeekCalendarBlockConfig.vue";
 
-const schema = v.object({ ...calendarBlockBaseSchema });
+const schema = v.object({
+  ...calendarBlockBaseSchema,
+  showHeading: v.optional(v.boolean(), true),
+});
 
 export type WeekCalendarConfig = v.InferOutput<typeof schema>;
 export type WeekCalendarConfigChange = (next: WeekCalendarConfig) => void;
@@ -21,7 +24,7 @@ export const weekCalendarBlock = defineViewBlock<WeekCalendarConfig>({
   description: m.view_block_week_calendar_description(),
   icon: icons.entity.week,
   schema,
-  defaultConfig: { before: 0, after: 0, hiddenWeekdays: [], weeks: "left" as const },
+  defaultConfig: { before: 0, after: 0, hiddenWeekdays: [], weeks: "left" as const, showHeading: true },
   component: WeekCalendarBlock,
   configComponent: WeekCalendarBlockConfig,
   summary: calendarBlockSummary,
