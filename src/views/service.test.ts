@@ -1,6 +1,7 @@
 import { createNanoEvents } from "nanoevents";
 import * as v from "valibot";
 import { describe, expect, it, vi } from "vitest";
+import { reactive } from "vue";
 
 import { Container } from "@/infrastructure/di";
 import { createLoggerTestingModule } from "@/infrastructure/logger/testing";
@@ -119,6 +120,30 @@ describe("ViewsService", () => {
       const result = await service.clone(created.value);
       expectOk(result);
       expect(listener).toHaveBeenCalledWith(result.value);
+    });
+
+    it("clones block config sourced from reactive settings storage", async () => {
+      const sourceId = "11111111-1111-4111-8111-111111111111" as ViewId;
+      const blockId = "22222222-2222-4222-8222-222222222222" as BlockInstanceId;
+      const seeds = reactive<Record<string, View>>({
+        [sourceId]: {
+          id: sourceId,
+          name: "Source",
+          icon: "calendar-days",
+          defaultShelf: null,
+          showInRibbon: false,
+          leaf: "right",
+          openOnStartup: false,
+          blocks: [{ id: blockId, key: "test-block", config: { nested: { count: 1 } } }],
+        },
+      });
+      const { service, repo } = build({ seeds });
+
+      const result = await service.clone(sourceId);
+
+      expectOk(result);
+      const cloned = repo.get(result.value).match({ some: (view) => view, none: () => null });
+      expect(cloned?.blocks[0]?.config).toEqual({ nested: { count: 1 } });
     });
   });
 

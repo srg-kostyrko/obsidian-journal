@@ -1,4 +1,5 @@
 import * as v from "valibot";
+import { toRaw } from "vue";
 
 import { inject } from "@/infrastructure/di";
 import { LoggerFactoryToken } from "@/infrastructure/logger";
@@ -75,7 +76,9 @@ export class ViewsService {
         blocks: source.blocks.map((b) => ({
           ...b,
           id: crypto.randomUUID() as BlockInstanceId,
-          config: structuredClone(b.config),
+          // b.config is a Vue reactive proxy (settings storage is reactive); structuredClone
+          // rejects proxies, so unwrap to the raw object first.
+          config: structuredClone(toRaw(b.config)),
         })),
       };
       return yield* this.#repo.create(clone);
