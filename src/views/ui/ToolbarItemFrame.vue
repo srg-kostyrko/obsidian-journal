@@ -47,7 +47,7 @@ defineEmits<{ edit: []; remove: [] }>();
 }
 .jv-item-frame:hover {
   border-color: var(--interactive-accent);
-  /* Raise above later siblings so the right-side tools are not painted over by the next item. */
+  /* Raise above siblings so the tools floating on top are not painted over by neighbouring items. */
   z-index: 1;
 }
 /* Suppress all hover affordances while a drag is in progress. */
@@ -67,10 +67,10 @@ defineEmits<{ edit: []; remove: [] }>();
 }
 .jv-frame-tools {
   position: absolute;
-  top: 50%;
-  left: 100%;
-  transform: translateY(-50%);
-  margin-left: var(--size-2-2);
+  bottom: 100%;
+  left: 50%;
+  transform: translateX(-50%);
+  margin-bottom: var(--size-2-2);
   display: inline-flex;
   gap: var(--size-2-1);
   padding: var(--size-2-1);
@@ -88,10 +88,10 @@ defineEmits<{ edit: []; remove: [] }>();
 .jv-frame-tools::before {
   content: "";
   position: absolute;
-  right: 100%;
-  top: 0;
-  bottom: 0;
-  width: var(--size-2-2);
+  top: 100%;
+  left: 0;
+  right: 0;
+  height: var(--size-2-2);
 }
 .jv-item-frame:hover .jv-frame-tools {
   opacity: 1;
