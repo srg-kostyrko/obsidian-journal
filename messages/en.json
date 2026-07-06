@@ -769,7 +769,7 @@
   "view_block_markdown_template_description": "Render a template note as markdown, with journal variables processed.",
   "view_block_markdown_template_path_label": "Template file",
   "view_block_markdown_template_path_placeholder": "path/to/template.md",
-  "view_block_markdown_template_variables_hint": "Available: \\{\\{date\\}\\}, \\{\\{current_date\\}\\}, \\{\\{time\\}\\}, \\{\\{journal_link(journal-name)\\}\\}. Wrap links like [[\\{\\{journal_link(daily)\\}\\}]].",
+  "view_block_markdown_template_variables_link": "Supported variables.",
   "view_block_markdown_template_variables_modal_title": "Markdown template variables",
   "view_block_markdown_template_variables_intro": "These variables are replaced when the template renders. Dates use YYYY-MM-DD and times use HH:mm unless you give an explicit format.",
   "view_block_markdown_template_variable_date_description": "The date the view is focused on.",
