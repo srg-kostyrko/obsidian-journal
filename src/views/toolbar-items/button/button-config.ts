@@ -7,7 +7,7 @@ import { icons } from "@/ui/icons";
 const levelField = v.picklist(["day", "week", "month", "quarter", "year"] as const);
 const levelsField = v.pipe(v.array(levelField), v.minLength(1));
 const modeField = v.picklist(["select-only", "navigate", "create"] as const);
-const unitField = v.picklist(["day", "week", "month", "quarter", "year"] as const);
+const stepUnitField = v.picklist(["week", "month", "quarter", "year"] as const);
 
 export const buttonActionSchema = v.variant("type", [
   v.object({ type: v.literal("pick-date"), mode: modeField, levels: levelsField }),
@@ -15,7 +15,7 @@ export const buttonActionSchema = v.variant("type", [
   v.object({
     type: v.literal("navigate-step"),
     direction: v.picklist(["prev", "next"] as const),
-    unit: unitField,
+    unit: stepUnitField,
     amount: v.optional(v.pipe(v.number(), v.integer(), v.minValue(1)), 1),
   }),
 ]);
@@ -31,6 +31,7 @@ export type ButtonAction = v.InferOutput<typeof buttonActionSchema>;
 export type ButtonConfig = v.InferOutput<typeof buttonItemConfigSchema>;
 export type ButtonConfigChange = (next: ButtonConfig) => void;
 export type ButtonLevel = "day" | "week" | "month" | "quarter" | "year";
+export type ButtonStepUnit = "week" | "month" | "quarter" | "year";
 
 export interface ButtonAppearance {
   readonly icon?: string;
@@ -72,7 +73,7 @@ export function resolveButtonAppearance(action: ButtonAction): ButtonAppearance 
       label: m.view_toolbar_button_default_label_current(),
       tooltip: m.view_toolbar_button_default_tooltip_current_multi(),
     }))
-    .with({ type: "navigate-step", direction: "prev", unit: P.union("day", "week", "month") }, ({ unit }) => ({
+    .with({ type: "navigate-step", direction: "prev", unit: P.union("week", "month") }, ({ unit }) => ({
       icon: icons.nav.prev,
       tooltip: m.view_toolbar_button_default_tooltip_prev_unit({ unit }),
     }))
@@ -80,7 +81,7 @@ export function resolveButtonAppearance(action: ButtonAction): ButtonAppearance 
       icon: icons.nav.prevLeap,
       tooltip: m.view_toolbar_button_default_tooltip_prev_unit({ unit }),
     }))
-    .with({ type: "navigate-step", direction: "next", unit: P.union("day", "week", "month") }, ({ unit }) => ({
+    .with({ type: "navigate-step", direction: "next", unit: P.union("week", "month") }, ({ unit }) => ({
       icon: icons.nav.next,
       tooltip: m.view_toolbar_button_default_tooltip_next_unit({ unit }),
     }))

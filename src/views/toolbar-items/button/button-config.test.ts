@@ -62,12 +62,6 @@ describe("resolveButtonAppearance", () => {
   });
 
   describe("navigate-step prev", () => {
-    it("uses chevron-left + prev tooltip for day", () => {
-      const a = resolveButtonAppearance({ type: "navigate-step", direction: "prev", unit: "day", amount: 1 });
-      expect(a.icon).toBe("chevron-left");
-      expect(a.tooltip).toBe(m.view_toolbar_button_default_tooltip_prev_unit({ unit: "day" }));
-    });
-
     it("uses chevron-left for week", () => {
       expect(resolveButtonAppearance({ type: "navigate-step", direction: "prev", unit: "week", amount: 1 }).icon).toBe(
         "chevron-left",
@@ -94,12 +88,6 @@ describe("resolveButtonAppearance", () => {
   });
 
   describe("navigate-step next", () => {
-    it("uses chevron-right for day", () => {
-      expect(resolveButtonAppearance({ type: "navigate-step", direction: "next", unit: "day", amount: 1 }).icon).toBe(
-        "chevron-right",
-      );
-    });
-
     it("uses chevron-right for week", () => {
       expect(resolveButtonAppearance({ type: "navigate-step", direction: "next", unit: "week", amount: 1 }).icon).toBe(
         "chevron-right",
