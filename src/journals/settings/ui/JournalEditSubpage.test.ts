@@ -165,6 +165,32 @@ describe("JournalEditSubpage", () => {
   });
 });
 
+describe("JournalEditSubpage collision warning", () => {
+  it("names another journal that resolves to the same note path", async () => {
+    const { container } = await setup({
+      version: 4,
+      journals: { daily: makeJournal("daily"), weekly: makeJournal("weekly") },
+    });
+    mount(container, "daily");
+    expect(screen.getByText(m.journal_edit_colliding_warning({ names: "weekly" }))).toBeTruthy();
+  });
+
+  it("stays hidden when no other journal shares the resolved path", async () => {
+    const { container } = await setup({
+      version: 4,
+      journals: { daily: makeJournal("daily"), weekly: makeJournal("weekly", { folder: "week" }) },
+    });
+    mount(container, "daily");
+    expect(screen.queryByText(/resolves to the same note path as/)).toBeNull();
+  });
+
+  it("stays hidden when this is the only journal", async () => {
+    const { container } = await setup();
+    mount(container, "daily");
+    expect(screen.queryByText(/resolves to the same note path as/)).toBeNull();
+  });
+});
+
 function makeSectionComponent(label: string) {
   return defineComponent({
     props: { journalName: { type: String, default: "" } },

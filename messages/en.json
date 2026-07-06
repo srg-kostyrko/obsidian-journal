@@ -959,6 +959,7 @@
   "journal_edit_move_to_folder_recommendation_name_template": "Note name template contains a path separator. Move the path prefix into the Folder field?",
   "journal_edit_name_template_description": "Template used to generate new note names.",
   "journal_edit_name_template_collision_warning": "Template has no date or numbering variable, so every entry resolves to the same note. Add a date variable to give each entry its own note.",
+  "journal_edit_colliding_warning": "This journal resolves to the same note path as {names}, so their notes will overwrite each other. Change the folder or name template to give it a distinct path.",
   "journal_edit_name_template_invertibility_warning": "Template cannot be reverse-parsed ({reason}: \"{offending}\"). Auto-attach will silently skip externally created notes that match this pattern.",
   "journal_edit_name_template_no_anchor_warning": "Template has no date variable and its numbering variable can't be reversed to a date, so auto-attach will silently skip externally created notes that match this pattern.",
   "journal_edit_name_template_label": "Note name template",
