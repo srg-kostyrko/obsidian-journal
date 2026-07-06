@@ -724,7 +724,7 @@
   "view_dashboard_section_title": "Views",
   "view_dashboard_empty": "No views yet.",
   "view_dashboard_add": "Add a view",
-  "view_dashboard_open": "Open {name}",
+  "view_dashboard_open": "Configure {name}",
   "view_dashboard_clone": "Clone {name}",
   "view_add_modal_title": "Add view",
   "view_rename": "Rename view",

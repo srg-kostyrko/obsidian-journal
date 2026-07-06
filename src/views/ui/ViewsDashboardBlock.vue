@@ -61,7 +61,7 @@ function remove(viewId: ViewId): void {
       <UiSettingRow v-for="view of viewsVM.views.value" :key="view.id">
         <template #name>{{ view.name }}</template>
         <UiIconButton
-          :icon="icons.action.openExternal"
+          :icon="icons.action.configure"
           :tooltip="m.view_dashboard_open({ name: view.name })"
           @click="open(view.id)"
         />
