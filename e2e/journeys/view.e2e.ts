@@ -358,6 +358,14 @@ describe("calendar view", () => {
       await waitForFrontmatter(path, (fm) => fm.journal === "daily", `waited for ${path} to attach journal=daily`);
     });
 
+    it("opens the pinned weekly journal's current-week note when a journal-pinned button is clicked", async () => {
+      await openCalendarView();
+      await $(`${TOOLBAR} [aria-label="This week"]`).click();
+
+      const path = await waitForActiveNoteIn("week");
+      await waitForFrontmatter(path, (fm) => fm.journal === "weekly", `waited for ${path} to attach journal=weekly`);
+    });
+
     it("navigates to an existing day note picked from the date-picker modal", async () => {
       const anchor = dayAnchor(20);
       const path = `day/${anchor}.md`;
