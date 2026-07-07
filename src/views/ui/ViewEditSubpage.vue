@@ -18,6 +18,7 @@ import UiToggle from "@/ui/UiToggle.vue";
 
 import { AddBlockToViewFlow } from "../flows/add-block-to-view.flow";
 import { EditViewNameFlow } from "../flows/edit-view-name.flow";
+import { RepositionViewFlow } from "../flows/reposition-view.flow";
 import { ViewsService } from "../service";
 import { ViewHostService } from "../view-host";
 import { ViewsViewModel } from "../view-model";
@@ -72,7 +73,9 @@ const openOnStartupValue = computed<boolean>({
 const leafValue = computed<string>({
   get: () => view.value?.leaf ?? "right",
   set: (next) => {
-    void viewsService.update(viewId, { leaf: next as View["leaf"] });
+    void viewsService.update(viewId, { leaf: next as View["leaf"] }).tap(() => {
+      void flows.invoke(RepositionViewFlow, { viewId });
+    });
   },
 });
 

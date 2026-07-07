@@ -11,12 +11,14 @@ import { InputSuggestService } from "@/infrastructure/host";
 import { FakeInputSuggestService } from "@/infrastructure/host/input-suggests/testing";
 import { ModalService } from "@/infrastructure/host/modals";
 import { FakeModalService } from "@/infrastructure/host/modals/testing";
+import { AsyncResult } from "@/infrastructure/result";
 import { createSettingsService } from "@/settings/testing";
 import { ShelvesEventsToken, ShelvesRepository, ShelvesViewModel, shelvesCollection } from "@/shelves";
 
 import { ToolbarItemsService } from "../blocks/toolbar/toolbar-items-service";
 import { viewsCollection } from "../config";
 import { AddBlockToViewFlow } from "../flows/add-block-to-view.flow";
+import { RepositionViewFlow } from "../flows/reposition-view.flow";
 import { ViewsRepository } from "../repository";
 import { ViewsService } from "../service";
 import { ViewsEventsToken } from "../tokens";
@@ -65,8 +67,10 @@ async function setup(viewOverrides: Record<string, unknown> = {}) {
   container.register(ShelvesViewModel).useClass(ShelvesViewModel);
   container.register(Flows).useClass(Flows);
   container.register(AddBlockToViewFlow).useClass(AddBlockToViewFlow);
+  const repositionExecute = vi.fn(() => AsyncResult.ok());
+  container.register(RepositionViewFlow).useValue({ execute: repositionExecute } as unknown as RepositionViewFlow);
   container.register(ViewHostService).useValue({ open } as unknown as ViewHostService);
-  return { container, open };
+  return { container, open, repositionExecute };
 }
 
 function makeNav() {
@@ -155,6 +159,14 @@ describe("ViewEditSubpage", () => {
     const toggle = within(row(m.view_edit_open_on_startup_label())).getByRole("checkbox");
     await userEvent.click(toggle);
     expect(open).not.toHaveBeenCalled();
+  });
+
+  it("invokes the reposition flow after the open-in dropdown changes", async () => {
+    const { container, repositionExecute } = await setup();
+    mount(container);
+    const dropdown = within(row(m.view_edit_leaf_label())).getByRole("combobox");
+    await userEvent.selectOptions(dropdown, "left");
+    await vi.waitFor(() => expect(repositionExecute).toHaveBeenCalledWith({ viewId }));
   });
 
   it("invokes AddBlockToViewFlow from the blocks header control", async () => {
