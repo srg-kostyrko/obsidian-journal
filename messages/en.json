@@ -856,6 +856,8 @@
   "view_toolbar_button_menu_pick": "Pick {unit}",
   "view_toolbar_button_config_label_label": "Label",
   "view_toolbar_button_config_tooltip_label": "Tooltip",
+  "view_toolbar_appearance_label_label": "Label",
+  "view_toolbar_appearance_tooltip_label": "Tooltip",
   "view_toolbar_button_config_mode_label": "Behavior",
   "view_toolbar_button_config_levels_label": "Periods",
   "view_toolbar_button_config_mode_option": [
