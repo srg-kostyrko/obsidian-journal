@@ -14,7 +14,6 @@ import {
   selectModalSelect,
   setModalText,
   submitModal,
-  waitForModalOpen,
 } from "../support/settings.js";
 
 import type { StoredView } from "../support/plugin-data.js";
@@ -206,10 +205,9 @@ describe("settings", () => {
       await clickIcon("Configure Calendar");
       await clickIcon("Add toolbar item");
       await clickIcon("Add Period buttons");
-      // Adding a configurable item now auto-opens its config editor. The view's icon-suggest
-      // input retains focus after the picker closes and its dropdown overlays the Save button;
-      // fire the click programmatically — matching the pattern for the edit-button click below —
-      // to bypass the overlay, then wait for the modal to close.
+      // The view's icon-suggest input retains focus after the picker closes and its dropdown
+      // overlays the Save button; fire the click programmatically — matching the pattern for the
+      // edit-button click below — to bypass the overlay, then wait for the modal to close.
       await $(".modal-container:not(:has(.mod-settings)) button.mod-cta").waitForExist({
         timeoutMsg: "config editor Save button did not appear",
       });
@@ -234,9 +232,17 @@ describe("settings", () => {
       await adders.at(-1)?.click();
       await clickIcon("Add Period buttons");
 
-      await waitForModalOpen();
       // Close it so it does not pollute the next test.
-      await submitModal();
+      await $(".modal-container:not(:has(.mod-settings)) button.mod-cta").waitForExist({
+        timeoutMsg: "config editor Save button did not appear",
+      });
+      await browser.execute(() => {
+        document.querySelector<HTMLElement>(".modal-container:not(:has(.mod-settings)) button.mod-cta")?.click();
+      });
+      await $(".modal-container:not(:has(.mod-settings))").waitForExist({
+        reverse: true,
+        timeoutMsg: "config editor did not close after Save",
+      });
 
       // Persist before the next test reads getSettings(); without this the next test's `before`
       // baseline would be stale (missing this item), causing its count assertion to fail.
@@ -267,8 +273,7 @@ describe("settings", () => {
       const adders = await $$('button[aria-label="Add toolbar item"]').getElements();
       await adders.at(-1)?.click();
       await clickIcon("Add Pick date");
-      // Auto-opened config editor: Save with the preset's defaults (mode stays "navigate"); the
-      // explicit edit below then changes the mode. Same icon-suggest overlay issue as above:
+      // The explicit edit below then changes the mode. Same icon-suggest overlay issue as above:
       // fire the click programmatically to bypass it.
       await $(".modal-container:not(:has(.mod-settings)) button.mod-cta").waitForExist({
         timeoutMsg: "config editor Save button did not appear",
