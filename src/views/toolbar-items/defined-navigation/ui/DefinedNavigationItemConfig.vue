@@ -5,7 +5,7 @@ import UiSettingRow from "@/ui/UiSettingRow.vue";
 
 import { DEFINED_NAVIGATION_TARGETS } from "../defined-navigation-targets";
 
-import type { DefinedNavigationConfig, DefinedNavigationConfigChange } from "../defined-navigation-item";
+import type { DefinedNavigationConfig, DefinedNavigationConfigChange } from "../defined-navigation-config";
 
 const props = defineProps<{
   config: DefinedNavigationConfig;

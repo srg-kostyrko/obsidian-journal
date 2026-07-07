@@ -11,11 +11,12 @@ import { JournalsIndex, OpenDateFlow } from "@/journals";
 import { ActiveEntryViewModel } from "@/notes-calendar/active-entry";
 import { useShelfScope } from "@/notes-calendar/use-shelf-scope";
 import UiButton from "@/ui/UiButton.vue";
+import UiIcon from "@/ui/UiIcon.vue";
 
 import { useViewContext } from "../../../view-context";
+import { resolveDefinedNavigationAppearance, type DefinedNavigationConfig } from "../defined-navigation-config";
 
 import type { BlockInstanceId } from "../../../config";
-import type { DefinedNavigationConfig } from "../defined-navigation-item";
 
 const props = defineProps<{
   instanceId: BlockInstanceId;
@@ -28,6 +29,11 @@ const index = useService(JournalsIndex);
 const notices = useService(NoticeService);
 const activeVM = useService(ActiveEntryViewModel);
 const scope = useShelfScope(() => context.shelf.value);
+
+const appearance = computed(() => resolveDefinedNavigationAppearance(props.config));
+const icon = computed(() => props.config.icon ?? appearance.value.icon);
+const label = computed(() => props.config.label ?? appearance.value.label);
+const tooltip = computed(() => props.config.tooltip ?? appearance.value.tooltip);
 
 const candidates = computed<readonly string[]>(() => {
   const target = props.config.target;
@@ -62,12 +68,14 @@ function navigate(direction: "previous" | "next", event: MouseEvent): void {
 <template>
   <UiButton
     flat
-    :tooltip="config.direction === 'previous' ? m.command_open_previous() : m.command_open_next()"
+    :tooltip="tooltip"
     :disabled="candidates.length === 0"
     :data-direction="config.direction"
     @click="(event: MouseEvent) => navigate(config.direction, event)"
     @auxclick.middle.prevent="(event: MouseEvent) => navigate(config.direction, event)"
   >
-    {{ config.direction === "previous" ? "‹" : "›" }}
+    <UiIcon v-if="icon" :name="icon" />
+    <span v-if="label">{{ label }}</span>
+    <span v-else-if="!icon">{{ tooltip }}</span>
   </UiButton>
 </template>

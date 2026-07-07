@@ -212,4 +212,25 @@ describe("DefinedNavigationItem", () => {
     const button = result.container.querySelector<HTMLButtonElement>("[data-direction='next']");
     expect(button?.disabled).toBe(true);
   });
+
+  it("renders the right chevron when no label is configured", () => {
+    const { result } = mountItem({ target: "day", direction: "next" });
+    expect(result.getByText("›")).toBeTruthy();
+  });
+
+  it("renders a custom label in place of the chevron", () => {
+    const { result } = mountItem({ target: "day", direction: "next", label: "Older" });
+    expect(result.getByText("Older")).toBeTruthy();
+    expect(result.queryByText("›")).toBeNull();
+  });
+
+  it("uses the direction default tooltip as the button aria-label", () => {
+    const { result } = mountItem({ target: "day", direction: "previous" });
+    expect(result.getByLabelText(m.command_open_previous())).toBeTruthy();
+  });
+
+  it("uses a custom tooltip as the button aria-label", () => {
+    const { result } = mountItem({ target: "day", direction: "next", tooltip: "Jump back" });
+    expect(result.getByLabelText("Jump back")).toBeTruthy();
+  });
 });
