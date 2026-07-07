@@ -4,7 +4,7 @@ import { m } from "@/i18n";
 
 import { DEFINED_NAVIGATION_TARGETS } from "./defined-navigation-targets";
 
-const schema = v.object({
+export const definedNavigationSchema = v.object({
   target: v.picklist(DEFINED_NAVIGATION_TARGETS),
   direction: v.picklist(["previous", "next"] as const),
   icon: v.optional(v.string()),
@@ -12,7 +12,7 @@ const schema = v.object({
   tooltip: v.optional(v.string()),
 });
 
-export type DefinedNavigationConfig = v.InferOutput<typeof schema>;
+export type DefinedNavigationConfig = v.InferOutput<typeof definedNavigationSchema>;
 export type DefinedNavigationConfigChange = (next: DefinedNavigationConfig) => void;
 
 export interface DefinedNavigationAppearance {
@@ -26,5 +26,3 @@ export function resolveDefinedNavigationAppearance(config: DefinedNavigationConf
     ? { label: "‹", tooltip: m.command_open_previous() }
     : { label: "›", tooltip: m.command_open_next() };
 }
-
-export { schema as definedNavigationSchema };

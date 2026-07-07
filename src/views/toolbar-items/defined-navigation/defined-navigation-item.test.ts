@@ -3,7 +3,8 @@ import { describe, expect, it } from "vitest";
 
 import { m } from "@/i18n";
 
-import { definedNavigationItem, resolveDefinedNavigationAppearance } from "./defined-navigation-item";
+import { resolveDefinedNavigationAppearance } from "./defined-navigation-config";
+import { definedNavigationItem } from "./defined-navigation-item";
 
 describe("definedNavigationItem", () => {
   it("defaults to walking daily notes in the next direction", () => {

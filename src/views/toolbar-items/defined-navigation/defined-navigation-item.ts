@@ -8,8 +8,6 @@ import DefinedNavigationItem from "./ui/DefinedNavigationItem.vue";
 import DefinedNavigationItemConfig from "./ui/DefinedNavigationItemConfig.vue";
 
 export { DEFINED_NAVIGATION_TARGETS } from "./defined-navigation-targets";
-export type { DefinedNavigationConfig, DefinedNavigationConfigChange } from "./defined-navigation-config";
-export { resolveDefinedNavigationAppearance } from "./defined-navigation-config";
 
 export const definedNavigationItem = defineToolbarItem<DefinedNavigationConfig>({
   key: "defined-navigation",

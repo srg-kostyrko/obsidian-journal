@@ -9,7 +9,7 @@ import { FakeInputSuggestService } from "@/infrastructure/host/input-suggests/te
 
 import DefinedNavigationItemConfig from "./ui/DefinedNavigationItemConfig.vue";
 
-import type { DefinedNavigationConfig, DefinedNavigationConfigChange } from "./defined-navigation-item";
+import type { DefinedNavigationConfig, DefinedNavigationConfigChange } from "./defined-navigation-config";
 
 function mountConfig(config: DefinedNavigationConfig, onChange: DefinedNavigationConfigChange) {
   const container = new Container();
@@ -20,7 +20,6 @@ function mountConfig(config: DefinedNavigationConfig, onChange: DefinedNavigatio
   });
 }
 
-// Text inputs render in order: icon, label, tooltip.
 // Dropdowns render in order: target, direction.
 afterEach(() => cleanup());
 

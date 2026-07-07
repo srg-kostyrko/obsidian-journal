@@ -16,9 +16,10 @@ import { ActiveEntryViewModel, type ActiveEntryRef } from "@/notes-calendar/acti
 
 import { provideViewContextStub } from "../../../testing";
 import { provideViewContext, type ViewContext } from "../../../view-context";
-import { definedNavigationItem, type DefinedNavigationConfig } from "../defined-navigation-item";
+import { definedNavigationItem } from "../defined-navigation-item";
 
 import type { BlockInstanceId } from "../../../config";
+import type { DefinedNavigationConfig } from "../defined-navigation-config";
 
 const SCOPE = {
   day: [] as readonly string[],
