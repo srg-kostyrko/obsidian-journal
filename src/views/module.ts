@@ -17,6 +17,7 @@ import { AddBlockToViewFlow } from "./flows/add-block-to-view.flow";
 import { AddToolbarItemToBlockFlow } from "./flows/add-toolbar-item-to-block.flow";
 import { DeleteViewFlow } from "./flows/delete-view.flow";
 import { EditViewNameFlow } from "./flows/edit-view-name.flow";
+import { RepositionViewFlow } from "./flows/reposition-view.flow";
 import { ViewsRepository } from "./repository";
 import { ViewsService } from "./service";
 import { ToolbarItemDefinitionToken, ViewBlockDefinitionToken, ViewsEventsToken, type ViewsEvents } from "./tokens";
@@ -43,6 +44,7 @@ export const viewsModule: Module = {
     c.register(DeleteViewFlow).useClass(DeleteViewFlow);
     c.register(AddBlockToViewFlow).useClass(AddBlockToViewFlow);
     c.register(AddToolbarItemToBlockFlow).useClass(AddToolbarItemToBlockFlow);
+    c.register(RepositionViewFlow).useClass(RepositionViewFlow);
 
     c.register(ViewBlockDefinitionToken).useValue(dividerBlock);
     c.register(ViewBlockDefinitionToken).useValue(toolbarBlock);

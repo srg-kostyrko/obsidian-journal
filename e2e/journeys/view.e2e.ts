@@ -1,6 +1,15 @@
 import { $, $$, browser, expect } from "@wdio/globals";
 
 import {
+  clickDialogButton,
+  clickIcon,
+  closeSettings,
+  expandSection,
+  openSettings,
+  waitForDialogClosed,
+  waitForModalOpen,
+} from "../support/settings.js";
+import {
   activeNotePath,
   openNote,
   renameNote,
@@ -500,6 +509,41 @@ describe("calendar view", () => {
       await openCalendarView();
       await $(MONTH_VIEW).waitForExist({ timeoutMsg: "month grid did not render" });
       await expect($(`${LIVE_LEAF} .notes-month-view__header`)).not.toBeExisting();
+    });
+  });
+
+  describe("view reposition", () => {
+    before(async () => {
+      await browser.reloadObsidian({ vault: "./e2e/fixtures/e2e-journeys", plugins: ["journals"] });
+    });
+
+    after(closeSettings);
+
+    it("moves an open calendar view from the right sidebar to a tab after confirming", async () => {
+      await openCalendarView();
+      await expect($(`.mod-right-split ${LIVE_LEAF} .notes-month-view`)).toExist();
+
+      await openSettings();
+      await expandSection("Views");
+      await clickIcon("Configure Calendar");
+
+      // The "Open in" select is identified by its unique option values (left/right/tab).
+      const openInSelect = $('//select[option[@value="tab"]]');
+      await openInSelect.waitForExist({
+        timeoutMsg: "Open in select did not appear after clicking Configure Calendar",
+      });
+      await openInSelect.selectByAttribute("value", "tab");
+
+      await waitForModalOpen();
+      await clickDialogButton("Move");
+      await waitForDialogClosed();
+
+      await closeSettings();
+
+      await $(`.workspace-split.mod-root ${LIVE_LEAF} .notes-month-view`).waitForExist({
+        timeoutMsg: "calendar view did not move to a main-area tab after confirming the reposition",
+      });
+      await expect($(`.mod-right-split ${LIVE_LEAF} .notes-month-view`)).not.toExist();
     });
   });
 });
