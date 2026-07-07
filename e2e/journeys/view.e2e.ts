@@ -538,6 +538,8 @@ describe("calendar view", () => {
       await clickDialogButton("Move");
       await waitForDialogClosed();
 
+      // reposition calls workspace.revealLeaf, which ejects the settings panel off the view-editor subpage,
+      // so the back-link is gone — close settings directly instead of goBack().
       await closeSettings();
 
       await $(`.workspace-split.mod-root ${LIVE_LEAF} .notes-month-view`).waitForExist({
