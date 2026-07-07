@@ -84,6 +84,11 @@ export async function selectModalSelect(value: string): Promise<void> {
   await activeModal().$("select").selectByAttribute("value", value);
 }
 
+// Set the first number input in the open modal (e.g. a calendar block's leading padding field).
+export async function setModalNumber(value: number): Promise<void> {
+  await activeModal().$('input[type="number"]').setValue(value);
+}
+
 export async function submitModal(): Promise<void> {
   await activeModal().$("button=Save").click();
   await activeModal().waitForExist({ reverse: true, timeoutMsg: "modal did not close after Save" });

@@ -780,8 +780,6 @@
   "view_block_markdown_template_variable_journal_link_description": "Resolves to the vault path of another journal's note for the focused date. Wrap it in a link yourself, and add a shift like +1w to point at a neighbouring period.",
   "view_block_markdown_template_empty": "No template selected",
   "view_block_markdown_template_read_error": "Could not read the template file.",
-  "view_block_summary_weeks_left": "Week numbers: left",
-  "view_block_summary_weeks_right": "Week numbers: right",
   "view_block_summary_padding": "{before} before, {after} after",
   "view_block_summary_hidden_days": "Hides {days}",
   "view_block_summary_journal_count": "{count} journals",

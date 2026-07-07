@@ -6,7 +6,7 @@ import {
   expandSection,
   goBack,
   openSettings,
-  selectModalSelect,
+  setModalNumber,
   submitModal,
 } from "../support/settings.js";
 
@@ -34,11 +34,11 @@ describe("view clone", () => {
     // state the clone must survive.
     await clickIcon("Configure Calendar");
     await clickIcon("Edit block"); // the first editable block is the month calendar
-    await selectModalSelect("right"); // the week-numbers dropdown — a primitive change that leaves hiddenWeekdays spread as a proxy
+    await setModalNumber(1); // the leading-padding field — a primitive change that leaves hiddenWeekdays spread as a proxy
     await submitModal();
     // The updated summary confirms the edited config persisted before we leave the editor.
-    await $(".jv-block-entry*=Week numbers: right").waitForExist({
-      timeoutMsg: "month block summary did not reflect the saved week-numbers change",
+    await $(".jv-block-entry*=1 before, 0 after").waitForExist({
+      timeoutMsg: "month block summary did not reflect the saved padding change",
     });
     await goBack();
 
