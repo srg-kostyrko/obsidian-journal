@@ -9,8 +9,9 @@ import UiSettingRow from "@/ui/UiSettingRow.vue";
 const props = defineProps<{
   component: Component;
   config: Record<string, unknown>;
-  // Consumed by the modal title (see modals.ts), declared here so it is not a fall-through attr.
+  // Consumed by the modal title (see modals.ts), declared here so they are not fall-through attrs.
   typeLabel?: string;
+  summary?: string;
 }>();
 
 const api = useModal<Record<string, unknown>>();

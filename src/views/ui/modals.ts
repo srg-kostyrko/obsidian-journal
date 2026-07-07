@@ -52,11 +52,15 @@ export interface EditConfigModalProps {
   component: Component;
   config: Record<string, unknown>;
   typeLabel: string;
+  summary?: string;
 }
 
 export const editToolbarItemModal = defineModal<Record<string, unknown>>()({
   component: EditConfigModal,
-  title: ({ typeLabel }: EditConfigModalProps) => m.view_toolbar_item_edit_title({ type: typeLabel }),
+  title: ({ typeLabel, summary }: EditConfigModalProps) =>
+    summary === undefined
+      ? m.view_toolbar_item_edit_title({ type: typeLabel })
+      : m.view_toolbar_item_edit_title_detail({ type: typeLabel, detail: summary }),
 });
 
 export const editBlockModal = defineModal<Record<string, unknown>>()({

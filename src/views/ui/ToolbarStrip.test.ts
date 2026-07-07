@@ -49,6 +49,7 @@ const shelfSelectorDefinition = {
   schema: v.object({}),
   defaultConfig: {},
   component: { render: () => null },
+  configComponent: { render: () => null },
   __brand: "toolbar-item",
 } as unknown as ToolbarItemDefinition;
 
@@ -136,12 +137,22 @@ describe("ToolbarStrip", () => {
     expect(spy).toHaveBeenCalledWith(AddToolbarItemToBlockFlow, { viewId, blockId });
   });
 
-  it("titles the edit modal with the item's config-specific summary", async () => {
+  it("titles the edit modal by qualifying the item type with its config-specific summary", async () => {
     const { container } = await setup([{ id: itemIdA, key: "button", config: { action: { type: "pick-date" } } }]);
     mount(container);
     await userEvent.click(screen.getByLabelText(m.view_toolbar_item_edit()));
     const modals = container.resolve(ModalService) as unknown as FakeModalService;
-    expect(modals.lastOpen().resolvedTitle).toBe(m.view_toolbar_item_edit_title({ type: "Pick a date" }));
+    expect(modals.lastOpen().resolvedTitle).toBe(
+      m.view_toolbar_item_edit_title_detail({ type: "Button", detail: "Pick a date" }),
+    );
+  });
+
+  it("titles the edit modal with just the item type when it has no summary", async () => {
+    const { container } = await setup([{ id: itemIdA, key: "shelf-selector", config: {} }]);
+    mount(container);
+    await userEvent.click(screen.getByLabelText(m.view_toolbar_item_edit()));
+    const modals = container.resolve(ModalService) as unknown as FakeModalService;
+    expect(modals.lastOpen().resolvedTitle).toBe(m.view_toolbar_item_edit_title({ type: "Shelf selector" }));
   });
 
   it("persists the edited config when the edit modal is saved", async () => {

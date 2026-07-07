@@ -755,7 +755,8 @@
   "view_block_remove": "Remove block",
   "view_toolbar_item_unknown_label": "Unknown toolbar item: {key}",
   "view_toolbar_item_edit": "Edit toolbar item",
-  "view_toolbar_item_edit_title": "Edit toolbar item: {type}",
+  "view_toolbar_item_edit_title": "Edit {type}",
+  "view_toolbar_item_edit_title_detail": "Edit {type}: {detail}",
   "view_toolbar_item_remove": "Remove toolbar item",
   "view_toolbar_item_empty": "No toolbar items yet.",
 
