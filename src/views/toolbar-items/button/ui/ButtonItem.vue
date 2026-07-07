@@ -97,7 +97,7 @@ async function fireJournal(
   event: MouseEvent,
 ): Promise<void> {
   const journal = action.journal;
-  if (journal === undefined) return;
+  if (!journal) return;
   let date: CalendarDate;
   if (action.type === "pick-date") {
     const result = await modals.open(datePickerModal, { picking: "day" });
@@ -129,7 +129,7 @@ function onClick(event: MouseEvent): void {
     void fire("day", event); // navigate-step ignores level
     return;
   }
-  if (action.journal !== undefined) {
+  if (action.journal) {
     void fireJournal(action, event);
     return;
   }
