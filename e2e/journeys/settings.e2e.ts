@@ -14,6 +14,7 @@ import {
   selectModalSelect,
   setModalText,
   submitModal,
+  waitForModalOpen,
 } from "../support/settings.js";
 
 import type { StoredView } from "../support/plugin-data.js";
@@ -231,6 +232,8 @@ describe("settings", () => {
       const adders = await $$('button[aria-label="Add toolbar item"]').getElements();
       await adders.at(-1)?.click();
       await clickIcon("Add Period buttons");
+
+      await waitForModalOpen();
 
       // Close it so it does not pollute the next test.
       await $(".modal-container:not(:has(.mod-settings)) button.mod-cta").waitForExist({
