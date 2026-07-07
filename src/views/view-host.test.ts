@@ -168,6 +168,56 @@ describe("ViewHostService", () => {
     });
   });
 
+  describe("isOpen", () => {
+    it("reports a view with no open leaves as closed", () => {
+      const { service } = build({ a: seedView("a") });
+      expect(service.isOpen("a" as ViewId)).toBe(false);
+    });
+
+    it("reports a view as open once its leaf has been opened", async () => {
+      const { service, host } = build({ a: seedView("a") });
+      openVia(host, "a");
+      await Promise.resolve();
+      expect(service.isOpen("a" as ViewId)).toBe(true);
+    });
+  });
+
+  describe("reposition", () => {
+    it("reopens the view at the newly configured mode after detaching the old leaf", async () => {
+      const { service, host, storage } = build({ a: seedView("a", { leaf: "right" }) });
+      openVia(host, "a");
+      await Promise.resolve();
+      storage.a.leaf = "tab";
+
+      await service.reposition("a" as ViewId);
+
+      expect(host.workspace.detachedTypes).toContain("journal-view:a");
+      expect(host.workspace.viewStateCalls.at(-1)).toEqual({ type: "journal-view:a", placement: "tab" });
+    });
+
+    it("preserves the number of open leaves when repositioning", async () => {
+      const { service, host, storage } = build({ a: seedView("a", { leaf: "right" }) });
+      await host.app.workspace.getRightLeaf(false)!.setViewState({ type: "journal-view:a" });
+      await host.app.workspace.getRightLeaf(false)!.setViewState({ type: "journal-view:a" });
+      storage.a.leaf = "tab";
+      host.workspace.viewStateCalls.length = 0;
+
+      await service.reposition("a" as ViewId);
+
+      expect(host.workspace.viewStateCalls).toEqual([
+        { type: "journal-view:a", placement: "tab" },
+        { type: "journal-view:a", placement: "tab" },
+      ]);
+    });
+
+    it("does nothing when no leaf of the view is open", async () => {
+      const { service, host } = build({ a: seedView("a") });
+      await service.reposition("a" as ViewId);
+      expect(host.workspace.viewStateCalls).toEqual([]);
+      expect(host.workspace.detachedTypes).toEqual([]);
+    });
+  });
+
   describe("initialize", () => {
     it("opens an opted-in view once layout becomes ready at launch", async () => {
       const { service, host } = build({ a: seedView("a", { openOnStartup: true }) });

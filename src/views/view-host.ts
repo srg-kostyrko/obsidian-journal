@@ -147,6 +147,23 @@ export class ViewHostService {
     await leaf.setViewState({ type: viewType, active: true });
     await this.#app.workspace.revealLeaf(leaf);
   }
+
+  isOpen(id: ViewId): boolean {
+    return this.#app.workspace.getLeavesOfType(viewTypeOf(id)).length > 0;
+  }
+
+  async reposition(id: ViewId): Promise<void> {
+    const viewType = viewTypeOf(id);
+    const count = this.#app.workspace.getLeavesOfType(viewType).length;
+    if (count === 0) return;
+    this.#app.workspace.detachLeavesOfType(viewType);
+    const view = this.#getView(id);
+    for (let index = 0; index < count; index++) {
+      const leaf = this.#leafFor(view?.leaf ?? "right");
+      await leaf.setViewState({ type: viewType, active: true });
+      await this.#app.workspace.revealLeaf(leaf);
+    }
+  }
 }
 
 function viewTypeOf(id: ViewId): string {
