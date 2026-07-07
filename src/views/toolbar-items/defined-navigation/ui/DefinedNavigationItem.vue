@@ -29,7 +29,11 @@ const notices = useService(NoticeService);
 const activeVM = useService(ActiveEntryViewModel);
 const scope = useShelfScope(() => context.shelf.value);
 
-const candidates = computed<readonly string[]>(() => scope[props.config.target].value);
+const candidates = computed<readonly string[]>(() => {
+  const target = props.config.target;
+  if (target === "active") return scope.all.value;
+  return scope[target].value;
+});
 
 function referenceAnchor(): AnchorString {
   const active = activeVM.active.value;

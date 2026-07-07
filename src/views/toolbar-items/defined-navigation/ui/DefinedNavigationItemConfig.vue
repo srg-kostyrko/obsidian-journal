@@ -28,7 +28,11 @@ const update = (patch: Partial<DefinedNavigationConfig>): void => props.onChange
       "
     >
       <option v-for="target of targets" :key="target" :value="target">
-        {{ m.command_write_type_option({ writeType: target }) }}
+        {{
+          target === "active"
+            ? m.view_toolbar_defined_navigation_target_active()
+            : m.command_write_type_option({ writeType: target })
+        }}
       </option>
     </UiDropdown>
   </UiSettingRow>

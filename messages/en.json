@@ -824,6 +824,7 @@
   "view_toolbar_defined_navigation_label": "Defined-note navigation",
   "view_toolbar_defined_navigation_description": "A button that jumps to the previous or next note that already exists.",
   "view_toolbar_defined_navigation_target": "Walk which notes",
+  "view_toolbar_defined_navigation_target_active": "Active journal's notes",
   "view_toolbar_defined_navigation_direction": "Direction",
   "view_toolbar_defined_navigation_direction_option": [
     {

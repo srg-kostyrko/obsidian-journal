@@ -37,4 +37,12 @@ describe("DefinedNavigationItemConfig", () => {
     await userEvent.selectOptions(directionDropdown, "next");
     expect(onChange).toHaveBeenCalledWith({ target: "day", direction: "next" });
   });
+
+  it("emits onChange with the active target when active is selected", async () => {
+    const onChange = vi.fn();
+    mountConfig({ target: "day", direction: "next" }, onChange);
+    const [targetDropdown] = screen.getAllByRole("combobox");
+    await userEvent.selectOptions(targetDropdown, "active");
+    expect(onChange).toHaveBeenCalledWith({ target: "active", direction: "next" });
+  });
 });
