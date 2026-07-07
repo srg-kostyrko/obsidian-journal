@@ -11,7 +11,7 @@ import { useService } from "@/infrastructure/di";
 import { Flows } from "@/infrastructure/flows";
 import { defineOpenMode } from "@/infrastructure/host";
 import { ModalService } from "@/infrastructure/host/modals";
-import { OpenDateFlow } from "@/journals";
+import { CycleService, OpenDateFlow } from "@/journals";
 import { useShelfScope } from "@/notes-calendar/use-shelf-scope";
 import UiButton from "@/ui/UiButton.vue";
 import UiIcon from "@/ui/UiIcon.vue";
@@ -29,6 +29,7 @@ const props = defineProps<{
 const context = useViewContext();
 const flows = useService(Flows);
 const modals = useService(ModalService);
+const cycle = useService(CycleService);
 const scope = useShelfScope(() => context.shelf.value);
 
 const appearance = computed(() => resolveButtonAppearance(props.config.action));
@@ -53,7 +54,7 @@ function journalsFor(level: ButtonLevel): readonly string[] {
 async function applyMode(
   mode: "select-only" | "navigate" | "create",
   anchor: AnchorString,
-  level: ButtonLevel,
+  journalNames: readonly string[],
   event: MouseEvent,
 ): Promise<void> {
   if (mode === "select-only") {
@@ -62,7 +63,7 @@ async function applyMode(
   }
   await flows.invoke(OpenDateFlow, {
     anchor,
-    journalNames: [...journalsFor(level)],
+    journalNames: [...journalNames],
     openMode: defineOpenMode(event),
     existingOnly: mode === "navigate",
   });
@@ -73,11 +74,11 @@ async function fire(level: ButtonLevel, event: MouseEvent): Promise<void> {
     .with({ type: "pick-date" }, async (action) => {
       const result = await modals.open(datePickerModal, { picking: level });
       if (result.isErr()) return;
-      await applyMode(action.mode, result.value.anchor.toAnchor(), level, event);
+      await applyMode(action.mode, result.value.anchor.toAnchor(), journalsFor(level), event);
     })
     .with({ type: "current" }, async (action) => {
       const period = periodFor(level, CalendarDate.today());
-      await applyMode(action.mode, period.anchor.toAnchor(), level, event);
+      await applyMode(action.mode, period.anchor.toAnchor(), journalsFor(level), event);
     })
     .with({ type: "navigate-step" }, (action) => {
       const date = CalendarDate.fromAnchor(context.refDate.value);
@@ -89,6 +90,25 @@ async function fire(level: ButtonLevel, event: MouseEvent): Promise<void> {
       context.setRefDate(cursor.anchor.toAnchor());
     })
     .exhaustive();
+}
+
+async function fireJournal(
+  action: Extract<ButtonAction, { type: "current" | "pick-date" }>,
+  event: MouseEvent,
+): Promise<void> {
+  const journal = action.journal;
+  if (journal === undefined) return;
+  let date: CalendarDate;
+  if (action.type === "pick-date") {
+    const result = await modals.open(datePickerModal, { picking: "day" });
+    if (result.isErr()) return;
+    date = CalendarDate.fromAnchor(result.value.anchor.toAnchor());
+  } else {
+    date = CalendarDate.today();
+  }
+  const anchor = cycle.anchorOf(journal, date);
+  if (anchor.isNone()) return;
+  await applyMode(action.mode, anchor.value, [journal], event);
 }
 
 function menuLabelFor(action: ButtonAction, level: ButtonLevel): string {
@@ -107,6 +127,10 @@ function onClick(event: MouseEvent): void {
   const action = props.config.action;
   if (action.type === "navigate-step") {
     void fire("day", event); // navigate-step ignores level
+    return;
+  }
+  if (action.journal !== undefined) {
+    void fireJournal(action, event);
     return;
   }
   if (action.levels.length === 1) {

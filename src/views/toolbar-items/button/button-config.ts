@@ -10,8 +10,18 @@ const modeField = v.picklist(["select-only", "navigate", "create"] as const);
 const stepUnitField = v.picklist(["week", "month", "quarter", "year"] as const);
 
 export const buttonActionSchema = v.variant("type", [
-  v.object({ type: v.literal("pick-date"), mode: modeField, levels: levelsField }),
-  v.object({ type: v.literal("current"), mode: modeField, levels: levelsField }),
+  v.object({
+    type: v.literal("pick-date"),
+    mode: modeField,
+    levels: levelsField,
+    journal: v.optional(v.string()),
+  }),
+  v.object({
+    type: v.literal("current"),
+    mode: modeField,
+    levels: levelsField,
+    journal: v.optional(v.string()),
+  }),
   v.object({
     type: v.literal("navigate-step"),
     direction: v.picklist(["prev", "next"] as const),

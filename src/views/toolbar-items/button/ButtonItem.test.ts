@@ -11,8 +11,8 @@ import { Container, provideInjectorOnApp } from "@/infrastructure/di";
 import { Flows } from "@/infrastructure/flows";
 import { ModalService } from "@/infrastructure/host/modals";
 import { FakeModalService } from "@/infrastructure/host/modals/testing";
-import { AsyncResult } from "@/infrastructure/result";
-import { OpenDateFlow } from "@/journals";
+import { AsyncResult, Option } from "@/infrastructure/result";
+import { CycleService, OpenDateFlow } from "@/journals";
 
 import { provideViewContextStub } from "../../testing";
 import { provideViewContext, type ViewContext } from "../../view-context";
@@ -51,15 +51,31 @@ class FakeFlows {
   }
 }
 
+class FakeCycle {
+  constructor(
+    private readonly resolve: (name: string, date: CalendarDate) => Option<AnchorString> = (_name, date) =>
+      Option.some(date.toAnchor()),
+  ) {}
+  anchorOf(name: string, date: CalendarDate): Option<AnchorString> {
+    return this.resolve(name, date);
+  }
+}
+
 const renderRoot = (config: ButtonConfig): ReturnType<typeof h> =>
   h(buttonItem.component, { instanceId: "i-1" as BlockInstanceId, config });
 
-function mountItem(config: ButtonConfig, contextOverride: Partial<ViewContext> = {}) {
+function mountItem(
+  config: ButtonConfig,
+  contextOverride: Partial<ViewContext> = {},
+  cycleResolve?: (name: string, date: CalendarDate) => Option<AnchorString>,
+) {
   const container = new Container();
   const flows = new FakeFlows();
   const modals = new FakeModalService();
+  const cycle = new FakeCycle(cycleResolve);
   container.register(Flows).useValue(flows as unknown as Flows);
   container.register(ModalService).useValue(modals as unknown as ModalService);
+  container.register(CycleService).useValue(cycle as unknown as CycleService);
   const context = provideViewContextStub(contextOverride);
   const wrapperRender = (): ReturnType<typeof h> => renderRoot(config);
   const Wrapper = defineComponent({
@@ -230,6 +246,49 @@ describe("ButtonItem", () => {
       await new Promise((r) => window.setTimeout(r, 0));
       const expected = WeekPeriod.containing(CalendarDate.today()).anchor.toAnchor();
       expect(setRefDate).toHaveBeenCalledWith(expected);
+    });
+  });
+
+  describe("click — pinned journal", () => {
+    it("opens only the pinned journal at its resolved anchor for current", async () => {
+      const { result, flows } = mountItem(
+        { action: { type: "current", mode: "create", levels: ["day"], journal: "weekly" } },
+        {},
+        () => Option.some("2026-06-08" as AnchorString),
+      );
+      await userEvent.click(result.getByText("Today"));
+      expect(flows.calls).toHaveLength(1);
+      expect(flows.calls[0]?.flow).toBe(OpenDateFlow);
+      const parameters = flows.calls[0]?.parameters as { anchor: string; journalNames: string[] };
+      expect(parameters.anchor).toBe("2026-06-08");
+      expect(parameters.journalNames).toEqual(["weekly"]);
+    });
+
+    it("does nothing when the pinned journal cannot be resolved", async () => {
+      const { result, flows } = mountItem(
+        { action: { type: "current", mode: "create", levels: ["day"], journal: "gone" } },
+        {},
+        () => Option.none(),
+      );
+      await userEvent.click(result.getByText("Today"));
+      expect(flows.calls).toHaveLength(0);
+    });
+
+    it("resolves the picked day through the pinned journal for pick-date", async () => {
+      const { result, modals, flows } = mountItem(
+        { action: { type: "pick-date", mode: "create", levels: ["day"], journal: "weekly" } },
+        {},
+        () => Option.some("2026-06-08" as AnchorString),
+      );
+      await userEvent.click(result.getByRole("button"));
+      expect((modals.lastOpen().props as { picking: string }).picking).toBe("day");
+      const picked = DayPeriod.containing(CalendarDate.fromAnchor("2026-06-10" as AnchorString));
+      modals.lastOpen().submit(picked);
+      await new Promise((r) => window.setTimeout(r, 0));
+      expect(flows.calls).toHaveLength(1);
+      const parameters = flows.calls[0]?.parameters as { anchor: string; journalNames: string[] };
+      expect(parameters.anchor).toBe("2026-06-08");
+      expect(parameters.journalNames).toEqual(["weekly"]);
     });
   });
 });
