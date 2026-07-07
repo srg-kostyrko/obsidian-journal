@@ -51,7 +51,10 @@ automatic. The setting itself always saves regardless of the answer.
 
 If more than one instance of the view is open when the user confirms, each
 instance relocates to the new open mode; the number of open instances is
-preserved.
+preserved. Note: count preservation holds for the New-tab target only — sidebar
+targets reuse Obsidian's single left/right leaf, so multiple instances collapse
+to one (an accepted limitation given that multi-leaf states are rare, and
+`open()` already dedupes to a single leaf).
 
 ## Design notes (implementation vocabulary)
 

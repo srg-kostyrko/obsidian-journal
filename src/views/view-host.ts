@@ -158,6 +158,9 @@ export class ViewHostService {
     if (count === 0) return;
     this.#app.workspace.detachLeavesOfType(viewType);
     const view = this.#getView(id);
+    // Count is preserved only for the "tab" target, where each iteration mints a fresh leaf. Sidebar
+    // placements reuse the single left/right leaf, so multiple leaves collapse to one — acceptable
+    // because open() dedupes, making multi-leaf states rare.
     for (let index = 0; index < count; index++) {
       const leaf = this.#leafFor(view?.leaf ?? "right");
       await leaf.setViewState({ type: viewType, active: true });

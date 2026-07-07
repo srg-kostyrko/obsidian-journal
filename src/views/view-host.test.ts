@@ -195,7 +195,7 @@ describe("ViewHostService", () => {
       expect(host.workspace.viewStateCalls.at(-1)).toEqual({ type: "journal-view:a", placement: "tab" });
     });
 
-    it("preserves the number of open leaves when repositioning", async () => {
+    it("opens one tab per open leaf when repositioning to a new tab", async () => {
       const { service, host, storage } = build({ a: seedView("a", { leaf: "right" }) });
       await host.app.workspace.getRightLeaf(false)!.setViewState({ type: "journal-view:a" });
       await host.app.workspace.getRightLeaf(false)!.setViewState({ type: "journal-view:a" });

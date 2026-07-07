@@ -53,7 +53,7 @@ function build(seeds: Record<string, View> = {}) {
   c.register(Flows).useClass(Flows);
   c.register(RepositionViewFlow).useClass(RepositionViewFlow);
   c.resolve(ViewHostService);
-  return { host, storage, modals, flows: c.resolve(Flows) };
+  return { host, modals, flows: c.resolve(Flows) };
 }
 
 async function seedOpenLeaf(host: ReturnType<typeof createFakeHost>, id: string): Promise<void> {
