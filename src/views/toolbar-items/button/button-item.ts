@@ -23,8 +23,8 @@ export const buttonItem = defineToolbarItem<ButtonConfig>({
       defaultConfig: { action: { type: "pick-date", mode: "navigate", levels: ["day"] } },
     },
     {
-      label: m.common_label_today(),
-      description: m.view_toolbar_button_preset_today_description(),
+      label: m.view_toolbar_button_preset_open_note(),
+      description: m.view_toolbar_button_preset_open_note_description(),
       defaultConfig: { action: { type: "current", mode: "create", levels: ["day"] } },
     },
     {
