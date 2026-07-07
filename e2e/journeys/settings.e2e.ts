@@ -3,7 +3,7 @@ import { $, $$, browser, expect } from "@wdio/globals";
 import { getSettings, waitForSettings } from "../support/plugin-data.js";
 import {
   clickIcon,
-  clickModalCheckboxByLabel,
+  clickModalToggleOption,
   closeSettings,
   deleteInModal,
   expandSection,
@@ -14,6 +14,7 @@ import {
   selectModalSelect,
   setModalText,
   submitModal,
+  waitForModalOpen,
 } from "../support/settings.js";
 
 import type { StoredView } from "../support/plugin-data.js";
@@ -182,7 +183,7 @@ describe("settings", () => {
       const before = initial.views?.[calId ?? ""]?.blocks?.length ?? 0;
 
       await expandSection("Views");
-      await clickIcon("Open Calendar");
+      await clickIcon("Configure Calendar");
       await clickIcon("Add block");
       await clickIcon("Add Week calendar");
 
@@ -202,11 +203,47 @@ describe("settings", () => {
       const before = itemCount(initial.views);
 
       await expandSection("Views");
-      await clickIcon("Open Calendar");
+      await clickIcon("Configure Calendar");
       await clickIcon("Add toolbar item");
       await clickIcon("Add Period buttons");
+      // Adding a configurable item now auto-opens its config editor. The view's icon-suggest
+      // input retains focus after the picker closes and its dropdown overlays the Save button;
+      // fire the click programmatically — matching the pattern for the edit-button click below —
+      // to bypass the overlay, then wait for the modal to close.
+      await $(".modal-container:not(:has(.mod-settings)) button.mod-cta").waitForExist({
+        timeoutMsg: "config editor Save button did not appear",
+      });
+      await browser.execute(() => {
+        document.querySelector<HTMLElement>(".modal-container:not(:has(.mod-settings)) button.mod-cta")?.click();
+      });
+      await $(".modal-container:not(:has(.mod-settings))").waitForExist({
+        reverse: true,
+        timeoutMsg: "config editor did not close after Save",
+      });
 
       await waitForSettings((s) => itemCount(s.views) === before + 1, "added toolbar item not persisted");
+    });
+
+    it("auto-opens the config editor when a configurable toolbar item is added", async () => {
+      const initial = await getSettings();
+      const before = calendarToolbarItems(initial.views).length;
+
+      await expandSection("Views");
+      await clickIcon("Configure Calendar");
+      const adders = await $$('button[aria-label="Add toolbar item"]').getElements();
+      await adders.at(-1)?.click();
+      await clickIcon("Add Period buttons");
+
+      await waitForModalOpen();
+      // Close it so it does not pollute the next test.
+      await submitModal();
+
+      // Persist before the next test reads getSettings(); without this the next test's `before`
+      // baseline would be stale (missing this item), causing its count assertion to fail.
+      await waitForSettings(
+        (s) => calendarToolbarItems(s.views).length === before + 1,
+        "auto-opened config item not persisted",
+      );
     });
 
     it("edits a toolbar button's behavior and persists the new mode", async () => {
@@ -224,12 +261,25 @@ describe("settings", () => {
       const before = toolbarItems(initial.views).length;
 
       await expandSection("Views");
-      await clickIcon("Open Calendar");
+      await clickIcon("Configure Calendar");
       // Two toolbar blocks each render an "Add toolbar item" button; add to the last strip so the
       // new item is globally last — matching the last edit button and last-button reads below.
       const adders = await $$('button[aria-label="Add toolbar item"]').getElements();
       await adders.at(-1)?.click();
       await clickIcon("Add Pick date");
+      // Auto-opened config editor: Save with the preset's defaults (mode stays "navigate"); the
+      // explicit edit below then changes the mode. Same icon-suggest overlay issue as above:
+      // fire the click programmatically to bypass it.
+      await $(".modal-container:not(:has(.mod-settings)) button.mod-cta").waitForExist({
+        timeoutMsg: "config editor Save button did not appear",
+      });
+      await browser.execute(() => {
+        document.querySelector<HTMLElement>(".modal-container:not(:has(.mod-settings)) button.mod-cta")?.click();
+      });
+      await $(".modal-container:not(:has(.mod-settings))").waitForExist({
+        reverse: true,
+        timeoutMsg: "config editor did not close after Save",
+      });
       await waitForSettings(
         (s) => toolbarItems(s.views).length === before + 1 && lastButtonMode(s.views) === "navigate",
         "added pick-date button not persisted",
@@ -259,7 +309,7 @@ describe("settings", () => {
       };
 
       await expandSection("Views");
-      await clickIcon("Open Calendar");
+      await clickIcon("Configure Calendar");
       await clickIcon("Add block");
       await clickIcon("Add Week calendar");
       await waitForSettings((s) => {
@@ -284,7 +334,7 @@ describe("settings", () => {
       expect(itemCount).toBeGreaterThanOrEqual(8);
 
       await expandSection("Views");
-      await clickIcon("Open Calendar");
+      await clickIcon("Configure Calendar");
 
       // The editor mounts one frame per persisted item.
       await browser.waitUntil(async () => (await $$(".jv-item-frame").length) === itemCount, {
@@ -305,7 +355,7 @@ describe("settings", () => {
       };
 
       await expandSection("Views");
-      await clickIcon("Open Calendar");
+      await clickIcon("Configure Calendar");
       await clickIcon("Add block");
       await clickIcon("Add Week calendar");
       await waitForSettings(
@@ -316,7 +366,7 @@ describe("settings", () => {
       const editButtons = await $$('button[aria-label="Edit block"]').getElements();
       await editButtons.at(-1)?.click();
       // Saturday is weekday index 6 (Sunday-based); checking it should persist [6].
-      await clickModalCheckboxByLabel("Sat");
+      await clickModalToggleOption("Sat");
       await submitModal();
 
       await waitForSettings(
@@ -334,7 +384,7 @@ describe("settings", () => {
       const secondId = ids[1];
 
       await expandSection("Views");
-      await clickIcon("Open Calendar");
+      await clickIcon("Configure Calendar");
       await $(".jv-item-frame").waitForExist({ timeoutMsg: "toolbar editor strip did not mount" });
 
       // SortableJS runs in native HTML5 drag mode here; WDIO's pointer Actions don't trigger it,

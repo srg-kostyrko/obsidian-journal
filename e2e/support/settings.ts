@@ -109,6 +109,10 @@ export async function waitForDialogClosed(): Promise<void> {
   await activeModal().waitForExist({ reverse: true, timeoutMsg: "dialog did not close" });
 }
 
+export async function waitForModalOpen(): Promise<void> {
+  await activeModal().waitForExist({ timeoutMsg: "expected a dialog to open" });
+}
+
 // Click the dialog's sole checkbox toggle (UiToggle renders a .checkbox-container). Used by
 // bulk-add to turn off the default dry-run; valid only when the dialog has exactly one toggle.
 export async function toggleModalCheckbox(): Promise<void> {
@@ -129,8 +133,14 @@ export async function toggleNamedModalToggle(ariaLabel: string): Promise<void> {
   await activeModal().$(`.checkbox-container[aria-label="${ariaLabel}"]`).click();
 }
 
-// Click a plain checkbox in the dialog by its wrapping <label>'s visible text (e.g. a weekday
-// short name like "Sat"). Clicking the label toggles its nested <input type="checkbox">.
+// Click a plain checkbox in the dialog by its wrapping <label>'s visible text. Clicking the label
+// toggles its nested <input type="checkbox">.
 export async function clickModalCheckboxByLabel(label: string): Promise<void> {
   await activeModal().$(`label*=${label}`).click();
+}
+
+// Click an option inside a UiToggleGroup in the open dialog by its exact visible text label
+// (e.g. a weekday short name like "Sat"). UiToggleGroup renders <button> elements, not checkboxes.
+export async function clickModalToggleOption(label: string): Promise<void> {
+  await activeModal().$(`button=${label}`).click();
 }
