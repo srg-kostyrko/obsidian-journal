@@ -1,11 +1,20 @@
 import userEvent from "@testing-library/user-event";
 import { cleanup, render, screen } from "@testing-library/vue";
+import { createNanoEvents } from "nanoevents";
 import { afterEach, describe, expect, it, vi } from "vitest";
+import { reactive } from "vue";
 
 import { m } from "@/i18n";
 import { Container, provideInjectorOnApp } from "@/infrastructure/di";
 import { InputSuggestService } from "@/infrastructure/host";
 import { FakeInputSuggestService } from "@/infrastructure/host/input-suggests/testing";
+import {
+  JournalsRepository,
+  JournalsViewModel,
+  journalDefaultsFor,
+  type JournalConfig,
+  type JournalsEvents,
+} from "@/journals";
 import { icons } from "@/ui/icons";
 
 import ButtonItemConfig from "./ui/ButtonItemConfig.vue";
@@ -15,6 +24,13 @@ import type { ButtonConfig, ButtonConfigChange } from "./button-config";
 function mountConfig(config: ButtonConfig, onChange: ButtonConfigChange) {
   const container = new Container();
   container.register(InputSuggestService).useValue(new FakeInputSuggestService() as unknown as InputSuggestService);
+  const storage = reactive<Record<string, JournalConfig>>({
+    daily: journalDefaultsFor({ type: "day" }, "daily"),
+    weekly: journalDefaultsFor({ type: "week" }, "weekly"),
+  });
+  const repo = JournalsRepository.fromParts(storage, createNanoEvents<JournalsEvents>());
+  container.register(JournalsRepository).useValue(repo);
+  container.register(JournalsViewModel).useValue(JournalsViewModel.fromRepository(repo));
   return render(ButtonItemConfig, {
     props: { config, onChange },
     global: { plugins: [{ install: (app) => provideInjectorOnApp(app, container) }] },
@@ -79,9 +95,40 @@ describe("ButtonItemConfig", () => {
     it("emits onChange with the selected mode when the behavior dropdown changes", async () => {
       const onChange = vi.fn();
       mountConfig(baseConfig, onChange);
-      await userEvent.selectOptions(screen.getByRole("combobox"), "navigate");
+      const [, modeDropdown] = screen.getAllByRole("combobox");
+      await userEvent.selectOptions(modeDropdown, "navigate");
       expect(onChange).toHaveBeenLastCalledWith({
         action: { type: "current", mode: "navigate", levels: ["day"] },
+      });
+    });
+  });
+
+  describe("journal selection", () => {
+    it("hides the period-level toggles when a journal is pinned", () => {
+      mountConfig({ action: { type: "current", mode: "create", levels: ["day"], journal: "weekly" } }, vi.fn());
+      expect(screen.queryByRole("button", { name: "Week" })).toBeNull();
+    });
+
+    it("shows the period-level toggles when no journal is pinned", () => {
+      mountConfig(baseConfig, vi.fn());
+      expect(screen.getByRole("button", { name: "Week" })).toBeTruthy();
+    });
+
+    it("emits onChange with the pinned journal when one is selected", async () => {
+      const onChange = vi.fn();
+      mountConfig(baseConfig, onChange);
+      await userEvent.selectOptions(screen.getByLabelText("Journal"), "weekly");
+      expect(onChange).toHaveBeenLastCalledWith({
+        action: { type: "current", mode: "create", levels: ["day"], journal: "weekly" },
+      });
+    });
+
+    it("clears the pinned journal when the default option is chosen", async () => {
+      const onChange = vi.fn();
+      mountConfig({ action: { type: "current", mode: "create", levels: ["day"], journal: "weekly" } }, onChange);
+      await userEvent.selectOptions(screen.getByLabelText("Journal"), "");
+      expect(onChange).toHaveBeenLastCalledWith({
+        action: { type: "current", mode: "create", levels: ["day"], journal: undefined },
       });
     });
   });

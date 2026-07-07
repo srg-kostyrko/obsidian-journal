@@ -2,6 +2,8 @@
 import { computed } from "vue";
 
 import { m } from "@/i18n";
+import { useService } from "@/infrastructure/di";
+import { JournalsViewModel } from "@/journals";
 import UiDropdown from "@/ui/UiDropdown.vue";
 import UiIconSuggest from "@/ui/UiIconSuggest.vue";
 import UiSettingRow from "@/ui/UiSettingRow.vue";
@@ -22,6 +24,9 @@ const props = defineProps<{
 }>();
 
 const allLevels: readonly ButtonLevel[] = ["day", "week", "month", "quarter", "year"];
+
+const journalsVM = useService(JournalsViewModel);
+const journalOptions = journalsVM.journalOptions;
 
 // Defaults the action would display when the field is left blank, surfaced as placeholders so the
 // per-action display is visible while editing.
@@ -57,6 +62,12 @@ function setMode(mode: "select-only" | "navigate" | "create"): void {
   const action = periodAction.value;
   if (!action) return;
   update({ action: { ...action, mode } });
+}
+
+function setJournal(journal: string | undefined): void {
+  const action = periodAction.value;
+  if (!action) return;
+  update({ action: { ...action, journal } });
 }
 
 const levelOptions = allLevels.map((level) => ({
@@ -98,6 +109,19 @@ function setLevels(levels: ButtonLevel[]): void {
   </UiSettingRow>
   <template v-if="periodAction">
     <UiSettingRow>
+      <template #name>{{ m.common_label_journal() }}</template>
+      <UiDropdown
+        :model-value="periodAction.journal ?? ''"
+        :aria-label="m.common_label_journal()"
+        @update:model-value="(value: string | undefined) => setJournal(value || undefined)"
+      >
+        <option value="">{{ m.view_toolbar_button_config_journal_default() }}</option>
+        <option v-for="option of journalOptions" :key="option.value" :value="option.value">
+          {{ option.label }}
+        </option>
+      </UiDropdown>
+    </UiSettingRow>
+    <UiSettingRow>
       <template #name>{{ m.view_toolbar_button_config_mode_label() }}</template>
       <UiDropdown
         :model-value="periodAction.mode"
@@ -110,7 +134,7 @@ function setLevels(levels: ButtonLevel[]): void {
         <option value="create">{{ m.view_toolbar_button_config_mode_option({ mode: "create" }) }}</option>
       </UiDropdown>
     </UiSettingRow>
-    <UiSettingRow>
+    <UiSettingRow v-if="!periodAction.journal">
       <template #name>{{ m.view_toolbar_button_config_levels_label() }}</template>
       <UiToggleGroup :model-value="periodAction.levels" :options="levelOptions" @update:model-value="setLevels" />
     </UiSettingRow>
