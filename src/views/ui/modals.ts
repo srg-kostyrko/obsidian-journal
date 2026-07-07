@@ -3,6 +3,7 @@ import { defineModal } from "@/infrastructure/host/modals";
 
 import AddBlockPickerModal from "./AddBlockPickerModal.vue";
 import AddToolbarItemPickerModal from "./AddToolbarItemPickerModal.vue";
+import ConfirmRepositionModal from "./ConfirmRepositionModal.vue";
 import DeleteViewModal from "./DeleteViewModal.vue";
 import EditConfigModal from "./EditConfigModal.vue";
 import ViewNameModal from "./ViewNameModal.vue";
@@ -28,6 +29,15 @@ export interface DeleteViewModalProps {
 export const deleteViewModal = defineModal()({
   component: DeleteViewModal,
   title: ({ viewName }: DeleteViewModalProps) => m.view_delete_modal_title({ name: viewName }),
+});
+
+export interface RepositionViewModalProps {
+  location: string;
+}
+
+export const repositionViewModal = defineModal()({
+  component: ConfirmRepositionModal,
+  title: (_: RepositionViewModalProps) => m.view_reposition_modal_title(),
 });
 
 export interface AddBlockPickerModalProps {
