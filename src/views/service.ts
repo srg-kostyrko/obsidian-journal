@@ -1,5 +1,5 @@
+import { cloneFnJSON } from "@vueuse/core";
 import * as v from "valibot";
-import { toRaw } from "vue";
 
 import { inject } from "@/infrastructure/di";
 import { LoggerFactoryToken } from "@/infrastructure/logger";
@@ -76,9 +76,11 @@ export class ViewsService {
         blocks: source.blocks.map((b) => ({
           ...b,
           id: crypto.randomUUID() as BlockInstanceId,
-          // b.config is a Vue reactive proxy (settings storage is reactive); structuredClone
-          // rejects proxies, so unwrap to the raw object first.
-          config: structuredClone(toRaw(b.config)),
+          // Settings storage is deeply reactive, so config can hold reactive proxies nested at any
+          // depth (e.g. a config editor spreads the store object). structuredClone rejects proxies
+          // and a shallow toRaw leaves the nested ones, so deep-clone through JSON — config is
+          // JSON-serializable persisted data — which strips reactivity at every level.
+          config: cloneFnJSON(b.config),
         })),
       };
       return yield* this.#repo.create(clone);

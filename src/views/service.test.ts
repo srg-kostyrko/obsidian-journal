@@ -122,9 +122,12 @@ describe("ViewsService", () => {
       expect(listener).toHaveBeenCalledWith(result.value);
     });
 
-    it("clones block config sourced from reactive settings storage", async () => {
+    it("clones block config that holds a reactive proxy nested at depth", async () => {
       const sourceId = "11111111-1111-4111-8111-111111111111" as ViewId;
       const blockId = "22222222-2222-4222-8222-222222222222" as BlockInstanceId;
+      // A config editor spreads the store's reactive config, so a sibling array/object read back
+      // out of it stays a reactive proxy embedded at depth. structuredClone rejects proxies and a
+      // shallow toRaw only unwraps the top level, so this is the shape that actually breaks cloning.
       const seeds = reactive<Record<string, View>>({
         [sourceId]: {
           id: sourceId,
@@ -134,7 +137,7 @@ describe("ViewsService", () => {
           showInRibbon: false,
           leaf: "right",
           openOnStartup: false,
-          blocks: [{ id: blockId, key: "test-block", config: { nested: { count: 1 } } }],
+          blocks: [{ id: blockId, key: "test-block", config: { nested: reactive({ count: 1 }) } }],
         },
       });
       const { service, repo } = build({ seeds });
