@@ -100,7 +100,8 @@ export type ViewsLifecycleError =
   | InvalidViewNameError
   | UnknownViewError
   | UnknownViewBlockKeyError
-  | UnknownToolbarItemKeyError;
+  | UnknownToolbarItemKeyError
+  | InvalidToolbarItemConfigError;
 
 export class ViewsLifecycleFlowError extends FlowError {
   readonly kind = "views-lifecycle" as const;

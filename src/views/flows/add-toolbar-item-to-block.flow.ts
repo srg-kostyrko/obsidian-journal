@@ -6,7 +6,7 @@ import { attempt, type AsyncResult } from "@/infrastructure/result";
 import { toFlowError } from "../errors";
 import { ViewsService } from "../service";
 import { ToolbarItemDefinitionToken } from "../tokens";
-import { addToolbarItemPickerModal } from "../ui/modals";
+import { addToolbarItemPickerModal, editToolbarItemModal } from "../ui/modals";
 
 import type { BlockInstanceId, ViewId } from "../config";
 
@@ -25,9 +25,26 @@ export class AddToolbarItemToBlockFlow implements Flow<AddToolbarItemParameters,
       const choice = yield* this.#modals
         .open(addToolbarItemPickerModal, { definitions: this.#definitions })
         .mapErr(() => new UserAborted("add-toolbar-item-picker-modal"));
-      yield* this.#views
-        .addToolbarItem(p.viewId, p.blockId, choice.key, choice.defaultConfig as Record<string, unknown> | undefined)
+      const defaultConfig = choice.defaultConfig as Record<string, unknown> | undefined;
+      const itemId = yield* this.#views
+        .addToolbarItem(p.viewId, p.blockId, choice.key, defaultConfig)
         .mapErr(toFlowError);
+      if (itemId === null) return;
+
+      const definition = this.#definitions.find((d) => d.key === choice.key);
+      if (!definition?.configComponent) return;
+
+      const seed = defaultConfig ?? (definition.defaultConfig as Record<string, unknown>);
+      const submitted = await this.#modals
+        .open(editToolbarItemModal, {
+          component: definition.configComponent,
+          config: seed,
+          typeLabel: definition.summary?.(seed) ?? definition.label,
+        })
+        .match<Record<string, unknown> | null>({ ok: (next) => next, err: () => null });
+      if (submitted === null) return;
+
+      yield* this.#views.updateToolbarItemConfig(p.viewId, p.blockId, itemId, submitted).mapErr(toFlowError);
     });
   }
 }

@@ -1,6 +1,6 @@
 import { createNanoEvents } from "nanoevents";
 import * as v from "valibot";
-import { describe, expect, it } from "vitest";
+import { describe, expect, it, vi } from "vitest";
 
 import { Flows, UserAborted } from "@/infrastructure/flows";
 import { ModalService } from "@/infrastructure/host/modals";
@@ -40,6 +40,26 @@ const shelfSelectorDefinition = {
   __brand: "toolbar-item",
 } as unknown as ToolbarItemDefinition;
 
+const configurableDefinition = {
+  key: "period-buttons",
+  label: "Period buttons",
+  schema: v.object({ periods: v.array(v.string()) }),
+  defaultConfig: { periods: [] },
+  component: { render: () => null },
+  configComponent: { render: () => null },
+  summary: (config: Record<string, unknown>) => `periods:${((config.periods as string[]) ?? []).length}`,
+  __brand: "toolbar-item",
+} as unknown as ToolbarItemDefinition;
+
+function readItems(repo: ViewsRepository): { id: string; key: string; config: unknown }[] {
+  const rawConfig =
+    repo
+      .get(viewId)
+      .getOr(undefined as never)
+      ?.blocks.find((b) => b.id === blockId)?.config ?? {};
+  return Array.isArray(rawConfig.items) ? (rawConfig.items as { id: string; key: string; config: unknown }[]) : [];
+}
+
 async function build(withDefinition = true) {
   const raw = {
     version: 4,
@@ -62,6 +82,7 @@ async function build(withDefinition = true) {
   container.register(ViewBlockDefinitionToken).useValue(toolbarBlockDefinition);
   if (withDefinition) {
     container.register(ToolbarItemDefinitionToken).useValue(shelfSelectorDefinition);
+    container.register(ToolbarItemDefinitionToken).useValue(configurableDefinition);
   }
   container.register(ViewsRepository).useClass(ViewsRepository);
   container.register(ToolbarItemsService).useClass(ToolbarItemsService);
@@ -104,5 +125,42 @@ describe("AddToolbarItemToBlockFlow", () => {
       .submit({ key: "unknown-item", defaultConfig: {} });
     const result = await promise;
     expect(result.kind === "err" && result.error.cause).toBeInstanceOf(UnknownToolbarItemKeyError);
+  });
+
+  it("opens the config modal after adding a configurable item and applies the submitted config", async () => {
+    const { flows, modals, repo } = await build();
+    const promise = flows.invoke(AddToolbarItemToBlockFlow, { viewId, blockId });
+    modals
+      .lastOpen<unknown, { key: string; defaultConfig: unknown }>()
+      .submit({ key: "period-buttons", defaultConfig: { periods: [] } });
+    await vi.waitFor(() => expect(modals.opens).toHaveLength(2));
+    modals.lastOpen<unknown, Record<string, unknown>>().submit({ periods: ["month"] });
+    await promise;
+    expect(readItems(repo)).toEqual([
+      expect.objectContaining({ key: "period-buttons", config: { periods: ["month"] } }),
+    ]);
+  });
+
+  it("adds a non-configurable item without opening a config modal", async () => {
+    const { flows, modals } = await build();
+    const promise = flows.invoke(AddToolbarItemToBlockFlow, { viewId, blockId });
+    modals
+      .lastOpen<unknown, { key: string; defaultConfig: unknown }>()
+      .submit({ key: "shelf-selector", defaultConfig: {} });
+    await promise;
+    expect(modals.opens).toHaveLength(1);
+  });
+
+  it("keeps the added item with its default config when the config modal is cancelled", async () => {
+    const { flows, modals, repo } = await build();
+    const promise = flows.invoke(AddToolbarItemToBlockFlow, { viewId, blockId });
+    modals
+      .lastOpen<unknown, { key: string; defaultConfig: unknown }>()
+      .submit({ key: "period-buttons", defaultConfig: { periods: [] } });
+    await vi.waitFor(() => expect(modals.opens).toHaveLength(2));
+    modals.lastOpen().cancel();
+    const result = await promise;
+    expect(result.kind).toBe("ok");
+    expect(readItems(repo)).toEqual([expect.objectContaining({ key: "period-buttons", config: { periods: [] } })]);
   });
 });
