@@ -187,4 +187,29 @@ describe("DefinedNavigationItem", () => {
     expect(flows.calls).toHaveLength(0);
     expect(notices.messages).toContain(m.command_open_no_next());
   });
+
+  it("navigates within only the active journal when the target is active", async () => {
+    const { result, flows } = mountItem(
+      { target: "active", direction: "next" },
+      {
+        active: { journalName: "daily", anchor: "2030-03-10" as AnchorString },
+        entries: [
+          { journalName: "daily", anchor: "2030-03-10" },
+          { journalName: "daily", anchor: "2030-03-14" },
+          { journalName: "work", anchor: "2030-03-11" },
+        ],
+      },
+    );
+    const button = result.container.querySelector<HTMLElement>("[data-direction='next']");
+    expect(button).not.toBeNull();
+    await userEvent.click(button!);
+    const parameters = flows.calls[0]?.parameters as { anchor: string };
+    expect(parameters.anchor).toBe("2030-03-14");
+  });
+
+  it("disables the button when the target is active and no journal note is open", () => {
+    const { result } = mountItem({ target: "active", direction: "next" });
+    const button = result.container.querySelector<HTMLButtonElement>("[data-direction='next']");
+    expect(button?.disabled).toBe(true);
+  });
 });

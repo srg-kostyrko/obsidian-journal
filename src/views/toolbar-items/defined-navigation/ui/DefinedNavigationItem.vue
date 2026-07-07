@@ -31,7 +31,10 @@ const scope = useShelfScope(() => context.shelf.value);
 
 const candidates = computed<readonly string[]>(() => {
   const target = props.config.target;
-  if (target === "active") return scope.all.value;
+  if (target === "active") {
+    const active = activeVM.active.value;
+    return active ? [active.journalName] : [];
+  }
   return scope[target].value;
 });
 
