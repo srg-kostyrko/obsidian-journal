@@ -87,9 +87,9 @@ Domain scenarios above stay in domain language; concrete names live here.
   ```ts
   useFollowActiveDate(opts: {
     refDate: Ref<AnchorString>;
-    enabled: () => boolean;                        // config.followActiveDate
+    enabled: () => boolean;                        // config.followActiveDate ?? true
     inScope: (journalName: string) => boolean;     // does this block display it?
-    isVisible: (anchor: AnchorString) => boolean;  // already inside my window?
+    isVisible: (anchor, focus) => boolean;         // already inside the window at `focus`?
   }): ComputedRef<AnchorString>                     // the block's focus
   ```
 
@@ -103,7 +103,8 @@ Domain scenarios above stay in domain language; concrete names live here.
     and at mount, when `enabled()`:
     - `a === null || !inScope(a.journalName)` → `localFocus.value = null`
       (return to the reference date);
-    - else `isVisible(a.anchor)` → return (already visible, do not move);
+    - else `isVisible(a.anchor, currentFocus)` → return (already visible, do
+      not move);
     - else → `localFocus.value = a.anchor` (follow).
 
   `activeEntry` is the existing `ActiveEntryViewModel` (`{ journalName, anchor }`).
@@ -146,10 +147,14 @@ periodOfKind("week", months.at(-1).end).end`. For **week**, the span is
 
 ### Schema and config UI
 
-- Add `followActiveDate: v.optional(v.boolean(), true)` to
+- Add `followActiveDate: v.optional(v.boolean())` (optional, no baked default) to
   `calendarBlockBaseSchema` (covers month + week), to the `customIntervalsBlock`
   schema, and to the `markdownTemplateBlock` schema. Add `followActiveDate: true`
-  to each block's `defaultConfig` for explicitness.
+  to each block's `defaultConfig`. The on-by-default is applied at read sites with
+  `?? true`, not as a schema default: a schema default makes the inferred output
+  type required, which would force the key into every existing typed config
+  literal; the optional form keeps those compiling and treats legacy persisted
+  configs (missing the key) as on, matching the "restore v2" intent.
 - Add a `UiSettingRow` + `UiToggle` "Follow active note" row in the shared
   `CalendarBlockConfigFields.vue` (month + week inherit it), and in
   `CustomIntervalsBlockConfig.vue` and `MarkdownTemplateBlockConfig.vue`.
