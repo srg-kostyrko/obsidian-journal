@@ -1,8 +1,11 @@
 <script setup lang="ts">
 import { usePeriodWindow } from "@/calendar/ui";
 import NotesWeekView from "@/notes-calendar/ui/NotesWeekView.vue";
+import { useFollowActiveDate } from "@/notes-calendar/use-follow-active-date";
+import { useShelfScope } from "@/notes-calendar/use-shelf-scope";
 
 import { useViewContext } from "../../../view-context";
+import { weekWindowContains } from "../../ui/follow-visibility";
 
 import type { BlockInstanceId } from "../../../config";
 import type { WeekCalendarConfig } from "../week-calendar-block";
@@ -13,10 +16,18 @@ const props = defineProps<{
 }>();
 
 const viewContext = useViewContext();
+const scope = useShelfScope(() => viewContext.shelf.value);
+
+const focus = useFollowActiveDate({
+  refDate: viewContext.refDate,
+  enabled: () => props.config.followActiveDate ?? true,
+  inScope: (name) => scope.fixed.value.includes(name),
+  isVisible: (anchor, focusAnchor) => weekWindowContains(anchor, focusAnchor, props.config.before, props.config.after),
+});
 
 const weeks = usePeriodWindow(
   "week",
-  viewContext.refDate,
+  focus,
   () => props.config.before,
   () => props.config.after,
 );
