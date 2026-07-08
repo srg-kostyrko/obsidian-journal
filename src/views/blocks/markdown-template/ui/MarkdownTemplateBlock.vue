@@ -47,7 +47,8 @@ async function load(): Promise<void> {
 
 const rendered = computed(() => {
   if (rawTemplate.value === null) return "";
-  const focus = CalendarDate.fromAnchor(activeEntry.active.value?.anchor ?? viewContext.refDate.value);
+  const followed = (props.config.followActiveDate ?? true) ? activeEntry.active.value?.anchor : undefined;
+  const focus = CalendarDate.fromAnchor(followed ?? viewContext.refDate.value);
   const clockSpec = { kind: "clock", value: Clock.now(), defaultFormat: "HH:mm" } as const;
   const context = TemplateContext.empty()
     .date("date", focus, "YYYY-MM-DD")

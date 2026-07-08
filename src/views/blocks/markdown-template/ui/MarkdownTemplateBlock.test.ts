@@ -153,4 +153,14 @@ describe("MarkdownTemplateBlock", () => {
     await notes.delete("templates/today.md" as never);
     expect(await screen.findByText(m.view_block_markdown_template_read_error())).toBeTruthy();
   });
+
+  it("uses the reference date for {{date}} when following is disabled", async () => {
+    seedAndMount(
+      { "templates/today.md": "Today is {{date}}" },
+      { templatePath: "templates/today.md", followActiveDate: false },
+      "2026-05-15" as AnchorString,
+      { journalName: "daily", anchor: "2026-03-09" as AnchorString },
+    );
+    expect(await screen.findByText("Today is 2026-05-15")).toBeTruthy();
+  });
 });
