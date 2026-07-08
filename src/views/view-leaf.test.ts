@@ -13,6 +13,7 @@ import type { ShelvesEvents } from "@/shelves";
 import { dividerBlock } from "./blocks/divider/divider-block";
 import { toolbarBlock } from "./blocks/toolbar/toolbar-block";
 import { ToolbarItemsService } from "./blocks/toolbar/toolbar-items-service";
+import { FALLBACK_VIEW_ICON, type BlockInstanceId, type View, type ViewId } from "./config";
 import { defineViewBlock } from "./define-view-block";
 import { ViewsRepository } from "./repository";
 import { ViewsService } from "./service";
@@ -20,7 +21,6 @@ import { ToolbarItemDefinitionToken, ViewBlockDefinitionToken, ViewsEventsToken,
 import { shelfSelectorItem } from "./toolbar-items/shelf-selector/shelf-selector-item";
 import { JournalViewLeaf } from "./view-leaf";
 
-import type { BlockInstanceId, View, ViewId } from "./config";
 import type { WorkspaceLeaf } from "obsidian";
 
 const noop = () => null;
@@ -100,6 +100,18 @@ describe("JournalViewLeaf", () => {
       const { leafInstance } = build();
       const state = leafInstance.getState() as { shelf?: string | null };
       expect(state.shelf).toBeUndefined();
+    });
+  });
+
+  describe("getIcon", () => {
+    it("returns the view's configured icon", () => {
+      const { leafInstance } = build(seedView({ icon: "star" }));
+      expect(leafInstance.getIcon()).toBe("star");
+    });
+
+    it("falls back to a generic icon when the view has no icon", () => {
+      const { leafInstance } = build(seedView({ icon: "" }));
+      expect(leafInstance.getIcon()).toBe(FALLBACK_VIEW_ICON);
     });
   });
 

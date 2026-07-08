@@ -7,11 +7,11 @@ import { createFakeHost } from "@/infrastructure/host/internal/testing";
 import { InternalObsidianAppToken, InternalPluginToken } from "@/infrastructure/host/internal/tokens";
 import { createLoggerTestingModule } from "@/infrastructure/logger/testing";
 
+import { FALLBACK_VIEW_ICON, type View, type ViewId } from "./config";
 import { ViewsRepository } from "./repository";
 import { ViewsEventsToken, type ViewsEvents } from "./tokens";
 import { ViewHostService } from "./view-host";
 
-import type { View, ViewId } from "./config";
 import type { WorkspaceLeaf } from "obsidian";
 
 function seedView(id: string, overrides: Partial<View> = {}): View {
@@ -71,6 +71,11 @@ describe("ViewHostService", () => {
       const { host } = build({ b: seedView("b") });
       const ribbonIds = host.ribbonIcons.map((r) => r.id);
       expect(ribbonIds).not.toContain("journal-command:journal:open-view:b");
+    });
+
+    it("registers the command with a generic icon when the view has no icon", () => {
+      const { host } = build({ a: seedView("a", { icon: "" }) });
+      expect(host.commands.get("journal:open-view:a")?.icon).toBe(FALLBACK_VIEW_ICON);
     });
   });
 

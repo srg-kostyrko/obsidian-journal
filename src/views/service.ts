@@ -54,7 +54,7 @@ export class ViewsService {
       const view: View = {
         id,
         name: input.name,
-        icon: input.icon ?? "calendar-days",
+        icon: input.icon ?? "",
         defaultShelf: input.defaultShelf ?? null,
         showInRibbon: input.showInRibbon ?? false,
         leaf: "right",

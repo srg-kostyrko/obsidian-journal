@@ -8,11 +8,10 @@ import { provideInjectorOnApp, type Injector } from "@/infrastructure/di";
 import { InternalObsidianAppToken } from "@/infrastructure/host/internal/tokens";
 import { LoggerFactoryToken } from "@/infrastructure/logger";
 
+import { FALLBACK_VIEW_ICON, type ViewId } from "./config";
 import { ViewsRepository } from "./repository";
 import { ViewsService } from "./service";
 import { provideViewContext, type ViewContext } from "./view-context";
-
-import type { ViewId } from "./config";
 
 interface JournalViewLeafState {
   refDate?: AnchorString;
@@ -48,7 +47,7 @@ export class JournalViewLeaf extends ItemView {
     return this.injector
       .resolve(ViewsRepository)
       .get(this.viewId)
-      .match({ some: (view) => view.icon, none: () => "calendar-days" });
+      .match({ some: (view) => view.icon || FALLBACK_VIEW_ICON, none: () => FALLBACK_VIEW_ICON });
   }
 
   getState(): Record<string, unknown> {

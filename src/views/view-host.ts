@@ -6,11 +6,10 @@ import { CommandService } from "@/infrastructure/host/commands";
 import { InternalObsidianAppToken, InternalPluginToken } from "@/infrastructure/host/internal/tokens";
 import { LoggerFactoryToken, type Logger } from "@/infrastructure/logger";
 
+import { FALLBACK_VIEW_ICON, type View, type ViewId } from "./config";
 import { ViewsRepository } from "./repository";
 import { ViewsEventsToken } from "./tokens";
 import { JournalViewLeaf } from "./view-leaf";
-
-import type { View, ViewId } from "./config";
 
 type Disposer = () => void;
 
@@ -102,7 +101,7 @@ export class ViewHostService {
     return {
       id: commandIdOf(id),
       name: `Open ${view.name}`,
-      icon: view.icon,
+      icon: view.icon || FALLBACK_VIEW_ICON,
       ribbon: view.showInRibbon,
       execute: () => void this.open(id),
     };

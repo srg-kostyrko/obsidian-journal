@@ -26,10 +26,12 @@ const viewBlockInstanceSchema = v.object({
   config: v.record(v.string(), v.unknown()),
 });
 
+export const FALLBACK_VIEW_ICON = icons.entity.view;
+
 export const viewSchema = v.object({
   id: viewIdSchema,
   name: v.pipe(v.string(), v.minLength(1)),
-  icon: v.pipe(v.string(), v.minLength(1)),
+  icon: v.optional(v.string(), ""),
   defaultShelf: v.nullable(v.string()),
   showInRibbon: v.boolean(),
   leaf: v.optional(v.picklist(["left", "right", "tab"]), "right"),

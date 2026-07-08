@@ -83,6 +83,13 @@ describe("ViewsService", () => {
       expectErr(result);
       expect(result.error.kind).toBe("invalid-view-name");
     });
+
+    it("stores a blank icon when none is provided so the view falls back to a generic icon", async () => {
+      const { service, repo } = build();
+      const result = await service.create({ name: "Calendar" });
+      expectOk(result);
+      expect(repo.get(result.value).match({ some: (v) => v.icon, none: () => null })).toBe("");
+    });
   });
 
   describe("clone", () => {

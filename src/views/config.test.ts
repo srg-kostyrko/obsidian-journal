@@ -55,12 +55,12 @@ describe("viewsCollection", () => {
       expect(result.success).toBe(false);
     });
 
-    it("rejects a view with an empty icon", () => {
+    it("accepts a view with an empty icon so clearing it never wipes the stored view on reload", () => {
       const result = v.safeParse(viewSchema, {
         ...viewsCollection.defaultItem("3f8c8b7e-1c1a-4d5e-9b9b-1c1a4d5e9b9b"),
         icon: "",
       });
-      expect(result.success).toBe(false);
+      expect(result.success).toBe(true);
     });
 
     it("rejects a block instance with an empty key", () => {
