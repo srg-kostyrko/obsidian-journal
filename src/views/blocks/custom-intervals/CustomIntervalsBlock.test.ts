@@ -226,6 +226,7 @@ describe("CustomIntervalsBlock", () => {
     );
     const anchors = [...container.querySelectorAll<HTMLElement>("[data-anchor]")].map((el) => el.dataset.anchor ?? "");
     expect(anchors.every((anchor) => anchor.startsWith("2026"))).toBe(true);
+    expect(anchors).toContain("2026-05-15");
   });
 
   describe("decorations", () => {

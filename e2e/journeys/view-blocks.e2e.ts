@@ -1,6 +1,6 @@
 import { $, $$, browser, expect } from "@wdio/globals";
 
-import { activeNotePath, openNote, seedNote, waitForJournalFrontmatter } from "../support/vault.js";
+import { activeNotePath, openNote, seedNote, todayAnchor, waitForJournalFrontmatter } from "../support/vault.js";
 
 import {
   CUSTOM_INTERVALS,
@@ -131,7 +131,9 @@ describe("blocks view", () => {
 
       // A day well outside the current (today's) week; the week block renders only the
       // focus week (before/after = 0), so a passing assertion means the block moved.
-      const far = "2026-09-14";
+      const base = new Date(`${todayAnchor()}T00:00:00Z`);
+      base.setUTCDate(base.getUTCDate() + 120);
+      const far = base.toISOString().slice(0, 10);
       const path = `day/${far}.md`;
       await seedNote(path, `---\njournal: daily\njournal-date: ${far}\n---\n`);
       await waitForJournalFrontmatter(path, { journal: "daily", date: far });
