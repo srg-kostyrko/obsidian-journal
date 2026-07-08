@@ -776,7 +776,7 @@
   "view_block_markdown_template_variables_link": "Supported variables.",
   "view_block_markdown_template_variables_modal_title": "Markdown template variables",
   "view_block_markdown_template_variables_intro": "These variables are replaced when the template renders. Dates use YYYY-MM-DD and times use HH:mm unless you give an explicit format.",
-  "view_block_markdown_template_variable_date_description": "The date the view is focused on.",
+  "view_block_markdown_template_variable_date_description": "The active note's date, or the view's focused date when no journal note is open.",
   "view_block_markdown_template_variable_current_date_description": "Today's date at the moment the block renders.",
   "view_block_markdown_template_variable_time_description": "The current wall-clock time when the block renders.",
   "view_block_markdown_template_variable_current_time_description": "The current wall-clock time when the block renders (alias of the time variable).",

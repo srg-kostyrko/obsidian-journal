@@ -1,6 +1,6 @@
 import { cleanup, render, screen } from "@testing-library/vue";
 import { afterEach, beforeAll, describe, expect, it } from "vitest";
-import { defineComponent, h, ref } from "vue";
+import { defineComponent, h, ref, shallowRef } from "vue";
 
 import { installTestCalendar } from "@/calendar/testing";
 import type { AnchorString } from "@/calendar/types";
@@ -8,6 +8,7 @@ import { m } from "@/i18n";
 import { Container, provideInjectorOnApp } from "@/infrastructure/di";
 import { MarkdownRenderService, NotesService } from "@/infrastructure/host";
 import { FakeMarkdownRenderService, FakeNotesService } from "@/infrastructure/host/testing";
+import { ActiveEntryViewModel, type ActiveEntryRef } from "@/notes-calendar/active-entry";
 import { TemplateEngine } from "@/templates";
 
 import { provideViewContextStub } from "../../../testing";
@@ -22,9 +23,16 @@ beforeAll(() => {
 
 afterEach(() => cleanup());
 
-function seedAndMount(files: Record<string, string>, config: MarkdownTemplateConfig, refDate: AnchorString) {
+function seedAndMount(
+  files: Record<string, string>,
+  config: MarkdownTemplateConfig,
+  refDate: AnchorString,
+  activeEntry: ActiveEntryRef | null = null,
+) {
   const notes = new FakeNotesService();
   for (const [path, content] of Object.entries(files)) notes.seed(path as never, content);
+
+  const activeRef = shallowRef<ActiveEntryRef | null>(activeEntry);
 
   const container = new Container();
   container.register(NotesService).useValue(notes as unknown as NotesService);
@@ -34,6 +42,7 @@ function seedAndMount(files: Record<string, string>, config: MarkdownTemplateCon
   container
     .register(MarkdownRenderService)
     .useValue(new FakeMarkdownRenderService() as unknown as MarkdownRenderService);
+  container.register(ActiveEntryViewModel).useValue({ active: activeRef } as unknown as ActiveEntryViewModel);
 
   const refDateRef = ref(refDate);
   const configRef = ref(config);
@@ -57,17 +66,39 @@ function seedAndMount(files: Record<string, string>, config: MarkdownTemplateCon
       ],
     },
   });
-  return { ...result, notes, refDateRef, configRef };
+  return { ...result, notes, refDateRef, configRef, activeRef };
 }
 
 describe("MarkdownTemplateBlock", () => {
-  it("renders the template with {{date}} resolved to the focused refDate", async () => {
+  it("resolves {{date}} to the active note's anchor", async () => {
+    seedAndMount(
+      { "templates/today.md": "Today is {{date}}" },
+      { templatePath: "templates/today.md" },
+      "2026-05-15" as AnchorString,
+      { journalName: "daily", anchor: "2026-03-09" as AnchorString },
+    );
+    expect(await screen.findByText("Today is 2026-03-09")).toBeTruthy();
+  });
+
+  it("falls back to the focused refDate for {{date}} when no journal note is active", async () => {
     seedAndMount(
       { "templates/today.md": "Today is {{date}}" },
       { templatePath: "templates/today.md" },
       "2026-05-15" as AnchorString,
     );
     expect(await screen.findByText("Today is 2026-05-15")).toBeTruthy();
+  });
+
+  it("re-renders {{date}} when the active note changes", async () => {
+    const { activeRef } = seedAndMount(
+      { "templates/today.md": "Today is {{date}}" },
+      { templatePath: "templates/today.md" },
+      "2026-05-15" as AnchorString,
+      { journalName: "daily", anchor: "2026-03-09" as AnchorString },
+    );
+    expect(await screen.findByText("Today is 2026-03-09")).toBeTruthy();
+    activeRef.value = { journalName: "daily", anchor: "2026-03-10" as AnchorString };
+    expect(await screen.findByText("Today is 2026-03-10")).toBeTruthy();
   });
 
   it("shows the placeholder when no template path is configured", () => {

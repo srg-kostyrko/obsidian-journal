@@ -6,6 +6,7 @@ import { m } from "@/i18n";
 import { useService } from "@/infrastructure/di";
 import { NotesService } from "@/infrastructure/host";
 import type { VaultPath } from "@/infrastructure/host";
+import { ActiveEntryViewModel } from "@/notes-calendar/active-entry";
 import { TemplateContext, TemplateEngine } from "@/templates";
 import UiMarkdown from "@/ui/UiMarkdown.vue";
 
@@ -18,6 +19,7 @@ const props = defineProps<{ instanceId: BlockInstanceId; config: MarkdownTemplat
 
 const notes = useService(NotesService);
 const engine = useService(TemplateEngine);
+const activeEntry = useService(ActiveEntryViewModel);
 const viewContext = useViewContext();
 
 const rawTemplate = ref<string | null>(null);
@@ -45,7 +47,7 @@ async function load(): Promise<void> {
 
 const rendered = computed(() => {
   if (rawTemplate.value === null) return "";
-  const focus = CalendarDate.fromAnchor(viewContext.refDate.value);
+  const focus = CalendarDate.fromAnchor(activeEntry.active.value?.anchor ?? viewContext.refDate.value);
   const clockSpec = { kind: "clock", value: Clock.now(), defaultFormat: "HH:mm" } as const;
   const context = TemplateContext.empty()
     .date("date", focus, "YYYY-MM-DD")

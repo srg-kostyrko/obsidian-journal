@@ -59,7 +59,7 @@ describe("blocks view", () => {
   describe("markdown-template block", () => {
     before(async () => {
       await browser.reloadObsidian({ vault: "./e2e/fixtures/e2e-views", plugins: ["journals"] });
-      await seedNote("templates/view-template.md", "# View block template heading\n");
+      await seedNote("templates/view-template.md", "# View block template heading\n\nActive date: {{date}}\n");
     });
 
     it("renders the template's content rather than the empty or error state", async () => {
@@ -70,6 +70,31 @@ describe("blocks view", () => {
       await expect(block.$(".journal-view-markdown-template__empty")).not.toBeExisting();
       await expect(block.$(".journal-view-markdown-template__error")).not.toBeExisting();
       await expect(block.$("h1")).toHaveText("View block template heading");
+    });
+
+    it("resolves {{date}} to the active note's date, not the view's default focus", async () => {
+      await openBlocksView();
+
+      const block = $(MARKDOWN_TEMPLATE);
+      await block.waitForExist({ timeoutMsg: "markdown-template block did not render" });
+
+      // With no journal note open, {{date}} falls back to the view's focus (today).
+      const focusDate = /Active date: (\d{4}-\d{2}-\d{2})/.exec(await block.getText())?.[1] ?? "";
+      expect(focusDate).not.toBe("");
+
+      // Open a day whose anchor differs from the focus date, so a passing assertion can
+      // only mean {{date}} followed the opened note rather than the view's focus.
+      const anchors = await browser.execute(
+        (selector) => Array.from(document.querySelectorAll<HTMLElement>(selector), (el) => el.dataset.anchor ?? ""),
+        `${WEEK_CALENDAR} .notes-week-view__row .notes-calendar-cell:not(.notes-week-view__week-number)`,
+      );
+      const anchor = anchors.find((candidate) => candidate && candidate !== focusDate) ?? "";
+      expect(anchor).not.toBe("");
+
+      await weekCalendar.cell(anchor).click();
+      await weekCalendar.waitForActive(anchor);
+
+      await expect(block).toHaveText(`Active date: ${anchor}`, { containing: true });
     });
   });
 
