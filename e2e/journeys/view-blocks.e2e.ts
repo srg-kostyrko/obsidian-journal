@@ -1,6 +1,6 @@
 import { $, $$, browser, expect } from "@wdio/globals";
 
-import { activeNotePath, seedNote, waitForJournalFrontmatter } from "../support/vault.js";
+import { activeNotePath, openNote, seedNote, waitForJournalFrontmatter } from "../support/vault.js";
 
 import {
   CUSTOM_INTERVALS,
@@ -121,6 +121,25 @@ describe("blocks view", () => {
 
       await waitForJournalFrontmatter(path, { journal: "sprint", date: anchor });
       expect(await activeNotePath()).toBe(path);
+    });
+  });
+
+  describe("week-calendar follow", () => {
+    it("recenters to the week of a journal note opened outside the current week", async () => {
+      await browser.reloadObsidian({ vault: "./e2e/fixtures/e2e-views", plugins: ["journals"] });
+      await openBlocksView();
+
+      // A day well outside the current (today's) week; the week block renders only the
+      // focus week (before/after = 0), so a passing assertion means the block moved.
+      const far = "2026-09-14";
+      const path = `day/${far}.md`;
+      await seedNote(path, `---\njournal: daily\njournal-date: ${far}\n---\n`);
+      await waitForJournalFrontmatter(path, { journal: "daily", date: far });
+
+      await openNote(path);
+
+      await weekCalendar.waitForActive(far);
+      await expect(weekCalendar.cell(far)).toBeExisting();
     });
   });
 });
