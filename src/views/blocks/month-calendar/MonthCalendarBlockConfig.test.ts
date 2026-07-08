@@ -42,4 +42,19 @@ describe("MonthCalendarBlockConfig", () => {
       showHeading: false,
     });
   });
+
+  it("emits onChange turning follow off when the follow toggle is switched off", async () => {
+    const onChange = vi.fn();
+    mountConfig({ before: 0, after: 0, hiddenWeekdays: [], weeks: "left" as const, showHeading: true }, onChange);
+    const checkboxes = screen.getAllByRole("checkbox");
+    await userEvent.click(checkboxes[0]);
+    expect(onChange).toHaveBeenCalledWith({
+      before: 0,
+      after: 0,
+      hiddenWeekdays: [],
+      weeks: "left",
+      showHeading: true,
+      followActiveDate: false,
+    });
+  });
 });

@@ -5,6 +5,7 @@ import { useService } from "@/infrastructure/di";
 import UiDropdown from "@/ui/UiDropdown.vue";
 import UiNumberInput from "@/ui/UiNumberInput.vue";
 import UiSettingRow from "@/ui/UiSettingRow.vue";
+import UiToggle from "@/ui/UiToggle.vue";
 import UiToggleGroup from "@/ui/UiToggleGroup.vue";
 
 import type { CalendarBlockFields, CalendarBlockFieldsChange } from "./calendar-block-fields";
@@ -26,6 +27,13 @@ function setShownWeekdays(shown: number[]): void {
 </script>
 
 <template>
+  <UiSettingRow>
+    <template #name>{{ m.view_block_config_follow_active_date_label() }}</template>
+    <UiToggle
+      :model-value="config.followActiveDate ?? true"
+      @update:model-value="(value: boolean | undefined) => onChange({ followActiveDate: value ?? false })"
+    />
+  </UiSettingRow>
   <UiSettingRow>
     <template #name>{{ m.view_block_config_before({ unit }) }}</template>
     <UiNumberInput :model-value="config.before" :min="0" @update:model-value="(v) => onChange({ before: v })" />
