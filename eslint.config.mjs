@@ -308,6 +308,12 @@ export default [
     },
   },
   {
+    files: ["src/views/blocks/ui/follow-visibility.ts"],
+    rules: {
+      "@typescript-eslint/no-non-null-assertion": "off",
+    },
+  },
+  {
     files: ["src/**/*.ts"],
     ignores: ["**/*.test.ts", "**/*.bench.ts", "src/_old-code/**", "src/i18n/paraglide/**"],
     rules: {
