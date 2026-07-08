@@ -45,6 +45,30 @@ import { calendar, LIVE_LEAF, MONTH_VIEW, openCalendarView, TOOLBAR } from "./vi
 const headerMonthAnchor = async (): Promise<string | undefined> =>
   (await calendar.periodCell("header-month").getAttribute("data-anchor")) ?? undefined;
 
+// Reads the rendered tab-icon class of the open journal-view leaf straight from Obsidian's
+// DOM (not our repository), so it observes what updateHeader() actually painted — the only
+// way to prove the undocumented internal refreshes an open tab. setIcon stamps the svg with
+// a `lucide-<name>` class, so the class carries the current icon identity.
+const openViewTabIconClass = async (): Promise<string | null> =>
+  browser.executeObsidian(({ app }) => {
+    let iconClass: string | null = null;
+    const workspace = app.workspace as unknown as { iterateAllLeaves(callback: (leaf: unknown) => void): void };
+    workspace.iterateAllLeaves((leaf) => {
+      const candidate = leaf as {
+        view?: { getViewType?(): string };
+        tabHeaderInnerIconEl?: HTMLElement;
+        tabHeaderEl?: HTMLElement;
+      };
+      if (!candidate.view?.getViewType?.().startsWith("journal-view:")) return;
+      const iconEl =
+        candidate.tabHeaderInnerIconEl ??
+        candidate.tabHeaderEl?.querySelector<HTMLElement>(".workspace-tab-header-inner-icon") ??
+        undefined;
+      iconClass = iconEl?.querySelector("svg")?.getAttribute("class") ?? null;
+    });
+    return iconClass;
+  });
+
 const pad2 = (n: number): string => String(n).padStart(2, "0");
 
 // The sprint runs in 2-week intervals anchored at 2026-01-05 (see the fixture). The first start
@@ -546,6 +570,43 @@ describe("calendar view", () => {
         timeoutMsg: "calendar view did not move to a main-area tab after confirming the reposition",
       });
       await expect($(`.mod-right-split ${LIVE_LEAF} .notes-month-view`)).not.toExist();
+    });
+  });
+
+  describe("view icon live update", () => {
+    before(async () => {
+      await browser.reloadObsidian({ vault: "./e2e/fixtures/e2e-journeys", plugins: ["journals"] });
+    });
+
+    after(closeSettings);
+
+    it("refreshes an open view's tab icon in place when the icon setting changes", async () => {
+      await openCalendarView();
+      await browser.waitUntil(
+        async () => {
+          const iconClass = await openViewTabIconClass();
+          return iconClass?.includes("lucide-calendar-days") ?? false;
+        },
+        { timeoutMsg: "open calendar leaf did not render its default tab icon" },
+      );
+
+      await openSettings();
+      await expandSection("Views");
+      await clickIcon("Configure Calendar");
+
+      const iconInput = $('.ui-icon-suggest input[type="text"]');
+      await iconInput.waitForExist({ timeoutMsg: "icon field did not appear in the view editor" });
+      await iconInput.setValue("star");
+
+      // No reopen happens here — the leaf opened once via the ribbon and was never re-created,
+      // so a changed icon can only appear if updateHeader() re-read getIcon() on the live tab.
+      await browser.waitUntil(
+        async () => {
+          const iconClass = await openViewTabIconClass();
+          return iconClass?.includes("lucide-star") ?? false;
+        },
+        { timeoutMsg: "open calendar leaf tab icon did not update to the new icon without reopening" },
+      );
     });
   });
 });

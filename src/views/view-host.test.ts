@@ -97,6 +97,24 @@ describe("ViewHostService", () => {
       expect(host.registeredViews.size).toBe(before);
       expect(host.commands.get("journal:open-view:a")?.name).toBe("Open New");
     });
+
+    it("refreshes an open leaf's header so a changed icon shows without reopening", async () => {
+      const { host, events, storage } = build({ a: seedView("a", { icon: "calendar-days" }) });
+      openVia(host, "a");
+      await Promise.resolve();
+      storage.a.icon = "star";
+      events.emit("updated", "a" as ViewId, { icon: "star" });
+      expect(host.workspace.headerRefreshedTypes).toContain("journal-view:a");
+    });
+
+    it("does not let a failing header refresh break the update event", async () => {
+      const { host, events, storage } = build({ a: seedView("a") });
+      openVia(host, "a");
+      await Promise.resolve();
+      host.workspace.updateHeaderThrows = true;
+      storage.a.icon = "star";
+      expect(() => events.emit("updated", "a" as ViewId, { icon: "star" })).not.toThrow();
+    });
   });
 
   describe("deleted event", () => {

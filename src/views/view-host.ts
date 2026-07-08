@@ -83,6 +83,21 @@ export class ViewHostService {
     if (!view) return;
     this.#commands.unregister(commandIdOf(id));
     this.#commands.register(this.#commandDescriptorFor(id, view));
+    this.#refreshOpenHeaders(viewTypeOf(id));
+  }
+
+  #refreshOpenHeaders(viewType: string): void {
+    for (const leaf of this.#app.workspace.getLeavesOfType(viewType)) {
+      // updateHeader() is an undocumented Obsidian internal that makes an open leaf re-read
+      // getIcon()/getDisplayText(), so icon/title edits show without reopening the tab.
+      // Optional-call plus catch so a renamed or removed internal degrades to "updates on
+      // next reopen" instead of throwing out of the settings update.
+      try {
+        (leaf as WorkspaceLeaf & { updateHeader?: () => void }).updateHeader?.();
+      } catch (error) {
+        this.#logger.warn("failed to refresh view leaf header", { viewType, error });
+      }
+    }
   }
 
   #tearDown(id: ViewId, viewType: string): void {
