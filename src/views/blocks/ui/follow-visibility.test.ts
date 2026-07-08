@@ -16,6 +16,10 @@ describe("spanContains", () => {
     expect(spanContains(a("2026-05-01"), a("2026-05-01"), a("2026-05-31"))).toBe(true);
   });
 
+  it("includes a date on the end boundary", () => {
+    expect(spanContains(a("2026-05-31"), a("2026-05-01"), a("2026-05-31"))).toBe(true);
+  });
+
   it("excludes a date after the end boundary", () => {
     expect(spanContains(a("2026-06-01"), a("2026-05-01"), a("2026-05-31"))).toBe(false);
   });
