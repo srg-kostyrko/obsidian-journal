@@ -26,7 +26,7 @@ export const icons = {
     journal: "book-open",
     shelf: "library",
     view: "layout-dashboard",
-    command: "terminal",
+    command: "square-terminal",
     month: "calendar-days",
     week: "calendar-range",
     customInterval: "list",

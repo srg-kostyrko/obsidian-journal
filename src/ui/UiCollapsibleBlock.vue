@@ -50,6 +50,8 @@ function toggle() {
   min-height: 38px;
 }
 .collapsible-trigger-text {
+  display: flex;
+  align-items: center;
   flex-grow: 1;
 }
 .collapsible-content {
