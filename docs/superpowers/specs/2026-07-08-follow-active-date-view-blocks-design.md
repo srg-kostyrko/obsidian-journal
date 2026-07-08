@@ -45,8 +45,9 @@ journal's notes (see Design notes for the exact scope per block).
 ### Scenario: opening a note the block does not display
 
 - **Given** a block is set to follow the active note
+- **And** the block has already moved to track an earlier note
 - **When** the user opens a note whose journal the block does not display
-- **Then** the block does not move
+- **Then** the block returns to the shared reference date
 
 ### Scenario: following turned off
 
@@ -71,7 +72,7 @@ journal's notes (see Design notes for the exact scope per block).
 
 - **Given** a block is set to follow the active note
 - **And** the active note is not a journal entry (or there is none)
-- **Then** the block shows the shared reference date
+- **Then** the block returns to the shared reference date
 
 ## Design notes (implementation vocabulary)
 
@@ -99,8 +100,11 @@ Domain scenarios above stay in domain language; concrete names live here.
   - `watch(refDate, () => { localFocus.value = null })` — manual navigation wins
     and re-syncs the block to the reference date.
   - `watch(activeEntry.active, …, { immediate: true })` — on active-note change
-    and at mount, if `enabled()` **and** `inScope(journalName)` **and not**
-    `isVisible(anchor)` → `localFocus.value = anchor`.
+    and at mount, when `enabled()`:
+    - `a === null || !inScope(a.journalName)` → `localFocus.value = null`
+      (return to the reference date);
+    - else `isVisible(a.anchor)` → return (already visible, do not move);
+    - else → `localFocus.value = a.anchor` (follow).
 
   `activeEntry` is the existing `ActiveEntryViewModel` (`{ journalName, anchor }`).
   Each block feeds the returned `focus` into its existing window computation in
@@ -111,9 +115,11 @@ Domain scenarios above stay in domain language; concrete names live here.
 - **month-calendar / week-calendar** (`MonthCalendarBlock.vue`,
   `WeekCalendarBlock.vue`): `usePeriodWindow(kind, focus, before, after)` where
   `focus` comes from the composable.
-  - `inScope = (name) => scope.all.value.includes(name)` — the whole shelf, since
-    `NotesMonthView`/`NotesWeekView` render cells for every period kind (day,
-    week number, month/quarter/year headers). Matches v2 following everything.
+  - `inScope = (name) => scope.fixed.value.includes(name)` — the non-custom
+    journals, i.e. exactly the kinds the grid renders as cells (day, week number,
+    month/quarter/year headers). `scope.fixed` already excludes custom-interval
+    journals, which the grid does not draw; opening a custom-interval note
+    therefore resets a calendar block to the reference date.
   - `isVisible(anchor)`: the anchor's `CalendarDate` lies within the block's
     rendered span. For **month**, expand to full weeks so the check matches the
     grid's spillover exactly (v2's week-case fidelity):
@@ -134,7 +140,9 @@ periodOfKind("week", months.at(-1).end).end`. For **week**, the span is
   (the `rendered` computed). The only change is to gate that on the flag:
   `focus = enabled() ? (active?.anchor ?? refDate) : refDate`. It follows any
   active entry (no journal scope), preserving today's behavior when the flag is
-  on. It does not use `useFollowActiveDate`.
+  on. The `?? refDate` already yields the reset-to-reference-date behavior when
+  there is no active journal entry, so no window/visibility logic is needed and
+  it does not use `useFollowActiveDate`.
 
 ### Schema and config UI
 
@@ -153,6 +161,15 @@ Local focus is not persisted. On reopen, a following block snaps to the active
 journal note it displays (immediate follow at mount); non-following blocks
 restore the persisted reference date. This is the intended follow contract —
 following blocks track the note, not their last manual position.
+
+### Deliberate divergence from v2
+
+v2 left the calendar where it was when the active note became a non-journal note
+(its watch returned early on no active journal note). Here a following block
+instead **returns to the reference date** whenever the active note is not a
+journal entry the block displays. In a mixed-block view this means opening a note
+only one block displays returns the other blocks to the reference date — an
+accepted consequence of per-block local focus.
 
 ## Non-goals
 
