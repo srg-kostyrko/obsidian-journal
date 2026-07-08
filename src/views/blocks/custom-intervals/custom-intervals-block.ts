@@ -19,6 +19,7 @@ const schema = v.object({
     ),
   ]),
   hideEmpty: v.boolean(),
+  followActiveDate: v.optional(v.boolean()),
 });
 
 export type CustomIntervalsConfig = v.InferOutput<typeof schema>;
@@ -30,7 +31,7 @@ export const customIntervalsBlock = defineViewBlock<CustomIntervalsConfig>({
   description: m.view_block_custom_intervals_description(),
   icon: icons.entity.customInterval,
   schema,
-  defaultConfig: { window: "month", hideEmpty: true },
+  defaultConfig: { window: "month", hideEmpty: true, followActiveDate: true },
   component: CustomIntervalsBlock,
   configComponent: CustomIntervalsBlockConfig,
   summary: (config) => {

@@ -9,9 +9,11 @@ import { useService } from "@/infrastructure/di";
 import { CycleService, JournalsIndex, JournalsRepository, TimelineService } from "@/journals";
 import type { JournalConfig, JournalNavBlock } from "@/journals";
 import { ActiveEntryViewModel } from "@/notes-calendar/active-entry";
+import { useFollowActiveDate } from "@/notes-calendar/use-follow-active-date";
 import { useShelfScope } from "@/notes-calendar/use-shelf-scope";
 
 import { useViewContext } from "../../../view-context";
+import { spanContains } from "../../ui/follow-visibility";
 import { resolveWindow } from "../window-resolution";
 
 import type { BlockInstanceId } from "../../../config";
@@ -35,7 +37,22 @@ function isEntryActive(journalName: string, anchor: AnchorString): boolean {
   return current !== null && current.journalName === journalName && current.anchor === anchor;
 }
 
-const window = computed(() => resolveWindow(props.config.window, context.refDate.value));
+const displayedJournals = computed(() => {
+  const filter = props.config.journals;
+  return scope.custom.value.filter((name) => !filter || filter.includes(name));
+});
+
+const focus = useFollowActiveDate({
+  refDate: context.refDate,
+  enabled: () => props.config.followActiveDate ?? true,
+  inScope: (name) => displayedJournals.value.includes(name),
+  isVisible: (anchor, focusAnchor) => {
+    const w = resolveWindow(props.config.window, focusAnchor);
+    return spanContains(anchor, w.start, w.end);
+  },
+});
+
+const window = computed(() => resolveWindow(props.config.window, focus.value));
 
 const indexVersion = shallowRef(0);
 onMounted(() => {
@@ -55,8 +72,7 @@ interface Section {
 const sections = computed<readonly Section[]>(() => {
   // JournalsIndex is event-based, not Vue-reactive; re-run when it signals an entry change.
   void indexVersion.value;
-  const filter = props.config.journals;
-  const candidates = scope.custom.value.filter((name) => !filter || filter.includes(name));
+  const candidates = displayedJournals.value;
   const out: Section[] = [];
   for (const name of candidates) {
     const cfg = journalsRepo.get(name).getOr(undefined as never) as JournalConfig | undefined;

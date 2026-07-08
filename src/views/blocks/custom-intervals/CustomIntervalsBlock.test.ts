@@ -203,6 +203,31 @@ describe("CustomIntervalsBlock", () => {
     expect(container.querySelectorAll(".journal-view-custom-intervals__entry[data-active]").length).toBe(0);
   });
 
+  it("recenters the window to the active note's interval when it is off-window and following", () => {
+    SCOPE.custom = ["foo"];
+    JOURNALS.foo = customJournal("foo", "day", 1, "2026-01-01");
+    ACTIVE.value = { journalName: "foo", anchor: "2027-03-05" as AnchorString };
+    const { container } = mountBlock(
+      { window: "year", hideEmpty: true, followActiveDate: true },
+      { refDate: ref("2026-05-15" as AnchorString) },
+    );
+    const anchors = [...container.querySelectorAll<HTMLElement>("[data-anchor]")].map((el) => el.dataset.anchor ?? "");
+    expect(anchors.every((anchor) => anchor.startsWith("2027"))).toBe(true);
+    expect(anchors).toContain("2027-03-05");
+  });
+
+  it("keeps the window on the reference date when following is off", () => {
+    SCOPE.custom = ["foo"];
+    JOURNALS.foo = customJournal("foo", "day", 1, "2026-01-01");
+    ACTIVE.value = { journalName: "foo", anchor: "2027-03-05" as AnchorString };
+    const { container } = mountBlock(
+      { window: "year", hideEmpty: true, followActiveDate: false },
+      { refDate: ref("2026-05-15" as AnchorString) },
+    );
+    const anchors = [...container.querySelectorAll<HTMLElement>("[data-anchor]")].map((el) => el.dataset.anchor ?? "");
+    expect(anchors.every((anchor) => anchor.startsWith("2026"))).toBe(true);
+  });
+
   describe("decorations", () => {
     it("decorates the interval entry whose note matches the journal decoration", async () => {
       SCOPE.custom = ["foo"];

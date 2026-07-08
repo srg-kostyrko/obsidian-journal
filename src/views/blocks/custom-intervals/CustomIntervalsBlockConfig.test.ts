@@ -28,8 +28,8 @@ describe("CustomIntervalsBlockConfig", () => {
   it("emits onChange when hideEmpty toggles", async () => {
     const onChange = vi.fn();
     mountConfig({ window: "month", hideEmpty: true }, onChange);
-    const toggle = screen.getByRole("checkbox");
-    await userEvent.click(toggle);
+    const [hideEmptyToggle] = screen.getAllByRole("checkbox");
+    await userEvent.click(hideEmptyToggle);
     expect(onChange).toHaveBeenCalledWith({ window: "month", hideEmpty: false });
   });
 
