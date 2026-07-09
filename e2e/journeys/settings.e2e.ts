@@ -139,6 +139,17 @@ describe("settings", () => {
       await waitForSettings((s) => !("delete-me" in (s.shelves ?? {})), "deleted shelf still present in data.json");
     });
 
+    it("moves the deleted shelf's journals onto the chosen destination", async () => {
+      await clickIcon("Delete spill-me");
+      await selectModalSelect("catch-me");
+      await deleteInModal();
+
+      await waitForSettings(
+        (s) => (s.shelves?.["catch-me"]?.journals ?? []).includes("sprint"),
+        "deleted shelf's journal was not moved to the destination shelf",
+      );
+    });
+
     it("places a journal onto a shelf and records it on the target", async () => {
       await openJournalSubpage("extra", "yearly");
       await expandSection("Shelf");

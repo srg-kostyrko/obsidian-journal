@@ -607,6 +607,16 @@
     "delete-me": {
       "name": "delete-me",
       "journals": []
+    },
+    "spill-me": {
+      "name": "spill-me",
+      "journals": [
+        "sprint"
+      ]
+    },
+    "catch-me": {
+      "name": "catch-me",
+      "journals": []
     }
   },
   "commands": {
