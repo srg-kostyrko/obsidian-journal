@@ -135,6 +135,45 @@ describe("FrontmatterService", () => {
       });
       expect(result.isSome() && result.value.numbers).toEqual({ sprint: 3 });
     });
+
+    it("rejects a fixed monthly note whose date is not the month anchor", () => {
+      const c = buildContainer({ m: fixedJournal("m", { type: "month" }) });
+      const fm = c.resolve(FrontmatterService);
+      const result = fm.parseEntry("M/june.md" as VaultPath, { journal: "m", "journal-date": "2024-06-15" });
+      expect(result.isNone()).toBe(true);
+    });
+
+    it("accepts a fixed monthly note whose date is the month anchor", () => {
+      const c = buildContainer({ m: fixedJournal("m", { type: "month" }) });
+      const fm = c.resolve(FrontmatterService);
+      const result = fm.parseEntry("M/june.md" as VaultPath, { journal: "m", "journal-date": "2024-06-01" });
+      expect(result.isSome()).toBe(true);
+    });
+
+    it("accepts any date for a fixed daily note", () => {
+      const c = buildContainer({ daily: fixedJournal("daily", { type: "day" }) });
+      const fm = c.resolve(FrontmatterService);
+      const result = fm.parseEntry("D/x.md" as VaultPath, { journal: "daily", "journal-date": "2024-06-15" });
+      expect(result.isSome()).toBe(true);
+    });
+
+    it("still adopts an off-grid custom note at parse time (validated later)", () => {
+      const c = buildContainer({ s: customJournal("s", "week", 1, "2024-01-01") });
+      const fm = c.resolve(FrontmatterService);
+      const result = fm.parseEntry("S/x.md" as VaultPath, { journal: "s", "journal-date": "2024-01-03" });
+      expect(result.isSome()).toBe(true);
+    });
+
+    it("re-adopts a note written through writeMutator for its own fixed journal", () => {
+      const c = buildContainer({ weekly: fixedJournal("weekly", { type: "week" }) });
+      const fm = c.resolve(FrontmatterService);
+      const written = fm.writeMutator("weekly", { journalName: "weekly", anchor: "2021-01-07" as AnchorString });
+      expect(written.isOk()).toBe(true);
+      if (!written.isOk()) return;
+      const out: Record<string, unknown> = {};
+      written.value(out);
+      expect(fm.parseEntry("W/x.md" as VaultPath, out).isSome()).toBe(true);
+    });
   });
 
   describe("buildMetadata", () => {

@@ -33,6 +33,15 @@ export class FrontmatterService {
     if (!parsed.isOk()) return Option.none();
     const anchor = parsed.value.toAnchor();
 
+    // Fixed cycles: reject a stored date that is not the period's canonical anchor, so a note left
+    // behind by a same-named journal of a different write type is not silently re-interpreted.
+    // anchorOf is pure for fixed cycles, so this is safe during the boot walk (no index read).
+    // Custom cycles are validated after the index is complete (see VaultSubscriptionService).
+    if (config.write.type !== "custom") {
+      const canonical = this.#cycle.isCanonicalAnchor(journalName, anchor);
+      if (!(canonical.isSome() && canonical.value)) return Option.none();
+    }
+
     const rawEnd = frontmatter[config.frontmatter.endDateField];
     let endDate: AnchorString | undefined;
     if (typeof rawEnd === "string") {
