@@ -286,10 +286,12 @@ describe("VaultSubscriptionService", () => {
       "S/first.md" as VaultPath,
       "S/second.md" as VaultPath,
     ]);
-    // first interval extended from 1 week to 3 weeks (ends 2024-01-21), so the next interval starts
-    // 2024-01-22 — off the regular 1-week grid but on the reconstructed sequence.
-    rig.setFrontmatter("S/first.md", { journal: "s", "journal-date": "2024-01-01", "journal-end-date": "2024-01-21" });
-    rig.setFrontmatter("S/second.md", { journal: "s", "journal-date": "2024-01-22" });
+    // first interval extended from 1 week to 18 days (ends 2024-01-18), so the next interval starts
+    // 2024-01-19 — 18 days after the anchor, NOT a multiple of 7, so off the regular 1-week grid
+    // but on the reconstructed sequence. Without the extension chain, the valid grid would be
+    // 01-01, 01-08, 01-15, 01-22, ... and 2024-01-19 would be dropped.
+    rig.setFrontmatter("S/first.md", { journal: "s", "journal-date": "2024-01-01", "journal-end-date": "2024-01-18" });
+    rig.setFrontmatter("S/second.md", { journal: "s", "journal-date": "2024-01-19" });
     const sub = rig.container.resolve(VaultSubscriptionService);
     await sub.initialize();
     const index = rig.container.resolve(JournalsIndex);

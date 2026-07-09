@@ -1,7 +1,13 @@
 import { browser, expect } from "@wdio/globals";
 
 import { openPalette, promptChoose } from "../support/commands.js";
-import { activeNotePath, seedNote, waitForActiveNote, waitForJournalFrontmatter } from "../support/vault.js";
+import {
+  activeNotePath,
+  noteExists,
+  seedNote,
+  waitForActiveNote,
+  waitForJournalFrontmatter,
+} from "../support/vault.js";
 
 // Custom-cycle second pass: #reconcileCustomJournals in VaultSubscriptionService runs after the full
 // boot walk. It calls CycleService.intervalsInRange over all registered anchors for each custom
@@ -53,7 +59,8 @@ describe("adoption anchor guard — custom interval", () => {
     expect(await activeNotePath()).toBe(LEGIT);
   });
 
-  it("does not open the off-sequence custom orphan", async () => {
-    expect(await activeNotePath()).not.toBe(ORPHAN);
+  it("keeps the dropped orphan note on disk", async () => {
+    expect(await noteExists(ORPHAN)).toBe(true);
+    expect(await noteExists(LEGIT)).toBe(true);
   });
 });
