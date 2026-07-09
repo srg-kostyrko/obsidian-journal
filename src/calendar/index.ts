@@ -21,4 +21,5 @@ export { CalendarModule } from "./module";
 
 export { weekPresets, detectCurrentPreset, type WeekPreset } from "./presets";
 export { calendarSlice, type CalendarSliceState } from "./settings/slice";
+export { calendarDisplaySlice, type WeekPlacement, type CalendarDisplaySliceState } from "./settings/display-slice";
 export { calendarSettingsModule } from "./settings/module";
