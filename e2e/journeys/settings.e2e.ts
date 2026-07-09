@@ -342,7 +342,7 @@ describe("settings", () => {
       await clickIcon("Add Week calendar");
       await waitForSettings((s) => {
         const block = lastBlock(s.views);
-        return block?.key === "week-calendar" && block.config?.weeks === "left";
+        return block?.key === "week-calendar" && block.config?.weeks === "default";
       }, "added week-calendar block not persisted");
 
       // Edit buttons show only for blocks with a config editor; the one just added is last.

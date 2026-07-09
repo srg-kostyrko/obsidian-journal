@@ -100,7 +100,10 @@ describe("code blocks", () => {
 
     describe("responsive layout", () => {
       it("stacks the weekly nav blocks without clipping when the pane is too narrow for one row", async () => {
-        await renderBlock("nav/narrow-weekly.md", hostNote("weekly", "2025-12-29", NAV_FENCE), NAV_VIEW);
+        // The note connects only when journal-date is the week's canonical anchor — the
+        // representative day (Friday under the fixture's Sunday-start locale), not the week
+        // start. 2026-01-02 is that anchor; a non-anchor date is rejected as non-canonical.
+        await renderBlock("nav/narrow-weekly.md", hostNote("weekly", "2026-01-02", NAV_FENCE), NAV_VIEW);
         const layout = await narrowNavLayout(180);
         // Blocks wrap onto more than one row (impossible without flex-wrap) ...
         expect(layout.rows).toBeGreaterThan(1);
