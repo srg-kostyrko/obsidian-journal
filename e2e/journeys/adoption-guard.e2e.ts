@@ -39,12 +39,13 @@ function monthNote(date: string): string {
 describe("adoption anchor guard", () => {
   before(async () => {
     await browser.reloadObsidian({ vault: "./e2e/fixtures/e2e-adoption", plugins: ["journals"] });
-    // Seed after boot so the metadata-changed event fires and #scan runs synchronously,
-    // ensuring both notes are in the index before the test invokes the command.
-    await seedNote(LEGIT, monthNote("2024-05-01"));
+    // Seed ORPHAN before LEGIT so that once LEGIT's metadata-changed has fired (the barrier below),
+    // ORPHAN's earlier-queued scan — the guard's rejection — is guaranteed to have already run.
+    // Obsidian's metadata events serialize in queue order, so the LEGIT barrier is sufficient.
     await seedNote(ORPHAN, monthNote("2024-06-15"));
+    await seedNote(LEGIT, monthNote("2024-05-01"));
     // waitForJournalFrontmatter on LEGIT confirms metadataCache has parsed it and #scan has run.
-    // ORPHAN's #scan call also ran (rejected by the guard), so the index state is settled.
+    // Because ORPHAN was queued first, its #scan (rejection by the guard) has also already run.
     await waitForJournalFrontmatter(LEGIT, { journal: "log", date: "2024-05-01" });
   });
 
