@@ -30,6 +30,16 @@ describe("blocks view", () => {
       await expect(weekCalendar.periodCell("header-month")).toBeExisting();
     });
 
+    it("places the week-number column on the side of the global default when the block inherits", async () => {
+      await openBlocksView();
+
+      const row = $(`${WEEK_CALENDAR} .notes-week-view__row`);
+      await row.waitForExist({ timeoutMsg: "week grid row did not render" });
+
+      // Fixture: global weekPlacement = "right", block weeks = "default" (inherit).
+      await expect(row).toHaveAttribute("data-weeks", "right");
+    });
+
     it("renders a weekday header of seven labels above the week grid", async () => {
       await openBlocksView();
 
