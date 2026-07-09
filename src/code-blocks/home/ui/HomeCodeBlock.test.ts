@@ -8,9 +8,20 @@ import { Flows } from "@/infrastructure/flows";
 import type { VaultPath } from "@/infrastructure/host";
 import { LoggerFactory, LoggerFactoryToken } from "@/infrastructure/logger";
 import { AsyncResult, Ok, Option } from "@/infrastructure/result";
-import { journalDefaultsFor, JournalsIndex, JournalsRepository, NotePathService, OpenDateFlow } from "@/journals";
+import {
+  CycleService,
+  FrontmatterService,
+  journalDefaultsFor,
+  JournalsIndex,
+  JournalsRepository,
+  NotePathService,
+  NumberingService,
+  OpenDateFlow,
+} from "@/journals";
 import type { JournalConfig } from "@/journals";
+import { customJournal, fakeRepo } from "@/journals/testing";
 import { ShelvesRepository } from "@/shelves";
+import { TemplateEngine } from "@/templates";
 
 import HomeCodeBlock from "./HomeCodeBlock.vue";
 
@@ -130,6 +141,28 @@ describe("HomeCodeBlock", () => {
     const separators = document.querySelectorAll(".home-code-block__separator");
     expect(separators).toHaveLength(1);
     expect(separators[0]?.textContent).toBe(" | ");
+  });
+
+  it("renders the resolved index for a custom journal whose name template uses {{index}}", () => {
+    const repo = fakeRepo({
+      Sprint: customJournal("Sprint", "week", 1, "2026-05-27", { nameTemplate: "Sprint {{index}}" }),
+    });
+    const realContainer = new Container();
+    realContainer.register(LoggerFactoryToken).useClass(LoggerFactory);
+    realContainer.register(JournalsRepository).useValue(repo);
+    realContainer.register(JournalsIndex).useClass(JournalsIndex);
+    realContainer.register(CycleService).useClass(CycleService);
+    realContainer.register(NumberingService).useClass(NumberingService);
+    realContainer.register(FrontmatterService).useClass(FrontmatterService);
+    realContainer.register(TemplateEngine).useClass(TemplateEngine);
+    realContainer.register(NotePathService).useClass(NotePathService);
+    realContainer.register(ShelvesRepository).useValue(new FakeShelvesRepository() as unknown as ShelvesRepository);
+    realContainer.register(Flows).useValue(flowsFake as unknown as Flows);
+    realContainer.register(OpenDateFlow).useValue({} as OpenDateFlow);
+
+    mount(realContainer, { path: "Note.md" as VaultPath, config: { show: ["custom"], separator: " • ", scale: 1 } });
+
+    expect(screen.getByRole("link").textContent).toBe("Sprint 1");
   });
 
   it("invokes OpenDateFlow with the item's journal names and today's anchor on click", async () => {

@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { computed } from "vue";
 
-import { Clock, type AnchorString } from "@/calendar";
+import { CalendarDate, Clock, type AnchorString } from "@/calendar";
 import { useService } from "@/infrastructure/di";
 import { Flows } from "@/infrastructure/flows";
 import { defineOpenMode, type CodeBlockProps } from "@/infrastructure/host";
@@ -49,7 +49,7 @@ const allJournals = computed(() => [...journals.find().list()]);
 const items = computed<readonly HomeItem[]>(() =>
   buildHomeItems(config, allJournals.value, today.value, effectiveShelf.value, shelfByJournal.value, {
     pathForCustom: (journal) => {
-      const result = notePaths.pathFor(journal.name, { journalName: journal.name, anchor: today.value });
+      const result = notePaths.pathForDate(journal.name, CalendarDate.fromAnchor(today.value));
       if (result.kind === "err") return null;
       const fullPath = result.value;
       const slash = fullPath.lastIndexOf("/");
