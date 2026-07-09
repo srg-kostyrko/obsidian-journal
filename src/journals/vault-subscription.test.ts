@@ -15,7 +15,7 @@ import { FrontmatterService } from "./frontmatter";
 import { JournalsIndex } from "./journals-index";
 import { NumberingService } from "./numbering";
 import { JournalsRepository, type JournalsEvents } from "./repository";
-import { fakeRepo, fixedJournal } from "./testing";
+import { customJournal, fakeRepo, fixedJournal } from "./testing";
 import { JournalsEventsToken } from "./tokens";
 import { VaultSubscriptionService } from "./vault-subscription";
 
@@ -251,5 +251,73 @@ describe("VaultSubscriptionService", () => {
 
     rig.emit("created", { path: "D/A.md" as VaultPath, basename: "A", folder: "D" as VaultPath });
     expect(index.entryByPath("D/A.md" as VaultPath).isNone()).toBe(true);
+  });
+
+  it("drops an off-sequence custom note during the boot rebuild", async () => {
+    const rig = buildRig({ s: customJournal("s", "week", 1, "2024-01-01") }, [
+      "S/on.md" as VaultPath,
+      "S/off.md" as VaultPath,
+    ]);
+    rig.setFrontmatter("S/on.md", { journal: "s", "journal-date": "2024-01-01" });
+    rig.setFrontmatter("S/off.md", { journal: "s", "journal-date": "2024-01-03" });
+    const sub = rig.container.resolve(VaultSubscriptionService);
+    await sub.initialize();
+    const index = rig.container.resolve(JournalsIndex);
+
+    expect(index.entryByPath("S/off.md" as VaultPath).isNone()).toBe(true);
+  });
+
+  it("keeps an on-grid custom note during the boot rebuild", async () => {
+    const rig = buildRig({ s: customJournal("s", "week", 1, "2024-01-01") }, [
+      "S/on.md" as VaultPath,
+      "S/off.md" as VaultPath,
+    ]);
+    rig.setFrontmatter("S/on.md", { journal: "s", "journal-date": "2024-01-01" });
+    rig.setFrontmatter("S/off.md", { journal: "s", "journal-date": "2024-01-03" });
+    const sub = rig.container.resolve(VaultSubscriptionService);
+    await sub.initialize();
+    const index = rig.container.resolve(JournalsIndex);
+
+    expect(index.entryByPath("S/on.md" as VaultPath).isSome()).toBe(true);
+  });
+
+  it("keeps a manually extended custom interval whose start is off the regular grid", async () => {
+    const rig = buildRig({ s: customJournal("s", "week", 1, "2024-01-01") }, [
+      "S/first.md" as VaultPath,
+      "S/second.md" as VaultPath,
+    ]);
+    // first interval extended from 1 week to 3 weeks (ends 2024-01-21), so the next interval starts
+    // 2024-01-22 — off the regular 1-week grid but on the reconstructed sequence.
+    rig.setFrontmatter("S/first.md", { journal: "s", "journal-date": "2024-01-01", "journal-end-date": "2024-01-21" });
+    rig.setFrontmatter("S/second.md", { journal: "s", "journal-date": "2024-01-22" });
+    const sub = rig.container.resolve(VaultSubscriptionService);
+    await sub.initialize();
+    const index = rig.container.resolve(JournalsIndex);
+
+    expect(index.entryByPath("S/second.md" as VaultPath).isSome()).toBe(true);
+  });
+
+  it("drops an off-sequence custom note on metadata-changed", async () => {
+    const rig = buildRig({ s: customJournal("s", "week", 1, "2024-01-01") });
+    const sub = rig.container.resolve(VaultSubscriptionService);
+    await sub.initialize();
+
+    rig.setFrontmatter("S/off.md", { journal: "s", "journal-date": "2024-01-03" });
+    rig.emit("metadata-changed", "S/off.md" as VaultPath);
+
+    const index = rig.container.resolve(JournalsIndex);
+    expect(index.entryByPath("S/off.md" as VaultPath).isNone()).toBe(true);
+  });
+
+  it("registers an on-grid custom note on metadata-changed", async () => {
+    const rig = buildRig({ s: customJournal("s", "week", 1, "2024-01-01") });
+    const sub = rig.container.resolve(VaultSubscriptionService);
+    await sub.initialize();
+
+    rig.setFrontmatter("S/on.md", { journal: "s", "journal-date": "2024-01-08" });
+    rig.emit("metadata-changed", "S/on.md" as VaultPath);
+
+    const index = rig.container.resolve(JournalsIndex);
+    expect(index.entryByPath("S/on.md" as VaultPath).isSome()).toBe(true);
   });
 });
