@@ -1,0 +1,36 @@
+{
+  "version": 4,
+  "journals": {
+    "sprint": {
+      "name": "sprint",
+      "write": {
+        "type": "custom",
+        "every": "week",
+        "duration": 2,
+        "anchorDate": "2024-01-01"
+      },
+      "nameTemplate": "{{date}}",
+      "dateFormat": "YYYY-MM-DD",
+      "frontmatter": {
+        "dateField": "journal-date",
+        "startDateField": "journal-start-date",
+        "endDateField": "journal-end-date",
+        "addStartDate": false,
+        "addEndDate": false
+      },
+      "numbering": { "enabled": false, "anchorDate": "", "allowBefore": false, "sources": [] },
+      "timeline": { "start": "", "end": { "kind": "never" } }
+    }
+  },
+  "commands": {
+    "e2e-open-prev-sprint": {
+      "name": "Open previous sprint",
+      "icon": "",
+      "showInRibbon": false,
+      "openMode": "active",
+      "target": { "kind": "journal", "journalName": "sprint" },
+      "type": "previous_available",
+      "context": "today"
+    }
+  }
+}
