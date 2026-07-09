@@ -331,4 +331,47 @@ describe("CycleService", () => {
       expect(cycle.anchorAtOffset("missing", "2024-01-01" as AnchorString, 2).isNone()).toBe(true);
     });
   });
+
+  describe("isCanonicalAnchor", () => {
+    it("accepts any date for a fixed daily journal", () => {
+      const c = buildContainer({ daily: fixedJournal("daily", { type: "day" }) });
+      const cycle = c.resolve(CycleService);
+      const result = cycle.isCanonicalAnchor("daily", "2024-06-15" as AnchorString);
+      expect(result.isSome() && result.value).toBe(true);
+    });
+
+    it("rejects a non-first-of-month date for a fixed monthly journal", () => {
+      const c = buildContainer({ m: fixedJournal("m", { type: "month" }) });
+      const cycle = c.resolve(CycleService);
+      const result = cycle.isCanonicalAnchor("m", "2024-06-15" as AnchorString);
+      expect(result.isSome() && result.value).toBe(false);
+    });
+
+    it("accepts the first-of-month date for a fixed monthly journal", () => {
+      const c = buildContainer({ m: fixedJournal("m", { type: "month" }) });
+      const cycle = c.resolve(CycleService);
+      const result = cycle.isCanonicalAnchor("m", "2024-06-01" as AnchorString);
+      expect(result.isSome() && result.value).toBe(true);
+    });
+
+    it("rejects an off-grid date for a custom interval journal", () => {
+      const c = buildContainer({ s: customJournal("s", "month", 1, "2024-01-15") });
+      const cycle = c.resolve(CycleService);
+      const result = cycle.isCanonicalAnchor("s", "2024-02-20" as AnchorString);
+      expect(result.isSome() && result.value).toBe(false);
+    });
+
+    it("accepts an on-grid date for a custom interval journal", () => {
+      const c = buildContainer({ s: customJournal("s", "month", 1, "2024-01-15") });
+      const cycle = c.resolve(CycleService);
+      const result = cycle.isCanonicalAnchor("s", "2024-02-15" as AnchorString);
+      expect(result.isSome() && result.value).toBe(true);
+    });
+
+    it("returns None for an unknown journal", () => {
+      const c = buildContainer({});
+      const cycle = c.resolve(CycleService);
+      expect(cycle.isCanonicalAnchor("missing", "2024-06-01" as AnchorString).isNone()).toBe(true);
+    });
+  });
 });

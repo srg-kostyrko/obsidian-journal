@@ -120,6 +120,10 @@ export class CycleService {
     );
   }
 
+  isCanonicalAnchor(name: string, anchor: AnchorString): Option<boolean> {
+    return this.anchorOf(name, CalendarDate.fromAnchor(anchor)).map((resolved) => resolved === anchor);
+  }
+
   nextAnchor(name: string, from: AnchorString): Option<AnchorString> {
     return this.#cycleFor(name).flatMap((cycle) =>
       match(cycle)
