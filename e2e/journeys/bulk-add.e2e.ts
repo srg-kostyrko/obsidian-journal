@@ -5,6 +5,7 @@ import {
   clickIcon,
   closeSettings,
   openSettings,
+  openShelfSubpage,
   selectModalDropdownByLabel,
   setModalText,
   toggleModalCheckbox,
@@ -24,6 +25,9 @@ const EXISTING_LABEL = "When a note is already connected to that date";
 
 async function runBulkAdd(folder: string, options: { existing?: "override" | "merge" } = {}): Promise<void> {
   await openSettings();
+  // The dashboard lists only shelf-less journals; daily lives on the "core" shelf, so its
+  // per-row bulk-add icon is reached through the shelf subpage.
+  await openShelfSubpage("core");
   await clickIcon(BULK_ADD);
   await setModalText(folder);
   // Set the occupant policy up front in the configure modal so the process modal needs no per-note

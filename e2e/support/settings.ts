@@ -84,6 +84,34 @@ export async function selectModalSelect(value: string): Promise<void> {
   await activeModal().$("select").selectByAttribute("value", value);
 }
 
+// Pick an <option> by value in whichever modal <select> actually carries it. Use when the first
+// <select> is not the target (e.g. the button editor renders a Journal dropdown before the mode
+// dropdown), so selectModalSelect's first-<select> assumption would land on the wrong field.
+export async function selectModalOption(value: string): Promise<void> {
+  const selects = await activeModal().$$("select").getElements();
+  for (const select of selects) {
+    if (!(await select.$(`option[value="${value}"]`).isExisting())) continue;
+    await select.selectByAttribute("value", value);
+    return;
+  }
+  // No select carried the option; let wdio raise its descriptive "Option not found" on the first.
+  await activeModal().$("select").selectByAttribute("value", value);
+}
+
+// A test that throws mid-modal leaves its dialog open; since activeModal() resolves the FIRST
+// .modal-container, that stale dialog would shadow every later test's modal and cascade the
+// failure. Escape closes Obsidian modals, so press it until no dialog remains.
+export async function dismissDialogs(): Promise<void> {
+  await browser.waitUntil(
+    async () => {
+      if (!(await activeModal().isExisting())) return true;
+      await browser.keys("Escape");
+      return false;
+    },
+    { timeout: 5000, interval: 250, timeoutMsg: "a leftover dialog would not dismiss" },
+  );
+}
+
 // Set the first number input in the open modal (e.g. a calendar block's leading padding field).
 export async function setModalNumber(value: number): Promise<void> {
   await activeModal().$('input[type="number"]').setValue(value);

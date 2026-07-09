@@ -6,11 +6,13 @@ import {
   clickModalToggleOption,
   closeSettings,
   deleteInModal,
+  dismissDialogs,
   expandSection,
   goBack,
   openJournalSubpage,
   openSettings,
   openShelfSubpage,
+  selectModalOption,
   selectModalSelect,
   setModalText,
   submitModal,
@@ -47,7 +49,12 @@ describe("settings", () => {
 
   beforeEach(openSettings);
 
-  afterEach(closeSettings);
+  // Dismiss any dialog a failing test left open before closing settings, so one failure can't
+  // shadow every later test's modal (activeModal resolves the first .modal-container).
+  afterEach(async () => {
+    await dismissDialogs();
+    await closeSettings();
+  });
 
   describe("journals", () => {
     it("adds a journal from the dashboard and shows its row", async () => {
@@ -300,7 +307,9 @@ describe("settings", () => {
         const editButtons = [...document.querySelectorAll<HTMLElement>('button[aria-label="Edit toolbar item"]')];
         editButtons.at(-1)?.click();
       });
-      await selectModalSelect("create");
+      // The button editor renders the Journal dropdown before the mode dropdown, so target the
+      // <select> that actually carries the "create" mode rather than the modal's first one.
+      await selectModalOption("create");
       await submitModal();
 
       await waitForSettings((s) => lastButtonMode(s.views) === "create", "edited button mode not persisted");
