@@ -1,0 +1,30 @@
+{
+  "version": 4,
+  "journals": {
+    "log": {
+      "name": "log",
+      "write": { "type": "month" },
+      "timeline": { "start": "", "end": { "kind": "never" } },
+      "dateFormat": "YYYY-MM",
+      "frontmatter": {
+        "dateField": "journal-date",
+        "startDateField": "journal-start-date",
+        "endDateField": "journal-end-date",
+        "addStartDate": false,
+        "addEndDate": false
+      },
+      "numbering": { "enabled": false, "anchorDate": "", "allowBefore": false, "sources": [] }
+    }
+  },
+  "commands": {
+    "e2e-open-prev-log": {
+      "name": "Open previous log",
+      "icon": "",
+      "showInRibbon": false,
+      "openMode": "active",
+      "target": { "kind": "journal", "journalName": "log" },
+      "type": "previous_available",
+      "context": "today"
+    }
+  }
+}
