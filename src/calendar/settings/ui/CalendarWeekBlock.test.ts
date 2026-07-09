@@ -9,6 +9,7 @@ import { ModalService } from "@/infrastructure/host/modals";
 import { AsyncResult } from "@/infrastructure/result";
 import { createSettingsService } from "@/settings/testing";
 
+import { calendarDisplaySlice } from "../display-slice";
 import { calendarSlice } from "../slice";
 
 import CalendarWeekBlock from "./CalendarWeekBlock.vue";
@@ -18,7 +19,7 @@ import type { CalendarSliceState } from "../slice";
 
 function setupContainer(initial?: CalendarSliceState) {
   const raw = initial ? { version: 4, calendar: initial } : undefined;
-  const settings = createSettingsService({ slices: [calendarSlice], raw });
+  const settings = createSettingsService({ slices: [calendarSlice, calendarDisplaySlice], raw });
   const container = settings.container;
 
   const modalService = {

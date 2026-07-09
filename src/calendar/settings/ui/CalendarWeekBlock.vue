@@ -9,10 +9,12 @@ import { useModalService } from "@/infrastructure/host/modals";
 import { SettingsService } from "@/settings";
 import UiButton from "@/ui/UiButton.vue";
 import UiCollapsibleBlock from "@/ui/UiCollapsibleBlock.vue";
+import UiDropdown from "@/ui/UiDropdown.vue";
 import UiIcon from "@/ui/UiIcon.vue";
 import UiSettingRow from "@/ui/UiSettingRow.vue";
 import UiToggle from "@/ui/UiToggle.vue";
 
+import { calendarDisplaySlice, type WeekPlacement } from "../display-slice";
 import { calendarSlice } from "../slice";
 
 import { weekPresetPickerModal } from "./modals";
@@ -23,7 +25,12 @@ const settings = useService(SettingsService);
 const calendar = useService(Calendar);
 const modals = useModalService();
 const slice = settings.getSlice(calendarSlice);
+const displaySlice = settings.getSlice(calendarDisplaySlice);
 const expanded = ref(false);
+
+function setWeekPlacement(weekPlacement: WeekPlacement): void {
+  displaySlice.state = { ...displaySlice.state, weekPlacement };
+}
 
 const activePreset = computed<ActivePreset>(() => {
   if (slice.state.mode === "locale") return "locale";
@@ -80,6 +87,17 @@ function change(): void {
         <div class="journal-hint">{{ m.calendar_apply_globally_restart_hint() }}</div>
       </template>
       <UiToggle v-model="globalRef" />
+    </UiSettingRow>
+    <UiSettingRow :name="m.calendar_week_placement_label()">
+      <template #description>{{ m.calendar_week_placement_description() }}</template>
+      <UiDropdown
+        :model-value="displaySlice.state.weekPlacement"
+        @update:model-value="(v) => setWeekPlacement(v as WeekPlacement)"
+      >
+        <option value="none">{{ m.view_block_config_weeks_none() }}</option>
+        <option value="left">{{ m.view_block_config_weeks_left() }}</option>
+        <option value="right">{{ m.view_block_config_weeks_right() }}</option>
+      </UiDropdown>
     </UiSettingRow>
   </UiCollapsibleBlock>
 </template>

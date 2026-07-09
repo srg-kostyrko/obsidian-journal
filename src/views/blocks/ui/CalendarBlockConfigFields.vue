@@ -56,6 +56,7 @@ function setShownWeekdays(shown: number[]): void {
       :model-value="config.weeks"
       @update:model-value="(v) => onChange({ weeks: v as CalendarBlockFields['weeks'] })"
     >
+      <option value="default">{{ m.view_block_config_weeks_default() }}</option>
       <option value="none">{{ m.view_block_config_weeks_none() }}</option>
       <option value="left">{{ m.view_block_config_weeks_left() }}</option>
       <option value="right">{{ m.view_block_config_weeks_right() }}</option>
