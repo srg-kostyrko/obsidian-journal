@@ -53,7 +53,7 @@ describe("timelineBlockSchema", () => {
     expectTypeOf<TimelineBlockConfig>().toEqualTypeOf<{
       mode?: TimelineMode | undefined;
       shelf?: string | undefined;
-      weeks?: "none" | "left" | "right" | undefined;
+      weeks?: "default" | "none" | "left" | "right" | undefined;
       hiddenWeekdays?: number[] | undefined;
     }>();
   });

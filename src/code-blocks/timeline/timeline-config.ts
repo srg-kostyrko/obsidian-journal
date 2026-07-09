@@ -7,7 +7,7 @@ const timelineModeSchema = v.picklist(timelineModes);
 export const timelineBlockSchema = v.object({
   mode: v.optional(timelineModeSchema),
   shelf: v.optional(v.string()),
-  weeks: v.optional(v.picklist(["none", "left", "right"] as const)),
+  weeks: v.optional(v.picklist(["default", "none", "left", "right"] as const)),
   hiddenWeekdays: v.optional(v.array(v.pipe(v.number(), v.integer(), v.minValue(0), v.maxValue(6)))),
 });
 

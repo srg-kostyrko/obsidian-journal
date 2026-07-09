@@ -28,7 +28,7 @@ export const weekCalendarBlock = defineViewBlock<WeekCalendarConfig>({
     before: 0,
     after: 0,
     hiddenWeekdays: [],
-    weeks: "left" as const,
+    weeks: "default" as const,
     showHeading: true,
     followActiveDate: true,
   },

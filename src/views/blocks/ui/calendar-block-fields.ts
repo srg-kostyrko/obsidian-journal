@@ -2,7 +2,7 @@ export interface CalendarBlockFields {
   before: number;
   after: number;
   hiddenWeekdays: number[];
-  weeks: "none" | "left" | "right";
+  weeks: "default" | "none" | "left" | "right";
   followActiveDate?: boolean;
 }
 

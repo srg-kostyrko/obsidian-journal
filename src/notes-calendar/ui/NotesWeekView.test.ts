@@ -16,7 +16,7 @@ function mount(
   props: {
     shelf: string | null;
     week: WeekPeriod;
-    weeks?: "none" | "left" | "right";
+    weeks?: "default" | "none" | "left" | "right";
     hiddenWeekdays?: readonly number[];
     showHeader?: boolean;
   },

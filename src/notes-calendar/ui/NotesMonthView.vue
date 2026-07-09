@@ -14,7 +14,7 @@ const props = withDefaults(
     shelf: string | null;
     month: MonthPeriod;
     outsideDates?: "active" | "inactive" | "blank";
-    weeks?: "none" | "left" | "right";
+    weeks?: "default" | "none" | "left" | "right";
     hiddenWeekdays?: readonly number[];
     showHeader?: boolean;
   }>(),

@@ -4,13 +4,13 @@ import { describe, expect, it } from "vitest";
 import { weekCalendarBlock } from "./week-calendar-block";
 
 describe("weekCalendarBlock", () => {
-  it("defaults the week-number column to left", () => {
-    expect(weekCalendarBlock.defaultConfig.weeks).toBe("left");
+  it("defaults the week-number column to 'default'", () => {
+    expect(weekCalendarBlock.defaultConfig.weeks).toBe("default");
   });
 
-  it("parses a stored config missing weeks as left", () => {
+  it("parses a stored config missing weeks as 'default'", () => {
     const parsed = v.parse(weekCalendarBlock.schema, { before: 0, after: 0 });
-    expect(parsed.weeks).toBe("left");
+    expect(parsed.weeks).toBe("default");
   });
 
   it("rejects an unknown weeks value", () => {
