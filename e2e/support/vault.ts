@@ -69,6 +69,15 @@ export async function contentOf(path: string): Promise<string | undefined> {
   }, path);
 }
 
+// Resolves against the vault's live file map (updated synchronously by create/rename/trash), not
+// metadataCache — so a test can wait for a note to appear or, after a delete, to be gone.
+export function noteExists(path: string): Promise<boolean> {
+  return browser.executeObsidian(
+    ({ app, obsidian }, notePath) => app.vault.getAbstractFileByPath(notePath) instanceof obsidian.TFile,
+    path,
+  );
+}
+
 export function activeNotePath(): Promise<string | undefined> {
   return browser.executeObsidian(({ app }) => app.workspace.getActiveFile()?.path);
 }

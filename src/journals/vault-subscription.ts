@@ -9,6 +9,7 @@ import { SettingsEventsToken } from "@/settings";
 
 import { FrontmatterService } from "./frontmatter";
 import { JournalsIndex } from "./journals-index";
+import { JournalsEventsToken } from "./tokens";
 
 export class VaultSubscriptionService {
   readonly #notes = inject(NotesService);
@@ -17,6 +18,7 @@ export class VaultSubscriptionService {
   readonly #workspace = inject(WorkspaceService);
   readonly #frontmatter = inject(FrontmatterService);
   readonly #index = inject(JournalsIndex);
+  readonly #journalEvents = inject(JournalsEventsToken);
   readonly #settingsEvents = inject(SettingsEventsToken);
   readonly #logger = inject(LoggerFactoryToken).named("vault-subscription");
   readonly #unsubscribes: (() => void)[] = [];
@@ -76,6 +78,9 @@ export class VaultSubscriptionService {
       this.#notes.events.on("metadata-changed", (path) => this.#scan(path)),
       this.#notes.events.on("renamed", ({ from, to }) => this.#index.transferPath(from, to)),
       this.#notes.events.on("deleted", (path) => this.#index.unregister(path)),
+      // A deleted journal's notes may survive with their frontmatter intact (the "keep" delete
+      // mode), so no vault event clears their index entries — drop them by journal name here.
+      this.#journalEvents.on("deleted", (journalName) => this.#index.clearJournal(journalName)),
       // An external settings sync changes journal configs without any vault event, so
       // re-scan every note to reindex against the freshly loaded journals.
       this.#settingsEvents.on("reloaded", () => this.#rebuild()),

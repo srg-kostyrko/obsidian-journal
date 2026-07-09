@@ -14,8 +14,9 @@ import { CycleService } from "./cycle";
 import { FrontmatterService } from "./frontmatter";
 import { JournalsIndex } from "./journals-index";
 import { NumberingService } from "./numbering";
-import { JournalsRepository } from "./repository";
+import { JournalsRepository, type JournalsEvents } from "./repository";
 import { fakeRepo, fixedJournal } from "./testing";
+import { JournalsEventsToken } from "./tokens";
 import { VaultSubscriptionService } from "./vault-subscription";
 
 function fakeTFile(path: string): TFile {
@@ -29,6 +30,7 @@ function fakeTFile(path: string): TFile {
 interface TestRig {
   container: Container;
   emit: <K extends keyof NotesEvents>(event: K, ...arguments_: Parameters<NotesEvents[K]>) => void;
+  emitJournalDeleted: (journalName: string) => void;
   emitSettingsReloaded: () => void;
   setFrontmatter(path: string, fm: Record<string, unknown> | null): void;
   setMarkdownNotes(paths: VaultPath[]): void;
@@ -85,9 +87,11 @@ function buildRig(journals: Parameters<typeof fakeRepo>[0], initialPaths: VaultP
   };
 
   const settingsEvents = createNanoEvents<SettingsEvents>();
+  const journalEvents = createNanoEvents<JournalsEvents>();
 
   const c = new Container();
   c.register(JournalsRepository).useValue(fakeRepo(journals));
+  c.register(JournalsEventsToken).useValue(journalEvents);
   c.register(JournalsIndex).useClass(JournalsIndex);
   c.register(CycleService).useClass(CycleService);
   c.register(NumberingService).useClass(NumberingService);
@@ -103,6 +107,7 @@ function buildRig(journals: Parameters<typeof fakeRepo>[0], initialPaths: VaultP
   return {
     container: c,
     emit: (event, ...arguments_) => emitter.emit(event, ...arguments_),
+    emitJournalDeleted: (journalName) => journalEvents.emit("deleted", journalName),
     emitSettingsReloaded: () => settingsEvents.emit("reloaded"),
     setFrontmatter: (path, fm) => {
       if (fm === null) {
@@ -206,6 +211,21 @@ describe("VaultSubscriptionService", () => {
     const index = rig.container.resolve(JournalsIndex);
 
     rig.emit("deleted", "D/A.md" as VaultPath);
+
+    expect(index.entryByPath("D/A.md" as VaultPath).isNone()).toBe(true);
+  });
+
+  it("clears the index for a deleted journal whose notes keep their frontmatter", async () => {
+    const rig = buildRig({ daily: fixedJournal("daily", { type: "day" }) }, ["D/A.md" as VaultPath]);
+    rig.setFrontmatter("D/A.md", { journal: "daily", "journal-date": "2024-01-01" });
+    const sub = rig.container.resolve(VaultSubscriptionService);
+    await sub.initialize();
+    const index = rig.container.resolve(JournalsIndex);
+    expect(index.entryByPath("D/A.md" as VaultPath).isSome()).toBe(true);
+
+    // The "keep" delete mode leaves the note (and its frontmatter) in place, so no vault event
+    // fires — only the journal's own "deleted" event can drop its stale index entry.
+    rig.emitJournalDeleted("daily");
 
     expect(index.entryByPath("D/A.md" as VaultPath).isNone()).toBe(true);
   });
