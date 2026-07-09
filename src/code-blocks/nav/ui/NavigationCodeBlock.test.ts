@@ -19,6 +19,7 @@ import {
 } from "@/infrastructure/host";
 import { FakeNoteMetadataService } from "@/infrastructure/host/testing";
 import { LoggerFactory, LoggerFactoryToken } from "@/infrastructure/logger";
+import { RepositoryQuery } from "@/infrastructure/repository";
 import { AsyncResult, Option } from "@/infrastructure/result";
 import {
   CycleService,
@@ -95,7 +96,8 @@ class FakeFlows {
 class FakeShelves {
   shelves: { name: string; journals: string[] }[] = [];
   find() {
-    return { list: () => this.shelves[Symbol.iterator]() };
+    const entries = this.shelves.map((shelf) => [shelf.name, shelf] as [string, (typeof this.shelves)[number]]);
+    return new RepositoryQuery(entries[Symbol.iterator]());
   }
 }
 

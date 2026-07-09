@@ -78,9 +78,13 @@ const blockJournalNames = computed<readonly string[]>(() => (journal.value ? [jo
 const rowJournalNames = computed<readonly string[]>(() => {
   const currentJournal = journal.value;
   if (!currentJournal) return [];
-  const owning = [...shelves.find().list()].find((shelf) => shelf.journals.includes(currentJournal.name));
-  const inScope = owning
-    ? [...journals.find().list()].filter((other) => owning.journals.includes(other.name))
+  const owningJournalNames = shelves
+    .find()
+    .filter((shelf) => shelf.journals.includes(currentJournal.name))
+    .first()
+    .match<readonly string[] | null>({ some: (shelf) => shelf.journals, none: () => null });
+  const inScope = owningJournalNames
+    ? [...journals.find().list()].filter((other) => owningJournalNames.includes(other.name))
     : [...journals.find().list()];
   return inScope.filter((other) => other.write.type === currentJournal.write.type).map((other) => other.name);
 });

@@ -42,7 +42,13 @@ describe("EditViewNameFlow", () => {
     modals.lastOpen<unknown, string>().submit("Weekly");
     const result = await promise;
     expect(result.kind).toBe("ok");
-    expect([...repo.find().list()].some((v) => v.name === "Weekly")).toBe(true);
+    expect(
+      repo
+        .find()
+        .filter((v) => v.name === "Weekly")
+        .first()
+        .isSome(),
+    ).toBe(true);
   });
 
   it("renames an existing view", async () => {

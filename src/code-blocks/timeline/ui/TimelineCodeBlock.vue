@@ -56,8 +56,11 @@ const mode = computed(() => config.mode ?? derivedMode.value);
 const derivedShelf = computed(() => {
   const hostJournal = journal.value;
   if (!hostJournal) return null;
-  const owning = [...shelves.find().list()].find((shelf) => shelf.journals.includes(hostJournal.name));
-  return owning?.name ?? null;
+  return shelves
+    .find()
+    .filter((shelf) => shelf.journals.includes(hostJournal.name))
+    .first()
+    .match<string | null>({ some: (shelf) => shelf.name, none: () => null });
 });
 
 const shelf = computed(() => config.shelf ?? derivedShelf.value);
