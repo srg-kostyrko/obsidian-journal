@@ -13,13 +13,16 @@ const props = withDefaults(
   defineProps<{
     shelf: string | null;
     month: MonthPeriod;
-    hideOutsideDates?: boolean;
+    outsideDates?: "active" | "inactive" | "blank";
     weeks?: "none" | "left" | "right";
     hiddenWeekdays?: readonly number[];
     showHeader?: boolean;
   }>(),
-  { hideOutsideDates: undefined, weeks: undefined, hiddenWeekdays: undefined, showHeader: true },
+  { outsideDates: "active", weeks: undefined, hiddenWeekdays: undefined, showHeader: true },
 );
+
+const blankOutside = computed(() => props.outsideDates === "blank");
+const inactiveOutside = computed(() => props.outsideDates === "inactive");
 
 const hiddenWeekdays = computed(() => new Set(props.hiddenWeekdays));
 const dayColumns = computed(() => 7 - [0, 1, 2, 3, 4, 5, 6].filter((i) => hiddenWeekdays.value.has(i)).length);
@@ -68,7 +71,10 @@ const visiblePeriods = computed<readonly Period[]>(() => {
   if (showQuarter.value) periods.push(quarterPeriod.value);
   for (const row of rows.value) {
     if (showWeekNumber.value) periods.push(row.weekPeriod);
-    for (const d of row.days) periods.push(d.period);
+    for (const d of row.days) {
+      if (blankOutside.value && d.isOutside) continue;
+      periods.push(d.period);
+    }
   }
   return periods;
 });
@@ -133,14 +139,20 @@ const inactiveDay = inactiveCell();
           :period="row.weekPeriod"
           :cell="weekCell"
         />
-        <NotesCalendarCell
-          v-for="day in row.days"
-          :key="day.period.anchor.toAnchor()"
-          class="notes-month-view__day"
-          :data-outside="day.isOutside || null"
-          :period="day.period"
-          :cell="hideOutsideDates && day.isOutside ? inactiveDay : dayCell"
-        />
+        <template v-for="day in row.days" :key="day.period.anchor.toAnchor()">
+          <span
+            v-if="blankOutside && day.isOutside"
+            class="notes-month-view__day notes-month-view__day--blank"
+            aria-hidden="true"
+          ></span>
+          <NotesCalendarCell
+            v-else
+            class="notes-month-view__day"
+            :data-outside="day.isOutside || null"
+            :period="day.period"
+            :cell="inactiveOutside && day.isOutside ? inactiveDay : dayCell"
+          />
+        </template>
         <NotesCalendarCell
           v-if="showWeekNumber && weeksPos === 'right'"
           data-testid="week-number-cell"

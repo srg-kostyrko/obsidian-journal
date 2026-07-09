@@ -27,7 +27,7 @@ const months = computed<readonly MonthPeriod[]>(() => {
         :month
         :weeks="weeks"
         :hidden-weekdays="hiddenWeekdays"
-        hide-outside-dates
+        outside-dates="inactive"
       />
     </div>
   </div>

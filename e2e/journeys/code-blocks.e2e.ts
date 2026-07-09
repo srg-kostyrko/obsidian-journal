@@ -224,6 +224,14 @@ describe("code blocks", () => {
         await expect(grid.$$(".notes-month-view__weekday")).toBeElementsArrayOfSize(5);
       });
 
+      it("renders no adjacent-month day cells in the timeline month grid", async () => {
+        await renderBlock("blocks/timeline.md", plainNote(TIMELINE_FENCE), `${TIMELINE_BLOCK} .notes-month-view`);
+        // Outside days are blanked in the month timeline block, so no rendered day cell carries the
+        // data-outside marker; the blanked slots keep the week grid aligned without a day number.
+        const grid = $(`${TIMELINE_BLOCK} .notes-month-view`);
+        await expect(grid.$$(".notes-month-view__day[data-outside]")).toBeElementsArrayOfSize(0);
+      });
+
       it("renders the error fallback for a timeline fence with an invalid mode", async () => {
         await seedNote("blocks/bad-timeline.md", plainNote(TIMELINE_BAD_FENCE));
         await openInReadingMode("blocks/bad-timeline.md");

@@ -16,7 +16,11 @@ import type { BlockInstanceId } from "../../config";
 
 vi.mock("@/notes-calendar/ui/NotesMonthView.vue", () => ({
   default: defineComponent({
-    props: { month: { type: Object, required: true }, shelf: { type: [String, null], default: null } },
+    props: {
+      month: { type: Object, required: true },
+      shelf: { type: [String, null], default: null },
+      outsideDates: { type: String, default: "active" },
+    },
     setup: (p) => {
       interface MonthLike {
         start: { toAnchor(): string };
@@ -26,6 +30,7 @@ vi.mock("@/notes-calendar/ui/NotesMonthView.vue", () => ({
           "data-testid": "month-stub",
           "data-month": (p.month as unknown as MonthLike).start.toAnchor(),
           "data-shelf": p.shelf ?? "",
+          "data-outside-dates": p.outsideDates,
         });
     },
   }),
@@ -94,6 +99,16 @@ describe("MonthCalendarBlock", () => {
       { refDate: ref("2026-05-15" as AnchorString) },
     );
     expect(getAllByTestId("month-stub").length).toBe(3);
+  });
+
+  it("dims outside-month days when a single month is shown", () => {
+    const { getAllByTestId } = mountBlock(baseConfig, { refDate: ref("2026-05-15" as AnchorString) });
+    expect(getAllByTestId("month-stub").every((s) => s.dataset.outsideDates === "active")).toBe(true);
+  });
+
+  it("blanks outside-month days when more than one month is shown", () => {
+    const { getAllByTestId } = mountBlock({ ...baseConfig, before: 1 }, { refDate: ref("2026-05-15" as AnchorString) });
+    expect(getAllByTestId("month-stub").every((s) => s.dataset.outsideDates === "blank")).toBe(true);
   });
 
   it("anchors the first NotesMonthView at refDate shifted back by before months", () => {

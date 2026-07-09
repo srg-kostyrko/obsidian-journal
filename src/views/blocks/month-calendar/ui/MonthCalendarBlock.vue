@@ -1,4 +1,6 @@
 <script setup lang="ts">
+import { computed } from "vue";
+
 import { usePeriodWindow } from "@/calendar/ui";
 import NotesMonthView from "@/notes-calendar/ui/NotesMonthView.vue";
 import { useFollowActiveDate } from "@/notes-calendar/use-follow-active-date";
@@ -31,6 +33,10 @@ const months = usePeriodWindow(
   () => props.config.before,
   () => props.config.after,
 );
+
+// A lone month dims its adjacent-month days; a window of several months blanks them so the
+// adjacent months' own cells aren't shadowed by dates duplicated across the stack.
+const outsideDates = computed<"active" | "blank">(() => (months.value.length > 1 ? "blank" : "active"));
 </script>
 
 <template>
@@ -43,6 +49,7 @@ const months = usePeriodWindow(
       :weeks="config.weeks"
       :hidden-weekdays="config.hiddenWeekdays"
       :show-header="config.showHeading"
+      :outside-dates="outsideDates"
     />
   </div>
 </template>

@@ -19,7 +19,7 @@ function mount(
   props: {
     shelf: string | null;
     month: MonthPeriod;
-    hideOutsideDates?: boolean;
+    outsideDates?: "active" | "inactive" | "blank";
     weeks?: "none" | "left" | "right";
     hiddenWeekdays?: readonly number[];
     showHeader?: boolean;
@@ -65,10 +65,10 @@ describe("NotesMonthView", () => {
     });
   });
 
-  describe("hideOutsideDates", () => {
-    it("marks cells outside the outer month inactive when set", () => {
+  describe("outsideDates", () => {
+    it("marks cells outside the outer month inactive when inactive", () => {
       const h = buildNotesCalendarHarness({ journals: { daily: fixedJournal("daily", { type: "day" }) } });
-      const { container } = mount(h, { shelf: null, month, hideOutsideDates: true });
+      const { container } = mount(h, { shelf: null, month, outsideDates: "inactive" });
       const outside = container.querySelectorAll<HTMLElement>(".notes-month-view__day[data-outside]");
       expect(outside.length).toBeGreaterThan(0);
       for (const element of outside) {
@@ -76,7 +76,7 @@ describe("NotesMonthView", () => {
       }
     });
 
-    it("does not mark outside cells inactive when not set", () => {
+    it("keeps outside cells actionable by default", () => {
       const h = buildNotesCalendarHarness({ journals: { daily: fixedJournal("daily", { type: "day" }) } });
       const { container } = mount(h, { shelf: null, month });
       const outside = container.querySelectorAll<HTMLElement>(".notes-month-view__day[data-outside]");
@@ -84,6 +84,28 @@ describe("NotesMonthView", () => {
       for (const element of outside) {
         expect(element.dataset.inactive).toBeUndefined();
       }
+    });
+
+    it("renders outside days as empty cells when blank", () => {
+      const h = buildNotesCalendarHarness({ journals: { daily: fixedJournal("daily", { type: "day" }) } });
+      const { container } = mount(h, { shelf: null, month, outsideDates: "blank" });
+      const blanks = container.querySelectorAll<HTMLElement>(".notes-month-view__day--blank");
+      expect(blanks.length).toBeGreaterThan(0);
+      for (const element of blanks) {
+        expect(element.textContent?.trim()).toBe("");
+      }
+    });
+
+    it("renders no day number outside the outer month when blank", () => {
+      const h = buildNotesCalendarHarness({ journals: { daily: fixedJournal("daily", { type: "day" }) } });
+      const { container } = mount(h, { shelf: null, month, outsideDates: "blank" });
+      expect(container.querySelector(".notes-month-view__day[data-outside]")).toBeNull();
+    });
+
+    it("preserves the full week grid when blank", () => {
+      const h = buildNotesCalendarHarness({ journals: { daily: fixedJournal("daily", { type: "day" }) } });
+      const { container } = mount(h, { shelf: null, month, outsideDates: "blank" });
+      expect(container.querySelectorAll(".notes-month-view__day").length).toBe(42);
     });
   });
 
