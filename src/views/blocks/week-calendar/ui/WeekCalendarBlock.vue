@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import { useResolvedWeekPlacement } from "@/calendar";
 import { usePeriodWindow } from "@/calendar/ui";
 import NotesWeekView from "@/notes-calendar/ui/NotesWeekView.vue";
 import { useFollowActiveDate } from "@/notes-calendar/use-follow-active-date";
@@ -31,6 +32,8 @@ const weeks = usePeriodWindow(
   () => props.config.before,
   () => props.config.after,
 );
+
+const weekPlacement = useResolvedWeekPlacement(() => props.config.weeks);
 </script>
 
 <template>
@@ -40,7 +43,7 @@ const weeks = usePeriodWindow(
       :key="week.start.toAnchor()"
       :week="week"
       :shelf="viewContext.shelf.value"
-      :weeks="config.weeks"
+      :weeks="weekPlacement"
       :hidden-weekdays="config.hiddenWeekdays"
       :show-header="config.showHeading"
     />

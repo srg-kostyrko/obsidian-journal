@@ -2,6 +2,7 @@ import { cleanup, render } from "@testing-library/vue";
 import { afterEach, beforeAll, describe, expect, it, vi } from "vitest";
 import { computed, defineComponent, h, nextTick, ref } from "vue";
 
+import type * as CalendarModule from "@/calendar";
 import { installTestCalendar } from "@/calendar/testing";
 import type { AnchorString } from "@/calendar/types";
 import { Container, provideInjectorOnApp } from "@/infrastructure/di";
@@ -13,6 +14,11 @@ import { provideViewContext, type ViewContext } from "../../view-context";
 import { weekCalendarBlock, type WeekCalendarConfig } from "./week-calendar-block";
 
 import type { BlockInstanceId } from "../../config";
+
+vi.mock("@/calendar", async (importOriginal) => {
+  const actual = await importOriginal<typeof CalendarModule>();
+  return { ...actual, useResolvedWeekPlacement: () => ref("left" as const) };
+});
 
 vi.mock("@/notes-calendar/ui/NotesWeekView.vue", () => ({
   default: defineComponent({

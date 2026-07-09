@@ -2,7 +2,7 @@
 import { match } from "ts-pattern";
 import { computed } from "vue";
 
-import { Clock, type AnchorString } from "@/calendar";
+import { Clock, useResolvedWeekPlacement, type AnchorString } from "@/calendar";
 import { useService } from "@/infrastructure/di";
 import type { CodeBlockProps } from "@/infrastructure/host";
 import { JournalsIndex, JournalsRepository } from "@/journals";
@@ -61,6 +61,8 @@ const derivedShelf = computed(() => {
 });
 
 const shelf = computed(() => config.shelf ?? derivedShelf.value);
+
+const weekPlacement = useResolvedWeekPlacement(() => config.weeks);
 </script>
 
 <template>
@@ -68,28 +70,28 @@ const shelf = computed(() => config.shelf ?? derivedShelf.value);
     v-if="mode === 'week'"
     :ref-date="refDate"
     :shelf="shelf"
-    :weeks="config.weeks"
+    :weeks="weekPlacement"
     :hidden-weekdays="config.hiddenWeekdays"
   />
   <TimelineMonth
     v-else-if="mode === 'month'"
     :ref-date="refDate"
     :shelf="shelf"
-    :weeks="config.weeks"
+    :weeks="weekPlacement"
     :hidden-weekdays="config.hiddenWeekdays"
   />
   <TimelineQuarter
     v-else-if="mode === 'quarter'"
     :ref-date="refDate"
     :shelf="shelf"
-    :weeks="config.weeks"
+    :weeks="weekPlacement"
     :hidden-weekdays="config.hiddenWeekdays"
   />
   <TimelineCalendar
     v-else
     :ref-date="refDate"
     :shelf="shelf"
-    :weeks="config.weeks"
+    :weeks="weekPlacement"
     :hidden-weekdays="config.hiddenWeekdays"
   />
 </template>

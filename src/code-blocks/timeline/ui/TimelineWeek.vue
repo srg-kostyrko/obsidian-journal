@@ -7,7 +7,7 @@ import { NotesWeekView } from "@/notes-calendar";
 const props = defineProps<{
   refDate: AnchorString;
   shelf: string | null;
-  weeks?: "default" | "none" | "left" | "right";
+  weeks?: "none" | "left" | "right";
   hiddenWeekdays?: readonly number[];
 }>();
 

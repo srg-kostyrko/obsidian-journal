@@ -1,7 +1,9 @@
 import { cleanup, render } from "@testing-library/vue";
 import { afterEach, beforeAll, beforeEach, describe, expect, it, vi } from "vitest";
+import { computed } from "vue";
 
-import { CalendarDate, type AnchorString } from "@/calendar";
+import type * as CalendarModule from "@/calendar";
+import { CalendarDate, type AnchorString, type WeekPlacement, type WeekPlacementConfig } from "@/calendar";
 import { anchor, installTestCalendar } from "@/calendar/testing";
 import { initLocale } from "@/i18n";
 import { provideInjectorOnApp } from "@/infrastructure/di";
@@ -13,6 +15,18 @@ import { buildNotesCalendarHarness, type NotesCalendarHarness } from "@/notes-ca
 import TimelineCodeBlock from "./TimelineCodeBlock.vue";
 
 import type { TimelineBlockConfig } from "../timeline-config";
+
+vi.mock("@/calendar", async (importOriginal) => {
+  const actual = await importOriginal<typeof CalendarModule>();
+  return {
+    ...actual,
+    useResolvedWeekPlacement: (getConfigWeeks: () => WeekPlacementConfig | undefined) =>
+      computed<WeekPlacement>(() => {
+        const v = getConfigWeeks();
+        return v === "none" || v === "left" || v === "right" ? v : "left";
+      }),
+  };
+});
 
 const HOST_PATH = "host-note.md" as VaultPath;
 const HOST_ANCHOR = anchor("2026-05-27");

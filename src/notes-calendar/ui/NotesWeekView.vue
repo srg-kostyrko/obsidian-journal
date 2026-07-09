@@ -13,7 +13,7 @@ const props = withDefaults(
   defineProps<{
     shelf: string | null;
     week: WeekPeriod;
-    weeks?: "default" | "none" | "left" | "right";
+    weeks?: "none" | "left" | "right";
     hiddenWeekdays?: readonly number[];
     showHeader?: boolean;
   }>(),
