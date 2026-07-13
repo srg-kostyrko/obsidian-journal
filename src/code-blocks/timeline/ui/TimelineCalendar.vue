@@ -43,7 +43,7 @@ const months = computed<readonly MonthPeriod[]>(() => {
   --line-thickness: 1px;
   --line-color: var(--text-faint);
   display: grid;
-  gap: 0 var(--gap);
+  gap: var(--gap);
   grid-template-columns: repeat(1, 1fr);
 }
 @container (min-width: 420px) {
