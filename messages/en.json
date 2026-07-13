@@ -3,7 +3,7 @@
 
   "calendar_apply_globally_desc": "If disabled, week-configuration settings apply only to dates inside journals and do not affect dates created by other plugins or Obsidian itself.",
   "calendar_apply_globally_restart_hint": "You might need to restart Obsidian for changes to take effect.",
-  "calendar_apply_globally_title": "Apply week configuration to all dates in vault?",
+  "calendar_apply_globally_title": "Apply week configuration to all dates in vault",
   "calendar_appearance_active_background": "Active — background",
   "calendar_appearance_active_text": "Active — text",
   "calendar_appearance_section_title": "Calendar highlighting",
@@ -12,7 +12,7 @@
   "common_label_back": "Back to list",
   "common_label_calendar": "Calendar",
   "common_pick_a_date": "Pick a date",
-  "calendar_picker_first_week_desc": "Which day in January the first week of the year must contain (1..7).",
+  "calendar_picker_first_week_desc": "The day of January (1–7) that the first week of the year must contain. For example, 4 means the first week is the one containing Jan 4.",
   "calendar_picker_first_week_label": "First week of year",
   "calendar_picker_in_use_marker": "Currently used",
   "calendar_picker_start_week_on": "Start week on",
@@ -113,8 +113,8 @@
       }
     }
   ],
-  "nav_block_row_template_required": "Template is required",
-  "nav_block_row_journal_required": "Please select a journal",
+  "nav_block_row_template_required": "Template is required.",
+  "nav_block_row_journal_required": "Select a journal.",
   "nav_block_row_resolved_preview": "Resolved: {text}",
 
   "command_add": "Add command",
@@ -161,8 +161,8 @@
   "common_show_in_ribbon": "Show in ribbon",
   "command_modal_type_label": "When the command runs",
   "command_modal_write_type_label": "Note type",
-  "command_name_required_error": "Command name is required",
-  "command_name_unique_error": "Command name must be unique",
+  "command_name_required_error": "Command name is required.",
+  "command_name_unique_error": "Command name must be unique.",
   "command_open_mode_option": [
     {
       "declarations": ["input mode"],
@@ -197,24 +197,24 @@
         "type=next,writeType=quarter": "Open next quarterly note",
         "type=next,writeType=year": "Open next yearly note",
         "type=next,writeType=custom": "Open next custom note",
-        "type=previous,writeType=day": "Open last daily note",
-        "type=previous,writeType=week": "Open last weekly note",
-        "type=previous,writeType=month": "Open last monthly note",
-        "type=previous,writeType=quarter": "Open last quarterly note",
-        "type=previous,writeType=year": "Open last yearly note",
-        "type=previous,writeType=custom": "Open last custom note",
-        "type=previous_available,writeType=day": "Open last available daily note",
-        "type=previous_available,writeType=week": "Open last available weekly note",
-        "type=previous_available,writeType=month": "Open last available monthly note",
-        "type=previous_available,writeType=quarter": "Open last available quarterly note",
-        "type=previous_available,writeType=year": "Open last available yearly note",
-        "type=previous_available,writeType=custom": "Open last available custom note",
-        "type=next_available,writeType=day": "Open next available daily note",
-        "type=next_available,writeType=week": "Open next available weekly note",
-        "type=next_available,writeType=month": "Open next available monthly note",
-        "type=next_available,writeType=quarter": "Open next available quarterly note",
-        "type=next_available,writeType=year": "Open next available yearly note",
-        "type=next_available,writeType=custom": "Open next available custom note",
+        "type=previous,writeType=day": "Open previous daily note",
+        "type=previous,writeType=week": "Open previous weekly note",
+        "type=previous,writeType=month": "Open previous monthly note",
+        "type=previous,writeType=quarter": "Open previous quarterly note",
+        "type=previous,writeType=year": "Open previous yearly note",
+        "type=previous,writeType=custom": "Open previous custom note",
+        "type=previous_available,writeType=day": "Open previous existing daily note",
+        "type=previous_available,writeType=week": "Open previous existing weekly note",
+        "type=previous_available,writeType=month": "Open previous existing monthly note",
+        "type=previous_available,writeType=quarter": "Open previous existing quarterly note",
+        "type=previous_available,writeType=year": "Open previous existing yearly note",
+        "type=previous_available,writeType=custom": "Open previous existing custom note",
+        "type=next_available,writeType=day": "Open next existing daily note",
+        "type=next_available,writeType=week": "Open next existing weekly note",
+        "type=next_available,writeType=month": "Open next existing monthly note",
+        "type=next_available,writeType=quarter": "Open next existing quarterly note",
+        "type=next_available,writeType=year": "Open next existing yearly note",
+        "type=next_available,writeType=custom": "Open next existing custom note",
         "type=same_next_week,writeType=*": "Open same day next week",
         "type=same_previous_week,writeType=*": "Open same day last week",
         "type=same_next_month,writeType=*": "Open same day next month",
@@ -289,8 +289,26 @@
   "bulk_add_next": "Continue",
   "bulk_add_run": "Run",
   "bulk_add_progress": "Processing {done} of {total}…",
-  "bulk_add_skipped_count": "{count} note(s) skipped",
-  "bulk_add_planned_count": "{count} note(s) to process",
+  "bulk_add_skipped_count": [
+    {
+      "declarations": ["input count"],
+      "selectors": ["count"],
+      "match": {
+        "count=1": "1 note skipped",
+        "count=*": "{count} notes skipped"
+      }
+    }
+  ],
+  "bulk_add_planned_count": [
+    {
+      "declarations": ["input count"],
+      "selectors": ["count"],
+      "match": {
+        "count=1": "1 note to process",
+        "count=*": "{count} notes to process"
+      }
+    }
+  ],
   "bulk_add_skip_reason_already_connected": "Already connected",
   "bulk_add_skip_reason_filtered": "Filtered out",
   "bulk_add_skip_reason_no_date": "No date found",
@@ -440,10 +458,10 @@
       "declarations": ["input placement"],
       "selectors": ["placement"],
       "match": {
-        "placement=top-left": "Top Left",
-        "placement=top-right": "Top Right",
-        "placement=bottom-left": "Bottom Left",
-        "placement=bottom-right": "Bottom Right"
+        "placement=top-left": "Top left",
+        "placement=top-right": "Top right",
+        "placement=bottom-left": "Bottom left",
+        "placement=bottom-right": "Bottom right"
       }
     }
   ],
@@ -477,8 +495,8 @@
   "decoration_modal_mode_suffix": "fulfilled",
   "decoration_modal_no_conditions": "No conditions defined yet",
   "decoration_modal_no_styles": "No styles defined yet",
-  "decoration_no_conditions_error": "At least one condition is required",
-  "decoration_no_styles_error": "At least one style is required",
+  "decoration_no_conditions_error": "At least one condition is required.",
+  "decoration_no_styles_error": "At least one style is required.",
   "decoration_placement_x_label": [
     {
       "declarations": ["input value"],
@@ -511,10 +529,10 @@
       "match": {
         "shape=square": "Square",
         "shape=circle": "Circle",
-        "shape=triangle-up": "Triangle Up",
-        "shape=triangle-down": "Triangle Down",
-        "shape=triangle-left": "Triangle Left",
-        "shape=triangle-right": "Triangle Right"
+        "shape=triangle-up": "Triangle (up)",
+        "shape=triangle-down": "Triangle (down)",
+        "shape=triangle-left": "Triangle (left)",
+        "shape=triangle-right": "Triangle (right)"
       }
     }
   ],
@@ -582,8 +600,8 @@
       "declarations": ["input kind"],
       "selectors": ["kind"],
       "match": {
-        "kind=icon": "Icon size is relative to font size where 1 means that an icon is same size as a letter",
-        "kind=shape": "Shape size is relative to font size where 1 means that a figure is same size as a letter"
+        "kind=icon": "Icon size is relative to the font size: 1 means the icon is the same size as a letter.",
+        "kind=shape": "Shape size is relative to the font size: 1 means the shape is the same size as a letter."
       }
     }
   ],
@@ -687,7 +705,7 @@
   "shelf_add": "Add shelf",
   "common_delete_name": "Delete {name}",
   "shelf_dashboard_empty": "No shelves created yet.",
-  "shelf_dashboard_open": "Organize {name}",
+  "shelf_dashboard_open": "Configure {name}",
   "shelf_dashboard_section_title": "Journal shelves",
   "shelf_delete_modal_destination_label": "Move journals to",
   "shelf_delete_modal_destination_none": "None",
@@ -697,11 +715,20 @@
   "common_label_journals": "Journals",
   "shelf_rename": "Rename shelf",
   "shelf_journals_block_title_filtered": "Journals not on a shelf",
-  "shelf_member_count": "{count} journals",
+  "shelf_member_count": [
+    {
+      "declarations": ["input count"],
+      "selectors": ["count"],
+      "match": {
+        "count=1": "1 journal",
+        "count=*": "{count} journals"
+      }
+    }
+  ],
   "shelf_modal_name_label": "Shelf name",
-  "shelf_name_required_error": "Shelf name is required",
-  "shelf_name_unchanged_error": "Enter a different name",
-  "shelf_name_unique_error": "Shelf name must be unique",
+  "shelf_name_required_error": "Shelf name is required.",
+  "shelf_name_unchanged_error": "Enter a different name.",
+  "shelf_name_unique_error": "Shelf name must be unique.",
   "common_label_shelf": "Shelf",
   "shelf_place_modal_title": "Place journal",
   "shelf_section_not_on_shelf": "Not on a shelf",
@@ -709,7 +736,7 @@
 
   "startup_dashboard_section_title": "Startup",
   "startup_open_note_title": "Open on startup",
-  "startup_open_note_desc": "Open a note whenever you open this vault?",
+  "startup_open_note_desc": "Open a note whenever you open this vault.",
   "startup_dont_open_option": "Don't open",
 
   "uri_missing_target": "Journal URI needs a \"journal\" or \"type\" parameter.",
@@ -729,8 +756,8 @@
   "view_add_modal_title": "Add view",
   "view_rename": "Rename view",
   "view_name_required_error": "Name is required.",
-  "view_name_unchanged_error": "Pick a different name.",
-  "view_delete_modal_title": "Delete view {name}?",
+  "view_name_unchanged_error": "Enter a different name.",
+  "view_delete_modal_title": "Delete view {name}",
   "view_delete_modal_description": "This action cannot be undone.",
   "view_add_block": "Add block",
   "view_add_block_empty": "No block types are registered.",
@@ -764,11 +791,11 @@
   "view_toolbar_item_empty": "No toolbar items yet.",
 
   "view_block_month_calendar_label": "Month calendar",
-  "view_block_month_calendar_description": "Stacks one or more month grids around the reference date.",
+  "view_block_month_calendar_description": "Shows one or more month grids around the selected date.",
   "view_block_week_calendar_label": "Week calendar",
-  "view_block_week_calendar_description": "Stacks one or more week strips around the reference date.",
+  "view_block_week_calendar_description": "Shows one or more week strips around the selected date.",
   "common_custom_intervals": "Custom intervals",
-  "view_block_custom_intervals_description": "Lists custom-journal entries that overlap a configurable window.",
+  "view_block_custom_intervals_description": "Lists custom-journal entries that fall within a configurable time window.",
   "view_block_markdown_template_label": "Markdown template",
   "view_block_markdown_template_description": "Render a template note as markdown, with journal variables processed.",
   "view_block_markdown_template_path_label": "Template file",
@@ -780,14 +807,32 @@
   "view_block_markdown_template_variable_current_date_description": "Today's date at the moment the block renders.",
   "view_block_markdown_template_variable_time_description": "The current wall-clock time when the block renders.",
   "view_block_markdown_template_variable_current_time_description": "The current wall-clock time when the block renders (alias of the time variable).",
-  "view_block_markdown_template_variable_journal_link_description": "Resolves to the vault path of another journal's note for the focused date. Wrap it in a link yourself, and add a shift like +1w to point at a neighbouring period.",
+  "view_block_markdown_template_variable_journal_link_description": "Resolves to the vault path of another journal's note for the focused date. Wrap it in a link yourself, and add a shift like +1w to point at a neighboring period.",
   "view_block_markdown_template_empty": "No template selected",
   "view_block_markdown_template_read_error": "Could not read the template file.",
   "view_block_summary_before": "{count} before",
   "view_block_summary_after": "{count} after",
-  "view_block_summary_hidden_days": "Hides {days}",
-  "view_block_summary_journal_count": "{count} journals",
-  "view_block_toolbar_item_count": "{count} items",
+  "view_block_summary_hidden_days": "Hidden: {days}",
+  "view_block_summary_journal_count": [
+    {
+      "declarations": ["input count"],
+      "selectors": ["count"],
+      "match": {
+        "count=1": "1 journal",
+        "count=*": "{count} journals"
+      }
+    }
+  ],
+  "view_block_toolbar_item_count": [
+    {
+      "declarations": ["input count"],
+      "selectors": ["count"],
+      "match": {
+        "count=1": "1 item",
+        "count=*": "{count} items"
+      }
+    }
+  ],
   "view_block_config_window_label": "Window",
   "view_block_config_window_current": [
     {
@@ -806,7 +851,7 @@
   "view_toolbar_shelf_selector_label": "Shelf selector",
   "view_toolbar_shelf_selector_description": "Switches which shelf scopes the view's journals.",
   "view_toolbar_spacer_label": "Spacer",
-  "view_toolbar_spacer_description": "Flexible gap that pushes neighbouring items apart.",
+  "view_toolbar_spacer_description": "Flexible gap that pushes neighboring items apart.",
   "view_toolbar_period_buttons_label": "Period buttons",
   "view_toolbar_period_buttons_description": "Shows clickable badges for the current week, month, quarter, year periods.",
   "view_toolbar_period_buttons_config": [
@@ -826,7 +871,7 @@
 
   "view_toolbar_defined_navigation_label": "Defined-note navigation",
   "view_toolbar_defined_navigation_description": "A button that jumps to the previous or next note that already exists.",
-  "view_toolbar_defined_navigation_target": "Walk which notes",
+  "view_toolbar_defined_navigation_target": "Notes to step through",
   "view_toolbar_defined_navigation_target_active": "Active journal's notes",
   "view_toolbar_defined_navigation_direction": "Direction",
   "view_toolbar_defined_navigation_direction_option": [
@@ -869,7 +914,7 @@
       "declarations": ["input mode"],
       "selectors": ["mode"],
       "match": {
-        "mode=select-only": "Just move the calendar",
+        "mode=select-only": "Move the calendar only",
         "mode=navigate": "Open note only if it exists",
         "mode=create": "Create note if it doesn't exist"
       }
@@ -941,9 +986,9 @@
   "journal_colliding_heading": "Colliding journal settings",
   "journal_colliding_warning": "Journals {names} have colliding configurations, so their notes will overwrite each other. Change the folder or name template in one of them.",
   "journal_dashboard_bulk_add": "Bulk add notes to",
-  "journal_dashboard_edit": "Edit",
+  "journal_dashboard_edit": "Configure",
   "journal_dashboard_empty": "No journals created yet.",
-  "journal_delete_modal_title": "Remove {name}",
+  "journal_delete_modal_title": "Delete {name}",
   "journal_delete_mode_label": "What to do with connected notes",
   "journal_delete_mode_option": [
     {
@@ -964,8 +1009,8 @@
   "journal_edit_auto_create_description": "Automatically create today's note on plugin load and at every local midnight.",
   "journal_edit_auto_create_label": "Auto-create today's note",
   "journal_edit_confirm_creation_description": "Show a confirmation dialog when navigating to a date that does not yet have a note.",
-  "journal_edit_confirm_creation_label": "Confirm creating new note?",
-  "journal_edit_date_format_description": "Used to format dates if not defined in variables, like:",
+  "journal_edit_confirm_creation_label": "Confirm creating new notes",
+  "journal_edit_date_format_description": "Default format for date variables that don't specify their own, like:",
   "journal_edit_date_format_label": "Default date format",
   "journal_edit_date_format_preview_label": "Formatted date:",
   "common_moment_format_reference": "moment.js format reference",
@@ -993,9 +1038,9 @@
   ],
   "journal_edit_end_repeats_needs_start_warning": "Set a start date — a journal that ends after a number of repeats needs one to count from.",
   "journal_edit_end_writing_label": "End writing",
-  "journal_edit_fm_end_toggle_label": "Add end date property?",
+  "journal_edit_fm_end_toggle_label": "Add end date property",
   "journal_edit_fm_start_description": "For weekly journals that span two years, the start date can differ from the date property.",
-  "journal_edit_fm_start_toggle_label": "Add start date property?",
+  "journal_edit_fm_start_toggle_label": "Add start date property",
   "journal_edit_folder_description": "New notes will be created in this folder.",
   "journal_edit_folder_label": "Folder",
   "journal_edit_folder_path_preview_label": "Resolved folder:",
@@ -1070,7 +1115,7 @@
   "journal_edit_variable_date_format_description": "The note's reference date, formatted with the supplied moment.js format string.",
   "journal_edit_variable_end_date_description": "The last day of the period this note covers.",
   "journal_edit_variable_index_description": "Sequential number for the note when the journal has numbering enabled.",
-  "journal_edit_variable_journal_link_description": "Inside a template file's content, resolves to the path of another journal's note for this note's date. Wrap it yourself in a link or embed (for example ![[ … ]]), and add date modifiers like +1w to point at a neighbouring period.",
+  "journal_edit_variable_journal_link_description": "Inside a template file's content, resolves to the path of another journal's note for this note's date. Wrap it yourself in a link or embed (for example ![[ … ]]), and add date modifiers like +1w to point at a neighboring period.",
   "journal_edit_variable_journal_name_description": "The journal name (here: {name}).",
   "journal_edit_variable_non_invertible_warning": "Using this here prevents the journal from recovering the date from the filename.",
   "journal_edit_variable_numbering_description": "The configured numbering variable (see the Sequence section).",
@@ -1111,7 +1156,7 @@
   "journal_property_modal_current_label": "Current name",
   "common_label_new_name": "New name",
   "journal_property_name_required": "Property name is required.",
-  "journal_rename_modal_same_as_current_error": "New name must differ from current name.",
+  "journal_rename_modal_same_as_current_error": "Enter a different name.",
   "journal_rename_modal_title": "Rename {name}",
   "journal_sequence_property_modal_title": "Edit sequential number property name",
   "templater_support_intro": "Templater can interfere with plugin actions, leaving a note partially broken or journal data missing from its frontmatter.",
