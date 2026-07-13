@@ -22,8 +22,10 @@ Produce a **draft only** — never commit, bump the version, or tag.
    (records separated by 0x1e, fields by 0x1f).
 2. Milestone-closed issues:
    `gh issue list --milestone "<version>" --state closed --json number,title --jq '.[] | "\(.number)\t\(.title)"'`
-3. Commit-referenced fixed issues: scan every commit subject+body for
-   `(?i)(fix|close|resolve)(e[sd])?\s+#(\d+)`; collect the numbers; for each,
+3. Commit-referenced fixed issues: scan every commit subject+body for GitHub
+   closing keywords — `(?i)(close[sd]?|fix(e[sd])?|resolve[sd]?)\s+#(\d+)` (covers
+   close/closes/closed, fix/fixes/fixed, resolve/resolves/resolved); collect the
+   numbers; for each,
    `gh issue view <n> --json number,title,state --jq '"\(.number)\t\(.title)\t\(.state)"'`.
 
 ## Build the draft
