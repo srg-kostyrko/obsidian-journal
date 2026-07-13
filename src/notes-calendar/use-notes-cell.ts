@@ -10,7 +10,7 @@ import { JournalsIndex, OpenDateFlow, TimelineService } from "@/journals";
 import { ActiveEntryViewModel } from "./active-entry";
 
 export interface NotesCellApi {
-  open(period: Period, event: MouseEvent): void;
+  open(period: Period, event: MouseEvent | KeyboardEvent): void;
   openContextMenu(period: Period, event: MouseEvent): void;
   openPreview(period: Period, event: MouseEvent): void;
   isActive(period: Period): boolean;
@@ -41,7 +41,7 @@ export function useNotesCell(options: { journalNames: MaybeRefOrGetter<readonly 
   const existingPathsAt = (period: Period): readonly VaultPath[] =>
     index.pathsAt(toValue(options.journalNames), period.anchor.toAnchor());
 
-  const open = (period: Period, event: MouseEvent): void => {
+  const open = (period: Period, event: MouseEvent | KeyboardEvent): void => {
     if (!isActionable(period)) return;
     void flows.invoke(OpenDateFlow, {
       anchor: period.anchor.toAnchor(),

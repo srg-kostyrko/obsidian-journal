@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { toTypedSchema } from "@vee-validate/valibot";
 import { useField, useFieldArray, useForm } from "vee-validate";
-import { computed, ref } from "vue";
+import { computed } from "vue";
 
 import {
   decorationSchema,
@@ -44,7 +44,7 @@ const conditions = useFieldArray<JournalDecorationCondition>("conditions");
 const styles = useFieldArray<JournalDecorationStyle>("styles");
 const { value: mode } = useField<JournalDecoration["mode"]>("mode");
 
-const formError = ref<string | null>(null);
+const incomplete = computed(() => values.conditions.length === 0 || values.styles.length === 0);
 
 const addConditionOptions = computed<{ value: string; label: string }[]>(() => {
   const allowed = conditionTypeOptions[props.writeType];
@@ -70,31 +70,18 @@ function addStyle(type: string): void {
 }
 
 const onSubmit = handleSubmit((decoration) => {
-  if (decoration.conditions.length === 0) {
-    formError.value = m.decoration_no_conditions_error();
-    return;
-  }
-  if (decoration.styles.length === 0) {
-    formError.value = m.decoration_no_styles_error();
-    return;
-  }
-  formError.value = null;
+  if (decoration.conditions.length === 0 || decoration.styles.length === 0) return;
   api.submit({ decoration });
 });
 </script>
 
 <template>
   <form @submit.prevent="onSubmit">
-    <UiSettingRow>
-      <template #description>
-        <span v-if="formError" class="form-error">{{ formError }}</span>
-      </template>
-      <span>{{ m.decoration_modal_mode_prefix() }}</span>
+    <UiSettingRow :name="m.decoration_modal_mode_label()">
       <UiDropdown v-model="mode">
         <option value="and">{{ m.decoration_modal_mode_option({ kind: "and" }) }}</option>
         <option value="or">{{ m.decoration_modal_mode_option({ kind: "or" }) }}</option>
       </UiDropdown>
-      <span>{{ m.decoration_modal_mode_suffix() }}</span>
     </UiSettingRow>
 
     <UiSettingRow>
@@ -140,7 +127,7 @@ const onSubmit = handleSubmit((decoration) => {
 
     <UiSettingRow controls-only>
       <UiButton @click="api.cancel()">{{ m.common_action_cancel() }}</UiButton>
-      <UiButton cta type="submit">{{ m.common_action_submit() }}</UiButton>
+      <UiButton cta type="submit" :disabled="incomplete">{{ m.common_action_submit() }}</UiButton>
     </UiSettingRow>
   </form>
 </template>
@@ -156,10 +143,6 @@ const onSubmit = handleSubmit((decoration) => {
   justify-content: center;
   align-items: flex-start;
   padding: var(--size-4-2);
-}
-.form-error {
-  color: var(--text-error);
-  display: block;
 }
 .condition-row {
   position: relative;

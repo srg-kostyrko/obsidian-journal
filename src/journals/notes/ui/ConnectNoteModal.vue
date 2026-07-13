@@ -96,7 +96,7 @@ const outOfBounds = computed(() => {
 const canConnect = computed(() => Boolean(anchor.value) && !outOfBounds.value && (!occupant.value || override.value));
 
 function disconnect(): void {
-  api.submit({ action: "disconnect" });
+  api.submit({ action: "disconnect", journalName: existingJournal });
 }
 
 function connect(): void {
@@ -120,7 +120,8 @@ function connect(): void {
         {{ m.connect_note_modal_connected_to({ journalName: existingJournal }) }}
       </template>
     </UiSettingRow>
-    <UiSettingRow>
+    <UiSettingRow controls-only>
+      <UiButton @click="api.cancel()">{{ m.common_action_cancel() }}</UiButton>
       <UiButton cta @click="disconnect">{{ m.connect_note_modal_disconnect() }}</UiButton>
     </UiSettingRow>
   </div>
@@ -157,7 +158,8 @@ function connect(): void {
       </template>
       <UiToggle v-model="move" :tooltip="m.connect_note_modal_move_label()" />
     </UiSettingRow>
-    <UiSettingRow>
+    <UiSettingRow controls-only>
+      <UiButton @click="api.cancel()">{{ m.common_action_cancel() }}</UiButton>
       <UiButton cta :disabled="!canConnect" @click="connect">{{ m.connect_note_modal_connect() }}</UiButton>
     </UiSettingRow>
   </div>

@@ -8,6 +8,6 @@ import { m } from "@/i18n";
 
 <style scoped>
 .journal-wrong-week-warning {
-  color: rgb(var(--callout-warning));
+  color: var(--text-warning);
 }
 </style>

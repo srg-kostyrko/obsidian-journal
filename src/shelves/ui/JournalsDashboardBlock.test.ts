@@ -85,7 +85,7 @@ describe("JournalsDashboardBlock", () => {
       shelves: { Work: { name: "Work", journals: ["weekly"] } },
     });
     mount(container);
-    expect(screen.getByLabelText(`${m.journal_dashboard_edit()} daily`)).toBeTruthy();
+    expect(screen.getByLabelText(m.journal_dashboard_edit({ name: "daily" }))).toBeTruthy();
     expect(screen.queryByText("weekly")).toBeNull();
   });
 
@@ -114,7 +114,7 @@ describe("JournalsDashboardBlock", () => {
   it("pushes the journal-edit subpage when Edit is clicked", async () => {
     const { container, ui } = await setup({ journals: ["daily"] });
     mount(container);
-    await userEvent.click(screen.getByLabelText(`${m.journal_dashboard_edit()} daily`));
+    await userEvent.click(screen.getByLabelText(m.journal_dashboard_edit({ name: "daily" })));
     expect(ui.current.value?.subpage.key).toBe("journal-edit");
     expect(ui.current.value?.props).toEqual({ journalName: "daily" });
   });
@@ -122,14 +122,14 @@ describe("JournalsDashboardBlock", () => {
   it("invokes DeleteJournalFlow when Delete is clicked", async () => {
     const { container, flows } = await setup({ journals: ["daily"] });
     mount(container);
-    await userEvent.click(screen.getByLabelText(`${m.common_action_delete()} daily`));
+    await userEvent.click(screen.getByLabelText(m.common_delete_name({ name: "daily" })));
     expect(flows.invoke).toHaveBeenCalledWith(DeleteJournalFlow, { journalName: "daily" });
   });
 
   it("invokes BulkAddFlow when bulk-add is clicked", async () => {
     const { container, flows } = await setup({ journals: ["daily"] });
     mount(container);
-    await userEvent.click(screen.getByLabelText(`${m.journal_dashboard_bulk_add()} daily`));
+    await userEvent.click(screen.getByLabelText(m.journal_dashboard_bulk_add({ name: "daily" })));
     expect(flows.invoke).toHaveBeenCalledWith(BulkAddFlow, { journalName: "daily" });
   });
 });

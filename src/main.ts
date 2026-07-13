@@ -7,7 +7,7 @@ import { commandsModule } from "@/commands";
 import { DynamicCommandRegistry } from "@/commands/command-registry";
 import { decorationsModule } from "@/decorations";
 import { decorationsSettingsModule } from "@/decorations/settings/module";
-import { initLocale } from "@/i18n";
+import { initLocale, m } from "@/i18n";
 import { Container } from "@/infrastructure/di";
 import { FlowsModule } from "@/infrastructure/flows";
 import { createHostModule } from "@/infrastructure/host";
@@ -57,7 +57,7 @@ export default class JournalPlugin extends Plugin {
 
     const init = await container.resolve(SettingsService).initialize();
     if (init.kind === "err") {
-      new Notice(`Journal: failed to load settings — ${init.error.message}`);
+      new Notice(m.settings_load_failed({ error: init.error.message }));
       await container.dispose();
       return;
     }
@@ -82,7 +82,7 @@ export default class JournalPlugin extends Plugin {
     void container
       .resolve(SettingsService)
       .reload()
-      .tapErr((error) => new Notice(`Journal: failed to reload settings — ${error.message}`));
+      .tapErr((error) => new Notice(m.settings_reload_failed({ error: error.message })));
   }
 
   onunload(): void {

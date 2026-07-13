@@ -95,9 +95,11 @@ function open(badge: Badge, event: MouseEvent): void {
 
 <style scoped>
 /* A period with no journal of its kind stays visible but inert — not clickable, and no
-   not-allowed cursor (it is not a disabled control, just nothing to open). */
+   not-allowed cursor (it is not a disabled control, just nothing to open). Dimmed so it
+   does not read as a clickable button. */
 .jv-period-inert {
   pointer-events: none;
+  opacity: 0.5;
 }
 /* Mirror the in-grid cell highlight: a period button whose note is the active one picks up
    the configured active colors (bridged onto the document body as CSS vars). The

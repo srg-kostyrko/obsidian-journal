@@ -98,11 +98,11 @@ const onSubmit = handleSubmit((vs) => {
     </UiSettingRow>
     <UiSettingRow v-if="isCustom" :name="m.journal_add_modal_every_label()">
       <UiDropdown v-model="every" v-bind="everyAttrs">
-        <option value="day">day</option>
-        <option value="week">week</option>
-        <option value="month">month</option>
-        <option value="quarter">quarter</option>
-        <option value="year">year</option>
+        <option value="day">{{ m.journal_add_modal_every_unit({ unit: "day" }) }}</option>
+        <option value="week">{{ m.journal_add_modal_every_unit({ unit: "week" }) }}</option>
+        <option value="month">{{ m.journal_add_modal_every_unit({ unit: "month" }) }}</option>
+        <option value="quarter">{{ m.journal_add_modal_every_unit({ unit: "quarter" }) }}</option>
+        <option value="year">{{ m.journal_add_modal_every_unit({ unit: "year" }) }}</option>
       </UiDropdown>
     </UiSettingRow>
     <UiSettingRow v-if="isCustom" :name="m.journal_add_modal_anchor_label()">
@@ -114,7 +114,7 @@ const onSubmit = handleSubmit((vs) => {
     </UiSettingRow>
     <UiSettingRow controls-only>
       <UiButton @click="api.cancel()">{{ m.common_action_cancel() }}</UiButton>
-      <UiButton cta type="submit">{{ m.common_action_submit() }}</UiButton>
+      <UiButton cta type="submit">{{ m.common_action_create() }}</UiButton>
     </UiSettingRow>
   </form>
 </template>

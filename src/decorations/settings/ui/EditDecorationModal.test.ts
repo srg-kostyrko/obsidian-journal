@@ -50,28 +50,20 @@ function mountModal(options: {
 
 describe("EditDecorationModal", () => {
   describe("submit gating", () => {
-    it("does not submit when no conditions are defined", async () => {
-      const { submit } = mountModal({
+    it("disables Save when no conditions are defined", () => {
+      mountModal({
         writeType: "day",
         decoration: { mode: "and", conditions: [], styles: [{ type: "background", color: transparent }] },
       });
-      await userEvent.click(screen.getByText(m.common_action_submit()));
-      await waitFor(() => {
-        expect(screen.getByText(m.decoration_no_conditions_error())).toBeTruthy();
-      });
-      expect(submit).not.toHaveBeenCalled();
+      expect(screen.getByText(m.common_action_submit()).closest("button")?.disabled).toBe(true);
     });
 
-    it("does not submit when no styles are defined", async () => {
-      const { submit } = mountModal({
+    it("disables Save when no styles are defined", () => {
+      mountModal({
         writeType: "day",
         decoration: { mode: "and", conditions: [{ type: "has-note" }], styles: [] },
       });
-      await userEvent.click(screen.getByText(m.common_action_submit()));
-      await waitFor(() => {
-        expect(screen.getByText(m.decoration_no_styles_error())).toBeTruthy();
-      });
-      expect(submit).not.toHaveBeenCalled();
+      expect(screen.getByText(m.common_action_submit()).closest("button")?.disabled).toBe(true);
     });
 
     it("submits when both arrays are populated", async () => {

@@ -102,10 +102,10 @@ describe("AddToolbarItemPickerModal", () => {
     });
   });
 
-  describe("when the Cancel button is clicked", () => {
+  describe("when the Close button is clicked", () => {
     it("calls api.cancel()", async () => {
       const { cancel } = mountModal([toolbarItemDefinition("shelf-selector", "Shelf selector")]);
-      await userEvent.click(screen.getByText(m.common_action_cancel()));
+      await userEvent.click(screen.getByText(m.common_action_close()));
       expect(cancel).toHaveBeenCalledTimes(1);
     });
   });

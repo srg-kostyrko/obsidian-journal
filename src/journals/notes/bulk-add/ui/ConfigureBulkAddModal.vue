@@ -105,6 +105,7 @@ const onSubmit = handleSubmit((parameters) => {
 
     <UiSettingRow>
       <template #name>{{ m.bulk_add_existing_label() }}</template>
+      <template #description>{{ m.bulk_add_existing_description({ option: existingNote }) }}</template>
       <UiDropdown v-model="existingNote" :aria-label="m.bulk_add_existing_label()">
         <option value="skip">{{ m.bulk_add_option_skip() }}</option>
         <option value="override">{{ m.bulk_add_option_override() }}</option>

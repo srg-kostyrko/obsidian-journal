@@ -7,6 +7,18 @@
   "calendar_appearance_active_background": "Active — background",
   "calendar_appearance_active_text": "Active — text",
   "calendar_appearance_section_title": "Calendar highlighting",
+  "calendar_appearance_description": [
+    {
+      "declarations": ["input target", "input layer"],
+      "selectors": ["target", "layer"],
+      "match": {
+        "target=today,layer=text": "Text color of the calendar cell for today's date.",
+        "target=today,layer=background": "Background color of the calendar cell for today's date.",
+        "target=active,layer=text": "Text color of the calendar cell whose note is currently open.",
+        "target=active,layer=background": "Background color of the calendar cell whose note is currently open."
+      }
+    }
+  ],
   "calendar_appearance_today_background": "Today — background",
   "calendar_appearance_today_text": "Today — text",
   "common_label_back": "Back to list",
@@ -54,6 +66,8 @@
   "calendar_week_config_description": "Define which day starts the week and how the first week of the year is determined — this affects week numbers.",
 
   "code_blocks_nav_not_connected": "Note is not connected to a journal",
+  "code_blocks_home_empty": "No journals to show. Check the block's show and shelf options.",
+  "view_block_calendar_no_journals": "No journals on this shelf.",
   "code_blocks_nav_next": "Next",
   "code_blocks_nav_previous": "Previous",
 
@@ -69,7 +83,20 @@
       }
     }
   ],
-  "nav_block_section_use_defaults": "Use defaults for {writeType}",
+  "nav_block_section_use_defaults": [
+    {
+      "declarations": ["input writeType"],
+      "selectors": ["writeType"],
+      "match": {
+        "writeType=day": "Use defaults for daily notes",
+        "writeType=week": "Use defaults for weekly notes",
+        "writeType=month": "Use defaults for monthly notes",
+        "writeType=quarter": "Use defaults for quarterly notes",
+        "writeType=year": "Use defaults for yearly notes",
+        "writeType=*": "Use defaults"
+      }
+    }
+  ],
   "block_rows_decorate_whole_label": "Decorate whole block",
   "block_rows_empty": "No rows yet. Add one.",
   "block_rows_add_row": "Add row",
@@ -146,6 +173,7 @@
   "command_delete_modal_confirm": "Delete the command \"{name}\"?",
   "command_delete": "Delete command",
   "command_edit": "Edit command",
+  "command_edit_tooltip": "Edit {name}",
   "command_icon_required_error": "Pick an icon to show this command in the ribbon.",
   "command_insert_date_link": "Insert link to journal note",
   "command_label_today": "Open today's note",
@@ -256,6 +284,8 @@
   "connect_note_modal_connected_to": "This note is connected to \"{journalName}\".",
   "connect_note_modal_disconnect": "Disconnect",
   "connect_note_modal_out_of_bounds": "This date is outside the journal's active timeline.",
+  "connect_note_notice_connected": "Note connected to \"{journalName}\".",
+  "connect_note_notice_disconnected": "Note disconnected from \"{journalName}\".",
 
   "bulk_add_notes_to_title": "Add notes to {journalName}",
   "bulk_add_folder_label": "Source folder",
@@ -275,6 +305,18 @@
   "bulk_add_add_filter_tag": "Add tag condition",
   "bulk_add_add_filter_property": "Add property condition",
   "bulk_add_existing_label": "When a note is already connected to that date",
+  "bulk_add_existing_description": [
+    {
+      "declarations": ["input option"],
+      "selectors": ["option"],
+      "match": {
+        "option=skip": "The new note is left untouched and not connected.",
+        "option=override": "The new note takes over the date; the previously connected note stays in the vault but is disconnected.",
+        "option=merge": "The new note's content is appended to the already-connected note, and the new note is deleted.",
+        "option=ask": "Decide for each note on the review screen."
+      }
+    }
+  ],
   "bulk_add_other_folder_label": "When the folder differs",
   "bulk_add_other_name_label": "When the name differs",
   "bulk_add_option_skip": "Skip",
@@ -317,6 +359,7 @@
 
   "common_action_cancel": "Cancel",
   "common_action_close": "Close",
+  "common_action_create": "Create",
   "common_action_delete": "Delete",
   "common_action_submit": "Save",
 
@@ -481,22 +524,19 @@
   "decoration_edit": "Edit decoration",
   "decoration_modal_add_condition": "Add condition",
   "decoration_modal_add_style": "Add style",
+  "decoration_modal_mode_label": "When to decorate",
   "decoration_modal_mode_option": [
     {
       "declarations": ["input kind"],
       "selectors": ["kind"],
       "match": {
-        "kind=and": "all conditions are",
-        "kind=or": "any condition is"
+        "kind=and": "Decorate when all conditions are fulfilled",
+        "kind=or": "Decorate when any condition is fulfilled"
       }
     }
   ],
-  "decoration_modal_mode_prefix": "Decorate elements in calendar when",
-  "decoration_modal_mode_suffix": "fulfilled",
   "decoration_modal_no_conditions": "No conditions defined yet",
   "decoration_modal_no_styles": "No styles defined yet",
-  "decoration_no_conditions_error": "At least one condition is required.",
-  "decoration_no_styles_error": "At least one style is required.",
   "decoration_placement_x_label": [
     {
       "declarations": ["input value"],
@@ -709,7 +749,8 @@
   "shelf_dashboard_section_title": "Journal shelves",
   "shelf_delete_modal_destination_label": "Move journals to",
   "shelf_delete_modal_destination_none": "None",
-  "shelf_delete_modal_moved_out": "Journals will be moved off the shelf.",
+  "shelf_delete_modal_destination_description": "Journals on this shelf are moved to the selected shelf, or off the shelf when none is selected. Notes are not affected.",
+  "shelf_delete_modal_moved_out": "Journals will be moved off the shelf. Notes are not affected.",
   "shelf_delete_modal_title": "Delete shelf {name}",
   "journal_create": "Create new journal",
   "common_label_journals": "Journals",
@@ -733,6 +774,9 @@
   "shelf_place_modal_title": "Place journal",
   "shelf_section_not_on_shelf": "Not on a shelf",
   "shelf_section_place_tooltip": "Place on a shelf",
+
+  "settings_load_failed": "Journal: failed to load settings — {error}",
+  "settings_reload_failed": "Journal: failed to reload settings — {error}",
 
   "startup_dashboard_section_title": "Startup",
   "startup_open_note_title": "Open on startup",
@@ -758,7 +802,7 @@
   "view_name_required_error": "Name is required.",
   "view_name_unchanged_error": "Enter a different name.",
   "view_delete_modal_title": "Delete view {name}",
-  "view_delete_modal_description": "This action cannot be undone.",
+  "view_delete_modal_description": "The view and its block configuration are removed. Your notes are not affected.",
   "view_add_block": "Add block",
   "view_add_block_empty": "No block types are registered.",
   "view_add_picker_action": "Add {label}",
@@ -767,10 +811,15 @@
   "view_block_toolbar_description": "Container for toolbar items such as buttons and the shelf selector.",
   "view_add_toolbar_item": "Add toolbar item",
   "view_add_toolbar_item_empty": "No toolbar items are registered.",
+  "view_edit_icon_description": "Shown in the view's tab header and in the ribbon.",
   "view_edit_default_shelf_label": "Default shelf",
+  "view_edit_default_shelf_description": "The shelf this view starts on when it opens.",
+  "view_edit_show_in_ribbon_description": "Add a ribbon button that opens this view.",
   "common_label_all_journals": "All journals",
   "view_edit_open_on_startup_label": "Open on startup",
+  "view_edit_open_on_startup_description": "Open this view whenever you open the vault. Separate from the startup note setting on the main settings page.",
   "view_edit_leaf_label": "Open in",
+  "view_edit_leaf_description": "Where the view opens: docked in a sidebar, or as a regular tab in the main workspace.",
   "view_edit_leaf_left": "Left sidebar",
   "view_edit_leaf_right": "Right sidebar",
   "view_edit_leaf_tab": "New tab",
@@ -850,6 +899,7 @@
 
   "view_toolbar_shelf_selector_label": "Shelf selector",
   "view_toolbar_shelf_selector_description": "Switches which shelf scopes the view's journals.",
+  "view_toolbar_shelf_selector_tooltip": "Switch shelf",
   "view_toolbar_spacer_label": "Spacer",
   "view_toolbar_spacer_description": "Flexible gap that pushes neighboring items apart.",
   "view_toolbar_period_buttons_label": "Period buttons",
@@ -985,8 +1035,8 @@
   "journal_add_modal_write_label": "I'll be writing",
   "journal_colliding_heading": "Colliding journal settings",
   "journal_colliding_warning": "Journals {names} have colliding configurations, so their notes will overwrite each other. Change the folder or name template in one of them.",
-  "journal_dashboard_bulk_add": "Bulk add notes to",
-  "journal_dashboard_edit": "Configure",
+  "journal_dashboard_bulk_add": "Bulk add notes to {name}",
+  "journal_dashboard_edit": "Configure {name}",
   "journal_dashboard_empty": "No journals created yet.",
   "journal_delete_modal_title": "Delete {name}",
   "journal_delete_mode_label": "What to do with connected notes",
@@ -998,6 +1048,17 @@
         "mode=keep": "Keep notes",
         "mode=clear": "Clear journal data",
         "mode=delete": "Delete notes"
+      }
+    }
+  ],
+  "journal_delete_mode_description": [
+    {
+      "declarations": ["input mode"],
+      "selectors": ["mode"],
+      "match": {
+        "mode=keep": "Notes stay in your vault unchanged.",
+        "mode=clear": "Notes stay in your vault, but the journal properties are removed from their frontmatter.",
+        "mode=delete": "All notes connected to this journal are deleted from your vault."
       }
     }
   ],
@@ -1126,7 +1187,6 @@
   "journal_edit_variable_start_date_description": "The first day of the period this note covers.",
   "journal_edit_variable_time_description": "Current wall-clock time (in HH:mm by default).",
   "journal_edit_wrong_week_warning": "You use `W` to format weeks, which does not respect custom week settings and may show a different week number than the Calendar view. Use `w` instead (and change the start of the week in the plugin settings if needed).",
-  "journal_flow_failure": "Journal action failed ({kind}).",
   "journal_fm_field_label": [
     {
       "declarations": ["input field"],
@@ -1206,14 +1266,37 @@
   "journal_write": [
     {
       "declarations": ["input type", "input every", "input duration"],
-      "selectors": ["type"],
+      "selectors": ["type", "every", "duration"],
       "match": {
-        "type=day": "daily",
-        "type=week": "weekly",
-        "type=month": "monthly",
-        "type=quarter": "quarterly",
-        "type=year": "annually",
-        "type=custom": "every {duration} {every}"
+        "type=day,every=*,duration=*": "daily",
+        "type=week,every=*,duration=*": "weekly",
+        "type=month,every=*,duration=*": "monthly",
+        "type=quarter,every=*,duration=*": "quarterly",
+        "type=year,every=*,duration=*": "annually",
+        "type=custom,every=day,duration=1": "every day",
+        "type=custom,every=day,duration=*": "every {duration} days",
+        "type=custom,every=week,duration=1": "every week",
+        "type=custom,every=week,duration=*": "every {duration} weeks",
+        "type=custom,every=month,duration=1": "every month",
+        "type=custom,every=month,duration=*": "every {duration} months",
+        "type=custom,every=quarter,duration=1": "every quarter",
+        "type=custom,every=quarter,duration=*": "every {duration} quarters",
+        "type=custom,every=year,duration=1": "every year",
+        "type=custom,every=year,duration=*": "every {duration} years",
+        "type=*,every=*,duration=*": "every {duration} {every}"
+      }
+    }
+  ],
+  "journal_add_modal_every_unit": [
+    {
+      "declarations": ["input unit"],
+      "selectors": ["unit"],
+      "match": {
+        "unit=day": "day",
+        "unit=week": "week",
+        "unit=month": "month",
+        "unit=quarter": "quarter",
+        "unit=year": "year"
       }
     }
   ],

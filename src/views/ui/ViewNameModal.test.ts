@@ -27,13 +27,13 @@ describe("ViewNameModal", () => {
   it("submits the entered name", async () => {
     const { submit } = mountModal();
     await userEvent.type(screen.getByRole("textbox"), "Weekly");
-    await userEvent.click(screen.getByText(m.common_action_submit()));
+    await userEvent.click(screen.getByText(m.common_action_create()));
     await waitFor(() => expect(submit).toHaveBeenCalledWith("Weekly"));
   });
 
   it("shows the required-error for an empty name", async () => {
     mountModal();
-    await userEvent.click(screen.getByText(m.common_action_submit()));
+    await userEvent.click(screen.getByText(m.common_action_create()));
     await waitFor(() => expect(screen.getByText(m.view_name_required_error())).toBeTruthy());
   });
 

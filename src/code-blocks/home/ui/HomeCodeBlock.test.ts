@@ -2,7 +2,7 @@ import userEvent from "@testing-library/user-event";
 import { cleanup, render, screen } from "@testing-library/vue";
 import { afterEach, beforeAll, beforeEach, describe, expect, it, vi } from "vitest";
 
-import { initLocale } from "@/i18n";
+import { initLocale, m } from "@/i18n";
 import { Container, provideInjectorOnApp } from "@/infrastructure/di";
 import { Flows } from "@/infrastructure/flows";
 import type { VaultPath } from "@/infrastructure/host";
@@ -122,6 +122,18 @@ describe("HomeCodeBlock", () => {
     journalsRepo.seed([]);
     mount(container, { path: "Note.md" as VaultPath, config: { show: ["day"], separator: " • ", scale: 1 } });
     expect(screen.queryAllByRole("link")).toHaveLength(0);
+  });
+
+  it("explains itself when no journals match the configured entries", () => {
+    journalsRepo.seed([]);
+    mount(container, { path: "Note.md" as VaultPath, config: { show: ["day"], separator: " • ", scale: 1 } });
+    expect(screen.getByText(m.code_blocks_home_empty())).toBeTruthy();
+  });
+
+  it("does not show the empty message when a journal matches", () => {
+    journalsRepo.seed([dayJournal("Daily")]);
+    mount(container, { path: "Note.md" as VaultPath, config: { show: ["day"], separator: " • ", scale: 1 } });
+    expect(screen.queryByText(m.code_blocks_home_empty())).toBeNull();
   });
 
   it("renders one link with the relative day label for a matching daily journal", () => {

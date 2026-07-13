@@ -83,7 +83,7 @@ describe("FrontmatterSection", () => {
     it("invokes EditFrontmatterFieldFlow when the date-field pencil is clicked", async () => {
       const { flows } = mount();
       await userEvent.click(screen.getByText(m.journal_edit_section_frontmatter()));
-      await userEvent.click(screen.getByLabelText(`${m.journal_fm_field_label({ field: "dateField" })} edit`));
+      await userEvent.click(screen.getByLabelText(m.journal_fm_field_modal_title({ field: "dateField" })));
       expect(flows.invoke).toHaveBeenCalledWith(EditFrontmatterFieldFlow, {
         journalName: "daily",
         fieldName: "dateField",

@@ -42,7 +42,7 @@ function editFm(fieldName: "dateField" | "startDateField" | "endDateField"): voi
       {{ config.frontmatter.dateField }}
       <UiIconButton
         :icon="icons.action.configure"
-        :tooltip="`${m.journal_fm_field_label({ field: 'dateField' })} edit`"
+        :tooltip="m.journal_fm_field_modal_title({ field: 'dateField' })"
         @click="editFm('dateField')"
       />
     </UiSettingRow>
@@ -55,7 +55,7 @@ function editFm(fieldName: "dateField" | "startDateField" | "endDateField"): voi
       {{ config.frontmatter.startDateField }}
       <UiIconButton
         :icon="icons.action.configure"
-        :tooltip="`${m.journal_fm_field_label({ field: 'startDateField' })} edit`"
+        :tooltip="m.journal_fm_field_modal_title({ field: 'startDateField' })"
         @click="editFm('startDateField')"
       />
     </UiSettingRow>
@@ -67,7 +67,7 @@ function editFm(fieldName: "dateField" | "startDateField" | "endDateField"): voi
       {{ config.frontmatter.endDateField }}
       <UiIconButton
         :icon="icons.action.configure"
-        :tooltip="`${m.journal_fm_field_label({ field: 'endDateField' })} edit`"
+        :tooltip="m.journal_fm_field_modal_title({ field: 'endDateField' })"
         @click="editFm('endDateField')"
       />
     </UiSettingRow>

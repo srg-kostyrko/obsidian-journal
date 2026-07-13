@@ -117,7 +117,7 @@ function editSequenceKey(): void {
         {{ config.numbering.sources[0].frontmatterKey }}
         <UiIconButton
           :icon="icons.action.configure"
-          :tooltip="`${m.common_label_property_name()} edit`"
+          :tooltip="m.journal_sequence_property_modal_title()"
           @click="editSequenceKey"
         />
       </UiSettingRow>

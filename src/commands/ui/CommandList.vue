@@ -31,12 +31,12 @@ defineEmits<{ edit: [id: string]; delete: [id: string] }>();
       </template>
       <UiIconButton
         :icon="icons.action.configure"
-        :tooltip="`${m.command_edit()} ${command.name}`"
+        :tooltip="m.command_edit_tooltip({ name: command.name })"
         @click="$emit('edit', id)"
       />
       <UiIconButton
         :icon="icons.action.delete"
-        :tooltip="`${m.command_delete()} ${command.name}`"
+        :tooltip="m.common_delete_name({ name: command.name })"
         @click="$emit('delete', id)"
       />
     </UiSettingRow>

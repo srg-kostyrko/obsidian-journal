@@ -30,5 +30,7 @@ function open(event: MouseEvent): void {
 </script>
 
 <template>
-  <UiButton v-if="hasShelves" flat @click="open">{{ label }}</UiButton>
+  <UiButton v-if="hasShelves" flat :tooltip="m.view_toolbar_shelf_selector_tooltip()" @click="open">{{
+    label
+  }}</UiButton>
 </template>

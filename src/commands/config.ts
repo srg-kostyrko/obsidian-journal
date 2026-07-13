@@ -65,15 +65,15 @@ const defaultCommands: readonly {
   { key: "default-open-quarterly", name: "Open quarterly note", writeType: "quarter", type: "same" },
   { key: "default-open-yearly", name: "Open yearly note", writeType: "year", type: "same" },
   { key: "default-open-tomorrow", name: "Open tomorrow's note", writeType: "day", type: "next" },
-  { key: "default-open-next-week", name: "Open next week note", writeType: "week", type: "next" },
-  { key: "default-open-next-month", name: "Open next month note", writeType: "month", type: "next" },
-  { key: "default-open-next-quarter", name: "Open next quarter note", writeType: "quarter", type: "next" },
-  { key: "default-open-next-year", name: "Open next year note", writeType: "year", type: "next" },
+  { key: "default-open-next-week", name: "Open next weekly note", writeType: "week", type: "next" },
+  { key: "default-open-next-month", name: "Open next monthly note", writeType: "month", type: "next" },
+  { key: "default-open-next-quarter", name: "Open next quarterly note", writeType: "quarter", type: "next" },
+  { key: "default-open-next-year", name: "Open next yearly note", writeType: "year", type: "next" },
   { key: "default-open-yesterday", name: "Open yesterday's note", writeType: "day", type: "previous" },
-  { key: "default-open-last-week", name: "Open last week note", writeType: "week", type: "previous" },
-  { key: "default-open-last-month", name: "Open last month note", writeType: "month", type: "previous" },
-  { key: "default-open-last-quarter", name: "Open last quarter note", writeType: "quarter", type: "previous" },
-  { key: "default-open-last-year", name: "Open last year note", writeType: "year", type: "previous" },
+  { key: "default-open-last-week", name: "Open previous weekly note", writeType: "week", type: "previous" },
+  { key: "default-open-last-month", name: "Open previous monthly note", writeType: "month", type: "previous" },
+  { key: "default-open-last-quarter", name: "Open previous quarterly note", writeType: "quarter", type: "previous" },
+  { key: "default-open-last-year", name: "Open previous yearly note", writeType: "year", type: "previous" },
 ];
 
 export const commandCollection = defineCollection(

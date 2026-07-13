@@ -63,6 +63,20 @@ describe("NotesCalendarCell", () => {
     });
   });
 
+  describe("keyboard access", () => {
+    it("is focusable when actionable", () => {
+      const { container } = mount({ period: may25, cell: stubApi() });
+      const cell = container.querySelector<HTMLElement>(".notes-calendar-cell");
+      expect(cell?.tabIndex).toBe(0);
+    });
+
+    it("is not focusable when not actionable", () => {
+      const { container } = mount({ period: may25, cell: stubApi({ isActionable: () => false }) });
+      const cell = container.querySelector<HTMLElement>(".notes-calendar-cell");
+      expect(cell?.hasAttribute("tabindex")).toBe(false);
+    });
+  });
+
   describe("data attributes", () => {
     it("renders data-active when the cell reports active", () => {
       const { container } = mount({
@@ -131,6 +145,17 @@ describe("NotesCalendarCell", () => {
       cell.dispatchEvent(event);
       expect(openContextMenu).toHaveBeenCalledWith(may25, event);
       expect(event.defaultPrevented).toBe(true);
+    });
+
+    it("invokes cell.open on Enter when focused", async () => {
+      const open = vi.fn();
+      const { container } = mount({ period: may25, cell: stubApi({ open }) });
+      const cell = container.querySelector<HTMLElement>(".notes-calendar-cell")!;
+      cell.focus();
+      await userEvent.keyboard("{Enter}");
+      expect(open).toHaveBeenCalled();
+      const firstCall = open.mock.calls[0] as [Period, KeyboardEvent];
+      expect(firstCall[0]).toBe(may25);
     });
 
     it("invokes cell.openPreview on mouseenter", async () => {

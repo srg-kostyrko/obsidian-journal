@@ -83,7 +83,7 @@ describe("ConnectNoteModal", () => {
 
       mountModal("Journal/2026-06-01.md" as VaultPath, container, api);
       await userEvent.click(screen.getByText(m.connect_note_modal_disconnect()));
-      expect(submit).toHaveBeenCalledWith({ action: "disconnect" });
+      expect(submit).toHaveBeenCalledWith({ action: "disconnect", journalName: "daily" });
     });
 
     it("does not render the journal select when the note is connected", () => {

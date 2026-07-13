@@ -19,6 +19,7 @@ const destination = ref("");
 <template>
   <div>
     <UiSettingRow v-if="props.otherShelves.length > 0" :name="m.shelf_delete_modal_destination_label()">
+      <template #description>{{ m.shelf_delete_modal_destination_description() }}</template>
       <UiDropdown v-model="destination">
         <option value="">{{ m.shelf_delete_modal_destination_none() }}</option>
         <option v-for="shelf of props.otherShelves" :key="shelf" :value="shelf">{{ shelf }}</option>

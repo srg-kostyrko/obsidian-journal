@@ -37,7 +37,8 @@ describe("view clone", () => {
     await setModalNumber(1); // the leading-padding field — a primitive change that leaves hiddenWeekdays spread as a proxy
     await submitModal();
     // The updated summary confirms the edited config persisted before we leave the editor.
-    await $(".jv-block-entry*=1 before, 0 after").waitForExist({
+    // (Zero-count sides are hidden from the summary, so "after: 0" does not appear.)
+    await $(".jv-block-entry*=1 before").waitForExist({
       timeoutMsg: "month block summary did not reflect the saved padding change",
     });
     await goBack();

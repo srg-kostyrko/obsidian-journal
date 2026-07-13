@@ -68,7 +68,7 @@ const api = useModal<{ key: string; defaultConfig: unknown }>();
       />
     </UiSettingRow>
     <UiSettingRow controls-only>
-      <UiButton @click="api.cancel()">{{ m.common_action_cancel() }}</UiButton>
+      <UiButton @click="api.cancel()">{{ m.common_action_close() }}</UiButton>
     </UiSettingRow>
   </div>
 </template>

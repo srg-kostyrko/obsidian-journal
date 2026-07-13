@@ -64,14 +64,14 @@ export async function goBack(): Promise<void> {
 }
 
 export async function openShelfSubpage(shelf: string): Promise<void> {
-  await clickIcon(`Organize ${shelf}`);
+  await clickIcon(`Configure ${shelf}`);
 }
 
 // Journals are all shelved in e2e-journeys, so a journal subpage is reached through its
-// shelf: dashboard → Organize <shelf> → Edit <journal>.
+// shelf: dashboard → Configure <shelf> → Configure <journal>.
 export async function openJournalSubpage(shelf: string, journal: string): Promise<void> {
   await openShelfSubpage(shelf);
-  await clickIcon(`Edit ${journal}`);
+  await clickIcon(`Configure ${journal}`);
 }
 
 // Set the first text input in the open modal (the primary field — name/template/new-name).
@@ -117,9 +117,10 @@ export async function setModalNumber(value: number): Promise<void> {
   await activeModal().$('input[type="number"]').setValue(value);
 }
 
+// The CTA label varies by modal (Save for edits, Create for additions) — target the CTA class.
 export async function submitModal(): Promise<void> {
-  await activeModal().$("button=Save").click();
-  await activeModal().waitForExist({ reverse: true, timeoutMsg: "modal did not close after Save" });
+  await activeModal().$("button.mod-cta").click();
+  await activeModal().waitForExist({ reverse: true, timeoutMsg: "modal did not close after submit" });
 }
 
 export async function deleteInModal(): Promise<void> {

@@ -2,6 +2,7 @@
 import { computed } from "vue";
 
 import { CalendarDate, Clock, type AnchorString } from "@/calendar";
+import { m } from "@/i18n";
 import { useService } from "@/infrastructure/di";
 import { Flows } from "@/infrastructure/flows";
 import { defineOpenMode, type CodeBlockProps } from "@/infrastructure/host";
@@ -70,6 +71,7 @@ function open(item: HomeItem, event: MouseEvent): void {
 
 <template>
   <div class="home-code-block">
+    <span v-if="items.length === 0" class="home-code-block__empty">{{ m.code_blocks_home_empty() }}</span>
     <template v-for="(item, position) of items" :key="`${item.entry}-${item.journalNames.join('|')}`">
       <span v-if="position > 0" class="home-code-block__separator">{{ config.separator }}</span>
       <a href="#" @click.stop.prevent="open(item, $event)" @auxclick.middle.stop.prevent="open(item, $event)">{{
@@ -87,5 +89,9 @@ function open(item: HomeItem, event: MouseEvent): void {
   text-align: center;
   gap: var(--size-2-2);
   font-size: calc(var(--font-text-size) * v-bind("config.scale"));
+}
+.home-code-block__empty {
+  color: var(--text-faint);
+  font-size: var(--font-text-size);
 }
 </style>

@@ -38,13 +38,13 @@ describe("ShelfNameModal", () => {
   it("submits the entered name", async () => {
     const { submit } = mountModal({});
     await userEvent.type(screen.getByRole("textbox"), "Work");
-    await userEvent.click(screen.getByText(m.common_action_submit()));
+    await userEvent.click(screen.getByText(m.common_action_create()));
     await waitFor(() => expect(submit).toHaveBeenCalledWith("Work"));
   });
 
   it("surfaces a required error when the name is empty", async () => {
     const { submit } = mountModal({});
-    await userEvent.click(screen.getByText(m.common_action_submit()));
+    await userEvent.click(screen.getByText(m.common_action_create()));
     await waitFor(() => expect(screen.getByText(m.shelf_name_required_error())).toBeTruthy());
     expect(submit).not.toHaveBeenCalled();
   });
@@ -52,7 +52,7 @@ describe("ShelfNameModal", () => {
   it("surfaces a uniqueness error when the name is taken", async () => {
     const { submit } = mountModal({ takenNames: ["Work"] });
     await userEvent.type(screen.getByRole("textbox"), "Work");
-    await userEvent.click(screen.getByText(m.common_action_submit()));
+    await userEvent.click(screen.getByText(m.common_action_create()));
     await waitFor(() => expect(screen.getByText(m.shelf_name_unique_error())).toBeTruthy());
     expect(submit).not.toHaveBeenCalled();
   });

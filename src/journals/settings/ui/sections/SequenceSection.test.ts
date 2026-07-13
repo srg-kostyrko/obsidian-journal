@@ -124,7 +124,7 @@ describe("SequenceSection", () => {
         },
       });
       await userEvent.click(screen.getByText(m.journal_edit_section_sequential_numbers()));
-      await userEvent.click(screen.getByLabelText(`${m.common_label_property_name()} edit`));
+      await userEvent.click(screen.getByLabelText(m.journal_sequence_property_modal_title()));
       expect(flows.invoke).toHaveBeenCalledWith(EditSequencePropertyFlow, { journalName: "daily", sourceIndex: 0 });
     });
   });

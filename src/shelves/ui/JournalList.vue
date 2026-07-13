@@ -24,17 +24,17 @@ defineEmits<{ "bulk-add": [name: string]; edit: [name: string]; delete: [name: s
       </template>
       <UiIconButton
         :icon="icons.action.bulkAdd"
-        :tooltip="`${m.journal_dashboard_bulk_add()} ${name}`"
+        :tooltip="m.journal_dashboard_bulk_add({ name })"
         @click="$emit('bulk-add', name)"
       />
       <UiIconButton
         :icon="icons.action.configure"
-        :tooltip="`${m.journal_dashboard_edit()} ${name}`"
+        :tooltip="m.journal_dashboard_edit({ name })"
         @click="$emit('edit', name)"
       />
       <UiIconButton
         :icon="icons.action.delete"
-        :tooltip="`${m.common_action_delete()} ${name}`"
+        :tooltip="m.common_delete_name({ name })"
         @click="$emit('delete', name)"
       />
     </UiSettingRow>

@@ -95,7 +95,7 @@ describe("settings", () => {
     it("edits the date-property frontmatter field and persists it", async () => {
       await openJournalSubpage("core", "daily");
       await expandSection("Frontmatter");
-      await clickIcon("Date property name edit");
+      await clickIcon("Edit date property name");
       await setModalText("custom-date");
       await submitModal();
 
@@ -108,7 +108,7 @@ describe("settings", () => {
     it("edits the sequence property name and persists it", async () => {
       await openJournalSubpage("extra", "monthly");
       await expandSection("Sequential numbers");
-      await clickIcon("Property name edit");
+      await clickIcon("Edit sequential number property name");
       await setModalText("seq-index");
       await submitModal();
 
@@ -510,7 +510,7 @@ describe("settings", () => {
   describe("commands", () => {
     it("edits a command's name and persists it", async () => {
       await expandSection("Commands");
-      await clickIcon("Edit command Editable command");
+      await clickIcon("Edit Editable command");
       await setModalText("Renamed command");
       await submitModal();
 
@@ -522,7 +522,7 @@ describe("settings", () => {
 
     it("deletes a command and removes it from data.json", async () => {
       await expandSection("Commands");
-      await clickIcon("Delete command Disposable command");
+      await clickIcon("Delete Disposable command");
       await deleteInModal();
 
       await waitForSettings(

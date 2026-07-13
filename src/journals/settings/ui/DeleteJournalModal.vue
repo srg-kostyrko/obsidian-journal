@@ -19,6 +19,7 @@ function submit(): void {
 
 <template>
   <UiSettingRow :name="m.journal_delete_mode_label()">
+    <template #description>{{ m.journal_delete_mode_description({ mode }) }}</template>
     <UiDropdown v-model="mode">
       <option value="keep">{{ m.journal_delete_mode_option({ mode: "keep" }) }}</option>
       <option value="clear">{{ m.journal_delete_mode_option({ mode: "clear" }) }}</option>

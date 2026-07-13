@@ -13,7 +13,7 @@ export const confirmCreationModal = defineModal<boolean>()({
 
 export type ConnectNoteResult =
   | { action: "connect"; journalName: string; anchor: AnchorString; override: boolean; rename: boolean; move: boolean }
-  | { action: "disconnect" };
+  | { action: "disconnect"; journalName: string };
 
 export const connectNoteModal = defineModal<ConnectNoteResult>()({
   component: ConnectNoteModal,

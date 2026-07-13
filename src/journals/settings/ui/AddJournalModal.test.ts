@@ -89,7 +89,7 @@ describe("AddJournalModal", () => {
   it("submits a fixed-write payload with defaults on save", async () => {
     const { submit } = await mountModal();
     await userEvent.type(screen.getByRole("textbox"), "daily");
-    await userEvent.click(screen.getByText(m.common_action_submit()));
+    await userEvent.click(screen.getByText(m.common_action_create()));
     await waitFor(() => expect(submit).toHaveBeenCalledWith({ name: "daily", write: { type: "day" } }));
   });
 
@@ -103,7 +103,7 @@ describe("AddJournalModal", () => {
     await userEvent.click(screen.getByRole("button", { name: m.common_pick_a_date() }));
     const period = DayPeriod.containing(date("2024-01-01"));
     fakeModalService.lastOpen<unknown, typeof period>().submit(period);
-    await userEvent.click(screen.getByText(m.common_action_submit()));
+    await userEvent.click(screen.getByText(m.common_action_create()));
     await waitFor(() =>
       expect(submit).toHaveBeenCalledWith({
         name: "sprints",
@@ -114,7 +114,7 @@ describe("AddJournalModal", () => {
 
   it("surfaces a required-name error when submitting without a name", async () => {
     const { submit } = await mountModal();
-    await userEvent.click(screen.getByText(m.common_action_submit()));
+    await userEvent.click(screen.getByText(m.common_action_create()));
     await waitFor(() => expect(screen.getByText(m.journal_name_required_error())).toBeTruthy());
     expect(submit).not.toHaveBeenCalled();
   });
@@ -122,7 +122,7 @@ describe("AddJournalModal", () => {
   it("surfaces a unique-name error when colliding with an existing journal", async () => {
     const { submit } = await mountModal({ journals: { daily: makeJournal("daily") } });
     await userEvent.type(screen.getByRole("textbox"), "daily");
-    await userEvent.click(screen.getByText(m.common_action_submit()));
+    await userEvent.click(screen.getByText(m.common_action_create()));
     await waitFor(() => {
       expect(screen.getByText(m.journal_name_unique_error())).toBeTruthy();
     });
@@ -133,7 +133,7 @@ describe("AddJournalModal", () => {
     const { submit } = await mountModal();
     await userEvent.type(screen.getByRole("textbox"), "x");
     await userEvent.selectOptions(screen.getByRole("combobox"), "custom");
-    await userEvent.click(screen.getByText(m.common_action_submit()));
+    await userEvent.click(screen.getByText(m.common_action_create()));
     await waitFor(() => expect(screen.getByText(m.journal_add_modal_anchor_required_error())).toBeTruthy());
     expect(submit).not.toHaveBeenCalled();
   });

@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { useResolvedWeekPlacement } from "@/calendar";
 import { usePeriodWindow } from "@/calendar/ui";
+import { m } from "@/i18n";
 import NotesWeekView from "@/notes-calendar/ui/NotesWeekView.vue";
 import { useFollowActiveDate } from "@/notes-calendar/use-follow-active-date";
 import { useShelfScope } from "@/notes-calendar/use-shelf-scope";
@@ -38,6 +39,9 @@ const weekPlacement = useResolvedWeekPlacement(() => props.config.weeks);
 
 <template>
   <div class="journal-view-week-calendar">
+    <div v-if="scope.all.value.length === 0" class="journal-view-calendar-empty">
+      {{ m.view_block_calendar_no_journals() }}
+    </div>
     <NotesWeekView
       v-for="week of weeks"
       :key="week.start.toAnchor()"
@@ -55,5 +59,9 @@ const weekPlacement = useResolvedWeekPlacement(() => props.config.weeks);
   display: flex;
   flex-direction: column;
   gap: var(--size-4-2);
+}
+.journal-view-calendar-empty {
+  color: var(--text-faint);
+  text-align: center;
 }
 </style>

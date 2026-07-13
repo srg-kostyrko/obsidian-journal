@@ -85,7 +85,7 @@ describe("CommandsDashboardBlock", () => {
     const { container, flows } = await setup({ "c-1": makeConfig("Global one", "all") });
     mount(container);
     await userEvent.click(screen.getByText(m.command_section_title()));
-    await userEvent.click(screen.getByLabelText(`${m.command_edit()} Global one`));
+    await userEvent.click(screen.getByLabelText(m.command_edit_tooltip({ name: "Global one" })));
     expect(flows.invoke).toHaveBeenCalledWith(EditCommandFlow, {
       commandId: "c-1",
       target: { kind: "all", writeType: "day" },
@@ -96,7 +96,7 @@ describe("CommandsDashboardBlock", () => {
     const { container, flows } = await setup({ "c-1": makeConfig("Global one", "all") });
     mount(container);
     await userEvent.click(screen.getByText(m.command_section_title()));
-    await userEvent.click(screen.getByLabelText(`${m.command_delete()} Global one`));
+    await userEvent.click(screen.getByLabelText(m.common_delete_name({ name: "Global one" })));
     expect(flows.invoke).toHaveBeenCalledWith(DeleteCommandFlow, { commandId: "c-1" });
   });
 });

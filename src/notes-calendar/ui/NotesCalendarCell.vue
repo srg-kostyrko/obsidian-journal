@@ -25,11 +25,15 @@ const isToday = computed(() => rawPeriod.value.contains(CalendarDate.today()));
 <template>
   <span
     class="notes-calendar-cell"
+    :role="isInactive ? undefined : 'button'"
+    :tabindex="isInactive ? undefined : 0"
     :data-active="isActive || null"
     :data-inactive="isInactive || null"
     :data-anchor="rawPeriod.anchor.toAnchor()"
     :data-today="isToday || null"
     @click="cell.open(rawPeriod, $event)"
+    @keydown.enter="cell.open(rawPeriod, $event)"
+    @keydown.space.prevent="cell.open(rawPeriod, $event)"
     @contextmenu.prevent="cell.openContextMenu(rawPeriod, $event)"
     @mouseenter="cell.openPreview(rawPeriod, $event)"
   >

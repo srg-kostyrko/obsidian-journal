@@ -100,10 +100,12 @@ function addBlock(): void {
     </UiSettingRow>
 
     <UiSettingRow :name="m.common_label_icon()">
+      <template #description>{{ m.view_edit_icon_description() }}</template>
       <UiIconSuggest v-model="iconValue" />
     </UiSettingRow>
 
     <UiSettingRow :name="m.view_edit_default_shelf_label()">
+      <template #description>{{ m.view_edit_default_shelf_description() }}</template>
       <UiDropdown v-model="shelfValue">
         <option value="">{{ m.common_label_all_journals() }}</option>
         <option v-for="opt of shelvesVM.shelfOptions.value" :key="opt.value" :value="opt.value">
@@ -113,14 +115,17 @@ function addBlock(): void {
     </UiSettingRow>
 
     <UiSettingRow :name="m.common_show_in_ribbon()">
+      <template #description>{{ m.view_edit_show_in_ribbon_description() }}</template>
       <UiToggle v-model="ribbonValue" />
     </UiSettingRow>
 
     <UiSettingRow :name="m.view_edit_open_on_startup_label()">
+      <template #description>{{ m.view_edit_open_on_startup_description() }}</template>
       <UiToggle v-model="openOnStartupValue" />
     </UiSettingRow>
 
     <UiSettingRow :name="m.view_edit_leaf_label()">
+      <template #description>{{ m.view_edit_leaf_description() }}</template>
       <UiDropdown v-model="leafValue">
         <option value="left">{{ m.view_edit_leaf_left() }}</option>
         <option value="right">{{ m.view_edit_leaf_right() }}</option>

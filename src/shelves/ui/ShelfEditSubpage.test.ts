@@ -94,7 +94,7 @@ describe("ShelfEditSubpage", () => {
       shelves: { Work: { name: "Work", journals: ["daily"] } },
     });
     mount(container, "Work");
-    expect(screen.getByLabelText(`${m.journal_dashboard_edit()} daily`)).toBeTruthy();
+    expect(screen.getByLabelText(m.journal_dashboard_edit({ name: "daily" }))).toBeTruthy();
   });
 
   it("invokes BulkAddFlow when a member journal's bulk-add is clicked", async () => {
@@ -104,7 +104,7 @@ describe("ShelfEditSubpage", () => {
     });
     vi.spyOn(flows, "invoke").mockReturnValue(AsyncResult.ok(undefined));
     mount(container, "Work");
-    await userEvent.click(screen.getByLabelText(`${m.journal_dashboard_bulk_add()} daily`));
+    await userEvent.click(screen.getByLabelText(m.journal_dashboard_bulk_add({ name: "daily" })));
     expect(flows.invoke).toHaveBeenCalledWith(BulkAddFlow, { journalName: "daily" });
   });
 

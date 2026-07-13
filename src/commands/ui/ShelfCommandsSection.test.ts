@@ -76,7 +76,7 @@ describe("ShelfCommandsSection", () => {
     });
     mount(container);
     await userEvent.click(screen.getByText(m.command_section_title()));
-    await userEvent.click(screen.getByLabelText(`${m.command_edit()} Mine`));
+    await userEvent.click(screen.getByLabelText(m.command_edit_tooltip({ name: "Mine" })));
     expect(flows.invoke).toHaveBeenCalledWith(EditCommandFlow, {
       commandId: "c-1",
       target: { kind: "shelf", shelfName: "work", writeType: "day" },
@@ -89,7 +89,7 @@ describe("ShelfCommandsSection", () => {
     });
     mount(container);
     await userEvent.click(screen.getByText(m.command_section_title()));
-    await userEvent.click(screen.getByLabelText(`${m.command_delete()} Mine`));
+    await userEvent.click(screen.getByLabelText(m.common_delete_name({ name: "Mine" })));
     expect(flows.invoke).toHaveBeenCalledWith(DeleteCommandFlow, { commandId: "c-1" });
   });
 });

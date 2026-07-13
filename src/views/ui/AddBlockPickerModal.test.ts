@@ -49,9 +49,9 @@ describe("AddBlockPickerModal", () => {
     expect(screen.getByText(m.view_add_block_empty())).toBeTruthy();
   });
 
-  it("cancels when the user clicks Cancel", async () => {
+  it("cancels when the user clicks Close", async () => {
     const { cancel } = mountModal([blockDefinition("divider", "Divider")]);
-    await userEvent.click(screen.getByText(m.common_action_cancel()));
+    await userEvent.click(screen.getByText(m.common_action_close()));
     expect(cancel).toHaveBeenCalledTimes(1);
   });
 });
