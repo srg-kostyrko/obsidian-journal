@@ -6,9 +6,19 @@ import { m } from "@/i18n";
 import { calendarBlockSummary } from "./calendar-block-summary";
 
 describe("calendarBlockSummary", () => {
-  it("reports before/after padding when non-zero", () => {
+  it("reports both padding sides when both are non-zero", () => {
     const summary = calendarBlockSummary({ before: 1, after: 2, hiddenWeekdays: [] });
-    expect(summary).toBe(m.view_block_summary_padding({ before: 1, after: 2 }));
+    expect(summary).toBe(`${m.view_block_summary_before({ count: 1 })}, ${m.view_block_summary_after({ count: 2 })}`);
+  });
+
+  it("omits the after side when it is zero", () => {
+    const summary = calendarBlockSummary({ before: 1, after: 0, hiddenWeekdays: [] });
+    expect(summary).toBe(m.view_block_summary_before({ count: 1 }));
+  });
+
+  it("omits the before side when it is zero", () => {
+    const summary = calendarBlockSummary({ before: 0, after: 2, hiddenWeekdays: [] });
+    expect(summary).toBe(m.view_block_summary_after({ count: 2 }));
   });
 
   it("names hidden weekdays from the locale", () => {

@@ -10,8 +10,15 @@ interface CalendarLikeConfig {
 
 export function calendarBlockSummary(config: CalendarLikeConfig): string | undefined {
   const parts: string[] = [];
-  if (config.before > 0 || config.after > 0) {
-    parts.push(m.view_block_summary_padding({ before: config.before, after: config.after }));
+  const padding: string[] = [];
+  if (config.before > 0) {
+    padding.push(m.view_block_summary_before({ count: config.before }));
+  }
+  if (config.after > 0) {
+    padding.push(m.view_block_summary_after({ count: config.after }));
+  }
+  if (padding.length > 0) {
+    parts.push(padding.join(", "));
   }
   if (config.hiddenWeekdays && config.hiddenWeekdays.length > 0) {
     const names = moment.localeData().weekdaysShort();
