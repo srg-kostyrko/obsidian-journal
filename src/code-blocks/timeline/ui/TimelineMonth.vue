@@ -16,7 +16,7 @@ const month = computed(() => MonthPeriod.containing(CalendarDate.fromAnchor(prop
 
 <template>
   <div class="timeline-month">
-    <NotesMonthView :shelf :month :weeks="weeks" :hidden-weekdays="hiddenWeekdays" outside-dates="blank" />
+    <NotesMonthView :shelf :month :weeks="weeks" :hidden-weekdays="hiddenWeekdays" outside-dates="inactive" />
   </div>
 </template>
 

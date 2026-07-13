@@ -18,6 +18,7 @@ import {
   TIMELINE_BLOCK,
   TIMELINE_FENCE,
   TIMELINE_HIDDEN_WEEKDAYS_FENCE,
+  TIMELINE_QUARTER_FENCE,
   clickNavNext,
   hostNote,
   narrowNavLayout,
@@ -227,12 +228,26 @@ describe("code blocks", () => {
         await expect(grid.$$(".notes-month-view__weekday")).toBeElementsArrayOfSize(5);
       });
 
-      it("renders no adjacent-month day cells in the timeline month grid", async () => {
+      it("grays out adjacent-month day cells in the timeline month grid", async () => {
         await renderBlock("blocks/timeline.md", plainNote(TIMELINE_FENCE), `${TIMELINE_BLOCK} .notes-month-view`);
-        // Outside days are blanked in the month timeline block, so no rendered day cell carries the
-        // data-outside marker; the blanked slots keep the week grid aligned without a day number.
+        // A lone month keeps its adjacent-month days for context, rendered inactive (grayed,
+        // non-actionable) via the data-outside marker rather than blanked.
         const grid = $(`${TIMELINE_BLOCK} .notes-month-view`);
-        await expect(grid.$$(".notes-month-view__day[data-outside]")).toBeElementsArrayOfSize(0);
+        await expect(grid.$$(".notes-month-view__day[data-outside]")).toBeElementsArrayOfSize({ gte: 1 });
+        await expect(grid.$$(".notes-month-view__day--blank")).toBeElementsArrayOfSize(0);
+      });
+
+      it("blanks adjacent-month day cells in the timeline quarter grid", async () => {
+        await renderBlock(
+          "blocks/timeline-quarter.md",
+          plainNote(TIMELINE_QUARTER_FENCE),
+          `${TIMELINE_BLOCK} .notes-month-view`,
+        );
+        // Stacked months blank their adjacent-month days so a neighbor's own cells aren't
+        // shadowed by duplicated dates: blank placeholders exist, no data-outside cell remains.
+        const block = $(TIMELINE_BLOCK);
+        await expect(block.$$(".notes-month-view__day--blank")).toBeElementsArrayOfSize({ gte: 1 });
+        await expect(block.$$(".notes-month-view__day[data-outside]")).toBeElementsArrayOfSize(0);
       });
 
       it("renders the error fallback for a timeline fence with an invalid mode", async () => {

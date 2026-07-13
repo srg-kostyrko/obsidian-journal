@@ -41,6 +41,9 @@ export const timelineCalendar: CalendarSurface = calendarSurface(TIMELINE_BLOCK)
 // must show the week column for the has-open-task weekly decoration.
 export const NAV_FENCE = "```calendar-nav\n```";
 export const TIMELINE_FENCE = "```calendar-timeline\nmode: month\nweeks: left\n```";
+// Quarter mode stacks three month grids; adjacent-month days are blanked so a neighbor
+// month's own cells aren't shadowed by duplicated dates.
+export const TIMELINE_QUARTER_FENCE = "```calendar-timeline\nmode: quarter\nweeks: left\n```";
 // Hide Sunday (0) and Saturday (6): the month grid should drop those two weekday columns.
 export const TIMELINE_HIDDEN_WEEKDAYS_FENCE =
   "```calendar-timeline\nmode: month\nweeks: left\nhiddenWeekdays: [0, 6]\n```";
