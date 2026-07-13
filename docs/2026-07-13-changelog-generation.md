@@ -56,18 +56,26 @@ Each section draws from a different source, chosen so the unit matches the secti
 - Source: **union** of
   1. **Milestone** — issues closed under the release milestone
      (`gh issue list --milestone "<version>" --state closed --json number,title`).
-  2. **Commit refs** — issues referenced as `fix(es) #N` / `close(s) #N` /
-     `resolve(s) #N` in the `<lastTag>..HEAD` range (72 such refs exist today).
+  2. **Commit refs** — issues closed via GitHub keywords in the `<lastTag>..HEAD`
+     range: `(?i)(close[sd]?|fix(e[sd])?|resolve[sd]?)\s+#(\d+)` (close/closes/closed,
+     fix/fixes/fixed, resolve/resolves/resolved).
 - Deduped by issue number. The issue _title_ is the bullet text (already
   user-facing phrasing).
 - Fallback: `fix` commits that reference no issue are summarized into their own
   bullets so nothing is silently dropped.
 
 Rationale for union: the milestone is the highest-signal curated source ("this
-ships in X") but depends on tagging discipline that is currently inconsistent (2 of
-~15 recent closed issues are milestoned). Commit refs catch fixes when the milestone
-tag is forgotten. Either source alone leaks; the union is resilient and the review
-gate absorbs the extra noise.
+ships in X") but depends on tagging discipline. Commit refs catch fixes when the
+milestone tag is forgotten. Either source alone leaks; the union is resilient and
+the review gate absorbs the extra noise.
+
+Commit-ref convention: this uses GitHub's issue-closing keywords, adopted **going
+forward** — the command deliberately does not recognize the trailing `(#N)`
+scope-reference style used in pre-3.0.0 history (those cite issues for context, not
+as fixes, and over-report across a large range). Consequence: for the 3.0.0 release
+the commit-ref source is effectively empty, so 3.0.0's Bug Fixes come from the
+milestone (plus the one-time backfill below). From the next release on, closing-keyword
+refs make the union meaningful.
 
 ## Mechanism
 
