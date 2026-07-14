@@ -13,17 +13,24 @@ A comprehensive journaling solution for [Obsidian](https://obsidian.md/) that tr
 
 ### Visual & Navigation
 
-- **Calendar View**: Built-in calendar for easy date navigation
+- **Configurable Views**: Build your own views by composing blocks (month/week/quarter/year/decade and custom-interval calendars, toolbars, dividers, spacers) and toolbar items; open each view in the left or right sidebar or as a tab
 - **Timeline View**: Navigate through time periods with customizable code blocks
 - **Note Decorations**: Visually highlight notes based on contents, dates, or status
 - **Navigation Blocks**: Quick links to related journal entries
+- **Date Picker**: Drill down across day, week, month, quarter, year, and decade
 
 ### Organization
 
-- **Journal Shelves**: Group related journals together
-- **Custom Commands**: Create shortcuts for your most common journal operations
-- **Templating**: Powerful variable system for consistent journal entries
+- **Journal Shelves**: Group related journals together and target commands and views at a whole shelf
+- **Custom Commands**: Create shortcuts for your most common journal operations, including opening the next, previous, or nearest existing note, and target them at a specific journal or shelf
+- **Templating**: Powerful variable system for consistent journal entries, with Templater support
 - **Frontmatter**: Automatic metadata for better organization
+
+### Integrations & Tooling
+
+- **URI Scheme**: Open (and create, applying templates) journal notes via `obsidian://` links
+- **Insert Date Link**: Command to insert a link to any journal date at the cursor
+- **Logging**: Capture plugin activity and dump it to a note for troubleshooting
 
 ## Installation
 
@@ -39,28 +46,33 @@ The Journals plugin offers extensive configuration options to customize your jou
 
 ### Global Settings
 
-- **Use Shelves**: Enable this option to organize journals into logical groups (like work, personal, projects). Shelves allow you to:
+- **Shelves**: Organize journals into logical groups (like work, personal, projects). Shelves let you:
 
-  - Filter the calendar view to show only journals from a specific shelf
+  - Scope views to show only journals from a specific shelf
   - Limit decorations in navigation blocks to the current shelf
+  - Target commands and views at a whole shelf
   - Manage related journals together
 
-- **Open on Startup**: Choose a journal that will automatically open when you launch Obsidian. Select "Don't open" to disable this feature.
+- **Open on Startup**: Choose journals and views that automatically open when you launch Obsidian.
+- **Week Numbers**: Set the global default for where the week-number column appears (before/after weekdays, or hidden); individual view blocks can override it.
+- **Logging**: Set the log level and dump captured activity to a note for troubleshooting.
 
 ### Calendar Settings
 
 - **Week Start**: Choose which day starts your week (Monday, Sunday, etc.)
-- **Calendar View Position**: Display the calendar in the left or right sidebar
-- **Week Numbers**: Show week numbers before or after weekdays, or hide them
-- **Today Button Mode**:
-
-  - Create note: Creates today's note if it doesn't exist
-  - Navigate: Opens existing note only
-  - Switch date: Just switches calendar view to current month
-
 - **Calendar Highlighting**:
   - Customize today's date highlight (text and background colors)
   - Customize active note highlight (text and background colors)
+
+### View & Block Settings
+
+Views are assembled from blocks and toolbar items, each with its own configuration:
+
+- **Open in**: Left sidebar, right sidebar, or a tab
+- **Open on startup**: Automatically open the view when Obsidian launches
+- **Follow active note**: Keep the view in sync with the note you're editing
+- **Week-number placement**: Per block — inherit the global default, or force left/right/hidden
+- **Hidden weekdays**: Hide specific weekdays (e.g., weekends) from calendar blocks
 
 ### Journal Configuration
 
@@ -121,7 +133,10 @@ Create custom commands to quickly navigate between journal notes:
 
   - Same date in current/next/previous period (e.g., "same day next week")
   - Next/previous entry in the same journal
+  - Next/previous _existing_ note (skips gaps to the nearest note that exists)
   - Combined navigation (e.g., "same day in next month")
+
+- **Targets**: Point a command at a specific journal or a whole shelf
 
 - **Context Settings**:
 
@@ -182,6 +197,10 @@ There variables can be used in note name template, note storage path, content of
 - `{{start_date}}` - first day of week, month, quarter, year or interval depending on note type, formatting rules are the same as in `{{date}}`, as well as the calculations
 - `{{end_date}}` - last day of week, month, quarter, year or interval depending on note type, formatting rules are the same as in `{{date}}`, as well as the calculations
 - `{{index}}` - available for interval based journals indicating index of interval (like financial quarter or spring number)
+- `{{title}}` - alias of `{{note_name}}` (available in note content)
+- `{{current_date}}` - the date the note is rendered on (not the reference period), formatted with `{{current_date:format}}`
+- `{{current_time}}` / `{{time}}` - the clock time at render, formatted with `{{time:HH:mm}}`
+- `{{journal_link(journal_name)}}` - a link to the corresponding note in another journal; supports date manipulations, e.g. `{{journal_link(daily)+1d}}`
 
 ## Supported code blocks
 

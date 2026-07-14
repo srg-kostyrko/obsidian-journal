@@ -2,12 +2,34 @@
 
 All notable changes to this project will be documented in this file.
 
-## [unreleased]
+## [Unreleased]
+
+### Features
+
+- Complete rewrite of the plugin on a new modular foundation, with automatic migration of settings and existing notes from earlier versions.
+- Build and customize your own calendar views by composing blocks (month, week, quarter, year, decade, and custom-interval calendars, plus toolbars, dividers, and spacers) and toolbar items (shelf selector, period buttons, navigation buttons, and more).
+- Target a specific journal from a custom command or toolbar button, so hotkeys act on it without prompting.
+- Choose where the week-number column appears per block, with a global default.
+- Open the nearest existing note for a journal or shelf, via command or a defined-navigation toolbar item.
+- New markdown-template block for custom views that renders a template file inline.
+- Automatically attach externally created notes that match a journal's naming.
+- Logging tools that capture activity and dump it to a note for troubleshooting.
+- Open journal notes through the Obsidian URI scheme.
+- Insert a link to a journal date at the cursor via command.
+- New `journal_link` template variable.
+- Hide specific weekdays on the calendar with a per-weekday picker.
+- Meaningful, stable CSS class names on calendar and code-block elements for easier theming.
 
 ### Bug Fixes
 
-- Fix hover preview to support pressing contol key after hover
-- Fix custom interval calculation for month intervals starting on last days of month
+- Warn when a name template would connect every entry to the same note; previously, notes with only a title and no date all collided onto a single note.
+- Weekly navigation now reaches ISO week 53 at year boundaries instead of skipping it.
+- Sequence numbering resets now cycle correctly.
+- Creating a weekly journal mid-week now creates the current note immediately instead of waiting for the next week.
+- Decorations based on a checkbox (boolean) property now match correctly.
+- A navigation link no longer opens two context menus at once.
+- Previously imported notes now appear on the calendar after startup.
+- The open-next and open-previous note commands now work in Reading (preview) mode.
 
 ## [2.1.9] - 2025-06-07
 
