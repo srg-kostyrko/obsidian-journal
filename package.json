@@ -7,6 +7,7 @@
     "dev": "vite build --watch",
     "build": "vite build",
     "compile:i18n": "paraglide-js compile --project ./project.inlang --outdir ./src/i18n/paraglide",
+    "translate:i18n": "npx --yes @inlang/cli machine translate --project ./project.inlang && node scripts/fix-i18n-variant-keys.mjs",
     "version": "node version-bump.mjs && git add manifest.json manifest-beta.json versions.json",
     "check:lint": "eslint . --cache --cache-location node_modules/.cache/eslint/",
     "test": "vitest run",

@@ -1,0 +1,1555 @@
+{
+	"$schema": "https://inlang.com/schema/inlang-message-format",
+	"calendar_apply_globally_desc": "Якщо вимкнено, налаштування конфігурації тижня застосовуються лише до дат у журналах і не впливають на дати, створені іншими плагінами або самим Obsidian.",
+	"calendar_apply_globally_restart_hint": "Можливо, вам доведеться перезапустити Obsidian, щоб зміни набули чинності.",
+	"calendar_apply_globally_title": "Застосувати конфігурацію тижня до всіх дат у сховищі",
+	"calendar_appearance_active_background": "Активний — фон",
+	"calendar_appearance_active_text": "Активний — текст",
+	"calendar_appearance_section_title": "Виділення календаря",
+	"calendar_appearance_description": [
+		{
+			"declarations": [
+				"input layer",
+				"input target"
+			],
+			"selectors": [
+				"layer",
+				"target"
+			],
+			"match": {
+				"layer=text,target=today": "Колір тексту клітинки календаря для сьогоднішньої дати.",
+				"layer=background,target=today": "Колір фону клітинки календаря для сьогоднішньої дати.",
+				"layer=text,target=active": "Колір тексту комірки календаря, нотатка якої наразі відкрита.",
+				"layer=background,target=active": "Колір фону комірки календаря, нотатка якої наразі відкрита."
+			}
+		}
+	],
+	"calendar_appearance_today_background": "Сьогодні — передісторія",
+	"calendar_appearance_today_text": "Сьогодні — текст",
+	"common_label_back": "Назад до списку",
+	"common_label_calendar": "Календар",
+	"common_pick_a_date": "Виберіть дату",
+	"calendar_picker_first_week_desc": "День січня (1–7), який має містити перший тиждень року. Наприклад, 4 означає, що перший тиждень містить 4 січня.",
+	"calendar_picker_first_week_label": "Перший тиждень року",
+	"calendar_picker_in_use_marker": "Використовується наразі",
+	"calendar_picker_start_week_on": "Початок тижня",
+	"calendar_picker_start_week_on_desc": "Який день вважати першим днем тижня.",
+	"calendar_picker_update_action": "Оновлення",
+	"calendar_picker_use_action": "Використання",
+	"calendar_preset_description": [
+		{
+			"declarations": [
+				"input preset"
+			],
+			"selectors": [
+				"preset"
+			],
+			"match": {
+				"preset=locale": "Використовувати налаштування тижня, визначені поточною локалізацією Obsidian.",
+				"preset=iso-8601": "Тиждень починається в понеділок. Перший тиждень року включає перший четвер (4 січня).",
+				"preset=western": "Тиждень починається в неділю. Перший тиждень року включає першу суботу (1 січня).",
+				"preset=middle-eastern": "Тиждень починається в суботу. Перший тиждень року включає першу п'ятницю (1 січня).",
+				"preset=custom": "Визначте, який день тижня вважати першим і як визначається перший тиждень року."
+			}
+		}
+	],
+	"calendar_preset_custom_summary": "Тиждень починається з {dayName} . Перший тиждень року включає січень {firstDayOfYear} .",
+	"calendar_preset_iso_used": "ЄС (за винятком Португалії) та більшість інших європейських країн, більшість країн Азії та Океанії.",
+	"calendar_preset_middle_eastern_used": "Значна частина Близького Сходу.",
+	"calendar_preset_name": [
+		{
+			"declarations": [
+				"input preset"
+			],
+			"selectors": [
+				"preset"
+			],
+			"match": {
+				"preset=locale": "Слідкуйте за локалізацією системи",
+				"preset=iso-8601": "ISO 8601",
+				"preset=western": "Західний традиційний",
+				"preset=middle-eastern": "Близькосхідний",
+				"preset=custom": "Користувацька"
+			}
+		}
+	],
+	"common_week_configuration": "Конфігурація тижня",
+	"calendar_preset_western_used": "Канада, США, Ісландія, Португалія, Японія, Тайвань, Таїланд, Гонконг, Макао, Ізраїль, Єгипет, Південна Африка, Філіппіни та більшість країн Латинської Америки.",
+	"calendar_week_config_change": "Зміна",
+	"calendar_week_config_description": "Визначте, з якого дня починається тиждень і як визначається перший тиждень року — це впливає на номери тижнів.",
+	"code_blocks_nav_not_connected": "Нотатка не пов'язана з журналом",
+	"code_blocks_home_empty": "Немає журналів для показу. Перевірте параметри показу та полиці блоку.",
+	"view_block_calendar_no_journals": "На цій полиці немає журналів.",
+	"code_blocks_nav_next": "Далі",
+	"code_blocks_nav_previous": "Попередній",
+	"nav_block_section_title": "Блок навігації",
+	"nav_block_section_mode_label": "Режим",
+	"nav_block_section_mode_option": [
+		{
+			"declarations": [
+				"input kind"
+			],
+			"selectors": [
+				"kind"
+			],
+			"match": {
+				"kind=create": "Створити нову нотатку",
+				"kind=existing": "Відкрити наявну нотатку"
+			}
+		}
+	],
+	"nav_block_section_use_defaults": [
+		{
+			"declarations": [
+				"input writeType"
+			],
+			"selectors": [
+				"writeType"
+			],
+			"match": {
+				"writeType=day": "Використовуйте налаштування за замовчуванням для щоденних нотаток",
+				"writeType=week": "Використовуйте налаштування за замовчуванням для щотижневих нотаток",
+				"writeType=month": "Використовуйте налаштування за замовчуванням для щомісячних нотаток",
+				"writeType=quarter": "Використовуйте значення за замовчуванням для квартальних нотаток",
+				"writeType=year": "Використовуйте значення за замовчуванням для щорічних нотаток",
+				"writeType=*": "Використовувати значення за замовчуванням"
+			}
+		}
+	],
+	"block_rows_decorate_whole_label": "Прикрасьте весь блок",
+	"block_rows_empty": "Ще немає рядків. Додайте один.",
+	"block_rows_add_row": "Додати рядок",
+	"block_rows_edit_tooltip": "Редагувати рядок",
+	"block_rows_delete_tooltip": "Видалити рядок",
+	"common_action_move_up": "Перемістити вгору",
+	"common_action_move_down": "Перемістити вниз",
+	"interval_block_section_title": "Рядки календарного інтервалу",
+	"nav_block_row_modal_title": [
+		{
+			"declarations": [
+				"input mode"
+			],
+			"selectors": [
+				"mode"
+			],
+			"match": {
+				"mode=add": "Додати рядок навігаційного блоку",
+				"mode=edit": "Редагувати рядок навігаційного блоку"
+			}
+		}
+	],
+	"nav_block_row_field_template": "Шаблон",
+	"nav_block_row_field_font_size": "Розмір шрифту",
+	"nav_block_row_field_bold": "Жирний шрифт",
+	"nav_block_row_field_italic": "Курсив",
+	"common_label_text_color": "Колір тексту",
+	"common_label_background_color": "Колір фону",
+	"nav_block_row_field_link": "Посилання",
+	"common_label_journal": "Журнал",
+	"nav_block_row_field_add_decorations": "Додати прикраси",
+	"nav_block_row_link_option": [
+		{
+			"declarations": [
+				"input kind"
+			],
+			"selectors": [
+				"kind"
+			],
+			"match": {
+				"kind=none": "Жоден",
+				"kind=self": "Сам",
+				"kind=journal": "Журнал",
+				"kind=day": "День",
+				"kind=week": "Тиждень",
+				"kind=month": "Місяць",
+				"kind=quarter": "Чверть",
+				"kind=year": "Рік"
+			}
+		}
+	],
+	"nav_block_row_template_required": "Шаблон обов'язковий.",
+	"nav_block_row_journal_required": "Виберіть журнал.",
+	"nav_block_row_resolved_preview": "Вирішено: {text}",
+	"command_add": "Додати команду",
+	"command_context_open_note_clarifier": "(використовується дата відкритої нотатки або сьогоднішній день)",
+	"command_context_only_open_note_clarifier": "(використовується дата відкритої нотатки)",
+	"command_context_option": [
+		{
+			"declarations": [
+				"input context"
+			],
+			"selectors": [
+				"context"
+			],
+			"match": {
+				"context=today": "Сьогодні",
+				"context=open_note": "Поточна відкрита нотатка",
+				"context=only_open_note": "Тільки відкрита нота"
+			}
+		}
+	],
+	"command_empty": [
+		{
+			"declarations": [
+				"input scope"
+			],
+			"selectors": [
+				"scope"
+			],
+			"match": {
+				"scope=global": "Глобальні команди ще не створено.",
+				"scope=journal": "Для цього журналу ще не створено жодних команд.",
+				"scope=shelf": "Для цієї полиці ще не створено жодних команд."
+			}
+		}
+	],
+	"command_section_title": "Команди",
+	"command_delete_modal_confirm": "Видалити команду \" {name} \"?",
+	"command_delete": "Команда видалення",
+	"command_edit": "Команда редагування",
+	"command_edit_tooltip": "Редагувати {name}",
+	"command_icon_required_error": "Виберіть піктограму, щоб відобразити цю команду на стрічці.",
+	"command_insert_date_link": "Вставити посилання на нотатку в журналі",
+	"command_label_today": "Відкрити сьогоднішню нотатку",
+	"command_label_tomorrow": "Відкрити нотатку на завтра",
+	"command_label_yesterday": "Відкрити вчорашню нотатку",
+	"command_modal_context_description": "Виберіть дату нотатки, яку команда вважатиме поточною.",
+	"command_modal_context_label": "Контекст",
+	"command_modal_context_only_open_note_hint": "Виконується лише тоді, коли відкрито нотатку в журналі, використовуючи дату цієї нотатки.",
+	"command_modal_context_open_note_hint": "Використовує дату відкритої нотатки журналу або сьогоднішню дату, якщо нотатки журналу не відкриті.",
+	"common_label_icon": "Значок",
+	"common_label_name": "Ім'я",
+	"command_modal_open_mode_label": "Відкрити нотатку",
+	"common_show_in_ribbon": "Показати на стрічці",
+	"command_modal_type_label": "Коли виконується команда",
+	"command_modal_write_type_label": "Тип нотатки",
+	"command_name_required_error": "Ім'я команди обов'язкове.",
+	"command_name_unique_error": "Ім'я команди має бути унікальним.",
+	"command_open_mode_option": [
+		{
+			"declarations": [
+				"input mode"
+			],
+			"selectors": [
+				"mode"
+			],
+			"match": {
+				"mode=active": "Заміна активної ноти",
+				"mode=tab": "У новій вкладці",
+				"mode=split": "Поруч з активною нотаткою",
+				"mode=window": "У спливаючому вікні"
+			}
+		}
+	],
+	"command_open_next": "Відкрити наступну нотатку",
+	"command_open_previous": "Відкрити попередню нотатку",
+	"command_open_not_connected": "Ця нотатка не пов'язана з жодним журналом.",
+	"command_open_no_next": "Після цієї наступної ноти немає.",
+	"command_open_no_previous": "Перед цією нотаткою немає жодної попередньої.",
+	"command_type_label": [
+		{
+			"declarations": [
+				"input type",
+				"input writeType"
+			],
+			"selectors": [
+				"type",
+				"writeType"
+			],
+			"match": {
+				"type=same,writeType=day": "Відкрити поточну щоденну нотатку",
+				"type=same,writeType=week": "Відкрити поточну тижневу нотатку",
+				"type=same,writeType=month": "Відкрити поточну щомісячну нотатку",
+				"type=same,writeType=quarter": "Відкрити поточну квартальну ноту",
+				"type=same,writeType=year": "Відкрити поточну річну ноту",
+				"type=same,writeType=custom": "Відкрити поточну власну нотатку",
+				"type=next,writeType=day": "Відкрити наступну щоденну нотатку",
+				"type=next,writeType=week": "Відкрити наступну щотижневу нотатку",
+				"type=next,writeType=month": "Відкрити наступну щомісячну нотатку",
+				"type=next,writeType=quarter": "Відкрити наступну квартальну ноту",
+				"type=next,writeType=year": "Відкрити наступну річну нотатку",
+				"type=next,writeType=custom": "Відкрити наступну власну нотатку",
+				"type=previous,writeType=day": "Відкрити попередню щоденну нотатку",
+				"type=previous,writeType=week": "Відкрити попередню тижневу нотатку",
+				"type=previous,writeType=month": "Відкрити попередню щомісячну нотатку",
+				"type=previous,writeType=quarter": "Відкрити попередню квартальну ноту",
+				"type=previous,writeType=year": "Відкрити попередню річну нотатку",
+				"type=previous,writeType=custom": "Відкрити попередню власну нотатку",
+				"type=previous_available,writeType=day": "Відкрити попередню існуючу щоденну нотатку",
+				"type=previous_available,writeType=week": "Відкрити попередню існуючу тижневу нотатку",
+				"type=previous_available,writeType=month": "Відкрити попередню існуючу щомісячну нотатку",
+				"type=previous_available,writeType=quarter": "Відкрити попередню існуючу квартальну ноту",
+				"type=previous_available,writeType=year": "Відкрити попередню існуючу річну ноту",
+				"type=previous_available,writeType=custom": "Відкрити попередню існуючу власну нотатку",
+				"type=next_available,writeType=day": "Відкрити наступну існуючу щоденну нотатку",
+				"type=next_available,writeType=week": "Відкрити наступну існуючу щотижневу нотатку",
+				"type=next_available,writeType=month": "Відкрити наступну існуючу щомісячну нотатку",
+				"type=next_available,writeType=quarter": "Відкрити наступний існуючий квартальний запис",
+				"type=next_available,writeType=year": "Відкрити наступну існуючу річну ноту",
+				"type=next_available,writeType=custom": "Відкрити наступну існуючу власну нотатку",
+				"type=same_next_week,writeType=*": "Відкрито того ж дня наступного тижня",
+				"type=same_previous_week,writeType=*": "Відкрито минулого тижня того ж дня",
+				"type=same_next_month,writeType=*": "Відкрито того ж дня наступного місяця",
+				"type=same_previous_month,writeType=*": "Відкрито того ж дня минулого місяця",
+				"type=same_next_year,writeType=day": "Відкрито того ж дня наступного року",
+				"type=same_next_year,writeType=month": "Відкрито в тому ж місяці наступного року",
+				"type=same_next_year,writeType=quarter": "Відкрито в тому ж кварталі наступного року",
+				"type=same_previous_year,writeType=day": "Відкрито того ж дня минулого року",
+				"type=same_previous_year,writeType=month": "Відкрито в тому ж місяці минулого року",
+				"type=same_previous_year,writeType=quarter": "Відкрито в тому ж кварталі минулого року",
+				"type=*,writeType=*": "Відкрити нотатку"
+			}
+		}
+	],
+	"command_write_type_option": [
+		{
+			"declarations": [
+				"input writeType"
+			],
+			"selectors": [
+				"writeType"
+			],
+			"match": {
+				"writeType=day": "Щоденна нотатка",
+				"writeType=week": "Щотижнева нотатка",
+				"writeType=month": "Щомісячна нотатка",
+				"writeType=quarter": "Квартальна нотатка",
+				"writeType=year": "Річна нотатка",
+				"writeType=custom": "Спеціальна нотатка"
+			}
+		}
+	],
+	"command_connect_note": "Підключити нотатку до журналу",
+	"connect_note_modal_date_label": "Дата",
+	"connect_note_modal_move_description": "Папка нотатки ( {current} ) відрізняється від налаштованої папки журналу ( {configured} ).",
+	"connect_note_modal_override_description": "З цією датою пов’язана ще одна нотатка ( {path} ). Її буде від’єднано, якщо ви ввімкнете цю функцію.",
+	"connect_note_modal_override_label": "Замініть нотатку, яка вже пов'язана з цією датою",
+	"connect_note_modal_rename_description": "Назва нотатки ( {current} ) відрізняється від налаштованої назви журналу ( {configured} ).",
+	"connect_note_modal_rename_label": "Перейменуйте файл відповідно до журналу",
+	"connect_note_modal_move_label": "Перемістити файл до папки журналу",
+	"connect_note_modal_connect": "Підключитися",
+	"connect_note_modal_connected_to": "Ця нотатка пов’язана з \" {journalName} \".",
+	"connect_note_modal_disconnect": "Відключитися",
+	"connect_note_modal_out_of_bounds": "Ця дата знаходиться поза межами активної часової шкали журналу.",
+	"connect_note_notice_connected": "Примітка, пов’язана з \" {journalName} \".",
+	"connect_note_notice_disconnected": "Примітка відключена від \" {journalName} \".",
+	"bulk_add_notes_to_title": "Додати примітки до {journalName}",
+	"bulk_add_folder_label": "Вихідна папка",
+	"bulk_add_folder_description": "Виберіть папку з наявними нотатками, які потрібно обробити.",
+	"bulk_add_date_place_label": "Прочитайте дату з",
+	"bulk_add_date_place_title": "Назва нотатки",
+	"bulk_add_date_place_property": "Власність",
+	"common_label_property_name": "Назва власності",
+	"bulk_add_date_format_label": "Формат дати",
+	"bulk_add_date_format_omit_time": "Якщо ваші дати містять компонент часу, пропустіть його з формату.",
+	"bulk_add_date_format_property_note": "Дати можуть відрізнятися від способу їх збереження — перевірте формат у режимі відображення джерела.",
+	"bulk_add_filter_combinator_label": "Фільтрувати нотатки",
+	"bulk_add_filter_combinator_no": "Без фільтра",
+	"bulk_add_filter_combinator_and": "Відповідає всім умовам",
+	"bulk_add_filter_combinator_or": "Відповідає будь-якій умові",
+	"bulk_add_add_filter_title": "Додати умову заголовка",
+	"bulk_add_add_filter_tag": "Додати умову тегу",
+	"bulk_add_add_filter_property": "Додати умову властивості",
+	"bulk_add_existing_label": "Коли нотатка вже пов'язана з цією датою",
+	"bulk_add_existing_description": [
+		{
+			"declarations": [
+				"input option"
+			],
+			"selectors": [
+				"option"
+			],
+			"match": {
+				"option=skip": "Нова нота залишається недоторканою та не підключеною.",
+				"option=override": "Нова нотатка переймає дату; попередньо підключена нотатка залишається у сховищі, але відключається.",
+				"option=merge": "Вміст нової нотатки додається до вже підключеної нотатки, а нова нотатка видаляється.",
+				"option=ask": "Визначтеся з кожною нотаткою на екрані огляду."
+			}
+		}
+	],
+	"bulk_add_other_folder_label": "Коли папка відрізняється",
+	"bulk_add_other_name_label": "Коли назва відрізняється",
+	"bulk_add_option_skip": "Пропустити",
+	"bulk_add_option_override": "Замінити",
+	"bulk_add_option_merge": "Об'єднати",
+	"bulk_add_option_keep": "Зберегти",
+	"bulk_add_option_move": "Перемістити",
+	"bulk_add_option_rename": "Перейменувати",
+	"bulk_add_option_ask": "Запитайте кожного",
+	"bulk_add_dry_run_label": "Пробний запуск (лише попередній перегляд)",
+	"bulk_add_dry_run_description": "Не змінюйте жодних нотаток — просто повідомте про зміни, які будуть внесені.",
+	"bulk_add_next": "Продовжити",
+	"bulk_add_run": "Бігти",
+	"bulk_add_progress": "Обробка {done} з {total} …",
+	"bulk_add_skipped_count": [
+		{
+			"declarations": [
+				"input count"
+			],
+			"selectors": [
+				"count"
+			],
+			"match": {
+				"count=1": "1 нота пропущена",
+				"count=*": "{count} нотатки пропущено"
+			}
+		}
+	],
+	"bulk_add_planned_count": [
+		{
+			"declarations": [
+				"input count"
+			],
+			"selectors": [
+				"count"
+			],
+			"match": {
+				"count=1": "1 нотатка для обробки",
+				"count=*": "{count} нотатки для обробки"
+			}
+		}
+	],
+	"bulk_add_skip_reason_already_connected": "Вже підключено",
+	"bulk_add_skip_reason_filtered": "Відфільтровано",
+	"bulk_add_skip_reason_no_date": "Дату не знайдено",
+	"bulk_add_skip_reason_invalid_date": "Не вдалося проаналізувати дату",
+	"bulk_add_skip_reason_out_of_bounds": "Поза хронологією журналу",
+	"common_action_cancel": "Скасувати",
+	"common_action_close": "Закрити",
+	"common_action_create": "Створити",
+	"common_action_delete": "Видалити",
+	"common_action_submit": "Зберегти",
+	"confirm_note_creation_body": "Створити ' {noteName} ' у журналі ' {journalName} '?",
+	"confirm_note_creation_confirm": "Створити",
+	"confirm_note_creation_title": "Створити нову нотатку в журналі?",
+	"decoration_add": "Додати прикрасу",
+	"decoration_border_mode_label": [
+		{
+			"declarations": [
+				"input mode"
+			],
+			"selectors": [
+				"mode"
+			],
+			"match": {
+				"mode=uniform": "Уніформа",
+				"mode=different": "Налаштування для кожної сторони"
+			}
+		}
+	],
+	"decoration_border_side_label": [
+		{
+			"declarations": [
+				"input side"
+			],
+			"selectors": [
+				"side"
+			],
+			"match": {
+				"side=top": "Верх",
+				"side=bottom": "Дно",
+				"side=left": "Ліворуч",
+				"side=right": "Праворуч"
+			}
+		}
+	],
+	"decoration_border_style_label": [
+		{
+			"declarations": [
+				"input style"
+			],
+			"selectors": [
+				"style"
+			],
+			"match": {
+				"style=solid": "Твердий",
+				"style=dashed": "Пунктирна",
+				"style=dotted": "Пунктирний",
+				"style=groove": "Грув",
+				"style=double": "Подвійний"
+			}
+		}
+	],
+	"decoration_condition_all_tasks_completed_describe": "всі завдання виконано",
+	"decoration_condition_date_describe": [
+		{
+			"declarations": [
+				"input day",
+				"input month",
+				"input year"
+			],
+			"selectors": [
+				"year"
+			],
+			"match": {
+				"year=null": "дата — {day} / {month}",
+				"year=*": "дата {day} / {month} / {year}"
+			}
+		}
+	],
+	"decoration_condition_date_any": "будь-який",
+	"decoration_condition_date_any_unit": [
+		{
+			"declarations": [
+				"input unit"
+			],
+			"selectors": [
+				"unit"
+			],
+			"match": {
+				"unit=day": "Будь-якого дня",
+				"unit=month": "Будь-який місяць",
+				"unit=year": "Будь-який рік"
+			}
+		}
+	],
+	"decoration_condition_date_unit_label": [
+		{
+			"declarations": [
+				"input unit"
+			],
+			"selectors": [
+				"unit"
+			],
+			"match": {
+				"unit=day": "День",
+				"unit=month": "Місяць",
+				"unit=year": "Рік"
+			}
+		}
+	],
+	"decoration_condition_date_hint": "Залиште поле порожнім, щоб вказати будь-який день, місяць або рік.",
+	"decoration_condition_has_note_describe": "примітка існує",
+	"decoration_condition_has_open_task_describe": "нотатка має відкрите завдання",
+	"decoration_condition_offset_describe": "зміщення від початку дорівнює {offset}",
+	"decoration_condition_offset_hint": [
+		{
+			"declarations": [
+				"input days",
+				"input side"
+			],
+			"selectors": [
+				"side"
+			],
+			"match": {
+				"side=start": "Збігається з {days} днями від початку інтервалу.",
+				"side=end": "Збігається з {days} днями з кінця інтервалу."
+			}
+		}
+	],
+	"decoration_condition_offset_label": "Зсув",
+	"decoration_condition_property_condition_label": "Хвороба",
+	"decoration_condition_property_describe": "властивість {name} {op} {value}",
+	"decoration_condition_property_value_label": "Значення",
+	"decoration_condition_property_value_type_label": "Тип",
+	"decoration_condition_tag_describe": "тег {op} {value}",
+	"decoration_condition_tag_value_label": "Значення тегу",
+	"decoration_condition_title_describe": "заголовок {op} {value}",
+	"decoration_condition_title_value_label": "Значення заголовка",
+	"decoration_condition_type_short": [
+		{
+			"declarations": [
+				"input type"
+			],
+			"selectors": [
+				"type"
+			],
+			"match": {
+				"type=title": "Назва",
+				"type=tag": "Тег",
+				"type=property": "Нерухомість",
+				"type=date": "Дата",
+				"type=weekday": "Будній день",
+				"type=offset": "Зсув",
+				"type=has-note": "Має примітку",
+				"type=has-open-task": "Має відкрите завдання",
+				"type=all-tasks-completed": "Усі завдання виконано"
+			}
+		}
+	],
+	"decoration_condition_type_label": [
+		{
+			"declarations": [
+				"input type"
+			],
+			"selectors": [
+				"type"
+			],
+			"match": {
+				"type=title": "Перевірити заголовок",
+				"type=tag": "Перевірте теги",
+				"type=property": "Перевірте властивість frontmatter",
+				"type=date": "Перевірити дату",
+				"type=weekday": "Перевірте день тижня",
+				"type=offset": "Перевірте зміщення інтервалу",
+				"type=has-note": "Перевірте, чи існує нотатка",
+				"type=has-open-task": "Перевірте, чи є в нотатці відкриті завдання",
+				"type=all-tasks-completed": "Перевірте, чи всі завдання виконано"
+			}
+		}
+	],
+	"decoration_condition_weekday_describe": "день тижня — це {weekdays}",
+	"decoration_condition_weekday_label": "Будні дні",
+	"decoration_corner_placement_label": [
+		{
+			"declarations": [
+				"input placement"
+			],
+			"selectors": [
+				"placement"
+			],
+			"match": {
+				"placement=top-left": "Угорі ліворуч",
+				"placement=top-right": "Угорі праворуч",
+				"placement=bottom-left": "Внизу ліворуч",
+				"placement=bottom-right": "Внизу праворуч"
+			}
+		}
+	],
+	"decoration_delete": "Видалити прикрасу",
+	"decoration_delete_modal_warning": "Це назавжди видалить прикрасу.",
+	"decoration_describe_mode": [
+		{
+			"declarations": [
+				"input kind"
+			],
+			"selectors": [
+				"kind"
+			],
+			"match": {
+				"kind=and": "і",
+				"kind=or": "або"
+			}
+		}
+	],
+	"decoration_describe_when": "коли",
+	"decoration_edit": "Редагувати декор",
+	"decoration_modal_add_condition": "Додати умову",
+	"decoration_modal_add_style": "Додати стиль",
+	"decoration_modal_mode_label": "Коли прикрашати",
+	"decoration_modal_mode_option": [
+		{
+			"declarations": [
+				"input kind"
+			],
+			"selectors": [
+				"kind"
+			],
+			"match": {
+				"kind=and": "Прикрашаємо, коли всі умови виконані",
+				"kind=or": "Прикрашати, коли виконується будь-яка умова"
+			}
+		}
+	],
+	"decoration_modal_no_conditions": "Умови ще не визначені",
+	"decoration_modal_no_styles": "Стилі ще не визначені",
+	"decoration_placement_x_label": [
+		{
+			"declarations": [
+				"input value"
+			],
+			"selectors": [
+				"value"
+			],
+			"match": {
+				"value=left": "Ліворуч",
+				"value=center": "Центр",
+				"value=right": "Праворуч"
+			}
+		}
+	],
+	"decoration_placement_y_label": [
+		{
+			"declarations": [
+				"input value"
+			],
+			"selectors": [
+				"value"
+			],
+			"match": {
+				"value=top": "Верх",
+				"value=middle": "Середній",
+				"value=bottom": "Дно"
+			}
+		}
+	],
+	"decoration_section_description": "Використовуйте прикраси для виділення дат у календарі, які відповідають певним умовам.",
+	"decoration_section_empty": "Прикраси календаря ще не налаштовано.",
+	"decoration_section_title": "Прикраси календаря",
+	"decoration_shape_label": [
+		{
+			"declarations": [
+				"input shape"
+			],
+			"selectors": [
+				"shape"
+			],
+			"match": {
+				"shape=square": "Квадрат",
+				"shape=circle": "Коло",
+				"shape=triangle-up": "Трикутник (вгору)",
+				"shape=triangle-down": "Трикутник (вниз)",
+				"shape=triangle-left": "Трикутник (ліворуч)",
+				"shape=triangle-right": "Трикутник (праворуч)"
+			}
+		}
+	],
+	"decoration_date_op_label": [
+		{
+			"declarations": [
+				"input op"
+			],
+			"selectors": [
+				"op"
+			],
+			"match": {
+				"op=exists": "існує",
+				"op=does-not-exist": "не існує",
+				"op=eq": "на",
+				"op=neq": "не ввімкнено",
+				"op=lt": "перед",
+				"op=lte": "або раніше",
+				"op=gt": "після",
+				"op=gte": "або після"
+			}
+		}
+	],
+	"decoration_string_op_label": [
+		{
+			"declarations": [
+				"input op"
+			],
+			"selectors": [
+				"op"
+			],
+			"match": {
+				"op=contains": "містить",
+				"op=starts-with": "починається з",
+				"op=ends-with": "закінчується на",
+				"op=exists": "існує",
+				"op=does-not-exist": "не існує",
+				"op=eq": "дорівнює",
+				"op=neq": "не дорівнює",
+				"op=lt": "<",
+				"op=lte": "&lt;=",
+				"op=gt": "&gt;",
+				"op=gte": "&gt;=",
+				"op=is-true": "правда",
+				"op=is-false": "є хибним",
+				"op=does-not-contain": "не містить"
+			}
+		}
+	],
+	"common_label_color": "Колір",
+	"decoration_style_border_mode_label": "Режим межі",
+	"decoration_style_border_show_label": "Показати",
+	"decoration_style_border_style_label": "Стиль",
+	"decoration_style_border_width_label": "Ширина",
+	"decoration_style_corner_placement_label": "Розміщення",
+	"decoration_style_header": [
+		{
+			"declarations": [
+				"input type"
+			],
+			"selectors": [
+				"type"
+			],
+			"match": {
+				"type=background": "Декорування фону",
+				"type=color": "Колір декорування",
+				"type=shape": "Декорування форми",
+				"type=corner": "Декорування куточка",
+				"type=icon": "Декорування значок",
+				"type=border": "Декорування бордюру"
+			}
+		}
+	],
+	"common_label_placement": "Розміщення",
+	"decoration_style_size_hint": [
+		{
+			"declarations": [
+				"input kind"
+			],
+			"selectors": [
+				"kind"
+			],
+			"match": {
+				"kind=icon": "Розмір значка залежить від розміру шрифту: 1 означає, що значок має такий самий розмір, як і літера.",
+				"kind=shape": "Розмір фігури залежить від розміру шрифту: 1 означає, що фігура має такий самий розмір, як і літера."
+			}
+		}
+	],
+	"common_label_size": "Розмір",
+	"decoration_style_shape_shape_label": "Форма",
+	"decoration_style_type_label": [
+		{
+			"declarations": [
+				"input type"
+			],
+			"selectors": [
+				"type"
+			],
+			"match": {
+				"type=background": "Передісторія",
+				"type=color": "Колір",
+				"type=shape": "Форма",
+				"type=corner": "Кут",
+				"type=icon": "Значок",
+				"type=border": "Кордон"
+			}
+		}
+	],
+	"ui_color_kind_label": [
+		{
+			"declarations": [
+				"input kind"
+			],
+			"selectors": [
+				"kind"
+			],
+			"match": {
+				"kind=transparent": "Прозорий",
+				"kind=theme": "Змінна теми",
+				"kind=custom": "Користувацька"
+			}
+		}
+	],
+	"ui_color_theme_variable_label": "Змінна CSS",
+	"journal_add_modal_anchor_description": "Ця дата використовується для відліку користувацьких інтервалів. Її не можна змінити після створення журналу.",
+	"common_label_today": "Сьогодні",
+	"relative_date_yesterday": "Вчора",
+	"relative_date_tomorrow": "Завтра",
+	"relative_date_last_named_day": "Останній {weekday}",
+	"relative_date_named_day": "{weekday}",
+	"relative_date_this": [
+		{
+			"declarations": [
+				"input period"
+			],
+			"selectors": [
+				"period"
+			],
+			"match": {
+				"period=week": "Цього тижня",
+				"period=month": "Цього місяця",
+				"period=quarter": "У цьому кварталі",
+				"period=year": "Цього року"
+			}
+		}
+	],
+	"relative_date_last": [
+		{
+			"declarations": [
+				"input period"
+			],
+			"selectors": [
+				"period"
+			],
+			"match": {
+				"period=week": "Минулого тижня",
+				"period=month": "Минулого місяця",
+				"period=quarter": "Остання чверть",
+				"period=year": "Минулого року"
+			}
+		}
+	],
+	"relative_date_next": [
+		{
+			"declarations": [
+				"input period"
+			],
+			"selectors": [
+				"period"
+			],
+			"match": {
+				"period=week": "Наступного тижня",
+				"period=month": "Наступного місяця",
+				"period=quarter": "Наступний квартал",
+				"period=year": "Наступного року"
+			}
+		}
+	],
+	"relative_date_ago": [
+		{
+			"declarations": [
+				"input count",
+				"input period"
+			],
+			"selectors": [
+				"period"
+			],
+			"match": {
+				"period=week": "{count} тижнів тому",
+				"period=month": "{count} місяців тому",
+				"period=quarter": "{count} кварталів тому",
+				"period=year": "{count} років тому"
+			}
+		}
+	],
+	"relative_date_from_now": [
+		{
+			"declarations": [
+				"input count",
+				"input period"
+			],
+			"selectors": [
+				"period"
+			],
+			"match": {
+				"period=week": "{count} тижнів відтепер",
+				"period=month": "{count} місяців відтепер",
+				"period=quarter": "{count} кварталів відтепер",
+				"period=year": "{count} років відтепер"
+			}
+		}
+	],
+	"shelf_add": "Додати полицю",
+	"common_delete_name": "Видалити {name}",
+	"shelf_dashboard_empty": "Полиць ще не створено.",
+	"shelf_dashboard_open": "Налаштувати {name}",
+	"shelf_dashboard_section_title": "Полиці для журналів",
+	"shelf_delete_modal_destination_label": "Перемістити журнали до",
+	"shelf_delete_modal_destination_none": "Жоден",
+	"shelf_delete_modal_destination_description": "Журнали на цій полиці переміщуються на вибрану полицю або з полиці, якщо жодної не вибрано. Нотатки залишаються в силі.",
+	"shelf_delete_modal_moved_out": "Журнали будуть переміщені з полиці. Нотатки залишаться в силі.",
+	"shelf_delete_modal_title": "Видалити полицю {name}",
+	"journal_create": "Створити новий журнал",
+	"common_label_journals": "Журнали",
+	"shelf_rename": "Перейменувати полицю",
+	"shelf_journals_block_title_filtered": "Журнали не на полиці",
+	"shelf_member_count": [
+		{
+			"declarations": [
+				"input count"
+			],
+			"selectors": [
+				"count"
+			],
+			"match": {
+				"count=1": "1 журнал",
+				"count=*": "{count} журнали"
+			}
+		}
+	],
+	"shelf_modal_name_label": "Назва полиці",
+	"shelf_name_required_error": "Назва полиці обов'язкова.",
+	"shelf_name_unchanged_error": "Введіть інше ім'я.",
+	"shelf_name_unique_error": "Назва полиці має бути унікальною.",
+	"common_label_shelf": "Полиця",
+	"shelf_place_modal_title": "Журнал місць",
+	"shelf_section_not_on_shelf": "Не на полиці",
+	"shelf_section_place_tooltip": "Поставити на полицю",
+	"settings_load_failed": "Журнал: не вдалося завантажити налаштування — {error}",
+	"settings_reload_failed": "Журнал: не вдалося перезавантажити налаштування — {error}",
+	"startup_dashboard_section_title": "Стартап",
+	"startup_open_note_title": "Відкривати під час запуску",
+	"startup_open_note_desc": "Відкривайте нотатку щоразу, коли відкриваєте це сховище.",
+	"startup_dont_open_option": "Не відкривати",
+	"uri_missing_target": "URI журналу потребує параметра \"journal\" або \"type\".",
+	"uri_unknown_write_type": "Невідомий тип журналу \" {type} \" в URI.",
+	"uri_invalid_date": "Не вдалося розпізнати дату \" {date} \" в URI.",
+	"uri_invalid_mode": "Невідомий режим відкриття \" {mode} \" в URI.",
+	"uri_unknown_journal": "Немає журналу з назвою \" {journal} \".",
+	"uri_no_journal": "Жоден журнал не охоплює цю дату.",
+	"uri_no_journal_of_type": "Немає журналу {type} .",
+	"uri_open_failed": "Не вдалося відкрити запис у журналі.",
+	"view_dashboard_section_title": "Перегляди",
+	"view_dashboard_empty": "Переглядів поки що немає.",
+	"view_dashboard_add": "Додати перегляд",
+	"view_dashboard_open": "Налаштувати {name}",
+	"view_dashboard_clone": "Клон {name}",
+	"view_add_modal_title": "Додати перегляд",
+	"view_rename": "Перейменувати перегляд",
+	"view_name_required_error": "Ім'я обов'язкове.",
+	"view_name_unchanged_error": "Введіть інше ім'я.",
+	"view_delete_modal_title": "Видалити вигляд {name}",
+	"view_delete_modal_description": "Вигляд та його конфігурацію блоків видаляються. Ваші нотатки залишаються в силі.",
+	"view_add_block": "Додати блок",
+	"view_add_block_empty": "Жодних типів блоків не зареєстровано.",
+	"view_add_picker_action": "Додати {label}",
+	"view_block_divider_label": "Дільник",
+	"view_block_toolbar_label": "Панель інструментів",
+	"view_block_toolbar_description": "Контейнер для елементів панелі інструментів, таких як кнопки та селектор полиць.",
+	"view_add_toolbar_item": "Додати елемент панелі інструментів",
+	"view_add_toolbar_item_empty": "Жодних елементів панелі інструментів не зареєстровано.",
+	"view_edit_icon_description": "Відображається у заголовку вкладки подання та на стрічці.",
+	"view_edit_default_shelf_label": "Полиця за замовчуванням",
+	"view_edit_default_shelf_description": "Полиця, з якої починається цей вигляд під час відкриття.",
+	"view_edit_show_in_ribbon_description": "Додайте кнопку стрічки, яка відкриває це подання.",
+	"common_label_all_journals": "Усі журнали",
+	"view_edit_open_on_startup_label": "Відкривати під час запуску",
+	"view_edit_open_on_startup_description": "Відкривати це подання щоразу, коли ви відкриваєте сховище. Окремо від налаштування нотатки про запуск на головній сторінці налаштувань.",
+	"view_edit_leaf_label": "Відкрити в",
+	"view_edit_leaf_description": "Де відкривається подання: закріплене на бічній панелі або як звичайна вкладка в головному робочому просторі.",
+	"view_edit_leaf_left": "Ліва бічна панель",
+	"view_edit_leaf_right": "Права бічна панель",
+	"view_edit_leaf_tab": "Нова вкладка",
+	"view_reposition_modal_title": "Перемістити відкритий вигляд?",
+	"view_reposition_modal_description": "Це представлення відкрите. Перемістити його до {location} ?",
+	"view_reposition_modal_confirm": "Перемістити",
+	"view_edit_blocks_title": "Блоки",
+	"view_edit_blocks_empty": "Блоків поки що немає.",
+	"view_block_unknown_label": "Невідомий блок: {key}",
+	"view_block_edit": "Редагувати блок",
+	"view_block_edit_title": "Редагувати блок: {type}",
+	"view_block_remove": "Видалити блок",
+	"view_toolbar_item_unknown_label": "Невідомий елемент панелі інструментів: {key}",
+	"view_toolbar_item_edit": "Редагувати елемент панелі інструментів",
+	"view_toolbar_item_edit_title": "Редагувати {type}",
+	"view_toolbar_item_edit_title_detail": "Редагувати {type} : {detail}",
+	"view_toolbar_item_remove": "Видалити елемент панелі інструментів",
+	"view_toolbar_item_empty": "Поки що немає елементів панелі інструментів.",
+	"view_block_month_calendar_label": "Місячний календар",
+	"view_block_month_calendar_description": "Відображає одну або декілька місячних сіток навколо вибраної дати.",
+	"view_block_week_calendar_label": "Тижневий календар",
+	"view_block_week_calendar_description": "Показує одну або декілька тижневих смужок навколо вибраної дати.",
+	"common_custom_intervals": "Користувацькі інтервали",
+	"view_block_custom_intervals_description": "Перелічує записи користувацького журналу, які потрапляють у налаштовуваний часовий проміжок.",
+	"view_block_markdown_template_label": "Шаблон Markdown",
+	"view_block_markdown_template_description": "Відобразити шаблон нотатки як markdown з обробкою змінних журналу.",
+	"view_block_markdown_template_path_label": "Файл шаблону",
+	"view_block_markdown_template_path_placeholder": "шлях/до/template.md",
+	"view_block_markdown_template_variables_link": "Підтримувані змінні.",
+	"view_block_markdown_template_variables_modal_title": "Змінні шаблону Markdown",
+	"view_block_markdown_template_variables_intro": "Ці змінні замінюються під час відображення шаблону. Дати використовуються у форматі РРРР-ММ-ДД, а час — у форматі ГГ:хх, якщо ви не вкажете явний формат.",
+	"view_block_markdown_template_variable_date_description": "Дата активної нотатки або дата фокусування подання, коли нотатки журналу не відкриті.",
+	"view_block_markdown_template_variable_current_date_description": "Сьогоднішня дата на момент рендерингу блоку.",
+	"view_block_markdown_template_variable_time_description": "Поточний час настінного годинника під час рендерингу блоку.",
+	"view_block_markdown_template_variable_current_time_description": "Поточний час настінного годинника під час рендерингу блоку (псевдонім змінної часу).",
+	"view_block_markdown_template_variable_journal_link_description": "Перенаправляє на шлях сховища нотатки іншого журналу для вибраної дати. Обгорніть її самостійно у посилання та додайте зсув, наприклад +1w, щоб вказати на сусідній період.",
+	"view_block_markdown_template_empty": "Шаблон не вибрано",
+	"view_block_markdown_template_read_error": "Не вдалося прочитати файл шаблону.",
+	"view_block_summary_before": "{count} перед",
+	"view_block_summary_after": "{count} після",
+	"view_block_summary_hidden_days": "Приховано: {days}",
+	"view_block_summary_journal_count": [
+		{
+			"declarations": [
+				"input count"
+			],
+			"selectors": [
+				"count"
+			],
+			"match": {
+				"count=1": "1 журнал",
+				"count=*": "{count} журнали"
+			}
+		}
+	],
+	"view_block_toolbar_item_count": [
+		{
+			"declarations": [
+				"input count"
+			],
+			"selectors": [
+				"count"
+			],
+			"match": {
+				"count=1": "1 товар",
+				"count=*": "{count} елементів"
+			}
+		}
+	],
+	"view_block_config_window_label": "Вікно",
+	"view_block_config_window_current": [
+		{
+			"declarations": [
+				"input period"
+			],
+			"selectors": [
+				"period"
+			],
+			"match": {
+				"period=week": "Поточний тиждень",
+				"period=month": "Поточний місяць",
+				"period=quarter": "Поточний квартал",
+				"period=year": "Поточний рік"
+			}
+		}
+	],
+	"view_block_config_hide_empty_label": "Приховати порожні журнали",
+	"view_toolbar_shelf_selector_label": "Вибір полиці",
+	"view_toolbar_shelf_selector_description": "Перемикає, яка полиця охоплює журнали подання.",
+	"view_toolbar_shelf_selector_tooltip": "Перемикач полиці",
+	"view_toolbar_spacer_label": "Розпірка",
+	"view_toolbar_spacer_description": "Гнучкий зазор, який розсуває сусідні елементи.",
+	"view_toolbar_period_buttons_label": "Менструальні ґудзики",
+	"view_toolbar_period_buttons_description": "Показує клікабельні значки за поточний тиждень, місяць, квартал, рік.",
+	"view_toolbar_period_buttons_config": [
+		{
+			"declarations": [
+				"input period"
+			],
+			"selectors": [
+				"period"
+			],
+			"match": {
+				"period=week": "Тиждень показів",
+				"period=month": "Показати місяць",
+				"period=quarter": "Показати чверть",
+				"period=year": "Показати рік"
+			}
+		}
+	],
+	"view_toolbar_period_buttons_config_label": "Періоди",
+	"view_toolbar_defined_navigation_label": "Навігація за визначеними нотами",
+	"view_toolbar_defined_navigation_description": "Кнопка, яка переходить до попередньої або наступної ноти, яка вже існує.",
+	"view_toolbar_defined_navigation_target": "Примітки для покрокового ознайомлення",
+	"view_toolbar_defined_navigation_target_active": "Нотатки в активному журналі",
+	"view_toolbar_defined_navigation_direction": "Напрямок",
+	"view_toolbar_defined_navigation_direction_option": [
+		{
+			"declarations": [
+				"input direction"
+			],
+			"selectors": [
+				"direction"
+			],
+			"match": {
+				"direction=previous": "Попередній",
+				"direction=next": "Далі"
+			}
+		}
+	],
+	"view_toolbar_button_label": "Кнопка",
+	"view_toolbar_button_preset_pick_date": "Виберіть дату",
+	"view_toolbar_button_preset_pick_date_description": "Відкриває вибір дати для переходу до будь-якої нотатки.",
+	"view_toolbar_button_preset_open_note": "Відкрити нотатку",
+	"view_toolbar_button_preset_open_note_description": "Переходить до ноти поточного періоду.",
+	"view_toolbar_button_preset_navigate": "Навігація покроково",
+	"view_toolbar_button_preset_navigate_description": "Кроки вперед або назад на фіксований інтервал.",
+	"view_toolbar_button_default_tooltip_pick_multi": "Відкрити нотатку",
+	"view_toolbar_button_default_label_this_week": "Цього тижня",
+	"view_toolbar_button_default_label_this_month": "Цього місяця",
+	"view_toolbar_button_default_label_this_quarter": "У цьому кварталі",
+	"view_toolbar_button_default_label_this_year": "Цього року",
+	"view_toolbar_button_default_label_current": "Поточний",
+	"view_toolbar_button_default_tooltip_current_multi": "Перейти до поточного…",
+	"view_toolbar_button_default_tooltip_prev_unit": "Попередній {unit}",
+	"view_toolbar_button_default_tooltip_next_unit": "Далі {unit}",
+	"view_toolbar_button_menu_pick": "Виберіть {unit}",
+	"view_toolbar_button_config_label_label": "Мітка",
+	"view_toolbar_button_config_tooltip_label": "Підказка",
+	"view_toolbar_appearance_label_label": "Мітка",
+	"view_toolbar_appearance_tooltip_label": "Підказка",
+	"view_toolbar_button_config_journal_default": "Всі журнали на полиці",
+	"view_toolbar_button_config_mode_label": "Поведінка",
+	"view_toolbar_button_config_levels_label": "Періоди",
+	"view_toolbar_button_config_mode_option": [
+		{
+			"declarations": [
+				"input mode"
+			],
+			"selectors": [
+				"mode"
+			],
+			"match": {
+				"mode=select-only": "Перемістити лише календар",
+				"mode=navigate": "Відкрити нотатку, лише якщо вона існує",
+				"mode=create": "Створити нотатку, якщо її не існує"
+			}
+		}
+	],
+	"view_toolbar_button_config_level_option": [
+		{
+			"declarations": [
+				"input level"
+			],
+			"selectors": [
+				"level"
+			],
+			"match": {
+				"level=day": "День",
+				"level=week": "Тиждень",
+				"level=month": "Місяць",
+				"level=quarter": "Чверть",
+				"level=year": "Рік"
+			}
+		}
+	],
+	"view_toolbar_button_config_direction_label": "Напрямок",
+	"view_toolbar_button_config_direction_option": [
+		{
+			"declarations": [
+				"input direction"
+			],
+			"selectors": [
+				"direction"
+			],
+			"match": {
+				"direction=prev": "Попередній",
+				"direction=next": "Далі"
+			}
+		}
+	],
+	"view_toolbar_button_config_granularity_label": "Деталізація",
+	"view_block_config_before": [
+		{
+			"declarations": [
+				"input unit"
+			],
+			"selectors": [
+				"unit"
+			],
+			"match": {
+				"unit=month": "Місяцями раніше",
+				"unit=week": "За кілька тижнів до"
+			}
+		}
+	],
+	"view_block_config_after": [
+		{
+			"declarations": [
+				"input unit"
+			],
+			"selectors": [
+				"unit"
+			],
+			"match": {
+				"unit=month": "Через кілька місяців",
+				"unit=week": "Через кілька тижнів"
+			}
+		}
+	],
+	"view_block_config_hidden_weekdays_label": "Дні тижня",
+	"view_block_config_weeks_label": "Номери тижнів",
+	"view_block_config_weeks_default": "Використовувати глобальне значення за замовчуванням",
+	"view_block_config_weeks_none": "Прихований",
+	"view_block_config_weeks_left": "Перед будніми днями",
+	"view_block_config_weeks_right": "Після будніх днів",
+	"calendar_week_placement_label": "Номери тижнів за замовчуванням",
+	"calendar_week_placement_description": "Де стовпець із номером тижня відображається в блоках календаря, для яких встановлено значення «Використовувати глобальне значення за замовчуванням».",
+	"view_block_config_follow_active_date_label": "Слідкуйте за активною нотаткою",
+	"view_block_config_show_heading_label": "Показати заголовок місяць/рік",
+	"journal_add_modal_anchor_label": "Дата початку",
+	"journal_add_modal_anchor_required_error": "Виберіть дату початку.",
+	"journal_add_modal_duration_label": "Тривалість",
+	"journal_add_modal_every_label": "Кожен",
+	"journal_add_modal_name_label": "Назва журналу",
+	"journal_add_modal_title": "Додати журнал",
+	"journal_add_modal_write_label": "Я буду писати",
+	"journal_colliding_heading": "Зіткнення налаштувань журналу",
+	"journal_colliding_warning": "Журнали {names} мають конфігурації, що конфліктують, тому їхні нотатки перезаписуватимуть одна одну. Змініть папку або шаблон назви в одному з них.",
+	"journal_dashboard_bulk_add": "Масове додавання нотаток до {name}",
+	"journal_dashboard_edit": "Налаштувати {name}",
+	"journal_dashboard_empty": "Жодних журналів ще не створено.",
+	"journal_delete_modal_title": "Видалити {name}",
+	"journal_delete_mode_label": "Що робити зі зв'язаними нотатками",
+	"journal_delete_mode_option": [
+		{
+			"declarations": [
+				"input mode"
+			],
+			"selectors": [
+				"mode"
+			],
+			"match": {
+				"mode=keep": "Робіть нотатки",
+				"mode=clear": "Очистити дані журналу",
+				"mode=delete": "Видалити нотатки"
+			}
+		}
+	],
+	"journal_delete_mode_description": [
+		{
+			"declarations": [
+				"input mode"
+			],
+			"selectors": [
+				"mode"
+			],
+			"match": {
+				"mode=keep": "Нотатки залишаються у вашому сховищі без змін.",
+				"mode=clear": "Нотатки залишаються у вашому сховищі, але властивості журналу видаляються з їхньої вхідної сторінки.",
+				"mode=delete": "Усі нотатки, пов’язані з цим журналом, видаляються з вашого сховища."
+			}
+		}
+	],
+	"journal_edit_allow_before_description": "Дозволити індексацію до дати прив'язки. Може видавати від'ємні числа.",
+	"journal_edit_allow_before_label": "Дозволити перед прив’язкою",
+	"journal_edit_anchor_label": "Дата прив'язки",
+	"journal_edit_anchor_start_used": "Дата початку використовується як опорна дата.",
+	"journal_edit_auto_create_confirmation_skip_note": "Діалогове вікно підтвердження не відображатиметься для автоматично створених нотаток.",
+	"journal_edit_auto_create_description": "Автоматично створювати сьогоднішню нотатку про завантаження плагіна та щомісяця опівночі.",
+	"journal_edit_auto_create_label": "Автоматично створити сьогоднішню нотатку",
+	"journal_edit_confirm_creation_description": "Показувати діалогове вікно підтвердження під час переходу до дати, до якої ще немає примітки.",
+	"journal_edit_confirm_creation_label": "Підтвердити створення нових нотаток",
+	"journal_edit_date_format_description": "Формат за замовчуванням для змінних дати, які не вказують свої власні, наприклад:",
+	"journal_edit_date_format_label": "Формат дати за замовчуванням",
+	"journal_edit_date_format_preview_label": "Форматована дата:",
+	"common_moment_format_reference": "Довідник формату moment.js",
+	"journal_edit_end_description": [
+		{
+			"declarations": [
+				"input kind"
+			],
+			"selectors": [
+				"kind"
+			],
+			"match": {
+				"kind=never": "Письменство триває нескінченно довго.",
+				"kind=date": "Нові нотатки після цієї дати не будуть створені.",
+				"kind=repeats": "Після створення такої кількості нотаток нові нотатки створюватися не будуть."
+			}
+		}
+	],
+	"journal_edit_end_kind": [
+		{
+			"declarations": [
+				"input kind"
+			],
+			"selectors": [
+				"kind"
+			],
+			"match": {
+				"kind=never": "Ніколи",
+				"kind=date": "Після дати",
+				"kind=repeats": "Після повторення"
+			}
+		}
+	],
+	"journal_edit_end_repeats_needs_start_warning": "Встановіть дату початку — журнал, який закінчується після певної кількості повторень, потребує відліку.",
+	"journal_edit_end_writing_label": "Кінець письма",
+	"journal_edit_fm_end_toggle_label": "Додати властивість дати завершення",
+	"journal_edit_fm_start_description": "Для щотижневих журналів, що охоплюють два роки, дата початку може відрізнятися від властивості date.",
+	"journal_edit_fm_start_toggle_label": "Додати властивість дати початку",
+	"journal_edit_folder_description": "Нові нотатки будуть створені в цій папці.",
+	"journal_edit_folder_label": "Папка",
+	"journal_edit_folder_path_preview_label": "Вирішена папка:",
+	"journal_edit_move_to_folder_apply_link": "Застосувати рекомендацію",
+	"journal_edit_move_to_folder_recommendation_date_format": "Формат дати містить роздільник шляхів. Перемістити змінні дати в поле Папка?",
+	"journal_edit_move_to_folder_recommendation_name_template": "Шаблон назви нотатки містить роздільник шляхів. Перемістити префікс шляху в поле «Папка»?",
+	"journal_edit_name_template_description": "Шаблон, який використовується для створення нових назв нотаток.",
+	"journal_edit_name_template_collision_warning": "Шаблон не має змінної дати чи нумерації, тому кожен запис відповідає одній і тій самій нотатці. Додайте змінну дати, щоб надати кожному запису власну нотатку.",
+	"journal_edit_colliding_warning": "Цей журнал розв’язується таким самим шляхом до нотаток, як {names} , тому їхні нотатки перезаписуватимуть одна одну. Змініть шаблон папки або назви, щоб надати йому окремий шлях.",
+	"journal_edit_name_template_invertibility_warning": "Шаблон неможливо проаналізувати у зворотному порядку ( {reason} : \" {offending} \"). Автоматичне приєднання непомітно пропустить зовнішні нотатки, створені, що відповідають цьому шаблону.",
+	"journal_edit_name_template_no_anchor_warning": "Шаблон не має змінної дати, а його змінну нумерації не можна скасувати на дату, тому автоматичне приєднання непомітно пропустить зовнішні нотатки, створені, які відповідають цьому шаблону.",
+	"journal_edit_name_template_label": "Шаблон назви нотатки",
+	"journal_edit_note_name_preview_label": "Назва вирішеної нотатки:",
+	"journal_edit_rename_tooltip": "Перейменувати журнал",
+	"journal_edit_reset_count_suffix": "повтори",
+	"journal_edit_reset_description": "Як число змінюється з часом.",
+	"journal_edit_reset_label": "Скинути",
+	"journal_edit_reset_option": [
+		{
+			"declarations": [
+				"input kind"
+			],
+			"selectors": [
+				"kind"
+			],
+			"match": {
+				"kind=never": "Безперервний",
+				"kind=after": "Скидання після"
+			}
+		}
+	],
+	"journal_edit_section_frontmatter": "Фронтматер",
+	"journal_edit_section_note_creation": "Створення нотатки",
+	"journal_edit_section_sequential_numbers": "Порядкові номери",
+	"journal_edit_section_templates": "Шаблони",
+	"journal_edit_code_block_reference_link": "Підтримувані блоки коду.",
+	"journal_edit_code_block_reference_modal_title": "Підтримувані блоки коду",
+	"journal_edit_code_block_copy_hint": "Клацніть блок коду, щоб скопіювати його в буфер обміну.",
+	"journal_edit_code_block_copied": "Скопійовано в буфер обміну.",
+	"journal_edit_code_block_nav_description": "Блок навігації допомагає переходити між нотатками, що прилягають до поточної.",
+	"journal_edit_code_block_nav_current": "Його конфігурація для журналу {name} виглядає так:",
+	"journal_edit_code_block_nav_aliases_lead": "Ці старіші назви блоків є псевдонімами, які поводяться ідентично:",
+	"journal_edit_code_block_timeline_description": "Блок часової шкали допомагає вам орієнтуватися в межах більших часових періодів.",
+	"journal_edit_code_block_timeline_default": "Стандартна часова шкала для журналу {name} виглядає так:",
+	"journal_edit_code_block_timeline_mode_lead": "Змініть режим часової шкали, додавши опцію режиму до блоку.",
+	"journal_edit_code_block_timeline_modes_lead": "Підтримувані режими:",
+	"journal_edit_code_block_timeline_weeks": "контролює стовпець номера тижня (лівий, правий або жодного).",
+	"journal_edit_code_block_timeline_hidden_weekdays": "приховує перелічені дні тижня (0 = неділя … 6 = субота), наприклад, [0, 6], щоб видалити вихідні.",
+	"journal_edit_code_block_home_description": "У блоці «Головна» відображаються посилання на поточні нотатки у ваших журналах.",
+	"journal_edit_code_block_home_default": "За замовчуванням це виглядає так:",
+	"journal_edit_code_block_home_options_lead": "Підтримувані опції:",
+	"journal_edit_code_block_home_option_show": "контролює, які журнали відображаються (за замовчуванням лише посилання на день). Підтримувані значення: день, тиждень, місяць, квартал, рік, налаштування.",
+	"journal_edit_code_block_home_option_separator": "текст, який використовується для розділення кількох посилань.",
+	"journal_edit_code_block_home_option_scale": "збільшує розмір посилання як множник розміру тексту (наприклад, масштабування: 2 подвоює його).",
+	"journal_edit_code_block_home_option_shelf": "обмежує відображення журналів певною полицею.",
+	"journal_edit_code_block_home_custom_lead": "З налаштуваннями налаштувань це може виглядати так:",
+	"journal_edit_section_timeline": "Хронологія",
+	"journal_edit_sequence_enabled_description": "Призначте нотаткам номери (наприклад, День 1, День 2 тощо).",
+	"journal_edit_sequence_enabled_label": "Увімкнути послідовні номери",
+	"journal_edit_start_number_description": "Номер, присвоєний на дату прив'язки.",
+	"journal_edit_start_number_label": "Стартовий номер",
+	"journal_edit_start_writing_custom_locked": "Дату початку для користувацьких інтервалів змінити не можна: вона використовується для відліку інтервалів.",
+	"journal_edit_start_writing_description": "Нові нотатки до цієї дати не будуть створені.",
+	"journal_edit_start_writing_label": "Почніть писати далі",
+	"journal_edit_template_add_button": "Додати шаблон",
+	"journal_edit_template_path_placeholder": "шаблони/daily.md",
+	"journal_edit_template_path_preview_label": "Вирішений шлях шаблону:",
+	"journal_edit_template_remove_tooltip": "Видалити шаблон",
+	"journal_edit_templates_description": "Шлях до нотатки, яка використовуватиметься як шаблон під час створення нових нотаток. Якщо налаштовано кілька нотаток, перемагає перша існуюча.",
+	"journal_edit_templater_supported": "Синтаксис шаблонизатора такий: {slot} .",
+	"journal_edit_templater_supported_link": "підтримуваний",
+	"journal_edit_variable_additional_modifications_link": "додаткові модифікації",
+	"journal_edit_variable_current_date_description": "Сьогоднішня дата (за замовчуванням у форматі РРРР-ММ-ДД).",
+	"journal_edit_variable_current_time_description": "Поточний час настінного годинника (псевдонім {slot} , за замовчуванням у форматі ГГ:хх).",
+	"journal_edit_variable_date_description": "Дата подання ноти — дата періоду, який охоплює ця нота.",
+	"journal_edit_variable_date_format_description": "Дата посилання нотатки, відформатована за допомогою наданого рядка формату moment.js.",
+	"journal_edit_variable_end_date_description": "Останній день періоду, який охоплює ця примітка.",
+	"journal_edit_variable_index_description": "Порядковий номер нотатки, коли в журналі ввімкнено нумерацію.",
+	"journal_edit_variable_journal_link_description": "Усередині вмісту файлу шаблону переходить до шляху до нотатки іншого журналу для дати цієї нотатки. Оберніть її самостійно в посилання або вбудуйте (наприклад, ![[ … ]]) та додайте модифікатори дати, такі як +1w, щоб вказати на сусідній період.",
+	"journal_edit_variable_journal_name_description": "Назва журналу (тут: {name} ).",
+	"journal_edit_variable_non_invertible_warning": "Використання цього тут запобігає відновленню дати з імені файлу журналом.",
+	"journal_edit_variable_numbering_description": "Налаштована змінна нумерації (див. розділ «Послідовність»).",
+	"journal_edit_variable_reference_intro": "Доступні змінні. Формат дати за замовчуванням має значення {dateFormat} якщо явний формат не вказано.",
+	"journal_edit_variable_reference_link": "Підтримувані змінні.",
+	"journal_edit_variable_reference_modal_title": "Посилання на змінну",
+	"journal_edit_variable_relative_date_description": "вчора / сьогодні / завтра / N днів тому для журналів з фіксованим циклом; порожньо для користувацьких журналів.",
+	"journal_edit_variable_start_date_description": "Перший день періоду, який охоплює ця записка.",
+	"journal_edit_variable_time_description": "Поточний час настінного годинника (за замовчуванням у форматі ГГ:хх).",
+	"journal_edit_wrong_week_warning": "Ви використовуєте `W` для форматування тижнів, яке не враховує налаштування власного тижня та може відображати інший номер тижня, ніж у поданні Календаря. Замість цього використовуйте `w` (і за потреби змініть початок тижня в налаштуваннях плагіна).",
+	"journal_fm_field_label": [
+		{
+			"declarations": [
+				"input field"
+			],
+			"selectors": [
+				"field"
+			],
+			"match": {
+				"field=dateField": "Назва властивості дати",
+				"field=startDateField": "Назва властивості дати початку",
+				"field=endDateField": "Назва властивості кінцевої дати"
+			}
+		}
+	],
+	"journal_fm_field_modal_title": [
+		{
+			"declarations": [
+				"input field"
+			],
+			"selectors": [
+				"field"
+			],
+			"match": {
+				"field=dateField": "Змінити назву властивості дати",
+				"field=startDateField": "Змінити назву властивості дати початку",
+				"field=endDateField": "Змінити назву властивості дати завершення"
+			}
+		}
+	],
+	"journal_name_required_error": "Назва журналу обов'язкова.",
+	"journal_name_unique_error": "Назва журналу має бути унікальною.",
+	"journal_notes_not_rewritten_hint": "Існуючі нотатки не переписуються. Можливо, вам доведеться оновити їх вручну.",
+	"journal_picker_placeholder": "Пошук журналів",
+	"journal_property_modal_current_label": "Поточна назва",
+	"common_label_new_name": "Нова назва",
+	"journal_property_name_required": "Назва власності обов'язкова.",
+	"journal_rename_modal_same_as_current_error": "Введіть інше ім'я.",
+	"journal_rename_modal_title": "Перейменувати {name}",
+	"journal_sequence_property_modal_title": "Змінити назву властивості послідовного номера",
+	"templater_support_intro": "Шаблонизатор може перешкоджати діям плагіна, залишаючи нотатку частково пошкодженою або дані журналу відсутніми на її головній сторінці.",
+	"templater_support_modal_title": "Застереження щодо шаблонизаторів",
+	"templater_support_option_settings": "Налаштуйте шаблон у налаштуваннях журналу цього плагіна.",
+	"templater_support_option_trigger_off": "Вимкнути функцію «Запустити шаблонизатор під час створення нового файлу» шаблонизатора.",
+	"templater_support_option_trigger_on": "Або залиште опцію «Запустити шаблонизатор при створенні нового файлу» увімкненою, з увімкненою опцією «Увімкнути шаблони папок» та без налаштованих шаблонів папок.",
+	"templater_support_outro": "Таким чином, лише плагін журналу обробляє шаблон нотатки — він запускає сам Templater «під капотом», що дозволяє уникнути конфліктів.",
+	"templater_support_setup_intro": "Найбезпечніша установка:",
+	"variable_chip_copied": "Скопійовано в буфер обміну",
+	"variable_modifications_boundary_body": "Прив’язати змінну дати до початку або кінця календарного періоду, додавши `<startOf=unit> ` або `<endOf=unit> `.",
+	"variable_modifications_boundary_example": "Наприклад {slot} відтворює 1 січня року дати.",
+	"variable_modifications_boundary_heading": "Прив’язка до початку або кінця періоду",
+	"variable_modifications_boundary_unit": [
+		{
+			"declarations": [
+				"input unit"
+			],
+			"selectors": [
+				"unit"
+			],
+			"match": {
+				"unit=day": "день",
+				"unit=week": "тиждень",
+				"unit=month": "місяць",
+				"unit=quarter": "чверть",
+				"unit=year": "рік",
+				"unit=decade": "десятиліття (лише дата)",
+				"unit=hour": "година (лише годинник)"
+			}
+		}
+	],
+	"common_supported_units": "Підтримувані одиниці:",
+	"variable_modifications_combined_body": "Усі три модифікації можна комбінувати. Спочатку застосовуються зсуви, потім межі, а потім перевизначення формату.",
+	"variable_modifications_combined_example": "Наприклад {slot} зміщує дату на один тиждень вперед, прив'язується до початку цього тижня та форматує її.",
+	"variable_modifications_combined_heading": "Комбінований",
+	"variable_modifications_format_body": "Перевизначте формат дати за замовчуванням, додавши двокрапку та рядок формату moment.js.",
+	"variable_modifications_format_example": "Наприклад {slot} відображає лише рік.",
+	"variable_modifications_format_heading": "Перевизначення формату",
+	"variable_modifications_intro": "Змінні дати та годинника підтримують три види модифікацій. Їх можна об'єднати в одному токені.",
+	"variable_modifications_modal_title": "Зміни змінних дат",
+	"variable_modifications_shift_body": "Додайте або відніміть певну кількість одиниць, додавши `+N`<unit> ` або `-N<unit> `.",
+	"variable_modifications_shift_example": "Наприклад {slot} зміщує дату на один тиждень вперед.",
+	"variable_modifications_shift_heading": "Арифметичні зрушення",
+	"variable_modifications_unit_d": "д — дні",
+	"variable_modifications_unit_h": "год — години",
+	"variable_modifications_unit_m": "м — місяці",
+	"variable_modifications_unit_q": "q — чверті",
+	"variable_modifications_unit_w": "тижні",
+	"variable_modifications_unit_y": "y — роки",
+	"journal_write": [
+		{
+			"declarations": [
+				"input duration",
+				"input every",
+				"input type"
+			],
+			"selectors": [
+				"duration",
+				"every",
+				"type"
+			],
+			"match": {
+				"duration=*,every=*,type=day": "щоденно",
+				"duration=*,every=*,type=week": "щотижня",
+				"duration=*,every=*,type=month": "щомісяця",
+				"duration=*,every=*,type=quarter": "щоквартально",
+				"duration=*,every=*,type=year": "щорічно",
+				"duration=1,every=day,type=custom": "щодня",
+				"duration=*,every=day,type=custom": "кожні {duration} днів",
+				"duration=1,every=week,type=custom": "щотижня",
+				"duration=*,every=week,type=custom": "кожні {duration} тижнів",
+				"duration=1,every=month,type=custom": "щомісяця",
+				"duration=*,every=month,type=custom": "кожні {duration} місяців",
+				"duration=1,every=quarter,type=custom": "щокварталу",
+				"duration=*,every=quarter,type=custom": "кожні {duration} квартали",
+				"duration=1,every=year,type=custom": "щороку",
+				"duration=*,every=year,type=custom": "кожні {duration} років",
+				"duration=*,every=*,type=*": "кожен {duration} {every}"
+			}
+		}
+	],
+	"journal_add_modal_every_unit": [
+		{
+			"declarations": [
+				"input unit"
+			],
+			"selectors": [
+				"unit"
+			],
+			"match": {
+				"unit=day": "день",
+				"unit=week": "тиждень",
+				"unit=month": "місяць",
+				"unit=quarter": "чверть",
+				"unit=year": "рік"
+			}
+		}
+	],
+	"logging_dump_button": "Дамп журналів для нотаток",
+	"logging_dump_desc": "Запишіть нещодавно записані повідомлення журналу до нової нотатки у вашому сховищі.",
+	"logging_dump_empty": "Повідомлення журналу ще не записані.",
+	"logging_dump_failed": "Не вдалося записати нотатку в журналі.",
+	"logging_dump_succeeded": "Журнали, записані до {path}",
+	"logging_dump_title": "Експорт журналів",
+	"logging_level_debug": "Налагодження",
+	"logging_level_desc": "Тільки повідомлення журналу цього рівня або вище друкуються на консоль та зберігаються для експорту.",
+	"logging_level_error": "Помилка",
+	"logging_level_info": "Інформація",
+	"logging_level_title": "Рівень журналу",
+	"logging_level_warn": "УВАГА",
+	"logging_section_title": "Лісозаготівля"
+}

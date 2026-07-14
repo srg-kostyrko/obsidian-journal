@@ -26,19 +26,30 @@ English. Using `pt` also lets the region→prefix fallback cover both `pt` and
    `project.inlang/settings.json`. Add a `package.json` script:
 
    ```
-   "translate:i18n": "inlang machine translate --project ./project.inlang -f"
+   "translate:i18n": "npx --yes @inlang/cli machine translate --project ./project.inlang && node scripts/fix-i18n-variant-keys.mjs"
    ```
 
    This is the native inlang path. It is preferred over a custom LLM script
-   because the message-format plugin translates the leaf strings inside the 73
-   `select`/plural/`match` blocks while preserving their structure, eliminating
+   because the message-format plugin translates the leaf strings inside the
+   multi-selector `match` blocks while preserving their structure, eliminating
    the placeholder/ICU-corruption risk. Trade-off: Google-Translate quality, not
    LLM fluency — acceptable for drafts.
 
+   The `&& node scripts/fix-i18n-variant-keys.mjs` step is required: the CLI
+   (v3.1.15) re-serializes multi-selector match keys with a space after each
+   comma (`type=a, writeType=b`). Paraglide parses selector names by splitting
+   those keys on `,` without trimming, so the spaces leak into the generated
+   input parameter names and break `check:types`. The normalizer strips them.
+
 2. **Run** — `npm run translate:i18n` generates `messages/{locale}.json` for
-   each of the ten locales, each with all ~1,044 keys. No API key required (free
-   rate-limited `@inlang/rpc` fallback). An optional
-   `INLANG_GOOGLE_TRANSLATE_API_KEY` makes it faster/more reliable.
+   each of the ten locales, each with the full base key set. Requires a Google
+   Cloud Translation API key exported as `INLANG_GOOGLE_TRANSLATE_API_KEY` — the
+   installed CLI (v3.1.15) has no keyless `@inlang/rpc` fallback. The job is
+   ~316K characters, under Google's permanent 500K-characters/month free tier,
+   so a one-time run costs nothing (a billing account must still be attached to
+   the Cloud project). The CLI also re-serializes `messages/en.json`; because en
+   is the hand-authored source, restore it (`git checkout HEAD -- messages/en.json`)
+   after a run — its values are never translated.
 
 3. **Compile** — `npm run compile:i18n` regenerates paraglide output under
    `src/i18n/paraglide` (git-ignored, never staged).
