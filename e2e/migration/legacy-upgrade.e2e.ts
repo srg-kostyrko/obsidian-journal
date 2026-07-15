@@ -59,6 +59,18 @@ describe("legacy vault upgrade", () => {
     expect(journalKeysOf(settings)).toEqual(expect.arrayContaining(["My Journal Day", "Sprints"]));
   });
 
+  it("registers migrated commands under their v2-era Obsidian ids", async () => {
+    // Obsidian persists user hotkeys keyed by the full command id; v2 registered the
+    // seeded "Open today's note" as journals::open-today's-note. The migration must
+    // key the command so the same id re-registers, or every v2 hotkey silently unbinds.
+    await waitForSettingsVersion(4);
+    const registered = await browser.executeObsidian(({ app }, id) => {
+      const runtime = app as unknown as { commands: { findCommand(id: string): unknown } };
+      return runtime.commands.findCommand(id) !== undefined && runtime.commands.findCommand(id) !== null;
+    }, "journals::open-today's-note");
+    expect(registered).toBe(true);
+  });
+
   it("keys the migrated shelf by name", async () => {
     await waitForSettingsVersion(4);
     const settings = await getSettings();

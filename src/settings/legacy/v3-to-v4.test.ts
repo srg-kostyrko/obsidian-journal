@@ -96,6 +96,59 @@ describe("v3ToV4Migration", () => {
     expect(cmd.context).toBe("today");
   });
 
+  describe("command ids preserve v2 hotkey bindings", () => {
+    // Obsidian persists custom hotkeys keyed by the full command id (journals:<id>).
+    // v2 derived <id> from the owner prefix + command name (lowercased, spaces dashed),
+    // so re-deriving the same slug as the migrated collection key keeps every existing
+    // hotkey pointing at its command.
+    it("keys a journal command by its v2 slug", () => {
+      const data = monolithV3();
+      (data.journals["My Journal Day"] as { commands: unknown[] }).commands = [
+        {
+          name: "Open Today",
+          icon: "",
+          type: "same",
+          context: "today",
+          showInRibbon: false,
+          openMode: "active",
+        },
+      ];
+      const out = v3ToV4Migration.migrate(data);
+      expect(Object.keys(out.commands as Record<string, unknown>)).toContain("my-journal-day:open-today");
+    });
+
+    it("keys a plugin-level command by its v2 slug", () => {
+      const out = v3ToV4Migration.migrate(monolithV3());
+      expect(Object.keys(out.commands as Record<string, unknown>)).toEqual([":open-today's-note"]);
+    });
+
+    it("keys a shelf command by its v2 slug", () => {
+      const data = monolithV3();
+      (data.shelves["My Journal"] as { commands: unknown[] }).commands = [
+        {
+          name: "Open Weekly",
+          icon: "",
+          writeType: "week",
+          type: "same",
+          showInRibbon: false,
+          openMode: "active",
+        },
+      ];
+      const out = v3ToV4Migration.migrate(data);
+      expect(Object.keys(out.commands as Record<string, unknown>)).toContain("shelf:-my-journal:open-weekly");
+    });
+
+    it("suffixes a colliding slug so both commands survive", () => {
+      const data = monolithV3();
+      data.commands = [
+        { name: "Open X", writeType: "day", type: "same", openMode: "active", showInRibbon: false, icon: "" },
+        { name: "Open X", writeType: "week", type: "same", openMode: "active", showInRibbon: false, icon: "" },
+      ];
+      const out = v3ToV4Migration.migrate(data);
+      expect(Object.keys(out.commands as Record<string, unknown>)).toEqual([":open-x", ":open-x-2"]);
+    });
+  });
+
   it("maps a custom-week calendar to the custom mode", () => {
     const out = v3ToV4Migration.migrate(monolithV3());
     expect(out.calendar).toEqual({ mode: "custom", dow: 1, doy: 4, global: false });

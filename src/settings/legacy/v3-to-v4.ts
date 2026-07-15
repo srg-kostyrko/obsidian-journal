@@ -1,4 +1,3 @@
-import { nanoid } from "nanoid";
 import { match } from "ts-pattern";
 
 import type { Migration } from "@/settings";
@@ -135,6 +134,20 @@ function reshapeViews(cv: OldPluginSettings["calendarView"] | undefined): Record
   return { [DEFAULT_CALENDAR_VIEW_ID]: view };
 }
 
+// v2 registered every command under journals:<prefix>:<name>, lowercased with whitespace
+// dashed (obsidian-manager's prepareId; prefix = journal name, "Shelf: <name>", or "" for
+// plugin-level). Obsidian persists user hotkeys keyed by that id, so re-deriving the same
+// slug as the migrated collection key keeps every pre-migration hotkey bound. Collisions
+// were impossible in a working v2 config (the slug WAS the registration key); the numeric
+// suffix is a guard so a malformed config still migrates every command.
+function v2CommandSlug(prefix: string, name: string, taken: Set<string>): string {
+  const base = `${prefix}:${name}`.replaceAll(/\s/g, "-").toLocaleLowerCase();
+  let slug = base;
+  for (let suffix = 2; taken.has(slug); suffix++) slug = `${base}-${suffix}`;
+  taken.add(slug);
+  return slug;
+}
+
 export const v3ToV4Migration: Migration = {
   fromVersion: 3,
   toVersion: 4,
@@ -148,14 +161,19 @@ export const v3ToV4Migration: Migration = {
     // Journals and shelves are stored keyed by name — JournalsRepository and
     // ShelvesRepository look entities up via storage[name] (see their get/rename).
     // v1->v2 and v2->v3 already key them by name; preserving that here is what keeps
-    // every migrated entity resolvable. Commands carry no name-key invariant (they
-    // are referenced by record id), so they keep generated ids.
+    // every migrated entity resolvable. Commands are keyed by their v2 registration
+    // slug so existing hotkey bindings survive the migration (see v2CommandSlug).
+    const takenCommandIds = new Set<string>();
     const oldJournals = Object.values(old.journals ?? {});
     for (const journal of oldJournals) {
       journals[journal.name] = reshapeJournal(journal);
       const journalCommands = journal.commands ?? [];
       for (const cmd of journalCommands) {
-        commands[nanoid()] = reshapeCommand(cmd, { kind: "journal", journalName: journal.name }, cmd.context);
+        commands[v2CommandSlug(journal.name, cmd.name, takenCommandIds)] = reshapeCommand(
+          cmd,
+          { kind: "journal", journalName: journal.name },
+          cmd.context,
+        );
       }
     }
 
@@ -164,7 +182,7 @@ export const v3ToV4Migration: Migration = {
       shelves[shelf.name] = { name: shelf.name, journals: shelf.journals };
       const shelfCommands = shelf.commands ?? [];
       for (const cmd of shelfCommands) {
-        commands[nanoid()] = reshapeCommand(
+        commands[v2CommandSlug(`Shelf: ${shelf.name}`, cmd.name, takenCommandIds)] = reshapeCommand(
           cmd,
           { kind: "shelf", shelfName: shelf.name, writeType: cmd.writeType },
           "today",
@@ -174,7 +192,11 @@ export const v3ToV4Migration: Migration = {
 
     const looseCommands = old.commands ?? [];
     for (const cmd of looseCommands) {
-      commands[nanoid()] = reshapeCommand(cmd, { kind: "all", writeType: cmd.writeType }, "today");
+      commands[v2CommandSlug("", cmd.name, takenCommandIds)] = reshapeCommand(
+        cmd,
+        { kind: "all", writeType: cmd.writeType },
+        "today",
+      );
     }
 
     const output: Record<string, unknown> = {
