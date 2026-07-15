@@ -1,5 +1,7 @@
 import * as v from "valibot";
 
+import { m } from "@/i18n";
+
 import { dateConditionSchema } from "./date-condition";
 
 export const colorSchema = v.union([
@@ -101,7 +103,7 @@ const tagCondition = v.object({
 
 const stringPropertyCondition = v.object({
   type: v.literal("property"),
-  name: v.pipe(v.string(), v.minLength(1)),
+  name: v.pipe(v.string(), v.minLength(1, m.journal_property_name_required())),
   valueType: v.literal("text"),
   condition: v.union([
     v.literal("exists"),
@@ -118,7 +120,7 @@ const stringPropertyCondition = v.object({
 
 const numberPropertyCondition = v.object({
   type: v.literal("property"),
-  name: v.pipe(v.string(), v.minLength(1)),
+  name: v.pipe(v.string(), v.minLength(1, m.journal_property_name_required())),
   valueType: v.literal("number"),
   condition: v.union([
     v.literal("exists"),
@@ -135,14 +137,14 @@ const numberPropertyCondition = v.object({
 
 const booleanPropertyCondition = v.object({
   type: v.literal("property"),
-  name: v.pipe(v.string(), v.minLength(1)),
+  name: v.pipe(v.string(), v.minLength(1, m.journal_property_name_required())),
   valueType: v.literal("checkbox"),
   condition: v.union([v.literal("exists"), v.literal("does-not-exist"), v.literal("is-true"), v.literal("is-false")]),
 });
 
 const datePropertyCondition = v.object({
   type: v.literal("property"),
-  name: v.pipe(v.string(), v.minLength(1)),
+  name: v.pipe(v.string(), v.minLength(1, m.journal_property_name_required())),
   valueType: v.literal("date"),
   condition: v.union([
     v.literal("exists"),

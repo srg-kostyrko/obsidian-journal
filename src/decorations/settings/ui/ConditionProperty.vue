@@ -18,7 +18,7 @@ const { name } = defineProps<{ name: string }>();
 
 const metadataTypes = useService(MetadataTypeService);
 
-const { value: propertyName } = useField<string>(`${name}.name`);
+const { value: propertyName, errorMessage: nameError } = useField<string>(`${name}.name`);
 const { value: valueType, setValue: setValueType } = useField<ValueType>(`${name}.valueType`);
 const { value: op, setValue: setOp } = useField<Op>(`${name}.condition`);
 const { value: rawValue } = useField<string | number>(`${name}.value`);
@@ -98,4 +98,12 @@ watch(propertyName, (next) => {
     <UiNumberInput v-else-if="valueType === 'number'" v-model="numberModel" />
     <input v-else-if="valueType === 'date'" v-model="textModel" type="date" class="property-date-input" />
   </template>
+  <span v-if="nameError" class="condition-property-error">{{ nameError }}</span>
 </template>
+
+<style scoped>
+.condition-property-error {
+  color: var(--text-error);
+  flex-basis: 100%;
+}
+</style>

@@ -6,8 +6,10 @@ import { Calendar } from "@/calendar";
 import type { JournalDecoration } from "@/decorations";
 import { m } from "@/i18n";
 import { Container, provideInjectorOnApp } from "@/infrastructure/di";
-import { InputSuggestService } from "@/infrastructure/host";
+import { InputSuggestService, MetadataTypeService } from "@/infrastructure/host";
 import { FakeInputSuggestService } from "@/infrastructure/host/input-suggests/testing";
+import { createFakeHost } from "@/infrastructure/host/internal/testing";
+import { InternalObsidianAppToken } from "@/infrastructure/host/internal/tokens";
 import type { ModalApi } from "@/infrastructure/host/modals";
 import { provideModalApiOnApp } from "@/infrastructure/host/modals/testing";
 
@@ -32,6 +34,8 @@ function mountModal(options: {
   const container = new Container();
   container.register(Calendar).useValue(new Calendar());
   container.register(InputSuggestService).useValue(new FakeInputSuggestService() as unknown as InputSuggestService);
+  container.register(InternalObsidianAppToken).useValue(createFakeHost().app);
+  container.register(MetadataTypeService).useClass(MetadataTypeService);
   render(EditDecorationModal, {
     props: { journalName: "daily", writeType: options.writeType, decoration: options.decoration },
     global: {
@@ -72,6 +76,20 @@ describe("EditDecorationModal", () => {
       await waitFor(() => {
         expect(submit).toHaveBeenCalledWith({ decoration: expect.objectContaining({ mode: "and" }) as unknown });
       });
+    });
+
+    it("blocks submit and shows an error when a property condition has a blank name", async () => {
+      const { submit } = mountModal({
+        writeType: "day",
+        decoration: {
+          mode: "and",
+          conditions: [{ type: "property", name: "", valueType: "text", condition: "exists", value: "" }],
+          styles: [{ type: "background", color: transparent }],
+        },
+      });
+      await userEvent.click(screen.getByText(m.common_action_submit()));
+      await waitFor(() => expect(screen.getByText(m.journal_property_name_required())).toBeTruthy());
+      expect(submit).not.toHaveBeenCalled();
     });
   });
 
