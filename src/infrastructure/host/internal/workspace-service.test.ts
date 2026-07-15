@@ -159,6 +159,32 @@ describe("WorkspaceService", () => {
       expect(host.workspace.triggerCalls).toHaveLength(0);
       expect(__testing.openMenus).toHaveLength(0);
     });
+
+    it("appends a Delete item after the file-menu contributions", async () => {
+      const { __testing } = await import("obsidian");
+      __testing.reset();
+
+      const { service, host } = build();
+      host.putFile(path);
+      service.openFileMenu(path, new MouseEvent("contextmenu"));
+
+      const menu = __testing.lastOpenMenu();
+      expect(menu.items.at(-1)?.title).toBe("Delete");
+    });
+
+    it("prompts Obsidian's file deletion when the Delete item is clicked", async () => {
+      const { __testing } = await import("obsidian");
+      __testing.reset();
+
+      const { service, host } = build();
+      const file = host.putFile(path);
+      service.openFileMenu(path, new MouseEvent("contextmenu"));
+
+      const deleteItem = __testing.lastOpenMenu().items.at(-1);
+      (deleteItem as unknown as { click(): void }).click();
+
+      expect(host.promptedDeletions).toEqual([file]);
+    });
   });
 
   describe("openPathsMenu", () => {

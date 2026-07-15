@@ -96,6 +96,7 @@ export interface FakeHost {
   readonly ribbonIcons: FakeRibbonIcon[];
   readonly codeBlockProcessors: Map<string, CodeBlockProcessor>;
   readonly registeredViews: Map<string, FakeRegisteredView>;
+  readonly promptedDeletions: readonly TFile[];
 
   putFile(path: string, content?: string, frontmatter?: Record<string, unknown>): TFile;
   putFolder(path: string): TFolder;
@@ -289,7 +290,12 @@ export function createFakeHost(): FakeHost {
     },
   };
 
+  const promptedDeletions: TFile[] = [];
+
   const fileManagerApi = {
+    promptForFileDeletion(file: TFile): void {
+      promptedDeletions.push(file);
+    },
     async processFrontMatter(file: TFile, mutate: (fm: Record<string, unknown>) => void): Promise<void> {
       const existing = files.get(file.path);
       if (!existing) throw new Error(`missing: ${file.path}`);
@@ -449,6 +455,7 @@ export function createFakeHost(): FakeHost {
     ribbonIcons,
     codeBlockProcessors,
     registeredViews,
+    promptedDeletions,
     putFile(path, content = "", frontmatter = {}): TFile {
       ensureFolderChain(parentPath(path));
       files.set(path, { content, frontmatter, metadata: {} });

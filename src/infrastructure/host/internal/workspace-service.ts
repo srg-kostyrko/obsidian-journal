@@ -1,10 +1,12 @@
 import { createNanoEvents } from "nanoevents";
 import { Menu, TFile } from "obsidian";
 
+import { m } from "@/i18n";
 import { inject } from "@/infrastructure/di";
 import type { Subscribable, TypedEmitter } from "@/infrastructure/events";
 import { AsyncResult, InvariantError, None, Some } from "@/infrastructure/result";
 import type { Option } from "@/infrastructure/result";
+import { icons } from "@/ui/icons";
 
 import { WorkspaceOpenError } from "../errors";
 
@@ -18,6 +20,12 @@ import type { Editor, MarkdownView, WorkspaceLeaf } from "obsidian";
 // Obsidian exposes link-preference settings only through the untyped Vault.getConfig.
 interface ConfigurableVault {
   getConfig?(key: string): unknown;
+}
+
+// The confirm-and-delete prompt is an undocumented FileManager method (same one core
+// file-explorer menus use); v2 relied on it for the appended Delete item.
+interface DeletePromptingFileManager {
+  promptForFileDeletion?(file: TFile): void;
 }
 
 export class WorkspaceService {
@@ -136,6 +144,15 @@ export class WorkspaceService {
     if (!(file instanceof TFile)) return;
     const menu = new Menu();
     this.#app.workspace.trigger("file-menu", menu, file, "file-explorer-context-menu", null);
+    // The file-menu event does not guarantee a Delete entry; append one like v2 did.
+    menu.addItem((item) =>
+      item
+        .setTitle(m.common_action_delete())
+        .setIcon(icons.action.delete)
+        .onClick(() => {
+          (this.#app.fileManager as DeletePromptingFileManager).promptForFileDeletion?.(file);
+        }),
+    );
     menu.showAtMouseEvent(event);
   }
 
