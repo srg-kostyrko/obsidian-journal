@@ -53,6 +53,20 @@ describe("TemplateContentService.renderFor", () => {
     expect(result.value).toBe("per-note template body");
   });
 
+  it("falls through to the next template when the first existing one is empty", async () => {
+    const repo = fakeRepo({
+      daily: fixedJournal("daily", { type: "day" }, { templates: ["Templates/empty.md", "Templates/real.md"] }),
+    });
+    const notes = new FakeNotesService();
+    notes.seed("Templates/empty.md" as VaultPath, "");
+    notes.seed("Templates/real.md" as VaultPath, "real body");
+    const result = await build(repo, notes)
+      .resolve(TemplateContentService)
+      .renderFor("daily", meta, "2026-05-19", "2026-05-19.md" as VaultPath);
+    expectOk(result);
+    expect(result.value).toBe("real body");
+  });
+
   it("resolves to empty string when no templates are configured", async () => {
     const repo = fakeRepo({ daily: fixedJournal("daily", { type: "day" }) });
     const notes = new FakeNotesService();

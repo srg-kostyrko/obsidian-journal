@@ -41,6 +41,9 @@ export class TemplateContentService {
           if (this.#notes.find(renderedPath).isNone()) continue;
           const readResult = await this.#notes.read(renderedPath);
           if (readResult.isErr()) throw readResult.error;
+          // An empty template falls through to the next candidate (v2's truthy check);
+          // only a template with content wins the slot.
+          if (readResult.value === "") continue;
           const rendered = this.#engine.renderString(readResult.value, context);
           const applied = await this.#templater.apply(renderedPath, targetPath, rendered);
           return applied.match({ ok: (content) => content, err: () => rendered });
