@@ -73,7 +73,9 @@ async function applyMode(
 async function fire(level: ButtonLevel, event: MouseEvent): Promise<void> {
   await match(props.config.action)
     .with({ type: "pick-date" }, async (action) => {
-      const result = await modals.open(datePickerModal, { picking: level });
+      // Open the picker on the period the calendar currently shows, pre-selected (v2 parity).
+      const displayed = periodFor(level, CalendarDate.fromAnchor(context.refDate.value));
+      const result = await modals.open(datePickerModal, { picking: level, selected: displayed });
       if (result.isErr()) return;
       await applyMode(action.mode, result.value.anchor.toAnchor(), journalsFor(level), event);
     })
@@ -101,7 +103,8 @@ async function fireJournal(
   if (!journal) return;
   let date: CalendarDate;
   if (action.type === "pick-date") {
-    const result = await modals.open(datePickerModal, { picking: "day" });
+    const displayed = periodFor("day", CalendarDate.fromAnchor(context.refDate.value));
+    const result = await modals.open(datePickerModal, { picking: "day", selected: displayed });
     if (result.isErr()) return;
     date = CalendarDate.fromAnchor(result.value.anchor.toAnchor());
   } else {

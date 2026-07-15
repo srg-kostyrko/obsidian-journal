@@ -218,6 +218,18 @@ describe("ButtonItem", () => {
       expect((modals.lastOpen().props as { picking: string }).picking).toBe("day");
     });
 
+    it("opens the picker on the currently displayed period with it selected", async () => {
+      // v2 passed the calendar's refDate into the picker so it opened where the user
+      // is looking, not on today's month.
+      const { result, modals } = mountItem(
+        { action: { type: "pick-date", mode: "navigate", levels: ["day"] } },
+        { refDate: ref("2031-02-14" as AnchorString) },
+      );
+      await userEvent.click(result.getByRole("button"));
+      const selected = (modals.lastOpen().props as { selected?: { anchor: CalendarDate } }).selected;
+      expect(selected?.anchor.toAnchor()).toBe("2031-02-14");
+    });
+
     it("dispatches the picked date through OpenDateFlow when mode is 'create'", async () => {
       const { result, modals, flows } = mountItem({
         action: { type: "pick-date", mode: "create", levels: ["day"] },
