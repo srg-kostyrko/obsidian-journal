@@ -17,7 +17,7 @@ import { FrontmatterService } from "../frontmatter";
 import { JournalsIndex } from "../journals-index";
 import { NumberingService } from "../numbering";
 import { JournalsRepository } from "../repository";
-import { fakeRepo, fixedJournal } from "../testing";
+import { customJournal, fakeRepo, fixedJournal } from "../testing";
 
 import { AnchorOccupiedError } from "./errors";
 import { NoteConnectionService } from "./note-connection";
@@ -50,6 +50,11 @@ function build(
   c.register(NoteConnectionService).useClass(NoteConnectionService);
   const index = c.resolve(JournalsIndex);
   return { container: c, index };
+}
+
+function dailyWithFrontmatter(patch: { addStartDate?: boolean; addEndDate?: boolean }) {
+  const daily = fixedJournal("daily", { type: "day" });
+  return { daily: { ...daily, frontmatter: { ...daily.frontmatter, ...patch } } };
 }
 
 async function readFrontmatter(notes: FakeNotesService, path: VaultPath): Promise<Record<string, unknown>> {
@@ -247,6 +252,129 @@ describe("NoteConnectionService", () => {
         "journal-date": "2026-06-01",
         title: "keep",
       });
+    });
+  });
+
+  describe("reapplyAll", () => {
+    it("writes the start date property to every connected note when addStartDate is on", async () => {
+      const repo = fakeRepo(dailyWithFrontmatter({ addStartDate: true }));
+      const notes = new FakeNotesService();
+      const first = "a.md" as VaultPath;
+      const second = "b.md" as VaultPath;
+      notes.seed(first, "content", { journal: "daily", "journal-date": "2026-06-01" });
+      notes.seed(second, "content", { journal: "daily", "journal-date": "2026-06-02" });
+      const { container, index } = build(repo, notes, new FakeModalService());
+      index.register({ journalName: "daily", anchor: anchor("2026-06-01"), path: first });
+      index.register({ journalName: "daily", anchor: anchor("2026-06-02"), path: second });
+
+      await container.resolve(NoteConnectionService).reapplyAll("daily");
+
+      const firstFm = await readFrontmatter(notes, first);
+      const secondFm = await readFrontmatter(notes, second);
+      expect(firstFm["journal-start-date"]).toBe("2026-06-01");
+      expect(secondFm["journal-start-date"]).toBe("2026-06-02");
+    });
+
+    it("removes the start date property from connected notes when addStartDate is off", async () => {
+      const repo = fakeRepo(dailyWithFrontmatter({ addStartDate: false }));
+      const notes = new FakeNotesService();
+      const path = "a.md" as VaultPath;
+      notes.seed(path, "content", {
+        journal: "daily",
+        "journal-date": "2026-06-01",
+        "journal-start-date": "2026-06-01",
+      });
+      const { container, index } = build(repo, notes, new FakeModalService());
+      index.register({ journalName: "daily", anchor: anchor("2026-06-01"), path });
+
+      await container.resolve(NoteConnectionService).reapplyAll("daily");
+
+      expect("journal-start-date" in (await readFrontmatter(notes, path))).toBe(false);
+    });
+
+    it("writes the period end property to connected notes when addEndDate is on", async () => {
+      const repo = fakeRepo(dailyWithFrontmatter({ addEndDate: true }));
+      const notes = new FakeNotesService();
+      const path = "a.md" as VaultPath;
+      notes.seed(path, "content", { journal: "daily", "journal-date": "2026-06-01" });
+      const { container, index } = build(repo, notes, new FakeModalService());
+      index.register({ journalName: "daily", anchor: anchor("2026-06-01"), path });
+
+      await container.resolve(NoteConnectionService).reapplyAll("daily");
+
+      const fm = await readFrontmatter(notes, path);
+      expect(fm["journal-end-date"]).toBe("2026-06-01");
+    });
+
+    it("removes a period-default end property from connected notes when addEndDate is off", async () => {
+      const repo = fakeRepo(dailyWithFrontmatter({ addEndDate: false }));
+      const notes = new FakeNotesService();
+      const path = "a.md" as VaultPath;
+      notes.seed(path, "content", {
+        journal: "daily",
+        "journal-date": "2026-06-01",
+        "journal-end-date": "2026-06-01",
+      });
+      const { container, index } = build(repo, notes, new FakeModalService());
+      index.register({ journalName: "daily", anchor: anchor("2026-06-01"), path, endDate: anchor("2026-06-01") });
+
+      await container.resolve(NoteConnectionService).reapplyAll("daily");
+
+      expect("journal-end-date" in (await readFrontmatter(notes, path))).toBe(false);
+    });
+
+    it("keeps an extended end date when addEndDate is off", async () => {
+      const repo = fakeRepo(dailyWithFrontmatter({ addEndDate: false }));
+      const notes = new FakeNotesService();
+      const path = "a.md" as VaultPath;
+      notes.seed(path, "content", {
+        journal: "daily",
+        "journal-date": "2026-06-01",
+        "journal-end-date": "2026-06-05",
+      });
+      const { container, index } = build(repo, notes, new FakeModalService());
+      index.register({ journalName: "daily", anchor: anchor("2026-06-01"), path, endDate: anchor("2026-06-05") });
+
+      await container.resolve(NoteConnectionService).reapplyAll("daily");
+
+      const fm = await readFrontmatter(notes, path);
+      expect(fm["journal-end-date"]).toBe("2026-06-05");
+    });
+
+    it("removes a custom interval's duration-default end when addEndDate is off", async () => {
+      // 10-day intervals from 2026-06-01: the first interval's default end is 2026-06-10.
+      const repo = fakeRepo({ sprint: customJournal("sprint", "day", 10, "2026-06-01") });
+      const notes = new FakeNotesService();
+      const path = "a.md" as VaultPath;
+      notes.seed(path, "content", {
+        journal: "sprint",
+        "journal-date": "2026-06-01",
+        "journal-end-date": "2026-06-10",
+      });
+      const { container, index } = build(repo, notes, new FakeModalService());
+      index.register({ journalName: "sprint", anchor: anchor("2026-06-01"), path, endDate: anchor("2026-06-10") });
+
+      await container.resolve(NoteConnectionService).reapplyAll("sprint");
+
+      expect("journal-end-date" in (await readFrontmatter(notes, path))).toBe(false);
+    });
+
+    it("keeps a custom interval's extended end when addEndDate is off", async () => {
+      const repo = fakeRepo({ sprint: customJournal("sprint", "day", 10, "2026-06-01") });
+      const notes = new FakeNotesService();
+      const path = "a.md" as VaultPath;
+      notes.seed(path, "content", {
+        journal: "sprint",
+        "journal-date": "2026-06-01",
+        "journal-end-date": "2026-06-20",
+      });
+      const { container, index } = build(repo, notes, new FakeModalService());
+      index.register({ journalName: "sprint", anchor: anchor("2026-06-01"), path, endDate: anchor("2026-06-20") });
+
+      await container.resolve(NoteConnectionService).reapplyAll("sprint");
+
+      const fm = await readFrontmatter(notes, path);
+      expect(fm["journal-end-date"]).toBe("2026-06-20");
     });
   });
 

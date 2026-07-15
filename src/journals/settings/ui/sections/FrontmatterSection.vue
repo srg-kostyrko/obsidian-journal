@@ -13,6 +13,7 @@ import UiToggle from "@/ui/UiToggle.vue";
 
 import { JournalsViewModel } from "../../../view-model";
 import { EditFrontmatterFieldFlow } from "../../flows/edit-frontmatter-field.flow";
+import { useReapplyFrontmatterOnToggle } from "../use-reapply-frontmatter-on-toggle";
 
 import type { JournalConfig } from "../../../config";
 
@@ -21,6 +22,7 @@ const { journalName } = defineProps<{ journalName: string }>();
 const flows = useService(Flows);
 const journalsVM = useService(JournalsViewModel);
 const config = computed<JournalConfig | undefined>(() => journalsVM.getJournal(journalName).getOr(undefined as never));
+useReapplyFrontmatterOnToggle(config);
 
 const expanded = ref(false);
 

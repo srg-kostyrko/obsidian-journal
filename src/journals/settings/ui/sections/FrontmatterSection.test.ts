@@ -27,6 +27,7 @@ import {
 } from "@/journals";
 import { JournalsIndex } from "@/journals/journals-index";
 import { AutoCreateService } from "@/journals/notes/auto-create";
+import { NoteConnectionService } from "@/journals/notes/note-connection";
 import { JournalsEventsToken } from "@/journals/tokens";
 import { TemplateEngine } from "@/templates";
 import { installTestEngine } from "@/templates/testing";
@@ -68,6 +69,9 @@ function mount(overrides: Partial<JournalConfig> = {}) {
   container
     .register(AutoCreateService)
     .useValue({ createCurrent: () => Promise.resolve() } as unknown as AutoCreateService);
+  container
+    .register(NoteConnectionService)
+    .useValue({ reapplyAll: () => Promise.resolve() } as unknown as NoteConnectionService);
   container.register(Flows).useClass(Flows);
   const flows = container.resolve(Flows);
   vi.spyOn(flows, "invoke").mockReturnValue({} as never);

@@ -49,6 +49,12 @@ function customStepForward(anchor: AnchorString, every: MomentDurationUnit, dura
   return m.clone().add(duration, every).format("YYYY-MM-DD") as AnchorString;
 }
 
+function customDefaultEnd(anchor: AnchorString, c: CustomCycle): CalendarDate {
+  const next = customStepForward(anchor, c.every, c.duration);
+  const end = localMoment(next, "YYYY-MM-DD", true).subtract(1, "day");
+  return CalendarDate.fromAnchor(end.format("YYYY-MM-DD") as AnchorString);
+}
+
 function customStepBackward(anchor: AnchorString, every: MomentDurationUnit, duration: number): AnchorString {
   const m = localMoment(anchor, "YYYY-MM-DD", true);
   if (every === "month" && m.date() > 28) {
@@ -166,10 +172,19 @@ export class CycleService {
           if (stored.isSome() && stored.value.endDate !== undefined) {
             return CalendarDate.fromAnchor(stored.value.endDate);
           }
-          const next = customStepForward(anchor, c.every, c.duration);
-          const end = localMoment(next, "YYYY-MM-DD", true).subtract(1, "day");
-          return CalendarDate.fromAnchor(end.format("YYYY-MM-DD") as AnchorString);
+          return customDefaultEnd(anchor, c);
         })
+        .exhaustive(),
+    );
+  }
+
+  // The period's duration-derived end, ignoring any manually extended/shrunk stored end.
+  // A stored end equal to this is period metadata, not extension data.
+  defaultEndOf(name: string, anchor: AnchorString): Option<CalendarDate> {
+    return this.#cycleFor(name).map((cycle) =>
+      match(cycle)
+        .with({ kind: "fixed" }, (c) => periodOfKind(c.period, CalendarDate.fromAnchor(anchor)).end)
+        .with({ kind: "custom" }, (c) => customDefaultEnd(anchor, c))
         .exhaustive(),
     );
   }

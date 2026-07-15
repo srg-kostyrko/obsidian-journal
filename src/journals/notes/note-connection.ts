@@ -1,17 +1,17 @@
 import type { AnchorString } from "@/calendar";
 import { inject } from "@/infrastructure/di";
-import { NotesService } from "@/infrastructure/host";
+import { NoteNotFoundError, NotesService } from "@/infrastructure/host";
 import type {
   FrontmatterError,
   NoteAlreadyExistsError,
   NoteDeleteError,
-  NoteNotFoundError,
   NoteRenameError,
   VaultPath,
 } from "@/infrastructure/host";
 import { AsyncResult, attempt } from "@/infrastructure/result";
 
 import { DEFAULT_FRONTMATTER_KEYS, FRONTMATTER_NAME_KEY } from "../config";
+import { CycleService } from "../cycle";
 import { FrontmatterService } from "../frontmatter";
 import { JournalsIndex } from "../journals-index";
 
@@ -21,6 +21,7 @@ import { NotePathService } from "./note-path";
 import { splitVaultPath } from "./vault-path";
 
 import type { NoteCreationError } from "./note-creation";
+import type { JournalMetadata } from "../types";
 
 export type ConnectError =
   | NoteCreationError
@@ -45,6 +46,7 @@ export class NoteConnectionService {
   readonly #frontmatter = inject(FrontmatterService);
   readonly #creation = inject(NoteCreationService);
   readonly #index = inject(JournalsIndex);
+  readonly #cycle = inject(CycleService);
 
   readonly #defaultClear = (fm: Record<string, unknown>): void => {
     for (const key of DEFAULT_FRONTMATTER_KEYS) delete fm[key];
@@ -70,6 +72,17 @@ export class NoteConnectionService {
     const folder = options.move ? configuredFolder : currentFolder;
     const name = options.rename ? configuredName : currentName;
     return folder ? `${folder}/${name}` : name;
+  }
+
+  // A stored end equal to the duration-derived default is period metadata written by an
+  // earlier addEndDate config, not a manual extension — dropping it lets the write mutator
+  // clear the field once the toggle is off, while genuine extensions survive.
+  #withoutDefaultEnd(journalName: string, metadata: JournalMetadata): JournalMetadata {
+    if (metadata.endDate === undefined) return metadata;
+    const fallback = this.#cycle.defaultEndOf(journalName, metadata.anchor);
+    if (fallback.isNone() || fallback.value.toAnchor() !== metadata.endDate) return metadata;
+    const { endDate: _dropped, ...rest } = metadata;
+    return rest;
   }
 
   connect(
@@ -132,6 +145,20 @@ export class NoteConnectionService {
     return this.#forEachConnected(oldName, (path) =>
       this.#notes.updateFrontmatter(path, (fm) => {
         fm[FRONTMATTER_NAME_KEY] = newName;
+      }),
+    );
+  }
+
+  reapplyAll(journalName: string): AsyncResult<void, never> {
+    return this.#forEachConnected(journalName, (path) =>
+      attempt.in(this, async function* (this: NoteConnectionService) {
+        const entry = yield* this.#index.entryByPath(path).okOrElse(() => new NoteNotFoundError(path));
+        const metadata = yield* this.#frontmatter.buildMetadata(journalName, entry.anchor);
+        const mutator = yield* this.#frontmatter.writeMutator(
+          journalName,
+          this.#withoutDefaultEnd(journalName, metadata),
+        );
+        yield* this.#notes.updateFrontmatter(path, mutator);
       }),
     );
   }

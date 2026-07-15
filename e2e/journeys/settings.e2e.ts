@@ -16,8 +16,10 @@ import {
   selectModalSelect,
   setModalText,
   submitModal,
+  toggleSettingRow,
   waitForModalOpen,
 } from "../support/settings.js";
+import { seedNote, waitForFrontmatter, waitForJournalFrontmatter } from "../support/vault.js";
 
 import type { StoredView } from "../support/plugin-data.js";
 
@@ -544,6 +546,24 @@ describe("settings", () => {
       await waitForSettings(
         (s) => s.journals?.daily?.navBlock?.rows?.[0]?.template === "{{date}} edited",
         "nav row template change not persisted",
+      );
+    });
+  });
+
+  // Kept last: the toggle mutates the monthly journal's config for the rest of the boot.
+  describe("frontmatter toggle rewrite", () => {
+    it("backfills the start date property on an existing note when the toggle turns on", async () => {
+      await seedNote("month/2030-07-01.md", "---\njournal: monthly\njournal-date: 2030-07-01\n---\n");
+      await waitForJournalFrontmatter("month/2030-07-01.md", { journal: "monthly", date: "2030-07-01" });
+
+      await openJournalSubpage("extra", "monthly");
+      await expandSection("Frontmatter");
+      await toggleSettingRow("Add start date property");
+
+      await waitForFrontmatter(
+        "month/2030-07-01.md",
+        (fm) => fm["journal-start-date"] === "2030-07-01",
+        "existing note was not backfilled with the start date property",
       );
     });
   });

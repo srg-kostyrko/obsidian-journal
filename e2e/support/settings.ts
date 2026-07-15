@@ -57,6 +57,14 @@ export async function expandSection(title: string): Promise<void> {
   await $(`.collapsible-trigger*=${title}`).click();
 }
 
+// Page-level UiSettingRow toggles carry no aria-label of their own; locate the row by its
+// visible name and click the checkbox container inside its control cell.
+export async function toggleSettingRow(name: string): Promise<void> {
+  await $(
+    `//div[contains(@class,"setting-item")][.//div[contains(@class,"setting-item-name")][normalize-space(.)="${name}"]]//div[contains(@class,"checkbox-container")]`,
+  ).click();
+}
+
 // Every edit subpage opens with a breadcrumb back link (UiBackLink): an icon plus the
 // "Back to list" label, so it's a text button rather than an icon button.
 export async function goBack(): Promise<void> {
