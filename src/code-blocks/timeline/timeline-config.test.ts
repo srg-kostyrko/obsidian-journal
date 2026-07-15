@@ -14,8 +14,10 @@ describe("timelineBlockSchema", () => {
     expect(result.mode).toBe(mode);
   });
 
-  it("rejects an unknown mode value", () => {
-    expect(v.safeParse(timelineBlockSchema, { mode: "decade" }).success).toBe(false);
+  it("treats an unknown mode value as unset so the journal-derived mode applies", () => {
+    // v2 fell back to the host journal's mode on a typo; the block must not hard-error.
+    const result = v.parse(timelineBlockSchema, { mode: "decade" });
+    expect(result.mode).toBeUndefined();
   });
 
   it("accepts a shelf string", () => {

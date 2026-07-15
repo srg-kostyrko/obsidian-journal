@@ -250,13 +250,15 @@ describe("code blocks", () => {
         await expect(block.$$(".notes-month-view__day[data-outside]")).toBeElementsArrayOfSize(0);
       });
 
-      it("renders the error fallback for a timeline fence with an invalid mode", async () => {
+      it("falls back to the derived timeline when the fence mode is invalid", async () => {
+        // A typo'd mode no longer blanks the block into an error panel (v2 parity):
+        // it parses as unset, and a non-journal host derives the week mode.
         await seedNote("blocks/bad-timeline.md", plainNote(TIMELINE_BAD_FENCE));
         await openInReadingMode("blocks/bad-timeline.md");
-        await $(`${TIMELINE_BLOCK} ${CODE_BLOCK_ERROR}`).waitForExist({
-          timeoutMsg: "schema-invalid timeline fence did not render the .code-block-error fallback",
+        await $(`${TIMELINE_BLOCK} .notes-week-view`).waitForExist({
+          timeoutMsg: "invalid-mode timeline fence did not render the derived week timeline",
         });
-        await expect($(`${TIMELINE_BLOCK} .notes-month-view`)).not.toExist();
+        await expect($(`${TIMELINE_BLOCK} ${CODE_BLOCK_ERROR}`)).not.toExist();
       });
     });
 

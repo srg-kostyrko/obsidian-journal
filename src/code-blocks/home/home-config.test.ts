@@ -25,9 +25,15 @@ describe("homeBlockSchema", () => {
     expect(result.shelf).toBe("Work");
   });
 
-  it("rejects an unknown entry in show", () => {
-    expect(v.safeParse(homeBlockSchema, { show: ["decade"] }).success).toBe(false);
-    expect(v.safeParse(homeBlockSchema, { show: ["foo"] }).success).toBe(false);
+  it("drops unknown entries from show and keeps the valid ones", () => {
+    // v2 filtered invalid entries and rendered the rest; a typo must not blank the block.
+    const result = v.parse(homeBlockSchema, { show: ["day", "decade", "week"] });
+    expect(result.show).toEqual(["day", "week"]);
+  });
+
+  it("parses to an empty show list when no entry is recognized", () => {
+    const result = v.parse(homeBlockSchema, { show: ["decade"] });
+    expect(result.show).toEqual([]);
   });
 
   it("rejects a non-numeric scale", () => {
