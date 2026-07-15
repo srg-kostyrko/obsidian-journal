@@ -2,23 +2,22 @@ import { inject, InjectorToken } from "@/infrastructure/di";
 import { AsyncResult } from "@/infrastructure/result";
 
 import { InternalObsidianAppToken, InternalPluginToken } from "../../internal/tokens";
+import { TrackedInstances } from "../../internal/tracked-instances";
 import { ModalCancelled } from "../errors";
 
 import { VueModalHost } from "./vue-modal-host";
 
 import type { ModalDefinition } from "../types";
 
+function dismissHost(host: VueModalHost<unknown, unknown>): void {
+  host.dismiss();
+}
+
 export class ModalService {
   readonly #plugin = inject(InternalPluginToken);
   readonly #app = inject(InternalObsidianAppToken);
   readonly #injector = inject(InjectorToken);
-  readonly #open = new Set<VueModalHost<unknown, unknown>>();
-
-  constructor() {
-    this.#plugin.register(() => {
-      for (const host of this.#open) host.dismiss();
-    });
-  }
+  readonly #open = new TrackedInstances<VueModalHost<unknown, unknown>>(this.#plugin, dismissHost);
 
   open<TProps, TResult>(
     definition: ModalDefinition<TProps, TResult>,

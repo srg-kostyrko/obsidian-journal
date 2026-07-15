@@ -3,20 +3,18 @@ import { AbstractInputSuggest } from "obsidian";
 import { inject } from "@/infrastructure/di";
 
 import { InternalObsidianAppToken, InternalPluginToken } from "../../internal/tokens";
+import { TrackedInstances } from "../../internal/tracked-instances";
 
 import type { Disposer, InputSuggestDefinition } from "../types";
+
+function closeInputSuggest(suggest: AbstractInputSuggest<unknown>): void {
+  suggest.close();
+}
 
 export class InputSuggestService {
   readonly #app = inject(InternalObsidianAppToken);
   readonly #plugin = inject(InternalPluginToken);
-  readonly #attached = new Set<AbstractInputSuggest<unknown>>();
-
-  constructor() {
-    this.#plugin.register(() => {
-      for (const suggest of this.#attached) suggest.close();
-      this.#attached.clear();
-    });
-  }
+  readonly #attached = new TrackedInstances<AbstractInputSuggest<unknown>>(this.#plugin, closeInputSuggest);
 
   attach<TResult>(element: HTMLInputElement, definition: InputSuggestDefinition<TResult>): Disposer {
     const attached = this.#attached;

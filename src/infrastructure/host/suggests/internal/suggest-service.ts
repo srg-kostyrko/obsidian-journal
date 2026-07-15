@@ -4,20 +4,19 @@ import { inject } from "@/infrastructure/di";
 import { AsyncResult } from "@/infrastructure/result";
 
 import { InternalObsidianAppToken, InternalPluginToken } from "../../internal/tokens";
+import { TrackedInstances } from "../../internal/tracked-instances";
 import { SuggestCancelled } from "../errors";
 
 import type { SuggestDefinition } from "../types";
 
+function closeSuggestModal(modal: SuggestModal<unknown>): void {
+  modal.close();
+}
+
 export class SuggestService {
   readonly #app = inject(InternalObsidianAppToken);
   readonly #plugin = inject(InternalPluginToken);
-  readonly #open = new Set<SuggestModal<unknown>>();
-
-  constructor() {
-    this.#plugin.register(() => {
-      for (const modal of this.#open) modal.close();
-    });
-  }
+  readonly #open = new TrackedInstances<SuggestModal<unknown>>(this.#plugin, closeSuggestModal);
 
   open<TInput, TResult>(
     definition: SuggestDefinition<TInput, TResult>,
