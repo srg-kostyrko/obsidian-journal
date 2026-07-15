@@ -143,6 +143,16 @@ describe("ButtonItem", () => {
       expect(parameters.existingOnly).toBe(false);
     });
 
+    it("recenters the view to today when mode is 'navigate'", async () => {
+      const setRefDate = vi.fn();
+      const { result } = mountItem(
+        { action: { type: "current", mode: "navigate", levels: ["day"] } },
+        { refDate: ref("2020-01-01" as AnchorString), setRefDate },
+      );
+      await userEvent.click(result.getByText("Today"));
+      expect(setRefDate).toHaveBeenCalledWith(CalendarDate.today().toAnchor());
+    });
+
     it("calls setRefDate without invoking OpenDateFlow when mode is 'select-only'", async () => {
       const setRefDate = vi.fn();
       const { result, flows } = mountItem(
@@ -220,6 +230,34 @@ describe("ButtonItem", () => {
       const parameters = flows.calls[0]?.parameters as { anchor: string; existingOnly?: boolean };
       expect(parameters.anchor).toBe("2026-06-10");
       expect(parameters.existingOnly).toBe(false);
+    });
+  });
+
+  describe("click — pick-date recenters the view", () => {
+    it("recenters to the picked date when mode is 'navigate'", async () => {
+      const setRefDate = vi.fn();
+      const { result, modals } = mountItem(
+        { action: { type: "pick-date", mode: "navigate", levels: ["day"] } },
+        { setRefDate },
+      );
+      await userEvent.click(result.getByRole("button"));
+      const picked = DayPeriod.containing(CalendarDate.fromAnchor("2026-06-10" as AnchorString));
+      modals.lastOpen().submit(picked);
+      await new Promise((r) => window.setTimeout(r, 0));
+      expect(setRefDate).toHaveBeenCalledWith("2026-06-10");
+    });
+
+    it("recenters to the picked date when mode is 'create'", async () => {
+      const setRefDate = vi.fn();
+      const { result, modals } = mountItem(
+        { action: { type: "pick-date", mode: "create", levels: ["day"] } },
+        { setRefDate },
+      );
+      await userEvent.click(result.getByRole("button"));
+      const picked = DayPeriod.containing(CalendarDate.fromAnchor("2026-06-10" as AnchorString));
+      modals.lastOpen().submit(picked);
+      await new Promise((r) => window.setTimeout(r, 0));
+      expect(setRefDate).toHaveBeenCalledWith("2026-06-10");
     });
   });
 

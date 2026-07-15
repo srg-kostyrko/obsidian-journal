@@ -57,10 +57,11 @@ async function applyMode(
   journalNames: readonly string[],
   event: MouseEvent,
 ): Promise<void> {
-  if (mode === "select-only") {
-    context.setRefDate(anchor);
-    return;
-  }
+  // v2 parity: the pick/today interaction always moves the displayed period to the
+  // chosen date; the mode only decides whether an open follows. Without this, a
+  // navigate-mode pick of a note-less date would be a complete no-op.
+  context.setRefDate(anchor);
+  if (mode === "select-only") return;
   await flows.invoke(OpenDateFlow, {
     anchor,
     journalNames: [...journalNames],
