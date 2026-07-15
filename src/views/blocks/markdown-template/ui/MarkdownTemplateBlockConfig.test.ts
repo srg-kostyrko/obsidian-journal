@@ -3,7 +3,7 @@ import { cleanup, render, screen } from "@testing-library/vue";
 import { afterEach, describe, expect, it, vi } from "vitest";
 
 import { Container, provideInjectorOnApp } from "@/infrastructure/di";
-import { InputSuggestService, NotesService } from "@/infrastructure/host";
+import { InputSuggestService, NotesService, TemplatesService } from "@/infrastructure/host";
 import { FakeInputSuggestService } from "@/infrastructure/host/input-suggests/testing";
 import { ModalService } from "@/infrastructure/host/modals";
 import { FakeModalService } from "@/infrastructure/host/modals/testing";
@@ -24,6 +24,9 @@ function mountConfig(config: MarkdownTemplateConfig, onChange: (next: MarkdownTe
   container.register(NotesService).useValue(notes as unknown as NotesService);
   container.register(InputSuggestService).useValue(new FakeInputSuggestService() as unknown as InputSuggestService);
   container.register(ModalService).useValue(modals as unknown as ModalService);
+  container.register(TemplatesService).useValue({
+    candidatePaths: () => [],
+  } as unknown as TemplatesService);
   render(MarkdownTemplateBlockConfig, {
     props: { config, onChange },
     global: { plugins: [{ install: (app) => provideInjectorOnApp(app, container) }] },

@@ -5,10 +5,10 @@ import { m } from "@/i18n";
 import { useService } from "@/infrastructure/di";
 import { icons } from "@/ui/icons";
 import UiCollapsibleBlock from "@/ui/UiCollapsibleBlock.vue";
-import UiFileInput from "@/ui/UiFileInput.vue";
 import UiIconButton from "@/ui/UiIconButton.vue";
 import UiIconedRow from "@/ui/UiIconedRow.vue";
 import UiSettingRow from "@/ui/UiSettingRow.vue";
+import UiTemplateInput from "@/ui/UiTemplateInput.vue";
 
 import { JournalsViewModel } from "../../../view-model";
 import CodeBlockReferenceHint from "../CodeBlockReferenceHint.vue";
@@ -72,7 +72,7 @@ function removeTemplate(index: number): void {
 
     <template v-for="(_path, index) in config.templates" :key="index">
       <UiSettingRow>
-        <UiFileInput
+        <UiTemplateInput
           v-model="config.templates[index]"
           class="grow"
           :placeholder="m.journal_edit_template_path_placeholder()"

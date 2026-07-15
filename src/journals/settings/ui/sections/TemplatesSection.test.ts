@@ -7,7 +7,7 @@ import { reactive } from "vue";
 import { installTestCalendar } from "@/calendar/testing";
 import { m } from "@/i18n";
 import { Container, provideInjectorOnApp } from "@/infrastructure/di";
-import { InputSuggestService, NotesService, TemplaterService } from "@/infrastructure/host";
+import { InputSuggestService, NotesService, TemplaterService, TemplatesService } from "@/infrastructure/host";
 import { FakeInputSuggestService } from "@/infrastructure/host/input-suggests/testing";
 import { ModalService } from "@/infrastructure/host/modals";
 import { FakeModalService } from "@/infrastructure/host/modals/testing";
@@ -59,6 +59,9 @@ function mount(overrides: Partial<JournalConfig> = {}) {
   container.register(NotesService).useValue(new FakeNotesService() as unknown as NotesService);
   container.register(InputSuggestService).useValue(new FakeInputSuggestService() as unknown as InputSuggestService);
   container.register(ModalService).useValue(new FakeModalService() as unknown as ModalService);
+  container.register(TemplatesService).useValue({
+    candidatePaths: () => [],
+  } as unknown as TemplatesService);
   render(TemplatesSection, {
     props: { journalName: "daily" },
     global: { plugins: [{ install: (app) => provideInjectorOnApp(app, container) }] },
