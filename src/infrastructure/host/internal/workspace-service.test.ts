@@ -92,14 +92,18 @@ describe("WorkspaceService", () => {
       expect(received[0]?.value).toBe(path);
     });
 
-    it("emits None when active leaf has no markdown file", () => {
+    it("does not clear the active note when focus moves to a leaf with no file", () => {
+      // v2 tracked only file-open, so focusing the calendar sidebar (a leaf with no file) never
+      // cleared the active note; the calendar's active-day highlight must persist.
       const { service, host } = build();
-      let isNone = false;
-      service.events.on("active-note-changed", (option) => {
-        isNone = option.isNone();
-      });
+      const file = host.putFile(path);
+      const received: (VaultPath | null)[] = [];
+      service.events.on("active-note-changed", (option) =>
+        received.push(option.match({ some: (p) => p, none: () => null })),
+      );
+      host.emitActiveLeafChange(file);
       host.emitActiveLeafChange(null);
-      expect(isNone).toBe(true);
+      expect(received).toEqual([path]);
     });
 
     it("emits Some(path) when a file opens in the already-active leaf", () => {

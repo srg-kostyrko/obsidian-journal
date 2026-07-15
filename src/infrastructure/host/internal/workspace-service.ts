@@ -39,7 +39,12 @@ export class WorkspaceService {
   constructor() {
     this.#plugin.registerEvent(
       this.#app.workspace.on("active-leaf-change", (leaf) => {
-        this.#emitter.emit("active-note-changed", this.#pathOf(this.#fileOf(leaf)));
+        // Focusing a leaf with no file (e.g. the calendar sidebar) must not clear the active note —
+        // v2 tracked only file-open, so the calendar's active-day highlight persisted. Only react
+        // to leaves that carry a file; note closes leave the last note active, as in v2.
+        const file = this.#fileOf(leaf);
+        if (!file) return;
+        this.#emitter.emit("active-note-changed", this.#pathOf(file));
       }),
     );
     // Same-leaf navigation (a link click, open-in-place) fires file-open without an
