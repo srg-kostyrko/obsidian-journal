@@ -5,7 +5,7 @@ import { Clock, type AnchorString } from "@/calendar";
 import { m } from "@/i18n";
 import { useService } from "@/infrastructure/di";
 import { Flows } from "@/infrastructure/flows";
-import { JournalsViewModel, journalDefaultsFor, type JournalConfig } from "@/journals";
+import { JournalsViewModel, journalDefaultsFor } from "@/journals";
 import { icons } from "@/ui/icons";
 import UiButton from "@/ui/UiButton.vue";
 import UiCollapsibleBlock from "@/ui/UiCollapsibleBlock.vue";
@@ -38,7 +38,7 @@ const {
 const flows = useService(Flows);
 const journalsVM = useService(JournalsViewModel);
 
-const config = computed<JournalConfig | undefined>(() => journalsVM.getJournal(journalName).getOr(undefined as never));
+const config = computed(() => journalsVM.getJournal(journalName).getOrUndefined());
 const expanded = ref(false);
 
 const todayAnchor = computed(() => Clock.now().format("YYYY-MM-DD") as AnchorString);

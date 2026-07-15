@@ -21,12 +21,10 @@ import { extractFromDateFormat, extractFromNameTemplate } from "../use-folder-ex
 import { useInvertibilityCheck } from "../use-invertibility-check";
 import VariableReferenceHint from "../VariableReferenceHint.vue";
 
-import type { JournalConfig } from "../../../config";
-
 const { journalName } = defineProps<{ journalName: string }>();
 
 const journalsVM = useService(JournalsViewModel);
-const config = computed<JournalConfig | undefined>(() => journalsVM.getJournal(journalName).getOr(undefined as never));
+const config = computed(() => journalsVM.getJournal(journalName).getOrUndefined());
 useAutoCreateOnEnable(config);
 
 const expanded = ref(true);

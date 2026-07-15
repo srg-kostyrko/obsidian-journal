@@ -27,7 +27,7 @@ const currentJournalName = computed(() =>
   index
     .entryByPath(path)
     .map((entry) => entry.journalName)
-    .getOr(null as unknown as string),
+    .getOrUndefined(),
 );
 
 const shelfByJournal = computed(() => {
@@ -41,7 +41,7 @@ const shelfByJournal = computed(() => {
 const effectiveShelf = computed(() => {
   if (config.shelf !== undefined) return config.shelf;
   const current = currentJournalName.value;
-  if (current === null) return null;
+  if (current === undefined) return null;
   return shelfByJournal.value.get(current) ?? null;
 });
 

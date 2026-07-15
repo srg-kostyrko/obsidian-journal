@@ -75,7 +75,7 @@ const sections = computed<readonly Section[]>(() => {
   const candidates = displayedJournals.value;
   const out: Section[] = [];
   for (const name of candidates) {
-    const cfg = journalsRepo.get(name).getOr(undefined as never) as JournalConfig | undefined;
+    const cfg = journalsRepo.get(name).getOrUndefined();
     if (!cfg) continue;
     const entries = cycle
       .intervalsInRange(name, window.value.start, window.value.end)

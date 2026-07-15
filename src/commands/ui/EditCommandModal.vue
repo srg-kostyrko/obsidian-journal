@@ -37,7 +37,7 @@ const validIcons = new Set(getIconIds());
 
 function journalWriteType(): JournalWrite["type"] {
   if (props.target.kind !== "journal") return "day";
-  return journalsVM.getJournal(props.target.journalName).getOr(undefined as never)?.write.type ?? "day";
+  return journalsVM.getJournal(props.target.journalName).getOrUndefined()?.write.type ?? "day";
 }
 
 const writeType = ref<JournalWrite["type"]>(

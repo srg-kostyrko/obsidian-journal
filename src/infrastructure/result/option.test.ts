@@ -143,6 +143,16 @@ describe("Option", () => {
     });
   });
 
+  describe("getOrUndefined", () => {
+    it("returns the inner value when Some", () => {
+      expect(Option.some(7).getOrUndefined()).toBe(7);
+    });
+
+    it("returns undefined when None", () => {
+      expect(Option.none<number>().getOrUndefined()).toBeUndefined();
+    });
+  });
+
   describe("okOr / okOrElse", () => {
     it("okOr on Some returns Ok with the inner value", () => {
       const opt = Option.some(5);

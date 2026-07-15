@@ -25,7 +25,7 @@ const journalsVM = useService(JournalsViewModel);
 const calendar = useService(Calendar);
 
 const decorations = computed<readonly JournalDecoration[]>(
-  () => journalsVM.getJournal(journalName).getOr(undefined as never)?.decorations ?? [],
+  () => journalsVM.getJournal(journalName).getOrUndefined()?.decorations ?? [],
 );
 
 const expanded = ref(false);

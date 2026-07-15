@@ -42,9 +42,7 @@ const cycle = useService(CycleService);
 const numbering = useService(NumberingService);
 const index = useService(JournalsIndex);
 
-const config = computed<JournalConfig | undefined>(() =>
-  journalsVM.getJournal(props.journalName).getOr(undefined as never),
-);
+const config = computed<JournalConfig | undefined>(() => journalsVM.getJournal(props.journalName).getOrUndefined());
 
 const initial: NavBlockRow = props.row ?? {
   template: "",

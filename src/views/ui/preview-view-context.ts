@@ -14,7 +14,7 @@ function noop(): void {
 
 export function provideViewPreviewContext(viewId: ViewId): void {
   const viewsVM = useService(ViewsViewModel);
-  const view = computed(() => viewsVM.getView(viewId).getOr(undefined as never));
+  const view = computed(() => viewsVM.getView(viewId).getOrUndefined());
   provideViewContext({
     viewId,
     viewName: computed(() => view.value?.name ?? ""),

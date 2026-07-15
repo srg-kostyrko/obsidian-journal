@@ -17,9 +17,7 @@ const api = useModal<{ newValue: string }>();
 const journalsVM = useService(JournalsViewModel);
 
 const currentValue = computed(() => {
-  return (
-    journalsVM.getJournal(journalName).getOr(undefined as never)?.numbering.sources[sourceIndex]?.frontmatterKey ?? ""
-  );
+  return journalsVM.getJournal(journalName).getOrUndefined()?.numbering.sources[sourceIndex]?.frontmatterKey ?? "";
 });
 
 const { defineField, errorBag, handleSubmit } = useForm({

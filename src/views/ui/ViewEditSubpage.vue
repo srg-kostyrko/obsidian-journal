@@ -35,7 +35,7 @@ const viewsVM = useService(ViewsViewModel);
 const shelvesVM = useService(ShelvesViewModel);
 const viewHost = useService(ViewHostService);
 
-const view = computed(() => viewsVM.getView(viewId).getOr(undefined as never));
+const view = computed(() => viewsVM.getView(viewId).getOrUndefined());
 
 watchEffect(() => {
   if (!view.value) nav.back();

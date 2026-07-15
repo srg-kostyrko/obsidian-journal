@@ -16,12 +16,10 @@ import TemplaterSupportHint from "../TemplaterSupportHint.vue";
 import TemplateStringPreview from "../TemplateStringPreview.vue";
 import VariableReferenceHint from "../VariableReferenceHint.vue";
 
-import type { JournalConfig } from "../../../config";
-
 const { journalName } = defineProps<{ journalName: string }>();
 
 const journalsVM = useService(JournalsViewModel);
-const config = computed<JournalConfig | undefined>(() => journalsVM.getJournal(journalName).getOr(undefined as never));
+const config = computed(() => journalsVM.getJournal(journalName).getOrUndefined());
 
 const expanded = ref(false);
 

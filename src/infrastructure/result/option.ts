@@ -24,6 +24,10 @@ export class Some<T> {
     return this.value;
   }
 
+  getOrUndefined(): T | undefined {
+    return this.value;
+  }
+
   isSome(): this is Some<T> {
     return true;
   }
@@ -63,6 +67,10 @@ export class None<T = unknown> {
 
   getOr(fallback: T): T {
     return fallback;
+  }
+
+  getOrUndefined(): T | undefined {
+    return undefined;
   }
 
   isSome(): this is Some<T> {

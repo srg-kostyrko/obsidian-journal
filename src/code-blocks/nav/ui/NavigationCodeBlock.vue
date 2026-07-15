@@ -8,7 +8,6 @@ import { useService } from "@/infrastructure/di";
 import { Flows } from "@/infrastructure/flows";
 import { defineOpenMode, type CodeBlockProps } from "@/infrastructure/host";
 import { CycleService, JournalsIndex, JournalsRepository, OpenDateFlow, TimelineService } from "@/journals";
-import type { JournalConfig } from "@/journals";
 import { ShelvesRepository } from "@/shelves";
 import { icons } from "@/ui/icons";
 import UiIconButton from "@/ui/UiIconButton.vue";
@@ -28,37 +27,37 @@ const shelves = useService(ShelvesRepository);
 const flows = useService(Flows);
 
 const entryOpt = computed(() => index.entryByPath(path));
-const journalOpt = computed(() => (entryOpt.value.isSome() ? journals.get(entryOpt.value.value.journalName) : null));
+const journalOpt = computed(() =>
+  entryOpt.value.isSome() ? journals.get(entryOpt.value.value.journalName) : undefined,
+);
 const isConnected = computed(() => entryOpt.value.isSome() && journalOpt.value?.isSome() === true);
 
-const journal = computed<JournalConfig | null>(() =>
-  isConnected.value && journalOpt.value !== null ? journalOpt.value.getOr(null as unknown as JournalConfig) : null,
+const journal = computed(() =>
+  isConnected.value && journalOpt.value !== undefined ? journalOpt.value.getOrUndefined() : undefined,
 );
-const currentAnchor = computed<AnchorString | null>(() =>
-  entryOpt.value.isSome() ? entryOpt.value.value.anchor : null,
-);
+const currentAnchor = computed(() => (entryOpt.value.isSome() ? entryOpt.value.value.anchor : undefined));
 
-const adjacent = computed<{ previous: AnchorString | null; next: AnchorString | null }>(() => {
+const adjacent = computed<{ previous: AnchorString | undefined; next: AnchorString | undefined }>(() => {
   const currentJournal = journal.value;
   const anchor = currentAnchor.value;
-  if (!currentJournal || !anchor) return { previous: null, next: null };
+  if (!currentJournal || !anchor) return { previous: undefined, next: undefined };
   // An adjacent period outside the journal's timeline has no note to reach — OpenDateFlow would
   // silently reject it — so collapse it to the empty placeholder rather than a dead control.
-  const inBounds = (candidate: AnchorString | null): AnchorString | null =>
-    candidate !== null && timeline.contains(currentJournal.name, candidate) ? candidate : null;
+  const inBounds = (candidate: AnchorString | undefined): AnchorString | undefined =>
+    candidate !== undefined && timeline.contains(currentJournal.name, candidate) ? candidate : undefined;
   if (currentJournal.navBlock.type === "existing") {
     const previousPath = index.findPrevious(currentJournal.name, anchor);
     const nextPath = index.findNext(currentJournal.name, anchor);
     const previous = previousPath.flatMap((p) => index.entryByPath(p)).map((entry) => entry.anchor);
     const next = nextPath.flatMap((p) => index.entryByPath(p)).map((entry) => entry.anchor);
     return {
-      previous: inBounds(previous.getOr(null as unknown as AnchorString)),
-      next: inBounds(next.getOr(null as unknown as AnchorString)),
+      previous: inBounds(previous.getOrUndefined()),
+      next: inBounds(next.getOrUndefined()),
     };
   }
   return {
-    previous: inBounds(cycle.previousAnchor(currentJournal.name, anchor).getOr(null as unknown as AnchorString)),
-    next: inBounds(cycle.nextAnchor(currentJournal.name, anchor).getOr(null as unknown as AnchorString)),
+    previous: inBounds(cycle.previousAnchor(currentJournal.name, anchor).getOrUndefined()),
+    next: inBounds(cycle.nextAnchor(currentJournal.name, anchor).getOrUndefined()),
   };
 });
 
@@ -105,7 +104,7 @@ useCellDecorations(
   navRowDecorationScope,
 );
 
-function openAdjacent(anchor: AnchorString | null, event: MouseEvent): void {
+function openAdjacent(anchor: AnchorString | undefined, event: MouseEvent): void {
   const currentJournal = journal.value;
   if (!currentJournal || !anchor) return;
   void flows.invoke(OpenDateFlow, {

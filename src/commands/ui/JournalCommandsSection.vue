@@ -25,7 +25,7 @@ const commandsRepo = useService(CommandsRepository);
 const journalsVM = useService(JournalsViewModel);
 
 const writeType = computed<JournalWrite["type"]>(
-  () => journalsVM.getJournal(journalName).getOr(undefined as never)?.write.type ?? "day",
+  () => journalsVM.getJournal(journalName).getOrUndefined()?.write.type ?? "day",
 );
 
 const entries = computed<readonly [string, CommandConfig, JournalWrite["type"]][]>(() =>

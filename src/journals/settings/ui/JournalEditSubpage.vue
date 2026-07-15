@@ -17,14 +17,12 @@ import { RenameJournalFlow } from "../flows/rename-journal.flow";
 import { findCollidingJournals } from "./colliding-journals";
 import { JournalEditSectionToken } from "./journal-edit-section";
 
-import type { JournalConfig } from "../../config";
-
 const { journalName, nav } = defineProps<{ journalName: string; nav: SubpageNav }>();
 
 const flows = useService(Flows);
 const journalsVM = useService(JournalsViewModel);
 const editSections = useService(JournalEditSectionToken).toSorted((a, b) => a.order - b.order);
-const config = computed<JournalConfig | undefined>(() => journalsVM.getJournal(journalName).getOr(undefined as never));
+const config = computed(() => journalsVM.getJournal(journalName).getOrUndefined());
 
 watchEffect(() => {
   if (!config.value) nav.back();

@@ -45,7 +45,7 @@ const source = computed<Row[]>(() => {
     id: item.id,
     key: item.key,
     config: item.config,
-    definition: viewsService.getToolbarItemDefinition(item.key).getOr(undefined as never),
+    definition: viewsService.getToolbarItemDefinition(item.key).getOrUndefined(),
   }));
 });
 

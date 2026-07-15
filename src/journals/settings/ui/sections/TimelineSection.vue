@@ -16,12 +16,12 @@ import UiSettingRow from "@/ui/UiSettingRow.vue";
 import { JournalsViewModel } from "../../../view-model";
 import { useAnchorField } from "../use-anchor-field";
 
-import type { JournalConfig, TimelineEnd } from "../../../config";
+import type { TimelineEnd } from "../../../config";
 
 const { journalName } = defineProps<{ journalName: string }>();
 
 const journalsVM = useService(JournalsViewModel);
-const config = computed<JournalConfig | undefined>(() => journalsVM.getJournal(journalName).getOr(undefined as never));
+const config = computed(() => journalsVM.getJournal(journalName).getOrUndefined());
 
 const expanded = ref(false);
 

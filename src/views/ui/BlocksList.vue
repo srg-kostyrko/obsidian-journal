@@ -41,7 +41,7 @@ const source = computed<RowEntry[]>(() => {
     id: block.id,
     key: block.key,
     config: block.config,
-    definition: viewsService.getBlockDefinition(block.key).getOr(undefined as never),
+    definition: viewsService.getBlockDefinition(block.key).getOrUndefined(),
   }));
 });
 

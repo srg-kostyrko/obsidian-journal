@@ -32,7 +32,7 @@ const shelvesService = useService(ShelvesService);
 const journalsVM = useService(JournalsViewModel);
 const editSections = useService(ShelfEditSectionToken).toSorted((a, b) => a.order - b.order);
 
-const shelf = computed(() => shelvesVM.getShelf(shelfName).getOr(undefined as never));
+const shelf = computed(() => shelvesVM.getShelf(shelfName).getOrUndefined());
 
 watchEffect(() => {
   if (!shelf.value) nav.back();
@@ -41,7 +41,7 @@ watchEffect(() => {
 const entries = computed<readonly [string, JournalConfig][]>(() =>
   (shelf.value?.journals ?? [])
     .map((name): [string, JournalConfig] | undefined => {
-      const config = journalsVM.getJournal(name).getOr(undefined as never);
+      const config = journalsVM.getJournal(name).getOrUndefined();
       return config ? [name, config] : undefined;
     })
     .filter((entry): entry is [string, JournalConfig] => entry !== undefined),
