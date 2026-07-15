@@ -112,6 +112,30 @@ describe("NumberingService", () => {
     });
   });
 
+  describe("assignNumbers — start date as anchor", () => {
+    it("counts from timeline.start when anchorDate is empty", () => {
+      const c = buildContainer({
+        s: fixedJournal(
+          "s",
+          { type: "month" },
+          {
+            timeline: { start: "2026-01-01" as AnchorString, end: { kind: "never" } },
+            numbering: {
+              enabled: true,
+              anchorDate: "" as AnchorString,
+              allowBefore: false,
+              sources: [
+                { variable: "index", frontmatterKey: "journal-index", anchorValue: 1, reset: { kind: "never" } },
+              ],
+            },
+          },
+        ),
+      });
+      const n = c.resolve(NumberingService);
+      expect(unwrap(n.assignNumbers("s", "2026-03-01" as AnchorString))).toEqual({ index: 3 });
+    });
+  });
+
   describe("assignNumbers — multi-source cascade", () => {
     it("release stays at anchorValue for 6 sprints, then advances", () => {
       const c = buildContainer({
@@ -294,6 +318,29 @@ describe("NumberingService", () => {
       });
       const n = c.resolve(NumberingService);
       expect(n.anchorForNumbers("s", { phase: 1, n: 5 }).isNone()).toBe(true);
+    });
+
+    it("recovers an anchor via timeline.start when anchorDate is empty", () => {
+      const c = buildContainer({
+        s: fixedJournal(
+          "s",
+          { type: "month" },
+          {
+            timeline: { start: "2026-01-01" as AnchorString, end: { kind: "never" } },
+            numbering: {
+              enabled: true,
+              anchorDate: "" as AnchorString,
+              allowBefore: false,
+              sources: [
+                { variable: "index", frontmatterKey: "journal-index", anchorValue: 1, reset: { kind: "never" } },
+              ],
+            },
+          },
+        ),
+      });
+      const n = c.resolve(NumberingService);
+      const result = n.anchorForNumbers("s", { index: 3 });
+      expect(result.isSome() && result.value).toBe("2026-03-01");
     });
 
     it("returns None when numbering is disabled", () => {

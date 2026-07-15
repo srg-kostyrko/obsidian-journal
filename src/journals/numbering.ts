@@ -8,7 +8,7 @@ import { CycleService } from "./cycle";
 import { JournalsIndex } from "./journals-index";
 import { JournalsRepository } from "./repository";
 
-import type { JournalNumberingConfig, NumberingSource } from "./config";
+import type { JournalConfig, JournalNumberingConfig, NumberingSource } from "./config";
 
 // Only a single, never-resetting source is reversible: its value increases monotonically
 // with the cycle count, so subtracting anchorValue recovers the step offset. Cyclic (reset
@@ -42,9 +42,10 @@ export class NumberingService {
     name: string,
     anchor: AnchorString,
     numbering: JournalNumberingConfig,
+    anchorDate: AnchorString,
   ): Option<Readonly<Record<string, number>>> {
     if (!numbering.enabled) return Option.none();
-    if (!numbering.allowBefore && anchor < numbering.anchorDate) return Option.none();
+    if (!numbering.allowBefore && anchor < anchorDate) return Option.none();
 
     const previousPath = this.#index.findPrevious(name, anchor);
     const basis = previousPath
@@ -58,7 +59,7 @@ export class NumberingService {
       }
     }
 
-    const stepsOpt = this.#cycle.countRepeats(name, numbering.anchorDate, anchor);
+    const stepsOpt = this.#cycle.countRepeats(name, anchorDate, anchor);
     if (stepsOpt.isNone()) return Option.none();
 
     return Option.some(this.#cascade(numbering.sources, undefined, stepsOpt.value));
@@ -95,12 +96,20 @@ export class NumberingService {
     return result;
   }
 
+  // v2 parity: a defined start date IS the numbering anchor — the settings UI hides the anchor
+  // picker and labels the start as the anchor, so fall back to the explicit picker only when no
+  // start date is set.
+  #anchorDateFor(config: JournalConfig): AnchorString {
+    return config.timeline.start || config.numbering.anchorDate;
+  }
+
   assignNumbers(name: string, anchor: AnchorString): Option<Readonly<Record<string, number>>> {
     const configOpt = this.#journals.get(name);
     if (configOpt.isNone()) return Option.none();
     const config = configOpt.value;
     const numbering = config.numbering;
-    const fp = JSON.stringify(numbering);
+    const anchorDate = this.#anchorDateFor(config);
+    const fp = `${JSON.stringify(numbering)}|start=${anchorDate}`;
 
     let bucket = this.#cache.get(name);
     if (bucket && bucket.fp !== fp) {
@@ -116,7 +125,7 @@ export class NumberingService {
       return cached === null ? Option.none() : Option.some(cached);
     }
 
-    const result = this.#compute(name, anchor, numbering);
+    const result = this.#compute(name, anchor, numbering, anchorDate);
     bucket.values.set(anchor, result.isSome() ? result.value : null);
     return result;
   }
@@ -124,14 +133,16 @@ export class NumberingService {
   anchorForNumbers(name: string, numbers: Readonly<Record<string, number>>): Option<AnchorString> {
     const configOpt = this.#journals.get(name);
     if (configOpt.isNone()) return Option.none();
-    const numbering = configOpt.value.numbering;
+    const config = configOpt.value;
+    const numbering = config.numbering;
+    const anchorDate = this.#anchorDateFor(config);
     const variable = invertibleNumberingVariable(numbering);
-    if (variable === null || !numbering.anchorDate) return Option.none();
+    if (variable === null || !anchorDate) return Option.none();
     const value = numbers[variable];
     if (value === undefined) return Option.none();
     const [source] = numbering.sources;
     const steps = value - source.anchorValue;
     if (steps < 0 && !numbering.allowBefore) return Option.none();
-    return this.#cycle.anchorAtOffset(name, numbering.anchorDate, steps);
+    return this.#cycle.anchorAtOffset(name, anchorDate, steps);
   }
 }
