@@ -10,7 +10,7 @@ import { ToolbarItemDefinitionToken } from "../../tokens";
 
 import { ToolbarItemsService } from "./toolbar-items-service";
 
-import type { ToolbarItemInstance } from "./toolbar-block";
+import type { ToolbarItemInstance } from "./toolbar-config";
 import type { BlockInstanceId, View, ViewId } from "../../config";
 
 const ID_A = "aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa";
@@ -66,6 +66,27 @@ describe("ToolbarItemsService", () => {
       const service = build();
       const block = { id: "b1" as BlockInstanceId, key: "toolbar", config: { items: "garbage" } };
       expect(service.itemsOf(block)).toEqual([]);
+    });
+  });
+
+  describe("resolveItems", () => {
+    it("resolves registered items to their definition and parsed config", () => {
+      const service = build();
+      const resolved = service.resolveItems([item(ID_A)]);
+      expect(resolved.map((r) => r.id)).toEqual([ID_A]);
+      expect(resolved[0].definition.key).toBe("dummy");
+      expect(resolved[0].config).toEqual({ x: 0 });
+    });
+
+    it("skips an item whose key is not registered", () => {
+      const service = build();
+      expect(service.resolveItems([item(ID_A, "nope")])).toEqual([]);
+    });
+
+    it("skips an item whose config fails the item schema", () => {
+      const service = build();
+      const bad = { id: ID_A as BlockInstanceId, key: "dummy", config: { x: "no" } };
+      expect(service.resolveItems([bad])).toEqual([]);
     });
   });
 

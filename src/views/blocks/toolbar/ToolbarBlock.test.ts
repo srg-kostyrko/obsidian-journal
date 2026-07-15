@@ -12,6 +12,7 @@ import { ToolbarItemDefinitionToken } from "../../tokens";
 import { provideViewContext } from "../../view-context";
 
 import { toolbarBlock } from "./toolbar-block";
+import { ToolbarItemsService } from "./toolbar-items-service";
 
 import type { BlockInstanceId } from "../../config";
 
@@ -42,6 +43,7 @@ function buildContainer(registry: readonly ToolbarItemDefinition[]) {
   const container = new Container();
   container.addModule(createLoggerTestingModule().module);
   for (const item of registry) container.register(ToolbarItemDefinitionToken).useValue(item);
+  container.register(ToolbarItemsService).useClass(ToolbarItemsService);
   return container;
 }
 

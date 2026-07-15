@@ -7,10 +7,16 @@ import { Err, Ok, Option, type Result } from "@/infrastructure/result";
 import { InvalidToolbarItemConfigError, UnknownToolbarItemKeyError } from "../../errors";
 import { ToolbarItemDefinitionToken } from "../../tokens";
 
-import { toolbarItemSchema, type ToolbarItemInstance } from "./toolbar-block";
+import { toolbarItemSchema, type ToolbarItemInstance } from "./toolbar-config";
 
 import type { BlockInstanceId, View, ViewBlockInstance } from "../../config";
 import type { ToolbarItemDefinition } from "../../define-toolbar-item";
+
+export interface ResolvedToolbarItem {
+  readonly id: BlockInstanceId;
+  readonly definition: ToolbarItemDefinition;
+  readonly config: unknown;
+}
 
 export class ToolbarItemsService {
   readonly #itemList = inject(ToolbarItemDefinitionToken);
@@ -43,6 +49,24 @@ export class ToolbarItemsService {
     const raw = (block.config as { items?: unknown }).items ?? [];
     const parsed = v.safeParse(v.array(toolbarItemSchema), raw);
     return parsed.success ? parsed.output : [];
+  }
+
+  resolveItems(items: readonly ToolbarItemInstance[]): ResolvedToolbarItem[] {
+    const resolved: ResolvedToolbarItem[] = [];
+    for (const item of items) {
+      const definition = this.#items.get(item.key);
+      if (!definition) {
+        this.#logger.warn("unknown toolbar item key", { key: item.key, itemId: item.id });
+        continue;
+      }
+      const parsed = v.safeParse(definition.schema, item.config);
+      if (!parsed.success) {
+        this.#logger.warn("invalid toolbar item config", { key: item.key, itemId: item.id });
+        continue;
+      }
+      resolved.push({ id: item.id, definition, config: parsed.output });
+    }
+    return resolved;
   }
 
   addItem(

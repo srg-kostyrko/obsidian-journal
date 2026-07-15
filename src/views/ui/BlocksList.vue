@@ -58,10 +58,6 @@ function labelOf(row: RowEntry): string {
 }
 
 function summaryOf(row: RowEntry): string | undefined {
-  if (row.key === "toolbar") {
-    const items = (row.config.items as unknown[] | undefined) ?? [];
-    return m.view_block_toolbar_item_count({ count: items.length });
-  }
   return row.definition?.summary?.(row.config);
 }
 
