@@ -50,6 +50,34 @@
           }
         ]
       }
+    },
+    "daily-repeats": {
+      "name": "daily-repeats",
+      "write": {
+        "type": "day"
+      },
+      "folder": "repeat",
+      "timeline": {
+        "start": "2030-09-01",
+        "end": {
+          "kind": "repeats",
+          "count": 5
+        }
+      },
+      "dateFormat": "YYYY-MM-DD",
+      "frontmatter": {
+        "dateField": "journal-date",
+        "startDateField": "journal-start-date",
+        "endDateField": "journal-end-date",
+        "addStartDate": false,
+        "addEndDate": false
+      },
+      "numbering": {
+        "enabled": false,
+        "anchorDate": "",
+        "allowBefore": false,
+        "sources": []
+      }
     }
   },
   "shelves": {}

@@ -95,6 +95,33 @@ describe("timeline bounds", () => {
       await clickCell("2030-05-20");
       expect(await noteExists("window/2030-05-20.md")).toBe(false);
     });
+
+    // daily-repeats runs 2030-09-01 for 5 repeats (through 2030-09-05, a repeats-kind end); its
+    // September window never overlaps daily-window's June, so an out-of-repeats cell is out for
+    // every journal in scope and the countRepeats branch is what decides the cutoff.
+    it("keeps the final day within the repeats count actionable", async () => {
+      await renderBlock(
+        "bounds/repeats-in.md",
+        hostNote("daily-repeats", "2030-09-01", TIMELINE_FENCE),
+        `${TIMELINE_BLOCK} .notes-month-view`,
+      );
+
+      const cell = timelineCalendar.cell("2030-09-05");
+      expect(await cell.getAttribute("data-inactive")).toBe(null);
+      await expect(cell).toHaveAttribute("role", "button");
+    });
+
+    it("marks a day past the repeats-count end as inactive", async () => {
+      await renderBlock(
+        "bounds/repeats-out.md",
+        hostNote("daily-repeats", "2030-09-01", TIMELINE_FENCE),
+        `${TIMELINE_BLOCK} .notes-month-view`,
+      );
+
+      const cell = timelineCalendar.cell("2030-09-06");
+      await expect(cell).toHaveAttribute("data-inactive", "true");
+      expect(await cell.getAttribute("role")).toBe(null);
+    });
   });
 
   // The nav block's prev/next come from the journal cycle, which for a day journal is
