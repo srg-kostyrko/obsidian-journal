@@ -200,18 +200,18 @@ the rest cite exact lines from the sweep but haven't been independently re-read.
   - v3: `FrontmatterSection.vue:52,64` binds the toggles straight to config; the fields apply only at creation/connect time (`src/journals/frontmatter.ts:116-132`). No batch rewrite, no warning hint (unlike the field-rename modal, which does hint — see #57).
   - Impact: toggling silently affects future notes only; existing notes keep stale properties or never gain them.
 
-- [ ] **44. Custom journals' `offset` decorations no longer paint the day grid.** [verified]
+- [x] **44. Custom journals' `offset` decorations no longer paint the day grid.** [verified] Fixed: `useCellDecorations` gained a binding filter; the month/week grids now gather `scope.all` with custom journals restricted to offset-bearing decorations (`hasOffsetCondition`, exported from `@/decorations`), and `CustomIntervalsBlock` applies the inverse filter so offset decorations stay off interval rows — v2's exact two-surface split. The engine already evaluated day-periods for custom journals (`periodMatchesWrite`, `checkOffset` via `cycle.offsets`); only gathering was missing. Component tests pin both directions plus the existing anti-leak guard (watched red first).
   - v2: the day scope explicitly included custom journals' decorations that carry an `offset` condition (`src/_old-code/composables/use-shelf.ts:28`), so "N days into the interval" markers rendered on month-calendar day cells.
   - v3: `NotesMonthView`/`NotesWeekView` gather decorations from `scope.fixed`, which excludes custom journals entirely (`src/notes-calendar/ui/NotesMonthView.vue:82-84`, `src/notes-calendar/use-shelf-scope.ts:37-39`); custom decorations reach only `CustomIntervalsBlock`. The `offset` condition still exists (custom-only, `src/decorations/settings/ui/condition-types.ts:13`) but can no longer mark day cells. (Note: the third-pass sweep initially reported this inverted — as a leak onto day cells — re-verification shows the opposite: exclusion.)
 
-- [ ] **45. Right-click menus lost the guaranteed "Delete" item.**
+- [x] **45. Right-click menus lost the guaranteed "Delete" item.** Fixed: `WorkspaceService.openFileMenu` appends a trash-icon Delete item after triggering `file-menu`, wired to the undocumented `fileManager.promptForFileDeletion` via a typed optional interface (v2 parity; `openPathsMenu`'s multi-note chooser funnels into the same method). Label from `m.common_action_delete()`, icon from the central `icons.action.delete`. Unit-tested against the menu mock (watched red first).
   - v2: `showContextMenu` appended a trash-icon Delete wired to `fileManager.promptForFileDeletion` after triggering `file-menu` (`src/_old-code/obsidian-manager.ts:46-62`).
   - v3: `WorkspaceService.openFileMenu`/`openPathsMenu` only trigger `file-menu` (`src/infrastructure/host/internal/workspace-service.ts:134-154`); no `promptForFileDeletion` anywhere in v3.
   - Impact: calendar/nav right-click may offer no Delete unless Obsidian core populates one.
 
 ## 🟡 Capability changed shape (confirm intent)
 
-- [ ] **46. Journal/shelf commands lost their palette name prefix; names forced globally unique.**
+- [x] **46. Journal/shelf commands lost their palette name prefix; names forced globally unique.** Fixed: `DynamicCommandRegistry` registers journal commands as `<journal>: <name>` and shelf commands as `Shelf: <shelf>: <name>` (v2 format, via parameterized paraglide messages); `EditCommandFlow` scopes `takenNames` to same-owner commands (`sameCommandOwner` in commands/config.ts — journal by name, shelf by name, plugin-level as one namespace regardless of write type), so two journals can again both hold an "Open today's note". The edit modal regained v2's hint that the owner prefix is added automatically. Unit-tested at registry/flow/modal level (watched red first).
   - v2: palette showed `<journal>: <name>` / `Shelf: <shelf>: <name>` (`src/_old-code/obsidian-manager.ts:16`), ids namespaced per owner so same-named commands across journals coexisted.
   - v3: `command-registry.ts:60-68` registers the raw name; `edit-command.flow.ts:26-28` enforces uniqueness across ALL commands regardless of target. Two journals can't both have "Open today's note", and palette entries don't say which journal they act on.
 
