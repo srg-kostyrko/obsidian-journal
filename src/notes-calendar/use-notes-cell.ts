@@ -47,6 +47,7 @@ export function useNotesCell(options: { journalNames: MaybeRefOrGetter<readonly 
       anchor: period.anchor.toAnchor(),
       journalNames: [...toValue(options.journalNames)],
       openMode: defineOpenMode(event),
+      ...(event instanceof MouseEvent && { pickAt: event }),
     });
   };
 

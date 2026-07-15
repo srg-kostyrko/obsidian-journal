@@ -5,6 +5,7 @@ import { AsyncResult, None, Some } from "@/infrastructure/result";
 import type { Option } from "@/infrastructure/result";
 
 import { FolderNotFoundError, NoteAlreadyExistsError, NoteNotFoundError } from "./errors";
+import { SuggestCancelled } from "./suggests/errors";
 
 import type {
   FrontmatterError,
@@ -188,6 +189,7 @@ export class FakeWorkspaceService implements Pick<
   | "triggerHoverPreview"
   | "openFileMenu"
   | "openPathsMenu"
+  | "pickFromMenu"
   | "previewFirstPath"
   | "layoutReady"
   | "onLayoutReady"
@@ -202,6 +204,8 @@ export class FakeWorkspaceService implements Pick<
   readonly hoverPreviewCalls: { path: VaultPath; event: MouseEvent }[] = [];
   readonly fileMenuCalls: { path: VaultPath; event: MouseEvent }[] = [];
   readonly pathsMenuCalls: { paths: readonly VaultPath[]; event: MouseEvent }[] = [];
+  readonly pickFromMenuCalls: { labels: readonly string[]; event: MouseEvent }[] = [];
+  pickFromMenuChoice: string | null = null;
   readonly previewFirstPathCalls: { paths: readonly VaultPath[]; event: MouseEvent }[] = [];
 
   get layoutReady(): boolean {
@@ -253,6 +257,13 @@ export class FakeWorkspaceService implements Pick<
 
   openPathsMenu(paths: readonly VaultPath[], event: MouseEvent): void {
     this.pathsMenuCalls.push({ paths, event });
+  }
+
+  pickFromMenu(labels: readonly string[], event: MouseEvent): AsyncResult<string, SuggestCancelled> {
+    this.pickFromMenuCalls.push({ labels, event });
+    return this.pickFromMenuChoice === null
+      ? AsyncResult.err(new SuggestCancelled())
+      : AsyncResult.ok(this.pickFromMenuChoice);
   }
 
   previewFirstPath(paths: readonly VaultPath[], event: MouseEvent): void {

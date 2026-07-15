@@ -209,11 +209,16 @@ export class MenuItem {
 export class Menu {
   readonly items: MenuItem[] = [];
   showAtMouseEventCalls: MouseEvent[] = [];
+  #onHide: (() => void) | null = null;
 
   addItem(build: (item: MenuItem) => unknown): this {
     const item = new MenuItem();
     build(item);
     this.items.push(item);
+    return this;
+  }
+  onHide(callback: () => void): this {
+    this.#onHide = callback;
     return this;
   }
   showAtMouseEvent(event: MouseEvent): void {
@@ -226,6 +231,7 @@ export class Menu {
   hide(): void {
     const index = openMenus.indexOf(this);
     if (index >= 0) openMenus.splice(index, 1);
+    this.#onHide?.();
   }
 }
 

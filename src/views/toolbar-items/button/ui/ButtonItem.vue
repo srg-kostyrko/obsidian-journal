@@ -67,6 +67,7 @@ async function applyMode(
     journalNames: [...journalNames],
     openMode: defineOpenMode(event),
     existingOnly: mode === "navigate",
+    pickAt: event,
   });
 }
 

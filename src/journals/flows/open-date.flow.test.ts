@@ -99,6 +99,38 @@ describe("OpenDateFlow", () => {
     expect(workspace.isOpen("B/2026-05-19.md" as VaultPath)).toBe(true);
   });
 
+  it("picks via a menu at the mouse event when pickAt is provided", async () => {
+    // v2 disambiguated mouse-driven clicks with a native menu at the pointer; the
+    // centered suggest stays for keyboard/command/URI entry points.
+    const repo = fakeRepo({
+      a: fixedJournal("a", { type: "day" }, { folder: "A", timeline: TIMELINE_OPEN }),
+      b: fixedJournal("b", { type: "day" }, { folder: "B", timeline: TIMELINE_OPEN }),
+    });
+    const suggests = new FakeSuggestService();
+    const { container, workspace } = build(repo, suggests);
+    workspace.pickFromMenuChoice = "b";
+    const event = new MouseEvent("click");
+    const result = await container.resolve(Flows).invoke(OpenDateFlow, { anchor: anchor("2026-05-19"), pickAt: event });
+    expect(result.isOk()).toBe(true);
+    expect(workspace.pickFromMenuCalls).toEqual([{ labels: ["a", "b"], event }]);
+    expect(workspace.isOpen("B/2026-05-19.md" as VaultPath)).toBe(true);
+    expect(suggests.opens.length).toBe(0);
+  });
+
+  it("returns UserAborted when the pick menu is dismissed", async () => {
+    const repo = fakeRepo({
+      a: fixedJournal("a", { type: "day" }, { folder: "A", timeline: TIMELINE_OPEN }),
+      b: fixedJournal("b", { type: "day" }, { folder: "B", timeline: TIMELINE_OPEN }),
+    });
+    const suggests = new FakeSuggestService();
+    const { container, workspace } = build(repo, suggests);
+    workspace.pickFromMenuChoice = null;
+    const result = await container
+      .resolve(Flows)
+      .invoke(OpenDateFlow, { anchor: anchor("2026-05-19"), pickAt: new MouseEvent("click") });
+    expect(result.isErr() && result.error instanceof UserAborted).toBe(true);
+  });
+
   it("returns UserAborted when the suggest is cancelled", async () => {
     const repo = fakeRepo({
       a: fixedJournal("a", { type: "day" }, { folder: "A", timeline: TIMELINE_OPEN }),

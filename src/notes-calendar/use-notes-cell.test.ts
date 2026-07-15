@@ -153,6 +153,7 @@ describe("useNotesCell", () => {
         anchor: may25.anchor.toAnchor(),
         journalNames: ["daily"],
         openMode: "active",
+        pickAt: event,
       });
     });
 

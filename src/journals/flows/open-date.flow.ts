@@ -2,7 +2,7 @@ import type { AnchorString } from "@/calendar";
 import { inject } from "@/infrastructure/di";
 import { Flows, UserAborted } from "@/infrastructure/flows";
 import type { Flow } from "@/infrastructure/flows";
-import { SuggestService } from "@/infrastructure/host";
+import { SuggestService, WorkspaceService } from "@/infrastructure/host";
 import type { OpenMode, VaultPath, WorkspaceOpenError } from "@/infrastructure/host";
 import { AsyncResult } from "@/infrastructure/result";
 
@@ -21,6 +21,9 @@ export interface OpenDateParameters {
   journalNames?: readonly string[];
   openMode?: OpenMode;
   existingOnly?: boolean;
+  // The originating mouse event, when there is one: multi-journal disambiguation then
+  // shows a menu at the pointer (v2 behavior) instead of the centered suggest.
+  pickAt?: MouseEvent;
 }
 
 export interface OpenDateResult {
@@ -36,6 +39,7 @@ export class OpenDateFlow implements Flow<OpenDateParameters, OpenDateResult, Op
   readonly #index = inject(JournalsIndex);
   readonly #flows = inject(Flows);
   readonly #suggests = inject(SuggestService);
+  readonly #workspace = inject(WorkspaceService);
 
   execute(p: OpenDateParameters): AsyncResult<OpenDateResult, OpenDateError> {
     const all = [...this.#journals.find().ids()];
@@ -63,7 +67,9 @@ export class OpenDateFlow implements Flow<OpenDateParameters, OpenDateResult, Op
 
     return AsyncResult.fromPromise(
       (async (): Promise<OpenDateResult> => {
-        const choice = await this.#suggests.open(journalPickerSuggest, [...applicable]);
+        const choice = p.pickAt
+          ? await this.#workspace.pickFromMenu([...applicable], p.pickAt)
+          : await this.#suggests.open(journalPickerSuggest, [...applicable]);
         if (choice.isErr()) throw new UserAborted("journal-picker");
         const dispatched = await this.#flows.invoke(OpenJournalEntryFlow, {
           journalName: choice.value,
