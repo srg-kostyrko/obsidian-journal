@@ -28,7 +28,7 @@ export {
   type JournalDecorationWeekdayCondition,
 } from "./config";
 export { defaultCondition, defaultDecoration, defaultStyle } from "./defaults";
-export { DecorationEngine, periodMatchesWrite, type DecorationBinding } from "./engine";
+export { DecorationEngine, hasOffsetCondition, periodMatchesWrite, type DecorationBinding } from "./engine";
 export { decorationsModule } from "./module";
 export {
   CellDecorationMapKey,

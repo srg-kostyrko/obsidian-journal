@@ -40,6 +40,13 @@ export function periodKindForWrite(writeType: JournalWrite["type"]): PeriodKind 
   return writeType === "custom" ? "day" : writeType;
 }
 
+// Offset conditions mark single days inside a custom interval, so decorations carrying one
+// render on the day calendar grid while all other custom-journal decorations belong to the
+// interval list — the two surfaces split a custom journal's decorations by this predicate.
+export function hasOffsetCondition(decoration: JournalDecoration): boolean {
+  return decoration.conditions.some((condition) => condition.type === "offset");
+}
+
 // A week and a day period can share an anchor date (a week's anchor is one of its days),
 // so the cell map is keyed by period kind + anchor — keying by anchor alone would merge a
 // daily decoration onto the colliding week cell and vice versa.

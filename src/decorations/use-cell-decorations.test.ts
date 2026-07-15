@@ -160,6 +160,34 @@ describe("useCellDecorations", () => {
       expect(slot!.value).toHaveLength(1);
     });
 
+    it("gathers only decorations accepted by the filter", async () => {
+      const kept = buildDecoration({
+        mode: "or",
+        conditions: [buildCondition("weekday", { weekdays: [1] })], // Mon
+        styles: [buildStyle("background")],
+      });
+      const dropped = buildDecoration({
+        mode: "or",
+        conditions: [buildCondition("weekday", { weekdays: [1] })],
+        styles: [buildStyle("corner")],
+      });
+      const { c } = buildHarness([kept, dropped]);
+      const period = DayPeriod.containing(date("2026-05-25"));
+
+      const { captured } = mount(c, () =>
+        useCellDecorations(
+          () => [period],
+          () => ["daily"],
+          undefined,
+          (binding) => binding.decoration === kept,
+        ),
+      );
+      await nextTick();
+
+      const slot = captured.value!.get(key(period));
+      expect(slot!.value.map((style) => style.type)).toEqual(["background"]);
+    });
+
     it("re-seeds when the periods input changes", async () => {
       const decoration = buildDecoration({
         mode: "or",

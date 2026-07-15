@@ -2,7 +2,7 @@
 import { computed, toRaw } from "vue";
 
 import { DayPeriod, QuarterPeriod, YearPeriod, type MonthPeriod, type Period, type WeekPeriod } from "@/calendar";
-import { useCellDecorations } from "@/decorations";
+import { hasOffsetCondition, useCellDecorations } from "@/decorations";
 
 import { useNotesCell, type NotesCellApi } from "../use-notes-cell";
 import { useShelfScope } from "../use-shelf-scope";
@@ -79,9 +79,14 @@ const visiblePeriods = computed<readonly Period[]>(() => {
   return periods;
 });
 
+// Fixed journals decorate their own cells; custom journals contribute only their
+// offset-condition decorations, which mark single days inside an interval (v2's split —
+// everything else a custom journal defines renders in the interval list instead).
 useCellDecorations(
   () => visiblePeriods.value,
-  () => scope.fixed.value,
+  () => scope.all.value,
+  undefined,
+  (binding) => (scope.custom.value.includes(binding.journalName) ? hasOffsetCondition(binding.decoration) : true),
 );
 
 const noop = (): void => {

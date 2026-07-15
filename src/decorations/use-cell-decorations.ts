@@ -16,6 +16,7 @@ export function useCellDecorations(
   periodsRef: MaybeRefOrGetter<readonly Period[]>,
   journalNamesRef: MaybeRefOrGetter<readonly string[]>,
   scope: CellDecorationScope = defaultCellDecorationScope,
+  filter: (binding: DecorationBinding) => boolean = () => true,
 ): ReadonlyMap<string, CellStyleRef> {
   const engine = useService(DecorationEngine);
   const journals = useService(JournalsRepository);
@@ -34,7 +35,8 @@ export function useCellDecorations(
       const opt = journals.get(name);
       if (opt.isNone()) continue;
       for (const decoration of opt.value.decorations) {
-        out.push({ journalName: name, decoration });
+        const binding = { journalName: name, decoration };
+        if (filter(binding)) out.push(binding);
       }
     }
     return out;

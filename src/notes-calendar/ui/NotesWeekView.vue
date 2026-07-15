@@ -2,7 +2,7 @@
 import { computed, toRaw } from "vue";
 
 import { DayPeriod, MonthPeriod, QuarterPeriod, YearPeriod, type Period, type WeekPeriod } from "@/calendar";
-import { useCellDecorations } from "@/decorations";
+import { hasOffsetCondition, useCellDecorations } from "@/decorations";
 
 import { useNotesCell } from "../use-notes-cell";
 import { useShelfScope } from "../use-shelf-scope";
@@ -51,9 +51,13 @@ const allPeriods = computed<readonly Period[]>(() => {
   return periods;
 });
 
+// Same split as the month grid: custom journals contribute only their offset-condition
+// decorations to day cells; the rest of their decorations live in the interval list.
 useCellDecorations(
   () => allPeriods.value,
-  () => scope.fixed.value,
+  () => scope.all.value,
+  undefined,
+  (binding) => (scope.custom.value.includes(binding.journalName) ? hasOffsetCondition(binding.decoration) : true),
 );
 </script>
 

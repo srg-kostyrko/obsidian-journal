@@ -244,6 +244,27 @@ describe("CustomIntervalsBlock", () => {
       expect(entry?.querySelector(".decoration-corner")).not.toBeNull();
     });
 
+    it("does not paint an offset decoration on interval rows", async () => {
+      // Offset decorations mark single days inside an interval; they render on the day
+      // calendar grid, never on the whole-interval row (v2's decoration split).
+      SCOPE.custom = ["foo"];
+      JOURNALS.foo = customJournal("foo", "day", 10, "2026-05-01", {
+        decorations: [
+          buildDecoration({
+            mode: "or",
+            conditions: [buildCondition("offset", { offset: 1 })],
+            styles: [buildStyle("corner")],
+          }),
+        ],
+      });
+      const view = mountBlock({ window: "month", hideEmpty: false }, { refDate: ref("2026-05-15" as AnchorString) });
+      await nextTick();
+
+      const entry = view.container.querySelector('.journal-view-custom-intervals__entry[data-anchor="2026-05-11"]');
+      expect(entry).not.toBeNull();
+      expect(entry?.querySelector(".decoration-corner")).toBeNull();
+    });
+
     it("leaves an interval entry without a note undecorated", async () => {
       SCOPE.custom = ["foo"];
       JOURNALS.foo = customJournal("foo", "day", 1, "2026-01-01", { decorations: [cornerHasNote()] });

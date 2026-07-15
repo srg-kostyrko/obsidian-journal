@@ -253,6 +253,44 @@ describe("NotesMonthView", () => {
       const cell = container.querySelector('.notes-month-view__day[data-anchor="2026-08-03"]');
       expect(cell?.querySelector(".decoration-corner")).toBeNull();
     });
+
+    // v2 carved one exception out of the fixed-only day grid: a custom journal's
+    // offset-condition decorations mark specific days inside an interval, so they
+    // belong on the day cells even though the journal itself renders as intervals.
+    it("paints a custom journal's offset decoration on the matching day cell", async () => {
+      const decoration = buildDecoration({
+        mode: "or",
+        conditions: [buildCondition("offset", { offset: 3 })],
+        styles: [buildStyle("corner")],
+      });
+      const h = buildNotesCalendarHarness({
+        journals: { sprint: customJournal("sprint", "week", 2, "2026-08-03", { decorations: [decoration] }) },
+      });
+
+      const { container } = mount(h, { shelf: null, month });
+      await nextTick();
+
+      // Day 3 of the interval starting 2026-08-03 is 2026-08-05.
+      const cell = container.querySelector('.notes-month-view__day[data-anchor="2026-08-05"]');
+      expect(cell?.querySelector(".decoration-corner")).not.toBeNull();
+    });
+
+    it("does not paint a custom journal's non-offset decoration on other day cells", async () => {
+      const decoration = buildDecoration({
+        mode: "or",
+        conditions: [buildCondition("weekday", { weekdays: [1, 2, 3, 4, 5, 6, 0] })],
+        styles: [buildStyle("corner")],
+      });
+      const h = buildNotesCalendarHarness({
+        journals: { sprint: customJournal("sprint", "week", 2, "2026-08-03", { decorations: [decoration] }) },
+      });
+
+      const { container } = mount(h, { shelf: null, month });
+      await nextTick();
+
+      const cell = container.querySelector('.notes-month-view__day[data-anchor="2026-08-05"]');
+      expect(cell?.querySelector(".decoration-corner")).toBeNull();
+    });
   });
 
   describe("header slot", () => {

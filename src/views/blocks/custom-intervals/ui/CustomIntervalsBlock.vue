@@ -4,7 +4,7 @@ import { computed, onMounted, onUnmounted, shallowRef } from "vue";
 import type { AnchorString } from "@/calendar";
 import { periodForJournal } from "@/code-blocks/nav/period-for-journal";
 import NavBlock from "@/code-blocks/nav/ui/NavBlock.vue";
-import { useCellDecorations } from "@/decorations";
+import { hasOffsetCondition, useCellDecorations } from "@/decorations";
 import { useService } from "@/infrastructure/di";
 import { CycleService, JournalsIndex, JournalsRepository, TimelineService } from "@/journals";
 import type { JournalConfig, JournalNavBlock } from "@/journals";
@@ -96,6 +96,10 @@ useCellDecorations(
       section.entries.map((entry) => periodForJournal(section.journal.write, entry.anchor)),
     ),
   () => sections.value.map((section) => section.journalName),
+  undefined,
+  // Offset decorations mark single days inside an interval; they render on the day
+  // calendar grid, never on the whole-interval row (v2's decoration split).
+  (binding) => !hasOffsetCondition(binding.decoration),
 );
 </script>
 
