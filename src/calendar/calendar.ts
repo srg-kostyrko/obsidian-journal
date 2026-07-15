@@ -52,6 +52,10 @@ export class Calendar {
     moment.locale(currentLocale);
   }
 
+  localeWeek(): WeekConfig {
+    return { ...this.#initial };
+  }
+
   weekdays(): readonly string[] {
     return moment.localeData(CUSTOM_LOCALE).weekdays();
   }

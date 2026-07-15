@@ -12,9 +12,15 @@ import WeekPresetPickerModal from "./WeekPresetPickerModal.vue";
 
 import type { CalendarSliceState } from "../slice";
 
-function mountModal(current: CalendarSliceState, api: ModalApi<CalendarSliceState>) {
+function mountModal(
+  current: CalendarSliceState,
+  api: ModalApi<CalendarSliceState>,
+  localeWeek?: { dow: number; doy: number },
+) {
   const container = new Container();
-  container.register(Calendar).useValue(new Calendar());
+  const calendar = new Calendar();
+  vi.spyOn(calendar, "localeWeek").mockReturnValue(localeWeek ?? { dow: 1, doy: 4 });
+  container.register(Calendar).useValue(calendar);
 
   return render(WeekPresetPickerModal, {
     props: { current },
@@ -72,6 +78,16 @@ describe("WeekPresetPickerModal", () => {
 
     expect(screen.queryByText(m.calendar_picker_start_week_on())).not.toBeNull();
     expect(screen.queryByText(m.calendar_picker_first_week_label())).not.toBeNull();
+  });
+
+  it("prefills the custom fields from the locale week when Custom is opened from locale mode", async () => {
+    const api: ModalApi<CalendarSliceState> = { submit: vi.fn(), cancel: vi.fn() };
+    mountModal({ mode: "locale" }, api, { dow: 0, doy: 6 });
+
+    await userEvent.click(rowFor(m.calendar_preset_name({ preset: "custom" })).querySelector("button")!);
+    await userEvent.click(screen.getByText(m.calendar_picker_update_action()));
+
+    expect(api.submit).toHaveBeenCalledWith({ mode: "custom", dow: 0, doy: 6, global: false });
   });
 
   it("submits the custom dow/doy when in custom mode with edited values", async () => {

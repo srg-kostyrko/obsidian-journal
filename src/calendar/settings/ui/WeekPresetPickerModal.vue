@@ -29,8 +29,12 @@ function initialChoice(): LocalChoice {
 const calendar = useService(Calendar);
 const savedChoice: LocalChoice = initialChoice();
 const localChoice = ref<LocalChoice>(savedChoice);
-const customDow = ref<string>(props.current.mode === "custom" ? String(props.current.dow) : "1");
-const customFirstDay = ref<number>(props.current.mode === "custom" ? 7 + props.current.dow - props.current.doy : 4);
+// Seed the custom fields from the effective week so opening Custom starts from what the user
+// currently has (their locale's week when in locale mode), not a hardcoded Monday/4.
+const effectiveWeek =
+  props.current.mode === "custom" ? { dow: props.current.dow, doy: props.current.doy } : calendar.localeWeek();
+const customDow = ref<string>(String(effectiveWeek.dow));
+const customFirstDay = ref<number>(7 + effectiveWeek.dow - effectiveWeek.doy);
 const stagedGlobal = props.current.mode === "custom" ? props.current.global : false;
 
 const dowOptions = computed(() => calendar.weekdays().map((label, dow) => ({ value: String(dow), label })));
