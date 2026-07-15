@@ -172,3 +172,88 @@ else is tracked here.
 
 - [x] **39. `hideWeekends` toggle is dead → reworked into a per-weekday hide picker.** Was: both calendar blocks emitted a `data-hide-weekends` attribute and the config exposed a single toggle, but nothing consumed the attribute, so it did nothing. Reworked (user-requested): the boolean `hideWeekends` is replaced by `hiddenWeekdays: number[]` (Sunday-based moment day indices, 0–6, range-validated) on both `month-calendar` and `week-calendar` schemas; the config UI swaps the lone toggle for a per-weekday checkbox row ordered by first-day-of-week via `Calendar.weekdaysShort()` (mirrors `ConditionWeekday`). The dead attribute is gone — hiding is now real: `NotesMonthView`/`NotesWeekView` filter out the hidden weekdays' day cells _and_ their header labels, and the month grid's column count is driven by a `--day-columns` CSS var so the remaining columns stay aligned. Schema field is `v.optional(..., [])`, so already-stored configs that still carry `hideWeekends` parse cleanly to an empty hidden set (the dead flag's value is dropped — invisible, since it never did anything). Migration (`v3-to-v4`) and `default-view` write `hiddenWeekdays: []`; the e2e-views fixture updated to match. The same option was extended to the `calendar-timeline` code block (user-requested): an optional `hiddenWeekdays: number[]` (0–6, range-validated) field on `timelineBlockSchema`, authored in the fence YAML (e.g. `hiddenWeekdays: [0, 6]`) and threaded through all four modes (week/month/quarter/calendar) into the same `NotesMonthView`/`NotesWeekView` filter; documented in the code-block reference modal. Covered by unit tests at the schema, config-UI, view-render, and timeline-threading layers, plus two e2e specs — the calendar-block config picker (`settings.e2e.ts`: check Saturday → `hiddenWeekdays` persists `[6]`) and the timeline fence (`code-blocks.e2e.ts`: `hiddenWeekdays: [0, 6]` → month grid drops to five weekday columns). Full e2e suite green.
 - [x] **40. View _block_ configs are still not editable after creation.** Fixed. Surfaced while fixing #25: `BlocksList.vue` had the same missing affordance the toolbar list did — add/move/remove only, no edit — so the `configComponent`s of `month-calendar`/`week-calendar` (incl. the #39 `hideWeekends` toggle), `custom-intervals` (journal filter, hide-empty) and `markdown-template` (template path) were unreachable; a block was frozen at its add-time `defaultConfig`. The #25 modal was generalized (`EditToolbarItemModal` → `EditConfigModal`, since it's config-agnostic) and `BlocksList` gained the mirror affordance: a per-row edit pencil (shown only when the definition has a `configComponent`) opening `editBlockModal` and persisting via the already-tested `ViewsService.updateBlockConfig`. Not a v2 regression (the v3 views system is new), but wired up so the views config UI is complete.
+
+---
+
+# Third-pass audit — 2026-07-15
+
+Deep behavioral diff (7 parallel domain sweeps: lifecycle/integration, journals
+pipeline, index, calendar view UI, code blocks, settings UI, commands/URIs,
+utils/migrations). Focus on interaction details, side-effectful operations, and
+parsing tolerance — the layers the first two passes' feature checklists missed.
+Items marked **[verified]** were confirmed by reading the cited v3 code directly;
+the rest cite exact lines from the sweep but haven't been independently re-read.
+
+## 🔴 Functional regressions (user-facing features lost)
+
+- [x] **41. Opening an entry ignores the indexed note's real path → duplicate notes.** [verified] Fixed: `NoteCreationService.ensureNote` now consults `JournalsIndex.entryByAnchor` before the config-derived path — an indexed entry whose file still exists is reused (frontmatter refreshed, `created: false`); a stale index entry (file gone) falls through to creation at the derived path. Unit tests in `note-creation.test.ts` (reuse, no-duplicate, stale-index fallback; all watched red first) + e2e in `uri-open.e2e.ts` ("relocated entry" — red without the fix, green with it).
+  - v2: `Journal.get()` returned indexed metadata carrying the real `path`; `getNotePath()` short-circuited on it (`src/_old-code/journals/journal.ts:126-133,538-544`), so an existing note was re-opened wherever it physically lives.
+  - v3: `OpenJournalEntryFlow` → `FrontmatterService.buildMetadata` consults the index only for `endDate` (`src/journals/frontmatter.ts:74-75`), and `NoteCreationService.ensureNote` derives the path purely from the current `nameTemplate`/`folder` and checks only that exact path (`src/journals/notes/note-creation.ts:54-61`). `entryByAnchor`'s stored path is never used in the open pipeline.
+  - Impact: any connected note whose real path differs from the config-derived one — connected via connect-note without move/rename, manually renamed/moved, or predating a `nameTemplate`/`folder`/`dateFormat` change — is not found on open; a **second note is created for the same (journal, anchor)**. Likely the biggest source of "v3 keeps missing my notes" reports.
+
+- [x] **42. Pick-date button (default view): no recenter, silent no-op without a note.** [verified] Fixed: `applyMode` in `ButtonItem.vue` now calls `context.setRefDate(anchor)` unconditionally (v2 parity — the interaction always moves the displayed period; mode only decides whether an open follows), so a navigate-mode pick of a note-less date recenters instead of no-opping. Component tests cover recenter in navigate/create for both pick-date and current actions (watched red first).
+  - v2: `pickDate` always recentered the displayed month (`refDateMoment.value = …`, `src/_old-code/calendar-view/CalendarView.vue:97-115`), then opened/created.
+  - v3: `applyMode` calls `context.setRefDate` only in `select-only` mode; `navigate`/`create` rely on follow-active-date (`src/views/toolbar-items/button/ui/ButtonItem.vue:54-70`). The default view ships pick-date as `navigate` (`src/views/default-view.ts:46`), and `OpenDateFlow` with `existingOnly` errs when no note exists — so picking a note-less date does nothing visible. No v3 mode reproduces v2's "always move display AND open if exists".
+
+- [x] **43. Frontmatter start/end-date toggles no longer rewrite existing notes.** [verified] Fixed: `NoteConnectionService.reapplyAll(journalName)` re-applies the frontmatter write mutator to every connected note; `useReapplyFrontmatterOnToggle` (wired in `FrontmatterSection.vue`, mirroring the auto-create-on-enable composable) fires it when either toggle changes (journal-switch guarded). A stored end equal to the new `CycleService.defaultEndOf` (duration-derived, ignores stored extensions) is treated as period metadata and cleared when the toggle goes off; genuine extensions survive — deliberate improvement over v2, whose "keep divergent ends" branch was dead code (its custom `resolveEndDate` returned the stored end, so toggle-off always deleted, extensions included). Unit-tested at service+composable level (watched red first); e2e in `settings.e2e.ts` ("frontmatter toggle rewrite", red without the fix).
+  - v2: `toggleFrontmatterStartDate/EndDate` looped every connected note and added/removed the property (`src/_old-code/journals/journal.ts:444-483`).
+  - v3: `FrontmatterSection.vue:52,64` binds the toggles straight to config; the fields apply only at creation/connect time (`src/journals/frontmatter.ts:116-132`). No batch rewrite, no warning hint (unlike the field-rename modal, which does hint — see #57).
+  - Impact: toggling silently affects future notes only; existing notes keep stale properties or never gain them.
+
+- [ ] **44. Custom journals' `offset` decorations no longer paint the day grid.** [verified]
+  - v2: the day scope explicitly included custom journals' decorations that carry an `offset` condition (`src/_old-code/composables/use-shelf.ts:28`), so "N days into the interval" markers rendered on month-calendar day cells.
+  - v3: `NotesMonthView`/`NotesWeekView` gather decorations from `scope.fixed`, which excludes custom journals entirely (`src/notes-calendar/ui/NotesMonthView.vue:82-84`, `src/notes-calendar/use-shelf-scope.ts:37-39`); custom decorations reach only `CustomIntervalsBlock`. The `offset` condition still exists (custom-only, `src/decorations/settings/ui/condition-types.ts:13`) but can no longer mark day cells. (Note: the third-pass sweep initially reported this inverted — as a leak onto day cells — re-verification shows the opposite: exclusion.)
+
+- [ ] **45. Right-click menus lost the guaranteed "Delete" item.**
+  - v2: `showContextMenu` appended a trash-icon Delete wired to `fileManager.promptForFileDeletion` after triggering `file-menu` (`src/_old-code/obsidian-manager.ts:46-62`).
+  - v3: `WorkspaceService.openFileMenu`/`openPathsMenu` only trigger `file-menu` (`src/infrastructure/host/internal/workspace-service.ts:134-154`); no `promptForFileDeletion` anywhere in v3.
+  - Impact: calendar/nav right-click may offer no Delete unless Obsidian core populates one.
+
+## 🟡 Capability changed shape (confirm intent)
+
+- [ ] **46. Journal/shelf commands lost their palette name prefix; names forced globally unique.**
+  - v2: palette showed `<journal>: <name>` / `Shelf: <shelf>: <name>` (`src/_old-code/obsidian-manager.ts:16`), ids namespaced per owner so same-named commands across journals coexisted.
+  - v3: `command-registry.ts:60-68` registers the raw name; `edit-command.flow.ts:26-28` enforces uniqueness across ALL commands regardless of target. Two journals can't both have "Open today's note", and palette entries don't say which journal they act on.
+
+- [ ] **47. Command ids changed shape → every v2 hotkey on a journals command silently unbinds.**
+  - v2: deterministic slug ids (`journals:<journal>:<command-name>`, `src/_old-code/obsidian-manager.ts:15,68-70`); Obsidian persists hotkeys by id.
+  - v3: user commands get `nanoid()` ids (`edit-command.flow.ts:33`), seeds use `default-*` keys (`src/commands/config.ts:62-106`). No remap exists. `open-next`/`open-prev`/`connect-note` keep their ids. Adjacent to the out-of-scope data-migration work — decide whether hotkey continuity is in scope.
+
+- [ ] **48. `{{note_name}}`/`{{title}}` no longer resolve in folder or template-file paths.**
+  - v2: one shared context carried `note_name`/`title` into folder + template-path rendering (`src/_old-code/journals/journal.ts:546-603,608`).
+  - v3: `NotePathService.contextFor` (used for filename, folder, and template path) omits both; they exist only in `bodyContextFor` (template content) (`src/journals/notes/note-path.ts:115-142`, `src/journals/notes/template-content.ts:32-39`). A folder like `Journal/{{title}}` now renders the literal token. Also dropped from the variable-reference modal even for contexts where they still work (`src/journals/settings/ui/VariableReferenceModal.vue` vs v2 `VariableReference.modal.vue:28-38`).
+
+- [x] **49. Auto-create ignores the journal timeline.** [verified] Fixed: `AutoCreateService.createCurrent` gates on `TimelineService.contains(name, today)` before creating (covers both the midnight tick and the settings enable-toggle path, which funnels through it). Unit tests for ended-timeline and future-start journals (watched red first); e2e in `auto-create.e2e.ts` (out-of-bounds journal seeded before "daily" in the fixture; asserts raw vault-file absence because metadataCache lag made a frontmatter assertion vacuously green — test verified red without the fix).
+  - v2: `autoCreate()` went through `get()` → `#checkBounds`, so no note outside start/end/repeats (`src/_old-code/journals/journal.ts:486-491,668-684`).
+  - v3: `AutoCreateService.createCurrent` builds today's metadata and calls `ensureNote` with no `TimelineService.contains` check (`src/journals/notes/auto-create.ts:44-55`); same for the enable-toggle path. A journal whose timeline ended still gets a note every midnight, which bounded views then won't show.
+
+- [ ] **50. Strict fence validation turned v2's graceful degradation into error boxes.**
+  - Home block: v2 filtered invalid `show` entries and kept rendering (`src/_old-code/code-blocks/home/home-processor.ts:41-55`); v3's strict union fails the whole block into a `code-block-error` panel (`src/code-blocks/home/home-config.ts:5-11`, `code-block-service.ts:50-56`).
+  - Timeline: v2 fell back to the journal-derived mode on an invalid `mode` (`TimelineCodeBlock.vue:27-31`); v3 `v.picklist` hard-errors (`src/code-blocks/timeline/timeline-config.ts:5,10`).
+  - Impact: a typo that used to degrade now blanks the block.
+
+- [ ] **51. Month/quarter/year header badges lost right-click + hover preview in the default view.**
+  - v2: header badges were `NotesCalendarButton`s with context menu + hover preview (`src/_old-code/calendar-view/CalendarView.vue:180-187`).
+  - v3: the `period-buttons` toolbar item binds only click/middle-click (`src/views/toolbar-items/period-buttons/ui/PeriodButtonsItem.vue:81-94`); full behavior survives only in the in-grid heading, which the default view disables (`default-view.ts:94`).
+
+- [ ] **52. Multi-journal date disambiguation: at-cursor menu → centered suggest modal.**
+  - v2: `openDate` showed an Obsidian `Menu` at the mouse position when a click event was available (`src/_old-code/journals/open-date.ts:31-45`).
+  - v3: `OpenDateFlow` always opens `journalPickerSuggest` (`src/journals/flows/open-date.flow.ts:64-77`).
+
+- [ ] **53. Index rejects notes whose stored date isn't the canonical anchor.**
+  - v2 indexed any valid date literally (`src/_old-code/journals/journals-index.ts:91-117`); v3 `parseEntry` requires `isCanonicalAnchor` and unregisters off-anchor notes (`src/journals/frontmatter.ts:40-43`, `src/journals/vault-subscription.ts:62-111`). Deliberate per the week-canonical-anchor design decision — confirm and close, but note it silently hides hand-edited/imported notes v2 displayed.
+
+## 🟢 Behavioral deltas
+
+- [ ] **54. Auto-create bypasses `confirmCreation`** (`src/journals/notes/auto-create.ts:51` passes `skipConfirmation: true`; v2 prompted). Probably the intended fix for a background timer — confirm and close.
+- [ ] **55. Template pick stops at the first _existing_ file even if empty** — v2 skipped empty templates and fell through (`src/_old-code/journals/journal.ts:605-620` truthy check vs `src/journals/notes/template-content.ts:37-47`).
+- [ ] **56. Active-note tracking moved from `file-open` to `active-leaf-change` only** (`src/_old-code/main.ts:515-519` vs `src/infrastructure/host/internal/workspace-service.ts:31-35`) — same-leaf navigation may not update the calendar highlight depending on host event semantics.
+- [ ] **57. Frontmatter field rename no longer rewrites note properties** — v2 rewrote every note's key (`src/_old-code/journals/journal.ts:427-442`); v3 changes config only and shows a hint (`EditFrontmatterFieldModal.vue:42`). Hinted, so presumed intentional — confirm and close (contrast with the silent #43).
+- [ ] **58. Hover preview needs the modifier already held at mouseenter** — v2 fired reactively when Ctrl/Meta was pressed mid-hover (`src/_old-code/composables/use-hover-preview.ts:5-20`); v3 checks the flag on the enter event only (`workspace-service.ts:156-161`).
+- [ ] **59. Date picker opens on today, not the displayed month, with no pre-selection** — v2 passed `selectedDate: refDate` (`CalendarView.vue:103`); v3 opens with `{ picking }` only (`ButtonItem.vue:75`, `DatePickerModal.vue:58-64`).
+- [ ] **60. Month grid no longer follows an opened custom-interval note** — v2's watcher recentered on any journal type (`CalendarView.vue:128-162`); v3's month block follows `scope.fixed` only (`MonthCalendarBlock.vue:29`).
+- [ ] **61. Cell label format drift** — week cells `W01` vs v2 `W1`, in-grid month heading `Jan` vs `January` (`src/notes-calendar/cell-format.ts` vs `src/_old-code/constants.ts:20-26`).
+- [ ] **62. Home block: `separator: ""` / `scale: 0` no longer coerce to defaults** (`src/_old-code/code-blocks/home/home-processor.ts:44-45` `||` vs `v.optional` in `home-config.ts:9-10`).
+- [ ] **63. Timeline month mode: adjacent-month days no longer clickable** — v3 passes `outside-dates="inactive"` (`src/code-blocks/timeline/ui/TimelineMonth.vue:19`); v2 left them actionable.
+- [ ] **64. `end_date` written even when equal to the period start** (v2 equality guard `journal.ts:631-640`; v3 `frontmatter.ts:123-133`). Niche custom-interval delta.
+- [ ] **65. Invalid `end_date` frontmatter: v2 hid the whole note, v3 indexes it without the end span** (`src/_old-code/journals/journals-index.ts:97` vs `src/journals/frontmatter.ts:45-50`). v3 is more tolerant — likely fine, confirm and close.
