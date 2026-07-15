@@ -56,6 +56,34 @@
         "sources": []
       },
       "autoCreate": true
+    },
+    "monthly": {
+      "name": "monthly",
+      "write": {
+        "type": "month"
+      },
+      "timeline": {
+        "start": "",
+        "end": {
+          "kind": "never"
+        }
+      },
+      "dateFormat": "YYYY-MM",
+      "frontmatter": {
+        "dateField": "journal-date",
+        "startDateField": "journal-start-date",
+        "endDateField": "journal-end-date",
+        "addStartDate": false,
+        "addEndDate": false
+      },
+      "numbering": {
+        "enabled": false,
+        "anchorDate": "",
+        "allowBefore": false,
+        "sources": []
+      },
+      "autoCreate": true,
+      "folder": "monthly"
     }
   }
 }

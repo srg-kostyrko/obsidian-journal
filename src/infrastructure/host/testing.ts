@@ -92,6 +92,11 @@ export class FakeNotesService implements Pick<
     return this.#files.has(path) ? new Some<Note>(noteOf(path)) : new None<Note>();
   }
 
+  frontmatterOf(path: VaultPath): Record<string, unknown> | undefined {
+    const entry = this.#files.get(path);
+    return entry ? { ...entry.frontmatter } : undefined;
+  }
+
   listInFolder(folder: VaultPath): AsyncResult<VaultPath[], FolderNotFoundError> {
     if (!this.#folders.has(folder)) return AsyncResult.err(new FolderNotFoundError(folder));
     const prefix = folder ? `${folder}/` : "";

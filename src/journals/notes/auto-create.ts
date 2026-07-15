@@ -3,6 +3,7 @@ import { inject } from "@/infrastructure/di";
 import { LoggerFactoryToken } from "@/infrastructure/logger";
 import { AsyncResult } from "@/infrastructure/result";
 
+import { CycleService } from "../cycle";
 import { FrontmatterService } from "../frontmatter";
 import { JournalsRepository } from "../repository";
 import { TimelineService } from "../timeline";
@@ -13,6 +14,7 @@ export class AutoCreateService {
   readonly #creation = inject(NoteCreationService);
   readonly #frontmatter = inject(FrontmatterService);
   readonly #journals = inject(JournalsRepository);
+  readonly #cycle = inject(CycleService);
   readonly #timeline = inject(TimelineService);
   readonly #logger = inject(LoggerFactoryToken).named("auto-create");
 
@@ -44,7 +46,11 @@ export class AutoCreateService {
   }
 
   async createCurrent(name: string): Promise<void> {
-    const anchor = CalendarDate.today().toAnchor();
+    // Resolve today to the journal period's canonical anchor; a raw mid-period date would be
+    // written to frontmatter and then rejected by parseEntry, orphaning the note.
+    const anchorOpt = this.#cycle.anchorOf(name, CalendarDate.today());
+    if (anchorOpt.isNone()) return;
+    const anchor = anchorOpt.value;
     if (!this.#timeline.contains(name, anchor)) {
       this.#logger.debug("auto-create: today is outside the journal timeline", { name, anchor });
       return;

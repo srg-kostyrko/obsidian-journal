@@ -71,6 +71,17 @@ describe("AutoCreateService", () => {
     expect(notes.find("2026-05.md" as VaultPath).isNone()).toBe(true);
   });
 
+  it("writes the canonical period anchor as journal-date for non-daily journals", async () => {
+    const repo = fakeRepo({
+      monthly: fixedJournal("monthly", { type: "month" }, { autoCreate: true }),
+    });
+    const notes = new FakeNotesService();
+    const container = build(repo, notes);
+    await container.resolve(AutoCreateService).initialize();
+    await vi.advanceTimersByTimeAsync(0);
+    expect(notes.frontmatterOf("2026-05.md" as VaultPath)?.["journal-date"]).toBe("2026-05-01");
+  });
+
   it("skips creation when today is past the journal's end date", async () => {
     const repo = fakeRepo({
       ended: fixedJournal(

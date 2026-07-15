@@ -6,6 +6,7 @@ import { LoggerFactoryToken } from "@/infrastructure/logger";
 import { AsyncResult } from "@/infrastructure/result";
 import { SettingsService } from "@/settings";
 
+import { CycleService } from "../cycle";
 import { OpenJournalEntryFlow } from "../flows/open-journal-entry.flow";
 import { JournalsRepository } from "../repository";
 import { JournalsEventsToken } from "../tokens";
@@ -16,6 +17,7 @@ export class StartupOpenService {
   readonly #workspace = inject(WorkspaceService);
   readonly #flows = inject(Flows);
   readonly #journals = inject(JournalsRepository);
+  readonly #cycle = inject(CycleService);
   readonly #events = inject(JournalsEventsToken);
   readonly #logger = inject(LoggerFactoryToken).named("startup-open");
 
@@ -37,7 +39,11 @@ export class StartupOpenService {
   async #open(): Promise<void> {
     const { journalName } = this.#slice.state;
     if (journalName === "" || !this.#journals.exists(journalName)) return;
-    const anchor = CalendarDate.today().toAnchor();
+    // Resolve today to the journal period's canonical anchor so the opened/created note's
+    // frontmatter date is the one parseEntry accepts (a raw mid-period date orphans the note).
+    const anchorOpt = this.#cycle.anchorOf(journalName, CalendarDate.today());
+    if (anchorOpt.isNone()) return;
+    const anchor = anchorOpt.value;
     const result = await this.#flows.invoke(OpenJournalEntryFlow, { journalName, anchor, openMode: "active" });
     if (result.isErr() && !(result.error instanceof UserAborted)) {
       this.#logger.error("startup-open: failed to open note", { journalName, error: result.error });

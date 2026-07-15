@@ -44,6 +44,7 @@ interface Harness {
   readonly events: Emitter<JournalsEvents>;
   readonly workspace: FakeWorkspaceService;
   readonly settings: SettingsService;
+  readonly notes: FakeNotesService;
 }
 
 function build(journals: Record<string, JournalConfig>): Harness {
@@ -77,7 +78,7 @@ function build(journals: Record<string, JournalConfig>): Harness {
   c.register(OpenJournalEntryFlow).useClass(OpenJournalEntryFlow);
   c.register(StartupOpenService).useClass(StartupOpenService);
 
-  return { container: c, repo, events, workspace, settings: c.resolve(SettingsService) };
+  return { container: c, repo, events, workspace, settings: c.resolve(SettingsService), notes };
 }
 
 const TODAY_PATH = "2026-05-19.md" as VaultPath;
@@ -105,6 +106,19 @@ describe("StartupOpenService", () => {
     await vi.advanceTimersByTimeAsync(0);
 
     expect(h.workspace.isOpen(TODAY_PATH)).toBe(true);
+  });
+
+  it("writes the canonical period anchor as journal-date for a non-daily journal", async () => {
+    const h = build({ monthly: fixedJournal("monthly", { type: "month" }) });
+    await h.settings.initialize();
+    h.settings.getSlice(startupSlice).state = { journalName: "monthly" };
+    h.workspace.setLayoutReady(false);
+
+    await h.container.resolve(StartupOpenService).initialize();
+    h.workspace.setLayoutReady(true);
+    await vi.advanceTimersByTimeAsync(0);
+
+    expect(h.notes.frontmatterOf("2026-05.md" as VaultPath)?.["journal-date"]).toBe("2026-05-01");
   });
 
   it("does not open when the layout was already ready at initialize", async () => {

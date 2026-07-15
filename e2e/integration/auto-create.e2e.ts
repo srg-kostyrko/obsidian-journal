@@ -17,6 +17,15 @@ describe("auto-create", () => {
     await waitForJournalFrontmatter(`${today}.md`, { journal: "daily", date: today });
   });
 
+  it("stamps a non-daily note with the canonical period anchor, not today's raw date", async () => {
+    // A monthly journal's file lands at the same YYYY-MM path either way; the regression this
+    // guards is the frontmatter journal-date — it must be the month anchor (…-01) so the index
+    // accepts the note, not today's mid-month date (which parseEntry would reject → orphaned).
+    const now = new Date();
+    const ym = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, "0")}`;
+    await waitForJournalFrontmatter(`monthly/${ym}.md`, { journal: "monthly", date: `${ym}-01` });
+  });
+
   it("does not create a note for a journal whose timeline has ended", async () => {
     // The fixture stores "ended" (auto-create on, timeline ended 2020-12-31) before "daily",
     // and the tick awaits journals sequentially — once the previous test observed daily's
