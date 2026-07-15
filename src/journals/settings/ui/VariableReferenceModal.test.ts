@@ -60,12 +60,6 @@ describe("VariableReferenceModal — rules table", () => {
       expect(screen.getByText("{{page_no}}")).toBeTruthy();
     });
 
-    it("never renders note_name or title", () => {
-      renderModal({ context });
-      expect(screen.queryByText("{{note_name}}")).toBeNull();
-      expect(screen.queryByText("{{title}}")).toBeNull();
-    });
-
     it("renders current_date", () => {
       renderModal({ context });
       expect(screen.getByText("{{current_date}}")).toBeTruthy();
@@ -79,6 +73,22 @@ describe("VariableReferenceModal — rules table", () => {
     it("renders current_time", () => {
       renderModal({ context });
       expect(screen.getByText("{{current_time}}")).toBeTruthy();
+    });
+  });
+
+  describe("note name variables", () => {
+    // note_name/title are bound after the filename renders, so the name template itself
+    // can't use them; folder and template paths can.
+    it("omits note_name and title in the name-template context", () => {
+      renderModal({ context: "name-template" });
+      expect(screen.queryByText("{{note_name}}")).toBeNull();
+      expect(screen.queryByText("{{title}}")).toBeNull();
+    });
+
+    it.each(["folder-path", "template-path"] as const)("renders note_name and title in %s", (context) => {
+      renderModal({ context });
+      expect(screen.getByText("{{note_name}}")).toBeTruthy();
+      expect(screen.getByText("{{title}}")).toBeTruthy();
     });
   });
 

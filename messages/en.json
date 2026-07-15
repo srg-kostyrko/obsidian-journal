@@ -1191,6 +1191,8 @@
   "journal_edit_variable_journal_link_description": "Inside a template file's content, resolves to the path of another journal's note for this note's date. Wrap it yourself in a link or embed (for example ![[ … ]]), and add date modifiers like +1w to point at a neighboring period.",
   "journal_edit_variable_journal_name_description": "The journal name (here: {name}).",
   "journal_edit_variable_non_invertible_warning": "Using this here prevents the journal from recovering the date from the filename.",
+  "journal_edit_variable_note_name_description": "The name of the note being created.",
+  "journal_edit_variable_note_title_description": "Alias of the note name, supporting the core Templates plugin's variable.",
   "journal_edit_variable_numbering_description": "The configured numbering variable (see the Sequence section).",
   "journal_edit_variable_reference_intro": "Available variables. Date format defaults to {dateFormat} when no explicit format is given.",
   "journal_edit_variable_reference_link": "Supported variables.",

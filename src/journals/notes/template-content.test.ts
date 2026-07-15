@@ -40,6 +40,19 @@ function build(repo: JournalsRepository, notes: FakeNotesService, templater = ne
 const meta: JournalMetadata = { journalName: "daily", anchor: anchor("2026-05-19") };
 
 describe("TemplateContentService.renderFor", () => {
+  it("resolves {{note_name}} in a template file path", async () => {
+    const repo = fakeRepo({
+      daily: fixedJournal("daily", { type: "day" }, { templates: ["Templates/{{note_name}}"] }),
+    });
+    const notes = new FakeNotesService();
+    notes.seed("Templates/2026-05-19.md" as VaultPath, "per-note template body");
+    const result = await build(repo, notes)
+      .resolve(TemplateContentService)
+      .renderFor("daily", meta, "2026-05-19", "2026-05-19.md" as VaultPath);
+    expectOk(result);
+    expect(result.value).toBe("per-note template body");
+  });
+
   it("resolves to empty string when no templates are configured", async () => {
     const repo = fakeRepo({ daily: fixedJournal("daily", { type: "day" }) });
     const notes = new FakeNotesService();

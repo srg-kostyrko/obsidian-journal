@@ -29,18 +29,19 @@ export class TemplateContentService {
     const config = configOpt.value;
     if (config.templates.length === 0) return AsyncResult.ok("");
 
-    const pathContext = this.#path.contextFor(config, metadata);
-    const bodyContext = this.#path.bodyContextFor(config, metadata, noteName);
+    // One context for both the template's path and its body: paths resolve
+    // {{note_name}}/{{title}} too (v2 parity).
+    const context = this.#path.bodyContextFor(config, metadata, noteName);
 
     return AsyncResult.fromPromise(
       (async () => {
         for (const entry of config.templates) {
           const withExtension = entry.endsWith(".md") ? entry : `${entry}.md`;
-          const renderedPath = this.#engine.renderString(withExtension, pathContext) as VaultPath;
+          const renderedPath = this.#engine.renderString(withExtension, context) as VaultPath;
           if (this.#notes.find(renderedPath).isNone()) continue;
           const readResult = await this.#notes.read(renderedPath);
           if (readResult.isErr()) throw readResult.error;
-          const rendered = this.#engine.renderString(readResult.value, bodyContext);
+          const rendered = this.#engine.renderString(readResult.value, context);
           const applied = await this.#templater.apply(renderedPath, targetPath, rendered);
           return applied.match({ ok: (content) => content, err: () => rendered });
         }

@@ -52,6 +52,26 @@ describe("NotePathService.pathFor", () => {
     expect(result.isOk() && result.value).toBe("Diary/2026/2026-05-19.md");
   });
 
+  it("resolves {{note_name}} in the folder template to the rendered note name", () => {
+    const repo = fakeRepo({
+      daily: fixedJournal("daily", { type: "day" }, { folder: "Journal/{{note_name}}" }),
+    });
+    const c = buildContainer(repo);
+    const meta: JournalMetadata = { journalName: "daily", anchor: anchor("2026-05-19") };
+    const result = c.resolve(NotePathService).pathFor("daily", meta);
+    expect(result.isOk() && result.value).toBe("Journal/2026-05-19/2026-05-19.md");
+  });
+
+  it("treats {{title}} as an alias for the note name in the folder template", () => {
+    const repo = fakeRepo({
+      daily: fixedJournal("daily", { type: "day" }, { folder: "Journal/{{title}}" }),
+    });
+    const c = buildContainer(repo);
+    const meta: JournalMetadata = { journalName: "daily", anchor: anchor("2026-05-19") };
+    const result = c.resolve(NotePathService).pathFor("daily", meta);
+    expect(result.isOk() && result.value).toBe("Journal/2026-05-19/2026-05-19.md");
+  });
+
   it("returns JournalNotFoundError for an unknown journal", () => {
     const repo = fakeRepo({});
     const c = buildContainer(repo);

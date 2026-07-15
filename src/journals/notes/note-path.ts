@@ -24,6 +24,11 @@ export class NotePathService {
   readonly #frontmatter = inject(FrontmatterService);
   readonly #engine = inject(TemplateEngine);
 
+  #withNoteName(context: TemplateContext, noteName: string): TemplateContext {
+    const noteSpec = { kind: "string", value: noteName } as const;
+    return context.withSpec("note_name", noteSpec).withSpec("title", noteSpec);
+  }
+
   #parseContext(config: JournalConfig): TemplateContext {
     let context = TemplateContext.empty()
       .date("date", CalendarDate.today(), config.dateFormat)
@@ -47,7 +52,10 @@ export class NotePathService {
     if (config) {
       const context = this.contextFor(config, metadata);
       const filename = this.#engine.renderString(`${config.nameTemplate}.md`, context);
-      const folder = config.folder ? this.#engine.renderString(config.folder, context) : "";
+      // The rendered note name feeds back into the folder as {{note_name}}/{{title}},
+      // so the filename must render first (v2 order).
+      const folderContext = this.#withNoteName(context, filename.replace(/\.md$/, ""));
+      const folder = config.folder ? this.#engine.renderString(config.folder, folderContext) : "";
       const joined = folder ? `${folder}/${filename}` : filename;
       return new Ok(normalizePath(joined) as VaultPath);
     }
@@ -136,8 +144,6 @@ export class NotePathService {
   }
 
   bodyContextFor(config: JournalConfig, metadata: JournalMetadata, noteName: string): TemplateContext {
-    const base = this.contextFor(config, metadata);
-    const noteSpec = { kind: "string", value: noteName } as const;
-    return base.withSpec("note_name", noteSpec).withSpec("title", noteSpec);
+    return this.#withNoteName(this.contextFor(config, metadata), noteName);
   }
 }

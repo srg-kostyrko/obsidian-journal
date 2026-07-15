@@ -13,6 +13,9 @@ const NON_INVERTIBLE_CONTEXTS = new Set<VariableReferenceModalProps["context"]>(
 const showInvertibilityWarning = computed(() => NON_INVERTIBLE_CONTEXTS.has(props.context));
 const showNavRowVariables = computed(() => props.context === "nav-row");
 const showTemplateContentVariables = computed(() => props.context === "template-path");
+// note_name/title are bound after the filename renders, so the name template can't use them.
+const NOTE_NAME_CONTEXTS = new Set<VariableReferenceModalProps["context"]>(["folder-path", "template-path"]);
+const showNoteNameVariables = computed(() => NOTE_NAME_CONTEXTS.has(props.context));
 
 function handleModificationsClick(event: Event): void {
   event.preventDefault();
@@ -48,6 +51,17 @@ function handleModificationsClick(event: Event): void {
         <dt><VariableChip name="journal_link(journal_name)" /></dt>
         <dd>{{ m.journal_edit_variable_journal_link_description() }}</dd>
       </div>
+
+      <template v-if="showNoteNameVariables">
+        <div class="variable-reference__row">
+          <dt><VariableChip name="note_name" /></dt>
+          <dd>{{ m.journal_edit_variable_note_name_description() }}</dd>
+        </div>
+        <div class="variable-reference__row">
+          <dt><VariableChip name="title" /></dt>
+          <dd>{{ m.journal_edit_variable_note_title_description() }}</dd>
+        </div>
+      </template>
 
       <template v-if="showNavRowVariables">
         <div class="variable-reference__row">
