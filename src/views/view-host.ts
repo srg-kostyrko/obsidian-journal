@@ -1,12 +1,16 @@
 import { ItemView, type WorkspaceLeaf } from "obsidian";
 import { match } from "ts-pattern";
 
+import { m } from "@/i18n";
 import { inject, InjectorToken } from "@/infrastructure/di";
 import { CommandService } from "@/infrastructure/host/commands";
 import { InternalObsidianAppToken, InternalPluginToken } from "@/infrastructure/host/internal/tokens";
+import { SuggestService } from "@/infrastructure/host/suggests";
 import { LoggerFactoryToken, type Logger } from "@/infrastructure/logger";
+import { shelfPickerSuggest, ShelvesRepository } from "@/shelves";
 
 import { FALLBACK_VIEW_ICON, type View, type ViewId } from "./config";
+import { DEFAULT_CALENDAR_VIEW_ID } from "./default-view";
 import { ViewsRepository } from "./repository";
 import { ViewsEventsToken } from "./tokens";
 import { JournalViewLeaf } from "./view-leaf";
@@ -18,6 +22,8 @@ export class ViewHostService {
   readonly #app = inject(InternalObsidianAppToken);
   readonly #commands = inject(CommandService);
   readonly #repo = inject(ViewsRepository);
+  readonly #shelves = inject(ShelvesRepository);
+  readonly #suggests = inject(SuggestService);
   readonly #events = inject(ViewsEventsToken);
   readonly #logger = inject(LoggerFactoryToken).named("view-host");
   readonly #injector = inject(InjectorToken);
@@ -38,6 +44,30 @@ export class ViewHostService {
       this.dispose();
     });
     this.#registerAll();
+    this.#registerStableCommand();
+  }
+
+  // v2 exposed one fixed `open-calendar` command id users bound hotkeys to. The alias
+  // targets the seeded Calendar view, or the first remaining view when that one is gone,
+  // and hides itself only when no views exist at all.
+  #registerStableCommand(): void {
+    this.#commands.register({
+      id: "open-calendar",
+      name: m.command_open_calendar(),
+      icon: FALLBACK_VIEW_ICON,
+      ribbon: false,
+      check: () => this.#stableTarget() !== null,
+      execute: () => {
+        const id = this.#stableTarget();
+        if (id !== null) void this.open(id);
+      },
+    });
+  }
+
+  #stableTarget(): ViewId | null {
+    if (this.#repo.get(DEFAULT_CALENDAR_VIEW_ID).isSome()) return DEFAULT_CALENDAR_VIEW_ID;
+    for (const [id] of this.#repo.find().entries()) return id;
+    return null;
   }
 
   async #openStartupViews(): Promise<void> {
@@ -65,6 +95,7 @@ export class ViewHostService {
     const viewType = viewTypeOf(id);
     this.#plugin.registerView(viewType, (leaf) => this.#buildLeaf(leaf, id, viewType));
     this.#commands.register(this.#commandDescriptorFor(id, view));
+    this.#commands.register(this.#shelfCommandDescriptorFor(id, view));
     this.#disposers.set(id, () => {
       this.#tearDown(id, viewType);
     });
@@ -83,6 +114,8 @@ export class ViewHostService {
     if (!view) return;
     this.#commands.unregister(commandIdOf(id));
     this.#commands.register(this.#commandDescriptorFor(id, view));
+    this.#commands.unregister(shelfCommandIdOf(id));
+    this.#commands.register(this.#shelfCommandDescriptorFor(id, view));
     this.#refreshOpenHeaders(viewTypeOf(id));
   }
 
@@ -103,6 +136,7 @@ export class ViewHostService {
   #tearDown(id: ViewId, viewType: string): void {
     this.#app.workspace.detachLeavesOfType(viewType);
     this.#commands.unregister(commandIdOf(id));
+    this.#commands.unregister(shelfCommandIdOf(id));
     // Obsidian has no API to revoke registerView; mark the type so any future
     // factory invocation (e.g. a stale layout reopens) renders an empty leaf.
     this.#stale.add(viewType);
@@ -120,6 +154,31 @@ export class ViewHostService {
       ribbon: view.showInRibbon,
       execute: () => void this.open(id),
     };
+  }
+
+  // v2's change-calendar-shelf palette command, per view: pick a shelf (or all
+  // journals) from a suggest and apply it to the view's open leaves.
+  #shelfCommandDescriptorFor(id: ViewId, view: View) {
+    return {
+      id: shelfCommandIdOf(id),
+      name: m.command_view_change_shelf({ name: view.name }),
+      icon: view.icon || FALLBACK_VIEW_ICON,
+      ribbon: false,
+      check: () => this.#shelves.count() > 0 && this.isOpen(id),
+      execute: () => this.#pickShelf(id),
+    };
+  }
+
+  async #pickShelf(id: ViewId): Promise<void> {
+    const allJournals = m.common_label_all_journals();
+    const names = [allJournals, ...[...this.#shelves.find().list()].map((shelfConfig) => shelfConfig.name)];
+    const choice = await this.#suggests.open(shelfPickerSuggest, names);
+    if (choice.isErr()) return;
+    const picked = choice.value === allJournals ? null : choice.value;
+    const leaves = this.#app.workspace.getLeavesOfType(viewTypeOf(id));
+    for (const leaf of leaves) {
+      if (leaf.view instanceof JournalViewLeaf) leaf.view.setShelf(picked);
+    }
   }
 
   #buildLeaf(leaf: WorkspaceLeaf, id: ViewId, viewType: string): ItemView {
@@ -189,6 +248,10 @@ function viewTypeOf(id: ViewId): string {
 
 function commandIdOf(id: ViewId): string {
   return `journal:open-view:${id}`;
+}
+
+function shelfCommandIdOf(id: ViewId): string {
+  return `journal:change-shelf:${id}`;
 }
 
 class StaleLeaf extends ItemView {

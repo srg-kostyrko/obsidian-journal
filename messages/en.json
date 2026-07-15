@@ -215,6 +215,9 @@
   ],
   "command_open_next": "Open next note",
   "command_open_previous": "Open previous note",
+  "command_open_calendar": "Open calendar",
+  "command_view_change_shelf": "Change shelf in {name}",
+  "shelf_picker_placeholder": "Search shelves",
   "command_palette_journal_name": "{journal}: {name}",
   "command_palette_shelf_name": "Shelf: {shelf}: {name}",
   "command_open_not_connected": "This note is not connected to any journal.",
@@ -789,6 +792,7 @@
 
   "settings_load_failed": "Journal: failed to load settings — {error}",
   "settings_reload_failed": "Journal: failed to reload settings — {error}",
+  "settings_reload_required_banner": "Reload Obsidian to apply the changed settings.",
 
   "startup_dashboard_section_title": "Startup",
   "startup_open_note_title": "Open on startup",

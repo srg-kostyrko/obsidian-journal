@@ -1,13 +1,19 @@
 import { createNanoEvents } from "nanoevents";
 import { describe, expect, it } from "vitest";
 
+import { m } from "@/i18n";
 import { Container } from "@/infrastructure/di";
 import { CommandService } from "@/infrastructure/host/commands";
 import { createFakeHost } from "@/infrastructure/host/internal/testing";
 import { InternalObsidianAppToken, InternalPluginToken } from "@/infrastructure/host/internal/tokens";
+import { SuggestService } from "@/infrastructure/host/suggests";
+import { FakeSuggestService } from "@/infrastructure/host/suggests/testing";
 import { createLoggerTestingModule } from "@/infrastructure/logger/testing";
+import { ShelvesRepository, type ShelfConfig } from "@/shelves";
+import { fakeShelvesRepo } from "@/shelves/testing";
 
 import { FALLBACK_VIEW_ICON, type View, type ViewId } from "./config";
+import { DEFAULT_CALENDAR_VIEW_ID } from "./default-view";
 import { ViewsRepository } from "./repository";
 import { ViewsEventsToken, type ViewsEvents } from "./tokens";
 import { ViewHostService } from "./view-host";
@@ -32,11 +38,12 @@ function openVia(host: ReturnType<typeof build>["host"], id: string): void {
   host.commands.get(`journal:open-view:${id}`)?.callback?.();
 }
 
-function build(seeds: Record<string, View> = {}) {
+function build(seeds: Record<string, View> = {}, shelves: Record<string, ShelfConfig> = {}) {
   const host = createFakeHost();
   const storage: Record<string, View> = { ...seeds };
   const events = createNanoEvents<ViewsEvents>();
   const repo = ViewsRepository.fromParts(storage, events);
+  const suggests = new FakeSuggestService();
   const c = new Container();
   c.register(InternalPluginToken).useValue(host.plugin);
   c.register(InternalObsidianAppToken).useValue(host.app);
@@ -44,9 +51,15 @@ function build(seeds: Record<string, View> = {}) {
   c.register(CommandService).useClass(CommandService);
   c.register(ViewsRepository).useValue(repo);
   c.register(ViewsEventsToken).useValue(events);
+  c.register(ShelvesRepository).useValue(fakeShelvesRepo(shelves));
+  c.register(SuggestService).useValue(suggests as unknown as SuggestService);
   c.register(ViewHostService).useClass(ViewHostService);
   const service = c.resolve(ViewHostService);
-  return { service, host, events, repo, storage };
+  return { service, host, events, repo, storage, suggests };
+}
+
+function shelf(name: string): ShelfConfig {
+  return { name, journals: [] };
 }
 
 describe("ViewHostService", () => {
@@ -146,6 +159,65 @@ describe("ViewHostService", () => {
       const leafStub = { containerEl: document.createElement("div") } as unknown as WorkspaceLeaf;
       const result = factory(leafStub);
       expect(result.getDisplayText()).toBe("Stale view");
+    });
+  });
+
+  describe("change-shelf command", () => {
+    it("registers a change-shelf command per view", () => {
+      const { host } = build({ a: seedView("a") });
+      expect(host.commands.has("journal:change-shelf:a")).toBe(true);
+    });
+
+    it("hides the command when no shelves exist", () => {
+      const { host } = build({ a: seedView("a") });
+      openVia(host, "a");
+      expect(host.commands.get("journal:change-shelf:a")?.checkCallback?.(true)).toBe(false);
+    });
+
+    it("hides the command while the view is not open", () => {
+      const { host } = build({ a: seedView("a") }, { work: shelf("work") });
+      expect(host.commands.get("journal:change-shelf:a")?.checkCallback?.(true)).toBe(false);
+    });
+
+    it("offers all-journals plus every shelf when invoked", async () => {
+      const { host, suggests } = build({ a: seedView("a") }, { work: shelf("work"), home: shelf("home") });
+      openVia(host, "a");
+      await Promise.resolve();
+      host.commands.get("journal:change-shelf:a")?.checkCallback?.(false);
+      expect(suggests.lastOpen().input).toEqual([m.common_label_all_journals(), "work", "home"]);
+    });
+  });
+
+  describe("stable open-calendar command", () => {
+    // v2 exposed one fixed `open-calendar` id users bound hotkeys to; the alias keeps
+    // those bindings working across the dynamic per-view commands.
+    it("registers the fixed open-calendar id alongside per-view commands", () => {
+      const { host } = build({ a: seedView("a") });
+      expect(host.commands.has("open-calendar")).toBe(true);
+    });
+
+    it("opens the default Calendar view when invoked", async () => {
+      const { host } = build({
+        a: seedView("a"),
+        [DEFAULT_CALENDAR_VIEW_ID]: seedView(DEFAULT_CALENDAR_VIEW_ID),
+      });
+      host.commands.get("open-calendar")?.checkCallback?.(false);
+      await Promise.resolve();
+      expect(host.workspace.viewStateCalls).toEqual([
+        { type: `journal-view:${DEFAULT_CALENDAR_VIEW_ID}`, placement: "right" },
+      ]);
+    });
+
+    it("falls back to the first view when the default Calendar view is gone", async () => {
+      const { host } = build({ a: seedView("a") });
+      host.commands.get("open-calendar")?.checkCallback?.(false);
+      await Promise.resolve();
+      expect(host.workspace.viewStateCalls).toEqual([{ type: "journal-view:a", placement: "right" }]);
+    });
+
+    it("is hidden from the palette when no views exist", () => {
+      const { host } = build({});
+      expect(host.commands.get("open-calendar")?.checkCallback?.(true)).toBe(false);
     });
   });
 

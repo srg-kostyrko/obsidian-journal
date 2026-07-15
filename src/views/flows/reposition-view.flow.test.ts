@@ -9,7 +9,11 @@ import { createFakeHost } from "@/infrastructure/host/internal/testing";
 import { InternalObsidianAppToken, InternalPluginToken } from "@/infrastructure/host/internal/tokens";
 import { ModalService } from "@/infrastructure/host/modals";
 import { FakeModalService } from "@/infrastructure/host/modals/testing";
+import { SuggestService } from "@/infrastructure/host/suggests";
+import { FakeSuggestService } from "@/infrastructure/host/suggests/testing";
 import { createLoggerTestingModule } from "@/infrastructure/logger/testing";
+import { ShelvesRepository } from "@/shelves";
+import { fakeShelvesRepo } from "@/shelves/testing";
 
 import { ViewsRepository } from "../repository";
 import { ViewsEventsToken, type ViewsEvents } from "../tokens";
@@ -46,6 +50,8 @@ function build(seeds: Record<string, View> = {}) {
   c.register(CommandService).useClass(CommandService);
   c.register(ViewsRepository).useValue(repo);
   c.register(ViewsEventsToken).useValue(events);
+  c.register(ShelvesRepository).useValue(fakeShelvesRepo());
+  c.register(SuggestService).useValue(new FakeSuggestService() as unknown as SuggestService);
   c.register(ViewHostService).useClass(ViewHostService);
   c.register(ViewsViewModel).useClass(ViewsViewModel);
   const modals = new FakeModalService();
