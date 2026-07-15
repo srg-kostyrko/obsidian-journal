@@ -70,27 +70,21 @@ reading code, not inferred.
 
 ## 🟡 Architectural changes — capability survives in a different shape (confirm intent)
 
-- [ ] **12. `change-calendar-shelf` command + global `ui.calendarShelf`** — no palette command.
-  - v2: global command (gated on `useShelves`) set `ui.calendarShelf` via `ShelfSuggestModal`.
-  - v3: per-view `ShelfSelectorItem` (`src/views/toolbar-items/shelf-selector/`) drives `ViewContext.shelf`. No command-palette/hotkey entry, no global "calendar shelf" concept.
+- [x] **12. `change-calendar-shelf` command + global `ui.calendarShelf`** — restored as per-view dynamic commands (decided 2026-07-15). `ViewHostService` registers `journal:change-shelf:<viewId>` ("Change shelf in <view>") per view, gated on shelves existing and the view being open; it opens `shelfPickerSuggest` (All journals + every shelf) and applies the pick to the open leaves via `JournalViewLeaf.setShelf` — the same reactive leaf state the toolbar selector drives.
 
-- [ ] **13. `open-calendar` stable command** — replaced by per-view dynamic command.
-  - v2: single fixed `open-calendar` command.
-  - v3: `view-host.ts` registers `journal:open-view:<id>` per view. Works because a default Calendar view is seeded, but the stable id is gone and disappears if all views are deleted.
+- [x] **13. `open-calendar` stable command** — restored as a stable alias (decided 2026-07-15). `ViewHostService` registers the fixed `open-calendar` id alongside the per-view commands; it opens the seeded Calendar view, falls back to the first remaining view, and hides only when no views exist. v2 hotkeys bound to `journals:open-calendar` work again.
 
 - [x] **14. `useShelves` toggle** — removed. **Decided won't-do (2026-06-13): always-on shelves is an intentional design decision.**
   - v2: `PluginSettings.useShelves` gated the whole shelves UI; explanatory copy described shelf scoping.
   - v3: no toggle/slice field; shelves always available (`ShelvesDashboardBlock` unconditionally registered). Explanatory copy gone.
 
-- [ ] **15. Reload-hint UX (`showReloadHint`)** — gone.
-  - v2: `showReloadHint` + `requestReloadHint()` + onload reset.
-  - v3: no slice/service/UI (grep returns nothing).
+- [x] **15. Reload-hint UX (`showReloadHint`)** — restored (decided 2026-07-15) as the session-scoped `ReloadHintService` (a restart inherently clears the flag, so v2's persist-then-reset-on-load reduces to a session ref). `SettingsDashboard` shows a warning banner while a reload is pending; `CalendarWeekBlock` requests it when the apply-globally toggle flips or a preset change touches the active global week patch.
 
-- [ ] **16. Dismissable notifications (`dismissedNotifications`)** — gone.
+- [x] **16. Dismissable notifications (`dismissedNotifications`)** — gone. **Decided won't-do (2026-07-15): no current content needs the banner channel; reintroduce if a release notice ever calls for it.**
   - v2: `dismissedNotifications[]` + `dismissNotification(id)` + `notifications.ts` registry + dashboard banners with dismiss buttons.
   - v3: no notifications module, slice field, or banner.
 
-- [ ] **17. Journal in multiple shelves** — data model reduced to one shelf per journal.
+- [x] **17. Journal in multiple shelves** — data model reduced to one shelf per journal. **Decided won't-do (2026-07-15): v2's runtime was effectively single-shelf; v3's one-owner model stands.**
   - v2: `JournalSettings.shelves: string[]`.
   - v3: membership only on shelf side (`ShelfConfig.journals[]`); `ShelvesService.assign` removes from all other shelves first. v2 runtime already behaved single-shelf, so likely no real-world loss — confirm and close.
 
@@ -98,8 +92,8 @@ reading code, not inferred.
 
 ## 🟢 Behavioral deltas (intentional-looking; were untested in v2)
 
-- [ ] **18. `reset_after` numbering cycle range** — v2 `index %= resetAfter` (0-based, ignores anchor); v3 cycles within `[anchorValue, anchorValue+count-1]` (`src/journals/numbering.ts`, tested). Confirm v3 behavior is desired.
-- [ ] **19. `allowBefore` uniformity** — v3 applies `allowBefore` to all numbering sources; v2's `reset_after` before-anchor negative-mirroring branch has no v3 equivalent. Confirm.
+- [x] **18. `reset_after` numbering cycle range** — **v3 semantics confirmed (2026-07-15):** cycle spans [anchorValue, anchorValue+count-1]; v2's 0-based modulo was an off-by-anchor bug.
+- [x] **19. `allowBefore` uniformity** — **v3 semantics confirmed (2026-07-15):** allowBefore gates all sources uniformly; v2's negative-mirroring branch stays retired.
 - [x] **20. Week cross-year anchor** — v3 `WeekPeriod` (`src/calendar/period-week.ts`) fixes the known v2 bug. Improvement, no action.
 
 ---
