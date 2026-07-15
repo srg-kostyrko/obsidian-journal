@@ -65,6 +65,9 @@ const opsForType = computed<readonly Op[]>(() =>
     .exhaustive(),
 );
 
+// Existence checks take no operand, so the value input is meaningless for them (v2 hid it too).
+const showValueField = computed(() => op.value !== "exists" && op.value !== "does-not-exist");
+
 type DateOp = Parameters<typeof m.decoration_date_op_label>[0]["op"];
 
 // opsForType only yields date ops when the value type is date, so the cast is sound.
@@ -90,7 +93,9 @@ watch(propertyName, (next) => {
   <UiDropdown v-model="op">
     <option v-for="o of opsForType" :key="o" :value="o">{{ opLabel(o) }}</option>
   </UiDropdown>
-  <UiTextInput v-if="valueType === 'text'" v-model="textModel" />
-  <UiNumberInput v-else-if="valueType === 'number'" v-model="numberModel" />
-  <input v-else-if="valueType === 'date'" v-model="textModel" type="date" class="property-date-input" />
+  <template v-if="showValueField">
+    <UiTextInput v-if="valueType === 'text'" v-model="textModel" />
+    <UiNumberInput v-else-if="valueType === 'number'" v-model="numberModel" />
+    <input v-else-if="valueType === 'date'" v-model="textModel" type="date" class="property-date-input" />
+  </template>
 </template>

@@ -72,6 +72,8 @@ describe("ConditionProperty", () => {
     );
     await userEvent.type(screen.getAllByRole("textbox")[0], "due");
     expect(exposed.values.c.valueType).toBe("date");
+    // Deriving the type resets the operator to "exists" (no operand); pick a comparison to reveal the value input.
+    await userEvent.selectOptions(screen.getByRole("combobox"), "eq");
     expect(container.querySelector("input[type=date]")).toBeTruthy();
   });
 
@@ -89,6 +91,16 @@ describe("ConditionProperty", () => {
   it("renders only the name input and operator for checkbox type", () => {
     mount({ type: "property", name: "x", valueType: "checkbox", condition: "is-true" });
     expect(screen.getAllByRole("textbox")).toHaveLength(1);
+    expect(screen.queryByRole("spinbutton")).toBeNull();
+  });
+
+  it("hides the text value input for the exists operator", () => {
+    mount({ type: "property", name: "x", valueType: "text", condition: "exists", value: "" });
+    expect(screen.getAllByRole("textbox")).toHaveLength(1);
+  });
+
+  it("hides the number value input for the does-not-exist operator", () => {
+    mount({ type: "property", name: "x", valueType: "number", condition: "does-not-exist", value: 0 });
     expect(screen.queryByRole("spinbutton")).toBeNull();
   });
 });
