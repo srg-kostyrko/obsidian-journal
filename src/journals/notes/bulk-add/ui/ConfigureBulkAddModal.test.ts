@@ -9,25 +9,32 @@ import { FakeInputSuggestService } from "@/infrastructure/host/input-suggests/te
 import type { ModalApi } from "@/infrastructure/host/modals";
 import { provideModalApiOnApp } from "@/infrastructure/host/modals/testing";
 import { FakeNotesService } from "@/infrastructure/host/testing";
+import { JournalsRepository } from "@/journals/repository";
+import { fakeRepo, fixedJournal } from "@/journals/testing";
+import { JournalsViewModel } from "@/journals/view-model";
 
 import ConfigureBulkAddModal from "./ConfigureBulkAddModal.vue";
 
 import type { BulkAddParameters } from "../config";
 
-function buildContainer(): Container {
+function buildContainer(dateFormat = "YYYY-MM-DD"): Container {
   const notes = new FakeNotesService();
   const inputSuggest = new FakeInputSuggestService();
   const container = new Container();
   container.register(NotesService).useValue(notes as unknown as NotesService);
   container.register(InputSuggestService).useValue(inputSuggest as unknown as InputSuggestService);
+  container
+    .register(JournalsRepository)
+    .useValue(fakeRepo({ daily: fixedJournal("daily", { type: "day" }, { dateFormat }) }));
+  container.register(JournalsViewModel).useClass(JournalsViewModel);
   return container;
 }
 
-function mountModal() {
+function mountModal(dateFormat?: string) {
   const submit = vi.fn();
   const cancel = vi.fn();
   const api: ModalApi<BulkAddParameters> = { submit, cancel };
-  const container = buildContainer();
+  const container = buildContainer(dateFormat);
 
   render(ConfigureBulkAddModal, {
     props: { journalName: "daily" },
@@ -73,5 +80,19 @@ describe("ConfigureBulkAddModal", () => {
     const datePlace = screen.getByRole("combobox", { name: m.bulk_add_date_place_label() });
     await userEvent.selectOptions(datePlace, "property");
     expect(screen.getByText(m.bulk_add_date_format_property_note())).toBeTruthy();
+  });
+
+  it("prefills the date format from the journal's configured format", () => {
+    mountModal("YYYY-MM");
+    const input = screen.getByRole("textbox", { name: m.bulk_add_date_format_label() });
+    expect((input as HTMLInputElement).value).toBe("YYYY-MM");
+  });
+
+  it("blocks submit and shows an error when property mode has a blank property name", async () => {
+    const { submit } = mountModal();
+    await userEvent.selectOptions(screen.getByRole("combobox", { name: m.bulk_add_date_place_label() }), "property");
+    await userEvent.click(screen.getByText(m.bulk_add_next()));
+    await waitFor(() => expect(screen.getByText(m.journal_property_name_required())).toBeTruthy());
+    expect(submit).not.toHaveBeenCalled();
   });
 });

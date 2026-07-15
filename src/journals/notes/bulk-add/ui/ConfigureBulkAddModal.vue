@@ -6,9 +6,11 @@ import type { FilterCondition } from "@/decorations/config";
 import { defaultCondition } from "@/decorations/defaults";
 import ConditionItem from "@/decorations/settings/ui/ConditionItem.vue";
 import { m } from "@/i18n";
+import { useService } from "@/infrastructure/di";
 import { useModal } from "@/infrastructure/host/modals";
 import DateFormatPreview from "@/journals/settings/ui/DateFormatPreview.vue";
 import FolderInput from "@/journals/settings/ui/FolderInput.vue";
+import { JournalsViewModel } from "@/journals/view-model";
 import { icons } from "@/ui/icons";
 import UiButton from "@/ui/UiButton.vue";
 import UiDropdown from "@/ui/UiDropdown.vue";
@@ -19,11 +21,16 @@ import UiToggle from "@/ui/UiToggle.vue";
 
 import { bulkAddParametersSchema, defaultBulkAddParameters, type BulkAddParameters } from "../config";
 
-defineProps<{ journalName: string }>();
+const { journalName } = defineProps<{ journalName: string }>();
 const api = useModal<BulkAddParameters>();
+const journalsVM = useService(JournalsViewModel);
 
-const { values, defineField, handleSubmit } = useForm<BulkAddParameters>({
-  initialValues: defaultBulkAddParameters(),
+// Prefill the date format from the journal's own format so a non-ISO journal starts from the
+// right pattern instead of a hardcoded YYYY-MM-DD (v2 parity).
+const journalDateFormat = journalsVM.getJournal(journalName).getOrUndefined()?.dateFormat;
+
+const { values, defineField, handleSubmit, errorBag } = useForm<BulkAddParameters>({
+  initialValues: { ...defaultBulkAddParameters(), ...(journalDateFormat && { dateFormat: journalDateFormat }) },
   validationSchema: toTypedSchema(bulkAddParametersSchema),
 });
 
@@ -66,6 +73,9 @@ const onSubmit = handleSubmit((parameters) => {
 
     <UiSettingRow v-if="values.datePlace === 'property'">
       <template #name>{{ m.common_label_property_name() }}</template>
+      <template #description>
+        <span v-for="error of errorBag.propertyName" :key="error" class="bulk-add-form-error">{{ error }}</span>
+      </template>
       <UiTextInput v-model="propertyName" :aria-label="m.common_label_property_name()" />
     </UiSettingRow>
 
@@ -143,3 +153,10 @@ const onSubmit = handleSubmit((parameters) => {
     </UiSettingRow>
   </form>
 </template>
+
+<style scoped>
+.bulk-add-form-error {
+  color: var(--text-error);
+  display: block;
+}
+</style>

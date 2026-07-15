@@ -1,6 +1,7 @@
 import * as v from "valibot";
 
 import { filterConditionSchema, type FilterCondition } from "@/decorations/config";
+import { m } from "@/i18n";
 
 export type DatePlace = "title" | "property";
 export type FilterCombinator = "no" | "and" | "or";
@@ -21,18 +22,28 @@ export interface BulkAddParameters {
   dryRun: boolean;
 }
 
-export const bulkAddParametersSchema = v.object({
-  folder: v.string(),
-  datePlace: v.picklist(["title", "property"]),
-  propertyName: v.string(),
-  dateFormat: v.pipe(v.string(), v.minLength(1)),
-  filterCombinator: v.picklist(["no", "and", "or"]),
-  filters: v.array(filterConditionSchema),
-  existingNote: v.picklist(["skip", "override", "merge", "ask"]),
-  otherFolder: v.picklist(["keep", "move", "ask"]),
-  otherName: v.picklist(["keep", "rename", "ask"]),
-  dryRun: v.boolean(),
-});
+export const bulkAddParametersSchema = v.pipe(
+  v.object({
+    folder: v.string(),
+    datePlace: v.picklist(["title", "property"]),
+    propertyName: v.string(),
+    dateFormat: v.pipe(v.string(), v.minLength(1)),
+    filterCombinator: v.picklist(["no", "and", "or"]),
+    filters: v.array(filterConditionSchema),
+    existingNote: v.picklist(["skip", "override", "merge", "ask"]),
+    otherFolder: v.picklist(["keep", "move", "ask"]),
+    otherName: v.picklist(["keep", "rename", "ask"]),
+    dryRun: v.boolean(),
+  }),
+  v.forward(
+    v.partialCheck(
+      [["datePlace"], ["propertyName"]],
+      (input) => input.datePlace !== "property" || input.propertyName.trim().length > 0,
+      m.journal_property_name_required(),
+    ),
+    ["propertyName"],
+  ),
+);
 
 export const defaultBulkAddParameters = (): BulkAddParameters => ({
   folder: "",
