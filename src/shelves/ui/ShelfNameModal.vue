@@ -49,7 +49,7 @@ const onSubmit = handleSubmit((values) => {
       <template #description>
         <span v-for="error of errorBag.name" :key="error" class="shelf-form-error">{{ error }}</span>
       </template>
-      <UiTextInput v-model="name" v-bind="nameAttrs" />
+      <UiTextInput v-model="name" v-bind="nameAttrs" :placeholder="m.shelf_name_placeholder()" />
     </UiSettingRow>
 
     <UiSettingRow controls-only>

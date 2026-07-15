@@ -11,8 +11,9 @@ import type {
 } from "./config";
 
 const transparentColor: ColorSettings = { type: "transparent" };
-const defaultBorderSide = (): BorderSide => ({
-  show: false,
+const textNormalColor: ColorSettings = { type: "theme", name: "text-normal" };
+const defaultBorderSide = (show = false): BorderSide => ({
+  show,
   width: 1,
   color: transparentColor,
   style: "solid",
@@ -28,11 +29,11 @@ export function defaultStyle<T extends JournalDecorationStyle["type"]>(
 export function defaultStyle(type: JournalDecorationStyle["type"]): JournalDecorationStyle {
   return match<JournalDecorationStyle["type"], JournalDecorationStyle>(type)
     .with("background", () => ({ type: "background", color: transparentColor }))
-    .with("color", () => ({ type: "color", color: transparentColor }))
+    .with("color", () => ({ type: "color", color: textNormalColor }))
     .with("border", () => ({
       type: "border",
       border: "uniform",
-      left: defaultBorderSide(),
+      left: defaultBorderSide(true),
       right: defaultBorderSide(),
       top: defaultBorderSide(),
       bottom: defaultBorderSide(),
@@ -40,17 +41,17 @@ export function defaultStyle(type: JournalDecorationStyle["type"]): JournalDecor
     .with("shape", () => ({
       type: "shape",
       size: 0.4,
-      shape: "square",
+      shape: "circle",
       color: transparentColor,
       placement_x: "center",
-      placement_y: "middle",
+      placement_y: "bottom",
     }))
     .with("corner", () => ({ type: "corner", placement: "top-left", color: transparentColor }))
     .with("icon", () => ({
       type: "icon",
       icon: "",
       placement_x: "center",
-      placement_y: "middle",
+      placement_y: "top",
       color: transparentColor,
       size: 0.5,
     }))

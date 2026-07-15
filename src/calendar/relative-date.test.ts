@@ -79,11 +79,18 @@ describe("relativeDate", () => {
     it("returns 'Tomorrow' for the immediately following day", () => {
       expect(relativeDate("day", anchor("2026-05-28"), anchor("2026-05-27"))).toBe("Tomorrow");
     });
-    it("returns 'Last <weekday>' for a day 2-7 days in the past", () => {
+    it("returns 'Last <weekday>' for a day 2-6 days in the past", () => {
       expect(relativeDate("day", anchor("2026-05-22"), anchor("2026-05-27"))).toBe("Last Friday");
     });
-    it("returns '<weekday>' for a day 2-7 days in the future", () => {
+    it("returns '<weekday>' for a day 2-6 days in the future", () => {
       expect(relativeDate("day", anchor("2026-05-30"), anchor("2026-05-27"))).toBe("Saturday");
+    });
+    it("returns 'N days ago' for a day exactly a week in the past", () => {
+      // v2 bucketed ±7 days into the day-count phrasing, not the named-weekday window.
+      expect(relativeDate("day", anchor("2026-05-20"), anchor("2026-05-27"))).toBe("7 days ago");
+    });
+    it("returns 'in N days' for a day exactly a week in the future", () => {
+      expect(relativeDate("day", anchor("2026-06-03"), anchor("2026-05-27"))).toBe("in 7 days");
     });
   });
 

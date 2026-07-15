@@ -784,6 +784,7 @@
     }
   ],
   "shelf_modal_name_label": "Shelf name",
+  "shelf_name_placeholder": "e.g. Work",
   "shelf_name_required_error": "Shelf name is required.",
   "shelf_name_unchanged_error": "Enter a different name.",
   "shelf_name_unique_error": "Shelf name must be unique.",
