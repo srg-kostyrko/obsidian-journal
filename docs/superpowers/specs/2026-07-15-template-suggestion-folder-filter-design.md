@@ -28,25 +28,35 @@ both engines:
 
 ## Approach
 
-A dedicated `TemplatesService` owns reading the configured folders from both
-plugins and producing the candidate list. The Vue input component stays dumb: it
-asks the service for candidates and applies its existing query filter/sort on
-top. `NotesService` is unchanged and does not learn about template folders.
+A dedicated `TemplatesService` owns assembling the configured folders and
+producing the candidate list. It reads the core Templates folder itself and
+delegates the Templater folder to `TemplaterService`, which already owns access
+to the Templater plugin. The Vue input component stays dumb: it asks the service
+for candidates and applies its existing query filter/sort on top. `NotesService`
+is unchanged and does not learn about template folders.
 
 ## Components
 
+### `TemplaterService` (`src/infrastructure/host/internal/templater-service.ts`)
+
+Gains one public method, reusing its existing `#rawPlugin()` accessor and
+`TEMPLATER_PLUGIN_ID`:
+
+- `templatesFolder(): string | null` — reads `#rawPlugin()?.settings?.templates_folder`,
+  guarding each hop; returns `null` when Templater is absent or the setting is
+  unset. No new plugin-access code — it goes through `#rawPlugin`.
+
 ### `TemplatesService` (`src/infrastructure/host/internal/templates-service.ts`)
 
-Injects `InternalObsidianAppToken` and `NotesService`. Untyped plugin access
-follows the existing narrowing style of `TemplaterService.#rawPlugin`.
+Injects `InternalObsidianAppToken`, `NotesService`, and `TemplaterService`.
+Untyped core-plugin access follows the existing narrowing style of
+`TemplaterService.#rawPlugin`.
 
 - `#coreTemplatesFolder(): string | null` — reads
   `app.internalPlugins.getPluginById("templates")?.instance?.options?.folder`,
   guarding each hop; returns `null` when unavailable.
-- `#templaterFolder(): string | null` — reads
-  `app.plugins.getPlugin("templater-obsidian")?.settings?.templates_folder`,
-  guarding each hop; returns `null` when unavailable.
-- `templateFolders(): VaultPath[]` — union of the two sources, each normalized:
+- `templateFolders(): VaultPath[]` — union of the core folder and
+  `templater.templatesFolder()`, each normalized:
   trim, strip a trailing `/`; drop `""` and `"/"` (treated as "not configured").
   De-duplicated.
 - `candidatePaths(): VaultPath[]` — the deep operation:
@@ -79,7 +89,9 @@ Test file renamed alongside: `UiFileInput.test.ts` → `UiTemplateInput.test.ts`
 ```
 UiTemplateInput.fetch(query)
   └─ TemplatesService.candidatePaths()
-       ├─ templateFolders()  ── core Templates folder ∪ Templater folder (normalized)
+       ├─ templateFolders()
+       │    ├─ #coreTemplatesFolder()          ── app.internalPlugins "templates"
+       │    └─ TemplaterService.templatesFolder() ── via #rawPlugin (reused)
        └─ NotesService.allMarkdownNotes()  ── filtered under folders, or all when none
   └─ .filter(includes(query)).toSorted()
 ```
@@ -94,7 +106,8 @@ all markdown notes.
 ## Testing
 
 Unit tests on `TemplatesService` (sibling `testing`/`vi.spyOn` on the injected
-app per project conventions; no baked-in fakes), one behavior per test:
+app and on `TemplaterService.templatesFolder` per project conventions; no
+baked-in fakes), one behavior per test:
 
 - union when both folders configured
 - core-only configured
@@ -103,6 +116,9 @@ app per project conventions; no baked-in fakes), one behavior per test:
 - recursive inclusion (note in a subfolder of the configured folder)
 - normalization: trailing slash stripped; `""` and `"/"` treated as unconfigured
 - de-duplication when both sources name the same folder
+
+Unit test on `TemplaterService.templatesFolder()`: returns the setting when the
+plugin is present, `null` when absent.
 
 No new component or e2e test: the component change is a source-level dependency
 swap (wiring), and suggestion dropdowns are poor e2e targets. Existing
