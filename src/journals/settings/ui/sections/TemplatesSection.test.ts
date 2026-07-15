@@ -7,11 +7,11 @@ import { reactive } from "vue";
 import { installTestCalendar } from "@/calendar/testing";
 import { m } from "@/i18n";
 import { Container, provideInjectorOnApp } from "@/infrastructure/di";
-import { InputSuggestService, NotesService, TemplaterService, TemplatesService } from "@/infrastructure/host";
+import { InputSuggestService, TemplaterService, TemplatesService } from "@/infrastructure/host";
 import { FakeInputSuggestService } from "@/infrastructure/host/input-suggests/testing";
 import { ModalService } from "@/infrastructure/host/modals";
 import { FakeModalService } from "@/infrastructure/host/modals/testing";
-import { FakeNotesService, FakeTemplaterService } from "@/infrastructure/host/testing";
+import { FakeTemplaterService } from "@/infrastructure/host/testing";
 import {
   CycleService,
   FrontmatterService,
@@ -56,7 +56,6 @@ function mount(overrides: Partial<JournalConfig> = {}) {
   container.register(NotePathService).useClass(NotePathService);
   container.register(TemplateEngine).useValue(installTestEngine());
   container.register(TemplaterService).useValue(new FakeTemplaterService() as unknown as TemplaterService);
-  container.register(NotesService).useValue(new FakeNotesService() as unknown as NotesService);
   container.register(InputSuggestService).useValue(new FakeInputSuggestService() as unknown as InputSuggestService);
   container.register(ModalService).useValue(new FakeModalService() as unknown as ModalService);
   container.register(TemplatesService).useValue({
