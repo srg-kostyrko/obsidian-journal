@@ -1,14 +1,18 @@
 import userEvent from "@testing-library/user-event";
-import { cleanup, render } from "@testing-library/vue";
+import { cleanup, fireEvent, render } from "@testing-library/vue";
 import { afterEach, beforeAll, describe, expect, it, vi } from "vitest";
 import { computed, defineComponent, h, ref, shallowRef } from "vue";
 
-import { installTestCalendar } from "@/calendar/testing";
+import { anchor, installTestCalendar } from "@/calendar/testing";
 import type { AnchorString } from "@/calendar/types";
 import { Container, provideInjectorOnApp } from "@/infrastructure/di";
 import { Flows } from "@/infrastructure/flows";
+import { WorkspaceService } from "@/infrastructure/host";
+import type { VaultPath } from "@/infrastructure/host";
+import { FakeWorkspaceService } from "@/infrastructure/host/testing";
 import { AsyncResult } from "@/infrastructure/result";
 import { OpenDateFlow } from "@/journals";
+import { JournalsIndex } from "@/journals/journals-index";
 import { ActiveEntryViewModel, type ActiveEntryRef } from "@/notes-calendar/active-entry";
 
 import { provideViewContextStub } from "../../testing";
@@ -80,8 +84,12 @@ function mountItem(
   const activeVM = new FakeActiveEntryVM();
   if (options.active !== undefined) activeVM.active.value = options.active;
   const flows = new FakeFlows();
+  const workspace = new FakeWorkspaceService();
   container.register(ActiveEntryViewModel).useValue(activeVM as unknown as ActiveEntryViewModel);
   container.register(Flows).useValue(flows as unknown as Flows);
+  container.register(WorkspaceService).useValue(workspace as unknown as WorkspaceService);
+  container.register(JournalsIndex).useClass(JournalsIndex);
+  const index = container.resolve(JournalsIndex);
   const context = provideViewContextStub(contextOverride);
   const wrapperRender = (): ReturnType<typeof h> => renderRoot(config);
   const Wrapper = defineComponent({
@@ -93,7 +101,7 @@ function mountItem(
   const result = render(Wrapper, {
     global: { plugins: [{ install: (app) => provideInjectorOnApp(app, container) }] },
   });
-  return { result, flows };
+  return { result, flows, workspace, index };
 }
 
 beforeAll(() => {
@@ -106,6 +114,36 @@ afterEach(() => {
 });
 
 describe("PeriodButtonsItem", () => {
+  describe("context menu and hover preview", () => {
+    it("opens the period note's menu on right-click", async () => {
+      SCOPE.month = ["monthly"];
+      const { result, workspace, index } = mountItem(
+        { week: false, month: true, quarter: false, year: false },
+        { refDate: ref("2026-05-15" as AnchorString) },
+      );
+      index.register({ journalName: "monthly", anchor: anchor("2026-05-01"), path: "m/2026-05.md" as VaultPath });
+
+      await fireEvent.contextMenu(result.container.querySelector("[data-period='month']")!);
+
+      expect(workspace.pathsMenuCalls).toHaveLength(1);
+      expect(workspace.pathsMenuCalls[0]?.paths).toEqual(["m/2026-05.md"]);
+    });
+
+    it("requests the period note's hover preview on mouseenter", async () => {
+      SCOPE.month = ["monthly"];
+      const { result, workspace, index } = mountItem(
+        { week: false, month: true, quarter: false, year: false },
+        { refDate: ref("2026-05-15" as AnchorString) },
+      );
+      index.register({ journalName: "monthly", anchor: anchor("2026-05-01"), path: "m/2026-05.md" as VaultPath });
+
+      await fireEvent.mouseEnter(result.container.querySelector("[data-period='month']")!);
+
+      expect(workspace.previewFirstPathCalls).toHaveLength(1);
+      expect(workspace.previewFirstPathCalls[0]?.paths).toEqual(["m/2026-05.md"]);
+    });
+  });
+
   describe("rendering", () => {
     it("renders a journal-less month button rather than hiding it", () => {
       const { result } = mountItem({ week: false, month: true, quarter: false, year: false });

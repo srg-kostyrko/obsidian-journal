@@ -6,8 +6,10 @@ import type { Period } from "@/calendar";
 import { CellDecoration, useCellDecorations } from "@/decorations";
 import { useService } from "@/infrastructure/di";
 import { Flows } from "@/infrastructure/flows";
-import { defineOpenMode } from "@/infrastructure/host";
+import { defineOpenMode, WorkspaceService } from "@/infrastructure/host";
+import type { VaultPath } from "@/infrastructure/host";
 import { OpenDateFlow } from "@/journals";
+import { JournalsIndex } from "@/journals/journals-index";
 import { ActiveEntryViewModel } from "@/notes-calendar/active-entry";
 import { useShelfScope } from "@/notes-calendar/use-shelf-scope";
 import UiButton from "@/ui/UiButton.vue";
@@ -35,6 +37,8 @@ const props = defineProps<{
 const context = useViewContext();
 const flows = useService(Flows);
 const activeVM = useService(ActiveEntryViewModel);
+const workspace = useService(WorkspaceService);
+const index = useService(JournalsIndex);
 const scope = useShelfScope(() => context.shelf.value);
 
 const badges = computed<readonly Badge[]>(() => {
@@ -76,6 +80,20 @@ function open(badge: Badge, event: MouseEvent): void {
     openMode: defineOpenMode(event),
   });
 }
+
+function pathsFor(badge: Badge): readonly VaultPath[] {
+  return index.pathsAt(badge.journals, badge.period.anchor.toAnchor());
+}
+
+// The badges mirror the in-grid header cells: right-click reaches the note's file
+// menu and Ctrl/Cmd hover previews it (v2's header rendered full calendar cells).
+function openContextMenu(badge: Badge, event: MouseEvent): void {
+  workspace.openPathsMenu(pathsFor(badge), event);
+}
+
+function openPreview(badge: Badge, event: MouseEvent): void {
+  workspace.previewFirstPath(pathsFor(badge), event);
+}
 </script>
 
 <template>
@@ -88,6 +106,8 @@ function open(badge: Badge, event: MouseEvent): void {
     :data-active="isActive(badge) || null"
     @click="(event: MouseEvent) => open(badge, event)"
     @auxclick.middle.prevent="(event: MouseEvent) => open(badge, event)"
+    @contextmenu.prevent="(event: MouseEvent) => openContextMenu(badge, event)"
+    @mouseenter="(event: MouseEvent) => openPreview(badge, event)"
   >
     <CellDecoration :period="badge.period">{{ badge.label }}</CellDecoration>
   </UiButton>
