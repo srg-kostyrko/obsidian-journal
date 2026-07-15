@@ -1,9 +1,11 @@
 import { cleanup, render, screen } from "@testing-library/vue";
 import { afterEach, describe, expect, it } from "vitest";
-import { defineComponent, h } from "vue";
+import { defineComponent, h, nextTick } from "vue";
 
+import { m } from "@/i18n";
 import { Container, InjectorToken, provideInjector } from "@/infrastructure/di";
 
+import { ReloadHintService } from "../reload-hint";
 import { DashboardBlockToken, SubpageToken } from "../tokens";
 
 import { defineDashboardBlock, defineSubpage } from "./schema";
@@ -38,15 +40,17 @@ function buildHarness(
   const subpages = options.subpages ?? [];
   for (const s of subpages) c.register(SubpageToken).useValue(s);
   c.register(SettingsUiService).useClass(SettingsUiService);
+  c.register(ReloadHintService).useClass(ReloadHintService);
   const injector = c.resolve(InjectorToken);
   const service = c.resolve(SettingsUiService);
+  const reloadHint = c.resolve(ReloadHintService);
   const Harness = defineComponent({
     setup() {
       provideInjector(injector);
       return renderDashboard;
     },
   });
-  return { Harness, service };
+  return { Harness, service, reloadHint };
 }
 
 describe("SettingsDashboard", () => {
@@ -60,6 +64,22 @@ describe("SettingsDashboard", () => {
 
       const labels = screen.getAllByTestId(/^block-/).map((node) => node.textContent);
       expect(labels).toEqual(["first", "second", "third"]);
+    });
+  });
+
+  describe("reload banner", () => {
+    it("stays hidden until a reload-requiring change is made", () => {
+      const { Harness } = buildHarness();
+      render(Harness);
+      expect(screen.queryByText(m.settings_reload_required_banner())).toBeNull();
+    });
+
+    it("appears once a reload is requested", async () => {
+      const { Harness, reloadHint } = buildHarness();
+      render(Harness);
+      reloadHint.request();
+      await nextTick();
+      expect(screen.getByText(m.settings_reload_required_banner())).toBeTruthy();
     });
   });
 

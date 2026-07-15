@@ -6,7 +6,7 @@ import { detectCurrentPreset, type WeekPreset } from "@/calendar/presets";
 import { m } from "@/i18n";
 import { useService } from "@/infrastructure/di";
 import { useModalService } from "@/infrastructure/host/modals";
-import { SettingsService } from "@/settings";
+import { ReloadHintService, SettingsService } from "@/settings";
 import UiButton from "@/ui/UiButton.vue";
 import UiCollapsibleBlock from "@/ui/UiCollapsibleBlock.vue";
 import UiDropdown from "@/ui/UiDropdown.vue";
@@ -15,7 +15,7 @@ import UiSettingRow from "@/ui/UiSettingRow.vue";
 import UiToggle from "@/ui/UiToggle.vue";
 
 import { calendarDisplaySlice, type WeekPlacement } from "../display-slice";
-import { calendarSlice } from "../slice";
+import { calendarSlice, type CalendarSliceState } from "../slice";
 
 import { weekPresetPickerModal } from "./modals";
 
@@ -24,6 +24,7 @@ type ActivePreset = "locale" | WeekPreset["id"] | "custom";
 const settings = useService(SettingsService);
 const calendar = useService(Calendar);
 const modals = useModalService();
+const reloadHint = useService(ReloadHintService);
 const slice = settings.getSlice(calendarSlice);
 const displaySlice = settings.getSlice(calendarDisplaySlice);
 const expanded = ref(false);
@@ -55,11 +56,21 @@ const globalRef = computed({
   set: (v: boolean) => {
     if (slice.state.mode !== "custom") return;
     slice.state = { ...slice.state, global: v };
+    reloadHint.request();
   },
 });
 
+// The global week patch rewires moment's locale at boot, so any change that turns
+// it on, off, or reshapes it while on only fully applies after a reload.
+function touchesGlobalPatch(before: CalendarSliceState, after: CalendarSliceState): boolean {
+  if (JSON.stringify(before) === JSON.stringify(after)) return false;
+  const globalOn = (s: CalendarSliceState): boolean => s.mode === "custom" && s.global;
+  return globalOn(before) || globalOn(after);
+}
+
 function change(): void {
   void modals.open(weekPresetPickerModal, { current: slice.state }).tap((value) => {
+    if (touchesGlobalPatch(slice.state, value)) reloadHint.request();
     slice.state = value;
   });
 }

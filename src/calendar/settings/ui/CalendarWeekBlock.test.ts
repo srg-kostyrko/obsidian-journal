@@ -7,6 +7,7 @@ import { m } from "@/i18n";
 import { provideInjectorOnApp, type Container } from "@/infrastructure/di";
 import { ModalService } from "@/infrastructure/host/modals";
 import { AsyncResult } from "@/infrastructure/result";
+import { ReloadHintService } from "@/settings";
 import { createSettingsService } from "@/settings/testing";
 
 import { calendarDisplaySlice } from "../display-slice";
@@ -27,8 +28,9 @@ function setupContainer(initial?: CalendarSliceState) {
   } as unknown as ModalService;
   container.register(ModalService).useValue(modalService);
   container.register(Calendar).useValue(new Calendar());
+  container.register(ReloadHintService).useClass(ReloadHintService);
 
-  return { container, settings: settings.service, modalService };
+  return { container, settings: settings.service, modalService, reloadHint: container.resolve(ReloadHintService) };
 }
 
 function mount(container: Container) {
@@ -123,6 +125,41 @@ describe("CalendarWeekBlock", () => {
     await userEvent.click(toggle);
     const state = settings.getSlice(calendarSlice).state;
     expect(state).toEqual({ mode: "custom", dow: 1, doy: 4, global: true });
+  });
+
+  it("requests a reload when the apply-globally toggle is flipped", async () => {
+    const { container, settings, reloadHint } = setupContainer({ mode: "custom", dow: 1, doy: 4, global: false });
+    await settings.initialize();
+    mount(container);
+    await openSection();
+    await userEvent.click(screen.getByRole("checkbox"));
+    expect(reloadHint.pending.value).toBe(true);
+  });
+
+  it("does not request a reload for a preset change that never touches the global patch", async () => {
+    const { container, settings, modalService, reloadHint } = setupContainer();
+    await settings.initialize();
+    (modalService.open as ReturnType<typeof vi.fn>).mockReturnValue(
+      AsyncResult.ok<CalendarSliceState>({ mode: "custom", dow: 0, doy: 6, global: false }),
+    );
+    mount(container);
+    await openSection();
+    await userEvent.click(screen.getByText(m.calendar_week_config_change()));
+    await Promise.resolve();
+    expect(reloadHint.pending.value).toBe(false);
+  });
+
+  it("requests a reload when the picked preset turns the global patch on", async () => {
+    const { container, settings, modalService, reloadHint } = setupContainer();
+    await settings.initialize();
+    (modalService.open as ReturnType<typeof vi.fn>).mockReturnValue(
+      AsyncResult.ok<CalendarSliceState>({ mode: "custom", dow: 0, doy: 6, global: true }),
+    );
+    mount(container);
+    await openSection();
+    await userEvent.click(screen.getByText(m.calendar_week_config_change()));
+    await Promise.resolve();
+    expect(reloadHint.pending.value).toBe(true);
   });
 
   it("updates the slice state when the modal resolves Ok", async () => {
