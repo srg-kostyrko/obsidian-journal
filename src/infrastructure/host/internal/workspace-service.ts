@@ -41,6 +41,13 @@ export class WorkspaceService {
         this.#emitter.emit("active-note-changed", this.#pathOf(this.#fileOf(leaf)));
       }),
     );
+    // Same-leaf navigation (a link click, open-in-place) fires file-open without an
+    // active-leaf-change; both feed the active-note signal (v2 tracked file-open).
+    this.#plugin.registerEvent(
+      this.#app.workspace.on("file-open", (file) => {
+        this.#emitter.emit("active-note-changed", this.#pathOf(file));
+      }),
+    );
   }
 
   async #open(path: VaultPath, mode: OpenMode): Promise<void> {

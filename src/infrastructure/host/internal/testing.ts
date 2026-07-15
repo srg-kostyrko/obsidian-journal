@@ -104,6 +104,7 @@ export interface FakeHost {
   emitVault(event: "create" | "rename" | "delete", ...arguments_: unknown[]): void;
   emitMetadata(path: string, metadata?: CachedMetadata): void;
   emitActiveLeafChange(file: TFile | null): void;
+  emitFileOpen(file: TFile | null): void;
   emitProtocol(action: string, parameters: Record<string, string>): void;
   triggerUnload(): void;
   setLayoutReady(): void;
@@ -485,6 +486,10 @@ export function createFakeHost(): FakeHost {
     emitActiveLeafChange(file): void {
       workspaceState.activeFile = file;
       workspaceEvents.emit("active-leaf-change", { view: { file } });
+    },
+    emitFileOpen(file): void {
+      workspaceState.activeFile = file;
+      workspaceEvents.emit("file-open", file);
     },
     emitProtocol(action, parameters): void {
       protocolHandlers.get(action)?.(parameters);

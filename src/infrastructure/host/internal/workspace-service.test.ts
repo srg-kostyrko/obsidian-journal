@@ -102,6 +102,19 @@ describe("WorkspaceService", () => {
       expect(isNone).toBe(true);
     });
 
+    it("emits Some(path) when a file opens in the already-active leaf", () => {
+      // A link click or open-in-place fires file-open without active-leaf-change;
+      // the active-note signal must follow it too (v2 tracked file-open).
+      const { service, host } = build();
+      const file = host.putFile(path);
+      const received: string[] = [];
+      service.events.on("active-note-changed", (option) => {
+        if (option.isSome()) received.push(option.value);
+      });
+      host.emitFileOpen(file);
+      expect(received).toEqual([path]);
+    });
+
     it("stops invoking the handler after unbind", () => {
       const { service, host } = build();
       const file = host.putFile(path);
