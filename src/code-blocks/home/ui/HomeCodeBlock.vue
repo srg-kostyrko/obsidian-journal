@@ -39,7 +39,9 @@ const shelfByJournal = computed(() => {
 });
 
 const effectiveShelf = computed(() => {
-  if (config.shelf !== undefined) return config.shelf;
+  // An empty shelf means "use the current note's shelf" (v2 `config.shelf || currentShelf`),
+  // not a literal shelf named "" that no journal belongs to.
+  if (config.shelf) return config.shelf;
   const current = currentJournalName.value;
   if (current === undefined) return null;
   return shelfByJournal.value.get(current) ?? null;

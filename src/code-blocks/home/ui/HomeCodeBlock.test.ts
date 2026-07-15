@@ -136,6 +136,16 @@ describe("HomeCodeBlock", () => {
     expect(screen.queryByText(m.code_blocks_home_empty())).toBeNull();
   });
 
+  it("treats an empty shelf as unset so journals still render", () => {
+    // shelf: "" must mean "current shelf" (here none → all journals), not a literal shelf "".
+    journalsRepo.seed([dayJournal("Daily")]);
+    mount(container, {
+      path: "Note.md" as VaultPath,
+      config: { show: ["day"], separator: " • ", scale: 1, shelf: "" },
+    });
+    expect(screen.getByRole("link").textContent).toBe("Today");
+  });
+
   it("renders one link with the relative day label for a matching daily journal", () => {
     journalsRepo.seed([dayJournal("Daily")]);
     mount(container, { path: "Note.md" as VaultPath, config: { show: ["day"], separator: " • ", scale: 1 } });

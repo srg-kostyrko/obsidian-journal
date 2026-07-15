@@ -36,7 +36,24 @@ describe("homeBlockSchema", () => {
     expect(result.show).toEqual([]);
   });
 
-  it("rejects a non-numeric scale", () => {
-    expect(v.safeParse(homeBlockSchema, { scale: "big" }).success).toBe(false);
+  it("falls back to the default scale for a non-numeric value", () => {
+    // v2 coerced with `scale || 1`; a typo must degrade to the default, not blank the block.
+    expect(v.parse(homeBlockSchema, { scale: "big" }).scale).toBe(1);
+  });
+
+  it("coerces a zero scale to the default so the block stays visible", () => {
+    expect(v.parse(homeBlockSchema, { scale: 0 }).scale).toBe(1);
+  });
+
+  it("falls back to the default separator for a null value", () => {
+    expect(v.parse(homeBlockSchema, { separator: null }).separator).toBe(" • ");
+  });
+
+  it("applies defaults when the source is a non-object scalar", () => {
+    // `show:day` with no space parses to the bare string "show:day"; v2 still rendered.
+    const result = v.parse(homeBlockSchema, "show:day");
+    expect(result.show).toEqual(["day"]);
+    expect(result.separator).toBe(" • ");
+    expect(result.scale).toBe(1);
   });
 });

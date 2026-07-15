@@ -20,6 +20,13 @@ describe("timelineBlockSchema", () => {
     expect(result.mode).toBeUndefined();
   });
 
+  it("applies the journal-derived mode when the source is a non-object scalar", () => {
+    // `mode:month` with no space after the colon parses to the bare string "mode:month";
+    // v2's line-split processor still rendered a timeline instead of an error panel.
+    const result = v.parse(timelineBlockSchema, "mode:month");
+    expect(result.mode).toBeUndefined();
+  });
+
   it("accepts a shelf string", () => {
     const result = v.parse(timelineBlockSchema, { shelf: "work" });
     expect(result.shelf).toBe("work");
