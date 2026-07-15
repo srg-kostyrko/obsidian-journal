@@ -189,6 +189,16 @@
   "common_show_in_ribbon": "Show in ribbon",
   "command_modal_type_label": "When the command runs",
   "command_modal_write_type_label": "Note type",
+  "command_name_prefix_hint": [
+    {
+      "declarations": ["input kind"],
+      "selectors": ["kind"],
+      "match": {
+        "kind=journal": "The journal name is added in front of the command name in the palette automatically.",
+        "kind=shelf": "The shelf name is added in front of the command name in the palette automatically."
+      }
+    }
+  ],
   "command_name_required_error": "Command name is required.",
   "command_name_unique_error": "Command name must be unique.",
   "command_open_mode_option": [
@@ -205,6 +215,8 @@
   ],
   "command_open_next": "Open next note",
   "command_open_previous": "Open previous note",
+  "command_palette_journal_name": "{journal}: {name}",
+  "command_palette_shelf_name": "Shelf: {shelf}: {name}",
   "command_open_not_connected": "This note is not connected to any journal.",
   "command_open_no_next": "There is no next note after this one.",
   "command_open_no_previous": "There is no previous note before this one.",

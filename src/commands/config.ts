@@ -1,3 +1,4 @@
+import { match } from "ts-pattern";
 import * as v from "valibot";
 
 import { defineCollection } from "@/settings";
@@ -47,6 +48,18 @@ const commandConfigSchema = v.object({
 });
 
 export type CommandTarget = v.InferOutput<typeof commandTargetSchema>;
+
+// Command names are namespaced per owner (a journal, a shelf, or the plugin level):
+// the palette prefix disambiguates across owners, so only same-owner names collide.
+// Plugin-level commands share one namespace regardless of write type — they list unprefixed.
+export function sameCommandOwner(a: CommandTarget, b: CommandTarget): boolean {
+  return match([a, b] as const)
+    .with([{ kind: "journal" }, { kind: "journal" }], ([x, y]) => x.journalName === y.journalName)
+    .with([{ kind: "shelf" }, { kind: "shelf" }], ([x, y]) => x.shelfName === y.shelfName)
+    .with([{ kind: "all" }, { kind: "all" }], () => true)
+    .otherwise(() => false);
+}
+
 export type CommandType = v.InferOutput<typeof commandTypeSchema>;
 export type CommandContext = v.InferOutput<typeof commandContextSchema>;
 export type CommandConfig = v.InferOutput<typeof commandConfigSchema>;

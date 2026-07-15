@@ -112,6 +112,25 @@ describe("EditCommandModal", () => {
     );
   });
 
+  it("shows the auto-prefix hint for a journal-targeted command", async () => {
+    await mountModal({
+      target: { kind: "journal", journalName: "daily" },
+      journals: { daily: makeJournal("daily", "day") },
+    });
+    expect(screen.getByText(m.command_name_prefix_hint({ kind: "journal" }))).toBeTruthy();
+  });
+
+  it("shows the auto-prefix hint for a shelf-targeted command", async () => {
+    await mountModal({ target: { kind: "shelf", shelfName: "work", writeType: "day" } });
+    expect(screen.getByText(m.command_name_prefix_hint({ kind: "shelf" }))).toBeTruthy();
+  });
+
+  it("omits the auto-prefix hint for a plugin-level command", async () => {
+    await mountModal({ target: { kind: "all", writeType: "day" } });
+    expect(screen.queryByText(m.command_name_prefix_hint({ kind: "journal" }))).toBeNull();
+    expect(screen.queryByText(m.command_name_prefix_hint({ kind: "shelf" }))).toBeNull();
+  });
+
   it("surfaces a required-name error when submitting without a name", async () => {
     const { submit } = await mountModal({ target: { kind: "all", writeType: "day" } });
     await userEvent.click(screen.getByText(m.common_action_submit()));

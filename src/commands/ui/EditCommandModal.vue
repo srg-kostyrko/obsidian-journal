@@ -143,6 +143,7 @@ const onSubmit = handleSubmit((values) => {
   <form @submit.prevent="onSubmit">
     <UiSettingRow :name="m.common_label_name()">
       <template #description>
+        <span v-if="props.target.kind !== 'all'">{{ m.command_name_prefix_hint({ kind: props.target.kind }) }}</span>
         <span v-for="error of errorBag.name" :key="error" class="command-form-error">{{ error }}</span>
       </template>
       <UiTextInput v-model="name" v-bind="nameAttrs" />

@@ -5,6 +5,7 @@ import { UserAborted, type Flow, type FlowError } from "@/infrastructure/flows";
 import { ModalService } from "@/infrastructure/host/modals";
 import { attempt, type AsyncResult } from "@/infrastructure/result";
 
+import { sameCommandOwner } from "../config";
 import { CommandsRepository } from "../repository";
 import { editCommandModal } from "../ui/modals";
 
@@ -24,7 +25,7 @@ export class EditCommandFlow implements Flow<EditCommandParameters, { id: string
       parameters.commandId === undefined ? undefined : this.#repo.get(parameters.commandId).getOr(undefined as never);
     const target = existing?.target ?? parameters.target;
     const takenNames = [...this.#repo.find().entries()]
-      .filter(([id]) => id !== parameters.commandId)
+      .filter(([id, command]) => id !== parameters.commandId && sameCommandOwner(command.target, target))
       .map(([, command]) => command.name);
     return attempt.in(this, async function* (this: EditCommandFlow) {
       const config = yield* this.#modals

@@ -109,6 +109,24 @@ describe("DynamicCommandRegistry registration", () => {
     expect(host.commands.get("cmd-1")?.name).toBe("Open daily");
   });
 
+  it("prefixes a journal-targeted command's palette name with the journal name", async () => {
+    const { host, commandsRepo } = await build();
+    commandsRepo.create(
+      "cmd-1",
+      makeCommand({ name: "Open today", target: { kind: "journal", journalName: "daily" } }),
+    );
+    expect(host.commands.get("cmd-1")?.name).toBe("daily: Open today");
+  });
+
+  it("prefixes a shelf-targeted command's palette name with the shelf name", async () => {
+    const { host, commandsRepo } = await build();
+    commandsRepo.create(
+      "cmd-1",
+      makeCommand({ name: "Open today", target: { kind: "shelf", shelfName: "work", writeType: "day" } }),
+    );
+    expect(host.commands.get("cmd-1")?.name).toBe("Shelf: work: Open today");
+  });
+
   it("unregisters a command removed from the collection", async () => {
     const { host, commandsRepo } = await build();
     commandsRepo.create("cmd-1", makeCommand({}));
@@ -372,7 +390,7 @@ describe("DynamicCommandRegistry shelf targets", () => {
       "cmd-1",
       makeCommand({ name: "Open work daily", target: { kind: "shelf", shelfName: "work", writeType: "day" } }),
     );
-    expect(host.commands.get("cmd-1")?.name).toBe("Open work daily");
+    expect(host.commands.get("cmd-1")?.name).toBe("Shelf: work: Open work daily");
   });
 
   it("hides a shelf-targeted command when the shelf has no journal of the write type", async () => {

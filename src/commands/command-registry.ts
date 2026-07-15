@@ -60,12 +60,26 @@ export class DynamicCommandRegistry {
   #registration(id: string, command: CommandConfig): CommandRegistration {
     return {
       id,
-      name: command.name,
+      name: this.#paletteName(command),
       icon: command.icon,
       ribbon: command.showInRibbon,
       check: () => this.#listable(command),
       execute: () => this.#run(command),
     };
+  }
+
+  // The palette lists every journal's commands side by side; the owning journal/shelf
+  // prefix is what disambiguates same-named commands across owners (v2 format).
+  #paletteName(command: CommandConfig): string {
+    return match(command.target)
+      .with({ kind: "journal" }, (target) =>
+        m.command_palette_journal_name({ journal: target.journalName, name: command.name }),
+      )
+      .with({ kind: "shelf" }, (target) =>
+        m.command_palette_shelf_name({ shelf: target.shelfName, name: command.name }),
+      )
+      .with({ kind: "all" }, () => command.name)
+      .exhaustive();
   }
 
   #plan(command: CommandConfig): Option<CommandPlan> {
