@@ -223,6 +223,20 @@
 	"common_show_in_ribbon": "Показать в ленте",
 	"command_modal_type_label": "Когда выполняется команда",
 	"command_modal_write_type_label": "Тип примечания",
+	"command_name_prefix_hint": [
+		{
+			"declarations": [
+				"input kind"
+			],
+			"selectors": [
+				"kind"
+			],
+			"match": {
+				"kind=journal": "Название журнала автоматически добавляется перед названием команды в палитре.",
+				"kind=shelf": "Название полки автоматически добавляется перед названием команды в палитре."
+			}
+		}
+	],
 	"command_name_required_error": "Название команды обязательно для заполнения.",
 	"command_name_unique_error": "Название команды должно быть уникальным.",
 	"command_open_mode_option": [
@@ -243,6 +257,11 @@
 	],
 	"command_open_next": "Открыть следующую заметку",
 	"command_open_previous": "Открыть предыдущую заметку",
+	"command_open_calendar": "Открыть календарь",
+	"command_view_change_shelf": "Изменить полку в {name}",
+	"shelf_picker_placeholder": "Поиск полок",
+	"command_palette_journal_name": "{journal}: {name}",
+	"command_palette_shelf_name": "Полка: {shelf}: {name}",
 	"command_open_not_connected": "Данная заметка не связана ни с каким журналом.",
 	"command_open_no_next": "После этой ноты следующей нет.",
 	"command_open_no_previous": "Предшествующей заметки нет.",
@@ -941,6 +960,7 @@
 	"shelf_section_place_tooltip": "Поставьте на полку",
 	"settings_load_failed": "Журнал: не удалось загрузить настройки — {error}",
 	"settings_reload_failed": "Журнал: не удалось перезагрузить настройки — {error}",
+	"settings_reload_required_banner": "Перезагрузите Obsidian, чтобы применить изменённые настройки.",
 	"startup_dashboard_section_title": "Запускать",
 	"startup_open_note_title": "Открывается при запуске",
 	"startup_open_note_desc": "При каждом открытии этого хранилища создавайте заметку.",
@@ -1394,6 +1414,8 @@
 	"journal_edit_variable_journal_link_description": "Внутри содержимого файла шаблона указывается путь к заметке другого журнала для даты этой заметки. Вы можете самостоятельно обернуть его в ссылку или встроить (например, ![[ … ]]) и добавить модификаторы даты, такие как +1w, чтобы указать на соседний период.",
 	"journal_edit_variable_journal_name_description": "Название журнала (здесь: {name} ).",
 	"journal_edit_variable_non_invertible_warning": "Использование этого параметра здесь не позволит журналу восстановить дату из имени файла.",
+	"journal_edit_variable_note_name_description": "Имя создаваемой заметки.",
+	"journal_edit_variable_note_title_description": "Псевдоним имени заметки, поддерживающий переменную основного плагина «Шаблоны».",
 	"journal_edit_variable_numbering_description": "Настраиваемая переменная нумерации (см. раздел «Последовательность»).",
 	"journal_edit_variable_reference_intro": "Доступные переменные. Формат даты по умолчанию равен {dateFormat} если явный формат не указан.",
 	"journal_edit_variable_reference_link": "Поддерживаемые переменные.",

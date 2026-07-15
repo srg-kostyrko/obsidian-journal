@@ -223,6 +223,20 @@
 	"common_show_in_ribbon": "Показати на стрічці",
 	"command_modal_type_label": "Коли виконується команда",
 	"command_modal_write_type_label": "Тип нотатки",
+	"command_name_prefix_hint": [
+		{
+			"declarations": [
+				"input kind"
+			],
+			"selectors": [
+				"kind"
+			],
+			"match": {
+				"kind=journal": "Назва журналу автоматично додається перед назвою команди в палітрі.",
+				"kind=shelf": "Назва полиці автоматично додається перед назвою команди в палітрі."
+			}
+		}
+	],
 	"command_name_required_error": "Ім'я команди обов'язкове.",
 	"command_name_unique_error": "Ім'я команди має бути унікальним.",
 	"command_open_mode_option": [
@@ -243,6 +257,11 @@
 	],
 	"command_open_next": "Відкрити наступну нотатку",
 	"command_open_previous": "Відкрити попередню нотатку",
+	"command_open_calendar": "Відкрити календар",
+	"command_view_change_shelf": "Змінити полицю в {name}",
+	"shelf_picker_placeholder": "Пошук полиць",
+	"command_palette_journal_name": "{journal}: {name}",
+	"command_palette_shelf_name": "Полиця: {shelf}: {name}",
 	"command_open_not_connected": "Ця нотатка не пов'язана з жодним журналом.",
 	"command_open_no_next": "Після цієї наступної ноти немає.",
 	"command_open_no_previous": "Перед цією нотаткою немає жодної попередньої.",
@@ -941,6 +960,7 @@
 	"shelf_section_place_tooltip": "Поставити на полицю",
 	"settings_load_failed": "Журнал: не вдалося завантажити налаштування — {error}",
 	"settings_reload_failed": "Журнал: не вдалося перезавантажити налаштування — {error}",
+	"settings_reload_required_banner": "Перезавантажте Obsidian, щоб застосувати змінені налаштування.",
 	"startup_dashboard_section_title": "Стартап",
 	"startup_open_note_title": "Відкривати під час запуску",
 	"startup_open_note_desc": "Відкривайте нотатку щоразу, коли відкриваєте це сховище.",
@@ -1394,6 +1414,8 @@
 	"journal_edit_variable_journal_link_description": "Усередині вмісту файлу шаблону переходить до шляху до нотатки іншого журналу для дати цієї нотатки. Оберніть її самостійно в посилання або вбудуйте (наприклад, ![[ … ]]) та додайте модифікатори дати, такі як +1w, щоб вказати на сусідній період.",
 	"journal_edit_variable_journal_name_description": "Назва журналу (тут: {name} ).",
 	"journal_edit_variable_non_invertible_warning": "Використання цього тут запобігає відновленню дати з імені файлу журналом.",
+	"journal_edit_variable_note_name_description": "Ім’я нотатки, що створюється.",
+	"journal_edit_variable_note_title_description": "Псевдонім імені нотатки, що підтримує змінну основного плагіна «Шаблони».",
 	"journal_edit_variable_numbering_description": "Налаштована змінна нумерації (див. розділ «Послідовність»).",
 	"journal_edit_variable_reference_intro": "Доступні змінні. Формат дати за замовчуванням має значення {dateFormat} якщо явний формат не вказано.",
 	"journal_edit_variable_reference_link": "Підтримувані змінні.",

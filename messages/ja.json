@@ -223,6 +223,20 @@
 	"common_show_in_ribbon": "リボンに表示",
 	"command_modal_type_label": "コマンドを実行すると",
 	"command_modal_write_type_label": "ノートの種類",
+	"command_name_prefix_hint": [
+		{
+			"declarations": [
+				"input kind"
+			],
+			"selectors": [
+				"kind"
+			],
+			"match": {
+				"kind=journal": "コマンドパレットでは、ジャーナル名がコマンド名の前に自動的に追加されます。",
+				"kind=shelf": "コマンドパレットでは、棚の名前がコマンド名の前に自動的に追加されます。"
+			}
+		}
+	],
 	"command_name_required_error": "コマンド名は必須です。",
 	"command_name_unique_error": "コマンド名は一意である必要があります。",
 	"command_open_mode_option": [
@@ -243,6 +257,11 @@
 	],
 	"command_open_next": "次のノートを開く",
 	"command_open_previous": "前のメモを開く",
+	"command_open_calendar": "カレンダーを開く",
+	"command_view_change_shelf": "{name} の棚を変更",
+	"shelf_picker_placeholder": "棚を検索",
+	"command_palette_journal_name": "{journal}: {name}",
+	"command_palette_shelf_name": "棚: {shelf}: {name}",
 	"command_open_not_connected": "このメモはどの学術誌にも関連付けられていません。",
 	"command_open_no_next": "この音符の後に続く音符はありません。",
 	"command_open_no_previous": "このメモの前には、メモはありません。",
@@ -941,6 +960,7 @@
 	"shelf_section_place_tooltip": "棚に置く",
 	"settings_load_failed": "ジャーナル: 設定の読み込みに失敗しました — {error}",
 	"settings_reload_failed": "ジャーナル: 設定の再読み込みに失敗しました — {error}",
+	"settings_reload_required_banner": "変更した設定を適用するには、Obsidian を再読み込みしてください。",
 	"startup_dashboard_section_title": "起動する",
 	"startup_open_note_title": "起動時に開く",
 	"startup_open_note_desc": "この金庫を開けるたびに、メモを開いてください。",
@@ -1394,6 +1414,8 @@
 	"journal_edit_variable_journal_link_description": "テンプレートファイルの内容内では、このノートの日付に対応する別のジャーナルノートのパスに解決されます。リンクまたは埋め込み（例：![[ … ]]）で自分で囲み、+1w のような日付修飾子を追加して、隣接する期間を指すようにします。",
 	"journal_edit_variable_journal_name_description": "ジャーナル名（ここでは： {name} ）。",
 	"journal_edit_variable_non_invertible_warning": "ここでこれを使用すると、ジャーナルがファイル名から日付を復元できなくなります。",
+	"journal_edit_variable_note_name_description": "作成されるノートの名前。",
+	"journal_edit_variable_note_title_description": "ノート名のエイリアスで、コアプラグイン「テンプレート」の変数に対応します。",
 	"journal_edit_variable_numbering_description": "設定された番号付け変数（シーケンスのセクションを参照）。",
 	"journal_edit_variable_reference_intro": "使用可能な変数。明示的な形式が指定されていない場合、日付形式はデフォルトで{dateFormat}になります。",
 	"journal_edit_variable_reference_link": "サポートされている変数。",

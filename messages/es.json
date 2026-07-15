@@ -223,6 +223,20 @@
 	"common_show_in_ribbon": "Mostrar en cinta",
 	"command_modal_type_label": "Cuando se ejecuta el comando",
 	"command_modal_write_type_label": "Tipo de nota",
+	"command_name_prefix_hint": [
+		{
+			"declarations": [
+				"input kind"
+			],
+			"selectors": [
+				"kind"
+			],
+			"match": {
+				"kind=journal": "El nombre del diario se añade automáticamente delante del nombre del comando en la paleta.",
+				"kind=shelf": "El nombre del estante se añade automáticamente delante del nombre del comando en la paleta."
+			}
+		}
+	],
 	"command_name_required_error": "Se requiere el nombre del comando.",
 	"command_name_unique_error": "El nombre del comando debe ser único.",
 	"command_open_mode_option": [
@@ -243,6 +257,11 @@
 	],
 	"command_open_next": "Abrir la siguiente nota",
 	"command_open_previous": "Abrir nota anterior",
+	"command_open_calendar": "Abrir calendario",
+	"command_view_change_shelf": "Cambiar estante en {name}",
+	"shelf_picker_placeholder": "Buscar estantes",
+	"command_palette_journal_name": "{journal}: {name}",
+	"command_palette_shelf_name": "Estante: {shelf}: {name}",
 	"command_open_not_connected": "Esta nota no está relacionada con ninguna revista.",
 	"command_open_no_next": "No hay ninguna otra nota después de esta.",
 	"command_open_no_previous": "No hay ninguna nota anterior a esta.",
@@ -941,6 +960,7 @@
 	"shelf_section_place_tooltip": "Colócalo en un estante.",
 	"settings_load_failed": "Diario: error al cargar la configuración — {error}",
 	"settings_reload_failed": "Diario: error al recargar la configuración — {error}",
+	"settings_reload_required_banner": "Recarga Obsidian para aplicar los cambios de configuración.",
 	"startup_dashboard_section_title": "Puesta en marcha",
 	"startup_open_note_title": "Abrir al iniciar",
 	"startup_open_note_desc": "Abre una nota cada vez que abras esta bóveda.",
@@ -1394,6 +1414,8 @@
 	"journal_edit_variable_journal_link_description": "Dentro del contenido de un archivo de plantilla, se resuelve a la ruta de la nota de otra revista para la fecha de esta nota. Inclúyela tú mismo en un enlace o incrustación (por ejemplo, ![[ … ]]) y agrega modificadores de fecha como +1w para apuntar a un período adyacente.",
 	"journal_edit_variable_journal_name_description": "El nombre de la revista (aquí: {name} ).",
 	"journal_edit_variable_non_invertible_warning": "El uso de esta opción impide que el registro recupere la fecha a partir del nombre del archivo.",
+	"journal_edit_variable_note_name_description": "El nombre de la nota que se está creando.",
+	"journal_edit_variable_note_title_description": "Alias del nombre de la nota, compatible con la variable del complemento principal «Plantillas».",
 	"journal_edit_variable_numbering_description": "La variable de numeración configurada (véase la sección Secuencia).",
 	"journal_edit_variable_reference_intro": "Variables disponibles. El formato de fecha predeterminado es {dateFormat} cuando no se proporciona un formato explícito.",
 	"journal_edit_variable_reference_link": "Variables admitidas.",

@@ -223,6 +223,20 @@
 	"common_show_in_ribbon": "리본에 표시",
 	"command_modal_type_label": "명령이 실행될 때",
 	"command_modal_write_type_label": "메모 유형",
+	"command_name_prefix_hint": [
+		{
+			"declarations": [
+				"input kind"
+			],
+			"selectors": [
+				"kind"
+			],
+			"match": {
+				"kind=journal": "명령어 팔레트에서 신문 이름이 명령어 이름 앞에 자동으로 추가됩니다.",
+				"kind=shelf": "명령어 팔레트에서 선반 이름이 명령어 이름 앞에 자동으로 추가됩니다."
+			}
+		}
+	],
 	"command_name_required_error": "명령어 이름은 필수입니다.",
 	"command_name_unique_error": "명령어 이름은 고유해야 합니다.",
 	"command_open_mode_option": [
@@ -243,6 +257,11 @@
 	],
 	"command_open_next": "다음 메모 열기",
 	"command_open_previous": "이전 메모 열기",
+	"command_open_calendar": "캘린더 열기",
+	"command_view_change_shelf": "{name}의 선반 변경",
+	"shelf_picker_placeholder": "선반 검색",
+	"command_palette_journal_name": "{journal}: {name}",
+	"command_palette_shelf_name": "선반: {shelf}: {name}",
 	"command_open_not_connected": "이 메모는 어떤 학술지와도 연관이 없습니다.",
 	"command_open_no_next": "이 음표 다음에는 다음 음표가 없습니다.",
 	"command_open_no_previous": "이 글 이전에는 이전 글이 없습니다.",
@@ -941,6 +960,7 @@
 	"shelf_section_place_tooltip": "선반 위에 놓으세요",
 	"settings_load_failed": "저널: 설정 로드 실패 — {error}",
 	"settings_reload_failed": "저널: 설정 다시 로드 실패 — {error}",
+	"settings_reload_required_banner": "변경된 설정을 적용하려면 Obsidian을 다시 로드하세요.",
 	"startup_dashboard_section_title": "스타트업",
 	"startup_open_note_title": "시작 시 열림",
 	"startup_open_note_desc": "이 금고를 열 때마다 메모를 열어보세요.",
@@ -1394,6 +1414,8 @@
 	"journal_edit_variable_journal_link_description": "템플릿 파일 내용 내에서, 는 해당 노트의 날짜에 해당하는 다른 저널 노트의 경로를 가리킵니다. 직접 링크나 임베드(예: ![[ … ]])로 감싸고, 인접한 기간을 가리키도록 +1w와 같은 날짜 수정자를 추가하세요.",
 	"journal_edit_variable_journal_name_description": "저널 이름(여기: {name} ).",
 	"journal_edit_variable_non_invertible_warning": "이렇게 하면 저널이 파일 이름에서 날짜를 복구하는 것을 방지할 수 있습니다.",
+	"journal_edit_variable_note_name_description": "생성되는 메모의 이름입니다.",
+	"journal_edit_variable_note_title_description": "메모 이름의 별칭으로, 코어 플러그인 '템플릿'의 변수를 지원합니다.",
 	"journal_edit_variable_numbering_description": "구성된 번호 매기기 변수(순서 섹션 참조).",
 	"journal_edit_variable_reference_intro": "사용 가능한 변수입니다. 날짜 형식이 명시적으로 지정되지 않은 경우 기본값은 {dateFormat} 입니다.",
 	"journal_edit_variable_reference_link": "지원되는 변수.",

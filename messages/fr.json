@@ -223,6 +223,20 @@
 	"common_show_in_ribbon": "Afficher dans le ruban",
 	"command_modal_type_label": "Lorsque la commande s'exécute",
 	"command_modal_write_type_label": "Type de note",
+	"command_name_prefix_hint": [
+		{
+			"declarations": [
+				"input kind"
+			],
+			"selectors": [
+				"kind"
+			],
+			"match": {
+				"kind=journal": "Le nom du journal est automatiquement ajouté devant le nom de la commande dans la palette.",
+				"kind=shelf": "Le nom de l’étagère est automatiquement ajouté devant le nom de la commande dans la palette."
+			}
+		}
+	],
 	"command_name_required_error": "Le nom de la commande est obligatoire.",
 	"command_name_unique_error": "Le nom de la commande doit être unique.",
 	"command_open_mode_option": [
@@ -243,6 +257,11 @@
 	],
 	"command_open_next": "Ouvrir la note suivante",
 	"command_open_previous": "Ouvrir la note précédente",
+	"command_open_calendar": "Ouvrir le calendrier",
+	"command_view_change_shelf": "Changer d’étagère dans {name}",
+	"shelf_picker_placeholder": "Rechercher des étagères",
+	"command_palette_journal_name": "{journal}: {name}",
+	"command_palette_shelf_name": "Étagère : {shelf} : {name}",
 	"command_open_not_connected": "Cette note n'est liée à aucun journal.",
 	"command_open_no_next": "Il n'y a pas de note suivante après celle-ci.",
 	"command_open_no_previous": "Il n'y a pas de note précédente.",
@@ -941,6 +960,7 @@
 	"shelf_section_place_tooltip": "Placer sur une étagère",
 	"settings_load_failed": "Journal : échec du chargement des paramètres — {error}",
 	"settings_reload_failed": "Journal : échec du rechargement des paramètres — {error}",
+	"settings_reload_required_banner": "Rechargez Obsidian pour appliquer les paramètres modifiés.",
 	"startup_dashboard_section_title": "Démarrer",
 	"startup_open_note_title": "Ouvrir au démarrage",
 	"startup_open_note_desc": "Ouvrez une note à chaque fois que vous ouvrez ce coffre-fort.",
@@ -1394,6 +1414,8 @@
 	"journal_edit_variable_journal_link_description": "Dans le contenu d'un fichier modèle, cette propriété renvoie au chemin d'accès à la note d'un autre journal correspondant à la date de cette note. Intégrez-la vous-même dans un lien ou un élément (par exemple ![[ … ]]), et ajoutez des modificateurs de date comme +1w pour pointer vers une période voisine.",
 	"journal_edit_variable_journal_name_description": "Le nom du journal (ici : {name} ).",
 	"journal_edit_variable_non_invertible_warning": "Son utilisation ici empêche le journal de récupérer la date à partir du nom du fichier.",
+	"journal_edit_variable_note_name_description": "Le nom de la note en cours de création.",
+	"journal_edit_variable_note_title_description": "Alias du nom de la note, prenant en charge la variable du plugin principal « Modèles ».",
 	"journal_edit_variable_numbering_description": "La variable de numérotation configurée (voir la section Séquence).",
 	"journal_edit_variable_reference_intro": "Variables disponibles. Le format de date par défaut est {dateFormat} lorsqu'aucun format explicite n'est spécifié.",
 	"journal_edit_variable_reference_link": "Variables prises en charge.",

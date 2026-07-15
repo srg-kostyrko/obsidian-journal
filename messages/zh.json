@@ -223,6 +223,20 @@
 	"common_show_in_ribbon": "以丝带形式展示",
 	"command_modal_type_label": "当命令运行时",
 	"command_modal_write_type_label": "备注类型",
+	"command_name_prefix_hint": [
+		{
+			"declarations": [
+				"input kind"
+			],
+			"selectors": [
+				"kind"
+			],
+			"match": {
+				"kind=journal": "在命令面板中，杂志名称会自动添加到命令名称前面。",
+				"kind=shelf": "在命令面板中，架子名称会自动添加到命令名称前面。"
+			}
+		}
+	],
 	"command_name_required_error": "命令名称为必填项。",
 	"command_name_unique_error": "命令名称必须唯一。",
 	"command_open_mode_option": [
@@ -243,6 +257,11 @@
 	],
 	"command_open_next": "打开下一张笔记",
 	"command_open_previous": "打开上一条笔记",
+	"command_open_calendar": "打开日历",
+	"command_view_change_shelf": "更改 {name} 中的架子",
+	"shelf_picker_placeholder": "搜索架子",
+	"command_palette_journal_name": "{journal}: {name}",
+	"command_palette_shelf_name": "架子：{shelf}：{name}",
 	"command_open_not_connected": "这条笔记与任何期刊无关。",
 	"command_open_no_next": "此音符之后没有下一首了。",
 	"command_open_no_previous": "此前没有其他笔记。",
@@ -941,6 +960,7 @@
 	"shelf_section_place_tooltip": "放在架子上",
 	"settings_load_failed": "日志：加载设置失败 — {error}",
 	"settings_reload_failed": "日志：重新加载设置失败 — {error}",
+	"settings_reload_required_banner": "重新加载 Obsidian 以应用更改后的设置。",
 	"startup_dashboard_section_title": "创业公司",
 	"startup_open_note_title": "启动时打开",
 	"startup_open_note_desc": "每次打开此保险库时，请打开一个备注。",
@@ -1394,6 +1414,8 @@
 	"journal_edit_variable_journal_link_description": "在模板文件的内容中，它会解析为另一篇日志中与此笔记日期对应的笔记路径。您可以将其包装在链接或嵌入代码中（例如 ![[ … ]]），并添加日期修饰符（例如 +1w）以指向相邻的时期。",
 	"journal_edit_variable_journal_name_description": "期刊名称（此处： {name} ）。",
 	"journal_edit_variable_non_invertible_warning": "在此处使用此方法可防止日志从文件名中恢复日期。",
+	"journal_edit_variable_note_name_description": "正在创建的笔记的名称。",
+	"journal_edit_variable_note_title_description": "笔记名称的别名，支持核心插件“模板”的变量。",
 	"journal_edit_variable_numbering_description": "配置的编号变量（参见“序列”部分）。",
 	"journal_edit_variable_reference_intro": "可用变量。当未指定显式格式时，日期格式默认为{dateFormat} 。",
 	"journal_edit_variable_reference_link": "支持的变量。",

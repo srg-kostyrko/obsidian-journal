@@ -223,6 +223,20 @@
 	"common_show_in_ribbon": "Mostrar em fita",
 	"command_modal_type_label": "Quando o comando é executado",
 	"command_modal_write_type_label": "Tipo de nota",
+	"command_name_prefix_hint": [
+		{
+			"declarations": [
+				"input kind"
+			],
+			"selectors": [
+				"kind"
+			],
+			"match": {
+				"kind=journal": "O nome do jornal é adicionado automaticamente antes do nome do comando na paleta.",
+				"kind=shelf": "O nome da prateleira é adicionado automaticamente antes do nome do comando na paleta."
+			}
+		}
+	],
 	"command_name_required_error": "O nome do comando é obrigatório.",
 	"command_name_unique_error": "O nome do comando deve ser único.",
 	"command_open_mode_option": [
@@ -243,6 +257,11 @@
 	],
 	"command_open_next": "Abra a próxima nota",
 	"command_open_previous": "Abra a nota anterior",
+	"command_open_calendar": "Abrir calendário",
+	"command_view_change_shelf": "Alterar prateleira em {name}",
+	"shelf_picker_placeholder": "Pesquisar prateleiras",
+	"command_palette_journal_name": "{journal}: {name}",
+	"command_palette_shelf_name": "Prateleira: {shelf}: {name}",
 	"command_open_not_connected": "Esta nota não está relacionada a nenhum periódico.",
 	"command_open_no_next": "Não há nota seguinte depois desta.",
 	"command_open_no_previous": "Não há nenhuma anotação anterior a esta.",
@@ -941,6 +960,7 @@
 	"shelf_section_place_tooltip": "Coloque em uma prateleira.",
 	"settings_load_failed": "Diário: falha ao carregar as configurações — {error}",
 	"settings_reload_failed": "Diário: falha ao recarregar as configurações — {error}",
+	"settings_reload_required_banner": "Recarregue o Obsidian para aplicar as configurações alteradas.",
 	"startup_dashboard_section_title": "Comece",
 	"startup_open_note_title": "Abrir ao iniciar",
 	"startup_open_note_desc": "Abra uma nota sempre que abrir este cofre.",
@@ -1394,6 +1414,8 @@
 	"journal_edit_variable_journal_link_description": "Dentro do conteúdo de um arquivo de modelo, o caminho aponta para a anotação de outro diário na data da anotação. Você pode inserir o caminho em um link ou embuti-lo (por exemplo, ![[ … ]]) e adicionar modificadores de data como +1w para apontar para um período adjacente.",
 	"journal_edit_variable_journal_name_description": "O nome do periódico (aqui: {name} ).",
 	"journal_edit_variable_non_invertible_warning": "Usar isso aqui impede que o diário recupere a data a partir do nome do arquivo.",
+	"journal_edit_variable_note_name_description": "O nome da nota que está sendo criada.",
+	"journal_edit_variable_note_title_description": "Alias do nome da nota, compatível com a variável do plugin principal «Modelos».",
 	"journal_edit_variable_numbering_description": "A variável de numeração configurada (consulte a seção Sequência).",
 	"journal_edit_variable_reference_intro": "Variáveis disponíveis. O formato de data padrão é {dateFormat} quando nenhum formato explícito é fornecido.",
 	"journal_edit_variable_reference_link": "Variáveis suportadas.",
