@@ -1,0 +1,56 @@
+{
+  "version": 4,
+  "journals": {
+    "daily-window": {
+      "name": "daily-window",
+      "write": {
+        "type": "day"
+      },
+      "folder": "window",
+      "timeline": {
+        "start": "2030-06-01",
+        "end": {
+          "kind": "date",
+          "date": "2030-06-30"
+        }
+      },
+      "dateFormat": "YYYY-MM-DD",
+      "frontmatter": {
+        "dateField": "journal-date",
+        "startDateField": "journal-start-date",
+        "endDateField": "journal-end-date",
+        "addStartDate": false,
+        "addEndDate": false
+      },
+      "numbering": {
+        "enabled": false,
+        "anchorDate": "",
+        "allowBefore": false,
+        "sources": []
+      },
+      "navBlock": {
+        "type": "create",
+        "decorateWholeBlock": false,
+        "rows": [
+          {
+            "template": "{{date:YYYY-MM-DD}}",
+            "fontSize": 1,
+            "bold": false,
+            "italic": false,
+            "link": "self",
+            "journal": "",
+            "color": {
+              "type": "theme",
+              "name": "text-normal"
+            },
+            "background": {
+              "type": "transparent"
+            },
+            "addDecorations": false
+          }
+        ]
+      }
+    }
+  },
+  "shelves": {}
+}

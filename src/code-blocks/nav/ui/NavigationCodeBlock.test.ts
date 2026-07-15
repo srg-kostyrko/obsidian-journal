@@ -27,6 +27,7 @@ import {
   JournalsRepository,
   NumberingService,
   OpenDateFlow,
+  TimelineService,
   journalDefaultsFor,
   type JournalConfig,
   type JournalEntry,
@@ -118,6 +119,7 @@ function buildHarness(journals: Record<string, JournalConfig>): Harness {
   const index = new FakeJournalsIndex();
   container.register(JournalsIndex).useValue(index as unknown as JournalsIndex);
   container.register(CycleService).useClass(CycleService);
+  container.register(TimelineService).useClass(TimelineService);
   container.register(NumberingService).useClass(NumberingService);
   const shelves = new FakeShelves();
   container.register(ShelvesRepository).useValue(shelves as unknown as ShelvesRepository);

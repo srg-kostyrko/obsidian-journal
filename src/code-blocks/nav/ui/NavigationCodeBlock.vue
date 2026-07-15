@@ -7,7 +7,7 @@ import { m } from "@/i18n";
 import { useService } from "@/infrastructure/di";
 import { Flows } from "@/infrastructure/flows";
 import { defineOpenMode, type CodeBlockProps } from "@/infrastructure/host";
-import { CycleService, JournalsIndex, JournalsRepository, OpenDateFlow } from "@/journals";
+import { CycleService, JournalsIndex, JournalsRepository, OpenDateFlow, TimelineService } from "@/journals";
 import type { JournalConfig } from "@/journals";
 import { ShelvesRepository } from "@/shelves";
 import { icons } from "@/ui/icons";
@@ -23,6 +23,7 @@ const { path } = defineProps<CodeBlockProps<Record<string, never>>>();
 const index = useService(JournalsIndex);
 const journals = useService(JournalsRepository);
 const cycle = useService(CycleService);
+const timeline = useService(TimelineService);
 const shelves = useService(ShelvesRepository);
 const flows = useService(Flows);
 
@@ -41,19 +42,23 @@ const adjacent = computed<{ previous: AnchorString | null; next: AnchorString | 
   const currentJournal = journal.value;
   const anchor = currentAnchor.value;
   if (!currentJournal || !anchor) return { previous: null, next: null };
+  // An adjacent period outside the journal's timeline has no note to reach — OpenDateFlow would
+  // silently reject it — so collapse it to the empty placeholder rather than a dead control.
+  const inBounds = (candidate: AnchorString | null): AnchorString | null =>
+    candidate !== null && timeline.contains(currentJournal.name, candidate) ? candidate : null;
   if (currentJournal.navBlock.type === "existing") {
     const previousPath = index.findPrevious(currentJournal.name, anchor);
     const nextPath = index.findNext(currentJournal.name, anchor);
     const previous = previousPath.flatMap((p) => index.entryByPath(p)).map((entry) => entry.anchor);
     const next = nextPath.flatMap((p) => index.entryByPath(p)).map((entry) => entry.anchor);
     return {
-      previous: previous.getOr(null as unknown as AnchorString),
-      next: next.getOr(null as unknown as AnchorString),
+      previous: inBounds(previous.getOr(null as unknown as AnchorString)),
+      next: inBounds(next.getOr(null as unknown as AnchorString)),
     };
   }
   return {
-    previous: cycle.previousAnchor(currentJournal.name, anchor).getOr(null as unknown as AnchorString),
-    next: cycle.nextAnchor(currentJournal.name, anchor).getOr(null as unknown as AnchorString),
+    previous: inBounds(cycle.previousAnchor(currentJournal.name, anchor).getOr(null as unknown as AnchorString)),
+    next: inBounds(cycle.nextAnchor(currentJournal.name, anchor).getOr(null as unknown as AnchorString)),
   };
 });
 
