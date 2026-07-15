@@ -8,6 +8,8 @@ import { useService } from "@/infrastructure/di";
 import UiDropdown from "@/ui/UiDropdown.vue";
 import UiNumberInput from "@/ui/UiNumberInput.vue";
 
+import { DATE_CONDITION_ANY, displayMonthToStored, storedMonthToDisplay } from "../../date-condition";
+
 const { name } = defineProps<{ name: string }>();
 const { value: day } = useField<number>(`${name}.day`);
 const { value: month } = useField<number>(`${name}.month`);
@@ -22,16 +24,16 @@ function isNumber(value: number | undefined): value is number {
 // Day is stored 1-based, month 0-based (matching the date the period falls on); the empty
 // option stores the wildcard sentinel (-1 / null) meaning "match any".
 const daySelect = computed<string>({
-  get: () => (day.value === -1 ? "" : String(day.value)),
+  get: () => (day.value === DATE_CONDITION_ANY ? "" : String(day.value)),
   set: (next) => {
-    day.value = next === "" ? -1 : Number(next);
+    day.value = next === "" ? DATE_CONDITION_ANY : Number(next);
   },
 });
 
 const monthSelect = computed<string>({
-  get: () => (month.value === -1 ? "" : String(month.value + 1)),
+  get: () => (month.value === DATE_CONDITION_ANY ? "" : String(storedMonthToDisplay(month.value))),
   set: (next) => {
-    month.value = next === "" ? -1 : Number(next) - 1;
+    month.value = next === "" ? DATE_CONDITION_ANY : displayMonthToStored(Number(next));
   },
 });
 

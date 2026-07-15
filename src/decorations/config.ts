@@ -1,5 +1,7 @@
 import * as v from "valibot";
 
+import { dateConditionSchema } from "./date-condition";
+
 export const colorSchema = v.union([
   v.object({ type: v.literal("transparent") }),
   v.object({ type: v.literal("theme"), name: v.string() }),
@@ -165,13 +167,6 @@ const propertyCondition = v.union([
 export const filterConditionSchema = v.union([titleCondition, tagCondition, propertyCondition]);
 export type FilterCondition = v.InferOutput<typeof filterConditionSchema>;
 
-const dateCondition = v.object({
-  type: v.literal("date"),
-  day: v.number(),
-  month: v.number(),
-  year: v.nullable(v.number()),
-});
-
 const weekdayCondition = v.object({
   type: v.literal("weekday"),
   weekdays: v.array(v.pipe(v.number(), v.integer(), v.minValue(0), v.maxValue(6))),
@@ -190,7 +185,7 @@ export const decorationConditionSchema = v.union([
   titleCondition,
   tagCondition,
   propertyCondition,
-  dateCondition,
+  dateConditionSchema,
   weekdayCondition,
   offsetCondition,
   hasNoteCondition,
@@ -205,7 +200,7 @@ export type JournalDecorationStringPropertyCondition = v.InferOutput<typeof stri
 export type JournalDecorationNumberPropertyCondition = v.InferOutput<typeof numberPropertyCondition>;
 export type JournalDecorationBooleanPropertyCondition = v.InferOutput<typeof booleanPropertyCondition>;
 export type JournalDecorationPropertyCondition = v.InferOutput<typeof propertyCondition>;
-export type JournalDecorationDateCondition = v.InferOutput<typeof dateCondition>;
+export type JournalDecorationDateCondition = v.InferOutput<typeof dateConditionSchema>;
 export type JournalDecorationWeekdayCondition = v.InferOutput<typeof weekdayCondition>;
 export type JournalDecorationOffsetCondition = v.InferOutput<typeof offsetCondition>;
 

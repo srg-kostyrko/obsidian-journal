@@ -5,6 +5,8 @@ import type { NoteMetadata } from "@/infrastructure/host";
 import type { CycleService } from "@/journals";
 import type { JournalConfig } from "@/journals/config";
 
+import { matchesDate } from "./date-condition";
+
 import type {
   JournalDecorationDateCondition,
   JournalDecorationOffsetCondition,
@@ -118,11 +120,7 @@ function checkDateProperty(
 }
 
 export function checkDate(condition: JournalDecorationDateCondition, period: Period): boolean {
-  const anchor = period.anchor;
-  const dayOk = condition.day === -1 || Number(anchor.format("D")) === condition.day;
-  const monthOk = condition.month === -1 || Number(anchor.format("M")) - 1 === condition.month;
-  const yearOk = condition.year === null || Number(anchor.format("YYYY")) === condition.year;
-  return dayOk && monthOk && yearOk;
+  return matchesDate(condition, period.anchor);
 }
 
 export function checkWeekday(condition: JournalDecorationWeekdayCondition, period: Period): boolean {

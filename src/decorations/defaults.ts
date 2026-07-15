@@ -1,5 +1,7 @@
 import { match } from "ts-pattern";
 
+import { DATE_CONDITION_ANY } from "./date-condition";
+
 import type {
   BorderSide,
   ColorSettings,
@@ -63,7 +65,7 @@ export function defaultCondition(type: JournalDecorationCondition["type"]): Jour
     .with("title", () => ({ type: "title", condition: "contains", value: "" }))
     .with("tag", () => ({ type: "tag", condition: "contains", value: "" }))
     .with("property", () => ({ type: "property", name: "", valueType: "text", condition: "exists", value: "" }))
-    .with("date", () => ({ type: "date", day: -1, month: -1, year: null }))
+    .with("date", () => ({ type: "date", day: DATE_CONDITION_ANY, month: DATE_CONDITION_ANY, year: null }))
     .with("weekday", () => ({ type: "weekday", weekdays: [] }))
     .with("offset", () => ({ type: "offset", offset: 0 }))
     .with("has-note", () => ({ type: "has-note" }))

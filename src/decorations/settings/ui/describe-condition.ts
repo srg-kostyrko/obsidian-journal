@@ -4,6 +4,8 @@ import type { Calendar } from "@/calendar";
 import type { JournalDecorationCondition } from "@/decorations";
 import { m } from "@/i18n";
 
+import { DATE_CONDITION_ANY, storedMonthToDisplay } from "../../date-condition";
+
 export function describeCondition(condition: JournalDecorationCondition, calendar: Calendar): string {
   return match(condition)
     .with({ type: "title" }, (c) =>
@@ -30,8 +32,9 @@ export function describeCondition(condition: JournalDecorationCondition, calenda
     )
     .with({ type: "date" }, (c) =>
       m.decoration_condition_date_describe({
-        day: c.day === -1 ? m.decoration_condition_date_any() : String(c.day),
-        month: c.month === -1 ? m.decoration_condition_date_any() : String(c.month + 1),
+        day: c.day === DATE_CONDITION_ANY ? m.decoration_condition_date_any() : String(c.day),
+        month:
+          c.month === DATE_CONDITION_ANY ? m.decoration_condition_date_any() : String(storedMonthToDisplay(c.month)),
         year: c.year === null ? "null" : String(c.year),
       }),
     )
