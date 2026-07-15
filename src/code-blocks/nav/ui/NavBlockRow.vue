@@ -18,6 +18,7 @@ import {
 } from "@/journals";
 import { ShelvesRepository } from "@/shelves";
 import { TemplateEngine } from "@/templates";
+import { useModifierHoverPreview } from "@/ui/use-modifier-hover-preview";
 
 import { resolveLinkCandidates, resolveLinkTarget, type LinkTarget } from "../link-targets";
 import { buildNavRowContext } from "../nav-row-context";
@@ -93,6 +94,7 @@ function onClick(event: MouseEvent): void {
     anchor: props.refDate,
     journalNames: [...t.journalNames],
     openMode: defineOpenMode(event),
+    pickAt: event,
   });
 }
 
@@ -101,9 +103,11 @@ function onContextMenu(event: MouseEvent): void {
   workspace.openPathsMenu(pathsForTarget(target.value), event);
 }
 
+const hover = useModifierHoverPreview();
+
 function onPointerEnter(event: PointerEvent): void {
   if (props.preventNavigation) return;
-  workspace.previewFirstPath(pathsForTarget(target.value), event);
+  hover.enter(event, (hoverEvent) => workspace.previewFirstPath(pathsForTarget(target.value), hoverEvent));
 }
 </script>
 
@@ -114,6 +118,7 @@ function onPointerEnter(event: PointerEvent): void {
     @auxclick.middle.prevent="onClick"
     @contextmenu.prevent="onContextMenu"
     @pointerenter="onPointerEnter"
+    @pointerleave="hover.leave()"
   >
     <CellDecoration v-if="row.addDecorations" :period="period" :scope="decorationScope">{{ text }}</CellDecoration>
     <template v-else>{{ text }}</template>

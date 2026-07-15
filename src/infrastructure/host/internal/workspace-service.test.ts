@@ -252,25 +252,60 @@ describe("WorkspaceService", () => {
     });
   });
 
-  describe("previewFirstPath", () => {
-    it("no-ops when neither ctrl nor meta is held", () => {
-      const { service, host } = build();
-      service.previewFirstPath([path], new MouseEvent("pointerenter"));
+  describe("pickFromMenu", () => {
+    it("lists one menu item per label at the mouse event", async () => {
+      const { __testing } = await import("obsidian");
+      __testing.reset();
 
-      expect(host.workspace.triggerCalls).toHaveLength(0);
+      const { service } = build();
+      const event = new MouseEvent("click");
+      void service.pickFromMenu(["daily", "work"], event);
+
+      const menu = __testing.lastOpenMenu();
+      expect(menu.items.map((item) => item.title)).toEqual(["daily", "work"]);
+      expect(menu.showAtMouseEventCalls).toEqual([event]);
     });
 
-    it("no-ops when given no paths even while ctrl is held", () => {
+    it("resolves the clicked label", async () => {
+      const { __testing } = await import("obsidian");
+      __testing.reset();
+
+      const { service } = build();
+      const result = service.pickFromMenu(["daily", "work"], new MouseEvent("click"));
+      const [, work] = __testing.lastOpenMenu().items;
+      (work as unknown as { click(): void }).click();
+
+      const settled = await result;
+      expect(settled.isOk() && settled.value).toBe("work");
+    });
+
+    it("cancels when the menu hides without a pick", async () => {
+      const { __testing } = await import("obsidian");
+      __testing.reset();
+
+      const { service } = build();
+      const result = service.pickFromMenu(["daily"], new MouseEvent("click"));
+      __testing.lastOpenMenu().hide();
+
+      const settled = await result;
+      expect(settled.isErr()).toBe(true);
+    });
+  });
+
+  describe("previewFirstPath", () => {
+    // Modifier gating lives in useModifierHoverPreview (which also fires on a modifier
+    // pressed mid-hover); the service previews unconditionally.
+    it("no-ops when given no paths", () => {
       const { service, host } = build();
       service.previewFirstPath([], new MouseEvent("pointerenter", { ctrlKey: true }));
 
       expect(host.workspace.triggerCalls).toHaveLength(0);
     });
 
-    it("previews the first path when ctrl is held", () => {
+    it("previews the first path", () => {
       const { service, host } = build();
       const other = "Daily/2026-05-14.md" as VaultPath;
-      service.previewFirstPath([path, other], new MouseEvent("pointerenter", { ctrlKey: true }));
+      service.previewFirstPath([path, other], new MouseEvent("pointerenter"));
 
       expect(host.workspace.triggerCalls).toHaveLength(1);
       const [recorded] = host.workspace.triggerCalls;

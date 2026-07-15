@@ -129,7 +129,7 @@ describe("PeriodButtonsItem", () => {
       expect(workspace.pathsMenuCalls[0]?.paths).toEqual(["m/2026-05.md"]);
     });
 
-    it("requests the period note's hover preview on mouseenter", async () => {
+    it("requests the period note's hover preview on modifier hover", async () => {
       SCOPE.month = ["monthly"];
       const { result, workspace, index } = mountItem(
         { week: false, month: true, quarter: false, year: false },
@@ -137,7 +137,7 @@ describe("PeriodButtonsItem", () => {
       );
       index.register({ journalName: "monthly", anchor: anchor("2026-05-01"), path: "m/2026-05.md" as VaultPath });
 
-      await fireEvent.mouseEnter(result.container.querySelector("[data-period='month']")!);
+      await fireEvent.mouseEnter(result.container.querySelector("[data-period='month']")!, { ctrlKey: true });
 
       expect(workspace.previewFirstPathCalls).toHaveLength(1);
       expect(workspace.previewFirstPathCalls[0]?.paths).toEqual(["m/2026-05.md"]);

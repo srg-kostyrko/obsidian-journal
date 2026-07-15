@@ -13,6 +13,7 @@ import { JournalsIndex } from "@/journals/journals-index";
 import { ActiveEntryViewModel } from "@/notes-calendar/active-entry";
 import { useShelfScope } from "@/notes-calendar/use-shelf-scope";
 import UiButton from "@/ui/UiButton.vue";
+import { useModifierHoverPreview } from "@/ui/use-modifier-hover-preview";
 
 import { useViewContext } from "../../../view-context";
 
@@ -78,6 +79,7 @@ function open(badge: Badge, event: MouseEvent): void {
     anchor: badge.period.anchor.toAnchor(),
     journalNames: [...badge.journals],
     openMode: defineOpenMode(event),
+    pickAt: event,
   });
 }
 
@@ -91,8 +93,10 @@ function openContextMenu(badge: Badge, event: MouseEvent): void {
   workspace.openPathsMenu(pathsFor(badge), event);
 }
 
+const hover = useModifierHoverPreview();
+
 function openPreview(badge: Badge, event: MouseEvent): void {
-  workspace.previewFirstPath(pathsFor(badge), event);
+  hover.enter(event, (hoverEvent) => workspace.previewFirstPath(pathsFor(badge), hoverEvent));
 }
 </script>
 
@@ -108,6 +112,7 @@ function openPreview(badge: Badge, event: MouseEvent): void {
     @auxclick.middle.prevent="(event: MouseEvent) => open(badge, event)"
     @contextmenu.prevent="(event: MouseEvent) => openContextMenu(badge, event)"
     @mouseenter="(event: MouseEvent) => openPreview(badge, event)"
+    @mouseleave="hover.leave()"
   >
     <CellDecoration :period="badge.period">{{ badge.label }}</CellDecoration>
   </UiButton>

@@ -157,16 +157,38 @@ describe("NotesCalendarCell", () => {
       const firstCall = open.mock.calls[0] as [Period, KeyboardEvent];
       expect(firstCall[0]).toBe(may25);
     });
+  });
 
-    it("invokes cell.openPreview on mouseenter", async () => {
+  describe("hover preview", () => {
+    it("previews when the modifier is already held on enter", () => {
       const openPreview = vi.fn();
       const { container } = mount({ period: may25, cell: stubApi({ openPreview }) });
       const cell = container.querySelector<HTMLElement>(".notes-calendar-cell")!;
-      await userEvent.hover(cell);
-      expect(openPreview).toHaveBeenCalled();
+      cell.dispatchEvent(new MouseEvent("mouseenter", { ctrlKey: true }));
+      expect(openPreview).toHaveBeenCalledTimes(1);
       const firstCall = openPreview.mock.calls[0] as [Period, MouseEvent];
       expect(firstCall[0]).toBe(may25);
-      expect(firstCall[1]).toBeInstanceOf(MouseEvent);
+    });
+
+    it("previews when the modifier is pressed while hovering", () => {
+      // v2 behavior: hover first, press Ctrl/Cmd after — the preview still fires.
+      const openPreview = vi.fn();
+      const { container } = mount({ period: may25, cell: stubApi({ openPreview }) });
+      const cell = container.querySelector<HTMLElement>(".notes-calendar-cell")!;
+      cell.dispatchEvent(new MouseEvent("mouseenter"));
+      expect(openPreview).not.toHaveBeenCalled();
+      window.dispatchEvent(new KeyboardEvent("keydown", { key: "Control" }));
+      expect(openPreview).toHaveBeenCalledTimes(1);
+    });
+
+    it("does not preview for a modifier pressed after the pointer left", () => {
+      const openPreview = vi.fn();
+      const { container } = mount({ period: may25, cell: stubApi({ openPreview }) });
+      const cell = container.querySelector<HTMLElement>(".notes-calendar-cell")!;
+      cell.dispatchEvent(new MouseEvent("mouseenter"));
+      cell.dispatchEvent(new MouseEvent("mouseleave"));
+      window.dispatchEvent(new KeyboardEvent("keydown", { key: "Control" }));
+      expect(openPreview).not.toHaveBeenCalled();
     });
   });
 });

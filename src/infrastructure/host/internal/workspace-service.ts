@@ -9,6 +9,7 @@ import type { Option } from "@/infrastructure/result";
 import { icons } from "@/ui/icons";
 
 import { WorkspaceOpenError } from "../errors";
+import { SuggestCancelled } from "../suggests/errors";
 
 import { buildMarkdownLink, type NewLinkFormat } from "./markdown-link";
 import { toPaneType } from "./obsidian-bridge";
@@ -177,8 +178,36 @@ export class WorkspaceService {
     menu.showAtMouseEvent(event);
   }
 
+  // A pick-one menu at the pointer (v2's multi-journal disambiguation). Cancellation is
+  // decided a task later than onHide because Obsidian can hide the menu before the
+  // clicked item's handler runs — the same ordering hazard as SuggestModal.onClose.
+  pickFromMenu(labels: readonly string[], event: MouseEvent): AsyncResult<string, SuggestCancelled> {
+    return AsyncResult.fromPromise(
+      new Promise<string>((resolve, reject) => {
+        const menu = new Menu();
+        let chosen = false;
+        for (const label of labels) {
+          menu.addItem((item) =>
+            item.setTitle(label).onClick(() => {
+              chosen = true;
+              resolve(label);
+            }),
+          );
+        }
+        menu.onHide(() => {
+          window.setTimeout(() => {
+            if (!chosen) reject(new SuggestCancelled());
+          }, 0);
+        });
+        menu.showAtMouseEvent(event);
+      }),
+      (cause) => (cause instanceof SuggestCancelled ? cause : new SuggestCancelled()),
+    );
+  }
+
+  // Callers gate this behind useModifierHoverPreview, which also covers a modifier
+  // pressed while already hovering (the stored enter event carries no modifier flags).
   previewFirstPath(paths: readonly VaultPath[], event: MouseEvent): void {
-    if (!event.ctrlKey && !event.metaKey) return;
     const [first] = paths;
     if (first === undefined) return;
     this.triggerHoverPreview(first, event);

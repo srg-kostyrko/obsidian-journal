@@ -4,6 +4,7 @@ import { computed, toRaw } from "vue";
 import { CalendarDate } from "@/calendar";
 import type { Period } from "@/calendar";
 import { CellDecoration } from "@/decorations";
+import { useModifierHoverPreview } from "@/ui/use-modifier-hover-preview";
 
 import { defaultFormatPattern } from "../cell-format";
 
@@ -20,6 +21,8 @@ const label = computed(() => rawPeriod.value.format(props.format ?? defaultForma
 const isActive = computed(() => props.cell.isActive(rawPeriod.value));
 const isInactive = computed(() => !props.cell.isActionable(rawPeriod.value));
 const isToday = computed(() => rawPeriod.value.contains(CalendarDate.today()));
+
+const hover = useModifierHoverPreview();
 </script>
 
 <template>
@@ -35,7 +38,8 @@ const isToday = computed(() => rawPeriod.value.contains(CalendarDate.today()));
     @keydown.enter="cell.open(rawPeriod, $event)"
     @keydown.space.prevent="cell.open(rawPeriod, $event)"
     @contextmenu.prevent="cell.openContextMenu(rawPeriod, $event)"
-    @mouseenter="cell.openPreview(rawPeriod, $event)"
+    @mouseenter="hover.enter($event, (event) => cell.openPreview(rawPeriod, event))"
+    @mouseleave="hover.leave()"
   >
     <CellDecoration :period="rawPeriod">{{ label }}</CellDecoration>
   </span>
