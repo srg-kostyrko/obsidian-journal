@@ -43,16 +43,17 @@ vi.mock("@/notes-calendar/ui/NotesMonthView.vue", () => ({
 }));
 
 const FIXED: { names: readonly string[] } = { names: [] };
+const CUSTOM: { names: readonly string[] } = { names: [] };
 vi.mock("@/notes-calendar/use-shelf-scope", () => ({
   useShelfScope: () => ({
-    all: computed<readonly string[]>(() => FIXED.names),
+    all: computed<readonly string[]>(() => [...FIXED.names, ...CUSTOM.names]),
     fixed: computed<readonly string[]>(() => FIXED.names),
     day: computed<readonly string[]>(() => []),
     week: computed<readonly string[]>(() => []),
     month: computed<readonly string[]>(() => []),
     quarter: computed<readonly string[]>(() => []),
     year: computed<readonly string[]>(() => []),
-    custom: computed<readonly string[]>(() => []),
+    custom: computed<readonly string[]>(() => CUSTOM.names),
   }),
 }));
 
@@ -90,6 +91,7 @@ beforeAll(() => {
 afterEach(() => {
   cleanup();
   FIXED.names = [];
+  CUSTOM.names = [];
   ACTIVE.value = null;
 });
 
@@ -130,6 +132,15 @@ describe("MonthCalendarBlock", () => {
   it("recenters to the active note's month when it is off-window and following", () => {
     FIXED.names = ["daily"];
     ACTIVE.value = { journalName: "daily", anchor: "2026-09-10" as AnchorString };
+    const { getAllByTestId } = mountBlock(baseConfig, { refDate: ref("2026-05-15" as AnchorString) });
+    expect(getAllByTestId("month-stub")[0]?.dataset.month).toBe("2026-09-01");
+  });
+
+  it("recenters to an active custom-interval note's month when following", () => {
+    // v2 moved the whole panel for custom notes too; only the cell highlight is
+    // fixed-journal-scoped, not the follow.
+    CUSTOM.names = ["sprint"];
+    ACTIVE.value = { journalName: "sprint", anchor: "2026-09-10" as AnchorString };
     const { getAllByTestId } = mountBlock(baseConfig, { refDate: ref("2026-05-15" as AnchorString) });
     expect(getAllByTestId("month-stub")[0]?.dataset.month).toBe("2026-09-01");
   });

@@ -18,11 +18,13 @@ words:
   - passthroughs
   - popout
   - rangeset
+  - recentered
   - recenters
   - spinbutton
   - subpages
   - templater
   - tfile
+  - unpadded
   - vueuse
   - wdio
   - wikilinks

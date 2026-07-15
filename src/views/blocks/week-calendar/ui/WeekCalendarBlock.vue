@@ -23,7 +23,8 @@ const scope = useShelfScope(() => viewContext.shelf.value);
 const focus = useFollowActiveDate({
   refDate: viewContext.refDate,
   enabled: () => props.config.followActiveDate ?? true,
-  inScope: (name) => scope.fixed.value.includes(name),
+  // Follow custom-interval notes too — v2 recentered the panel for every journal type.
+  inScope: (name) => scope.all.value.includes(name),
   isVisible: (anchor, focusAnchor) => weekWindowContains(anchor, focusAnchor, props.config.before, props.config.after),
 });
 
