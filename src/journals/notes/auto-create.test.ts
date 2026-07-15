@@ -17,6 +17,7 @@ import { JournalsIndex } from "../journals-index";
 import { NumberingService } from "../numbering";
 import { JournalsRepository } from "../repository";
 import { fakeRepo, fixedJournal } from "../testing";
+import { TimelineService } from "../timeline";
 
 import { AutoCreateService } from "./auto-create";
 import { NoteCreationService } from "./note-creation";
@@ -40,6 +41,7 @@ function build(repo: JournalsRepository, notes: FakeNotesService): Container {
   c.register(TemplateContentService).useClass(TemplateContentService);
   c.register(SelfWriteGuard).useClass(SelfWriteGuard);
   c.register(NoteCreationService).useClass(NoteCreationService);
+  c.register(TimelineService).useClass(TimelineService);
   c.register(AutoCreateService).useClass(AutoCreateService);
   return c;
 }
@@ -67,6 +69,36 @@ describe("AutoCreateService", () => {
     await vi.advanceTimersByTimeAsync(0);
     expect(notes.find("2026-05-19.md" as VaultPath).isSome()).toBe(true);
     expect(notes.find("2026-05.md" as VaultPath).isNone()).toBe(true);
+  });
+
+  it("skips creation when today is past the journal's end date", async () => {
+    const repo = fakeRepo({
+      ended: fixedJournal(
+        "ended",
+        { type: "day" },
+        { autoCreate: true, timeline: { start: "2026-01-01", end: { kind: "date", date: "2026-01-31" } } as never },
+      ),
+    });
+    const notes = new FakeNotesService();
+    const container = build(repo, notes);
+    await container.resolve(AutoCreateService).initialize();
+    await vi.advanceTimersByTimeAsync(0);
+    expect(notes.find("2026-05-19.md" as VaultPath).isNone()).toBe(true);
+  });
+
+  it("skips creation when today precedes the journal's start date", async () => {
+    const repo = fakeRepo({
+      upcoming: fixedJournal(
+        "upcoming",
+        { type: "day" },
+        { autoCreate: true, timeline: { start: "2026-06-01", end: { kind: "never" } } as never },
+      ),
+    });
+    const notes = new FakeNotesService();
+    const container = build(repo, notes);
+    await container.resolve(AutoCreateService).initialize();
+    await vi.advanceTimersByTimeAsync(0);
+    expect(notes.find("2026-05-19.md" as VaultPath).isNone()).toBe(true);
   });
 
   it("re-ticks at the next local midnight", async () => {

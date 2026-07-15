@@ -5,6 +5,7 @@ import { AsyncResult } from "@/infrastructure/result";
 
 import { FrontmatterService } from "../frontmatter";
 import { JournalsRepository } from "../repository";
+import { TimelineService } from "../timeline";
 
 import { NoteCreationService } from "./note-creation";
 
@@ -12,6 +13,7 @@ export class AutoCreateService {
   readonly #creation = inject(NoteCreationService);
   readonly #frontmatter = inject(FrontmatterService);
   readonly #journals = inject(JournalsRepository);
+  readonly #timeline = inject(TimelineService);
   readonly #logger = inject(LoggerFactoryToken).named("auto-create");
 
   #timer: ReturnType<typeof window.setTimeout> | undefined;
@@ -43,6 +45,10 @@ export class AutoCreateService {
 
   async createCurrent(name: string): Promise<void> {
     const anchor = CalendarDate.today().toAnchor();
+    if (!this.#timeline.contains(name, anchor)) {
+      this.#logger.debug("auto-create: today is outside the journal timeline", { name, anchor });
+      return;
+    }
     const metadata = this.#frontmatter.buildMetadata(name, anchor);
     if (metadata.kind === "err") {
       this.#logger.debug("auto-create: build metadata failed", { name, error: metadata.error });

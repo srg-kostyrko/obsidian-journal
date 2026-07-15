@@ -1,4 +1,4 @@
-import { browser } from "@wdio/globals";
+import { browser, expect } from "@wdio/globals";
 
 import { todayAnchor, waitForJournalFrontmatter } from "../support/vault.js";
 
@@ -15,5 +15,17 @@ describe("auto-create", () => {
   it("creates today's note on boot for a journal with auto-create enabled", async () => {
     const today = todayAnchor();
     await waitForJournalFrontmatter(`${today}.md`, { journal: "daily", date: today });
+  });
+
+  it("does not create a note for a journal whose timeline has ended", async () => {
+    // The fixture stores "ended" (auto-create on, timeline ended 2020-12-31) before "daily",
+    // and the tick awaits journals sequentially — once the previous test observed daily's
+    // note, any "ended" create has already settled. Assert raw vault existence, not
+    // frontmatter: metadataCache parsing lags creation and would make this vacuously green.
+    const exists = await browser.executeObsidian(
+      ({ app }, path) => app.vault.getAbstractFileByPath(path) !== null,
+      `ended/${todayAnchor()}.md`,
+    );
+    expect(exists).toBe(false);
   });
 });

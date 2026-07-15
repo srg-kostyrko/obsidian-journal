@@ -1,6 +1,35 @@
 {
   "version": 4,
   "journals": {
+    "ended": {
+      "name": "ended",
+      "write": {
+        "type": "day"
+      },
+      "timeline": {
+        "start": "2020-01-01",
+        "end": {
+          "kind": "date",
+          "date": "2020-12-31"
+        }
+      },
+      "dateFormat": "YYYY-MM-DD",
+      "frontmatter": {
+        "dateField": "journal-date",
+        "startDateField": "journal-start-date",
+        "endDateField": "journal-end-date",
+        "addStartDate": false,
+        "addEndDate": false
+      },
+      "numbering": {
+        "enabled": false,
+        "anchorDate": "",
+        "allowBefore": false,
+        "sources": []
+      },
+      "autoCreate": true,
+      "folder": "ended"
+    },
     "daily": {
       "name": "daily",
       "write": {
