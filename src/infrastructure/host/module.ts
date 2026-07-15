@@ -10,6 +10,7 @@ import { NotesService } from "./internal/notes-service";
 import { NoticeService } from "./internal/notice-service";
 import { PluginData } from "./internal/plugin-data";
 import { TemplaterService } from "./internal/templater-service";
+import { TemplatesService } from "./internal/templates-service";
 import { InternalObsidianAppToken, InternalPluginToken } from "./internal/tokens";
 import { WorkspaceService } from "./internal/workspace-service";
 import { modalsModule } from "./modals/module";
@@ -30,6 +31,7 @@ export function createHostModule(plugin: Plugin): Module {
       c.register(NoticeService).useClass(NoticeService);
       c.register(WorkspaceService).useClass(WorkspaceService).eager();
       c.register(TemplaterService).useClass(TemplaterService);
+      c.register(TemplatesService).useClass(TemplatesService);
       c.register(PluginData).useClass(PluginData);
       c.register(SuggestService).useClass(SuggestService);
       c.register(InputSuggestService).useClass(InputSuggestService);

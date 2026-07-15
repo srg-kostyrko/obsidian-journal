@@ -20,6 +20,7 @@ export { NotesService } from "./internal/notes-service";
 export { PluginData } from "./internal/plugin-data";
 export { WorkspaceService } from "./internal/workspace-service";
 export { TemplaterService } from "./internal/templater-service";
+export { TemplatesService } from "./internal/templates-service";
 export { renderIcon } from "./internal/icons";
 export { defineOpenMode } from "./define-open-mode";
 export {
