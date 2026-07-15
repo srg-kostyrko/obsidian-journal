@@ -72,6 +72,13 @@ export class TemplaterService {
     return plugin && typeof plugin === "object" ? plugin : null;
   }
 
+  templatesFolder(): string | null {
+    const settings = (this.#rawPlugin() as { settings?: unknown } | null)?.settings;
+    if (!settings || typeof settings !== "object") return null;
+    const folder = (settings as Record<string, unknown>).templates_folder;
+    return typeof folder === "string" ? folder : null;
+  }
+
   apply(templatePath: VaultPath, targetPath: VaultPath, content: string): AsyncResult<string, never> {
     return AsyncResult.fromPromise(this.#apply(templatePath, targetPath, content), () => {
       throw new InvariantError("unreachable: #apply never rejects");

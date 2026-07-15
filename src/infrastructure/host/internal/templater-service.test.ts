@@ -166,3 +166,19 @@ describe("TemplaterService.isSupported", () => {
     expect(build(fakeApp({ plugin })).isSupported()).toBe(false);
   });
 });
+
+describe("TemplaterService.templatesFolder", () => {
+  it("returns the configured Templater templates folder", () => {
+    const plugin = { settings: { templates_folder: "Meta/Templater" } };
+    expect(build(fakeApp({ plugin })).templatesFolder()).toBe("Meta/Templater");
+  });
+
+  it("returns null when the Templater plugin is absent", () => {
+    expect(build(fakeApp()).templatesFolder()).toBeNull();
+  });
+
+  it("returns null when the plugin has no templates_folder setting", () => {
+    const plugin = { settings: {} };
+    expect(build(fakeApp({ plugin })).templatesFolder()).toBeNull();
+  });
+});
