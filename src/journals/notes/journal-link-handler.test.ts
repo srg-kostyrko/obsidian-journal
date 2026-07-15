@@ -12,6 +12,7 @@ import { JournalsIndex } from "../journals-index";
 import { NumberingService } from "../numbering";
 import { JournalsRepository } from "../repository";
 import { customJournal, fakeRepo, fixedJournal } from "../testing";
+import { TimelineService } from "../timeline";
 
 import { JournalLinkHandler } from "./journal-link-handler";
 import { NotePathService } from "./note-path";
@@ -24,6 +25,7 @@ function buildContainer(journals: Record<string, JournalConfig>): Container {
   c.register(JournalsRepository).useValue(fakeRepo(journals));
   c.register(JournalsIndex).useClass(JournalsIndex);
   c.register(CycleService).useClass(CycleService);
+  c.register(TimelineService).useClass(TimelineService);
   c.register(NumberingService).useClass(NumberingService);
   c.register(FrontmatterService).useClass(FrontmatterService);
   c.register(NotePathService).useClass(NotePathService);
@@ -160,6 +162,48 @@ describe("JournalLinkHandler", () => {
       engine,
     });
     expect(result.isErr()).toBe(true);
+  });
+
+  describe("timeline bounds", () => {
+    const bounded = fixedJournal(
+      "bounded",
+      { type: "day" },
+      { timeline: { start: anchor("2030-06-01"), end: { kind: "date", date: anchor("2030-06-30") } } },
+    );
+
+    function renderResult(anchorDate: string) {
+      return buildContainer({ ...ALL_JOURNALS, bounded })
+        .resolve(JournalLinkHandler)
+        .render({
+          arg: "bounded",
+          sourceDate: CalendarDate.fromAnchor(anchor(anchorDate)),
+          modifiers: [],
+          context: hostContext("daily", anchorDate, anchorDate),
+          engine,
+        });
+    }
+
+    it("errors when the target date is after the target timeline end", () => {
+      expect(renderResult("2030-07-10").isErr()).toBe(true);
+    });
+
+    it("errors when the target date is before the target timeline start", () => {
+      expect(renderResult("2030-05-20").isErr()).toBe(true);
+    });
+
+    it("resolves the path when the target date is within the timeline", () => {
+      const result = renderResult("2030-06-15");
+      expect(result.isOk() && result.value).toBe("2030-06-15");
+    });
+
+    it("leaves a {{journal_link}} token unresolved when the target is out of bounds", () => {
+      const tokenEngine = buildEngineContainer({ ...ALL_JOURNALS, bounded }).resolve(TemplateEngine);
+      const rendered = tokenEngine.renderString(
+        "See [[{{journal_link(bounded)}}]]",
+        hostContext("daily", "2030-07-10", "2030-07-10"),
+      );
+      expect(rendered).toBe("See [[{{journal_link(bounded)}}]]");
+    });
   });
 
   // The prod wiring registers the handler under FunctionHandlerToken (notes/module.ts), and

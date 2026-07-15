@@ -1,9 +1,10 @@
 import type { CalendarDate } from "@/calendar";
 import { inject } from "@/infrastructure/di";
-import type { Result } from "@/infrastructure/result";
+import { Err, type Result } from "@/infrastructure/result";
 import { applyModifiers, TemplateRenderError, type FunctionHandler, type FunctionInput } from "@/templates";
 
 import { JournalsRepository } from "../repository";
+import { TimelineService } from "../timeline";
 
 import { NotePathService } from "./note-path";
 
@@ -19,6 +20,7 @@ const GRANULARITY_RANK: Record<FixedWriteIntervals["type"], number> = {
 
 export class JournalLinkHandler implements FunctionHandler {
   readonly #journals = inject(JournalsRepository);
+  readonly #timeline = inject(TimelineService);
   readonly #path = inject(NotePathService);
   readonly name = "journal_link";
 
@@ -45,6 +47,11 @@ export class JournalLinkHandler implements FunctionHandler {
 
   render(input: FunctionInput): Result<string, TemplateRenderError> {
     const base = applyModifiers(this.#baseDate(input), input.modifiers);
+    // A target date outside the target journal's timeline has no note to link to; erroring
+    // leaves the {{journal_link}} token unresolved rather than pointing at an unreachable note.
+    if (!this.#timeline.contains(input.arg, base.toAnchor())) {
+      return new Err(new TemplateRenderError("journal-link-out-of-bounds"));
+    }
     return this.#path
       .pathForDate(input.arg, base)
       .map((path) => path.replace(/\.md$/, ""))
