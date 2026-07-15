@@ -7,12 +7,14 @@ describe("defaultFormatPattern", () => {
     expect(defaultFormatPattern("day")).toBe("D");
   });
 
-  it("returns '[W]ww' for week", () => {
-    expect(defaultFormatPattern("week")).toBe("[W]ww");
+  it("returns '[W]w' for week", () => {
+    // v2 labels: unpadded week numbers (W1, not W01).
+    expect(defaultFormatPattern("week")).toBe("[W]w");
   });
 
-  it("returns 'MMM' for month", () => {
-    expect(defaultFormatPattern("month")).toBe("MMM");
+  it("returns 'MMMM' for month", () => {
+    // v2 labels: the in-grid month heading shows the full month name.
+    expect(defaultFormatPattern("month")).toBe("MMMM");
   });
 
   it("returns '[Q]Q' for quarter", () => {
