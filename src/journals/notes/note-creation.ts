@@ -93,12 +93,16 @@ export class NoteCreationService {
     const mutator = mutatorResult.value;
 
     return attempt.in(this, async function* () {
-      yield* this.#notes.updateFrontmatter(path, mutator);
+      // Emptiness must be judged against the note's original body: writing frontmatter fills
+      // the file (Obsidian embeds a `---` block), which would otherwise make a freshly
+      // link-created note look non-empty and skip its template. Render into the empty note
+      // first, then attach frontmatter last — matching ensureNote's order.
       const existing = yield* this.#notes.read(path);
-      if (existing.trim() !== "") return;
-      const content = yield* this.#content.renderFor(name, metadata, this.#basename(path), path);
-      if (content === "") return;
-      yield* this.#notes.write(path, content);
+      if (existing.trim() === "") {
+        const content = yield* this.#content.renderFor(name, metadata, this.#basename(path), path);
+        if (content !== "") yield* this.#notes.write(path, content);
+      }
+      yield* this.#notes.updateFrontmatter(path, mutator);
     });
   }
 }

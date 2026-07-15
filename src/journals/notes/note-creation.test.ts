@@ -173,6 +173,34 @@ describe("NoteCreationService.attachNote", () => {
     const read = await notes.read("2026-05-19.md" as VaultPath);
     expect(read.isOk() && read.value).toBe("body");
   });
+
+  it("applies the template to an empty note even though attaching frontmatter fills the file body", async () => {
+    const repo = fakeRepo({
+      daily: fixedJournal("daily", { type: "day" }, { templates: ["Templates/daily.md"] }),
+    });
+    const notes = new FakeNotesService();
+    notes.seed("Templates/daily.md" as VaultPath, "# Daily {{date}}");
+    notes.seed("2026-05-19.md" as VaultPath, "");
+    // Obsidian's processFrontMatter embeds a `---` block into the file text, so a note
+    // reads back non-empty once frontmatter is attached. Model that here so emptiness must
+    // be decided against the note's original body, not its post-frontmatter contents.
+    vi.spyOn(notes, "updateFrontmatter").mockImplementation((path) =>
+      AsyncResult.fromPromise(
+        (async () => {
+          const current = await notes.read(path);
+          const body = current.isOk() ? current.value : "";
+          await notes.write(path, `---\njournal: daily\n---\n${body}`);
+        })(),
+        () => new FrontmatterError(path, new Error("unreachable")),
+      ),
+    );
+    const result = await build(repo, notes, new FakeModalService())
+      .resolve(NoteCreationService)
+      .attachNote("daily", "2026-05-19.md" as VaultPath, meta);
+    expect(result.isOk()).toBe(true);
+    const read = await notes.read("2026-05-19.md" as VaultPath);
+    expect(read.isOk() && read.value).toContain("# Daily 2026-05-19");
+  });
 });
 
 describe("NoteCreationService.ensureNote — note_name binding", () => {
