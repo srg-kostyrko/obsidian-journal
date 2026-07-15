@@ -14,6 +14,7 @@ import { AsyncResult, Err, attempt } from "@/infrastructure/result";
 import type { TemplateRenderError } from "@/templates";
 
 import { FrontmatterService } from "../frontmatter";
+import { JournalsIndex } from "../journals-index";
 
 import { NotePathService } from "./note-path";
 import { SelfWriteGuard } from "./self-write-guard";
@@ -35,6 +36,7 @@ export type NoteCreationError =
 
 export class NoteCreationService {
   readonly #notes = inject(NotesService);
+  readonly #index = inject(JournalsIndex);
   readonly #path = inject(NotePathService);
   readonly #content = inject(TemplateContentService);
   readonly #frontmatter = inject(FrontmatterService);
@@ -57,6 +59,17 @@ export class NoteCreationService {
     const mutatorResult = this.#frontmatter.writeMutator(name, metadata);
     if (mutatorResult.kind === "err") return AsyncResult.err(mutatorResult.error);
     const mutator = mutatorResult.value;
+
+    // A connected note may live away from the config-derived path (renamed, moved,
+    // or connected in place); the index knows its real location — reuse it instead
+    // of spawning a duplicate at the derived path.
+    const indexed = this.#index.entryByAnchor(name, metadata.anchor);
+    if (indexed.isSome() && this.#notes.find(indexed.value.path).isSome()) {
+      const indexedPath = indexed.value.path;
+      return this.#notes
+        .updateFrontmatter(indexedPath, mutator)
+        .map(() => ({ path: indexedPath, created: false as const }));
+    }
 
     if (this.#notes.find(path).isSome()) {
       return this.#notes.updateFrontmatter(path, mutator).map(() => ({ path, created: false as const }));

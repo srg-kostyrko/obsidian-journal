@@ -5,6 +5,7 @@ import { openViaUri } from "../support/uri.js";
 import {
   closeAllLeaves,
   closePopoutWindows,
+  frontmatterOf,
   markdownLeafCount,
   openNote,
   popoutWindowCount,
@@ -36,6 +37,21 @@ describe("open via uri", () => {
       await openViaUri({ journal: "work", date: "2027-04-05" });
       await waitForActiveNote("work/2027-04-05.md");
       await waitForJournalFrontmatter("work/2027-04-05.md", { journal: "work", date: "2027-04-05" });
+    });
+  });
+
+  describe("relocated entry", () => {
+    it("reopens the indexed note at its real path instead of duplicating it", async () => {
+      // The note is connected to the anchor but lives away from the config-derived
+      // work/<date>.md path (as after a manual rename or an in-place connect). The open
+      // pipeline must resolve it through the index, not re-derive the path and create a twin.
+      await seedNote("elsewhere/moved entry.md", "---\njournal: work\njournal-date: 2027-08-16\n---\nkept body\n");
+      await waitForJournalFrontmatter("elsewhere/moved entry.md", { journal: "work", date: "2027-08-16" });
+
+      await openViaUri({ journal: "work", date: "2027-08-16" });
+      await waitForActiveNote("elsewhere/moved entry.md");
+
+      expect(await frontmatterOf("work/2027-08-16.md")).toBeNull();
     });
   });
 

@@ -81,6 +81,48 @@ describe("NoteCreationService.ensureNote", () => {
     expect(result.isOk() && result.value.created).toBe(false);
   });
 
+  it("reuses the indexed note's path when it differs from the config-derived path", async () => {
+    const repo = fakeRepo({ daily: fixedJournal("daily", { type: "day" }) });
+    const notes = new FakeNotesService();
+    notes.seed("Archive/renamed note.md" as VaultPath, "existing");
+    const modals = new FakeModalService();
+    const container = build(repo, notes, modals);
+    container
+      .resolve(JournalsIndex)
+      .register({ journalName: "daily", anchor: meta.anchor, path: "Archive/renamed note.md" as VaultPath });
+    const result = await container.resolve(NoteCreationService).ensureNote("daily", meta);
+    expectOk(result);
+    expect(result.value.path).toBe("Archive/renamed note.md");
+    expect(result.value.created).toBe(false);
+  });
+
+  it("does not create a second note at the derived path when the entry is indexed elsewhere", async () => {
+    const repo = fakeRepo({ daily: fixedJournal("daily", { type: "day" }) });
+    const notes = new FakeNotesService();
+    notes.seed("Archive/renamed note.md" as VaultPath, "existing");
+    const modals = new FakeModalService();
+    const container = build(repo, notes, modals);
+    container
+      .resolve(JournalsIndex)
+      .register({ journalName: "daily", anchor: meta.anchor, path: "Archive/renamed note.md" as VaultPath });
+    await container.resolve(NoteCreationService).ensureNote("daily", meta);
+    expect(notes.find("2026-05-19.md" as VaultPath).isNone()).toBe(true);
+  });
+
+  it("creates at the derived path when the indexed file no longer exists", async () => {
+    const repo = fakeRepo({ daily: fixedJournal("daily", { type: "day" }) });
+    const notes = new FakeNotesService();
+    const modals = new FakeModalService();
+    const container = build(repo, notes, modals);
+    container
+      .resolve(JournalsIndex)
+      .register({ journalName: "daily", anchor: meta.anchor, path: "Archive/gone.md" as VaultPath });
+    const result = await container.resolve(NoteCreationService).ensureNote("daily", meta);
+    expectOk(result);
+    expect(result.value.path).toBe("2026-05-19.md");
+    expect(result.value.created).toBe(true);
+  });
+
   it("opens confirm modal when confirmCreation is true and returns UserAborted on cancel", async () => {
     const repo = fakeRepo({ daily: fixedJournal("daily", { type: "day" }, { confirmCreation: true }) });
     const notes = new FakeNotesService();
