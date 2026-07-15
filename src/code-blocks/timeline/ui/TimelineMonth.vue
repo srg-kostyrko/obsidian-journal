@@ -16,7 +16,9 @@ const month = computed(() => MonthPeriod.containing(CalendarDate.fromAnchor(prop
 
 <template>
   <div class="timeline-month">
-    <NotesMonthView :shelf :month :weeks="weeks" :hidden-weekdays="hiddenWeekdays" outside-dates="inactive" />
+    <!-- Adjacent-month days stay actionable (v2 parity): a leading/trailing day can
+         open that day's note. Quarter/calendar modes blank them instead. -->
+    <NotesMonthView :shelf :month :weeks="weeks" :hidden-weekdays="hiddenWeekdays" outside-dates="active" />
   </div>
 </template>
 
