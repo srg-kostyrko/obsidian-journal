@@ -71,7 +71,7 @@ function removeTemplate(index: number): void {
     </UiSettingRow>
 
     <template v-for="(_path, index) in config.templates" :key="index">
-      <UiSettingRow>
+      <UiSettingRow controls-only class="template-row">
         <UiTemplateInput
           v-model="config.templates[index]"
           class="grow"
@@ -97,6 +97,10 @@ function removeTemplate(index: number): void {
 <style scoped>
 .grow {
   flex-grow: 1;
+}
+
+.template-row :deep(.setting-item-control) {
+  flex: 1;
 }
 
 .template-path-preview {
