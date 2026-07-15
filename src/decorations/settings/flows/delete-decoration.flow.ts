@@ -21,7 +21,7 @@ export class DeleteDecorationFlow implements Flow<
     if (configOption.isNone()) {
       return AsyncResult.err(toJournalFlowError(new UnknownJournalError(parameters.journalName)));
     }
-    const config = configOption.getOr(undefined as never);
+    const config = configOption.value;
     if (parameters.index < 0 || parameters.index >= config.decorations.length) {
       return AsyncResult.err(
         toDecorationFlowError(new UnknownDecorationError(parameters.journalName, parameters.index)),

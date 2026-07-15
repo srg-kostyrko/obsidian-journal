@@ -7,6 +7,7 @@ import {
   InvalidJournalNameError,
   InvalidJournalUpdateError,
   JournalNameTakenError,
+  JournalNotFoundError,
   UnknownJournalError,
 } from "./errors";
 import { JournalsRepository, type JournalsEvents } from "./repository";
@@ -150,6 +151,21 @@ describe("JournalsRepository", () => {
       const { repo } = buildRepo();
       const result = repo.delete("nope");
       expect(result.isErr() && result.error).toBeInstanceOf(UnknownJournalError);
+    });
+  });
+
+  describe("require", () => {
+    it("returns Ok with the journal when it exists", () => {
+      const daily = journalDefaultsFor({ type: "day" }, "daily");
+      const { repo } = buildRepo({ daily });
+      const result = repo.require("daily");
+      expect(result.isOk() && result.value).toStrictEqual(daily);
+    });
+
+    it("returns Err with JournalNotFoundError when the journal is absent", () => {
+      const { repo } = buildRepo();
+      const result = repo.require("nope");
+      expect(result.isErr() && result.error).toBeInstanceOf(JournalNotFoundError);
     });
   });
 });

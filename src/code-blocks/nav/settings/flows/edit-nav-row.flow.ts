@@ -28,7 +28,7 @@ export class EditNavBlockRowFlow implements Flow<EditNavBlockRowParameters, Edit
     if (configOption.isNone()) {
       return AsyncResult.err(toJournalFlowError(new UnknownJournalError(parameters.journalName)));
     }
-    const config = configOption.getOr(undefined as never);
+    const config = configOption.value;
     const rowIndex = parameters.rowIndex;
     const isEdit = rowIndex !== undefined;
     if (isEdit && (rowIndex < 0 || rowIndex >= config[field].rows.length)) {

@@ -14,7 +14,7 @@ export class DeleteCommandFlow implements Flow<{ commandId: string }, void, Flow
     return attempt.in(this, async function* (this: DeleteCommandFlow) {
       yield* this.#modals
         .open(deleteCommandModal, {
-          commandName: this.#repo.get(parameters.commandId).getOr(undefined as never)?.name ?? "",
+          commandName: this.#repo.get(parameters.commandId).getOrUndefined()?.name ?? "",
         })
         .mapErr(() => new UserAborted("delete-command-modal"));
       this.#repo.delete(parameters.commandId);

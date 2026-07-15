@@ -20,7 +20,7 @@ export class EditSequencePropertyFlow implements Flow<
     if (configOpt.isNone()) {
       return AsyncResult.err(toFlowError(new UnknownJournalError(parameters.journalName)));
     }
-    const config = configOpt.getOr(undefined as never);
+    const config = configOpt.value;
     if (config.numbering.sources.at(parameters.sourceIndex) === undefined) {
       return AsyncResult.err(
         toFlowError(new UnknownSequenceSourceError(parameters.journalName, parameters.sourceIndex)),

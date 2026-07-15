@@ -27,7 +27,7 @@ export class EditDecorationFlow implements Flow<EditDecorationParameters, EditDe
     if (configOption.isNone()) {
       return AsyncResult.err(toJournalFlowError(new UnknownJournalError(parameters.journalName)));
     }
-    const config = configOption.getOr(undefined as never);
+    const config = configOption.value;
     const index = parameters.index;
     const isEdit = index !== undefined;
     if (isEdit && (index < 0 || index >= config.decorations.length)) {

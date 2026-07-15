@@ -23,8 +23,8 @@ export class EditFrontmatterFieldFlow implements Flow<
     if (configOpt.isNone()) {
       return AsyncResult.err(toFlowError(new UnknownJournalError(parameters.journalName)));
     }
+    const config = configOpt.value;
     return attempt.in(this, async function* (this: EditFrontmatterFieldFlow) {
-      const config = configOpt.getOr(undefined as never);
       const submitted = yield* this.#modals
         .open(editFrontmatterFieldModal, { journalName: parameters.journalName, fieldName: parameters.fieldName })
         .mapErr(() => new UserAborted("edit-frontmatter-field-modal"));

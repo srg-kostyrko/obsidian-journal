@@ -27,7 +27,7 @@ export class EditViewNameFlow implements Flow<EditViewNameParameters, { viewId: 
           : this.#vm
               .getView(parameters.viewId)
               .map((v) => v.name)
-              .getOr(undefined as never);
+              .getOrUndefined();
       const name = yield* this.#modals
         .open(viewNameModal, { currentName })
         .mapErr(() => new UserAborted("view-name-modal"));

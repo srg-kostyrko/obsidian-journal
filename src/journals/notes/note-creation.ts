@@ -15,6 +15,7 @@ import type { TemplateRenderError } from "@/templates";
 
 import { FrontmatterService } from "../frontmatter";
 import { JournalsIndex } from "../journals-index";
+import { JournalsRepository } from "../repository";
 
 import { NotePathService } from "./note-path";
 import { SelfWriteGuard } from "./self-write-guard";
@@ -38,6 +39,7 @@ export class NoteCreationService {
   readonly #notes = inject(NotesService);
   readonly #index = inject(JournalsIndex);
   readonly #path = inject(NotePathService);
+  readonly #journals = inject(JournalsRepository);
   readonly #content = inject(TemplateContentService);
   readonly #frontmatter = inject(FrontmatterService);
   readonly #modals = inject(ModalService);
@@ -76,7 +78,7 @@ export class NoteCreationService {
     }
 
     return attempt.in(this, async function* () {
-      const config = this.#path.configFor(name);
+      const config = this.#journals.get(name).getOrUndefined();
       if (!options?.skipConfirmation && config?.confirmCreation) {
         const confirmed = yield* this.#modals
           .open(confirmCreationModal, { journalName: name, noteName: this.#basename(path) })

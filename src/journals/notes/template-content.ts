@@ -4,11 +4,11 @@ import type { NoteReadError, VaultPath } from "@/infrastructure/host";
 import { AsyncResult } from "@/infrastructure/result";
 import { TemplateEngine } from "@/templates";
 
-import { JournalNotFoundError } from "../errors";
 import { JournalsRepository } from "../repository";
 
 import { NotePathService } from "./note-path";
 
+import type { JournalNotFoundError } from "../errors";
 import type { JournalMetadata } from "../types";
 
 export class TemplateContentService {
@@ -24,9 +24,9 @@ export class TemplateContentService {
     noteName: string,
     targetPath: VaultPath,
   ): AsyncResult<string, JournalNotFoundError | NoteReadError> {
-    const configOpt = this.#journals.get(name);
-    if (configOpt.isNone()) return AsyncResult.err(new JournalNotFoundError(name));
-    const config = configOpt.value;
+    const configResult = this.#journals.require(name);
+    if (configResult.isErr()) return AsyncResult.err(configResult.error);
+    const config = configResult.value;
     if (config.templates.length === 0) return AsyncResult.ok("");
 
     // One context for both the template's path and its body: paths resolve

@@ -2,16 +2,16 @@ import { CalendarDate } from "@/calendar";
 import type { AnchorString } from "@/calendar";
 import { inject } from "@/infrastructure/di";
 import type { VaultPath } from "@/infrastructure/host";
-import { Err, Ok, Option } from "@/infrastructure/result";
+import { Option } from "@/infrastructure/result";
 import type { Result } from "@/infrastructure/result";
 
 import { FRONTMATTER_NAME_KEY } from "./config";
 import { CycleService } from "./cycle";
-import { JournalNotFoundError } from "./errors";
 import { JournalsIndex } from "./journals-index";
 import { NumberingService } from "./numbering";
 import { JournalsRepository } from "./repository";
 
+import type { JournalNotFoundError } from "./errors";
 import type { JournalEntry, JournalMetadata } from "./types";
 
 export class FrontmatterService {
@@ -68,34 +68,32 @@ export class FrontmatterService {
   }
 
   buildMetadata(name: string, anchor: AnchorString): Result<JournalMetadata, JournalNotFoundError> {
-    if (this.#journals.get(name).isNone()) return new Err(new JournalNotFoundError(name));
+    return this.#journals.require(name).map(() => {
+      const numbers = this.#numbering.assignNumbers(name, anchor);
+      const storedEntry = this.#index.entryByAnchor(name, anchor);
+      const endDate = storedEntry.isSome() ? storedEntry.value.endDate : undefined;
 
-    const numbers = this.#numbering.assignNumbers(name, anchor);
-    const storedEntry = this.#index.entryByAnchor(name, anchor);
-    const endDate = storedEntry.isSome() ? storedEntry.value.endDate : undefined;
-
-    const metadata: JournalMetadata = {
-      journalName: name,
-      anchor,
-      ...(endDate !== undefined && { endDate }),
-      ...(numbers.isSome() && { numbers: numbers.value }),
-    };
-    return new Ok(metadata);
+      const metadata: JournalMetadata = {
+        journalName: name,
+        anchor,
+        ...(endDate !== undefined && { endDate }),
+        ...(numbers.isSome() && { numbers: numbers.value }),
+      };
+      return metadata;
+    });
   }
 
   clearMutator(name: string): Result<(fm: Record<string, unknown>) => void, JournalNotFoundError> {
-    const configOpt = this.#journals.get(name);
-    if (configOpt.isNone()) return new Err(new JournalNotFoundError(name));
-    const config = configOpt.value;
-    const fields = config.frontmatter;
-
-    return new Ok((fm: Record<string, unknown>) => {
-      // Clear every key this journal could own under any config, regardless of current add* flags.
-      delete fm[FRONTMATTER_NAME_KEY];
-      delete fm[fields.dateField];
-      delete fm[fields.startDateField];
-      delete fm[fields.endDateField];
-      for (const source of config.numbering.sources) delete fm[source.frontmatterKey];
+    return this.#journals.require(name).map((config) => {
+      const fields = config.frontmatter;
+      return (fm: Record<string, unknown>) => {
+        // Clear every key this journal could own under any config, regardless of current add* flags.
+        delete fm[FRONTMATTER_NAME_KEY];
+        delete fm[fields.dateField];
+        delete fm[fields.startDateField];
+        delete fm[fields.endDateField];
+        for (const source of config.numbering.sources) delete fm[source.frontmatterKey];
+      };
     });
   }
 
@@ -103,40 +101,39 @@ export class FrontmatterService {
     name: string,
     metadata: JournalMetadata,
   ): Result<(fm: Record<string, unknown>) => void, JournalNotFoundError> {
-    const configOpt = this.#journals.get(name);
-    if (configOpt.isNone()) return new Err(new JournalNotFoundError(name));
-    const config = configOpt.value;
-    const fields = config.frontmatter;
-    const cycle = this.#cycle;
+    return this.#journals.require(name).map((config) => {
+      const fields = config.frontmatter;
+      const cycle = this.#cycle;
 
-    return new Ok((fm: Record<string, unknown>) => {
-      fm[FRONTMATTER_NAME_KEY] = name;
-      fm[fields.dateField] = metadata.anchor;
+      return (fm: Record<string, unknown>) => {
+        fm[FRONTMATTER_NAME_KEY] = name;
+        fm[fields.dateField] = metadata.anchor;
 
-      if (fields.addStartDate) {
-        const start = cycle.startOf(name, metadata.anchor);
-        if (start.isSome()) fm[fields.startDateField] = start.value.toAnchor();
-      } else {
-        delete fm[fields.startDateField];
-      }
-
-      const hasExtension = metadata.endDate !== undefined;
-      if (fields.addEndDate || hasExtension) {
-        if (metadata.endDate === undefined) {
-          const computed = cycle.endOf(name, metadata.anchor);
-          if (computed.isSome()) fm[fields.endDateField] = computed.value.toAnchor();
+        if (fields.addStartDate) {
+          const start = cycle.startOf(name, metadata.anchor);
+          if (start.isSome()) fm[fields.startDateField] = start.value.toAnchor();
         } else {
-          fm[fields.endDateField] = metadata.endDate;
+          delete fm[fields.startDateField];
         }
-      } else {
-        delete fm[fields.endDateField];
-      }
 
-      for (const source of config.numbering.sources) {
-        const value = metadata.numbers?.[source.variable];
-        if (value === undefined) delete fm[source.frontmatterKey];
-        else fm[source.frontmatterKey] = value;
-      }
+        const hasExtension = metadata.endDate !== undefined;
+        if (fields.addEndDate || hasExtension) {
+          if (metadata.endDate === undefined) {
+            const computed = cycle.endOf(name, metadata.anchor);
+            if (computed.isSome()) fm[fields.endDateField] = computed.value.toAnchor();
+          } else {
+            fm[fields.endDateField] = metadata.endDate;
+          }
+        } else {
+          delete fm[fields.endDateField];
+        }
+
+        for (const source of config.numbering.sources) {
+          const value = metadata.numbers?.[source.variable];
+          if (value === undefined) delete fm[source.frontmatterKey];
+          else fm[source.frontmatterKey] = value;
+        }
+      };
     });
   }
 }

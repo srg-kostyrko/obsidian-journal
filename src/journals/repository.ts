@@ -8,6 +8,7 @@ import {
   InvalidJournalNameError,
   InvalidJournalUpdateError,
   JournalNameTakenError,
+  JournalNotFoundError,
   UnknownJournalError,
 } from "./errors";
 import { JournalsEventsToken } from "./tokens";
@@ -55,6 +56,10 @@ export class JournalsRepository extends BaseRepository<
   protected events = inject(JournalsEventsToken);
   protected unknownEntityError = (name: string) => new UnknownJournalError(name);
   protected invalidUpdateError = (name: string) => new InvalidJournalUpdateError(name);
+
+  require(name: string): Result<JournalConfig, JournalNotFoundError> {
+    return this.get(name).okOrElse(() => new JournalNotFoundError(name));
+  }
 
   create(name: string, write: JournalWrite): Result<JournalConfig, InvalidJournalNameError | JournalNameTakenError> {
     if (name.length === 0) return new Err(new InvalidJournalNameError(name));

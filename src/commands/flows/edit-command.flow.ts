@@ -22,7 +22,7 @@ export class EditCommandFlow implements Flow<EditCommandParameters, { id: string
 
   execute(parameters: EditCommandParameters): AsyncResult<{ id: string }, FlowError> {
     const existing =
-      parameters.commandId === undefined ? undefined : this.#repo.get(parameters.commandId).getOr(undefined as never);
+      parameters.commandId === undefined ? undefined : this.#repo.get(parameters.commandId).getOrUndefined();
     const target = existing?.target ?? parameters.target;
     const takenNames = [...this.#repo.find().entries()]
       .filter(([id, command]) => id !== parameters.commandId && sameCommandOwner(command.target, target))

@@ -4,7 +4,7 @@ import { CalendarDate, Clock } from "@/calendar";
 import type { AnchorString } from "@/calendar";
 import { inject } from "@/infrastructure/di";
 import type { VaultPath } from "@/infrastructure/host";
-import { attempt, Err, Ok, Option, type Result } from "@/infrastructure/result";
+import { attempt, Option, type Result } from "@/infrastructure/result";
 import { TemplateContext, TemplateEngine, tokenize } from "@/templates";
 import type { Bindings } from "@/templates";
 
@@ -48,8 +48,7 @@ export class NotePathService {
   }
 
   pathFor(name: string, metadata: JournalMetadata): Result<VaultPath, JournalNotFoundError> {
-    const config = this.configFor(name);
-    if (config) {
+    return this.#journals.require(name).map((config) => {
       const context = this.contextFor(config, metadata);
       const filename = this.#engine.renderString(`${config.nameTemplate}.md`, context);
       // The rendered note name feeds back into the folder as {{note_name}}/{{title}},
@@ -57,9 +56,8 @@ export class NotePathService {
       const folderContext = this.#withNoteName(context, filename.replace(/\.md$/, ""));
       const folder = config.folder ? this.#engine.renderString(config.folder, folderContext) : "";
       const joined = folder ? `${folder}/${filename}` : filename;
-      return new Ok(normalizePath(joined) as VaultPath);
-    }
-    return new Err(new JournalNotFoundError(name));
+      return normalizePath(joined) as VaultPath;
+    });
   }
 
   candidateFor(name: string, path: VaultPath): Option<JournalMetadata> {
