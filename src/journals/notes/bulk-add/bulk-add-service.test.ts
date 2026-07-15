@@ -35,6 +35,7 @@ function plannedAction(overrides: Partial<PlannedAction> = {}): PlannedAction {
     kind: "action",
     path: "src/note.md" as VaultPath,
     anchor: anchor("2026-06-01"),
+    targetPath: "src/note.md" as VaultPath,
     existing: "none",
     folder: "n/a",
     name: "n/a",

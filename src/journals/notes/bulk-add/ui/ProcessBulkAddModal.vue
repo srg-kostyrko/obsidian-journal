@@ -98,6 +98,10 @@ function close(): void {
     <template v-if="log === null">
       <UiSettingRow v-for="action of actions" :key="action.path">
         <template #name>{{ action.path }} → {{ action.anchor }}</template>
+        <template v-if="action.occupant !== undefined || action.targetPath !== action.path" #description>
+          <div v-if="action.occupant !== undefined">{{ m.bulk_add_occupant({ path: action.occupant }) }}</div>
+          <div v-if="action.targetPath !== action.path">{{ m.bulk_add_target({ path: action.targetPath }) }}</div>
+        </template>
         <UiDropdown
           v-if="action.occupant !== undefined && action.existing === 'ask'"
           :aria-label="m.bulk_add_existing_label()"

@@ -67,6 +67,7 @@ describe("ProcessBulkAddModal", () => {
             kind: "action",
             path: "src/a.md" as VaultPath,
             anchor: "2026-06-01" as AnchorString,
+            targetPath: "src/a.md" as VaultPath,
             existing: "none",
             folder: "n/a",
             name: "n/a",
@@ -83,6 +84,29 @@ describe("ProcessBulkAddModal", () => {
     mountModal({ apply, dryRun: true, plan: { notes: [] } });
     await userEvent.click(screen.getByText(m.bulk_add_run()));
     expect(apply).toHaveBeenCalledWith("daily", expect.any(Array), true, expect.any(Function));
+  });
+
+  it("shows the occupying note and the target path for a conflicting action", () => {
+    const apply = vi.fn(() => AsyncResult.ok([]));
+    mountModal({
+      apply,
+      plan: {
+        notes: [
+          {
+            kind: "action",
+            path: "src/a.md" as VaultPath,
+            anchor: "2026-06-01" as AnchorString,
+            occupant: "daily/2026-06-01.md" as VaultPath,
+            targetPath: "daily/2026-06-01.md" as VaultPath,
+            existing: "ask",
+            folder: "move",
+            name: "rename",
+          },
+        ],
+      },
+    });
+    expect(screen.getByText(m.bulk_add_occupant({ path: "daily/2026-06-01.md" }))).toBeTruthy();
+    expect(screen.getByText(m.bulk_add_target({ path: "daily/2026-06-01.md" }))).toBeTruthy();
   });
 
   it("shows the skip reason for each skipped note", () => {
@@ -103,6 +127,7 @@ describe("ProcessBulkAddModal", () => {
             kind: "action",
             path: "src/a.md" as VaultPath,
             anchor: "2026-06-01" as AnchorString,
+            targetPath: "daily/a.md" as VaultPath,
             existing: "none",
             folder: "ask",
             name: "n/a",
@@ -131,6 +156,7 @@ describe("ProcessBulkAddModal", () => {
             path: "src/a.md" as VaultPath,
             anchor: "2026-06-01" as AnchorString,
             occupant: "daily/2026-06-01.md" as VaultPath,
+            targetPath: "src/a.md" as VaultPath,
             existing: "ask",
             folder: "n/a",
             name: "n/a",
@@ -158,6 +184,7 @@ describe("ProcessBulkAddModal", () => {
             kind: "action",
             path: "src/a.md" as VaultPath,
             anchor: "2026-06-01" as AnchorString,
+            targetPath: "src/2026-06-01.md" as VaultPath,
             existing: "none",
             folder: "n/a",
             name: "ask",

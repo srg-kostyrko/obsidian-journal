@@ -371,6 +371,8 @@
   "bulk_add_skip_reason_no_date": "No date found",
   "bulk_add_skip_reason_invalid_date": "Date could not be parsed",
   "bulk_add_skip_reason_out_of_bounds": "Outside the journal's timeline",
+  "bulk_add_occupant": "Already connected: {path}",
+  "bulk_add_target": "New path: {path}",
 
   "common_action_cancel": "Cancel",
   "common_action_close": "Close",

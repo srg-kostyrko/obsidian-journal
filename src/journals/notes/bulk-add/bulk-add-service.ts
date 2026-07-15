@@ -32,6 +32,7 @@ export interface PlannedAction {
   path: VaultPath;
   anchor: AnchorString;
   occupant?: VaultPath;
+  targetPath: VaultPath;
   existing: "none" | "skip" | "override" | "merge" | "ask";
   folder: "n/a" | "keep" | "move" | "ask";
   name: "n/a" | "keep" | "rename" | "ask";
@@ -122,6 +123,7 @@ export class BulkAddService {
       path,
       anchor,
       ...(occupant !== undefined && { occupant }),
+      targetPath: configured,
       existing: occupant === undefined ? "none" : parameters.existingNote,
       folder: configuredFolder === currentFolder ? "n/a" : parameters.otherFolder,
       name: configuredName === currentName ? "n/a" : parameters.otherName,
