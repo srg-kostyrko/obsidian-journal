@@ -54,6 +54,12 @@ export class JournalViewLeaf extends ItemView {
     return { ...this.#state };
   }
 
+  // Entry point for the per-view change-shelf command: mutating the reactive leaf
+  // state updates the mounted view's ViewContext.shelf, same as the toolbar selector.
+  setShelf(shelf: string | null): void {
+    this.#state.shelf = shelf;
+  }
+
   setState(state: unknown, _result: unknown): Promise<void> {
     if (state && typeof state === "object") {
       // Obsidian sends the full persisted state (replace, not patch).
