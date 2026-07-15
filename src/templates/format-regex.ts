@@ -5,7 +5,17 @@ import { moment } from "obsidian";
 // affect compiled patterns. Tests therefore exercise locale-insensitive tokens only.
 const localeData = moment.localeData();
 
+// moment exposes the locale's ordinal-parse pattern on the undocumented _config; .source
+// strips the delimiters and the leading \d{1,2} (the day digits, matched by the D token).
+interface MomentLocaleInternals {
+  _config?: { dayOfMonthOrdinalParse?: RegExp };
+}
+const ordinalRegexp = (localeData as unknown as MomentLocaleInternals)._config?.dayOfMonthOrdinalParse;
+const ordinalPattern =
+  ordinalRegexp == null ? "(?:th|st|nd|rd)" : ordinalRegexp.source.replace(String.raw`\d{1,2}`, "");
+
 const formatRegExpParts = new Map<string, string>([
+  ["o", ordinalPattern],
   ["M", "(?:[1-9]|1[0-2])"],
   ["MM", "(?:0[1-9]|1[0-2])"],
   ["MMM", "(?:" + localeData.monthsShort().join("|") + ")"],
@@ -27,7 +37,7 @@ const formatRegExpParts = new Map<string, string>([
   ["YYYY", "[0-9]{4}"],
 ]);
 
-const supportedSymbols = new Set(["M", "Q", "D", "d", "w", "W", "Y"]);
+const supportedSymbols = new Set(["o", "M", "Q", "D", "d", "w", "W", "Y"]);
 
 export function formatToRegexp(format: string): RegExp {
   const parts: string[] = [];

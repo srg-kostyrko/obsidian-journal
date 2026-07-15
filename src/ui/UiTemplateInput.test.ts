@@ -20,15 +20,22 @@ function build() {
   return { inputSuggest, container };
 }
 
+function mountHandle() {
+  const { inputSuggest, container } = build();
+  render(UiTemplateInput, {
+    props: { modelValue: "", "onUpdate:modelValue": vi.fn() },
+    global: { plugins: [{ install: (app) => provideInjectorOnApp(app, container) }] },
+  });
+  return inputSuggest.attachments[0];
+}
+
 describe("UiTemplateInput", () => {
-  it("offers template candidate paths filtered by query", () => {
-    const { inputSuggest, container } = build();
-    render(UiTemplateInput, {
-      props: { modelValue: "", "onUpdate:modelValue": vi.fn() },
-      global: { plugins: [{ install: (app) => provideInjectorOnApp(app, container) }] },
-    });
-    const handle = inputSuggest.attachments[0];
-    expect(handle.query("").toSorted()).toEqual(["templates/daily.md", "templates/weekly.md"]);
-    expect(handle.query("weekly")).toEqual(["templates/weekly.md"]);
+  it("offers no suggestions for an empty query", () => {
+    // v2's template suggester returned [] on empty input rather than popping the full path list.
+    expect(mountHandle().query("")).toEqual([]);
+  });
+
+  it("filters candidate paths by query", () => {
+    expect(mountHandle().query("weekly")).toEqual(["templates/weekly.md"]);
   });
 });

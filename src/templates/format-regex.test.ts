@@ -42,6 +42,14 @@ describe("formatToRegexp", () => {
     });
   });
 
+  describe("ordinal token", () => {
+    it("matches an ordinal day for Do", () => {
+      const re = new RegExp(`^${formatToRegexp("Do").source}$`);
+      expect(re.test("3rd")).toBe(true);
+      expect(re.test("1st")).toBe(true);
+    });
+  });
+
   describe("quarter token", () => {
     it("matches a quarter digit for Q", () => {
       expect(formatToRegexp("Q").test("3")).toBe(true);
