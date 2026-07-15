@@ -38,7 +38,6 @@ const onSubmit = handleSubmit((vs) => api.submit({ newName: vs.newName }));
   <form @submit.prevent="onSubmit">
     <UiSettingRow :name="m.common_label_new_name()">
       <template #description>
-        <div>{{ m.journal_notes_not_rewritten_hint() }}</div>
         <span v-for="error of errorBag.newName" :key="error" class="journal-form-error">{{ error }}</span>
       </template>
       <UiTextInput v-model="newName" v-bind="newNameAttrs" />

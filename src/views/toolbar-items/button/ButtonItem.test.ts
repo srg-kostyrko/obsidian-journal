@@ -4,7 +4,7 @@ import { __testing as obsidianTesting } from "obsidian";
 import { afterEach, beforeAll, describe, expect, it, vi } from "vitest";
 import { computed, defineComponent, h, ref } from "vue";
 
-import { CalendarDate, DayPeriod, MonthPeriod, WeekPeriod } from "@/calendar";
+import { CalendarDate, DayPeriod, WeekPeriod } from "@/calendar";
 import { installTestCalendar } from "@/calendar/testing";
 import type { AnchorString } from "@/calendar/types";
 import { Container, provideInjectorOnApp } from "@/infrastructure/di";
@@ -178,7 +178,7 @@ describe("ButtonItem", () => {
   });
 
   describe("click — navigate-step", () => {
-    it("walks refDate forward by amount×unit", async () => {
+    it("walks refDate forward by amount×unit, preserving the day within the period", async () => {
       const setRefDate = vi.fn();
       const { result } = mountItem(
         { action: { type: "navigate-step", direction: "next", unit: "month", amount: 2 } },
@@ -186,25 +186,29 @@ describe("ButtonItem", () => {
       );
       // No label; tooltip is rendered as text fallback when there's no label
       await userEvent.click(result.getByRole("button"));
-      // refDate 2026-05-15 → MonthPeriod May → next twice → July → anchor = 2026-07-01
-      const expected = MonthPeriod.containing(CalendarDate.fromAnchor("2026-05-15" as AnchorString))
-        .next()
-        .next()
-        .anchor.toAnchor();
-      expect(setRefDate).toHaveBeenCalledWith(expected);
+      // refDate 2026-05-15 → +2 months → 2026-07-15 (day kept, not snapped to the month anchor)
+      expect(setRefDate).toHaveBeenCalledWith("2026-07-15");
     });
 
-    it("walks refDate backward by amount×unit", async () => {
+    it("walks refDate backward by amount×unit, preserving the day within the period", async () => {
       const setRefDate = vi.fn();
       const { result } = mountItem(
         { action: { type: "navigate-step", direction: "prev", unit: "week", amount: 1 } },
         { refDate: ref("2026-05-15" as AnchorString), setRefDate },
       );
       await userEvent.click(result.getByRole("button"));
-      const expected = WeekPeriod.containing(CalendarDate.fromAnchor("2026-05-15" as AnchorString))
-        .previous()
-        .anchor.toAnchor();
-      expect(setRefDate).toHaveBeenCalledWith(expected);
+      expect(setRefDate).toHaveBeenCalledWith("2026-05-08");
+    });
+
+    it("keeps the displayed month when paging by year", async () => {
+      const setRefDate = vi.fn();
+      const { result } = mountItem(
+        { action: { type: "navigate-step", direction: "next", unit: "year", amount: 1 } },
+        { refDate: ref("2026-05-15" as AnchorString), setRefDate },
+      );
+      await userEvent.click(result.getByRole("button"));
+      // +1 year keeps May (2027-05-15); it must not snap to the year anchor (2027-01-01)
+      expect(setRefDate).toHaveBeenCalledWith("2027-05-15");
     });
   });
 

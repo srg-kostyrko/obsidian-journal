@@ -3,7 +3,7 @@ import { Menu } from "obsidian";
 import { match } from "ts-pattern";
 import { computed } from "vue";
 
-import { advance, CalendarDate, periodOfKind } from "@/calendar";
+import { CalendarDate, periodOfKind } from "@/calendar";
 import type { AnchorString } from "@/calendar";
 import { datePickerModal } from "@/calendar/ui/modals";
 import { m } from "@/i18n";
@@ -20,6 +20,8 @@ import { useViewContext } from "../../../view-context";
 import { resolveButtonAppearance, type ButtonAction, type ButtonConfig, type ButtonLevel } from "../button-config";
 
 import type { BlockInstanceId } from "../../../config";
+
+const STEP_SHIFT_UNIT = { week: "w", month: "m", quarter: "q", year: "y" } as const;
 
 const props = defineProps<{
   instanceId: BlockInstanceId;
@@ -90,8 +92,11 @@ async function fire(level: ButtonLevel, event: MouseEvent): Promise<void> {
         .with("prev", () => -1)
         .with("next", () => 1)
         .exhaustive();
-      const cursor = advance(periodFor(action.unit, date), direction * action.amount);
-      context.setRefDate(cursor.anchor.toAnchor());
+      // Shift the ref date itself rather than snapping to the period anchor, so paging by a
+      // unit coarser than the grid (e.g. year on a month calendar) keeps the displayed month
+      // instead of jumping to January. v2 parity: navigate always did refDate.add(±n, unit).
+      const shifted = date.shift(direction * action.amount, STEP_SHIFT_UNIT[action.unit]);
+      context.setRefDate(shifted.toAnchor());
     })
     .exhaustive();
 }

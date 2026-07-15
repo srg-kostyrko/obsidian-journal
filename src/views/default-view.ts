@@ -43,12 +43,12 @@ export function defaultCalendarView(): View {
             {
               id: ITEM_PICK_DATE,
               key: "button",
-              config: { action: { type: "pick-date", mode: "navigate", levels: ["day"] } },
+              config: { action: { type: "pick-date", mode: "create", levels: ["day"] } },
             },
             {
               id: ITEM_CURRENT,
               key: "button",
-              config: { action: { type: "current", mode: "create", levels: ["day"] } },
+              config: { action: { type: "current", mode: "navigate", levels: ["day"] } },
             },
           ],
         },

@@ -50,14 +50,14 @@ describe("defaultCalendarView", () => {
     ]);
   });
 
-  it("seeds the pick-date button in navigate mode", () => {
+  it("seeds the pick-date button in create mode", () => {
     const pick = allItems().find((item) => actionOf(item)?.type === "pick-date");
-    expect(actionOf(pick!)?.mode).toBe("navigate");
+    expect(actionOf(pick!)?.mode).toBe("create");
   });
 
-  it("seeds the current button in create mode", () => {
+  it("seeds the current button in navigate mode", () => {
     const current = allItems().find((item) => actionOf(item)?.type === "current");
-    expect(actionOf(current!)?.mode).toBe("create");
+    expect(actionOf(current!)?.mode).toBe("navigate");
   });
 
   it("seeds period buttons for month, quarter, and year but not week", () => {

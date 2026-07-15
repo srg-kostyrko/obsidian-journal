@@ -115,11 +115,6 @@ describe("RenameJournalModal", () => {
     expect(submit).not.toHaveBeenCalled();
   });
 
-  it("renders the notes-not-rewritten hint", async () => {
-    await mountModal("daily");
-    expect(screen.getByText(m.journal_notes_not_rewritten_hint())).toBeTruthy();
-  });
-
   it("cancels when the user clicks Cancel", async () => {
     const { cancel } = await mountModal("daily");
     await userEvent.click(screen.getByText(m.common_action_cancel()));
