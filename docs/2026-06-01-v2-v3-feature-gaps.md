@@ -294,3 +294,70 @@ this pass; the rest cite the sweep's lines and still need an independent read.
   - **`{{relative_date}}` ±7 wording** Fixed: `formatDay` tightened the named-weekday window to ±(2-6); exactly a week now reads "7 days ago" / "in 7 days" (v2's `sameElse` bucket), not "Last Wednesday". Tests for both boundaries watched red first.
   - **Decoration "Add style" defaults** Fixed: `defaultStyle` restored to v2 — a new color style defaults to the visible `text-normal` theme color (not transparent), a new border shows its left side, a new shape is a circle at the bottom, and a new icon sits at the top. New `defaults.test.ts` watched red first.
   - **Shelf-name placeholder** Fixed: `ShelfNameModal` regained an example placeholder (`shelf_name_placeholder` = "e.g. Work").
+
+---
+
+# Fifth-pass audit — 2026-07-16
+
+Six parallel domain sweeps (journals pipeline/index, calendar view UI +
+decorations, code blocks, views/toolbar system, settings/config UI,
+lifecycle/host/commands/migration), re-run against `_old-code/` after four prior
+passes. Mandate sharpened to the residue those feature-level passes could still
+miss: per-field options, defaults, event/mode gating, parse-tolerance edges,
+reactive syncs. Every item below was **independently re-read against v3 source**
+by the coordinator (not just the sweep) before landing here; confidence + exposure
+noted honestly. Items open (`[ ]`) — no fixes applied, decisions pending.
+
+## 🔴 Functional regressions (user-facing features lost)
+
+- [x] **72. `{{relative_date}}` renders empty for custom-interval journals.** [verified] Fixed: `buildNavRowContext` now resolves the custom case via `customRelativeDate` (`src/code-blocks/nav/nav-row-context.ts`) — it counts intervals from the one containing today (`cycle.anchorOf(today)`) to the row's interval (`cycle.countRepeats`) and renders "This/Last/Next `<journal>`" or "N `<journal>`s ago / from now" via new `relative_date_custom_*` messages, restoring v2's `CustomInterval.resolveRelativeDate` labels (`src/_old-code/journals/custom-interval.ts:92-112`). The existing test that asserted empty-for-custom was replaced with the five label cases (this/last/next/ago/from-now, watched red first), and the `journal_edit_variable_relative_date_description` help text — which previously read "empty for custom journals" (a deliberately-codified simplification, reverted here per v2 fidelity) — now documents the custom labels.
+  - v2: `CustomInterval.resolveRelativeDate` returned real labels ("This/Last/Next `<journal>`", "N `<journal>`s ago / from now") — `src/_old-code/journals/custom-interval.ts:92-112` — wired into nav rendering at `NavigationBlockRow.vue:56-58`.
+  - v3 (before): `fixedPeriodKindFor` returned `null` for `{ type: "custom" }`, so `relative = ""` bound empty; `relativeDate()` handled only day/week/month/quarter/year.
+  - Exposure was opt-in — the custom default nav rows use `{{journal_name}} {{index}}`, not `{{relative_date}}`, so only users who added it were affected (which is why four passes missed it).
+
+## 🟡 Capability changed shape / behavior changed (confirm intent)
+
+- [ ] **73. Home fence: `show`-as-scalar and `shelf`-as-non-string hard-error where v2 degraded (new tolerance axes beyond #67).** [verified]
+  - v2: `home-processor.ts:41,48` wrapped `config.show.filter(...)` in a try/catch returning defaults on any throw, so `show: day` (scalar, a common "forgot the list" YAML slip) → `"day".filter` throws → caught → default; `shelf` was passed through untouched, so a numeric/unquoted `shelf: 2024` rendered harmlessly.
+  - v3: `homeBlockSchema.show` is `v.array(v.unknown())` — the `v.optional` default fires only on `undefined`, not a type mismatch, so a scalar fails array validation; `shelf: v.optional(v.string())` has no `v.fallback` (unlike the deliberately-softened `separator`/`scale` beside it), so a non-string fails too (`src/code-blocks/home/home-config.ts:25-31,45`). Both propagate to the strict `code-block-error` panel.
+  - Impact: `journals-home` with `show: day` or an unquoted/numeric `shelf:` renders a red error box; v2 rendered normally. #67 softened only the within-array `show` filter, `mode` fallback, non-mapping fence, and separator/scale — these two field-level type mismatches are uncovered axes.
+
+- [ ] **74. Journal view leaf never sets `navigation = false`.** [verified]
+  - v2: `CalendarView` set `navigation = false` on the `ItemView` (`src/_old-code/calendar-view/calendar-view.ts:8`) — Obsidian's documented convention for calendar-type views.
+  - v3: `JournalViewLeaf` overrides the view hooks but never sets `navigation` (`src/views/view-leaf.ts:21-91`), so it inherits the `ItemView` default (`true`).
+  - Impact: v2 was sidebar-only and immune by construction; v3 now allows `leaf: "tab"` placement, where a navigable calendar tab gets added to navigation history and can be reused/replaced by Obsidian when a note opens. Real omission; runtime blast radius depends on the ItemView default + `OpenDateFlow` leaf selection — confirm severity.
+
+- [ ] **75. Startup view-open reveals/expands the sidebar and steals focus; v2 only placed the leaf.** [verified]
+  - v2: `placeCalendarView()` on `onLayoutReady` did `getRightLeaf(false).setViewState({ type })` only — no `revealLeaf`, no `active: true` (`src/_old-code/main.ts:288-300,384-396`). A user-collapsed sidebar stayed collapsed; reveal happened only via the `open-calendar` command.
+  - v3: `#openStartupViews` → `open()`, which finds the layout-restored leaf and calls `revealLeaf(existing)` (`src/views/view-host.ts:73-82,211-222`).
+  - Impact: every launch, a startup view force-expands its (possibly collapsed) sidebar and becomes the active leaf. Distinct from #4 (startup _note_) and #7/#13.
+
+- [ ] **76. Decoration property `neq` no longer matches notes that lack the property.** [verified]
+  - v2: `case "neq": return properties[name] != condition.value` — for a note without the property, `undefined != value` is **true**, so the cell was decorated (`src/_old-code/composables/use-decorations.ts:181-186`).
+  - v3: `checkProperty` runs `if (!present) return false` before the value match, so an absent property is **false** for `neq` (`src/decorations/engine-checks.ts:42-45`).
+  - Impact: a v2 "property X does-not-equal Y" decoration that painted every note including those missing X now skips the property-less ones. Note: this is the only property operator that flips — v2's `does-not-contain` already returned false for absent — so v3 makes the negative operators self-consistent. Likely a deliberate correctness improvement; flag to confirm intent + release-note if any user relied on it.
+
+- [ ] **77. Numbering dropped back-propagation from a later existing (manually renumbered) note.** [verified]
+  - v2: `#resolveIndex()` tried nearest **previous** existing note → nearest **next** existing note (`after.index - repeats`) → config anchor (`src/_old-code/journals/journal.ts:686-737`), so a future note's manually-edited index back-computed earlier dates.
+  - v3: `NumberingService.#compute` consults only `findPrevious` — no `findNext` fallback — then falls to the config anchor (`src/journals/numbering.ts:50-65`).
+  - Impact: for an index-enabled journal, if a user manually renumbers a note then views/creates an _earlier_ period with no earlier neighbor, v2 derived the index from the manual value; v3 uses the anchor-derived value. Forward propagation still works. Plausibly part of the deliberate numbering redesign (#18/#19) — confirm.
+
+- [ ] **78. Template-file suggester scope narrowed to markdown + configured template folders.** [needs-recheck]
+  - v2: `template-suggest.ts` returned **any** `TFile` vault-wide whose path contains the query (markdown or not, any folder).
+  - v3: `UiTemplateInput` → `TemplatesService.candidatePaths` returns markdown notes only, and when a core-Templates/Templater folder is configured, restricts to files inside it (`src/infrastructure/host/internal/templates-service.ts:35-40`).
+  - Impact: a user keeping template notes outside the configured folder (or a non-markdown template) gets no autocomplete. Beyond #34/#36/#71. Plausibly an intentional scoping improvement — confirm.
+
+## 🟢 Behavioral / cosmetic deltas
+
+- [ ] **79. Theme-color dropdown lost v2's friendly labels (shows raw variable names).** [verified] Residual of #26 — the dropdown/swatch was restored but not the labels. v2 mapped each of ~32 variables to a human label ("Primary background", "Error background, RGB value") via `ui-texts.ts:15-48` → `ColorPicker.vue:66-70`; v3 `THEME_COLOR_NAMES` keeps bare variable strings, rendered verbatim as `{{ colorName }}` (`src/ui/theme-colors.ts`, `UiColorSettingsPicker.vue:49`). Less discoverable (`background-modifier-error-rgb` vs "Error background, RGB value").
+- [ ] **80. `connect-note` command lost editor-mode gating (parallel to #27, different command).** [verified] v2 registered it with `editorCallback`, so it appeared only with an active **markdown editor** (`src/_old-code/main.ts:603-614`); v3 gates on `check: () => this.#workspace.activeNote().isSome()`, which is true for any active file incl. reading mode / PDF / image (`src/journals/notes/note-connection-commands.ts:16-19`). #27 fixed this class for `open-next`/`open-prev` but named only those.
+- [ ] **81. Sequence "Anchor date" field lost its explanatory help text.** [verified] v2's anchor-date row always read "This date is used to connect some number to it for further calculations. Start date is used as anchor date if defined." (`JournalSettingsEdit.vue:384-393`). v3 renders only `journal_edit_anchor_start_used` ("Start date is used as anchor date.") and **only when a start date exists** (`SequenceSection.vue:80-86`); the no-start-date case — exactly when the picker shows and the user must choose — has no description, and the core sentence has no message key.
+- [ ] **82. `refDate` persists across restarts; v2 always opened at today.** [verified] v2's `refDateMoment = ref(today())` was component-local, reset every mount (`CalendarView.vue:21`). v3 round-trips `refDate` through the persisted leaf state (`view-leaf.ts:53-75,109`), so a calendar paged to a distant month reopens there after restart. Arguably intentional (within-session both retain the date); active-note-follow / startup-note open can override it. Confirm intent.
+- [ ] **83. Home block shows an empty-state placeholder where v2 rendered nothing.** [verified] v2 rendered no children when `listToShow` was empty (`_old-code/code-blocks/home/HomeCodeBlock.vue:62-69`); v3 renders `m.code_blocks_home_empty()` ("no journals to show") (`src/code-blocks/home/ui/HomeCodeBlock.vue:76`). Deliberate-looking UX addition, visible output change.
+- [ ] **84. Command ribbon-icon tooltip now carries the journal/shelf prefix.** [verified] v2 passed the bare `command.name` as the ribbon tooltip (`utils/plugin-commands.ts:67`); v3 uses the prefixed palette name, so a journal command's ribbon icon hovers as "MyJournal: Open today" instead of "Open today" (`command-service.ts:70-82` via `command-registry.ts` `#paletteName`). Arguably an improvement (disambiguates icons); flagged as a divergence.
+- [ ] **85. Decoration date-condition description prints the literal string "null" for "any year".** [verified] v3-only UI defect (v2 rendered no per-condition descriptions). `describe-condition.ts:41` does `year: c.year === null ? "null" : String(c.year)`, so the wildcard year renders the word "null" in the decorations settings summary, unlike the sibling day/month fields which use `m.decoration_condition_date_any()`.
+- [ ] **86. Minor deltas (#71-class).** [verified] (a) Custom journal's default nav first-row `fontSize` changed 3 → 2 (`journal-defaults.ts:143-147` vs `src/journals/config.ts:250`). (b) Frontmatter end-date write no longer suppresses an end equal to the period start (v2 `journal.ts:631-640` guarded `end_date !== resolveStartDate(date)`; v3 `frontmatter.ts:119-129` writes whenever defined) — reachable only via connect/reindex of an already-extended degenerate custom interval. (c) Home custom-entry label: v2 showed the full rendered name template incl. `/` and a blank link for out-of-bounds dates; v3 slices at the last `/` and omits out-of-bounds entries (`home-items.ts:53-71`). (d) "Add journal" name field dropped its `ex. Work` placeholder (`CreateJournal.modal.vue:93` vs `AddJournalModal.vue:84`).
+
+## Checked and confirmed at parity (no finding)
+
+Bounding the search — sweeps verified these as faithful (or already-tracked/intentional): all decoration evaluators + style derivation (v3 even fixes a latent v2 uniform-border padding bug) + per-write-type condition availability; period-badge/cell click·middle·context·hover·decoration·active wiring; active-note follow (week/quarter/year spillover); shelf-selector "All journals" scope; custom-intervals window/hideEmpty/active-highlight/offset-split; all five fence keys + nav link scoping + two-level context menu + timeline mode/weeks fallbacks; every v2 event (`file-open`, vault rename/delete, metadata changed) + core commands + URI (v3-new); migration maps every enumerated v2 field (only #12/#14/#15/#16 + `pendingMigrations` intentionally dropped); template selection (skip empty/nonexistent), reuse-existing-leaf on open, settings save/sync guards. #5 already records the delete-notes trash-vs-permanent delta; #52 already records the home-block at-cursor→suggest disambiguation change.
