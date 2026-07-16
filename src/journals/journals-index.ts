@@ -96,7 +96,10 @@ export class JournalsIndex {
     if (!existing) return;
     const next: JournalEntry = { ...existing, path: to };
     const journalIndex = this.#journals.get(existing.journalName);
-    journalIndex?.set(existing.anchor, to);
+    // Only move the anchor slot if `from` actually owned it — a collision loser being renamed
+    // must not seize the incumbent's slot.
+    const slot = journalIndex?.get(existing.anchor);
+    if (slot !== undefined && slot.isSome() && slot.value === from) journalIndex?.set(existing.anchor, to);
     this.#byPath.delete(from);
     this.#byPath.set(to, next);
     this.#emitter.emit("entryChanged", { entry: existing, kind: "removed" });
@@ -107,8 +110,8 @@ export class JournalsIndex {
   clearJournal(journalName: string): void {
     const journalIndex = this.#journals.get(journalName);
     if (!journalIndex) return;
-    for (const [, path] of journalIndex) {
-      this.#byPath.delete(path);
+    for (const [path, entry] of this.#byPath) {
+      if (entry.journalName === journalName) this.#byPath.delete(path);
     }
     journalIndex.clear();
     this.#journals.delete(journalName);

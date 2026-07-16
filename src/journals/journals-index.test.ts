@@ -234,6 +234,16 @@ describe("JournalsIndex", () => {
       index.transferPath(p("same.md"), p("same.md"));
       expect(events.entryChanged).toEqual([]);
     });
+
+    it("does not seize the incumbent's slot when a collision loser is renamed", () => {
+      const index = new JournalsIndex();
+      index.register(entry("daily", "2022-01-01", "original.md"));
+      index.register(entry("daily", "2022-01-01", "conflict.md")); // collision loser
+      index.transferPath(p("conflict.md"), p("renamed.md"));
+      const atAnchor = index.entryByAnchor("daily", a("2022-01-01"));
+      assert(atAnchor.isSome());
+      expect(atAnchor.value.path).toBe(p("original.md"));
+    });
   });
 
   describe("clearJournal", () => {
@@ -278,6 +288,14 @@ describe("JournalsIndex", () => {
       index.clearJournal("daily");
       await Promise.resolve();
       expect(events.journalDirty).toEqual([{ journalName: "daily" }]);
+    });
+
+    it("removes a collision loser from path lookup when its journal is cleared", () => {
+      const index = new JournalsIndex();
+      index.register(entry("daily", "2022-01-01", "original.md"));
+      index.register(entry("daily", "2022-01-01", "conflict.md")); // collision loser
+      index.clearJournal("daily");
+      expect(index.entryByPath(p("conflict.md")).isNone()).toBe(true);
     });
   });
 
