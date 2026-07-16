@@ -127,6 +127,16 @@ describe("JournalsIndex", () => {
       const index = new JournalsIndex();
       expect(index.register(entry("daily", "2022-01-01", "original.md"))).toBe("registered");
     });
+
+    it("does not orphan the incumbent when a collision loser is re-registered at a new anchor", () => {
+      const index = new JournalsIndex();
+      index.register(entry("daily", "2022-01-01", "original.md"));
+      index.register(entry("daily", "2022-01-01", "conflict.md")); // collision loser at 2022-01-01
+      index.register(entry("daily", "2022-01-05", "conflict.md")); // loser re-anchors elsewhere
+      const atOriginal = index.entryByAnchor("daily", a("2022-01-01"));
+      assert(atOriginal.isSome());
+      expect(atOriginal.value.path).toBe(p("original.md"));
+    });
   });
 
   describe("entryByPath", () => {

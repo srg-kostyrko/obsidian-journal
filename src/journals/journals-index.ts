@@ -47,7 +47,13 @@ export class JournalsIndex {
       return "registered";
     }
     if (existing) {
-      this.#journals.get(existing.journalName)?.delete(existing.anchor);
+      // Only free the old slot if this path actually owned it — a collision loser being re-anchored
+      // must not delete the incumbent's slot.
+      const oldIndex = this.#journals.get(existing.journalName);
+      const oldSlot = oldIndex?.get(existing.anchor);
+      if (oldSlot !== undefined && oldSlot.isSome() && oldSlot.value === entry.path) {
+        oldIndex?.delete(existing.anchor);
+      }
       this.#emitter.emit("entryChanged", { entry: existing, kind: "removed" });
       this.#markDirty(existing.journalName);
     }
