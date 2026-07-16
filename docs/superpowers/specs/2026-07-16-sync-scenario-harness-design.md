@@ -69,10 +69,12 @@ copy (different path, same anchor) skips dedup and `journalIndex.set(anchor, con
 silently overwrites the original's anchor→path mapping; the original lingers orphaned in
 `#byPath`. Worse, when sync later deletes the conflict copy, `unregister` deletes the
 anchor slot entirely, so the original note vanishes from all anchor/calendar lookups. The
-fix makes same-anchor collisions **incumbent-wins**: the first live path keeps the slot, a
-later different path is rejected (never entering `#byPath`), and `unregister` only frees a
-slot it actually owns. Nothing is silently orphaned. Other gaps the harness reveals are
-report-only unless a fix is trivial.
+fix makes same-anchor collisions **incumbent-wins**: the first live path keeps the anchor
+slot; a later different path is still tracked by path (so `entryByPath` resolves it) but
+never overwrites or frees the slot, and `unregister` only frees a slot it actually owns.
+Nothing is silently orphaned. This also preserves the settings code-block preview, which
+registers a unique synthetic path at today's real anchor and reads it back by path. Other
+gaps the harness reveals are report-only unless a fix is trivial.
 
 ## Approach (C: unit core + one faithful e2e)
 
@@ -118,3 +120,25 @@ e2e (cold-boot metadata races need unit-level fakes — an e2e would flake).
 
 The harness _is_ the test. Quality gates: `test`, `check:types`, `check:lint`; the two
 new e2e specs run under the wdio `integration` suite.
+
+## Results
+
+All 11 sync-scenario cells are covered and passing. The harness surfaced and fixed one
+critical bug (cell 7: conflict-copy incumbent-wins in `JournalsIndex`), and incidentally
+exposed and fixed a pure-literal-match bug in `TemplateEngine.parse` where plain-text
+journal folders and nameTemplates could never auto-attach. Quality gates run clean:
+332 test files, 2880 tests passed; types clean; 30 lint warnings (test-file style, non-blocking).
+
+| #   | Scenario                                     | Covering test                                                                      | Status                    |
+| --- | -------------------------------------------- | ---------------------------------------------------------------------------------- | ------------------------- |
+| 1   | Foreign create, valid journal frontmatter    | `src/journals/notes/auto-attach.test.ts`                                           | PASS                      |
+| 2   | Foreign create in folder without frontmatter | `src/journals/notes/auto-attach.test.ts`                                           | PASS                      |
+| 3   | Foreign modify — journal-date changed        | `src/journals/vault-subscription.test.ts` (partial)                                | PASS                      |
+| 4   | Foreign modify makes frontmatter invalid     | `src/journals/vault-subscription.test.ts`                                          | PASS                      |
+| 5   | Foreign delete                               | `src/journals/vault-subscription.test.ts`                                          | PASS                      |
+| 6   | Foreign rename/move                          | `src/journals/vault-subscription.test.ts`                                          | PASS                      |
+| 7   | Conflict copy — duplicate, same name+date    | `src/journals/journals-index.test.ts` + `src/journals/sync-scenarios.test.ts`      | PASS (incumbent-wins fix) |
+| 8   | Settings sync (`data.json` change)           | `e2e/integration/sync-settings.e2e.ts` + `src/journals/vault-subscription.test.ts` | PASS                      |
+| 9   | Boot during active sync                      | `src/journals/vault-subscription.test.ts`                                          | PASS                      |
+| 10  | Burst — hundreds of synced notes             | `src/journals/sync-scenarios.test.ts`                                              | PASS                      |
+| 11  | Foreign create, unknown journal config       | `src/journals/sync-scenarios.test.ts`                                              | PASS                      |
