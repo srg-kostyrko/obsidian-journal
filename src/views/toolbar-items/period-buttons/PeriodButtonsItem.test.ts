@@ -5,6 +5,7 @@ import { computed, defineComponent, h, ref, shallowRef } from "vue";
 
 import { anchor, installTestCalendar } from "@/calendar/testing";
 import type { AnchorString } from "@/calendar/types";
+import type * as Decorations from "@/decorations";
 import { Container, provideInjectorOnApp } from "@/infrastructure/di";
 import { Flows } from "@/infrastructure/flows";
 import { WorkspaceService } from "@/infrastructure/host";
@@ -31,7 +32,8 @@ const SCOPE = {
   custom: [] as readonly string[],
 };
 
-vi.mock("@/decorations", () => ({
+vi.mock("@/decorations", async (importOriginal) => ({
+  ...(await importOriginal<typeof Decorations>()),
   useCellDecorations: () => new Map(),
   CellDecoration: defineComponent({
     props: { period: { type: Object, required: true } },

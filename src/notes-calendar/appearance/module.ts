@@ -1,7 +1,6 @@
 import type { Module } from "@/infrastructure/di";
 import { DashboardBlockToken, SliceDefinitionToken, defineDashboardBlock } from "@/settings";
 
-import { CalendarAppearanceBridge } from "./bridge";
 import { appearanceSlice } from "./slice";
 import AppearanceBlock from "./ui/AppearanceBlock.vue";
 
@@ -15,6 +14,5 @@ export const calendarAppearanceModule: Module = {
         order: 20,
       }),
     );
-    c.register(CalendarAppearanceBridge).useClass(CalendarAppearanceBridge).eager();
   },
 };

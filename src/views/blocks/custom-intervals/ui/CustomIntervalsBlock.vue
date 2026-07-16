@@ -9,6 +9,7 @@ import { useService } from "@/infrastructure/di";
 import { CycleService, JournalsIndex, JournalsRepository, TimelineService } from "@/journals";
 import type { JournalConfig, JournalNavBlock } from "@/journals";
 import { ActiveEntryViewModel } from "@/notes-calendar/active-entry";
+import { useCalendarAppearanceStyle } from "@/notes-calendar/appearance/use-appearance-style";
 import { useFollowActiveDate } from "@/notes-calendar/use-follow-active-date";
 import { useShelfScope } from "@/notes-calendar/use-shelf-scope";
 
@@ -25,6 +26,7 @@ const props = defineProps<{
 }>();
 
 const context = useViewContext();
+const appearanceStyle = useCalendarAppearanceStyle();
 const index = useService(JournalsIndex);
 const journalsRepo = useService(JournalsRepository);
 const cycle = useService(CycleService);
@@ -104,7 +106,7 @@ useCellDecorations(
 </script>
 
 <template>
-  <div class="journal-view-custom-intervals">
+  <div class="journal-view-custom-intervals" :style="appearanceStyle">
     <section
       v-for="section of sections"
       :key="section.journalName"

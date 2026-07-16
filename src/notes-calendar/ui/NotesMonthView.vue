@@ -4,10 +4,13 @@ import { computed, toRaw } from "vue";
 import { DayPeriod, QuarterPeriod, YearPeriod, type MonthPeriod, type Period, type WeekPeriod } from "@/calendar";
 import { hasOffsetCondition, useCellDecorations } from "@/decorations";
 
+import { useCalendarAppearanceStyle } from "../appearance/use-appearance-style";
 import { useNotesCell, type NotesCellApi } from "../use-notes-cell";
 import { useShelfScope } from "../use-shelf-scope";
 
 import NotesCalendarCell from "./NotesCalendarCell.vue";
+
+const appearanceStyle = useCalendarAppearanceStyle();
 
 const props = withDefaults(
   defineProps<{
@@ -107,7 +110,7 @@ const inactiveDay = inactiveCell();
 </script>
 
 <template>
-  <div class="notes-month-view">
+  <div class="notes-month-view" :style="appearanceStyle">
     <div v-if="showHeader" class="notes-month-view__header">
       <slot name="header">
         <NotesCalendarCell data-testid="header-month" :period="monthPeriod" :cell="monthCell" />

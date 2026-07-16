@@ -11,6 +11,7 @@ import type { VaultPath } from "@/infrastructure/host";
 import { OpenDateFlow } from "@/journals";
 import { JournalsIndex } from "@/journals/journals-index";
 import { ActiveEntryViewModel } from "@/notes-calendar/active-entry";
+import { useCalendarAppearanceStyle } from "@/notes-calendar/appearance/use-appearance-style";
 import { useShelfScope } from "@/notes-calendar/use-shelf-scope";
 import UiButton from "@/ui/UiButton.vue";
 import { useModifierHoverPreview } from "@/ui/use-modifier-hover-preview";
@@ -36,6 +37,7 @@ const props = defineProps<{
 }>();
 
 const context = useViewContext();
+const appearanceStyle = useCalendarAppearanceStyle();
 const flows = useService(Flows);
 const activeVM = useService(ActiveEntryViewModel);
 const workspace = useService(WorkspaceService);
@@ -105,6 +107,7 @@ function openPreview(badge: Badge, event: MouseEvent): void {
     v-for="badge of badges"
     :key="badge.key"
     flat
+    :style="appearanceStyle"
     :class="{ 'jv-period-inert': !badge.navigable }"
     :data-period="badge.key"
     :data-active="isActive(badge) || null"

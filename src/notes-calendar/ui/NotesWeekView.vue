@@ -4,10 +4,13 @@ import { computed, toRaw } from "vue";
 import { DayPeriod, MonthPeriod, QuarterPeriod, YearPeriod, type Period, type WeekPeriod } from "@/calendar";
 import { hasOffsetCondition, useCellDecorations } from "@/decorations";
 
+import { useCalendarAppearanceStyle } from "../appearance/use-appearance-style";
 import { useNotesCell } from "../use-notes-cell";
 import { useShelfScope } from "../use-shelf-scope";
 
 import NotesCalendarCell from "./NotesCalendarCell.vue";
+
+const appearanceStyle = useCalendarAppearanceStyle();
 
 const props = withDefaults(
   defineProps<{
@@ -62,7 +65,7 @@ useCellDecorations(
 </script>
 
 <template>
-  <div class="notes-week-view">
+  <div class="notes-week-view" :style="appearanceStyle">
     <div v-if="showHeader" class="notes-week-view__header">
       <slot name="header">
         <NotesCalendarCell data-testid="header-month" :period="monthPeriod" :cell="monthCell" />
