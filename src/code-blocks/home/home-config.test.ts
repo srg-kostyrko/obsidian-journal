@@ -56,4 +56,16 @@ describe("homeBlockSchema", () => {
     expect(result.separator).toBe(" • ");
     expect(result.scale).toBe(1);
   });
+
+  it("degrades a scalar show to the default list", () => {
+    // `show: month` (no list) parses to the bare string "month"; v2 caught the resulting
+    // `.filter` throw and fell back to the default rather than blanking the block.
+    expect(v.parse(homeBlockSchema, { show: "month" }).show).toEqual(["day"]);
+  });
+
+  it("coerces a non-string shelf to its string form", () => {
+    // An unquoted `shelf: 2024` parses to the number 2024; v2 passed it through untouched
+    // (matching no shelf) instead of erroring. Coercing keeps that graceful outcome.
+    expect(v.parse(homeBlockSchema, { shelf: 2024 }).shelf).toBe("2024");
+  });
 });

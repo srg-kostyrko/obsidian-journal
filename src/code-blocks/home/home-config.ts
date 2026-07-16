@@ -21,11 +21,16 @@ export const homeBlockSchema = v.pipe(
   v.transform(asRecord),
   v.object({
     // A typo'd entry drops out instead of failing the whole block into an error
-    // panel — v2 filtered invalid entries and rendered the rest.
+    // panel — v2 filtered invalid entries and rendered the rest. A non-array
+    // `show` (e.g. the scalar `show: month`) degrades to the default rather than
+    // erroring: v2 caught the resulting `.filter` throw and fell back the same way.
     show: v.optional(
-      v.pipe(
-        v.array(v.unknown()),
-        v.transform((entries) => entries.filter(isHomeEntry)),
+      v.fallback(
+        v.pipe(
+          v.array(v.unknown()),
+          v.transform((entries) => entries.filter(isHomeEntry)),
+        ),
+        ["day"] as HomeEntry[],
       ),
       () => ["day"] as const,
     ),
@@ -42,7 +47,19 @@ export const homeBlockSchema = v.pipe(
       ),
       1,
     ),
-    shelf: v.optional(v.string()),
+    // A non-string shelf (e.g. an unquoted `shelf: 2024` parsed as a number) coerces to
+    // its string form instead of erroring — v2 passed the raw value through, so it simply
+    // matched no shelf. An explicit null degrades to unset (current shelf).
+    shelf: v.optional(
+      v.pipe(
+        v.unknown(),
+        v.transform((value) => {
+          if (typeof value === "string") return value;
+          if (typeof value === "number" || typeof value === "boolean") return String(value);
+          return;
+        }),
+      ),
+    ),
   }),
 );
 
