@@ -96,6 +96,33 @@ describe("JournalsIndex", () => {
       index.register(entry("weekly", "2022-W01", "shared.md"));
       expect(index.has("daily", a("2022-01-01"))).toBe(false);
     });
+
+    it("keeps the incumbent when a different path claims an occupied anchor", () => {
+      const index = new JournalsIndex();
+      index.register(entry("daily", "2022-01-01", "original.md"));
+      index.register(entry("daily", "2022-01-01", "original (conflicted copy).md"));
+      const atAnchor = index.entryByAnchor("daily", a("2022-01-01"));
+      assert(atAnchor.isSome());
+      expect(atAnchor.value.path).toBe(p("original.md"));
+    });
+
+    it("reports collision when a different path claims an occupied anchor", () => {
+      const index = new JournalsIndex();
+      index.register(entry("daily", "2022-01-01", "original.md"));
+      expect(index.register(entry("daily", "2022-01-01", "conflict.md"))).toBe("collision");
+    });
+
+    it("does not index a path rejected as a collision", () => {
+      const index = new JournalsIndex();
+      index.register(entry("daily", "2022-01-01", "original.md"));
+      index.register(entry("daily", "2022-01-01", "conflict.md"));
+      expect(index.entryByPath(p("conflict.md")).isNone()).toBe(true);
+    });
+
+    it("reports registered for a first-seen anchor", () => {
+      const index = new JournalsIndex();
+      expect(index.register(entry("daily", "2022-01-01", "original.md"))).toBe("registered");
+    });
   });
 
   describe("entryByPath", () => {
@@ -134,6 +161,16 @@ describe("JournalsIndex", () => {
       index.register(entry("daily", "2022-01-01", "Daily/2022-01-01.md"));
       index.unregister(p("Daily/2022-01-01.md"));
       expect(index.has("daily", a("2022-01-01"))).toBe(false);
+    });
+
+    it("keeps the incumbent indexed when a rejected collision path is unregistered", () => {
+      const index = new JournalsIndex();
+      index.register(entry("daily", "2022-01-01", "original.md"));
+      index.register(entry("daily", "2022-01-01", "conflict.md"));
+      index.unregister(p("conflict.md"));
+      const atAnchor = index.entryByAnchor("daily", a("2022-01-01"));
+      assert(atAnchor.isSome());
+      expect(atAnchor.value.path).toBe(p("original.md"));
     });
   });
 

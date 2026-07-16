@@ -41,12 +41,20 @@ export class JournalsIndex {
     return journalIndex.get(anchor).flatMap((path) => Option.fromNullable(this.#byPath.get(path)));
   }
 
-  register(entry: JournalEntry): void {
+  register(entry: JournalEntry): "registered" | "collision" {
     const existing = this.#byPath.get(entry.path);
+    if (existing?.journalName === entry.journalName && existing?.anchor === entry.anchor) {
+      return "registered";
+    }
+    // A different note already holds this (journal, anchor) slot — e.g. a sync conflict copy that
+    // carries the original's frontmatter. Keep the incumbent and reject the newcomer, rather than
+    // overwriting the slot and orphaning the incumbent in #byPath (where a later delete of the
+    // newcomer would then strand the incumbent, invisible to every anchor lookup).
+    const occupant = this.#journals.get(entry.journalName)?.get(entry.anchor);
+    if (occupant !== undefined && occupant.isSome() && occupant.value !== entry.path) {
+      return "collision";
+    }
     if (existing) {
-      if (existing.journalName === entry.journalName && existing.anchor === entry.anchor) {
-        return;
-      }
       this.#journals.get(existing.journalName)?.delete(existing.anchor);
       this.#emitter.emit("entryChanged", { entry: existing, kind: "removed" });
       this.#markDirty(existing.journalName);
@@ -60,12 +68,18 @@ export class JournalsIndex {
     this.#byPath.set(entry.path, entry);
     this.#emitter.emit("entryChanged", { entry, kind: "added" });
     this.#markDirty(entry.journalName);
+    return "registered";
   }
 
   unregister(path: VaultPath): void {
     const existing = this.#byPath.get(path);
     if (!existing) return;
-    this.#journals.get(existing.journalName)?.delete(existing.anchor);
+    const journalIndex = this.#journals.get(existing.journalName);
+    // Only free the anchor slot if it still points at this path: a rejected collision newcomer
+    // never entered #byPath (so this is a no-op for it), and we must never delete a slot another
+    // note owns.
+    const slot = journalIndex?.get(existing.anchor);
+    if (slot !== undefined && slot.isSome() && slot.value === path) journalIndex?.delete(existing.anchor);
     this.#byPath.delete(path);
     this.#emitter.emit("entryChanged", { entry: existing, kind: "removed" });
     this.#markDirty(existing.journalName);
