@@ -2,6 +2,7 @@ import { match } from "ts-pattern";
 
 import type { AnchorString } from "@/calendar";
 import { inject } from "@/infrastructure/di";
+import type { VaultPath } from "@/infrastructure/host";
 import { Option } from "@/infrastructure/result";
 
 import { CycleService } from "./cycle";
@@ -47,22 +48,35 @@ export class NumberingService {
     if (!numbering.enabled) return Option.none();
     if (!numbering.allowBefore && anchor < anchorDate) return Option.none();
 
-    const previousPath = this.#index.findPrevious(name, anchor);
-    const basis = previousPath
-      .flatMap((path) => this.#index.entryByPath(path))
-      .flatMap((entry) => Option.fromNullable(entry.numbers).map((numbers) => ({ anchor: entry.anchor, numbers })));
+    // v2 parity: derive from the nearest previous existing note, else back-compute from the
+    // nearest next existing note, else fall to the config anchor. A manually renumbered note
+    // thus pins the sequence in both directions — countRepeats is signed, so a next-note basis
+    // subtracts the steps between them.
+    const fromPrevious = this.#basisNumbers(this.#index.findPrevious(name, anchor), name, anchor, numbering.sources);
+    if (fromPrevious.isSome()) return fromPrevious;
 
-    if (basis.isSome()) {
-      const stepsFromBasisOpt = this.#cycle.countRepeats(name, basis.value.anchor, anchor);
-      if (stepsFromBasisOpt.isSome()) {
-        return Option.some(this.#cascade(numbering.sources, basis.value.numbers, stepsFromBasisOpt.value));
-      }
-    }
+    const fromNext = this.#basisNumbers(this.#index.findNext(name, anchor), name, anchor, numbering.sources);
+    if (fromNext.isSome()) return fromNext;
 
     const stepsOpt = this.#cycle.countRepeats(name, anchorDate, anchor);
     if (stepsOpt.isNone()) return Option.none();
 
     return Option.some(this.#cascade(numbering.sources, undefined, stepsOpt.value));
+  }
+
+  #basisNumbers(
+    pathOpt: Option<VaultPath>,
+    name: string,
+    anchor: AnchorString,
+    sources: readonly NumberingSource[],
+  ): Option<Readonly<Record<string, number>>> {
+    const basis = pathOpt
+      .flatMap((path) => this.#index.entryByPath(path))
+      .flatMap((entry) => Option.fromNullable(entry.numbers).map((numbers) => ({ anchor: entry.anchor, numbers })));
+    if (basis.isNone()) return Option.none();
+    return this.#cycle
+      .countRepeats(name, basis.value.anchor, anchor)
+      .map((steps) => this.#cascade(sources, basis.value.numbers, steps));
   }
 
   #cascade(

@@ -235,6 +235,42 @@ describe("NumberingService", () => {
     });
   });
 
+  describe("assignNumbers — next-entry back-propagation", () => {
+    it("back-computes from the nearest later entry when no earlier entry exists", () => {
+      const c = buildContainer({ s: customJournal("s", "week", 1, "2024-01-01") });
+      const index = c.resolve(JournalsIndex);
+      index.register({
+        journalName: "s",
+        anchor: "2024-01-29" as AnchorString,
+        path: "S/later.md" as VaultPath,
+        numbers: { index: 100 },
+      });
+      const n = c.resolve(NumberingService);
+      // Two weeks before the manually-numbered later note: 100 - 2.
+      expect(unwrap(n.assignNumbers("s", "2024-01-15" as AnchorString))).toEqual({ index: 98 });
+    });
+
+    it("prefers the nearest earlier entry over a later one", () => {
+      const c = buildContainer({ s: customJournal("s", "week", 1, "2024-01-01") });
+      const index = c.resolve(JournalsIndex);
+      index.register({
+        journalName: "s",
+        anchor: "2024-01-08" as AnchorString,
+        path: "S/earlier.md" as VaultPath,
+        numbers: { index: 10 },
+      });
+      index.register({
+        journalName: "s",
+        anchor: "2024-01-29" as AnchorString,
+        path: "S/later.md" as VaultPath,
+        numbers: { index: 100 },
+      });
+      const n = c.resolve(NumberingService);
+      // One week after the earlier note (10 + 1), not derived from the later note.
+      expect(unwrap(n.assignNumbers("s", "2024-01-15" as AnchorString))).toEqual({ index: 11 });
+    });
+  });
+
   describe("cache invalidation", () => {
     it("recomputes after journalDirty fires", async () => {
       const c = buildContainer({ s: customJournal("s", "week", 1, "2024-01-01") });
