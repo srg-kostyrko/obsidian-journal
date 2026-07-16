@@ -905,6 +905,11 @@
 			}
 		}
 	],
+	"relative_date_custom_this": "Ce {name}",
+	"relative_date_custom_last": "{name} dernier",
+	"relative_date_custom_next": "{name} prochain",
+	"relative_date_custom_ago": "il y a {count} {name}",
+	"relative_date_custom_from_now": "dans {count} {name}",
 	"relative_date_from_now": [
 		{
 			"declarations": [

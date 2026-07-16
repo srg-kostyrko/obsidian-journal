@@ -905,6 +905,11 @@
 			}
 		}
 	],
+	"relative_date_custom_this": "Este {name}",
+	"relative_date_custom_last": "{name} passado",
+	"relative_date_custom_next": "Próximo {name}",
+	"relative_date_custom_ago": "há {count} {name}",
+	"relative_date_custom_from_now": "daqui a {count} {name}",
 	"relative_date_from_now": [
 		{
 			"declarations": [

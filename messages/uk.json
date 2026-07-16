@@ -905,6 +905,11 @@
 			}
 		}
 	],
+	"relative_date_custom_this": "Цей {name}",
+	"relative_date_custom_last": "Минулий {name}",
+	"relative_date_custom_next": "Наступний {name}",
+	"relative_date_custom_ago": "{count} {name} тому",
+	"relative_date_custom_from_now": "через {count} {name}",
 	"relative_date_from_now": [
 		{
 			"declarations": [

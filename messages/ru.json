@@ -905,6 +905,11 @@
 			}
 		}
 	],
+	"relative_date_custom_this": "Этот {name}",
+	"relative_date_custom_last": "Прошлый {name}",
+	"relative_date_custom_next": "Следующий {name}",
+	"relative_date_custom_ago": "{count} {name} назад",
+	"relative_date_custom_from_now": "через {count} {name}",
 	"relative_date_from_now": [
 		{
 			"declarations": [

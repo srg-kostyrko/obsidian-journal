@@ -905,6 +905,11 @@
 			}
 		}
 	],
+	"relative_date_custom_this": "이번 {name}",
+	"relative_date_custom_last": "지난 {name}",
+	"relative_date_custom_next": "다음 {name}",
+	"relative_date_custom_ago": "{count} {name} 전",
+	"relative_date_custom_from_now": "{count} {name} 후",
 	"relative_date_from_now": [
 		{
 			"declarations": [

@@ -905,6 +905,11 @@
 			}
 		}
 	],
+	"relative_date_custom_this": "Questo {name}",
+	"relative_date_custom_last": "{name} scorso",
+	"relative_date_custom_next": "{name} prossimo",
+	"relative_date_custom_ago": "{count} {name} fa",
+	"relative_date_custom_from_now": "tra {count} {name}",
 	"relative_date_from_now": [
 		{
 			"declarations": [

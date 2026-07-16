@@ -905,6 +905,11 @@
 			}
 		}
 	],
+	"relative_date_custom_this": "今回の {name}",
+	"relative_date_custom_last": "前回の {name}",
+	"relative_date_custom_next": "次回の {name}",
+	"relative_date_custom_ago": "{count} {name}前",
+	"relative_date_custom_from_now": "{count} {name}後",
 	"relative_date_from_now": [
 		{
 			"declarations": [

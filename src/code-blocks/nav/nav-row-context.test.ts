@@ -80,21 +80,46 @@ describe("buildNavRowContext", () => {
     expect(context.get("relative_date")).toEqual({ kind: "string", value: "Yesterday" });
   });
 
-  it("renders relative_date as an empty string for a custom journal", () => {
+  describe("relative_date for a custom journal", () => {
     const customConfig = journalDefaultsFor(
       { type: "custom", every: "week", duration: 2, anchorDate: "2024-01-01" as AnchorString },
-      "biweekly",
+      "sprint",
     );
-    const custom = makeServices({ biweekly: customConfig });
-    const context = buildNavRowContext({
-      journal: customConfig,
-      refDate,
-      entry: Option.none(),
-      cycle: custom.cycle,
-      numbering: custom.numbering,
-      today,
+    const custom = makeServices({ sprint: customConfig });
+    // today lands in the interval anchored at 2024-01-15; adjacent interval anchors are
+    // 2024-01-01 / 2024-01-29 (±1) and 2023-12-18 / 2024-02-12 (±2).
+    const customToday = "2024-01-20" as AnchorString;
+
+    function relativeFor(customRefDate: AnchorString): unknown {
+      return buildNavRowContext({
+        journal: customConfig,
+        refDate: customRefDate,
+        entry: Option.none(),
+        cycle: custom.cycle,
+        numbering: custom.numbering,
+        today: customToday,
+      }).get("relative_date");
+    }
+
+    it("names the current interval with the journal name", () => {
+      expect(relativeFor("2024-01-15" as AnchorString)).toEqual({ kind: "string", value: "This sprint" });
     });
-    expect(context.get("relative_date")).toEqual({ kind: "string", value: "" });
+
+    it("names the immediately previous interval", () => {
+      expect(relativeFor("2024-01-01" as AnchorString)).toEqual({ kind: "string", value: "Last sprint" });
+    });
+
+    it("names the immediately next interval", () => {
+      expect(relativeFor("2024-01-29" as AnchorString)).toEqual({ kind: "string", value: "Next sprint" });
+    });
+
+    it("counts intervals in the past", () => {
+      expect(relativeFor("2023-12-18" as AnchorString)).toEqual({ kind: "string", value: "2 sprint ago" });
+    });
+
+    it("counts intervals in the future", () => {
+      expect(relativeFor("2024-02-12" as AnchorString)).toEqual({ kind: "string", value: "2 sprint from now" });
+    });
   });
 
   it("populates index from the entry numbers when present", () => {

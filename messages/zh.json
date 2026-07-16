@@ -905,6 +905,11 @@
 			}
 		}
 	],
+	"relative_date_custom_this": "这个 {name}",
+	"relative_date_custom_last": "上个 {name}",
+	"relative_date_custom_next": "下个 {name}",
+	"relative_date_custom_ago": "{count} {name}前",
+	"relative_date_custom_from_now": "{count} {name}后",
 	"relative_date_from_now": [
 		{
 			"declarations": [
