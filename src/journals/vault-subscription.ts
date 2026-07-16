@@ -71,7 +71,10 @@ export class VaultSubscriptionService {
       this.#logger.debug("frontmatter not parseable", { path });
       return;
     }
-    this.#index.register(entry.value);
+    const outcome = this.#index.register(entry.value);
+    if (outcome === "collision") {
+      this.#logger.warn("note shares an anchor with another note; not the canonical entry", { path });
+    }
     if (options.reconcileCustom) this.#reconcileEntry(entry.value);
   }
 
