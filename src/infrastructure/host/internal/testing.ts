@@ -55,6 +55,7 @@ export interface FakeWorkspaceState {
   updateHeaderThrows: boolean;
   sidebarLeafAvailable: boolean;
   saveLayoutCalls: number;
+  revealLeafCalls: number;
   layoutReady: boolean;
 }
 
@@ -157,6 +158,7 @@ export function createFakeHost(): FakeHost {
     updateHeaderThrows: false,
     sidebarLeafAvailable: true,
     saveLayoutCalls: 0,
+    revealLeafCalls: 0,
     layoutReady: true,
   };
   const pluginData: FakeHost["pluginData"] = { current: undefined };
@@ -379,7 +381,7 @@ export function createFakeHost(): FakeHost {
       return workspaceState.sidebarLeafAvailable ? makeLeaf("right") : null;
     },
     async revealLeaf(_leaf: unknown): Promise<void> {
-      /* no-op */
+      workspaceState.revealLeafCalls++;
     },
     trigger(event: string, ...arguments_: unknown[]): void {
       workspaceState.triggerCalls.push({ event, arguments_ });

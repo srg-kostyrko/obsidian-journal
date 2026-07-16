@@ -74,11 +74,23 @@ export class ViewHostService {
     for (const [id, view] of this.#repo.find().entries()) {
       if (!view.openOnStartup) continue;
       try {
-        await this.open(id);
+        await this.#placeOnStartup(id);
       } catch (error) {
         this.#logger.error("failed to open view on startup", { id, error });
       }
     }
+  }
+
+  // v2 parity: startup places the view without revealing it — a collapsed sidebar stays
+  // collapsed and focus is not stolen. A leaf already restored from the persisted layout is
+  // left untouched; only a genuinely missing one is placed (inactive). Explicit open
+  // commands still reveal — see open().
+  async #placeOnStartup(id: ViewId): Promise<void> {
+    const viewType = viewTypeOf(id);
+    if (this.#app.workspace.getLeavesOfType(viewType).length > 0) return;
+    const view = this.#getView(id);
+    const leaf = this.#leafFor(view?.leaf ?? "right");
+    await leaf.setViewState({ type: viewType });
   }
 
   #registerAll(): void {

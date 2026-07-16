@@ -339,6 +339,37 @@ describe("ViewHostService", () => {
       await Promise.resolve();
       expect(host.workspace.viewStateCalls).toEqual([{ type: "journal-view:a", placement: "right" }]);
     });
+
+    it("places an opted-in view on startup without revealing it", async () => {
+      const { service, host } = build({ a: seedView("a", { openOnStartup: true }) });
+      host.workspace.layoutReady = false;
+      service.initialize();
+      host.setLayoutReady();
+      await Promise.resolve();
+      expect(host.workspace.viewStateCalls).toEqual([{ type: "journal-view:a", placement: "right" }]);
+      expect(host.workspace.revealLeafCalls).toBe(0);
+    });
+
+    it("leaves a view already restored from the layout untouched on startup", async () => {
+      const { service, host } = build({ a: seedView("a", { openOnStartup: true }) });
+      await host.app.workspace.getRightLeaf(false)!.setViewState({ type: "journal-view:a" });
+      host.workspace.viewStateCalls.length = 0;
+      host.workspace.layoutReady = false;
+      service.initialize();
+      host.setLayoutReady();
+      await Promise.resolve();
+      expect(host.workspace.viewStateCalls).toEqual([]);
+      expect(host.workspace.revealLeafCalls).toBe(0);
+    });
+  });
+
+  describe("open", () => {
+    it("reveals the leaf when opened via a command", async () => {
+      const { host } = build({ a: seedView("a", { leaf: "right" }) });
+      openVia(host, "a");
+      await Promise.resolve();
+      expect(host.workspace.revealLeafCalls).toBeGreaterThan(0);
+    });
   });
 
   describe("dispose", () => {
