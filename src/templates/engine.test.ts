@@ -191,6 +191,16 @@ describe("TemplateEngine.parse", () => {
     expect(result.error.detail.kind).toBe("no-match");
   });
 
+  it("matches a pure-literal template with no variable tokens", () => {
+    // A stream with no variables compiles to a regex with no named groups, so
+    // `.groups` is undefined on the match object even though it matched — parse
+    // must not mistake that for a failed match (a plain folder name like "Diary").
+    const engine = installTestEngine();
+    const result = engine.parse(tokenize("Diary"), "Diary", buildFakeContext());
+    expectOk(result);
+    expect(result.value.size).toBe(0);
+  });
+
   it("returns invalid-date when capture cannot be parsed strictly", () => {
     const engine = installTestEngine();
     const context = buildFakeContext();

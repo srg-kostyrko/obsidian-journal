@@ -211,13 +211,18 @@ export class TemplateEngine {
     if (compiled.kind === "err") return new Err(compiled.error);
     const { regex, captureTokens } = compiled.value;
     const matched = regex.exec(input);
-    if (!matched?.groups) {
+    if (!matched) {
       return new Err(new TemplateParseError({ kind: "no-match", input }));
     }
+    // A stream with no variable tokens compiles to a regex with no named groups at
+    // all, so `.groups` is `undefined` even on a successful match (JS regex semantics
+    // key `.groups` off the pattern, not the match) — fall back to {} rather than
+    // treating a matching pure-literal template as a parse failure.
+    const groups = matched.groups ?? {};
 
     const candidates = new Map<string, BoundValue[]>();
     for (const [index, token] of captureTokens.entries()) {
-      const capture = matched.groups[`v_${index}`];
+      const capture = groups[`v_${index}`];
       if (capture === undefined) continue;
       const spec = context.get(token.name);
       if (!spec) continue;
