@@ -129,6 +129,22 @@ describe("SequenceSection", () => {
     });
   });
 
+  describe("anchor help text", () => {
+    it("shows the anchor description when no start date is set", async () => {
+      mount({
+        timeline: { start: "" as AnchorString, end: { kind: "never" } },
+        numbering: {
+          enabled: true,
+          anchorDate: "2024-01-01" as AnchorString,
+          allowBefore: false,
+          sources: [{ variable: "index", frontmatterKey: "journal-index", anchorValue: 1, reset: { kind: "never" } }],
+        },
+      });
+      await userEvent.click(screen.getByText(m.journal_edit_section_sequential_numbers()));
+      expect(screen.getByText(m.journal_edit_anchor_description())).toBeDefined();
+    });
+  });
+
   describe("numbering anchor DatePicker", () => {
     it("writes the picked date to numbering.anchorDate", async () => {
       const { storage, fakeModalService } = mount({

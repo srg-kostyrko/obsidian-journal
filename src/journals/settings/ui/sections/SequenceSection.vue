@@ -79,7 +79,8 @@ function editSequenceKey(): void {
     <template v-if="config.numbering.enabled && config.numbering.sources[0]">
       <UiSettingRow :name="m.journal_edit_anchor_label()">
         <template #description>
-          <span v-if="config.timeline.start">{{ m.journal_edit_anchor_start_used() }}</span>
+          {{ m.journal_edit_anchor_description() }}
+          <template v-if="config.timeline.start">{{ m.journal_edit_anchor_start_used() }}</template>
         </template>
         <span v-if="config.timeline.start">{{ config.timeline.start }}</span>
         <DatePicker v-else v-model="numberingAnchorModel" :picking="startPicking" />

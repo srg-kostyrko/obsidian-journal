@@ -81,7 +81,7 @@ const onSubmit = handleSubmit((vs) => {
       <template #description>
         <span v-for="error of errorBag.name" :key="error" class="journal-form-error">{{ error }}</span>
       </template>
-      <UiTextInput v-model="name" v-bind="nameAttrs" />
+      <UiTextInput v-model="name" v-bind="nameAttrs" :placeholder="m.journal_add_modal_name_placeholder()" />
     </UiSettingRow>
     <UiSettingRow :name="m.journal_add_modal_write_label()">
       <UiDropdown v-model="type" v-bind="typeAttrs">
