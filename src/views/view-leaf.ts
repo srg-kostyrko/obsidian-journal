@@ -24,6 +24,11 @@ export class JournalViewLeaf extends ItemView {
   #state: JournalViewLeafState = reactive({});
   #vueApp: VueApp | null = null;
 
+  // Calendar-type views opt out of navigation history (Obsidian convention, v2 parity).
+  // Without it a tab-placed view leaf is treated as navigable and Obsidian may reuse or
+  // replace it when a note opens; v2 was sidebar-only and immune by construction.
+  navigation = false;
+
   constructor(
     leaf: WorkspaceLeaf,
     private readonly viewId: ViewId,
