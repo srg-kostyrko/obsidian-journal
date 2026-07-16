@@ -209,6 +209,58 @@ describe("engine-checks", () => {
         expect(checkProperty(condition, meta({ properties: { due: 2026 } }))).toBe(false);
       });
     });
+
+    describe("absent property", () => {
+      it("treats a missing property as neq (text)", () => {
+        const condition = buildCondition("property", {
+          name: "status",
+          valueType: "text",
+          condition: "neq",
+          value: "done",
+        });
+        expect(checkProperty(condition, meta({ properties: {} }))).toBe(true);
+      });
+
+      it("treats a missing property as does-not-contain (text)", () => {
+        const condition = buildCondition("property", {
+          name: "tags",
+          valueType: "text",
+          condition: "does-not-contain",
+          value: "urgent",
+        });
+        expect(checkProperty(condition, meta({ properties: {} }))).toBe(true);
+      });
+
+      it("does not match a positive text operator on a missing property", () => {
+        const condition = buildCondition("property", {
+          name: "status",
+          valueType: "text",
+          condition: "eq",
+          value: "done",
+        });
+        expect(checkProperty(condition, meta({ properties: {} }))).toBe(false);
+      });
+
+      it("treats a missing property as neq (number)", () => {
+        const condition = buildCondition("property", {
+          name: "score",
+          valueType: "number",
+          condition: "neq",
+          value: 5,
+        });
+        expect(checkProperty(condition, meta({ properties: {} }))).toBe(true);
+      });
+
+      it("treats a missing property as neq (date)", () => {
+        const condition = buildCondition("property", {
+          name: "due",
+          valueType: "date",
+          condition: "neq",
+          value: "2026-06-24",
+        });
+        expect(checkProperty(condition, meta({ properties: {} }))).toBe(true);
+      });
+    });
   });
 
   describe("checkDate", () => {

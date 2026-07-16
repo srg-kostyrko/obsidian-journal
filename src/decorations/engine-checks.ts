@@ -42,7 +42,12 @@ export function checkProperty(condition: JournalDecorationPropertyCondition, met
   const present = Object.hasOwn(metadata.properties, condition.name);
   if (condition.condition === "exists") return present;
   if (condition.condition === "does-not-exist") return !present;
-  if (!present) return false;
+  if (!present) {
+    // An exclusion operator is satisfied when there is no value to violate it: a note
+    // lacking the property counts as "not equal to X" and "does not contain X". Positive
+    // operators (eq/contains/comparisons) stay false — there is nothing to match.
+    return condition.condition === "neq" || condition.condition === "does-not-contain";
+  }
   const raw = metadata.properties[condition.name];
 
   return match(condition)
