@@ -116,8 +116,16 @@ export class FrontmatterService {
           delete fm[fields.startDateField];
         }
 
-        const hasExtension = metadata.endDate !== undefined;
-        if (fields.addEndDate || hasExtension) {
+        // v2 parity: an end equal to the auto-derived period end is redundant metadata, not a
+        // manual extension, so it is persisted only when the end-date field is enabled. A genuine
+        // extension (end differs from the default period end) is always kept.
+        const isManualExtension =
+          metadata.endDate !== undefined &&
+          !cycle
+            .defaultEndOf(name, metadata.anchor)
+            .map((end) => end.toAnchor() === metadata.endDate)
+            .getOr(false);
+        if (fields.addEndDate || isManualExtension) {
           if (metadata.endDate === undefined) {
             const computed = cycle.endOf(name, metadata.anchor);
             if (computed.isSome()) fm[fields.endDateField] = computed.value.toAnchor();

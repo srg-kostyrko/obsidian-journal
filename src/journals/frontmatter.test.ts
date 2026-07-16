@@ -302,6 +302,48 @@ describe("FrontmatterService", () => {
       expect(out["journal-end-date"]).toBe("2024-01-14");
     });
 
+    it("suppresses an endDate equal to the default period end when addEndDate is false", () => {
+      // 2024-01-07 is the auto-derived end of the one-week interval at 2024-01-01 — redundant
+      // period metadata, not a manual extension, so it is not persisted.
+      const c = buildContainer({ s: customJournal("s", "week", 1, "2024-01-01") });
+      const fm = c.resolve(FrontmatterService);
+      const result = fm.writeMutator("s", {
+        journalName: "s",
+        anchor: "2024-01-01" as AnchorString,
+        endDate: "2024-01-07" as AnchorString,
+      });
+      expect(result.isOk()).toBe(true);
+      if (!result.isOk()) return;
+      const out: Record<string, unknown> = { "journal-end-date": "2024-01-07" };
+      result.value(out);
+      expect("journal-end-date" in out).toBe(false);
+    });
+
+    it("writes an endDate equal to the default period end when addEndDate is true", () => {
+      const c = buildContainer({
+        s: customJournal("s", "week", 1, "2024-01-01", {
+          frontmatter: {
+            dateField: "journal-date",
+            startDateField: "journal-start-date",
+            endDateField: "journal-end-date",
+            addStartDate: false,
+            addEndDate: true,
+          },
+        }),
+      });
+      const fm = c.resolve(FrontmatterService);
+      const result = fm.writeMutator("s", {
+        journalName: "s",
+        anchor: "2024-01-01" as AnchorString,
+        endDate: "2024-01-07" as AnchorString,
+      });
+      expect(result.isOk()).toBe(true);
+      if (!result.isOk()) return;
+      const out: Record<string, unknown> = {};
+      result.value(out);
+      expect(out["journal-end-date"]).toBe("2024-01-07");
+    });
+
     it("writes each numbering frontmatterKey when value present, deletes when absent", () => {
       const c = buildContainer({ s: customJournal("s", "week", 1, "2024-01-01") });
       const fm = c.resolve(FrontmatterService);
