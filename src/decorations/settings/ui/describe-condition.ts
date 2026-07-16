@@ -35,7 +35,7 @@ export function describeCondition(condition: JournalDecorationCondition, calenda
         day: c.day === DATE_CONDITION_ANY ? m.decoration_condition_date_any() : String(c.day),
         month:
           c.month === DATE_CONDITION_ANY ? m.decoration_condition_date_any() : String(storedMonthToDisplay(c.month)),
-        year: c.year === null ? "null" : String(c.year),
+        year: c.year === null ? m.decoration_condition_date_any() : String(c.year),
       }),
     )
     .with({ type: "weekday" }, (c) => {

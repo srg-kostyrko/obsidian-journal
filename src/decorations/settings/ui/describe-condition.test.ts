@@ -59,7 +59,9 @@ describe("describeCondition", () => {
 
     it("renders the month one-based", () => {
       const out = describeCondition({ type: "date", day: 1, month: 0, year: null }, calendar);
-      expect(out).toBe(m.decoration_condition_date_describe({ day: "1", month: "1", year: "null" }));
+      expect(out).toBe(
+        m.decoration_condition_date_describe({ day: "1", month: "1", year: m.decoration_condition_date_any() }),
+      );
     });
 
     it("renders wildcard day and month as any", () => {
@@ -68,8 +70,15 @@ describe("describeCondition", () => {
         m.decoration_condition_date_describe({
           day: m.decoration_condition_date_any(),
           month: m.decoration_condition_date_any(),
-          year: "null",
+          year: m.decoration_condition_date_any(),
         }),
+      );
+    });
+
+    it("renders a null year as any, not the literal string null", () => {
+      const out = describeCondition({ type: "date", day: 14, month: 2, year: null }, calendar);
+      expect(out).toBe(
+        m.decoration_condition_date_describe({ day: "14", month: "3", year: m.decoration_condition_date_any() }),
       );
     });
   });
