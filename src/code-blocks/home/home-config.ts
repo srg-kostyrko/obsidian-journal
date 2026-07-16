@@ -30,8 +30,18 @@ export const homeBlockSchema = v.pipe(
       ),
       () => ["day"] as const,
     ),
-    // A null / wrong-type value degrades to the default (v2 coerced with `separator || " • "`).
-    separator: v.optional(v.fallback(v.string(), " • "), " • "),
+    // A null / wrong-type value degrades to the default, and an empty string coerces to the
+    // bullet too (v2 coerced with `separator || " • "`).
+    separator: v.optional(
+      v.fallback(
+        v.pipe(
+          v.string(),
+          v.transform((s) => s || " • "),
+        ),
+        " • ",
+      ),
+      " • ",
+    ),
     // Non-number degrades to 1; a zero scale coerces to 1 so the block stays visible (v2 `scale || 1`).
     scale: v.optional(
       v.fallback(

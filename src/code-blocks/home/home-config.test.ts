@@ -49,6 +49,11 @@ describe("homeBlockSchema", () => {
     expect(v.parse(homeBlockSchema, { separator: null }).separator).toBe(" • ");
   });
 
+  it("coerces an empty separator to the default bullet", () => {
+    // v2 used `separator || " • "`, so an explicit empty string falls back to the bullet.
+    expect(v.parse(homeBlockSchema, { separator: "" }).separator).toBe(" • ");
+  });
+
   it("applies defaults when the source is a non-object scalar", () => {
     // `show:day` with no space parses to the bare string "show:day"; v2 still rendered.
     const result = v.parse(homeBlockSchema, "show:day");
