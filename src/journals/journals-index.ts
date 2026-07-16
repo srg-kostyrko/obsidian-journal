@@ -46,14 +46,6 @@ export class JournalsIndex {
     if (existing?.journalName === entry.journalName && existing?.anchor === entry.anchor) {
       return "registered";
     }
-    // A different note already holds this (journal, anchor) slot — e.g. a sync conflict copy that
-    // carries the original's frontmatter. Keep the incumbent and reject the newcomer, rather than
-    // overwriting the slot and orphaning the incumbent in #byPath (where a later delete of the
-    // newcomer would then strand the incumbent, invisible to every anchor lookup).
-    const occupant = this.#journals.get(entry.journalName)?.get(entry.anchor);
-    if (occupant !== undefined && occupant.isSome() && occupant.value !== entry.path) {
-      return "collision";
-    }
     if (existing) {
       this.#journals.get(existing.journalName)?.delete(existing.anchor);
       this.#emitter.emit("entryChanged", { entry: existing, kind: "removed" });
@@ -64,20 +56,27 @@ export class JournalsIndex {
       journalIndex = new JournalIndex();
       this.#journals.set(entry.journalName, journalIndex);
     }
-    journalIndex.set(entry.anchor, entry.path);
+    // A different note already owns this (journal, anchor) slot — e.g. a sync conflict copy that
+    // shares the original's frontmatter, or a settings-preview entry mirroring today's real note.
+    // Keep the incumbent as the canonical anchor owner (calendar/navigation resolve to it), but
+    // still track the newcomer by path so entryByPath resolves it. Never overwrite the slot or
+    // orphan the incumbent.
+    const occupant = journalIndex.get(entry.anchor);
+    const collision = occupant.isSome() && occupant.value !== entry.path;
+    if (!collision) journalIndex.set(entry.anchor, entry.path);
     this.#byPath.set(entry.path, entry);
     this.#emitter.emit("entryChanged", { entry, kind: "added" });
     this.#markDirty(entry.journalName);
-    return "registered";
+    return collision ? "collision" : "registered";
   }
 
   unregister(path: VaultPath): void {
     const existing = this.#byPath.get(path);
     if (!existing) return;
     const journalIndex = this.#journals.get(existing.journalName);
-    // Only free the anchor slot if it still points at this path: a rejected collision newcomer
-    // never entered #byPath (so this is a no-op for it), and we must never delete a slot another
-    // note owns.
+    // Only free the anchor slot if it still points at this path: a collision newcomer never owned
+    // the slot (so this leaves the incumbent's slot intact), and we must never delete a slot
+    // another note owns.
     const slot = journalIndex?.get(existing.anchor);
     if (slot !== undefined && slot.isSome() && slot.value === path) journalIndex?.delete(existing.anchor);
     this.#byPath.delete(path);

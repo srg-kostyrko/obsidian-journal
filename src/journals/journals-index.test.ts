@@ -112,11 +112,15 @@ describe("JournalsIndex", () => {
       expect(index.register(entry("daily", "2022-01-01", "conflict.md"))).toBe("collision");
     });
 
-    it("does not index a path rejected as a collision", () => {
+    it("still resolves a colliding path by its own path", () => {
+      // A settings-preview entry (a unique synthetic path at today's real anchor) must stay
+      // resolvable by entryByPath even though the real note owns the anchor slot.
       const index = new JournalsIndex();
       index.register(entry("daily", "2022-01-01", "original.md"));
       index.register(entry("daily", "2022-01-01", "conflict.md"));
-      expect(index.entryByPath(p("conflict.md")).isNone()).toBe(true);
+      const byPath = index.entryByPath(p("conflict.md"));
+      assert(byPath.isSome());
+      expect(byPath.value.anchor).toBe(a("2022-01-01"));
     });
 
     it("reports registered for a first-seen anchor", () => {
