@@ -1,5 +1,7 @@
 import * as v from "valibot";
 
+import { asRecord } from "../fence-record";
+
 const homeEntries = ["day", "week", "month", "quarter", "year", "custom"] as const;
 
 export const homeEntrySchema = v.picklist(homeEntries);
@@ -8,12 +10,6 @@ export type HomeEntry = v.InferOutput<typeof homeEntrySchema>;
 
 function isHomeEntry(value: unknown): value is HomeEntry {
   return typeof value === "string" && (homeEntries as readonly string[]).includes(value);
-}
-
-// A non-mapping fence (e.g. `show:day` with no space parses to the bare string "show:day")
-// degrades to defaults rather than blanking the block into an error panel — v2 still rendered.
-function asRecord(input: unknown): Record<string, unknown> {
-  return typeof input === "object" && input !== null && !Array.isArray(input) ? (input as Record<string, unknown>) : {};
 }
 
 export const homeBlockSchema = v.pipe(

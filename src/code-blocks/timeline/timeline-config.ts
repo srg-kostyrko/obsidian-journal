@@ -1,5 +1,7 @@
 import * as v from "valibot";
 
+import { asRecord } from "../fence-record";
+
 export const timelineModes = ["week", "month", "quarter", "calendar"] as const;
 
 export type TimelineMode = (typeof timelineModes)[number];
@@ -8,12 +10,6 @@ function asTimelineMode(value: unknown): TimelineMode | undefined {
   return typeof value === "string" && (timelineModes as readonly string[]).includes(value)
     ? (value as TimelineMode)
     : undefined;
-}
-
-// A non-mapping fence (e.g. `mode:month` with no space parses to the bare string "mode:month")
-// degrades to defaults so the journal-derived mode applies, rather than blanking into an error panel.
-function asRecord(input: unknown): Record<string, unknown> {
-  return typeof input === "object" && input !== null && !Array.isArray(input) ? (input as Record<string, unknown>) : {};
 }
 
 export const timelineBlockSchema = v.pipe(
