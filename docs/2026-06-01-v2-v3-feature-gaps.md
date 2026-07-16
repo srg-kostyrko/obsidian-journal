@@ -337,10 +337,9 @@ noted honestly. Items open (`[ ]`) — no fixes applied, decisions pending.
   - v2: `#resolveIndex()` tried nearest **previous** existing note → nearest **next** existing note (`after.index - repeats`) → config anchor (`src/_old-code/journals/journal.ts:686-737`), so a future note's manually-edited index back-computed earlier dates.
   - v3 (before): `NumberingService.#compute` consulted only `findPrevious` — no `findNext` fallback — then fell to the config anchor, so an _earlier_ period with no earlier neighbor ignored a later manual value. Forward propagation was unaffected.
 
-- [ ] **78. Template-file suggester scope narrowed to markdown + configured template folders.** [needs-recheck]
+- [x] **78. Template-file suggester scope narrowed to markdown + configured template folders.** **Decided won't-do (2026-07-16): the narrowing is an intentional UX improvement.** Templates live in the template folder, so scoping the suggestions there (and to markdown notes) yields a focused list instead of a firehose of every vault file; an out-of-folder or non-markdown template is still reachable by typing the path manually.
   - v2: `template-suggest.ts` returned **any** `TFile` vault-wide whose path contains the query (markdown or not, any folder).
   - v3: `UiTemplateInput` → `TemplatesService.candidatePaths` returns markdown notes only, and when a core-Templates/Templater folder is configured, restricts to files inside it (`src/infrastructure/host/internal/templates-service.ts:35-40`).
-  - Impact: a user keeping template notes outside the configured folder (or a non-markdown template) gets no autocomplete. Beyond #34/#36/#71. Plausibly an intentional scoping improvement — confirm.
 
 ## 🟢 Behavioral / cosmetic deltas
 
