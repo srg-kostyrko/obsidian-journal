@@ -1036,6 +1036,8 @@
 	"common_label_all_journals": "Tous les journaux",
 	"view_edit_open_on_startup_label": "Ouvrir au démarrage",
 	"view_edit_open_on_startup_description": "Ouvrez cette vue à chaque fois que vous ouvrez le coffre-fort. Elle est distincte du paramètre de note de démarrage de la page des paramètres principaux.",
+	"view_edit_remember_date_label": "Mémoriser la dernière date consultée",
+	"view_edit_remember_date_description": "Lorsque désactivé, le calendrier s'ouvre sur aujourd'hui à chaque lancement. Lorsque activé, il rouvre sur la dernière date consultée.",
 	"view_edit_leaf_label": "Ouvrir dans",
 	"view_edit_leaf_description": "Emplacement d'ouverture de la vue : ancrée dans une barre latérale ou sous forme d'onglet classique dans l'espace de travail principal.",
 	"view_edit_leaf_left": "barre latérale gauche",

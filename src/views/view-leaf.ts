@@ -56,7 +56,16 @@ export class JournalViewLeaf extends ItemView {
   }
 
   getState(): Record<string, unknown> {
-    return { ...this.#state };
+    const state = { ...this.#state };
+    // Persist the viewed date across restarts only when the view opts in; otherwise a fresh
+    // launch centers on today (v2 default). In-session navigation is unaffected — it reads
+    // the live reactive state, not the serialized snapshot.
+    const remembers = this.injector
+      .resolve(ViewsRepository)
+      .get(this.viewId)
+      .match({ some: (view) => view.rememberDate, none: () => false });
+    if (!remembers) delete state.refDate;
+    return state;
   }
 
   // Entry point for the per-view change-shelf command: mutating the reactive leaf

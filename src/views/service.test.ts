@@ -144,6 +144,7 @@ describe("ViewsService", () => {
           showInRibbon: false,
           leaf: "right",
           openOnStartup: false,
+          rememberDate: false,
           blocks: [{ id: blockId, key: "test-block", config: { nested: reactive({ count: 1 }) } }],
         },
       });

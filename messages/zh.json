@@ -1036,6 +1036,8 @@
 	"common_label_all_journals": "所有期刊",
 	"view_edit_open_on_startup_label": "启动时打开",
 	"view_edit_open_on_startup_description": "每次打开保险库时都会打开此视图。它与主设置页面上的启动备注设置是分开的。",
+	"view_edit_remember_date_label": "记住上次查看的日期",
+	"view_edit_remember_date_description": "关闭时，日历每次启动都会打开今天的日期。开启时，会重新打开上次查看的日期。",
 	"view_edit_leaf_label": "打开",
 	"view_edit_leaf_description": "视图打开位置：停靠在侧边栏中，或作为主工作区中的常规选项卡。",
 	"view_edit_leaf_left": "左侧边栏",

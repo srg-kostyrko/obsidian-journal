@@ -874,6 +874,8 @@
   "common_label_all_journals": "All journals",
   "view_edit_open_on_startup_label": "Open on startup",
   "view_edit_open_on_startup_description": "Open this view whenever you open the vault. Separate from the startup note setting on the main settings page.",
+  "view_edit_remember_date_label": "Remember last viewed date",
+  "view_edit_remember_date_description": "When off, the calendar opens on today each time you launch. When on, it reopens on the date you last viewed.",
   "view_edit_leaf_label": "Open in",
   "view_edit_leaf_description": "Where the view opens: docked in a sidebar, or as a regular tab in the main workspace.",
   "view_edit_leaf_left": "Left sidebar",

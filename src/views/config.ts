@@ -36,6 +36,9 @@ export const viewSchema = v.object({
   showInRibbon: v.boolean(),
   leaf: v.optional(v.picklist(["left", "right", "tab"]), "right"),
   openOnStartup: v.optional(v.boolean(), false),
+  // When off (v2 default), a fresh launch centers the calendar on today; when on, the last
+  // viewed date is persisted and restored across restarts.
+  rememberDate: v.optional(v.boolean(), false),
   blocks: v.array(viewBlockInstanceSchema),
 });
 
@@ -53,6 +56,7 @@ export const viewsCollection = defineCollection(
     showInRibbon: false,
     leaf: "right" as const,
     openOnStartup: false,
+    rememberDate: false,
     blocks: [],
   }),
   { seed: () => ({ [DEFAULT_CALENDAR_VIEW_ID]: defaultCalendarView() }) },

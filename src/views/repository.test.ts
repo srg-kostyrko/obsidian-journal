@@ -15,6 +15,7 @@ function view(id: string, overrides: Partial<View> = {}): View {
     showInRibbon: false,
     leaf: "right",
     openOnStartup: false,
+    rememberDate: false,
     blocks: [],
     ...overrides,
   };

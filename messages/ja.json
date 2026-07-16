@@ -1036,6 +1036,8 @@
 	"common_label_all_journals": "すべてのジャーナル",
 	"view_edit_open_on_startup_label": "起動時に開く",
 	"view_edit_open_on_startup_description": "保管庫を開くたびにこの画面が表示されます。メイン設定ページの起動時のメモ設定とは別になっています。",
+	"view_edit_remember_date_label": "最後に表示した日付を記憶する",
+	"view_edit_remember_date_description": "オフの場合、起動するたびにカレンダーは今日の日付を開きます。オンの場合、最後に表示した日付を再度開きます。",
 	"view_edit_leaf_label": "開く",
 	"view_edit_leaf_description": "ビューが開く場所：サイドバーにドッキングされるか、メインワークスペースの通常のタブとして開きます。",
 	"view_edit_leaf_left": "左サイドバー",

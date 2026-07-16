@@ -34,6 +34,7 @@ function seedView(overrides: Partial<View> = {}): View {
     showInRibbon: false,
     leaf: "right",
     openOnStartup: false,
+    rememberDate: false,
     blocks: [],
     ...overrides,
   };
@@ -66,7 +67,7 @@ function build(view: View = seedView()) {
 describe("JournalViewLeaf", () => {
   describe("setState", () => {
     it("stores refDate from incoming state", async () => {
-      const { leafInstance } = build();
+      const { leafInstance } = build(seedView({ rememberDate: true }));
       await leafInstance.setState({ refDate: "2026-06-01" }, {});
       const state = leafInstance.getState() as { refDate?: AnchorString };
       expect(state.refDate).toBe("2026-06-01");
@@ -92,6 +93,13 @@ describe("JournalViewLeaf", () => {
   describe("getState", () => {
     it("returns refDate undefined by default", () => {
       const { leafInstance } = build();
+      const state = leafInstance.getState() as { refDate?: AnchorString };
+      expect(state.refDate).toBeUndefined();
+    });
+
+    it("omits refDate from persisted state when the view does not remember the date", async () => {
+      const { leafInstance } = build(seedView({ rememberDate: false }));
+      await leafInstance.setState({ refDate: "2026-06-01" }, {});
       const state = leafInstance.getState() as { refDate?: AnchorString };
       expect(state.refDate).toBeUndefined();
     });

@@ -1036,6 +1036,8 @@
 	"common_label_all_journals": "모든 저널",
 	"view_edit_open_on_startup_label": "시작 시 열림",
 	"view_edit_open_on_startup_description": "금고를 열 때마다 이 보기를 엽니다. 기본 설정 페이지의 시작 메모 설정과는 별개입니다.",
+	"view_edit_remember_date_label": "마지막으로 본 날짜 기억",
+	"view_edit_remember_date_description": "꺼져 있으면 실행할 때마다 캘린더가 오늘 날짜로 열립니다. 켜져 있으면 마지막으로 본 날짜로 다시 엽니다.",
 	"view_edit_leaf_label": "열기",
 	"view_edit_leaf_description": "뷰가 열리는 위치: 사이드바에 도킹되거나 메인 작업 공간의 일반 탭으로 열립니다.",
 	"view_edit_leaf_left": "왼쪽 사이드바",

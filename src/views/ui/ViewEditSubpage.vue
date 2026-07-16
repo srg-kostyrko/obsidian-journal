@@ -70,6 +70,13 @@ const openOnStartupValue = computed<boolean>({
   },
 });
 
+const rememberDateValue = computed<boolean>({
+  get: () => view.value?.rememberDate ?? false,
+  set: (next) => {
+    void viewsService.update(viewId, { rememberDate: next });
+  },
+});
+
 const leafValue = computed<string>({
   get: () => view.value?.leaf ?? "right",
   set: (next) => {
@@ -122,6 +129,11 @@ function addBlock(): void {
     <UiSettingRow :name="m.view_edit_open_on_startup_label()">
       <template #description>{{ m.view_edit_open_on_startup_description() }}</template>
       <UiToggle v-model="openOnStartupValue" />
+    </UiSettingRow>
+
+    <UiSettingRow :name="m.view_edit_remember_date_label()">
+      <template #description>{{ m.view_edit_remember_date_description() }}</template>
+      <UiToggle v-model="rememberDateValue" />
     </UiSettingRow>
 
     <UiSettingRow :name="m.view_edit_leaf_label()">

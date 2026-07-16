@@ -1036,6 +1036,8 @@
 	"common_label_all_journals": "Todos os periódicos",
 	"view_edit_open_on_startup_label": "Abrir ao iniciar",
 	"view_edit_open_on_startup_description": "Abra esta visualização sempre que abrir o cofre. Ela é diferente da configuração de notas de inicialização na página de configurações principal.",
+	"view_edit_remember_date_label": "Lembrar a última data visualizada",
+	"view_edit_remember_date_description": "Quando desativado, o calendário abre na data de hoje a cada inicialização. Quando ativado, reabre na última data visualizada.",
 	"view_edit_leaf_label": "Abrir em",
 	"view_edit_leaf_description": "Onde a visualização é aberta: ancorada em uma barra lateral ou como uma guia normal na área de trabalho principal.",
 	"view_edit_leaf_left": "Barra lateral esquerda",

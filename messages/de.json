@@ -1036,6 +1036,8 @@
 	"common_label_all_journals": "Alle Zeitschriften",
 	"view_edit_open_on_startup_label": "Beim Start öffnen",
 	"view_edit_open_on_startup_description": "Diese Ansicht wird jedes Mal angezeigt, wenn Sie den Tresor öffnen. Sie ist unabhängig von der Einstellung für die Startnotiz auf der Hauptseite der Einstellungen.",
+	"view_edit_remember_date_label": "Zuletzt angezeigtes Datum merken",
+	"view_edit_remember_date_description": "Wenn deaktiviert, öffnet der Kalender bei jedem Start das heutige Datum. Wenn aktiviert, wird das zuletzt angezeigte Datum wiederhergestellt.",
 	"view_edit_leaf_label": "Öffnen in",
 	"view_edit_leaf_description": "Wo die Ansicht geöffnet wird: angedockt in einer Seitenleiste oder als regulärer Tab im Hauptarbeitsbereich.",
 	"view_edit_leaf_left": "Linke Seitenleiste",

@@ -1036,6 +1036,8 @@
 	"common_label_all_journals": "Todas las revistas",
 	"view_edit_open_on_startup_label": "Abrir al iniciar",
 	"view_edit_open_on_startup_description": "Esta vista se abrirá cada vez que abra la bóveda. Es independiente de la configuración de notas de inicio en la página de configuración principal.",
+	"view_edit_remember_date_label": "Recordar la última fecha vista",
+	"view_edit_remember_date_description": "Si está desactivado, el calendario se abre en la fecha de hoy cada vez que inicias. Si está activado, vuelve a la última fecha que viste.",
 	"view_edit_leaf_label": "Abrir en",
 	"view_edit_leaf_description": "Dónde se abre la vista: acoplada en una barra lateral o como una pestaña normal en el espacio de trabajo principal.",
 	"view_edit_leaf_left": "Barra lateral izquierda",

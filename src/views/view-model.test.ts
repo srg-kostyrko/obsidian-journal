@@ -17,6 +17,7 @@ function makeView(id: string, name: string): View {
     showInRibbon: false,
     leaf: "right",
     openOnStartup: false,
+    rememberDate: false,
     blocks: [],
   };
 }

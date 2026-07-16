@@ -1036,6 +1036,8 @@
 	"common_label_all_journals": "Tutte le riviste",
 	"view_edit_open_on_startup_label": "Apri all'avvio",
 	"view_edit_open_on_startup_description": "Apri questa visualizzazione ogni volta che apri il vault. È separata dall'impostazione della nota di avvio nella pagina delle impostazioni principali.",
+	"view_edit_remember_date_label": "Ricorda l'ultima data visualizzata",
+	"view_edit_remember_date_description": "Se disattivato, il calendario si apre sulla data odierna a ogni avvio. Se attivato, riapre sull'ultima data visualizzata.",
 	"view_edit_leaf_label": "Apri in",
 	"view_edit_leaf_description": "Dove si apre la vista: ancorata in una barra laterale o come una normale scheda nell'area di lavoro principale.",
 	"view_edit_leaf_left": "Barra laterale sinistra",
