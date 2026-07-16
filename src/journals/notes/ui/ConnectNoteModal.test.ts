@@ -104,6 +104,15 @@ describe("ConnectNoteModal", () => {
   });
 
   describe("when the note is not connected", () => {
+    it("shows the note path", () => {
+      const repo = fakeRepo({ daily: fixedJournal("daily", { type: "day" }) });
+      const container = buildContainer(repo);
+      const api: ModalApi<ConnectNoteResult> = { submit: vi.fn(), cancel: vi.fn() };
+
+      mountModal("inbox/note.md" as VaultPath, container, api);
+      expect(screen.getByText("inbox/note.md")).toBeTruthy();
+    });
+
     it("submits a connect command for an unconnected note", async () => {
       const repo = fakeRepo({ daily: fixedJournal("daily", { type: "day" }) });
       const container = buildContainer(repo);

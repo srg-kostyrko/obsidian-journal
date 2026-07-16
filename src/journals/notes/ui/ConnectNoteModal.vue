@@ -127,6 +127,9 @@ function connect(): void {
   </div>
   <div v-else>
     <UiSettingRow>
+      <template #description>{{ path }}</template>
+    </UiSettingRow>
+    <UiSettingRow>
       <template #name>{{ m.common_label_journal() }}</template>
       <UiDropdown v-model="selected">
         <option v-for="name in journalNames" :key="name" :value="name">{{ name }}</option>
