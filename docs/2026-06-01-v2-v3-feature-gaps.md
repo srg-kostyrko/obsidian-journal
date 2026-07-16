@@ -325,10 +325,9 @@ noted honestly. Items open (`[ ]`) — no fixes applied, decisions pending.
   - v2: `CalendarView` set `navigation = false` on the `ItemView` (`src/_old-code/calendar-view/calendar-view.ts:8`) — Obsidian's documented convention for calendar-type views.
   - v3 (before): `JournalViewLeaf` inherited the `ItemView` default (`true`); v2 was sidebar-only and immune by construction, but v3 allows `leaf: "tab"` placement where a navigable calendar tab is added to navigation history.
 
-- [ ] **75. Startup view-open reveals/expands the sidebar and steals focus; v2 only placed the leaf.** [verified]
+- [x] **75. Startup view-open reveals/expands the sidebar and steals focus; v2 only placed the leaf.** [verified] Fixed (user chose place-only, 2026-07-16): `#openStartupViews` now calls a new `#placeOnStartup(id)` that leaves a leaf already restored from the persisted layout untouched and places a genuinely missing one via `setViewState({ type })` — no `active: true`, no `revealLeaf` — so a collapsed sidebar stays collapsed and focus is not stolen (`src/views/view-host.ts`). Explicit open commands (`open()`) still reveal. Tests watched red first: startup places without revealing, and an already-restored leaf is left untouched; a guard pins that the open command still reveals (the fake host gained a `revealLeafCalls` counter).
   - v2: `placeCalendarView()` on `onLayoutReady` did `getRightLeaf(false).setViewState({ type })` only — no `revealLeaf`, no `active: true` (`src/_old-code/main.ts:288-300,384-396`). A user-collapsed sidebar stayed collapsed; reveal happened only via the `open-calendar` command.
-  - v3: `#openStartupViews` → `open()`, which finds the layout-restored leaf and calls `revealLeaf(existing)` (`src/views/view-host.ts:73-82,211-222`).
-  - Impact: every launch, a startup view force-expands its (possibly collapsed) sidebar and becomes the active leaf. Distinct from #4 (startup _note_) and #7/#13.
+  - v3 (before): `#openStartupViews` → `open()`, which found the layout-restored leaf and called `revealLeaf(existing)`, force-expanding the sidebar and stealing focus every launch. Distinct from #4 (startup _note_) and #7/#13.
 
 - [ ] **76. Decoration property `neq` no longer matches notes that lack the property.** [verified]
   - v2: `case "neq": return properties[name] != condition.value` — for a note without the property, `undefined != value` is **true**, so the cell was decorated (`src/_old-code/composables/use-decorations.ts:181-186`).
