@@ -14,7 +14,9 @@ export class NoteConnectionCommands {
     this.#commands.register({
       id: "connect-note",
       name: m.command_connect_note(),
-      check: () => this.#workspace.activeNote().isSome(),
+      // v2 parity: registered with an editorCallback, so it appears only with an active
+      // markdown editor — not in reading mode or on a non-markdown file (PDF/image).
+      check: () => this.#workspace.hasActiveEditor(),
       execute: () => this.#run(),
     });
   }
