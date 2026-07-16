@@ -14,8 +14,8 @@ const ORIGINAL = "daily/2024-01-01.md" as VaultPath;
 const CONFLICT = "daily/2024-01-01 (conflicted copy 2026-07-16).md" as VaultPath;
 const FM = { journal: "daily", "journal-date": "2024-01-01" };
 
-async function startedRig(initialPaths: VaultPath[] = []) {
-  const rig = buildRig({ daily: fixedJournal("daily", { type: "day" }) }, initialPaths);
+async function startedRig() {
+  const rig = buildRig({ daily: fixedJournal("daily", { type: "day" }) });
   await rig.container.resolve(VaultSubscriptionService).initialize();
   return { rig, index: rig.container.resolve(JournalsIndex) };
 }
