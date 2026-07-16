@@ -18,3 +18,10 @@ export class UriHandlerMissingError extends Error {
     this.name = "UriHandlerMissingError";
   }
 }
+
+export class FixtureJournalMissingError extends Error {
+  constructor(name: string) {
+    super(`fixture is missing the "${name}" journal`);
+    this.name = "FixtureJournalMissingError";
+  }
+}
