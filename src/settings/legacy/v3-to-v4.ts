@@ -164,9 +164,16 @@ export const v3ToV4Migration: Migration = {
     // every migrated entity resolvable. Commands are keyed by their v2 registration
     // slug so existing hotkey bindings survive the migration (see v2CommandSlug).
     const takenCommandIds = new Set<string>();
+    // Weekly notes written before v3 stored the week start as journal-date; v3's
+    // canonical anchor is the week's representative day, so those notes need a
+    // one-time re-canonicalization (see DataMigrationService).
+    const weekAnchorMarkers: { kind: "week-anchor"; journalName: string }[] = [];
     const oldJournals = Object.values(old.journals ?? {});
     for (const journal of oldJournals) {
       journals[journal.name] = reshapeJournal(journal);
+      if (journal.write.type === "week") {
+        weekAnchorMarkers.push({ kind: "week-anchor", journalName: journal.name });
+      }
       const journalCommands = journal.commands ?? [];
       for (const cmd of journalCommands) {
         commands[v2CommandSlug(journal.name, cmd.name, takenCommandIds)] = reshapeCommand(
@@ -205,7 +212,7 @@ export const v3ToV4Migration: Migration = {
       commands,
       calendar: reshapeCalendar(old.calendar),
       startup: { journalName: old.openOnStartup ?? "" },
-      pendingNoteMigration: old.pendingNoteMigration ?? [],
+      pendingNoteMigration: [...(old.pendingNoteMigration ?? []), ...weekAnchorMarkers],
     };
 
     const appearance = reshapeAppearance(old.calendarView);

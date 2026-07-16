@@ -16,7 +16,17 @@ const calendarMarker = v.object({
   sectionToName: v.record(sectionName, v.string()),
 });
 
-export const pendingNoteMigrationSchema = v.array(v.variant("kind", [intervalMarker, calendarMarker]));
+// Notes already in the current shape but written by a plugin version that anchored
+// weekly notes on the week start; their journal-date must be re-canonicalized to the
+// week's representative day (the anchor v3 accepts).
+const weekAnchorMarker = v.object({
+  kind: v.literal("week-anchor"),
+  journalName: v.string(),
+});
+
+export const pendingNoteMigrationSchema = v.array(
+  v.variant("kind", [intervalMarker, calendarMarker, weekAnchorMarker]),
+);
 
 export type PendingNoteMigration = v.InferOutput<typeof pendingNoteMigrationSchema>[number];
 

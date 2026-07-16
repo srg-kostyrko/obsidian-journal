@@ -190,6 +190,17 @@ describe("v3ToV4Migration", () => {
     ]);
   });
 
+  it("emits a week-anchor marker for each weekly journal", () => {
+    const data = monolithV3();
+    (data.journals as Record<string, unknown>)["My Weekly"] = {
+      ...data.journals["My Journal Day"],
+      name: "My Weekly",
+      write: { type: "week" },
+    };
+    const out = v3ToV4Migration.migrate(data);
+    expect(out.pendingNoteMigration).toContainEqual({ kind: "week-anchor", journalName: "My Weekly" });
+  });
+
   it("maps switch_date today/pick modes to select-only buttons", () => {
     const data = monolithV3();
     data.calendarView.todayMode = "switch_date";

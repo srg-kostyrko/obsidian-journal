@@ -28,6 +28,8 @@ const ORPHAN_KEYS = [
   "journal-index",
 ] as const;
 
+type ReshapeMarker = Extract<PendingNoteMigration, { kind: "interval" | "calendar" }>;
+
 export class DataMigrationService {
   readonly #notes = inject(NotesService);
   readonly #metadata = inject(NoteMetadataService);
@@ -58,25 +60,62 @@ export class DataMigrationService {
     const markers = this.#slice.state;
     if (markers.length === 0) return;
 
-    const byOldId = new Map<string, PendingNoteMigration>(markers.map((marker) => [marker.oldJournalId, marker]));
+    const reshapeByOldId = new Map<string, ReshapeMarker>();
+    const weekAnchorNames = new Set<string>();
+    for (const marker of markers) {
+      if (marker.kind === "week-anchor") weekAnchorNames.add(marker.journalName);
+      else reshapeByOldId.set(marker.oldJournalId, marker);
+    }
 
     for (const path of this.#notes.allMarkdownNotes()) {
-      await this.#rewrite(path, byOldId);
+      await this.#processNote(path, reshapeByOldId, weekAnchorNames);
     }
 
     this.#slice.state = [];
   }
 
-  async #rewrite(path: VaultPath, byOldId: Map<string, PendingNoteMigration>): Promise<void> {
+  async #processNote(
+    path: VaultPath,
+    reshapeByOldId: Map<string, ReshapeMarker>,
+    weekAnchorNames: Set<string>,
+  ): Promise<void> {
     const metadata = this.#metadata.get(path);
     if (metadata.isNone()) return;
 
     const properties = metadata.value.properties;
-    const oldId = properties[FRONTMATTER_NAME_KEY];
-    if (typeof oldId !== "string") return;
-    const marker = byOldId.get(oldId);
-    if (!marker) return;
+    const name = properties[FRONTMATTER_NAME_KEY];
+    if (typeof name !== "string") return;
 
+    const reshape = reshapeByOldId.get(name);
+    if (reshape) return this.#rewrite(path, reshape, properties);
+    if (weekAnchorNames.has(name)) return this.#canonicalizeWeekAnchor(path, name, properties);
+  }
+
+  async #canonicalizeWeekAnchor(
+    path: VaultPath,
+    journalName: string,
+    properties: Record<string, unknown>,
+  ): Promise<void> {
+    const config = this.#journals.get(journalName);
+    if (config.isNone()) return;
+    const dateField = config.value.frontmatter.dateField;
+    const stored = properties[dateField];
+    if (typeof stored !== "string") return;
+    const parsed = CalendarDate.parse(stored);
+    if (!parsed.isOk()) return;
+    const anchor = this.#cycle.anchorOf(journalName, parsed.value);
+    if (anchor.isNone() || anchor.value === stored) return;
+
+    const canonical = anchor.value;
+    const result = await this.#notes.updateFrontmatter(path, (fm) => {
+      fm[dateField] = canonical;
+    });
+    result.tapErr((error) => {
+      this.#logger.warn("failed to canonicalize weekly note anchor", { path, error });
+    });
+  }
+
+  async #rewrite(path: VaultPath, marker: ReshapeMarker, properties: Record<string, unknown>): Promise<void> {
     const targetName = match(marker)
       .with({ kind: "interval" }, (entry) => entry.name)
       .with({ kind: "calendar" }, (entry) => entry.sectionToName[sectionOf(properties)])
@@ -94,7 +133,10 @@ export class DataMigrationService {
       }
 
       fm[FRONTMATTER_NAME_KEY] = targetName;
-      fm[config.frontmatter.dateField] = date;
+      // The date field must hold the period's canonical anchor (e.g. a week's
+      // representative day), not the raw start date — a week-start date is
+      // non-canonical and parseEntry would reject it.
+      fm[config.frontmatter.dateField] = anchor;
 
       if (Object.hasOwn(fm, INTERVAL_INDEX_KEY)) {
         const indexKey = config.numbering.sources[0]?.frontmatterKey ?? "journal-index";

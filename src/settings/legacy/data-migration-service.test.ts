@@ -153,6 +153,26 @@ describe("DataMigrationService", () => {
     });
   });
 
+  it("writes the canonical anchor, not the raw start date, into the date field", async () => {
+    const marker: PendingNoteMigration = {
+      oldJournalId: "cal",
+      kind: "calendar",
+      sectionToName: { week: "Weekly" },
+    };
+    const { service, notesByPath, workspace, resolveMetadata } = build({
+      notes: {
+        "wk.md": { journal: "cal", "journal-start-date": "2022-01-03", "journal-section": "week" },
+      },
+      markers: [marker],
+      configs: { Weekly: config({ addStartDate: false, addEndDate: false }) },
+      anchors: { Weekly: "2022-01-06" as AnchorString },
+    });
+
+    await migrate({ service, workspace, resolveMetadata });
+
+    expect(notesByPath.get("wk.md")).toEqual({ journal: "Weekly", "journal-date": "2022-01-06" });
+  });
+
   it("moves the interval index into the journal's configured index field", async () => {
     const marker: PendingNoteMigration = { oldJournalId: "int", kind: "interval", name: "Sprints" };
     const sprintsConfig = journalDefaultsFor(
@@ -179,6 +199,49 @@ describe("DataMigrationService", () => {
     expect(result?.["sprint-number"]).toBe(1);
     expect(result).not.toHaveProperty("journal-interval-index");
     expect(result).not.toHaveProperty("journal-index");
+  });
+
+  it("re-canonicalizes a week-anchor journal's note date to the week anchor", async () => {
+    const marker: PendingNoteMigration = { kind: "week-anchor", journalName: "Weekly" };
+    const { service, notesByPath, workspace, resolveMetadata } = build({
+      notes: { "wk.md": { journal: "Weekly", "journal-date": "2022-01-03" } },
+      markers: [marker],
+      configs: { Weekly: config() },
+      anchors: { Weekly: "2022-01-06" as AnchorString },
+    });
+
+    await migrate({ service, workspace, resolveMetadata });
+
+    expect(notesByPath.get("wk.md")).toEqual({ journal: "Weekly", "journal-date": "2022-01-06" });
+  });
+
+  it("leaves an already-canonical week-anchor note untouched", async () => {
+    const marker: PendingNoteMigration = { kind: "week-anchor", journalName: "Weekly" };
+    const { service, updateCalls, workspace, resolveMetadata } = build({
+      notes: { "wk.md": { journal: "Weekly", "journal-date": "2022-01-06" } },
+      markers: [marker],
+      configs: { Weekly: config() },
+      anchors: { Weekly: "2022-01-06" as AnchorString },
+    });
+
+    await migrate({ service, workspace, resolveMetadata });
+
+    expect(updateCalls).not.toContain("wk.md");
+  });
+
+  it("ignores notes that do not belong to a week-anchor journal", async () => {
+    const marker: PendingNoteMigration = { kind: "week-anchor", journalName: "Weekly" };
+    const { service, notesByPath, updateCalls, workspace, resolveMetadata } = build({
+      notes: { "other.md": { journal: "Daily", "journal-date": "2022-01-03" } },
+      markers: [marker],
+      configs: { Weekly: config(), Daily: config() },
+      anchors: { Weekly: "2022-01-06" as AnchorString, Daily: "2022-01-03" as AnchorString },
+    });
+
+    await migrate({ service, workspace, resolveMetadata });
+
+    expect(updateCalls).not.toContain("other.md");
+    expect(notesByPath.get("other.md")).toEqual({ journal: "Daily", "journal-date": "2022-01-03" });
   });
 
   it("strips all journal keys when the anchor cannot be resolved", async () => {
