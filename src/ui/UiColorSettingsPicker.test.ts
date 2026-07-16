@@ -49,6 +49,12 @@ describe("UiColorSettingsPicker", () => {
       expect(lastEmitted(emitted)).toEqual({ type: "theme", name: "text-accent" });
     });
 
+    it("shows the friendly label for a known theme variable option", () => {
+      mount({ type: "theme", name: "" });
+      const option = screen.getByRole<HTMLOptionElement>("option", { name: m.ui_theme_color_text_normal() });
+      expect(option.value).toBe("text-normal");
+    });
+
     it("keeps a previously stored variable selectable even when it is not a known theme color", () => {
       mount({ type: "theme", name: "my-custom-var" });
       const dropdown = screen.getByRole<HTMLSelectElement>("combobox", { name: m.ui_color_theme_variable_label() });

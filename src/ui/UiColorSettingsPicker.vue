@@ -4,7 +4,7 @@ import { computed } from "vue";
 import type { ColorSettings } from "@/decorations";
 import { m } from "@/i18n";
 
-import { THEME_COLOR_NAMES } from "./theme-colors";
+import { THEME_COLOR_NAMES, themeColorLabel } from "./theme-colors";
 import UiColorPicker from "./UiColorPicker.vue";
 import UiDropdown from "./UiDropdown.vue";
 
@@ -46,7 +46,9 @@ const customColor = computed<string>({
     <template v-if="model.type === 'theme'">
       <UiDropdown v-model="themeName" :aria-label="m.ui_color_theme_variable_label()">
         <option value="">{{ m.ui_color_theme_variable_label() }}</option>
-        <option v-for="colorName of themeColorNames" :key="colorName" :value="colorName">{{ colorName }}</option>
+        <option v-for="colorName of themeColorNames" :key="colorName" :value="colorName">
+          {{ themeColorLabel(colorName) }}
+        </option>
         <option v-if="themeName && !themeColorNames.includes(themeName)" :value="themeName">{{ themeName }}</option>
       </UiDropdown>
       <span
