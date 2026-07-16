@@ -53,13 +53,14 @@ const hover = useModifierHoverPreview();
 .notes-calendar-cell[data-inactive] {
   cursor: not-allowed;
 }
-/* [data-today] follows [data-active] so a cell that is both resolves to the today colors. */
-.notes-calendar-cell[data-active] {
-  color: var(--journal-cell-active-color);
-  background-color: var(--journal-cell-active-bg);
-}
+/* [data-active] follows [data-today] so a cell that is both the open note and today resolves
+   to the active colors — the note you're viewing wins over the today marker (v2). */
 .notes-calendar-cell[data-today] {
   color: var(--journal-cell-today-color);
   background-color: var(--journal-cell-today-bg);
+}
+.notes-calendar-cell[data-active] {
+  color: var(--journal-cell-active-color);
+  background-color: var(--journal-cell-active-bg);
 }
 </style>
