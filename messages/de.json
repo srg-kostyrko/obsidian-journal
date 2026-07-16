@@ -262,7 +262,6 @@
 	"shelf_picker_placeholder": "Regale durchsuchen",
 	"command_palette_journal_name": "{journal}: {name}",
 	"command_palette_shelf_name": "Regal: {shelf}: {name}",
-	"command_open_not_connected": "Dieser Vermerk steht in keiner Verbindung zu einer Fachzeitschrift.",
 	"command_open_no_next": "Nach dieser Note folgt keine weitere.",
 	"command_open_no_previous": "Vor diesem Eintrag gibt es keinen vorherigen Eintrag.",
 	"command_type_label": [

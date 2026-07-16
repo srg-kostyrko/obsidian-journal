@@ -44,7 +44,7 @@ function build(): {
 }
 
 describe("JournalNavigationCommands", () => {
-  it("makes open-next available whenever a note is active", () => {
+  it("makes open-next available when the active note is connected to a journal", () => {
     const { host, workspace } = build();
     workspace.setActive(FIRST);
     expect(host.commands.get("open-next")?.checkCallback?.(true)).toBe(true);
@@ -56,10 +56,10 @@ describe("JournalNavigationCommands", () => {
     expect(host.commands.get("open-next")?.checkCallback?.(true)).toBe(true);
   });
 
-  it("keeps open-next available even when the active note is not a journal note", () => {
+  it("makes open-next unavailable when the active note is not a journal note", () => {
     const { host, workspace } = build();
     workspace.setActive(ORPHAN);
-    expect(host.commands.get("open-next")?.checkCallback?.(true)).toBe(true);
+    expect(host.commands.get("open-next")?.checkCallback?.(true)).toBe(false);
   });
 
   it("makes open-next unavailable when no note is active", () => {
@@ -94,12 +94,5 @@ describe("JournalNavigationCommands", () => {
     workspace.setActive(FIRST);
     host.commands.get("open-prev")?.checkCallback?.(false);
     expect(notices.messages).toContain(m.command_open_no_previous());
-  });
-
-  it("notifies when open-next runs on a note not connected to a journal", () => {
-    const { host, workspace, notices } = build();
-    workspace.setActive(ORPHAN);
-    host.commands.get("open-next")?.checkCallback?.(false);
-    expect(notices.messages).toContain(m.command_open_not_connected());
   });
 });

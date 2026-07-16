@@ -2,8 +2,11 @@ import { m } from "@/i18n";
 import { inject } from "@/infrastructure/di";
 import { CommandService, NoticeService, WorkspaceService } from "@/infrastructure/host";
 import { LoggerFactoryToken } from "@/infrastructure/logger";
+import type { Option } from "@/infrastructure/result";
 
 import { JournalsIndex } from "./journals-index";
+
+import type { JournalEntry } from "./types";
 
 type Direction = "next" | "previous";
 
@@ -15,28 +18,30 @@ export class JournalNavigationCommands {
   readonly #logger = inject(LoggerFactoryToken).named("journal-navigation");
 
   constructor() {
+    // Available whenever the active note is connected to a journal, in either editing or
+    // reading mode — navigating to an adjacent entry is meaningless on a note that belongs
+    // to no journal, so hide the command rather than surface a no-op notice.
     this.#commands.register({
       id: "open-next",
       name: m.command_open_next(),
-      check: () => this.#workspace.activeNote().isSome(),
+      check: () => this.#activeEntry().isSome(),
       execute: () => this.#open("next"),
     });
     this.#commands.register({
       id: "open-prev",
       name: m.command_open_previous(),
-      check: () => this.#workspace.activeNote().isSome(),
+      check: () => this.#activeEntry().isSome(),
       execute: () => this.#open("previous"),
     });
   }
 
+  #activeEntry(): Option<JournalEntry> {
+    return this.#workspace.activeNote().flatMap((path) => this.#index.entryByPath(path));
+  }
+
   #open(direction: Direction): void {
-    const active = this.#workspace.activeNote();
-    if (!active.isSome()) return;
-    const entry = this.#index.entryByPath(active.value);
-    if (!entry.isSome()) {
-      this.#notices.show(m.command_open_not_connected());
-      return;
-    }
+    const entry = this.#activeEntry();
+    if (!entry.isSome()) return;
     const target =
       direction === "next"
         ? this.#index.findNext(entry.value.journalName, entry.value.anchor)

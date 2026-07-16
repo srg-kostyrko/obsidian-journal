@@ -262,7 +262,6 @@
 	"shelf_picker_placeholder": "搜索架子",
 	"command_palette_journal_name": "{journal}: {name}",
 	"command_palette_shelf_name": "架子：{shelf}：{name}",
-	"command_open_not_connected": "这条笔记与任何期刊无关。",
 	"command_open_no_next": "此音符之后没有下一首了。",
 	"command_open_no_previous": "此前没有其他笔记。",
 	"command_type_label": [

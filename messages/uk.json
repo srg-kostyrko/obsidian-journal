@@ -262,7 +262,6 @@
 	"shelf_picker_placeholder": "Пошук полиць",
 	"command_palette_journal_name": "{journal}: {name}",
 	"command_palette_shelf_name": "Полиця: {shelf}: {name}",
-	"command_open_not_connected": "Ця нотатка не пов'язана з жодним журналом.",
 	"command_open_no_next": "Після цієї наступної ноти немає.",
 	"command_open_no_previous": "Перед цією нотаткою немає жодної попередньої.",
 	"command_type_label": [

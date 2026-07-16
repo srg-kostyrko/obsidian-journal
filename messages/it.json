@@ -262,7 +262,6 @@
 	"shelf_picker_placeholder": "Cerca mensole",
 	"command_palette_journal_name": "{journal}: {name}",
 	"command_palette_shelf_name": "Mensola: {shelf}: {name}",
-	"command_open_not_connected": "Questa nota non è collegata ad alcuna rivista.",
 	"command_open_no_next": "Non c'è una nota successiva a questa.",
 	"command_open_no_previous": "Non esiste alcuna nota precedente a questa.",
 	"command_type_label": [

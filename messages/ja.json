@@ -262,7 +262,6 @@
 	"shelf_picker_placeholder": "棚を検索",
 	"command_palette_journal_name": "{journal}: {name}",
 	"command_palette_shelf_name": "棚: {shelf}: {name}",
-	"command_open_not_connected": "このメモはどの学術誌にも関連付けられていません。",
 	"command_open_no_next": "この音符の後に続く音符はありません。",
 	"command_open_no_previous": "このメモの前には、メモはありません。",
 	"command_type_label": [

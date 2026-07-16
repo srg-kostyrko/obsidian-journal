@@ -262,7 +262,6 @@
 	"shelf_picker_placeholder": "Pesquisar prateleiras",
 	"command_palette_journal_name": "{journal}: {name}",
 	"command_palette_shelf_name": "Prateleira: {shelf}: {name}",
-	"command_open_not_connected": "Esta nota não está relacionada a nenhum periódico.",
 	"command_open_no_next": "Não há nota seguinte depois desta.",
 	"command_open_no_previous": "Não há nenhuma anotação anterior a esta.",
 	"command_type_label": [

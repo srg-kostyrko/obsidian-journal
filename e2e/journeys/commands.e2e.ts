@@ -153,20 +153,19 @@ describe("commands", () => {
       await waitForActiveNote(NAV_PREV);
     });
 
-    it("still lists navigation commands while a journal note is open in reading mode", async () => {
-      // v3 registers open-next/prev via checkCallback gated on an active note, not v2's
-      // editor-only editorCallback, so reading (preview) mode must still surface them.
+    it("lists navigation commands while a journal note is open in reading mode", async () => {
+      // Gated on the active note being connected to a journal, not on an active editor, so a
+      // connected note surfaces the commands in reading (preview) mode too.
       await openInReadingMode(NAV_MID);
       expect(await paletteLists(OPEN_NEXT)).toBe(true);
     });
 
-    it("still lists navigation commands on a non-journal note", async () => {
-      // v2-faithful: the commands are editor-gated (available whenever a note is active) and
-      // surface a Notice when there's nothing to navigate to, rather than hiding themselves.
-      // Verified across both commands, which share the same active-note guard.
+    it("hides navigation commands on a non-journal note", async () => {
+      // Navigating adjacent entries is meaningless on a note that belongs to no journal, so the
+      // commands hide rather than surface a no-op notice. Verified across both commands.
       await openNote("plain-note.md");
-      expect(await paletteLists(OPEN_NEXT)).toBe(true);
-      expect(await paletteLists(OPEN_PREV)).toBe(true);
+      expect(await paletteLists(OPEN_NEXT)).toBe(false);
+      expect(await paletteLists(OPEN_PREV)).toBe(false);
     });
   });
 });

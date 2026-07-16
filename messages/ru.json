@@ -262,7 +262,6 @@
 	"shelf_picker_placeholder": "Поиск полок",
 	"command_palette_journal_name": "{journal}: {name}",
 	"command_palette_shelf_name": "Полка: {shelf}: {name}",
-	"command_open_not_connected": "Данная заметка не связана ни с каким журналом.",
 	"command_open_no_next": "После этой ноты следующей нет.",
 	"command_open_no_previous": "Предшествующей заметки нет.",
 	"command_type_label": [

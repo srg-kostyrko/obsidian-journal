@@ -262,7 +262,6 @@
 	"shelf_picker_placeholder": "Buscar estantes",
 	"command_palette_journal_name": "{journal}: {name}",
 	"command_palette_shelf_name": "Estante: {shelf}: {name}",
-	"command_open_not_connected": "Esta nota no está relacionada con ninguna revista.",
 	"command_open_no_next": "No hay ninguna otra nota después de esta.",
 	"command_open_no_previous": "No hay ninguna nota anterior a esta.",
 	"command_type_label": [

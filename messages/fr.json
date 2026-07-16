@@ -262,7 +262,6 @@
 	"shelf_picker_placeholder": "Rechercher des étagères",
 	"command_palette_journal_name": "{journal}: {name}",
 	"command_palette_shelf_name": "Étagère : {shelf} : {name}",
-	"command_open_not_connected": "Cette note n'est liée à aucun journal.",
 	"command_open_no_next": "Il n'y a pas de note suivante après celle-ci.",
 	"command_open_no_previous": "Il n'y a pas de note précédente.",
 	"command_type_label": [

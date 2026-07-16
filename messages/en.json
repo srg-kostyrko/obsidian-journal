@@ -220,7 +220,6 @@
   "shelf_picker_placeholder": "Search shelves",
   "command_palette_journal_name": "{journal}: {name}",
   "command_palette_shelf_name": "Shelf: {shelf}: {name}",
-  "command_open_not_connected": "This note is not connected to any journal.",
   "command_open_no_next": "There is no next note after this one.",
   "command_open_no_previous": "There is no previous note before this one.",
   "command_type_label": [
