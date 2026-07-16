@@ -79,6 +79,16 @@ describe("NotePathService.pathFor", () => {
     const result = c.resolve(NotePathService).pathFor("missing", meta);
     expect(result.isErr() && result.error instanceof JournalNotFoundError).toBe(true);
   });
+
+  it("renders an empty string for a numbering variable with no resolved value", () => {
+    const repo = fakeRepo({
+      sprints: customJournal("sprints", "week", 1, "2024-01-01", { nameTemplate: "{{journal_name}} {{index}}" }),
+    });
+    const c = buildContainer(repo);
+    const meta: JournalMetadata = { journalName: "sprints", anchor: anchor("2024-01-01") };
+    const result = c.resolve(NotePathService).pathFor("sprints", meta);
+    expect(result.isOk() && result.value).toBe("sprints .md");
+  });
 });
 
 describe("NotePathService.pathForDate", () => {

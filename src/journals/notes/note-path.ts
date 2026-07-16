@@ -132,7 +132,9 @@ export class NotePathService {
     if (endOpt.isSome()) context = context.date("end_date", endOpt.value, config.dateFormat);
     for (const source of config.numbering.sources) {
       const value = metadata.numbers?.[source.variable];
-      if (value !== undefined) context = context.number(source.variable, value);
+      // v2 fidelity: a declared numbering variable that didn't resolve renders empty
+      // (e.g. numbering disabled) rather than leaking the literal `{{index}}` token.
+      context = value === undefined ? context.string(source.variable, "") : context.number(source.variable, value);
     }
     // Render-time snapshots — invertible:false so they don't enter the filename→date round-trip.
     context = context.date("current_date", CalendarDate.today(), "YYYY-MM-DD", { invertible: false });
