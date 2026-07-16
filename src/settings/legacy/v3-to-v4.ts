@@ -110,11 +110,16 @@ function patchToolbarModes(toolbar: ViewBlockInstance, cv: NonNullable<OldPlugin
   }
 }
 
-function reshapeViews(cv: OldPluginSettings["calendarView"] | undefined): Record<string, unknown> | undefined {
+function reshapeViews(
+  cv: OldPluginSettings["calendarView"] | undefined,
+  calendarShelf: string | null,
+): Record<string, unknown> | undefined {
   if (!cv) return undefined;
 
   const view: View = structuredClone(defaultCalendarView());
   view.leaf = cv.leaf;
+  // Preserve the v2 calendar's shelf scoping (change-calendar-shelf) as the view's default shelf.
+  view.defaultShelf = calendarShelf;
 
   const monthBlock = view.blocks.find((b) => b.key === "month-calendar");
   if (monthBlock) monthBlock.config.weeks = cv.weeks;
@@ -218,7 +223,7 @@ export const v3ToV4Migration: Migration = {
     const appearance = reshapeAppearance(old.calendarView);
     if (appearance) output.appearance = appearance;
 
-    const views = reshapeViews(old.calendarView);
+    const views = reshapeViews(old.calendarView, old.ui?.calendarShelf ?? null);
     if (views) output.views = views;
 
     return output;

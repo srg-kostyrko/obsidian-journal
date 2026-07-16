@@ -201,6 +201,20 @@ describe("v3ToV4Migration", () => {
     expect(out.pendingNoteMigration).toContainEqual({ kind: "week-anchor", journalName: "My Weekly" });
   });
 
+  it("maps the calendar shelf into the migrated view's default shelf", () => {
+    const data = monolithV3();
+    (data as Record<string, unknown>).ui = { calendarShelf: "My Journal" };
+    const out = v3ToV4Migration.migrate(data);
+    const view = (out.views as Record<string, View>)[DEFAULT_CALENDAR_VIEW_ID];
+    expect(view.defaultShelf).toBe("My Journal");
+  });
+
+  it("leaves the default shelf null when no calendar shelf was set", () => {
+    const out = v3ToV4Migration.migrate(monolithV3());
+    const view = (out.views as Record<string, View>)[DEFAULT_CALENDAR_VIEW_ID];
+    expect(view.defaultShelf).toBeNull();
+  });
+
   it("maps switch_date today/pick modes to select-only buttons", () => {
     const data = monolithV3();
     data.calendarView.todayMode = "switch_date";
