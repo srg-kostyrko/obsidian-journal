@@ -1369,6 +1369,7 @@
 		}
 	],
 	"journal_edit_end_repeats_needs_start_warning": "Встановіть дату початку — журнал, який закінчується після певної кількості повторень, потребує відліку.",
+	"journal_edit_end_repeats_suffix": "разів",
 	"journal_edit_end_writing_label": "Кінець письма",
 	"journal_edit_fm_end_toggle_label": "Додати властивість дати завершення",
 	"journal_edit_fm_start_description": "Для щотижневих журналів, що охоплюють два роки, дата початку може відрізнятися від властивості date.",
@@ -1496,7 +1497,6 @@
 	],
 	"journal_name_required_error": "Назва журналу обов'язкова.",
 	"journal_name_unique_error": "Назва журналу має бути унікальною.",
-	"journal_notes_not_rewritten_hint": "Існуючі нотатки не переписуються. Можливо, вам доведеться оновити їх вручну.",
 	"journal_picker_placeholder": "Пошук журналів",
 	"journal_property_modal_current_label": "Поточна назва",
 	"common_label_new_name": "Нова назва",

@@ -3,6 +3,7 @@ import { UserAborted, type Flow, type FlowError } from "@/infrastructure/flows";
 import { ModalService } from "@/infrastructure/host/modals";
 import { AsyncResult, attempt } from "@/infrastructure/result";
 import { toFlowError, UnknownJournalError, UnknownSequenceSourceError } from "@/journals/errors";
+import { NoteConnectionService } from "@/journals/notes/note-connection";
 import { JournalsRepository } from "@/journals/repository";
 
 import { editSequencePropertyModal } from "../ui/modals";
@@ -14,6 +15,7 @@ export class EditSequencePropertyFlow implements Flow<
 > {
   readonly #modals = inject(ModalService);
   readonly #repository = inject(JournalsRepository);
+  readonly #connection = inject(NoteConnectionService);
 
   execute(parameters: { journalName: string; sourceIndex: number }): AsyncResult<{ newValue: string }, FlowError> {
     const configOpt = this.#repository.get(parameters.journalName);
@@ -33,12 +35,18 @@ export class EditSequencePropertyFlow implements Flow<
           sourceIndex: parameters.sourceIndex,
         })
         .mapErr(() => new UserAborted("edit-sequence-property-modal"));
+      const oldKey = config.numbering.sources[parameters.sourceIndex]?.frontmatterKey;
       const updatedSources = config.numbering.sources.map((s, i) =>
         i === parameters.sourceIndex ? { ...s, frontmatterKey: submitted.newValue } : s,
       );
       this.#repository.update(parameters.journalName, {
         numbering: { ...config.numbering, sources: updatedSources },
       });
+      // Move the stored index to the new key in every connected note so a manually-set value
+      // survives the rename instead of being stranded under the old key (v2 rewrote it).
+      if (oldKey !== undefined && submitted.newValue !== oldKey) {
+        yield* this.#connection.renameFieldAll(parameters.journalName, oldKey, submitted.newValue);
+      }
       return { newValue: submitted.newValue };
     });
   }

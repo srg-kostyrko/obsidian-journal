@@ -1369,6 +1369,7 @@
 		}
 	],
 	"journal_edit_end_repeats_needs_start_warning": "開始日を設定しましょう。一定回数の繰り返しで終了する日記には、開始日が必要です。",
+	"journal_edit_end_repeats_suffix": "回",
 	"journal_edit_end_writing_label": "エンドライティング",
 	"journal_edit_fm_end_toggle_label": "終了日プロパティを追加する",
 	"journal_edit_fm_start_description": "2年間にわたる週次ジャーナルの場合、開始日は日付プロパティと異なる場合があります。",
@@ -1496,7 +1497,6 @@
 	],
 	"journal_name_required_error": "雑誌名は必須です。",
 	"journal_name_unique_error": "ジャーナル名は一意である必要があります。",
-	"journal_notes_not_rewritten_hint": "既存のメモは書き換えられません。手動で更新する必要がある場合があります。",
 	"journal_picker_placeholder": "ジャーナルを検索",
 	"journal_property_modal_current_label": "現在の名前",
 	"common_label_new_name": "新しい名前",

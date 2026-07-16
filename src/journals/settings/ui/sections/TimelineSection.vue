@@ -112,7 +112,10 @@ function setEndKind(kind: TimelineEnd["kind"]): void {
         :picking="startPicking"
         :bounds="endBounds"
       />
-      <UiNumberInput v-if="config.timeline.end.kind === 'repeats'" v-model="config.timeline.end.count" :min="1" />
+      <template v-if="config.timeline.end.kind === 'repeats'">
+        <UiNumberInput v-model="config.timeline.end.count" :min="1" />
+        <span>{{ m.journal_edit_end_repeats_suffix() }}</span>
+      </template>
     </UiSettingRow>
   </UiCollapsibleBlock>
 </template>

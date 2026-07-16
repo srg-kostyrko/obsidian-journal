@@ -39,7 +39,6 @@ const onSubmit = handleSubmit((vs) => api.submit({ newValue: vs.newValue }));
     <UiSettingRow :name="m.journal_property_modal_current_label()">{{ currentValue }}</UiSettingRow>
     <UiSettingRow :name="m.common_label_new_name()">
       <template #description>
-        <div>{{ m.journal_notes_not_rewritten_hint() }}</div>
         <span v-for="error of errorBag.newValue" :key="error" class="journal-form-error">{{ error }}</span>
       </template>
       <UiTextInput v-model="newValue" v-bind="newValueAttrs" />

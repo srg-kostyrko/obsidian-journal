@@ -149,6 +149,18 @@ export class NoteConnectionService {
     );
   }
 
+  // Renaming a frontmatter key in config alone would orphan every connected note (their old
+  // key no longer matches parseEntry). Move the value across so the notes stay connected.
+  renameFieldAll(journalName: string, oldKey: string, newKey: string): AsyncResult<void, never> {
+    return this.#forEachConnected(journalName, (path) =>
+      this.#notes.updateFrontmatter(path, (fm) => {
+        if (!Object.hasOwn(fm, oldKey)) return;
+        fm[newKey] = fm[oldKey];
+        delete fm[oldKey];
+      }),
+    );
+  }
+
   reapplyAll(journalName: string): AsyncResult<void, never> {
     return this.#forEachConnected(journalName, (path) =>
       attempt.in(this, async function* (this: NoteConnectionService) {

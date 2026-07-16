@@ -1,10 +1,11 @@
 import { createNanoEvents } from "nanoevents";
-import { describe, expect, it } from "vitest";
+import { describe, expect, it, vi } from "vitest";
 import { reactive } from "vue";
 
 import { Flows, UserAborted } from "@/infrastructure/flows";
 import { ModalService } from "@/infrastructure/host/modals";
 import { FakeModalService } from "@/infrastructure/host/modals/testing";
+import { AsyncResult } from "@/infrastructure/result";
 import {
   JournalLifecycleFlowError,
   JournalsRepository,
@@ -13,6 +14,7 @@ import {
   type JournalConfig,
   type JournalsEvents,
 } from "@/journals";
+import { NoteConnectionService } from "@/journals/notes/note-connection";
 import { createSettingsService } from "@/settings/testing";
 
 import { EditFrontmatterFieldFlow } from "./edit-frontmatter-field.flow";
@@ -23,11 +25,13 @@ async function build(initial: Record<string, JournalConfig> = {}) {
   const events = createNanoEvents<JournalsEvents>();
   const repo = JournalsRepository.fromParts(storage, events);
   const modals = new FakeModalService();
+  const connection = { renameFieldAll: vi.fn(() => AsyncResult.ok()) };
   container.register(ModalService).useValue(modals as unknown as ModalService);
   container.register(JournalsRepository).useValue(repo);
+  container.register(NoteConnectionService).useValue(connection as unknown as NoteConnectionService);
   container.register(Flows).useClass(Flows);
   container.register(EditFrontmatterFieldFlow).useClass(EditFrontmatterFieldFlow);
-  return { storage, repo, modals, flows: container.resolve(Flows) };
+  return { storage, repo, modals, connection, flows: container.resolve(Flows) };
 }
 
 describe("EditFrontmatterFieldFlow", () => {
@@ -53,6 +57,30 @@ describe("EditFrontmatterFieldFlow", () => {
     modals.lastOpen<unknown, { newValue: string }>().submit({ newValue: "ends-on" });
     await promise;
     expect(repo.get("daily").getOr(undefined as never).frontmatter.endDateField).toBe("ends-on");
+  });
+
+  it("moves note frontmatter from the old date-field key to the new one", async () => {
+    const { flows, modals, connection } = await build({ daily: journalDefaultsFor({ type: "day" }, "daily") });
+    const promise = flows.invoke(EditFrontmatterFieldFlow, { journalName: "daily", fieldName: "dateField" });
+    modals.lastOpen<unknown, { newValue: string }>().submit({ newValue: "happened-on" });
+    await promise;
+    expect(connection.renameFieldAll).toHaveBeenCalledWith("daily", "journal-date", "happened-on");
+  });
+
+  it("moves note frontmatter from the old start-date key to the new one", async () => {
+    const { flows, modals, connection } = await build({ daily: journalDefaultsFor({ type: "day" }, "daily") });
+    const promise = flows.invoke(EditFrontmatterFieldFlow, { journalName: "daily", fieldName: "startDateField" });
+    modals.lastOpen<unknown, { newValue: string }>().submit({ newValue: "begins-on" });
+    await promise;
+    expect(connection.renameFieldAll).toHaveBeenCalledWith("daily", "journal-start-date", "begins-on");
+  });
+
+  it("does not move note frontmatter when the date field is unchanged", async () => {
+    const { flows, modals, connection } = await build({ daily: journalDefaultsFor({ type: "day" }, "daily") });
+    const promise = flows.invoke(EditFrontmatterFieldFlow, { journalName: "daily", fieldName: "dateField" });
+    modals.lastOpen<unknown, { newValue: string }>().submit({ newValue: "journal-date" });
+    await promise;
+    expect(connection.renameFieldAll).not.toHaveBeenCalled();
   });
 
   it("returns the new value on submit", async () => {

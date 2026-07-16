@@ -1157,6 +1157,7 @@
     }
   ],
   "journal_edit_end_repeats_needs_start_warning": "Set a start date — a journal that ends after a number of repeats needs one to count from.",
+  "journal_edit_end_repeats_suffix": "times",
   "journal_edit_end_writing_label": "End writing",
   "journal_edit_fm_end_toggle_label": "Add end date property",
   "journal_edit_fm_start_description": "For weekly journals that span two years, the start date can differ from the date property.",
@@ -1272,7 +1273,6 @@
   ],
   "journal_name_required_error": "Journal name is required.",
   "journal_name_unique_error": "Journal name must be unique.",
-  "journal_notes_not_rewritten_hint": "Existing notes are not rewritten. You may need to update them manually.",
   "journal_picker_placeholder": "Search journals",
   "journal_property_modal_current_label": "Current name",
   "common_label_new_name": "New name",

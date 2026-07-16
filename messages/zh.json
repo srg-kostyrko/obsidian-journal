@@ -1369,6 +1369,7 @@
 		}
 	],
 	"journal_edit_end_repeats_needs_start_warning": "设定一个开始日期——一本在多次重复后结束的日记需要一个起始日期。",
+	"journal_edit_end_repeats_suffix": "次",
 	"journal_edit_end_writing_label": "结束写作",
 	"journal_edit_fm_end_toggle_label": "添加结束日期属性",
 	"journal_edit_fm_start_description": "对于跨越两年的周刊，开始日期可能与日期属性不同。",
@@ -1496,7 +1497,6 @@
 	],
 	"journal_name_required_error": "期刊名称为必填项。",
 	"journal_name_unique_error": "期刊名称必须唯一。",
-	"journal_notes_not_rewritten_hint": "现有笔记不会被重写。您可能需要手动更新它们。",
 	"journal_picker_placeholder": "搜索期刊",
 	"journal_property_modal_current_label": "当前姓名",
 	"common_label_new_name": "新名称",

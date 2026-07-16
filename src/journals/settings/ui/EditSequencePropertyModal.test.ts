@@ -83,11 +83,6 @@ describe("EditSequencePropertyModal", () => {
     expect(screen.getByText("sprint-no")).toBeTruthy();
   });
 
-  it("renders the notes-not-rewritten hint", async () => {
-    await mountModal("daily");
-    expect(screen.getByText(m.journal_notes_not_rewritten_hint())).toBeTruthy();
-  });
-
   it("submits the new value on Save", async () => {
     const { submit } = await mountModal("daily");
     const input = screen.getByRole("textbox");

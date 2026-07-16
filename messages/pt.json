@@ -1369,6 +1369,7 @@
 		}
 	],
 	"journal_edit_end_repeats_needs_start_warning": "Defina uma data de início — um diário que termina após um certo número de repetições precisa de uma data inicial para começar a contagem.",
+	"journal_edit_end_repeats_suffix": "vezes",
 	"journal_edit_end_writing_label": "Fim da escrita",
 	"journal_edit_fm_end_toggle_label": "Adicionar propriedade de data final",
 	"journal_edit_fm_start_description": "Para registros semanais que abrangem dois anos, a data de início pode ser diferente da propriedade de data.",
@@ -1496,7 +1497,6 @@
 	],
 	"journal_name_required_error": "É necessário nomear o periódico.",
 	"journal_name_unique_error": "O nome do periódico deve ser único.",
-	"journal_notes_not_rewritten_hint": "As anotações existentes não serão reescritas. Talvez seja necessário atualizá-las manualmente.",
 	"journal_picker_placeholder": "Pesquisar periódicos",
 	"journal_property_modal_current_label": "Nome atual",
 	"common_label_new_name": "Novo nome",

@@ -1,10 +1,11 @@
 import { createNanoEvents } from "nanoevents";
-import { describe, expect, it } from "vitest";
+import { describe, expect, it, vi } from "vitest";
 import { reactive } from "vue";
 
 import { Flows, UserAborted } from "@/infrastructure/flows";
 import { ModalService } from "@/infrastructure/host/modals";
 import { FakeModalService } from "@/infrastructure/host/modals/testing";
+import { AsyncResult } from "@/infrastructure/result";
 import {
   JournalLifecycleFlowError,
   JournalsRepository,
@@ -14,6 +15,7 @@ import {
   type JournalConfig,
   type JournalsEvents,
 } from "@/journals";
+import { NoteConnectionService } from "@/journals/notes/note-connection";
 import { createSettingsService } from "@/settings/testing";
 
 import { EditSequencePropertyFlow } from "./edit-sequence-property.flow";
@@ -41,11 +43,13 @@ async function build(initial: Record<string, JournalConfig> = {}) {
   const events = createNanoEvents<JournalsEvents>();
   const repo = JournalsRepository.fromParts(storage, events);
   const modals = new FakeModalService();
+  const connection = { renameFieldAll: vi.fn(() => AsyncResult.ok()) };
   container.register(ModalService).useValue(modals as unknown as ModalService);
   container.register(JournalsRepository).useValue(repo);
+  container.register(NoteConnectionService).useValue(connection as unknown as NoteConnectionService);
   container.register(Flows).useClass(Flows);
   container.register(EditSequencePropertyFlow).useClass(EditSequencePropertyFlow);
-  return { storage, repo, modals, flows: container.resolve(Flows) };
+  return { storage, repo, modals, connection, flows: container.resolve(Flows) };
 }
 
 describe("EditSequencePropertyFlow", () => {
@@ -55,6 +59,22 @@ describe("EditSequencePropertyFlow", () => {
     modals.lastOpen<unknown, { newValue: string }>().submit({ newValue: "sprint-no" });
     await promise;
     expect(repo.get("daily").getOr(undefined as never).numbering.sources[0]?.frontmatterKey).toBe("sprint-no");
+  });
+
+  it("moves note frontmatter from the old numbering key to the new one", async () => {
+    const { flows, modals, connection } = await build({ daily: makeConfigWithSource("daily") });
+    const promise = flows.invoke(EditSequencePropertyFlow, { journalName: "daily", sourceIndex: 0 });
+    modals.lastOpen<unknown, { newValue: string }>().submit({ newValue: "sprint-no" });
+    await promise;
+    expect(connection.renameFieldAll).toHaveBeenCalledWith("daily", "journal-index", "sprint-no");
+  });
+
+  it("does not move note frontmatter when the numbering key is unchanged", async () => {
+    const { flows, modals, connection } = await build({ daily: makeConfigWithSource("daily") });
+    const promise = flows.invoke(EditSequencePropertyFlow, { journalName: "daily", sourceIndex: 0 });
+    modals.lastOpen<unknown, { newValue: string }>().submit({ newValue: "journal-index" });
+    await promise;
+    expect(connection.renameFieldAll).not.toHaveBeenCalled();
   });
 
   it("returns the new value on submit", async () => {

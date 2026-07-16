@@ -1369,6 +1369,7 @@
 		}
 	],
 	"journal_edit_end_repeats_needs_start_warning": "Imposta una data di inizio: un diario che termina dopo un certo numero di ripetizioni necessita di una data da cui partire per contare.",
+	"journal_edit_end_repeats_suffix": "volte",
 	"journal_edit_end_writing_label": "Fine della scrittura",
 	"journal_edit_fm_end_toggle_label": "Aggiungi la proprietà data di fine",
 	"journal_edit_fm_start_description": "Per le riviste settimanali che coprono un arco di due anni, la data di inizio può differire dalla proprietà data.",
@@ -1496,7 +1497,6 @@
 	],
 	"journal_name_required_error": "Il nome della rivista è obbligatorio.",
 	"journal_name_unique_error": "Il nome della rivista deve essere univoco.",
-	"journal_notes_not_rewritten_hint": "Le note esistenti non vengono riscritte. Potrebbe essere necessario aggiornarle manualmente.",
 	"journal_picker_placeholder": "Cerca riviste",
 	"journal_property_modal_current_label": "Nome attuale",
 	"common_label_new_name": "Nuovo nome",

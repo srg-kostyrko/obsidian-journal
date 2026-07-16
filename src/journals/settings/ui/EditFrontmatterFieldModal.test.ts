@@ -96,11 +96,6 @@ describe("EditFrontmatterFieldModal", () => {
     expect(screen.getByText("ends-on")).toBeTruthy();
   });
 
-  it("renders the notes-not-rewritten hint", async () => {
-    await mountModal("daily", "dateField");
-    expect(screen.getByText(m.journal_notes_not_rewritten_hint())).toBeTruthy();
-  });
-
   it("submits the new value on Save", async () => {
     const { submit } = await mountModal("daily", "dateField");
     const input = screen.getByRole("textbox");

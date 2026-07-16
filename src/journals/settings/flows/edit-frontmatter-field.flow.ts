@@ -3,6 +3,7 @@ import { UserAborted, type Flow, type FlowError } from "@/infrastructure/flows";
 import { ModalService } from "@/infrastructure/host/modals";
 import { AsyncResult, attempt } from "@/infrastructure/result";
 import { toFlowError, UnknownJournalError } from "@/journals/errors";
+import { NoteConnectionService } from "@/journals/notes/note-connection";
 import { JournalsRepository } from "@/journals/repository";
 
 import { editFrontmatterFieldModal, type FrontmatterFieldName } from "../ui/modals";
@@ -14,6 +15,7 @@ export class EditFrontmatterFieldFlow implements Flow<
 > {
   readonly #modals = inject(ModalService);
   readonly #repository = inject(JournalsRepository);
+  readonly #connection = inject(NoteConnectionService);
 
   execute(parameters: {
     journalName: string;
@@ -28,9 +30,16 @@ export class EditFrontmatterFieldFlow implements Flow<
       const submitted = yield* this.#modals
         .open(editFrontmatterFieldModal, { journalName: parameters.journalName, fieldName: parameters.fieldName })
         .mapErr(() => new UserAborted("edit-frontmatter-field-modal"));
+      const oldValue = config.frontmatter[parameters.fieldName];
       this.#repository.update(parameters.journalName, {
         frontmatter: { ...config.frontmatter, [parameters.fieldName]: submitted.newValue },
       });
+      // Move the value to the new key in every connected note so nothing is stranded: renaming
+      // the date field would otherwise orphan the note entirely, and renaming a start/end key
+      // would leave a dead property behind (v2 rewrote every field).
+      if (submitted.newValue !== oldValue) {
+        yield* this.#connection.renameFieldAll(parameters.journalName, oldValue, submitted.newValue);
+      }
       return { newValue: submitted.newValue };
     });
   }

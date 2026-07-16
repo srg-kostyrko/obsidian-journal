@@ -255,6 +255,38 @@ describe("NoteConnectionService", () => {
     });
   });
 
+  describe("renameFieldAll", () => {
+    it("moves the value from the old key to the new key in every connected note", async () => {
+      const repo = fakeRepo({ daily: fixedJournal("daily", { type: "day" }) });
+      const notes = new FakeNotesService();
+      const first = "a.md" as VaultPath;
+      const second = "b.md" as VaultPath;
+      notes.seed(first, "content", { journal: "daily", "journal-date": "2026-06-01", title: "keep" });
+      notes.seed(second, "content", { journal: "daily", "journal-date": "2026-06-02", title: "keep" });
+      const { container, index } = build(repo, notes, new FakeModalService());
+      index.register({ journalName: "daily", anchor: anchor("2026-06-01"), path: first });
+      index.register({ journalName: "daily", anchor: anchor("2026-06-02"), path: second });
+
+      await container.resolve(NoteConnectionService).renameFieldAll("daily", "journal-date", "date");
+
+      expect(await readFrontmatter(notes, first)).toEqual({ journal: "daily", date: "2026-06-01", title: "keep" });
+      expect(await readFrontmatter(notes, second)).toEqual({ journal: "daily", date: "2026-06-02", title: "keep" });
+    });
+
+    it("leaves a note that lacks the old key untouched", async () => {
+      const repo = fakeRepo({ daily: fixedJournal("daily", { type: "day" }) });
+      const notes = new FakeNotesService();
+      const path = "a.md" as VaultPath;
+      notes.seed(path, "content", { journal: "daily", "journal-date": "2026-06-01" });
+      const { container, index } = build(repo, notes, new FakeModalService());
+      index.register({ journalName: "daily", anchor: anchor("2026-06-01"), path });
+
+      await container.resolve(NoteConnectionService).renameFieldAll("daily", "absent-key", "date");
+
+      expect(await readFrontmatter(notes, path)).toEqual({ journal: "daily", "journal-date": "2026-06-01" });
+    });
+  });
+
   describe("reapplyAll", () => {
     it("writes the start date property to every connected note when addStartDate is on", async () => {
       const repo = fakeRepo(dailyWithFrontmatter({ addStartDate: true }));

@@ -1369,6 +1369,7 @@
 		}
 	],
 	"journal_edit_end_repeats_needs_start_warning": "Установите дату начала — для журнала, который заканчивается после определенного количества повторений, нужна одна дата, от которой будет производиться отсчет.",
+	"journal_edit_end_repeats_suffix": "раз",
 	"journal_edit_end_writing_label": "Конец записи",
 	"journal_edit_fm_end_toggle_label": "Добавить свойство даты окончания",
 	"journal_edit_fm_start_description": "Для еженедельных журналов, охватывающих два года, дата начала может отличаться от значения параметра date.",
@@ -1496,7 +1497,6 @@
 	],
 	"journal_name_required_error": "Название журнала обязательно для указания.",
 	"journal_name_unique_error": "Название журнала должно быть уникальным.",
-	"journal_notes_not_rewritten_hint": "Существующие заметки не переписываются. Возможно, вам потребуется обновить их вручную.",
 	"journal_picker_placeholder": "Поиск журналов",
 	"journal_property_modal_current_label": "Текущее имя",
 	"common_label_new_name": "Новое название",
