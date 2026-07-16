@@ -61,42 +61,51 @@ Scenarios **7**, **8**, and **11** are the highest-suspicion cells.
 
 Each test asserts the **desired** behavior, not merely the current behavior. Scenarios
 the plugin mishandles surface as failures. The deliverable includes a reported pass/fail
-matrix: which sync scenarios are handled correctly and which have gaps. Confirmed gaps
-are documented (and, where cheap and clearly correct, fixed — but bug-fixing is a
-follow-up, not part of this harness's scope unless trivial).
+matrix: which sync scenarios are handled correctly and which have gaps.
 
-## Approach (C: unit core + targeted e2e)
+**Scenario 7 (conflict copy) is a confirmed bug and is fixed in this pass.** Tracing
+`JournalsIndex.register`/`unregister`: `register` keys its dedup by _path_, so a conflict
+copy (different path, same anchor) skips dedup and `journalIndex.set(anchor, conflictPath)`
+silently overwrites the original's anchor→path mapping; the original lingers orphaned in
+`#byPath`. Worse, when sync later deletes the conflict copy, `unregister` deletes the
+anchor slot entirely, so the original note vanishes from all anchor/calendar lookups. The
+fix makes same-anchor collisions **incumbent-wins**: the first live path keeps the slot, a
+later different path is rejected (never entering `#byPath`), and `unregister` only frees a
+slot it actually owns. Nothing is silently orphaned. Other gaps the harness reveals are
+report-only unless a fix is trivial.
 
-### Unit layer — the full matrix
+## Approach (C: unit core + one faithful e2e)
 
-A dedicated `src/journals/sync-scenarios.test.ts` (colocated per test-hygiene) drives a
-real DI `Container` wiring `VaultSubscriptionService` + `JournalsIndex` +
-`AutoAttachService` against the existing `Fake*Service` ports:
+### Unit layer — the scenario matrix and the fix
 
-- `FakeNotesService.externalEdit / create / rename / delete` — the create/modify/delete/rename events.
-- `FakeNoteMetadataService.emitResolved` — the boot resolve batches (scenario 9).
-- `FakePluginData` + a `settings "reloaded"` emit — the data.json change (scenario 8, unit slice).
-- Duplicate-anchor: two `create`s whose frontmatter parses to the same anchor (scenario 7).
+The genuinely-uncovered cells (7, 11, burst 10) plus the `register`/`unregister` fix.
+Cells already covered are **not** duplicated: `vault-subscription.test.ts` covers 4, 5, 6,
+and partial 3/8/9; `auto-attach.test.ts` covers cell 1 (a foreign note synced in at a
+matching path attaches to exactly one journal; an already-indexed path is skipped).
 
-`src/journals/vault-subscription.test.ts` (`buildRig`) is the established template. The
-harness covers cells 1–7, 10, 11 fully, and the _logic_ of 8–9. `one behavior per test`:
-each scenario cell is its own `it`, grouped by nested `describe` per FS-event family.
+- **The fix** lives in `src/journals/journals-index.ts` with unit tests in the existing
+  `src/journals/journals-index.test.ts`: `register` returns `"registered" | "collision"`
+  (incumbent-wins on same-anchor different-path); `unregister` only frees a slot it owns;
+  `VaultSubscriptionService.#scan` logs a warn on `"collision"` so a rejected note is
+  observable, not silent.
+- **The harness** — `src/journals/sync-scenarios.test.ts` (colocated per test-hygiene) —
+  drives `VaultSubscriptionService` + `JournalsIndex` on the `vault-subscription.test.ts`
+  `buildRig` pattern (extracted to a sibling `vault-subscription.testing.ts`) for
+  conflict-copy (7), missing-config (11), and burst (10). `one behavior per test`: each
+  cell is its own `it`, grouped by nested `describe`.
 
-### e2e layer — timing-sensitive cells only
+### e2e layer — one faithful, real-pipeline cell
 
-Two specs where fakes lack fidelity:
+- **`e2e/integration/sync-settings.e2e.ts`** (scenario 8): the real `onExternalSettingsChange`
+  path, observable without touching plugin internals. Using `writeRawSettings` +
+  `triggerExternalSettingsChange()` (both exist in `e2e/support/`), assert (a) a foreign
+  note created under the freshly-synced config auto-attaches, and (b) `getSettings()` shows
+  the journal entity intact — not wiped to defaults (the `minLength` reset trap).
 
-- **`e2e/integration/sync-settings.e2e.ts`** (scenario 8, real path): extends the
-  `settings-reload.e2e.ts` template — `writeRawSettings` out of band, then
-  `triggerExternalSettingsChange()`, assert the index / command palette / decorations
-  reconcile and no entity is wiped.
-- **`e2e/integration/sync-boot-race.e2e.ts`** (scenario 9, real timing): seed a fixture
-  vault with journal notes, boot, and assert every synced note is indexed (no skip)
-  despite the resolve race.
-
-A `deleteNote` helper (currently missing) is added to `e2e/support/vault.ts`, mirroring
-`renameNote` via `fileManager.trashFile` / `vault.trash`. Conflict-copy files are created
-with the existing `createNote`.
+The conflict-copy bug (7) is proven at the unit level only: the plugin deliberately keeps
+its journal index private (`JournalPlugin.#container`), so an index-state bug is not
+faithfully observable from e2e without adding a test-only production hook. No boot-race
+e2e (cold-boot metadata races need unit-level fakes — an e2e would flake).
 
 ## Out of scope
 
