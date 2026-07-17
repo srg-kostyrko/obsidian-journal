@@ -49,6 +49,24 @@ describe("journalConfigSchema", () => {
     expect(parsed.success).toBe(true);
   });
 
+  it("accepts an unset end date, so a half-configured timeline survives a reload", () => {
+    const cfg = {
+      ...journalDefaultsFor({ type: "day" }, "daily"),
+      timeline: { start: "" as AnchorString, end: { kind: "date", date: "" } },
+    };
+    const parsed = v.safeParse(journalConfigSchema, cfg);
+    expect(parsed.success).toBe(true);
+  });
+
+  it("rejects a malformed end date", () => {
+    const cfg = {
+      ...journalDefaultsFor({ type: "day" }, "daily"),
+      timeline: { start: "" as AnchorString, end: { kind: "date", date: "not-a-date" } },
+    };
+    const parsed = v.safeParse(journalConfigSchema, cfg);
+    expect(parsed.success).toBe(false);
+  });
+
   it("accepts a config with the new fields populated", () => {
     const cfg = {
       ...journalDefaultsFor({ type: "day" }, "daily"),

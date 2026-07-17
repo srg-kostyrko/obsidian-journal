@@ -23,8 +23,8 @@ const anchorString = v.pipe(
   v.transform((s) => s as AnchorString),
 );
 
-// "" is the sentinel for an unset anchor — the start of a timeline and the
-// numbering anchor are both legitimately empty until the user picks a date.
+// "" is the sentinel for an unset anchor — a timeline's start and end and the
+// numbering anchor are all legitimately empty until the user picks a date.
 const optionalAnchorString = v.pipe(
   v.union([v.literal(""), anchorString]),
   v.transform((s) => s as AnchorString),
@@ -45,7 +45,7 @@ const writeSchema = v.union([writeFixed, writeCustom]);
 
 const timelineEnd = v.union([
   v.object({ kind: v.literal("never") }),
-  v.object({ kind: v.literal("date"), date: anchorString }),
+  v.object({ kind: v.literal("date"), date: optionalAnchorString }),
   v.object({ kind: v.literal("repeats"), count: v.pipe(v.number(), v.integer(), v.minValue(1)) }),
 ]);
 

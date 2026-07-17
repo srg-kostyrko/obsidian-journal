@@ -12,11 +12,16 @@ type CommandTarget =
   | { kind: "shelf"; shelfName: string; writeType: OldPluginCommand["writeType"] };
 
 function mapEnd(end: OldJournalSettings["end"]): Record<string, unknown> {
-  return match(end)
-    .with({ type: "never" }, () => ({ kind: "never" }))
-    .with({ type: "date" }, ({ date }) => ({ kind: "date", date }))
-    .with({ type: "repeats" }, ({ repeats }) => ({ kind: "repeats", count: repeats }))
-    .exhaustive();
+  return (
+    match(end)
+      .with({ type: "never" }, () => ({ kind: "never" }))
+      // A v2 vault can carry end.type "date" with no date — the dropdown set the type
+      // without ever setting a value. Coerce to the unset sentinel rather than emitting
+      // undefined, which fails the schema and resets the whole journal to defaults.
+      .with({ type: "date" }, ({ date }) => ({ kind: "date", date: date ?? "" }))
+      .with({ type: "repeats" }, ({ repeats }) => ({ kind: "repeats", count: repeats }))
+      .exhaustive()
+  );
 }
 
 function mapMode(mode: "navigate" | "create" | "switch_date"): "navigate" | "create" | "select-only" {

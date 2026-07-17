@@ -20,14 +20,18 @@ export class TimelineService {
     // date (e.g. a week whose anchor precedes a mid-week timeline start) stays in-timeline.
     const periodEnd = this.#cycle.endOf(name, anchor);
     if (periodEnd.isSome() && periodEnd.value.toAnchor() < config.timeline.start) return false;
-    return match(config.timeline.end)
-      .with({ kind: "never" }, () => true)
-      .with({ kind: "date" }, ({ date }) => anchor <= date)
-      .with({ kind: "repeats" }, ({ count }) => {
-        const repeats = this.#cycle.countRepeats(name, config.timeline.start, anchor);
-        return repeats.isSome() && repeats.value < count;
-      })
-      .exhaustive();
+    return (
+      match(config.timeline.end)
+        .with({ kind: "never" }, () => true)
+        // An unset end date is no bound at all. Comparing against "" would sort every real
+        // anchor above it and silently bound the journal to nothing.
+        .with({ kind: "date" }, ({ date }) => date === "" || anchor <= date)
+        .with({ kind: "repeats" }, ({ count }) => {
+          const repeats = this.#cycle.countRepeats(name, config.timeline.start, anchor);
+          return repeats.isSome() && repeats.value < count;
+        })
+        .exhaustive()
+    );
   }
 
   startOf(name: string): Option<CalendarDate> {
@@ -40,7 +44,9 @@ export class TimelineService {
     const config = configOpt.value;
     return match(config.timeline.end)
       .with({ kind: "never" }, () => Option.none<CalendarDate>())
-      .with({ kind: "date" }, ({ date }) => Option.some(CalendarDate.fromAnchor(date)))
+      .with({ kind: "date" }, ({ date }) =>
+        date === "" ? Option.none<CalendarDate>() : Option.some(CalendarDate.fromAnchor(date)),
+      )
       .with({ kind: "repeats" }, ({ count }) => {
         const startAnchorOpt = this.#cycle.anchorOf(name, CalendarDate.fromAnchor(config.timeline.start));
         if (startAnchorOpt.isNone()) return Option.none<CalendarDate>();

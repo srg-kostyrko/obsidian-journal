@@ -58,7 +58,7 @@ function clearStart(): void {
 function setEndKind(kind: TimelineEnd["kind"]): void {
   if (!config.value) return;
   if (kind === "never") config.value.timeline.end = { kind: "never" };
-  else if (kind === "date") config.value.timeline.end = { kind: "date", date: "" as never };
+  else if (kind === "date") config.value.timeline.end = { kind: "date", date: "" as AnchorString };
   else config.value.timeline.end = { kind: "repeats", count: 1 };
 }
 </script>

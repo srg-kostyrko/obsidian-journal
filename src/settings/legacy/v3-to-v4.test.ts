@@ -64,6 +64,14 @@ describe("v3ToV4Migration", () => {
     expect(v3ToV4Migration.toVersion).toBe(4);
   });
 
+  it("coerces a missing end date to the unset sentinel", () => {
+    const data = monolithV3();
+    (data.journals as Record<string, { end: unknown }>)["My Journal Day"].end = { type: "date" };
+    const out = v3ToV4Migration.migrate(data);
+    const journal = Object.values(out.journals as Record<string, Record<string, unknown>>)[0];
+    expect(journal.timeline).toEqual({ start: "", end: { kind: "date", date: "" } });
+  });
+
   it("reshapes a journal into the new config shape", () => {
     const out = v3ToV4Migration.migrate(monolithV3());
     const journals = Object.values(out.journals as Record<string, Record<string, unknown>>);

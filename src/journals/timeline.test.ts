@@ -73,6 +73,23 @@ describe("TimelineService", () => {
       expect(timeline.contains("daily", "2024-07-01" as AnchorString)).toBe(false);
     });
 
+    it("treats an unset end date as no upper bound", () => {
+      const c = buildContainer({
+        daily: fixedJournal(
+          "daily",
+          { type: "day" },
+          {
+            timeline: {
+              start: "2024-01-01" as AnchorString,
+              end: { kind: "date", date: "" as AnchorString },
+            },
+          },
+        ),
+      });
+      const timeline = c.resolve(TimelineService);
+      expect(timeline.contains("daily", "2099-12-31" as AnchorString)).toBe(true);
+    });
+
     describe("end.kind === repeats", () => {
       it("returns false once count repeats have elapsed", () => {
         // Weekly journal from 2024-01-01 (Mon), count=3.
@@ -183,6 +200,23 @@ describe("TimelineService", () => {
       const timeline = c.resolve(TimelineService);
       const result = timeline.endOf("daily");
       expect(result.isSome() && result.value.toAnchor()).toBe("2024-06-30");
+    });
+
+    it("returns None when the end date is unset", () => {
+      const c = buildContainer({
+        daily: fixedJournal(
+          "daily",
+          { type: "day" },
+          {
+            timeline: {
+              start: "2024-01-01" as AnchorString,
+              end: { kind: "date", date: "" as AnchorString },
+            },
+          },
+        ),
+      });
+      const timeline = c.resolve(TimelineService);
+      expect(timeline.endOf("daily").isNone()).toBe(true);
     });
 
     it("returns the computed end date for end.kind === repeats", () => {
