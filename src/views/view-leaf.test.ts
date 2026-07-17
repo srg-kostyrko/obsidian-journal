@@ -3,6 +3,7 @@ import * as v from "valibot";
 import { describe, expect, it } from "vitest";
 
 import type { AnchorString } from "@/calendar/types";
+import { m } from "@/i18n";
 import { Container, InjectorToken } from "@/infrastructure/di";
 import { createFakeHost } from "@/infrastructure/host/internal/testing";
 import { InternalObsidianAppToken, InternalPluginToken } from "@/infrastructure/host/internal/tokens";
@@ -127,7 +128,7 @@ describe("JournalViewLeaf", () => {
   });
 
   describe("rendering", () => {
-    it("renders the View was deleted placeholder when the view is None", async () => {
+    it("reports that the view was deleted when the view is None", async () => {
       const host = createFakeHost();
       const events = createNanoEvents<ViewsEvents>();
       const repo = ViewsRepository.fromParts({}, events);
@@ -154,18 +155,18 @@ describe("JournalViewLeaf", () => {
         onClose(): Promise<void>;
       };
       await leaf.onOpen();
-      expect(containerEl.textContent).toContain("View was deleted");
+      expect(containerEl.textContent).toContain(m.view_deleted_error());
       await leaf.onClose();
     });
 
-    it("silently skips a block whose key is not registered", async () => {
+    it("reports a block whose key is not registered", async () => {
       const view = seedView({
         blocks: [{ id: "block-id" as BlockInstanceId, key: "missing-block", config: {} }],
       });
       const { leafInstance, containerEl } = build(view);
       const leaf = leafInstance as unknown as { onOpen(): Promise<void>; onClose(): Promise<void> };
       await leaf.onOpen();
-      expect(containerEl.innerHTML).not.toContain("missing-block");
+      expect(containerEl.textContent).toContain(m.view_block_unknown_error());
       await leaf.onClose();
     });
 
@@ -217,7 +218,7 @@ describe("JournalViewLeaf", () => {
       await leaf.onClose();
     });
 
-    it("silently skips a block whose config fails the registered schema", async () => {
+    it("reports a block whose config fails the registered schema", async () => {
       const trivialBlock = defineViewBlock<{ x: number }>({
         key: "trivial-block",
         label: "Trivial",
@@ -250,9 +251,7 @@ describe("JournalViewLeaf", () => {
         onClose(): Promise<void>;
       };
       await leaf.onOpen();
-      // journal-view-root is rendered but no block child node should appear
-      expect(containerEl.querySelector(".journal-view-root")).not.toBeNull();
-      expect(containerEl.querySelector(".journal-view-root")!.children).toHaveLength(0);
+      expect(containerEl.textContent).toContain(m.view_block_config_error());
       await leaf.onClose();
     });
   });

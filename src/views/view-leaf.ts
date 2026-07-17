@@ -4,6 +4,7 @@ import { computed, createApp, defineComponent, h, reactive, type App as VueApp, 
 
 import { CalendarDate } from "@/calendar/calendar-date";
 import type { AnchorString } from "@/calendar/types";
+import { m } from "@/i18n";
 import { provideInjectorOnApp, type Injector } from "@/infrastructure/di";
 import { InternalObsidianAppToken } from "@/infrastructure/host/internal/tokens";
 import { LoggerFactoryToken } from "@/infrastructure/logger";
@@ -13,6 +14,7 @@ import { FALLBACK_VIEW_ICON, type ViewId } from "./config";
 import { resolveLeafShelf } from "./leaf-shelf";
 import { ViewsRepository } from "./repository";
 import { ViewsService } from "./service";
+import ViewErrorPanel from "./ui/ViewErrorPanel.vue";
 import { provideViewContext, type ViewContext } from "./view-context";
 
 interface JournalViewLeafState {
@@ -139,7 +141,7 @@ function buildRootComponent(viewId: ViewId, leafState: JournalViewLeafState, inj
 
       return () => {
         const current = view.value;
-        if (!current) return h("div", { class: "journal-view-deleted" }, "View was deleted");
+        if (!current) return h(ViewErrorPanel, { message: m.view_deleted_error() });
         const children: (VNode | null)[] = current.blocks.map((block) => {
           const definition = service.getBlockDefinition(block.key).match({
             some: (d) => d,
@@ -147,12 +149,12 @@ function buildRootComponent(viewId: ViewId, leafState: JournalViewLeafState, inj
           });
           if (!definition) {
             logger.warn("unknown view-block key", { key: block.key, viewId });
-            return null;
+            return h(ViewErrorPanel, { key: block.id, message: m.view_block_unknown_error() });
           }
           const parsed = v.safeParse(definition.schema, block.config);
           if (!parsed.success) {
             logger.warn("invalid view-block config", { key: block.key, viewId, blockId: block.id });
-            return null;
+            return h(ViewErrorPanel, { key: block.id, message: m.view_block_config_error() });
           }
           return h(definition.component, {
             key: block.id,
