@@ -104,6 +104,19 @@ describe("NoteCreationSection", () => {
       ).toBeTruthy();
     });
 
+    it("names the offending variable in the invertibility warning", () => {
+      mount({ nameTemplate: "{{date}}-{{mystery}}" });
+      expect(screen.getByText(/"mystery"/)).toBeTruthy();
+    });
+
+    it("keeps the internal reason code out of the invertibility warning", () => {
+      // Asserting against m.*() with the same arguments the component passes cannot catch a
+      // message that renders the reason union verbatim — it passes for any message body. This
+      // reads the rendered text instead, and stays true through copy edits.
+      mount({ nameTemplate: "{{date}}-{{mystery}}" });
+      expect(screen.queryByText(/unknown-variable/)).toBeNull();
+    });
+
     it("shows the collision warning for a template with no date or numbering variable", () => {
       mount({ nameTemplate: "MyNote" });
       expect(screen.getByText(m.journal_edit_name_template_collision_warning())).toBeTruthy();
