@@ -5,6 +5,7 @@ import { __testing as obsidianTesting } from "obsidian";
 import { afterEach, describe, expect, it, vi } from "vitest";
 import { defineComponent, h, ref } from "vue";
 
+import { m } from "@/i18n";
 import { Container, provideInjectorOnApp } from "@/infrastructure/di";
 import { ShelvesRepository } from "@/shelves";
 import type { ShelfConfig, ShelvesEvents } from "@/shelves";
@@ -60,6 +61,25 @@ describe("ShelfSelectorItem", () => {
     it("renders nothing when there are no shelves", () => {
       mountItem(makeShelves([]), { shelf: ref(null) });
       expect(screen.queryByText("All journals")).toBeNull();
+    });
+  });
+
+  describe("assistive tech", () => {
+    it("announces the active shelf as its name rather than the action", () => {
+      mountItem(makeShelves(["work"]), { shelf: ref("work") });
+      expect(screen.getByRole("button", { name: "work" })).toBeTruthy();
+    });
+
+    it("keeps the switch-shelf hint as a tooltip", () => {
+      mountItem(makeShelves(["work"]), { shelf: ref("work") });
+      expect(screen.getByRole("button", { name: "work" }).dataset.tooltip).toBe(
+        m.view_toolbar_shelf_selector_tooltip(),
+      );
+    });
+
+    it("declares that it opens a menu", () => {
+      mountItem(makeShelves(["work"]), { shelf: ref("work") });
+      expect(screen.getByRole("button", { name: "work" }).getAttribute("aria-haspopup")).toBe("menu");
     });
   });
 

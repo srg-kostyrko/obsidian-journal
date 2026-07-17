@@ -6,6 +6,7 @@ import { m } from "@/i18n";
 import { useService } from "@/infrastructure/di";
 import { ShelvesRepository } from "@/shelves";
 import UiButton from "@/ui/UiButton.vue";
+import { vTooltip } from "@/ui/v-tooltip";
 
 import { useViewContext } from "../../../view-context";
 
@@ -30,7 +31,16 @@ function open(event: MouseEvent): void {
 </script>
 
 <template>
-  <UiButton v-if="hasShelves" flat :tooltip="m.view_toolbar_shelf_selector_tooltip()" @click="open">{{
-    label
-  }}</UiButton>
+  <!-- The visible text is the answer to "which shelf?", so it has to be this button's accessible
+       name: an aria-label would replace it and leave the active shelf unannounced. The affordance
+       comes from aria-haspopup, and the hint from Obsidian's tooltip API instead. -->
+  <UiButton
+    v-if="hasShelves"
+    v-tooltip="m.view_toolbar_shelf_selector_tooltip()"
+    flat
+    aria-haspopup="menu"
+    @click="open"
+  >
+    {{ label }}
+  </UiButton>
 </template>

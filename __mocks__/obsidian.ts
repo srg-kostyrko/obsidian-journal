@@ -32,6 +32,12 @@ export class Notice {
   hide(): void {}
 }
 
+// Obsidian renders its own tooltip layer; the real one attaches listeners rather than writing an
+// attribute. Recording it on the element keeps it assertable without pretending to be that layer.
+export function setTooltip(el: HTMLElement, tooltip: string): void {
+  el.dataset.tooltip = tooltip;
+}
+
 export function getIcon(name: string): SVGSVGElement | null {
   const svg = document.createElementNS("http://www.w3.org/2000/svg", "svg");
   svg.setAttribute("data-icon", name);
