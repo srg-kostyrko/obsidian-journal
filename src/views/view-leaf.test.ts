@@ -9,6 +9,7 @@ import { InternalObsidianAppToken, InternalPluginToken } from "@/infrastructure/
 import { createLoggerTestingModule } from "@/infrastructure/logger/testing";
 import { ShelvesEventsToken, ShelvesRepository } from "@/shelves";
 import type { ShelvesEvents } from "@/shelves";
+import { fakeShelvesRepo } from "@/shelves/testing";
 
 import { dividerBlock } from "./blocks/divider/divider-block";
 import { toolbarBlock } from "./blocks/toolbar/toolbar-block";
@@ -51,6 +52,7 @@ function build(view: View = seedView()) {
   c.register(ViewsEventsToken).useValue(events);
   c.register(ViewsRepository).useValue(repo);
   c.register(ToolbarItemsService).useClass(ToolbarItemsService);
+  c.register(ShelvesRepository).useValue(fakeShelvesRepo());
   c.register(ShelvesEventsToken).useValue(createNanoEvents<ShelvesEvents>());
   c.register(ViewsService).useClass(ViewsService);
   const containerEl = document.createElement("div");
@@ -136,6 +138,7 @@ describe("JournalViewLeaf", () => {
       c.register(ViewsEventsToken).useValue(events);
       c.register(ViewsRepository).useValue(repo);
       c.register(ToolbarItemsService).useClass(ToolbarItemsService);
+      c.register(ShelvesRepository).useValue(fakeShelvesRepo());
       c.register(ShelvesEventsToken).useValue(createNanoEvents<ShelvesEvents>());
       c.register(ViewsService).useClass(ViewsService);
       const injector = c.resolve(InjectorToken);
@@ -236,6 +239,7 @@ describe("JournalViewLeaf", () => {
       c.register(ViewsRepository).useValue(repo);
       c.register(ViewBlockDefinitionToken).useValue(trivialBlock);
       c.register(ToolbarItemsService).useClass(ToolbarItemsService);
+      c.register(ShelvesRepository).useValue(fakeShelvesRepo());
       c.register(ShelvesEventsToken).useValue(createNanoEvents<ShelvesEvents>());
       c.register(ViewsService).useClass(ViewsService);
       const containerEl = document.createElement("div");

@@ -7,8 +7,10 @@ import type { AnchorString } from "@/calendar/types";
 import { provideInjectorOnApp, type Injector } from "@/infrastructure/di";
 import { InternalObsidianAppToken } from "@/infrastructure/host/internal/tokens";
 import { LoggerFactoryToken } from "@/infrastructure/logger";
+import { ShelvesRepository } from "@/shelves";
 
 import { FALLBACK_VIEW_ICON, type ViewId } from "./config";
+import { resolveLeafShelf } from "./leaf-shelf";
 import { ViewsRepository } from "./repository";
 import { ViewsService } from "./service";
 import { provideViewContext, type ViewContext } from "./view-context";
@@ -113,6 +115,7 @@ function buildRootComponent(viewId: ViewId, leafState: JournalViewLeafState, inj
     setup() {
       const repo = injector.resolve(ViewsRepository);
       const service = injector.resolve(ViewsService);
+      const shelves = injector.resolve(ShelvesRepository);
       const logger = injector.resolve(LoggerFactoryToken).named("view-leaf");
 
       const view = computed(() => repo.get(viewId).match({ some: (current) => current, none: () => null }));
@@ -121,7 +124,9 @@ function buildRootComponent(viewId: ViewId, leafState: JournalViewLeafState, inj
         viewId,
         viewName: computed(() => view.value?.name ?? ""),
         refDate: computed(() => leafState.refDate ?? todayAnchor()),
-        shelf: computed(() => leafState.shelf ?? view.value?.defaultShelf ?? null),
+        shelf: computed(() =>
+          resolveLeafShelf(leafState.shelf, view.value?.defaultShelf ?? null, (name) => shelves.get(name).isSome()),
+        ),
         preview: false,
         setRefDate: (date) => {
           leafState.refDate = date;
