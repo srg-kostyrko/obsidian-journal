@@ -1,14 +1,15 @@
-import { describe, expect, it } from "vitest";
+import { describe, expect, it, vi } from "vitest";
 
 import { anchor } from "@/calendar/testing";
 import { m } from "@/i18n";
 import { Container } from "@/infrastructure/di";
-import { CommandService, NoticeService, WorkspaceService } from "@/infrastructure/host";
+import { CommandService, NoticeService, WorkspaceOpenError, WorkspaceService } from "@/infrastructure/host";
 import type { VaultPath } from "@/infrastructure/host";
 import { createFakeHost } from "@/infrastructure/host/internal/testing";
 import { InternalPluginToken } from "@/infrastructure/host/internal/tokens";
 import { FakeNoticeService, FakeWorkspaceService } from "@/infrastructure/host/testing";
 import { LoggerModule } from "@/infrastructure/logger";
+import { AsyncResult } from "@/infrastructure/result";
 
 import { JournalsIndex } from "./journals-index";
 import { JournalNavigationCommands } from "./navigation-commands";
@@ -80,6 +81,14 @@ describe("JournalNavigationCommands", () => {
     workspace.setActive(SECOND);
     host.commands.get("open-prev")?.checkCallback?.(false);
     expect(workspace.isOpen(FIRST)).toBe(true);
+  });
+
+  it("notifies when the following entry cannot be opened", async () => {
+    const { host, workspace, notices } = build();
+    workspace.setActive(FIRST);
+    vi.spyOn(workspace, "openNote").mockReturnValue(AsyncResult.err(new WorkspaceOpenError(SECOND, "gone")));
+    host.commands.get("open-next")?.checkCallback?.(false);
+    await vi.waitFor(() => expect(notices.messages).toContain(m.common_note_open_error()));
   });
 
   it("notifies when open-next runs on a note with no following entry", () => {

@@ -24,6 +24,7 @@
   "common_label_back": "Back to list",
   "common_label_calendar": "Calendar",
   "common_pick_a_date": "Pick a date",
+  "common_note_open_error": "Could not open the note.",
   "calendar_picker_first_week_desc": "The day of January (1–7) that the first week of the year must contain. For example, 4 means the first week is the one containing Jan 4.",
   "calendar_picker_first_week_label": "First week of year",
   "calendar_picker_in_use_marker": "Currently used",
@@ -863,6 +864,9 @@
   "uri_no_journal_of_type": "There is no {type} journal.",
   "uri_open_failed": "Could not open the journal entry.",
 
+  "view_deleted_error": "This view was deleted. Close this tab, or create the view again in the plugin settings.",
+  "view_block_unknown_error": "This block is no longer available. Remove it from the view in the plugin settings.",
+  "view_block_config_error": "Some settings in this block are not valid. Reconfigure it in the plugin settings.",
   "view_dashboard_section_title": "Views",
   "view_dashboard_empty": "No views yet.",
   "view_dashboard_add": "Add a view",

@@ -52,6 +52,7 @@ export class JournalNavigationCommands {
     }
     this.#workspace.openNote(target.value).tapErr((error) => {
       this.#logger.error("failed to open journal note", { path: target.value, error });
+      this.#notices.show(m.common_note_open_error());
     });
   }
 }

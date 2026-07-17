@@ -7,7 +7,7 @@ import type { AnchorString } from "@/calendar";
 import { installTestCalendar } from "@/calendar/testing";
 import { DecorationEngine } from "@/decorations";
 import { buildCondition, buildDecoration, buildStyle } from "@/decorations/testing";
-import { initLocale } from "@/i18n";
+import { initLocale, m } from "@/i18n";
 import { Container, provideInjectorOnApp } from "@/infrastructure/di";
 import { Flows } from "@/infrastructure/flows";
 import {
@@ -17,6 +17,7 @@ import {
   type NotesEvents,
   type VaultPath,
   NoticeService,
+  WorkspaceOpenError,
 } from "@/infrastructure/host";
 import { FakeNoteMetadataService, FakeNoticeService } from "@/infrastructure/host/testing";
 import { LoggerFactory, LoggerFactoryToken } from "@/infrastructure/logger";
@@ -75,7 +76,7 @@ class FakeWorkspace {
   openNoteCalls: { path: VaultPath; mode: unknown }[] = [];
   pathsMenuCalls: { paths: readonly VaultPath[] }[] = [];
   previewFirstPathCalls: { paths: readonly VaultPath[] }[] = [];
-  openNote(path: VaultPath, mode?: unknown) {
+  openNote(path: VaultPath, mode?: unknown): AsyncResult<void, WorkspaceOpenError> {
     this.openNoteCalls.push({ path, mode });
     return AsyncResult.ok(undefined);
   }
@@ -110,6 +111,7 @@ interface Harness {
   workspace: FakeWorkspace;
   flows: FakeFlows;
   shelves: FakeShelves;
+  notices: FakeNoticeService;
 }
 
 function buildHarness(journals: Record<string, JournalConfig>): Harness {
@@ -127,7 +129,8 @@ function buildHarness(journals: Record<string, JournalConfig>): Harness {
   const workspace = new FakeWorkspace();
   container.register(WorkspaceService).useValue(workspace as unknown as WorkspaceService);
   const flows = new FakeFlows();
-  container.register(NoticeService).useValue(new FakeNoticeService());
+  const notices = new FakeNoticeService();
+  container.register(NoticeService).useValue(notices);
   container.register(Flows).useValue(flows as unknown as Flows);
   container.register(OpenDateFlow).useValue({} as OpenDateFlow);
   const fakeMetadata = new FakeNoteMetadataService();
@@ -135,7 +138,7 @@ function buildHarness(journals: Record<string, JournalConfig>): Harness {
   container.register(NotesService).useValue({ events: createNanoEvents<NotesEvents>() } as unknown as NotesService);
   container.register(DecorationEngine).useClass(DecorationEngine);
   container.register(TemplateEngine).useClass(TemplateEngine);
-  return { container, journalsRepo, index, workspace, flows, shelves };
+  return { container, journalsRepo, index, workspace, flows, shelves, notices };
 }
 
 function mount(h: Harness, path: string) {
@@ -359,6 +362,43 @@ describe("NavigationCodeBlock row click routing", () => {
     if (target) await user.click(target);
     expect(h.workspace.openNoteCalls.map((c) => c.path)).toEqual(["Daily/2026-05-27.md"]);
     expect(h.flows.calls).toHaveLength(0);
+  });
+
+  it("notifies when the current entry cannot be opened on a 'self' row click", async () => {
+    const journal = dailyWithRows([
+      {
+        template: "today",
+        fontSize: 1,
+        bold: false,
+        italic: false,
+        color: { type: "transparent" },
+        background: { type: "transparent" },
+        link: "self",
+        journal: "",
+        addDecorations: false,
+      },
+    ]);
+    const h = buildHarness({ daily: journal });
+    h.index.byPath.set("Daily/2026-05-27.md", {
+      journalName: "daily",
+      anchor: "2026-05-27" as AnchorString,
+      path: "Daily/2026-05-27.md" as VaultPath,
+    });
+    h.index.byAnchor.set("daily::2026-05-27", {
+      journalName: "daily",
+      anchor: "2026-05-27" as AnchorString,
+      path: "Daily/2026-05-27.md" as VaultPath,
+    });
+    h.shelves.shelves = [{ name: "main", journals: ["daily"] }];
+    vi.spyOn(h.workspace, "openNote").mockReturnValue(
+      AsyncResult.err(new WorkspaceOpenError("Daily/2026-05-27.md" as VaultPath, "gone")),
+    );
+    mount(h, "Daily/2026-05-27.md");
+
+    const user = userEvent.setup({ advanceTimers: vi.advanceTimersByTime });
+    const target = screen.getAllByText("today")[1];
+    if (target) await user.click(target);
+    await vi.waitFor(() => expect(h.notices.messages).toContain(m.common_note_open_error()));
   });
 
   it("opens the current entry in a new tab on a middle-click of a 'self' row", async () => {

@@ -4,9 +4,10 @@ import { computed } from "vue";
 
 import { Clock, type AnchorString, type Period } from "@/calendar";
 import { CellDecoration, colorToString, type CellDecorationScope } from "@/decorations";
+import { m } from "@/i18n";
 import { useService } from "@/infrastructure/di";
 import { Flows } from "@/infrastructure/flows";
-import { defineOpenMode, WorkspaceService, type VaultPath } from "@/infrastructure/host";
+import { defineOpenMode, NoticeService, WorkspaceService, type VaultPath } from "@/infrastructure/host";
 import {
   CycleService,
   JournalsIndex,
@@ -42,6 +43,7 @@ const shelves = useService(ShelvesRepository);
 const engine = useService(TemplateEngine);
 const flows = useService(Flows);
 const workspace = useService(WorkspaceService);
+const notices = useService(NoticeService);
 
 const today = computed(() => Clock.now().format("YYYY-MM-DD") as AnchorString);
 
@@ -87,7 +89,9 @@ function onClick(event: MouseEvent): void {
   const t = target.value;
   if (t.kind === "none") return;
   if (t.kind === "self") {
-    void workspace.openNote(t.path, defineOpenMode(event));
+    // The sibling branch below reports its failures through the flow funnel; this one opens the
+    // note directly, so it has to say so itself.
+    void workspace.openNote(t.path, defineOpenMode(event)).tapErr(() => notices.show(m.common_note_open_error()));
     return;
   }
   void flows.invoke(OpenDateFlow, {
