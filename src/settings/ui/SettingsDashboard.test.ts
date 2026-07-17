@@ -67,6 +67,41 @@ describe("SettingsDashboard", () => {
     });
   });
 
+  describe("scroll position", () => {
+    const sub = defineSubpage({ key: "edit", component: blockComponent("subpage") });
+
+    function renderScrolled(scrollTop: number) {
+      const { Harness, service } = buildHarness({ subpages: [sub] });
+      const { container } = render(Harness);
+      // Vue mounts into the settings pane, so the rendered root's parent stands in for it.
+      const scroller = container.firstElementChild!.parentElement!;
+      scroller.scrollTop = scrollTop;
+      return { service, scroller };
+    }
+
+    it("opens a subpage at its top rather than mid-scroll", async () => {
+      const { service, scroller } = renderScrolled(420);
+      service.push(sub, undefined);
+      await nextTick();
+      await nextTick();
+      expect(scroller.scrollTop).toBe(0);
+    });
+
+    it("returns the dashboard to where the user left it", async () => {
+      const { service, scroller } = renderScrolled(420);
+      service.push(sub, undefined);
+      await nextTick();
+      await nextTick();
+      // The user scrolls the subpage before going back, so the offset has to be restored
+      // rather than merely left alone.
+      scroller.scrollTop = 80;
+      service.pop();
+      await nextTick();
+      await nextTick();
+      expect(scroller.scrollTop).toBe(420);
+    });
+  });
+
   describe("reload banner", () => {
     it("stays hidden until a reload-requiring change is made", () => {
       const { Harness } = buildHarness();

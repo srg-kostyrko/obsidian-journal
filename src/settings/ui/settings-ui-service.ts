@@ -17,6 +17,7 @@ export class SettingsUiService {
   readonly #subpageKeys: ReadonlySet<string>;
   readonly #stack = ref<readonly SubpageFrame[]>([]);
   readonly #current: ComputedRef<SubpageFrame | null>;
+  readonly #depth: ComputedRef<number>;
 
   constructor() {
     const blocks = [...inject(DashboardBlockToken)];
@@ -37,6 +38,7 @@ export class SettingsUiService {
     this.#subpageKeys = subpageKeys;
 
     this.#current = computed(() => this.#stack.value.at(-1) ?? null);
+    this.#depth = computed(() => this.#stack.value.length);
   }
 
   get blocks(): readonly DashboardBlock[] {
@@ -45,6 +47,11 @@ export class SettingsUiService {
 
   get current(): ComputedRef<SubpageFrame | null> {
     return this.#current;
+  }
+
+  // How deep the user has navigated. The dashboard reads this to tell a push from a pop.
+  get depth(): ComputedRef<number> {
+    return this.#depth;
   }
 
   push<TProps>(subpage: Subpage<TProps>, props: TProps): void {
