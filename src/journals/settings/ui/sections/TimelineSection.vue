@@ -85,7 +85,7 @@ function setEndKind(kind: TimelineEnd["kind"]): void {
         <UiIconButton
           v-if="config.timeline.start"
           :icon="icons.action.delete"
-          :tooltip="m.common_action_close()"
+          :tooltip="m.journal_edit_clear_start_tooltip()"
           @click="clearStart"
         />
       </template>

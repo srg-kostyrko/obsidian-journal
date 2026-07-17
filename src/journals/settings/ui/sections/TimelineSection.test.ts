@@ -88,6 +88,23 @@ describe("TimelineSection", () => {
     });
   });
 
+  describe("clear start button", () => {
+    it("names itself for what it clears rather than as a close button", async () => {
+      mount({ timeline: { start: "2024-01-01" as AnchorString, end: { kind: "never" } } });
+      await userEvent.click(screen.getByText(m.journal_edit_section_timeline()));
+      expect(screen.getByRole("button", { name: m.journal_edit_clear_start_tooltip() })).toBeTruthy();
+    });
+
+    it("clears timeline.start when clicked", async () => {
+      const { storage } = mount({ timeline: { start: "2024-01-01" as AnchorString, end: { kind: "never" } } });
+      await userEvent.click(screen.getByText(m.journal_edit_section_timeline()));
+      await userEvent.click(screen.getByRole("button", { name: m.journal_edit_clear_start_tooltip() }));
+      await waitFor(() => {
+        expect(storage.daily?.timeline.start).toBe("");
+      });
+    });
+  });
+
   describe("timeline.end.date DatePicker", () => {
     it("writes the picked date to timeline.end.date", async () => {
       const { storage, fakeModalService } = mount({
