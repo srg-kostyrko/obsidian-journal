@@ -45,12 +45,14 @@ export class VaultSubscriptionService {
   #rebuildWhenResolved(): void {
     if (this.#allNotesResolved()) {
       this.#rebuild();
+      this.#index.markReady();
       return;
     }
     const dispose = this.#metadata.onResolved(() => {
       if (!this.#allNotesResolved()) return;
       dispose();
       this.#rebuild();
+      this.#index.markReady();
     });
     this.#unsubscribes.push(dispose);
   }

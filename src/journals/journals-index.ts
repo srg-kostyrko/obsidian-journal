@@ -15,6 +15,15 @@ export class JournalsIndex {
   readonly #emitter: TypedEmitter<JournalsIndexEvents> = createNanoEvents();
   readonly #dirty = new Set<string>();
   #flushScheduled = false;
+  #resolveReady: (() => void) | undefined;
+  // The boot-time vault walk populates the index behind layout-ready and all-notes-resolved, so
+  // until it lands the index is empty rather than authoritative — and "no entry for this anchor"
+  // means "not indexed yet", not "no note exists". A consumer that would act on that difference
+  // (auto-create duplicates a note living off its derived path) waits here. Not ready until
+  // VaultSubscriptionService says so: never acting is safer than acting on an empty index.
+  readonly #ready = new Promise<void>((resolve) => {
+    this.#resolveReady = resolve;
+  });
   readonly events: Subscribable<JournalsIndexEvents> = this.#emitter;
 
   #markDirty(journalName: string): void {
@@ -29,6 +38,14 @@ export class JournalsIndex {
         this.#emitter.emit("journalDirty", { journalName: name });
       }
     });
+  }
+
+  whenReady(): Promise<void> {
+    return this.#ready;
+  }
+
+  markReady(): void {
+    this.#resolveReady?.();
   }
 
   entryByPath(path: VaultPath): Option<JournalEntry> {

@@ -1,6 +1,6 @@
 import { afterEach, beforeEach, describe, it, expect, vi } from "vitest";
 
-import { installTestCalendar } from "@/calendar/testing";
+import { anchor as anchorOf, installTestCalendar } from "@/calendar/testing";
 import { Container } from "@/infrastructure/di";
 import { NotesService, TemplaterService } from "@/infrastructure/host";
 import type { VaultPath } from "@/infrastructure/host";
@@ -58,6 +58,33 @@ describe("AutoCreateService", () => {
     vi.useRealTimers();
   });
 
+  it("waits for the index before creating, so a note living off its derived path is reused", async () => {
+    // The index lookup in ensureNote is the only thing that stops a connected note living away
+    // from its derived path (bulk-added with "keep name", renamed, moved) from being duplicated.
+    // At boot the index is built behind layout-ready and all-notes-resolved, so ticking before
+    // it is populated creates a second note for the same anchor.
+    const repo = fakeRepo({ daily: fixedJournal("daily", { type: "day" }, { autoCreate: true }) });
+    const notes = new FakeNotesService();
+    const container = build(repo, notes);
+    const index = container.resolve(JournalsIndex);
+
+    notes.seed("Daily/Monday standup.md" as VaultPath, "");
+
+    await container.resolve(AutoCreateService).initialize();
+    await vi.advanceTimersByTimeAsync(0);
+    expect(notes.find("2026-05-19.md" as VaultPath).isNone()).toBe(true);
+
+    index.register({
+      journalName: "daily",
+      anchor: anchorOf("2026-05-19"),
+      path: "Daily/Monday standup.md" as VaultPath,
+    });
+    index.markReady();
+    await vi.advanceTimersByTimeAsync(0);
+
+    expect(notes.find("2026-05-19.md" as VaultPath).isNone()).toBe(true);
+  });
+
   it("creates today's note for journals with autoCreate=true", async () => {
     const repo = fakeRepo({
       daily: fixedJournal("daily", { type: "day" }, { autoCreate: true }),
@@ -65,6 +92,7 @@ describe("AutoCreateService", () => {
     });
     const notes = new FakeNotesService();
     const container = build(repo, notes);
+    container.resolve(JournalsIndex).markReady();
     await container.resolve(AutoCreateService).initialize();
     await vi.advanceTimersByTimeAsync(0);
     expect(notes.find("2026-05-19.md" as VaultPath).isSome()).toBe(true);
@@ -77,6 +105,7 @@ describe("AutoCreateService", () => {
     });
     const notes = new FakeNotesService();
     const container = build(repo, notes);
+    container.resolve(JournalsIndex).markReady();
     await container.resolve(AutoCreateService).initialize();
     await vi.advanceTimersByTimeAsync(0);
     expect(notes.frontmatterOf("2026-05.md" as VaultPath)?.["journal-date"]).toBe("2026-05-01");
@@ -92,6 +121,7 @@ describe("AutoCreateService", () => {
     });
     const notes = new FakeNotesService();
     const container = build(repo, notes);
+    container.resolve(JournalsIndex).markReady();
     await container.resolve(AutoCreateService).initialize();
     await vi.advanceTimersByTimeAsync(0);
     expect(notes.find("2026-05-19.md" as VaultPath).isNone()).toBe(true);
@@ -107,6 +137,7 @@ describe("AutoCreateService", () => {
     });
     const notes = new FakeNotesService();
     const container = build(repo, notes);
+    container.resolve(JournalsIndex).markReady();
     await container.resolve(AutoCreateService).initialize();
     await vi.advanceTimersByTimeAsync(0);
     expect(notes.find("2026-05-19.md" as VaultPath).isNone()).toBe(true);
@@ -116,6 +147,7 @@ describe("AutoCreateService", () => {
     const repo = fakeRepo({ daily: fixedJournal("daily", { type: "day" }, { autoCreate: true }) });
     const notes = new FakeNotesService();
     const container = build(repo, notes);
+    container.resolve(JournalsIndex).markReady();
     await container.resolve(AutoCreateService).initialize();
     await vi.advanceTimersByTimeAsync(0);
     expect(notes.find("2026-05-19.md" as VaultPath).isSome()).toBe(true);
@@ -128,6 +160,7 @@ describe("AutoCreateService", () => {
     const notes = new FakeNotesService();
     const container = build(repo, notes);
     const service = container.resolve(AutoCreateService);
+    container.resolve(JournalsIndex).markReady();
     await service.initialize();
     await service[Symbol.asyncDispose]();
     await vi.advanceTimersByTimeAsync(24 * 60 * 60 * 1000);
@@ -146,6 +179,7 @@ describe("AutoCreateService", () => {
     vi.spyOn(creation, "ensureNote").mockImplementationOnce(() =>
       AsyncResult.err(new Error("forced failure") as never),
     );
+    container.resolve(JournalsIndex).markReady();
     await container.resolve(AutoCreateService).initialize();
     await vi.advanceTimersByTimeAsync(0);
     const aExists = notes.find("A/2026-05-19.md" as VaultPath).isSome();
@@ -161,6 +195,7 @@ describe("AutoCreateService", () => {
     const notes = new FakeNotesService();
     const container = build(repo, notes);
     const modals = container.resolve(ModalService) as unknown as FakeModalService;
+    container.resolve(JournalsIndex).markReady();
     await container.resolve(AutoCreateService).initialize();
     await vi.advanceTimersByTimeAsync(0);
     expect(notes.find("2026-05-19.md" as VaultPath).isSome()).toBe(true);

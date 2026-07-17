@@ -5,6 +5,7 @@ import { AsyncResult } from "@/infrastructure/result";
 
 import { CycleService } from "../cycle";
 import { FrontmatterService } from "../frontmatter";
+import { JournalsIndex } from "../journals-index";
 import { JournalsRepository } from "../repository";
 import { TimelineService } from "../timeline";
 
@@ -15,6 +16,7 @@ export class AutoCreateService {
   readonly #frontmatter = inject(FrontmatterService);
   readonly #journals = inject(JournalsRepository);
   readonly #cycle = inject(CycleService);
+  readonly #index = inject(JournalsIndex);
   readonly #timeline = inject(TimelineService);
   readonly #logger = inject(LoggerFactoryToken).named("auto-create");
 
@@ -33,7 +35,11 @@ export class AutoCreateService {
   }
 
   initialize(): AsyncResult<void, never> {
-    void this.#tick();
+    // ensureNote's index lookup is the only thing keeping a connected note that lives away from
+    // its derived path (bulk-added keeping its name, renamed, moved) from being duplicated, and
+    // the index is empty until the boot-time vault walk lands. v2 ran auto-create inside
+    // onLayoutReady, strictly after its own reindex, for the same reason.
+    void this.#index.whenReady().then(() => this.#tick());
     return AsyncResult.ok();
   }
 
