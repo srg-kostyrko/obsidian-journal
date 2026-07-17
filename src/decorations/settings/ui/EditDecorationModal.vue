@@ -127,7 +127,9 @@ const onSubmit = handleSubmit((decoration) => {
 
     <UiSettingRow controls-only>
       <UiButton @click="api.cancel()">{{ m.common_action_cancel() }}</UiButton>
-      <UiButton cta type="submit" :disabled="incomplete">{{ m.common_action_submit() }}</UiButton>
+      <UiButton cta type="submit" :disabled="incomplete">
+        {{ decoration === undefined ? m.common_action_create() : m.common_action_submit() }}
+      </UiButton>
     </UiSettingRow>
   </form>
 </template>

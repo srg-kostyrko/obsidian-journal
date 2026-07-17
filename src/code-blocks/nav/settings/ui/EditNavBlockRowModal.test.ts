@@ -92,7 +92,7 @@ describe("EditNavBlockRowModal", () => {
 
   it("does not submit when template is empty", async () => {
     const { submit } = mountModal({});
-    await userEvent.click(screen.getByText(m.common_action_submit()));
+    await userEvent.click(screen.getByText(m.common_action_create()));
     await waitFor(() => {
       expect(screen.getByText(m.nav_block_row_template_required())).toBeTruthy();
     });
@@ -102,7 +102,7 @@ describe("EditNavBlockRowModal", () => {
   it("submits when template is present", async () => {
     const { submit } = mountModal({});
     await userEvent.type(screen.getByLabelText(m.nav_block_row_field_template()), "{{{{date:YYYY}}");
-    await userEvent.click(screen.getByText(m.common_action_submit()));
+    await userEvent.click(screen.getByText(m.common_action_create()));
     await waitFor(() => {
       expect(submit).toHaveBeenCalledTimes(1);
     });
@@ -113,7 +113,7 @@ describe("EditNavBlockRowModal", () => {
     const { submit } = mountModal({});
     await userEvent.type(screen.getByLabelText(m.nav_block_row_field_template()), "x");
     await userEvent.selectOptions(screen.getByLabelText(m.nav_block_row_field_link()), "journal");
-    await userEvent.click(screen.getByText(m.common_action_submit()));
+    await userEvent.click(screen.getByText(m.common_action_create()));
     await waitFor(() => {
       expect(screen.getByText(m.nav_block_row_journal_required())).toBeTruthy();
     });

@@ -182,7 +182,9 @@ const onSubmit = handleSubmit((row) => {
 
     <UiSettingRow controls-only>
       <UiButton @click="api.cancel()">{{ m.common_action_cancel() }}</UiButton>
-      <UiButton cta type="submit">{{ m.common_action_submit() }}</UiButton>
+      <UiButton cta type="submit">
+        {{ row === undefined ? m.common_action_create() : m.common_action_submit() }}
+      </UiButton>
     </UiSettingRow>
   </form>
 </template>

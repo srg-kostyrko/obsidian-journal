@@ -78,6 +78,12 @@ describe("editCommandModal definition", () => {
     expect(editCommandModal.title({ target: { kind: "all", writeType: "day" }, takenNames: [] })).toBe(m.command_add());
   });
 
+  it("labels the confirm button Create when no command is supplied", async () => {
+    await mountModal({ target: { kind: "all", writeType: "day" } });
+    expect(screen.getByText(m.common_action_create())).toBeTruthy();
+    expect(screen.queryByText(m.common_action_submit())).toBeNull();
+  });
+
   it("uses the edit title when a command is supplied", () => {
     const command: CommandConfig = {
       name: "Existing",
@@ -98,7 +104,7 @@ describe("EditCommandModal", () => {
   it("submits an all-target command with the entered values", async () => {
     const { submit } = await mountModal({ target: { kind: "all", writeType: "day" } });
     await userEvent.type(screen.getByRole("textbox"), "Open today");
-    await userEvent.click(screen.getByText(m.common_action_submit()));
+    await userEvent.click(screen.getByText(m.common_action_create()));
     await waitFor(() =>
       expect(submit).toHaveBeenCalledWith({
         name: "Open today",
@@ -133,7 +139,7 @@ describe("EditCommandModal", () => {
 
   it("surfaces a required-name error when submitting without a name", async () => {
     const { submit } = await mountModal({ target: { kind: "all", writeType: "day" } });
-    await userEvent.click(screen.getByText(m.common_action_submit()));
+    await userEvent.click(screen.getByText(m.common_action_create()));
     await waitFor(() => expect(screen.getByText(m.command_name_required_error())).toBeTruthy());
     expect(submit).not.toHaveBeenCalled();
   });
@@ -144,7 +150,7 @@ describe("EditCommandModal", () => {
       takenNames: ["Taken"],
     });
     await userEvent.type(screen.getByRole("textbox"), "Taken");
-    await userEvent.click(screen.getByText(m.common_action_submit()));
+    await userEvent.click(screen.getByText(m.common_action_create()));
     await waitFor(() => expect(screen.getByText(m.command_name_unique_error())).toBeTruthy());
     expect(submit).not.toHaveBeenCalled();
   });
@@ -153,7 +159,7 @@ describe("EditCommandModal", () => {
     const { submit } = await mountModal({ target: { kind: "all", writeType: "day" } });
     await userEvent.type(screen.getByRole("textbox"), "Ribboned");
     await userEvent.click(screen.getByLabelText(m.common_show_in_ribbon()));
-    await userEvent.click(screen.getByText(m.common_action_submit()));
+    await userEvent.click(screen.getByText(m.common_action_create()));
     await waitFor(() => expect(screen.getByText(m.command_icon_required_error())).toBeTruthy());
     expect(submit).not.toHaveBeenCalled();
   });
@@ -191,7 +197,7 @@ describe("EditCommandModal", () => {
   it("submits a shelf-target command with the entered values", async () => {
     const { submit } = await mountModal({ target: { kind: "shelf", shelfName: "work", writeType: "day" } });
     await userEvent.type(screen.getByRole("textbox"), "Open work");
-    await userEvent.click(screen.getByText(m.common_action_submit()));
+    await userEvent.click(screen.getByText(m.common_action_create()));
     await waitFor(() =>
       expect(submit).toHaveBeenCalledWith({
         name: "Open work",
@@ -209,7 +215,7 @@ describe("EditCommandModal", () => {
     const { submit } = await mountModal({ target: { kind: "shelf", shelfName: "work", writeType: "day" } });
     await userEvent.type(screen.getByRole("textbox"), "Open work weekly");
     await userEvent.selectOptions(screen.getAllByRole("combobox")[0], "week");
-    await userEvent.click(screen.getByText(m.common_action_submit()));
+    await userEvent.click(screen.getByText(m.common_action_create()));
     await waitFor(() =>
       expect(submit).toHaveBeenCalledWith(
         expect.objectContaining({ target: { kind: "shelf", shelfName: "work", writeType: "week" } }),
