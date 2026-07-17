@@ -1,12 +1,12 @@
 <script setup lang="ts">
 import { useResolvedWeekPlacement } from "@/calendar";
 import { usePeriodWindow } from "@/calendar/ui";
-import { m } from "@/i18n";
 import NotesWeekView from "@/notes-calendar/ui/NotesWeekView.vue";
 import { useFollowActiveDate } from "@/notes-calendar/use-follow-active-date";
 import { useShelfScope } from "@/notes-calendar/use-shelf-scope";
 
 import { useViewContext } from "../../../view-context";
+import { calendarEmptyMessage } from "../../calendar-empty-message";
 import { weekWindowContains } from "../../ui/follow-visibility";
 
 import type { BlockInstanceId } from "../../../config";
@@ -41,7 +41,7 @@ const weekPlacement = useResolvedWeekPlacement(() => props.config.weeks);
 <template>
   <div class="journal-view-week-calendar">
     <div v-if="scope.all.value.length === 0" class="journal-view-calendar-empty">
-      {{ m.view_block_calendar_no_journals() }}
+      {{ calendarEmptyMessage(viewContext.shelf.value) }}
     </div>
     <NotesWeekView
       v-for="week of weeks"

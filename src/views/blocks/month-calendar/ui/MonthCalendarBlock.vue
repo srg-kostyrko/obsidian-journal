@@ -3,12 +3,12 @@ import { computed } from "vue";
 
 import { useResolvedWeekPlacement } from "@/calendar";
 import { usePeriodWindow } from "@/calendar/ui";
-import { m } from "@/i18n";
 import NotesMonthView from "@/notes-calendar/ui/NotesMonthView.vue";
 import { useFollowActiveDate } from "@/notes-calendar/use-follow-active-date";
 import { useShelfScope } from "@/notes-calendar/use-shelf-scope";
 
 import { useViewContext } from "../../../view-context";
+import { calendarEmptyMessage } from "../../calendar-empty-message";
 import { monthWindowContains } from "../../ui/follow-visibility";
 
 import type { BlockInstanceId } from "../../../config";
@@ -48,7 +48,7 @@ const weekPlacement = useResolvedWeekPlacement(() => props.config.weeks);
 <template>
   <div class="journal-view-month-calendar">
     <div v-if="scope.all.value.length === 0" class="journal-view-calendar-empty">
-      {{ m.view_block_calendar_no_journals() }}
+      {{ calendarEmptyMessage(viewContext.shelf.value) }}
     </div>
     <NotesMonthView
       v-for="month of months"
