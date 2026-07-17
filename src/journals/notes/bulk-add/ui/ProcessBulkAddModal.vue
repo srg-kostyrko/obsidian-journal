@@ -11,6 +11,7 @@ import UiSettingRow from "@/ui/UiSettingRow.vue";
 
 import {
   BulkAddService,
+  type BulkLogAction,
   type BulkLogEntry,
   type BulkPlan,
   type PlannedAction,
@@ -26,6 +27,25 @@ const service = useService(BulkAddService);
 
 const actions = props.plan.notes.filter((n): n is PlannedAction => n.kind === "action");
 const skips = props.plan.notes.filter((n): n is PlannedSkip => n.kind === "skip");
+
+// A dry run reports what *would* happen, a real run what did. The service returns the actions as
+// data precisely so the wording can carry that difference — otherwise a dry run reads exactly
+// like a completed one and the user believes their notes were changed.
+function actionLabel(action: BulkLogAction): string {
+  const mood = props.parameters.dryRun ? "planned" : "done";
+  return match(action)
+    .with({ kind: "skipped-occupied" }, (a) => m.bulk_add_log_skipped_occupied({ mood, anchor: a.anchor }))
+    .with({ kind: "merged" }, (a) => m.bulk_add_log_merged({ mood, anchor: a.anchor }))
+    .with({ kind: "replaced" }, (a) => m.bulk_add_log_replaced({ mood, anchor: a.anchor }))
+    .with({ kind: "moved" }, () => m.bulk_add_log_moved({ mood }))
+    .with({ kind: "renamed" }, () => m.bulk_add_log_renamed({ mood }))
+    .with({ kind: "connected" }, (a) =>
+      m.bulk_add_log_connected({ mood, journalName: a.journalName, anchor: a.anchor }),
+    )
+    .with({ kind: "merge-occupant-missing" }, () => m.bulk_add_log_merge_occupant_missing())
+    .with({ kind: "failed" }, (a) => m.bulk_add_log_failed({ message: a.message }))
+    .exhaustive();
+}
 
 function skipReasonLabel(reason: SkipReason): string {
   return match(reason)
@@ -144,10 +164,11 @@ function close(): void {
     </template>
 
     <template v-else>
+      <UiSettingRow v-if="parameters.dryRun" heading no-controls :name="m.bulk_add_dry_run_banner()" />
       <UiSettingRow v-for="entry of log" :key="entry.path">
         <template #name>{{ entry.path }}</template>
         <template #description>
-          <div v-for="(line, i) of entry.actions" :key="i">{{ line }}</div>
+          <div v-for="(action, i) of entry.actions" :key="i">{{ actionLabel(action) }}</div>
         </template>
       </UiSettingRow>
       <UiSettingRow>

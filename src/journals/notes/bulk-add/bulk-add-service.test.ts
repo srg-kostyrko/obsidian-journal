@@ -432,6 +432,30 @@ describe("BulkAddService", () => {
       expect(log[0]?.actions.length).toBeGreaterThan(0);
     });
 
+    it("reports the intended actions as data the caller can word for a dry run", async () => {
+      const { service, notes } = build();
+      notes.seed("src/note.md" as VaultPath, "body");
+      const logResult = await service.apply(
+        "daily",
+        [
+          {
+            path: "src/note.md" as VaultPath,
+            anchor: anchor("2026-06-01"),
+            existing: "none",
+            move: true,
+            rename: true,
+          },
+        ],
+        true,
+      );
+      expectOk(logResult);
+      expect(logResult.value[0]?.actions).toEqual([
+        { kind: "moved" },
+        { kind: "renamed" },
+        { kind: "connected", journalName: "daily", anchor: anchor("2026-06-01") },
+      ]);
+    });
+
     it("skips a note resolved as existing skip", async () => {
       const { service, notes } = build();
       notes.seed("src/note.md" as VaultPath, "body");

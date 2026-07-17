@@ -57,7 +57,12 @@ afterEach(() => cleanup());
 describe("ProcessBulkAddModal", () => {
   it("shows the action log after running", async () => {
     const apply = vi.fn(() =>
-      AsyncResult.ok([{ path: "src/a.md" as VaultPath, actions: ["Connected to daily at 2026-06-01."] }]),
+      AsyncResult.ok([
+        {
+          path: "src/a.md" as VaultPath,
+          actions: [{ kind: "connected" as const, journalName: "daily", anchor: "2026-06-01" as AnchorString }],
+        },
+      ]),
     );
     mountModal({
       apply,
@@ -77,6 +82,34 @@ describe("ProcessBulkAddModal", () => {
     });
     await userEvent.click(screen.getByText(m.bulk_add_run()));
     expect(await screen.findByText("Connected to daily at 2026-06-01.")).toBeTruthy();
+  });
+
+  it("words the log in the future tense for a dry run so it is not mistaken for a completed run", async () => {
+    const apply = vi.fn(() =>
+      AsyncResult.ok([
+        {
+          path: "src/a.md" as VaultPath,
+          actions: [{ kind: "connected" as const, journalName: "daily", anchor: "2026-06-01" as AnchorString }],
+        },
+      ]),
+    );
+    mountModal({ apply, dryRun: true, plan: { notes: [] } });
+    await userEvent.click(screen.getByText(m.bulk_add_run()));
+    expect(await screen.findByText("Will connect to daily at 2026-06-01.")).toBeTruthy();
+  });
+
+  it("announces that a dry run changed nothing", async () => {
+    const apply = vi.fn(() => AsyncResult.ok([]));
+    mountModal({ apply, dryRun: true, plan: { notes: [] } });
+    await userEvent.click(screen.getByText(m.bulk_add_run()));
+    expect(await screen.findByText(m.bulk_add_dry_run_banner())).toBeTruthy();
+  });
+
+  it("does not announce a dry run after a real run", async () => {
+    const apply = vi.fn(() => AsyncResult.ok([]));
+    mountModal({ apply, dryRun: false, plan: { notes: [] } });
+    await userEvent.click(screen.getByText(m.bulk_add_run()));
+    expect(screen.queryByText(m.bulk_add_dry_run_banner())).toBeNull();
   });
 
   it("runs apply with the dry-run flag from params", async () => {

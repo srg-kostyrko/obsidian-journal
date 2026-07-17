@@ -58,9 +58,22 @@ export interface BulkAddDecisions {
   name: Readonly<Record<string, "keep" | "rename">>;
 }
 
+// What happened (or, on a dry run, what would have happened) to one note. Kept as data rather
+// than prose so the caller words it: the service cannot know whether this was a dry run's
+// intention or a completed action, and only the UI layer can localize it.
+export type BulkLogAction =
+  | { kind: "skipped-occupied"; anchor: AnchorString }
+  | { kind: "merged"; anchor: AnchorString }
+  | { kind: "replaced"; anchor: AnchorString }
+  | { kind: "moved" }
+  | { kind: "renamed" }
+  | { kind: "connected"; journalName: string; anchor: AnchorString }
+  | { kind: "merge-occupant-missing" }
+  | { kind: "failed"; message: string };
+
 export interface BulkLogEntry {
   path: VaultPath;
-  actions: string[];
+  actions: BulkLogAction[];
 }
 
 export class BulkAddService {
@@ -151,13 +164,13 @@ export class BulkAddService {
   }
 
   async #applyOne(journalName: string, action: ResolvedAction, dryRun: boolean): Promise<BulkLogEntry> {
-    const actions: string[] = [];
+    const actions: BulkLogAction[] = [];
     if (action.existing === "skip") {
-      actions.push(`Skipped: a note is already connected to ${action.anchor}.`);
+      actions.push({ kind: "skipped-occupied", anchor: action.anchor });
       return { path: action.path, actions };
     }
     if (action.existing === "merge") {
-      actions.push(`Merged into the note already connected to ${action.anchor}; source deleted.`);
+      actions.push({ kind: "merged", anchor: action.anchor });
       if (!dryRun) {
         const occupant = this.#index.entryByAnchor(journalName, action.anchor);
         if (occupant.isSome()) {
@@ -168,19 +181,19 @@ export class BulkAddService {
             yield* this.#notes.delete(action.path);
             return;
           });
-          if (result.kind === "err") actions.push(`Failed: ${result.error.message}`);
+          if (result.kind === "err") actions.push({ kind: "failed", message: result.error.message });
         } else {
-          actions.push("Failed: the occupant disappeared before merge.");
+          actions.push({ kind: "merge-occupant-missing" });
         }
       }
       return { path: action.path, actions };
     }
 
     const override = action.existing === "override";
-    if (override) actions.push(`Replaced the note already connected to ${action.anchor}.`);
-    if (action.move) actions.push("Moved into the journal's folder.");
-    if (action.rename) actions.push("Renamed to match the journal.");
-    actions.push(`Connected to ${journalName} at ${action.anchor}.`);
+    if (override) actions.push({ kind: "replaced", anchor: action.anchor });
+    if (action.move) actions.push({ kind: "moved" });
+    if (action.rename) actions.push({ kind: "renamed" });
+    actions.push({ kind: "connected", journalName, anchor: action.anchor });
 
     if (!dryRun) {
       const result = await this.#connection.connect(journalName, action.path, action.anchor, {
@@ -188,7 +201,7 @@ export class BulkAddService {
         move: action.move,
         rename: action.rename,
       });
-      if (result.kind === "err") actions.push(`Failed: ${result.error.message}`);
+      if (result.kind === "err") actions.push({ kind: "failed", message: result.error.message });
     }
     return { path: action.path, actions };
   }
