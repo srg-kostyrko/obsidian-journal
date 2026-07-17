@@ -1112,6 +1112,7 @@
   "journal_dashboard_edit": "Configure {name}",
   "journal_dashboard_empty": "No journals created yet.",
   "journal_delete_modal_title": "Delete {name}",
+  "journal_delete_connected_count": [{"declarations": ["input count"], "selectors": ["count"], "match": {"count=0": "This journal has no connected notes.", "count=1": "This journal has 1 connected note.", "count=*": "This journal has {count} connected notes."}}],
   "journal_delete_mode_label": "What to do with connected notes",
   "journal_delete_mode_option": [
     {
