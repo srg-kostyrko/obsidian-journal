@@ -8,7 +8,14 @@ import { Flows } from "@/infrastructure/flows";
 import { CommandService, NoticeService, WorkspaceService } from "@/infrastructure/host";
 import type { CommandRegistration } from "@/infrastructure/host";
 import { Option } from "@/infrastructure/result";
-import { CycleService, JournalsIndex, JournalsEventsToken, JournalsRepository, OpenDateFlow } from "@/journals";
+import {
+  CycleService,
+  JournalsIndex,
+  JournalsEventsToken,
+  JournalsRepository,
+  OpenDateFlow,
+  TimelineService,
+} from "@/journals";
 import type { JournalEntry } from "@/journals";
 import { SettingsEventsToken } from "@/settings";
 import { ShelvesEventsToken, ShelvesRepository } from "@/shelves";
@@ -31,6 +38,7 @@ export class DynamicCommandRegistry {
   readonly #notices = inject(NoticeService);
   readonly #index = inject(JournalsIndex);
   readonly #cycle = inject(CycleService);
+  readonly #timeline = inject(TimelineService);
   readonly #registered = new Map<string, string>();
   readonly #commandsRepo = inject(CommandsRepository);
   readonly #commandsEvents = inject(CommandsEventsToken);
@@ -89,7 +97,15 @@ export class DynamicCommandRegistry {
     return this.#journalsRepo.get(rep).flatMap((config) => {
       if (!supportedTypes(config.write.type).includes(command.type)) return Option.none();
       return this.#reference(command, journalNames).flatMap((reference) =>
-        this.#anchor(command, rep, reference, journalNames).map((resolved) => ({ anchor: resolved, journalNames })),
+        // Listing and running must share one predicate. OpenDateFlow drops journals whose
+        // timeline excludes the anchor, so planning without that filter let a command list in
+        // the palette, run, and end in NoApplicableJournals — which is benign, so it logged at
+        // info and showed nothing. v2 gated availability and execution on the same check.
+        this.#anchor(command, rep, reference, journalNames).flatMap((resolved) => {
+          const inTimeline = journalNames.filter((name) => this.#timeline.contains(name, resolved));
+          if (inTimeline.length === 0) return Option.none<CommandPlan>();
+          return Option.some<CommandPlan>({ anchor: resolved, journalNames: inTimeline });
+        }),
       );
     });
   }

@@ -17,6 +17,7 @@ import {
   JournalsRepository,
   JournalsEventsToken,
   OpenDateFlow,
+  TimelineService,
   journalConfigCollection,
 } from "@/journals";
 import type { JournalsEvents } from "@/journals";
@@ -73,6 +74,7 @@ async function build() {
   container.register(NoticeService).useValue(notices);
   container.register(JournalsIndex).useClass(JournalsIndex);
   container.register(CycleService).useClass(CycleService);
+  container.register(TimelineService).useClass(TimelineService);
   container.register(JournalsEventsToken).useValue(journalsEvents);
   container.register(JournalsRepository).useValue(journalsRepo);
   container.register(ShelvesEventsToken).useValue(shelvesEvents);
@@ -185,6 +187,16 @@ describe("DynamicCommandRegistry availability", () => {
     expect(host.commands.get("cmd-1")?.checkCallback?.(true)).toBe(false);
   });
 
+  it("is unavailable when the resolved date is past the journal's timeline end", async () => {
+    const { host, commandsRepo, journalsRepo } = await build();
+    journalsRepo.create("daily", { type: "day" });
+    journalsRepo.update("daily", {
+      timeline: { start: anchor("2020-01-01"), end: { kind: "date", date: anchor("2020-12-31") } },
+    });
+    commandsRepo.create("cmd-1", makeCommand({}));
+    expect(host.commands.get("cmd-1")?.checkCallback?.(true)).toBe(false);
+  });
+
   it("is unavailable for only_open_note context without a matching active note", async () => {
     const { host, commandsRepo, journalsRepo } = await build();
     journalsRepo.create("daily", { type: "day" });
@@ -221,6 +233,39 @@ describe("DynamicCommandRegistry execution", () => {
         existingOnly: false,
       },
       { context: { command: "Cmd" } },
+    );
+  });
+
+  it("does not invoke OpenDateFlow when the resolved date is outside the timeline", async () => {
+    const { host, commandsRepo, journalsRepo, flows } = await build();
+    journalsRepo.create("daily", { type: "day" });
+    journalsRepo.update("daily", {
+      timeline: { start: anchor("2020-01-01"), end: { kind: "date", date: anchor("2020-12-31") } },
+    });
+    const invokeSpy = vi.spyOn(flows, "invoke");
+    commandsRepo.create("cmd-1", makeCommand({}));
+
+    host.commands.get("cmd-1")?.checkCallback?.(false);
+
+    expect(invokeSpy).not.toHaveBeenCalled();
+  });
+
+  it("passes only in-timeline journals to OpenDateFlow", async () => {
+    const { host, commandsRepo, journalsRepo, flows } = await build();
+    journalsRepo.create("daily", { type: "day" });
+    journalsRepo.create("archive", { type: "day" });
+    journalsRepo.update("archive", {
+      timeline: { start: anchor("2020-01-01"), end: { kind: "date", date: anchor("2020-12-31") } },
+    });
+    const invokeSpy = vi.spyOn(flows, "invoke").mockReturnValue(AsyncResult.ok({ path: "daily/x.md", created: false }));
+    commandsRepo.create("cmd-1", makeCommand({}));
+
+    host.commands.get("cmd-1")?.checkCallback?.(false);
+
+    expect(invokeSpy).toHaveBeenCalledWith(
+      OpenDateFlow,
+      expect.objectContaining({ journalNames: ["daily"] }),
+      expect.anything(),
     );
   });
 

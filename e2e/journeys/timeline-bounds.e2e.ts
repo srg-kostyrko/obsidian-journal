@@ -1,7 +1,7 @@
 import { $, browser, expect } from "@wdio/globals";
 
-import { openPalette, paletteLists, promptChoose } from "../support/commands.js";
-import { noteExists, seedNote, todayAnchor, waitForJournalFrontmatter } from "../support/vault.js";
+import { paletteLists } from "../support/commands.js";
+import { noteExists, seedNote, waitForJournalFrontmatter } from "../support/vault.js";
 
 import {
   hostNote,
@@ -150,19 +150,12 @@ describe("timeline bounds", () => {
     });
   });
 
-  // The open-today command lists whenever a day-writing journal exists (its check() consults the
-  // cycle, not the timeline), so it stays in the palette even when today lies outside the only
-  // journal's bounds — but running it resolves no in-bounds journal and creates nothing.
+  // Availability and execution share one predicate: the command's plan drops journals whose
+  // timeline excludes the resolved date, so a command that could only no-op is never listed.
+  // The palette therefore cannot offer an action that would do nothing.
   describe("open-today command", () => {
-    it("lists the command for a journal whose bounds exclude today", async () => {
-      expect(await paletteLists("Open today's note")).toBe(true);
-    });
-
-    it("creates no note when today is outside the timeline", async () => {
-      await openPalette();
-      await promptChoose("Open today's note");
-
-      expect(await noteExists(`window/${todayAnchor()}.md`)).toBe(false);
+    it("hides the command for a journal whose bounds exclude today", async () => {
+      expect(await paletteLists("Open today's note")).toBe(false);
     });
   });
 });
