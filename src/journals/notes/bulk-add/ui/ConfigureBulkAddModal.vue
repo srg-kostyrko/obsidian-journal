@@ -165,7 +165,8 @@ const onSubmit = handleSubmit((parameters) => {
       <UiToggle v-model="dryRun" />
     </UiSettingRow>
 
-    <UiSettingRow>
+    <UiSettingRow controls-only>
+      <UiButton @click="api.cancel()">{{ m.common_action_cancel() }}</UiButton>
       <UiButton cta type="submit">{{ m.bulk_add_next() }}</UiButton>
     </UiSettingRow>
   </form>

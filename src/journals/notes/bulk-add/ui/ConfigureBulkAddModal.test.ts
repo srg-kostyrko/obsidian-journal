@@ -105,6 +105,12 @@ describe("ConfigureBulkAddModal", () => {
     expect(submit).not.toHaveBeenCalled();
   });
 
+  it("cancels when the user clicks Cancel", async () => {
+    const { cancel } = mountModal();
+    await userEvent.click(screen.getByText(m.common_action_cancel()));
+    expect(cancel).toHaveBeenCalled();
+  });
+
   it("blocks submit when the source folder does not exist", async () => {
     const { submit } = mountModal();
     await userEvent.type(screen.getByRole("textbox", { name: m.bulk_add_folder_label() }), "Typo");
