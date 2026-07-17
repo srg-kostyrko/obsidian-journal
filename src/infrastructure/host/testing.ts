@@ -49,6 +49,7 @@ function noteOf(path: VaultPath): Note {
 export class FakeNotesService implements Pick<
   NotesService,
   | "find"
+  | "folderExists"
   | "listInFolder"
   | "listFolders"
   | "allMarkdownNotes"
@@ -95,6 +96,10 @@ export class FakeNotesService implements Pick<
   frontmatterOf(path: VaultPath): Record<string, unknown> | undefined {
     const entry = this.#files.get(path);
     return entry ? { ...entry.frontmatter } : undefined;
+  }
+
+  folderExists(folder: VaultPath): boolean {
+    return this.#folders.has(folder);
   }
 
   listInFolder(folder: VaultPath): AsyncResult<VaultPath[], FolderNotFoundError> {

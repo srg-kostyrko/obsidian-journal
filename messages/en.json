@@ -308,6 +308,7 @@
   "bulk_add_notes_to_title": "Add notes to {journalName}",
   "bulk_add_folder_label": "Source folder",
   "bulk_add_folder_description": "Select the folder with existing notes you want to process.",
+  "bulk_add_folder_not_found": "This folder does not exist in your vault.",
   "bulk_add_date_place_label": "Read the date from",
   "bulk_add_date_place_title": "Note title",
   "bulk_add_date_place_property": "A property",

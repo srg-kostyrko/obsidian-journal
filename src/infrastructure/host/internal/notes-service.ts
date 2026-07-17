@@ -90,6 +90,10 @@ export class NotesService {
     return new Some<Note>(toNote(file));
   }
 
+  folderExists(folder: VaultPath): boolean {
+    return this.#app.vault.getFolderByPath(folder || "/") !== null;
+  }
+
   listInFolder(folder: VaultPath): AsyncResult<VaultPath[], FolderNotFoundError> {
     const target = this.#app.vault.getFolderByPath(folder || "/");
     if (!target) return AsyncResult.err(new FolderNotFoundError(folder));

@@ -4,7 +4,7 @@ import { afterEach, describe, expect, it, vi } from "vitest";
 
 import { m } from "@/i18n";
 import { Container, provideInjectorOnApp } from "@/infrastructure/di";
-import { InputSuggestService, NotesService } from "@/infrastructure/host";
+import { InputSuggestService, NotesService, type VaultPath } from "@/infrastructure/host";
 import { FakeInputSuggestService } from "@/infrastructure/host/input-suggests/testing";
 import type { ModalApi } from "@/infrastructure/host/modals";
 import { provideModalApiOnApp } from "@/infrastructure/host/modals/testing";
@@ -19,6 +19,7 @@ import type { BulkAddParameters } from "../config";
 
 function buildContainer(dateFormat = "YYYY-MM-DD"): Container {
   const notes = new FakeNotesService();
+  notes.seed("Daily/2026-07-17.md" as VaultPath);
   const inputSuggest = new FakeInputSuggestService();
   const container = new Container();
   container.register(NotesService).useValue(notes as unknown as NotesService);
@@ -102,5 +103,20 @@ describe("ConfigureBulkAddModal", () => {
     await userEvent.click(screen.getByText(m.bulk_add_next()));
     await waitFor(() => expect(screen.getByText(m.bulk_add_date_format_required())).toBeTruthy());
     expect(submit).not.toHaveBeenCalled();
+  });
+
+  it("blocks submit when the source folder does not exist", async () => {
+    const { submit } = mountModal();
+    await userEvent.type(screen.getByRole("textbox", { name: m.bulk_add_folder_label() }), "Typo");
+    await userEvent.click(screen.getByText(m.bulk_add_next()));
+    await waitFor(() => expect(screen.getByText(m.bulk_add_folder_not_found())).toBeTruthy());
+    expect(submit).not.toHaveBeenCalled();
+  });
+
+  it("submits a source folder that exists", async () => {
+    const { submit } = mountModal();
+    await userEvent.type(screen.getByRole("textbox", { name: m.bulk_add_folder_label() }), "Daily");
+    await userEvent.click(screen.getByText(m.bulk_add_next()));
+    await waitFor(() => expect(submit).toHaveBeenCalledWith(expect.objectContaining({ folder: "Daily" })));
   });
 });

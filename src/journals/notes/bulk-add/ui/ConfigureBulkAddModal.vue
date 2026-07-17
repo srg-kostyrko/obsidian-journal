@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import { toTypedSchema } from "@vee-validate/valibot";
+import * as v from "valibot";
 import { useFieldArray, useForm } from "vee-validate";
 
 import type { FilterCondition } from "@/decorations/config";
@@ -7,6 +8,7 @@ import { defaultCondition } from "@/decorations/defaults";
 import ConditionItem from "@/decorations/settings/ui/ConditionItem.vue";
 import { m } from "@/i18n";
 import { useService } from "@/infrastructure/di";
+import { NotesService, type VaultPath } from "@/infrastructure/host";
 import { useModal } from "@/infrastructure/host/modals";
 import DateFormatPreview from "@/journals/settings/ui/DateFormatPreview.vue";
 import FolderInput from "@/journals/settings/ui/FolderInput.vue";
@@ -24,14 +26,25 @@ import { bulkAddParametersSchema, defaultBulkAddParameters, type BulkAddParamete
 const { journalName } = defineProps<{ journalName: string }>();
 const api = useModal<BulkAddParameters>();
 const journalsVM = useService(JournalsViewModel);
+const notes = useService(NotesService);
 
 // Prefill the date format from the journal's own format so a non-ISO journal starts from the
 // right pattern instead of a hardcoded YYYY-MM-DD (v2 parity).
 const journalDateFormat = journalsVM.getJournal(journalName).getOrUndefined()?.dateFormat;
 
+// The folder exists only at runtime, so the schema in config.ts cannot check it; without this the
+// typo surfaces as a FolderNotFoundError once the modal has closed, taking the whole form with it.
 const { values, defineField, handleSubmit, errorBag } = useForm<BulkAddParameters>({
   initialValues: { ...defaultBulkAddParameters(), ...(journalDateFormat && { dateFormat: journalDateFormat }) },
-  validationSchema: toTypedSchema(bulkAddParametersSchema),
+  validationSchema: toTypedSchema(
+    v.pipe(
+      bulkAddParametersSchema,
+      v.forward(
+        v.check((input) => notes.folderExists(input.folder as VaultPath), m.bulk_add_folder_not_found()),
+        ["folder"],
+      ),
+    ),
+  ),
 });
 
 const [folder] = defineField("folder");
@@ -59,8 +72,11 @@ const onSubmit = handleSubmit((parameters) => {
   <form @submit.prevent="onSubmit">
     <UiSettingRow>
       <template #name>{{ m.bulk_add_folder_label() }}</template>
-      <template #description>{{ m.bulk_add_folder_description() }}</template>
-      <FolderInput v-model="folder" />
+      <template #description>
+        <div>{{ m.bulk_add_folder_description() }}</div>
+        <span v-for="error of errorBag.folder" :key="error" class="bulk-add-form-error">{{ error }}</span>
+      </template>
+      <FolderInput v-model="folder" :aria-label="m.bulk_add_folder_label()" />
     </UiSettingRow>
 
     <UiSettingRow>
