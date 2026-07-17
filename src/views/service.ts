@@ -4,6 +4,7 @@ import * as v from "valibot";
 import { inject } from "@/infrastructure/di";
 import { LoggerFactoryToken } from "@/infrastructure/logger";
 import { attempt, Err, Option, type AsyncResult, type Result } from "@/infrastructure/result";
+import { ShelvesEventsToken } from "@/shelves";
 
 import { ToolbarItemsService } from "./blocks/toolbar/toolbar-items-service";
 import {
@@ -30,10 +31,29 @@ export class ViewsService {
   readonly #logger = inject(LoggerFactoryToken).named("views-service");
   readonly #blocks: ReadonlyMap<string, ViewBlockDefinition>;
 
-  constructor() {
+  constructor(shelvesEvents = inject(ShelvesEventsToken)) {
     const blockMap = new Map<string, ViewBlockDefinition>();
     for (const definition of this.#blockList) blockMap.set(definition.key, definition);
     this.#blocks = blockMap;
+
+    // A view holds its shelf by name, so nothing else keeps that reference valid: a rename or
+    // delete would leave defaultShelf pointing at a shelf that no longer resolves, and the view
+    // would silently scope to no journals at all. ShelvesService maintains its own journal
+    // references the same way.
+    shelvesEvents.on("renamed", (oldName, newName) => this.#updateShelfReference(oldName, newName));
+    shelvesEvents.on("deleted", (name) => this.#updateShelfReference(name, null));
+  }
+
+  // A deleted shelf falls back to unscoped (all journals) rather than following the delete
+  // modal's destination: that destination re-homes the shelf's journals, which is not the same
+  // question as what a view should show. Unscoped stays visible and the user can re-scope.
+  #updateShelfReference(oldName: string, newShelf: string | null): void {
+    for (const view of this.#repo.find().list()) {
+      if (view.defaultShelf !== oldName) continue;
+      this.#repo.update(view.id, { defaultShelf: newShelf }).tapErr((error) => {
+        this.#logger.error("failed to update a view's shelf reference", { view: view.id, error });
+      });
+    }
   }
 
   #persistBlocks(id: ViewId, blocks: View["blocks"]): Result<void, UnknownViewError> {

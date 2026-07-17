@@ -6,6 +6,7 @@ import { reactive } from "vue";
 import { Container } from "@/infrastructure/di";
 import { createLoggerTestingModule } from "@/infrastructure/logger/testing";
 import { expectErr, expectOk } from "@/infrastructure/result/testing";
+import { ShelvesEventsToken, type ShelvesEvents } from "@/shelves";
 
 import { ToolbarItemsService } from "./blocks/toolbar/toolbar-items-service";
 import { defineToolbarItem, type ToolbarItemDefinition } from "./define-toolbar-item";
@@ -32,12 +33,19 @@ function build(
     blocks?: readonly ViewBlockDefinition[];
     items?: readonly ToolbarItemDefinition[];
   } = {},
-): { service: ViewsService; events: ReturnType<typeof createNanoEvents<ViewsEvents>>; repo: ViewsRepository } {
+): {
+  service: ViewsService;
+  events: ReturnType<typeof createNanoEvents<ViewsEvents>>;
+  repo: ViewsRepository;
+  shelvesEvents: ReturnType<typeof createNanoEvents<ShelvesEvents>>;
+} {
   const events = createNanoEvents<ViewsEvents>();
+  const shelvesEvents = createNanoEvents<ShelvesEvents>();
   const repo = ViewsRepository.fromParts(options.seeds ?? {}, events);
   const c = new Container();
   c.register(ViewsRepository).useValue(repo);
   c.register(ViewsEventsToken).useValue(events);
+  c.register(ShelvesEventsToken).useValue(shelvesEvents);
   c.addModule(createLoggerTestingModule().module);
   const blocks = options.blocks ?? [];
   for (const block of blocks) {
@@ -49,10 +57,50 @@ function build(
   }
   c.register(ToolbarItemsService).useClass(ToolbarItemsService);
   c.register(ViewsService).useClass(ViewsService);
-  return { service: c.resolve(ViewsService), events, repo };
+  return { service: c.resolve(ViewsService), events, repo, shelvesEvents };
+}
+
+function viewScopedTo(shelf: string | null): View {
+  return {
+    id: "v1" as ViewId,
+    name: "Calendar",
+    icon: "",
+    defaultShelf: shelf,
+    showInRibbon: false,
+    leaf: "right",
+    openOnStartup: false,
+    rememberDate: false,
+    blocks: [],
+  };
 }
 
 describe("ViewsService", () => {
+  describe("shelf reference maintenance", () => {
+    it("follows a renamed shelf so the view stays scoped to it", () => {
+      const { repo, shelvesEvents } = build({ seeds: { v1: viewScopedTo("work") } });
+      shelvesEvents.emit("renamed", "work", "office");
+      expect(repo.get("v1" as ViewId).match({ some: (v) => v.defaultShelf, none: () => "gone" })).toBe("office");
+    });
+
+    it("leaves a view scoped to a different shelf untouched on rename", () => {
+      const { repo, shelvesEvents } = build({ seeds: { v1: viewScopedTo("personal") } });
+      shelvesEvents.emit("renamed", "work", "office");
+      expect(repo.get("v1" as ViewId).match({ some: (v) => v.defaultShelf, none: () => "gone" })).toBe("personal");
+    });
+
+    it("unscopes a view whose shelf was deleted", () => {
+      const { repo, shelvesEvents } = build({ seeds: { v1: viewScopedTo("work") } });
+      shelvesEvents.emit("deleted", "work");
+      expect(repo.get("v1" as ViewId).match({ some: (v) => v.defaultShelf, none: () => "gone" })).toBeNull();
+    });
+
+    it("leaves a view scoped to a different shelf untouched on delete", () => {
+      const { repo, shelvesEvents } = build({ seeds: { v1: viewScopedTo("personal") } });
+      shelvesEvents.emit("deleted", "work");
+      expect(repo.get("v1" as ViewId).match({ some: (v) => v.defaultShelf, none: () => "gone" })).toBe("personal");
+    });
+  });
+
   describe("create", () => {
     it("returns Ok with the new view id", async () => {
       const { service } = build();

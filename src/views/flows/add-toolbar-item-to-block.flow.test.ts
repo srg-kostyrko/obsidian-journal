@@ -8,6 +8,7 @@ import { ModalService } from "@/infrastructure/host/modals";
 import { FakeModalService } from "@/infrastructure/host/modals/testing";
 import { FakeNoticeService } from "@/infrastructure/host/testing";
 import { createSettingsService } from "@/settings/testing";
+import { ShelvesEventsToken, type ShelvesEvents } from "@/shelves";
 
 import { ToolbarItemsService } from "../blocks/toolbar/toolbar-items-service";
 import { viewsCollection } from "../config";
@@ -88,6 +89,7 @@ async function build(withDefinition = true) {
   }
   container.register(ViewsRepository).useClass(ViewsRepository);
   container.register(ToolbarItemsService).useClass(ToolbarItemsService);
+  container.register(ShelvesEventsToken).useValue(createNanoEvents<ShelvesEvents>());
   container.register(ViewsService).useClass(ViewsService);
   container.register(NoticeService).useValue(new FakeNoticeService());
   container.register(Flows).useClass(Flows);

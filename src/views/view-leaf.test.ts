@@ -7,7 +7,7 @@ import { Container, InjectorToken } from "@/infrastructure/di";
 import { createFakeHost } from "@/infrastructure/host/internal/testing";
 import { InternalObsidianAppToken, InternalPluginToken } from "@/infrastructure/host/internal/tokens";
 import { createLoggerTestingModule } from "@/infrastructure/logger/testing";
-import { ShelvesRepository } from "@/shelves";
+import { ShelvesEventsToken, ShelvesRepository } from "@/shelves";
 import type { ShelvesEvents } from "@/shelves";
 
 import { dividerBlock } from "./blocks/divider/divider-block";
@@ -51,6 +51,7 @@ function build(view: View = seedView()) {
   c.register(ViewsEventsToken).useValue(events);
   c.register(ViewsRepository).useValue(repo);
   c.register(ToolbarItemsService).useClass(ToolbarItemsService);
+  c.register(ShelvesEventsToken).useValue(createNanoEvents<ShelvesEvents>());
   c.register(ViewsService).useClass(ViewsService);
   const containerEl = document.createElement("div");
   const leafStub = { containerEl };
@@ -135,6 +136,7 @@ describe("JournalViewLeaf", () => {
       c.register(ViewsEventsToken).useValue(events);
       c.register(ViewsRepository).useValue(repo);
       c.register(ToolbarItemsService).useClass(ToolbarItemsService);
+      c.register(ShelvesEventsToken).useValue(createNanoEvents<ShelvesEvents>());
       c.register(ViewsService).useClass(ViewsService);
       const injector = c.resolve(InjectorToken);
       const containerEl = document.createElement("div");
@@ -195,6 +197,7 @@ describe("JournalViewLeaf", () => {
       c.register(ViewBlockDefinitionToken).useValue(dividerBlock);
       c.register(ToolbarItemDefinitionToken).useValue(shelfSelectorItem);
       c.register(ToolbarItemsService).useClass(ToolbarItemsService);
+      c.register(ShelvesEventsToken).useValue(createNanoEvents<ShelvesEvents>());
       c.register(ViewsService).useClass(ViewsService);
       const containerEl = document.createElement("div");
       const leafStub = { containerEl };
@@ -233,6 +236,7 @@ describe("JournalViewLeaf", () => {
       c.register(ViewsRepository).useValue(repo);
       c.register(ViewBlockDefinitionToken).useValue(trivialBlock);
       c.register(ToolbarItemsService).useClass(ToolbarItemsService);
+      c.register(ShelvesEventsToken).useValue(createNanoEvents<ShelvesEvents>());
       c.register(ViewsService).useClass(ViewsService);
       const containerEl = document.createElement("div");
       const leafStub = { containerEl };
