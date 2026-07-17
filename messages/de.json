@@ -536,7 +536,6 @@
 			}
 		}
 	],
-	"decoration_condition_date_hint": "Lassen Sie ein Feld leer, um einen beliebigen Tag, Monat oder ein beliebiges Jahr anzugeben.",
 	"decoration_condition_has_note_describe": "Es existiert eine Notiz",
 	"decoration_condition_has_open_task_describe": "Die Notiz enthält eine offene Aufgabe",
 	"decoration_condition_offset_describe": "Offset vom Start ist {offset}",
@@ -559,7 +558,6 @@
 	"decoration_condition_property_condition_label": "Zustand",
 	"decoration_condition_property_describe": "property {name} {op} {value}",
 	"decoration_condition_property_value_label": "Wert",
-	"decoration_condition_property_value_type_label": "Typ",
 	"decoration_condition_tag_describe": "tag {op} {value}",
 	"decoration_condition_tag_value_label": "Tag-Wert",
 	"decoration_condition_title_describe": "title {op} {value}",

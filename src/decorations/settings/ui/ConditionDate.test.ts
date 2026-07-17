@@ -8,6 +8,7 @@ import { defineComponent, h } from "vue";
 
 import { Calendar } from "@/calendar";
 import { decorationConditionSchema, type JournalDecorationCondition } from "@/decorations";
+import { m } from "@/i18n";
 import { Container, provideInjectorOnApp } from "@/infrastructure/di";
 
 import ConditionDate from "./ConditionDate.vue";
@@ -39,6 +40,27 @@ function mount(initial: DateCond) {
 }
 
 describe("ConditionDate", () => {
+  it("names its day field for assistive tech", () => {
+    mount({ type: "date", day: 1, month: 1, year: null });
+    expect(
+      screen.getByRole("combobox", { name: m.decoration_condition_date_unit_label({ unit: "day" }) }),
+    ).toBeTruthy();
+  });
+
+  it("names its month field for assistive tech", () => {
+    mount({ type: "date", day: 1, month: 1, year: null });
+    expect(
+      screen.getByRole("combobox", { name: m.decoration_condition_date_unit_label({ unit: "month" }) }),
+    ).toBeTruthy();
+  });
+
+  it("names its year field for assistive tech", () => {
+    mount({ type: "date", day: 1, month: 1, year: null });
+    expect(
+      screen.getByRole("spinbutton", { name: m.decoration_condition_date_unit_label({ unit: "year" }) }),
+    ).toBeTruthy();
+  });
+
   it("stores the selected day verbatim", async () => {
     const host = mount({ type: "date", day: 1, month: 1, year: null });
     const [dayDropdown] = screen.getAllByRole("combobox");

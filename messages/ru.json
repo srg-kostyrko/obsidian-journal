@@ -536,7 +536,6 @@
 			}
 		}
 	],
-	"decoration_condition_date_hint": "Оставьте поле пустым, чтобы выбрать любой день, месяц или год.",
 	"decoration_condition_has_note_describe": "существует записка",
 	"decoration_condition_has_open_task_describe": "В записке содержится открытое задание.",
 	"decoration_condition_offset_describe": "Смещение от начала равно {offset}",
@@ -559,7 +558,6 @@
 	"decoration_condition_property_condition_label": "Состояние",
 	"decoration_condition_property_describe": "свойство {name} {op} {value}",
 	"decoration_condition_property_value_label": "Ценить",
-	"decoration_condition_property_value_type_label": "Тип",
 	"decoration_condition_tag_describe": "tag {op} {value}",
 	"decoration_condition_tag_value_label": "Значение тега",
 	"decoration_condition_title_describe": "title {op} {value}",

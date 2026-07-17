@@ -468,7 +468,6 @@
       }
     }
   ],
-  "decoration_condition_date_hint": "Leave a field empty to match any day, month, or year.",
   "decoration_condition_has_note_describe": "a note exists",
   "decoration_condition_has_open_task_describe": "the note has an open task",
   "decoration_condition_offset_describe": "offset from start is {offset}",
@@ -483,10 +482,10 @@
     }
   ],
   "decoration_condition_offset_label": "Offset",
+  "decoration_condition_op_label": "Condition",
   "decoration_condition_property_condition_label": "Condition",
   "decoration_condition_property_describe": "property {name} {op} {value}",
   "decoration_condition_property_value_label": "Value",
-  "decoration_condition_property_value_type_label": "Type",
   "decoration_condition_tag_describe": "tag {op} {value}",
   "decoration_condition_tag_value_label": "Tag value",
   "decoration_condition_title_describe": "title {op} {value}",

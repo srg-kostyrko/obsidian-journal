@@ -536,7 +536,6 @@
 			}
 		}
 	],
-	"decoration_condition_date_hint": "Deixe um campo vazio para corresponder a qualquer dia, mês ou ano.",
 	"decoration_condition_has_note_describe": "existe uma nota",
 	"decoration_condition_has_open_task_describe": "A nota tem uma tarefa em aberto.",
 	"decoration_condition_offset_describe": "O deslocamento a partir do início é {offset}",
@@ -559,7 +558,6 @@
 	"decoration_condition_property_condition_label": "Doença",
 	"decoration_condition_property_describe": "propriedade {name} {op} {value}",
 	"decoration_condition_property_value_label": "Valor",
-	"decoration_condition_property_value_type_label": "Tipo",
 	"decoration_condition_tag_describe": "tag {op} {value}",
 	"decoration_condition_tag_value_label": "Valor da etiqueta",
 	"decoration_condition_title_describe": "título {op} {value}",

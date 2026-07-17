@@ -34,6 +34,11 @@ function mount(initial: Offset) {
 }
 
 describe("ConditionOffset", () => {
+  it("names its offset field for assistive tech", () => {
+    mount({ type: "offset", offset: 0 });
+    expect(screen.getByRole("spinbutton", { name: m.decoration_condition_offset_label() })).toBeTruthy();
+  });
+
   it("updates the offset as the user types", async () => {
     const host = mount({ type: "offset", offset: 0 });
     const input = screen.getByRole("spinbutton");

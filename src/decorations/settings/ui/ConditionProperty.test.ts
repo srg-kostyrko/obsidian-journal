@@ -7,6 +7,7 @@ import { afterEach, describe, expect, it } from "vitest";
 import { defineComponent, h } from "vue";
 
 import { decorationConditionSchema, type JournalDecorationCondition } from "@/decorations";
+import { m } from "@/i18n";
 import { Container, provideInjectorOnApp } from "@/infrastructure/di";
 import { MetadataTypeService } from "@/infrastructure/host";
 import { createFakeHost, type FakeHost } from "@/infrastructure/host/internal/testing";
@@ -44,6 +45,21 @@ function mount(initial: Property, seed: (host: FakeHost) => void = () => undefin
 }
 
 describe("ConditionProperty", () => {
+  it("names its property-name field for assistive tech", () => {
+    mount({ type: "property", name: "", valueType: "text", condition: "exists", value: "" });
+    expect(screen.getByRole("textbox", { name: m.common_label_property_name() })).toBeTruthy();
+  });
+
+  it("names its condition dropdown for assistive tech", () => {
+    mount({ type: "property", name: "", valueType: "text", condition: "exists", value: "" });
+    expect(screen.getByRole("combobox", { name: m.decoration_condition_property_condition_label() })).toBeTruthy();
+  });
+
+  it("names its value field for assistive tech", () => {
+    mount({ type: "property", name: "mood", valueType: "text", condition: "contains", value: "" });
+    expect(screen.getByRole("textbox", { name: m.decoration_condition_property_value_label() })).toBeTruthy();
+  });
+
   it("updates the property name as the user types", async () => {
     const { exposed } = mount({ type: "property", name: "", valueType: "text", condition: "exists", value: "" });
     await userEvent.type(screen.getAllByRole("textbox")[0], "mood");

@@ -14,7 +14,7 @@ const hint = computed(() =>
 </script>
 
 <template>
-  <UiNumberInput v-model="offset" />
+  <UiNumberInput v-model="offset" :aria-label="m.decoration_condition_offset_label()" />
   <span class="offset-hint">{{ hint }}</span>
 </template>
 

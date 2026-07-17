@@ -46,15 +46,19 @@ const yearModel = computed<number | undefined>({
 </script>
 
 <template>
-  <UiDropdown v-model="daySelect">
+  <UiDropdown v-model="daySelect" :aria-label="m.decoration_condition_date_unit_label({ unit: 'day' })">
     <option value="">{{ m.decoration_condition_date_any_unit({ unit: "day" }) }}</option>
     <option v-for="dayNumber in 31" :key="dayNumber" :value="String(dayNumber)">{{ dayNumber }}</option>
   </UiDropdown>
-  <UiDropdown v-model="monthSelect">
+  <UiDropdown v-model="monthSelect" :aria-label="m.decoration_condition_date_unit_label({ unit: 'month' })">
     <option value="">{{ m.decoration_condition_date_any_unit({ unit: "month" }) }}</option>
     <option v-for="(monthName, monthIndex) in monthNames" :key="monthIndex" :value="String(monthIndex + 1)">
       {{ monthName }}
     </option>
   </UiDropdown>
-  <UiNumberInput v-model="yearModel" :placeholder="m.decoration_condition_date_any_unit({ unit: 'year' })" />
+  <UiNumberInput
+    v-model="yearModel"
+    :aria-label="m.decoration_condition_date_unit_label({ unit: 'year' })"
+    :placeholder="m.decoration_condition_date_any_unit({ unit: 'year' })"
+  />
 </template>

@@ -536,7 +536,6 @@
 			}
 		}
 	],
-	"decoration_condition_date_hint": "임의의 날짜, 월 또는 연도를 입력하려면 해당 필드를 비워 두십시오.",
 	"decoration_condition_has_note_describe": "메모가 있습니다",
 	"decoration_condition_has_open_task_describe": "해당 메모에는 미해결 작업이 있습니다.",
 	"decoration_condition_offset_describe": "시작점으로부터의 오프셋은 {offset} 입니다.",
@@ -559,7 +558,6 @@
 	"decoration_condition_property_condition_label": "상태",
 	"decoration_condition_property_describe": "속성 {name} {op} {value}",
 	"decoration_condition_property_value_label": "값",
-	"decoration_condition_property_value_type_label": "유형",
 	"decoration_condition_tag_describe": "태그 {op} {value}",
 	"decoration_condition_tag_value_label": "태그 값",
 	"decoration_condition_title_describe": "제목 {op} {value}",

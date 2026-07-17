@@ -536,7 +536,6 @@
 			}
 		}
 	],
-	"decoration_condition_date_hint": "日付、月、年のいずれかを指定する場合は、空欄のままにしてください。",
 	"decoration_condition_has_note_describe": "メモが存在する",
 	"decoration_condition_has_open_task_describe": "メモには未完了のタスクがあります",
 	"decoration_condition_offset_describe": "開始位置からのオフセットは{offset}です。",
@@ -559,7 +558,6 @@
 	"decoration_condition_property_condition_label": "状態",
 	"decoration_condition_property_describe": "プロパティ{name} {op} {value}",
 	"decoration_condition_property_value_label": "価値",
-	"decoration_condition_property_value_type_label": "タイプ",
 	"decoration_condition_tag_describe": "タグ{op} {value}",
 	"decoration_condition_tag_value_label": "タグ値",
 	"decoration_condition_title_describe": "タイトル{op} {value}",

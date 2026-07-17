@@ -2,6 +2,7 @@
 import { useField } from "vee-validate";
 
 import { Calendar } from "@/calendar";
+import { m } from "@/i18n";
 import { useService } from "@/infrastructure/di";
 
 const { name } = defineProps<{ name: string }>();
@@ -22,7 +23,7 @@ function isChecked(index: number): boolean {
 </script>
 
 <template>
-  <div class="weekday-grid">
+  <div class="weekday-grid" role="group" :aria-label="m.decoration_condition_weekday_label()">
     <label v-for="{ index, label } in orderedWeekdays" :key="index">
       <input
         type="checkbox"

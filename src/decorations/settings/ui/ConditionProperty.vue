@@ -89,14 +89,28 @@ watch(propertyName, (next) => {
 </script>
 
 <template>
-  <UiTextInput v-model="propertyName" />
-  <UiDropdown v-model="op">
+  <UiTextInput v-model="propertyName" :aria-label="m.common_label_property_name()" />
+  <UiDropdown v-model="op" :aria-label="m.decoration_condition_property_condition_label()">
     <option v-for="o of opsForType" :key="o" :value="o">{{ opLabel(o) }}</option>
   </UiDropdown>
   <template v-if="showValueField">
-    <UiTextInput v-if="valueType === 'text'" v-model="textModel" />
-    <UiNumberInput v-else-if="valueType === 'number'" v-model="numberModel" />
-    <input v-else-if="valueType === 'date'" v-model="textModel" type="date" class="property-date-input" />
+    <UiTextInput
+      v-if="valueType === 'text'"
+      v-model="textModel"
+      :aria-label="m.decoration_condition_property_value_label()"
+    />
+    <UiNumberInput
+      v-else-if="valueType === 'number'"
+      v-model="numberModel"
+      :aria-label="m.decoration_condition_property_value_label()"
+    />
+    <input
+      v-else-if="valueType === 'date'"
+      v-model="textModel"
+      type="date"
+      class="property-date-input"
+      :aria-label="m.decoration_condition_property_value_label()"
+    />
   </template>
   <span v-if="nameError" class="condition-property-error">{{ nameError }}</span>
 </template>

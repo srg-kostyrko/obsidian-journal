@@ -536,7 +536,6 @@
 			}
 		}
 	],
-	"decoration_condition_date_hint": "Deje un campo vacío para que coincida con cualquier día, mes o año.",
 	"decoration_condition_has_note_describe": "existe una nota",
 	"decoration_condition_has_open_task_describe": "La nota tiene una tarea abierta",
 	"decoration_condition_offset_describe": "El desplazamiento desde el inicio es {offset}",
@@ -559,7 +558,6 @@
 	"decoration_condition_property_condition_label": "Condición",
 	"decoration_condition_property_describe": "propiedad {name} {op} {value}",
 	"decoration_condition_property_value_label": "Valor",
-	"decoration_condition_property_value_type_label": "Tipo",
 	"decoration_condition_tag_describe": "etiqueta {op} {value}",
 	"decoration_condition_tag_value_label": "Valor de la etiqueta",
 	"decoration_condition_title_describe": "título {op} {value}",

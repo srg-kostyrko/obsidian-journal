@@ -8,6 +8,7 @@ import { defineComponent, h } from "vue";
 
 import { Calendar } from "@/calendar";
 import { decorationConditionSchema, type JournalDecorationCondition } from "@/decorations";
+import { m } from "@/i18n";
 import { Container, provideInjectorOnApp } from "@/infrastructure/di";
 
 import ConditionWeekday from "./ConditionWeekday.vue";
@@ -47,6 +48,11 @@ function mount(initial: Weekday) {
 }
 
 describe("ConditionWeekday", () => {
+  it("names the weekday group for assistive tech", () => {
+    mount({ type: "weekday", weekdays: [] });
+    expect(screen.getByRole("group", { name: m.decoration_condition_weekday_label() })).toBeTruthy();
+  });
+
   it("adds a weekday index when its checkbox is clicked", async () => {
     const host = mount({ type: "weekday", weekdays: [] });
     await userEvent.click(screen.getByLabelText("Mon"));

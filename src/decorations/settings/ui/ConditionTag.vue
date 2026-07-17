@@ -12,10 +12,10 @@ const { value: text } = useField<string>(`${name}.value`);
 </script>
 
 <template>
-  <UiDropdown v-model="op">
+  <UiDropdown v-model="op" :aria-label="m.decoration_condition_op_label()">
     <option value="contains">{{ m.decoration_string_op_label({ op: "contains" }) }}</option>
     <option value="starts-with">{{ m.decoration_string_op_label({ op: "starts-with" }) }}</option>
     <option value="ends-with">{{ m.decoration_string_op_label({ op: "ends-with" }) }}</option>
   </UiDropdown>
-  <UiTextInput v-model="text" />
+  <UiTextInput v-model="text" :aria-label="m.decoration_condition_tag_value_label()" />
 </template>

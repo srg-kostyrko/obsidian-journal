@@ -536,7 +536,6 @@
 			}
 		}
 	],
-	"decoration_condition_date_hint": "Залиште поле порожнім, щоб вказати будь-який день, місяць або рік.",
 	"decoration_condition_has_note_describe": "примітка існує",
 	"decoration_condition_has_open_task_describe": "нотатка має відкрите завдання",
 	"decoration_condition_offset_describe": "зміщення від початку дорівнює {offset}",
@@ -559,7 +558,6 @@
 	"decoration_condition_property_condition_label": "Хвороба",
 	"decoration_condition_property_describe": "властивість {name} {op} {value}",
 	"decoration_condition_property_value_label": "Значення",
-	"decoration_condition_property_value_type_label": "Тип",
 	"decoration_condition_tag_describe": "тег {op} {value}",
 	"decoration_condition_tag_value_label": "Значення тегу",
 	"decoration_condition_title_describe": "заголовок {op} {value}",

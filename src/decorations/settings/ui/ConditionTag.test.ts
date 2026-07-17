@@ -6,6 +6,8 @@ import { useForm } from "vee-validate";
 import { afterEach, describe, expect, it } from "vitest";
 import { defineComponent, h } from "vue";
 
+import { m } from "@/i18n";
+
 import ConditionTag from "./ConditionTag.vue";
 
 const renderConditionTagHost = () => h(ConditionTag, { name: "c" });
@@ -34,6 +36,16 @@ function mount(initial: InitialTag) {
 }
 
 describe("ConditionTag", () => {
+  it("names its value field for assistive tech", () => {
+    mount({ condition: "contains", value: "" });
+    expect(screen.getByRole("textbox", { name: m.decoration_condition_tag_value_label() })).toBeTruthy();
+  });
+
+  it("names its operator dropdown for assistive tech", () => {
+    mount({ condition: "contains", value: "" });
+    expect(screen.getByRole("combobox", { name: m.decoration_condition_op_label() })).toBeTruthy();
+  });
+
   it("updates tag value as the user types", async () => {
     const host = mount({ condition: "contains", value: "" });
     await userEvent.type(screen.getByRole("textbox"), "#work");

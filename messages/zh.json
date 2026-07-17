@@ -536,7 +536,6 @@
 			}
 		}
 	],
-	"decoration_condition_date_hint": "将此字段留空，即可匹配任意日期、月份或年份。",
 	"decoration_condition_has_note_describe": "存在一张纸条",
 	"decoration_condition_has_open_task_describe": "该笔记有一个未完成的任务",
 	"decoration_condition_offset_describe": "起始偏移量为{offset}",
@@ -559,7 +558,6 @@
 	"decoration_condition_property_condition_label": "健康）状况",
 	"decoration_condition_property_describe": "属性{name} {op} {value}",
 	"decoration_condition_property_value_label": "价值",
-	"decoration_condition_property_value_type_label": "类型",
 	"decoration_condition_tag_describe": "标签{op} {value}",
 	"decoration_condition_tag_value_label": "标签值",
 	"decoration_condition_title_describe": "标题{op} {value}",
