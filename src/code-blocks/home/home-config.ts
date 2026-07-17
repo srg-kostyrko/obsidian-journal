@@ -1,6 +1,6 @@
 import * as v from "valibot";
 
-import { asRecord } from "../fence-record";
+import { asFenceString, asRecord } from "../fence-record";
 
 const homeEntries = ["day", "week", "month", "quarter", "year", "custom"] as const;
 
@@ -53,19 +53,8 @@ export const homeBlockSchema = v.pipe(
       ),
       1,
     ),
-    // A non-string shelf (e.g. an unquoted `shelf: 2024` parsed as a number) coerces to
-    // its string form instead of erroring — v2 passed the raw value through, so it simply
-    // matched no shelf. An explicit null degrades to unset (current shelf).
-    shelf: v.optional(
-      v.pipe(
-        v.unknown(),
-        v.transform((value) => {
-          if (typeof value === "string") return value;
-          if (typeof value === "number" || typeof value === "boolean") return String(value);
-          return;
-        }),
-      ),
-    ),
+    // An explicit null degrades to unset (current shelf); see asFenceString for the rest.
+    shelf: v.optional(v.pipe(v.unknown(), v.transform(asFenceString))),
   }),
 );
 
