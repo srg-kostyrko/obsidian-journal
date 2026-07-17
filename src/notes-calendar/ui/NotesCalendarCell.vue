@@ -41,6 +41,7 @@ const hover = useModifierHoverPreview();
     :data-anchor="rawPeriod.anchor.toAnchor()"
     :data-today="isToday || null"
     @click="cell.open(rawPeriod, $event)"
+    @auxclick.middle.prevent="cell.open(rawPeriod, $event)"
     @keydown.enter="cell.open(rawPeriod, $event)"
     @keydown.space.prevent="cell.open(rawPeriod, $event)"
     @contextmenu.prevent="cell.openContextMenu(rawPeriod, $event)"

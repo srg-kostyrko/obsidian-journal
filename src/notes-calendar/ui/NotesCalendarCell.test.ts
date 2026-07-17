@@ -6,6 +6,7 @@ import { CalendarDate, DayPeriod } from "@/calendar";
 import type { Period } from "@/calendar";
 import { date, installTestCalendar } from "@/calendar/testing";
 import { Container, provideInjectorOnApp } from "@/infrastructure/di";
+import { defineOpenMode } from "@/infrastructure/host";
 
 import NotesCalendarCell from "./NotesCalendarCell.vue";
 
@@ -76,6 +77,25 @@ describe("NotesCalendarCell", () => {
       const { container } = mount({ period: may25, cell: stubApi({ isActionable: () => false }) });
       const cell = container.querySelector<HTMLElement>(".notes-calendar-cell");
       expect(cell?.hasAttribute("aria-label")).toBe(false);
+    });
+  });
+
+  describe("middle click", () => {
+    it("opens the period, as every other note-opening affordance does", async () => {
+      const api = stubApi();
+      const { container } = mount({ period: may25, cell: api });
+      const cell = container.querySelector<HTMLElement>(".notes-calendar-cell")!;
+      await userEvent.pointer({ target: cell, keys: "[MouseMiddle]" });
+      expect(api.open).toHaveBeenCalled();
+    });
+
+    it("passes the middle-click event through, so it resolves to a new tab", async () => {
+      const api = stubApi();
+      const { container } = mount({ period: may25, cell: api });
+      const cell = container.querySelector<HTMLElement>(".notes-calendar-cell")!;
+      await userEvent.pointer({ target: cell, keys: "[MouseMiddle]" });
+      const event = vi.mocked(api.open).mock.calls.at(-1)?.[1] as MouseEvent;
+      expect(defineOpenMode(event)).toBe("tab");
     });
   });
 
