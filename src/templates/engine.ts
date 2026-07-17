@@ -200,6 +200,15 @@ export class TemplateEngine {
         if (token.modifiers.length > 0) {
           problems.push({ token, position, problem: "modifiers-on-non-date" });
         }
+      } else {
+        // The grammar accepts any word as a boundary unit, and applyModifier drops one it does
+        // not understand — leaving the date silently unsnapped rather than wrong in a way anyone
+        // could see. This problem type was declared from the start and never raised.
+        for (const modifier of token.modifiers) {
+          if (modifier.kind === "boundary" && !isBoundaryUnit(modifier.unit)) {
+            problems.push({ token, position, problem: "unknown-unit" });
+          }
+        }
       }
       position += token.raw.length;
     }

@@ -268,6 +268,25 @@ describe("TemplateEngine.validate", () => {
     expect(problems[0].problem).toBe("unknown-variable");
   });
 
+  it("flags a boundary unit it does not understand", () => {
+    // An unrecognized unit is dropped at render (applyModifier returns the value untouched), so
+    // the date silently comes out unsnapped. validate declared this problem and never emitted it,
+    // which left the settings preview with nothing to report.
+    const engine = installTestEngine();
+    const stream = tokenize("{{date<startOf=fortnight>:YYYY-MM-DD}}.md");
+    const problems = engine.validate(stream, buildFakeContext());
+    expect(problems).toHaveLength(1);
+    expect(problems[0].problem).toBe("unknown-unit");
+  });
+
+  it("accepts every boundary unit the reference documents", () => {
+    const engine = installTestEngine();
+    for (const unit of ["day", "week", "month", "quarter", "year", "decade", "hour"]) {
+      const stream = tokenize(`{{date<startOf=${unit}>:YYYY-MM-DD}}.md`);
+      expect(engine.validate(stream, buildFakeContext())).toEqual([]);
+    }
+  });
+
   it("flags function token when allowFunctions is false", () => {
     const engine = installTestEngine([FakeHandler.fixed("greet", "x")]);
     const stream = tokenize("{{greet(x)}}.md");
