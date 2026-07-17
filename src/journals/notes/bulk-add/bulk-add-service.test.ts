@@ -155,6 +155,14 @@ describe("BulkAddService", () => {
       expect(note?.kind === "action" && note.folder).toBe("move"); // src != configured "Journal"
     });
 
+    it("ignores a date-named attachment in the source folder", async () => {
+      const { service, notes } = build();
+      notes.seed("src/2026-06-01.pdf" as VaultPath);
+      const planResult = await service.plan("daily", makeParameters({ folder: "src" }));
+      expectOk(planResult);
+      expect(planResult.value.notes.find((n) => n.path === "src/2026-06-01.pdf")).toBeUndefined();
+    });
+
     it("skips a note whose date string cannot be parsed", async () => {
       const { service, notes, metadata } = build();
       notes.seed("src/2026-06-45.md" as VaultPath);

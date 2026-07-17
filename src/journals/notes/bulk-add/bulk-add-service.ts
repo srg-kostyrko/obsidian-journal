@@ -218,7 +218,10 @@ export class BulkAddService {
 
   plan(journalName: string, parameters: BulkAddParameters): AsyncResult<BulkPlan, FolderNotFoundError> {
     return attempt.in(this, async function* (this: BulkAddService) {
-      const paths = yield* this.#notes.listInFolder(parameters.folder as VaultPath);
+      const files = yield* this.#notes.listInFolder(parameters.folder as VaultPath);
+      // The folder holds attachments too, and a date-named one plans exactly like a note: nothing
+      // downstream reads an extension, so connect would write journal frontmatter into a binary.
+      const paths = files.filter((path) => path.endsWith(".md"));
       const dateRegexp = formatToRegexp(parameters.dateFormat);
       const notes = paths.map((path) => this.#planNote(journalName, path, parameters, dateRegexp));
       return { notes };
