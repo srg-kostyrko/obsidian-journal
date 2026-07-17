@@ -359,14 +359,15 @@ describe("calendar view", () => {
         "month period button did not become active",
       );
 
-      // The active background is bridged onto the document body as --journal-cell-active-bg;
-      // a probe resolves it so the assertion stays theme-independent.
+      // --journal-cell-active-bg is bound per calendar surface, so it exists on the button
+      // itself, not on the document body. The probe resolves it from inside the button (custom
+      // properties inherit) so the assertion stays theme-independent.
       const verdict = await browser.execute(() => {
         const button = document.querySelector(".journal-view-toolbar [data-period='month']");
         if (!button) return "no-button";
         const probe = document.createElement("div");
         probe.style.backgroundColor = "var(--journal-cell-active-bg)";
-        document.body.append(probe);
+        button.append(probe);
         const expected = getComputedStyle(probe).backgroundColor;
         probe.remove();
         return getComputedStyle(button).backgroundColor === expected ? "match" : "mismatch";

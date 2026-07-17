@@ -130,8 +130,8 @@ function openPreview(badge: Badge, event: MouseEvent): void {
   opacity: 0.5;
 }
 /* Mirror the in-grid cell highlight: a period button whose note is the active one picks up
-   the configured active colors (bridged onto the document body as CSS vars). The
-   button[data-active] specificity clears the flat clickable-icon background. */
+   the configured active colors (bound as CSS vars on the button itself, see appearanceStyle).
+   The button[data-active] specificity clears the flat clickable-icon background. */
 button[data-active] {
   color: var(--journal-cell-active-color);
   background-color: var(--journal-cell-active-bg);
