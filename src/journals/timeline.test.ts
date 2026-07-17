@@ -90,6 +90,23 @@ describe("TimelineService", () => {
       expect(timeline.contains("daily", "2099-12-31" as AnchorString)).toBe(true);
     });
 
+    it("treats a repeats bound as no bound when the timeline has no start", () => {
+      const c = buildContainer({
+        daily: fixedJournal(
+          "daily",
+          { type: "day" },
+          {
+            timeline: {
+              start: "" as AnchorString,
+              end: { kind: "repeats", count: 3 },
+            },
+          },
+        ),
+      });
+      const timeline = c.resolve(TimelineService);
+      expect(timeline.contains("daily", "2024-06-15" as AnchorString)).toBe(true);
+    });
+
     describe("end.kind === repeats", () => {
       it("returns false once count repeats have elapsed", () => {
         // Weekly journal from 2024-01-01 (Mon), count=3.
@@ -200,6 +217,23 @@ describe("TimelineService", () => {
       const timeline = c.resolve(TimelineService);
       const result = timeline.endOf("daily");
       expect(result.isSome() && result.value.toAnchor()).toBe("2024-06-30");
+    });
+
+    it("returns None for a repeats bound with no timeline start", () => {
+      const c = buildContainer({
+        daily: fixedJournal(
+          "daily",
+          { type: "day" },
+          {
+            timeline: {
+              start: "" as AnchorString,
+              end: { kind: "repeats", count: 3 },
+            },
+          },
+        ),
+      });
+      const timeline = c.resolve(TimelineService);
+      expect(timeline.endOf("daily").isNone()).toBe(true);
     });
 
     it("returns None when the end date is unset", () => {

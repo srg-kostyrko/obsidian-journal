@@ -26,7 +26,11 @@ export class TimelineService {
         // An unset end date is no bound at all. Comparing against "" would sort every real
         // anchor above it and silently bound the journal to nothing.
         .with({ kind: "date" }, ({ date }) => date === "" || anchor <= date)
+        // A repeats bound counts forward from the timeline start, so with no start there is
+        // nothing to count from: the bound is un-countable and the journal stays unbounded
+        // rather than writing nothing at all (v2 required a start for this bound too).
         .with({ kind: "repeats" }, ({ count }) => {
+          if (config.timeline.start === "") return true;
           const repeats = this.#cycle.countRepeats(name, config.timeline.start, anchor);
           return repeats.isSome() && repeats.value < count;
         })
@@ -48,6 +52,9 @@ export class TimelineService {
         date === "" ? Option.none<CalendarDate>() : Option.some(CalendarDate.fromAnchor(date)),
       )
       .with({ kind: "repeats" }, ({ count }) => {
+        // Without a start there is nothing to count from, and CalendarDate.fromAnchor("")
+        // would otherwise carry an invalid moment through as a garbage end date.
+        if (config.timeline.start === "") return Option.none<CalendarDate>();
         const startAnchorOpt = this.#cycle.anchorOf(name, CalendarDate.fromAnchor(config.timeline.start));
         if (startAnchorOpt.isNone()) return Option.none<CalendarDate>();
         let current = startAnchorOpt.value;
