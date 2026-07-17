@@ -5,7 +5,9 @@ import { afterEach, beforeAll, beforeEach, describe, expect, it, vi } from "vite
 import { initLocale, m } from "@/i18n";
 import { Container, provideInjectorOnApp } from "@/infrastructure/di";
 import { Flows } from "@/infrastructure/flows";
+import { NoticeService } from "@/infrastructure/host";
 import type { VaultPath } from "@/infrastructure/host";
+import { FakeNoticeService } from "@/infrastructure/host/testing";
 import { LoggerFactory, LoggerFactoryToken } from "@/infrastructure/logger";
 import { AsyncResult, Ok, Option } from "@/infrastructure/result";
 import {
@@ -114,6 +116,7 @@ describe("HomeCodeBlock", () => {
     container.register(JournalsIndex).useValue(new FakeJournalsIndex() as unknown as JournalsIndex);
     container.register(ShelvesRepository).useValue(new FakeShelvesRepository() as unknown as ShelvesRepository);
     container.register(NotePathService).useValue(new FakeNotePathService() as unknown as NotePathService);
+    container.register(NoticeService).useValue(new FakeNoticeService());
     container.register(Flows).useValue(flowsFake as unknown as Flows);
     container.register(OpenDateFlow).useValue({} as OpenDateFlow);
   });

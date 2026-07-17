@@ -2,8 +2,10 @@ import { createNanoEvents } from "nanoevents";
 import { describe, expect, it } from "vitest";
 
 import { Flows, UserAborted } from "@/infrastructure/flows";
+import { NoticeService } from "@/infrastructure/host";
 import { ModalService } from "@/infrastructure/host/modals";
 import { FakeModalService } from "@/infrastructure/host/modals/testing";
+import { FakeNoticeService } from "@/infrastructure/host/testing";
 import { journalConfigCollection } from "@/journals";
 import { JournalsRepository } from "@/journals/repository";
 import { JournalsEventsToken } from "@/journals/tokens";
@@ -56,6 +58,7 @@ async function build() {
   container.register(ShelvesEventsToken).useFactory(() => createNanoEvents());
   container.register(ShelvesRepository).useClass(ShelvesRepository);
   container.register(ShelvesService).useClass(ShelvesService);
+  container.register(NoticeService).useValue(new FakeNoticeService());
   container.register(Flows).useClass(Flows);
   container.register(PlaceJournalFlow).useClass(PlaceJournalFlow);
   const shelvesRepo = container.resolve(ShelvesRepository);

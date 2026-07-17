@@ -8,11 +8,11 @@ import { installTestCalendar } from "@/calendar/testing";
 import { m } from "@/i18n";
 import { type Container, provideInjectorOnApp } from "@/infrastructure/di";
 import { Flows } from "@/infrastructure/flows";
-import { InputSuggestService, NotesService, TemplaterService } from "@/infrastructure/host";
+import { InputSuggestService, NotesService, TemplaterService, NoticeService } from "@/infrastructure/host";
 import { FakeInputSuggestService } from "@/infrastructure/host/input-suggests/testing";
 import { ModalService } from "@/infrastructure/host/modals";
 import { FakeModalService } from "@/infrastructure/host/modals/testing";
-import { FakeNotesService, FakeTemplaterService } from "@/infrastructure/host/testing";
+import { FakeNotesService, FakeTemplaterService, FakeNoticeService } from "@/infrastructure/host/testing";
 import {
   CycleService,
   FrontmatterService,
@@ -96,6 +96,7 @@ async function setup(raw?: unknown) {
   container
     .register(AutoCreateService)
     .useValue({ createCurrent: () => Promise.resolve() } as unknown as AutoCreateService);
+  container.register(NoticeService).useValue(new FakeNoticeService());
   container.register(Flows).useClass(Flows);
   const flows = container.resolve(Flows);
   vi.spyOn(flows, "invoke").mockReturnValue({} as never);

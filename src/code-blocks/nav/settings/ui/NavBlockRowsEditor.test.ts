@@ -8,7 +8,8 @@ import { Calendar, type AnchorString } from "@/calendar";
 import { m } from "@/i18n";
 import { Container, provideInjectorOnApp } from "@/infrastructure/di";
 import { Flows } from "@/infrastructure/flows";
-import { WorkspaceService } from "@/infrastructure/host";
+import { WorkspaceService, NoticeService } from "@/infrastructure/host";
+import { FakeNoticeService } from "@/infrastructure/host/testing";
 import {
   CycleService,
   JournalsIndex,
@@ -51,6 +52,7 @@ function mount(rows: NavBlockRow[]) {
   container.register(JournalsRepository).useValue(repo);
   container.register(JournalsViewModel).useValue(JournalsViewModel.fromRepository(repo));
   container.register(ShelvesRepository).useValue(shelvesRepo);
+  container.register(NoticeService).useValue(new FakeNoticeService());
   container.register(Flows).useValue({ invoke } as unknown as Flows);
   container.register(Calendar).useValue(new Calendar());
   container.register(TemplateEngine).useClass(TemplateEngine);

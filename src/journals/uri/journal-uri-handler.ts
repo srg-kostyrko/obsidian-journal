@@ -54,12 +54,17 @@ export class JournalUriHandler {
       return;
     }
 
-    const result = await this.#flows.invoke(OpenDateFlow, {
-      anchor: anchor.value,
-      journalNames: candidates,
-      openMode,
-      existingOnly: false,
-    });
+    const result = await this.#flows.invoke(
+      OpenDateFlow,
+      {
+        anchor: anchor.value,
+        journalNames: candidates,
+        openMode,
+        existingOnly: false,
+      },
+      // This handler distinguishes the URI failure modes below with better copy.
+      { notify: false },
+    );
 
     if (result.isErr()) {
       const { error } = result;

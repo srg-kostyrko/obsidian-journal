@@ -2,8 +2,10 @@ import { createNanoEvents } from "nanoevents";
 import { describe, expect, it } from "vitest";
 
 import { Flows, UserAborted } from "@/infrastructure/flows";
+import { NoticeService } from "@/infrastructure/host";
 import { ModalService } from "@/infrastructure/host/modals";
 import { FakeModalService } from "@/infrastructure/host/modals/testing";
+import { FakeNoticeService } from "@/infrastructure/host/testing";
 import { createSettingsService } from "@/settings/testing";
 
 import { commandCollection, type CommandConfig } from "../config";
@@ -34,6 +36,7 @@ async function build(raw?: unknown) {
   container.register(ModalService).useValue(modals as unknown as ModalService);
   container.register(CommandsEventsToken).useFactory(() => createNanoEvents());
   container.register(CommandsRepository).useClass(CommandsRepository);
+  container.register(NoticeService).useValue(new FakeNoticeService());
   container.register(Flows).useClass(Flows);
   container.register(EditCommandFlow).useClass(EditCommandFlow);
   const repo = container.resolve(CommandsRepository);

@@ -4,8 +4,14 @@ import { shallowRef, type ShallowRef } from "vue";
 import { DecorationEngine } from "@/decorations";
 import { Container } from "@/infrastructure/di";
 import { FlowsModule } from "@/infrastructure/flows";
-import { NoteMetadataService, NotesService, WorkspaceService, type NotesEvents } from "@/infrastructure/host";
-import { FakeNoteMetadataService, FakeWorkspaceService } from "@/infrastructure/host/testing";
+import {
+  NoteMetadataService,
+  NoticeService,
+  NotesService,
+  WorkspaceService,
+  type NotesEvents,
+} from "@/infrastructure/host";
+import { FakeNoteMetadataService, FakeNoticeService, FakeWorkspaceService } from "@/infrastructure/host/testing";
 import { LoggerModule } from "@/infrastructure/logger";
 import {
   CycleService,
@@ -44,6 +50,7 @@ export function buildNotesCalendarHarness(options: {
   const container = new Container();
   container.addModule(LoggerModule);
   container.addModule(FlowsModule);
+  container.register(NoticeService).useValue(new FakeNoticeService());
 
   container.register(JournalsRepository).useValue(fakeRepo(options.journals ?? {}));
   container.register(JournalsViewModel).useClass(JournalsViewModel);

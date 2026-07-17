@@ -9,6 +9,8 @@ import type { JournalDecoration } from "@/decorations";
 import { m } from "@/i18n";
 import { Container, provideInjectorOnApp } from "@/infrastructure/di";
 import { Flows } from "@/infrastructure/flows";
+import { NoticeService } from "@/infrastructure/host";
+import { FakeNoticeService } from "@/infrastructure/host/testing";
 import {
   JournalsRepository,
   JournalsViewModel,
@@ -44,6 +46,7 @@ function mount(decorations: JournalDecoration[]) {
   const flows = { invoke: vi.fn() };
   container.register(JournalsRepository).useValue(repo);
   container.register(JournalsViewModel).useValue(vm);
+  container.register(NoticeService).useValue(new FakeNoticeService());
   container.register(Flows).useValue(flows as unknown as Flows);
   container.register(Calendar).useValue(new Calendar());
   render(DecorationsSection, {

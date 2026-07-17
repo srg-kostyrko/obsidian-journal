@@ -4,11 +4,12 @@ import { DayPeriod } from "@/calendar";
 import { date, installTestCalendar } from "@/calendar/testing";
 import { Container } from "@/infrastructure/di";
 import { Flows } from "@/infrastructure/flows";
-import { SuggestService, WorkspaceService } from "@/infrastructure/host";
+import { SuggestService, WorkspaceService, NoticeService } from "@/infrastructure/host";
 import type { VaultPath } from "@/infrastructure/host";
 import { ModalService } from "@/infrastructure/host/modals";
 import { FakeModalService } from "@/infrastructure/host/modals/testing";
 import { FakeSuggestService } from "@/infrastructure/host/suggests/testing";
+import { FakeNoticeService } from "@/infrastructure/host/testing";
 import { LoggerModule } from "@/infrastructure/logger";
 import { Ok } from "@/infrastructure/result";
 
@@ -34,6 +35,7 @@ function build(journals: Record<string, JournalConfig>) {
   c.register(SuggestService).useValue(suggests as unknown as SuggestService);
   c.register(WorkspaceService).useValue(workspace as unknown as WorkspaceService);
   c.register(NotePathService).useValue(path as unknown as NotePathService);
+  c.register(NoticeService).useValue(new FakeNoticeService());
   c.register(Flows).useClass(Flows);
   c.register(InsertJournalLinkFlow).useClass(InsertJournalLinkFlow);
   return { flows: c.resolve(Flows), modals, suggests, workspace, path };

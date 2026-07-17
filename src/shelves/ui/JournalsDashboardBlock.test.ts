@@ -6,8 +6,10 @@ import { afterEach, describe, expect, it, vi } from "vitest";
 import { m } from "@/i18n";
 import { type Container, provideInjectorOnApp } from "@/infrastructure/di";
 import { Flows } from "@/infrastructure/flows";
+import { NoticeService } from "@/infrastructure/host";
 import { ModalService } from "@/infrastructure/host/modals";
 import { FakeModalService } from "@/infrastructure/host/modals/testing";
+import { FakeNoticeService } from "@/infrastructure/host/testing";
 import { AddJournalFlow, DeleteJournalFlow, journalConfigCollection, journalEditSubpage } from "@/journals";
 import { BulkAddFlow } from "@/journals/notes/bulk-add/flows/bulk-add.flow";
 import { JournalsRepository } from "@/journals/repository";
@@ -66,6 +68,7 @@ async function setup(options: { journals?: string[]; shelves?: Record<string, { 
   container.register(ShelvesViewModel).useClass(ShelvesViewModel);
   container.register(SubpageToken).useValue(journalEditSubpage);
   container.register(SettingsUiService).useClass(SettingsUiService);
+  container.register(NoticeService).useValue(new FakeNoticeService());
   container.register(Flows).useClass(Flows);
   const flows = container.resolve(Flows);
   vi.spyOn(flows, "invoke").mockReturnValue({} as never);

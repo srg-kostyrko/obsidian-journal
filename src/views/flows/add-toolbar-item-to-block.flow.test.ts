@@ -3,8 +3,10 @@ import * as v from "valibot";
 import { describe, expect, it, vi } from "vitest";
 
 import { Flows, UserAborted } from "@/infrastructure/flows";
+import { NoticeService } from "@/infrastructure/host";
 import { ModalService } from "@/infrastructure/host/modals";
 import { FakeModalService } from "@/infrastructure/host/modals/testing";
+import { FakeNoticeService } from "@/infrastructure/host/testing";
 import { createSettingsService } from "@/settings/testing";
 
 import { ToolbarItemsService } from "../blocks/toolbar/toolbar-items-service";
@@ -87,6 +89,7 @@ async function build(withDefinition = true) {
   container.register(ViewsRepository).useClass(ViewsRepository);
   container.register(ToolbarItemsService).useClass(ToolbarItemsService);
   container.register(ViewsService).useClass(ViewsService);
+  container.register(NoticeService).useValue(new FakeNoticeService());
   container.register(Flows).useClass(Flows);
   container.register(AddToolbarItemToBlockFlow).useClass(AddToolbarItemToBlockFlow);
   return { repo: container.resolve(ViewsRepository), modals, flows: container.resolve(Flows) };

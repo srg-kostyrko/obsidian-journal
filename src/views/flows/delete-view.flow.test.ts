@@ -2,8 +2,10 @@ import { createNanoEvents } from "nanoevents";
 import { describe, expect, it } from "vitest";
 
 import { Flows, UserAborted } from "@/infrastructure/flows";
+import { NoticeService } from "@/infrastructure/host";
 import { ModalService } from "@/infrastructure/host/modals";
 import { FakeModalService } from "@/infrastructure/host/modals/testing";
+import { FakeNoticeService } from "@/infrastructure/host/testing";
 import { createSettingsService } from "@/settings/testing";
 
 import { ToolbarItemsService } from "../blocks/toolbar/toolbar-items-service";
@@ -34,6 +36,7 @@ async function build() {
   container.register(ToolbarItemsService).useClass(ToolbarItemsService);
   container.register(ViewsService).useClass(ViewsService);
   container.register(ViewsViewModel).useClass(ViewsViewModel);
+  container.register(NoticeService).useValue(new FakeNoticeService());
   container.register(Flows).useClass(Flows);
   container.register(DeleteViewFlow).useClass(DeleteViewFlow);
   return { id, repo: container.resolve(ViewsRepository), modals, flows: container.resolve(Flows) };

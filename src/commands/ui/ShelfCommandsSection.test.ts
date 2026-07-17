@@ -6,8 +6,10 @@ import { afterEach, describe, expect, it, vi } from "vitest";
 import { m } from "@/i18n";
 import { type Container, provideInjectorOnApp } from "@/infrastructure/di";
 import { Flows } from "@/infrastructure/flows";
+import { NoticeService } from "@/infrastructure/host";
 import { ModalService } from "@/infrastructure/host/modals";
 import { FakeModalService } from "@/infrastructure/host/modals/testing";
+import { FakeNoticeService } from "@/infrastructure/host/testing";
 import { createSettingsService } from "@/settings/testing";
 import { shelvesCollection } from "@/shelves";
 
@@ -34,6 +36,7 @@ async function setup(commands: Record<string, CommandConfig> = {}) {
   container.register(ModalService).useValue(new FakeModalService() as unknown as ModalService);
   container.register(CommandsEventsToken).useFactory(() => createNanoEvents());
   container.register(CommandsRepository).useClass(CommandsRepository);
+  container.register(NoticeService).useValue(new FakeNoticeService());
   container.register(Flows).useClass(Flows);
   const flows = container.resolve(Flows);
   vi.spyOn(flows, "invoke").mockReturnValue({} as never);

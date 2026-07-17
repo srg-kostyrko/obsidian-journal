@@ -2,7 +2,14 @@ import { describe, expect, it, vi } from "vitest";
 
 import { Container } from "@/infrastructure/di";
 import { Flows } from "@/infrastructure/flows";
-import { CommandService, WorkspaceService, type CommandRegistration, type VaultPath } from "@/infrastructure/host";
+import {
+  CommandService,
+  WorkspaceService,
+  type CommandRegistration,
+  type VaultPath,
+  NoticeService,
+} from "@/infrastructure/host";
+import { FakeNoticeService } from "@/infrastructure/host/testing";
 import { AsyncResult, Option } from "@/infrastructure/result";
 
 import { NoteConnectionCommands } from "./note-connection-commands";
@@ -18,6 +25,7 @@ function build(options: { active?: VaultPath; hasEditor: boolean }) {
     hasActiveEditor: () => options.hasEditor,
   } as unknown as WorkspaceService);
   const invoke = vi.fn(() => AsyncResult.ok());
+  c.register(NoticeService).useValue(new FakeNoticeService());
   c.register(Flows).useValue({ invoke } as unknown as Flows);
   c.register(NoteConnectionCommands).useClass(NoteConnectionCommands).eager();
   c.resolve(NoteConnectionCommands);

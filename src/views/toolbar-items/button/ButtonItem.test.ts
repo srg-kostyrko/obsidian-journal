@@ -9,8 +9,10 @@ import { installTestCalendar } from "@/calendar/testing";
 import type { AnchorString } from "@/calendar/types";
 import { Container, provideInjectorOnApp } from "@/infrastructure/di";
 import { Flows } from "@/infrastructure/flows";
+import { NoticeService } from "@/infrastructure/host";
 import { ModalService } from "@/infrastructure/host/modals";
 import { FakeModalService } from "@/infrastructure/host/modals/testing";
+import { FakeNoticeService } from "@/infrastructure/host/testing";
 import { AsyncResult, Option } from "@/infrastructure/result";
 import { CycleService, OpenDateFlow } from "@/journals";
 
@@ -73,6 +75,7 @@ function mountItem(
   const flows = new FakeFlows();
   const modals = new FakeModalService();
   const cycle = new FakeCycle(cycleResolve);
+  container.register(NoticeService).useValue(new FakeNoticeService());
   container.register(Flows).useValue(flows as unknown as Flows);
   container.register(ModalService).useValue(modals as unknown as ModalService);
   container.register(CycleService).useValue(cycle as unknown as CycleService);

@@ -6,8 +6,10 @@ import { afterEach, describe, expect, it, vi } from "vitest";
 import { m } from "@/i18n";
 import { type Container, provideInjectorOnApp } from "@/infrastructure/di";
 import { Flows } from "@/infrastructure/flows";
+import { NoticeService } from "@/infrastructure/host";
 import { ModalService } from "@/infrastructure/host/modals";
 import { FakeModalService } from "@/infrastructure/host/modals/testing";
+import { FakeNoticeService } from "@/infrastructure/host/testing";
 import { SettingsUiService, SubpageToken } from "@/settings";
 import { createSettingsService } from "@/settings/testing";
 
@@ -39,6 +41,7 @@ async function setup(views: Record<string, unknown> = {}) {
   container.register(ViewsViewModel).useClass(ViewsViewModel);
   container.register(SubpageToken).useValue(viewEditSubpage);
   container.register(SettingsUiService).useClass(SettingsUiService);
+  container.register(NoticeService).useValue(new FakeNoticeService());
   container.register(Flows).useClass(Flows);
   return { container };
 }

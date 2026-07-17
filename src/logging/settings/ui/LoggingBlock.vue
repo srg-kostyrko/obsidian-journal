@@ -28,7 +28,8 @@ const level = computed({
 });
 
 function dump(): void {
-  void flows.invoke(DumpLogsFlow);
+  // DumpLogsFlow shows its own empty/failed/succeeded notices.
+  void flows.invoke(DumpLogsFlow, undefined, { notify: false });
 }
 </script>
 

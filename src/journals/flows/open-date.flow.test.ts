@@ -3,12 +3,17 @@ import { describe, it, expect } from "vitest";
 import { anchor } from "@/calendar/testing";
 import { Container } from "@/infrastructure/di";
 import { Flows, FlowsModule, UserAborted } from "@/infrastructure/flows";
-import { NotesService, SuggestService, TemplaterService, WorkspaceService } from "@/infrastructure/host";
+import { NotesService, SuggestService, TemplaterService, WorkspaceService, NoticeService } from "@/infrastructure/host";
 import type { VaultPath } from "@/infrastructure/host";
 import { ModalService } from "@/infrastructure/host/modals";
 import { FakeModalService } from "@/infrastructure/host/modals/testing";
 import { FakeSuggestService } from "@/infrastructure/host/suggests/testing";
-import { FakeNotesService, FakeTemplaterService, FakeWorkspaceService } from "@/infrastructure/host/testing";
+import {
+  FakeNotesService,
+  FakeTemplaterService,
+  FakeWorkspaceService,
+  FakeNoticeService,
+} from "@/infrastructure/host/testing";
 import { LoggerModule } from "@/infrastructure/logger";
 import { TemplateEngine } from "@/templates";
 
@@ -32,6 +37,7 @@ function build(repo: JournalsRepository, suggests: FakeSuggestService) {
   const c = new Container();
   c.addModule(LoggerModule);
   c.addModule(FlowsModule);
+  c.register(NoticeService).useValue(new FakeNoticeService());
   const notes = new FakeNotesService();
   const workspace = new FakeWorkspaceService();
   c.register(JournalsRepository).useValue(repo);

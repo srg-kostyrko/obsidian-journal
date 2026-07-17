@@ -829,6 +829,8 @@
   "shelf_section_not_on_shelf": "Not on a shelf",
   "shelf_section_place_tooltip": "Place on a shelf",
 
+  "flow_failure_notice": "Journal: something went wrong — {error}",
+
   "settings_load_failed": "Journal: failed to load settings — {error}",
   "settings_reload_failed": "Journal: failed to reload settings — {error}",
   "settings_reload_required_banner": "Reload Obsidian to apply the changed settings.",

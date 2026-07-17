@@ -2,8 +2,10 @@ import { describe, expect, it, vi } from "vitest";
 
 import { Container } from "@/infrastructure/di";
 import { Flows } from "@/infrastructure/flows";
+import { NoticeService } from "@/infrastructure/host";
 import { ModalService } from "@/infrastructure/host/modals";
 import { FakeModalService } from "@/infrastructure/host/modals/testing";
+import { FakeNoticeService } from "@/infrastructure/host/testing";
 import { LoggerModule } from "@/infrastructure/logger";
 import { AsyncResult } from "@/infrastructure/result";
 
@@ -19,6 +21,7 @@ function build() {
   const modals = new FakeModalService();
   c.register(ModalService).useValue(modals as unknown as ModalService);
   c.register(BulkAddService).useValue(service as unknown as BulkAddService);
+  c.register(NoticeService).useValue(new FakeNoticeService());
   c.register(Flows).useClass(Flows);
   c.register(BulkAddFlow).useClass(BulkAddFlow);
   return { flows: c.resolve(Flows), modals, service };

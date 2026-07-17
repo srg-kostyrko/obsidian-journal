@@ -5,8 +5,10 @@ import { reactive } from "vue";
 import type { JournalDecoration } from "@/decorations";
 import { DecorationLifecycleFlowError, UnknownDecorationError } from "@/decorations/errors";
 import { Flows, UserAborted } from "@/infrastructure/flows";
+import { NoticeService } from "@/infrastructure/host";
 import { ModalService } from "@/infrastructure/host/modals";
 import { FakeModalService } from "@/infrastructure/host/modals/testing";
+import { FakeNoticeService } from "@/infrastructure/host/testing";
 import {
   JournalLifecycleFlowError,
   JournalsRepository,
@@ -31,6 +33,7 @@ function build(initial: Record<string, JournalConfig> = {}) {
   const modals = new FakeModalService();
   container.register(ModalService).useValue(modals as unknown as ModalService);
   container.register(JournalsRepository).useValue(repo);
+  container.register(NoticeService).useValue(new FakeNoticeService());
   container.register(Flows).useClass(Flows);
   container.register(EditDecorationFlow).useClass(EditDecorationFlow);
   return { storage, modals, flows: container.resolve(Flows) };

@@ -16,8 +16,9 @@ import {
   WorkspaceService,
   type NotesEvents,
   type VaultPath,
+  NoticeService,
 } from "@/infrastructure/host";
-import { FakeNoteMetadataService } from "@/infrastructure/host/testing";
+import { FakeNoteMetadataService, FakeNoticeService } from "@/infrastructure/host/testing";
 import { LoggerFactory, LoggerFactoryToken } from "@/infrastructure/logger";
 import { RepositoryQuery } from "@/infrastructure/repository";
 import { AsyncResult, Option } from "@/infrastructure/result";
@@ -126,6 +127,7 @@ function buildHarness(journals: Record<string, JournalConfig>): Harness {
   const workspace = new FakeWorkspace();
   container.register(WorkspaceService).useValue(workspace as unknown as WorkspaceService);
   const flows = new FakeFlows();
+  container.register(NoticeService).useValue(new FakeNoticeService());
   container.register(Flows).useValue(flows as unknown as Flows);
   container.register(OpenDateFlow).useValue({} as OpenDateFlow);
   const fakeMetadata = new FakeNoteMetadataService();

@@ -4,7 +4,7 @@ import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { installTestCalendar } from "@/calendar/testing";
 import { Container } from "@/infrastructure/di";
 import { FlowsModule } from "@/infrastructure/flows";
-import { NotesService, PluginData, TemplaterService, WorkspaceService } from "@/infrastructure/host";
+import { NotesService, PluginData, TemplaterService, WorkspaceService, NoticeService } from "@/infrastructure/host";
 import type { VaultPath } from "@/infrastructure/host";
 import { ModalService } from "@/infrastructure/host/modals";
 import { FakeModalService } from "@/infrastructure/host/modals/testing";
@@ -13,6 +13,7 @@ import {
   FakePluginData,
   FakeTemplaterService,
   FakeWorkspaceService,
+  FakeNoticeService,
 } from "@/infrastructure/host/testing";
 import { LoggerModule } from "@/infrastructure/logger";
 import { SettingsEventsToken, SettingsService, SliceDefinitionToken, type SettingsEvents } from "@/settings";
@@ -56,6 +57,7 @@ function build(journals: Record<string, JournalConfig>): Harness {
   const c = new Container();
   c.addModule(LoggerModule);
   c.addModule(FlowsModule);
+  c.register(NoticeService).useValue(new FakeNoticeService());
   c.register(PluginData).useValue(new FakePluginData() as unknown as PluginData);
   c.register(SliceDefinitionToken).useValue(startupSlice);
   c.register(SettingsEventsToken).useValue(createNanoEvents<SettingsEvents>());

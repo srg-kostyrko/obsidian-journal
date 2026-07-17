@@ -72,12 +72,16 @@ describe("JournalUriHandler dispatch", () => {
     trigger({ journal: "daily", date: "2026-06-04", mode: "tab" });
     await flush();
 
-    expect(invokeSpy).toHaveBeenCalledWith(OpenDateFlow, {
-      anchor: "2026-06-04",
-      journalNames: ["daily"],
-      openMode: "tab",
-      existingOnly: false,
-    });
+    expect(invokeSpy).toHaveBeenCalledWith(
+      OpenDateFlow,
+      {
+        anchor: "2026-06-04",
+        journalNames: ["daily"],
+        openMode: "tab",
+        existingOnly: false,
+      },
+      { notify: false },
+    );
   });
 
   it("defaults to today when no date is given", async () => {
@@ -88,12 +92,16 @@ describe("JournalUriHandler dispatch", () => {
     trigger({ journal: "daily" });
     await flush();
 
-    expect(invokeSpy).toHaveBeenCalledWith(OpenDateFlow, {
-      anchor: CalendarDate.today().toAnchor(),
-      journalNames: ["daily"],
-      openMode: "active",
-      existingOnly: false,
-    });
+    expect(invokeSpy).toHaveBeenCalledWith(
+      OpenDateFlow,
+      {
+        anchor: CalendarDate.today().toAnchor(),
+        journalNames: ["daily"],
+        openMode: "active",
+        existingOnly: false,
+      },
+      { notify: false },
+    );
   });
 
   it("passes every journal of a write type as candidates", async () => {
@@ -105,12 +113,16 @@ describe("JournalUriHandler dispatch", () => {
     trigger({ type: "day", date: "2026-06-04" });
     await flush();
 
-    expect(invokeSpy).toHaveBeenCalledWith(OpenDateFlow, {
-      anchor: "2026-06-04",
-      journalNames: ["daily", "work"],
-      openMode: "active",
-      existingOnly: false,
-    });
+    expect(invokeSpy).toHaveBeenCalledWith(
+      OpenDateFlow,
+      {
+        anchor: "2026-06-04",
+        journalNames: ["daily", "work"],
+        openMode: "active",
+        existingOnly: false,
+      },
+      { notify: false },
+    );
   });
 });
 

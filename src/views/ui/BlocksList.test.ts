@@ -7,8 +7,10 @@ import { afterEach, describe, expect, it, vi } from "vitest";
 import { m } from "@/i18n";
 import { type Container, provideInjectorOnApp } from "@/infrastructure/di";
 import { Flows } from "@/infrastructure/flows";
+import { NoticeService } from "@/infrastructure/host";
 import { ModalService } from "@/infrastructure/host/modals";
 import { FakeModalService } from "@/infrastructure/host/modals/testing";
+import { FakeNoticeService } from "@/infrastructure/host/testing";
 import { createSettingsService } from "@/settings/testing";
 
 import { ToolbarItemsService } from "../blocks/toolbar/toolbar-items-service";
@@ -85,6 +87,7 @@ async function setup(blocks: { id: string; key: string; config: Record<string, u
   container.register(ToolbarItemsService).useClass(ToolbarItemsService);
   container.register(ViewsService).useClass(ViewsService);
   container.register(ViewsViewModel).useClass(ViewsViewModel);
+  container.register(NoticeService).useValue(new FakeNoticeService());
   container.register(Flows).useClass(Flows);
   return { container };
 }

@@ -3,8 +3,10 @@ import { describe, expect, it } from "vitest";
 import { reactive } from "vue";
 
 import { Flows, UserAborted } from "@/infrastructure/flows";
+import { NoticeService } from "@/infrastructure/host";
 import { ModalService } from "@/infrastructure/host/modals";
 import { FakeModalService } from "@/infrastructure/host/modals/testing";
+import { FakeNoticeService } from "@/infrastructure/host/testing";
 import {
   JournalLifecycleFlowError,
   JournalNameTakenError,
@@ -30,6 +32,7 @@ async function build(initial: Record<string, JournalConfig> = {}) {
   container.register(JournalsRepository).useValue(repo);
   container.register(SubpageToken).useValue(journalEditSubpage);
   container.register(SettingsUiService).useClass(SettingsUiService);
+  container.register(NoticeService).useValue(new FakeNoticeService());
   container.register(Flows).useClass(Flows);
   container.register(AddJournalFlow).useClass(AddJournalFlow);
   return {

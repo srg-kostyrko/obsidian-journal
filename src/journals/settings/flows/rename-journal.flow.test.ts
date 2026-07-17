@@ -3,8 +3,10 @@ import { describe, expect, it, vi } from "vitest";
 import { reactive } from "vue";
 
 import { Flows, UserAborted } from "@/infrastructure/flows";
+import { NoticeService } from "@/infrastructure/host";
 import { ModalService } from "@/infrastructure/host/modals";
 import { FakeModalService } from "@/infrastructure/host/modals/testing";
+import { FakeNoticeService } from "@/infrastructure/host/testing";
 import { AsyncResult } from "@/infrastructure/result";
 import {
   JournalLifecycleFlowError,
@@ -31,6 +33,7 @@ async function build(initial: Record<string, JournalConfig> = {}) {
   container.register(ModalService).useValue(modals as unknown as ModalService);
   container.register(JournalsRepository).useValue(repo);
   container.register(NoteConnectionService).useValue(connection as unknown as NoteConnectionService);
+  container.register(NoticeService).useValue(new FakeNoticeService());
   container.register(Flows).useClass(Flows);
   container.register(RenameJournalFlow).useClass(RenameJournalFlow);
   return { storage, modals, connection, flows: container.resolve(Flows) };

@@ -82,7 +82,7 @@ describe("ConnectNoteFlow", () => {
     expect(notices.messages).toContain(m.connect_note_notice_disconnected({ journalName: "daily" }));
   });
 
-  it("stays silent when the connection fails", async () => {
+  it("does not report success when the connection fails", async () => {
     const { flows, modals, connection, notices } = build();
     connection.connect.mockReturnValue(AsyncResult.err(new Error("boom")) as never);
     const promise = flows.invoke(ConnectNoteFlow, { path: "inbox/n.md" as VaultPath });
@@ -95,6 +95,6 @@ describe("ConnectNoteFlow", () => {
       move: false,
     });
     await promise;
-    expect(notices.messages).toHaveLength(0);
+    expect(notices.messages).not.toContain(m.connect_note_notice_connected({ journalName: "daily" }));
   });
 });

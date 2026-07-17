@@ -7,9 +7,9 @@ import type { AnchorString } from "@/calendar";
 import { date, installTestCalendar } from "@/calendar/testing";
 import { Container, provideInjectorOnApp } from "@/infrastructure/di";
 import { Flows, FlowsModule } from "@/infrastructure/flows";
-import { WorkspaceService } from "@/infrastructure/host";
+import { WorkspaceService, NoticeService } from "@/infrastructure/host";
 import type { VaultPath } from "@/infrastructure/host";
-import { FakeWorkspaceService } from "@/infrastructure/host/testing";
+import { FakeWorkspaceService, FakeNoticeService } from "@/infrastructure/host/testing";
 import { LoggerModule } from "@/infrastructure/logger";
 import { AsyncResult } from "@/infrastructure/result";
 import { CycleService, JournalsIndex, JournalsRepository, OpenDateFlow, TimelineService } from "@/journals";
@@ -36,6 +36,7 @@ function buildHarness(): Harness {
   const c = new Container();
   c.addModule(LoggerModule);
   c.addModule(FlowsModule);
+  c.register(NoticeService).useValue(new FakeNoticeService());
 
   const journals = reactive({
     daily: fixedJournal(

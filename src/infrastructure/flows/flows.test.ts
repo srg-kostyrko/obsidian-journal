@@ -1,6 +1,8 @@
 import { beforeEach, describe, expect, it } from "vitest";
 
 import { Container } from "@/infrastructure/di";
+import { NoticeService } from "@/infrastructure/host";
+import { FakeNoticeService } from "@/infrastructure/host/testing";
 import { createLoggerTestingModule, type MemorySink } from "@/infrastructure/logger/testing";
 import { AsyncResult } from "@/infrastructure/result";
 import { expectErr, expectOk } from "@/infrastructure/result/testing";
@@ -51,12 +53,14 @@ class BenignFailingFlow implements Flow<null, never, BenignError> {
   }
 }
 
-function buildContainer(): { c: Container; sink: MemorySink } {
+function buildContainer(): { c: Container; sink: MemorySink; notices: FakeNoticeService } {
   const { module, sink } = createLoggerTestingModule();
+  const notices = new FakeNoticeService();
   const c = new Container();
   c.addModule(module);
+  c.register(NoticeService).useValue(notices);
   c.register(Flows).useClass(Flows);
-  return { c, sink };
+  return { c, sink, notices };
 }
 
 function settledRecord(sink: MemorySink) {
@@ -67,11 +71,13 @@ describe("Flows", () => {
   describe("invoke", () => {
     let c: Container;
     let sink: MemorySink;
+    let notices: FakeNoticeService;
 
     beforeEach(() => {
       const built = buildContainer();
       c = built.c;
       sink = built.sink;
+      notices = built.notices;
     });
 
     it("returns the Ok produced by the flow", async () => {
@@ -117,6 +123,48 @@ describe("Flows", () => {
       c.register(BenignFailingFlow).useClass(BenignFailingFlow);
       await c.resolve(Flows).invoke(BenignFailingFlow, null);
       expect(settledRecord(sink)?.level).toBe("info");
+    });
+
+    it("shows a notice when the flow fails", async () => {
+      c.register(FailingFlow).useClass(FailingFlow);
+      await c.resolve(Flows).invoke(FailingFlow, null);
+      expect(notices.messages).toHaveLength(1);
+    });
+
+    it("names the underlying failure in the notice", async () => {
+      c.register(FailingFlow).useClass(FailingFlow);
+      await c.resolve(Flows).invoke(FailingFlow, null);
+      expect(notices.messages.at(0)).toContain("domain failed");
+    });
+
+    it("stays silent when the user aborted", async () => {
+      c.register(AbortingFlow).useClass(AbortingFlow);
+      await c.resolve(Flows).invoke(AbortingFlow, null);
+      expect(notices.messages).toHaveLength(0);
+    });
+
+    it("stays silent when the failure is marked benign", async () => {
+      c.register(BenignFailingFlow).useClass(BenignFailingFlow);
+      await c.resolve(Flows).invoke(BenignFailingFlow, null);
+      expect(notices.messages).toHaveLength(0);
+    });
+
+    it("stays silent on success", async () => {
+      c.register(CompletingFlow).useClass(CompletingFlow);
+      await c.resolve(Flows).invoke(CompletingFlow, { value: "x" });
+      expect(notices.messages).toHaveLength(0);
+    });
+
+    it("stays silent when the caller opts out of notifying", async () => {
+      c.register(FailingFlow).useClass(FailingFlow);
+      await c.resolve(Flows).invoke(FailingFlow, null, { notify: false });
+      expect(notices.messages).toHaveLength(0);
+    });
+
+    it("still logs the failure when the caller opts out of notifying", async () => {
+      c.register(FailingFlow).useClass(FailingFlow);
+      await c.resolve(Flows).invoke(FailingFlow, null, { notify: false });
+      expect(settledRecord(sink)?.level).toBe("error");
     });
 
     it("merges caller-supplied context into the completion log fields", async () => {
