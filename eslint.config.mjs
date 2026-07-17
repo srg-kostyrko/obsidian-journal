@@ -239,7 +239,11 @@ export default [
       // `splice(0)` deliberately drains-and-snapshots a listener array mid-iteration.
       "unicorn/no-unnecessary-splice": "off",
       "no-restricted-syntax": "off",
+      // Obsidian's DOM API describes plugin runtime code. Test scaffolding builds detached
+      // elements under happy-dom, where `createDiv`/`activeDocument` do not exist — and both
+      // rules autofix, so `--fix` would rewrite a passing test into a ReferenceError.
       "obsidianmd/prefer-active-doc": "off",
+      "obsidianmd/prefer-create-el": "off",
       "vitest/expect-expect": ["error", { assertFunctionNames: ["expect", "expectTypeOf", "expectOk", "expectErr"] }],
     },
   },
