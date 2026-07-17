@@ -93,13 +93,15 @@ defineEmits<{ edit: []; remove: [] }>();
   right: 0;
   height: var(--size-2-2);
 }
-.jv-item-frame:hover .jv-frame-tools {
+.jv-item-frame:hover .jv-frame-tools,
+.jv-item-frame:focus-within .jv-frame-tools {
   opacity: 1;
   pointer-events: auto;
 }
 /* While a drag is in progress no frame should reveal its tools on hover — the dragged item
    passing over a neighbour would otherwise pop that neighbour's controls. */
-.jv-item-frame.is-dragging:hover .jv-frame-tools {
+.jv-item-frame.is-dragging:hover .jv-frame-tools,
+.jv-item-frame.is-dragging:focus-within .jv-frame-tools {
   opacity: 0;
   pointer-events: none;
 }

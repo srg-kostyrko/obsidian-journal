@@ -63,7 +63,15 @@ defineEmits<{ edit: []; remove: [] }>();
   gap: var(--size-2-1);
   opacity: 0;
 }
-.jv-block-frame:hover .jv-frame-tools {
+.jv-block-frame:hover .jv-frame-tools,
+.jv-block-frame:focus-within .jv-frame-tools {
   opacity: 1;
+}
+/* A pointer-less device never fires :hover, and these tools are the only way to configure or
+   remove a block — without this the composition of a view is uneditable on mobile. */
+@media (hover: none) {
+  .jv-frame-tools {
+    opacity: 1;
+  }
 }
 </style>
