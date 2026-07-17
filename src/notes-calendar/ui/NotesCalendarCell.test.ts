@@ -63,6 +63,22 @@ describe("NotesCalendarCell", () => {
     });
   });
 
+  describe("accessible name", () => {
+    it("names the full date, not the bare number the cell renders", () => {
+      // The visible label of a day cell is "25", so a screen reader announced "25, button" —
+      // no month, no year. The label pattern comes from moment, not a duplicated catalog.
+      const { container } = mount({ period: may25, cell: stubApi() });
+      const cell = container.querySelector<HTMLElement>(".notes-calendar-cell");
+      expect(cell?.getAttribute("aria-label")).toBe(may25.format("LL"));
+    });
+
+    it("leaves a non-actionable cell unnamed, since it is not a control", () => {
+      const { container } = mount({ period: may25, cell: stubApi({ isActionable: () => false }) });
+      const cell = container.querySelector<HTMLElement>(".notes-calendar-cell");
+      expect(cell?.hasAttribute("aria-label")).toBe(false);
+    });
+  });
+
   describe("keyboard access", () => {
     it("is focusable when actionable", () => {
       const { container } = mount({ period: may25, cell: stubApi() });

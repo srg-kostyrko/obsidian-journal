@@ -6,7 +6,7 @@ import type { Period } from "@/calendar";
 import { CellDecoration } from "@/decorations";
 import { useModifierHoverPreview } from "@/ui/use-modifier-hover-preview";
 
-import { defaultFormatPattern } from "../cell-format";
+import { accessibleFormatPattern, defaultFormatPattern } from "../cell-format";
 
 import type { NotesCellApi } from "../use-notes-cell";
 
@@ -21,6 +21,11 @@ const label = computed(() => rawPeriod.value.format(props.format ?? defaultForma
 const isActive = computed(() => props.cell.isActive(rawPeriod.value));
 const isInactive = computed(() => !props.cell.isActionable(rawPeriod.value));
 const isToday = computed(() => rawPeriod.value.contains(CalendarDate.today()));
+// Only an actionable cell is a control; an inert one is decoration and naming it would add
+// noise to the announcement without offering anything to activate.
+const accessibleName = computed(() =>
+  isInactive.value ? undefined : rawPeriod.value.format(accessibleFormatPattern(rawPeriod.value.kind)),
+);
 
 const hover = useModifierHoverPreview();
 </script>
@@ -30,6 +35,7 @@ const hover = useModifierHoverPreview();
     class="notes-calendar-cell"
     :role="isInactive ? undefined : 'button'"
     :tabindex="isInactive ? undefined : 0"
+    :aria-label="accessibleName"
     :data-active="isActive || null"
     :data-inactive="isInactive || null"
     :data-anchor="rawPeriod.anchor.toAnchor()"
@@ -52,6 +58,13 @@ const hover = useModifierHoverPreview();
 }
 .notes-calendar-cell[data-inactive] {
   cursor: not-allowed;
+}
+/* A cell takes a tab stop, so it has to show where the keyboard is. v2's cell was a real
+   <button> and got this from Obsidian for free; a span with tabindex does not, which left a
+   keyboard user tabbing ~35 cells with nothing to see. Same rule as the date-picker grid. */
+.notes-calendar-cell:focus-visible {
+  outline: 2px solid var(--background-modifier-border-focus);
+  outline-offset: -1px;
 }
 /* [data-active] follows [data-today] so a cell that is both the open note and today resolves
    to the active colors — the note you're viewing wins over the today marker (v2). */
