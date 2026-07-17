@@ -202,4 +202,15 @@ describe("HomeCodeBlock", () => {
     expect(parameters.anchor).toBe("2026-05-27");
     expect(parameters.journalNames).toEqual(["Daily"]);
   });
+
+  it("asks the journal picker to open at the pointer rather than center-screen", async () => {
+    journalsRepo.seed([dayJournal("Daily"), dayJournal("Work")]);
+    mount(container, { path: "Note.md" as VaultPath, config: { show: ["day"], separator: " • ", scale: 1 } });
+
+    const user = userEvent.setup({ advanceTimers: vi.advanceTimersByTime });
+    await user.click(screen.getAllByRole("link")[0]);
+
+    const parameters = flowsFake.calls[0]?.parameters as { pickAt?: MouseEvent };
+    expect(parameters.pickAt).toBeInstanceOf(MouseEvent);
+  });
 });

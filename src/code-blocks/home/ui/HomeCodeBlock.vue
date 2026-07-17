@@ -67,6 +67,9 @@ function open(item: HomeItem, event: MouseEvent): void {
     anchor: today.value,
     journalNames: [...item.journalNames],
     openMode: defineOpenMode(event),
+    // Without this the picker falls back to a center-screen modal, unlike every other place
+    // that asks the same question.
+    pickAt: event,
   });
 }
 </script>
