@@ -51,6 +51,12 @@ function mount(container: Container) {
 }
 
 describe("ShelvesDashboardBlock", () => {
+  it("explains what a shelf is even once shelves exist", async () => {
+    const { container } = await setup({ Work: { name: "Work", journals: ["daily"] } });
+    mount(container);
+    expect(screen.getByText(m.shelf_dashboard_description())).toBeTruthy();
+  });
+
   it("shows the empty state when no shelves exist", async () => {
     const { container } = await setup();
     mount(container);

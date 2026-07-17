@@ -811,6 +811,7 @@
 
   "shelf_add": "Add shelf",
   "common_delete_name": "Delete {name}",
+  "shelf_dashboard_description": "A shelf groups journals that belong together, like work or personal. A calendar view can show one shelf at a time, navigation blocks decorate from the shelf's journals, and a command can target a shelf.",
   "shelf_dashboard_empty": "No shelves created yet.",
   "shelf_dashboard_open": "Configure {name}",
   "shelf_dashboard_section_title": "Journal shelves",
