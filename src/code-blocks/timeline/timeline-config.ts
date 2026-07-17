@@ -26,24 +26,26 @@ function isWeekdayIndex(value: unknown): value is number {
   return typeof value === "number" && Number.isSafeInteger(value) && value >= 0 && value <= 6;
 }
 
-export const timelineBlockSchema = v.pipe(
-  v.unknown(),
-  v.transform(asRecord),
-  v.object({
-    // Every key degrades rather than erroring: a typo in one option must not blank the whole
-    // block into an error panel, which is the rule the home fence follows and mode already did.
-    // An unknown mode parses to unset so the journal-derived mode applies.
-    mode: v.pipe(v.optional(v.unknown()), v.transform(asTimelineMode)),
-    shelf: v.optional(v.pipe(v.unknown(), v.transform(asFenceString))),
-    // An unknown placement is unset, so the configured default applies — as for mode.
-    weeks: v.pipe(v.optional(v.unknown()), v.transform(asWeekPlacement)),
-    // Out-of-range entries drop out and the rest still apply, mirroring the home fence's `show`;
-    // a non-array degrades to unset.
-    hiddenWeekdays: v.pipe(
-      v.optional(v.unknown()),
-      v.transform((value) => (Array.isArray(value) ? value.filter(isWeekdayIndex) : undefined)),
-    ),
-  }),
-);
+const timelineBlockEntries = {
+  // Every key degrades rather than erroring: a typo in one option must not blank the whole
+  // block into an error panel, which is the rule the home fence follows and mode already did.
+  // An unknown mode parses to unset so the journal-derived mode applies.
+  mode: v.pipe(v.optional(v.unknown()), v.transform(asTimelineMode)),
+  shelf: v.optional(v.pipe(v.unknown(), v.transform(asFenceString))),
+  // An unknown placement is unset, so the configured default applies — as for mode.
+  weeks: v.pipe(v.optional(v.unknown()), v.transform(asWeekPlacement)),
+  // Out-of-range entries drop out and the rest still apply, mirroring the home fence's `show`;
+  // a non-array degrades to unset.
+  hiddenWeekdays: v.pipe(
+    v.optional(v.unknown()),
+    v.transform((value) => (Array.isArray(value) ? value.filter(isWeekdayIndex) : undefined)),
+  ),
+};
+
+export const timelineBlockSchema = v.pipe(v.unknown(), v.transform(asRecord), v.object(timelineBlockEntries));
+
+// Derived from the entries so the two can never drift: the block reports any other key as
+// unrecognized rather than ignoring it and rendering a plausible-looking default.
+export const timelineBlockKeys = Object.keys(timelineBlockEntries);
 
 export type TimelineBlockConfig = v.InferOutput<typeof timelineBlockSchema>;

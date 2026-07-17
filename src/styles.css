@@ -1,0 +1,32 @@
+/* Global styles for markup the plugin builds outside Vue, where a scoped SFC style cannot
+   reach it. Everything else lives in its component's <style scoped>.
+   Imported from main.ts so vite emits it into build/styles.css, which is what the release
+   workflow ships — the styles.css at the repo root is a v2 leftover and is bundled nowhere. */
+
+/* Feedback a code block renders about itself: a fatal parse/validation failure, and a
+   non-fatal notice (an unrecognized option that was ignored). Both must read as plugin
+   output rather than note prose — unstyled, they are indistinguishable from body text. */
+.code-block-error,
+.code-block-notice {
+  padding: var(--size-4-2);
+  border-radius: var(--radius-s);
+  font-size: var(--font-ui-small);
+}
+
+.code-block-error {
+  color: var(--text-error);
+  border: 1px solid var(--text-error);
+  background-color: var(--background-modifier-error);
+}
+
+.code-block-error ul {
+  margin: var(--size-2-2) 0 0;
+  padding-left: var(--size-4-4);
+}
+
+/* The block still renders below, so the notice reads as a header on it. */
+.code-block-notice {
+  color: var(--text-warning);
+  border: 1px solid var(--text-warning);
+  margin-bottom: var(--size-2-2);
+}

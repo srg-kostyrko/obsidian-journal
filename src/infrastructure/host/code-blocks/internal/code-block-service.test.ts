@@ -82,6 +82,17 @@ describe("CodeBlockService", () => {
       context.container.resolve(CodeBlockService);
     }
 
+    function bindWithKnownKeys(): void {
+      const definition = defineCodeBlock({
+        keys: ["journals-home"],
+        schema,
+        component: StubComponent,
+        knownKeys: ["show", "separator"],
+      });
+      context.container.register(CodeBlockDefinitionToken).useValue(definition);
+      context.container.resolve(CodeBlockService);
+    }
+
     it("mounts the component with schema defaults when source is empty", () => {
       bind();
       const { el } = context.host.runCodeBlockProcessor("journals-home", "");
@@ -119,6 +130,32 @@ describe("CodeBlockService", () => {
 
       const { el } = context.host.runCodeBlockProcessor("journals-home", "", "Vault/Daily/2026-05-27.md");
       expect(el.querySelector(".stub-path")?.textContent).toBe("Vault/Daily/2026-05-27.md");
+    });
+
+    it("names an unrecognized key beside the rendered block", () => {
+      bindWithKnownKeys();
+      const { el } = context.host.runCodeBlockProcessor("journals-home", "shows:\n  - week\n");
+      expect(el.querySelector(".code-block-notice")?.textContent).toContain("shows");
+    });
+
+    it("still renders the block when a key is unrecognized", () => {
+      bindWithKnownKeys();
+      const { el } = context.host.runCodeBlockProcessor("journals-home", "shows:\n  - week\n");
+      expect(el.querySelector(".stub")).not.toBeNull();
+    });
+
+    it("says nothing when every key is recognized", () => {
+      bindWithKnownKeys();
+      const { el } = context.host.runCodeBlockProcessor("journals-home", "separator: ' | '\n");
+      expect(el.querySelector(".code-block-notice")).toBeNull();
+    });
+
+    it("says nothing about unknown keys for a block that declares none", () => {
+      // The nav fence takes no options at all — v2 ignored its body — so every key would
+      // otherwise be "unrecognized" and every nav block would carry a notice.
+      bind();
+      const { el } = context.host.runCodeBlockProcessor("journals-home", "anything: 1\n");
+      expect(el.querySelector(".code-block-notice")).toBeNull();
     });
   });
 

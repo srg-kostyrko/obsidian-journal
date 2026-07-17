@@ -1,5 +1,7 @@
 import { getLanguage, Notice, Plugin } from "obsidian";
 
+import "./styles.css";
+
 import { CalendarModule, calendarSettingsModule } from "@/calendar";
 import { codeBlocksModule } from "@/code-blocks";
 import { navBlockSettingsModule } from "@/code-blocks/nav/settings/module";

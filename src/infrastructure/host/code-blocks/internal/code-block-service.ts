@@ -1,6 +1,7 @@
 import { parseYaml } from "obsidian";
 import * as v from "valibot";
 
+import { formatConjunction, m } from "@/i18n";
 import { inject, InjectorToken } from "@/infrastructure/di";
 import { LoggerFactoryToken } from "@/infrastructure/logger";
 
@@ -55,6 +56,10 @@ export class CodeBlockService {
       return;
     }
     const props: CodeBlockProps<InferOutput<TSchema>> = { path, config: validated.output };
+    const unknownKeys = this.#unknownKeys(definition, parsed.value);
+    if (unknownKeys.length > 0) {
+      this.#logger.warn("code-block ignored unrecognized keys", { key, path, keys: unknownKeys });
+    }
     attach(
       new VueCodeBlockHost(
         element,
@@ -62,8 +67,19 @@ export class CodeBlockService {
         definition.component,
         props as unknown as Record<string, unknown>,
         definition.cssClass,
+        unknownKeys.length > 0
+          ? m.code_block_unknown_keys({ count: unknownKeys.length, keys: formatConjunction(unknownKeys) })
+          : undefined,
       ),
     );
+  }
+
+  // Only a block that declares its options can tell a typo from a key it never had.
+  #unknownKeys(definition: CodeBlockDefinition, parsed: unknown): string[] {
+    const known = definition.knownKeys;
+    if (known === undefined) return [];
+    if (typeof parsed !== "object" || parsed === null || Array.isArray(parsed)) return [];
+    return Object.keys(parsed).filter((k) => !known.includes(k));
   }
 
   #parseYaml(source: string): { kind: "ok"; value: unknown } | { kind: "err"; error: CodeBlockYamlError } {
