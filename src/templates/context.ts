@@ -19,6 +19,20 @@ export class TemplateContext {
     return new TemplateContext(next);
   }
 
+  // v2 matched date/time variables case-insensitively (its regexes carried "gi") while string
+  // and number ones went through an exact `replaceAll`. v3 applies one rule to every variable.
+  // Exact match wins first, so two variables differing only in case each keep their own binding
+  // — numbering source names are user-authored and unique only case-sensitively (config.ts).
+  #lookup(name: string): { name: string; spec: VariableSpec } | undefined {
+    const exact = this.#variables.get(name);
+    if (exact) return { name, spec: exact };
+    const lowered = name.toLowerCase();
+    for (const [key, spec] of this.#variables) {
+      if (key.toLowerCase() === lowered) return { name: key, spec };
+    }
+    return undefined;
+  }
+
   string(name: string, value: string): TemplateContext {
     return this.#with(name, { kind: "string", value });
   }
@@ -45,10 +59,16 @@ export class TemplateContext {
   }
 
   get(name: string): VariableSpec | undefined {
-    return this.#variables.get(name);
+    return this.#lookup(name)?.spec;
+  }
+
+  // The name a variable was defined under, for a token that may have spelled it in any case.
+  // Bindings are keyed by this so a caller reading `bindings.get("date")` finds `{{Date}}`'s value.
+  canonicalName(name: string): string | undefined {
+    return this.#lookup(name)?.name;
   }
 
   has(name: string): boolean {
-    return this.#variables.has(name);
+    return this.#lookup(name) !== undefined;
   }
 }

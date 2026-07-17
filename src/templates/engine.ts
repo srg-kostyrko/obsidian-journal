@@ -237,9 +237,12 @@ export class TemplateEngine {
       if (!spec) continue;
       const value = this.#parseCapture(capture, spec, token);
       if (value.kind === "err") return new Err(value.error);
-      const list = candidates.get(token.name) ?? [];
+      // Key by the defined name, not the token's spelling: `{{Date}}` binds `date`, which is
+      // what every caller reads.
+      const name = context.canonicalName(token.name) ?? token.name;
+      const list = candidates.get(name) ?? [];
       list.push(value.value);
-      candidates.set(token.name, list);
+      candidates.set(name, list);
     }
 
     const resolved = new Map<string, BoundValue>();

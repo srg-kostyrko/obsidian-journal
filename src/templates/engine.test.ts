@@ -41,6 +41,22 @@ describe("TemplateEngine.renderString", () => {
     expect(engine.renderString("Sprint {{index}}", buildFakeContext())).toBe("Sprint 7");
   });
 
+  it("renders a date variable whose name is capitalized", () => {
+    const engine = installTestEngine();
+    expect(engine.renderString("{{Date:YYYY-MM-DD}}", buildFakeContext())).toBe("2022-01-05");
+  });
+
+  it("renders a string variable whose name is capitalized", () => {
+    const engine = installTestEngine();
+    expect(engine.renderString("{{Journal_Name}}", buildFakeContext())).toBe("Daily");
+  });
+
+  it("binds each of two variables differing only in case to its own value", () => {
+    const engine = installTestEngine();
+    const context = buildFakeContext().number("Index", 42);
+    expect(engine.renderString("{{index}}/{{Index}}", context)).toBe("7/42");
+  });
+
   it("renders a date variable with default format", () => {
     const engine = installTestEngine();
     expect(engine.renderString("Today: {{date}}", buildFakeContext())).toBe("Today: 2022-01-05");
@@ -132,6 +148,14 @@ describe("TemplateEngine.parse", () => {
     const engine = installTestEngine();
     const context = buildFakeContext();
     const result = engine.parse(tokenize("{{date:YYYY-MM-DD}}.md"), "2022-01-05.md", context);
+    expectOk(result);
+    expect(asDateBinding(result.value.get("date")).toAnchor()).toBe("2022-01-05");
+  });
+
+  it("parses a capitalized variable into its canonically named binding", () => {
+    const engine = installTestEngine();
+    const context = buildFakeContext();
+    const result = engine.parse(tokenize("{{Date:YYYY-MM-DD}}.md"), "2022-01-05.md", context);
     expectOk(result);
     expect(asDateBinding(result.value.get("date")).toAnchor()).toBe("2022-01-05");
   });

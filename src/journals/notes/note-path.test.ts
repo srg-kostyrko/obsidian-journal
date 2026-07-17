@@ -42,6 +42,15 @@ describe("NotePathService.pathFor", () => {
     expect(result.isOk() && result.value).toBe("2026-05-19.md");
   });
 
+  it("renders a capitalized date variable rather than emitting it raw", () => {
+    const repo = fakeRepo({
+      daily: fixedJournal("daily", { type: "day" }, { nameTemplate: "{{Date:YYYY-MM-DD}}" }),
+    });
+    const c = buildContainer(repo);
+    const result = c.resolve(NotePathService).pathForDate("daily", CalendarDate.fromAnchor(anchor("2026-05-19")));
+    expect(result.isOk() && result.value).toBe("2026-05-19.md");
+  });
+
   it("prefixes folder when configured", () => {
     const repo = fakeRepo({
       daily: fixedJournal("daily", { type: "day" }, { folder: "Diary/{{date:YYYY}}" }),
@@ -122,6 +131,15 @@ describe("NotePathService.candidateFor", () => {
     const metadata = unwrap(result);
     expect(metadata.anchor).toBe("2026-05-19");
     expect(metadata.journalName).toBe("daily");
+  });
+
+  it("inverts a path whose template capitalized the date variable", () => {
+    const repo = fakeRepo({
+      daily: fixedJournal("daily", { type: "day" }, { nameTemplate: "{{Date:YYYY-MM-DD}}" }),
+    });
+    const c = buildContainer(repo);
+    const result = c.resolve(NotePathService).candidateFor("daily", "2026-05-19.md" as VaultPath);
+    expect(unwrap(result).anchor).toBe("2026-05-19");
   });
 
   it("returns None when the path doesn't match the template", () => {
