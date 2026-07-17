@@ -24,6 +24,20 @@
   padding-left: var(--size-4-4);
 }
 
+/* The parser aligns a caret under the offending column, so the whitespace has to survive.
+   A long line scrolls inside the panel rather than stretching the note. */
+.code-block-error__detail {
+  margin: var(--size-2-2) 0 0;
+  padding: var(--size-2-2);
+  border-radius: var(--radius-s);
+  background-color: var(--background-primary);
+  color: var(--text-muted);
+  font-family: var(--font-monospace);
+  font-size: var(--font-smaller);
+  white-space: pre;
+  overflow-x: auto;
+}
+
 /* The block still renders below, so the notice reads as a header on it. */
 .code-block-notice {
   color: var(--text-warning);

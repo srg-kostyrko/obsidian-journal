@@ -6,13 +6,17 @@ import { inject, InjectorToken } from "@/infrastructure/di";
 import { LoggerFactoryToken } from "@/infrastructure/logger";
 
 import { InternalPluginToken } from "../../internal/tokens";
-import { CodeBlockSchemaError, CodeBlockYamlError } from "../errors";
+import { CodeBlockYamlError } from "../errors";
 import { CodeBlockDefinitionToken, type CodeBlockDefinition, type CodeBlockProps } from "../types";
 
 import { VueCodeBlockHost } from "./vue-code-block-host";
 
 import type { VaultPath } from "../../types";
 import type { BaseIssue, GenericSchema, InferOutput } from "valibot";
+
+function detailOf(cause: unknown): string {
+  return cause instanceof Error ? cause.message : String(cause);
+}
 
 export class CodeBlockService {
   readonly #plugin = inject(InternalPluginToken);
@@ -45,14 +49,15 @@ export class CodeBlockService {
     const parsed = this.#parseYaml(source);
     if (parsed.kind === "err") {
       this.#logger.error("code-block yaml parse failed", { key, path, cause: parsed.error.cause });
-      this.#renderError(element, parsed.error.message);
+      // The parser's own message carries the line, the column and an excerpt with a caret —
+      // everything the user needs to fix it, and previously console-only.
+      this.#renderError(element, m.code_blocks_yaml_error({ key }), { detail: detailOf(parsed.error.cause) });
       return;
     }
     const validated = v.safeParse(definition.schema, parsed.value);
     if (!validated.success) {
-      const error = new CodeBlockSchemaError(key, validated.issues);
       this.#logger.error("code-block schema validation failed", { key, path, issues: validated.issues });
-      this.#renderError(element, error.message, validated.issues);
+      this.#renderError(element, m.code_blocks_schema_error({ key }), { issues: validated.issues });
       return;
     }
     const props: CodeBlockProps<InferOutput<TSchema>> = { path, config: validated.output };
@@ -68,7 +73,7 @@ export class CodeBlockService {
         props as unknown as Record<string, unknown>,
         definition.cssClass,
         unknownKeys.length > 0
-          ? m.code_block_unknown_keys({ count: unknownKeys.length, keys: formatConjunction(unknownKeys) })
+          ? m.code_blocks_unknown_keys({ count: unknownKeys.length, keys: formatConjunction(unknownKeys) })
           : undefined,
       ),
     );
@@ -92,13 +97,25 @@ export class CodeBlockService {
     }
   }
 
-  #renderError(element: HTMLElement, message: string, issues?: readonly BaseIssue<unknown>[]): void {
+  #renderError(
+    element: HTMLElement,
+    message: string,
+    { detail, issues }: { detail?: string; issues?: readonly BaseIssue<unknown>[] } = {},
+  ): void {
     element.replaceChildren();
     const root = activeDocument.createElement("div");
     root.className = "code-block-error";
     const head = activeDocument.createElement("div");
     head.textContent = message;
     root.append(head);
+    if (detail !== undefined && detail !== "") {
+      // Monospace and preserved whitespace: the parser aligns a caret under the offending
+      // column, which only lines up in a <pre>.
+      const detailElement = activeDocument.createElement("pre");
+      detailElement.className = "code-block-error__detail";
+      detailElement.textContent = detail;
+      root.append(detailElement);
+    }
     if (issues && issues.length > 0) {
       const list = activeDocument.createElement("ul");
       for (const issue of issues) {

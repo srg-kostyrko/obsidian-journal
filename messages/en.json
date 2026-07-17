@@ -65,7 +65,9 @@
   "calendar_week_config_change": "Change",
   "calendar_week_config_description": "Define which day starts the week and how the first week of the year is determined — this affects week numbers.",
 
-  "code_block_unknown_keys": [{"declarations": ["input count", "input keys"], "selectors": ["count"], "match": {"count=1": "Unrecognized option ignored: {keys}.", "count=*": "Unrecognized options ignored: {keys}."}}],
+  "code_blocks_unknown_keys": [{"declarations": ["input count", "input keys"], "selectors": ["count"], "match": {"count=1": "Unrecognized option ignored: {keys}.", "count=*": "Unrecognized options ignored: {keys}."}}],
+  "code_blocks_yaml_error": "Could not read the options in this {key} block.",
+  "code_blocks_schema_error": "Some options in this {key} block are not valid.",
   "code_blocks_nav_not_connected": "Note is not connected to a journal",
   "code_blocks_home_empty": "No journals to show. Check the block's show and shelf options.",
   "view_block_calendar_no_journals": "No journals on this shelf.",

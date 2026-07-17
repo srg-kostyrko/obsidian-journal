@@ -2,6 +2,7 @@ import * as v from "valibot";
 import { beforeEach, describe, expect, it } from "vitest";
 import { defineComponent, h } from "vue";
 
+import { m } from "@/i18n";
 import { Container } from "@/infrastructure/di";
 import { createLoggerTestingModule } from "@/infrastructure/logger/testing";
 
@@ -34,6 +35,12 @@ describe("CodeBlockService", () => {
   beforeEach(() => {
     context = build();
   });
+
+  function bindEmpty(): void {
+    const definition = defineCodeBlock({ keys: ["journals-home"], schema: v.object({}), component: StubComponent });
+    context.container.register(CodeBlockDefinitionToken).useValue(definition);
+    context.container.resolve(CodeBlockService);
+  }
 
   describe("registration", () => {
     it("registers a processor for each key bound to the multi-token", () => {
@@ -172,7 +179,23 @@ describe("CodeBlockService", () => {
       const { el } = context.host.runCodeBlockProcessor("journals-home", "key: [a, b, c");
 
       expect(el.querySelector(".stub")).toBeNull();
-      expect(el.querySelector(".code-block-error")?.textContent).toContain("Failed to parse code block YAML");
+      expect(el.querySelector(".code-block-error")?.textContent).toContain(
+        m.code_blocks_yaml_error({ key: "journals-home" }),
+      );
+    });
+
+    it("names the fence the yaml error came from", () => {
+      bindEmpty();
+      const { el } = context.host.runCodeBlockProcessor("journals-home", "key: [a, b, c");
+      expect(el.querySelector(".code-block-error")?.textContent).toContain("journals-home");
+    });
+
+    it("shows the offending source so the user can see where the yaml broke", () => {
+      // The parser's message carries the line, the column and an excerpt with a caret; all of
+      // it went to the console, leaving the panel with nothing to act on.
+      bindEmpty();
+      const { el } = context.host.runCodeBlockProcessor("journals-home", "key: [a, b, c");
+      expect(el.querySelector(".code-block-error__detail")?.textContent).toContain("key: [a, b, c");
     });
 
     it("renders an error div with issue paths when the schema rejects the parsed yaml", () => {
@@ -185,6 +208,7 @@ describe("CodeBlockService", () => {
 
       const errorElement = el.querySelector(".code-block-error");
       expect(errorElement).not.toBeNull();
+      expect(errorElement?.textContent).toContain(m.code_blocks_schema_error({ key: "journals-home" }));
       expect(errorElement?.textContent).toContain("scale");
       expect(el.querySelector(".stub")).toBeNull();
     });

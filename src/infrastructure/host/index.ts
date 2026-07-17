@@ -49,7 +49,6 @@ export {
 } from "./input-suggests";
 export {
   CodeBlockDefinitionToken,
-  CodeBlockSchemaError,
   CodeBlockService,
   CodeBlockYamlError,
   defineCodeBlock,

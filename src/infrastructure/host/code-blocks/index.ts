@@ -1,5 +1,5 @@
 export { defineCodeBlock } from "./define-code-block";
-export { CodeBlockYamlError, CodeBlockSchemaError } from "./errors";
+export { CodeBlockYamlError } from "./errors";
 export { CodeBlockService } from "./internal/code-block-service";
 export {
   CodeBlockDefinitionToken,
