@@ -38,6 +38,10 @@ export function buildCycle(write: JournalWrite): JournalCycle {
   );
 }
 
+function isParseableAnchor(s: AnchorString): boolean {
+  return localMoment(s, "YYYY-MM-DD", true).isValid();
+}
+
 function customStepForward(anchor: AnchorString, every: MomentDurationUnit, duration: number): AnchorString {
   const m = localMoment(anchor, "YYYY-MM-DD", true);
   if (every === "month" && m.date() > 28) {
@@ -242,6 +246,11 @@ export class CycleService {
   }
 
   countRepeats(name: string, from: AnchorString, to: AnchorString): Option<number> {
+    // NaN is not a count. A bound that does not parse — e.g. the empty anchor a numbering source or
+    // timeline start legitimately carries until the user picks a date — would otherwise diff to
+    // NaN and travel on as Some(NaN), silently poisoning every comparison downstream: a NaN
+    // index rendered into a note, or a timeline that excludes every date.
+    if (!isParseableAnchor(from) || !isParseableAnchor(to)) return Option.none();
     return this.#cycleFor(name).map((cycle) =>
       match(cycle)
         .with({ kind: "fixed" }, (c) => {

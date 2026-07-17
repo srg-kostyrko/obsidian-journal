@@ -287,6 +287,18 @@ describe("CycleService", () => {
       expect(result.isSome() && result.value).toBe(3);
     });
 
+    it("returns None when the from anchor does not parse", () => {
+      const c = buildContainer({ w: fixedJournal("w", { type: "week" }) });
+      const cycle = c.resolve(CycleService);
+      expect(cycle.countRepeats("w", "" as AnchorString, "2024-01-22" as AnchorString).isNone()).toBe(true);
+    });
+
+    it("returns None when the to anchor does not parse", () => {
+      const c = buildContainer({ w: fixedJournal("w", { type: "week" }) });
+      const cycle = c.resolve(CycleService);
+      expect(cycle.countRepeats("w", "2024-01-01" as AnchorString, "nonsense" as AnchorString).isNone()).toBe(true);
+    });
+
     it("returns equal magnitude regardless of direction", () => {
       const c = buildContainer({ w: fixedJournal("w", { type: "week" }) });
       const cycle = c.resolve(CycleService);

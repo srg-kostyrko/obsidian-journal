@@ -56,6 +56,32 @@ describe("NumberingService", () => {
       expect(result.isSome() && result.value).toEqual({ index: 3 });
     });
 
+    it("returns None when numbering is enabled but the anchor date is unset", () => {
+      const c = buildContainer({
+        w: fixedJournal(
+          "w",
+          { type: "week" },
+          {
+            numbering: {
+              enabled: true,
+              anchorDate: "" as AnchorString,
+              allowBefore: false,
+              sources: [
+                {
+                  variable: "index",
+                  frontmatterKey: "journal-index",
+                  anchorValue: 1,
+                  reset: { kind: "never" },
+                },
+              ],
+            },
+          },
+        ),
+      });
+      const n = c.resolve(NumberingService);
+      expect(n.assignNumbers("w", "2024-01-15" as AnchorString).isNone()).toBe(true);
+    });
+
     it("returns None for anchor before anchorDate when allowBefore is false", () => {
       const c = buildContainer({ s: customJournal("s", "week", 1, "2024-01-15") });
       const n = c.resolve(NumberingService);
