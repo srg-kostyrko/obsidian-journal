@@ -95,4 +95,12 @@ describe("ConfigureBulkAddModal", () => {
     await waitFor(() => expect(screen.getByText(m.journal_property_name_required())).toBeTruthy());
     expect(submit).not.toHaveBeenCalled();
   });
+
+  it("explains why submit is blocked when the date format is cleared", async () => {
+    const { submit } = mountModal();
+    await userEvent.clear(screen.getByRole("textbox", { name: m.bulk_add_date_format_label() }));
+    await userEvent.click(screen.getByText(m.bulk_add_next()));
+    await waitFor(() => expect(screen.getByText(m.bulk_add_date_format_required())).toBeTruthy());
+    expect(submit).not.toHaveBeenCalled();
+  });
 });

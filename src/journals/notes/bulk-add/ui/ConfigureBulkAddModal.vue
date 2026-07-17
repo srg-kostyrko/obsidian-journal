@@ -88,6 +88,7 @@ const onSubmit = handleSubmit((parameters) => {
         <div>{{ m.bulk_add_date_format_omit_time() }}</div>
         <div v-if="values.datePlace === 'property'">{{ m.bulk_add_date_format_property_note() }}</div>
         <DateFormatPreview :format="values.dateFormat" />
+        <span v-for="error of errorBag.dateFormat" :key="error" class="bulk-add-form-error">{{ error }}</span>
       </template>
       <UiTextInput v-model="dateFormat" :aria-label="m.bulk_add_date_format_label()" />
     </UiSettingRow>

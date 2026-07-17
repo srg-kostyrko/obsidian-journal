@@ -1288,6 +1288,7 @@
   "journal_property_modal_current_label": "Current name",
   "common_label_new_name": "New name",
   "journal_property_name_required": "Property name is required.",
+  "bulk_add_date_format_required": "Date format is required.",
   "journal_rename_modal_same_as_current_error": "Enter a different name.",
   "journal_rename_modal_title": "Rename {name}",
   "journal_sequence_property_modal_title": "Edit sequential number property name",
