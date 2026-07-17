@@ -103,6 +103,24 @@ describe("ConnectNoteModal", () => {
     });
   });
 
+  describe("when the vault has no journals", () => {
+    it("says so and points at the settings instead of offering a dead form", () => {
+      const container = buildContainer(fakeRepo({}));
+      const api: ModalApi<ConnectNoteResult> = { submit: vi.fn(), cancel: vi.fn() };
+
+      mountModal("inbox/note.md" as VaultPath, container, api);
+      expect(screen.getByText(m.common_no_journals_yet())).toBeTruthy();
+    });
+
+    it("offers no journal select to choose from", () => {
+      const container = buildContainer(fakeRepo({}));
+      const api: ModalApi<ConnectNoteResult> = { submit: vi.fn(), cancel: vi.fn() };
+
+      mountModal("inbox/note.md" as VaultPath, container, api);
+      expect(screen.queryByRole("combobox")).toBeNull();
+    });
+  });
+
   describe("when the note is not connected", () => {
     it("shows the note path", () => {
       const repo = fakeRepo({ daily: fixedJournal("daily", { type: "day" }) });

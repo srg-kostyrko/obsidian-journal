@@ -4,5 +4,5 @@ import { m } from "@/i18n";
 // at all — which is what a fresh install looks like. Naming a shelf there points at a concept
 // the user has not met yet, and misdiagnoses the situation for the person least able to tell.
 export function calendarEmptyMessage(shelf: string | null): string {
-  return shelf === null ? m.view_block_calendar_no_journals_yet() : m.view_block_calendar_no_journals();
+  return shelf === null ? m.common_no_journals_yet() : m.view_block_calendar_no_journals();
 }

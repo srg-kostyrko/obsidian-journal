@@ -72,7 +72,7 @@
   "code_blocks_nav_not_connected": "Note is not connected to a journal",
   "code_blocks_home_empty": "No journals to show. Check the block's show and shelf options.",
   "view_block_calendar_no_journals": "No journals on this shelf.",
-  "view_block_calendar_no_journals_yet": "No journals yet. Create one in the plugin settings.",
+  "common_no_journals_yet": "No journals yet. Create one in the plugin settings.",
   "code_blocks_nav_next": "Next",
   "code_blocks_nav_previous": "Previous",
 

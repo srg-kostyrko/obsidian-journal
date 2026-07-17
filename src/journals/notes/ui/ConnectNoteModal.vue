@@ -125,6 +125,16 @@ function connect(): void {
       <UiButton cta @click="disconnect">{{ m.connect_note_modal_disconnect() }}</UiButton>
     </UiSettingRow>
   </div>
+  <!-- Nothing to connect to on a fresh install: the form would render an empty picker above a
+       permanently disabled button, which states the situation to nobody. -->
+  <div v-else-if="journalNames.length === 0">
+    <UiSettingRow>
+      <template #description>{{ m.common_no_journals_yet() }}</template>
+    </UiSettingRow>
+    <UiSettingRow controls-only>
+      <UiButton @click="api.cancel()">{{ m.common_action_cancel() }}</UiButton>
+    </UiSettingRow>
+  </div>
   <div v-else>
     <UiSettingRow>
       <template #description>{{ path }}</template>

@@ -101,7 +101,7 @@ describe("MonthCalendarBlock", () => {
     // An unscoped calendar shows every journal, so an empty scope means the vault has none —
     // which is what a fresh install looks like. Blaming a shelf misdiagnoses it.
     const { getByText } = mountBlock(baseConfig, { shelf: computed(() => null) });
-    expect(getByText(m.view_block_calendar_no_journals_yet())).toBeTruthy();
+    expect(getByText(m.common_no_journals_yet())).toBeTruthy();
   });
 
   it("blames the shelf only when the view is scoped to one", () => {
