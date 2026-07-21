@@ -9,6 +9,44 @@ for the whole group. Each `[ ]` item is one behavior: it states any extra setup
 
 Severity for bugs you log: 🔴 data loss / crash · 🟡 feature broken · 🟢 cosmetic.
 
+## What CI already proves — run this pass in priority order
+
+`npm run test:e2e` drives a real Obsidian against fixture vaults. Where a section
+below names a spec, that ground is already covered on every run; walk it manually
+only when you are investigating a specific report or the spec is red.
+
+| Section                  | Automated by                                                                                        |
+| ------------------------ | --------------------------------------------------------------------------------------------------- |
+| §0 smoke                 | `plugin-activates`, `re-enable`                                                                     |
+| §1 write types           | `custom-interval`, `weekly-midweek-start`                                                           |
+| §2 config                | `confirm-creation`, `auto-attach-template`, `templater`                                             |
+| §2 timeline bounds       | `timeline-bounds`                                                                                   |
+| §3 lifecycle             | `delete-journal`, `colliding-journals`                                                              |
+| §4 numbering             | `home-index`, `auto-attach-index`, `adoption-guard`, `adoption-guard-custom`                        |
+| §5 connection            | `commands` (insert date link)                                                                       |
+| §6 bulk add              | `bulk-add`                                                                                          |
+| §7 commands              | `commands`, `default-commands`, `dynamic-commands`, `available-command`                             |
+| §8 views                 | `view`, `view-blocks`, `view-clone`, `remember-date`, `startup-view`, `defined-navigation`          |
+| §9 shelves               | `nav-off-shelf`                                                                                     |
+| §10 code blocks          | `code-blocks`, `custom-interval-nav`, `home-index`                                                  |
+| §13 settings             | `settings`, `settings-first-journal`                                                                |
+| §14 startup / background | `startup-open`, `startup-confirm`, `auto-create`, `auto-attach`, `settings-reload`, `sync-settings` |
+| §15 migration            | `legacy-upgrade`, `mid-session-enable`                                                              |
+| §16 regression (locale)  | `calendar-locale`                                                                                   |
+| §17 URI handler          | `uri-open`                                                                                          |
+
+**Spend your attention where automation cannot reach.** Work the sections in this
+order, not top to bottom:
+
+1. §12 styles, §11 conditions, §19 appearance & accessibility — anything whose
+   pass condition is "a human looked at it".
+2. §18 error & recovery surfaces — mostly beyond automation, and the class where v3
+   has historically failed silently.
+3. §16 regression (theme switch, large vault, malformed frontmatter) and §0's
+   mobile line.
+4. §15 migration against a real user snapshot, if you have one.
+5. Everything else, as a sweep, trusting the table above.
+
 ---
 
 ## 0. Setup & smoke
@@ -22,11 +60,14 @@ Setup: clone branch `v3-ai`; `npm run dev` (builds into
 - [ ] Disable the plugin in Community Plugins → no errors, calendar leaves close.
 - [ ] Re-enable the plugin → re-initializes, default view available again.
 - [ ] Reload Obsidian (Ctrl/Cmd+R) → clean re-init, no duplicate ribbon icons.
-- [ ] - Open a **brand-new empty vault**, install the plugin → first-run state is
-      sane (a default Calendar view seeded, no journals).
+- [ ] - Open a **brand-new empty vault**, install the plugin → exactly one Calendar
+      view is seeded, it opens on startup, it shows a ribbon icon, and no journals
+      exist.
+- [ ] First run → the seeded view explains that there are no journals yet and does
+      not render a bare divider rule or an empty custom-intervals section around
+      that message.
 - [ ] - Open a vault with a v2 `data.json` → loads without crash (migration, §15).
-- [ ] If claiming mobile (`isDesktopOnly: false`): repeat load + open-view on a
-      mobile/tablet build.
+- [ ] Mobile smoke: plugin loads on a mobile/tablet build (full mobile pass is §19).
 
 ---
 
@@ -66,6 +107,21 @@ rewrite every connected note (see the item below).
 - [ ] **Name template** with `{{journal_name}}` → filename includes "Cfg".
 - [ ] **Name template** with `{{index}}` — + numbering on (§4) → filename includes
       the number.
+- [ ] **Name template** with a **shift** — `{{date+1d}}`, `{{date-2w}}` → the
+      filename uses the shifted date (units `y q m w d h`).
+- [ ] **Name template** with a **boundary** — `{{date<startOf=week>}}`,
+      `{{date<endOf=month>}}` → snaps to that boundary.
+- [ ] Boundary unit **`decade`** → snaps to the decade's first/last day.
+- [ ] Shift **and** boundary together — `{{date+1w<endOf=month>:YYYY-MM-DD}}` → the
+      shift applies first, then the boundary.
+- [ ] **Unknown boundary unit** — `{{date<startOf=fortnight>}}` → left as-is /
+      degrades, no crash.
+- [ ] **Name template** with an inline **format** — `{{date:YYYY}}` → uses that
+      format instead of the journal's.
+- [ ] **Template body** with `{{journal_link(<journal name>)}}` → resolves to the
+      target journal's note path.
+- [ ] `{{journal_link(...)}}` whose target is **outside its timeline** → the token is
+      left unresolved rather than producing a broken link.
 - [ ] **Date format** change (e.g. `DD.MM.YYYY`) → new notes use the new format.
 - [ ] **Date format** change → existing notes keep their old names (no rewrite).
 - [ ] **Folder** set to `Journals/Cfg` → new note created there.
@@ -83,6 +139,8 @@ rewrite every connected note (see the item below).
       to it after creation.
 - [ ] **confirmCreation = on** → navigating to a missing entry prompts before
       creating.
+- [ ] **confirmCreation = on**, then **cancel** the prompt → no note is created and
+      no error is reported.
 - [ ] **confirmCreation = off** → missing entry created silently.
 - [ ] **Frontmatter date field** renamed → new note's frontmatter uses the new
       key.
@@ -104,6 +162,8 @@ Setup: edit journal Cfg → Timeline.
 - [ ] **End = never** → can navigate arbitrarily far forward.
 - [ ] **End = fixed date** → navigation/creation stops at that date.
 - [ ] **End = repeat count N** → exactly N entries reachable from start.
+- [ ] **End = repeat count N** with **no start bound** → the journal stays unbounded
+      (repeats need a start); a warning says so.
 
 ---
 
@@ -163,12 +223,19 @@ Setup: a Day journal "Conn" with a folder + name template; an arbitrary note
       frontmatter written to the note.
 - [ ] - Date already has a note → **override** prompt appears → choosing override
       replaces the connection.
+- [ ] 🔴 Override **with rename+move on**, so the incoming note takes the occupant's
+      exact path → the old occupant file is moved to **trash**.
+- [ ] 🔴 Override **without** rename+move → the old occupant is only _disconnected_
+      (frontmatter stripped); its file stays in place as an orphan. Confirm this is
+      what you see — the two outcomes differ and only one deletes a file.
 - [ ] - **Rename toggle on** → `Scratch.md` renamed to Conn's name template.
 - [ ] - **Move toggle on** → file moved into Conn's folder.
 - [ ] **Connect** on an already-connected note → button shows **Disconnect** →
       frontmatter keys stripped.
-- [ ] Connect a note dated **outside Conn's timeline** → blocked or warned, not
-      silently corrupted.
+- [ ] Connect a note dated **outside Conn's timeline** → the attempt is refused with
+      an explanation; the note's frontmatter is unchanged afterwards.
+- [ ] **Connect note** in a vault with **no journals** → an empty-state explains why,
+      with only Cancel.
 - [ ] **Insert date link** command in an editor → inserts a journal/date link.
 - [ ] Click the inserted link → navigates to / creates that entry.
 
@@ -186,9 +253,25 @@ Settings → Journals → Bulk → **Bulk add**.
 - [ ] **Filter by title** condition → narrows the candidate set.
 - [ ] **Filter by tag** condition → narrows the set.
 - [ ] **Filter by property** condition → narrows the set.
+- [ ] **Two filters + combinator `and`** → only notes matching both survive.
+- [ ] **Two filters + combinator `or`** → notes matching either survive.
 - [ ] **Dry-run preview** → lists each note with connect/skip and a skip _reason_.
+- [ ] Dry-run **off** → the run commits directly (preview-first is the v3 default;
+      confirm the opt-out still works).
+
+The three decisions below each have a **fixed** setting applied silently to every
+note _and_ an `ask` setting that produces the per-note dropdown. Test both arms.
+
+- [ ] `existingNote` fixed to **skip** → occupied dates are skipped, and the log says
+      so per note.
+- [ ] `existingNote` fixed to **override** / **merge** → applied without prompting.
+- [ ] `existingNote` = **ask** → per-note dropdown appears.
+- [ ] `otherFolder` fixed to **move** vs **keep** → applied without prompting.
+- [ ] `otherName` fixed to **rename** vs **keep** → applied without prompting.
 - [ ] Per-note decision **connect** → note connected on commit.
-- [ ] Per-note decision **merge** → merges into existing entry.
+- [ ] 🔴 Per-note decision **merge** → the source's content is appended to the
+      existing entry **and the source file is deleted**. Verify the deletion is what
+      you expect before shipping this to users.
 - [ ] Per-note decision **override** → replaces existing entry.
 - [ ] Per-note **move** → file moved to journal folder on commit.
 - [ ] Per-note **rename** → file renamed to journal template on commit.
@@ -216,6 +299,10 @@ the journal's Commands section).
 - [ ] **Target: all journals** → acts on every journal of the filtered write type.
 - [ ] **Target: specific journal** → acts only on Cmd.
 - [ ] **Target: shelf** → acts only on journals in the chosen shelf (§9).
+- [ ] **Target: shelf** on a shelf holding **mixed write types** → acts only on the
+      members matching the command's own write type.
+- [ ] **Icon** required — turn on show-in-ribbon with no icon → save is blocked with
+      a "pick an icon" error.
 
 ### Command type variants (depend on write type)
 
@@ -223,6 +310,13 @@ Setup: one command of each `type`, targeting the relevant journal write type.
 
 - [ ] **Built-in `Open next`** → next entry of the active journal.
 - [ ] **Built-in `Open previous`** → previous entry.
+- [ ] **next_available** — + gaps between existing notes → jumps to the next entry
+      that _exists_, skipping the gap (not merely +1 period).
+- [ ] **previous_available** → jumps to the previous existing entry.
+- [ ] **next_available** with nothing ahead → an explicit "no next note" notice, not
+      silence.
+- [ ] **previous_available** with nothing behind → an explicit "no previous note"
+      notice.
 - [ ] Day journal — **same** → today's entry.
 - [ ] Day journal — **next** → +1 day.
 - [ ] Day journal — **previous** → −1 day.
@@ -245,6 +339,11 @@ Setup: one command of each `type`, targeting the relevant journal write type.
 
 - [ ] Rename a targeted journal → command re-targets automatically.
 - [ ] Delete a targeted journal → its commands disappear from the palette.
+- [ ] Delete a targeted **shelf** → its shelf-scoped commands disappear too.
+- [ ] Palette entries carry their owner prefix: `<journal>: <name>` for journal
+      commands, `Shelf: <shelf>: <name>` for shelf commands.
+- [ ] Two different journals can both hold a command named "Open today's note"
+      (uniqueness is per-owner, not global).
 
 ---
 
@@ -262,14 +361,34 @@ so cells are populated.
 - [ ] View **show in ribbon** on → ribbon icon opens the view.
 - [ ] **Default shelf** set → view shows only that shelf's journals.
 - [ ] **Create a new view** → appears with its own `open-view` command.
+- [ ] **Rename a view** → its palette command and tab header follow.
+- [ ] **Clone a view** → the copy carries every block and toolbar item, and edits to
+      the copy do not affect the original.
+- [ ] **Change leaf while the view is open** → a "move open view?" confirm appears.
+- [ ] Confirm that dialog → the open view relocates immediately.
+- [ ] Cancel that dialog → the view stays put and the setting reverts.
+- [ ] **Open on startup** on a view → reload Obsidian → it opens on launch **without
+      stealing focus** from the active note.
+- [ ] Open-on-startup when a leaf for that view was **already restored** by
+      Obsidian's saved layout → no duplicate leaf.
+- [ ] **Remember last viewed date** on → navigate away from today, reload → the view
+      reopens on the remembered date.
+- [ ] Remember-date **off** → the view reopens on today.
 - [ ] **Delete a view** → its `open-view` command disappears from the palette.
 - [ ] **Delete a view** → the remaining views still open normally.
 - [ ] **Delete all views** → plugin does not crash; graceful empty state.
 
 ### View blocks
 
-Setup: edit a view → add each block type via **Add block**.
+Setup: edit a view → add each block type via **Add block**. Six block types are
+registered: `toolbar`, `month-calendar`, `week-calendar`, `custom-intervals`,
+`divider`, `markdown-template` — add every one at least once.
 
+- [ ] **Add block** picker lists all six types.
+- [ ] **toolbar** block adds and renders as an empty strip ("No toolbar items yet").
+- [ ] **Reorder blocks** by drag → the new order renders and survives a reload.
+- [ ] **Remove a block** → it disappears; siblings keep their order.
+- [ ] A view with **no blocks** → "No blocks yet" empty state, no crash.
 - [ ] **month-calendar** renders the current month grid.
 - [ ] month-calendar **before = 1** → also shows the previous month.
 - [ ] month-calendar **after = 1** → also shows the next month.
@@ -279,6 +398,12 @@ Setup: edit a view → add each block type via **Add block**.
 - [ ] month-calendar **weeks = left** → week-number column on the left.
 - [ ] month-calendar **weeks = right** → week-number column on the right.
 - [ ] month-calendar **weeks = none** → no week column.
+- [ ] month-calendar **weeks = default** → inherits the global calendar setting
+      (change that setting and confirm the block follows).
+- [ ] month-calendar **show heading** off → the month/year heading is hidden.
+- [ ] **Follow active note** on → opening a journal entry moves the calendar to that
+      entry's period.
+- [ ] **Follow active note** off → opening an entry leaves the displayed period put.
 - [ ] A week number with **no week journal** still shows as an inactive label.
 - [ ] **week-calendar** renders week rows (weeks/before/after behave as on
       month-calendar — spot-check one).
@@ -287,6 +412,13 @@ Setup: edit a view → add each block type via **Add block**.
 - [ ] custom-intervals **hideEmpty** → periods with no note are hidden.
 - [ ] **divider** renders a separator line.
 - [ ] **markdown-template** + `templatePath` set → renders that file's markdown.
+- [ ] markdown-template with **date-format tokens in the path** → resolves to a
+      dated file.
+- [ ] markdown-template body variables — `date`, `current-date`, `time`,
+      `current-time`, `journal-link` → each substitutes.
+- [ ] markdown-template `journal-link` with a **shift suffix** (e.g. `+1w`) → links
+      to the shifted entry.
+- [ ] markdown-template **"Supported variables" help** modal lists them.
 - [ ] **Today highlight — day** → today's day cell is marked `data-today`.
 - [ ] **Today highlight — week** → the week cell containing today is marked.
 - [ ] **Today highlight — month** → the current month cell is marked.
@@ -296,8 +428,22 @@ Setup: edit a view → add each block type via **Add block**.
 
 ### Toolbar items
 
-Setup: edit a view's toolbar block → add each item.
+Setup: edit a view's toolbar block → add each item. Five item types are registered:
+`button`, `shelf-selector`, `spacer`, `period-buttons`, `defined-navigation` — add
+every one at least once.
 
+- [ ] **Add item** picker lists all five types, including the three button presets
+      ("Pick date", "Open note", "Navigate by step").
+- [ ] **Reorder toolbar items** by drag → the new order survives a reload.
+- [ ] **Remove a toolbar item** → it disappears; siblings keep their order.
+- [ ] **spacer** → pushes the items after it to the far edge of the strip.
+- [ ] **defined-navigation**, direction **previous** → steps back at its configured
+      target.
+- [ ] defined-navigation, direction **next** → steps forward.
+- [ ] defined-navigation **target = active** → follows the active note's journal
+      rather than a fixed period.
+- [ ] defined-navigation targets **day / week / month / quarter / year / custom** →
+      each steps at that scale.
 - [ ] **button → pick-date** → click opens a date picker.
 - [ ] pick-date **day** level → selecting a day navigates to that day.
 - [ ] pick-date **week** level → selecting a week navigates to that week.
@@ -311,9 +457,21 @@ Setup: edit a view's toolbar block → add each item.
 - [ ] button **custom icon** → configured icon renders.
 - [ ] button **custom label** → configured label renders.
 - [ ] button **custom tooltip** → configured tooltip shows on hover.
+- [ ] button **mode = select-only** → clicking moves the displayed period but opens
+      nothing.
+- [ ] button **mode = navigate** → opens an existing entry; a date with no note does
+      nothing visible.
+- [ ] button **mode = create** → opens _or creates_ the entry.
+- [ ] button with **two or more levels** configured → clicking pops a menu to choose
+      the level instead of acting directly.
+- [ ] button **bound to a specific journal** → acts on that journal regardless of the
+      view's shelf scope.
 - [ ] **shelf-selector** dropdown → lists the available shelves.
 - [ ] **shelf-selector** selection → re-scopes the calendar to that shelf's
       journals.
+- [ ] shelf-selector selection **persists** across closing and reopening the view.
+- [ ] **Delete the selected shelf** → the selector falls back gracefully rather than
+      showing a dangling name.
 - [ ] **period-buttons — week** toggle → shows/hides the week level.
 - [ ] **period-buttons — month** toggle → shows/hides the month level.
 - [ ] **period-buttons — quarter** toggle → shows/hides the quarter level.
@@ -386,7 +544,16 @@ preview.
 - [ ] Row **link = month** → click navigates to the month entry.
 - [ ] Row **link = quarter** → click navigates to the quarter entry.
 - [ ] Row **link = year** → click navigates to the year entry.
+- [ ] Row **link = none** → the row renders as plain text, not a link.
+- [ ] Row variable **`{{start_date}}`** / **`{{end_date}}`** → substitute the
+      period's bounds (the default custom-interval rows use these).
 - [ ] Row **addDecorations on** → the journal's decorations show on the row.
+- [ ] Block-level **decorate whole block** on → decorations apply to the block as a
+      whole rather than per row.
+- [ ] Nav block **type = create** → prev/next cycle through periods whether or not a
+      note exists, and clicking creates.
+- [ ] Nav block **type = existing** → prev/next only reach periods that already have
+      notes.
 - [ ] Edit a row via its edit-row modal → change persists in the rendered block.
 
 ### calendar-timeline
@@ -398,6 +565,9 @@ preview.
 - [ ] timeline **weeks = left** → week column on the left.
 - [ ] timeline **weeks = right** → week column on the right.
 - [ ] timeline **weeks = none** → no week column.
+- [ ] timeline **hiddenWeekdays: [0, 6]** → those columns are hidden.
+- [ ] timeline **hiddenWeekdays** with an out-of-range entry → the valid entries
+      still apply, the block does not error.
 - [ ] **shelf** option → scopes the timeline to that shelf.
 
 ### Reference help
@@ -468,6 +638,22 @@ Setup: a linked note with frontmatter `rating: 5`.
 - [ ] **property number — less-than-or-equal** `5` → decorated.
 - [ ] **property number — greater-than** `4` → decorated.
 - [ ] **property number — greater-than-or-equal** `5` → decorated.
+- [ ] **property number — exists / does-not-exist** → decorated on presence/absence.
+
+### Property conditions (date)
+
+Setup: a linked note with frontmatter `reviewed: 2026-03-05`.
+
+- [ ] **property date — exists** → decorated when `reviewed` present.
+- [ ] **property date — does-not-exist** → decorated when absent.
+- [ ] **property date — equals** `2026-03-05` → decorated.
+- [ ] **property date — not-equals** → decorated when the date differs.
+- [ ] **property date — less-than** a later date → decorated.
+- [ ] **property date — less-than-or-equal** the same date → decorated.
+- [ ] **property date — greater-than** an earlier date → decorated.
+- [ ] **property date — greater-than-or-equal** the same date → decorated.
+- [ ] The condition editor offers a **date picker** for the value (the value type is
+      auto-derived from the vault's property registry, not chosen by hand).
 
 ### Property conditions (checkbox)
 
@@ -475,6 +661,8 @@ Setup: a linked note with frontmatter `done: true`.
 
 - [ ] **property checkbox — is-true** → decorated.
 - [ ] **property checkbox — is-false** → + set `done: false` → decorated.
+- [ ] **property checkbox — exists / does-not-exist** → decorated on
+      presence/absence.
 
 ### Condition combination
 
@@ -515,7 +703,11 @@ so every entry cell is styled. Swap the style per item.
 - [ ] **Color mode: transparent** → no fill.
 - [ ] **Color mode: theme** (by name) → uses the Obsidian theme color.
 - [ ] **Color mode: custom** (hex/rgb) → uses the literal color.
-- [ ] **Two styles stacked** → both apply, layered in order.
+- [ ] **corner color** → the corner dot uses the configured color.
+- [ ] **Two styles stacked** in one decoration → both apply, layered in order.
+- [ ] **Two separate decorations** whose conditions both match the same cell, each
+      setting a **background** → the first decoration in the list wins. Reorder them
+      and confirm the winner changes.
 
 ---
 
@@ -531,10 +723,14 @@ Setup: open the Journals settings tab.
 - [ ] **Views** block → click a view → opens its view edit subpage.
 - [ ] **Shelves** block → click a shelf → opens its shelf edit subpage.
 - [ ] **Commands** block → global command editor.
-- [ ] **Invalid name template** → field error shown (description slot), save
-      blocked.
-- [ ] **Bad date format** → field error, save blocked.
-- [ ] **Duplicate journal name** → field error, save blocked.
+- [ ] Journal subpage sections render in order: note-creation, templates, timeline,
+      sequence, frontmatter, shelf, commands, interval-block, decorations.
+- [ ] Back from a **view** and a **shelf** subpage → each returns to the dashboard
+      with the list scrolled where you left it.
+
+Field validation lives in §18 — it is one behavior class and testing it in one
+sitting is faster than rediscovering the pattern per screen.
+
 - [ ] **calendar-week** — change week-start day → calendar grids shift to the new
       first day.
 - [ ] **calendar-week** — change week-start day → week numbers recompute.
@@ -557,6 +753,9 @@ Setup: open the Journals settings tab.
 
 - [ ] **Open on startup** — + set startup journal = a Day journal; reload Obsidian
       → today's entry opens automatically on launch.
+- [ ] Startup journal = a **Month** (or Week/Quarter/Year/custom) journal → reload →
+      the current period's entry opens, stamped with the period's canonical anchor,
+      not today's exact date.
 - [ ] Open-on-startup does **not** re-fire on later layout changes within a
       session (only genuine launch).
 - [ ] - Rename the startup journal → reload → still opens (name reconciled).
@@ -566,6 +765,8 @@ Setup: open the Journals settings tab.
 - [ ] autoCreate scheduling does not double-fire across the midnight boundary.
 - [ ] **Auto-attach** — + manually create a note matching a journal's
       folder+name pattern within its timeline → journal frontmatter auto-added.
+- [ ] Auto-attach on **rename** — rename an unrelated note _into_ a matching
+      folder+name → it is attached the same as a fresh creation.
 - [ ] Auto-attach does **not** double-process a note the plugin itself just
       created (self-write guard, ~5s window).
 - [ ] Auto-attach leaves a note untouched when **multiple journals** could match
@@ -622,22 +823,228 @@ covered.
 - [ ] Change **global locale / week-start** → `calendar-timeline` blocks update to
       match.
 - [ ] Change **global locale / week-start** → week numbers recompute consistently.
-- [ ] **Large vault** (hundreds of journal notes) → calendar/timeline render &
-      navigate without noticeable lag.
+- [ ] **Large vault** — generate ≥1000 journal notes across ≥3 journals → the
+      calendar view paints within ~1s of opening, and a month step feels immediate
+      (no visible stall). Record the numbers in sign-off rather than judging "lag".
 - [ ] Note with **malformed frontmatter** → indexing does not crash.
 - [ ] Note with **malformed frontmatter** → other journals still index normally.
+- [ ] Note with **malformed `data.json`** (hand-corrupt one journal entry) → that
+      entry resets to defaults, the rest of the settings survive.
+
+---
+
+## 17. Opening: modes, modifiers, and menus
+
+Setup: a Day journal "Open" with a few existing entries; a calendar view, a
+`journal-nav` block, and a `journals-home` block all visible.
+
+### Click modifiers
+
+The same modifier map applies to every affordance below: **Ctrl/Cmd → new tab**,
+**Ctrl/Cmd+Alt → split**, **middle-click → new tab**, plain click → active pane.
+
+- [ ] **Calendar day cell** — Ctrl/Cmd+click → opens in a new tab.
+- [ ] Calendar day cell — **middle-click** → opens in a new tab.
+- [ ] Calendar day cell — Ctrl/Cmd+Alt+click → opens in a split.
+- [ ] **Week number / month / year header** cell → same modifier behavior.
+- [ ] **`journal-nav` row** → same modifier behavior.
+- [ ] **`journal-nav` prev / next arrows** → same modifier behavior.
+- [ ] **`journals-home` link** → same modifier behavior.
+- [ ] **Toolbar button** → same modifier behavior.
+- [ ] **Period badge** (period-buttons item) → same modifier behavior.
+- [ ] **Defined-navigation arrow** → same modifier behavior.
+
+### Context menus
+
+- [ ] **Right-click a calendar cell with a note** → native file menu appears.
+- [ ] That menu includes a **Delete** entry (appended by the plugin; Obsidian does
+      not guarantee one).
+- [ ] Deleting from that menu → the note goes to trash and the cell empties.
+- [ ] **Right-click a period badge** → same menu.
+- [ ] **Right-click a `journal-nav` row** → same menu.
+- [ ] Right-click a cell with **no** note → no menu / no crash.
+
+### Multi-journal disambiguation
+
+Setup: two Day journals whose entries land on the same date.
+
+- [ ] **Click** a date served by both → a centered suggest modal lists both.
+- [ ] Pick one → that journal's entry opens.
+- [ ] **Dismiss** the suggest modal (Esc) → nothing opens, no error notice.
+- [ ] Trigger the same date from a **command** or keyboard → centered suggest
+      (not the at-pointer menu).
+
+### URI handler (`obsidian://`)
+
+Covered by `uri-open`; walk manually only when investigating.
+
+- [ ] `journal=Open&date=today` → opens today's entry.
+- [ ] `type=day&date=2026-03-05` → opens that day via write-type targeting.
+- [ ] `date=+3d` / `-2w` / `+1m` / `+1q` / `-1y` → relative offsets resolve.
+- [ ] `mode=tab` / `split` / `window` → honored.
+- [ ] **Neither `journal` nor `type`** → error notice, no note created.
+- [ ] **Unknown write type** (`type=fortnight`) → error notice.
+- [ ] **Unreadable date** (`date=not-a-date`) → error notice.
+- [ ] **Unknown open mode** (`mode=sideways`) → error notice.
+- [ ] `journal=` a name that does not exist → error notice, not a silent no-op.
+
+---
+
+## 18. Error & recovery surfaces
+
+This is the class v3 has historically failed **silently** — an item passes only if
+the user is actually told. "Nothing happened" is a bug here, not a pass.
+
+### Flow failures reach the user
+
+Setup: journal "Err" whose template path points at a missing file.
+
+- [ ] Open today's entry from the **palette** → a failure notice appears.
+- [ ] Same failure from the **ribbon** → notice appears.
+- [ ] Same failure from a **calendar cell** click → notice appears.
+- [ ] Same failure from a **code block** link → notice appears.
+- [ ] **Cancelling** a confirm-creation prompt → _no_ error notice (a user cancel
+      is not a failure).
+- [ ] A command whose **timeline has ended** → either it is absent from the palette,
+      or running it explains why nothing opened. Never listed-but-silent.
+
+### Code-block errors
+
+- [ ] Code block with **malformed YAML** → an error panel says the options could not
+      be read; the note still renders.
+- [ ] Code block with a **wrong-typed option** (e.g. `mode: 42`) → schema error panel
+      or documented graceful degrade, not a blank block.
+- [ ] Code block with an **unrecognized option** → a warning names the ignored key
+      and the block still renders.
+- [ ] `journal-nav` in a note **not connected** to any journal → "not connected"
+      message, not an empty block.
+
+### View errors
+
+- [ ] Leave a view's tab open, **delete the view** → the tab shows a "view deleted"
+      panel, not a crash or a blank pane.
+- [ ] Hand-edit `data.json` to give a block an **unknown type** → that block shows an
+      unknown-block panel; sibling blocks still render.
+- [ ] Hand-edit a block's config to something **invalid** → config-error panel,
+      siblings unaffected.
+- [ ] A calendar block with **no journals at all** → "No journals yet".
+- [ ] A calendar block **scoped to a shelf** with no members → "No journals on this
+      shelf."
+- [ ] `markdown-template` pointing at a **missing file** → read-error message.
+
+### Settings load & sync
+
+- [ ] Hand-corrupt `data.json` **wholesale** → a notice explains the load failed and
+      the plugin disables itself; Obsidian does not crash.
+- [ ] Corrupt a **single collection entry** → only that entry resets to defaults, with
+      a console warning; other journals survive.
+- [ ] Edit `data.json` **externally** (simulate sync) → settings reload, commands
+      re-register, and the vault re-scans without a restart.
+- [ ] An external edit that is **invalid** → a reload-failed notice, previous
+      settings retained.
+- [ ] Change the **week start / locale preset** → a "reload required" banner appears
+      in settings.
+- [ ] **Dump logs** button → writes a `journal-log-*.md` note.
+- [ ] Dump logs with **no buffered logs** → an empty-state notice, no stray note.
+
+### Field validation
+
+Every one of these should block save and show the message in the field's own
+description slot — not a notice, not a silent revert.
+
+- [ ] Journal: **empty name**, **duplicate name**, **invalid name template**,
+      **bad date format**.
+- [ ] Journal name template with **no per-entry variable** → collision warning (all
+      entries would share one note).
+- [ ] Journal name template that is **not invertible** (function token, unknown
+      variable, or a clock variable) → warning that auto-attach cannot recover a
+      date from the filename.
+- [ ] Journal name template or date format containing **`/`** → the "move this into
+      the folder setting" nudge appears, and its apply-link works.
+- [ ] Date format or name template using **uppercase `W`/`WW`** → wrong-week warning
+      (ISO week is locale-independent; `ww` is the locale week).
+- [ ] Timeline **end = repeats** with **no start** set → warning that repeats need a
+      start to be bounded.
+- [ ] Shelf: **empty name**, **duplicate name**, **unchanged name**.
+- [ ] Command: **empty name**, **duplicate name within the same owner**.
+- [ ] Command: **show in ribbon on with no icon** → "pick an icon" error.
+- [ ] View: **empty name**, **unchanged name**.
+- [ ] Nav-block row: **no journal selected**, **empty template**.
+- [ ] Numbering: **anchor date required** when the mode needs one.
+- [ ] Bulk add: **folder not found**, **date format required**, **property name
+      required** when dating by property.
+- [ ] Theme color inputs: **invalid color value** → field error.
+
+---
+
+## 19. Appearance & accessibility
+
+No automated check can judge any of this. It is the reason a human runs this pass.
+
+### Theme & legibility
+
 - [ ] **Theme switch** light ↔ dark → decoration & calendar colors stay legible.
 - [ ] **Custom theme** applied → decoration & calendar colors stay legible.
+- [ ] Decoration **color mode: theme** under both light and dark → follows the theme.
+- [ ] Today vs. active cell styling stays distinguishable in both themes.
+
+### Keyboard
+
+- [ ] **Tab** through a calendar view → every interactive cell and toolbar control is
+      reachable.
+- [ ] Every focused control shows a **visible focus ring**. (Known open: calendar
+      cells are focusable with no ring — parity item 124.)
+- [ ] **Enter / Space** on a focused calendar cell → opens the entry.
+- [ ] Block and toolbar-item controls in the **view editor** are reachable without a
+      mouse. (Known open: they are hover-only — parity item 123.)
+- [ ] Modals trap focus and **Esc** closes them.
+
+### Screen reader / labels
+
+- [ ] Calendar cells announce a usable label (date + whether an entry exists).
+- [ ] Icon-only toolbar buttons announce their purpose.
+- [ ] The **shelf selector** announces the _selected shelf_, not a static label — its
+      visible text is data, not a name.
+
+### Mobile
+
+`manifest.json` sets `isDesktopOnly: false`, so mobile is a supported target.
+
+- [ ] Plugin loads on a **mobile/tablet** build.
+- [ ] Calendar view opens and renders at phone width.
+- [ ] Tapping a day cell opens the entry.
+- [ ] Settings dashboard and journal subpages are usable at phone width.
+- [ ] View-editor block/toolbar controls are reachable **without hover**.
+- [ ] Modals fit the viewport and can be dismissed.
+
+### Localization
+
+The plugin's UI language follows **Obsidian's** language setting; it is not
+selectable inside the plugin. 11 bundles ship (`de en es fr it ja ko pt ru uk zh`).
+
+- [ ] Switch Obsidian to a shipped language → plugin UI is translated.
+- [ ] Switch to a **regional variant** (e.g. `de-AT`) → falls back to the base
+      language, not to English.
+- [ ] Switch to an **unshipped** language → falls back to English, no blank strings
+      or raw message keys.
+- [ ] In a translated locale, long strings do not clip or overflow their controls.
+- [ ] Weekday and month names come from the **calendar locale**, and stay correct
+      when the UI language and calendar locale differ.
 
 ---
 
 ## Sign-off
 
-| Field                 | Value                             |
-| --------------------- | --------------------------------- |
-| Tester                |                                   |
-| Date                  |                                   |
-| OS / Obsidian version |                                   |
-| Theme                 |                                   |
-| Vault(s) tested       | fresh / v2-migrated / v1-migrated |
-| Bugs filed            |                                   |
+| Field                    | Value                                    |
+| ------------------------ | ---------------------------------------- |
+| Tester                   |                                          |
+| Date                     |                                          |
+| OS / Obsidian version    |                                          |
+| Theme(s)                 |                                          |
+| Vault(s) tested          | fresh / v1-migrated / real user snapshot |
+| Mobile build tested      | yes / no — device:                       |
+| UI language(s) tested    |                                          |
+| Large-vault note count   |                                          |
+| Large-vault paint / step | ms / ms                                  |
+| Sections skipped         |                                          |
+| Bugs filed               |                                          |
