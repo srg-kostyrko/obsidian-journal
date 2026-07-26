@@ -4,7 +4,7 @@ import { afterEach, beforeEach, describe, expect, it } from "vitest";
 
 import { Calendar, MonthPeriod, OpenInterval, WeekPeriod } from "@/calendar";
 import type { Period } from "@/calendar";
-import { date, installTestCalendar } from "@/calendar/testing";
+import { date, installTestCalendar, testCalendar } from "@/calendar/testing";
 import { provideInjectorOnApp } from "@/infrastructure/di";
 import { createTestContainer } from "@/infrastructure/di/testing";
 
@@ -15,7 +15,7 @@ function mount(
   calendar?: Calendar,
 ) {
   const container = createTestContainer();
-  container.register(Calendar).useValue(calendar ?? new Calendar());
+  container.register(Calendar).useValue(calendar ?? testCalendar());
 
   return render(CalendarWeekView, {
     props,
@@ -68,10 +68,9 @@ describe("CalendarWeekView", () => {
 
   describe("selection", () => {
     it("marks the selected week with data-selected", () => {
-      const calendar = new Calendar();
       const outerPeriod = MonthPeriod.containing(date("2025-03-15"));
       const selected = WeekPeriod.containing(date("2025-03-15"));
-      mount({ outerPeriod, selected }, calendar);
+      mount({ outerPeriod, selected });
 
       const anchor = selected.anchor.toAnchor();
       const selectedCell = screen.getAllByTestId("week-cell").find((c) => c.dataset.anchor === anchor);
@@ -104,14 +103,8 @@ describe("CalendarWeekView", () => {
       const outerPeriod = MonthPeriod.containing(date("2025-03-15"));
       mount({ outerPeriod, selected: null });
 
-      const allCells = screen.getAllByTestId("week-cell");
-      const weekWith15 = allCells.find((c) => (c.textContent ?? "").includes("15"));
-      const cellText = weekWith15?.textContent ?? "";
-      // Verify the week containing Mar 15 spans from the first day of the week to the last day
-      // (not from the anchor/representative day to the last day)
-      expect(cellText).toEqual(expect.stringMatching(/Mar \d+[\s\n]+–[\s\n]+Mar 15/));
-      // Specifically, it should start at 9 or earlier (first day of the week), not 13 (anchor day)
-      expect(cellText).not.toMatch(/Mar 1[3-6][\s\n]+–[\s\n]+Mar 15/);
+      const texts = screen.getAllByTestId("week-cell").map((c) => (c.textContent ?? "").replaceAll(/\s+/g, " "));
+      expect(texts.some((t) => t.includes("Mar 10 – Mar 16"))).toBe(true);
     });
   });
 });

@@ -4,7 +4,7 @@ import { afterEach, beforeEach, describe, expect, it } from "vitest";
 
 import { Calendar, DecadePeriod, OpenInterval, YearPeriod } from "@/calendar";
 import type { Period } from "@/calendar";
-import { date, installTestCalendar } from "@/calendar/testing";
+import { date, installTestCalendar, testCalendar } from "@/calendar/testing";
 import { provideInjectorOnApp } from "@/infrastructure/di";
 import { createTestContainer } from "@/infrastructure/di/testing";
 
@@ -12,7 +12,7 @@ import CalendarDecadeView from "./CalendarDecadeView.vue";
 
 function mount(props: { outerPeriod: DecadePeriod; selected: Period | null; bounds?: OpenInterval }) {
   const container = createTestContainer();
-  container.register(Calendar).useValue(new Calendar());
+  container.register(Calendar).useValue(testCalendar());
 
   return render(CalendarDecadeView, {
     props,

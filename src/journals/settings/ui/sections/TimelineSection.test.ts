@@ -5,7 +5,7 @@ import { afterEach, beforeEach, describe, expect, it } from "vitest";
 import { reactive } from "vue";
 
 import { Calendar, DayPeriod, type AnchorString, type OpenInterval } from "@/calendar";
-import { date, installTestCalendar } from "@/calendar/testing";
+import { date, installTestCalendar, testCalendar } from "@/calendar/testing";
 import { m } from "@/i18n";
 import { Container, provideInjectorOnApp } from "@/infrastructure/di";
 import { InputSuggestService, NotesService, TemplaterService } from "@/infrastructure/host";
@@ -62,7 +62,7 @@ function mount(overrides: Partial<JournalConfig> = {}) {
   container.register(NotesService).useValue(new FakeNotesService() as unknown as NotesService);
   container.register(InputSuggestService).useValue(new FakeInputSuggestService() as unknown as InputSuggestService);
   container.register(ModalService).useValue(fakeModalService as unknown as ModalService);
-  container.register(Calendar).useValue(new Calendar());
+  container.register(Calendar).useValue(testCalendar());
   container
     .register(AutoCreateService)
     .useValue({ createCurrent: () => Promise.resolve() } as unknown as AutoCreateService);

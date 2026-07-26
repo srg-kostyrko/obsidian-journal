@@ -3,7 +3,7 @@ import { cleanup, render, screen } from "@testing-library/vue";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
 import { Calendar, DayPeriod, type OpenInterval, type Period } from "@/calendar";
-import { date, installTestCalendar } from "@/calendar/testing";
+import { date, installTestCalendar, testCalendar } from "@/calendar/testing";
 import { m } from "@/i18n";
 import { provideInjectorOnApp } from "@/infrastructure/di";
 import { createTestContainer } from "@/infrastructure/di/testing";
@@ -26,7 +26,7 @@ interface MountProps {
 function mount(props: MountProps) {
   const container = createTestContainer();
   const fakeService = new FakeModalService();
-  container.register(Calendar).useValue(new Calendar());
+  container.register(Calendar).useValue(testCalendar());
   container.register(ModalService).useValue(fakeService as unknown as ModalService);
   return {
     fakeService,

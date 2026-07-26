@@ -2,9 +2,9 @@ import userEvent from "@testing-library/user-event";
 import { cleanup, render, screen } from "@testing-library/vue";
 import { afterEach, beforeEach, describe, expect, it } from "vitest";
 
-import { Calendar, DayPeriod, MonthPeriod, OpenInterval } from "@/calendar";
+import { DayPeriod, MonthPeriod, OpenInterval } from "@/calendar";
 import type { Period } from "@/calendar";
-import { date, installTestCalendar } from "@/calendar/testing";
+import { date, installTestCalendar, testCalendar } from "@/calendar/testing";
 
 import CalendarMonthView from "./CalendarMonthView.vue";
 
@@ -13,8 +13,7 @@ function mount(props: { outerPeriod: MonthPeriod; selected: Period | null; bound
 }
 
 function setWeek(dow: number, doy: number): void {
-  const calendar = new Calendar();
-  calendar.applyWeekConfig({ dow, doy }, { propagateToGlobal: false });
+  testCalendar().applyWeekConfig({ dow, doy }, { propagateToGlobal: false });
 }
 
 describe("CalendarMonthView", () => {
