@@ -29,7 +29,7 @@ const entries = computed<readonly [string, ShelfConfig][]>(() =>
     .map((shelf): [string, ShelfConfig] => [shelf.name, shelf]),
 );
 
-const expanded = ref(true);
+const expanded = ref(entries.value.length > 0);
 
 function add(): void {
   void flows.invoke(EditShelfNameFlow, {}).tap(({ shelfName }) => {

@@ -50,6 +50,10 @@ function mount(container: Container) {
   });
 }
 
+async function expand(): Promise<void> {
+  await userEvent.click(screen.getByText(m.shelf_dashboard_section_title()));
+}
+
 describe("ShelvesDashboardBlock", () => {
   it("explains what a shelf is even once shelves exist", async () => {
     const { container } = await setup({ Work: { name: "Work", journals: ["daily"] } });
@@ -57,9 +61,16 @@ describe("ShelvesDashboardBlock", () => {
     expect(screen.getByText(m.shelf_dashboard_description())).toBeTruthy();
   });
 
+  it("starts collapsed when no shelves exist", async () => {
+    const { container } = await setup();
+    mount(container);
+    expect(screen.queryByText(m.shelf_dashboard_description())).toBeNull();
+  });
+
   it("shows the empty state when no shelves exist", async () => {
     const { container } = await setup();
     mount(container);
+    await expand();
     expect(screen.getByText(m.shelf_dashboard_empty())).toBeTruthy();
   });
 
