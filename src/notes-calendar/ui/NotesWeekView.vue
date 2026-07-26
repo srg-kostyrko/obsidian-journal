@@ -40,9 +40,11 @@ const days = computed(() =>
     .filter((d) => !hiddenWeekdays.value.has(Number(d.start.format("d")))),
 );
 const weekdayNames = computed(() => days.value.map((d) => d.start.format("ddd")));
-const monthPeriod = computed(() => MonthPeriod.containing(rawWeek.value.anchor));
-const quarterPeriod = computed(() => QuarterPeriod.containing(rawWeek.value.anchor));
-const yearPeriod = computed(() => YearPeriod.containing(rawWeek.value.anchor));
+// A week belongs to the period that owns it, which is the representative day's — not the
+// week start's, which for a cross-year week sits in the previous month and year.
+const monthPeriod = computed(() => MonthPeriod.containing(rawWeek.value.representative));
+const quarterPeriod = computed(() => QuarterPeriod.containing(rawWeek.value.representative));
+const yearPeriod = computed(() => YearPeriod.containing(rawWeek.value.representative));
 const weeksPos = computed(() => props.weeks ?? "left");
 const showWeekNumber = computed(() => weeksPos.value !== "none");
 const showQuarter = computed(() => scope.quarter.value.length > 0);

@@ -185,6 +185,15 @@ export class CycleService {
     );
   }
 
+  representativeOf(name: string, anchor: AnchorString): Option<CalendarDate> {
+    return this.#cycleFor(name).map((cycle) =>
+      match(cycle)
+        .with({ kind: "fixed" }, (c) => periodOfKind(c.period, CalendarDate.fromAnchor(anchor)).representative)
+        .with({ kind: "custom" }, () => CalendarDate.fromAnchor(anchor))
+        .exhaustive(),
+    );
+  }
+
   endOf(name: string, anchor: AnchorString): Option<CalendarDate> {
     return this.#cycleFor(name).map((cycle) =>
       match(cycle)

@@ -46,6 +46,7 @@ function customRelativeDate(name: string, cycle: CycleService, refDate: AnchorSt
 export function buildNavRowContext(inputs: NavRowContextInputs): TemplateContext {
   const { journal, refDate, entry, cycle, numbering, today } = inputs;
   const refCalendarDate = CalendarDate.fromAnchor(refDate);
+  const renderDate = cycle.representativeOf(journal.name, refDate).getOr(refCalendarDate);
   const startDate = cycle.startOf(journal.name, refDate).getOr(refCalendarDate);
   const endDate = cycle.endOf(journal.name, refDate).getOr(refCalendarDate);
   const periodKind = fixedPeriodKindFor(journal.write);
@@ -55,7 +56,7 @@ export function buildNavRowContext(inputs: NavRowContextInputs): TemplateContext
       : relativeDate(periodKind, refDate, today);
 
   let context = TemplateContext.empty()
-    .date("date", refCalendarDate, journal.dateFormat)
+    .date("date", renderDate, journal.dateFormat)
     .date("start_date", startDate, journal.dateFormat)
     .date("end_date", endDate, journal.dateFormat)
     .string("relative_date", relative)

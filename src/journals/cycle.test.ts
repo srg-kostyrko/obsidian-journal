@@ -107,6 +107,43 @@ describe("CycleService", () => {
     });
   });
 
+  describe("representativeOf", () => {
+    it("returns the week's representative day for a weekly journal", () => {
+      const c = buildContainer({ weekly: fixedJournal("weekly", { type: "week" }) });
+
+      const result = c.resolve(CycleService).representativeOf("weekly", "2025-03-10" as AnchorString);
+
+      expect(unwrap(result).toAnchor()).toBe("2025-03-13");
+    });
+
+    it("returns the anchor itself for a monthly journal", () => {
+      const c = buildContainer({ monthly: fixedJournal("monthly", { type: "month" }) });
+
+      const result = c.resolve(CycleService).representativeOf("monthly", "2025-03-01" as AnchorString);
+
+      expect(unwrap(result).toAnchor()).toBe("2025-03-01");
+    });
+
+    it("returns the interval start for a custom journal", () => {
+      const c = buildContainer({ sprints: customJournal("sprints", "week", 2, "2024-01-01") });
+
+      const result = c.resolve(CycleService).representativeOf("sprints", "2024-01-01" as AnchorString);
+
+      expect(unwrap(result).toAnchor()).toBe("2024-01-01");
+    });
+
+    it("returns none for an unknown journal", () => {
+      const c = buildContainer({});
+
+      expect(
+        c
+          .resolve(CycleService)
+          .representativeOf("missing", "2025-03-10" as AnchorString)
+          .isNone(),
+      ).toBe(true);
+    });
+  });
+
   describe("nextAnchor", () => {
     it("advances to the following week anchor for fixed weekly", () => {
       const c = buildContainer({ w: fixedJournal("w", { type: "week" }) });

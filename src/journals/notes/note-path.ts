@@ -124,7 +124,11 @@ export class NotePathService {
   }
 
   contextFor(config: JournalConfig, metadata: JournalMetadata): TemplateContext {
-    const dateValue = CalendarDate.fromAnchor(metadata.anchor);
+    // {{date}} renders the period's representative day, which for weeks is the day whose
+    // calendar year equals the week-year. The anchor is the stored identity, not the render date.
+    const dateValue = this.#cycle
+      .representativeOf(config.name, metadata.anchor)
+      .getOr(CalendarDate.fromAnchor(metadata.anchor));
     const startOpt = this.#cycle.startOf(config.name, metadata.anchor);
     const endOpt =
       metadata.endDate === undefined
