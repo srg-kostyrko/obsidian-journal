@@ -53,12 +53,14 @@ const hover = useModifierHoverPreview();
 </template>
 
 <style scoped>
-/* Actionable cells open a note on click; inactive (non-actionable) cells offer nothing. */
+/* Actionable cells open a note on click; inactive (non-actionable) cells offer nothing — they
+   keep the plain cursor rather than not-allowed, since they are decoration, not disabled
+   controls (same reasoning as the inert period buttons in the toolbar). */
 .notes-calendar-cell {
   cursor: pointer;
 }
 .notes-calendar-cell[data-inactive] {
-  cursor: not-allowed;
+  cursor: default;
 }
 /* A cell takes a tab stop, so it has to show where the keyboard is. v2's cell was a real
    <button> and got this from Obsidian for free; a span with tabindex does not, which left a
