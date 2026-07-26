@@ -2,6 +2,12 @@ import { moment } from "obsidian";
 
 export const CUSTOM_LOCALE = "custom-journal-locale";
 
+// A never-written clone of the locale as it stood before this plugin first touched it.
+// applyWeekConfig with propagateToGlobal rewrites the global locale's week, and moment's locale
+// registry outlives a plugin reload — so reading the locale's own week back off the global locale
+// would return whatever the user last propagated. This keeps the real default recoverable.
+const PRISTINE_LOCALE = "custom-journal-locale-pristine";
+
 export interface WeekConfig {
   readonly dow: number;
   readonly doy: number;
@@ -22,12 +28,17 @@ export class Calendar {
     this.#globalLocale = systemLocale;
 
     const data = moment.localeData();
-    this.#initial = { dow: data.firstDayOfWeek(), doy: data.firstDayOfYear() };
+    // moment.defineLocale mutates `config.abbr` on the object passed in; clone at each use so
+    // we don't corrupt the global locale's _config.abbr (which breaks moment.locale()).
+    const sourceConfig = (data as unknown as { _config: moment.LocaleSpecification })._config;
+
+    if (!moment.locales().includes(PRISTINE_LOCALE)) {
+      moment.defineLocale(PRISTINE_LOCALE, { ...sourceConfig });
+    }
+    const pristine = moment.localeData(PRISTINE_LOCALE);
+    this.#initial = { dow: pristine.firstDayOfWeek(), doy: pristine.firstDayOfYear() };
 
     if (!moment.locales().includes(CUSTOM_LOCALE)) {
-      const sourceConfig = (data as unknown as { _config: moment.LocaleSpecification })._config;
-      // moment.defineLocale mutates `config.abbr` on the object passed in; clone so
-      // we don't corrupt the global locale's _config.abbr (which breaks moment.locale()).
       moment.defineLocale(CUSTOM_LOCALE, { ...sourceConfig });
     }
     moment.updateLocale(CUSTOM_LOCALE, { week: this.#initial });

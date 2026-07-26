@@ -76,6 +76,39 @@ describe("Calendar", () => {
     });
   });
 
+  // A propagated week rewrites the global locale, and moment's locale registry outlives a plugin
+  // reload. An instance built afterwards must still know what the locale's own week was.
+  describe("locale default after a propagated week", () => {
+    it("reports the true locale default from an instance built after the propagation", () => {
+      const first = new Calendar();
+      first.applyWeekConfig({ dow: 1, doy: 4 }, { propagateToGlobal: true });
+
+      const second = new Calendar();
+
+      expect(second.localeWeek()).toEqual(priorGlobal);
+    });
+
+    it("restores the true locale default onto the global locale from that later instance", () => {
+      const first = new Calendar();
+      first.applyWeekConfig({ dow: 1, doy: 4 }, { propagateToGlobal: true });
+
+      const second = new Calendar();
+      second.applyWeekConfig("locale", { propagateToGlobal: false });
+
+      expect(globalWeek()).toEqual(priorGlobal);
+    });
+
+    it("restores the true locale default onto the custom locale from that later instance", () => {
+      const first = new Calendar();
+      first.applyWeekConfig({ dow: 1, doy: 4 }, { propagateToGlobal: true });
+
+      const second = new Calendar();
+      second.applyWeekConfig("locale", { propagateToGlobal: false });
+
+      expect(customWeek()).toEqual(priorGlobal);
+    });
+  });
+
   describe("weekdays", () => {
     it("returns the 7-element localized weekday array from the custom locale, indexed Sunday-first", () => {
       const calendar = new Calendar();
