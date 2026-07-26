@@ -103,30 +103,30 @@ Cfg. After each change, create a _new_ entry to observe the effect. Existing not
 should be untouched — except by the start/end-date toggles, which deliberately
 rewrite every connected note (see the item below).
 
-- [ ] **Name template** with `{{date}}` → filename is the formatted date.
-- [ ] **Name template** with `{{journal_name}}` → filename includes "Cfg".
-- [ ] **Name template** with `{{index}}` — + numbering on (§4) → filename includes
+- [x] **Name template** with `{{date}}` → filename is the formatted date.
+- [x] **Name template** with `{{journal_name}}` → filename includes "Cfg".
+- [x] **Name template** with `{{index}}` — + numbering on (§4) → filename includes
       the number.
-- [ ] **Name template** with a **shift** — `{{date+1d}}`, `{{date-2w}}` → the
+- [x] **Name template** with a **shift** — `{{date+1d}}`, `{{date-2w}}` → the
       filename uses the shifted date (units `y q m w d h`).
-- [ ] **Name template** with a **boundary** — `{{date<startOf=week>}}`,
+- [x] **Name template** with a **boundary** — `{{date<startOf=week>}}`,
       `{{date<endOf=month>}}` → snaps to that boundary.
-- [ ] Boundary unit **`decade`** → snaps to the decade's first/last day.
+- [x] Boundary unit **`decade`** → snaps to the decade's first/last day.
 - [ ] Shift **and** boundary together — `{{date+1w<endOf=month>:YYYY-MM-DD}}` → the
       shift applies first, then the boundary.
-- [ ] **Unknown boundary unit** — `{{date<startOf=fortnight>}}` → left as-is /
+- [x] **Unknown boundary unit** — `{{date<startOf=fortnight>}}` → left as-is /
       degrades, no crash.
-- [ ] **Name template** with an inline **format** — `{{date:YYYY}}` → uses that
+- [x] **Name template** with an inline **format** — `{{date:YYYY}}` → uses that
       format instead of the journal's.
-- [ ] **Template body** with `{{journal_link(<journal name>)}}` → resolves to the
+- [x] **Template body** with `{{journal_link(<journal name>)}}` → resolves to the
       target journal's note path.
 - [ ] `{{journal_link(...)}}` whose target is **outside its timeline** → the token is
       left unresolved rather than producing a broken link.
-- [ ] **Date format** change (e.g. `DD.MM.YYYY`) → new notes use the new format.
-- [ ] **Date format** change → existing notes keep their old names (no rewrite).
-- [ ] **Folder** set to `Journals/Cfg` → new note created there.
-- [ ] **Folder** with a not-yet-existing nested path → folders auto-created.
-- [ ] **Template** — + add `templates/daily template.md` → new note's body is the
+- [x] **Date format** change (e.g. `DD.MM.YYYY`) → new notes use the new format.
+- [x] **Date format** change → existing notes keep their old names (no rewrite).
+- [x] **Folder** set to `Journals/Cfg` → new note created there.
+- [x] **Folder** with a not-yet-existing nested path → folders auto-created.
+- [x] **Template** — + add `templates/daily template.md` → new note's body is the
       template content.
 - [ ] **Multiple templates** listed → the _first existing, non-empty_ one wins; the
       rest are a fallback chain, not appended.
@@ -137,11 +137,11 @@ rewrite every connected note (see the item below).
       `<% tp.* %>` command → the command is evaluated in the new note.
 - [ ] **Templater cursor jump** — + template has a cursor marker → cursor jumps
       to it after creation.
-- [ ] **confirmCreation = on** → navigating to a missing entry prompts before
+- [x] **confirmCreation = on** → navigating to a missing entry prompts before
       creating.
-- [ ] **confirmCreation = on**, then **cancel** the prompt → no note is created and
+- [x] **confirmCreation = on**, then **cancel** the prompt → no note is created and
       no error is reported.
-- [ ] **confirmCreation = off** → missing entry created silently.
+- [x] **confirmCreation = off** → missing entry created silently.
 - [ ] **Frontmatter date field** renamed → new note's frontmatter uses the new
       key.
 - [ ] **Start/end date fields** on a **Day** journal → both written with the
