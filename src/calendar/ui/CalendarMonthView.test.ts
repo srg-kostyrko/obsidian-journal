@@ -5,31 +5,16 @@ import { afterEach, beforeEach, describe, expect, it } from "vitest";
 import { Calendar, DayPeriod, MonthPeriod, OpenInterval } from "@/calendar";
 import type { Period } from "@/calendar";
 import { date, installTestCalendar } from "@/calendar/testing";
-import { provideInjectorOnApp } from "@/infrastructure/di";
-import { createTestContainer } from "@/infrastructure/di/testing";
 
 import CalendarMonthView from "./CalendarMonthView.vue";
 
-function mount(
-  props: { outerPeriod: MonthPeriod; selected: Period | null; bounds?: OpenInterval },
-  calendarOverride?: Calendar,
-) {
-  const container = createTestContainer();
-  const calendar = calendarOverride ?? new Calendar();
-  container.register(Calendar).useValue(calendar);
+function mount(props: { outerPeriod: MonthPeriod; selected: Period | null; bounds?: OpenInterval }) {
+  return render(CalendarMonthView, { props });
+}
 
-  return render(CalendarMonthView, {
-    props,
-    global: {
-      plugins: [
-        {
-          install(app) {
-            provideInjectorOnApp(app, container);
-          },
-        },
-      ],
-    },
-  });
+function setWeek(dow: number, doy: number): void {
+  const calendar = new Calendar();
+  calendar.applyWeekConfig({ dow, doy }, { propagateToGlobal: false });
 }
 
 describe("CalendarMonthView", () => {
@@ -85,21 +70,41 @@ describe("CalendarMonthView", () => {
       mount({ outerPeriod, selected: null, bounds });
 
       const cellForMay1 = screen.getAllByTestId("month-cell").find((c) => c.dataset.anchor === "2024-05-01") as
-        | HTMLButtonElement
-        | undefined;
+        HTMLButtonElement | undefined;
       expect(cellForMay1?.disabled).toBe(true);
     });
   });
 
   describe("weekday header", () => {
-    it("respects Calendar dow configuration", () => {
+    it("orders the header row from the locale's first day of week", () => {
       const outerPeriod = MonthPeriod.containing(date("2024-05-15"));
-      const calendar = new Calendar();
-      calendar.applyWeekConfig({ dow: 0, doy: 6 }, { propagateToGlobal: false });
-      mount({ outerPeriod, selected: null }, calendar);
+      setWeek(1, 4);
+      mount({ outerPeriod, selected: null });
 
-      const firstHeader = screen.getAllByTestId("weekday-header")[0];
-      expect(firstHeader.textContent).toMatch(/Sun/i);
+      const headers = screen.getAllByTestId("weekday-header").map((h) => h.textContent);
+      expect(headers).toEqual(["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"]);
+    });
+
+    it("starts the header row on Sunday when the week starts on Sunday", () => {
+      const outerPeriod = MonthPeriod.containing(date("2024-05-15"));
+      setWeek(0, 6);
+      mount({ outerPeriod, selected: null });
+
+      const headers = screen.getAllByTestId("weekday-header").map((h) => h.textContent);
+      expect(headers).toEqual(["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"]);
+    });
+
+    it("labels each header with the weekday of the cells in its column", () => {
+      const outerPeriod = MonthPeriod.containing(date("2024-05-15"));
+      setWeek(1, 4);
+      mount({ outerPeriod, selected: null });
+
+      const headers = screen.getAllByTestId("weekday-header").map((h) => h.textContent);
+      const firstWeek = screen
+        .getAllByTestId("month-cell")
+        .slice(0, 7)
+        .map((c) => date(c.dataset.anchor!).format("ddd"));
+      expect(headers).toEqual(firstWeek);
     });
   });
 });

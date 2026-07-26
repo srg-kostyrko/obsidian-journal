@@ -1,9 +1,8 @@
 <script setup lang="ts">
 import { computed, toRaw } from "vue";
 
-import { Calendar, CalendarDate, DayPeriod } from "@/calendar";
+import { CalendarDate, DayPeriod } from "@/calendar";
 import type { MonthPeriod, OpenInterval, Period } from "@/calendar";
-import { useService } from "@/infrastructure/di";
 import UiButton from "@/ui/UiButton.vue";
 
 import CalendarGrid from "./CalendarGrid.vue";
@@ -17,13 +16,14 @@ const props = defineProps<{
 
 const emit = defineEmits<{ select: [cell: DayPeriod, event: MouseEvent] }>();
 
-const calendar = useService(Calendar);
-const weekdays = computed(() => calendar.weekdays());
-
 const cells = computed(() => {
   const month = toRaw(props.outerPeriod);
   return [...month.weeks()].flatMap((w) => [...w.days()].map((d) => DayPeriod.containing(d)));
 });
+
+// Deriving the header from the grid's own first week keeps the two in step; a
+// separately-rotated weekday list can drift from the cells it labels.
+const weekdays = computed(() => cells.value.slice(0, 7).map((d) => d.start.format("ddd")));
 
 const today = CalendarDate.today();
 
@@ -40,13 +40,9 @@ const grid = useCalendarGrid({
 <template>
   <CalendarGrid :columns="7">
     <div class="calendar-month-view__weekdays">
-      <span
-        v-for="(day, i) in weekdays"
-        :key="day"
-        class="calendar-month-view__weekday"
-        :data-testid="i === 0 ? 'weekday-header' : undefined"
-        >{{ day.slice(0, 3) }}</span
-      >
+      <span v-for="day in weekdays" :key="day" class="calendar-month-view__weekday" data-testid="weekday-header">{{
+        day
+      }}</span>
     </div>
     <UiButton
       v-for="cell in grid"
