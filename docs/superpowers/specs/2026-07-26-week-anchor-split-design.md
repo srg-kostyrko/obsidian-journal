@@ -140,8 +140,16 @@ December 2025. A week belongs to the year that owns it, so this call site
 moves to `representative` and its rendered output does not change.
 
 `descend.ts:8` and `DatePickerModal.vue:64,106,110` use the anchor as a
-navigation reference. Any day inside the period locates the same next-view
-window, so both are unaffected either way; they stay on `anchor`.
+navigation reference. They stay on `anchor`.
+
+> **Correction (post-implementation).** The original text here claimed "any
+> day inside the period locates the same next-view window, so both are
+> unaffected either way". That is false at a month boundary: `outerPeriod`
+> for a week is `MonthPeriod.containing(refDate)`, so opening the picker on
+> the cross-year week Mon 2025-12-29 – Sun 2026-01-04 now titles "December
+> 2025" rather than "January 2026", and `use-follow-active-date.ts:39`
+> scrolls the notes calendar likewise. Both are benign — the week appears in
+> both months' grids — but the reasoning that dismissed them was wrong.
 
 ### Journals layer
 
@@ -158,12 +166,24 @@ render date is its start — so custom journals are byte-identical. It
 returns `Option.none()` for an unknown journal name, matching the other
 `CycleService` lookups.
 
-Two sites bind `{{date}}` from real journal data, and both repoint to it:
+> **Correction (post-implementation).** There are **three** such sites, not
+> two. The third — `MarkdownTemplateBlock.vue:50`, which binds `{{date}}`
+> from the active entry's anchor — was missed here and regressed until the
+> final review caught it. The root error was auditing the wrong axis:
+> enumerating `.anchor` reads on `Period` objects rather than `{{date}}`
+> _bindings_. The correct audit is `TemplateContext.empty()` call sites —
+> five in `src/`, of which two (`note-path.ts:33`,
+> `use-invertibility-check.ts:32`) are synthetic probes and three take real
+> journal data. One grep would have enumerated them exactly.
+
+Three sites bind `{{date}}` from real journal data, and all repoint to it:
 
 - `note-path.ts:129` (`contextFor`) — filenames, folders, note bodies
 - `nav-row-context.ts:58` (`buildNavRowContext`) — nav code blocks
+- `MarkdownTemplateBlock.vue:50` — the markdown-template view block, bound
+  from the active entry's anchor
 
-`{{start_date}}` / `{{end_date}}` need no change at either site: they come
+`{{start_date}}` / `{{end_date}}` need no change at the first two sites: they come
 from `cycle.startOf` / `cycle.endOf`, which take the anchor as _input_, and
 under the new model `startOf(weekStart)` is the anchor itself.
 
