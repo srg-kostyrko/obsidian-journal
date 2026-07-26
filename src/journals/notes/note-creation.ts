@@ -17,6 +17,7 @@ import { FrontmatterService } from "../frontmatter";
 import { JournalsIndex } from "../journals-index";
 import { JournalsRepository } from "../repository";
 
+import { AnchorOccupiedError } from "./errors";
 import { NotePathService } from "./note-path";
 import { SelfWriteGuard } from "./self-write-guard";
 import { TemplateContentService } from "./template-content";
@@ -33,6 +34,7 @@ export type NoteCreationError =
   | NoteWriteError
   | NoteNotFoundError
   | FrontmatterError
+  | AnchorOccupiedError
   | UserAborted;
 
 export class NoteCreationService {
@@ -108,6 +110,16 @@ export class NoteCreationService {
     const mutator = mutatorResult.value;
 
     return attempt.in(this, async function* () {
+      // One note per anchor: a stray file whose name parses to a date inside an occupied
+      // period must not claim that period's slot, or the anchor ends up with two notes and
+      // the index keeps only one as its owner. The occupant's file must still be there —
+      // a connect that just freed the slot by renaming or trashing its note leaves a stale
+      // entry behind until the vault events land.
+      const occupant = this.#index.entryByAnchor(name, metadata.anchor);
+      if (occupant.isSome() && occupant.value.path !== path && this.#notes.find(occupant.value.path).isSome()) {
+        return yield* new Err(new AnchorOccupiedError(name, metadata.anchor, occupant.value.path));
+      }
+
       // Emptiness must be judged against the note's original body: writing frontmatter fills
       // the file (Obsidian embeds a `---` block), which would otherwise make a freshly
       // link-created note look non-empty and skip its template. Render into the empty note

@@ -113,6 +113,10 @@ export class NoteConnectionService {
         yield* target === occupant.value.path
           ? this.#notes.delete(occupant.value.path)
           : this.disconnect(occupant.value.path);
+        // The slot is free as of now, but the index only learns that once the vault's
+        // delete/metadata events land. Drop the stale entry so the attach below (which
+        // refuses an occupied anchor) sees the same truth this branch just established.
+        this.#index.unregister(occupant.value.path);
       }
 
       if (target !== path) yield* this.#notes.rename(path, target);

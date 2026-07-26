@@ -27,6 +27,7 @@ import { NumberingService } from "../numbering";
 import { JournalsRepository } from "../repository";
 import { fakeRepo, fixedJournal } from "../testing";
 
+import { AnchorOccupiedError } from "./errors";
 import { NoteCreationService } from "./note-creation";
 import { NotePathService } from "./note-path";
 import { SelfWriteGuard } from "./self-write-guard";
@@ -214,6 +215,51 @@ describe("NoteCreationService.attachNote", () => {
     expect(result.isOk()).toBe(true);
     const read = await notes.read("2026-05-19.md" as VaultPath);
     expect(read.isOk() && read.value).toBe("body");
+  });
+
+  it("refuses to attach when another existing note already holds the anchor", async () => {
+    const repo = fakeRepo({ daily: fixedJournal("daily", { type: "day" }) });
+    const notes = new FakeNotesService();
+    notes.seed("2026-05-19.md" as VaultPath, "the incumbent");
+    notes.seed("stray.md" as VaultPath, "");
+    const container = build(repo, notes, new FakeModalService());
+    container
+      .resolve(JournalsIndex)
+      .register({ journalName: "daily", anchor: meta.anchor, path: "2026-05-19.md" as VaultPath });
+
+    const result = await container.resolve(NoteCreationService).attachNote("daily", "stray.md" as VaultPath, meta);
+
+    expect(result.isErr() && result.error instanceof AnchorOccupiedError).toBe(true);
+  });
+
+  it("leaves the stray note's frontmatter untouched when the anchor is occupied", async () => {
+    const repo = fakeRepo({ daily: fixedJournal("daily", { type: "day" }) });
+    const notes = new FakeNotesService();
+    notes.seed("2026-05-19.md" as VaultPath, "the incumbent");
+    notes.seed("stray.md" as VaultPath, "");
+    const container = build(repo, notes, new FakeModalService());
+    container
+      .resolve(JournalsIndex)
+      .register({ journalName: "daily", anchor: meta.anchor, path: "2026-05-19.md" as VaultPath });
+
+    await container.resolve(NoteCreationService).attachNote("daily", "stray.md" as VaultPath, meta);
+
+    const read = await notes.read("stray.md" as VaultPath);
+    expect(read.isOk() && read.value).toBe("");
+  });
+
+  it("attaches when the anchor's indexed note no longer exists in the vault", async () => {
+    const repo = fakeRepo({ daily: fixedJournal("daily", { type: "day" }) });
+    const notes = new FakeNotesService();
+    notes.seed("stray.md" as VaultPath, "");
+    const container = build(repo, notes, new FakeModalService());
+    container
+      .resolve(JournalsIndex)
+      .register({ journalName: "daily", anchor: meta.anchor, path: "Archive/gone.md" as VaultPath });
+
+    const result = await container.resolve(NoteCreationService).attachNote("daily", "stray.md" as VaultPath, meta);
+
+    expect(result.isOk()).toBe(true);
   });
 
   it("applies the template to an empty note even though attaching frontmatter fills the file body", async () => {
