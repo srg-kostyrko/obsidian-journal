@@ -57,7 +57,8 @@ and yields the colliding pair as a by-product.
 
 ### Window
 
-40 consecutive periods, starting at today's anchor.
+Up to 40 consecutive periods from the walk's origin, cut short at the journal's
+timeline end.
 
 That covers every realistic collapse: a month boundary repeats after 2 day-periods,
 a weekday name after 7, a day-of-month format such as `{{date:DD}}` after 28–31.
@@ -94,22 +95,30 @@ Mirrors `use-invertibility-check.ts` and returns
 `ComputedRef<PathCollision | null>`:
 
 1. return `null` when the config is missing or `nameTemplate` is empty
-2. resolve today's anchor via `CycleService.anchorOf(name, CalendarDate.today())`
-3. collect up to 40 anchors via `anchorAtOffset(name, todayAnchor, i)`, stopping
-   early when it returns `None` at a timeline boundary
+2. pick the walk's origin: the journal's `timeline.start` when it is set, otherwise
+   today. Resolve it to an anchor via `CycleService.anchorOf`
+3. collect up to 40 anchors, stepping with `CycleService.nextAnchor` and stopping as
+   soon as `TimelineService.contains(name, anchor)` is false
 4. render each through `NotePathService.pathForDate`, discarding `Err` results
 5. hand both to `findPathCollision`
 
-### Known limits, accepted deliberately
+Bounding the walk with `TimelineService` is not optional. Neither `nextAnchor` nor
+`anchorAtOffset` respects timeline limits — both return `None` only for a journal
+that does not exist — so an unbounded walk would sample periods past a journal's
+end and warn about collisions between notes that can never be created.
+
+Anchoring the walk at `timeline.start` rather than today also makes the result
+deterministic. A walk from today could warn on one day and stay silent the next.
+
+Stepping with `nextAnchor` keeps the walk linear; `anchorAtOffset` re-steps from the
+origin on every call and would make it quadratic.
+
+### Known limit, accepted deliberately
 
 `pathForDate` builds metadata through `FrontmatterService.buildMetadata`, which
 reads stored end dates from the journals index. The result is therefore not a pure
 function of the config. This makes sampling more faithful to what will actually
-happen in the vault, not less.
-
-The walk starts at today, so a template that collides only in certain months could
-warn on one day and not another. Inside a 40-period window this is a corner case
-and is documented rather than engineered around.
+happen in the vault, not less, but a test asserting on it must control the index.
 
 ## Replacing the existing check
 
@@ -155,10 +164,12 @@ Unit, `name-template-collision.test.ts`:
 Composable, `use-collision-check.test.ts`:
 
 - `{{date<endOf=month>}}` on a Day journal warns
+- plain `{{date}}` with a `YYYY-MM` journal date format on a Day journal warns
 - plain `{{date}}` on a Day journal stays silent
 - name `{{date:YYYY}}` with folder `{{date:MM}}` stays silent
 - a template with no date variable warns (the issue #175 case, via the sampler)
 - an empty name template stays silent
+- a journal whose timeline ends before the colliding period stays silent
 
 Component, `NoteCreationSection.test.ts`: the warning renders under the
 name-template field, queried through `@testing-library/vue`.
