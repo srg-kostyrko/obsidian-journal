@@ -13,10 +13,10 @@ import UiToggle from "@/ui/UiToggle.vue";
 import { JournalsViewModel } from "../../../view-model";
 import DateFormatPreview from "../DateFormatPreview.vue";
 import FolderInput from "../FolderInput.vue";
-import { nameTemplateCollides } from "../name-template-collision";
 import NoteNamePreview from "../NoteNamePreview.vue";
 import TemplateStringPreview from "../TemplateStringPreview.vue";
 import { useAutoCreateOnEnable } from "../use-auto-create-on-enable";
+import { useCollisionCheck } from "../use-collision-check";
 import { extractFromDateFormat, extractFromNameTemplate } from "../use-folder-extractor";
 import { useInvertibilityCheck } from "../use-invertibility-check";
 import VariableReferenceHint from "../VariableReferenceHint.vue";
@@ -34,9 +34,8 @@ const numberingVariableNames = computed<readonly string[]>(() =>
   config.value?.numbering.enabled ? config.value.numbering.sources.map((source) => source.variable) : [],
 );
 
-const nameTemplateRef = computed(() => config.value?.nameTemplate ?? "");
 const invertibility = useInvertibilityCheck(config);
-const templateCollides = computed(() => nameTemplateCollides(nameTemplateRef.value, numberingVariableNames.value));
+const collision = useCollisionCheck(config);
 
 function applyNameTemplateRecommendation(): void {
   if (config.value) extractFromNameTemplate(config.value);
@@ -66,8 +65,8 @@ function applyDateFormatRecommendation(): void {
           :numbering-variable-names="numberingVariableNames"
         />
         <NoteNamePreview :journal-name="journalName" />
-        <div v-if="templateCollides" class="journal-hint">
-          {{ m.journal_edit_name_template_collision_warning() }}
+        <div v-if="collision" class="journal-hint">
+          {{ m.journal_edit_name_template_collision_warning(collision) }}
         </div>
         <div v-if="invertibility" class="journal-hint">
           <template v-if="invertibility.kind === 'non-invertible'">

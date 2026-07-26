@@ -19,6 +19,7 @@ import {
   JournalsViewModel,
   NotePathService,
   NumberingService,
+  TimelineService,
   journalDefaultsFor,
   type JournalConfig,
   type JournalsEvents,
@@ -55,6 +56,7 @@ function mount(overrides: Partial<JournalConfig> = {}) {
   container.register(NumberingService).useClass(NumberingService);
   container.register(FrontmatterService).useClass(FrontmatterService);
   container.register(NotePathService).useClass(NotePathService);
+  container.register(TimelineService).useClass(TimelineService);
   container.register(TemplateEngine).useValue(installTestEngine());
   container.register(TemplaterService).useValue(new FakeTemplaterService() as unknown as TemplaterService);
   container.register(NotesService).useValue(new FakeNotesService() as unknown as NotesService);
@@ -117,14 +119,14 @@ describe("NoteCreationSection", () => {
       expect(screen.queryByText(/unknown-variable/)).toBeNull();
     });
 
-    it("shows the collision warning for a template with no date or numbering variable", () => {
+    it("names the colliding note path when every entry resolves to one note", () => {
       mount({ nameTemplate: "MyNote" });
-      expect(screen.getByText(m.journal_edit_name_template_collision_warning())).toBeTruthy();
+      expect(screen.getByText(/MyNote\.md/)).toBeTruthy();
     });
 
-    it("does not show the collision warning for the default date template", () => {
+    it("does not warn about collisions for the default date template", () => {
       mount();
-      expect(screen.queryByText(m.journal_edit_name_template_collision_warning())).toBeNull();
+      expect(screen.queryByText(/resolve to/)).toBeNull();
     });
 
     it("shows the move-to-folder recommendation when nameTemplate contains a slash", () => {

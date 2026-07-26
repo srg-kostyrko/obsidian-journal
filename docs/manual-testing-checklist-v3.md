@@ -114,6 +114,8 @@ rewrite every connected note (see the item below).
 - [x] Boundary unit **`decade`** → snaps to the decade's first/last day.
 - [ ] Shift **and** boundary together — `{{date+1w<endOf=month>:YYYY-MM-DD}}` → the
       shift applies first, then the boundary.
+- [ ] **Colliding name template** — `{{date<endOf=month>}}` on a Day journal → the
+      name-template field warns, naming the two dates and the shared note path.
 - [x] **Unknown boundary unit** — `{{date<startOf=fortnight>}}` → left as-is /
       degrades, no crash.
 - [x] **Name template** with an inline **format** — `{{date:YYYY}}` → uses that
