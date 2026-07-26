@@ -1374,7 +1374,6 @@
 	"journal_edit_move_to_folder_recommendation_date_format": "Il formato data contiene un separatore di percorso. Spostare le variabili data nel campo Cartella?",
 	"journal_edit_move_to_folder_recommendation_name_template": "Il modello del nome della nota contiene un separatore di percorso. Spostare il prefisso del percorso nel campo Cartella?",
 	"journal_edit_name_template_description": "Modello utilizzato per generare nuovi nomi di note.",
-	"journal_edit_name_template_collision_warning": "Il modello non prevede variabili per la data o la numerazione, pertanto ogni voce viene ricondotta alla stessa nota. Aggiungi una variabile per la data per assegnare a ciascuna voce una nota univoca.",
 	"journal_edit_colliding_warning": "Questo diario punta allo stesso percorso di nota di {names} , quindi le loro note si sovrascriveranno a vicenda. Modifica la cartella o il modello del nome per assegnargli un percorso distinto.",
 	"journal_edit_name_template_invertibility_warning": "Impossibile analizzare il modello inverso ( {reason} : \" {offending} \"). L'allegato automatico ignorerà silenziosamente le note create esternamente che corrispondono a questo modello.",
 	"journal_edit_name_template_no_anchor_warning": "Il modello non ha una variabile data e la sua variabile di numerazione non può essere invertita in una data, quindi l'allegato automatico ignorerà silenziosamente le note create esternamente che corrispondono a questo schema.",

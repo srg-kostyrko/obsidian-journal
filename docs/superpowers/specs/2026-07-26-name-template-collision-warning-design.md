@@ -62,8 +62,13 @@ timeline end.
 
 That covers every realistic collapse: a month boundary repeats after 2 day-periods,
 a weekday name after 7, a day-of-month format such as `{{date:DD}}` after 28–31.
-Only a format whose sole varying field cycles more slowly than 40 periods escapes,
-which is not a shape users write by accident.
+
+The window still misses real cases. `{{date:MM-DD}}` on a Day journal collides only
+at sample 365, and on a Week journal not for years — and "name carries month and
+day, folder carries the year" is an ordinary template, one deleted folder segment
+away from colliding. 40 is kept anyway: the miss is silent and no worse than the
+status quo (no detection at all), and a wider window reintroduces the cost this
+design otherwise avoids.
 
 Adjacent-period sampling would not be enough on its own: `{{date:DD}}` renders
 distinct names for Jan 1 and Jan 2 but collides Jan 1 with Feb 1.

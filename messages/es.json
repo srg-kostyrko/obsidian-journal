@@ -1374,7 +1374,6 @@
 	"journal_edit_move_to_folder_recommendation_date_format": "El formato de fecha contiene un separador de ruta. ¿Mover las variables de fecha al campo Carpeta?",
 	"journal_edit_move_to_folder_recommendation_name_template": "Nota: la plantilla de nombre contiene un separador de ruta. ¿Mover el prefijo de ruta al campo Carpeta?",
 	"journal_edit_name_template_description": "Plantilla utilizada para generar nuevos nombres de notas.",
-	"journal_edit_name_template_collision_warning": "La plantilla no tiene variable de fecha ni de numeración, por lo que todas las entradas se corresponden con la misma nota. Añada una variable de fecha para que cada entrada tenga su propia nota.",
 	"journal_edit_colliding_warning": "Este diario utiliza la misma ruta de notas que {names} , por lo que sus notas se sobrescribirán entre sí. Modifique la plantilla de carpeta o nombre para asignarle una ruta distinta.",
 	"journal_edit_name_template_invertibility_warning": "La plantilla no se puede analizar inversamente ( {reason} : \" {offending} \"). La función de adjuntar automáticamente omitirá silenciosamente las notas creadas externamente que coincidan con este patrón.",
 	"journal_edit_name_template_no_anchor_warning": "La plantilla no tiene variable de fecha y su variable de numeración no se puede convertir a fecha, por lo que la función de adjuntar automáticamente omitirá silenciosamente las notas creadas externamente que coincidan con este patrón.",

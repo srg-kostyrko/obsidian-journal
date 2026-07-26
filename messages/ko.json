@@ -1374,7 +1374,6 @@
 	"journal_edit_move_to_folder_recommendation_date_format": "날짜 형식에 경로 구분 기호가 포함되어 있습니다. 날짜 변수를 폴더 필드로 이동하시겠습니까?",
 	"journal_edit_move_to_folder_recommendation_name_template": "노트 이름 템플릿에 경로 구분 기호가 포함되어 있습니다. 경로 접두사를 폴더 필드로 옮기시겠습니까?",
 	"journal_edit_name_template_description": "새 메모 이름을 생성하는 데 사용되는 템플릿입니다.",
-	"journal_edit_name_template_collision_warning": "템플릿에 날짜 또는 번호 변수가 없으므로 모든 항목이 동일한 메모로 연결됩니다. 각 항목에 고유한 메모를 지정하려면 날짜 변수를 추가하세요.",
 	"journal_edit_colliding_warning": "이 저널은 {names} 와 동일한 노트 경로로 해석되므로, 두 노트가 서로 덮어쓰여집니다. 폴더 또는 이름 템플릿을 변경하여 서로 다른 경로를 지정하십시오.",
 	"journal_edit_name_template_invertibility_warning": "템플릿을 역으로 구문 분석할 수 없습니다( {reason} : \" {offending} \"). 자동 첨부 기능은 이 패턴과 일치하는 외부에서 생성된 메모를 자동으로 건너뜁니다.",
 	"journal_edit_name_template_no_anchor_warning": "템플릿에 날짜 변수가 없고 번호 매기기 변수를 날짜로 역변환할 수 없으므로 자동 첨부 기능은 이 패턴과 일치하는 외부에서 생성된 메모를 자동으로 건너뜁니다.",

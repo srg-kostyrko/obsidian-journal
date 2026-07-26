@@ -1374,7 +1374,6 @@
 	"journal_edit_move_to_folder_recommendation_date_format": "O formato de data contém um separador de caminho. Mover as variáveis de data para o campo Pasta?",
 	"journal_edit_move_to_folder_recommendation_name_template": "O modelo de nome da nota contém um separador de caminho. Deseja mover o prefixo do caminho para o campo Pasta?",
 	"journal_edit_name_template_description": "Modelo usado para gerar novos nomes de notas.",
-	"journal_edit_name_template_collision_warning": "O modelo não possui variáveis de data ou numeração, portanto, todas as entradas são direcionadas para a mesma nota. Adicione uma variável de data para que cada entrada tenha sua própria nota.",
 	"journal_edit_colliding_warning": "Este diário resolve para o mesmo caminho de notas que {names} , portanto, suas notas se sobrescreverão. Altere o modelo de pasta ou nome para atribuir um caminho distinto.",
 	"journal_edit_name_template_invertibility_warning": "O modelo não pode ser analisado reversamente ( {reason} : \" {offending} ). O recurso de anexação automática ignorará silenciosamente as notas criadas externamente que corresponderem a esse padrão.",
 	"journal_edit_name_template_no_anchor_warning": "O modelo não possui uma variável de data e sua variável de numeração não pode ser revertida para uma data; portanto, a anexação automática ignorará silenciosamente as notas criadas externamente que correspondam a esse padrão.",

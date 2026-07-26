@@ -1374,7 +1374,6 @@
 	"journal_edit_move_to_folder_recommendation_date_format": "日付形式にはパス区切り文字が含まれています。日付変数をフォルダーフィールドに移動しますか？",
 	"journal_edit_move_to_folder_recommendation_name_template": "注記名テンプレートにパス区切り文字が含まれています。パスの接頭辞をフォルダーフィールドに移動しますか？",
 	"journal_edit_name_template_description": "新しい音名を生成するために使用されるテンプレート。",
-	"journal_edit_name_template_collision_warning": "テンプレートに日付や番号の変数がないため、すべてのエントリが同じメモになってしまいます。日付変数を追加して、各エントリに個別のメモを割り当ててください。",
 	"journal_edit_colliding_warning": "このジャーナルは{names}と同じノートパスに解決されるため、ノートが互いに上書きされます。フォルダまたは名前テンプレートを変更して、異なるパスを指定してください。",
 	"journal_edit_name_template_invertibility_warning": "テンプレートを逆解析できません ( {reason} : \" {offending} \")。自動添付機能は、このパターンに一致する外部作成のメモを警告なしにスキップします。",
 	"journal_edit_name_template_no_anchor_warning": "テンプレートには日付変数がなく、番号変数を日付に反転することもできないため、自動添付機能は、このパターンに一致する外部作成のメモを黙ってスキップします。",

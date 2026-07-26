@@ -1374,7 +1374,6 @@
 	"journal_edit_move_to_folder_recommendation_date_format": "Das Datumsformat enthält einen Pfadtrenner. Sollen die Datumsvariablen in das Feld „Ordner“ verschoben werden?",
 	"journal_edit_move_to_folder_recommendation_name_template": "Die Vorlage für den Notiznamen enthält ein Pfadtrennzeichen. Soll das Pfadpräfix in das Ordnerfeld verschoben werden?",
 	"journal_edit_name_template_description": "Vorlage zur Generierung neuer Notiznamen.",
-	"journal_edit_name_template_collision_warning": "Die Vorlage enthält keine Datums- oder Nummerierungsvariable, daher wird jeder Eintrag derselben Notiz zugeordnet. Fügen Sie eine Datumsvariable hinzu, um jedem Eintrag eine eigene Notiz zuzuweisen.",
 	"journal_edit_colliding_warning": "Dieses Journal verweist auf denselben Notizpfad wie {names} , sodass sich die Notizen gegenseitig überschreiben. Ändern Sie die Ordner- oder Namensvorlage, um einen eindeutigen Pfad zu vergeben.",
 	"journal_edit_name_template_invertibility_warning": "Die Vorlage kann nicht rückwärts analysiert werden ( {reason} : \" {offending} \"). Die automatische Anfügung überspringt stillschweigend extern erstellte Notizen, die diesem Muster entsprechen.",
 	"journal_edit_name_template_no_anchor_warning": "Die Vorlage verfügt über keine Datumsvariable und ihre Nummerierungsvariable kann nicht in ein Datum umgewandelt werden, daher werden extern erstellte Notizen, die diesem Muster entsprechen, von der automatischen Anfügefunktion stillschweigend übersprungen.",

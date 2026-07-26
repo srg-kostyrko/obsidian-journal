@@ -1374,7 +1374,6 @@
 	"journal_edit_move_to_folder_recommendation_date_format": "Le format de date contient un séparateur de chemin. Déplacez les variables de date dans le champ Dossier.",
 	"journal_edit_move_to_folder_recommendation_name_template": "Le modèle de nom de note contient un séparateur de chemin. Déplacer le préfixe du chemin dans le champ Dossier ?",
 	"journal_edit_name_template_description": "Modèle utilisé pour générer les nouveaux noms de notes.",
-	"journal_edit_name_template_collision_warning": "Le modèle ne comporte aucune variable de date ni de numérotation ; par conséquent, chaque entrée correspond à la même note. Ajoutez une variable de date pour attribuer une note unique à chaque entrée.",
 	"journal_edit_colliding_warning": "Ce journal est associé au même chemin de notes que {names} , ce qui entraîne l'écrasement mutuel de leurs notes. Modifiez le dossier ou le modèle de nom pour lui attribuer un chemin distinct.",
 	"journal_edit_name_template_invertibility_warning": "Le modèle ne peut pas être analysé de manière inverse ( {reason} : \" {offending} \"). L'attachement automatique ignorera silencieusement les notes créées en externe qui correspondent à ce modèle.",
 	"journal_edit_name_template_no_anchor_warning": "Le modèle ne comporte aucune variable de date et sa variable de numérotation ne peut pas être convertie en date ; par conséquent, la fonction d'attachement automatique ignorera silencieusement les notes créées en externe qui correspondent à ce modèle.",

@@ -1374,7 +1374,6 @@
 	"journal_edit_move_to_folder_recommendation_date_format": "日期格式包含路径分隔符。是否应将日期变量移至“文件夹”字段？",
 	"journal_edit_move_to_folder_recommendation_name_template": "备注名称模板包含路径分隔符。是否将路径前缀移至“文件夹”字段？",
 	"journal_edit_name_template_description": "用于生成新笔记名称的模板。",
-	"journal_edit_name_template_collision_warning": "模板中没有日期或编号变量，因此每个条目都解析为同一条注释。添加日期变量，使每个条目都有自己的注释。",
 	"journal_edit_colliding_warning": "此日志解析到与{names}相同的笔记路径，因此它们的笔记会互相覆盖。请更改文件夹或名称模板，使其拥有不同的路径。",
 	"journal_edit_name_template_invertibility_warning": "模板无法反向解析（ {reason} : \" {offending} \"）。自动附加功能将静默跳过与此模式匹配的外部创建的笔记。",
 	"journal_edit_name_template_no_anchor_warning": "模板没有日期变量，其编号变量也无法反转为日期，因此自动附加功能将静默跳过与此模式匹配的外部创建的笔记。",
