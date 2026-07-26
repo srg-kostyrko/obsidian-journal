@@ -305,6 +305,40 @@ describe("NotePathService.candidateFor weekly round trip", () => {
   });
 });
 
+// ISO test calendar: the week anchored Mon 2025-12-29 is week 1 of 2026, running to
+// Sun 2026-01-04, and its representative day is Thu 2026-01-01.
+function weeklyContextValue(variable: string): string {
+  const config = fixedJournal("weekly", { type: "week" }, { dateFormat: "YYYY-MM-DD" });
+  const service = buildContainer(fakeRepo({ weekly: config })).resolve(NotePathService);
+  const context = service.contextFor(config, { journalName: "weekly", anchor: anchor("2025-12-29") });
+  const spec = context.get(variable);
+  assert(spec?.kind === "date");
+  return spec.value.toAnchor();
+}
+
+describe("contextFor — weekly period variables", () => {
+  let teardown: () => void;
+
+  beforeEach(() => {
+    ({ teardown } = installTestCalendar());
+  });
+  afterEach(() => {
+    teardown();
+  });
+
+  it("renders date as the week's representative day", () => {
+    expect(weeklyContextValue("date")).toBe("2026-01-01");
+  });
+
+  it("renders start_date as the week's first day", () => {
+    expect(weeklyContextValue("start_date")).toBe("2025-12-29");
+  });
+
+  it("renders end_date as the week's last day", () => {
+    expect(weeklyContextValue("end_date")).toBe("2026-01-04");
+  });
+});
+
 function buildFixture(): { service: NotePathService; config: JournalConfig; metadata: JournalMetadata } {
   const config = fixedJournal("daily", { type: "day" }, { dateFormat: "DD/MM/YYYY" });
   const repo = fakeRepo({ daily: config });

@@ -122,6 +122,44 @@ describe("buildNavRowContext", () => {
     });
   });
 
+  describe("weekly journal", () => {
+    const weeklyConfig = journalDefaultsFor({ type: "week" }, "weekly");
+    const weekly = makeServices({ weekly: weeklyConfig });
+    // ISO test calendar: the week anchored Mon 2025-12-29 is week 1 of 2026, running to
+    // Sun 2026-01-04; its representative day is Thu 2026-01-01, the day whose calendar
+    // year equals the week-year.
+    const weekAnchor = "2025-12-29" as AnchorString;
+
+    function weeklyContext(): ReturnType<typeof buildNavRowContext> {
+      return buildNavRowContext({
+        journal: weeklyConfig,
+        refDate: weekAnchor,
+        entry: Option.none(),
+        cycle: weekly.cycle,
+        numbering: weekly.numbering,
+        today,
+      });
+    }
+
+    function dateValueOf(variable: string): string {
+      const spec = weeklyContext().get(variable);
+      assert(spec?.kind === "date");
+      return spec.value.toAnchor();
+    }
+
+    it("renders the `date` variable as the week's representative day", () => {
+      expect(dateValueOf("date")).toBe("2026-01-01");
+    });
+
+    it("renders the `start_date` variable as the week's first day", () => {
+      expect(dateValueOf("start_date")).toBe("2025-12-29");
+    });
+
+    it("renders the `end_date` variable as the week's last day", () => {
+      expect(dateValueOf("end_date")).toBe("2026-01-04");
+    });
+  });
+
   it("populates index from the entry numbers when present", () => {
     const entry: JournalEntry = {
       journalName: "daily",
