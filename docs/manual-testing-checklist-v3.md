@@ -135,18 +135,18 @@ rewrite every connected note (see the item below).
 - [ ] **Multiple templates**, first path missing → falls through to the second.
 - [ ] **Multiple templates**, first file exists but is empty → falls through to the
       second.
-- [ ] **Templater command** — + with Templater installed, template uses a
+- [x] **Templater command** — + with Templater installed, template uses a
       `<% tp.* %>` command → the command is evaluated in the new note.
-- [ ] **Templater cursor jump** — + template has a cursor marker → cursor jumps
+- [x] **Templater cursor jump** — + template has a cursor marker → cursor jumps
       to it after creation.
 - [x] **confirmCreation = on** → navigating to a missing entry prompts before
       creating.
 - [x] **confirmCreation = on**, then **cancel** the prompt → no note is created and
       no error is reported.
 - [x] **confirmCreation = off** → missing entry created silently.
-- [ ] **Frontmatter date field** renamed → new note's frontmatter uses the new
+- [x] **Frontmatter date field** renamed → new note's frontmatter uses the new
       key.
-- [ ] **Start/end date fields** on a **Day** journal → both written with the
+- [x] **Start/end date fields** on a **Day** journal → both written with the
       configured key names (these apply to _every_ write type, not just custom).
 - [ ] **Start/end date fields** on a **Month** journal → values are the month's
       first/last day.
