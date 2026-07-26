@@ -16,6 +16,7 @@ export interface WeekConfig {
 type MomentConstructor = (
   input?: string | number | Date | moment.Moment | null,
   format?: string,
+  language?: string,
   strict?: boolean,
 ) => moment.Moment;
 
@@ -92,6 +93,8 @@ export function localMoment(
   strict?: boolean,
 ): moment.Moment {
   const m = moment as unknown as MomentConstructor;
-  const instance = m(input, format, strict);
-  return instance.locale(CUSTOM_LOCALE);
+  // The locale has to be supplied at parse time, not applied to the result: week-based tokens
+  // (w, W, gg, GG) resolve against the locale's week config while parsing, and relabelling an
+  // instance afterwards cannot re-interpret a week number that has already been resolved.
+  return m(input, format, CUSTOM_LOCALE, strict).locale(CUSTOM_LOCALE);
 }

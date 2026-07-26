@@ -1,7 +1,7 @@
 import { moment } from "obsidian";
 import { afterEach, beforeEach, describe, expect, it } from "vitest";
 
-import { Calendar, CUSTOM_LOCALE } from "./calendar";
+import { Calendar, CUSTOM_LOCALE, localMoment } from "./calendar";
 
 function customWeek(): { dow: number; doy: number } {
   const data = moment.localeData(CUSTOM_LOCALE);
@@ -106,6 +106,19 @@ describe("Calendar", () => {
       second.applyWeekConfig("locale", { propagateToGlobal: false });
 
       expect(customWeek()).toEqual(priorGlobal);
+    });
+  });
+
+  describe("localMoment", () => {
+    it("resolves a week-based format against the custom locale rather than the global one", () => {
+      const calendar = new Calendar();
+      calendar.applyWeekConfig({ dow: 1, doy: 4 }, { propagateToGlobal: false });
+      // Force the global locale to a different week than the plugin's, so this fails if parsing
+      // ever consults the global one again. ISO week 1 of 2026 starts Mon 2025-12-29; under a
+      // Sunday-start week it would start 2025-12-28.
+      moment.updateLocale(priorLocale, { week: { dow: 0, doy: 6 } });
+
+      expect(localMoment("2026-W1", "YYYY-[W]w", true).format("YYYY-MM-DD")).toBe("2025-12-29");
     });
   });
 
