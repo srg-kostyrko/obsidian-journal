@@ -54,18 +54,18 @@ order, not top to bottom:
 Setup: clone branch `v3-ai`; `npm run dev` (builds into
 `test-vault/.obsidian/plugins/journals` with hot-reload).
 
-- [ ] Dev build completes with no errors and writes `main.js`.
-- [ ] Open `test-vault` in Obsidian → plugin loads, Console (DevTools) shows no
+- [x] Dev build completes with no errors and writes `main.js`.
+- [x] Open `test-vault` in Obsidian → plugin loads, Console (DevTools) shows no
       errors.
-- [ ] Disable the plugin in Community Plugins → no errors, calendar leaves close.
-- [ ] Re-enable the plugin → re-initializes, default view available again.
-- [ ] Reload Obsidian (Ctrl/Cmd+R) → clean re-init, no duplicate ribbon icons.
-- [ ] - Open a **brand-new empty vault**, install the plugin → exactly one Calendar
+- [x] Disable the plugin in Community Plugins → no errors, calendar leaves close.
+- [x] Re-enable the plugin → re-initializes, default view available again.
+- [x] Reload Obsidian (Ctrl/Cmd+R) → clean re-init, no duplicate ribbon icons.
+- [x] - Open a **brand-new empty vault**, install the plugin → exactly one Calendar
       view is seeded, it opens on startup, it shows a ribbon icon, and no journals
       exist.
-- [ ] First run → the seeded view explains that there are no journals yet and does
-      not render a bare divider rule or an empty custom-intervals section around
-      that message.
+- [ ] First run → the seeded view renders its calendar grid with no empty-state
+      message, and does not render a bare divider rule or an empty custom-intervals
+      section.
 - [ ] - Open a vault with a v2 `data.json` → loads without crash (migration, §15).
 - [ ] Mobile smoke: plugin loads on a mobile/tablet build (full mobile pass is §19).
 
@@ -77,22 +77,22 @@ Setup: Settings → Journals → **Add journal**. For each type below, create on
 journal of that type, then trigger creation of "today's" entry (open it via a
 command or the calendar).
 
-- [ ] **Day** — + name template `{{date}}`, format `YYYY-MM-DD` → note created at
+- [x] **Day** — + name template `{{date}}`, format `YYYY-MM-DD` → note created at
       `YYYY-MM-DD.md` for today.
-- [ ] **Week** — + format `YYYY-[W]ww` → the week note spans Mon–Sun (per locale).
-- [ ] **Week** filename → uses the week token (`ww`).
-- [ ] **Month** — + format `YYYY-MM` → note covers the whole month.
-- [ ] **Quarter** — + format `YYYY-[Q]Q` → note covers 3 months.
-- [ ] **Year** — + format `YYYY` → note covers the year.
-- [ ] **Custom, every N days** — + repeat `10 days`, anchor = a past date →
+- [x] **Week** — + format `YYYY-[W]ww` → the week note spans Mon–Sun (per locale).
+- [x] **Week** filename → uses the week token (`ww`).
+- [x] **Month** — + format `YYYY-MM` → note covers the whole month.
+- [x] **Quarter** — + format `YYYY-[Q]Q` → note covers 3 months.
+- [x] **Year** — + format `YYYY` → note covers the year.
+- [x] **Custom, every N days** — + repeat `10 days`, anchor = a past date →
       stepping next/prev lands exactly 10 days apart, no drift over 12 steps.
-- [ ] **Custom, every N weeks** — + repeat `2 weeks` → consecutive intervals are
+- [x] **Custom, every N weeks** — + repeat `2 weeks` → consecutive intervals are
       exactly 14 days apart.
-- [ ] **Custom, every N weeks** alignment → each interval starts on the anchor's
+- [x] **Custom, every N weeks** alignment → each interval starts on the anchor's
       weekday.
-- [ ] **Custom, every N months** — + repeat `1 month`, anchor = Jan 31 →
-      Feb interval clamps to Feb 28/29 (month-end clamp).
-- [ ] **Custom, every N quarters / years** — interval boundaries correct.
+- [x] **Custom, every N months** — + repeat `1 month`, anchor = Jan 31 →
+      Feb interval clamps to Feb 28/29 (month-end clamp). - month got clammped to 28th
+- [x] **Custom, every N quarters / years** — interval boundaries correct.
 
 ---
 
@@ -927,9 +927,9 @@ Setup: journal "Err" whose template path points at a missing file.
       unknown-block panel; sibling blocks still render.
 - [ ] Hand-edit a block's config to something **invalid** → config-error panel,
       siblings unaffected.
-- [ ] A calendar block with **no journals at all** → "No journals yet".
-- [ ] A calendar block **scoped to a shelf** with no members → "No journals on this
-      shelf."
+- [ ] A calendar block with **no journals at all** → the grid still renders, with no
+      empty-state message; its cells are inert.
+- [ ] A calendar block **scoped to a shelf** with no members → same as above.
 - [ ] `markdown-template` pointing at a **missing file** → read-error message.
 
 ### Settings load & sync
