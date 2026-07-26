@@ -5,7 +5,6 @@ import { computed, defineComponent, h, nextTick, ref } from "vue";
 import type * as CalendarModule from "@/calendar";
 import { installTestCalendar } from "@/calendar/testing";
 import type { AnchorString } from "@/calendar/types";
-import { m } from "@/i18n";
 import { Container, provideInjectorOnApp } from "@/infrastructure/di";
 import { ActiveEntryViewModel, type ActiveEntryRef } from "@/notes-calendar";
 
@@ -97,16 +96,9 @@ afterEach(() => {
 });
 
 describe("MonthCalendarBlock", () => {
-  it("says there are no journals at all when the view is not scoped to a shelf", () => {
-    // An unscoped calendar shows every journal, so an empty scope means the vault has none —
-    // which is what a fresh install looks like. Blaming a shelf misdiagnoses it.
-    const { getByText } = mountBlock(baseConfig, { shelf: computed(() => null) });
-    expect(getByText(m.common_no_journals_yet())).toBeTruthy();
-  });
-
-  it("blames the shelf only when the view is scoped to one", () => {
-    const { getByText } = mountBlock(baseConfig, { shelf: computed(() => "my-shelf") });
-    expect(getByText(m.view_block_calendar_no_journals())).toBeTruthy();
+  it("renders the calendar when the vault has no journals", () => {
+    const { getAllByTestId } = mountBlock(baseConfig, { shelf: computed(() => null) });
+    expect(getAllByTestId("month-stub").length).toBe(1);
   });
 
   it("renders a single NotesMonthView when before=0 and after=0", () => {

@@ -79,7 +79,6 @@
 	"calendar_week_config_description": "Définissez quel jour marque le début de la semaine et comment la première semaine de l'année est déterminée — cela influe sur la numérotation des semaines.",
 	"code_blocks_nav_not_connected": "Note non liée à un journal",
 	"code_blocks_home_empty": "Aucun journal à afficher. Vérifiez les options d'affichage et d'étagère du bloc.",
-	"view_block_calendar_no_journals": "Aucun journal sur cette étagère.",
 	"code_blocks_nav_next": "Suivant",
 	"code_blocks_nav_previous": "Précédent",
 	"nav_block_section_title": "Bloc de navigation",

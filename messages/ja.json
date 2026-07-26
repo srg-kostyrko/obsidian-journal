@@ -79,7 +79,6 @@
 	"calendar_week_config_description": "週の始まりを何曜日とするか、そして年の最初の週をどのように決定するかを定義する。これは週番号に影響する。",
 	"code_blocks_nav_not_connected": "メモはジャーナルにリンクされていません",
 	"code_blocks_home_empty": "表示できるジャーナルがありません。ブロックの表示オプションと棚の表示オプションを確認してください。",
-	"view_block_calendar_no_journals": "この棚には雑誌はありません。",
 	"code_blocks_nav_next": "次",
 	"code_blocks_nav_previous": "前の",
 	"nav_block_section_title": "ナビゲーションブロック",

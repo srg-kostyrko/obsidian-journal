@@ -79,7 +79,6 @@
 	"calendar_week_config_description": "Definiere, welcher Tag die Woche beginnt und wie die erste Woche des Jahres bestimmt wird – dies wirkt sich auf die Wochennummerierung aus.",
 	"code_blocks_nav_not_connected": "Die Notiz ist nicht mit einem Journal verbunden.",
 	"code_blocks_home_empty": "Es sind keine Zeitschriften vorhanden. Überprüfen Sie die Anzeige- und Regaloptionen des Blocks.",
-	"view_block_calendar_no_journals": "In diesem Regal befinden sich keine Zeitschriften.",
 	"code_blocks_nav_next": "Nächste",
 	"code_blocks_nav_previous": "Vorherige",
 	"nav_block_section_title": "Navigationsblock",

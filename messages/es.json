@@ -79,7 +79,6 @@
 	"calendar_week_config_description": "Definir qué día comienza la semana y cómo se determina la primera semana del año: esto afecta a la numeración de las semanas.",
 	"code_blocks_nav_not_connected": "Esta nota no está conectada a un diario.",
 	"code_blocks_home_empty": "No hay revistas para mostrar. Consulta las opciones de visualización y estantería del bloque.",
-	"view_block_calendar_no_journals": "No hay revistas en este estante.",
 	"code_blocks_nav_next": "Próximo",
 	"code_blocks_nav_previous": "Anterior",
 	"nav_block_section_title": "Bloque de navegación",

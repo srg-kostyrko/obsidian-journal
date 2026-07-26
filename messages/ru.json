@@ -79,7 +79,6 @@
 	"calendar_week_config_description": "Определите, с какого дня начинается неделя и как определяется первая неделя года — это влияет на нумерацию недель.",
 	"code_blocks_nav_not_connected": "Примечание не связано с журналом.",
 	"code_blocks_home_empty": "Журналы для отображения отсутствуют. Проверьте параметры отображения и размещения на полке блока.",
-	"view_block_calendar_no_journals": "На этой полке нет журналов.",
 	"code_blocks_nav_next": "Следующий",
 	"code_blocks_nav_previous": "Предыдущий",
 	"nav_block_section_title": "Блок навигации",
