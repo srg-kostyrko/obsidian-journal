@@ -133,9 +133,11 @@ export class DataMigrationService {
       }
 
       fm[FRONTMATTER_NAME_KEY] = targetName;
-      // The date field must hold the period's canonical anchor (e.g. a week's
-      // representative day), not the raw start date — a week-start date is
-      // non-canonical and parseEntry would reject it.
+      // The date field must hold the period's canonical anchor — its first day — not the
+      // raw legacy start date. The two usually coincide, but a note written under a
+      // different week configuration (or hand-edited) lands mid-period, and parseEntry
+      // rejects any journal-date that is not the anchor. Resolving through the cycle
+      // normalizes both cases.
       fm[config.frontmatter.dateField] = anchor;
 
       if (Object.hasOwn(fm, INTERVAL_INDEX_KEY)) {

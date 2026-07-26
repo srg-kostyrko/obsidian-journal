@@ -174,9 +174,12 @@ export const v3ToV4Migration: Migration = {
     // every migrated entity resolvable. Commands are keyed by their v2 registration
     // slug so existing hotkey bindings survive the migration (see v2CommandSlug).
     const takenCommandIds = new Set<string>();
-    // Weekly notes written before v3 stored the week start as journal-date; v3's
-    // canonical anchor is the week's representative day, so those notes need a
-    // one-time re-canonicalization (see DataMigrationService).
+    // A week's canonical anchor is its first day, which is what v2 stored for most weekly
+    // notes — those migrate untouched. Two kinds do not: v2 anchored a cross-year week that
+    // it numbered as week 1 on the week's *end*, and a note written by an earlier v3
+    // pre-release carries the week's representative day. Both need a one-time
+    // re-canonicalization, so every weekly journal still gets a marker
+    // (see DataMigrationService).
     const weekAnchorMarkers: { kind: "week-anchor"; journalName: string }[] = [];
     const oldJournals = Object.values(old.journals ?? {});
     for (const journal of oldJournals) {

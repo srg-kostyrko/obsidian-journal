@@ -16,9 +16,10 @@ const calendarMarker = v.object({
   sectionToName: v.record(sectionName, v.string()),
 });
 
-// Notes already in the current shape but written by a plugin version that anchored
-// weekly notes on the week start; their journal-date must be re-canonicalized to the
-// week's representative day (the anchor v3 accepts).
+// Notes already in the current shape but written by a plugin version that anchored a
+// weekly note somewhere other than its week's first day — v2's week end for a cross-year
+// week, or the week's representative day. Their journal-date must be re-canonicalized to
+// the week start, the only anchor the current version accepts.
 const weekAnchorMarker = v.object({
   kind: v.literal("week-anchor"),
   journalName: v.string(),
