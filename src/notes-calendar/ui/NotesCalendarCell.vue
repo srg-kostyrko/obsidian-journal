@@ -58,6 +58,13 @@ const hover = useModifierHoverPreview();
    controls (same reasoning as the inert period buttons in the toolbar). */
 .notes-calendar-cell {
   cursor: pointer;
+  /* Height would otherwise come entirely from the decorations' shared padding, so a vault with no
+     journals — or one whose decorations are colour-only and reserve no padding — collapses every
+     row to a bare text line. 26px is v2's cell line-height; it is a floor, not a fixed row, so
+     taller decorations still grow it. The cell is flex so the decoration stretches to fill that
+     floor instead of resolving its height: 100% against a parent that has only a min-height. */
+  display: flex;
+  min-height: 26px;
 }
 .notes-calendar-cell[data-inactive] {
   cursor: default;
