@@ -26,6 +26,7 @@ words:
   - templater
   - tfile
   - unpadded
+  - unrenderable
   - vueuse
   - wdio
   - wikilinks
