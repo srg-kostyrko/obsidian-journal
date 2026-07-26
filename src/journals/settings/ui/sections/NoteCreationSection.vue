@@ -3,6 +3,8 @@ import { computed, ref } from "vue";
 
 import { m } from "@/i18n";
 import { useService } from "@/infrastructure/di";
+import VariableChip from "@/templates/ui/VariableChip.vue";
+import I18nWithSlot from "@/ui/I18nWithSlot.vue";
 import { icons } from "@/ui/icons";
 import UiCollapsibleBlock from "@/ui/UiCollapsibleBlock.vue";
 import UiIcon from "@/ui/UiIcon.vue";
@@ -30,6 +32,7 @@ useAutoCreateOnEnable(config);
 const expanded = ref(true);
 
 const hasCycle = computed(() => config.value !== undefined && config.value.write.type !== "day");
+const isWeekly = computed(() => config.value?.write.type === "week");
 const numberingVariableNames = computed<readonly string[]>(() =>
   config.value?.numbering.enabled ? config.value.numbering.sources.map((source) => source.variable) : [],
 );
@@ -117,6 +120,14 @@ function applyDateFormatRecommendation(): void {
           </a>
         </div>
         <DateFormatPreview :format="config.dateFormat" />
+        <div v-if="isWeekly">
+          <I18nWithSlot :message="m.journal_edit_date_format_week_date_note">
+            <VariableChip name="date" />
+          </I18nWithSlot>
+          <I18nWithSlot :message="m.journal_edit_date_format_week_start_note">
+            <VariableChip name="start_date" />
+          </I18nWithSlot>
+        </div>
         <div v-if="config.dateFormat.includes('/')" class="journal-recommendation">
           {{ m.journal_edit_move_to_folder_recommendation_date_format() }}
           <a href="#" @click.prevent="applyDateFormatRecommendation">

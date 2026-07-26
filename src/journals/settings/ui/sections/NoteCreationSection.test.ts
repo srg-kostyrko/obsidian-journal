@@ -187,4 +187,18 @@ describe("NoteCreationSection", () => {
       });
     });
   });
+
+  describe("weekly date-format hint", () => {
+    it("explains the date variable on a weekly journal", () => {
+      mount({ write: { type: "week" } });
+
+      expect(screen.getByText(/day inside the week/i)).toBeTruthy();
+    });
+
+    it("omits the explanation on a day journal", () => {
+      mount();
+
+      expect(screen.queryByText(/day inside the week/i)).toBeNull();
+    });
+  });
 });

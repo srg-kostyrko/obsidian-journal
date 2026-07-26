@@ -1150,6 +1150,8 @@
   "journal_edit_date_format_description": "Default format for date variables that don't specify their own, like:",
   "journal_edit_date_format_label": "Default date format",
   "journal_edit_date_format_preview_label": "Formatted date:",
+  "journal_edit_date_format_week_date_note": "On a weekly journal, {slot} is a day inside the week, chosen so year tokens match the week's year.",
+  "journal_edit_date_format_week_start_note": "Use {slot} for the week's first day.",
   "common_moment_format_reference": "moment.js format reference",
   "journal_edit_end_description": [
     {
