@@ -56,9 +56,9 @@ const ALL_JOURNALS = {
   custom_daily: customJournal("custom_daily", "day", 1, "2020-01-01", { nameTemplate: "{{date}}" }),
 };
 
-function hostContext(name: string, anchorDate: string, startDate: string): TemplateContext {
+function hostContext(name: string, renderDate: string, startDate: string): TemplateContext {
   return TemplateContext.empty()
-    .date("date", CalendarDate.fromAnchor(anchor(anchorDate)), "YYYY-MM-DD")
+    .date("date", CalendarDate.fromAnchor(anchor(renderDate)), "YYYY-MM-DD")
     .date("start_date", CalendarDate.fromAnchor(anchor(startDate)), "YYYY-MM-DD")
     .string("journal_name", name);
 }
@@ -69,8 +69,9 @@ function dateOf(context: TemplateContext): CalendarDate {
   return spec.value;
 }
 
-// The week of 2026-01-01 (Thursday) is ISO week 1 of 2026:
-// start = Mon 2025-12-29, anchor = Thu 2026-01-01, end = Sun 2026-01-04.
+// The week of 2026-01-01 (Thursday) is ISO week 1 of 2026: start = Mon 2025-12-29,
+// end = Sun 2026-01-04. This is a rendered context, so its `date` is the week's
+// representative day (Thu 2026-01-01), not the stored anchor.
 const crossYearWeek = (): TemplateContext => hostContext("weekly", "2026-01-01", "2025-12-29");
 
 describe("JournalLinkHandler", () => {

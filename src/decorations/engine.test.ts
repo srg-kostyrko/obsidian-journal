@@ -109,6 +109,10 @@ describe("DecorationEngine", () => {
       expect(result.size).toBe(2);
     });
 
+    // The two weekday-against-a-week checks below pin engine behavior that the UI cannot
+    // produce: the condition editor offers date/weekday only for day journals, and the write
+    // type is fixed once a journal exists. They guard the anchor the engine evaluates against,
+    // not a supported configuration.
     it("matches a weekday condition naming the week's first day", () => {
       // A week period evaluates weekday conditions against its anchor, which is its first day
       // (Monday under the ISO test calendar) — not the representative day {{date}} renders.

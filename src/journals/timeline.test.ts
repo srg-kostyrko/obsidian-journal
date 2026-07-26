@@ -148,7 +148,8 @@ describe("TimelineService", () => {
 
     it("includes the period containing the start date when the start falls after that period's anchor", () => {
       // Start date Sat 2024-01-06 lies in the week Mon 2024-01-01–Sun 2024-01-07, whose anchor
-      // (Thu 2024-01-04) precedes it. The week that contains the start date must stay in-timeline.
+      // (its first day, Mon 2024-01-01) precedes it. The week that contains the start date must
+      // stay in-timeline.
       const c = buildContainer({
         weekly: fixedJournal(
           "weekly",
@@ -157,7 +158,7 @@ describe("TimelineService", () => {
         ),
       });
       const timeline = c.resolve(TimelineService);
-      expect(timeline.contains("weekly", "2024-01-04" as AnchorString)).toBe(true);
+      expect(timeline.contains("weekly", "2024-01-01" as AnchorString)).toBe(true);
     });
 
     it("returns false for unknown journal", () => {
@@ -255,7 +256,7 @@ describe("TimelineService", () => {
 
     it("returns the computed end date for end.kind === repeats", () => {
       // Weekly journal starting 2024-01-01, count=3.
-      // With test calendar (dow=1, doy=4), week anchor is Thursday.
+      // With test calendar (dow=1, doy=4), a week's anchor is its first day, Monday.
       // Start anchor: anchorOf(2024-01-01) — step count-1=2 times → endOf that anchor.
       const c = buildContainer({
         weekly: fixedJournal(
