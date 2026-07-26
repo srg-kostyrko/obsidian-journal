@@ -1,7 +1,7 @@
 import { describe, it, expect, vi, beforeEach, afterEach, assert } from "vitest";
 
 import { CalendarDate, type AnchorString } from "@/calendar";
-import { anchor } from "@/calendar/testing";
+import { anchor, installTestCalendar } from "@/calendar/testing";
 import { Container } from "@/infrastructure/di";
 import type { VaultPath } from "@/infrastructure/host";
 import { LoggerModule } from "@/infrastructure/logger";
@@ -261,6 +261,26 @@ describe("NotePathService.candidateFor", () => {
         .candidateFor("sprints", "Sprint 2.md" as VaultPath)
         .isNone(),
     ).toBe(true);
+  });
+});
+
+describe("NotePathService.candidateFor weekly round trip", () => {
+  let teardown: () => void;
+
+  beforeEach(() => {
+    ({ teardown } = installTestCalendar());
+  });
+  afterEach(() => {
+    teardown();
+  });
+
+  it("resolves a weekly note name to the journal's canonical anchor", () => {
+    const repo = fakeRepo({ weekly: fixedJournal("weekly", { type: "week" }) });
+    const c = buildContainer(repo);
+
+    const result = c.resolve(NotePathService).candidateFor("weekly", "2026-W1.md" as VaultPath);
+
+    expect(unwrap(result).anchor).toBe("2026-01-01");
   });
 });
 

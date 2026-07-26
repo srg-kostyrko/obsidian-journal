@@ -99,7 +99,12 @@ export class NotePathService {
     const dateBinding = bindings.get("date");
     let anchor: AnchorString;
     if (dateBinding?.kind === "date") {
-      anchor = dateBinding.value.toAnchor();
+      // A coarse format (e.g. a week's "YYYY-[W]w") parses back to some day inside the
+      // period, not necessarily the period's canonical anchor. Resolve it, or the note
+      // attaches with a date parseEntry will reject.
+      const resolved = this.#cycle.anchorOf(name, dateBinding.value);
+      if (resolved.isNone()) return Option.none();
+      anchor = resolved.value;
     } else {
       const inverted = this.#numbering.anchorForNumbers(name, numbers);
       if (inverted.isNone()) return Option.none();
