@@ -65,9 +65,10 @@ describe("CycleService", () => {
       it("returns a year-2021 anchor for a date the week-year considers 2021", () => {
         const c = buildContainer({ weekly: fixedJournal("weekly", { type: "week" }) });
         const cycle = c.resolve(CycleService);
-        // Week containing Mon 2021-01-04 starts Mon 2021-01-04, ends Sun 2021-01-10.
-        // With dow=1, the anchor is the week's first day = Mon 2021-01-04.
-        const result = cycle.anchorOf("weekly", unwrapResult(CalendarDate.parse("2021-01-04")));
+        // Week containing Thu 2021-01-07 starts Mon 2021-01-04, ends Sun 2021-01-10.
+        // With dow=1, the anchor is the week's first day = Mon 2021-01-04. A mid-week input
+        // keeps this distinct from an identity function.
+        const result = cycle.anchorOf("weekly", unwrapResult(CalendarDate.parse("2021-01-07")));
         expect(result.isSome() && result.value).toBe("2021-01-04");
       });
     });
@@ -230,8 +231,8 @@ describe("CycleService", () => {
     it("retreats to the prior week anchor for fixed weekly", () => {
       const c = buildContainer({ w: fixedJournal("w", { type: "week" }) });
       const cycle = c.resolve(CycleService);
-      const previous = cycle.previousAnchor("w", "2024-03-07" as AnchorString);
-      // With the test calendar (dow=1), 2024-03-07 (Thu) resolves to its week Mon 2024-03-04 –
+      const previous = cycle.previousAnchor("w", "2024-03-04" as AnchorString);
+      // With the test calendar (dow=1), 2024-03-04 is the anchor of the week Mon 2024-03-04 –
       // Sun 2024-03-10; the prior week's anchor is its first day = Mon 2024-02-26.
       expect(previous.isSome() && previous.value).toBe("2024-02-26");
     });

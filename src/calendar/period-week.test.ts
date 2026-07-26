@@ -136,8 +136,11 @@ describe("WeekPeriod", () => {
   });
 
   describe("format", () => {
-    it("formats against the anchor (Thursday)", () => {
-      expect(WeekPeriod.containing(date("2024-12-31")).format("GGGG-[W]WW")).toBe("2025-W01");
+    // A locale week format (YYYY-[W]w) discriminates where an ISO one (GGGG-[W]WW) cannot: its
+    // year token reads the calendar year of whichever day format() renders against. Formatting
+    // this week's first day (Mon 2024-12-30) would yield "2024-W1".
+    it("formats against the representative day", () => {
+      expect(WeekPeriod.containing(date("2024-12-31")).format("YYYY-[W]w")).toBe("2025-W1");
     });
   });
 

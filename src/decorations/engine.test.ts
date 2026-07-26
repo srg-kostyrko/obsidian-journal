@@ -109,6 +109,42 @@ describe("DecorationEngine", () => {
       expect(result.size).toBe(2);
     });
 
+    it("matches a weekday condition naming the week's first day", () => {
+      // A week period evaluates weekday conditions against its anchor, which is its first day
+      // (Monday under the ISO test calendar) — not the representative day {{date}} renders.
+      const decoration = buildDecoration({
+        mode: "or",
+        conditions: [buildCondition("weekday", { weekdays: [1] })],
+        styles: [buildStyle("background")],
+      });
+      const { c } = buildContainer({
+        weekly: fixedJournal("weekly", { type: "week" }, { decorations: [decoration] }),
+      });
+      const engine = c.resolve(DecorationEngine);
+
+      const weekPeriod = WeekPeriod.containing(date("2026-05-25"));
+      const result = engine.evaluateRange([weekPeriod], [{ journalName: "weekly", decoration }]);
+
+      expect(result.size).toBe(1);
+    });
+
+    it("does not match a weekday condition naming the week's representative day", () => {
+      const decoration = buildDecoration({
+        mode: "or",
+        conditions: [buildCondition("weekday", { weekdays: [4] })],
+        styles: [buildStyle("background")],
+      });
+      const { c } = buildContainer({
+        weekly: fixedJournal("weekly", { type: "week" }, { decorations: [decoration] }),
+      });
+      const engine = c.resolve(DecorationEngine);
+
+      const weekPeriod = WeekPeriod.containing(date("2026-05-25"));
+      const result = engine.evaluateRange([weekPeriod], [{ journalName: "weekly", decoration }]);
+
+      expect(result.size).toBe(0);
+    });
+
     it("returns no entries when conditions list is empty (v2 parity)", () => {
       const decoration = buildDecoration({ styles: [buildStyle("background")] });
       const { c } = buildContainer({
