@@ -13,6 +13,7 @@ export class MonthPeriod implements PeriodBase<MonthPeriod> {
   readonly start: CalendarDate;
   readonly end: CalendarDate;
   readonly anchor: CalendarDate;
+  readonly representative: CalendarDate;
   readonly monthOfYear: number;
   readonly year: number;
 
@@ -23,6 +24,7 @@ export class MonthPeriod implements PeriodBase<MonthPeriod> {
     this.start = CalendarDate._fromMoment(start);
     this.end = CalendarDate._fromMoment(end);
     this.anchor = this.start;
+    this.representative = this.start;
     this.monthOfYear = start.month() + 1;
     this.year = start.year();
   }
@@ -63,6 +65,6 @@ export class MonthPeriod implements PeriodBase<MonthPeriod> {
   }
 
   format(pattern: string): string {
-    return this.anchor.format(pattern);
+    return this.representative.format(pattern);
   }
 }

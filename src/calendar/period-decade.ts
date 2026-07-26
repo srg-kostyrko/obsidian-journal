@@ -15,6 +15,7 @@ export class DecadePeriod implements PeriodBase<DecadePeriod> {
   readonly start: CalendarDate;
   readonly end: CalendarDate;
   readonly anchor: CalendarDate;
+  readonly representative: CalendarDate;
   readonly decadeStart: number;
 
   private constructor(decadeStart: number) {
@@ -26,6 +27,7 @@ export class DecadePeriod implements PeriodBase<DecadePeriod> {
     this.start = CalendarDate._fromMoment(startMoment);
     this.end = CalendarDate._fromMoment(endMoment);
     this.anchor = this.start;
+    this.representative = this.start;
   }
 
   next(): DecadePeriod {
@@ -62,6 +64,6 @@ export class DecadePeriod implements PeriodBase<DecadePeriod> {
   }
 
   format(pattern: string): string {
-    return this.anchor.format(pattern);
+    return this.representative.format(pattern);
   }
 }

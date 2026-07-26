@@ -12,11 +12,13 @@ export class DayPeriod implements PeriodBase<DayPeriod> {
   readonly start: CalendarDate;
   readonly end: CalendarDate;
   readonly anchor: CalendarDate;
+  readonly representative: CalendarDate;
 
   private constructor(date: CalendarDate) {
     this.start = date;
     this.end = date;
     this.anchor = date;
+    this.representative = date;
   }
 
   next(): DayPeriod {
@@ -42,6 +44,6 @@ export class DayPeriod implements PeriodBase<DayPeriod> {
   }
 
   format(pattern: string): string {
-    return this.anchor.format(pattern);
+    return this.representative.format(pattern);
   }
 }

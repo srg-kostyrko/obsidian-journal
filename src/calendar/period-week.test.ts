@@ -37,6 +37,19 @@ describe("WeekPeriod", () => {
     });
   });
 
+  describe("representative", () => {
+    it("is the Thursday inside the week under ISO 8601", () => {
+      expect(WeekPeriod.containing(date("2025-03-10")).representative.toAnchor()).toBe("2025-03-13");
+    });
+
+    it("is the Friday inside a Sunday-start week under dow=0, doy=6", () => {
+      teardown();
+      ({ teardown } = installTestCalendar({ dow: 0, doy: 6 }));
+
+      expect(WeekPeriod.containing(date("2025-03-14")).representative.toAnchor()).toBe("2025-03-14");
+    });
+  });
+
   describe("year", () => {
     it("returns the calendar year for a fully-in-year week", () => {
       expect(WeekPeriod.containing(date("2025-03-14")).year).toBe(2025);

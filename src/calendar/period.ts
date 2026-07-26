@@ -15,6 +15,7 @@ export interface PeriodBase<Self> {
   readonly start: CalendarDate;
   readonly end: CalendarDate;
   readonly anchor: CalendarDate;
+  readonly representative: CalendarDate;
 
   next(): Self;
   previous(): Self;

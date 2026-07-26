@@ -13,6 +13,7 @@ export class QuarterPeriod implements PeriodBase<QuarterPeriod> {
   readonly start: CalendarDate;
   readonly end: CalendarDate;
   readonly anchor: CalendarDate;
+  readonly representative: CalendarDate;
   readonly quarterOfYear: 1 | 2 | 3 | 4;
   readonly year: number;
 
@@ -23,6 +24,7 @@ export class QuarterPeriod implements PeriodBase<QuarterPeriod> {
     this.start = CalendarDate._fromMoment(start);
     this.end = CalendarDate._fromMoment(end);
     this.anchor = this.start;
+    this.representative = this.start;
     this.quarterOfYear = start.quarter() as 1 | 2 | 3 | 4;
     this.year = start.year();
   }
@@ -61,6 +63,6 @@ export class QuarterPeriod implements PeriodBase<QuarterPeriod> {
   }
 
   format(pattern: string): string {
-    return this.anchor.format(pattern);
+    return this.representative.format(pattern);
   }
 }

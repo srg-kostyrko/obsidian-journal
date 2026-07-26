@@ -14,6 +14,7 @@ export class YearPeriod implements PeriodBase<YearPeriod> {
   readonly start: CalendarDate;
   readonly end: CalendarDate;
   readonly anchor: CalendarDate;
+  readonly representative: CalendarDate;
   readonly year: number;
 
   private constructor(reference: ReturnType<typeof localMoment>) {
@@ -23,6 +24,7 @@ export class YearPeriod implements PeriodBase<YearPeriod> {
     this.start = CalendarDate._fromMoment(start);
     this.end = CalendarDate._fromMoment(end);
     this.anchor = this.start;
+    this.representative = this.start;
     this.year = start.year();
   }
 
@@ -68,6 +70,6 @@ export class YearPeriod implements PeriodBase<YearPeriod> {
   }
 
   format(pattern: string): string {
-    return this.anchor.format(pattern);
+    return this.representative.format(pattern);
   }
 }

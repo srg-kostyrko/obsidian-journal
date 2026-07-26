@@ -12,6 +12,7 @@ export class WeekPeriod implements PeriodBase<WeekPeriod> {
   readonly start: CalendarDate;
   readonly end: CalendarDate;
   readonly anchor: CalendarDate;
+  readonly representative: CalendarDate;
   readonly weekOfYear: number;
   readonly year: number;
 
@@ -24,6 +25,7 @@ export class WeekPeriod implements PeriodBase<WeekPeriod> {
     this.start = CalendarDate._fromMoment(start);
     this.end = CalendarDate._fromMoment(end);
     this.anchor = CalendarDate._fromMoment(anchor);
+    this.representative = this.anchor;
     this.weekOfYear = reference.week();
     this.year = reference.weekYear();
   }
@@ -56,6 +58,6 @@ export class WeekPeriod implements PeriodBase<WeekPeriod> {
   }
 
   format(pattern: string): string {
-    return this.anchor.format(pattern);
+    return this.representative.format(pattern);
   }
 }
