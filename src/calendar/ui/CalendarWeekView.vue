@@ -43,7 +43,10 @@ const grid = useCalendarGrid({
     >
       <slot name="cell" :period="cell.period" :label="cell.label">
         <span>{{ cell.label }}</span>
-        <span>{{ cell.period.format("MMM D") }} – {{ (cell.period as WeekPeriod).end.format("MMM D") }}</span>
+        <span>
+          {{ (cell.period as WeekPeriod).start.format("MMM D") }} –
+          {{ (cell.period as WeekPeriod).end.format("MMM D") }}
+        </span>
       </slot>
     </UiButton>
   </CalendarGrid>

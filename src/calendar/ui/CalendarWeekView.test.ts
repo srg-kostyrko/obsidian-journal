@@ -92,14 +92,26 @@ describe("CalendarWeekView", () => {
   });
 
   describe("cell label", () => {
-    it("renders the week number and date range in the cell text", () => {
+    it("renders the week number in the cell text", () => {
       const outerPeriod = MonthPeriod.containing(date("2025-03-15"));
       mount({ outerPeriod, selected: null });
 
-      const cells = screen.getAllByTestId("week-cell");
-      const marchCell = cells.find((c) => /Mar/i.test(c.textContent ?? ""));
+      const marchCell = screen.getAllByTestId("week-cell").find((c) => /Mar/i.test(c.textContent ?? ""));
       expect(marchCell?.textContent).toMatch(/W\d+/);
-      expect(marchCell?.textContent).toMatch(/Mar \d+/i);
+    });
+
+    it("renders the week's full first-to-last-day span in the cell text", () => {
+      const outerPeriod = MonthPeriod.containing(date("2025-03-15"));
+      mount({ outerPeriod, selected: null });
+
+      const allCells = screen.getAllByTestId("week-cell");
+      const weekWith15 = allCells.find((c) => (c.textContent ?? "").includes("15"));
+      const cellText = weekWith15?.textContent ?? "";
+      // Verify the week containing Mar 15 spans from the first day of the week to the last day
+      // (not from the anchor/representative day to the last day)
+      expect(cellText).toEqual(expect.stringMatching(/Mar \d+[\s\n]+–[\s\n]+Mar 15/));
+      // Specifically, it should start at 9 or earlier (first day of the week), not 13 (anchor day)
+      expect(cellText).not.toMatch(/Mar 1[3-6][\s\n]+–[\s\n]+Mar 15/);
     });
   });
 });
