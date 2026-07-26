@@ -5,6 +5,7 @@ import type { AnchorString } from "@/calendar";
 import { useService } from "@/infrastructure/di";
 
 import { CycleService } from "../../cycle";
+import { FrontmatterService } from "../../frontmatter";
 import { NotePathService } from "../../notes/note-path";
 import { TimelineService } from "../../timeline";
 
@@ -17,6 +18,7 @@ const SAMPLE_COUNT = 40;
 export function useCollisionCheck(config: Ref<JournalConfig | undefined>): ComputedRef<PathCollision | null> {
   const cycle = useService(CycleService);
   const timeline = useService(TimelineService);
+  const frontmatter = useService(FrontmatterService);
   const notePath = useService(NotePathService);
   return computed(() => {
     const value = config.value;
@@ -34,11 +36,16 @@ export function useCollisionCheck(config: Ref<JournalConfig | undefined>): Compu
     while (anchors.length < SAMPLE_COUNT && timeline.contains(name, current)) {
       anchors.push(current);
       const next = cycle.nextAnchor(name, current);
-      if (next.isNone()) break;
+      // A custom cycle's next anchor is derived from a stored end date; a hand-edited
+      // end date at or before its own anchor would make the walk go backwards or stall.
+      if (next.isNone() || next.value <= current) break;
       current = next.value;
     }
     return findPathCollision(anchors, (candidate) => {
-      const path = notePath.pathForDate(name, CalendarDate.fromAnchor(candidate));
+      // candidate is already a canonical anchor, so build metadata straight from it
+      // rather than round-tripping through pathForDate, which re-derives the anchor
+      // from a date and walks a custom cycle's stored entries all over again.
+      const path = frontmatter.buildMetadata(name, candidate).flatMap((metadata) => notePath.pathFor(name, metadata));
       return path.isOk() ? path.value : undefined;
     });
   });

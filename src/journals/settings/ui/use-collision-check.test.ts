@@ -117,4 +117,9 @@ describe("useCollisionCheck", () => {
     });
     expect(probe(config).value).toBeNull();
   });
+
+  it("flags a day-of-month format colliding across a later sample in the walk", () => {
+    const collision = probe(dayJournal({ nameTemplate: "{{date:DD}}" })).value;
+    expect(collision).toMatchObject({ first: "2026-01-01", second: "2026-02-01", path: "01.md" });
+  });
 });
