@@ -8,6 +8,8 @@ import { m } from "@/i18n";
 import { Container, provideInjectorOnApp } from "@/infrastructure/di";
 import { MarkdownRenderService, NotesService } from "@/infrastructure/host";
 import { FakeMarkdownRenderService, FakeNotesService } from "@/infrastructure/host/testing";
+import { CycleService, JournalsIndex, JournalsRepository } from "@/journals";
+import { fakeRepo, fixedJournal } from "@/journals/testing";
 import { ActiveEntryViewModel, type ActiveEntryRef } from "@/notes-calendar/active-entry";
 import { TemplateEngine } from "@/templates";
 
@@ -43,6 +45,14 @@ function seedAndMount(
     .register(MarkdownRenderService)
     .useValue(new FakeMarkdownRenderService() as unknown as MarkdownRenderService);
   container.register(ActiveEntryViewModel).useValue({ active: activeRef } as unknown as ActiveEntryViewModel);
+  container.register(JournalsRepository).useValue(
+    fakeRepo({
+      daily: fixedJournal("daily", { type: "day" }),
+      weekly: fixedJournal("weekly", { type: "week" }),
+    }),
+  );
+  container.register(JournalsIndex).useClass(JournalsIndex);
+  container.register(CycleService).useClass(CycleService);
 
   const refDateRef = ref(refDate);
   const configRef = ref(config);
@@ -78,6 +88,18 @@ describe("MarkdownTemplateBlock", () => {
       { journalName: "daily", anchor: "2026-03-09" as AnchorString },
     );
     expect(await screen.findByText("Today is 2026-03-09")).toBeTruthy();
+  });
+
+  it("resolves {{date}} to the representative day when the active note is a weekly entry", async () => {
+    // ISO test calendar: the week anchored Mon 2025-12-29 is week 1 of 2026, so its
+    // representative day is Thu 2026-01-01 — a different day and a different year.
+    seedAndMount(
+      { "templates/today.md": "Today is {{date}}" },
+      { templatePath: "templates/today.md" },
+      "2026-05-15" as AnchorString,
+      { journalName: "weekly", anchor: "2025-12-29" as AnchorString },
+    );
+    expect(await screen.findByText("Today is 2026-01-01")).toBeTruthy();
   });
 
   it("falls back to the focused refDate for {{date}} when no journal note is active", async () => {

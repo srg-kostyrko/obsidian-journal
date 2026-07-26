@@ -6,6 +6,8 @@ import { m } from "@/i18n";
 import { useService } from "@/infrastructure/di";
 import { NotesService } from "@/infrastructure/host";
 import type { VaultPath } from "@/infrastructure/host";
+import { Option } from "@/infrastructure/result";
+import { CycleService } from "@/journals";
 import { ActiveEntryViewModel } from "@/notes-calendar/active-entry";
 import { TemplateContext, TemplateEngine } from "@/templates";
 import UiMarkdown from "@/ui/UiMarkdown.vue";
@@ -20,6 +22,7 @@ const props = defineProps<{ instanceId: BlockInstanceId; config: MarkdownTemplat
 const notes = useService(NotesService);
 const engine = useService(TemplateEngine);
 const activeEntry = useService(ActiveEntryViewModel);
+const cycle = useService(CycleService);
 const viewContext = useViewContext();
 
 const rawTemplate = ref<string | null>(null);
@@ -47,8 +50,12 @@ async function load(): Promise<void> {
 
 const rendered = computed(() => {
   if (rawTemplate.value === null) return "";
-  const followed = (props.config.followActiveDate ?? true) ? activeEntry.active.value?.anchor : undefined;
-  const focus = CalendarDate.fromAnchor(followed ?? viewContext.refDate.value);
+  // The active entry carries the period's stored anchor; {{date}} renders the period's
+  // representative day, which for a week is the day whose calendar year is the week-year.
+  const followed = (props.config.followActiveDate ?? true) ? activeEntry.active.value : null;
+  const focus = Option.fromNullable(followed)
+    .flatMap((entry) => cycle.representativeOf(entry.journalName, entry.anchor))
+    .getOr(CalendarDate.fromAnchor(viewContext.refDate.value));
   const clockSpec = { kind: "clock", value: Clock.now(), defaultFormat: "HH:mm" } as const;
   const context = TemplateContext.empty()
     .date("date", focus, "YYYY-MM-DD")

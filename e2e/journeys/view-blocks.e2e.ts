@@ -154,4 +154,25 @@ describe("blocks view", () => {
       await expect(weekCalendar.cell(far)).toBeExisting();
     });
   });
+
+  describe("markdown-template weekly follow", () => {
+    it("resolves {{date}} to the week's representative day when a weekly note is active", async () => {
+      await browser.reloadObsidian({ vault: "./e2e/fixtures/e2e-views", plugins: ["journals"] });
+      await seedNote("templates/view-template.md", "# View block template heading\n\nActive date: {{date}}\n");
+      await openBlocksView();
+
+      // Under the fixture's Sunday-start locale a week's canonical anchor is its first day,
+      // so Sun 2026-01-11 is what the note stores. {{date}} renders the week's representative
+      // day instead — Fri 2026-01-16, the day whose calendar year is the week-year.
+      const path = "week/2026-01-11.md";
+      await seedNote(path, "---\njournal: weekly\njournal-date: 2026-01-11\n---\n");
+      await waitForJournalFrontmatter(path, { journal: "weekly", date: "2026-01-11" });
+
+      await openNote(path);
+
+      const block = $(MARKDOWN_TEMPLATE);
+      await block.waitForExist({ timeoutMsg: "markdown-template block did not render" });
+      await expect(block).toHaveText("Active date: 2026-01-16", { containing: true });
+    });
+  });
 });
