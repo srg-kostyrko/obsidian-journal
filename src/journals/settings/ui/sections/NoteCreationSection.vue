@@ -120,14 +120,18 @@ function applyDateFormatRecommendation(): void {
           </a>
         </div>
         <DateFormatPreview :format="config.dateFormat" />
-        <div v-if="isWeekly">
-          <I18nWithSlot :message="m.journal_edit_date_format_week_date_note">
-            <VariableChip name="date" />
-          </I18nWithSlot>
-          <I18nWithSlot :message="m.journal_edit_date_format_week_start_note">
-            <VariableChip name="start_date" />
-          </I18nWithSlot>
-        </div>
+        <template v-if="isWeekly">
+          <div>
+            <I18nWithSlot :message="m.journal_edit_date_format_week_date_note">
+              <VariableChip name="date" />
+            </I18nWithSlot>
+          </div>
+          <div>
+            <I18nWithSlot :message="m.journal_edit_date_format_week_start_note">
+              <VariableChip name="start_date" />
+            </I18nWithSlot>
+          </div>
+        </template>
         <div v-if="config.dateFormat.includes('/')" class="journal-recommendation">
           {{ m.journal_edit_move_to_folder_recommendation_date_format() }}
           <a href="#" @click.prevent="applyDateFormatRecommendation">
