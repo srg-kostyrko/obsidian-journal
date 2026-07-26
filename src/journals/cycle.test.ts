@@ -87,14 +87,22 @@ describe("CycleService", () => {
         expect(result.isSome() && result.value).toBe("2024-02-15");
       });
 
-      it("preserves distance-from-month-end when anchor is the 30th and target month is February", () => {
-        // v2 fidelity: anchor 2024-01-30 is 1 day before Jan-31 (end of month). Advancing 1 month
-        // produces 2024-02-28, which is 1 day before Feb-29 (end of leap-year Feb). Date 2024-02-28
-        // falls inside the interval [2024-02-28, 2024-03-27].
+      it("clamps a day-30 anchor to the last day of a shorter month", () => {
+        // Feb 2024 has 29 days, so the 30th clamps to the 29th; 2024-02-28 still belongs to the
+        // preceding interval [2024-01-30, 2024-02-28].
         const c = buildContainer({ s: customJournal("s", "month", 1, "2024-01-30") });
         const cycle = c.resolve(CycleService);
         const result = cycle.anchorOf("s", unwrapResult(CalendarDate.parse("2024-02-28")));
-        expect(result.isSome() && result.value).toBe("2024-02-28");
+        expect(result.isSome() && result.value).toBe("2024-01-30");
+      });
+
+      it("keeps a month-end anchor on month ends across a short month", () => {
+        // The grid from 2025-01-31 is 01-31, 02-28, 03-31, 04-30, 05-31 — 2025-05-15 falls inside
+        // the interval opened on 2025-04-30.
+        const c = buildContainer({ s: customJournal("s", "month", 1, "2025-01-31") });
+        const cycle = c.resolve(CycleService);
+        const result = cycle.anchorOf("s", unwrapResult(CalendarDate.parse("2025-05-15")));
+        expect(result.isSome() && result.value).toBe("2025-04-30");
       });
     });
   });
@@ -123,6 +131,63 @@ describe("CycleService", () => {
       const cycle = c.resolve(CycleService);
       expect(cycle.nextAnchor("missing", "2024-01-01" as AnchorString).isNone()).toBe(true);
     });
+
+    describe("custom monthly anchored to a month end", () => {
+      it("clamps to the last day of a month too short for the configured day", () => {
+        const c = buildContainer({ s: customJournal("s", "month", 1, "2025-01-31") });
+        const cycle = c.resolve(CycleService);
+        const next = cycle.nextAnchor("s", "2025-01-31" as AnchorString);
+        expect(next.isSome() && next.value).toBe("2025-02-28");
+      });
+
+      it("returns to the month end after passing through a short month", () => {
+        const c = buildContainer({ s: customJournal("s", "month", 1, "2025-01-31") });
+        const cycle = c.resolve(CycleService);
+        const next = cycle.nextAnchor("s", "2025-02-28" as AnchorString);
+        expect(next.isSome() && next.value).toBe("2025-03-31");
+      });
+
+      it("resumes the configured phase from an anchor left off-grid by an extension", () => {
+        const c = buildContainer({ s: customJournal("s", "month", 1, "2025-01-31") });
+        const index = c.resolve(JournalsIndex);
+        index.register({
+          journalName: "s",
+          anchor: "2025-02-28" as AnchorString,
+          path: "S/feb.md" as VaultPath,
+          endDate: "2025-03-04" as AnchorString, // extended past its computed end of 2025-03-30
+        });
+        const cycle = c.resolve(CycleService);
+        const next = cycle.nextAnchor("s", "2025-03-05" as AnchorString);
+        expect(next.isSome() && next.value).toBe("2025-04-30");
+      });
+    });
+
+    describe("custom monthly anchored mid-month", () => {
+      it("restores the configured day in the month after a clamped one", () => {
+        const c = buildContainer({ s: customJournal("s", "month", 1, "2024-01-30") });
+        const cycle = c.resolve(CycleService);
+        const next = cycle.nextAnchor("s", "2024-02-29" as AnchorString);
+        expect(next.isSome() && next.value).toBe("2024-03-30");
+      });
+    });
+
+    describe("custom quarterly anchored to a month end", () => {
+      it("returns to the month end after a quarter landing on a 30-day month", () => {
+        const c = buildContainer({ s: customJournal("s", "quarter", 1, "2025-01-31") });
+        const cycle = c.resolve(CycleService);
+        const next = cycle.nextAnchor("s", "2025-04-30" as AnchorString);
+        expect(next.isSome() && next.value).toBe("2025-07-31");
+      });
+    });
+
+    describe("custom yearly anchored to a leap day", () => {
+      it("returns to the leap day in a year that has one", () => {
+        const c = buildContainer({ s: customJournal("s", "year", 1, "2024-02-29") });
+        const cycle = c.resolve(CycleService);
+        const next = cycle.nextAnchor("s", "2027-02-28" as AnchorString);
+        expect(next.isSome() && next.value).toBe("2028-02-29");
+      });
+    });
   });
 
   describe("previousAnchor", () => {
@@ -141,6 +206,20 @@ describe("CycleService", () => {
       const cycle = c.resolve(CycleService);
       const previous = cycle.previousAnchor("s", "2024-02-15" as AnchorString);
       expect(previous.isSome() && previous.value).toBe("2024-01-15");
+    });
+
+    it("steps a month-end anchor back onto the previous month's last day", () => {
+      const c = buildContainer({ s: customJournal("s", "month", 1, "2025-01-31") });
+      const cycle = c.resolve(CycleService);
+      const previous = cycle.previousAnchor("s", "2025-03-31" as AnchorString);
+      expect(previous.isSome() && previous.value).toBe("2025-02-28");
+    });
+
+    it("steps a quarterly month-end anchor back onto the previous quarter's last day", () => {
+      const c = buildContainer({ s: customJournal("s", "quarter", 1, "2025-01-31") });
+      const cycle = c.resolve(CycleService);
+      const previous = cycle.previousAnchor("s", "2025-04-30" as AnchorString);
+      expect(previous.isSome() && previous.value).toBe("2025-01-31");
     });
   });
 

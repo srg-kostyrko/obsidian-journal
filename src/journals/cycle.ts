@@ -42,32 +42,50 @@ function isParseableAnchor(s: AnchorString): boolean {
   return localMoment(s, "YYYY-MM-DD", true).isValid();
 }
 
-function customStepForward(anchor: AnchorString, every: MomentDurationUnit, duration: number): AnchorString {
-  const m = localMoment(anchor, "YYYY-MM-DD", true);
-  if (every === "month" && m.date() > 28) {
-    const monthEnd = m.clone().endOf("month");
-    const delta = monthEnd.diff(m, "days");
-    const nextEnd = monthEnd.clone().add(duration, "month").endOf("month");
-    return nextEnd.clone().subtract(delta, "days").format("YYYY-MM-DD") as AnchorString;
+// Month-sized steps take their day-of-month from the journal's configured anchor, never from the
+// date being stepped off. Re-deriving the phase from the current anchor loses it the first time a
+// short month clamps it: a 31st anchor clamped to Feb 28 would then read as a plain 28th and stay
+// on the 28th forever, instead of returning to the month end in March.
+function customStepMonths(from: AnchorString, anchor: AnchorString, months: number): AnchorString {
+  const phase = localMoment(anchor, "YYYY-MM-DD", true);
+  const target = localMoment(from, "YYYY-MM-DD", true).date(1).add(months, "month");
+  const day =
+    phase.date() === phase.daysInMonth() ? target.daysInMonth() : Math.min(phase.date(), target.daysInMonth());
+  return target.date(day).format("YYYY-MM-DD") as AnchorString;
+}
+
+// None for units that never cross a month boundary, and so need no phase of their own.
+function monthsPerStep(c: CustomCycle): Option<number> {
+  return match(c.every)
+    .with("month", () => Option.some(c.duration))
+    .with("quarter", () => Option.some(c.duration * 3))
+    .with("year", () => Option.some(c.duration * 12))
+    .with("day", "week", () => Option.none<number>())
+    .exhaustive();
+}
+
+function customStep(from: AnchorString, c: CustomCycle, direction: 1 | -1): AnchorString {
+  const months = monthsPerStep(c);
+  if (months.isSome() && isParseableAnchor(c.anchor)) {
+    return customStepMonths(from, c.anchor, direction * months.value);
   }
-  return m.clone().add(duration, every).format("YYYY-MM-DD") as AnchorString;
+  const m = localMoment(from, "YYYY-MM-DD", true);
+  const stepped = direction === 1 ? m.add(c.duration, c.every) : m.subtract(c.duration, c.every);
+  return stepped.format("YYYY-MM-DD") as AnchorString;
+}
+
+function customStepForward(anchor: AnchorString, c: CustomCycle): AnchorString {
+  return customStep(anchor, c, 1);
+}
+
+function customStepBackward(anchor: AnchorString, c: CustomCycle): AnchorString {
+  return customStep(anchor, c, -1);
 }
 
 function customDefaultEnd(anchor: AnchorString, c: CustomCycle): CalendarDate {
-  const next = customStepForward(anchor, c.every, c.duration);
+  const next = customStepForward(anchor, c);
   const end = localMoment(next, "YYYY-MM-DD", true).subtract(1, "day");
   return CalendarDate.fromAnchor(end.format("YYYY-MM-DD") as AnchorString);
-}
-
-function customStepBackward(anchor: AnchorString, every: MomentDurationUnit, duration: number): AnchorString {
-  const m = localMoment(anchor, "YYYY-MM-DD", true);
-  if (every === "month" && m.date() > 28) {
-    const monthEnd = m.clone().endOf("month");
-    const delta = monthEnd.diff(m, "days");
-    const previousEnd = monthEnd.clone().subtract(duration, "month").endOf("month");
-    return previousEnd.clone().add(delta, "days").format("YYYY-MM-DD") as AnchorString;
-  }
-  return m.clone().subtract(duration, every).format("YYYY-MM-DD") as AnchorString;
 }
 
 export class CycleService {
@@ -83,7 +101,7 @@ export class CycleService {
       const m = localMoment(stored.value.endDate, "YYYY-MM-DD", true).add(1, "day");
       return m.format("YYYY-MM-DD") as AnchorString;
     }
-    return customStepForward(from, c.every, c.duration);
+    return customStepForward(from, c);
   }
 
   #customPrevious(name: string, c: CustomCycle, from: AnchorString): AnchorString {
@@ -95,7 +113,7 @@ export class CycleService {
         return closest.value;
       }
     }
-    return customStepBackward(from, c.every, c.duration);
+    return customStepBackward(from, c);
   }
 
   #cycleFor(name: string): Option<JournalCycle> {
@@ -234,10 +252,7 @@ export class CycleService {
         .with({ kind: "custom" }, (c) => {
           let current = from;
           for (let i = 0; i < Math.abs(steps); i++) {
-            current =
-              steps >= 0
-                ? customStepForward(current, c.every, c.duration)
-                : customStepBackward(current, c.every, c.duration);
+            current = steps >= 0 ? customStepForward(current, c) : customStepBackward(current, c);
           }
           return current;
         })
@@ -263,7 +278,7 @@ export class CycleService {
           let count = 0;
           if (from <= to) {
             while (current < to) {
-              const next = customStepForward(current, c.every, c.duration);
+              const next = customStepForward(current, c);
               if (next > to) break;
               current = next;
               count++;
@@ -271,7 +286,7 @@ export class CycleService {
             return count;
           }
           while (current > to) {
-            const previous = customStepBackward(current, c.every, c.duration);
+            const previous = customStepBackward(current, c);
             if (previous < to) break;
             current = previous;
             count++;
