@@ -14,12 +14,12 @@ import { waitForMigratedIntervalNote, waitForMigratedNote } from "./helpers.js";
 // The migration rewrites journal-date to the period's *canonical anchor*, not the
 // legacy start date verbatim — so a note whose old start date sits mid-period
 // (a week's Tuesday, a month's 5th, a quarter's February, a year's June) lands on
-// the anchor v3 accepts (a week's representative Thursday, the 1st, Jan 1). Writing
+// the anchor v3 accepts (a week's first day, the 1st, Jan 1). Writing
 // the raw start date would leave the note non-canonical and orphaned. Fixture week
-// config is ISO (firstDayOfWeek 1, firstWeekOfYear 4), so the week anchor is Thursday.
+// config is ISO (firstDayOfWeek 1, firstWeekOfYear 4), so the week anchor is Monday.
 const calendarNotes = [
   { section: "day", journal: "My Journal Day", path: "archive/day-note.md", date: "2024-03-10" },
-  { section: "week", journal: "My Journal Week", path: "archive/week-note.md", date: "2024-03-14" },
+  { section: "week", journal: "My Journal Week", path: "archive/week-note.md", date: "2024-03-11" },
   { section: "month", journal: "My Journal Month", path: "archive/month-note.md", date: "2024-03-01" },
   { section: "quarter", journal: "My Journal Quarter", path: "archive/quarter-note.md", date: "2024-01-01" },
   { section: "year", journal: "My Journal Year", path: "archive/year-note.md", date: "2024-01-01" },

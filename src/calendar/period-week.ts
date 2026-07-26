@@ -20,12 +20,13 @@ export class WeekPeriod implements PeriodBase<WeekPeriod> {
     const start = reference.clone().startOf("week");
     const end = reference.clone().endOf("week").startOf("day");
     const doy = reference.localeData().firstDayOfYear();
-    const anchor = start.clone().add(doy - 1, "day");
 
     this.start = CalendarDate._fromMoment(start);
     this.end = CalendarDate._fromMoment(end);
-    this.anchor = CalendarDate._fromMoment(anchor);
-    this.representative = this.anchor;
+    this.anchor = this.start;
+    // The locale's representative day: the one whose calendar year is the week-year, so
+    // {{date:YYYY}} resolves correctly for a week straddling January 1.
+    this.representative = CalendarDate._fromMoment(start.clone().add(doy - 1, "day"));
     this.weekOfYear = reference.week();
     this.year = reference.weekYear();
   }

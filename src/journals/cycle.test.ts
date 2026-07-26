@@ -57,18 +57,18 @@ describe("CycleService", () => {
         const c = buildContainer({ weekly: fixedJournal("weekly", { type: "week" }) });
         const cycle = c.resolve(CycleService);
         // Week containing Wed 2020-12-30 starts Mon 2020-12-28, ends Sun 2021-01-03.
-        // With dow=1 doy=4, anchor = start + 3 days = Thu 2020-12-31.
+        // With dow=1, the anchor is the week's first day = Mon 2020-12-28.
         const result = cycle.anchorOf("weekly", unwrapResult(CalendarDate.parse("2020-12-30")));
-        expect(result.isSome() && result.value).toBe("2020-12-31");
+        expect(result.isSome() && result.value).toBe("2020-12-28");
       });
 
       it("returns a year-2021 anchor for a date the week-year considers 2021", () => {
         const c = buildContainer({ weekly: fixedJournal("weekly", { type: "week" }) });
         const cycle = c.resolve(CycleService);
         // Week containing Mon 2021-01-04 starts Mon 2021-01-04, ends Sun 2021-01-10.
-        // With dow=1 doy=4, anchor = start + 3 days = Thu 2021-01-07.
+        // With dow=1, the anchor is the week's first day = Mon 2021-01-04.
         const result = cycle.anchorOf("weekly", unwrapResult(CalendarDate.parse("2021-01-04")));
-        expect(result.isSome() && result.value).toBe("2021-01-07");
+        expect(result.isSome() && result.value).toBe("2021-01-04");
       });
     });
 
@@ -150,10 +150,9 @@ describe("CycleService", () => {
       const cycle = c.resolve(CycleService);
       const next = cycle.nextAnchor("w", "2024-03-04" as AnchorString);
       const result = next.isSome() && next.value;
-      // With the test calendar (dow=1, doy=4), the anchor of a week is Thursday.
-      // next() of the week containing 2024-03-04 (Mon): next week = Mon 2024-03-11,
-      // anchor = 2024-03-11 + (4-1) = 2024-03-14.
-      expect(result).toBe("2024-03-14");
+      // With the test calendar (dow=1), the anchor of a week is its first day (Monday).
+      // next() of the week containing 2024-03-04 (Mon): next week = Mon 2024-03-11.
+      expect(result).toBe("2024-03-11");
     });
 
     it("returns next anchor for custom monthly", () => {
@@ -232,10 +231,9 @@ describe("CycleService", () => {
       const c = buildContainer({ w: fixedJournal("w", { type: "week" }) });
       const cycle = c.resolve(CycleService);
       const previous = cycle.previousAnchor("w", "2024-03-07" as AnchorString);
-      // With the test calendar (dow=1, doy=4), 2024-03-07 is Thursday — a valid week anchor.
-      // previous() of that week (Mon 2024-03-04 – Sun 2024-03-10): prior week = Mon 2024-02-26,
-      // anchor = 2024-02-26 + (4-1) = 2024-02-29.
-      expect(previous.isSome() && previous.value).toBe("2024-02-29");
+      // With the test calendar (dow=1), 2024-03-07 (Thu) resolves to its week Mon 2024-03-04 –
+      // Sun 2024-03-10; the prior week's anchor is its first day = Mon 2024-02-26.
+      expect(previous.isSome() && previous.value).toBe("2024-02-26");
     });
 
     it("returns previous anchor for custom monthly", () => {

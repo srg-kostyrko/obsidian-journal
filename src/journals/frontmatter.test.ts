@@ -167,7 +167,7 @@ describe("FrontmatterService", () => {
     it("re-adopts a note written through writeMutator for its own fixed journal", () => {
       const c = buildContainer({ weekly: fixedJournal("weekly", { type: "week" }) });
       const fm = c.resolve(FrontmatterService);
-      const written = fm.writeMutator("weekly", { journalName: "weekly", anchor: "2021-01-07" as AnchorString });
+      const written = fm.writeMutator("weekly", { journalName: "weekly", anchor: "2021-01-04" as AnchorString });
       expect(written.isOk()).toBe(true);
       if (!written.isOk()) return;
       const out: Record<string, unknown> = {};

@@ -280,7 +280,28 @@ describe("NotePathService.candidateFor weekly round trip", () => {
 
     const result = c.resolve(NotePathService).candidateFor("weekly", "2026-W1.md" as VaultPath);
 
-    expect(unwrap(result).anchor).toBe("2026-01-01");
+    expect(unwrap(result).anchor).toBe("2025-12-29");
+  });
+
+  it("resolves a day-precision weekly note name to the week's first day", () => {
+    const repo = fakeRepo({
+      weekly: fixedJournal("weekly", { type: "week" }, { dateFormat: "YYYY-MM-DD" }),
+    });
+    const c = buildContainer(repo);
+
+    const result = c.resolve(NotePathService).candidateFor("weekly", "2026-01-01.md" as VaultPath);
+
+    expect(unwrap(result).anchor).toBe("2025-12-29");
+  });
+
+  it("renders a weekly note name from the week-year regardless of the stored anchor", () => {
+    const repo = fakeRepo({ weekly: fixedJournal("weekly", { type: "week" }) });
+    const c = buildContainer(repo);
+    const meta: JournalMetadata = { journalName: "weekly", anchor: anchor("2025-12-29") };
+
+    const result = c.resolve(NotePathService).pathFor("weekly", meta);
+
+    expect(result.isOk() && result.value).toBe("2026-W1.md");
   });
 });
 

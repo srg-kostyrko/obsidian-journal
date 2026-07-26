@@ -32,8 +32,8 @@ describe("WeekPeriod", () => {
   });
 
   describe("anchor", () => {
-    it("is the Thursday inside the week under ISO 8601", () => {
-      expect(WeekPeriod.containing(date("2025-03-10")).anchor.toAnchor()).toBe("2025-03-13");
+    it("is the week's first day under ISO 8601", () => {
+      expect(WeekPeriod.containing(date("2025-03-14")).anchor.toAnchor()).toBe("2025-03-10");
     });
   });
 
@@ -63,16 +63,16 @@ describe("WeekPeriod", () => {
       expect(WeekPeriod.containing(date("2024-12-31")).end.toAnchor()).toBe("2025-01-05");
     });
 
-    it("anchor is the Thursday inside the cross-year week", () => {
-      expect(WeekPeriod.containing(date("2024-12-31")).anchor.toAnchor()).toBe("2025-01-02");
+    it("anchor is the week's first day for the cross-year week", () => {
+      expect(WeekPeriod.containing(date("2024-12-31")).anchor.toAnchor()).toBe("2024-12-30");
     });
 
     it("year is the locale-owning year for the cross-year week", () => {
       expect(WeekPeriod.containing(date("2024-12-31")).year).toBe(2025);
     });
 
-    it("anchor.format('YYYY') matches year for the same cross-year week", () => {
-      expect(WeekPeriod.containing(date("2024-12-31")).anchor.format("YYYY")).toBe("2025");
+    it("representative.format('YYYY') matches year for the same cross-year week", () => {
+      expect(WeekPeriod.containing(date("2024-12-31")).representative.format("YYYY")).toBe("2025");
     });
   });
 
@@ -156,11 +156,11 @@ describe("WeekPeriod", () => {
       expect(WeekPeriod.containing(date("2025-03-14")).end.toAnchor()).toBe("2025-03-15");
     });
 
-    it("anchor is the Friday for a Sun-start week under dow=0, doy=6", () => {
+    it("anchor is the Sunday for a Sun-start week under dow=0, doy=6", () => {
       teardown();
       ({ teardown } = installTestCalendar({ dow: 0, doy: 6 }));
 
-      expect(WeekPeriod.containing(date("2025-03-14")).anchor.toAnchor()).toBe("2025-03-14");
+      expect(WeekPeriod.containing(date("2025-03-14")).anchor.toAnchor()).toBe("2025-03-09");
     });
 
     it("year returns owning year for a cross-year week under dow=0, doy=6", () => {
@@ -172,13 +172,13 @@ describe("WeekPeriod", () => {
       expect(WeekPeriod.containing(date("2025-12-31")).year).toBe(2026);
     });
 
-    it("anchor.year matches year for the cross-year week under dow=0, doy=6", () => {
+    it("representative.year matches year for the cross-year week under dow=0, doy=6", () => {
       teardown();
       ({ teardown } = installTestCalendar({ dow: 0, doy: 6 }));
 
       const week = WeekPeriod.containing(date("2025-12-31"));
 
-      expect(week.anchor.year).toBe(week.year);
+      expect(week.representative.year).toBe(week.year);
     });
   });
 });
