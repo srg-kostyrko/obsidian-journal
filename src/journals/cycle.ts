@@ -278,9 +278,17 @@ export class CycleService {
     return this.#cycleFor(name).map((cycle) =>
       match(cycle)
         .with({ kind: "fixed" }, (c) => {
-          const a = localMoment(from, "YYYY-MM-DD", true);
-          const b = localMoment(to, "YYYY-MM-DD", true);
-          return Math.ceil(b.diff(a, c.period));
+          // Both ends must sit on the journal's grid before diffing: `from` is free-form (a
+          // timeline start or numbering anchor the user picked mid-period, or a v2 config
+          // carried over verbatim) while `to` is always a canonical anchor. A raw diff counts
+          // whole periods only when both share the same intra-period offset — a Wednesday
+          // start against Monday week anchors otherwise collapses two weeks into one step.
+          const a = periodOfKind(c.period, CalendarDate.fromAnchor(from)).anchor;
+          const b = periodOfKind(c.period, CalendarDate.fromAnchor(to)).anchor;
+          return localMoment(b.toAnchor(), "YYYY-MM-DD", true).diff(
+            localMoment(a.toAnchor(), "YYYY-MM-DD", true),
+            c.period,
+          );
         })
         .with({ kind: "custom" }, (c) => {
           let current = from;

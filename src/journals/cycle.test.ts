@@ -414,6 +414,22 @@ describe("CycleService", () => {
       expect(cycle.countRepeats("w", "2024-01-01" as AnchorString, "nonsense" as AnchorString).isNone()).toBe(true);
     });
 
+    it("counts whole weeks from a mid-week start date", () => {
+      const c = buildContainer({ w: fixedJournal("w", { type: "week" }) });
+      const cycle = c.resolve(CycleService);
+      // Wed 2024-01-03 sits in the week anchored Mon 2024-01-01; the week anchored
+      // 2024-01-15 is two weeks on, however far into its week the start date falls.
+      const result = cycle.countRepeats("w", "2024-01-03" as AnchorString, "2024-01-15" as AnchorString);
+      expect(result.isSome() && result.value).toBe(2);
+    });
+
+    it("counts whole months from a mid-month start date", () => {
+      const c = buildContainer({ m: fixedJournal("m", { type: "month" }) });
+      const cycle = c.resolve(CycleService);
+      const result = cycle.countRepeats("m", "2024-06-15" as AnchorString, "2024-08-01" as AnchorString);
+      expect(result.isSome() && result.value).toBe(2);
+    });
+
     it("returns equal magnitude regardless of direction", () => {
       const c = buildContainer({ w: fixedJournal("w", { type: "week" }) });
       const cycle = c.resolve(CycleService);
