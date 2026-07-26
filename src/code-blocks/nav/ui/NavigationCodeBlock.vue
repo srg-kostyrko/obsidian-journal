@@ -7,7 +7,14 @@ import { m } from "@/i18n";
 import { useService } from "@/infrastructure/di";
 import { Flows } from "@/infrastructure/flows";
 import { defineOpenMode, type CodeBlockProps } from "@/infrastructure/host";
-import { CycleService, JournalsIndex, JournalsRepository, OpenDateFlow, TimelineService } from "@/journals";
+import {
+  CycleService,
+  JournalsIndex,
+  JournalsRepository,
+  OpenDateFlow,
+  TimelineService,
+  useIndexVersion,
+} from "@/journals";
 import { ShelvesRepository } from "@/shelves";
 import { icons } from "@/ui/icons";
 import UiIconButton from "@/ui/UiIconButton.vue";
@@ -26,7 +33,12 @@ const timeline = useService(TimelineService);
 const shelves = useService(ShelvesRepository);
 const flows = useService(Flows);
 
-const entryOpt = computed(() => index.entryByPath(path));
+const indexVersion = useIndexVersion();
+
+const entryOpt = computed(() => {
+  void indexVersion.value;
+  return index.entryByPath(path);
+});
 const journalOpt = computed(() =>
   entryOpt.value.isSome() ? journals.get(entryOpt.value.value.journalName) : undefined,
 );
@@ -46,6 +58,7 @@ const adjacent = computed<{ previous: AnchorString | undefined; next: AnchorStri
   const inBounds = (candidate: AnchorString | undefined): AnchorString | undefined =>
     candidate !== undefined && timeline.contains(currentJournal.name, candidate) ? candidate : undefined;
   if (currentJournal.navBlock.type === "existing") {
+    void indexVersion.value;
     const previousPath = index.findPrevious(currentJournal.name, anchor);
     const nextPath = index.findNext(currentJournal.name, anchor);
     const previous = previousPath.flatMap((p) => index.entryByPath(p)).map((entry) => entry.anchor);

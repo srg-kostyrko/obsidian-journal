@@ -1,6 +1,6 @@
 import { cleanup, render } from "@testing-library/vue";
 import { afterEach, beforeAll, beforeEach, describe, expect, it, vi } from "vitest";
-import { computed } from "vue";
+import { computed, nextTick } from "vue";
 
 import type * as CalendarModule from "@/calendar";
 import { CalendarDate, type AnchorString, type WeekPlacement, type WeekPlacementConfig } from "@/calendar";
@@ -125,6 +125,16 @@ describe("TimelineCodeBlock", () => {
       const { container } = mount(h, { path: HOST_PATH, config: {} });
 
       expect(container.querySelector(".timeline-week")).toBeTruthy();
+    });
+
+    it("re-derives the mode when the index registers the host note after mount", async () => {
+      const h = buildNotesCalendarHarness({ journals: { monthly: fixedJournal("monthly", { type: "month" }) } });
+
+      const { container } = mount(h, { path: HOST_PATH, config: {} });
+      h.index.register({ journalName: "monthly", anchor: HOST_ANCHOR, path: HOST_PATH });
+      await nextTick();
+
+      expect(container.querySelector(".timeline-month")).toBeTruthy();
     });
   });
 

@@ -1,12 +1,12 @@
 <script setup lang="ts">
-import { computed, onMounted, onUnmounted, shallowRef } from "vue";
+import { computed } from "vue";
 
 import type { AnchorString } from "@/calendar";
 import { periodForJournal } from "@/code-blocks/nav/period-for-journal";
 import NavBlock from "@/code-blocks/nav/ui/NavBlock.vue";
 import { hasOffsetCondition, useCellDecorations } from "@/decorations";
 import { useService } from "@/infrastructure/di";
-import { CycleService, JournalsIndex, JournalsRepository, TimelineService } from "@/journals";
+import { CycleService, JournalsRepository, TimelineService, useIndexVersion } from "@/journals";
 import type { JournalConfig, JournalNavBlock } from "@/journals";
 import { ActiveEntryViewModel } from "@/notes-calendar/active-entry";
 import { useCalendarAppearanceStyle } from "@/notes-calendar/appearance/use-appearance-style";
@@ -27,7 +27,6 @@ const props = defineProps<{
 
 const context = useViewContext();
 const appearanceStyle = useCalendarAppearanceStyle();
-const index = useService(JournalsIndex);
 const journalsRepo = useService(JournalsRepository);
 const cycle = useService(CycleService);
 const timeline = useService(TimelineService);
@@ -56,13 +55,7 @@ const focus = useFollowActiveDate({
 
 const window = computed(() => resolveWindow(props.config.window, focus.value));
 
-const indexVersion = shallowRef(0);
-onMounted(() => {
-  const off = index.events.on("entryChanged", () => {
-    indexVersion.value++;
-  });
-  onUnmounted(off);
-});
+const indexVersion = useIndexVersion();
 
 interface Section {
   readonly journalName: string;

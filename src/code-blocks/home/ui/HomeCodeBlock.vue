@@ -6,7 +6,7 @@ import { m } from "@/i18n";
 import { useService } from "@/infrastructure/di";
 import { Flows } from "@/infrastructure/flows";
 import { defineOpenMode, type CodeBlockProps } from "@/infrastructure/host";
-import { JournalsIndex, JournalsRepository, NotePathService, OpenDateFlow } from "@/journals";
+import { JournalsIndex, JournalsRepository, NotePathService, OpenDateFlow, useIndexVersion } from "@/journals";
 import { ShelvesRepository } from "@/shelves";
 
 import { buildHomeItems, type HomeItem } from "../home-items";
@@ -23,12 +23,15 @@ const flows = useService(Flows);
 
 const today = computed(() => Clock.now().format("YYYY-MM-DD") as AnchorString);
 
-const currentJournalName = computed(() =>
-  index
+const indexVersion = useIndexVersion();
+
+const currentJournalName = computed(() => {
+  void indexVersion.value;
+  return index
     .entryByPath(path)
     .map((entry) => entry.journalName)
-    .getOrUndefined(),
-);
+    .getOrUndefined();
+});
 
 const shelfByJournal = computed(() => {
   const map = new Map<string, string>();

@@ -2,6 +2,7 @@ import userEvent from "@testing-library/user-event";
 import { cleanup, fireEvent, render, screen } from "@testing-library/vue";
 import { createNanoEvents } from "nanoevents";
 import { afterEach, beforeAll, beforeEach, describe, expect, it, vi } from "vitest";
+import { nextTick } from "vue";
 
 import type { AnchorString } from "@/calendar";
 import { installTestCalendar } from "@/calendar/testing";
@@ -200,6 +201,23 @@ describe("NavigationCodeBlock", () => {
     const h = buildHarness({});
     mount(h, "Random/Note.md");
     expect(screen.getByText("Note is not connected to a journal")).toBeTruthy();
+  });
+
+  it("drops the not-connected message once the index registers the note after mount", async () => {
+    const daily = journalDefaultsFor({ type: "day" }, "daily");
+    const h = buildHarness({ daily });
+    mount(h, "Daily/2026-05-27.md");
+
+    const entry: JournalEntry = {
+      journalName: "daily",
+      anchor: "2026-05-27" as AnchorString,
+      path: "Daily/2026-05-27.md" as VaultPath,
+    };
+    h.index.byPath.set(entry.path, entry);
+    h.index.events.emit("entryChanged", { entry, kind: "added" });
+    await nextTick();
+
+    expect(screen.queryByText("Note is not connected to a journal")).toBeNull();
   });
 });
 

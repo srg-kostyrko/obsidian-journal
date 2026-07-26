@@ -5,7 +5,7 @@ import { computed } from "vue";
 import { Clock, useResolvedWeekPlacement, type AnchorString } from "@/calendar";
 import { useService } from "@/infrastructure/di";
 import type { CodeBlockProps } from "@/infrastructure/host";
-import { JournalsIndex, JournalsRepository } from "@/journals";
+import { JournalsIndex, JournalsRepository, useIndexVersion } from "@/journals";
 import { ShelvesRepository } from "@/shelves";
 
 import TimelineCalendar from "./TimelineCalendar.vue";
@@ -21,7 +21,12 @@ const journals = useService(JournalsRepository);
 const index = useService(JournalsIndex);
 const shelves = useService(ShelvesRepository);
 
-const entry = computed(() => index.entryByPath(path));
+const indexVersion = useIndexVersion();
+
+const entry = computed(() => {
+  void indexVersion.value;
+  return index.entryByPath(path);
+});
 
 const journal = computed(() =>
   entry.value

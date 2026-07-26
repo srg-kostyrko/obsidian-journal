@@ -1,7 +1,10 @@
 import userEvent from "@testing-library/user-event";
 import { cleanup, render, screen } from "@testing-library/vue";
+import { createNanoEvents } from "nanoevents";
 import { afterEach, beforeAll, beforeEach, describe, expect, it, vi } from "vitest";
+import { nextTick } from "vue";
 
+import type { AnchorString } from "@/calendar";
 import { initLocale, m } from "@/i18n";
 import { Container, provideInjectorOnApp } from "@/infrastructure/di";
 import { Flows } from "@/infrastructure/flows";
@@ -20,7 +23,7 @@ import {
   NumberingService,
   OpenDateFlow,
 } from "@/journals";
-import type { JournalConfig } from "@/journals";
+import type { JournalConfig, JournalEntry } from "@/journals";
 import { customJournal, fakeRepo } from "@/journals/testing";
 import { ShelvesRepository } from "@/shelves";
 import { TemplateEngine } from "@/templates";
@@ -43,14 +46,24 @@ class FakeJournalsRepository {
 }
 
 class FakeJournalsIndex {
+  #entry: JournalEntry | undefined;
+  events = createNanoEvents();
+  connect(entry: JournalEntry): void {
+    this.#entry = entry;
+    this.events.emit("entryChanged", { entry, kind: "added" });
+  }
   entryByPath() {
-    return Option.none();
+    return Option.fromNullable(this.#entry);
   }
 }
 
 class FakeShelvesRepository {
+  #shelves: { name: string; journals: string[] }[] = [];
+  seed(shelves: { name: string; journals: string[] }[]): void {
+    this.#shelves = shelves;
+  }
   find() {
-    return { list: () => [][Symbol.iterator]() };
+    return { list: () => this.#shelves[Symbol.iterator]() };
   }
 }
 
@@ -101,6 +114,8 @@ describe("HomeCodeBlock", () => {
 
   let journalsRepo: FakeJournalsRepository;
   let flowsFake: FakeFlows;
+  let index: FakeJournalsIndex;
+  let shelvesRepo: FakeShelvesRepository;
   let container: Container;
 
   beforeEach(() => {
@@ -109,12 +124,14 @@ describe("HomeCodeBlock", () => {
 
     journalsRepo = new FakeJournalsRepository();
     flowsFake = new FakeFlows();
+    index = new FakeJournalsIndex();
+    shelvesRepo = new FakeShelvesRepository();
 
     container = new Container();
     container.register(LoggerFactoryToken).useClass(LoggerFactory);
     container.register(JournalsRepository).useValue(journalsRepo as unknown as JournalsRepository);
-    container.register(JournalsIndex).useValue(new FakeJournalsIndex() as unknown as JournalsIndex);
-    container.register(ShelvesRepository).useValue(new FakeShelvesRepository() as unknown as ShelvesRepository);
+    container.register(JournalsIndex).useValue(index as unknown as JournalsIndex);
+    container.register(ShelvesRepository).useValue(shelvesRepo as unknown as ShelvesRepository);
     container.register(NotePathService).useValue(new FakeNotePathService() as unknown as NotePathService);
     container.register(NoticeService).useValue(new FakeNoticeService());
     container.register(Flows).useValue(flowsFake as unknown as Flows);
@@ -200,6 +217,24 @@ describe("HomeCodeBlock", () => {
     expect(flowsFake.calls).toHaveLength(1);
     const parameters = flowsFake.calls[0]?.parameters as { anchor: string; journalNames: string[] };
     expect(parameters.anchor).toBe("2026-05-27");
+    expect(parameters.journalNames).toEqual(["Daily"]);
+  });
+
+  it("narrows to the host note's shelf when the index registers it after mount", async () => {
+    journalsRepo.seed([dayJournal("Daily"), dayJournal("Personal")]);
+    shelvesRepo.seed([
+      { name: "work", journals: ["Daily"] },
+      { name: "home", journals: ["Personal"] },
+    ]);
+    mount(container, { path: "Note.md" as VaultPath, config: { show: ["day"], separator: " • ", scale: 1 } });
+
+    index.connect({ journalName: "Daily", anchor: "2026-05-27" as AnchorString, path: "Note.md" as VaultPath });
+    await nextTick();
+
+    const user = userEvent.setup({ advanceTimers: vi.advanceTimersByTime });
+    await user.click(screen.getByRole("link"));
+
+    const parameters = flowsFake.calls[0]?.parameters as { journalNames: string[] };
     expect(parameters.journalNames).toEqual(["Daily"]);
   });
 

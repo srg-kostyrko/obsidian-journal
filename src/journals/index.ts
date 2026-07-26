@@ -11,6 +11,8 @@ export { VaultSubscriptionService } from "./vault-subscription";
 
 export { JournalsIndex } from "./journals-index";
 
+export { useIndexVersion } from "./use-index-version";
+
 export { journalsModule } from "./module";
 
 export {
