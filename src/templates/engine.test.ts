@@ -266,6 +266,33 @@ describe("TemplateEngine.parse", () => {
       expectErr(result);
       expect(result.error.detail.kind).toBe("conflict");
     });
+
+    it("combines complementary date components split across tokens", () => {
+      const engine = installTestEngine();
+      const context = buildFakeContext();
+      const stream = tokenize("{{date:YYYY}}-{{date:MM}}-{{date:DD}}.md");
+      const result = engine.parse(stream, "2022-05-19.md", context);
+      expectOk(result);
+      expect(asDateBinding(result.value.get("date")).toAnchor()).toBe("2022-05-19");
+    });
+
+    it("combines a coarse and a full binding of the same date variable", () => {
+      const engine = installTestEngine();
+      const context = buildFakeContext();
+      const stream = tokenize("{{date:YYYY}}/{{date:YYYY-MM-DD}}.md");
+      const result = engine.parse(stream, "2022/2022-05-19.md", context);
+      expectOk(result);
+      expect(asDateBinding(result.value.get("date")).toAnchor()).toBe("2022-05-19");
+    });
+
+    it("returns conflict when split components disagree on a shared field", () => {
+      const engine = installTestEngine();
+      const context = buildFakeContext();
+      const stream = tokenize("{{date:YYYY}}/{{date:YYYY-MM-DD}}.md");
+      const result = engine.parse(stream, "2021/2022-05-19.md", context);
+      expectErr(result);
+      expect(result.error.detail.kind).toBe("conflict");
+    });
   });
 });
 

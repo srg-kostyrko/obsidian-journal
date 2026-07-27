@@ -6,7 +6,6 @@ import { inject } from "@/infrastructure/di";
 import type { VaultPath } from "@/infrastructure/host";
 import { attempt, Option, type Result } from "@/infrastructure/result";
 import { TemplateContext, TemplateEngine, tokenize } from "@/templates";
-import type { Bindings } from "@/templates";
 
 import { CycleService } from "../cycle";
 import { JournalNotFoundError } from "../errors";
@@ -30,8 +29,13 @@ export class NotePathService {
   }
 
   #parseContext(config: JournalConfig): TemplateContext {
+    // start_date/end_date mirror the render context (contextFor) so a note named by its
+    // period bounds (e.g. a weekly "{{start_date:YYYY-MM-DD}}") is invertible too; the
+    // seeded value is unused, only the kind and default format drive inversion.
     let context = TemplateContext.empty()
       .date("date", CalendarDate.today(), config.dateFormat)
+      .date("start_date", CalendarDate.today(), config.dateFormat)
+      .date("end_date", CalendarDate.today(), config.dateFormat)
       .string("journal_name", config.name);
     for (const source of config.numbering.sources) {
       context = context.number(source.variable, 0);
@@ -64,39 +68,22 @@ export class NotePathService {
     const config = this.configFor(name);
     if (!config) return Option.none();
     const context = this.#parseContext(config);
-    // The template engine can't reconcile two date bindings for the same variable
-    // at different resolutions (e.g. {{date:YYYY}} in the folder vs {{date}} in
-    // the filename). Parsing each part independently avoids the conflict; filename
-    // is the canonical date source, so its bindings take precedence on any overlap.
-    let filename: string = path;
-    let folderBindings: Bindings | undefined;
-    if (config.folder) {
-      const lastSlash = path.lastIndexOf("/");
-      if (lastSlash === -1) return Option.none();
-      const folderPart = path.slice(0, lastSlash);
-      filename = path.slice(lastSlash + 1);
-      const folderParsed = this.#engine.parse(tokenize(config.folder), folderPart, context);
-      if (folderParsed.kind === "err") return Option.none();
-      folderBindings = folderParsed.value;
-    }
-    const parsed = this.#engine.parse(tokenize(`${config.nameTemplate}.md`), filename, context);
+    // Invert the whole folder+name template in one pass so a date split across folder
+    // segments and the filename (e.g. Journals/{{date:YYYY}}/{{date:MM}}/{{date:DD}})
+    // reassembles into a single anchor rather than losing the folder's components.
+    const template = config.folder ? `${config.folder}/${config.nameTemplate}.md` : `${config.nameTemplate}.md`;
+    const parsed = this.#engine.parse(tokenize(template), path, context);
     if (parsed.kind === "err") return Option.none();
     const bindings = parsed.value;
     const numbers: Record<string, number> = {};
-    // Seed from folder bindings first so filename bindings take precedence.
-    if (folderBindings) {
-      for (const source of config.numbering.sources) {
-        const captured = folderBindings.get(source.variable);
-        if (captured?.kind === "number") numbers[source.variable] = captured.value;
-      }
-    }
     for (const source of config.numbering.sources) {
       const captured = bindings.get(source.variable);
       if (captured?.kind === "number") numbers[source.variable] = captured.value;
     }
-    // The date variable is the canonical anchor source; a template without one (e.g.
-    // "Sprint {{index}}") falls back to inverting the captured numbering value.
-    const dateBinding = bindings.get("date");
+    // The date variable is the canonical anchor source; start_date/end_date fall inside the
+    // same period, so a note named by its bounds recovers the anchor too. A template with no
+    // date at all (e.g. "Sprint {{index}}") falls back to inverting the captured numbering.
+    const dateBinding = bindings.get("date") ?? bindings.get("start_date") ?? bindings.get("end_date");
     let anchor: AnchorString;
     if (dateBinding?.kind === "date") {
       // A coarse format (e.g. a week's "YYYY-[W]w") parses back to some day inside the

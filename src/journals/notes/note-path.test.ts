@@ -159,6 +159,56 @@ describe("NotePathService.candidateFor", () => {
     expect(metadata.anchor).toBe("2026-05-19");
   });
 
+  it("inverts a date split across folder segments and the filename", () => {
+    const repo = fakeRepo({
+      daily: fixedJournal(
+        "daily",
+        { type: "day" },
+        { folder: "Journals/{{date:YYYY}}/{{date:MM}}", nameTemplate: "{{date:DD}}" },
+      ),
+    });
+    const c = buildContainer(repo);
+    const result = c.resolve(NotePathService).candidateFor("daily", "Journals/2026/05/19.md" as VaultPath);
+    expect(unwrap(result).anchor).toBe("2026-05-19");
+  });
+
+  it("inverts a date split across multiple tokens in the filename", () => {
+    const repo = fakeRepo({
+      daily: fixedJournal("daily", { type: "day" }, { nameTemplate: "{{date:YYYY}}-{{date:MM}}-{{date:DD}}" }),
+    });
+    const c = buildContainer(repo);
+    const result = c.resolve(NotePathService).candidateFor("daily", "2026-05-19.md" as VaultPath);
+    expect(unwrap(result).anchor).toBe("2026-05-19");
+  });
+
+  it("recovers the period anchor from a note named by its start date", () => {
+    const repo = fakeRepo({
+      weekly: fixedJournal("weekly", { type: "week" }, { nameTemplate: "{{start_date:YYYY-MM-DD}}" }),
+    });
+    const c = buildContainer(repo);
+    const svc = c.resolve(NotePathService);
+    const day = CalendarDate.fromAnchor(anchor("2026-05-21"));
+    const path = svc.pathForDate("weekly", day);
+    assert(path.isOk());
+    const expected = c.resolve(CycleService).anchorOf("weekly", day);
+    assert(expected.isSome());
+    expect(unwrap(svc.candidateFor("weekly", path.value)).anchor).toBe(expected.value);
+  });
+
+  it("recovers the period anchor from a note named by its end date", () => {
+    const repo = fakeRepo({
+      weekly: fixedJournal("weekly", { type: "week" }, { nameTemplate: "{{end_date:YYYY-MM-DD}}" }),
+    });
+    const c = buildContainer(repo);
+    const svc = c.resolve(NotePathService);
+    const day = CalendarDate.fromAnchor(anchor("2026-05-21"));
+    const path = svc.pathForDate("weekly", day);
+    assert(path.isOk());
+    const expected = c.resolve(CycleService).anchorOf("weekly", day);
+    assert(expected.isSome());
+    expect(unwrap(svc.candidateFor("weekly", path.value)).anchor).toBe(expected.value);
+  });
+
   it("captures numbering variables that appear only in the folder template", () => {
     const repo = fakeRepo({
       sprints: fixedJournal(

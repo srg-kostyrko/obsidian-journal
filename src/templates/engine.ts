@@ -153,6 +153,63 @@ export class TemplateEngine {
       .exhaustive();
   }
 
+  #resolveDate(name: string, entries: DateCapture[]): Result<BoundValue, TemplateParseError> {
+    if (entries.length === 1) {
+      return this.#parseCapture(entries[0].capture, entries[0].spec, entries[0].token);
+    }
+    // Combining relies on moment reassembling components from one format string, which
+    // can't account for arithmetic/boundary modifiers. When any token carries a modifier
+    // (e.g. a week's <startOf>/<endOf> pair), fall back to parsing each independently and
+    // requiring the normalized lower bounds to agree.
+    const noModifiers = entries.every((entry) => entry.token.modifiers.length === 0);
+    const fieldSets = noModifiers ? entries.map((entry) => ymdFields(entry.format)) : undefined;
+    if (!fieldSets || fieldSets.includes(undefined)) {
+      const parsed: BoundValue[] = [];
+      for (const entry of entries) {
+        const value = this.#parseCapture(entry.capture, entry.spec, entry.token);
+        if (value.kind === "err") return new Err(value.error);
+        parsed.push(value.value);
+      }
+      return mergeCandidates(name, parsed);
+    }
+    const definiteFields = fieldSets.filter((fields): fields is Set<DateField> => fields !== undefined);
+    const combinedInput = entries.map((entry) => entry.capture).join(DATE_PART_SEP);
+    const combinedFormat = entries.map((entry) => entry.format).join(`[${DATE_PART_SEP}]`);
+    const combined = CalendarDate.parse(combinedInput, combinedFormat);
+    if (combined.kind === "err") {
+      return new Err(
+        new TemplateParseError({
+          kind: "invalid-date",
+          capture: combinedInput,
+          variableName: name,
+          format: combinedFormat,
+        }),
+      );
+    }
+    const merged = combined.value;
+    // moment silently lets a later component override an earlier one; verify each token's
+    // own fields still agree with the merged date so contradictory captures conflict.
+    const candidates: BoundValue[] = [];
+    for (const [index, entry] of entries.entries()) {
+      const own = CalendarDate.parse(entry.capture, entry.format);
+      if (own.kind === "err") {
+        return new Err(
+          new TemplateParseError({
+            kind: "invalid-date",
+            capture: entry.capture,
+            variableName: name,
+            format: entry.format,
+          }),
+        );
+      }
+      candidates.push({ kind: "date", value: own.value });
+      if (!fieldsAgree(definiteFields[index], own.value, merged)) {
+        return new Err(new TemplateParseError({ kind: "conflict", variableName: name, candidates }));
+      }
+    }
+    return new Ok({ kind: "date", value: merged });
+  }
+
   renderString(template: string, context: TemplateContext): string {
     return this.renderStream(tokenize(template), context);
   }
@@ -230,16 +287,26 @@ export class TemplateEngine {
     const groups = matched.groups ?? {};
 
     const candidates = new Map<string, BoundValue[]>();
+    // Date tokens are resolved together per variable: a date split across tokens
+    // (e.g. {{date:YYYY}}/{{date:MM}}/{{date:DD}}) must combine into one value
+    // rather than have each token parse to a full moment-defaulted date.
+    const dateTokens = new Map<string, DateCapture[]>();
     for (const [index, token] of captureTokens.entries()) {
       const capture = groups[`v_${index}`];
       if (capture === undefined) continue;
       const spec = context.get(token.name);
       if (!spec) continue;
-      const value = this.#parseCapture(capture, spec, token);
-      if (value.kind === "err") return new Err(value.error);
       // Key by the defined name, not the token's spelling: `{{Date}}` binds `date`, which is
       // what every caller reads.
       const name = context.canonicalName(token.name) ?? token.name;
+      if (spec.kind === "date") {
+        const list = dateTokens.get(name) ?? [];
+        list.push({ token, spec, capture, format: token.format ?? spec.defaultFormat });
+        dateTokens.set(name, list);
+        continue;
+      }
+      const value = this.#parseCapture(capture, spec, token);
+      if (value.kind === "err") return new Err(value.error);
       const list = candidates.get(name) ?? [];
       list.push(value.value);
       candidates.set(name, list);
@@ -251,8 +318,74 @@ export class TemplateEngine {
       if (merged.kind === "err") return new Err(merged.error);
       resolved.set(name, merged.value);
     }
+    for (const [name, entries] of dateTokens) {
+      const merged = this.#resolveDate(name, entries);
+      if (merged.kind === "err") return new Err(merged.error);
+      resolved.set(name, merged.value);
+    }
     return new Ok(resolved);
   }
+}
+
+interface DateCapture {
+  token: Extract<Token, { kind: "variable" }>;
+  spec: Extract<VariableSpec, { kind: "date" }>;
+  capture: string;
+  format: string;
+}
+
+type DateField = "year" | "month" | "day";
+
+// A separator that can't occur inside a captured date component, so combining
+// component captures into one moment parse stays unambiguous.
+const DATE_PART_SEP = "\u{0}";
+
+// The calendar fields a date format constrains, or undefined if it uses any field
+// (week, quarter, weekday, day-of-year, ...) this component combiner can't reconcile —
+// those route back to the agreement-based merge instead.
+function ymdFields(format: string): Set<DateField> | undefined {
+  const fields = new Set<DateField>();
+  let inLiteral = false;
+  let symbol = "";
+  let count = 0;
+  let unsupported = false;
+  // Symbols that carry date information this combiner can't safely reconcile:
+  // quarter, week-of-year, ISO week, weekday, ordinal, week-year.
+  const unreconcilable = new Set(["Q", "w", "W", "d", "o", "g", "e"]);
+  const flush = () => {
+    if (count === 0) return;
+    if (symbol === "Y") fields.add("year");
+    else if (symbol === "M") fields.add("month");
+    else if (symbol === "D" && count < 3) fields.add("day");
+    else if (symbol === "D" || unreconcilable.has(symbol)) unsupported = true;
+    count = 0;
+    symbol = "";
+  };
+  for (const char of format) {
+    if (inLiteral) {
+      if (char === "]") inLiteral = false;
+      continue;
+    }
+    if (char === "[") {
+      flush();
+      inLiteral = true;
+    } else if (char === symbol) {
+      count++;
+    } else {
+      flush();
+      symbol = char;
+      count = 1;
+    }
+  }
+  flush();
+  return unsupported ? undefined : fields;
+}
+
+function fieldsAgree(fields: Set<DateField>, a: CalendarDate, b: CalendarDate): boolean {
+  for (const field of fields) {
+    if (a[field] !== b[field]) return false;
+  }
+  return true;
 }
 
 function isWildcard(spec: VariableSpec | undefined): boolean {
