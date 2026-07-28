@@ -4,6 +4,7 @@ import { CalendarDate, DayPeriod } from "@/calendar";
 import type { AnchorString } from "@/calendar";
 import { date, installTestCalendar } from "@/calendar/testing";
 import { Container } from "@/infrastructure/di";
+import type { VaultPath } from "@/infrastructure/host";
 
 import { CycleService } from "./cycle";
 import { JournalsIndex } from "./journals-index";
@@ -441,6 +442,30 @@ describe("TimelineService", () => {
       const bounds = timeline.boundsOf("custom");
       expect(timeline.contains("custom", "2026-06-22" as AnchorString)).toBe(false);
       expect(bounds.overlapsPeriod(DayPeriod.containing(date("2026-06-22")))).toBe(false);
+    });
+
+    it("agrees with contains for a custom journal with an extended interval", () => {
+      // The first interval is extended a full week past its default end of 06-07, so the
+      // index-aware grid is 06-01, 06-15, 06-22, ... — 06-15 is still inside the 2 repeats
+      // counted from the 06-01 start, and boundsOf's endOf-derived end (06-21) already agrees.
+      // countRepeats must walk the same index-aware grid, or contains() excludes 06-15 while
+      // boundsOf still admits it.
+      const c = buildContainer({
+        custom: customJournal("custom", "day", 7, "2026-06-01", {
+          timeline: { start: "2026-06-01" as AnchorString, end: { kind: "repeats", count: 2 } },
+        }),
+      });
+      const index = c.resolve(JournalsIndex);
+      index.register({
+        journalName: "custom",
+        anchor: "2026-06-01" as AnchorString,
+        path: "Custom/1.md" as VaultPath,
+        endDate: "2026-06-14" as AnchorString,
+      });
+      const timeline = c.resolve(TimelineService);
+      const bounds = timeline.boundsOf("custom");
+      expect(timeline.contains("custom", "2026-06-15" as AnchorString)).toBe(true);
+      expect(bounds.overlapsPeriod(DayPeriod.containing(date("2026-06-15")))).toBe(true);
     });
   });
 });

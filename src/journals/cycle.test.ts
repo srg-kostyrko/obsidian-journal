@@ -447,6 +447,32 @@ describe("CycleService", () => {
       const result = cycle.countRepeats("s", "2026-06-03" as AnchorString, "2026-06-22" as AnchorString);
       expect(result.isSome() && result.value).toBe(3);
     });
+
+    describe("custom interval extended past its default end", () => {
+      it("counts the same number of intervals as stepping through nextAnchor", () => {
+        // The first interval is extended a full week past its default end of 01-07, so the
+        // index-aware grid is 01-01, 01-15, 01-22, 01-29, 02-05 — 4 steps, not the 5 a raw
+        // 7-day stepping (ignoring the extension) would produce.
+        const c = buildContainer({ s: customJournal("s", "week", 1, "2024-01-01") });
+        const index = c.resolve(JournalsIndex);
+        index.register({
+          journalName: "s",
+          anchor: "2024-01-01" as AnchorString,
+          path: "S/1.md" as VaultPath,
+          endDate: "2024-01-14" as AnchorString,
+        });
+        const cycle = c.resolve(CycleService);
+        const to = "2024-02-05" as AnchorString;
+        let current = "2024-01-01" as AnchorString;
+        let steps = 0;
+        while (current < to) {
+          current = unwrap(cycle.nextAnchor("s", current));
+          steps++;
+        }
+        const result = cycle.countRepeats("s", "2024-01-01" as AnchorString, to);
+        expect(result.isSome() && result.value).toBe(steps);
+      });
+    });
   });
 
   describe("anchorAtOffset", () => {

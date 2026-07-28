@@ -294,22 +294,29 @@ export class CycleService {
           // `from` is free-form (a timeline start the user picked mid-interval) while `to` is
           // always a canonical anchor. Stepping in raw duration increments from an off-grid
           // `from` shifts the count by one interval versus counting from its cycle anchor, the
-          // same grid endOf() walks when it computes the repeats bound.
+          // same grid endOf() walks when it computes the repeats bound. And the steps themselves
+          // must consult the index (#customNext/#customPrevious), the same as anchorOf/endOf, so
+          // a manually extended/shrunk interval counts on the same grid those walk rather than a
+          // phantom one computed from the fixed duration.
           const anchoredFrom = this.anchorOf(name, CalendarDate.fromAnchor(from)).getOr(from);
           let current = anchoredFrom;
           let count = 0;
           if (anchoredFrom <= to) {
             while (current < to) {
-              const next = customStepForward(current, c);
-              if (next > to) break;
+              const next = this.#customNext(name, c, current);
+              // A stored endDate is trusted to advance past its own anchor (nothing else in this
+              // file guards #customNext/#customPrevious either), but this loop's exit condition
+              // depends on strictly increasing steps in a way the raw stepping never risked —
+              // bail rather than spin if a corrupt entry ever breaks that assumption.
+              if (next <= current || next > to) break;
               current = next;
               count++;
             }
             return count;
           }
           while (current > to) {
-            const previous = customStepBackward(current, c);
-            if (previous < to) break;
+            const previous = this.#customPrevious(name, c, current);
+            if (previous >= current || previous < to) break;
             current = previous;
             count++;
           }
