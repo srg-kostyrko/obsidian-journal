@@ -912,6 +912,9 @@ Setup: journal "Err" whose template path points at a missing file.
       is not a failure).
 - [ ] A command whose **timeline has ended** → either it is absent from the palette,
       or running it explains why nothing opened. Never listed-but-silent.
+- [ ] Journal whose **note name template is empty** → the settings field shows a
+      warning, and running the journal's open command shows a notice naming the
+      journal. No `.md` dotfile appears in the vault.
 
 ### Code-block errors
 
