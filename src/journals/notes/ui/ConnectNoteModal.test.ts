@@ -1,13 +1,14 @@
 import userEvent from "@testing-library/user-event";
-import { cleanup, fireEvent, render, screen } from "@testing-library/vue";
+import { cleanup, render, screen, waitFor } from "@testing-library/vue";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
-import { installTestCalendar, anchor } from "@/calendar/testing";
+import { DayPeriod, type OpenInterval } from "@/calendar";
+import { installTestCalendar, anchor, date } from "@/calendar/testing";
 import { m } from "@/i18n";
 import { Container, provideInjectorOnApp } from "@/infrastructure/di";
 import type { VaultPath } from "@/infrastructure/host";
-import type { ModalApi } from "@/infrastructure/host/modals";
-import { provideModalApiOnApp } from "@/infrastructure/host/modals/testing";
+import { ModalService, type ModalApi } from "@/infrastructure/host/modals";
+import { FakeModalService, provideModalApiOnApp } from "@/infrastructure/host/modals/testing";
 import { LoggerModule } from "@/infrastructure/logger";
 import { TemplateEngine } from "@/templates";
 
@@ -24,8 +25,9 @@ import ConnectNoteModal from "./ConnectNoteModal.vue";
 
 import type { ConnectNoteResult } from "./modals";
 
-function buildContainer(repo: JournalsRepository): Container {
+function buildContainer(repo: JournalsRepository): { container: Container; modals: FakeModalService } {
   const c = new Container();
+  const modals = new FakeModalService();
   c.addModule(LoggerModule);
   c.register(JournalsRepository).useValue(repo);
   c.register(JournalsIndex).useClass(JournalsIndex);
@@ -35,7 +37,8 @@ function buildContainer(repo: JournalsRepository): Container {
   c.register(FrontmatterService).useClass(FrontmatterService);
   c.register(TemplateEngine).useClass(TemplateEngine);
   c.register(NotePathService).useClass(NotePathService);
-  return c;
+  c.register(ModalService).useValue(modals as unknown as ModalService);
+  return { container: c, modals };
 }
 
 function mountModal(path: VaultPath, container: Container, api: ModalApi<ConnectNoteResult>) {
@@ -54,6 +57,14 @@ function mountModal(path: VaultPath, container: Container, api: ModalApi<Connect
   });
 }
 
+async function pickDate(modals: FakeModalService, when: string): Promise<void> {
+  await userEvent.click(screen.getByText(m.common_pick_a_date()));
+  modals.lastOpen<unknown, DayPeriod>().submit(DayPeriod.containing(date(when)));
+  await waitFor(() => {
+    expect(screen.queryByText(m.common_pick_a_date())).toBeNull();
+  });
+}
+
 describe("ConnectNoteModal", () => {
   let teardown: () => void;
 
@@ -69,7 +80,7 @@ describe("ConnectNoteModal", () => {
   describe("when the note is already connected to a journal", () => {
     it("offers Disconnect when the note is already connected", async () => {
       const repo = fakeRepo({ daily: fixedJournal("daily", { type: "day" }) });
-      const container = buildContainer(repo);
+      const { container } = buildContainer(repo);
       const index = container.resolve(JournalsIndex);
       index.register({
         journalName: "daily",
@@ -88,7 +99,7 @@ describe("ConnectNoteModal", () => {
 
     it("does not render the journal select when the note is connected", () => {
       const repo = fakeRepo({ daily: fixedJournal("daily", { type: "day" }) });
-      const container = buildContainer(repo);
+      const { container } = buildContainer(repo);
       const index = container.resolve(JournalsIndex);
       index.register({
         journalName: "daily",
@@ -105,7 +116,7 @@ describe("ConnectNoteModal", () => {
 
   describe("when the vault has no journals", () => {
     it("says so and points at the settings instead of offering a dead form", () => {
-      const container = buildContainer(fakeRepo({}));
+      const { container } = buildContainer(fakeRepo({}));
       const api: ModalApi<ConnectNoteResult> = { submit: vi.fn(), cancel: vi.fn() };
 
       mountModal("inbox/note.md" as VaultPath, container, api);
@@ -113,7 +124,7 @@ describe("ConnectNoteModal", () => {
     });
 
     it("offers no journal select to choose from", () => {
-      const container = buildContainer(fakeRepo({}));
+      const { container } = buildContainer(fakeRepo({}));
       const api: ModalApi<ConnectNoteResult> = { submit: vi.fn(), cancel: vi.fn() };
 
       mountModal("inbox/note.md" as VaultPath, container, api);
@@ -124,7 +135,7 @@ describe("ConnectNoteModal", () => {
   describe("when the note is not connected", () => {
     it("shows the note path", () => {
       const repo = fakeRepo({ daily: fixedJournal("daily", { type: "day" }) });
-      const container = buildContainer(repo);
+      const { container } = buildContainer(repo);
       const api: ModalApi<ConnectNoteResult> = { submit: vi.fn(), cancel: vi.fn() };
 
       mountModal("inbox/note.md" as VaultPath, container, api);
@@ -133,15 +144,53 @@ describe("ConnectNoteModal", () => {
 
     it("submits a connect command for an unconnected note", async () => {
       const repo = fakeRepo({ daily: fixedJournal("daily", { type: "day" }) });
-      const container = buildContainer(repo);
+      const { container, modals } = buildContainer(repo);
 
       const submit = vi.fn();
       const cancel = vi.fn();
       const api: ModalApi<ConnectNoteResult> = { submit, cancel };
 
       mountModal("inbox/note.md" as VaultPath, container, api);
-      await userEvent.click(screen.getByText(m.connect_note_modal_connect()));
+      await pickDate(modals, "2026-06-15");
+      await userEvent.click(screen.getByRole("button", { name: m.connect_note_modal_connect() }));
       expect(submit).toHaveBeenCalledWith(expect.objectContaining({ action: "connect", journalName: "daily" }));
+    });
+
+    it("disables Connect until a date is picked", () => {
+      const repo = fakeRepo({ daily: fixedJournal("daily", { type: "day" }) });
+      const { container } = buildContainer(repo);
+      const api: ModalApi<ConnectNoteResult> = { submit: vi.fn(), cancel: vi.fn() };
+
+      mountModal("inbox/note.md" as VaultPath, container, api);
+      const connect = screen.getByRole("button", { name: m.connect_note_modal_connect() });
+      expect((connect as HTMLButtonElement).disabled).toBe(true);
+    });
+
+    it("picks whole weeks for a weekly journal", async () => {
+      const repo = fakeRepo({ weekly: fixedJournal("weekly", { type: "week" }) });
+      const { container, modals } = buildContainer(repo);
+      const api: ModalApi<ConnectNoteResult> = { submit: vi.fn(), cancel: vi.fn() };
+
+      mountModal("inbox/note.md" as VaultPath, container, api);
+      await userEvent.click(screen.getByText(m.common_pick_a_date()));
+      expect(modals.lastOpen<{ picking: string }, DayPeriod>().props.picking).toBe("week");
+    });
+
+    it("bounds the picker to the journal timeline", async () => {
+      const repo = fakeRepo({
+        daily: fixedJournal(
+          "daily",
+          { type: "day" },
+          { timeline: { start: anchor("2026-06-01"), end: { kind: "never" } } },
+        ),
+      });
+      const { container, modals } = buildContainer(repo);
+      const api: ModalApi<ConnectNoteResult> = { submit: vi.fn(), cancel: vi.fn() };
+
+      mountModal("inbox/note.md" as VaultPath, container, api);
+      await userEvent.click(screen.getByText(m.common_pick_a_date()));
+      const bounds = modals.lastOpen<{ bounds?: OpenInterval }, DayPeriod>().props.bounds;
+      expect(bounds?.start.match({ some: (d) => d.toAnchor(), none: () => null })).toBe("2026-06-01");
     });
 
     it("disables Connect when the chosen date is outside the journal timeline", async () => {
@@ -152,11 +201,11 @@ describe("ConnectNoteModal", () => {
           { timeline: { start: anchor(""), end: { kind: "date", date: anchor("2026-06-01") } } },
         ),
       });
-      const container = buildContainer(repo);
+      const { container, modals } = buildContainer(repo);
       const api: ModalApi<ConnectNoteResult> = { submit: vi.fn(), cancel: vi.fn() };
 
       mountModal("inbox/note.md" as VaultPath, container, api);
-      await fireEvent.update(screen.getByLabelText(m.connect_note_modal_date_label()), "2026-09-15");
+      await pickDate(modals, "2026-09-15");
 
       const connect = screen.getByRole("button", { name: m.connect_note_modal_connect() });
       expect((connect as HTMLButtonElement).disabled).toBe(true);
@@ -170,21 +219,22 @@ describe("ConnectNoteModal", () => {
           { timeline: { start: anchor(""), end: { kind: "date", date: anchor("2026-06-01") } } },
         ),
       });
-      const container = buildContainer(repo);
+      const { container, modals } = buildContainer(repo);
       const api: ModalApi<ConnectNoteResult> = { submit: vi.fn(), cancel: vi.fn() };
 
       mountModal("inbox/note.md" as VaultPath, container, api);
-      await fireEvent.update(screen.getByLabelText(m.connect_note_modal_date_label()), "2026-09-15");
+      await pickDate(modals, "2026-09-15");
 
       expect(screen.getByText(m.connect_note_modal_out_of_bounds())).toBeTruthy();
     });
 
-    it("spells out the current and configured folder on the move toggle", () => {
+    it("spells out the current and configured folder on the move toggle", async () => {
       const repo = fakeRepo({ daily: fixedJournal("daily", { type: "day" }, { folder: "journals" }) });
-      const container = buildContainer(repo);
+      const { container, modals } = buildContainer(repo);
       const api: ModalApi<ConnectNoteResult> = { submit: vi.fn(), cancel: vi.fn() };
 
       mountModal("inbox/note.md" as VaultPath, container, api);
+      await pickDate(modals, "2026-06-15");
       expect(
         screen.getByText(m.connect_note_modal_move_description({ current: "inbox", configured: "journals" })),
       ).toBeTruthy();

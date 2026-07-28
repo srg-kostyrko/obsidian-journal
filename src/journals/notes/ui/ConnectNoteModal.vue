@@ -1,7 +1,8 @@
 <script setup lang="ts">
 import { computed, ref, watch } from "vue";
 
-import { CalendarDate } from "@/calendar";
+import { CalendarDate, type AnchorString } from "@/calendar";
+import { DatePicker, useAnchorField, type Picking } from "@/calendar/ui";
 import { m } from "@/i18n";
 import { useService } from "@/infrastructure/di";
 import type { VaultPath } from "@/infrastructure/host";
@@ -14,6 +15,7 @@ import UiToggle from "@/ui/UiToggle.vue";
 import { CycleService } from "../../cycle";
 import { FrontmatterService } from "../../frontmatter";
 import { JournalsIndex } from "../../journals-index";
+import { pickingForWrite } from "../../picking";
 import { JournalsRepository } from "../../repository";
 import { TimelineService } from "../../timeline";
 import { NotePathService } from "../note-path";
@@ -36,22 +38,25 @@ const existingJournal = existing.isSome() ? existing.value.journalName : "";
 const journalNames = [...journals.find().ids()];
 
 const selected = ref(journalNames[0] ?? "");
-const dateString = ref(CalendarDate.today().toAnchor());
+const dateAnchor = ref<AnchorString>("" as AnchorString);
 const override = ref(false);
 const rename = ref(false);
 const move = ref(false);
 
-watch([dateString, selected], () => {
+const selectedConfig = computed(() => journals.get(selected.value).getOrUndefined());
+const picking = computed<Picking>(() => (selectedConfig.value ? pickingForWrite(selectedConfig.value.write) : "day"));
+const bounds = computed(() => timeline.boundsOf(selected.value));
+const dateModel = useAnchorField({ anchor: dateAnchor, picking });
+
+watch([dateAnchor, selected], () => {
   override.value = false;
   rename.value = false;
   move.value = false;
 });
 
 const anchor = computed(() => {
-  if (!selected.value) return;
-  const parsed = CalendarDate.parse(dateString.value);
-  if (!parsed.isOk()) return;
-  const resolved = cycle.anchorOf(selected.value, parsed.value);
+  if (!selected.value || !dateAnchor.value) return;
+  const resolved = cycle.anchorOf(selected.value, CalendarDate.fromAnchor(dateAnchor.value));
   return resolved.isSome() ? resolved.value : undefined;
 });
 
@@ -147,7 +152,7 @@ function connect(): void {
     </UiSettingRow>
     <UiSettingRow>
       <template #name>{{ m.connect_note_modal_date_label() }}</template>
-      <input v-model="dateString" type="date" :aria-label="m.connect_note_modal_date_label()" />
+      <DatePicker v-model="dateModel" :picking="picking" :bounds="bounds" />
     </UiSettingRow>
     <UiSettingRow v-if="outOfBounds">
       <template #description>{{ m.connect_note_modal_out_of_bounds() }}</template>
