@@ -185,6 +185,21 @@ describe("NoteCreationService.ensureNote", () => {
     await build(repo, notes, new FakeModalService()).resolve(NoteCreationService).ensureNote("daily", meta);
     expect(notes.find(".md" as VaultPath).isNone()).toBe(true);
   });
+
+  it("opens the existing connected note when the name template resolves to an empty name", async () => {
+    const repo = fakeRepo({ daily: fixedJournal("daily", { type: "day" }, { nameTemplate: "" }) });
+    const notes = new FakeNotesService();
+    notes.seed("Archive/connected note.md" as VaultPath, "existing");
+    const modals = new FakeModalService();
+    const container = build(repo, notes, modals);
+    container
+      .resolve(JournalsIndex)
+      .register({ journalName: "daily", anchor: meta.anchor, path: "Archive/connected note.md" as VaultPath });
+    const result = await container.resolve(NoteCreationService).ensureNote("daily", meta);
+    expectOk(result);
+    expect(result.value.path).toBe("Archive/connected note.md");
+    expect(result.value.created).toBe(false);
+  });
 });
 
 describe("NoteCreationService.attachNote", () => {

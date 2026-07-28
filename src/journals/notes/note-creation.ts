@@ -58,9 +58,6 @@ export class NoteCreationService {
     metadata: JournalMetadata,
     options?: { skipConfirmation?: boolean },
   ): AsyncResult<{ path: VaultPath; created: boolean }, NoteCreationError> {
-    const pathResult = this.#path.pathFor(name, metadata);
-    if (pathResult.kind === "err") return AsyncResult.err(pathResult.error);
-    const path = pathResult.value;
     const mutatorResult = this.#frontmatter.writeMutator(name, metadata);
     if (mutatorResult.kind === "err") return AsyncResult.err(mutatorResult.error);
     const mutator = mutatorResult.value;
@@ -75,6 +72,13 @@ export class NoteCreationService {
         .updateFrontmatter(indexedPath, mutator)
         .map(() => ({ path: indexedPath, created: false as const }));
     }
+
+    // A connected note is reachable above without ever needing a resolvable
+    // configured path, so the empty-name guard must gate creation only — deriving
+    // it any earlier would block opening a note this journal already has.
+    const pathResult = this.#path.pathFor(name, metadata);
+    if (pathResult.kind === "err") return AsyncResult.err(pathResult.error);
+    const path = pathResult.value;
 
     if (this.#notes.find(path).isSome()) {
       return this.#notes.updateFrontmatter(path, mutator).map(() => ({ path, created: false as const }));
