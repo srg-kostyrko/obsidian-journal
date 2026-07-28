@@ -126,6 +126,19 @@ describe("EditCommandModal", () => {
     expect(screen.getByText(m.command_name_prefix_hint({ kind: "journal" }))).toBeTruthy();
   });
 
+  it("omits the note type field for a journal-targeted command", async () => {
+    await mountModal({
+      target: { kind: "journal", journalName: "daily" },
+      journals: { daily: makeJournal("daily", "day") },
+    });
+    expect(screen.queryByText(m.command_modal_write_type_label())).toBeNull();
+  });
+
+  it("shows the note type field for a shelf-targeted command", async () => {
+    await mountModal({ target: { kind: "shelf", shelfName: "work", writeType: "day" } });
+    expect(screen.getByText(m.command_modal_write_type_label())).toBeTruthy();
+  });
+
   it("shows the auto-prefix hint for a shelf-targeted command", async () => {
     await mountModal({ target: { kind: "shelf", shelfName: "work", writeType: "day" } });
     expect(screen.getByText(m.command_name_prefix_hint({ kind: "shelf" }))).toBeTruthy();

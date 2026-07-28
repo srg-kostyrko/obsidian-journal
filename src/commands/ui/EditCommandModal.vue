@@ -149,15 +149,14 @@ const onSubmit = handleSubmit((values) => {
       <UiTextInput v-model="name" v-bind="nameAttrs" />
     </UiSettingRow>
 
-    <UiSettingRow :name="m.command_modal_write_type_label()">
-      <UiDropdown v-if="props.target.kind !== 'journal'" v-model="writeType">
+    <UiSettingRow v-if="props.target.kind !== 'journal'" :name="m.command_modal_write_type_label()">
+      <UiDropdown v-model="writeType">
         <option value="day">{{ m.command_write_type_option({ writeType: "day" }) }}</option>
         <option value="week">{{ m.command_write_type_option({ writeType: "week" }) }}</option>
         <option value="month">{{ m.command_write_type_option({ writeType: "month" }) }}</option>
         <option value="quarter">{{ m.command_write_type_option({ writeType: "quarter" }) }}</option>
         <option value="year">{{ m.command_write_type_option({ writeType: "year" }) }}</option>
       </UiDropdown>
-      <span v-else>{{ m.command_write_type_option({ writeType }) }}</span>
     </UiSettingRow>
 
     <UiSettingRow :name="m.command_modal_type_label()">
