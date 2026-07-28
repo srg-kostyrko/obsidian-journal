@@ -1,6 +1,6 @@
 import { match } from "ts-pattern";
 
-import { CalendarDate } from "@/calendar";
+import { CalendarDate, OpenInterval } from "@/calendar";
 import type { AnchorString } from "@/calendar";
 import { inject } from "@/infrastructure/di";
 import { Option } from "@/infrastructure/result";
@@ -11,6 +11,22 @@ import { JournalsRepository } from "./repository";
 export class TimelineService {
   readonly #journals = inject(JournalsRepository);
   readonly #cycle = inject(CycleService);
+
+  // Widen to the whole period the start falls in: contains() admits a period that straddles the
+  // start date, so a narrower bound would grey out a cell the journal accepts.
+  #boundStart(name: string): Option<CalendarDate> {
+    return this.startOf(name)
+      .flatMap((d) => this.#cycle.anchorOf(name, d))
+      .flatMap((a) => this.#cycle.startOf(name, a));
+  }
+
+  // Widen to the whole period the end falls in: contains() admits a period by its anchor, so a
+  // period straddling the end date is still written and its cell must stay selectable.
+  #boundEnd(name: string): Option<CalendarDate> {
+    return this.endOf(name)
+      .flatMap((d) => this.#cycle.anchorOf(name, d))
+      .flatMap((a) => this.#cycle.endOf(name, a));
+  }
 
   contains(name: string, anchor: AnchorString): boolean {
     const configOpt = this.#journals.get(name);
@@ -70,5 +86,19 @@ export class TimelineService {
         return this.#cycle.endOf(name, current);
       })
       .exhaustive();
+  }
+
+  boundsOf(name: string): OpenInterval {
+    const start = this.#boundStart(name);
+    const end = this.#boundEnd(name);
+    if (start.isSome() && end.isSome()) {
+      const between = OpenInterval.between(start.value, end.value);
+      // Only hand-edited settings can put the start after the end. Keep the start bound rather
+      // than dropping both and offering the whole calendar.
+      return between.isOk() ? between.value : OpenInterval.from(start.value);
+    }
+    if (start.isSome()) return OpenInterval.from(start.value);
+    if (end.isSome()) return OpenInterval.until(end.value);
+    return OpenInterval.unbounded();
   }
 }

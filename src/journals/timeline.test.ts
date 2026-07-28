@@ -1,8 +1,8 @@
 import { afterEach, beforeEach, describe, expect, it } from "vitest";
 
-import { CalendarDate } from "@/calendar";
+import { CalendarDate, WeekPeriod } from "@/calendar";
 import type { AnchorString } from "@/calendar";
-import { installTestCalendar } from "@/calendar/testing";
+import { date, installTestCalendar } from "@/calendar/testing";
 import { Container } from "@/infrastructure/di";
 
 import { CycleService } from "./cycle";
@@ -297,6 +297,111 @@ describe("TimelineService", () => {
       const c = buildContainer({});
       const timeline = c.resolve(TimelineService);
       expect(timeline.endOf("missing").isNone()).toBe(true);
+    });
+  });
+
+  describe("boundsOf", () => {
+    it("leaves both sides open for an unknown journal", () => {
+      const c = buildContainer({});
+      const bounds = c.resolve(TimelineService).boundsOf("missing");
+      expect(bounds.start.isNone() && bounds.end.isNone()).toBe(true);
+    });
+
+    it("leaves the lower side open when the timeline has no start", () => {
+      const c = buildContainer({
+        daily: fixedJournal(
+          "daily",
+          { type: "day" },
+          { timeline: { start: "" as AnchorString, end: { kind: "never" } } },
+        ),
+      });
+      expect(c.resolve(TimelineService).boundsOf("daily").start.isNone()).toBe(true);
+    });
+
+    it("leaves the upper side open when the timeline never ends", () => {
+      const c = buildContainer({
+        daily: fixedJournal(
+          "daily",
+          { type: "day" },
+          { timeline: { start: "2024-01-01" as AnchorString, end: { kind: "never" } } },
+        ),
+      });
+      expect(c.resolve(TimelineService).boundsOf("daily").end.isNone()).toBe(true);
+    });
+
+    it("bounds a daily journal at its configured start date", () => {
+      const c = buildContainer({
+        daily: fixedJournal(
+          "daily",
+          { type: "day" },
+          { timeline: { start: "2024-01-01" as AnchorString, end: { kind: "never" } } },
+        ),
+      });
+      const bounds = c.resolve(TimelineService).boundsOf("daily");
+      expect(bounds.start.match({ some: (d) => d.toAnchor(), none: () => null })).toBe("2024-01-01");
+    });
+
+    it("widens the lower bound to the start of the week a mid-week start falls in", () => {
+      const c = buildContainer({
+        weekly: fixedJournal(
+          "weekly",
+          { type: "week" },
+          { timeline: { start: "2026-06-03" as AnchorString, end: { kind: "never" } } },
+        ),
+      });
+      const bounds = c.resolve(TimelineService).boundsOf("weekly");
+      expect(bounds.start.match({ some: (d) => d.toAnchor(), none: () => null })).toBe("2026-06-01");
+    });
+
+    it("extends the upper bound to the end of the week the timeline end falls in", () => {
+      const c = buildContainer({
+        weekly: fixedJournal(
+          "weekly",
+          { type: "week" },
+          { timeline: { start: "" as AnchorString, end: { kind: "date", date: "2026-06-03" as AnchorString } } },
+        ),
+      });
+      const bounds = c.resolve(TimelineService).boundsOf("weekly");
+      expect(bounds.end.match({ some: (d) => d.toAnchor(), none: () => null })).toBe("2026-06-07");
+    });
+
+    it("keeps the upper bound at the end date when it already closes a period", () => {
+      const c = buildContainer({
+        daily: fixedJournal(
+          "daily",
+          { type: "day" },
+          { timeline: { start: "" as AnchorString, end: { kind: "date", date: "2026-06-03" as AnchorString } } },
+        ),
+      });
+      const bounds = c.resolve(TimelineService).boundsOf("daily");
+      expect(bounds.end.match({ some: (d) => d.toAnchor(), none: () => null })).toBe("2026-06-03");
+    });
+
+    it("bounds a repeats end at the last repeat", () => {
+      const c = buildContainer({
+        daily: fixedJournal(
+          "daily",
+          { type: "day" },
+          { timeline: { start: "2024-01-01" as AnchorString, end: { kind: "repeats", count: 3 } } },
+        ),
+      });
+      const bounds = c.resolve(TimelineService).boundsOf("daily");
+      expect(bounds.end.match({ some: (d) => d.toAnchor(), none: () => null })).toBe("2024-01-03");
+    });
+
+    it("agrees with contains at the upper edge", () => {
+      const c = buildContainer({
+        weekly: fixedJournal(
+          "weekly",
+          { type: "week" },
+          { timeline: { start: "" as AnchorString, end: { kind: "date", date: "2026-06-03" as AnchorString } } },
+        ),
+      });
+      const timeline = c.resolve(TimelineService);
+      const bounds = timeline.boundsOf("weekly");
+      const rejectedWeek = WeekPeriod.containing(date("2026-06-10"));
+      expect(timeline.contains("weekly", rejectedWeek.anchor.toAnchor())).toBe(false);
+      expect(bounds.overlapsPeriod(rejectedWeek)).toBe(false);
     });
   });
 });
