@@ -27,7 +27,7 @@ import { NumberingService } from "../numbering";
 import { JournalsRepository } from "../repository";
 import { fakeRepo, fixedJournal } from "../testing";
 
-import { AnchorOccupiedError } from "./errors";
+import { AnchorOccupiedError, EmptyNoteNameError } from "./errors";
 import { NoteCreationService } from "./note-creation";
 import { NotePathService } from "./note-path";
 import { SelfWriteGuard } from "./self-write-guard";
@@ -168,6 +168,22 @@ describe("NoteCreationService.ensureNote", () => {
       .resolve(NoteCreationService)
       .ensureNote("daily", meta, { skipConfirmation: true });
     expect(result.isOk() && result.value.created).toBe(true);
+  });
+
+  it("refuses to create a note when the name template resolves to an empty name", async () => {
+    const repo = fakeRepo({ daily: fixedJournal("daily", { type: "day" }, { nameTemplate: "" }) });
+    const notes = new FakeNotesService();
+    const result = await build(repo, notes, new FakeModalService())
+      .resolve(NoteCreationService)
+      .ensureNote("daily", meta);
+    expect(result.isErr() && result.error instanceof EmptyNoteNameError).toBe(true);
+  });
+
+  it("writes no file when the name template resolves to an empty name", async () => {
+    const repo = fakeRepo({ daily: fixedJournal("daily", { type: "day" }, { nameTemplate: "" }) });
+    const notes = new FakeNotesService();
+    await build(repo, notes, new FakeModalService()).resolve(NoteCreationService).ensureNote("daily", meta);
+    expect(notes.find(".md" as VaultPath).isNone()).toBe(true);
   });
 });
 

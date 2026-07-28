@@ -19,7 +19,7 @@ import { NumberingService } from "../numbering";
 import { JournalsRepository } from "../repository";
 import { customJournal, fakeRepo, fixedJournal } from "../testing";
 
-import { AnchorOccupiedError } from "./errors";
+import { AnchorOccupiedError, EmptyNoteNameError } from "./errors";
 import { NoteConnectionService } from "./note-connection";
 import { NoteCreationService } from "./note-creation";
 import { NotePathService } from "./note-path";
@@ -538,6 +538,50 @@ describe("NoteConnectionService", () => {
       expect(content.value).toBe("INCOMING");
       const fm = await readFrontmatter(notes, occupantPath);
       expect(fm.journal).toBe("daily");
+    });
+
+    it("refuses to rename the note when the name template resolves to an empty name", async () => {
+      const repo = fakeRepo({
+        daily: fixedJournal("daily", { type: "day" }, { folder: "Journal", nameTemplate: "" }),
+      });
+      const notes = new FakeNotesService();
+      const sourcePath = "inbox/note.md" as VaultPath;
+      notes.seed(sourcePath, "");
+      const { container } = build(repo, notes, new FakeModalService());
+
+      const result = await container
+        .resolve(NoteConnectionService)
+        .connect("daily", sourcePath, anchor("2026-06-01"), { rename: true, move: true });
+
+      expect(result.isErr() && result.error instanceof EmptyNoteNameError).toBe(true);
+    });
+
+    it("leaves the note in place when it refuses to rename it", async () => {
+      const repo = fakeRepo({
+        daily: fixedJournal("daily", { type: "day" }, { folder: "Journal", nameTemplate: "" }),
+      });
+      const notes = new FakeNotesService();
+      const sourcePath = "inbox/note.md" as VaultPath;
+      notes.seed(sourcePath, "");
+      const { container } = build(repo, notes, new FakeModalService());
+
+      await container
+        .resolve(NoteConnectionService)
+        .connect("daily", sourcePath, anchor("2026-06-01"), { rename: true, move: true });
+
+      expect(notes.find(sourcePath).isSome()).toBe(true);
+    });
+
+    it("connects the note in place when the name template resolves to an empty name", async () => {
+      const repo = fakeRepo({ daily: fixedJournal("daily", { type: "day" }, { nameTemplate: "" }) });
+      const notes = new FakeNotesService();
+      const sourcePath = "inbox/note.md" as VaultPath;
+      notes.seed(sourcePath, "");
+      const { container } = build(repo, notes, new FakeModalService());
+
+      const result = await container.resolve(NoteConnectionService).connect("daily", sourcePath, anchor("2026-06-01"));
+
+      expect(result.isOk()).toBe(true);
     });
   });
 });

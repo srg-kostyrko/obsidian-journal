@@ -29,6 +29,7 @@ import { defaultBulkAddParameters } from "./config";
 
 import type { PlannedAction } from "./bulk-add-service";
 import type { BulkAddParameters } from "./config";
+import type { JournalConfig } from "../../config";
 
 function plannedAction(overrides: Partial<PlannedAction> = {}): PlannedAction {
   return {
@@ -47,13 +48,15 @@ function makeParameters(overrides: Partial<BulkAddParameters> = {}): BulkAddPara
   return { ...defaultBulkAddParameters(), ...overrides };
 }
 
-function build(): {
+function build(journalOverrides: Partial<JournalConfig> = {}): {
   service: BulkAddService;
   notes: FakeNotesService;
   metadata: FakeNoteMetadataService;
   index: JournalsIndex;
 } {
-  const repo = fakeRepo({ daily: fixedJournal("daily", { type: "day" }, { folder: "Journal" }) });
+  const repo = fakeRepo({
+    daily: fixedJournal("daily", { type: "day" }, { folder: "Journal", ...journalOverrides }),
+  });
   const notes = new FakeNotesService();
   const modals = new FakeModalService();
   const metadata = new FakeNoteMetadataService();
@@ -153,6 +156,21 @@ describe("BulkAddService", () => {
       expect(note?.kind).toBe("action");
       expect(note?.kind === "action" && note.anchor).toBe("2026-06-01");
       expect(note?.kind === "action" && note.folder).toBe("move"); // src != configured "Journal"
+    });
+
+    it("keeps the note's current path when the configured path cannot resolve", async () => {
+      const { service, notes, metadata } = build({ nameTemplate: "" });
+      notes.seed("src/2026-06-01.md" as VaultPath);
+      metadata.setMetadata("src/2026-06-01.md" as VaultPath, {
+        title: "2026-06-01",
+        tags: [],
+        properties: {},
+        tasks: [],
+      });
+      const planResult = await service.plan("daily", makeParameters({ folder: "src" }));
+      expectOk(planResult);
+      const note = planResult.value.notes.find((n) => n.path === "src/2026-06-01.md");
+      expect(note?.kind === "action" && note.targetPath).toBe("src/2026-06-01.md");
     });
 
     it("ignores a date-named attachment in the source folder", async () => {
