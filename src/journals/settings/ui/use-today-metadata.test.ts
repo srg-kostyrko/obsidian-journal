@@ -27,7 +27,12 @@ afterEach(() => {
 function buildContainer(): Container {
   const c = new Container();
   c.addModule(LoggerModule);
-  c.register(JournalsRepository).useValue(fakeRepo({ daily: fixedJournal("daily", { type: "day" }) }));
+  c.register(JournalsRepository).useValue(
+    fakeRepo({
+      daily: fixedJournal("daily", { type: "day" }),
+      weekly: fixedJournal("weekly", { type: "week" }),
+    }),
+  );
   c.register(JournalsIndex).useClass(JournalsIndex);
   c.register(CycleService).useClass(CycleService);
   c.register(NumberingService).useClass(NumberingService);
@@ -65,5 +70,10 @@ describe("useTodayMetadata", () => {
 
   it("returns undefined for a missing journal", () => {
     expect(probe("nope").value).toBeUndefined();
+  });
+
+  it("anchors the metadata at the start of today's period", () => {
+    const metadata = probe("weekly");
+    expect(metadata.value?.anchor).toBe("2026-05-18");
   });
 });
