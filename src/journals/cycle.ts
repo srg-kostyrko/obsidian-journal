@@ -304,10 +304,10 @@ export class CycleService {
           if (anchoredFrom <= to) {
             while (current < to) {
               const next = this.#customNext(name, c, current);
-              // A stored endDate is trusted to advance past its own anchor (nothing else in this
-              // file guards #customNext/#customPrevious either), but this loop's exit condition
-              // depends on strictly increasing steps in a way the raw stepping never risked —
-              // bail rather than spin if a corrupt entry ever breaks that assumption.
+              // A stored endDate is trusted to advance past its own anchor — anchorOf's own
+              // #customNext walk carries this same unguarded risk. intervalsInRange already
+              // bails out its nextAnchor walk the same way when a step fails to advance; mirror
+              // that guard here rather than spin if a corrupt entry ever breaks the assumption.
               if (next <= current || next > to) break;
               current = next;
               count++;

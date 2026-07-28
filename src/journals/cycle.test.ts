@@ -465,12 +465,44 @@ describe("CycleService", () => {
         const to = "2024-02-05" as AnchorString;
         let current = "2024-01-01" as AnchorString;
         let steps = 0;
-        while (current < to) {
+        // Capped so a stalled nextAnchor fails the test below rather than hanging the run.
+        const maxSteps = 8;
+        while (current < to && steps < maxSteps) {
           current = unwrap(cycle.nextAnchor("s", current));
           steps++;
         }
+        expect(current).toBe(to);
+        expect(steps).toBe(4);
         const result = cycle.countRepeats("s", "2024-01-01" as AnchorString, to);
         expect(result.isSome() && result.value).toBe(steps);
+      });
+
+      it("counts the same number of intervals as stepping through previousAnchor", () => {
+        // Mirror of the forward case: stepping backward from 2024-02-05 through the
+        // index-aware grid is 02-05, 01-29, 01-22, 01-15, 01-01 — 4 steps, not the 5 a raw
+        // 7-day stepping (ignoring the extension) would produce.
+        const c = buildContainer({ s: customJournal("s", "week", 1, "2024-01-01") });
+        const index = c.resolve(JournalsIndex);
+        index.register({
+          journalName: "s",
+          anchor: "2024-01-01" as AnchorString,
+          path: "S/1.md" as VaultPath,
+          endDate: "2024-01-14" as AnchorString,
+        });
+        const cycle = c.resolve(CycleService);
+        const to = "2024-01-01" as AnchorString;
+        let current = "2024-02-05" as AnchorString;
+        let steps = 0;
+        // Capped so a stalled previousAnchor fails the test below rather than hanging the run.
+        const maxSteps = 8;
+        while (current > to && steps < maxSteps) {
+          current = unwrap(cycle.previousAnchor("s", current));
+          steps++;
+        }
+        expect(current).toBe(to);
+        expect(steps).toBe(4);
+        const result = cycle.countRepeats("s", "2024-02-05" as AnchorString, to);
+        expect(result.isSome() && result.value).toBe(-steps);
       });
     });
   });
