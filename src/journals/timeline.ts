@@ -39,7 +39,11 @@ export class TimelineService {
   }
 
   startOf(name: string): Option<CalendarDate> {
-    return this.#journals.get(name).map((c) => CalendarDate.fromAnchor(c.timeline.start));
+    return this.#journals
+      .get(name)
+      .flatMap((c) =>
+        c.timeline.start === "" ? Option.none<CalendarDate>() : Option.some(CalendarDate.fromAnchor(c.timeline.start)),
+      );
   }
 
   endOf(name: string): Option<CalendarDate> {

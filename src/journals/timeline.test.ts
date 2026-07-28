@@ -187,6 +187,18 @@ describe("TimelineService", () => {
       const timeline = c.resolve(TimelineService);
       expect(timeline.startOf("missing").isNone()).toBe(true);
     });
+
+    it("returns None when the timeline has no start", () => {
+      const c = buildContainer({
+        daily: fixedJournal(
+          "daily",
+          { type: "day" },
+          { timeline: { start: "" as AnchorString, end: { kind: "never" } } },
+        ),
+      });
+      const timeline = c.resolve(TimelineService);
+      expect(timeline.startOf("daily").isNone()).toBe(true);
+    });
   });
 
   describe("endOf", () => {
