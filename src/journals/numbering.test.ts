@@ -160,6 +160,19 @@ describe("NumberingService", () => {
       const n = c.resolve(NumberingService);
       expect(unwrap(n.assignNumbers("s", "2026-03-01" as AnchorString))).toEqual({ index: 3 });
     });
+
+    it("counts from the interval containing an off-grid timeline.start rather than the raw date", () => {
+      // The custom journal's grid sits on Jan 1/8/15/... but timeline.start (2024-01-03) falls
+      // two days into the first interval instead of on an anchor, so this pins that the count
+      // walks from the interval start (2024-01-01), not from 2024-01-03 itself.
+      const c = buildContainer({
+        s: customJournal("s", "week", 1, "2024-01-01", {
+          timeline: { start: "2024-01-03" as AnchorString, end: { kind: "never" } },
+        }),
+      });
+      const n = c.resolve(NumberingService);
+      expect(unwrap(n.assignNumbers("s", "2024-01-15" as AnchorString))).toEqual({ index: 3 });
+    });
   });
 
   describe("assignNumbers — multi-source cascade", () => {
