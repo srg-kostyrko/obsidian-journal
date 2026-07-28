@@ -19,6 +19,13 @@ export class UriHandlerMissingError extends Error {
   }
 }
 
+export class NoFreeDayError extends Error {
+  constructor() {
+    super("every day of the current month already has a note");
+    this.name = "NoFreeDayError";
+  }
+}
+
 export class FixtureJournalMissingError extends Error {
   constructor(name: string) {
     super(`fixture is missing the "${name}" journal`);

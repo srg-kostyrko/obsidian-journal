@@ -9,9 +9,9 @@ import { datePickerModal } from "@/calendar/ui/modals";
 import { m } from "@/i18n";
 import { useService } from "@/infrastructure/di";
 import { Flows } from "@/infrastructure/flows";
-import { defineOpenMode } from "@/infrastructure/host";
+import { defineOpenMode, NoticeService } from "@/infrastructure/host";
 import { ModalService } from "@/infrastructure/host/modals";
-import { CycleService, OpenDateFlow } from "@/journals";
+import { CycleService, NoApplicableJournals, OpenDateFlow } from "@/journals";
 import { useShelfScope } from "@/notes-calendar/use-shelf-scope";
 import UiButton from "@/ui/UiButton.vue";
 import UiIcon from "@/ui/UiIcon.vue";
@@ -32,6 +32,7 @@ const context = useViewContext();
 const flows = useService(Flows);
 const modals = useService(ModalService);
 const cycle = useService(CycleService);
+const notices = useService(NoticeService);
 const scope = useShelfScope(() => context.shelf.value);
 
 const appearance = computed(() => resolveButtonAppearance(props.config.action));
@@ -60,16 +61,23 @@ async function applyMode(
   event: MouseEvent,
 ): Promise<void> {
   // v2 parity: the pick/today interaction always moves the displayed period to the
-  // chosen date; the mode only decides whether an open follows. Without this, a
-  // navigate-mode pick of a note-less date would be a complete no-op.
+  // chosen date; the mode only decides whether an open follows.
   context.setRefDate(anchor);
   if (mode === "select-only") return;
-  await flows.invoke(OpenDateFlow, {
+  const opened = await flows.invoke(OpenDateFlow, {
     anchor,
     journalNames: [...journalNames],
     openMode: defineOpenMode(event),
     existingOnly: mode === "navigate",
     pickAt: event,
+  });
+  // Navigate mode reaches only notes that already exist, and OpenDateFlow calls finding none
+  // benign — so without this the button moves the calendar and otherwise says nothing. Create
+  // mode keeps the silence: there the same error means the date falls outside every timeline,
+  // which the greyed-out calendar already shows.
+  if (mode !== "navigate") return;
+  opened.tapErr((error) => {
+    if (error instanceof NoApplicableJournals) notices.show(m.command_open_unavailable());
   });
 }
 

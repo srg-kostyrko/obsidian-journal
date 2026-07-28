@@ -5,8 +5,9 @@ import { afterEach, beforeAll, describe, expect, it, vi } from "vitest";
 import { computed, defineComponent, h, ref } from "vue";
 
 import { CalendarDate, DayPeriod, WeekPeriod } from "@/calendar";
-import { installTestCalendar } from "@/calendar/testing";
+import { anchor, installTestCalendar } from "@/calendar/testing";
 import type { AnchorString } from "@/calendar/types";
+import { m } from "@/i18n";
 import { Container, provideInjectorOnApp } from "@/infrastructure/di";
 import { Flows } from "@/infrastructure/flows";
 import { NoticeService } from "@/infrastructure/host";
@@ -14,7 +15,7 @@ import { ModalService } from "@/infrastructure/host/modals";
 import { FakeModalService } from "@/infrastructure/host/modals/testing";
 import { FakeNoticeService } from "@/infrastructure/host/testing";
 import { AsyncResult, Option } from "@/infrastructure/result";
-import { CycleService, OpenDateFlow } from "@/journals";
+import { CycleService, NoApplicableJournals, OpenDateFlow } from "@/journals";
 
 import { provideViewContextStub } from "../../testing";
 import { provideViewContext, type ViewContext } from "../../view-context";
@@ -47,7 +48,7 @@ vi.mock("@/notes-calendar/use-shelf-scope", () => ({
 
 class FakeFlows {
   calls: { flow: unknown; parameters: unknown }[] = [];
-  invoke(flow: unknown, parameters: unknown) {
+  invoke(flow: unknown, parameters: unknown): AsyncResult<{ path: string; created: boolean }, NoApplicableJournals> {
     this.calls.push({ flow, parameters });
     return AsyncResult.ok({ path: "x", created: false });
   }
@@ -75,7 +76,8 @@ function mountItem(
   const flows = new FakeFlows();
   const modals = new FakeModalService();
   const cycle = new FakeCycle(cycleResolve);
-  container.register(NoticeService).useValue(new FakeNoticeService());
+  const notices = new FakeNoticeService();
+  container.register(NoticeService).useValue(notices);
   container.register(Flows).useValue(flows as unknown as Flows);
   container.register(ModalService).useValue(modals as unknown as ModalService);
   container.register(CycleService).useValue(cycle as unknown as CycleService);
@@ -90,7 +92,7 @@ function mountItem(
   const result = render(Wrapper, {
     global: { plugins: [{ install: (app) => provideInjectorOnApp(app, container) }] },
   });
-  return { result, flows, modals, context };
+  return { result, flows, modals, context, notices };
 }
 
 beforeAll(() => {
@@ -121,6 +123,32 @@ describe("ButtonItem", () => {
         tooltip: "Jump to today",
       });
       expect(result.getByLabelText("Jump to today")).toBeTruthy();
+    });
+  });
+
+  describe("navigate mode with nothing to open", () => {
+    it("notices when no note exists at the picked date", async () => {
+      const { result, flows, notices } = mountItem(
+        { action: { type: "current", mode: "navigate", levels: ["day"] } },
+        { refDate: ref("2026-05-15" as AnchorString) },
+      );
+      vi.spyOn(flows, "invoke").mockReturnValue(AsyncResult.err(new NoApplicableJournals(anchor("2026-05-15"))));
+
+      await userEvent.click(result.getByText("Today"));
+
+      expect(notices.messages).toContain(m.command_open_unavailable());
+    });
+
+    it("stays silent in create mode when no journal covers the date", async () => {
+      const { result, flows, notices } = mountItem(
+        { action: { type: "current", mode: "create", levels: ["day"] } },
+        { refDate: ref("2026-05-15" as AnchorString) },
+      );
+      vi.spyOn(flows, "invoke").mockReturnValue(AsyncResult.err(new NoApplicableJournals(anchor("2026-05-15"))));
+
+      await userEvent.click(result.getByText("Today"));
+
+      expect(notices.messages).toEqual([]);
     });
   });
 

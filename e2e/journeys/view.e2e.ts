@@ -1,5 +1,7 @@
 import { $, $$, browser, expect } from "@wdio/globals";
 
+import { NoFreeDayError } from "../support/errors.js";
+import { waitForNotice } from "../support/notices.js";
 import {
   clickDialogButton,
   clickIcon,
@@ -11,9 +13,11 @@ import {
 } from "../support/settings.js";
 import {
   activeNotePath,
+  noteExists,
   openNote,
   renameNote,
   seedNote,
+  todayAnchor,
   waitForActiveNote,
   waitForActiveNoteIn,
   waitForFrontmatter,
@@ -41,6 +45,18 @@ import { calendar, LIVE_LEAF, MONTH_VIEW, openCalendarView, TOOLBAR } from "./vi
 // mounts in a real Obsidian leaf, a real ribbon click opens it, and a real cell
 // click drives OpenDateFlow -> note create+open. None of this is reachable through
 // __mocks__/obsidian.ts, which renders no leaf and has no ribbon.
+
+// Earlier specs seed day notes across the current month and the Today button creates today's,
+// so a hard-coded "empty" day would pass or fail by calendar date. Read the vault instead.
+async function freeDayAnchor(): Promise<string> {
+  const today = todayAnchor();
+  for (let day = 1; day <= 28; day++) {
+    const candidate = dayAnchor(day);
+    if (candidate === today) continue;
+    if (!(await noteExists(`day/${candidate}.md`))) return candidate;
+  }
+  throw new NoFreeDayError();
+}
 
 const headerMonthAnchor = async (): Promise<string | undefined> =>
   (await calendar.periodCell("header-month").getAttribute("data-anchor")) ?? undefined;
@@ -414,6 +430,22 @@ describe("calendar view", () => {
       await modal.$(`[data-testid="month-cell"][data-anchor="${anchor}"]`).click();
 
       await waitForActiveNote(path);
+    });
+
+    it("notices when the picked date has no note to navigate to", async () => {
+      // Same navigate-mode button, pointed at a day nothing has seeded: OpenDateFlow calls the
+      // empty result benign, so the calendar jumps there and nothing opens. The notice is the
+      // only signal the click landed.
+      const anchor = await freeDayAnchor();
+
+      await openCalendarView();
+      await $(`${TOOLBAR} [aria-label="Pick a date"]`).click();
+
+      const modal = $(".date-picker-modal");
+      await modal.waitForExist({ timeoutMsg: "date-picker modal did not open" });
+      await modal.$(`[data-testid="month-cell"][data-anchor="${anchor}"]`).click();
+
+      await waitForNotice("There is no note to open.");
     });
   });
 
