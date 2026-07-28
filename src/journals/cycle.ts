@@ -291,9 +291,14 @@ export class CycleService {
           );
         })
         .with({ kind: "custom" }, (c) => {
-          let current = from;
+          // `from` is free-form (a timeline start the user picked mid-interval) while `to` is
+          // always a canonical anchor. Stepping in raw duration increments from an off-grid
+          // `from` shifts the count by one interval versus counting from its cycle anchor, the
+          // same grid endOf() walks when it computes the repeats bound.
+          const anchoredFrom = this.anchorOf(name, CalendarDate.fromAnchor(from)).getOr(from);
+          let current = anchoredFrom;
           let count = 0;
-          if (from <= to) {
+          if (anchoredFrom <= to) {
             while (current < to) {
               const next = customStepForward(current, c);
               if (next > to) break;

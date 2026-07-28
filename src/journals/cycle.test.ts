@@ -437,6 +437,16 @@ describe("CycleService", () => {
       const backward = unwrap(cycle.countRepeats("w", "2024-01-22" as AnchorString, "2024-01-01" as AnchorString));
       expect(Math.abs(forward)).toBe(Math.abs(backward));
     });
+
+    it("counts whole intervals from an off-anchor start for a custom cycle", () => {
+      // Cycle anchored 2026-06-01, stepping every 7 days: 06-01, 06-08, 06-15, 06-22, ...
+      // A `from` of 2026-06-03 sits mid-interval; it must snap to 2026-06-01 before counting,
+      // so the walk to 2026-06-22 crosses exactly 3 interval boundaries, not 2.
+      const c = buildContainer({ s: customJournal("s", "day", 7, "2026-06-01") });
+      const cycle = c.resolve(CycleService);
+      const result = cycle.countRepeats("s", "2026-06-03" as AnchorString, "2026-06-22" as AnchorString);
+      expect(result.isSome() && result.value).toBe(3);
+    });
   });
 
   describe("anchorAtOffset", () => {

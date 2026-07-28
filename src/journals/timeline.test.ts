@@ -412,5 +412,20 @@ describe("TimelineService", () => {
       const bounds = c.resolve(TimelineService).boundsOf("custom");
       expect(bounds.end.match({ some: (d) => d.toAnchor(), none: () => null })).toBe("2026-06-07");
     });
+
+    it("rejects the interval past an off-anchor repeats start consistently with contains", () => {
+      // Cycle anchored 2026-06-01, stepping every 7 days. A timeline start of 2026-06-03 sits
+      // mid-interval; countRepeats must snap it to 2026-06-01 before counting, so 3 repeats
+      // covers 06-01–06-21 and the interval starting 06-22 is excluded from both.
+      const c = buildContainer({
+        custom: customJournal("custom", "day", 7, "2026-06-01", {
+          timeline: { start: "2026-06-03" as AnchorString, end: { kind: "repeats", count: 3 } },
+        }),
+      });
+      const timeline = c.resolve(TimelineService);
+      const bounds = timeline.boundsOf("custom");
+      expect(timeline.contains("custom", "2026-06-22" as AnchorString)).toBe(false);
+      expect(bounds.overlapsPeriod(DayPeriod.containing(date("2026-06-22")))).toBe(false);
+    });
   });
 });
