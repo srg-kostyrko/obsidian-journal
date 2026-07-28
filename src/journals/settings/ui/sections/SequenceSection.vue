@@ -2,7 +2,7 @@
 import { computed, ref } from "vue";
 
 import type { AnchorString } from "@/calendar";
-import { DatePicker, type Picking } from "@/calendar/ui";
+import { DatePicker, useAnchorField, type Picking } from "@/calendar/ui";
 import { m } from "@/i18n";
 import { useService } from "@/infrastructure/di";
 import { Flows } from "@/infrastructure/flows";
@@ -17,7 +17,6 @@ import UiToggle from "@/ui/UiToggle.vue";
 
 import { JournalsViewModel } from "../../../view-model";
 import { EditSequencePropertyFlow } from "../../flows/edit-sequence-property.flow";
-import { useAnchorField } from "../use-anchor-field";
 
 import type { NumberingReset } from "../../../config";
 

@@ -5,7 +5,7 @@ import { useForm } from "vee-validate";
 import { computed, type Ref } from "vue";
 
 import type { AnchorString } from "@/calendar";
-import { DatePicker } from "@/calendar/ui";
+import { DatePicker, useAnchorField } from "@/calendar/ui";
 import { m } from "@/i18n";
 import { useService } from "@/infrastructure/di";
 import { useModal } from "@/infrastructure/host/modals";
@@ -15,8 +15,6 @@ import UiDropdown from "@/ui/UiDropdown.vue";
 import UiNumberInput from "@/ui/UiNumberInput.vue";
 import UiSettingRow from "@/ui/UiSettingRow.vue";
 import UiTextInput from "@/ui/UiTextInput.vue";
-
-import { useAnchorField } from "./use-anchor-field";
 
 import type { JournalWrite } from "../../config";
 

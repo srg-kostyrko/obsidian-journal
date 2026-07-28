@@ -2,7 +2,7 @@
 import { computed, ref } from "vue";
 
 import { CalendarDate, OpenInterval, type AnchorString } from "@/calendar";
-import { DatePicker, type Picking } from "@/calendar/ui";
+import { DatePicker, useAnchorField, type Picking } from "@/calendar/ui";
 import { m } from "@/i18n";
 import { useService } from "@/infrastructure/di";
 import { icons } from "@/ui/icons";
@@ -14,7 +14,6 @@ import UiNumberInput from "@/ui/UiNumberInput.vue";
 import UiSettingRow from "@/ui/UiSettingRow.vue";
 
 import { JournalsViewModel } from "../../../view-model";
-import { useAnchorField } from "../use-anchor-field";
 
 import type { TimelineEnd } from "../../../config";
 
