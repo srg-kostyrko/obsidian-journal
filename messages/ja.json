@@ -19,8 +19,8 @@
 			"match": {
 				"layer=text,target=today": "今日の日付のカレンダーセルのテキストの色。",
 				"layer=background,target=today": "今日の日付のカレンダーセルの背景色。",
-				"layer=text,target=active": "現在メモが開いているカレンダーセルのテキストの色。",
-				"layer=background,target=active": "現在メモが開いているカレンダーセルの背景色。"
+				"layer=text,target=active": "現在ノートが開いているカレンダーセルのテキストの色。",
+				"layer=background,target=active": "現在ノートが開いているカレンダーセルの背景色。"
 			}
 		}
 	],
@@ -77,7 +77,7 @@
 	"calendar_preset_western_used": "カナダ、アメリカ合衆国、アイスランド、ポルトガル、日本、台湾、タイ、香港、マカオ、イスラエル、エジプト、南アフリカ、フィリピン、そしてラテンアメリカのほとんどの地域。",
 	"calendar_week_config_change": "変化",
 	"calendar_week_config_description": "週の始まりを何曜日とするか、そして年の最初の週をどのように決定するかを定義する。これは週番号に影響する。",
-	"code_blocks_nav_not_connected": "メモはジャーナルにリンクされていません",
+	"code_blocks_nav_not_connected": "ノートはジャーナルにリンクされていません",
 	"code_blocks_home_empty": "表示できるジャーナルがありません。ブロックの表示オプションと棚の表示オプションを確認してください。",
 	"code_blocks_nav_next": "次",
 	"code_blocks_nav_previous": "前の",
@@ -93,7 +93,7 @@
 			],
 			"match": {
 				"kind=create": "新しいノートを作成する",
-				"kind=existing": "既存のメモを開く"
+				"kind=existing": "既存のノートを開く"
 			}
 		}
 	],
@@ -106,11 +106,11 @@
 				"writeType"
 			],
 			"match": {
-				"writeType=day": "日々のメモにはデフォルト設定を使用する",
-				"writeType=week": "週次メモにはデフォルト設定を使用する",
-				"writeType=month": "月次メモにはデフォルト設定を使用する",
-				"writeType=quarter": "四半期ごとのメモにはデフォルト設定を使用する",
-				"writeType=year": "年間手形にはデフォルト設定を使用する",
+				"writeType=day": "日々のノートにはデフォルト設定を使用する",
+				"writeType=week": "週次ノートにはデフォルト設定を使用する",
+				"writeType=month": "月次ノートにはデフォルト設定を使用する",
+				"writeType=quarter": "四半期ごとのノートにはデフォルト設定を使用する",
+				"writeType=year": "年間ノートにはデフォルト設定を使用する",
 				"writeType=*": "デフォルト設定を使用する"
 			}
 		}
@@ -209,10 +209,10 @@
 	"command_edit_tooltip": "{name}を編集",
 	"command_icon_required_error": "このコマンドをリボンに表示するアイコンを選択してください。",
 	"command_insert_date_link": "ジャーナルノートへのリンクを挿入",
-	"command_label_today": "今日の紙幣を開く",
-	"command_label_tomorrow": "明日のメモを開く",
-	"command_label_yesterday": "昨日のメモを開く",
-	"command_modal_context_description": "コマンドが現在の日付として扱うメモの日付を選択してください。",
+	"command_label_today": "今日のノートを開く",
+	"command_label_tomorrow": "明日のノートを開く",
+	"command_label_yesterday": "昨日のノートを開く",
+	"command_modal_context_description": "コマンドが現在の日付として扱うノートの日付を選択してください。",
 	"command_modal_context_label": "コンテクスト",
 	"command_modal_context_only_open_note_hint": "ジャーナルノートが開いている間のみ実行され、そのノートの日付を使用します。",
 	"command_modal_context_open_note_hint": "開いているジャーナルノートの日付、ジャーナルノートが開いていない場合は今日の日付を使用します。",
@@ -255,14 +255,14 @@
 		}
 	],
 	"command_open_next": "次のノートを開く",
-	"command_open_previous": "前のメモを開く",
+	"command_open_previous": "前のノートを開く",
 	"command_open_calendar": "カレンダーを開く",
 	"command_view_change_shelf": "{name} の棚を変更",
 	"shelf_picker_placeholder": "棚を検索",
 	"command_palette_journal_name": "{journal}: {name}",
 	"command_palette_shelf_name": "棚: {shelf}: {name}",
-	"command_open_no_next": "この音符の後に続く音符はありません。",
-	"command_open_no_previous": "このメモの前には、メモはありません。",
+	"command_open_no_next": "このノートの後に続くノートはありません。",
+	"command_open_no_previous": "このノートの前には、ノートはありません。",
 	"command_type_label": [
 		{
 			"declarations": [
@@ -294,7 +294,7 @@
 				"type=previous,writeType=custom": "前のカスタムノートを開く",
 				"type=previous_available,writeType=day": "以前の既存の日報を開く",
 				"type=previous_available,writeType=week": "以前の既存の週報を開く",
-				"type=previous_available,writeType=month": "以前の既存の月次メモを開く",
+				"type=previous_available,writeType=month": "以前の既存の月次ノートを開く",
 				"type=previous_available,writeType=quarter": "以前の四半期ノートを開く",
 				"type=previous_available,writeType=year": "既存の過去の年間債券を開く",
 				"type=previous_available,writeType=custom": "既存のカスタムノートを開く",
@@ -327,7 +327,7 @@
 				"writeType"
 			],
 			"match": {
-				"writeType=day": "日々のメモ",
+				"writeType=day": "日々のノート",
 				"writeType=week": "週刊ノート",
 				"writeType=month": "月次報告",
 				"writeType=quarter": "四半期報告書",
@@ -339,20 +339,20 @@
 	"command_connect_note": "ノートをジャーナルに接続する",
 	"connect_note_modal_date_label": "日付",
 	"connect_note_modal_move_description": "ノートのフォルダ ( {current} ) は、ジャーナルの設定済みフォルダ ( {configured} ) と異なります。",
-	"connect_note_modal_override_description": "別のメモ（ {path} ）がこの日付に関連付けられています。これを有効にすると、このメモは切断されます。",
-	"connect_note_modal_override_label": "この日付に既に関連付けられているメモを置き換えます",
+	"connect_note_modal_override_description": "別のノート（ {path} ）がこの日付に関連付けられています。これを有効にすると、このノートは切断されます。",
+	"connect_note_modal_override_label": "この日付に既に関連付けられているノートを置き換えます",
 	"connect_note_modal_rename_description": "ノートの名前 ( {current} ) は、ジャーナルの設定名 ( {configured} ) と異なります。",
 	"connect_note_modal_rename_label": "ジャーナルに合わせてファイル名を変更する",
 	"connect_note_modal_move_label": "ファイルをジャーナルのフォルダに移動",
 	"connect_note_modal_connect": "接続する",
-	"connect_note_modal_connected_to": "このメモは「 {journalName} \" に関連しています。",
+	"connect_note_modal_connected_to": "このノートは「 {journalName} \" に関連しています。",
 	"connect_note_modal_disconnect": "切断",
 	"connect_note_modal_out_of_bounds": "この日付は、本誌の有効な掲載期間外です。",
-	"connect_note_notice_connected": "「 {journalName} \" に関連するメモ。",
+	"connect_note_notice_connected": "「 {journalName} \" に関連するノート。",
 	"connect_note_notice_disconnected": "「 {journalName} \"から切断されました。",
-	"bulk_add_notes_to_title": "{journalName}にメモを追加する",
+	"bulk_add_notes_to_title": "{journalName}にノートを追加する",
 	"bulk_add_folder_label": "ソースフォルダ",
-	"bulk_add_folder_description": "処理したい既存のメモが入っているフォルダを選択してください。",
+	"bulk_add_folder_description": "処理したい既存のノートが入っているフォルダを選択してください。",
 	"bulk_add_date_place_label": "日付を読んでください",
 	"bulk_add_date_place_title": "ノートのタイトル",
 	"bulk_add_date_place_property": "不動産",
@@ -360,14 +360,14 @@
 	"bulk_add_date_format_label": "日付形式",
 	"bulk_add_date_format_omit_time": "日付に時刻が含まれる場合は、フォーマットから時刻を省略してください。",
 	"bulk_add_date_format_property_note": "日付の表示形式は保存形式と異なる場合があります。ソース表示モードで形式を確認してください。",
-	"bulk_add_filter_combinator_label": "フィルターに関する注記",
+	"bulk_add_filter_combinator_label": "ノートを絞り込む",
 	"bulk_add_filter_combinator_no": "フィルターなし",
 	"bulk_add_filter_combinator_and": "すべての条件に一致する",
 	"bulk_add_filter_combinator_or": "あらゆる条件に一致する",
 	"bulk_add_add_filter_title": "タイトル条件を追加",
 	"bulk_add_add_filter_tag": "タグ条件を追加する",
 	"bulk_add_add_filter_property": "プロパティ条件を追加する",
-	"bulk_add_existing_label": "メモが既にその日付に関連付けられている場合",
+	"bulk_add_existing_label": "ノートが既にその日付に関連付けられている場合",
 	"bulk_add_existing_description": [
 		{
 			"declarations": [
@@ -377,10 +377,10 @@
 				"option"
 			],
 			"match": {
-				"option=skip": "新しいメモはそのまま放置され、接続もされていません。",
-				"option=override": "新しいメモが日付を引き継ぎ、以前接続されていたメモは保管庫に残りますが、接続は切断されます。",
-				"option=merge": "新しいメモの内容は、既に接続されているメモに追加され、新しいメモは削除されます。",
-				"option=ask": "レビュー画面で各メモについて決定してください。"
+				"option=skip": "新しいノートはそのまま放置され、接続もされていません。",
+				"option=override": "新しいノートが日付を引き継ぎ、以前接続されていたノートは保管庫に残りますが、接続は切断されます。",
+				"option=merge": "新しいノートの内容は、既に接続されているノートに追加され、新しいノートは削除されます。",
+				"option=ask": "レビュー画面で各ノートについて決定してください。"
 			}
 		}
 	],
@@ -394,7 +394,7 @@
 	"bulk_add_option_rename": "名前を変更する",
 	"bulk_add_option_ask": "それぞれを尋ねてください",
 	"bulk_add_dry_run_label": "予行演習（プレビューのみ）",
-	"bulk_add_dry_run_description": "メモの内容は一切変更しないでください。変更内容のみを報告してください。",
+	"bulk_add_dry_run_description": "ノートの内容は一切変更しないでください。変更内容のみを報告してください。",
 	"bulk_add_next": "続く",
 	"bulk_add_run": "走る",
 	"bulk_add_progress": "{done}を{total} …",
@@ -407,7 +407,7 @@
 				"count"
 			],
 			"match": {
-				"count=1": "1音符スキップ",
+				"count=1": "1ノートスキップ",
 				"count=*": "{count}注釈は省略されました"
 			}
 		}
@@ -421,8 +421,8 @@
 				"count"
 			],
 			"match": {
-				"count=1": "処理すべきメモが1件あります。",
-				"count=*": "{count}処理すべきメモ"
+				"count=1": "処理すべきノートが1件あります。",
+				"count=*": "{count}処理すべきノート"
 			}
 		}
 	],
@@ -535,8 +535,8 @@
 			}
 		}
 	],
-	"decoration_condition_has_note_describe": "メモが存在する",
-	"decoration_condition_has_open_task_describe": "メモには未完了のタスクがあります",
+	"decoration_condition_has_note_describe": "ノートが存在する",
+	"decoration_condition_has_open_task_describe": "ノートには未完了のタスクがあります",
 	"decoration_condition_offset_describe": "開始位置からのオフセットは{offset}です。",
 	"decoration_condition_offset_hint": [
 		{
@@ -576,7 +576,7 @@
 				"type=date": "日付",
 				"type=weekday": "平日",
 				"type=offset": "オフセット",
-				"type=has-note": "注記あり",
+				"type=has-note": "ノートあり",
 				"type=has-open-task": "未完了のタスクがあります",
 				"type=all-tasks-completed": "すべてのタスクが完了しました"
 			}
@@ -597,8 +597,8 @@
 				"type=date": "日付を確認してください",
 				"type=weekday": "平日をチェック",
 				"type=offset": "間隔オフセットを確認する",
-				"type=has-note": "メモが存在するか確認する",
-				"type=has-open-task": "メモに未完了のタスクがあるかどうか確認する",
+				"type=has-note": "ノートが存在するか確認する",
+				"type=has-open-task": "ノートに未完了のタスクがあるかどうか確認する",
 				"type=all-tasks-completed": "すべてのタスクが完了しているかどうかを確認してください。"
 			}
 		}
@@ -962,13 +962,13 @@
 	"shelf_dashboard_section_title": "ジャーナル棚",
 	"shelf_delete_modal_destination_label": "ジャーナルを移動",
 	"shelf_delete_modal_destination_none": "なし",
-	"shelf_delete_modal_destination_description": "この棚にある雑誌は、選択した棚に移動されます。何も選択されていない場合は、棚から取り出されます。メモは影響を受けません。",
-	"shelf_delete_modal_moved_out": "雑誌は棚から移動されます。ノートには影響はありません。",
+	"shelf_delete_modal_destination_description": "この棚にあるジャーナルは、選択した棚に移動されます。何も選択されていない場合は、棚から取り出されます。ノートは影響を受けません。",
+	"shelf_delete_modal_moved_out": "ジャーナルは棚から移動されます。ノートには影響はありません。",
 	"shelf_delete_modal_title": "シェルフ{name}を削除します。",
 	"journal_create": "新しいジャーナルを作成する",
 	"common_label_journals": "ジャーナル",
 	"shelf_rename": "棚の名前を変更する",
-	"shelf_journals_block_title_filtered": "棚にない雑誌",
+	"shelf_journals_block_title_filtered": "棚にないジャーナル",
 	"shelf_member_count": [
 		{
 			"declarations": [
@@ -996,14 +996,14 @@
 	"settings_reload_required_banner": "変更した設定を適用するには、Obsidian を再読み込みしてください。",
 	"startup_dashboard_section_title": "起動する",
 	"startup_open_note_title": "起動時に開く",
-	"startup_open_note_desc": "この金庫を開けるたびに、メモを開いてください。",
+	"startup_open_note_desc": "この金庫を開けるたびに、ノートを開いてください。",
 	"startup_dont_open_option": "開けないでください",
 	"uri_missing_target": "ジャーナルURIには、「journal」または「type」パラメータが必要です。",
 	"uri_unknown_write_type": "URI に不明なジャーナルタイプ \" {type} \" があります。",
 	"uri_invalid_date": "URI 内の日付 \" {date} \" を理解できませんでした。",
 	"uri_invalid_mode": "URI に不明なオープンモード \" {mode} \" があります。",
 	"uri_unknown_journal": "「 {journal} \" という名前のジャーナルは存在しません。",
-	"uri_no_journal": "その日付を扱っている雑誌はない。",
+	"uri_no_journal": "その日付を扱っているジャーナルはない。",
 	"uri_no_journal_of_type": "{type}ジャーナルは存在しません。",
 	"uri_open_failed": "ジャーナルエントリを開くことができませんでした。",
 	"view_dashboard_section_title": "閲覧数",
@@ -1016,7 +1016,7 @@
 	"view_name_required_error": "名前は必須です。",
 	"view_name_unchanged_error": "別の名前を入力してください。",
 	"view_delete_modal_title": "ビューを削除{name}",
-	"view_delete_modal_description": "ビューとそのブロック構成は削除されます。メモには影響はありません。",
+	"view_delete_modal_description": "ビューとそのブロック構成は削除されます。ノートには影響はありません。",
 	"view_add_block": "ブロックを追加",
 	"view_add_block_empty": "ブロックタイプは登録されていません。",
 	"view_add_picker_action": "{label}を追加します。",
@@ -1031,7 +1031,7 @@
 	"view_edit_show_in_ribbon_description": "このビューを開くリボンボタンを追加します。",
 	"common_label_all_journals": "すべてのジャーナル",
 	"view_edit_open_on_startup_label": "起動時に開く",
-	"view_edit_open_on_startup_description": "保管庫を開くたびにこの画面が表示されます。メイン設定ページの起動時のメモ設定とは別になっています。",
+	"view_edit_open_on_startup_description": "保管庫を開くたびにこの画面が表示されます。メイン設定ページの起動時のノート設定とは別になっています。",
 	"view_edit_remember_date_label": "最後に表示した日付を記憶する",
 	"view_edit_remember_date_description": "オフの場合、起動するたびにカレンダーは今日の日付を開きます。オンの場合、最後に表示した日付を再度開きます。",
 	"view_edit_leaf_label": "開く",
@@ -1148,9 +1148,9 @@
 	],
 	"view_toolbar_period_buttons_config_label": "期間",
 	"view_toolbar_defined_navigation_label": "定義済みノートナビゲーション",
-	"view_toolbar_defined_navigation_description": "既に存在する前の音符または次の音符にジャンプするボタン。",
-	"view_toolbar_defined_navigation_target": "手順を追うためのメモ",
-	"view_toolbar_defined_navigation_target_active": "アクティブジャーナルのメモ",
+	"view_toolbar_defined_navigation_description": "既に存在する前のノートまたは次のノートにジャンプするボタン。",
+	"view_toolbar_defined_navigation_target": "手順を追うためのノート",
+	"view_toolbar_defined_navigation_target_active": "アクティブジャーナルのノート",
 	"view_toolbar_defined_navigation_direction": "方向",
 	"view_toolbar_defined_navigation_direction_option": [
 		{
@@ -1168,12 +1168,12 @@
 	],
 	"view_toolbar_button_label": "ボタン",
 	"view_toolbar_button_preset_pick_date": "日付を選択してください",
-	"view_toolbar_button_preset_pick_date_description": "日付選択ダイアログを開き、任意のメモにジャンプします。",
+	"view_toolbar_button_preset_pick_date_description": "日付選択ダイアログを開き、任意のノートにジャンプします。",
 	"view_toolbar_button_preset_open_note": "オープンノート",
-	"view_toolbar_button_preset_open_note_description": "現在の期間の注記にジャンプします。",
+	"view_toolbar_button_preset_open_note_description": "現在の期間のノートにジャンプします。",
 	"view_toolbar_button_preset_navigate": "手順に沿ってナビゲートする",
 	"view_toolbar_button_preset_navigate_description": "一定の間隔で前進または後退するステップ。",
-	"view_toolbar_button_default_tooltip_pick_multi": "メモを開く",
+	"view_toolbar_button_default_tooltip_pick_multi": "ノートを開く",
 	"view_toolbar_button_default_label_current": "現在",
 	"view_toolbar_button_default_tooltip_current_multi": "現在のページへジャンプ…",
 	"view_toolbar_button_default_tooltip_prev_unit": "前の{unit}",
@@ -1183,7 +1183,7 @@
 	"view_toolbar_button_config_tooltip_label": "ツールチップ",
 	"view_toolbar_appearance_label_label": "ラベル",
 	"view_toolbar_appearance_tooltip_label": "ツールチップ",
-	"view_toolbar_button_config_journal_default": "棚にあるすべての雑誌",
+	"view_toolbar_button_config_journal_default": "棚にあるすべてのジャーナル",
 	"view_toolbar_button_config_mode_label": "行動",
 	"view_toolbar_button_config_levels_label": "期間",
 	"view_toolbar_button_config_mode_option": [
@@ -1197,7 +1197,7 @@
 			"match": {
 				"mode=select-only": "カレンダーを移動するだけ",
 				"mode=navigate": "ノートが存在する場合のみ開く",
-				"mode=create": "存在しない場合はメモを作成する"
+				"mode=create": "存在しない場合はノートを作成する"
 			}
 		}
 	],
@@ -1277,12 +1277,12 @@
 	"journal_add_modal_duration_label": "間隔",
 	"journal_add_modal_every_label": "毎",
 	"journal_add_modal_name_placeholder": "例: デイリー",
-	"journal_add_modal_name_label": "雑誌名",
+	"journal_add_modal_name_label": "ジャーナル名",
 	"journal_add_modal_title": "ジャーナルを追加",
 	"journal_add_modal_write_label": "私は書くつもりです",
 	"journal_colliding_heading": "ジャーナル設定の衝突",
 	"journal_colliding_warning": "ジャーナル{names}設定が競合しているため、ノートが互いに上書きされます。いずれかのジャーナルのフォルダまたは名前テンプレートを変更してください。",
-	"journal_dashboard_bulk_add": "{name}にメモを一括追加します",
+	"journal_dashboard_bulk_add": "{name}にノートを一括追加します",
 	"journal_dashboard_edit": "設定{name}",
 	"journal_dashboard_empty": "まだジャーナルは作成されていません。",
 	"journal_delete_modal_title": "{name}を削除します。",
@@ -1296,9 +1296,9 @@
 				"mode"
 			],
 			"match": {
-				"mode=keep": "メモを取る",
+				"mode=keep": "ノートを取る",
 				"mode=clear": "明確なジャーナルデータ",
-				"mode=delete": "メモを削除"
+				"mode=delete": "ノートを削除"
 			}
 		}
 	],
@@ -1311,9 +1311,9 @@
 				"mode"
 			],
 			"match": {
-				"mode=keep": "メモは金庫の中で変更されずに保管されます。",
-				"mode=clear": "メモは保管庫に残りますが、ジャーナルのプロパティはフロントマターから削除されます。",
-				"mode=delete": "このジャーナルに関連付けられたすべてのメモは、あなたの保管庫から削除されます。"
+				"mode=keep": "ノートは金庫の中で変更されずに保管されます。",
+				"mode=clear": "ノートは保管庫に残りますが、ジャーナルのプロパティはフロントマターから削除されます。",
+				"mode=delete": "このジャーナルに関連付けられたすべてのノートは、あなたの保管庫から削除されます。"
 			}
 		}
 	],
@@ -1322,10 +1322,10 @@
 	"journal_edit_anchor_description": "この日付は、以降の計算のために数値を結び付けるために使用されます。",
 	"journal_edit_anchor_label": "アンカー日付",
 	"journal_edit_anchor_start_used": "開始日は基準日として使用されます。",
-	"journal_edit_auto_create_confirmation_skip_note": "自動作成されたメモには確認ダイアログは表示されません。",
-	"journal_edit_auto_create_description": "プラグインの読み込み時と、現地時間の毎正時に、今日のメモを自動的に作成します。",
-	"journal_edit_auto_create_label": "今日のメモを自動作成する",
-	"journal_edit_confirm_creation_description": "メモがまだ登録されていない日付に移動する際に、確認ダイアログを表示する。",
+	"journal_edit_auto_create_confirmation_skip_note": "自動作成されたノートには確認ダイアログは表示されません。",
+	"journal_edit_auto_create_description": "プラグインの読み込み時と、現地時間の毎正時に、今日のノートを自動的に作成します。",
+	"journal_edit_auto_create_label": "今日のノートを自動作成する",
+	"journal_edit_confirm_creation_description": "ノートがまだ登録されていない日付に移動する際に、確認ダイアログを表示する。",
 	"journal_edit_confirm_creation_label": "新しいノートの作成を確認する",
 	"journal_edit_date_format_description": "独自の形式を指定しない日付変数のデフォルト形式は次のとおりです。",
 	"journal_edit_date_format_label": "デフォルトの日付形式",
@@ -1367,16 +1367,16 @@
 	"journal_edit_fm_end_toggle_label": "終了日プロパティを追加する",
 	"journal_edit_fm_start_description": "2年間にわたる週次ジャーナルの場合、開始日は日付プロパティと異なる場合があります。",
 	"journal_edit_fm_start_toggle_label": "開始日プロパティを追加する",
-	"journal_edit_folder_description": "新しいメモはこのフォルダに作成されます。",
+	"journal_edit_folder_description": "新しいノートはこのフォルダに作成されます。",
 	"journal_edit_folder_label": "フォルダ",
 	"journal_edit_folder_path_preview_label": "解決済みフォルダ:",
 	"journal_edit_move_to_folder_apply_link": "推奨事項を適用する",
 	"journal_edit_move_to_folder_recommendation_date_format": "日付形式にはパス区切り文字が含まれています。日付変数をフォルダーフィールドに移動しますか？",
-	"journal_edit_move_to_folder_recommendation_name_template": "注記名テンプレートにパス区切り文字が含まれています。パスの接頭辞をフォルダーフィールドに移動しますか？",
+	"journal_edit_move_to_folder_recommendation_name_template": "ノート名テンプレートにパス区切り文字が含まれています。パスの接頭辞をフォルダーフィールドに移動しますか？",
 	"journal_edit_name_template_description": "新しい音名を生成するために使用されるテンプレート。",
 	"journal_edit_colliding_warning": "このジャーナルは{names}と同じノートパスに解決されるため、ノートが互いに上書きされます。フォルダまたは名前テンプレートを変更して、異なるパスを指定してください。",
-	"journal_edit_name_template_invertibility_warning": "テンプレートを逆解析できません ( {reason} : \" {offending} \")。自動添付機能は、このパターンに一致する外部作成のメモを警告なしにスキップします。",
-	"journal_edit_name_template_no_anchor_warning": "テンプレートには日付変数がなく、番号変数を日付に反転することもできないため、自動添付機能は、このパターンに一致する外部作成のメモを黙ってスキップします。",
+	"journal_edit_name_template_invertibility_warning": "テンプレートを逆解析できません ( {reason} : \" {offending} \")。自動添付機能は、このパターンに一致する外部作成のノートを警告なしにスキップします。",
+	"journal_edit_name_template_no_anchor_warning": "テンプレートには日付変数がなく、番号変数を日付に反転することもできないため、自動添付機能は、このパターンに一致する外部作成のノートを黙ってスキップします。",
 	"journal_edit_name_template_label": "ノート名テンプレート",
 	"journal_edit_note_name_preview_label": "解決済みノート名:",
 	"journal_edit_rename_tooltip": "ジャーナル名の変更",
@@ -1414,16 +1414,16 @@
 	"journal_edit_code_block_timeline_modes_lead": "サポートされているモード:",
 	"journal_edit_code_block_timeline_weeks": "週番号の列（左、右、またはなし）を制御します。",
 	"journal_edit_code_block_timeline_hidden_weekdays": "リストされている曜日を非表示にします（0 = 日曜日 … 6 = 土曜日）。たとえば、[0, 6] は週末を非表示にします。",
-	"journal_edit_code_block_home_description": "ホームブロックには、ジャーナル内の最新のメモへのリンクが表示されます。",
+	"journal_edit_code_block_home_description": "ホームブロックには、ジャーナル内の最新のノートへのリンクが表示されます。",
 	"journal_edit_code_block_home_default": "デフォルトでは、このように表示されます。",
 	"journal_edit_code_block_home_options_lead": "サポートされているオプション:",
 	"journal_edit_code_block_home_option_show": "表示するジャーナルを制御します（デフォルトでは日別リンクのみ）。サポートされている値：日、週、月、四半期、年、カスタム。",
 	"journal_edit_code_block_home_option_separator": "複数のリンクを区切るために使用されるテキスト。",
 	"journal_edit_code_block_home_option_scale": "テキストサイズの乗数としてリンクサイズを大きくします（例えば、scale: 2 はリンクサイズを2倍にします）。",
-	"journal_edit_code_block_home_option_shelf": "表示される雑誌を特定の棚に限定する。",
+	"journal_edit_code_block_home_option_shelf": "表示されるジャーナルを特定の棚に限定する。",
 	"journal_edit_code_block_home_custom_lead": "カスタムオプションを使用すると、次のようになります。",
 	"journal_edit_section_timeline": "タイムライン",
-	"journal_edit_sequence_enabled_description": "メモに番号を割り当てます（例：1日目、2日目、…）。",
+	"journal_edit_sequence_enabled_description": "ノートに番号を割り当てます（例：1日目、2日目、…）。",
 	"journal_edit_sequence_enabled_label": "連番を有効にする",
 	"journal_edit_start_number_description": "アンカー日付に割り当てられた番号。",
 	"journal_edit_start_number_label": "開始番号",
@@ -1440,10 +1440,10 @@
 	"journal_edit_variable_additional_modifications_link": "追加の修正",
 	"journal_edit_variable_current_date_description": "今日の日付（デフォルトではYYYY-MM-DD形式）。",
 	"journal_edit_variable_current_time_description": "現在の壁時計時刻（ {slot}のエイリアス。デフォルトでは HH:mm 形式）。",
-	"journal_edit_variable_date_description": "手形の参照日とは、この手形が対象とする期間の日付のことです。",
-	"journal_edit_variable_date_format_description": "メモの参照日。指定されたmoment.jsフォーマット文字列でフォーマットされています。",
-	"journal_edit_variable_end_date_description": "このメモが対象とする期間の最終日。",
-	"journal_edit_variable_index_description": "ジャーナルで番号付けが有効になっている場合、メモに連番が付けられます。",
+	"journal_edit_variable_date_description": "ノートの参照日とは、このノートが対象とする期間の日付のことです。",
+	"journal_edit_variable_date_format_description": "ノートの参照日。指定されたmoment.jsフォーマット文字列でフォーマットされています。",
+	"journal_edit_variable_end_date_description": "このノートが対象とする期間の最終日。",
+	"journal_edit_variable_index_description": "ジャーナルで番号付けが有効になっている場合、ノートに連番が付けられます。",
 	"journal_edit_variable_journal_link_description": "テンプレートファイルの内容内では、このノートの日付に対応する別のジャーナルノートのパスに解決されます。リンクまたは埋め込み（例：![[ … ]]）で自分で囲み、+1w のような日付修飾子を追加して、隣接する期間を指すようにします。",
 	"journal_edit_variable_journal_name_description": "ジャーナル名（ここでは： {name} ）。",
 	"journal_edit_variable_non_invertible_warning": "ここでこれを使用すると、ジャーナルがファイル名から日付を復元できなくなります。",
@@ -1454,7 +1454,7 @@
 	"journal_edit_variable_reference_link": "サポートされている変数。",
 	"journal_edit_variable_reference_modal_title": "変数参照",
 	"journal_edit_variable_relative_date_description": "固定サイクルジャーナルの場合は「昨日」「今日」「明日」「N日前」と入力してください。カスタムジャーナルの場合は空欄です。",
-	"journal_edit_variable_start_date_description": "このメモが対象とする期間の初日。",
+	"journal_edit_variable_start_date_description": "このノートが対象とする期間の初日。",
 	"journal_edit_variable_time_description": "現在の壁時計の時刻（デフォルトでは時:分表示）。",
 	"journal_edit_wrong_week_warning": "週の書式設定には「W」を使用しますが、これはカスタム週設定を尊重せず、カレンダー表示とは異なる週番号が表示される場合があります。代わりに「w」を使用してください（必要に応じてプラグイン設定で週の開始日を変更してください）。",
 	"journal_fm_field_label": [
@@ -1487,7 +1487,7 @@
 			}
 		}
 	],
-	"journal_name_required_error": "雑誌名は必須です。",
+	"journal_name_required_error": "ジャーナル名は必須です。",
 	"journal_name_unique_error": "ジャーナル名は一意である必要があります。",
 	"journal_picker_placeholder": "ジャーナルを検索",
 	"journal_property_modal_current_label": "現在の名前",
@@ -1593,8 +1593,8 @@
 			}
 		}
 	],
-	"logging_dump_button": "ダンプログをメモする",
-	"logging_dump_desc": "最近記録されたログメッセージを、保管庫内の新しいメモに書き込んでください。",
+	"logging_dump_button": "ダンプログをノートする",
+	"logging_dump_desc": "最近記録されたログメッセージを、保管庫内の新しいノートに書き込んでください。",
 	"logging_dump_empty": "ログメッセージはまだ記録されていません。",
 	"logging_dump_failed": "ログノートの書き込みに失敗しました。",
 	"logging_dump_succeeded": "ログは{path}に書き込まれました。",

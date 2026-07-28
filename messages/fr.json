@@ -167,7 +167,7 @@
 		}
 	],
 	"nav_block_row_template_required": "Un modèle est requis.",
-	"nav_block_row_journal_required": "Choisissez une revue.",
+	"nav_block_row_journal_required": "Choisissez un journal.",
 	"nav_block_row_resolved_preview": "Résolu : {text}",
 	"command_add": "Ajouter une commande",
 	"command_context_open_note_clarifier": "(utilise la date de la note ouverte, ou celle du jour)",
@@ -210,7 +210,7 @@
 	"command_icon_required_error": "Choisissez une icône pour afficher cette commande dans le ruban.",
 	"command_insert_date_link": "Insérer un lien vers la note de journal",
 	"command_label_today": "Ouvrez la note d'aujourd'hui",
-	"command_label_tomorrow": "Ouvrez le billet de demain",
+	"command_label_tomorrow": "Ouvrir la note de demain",
 	"command_label_yesterday": "Ouvrir la note d'hier",
 	"command_modal_context_description": "Choisissez la date de la note que la commande considère comme la date actuelle.",
 	"command_modal_context_label": "Contexte",
@@ -277,8 +277,8 @@
 				"type=same,writeType=day": "Note quotidienne ouverte",
 				"type=same,writeType=week": "Note hebdomadaire ouverte",
 				"type=same,writeType=month": "Note mensuelle ouverte en cours",
-				"type=same,writeType=quarter": "billet trimestriel courant ouvert",
-				"type=same,writeType=year": "billet annuel courant ouvert",
+				"type=same,writeType=quarter": "Ouvrir la note trimestrielle actuelle",
+				"type=same,writeType=year": "Ouvrir la note annuelle actuelle",
 				"type=same,writeType=custom": "Ouvrir la note douanière actuelle",
 				"type=next,writeType=day": "Ouvrir la prochaine note quotidienne",
 				"type=next,writeType=week": "Ouvrez la prochaine note hebdomadaire",
@@ -288,14 +288,14 @@
 				"type=next,writeType=custom": "Ouvrir la note personnalisée suivante",
 				"type=previous,writeType=day": "Ouvrir la note quotidienne précédente",
 				"type=previous,writeType=week": "Ouvrir la note hebdomadaire précédente",
-				"type=previous,writeType=month": "Ouvrir le précédent billet mensuel",
+				"type=previous,writeType=month": "Ouvrir la note mensuelle précédente",
 				"type=previous,writeType=quarter": "Ouvrir la note trimestrielle précédente",
 				"type=previous,writeType=year": "Ouvrir la note annuelle précédente",
 				"type=previous,writeType=custom": "Ouvrir la note personnalisée précédente",
 				"type=previous_available,writeType=day": "Ouvrir la note journalière précédente existante",
 				"type=previous_available,writeType=week": "Ouvrir la note hebdomadaire précédente.",
-				"type=previous_available,writeType=month": "Ouvrir le précédent billet mensuel existant",
-				"type=previous_available,writeType=quarter": "Ouvrir le précédent billet trimestriel existant",
+				"type=previous_available,writeType=month": "Ouvrir la note mensuelle existante précédente",
+				"type=previous_available,writeType=quarter": "Ouvrir la note trimestrielle existante précédente",
 				"type=previous_available,writeType=year": "Ouvrir l'ancienne note annuelle existante",
 				"type=previous_available,writeType=custom": "Ouvrir la note personnalisée existante précédente",
 				"type=next_available,writeType=day": "Ouvrir la prochaine note journalière existante",
@@ -347,7 +347,7 @@
 	"connect_note_modal_connect": "Connecter",
 	"connect_note_modal_connected_to": "Cette note est liée à \" {journalName} \".",
 	"connect_note_modal_disconnect": "Déconnecter",
-	"connect_note_modal_out_of_bounds": "Cette date est en dehors de la période de publication active de la revue.",
+	"connect_note_modal_out_of_bounds": "Cette date se situe en dehors de la période active du journal.",
 	"connect_note_notice_connected": "Note liée à \" {journalName} \".",
 	"connect_note_notice_disconnected": "Note déconnectée de \" {journalName} \".",
 	"bulk_add_notes_to_title": "Ajouter des notes à {journalName}",
@@ -360,7 +360,7 @@
 	"bulk_add_date_format_label": "Format de date",
 	"bulk_add_date_format_omit_time": "Si vos dates incluent une heure, omettez-la du format.",
 	"bulk_add_date_format_property_note": "Les dates peuvent différer de la façon dont elles sont stockées — vérifiez le format en mode d'affichage Source.",
-	"bulk_add_filter_combinator_label": "Notes de filtre",
+	"bulk_add_filter_combinator_label": "Filtrer les notes",
 	"bulk_add_filter_combinator_no": "Aucun filtre",
 	"bulk_add_filter_combinator_and": "Respecter toutes les conditions",
 	"bulk_add_filter_combinator_or": "Correspond à toutes les conditions",
@@ -959,16 +959,16 @@
 	"common_delete_name": "Supprimer {name}",
 	"shelf_dashboard_empty": "Aucune étagère n'a encore été créée.",
 	"shelf_dashboard_open": "Configurer {name}",
-	"shelf_dashboard_section_title": "étagères de revues",
+	"shelf_dashboard_section_title": "Étagères de journaux",
 	"shelf_delete_modal_destination_label": "Déplacer les journaux vers",
 	"shelf_delete_modal_destination_none": "Aucun",
-	"shelf_delete_modal_destination_description": "Les revues posées sur cette étagère sont déplacées vers l'étagère sélectionnée, ou retirées de l'étagère si aucune n'est sélectionnée. Les notes ne sont pas affectées.",
-	"shelf_delete_modal_moved_out": "Les revues seront retirées des étagères. Les notes ne sont pas concernées.",
+	"shelf_delete_modal_destination_description": "Les journaux posés sur cette étagère sont déplacés vers l'étagère sélectionnée, ou retirés de l'étagère si aucune n'est sélectionnée. Les notes ne sont pas affectées.",
+	"shelf_delete_modal_moved_out": "Les journaux seront retirés de l'étagère. Les notes ne sont pas affectées.",
 	"shelf_delete_modal_title": "Supprimer l'étagère {name}",
 	"journal_create": "Créer un nouveau journal",
-	"common_label_journals": "Revues",
+	"common_label_journals": "Journaux",
 	"shelf_rename": "Renommer l'étagère",
-	"shelf_journals_block_title_filtered": "Revues non rangées sur une étagère",
+	"shelf_journals_block_title_filtered": "Journaux non rangés sur une étagère",
 	"shelf_member_count": [
 		{
 			"declarations": [
@@ -979,7 +979,7 @@
 			],
 			"match": {
 				"count=1": "1 journal",
-				"count=*": "{count} revues"
+				"count=*": "{count} journaux"
 			}
 		}
 	],
@@ -998,11 +998,11 @@
 	"startup_open_note_title": "Ouvrir au démarrage",
 	"startup_open_note_desc": "Ouvrez une note à chaque fois que vous ouvrez ce coffre-fort.",
 	"startup_dont_open_option": "N'ouvrez pas",
-	"uri_missing_target": "L'URI de la revue nécessite un paramètre « journal » ou « type ».",
+	"uri_missing_target": "L'URI du journal nécessite un paramètre « journal » ou « type ».",
 	"uri_unknown_write_type": "Type de journal inconnu \" {type} \" dans l'URI.",
 	"uri_invalid_date": "Impossible de comprendre la date \" {date} \" dans l'URI.",
 	"uri_invalid_mode": "Mode d'ouverture inconnu \" {mode} \" dans l'URI.",
-	"uri_unknown_journal": "Il n'existe pas de revue nommée \" {journal} \".",
+	"uri_unknown_journal": "Il n'existe pas de journal nommé « {journal} ».",
 	"uri_no_journal": "Aucun journal ne couvre cette date.",
 	"uri_no_journal_of_type": "Il n'existe pas de journal {type} .",
 	"uri_open_failed": "Impossible d'ouvrir l'entrée du journal.",
@@ -1087,7 +1087,7 @@
 			],
 			"match": {
 				"count=1": "1 journal",
-				"count=*": "{count} revues"
+				"count=*": "{count} journaux"
 			}
 		}
 	],
@@ -1420,7 +1420,7 @@
 	"journal_edit_code_block_home_option_show": "Contrôle les journaux affichés (par défaut, seul le lien du jour est pris en charge). Valeurs possibles : jour, semaine, mois, trimestre, année, personnalisé.",
 	"journal_edit_code_block_home_option_separator": "le texte utilisé pour séparer plusieurs liens.",
 	"journal_edit_code_block_home_option_scale": "augmente la taille du lien en fonction de la taille du texte (par exemple, scale: 2 la double).",
-	"journal_edit_code_block_home_option_shelf": "limite les revues affichées à une étagère spécifique.",
+	"journal_edit_code_block_home_option_shelf": "limite les journaux affichés à une étagère spécifique.",
 	"journal_edit_code_block_home_custom_lead": "Avec des options personnalisées, cela peut ressembler à ceci :",
 	"journal_edit_section_timeline": "Chronologie",
 	"journal_edit_sequence_enabled_description": "Attribuer des numéros aux notes (ex. Jour 1, Jour 2, …).",
@@ -1487,9 +1487,9 @@
 			}
 		}
 	],
-	"journal_name_required_error": "Le nom de la revue est obligatoire.",
-	"journal_name_unique_error": "Le nom de la revue doit être unique.",
-	"journal_picker_placeholder": "Recherche dans les revues",
+	"journal_name_required_error": "Le nom du journal est obligatoire.",
+	"journal_name_unique_error": "Le nom du journal doit être unique.",
+	"journal_picker_placeholder": "Rechercher dans les journaux",
 	"journal_property_modal_current_label": "Nom actuel",
 	"common_label_new_name": "Nouveau nom",
 	"journal_property_name_required": "Le nom de la propriété est obligatoire.",

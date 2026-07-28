@@ -1454,7 +1454,7 @@
 	"journal_edit_variable_reference_link": "Підтримувані змінні.",
 	"journal_edit_variable_reference_modal_title": "Посилання на змінну",
 	"journal_edit_variable_relative_date_description": "вчора / сьогодні / завтра / N днів тому для журналів з фіксованим циклом; порожньо для користувацьких журналів.",
-	"journal_edit_variable_start_date_description": "Перший день періоду, який охоплює ця записка.",
+	"journal_edit_variable_start_date_description": "Перший день періоду, який охоплює ця нотатка.",
 	"journal_edit_variable_time_description": "Поточний час настінного годинника (за замовчуванням у форматі ГГ:хх).",
 	"journal_edit_wrong_week_warning": "Ви використовуєте `W` для форматування тижнів, яке не враховує налаштування власного тижня та може відображати інший номер тижня, ніж у поданні Календаря. Замість цього використовуйте `w` (і за потреби змініть початок тижня в налаштуваннях плагіна).",
 	"journal_fm_field_label": [

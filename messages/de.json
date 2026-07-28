@@ -78,7 +78,7 @@
 	"calendar_week_config_change": "Ändern",
 	"calendar_week_config_description": "Definiere, welcher Tag die Woche beginnt und wie die erste Woche des Jahres bestimmt wird – dies wirkt sich auf die Wochennummerierung aus.",
 	"code_blocks_nav_not_connected": "Die Notiz ist nicht mit einem Journal verbunden.",
-	"code_blocks_home_empty": "Es sind keine Zeitschriften vorhanden. Überprüfen Sie die Anzeige- und Regaloptionen des Blocks.",
+	"code_blocks_home_empty": "Keine Journale vorhanden. Überprüfen Sie die Anzeige- und Regaloptionen des Blocks.",
 	"code_blocks_nav_next": "Nächste",
 	"code_blocks_nav_previous": "Vorherige",
 	"nav_block_section_title": "Navigationsblock",
@@ -144,7 +144,7 @@
 	"common_label_text_color": "Textfarbe",
 	"common_label_background_color": "Hintergrundfarbe",
 	"nav_block_row_field_link": "Link",
-	"common_label_journal": "Zeitschrift",
+	"common_label_journal": "Journal",
 	"nav_block_row_field_add_decorations": "Dekorationen hinzufügen",
 	"nav_block_row_link_option": [
 		{
@@ -157,7 +157,7 @@
 			"match": {
 				"kind=none": "Keiner",
 				"kind=self": "Selbst",
-				"kind=journal": "Zeitschrift",
+				"kind=journal": "Journal",
 				"kind=day": "Tag",
 				"kind=week": "Woche",
 				"kind=month": "Monat",
@@ -167,7 +167,7 @@
 		}
 	],
 	"nav_block_row_template_required": "Eine Vorlage ist erforderlich.",
-	"nav_block_row_journal_required": "Wählen Sie eine Zeitschrift aus.",
+	"nav_block_row_journal_required": "Wählen Sie ein Journal aus.",
 	"nav_block_row_resolved_preview": "Aufgelöst: {text}",
 	"command_add": "Befehl hinzufügen",
 	"command_context_open_note_clarifier": "(verwendet das Datum der offenen Notiz oder das heutige Datum)",
@@ -208,7 +208,7 @@
 	"command_edit": "Bearbeiten-Befehl",
 	"command_edit_tooltip": "Bearbeiten Sie {name}",
 	"command_icon_required_error": "Wählen Sie ein Symbol aus, um diesen Befehl im Menüband anzuzeigen.",
-	"command_insert_date_link": "Link zum Tagebucheintrag einfügen",
+	"command_insert_date_link": "Link zur Journalnotiz einfügen",
 	"command_label_today": "Öffnen Sie die heutige Notiz",
 	"command_label_tomorrow": "Öffnen Sie die Notiz von morgen.",
 	"command_label_yesterday": "Öffnen Sie die gestrige Notiz",
@@ -231,7 +231,7 @@
 				"kind"
 			],
 			"match": {
-				"kind=journal": "Der Name der Zeitschrift wird in der Befehlspalette automatisch vor den Befehlsnamen gesetzt.",
+				"kind=journal": "Der Name des Journals wird in der Befehlspalette automatisch vor den Befehlsnamen gesetzt.",
 				"kind=shelf": "Der Name des Regals wird in der Befehlspalette automatisch vor den Befehlsnamen gesetzt."
 			}
 		}
@@ -247,7 +247,7 @@
 				"mode"
 			],
 			"match": {
-				"mode=active": "Ersetzen der aktiven Note",
+				"mode=active": "Die aktive Notiz ersetzen",
 				"mode=tab": "In einem neuen Tab",
 				"mode=split": "Neben der aktiven Notiz",
 				"mode=window": "In einem Popout-Fenster"
@@ -261,7 +261,7 @@
 	"shelf_picker_placeholder": "Regale durchsuchen",
 	"command_palette_journal_name": "{journal}: {name}",
 	"command_palette_shelf_name": "Regal: {shelf}: {name}",
-	"command_open_no_next": "Nach dieser Note folgt keine weitere.",
+	"command_open_no_next": "Nach dieser Notiz folgt keine weitere.",
 	"command_open_no_previous": "Vor diesem Eintrag gibt es keinen vorherigen Eintrag.",
 	"command_type_label": [
 		{
@@ -336,18 +336,18 @@
 			}
 		}
 	],
-	"command_connect_note": "Verknüpfe die Notiz mit einem Tagebuch",
+	"command_connect_note": "Notiz mit einem Journal verknüpfen",
 	"connect_note_modal_date_label": "Datum",
 	"connect_note_modal_move_description": "Der Ordner der Notiz ( {current} ) unterscheidet sich vom konfigurierten Ordner des Journals ( {configured} ).",
 	"connect_note_modal_override_description": "Eine weitere Notiz ( {path} ) ist mit diesem Datum verknüpft. Diese Verknüpfung wird aufgehoben, wenn Sie sie aktivieren.",
 	"connect_note_modal_override_label": "Ersetzen Sie die bereits mit diesem Datum verknüpfte Notiz.",
-	"connect_note_modal_rename_description": "Der Name der Notiz ( {current} ) unterscheidet sich vom konfigurierten Namen der Zeitschrift ( {configured} ).",
+	"connect_note_modal_rename_description": "Der Name der Notiz ({current}) unterscheidet sich vom konfigurierten Namen des Journals ({configured}).",
 	"connect_note_modal_rename_label": "Benennen Sie die Datei so um, dass sie dem Journal entspricht.",
 	"connect_note_modal_move_label": "Verschiebe die Datei in den Ordner des Journals",
 	"connect_note_modal_connect": "Verbinden",
 	"connect_note_modal_connected_to": "Diese Notiz ist mit \" {journalName} \" verbunden.",
 	"connect_note_modal_disconnect": "Trennen",
-	"connect_note_modal_out_of_bounds": "Dieses Datum liegt außerhalb des aktiven Zeitrahmens der Zeitschrift.",
+	"connect_note_modal_out_of_bounds": "Dieses Datum liegt außerhalb des aktiven Zeitrahmens des Journals.",
 	"connect_note_notice_connected": "Hinweis verbunden mit \" {journalName} \".",
 	"connect_note_notice_disconnected": "Hinweis getrennt von \" {journalName} \".",
 	"bulk_add_notes_to_title": "Füge Notizen zu {journalName} hinzu.",
@@ -360,7 +360,7 @@
 	"bulk_add_date_format_label": "Datumsformat",
 	"bulk_add_date_format_omit_time": "Falls Ihre Datumsangaben eine Uhrzeitangabe enthalten, lassen Sie diese im Format weg.",
 	"bulk_add_date_format_property_note": "Die Datumsangaben können von der Art der Speicherung abweichen – überprüfen Sie das Format im Quelltextanzeigemodus.",
-	"bulk_add_filter_combinator_label": "Filternotizen",
+	"bulk_add_filter_combinator_label": "Notizen filtern",
 	"bulk_add_filter_combinator_no": "Kein Filter",
 	"bulk_add_filter_combinator_and": "Alle Bedingungen erfüllen",
 	"bulk_add_filter_combinator_or": "Jede beliebige Bedingung erfüllen",
@@ -377,7 +377,7 @@
 				"option"
 			],
 			"match": {
-				"option=skip": "Der neue Geldschein bleibt unberührt und ist nicht angeschlossen.",
+				"option=skip": "Die neue Notiz bleibt unberührt und wird nicht verknüpft.",
 				"option=override": "Die neue Notiz übernimmt das Datum; die zuvor verbundene Notiz bleibt im Tresor, ist aber nicht mehr mit diesem verbunden.",
 				"option=merge": "Der Inhalt der neuen Notiz wird an die bereits verknüpfte Notiz angehängt, und die neue Notiz wird gelöscht.",
 				"option=ask": "Treffen Sie für jede Notiz eine Entscheidung auf dem Überprüfungsbildschirm."
@@ -407,7 +407,7 @@
 				"count"
 			],
 			"match": {
-				"count=1": "1 Note übersprungen",
+				"count=1": "1 Notiz übersprungen",
 				"count=*": "{count} Notizen übersprungen"
 			}
 		}
@@ -430,7 +430,7 @@
 	"bulk_add_skip_reason_filtered": "Ausgefiltert",
 	"bulk_add_skip_reason_no_date": "Kein Datum gefunden",
 	"bulk_add_skip_reason_invalid_date": "Datum konnte nicht analysiert werden",
-	"bulk_add_skip_reason_out_of_bounds": "Außerhalb des Zeitrahmens der Zeitschrift",
+	"bulk_add_skip_reason_out_of_bounds": "Außerhalb des Zeitrahmens des Journals",
 	"common_action_cancel": "Stornieren",
 	"common_action_close": "Schließen",
 	"common_action_create": "Erstellen",
@@ -438,7 +438,7 @@
 	"common_action_submit": "Speichern",
 	"confirm_note_creation_body": "Erstellen Sie ' {noteName} ' im Journal ' {journalName} '?",
 	"confirm_note_creation_confirm": "Erstellen",
-	"confirm_note_creation_title": "Eine neue Tagebuchnotiz erstellen?",
+	"confirm_note_creation_title": "Eine neue Journalnotiz erstellen?",
 	"decoration_add": "Dekoration hinzufügen",
 	"decoration_border_mode_label": [
 		{
@@ -959,16 +959,16 @@
 	"common_delete_name": "Löschen Sie {name}",
 	"shelf_dashboard_empty": "Es wurden noch keine Regale erstellt.",
 	"shelf_dashboard_open": "Konfigurieren Sie {name}",
-	"shelf_dashboard_section_title": "Zeitschriftenregale",
+	"shelf_dashboard_section_title": "Journalregale",
 	"shelf_delete_modal_destination_label": "Journale verschieben nach",
 	"shelf_delete_modal_destination_none": "Keiner",
-	"shelf_delete_modal_destination_description": "Zeitschriften in diesem Regal werden in das ausgewählte Regal verschoben oder, falls kein Regal ausgewählt ist, aus dem Regal entfernt. Notizen sind davon nicht betroffen.",
-	"shelf_delete_modal_moved_out": "Die Zeitschriften werden aus dem Regal genommen. Notizen sind davon nicht betroffen.",
+	"shelf_delete_modal_destination_description": "Journale in diesem Regal werden in das ausgewählte Regal verschoben oder aus dem Regal entfernt, wenn keines ausgewählt ist. Notizen sind davon nicht betroffen.",
+	"shelf_delete_modal_moved_out": "Die Journale werden aus dem Regal entfernt. Notizen sind davon nicht betroffen.",
 	"shelf_delete_modal_title": "Löschen Sie den Regal {name}",
-	"journal_create": "Neues Tagebuch erstellen",
-	"common_label_journals": "Zeitschriften",
+	"journal_create": "Neues Journal erstellen",
+	"common_label_journals": "Journale",
 	"shelf_rename": "Regal umbenennen",
-	"shelf_journals_block_title_filtered": "Zeitschriften, die nicht im Regal stehen",
+	"shelf_journals_block_title_filtered": "Journale, die in keinem Regal stehen",
 	"shelf_member_count": [
 		{
 			"declarations": [
@@ -978,8 +978,8 @@
 				"count"
 			],
 			"match": {
-				"count=1": "1 Zeitschrift",
-				"count=*": "{count} Zeitschriften"
+				"count=1": "1 Journal",
+				"count=*": "{count} Journale"
 			}
 		}
 	],
@@ -1002,10 +1002,10 @@
 	"uri_unknown_write_type": "Unbekannter Journaltyp \" {type} \" in der URI.",
 	"uri_invalid_date": "Das Datum \" {date} \" in der URI konnte nicht interpretiert werden.",
 	"uri_invalid_mode": "Unbekannter Öffnungsmodus \" {mode} \" in der URI.",
-	"uri_unknown_journal": "Es gibt keine Zeitschrift mit dem Namen \" {journal} \".",
-	"uri_no_journal": "Für dieses Datum gibt es keine Zeitschrift.",
+	"uri_unknown_journal": "Es gibt kein Journal mit dem Namen \"{journal}\".",
+	"uri_no_journal": "Für dieses Datum gibt es kein Journal.",
 	"uri_no_journal_of_type": "Es gibt kein {type} Journal.",
-	"uri_open_failed": "Der Tagebucheintrag konnte nicht geöffnet werden.",
+	"uri_open_failed": "Die Journalnotiz konnte nicht geöffnet werden.",
 	"view_dashboard_section_title": "Ansichten",
 	"view_dashboard_empty": "Noch keine Aufrufe.",
 	"view_dashboard_add": "Ansicht hinzufügen",
@@ -1029,7 +1029,7 @@
 	"view_edit_default_shelf_label": "Standardregal",
 	"view_edit_default_shelf_description": "Das Regal, auf dem diese Ansicht beim Öffnen beginnt.",
 	"view_edit_show_in_ribbon_description": "Fügen Sie eine Menübandschaltfläche hinzu, die diese Ansicht öffnet.",
-	"common_label_all_journals": "Alle Zeitschriften",
+	"common_label_all_journals": "Alle Journale",
 	"view_edit_open_on_startup_label": "Beim Start öffnen",
 	"view_edit_open_on_startup_description": "Diese Ansicht wird jedes Mal angezeigt, wenn Sie den Tresor öffnen. Sie ist unabhängig von der Einstellung für die Startnotiz auf der Hauptseite der Einstellungen.",
 	"view_edit_remember_date_label": "Zuletzt angezeigtes Datum merken",
@@ -1071,7 +1071,7 @@
 	"view_block_markdown_template_variable_current_date_description": "Das heutige Datum zum Zeitpunkt der Blockdarstellung.",
 	"view_block_markdown_template_variable_time_description": "Die aktuelle Uhrzeit, wenn der Block gerendert wird.",
 	"view_block_markdown_template_variable_current_time_description": "Die aktuelle Uhrzeit (Wanduhrzeit) zum Zeitpunkt der Blockdarstellung (Alias der Zeitvariablen).",
-	"view_block_markdown_template_variable_journal_link_description": "Wird auf den Speicherort einer anderen Tagebuchnotiz für das fokussierte Datum aufgelöst. Fügen Sie selbst einen Link ein und fügen Sie eine Verschiebung wie +1w hinzu, um auf einen benachbarten Zeitraum zu verweisen.",
+	"view_block_markdown_template_variable_journal_link_description": "Wird auf den Pfad der Notiz eines anderen Journals für das fokussierte Datum aufgelöst. Fügen Sie sie selbst in einen Link ein und ergänzen Sie eine Verschiebung wie +1w, um auf einen benachbarten Zeitraum zu verweisen.",
 	"view_block_markdown_template_empty": "Keine Vorlage ausgewählt",
 	"view_block_markdown_template_read_error": "Die Vorlagendatei konnte nicht gelesen werden.",
 	"view_block_summary_before": "{count} vor",
@@ -1086,8 +1086,8 @@
 				"count"
 			],
 			"match": {
-				"count=1": "1 Zeitschrift",
-				"count=*": "{count} Zeitschriften"
+				"count=1": "1 Journal",
+				"count=*": "{count} Journale"
 			}
 		}
 	],
@@ -1148,9 +1148,9 @@
 	],
 	"view_toolbar_period_buttons_config_label": "Perioden",
 	"view_toolbar_defined_navigation_label": "Navigation in definierten Notizen",
-	"view_toolbar_defined_navigation_description": "Ein Button, der zur vorherigen oder nächsten bereits vorhandenen Note springt.",
+	"view_toolbar_defined_navigation_description": "Ein Button, der zur vorherigen oder nächsten bereits vorhandenen Notiz springt.",
 	"view_toolbar_defined_navigation_target": "Hinweise zum Durchgehen",
-	"view_toolbar_defined_navigation_target_active": "Notizen im aktiven Tagebuch",
+	"view_toolbar_defined_navigation_target_active": "Notizen im aktiven Journal",
 	"view_toolbar_defined_navigation_direction": "Richtung",
 	"view_toolbar_defined_navigation_direction_option": [
 		{
@@ -1183,7 +1183,7 @@
 	"view_toolbar_button_config_tooltip_label": "Tooltip",
 	"view_toolbar_appearance_label_label": "Etikett",
 	"view_toolbar_appearance_tooltip_label": "Tooltip",
-	"view_toolbar_button_config_journal_default": "Alle Zeitschriften im Regal",
+	"view_toolbar_button_config_journal_default": "Alle Journale im Regal",
 	"view_toolbar_button_config_mode_label": "Verhalten",
 	"view_toolbar_button_config_levels_label": "Perioden",
 	"view_toolbar_button_config_mode_option": [
@@ -1277,8 +1277,8 @@
 	"journal_add_modal_duration_label": "Dauer",
 	"journal_add_modal_every_label": "Jeder",
 	"journal_add_modal_name_placeholder": "z.B. Täglich",
-	"journal_add_modal_name_label": "Name der Zeitschrift",
-	"journal_add_modal_title": "Tagebuch hinzufügen",
+	"journal_add_modal_name_label": "Name des Journals",
+	"journal_add_modal_title": "Journal hinzufügen",
 	"journal_add_modal_write_label": "Ich werde schreiben",
 	"journal_colliding_heading": "Kollisionsjournaleinstellungen",
 	"journal_colliding_warning": "Journale {names} haben sich überschneidende Konfigurationen, sodass sich ihre Einträge gegenseitig überschreiben. Ändern Sie den Ordner oder die Namensvorlage in einem der Journale.",
@@ -1361,7 +1361,7 @@
 			}
 		}
 	],
-	"journal_edit_end_repeats_needs_start_warning": "Legen Sie ein Startdatum fest – ein Tagebuch, das nach einer bestimmten Anzahl von Wiederholungen endet, benötigt ein Startdatum zum Zählen.",
+	"journal_edit_end_repeats_needs_start_warning": "Legen Sie ein Startdatum fest – ein Journal, das nach einer bestimmten Anzahl von Wiederholungen endet, benötigt eines zum Zählen.",
 	"journal_edit_end_repeats_suffix": "mal",
 	"journal_edit_end_writing_label": "Ende des Schreibens",
 	"journal_edit_fm_end_toggle_label": "Enddatum hinzufügen",
@@ -1379,7 +1379,7 @@
 	"journal_edit_name_template_no_anchor_warning": "Die Vorlage verfügt über keine Datumsvariable und ihre Nummerierungsvariable kann nicht in ein Datum umgewandelt werden, daher werden extern erstellte Notizen, die diesem Muster entsprechen, von der automatischen Anfügefunktion stillschweigend übersprungen.",
 	"journal_edit_name_template_label": "Vorlage für einen Notiznamen",
 	"journal_edit_note_name_preview_label": "Name der gelösten Notiz:",
-	"journal_edit_rename_tooltip": "Zeitschrift umbenennen",
+	"journal_edit_rename_tooltip": "Journal umbenennen",
 	"journal_edit_reset_count_suffix": "Wiederholungen",
 	"journal_edit_reset_description": "Wie sich die Zahl im Laufe der Zeit verändert.",
 	"journal_edit_reset_label": "Zurücksetzen",
@@ -1420,7 +1420,7 @@
 	"journal_edit_code_block_home_option_show": "Steuert, welche Journale angezeigt werden (standardmäßig nur der Link zum jeweiligen Tag). Unterstützte Werte: Tag, Woche, Monat, Quartal, Jahr, benutzerdefiniert.",
 	"journal_edit_code_block_home_option_separator": "Der Text, der zur Trennung mehrerer Links verwendet wird.",
 	"journal_edit_code_block_home_option_scale": "Die Linkgröße wird als Vielfaches der Textgröße erhöht (z. B. verdoppelt `scale: 2` die Linkgröße).",
-	"journal_edit_code_block_home_option_shelf": "beschränkt die angezeigten Zeitschriften auf ein bestimmtes Regal.",
+	"journal_edit_code_block_home_option_shelf": "beschränkt die angezeigten Journale auf ein bestimmtes Regal.",
 	"journal_edit_code_block_home_custom_lead": "Mit benutzerdefinierten Optionen kann es so aussehen:",
 	"journal_edit_section_timeline": "Zeitleiste",
 	"journal_edit_sequence_enabled_description": "Weisen Sie den Notizen Nummern zu (z. B. Tag 1, Tag 2, …).",
@@ -1440,12 +1440,12 @@
 	"journal_edit_variable_additional_modifications_link": "zusätzliche Modifikationen",
 	"journal_edit_variable_current_date_description": "Heutiges Datum (standardmäßig im Format JJJJ-MM-TT).",
 	"journal_edit_variable_current_time_description": "Aktuelle Wanduhrzeit (Alias von {slot} , standardmäßig im Format HH:mm).",
-	"journal_edit_variable_date_description": "Bezugsdatum des Schuldscheins – das Datum des Zeitraums, den dieser Schuldschein abdeckt.",
+	"journal_edit_variable_date_description": "Bezugsdatum der Notiz – das Datum des Zeitraums, den diese Notiz abdeckt.",
 	"journal_edit_variable_date_format_description": "Das Referenzdatum der Notiz, formatiert mit der bereitgestellten moment.js-Formatzeichenfolge.",
 	"journal_edit_variable_end_date_description": "Der letzte Tag des Zeitraums, den diese Notiz abdeckt.",
 	"journal_edit_variable_index_description": "Fortlaufende Nummer für die Notiz, wenn die Nummerierung im Journal aktiviert ist.",
 	"journal_edit_variable_journal_link_description": "Innerhalb des Inhalts einer Vorlagendatei wird der Pfad zu einer anderen Journalnotiz für das Datum dieser Notiz aufgelöst. Sie können diese selbst in einen Link oder eine Einbettung einbetten (z. B. ![[ … ]]) und Datumsmodifikatoren wie +1w hinzufügen, um auf einen benachbarten Zeitraum zu verweisen.",
-	"journal_edit_variable_journal_name_description": "Der Name der Zeitschrift (hier: {name} ).",
+	"journal_edit_variable_journal_name_description": "Der Name des Journals (hier: {name}).",
 	"journal_edit_variable_non_invertible_warning": "Die Verwendung dieser Methode verhindert, dass das Journal das Datum aus dem Dateinamen ermittelt.",
 	"journal_edit_variable_note_name_description": "Der Name der zu erstellenden Notiz.",
 	"journal_edit_variable_note_title_description": "Alias des Notiznamens, der die Variable des Kern-Plugins „Vorlagen“ unterstützt.",
@@ -1487,9 +1487,9 @@
 			}
 		}
 	],
-	"journal_name_required_error": "Der Name der Zeitschrift ist erforderlich.",
-	"journal_name_unique_error": "Der Name der Zeitschrift muss eindeutig sein.",
-	"journal_picker_placeholder": "Zeitschriften durchsuchen",
+	"journal_name_required_error": "Der Name des Journals ist erforderlich.",
+	"journal_name_unique_error": "Der Name des Journals muss eindeutig sein.",
+	"journal_picker_placeholder": "Journale durchsuchen",
 	"journal_property_modal_current_label": "Aktueller Name",
 	"common_label_new_name": "Neuer Name",
 	"journal_property_name_required": "Die Angabe des Objektnamens ist erforderlich.",

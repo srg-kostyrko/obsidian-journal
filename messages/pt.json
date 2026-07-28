@@ -106,7 +106,7 @@
 				"writeType"
 			],
 			"match": {
-				"writeType=day": "Use as configurações padrão para anotações diárias.",
+				"writeType=day": "Usar as configurações padrão para notas diárias",
 				"writeType=week": "Use as configurações padrão para as notas semanais.",
 				"writeType=month": "Use os valores padrão para notas mensais.",
 				"writeType=quarter": "Use os valores padrão para notas trimestrais.",
@@ -144,7 +144,7 @@
 	"common_label_text_color": "Cor do texto",
 	"common_label_background_color": "Cor de fundo",
 	"nav_block_row_field_link": "Link",
-	"common_label_journal": "Jornal",
+	"common_label_journal": "Diário",
 	"nav_block_row_field_add_decorations": "Adicione decorações",
 	"nav_block_row_link_option": [
 		{
@@ -157,7 +157,7 @@
 			"match": {
 				"kind=none": "Nenhum",
 				"kind=self": "Auto",
-				"kind=journal": "Jornal",
+				"kind=journal": "Diário",
 				"kind=day": "Dia",
 				"kind=week": "Semana",
 				"kind=month": "Mês",
@@ -208,7 +208,7 @@
 	"command_edit": "Comando de edição",
 	"command_edit_tooltip": "Editar {name}",
 	"command_icon_required_error": "Selecione um ícone para exibir este comando na faixa de opções.",
-	"command_insert_date_link": "Insira o link para a anotação do diário",
+	"command_insert_date_link": "Inserir link para a nota do diário",
 	"command_label_today": "Abra a nota de hoje",
 	"command_label_tomorrow": "Abra a nota de amanhã",
 	"command_label_yesterday": "Abra a nota de ontem",
@@ -231,7 +231,7 @@
 				"kind"
 			],
 			"match": {
-				"kind=journal": "O nome do jornal é adicionado automaticamente antes do nome do comando na paleta.",
+				"kind=journal": "O nome do diário é adicionado automaticamente antes do nome do comando na paleta.",
 				"kind=shelf": "O nome da prateleira é adicionado automaticamente antes do nome do comando na paleta."
 			}
 		}
@@ -262,7 +262,7 @@
 	"command_palette_journal_name": "{journal}: {name}",
 	"command_palette_shelf_name": "Prateleira: {shelf}: {name}",
 	"command_open_no_next": "Não há nota seguinte depois desta.",
-	"command_open_no_previous": "Não há nenhuma anotação anterior a esta.",
+	"command_open_no_previous": "Não há nenhuma nota anterior a esta.",
 	"command_type_label": [
 		{
 			"declarations": [
@@ -336,7 +336,7 @@
 			}
 		}
 	],
-	"command_connect_note": "Anexe a anotação a um diário.",
+	"command_connect_note": "Conectar a nota a um diário",
 	"connect_note_modal_date_label": "Data",
 	"connect_note_modal_move_description": "A pasta da nota ( {current} ) difere da pasta configurada do diário ( {configured} ).",
 	"connect_note_modal_override_description": "Outra nota ( {path} ) está relacionada a esta data. Ela será desconectada se você habilitar isso.",
@@ -347,12 +347,12 @@
 	"connect_note_modal_connect": "Conectar",
 	"connect_note_modal_connected_to": "Esta nota está relacionada com \" {journalName} \".",
 	"connect_note_modal_disconnect": "Desconectar",
-	"connect_note_modal_out_of_bounds": "Esta data está fora do período de vigência da revista.",
+	"connect_note_modal_out_of_bounds": "Esta data está fora da linha do tempo ativa do diário.",
 	"connect_note_notice_connected": "Nota relacionada a \" {journalName} \".",
 	"connect_note_notice_disconnected": "Nota desconectada de \" {journalName} \".",
 	"bulk_add_notes_to_title": "Adicionar notas a {journalName}",
 	"bulk_add_folder_label": "Pasta de origem",
-	"bulk_add_folder_description": "Selecione a pasta com as anotações existentes que você deseja processar.",
+	"bulk_add_folder_description": "Selecione a pasta com as notas existentes que você deseja processar.",
 	"bulk_add_date_place_label": "Leia a data de",
 	"bulk_add_date_place_title": "Título da nota",
 	"bulk_add_date_place_property": "Uma propriedade",
@@ -378,7 +378,7 @@
 			],
 			"match": {
 				"option=skip": "A nova nota permanece intocada e desconectada.",
-				"option=override": "A nova anotação assume a data; a anotação anteriormente vinculada permanece no cofre, mas é desconectada.",
+				"option=override": "A nova nota assume a data; a nota anteriormente vinculada permanece no cofre, mas é desconectada.",
 				"option=merge": "O conteúdo da nova nota é anexado à nota já existente, e a nova nota é excluída.",
 				"option=ask": "Decida para cada nota na tela de revisão."
 			}
@@ -394,7 +394,7 @@
 	"bulk_add_option_rename": "Renomear",
 	"bulk_add_option_ask": "Peça cada um",
 	"bulk_add_dry_run_label": "Teste prático (apenas pré-visualização)",
-	"bulk_add_dry_run_description": "Não altere nenhuma anotação — apenas relate as alterações que seriam feitas.",
+	"bulk_add_dry_run_description": "Não altere nenhuma nota — apenas relate as alterações que seriam feitas.",
 	"bulk_add_next": "Continuar",
 	"bulk_add_run": "Correr",
 	"bulk_add_progress": "Processando {done} de {total} …",
@@ -438,7 +438,7 @@
 	"common_action_submit": "Salvar",
 	"confirm_note_creation_body": "Criar ' {noteName} ' no diário ' {journalName} '?",
 	"confirm_note_creation_confirm": "Criar",
-	"confirm_note_creation_title": "Criar uma nova anotação no diário?",
+	"confirm_note_creation_title": "Criar uma nova nota do diário?",
 	"decoration_add": "Adicione decoração",
 	"decoration_border_mode_label": [
 		{
@@ -962,13 +962,13 @@
 	"shelf_dashboard_section_title": "Prateleiras de diários",
 	"shelf_delete_modal_destination_label": "Transfira os periódicos para",
 	"shelf_delete_modal_destination_none": "Nenhum",
-	"shelf_delete_modal_destination_description": "Os periódicos nesta estante são movidos para a estante selecionada ou removidos da estante quando nenhuma estiver selecionada. As anotações não são afetadas.",
-	"shelf_delete_modal_moved_out": "Os periódicos serão removidos da estante. As anotações não serão afetadas.",
+	"shelf_delete_modal_destination_description": "Os diários nesta prateleira são movidos para a prateleira selecionada ou removidos da prateleira quando nenhuma estiver selecionada. As notas não são afetadas.",
+	"shelf_delete_modal_moved_out": "Os diários serão removidos da prateleira. As notas não são afetadas.",
 	"shelf_delete_modal_title": "Excluir prateleira {name}",
 	"journal_create": "Criar novo diário",
-	"common_label_journals": "Revistas",
+	"common_label_journals": "Diários",
 	"shelf_rename": "Renomear prateleira",
-	"shelf_journals_block_title_filtered": "Revistas que não estão em uma prateleira",
+	"shelf_journals_block_title_filtered": "Diários que não estão em uma prateleira",
 	"shelf_member_count": [
 		{
 			"declarations": [
@@ -1003,7 +1003,7 @@
 	"uri_invalid_date": "Não foi possível entender a data \" {date} \" no URI.",
 	"uri_invalid_mode": "Modo de abertura desconhecido \" {mode} \" no URI.",
 	"uri_unknown_journal": "Não existe nenhum periódico chamado \" {journal} \".",
-	"uri_no_journal": "Nenhuma revista publica conteúdo sobre essa data.",
+	"uri_no_journal": "Nenhum diário cobre essa data.",
 	"uri_no_journal_of_type": "Não existe nenhum {type} .",
 	"uri_open_failed": "Não foi possível abrir o registro no diário.",
 	"view_dashboard_section_title": "Vistas",
@@ -1016,7 +1016,7 @@
 	"view_name_required_error": "O nome é obrigatório.",
 	"view_name_unchanged_error": "Digite um nome diferente.",
 	"view_delete_modal_title": "Excluir visualização {name}",
-	"view_delete_modal_description": "A visualização e sua configuração de blocos foram removidas. Suas anotações não foram afetadas.",
+	"view_delete_modal_description": "A visualização e sua configuração de blocos foram removidas. Suas notas não foram afetadas.",
 	"view_add_block": "Adicionar bloco",
 	"view_add_block_empty": "Nenhum tipo de bloco está registrado.",
 	"view_add_picker_action": "Adicionar {label}",
@@ -1071,7 +1071,7 @@
 	"view_block_markdown_template_variable_current_date_description": "Data de hoje, no momento em que o bloco é renderizado.",
 	"view_block_markdown_template_variable_time_description": "A hora atual do relógio no momento em que o bloco é renderizado.",
 	"view_block_markdown_template_variable_current_time_description": "A hora atual do relógio no momento em que o bloco é renderizado (alias da variável de tempo).",
-	"view_block_markdown_template_variable_journal_link_description": "Resolve para o caminho do arquivo de outra anotação do diário para a data selecionada. Envolva-o em um link você mesmo e adicione um deslocamento como +1w para apontar para um ponto vizinho.",
+	"view_block_markdown_template_variable_journal_link_description": "Resolve para o caminho no cofre da nota de outro diário para a data selecionada. Envolva-o em um link você mesmo e adicione um deslocamento como +1w para apontar para um período adjacente.",
 	"view_block_markdown_template_empty": "Nenhum modelo selecionado",
 	"view_block_markdown_template_read_error": "Não foi possível ler o arquivo de modelo.",
 	"view_block_summary_before": "{count} antes",
@@ -1149,8 +1149,8 @@
 	"view_toolbar_period_buttons_config_label": "Períodos",
 	"view_toolbar_defined_navigation_label": "Navegação por notas definidas",
 	"view_toolbar_defined_navigation_description": "Um botão que pula para a nota anterior ou seguinte já existente.",
-	"view_toolbar_defined_navigation_target": "Anotações a seguir",
-	"view_toolbar_defined_navigation_target_active": "Anotações do diário ativo",
+	"view_toolbar_defined_navigation_target": "Notas a percorrer",
+	"view_toolbar_defined_navigation_target_active": "Notas do diário ativo",
 	"view_toolbar_defined_navigation_direction": "Direção",
 	"view_toolbar_defined_navigation_direction_option": [
 		{
@@ -1281,7 +1281,7 @@
 	"journal_add_modal_title": "Adicionar diário",
 	"journal_add_modal_write_label": "Estarei escrevendo",
 	"journal_colliding_heading": "Configurações de diário em conflito",
-	"journal_colliding_warning": "Os periódicos {names} têm configurações conflitantes, portanto, suas anotações se sobrescreverão. Altere o modelo de pasta ou nome em um deles.",
+	"journal_colliding_warning": "Os diários {names} têm configurações conflitantes, portanto, suas notas se sobrescreverão. Altere o modelo de pasta ou nome em um deles.",
 	"journal_dashboard_bulk_add": "Adicionar notas em massa a {name}",
 	"journal_dashboard_edit": "Configure {name}",
 	"journal_dashboard_empty": "Nenhum diário foi criado ainda.",
@@ -1311,9 +1311,9 @@
 				"mode"
 			],
 			"match": {
-				"mode=keep": "As anotações permanecem inalteradas no seu cofre.",
+				"mode=keep": "As notas permanecem inalteradas no seu cofre.",
 				"mode=clear": "As notas permanecem no seu cofre, mas as propriedades do diário são removidas do cabeçalho.",
-				"mode=delete": "Todas as anotações relacionadas a este diário serão excluídas do seu cofre."
+				"mode=delete": "Todas as notas conectadas a este diário serão excluídas do seu cofre."
 			}
 		}
 	],
@@ -1325,7 +1325,7 @@
 	"journal_edit_auto_create_confirmation_skip_note": "A caixa de diálogo de confirmação não será exibida para notas criadas automaticamente.",
 	"journal_edit_auto_create_description": "Crie automaticamente a nota do dia ao carregar o plugin e todos os dias à meia-noite, no horário local.",
 	"journal_edit_auto_create_label": "Criar automaticamente a nota de hoje",
-	"journal_edit_confirm_creation_description": "Exibir uma caixa de diálogo de confirmação ao navegar para uma data que ainda não possui uma anotação.",
+	"journal_edit_confirm_creation_description": "Exibir uma caixa de diálogo de confirmação ao navegar para uma data que ainda não possui uma nota.",
 	"journal_edit_confirm_creation_label": "Confirme a criação de novas notas.",
 	"journal_edit_date_format_description": "Formato padrão para variáveis de data que não especificam um formato próprio, como:",
 	"journal_edit_date_format_label": "Formato de data padrão",
@@ -1367,7 +1367,7 @@
 	"journal_edit_fm_end_toggle_label": "Adicionar propriedade de data final",
 	"journal_edit_fm_start_description": "Para registros semanais que abrangem dois anos, a data de início pode ser diferente da propriedade de data.",
 	"journal_edit_fm_start_toggle_label": "Adicionar propriedade de data de início",
-	"journal_edit_folder_description": "Novas anotações serão criadas nesta pasta.",
+	"journal_edit_folder_description": "Novas notas serão criadas nesta pasta.",
 	"journal_edit_folder_label": "Pasta",
 	"journal_edit_folder_path_preview_label": "Pasta resolvida:",
 	"journal_edit_move_to_folder_apply_link": "Aplicar recomendação",
@@ -1414,7 +1414,7 @@
 	"journal_edit_code_block_timeline_modes_lead": "Modos suportados:",
 	"journal_edit_code_block_timeline_weeks": "Controla a coluna do número da semana (esquerda, direita ou nenhuma).",
 	"journal_edit_code_block_timeline_hidden_weekdays": "oculta os dias da semana listados (0 = domingo … 6 = sábado), por exemplo, [0, 6] para excluir os fins de semana.",
-	"journal_edit_code_block_home_description": "O bloco inicial exibe links para as anotações atuais em seus diários.",
+	"journal_edit_code_block_home_description": "O bloco inicial exibe links para as notas atuais nos seus diários.",
 	"journal_edit_code_block_home_default": "Por padrão, a aparência é esta:",
 	"journal_edit_code_block_home_options_lead": "Opções suportadas:",
 	"journal_edit_code_block_home_option_show": "Controla quais diários são exibidos (por padrão, apenas o link do dia). Valores suportados: dia, semana, mês, trimestre, ano, personalizado.",
@@ -1423,12 +1423,12 @@
 	"journal_edit_code_block_home_option_shelf": "Limita a exibição de periódicos a uma prateleira específica.",
 	"journal_edit_code_block_home_custom_lead": "Com opções personalizadas, pode ficar assim:",
 	"journal_edit_section_timeline": "Linha do tempo",
-	"journal_edit_sequence_enabled_description": "Atribua números às anotações (ex.: Dia 1, Dia 2, …).",
+	"journal_edit_sequence_enabled_description": "Atribua números às notas (ex.: Dia 1, Dia 2, …).",
 	"journal_edit_sequence_enabled_label": "Ativar números sequenciais",
 	"journal_edit_start_number_description": "Número atribuído na data de ancoragem.",
 	"journal_edit_start_number_label": "Número inicial",
 	"journal_edit_start_writing_custom_locked": "A data de início para intervalos personalizados não pode ser alterada: ela é usada para contar os intervalos a partir de onde eles começam.",
-	"journal_edit_start_writing_description": "Novas anotações anteriores a esta data não serão criadas.",
+	"journal_edit_start_writing_description": "Novas notas anteriores a esta data não serão criadas.",
 	"journal_edit_start_writing_label": "Comece a escrever em",
 	"journal_edit_template_add_button": "Adicionar modelo",
 	"journal_edit_template_path_placeholder": "templates/daily.md",
@@ -1443,8 +1443,8 @@
 	"journal_edit_variable_date_description": "Data de referência da nota — a data do período que esta nota abrange.",
 	"journal_edit_variable_date_format_description": "A data de referência da nota, formatada com a string de formato moment.js fornecida.",
 	"journal_edit_variable_end_date_description": "Último dia do período abrangido por esta nota.",
-	"journal_edit_variable_index_description": "Número sequencial da anotação quando a numeração está habilitada no diário.",
-	"journal_edit_variable_journal_link_description": "Dentro do conteúdo de um arquivo de modelo, o caminho aponta para a anotação de outro diário na data da anotação. Você pode inserir o caminho em um link ou embuti-lo (por exemplo, ![[ … ]]) e adicionar modificadores de data como +1w para apontar para um período adjacente.",
+	"journal_edit_variable_index_description": "Número sequencial da nota quando a numeração está habilitada no diário.",
+	"journal_edit_variable_journal_link_description": "Dentro do conteúdo de um arquivo de modelo, o caminho aponta para a nota de outro diário na data desta nota. Você pode inserir o caminho em um link ou embuti-lo (por exemplo, ![[ … ]]) e adicionar modificadores de data como +1w para apontar para um período adjacente.",
 	"journal_edit_variable_journal_name_description": "O nome do periódico (aqui: {name} ).",
 	"journal_edit_variable_non_invertible_warning": "Usar isso aqui impede que o diário recupere a data a partir do nome do arquivo.",
 	"journal_edit_variable_note_name_description": "O nome da nota que está sendo criada.",
@@ -1593,10 +1593,10 @@
 			}
 		}
 	],
-	"logging_dump_button": "Registre os logs para anotação.",
+	"logging_dump_button": "Exportar os logs para uma nota",
 	"logging_dump_desc": "Anote as mensagens de registro gravadas recentemente em uma nova nota no seu cofre.",
 	"logging_dump_empty": "Nenhuma mensagem de log foi registrada ainda.",
-	"logging_dump_failed": "Não foi possível registrar a anotação no diário de bordo.",
+	"logging_dump_failed": "Não foi possível gravar a nota de log.",
 	"logging_dump_succeeded": "Registros gravados em {path}",
 	"logging_dump_title": "Exportar registros",
 	"logging_level_debug": "Depurar",

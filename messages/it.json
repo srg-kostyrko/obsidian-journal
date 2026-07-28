@@ -77,8 +77,8 @@
 	"calendar_preset_western_used": "Canada, Stati Uniti, Islanda, Portogallo, Giappone, Taiwan, Thailandia, Hong Kong, Macao, Israele, Egitto, Sudafrica, Filippine e gran parte dell'America Latina.",
 	"calendar_week_config_change": "Modifica",
 	"calendar_week_config_description": "Definisci qual è il giorno che segna l'inizio della settimana e come viene determinata la prima settimana dell'anno: questo influisce sulla numerazione delle settimane.",
-	"code_blocks_nav_not_connected": "La nota non è collegata a un giornale",
-	"code_blocks_home_empty": "Nessun giornale da mostrare. Controlla le opzioni di visualizzazione e di scaffale del blocco.",
+	"code_blocks_nav_not_connected": "La nota non è collegata a un diario",
+	"code_blocks_home_empty": "Nessun diario da mostrare. Controlla le opzioni di visualizzazione e di scaffale del blocco.",
 	"code_blocks_nav_next": "Prossimo",
 	"code_blocks_nav_previous": "Precedente",
 	"nav_block_section_title": "Blocco di navigazione",
@@ -144,7 +144,7 @@
 	"common_label_text_color": "Colore del testo",
 	"common_label_background_color": "Colore di sfondo",
 	"nav_block_row_field_link": "Collegamento",
-	"common_label_journal": "Rivista",
+	"common_label_journal": "Diario",
 	"nav_block_row_field_add_decorations": "Aggiungi decorazioni",
 	"nav_block_row_link_option": [
 		{
@@ -157,7 +157,7 @@
 			"match": {
 				"kind=none": "Nessuno",
 				"kind=self": "Se stesso",
-				"kind=journal": "Rivista",
+				"kind=journal": "Diario",
 				"kind=day": "Giorno",
 				"kind=week": "Settimana",
 				"kind=month": "Mese",
@@ -167,7 +167,7 @@
 		}
 	],
 	"nav_block_row_template_required": "È necessario un modello.",
-	"nav_block_row_journal_required": "Seleziona una rivista.",
+	"nav_block_row_journal_required": "Seleziona un diario.",
 	"nav_block_row_resolved_preview": "Risolto: {text}",
 	"command_add": "Aggiungi comando",
 	"command_context_open_note_clarifier": "(usa la data della nota aperta, oppure quella di oggi)",
@@ -231,7 +231,7 @@
 				"kind"
 			],
 			"match": {
-				"kind=journal": "Il nome della rivista viene aggiunto automaticamente davanti al nome del comando nella palette.",
+				"kind=journal": "Il nome del diario viene aggiunto automaticamente davanti al nome del comando nella palette.",
 				"kind=shelf": "Il nome della mensola viene aggiunto automaticamente davanti al nome del comando nella palette."
 			}
 		}
@@ -341,13 +341,13 @@
 	"connect_note_modal_move_description": "La cartella della nota ( {current} ) è diversa dalla cartella configurata del diario ( {configured} ).",
 	"connect_note_modal_override_description": "Un'altra nota ( {path} ) è collegata a questa data. Verrà scollegata se abiliti questa opzione.",
 	"connect_note_modal_override_label": "Sostituisci la nota già collegata a questa data",
-	"connect_note_modal_rename_description": "Il nome della nota ( {current} ) è diverso dal nome configurato del giornale ( {configured} ).",
+	"connect_note_modal_rename_description": "Il nome della nota ({current}) è diverso dal nome configurato del diario ({configured}).",
 	"connect_note_modal_rename_label": "Rinominare il file in modo che corrisponda al registro",
 	"connect_note_modal_move_label": "Spostare il file nella cartella del diario",
 	"connect_note_modal_connect": "Collegare",
 	"connect_note_modal_connected_to": "Questa nota è collegata a \" {journalName} \".",
 	"connect_note_modal_disconnect": "Disconnetti",
-	"connect_note_modal_out_of_bounds": "Questa data non rientra nel periodo di pubblicazione attivo della rivista.",
+	"connect_note_modal_out_of_bounds": "Questa data non rientra nella cronologia attiva del diario.",
 	"connect_note_notice_connected": "Nota collegata a \" {journalName} \".",
 	"connect_note_notice_disconnected": "Nota disconnessa da \" {journalName} \".",
 	"bulk_add_notes_to_title": "Aggiungi note a {journalName}",
@@ -360,7 +360,7 @@
 	"bulk_add_date_format_label": "Formato data",
 	"bulk_add_date_format_omit_time": "Se le date includono un orario, omettetelo dal formato.",
 	"bulk_add_date_format_property_note": "Le date potrebbero differire dal modo in cui vengono memorizzate: verifica il formato nella modalità di visualizzazione Sorgente.",
-	"bulk_add_filter_combinator_label": "Note di filtro",
+	"bulk_add_filter_combinator_label": "Filtra le note",
 	"bulk_add_filter_combinator_no": "Nessun filtro",
 	"bulk_add_filter_combinator_and": "Corrispondere a tutte le condizioni",
 	"bulk_add_filter_combinator_or": "Corrispondere a qualsiasi condizione",
@@ -430,7 +430,7 @@
 	"bulk_add_skip_reason_filtered": "Filtrato",
 	"bulk_add_skip_reason_no_date": "Nessuna data trovata",
 	"bulk_add_skip_reason_invalid_date": "Impossibile analizzare la data",
-	"bulk_add_skip_reason_out_of_bounds": "Al di fuori della cronologia della rivista",
+	"bulk_add_skip_reason_out_of_bounds": "Al di fuori della cronologia del diario",
 	"common_action_cancel": "Cancellare",
 	"common_action_close": "Vicino",
 	"common_action_create": "Creare",
@@ -978,7 +978,7 @@
 				"count"
 			],
 			"match": {
-				"count=1": "1 rivista",
+				"count=1": "1 diario",
 				"count=*": "{count} riviste"
 			}
 		}
@@ -991,21 +991,21 @@
 	"shelf_place_modal_title": "Registro delle procedure",
 	"shelf_section_not_on_shelf": "Non su uno scaffale",
 	"shelf_section_place_tooltip": "Posizionare su uno scaffale",
-	"settings_load_failed": "Rivista: impossibile caricare le impostazioni — {error}",
-	"settings_reload_failed": "Rivista: impossibile ricaricare le impostazioni — {error}",
+	"settings_load_failed": "Diario: impossibile caricare le impostazioni — {error}",
+	"settings_reload_failed": "Diario: impossibile ricaricare le impostazioni — {error}",
 	"settings_reload_required_banner": "Ricarica Obsidian per applicare le impostazioni modificate.",
 	"startup_dashboard_section_title": "Startup",
 	"startup_open_note_title": "Apri all'avvio",
 	"startup_open_note_desc": "Apri una nota ogni volta che apri questa cassaforte.",
 	"startup_dont_open_option": "Non aprire",
-	"uri_missing_target": "L'URI della rivista richiede un parametro \"journal\" o \"type\".",
-	"uri_unknown_write_type": "Tipo di rivista sconosciuto \" {type} \" nell'URI.",
+	"uri_missing_target": "L'URI del diario richiede un parametro \"journal\" o \"type\".",
+	"uri_unknown_write_type": "Tipo di diario sconosciuto \"{type}\" nell'URI.",
 	"uri_invalid_date": "Impossibile interpretare la data \" {date} \" nell'URI.",
 	"uri_invalid_mode": "Modalità aperta sconosciuta \" {mode} \" nell'URI.",
-	"uri_unknown_journal": "Non esiste alcuna rivista denominata \" {journal} \".",
-	"uri_no_journal": "Nessuna rivista riporta quella data.",
-	"uri_no_journal_of_type": "Non esiste alcuna rivista {type} .",
-	"uri_open_failed": "Impossibile aprire la voce del giornale.",
+	"uri_unknown_journal": "Non esiste alcun diario denominato \"{journal}\".",
+	"uri_no_journal": "Nessun diario copre quella data.",
+	"uri_no_journal_of_type": "Non esiste alcun diario di tipo {type}.",
+	"uri_open_failed": "Impossibile aprire la nota del diario.",
 	"view_dashboard_section_title": "Punti di vista",
 	"view_dashboard_empty": "Nessuna visualizzazione ancora.",
 	"view_dashboard_add": "Aggiungi una vista",
@@ -1086,7 +1086,7 @@
 				"count"
 			],
 			"match": {
-				"count=1": "1 rivista",
+				"count=1": "1 diario",
 				"count=*": "{count} riviste"
 			}
 		}
@@ -1277,7 +1277,7 @@
 	"journal_add_modal_duration_label": "Durata",
 	"journal_add_modal_every_label": "Ogni",
 	"journal_add_modal_name_placeholder": "es. Quotidiano",
-	"journal_add_modal_name_label": "Nome della rivista",
+	"journal_add_modal_name_label": "Nome del diario",
 	"journal_add_modal_title": "Aggiungi il diario",
 	"journal_add_modal_write_label": "Scriverò",
 	"journal_colliding_heading": "Impostazioni del journal in collisione",
@@ -1297,7 +1297,7 @@
 			],
 			"match": {
 				"mode=keep": "Prendi appunti",
-				"mode=clear": "Dati di rivista chiari",
+				"mode=clear": "Cancella i dati del diario",
 				"mode=delete": "Eliminazione delle note"
 			}
 		}
@@ -1379,7 +1379,7 @@
 	"journal_edit_name_template_no_anchor_warning": "Il modello non ha una variabile data e la sua variabile di numerazione non può essere invertita in una data, quindi l'allegato automatico ignorerà silenziosamente le note create esternamente che corrispondono a questo schema.",
 	"journal_edit_name_template_label": "Nota il modello del nome",
 	"journal_edit_note_name_preview_label": "Nome della nota risolta:",
-	"journal_edit_rename_tooltip": "Rivista Rename",
+	"journal_edit_rename_tooltip": "Rinomina diario",
 	"journal_edit_reset_count_suffix": "ripetizioni",
 	"journal_edit_reset_description": "Come cambia il numero nel tempo.",
 	"journal_edit_reset_label": "Reset",
@@ -1445,7 +1445,7 @@
 	"journal_edit_variable_end_date_description": "L'ultimo giorno del periodo a cui si riferisce questa nota.",
 	"journal_edit_variable_index_description": "Numero progressivo per la nota quando la numerazione è abilitata nel diario.",
 	"journal_edit_variable_journal_link_description": "All'interno del contenuto di un file modello, si risolve nel percorso di un'altra nota del diario per la data di questa nota. Inseritelo voi stessi in un link o in un embed (ad esempio ![[ … ]]) e aggiungete modificatori di data come +1w per puntare a un periodo adiacente.",
-	"journal_edit_variable_journal_name_description": "Il nome della rivista (qui: {name} ).",
+	"journal_edit_variable_journal_name_description": "Il nome del diario (qui: {name}).",
 	"journal_edit_variable_non_invertible_warning": "Utilizzando questo codice si impedisce al registro di recuperare la data dal nome del file.",
 	"journal_edit_variable_note_name_description": "Il nome della nota che si sta creando.",
 	"journal_edit_variable_note_title_description": "Alias del nome della nota, che supporta la variabile del plugin principale «Modelli».",
@@ -1453,7 +1453,7 @@
 	"journal_edit_variable_reference_intro": "Variabili disponibili. Il formato della data predefinito è {dateFormat} quando non viene specificato alcun formato esplicito.",
 	"journal_edit_variable_reference_link": "Variabili supportate.",
 	"journal_edit_variable_reference_modal_title": "Riferimento variabile",
-	"journal_edit_variable_relative_date_description": "ieri / oggi / domani / N giorni fa per i giornali a ciclo fisso; vuoto per i giornali personalizzati.",
+	"journal_edit_variable_relative_date_description": "ieri / oggi / domani / N giorni fa per i diari a ciclo fisso; questo / ultimo / prossimo <diario> e N <diari> fa per i diari personalizzati.",
 	"journal_edit_variable_start_date_description": "Il primo giorno del periodo a cui si riferisce questa nota.",
 	"journal_edit_variable_time_description": "Ora corrente dell'orologio a muro (formato HH:mm per impostazione predefinita).",
 	"journal_edit_wrong_week_warning": "Per formattare le settimane si utilizza `W`, che non rispetta le impostazioni personalizzate e potrebbe mostrare un numero di settimana diverso rispetto alla visualizzazione Calendario. Utilizzare invece `w` (e, se necessario, modificare l'inizio della settimana nelle impostazioni del plugin).",
@@ -1487,8 +1487,8 @@
 			}
 		}
 	],
-	"journal_name_required_error": "Il nome della rivista è obbligatorio.",
-	"journal_name_unique_error": "Il nome della rivista deve essere univoco.",
+	"journal_name_required_error": "Il nome del diario è obbligatorio.",
+	"journal_name_unique_error": "Il nome del diario deve essere univoco.",
 	"journal_picker_placeholder": "Cerca riviste",
 	"journal_property_modal_current_label": "Nome attuale",
 	"common_label_new_name": "Nuovo nome",

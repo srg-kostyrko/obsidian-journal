@@ -11,9 +11,10 @@ jobs:
       - name: Use Node.js
         uses: actions/setup-node@v5
         with:
-          node-version: '24.x'
+          node-version: "24.x"
       - run: npm ci
       - run: npm run compile:i18n
+      - run: npm run check:i18n
       - run: npm run check:types
       - run: npm test
       - run: npm run check:lint
