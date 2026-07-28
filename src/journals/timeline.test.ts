@@ -1,6 +1,6 @@
 import { afterEach, beforeEach, describe, expect, it } from "vitest";
 
-import { CalendarDate, WeekPeriod } from "@/calendar";
+import { CalendarDate, DayPeriod } from "@/calendar";
 import type { AnchorString } from "@/calendar";
 import { date, installTestCalendar } from "@/calendar/testing";
 import { Container } from "@/infrastructure/di";
@@ -8,7 +8,7 @@ import { Container } from "@/infrastructure/di";
 import { CycleService } from "./cycle";
 import { JournalsIndex } from "./journals-index";
 import { JournalsRepository } from "./repository";
-import { fakeRepo, fixedJournal, unwrap } from "./testing";
+import { customJournal, fakeRepo, fixedJournal, unwrap } from "./testing";
 import { TimelineService } from "./timeline";
 
 function buildContainer(journals: Parameters<typeof fakeRepo>[0]): Container {
@@ -399,9 +399,18 @@ describe("TimelineService", () => {
       });
       const timeline = c.resolve(TimelineService);
       const bounds = timeline.boundsOf("weekly");
-      const rejectedWeek = WeekPeriod.containing(date("2026-06-10"));
-      expect(timeline.contains("weekly", rejectedWeek.anchor.toAnchor())).toBe(false);
-      expect(bounds.overlapsPeriod(rejectedWeek)).toBe(false);
+      expect(timeline.contains("weekly", "2026-06-01" as AnchorString)).toBe(true);
+      expect(bounds.overlapsPeriod(DayPeriod.containing(date("2026-06-05")))).toBe(true);
+    });
+
+    it("extends the upper bound to the end of the interval a custom-interval timeline end falls in", () => {
+      const c = buildContainer({
+        custom: customJournal("custom", "day", 7, "2026-06-01", {
+          timeline: { start: "2026-06-01" as AnchorString, end: { kind: "date", date: "2026-06-03" as AnchorString } },
+        }),
+      });
+      const bounds = c.resolve(TimelineService).boundsOf("custom");
+      expect(bounds.end.match({ some: (d) => d.toAnchor(), none: () => null })).toBe("2026-06-07");
     });
   });
 });
