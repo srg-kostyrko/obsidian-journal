@@ -17,7 +17,7 @@ import { FrontmatterService } from "../frontmatter";
 import { JournalsIndex } from "../journals-index";
 import { JournalsRepository } from "../repository";
 
-import { AnchorOccupiedError } from "./errors";
+import { AnchorOccupiedError, type EmptyNoteNameError } from "./errors";
 import { NotePathService } from "./note-path";
 import { SelfWriteGuard } from "./self-write-guard";
 import { TemplateContentService } from "./template-content";
@@ -28,6 +28,7 @@ import type { JournalMetadata } from "../types";
 
 export type NoteCreationError =
   | JournalNotFoundError
+  | EmptyNoteNameError
   | TemplateRenderError
   | NoteReadError
   | NoteCreateError

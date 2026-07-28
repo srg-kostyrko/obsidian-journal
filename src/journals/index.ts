@@ -67,6 +67,7 @@ export {
   TemplateContentService,
   journalPickerSuggest,
   confirmCreationModal,
+  EmptyNoteNameError,
   JournalNoteCreationError,
   NoApplicableJournals,
   type NoteCreationError,

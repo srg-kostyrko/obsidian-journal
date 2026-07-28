@@ -15,6 +15,7 @@ import { NumberingService } from "../numbering";
 import { JournalsRepository } from "../repository";
 import { customJournal, fakeRepo, fixedJournal, unwrap } from "../testing";
 
+import { EmptyNoteNameError } from "./errors";
 import { NotePathService } from "./note-path";
 
 import type { JournalConfig } from "../config";
@@ -87,6 +88,54 @@ describe("NotePathService.pathFor", () => {
     const meta: JournalMetadata = { journalName: "missing", anchor: anchor("2026-05-19") };
     const result = c.resolve(NotePathService).pathFor("missing", meta);
     expect(result.isErr() && result.error instanceof JournalNotFoundError).toBe(true);
+  });
+
+  it("returns EmptyNoteNameError when the name template is blank", () => {
+    const repo = fakeRepo({ daily: fixedJournal("daily", { type: "day" }, { nameTemplate: "" }) });
+    const c = buildContainer(repo);
+    const meta: JournalMetadata = { journalName: "daily", anchor: anchor("2026-05-19") };
+    const result = c.resolve(NotePathService).pathFor("daily", meta);
+    expect(result.isErr() && result.error instanceof EmptyNoteNameError).toBe(true);
+  });
+
+  it("returns EmptyNoteNameError when the name template is only whitespace", () => {
+    const repo = fakeRepo({ daily: fixedJournal("daily", { type: "day" }, { nameTemplate: " ".repeat(3) }) });
+    const c = buildContainer(repo);
+    const meta: JournalMetadata = { journalName: "daily", anchor: anchor("2026-05-19") };
+    const result = c.resolve(NotePathService).pathFor("daily", meta);
+    expect(result.isErr() && result.error instanceof EmptyNoteNameError).toBe(true);
+  });
+
+  it("returns EmptyNoteNameError when every variable in the name template renders empty", () => {
+    const repo = fakeRepo({
+      daily: fixedJournal(
+        "daily",
+        { type: "day" },
+        {
+          nameTemplate: "{{index}}",
+          numbering: {
+            enabled: false,
+            anchorDate: anchor("2026-01-01"),
+            allowBefore: false,
+            sources: [{ variable: "index", frontmatterKey: "index", anchorValue: 1, reset: { kind: "never" } }],
+          },
+        },
+      ),
+    });
+    const c = buildContainer(repo);
+    const meta: JournalMetadata = { journalName: "daily", anchor: anchor("2026-05-19") };
+    const result = c.resolve(NotePathService).pathFor("daily", meta);
+    expect(result.isErr() && result.error instanceof EmptyNoteNameError).toBe(true);
+  });
+
+  it("resolves the path when only the folder template renders empty", () => {
+    const repo = fakeRepo({
+      daily: fixedJournal("daily", { type: "day" }, { folder: "" }),
+    });
+    const c = buildContainer(repo);
+    const meta: JournalMetadata = { journalName: "daily", anchor: anchor("2026-05-19") };
+    const result = c.resolve(NotePathService).pathFor("daily", meta);
+    expect(result.isOk() && result.value).toBe("2026-05-19.md");
   });
 
   it("renders an empty string for a numbering variable with no resolved value", () => {

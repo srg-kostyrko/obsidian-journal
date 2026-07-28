@@ -1,5 +1,6 @@
 import type { AnchorString } from "@/calendar";
-import type { BenignFlowError } from "@/infrastructure/flows";
+import { m } from "@/i18n";
+import type { BenignFlowError, UserFacingFlowError } from "@/infrastructure/flows";
 
 import { JournalsError } from "../errors";
 
@@ -33,5 +34,17 @@ export class AnchorOccupiedError extends JournalsError {
     readonly occupantPath: string,
   ) {
     super(`Anchor ${anchor} in journal ${journalName} is already held by ${occupantPath}`);
+  }
+}
+
+export class EmptyNoteNameError extends JournalsError implements UserFacingFlowError {
+  override name = "EmptyNoteNameError";
+
+  constructor(readonly journalName: string) {
+    super(`Name template of journal ${journalName} resolves to an empty note name`);
+  }
+
+  get userNotice(): string {
+    return m.journal_note_name_empty_notice({ journalName: this.journalName });
   }
 }

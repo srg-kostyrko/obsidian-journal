@@ -1110,6 +1110,7 @@
   "journal_add_modal_write_label": "I'll be writing",
   "journal_colliding_heading": "Colliding journal settings",
   "journal_colliding_warning": "Journals {names} have colliding configurations, so their notes will overwrite each other. Change the folder or name template in one of them.",
+  "journal_note_name_empty_notice": "Journal \"{journalName}\" has a name template that resolves to an empty note name, so no note can be created.",
   "journal_dashboard_bulk_add": "Bulk add notes to {name}",
   "journal_dashboard_edit": "Configure {name}",
   "journal_dashboard_empty": "No journals created yet.",

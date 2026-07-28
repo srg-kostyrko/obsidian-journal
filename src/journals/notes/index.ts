@@ -6,5 +6,5 @@ export { NoteCreationService } from "./note-creation";
 export { NotePathService } from "./note-path";
 export { TemplateContentService } from "./template-content";
 export { journalNotesModule } from "./module";
-export { JournalNoteCreationError, NoApplicableJournals } from "./errors";
+export { EmptyNoteNameError, JournalNoteCreationError, NoApplicableJournals } from "./errors";
 export type { NoteCreationError } from "./note-creation";

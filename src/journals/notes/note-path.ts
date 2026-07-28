@@ -4,7 +4,7 @@ import { CalendarDate, Clock } from "@/calendar";
 import type { AnchorString } from "@/calendar";
 import { inject } from "@/infrastructure/di";
 import type { VaultPath } from "@/infrastructure/host";
-import { attempt, Option, type Result } from "@/infrastructure/result";
+import { attempt, Err, Ok, Option, type Result } from "@/infrastructure/result";
 import { TemplateContext, TemplateEngine, tokenize } from "@/templates";
 
 import { CycleService } from "../cycle";
@@ -12,6 +12,8 @@ import { JournalNotFoundError } from "../errors";
 import { FrontmatterService } from "../frontmatter";
 import { NumberingService } from "../numbering";
 import { JournalsRepository } from "../repository";
+
+import { EmptyNoteNameError } from "./errors";
 
 import type { JournalConfig } from "../config";
 import type { JournalMetadata } from "../types";
@@ -43,7 +45,7 @@ export class NotePathService {
     return context;
   }
 
-  pathForDate(name: string, date: CalendarDate): Result<VaultPath, JournalNotFoundError> {
+  pathForDate(name: string, date: CalendarDate): Result<VaultPath, JournalNotFoundError | EmptyNoteNameError> {
     return attempt.in(this, function* (this: NotePathService) {
       const anchor = yield* this.#cycle.anchorOf(name, date).okOrElse(() => new JournalNotFoundError(name));
       const metadata = yield* this.#frontmatter.buildMetadata(name, anchor);
@@ -51,16 +53,20 @@ export class NotePathService {
     });
   }
 
-  pathFor(name: string, metadata: JournalMetadata): Result<VaultPath, JournalNotFoundError> {
-    return this.#journals.require(name).map((config) => {
+  pathFor(name: string, metadata: JournalMetadata): Result<VaultPath, JournalNotFoundError | EmptyNoteNameError> {
+    return this.#journals.require(name).flatMap((config) => {
       const context = this.contextFor(config, metadata);
-      const filename = this.#engine.renderString(`${config.nameTemplate}.md`, context);
+      const noteName = this.#engine.renderString(config.nameTemplate, context);
+      // A note named "" becomes the dotfile ".md", which is invisible in the vault.
+      // Reject rather than trim: trimming would move every template that renders
+      // trailing space to a different path.
+      if (noteName.trim() === "") return new Err(new EmptyNoteNameError(name));
       // The rendered note name feeds back into the folder as {{note_name}}/{{title}},
       // so the filename must render first (v2 order).
-      const folderContext = this.#withNoteName(context, filename.replace(/\.md$/, ""));
+      const folderContext = this.#withNoteName(context, noteName);
       const folder = config.folder ? this.#engine.renderString(config.folder, folderContext) : "";
-      const joined = folder ? `${folder}/${filename}` : filename;
-      return normalizePath(joined) as VaultPath;
+      const joined = folder ? `${folder}/${noteName}.md` : `${noteName}.md`;
+      return new Ok(normalizePath(joined) as VaultPath);
     });
   }
 

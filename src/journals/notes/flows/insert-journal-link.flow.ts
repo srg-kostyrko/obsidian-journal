@@ -12,7 +12,9 @@ import { TimelineService } from "../../timeline";
 import { journalPickerSuggest } from "../journal-picker";
 import { NotePathService } from "../note-path";
 
-type InsertJournalLinkError = UserAborted | JournalNotFoundError;
+import type { EmptyNoteNameError } from "../errors";
+
+type InsertJournalLinkError = UserAborted | JournalNotFoundError | EmptyNoteNameError;
 
 export class InsertJournalLinkFlow implements Flow<void, void, InsertJournalLinkError> {
   readonly #suggests = inject(SuggestService);
