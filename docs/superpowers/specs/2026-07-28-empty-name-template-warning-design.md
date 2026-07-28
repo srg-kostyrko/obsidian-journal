@@ -69,7 +69,8 @@ an invariant of the service, so every caller that derives a path inherits it:
 | `useCollisionCheck`, `findPathCollision`      | the path resolves to `undefined`, which `findPathCollision` already skips rather than matching — no collision reported, which is correct |
 | `NoteNamePreview`, `ConnectNoteModal`         | already branch on `isOk()`                                                                                                               |
 
-Only `NoteCreationError`'s union declaration changes. Nothing else needs a body edit.
+`NoteCreationError`, `InsertJournalLinkError` (`src/journals/notes/flows/insert-journal-link.flow.ts`), and
+`pathForDate`'s return type all widen by one member; none of the three needs a body edit.
 
 `attachNote` takes its path from the caller and derives nothing, so it is unaffected.
 
@@ -133,6 +134,14 @@ So `useTodayMetadata` resolves today through `CycleService.anchorOf` before
 `FrontmatterService.buildMetadata`, returning `undefined` when there is no anchor.
 This also fixes the preview itself, which has the same flaw today and can show a name
 with a blank segment where the number belongs.
+
+`useTodayMetadata` has a second consumer beyond `NoteNamePreview`:
+`TemplateStringPreview.vue`, mounted twice in `NoteCreationSection.vue` (the folder
+preview) and again in `TemplatesSection.vue` (each template-path preview). The
+canonicalization fix reaches those previews too, so for a Week, Month, Quarter, Year,
+or custom-interval journal the folder and template-path previews now render against
+the period's real start instead of today's raw date — for a custom journal the folder
+preview previously showed _today_ even when today falls mid-interval.
 
 ### Sibling hints are left alone
 
