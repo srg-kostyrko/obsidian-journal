@@ -1191,6 +1191,7 @@
   "journal_edit_move_to_folder_recommendation_date_format": "Date format contains a path separator. Move the date variables into the Folder field?",
   "journal_edit_move_to_folder_recommendation_name_template": "Note name template contains a path separator. Move the path prefix into the Folder field?",
   "journal_edit_name_template_description": "Template used to generate new note names.",
+  "journal_edit_name_template_empty_warning": "This name template resolves to an empty note name, so no note can be created. Add a variable or some text to it.",
   "journal_edit_name_template_collision_warning": "Entries for {first} and {second} both resolve to {path}. They will share one note.",
   "journal_edit_colliding_warning": "This journal resolves to the same note path as {names}, so their notes will overwrite each other. Change the folder or name template to give it a distinct path.",
   "journal_edit_name_template_invertibility_warning": [{"declarations": ["input reason", "input offending"], "selectors": ["reason"], "match": {"reason=unknown-variable": "The name template uses \"{offending}\", which is not a known variable, so notes created outside the plugin cannot be matched to this journal.", "reason=function-token": "The name template uses the function \"{offending}\", so notes created outside the plugin cannot be matched to this journal.", "reason=clock-variable": "The name template uses \"{offending}\", which is a time of day, so notes created outside the plugin cannot be matched to this journal."}}],

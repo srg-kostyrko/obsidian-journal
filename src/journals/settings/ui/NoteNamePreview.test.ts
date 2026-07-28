@@ -3,7 +3,8 @@ import { createNanoEvents } from "nanoevents";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
 import { installTestCalendar } from "@/calendar/testing";
-import { provideInjectorOnApp } from "@/infrastructure/di";
+import { m } from "@/i18n";
+import { provideInjectorOnApp, type Container } from "@/infrastructure/di";
 import {
   CycleService,
   FrontmatterService,
@@ -72,38 +73,31 @@ async function setupDaily(nameTemplate = "{{date}}") {
   return container;
 }
 
+function renderPreview(container: Container, journalName: string) {
+  return render(NoteNamePreview, {
+    props: { journalName },
+    global: {
+      plugins: [
+        {
+          install(app) {
+            provideInjectorOnApp(app, container);
+          },
+        },
+      ],
+    },
+  });
+}
+
 describe("NoteNamePreview", () => {
   it("renders today's resolved note basename", async () => {
     const container = await setupDaily();
-    render(NoteNamePreview, {
-      props: { journalName: "daily" },
-      global: {
-        plugins: [
-          {
-            install(app) {
-              provideInjectorOnApp(app, container);
-            },
-          },
-        ],
-      },
-    });
+    renderPreview(container, "daily");
     expect(screen.getByText("2026-05-19")).toBeTruthy();
   });
 
   it("updates reactively when the journal's nameTemplate changes", async () => {
     const container = await setupDaily("{{date}}");
-    render(NoteNamePreview, {
-      props: { journalName: "daily" },
-      global: {
-        plugins: [
-          {
-            install(app) {
-              provideInjectorOnApp(app, container);
-            },
-          },
-        ],
-      },
-    });
+    renderPreview(container, "daily");
     expect(screen.getByText("2026-05-19")).toBeTruthy();
     container.resolve(JournalsRepository).update("daily", { nameTemplate: "note-{{date}}" });
     await waitFor(() => {
@@ -111,20 +105,21 @@ describe("NoteNamePreview", () => {
     });
   });
 
-  it("renders nothing when the journal no longer exists", async () => {
+  it("warns when the name template resolves to an empty note name", async () => {
+    const container = await setupDaily("");
+    renderPreview(container, "daily");
+    expect(screen.getByText(m.journal_edit_name_template_empty_warning())).toBeTruthy();
+  });
+
+  it("warns when the name template renders only whitespace", async () => {
+    const container = await setupDaily(" ".repeat(3));
+    renderPreview(container, "daily");
+    expect(screen.getByText(m.journal_edit_name_template_empty_warning())).toBeTruthy();
+  });
+
+  it("renders no warning when the journal no longer exists", async () => {
     const container = await setupDaily();
-    const { container: dom } = render(NoteNamePreview, {
-      props: { journalName: "ghost" },
-      global: {
-        plugins: [
-          {
-            install(app) {
-              provideInjectorOnApp(app, container);
-            },
-          },
-        ],
-      },
-    });
+    const { container: dom } = renderPreview(container, "ghost");
     expect(dom.textContent ?? "").toBe("");
   });
 });
