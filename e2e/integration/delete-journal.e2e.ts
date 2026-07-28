@@ -1,7 +1,17 @@
 import { browser, expect } from "@wdio/globals";
 
 import { waitForSettings } from "../support/plugin-data.js";
-import { clickIcon, deleteInModal, openSettings, selectModalSelect } from "../support/settings.js";
+import {
+  clickDialogButton,
+  clickIcon,
+  deleteInModal,
+  goBack,
+  modalText,
+  openSettings,
+  selectModalSelect,
+  setModalText,
+  submitModal,
+} from "../support/settings.js";
 import { createNote, frontmatterOf, noteExists, waitForJournalFrontmatter } from "../support/vault.js";
 
 // The integration seam for journal deletion. DeleteJournalFlow purges connected notes through the
@@ -65,5 +75,26 @@ describe("journal deletion", () => {
     expect(await noteExists("2024-06-03.md")).toBe(true);
     const frontmatter = await frontmatterOf("2024-06-03.md");
     expect(frontmatter?.journal).toBe("daily");
+  });
+
+  // Deleting in keep mode drops the surviving notes' index entries, so a same-named journal
+  // created afterwards must re-walk the vault to adopt them. The delete dialog's connected count
+  // reads JournalsIndex directly, making it the observable for "did they reconnect" — and a real
+  // metadataCache is what supplies the frontmatter the walk re-reads.
+  it("reconnects a kept note when a journal with the same name is created again", async () => {
+    await createNote("2024-06-04.md");
+    await waitForJournalFrontmatter("2024-06-04.md", { journal: "daily", date: "2024-06-04" });
+
+    await deleteDailyWith("keep");
+
+    await clickIcon("Create new journal");
+    await setModalText("daily");
+    await submitModal();
+    // AddJournalFlow pushes the new journal's edit subpage; the delete icon lives on the dashboard.
+    await goBack();
+
+    await clickIcon("Delete daily");
+    expect(await modalText()).toContain("This journal has 1 connected note.");
+    await clickDialogButton("Cancel");
   });
 });

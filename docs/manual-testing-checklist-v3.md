@@ -112,9 +112,9 @@ rewrite every connected note (see the item below).
 - [x] **Name template** with a **boundary** — `{{date<startOf=week>}}`,
       `{{date<endOf=month>}}` → snaps to that boundary.
 - [x] Boundary unit **`decade`** → snaps to the decade's first/last day.
-- [ ] Shift **and** boundary together — `{{date+1w<endOf=month>:YYYY-MM-DD}}` → the
+- [x] Shift **and** boundary together — `{{date+1w<endOf=month>:YYYY-MM-DD}}` → the
       shift applies first, then the boundary.
-- [ ] **Colliding name template** — `{{date<endOf=month>}}` on a Day journal → the
+- [x] **Colliding name template** — `{{date<endOf=month>}}` on a Day journal → the
       name-template field warns, naming the two dates and the shared note path.
 - [x] **Unknown boundary unit** — `{{date<startOf=fortnight>}}` → left as-is /
       degrades, no crash.
@@ -130,10 +130,10 @@ rewrite every connected note (see the item below).
 - [x] **Folder** with a not-yet-existing nested path → folders auto-created.
 - [x] **Template** — + add `templates/daily template.md` → new note's body is the
       template content.
-- [ ] **Multiple templates** listed → the _first existing, non-empty_ one wins; the
+- [x] **Multiple templates** listed → the _first existing, non-empty_ one wins; the
       rest are a fallback chain, not appended.
-- [ ] **Multiple templates**, first path missing → falls through to the second.
-- [ ] **Multiple templates**, first file exists but is empty → falls through to the
+- [x] **Multiple templates**, first path missing → falls through to the second.
+- [x] **Multiple templates**, first file exists but is empty → falls through to the
       second.
 - [x] **Templater command** — + with Templater installed, template uses a
       `<% tp.* %>` command → the command is evaluated in the new note.
@@ -148,10 +148,10 @@ rewrite every connected note (see the item below).
       key.
 - [x] **Start/end date fields** on a **Day** journal → both written with the
       configured key names (these apply to _every_ write type, not just custom).
-- [ ] **Start/end date fields** on a **Month** journal → values are the month's
+- [x] **Start/end date fields** on a **Month** journal → values are the month's
       first/last day.
-- [ ] **Start/end date fields** on a **custom** journal → values span the interval.
-- [ ] Toggling **addStartDate / addEndDate** on a journal that already has connected
+- [x] **Start/end date fields** on a **custom** journal → values span the interval.
+- [x] Toggling **addStartDate / addEndDate** on a journal that already has connected
       notes → every connected note's frontmatter is rewritten immediately (this is
       the one config change that _does_ touch existing notes).
 
@@ -159,12 +159,12 @@ rewrite every connected note (see the item below).
 
 Setup: edit journal Cfg → Timeline.
 
-- [ ] **Start bound** set to a future date → navigating before it is blocked / not
+- [x] **Start bound** set to a future date → navigating before it is blocked / not
       creatable.
-- [ ] **End = never** → can navigate arbitrarily far forward.
-- [ ] **End = fixed date** → navigation/creation stops at that date.
-- [ ] **End = repeat count N** → exactly N entries reachable from start.
-- [ ] **End = repeat count N** with **no start bound** → the journal stays unbounded
+- [x] **End = never** → can navigate arbitrarily far forward.
+- [x] **End = fixed date** → navigation/creation stops at that date.
+- [x] **End = repeat count N** → exactly N entries reachable from start.
+- [x] **End = repeat count N** with **no start bound** → the journal stays unbounded
       (repeats need a start); a warning says so.
 
 ---
@@ -174,24 +174,27 @@ Setup: edit journal Cfg → Timeline.
 Setup: a Day journal "Life" with ≥3 connected notes across different dates, and a
 command + a view block targeting it.
 
-- [ ] **Rename** Life → "Living" → every connected note's frontmatter _name key_
+- [x] **Rename** Life → "Living" → every connected note's frontmatter _name key_
       is rewritten to "Living".
-- [ ] After rename → the targeting **command** still resolves (no dangling target).
-- [ ] After rename → the targeting **view block** still resolves.
-- [ ] **Rename to a name already taken** → rejected with an error message.
-- [ ] **Rename to a name already taken** → connected notes' frontmatter left
+- [x] After rename → the targeting **command** still resolves (no dangling target).
+- [x] After rename → the targeting **view block** still resolves.
+- [x] **Rename to a name already taken** → rejected with an error message.
+- [x] **Rename to a name already taken** → connected notes' frontmatter left
       untouched.
-- [ ] **Delete → keep notes** → note files remain, journal frontmatter intact.
-- [ ] **Delete → clear notes** → files remain, journal frontmatter keys stripped.
-- [ ] **Delete → delete notes** → notes moved to **trash** (recoverable), not
+- [x] **Delete → keep notes** → note files remain, journal frontmatter intact.
+- [x] **Delete → clear notes** → files remain, journal frontmatter keys stripped.
+- [x] **Delete → delete notes** → notes moved to **trash** (recoverable), not
       permanently erased.
-- [ ] Create a second journal with a **different name** but the same
+- [ ] **Delete → keep notes**, then create a journal with the **same name** → the kept
+      notes reconnect immediately (the delete modal counts them again, the calendar
+      shows them), with no reload.
+- [x] Create a second journal with a **different name** but the same
       `nameTemplate` + `folder` + `dateFormat` → "colliding journals" warning shows
       in the settings dashboard. (Duplicate _names_ are rejected at creation, so
       that is not the collision trigger.)
-- [ ] The same collision → the warning also shows on each colliding journal's own
+- [x] The same collision → the warning also shows on each colliding journal's own
       edit subpage.
-- [ ] Give both colliding journals a `{{journal_name}}` name template → the
+- [x] Give both colliding journals a `{{journal_name}}` name template → the
       collision clears (the name individualizes the path).
 
 ---
@@ -201,17 +204,17 @@ command + a view block targeting it.
 Setup: Day journal "Num" → enable Numbering. Use `{{index}}` in its name template
 so the number is visible in filenames.
 
-- [ ] **Enabled** → consecutive entries increment the index by 1.
-- [ ] **anchorDate** set → counting starts (index 1) at the anchor period.
-- [ ] **allowBefore = on** → periods before the anchor receive numbers (negative /
+- [x] **Enabled** → consecutive entries increment the index by 1.
+- [x] **anchorDate** set → counting starts (index 1) at the anchor period.
+- [x] **allowBefore = on** → periods before the anchor receive numbers (negative /
       mirrored).
-- [ ] **allowBefore = off** → entries before the anchor are blocked.
-- [ ] **reset_after = N** → index cycles within `[anchor, anchor+N-1]` then
+- [x] **allowBefore = off** → entries before the anchor are blocked.
+- [x] **reset_after = N** → index cycles within `[anchor, anchor+N-1]` then
       restarts (v3 differs from v2 `index %= N`; confirm intended).
-- [ ] **Increment / start value** → first index matches the configured start.
-- [ ] The **allowBefore** toggle only appears when the journal has no timeline
+- [x] **Increment / start value** → first index matches the configured start.
+- [x] The **allowBefore** toggle only appears when the journal has no timeline
       start _and_ reset is `never` — set `reset_after` first and confirm it hides.
-- [ ] Set a **timeline start** (§2) → the Sequence section hides its own anchor
+- [x] Set a **timeline start** (§2) → the Sequence section hides its own anchor
       picker and numbering counts from the timeline start instead.
 
 ---
@@ -232,7 +235,7 @@ Setup: a Day journal "Conn" with a folder + name template; an arbitrary note
       what you see — the two outcomes differ and only one deletes a file.
 - [ ] - **Rename toggle on** → `Scratch.md` renamed to Conn's name template.
 - [ ] - **Move toggle on** → file moved into Conn's folder.
-- [ ] **Connect** on an already-connected note → button shows **Disconnect** →
+- [x] **Connect** on an already-connected note → button shows **Disconnect** →
       frontmatter keys stripped.
 - [ ] Connect a note dated **outside Conn's timeline** → the attempt is refused with
       an explanation; the note's frontmatter is unchanged afterwards.
@@ -286,65 +289,65 @@ note _and_ an `ask` setting that produces the per-note dropdown. Test both arms.
 Setup: a Day journal "Cmd"; create a custom command in Settings → Commands (or
 the journal's Commands section).
 
-- [ ] New custom command appears in the **palette** with its label.
-- [ ] **Icon** set + **show in ribbon** on → ribbon icon appears.
-- [ ] Ribbon icon click → runs the command.
-- [ ] **Open mode: active** → opens in the current pane.
-- [ ] **Open mode: new tab** → opens in a new tab.
-- [ ] **Open mode: split** → opens in a split.
-- [ ] **Open mode: new window** → opens in a new window.
-- [ ] **Context: today** → resolves relative to today's date.
-- [ ] **Context: open note** → resolves relative to the active journal note (falls
+- [x] New custom command appears in the **palette** with its label.
+- [x] **Icon** set + **show in ribbon** on → ribbon icon appears.
+- [x] Ribbon icon click → runs the command.
+- [x] **Open mode: active** → opens in the current pane.
+- [x] **Open mode: new tab** → opens in a new tab.
+- [x] **Open mode: split** → opens in a split.
+- [x] **Open mode: new window** → opens in a new window.
+- [x] **Context: today** → resolves relative to today's date.
+- [x] **Context: open note** → resolves relative to the active journal note (falls
       back when none).
-- [ ] **Context: only open note** → only runs when a journal note is active;
+- [x] **Context: only open note** → only runs when a journal note is active;
       otherwise no-op/disabled.
-- [ ] **Target: all journals** → acts on every journal of the filtered write type.
-- [ ] **Target: specific journal** → acts only on Cmd.
-- [ ] **Target: shelf** → acts only on journals in the chosen shelf (§9).
-- [ ] **Target: shelf** on a shelf holding **mixed write types** → acts only on the
+- [x] **Target: all journals** → acts on every journal of the filtered write type.
+- [x] **Target: specific journal** → acts only on Cmd.
+- [x] **Target: shelf** → acts only on journals in the chosen shelf (§9).
+- [x] **Target: shelf** on a shelf holding **mixed write types** → acts only on the
       members matching the command's own write type.
-- [ ] **Icon** required — turn on show-in-ribbon with no icon → save is blocked with
+- [x] **Icon** required — turn on show-in-ribbon with no icon → save is blocked with
       a "pick an icon" error.
 
 ### Command type variants (depend on write type)
 
 Setup: one command of each `type`, targeting the relevant journal write type.
 
-- [ ] **Built-in `Open next`** → next entry of the active journal.
-- [ ] **Built-in `Open previous`** → previous entry.
-- [ ] **next_available** — + gaps between existing notes → jumps to the next entry
+- [x] **Built-in `Open next`** → next entry of the active journal.
+- [x] **Built-in `Open previous`** → previous entry.
+- [x] **next_available** — + gaps between existing notes → jumps to the next entry
       that _exists_, skipping the gap (not merely +1 period).
-- [ ] **previous_available** → jumps to the previous existing entry.
+- [x] **previous_available** → jumps to the previous existing entry.
 - [ ] **next_available** with nothing ahead → an explicit "no next note" notice, not
       silence.
 - [ ] **previous_available** with nothing behind → an explicit "no previous note"
       notice.
-- [ ] Day journal — **same** → today's entry.
-- [ ] Day journal — **next** → +1 day.
-- [ ] Day journal — **previous** → −1 day.
-- [ ] Day journal — **same_next_week** → +7 days.
-- [ ] Day journal — **same_previous_week** → −7 days.
-- [ ] Day journal — **same_next_month** → same day-of-month, +1 month.
-- [ ] Day journal — **same_previous_month** → same day-of-month, −1 month.
-- [ ] Day journal — **same_next_year** → same date, +1 year.
-- [ ] Day journal — **same_previous_year** → same date, −1 year.
-- [ ] Week / Year / Custom journal — **same** → current entry.
-- [ ] Week / Year / Custom journal — **next** → +1 period.
-- [ ] Week / Year / Custom journal — **previous** → −1 period.
-- [ ] Month / Quarter journal — **same** → current entry.
-- [ ] Month / Quarter journal — **next** → +1 period.
-- [ ] Month / Quarter journal — **previous** → −1 period.
-- [ ] Month / Quarter journal — **same_next_year** → same month/quarter, +1 year.
-- [ ] Month / Quarter journal — **same_previous_year** → same month/quarter, −1 year.
+- [x] Day journal — **same** → today's entry.
+- [x] Day journal — **next** → +1 day.
+- [x] Day journal — **previous** → −1 day.
+- [x] Day journal — **same_next_week** → +7 days.
+- [x] Day journal — **same_previous_week** → −7 days.
+- [x] Day journal — **same_next_month** → same day-of-month, +1 month.
+- [x] Day journal — **same_previous_month** → same day-of-month, −1 month.
+- [x] Day journal — **same_next_year** → same date, +1 year.
+- [x] Day journal — **same_previous_year** → same date, −1 year.
+- [x] Week / Year / Custom journal — **same** → current entry.
+- [x] Week / Year / Custom journal — **next** → +1 period.
+- [x] Week / Year / Custom journal — **previous** → −1 period.
+- [x] Month / Quarter journal — **same** → current entry.
+- [x] Month / Quarter journal — **next** → +1 period.
+- [x] Month / Quarter journal — **previous** → −1 period.
+- [x] Month / Quarter journal — **same_next_year** → same month/quarter, +1 year.
+- [x] Month / Quarter journal — **same_previous_year** → same month/quarter, −1 year.
 
 ### Command reactivity
 
-- [ ] Rename a targeted journal → command re-targets automatically.
-- [ ] Delete a targeted journal → its commands disappear from the palette.
-- [ ] Delete a targeted **shelf** → its shelf-scoped commands disappear too.
-- [ ] Palette entries carry their owner prefix: `<journal>: <name>` for journal
+- [x] Rename a targeted journal → command re-targets automatically.
+- [x] Delete a targeted journal → its commands disappear from the palette.
+- [x] Delete a targeted **shelf** → its shelf-scoped commands disappear too.
+- [x] Palette entries carry their owner prefix: `<journal>: <name>` for journal
       commands, `Shelf: <shelf>: <name>` for shelf commands.
-- [ ] Two different journals can both hold a command named "Open today's note"
+- [x] Two different journals can both hold a command named "Open today's note"
       (uniqueness is per-owner, not global).
 
 ---

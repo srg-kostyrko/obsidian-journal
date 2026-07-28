@@ -129,6 +129,13 @@ export class VaultSubscriptionService {
       // A deleted journal's notes may survive with their frontmatter intact (the "keep" delete
       // mode), so no vault event clears their index entries — drop them by journal name here.
       this.#journalEvents.on("deleted", (journalName) => this.#index.clearJournal(journalName)),
+      // The mirror image: a journal can be created over notes that already carry its name — the
+      // "keep" mode above leaves them behind, and parseEntry rejected them while no config existed.
+      // Nothing on disk changes, so no vault event fires; re-walk here as on a settings reload.
+      // Only "created" is safe to wire this way. Rename and frontmatter-key edits emit their
+      // repository event BEFORE rewriting the notes, so a rebuild there would unregister every note
+      // still carrying the old value and leave reconnectAll/renameFieldAll nothing to iterate.
+      this.#journalEvents.on("created", () => this.#rebuild()),
       // An external settings sync changes journal configs without any vault event, so
       // re-scan every note to reindex against the freshly loaded journals.
       this.#settingsEvents.on("reloaded", () => this.#rebuild()),

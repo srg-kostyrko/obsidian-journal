@@ -147,6 +147,12 @@ export async function clickDialogButton(label: string): Promise<void> {
   await button.click();
 }
 
+// Read the dialog's rendered text, for assertions on copy the dialog derives rather than echoes
+// (the delete dialog's connected-note count is computed from JournalsIndex).
+export function modalText(): Promise<string> {
+  return activeModal().getText();
+}
+
 export async function waitForDialogClosed(): Promise<void> {
   await activeModal().waitForExist({ reverse: true, timeoutMsg: "dialog did not close" });
 }

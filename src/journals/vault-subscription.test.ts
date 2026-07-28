@@ -8,6 +8,8 @@ import { customJournal, fixedJournal } from "./testing";
 import { VaultSubscriptionService } from "./vault-subscription";
 import { buildRig } from "./vault-subscription.testing";
 
+import type { JournalConfig } from "./config";
+
 describe("VaultSubscriptionService", () => {
   let teardown: () => void;
   beforeEach(() => {
@@ -198,5 +200,69 @@ describe("VaultSubscriptionService", () => {
 
     const index = rig.container.resolve(JournalsIndex);
     expect(index.entryByPath("S/on.md" as VaultPath).isSome()).toBe(true);
+  });
+
+  describe("journal creation", () => {
+    it("reindexes notes kept by a same-named journal deleted in keep mode", async () => {
+      const journals: Record<string, JournalConfig> = { daily: fixedJournal("daily", { type: "day" }) };
+      const rig = buildRig(journals, ["D/A.md" as VaultPath]);
+      rig.setFrontmatter("D/A.md", { journal: "daily", "journal-date": "2024-01-01" });
+      const sub = rig.container.resolve(VaultSubscriptionService);
+      await sub.initialize();
+      const index = rig.container.resolve(JournalsIndex);
+
+      // keep mode leaves the note and its frontmatter untouched, so only the journal events move.
+      delete journals.daily;
+      rig.emitJournalDeleted("daily");
+      journals.daily = fixedJournal("daily", { type: "day" });
+      rig.emitJournalCreated("daily");
+
+      expect(index.entryByPath("D/A.md" as VaultPath).isSome()).toBe(true);
+    });
+
+    it("indexes an orphan note whose journal is created after the boot walk", async () => {
+      const journals: Record<string, JournalConfig> = {};
+      const rig = buildRig(journals, ["D/A.md" as VaultPath]);
+      rig.setFrontmatter("D/A.md", { journal: "daily", "journal-date": "2024-01-01" });
+      const sub = rig.container.resolve(VaultSubscriptionService);
+      await sub.initialize();
+      const index = rig.container.resolve(JournalsIndex);
+
+      journals.daily = fixedJournal("daily", { type: "day" });
+      rig.emitJournalCreated("daily");
+
+      expect(index.entryByPath("D/A.md" as VaultPath).isSome()).toBe(true);
+    });
+
+    it("indexes an on-grid orphan when the created journal writes a custom cycle", async () => {
+      const journals: Record<string, JournalConfig> = {};
+      const rig = buildRig(journals, ["S/on.md" as VaultPath]);
+      rig.setFrontmatter("S/on.md", { journal: "s", "journal-date": "2024-01-01" });
+      const sub = rig.container.resolve(VaultSubscriptionService);
+      await sub.initialize();
+      const index = rig.container.resolve(JournalsIndex);
+
+      journals.s = customJournal("s", "week", 1, "2024-01-01");
+      rig.emitJournalCreated("s");
+
+      expect(index.entryByPath("S/on.md" as VaultPath).isSome()).toBe(true);
+    });
+
+    // Pairs with the on-grid case above: a bare per-note walk would adopt this one too, because
+    // parseEntry defers custom-cycle validation. Only the reconciliation pass drops it.
+    it("drops an off-sequence orphan when the created journal writes a custom cycle", async () => {
+      const journals: Record<string, JournalConfig> = {};
+      const rig = buildRig(journals, ["S/on.md" as VaultPath, "S/off.md" as VaultPath]);
+      rig.setFrontmatter("S/on.md", { journal: "s", "journal-date": "2024-01-01" });
+      rig.setFrontmatter("S/off.md", { journal: "s", "journal-date": "2024-01-03" });
+      const sub = rig.container.resolve(VaultSubscriptionService);
+      await sub.initialize();
+      const index = rig.container.resolve(JournalsIndex);
+
+      journals.s = customJournal("s", "week", 1, "2024-01-01");
+      rig.emitJournalCreated("s");
+
+      expect(index.entryByPath("S/off.md" as VaultPath).isNone()).toBe(true);
+    });
   });
 });

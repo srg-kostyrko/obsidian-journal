@@ -30,6 +30,7 @@ export interface TestRig {
   container: Container;
   emit: <K extends keyof NotesEvents>(event: K, ...arguments_: Parameters<NotesEvents[K]>) => void;
   emitJournalDeleted: (journalName: string) => void;
+  emitJournalCreated: (journalName: string) => void;
   emitSettingsReloaded: () => void;
   setFrontmatter(path: string, fm: Record<string, unknown> | null): void;
   setMarkdownNotes(paths: VaultPath[]): void;
@@ -107,6 +108,7 @@ export function buildRig(journals: Parameters<typeof fakeRepo>[0], initialPaths:
     container: c,
     emit: (event, ...arguments_) => emitter.emit(event, ...arguments_),
     emitJournalDeleted: (journalName) => journalEvents.emit("deleted", journalName),
+    emitJournalCreated: (journalName) => journalEvents.emit("created", journalName),
     emitSettingsReloaded: () => settingsEvents.emit("reloaded"),
     setFrontmatter: (path, fm) => {
       if (fm === null) {
