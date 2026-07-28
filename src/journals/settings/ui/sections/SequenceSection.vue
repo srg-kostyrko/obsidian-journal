@@ -15,6 +15,7 @@ import UiNumberInput from "@/ui/UiNumberInput.vue";
 import UiSettingRow from "@/ui/UiSettingRow.vue";
 import UiToggle from "@/ui/UiToggle.vue";
 
+import { pickingForWrite } from "../../../picking";
 import { JournalsViewModel } from "../../../view-model";
 import { EditSequencePropertyFlow } from "../../flows/edit-sequence-property.flow";
 
@@ -28,9 +29,7 @@ const config = computed(() => journalsVM.getJournal(journalName).getOrUndefined(
 
 const expanded = ref(false);
 
-const startPicking = computed<Picking>(() =>
-  config.value?.write.type === "custom" ? "day" : (config.value?.write.type ?? "day"),
-);
+const startPicking = computed<Picking>(() => (config.value ? pickingForWrite(config.value.write) : "day"));
 const numberingAnchorRef = computed<AnchorString>({
   get: () => config.value?.numbering.anchorDate ?? ("" as AnchorString),
   set: (v) => {

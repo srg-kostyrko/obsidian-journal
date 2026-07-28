@@ -13,6 +13,7 @@ import UiIconButton from "@/ui/UiIconButton.vue";
 import UiNumberInput from "@/ui/UiNumberInput.vue";
 import UiSettingRow from "@/ui/UiSettingRow.vue";
 
+import { pickingForWrite } from "../../../picking";
 import { JournalsViewModel } from "../../../view-model";
 
 import type { TimelineEnd } from "../../../config";
@@ -24,9 +25,7 @@ const config = computed(() => journalsVM.getJournal(journalName).getOrUndefined(
 
 const expanded = ref(false);
 
-const startPicking = computed<Picking>(() =>
-  config.value?.write.type === "custom" ? "day" : (config.value?.write.type ?? "day"),
-);
+const startPicking = computed<Picking>(() => (config.value ? pickingForWrite(config.value.write) : "day"));
 
 const startAnchorRef = computed<AnchorString>({
   get: () => config.value?.timeline.start ?? ("" as AnchorString),
