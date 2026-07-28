@@ -11,7 +11,7 @@ import { icons } from "@/ui/icons";
 import { WorkspaceOpenError } from "../errors";
 import { SuggestCancelled } from "../suggests/errors";
 
-import { buildMarkdownLink, type NewLinkFormat } from "./markdown-link";
+import { buildMarkdownLink } from "./markdown-link";
 import { toPaneType } from "./obsidian-bridge";
 import { InternalObsidianAppToken, InternalPluginToken } from "./tokens";
 
@@ -79,28 +79,19 @@ export class WorkspaceService {
     return this.#app.workspace.activeEditor?.editor;
   }
 
-  // Honors the vault's link preferences for a target that may not exist yet: an existing file goes
-  // through Obsidian's own generator; otherwise the format is reconstructed from the link settings.
+  // An existing file goes through Obsidian's own generator; a target that does not exist yet is
+  // linked by its full path so following the link creates the note where the journal expects it.
   #noteLink(targetPath: VaultPath): string {
-    const sourcePath = this.activeNote().getOr("" as VaultPath);
     const target = this.#app.vault.getAbstractFileByPath(targetPath);
     if (target instanceof TFile) {
+      const sourcePath = this.activeNote().getOr("" as VaultPath);
       return this.#app.fileManager.generateMarkdownLink(target, sourcePath);
     }
-    const basename = (targetPath.split("/").pop() ?? targetPath).replace(/\.md$/, "");
-    const resolved = this.#app.metadataCache.getFirstLinkpathDest(basename, sourcePath);
     return buildMarkdownLink({
       pathWithoutExtension: targetPath.replace(/\.md$/, ""),
-      basename,
+      basename: (targetPath.split("/").pop() ?? targetPath).replace(/\.md$/, ""),
       useMarkdownLinks: this.#vaultConfig("useMarkdownLinks") === true,
-      format: this.#newLinkFormat(),
-      ambiguous: resolved !== null && (resolved.path as VaultPath) !== targetPath,
     });
-  }
-
-  #newLinkFormat(): NewLinkFormat {
-    const raw = this.#vaultConfig("newLinkFormat");
-    return raw === "absolute" || raw === "relative" ? raw : "shortest";
   }
 
   #vaultConfig(key: string): unknown {

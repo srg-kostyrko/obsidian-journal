@@ -71,12 +71,15 @@ describe("commands", () => {
       await cell.waitForClickable({ timeoutMsg: `date picker did not render the ${anchor} cell` });
       await cell.click();
 
+      // The link must carry the journal's folder: a bare [[<anchor>]] would create the note in the
+      // vault's default location, where auto-attach can never match it to the journal.
+      const link = `[[day/${anchor}|${anchor}]]`;
       await browser.waitUntil(
         async () => {
           const value = await editorValue();
-          return value?.includes(anchor) ?? false;
+          return value?.includes(link) ?? false;
         },
-        { timeoutMsg: `editor never received a link containing ${anchor}` },
+        { timeoutMsg: `editor never received the link ${link}` },
       );
     });
 
