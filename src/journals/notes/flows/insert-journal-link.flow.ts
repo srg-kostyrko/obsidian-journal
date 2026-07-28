@@ -8,6 +8,7 @@ import { attempt, type AsyncResult } from "@/infrastructure/result";
 import { JournalNotFoundError } from "../../errors";
 import { pickingForWrite } from "../../picking";
 import { JournalsRepository } from "../../repository";
+import { TimelineService } from "../../timeline";
 import { journalPickerSuggest } from "../journal-picker";
 import { NotePathService } from "../note-path";
 
@@ -19,6 +20,7 @@ export class InsertJournalLinkFlow implements Flow<void, void, InsertJournalLink
   readonly #journals = inject(JournalsRepository);
   readonly #path = inject(NotePathService);
   readonly #workspace = inject(WorkspaceService);
+  readonly #timeline = inject(TimelineService);
 
   execute(): AsyncResult<void, InsertJournalLinkError> {
     return attempt.in(this, async function* (this: InsertJournalLinkFlow) {
@@ -33,7 +35,10 @@ export class InsertJournalLinkFlow implements Flow<void, void, InsertJournalLink
 
       const config = yield* this.#journals.get(journalName).okOrElse(() => new JournalNotFoundError(journalName));
       const period = yield* this.#modals
-        .open(datePickerModal, { picking: pickingForWrite(config.write) })
+        .open(datePickerModal, {
+          picking: pickingForWrite(config.write),
+          bounds: this.#timeline.boundsOf(journalName),
+        })
         .mapErr(() => new UserAborted("insert-journal-link"));
 
       const path = yield* this.#path.pathForDate(journalName, period.anchor);

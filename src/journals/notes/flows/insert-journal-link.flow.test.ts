@@ -1,6 +1,6 @@
 import { describe, expect, it, vi } from "vitest";
 
-import { DayPeriod } from "@/calendar";
+import { DayPeriod, type OpenInterval, type AnchorString } from "@/calendar";
 import { date, installTestCalendar } from "@/calendar/testing";
 import { Container } from "@/infrastructure/di";
 import { Flows } from "@/infrastructure/flows";
@@ -13,8 +13,11 @@ import { FakeNoticeService } from "@/infrastructure/host/testing";
 import { LoggerModule } from "@/infrastructure/logger";
 import { Ok } from "@/infrastructure/result";
 
+import { CycleService } from "../../cycle";
+import { JournalsIndex } from "../../journals-index";
 import { JournalsRepository } from "../../repository";
 import { fakeRepo, fixedJournal } from "../../testing";
+import { TimelineService } from "../../timeline";
 import { NotePathService } from "../note-path";
 
 import { InsertJournalLinkFlow } from "./insert-journal-link.flow";
@@ -31,6 +34,9 @@ function build(journals: Record<string, JournalConfig>) {
   const path = { pathForDate: vi.fn(() => new Ok("Journals/2026-01-01.md" as VaultPath)) };
 
   c.register(JournalsRepository).useValue(fakeRepo(journals));
+  c.register(JournalsIndex).useClass(JournalsIndex);
+  c.register(CycleService).useClass(CycleService);
+  c.register(TimelineService).useClass(TimelineService);
   c.register(ModalService).useValue(modals as unknown as ModalService);
   c.register(SuggestService).useValue(suggests as unknown as SuggestService);
   c.register(WorkspaceService).useValue(workspace as unknown as WorkspaceService);
@@ -86,5 +92,21 @@ describe("InsertJournalLinkFlow", () => {
     modals.lastOpen().cancel();
     await promise;
     expect(workspace.insertNoteLinkAtCursor).not.toHaveBeenCalled();
+  });
+
+  it("bounds the date picker to the journal timeline", async () => {
+    const { flows, modals } = build({
+      daily: fixedJournal(
+        "daily",
+        { type: "day" },
+        { timeline: { start: "2026-06-01" as AnchorString, end: { kind: "never" } } },
+      ),
+    });
+    const promise = flows.invoke(InsertJournalLinkFlow);
+    await tick();
+    const handle = modals.lastOpen<{ bounds?: OpenInterval }, DayPeriod>();
+    handle.submit(DayPeriod.containing(date("2026-06-15")));
+    await promise;
+    expect(handle.props.bounds?.start.match({ some: (d) => d.toAnchor(), none: () => null })).toBe("2026-06-01");
   });
 });
