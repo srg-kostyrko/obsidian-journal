@@ -90,38 +90,49 @@ export class DynamicCommandRegistry {
       .exhaustive();
   }
 
-  #plan(command: CommandConfig): Option<CommandPlan> {
+  #targetJournals(command: CommandConfig): Option<readonly string[]> {
     const journalNames = this.#candidates(command);
     const [rep] = journalNames;
     if (rep === undefined) return Option.none();
-    return this.#journalsRepo.get(rep).flatMap((config) => {
-      if (!supportedTypes(config.write.type).includes(command.type)) return Option.none();
-      return this.#reference(command, journalNames).flatMap((reference) =>
+    return this.#journalsRepo
+      .get(rep)
+      .filter((config) => supportedTypes(config.write.type).includes(command.type))
+      .map(() => journalNames);
+  }
+
+  #plan(command: CommandConfig): Option<CommandPlan> {
+    return this.#targetJournals(command).flatMap((journalNames) =>
+      this.#reference(command, journalNames).flatMap((reference) =>
         // Listing and running must share one predicate. OpenDateFlow drops journals whose
-        // timeline excludes the anchor, so planning without that filter let a command list in
-        // the palette, run, and end in NoApplicableJournals — which is benign, so it logged at
-        // info and showed nothing. v2 gated availability and execution on the same check.
-        this.#anchor(command, rep, reference, journalNames).flatMap((resolved) => {
+        // timeline excludes the anchor, so planning without that filter lets a command list in
+        // the palette, run, and end in NoApplicableJournals — a flow error that never reaches
+        // the notice below. v2 gated availability and execution on the same check.
+        this.#anchor(command, journalNames, reference).flatMap((resolved) => {
           const inTimeline = journalNames.filter((name) => this.#timeline.contains(name, resolved));
           if (inTimeline.length === 0) return Option.none<CommandPlan>();
           return Option.some<CommandPlan>({ anchor: resolved, journalNames: inTimeline });
         }),
-      );
-    });
+      ),
+    );
   }
 
   #listable(command: CommandConfig): boolean {
     if (!isAvailableType(command.type)) return this.#plan(command).isSome();
-    const journalNames = this.#candidates(command);
-    const [rep] = journalNames;
-    if (rep === undefined) return false;
-    return this.#journalsRepo
-      .get(rep)
-      .map(
-        (config) =>
-          supportedTypes(config.write.type).includes(command.type) && this.#reference(command, journalNames).isSome(),
-      )
-      .getOr(false);
+    // An available-type command lists whenever it has a reference date to search from: whether
+    // a note exists in that direction is answered by running it, not by hiding it.
+    return this.#targetJournals(command)
+      .flatMap((journalNames) => this.#reference(command, journalNames))
+      .isSome();
+  }
+
+  #unavailableNotice(command: CommandConfig): string {
+    const journalNames = this.#targetJournals(command);
+    if (!journalNames.isSome()) return m.command_open_unavailable();
+    if (this.#reference(command, journalNames.value).isNone()) return m.command_open_needs_active_note();
+    return match(command.type)
+      .with("previous_available", () => m.command_open_no_previous())
+      .with("next_available", () => m.command_open_no_next())
+      .otherwise(() => m.command_open_unavailable());
   }
 
   #candidates(command: CommandConfig): string[] {
@@ -172,12 +183,9 @@ export class DynamicCommandRegistry {
     return this.#workspace.activeNote().flatMap((path) => this.#index.entryByPath(path));
   }
 
-  #anchor(
-    command: CommandConfig,
-    journalName: string,
-    reference: CalendarDate,
-    journalNames: readonly string[],
-  ): Option<AnchorString> {
+  #anchor(command: CommandConfig, journalNames: readonly string[], reference: CalendarDate): Option<AnchorString> {
+    const [journalName] = journalNames;
+    if (journalName === undefined) return Option.none();
     return match(command.type)
       .with("same", () => this.#cycle.anchorOf(journalName, reference))
       .with("next", () =>
@@ -212,11 +220,7 @@ export class DynamicCommandRegistry {
   async #run(command: CommandConfig): Promise<void> {
     const plan = this.#plan(command);
     if (!plan.isSome()) {
-      if (isAvailableType(command.type) && this.#listable(command)) {
-        this.#notices.show(
-          command.type === "previous_available" ? m.command_open_no_previous() : m.command_open_no_next(),
-        );
-      }
+      this.#notices.show(this.#unavailableNotice(command));
       return;
     }
     await this.#flows.invoke(

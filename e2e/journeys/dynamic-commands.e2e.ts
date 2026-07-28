@@ -1,6 +1,7 @@
 import { browser, expect } from "@wdio/globals";
 
-import { openPalette, paletteLists, promptChoose } from "../support/commands.js";
+import { openPalette, paletteLists, promptChoose, runCommand } from "../support/commands.js";
+import { waitForNotice } from "../support/notices.js";
 import {
   openNote,
   seedNote,
@@ -68,6 +69,18 @@ describe("dynamic commands", () => {
       await seedNote("plain.md", "not a journal note\n");
       await openNote("plain.md");
       expect(await paletteLists(ADVANCE_FROM_ENTRY)).toBe(false);
+    });
+
+    it("notices when an unlisted command is invoked outside the palette", async () => {
+      // executeCommandById is the path a bound hotkey and a ribbon icon take: neither consults
+      // the listing gate, so Obsidian reaches checkCallback(false) directly. Proves the invoke
+      // still runs and explains itself instead of swallowing the press.
+      await seedNote("plain.md", "not a journal note\n");
+      await openNote("plain.md");
+
+      await runCommand("journals:advance-from-entry");
+
+      await waitForNotice("Open a note this command applies to first.");
     });
   });
 });

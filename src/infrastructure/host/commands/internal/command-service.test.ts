@@ -50,7 +50,7 @@ describe("CommandService", () => {
     expect(host.commands.get("demo")?.checkCallback?.(true)).toBe(true);
   });
 
-  it("skips execute when the check fails", () => {
+  it("runs execute on invocation even when the check fails", () => {
     const { service, host } = build();
     let ran = false;
     service.register({
@@ -62,7 +62,7 @@ describe("CommandService", () => {
       },
     });
     host.commands.get("demo")?.checkCallback?.(false);
-    expect(ran).toBe(false);
+    expect(ran).toBe(true);
   });
 
   it("runs execute when the check passes", () => {
@@ -123,7 +123,7 @@ describe("CommandService", () => {
     expect(ran).toBe(true);
   });
 
-  it("skips execute on ribbon click when the check fails", () => {
+  it("runs execute on ribbon click when the check fails", () => {
     const { service, host } = build();
     let ran = false;
     service.register({
@@ -137,7 +137,7 @@ describe("CommandService", () => {
       },
     });
     host.ribbonIcons[0]?.callback(new MouseEvent("click"));
-    expect(ran).toBe(false);
+    expect(ran).toBe(true);
   });
 
   it("removes the ribbon element on unregister", () => {

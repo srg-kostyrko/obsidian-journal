@@ -18,9 +18,10 @@ export class JournalNavigationCommands {
   readonly #logger = inject(LoggerFactoryToken).named("journal-navigation");
 
   constructor() {
-    // Available whenever the active note is connected to a journal, in either editing or
-    // reading mode — navigating to an adjacent entry is meaningless on a note that belongs
-    // to no journal, so hide the command rather than surface a no-op notice.
+    // Listed whenever the active note is connected to a journal, in either editing or reading
+    // mode — navigating to an adjacent entry is meaningless on a note that belongs to no
+    // journal, so the palette hides the command. A bound hotkey still reaches execute, which
+    // says so rather than swallowing the press.
     this.#commands.register({
       id: "open-next",
       name: m.command_open_next(),
@@ -41,7 +42,10 @@ export class JournalNavigationCommands {
 
   #open(direction: Direction): void {
     const entry = this.#activeEntry();
-    if (!entry.isSome()) return;
+    if (!entry.isSome()) {
+      this.#notices.show(m.command_open_needs_active_note());
+      return;
+    }
     const target =
       direction === "next"
         ? this.#index.findNext(entry.value.journalName, entry.value.anchor)

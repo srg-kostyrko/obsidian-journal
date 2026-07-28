@@ -177,7 +177,9 @@ export class ViewHostService {
       icon: view.icon || FALLBACK_VIEW_ICON,
       ribbon: false,
       check: () => this.#shelves.count() > 0 && this.isOpen(id),
-      execute: () => this.#pickShelf(id),
+      // check only hides the command from the palette; a hotkey still reaches execute, and
+      // picking a shelf for a view with no open leaf has nothing to apply it to.
+      execute: () => (this.isOpen(id) ? this.#pickShelf(id) : undefined),
     };
   }
 

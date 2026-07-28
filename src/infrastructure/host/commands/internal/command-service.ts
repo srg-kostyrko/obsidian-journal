@@ -51,9 +51,11 @@ export class CommandService {
         id: registration.id,
         name: registration.name,
         icon: registration.icon,
+        // check gates listing only. Invocation always runs, so a command reached through a
+        // hotkey or its ribbon icon — neither of which the listing filter hides — can say why
+        // it did nothing instead of swallowing the press.
         checkCallback: (checking: boolean): boolean => {
           if (checking) return check();
-          if (!check()) return false;
           run();
           return true;
         },
@@ -73,10 +75,7 @@ export class CommandService {
         actionId,
         registration.icon,
         registration.name,
-        () => {
-          if (check && !check()) return;
-          run();
-        },
+        run,
       );
       this.#ribbons.set(registration.id, { actionId, element });
     }

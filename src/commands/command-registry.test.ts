@@ -372,6 +372,40 @@ describe("DynamicCommandRegistry available types", () => {
 
     expect(host.commands.get("cmd-1")?.checkCallback?.(true)).toBe(true);
   });
+
+  it("notices from the ribbon when the open note does not belong to the target journals", async () => {
+    const { host, commandsRepo, journalsRepo, workspace, notices } = await build();
+    journalsRepo.create("daily", { type: "day" });
+    workspace.setActive("inbox/scratch.md" as VaultPath);
+    commandsRepo.create(
+      "cmd-1",
+      makeCommand({ type: "next_available", context: "only_open_note", icon: "star", showInRibbon: true }),
+    );
+
+    host.ribbonIcons[0]?.callback(new MouseEvent("click"));
+
+    expect(notices.messages).toContain(m.command_open_needs_active_note());
+  });
+
+  it("notices when the target has no journal of the command's write type", async () => {
+    const { host, commandsRepo, journalsRepo, notices } = await build();
+    journalsRepo.create("daily", { type: "day" });
+    commandsRepo.create("cmd-1", makeCommand({ type: "next_available", target: { kind: "all", writeType: "week" } }));
+
+    host.commands.get("cmd-1")?.checkCallback?.(false);
+
+    expect(notices.messages).toContain(m.command_open_unavailable());
+  });
+
+  it("notices when a same-period command cannot resolve a note", async () => {
+    const { host, commandsRepo, journalsRepo, notices } = await build();
+    journalsRepo.create("daily", { type: "day" });
+    commandsRepo.create("cmd-1", makeCommand({ type: "same", context: "only_open_note" }));
+
+    host.commands.get("cmd-1")?.checkCallback?.(false);
+
+    expect(notices.messages).toContain(m.command_open_needs_active_note());
+  });
 });
 
 describe("DynamicCommandRegistry journal cascade", () => {

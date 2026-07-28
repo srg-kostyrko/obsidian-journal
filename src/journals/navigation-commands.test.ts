@@ -104,4 +104,11 @@ describe("JournalNavigationCommands", () => {
     host.commands.get("open-prev")?.checkCallback?.(false);
     expect(notices.messages).toContain(m.command_open_no_previous());
   });
+
+  it("notifies when open-next runs on a note that belongs to no journal", () => {
+    const { host, workspace, notices } = build();
+    workspace.setActive("inbox/plain.md" as VaultPath);
+    host.commands.get("open-next")?.checkCallback?.(false);
+    expect(notices.messages).toContain(m.command_open_needs_active_note());
+  });
 });

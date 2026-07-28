@@ -226,6 +226,8 @@
   "command_palette_shelf_name": "Shelf: {shelf}: {name}",
   "command_open_no_next": "There is no next note after this one.",
   "command_open_no_previous": "There is no previous note before this one.",
+  "command_open_needs_active_note": "Open a note this command applies to first.",
+  "command_open_unavailable": "There is no note to open.",
   "command_type_label": [
     {
       "declarations": ["input type", "input writeType"],
