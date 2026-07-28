@@ -170,8 +170,8 @@
 	"nav_block_row_journal_required": "ジャーナルを選択してください。",
 	"nav_block_row_resolved_preview": "解決済み: {text}",
 	"command_add": "コマンドを追加する",
-	"command_context_open_note_clarifier": "（オープンノートの日付、つまり今日の日付を使用します）",
-	"command_context_only_open_note_clarifier": "（オープンノートの日付を使用します）",
+	"command_context_open_note_clarifier": "（開いているノートの日付、なければ今日の日付を使用します）",
+	"command_context_only_open_note_clarifier": "（ジャーナルノートが開いている必要があります）",
 	"command_context_option": [
 		{
 			"declarations": [
@@ -182,8 +182,8 @@
 			],
 			"match": {
 				"context=today": "今日",
-				"context=open_note": "現在未解決のノート",
-				"context=only_open_note": "オープンノートのみ"
+				"context=open_note": "開いているノートの日付、なければ今日",
+				"context=only_open_note": "開いているノートの日付のみ"
 			}
 		}
 	],
@@ -215,7 +215,7 @@
 	"command_modal_context_description": "コマンドが現在の日付として扱うメモの日付を選択してください。",
 	"command_modal_context_label": "コンテクスト",
 	"command_modal_context_only_open_note_hint": "ジャーナルノートが開いている間のみ実行され、そのノートの日付を使用します。",
-	"command_modal_context_open_note_hint": "開いている仕訳帳の日付、または開いている仕訳帳がない場合は今日の日付を使用します。",
+	"command_modal_context_open_note_hint": "開いているジャーナルノートの日付、ジャーナルノートが開いていない場合は今日の日付を使用します。",
 	"common_label_icon": "アイコン",
 	"common_label_name": "名前",
 	"command_modal_open_mode_label": "オープンノート",

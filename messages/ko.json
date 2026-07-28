@@ -170,8 +170,8 @@
 	"nav_block_row_journal_required": "저널을 선택하세요.",
 	"nav_block_row_resolved_preview": "해결됨: {text}",
 	"command_add": "명령어를 추가합니다",
-	"command_context_open_note_clarifier": "(미결된 메모의 날짜 또는 오늘 날짜를 사용합니다.)",
-	"command_context_only_open_note_clarifier": "(미결 메모의 날짜를 사용합니다)",
+	"command_context_open_note_clarifier": "(열려 있는 노트의 날짜 또는 오늘 날짜를 사용합니다)",
+	"command_context_only_open_note_clarifier": "(저널 노트가 열려 있어야 합니다)",
 	"command_context_option": [
 		{
 			"declarations": [
@@ -182,8 +182,8 @@
 			],
 			"match": {
 				"context=today": "오늘",
-				"context=open_note": "현재 열려있는 메모",
-				"context=only_open_note": "오픈 노트만"
+				"context=open_note": "열려 있는 노트의 날짜 또는 오늘",
+				"context=only_open_note": "열려 있는 노트의 날짜만"
 			}
 		}
 	],

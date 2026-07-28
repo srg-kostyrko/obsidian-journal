@@ -150,15 +150,15 @@
 
   "command_add": "Add command",
   "command_context_open_note_clarifier": "(uses the open note's date, or today)",
-  "command_context_only_open_note_clarifier": "(uses the open note's date)",
+  "command_context_only_open_note_clarifier": "(requires an open journal note)",
   "command_context_option": [
     {
       "declarations": ["input context"],
       "selectors": ["context"],
       "match": {
         "context=today": "Today",
-        "context=open_note": "Currently open note",
-        "context=only_open_note": "Only the open note"
+        "context=open_note": "Open note's date, or today",
+        "context=only_open_note": "Open note's date only"
       }
     }
   ],

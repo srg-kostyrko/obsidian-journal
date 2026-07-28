@@ -170,8 +170,8 @@
 	"nav_block_row_journal_required": "Choisissez une revue.",
 	"nav_block_row_resolved_preview": "Résolu : {text}",
 	"command_add": "Ajouter une commande",
-	"command_context_open_note_clarifier": "(utilise la date du billet ouvert, ou la date du jour)",
-	"command_context_only_open_note_clarifier": "(utilise la date du billet ouvert)",
+	"command_context_open_note_clarifier": "(utilise la date de la note ouverte, ou celle du jour)",
+	"command_context_only_open_note_clarifier": "(nécessite une note de journal ouverte)",
 	"command_context_option": [
 		{
 			"declarations": [
@@ -182,8 +182,8 @@
 			],
 			"match": {
 				"context=today": "Aujourd'hui",
-				"context=open_note": "Note actuellement ouverte",
-				"context=only_open_note": "Seule la note ouverte"
+				"context=open_note": "Date de la note ouverte, ou aujourd'hui",
+				"context=only_open_note": "Uniquement la date de la note ouverte"
 			}
 		}
 	],

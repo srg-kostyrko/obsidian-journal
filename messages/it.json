@@ -170,8 +170,8 @@
 	"nav_block_row_journal_required": "Seleziona una rivista.",
 	"nav_block_row_resolved_preview": "Risolto: {text}",
 	"command_add": "Aggiungi comando",
-	"command_context_open_note_clarifier": "(utilizza la data della nota aperta, ovvero la data odierna)",
-	"command_context_only_open_note_clarifier": "(utilizza la data della nota aperta)",
+	"command_context_open_note_clarifier": "(usa la data della nota aperta, oppure quella di oggi)",
+	"command_context_only_open_note_clarifier": "(richiede una nota del diario aperta)",
 	"command_context_option": [
 		{
 			"declarations": [
@@ -182,8 +182,8 @@
 			],
 			"match": {
 				"context=today": "Oggi",
-				"context=open_note": "Nota attualmente aperta",
-				"context=only_open_note": "Solo la nota aperta"
+				"context=open_note": "Data della nota aperta, oppure oggi",
+				"context=only_open_note": "Solo la data della nota aperta"
 			}
 		}
 	],
@@ -215,7 +215,7 @@
 	"command_modal_context_description": "Scegli la data della nota che il comando considererà come data corrente.",
 	"command_modal_context_label": "Contesto",
 	"command_modal_context_only_open_note_hint": "Si attiva solo quando è aperta una nota del diario, utilizzando la data di tale nota.",
-	"command_modal_context_open_note_hint": "Utilizza la data della nota di giornale aperta oppure la data odierna se non è aperta alcuna nota di giornale.",
+	"command_modal_context_open_note_hint": "Utilizza la data della nota del diario aperta, oppure la data odierna se non è aperta alcuna nota del diario.",
 	"common_label_icon": "Icona",
 	"common_label_name": "Nome",
 	"command_modal_open_mode_label": "Nota aperta",

@@ -170,8 +170,8 @@
 	"nav_block_row_journal_required": "Выберите журнал.",
 	"nav_block_row_resolved_preview": "Разрешено: {text}",
 	"command_add": "Добавить команду",
-	"command_context_open_note_clarifier": "(использует дату открытия счета или сегодняшний день)",
-	"command_context_only_open_note_clarifier": "(используется дата открытой облигации)",
+	"command_context_open_note_clarifier": "(использует дату открытой заметки или сегодняшнюю дату)",
+	"command_context_only_open_note_clarifier": "(требуется открытая заметка журнала)",
 	"command_context_option": [
 		{
 			"declarations": [
@@ -182,8 +182,8 @@
 			],
 			"match": {
 				"context=today": "Сегодня",
-				"context=open_note": "В настоящее время открыта заметка",
-				"context=only_open_note": "Только открытая записка"
+				"context=open_note": "Дата открытой заметки или сегодня",
+				"context=only_open_note": "Только дата открытой заметки"
 			}
 		}
 	],
@@ -214,8 +214,8 @@
 	"command_label_yesterday": "Откройте вчерашнюю заметку",
 	"command_modal_context_description": "Выберите дату, дату которой будет считаться текущей.",
 	"command_modal_context_label": "Контекст",
-	"command_modal_context_only_open_note_hint": "Выполняется только при открытой записи в журнале, используя дату этой записи.",
-	"command_modal_context_open_note_hint": "Используется дата открытой бухгалтерской проводки или сегодняшняя дата, если ни одна бухгалтерская проводка не открыта.",
+	"command_modal_context_only_open_note_hint": "Выполняется, только когда открыта заметка журнала, и использует дату этой заметки.",
+	"command_modal_context_open_note_hint": "Использует дату открытой заметки журнала или сегодняшнюю дату, если заметка журнала не открыта.",
 	"common_label_icon": "Икона",
 	"common_label_name": "Имя",
 	"command_modal_open_mode_label": "Открытая заметка",

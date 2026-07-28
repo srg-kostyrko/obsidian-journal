@@ -170,8 +170,8 @@
 	"nav_block_row_journal_required": "Selecione um periódico.",
 	"nav_block_row_resolved_preview": "Resolvido: {text}",
 	"command_add": "Adicionar comando",
-	"command_context_open_note_clarifier": "(usa a data da nota aberta ou a data de hoje)",
-	"command_context_only_open_note_clarifier": "(usa a data da nota aberta)",
+	"command_context_open_note_clarifier": "(usa a data da nota aberta, ou a de hoje)",
+	"command_context_only_open_note_clarifier": "(requer uma nota do diário aberta)",
 	"command_context_option": [
 		{
 			"declarations": [
@@ -182,8 +182,8 @@
 			],
 			"match": {
 				"context=today": "Hoje",
-				"context=open_note": "Nota atualmente aberta",
-				"context=only_open_note": "Apenas a nota aberta"
+				"context=open_note": "Data da nota aberta, ou hoje",
+				"context=only_open_note": "Apenas a data da nota aberta"
 			}
 		}
 	],
@@ -214,8 +214,8 @@
 	"command_label_yesterday": "Abra a nota de ontem",
 	"command_modal_context_description": "Escolha qual data da nota o comando considerará como a data atual.",
 	"command_modal_context_label": "Contexto",
-	"command_modal_context_only_open_note_hint": "Funciona apenas enquanto uma anotação no diário estiver aberta, usando a data dessa anotação.",
-	"command_modal_context_open_note_hint": "Utiliza a data da anotação aberta no diário ou a data de hoje, caso não haja nenhuma anotação aberta.",
+	"command_modal_context_only_open_note_hint": "Funciona apenas enquanto uma nota do diário estiver aberta, usando a data dessa nota.",
+	"command_modal_context_open_note_hint": "Utiliza a data da nota do diário aberta, ou a data de hoje quando nenhuma nota do diário está aberta.",
 	"common_label_icon": "Ícone",
 	"common_label_name": "Nome",
 	"command_modal_open_mode_label": "Nota aberta",

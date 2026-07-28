@@ -170,8 +170,8 @@
 	"nav_block_row_journal_required": "Wählen Sie eine Zeitschrift aus.",
 	"nav_block_row_resolved_preview": "Aufgelöst: {text}",
 	"command_add": "Befehl hinzufügen",
-	"command_context_open_note_clarifier": "(verwendet das Datum des offenen Kontoauszugs oder das heutige Datum)",
-	"command_context_only_open_note_clarifier": "(verwendet das Datum des offenen Kontoauszugs)",
+	"command_context_open_note_clarifier": "(verwendet das Datum der offenen Notiz oder das heutige Datum)",
+	"command_context_only_open_note_clarifier": "(erfordert eine geöffnete Journalnotiz)",
 	"command_context_option": [
 		{
 			"declarations": [
@@ -182,8 +182,8 @@
 			],
 			"match": {
 				"context=today": "Heute",
-				"context=open_note": "Aktuell offene Notiz",
-				"context=only_open_note": "Nur die offene Note"
+				"context=open_note": "Datum der offenen Notiz oder heute",
+				"context=only_open_note": "Nur das Datum der offenen Notiz"
 			}
 		}
 	],
@@ -215,7 +215,7 @@
 	"command_modal_context_description": "Wählen Sie aus, welches Datum der Notiz der Befehl als aktuelles Datum behandeln soll.",
 	"command_modal_context_label": "Kontext",
 	"command_modal_context_only_open_note_hint": "Wird nur ausgeführt, solange eine Journalnotiz geöffnet ist, und verwendet das Datum dieser Notiz.",
-	"command_modal_context_open_note_hint": "Verwendet das Datum des geöffneten Journaleintrags oder, falls kein Journaleintrag geöffnet ist, das heutige Datum.",
+	"command_modal_context_open_note_hint": "Verwendet das Datum der geöffneten Journalnotiz oder, falls keine Journalnotiz geöffnet ist, das heutige Datum.",
 	"common_label_icon": "Symbol",
 	"common_label_name": "Name",
 	"command_modal_open_mode_label": "Offene Notiz",

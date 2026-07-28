@@ -170,8 +170,8 @@
 	"nav_block_row_journal_required": "Виберіть журнал.",
 	"nav_block_row_resolved_preview": "Вирішено: {text}",
 	"command_add": "Додати команду",
-	"command_context_open_note_clarifier": "(використовується дата відкритої нотатки або сьогоднішній день)",
-	"command_context_only_open_note_clarifier": "(використовується дата відкритої нотатки)",
+	"command_context_open_note_clarifier": "(використовує дату відкритої нотатки або сьогоднішню дату)",
+	"command_context_only_open_note_clarifier": "(потрібна відкрита нотатка журналу)",
 	"command_context_option": [
 		{
 			"declarations": [
@@ -182,8 +182,8 @@
 			],
 			"match": {
 				"context=today": "Сьогодні",
-				"context=open_note": "Поточна відкрита нотатка",
-				"context=only_open_note": "Тільки відкрита нота"
+				"context=open_note": "Дата відкритої нотатки або сьогодні",
+				"context=only_open_note": "Лише дата відкритої нотатки"
 			}
 		}
 	],

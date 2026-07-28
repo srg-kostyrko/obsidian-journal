@@ -170,8 +170,8 @@
 	"nav_block_row_journal_required": "Seleccione una revista.",
 	"nav_block_row_resolved_preview": "Resuelto: {text}",
 	"command_add": "Agregar comando",
-	"command_context_open_note_clarifier": "(utiliza la fecha de apertura del pagaré, o la fecha de hoy)",
-	"command_context_only_open_note_clarifier": "(utiliza la fecha de la nota abierta)",
+	"command_context_open_note_clarifier": "(usa la fecha de la nota abierta, o la de hoy)",
+	"command_context_only_open_note_clarifier": "(requiere una nota del diario abierta)",
 	"command_context_option": [
 		{
 			"declarations": [
@@ -182,8 +182,8 @@
 			],
 			"match": {
 				"context=today": "Hoy",
-				"context=open_note": "Nota abierta actualmente",
-				"context=only_open_note": "Solo la nota abierta"
+				"context=open_note": "Fecha de la nota abierta, u hoy",
+				"context=only_open_note": "Solo la fecha de la nota abierta"
 			}
 		}
 	],

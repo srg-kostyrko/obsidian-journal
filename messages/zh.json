@@ -170,8 +170,8 @@
 	"nav_block_row_journal_required": "选择期刊。",
 	"nav_block_row_resolved_preview": "已解决： {text}",
 	"command_add": "添加命令",
-	"command_context_open_note_clarifier": "（使用未结票据的日期，或今天）",
-	"command_context_only_open_note_clarifier": "（使用未结票据的日期）",
+	"command_context_open_note_clarifier": "（使用打开的笔记的日期，或今天的日期）",
+	"command_context_only_open_note_clarifier": "（需要打开一个日记笔记）",
 	"command_context_option": [
 		{
 			"declarations": [
@@ -182,8 +182,8 @@
 			],
 			"match": {
 				"context=today": "今天",
-				"context=open_note": "当前未结笔记",
-				"context=only_open_note": "只有开放音符"
+				"context=open_note": "打开的笔记的日期，或今天",
+				"context=only_open_note": "仅打开的笔记的日期"
 			}
 		}
 	],
@@ -215,7 +215,7 @@
 	"command_modal_context_description": "选择命令将哪个日期作为当前日期。",
 	"command_modal_context_label": "语境",
 	"command_modal_context_only_open_note_hint": "仅在日记笔记打开时运行，并使用该笔记的日期。",
-	"command_modal_context_open_note_hint": "使用已打开的日记账的日期，如果没有打开的日记账，则使用今天的日期。",
+	"command_modal_context_open_note_hint": "使用已打开的日记笔记的日期；若没有打开日记笔记，则使用今天的日期。",
 	"common_label_icon": "图标",
 	"common_label_name": "姓名",
 	"command_modal_open_mode_label": "打开笔记",
