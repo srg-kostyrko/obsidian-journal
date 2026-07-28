@@ -17,3 +17,11 @@ export interface BenignFlowError {
 export function isBenignFlowError(error: unknown): error is BenignFlowError {
   return typeof error === "object" && error !== null && "benign" in error && error.benign === true;
 }
+
+export interface UserFacingFlowError {
+  readonly userNotice: string;
+}
+
+export function isUserFacingFlowError(error: unknown): error is UserFacingFlowError {
+  return typeof error === "object" && error !== null && "userNotice" in error && typeof error.userNotice === "string";
+}

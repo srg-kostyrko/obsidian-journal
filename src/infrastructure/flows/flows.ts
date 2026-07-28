@@ -4,7 +4,7 @@ import { NoticeService } from "@/infrastructure/host";
 import { LoggerFactoryToken } from "@/infrastructure/logger";
 import type { AsyncResult } from "@/infrastructure/result";
 
-import { isBenignFlowError, UserAborted } from "./errors";
+import { isBenignFlowError, isUserFacingFlowError, UserAborted } from "./errors";
 
 import type { Flow } from "./types";
 
@@ -52,7 +52,9 @@ export class Flows {
           // nothing on screen at all. Notify by default; callers with a better message
           // of their own opt out.
           if (options?.notify !== false) {
-            this.#notices.show(m.flow_failure_notice({ error: errorMessage(error) }));
+            this.#notices.show(
+              isUserFacingFlowError(error) ? error.userNotice : m.flow_failure_notice({ error: errorMessage(error) }),
+            );
           }
         }
       });

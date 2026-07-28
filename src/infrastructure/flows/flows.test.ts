@@ -7,7 +7,7 @@ import { createLoggerTestingModule, type MemorySink } from "@/infrastructure/log
 import { AsyncResult } from "@/infrastructure/result";
 import { expectErr, expectOk } from "@/infrastructure/result/testing";
 
-import { FlowError, UserAborted, type BenignFlowError } from "./errors";
+import { FlowError, UserAborted, type BenignFlowError, type UserFacingFlowError } from "./errors";
 import { Flows } from "./flows";
 
 import type { Flow } from "./types";
@@ -50,6 +50,21 @@ class BenignError extends FlowError implements BenignFlowError {
 class BenignFailingFlow implements Flow<null, never, BenignError> {
   execute(): AsyncResult<never, BenignError> {
     return AsyncResult.err(new BenignError());
+  }
+}
+
+class UserFacingError extends FlowError implements UserFacingFlowError {
+  readonly kind = "user-facing-error" as const;
+  readonly userNotice = "Journal \u{201C}daily\u{201D} cannot create a note.";
+  constructor() {
+    super("user facing failure");
+    this.name = "UserFacingError";
+  }
+}
+
+class UserFacingFailingFlow implements Flow<null, never, UserFacingError> {
+  execute(): AsyncResult<never, UserFacingError> {
+    return AsyncResult.err(new UserFacingError());
   }
 }
 
@@ -135,6 +150,12 @@ describe("Flows", () => {
       c.register(FailingFlow).useClass(FailingFlow);
       await c.resolve(Flows).invoke(FailingFlow, null);
       expect(notices.messages.at(0)).toContain("domain failed");
+    });
+
+    it("shows the error's own notice when the flow fails with a user-facing error", async () => {
+      c.register(UserFacingFailingFlow).useClass(UserFacingFailingFlow);
+      await c.resolve(Flows).invoke(UserFacingFailingFlow, null);
+      expect(notices.messages.at(0)).toBe("Journal \u{201C}daily\u{201D} cannot create a note.");
     });
 
     it("stays silent when the user aborted", async () => {
