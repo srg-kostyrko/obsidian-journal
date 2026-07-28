@@ -476,16 +476,28 @@ describe("boundsOf", () => {
     });
     const timeline = c.resolve(TimelineService);
     const bounds = timeline.boundsOf("weekly");
-    const rejectedWeek = WeekPeriod.containing(date("2026-06-10"));
-    expect(timeline.contains("weekly", rejectedWeek.anchor.toAnchor())).toBe(false);
-    expect(bounds.overlapsPeriod(rejectedWeek)).toBe(false);
+    // Jun 5 sits inside the accepted Jun 1-7 week and is clickable only because #boundEnd
+    // widened Jun 3 -> Jun 7. Asserting on a REJECTED week instead would be vacuous: week
+    // starts are Jun 1 or Jun 8, so overlapsPeriod cannot tell the two bounds apart.
+    expect(timeline.contains("weekly", "2026-06-01" as AnchorString)).toBe(true);
+    expect(bounds.overlapsPeriod(DayPeriod.containing(date("2026-06-05")))).toBe(true);
+  });
+
+  it("extends a custom journal's upper bound to the end of its final interval", () => {
+    const c = buildContainer({
+      sprints: customJournal("sprints", "day", 7, "2026-06-01", {
+        timeline: { start: "" as AnchorString, end: { kind: "date", date: "2026-06-03" as AnchorString } },
+      }),
+    });
+    const bounds = c.resolve(TimelineService).boundsOf("sprints");
+    expect(bounds.end.match({ some: (d) => d.toAnchor(), none: () => null })).toBe("2026-06-07");
   });
 });
 ```
 
-The last test needs two imports added at the top of `src/journals/timeline.test.ts`: `WeekPeriod` from `@/calendar` (join it to the existing `import { CalendarDate } from "@/calendar";`) and `date` from `@/calendar/testing` (join it to the existing `import { installTestCalendar } from "@/calendar/testing";`).
+These need imports added at the top of `src/journals/timeline.test.ts`: `DayPeriod` from `@/calendar` (join it to the existing `import { CalendarDate } from "@/calendar";`), `date` from `@/calendar/testing` (join it to the existing `import { installTestCalendar } from "@/calendar/testing";`), and `customJournal` from `./testing` (join it to the existing `fixedJournal` import — check its exact signature there).
 
-That test asserts two things because the property under test _is_ the agreement between them — a single-sided assertion would not express it.
+The "agrees with contains" test asserts two things because the property under test _is_ the agreement between them — a single-sided assertion would not express it. It must assert on the **accepted** side: a test that picks a rejected week passes even with `#boundEnd`'s widening deleted, because week starts straddle the two candidate bounds. Verify the test has teeth by temporarily making `#boundEnd` return `this.endOf(name)` directly and confirming it fails.
 
 - [ ] **Step 2: Run the tests to verify they fail**
 
