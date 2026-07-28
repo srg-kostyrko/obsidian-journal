@@ -153,7 +153,9 @@ describe("ConnectNoteModal", () => {
       mountModal("inbox/note.md" as VaultPath, container, api);
       await pickDate(modals, "2026-06-15");
       await userEvent.click(screen.getByRole("button", { name: m.connect_note_modal_connect() }));
-      expect(submit).toHaveBeenCalledWith(expect.objectContaining({ action: "connect", journalName: "daily" }));
+      expect(submit).toHaveBeenCalledWith(
+        expect.objectContaining({ action: "connect", journalName: "daily", anchor: "2026-06-15" }),
+      );
     });
 
     it("disables Connect until a date is picked", () => {

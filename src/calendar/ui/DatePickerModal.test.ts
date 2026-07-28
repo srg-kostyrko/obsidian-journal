@@ -4,6 +4,7 @@ import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
 import {
   Calendar,
+  CalendarDate,
   DayPeriod,
   MonthPeriod,
   OpenInterval,
@@ -93,6 +94,22 @@ describe("DatePickerModal", () => {
       renderModal({ picking: "year", selected });
 
       expect(screen.queryAllByTestId("decade-cell").length).toBeGreaterThan(0);
+    });
+
+    it("opens on the bounded period when there is no selection and bounds lie entirely in the past", () => {
+      const end = CalendarDate.today().shift(-2, "y");
+      const bounds = OpenInterval.until(end);
+      renderModal({ picking: "day", selected: null, bounds });
+
+      expect(screen.getByTestId("modal-title-label").textContent).toBe(end.format("MMMM YYYY"));
+    });
+
+    it("opens on the bounded period when there is no selection and bounds lie entirely in the future", () => {
+      const start = CalendarDate.today().shift(2, "y");
+      const bounds = OpenInterval.from(start);
+      renderModal({ picking: "day", selected: null, bounds });
+
+      expect(screen.getByTestId("modal-title-label").textContent).toBe(start.format("MMMM YYYY"));
     });
   });
 

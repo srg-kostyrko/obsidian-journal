@@ -61,7 +61,21 @@ const selectedForHighlight = computed<Period | null>(() => {
   return s.kind === props.picking ? s : null;
 });
 
-const refDate = ref<CalendarDate>(toRaw(props.selected)?.anchor ?? CalendarDate.today());
+// With no selection, seeding on today would open on an out-of-bounds view with every cell
+// greyed out and both nav arrows hidden — no route back in for a timeline that has already
+// ended or has yet to begin. Seed from the near edge of the bounds instead.
+const refDate = ref<CalendarDate>(
+  toRaw(props.selected)?.anchor ??
+    (() => {
+      const today = CalendarDate.today();
+      const bounds = toRaw(props.bounds);
+      if (bounds && !bounds.contains(today)) {
+        if (bounds.end.isSome() && today.isAfter(bounds.end.value)) return bounds.end.value;
+        if (bounds.start.isSome() && today.isBefore(bounds.start.value)) return bounds.start.value;
+      }
+      return today;
+    })(),
+);
 const currentView = ref<View>(targetView(props.picking));
 
 const outer = computed<Period>(() => outerPeriod(currentView.value, toRaw(refDate.value)));

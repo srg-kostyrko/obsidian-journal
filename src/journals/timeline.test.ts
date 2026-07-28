@@ -389,7 +389,7 @@ describe("TimelineService", () => {
       expect(bounds.end.match({ some: (d) => d.toAnchor(), none: () => null })).toBe("2024-01-03");
     });
 
-    it("agrees with contains at the upper edge", () => {
+    it("bounds a weekly journal's upper edge to the end of the week, matching contains", () => {
       const c = buildContainer({
         weekly: fixedJournal(
           "weekly",
@@ -400,7 +400,7 @@ describe("TimelineService", () => {
       const timeline = c.resolve(TimelineService);
       const bounds = timeline.boundsOf("weekly");
       expect(timeline.contains("weekly", "2026-06-01" as AnchorString)).toBe(true);
-      expect(bounds.overlapsPeriod(DayPeriod.containing(date("2026-06-05")))).toBe(true);
+      expect(bounds.end.match({ some: (d) => d.toAnchor(), none: () => null })).toBe("2026-06-07");
     });
 
     it("extends the upper bound to the end of the interval a custom-interval timeline end falls in", () => {
@@ -411,6 +411,21 @@ describe("TimelineService", () => {
       });
       const bounds = c.resolve(TimelineService).boundsOf("custom");
       expect(bounds.end.match({ some: (d) => d.toAnchor(), none: () => null })).toBe("2026-06-07");
+    });
+
+    // Real day-grid cells are actual days for a custom-interval journal — unlike the weekly
+    // case above, where the picker never renders a bare day cell — so this is where the
+    // boundsOf/contains agreement is load-bearing rather than incidentally true.
+    it("agrees with contains at the upper edge for a custom interval", () => {
+      const c = buildContainer({
+        custom: customJournal("custom", "day", 7, "2026-06-01", {
+          timeline: { start: "2026-06-01" as AnchorString, end: { kind: "date", date: "2026-06-03" as AnchorString } },
+        }),
+      });
+      const timeline = c.resolve(TimelineService);
+      const bounds = timeline.boundsOf("custom");
+      expect(timeline.contains("custom", "2026-06-01" as AnchorString)).toBe(true);
+      expect(bounds.overlapsPeriod(DayPeriod.containing(date("2026-06-05")))).toBe(true);
     });
 
     it("rejects the interval past an off-anchor repeats start consistently with contains", () => {
