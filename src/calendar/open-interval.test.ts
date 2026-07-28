@@ -31,6 +31,24 @@ describe("OpenInterval", () => {
     });
   });
 
+  describe("unbounded", () => {
+    it("leaves the start open", () => {
+      expect(OpenInterval.unbounded().start.isNone()).toBe(true);
+    });
+
+    it("leaves the end open", () => {
+      expect(OpenInterval.unbounded().end.isNone()).toBe(true);
+    });
+
+    it("contains any date", () => {
+      expect(OpenInterval.unbounded().contains(date("1999-01-01"))).toBe(true);
+    });
+
+    it("overlaps any period", () => {
+      expect(OpenInterval.unbounded().overlapsPeriod(MonthPeriod.containing(date("2099-12-01")))).toBe(true);
+    });
+  });
+
   describe("until", () => {
     it("creates an interval with None start", () => {
       expect(OpenInterval.until(date("2025-03-10")).start.isNone()).toBe(true);

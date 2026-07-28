@@ -10,6 +10,10 @@ export class OpenInterval {
     return new OpenInterval(Option.some(start), Option.none());
   }
 
+  static unbounded(): OpenInterval {
+    return new OpenInterval(Option.none(), Option.none());
+  }
+
   static until(end: CalendarDate): OpenInterval {
     return new OpenInterval(Option.none(), Option.some(end));
   }
