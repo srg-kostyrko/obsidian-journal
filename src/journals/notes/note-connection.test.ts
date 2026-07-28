@@ -572,7 +572,7 @@ describe("NoteConnectionService", () => {
       expect(notes.find(sourcePath).isSome()).toBe(true);
     });
 
-    it("connects the note in place when the name template resolves to an empty name", async () => {
+    it("does not derive a path when neither rename nor move is requested", async () => {
       const repo = fakeRepo({ daily: fixedJournal("daily", { type: "day" }, { nameTemplate: "" }) });
       const notes = new FakeNotesService();
       const sourcePath = "inbox/note.md" as VaultPath;
@@ -582,6 +582,7 @@ describe("NoteConnectionService", () => {
       const result = await container.resolve(NoteConnectionService).connect("daily", sourcePath, anchor("2026-06-01"));
 
       expect(result.isOk()).toBe(true);
+      expect(notes.find(sourcePath).isSome()).toBe(true);
     });
   });
 });
