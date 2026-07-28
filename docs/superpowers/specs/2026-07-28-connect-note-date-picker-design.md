@@ -49,22 +49,32 @@ Derives the picker's bounds from the same facts `contains()` uses, snapped to wh
 
 - **Start** — `startOf(name)` → `cycle.anchorOf` → `cycle.startOf`. A timeline starting mid-week
   yields that whole week's start, matching `contains()`, which admits a period straddling the start.
-- **End** — `endOf(name)` (which already resolves `never` / `date` / `repeats`), then snapped: take
-  `anchorOf(endDate)`; if that anchor falls _after_ the end date, step back via `previousAnchor`;
-  bound at that period's `cycle.endOf`. For a `repeats` end the snap is a no-op, since `endOf`
-  already returns a period end.
+- **End** — `endOf(name)` (which already resolves `never` / `date` / `repeats`), then snapped
+  outward: take `anchorOf(endDate)` and bound at that period's `cycle.endOf`. For a `repeats` end
+  the snap is a no-op, since `endOf` already returns a period end.
 - An unset start, a `never` end, or an unknown journal leaves that side open. Both open gives
   `OpenInterval.unbounded()`.
 
-Worked example — weekly journal, timeline end `2026-06-03` (a Wednesday):
+Since `e4bf4ebc` ("anchor a week to its first day") every period's anchor **is** its first day, and
+`representative` carries the formatting role that the anchor used to. So for a **fixed** cycle
+`contains()`'s anchor rule and the grid's overlap rule already coincide, and the snapping is an
+identity. It stays because it is what makes them agree, rather than leaving the agreement to a
+coincidence that a future change to either rule would silently break.
+
+The snapping is load-bearing for a **custom-interval** journal, where the picker shows _day_ cells
+while `contains()` judges the _interval_ each day resolves to.
+
+Worked example — custom journal, 7-day intervals from 2026-06-01, timeline end `2026-06-03`:
 
 ```
-snapped bounds -> end = 2026-05-31
-  May 25-31  clickable   anchor May 28 <= Jun 3   accepted by contains()
-  Jun  1-7   disabled    anchor Jun  4 >  Jun 3   rejected by contains()
+snapped bounds -> end = 2026-06-07 (the interval's own end)
+  Jun 1-3   clickable   interval anchor Jun 1 <= Jun 3   accepted by contains()
+  Jun 4-7   clickable   same interval, same anchor       accepted by contains()
+  Jun 8+    disabled    next interval, anchor Jun 8      rejected by contains()
 ```
 
-Without snapping, the Jun 1–7 cell would be clickable but not connectable.
+With a raw bound at Jun 3, the Jun 4–7 day cells would be greyed out even though connecting on any
+of them resolves to an in-timeline interval. The lower bound is symmetric.
 
 This also fixes `startOf()`, which currently builds a `CalendarDate` from `""` when the timeline has
 no start, unlike `endOf()` which guards that case. There is no production caller today, so this is a
@@ -103,8 +113,9 @@ it bounds the timeline editor to its own start date, and must not consume `bound
 
 - `open-interval.test.ts` — `unbounded()` admits any period.
 - `timeline.test.ts` — `boundsOf`: unset start leaves the lower side open; a mid-week start snaps to
-  the week's start; a `never` end leaves the upper side open; a mid-period end date snaps back to the
-  previous period's end; a `repeats` end bounds at the nth period; an unknown journal is unbounded.
+  the week's start; a `never` end leaves the upper side open; a mid-period end date extends to that
+  period's end; a `repeats` end bounds at the nth period; an unknown journal is unbounded; and the
+  bounds agree with `contains()` at the upper edge.
 - `ConnectNoteModal.test.ts` — the two `fireEvent.update` date tests are rewritten to drive
   `FakeModalService.lastOpen().submit(...)`, mirroring `TimelineSection.test.ts`. Added: the picker
   opens with the journal's picking kind; the picker opens with the journal's timeline bounds; Connect

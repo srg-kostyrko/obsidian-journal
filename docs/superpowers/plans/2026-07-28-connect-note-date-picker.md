@@ -358,7 +358,9 @@ git commit -m "fix(journals): report no timeline start instead of an invalid dat
 
 The core of "respect the journal timeline". It derives the picker's bounds from the same facts `contains()` uses, **snapped to whole periods**, so the set of clickable cells equals the set of connectable dates.
 
-Why snapping matters: `contains()` accepts a period by its _anchor_ (`anchor <= end date`), while the calendar grid disables a cell by _overlap_ (`period.start <= bounds.end`). For a weekly journal whose timeline ends Wednesday 2026-06-03, the week Jun 1–7 has its anchor on Thursday Jun 4, so `contains()` rejects it while a raw-date bound would still render it clickable. Snapping the bound back to the previous period's end (Sun 2026-05-31) makes the two rules agree.
+Why snapping matters: `contains()` accepts a period by its _anchor_, while the calendar grid disables a cell by _overlap_ against the raw bound. Since `e4bf4ebc` every period's anchor **is** its first day (`representative` carries the formatting role instead), so for a **fixed** cycle the two rules already agree and the snapping is an identity — keep it anyway, because it is what makes them agree rather than a coincidence.
+
+Snapping is load-bearing for a **custom-interval** journal. There the picker shows _day_ cells while `contains()` judges the _interval_ the day resolves to. For intervals of 7 days from Jun 1 and a timeline ending Wed 2026-06-03: `contains()` accepts every day in the Jun 1–7 interval (its anchor Jun 1 ≤ Jun 3), but a raw bound at Jun 3 would grey out Jun 4–7. Widening the bound to the interval's end (Jun 7) makes the clickable set equal the connectable set. The lower bound is symmetric.
 
 **Files:**
 
@@ -428,7 +430,7 @@ describe("boundsOf", () => {
     expect(bounds.start.match({ some: (d) => d.toAnchor(), none: () => null })).toBe("2026-06-01");
   });
 
-  it("pulls the upper bound back to the last week the timeline accepts", () => {
+  it("extends the upper bound to the end of the week the timeline end falls in", () => {
     const c = buildContainer({
       weekly: fixedJournal(
         "weekly",
@@ -437,7 +439,7 @@ describe("boundsOf", () => {
       ),
     });
     const bounds = c.resolve(TimelineService).boundsOf("weekly");
-    expect(bounds.end.match({ some: (d) => d.toAnchor(), none: () => null })).toBe("2026-05-31");
+    expect(bounds.end.match({ some: (d) => d.toAnchor(), none: () => null })).toBe("2026-06-07");
   });
 
   it("keeps the upper bound at the end date when it already closes a period", () => {
@@ -474,7 +476,7 @@ describe("boundsOf", () => {
     });
     const timeline = c.resolve(TimelineService);
     const bounds = timeline.boundsOf("weekly");
-    const rejectedWeek = WeekPeriod.containing(date("2026-06-03"));
+    const rejectedWeek = WeekPeriod.containing(date("2026-06-10"));
     expect(timeline.contains("weekly", rejectedWeek.anchor.toAnchor())).toBe(false);
     expect(bounds.overlapsPeriod(rejectedWeek)).toBe(false);
   });
@@ -517,16 +519,12 @@ In `src/journals/timeline.ts`, add these three methods to `TimelineService` afte
       .flatMap((a) => this.#cycle.startOf(name, a));
   }
 
-  // Pull back to the last period contains() accepts: it gates the upper edge on the period's
-  // anchor, which can sit past an end date that falls mid-period.
+  // Widen to the whole period the end falls in: contains() admits a period by its anchor, so a
+  // period straddling the end date is still written and its cell must stay selectable.
   #boundEnd(name: string): Option<CalendarDate> {
-    return this.endOf(name).flatMap((d) => {
-      const limit = d.toAnchor();
-      return this.#cycle
-        .anchorOf(name, d)
-        .flatMap((a) => (a <= limit ? Option.some(a) : this.#cycle.previousAnchor(name, a)))
-        .flatMap((a) => this.#cycle.endOf(name, a));
-    });
+    return this.endOf(name)
+      .flatMap((d) => this.#cycle.anchorOf(name, d))
+      .flatMap((a) => this.#cycle.endOf(name, a));
   }
 ```
 
