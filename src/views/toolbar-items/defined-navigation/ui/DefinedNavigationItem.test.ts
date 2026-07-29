@@ -16,6 +16,7 @@ import { ActiveEntryViewModel, type ActiveEntryRef } from "@/notes-calendar/acti
 
 import { provideViewContextStub } from "../../../testing";
 import { provideViewContext, type ViewContext } from "../../../view-context";
+import { definedNavigationConfigFor } from "../defined-navigation-config";
 import { definedNavigationItem } from "../defined-navigation-item";
 
 import type { BlockInstanceId } from "../../../config";
@@ -214,24 +215,28 @@ describe("DefinedNavigationItem", () => {
     expect(button?.disabled).toBe(true);
   });
 
-  it("renders the right chevron when no label is configured", () => {
-    const { result } = mountItem({ target: "day", direction: "next" });
+  it("renders the seeded chevron label", () => {
+    const { result } = mountItem(definedNavigationConfigFor("day", "next"));
     expect(result.getByText("›")).toBeTruthy();
   });
 
   it("renders a custom label in place of the chevron", () => {
-    const { result } = mountItem({ target: "day", direction: "next", label: "Older" });
+    const { result } = mountItem({ ...definedNavigationConfigFor("day", "next"), label: "Older" });
     expect(result.getByText("Older")).toBeTruthy();
+  });
+
+  it("renders no chevron when the label is cleared", () => {
+    const { result } = mountItem({ ...definedNavigationConfigFor("day", "next"), label: "" });
     expect(result.queryByText("›")).toBeNull();
   });
 
-  it("uses the direction default tooltip as the button aria-label", () => {
-    const { result } = mountItem({ target: "day", direction: "previous" });
+  it("uses the seeded tooltip as the button aria-label", () => {
+    const { result } = mountItem(definedNavigationConfigFor("day", "previous"));
     expect(result.getByLabelText(m.command_open_previous())).toBeTruthy();
   });
 
   it("uses a custom tooltip as the button aria-label", () => {
-    const { result } = mountItem({ target: "day", direction: "next", tooltip: "Jump back" });
+    const { result } = mountItem({ ...definedNavigationConfigFor("day", "next"), tooltip: "Jump back" });
     expect(result.getByLabelText("Jump back")).toBeTruthy();
   });
 

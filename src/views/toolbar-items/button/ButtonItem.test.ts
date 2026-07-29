@@ -20,6 +20,7 @@ import { CycleService, NoApplicableJournals, OpenDateFlow } from "@/journals";
 import { provideViewContextStub } from "../../testing";
 import { provideViewContext, type ViewContext } from "../../view-context";
 
+import { buttonConfigFor } from "./button-config";
 import { buttonItem } from "./button-item";
 
 import type { ButtonConfig } from "./button-config";
@@ -102,27 +103,39 @@ beforeAll(() => {
 afterEach(() => cleanup());
 
 describe("ButtonItem", () => {
-  describe("rendering defaults", () => {
-    it("renders the default 'Today' label for current[day]", () => {
-      const { result } = mountItem({ action: { type: "current", mode: "create", levels: ["day"] } });
+  describe("rendering", () => {
+    it("renders the seeded label for a current[day] button", () => {
+      const { result } = mountItem(buttonConfigFor({ type: "current", mode: "create", levels: ["day"] }));
       expect(result.getByText("Today")).toBeTruthy();
     });
 
-    it("overrides default label with config.label when provided", () => {
+    it("renders a custom label in place of the seeded one", () => {
       const { result } = mountItem({
-        action: { type: "current", mode: "create", levels: ["day"] },
+        ...buttonConfigFor({ type: "current", mode: "create", levels: ["day"] }),
         label: "Right now",
       });
       expect(result.getByText("Right now")).toBeTruthy();
-      expect(result.queryByText("Today")).toBeNull();
     });
 
-    it("uses config.tooltip as aria-label when provided", () => {
+    it("uses the configured tooltip as the button aria-label", () => {
       const { result } = mountItem({
-        action: { type: "current", mode: "create", levels: ["day"] },
+        ...buttonConfigFor({ type: "current", mode: "create", levels: ["day"] }),
         tooltip: "Jump to today",
       });
       expect(result.getByLabelText("Jump to today")).toBeTruthy();
+    });
+
+    it("falls back to the tooltip text when the icon is cleared", () => {
+      const { result } = mountItem({
+        ...buttonConfigFor({ type: "pick-date", mode: "navigate", levels: ["day"] }),
+        icon: "",
+      });
+      expect(result.getByText(m.common_pick_a_date())).toBeTruthy();
+    });
+
+    it("shows no text while the seeded icon is present", () => {
+      const { result } = mountItem(buttonConfigFor({ type: "pick-date", mode: "navigate", levels: ["day"] }));
+      expect(result.queryByText(m.common_pick_a_date())).toBeNull();
     });
   });
 
@@ -134,7 +147,7 @@ describe("ButtonItem", () => {
       );
       vi.spyOn(flows, "invoke").mockReturnValue(AsyncResult.err(new NoApplicableJournals(anchor("2026-05-15"))));
 
-      await userEvent.click(result.getByText("Today"));
+      await userEvent.click(result.getByRole("button"));
 
       expect(notices.messages).toContain(m.command_open_unavailable());
     });
@@ -146,7 +159,7 @@ describe("ButtonItem", () => {
       );
       vi.spyOn(flows, "invoke").mockReturnValue(AsyncResult.err(new NoApplicableJournals(anchor("2026-05-15"))));
 
-      await userEvent.click(result.getByText("Today"));
+      await userEvent.click(result.getByRole("button"));
 
       expect(notices.messages).toEqual([]);
     });
@@ -158,7 +171,7 @@ describe("ButtonItem", () => {
         { action: { type: "current", mode: "navigate", levels: ["day"] } },
         { refDate: ref("2026-05-15" as AnchorString) },
       );
-      await userEvent.click(result.getByText("Today"));
+      await userEvent.click(result.getByRole("button"));
       expect(flows.calls).toHaveLength(1);
       expect(flows.calls[0]?.flow).toBe(OpenDateFlow);
       const parameters = flows.calls[0]?.parameters as { existingOnly?: boolean };
@@ -169,7 +182,7 @@ describe("ButtonItem", () => {
       const { result, flows } = mountItem({
         action: { type: "current", mode: "create", levels: ["day"] },
       });
-      await userEvent.click(result.getByText("Today"));
+      await userEvent.click(result.getByRole("button"));
       const parameters = flows.calls[0]?.parameters as { existingOnly?: boolean };
       expect(parameters.existingOnly).toBe(false);
     });
@@ -180,7 +193,7 @@ describe("ButtonItem", () => {
         { action: { type: "current", mode: "navigate", levels: ["day"] } },
         { refDate: ref("2020-01-01" as AnchorString), setRefDate },
       );
-      await userEvent.click(result.getByText("Today"));
+      await userEvent.click(result.getByRole("button"));
       expect(setRefDate).toHaveBeenCalledWith(CalendarDate.today().toAnchor());
     });
 
@@ -190,7 +203,7 @@ describe("ButtonItem", () => {
         { action: { type: "current", mode: "select-only", levels: ["day"] } },
         { setRefDate },
       );
-      await userEvent.click(result.getByText("Today"));
+      await userEvent.click(result.getByRole("button"));
       expect(flows.calls).toHaveLength(0);
       expect(setRefDate).toHaveBeenCalledWith(CalendarDate.today().toAnchor());
     });
@@ -203,7 +216,7 @@ describe("ButtonItem", () => {
         { action: { type: "current", mode: "select-only", levels: ["day"] } },
         { refDate: ref("2020-01-01" as AnchorString), setRefDate },
       );
-      await userEvent.click(result.getByText("Today"));
+      await userEvent.click(result.getByRole("button"));
       expect(setRefDate).toHaveBeenCalledWith(CalendarDate.today().toAnchor());
     });
   });
@@ -341,7 +354,7 @@ describe("ButtonItem", () => {
         {},
         () => Option.some("2026-06-08" as AnchorString),
       );
-      await userEvent.click(result.getByText("Today"));
+      await userEvent.click(result.getByRole("button"));
       expect(flows.calls).toHaveLength(1);
       expect(flows.calls[0]?.flow).toBe(OpenDateFlow);
       const parameters = flows.calls[0]?.parameters as { anchor: string; journalNames: string[] };
@@ -355,7 +368,7 @@ describe("ButtonItem", () => {
         {},
         () => Option.none(),
       );
-      await userEvent.click(result.getByText("Today"));
+      await userEvent.click(result.getByRole("button"));
       expect(flows.calls).toHaveLength(0);
     });
 

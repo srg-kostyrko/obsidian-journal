@@ -1,7 +1,6 @@
 <script setup lang="ts">
 import { Menu } from "obsidian";
 import { match } from "ts-pattern";
-import { computed } from "vue";
 
 import { CalendarDate, periodOfKind } from "@/calendar";
 import type { AnchorString } from "@/calendar";
@@ -17,9 +16,9 @@ import UiButton from "@/ui/UiButton.vue";
 import UiIcon from "@/ui/UiIcon.vue";
 
 import { useViewContext } from "../../../view-context";
-import { resolveButtonAppearance, type ButtonAction, type ButtonConfig, type ButtonLevel } from "../button-config";
 
 import type { BlockInstanceId } from "../../../config";
+import type { ButtonAction, ButtonConfig, ButtonLevel } from "../button-config";
 
 const STEP_SHIFT_UNIT = { week: "w", month: "m", quarter: "q", year: "y" } as const;
 
@@ -34,11 +33,6 @@ const modals = useService(ModalService);
 const cycle = useService(CycleService);
 const notices = useService(NoticeService);
 const scope = useShelfScope(() => context.shelf.value);
-
-const appearance = computed(() => resolveButtonAppearance(props.config.action));
-const icon = computed(() => props.config.icon ?? appearance.value.icon);
-const label = computed(() => props.config.label ?? appearance.value.label);
-const tooltip = computed(() => props.config.tooltip ?? appearance.value.tooltip);
 
 function periodFor(level: ButtonLevel, date: CalendarDate) {
   return periodOfKind(level, date);
@@ -165,9 +159,9 @@ function onClick(event: MouseEvent): void {
 </script>
 
 <template>
-  <UiButton flat :tooltip="tooltip" @click="onClick" @auxclick.middle.prevent="onClick">
-    <UiIcon v-if="icon" :name="icon" />
-    <span v-if="label">{{ label }}</span>
-    <span v-else-if="!icon">{{ tooltip }}</span>
+  <UiButton flat :tooltip="config.tooltip || undefined" @click="onClick" @auxclick.middle.prevent="onClick">
+    <UiIcon v-if="config.icon" :name="config.icon" />
+    <span v-if="config.label">{{ config.label }}</span>
+    <span v-else-if="!config.icon">{{ config.tooltip }}</span>
   </UiButton>
 </template>

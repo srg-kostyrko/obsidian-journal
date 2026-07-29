@@ -692,7 +692,9 @@
                     "levels": [
                       "day"
                     ]
-                  }
+                  },
+                  "icon": "crosshair",
+                  "tooltip": "Pick a date"
                 }
               },
               {
@@ -705,7 +707,9 @@
                     "levels": [
                       "day"
                     ]
-                  }
+                  },
+                  "label": "Today",
+                  "tooltip": "Today"
                 }
               },
               {
@@ -719,7 +723,9 @@
                       "week"
                     ],
                     "journal": "monthly"
-                  }
+                  },
+                  "label": "This week",
+                  "tooltip": "This week"
                 }
               }
             ]
@@ -739,7 +745,9 @@
                     "direction": "prev",
                     "unit": "year",
                     "amount": 1
-                  }
+                  },
+                  "icon": "chevrons-left",
+                  "tooltip": "Previous year"
                 }
               },
               {
@@ -751,7 +759,9 @@
                     "direction": "prev",
                     "unit": "month",
                     "amount": 1
-                  }
+                  },
+                  "icon": "chevron-left",
+                  "tooltip": "Previous month"
                 }
               },
               {
@@ -783,7 +793,9 @@
                     "direction": "next",
                     "unit": "month",
                     "amount": 1
-                  }
+                  },
+                  "icon": "chevron-right",
+                  "tooltip": "Next month"
                 }
               },
               {
@@ -795,7 +807,9 @@
                     "direction": "next",
                     "unit": "year",
                     "amount": 1
-                  }
+                  },
+                  "icon": "chevrons-right",
+                  "tooltip": "Next year"
                 }
               }
             ]
