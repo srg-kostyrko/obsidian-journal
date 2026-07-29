@@ -151,6 +151,19 @@ describe("CustomIntervalsBlock", () => {
     ]);
   });
 
+  it("shifts the rendered window when the reference date changes", async () => {
+    SCOPE.custom = ["foo"];
+    JOURNALS.foo = customJournal("foo", "day", 1, "2026-01-01");
+    const refDate = ref("2026-05-15" as AnchorString);
+    const { container } = mountBlock({ window: "month", hideEmpty: true }, { refDate });
+
+    refDate.value = "2026-07-10" as AnchorString;
+    await nextTick();
+
+    const anchors = [...container.querySelectorAll<HTMLElement>("[data-anchor]")].map((el) => el.dataset.anchor ?? "");
+    expect(anchors.every((anchor) => anchor.startsWith("2026-07"))).toBe(true);
+  });
+
   it("hides a journal with no in-window intervals when hideEmpty is true", () => {
     SCOPE.custom = ["foo", "bar"];
     JOURNALS.foo = customJournal("foo", "day", 1, "2026-01-01");
