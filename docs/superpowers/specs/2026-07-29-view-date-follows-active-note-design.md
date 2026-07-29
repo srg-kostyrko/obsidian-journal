@@ -190,7 +190,13 @@ today:
 
 - `MonthCalendarBlock.vue` — `monthWindowContains(date, anchor, config.before, config.after)`
 - `WeekCalendarBlock.vue` — `weekWindowContains(date, anchor, config.before, config.after)`
-- `CustomIntervalsBlock.vue` — `spanContains(date, …resolveWindow(config.window, anchor))`
+
+`CustomIntervalsBlock.vue` does **not** use the composable: `resolveWindow(kind, anchor)`
+always returns the single period _containing_ the anchor, so its containment test is an
+equivalence — re-centering on a date inside the window produces the identical window.
+Holding would be unobservable for every input, so a window anchor there is dead state. It
+reads `context.refDate` directly. Month and week windows overlap once `before`/`after`
+exceed zero, which is what makes holding observable — and worth having — for them.
 
 `MarkdownTemplateBlock.vue` has no window and drops its `ActiveEntryViewModel` and
 `CycleService` dependencies entirely: `rendered` binds `{{date}}` to
