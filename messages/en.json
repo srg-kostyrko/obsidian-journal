@@ -219,7 +219,7 @@
   ],
   "command_open_next": "Open next note",
   "command_open_previous": "Open previous note",
-  "command_open_calendar": "Open calendar",
+  "command_open_view": "Open {name}",
   "command_view_change_shelf": "Change shelf in {name}",
   "shelf_picker_placeholder": "Search shelves",
   "command_palette_journal_name": "{journal}: {name}",

@@ -256,7 +256,7 @@
 	],
 	"command_open_next": "다음 노트 열기",
 	"command_open_previous": "이전 노트 열기",
-	"command_open_calendar": "캘린더 열기",
+	"command_open_view": "{name} 열기",
 	"command_view_change_shelf": "{name}의 선반 변경",
 	"shelf_picker_placeholder": "선반 검색",
 	"command_palette_journal_name": "{journal}: {name}",

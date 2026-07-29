@@ -256,7 +256,7 @@
 	],
 	"command_open_next": "Abra a próxima nota",
 	"command_open_previous": "Abra a nota anterior",
-	"command_open_calendar": "Abrir calendário",
+	"command_open_view": "Abrir {name}",
 	"command_view_change_shelf": "Alterar prateleira em {name}",
 	"shelf_picker_placeholder": "Pesquisar prateleiras",
 	"command_palette_journal_name": "{journal}: {name}",

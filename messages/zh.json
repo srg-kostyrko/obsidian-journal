@@ -256,7 +256,7 @@
 	],
 	"command_open_next": "打开下一张笔记",
 	"command_open_previous": "打开上一条笔记",
-	"command_open_calendar": "打开日历",
+	"command_open_view": "打开 {name}",
 	"command_view_change_shelf": "更改 {name} 中的架子",
 	"shelf_picker_placeholder": "搜索架子",
 	"command_palette_journal_name": "{journal}: {name}",

@@ -1,5 +1,6 @@
 import { $, $$, browser, expect } from "@wdio/globals";
 
+import { paletteCount } from "../support/commands.js";
 import { NoFreeDayError } from "../support/errors.js";
 import { waitForNotice } from "../support/notices.js";
 import {
@@ -566,6 +567,12 @@ describe("calendar view", () => {
       await openCalendarView();
       await $(MONTH_VIEW).waitForExist({ timeoutMsg: "month grid did not render" });
       await expect($(`${LIVE_LEAF} .notes-month-view__header`)).not.toBeExisting();
+    });
+
+    // The seeded view used to carry both its own open command and a separate fixed
+    // `open-calendar` alias, which the palette showed as two identical rows.
+    it("lists the seeded Calendar view once in the command palette", async () => {
+      expect(await paletteCount("Open Calendar")).toBe(1);
     });
   });
 

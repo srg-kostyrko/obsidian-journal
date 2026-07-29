@@ -256,7 +256,7 @@
 	],
 	"command_open_next": "Открыть следующую заметку",
 	"command_open_previous": "Открыть предыдущую заметку",
-	"command_open_calendar": "Открыть календарь",
+	"command_open_view": "Открыть {name}",
 	"command_view_change_shelf": "Изменить полку в {name}",
 	"shelf_picker_placeholder": "Поиск полок",
 	"command_palette_journal_name": "{journal}: {name}",

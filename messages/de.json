@@ -256,7 +256,7 @@
 	],
 	"command_open_next": "Nächste Notiz öffnen",
 	"command_open_previous": "Vorherige Notiz öffnen",
-	"command_open_calendar": "Kalender öffnen",
+	"command_open_view": "{name} öffnen",
 	"command_view_change_shelf": "Regal in {name} ändern",
 	"shelf_picker_placeholder": "Regale durchsuchen",
 	"command_palette_journal_name": "{journal}: {name}",

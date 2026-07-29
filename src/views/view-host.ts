@@ -44,30 +44,6 @@ export class ViewHostService {
       this.dispose();
     });
     this.#registerAll();
-    this.#registerStableCommand();
-  }
-
-  // v2 exposed one fixed `open-calendar` command id users bound hotkeys to. The alias
-  // targets the seeded Calendar view, or the first remaining view when that one is gone,
-  // and hides itself only when no views exist at all.
-  #registerStableCommand(): void {
-    this.#commands.register({
-      id: "open-calendar",
-      name: m.command_open_calendar(),
-      icon: FALLBACK_VIEW_ICON,
-      ribbon: false,
-      check: () => this.#stableTarget() !== null,
-      execute: () => {
-        const id = this.#stableTarget();
-        if (id !== null) void this.open(id);
-      },
-    });
-  }
-
-  #stableTarget(): ViewId | null {
-    if (this.#repo.get(DEFAULT_CALENDAR_VIEW_ID).isSome()) return DEFAULT_CALENDAR_VIEW_ID;
-    for (const [id] of this.#repo.find().entries()) return id;
-    return null;
   }
 
   async #openStartupViews(): Promise<void> {
@@ -161,7 +137,7 @@ export class ViewHostService {
   #commandDescriptorFor(id: ViewId, view: View) {
     return {
       id: commandIdOf(id),
-      name: `Open ${view.name}`,
+      name: m.command_open_view({ name: view.name }),
       icon: view.icon || FALLBACK_VIEW_ICON,
       ribbon: view.showInRibbon,
       execute: () => void this.open(id),
@@ -260,12 +236,16 @@ function viewTypeOf(id: ViewId): string {
   return `journal-view:${id}`;
 }
 
+// v2 exposed one fixed `open-calendar` command id users bound hotkeys to. The seeded
+// Calendar view owns that id as its own open command, so those hotkeys keep working
+// without a second command shadowing it in the palette.
 function commandIdOf(id: ViewId): string {
-  return `journal:open-view:${id}`;
+  if (id === DEFAULT_CALENDAR_VIEW_ID) return "open-calendar";
+  return `open-view:${id}`;
 }
 
 function shelfCommandIdOf(id: ViewId): string {
-  return `journal:change-shelf:${id}`;
+  return `change-shelf:${id}`;
 }
 
 class StaleLeaf extends ItemView {

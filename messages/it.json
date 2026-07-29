@@ -256,7 +256,7 @@
 	],
 	"command_open_next": "Apri la nota successiva",
 	"command_open_previous": "Apri la nota precedente",
-	"command_open_calendar": "Apri il calendario",
+	"command_open_view": "Apri {name}",
 	"command_view_change_shelf": "Cambia mensola in {name}",
 	"shelf_picker_placeholder": "Cerca mensole",
 	"command_palette_journal_name": "{journal}: {name}",

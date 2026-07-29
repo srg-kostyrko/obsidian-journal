@@ -256,7 +256,7 @@
 	],
 	"command_open_next": "Abrir la siguiente nota",
 	"command_open_previous": "Abrir nota anterior",
-	"command_open_calendar": "Abrir calendario",
+	"command_open_view": "Abrir {name}",
 	"command_view_change_shelf": "Cambiar estante en {name}",
 	"shelf_picker_placeholder": "Buscar estantes",
 	"command_palette_journal_name": "{journal}: {name}",

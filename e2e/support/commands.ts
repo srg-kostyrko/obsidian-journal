@@ -61,3 +61,18 @@ export async function paletteLists(text: string): Promise<boolean> {
   await closePalette();
   return present;
 }
+
+// How many palette rows carry `text`. A count rather than paletteLists' boolean because two
+// commands registered under the same label are indistinguishable from one by existence alone.
+// Matched case-insensitively in JS rather than through the `*=` selector, which is case-
+// sensitive and would let a near-twin row differing only in case slip past the count.
+export async function paletteCount(text: string): Promise<number> {
+  await openPalette();
+  await promptType(text);
+  const labels = await $(PROMPT)
+    .$$(".suggestion-item")
+    .map((row) => row.getText());
+  await closePalette();
+  const needle = text.toLowerCase();
+  return labels.filter((label) => label.toLowerCase().includes(needle)).length;
+}

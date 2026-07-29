@@ -256,7 +256,7 @@
 	],
 	"command_open_next": "次のノートを開く",
 	"command_open_previous": "前のノートを開く",
-	"command_open_calendar": "カレンダーを開く",
+	"command_open_view": "{name} を開く",
 	"command_view_change_shelf": "{name} の棚を変更",
 	"shelf_picker_placeholder": "棚を検索",
 	"command_palette_journal_name": "{journal}: {name}",

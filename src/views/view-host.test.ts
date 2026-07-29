@@ -36,7 +36,7 @@ function seedView(id: string, overrides: Partial<View> = {}): View {
 }
 
 function openVia(host: ReturnType<typeof build>["host"], id: string): void {
-  host.commands.get(`journal:open-view:${id}`)?.callback?.();
+  host.commands.get(`open-view:${id}`)?.callback?.();
 }
 
 function build(seeds: Record<string, View> = {}, shelves: Record<string, ShelfConfig> = {}) {
@@ -72,24 +72,24 @@ describe("ViewHostService", () => {
 
     it("registers a command per seeded view", () => {
       const { host } = build({ a: seedView("a") });
-      expect(host.commands.has("journal:open-view:a")).toBe(true);
+      expect(host.commands.has("open-view:a")).toBe(true);
     });
 
     it("adds a ribbon icon when showInRibbon is true", () => {
       const { host } = build({ a: seedView("a", { showInRibbon: true }) });
       const ribbonIds = host.ribbonIcons.map((r) => r.id);
-      expect(ribbonIds).toContain("journal-command:journal:open-view:a");
+      expect(ribbonIds).toContain("journal-command:open-view:a");
     });
 
     it("skips the ribbon icon when showInRibbon is false", () => {
       const { host } = build({ b: seedView("b") });
       const ribbonIds = host.ribbonIcons.map((r) => r.id);
-      expect(ribbonIds).not.toContain("journal-command:journal:open-view:b");
+      expect(ribbonIds).not.toContain("journal-command:open-view:b");
     });
 
     it("registers the command with a generic icon when the view has no icon", () => {
       const { host } = build({ a: seedView("a", { icon: "" }) });
-      expect(host.commands.get("journal:open-view:a")?.icon).toBe(FALLBACK_VIEW_ICON);
+      expect(host.commands.get("open-view:a")?.icon).toBe(FALLBACK_VIEW_ICON);
     });
   });
 
@@ -109,7 +109,7 @@ describe("ViewHostService", () => {
       storage.a.name = "New";
       events.emit("updated", "a" as ViewId, { name: "New" });
       expect(host.registeredViews.size).toBe(before);
-      expect(host.commands.get("journal:open-view:a")?.name).toBe("Open New");
+      expect(host.commands.get("open-view:a")?.name).toBe("Open New");
     });
 
     it("refreshes an open leaf's header so a changed icon shows without reopening", async () => {
@@ -141,14 +141,14 @@ describe("ViewHostService", () => {
     it("removes the command", () => {
       const { host, events } = build({ a: seedView("a") });
       events.emit("deleted", "a" as ViewId);
-      expect(host.commands.has("journal:open-view:a")).toBe(false);
+      expect(host.commands.has("open-view:a")).toBe(false);
     });
 
     it("removes the ribbon icon if it was added", () => {
       const { host, events } = build({ a: seedView("a", { showInRibbon: true }) });
-      expect(host.ribbonIcons.some((r) => r.id === "journal-command:journal:open-view:a")).toBe(true);
+      expect(host.ribbonIcons.some((r) => r.id === "journal-command:open-view:a")).toBe(true);
       events.emit("deleted", "a" as ViewId);
-      expect(host.ribbonIcons.some((r) => r.id === "journal-command:journal:open-view:a")).toBe(false);
+      expect(host.ribbonIcons.some((r) => r.id === "journal-command:open-view:a")).toBe(false);
     });
   });
 
@@ -166,59 +166,60 @@ describe("ViewHostService", () => {
   describe("change-shelf command", () => {
     it("registers a change-shelf command per view", () => {
       const { host } = build({ a: seedView("a") });
-      expect(host.commands.has("journal:change-shelf:a")).toBe(true);
+      expect(host.commands.has("change-shelf:a")).toBe(true);
     });
 
     it("hides the command when no shelves exist", () => {
       const { host } = build({ a: seedView("a") });
       openVia(host, "a");
-      expect(host.commands.get("journal:change-shelf:a")?.checkCallback?.(true)).toBe(false);
+      expect(host.commands.get("change-shelf:a")?.checkCallback?.(true)).toBe(false);
     });
 
     it("hides the command while the view is not open", () => {
       const { host } = build({ a: seedView("a") }, { work: shelf("work") });
-      expect(host.commands.get("journal:change-shelf:a")?.checkCallback?.(true)).toBe(false);
+      expect(host.commands.get("change-shelf:a")?.checkCallback?.(true)).toBe(false);
     });
 
     it("offers all-journals plus every shelf when invoked", async () => {
       const { host, suggests } = build({ a: seedView("a") }, { work: shelf("work"), home: shelf("home") });
       openVia(host, "a");
       await Promise.resolve();
-      host.commands.get("journal:change-shelf:a")?.checkCallback?.(false);
+      host.commands.get("change-shelf:a")?.checkCallback?.(false);
       expect(suggests.lastOpen().input).toEqual([m.common_label_all_journals(), "work", "home"]);
     });
   });
 
-  describe("stable open-calendar command", () => {
-    // v2 exposed one fixed `open-calendar` id users bound hotkeys to; the alias keeps
-    // those bindings working across the dynamic per-view commands.
-    it("registers the fixed open-calendar id alongside per-view commands", () => {
-      const { host } = build({ a: seedView("a") });
+  describe("default Calendar view command", () => {
+    // v2 exposed one fixed `open-calendar` id users bound hotkeys to; the seeded view owns
+    // that id so those bindings survive without a second command twinning it in the palette.
+    it("registers the default Calendar view under the fixed open-calendar id", () => {
+      const { host } = build({ [DEFAULT_CALENDAR_VIEW_ID]: seedView(DEFAULT_CALENDAR_VIEW_ID) });
       expect(host.commands.has("open-calendar")).toBe(true);
     });
 
+    it("leaves the default Calendar view without a generated open command", () => {
+      const { host } = build({ [DEFAULT_CALENDAR_VIEW_ID]: seedView(DEFAULT_CALENDAR_VIEW_ID) });
+      expect(host.commands.has(`open-view:${DEFAULT_CALENDAR_VIEW_ID}`)).toBe(false);
+    });
+
     it("opens the default Calendar view when invoked", async () => {
-      const { host } = build({
-        a: seedView("a"),
-        [DEFAULT_CALENDAR_VIEW_ID]: seedView(DEFAULT_CALENDAR_VIEW_ID),
-      });
-      host.commands.get("open-calendar")?.checkCallback?.(false);
+      const { host } = build({ [DEFAULT_CALENDAR_VIEW_ID]: seedView(DEFAULT_CALENDAR_VIEW_ID) });
+      host.commands.get("open-calendar")?.callback?.();
       await Promise.resolve();
       expect(host.workspace.viewStateCalls).toEqual([
         { type: `journal-view:${DEFAULT_CALENDAR_VIEW_ID}`, placement: "right" },
       ]);
     });
 
-    it("falls back to the first view when the default Calendar view is gone", async () => {
-      const { host } = build({ a: seedView("a") });
-      host.commands.get("open-calendar")?.checkCallback?.(false);
-      await Promise.resolve();
-      expect(host.workspace.viewStateCalls).toEqual([{ type: "journal-view:a", placement: "right" }]);
+    it("removes the fixed command when the default Calendar view is deleted", () => {
+      const { host, events } = build({ [DEFAULT_CALENDAR_VIEW_ID]: seedView(DEFAULT_CALENDAR_VIEW_ID) });
+      events.emit("deleted", DEFAULT_CALENDAR_VIEW_ID);
+      expect(host.commands.has("open-calendar")).toBe(false);
     });
 
-    it("is hidden from the palette when no views exist", () => {
-      const { host } = build({});
-      expect(host.commands.get("open-calendar")?.checkCallback?.(true)).toBe(false);
+    it("registers no fixed command when the default Calendar view is absent", () => {
+      const { host } = build({ a: seedView("a") });
+      expect(host.commands.has("open-calendar")).toBe(false);
     });
   });
 

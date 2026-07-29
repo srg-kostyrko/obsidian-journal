@@ -256,7 +256,7 @@
 	],
 	"command_open_next": "Відкрити наступну нотатку",
 	"command_open_previous": "Відкрити попередню нотатку",
-	"command_open_calendar": "Відкрити календар",
+	"command_open_view": "Відкрити {name}",
 	"command_view_change_shelf": "Змінити полицю в {name}",
 	"shelf_picker_placeholder": "Пошук полиць",
 	"command_palette_journal_name": "{journal}: {name}",
