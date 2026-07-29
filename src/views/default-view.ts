@@ -33,6 +33,7 @@ export function defaultCalendarView(): View {
     leaf: "right",
     openOnStartup: true,
     rememberDate: false,
+    followActiveDate: true,
     blocks: [
       {
         id: TOOLBAR_ACTIONS_BLOCK_ID,

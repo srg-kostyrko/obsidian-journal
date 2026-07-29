@@ -80,6 +80,7 @@ export class ViewsService {
         leaf: "right",
         openOnStartup: false,
         rememberDate: false,
+        followActiveDate: true,
         blocks: [],
       };
       return yield* this.#repo.create(view);
@@ -111,7 +112,17 @@ export class ViewsService {
   update(
     id: ViewId,
     patch: Partial<
-      Pick<View, "name" | "icon" | "defaultShelf" | "showInRibbon" | "leaf" | "openOnStartup" | "rememberDate">
+      Pick<
+        View,
+        | "name"
+        | "icon"
+        | "defaultShelf"
+        | "showInRibbon"
+        | "leaf"
+        | "openOnStartup"
+        | "rememberDate"
+        | "followActiveDate"
+      >
     >,
   ): AsyncResult<void, UnknownViewError | ViewsLifecycleError> {
     return attempt.in(this, async function* () {

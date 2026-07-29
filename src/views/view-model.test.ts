@@ -18,6 +18,7 @@ function makeView(id: string, name: string): View {
     leaf: "right",
     openOnStartup: false,
     rememberDate: false,
+    followActiveDate: true,
     blocks: [],
   };
 }

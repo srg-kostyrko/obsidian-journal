@@ -8,6 +8,7 @@ import { m } from "@/i18n";
 import { provideInjectorOnApp, type Injector } from "@/infrastructure/di";
 import { InternalObsidianAppToken } from "@/infrastructure/host/internal/tokens";
 import { LoggerFactoryToken } from "@/infrastructure/logger";
+import { useShelfScope } from "@/notes-calendar/use-shelf-scope";
 import { ShelvesRepository } from "@/shelves";
 
 import { FALLBACK_VIEW_ICON, type ViewId } from "./config";
@@ -15,6 +16,7 @@ import { resolveLeafShelf } from "./leaf-shelf";
 import { ViewsRepository } from "./repository";
 import { ViewsService } from "./service";
 import ViewErrorPanel from "./ui/ViewErrorPanel.vue";
+import { useFollowActiveNote } from "./use-follow-active-note";
 import { provideViewContext, type ViewContext } from "./view-context";
 
 interface JournalViewLeafState {
@@ -144,6 +146,16 @@ function buildRootComponent(viewId: ViewId, leafState: JournalViewLeafState, inj
         },
       };
       provideViewContext(context);
+
+      const scope = useShelfScope(() => context.shelf.value);
+      useFollowActiveNote({
+        enabled: () => view.value?.followActiveDate ?? true,
+        inScope: (name) => scope.all.value.includes(name),
+        onFollow: (date) => {
+          followedAnchor.value = date;
+          leafState.refDate = date;
+        },
+      });
 
       return () => {
         const current = view.value;

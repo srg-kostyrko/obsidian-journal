@@ -5,9 +5,15 @@ import { describe, expect, it } from "vitest";
 import type { AnchorString } from "@/calendar/types";
 import { m } from "@/i18n";
 import { Container, InjectorToken } from "@/infrastructure/di";
+import { WorkspaceService } from "@/infrastructure/host";
 import { createFakeHost } from "@/infrastructure/host/internal/testing";
 import { InternalObsidianAppToken, InternalPluginToken } from "@/infrastructure/host/internal/tokens";
+import { FakeWorkspaceService } from "@/infrastructure/host/testing";
 import { createLoggerTestingModule } from "@/infrastructure/logger/testing";
+import { CycleService, JournalsIndex, JournalsRepository, JournalsViewModel } from "@/journals";
+import { fakeRepo } from "@/journals/testing";
+import { ActiveEntryViewModel } from "@/notes-calendar";
+import { FakeActiveEntryViewModel } from "@/notes-calendar/testing";
 import { ShelvesEventsToken, ShelvesRepository } from "@/shelves";
 import type { ShelvesEvents } from "@/shelves";
 import { fakeShelvesRepo } from "@/shelves/testing";
@@ -27,6 +33,17 @@ import type { WorkspaceLeaf } from "obsidian";
 
 const noop = () => null;
 
+// The root component's follow-active-note watcher (Task 2) resolves these regardless of
+// whether a test cares about following; every container that reaches onOpen needs them wired.
+function registerFollowDependencies(c: Container): void {
+  c.register(JournalsRepository).useValue(fakeRepo({}));
+  c.register(JournalsViewModel).useClass(JournalsViewModel);
+  c.register(JournalsIndex).useClass(JournalsIndex);
+  c.register(CycleService).useClass(CycleService);
+  c.register(WorkspaceService).useValue(new FakeWorkspaceService() as unknown as WorkspaceService);
+  c.register(ActiveEntryViewModel).useValue(new FakeActiveEntryViewModel() as unknown as ActiveEntryViewModel);
+}
+
 function seedView(overrides: Partial<View> = {}): View {
   return {
     id: "abc" as ViewId,
@@ -37,6 +54,7 @@ function seedView(overrides: Partial<View> = {}): View {
     leaf: "right",
     openOnStartup: false,
     rememberDate: false,
+    followActiveDate: true,
     blocks: [],
     ...overrides,
   };
@@ -56,6 +74,7 @@ function build(view: View = seedView()) {
   c.register(ShelvesRepository).useValue(fakeShelvesRepo());
   c.register(ShelvesEventsToken).useValue(createNanoEvents<ShelvesEvents>());
   c.register(ViewsService).useClass(ViewsService);
+  registerFollowDependencies(c);
   const containerEl = document.createElement("div");
   const leafStub = { containerEl };
   const injector = c.resolve(InjectorToken);
@@ -142,6 +161,7 @@ describe("JournalViewLeaf", () => {
       c.register(ShelvesRepository).useValue(fakeShelvesRepo());
       c.register(ShelvesEventsToken).useValue(createNanoEvents<ShelvesEvents>());
       c.register(ViewsService).useClass(ViewsService);
+      registerFollowDependencies(c);
       const injector = c.resolve(InjectorToken);
       const containerEl = document.createElement("div");
       const leafStub = { containerEl };
@@ -203,6 +223,7 @@ describe("JournalViewLeaf", () => {
       c.register(ToolbarItemsService).useClass(ToolbarItemsService);
       c.register(ShelvesEventsToken).useValue(createNanoEvents<ShelvesEvents>());
       c.register(ViewsService).useClass(ViewsService);
+      registerFollowDependencies(c);
       const containerEl = document.createElement("div");
       const leafStub = { containerEl };
       const injector = c.resolve(InjectorToken);
@@ -243,6 +264,7 @@ describe("JournalViewLeaf", () => {
       c.register(ShelvesRepository).useValue(fakeShelvesRepo());
       c.register(ShelvesEventsToken).useValue(createNanoEvents<ShelvesEvents>());
       c.register(ViewsService).useClass(ViewsService);
+      registerFollowDependencies(c);
       const containerEl = document.createElement("div");
       const leafStub = { containerEl };
       const injector = c.resolve(InjectorToken);

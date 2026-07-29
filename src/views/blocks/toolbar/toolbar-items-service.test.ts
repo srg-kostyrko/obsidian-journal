@@ -45,6 +45,7 @@ function viewWith(items: ToolbarItemInstance[]): View {
     leaf: "right",
     openOnStartup: false,
     rememberDate: false,
+    followActiveDate: true,
     blocks: [{ id: "b1" as BlockInstanceId, key: "toolbar", config: { items } }],
   };
 }

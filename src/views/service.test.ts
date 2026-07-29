@@ -70,6 +70,7 @@ function viewScopedTo(shelf: string | null): View {
     leaf: "right",
     openOnStartup: false,
     rememberDate: false,
+    followActiveDate: true,
     blocks: [],
   };
 }
@@ -193,6 +194,7 @@ describe("ViewsService", () => {
           leaf: "right",
           openOnStartup: false,
           rememberDate: false,
+          followActiveDate: true,
           blocks: [{ id: blockId, key: "test-block", config: { nested: reactive({ count: 1 }) } }],
         },
       });

@@ -36,6 +36,7 @@ function seedView(id: string, overrides: Partial<View> = {}): View {
     leaf: "right",
     openOnStartup: false,
     rememberDate: false,
+    followActiveDate: true,
     blocks: [],
     ...overrides,
   };

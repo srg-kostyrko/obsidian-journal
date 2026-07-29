@@ -77,6 +77,13 @@ const rememberDateValue = computed<boolean>({
   },
 });
 
+const followActiveDateValue = computed<boolean>({
+  get: () => view.value?.followActiveDate ?? true,
+  set: (next) => {
+    void viewsService.update(viewId, { followActiveDate: next });
+  },
+});
+
 const leafValue = computed<string>({
   get: () => view.value?.leaf ?? "right",
   set: (next) => {
@@ -134,6 +141,11 @@ function addBlock(): void {
     <UiSettingRow :name="m.view_edit_remember_date_label()">
       <template #description>{{ m.view_edit_remember_date_description() }}</template>
       <UiToggle v-model="rememberDateValue" />
+    </UiSettingRow>
+
+    <UiSettingRow :name="m.view_edit_follow_active_date_label()">
+      <template #description>{{ m.view_edit_follow_active_date_description() }}</template>
+      <UiToggle v-model="followActiveDateValue" />
     </UiSettingRow>
 
     <UiSettingRow :name="m.view_edit_leaf_label()">

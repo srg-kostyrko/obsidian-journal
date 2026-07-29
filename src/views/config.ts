@@ -39,6 +39,9 @@ export const viewSchema = v.object({
   // When off (v2 default), a fresh launch centers the calendar on today; when on, the last
   // viewed date is persisted and restored across restarts.
   rememberDate: v.optional(v.boolean(), false),
+  // Following writes the opened note's date into this view's date; each calendar block's
+  // window layout decides whether that actually scrolls its grid.
+  followActiveDate: v.optional(v.boolean(), true),
   blocks: v.array(viewBlockInstanceSchema),
 });
 
@@ -57,6 +60,7 @@ export const viewsCollection = defineCollection(
     leaf: "right" as const,
     openOnStartup: false,
     rememberDate: false,
+    followActiveDate: true,
     blocks: [],
   }),
   { seed: () => ({ [DEFAULT_CALENDAR_VIEW_ID]: defaultCalendarView() }) },
