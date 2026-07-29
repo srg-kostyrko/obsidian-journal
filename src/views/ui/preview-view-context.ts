@@ -1,9 +1,9 @@
-import { computed } from "vue";
+import { computed, shallowRef } from "vue";
 
 import { Clock, type AnchorString } from "@/calendar";
 import { useService } from "@/infrastructure/di";
 
-import { provideViewContext } from "../view-context";
+import { provideViewContext, type RefDateOrigin } from "../view-context";
 import { ViewsViewModel } from "../view-model";
 
 import type { ViewId } from "../config";
@@ -19,6 +19,7 @@ export function provideViewPreviewContext(viewId: ViewId): void {
     viewId,
     viewName: computed(() => view.value?.name ?? ""),
     refDate: computed(() => Clock.now().format("YYYY-MM-DD") as AnchorString),
+    refDateOrigin: shallowRef<RefDateOrigin>("navigate"),
     shelf: computed(() => view.value?.defaultShelf ?? null),
     preview: true,
     setRefDate: noop,

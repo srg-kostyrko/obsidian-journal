@@ -7,13 +7,14 @@ import type { AnchorString } from "@/calendar/types";
 import { provideViewContext, useViewContext } from "./view-context";
 
 import type { ViewId } from "./config";
-import type { ViewContext } from "./view-context";
+import type { RefDateOrigin, ViewContext } from "./view-context";
 
 function buildContext(overrides: Partial<ViewContext> = {}): ViewContext {
   return {
     viewId: "abc" as ViewId,
     viewName: ref("Calendar"),
     refDate: ref("2026-05-28" as AnchorString),
+    refDateOrigin: ref<RefDateOrigin>("navigate"),
     shelf: ref(null),
     preview: false,
     setRefDate: vi.fn(),

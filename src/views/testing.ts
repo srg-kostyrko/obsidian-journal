@@ -5,7 +5,7 @@ import { defineComponent, h, ref } from "vue";
 import type { AnchorString } from "@/calendar/types";
 
 import { ViewsRepository } from "./repository";
-import { provideViewContext, type ViewContext } from "./view-context";
+import { provideViewContext, type RefDateOrigin, type ViewContext } from "./view-context";
 
 import type { BlockInstanceId, View, ViewId } from "./config";
 import type { ViewBlockDefinition } from "./define-view-block";
@@ -20,6 +20,7 @@ export function provideViewContextStub(partial: Partial<ViewContext> = {}): View
     viewId: "stub-view" as ViewId,
     viewName: ref("Stub"),
     refDate: ref("2026-01-01" as AnchorString),
+    refDateOrigin: ref<RefDateOrigin>("navigate"),
     shelf: ref(null),
     preview: false,
     setRefDate: () => undefined,

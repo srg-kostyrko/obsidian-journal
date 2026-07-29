@@ -1,6 +1,6 @@
 import { ItemView, type WorkspaceLeaf } from "obsidian";
 import * as v from "valibot";
-import { computed, createApp, defineComponent, h, reactive, type App as VueApp, type VNode } from "vue";
+import { computed, createApp, defineComponent, h, reactive, shallowRef, type App as VueApp, type VNode } from "vue";
 
 import { CalendarDate } from "@/calendar/calendar-date";
 import type { AnchorString } from "@/calendar/types";
@@ -122,15 +122,21 @@ function buildRootComponent(viewId: ViewId, leafState: JournalViewLeafState, inj
 
       const view = computed(() => repo.get(viewId).match({ some: (current) => current, none: () => null }));
 
+      // Set only by the view-level follow writer (Task 2) and cleared by every explicit
+      // navigation, so refDateOrigin can tell the two apart without a second date.
+      const followedAnchor = shallowRef<AnchorString | null>(null);
+
       const context: ViewContext = {
         viewId,
         viewName: computed(() => view.value?.name ?? ""),
         refDate: computed(() => leafState.refDate ?? todayAnchor()),
+        refDateOrigin: computed(() => (leafState.refDate === followedAnchor.value ? "follow" : "navigate")),
         shelf: computed(() =>
           resolveLeafShelf(leafState.shelf, view.value?.defaultShelf ?? null, (name) => shelves.get(name).isSome()),
         ),
         preview: false,
         setRefDate: (date) => {
+          followedAnchor.value = null;
           leafState.refDate = date;
         },
         setShelf: (shelf) => {
