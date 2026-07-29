@@ -13,6 +13,6 @@ export const spacerItem = defineToolbarItem({
   label: m.view_toolbar_spacer_label(),
   description: m.view_toolbar_spacer_description(),
   schema,
-  defaultConfig: {},
+  defaultConfig: () => ({}),
   component: SpacerItem,
 });

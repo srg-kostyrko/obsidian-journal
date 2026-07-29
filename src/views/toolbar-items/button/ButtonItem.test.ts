@@ -125,6 +125,14 @@ describe("ButtonItem", () => {
       expect(result.getByLabelText("Jump to today")).toBeTruthy();
     });
 
+    it("omits the aria-label attribute when the tooltip is emptied", () => {
+      const { result } = mountItem({
+        ...buttonConfigFor({ type: "current", mode: "create", levels: ["day"] }),
+        tooltip: "",
+      });
+      expect(result.getByRole("button").getAttribute("aria-label")).toBeNull();
+    });
+
     it("falls back to the tooltip text when the icon is cleared", () => {
       const { result } = mountItem({
         ...buttonConfigFor({ type: "pick-date", mode: "navigate", levels: ["day"] }),
@@ -142,7 +150,7 @@ describe("ButtonItem", () => {
   describe("navigate mode with nothing to open", () => {
     it("notices when no note exists at the picked date", async () => {
       const { result, flows, notices } = mountItem(
-        { action: { type: "current", mode: "navigate", levels: ["day"] } },
+        buttonConfigFor({ type: "current", mode: "navigate", levels: ["day"] }),
         { refDate: ref("2026-05-15" as AnchorString) },
       );
       vi.spyOn(flows, "invoke").mockReturnValue(AsyncResult.err(new NoApplicableJournals(anchor("2026-05-15"))));
@@ -154,7 +162,7 @@ describe("ButtonItem", () => {
 
     it("stays silent in create mode when no journal covers the date", async () => {
       const { result, flows, notices } = mountItem(
-        { action: { type: "current", mode: "create", levels: ["day"] } },
+        buttonConfigFor({ type: "current", mode: "create", levels: ["day"] }),
         { refDate: ref("2026-05-15" as AnchorString) },
       );
       vi.spyOn(flows, "invoke").mockReturnValue(AsyncResult.err(new NoApplicableJournals(anchor("2026-05-15"))));
@@ -167,10 +175,9 @@ describe("ButtonItem", () => {
 
   describe("click — single level", () => {
     it("invokes OpenDateFlow with existingOnly=true when mode is 'navigate'", async () => {
-      const { result, flows } = mountItem(
-        { action: { type: "current", mode: "navigate", levels: ["day"] } },
-        { refDate: ref("2026-05-15" as AnchorString) },
-      );
+      const { result, flows } = mountItem(buttonConfigFor({ type: "current", mode: "navigate", levels: ["day"] }), {
+        refDate: ref("2026-05-15" as AnchorString),
+      });
       await userEvent.click(result.getByRole("button"));
       expect(flows.calls).toHaveLength(1);
       expect(flows.calls[0]?.flow).toBe(OpenDateFlow);
@@ -179,9 +186,7 @@ describe("ButtonItem", () => {
     });
 
     it("invokes OpenDateFlow with existingOnly=false when mode is 'create'", async () => {
-      const { result, flows } = mountItem({
-        action: { type: "current", mode: "create", levels: ["day"] },
-      });
+      const { result, flows } = mountItem(buttonConfigFor({ type: "current", mode: "create", levels: ["day"] }));
       await userEvent.click(result.getByRole("button"));
       const parameters = flows.calls[0]?.parameters as { existingOnly?: boolean };
       expect(parameters.existingOnly).toBe(false);
@@ -189,20 +194,19 @@ describe("ButtonItem", () => {
 
     it("recenters the view to today when mode is 'navigate'", async () => {
       const setRefDate = vi.fn();
-      const { result } = mountItem(
-        { action: { type: "current", mode: "navigate", levels: ["day"] } },
-        { refDate: ref("2020-01-01" as AnchorString), setRefDate },
-      );
+      const { result } = mountItem(buttonConfigFor({ type: "current", mode: "navigate", levels: ["day"] }), {
+        refDate: ref("2020-01-01" as AnchorString),
+        setRefDate,
+      });
       await userEvent.click(result.getByRole("button"));
       expect(setRefDate).toHaveBeenCalledWith(CalendarDate.today().toAnchor());
     });
 
     it("calls setRefDate without invoking OpenDateFlow when mode is 'select-only'", async () => {
       const setRefDate = vi.fn();
-      const { result, flows } = mountItem(
-        { action: { type: "current", mode: "select-only", levels: ["day"] } },
-        { setRefDate },
-      );
+      const { result, flows } = mountItem(buttonConfigFor({ type: "current", mode: "select-only", levels: ["day"] }), {
+        setRefDate,
+      });
       await userEvent.click(result.getByRole("button"));
       expect(flows.calls).toHaveLength(0);
       expect(setRefDate).toHaveBeenCalledWith(CalendarDate.today().toAnchor());
@@ -212,10 +216,10 @@ describe("ButtonItem", () => {
   describe("click — current uses today, not refDate", () => {
     it("computes the day from CalendarDate.today() and not from refDate", async () => {
       const setRefDate = vi.fn();
-      const { result } = mountItem(
-        { action: { type: "current", mode: "select-only", levels: ["day"] } },
-        { refDate: ref("2020-01-01" as AnchorString), setRefDate },
-      );
+      const { result } = mountItem(buttonConfigFor({ type: "current", mode: "select-only", levels: ["day"] }), {
+        refDate: ref("2020-01-01" as AnchorString),
+        setRefDate,
+      });
       await userEvent.click(result.getByRole("button"));
       expect(setRefDate).toHaveBeenCalledWith(CalendarDate.today().toAnchor());
     });
@@ -225,10 +229,9 @@ describe("ButtonItem", () => {
     it("walks refDate forward by amount×unit, preserving the day within the period", async () => {
       const setRefDate = vi.fn();
       const { result } = mountItem(
-        { action: { type: "navigate-step", direction: "next", unit: "month", amount: 2 } },
+        buttonConfigFor({ type: "navigate-step", direction: "next", unit: "month", amount: 2 }),
         { refDate: ref("2026-05-15" as AnchorString), setRefDate },
       );
-      // No label; tooltip is rendered as text fallback when there's no label
       await userEvent.click(result.getByRole("button"));
       // refDate 2026-05-15 → +2 months → 2026-07-15 (day kept, not snapped to the month anchor)
       expect(setRefDate).toHaveBeenCalledWith("2026-07-15");
@@ -237,7 +240,7 @@ describe("ButtonItem", () => {
     it("walks refDate backward by amount×unit, preserving the day within the period", async () => {
       const setRefDate = vi.fn();
       const { result } = mountItem(
-        { action: { type: "navigate-step", direction: "prev", unit: "week", amount: 1 } },
+        buttonConfigFor({ type: "navigate-step", direction: "prev", unit: "week", amount: 1 }),
         { refDate: ref("2026-05-15" as AnchorString), setRefDate },
       );
       await userEvent.click(result.getByRole("button"));
@@ -247,7 +250,7 @@ describe("ButtonItem", () => {
     it("keeps the displayed month when paging by year", async () => {
       const setRefDate = vi.fn();
       const { result } = mountItem(
-        { action: { type: "navigate-step", direction: "next", unit: "year", amount: 1 } },
+        buttonConfigFor({ type: "navigate-step", direction: "next", unit: "year", amount: 1 }),
         { refDate: ref("2026-05-15" as AnchorString), setRefDate },
       );
       await userEvent.click(result.getByRole("button"));
@@ -258,9 +261,7 @@ describe("ButtonItem", () => {
 
   describe("click — pick-date", () => {
     it("opens the date picker modal with the configured level", async () => {
-      const { result, modals } = mountItem({
-        action: { type: "pick-date", mode: "navigate", levels: ["day"] },
-      });
+      const { result, modals } = mountItem(buttonConfigFor({ type: "pick-date", mode: "navigate", levels: ["day"] }));
       await userEvent.click(result.getByRole("button"));
       expect(modals.opens).toHaveLength(1);
       expect((modals.lastOpen().props as { picking: string }).picking).toBe("day");
@@ -269,19 +270,18 @@ describe("ButtonItem", () => {
     it("opens the picker on the currently displayed period with it selected", async () => {
       // v2 passed the calendar's refDate into the picker so it opened where the user
       // is looking, not on today's month.
-      const { result, modals } = mountItem(
-        { action: { type: "pick-date", mode: "navigate", levels: ["day"] } },
-        { refDate: ref("2031-02-14" as AnchorString) },
-      );
+      const { result, modals } = mountItem(buttonConfigFor({ type: "pick-date", mode: "navigate", levels: ["day"] }), {
+        refDate: ref("2031-02-14" as AnchorString),
+      });
       await userEvent.click(result.getByRole("button"));
       const selected = (modals.lastOpen().props as { selected?: { anchor: CalendarDate } }).selected;
       expect(selected?.anchor.toAnchor()).toBe("2031-02-14");
     });
 
     it("dispatches the picked date through OpenDateFlow when mode is 'create'", async () => {
-      const { result, modals, flows } = mountItem({
-        action: { type: "pick-date", mode: "create", levels: ["day"] },
-      });
+      const { result, modals, flows } = mountItem(
+        buttonConfigFor({ type: "pick-date", mode: "create", levels: ["day"] }),
+      );
       await userEvent.click(result.getByRole("button"));
       const picked = DayPeriod.containing(CalendarDate.fromAnchor("2026-06-10" as AnchorString));
       modals.lastOpen().submit(picked);
@@ -296,10 +296,9 @@ describe("ButtonItem", () => {
   describe("click — pick-date recenters the view", () => {
     it("recenters to the picked date when mode is 'navigate'", async () => {
       const setRefDate = vi.fn();
-      const { result, modals } = mountItem(
-        { action: { type: "pick-date", mode: "navigate", levels: ["day"] } },
-        { setRefDate },
-      );
+      const { result, modals } = mountItem(buttonConfigFor({ type: "pick-date", mode: "navigate", levels: ["day"] }), {
+        setRefDate,
+      });
       await userEvent.click(result.getByRole("button"));
       const picked = DayPeriod.containing(CalendarDate.fromAnchor("2026-06-10" as AnchorString));
       modals.lastOpen().submit(picked);
@@ -309,10 +308,9 @@ describe("ButtonItem", () => {
 
     it("recenters to the picked date when mode is 'create'", async () => {
       const setRefDate = vi.fn();
-      const { result, modals } = mountItem(
-        { action: { type: "pick-date", mode: "create", levels: ["day"] } },
-        { setRefDate },
-      );
+      const { result, modals } = mountItem(buttonConfigFor({ type: "pick-date", mode: "create", levels: ["day"] }), {
+        setRefDate,
+      });
       await userEvent.click(result.getByRole("button"));
       const picked = DayPeriod.containing(CalendarDate.fromAnchor("2026-06-10" as AnchorString));
       modals.lastOpen().submit(picked);
@@ -323,9 +321,9 @@ describe("ButtonItem", () => {
 
   describe("click — multi level", () => {
     it("opens an obsidian Menu with one entry per configured level for current", async () => {
-      const { result } = mountItem({
-        action: { type: "current", mode: "create", levels: ["day", "week", "month"] },
-      });
+      const { result } = mountItem(
+        buttonConfigFor({ type: "current", mode: "create", levels: ["day", "week", "month"] }),
+      );
       await userEvent.click(result.getByRole("button"));
       const menu = obsidianTesting.lastOpenMenu();
       expect(menu.items.map((i) => i.title).slice(0, 3)).toEqual(["Today", "This week", "This month"]);
@@ -333,10 +331,9 @@ describe("ButtonItem", () => {
 
     it("fires the chosen level's action when a menu item is selected", async () => {
       const setRefDate = vi.fn();
-      const { result } = mountItem(
-        { action: { type: "current", mode: "select-only", levels: ["day", "week"] } },
-        { setRefDate },
-      );
+      const { result } = mountItem(buttonConfigFor({ type: "current", mode: "select-only", levels: ["day", "week"] }), {
+        setRefDate,
+      });
       await userEvent.click(result.getByRole("button"));
       const menu = obsidianTesting.lastOpenMenu();
       (menu.items[1] as unknown as { click(): void }).click(); // "This week"
@@ -350,7 +347,7 @@ describe("ButtonItem", () => {
   describe("click — pinned journal", () => {
     it("opens only the pinned journal at its resolved anchor for current", async () => {
       const { result, flows } = mountItem(
-        { action: { type: "current", mode: "create", levels: ["day"], journal: "weekly" } },
+        buttonConfigFor({ type: "current", mode: "create", levels: ["day"], journal: "weekly" }),
         {},
         () => Option.some("2026-06-08" as AnchorString),
       );
@@ -364,7 +361,7 @@ describe("ButtonItem", () => {
 
     it("does nothing when the pinned journal cannot be resolved", async () => {
       const { result, flows } = mountItem(
-        { action: { type: "current", mode: "create", levels: ["day"], journal: "gone" } },
+        buttonConfigFor({ type: "current", mode: "create", levels: ["day"], journal: "gone" }),
         {},
         () => Option.none(),
       );
@@ -374,7 +371,7 @@ describe("ButtonItem", () => {
 
     it("resolves the picked day through the pinned journal for pick-date", async () => {
       const { result, modals, flows } = mountItem(
-        { action: { type: "pick-date", mode: "create", levels: ["day"], journal: "weekly" } },
+        buttonConfigFor({ type: "pick-date", mode: "create", levels: ["day"], journal: "weekly" }),
         {},
         () => Option.some("2026-06-08" as AnchorString),
       );

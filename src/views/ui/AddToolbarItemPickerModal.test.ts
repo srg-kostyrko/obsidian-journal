@@ -18,7 +18,7 @@ function toolbarItemDefinition(key: string, label: string): ToolbarItemDefinitio
     key,
     label,
     schema: v.object({}),
-    defaultConfig: {},
+    defaultConfig: () => ({}),
     component: { render: () => null },
     __brand: "toolbar-item",
   } as unknown as ToolbarItemDefinition;
@@ -27,13 +27,13 @@ function toolbarItemDefinition(key: string, label: string): ToolbarItemDefinitio
 function toolbarItemDefinitionWithPresets(
   key: string,
   label: string,
-  presets: { label: string; description?: string; defaultConfig: unknown }[],
+  presets: { label: string; description?: string; defaultConfig: () => unknown }[],
 ): ToolbarItemDefinition {
   return {
     key,
     label,
     schema: v.object({}),
-    defaultConfig: {},
+    defaultConfig: () => ({}),
     presets,
     component: { render: () => null },
     __brand: "toolbar-item",
@@ -63,9 +63,9 @@ describe("AddToolbarItemPickerModal", () => {
     it("renders one row per preset", () => {
       mountModal([
         toolbarItemDefinitionWithPresets("button", "Button", [
-          { label: "Today", defaultConfig: { action: "today" } },
-          { label: "Previous", defaultConfig: { action: "previous" } },
-          { label: "Next", defaultConfig: { action: "next" } },
+          { label: "Today", defaultConfig: () => ({ action: "today" }) },
+          { label: "Previous", defaultConfig: () => ({ action: "previous" }) },
+          { label: "Next", defaultConfig: () => ({ action: "next" }) },
         ]),
       ]);
       expect(screen.getByText("Today")).toBeTruthy();
@@ -76,8 +76,8 @@ describe("AddToolbarItemPickerModal", () => {
     it("renders each preset's own description", () => {
       mountModal([
         toolbarItemDefinitionWithPresets("button", "Button", [
-          { label: "Today", description: "Jump to now", defaultConfig: { action: "today" } },
-          { label: "Navigate", description: "Step by interval", defaultConfig: { action: "next" } },
+          { label: "Today", description: "Jump to now", defaultConfig: () => ({ action: "today" }) },
+          { label: "Navigate", description: "Step by interval", defaultConfig: () => ({ action: "next" }) },
         ]),
       ]);
       expect(screen.getByText("Jump to now")).toBeTruthy();

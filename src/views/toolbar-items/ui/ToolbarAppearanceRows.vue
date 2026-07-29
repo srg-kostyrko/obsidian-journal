@@ -34,7 +34,7 @@ const reset = (field: AppearanceField): void => set(field, props.appearance[fiel
     />
     <UiIconButton
       :icon="icons.action.reset"
-      :tooltip="m.view_toolbar_appearance_reset()"
+      :tooltip="m.view_toolbar_appearance_reset({ field: 'icon' })"
       :disabled="isDefault('icon')"
       @click="reset('icon')"
     />
@@ -47,7 +47,7 @@ const reset = (field: AppearanceField): void => set(field, props.appearance[fiel
     />
     <UiIconButton
       :icon="icons.action.reset"
-      :tooltip="m.view_toolbar_appearance_reset()"
+      :tooltip="m.view_toolbar_appearance_reset({ field: 'label' })"
       :disabled="isDefault('label')"
       @click="reset('label')"
     />
@@ -60,7 +60,7 @@ const reset = (field: AppearanceField): void => set(field, props.appearance[fiel
     />
     <UiIconButton
       :icon="icons.action.reset"
-      :tooltip="m.view_toolbar_appearance_reset()"
+      :tooltip="m.view_toolbar_appearance_reset({ field: 'tooltip' })"
       :disabled="isDefault('tooltip')"
       @click="reset('tooltip')"
     />

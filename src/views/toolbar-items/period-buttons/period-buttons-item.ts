@@ -24,7 +24,7 @@ export const periodButtonsItem = defineToolbarItem<PeriodButtonsConfig>({
   description: m.view_toolbar_period_buttons_description(),
   icon: icons.entity.week,
   schema,
-  defaultConfig: { week: false, month: true, quarter: true, year: true },
+  defaultConfig: () => ({ week: false, month: true, quarter: true, year: true }),
   component: PeriodButtonsItem,
   configComponent: PeriodButtonsItemConfig,
 });

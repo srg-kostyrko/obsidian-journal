@@ -240,6 +240,11 @@ describe("DefinedNavigationItem", () => {
     expect(result.getByLabelText("Jump back")).toBeTruthy();
   });
 
+  it("omits the aria-label attribute when the tooltip is emptied", () => {
+    const { result } = mountItem({ ...definedNavigationConfigFor("day", "next"), tooltip: "" });
+    expect(result.getByRole("button").getAttribute("aria-label")).toBeNull();
+  });
+
   it("searches from the view's date when no journal note is active", async () => {
     SCOPE.day = ["daily"];
     const { result, flows } = mountItem(

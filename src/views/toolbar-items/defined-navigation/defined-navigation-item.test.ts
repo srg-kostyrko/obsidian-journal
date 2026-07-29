@@ -1,14 +1,31 @@
 import * as v from "valibot";
-import { describe, expect, it } from "vitest";
+import { afterAll, beforeAll, describe, expect, it } from "vitest";
 
-import { m } from "@/i18n";
+import { initLocale, m } from "@/i18n";
 
 import { definedNavigationConfigFor, resolveDefinedNavigationAppearance } from "./defined-navigation-config";
 import { definedNavigationItem } from "./defined-navigation-item";
 
 describe("definedNavigationItem", () => {
   it("defaults to walking daily notes in the next direction", () => {
-    expect(definedNavigationItem.defaultConfig).toEqual(definedNavigationConfigFor("day", "next"));
+    expect(definedNavigationItem.defaultConfig()).toEqual(definedNavigationConfigFor("day", "next"));
+  });
+
+  describe("locale resolution", () => {
+    // The module graph — and definedNavigationItem — evaluates before JournalPlugin.onload()
+    // calls initLocale(), so a seed captured at module scope would freeze in the base locale.
+    // Switching locale only here, after import, reproduces that ordering and proves the seed is
+    // deferred rather than baked in at import time.
+    beforeAll(() => initLocale("de"));
+    afterAll(() => initLocale("en"));
+
+    it("resolves the seeded tooltip in the locale active when the item is created", () => {
+      expect(definedNavigationItem.defaultConfig().tooltip).toBe(m.command_open_next({}, { locale: "de" }));
+    });
+
+    it("returns a fresh config object on each call", () => {
+      expect(definedNavigationItem.defaultConfig()).not.toBe(definedNavigationItem.defaultConfig());
+    });
   });
 
   it("parses a valid config", () => {

@@ -15,6 +15,6 @@ export const shelfSelectorItem = defineToolbarItem({
   description: m.view_toolbar_shelf_selector_description(),
   icon: icons.entity.shelf,
   schema,
-  defaultConfig: {},
+  defaultConfig: () => ({}),
   component: ShelfSelectorItem,
 });

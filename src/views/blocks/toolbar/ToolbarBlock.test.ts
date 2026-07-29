@@ -26,7 +26,7 @@ const stubItem = defineToolbarItem<{ name: string }>({
   key: "stub",
   label: "Stub",
   schema: v.object({ name: v.string() }),
-  defaultConfig: { name: "" },
+  defaultConfig: () => ({ name: "" }),
   component: defineComponent({
     props: { instanceId: { type: String, required: true }, config: { type: Object, required: true } },
     setup: (properties) => () =>

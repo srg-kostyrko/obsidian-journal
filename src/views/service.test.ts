@@ -514,7 +514,7 @@ const dummyItem = defineToolbarItem<{ x: number }>({
   key: "dummy",
   label: "Dummy",
   schema: v.object({ x: v.number() }),
-  defaultConfig: { x: 0 },
+  defaultConfig: () => ({ x: 0 }),
   component: { setup: () => noop },
 }) as ToolbarItemDefinition;
 

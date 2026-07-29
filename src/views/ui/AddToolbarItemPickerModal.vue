@@ -18,7 +18,7 @@ interface Row {
   readonly label: string;
   readonly icon?: string;
   readonly description?: string;
-  readonly defaultConfig: unknown;
+  readonly defaultConfig: () => unknown;
 }
 
 const rows = computed<readonly Row[]>(() => {
@@ -64,7 +64,7 @@ const api = useModal<{ key: string; defaultConfig: unknown }>();
       <UiIconButton
         :icon="icons.action.add"
         :tooltip="m.view_add_picker_action({ label: row.label })"
-        @click="api.submit({ key: row.key, defaultConfig: row.defaultConfig })"
+        @click="api.submit({ key: row.key, defaultConfig: row.defaultConfig() })"
       />
     </UiSettingRow>
     <UiSettingRow controls-only>

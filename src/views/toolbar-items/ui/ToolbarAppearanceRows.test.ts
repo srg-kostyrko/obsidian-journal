@@ -24,10 +24,13 @@ function mountRows(
   });
 }
 
-// Inputs render in order: icon, label, tooltip. So do the reset buttons.
+// Inputs render in order: icon, label, tooltip.
 const seeded: ToolbarItemAppearance = { icon: "crosshair", tooltip: "Pick a date" };
 
-const resetButtons = (): HTMLElement[] => screen.getAllByRole("button", { name: m.view_toolbar_appearance_reset() });
+const iconReset = (): HTMLElement =>
+  screen.getByRole("button", { name: m.view_toolbar_appearance_reset({ field: "icon" }) });
+const labelReset = (): HTMLElement =>
+  screen.getByRole("button", { name: m.view_toolbar_appearance_reset({ field: "label" }) });
 
 afterEach(() => cleanup());
 
@@ -73,28 +76,28 @@ describe("ToolbarAppearanceRows", () => {
 
   it("disables the reset control while the value matches the default", () => {
     mountRows(seeded, seeded, vi.fn());
-    expect((resetButtons()[0] as HTMLButtonElement).disabled).toBe(true);
+    expect((iconReset() as HTMLButtonElement).disabled).toBe(true);
   });
 
   it("disables the reset control for a field that is unset and has no default", () => {
     mountRows(seeded, seeded, vi.fn());
-    expect((resetButtons()[1] as HTMLButtonElement).disabled).toBe(true);
+    expect((labelReset() as HTMLButtonElement).disabled).toBe(true);
   });
 
   it("enables the reset control once the value differs from the default", () => {
     mountRows({ ...seeded, icon: "star" }, seeded, vi.fn());
-    expect((resetButtons()[0] as HTMLButtonElement).disabled).toBe(false);
+    expect((iconReset() as HTMLButtonElement).disabled).toBe(false);
   });
 
   it("enables the reset control when the value has been cleared", () => {
     mountRows({ ...seeded, icon: "" }, seeded, vi.fn());
-    expect((resetButtons()[0] as HTMLButtonElement).disabled).toBe(false);
+    expect((iconReset() as HTMLButtonElement).disabled).toBe(false);
   });
 
   it("restores the default when the reset control is pressed", async () => {
     const onChange = vi.fn();
     mountRows({ ...seeded, icon: "star" }, seeded, onChange);
-    await userEvent.click(resetButtons()[0]);
+    await userEvent.click(iconReset());
     expect(onChange).toHaveBeenLastCalledWith({ icon: "crosshair" });
   });
 
@@ -105,14 +108,14 @@ describe("ToolbarAppearanceRows", () => {
       { icon: "chevron-left", tooltip: "Previous month" },
       onChange,
     );
-    await userEvent.click(resetButtons()[0]);
+    await userEvent.click(iconReset());
     expect(onChange).toHaveBeenLastCalledWith({ icon: "chevron-left" });
   });
 
   it("empties a field whose default is unset when reset is pressed", async () => {
     const onChange = vi.fn();
     mountRows({ ...seeded, label: "Mine" }, seeded, onChange);
-    await userEvent.click(resetButtons()[1]);
+    await userEvent.click(labelReset());
     expect(onChange).toHaveBeenLastCalledWith({ label: "" });
   });
 });

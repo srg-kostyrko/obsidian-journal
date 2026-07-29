@@ -1,10 +1,26 @@
-import { describe, expect, it } from "vitest";
+import { afterAll, beforeAll, describe, expect, it } from "vitest";
 
-import { m } from "@/i18n";
+import { initLocale, m } from "@/i18n";
 
 import { buttonItem } from "./button-item";
 
 describe("buttonItem", () => {
+  describe("defaultConfig", () => {
+    // The module graph — and buttonItem — evaluates before JournalPlugin.onload() calls
+    // initLocale(), so a seed captured at module scope would freeze in the base locale. Switching
+    // locale only here, after import, reproduces that ordering and proves the seed is deferred.
+    beforeAll(() => initLocale("de"));
+    afterAll(() => initLocale("en"));
+
+    it("resolves the seeded label in the locale active when the item is created", () => {
+      expect(buttonItem.defaultConfig().label).toBe(m.common_label_today({}, { locale: "de" }));
+    });
+
+    it("returns a fresh config object on each call", () => {
+      expect(buttonItem.defaultConfig()).not.toBe(buttonItem.defaultConfig());
+    });
+  });
+
   describe("summary", () => {
     it("names a single-day current button after today", () => {
       expect(buttonItem.summary?.({ action: { type: "current", mode: "create", levels: ["day"] } })).toBe(

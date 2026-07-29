@@ -10,7 +10,10 @@ export interface ToolbarItemProps<TConfig> {
 export interface ToolbarItemPreset<TConfig> {
   readonly label: string;
   readonly description?: string;
-  readonly defaultConfig: TConfig;
+  // A factory rather than a value: it resolves paraglide messages, which read the active locale
+  // only after JournalPlugin.onload() runs — calling it eagerly at module-evaluation time would
+  // freeze seeded text in the base locale.
+  readonly defaultConfig: () => TConfig;
 }
 
 export interface ToolbarItemDefinitionInput<TConfig> {
@@ -19,7 +22,8 @@ export interface ToolbarItemDefinitionInput<TConfig> {
   readonly description?: string;
   readonly icon?: string;
   readonly schema: BaseSchema<unknown, TConfig, BaseIssue<unknown>>;
-  readonly defaultConfig: TConfig;
+  // See ToolbarItemPreset.defaultConfig for why this is a factory, not a value.
+  readonly defaultConfig: () => TConfig;
   readonly component: Component;
   readonly configComponent?: Component;
   readonly presets?: readonly ToolbarItemPreset<TConfig>[];

@@ -19,7 +19,7 @@ export const definedNavigationItem = defineToolbarItem<DefinedNavigationConfig>(
   description: m.view_toolbar_defined_navigation_description(),
   icon: icons.block.definedNavigation,
   schema: definedNavigationSchema,
-  defaultConfig: definedNavigationConfigFor("day", "next"),
+  defaultConfig: () => definedNavigationConfigFor("day", "next"),
   component: DefinedNavigationItem,
   configComponent: DefinedNavigationItemConfig,
 });

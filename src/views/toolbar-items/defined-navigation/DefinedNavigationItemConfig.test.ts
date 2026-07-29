@@ -76,8 +76,8 @@ describe("DefinedNavigationItemConfig", () => {
     const onChange = vi.fn();
     const config: DefinedNavigationConfig = { ...definedNavigationConfigFor("day", "next"), label: "‹" };
     mountConfig(config, onChange);
-    const resetButtons = screen.getAllByRole("button", { name: m.view_toolbar_appearance_reset() });
-    await userEvent.click(resetButtons[1]);
+    const labelReset = screen.getByRole("button", { name: m.view_toolbar_appearance_reset({ field: "label" }) });
+    await userEvent.click(labelReset);
     expect(onChange).toHaveBeenLastCalledWith({ ...config, label: "›" });
   });
 });

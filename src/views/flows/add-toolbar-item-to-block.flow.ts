@@ -1,5 +1,3 @@
-import { cloneFnJSON } from "@vueuse/core";
-
 import { inject } from "@/infrastructure/di";
 import { UserAborted, type Flow, type FlowError } from "@/infrastructure/flows";
 import { ModalService } from "@/infrastructure/host/modals";
@@ -36,7 +34,7 @@ export class AddToolbarItemToBlockFlow implements Flow<AddToolbarItemParameters,
       const definition = this.#definitions.find((d) => d.key === choice.key);
       if (!definition?.configComponent) return;
 
-      const seed = cloneFnJSON(defaultConfig ?? (definition.defaultConfig as Record<string, unknown>));
+      const seed = defaultConfig ?? (definition.defaultConfig() as Record<string, unknown>);
       const submitted = await this.#modals
         .open(editToolbarItemModal, {
           component: definition.configComponent,

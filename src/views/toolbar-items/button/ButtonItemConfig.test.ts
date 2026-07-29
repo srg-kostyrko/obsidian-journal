@@ -66,8 +66,8 @@ describe("ButtonItemConfig", () => {
       icon: icons.nav.prev,
     };
     mountConfig(config, onChange);
-    const resetButtons = screen.getAllByRole("button", { name: m.view_toolbar_appearance_reset() });
-    await userEvent.click(resetButtons[0]);
+    const iconReset = screen.getByRole("button", { name: m.view_toolbar_appearance_reset({ field: "icon" }) });
+    await userEvent.click(iconReset);
     expect(onChange).toHaveBeenLastCalledWith({ ...config, icon: icons.nav.next });
   });
 
