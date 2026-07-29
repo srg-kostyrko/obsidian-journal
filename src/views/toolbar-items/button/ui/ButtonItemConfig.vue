@@ -114,29 +114,26 @@ function setLevels(levels: ButtonLevel[]): void {
       <UiToggleGroup :model-value="periodAction.levels" :options="levelOptions" @update:model-value="setLevels" />
     </UiSettingRow>
   </template>
-  <template v-if="stepAction">
-    <UiSettingRow>
-      <template #name>{{ m.view_toolbar_button_config_direction_label() }}</template>
-      <UiDropdown
-        :model-value="stepAction.direction"
-        @update:model-value="(value: string | undefined) => value && setDirection(value as 'prev' | 'next')"
-      >
-        <option value="prev">{{ m.view_toolbar_button_config_direction_option({ direction: "prev" }) }}</option>
-        <option value="next">{{ m.view_toolbar_button_config_direction_option({ direction: "next" }) }}</option>
-      </UiDropdown>
-    </UiSettingRow>
-    <UiSettingRow>
-      <template #name>{{ m.view_toolbar_button_config_granularity_label() }}</template>
-      <UiDropdown
-        :model-value="stepAction.unit"
-        @update:model-value="
-          (value: string | undefined) => value && setUnit(value as 'week' | 'month' | 'quarter' | 'year')
-        "
-      >
-        <option v-for="unit of stepUnits" :key="unit" :value="unit">
-          {{ m.view_toolbar_button_config_level_option({ level: unit }) }}
-        </option>
-      </UiDropdown>
-    </UiSettingRow>
-  </template>
+  <UiSettingRow v-if="stepAction">
+    <template #name>{{ m.view_toolbar_button_config_step_label() }}</template>
+    <UiDropdown
+      :model-value="stepAction.direction"
+      :aria-label="m.view_toolbar_button_config_direction_label()"
+      @update:model-value="(value: string | undefined) => value && setDirection(value as 'prev' | 'next')"
+    >
+      <option value="prev">{{ m.view_toolbar_button_config_direction_option({ direction: "prev" }) }}</option>
+      <option value="next">{{ m.view_toolbar_button_config_direction_option({ direction: "next" }) }}</option>
+    </UiDropdown>
+    <UiDropdown
+      :model-value="stepAction.unit"
+      :aria-label="m.view_toolbar_button_config_granularity_label()"
+      @update:model-value="
+        (value: string | undefined) => value && setUnit(value as 'week' | 'month' | 'quarter' | 'year')
+      "
+    >
+      <option v-for="unit of stepUnits" :key="unit" :value="unit">
+        {{ m.view_toolbar_button_config_level_option({ level: unit }) }}
+      </option>
+    </UiDropdown>
+  </UiSettingRow>
 </template>

@@ -1070,6 +1070,7 @@
       }
     }
   ],
+  "view_toolbar_button_config_step_label": "Step",
   "view_toolbar_button_config_direction_label": "Direction",
   "view_toolbar_button_config_direction_option": [
     {

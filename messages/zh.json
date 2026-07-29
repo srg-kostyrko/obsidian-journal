@@ -1218,6 +1218,7 @@
 			}
 		}
 	],
+	"view_toolbar_button_config_step_label": "步进",
 	"view_toolbar_button_config_direction_label": "方向",
 	"view_toolbar_button_config_direction_option": [
 		{

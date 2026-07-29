@@ -1218,6 +1218,7 @@
 			}
 		}
 	],
+	"view_toolbar_button_config_step_label": "Шаг",
 	"view_toolbar_button_config_direction_label": "Направление",
 	"view_toolbar_button_config_direction_option": [
 		{

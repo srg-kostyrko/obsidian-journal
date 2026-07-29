@@ -1218,6 +1218,7 @@
 			}
 		}
 	],
+	"view_toolbar_button_config_step_label": "Schritt",
 	"view_toolbar_button_config_direction_label": "Richtung",
 	"view_toolbar_button_config_direction_option": [
 		{

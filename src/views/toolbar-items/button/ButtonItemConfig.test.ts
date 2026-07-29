@@ -167,8 +167,7 @@ describe("ButtonItemConfig", () => {
     it("emits onChange with the selected direction when the direction dropdown changes", async () => {
       const onChange = vi.fn();
       mountConfig(stepConfig, onChange);
-      const [directionDropdown] = screen.getAllByRole("combobox");
-      await userEvent.selectOptions(directionDropdown, "prev");
+      await userEvent.selectOptions(screen.getByLabelText(m.view_toolbar_button_config_direction_label()), "prev");
       expect(onChange).toHaveBeenLastCalledWith({
         action: { type: "navigate-step", direction: "prev", unit: "month", amount: 1 },
       });
@@ -177,8 +176,7 @@ describe("ButtonItemConfig", () => {
     it("emits onChange with the selected granularity when the granularity dropdown changes", async () => {
       const onChange = vi.fn();
       mountConfig(stepConfig, onChange);
-      const [, granularityDropdown] = screen.getAllByRole("combobox");
-      await userEvent.selectOptions(granularityDropdown, "quarter");
+      await userEvent.selectOptions(screen.getByLabelText(m.view_toolbar_button_config_granularity_label()), "quarter");
       expect(onChange).toHaveBeenLastCalledWith({
         action: { type: "navigate-step", direction: "next", unit: "quarter", amount: 1 },
       });

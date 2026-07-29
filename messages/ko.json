@@ -1218,6 +1218,7 @@
 			}
 		}
 	],
+	"view_toolbar_button_config_step_label": "이동",
 	"view_toolbar_button_config_direction_label": "방향",
 	"view_toolbar_button_config_direction_option": [
 		{
