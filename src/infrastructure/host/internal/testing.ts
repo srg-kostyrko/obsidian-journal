@@ -51,6 +51,7 @@ export interface FakeWorkspaceState {
   triggerCalls: { event: string; arguments_: unknown[] }[];
   detachedTypes: string[];
   viewStateCalls: { type: string; placement: "left" | "right" | "tab" }[];
+  activatedTypes: string[];
   headerRefreshedTypes: string[];
   updateHeaderThrows: boolean;
   sidebarLeafAvailable: boolean;
@@ -66,7 +67,7 @@ export interface FakeRegisteredView {
 
 interface FakeLeaf {
   openFile(file: TFile): Promise<void>;
-  setViewState(state: { type: string }): Promise<void>;
+  setViewState(state: { type: string; active?: boolean }): Promise<void>;
   updateHeader(): void;
 }
 
@@ -154,6 +155,7 @@ export function createFakeHost(): FakeHost {
     triggerCalls: [],
     detachedTypes: [],
     viewStateCalls: [],
+    activatedTypes: [],
     headerRefreshedTypes: [],
     updateHeaderThrows: false,
     sidebarLeafAvailable: true,
@@ -336,9 +338,10 @@ export function createFakeHost(): FakeHost {
         workspaceState.openCalls.push({ path: file.path, mode: openMode });
         workspaceState.activeFile = file;
       },
-      async setViewState(state: { type: string }): Promise<void> {
+      async setViewState(state: { type: string; active?: boolean }): Promise<void> {
         assignedType = state.type;
         workspaceState.viewStateCalls.push({ type: state.type, placement });
+        if (state.active) workspaceState.activatedTypes.push(state.type);
         const leaves = viewLeavesByType.get(state.type) ?? [];
         leaves.push(leaf);
         viewLeavesByType.set(state.type, leaves);

@@ -198,6 +198,9 @@ export class ViewHostService {
     });
   }
 
+  // v2 parity: reveal makes the view visible (expanding a collapsed sidebar, selecting its tab)
+  // without activating it. Activation focuses the leaf, and Obsidian closes an open settings
+  // window whenever a leaf takes focus — which would dismiss the settings page a view is opened from.
   async open(id: ViewId): Promise<void> {
     const viewType = viewTypeOf(id);
     const [existing] = this.#app.workspace.getLeavesOfType(viewType);
@@ -207,7 +210,7 @@ export class ViewHostService {
     }
     const view = this.#getView(id);
     const leaf = this.#leafFor(view?.leaf ?? "right");
-    await leaf.setViewState({ type: viewType, active: true });
+    await leaf.setViewState({ type: viewType });
     await this.#app.workspace.revealLeaf(leaf);
   }
 
@@ -226,7 +229,7 @@ export class ViewHostService {
     // because open() dedupes, making multi-leaf states rare.
     for (let index = 0; index < count; index++) {
       const leaf = this.#leafFor(view?.leaf ?? "right");
-      await leaf.setViewState({ type: viewType, active: true });
+      await leaf.setViewState({ type: viewType });
       await this.#app.workspace.revealLeaf(leaf);
     }
   }

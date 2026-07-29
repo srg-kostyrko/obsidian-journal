@@ -307,6 +307,17 @@ describe("ViewHostService", () => {
       ]);
     });
 
+    it("places the moved leaf without activating it", async () => {
+      const { service, host, storage } = build({ a: seedView("a", { leaf: "right" }) });
+      openVia(host, "a");
+      await Promise.resolve();
+      storage.a.leaf = "tab";
+
+      await service.reposition("a" as ViewId);
+
+      expect(host.workspace.activatedTypes).toEqual([]);
+    });
+
     it("does nothing when no leaf of the view is open", async () => {
       const { service, host } = build({ a: seedView("a") });
       await service.reposition("a" as ViewId);
@@ -371,6 +382,15 @@ describe("ViewHostService", () => {
       openVia(host, "a");
       await Promise.resolve();
       expect(host.workspace.revealLeafCalls).toBeGreaterThan(0);
+    });
+
+    // Obsidian focuses an activated leaf, and focusing a leaf closes an open settings window —
+    // opening a view from its own settings page would then dismiss the settings the user is in.
+    it("places the leaf without activating it", async () => {
+      const { host } = build({ a: seedView("a", { leaf: "right" }) });
+      openVia(host, "a");
+      await Promise.resolve();
+      expect(host.workspace.activatedTypes).toEqual([]);
     });
   });
 

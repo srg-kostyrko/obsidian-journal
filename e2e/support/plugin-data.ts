@@ -26,6 +26,7 @@ export interface StoredViewBlock {
 export interface StoredView {
   name?: string;
   icon?: string;
+  openOnStartup?: boolean;
   blocks?: StoredViewBlock[];
 }
 

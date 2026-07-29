@@ -29,6 +29,12 @@ export async function openSettings(): Promise<void> {
   await $(DASHBOARD).waitForExist({ timeoutMsg: "settings dashboard did not mount" });
 }
 
+// Whether the settings panel is still on screen — Obsidian closes it whenever a workspace leaf
+// takes focus, so actions triggered from a settings page have to be checked against it.
+export function isSettingsOpen(): Promise<boolean> {
+  return $(".mod-settings").isExisting();
+}
+
 // Close settings. PluginSettingTab.hide() runs SettingsUiService.reset(), so the next
 // openSettings() starts at the dashboard root with an empty subpage stack.
 export async function closeSettings(): Promise<void> {
