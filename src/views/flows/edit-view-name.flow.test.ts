@@ -19,6 +19,7 @@ import { ViewsViewModel } from "../view-model";
 import { EditViewNameFlow } from "./edit-view-name.flow";
 
 import type { ViewId } from "../config";
+import type { ViewNameModalResult } from "../ui/modals";
 
 async function build(raw?: unknown) {
   const { service: settings, container } = createSettingsService({
@@ -44,7 +45,7 @@ describe("EditViewNameFlow", () => {
   it("creates a new view with the entered name", async () => {
     const { flows, modals, repo } = await build();
     const promise = flows.invoke(EditViewNameFlow, {});
-    modals.lastOpen<unknown, string>().submit("Weekly");
+    modals.lastOpen<unknown, ViewNameModalResult>().submit({ name: "Weekly", icon: "calendar-days" });
     const result = await promise;
     expect(result.kind).toBe("ok");
     expect(
@@ -54,6 +55,21 @@ describe("EditViewNameFlow", () => {
         .first()
         .isSome(),
     ).toBe(true);
+  });
+
+  it("creates a new view with the chosen icon", async () => {
+    const { flows, modals, repo } = await build();
+    const promise = flows.invoke(EditViewNameFlow, {});
+    modals.lastOpen<unknown, ViewNameModalResult>().submit({ name: "Weekly", icon: "calendar-days" });
+    await promise;
+    expect(
+      repo
+        .find()
+        .filter((v) => v.name === "Weekly")
+        .first()
+        .map((v) => v.icon)
+        .getOrUndefined(),
+    ).toBe("calendar-days");
   });
 
   it("renames an existing view", async () => {
@@ -66,9 +82,24 @@ describe("EditViewNameFlow", () => {
     };
     const { flows, modals, repo } = await build(raw);
     const promise = flows.invoke(EditViewNameFlow, { viewId: id });
-    modals.lastOpen<unknown, string>().submit("New");
+    modals.lastOpen<unknown, ViewNameModalResult>().submit({ name: "New", icon: "" });
     await promise;
-    expect(repo.get(id).getOr(undefined as never)?.name).toBe("New");
+    expect(repo.get(id).getOrUndefined()?.name).toBe("New");
+  });
+
+  it("keeps the existing icon when renaming", async () => {
+    const id = "11111111-1111-1111-1111-111111111111" as ViewId;
+    const raw = {
+      version: 4,
+      views: {
+        [id]: { id, name: "Old", icon: "calendar-days", defaultShelf: null, showInRibbon: false, blocks: [] },
+      },
+    };
+    const { flows, modals, repo } = await build(raw);
+    const promise = flows.invoke(EditViewNameFlow, { viewId: id });
+    modals.lastOpen<unknown, ViewNameModalResult>().submit({ name: "New", icon: "" });
+    await promise;
+    expect(repo.get(id).getOrUndefined()?.icon).toBe("calendar-days");
   });
 
   it("returns UserAborted when the modal is cancelled", async () => {

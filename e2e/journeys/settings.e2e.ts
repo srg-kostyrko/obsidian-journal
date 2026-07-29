@@ -12,6 +12,7 @@ import {
   openJournalSubpage,
   openSettings,
   openShelfSubpage,
+  pickModalIcon,
   selectModalOption,
   selectModalSelect,
   setModalText,
@@ -167,6 +168,22 @@ describe("settings", () => {
   });
 
   describe("views", () => {
+    // The add modal's icon field is a UiIconSuggest, whose popup overlays the dialog: only a real
+    // Obsidian run proves the suggestion click commits the icon and that the CTA underneath is
+    // still reachable afterwards. The picked icon diverges from the one a view gets by default,
+    // so the assertion fails if the modal's choice never reaches ViewsService.create.
+    it("creates a view with the icon picked in the add modal", async () => {
+      await clickIcon("Add a view");
+      await setModalText("icon-pick-view");
+      await pickModalIcon("lucide-book-open");
+      await submitModal();
+
+      await waitForSettings(
+        (s) => s.views?.[viewIdByName(s.views, "icon-pick-view") ?? ""]?.icon === "lucide-book-open",
+        "icon chosen in the add-view modal was not persisted",
+      );
+    });
+
     it("renames a view and persists the new name", async () => {
       await clickIcon("Add a view");
       await setModalText("rename-view-src");

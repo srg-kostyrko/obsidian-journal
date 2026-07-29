@@ -87,6 +87,16 @@ export async function setModalText(value: string): Promise<void> {
   await activeModal().$('input[type="text"]').setValue(value);
 }
 
+// Choose an icon in the open modal's UiIconSuggest. Typing only filters — the value is committed
+// by clicking a suggestion row, which Obsidian renders in a popup at the document root rather
+// than inside the dialog, so the row is looked up globally. Pass the id as getIconIds() reports
+// it: Obsidian prefixes the bundled Lucide set ("lucide-book-open"), unlike the bare names our
+// own icon map authors.
+export async function pickModalIcon(icon: string): Promise<void> {
+  await activeModal().$(".ui-icon-suggest input").setValue(icon);
+  await $(`.journal-suggestion-icon=${icon}`).click();
+}
+
 // Pick an <option> by its value in the modal's first <select> (journal type, shelf, ...).
 export async function selectModalSelect(value: string): Promise<void> {
   await activeModal().$("select").selectByAttribute("value", value);

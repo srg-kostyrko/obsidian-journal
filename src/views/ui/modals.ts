@@ -16,7 +16,12 @@ export interface ViewNameModalProps {
   currentName?: string;
 }
 
-export const viewNameModal = defineModal<string>()({
+export interface ViewNameModalResult {
+  name: string;
+  icon: string;
+}
+
+export const viewNameModal = defineModal<ViewNameModalResult>()({
   component: ViewNameModal,
   title: ({ currentName }: ViewNameModalProps) =>
     currentName === undefined ? m.view_add_modal_title() : m.view_rename(),

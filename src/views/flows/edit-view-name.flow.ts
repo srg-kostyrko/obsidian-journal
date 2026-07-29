@@ -28,11 +28,11 @@ export class EditViewNameFlow implements Flow<EditViewNameParameters, { viewId: 
               .getView(parameters.viewId)
               .map((v) => v.name)
               .getOrUndefined();
-      const name = yield* this.#modals
+      const { name, icon } = yield* this.#modals
         .open(viewNameModal, { currentName })
         .mapErr(() => new UserAborted("view-name-modal"));
       if (parameters.viewId === undefined) {
-        const id = yield* this.#views.create({ name }).mapErr(toFlowError);
+        const id = yield* this.#views.create({ name, icon }).mapErr(toFlowError);
         return { viewId: id };
       }
       const viewId = parameters.viewId;
