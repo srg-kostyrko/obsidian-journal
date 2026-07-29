@@ -62,6 +62,14 @@ async function freeDayAnchor(): Promise<string> {
 const headerMonthAnchor = async (): Promise<string | undefined> =>
   (await calendar.periodCell("header-month").getAttribute("data-anchor")) ?? undefined;
 
+// The month grid's header cell carries the month's first day, so a month expectation is
+// expressed as an anchor rather than a name.
+const monthStartOf = (anchor: string, offset = 0): string => {
+  const year = Number(anchor.slice(0, 4));
+  const month = Number(anchor.slice(5, 7));
+  return new Date(Date.UTC(year, month - 1 + offset, 1)).toISOString().slice(0, 10);
+};
+
 // Reads the rendered tab-icon class of the open journal-view leaf straight from Obsidian's
 // DOM (not our repository), so it observes what updateHeader() actually painted — the only
 // way to prove the undocumented internal refreshes an open tab. setIcon stamps the svg with
@@ -447,6 +455,38 @@ describe("calendar view", () => {
       await modal.$(`[data-testid="month-cell"][data-anchor="${anchor}"]`).click();
 
       await waitForNotice("There is no note to open.");
+    });
+
+    // The regression this guards: the calendar used to keep a private focus for the opened
+    // note while the toolbar kept stepping the untouched reference date, so "next month"
+    // jumped from the followed month to (previous reference + 1) instead of stepping one
+    // month on from what was on screen.
+    it("steps a month on from the opened note's month rather than from the previous date", async () => {
+      await openCalendarView();
+
+      // ~4 months out, so the note's month differs both from today's and from today + 1
+      // month; a passing assertion cannot be produced by the old behavior.
+      const base = new Date(`${todayAnchor()}T00:00:00Z`);
+      base.setUTCDate(base.getUTCDate() + 120);
+      const far = base.toISOString().slice(0, 10);
+      const path = `day/${far}.md`;
+      await seedNote(path, `---\njournal: daily\njournal-date: ${far}\n---\n`);
+      await waitForJournalFrontmatter(path, { journal: "daily", date: far });
+
+      await openNote(path);
+      await waitForState(
+        headerMonthAnchor,
+        (anchor) => anchor === monthStartOf(far),
+        "calendar did not move to the opened note's month",
+      );
+
+      await $(`${TOOLBAR} [aria-label="Next month"]`).click();
+
+      await waitForState(
+        headerMonthAnchor,
+        (anchor) => anchor === monthStartOf(far, 1),
+        "next month did not step on from the opened note's month",
+      );
     });
   });
 
