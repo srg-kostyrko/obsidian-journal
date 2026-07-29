@@ -1,6 +1,6 @@
 import { render } from "@testing-library/vue";
 import { beforeAll, describe, expect, it } from "vitest";
-import { defineComponent, h, nextTick } from "vue";
+import { defineComponent, h, nextTick, ref } from "vue";
 
 import { installTestCalendar } from "@/calendar/testing";
 import type { AnchorString } from "@/calendar/types";
@@ -29,10 +29,11 @@ function mount(
   });
   if (options.initialActive) harness.active.setActive(options.initialActive);
   const followed: AnchorString[] = [];
+  const enabled = ref(options.enabled ?? true);
   const Host = defineComponent({
     setup() {
       useFollowActiveNote({
-        enabled: () => options.enabled ?? true,
+        enabled: () => enabled.value,
         inScope: options.inScope ?? (() => true),
         onFollow: (date) => followed.push(date),
       });
@@ -42,7 +43,7 @@ function mount(
   render(Host, {
     global: { plugins: [{ install: (app) => provideInjectorOnApp(app, harness.container) }] },
   });
-  return { followed, active: harness.active };
+  return { followed, active: harness.active, enabled };
 }
 
 beforeAll(() => {
@@ -97,6 +98,18 @@ describe("useFollowActiveNote", () => {
     await nextTick();
 
     expect(followed).toEqual([]);
+  });
+
+  it("follows the open note as soon as following is turned on", async () => {
+    const { followed, enabled } = mount({
+      enabled: false,
+      initialActive: { journalName: "daily", anchor: "2026-03-09" as AnchorString },
+    });
+
+    enabled.value = true;
+    await nextTick();
+
+    expect(followed).toEqual(["2026-03-09"]);
   });
 
   it("follows a note that is already active when the view mounts", () => {

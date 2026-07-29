@@ -384,6 +384,8 @@ so cells are populated.
 - [x] **Follow active note** on → opening a journal entry moves the view's date to
       that entry's date.
 - [x] **Follow active note** off → opening an entry leaves the view's date put.
+- [x] Turning **Follow active note** on while a journal entry is already open moves the
+      view to that entry's date straight away, without waiting for the next note switch.
 - [x] Navigate after a follow (e.g. "next month") steps on from the _followed
       note's_ date, not from wherever the view was before the note opened.
 - [x] Closing the followed note, or opening a note outside the view's scope, leaves

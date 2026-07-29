@@ -15,9 +15,11 @@ export function useFollowActiveNote(options: FollowActiveNoteOptions): void {
   const activeEntry = useService(ActiveEntryViewModel);
   const cycle = useService(CycleService);
 
+  // Watching the setting alongside the active note means turning following on syncs the view
+  // to the note already open, rather than waiting for the next note switch to take effect.
   watch(
-    activeEntry.active,
-    (active) => {
+    [activeEntry.active, options.enabled],
+    ([active]) => {
       if (!options.enabled()) return;
       if (active === null || !options.inScope(active.journalName)) return;
       // A week's stored anchor is its first day; the representative day is the one whose
