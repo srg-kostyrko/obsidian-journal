@@ -97,6 +97,16 @@ export async function pickModalIcon(icon: string): Promise<void> {
   await $(`.journal-suggestion-icon=${icon}`).click();
 }
 
+// Choose a date in the open dialog's DatePicker. The trigger opens the picker as a SECOND dialog
+// stacked over this one, so the day cell is looked up globally (activeModal resolves the first
+// dialog) via the production data-testid/data-anchor the calendar cells carry.
+export async function pickModalDate(anchor: string): Promise<void> {
+  await activeModal().$(".date-picker-trigger").click();
+  const cell = $(`.modal-container [data-testid="month-cell"][data-anchor="${anchor}"]`);
+  await cell.waitForClickable({ timeoutMsg: `date picker did not render the ${anchor} cell` });
+  await cell.click();
+}
+
 // Pick an <option> by its value in the modal's first <select> (journal type, shelf, ...).
 export async function selectModalSelect(value: string): Promise<void> {
   await activeModal().$("select").selectByAttribute("value", value);

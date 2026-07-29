@@ -4,6 +4,7 @@ import { openPalette, paletteLists, promptChoose, waitForPrompt } from "../suppo
 import { editorValue } from "../support/editor.js";
 import {
   clickDialogButton,
+  pickModalDate,
   selectModalSelect,
   toggleNamedModalToggle,
   waitForDialogClosed,
@@ -13,8 +14,8 @@ import {
   frontmatterOf,
   openNote,
   seedNote,
+  todayAnchor,
   waitForActiveNote,
-  waitForFrontmatter,
   waitForJournalFrontmatter,
 } from "../support/vault.js";
 
@@ -91,45 +92,33 @@ describe("commands", () => {
 
   describe("connect note", () => {
     it("connects an unconnected note to a journal", async () => {
+      const anchor = todayAnchor();
       await openNote("unconnected.md");
       await openPalette();
       await promptChoose(CONNECT);
-      // ConnectNoteModal: the first <select> is the journal dropdown; the date defaults to today,
-      // and rename/move default off, so the note stays in place and only gains frontmatter.
+      // ConnectNoteModal: the first <select> is the journal dropdown; the date starts empty and
+      // Connect stays disabled until one is picked. Rename/move default off, so the note stays
+      // in place and only gains frontmatter.
       await selectModalSelect("daily");
+      await pickModalDate(anchor);
       await clickDialogButton("Connect");
       await waitForDialogClosed();
 
-      // The date defaults to today's (run-time) anchor, so assert the journal tag and that the
-      // date field was written, without pinning the unknown date value.
-      await waitForFrontmatter(
-        "unconnected.md",
-        (fm) => fm.journal === "daily" && "journal-date" in fm,
-        "connect-note did not attach journal=daily frontmatter",
-      );
+      await waitForJournalFrontmatter("unconnected.md", { journal: "daily", date: anchor });
     });
 
     it("moves and renames the note into the journal when both options are enabled", async () => {
-      // Use a fixed far-future date (unused by any other test in this spec) so the prior test's
-      // connection of unconnected.md to today's anchor does not produce an override toggle here.
-      const anchor = "2030-05-01";
+      // Any current-month day other than today: today's cell is occupied by the previous test's
+      // connection, which would raise an override toggle this test is not about. Staying in the
+      // current month keeps the pick to one click on the view the picker opens with.
+      const anchor = dayAnchor(new Date().getDate() === 1 ? 2 : 1);
       await seedNote("inbox/loose-note.md", "move me\n");
       await openNote("inbox/loose-note.md");
       await openPalette();
       await promptChoose(CONNECT);
       await selectModalSelect("daily");
-      // Set the date via JS so the Vue model updates and the watch fires before toggling.
-      // (Chrome date inputs are locale-dependent via keyboard; direct value + event is reliable.)
-      const dateInput = $(".modal-container input[aria-label='Date']");
-      await browser.execute(
-        (el, v) => {
-          (el as HTMLInputElement).value = v;
-          el.dispatchEvent(new Event("input", { bubbles: true }));
-          el.dispatchEvent(new Event("change", { bubbles: true }));
-        },
-        await dateInput.getElement(),
-        anchor,
-      );
+      // Picking the date resets the rename/move toggles, so it has to come before they are set.
+      await pickModalDate(anchor);
       await toggleNamedModalToggle("Rename file to match the journal");
       await toggleNamedModalToggle("Move file into the journal's folder");
       await clickDialogButton("Connect");
