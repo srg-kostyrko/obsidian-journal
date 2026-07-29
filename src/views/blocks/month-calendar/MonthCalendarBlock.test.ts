@@ -6,10 +6,9 @@ import type * as CalendarModule from "@/calendar";
 import { installTestCalendar } from "@/calendar/testing";
 import type { AnchorString } from "@/calendar/types";
 import { Container, provideInjectorOnApp } from "@/infrastructure/di";
-import { ActiveEntryViewModel, type ActiveEntryRef } from "@/notes-calendar";
 
 import { provideViewContextStub } from "../../testing";
-import { provideViewContext, type ViewContext } from "../../view-context";
+import { provideViewContext, type RefDateOrigin, type ViewContext } from "../../view-context";
 
 import { monthCalendarBlock, type MonthCalendarConfig } from "./month-calendar-block";
 
@@ -42,26 +41,8 @@ vi.mock("@/notes-calendar/ui/NotesMonthView.vue", () => ({
   }),
 }));
 
-const FIXED: { names: readonly string[] } = { names: [] };
-const CUSTOM: { names: readonly string[] } = { names: [] };
-vi.mock("@/notes-calendar/use-shelf-scope", () => ({
-  useShelfScope: () => ({
-    all: computed<readonly string[]>(() => [...FIXED.names, ...CUSTOM.names]),
-    fixed: computed<readonly string[]>(() => FIXED.names),
-    day: computed<readonly string[]>(() => []),
-    week: computed<readonly string[]>(() => []),
-    month: computed<readonly string[]>(() => []),
-    quarter: computed<readonly string[]>(() => []),
-    year: computed<readonly string[]>(() => []),
-    custom: computed<readonly string[]>(() => CUSTOM.names),
-  }),
-}));
-
-const ACTIVE = ref<ActiveEntryRef | null>(null);
-
 function mountBlock(config: MonthCalendarConfig, contextOverride: Partial<ViewContext> = {}) {
   const container = new Container();
-  container.register(ActiveEntryViewModel).useValue({ active: ACTIVE } as unknown as ActiveEntryViewModel);
   const context = provideViewContextStub(contextOverride);
   const renderRoot = () => h(monthCalendarBlock.component, { instanceId: "block-1" as BlockInstanceId, config });
   const Wrapper = defineComponent({
@@ -81,7 +62,6 @@ const baseConfig: MonthCalendarConfig = {
   hiddenWeekdays: [],
   weeks: "left",
   showHeading: true,
-  followActiveDate: true,
 };
 
 beforeAll(() => {
@@ -90,9 +70,6 @@ beforeAll(() => {
 
 afterEach(() => {
   cleanup();
-  FIXED.names = [];
-  CUSTOM.names = [];
-  ACTIVE.value = null;
 });
 
 describe("MonthCalendarBlock", () => {
@@ -134,49 +111,26 @@ describe("MonthCalendarBlock", () => {
     expect(getAllByTestId("month-stub").every((s) => s.dataset.shelf === "my-shelf")).toBe(true);
   });
 
-  it("recenters to the active note's month when it is off-window and following", () => {
-    FIXED.names = ["daily"];
-    ACTIVE.value = { journalName: "daily", anchor: "2026-09-10" as AnchorString };
-    const { getAllByTestId } = mountBlock(baseConfig, { refDate: ref("2026-05-15" as AnchorString) });
-    expect(getAllByTestId("month-stub")[0]?.dataset.month).toBe("2026-09-01");
-  });
+  it("holds the window on a followed date that is already visible", async () => {
+    const refDate = ref("2026-05-15" as AnchorString);
+    const refDateOrigin = ref<RefDateOrigin>("navigate");
+    const { getAllByTestId } = mountBlock({ ...baseConfig, before: 1, after: 1 }, { refDate, refDateOrigin });
 
-  it("recenters to an active custom-interval note's month when following", () => {
-    // v2 moved the whole panel for custom notes too; only the cell highlight is
-    // fixed-journal-scoped, not the follow.
-    CUSTOM.names = ["sprint"];
-    ACTIVE.value = { journalName: "sprint", anchor: "2026-09-10" as AnchorString };
-    const { getAllByTestId } = mountBlock(baseConfig, { refDate: ref("2026-05-15" as AnchorString) });
-    expect(getAllByTestId("month-stub")[0]?.dataset.month).toBe("2026-09-01");
-  });
+    refDateOrigin.value = "follow";
+    refDate.value = "2026-04-02" as AnchorString;
+    await nextTick();
 
-  it("stays on the reference month when following is off", () => {
-    FIXED.names = ["daily"];
-    ACTIVE.value = { journalName: "daily", anchor: "2026-09-10" as AnchorString };
-    const { getAllByTestId } = mountBlock(
-      { ...baseConfig, followActiveDate: false },
-      { refDate: ref("2026-05-15" as AnchorString) },
-    );
-    expect(getAllByTestId("month-stub")[0]?.dataset.month).toBe("2026-05-01");
-  });
-
-  it("stays on the reference window when the active note's month is already visible", () => {
-    FIXED.names = ["daily"];
-    ACTIVE.value = { journalName: "daily", anchor: "2026-05-02" as AnchorString };
-    const { getAllByTestId } = mountBlock(
-      { ...baseConfig, before: 1, after: 1 },
-      { refDate: ref("2026-05-15" as AnchorString) },
-    );
     expect(getAllByTestId("month-stub")[0]?.dataset.month).toBe("2026-04-01");
   });
 
-  it("returns to the reference month when the active note becomes out of scope", async () => {
-    FIXED.names = ["daily"];
-    ACTIVE.value = { journalName: "daily", anchor: "2026-09-10" as AnchorString };
-    const { getAllByTestId } = mountBlock(baseConfig, { refDate: ref("2026-05-15" as AnchorString) });
-    expect(getAllByTestId("month-stub")[0]?.dataset.month).toBe("2026-09-01");
-    ACTIVE.value = { journalName: "weekly", anchor: "2026-11-01" as AnchorString };
+  it("re-centers the window on a navigated date that it already contained", async () => {
+    const refDate = ref("2026-05-15" as AnchorString);
+    const refDateOrigin = ref<RefDateOrigin>("navigate");
+    const { getAllByTestId } = mountBlock({ ...baseConfig, before: 1, after: 1 }, { refDate, refDateOrigin });
+
+    refDate.value = "2026-04-02" as AnchorString;
     await nextTick();
-    expect(getAllByTestId("month-stub")[0]?.dataset.month).toBe("2026-05-01");
+
+    expect(getAllByTestId("month-stub")[0]?.dataset.month).toBe("2026-03-01");
   });
 });

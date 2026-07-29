@@ -2,11 +2,10 @@
 import { useResolvedWeekPlacement } from "@/calendar";
 import { usePeriodWindow } from "@/calendar/ui";
 import NotesWeekView from "@/notes-calendar/ui/NotesWeekView.vue";
-import { useFollowActiveDate } from "@/notes-calendar/use-follow-active-date";
-import { useShelfScope } from "@/notes-calendar/use-shelf-scope";
 
 import { useViewContext } from "../../../view-context";
 import { weekWindowContains } from "../../ui/follow-visibility";
+import { useWindowAnchor } from "../../ui/use-window-anchor";
 
 import type { BlockInstanceId } from "../../../config";
 import type { WeekCalendarConfig } from "../week-calendar-block";
@@ -17,14 +16,11 @@ const props = defineProps<{
 }>();
 
 const viewContext = useViewContext();
-const scope = useShelfScope(() => viewContext.shelf.value);
 
-const focus = useFollowActiveDate({
+const focus = useWindowAnchor({
   refDate: viewContext.refDate,
-  enabled: () => props.config.followActiveDate ?? true,
-  // Follow custom-interval notes too — v2 recentered the panel for every journal type.
-  inScope: (name) => scope.all.value.includes(name),
-  isVisible: (anchor, focusAnchor) => weekWindowContains(anchor, focusAnchor, props.config.before, props.config.after),
+  origin: viewContext.refDateOrigin,
+  contains: (date, anchor) => weekWindowContains(date, anchor, props.config.before, props.config.after),
 });
 
 const weeks = usePeriodWindow(

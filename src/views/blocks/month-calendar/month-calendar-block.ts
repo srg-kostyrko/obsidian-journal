@@ -30,7 +30,6 @@ export const monthCalendarBlock = defineViewBlock<MonthCalendarConfig>({
     hiddenWeekdays: [],
     weeks: "default" as const,
     showHeading: true,
-    followActiveDate: true,
   },
   component: MonthCalendarBlock,
   configComponent: MonthCalendarBlockConfig,
