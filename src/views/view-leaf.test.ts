@@ -1,6 +1,7 @@
 import { createNanoEvents } from "nanoevents";
 import * as v from "valibot";
 import { describe, expect, it } from "vitest";
+import { h, nextTick } from "vue";
 
 import type { AnchorString } from "@/calendar/types";
 import { m } from "@/i18n";
@@ -10,8 +11,8 @@ import { createFakeHost } from "@/infrastructure/host/internal/testing";
 import { InternalObsidianAppToken, InternalPluginToken } from "@/infrastructure/host/internal/tokens";
 import { FakeWorkspaceService } from "@/infrastructure/host/testing";
 import { createLoggerTestingModule } from "@/infrastructure/logger/testing";
-import { CycleService, JournalsIndex, JournalsRepository, JournalsViewModel } from "@/journals";
-import { fakeRepo } from "@/journals/testing";
+import { CycleService, JournalsIndex, JournalsRepository, JournalsViewModel, type JournalConfig } from "@/journals";
+import { fakeRepo, fixedJournal } from "@/journals/testing";
 import { ActiveEntryViewModel } from "@/notes-calendar";
 import { FakeActiveEntryViewModel } from "@/notes-calendar/testing";
 import { ShelvesEventsToken, ShelvesRepository } from "@/shelves";
@@ -22,11 +23,12 @@ import { dividerBlock } from "./blocks/divider/divider-block";
 import { toolbarBlock } from "./blocks/toolbar/toolbar-block";
 import { ToolbarItemsService } from "./blocks/toolbar/toolbar-items-service";
 import { FALLBACK_VIEW_ICON, type BlockInstanceId, type View, type ViewId } from "./config";
-import { defineViewBlock } from "./define-view-block";
+import { defineViewBlock, type ViewBlockDefinition } from "./define-view-block";
 import { ViewsRepository } from "./repository";
 import { ViewsService } from "./service";
 import { ToolbarItemDefinitionToken, ViewBlockDefinitionToken, ViewsEventsToken, type ViewsEvents } from "./tokens";
 import { shelfSelectorItem } from "./toolbar-items/shelf-selector/shelf-selector-item";
+import { useViewContext, type ViewContext } from "./view-context";
 import { JournalViewLeaf } from "./view-leaf";
 
 import type { WorkspaceLeaf } from "obsidian";
@@ -35,13 +37,40 @@ const noop = () => null;
 
 // The root component's follow-active-note watcher (Task 2) resolves these regardless of
 // whether a test cares about following; every container that reaches onOpen needs them wired.
-function registerFollowDependencies(c: Container): void {
-  c.register(JournalsRepository).useValue(fakeRepo({}));
+function registerFollowDependencies(c: Container, journals: Record<string, JournalConfig> = {}): void {
+  c.register(JournalsRepository).useValue(fakeRepo(journals));
   c.register(JournalsViewModel).useClass(JournalsViewModel);
   c.register(JournalsIndex).useClass(JournalsIndex);
   c.register(CycleService).useClass(CycleService);
   c.register(WorkspaceService).useValue(new FakeWorkspaceService() as unknown as WorkspaceService);
   c.register(ActiveEntryViewModel).useValue(new FakeActiveEntryViewModel() as unknown as ActiveEntryViewModel);
+}
+
+// A view block whose sole job is to grab the live ViewContext so a test can read
+// refDate / refDateOrigin the same way a real block would, without asserting on DOM shape.
+interface ContextProbe {
+  context: ViewContext | null;
+}
+
+function renderEmptyDiv() {
+  return h("div");
+}
+
+function contextProbeBlock(): { block: ViewBlockDefinition; probe: ContextProbe } {
+  const probe: ContextProbe = { context: null };
+  const block = defineViewBlock<unknown>({
+    key: "context-probe",
+    label: "Probe",
+    schema: v.object({}),
+    defaultConfig: {},
+    component: {
+      setup() {
+        probe.context = useViewContext();
+        return renderEmptyDiv;
+      },
+    },
+  });
+  return { block, probe };
 }
 
 function seedView(overrides: Partial<View> = {}): View {
@@ -60,7 +89,10 @@ function seedView(overrides: Partial<View> = {}): View {
   };
 }
 
-function build(view: View = seedView()) {
+function build(
+  view: View = seedView(),
+  options: { journals?: Record<string, JournalConfig>; blocks?: readonly ViewBlockDefinition[] } = {},
+) {
   const host = createFakeHost();
   const events = createNanoEvents<ViewsEvents>();
   const repo = ViewsRepository.fromParts({ [view.id]: view }, events);
@@ -74,7 +106,9 @@ function build(view: View = seedView()) {
   c.register(ShelvesRepository).useValue(fakeShelvesRepo());
   c.register(ShelvesEventsToken).useValue(createNanoEvents<ShelvesEvents>());
   c.register(ViewsService).useClass(ViewsService);
-  registerFollowDependencies(c);
+  const blocks = options.blocks ?? [];
+  for (const block of blocks) c.register(ViewBlockDefinitionToken).useValue(block);
+  registerFollowDependencies(c, options.journals);
   const containerEl = document.createElement("div");
   const leafStub = { containerEl };
   const injector = c.resolve(InjectorToken);
@@ -84,7 +118,22 @@ function build(view: View = seedView()) {
     containerEl,
     injector,
     c,
+    activeEntry: c.resolve(ActiveEntryViewModel) as unknown as FakeActiveEntryViewModel,
   };
+}
+
+function buildFollowingView(overrides: Partial<View> = {}) {
+  const { block, probe } = contextProbeBlock();
+  const view = seedView({
+    blocks: [{ id: "block-id" as BlockInstanceId, key: "context-probe", config: {} }],
+    ...overrides,
+  });
+  const { leafInstance, activeEntry } = build(view, {
+    journals: { daily: fixedJournal("daily", { type: "day" }) },
+    blocks: [block],
+  });
+  const leaf = leafInstance as unknown as { onOpen(): Promise<void>; onClose(): Promise<void> };
+  return { leaf, probe, activeEntry };
 }
 
 describe("JournalViewLeaf", () => {
@@ -274,6 +323,43 @@ describe("JournalViewLeaf", () => {
       };
       await leaf.onOpen();
       expect(containerEl.textContent).toContain(m.view_block_config_error());
+      await leaf.onClose();
+    });
+  });
+
+  describe("refDateOrigin", () => {
+    it("reports a follow origin when an in-scope journal note opens", async () => {
+      const { leaf, probe, activeEntry } = buildFollowingView();
+      await leaf.onOpen();
+
+      activeEntry.setActive({ journalName: "daily", anchor: "2026-03-09" as AnchorString });
+      await nextTick();
+
+      expect(probe.context?.refDateOrigin.value).toBe("follow");
+      await leaf.onClose();
+    });
+
+    it("reports a navigate origin after setRefDate overrides a followed date", async () => {
+      const { leaf, probe, activeEntry } = buildFollowingView();
+      await leaf.onOpen();
+      activeEntry.setActive({ journalName: "daily", anchor: "2026-03-09" as AnchorString });
+      await nextTick();
+
+      probe.context?.setRefDate("2026-04-01" as AnchorString);
+
+      expect(probe.context?.refDateOrigin.value).toBe("navigate");
+      await leaf.onClose();
+    });
+
+    it("leaves the view's date unchanged when the view has follow active date turned off", async () => {
+      const { leaf, probe, activeEntry } = buildFollowingView({ followActiveDate: false });
+      await leaf.onOpen();
+      const before = probe.context?.refDate.value;
+
+      activeEntry.setActive({ journalName: "daily", anchor: "2026-03-09" as AnchorString });
+      await nextTick();
+
+      expect(probe.context?.refDate.value).toBe(before);
       await leaf.onClose();
     });
   });
