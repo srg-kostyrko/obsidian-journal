@@ -4,6 +4,7 @@ import { createNanoEvents } from "nanoevents";
 import { afterEach, describe, expect, it, vi } from "vitest";
 import { reactive } from "vue";
 
+import { m } from "@/i18n";
 import { Container, provideInjectorOnApp } from "@/infrastructure/di";
 import { InputSuggestService } from "@/infrastructure/host";
 import { FakeInputSuggestService } from "@/infrastructure/host/input-suggests/testing";
@@ -56,6 +57,18 @@ describe("ButtonItemConfig", () => {
     const [iconInput] = screen.getAllByRole("textbox");
     await userEvent.type(iconInput, "star");
     expect(onChange).toHaveBeenLastCalledWith({ ...baseConfig, icon: "star" });
+  });
+
+  it("restores the current action's icon when the icon reset is pressed", async () => {
+    const onChange = vi.fn();
+    const config: ButtonConfig = {
+      action: { type: "navigate-step", direction: "next", unit: "month", amount: 1 },
+      icon: icons.nav.prev,
+    };
+    mountConfig(config, onChange);
+    const resetButtons = screen.getAllByRole("button", { name: m.view_toolbar_appearance_reset() });
+    await userEvent.click(resetButtons[0]);
+    expect(onChange).toHaveBeenLastCalledWith({ ...config, icon: icons.nav.next });
   });
 
   describe("action mode", () => {

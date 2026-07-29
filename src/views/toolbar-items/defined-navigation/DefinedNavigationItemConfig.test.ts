@@ -2,6 +2,7 @@ import userEvent from "@testing-library/user-event";
 import { cleanup, render, screen } from "@testing-library/vue";
 import { afterEach, describe, expect, it, vi } from "vitest";
 
+import { m } from "@/i18n";
 import { Container, provideInjectorOnApp } from "@/infrastructure/di";
 import { InputSuggestService } from "@/infrastructure/host";
 import { FakeInputSuggestService } from "@/infrastructure/host/input-suggests/testing";
@@ -69,5 +70,14 @@ describe("DefinedNavigationItemConfig", () => {
     const [, labelInput] = screen.getAllByRole("textbox");
     await userEvent.clear(labelInput);
     expect(onChange).toHaveBeenLastCalledWith({ ...config, label: "" });
+  });
+
+  it("restores the current direction's label when the label reset is pressed", async () => {
+    const onChange = vi.fn();
+    const config: DefinedNavigationConfig = { ...definedNavigationConfigFor("day", "next"), label: "‹" };
+    mountConfig(config, onChange);
+    const resetButtons = screen.getAllByRole("button", { name: m.view_toolbar_appearance_reset() });
+    await userEvent.click(resetButtons[1]);
+    expect(onChange).toHaveBeenLastCalledWith({ ...config, label: "›" });
   });
 });
