@@ -36,11 +36,4 @@ const update = (patch: Partial<CustomIntervalsConfig>): void => props.onChange({
       @update:model-value="(value: boolean | undefined) => update({ hideEmpty: value ?? false })"
     />
   </UiSettingRow>
-  <UiSettingRow>
-    <template #name>{{ m.view_block_config_follow_active_date_label() }}</template>
-    <UiToggle
-      :model-value="config.followActiveDate ?? true"
-      @update:model-value="(value: boolean | undefined) => update({ followActiveDate: value ?? false })"
-    />
-  </UiSettingRow>
 </template>

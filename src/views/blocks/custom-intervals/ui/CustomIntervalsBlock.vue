@@ -10,11 +10,9 @@ import { CycleService, JournalsRepository, TimelineService, useIndexVersion } fr
 import type { JournalConfig, JournalNavBlock } from "@/journals";
 import { ActiveEntryViewModel } from "@/notes-calendar/active-entry";
 import { useCalendarAppearanceStyle } from "@/notes-calendar/appearance/use-appearance-style";
-import { useFollowActiveDate } from "@/notes-calendar/use-follow-active-date";
 import { useShelfScope } from "@/notes-calendar/use-shelf-scope";
 
 import { useViewContext } from "../../../view-context";
-import { spanContains } from "../../ui/follow-visibility";
 import { resolveWindow } from "../window-resolution";
 
 import type { BlockInstanceId } from "../../../config";
@@ -43,17 +41,7 @@ const displayedJournals = computed(() => {
   return scope.custom.value.filter((name) => !filter || filter.includes(name));
 });
 
-const focus = useFollowActiveDate({
-  refDate: context.refDate,
-  enabled: () => props.config.followActiveDate ?? true,
-  inScope: (name) => displayedJournals.value.includes(name),
-  isVisible: (anchor, focusAnchor) => {
-    const w = resolveWindow(props.config.window, focusAnchor);
-    return spanContains(anchor, w.start, w.end);
-  },
-});
-
-const window = computed(() => resolveWindow(props.config.window, focus.value));
+const window = computed(() => resolveWindow(props.config.window, context.refDate.value));
 
 const indexVersion = useIndexVersion();
 
