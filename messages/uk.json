@@ -1270,7 +1270,6 @@
 	"view_block_config_weeks_right": "Після будніх днів",
 	"calendar_week_placement_label": "Номери тижнів за замовчуванням",
 	"calendar_week_placement_description": "Де стовпець із номером тижня відображається в блоках календаря, для яких встановлено значення «Використовувати глобальне значення за замовчуванням».",
-	"view_block_config_follow_active_date_label": "Слідкуйте за активною нотаткою",
 	"view_block_config_show_heading_label": "Показати заголовок місяць/рік",
 	"journal_add_modal_anchor_label": "Дата початку",
 	"journal_add_modal_anchor_required_error": "Виберіть дату початку.",

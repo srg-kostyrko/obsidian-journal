@@ -1270,7 +1270,6 @@
 	"view_block_config_weeks_right": "Después de los días laborables",
 	"calendar_week_placement_label": "Números de semana predeterminados",
 	"calendar_week_placement_description": "Donde aparece la columna del número de semana en los bloques de calendario configurados en \"Usar valor predeterminado global\".",
-	"view_block_config_follow_active_date_label": "Sigue la nota activa",
 	"view_block_config_show_heading_label": "Mostrar encabezado de mes/año",
 	"journal_add_modal_anchor_label": "Fecha de inicio",
 	"journal_add_modal_anchor_required_error": "Seleccione una fecha de inicio.",

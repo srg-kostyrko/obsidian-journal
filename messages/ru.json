@@ -1270,7 +1270,6 @@
 	"view_block_config_weeks_right": "После будних дней",
 	"calendar_week_placement_label": "Номера недель по умолчанию",
 	"calendar_week_placement_description": "В тех случаях, когда столбец с номером недели отображается в блоках календаря, для которых установлено значение «Использовать глобальные настройки по умолчанию».",
-	"view_block_config_follow_active_date_label": "Следуйте активной заметке",
 	"view_block_config_show_heading_label": "Показать заголовок месяца/года",
 	"journal_add_modal_anchor_label": "Дата начала",
 	"journal_add_modal_anchor_required_error": "Выберите дату начала.",

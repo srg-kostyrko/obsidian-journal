@@ -1270,7 +1270,6 @@
 	"view_block_config_weeks_right": "Após os dias úteis",
 	"calendar_week_placement_label": "Números de semana padrão",
 	"calendar_week_placement_description": "Onde a coluna do número da semana aparece nos blocos de calendário definidos como \"Usar padrão global\".",
-	"view_block_config_follow_active_date_label": "Siga a nota ativa",
 	"view_block_config_show_heading_label": "Exibir cabeçalho de mês/ano",
 	"journal_add_modal_anchor_label": "Data de início",
 	"journal_add_modal_anchor_required_error": "Selecione uma data de início.",

@@ -1099,7 +1099,6 @@
   "view_block_config_weeks_right": "After weekdays",
   "calendar_week_placement_label": "Default week numbers",
   "calendar_week_placement_description": "Where the week-number column appears in calendar blocks set to \"Use global default\".",
-  "view_block_config_follow_active_date_label": "Follow active note",
   "view_block_config_show_heading_label": "Show month/year heading",
 
   "journal_add_modal_anchor_label": "Start date",

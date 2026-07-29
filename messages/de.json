@@ -1270,7 +1270,6 @@
 	"view_block_config_weeks_right": "Nach Wochentagen",
 	"calendar_week_placement_label": "Standard-Wochennummern",
 	"calendar_week_placement_description": "Wenn die Spalte mit der Wochennummer in Kalenderblöcken angezeigt wird, die auf „Globalen Standardwert verwenden“ eingestellt sind.",
-	"view_block_config_follow_active_date_label": "Aktive Notiz verfolgen",
 	"view_block_config_show_heading_label": "Monat/Jahr-Überschrift anzeigen",
 	"journal_add_modal_anchor_label": "Startdatum",
 	"journal_add_modal_anchor_required_error": "Wählen Sie ein Startdatum.",

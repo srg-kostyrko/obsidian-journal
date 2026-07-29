@@ -3,7 +3,6 @@ import { m } from "@/i18n";
 import { useModalService } from "@/infrastructure/host/modals";
 import UiSettingRow from "@/ui/UiSettingRow.vue";
 import UiTemplateInput from "@/ui/UiTemplateInput.vue";
-import UiToggle from "@/ui/UiToggle.vue";
 
 import { markdownTemplateVariablesModal } from "./modals";
 
@@ -31,13 +30,6 @@ function showVariables(event: Event): void {
       :model-value="config.templatePath"
       :placeholder="m.view_block_markdown_template_path_placeholder()"
       @update:model-value="(value: string) => update({ templatePath: value })"
-    />
-  </UiSettingRow>
-  <UiSettingRow>
-    <template #name>{{ m.view_block_config_follow_active_date_label() }}</template>
-    <UiToggle
-      :model-value="config.followActiveDate ?? true"
-      @update:model-value="(value: boolean | undefined) => update({ followActiveDate: value ?? false })"
     />
   </UiSettingRow>
 </template>

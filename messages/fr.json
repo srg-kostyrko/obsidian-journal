@@ -1270,7 +1270,6 @@
 	"view_block_config_weeks_right": "Après les jours de semaine",
 	"calendar_week_placement_label": "Numéros de semaine par défaut",
 	"calendar_week_placement_description": "Lorsque la colonne du numéro de semaine apparaît dans les blocs de calendrier configurés sur « Utiliser la valeur par défaut globale ».",
-	"view_block_config_follow_active_date_label": "Suivre la note active",
 	"view_block_config_show_heading_label": "Afficher l'en-tête mois/année",
 	"journal_add_modal_anchor_label": "Date de début",
 	"journal_add_modal_anchor_required_error": "Sélectionnez une date de début.",

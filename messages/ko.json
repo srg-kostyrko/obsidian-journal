@@ -1270,7 +1270,6 @@
 	"view_block_config_weeks_right": "평일 이후",
 	"calendar_week_placement_label": "기본 주차 번호",
 	"calendar_week_placement_description": "\"전역 기본값 사용\"으로 설정된 달력 블록에서 주 번호 열이 나타나는 위치입니다.",
-	"view_block_config_follow_active_date_label": "활성 노트를 팔로우하세요",
 	"view_block_config_show_heading_label": "월/년 제목 표시",
 	"journal_add_modal_anchor_label": "시작일",
 	"journal_add_modal_anchor_required_error": "시작 날짜를 선택하세요.",
