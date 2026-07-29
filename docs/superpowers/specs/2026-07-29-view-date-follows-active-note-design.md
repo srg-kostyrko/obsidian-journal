@@ -246,10 +246,12 @@ no honest mapping in any case, since nothing decides which block would win.
    matches v2, which never reset, and is the point of "so that it can be changed
    later".
 2. **Custom-interval follow scope widens.** `CustomIntervalsBlock` currently scopes
-   following to its own `journals` filter; the view-level watcher scopes to the
-   view's shelf scope. A shelf-mate custom journal the block does not display will
-   now move the view. This is the same direction the month grid already takes
-   deliberately (it follows custom-interval notes on purpose).
+   following to its own `journals` filter, which admits only the custom-interval
+   journals it lists; the view-level watcher scopes to the view's shelf scope
+   instead. A shelf-mate custom journal the block does not display will now move
+   the view, and so will a fixed-journal note (daily, weekly, …) that the old
+   filter excluded from following entirely. This is the same direction the month
+   grid already takes deliberately (it follows custom-interval notes on purpose).
 3. **Multi-period windows can step by more than one period.** With
    `before`/`after` greater than zero: the window is Jun–Aug centred on July, the
    user opens an August note (visible, so the window holds), then presses "next
