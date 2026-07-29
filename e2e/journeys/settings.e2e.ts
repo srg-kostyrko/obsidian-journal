@@ -17,6 +17,7 @@ import {
   selectModalSelect,
   setModalText,
   submitModal,
+  submitOverlaidModal,
   toggleSettingRow,
   waitForModalOpen,
 } from "../support/settings.js";
@@ -223,10 +224,39 @@ describe("settings", () => {
       await clickIcon("Configure Calendar");
       await clickIcon("Add block");
       await clickIcon("Add Week calendar");
+      // Adding a configurable block auto-opens its config editor; this test is about the add, so
+      // decline the initial configuration and let the block keep its defaults.
+      await waitForModalOpen();
+      await dismissDialogs();
 
       await waitForSettings(
         (s) => (s.views?.[calId ?? ""]?.blocks?.length ?? 0) === before + 1,
         "added block not persisted to the default view",
+      );
+    });
+
+    it("auto-opens the config editor when a configurable block is added", async () => {
+      const initial = await getSettings();
+      const calId = viewIdByName(initial.views, "Calendar") ?? "";
+      const lastBlockWeeks = (views: Record<string, StoredView> | undefined): string | undefined => {
+        const blocks = views?.[calId]?.blocks ?? [];
+        return (blocks.at(-1) as { config?: { weeks?: string } } | undefined)?.config?.weeks;
+      };
+
+      await expandSection("Views");
+      await clickIcon("Configure Calendar");
+      await clickIcon("Add block");
+      await clickIcon("Add Week calendar");
+
+      // Configuring through the auto-opened editor — never touching the row's edit pencil — must
+      // reach the block that was just added, so assert a value that differs from its default.
+      await waitForModalOpen();
+      await selectModalSelect("right");
+      await submitOverlaidModal();
+
+      await waitForSettings(
+        (s) => lastBlockWeeks(s.views) === "right",
+        "config submitted through the auto-opened editor not persisted",
       );
     });
 
@@ -243,19 +273,7 @@ describe("settings", () => {
       await clickIcon("Configure Calendar");
       await clickIcon("Add toolbar item");
       await clickIcon("Add Period buttons");
-      // The view's icon-suggest input retains focus after the picker closes and its dropdown
-      // overlays the Save button; fire the click programmatically — matching the pattern for the
-      // edit-button click below — to bypass the overlay, then wait for the modal to close.
-      await $(".modal-container:not(:has(.mod-settings)) button.mod-cta").waitForExist({
-        timeoutMsg: "config editor Save button did not appear",
-      });
-      await browser.execute(() => {
-        document.querySelector<HTMLElement>(".modal-container:not(:has(.mod-settings)) button.mod-cta")?.click();
-      });
-      await $(".modal-container:not(:has(.mod-settings))").waitForExist({
-        reverse: true,
-        timeoutMsg: "config editor did not close after Save",
-      });
+      await submitOverlaidModal();
 
       await waitForSettings((s) => itemCount(s.views) === before + 1, "added toolbar item not persisted");
     });
@@ -273,16 +291,7 @@ describe("settings", () => {
       await waitForModalOpen();
 
       // Close it so it does not pollute the next test.
-      await $(".modal-container:not(:has(.mod-settings)) button.mod-cta").waitForExist({
-        timeoutMsg: "config editor Save button did not appear",
-      });
-      await browser.execute(() => {
-        document.querySelector<HTMLElement>(".modal-container:not(:has(.mod-settings)) button.mod-cta")?.click();
-      });
-      await $(".modal-container:not(:has(.mod-settings))").waitForExist({
-        reverse: true,
-        timeoutMsg: "config editor did not close after Save",
-      });
+      await submitOverlaidModal();
 
       // Persist before the next test reads getSettings(); without this the next test's `before`
       // baseline would be stale (missing this item), causing its count assertion to fail.
@@ -359,6 +368,9 @@ describe("settings", () => {
       await clickIcon("Configure Calendar");
       await clickIcon("Add block");
       await clickIcon("Add Week calendar");
+      // Decline the auto-opened config editor: this test edits through the row's edit pencil.
+      await waitForModalOpen();
+      await dismissDialogs();
       await waitForSettings((s) => {
         const block = lastBlock(s.views);
         return block?.key === "week-calendar" && block.config?.weeks === "default";
@@ -405,6 +417,9 @@ describe("settings", () => {
       await clickIcon("Configure Calendar");
       await clickIcon("Add block");
       await clickIcon("Add Week calendar");
+      // Decline the auto-opened config editor: this test edits through the row's edit pencil.
+      await waitForModalOpen();
+      await dismissDialogs();
       await waitForSettings(
         (s) => Array.isArray(lastBlockHidden(s.views)) && lastBlockHidden(s.views)?.length === 0,
         "added week-calendar block did not default to no hidden weekdays",

@@ -1,3 +1,4 @@
+import { cloneFnJSON } from "@vueuse/core";
 import * as v from "valibot";
 
 import { inject } from "@/infrastructure/di";
@@ -78,10 +79,12 @@ export class ToolbarItemsService {
     const definition = this.#items.get(itemKey);
     if (!definition) return new Err(new UnknownToolbarItemKeyError(itemKey));
     const itemId = crypto.randomUUID() as BlockInstanceId;
+    // Both seeds are objects the caller reuses across adds — the definition's shared default and
+    // the picker row's variant — so store a copy or one item's edits rewrite what later ones start from.
     const newItem: ToolbarItemInstance = {
       id: itemId,
       key: itemKey,
-      config: defaultConfig ?? (definition.defaultConfig as Record<string, unknown>),
+      config: cloneFnJSON(defaultConfig ?? (definition.defaultConfig as Record<string, unknown>)),
     };
     const blocks = this.#withItems(view, blockId, (items) => [...items, newItem]);
     return new Ok(blocks === null ? null : { blocks, itemId });

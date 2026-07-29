@@ -338,6 +338,21 @@ describe("ViewsService", () => {
       expect(view?.blocks[0]?.config).toEqual({ x: 0 });
     });
 
+    it("isolates each added block's config from the shared definition default", async () => {
+      const { service, repo } = build({ blocks: [trivialBlock] });
+      const created = await service.create({ name: "X" });
+      expectOk(created);
+      const first = await service.addBlock(created.value, "test-block");
+      expectOk(first);
+      const stored = repo.get(created.value).match({ some: (v) => v.blocks[0]?.config, none: () => undefined });
+      (stored as { x: number }).x = 42;
+
+      const second = await service.addBlock(created.value, "test-block");
+      expectOk(second);
+      const view = repo.get(created.value).match({ some: (v) => v, none: () => null });
+      expect(view?.blocks[1]?.config).toEqual({ x: 0 });
+    });
+
     it("emits updated with the view id and the new blocks list", async () => {
       const { service, events } = build({ blocks: [trivialBlock] });
       const created = await service.create({ name: "X" });
@@ -517,6 +532,26 @@ describe("ViewsService – toolbar-item operations", () => {
         .get(created.value)
         .match({ some: (v) => (v.blocks[0]?.config as { items: unknown[] }).items, none: () => null });
       expect(items).toHaveLength(1);
+    });
+
+    it("isolates each added item's config from the shared definition default", async () => {
+      const { service, repo } = build({ blocks: [toolbarBlock], items: [dummyItem] });
+      const created = await service.create({ name: "X" });
+      expectOk(created);
+      const blockAdded = await service.addBlock(created.value, "toolbar");
+      expectOk(blockAdded);
+      const storedItems = (): { config: { x: number } }[] =>
+        repo.get(created.value).match({
+          some: (view) => (view.blocks[0]?.config as { items: { config: { x: number } }[] }).items,
+          none: () => [],
+        });
+
+      expectOk(await service.addToolbarItem(created.value, blockAdded.value, "dummy"));
+      const first = storedItems()[0];
+      if (first) first.config.x = 42;
+
+      expectOk(await service.addToolbarItem(created.value, blockAdded.value, "dummy"));
+      expect(storedItems()[1]?.config).toEqual({ x: 0 });
     });
 
     it("returns UnknownToolbarItemKeyError when the key is not registered", async () => {

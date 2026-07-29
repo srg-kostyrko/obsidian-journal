@@ -151,6 +151,17 @@ export async function submitModal(): Promise<void> {
   await activeModal().waitForExist({ reverse: true, timeoutMsg: "modal did not close after submit" });
 }
 
+// Submit a config editor that a picker auto-opened. The view's icon-suggest input retains focus
+// after the picker closes and its dropdown overlays the CTA, so a physical click lands on the
+// overlay; fire the click programmatically to bypass it.
+export async function submitOverlaidModal(): Promise<void> {
+  await activeModal().$("button.mod-cta").waitForExist({ timeoutMsg: "config editor Save button did not appear" });
+  await browser.execute((selector) => {
+    document.querySelector<HTMLElement>(`${selector} button.mod-cta`)?.click();
+  }, DIALOG);
+  await activeModal().waitForExist({ reverse: true, timeoutMsg: "config editor did not close after Save" });
+}
+
 export async function deleteInModal(): Promise<void> {
   await activeModal().$("button=Delete").click();
   await activeModal().waitForExist({ reverse: true, timeoutMsg: "modal did not close after Delete" });

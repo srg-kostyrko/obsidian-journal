@@ -100,6 +100,7 @@ export type ViewsLifecycleError =
   | InvalidViewNameError
   | UnknownViewError
   | UnknownViewBlockKeyError
+  | InvalidViewBlockConfigError
   | UnknownToolbarItemKeyError
   | InvalidToolbarItemConfigError;
 

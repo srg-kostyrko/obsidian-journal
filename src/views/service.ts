@@ -139,10 +139,10 @@ export class ViewsService {
         () => new UnknownViewBlockKeyError(key),
       );
       const blockId = crypto.randomUUID() as BlockInstanceId;
-      const blocks = [
-        ...current.blocks,
-        { id: blockId, key, config: definition.defaultConfig as Record<string, unknown> },
-      ];
+      // defaultConfig is a shared module-level object, so storing it directly would let one block's
+      // edits rewrite the default every later block of this type starts from.
+      const config = cloneFnJSON(definition.defaultConfig as Record<string, unknown>);
+      const blocks = [...current.blocks, { id: blockId, key, config }];
       yield* this.#repo.update(id, { blocks }).mapErr((cause) => {
         if (cause.kind === "unknown-view") return cause;
         throw new ViewsInvariantError(`unreachable: repo.update returned ${cause.kind}`);
