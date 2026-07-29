@@ -1,6 +1,8 @@
 import { m } from "@/i18n";
 import { icons } from "@/ui/icons";
 
+import { buttonConfigFor } from "./toolbar-items/button/button-config";
+
 import type { BlockInstanceId, View, ViewId } from "./config";
 
 export const DEFAULT_CALENDAR_VIEW_ID = "b9f3a1c2-0d4e-4f6a-8b1c-2d3e4f5a6b7c" as ViewId;
@@ -45,12 +47,12 @@ export function defaultCalendarView(): View {
             {
               id: ITEM_PICK_DATE,
               key: "button",
-              config: { action: { type: "pick-date", mode: "create", levels: ["day"] } },
+              config: buttonConfigFor({ type: "pick-date", mode: "create", levels: ["day"] }),
             },
             {
               id: ITEM_CURRENT,
               key: "button",
-              config: { action: { type: "current", mode: "navigate", levels: ["day"] } },
+              config: buttonConfigFor({ type: "current", mode: "navigate", levels: ["day"] }),
             },
           ],
         },
@@ -63,12 +65,12 @@ export function defaultCalendarView(): View {
             {
               id: ITEM_PREV_YEAR,
               key: "button",
-              config: { action: { type: "navigate-step", direction: "prev", unit: "year", amount: 1 } },
+              config: buttonConfigFor({ type: "navigate-step", direction: "prev", unit: "year", amount: 1 }),
             },
             {
               id: ITEM_PREV_MONTH,
               key: "button",
-              config: { action: { type: "navigate-step", direction: "prev", unit: "month", amount: 1 } },
+              config: buttonConfigFor({ type: "navigate-step", direction: "prev", unit: "month", amount: 1 }),
             },
             { id: ITEM_SPACER_NAV_LEFT, key: "spacer", config: {} },
             {
@@ -80,12 +82,12 @@ export function defaultCalendarView(): View {
             {
               id: ITEM_NEXT_MONTH,
               key: "button",
-              config: { action: { type: "navigate-step", direction: "next", unit: "month", amount: 1 } },
+              config: buttonConfigFor({ type: "navigate-step", direction: "next", unit: "month", amount: 1 }),
             },
             {
               id: ITEM_NEXT_YEAR,
               key: "button",
-              config: { action: { type: "navigate-step", direction: "next", unit: "year", amount: 1 } },
+              config: buttonConfigFor({ type: "navigate-step", direction: "next", unit: "year", amount: 1 }),
             },
           ],
         },

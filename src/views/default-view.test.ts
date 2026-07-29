@@ -1,6 +1,8 @@
 import * as v from "valibot";
 import { describe, expect, it } from "vitest";
 
+import { icons } from "@/ui/icons";
+
 import { viewSchema } from "./config";
 import { defaultCalendarView } from "./default-view";
 
@@ -76,5 +78,10 @@ describe("defaultCalendarView", () => {
 
   it("opts the default calendar view into open-on-startup", () => {
     expect(defaultCalendarView().openOnStartup).toBe(true);
+  });
+
+  it("seeds the pick-date button with its action's icon", () => {
+    const pick = itemsOf(0).find((item) => item.key === "button");
+    expect((pick!.config as { icon?: string }).icon).toBe(icons.action.pickDate);
   });
 });

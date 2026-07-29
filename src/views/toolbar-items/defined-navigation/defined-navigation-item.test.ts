@@ -8,7 +8,7 @@ import { definedNavigationItem } from "./defined-navigation-item";
 
 describe("definedNavigationItem", () => {
   it("defaults to walking daily notes in the next direction", () => {
-    expect(definedNavigationItem.defaultConfig).toEqual({ target: "day", direction: "next" });
+    expect(definedNavigationItem.defaultConfig).toEqual(definedNavigationConfigFor("day", "next"));
   });
 
   it("parses a valid config", () => {

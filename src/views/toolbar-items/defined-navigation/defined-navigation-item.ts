@@ -3,7 +3,11 @@ import { icons } from "@/ui/icons";
 
 import { defineToolbarItem } from "../../define-toolbar-item";
 
-import { definedNavigationSchema, type DefinedNavigationConfig } from "./defined-navigation-config";
+import {
+  definedNavigationConfigFor,
+  definedNavigationSchema,
+  type DefinedNavigationConfig,
+} from "./defined-navigation-config";
 import DefinedNavigationItem from "./ui/DefinedNavigationItem.vue";
 import DefinedNavigationItemConfig from "./ui/DefinedNavigationItemConfig.vue";
 
@@ -15,7 +19,7 @@ export const definedNavigationItem = defineToolbarItem<DefinedNavigationConfig>(
   description: m.view_toolbar_defined_navigation_description(),
   icon: icons.block.definedNavigation,
   schema: definedNavigationSchema,
-  defaultConfig: { target: "day", direction: "next" },
+  defaultConfig: definedNavigationConfigFor("day", "next"),
   component: DefinedNavigationItem,
   configComponent: DefinedNavigationItemConfig,
 });
