@@ -14,13 +14,20 @@ function renderEmptyDiv() {
   return h("div");
 }
 
-function mount(options: { enabled?: boolean; inScope?: (name: string) => boolean } = {}) {
+function mount(
+  options: {
+    enabled?: boolean;
+    inScope?: (name: string) => boolean;
+    initialActive?: { journalName: string; anchor: AnchorString };
+  } = {},
+) {
   const harness = buildNotesCalendarHarness({
     journals: {
       daily: fixedJournal("daily", { type: "day" }),
       weekly: fixedJournal("weekly", { type: "week" }),
     },
   });
+  if (options.initialActive) harness.active.setActive(options.initialActive);
   const followed: AnchorString[] = [];
   const Host = defineComponent({
     setup() {
@@ -93,18 +100,7 @@ describe("useFollowActiveNote", () => {
   });
 
   it("follows a note that is already active when the view mounts", () => {
-    const harness = buildNotesCalendarHarness({ journals: { daily: fixedJournal("daily", { type: "day" }) } });
-    harness.active.setActive({ journalName: "daily", anchor: "2026-03-09" as AnchorString });
-    const followed: AnchorString[] = [];
-    const Host = defineComponent({
-      setup() {
-        useFollowActiveNote({ enabled: () => true, inScope: () => true, onFollow: (date) => followed.push(date) });
-        return renderEmptyDiv;
-      },
-    });
-    render(Host, {
-      global: { plugins: [{ install: (app) => provideInjectorOnApp(app, harness.container) }] },
-    });
+    const { followed } = mount({ initialActive: { journalName: "daily", anchor: "2026-03-09" as AnchorString } });
 
     expect(followed).toEqual(["2026-03-09"]);
   });
