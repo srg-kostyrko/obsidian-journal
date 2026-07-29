@@ -1004,7 +1004,23 @@
 	"uri_invalid_mode": "URI에서 알 수 없는 열기 모드 \" {mode} \"를 찾았습니다.",
 	"uri_unknown_journal": "\" {journal} \"이라는 이름의 저널이 없습니다.",
 	"uri_no_journal": "해당 날짜를 다룬 저널은 없습니다.",
-	"uri_no_journal_of_type": "{type} 저널이 없습니다.",
+	"uri_no_journal_of_type": [
+		{
+			"declarations": [
+				"input type"
+			],
+			"selectors": [
+				"type"
+			],
+			"match": {
+				"type=day": "일간 노트를 만드는 저널이 없습니다.",
+				"type=week": "주간 노트를 만드는 저널이 없습니다.",
+				"type=month": "월간 노트를 만드는 저널이 없습니다.",
+				"type=quarter": "분기 노트를 만드는 저널이 없습니다.",
+				"type=year": "연간 노트를 만드는 저널이 없습니다."
+			}
+		}
+	],
 	"uri_open_failed": "저널 항목을 열 수 없습니다.",
 	"view_dashboard_section_title": "조회수",
 	"view_dashboard_empty": "아직 조회수가 없습니다.",
@@ -1176,9 +1192,55 @@
 	"view_toolbar_button_default_tooltip_pick_multi": "노트를 엽니다",
 	"view_toolbar_button_default_label_current": "현재의",
 	"view_toolbar_button_default_tooltip_current_multi": "현재 화면으로 바로가기…",
-	"view_toolbar_button_default_tooltip_prev_unit": "이전 {unit}",
-	"view_toolbar_button_default_tooltip_next_unit": "다음 {unit}",
-	"view_toolbar_button_menu_pick": "{unit} 선택하세요.",
+	"view_toolbar_button_default_tooltip_prev_unit": [
+		{
+			"declarations": [
+				"input unit"
+			],
+			"selectors": [
+				"unit"
+			],
+			"match": {
+				"unit=week": "이전 주",
+				"unit=month": "이전 달",
+				"unit=quarter": "이전 분기",
+				"unit=year": "이전 연도"
+			}
+		}
+	],
+	"view_toolbar_button_default_tooltip_next_unit": [
+		{
+			"declarations": [
+				"input unit"
+			],
+			"selectors": [
+				"unit"
+			],
+			"match": {
+				"unit=week": "다음 주",
+				"unit=month": "다음 달",
+				"unit=quarter": "다음 분기",
+				"unit=year": "다음 연도"
+			}
+		}
+	],
+	"view_toolbar_button_menu_pick": [
+		{
+			"declarations": [
+				"input unit"
+			],
+			"selectors": [
+				"unit"
+			],
+			"match": {
+				"unit=day": "날짜 선택",
+				"unit=week": "주 선택",
+				"unit=month": "월 선택",
+				"unit=quarter": "분기 선택",
+				"unit=year": "연도 선택"
+			}
+		}
+	],
 	"view_toolbar_button_config_label_label": "상표",
 	"view_toolbar_button_config_tooltip_label": "툴팁",
 	"view_toolbar_appearance_label_label": "상표",
@@ -1210,11 +1272,11 @@
 				"level"
 			],
 			"match": {
-				"level=day": "낮",
+				"level=day": "일",
 				"level=week": "주",
 				"level=month": "월",
-				"level=quarter": "4분의 1",
-				"level=year": "년도"
+				"level=quarter": "분기",
+				"level=year": "연도"
 			}
 		}
 	],
@@ -1223,14 +1285,16 @@
 	"view_toolbar_button_config_direction_option": [
 		{
 			"declarations": [
-				"input direction"
+				"input direction",
+				"input unit"
 			],
 			"selectors": [
-				"direction"
+				"direction",
+				"unit"
 			],
 			"match": {
-				"direction=prev": "이전의",
-				"direction=next": "다음"
+				"direction=prev,unit=*": "이전",
+				"direction=next,unit=*": "다음"
 			}
 		}
 	],

@@ -121,8 +121,12 @@ function setLevels(levels: ButtonLevel[]): void {
       :aria-label="m.view_toolbar_button_config_direction_label()"
       @update:model-value="(value: string | undefined) => value && setDirection(value as 'prev' | 'next')"
     >
-      <option value="prev">{{ m.view_toolbar_button_config_direction_option({ direction: "prev" }) }}</option>
-      <option value="next">{{ m.view_toolbar_button_config_direction_option({ direction: "next" }) }}</option>
+      <option value="prev">
+        {{ m.view_toolbar_button_config_direction_option({ direction: "prev", unit: stepAction.unit }) }}
+      </option>
+      <option value="next">
+        {{ m.view_toolbar_button_config_direction_option({ direction: "next", unit: stepAction.unit }) }}
+      </option>
     </UiDropdown>
     <UiDropdown
       :model-value="stepAction.unit"

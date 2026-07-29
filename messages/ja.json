@@ -1004,7 +1004,23 @@
 	"uri_invalid_mode": "URI に不明なオープンモード \" {mode} \" があります。",
 	"uri_unknown_journal": "「 {journal} \" という名前のジャーナルは存在しません。",
 	"uri_no_journal": "その日付を扱っているジャーナルはない。",
-	"uri_no_journal_of_type": "{type}ジャーナルは存在しません。",
+	"uri_no_journal_of_type": [
+		{
+			"declarations": [
+				"input type"
+			],
+			"selectors": [
+				"type"
+			],
+			"match": {
+				"type=day": "日次ノートを作成するジャーナルがありません。",
+				"type=week": "週次ノートを作成するジャーナルがありません。",
+				"type=month": "月次ノートを作成するジャーナルがありません。",
+				"type=quarter": "四半期ノートを作成するジャーナルがありません。",
+				"type=year": "年次ノートを作成するジャーナルがありません。"
+			}
+		}
+	],
 	"uri_open_failed": "ジャーナルエントリを開くことができませんでした。",
 	"view_dashboard_section_title": "閲覧数",
 	"view_dashboard_empty": "まだ再生回数はありません。",
@@ -1176,9 +1192,55 @@
 	"view_toolbar_button_default_tooltip_pick_multi": "ノートを開く",
 	"view_toolbar_button_default_label_current": "現在",
 	"view_toolbar_button_default_tooltip_current_multi": "現在のページへジャンプ…",
-	"view_toolbar_button_default_tooltip_prev_unit": "前の{unit}",
-	"view_toolbar_button_default_tooltip_next_unit": "次の{unit}",
-	"view_toolbar_button_menu_pick": "{unit}を選択してください",
+	"view_toolbar_button_default_tooltip_prev_unit": [
+		{
+			"declarations": [
+				"input unit"
+			],
+			"selectors": [
+				"unit"
+			],
+			"match": {
+				"unit=week": "前の週",
+				"unit=month": "前の月",
+				"unit=quarter": "前の四半期",
+				"unit=year": "前の年"
+			}
+		}
+	],
+	"view_toolbar_button_default_tooltip_next_unit": [
+		{
+			"declarations": [
+				"input unit"
+			],
+			"selectors": [
+				"unit"
+			],
+			"match": {
+				"unit=week": "次の週",
+				"unit=month": "次の月",
+				"unit=quarter": "次の四半期",
+				"unit=year": "次の年"
+			}
+		}
+	],
+	"view_toolbar_button_menu_pick": [
+		{
+			"declarations": [
+				"input unit"
+			],
+			"selectors": [
+				"unit"
+			],
+			"match": {
+				"unit=day": "日付を選択",
+				"unit=week": "週を選択",
+				"unit=month": "月を選択",
+				"unit=quarter": "四半期を選択",
+				"unit=year": "年を選択"
+			}
+		}
+	],
 	"view_toolbar_button_config_label_label": "ラベル",
 	"view_toolbar_button_config_tooltip_label": "ツールチップ",
 	"view_toolbar_appearance_label_label": "ラベル",
@@ -1223,14 +1285,16 @@
 	"view_toolbar_button_config_direction_option": [
 		{
 			"declarations": [
-				"input direction"
+				"input direction",
+				"input unit"
 			],
 			"selectors": [
-				"direction"
+				"direction",
+				"unit"
 			],
 			"match": {
-				"direction=prev": "前の",
-				"direction=next": "次"
+				"direction=prev,unit=*": "前の",
+				"direction=next,unit=*": "次の"
 			}
 		}
 	],

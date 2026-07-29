@@ -1004,7 +1004,23 @@
 	"uri_invalid_mode": "URI 中存在未知的打开模式“ {mode} ”。",
 	"uri_unknown_journal": "没有名为“ {journal} ”的日记。",
 	"uri_no_journal": "没有日记收录该日期的内容。",
-	"uri_no_journal_of_type": "没有{type}日记。",
+	"uri_no_journal_of_type": [
+		{
+			"declarations": [
+				"input type"
+			],
+			"selectors": [
+				"type"
+			],
+			"match": {
+				"type=day": "没有任何日记创建每日笔记。",
+				"type=week": "没有任何日记创建每周笔记。",
+				"type=month": "没有任何日记创建每月笔记。",
+				"type=quarter": "没有任何日记创建季度笔记。",
+				"type=year": "没有任何日记创建每年笔记。"
+			}
+		}
+	],
 	"uri_open_failed": "无法打开日记条目。",
 	"view_dashboard_section_title": "浏览量",
 	"view_dashboard_empty": "暂无浏览量。",
@@ -1176,9 +1192,55 @@
 	"view_toolbar_button_default_tooltip_pick_multi": "打开一张便笺",
 	"view_toolbar_button_default_label_current": "当前的",
 	"view_toolbar_button_default_tooltip_current_multi": "跳转至当前…",
-	"view_toolbar_button_default_tooltip_prev_unit": "前一个{unit}",
-	"view_toolbar_button_default_tooltip_next_unit": "Next {unit}",
-	"view_toolbar_button_menu_pick": "选择{unit}",
+	"view_toolbar_button_default_tooltip_prev_unit": [
+		{
+			"declarations": [
+				"input unit"
+			],
+			"selectors": [
+				"unit"
+			],
+			"match": {
+				"unit=week": "上一周",
+				"unit=month": "上个月",
+				"unit=quarter": "上一季度",
+				"unit=year": "上一年"
+			}
+		}
+	],
+	"view_toolbar_button_default_tooltip_next_unit": [
+		{
+			"declarations": [
+				"input unit"
+			],
+			"selectors": [
+				"unit"
+			],
+			"match": {
+				"unit=week": "下一周",
+				"unit=month": "下个月",
+				"unit=quarter": "下一季度",
+				"unit=year": "下一年"
+			}
+		}
+	],
+	"view_toolbar_button_menu_pick": [
+		{
+			"declarations": [
+				"input unit"
+			],
+			"selectors": [
+				"unit"
+			],
+			"match": {
+				"unit=day": "选择日期",
+				"unit=week": "选择周",
+				"unit=month": "选择月份",
+				"unit=quarter": "选择季度",
+				"unit=year": "选择年份"
+			}
+		}
+	],
 	"view_toolbar_button_config_label_label": "标签",
 	"view_toolbar_button_config_tooltip_label": "工具提示",
 	"view_toolbar_appearance_label_label": "标签",
@@ -1211,9 +1273,9 @@
 			],
 			"match": {
 				"level=day": "天",
-				"level=week": "星期",
+				"level=week": "周",
 				"level=month": "月",
-				"level=quarter": "四分之一",
+				"level=quarter": "季度",
 				"level=year": "年"
 			}
 		}
@@ -1223,14 +1285,16 @@
 	"view_toolbar_button_config_direction_option": [
 		{
 			"declarations": [
-				"input direction"
+				"input direction",
+				"input unit"
 			],
 			"selectors": [
-				"direction"
+				"direction",
+				"unit"
 			],
 			"match": {
-				"direction=prev": "以前的",
-				"direction=next": "下一个"
+				"direction=prev,unit=*": "上一个",
+				"direction=next,unit=*": "下一个"
 			}
 		}
 	],

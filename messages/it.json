@@ -1004,7 +1004,23 @@
 	"uri_invalid_mode": "Modalità aperta sconosciuta \" {mode} \" nell'URI.",
 	"uri_unknown_journal": "Non esiste alcun diario denominato \"{journal}\".",
 	"uri_no_journal": "Nessun diario copre quella data.",
-	"uri_no_journal_of_type": "Non esiste alcun diario di tipo {type}.",
+	"uri_no_journal_of_type": [
+		{
+			"declarations": [
+				"input type"
+			],
+			"selectors": [
+				"type"
+			],
+			"match": {
+				"type=day": "Nessun diario crea note giornaliere.",
+				"type=week": "Nessun diario crea note settimanali.",
+				"type=month": "Nessun diario crea note mensili.",
+				"type=quarter": "Nessun diario crea note trimestrali.",
+				"type=year": "Nessun diario crea note annuali."
+			}
+		}
+	],
 	"uri_open_failed": "Impossibile aprire la nota del diario.",
 	"view_dashboard_section_title": "Punti di vista",
 	"view_dashboard_empty": "Nessuna visualizzazione ancora.",
@@ -1176,9 +1192,55 @@
 	"view_toolbar_button_default_tooltip_pick_multi": "Apri una nota",
 	"view_toolbar_button_default_label_current": "Attuale",
 	"view_toolbar_button_default_tooltip_current_multi": "Vai a quello attuale…",
-	"view_toolbar_button_default_tooltip_prev_unit": "Precedente {unit}",
-	"view_toolbar_button_default_tooltip_next_unit": "Successivo {unit}",
-	"view_toolbar_button_menu_pick": "Seleziona {unit}",
+	"view_toolbar_button_default_tooltip_prev_unit": [
+		{
+			"declarations": [
+				"input unit"
+			],
+			"selectors": [
+				"unit"
+			],
+			"match": {
+				"unit=week": "Settimana precedente",
+				"unit=month": "Mese precedente",
+				"unit=quarter": "Trimestre precedente",
+				"unit=year": "Anno precedente"
+			}
+		}
+	],
+	"view_toolbar_button_default_tooltip_next_unit": [
+		{
+			"declarations": [
+				"input unit"
+			],
+			"selectors": [
+				"unit"
+			],
+			"match": {
+				"unit=week": "Settimana successiva",
+				"unit=month": "Mese successivo",
+				"unit=quarter": "Trimestre successivo",
+				"unit=year": "Anno successivo"
+			}
+		}
+	],
+	"view_toolbar_button_menu_pick": [
+		{
+			"declarations": [
+				"input unit"
+			],
+			"selectors": [
+				"unit"
+			],
+			"match": {
+				"unit=day": "Scegli una data",
+				"unit=week": "Scegli una settimana",
+				"unit=month": "Scegli un mese",
+				"unit=quarter": "Scegli un trimestre",
+				"unit=year": "Scegli un anno"
+			}
+		}
+	],
 	"view_toolbar_button_config_label_label": "Etichetta",
 	"view_toolbar_button_config_tooltip_label": "Suggerimento",
 	"view_toolbar_appearance_label_label": "Etichetta",
@@ -1223,14 +1285,22 @@
 	"view_toolbar_button_config_direction_option": [
 		{
 			"declarations": [
-				"input direction"
+				"input direction",
+				"input unit"
 			],
 			"selectors": [
-				"direction"
+				"direction",
+				"unit"
 			],
 			"match": {
-				"direction=prev": "Precedente",
-				"direction=next": "Prossimo"
+				"direction=prev,unit=week": "Precedente",
+				"direction=next,unit=week": "Successiva",
+				"direction=prev,unit=month": "Precedente",
+				"direction=next,unit=month": "Successivo",
+				"direction=prev,unit=quarter": "Precedente",
+				"direction=next,unit=quarter": "Successivo",
+				"direction=prev,unit=year": "Precedente",
+				"direction=next,unit=year": "Successivo"
 			}
 		}
 	],

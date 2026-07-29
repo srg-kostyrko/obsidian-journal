@@ -1004,7 +1004,23 @@
 	"uri_invalid_mode": "Невідомий режим відкриття \" {mode} \" в URI.",
 	"uri_unknown_journal": "Немає журналу з назвою \" {journal} \".",
 	"uri_no_journal": "Жоден журнал не охоплює цю дату.",
-	"uri_no_journal_of_type": "Немає журналу {type} .",
+	"uri_no_journal_of_type": [
+		{
+			"declarations": [
+				"input type"
+			],
+			"selectors": [
+				"type"
+			],
+			"match": {
+				"type=day": "Жоден журнал не створює щоденні нотатки.",
+				"type=week": "Жоден журнал не створює щотижневі нотатки.",
+				"type=month": "Жоден журнал не створює щомісячні нотатки.",
+				"type=quarter": "Жоден журнал не створює квартальні нотатки.",
+				"type=year": "Жоден журнал не створює річні нотатки."
+			}
+		}
+	],
 	"uri_open_failed": "Не вдалося відкрити запис у журналі.",
 	"view_dashboard_section_title": "Перегляди",
 	"view_dashboard_empty": "Переглядів поки що немає.",
@@ -1176,9 +1192,55 @@
 	"view_toolbar_button_default_tooltip_pick_multi": "Відкрити нотатку",
 	"view_toolbar_button_default_label_current": "Поточний",
 	"view_toolbar_button_default_tooltip_current_multi": "Перейти до поточного…",
-	"view_toolbar_button_default_tooltip_prev_unit": "Попередній {unit}",
-	"view_toolbar_button_default_tooltip_next_unit": "Далі {unit}",
-	"view_toolbar_button_menu_pick": "Виберіть {unit}",
+	"view_toolbar_button_default_tooltip_prev_unit": [
+		{
+			"declarations": [
+				"input unit"
+			],
+			"selectors": [
+				"unit"
+			],
+			"match": {
+				"unit=week": "Попередній тиждень",
+				"unit=month": "Попередній місяць",
+				"unit=quarter": "Попередній квартал",
+				"unit=year": "Попередній рік"
+			}
+		}
+	],
+	"view_toolbar_button_default_tooltip_next_unit": [
+		{
+			"declarations": [
+				"input unit"
+			],
+			"selectors": [
+				"unit"
+			],
+			"match": {
+				"unit=week": "Наступний тиждень",
+				"unit=month": "Наступний місяць",
+				"unit=quarter": "Наступний квартал",
+				"unit=year": "Наступний рік"
+			}
+		}
+	],
+	"view_toolbar_button_menu_pick": [
+		{
+			"declarations": [
+				"input unit"
+			],
+			"selectors": [
+				"unit"
+			],
+			"match": {
+				"unit=day": "Виберіть дату",
+				"unit=week": "Виберіть тиждень",
+				"unit=month": "Виберіть місяць",
+				"unit=quarter": "Виберіть квартал",
+				"unit=year": "Виберіть рік"
+			}
+		}
+	],
 	"view_toolbar_button_config_label_label": "Мітка",
 	"view_toolbar_button_config_tooltip_label": "Підказка",
 	"view_toolbar_appearance_label_label": "Мітка",
@@ -1213,7 +1275,7 @@
 				"level=day": "День",
 				"level=week": "Тиждень",
 				"level=month": "Місяць",
-				"level=quarter": "Чверть",
+				"level=quarter": "Квартал",
 				"level=year": "Рік"
 			}
 		}
@@ -1223,14 +1285,16 @@
 	"view_toolbar_button_config_direction_option": [
 		{
 			"declarations": [
-				"input direction"
+				"input direction",
+				"input unit"
 			],
 			"selectors": [
-				"direction"
+				"direction",
+				"unit"
 			],
 			"match": {
-				"direction=prev": "Попередній",
-				"direction=next": "Далі"
+				"direction=prev,unit=*": "Попередній",
+				"direction=next,unit=*": "Наступний"
 			}
 		}
 	],

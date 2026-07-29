@@ -862,7 +862,19 @@
   "uri_invalid_mode": "Unknown open mode \"{mode}\" in the URI.",
   "uri_unknown_journal": "There is no journal named \"{journal}\".",
   "uri_no_journal": "No journal covers that date.",
-  "uri_no_journal_of_type": "There is no {type} journal.",
+  "uri_no_journal_of_type": [
+    {
+      "declarations": ["input type"],
+      "selectors": ["type"],
+      "match": {
+        "type=day": "No journal writes daily notes.",
+        "type=week": "No journal writes weekly notes.",
+        "type=month": "No journal writes monthly notes.",
+        "type=quarter": "No journal writes quarterly notes.",
+        "type=year": "No journal writes yearly notes."
+      }
+    }
+  ],
   "uri_open_failed": "Could not open the journal entry.",
 
   "view_deleted_error": "This view was deleted. Close this tab, or create the view again in the plugin settings.",
@@ -1025,9 +1037,43 @@
   "view_toolbar_button_default_tooltip_pick_multi": "Open a note",
   "view_toolbar_button_default_label_current": "Current",
   "view_toolbar_button_default_tooltip_current_multi": "Jump to current…",
-  "view_toolbar_button_default_tooltip_prev_unit": "Previous {unit}",
-  "view_toolbar_button_default_tooltip_next_unit": "Next {unit}",
-  "view_toolbar_button_menu_pick": "Pick {unit}",
+  "view_toolbar_button_default_tooltip_prev_unit": [
+    {
+      "declarations": ["input unit"],
+      "selectors": ["unit"],
+      "match": {
+        "unit=week": "Previous week",
+        "unit=month": "Previous month",
+        "unit=quarter": "Previous quarter",
+        "unit=year": "Previous year"
+      }
+    }
+  ],
+  "view_toolbar_button_default_tooltip_next_unit": [
+    {
+      "declarations": ["input unit"],
+      "selectors": ["unit"],
+      "match": {
+        "unit=week": "Next week",
+        "unit=month": "Next month",
+        "unit=quarter": "Next quarter",
+        "unit=year": "Next year"
+      }
+    }
+  ],
+  "view_toolbar_button_menu_pick": [
+    {
+      "declarations": ["input unit"],
+      "selectors": ["unit"],
+      "match": {
+        "unit=day": "Pick a date",
+        "unit=week": "Pick a week",
+        "unit=month": "Pick a month",
+        "unit=quarter": "Pick a quarter",
+        "unit=year": "Pick a year"
+      }
+    }
+  ],
   "view_toolbar_button_config_label_label": "Label",
   "view_toolbar_button_config_tooltip_label": "Tooltip",
   "view_toolbar_appearance_label_label": "Label",
@@ -1074,11 +1120,11 @@
   "view_toolbar_button_config_direction_label": "Direction",
   "view_toolbar_button_config_direction_option": [
     {
-      "declarations": ["input direction"],
-      "selectors": ["direction"],
+      "declarations": ["input direction", "input unit"],
+      "selectors": ["direction", "unit"],
       "match": {
-        "direction=prev": "Previous",
-        "direction=next": "Next"
+        "direction=prev,unit=*": "Previous",
+        "direction=next,unit=*": "Next"
       }
     }
   ],

@@ -35,8 +35,8 @@ Grammatical gender, where it decides agreement: `Journal` n. / `Notiz` f. / `Reg
 
 ## What the checker does not catch
 
-It bans wrong _terms_; it cannot see wrong _grammar_. Two known classes remain in the
-corpus, both from the same context-free-MT root cause:
+It bans wrong _terms_; it cannot see wrong _grammar_. Three known classes remain in the
+corpus, all from the same context-free-MT root cause:
 
 - **Part-of-speech misparse.** `bulk_add_filter_combinator_label` is the imperative
   "Filter notes", and seven of ten locales rendered it as the noun phrase "notes about
@@ -46,3 +46,12 @@ corpus, both from the same context-free-MT root cause:
   imperative and participial forms across its variants in es and fr ("Nota mensual
   abierta" beside "Abrir nota trimestral actual"). Only the variants touched by the
   glossary pass were normalized; the rest still diverge.
+- **Period nouns spliced in as `{unit}`.** A message like "Previous {unit}" survives
+  MT unchanged and then renders the raw enum in every locale ("Vorherige week"), and
+  even once translated the adjective cannot agree with the noun it precedes. Period
+  and level nouns therefore never travel as a parameter: the message takes the period
+  as a _selector_ and each variant spells the whole phrase, the way
+  `relative_date_this` and `view_toolbar_button_default_tooltip_prev_unit` do. Where
+  two dropdowns are read as one phrase, the adjective-only message selects on the
+  neighboring unit too (`view_toolbar_button_config_direction_option`), which is a
+  no-op `unit=*` pair in locales without gender agreement.

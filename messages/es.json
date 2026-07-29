@@ -1004,7 +1004,23 @@
 	"uri_invalid_mode": "Modo de apertura desconocido \" {mode} \" en la URI.",
 	"uri_unknown_journal": "No existe ningún diario llamado \"{journal}\".",
 	"uri_no_journal": "Ningún diario cubre esa fecha.",
-	"uri_no_journal_of_type": "No existe ningún diario de tipo {type}.",
+	"uri_no_journal_of_type": [
+		{
+			"declarations": [
+				"input type"
+			],
+			"selectors": [
+				"type"
+			],
+			"match": {
+				"type=day": "Ningún diario crea notas diarias.",
+				"type=week": "Ningún diario crea notas semanales.",
+				"type=month": "Ningún diario crea notas mensuales.",
+				"type=quarter": "Ningún diario crea notas trimestrales.",
+				"type=year": "Ningún diario crea notas anuales."
+			}
+		}
+	],
 	"uri_open_failed": "No se pudo abrir la entrada del diario.",
 	"view_dashboard_section_title": "Vistas",
 	"view_dashboard_empty": "Aún no hay visitas.",
@@ -1176,9 +1192,55 @@
 	"view_toolbar_button_default_tooltip_pick_multi": "Abrir una nota",
 	"view_toolbar_button_default_label_current": "Actual",
 	"view_toolbar_button_default_tooltip_current_multi": "Saltar a la actualidad…",
-	"view_toolbar_button_default_tooltip_prev_unit": "Anterior {unit}",
-	"view_toolbar_button_default_tooltip_next_unit": "Siguiente {unit}",
-	"view_toolbar_button_menu_pick": "Seleccione {unit}",
+	"view_toolbar_button_default_tooltip_prev_unit": [
+		{
+			"declarations": [
+				"input unit"
+			],
+			"selectors": [
+				"unit"
+			],
+			"match": {
+				"unit=week": "Semana anterior",
+				"unit=month": "Mes anterior",
+				"unit=quarter": "Trimestre anterior",
+				"unit=year": "Año anterior"
+			}
+		}
+	],
+	"view_toolbar_button_default_tooltip_next_unit": [
+		{
+			"declarations": [
+				"input unit"
+			],
+			"selectors": [
+				"unit"
+			],
+			"match": {
+				"unit=week": "Semana siguiente",
+				"unit=month": "Mes siguiente",
+				"unit=quarter": "Trimestre siguiente",
+				"unit=year": "Año siguiente"
+			}
+		}
+	],
+	"view_toolbar_button_menu_pick": [
+		{
+			"declarations": [
+				"input unit"
+			],
+			"selectors": [
+				"unit"
+			],
+			"match": {
+				"unit=day": "Elige una fecha",
+				"unit=week": "Elige una semana",
+				"unit=month": "Elige un mes",
+				"unit=quarter": "Elige un trimestre",
+				"unit=year": "Elige un año"
+			}
+		}
+	],
 	"view_toolbar_button_config_label_label": "Etiqueta",
 	"view_toolbar_button_config_tooltip_label": "Información sobre herramientas",
 	"view_toolbar_appearance_label_label": "Etiqueta",
@@ -1213,7 +1275,7 @@
 				"level=day": "Día",
 				"level=week": "Semana",
 				"level=month": "Mes",
-				"level=quarter": "Cuarto",
+				"level=quarter": "Trimestre",
 				"level=year": "Año"
 			}
 		}
@@ -1223,14 +1285,16 @@
 	"view_toolbar_button_config_direction_option": [
 		{
 			"declarations": [
-				"input direction"
+				"input direction",
+				"input unit"
 			],
 			"selectors": [
-				"direction"
+				"direction",
+				"unit"
 			],
 			"match": {
-				"direction=prev": "Anterior",
-				"direction=next": "Próximo"
+				"direction=prev,unit=*": "Anterior",
+				"direction=next,unit=*": "Siguiente"
 			}
 		}
 	],

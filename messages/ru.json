@@ -1004,7 +1004,23 @@
 	"uri_invalid_mode": "Неизвестный режим открытия \" {mode} \" в URI.",
 	"uri_unknown_journal": "Журнал с названием \" {journal} не существует.",
 	"uri_no_journal": "Ни в одном журнале эта дата не упоминается.",
-	"uri_no_journal_of_type": "Журнал {type} отсутствует.",
+	"uri_no_journal_of_type": [
+		{
+			"declarations": [
+				"input type"
+			],
+			"selectors": [
+				"type"
+			],
+			"match": {
+				"type=day": "Ни один журнал не создаёт ежедневные заметки.",
+				"type=week": "Ни один журнал не создаёт еженедельные заметки.",
+				"type=month": "Ни один журнал не создаёт ежемесячные заметки.",
+				"type=quarter": "Ни один журнал не создаёт квартальные заметки.",
+				"type=year": "Ни один журнал не создаёт ежегодные заметки."
+			}
+		}
+	],
 	"uri_open_failed": "Не удалось открыть заметку журнала.",
 	"view_dashboard_section_title": "Мнения",
 	"view_dashboard_empty": "Пока нет просмотров.",
@@ -1176,9 +1192,55 @@
 	"view_toolbar_button_default_tooltip_pick_multi": "Откройте заметку",
 	"view_toolbar_button_default_label_current": "Текущий",
 	"view_toolbar_button_default_tooltip_current_multi": "Перейти к текущему…",
-	"view_toolbar_button_default_tooltip_prev_unit": "Предыдущий {unit}",
-	"view_toolbar_button_default_tooltip_next_unit": "Next {unit}",
-	"view_toolbar_button_menu_pick": "Выберите {unit}",
+	"view_toolbar_button_default_tooltip_prev_unit": [
+		{
+			"declarations": [
+				"input unit"
+			],
+			"selectors": [
+				"unit"
+			],
+			"match": {
+				"unit=week": "Предыдущая неделя",
+				"unit=month": "Предыдущий месяц",
+				"unit=quarter": "Предыдущий квартал",
+				"unit=year": "Предыдущий год"
+			}
+		}
+	],
+	"view_toolbar_button_default_tooltip_next_unit": [
+		{
+			"declarations": [
+				"input unit"
+			],
+			"selectors": [
+				"unit"
+			],
+			"match": {
+				"unit=week": "Следующая неделя",
+				"unit=month": "Следующий месяц",
+				"unit=quarter": "Следующий квартал",
+				"unit=year": "Следующий год"
+			}
+		}
+	],
+	"view_toolbar_button_menu_pick": [
+		{
+			"declarations": [
+				"input unit"
+			],
+			"selectors": [
+				"unit"
+			],
+			"match": {
+				"unit=day": "Выберите дату",
+				"unit=week": "Выберите неделю",
+				"unit=month": "Выберите месяц",
+				"unit=quarter": "Выберите квартал",
+				"unit=year": "Выберите год"
+			}
+		}
+	],
 	"view_toolbar_button_config_label_label": "Этикетка",
 	"view_toolbar_button_config_tooltip_label": "Всплывающая подсказка",
 	"view_toolbar_appearance_label_label": "Этикетка",
@@ -1213,7 +1275,7 @@
 				"level=day": "День",
 				"level=week": "Неделя",
 				"level=month": "Месяц",
-				"level=quarter": "Четверть",
+				"level=quarter": "Квартал",
 				"level=year": "Год"
 			}
 		}
@@ -1223,14 +1285,22 @@
 	"view_toolbar_button_config_direction_option": [
 		{
 			"declarations": [
-				"input direction"
+				"input direction",
+				"input unit"
 			],
 			"selectors": [
-				"direction"
+				"direction",
+				"unit"
 			],
 			"match": {
-				"direction=prev": "Предыдущий",
-				"direction=next": "Следующий"
+				"direction=prev,unit=week": "Предыдущая",
+				"direction=next,unit=week": "Следующая",
+				"direction=prev,unit=month": "Предыдущий",
+				"direction=next,unit=month": "Следующий",
+				"direction=prev,unit=quarter": "Предыдущий",
+				"direction=next,unit=quarter": "Следующий",
+				"direction=prev,unit=year": "Предыдущий",
+				"direction=next,unit=year": "Следующий"
 			}
 		}
 	],
