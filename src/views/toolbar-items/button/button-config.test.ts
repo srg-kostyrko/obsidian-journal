@@ -1,8 +1,9 @@
 import { describe, expect, it } from "vitest";
 
 import { m } from "@/i18n";
+import { icons } from "@/ui/icons";
 
-import { resolveButtonAppearance } from "./button-config";
+import { buttonConfigFor, resolveButtonAppearance, type ButtonAction } from "./button-config";
 
 describe("resolveButtonAppearance", () => {
   describe("pick-date", () => {
@@ -116,5 +117,32 @@ describe("resolveButtonAppearance", () => {
       const a = resolveButtonAppearance({ type: "navigate-step", direction: "next", unit: "year", amount: 1 });
       expect(a.tooltip).toBe(m.view_toolbar_button_default_tooltip_next_unit({ unit: "year" }));
     });
+  });
+});
+
+describe("buttonConfigFor", () => {
+  it("seeds the icon from the action", () => {
+    const config = buttonConfigFor({ type: "navigate-step", direction: "next", unit: "month", amount: 1 });
+    expect(config.icon).toBe(icons.nav.next);
+  });
+
+  it("seeds the label from the action", () => {
+    const config = buttonConfigFor({ type: "current", mode: "create", levels: ["day"] });
+    expect(config.label).toBe(m.common_label_today());
+  });
+
+  it("seeds the tooltip from the action", () => {
+    const config = buttonConfigFor({ type: "pick-date", mode: "navigate", levels: ["day"] });
+    expect(config.tooltip).toBe(m.common_pick_a_date());
+  });
+
+  it("leaves the label unset for an action that has no default label", () => {
+    const config = buttonConfigFor({ type: "pick-date", mode: "navigate", levels: ["day"] });
+    expect(config.label).toBeUndefined();
+  });
+
+  it("carries the action it was given", () => {
+    const action: ButtonAction = { type: "current", mode: "create", levels: ["day"] };
+    expect(buttonConfigFor(action).action).toEqual(action);
   });
 });

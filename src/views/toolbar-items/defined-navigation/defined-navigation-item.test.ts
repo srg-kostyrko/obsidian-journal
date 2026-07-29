@@ -3,7 +3,7 @@ import { describe, expect, it } from "vitest";
 
 import { m } from "@/i18n";
 
-import { resolveDefinedNavigationAppearance } from "./defined-navigation-config";
+import { definedNavigationConfigFor, resolveDefinedNavigationAppearance } from "./defined-navigation-config";
 import { definedNavigationItem } from "./defined-navigation-item";
 
 describe("definedNavigationItem", () => {
@@ -51,5 +51,23 @@ describe("resolveDefinedNavigationAppearance", () => {
       label: "›",
       tooltip: m.command_open_next(),
     });
+  });
+});
+
+describe("definedNavigationConfigFor", () => {
+  it("seeds the left chevron label for the previous direction", () => {
+    expect(definedNavigationConfigFor("day", "previous").label).toBe("‹");
+  });
+
+  it("seeds the right chevron label for the next direction", () => {
+    expect(definedNavigationConfigFor("day", "next").label).toBe("›");
+  });
+
+  it("seeds the tooltip from the direction", () => {
+    expect(definedNavigationConfigFor("day", "next").tooltip).toBe(m.command_open_next());
+  });
+
+  it("carries the target it was given", () => {
+    expect(definedNavigationConfigFor("week", "next").target).toBe("week");
   });
 });

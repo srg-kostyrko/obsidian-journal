@@ -4,6 +4,8 @@ import * as v from "valibot";
 import { m } from "@/i18n";
 import { icons } from "@/ui/icons";
 
+import type { ToolbarItemAppearance } from "../appearance";
+
 const levelField = v.picklist(["day", "week", "month", "quarter", "year"] as const);
 const levelsField = v.pipe(v.array(levelField), v.minLength(1));
 const modeField = v.picklist(["select-only", "navigate", "create"] as const);
@@ -43,13 +45,7 @@ export type ButtonConfigChange = (next: ButtonConfig) => void;
 export type ButtonLevel = "day" | "week" | "month" | "quarter" | "year";
 export type ButtonStepUnit = "week" | "month" | "quarter" | "year";
 
-export interface ButtonAppearance {
-  readonly icon?: string;
-  readonly label?: string;
-  readonly tooltip: string;
-}
-
-export function resolveButtonAppearance(action: ButtonAction): ButtonAppearance {
+export function resolveButtonAppearance(action: ButtonAction): ToolbarItemAppearance {
   return match(action)
     .with({ type: "pick-date", levels: P.when((l) => l.length === 1 && l[0] === "day") }, () => ({
       icon: icons.action.pickDate,
@@ -100,4 +96,8 @@ export function resolveButtonAppearance(action: ButtonAction): ButtonAppearance 
       tooltip: m.view_toolbar_button_default_tooltip_next_unit({ unit }),
     }))
     .exhaustive();
+}
+
+export function buttonConfigFor(action: ButtonAction): ButtonConfig {
+  return { action, ...resolveButtonAppearance(action) };
 }
