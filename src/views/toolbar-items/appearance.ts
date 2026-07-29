@@ -3,3 +3,5 @@ export interface ToolbarItemAppearance {
   readonly label?: string;
   readonly tooltip?: string;
 }
+
+export type ToolbarAppearanceChange = (patch: ToolbarItemAppearance) => void;

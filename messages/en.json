@@ -1031,6 +1031,7 @@
   "view_toolbar_button_config_label_label": "Label",
   "view_toolbar_button_config_tooltip_label": "Tooltip",
   "view_toolbar_appearance_label_label": "Label",
+  "view_toolbar_appearance_reset": "Reset to default",
   "view_toolbar_appearance_tooltip_label": "Tooltip",
   "view_toolbar_button_config_journal_default": "All journals on shelf",
   "view_toolbar_button_config_mode_label": "Behavior",
