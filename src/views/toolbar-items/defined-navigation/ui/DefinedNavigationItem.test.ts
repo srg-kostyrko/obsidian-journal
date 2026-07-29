@@ -1,7 +1,7 @@
 import userEvent from "@testing-library/user-event";
 import { cleanup, render } from "@testing-library/vue";
 import { afterEach, beforeAll, describe, expect, it, vi } from "vitest";
-import { computed, defineComponent, h, shallowRef } from "vue";
+import { computed, defineComponent, h, ref, shallowRef } from "vue";
 
 import { installTestCalendar } from "@/calendar/testing";
 import type { AnchorString } from "@/calendar/types";
@@ -233,5 +233,18 @@ describe("DefinedNavigationItem", () => {
   it("uses a custom tooltip as the button aria-label", () => {
     const { result } = mountItem({ target: "day", direction: "next", tooltip: "Jump back" });
     expect(result.getByLabelText("Jump back")).toBeTruthy();
+  });
+
+  it("searches from the view's date when no journal note is active", async () => {
+    SCOPE.day = ["daily"];
+    const { result, flows } = mountItem(
+      { target: "day", direction: "next" },
+      { active: null, entries: [{ journalName: "daily", anchor: "2026-06-10" }] },
+      { refDate: ref("2026-06-01" as AnchorString) },
+    );
+
+    await userEvent.click(result.getByRole("button"));
+
+    expect(flows.calls[0]?.parameters).toMatchObject({ anchor: "2026-06-10" });
   });
 });

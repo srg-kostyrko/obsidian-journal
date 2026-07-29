@@ -1,7 +1,6 @@
 <script setup lang="ts">
 import { computed } from "vue";
 
-import { CalendarDate } from "@/calendar";
 import type { AnchorString } from "@/calendar";
 import { m } from "@/i18n";
 import { useService } from "@/infrastructure/di";
@@ -47,7 +46,7 @@ const candidates = computed<readonly string[]>(() => {
 function referenceAnchor(): AnchorString {
   const active = activeVM.active.value;
   if (active && candidates.value.includes(active.journalName)) return active.anchor;
-  return CalendarDate.today().toAnchor();
+  return context.refDate.value;
 }
 
 function navigate(direction: "previous" | "next", event: MouseEvent): void {
