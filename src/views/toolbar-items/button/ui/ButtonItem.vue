@@ -84,7 +84,7 @@ async function applyMode(
 async function fire(level: ButtonLevel, event: MouseEvent): Promise<void> {
   await match(props.config.action)
     .with({ type: "pick-date" }, async (action) => {
-      // Open the picker on the period the calendar currently shows, pre-selected (v2 parity).
+      // Open the picker on the period containing the currently selected date, pre-selected (v2 parity).
       const displayed = periodFor(level, CalendarDate.fromAnchor(context.refDate.value));
       const result = await modals.open(datePickerModal, { picking: level, selected: displayed });
       if (result.isErr()) return;
