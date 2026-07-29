@@ -239,12 +239,18 @@ describe("DefinedNavigationItem", () => {
     SCOPE.day = ["daily"];
     const { result, flows } = mountItem(
       { target: "day", direction: "next" },
-      { active: null, entries: [{ journalName: "daily", anchor: "2026-06-10" }] },
-      { refDate: ref("2026-06-01" as AnchorString) },
+      {
+        active: null,
+        entries: [
+          { journalName: "daily", anchor: "2030-03-10" },
+          { journalName: "daily", anchor: "2030-03-20" },
+        ],
+      },
+      { refDate: ref("2030-03-15" as AnchorString) },
     );
 
     await userEvent.click(result.getByRole("button"));
 
-    expect(flows.calls[0]?.parameters).toMatchObject({ anchor: "2026-06-10" });
+    expect(flows.calls[0]?.parameters).toMatchObject({ anchor: "2030-03-20" });
   });
 });
