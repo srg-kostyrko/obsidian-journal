@@ -1274,7 +1274,7 @@
 	"journal_add_modal_anchor_label": "Дата начала",
 	"journal_add_modal_anchor_required_error": "Выберите дату начала.",
 	"journal_add_modal_duration_label": "Продолжительность",
-	"journal_add_modal_every_label": "Каждый",
+	"journal_add_modal_every_label": "Интервал",
 	"journal_add_modal_name_placeholder": "напр. Ежедневный",
 	"journal_add_modal_name_label": "Название журнала",
 	"journal_add_modal_title": "Добавить журнал",
@@ -1578,17 +1578,24 @@
 	"journal_add_modal_every_unit": [
 		{
 			"declarations": [
-				"input unit"
+				"input unit",
+				"input count"
 			],
 			"selectors": [
-				"unit"
+				"unit",
+				"count"
 			],
 			"match": {
-				"unit=day": "день",
-				"unit=week": "неделя",
-				"unit=month": "месяц",
-				"unit=quarter": "четверть",
-				"unit=year": "год"
+				"unit=day,count=1": "день",
+				"unit=day,count=*": "дней",
+				"unit=week,count=1": "неделя",
+				"unit=week,count=*": "недель",
+				"unit=month,count=1": "месяц",
+				"unit=month,count=*": "месяцев",
+				"unit=quarter,count=1": "квартал",
+				"unit=quarter,count=*": "кварталов",
+				"unit=year,count=1": "год",
+				"unit=year,count=*": "лет"
 			}
 		}
 	],

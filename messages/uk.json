@@ -1274,7 +1274,7 @@
 	"journal_add_modal_anchor_label": "Дата початку",
 	"journal_add_modal_anchor_required_error": "Виберіть дату початку.",
 	"journal_add_modal_duration_label": "Тривалість",
-	"journal_add_modal_every_label": "Кожен",
+	"journal_add_modal_every_label": "Інтервал",
 	"journal_add_modal_name_placeholder": "напр. Щоденний",
 	"journal_add_modal_name_label": "Назва журналу",
 	"journal_add_modal_title": "Додати журнал",
@@ -1578,17 +1578,24 @@
 	"journal_add_modal_every_unit": [
 		{
 			"declarations": [
-				"input unit"
+				"input unit",
+				"input count"
 			],
 			"selectors": [
-				"unit"
+				"unit",
+				"count"
 			],
 			"match": {
-				"unit=day": "день",
-				"unit=week": "тиждень",
-				"unit=month": "місяць",
-				"unit=quarter": "чверть",
-				"unit=year": "рік"
+				"unit=day,count=1": "день",
+				"unit=day,count=*": "днів",
+				"unit=week,count=1": "тиждень",
+				"unit=week,count=*": "тижнів",
+				"unit=month,count=1": "місяць",
+				"unit=month,count=*": "місяців",
+				"unit=quarter,count=1": "квартал",
+				"unit=quarter,count=*": "кварталів",
+				"unit=year,count=1": "рік",
+				"unit=year,count=*": "років"
 			}
 		}
 	],

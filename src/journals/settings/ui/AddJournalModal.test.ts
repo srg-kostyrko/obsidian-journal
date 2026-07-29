@@ -112,6 +112,18 @@ describe("AddJournalModal", () => {
     );
   });
 
+  it("pluralizes the interval units when the duration is more than one", async () => {
+    await mountModal();
+    await userEvent.selectOptions(screen.getByRole("combobox"), "custom");
+    await userEvent.clear(screen.getByRole("spinbutton"));
+    await userEvent.type(screen.getByRole("spinbutton"), "3");
+    await waitFor(() =>
+      expect(
+        screen.getByRole("option", { name: m.journal_add_modal_every_unit({ unit: "week", count: 3 }) }),
+      ).toBeTruthy(),
+    );
+  });
+
   it("surfaces a required-name error when submitting without a name", async () => {
     const { submit } = await mountModal();
     await userEvent.click(screen.getByText(m.common_action_create()));

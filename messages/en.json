@@ -1386,14 +1386,19 @@
   ],
   "journal_add_modal_every_unit": [
     {
-      "declarations": ["input unit"],
-      "selectors": ["unit"],
+      "declarations": ["input unit", "input count"],
+      "selectors": ["unit", "count"],
       "match": {
-        "unit=day": "day",
-        "unit=week": "week",
-        "unit=month": "month",
-        "unit=quarter": "quarter",
-        "unit=year": "year"
+        "unit=day,count=1": "day",
+        "unit=day,count=*": "days",
+        "unit=week,count=1": "week",
+        "unit=week,count=*": "weeks",
+        "unit=month,count=1": "month",
+        "unit=month,count=*": "months",
+        "unit=quarter,count=1": "quarter",
+        "unit=quarter,count=*": "quarters",
+        "unit=year,count=1": "year",
+        "unit=year,count=*": "years"
       }
     }
   ],

@@ -1274,7 +1274,7 @@
 	"journal_add_modal_anchor_label": "Date de début",
 	"journal_add_modal_anchor_required_error": "Sélectionnez une date de début.",
 	"journal_add_modal_duration_label": "Durée",
-	"journal_add_modal_every_label": "Chaque",
+	"journal_add_modal_every_label": "Intervalle",
 	"journal_add_modal_name_placeholder": "p. ex. Quotidien",
 	"journal_add_modal_name_label": "Nom du journal",
 	"journal_add_modal_title": "Ajouter un journal",
@@ -1578,17 +1578,24 @@
 	"journal_add_modal_every_unit": [
 		{
 			"declarations": [
-				"input unit"
+				"input unit",
+				"input count"
 			],
 			"selectors": [
-				"unit"
+				"unit",
+				"count"
 			],
 			"match": {
-				"unit=day": "jour",
-				"unit=week": "semaine",
-				"unit=month": "mois",
-				"unit=quarter": "quart",
-				"unit=year": "année"
+				"unit=day,count=1": "jour",
+				"unit=day,count=*": "jours",
+				"unit=week,count=1": "semaine",
+				"unit=week,count=*": "semaines",
+				"unit=month,count=1": "mois",
+				"unit=month,count=*": "mois",
+				"unit=quarter,count=1": "trimestre",
+				"unit=quarter,count=*": "trimestres",
+				"unit=year,count=1": "année",
+				"unit=year,count=*": "années"
 			}
 		}
 	],

@@ -1273,8 +1273,8 @@
 	"view_block_config_show_heading_label": "月/年の見出しを表示する",
 	"journal_add_modal_anchor_label": "開始日",
 	"journal_add_modal_anchor_required_error": "開始日を選択してください。",
-	"journal_add_modal_duration_label": "間隔",
-	"journal_add_modal_every_label": "毎",
+	"journal_add_modal_duration_label": "期間",
+	"journal_add_modal_every_label": "間隔",
 	"journal_add_modal_name_placeholder": "例: デイリー",
 	"journal_add_modal_name_label": "ジャーナル名",
 	"journal_add_modal_title": "ジャーナルを追加",
@@ -1578,17 +1578,24 @@
 	"journal_add_modal_every_unit": [
 		{
 			"declarations": [
-				"input unit"
+				"input unit",
+				"input count"
 			],
 			"selectors": [
-				"unit"
+				"unit",
+				"count"
 			],
 			"match": {
-				"unit=day": "日",
-				"unit=week": "週",
-				"unit=month": "月",
-				"unit=quarter": "四半期",
-				"unit=year": "年"
+				"unit=day,count=1": "日",
+				"unit=day,count=*": "日",
+				"unit=week,count=1": "週",
+				"unit=week,count=*": "週",
+				"unit=month,count=1": "か月",
+				"unit=month,count=*": "か月",
+				"unit=quarter,count=1": "四半期",
+				"unit=quarter,count=*": "四半期",
+				"unit=year,count=1": "年",
+				"unit=year,count=*": "年"
 			}
 		}
 	],

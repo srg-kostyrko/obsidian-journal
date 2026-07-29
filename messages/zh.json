@@ -1273,8 +1273,8 @@
 	"view_block_config_show_heading_label": "显示月份/年份标题",
 	"journal_add_modal_anchor_label": "开始日期",
 	"journal_add_modal_anchor_required_error": "选择开始日期。",
-	"journal_add_modal_duration_label": "期间",
-	"journal_add_modal_every_label": "每一个",
+	"journal_add_modal_duration_label": "时长",
+	"journal_add_modal_every_label": "间隔",
 	"journal_add_modal_name_placeholder": "例如：每日",
 	"journal_add_modal_name_label": "日记名称",
 	"journal_add_modal_title": "添加日记",
@@ -1578,17 +1578,24 @@
 	"journal_add_modal_every_unit": [
 		{
 			"declarations": [
-				"input unit"
+				"input unit",
+				"input count"
 			],
 			"selectors": [
-				"unit"
+				"unit",
+				"count"
 			],
 			"match": {
-				"unit=day": "天",
-				"unit=week": "星期",
-				"unit=month": "月",
-				"unit=quarter": "四分之一",
-				"unit=year": "年"
+				"unit=day,count=1": "天",
+				"unit=day,count=*": "天",
+				"unit=week,count=1": "周",
+				"unit=week,count=*": "周",
+				"unit=month,count=1": "个月",
+				"unit=month,count=*": "个月",
+				"unit=quarter,count=1": "季度",
+				"unit=quarter,count=*": "季度",
+				"unit=year,count=1": "年",
+				"unit=year,count=*": "年"
 			}
 		}
 	],

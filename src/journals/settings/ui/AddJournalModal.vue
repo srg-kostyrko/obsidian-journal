@@ -63,6 +63,7 @@ const [anchorDate] = defineField("anchorDate");
 const anchorDateModel = useAnchorField({ anchor: anchorDate as unknown as Ref<AnchorString>, picking: "day" });
 
 const isCustom = computed(() => values.type === "custom");
+const unitCount = computed(() => values.duration ?? 1);
 
 const onSubmit = handleSubmit((vs) => {
   const write: JournalWrite =
@@ -91,16 +92,20 @@ const onSubmit = handleSubmit((vs) => {
         <option value="custom">{{ m.common_custom_intervals() }}</option>
       </UiDropdown>
     </UiSettingRow>
-    <UiSettingRow v-if="isCustom" :name="m.journal_add_modal_duration_label()">
-      <UiNumberInput v-model="duration" v-bind="durationAttrs" :min="1" />
-    </UiSettingRow>
     <UiSettingRow v-if="isCustom" :name="m.journal_add_modal_every_label()">
-      <UiDropdown v-model="every" v-bind="everyAttrs">
-        <option value="day">{{ m.journal_add_modal_every_unit({ unit: "day" }) }}</option>
-        <option value="week">{{ m.journal_add_modal_every_unit({ unit: "week" }) }}</option>
-        <option value="month">{{ m.journal_add_modal_every_unit({ unit: "month" }) }}</option>
-        <option value="quarter">{{ m.journal_add_modal_every_unit({ unit: "quarter" }) }}</option>
-        <option value="year">{{ m.journal_add_modal_every_unit({ unit: "year" }) }}</option>
+      <UiNumberInput
+        v-model="duration"
+        v-bind="durationAttrs"
+        narrow
+        :min="1"
+        :aria-label="m.journal_add_modal_duration_label()"
+      />
+      <UiDropdown v-model="every" v-bind="everyAttrs" :aria-label="m.journal_add_modal_every_label()">
+        <option value="day">{{ m.journal_add_modal_every_unit({ unit: "day", count: unitCount }) }}</option>
+        <option value="week">{{ m.journal_add_modal_every_unit({ unit: "week", count: unitCount }) }}</option>
+        <option value="month">{{ m.journal_add_modal_every_unit({ unit: "month", count: unitCount }) }}</option>
+        <option value="quarter">{{ m.journal_add_modal_every_unit({ unit: "quarter", count: unitCount }) }}</option>
+        <option value="year">{{ m.journal_add_modal_every_unit({ unit: "year", count: unitCount }) }}</option>
       </UiDropdown>
     </UiSettingRow>
     <UiSettingRow v-if="isCustom" :name="m.journal_add_modal_anchor_label()">

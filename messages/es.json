@@ -1578,17 +1578,24 @@
 	"journal_add_modal_every_unit": [
 		{
 			"declarations": [
-				"input unit"
+				"input unit",
+				"input count"
 			],
 			"selectors": [
-				"unit"
+				"unit",
+				"count"
 			],
 			"match": {
-				"unit=day": "día",
-				"unit=week": "semana",
-				"unit=month": "mes",
-				"unit=quarter": "cuarto",
-				"unit=year": "año"
+				"unit=day,count=1": "día",
+				"unit=day,count=*": "días",
+				"unit=week,count=1": "semana",
+				"unit=week,count=*": "semanas",
+				"unit=month,count=1": "mes",
+				"unit=month,count=*": "meses",
+				"unit=quarter,count=1": "trimestre",
+				"unit=quarter,count=*": "trimestres",
+				"unit=year,count=1": "año",
+				"unit=year,count=*": "años"
 			}
 		}
 	],

@@ -1274,7 +1274,7 @@
 	"journal_add_modal_anchor_label": "Data de início",
 	"journal_add_modal_anchor_required_error": "Selecione uma data de início.",
 	"journal_add_modal_duration_label": "Duração",
-	"journal_add_modal_every_label": "Todo",
+	"journal_add_modal_every_label": "A cada",
 	"journal_add_modal_name_placeholder": "ex.: Diário",
 	"journal_add_modal_name_label": "Nome do diário",
 	"journal_add_modal_title": "Adicionar diário",
@@ -1578,17 +1578,24 @@
 	"journal_add_modal_every_unit": [
 		{
 			"declarations": [
-				"input unit"
+				"input unit",
+				"input count"
 			],
 			"selectors": [
-				"unit"
+				"unit",
+				"count"
 			],
 			"match": {
-				"unit=day": "dia",
-				"unit=week": "semana",
-				"unit=month": "mês",
-				"unit=quarter": "trimestre",
-				"unit=year": "ano"
+				"unit=day,count=1": "dia",
+				"unit=day,count=*": "dias",
+				"unit=week,count=1": "semana",
+				"unit=week,count=*": "semanas",
+				"unit=month,count=1": "mês",
+				"unit=month,count=*": "meses",
+				"unit=quarter,count=1": "trimestre",
+				"unit=quarter,count=*": "trimestres",
+				"unit=year,count=1": "ano",
+				"unit=year,count=*": "anos"
 			}
 		}
 	],
