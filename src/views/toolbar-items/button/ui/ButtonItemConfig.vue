@@ -5,11 +5,10 @@ import { m } from "@/i18n";
 import { useService } from "@/infrastructure/di";
 import { JournalsViewModel } from "@/journals";
 import UiDropdown from "@/ui/UiDropdown.vue";
-import UiIconSuggest from "@/ui/UiIconSuggest.vue";
 import UiSettingRow from "@/ui/UiSettingRow.vue";
-import UiTextInput from "@/ui/UiTextInput.vue";
 import UiToggleGroup from "@/ui/UiToggleGroup.vue";
 
+import ToolbarAppearanceRows from "../../ui/ToolbarAppearanceRows.vue";
 import {
   resolveButtonAppearance,
   type ButtonConfig,
@@ -28,8 +27,7 @@ const allLevels: readonly ButtonLevel[] = ["day", "week", "month", "quarter", "y
 const journalsVM = useService(JournalsViewModel);
 const journalOptions = journalsVM.journalOptions;
 
-// Defaults the action would display when the field is left blank, surfaced as placeholders so the
-// per-action display is visible while editing.
+// What the current action would look like — the source the per-field reset restores from.
 const appearance = computed(() => resolveButtonAppearance(props.config.action));
 
 const update = (patch: Partial<ButtonConfig>): void => props.onChange({ ...props.config, ...patch });
@@ -83,30 +81,7 @@ function setLevels(levels: ButtonLevel[]): void {
 </script>
 
 <template>
-  <UiSettingRow>
-    <template #name>{{ m.common_label_icon() }}</template>
-    <UiIconSuggest
-      :model-value="config.icon ?? ''"
-      :placeholder="appearance.icon"
-      @update:model-value="(value: string | undefined) => update({ icon: value || undefined })"
-    />
-  </UiSettingRow>
-  <UiSettingRow>
-    <template #name>{{ m.view_toolbar_button_config_label_label() }}</template>
-    <UiTextInput
-      :model-value="config.label ?? ''"
-      :placeholder="appearance.label"
-      @update:model-value="(value: string | undefined) => update({ label: value || undefined })"
-    />
-  </UiSettingRow>
-  <UiSettingRow>
-    <template #name>{{ m.view_toolbar_button_config_tooltip_label() }}</template>
-    <UiTextInput
-      :model-value="config.tooltip ?? ''"
-      :placeholder="appearance.tooltip"
-      @update:model-value="(value: string | undefined) => update({ tooltip: value || undefined })"
-    />
-  </UiSettingRow>
+  <ToolbarAppearanceRows :value="config" :appearance="appearance" :on-change="update" />
   <template v-if="periodAction">
     <UiSettingRow>
       <template #name>{{ m.common_label_journal() }}</template>

@@ -3,10 +3,9 @@ import { computed } from "vue";
 
 import { m } from "@/i18n";
 import UiDropdown from "@/ui/UiDropdown.vue";
-import UiIconSuggest from "@/ui/UiIconSuggest.vue";
 import UiSettingRow from "@/ui/UiSettingRow.vue";
-import UiTextInput from "@/ui/UiTextInput.vue";
 
+import ToolbarAppearanceRows from "../../ui/ToolbarAppearanceRows.vue";
 import {
   resolveDefinedNavigationAppearance,
   type DefinedNavigationConfig,
@@ -28,30 +27,7 @@ const update = (patch: Partial<DefinedNavigationConfig>): void => props.onChange
 </script>
 
 <template>
-  <UiSettingRow>
-    <template #name>{{ m.common_label_icon() }}</template>
-    <UiIconSuggest
-      :model-value="config.icon ?? ''"
-      :placeholder="appearance.icon"
-      @update:model-value="(value: string | undefined) => update({ icon: value || undefined })"
-    />
-  </UiSettingRow>
-  <UiSettingRow>
-    <template #name>{{ m.view_toolbar_appearance_label_label() }}</template>
-    <UiTextInput
-      :model-value="config.label ?? ''"
-      :placeholder="appearance.label"
-      @update:model-value="(value: string | undefined) => update({ label: value || undefined })"
-    />
-  </UiSettingRow>
-  <UiSettingRow>
-    <template #name>{{ m.view_toolbar_appearance_tooltip_label() }}</template>
-    <UiTextInput
-      :model-value="config.tooltip ?? ''"
-      :placeholder="appearance.tooltip"
-      @update:model-value="(value: string | undefined) => update({ tooltip: value || undefined })"
-    />
-  </UiSettingRow>
+  <ToolbarAppearanceRows :value="config" :appearance="appearance" :on-change="update" />
   <UiSettingRow>
     <template #name>{{ m.view_toolbar_defined_navigation_target() }}</template>
     <UiDropdown

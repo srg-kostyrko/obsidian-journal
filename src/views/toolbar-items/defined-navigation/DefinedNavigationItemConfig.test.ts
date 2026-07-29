@@ -2,11 +2,11 @@ import userEvent from "@testing-library/user-event";
 import { cleanup, render, screen } from "@testing-library/vue";
 import { afterEach, describe, expect, it, vi } from "vitest";
 
-import { m } from "@/i18n";
 import { Container, provideInjectorOnApp } from "@/infrastructure/di";
 import { InputSuggestService } from "@/infrastructure/host";
 import { FakeInputSuggestService } from "@/infrastructure/host/input-suggests/testing";
 
+import { definedNavigationConfigFor } from "./defined-navigation-config";
 import DefinedNavigationItemConfig from "./ui/DefinedNavigationItemConfig.vue";
 
 import type { DefinedNavigationConfig, DefinedNavigationConfigChange } from "./defined-navigation-config";
@@ -56,48 +56,18 @@ describe("DefinedNavigationItemConfig", () => {
     expect(onChange).toHaveBeenCalledWith({ target: "active", direction: "next" });
   });
 
-  it("emits onChange with the new icon when the icon input changes", async () => {
-    const onChange = vi.fn();
-    mountConfig({ target: "day", direction: "next" }, onChange);
-    const [iconInput] = screen.getAllByRole("textbox");
-    await userEvent.clear(iconInput);
-    await userEvent.type(iconInput, "star");
-    expect(onChange).toHaveBeenLastCalledWith({ target: "day", direction: "next", icon: "star" });
+  it("shows the direction's seeded label in the label field", () => {
+    mountConfig(definedNavigationConfigFor("day", "next"), vi.fn());
+    const [, labelInput] = screen.getAllByRole("textbox");
+    expect((labelInput as HTMLInputElement).value).toBe("›");
   });
 
-  it("emits onChange with the new label when the label input changes", async () => {
+  it("emits the full config when an appearance field changes", async () => {
     const onChange = vi.fn();
-    mountConfig({ target: "day", direction: "next" }, onChange);
+    const config = definedNavigationConfigFor("day", "next");
+    mountConfig(config, onChange);
     const [, labelInput] = screen.getAllByRole("textbox");
     await userEvent.clear(labelInput);
-    await userEvent.type(labelInput, "Older");
-    expect(onChange).toHaveBeenLastCalledWith({ target: "day", direction: "next", label: "Older" });
-  });
-
-  it("emits onChange with the new tooltip when the tooltip input changes", async () => {
-    const onChange = vi.fn();
-    mountConfig({ target: "day", direction: "next" }, onChange);
-    const [, , tooltipInput] = screen.getAllByRole("textbox");
-    await userEvent.clear(tooltipInput);
-    await userEvent.type(tooltipInput, "Jump");
-    expect(onChange).toHaveBeenLastCalledWith({ target: "day", direction: "next", tooltip: "Jump" });
-  });
-
-  it("clears the label (sets undefined) when the label input is emptied", async () => {
-    const onChange = vi.fn();
-    mountConfig({ target: "day", direction: "next", label: "Older" }, onChange);
-    const [, labelInput] = screen.getAllByRole("textbox");
-    await userEvent.clear(labelInput);
-    expect(onChange).toHaveBeenLastCalledWith({ target: "day", direction: "next", label: undefined });
-  });
-
-  it("shows the chevron as the label-field placeholder", () => {
-    mountConfig({ target: "day", direction: "next" }, vi.fn());
-    expect(screen.getByPlaceholderText("›")).toBeTruthy();
-  });
-
-  it("shows the default tooltip as the tooltip-field placeholder", () => {
-    mountConfig({ target: "day", direction: "next" }, vi.fn());
-    expect(screen.getByPlaceholderText(m.command_open_next())).toBeTruthy();
+    expect(onChange).toHaveBeenLastCalledWith({ ...config, label: "" });
   });
 });

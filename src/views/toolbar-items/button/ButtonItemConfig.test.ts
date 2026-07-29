@@ -4,7 +4,6 @@ import { createNanoEvents } from "nanoevents";
 import { afterEach, describe, expect, it, vi } from "vitest";
 import { reactive } from "vue";
 
-import { m } from "@/i18n";
 import { Container, provideInjectorOnApp } from "@/infrastructure/di";
 import { InputSuggestService } from "@/infrastructure/host";
 import { FakeInputSuggestService } from "@/infrastructure/host/input-suggests/testing";
@@ -17,6 +16,7 @@ import {
 } from "@/journals";
 import { icons } from "@/ui/icons";
 
+import { buttonConfigFor } from "./button-config";
 import ButtonItemConfig from "./ui/ButtonItemConfig.vue";
 
 import type { ButtonConfig, ButtonConfigChange } from "./button-config";
@@ -44,51 +44,18 @@ const baseConfig: ButtonConfig = {
 afterEach(() => cleanup());
 
 describe("ButtonItemConfig", () => {
-  it("emits onChange with the new icon when the icon input changes", async () => {
+  it("shows the action's seeded icon in the icon field", () => {
+    mountConfig(buttonConfigFor({ type: "pick-date", mode: "navigate", levels: ["day"] }), vi.fn());
+    const [iconInput] = screen.getAllByRole("textbox");
+    expect((iconInput as HTMLInputElement).value).toBe(icons.action.pickDate);
+  });
+
+  it("emits the full config when an appearance field changes", async () => {
     const onChange = vi.fn();
     mountConfig(baseConfig, onChange);
     const [iconInput] = screen.getAllByRole("textbox");
-    await userEvent.clear(iconInput);
     await userEvent.type(iconInput, "star");
     expect(onChange).toHaveBeenLastCalledWith({ ...baseConfig, icon: "star" });
-  });
-
-  it("emits onChange with the new label when the label input changes", async () => {
-    const onChange = vi.fn();
-    mountConfig(baseConfig, onChange);
-    const [, labelInput] = screen.getAllByRole("textbox");
-    await userEvent.clear(labelInput);
-    await userEvent.type(labelInput, "Go");
-    expect(onChange).toHaveBeenLastCalledWith({ ...baseConfig, label: "Go" });
-  });
-
-  it("emits onChange with the new tooltip when the tooltip input changes", async () => {
-    const onChange = vi.fn();
-    mountConfig(baseConfig, onChange);
-    const [, , tooltipInput] = screen.getAllByRole("textbox");
-    await userEvent.clear(tooltipInput);
-    await userEvent.type(tooltipInput, "Press");
-    expect(onChange).toHaveBeenLastCalledWith({ ...baseConfig, tooltip: "Press" });
-  });
-
-  it("clears the field (sets undefined) when input is emptied", async () => {
-    const onChange = vi.fn();
-    mountConfig({ ...baseConfig, icon: "star" }, onChange);
-    const [iconInput] = screen.getAllByRole("textbox");
-    await userEvent.clear(iconInput);
-    expect(onChange).toHaveBeenLastCalledWith({ ...baseConfig, icon: undefined });
-  });
-
-  describe("default display", () => {
-    it("shows the action's default icon as the icon-field placeholder", () => {
-      mountConfig({ action: { type: "pick-date", mode: "navigate", levels: ["day"] } }, vi.fn());
-      expect(screen.getByPlaceholderText(icons.action.pickDate)).toBeTruthy();
-    });
-
-    it("shows the action's default tooltip as the tooltip-field placeholder", () => {
-      mountConfig({ action: { type: "pick-date", mode: "navigate", levels: ["day"] } }, vi.fn());
-      expect(screen.getByPlaceholderText(m.common_pick_a_date())).toBeTruthy();
-    });
   });
 
   describe("action mode", () => {
