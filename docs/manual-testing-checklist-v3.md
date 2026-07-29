@@ -470,6 +470,9 @@ every one at least once.
 - [x] button **custom icon** → configured icon renders.
 - [x] button **custom label** → configured label renders.
 - [x] button **custom tooltip** → configured tooltip shows on hover.
+- [ ] Add a toolbar button from the **"Pick a date"** preset, clear its icon → the
+      button renders without one after closing the editor.
+- [ ] Press the icon field's **reset control** → the crosshair icon returns.
 - [x] button **mode = select-only** → clicking moves the displayed period but opens
       nothing.
 - [x] button **mode = navigate** → opens an existing entry; a date with no note does
