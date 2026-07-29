@@ -357,31 +357,33 @@ Setup: one command of each `type`, targeting the relevant journal write type.
 Setup: keep the default seeded **Calendar** view; have ≥1 Day journal with notes
 so cells are populated.
 
-- [ ] Run `Open Calendar` (`journal:open-view:<id>`) → the sidebar view opens with
+- [x] Run `Open Calendar` (`journal:open-view:<id>`) → the sidebar view opens with
       its seeded default block layout.
-- [ ] **Leaf = left** → opens in the left sidebar on next open.
-- [ ] **Leaf = right** → opens in the right sidebar.
-- [ ] **Leaf = tab** → opens as a main-area tab.
-- [ ] View **icon** renders in its tab/header.
-- [ ] View **show in ribbon** on → ribbon icon opens the view.
-- [ ] **Default shelf** set → view shows only that shelf's journals.
-- [ ] **Create a new view** → appears with its own `open-view` command.
-- [ ] **Rename a view** → its palette command and tab header follow.
-- [ ] **Clone a view** → the copy carries every block and toolbar item, and edits to
+- [x] **Leaf = left** → opens in the left sidebar on next open.
+- [x] **Leaf = right** → opens in the right sidebar.
+- [x] **Leaf = tab** → opens as a main-area tab.
+- [x] View **icon** renders in its tab/header.
+- [x] View **show in ribbon** on → ribbon icon opens the view.
+- [x] **Default shelf** set → view shows only that shelf's journals.
+- [x] **Create a new view** → appears with its own `open-view` command.
+- [ ] **Create a new view** → the add dialog offers an icon, pre-filled with the default
+      one; the picked icon shows on the new view's subpage and in its tab/header.
+- [x] **Rename a view** → its palette command and tab header follow.
+- [x] **Clone a view** → the copy carries every block and toolbar item, and edits to
       the copy do not affect the original.
-- [ ] **Change leaf while the view is open** → a "move open view?" confirm appears.
-- [ ] Confirm that dialog → the open view relocates immediately.
-- [ ] Cancel that dialog → the view stays put and the setting reverts.
-- [ ] **Open on startup** on a view → reload Obsidian → it opens on launch **without
+- [x] **Change leaf while the view is open** → a "move open view?" confirm appears.
+- [x] Confirm that dialog → the open view relocates immediately.
+- [x] Cancel that dialog → the view stays put and the setting reverts.
+- [x] **Open on startup** on a view → reload Obsidian → it opens on launch **without
       stealing focus** from the active note.
-- [ ] Open-on-startup when a leaf for that view was **already restored** by
+- [x] Open-on-startup when a leaf for that view was **already restored** by
       Obsidian's saved layout → no duplicate leaf.
-- [ ] **Remember last viewed date** on → navigate away from today, reload → the view
+- [x] **Remember last viewed date** on → navigate away from today, reload → the view
       reopens on the remembered date.
-- [ ] Remember-date **off** → the view reopens on today.
-- [ ] **Delete a view** → its `open-view` command disappears from the palette.
-- [ ] **Delete a view** → the remaining views still open normally.
-- [ ] **Delete all views** → plugin does not crash; graceful empty state.
+- [x] Remember-date **off** → the view reopens on today.
+- [x] **Delete a view** → its `open-view` command disappears from the palette.
+- [x] **Delete a view** → the remaining views still open normally.
+- [x] **Delete all views** → plugin does not crash; graceful empty state.
 
 ### View blocks
 
@@ -389,47 +391,47 @@ Setup: edit a view → add each block type via **Add block**. Six block types ar
 registered: `toolbar`, `month-calendar`, `week-calendar`, `custom-intervals`,
 `divider`, `markdown-template` — add every one at least once.
 
-- [ ] **Add block** picker lists all six types.
-- [ ] **toolbar** block adds and renders as an empty strip ("No toolbar items yet").
+- [x] **Add block** picker lists all six types.
+- [x] **toolbar** block adds and renders as an empty strip ("No toolbar items yet").
 - [ ] **Reorder blocks** by drag → the new order renders and survives a reload.
-- [ ] **Remove a block** → it disappears; siblings keep their order.
-- [ ] A view with **no blocks** → "No blocks yet" empty state, no crash.
-- [ ] **month-calendar** renders the current month grid.
-- [ ] month-calendar **before = 1** → also shows the previous month.
-- [ ] month-calendar **after = 1** → also shows the next month.
-- [ ] month-calendar **hiddenWeekdays = Sat+Sun** → those two columns hidden.
-- [ ] month-calendar **hiddenWeekdays = a single midweek day** → only that column
+- [x] **Remove a block** → it disappears; siblings keep their order.
+- [x] A view with **no blocks** → "No blocks yet" empty state, no crash.
+- [x] **month-calendar** renders the current month grid.
+- [x] month-calendar **before = 1** → also shows the previous month.
+- [x] month-calendar **after = 1** → also shows the next month.
+- [x] month-calendar **hiddenWeekdays = Sat+Sun** → those two columns hidden.
+- [x] month-calendar **hiddenWeekdays = a single midweek day** → only that column
       is hidden (it is a per-weekday toggle group, not a weekend switch).
-- [ ] month-calendar **weeks = left** → week-number column on the left.
-- [ ] month-calendar **weeks = right** → week-number column on the right.
-- [ ] month-calendar **weeks = none** → no week column.
-- [ ] month-calendar **weeks = default** → inherits the global calendar setting
+- [x] month-calendar **weeks = left** → week-number column on the left.
+- [x] month-calendar **weeks = right** → week-number column on the right.
+- [x] month-calendar **weeks = none** → no week column.
+- [x] month-calendar **weeks = default** → inherits the global calendar setting
       (change that setting and confirm the block follows).
-- [ ] month-calendar **show heading** off → the month/year heading is hidden.
-- [ ] **Follow active note** on → opening a journal entry moves the calendar to that
+- [x] month-calendar **show heading** off → the month/year heading is hidden.
+- [x] **Follow active note** on → opening a journal entry moves the calendar to that
       entry's period.
-- [ ] **Follow active note** off → opening an entry leaves the displayed period put.
-- [ ] A week number with **no week journal** still shows as an inactive label.
-- [ ] **week-calendar** renders week rows (weeks/before/after behave as on
+- [x] **Follow active note** off → opening an entry leaves the displayed period put.
+- [x] A week number with **no week journal** still shows as an inactive label.
+- [x] **week-calendar** renders week rows (weeks/before/after behave as on
       month-calendar — spot-check one).
-- [ ] **custom-intervals** lists intervals for its assigned journals.
-- [ ] custom-intervals **window = month** (etc.) → lists periods at that scale.
+- [x] **custom-intervals** lists intervals for its assigned journals.
+- [x] custom-intervals **window = month** (etc.) → lists periods at that scale.
 - [ ] custom-intervals **hideEmpty** → periods with no note are hidden.
-- [ ] **divider** renders a separator line.
-- [ ] **markdown-template** + `templatePath` set → renders that file's markdown.
+- [x] **divider** renders a separator line.
+- [x] **markdown-template** + `templatePath` set → renders that file's markdown.
 - [ ] markdown-template with **date-format tokens in the path** → resolves to a
       dated file.
-- [ ] markdown-template body variables — `date`, `current-date`, `time`,
+- [x] markdown-template body variables — `date`, `current-date`, `time`,
       `current-time`, `journal-link` → each substitutes.
-- [ ] markdown-template `journal-link` with a **shift suffix** (e.g. `+1w`) → links
+- [x] markdown-template `journal-link` with a **shift suffix** (e.g. `+1w`) → links
       to the shifted entry.
-- [ ] markdown-template **"Supported variables" help** modal lists them.
-- [ ] **Today highlight — day** → today's day cell is marked `data-today`.
-- [ ] **Today highlight — week** → the week cell containing today is marked.
-- [ ] **Today highlight — month** → the current month cell is marked.
-- [ ] **Today highlight — quarter** → the current quarter cell is marked.
-- [ ] **Today highlight — year** → the current year cell is marked.
-- [ ] **Active highlight** → opening an entry marks its cell active.
+- [x] markdown-template **"Supported variables" help** modal lists them.
+- [x] **Today highlight — day** → today's day cell is marked `data-today`.
+- [x] **Today highlight — week** → the week cell containing today is marked.
+- [x] **Today highlight — month** → the current month cell is marked.
+- [x] **Today highlight — quarter** → the current quarter cell is marked.
+- [x] **Today highlight — year** → the current year cell is marked.
+- [x] **Active highlight** → opening an entry marks its cell active.
 
 ### Toolbar items
 
@@ -437,50 +439,50 @@ Setup: edit a view's toolbar block → add each item. Five item types are regist
 `button`, `shelf-selector`, `spacer`, `period-buttons`, `defined-navigation` — add
 every one at least once.
 
-- [ ] **Add item** picker lists all five types, including the three button presets
+- [x] **Add item** picker lists all five types, including the three button presets
       ("Pick date", "Open note", "Navigate by step").
-- [ ] **Reorder toolbar items** by drag → the new order survives a reload.
-- [ ] **Remove a toolbar item** → it disappears; siblings keep their order.
-- [ ] **spacer** → pushes the items after it to the far edge of the strip.
-- [ ] **defined-navigation**, direction **previous** → steps back at its configured
+- [x] **Reorder toolbar items** by drag → the new order survives a reload.
+- [x] **Remove a toolbar item** → it disappears; siblings keep their order.
+- [x] **spacer** → pushes the items after it to the far edge of the strip.
+- [x] **defined-navigation**, direction **previous** → steps back at its configured
       target.
-- [ ] defined-navigation, direction **next** → steps forward.
+- [x] defined-navigation, direction **next** → steps forward.
 - [ ] defined-navigation **target = active** → follows the active note's journal
       rather than a fixed period.
 - [ ] defined-navigation targets **day / week / month / quarter / year / custom** →
       each steps at that scale.
-- [ ] **button → pick-date** → click opens a date picker.
-- [ ] pick-date **day** level → selecting a day navigates to that day.
-- [ ] pick-date **week** level → selecting a week navigates to that week.
-- [ ] pick-date **month** level → selecting a month navigates to that month.
-- [ ] pick-date **quarter** level → selecting a quarter navigates to that quarter.
-- [ ] pick-date **year** level → selecting a year navigates to that year.
+- [x] **button → pick-date** → click opens a date picker.
+- [x] pick-date **day** level → selecting a day navigates to that day.
+- [x] pick-date **week** level → selecting a week navigates to that week.
+- [x] pick-date **month** level → selecting a month navigates to that month.
+- [x] pick-date **quarter** level → selecting a quarter navigates to that quarter.
+- [x] pick-date **year** level → selecting a year navigates to that year.
 - [ ] **button → current** → jumps to the current period at its configured level.
 - [ ] **button → navigate-step**, amount 1, forward → steps +1 unit.
 - [ ] navigate-step amount 1, **backward** → steps −1 unit.
 - [ ] navigate-step **amount = 3** → steps by 3 units.
-- [ ] button **custom icon** → configured icon renders.
-- [ ] button **custom label** → configured label renders.
-- [ ] button **custom tooltip** → configured tooltip shows on hover.
-- [ ] button **mode = select-only** → clicking moves the displayed period but opens
+- [x] button **custom icon** → configured icon renders.
+- [x] button **custom label** → configured label renders.
+- [x] button **custom tooltip** → configured tooltip shows on hover.
+- [x] button **mode = select-only** → clicking moves the displayed period but opens
       nothing.
-- [ ] button **mode = navigate** → opens an existing entry; a date with no note does
+- [x] button **mode = navigate** → opens an existing entry; a date with no note does
       nothing visible.
-- [ ] button **mode = create** → opens _or creates_ the entry.
-- [ ] button with **two or more levels** configured → clicking pops a menu to choose
+- [x] button **mode = create** → opens _or creates_ the entry.
+- [x] button with **two or more levels** configured → clicking pops a menu to choose
       the level instead of acting directly.
 - [ ] button **bound to a specific journal** → acts on that journal regardless of the
       view's shelf scope.
-- [ ] **shelf-selector** dropdown → lists the available shelves.
-- [ ] **shelf-selector** selection → re-scopes the calendar to that shelf's
+- [x] **shelf-selector** dropdown → lists the available shelves.
+- [x] **shelf-selector** selection → re-scopes the calendar to that shelf's
       journals.
 - [ ] shelf-selector selection **persists** across closing and reopening the view.
 - [ ] **Delete the selected shelf** → the selector falls back gracefully rather than
       showing a dangling name.
-- [ ] **period-buttons — week** toggle → shows/hides the week level.
-- [ ] **period-buttons — month** toggle → shows/hides the month level.
-- [ ] **period-buttons — quarter** toggle → shows/hides the quarter level.
-- [ ] **period-buttons — year** toggle → shows/hides the year level.
+- [x] **period-buttons — week** toggle → shows/hides the week level.
+- [x] **period-buttons — month** toggle → shows/hides the month level.
+- [x] **period-buttons — quarter** toggle → shows/hides the quarter level.
+- [x] **period-buttons — year** toggle → shows/hides the year level.
 
 ---
 
