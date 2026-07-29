@@ -381,6 +381,13 @@ so cells are populated.
 - [x] **Remember last viewed date** on → navigate away from today, reload → the view
       reopens on the remembered date.
 - [x] Remember-date **off** → the view reopens on today.
+- [x] **Follow active note** on → opening a journal entry moves the view's date to
+      that entry's date.
+- [x] **Follow active note** off → opening an entry leaves the view's date put.
+- [x] Navigate after a follow (e.g. "next month") steps on from the _followed
+      note's_ date, not from wherever the view was before the note opened.
+- [x] Closing the followed note, or opening a note outside the view's scope, leaves
+      the view where it is (no snap-back to the previously navigated date).
 - [x] **Delete a view** → its `open-view` command disappears from the palette.
 - [x] **Delete a view** → the remaining views still open normally.
 - [x] **Delete all views** → plugin does not crash; graceful empty state.
@@ -408,9 +415,6 @@ registered: `toolbar`, `month-calendar`, `week-calendar`, `custom-intervals`,
 - [x] month-calendar **weeks = default** → inherits the global calendar setting
       (change that setting and confirm the block follows).
 - [x] month-calendar **show heading** off → the month/year heading is hidden.
-- [x] **Follow active note** on → opening a journal entry moves the calendar to that
-      entry's period.
-- [x] **Follow active note** off → opening an entry leaves the displayed period put.
 - [x] A week number with **no week journal** still shows as an inactive label.
 - [x] **week-calendar** renders week rows (weeks/before/after behave as on
       month-calendar — spot-check one).
