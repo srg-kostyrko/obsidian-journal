@@ -117,15 +117,15 @@ function moveDown(index: number): void {
         <template #rowAction="{ index, isFirst, isLast }">
           <span class="nav-row-gutter">
             <UiIconButton
-              v-if="!isFirst"
               :icon="icons.action.moveUp"
               :tooltip="m.common_action_move_up()"
+              :disabled="isFirst"
               @click="moveUp(index)"
             />
             <UiIconButton
-              v-if="!isLast"
               :icon="icons.action.moveDown"
               :tooltip="m.common_action_move_down()"
+              :disabled="isLast"
               @click="moveDown(index)"
             />
             <UiIconButton :icon="icons.action.configure" :tooltip="m.block_rows_edit_tooltip()" @click="edit(index)" />
@@ -173,5 +173,10 @@ function moveDown(index: number): void {
 }
 .nav-row-gutter :deep(.icon-button) {
   padding: var(--size-2-1) var(--size-2-2);
+}
+/* The move buttons stay in place on the edge rows so every row's gutter keeps the same
+   columns; dimmed so an unusable one does not read as clickable. */
+.nav-row-gutter :deep(.icon-button:disabled) {
+  opacity: 0.5;
 }
 </style>

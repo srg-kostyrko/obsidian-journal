@@ -127,17 +127,30 @@ describe("NavBlockSection", () => {
     const { storage } = mount([a, b]);
     await userEvent.click(screen.getByText(m.nav_block_section_title()));
     const ups = screen.getAllByLabelText(m.common_action_move_up());
-    await userEvent.click(ups[0]);
+    await userEvent.click(ups.at(1)!);
     expect(storage.daily?.navBlock.rows.map((r) => r.template)).toEqual(["B", "A"]);
   });
 
-  it("hides up arrow on first row and down arrow on last row", async () => {
+  it("disables the up arrow on the first row", async () => {
     mount([
       { ...sampleRow, template: "A" },
       { ...sampleRow, template: "B" },
     ]);
     await userEvent.click(screen.getByText(m.nav_block_section_title()));
-    expect(screen.getAllByLabelText(m.common_action_move_up()).length).toBe(1);
-    expect(screen.getAllByLabelText(m.common_action_move_down()).length).toBe(1);
+    expect(screen.getAllByLabelText(m.common_action_move_up()).map((b) => (b as HTMLButtonElement).disabled)).toEqual([
+      true,
+      false,
+    ]);
+  });
+
+  it("disables the down arrow on the last row", async () => {
+    mount([
+      { ...sampleRow, template: "A" },
+      { ...sampleRow, template: "B" },
+    ]);
+    await userEvent.click(screen.getByText(m.nav_block_section_title()));
+    expect(screen.getAllByLabelText(m.common_action_move_down()).map((b) => (b as HTMLButtonElement).disabled)).toEqual(
+      [false, true],
+    );
   });
 });
