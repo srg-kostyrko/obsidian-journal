@@ -67,7 +67,7 @@ In `src/views/blocks/ui/follow-visibility.ts`, replace the body of `monthWindowC
 export function monthWindowContains(anchor: AnchorString, focus: AnchorString, before: number, after: number): boolean {
   const focusMonth = periodOfKind("month", CalendarDate.fromAnchor(focus)) as MonthPeriod;
   const months = periodWindow(focusMonth, before, after);
-  // Spillover days painted in the grid's margins belong to a neighbouring month this window
+  // Spillover days painted in the grid's margins belong to a neighboring month this window
   // does not display, so they are not "already shown" for the purpose of holding a layout.
   return spanContains(
     anchor,
@@ -280,7 +280,7 @@ it("writes the opened note's date when its period does not contain the view's da
   expect(followed).toEqual(["2026-07-01"]);
 });
 
-it("writes a neighbouring month's day note rather than holding on the current month", async () => {
+it("writes a neighboring month's day note rather than holding on the current month", async () => {
   const { followed, active } = mount({ currentDate: "2026-04-15" });
 
   active.setActive({ journalName: "daily", anchor: "2026-05-01" as AnchorString });
@@ -569,7 +569,7 @@ active-note follow — week/quarter/year spillover only, see #163 for the day/mo
 Append a new entry to the numbered list, matching the existing entries' `- [x] **N. Title.** Fixed (...)` shape:
 
 ```markdown
-- [x] **163. Follow held the calendar on spillover days.** Fixed (2026-07-30): `monthWindowContains` expanded the displayed months to whole weeks before testing containment, so opening a note whose date fell in the grid's margin held the window while `refDate` moved into the neighbouring month — the toolbar's period buttons named a month the grid was not laid out around (`src/views/blocks/ui/follow-visibility.ts`). v2 moved the display unconditionally for day/month/custom notes (`_old-code/calendar-view/CalendarView.vue` `default:` branch) and only guarded quarter/year by whether the display was already inside that period. Now: a window holds only for a date whose period at that block's granularity is one it displays, and a follow leaves the view's date alone when the opened note's period already contains it — v2's outcomes, without v2's per-type branching. Two deliberate deviations: a custom interval containing the view's date no longer pulls the display to the interval's start, and a month note for the month you are already in no longer snaps the date to the 1st (visible only through a custom-intervals block resolving a narrower window from it). Spec: `docs/superpowers/specs/2026-07-30-view-follow-period-alignment-design.md`.
+- [x] **163. Follow held the calendar on spillover days.** Fixed (2026-07-30): `monthWindowContains` expanded the displayed months to whole weeks before testing containment, so opening a note whose date fell in the grid's margin held the window while `refDate` moved into the neighboring month — the toolbar's period buttons named a month the grid was not laid out around (`src/views/blocks/ui/follow-visibility.ts`). v2 moved the display unconditionally for day/month/custom notes (`_old-code/calendar-view/CalendarView.vue` `default:` branch) and only guarded quarter/year by whether the display was already inside that period. Now: a window holds only for a date whose period at that block's granularity is one it displays, and a follow leaves the view's date alone when the opened note's period already contains it — v2's outcomes, without v2's per-type branching. Two deliberate deviations: a custom interval containing the view's date no longer pulls the display to the interval's start, and a month note for the month you are already in no longer snaps the date to the 1st (visible only through a custom-intervals block resolving a narrower window from it). Spec: `docs/superpowers/specs/2026-07-30-view-follow-period-alignment-design.md`.
 ```
 
 - [ ] **Step 4: Add the manual check**
@@ -577,7 +577,7 @@ Append a new entry to the numbered list, matching the existing entries' `- [x] *
 Append to `docs/manual-testing-checklist-v3.md`, in whichever calendar-view or journal-view section matches the file's existing structure (read it first — it has uncommitted edits from another change; leave those alone):
 
 ```markdown
-- Open a day note from a greyed-out spillover cell at the edge of the month grid: the grid moves to that day's own month and the toolbar's month button names the same month as the grid heading. With the month block's `after` set to 1, the grid instead keeps both months on screen and the toolbar names the neighbour.
+- Open a day note from a greyed-out spillover cell at the edge of the month grid: the grid moves to that day's own month and the toolbar's month button names the same month as the grid heading. With the month block's `after` set to 1, the grid instead keeps both months on screen and the toolbar names the neighbor.
 - Click the quarter button while the calendar shows a month inside that quarter: the quarter note opens, the quarter button highlights, and the grid does not move.
 ```
 

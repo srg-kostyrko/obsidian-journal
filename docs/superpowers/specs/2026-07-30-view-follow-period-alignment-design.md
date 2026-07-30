@@ -124,7 +124,12 @@ in shape. What changes is `monthWindowContains` in `follow-visibility.ts`: the
 two lines expanding the displayed months to whole weeks are deleted, leaving the
 displayed months' own span. `weekWindowContains` already tests period membership,
 since contiguous displayed weeks make span containment and period membership the
-same test, and is untouched. So is `spanContains`, which both rules now use.
+same test, and is untouched. The follow rule writes the same containment check
+inline rather than calling `spanContains`: importing `blocks/ui/follow-visibility`
+into a view-level composable would invert the layering, and the alternative,
+`Interval.between` in `src/calendar/interval.ts`, returns a `Result` that would
+need error handling for a pathologically shrunk stored interval end, where the
+inline form correctly answers `false`.
 
 Neither rule branches on journal type, so the amended spec's non-goal stands: a
 day journal's span is a day, a week's is a week, a custom interval's is the
