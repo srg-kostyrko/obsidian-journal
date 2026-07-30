@@ -128,6 +128,14 @@ rewrite every connected note (see the item below).
 - [x] **Date format** change → existing notes keep their old names (no rewrite).
 - [x] **Folder** set to `Journals/Cfg` → new note created there.
 - [x] **Folder** with a not-yet-existing nested path → folders auto-created.
+- [ ] **Note path preview** — set **Folder** to `Journals/{{date:YYYY}}/{{date:MM}}` → the
+      preview at the top of the Note creation section shows the whole path including `.md`,
+      it matches where the created note actually lands, and the deep path wraps onto
+      multiple lines instead of overflowing the settings pane.
+- [ ] **Note path preview** with **Folder** `Journals/{{note_name}}` → the preview
+      resolves the folder instead of going blank.
+- [ ] **Note path preview** with the **name template cleared** → the preview is replaced
+      by the empty-note-name warning.
 - [x] **Template** — + add `templates/daily template.md` → new note's body is the
       template content.
 - [x] **Multiple templates** listed → the _first existing, non-empty_ one wins; the
@@ -390,6 +398,14 @@ so cells are populated.
       note's_ date, not from wherever the view was before the note opened.
 - [x] Closing the followed note, or opening a note outside the view's scope, leaves
       the view where it is (no snap-back to the previously navigated date).
+- [ ] Open a day note from a greyed-out spillover cell at the edge of the month
+      grid: the grid moves to that day's own month and the toolbar's month button
+      names the same month as the grid heading. With the month block's `after` set
+      to 1, the grid instead keeps both months on screen and the toolbar names the
+      neighbor.
+- [ ] Click the quarter button while the calendar shows a month inside that
+      quarter: the quarter note opens, the quarter button highlights, and the grid
+      does not move.
 - [x] **Delete a view** → its `open-view` command disappears from the palette.
 - [x] **Delete a view** → the remaining views still open normally.
 - [x] **Delete all views** → plugin does not crash; graceful empty state.
@@ -499,28 +515,28 @@ every one at least once.
 
 Setup: 3 Day journals (A, B, C); open Settings → dashboard → Shelves block.
 
-- [ ] **Create** a shelf "S1".
-- [ ] **Assign A → S1** via the journal's Shelf section.
-- [ ] **Assign A → S2** (a second shelf) → A _moves_ off S1 (one shelf per
+- [x] **Create** a shelf "S1".
+- [x] **Assign A → S1** via the journal's Shelf section.
+- [x] **Assign A → S2** (a second shelf) → A _moves_ off S1 (one shelf per
       journal).
-- [ ] **Rename** S1 → its journal membership is preserved.
-- [ ] **Rename** S1 → its shelf-scoped commands re-target the renamed shelf.
-- [ ] **Delete** a shelf → its journals become unassigned, not deleted.
-- [ ] **Add journal from inside a shelf's edit subpage** → the new journal is
+- [x] **Rename** S1 → its journal membership is preserved.
+- [x] **Rename** S1 → its shelf-scoped commands re-target the renamed shelf.
+- [x] **Delete** a shelf → its journals become unassigned, not deleted.
+- [x] **Add journal from inside a shelf's edit subpage** → the new journal is
       auto-assigned to that shelf (the Add-journal modal itself has no shelf field).
-- [ ] **Delete a shelf → pick a destination shelf** → its journals move there
+- [x] **Delete a shelf → pick a destination shelf** → its journals move there
       instead of becoming unassigned.
-- [ ] **Delete a journal** that sits on a shelf → the shelf's membership list drops
+- [x] **Delete a journal** that sits on a shelf → the shelf's membership list drops
       it.
-- [ ] Once any shelf exists → the dashboard's Journals block retitles to "Journals
+- [x] Once any shelf exists → the dashboard's Journals block retitles to "Journals
       not on a shelf" and lists only unshelved journals.
-- [ ] **Delete a shelf** that a view uses as its default → the view falls back to
+- [x] **Delete a shelf** that a view uses as its default → the view falls back to
       all journals (not to the delete-modal's destination shelf).
-- [ ] **Delete a shelf** that a shelf-scoped command targets → the command
+- [x] **Delete a shelf** that a shelf-scoped command targets → the command
       disappears from the palette.
-- [ ] **Shelf-scoped command** (Settings → shelf → Commands) → acts only on that
+- [x] **Shelf-scoped command** (Settings → shelf → Commands) → acts only on that
       shelf's journals.
-- [ ] View **shelf-selector** set to S1 → calendar shows only S1's journals.
+- [x] View **shelf-selector** set to S1 → calendar shows only S1's journals.
 
 ---
 
@@ -532,65 +548,65 @@ preview.
 
 ### journals-home
 
-- [ ] ` ```journals-home ` with `show: [day, week, month]` → links for each listed
+- [x] ` ```journals-home ` with `show: [day, week, month]` → links for each listed
       period render.
-- [ ] **separator** option → appears between entries.
-- [ ] **scale** option → sizing changes.
-- [ ] **shelf** option → limits to that shelf's journals.
-- [ ] Clicking a link opens/creates the right entry.
+- [x] **separator** option → appears between entries.
+- [x] **scale** option → sizing changes.
+- [x] **shelf** option → limits to that shelf's journals.
+- [x] Clicking a link opens/creates the right entry.
 
 ### journal-nav (aliases calendar-nav, interval-nav)
 
-- [ ] ` ```journal-nav ` → renders CB's configured nav rows.
-- [ ] Alias `calendar-nav` → same output.
-- [ ] Alias `interval-nav` → same output.
-- [ ] Row variable **`{{date}}`** → substitutes the formatted date.
-- [ ] Row variable **`relative_date`** → substitutes the relative date.
-- [ ] Row variable **`journal_name`** → substitutes the journal name.
-- [ ] Row variable **`index`** → substitutes the numbering index.
-- [ ] Row style **fontSize** → text size changes.
-- [ ] Row style **bold** → text is bolded.
-- [ ] Row style **italic** → text is italicized.
-- [ ] Row style **color** → text color changes.
-- [ ] Row style **background** → row background changes.
-- [ ] Row **link = self** → click opens the containing entry.
-- [ ] Row **link = journal** → click opens the journal's entry.
-- [ ] Row **link = day** → click navigates to the day entry.
-- [ ] Row **link = week** → click navigates to the week entry.
-- [ ] Row **link = month** → click navigates to the month entry.
-- [ ] Row **link = quarter** → click navigates to the quarter entry.
-- [ ] Row **link = year** → click navigates to the year entry.
-- [ ] Row **link = none** → the row renders as plain text, not a link.
+- [x] ` ```journal-nav ` → renders CB's configured nav rows.
+- [x] Alias `calendar-nav` → same output.
+- [x] Alias `interval-nav` → same output.
+- [x] Row variable **`{{date}}`** → substitutes the formatted date.
+- [x] Row variable **`relative_date`** → substitutes the relative date.
+- [x] Row variable **`journal_name`** → substitutes the journal name.
+- [x] Row variable **`index`** → substitutes the numbering index.
+- [x] Row style **fontSize** → text size changes.
+- [x] Row style **bold** → text is bolded.
+- [x] Row style **italic** → text is italicized.
+- [x] Row style **color** → text color changes.
+- [x] Row style **background** → row background changes.
+- [x] Row **link = self** → click opens the containing entry.
+- [x] Row **link = journal** → click opens the journal's entry.
+- [x] Row **link = day** → click navigates to the day entry.
+- [x] Row **link = week** → click navigates to the week entry.
+- [x] Row **link = month** → click navigates to the month entry.
+- [x] Row **link = quarter** → click navigates to the quarter entry.
+- [x] Row **link = year** → click navigates to the year entry.
+- [x] Row **link = none** → the row renders as plain text, not a link.
 - [ ] Row variable **`{{start_date}}`** / **`{{end_date}}`** → substitute the
       period's bounds (the default custom-interval rows use these).
-- [ ] Row **addDecorations on** → the journal's decorations show on the row.
+- [x] Row **addDecorations on** → the journal's decorations show on the row.
 - [ ] Block-level **decorate whole block** on → decorations apply to the block as a
       whole rather than per row.
-- [ ] Nav block **type = create** → prev/next cycle through periods whether or not a
+- [x] Nav block **type = create** → prev/next cycle through periods whether or not a
       note exists, and clicking creates.
-- [ ] Nav block **type = existing** → prev/next only reach periods that already have
+- [x] Nav block **type = existing** → prev/next only reach periods that already have
       notes.
-- [ ] Edit a row via its edit-row modal → change persists in the rendered block.
+- [x] Edit a row via its edit-row modal → change persists in the rendered block.
 
 ### calendar-timeline
 
-- [ ] ` ```calendar-timeline mode: week ` → renders week timeline.
-- [ ] `mode: month` → month timeline.
-- [ ] `mode: quarter` → quarter timeline.
-- [ ] `mode: calendar` → calendar timeline.
-- [ ] timeline **weeks = left** → week column on the left.
-- [ ] timeline **weeks = right** → week column on the right.
-- [ ] timeline **weeks = none** → no week column.
-- [ ] timeline **hiddenWeekdays: [0, 6]** → those columns are hidden.
-- [ ] timeline **hiddenWeekdays** with an out-of-range entry → the valid entries
+- [x] ` ```calendar-timeline mode: week ` → renders week timeline.
+- [x] `mode: month` → month timeline.
+- [x] `mode: quarter` → quarter timeline.
+- [x] `mode: calendar` → calendar timeline.
+- [x] timeline **weeks = left** → week column on the left.
+- [x] timeline **weeks = right** → week column on the right.
+- [x] timeline **weeks = none** → no week column.
+- [x] timeline **hiddenWeekdays: [0, 6]** → those columns are hidden.
+- [x] timeline **hiddenWeekdays** with an out-of-range entry → the valid entries
       still apply, the block does not error.
-- [ ] **shelf** option → scopes the timeline to that shelf.
+- [x] **shelf** option → scopes the timeline to that shelf.
 
 ### Reference help
 
-- [ ] Settings → a journal → Templates section → **Code-block reference** opens a
+- [x] Settings → a journal → Templates section → **Code-block reference** opens a
       modal with syntax docs, click-to-copy snippets, and live previews.
-- [ ] Closing the modal → today's anchor index mapping is restored (no leftover
+- [x] Closing the modal → today's anchor index mapping is restored (no leftover
       synthetic entry).
 
 ---
@@ -719,6 +735,17 @@ so every entry cell is styled. Swap the style per item.
 - [ ] **Color mode: transparent** → no fill.
 - [ ] **Color mode: theme** (by name) → uses the Obsidian theme color.
 - [ ] **Color mode: custom** (hex/rgb) → uses the literal color.
+- [ ] **color** (text) style, theme mode → the variable list holds only text variables;
+      `Primary background` is absent.
+- [ ] **background** style, theme mode → the variable list holds only background variables;
+      `Normal text` is absent, `Selected text background` is present.
+- [ ] **border** style, theme mode → the list is split under **Border** and **Text**
+      headings.
+- [ ] **shape** style, theme mode → the list is split under **Text** and **Background**
+      headings, with no border variables.
+- [ ] A decoration saved before this change with an out-of-role variable (e.g. a text color
+      of `Primary background`) → reopening it still shows that variable selected under its
+      friendly label, and the cell renders exactly as before.
 - [ ] **corner color** → the corner dot uses the configured color.
 - [ ] **Two styles stacked** in one decoration → both apply, layered in order.
 - [ ] **Two separate decorations** whose conditions both match the same cell, each
@@ -731,17 +758,17 @@ so every entry cell is styled. Swap the style per item.
 
 Setup: open the Journals settings tab.
 
-- [ ] Dashboard renders blocks in order: colliding-journals, shelves, journals,
+- [x] Dashboard renders blocks in order: colliding-journals, shelves, journals,
       commands, views, startup, calendar-week, calendar-appearance, logging.
-- [ ] **Journals** block → click a journal → journal edit subpage opens (shelf,
+- [x] **Journals** block → click a journal → journal edit subpage opens (shelf,
       commands, interval-block, decorations sections).
-- [ ] Back from journal subpage → returns to dashboard.
-- [ ] **Views** block → click a view → opens its view edit subpage.
-- [ ] **Shelves** block → click a shelf → opens its shelf edit subpage.
-- [ ] **Commands** block → global command editor.
-- [ ] Journal subpage sections render in order: note-creation, templates, timeline,
+- [x] Back from journal subpage → returns to dashboard.
+- [x] **Views** block → click a view → opens its view edit subpage.
+- [x] **Shelves** block → click a shelf → opens its shelf edit subpage.
+- [x] **Commands** block → global command editor.
+- [x] Journal subpage sections render in order: note-creation, templates, timeline,
       sequence, frontmatter, shelf, commands, interval-block, decorations.
-- [ ] Back from a **view** and a **shelf** subpage → each returns to the dashboard
+- [x] Back from a **view** and a **shelf** subpage → each returns to the dashboard
       with the list scrolled where you left it.
 
 Field validation lives in §18 — it is one behavior class and testing it in one
@@ -750,18 +777,18 @@ sitting is faster than rediscovering the pattern per screen.
 - [ ] **calendar-week** — change week-start day → calendar grids shift to the new
       first day.
 - [ ] **calendar-week** — change week-start day → week numbers recompute.
-- [ ] **calendar-week** — locale preset → dow/doy update to the preset.
-- [ ] **calendar-appearance** — today color picker → applies live to today's cell.
-- [ ] **calendar-appearance** — today background picker → applies live to today's
+- [x] **calendar-week** — locale preset → dow/doy update to the preset.
+- [x] **calendar-appearance** — today color picker → applies live to today's cell.
+- [x] **calendar-appearance** — today background picker → applies live to today's
       cell.
-- [ ] **calendar-appearance** — active color picker → applies live to the active
+- [x] **calendar-appearance** — active color picker → applies live to the active
       cell.
-- [ ] **calendar-appearance** — active background picker → applies live to the
+- [x] **calendar-appearance** — active background picker → applies live to the
       active cell.
-- [ ] **calendar-appearance** — a cell that is both today and active → today's
+- [x] **calendar-appearance** — a cell that is both today and active → today's
       style wins.
-- [ ] **logging** — raise log level → more console output.
-- [ ] **logging** — lower log level → less console output.
+- [x] **logging** — raise log level → more console output.
+- [x] **logging** — lower log level → less console output.
 
 ---
 
@@ -783,7 +810,7 @@ sitting is faster than rediscovering the pattern per screen.
       folder+name pattern within its timeline → journal frontmatter auto-added.
 - [ ] Auto-attach on **rename** — rename an unrelated note _into_ a matching
       folder+name → it is attached the same as a fresh creation.
-- [ ] Auto-attach does **not** double-process a note the plugin itself just
+- [x] Auto-attach does **not** double-process a note the plugin itself just
       created (self-write guard, ~5s window).
 - [ ] Auto-attach leaves a note untouched when **multiple journals** could match
       (ambiguous).
@@ -832,7 +859,7 @@ covered.
 
 - [ ] **Cross-year week** — + a week spanning Dec→Jan → anchors to the correct
       owning year (the v2 `{{date:YYYY}}` bug stays fixed).
-- [ ] Rapidly create+delete journals/views/commands → no leaked leaves, ribbon
+- [x] Rapidly create+delete journals/views/commands → no leaked leaves, ribbon
       icons, or palette entries.
 - [ ] Change **global locale / week-start** → month/week calendars update to the
       new first day.
@@ -929,27 +956,27 @@ Setup: journal "Err" whose template path points at a missing file.
 
 ### Code-block errors
 
-- [ ] Code block with **malformed YAML** → an error panel says the options could not
+- [x] Code block with **malformed YAML** → an error panel says the options could not
       be read; the note still renders.
-- [ ] Code block with a **wrong-typed option** (e.g. `mode: 42`) → schema error panel
+- [x] Code block with a **wrong-typed option** (e.g. `mode: 42`) → schema error panel
       or documented graceful degrade, not a blank block.
-- [ ] Code block with an **unrecognized option** → a warning names the ignored key
+- [x] Code block with an **unrecognized option** → a warning names the ignored key
       and the block still renders.
-- [ ] `journal-nav` in a note **not connected** to any journal → "not connected"
+- [x] `journal-nav` in a note **not connected** to any journal → "not connected"
       message, not an empty block.
 
 ### View errors
 
-- [ ] Leave a view's tab open, **delete the view** → the tab shows a "view deleted"
+- [x] Leave a view's tab open, **delete the view** → the tab shows a "view deleted"
       panel, not a crash or a blank pane.
-- [ ] Hand-edit `data.json` to give a block an **unknown type** → that block shows an
+- [x] Hand-edit `data.json` to give a block an **unknown type** → that block shows an
       unknown-block panel; sibling blocks still render.
-- [ ] Hand-edit a block's config to something **invalid** → config-error panel,
+- [x] Hand-edit a block's config to something **invalid** → config-error panel,
       siblings unaffected.
-- [ ] A calendar block with **no journals at all** → the grid still renders, with no
+- [x] A calendar block with **no journals at all** → the grid still renders, with no
       empty-state message; its cells are inert.
-- [ ] A calendar block **scoped to a shelf** with no members → same as above.
-- [ ] `markdown-template` pointing at a **missing file** → read-error message.
+- [x] A calendar block **scoped to a shelf** with no members → same as above.
+- [x] `markdown-template` pointing at a **missing file** → read-error message.
 
 ### Settings load & sync
 
