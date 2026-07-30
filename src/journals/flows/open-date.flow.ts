@@ -1,3 +1,4 @@
+import { CalendarDate } from "@/calendar";
 import type { AnchorString } from "@/calendar";
 import { inject } from "@/infrastructure/di";
 import { Flows, UserAborted } from "@/infrastructure/flows";
@@ -6,6 +7,7 @@ import { SuggestService, WorkspaceService } from "@/infrastructure/host";
 import type { OpenMode, VaultPath, WorkspaceOpenError } from "@/infrastructure/host";
 import { AsyncResult } from "@/infrastructure/result";
 
+import { CycleService } from "../cycle";
 import { JournalsIndex } from "../journals-index";
 import { NoApplicableJournals } from "../notes/errors";
 import { journalPickerSuggest } from "../notes/journal-picker";
@@ -37,6 +39,7 @@ export class OpenDateFlow implements Flow<OpenDateParameters, OpenDateResult, Op
   readonly #journals = inject(JournalsRepository);
   readonly #timeline = inject(TimelineService);
   readonly #index = inject(JournalsIndex);
+  readonly #cycle = inject(CycleService);
   readonly #flows = inject(Flows);
   readonly #suggests = inject(SuggestService);
   readonly #workspace = inject(WorkspaceService);
@@ -45,35 +48,48 @@ export class OpenDateFlow implements Flow<OpenDateParameters, OpenDateResult, Op
     const all = [...this.#journals.find().ids()];
     const { journalNames } = p;
     const candidates = journalNames ? all.filter((n) => journalNames.includes(n)) : all;
-    const applicable = candidates.filter((name) => {
-      if (!this.#timeline.contains(name, p.anchor)) return false;
-      return !(p.existingOnly && this.#index.entryByAnchor(name, p.anchor).isNone());
+    const date = CalendarDate.fromAnchor(p.anchor);
+    // The date is wherever the caller pointed — a day cell, today, a nav row in a daily note —
+    // while each journal answers for the period of its own granularity containing it. Resolve
+    // per journal before any entry is read or written by it: a weekly journal handed a
+    // mid-week day would otherwise store that day as the entry's identity, which parseEntry
+    // rejects as non-canonical, and look up an existing entry under an anchor it never owns.
+    const applicable = candidates.flatMap((name) => {
+      const resolved = this.#cycle.anchorOf(name, date);
+      if (resolved.isNone()) return [];
+      const anchor = resolved.value;
+      if (!this.#timeline.contains(name, anchor)) return [];
+      if (p.existingOnly && this.#index.entryByAnchor(name, anchor).isNone()) return [];
+      return [{ name, anchor }];
     });
 
     if (applicable.length === 0) {
       return AsyncResult.err(new NoApplicableJournals(p.anchor, p.journalNames));
     }
     if (applicable.length === 1) {
-      const [name] = applicable;
-      if (name === undefined) {
+      const [only] = applicable;
+      if (only === undefined) {
         return AsyncResult.err(new NoApplicableJournals(p.anchor, p.journalNames));
       }
       return this.#flows.invoke(OpenJournalEntryFlow, {
-        journalName: name,
-        anchor: p.anchor,
+        journalName: only.name,
+        anchor: only.anchor,
         openMode: p.openMode,
       });
     }
 
+    const names = applicable.map((entry) => entry.name);
     return AsyncResult.fromPromise(
       (async (): Promise<OpenDateResult> => {
         const choice = p.pickAt
-          ? await this.#workspace.pickFromMenu([...applicable], p.pickAt)
-          : await this.#suggests.open(journalPickerSuggest, [...applicable]);
+          ? await this.#workspace.pickFromMenu(names, p.pickAt)
+          : await this.#suggests.open(journalPickerSuggest, names);
         if (choice.isErr()) throw new UserAborted("journal-picker");
+        const chosen = applicable.find((entry) => entry.name === choice.value);
+        if (chosen === undefined) throw new NoApplicableJournals(p.anchor, p.journalNames);
         const dispatched = await this.#flows.invoke(OpenJournalEntryFlow, {
-          journalName: choice.value,
-          anchor: p.anchor,
+          journalName: chosen.name,
+          anchor: chosen.anchor,
           openMode: p.openMode,
         });
         if (dispatched.isErr()) throw dispatched.error;

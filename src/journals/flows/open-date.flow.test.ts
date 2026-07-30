@@ -1,4 +1,4 @@
-import { describe, it, expect } from "vitest";
+import { assert, describe, it, expect } from "vitest";
 
 import { anchor } from "@/calendar/testing";
 import { Container } from "@/infrastructure/di";
@@ -161,6 +161,49 @@ describe("OpenDateFlow", () => {
       .resolve(Flows)
       .invoke(OpenDateFlow, { anchor: anchor("2026-05-19"), existingOnly: true });
     expect(result.isErr() && result.error instanceof NoApplicableJournals).toBe(true);
+  });
+
+  it("stores the period's canonical anchor when the date falls mid-period", async () => {
+    const repo = fakeRepo({
+      weekly: fixedJournal("weekly", { type: "week" }, { folder: "W", timeline: TIMELINE_OPEN }),
+    });
+    const { container, notes } = build(repo, new FakeSuggestService());
+    const result = await container
+      .resolve(Flows)
+      .invoke(OpenDateFlow, { anchor: anchor("2026-05-19"), journalNames: ["weekly"] });
+    assert(result.isOk());
+    expect(notes.frontmatterOf(result.value.path)?.["journal-date"]).toBe("2026-05-17");
+  });
+
+  it("reaches an existing entry under existingOnly when the date falls mid-period", async () => {
+    const repo = fakeRepo({
+      weekly: fixedJournal("weekly", { type: "week" }, { folder: "W", timeline: TIMELINE_OPEN }),
+    });
+    const { container, notes, workspace } = build(repo, new FakeSuggestService());
+    const existing = "W/2026-05-17.md" as VaultPath;
+    notes.seed(existing, "", { journal: "weekly", "journal-date": "2026-05-17" });
+    container.resolve(JournalsIndex).register({ journalName: "weekly", anchor: anchor("2026-05-17"), path: existing });
+    const result = await container
+      .resolve(Flows)
+      .invoke(OpenDateFlow, { anchor: anchor("2026-05-19"), journalNames: ["weekly"], existingOnly: true });
+    expect(result.isOk()).toBe(true);
+    expect(workspace.isOpen(existing)).toBe(true);
+  });
+
+  it("re-anchors a note left at a mid-period date by an earlier open", async () => {
+    const repo = fakeRepo({
+      weekly: fixedJournal("weekly", { type: "week" }, { folder: "W", timeline: TIMELINE_OPEN }),
+    });
+    const { container, notes } = build(repo, new FakeSuggestService());
+    const stale = "W/2026-W21.md" as VaultPath;
+    notes.seed(stale, "", { journal: "weekly", "journal-date": "2026-05-19" });
+    const result = await container
+      .resolve(Flows)
+      .invoke(OpenDateFlow, { anchor: anchor("2026-05-20"), journalNames: ["weekly"] });
+    assert(result.isOk());
+    // Asserted on the seeded path, not the returned one: a note created elsewhere would
+    // carry the canonical date too, and prove nothing about repairing this one.
+    expect(notes.frontmatterOf(stale)?.["journal-date"]).toBe("2026-05-17");
   });
 
   it("narrows by journalNames before timeline filtering", async () => {
