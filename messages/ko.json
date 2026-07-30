@@ -1444,7 +1444,7 @@
 	"journal_edit_name_template_invertibility_warning": "템플릿을 역으로 구문 분석할 수 없습니다( {reason} : \" {offending} \"). 자동 첨부 기능은 이 패턴과 일치하는 외부에서 생성된 노트를 자동으로 건너뜁니다.",
 	"journal_edit_name_template_no_anchor_warning": "템플릿에 날짜 변수가 없고 번호 매기기 변수를 날짜로 역변환할 수 없으므로 자동 첨부 기능은 이 패턴과 일치하는 외부에서 생성된 노트를 자동으로 건너뜁니다.",
 	"journal_edit_name_template_label": "노트 이름 템플릿",
-	"journal_edit_note_name_preview_label": "해결된 노트 이름:",
+	"journal_edit_note_path_preview_label": "해결된 노트 경로:",
 	"journal_edit_rename_tooltip": "저널 이름 변경",
 	"journal_edit_reset_count_suffix": "반복",
 	"journal_edit_reset_description": "시간이 지남에 따라 숫자가 어떻게 변하는지.",

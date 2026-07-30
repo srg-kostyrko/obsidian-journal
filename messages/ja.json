@@ -1444,7 +1444,7 @@
 	"journal_edit_name_template_invertibility_warning": "テンプレートを逆解析できません ( {reason} : \" {offending} \")。自動添付機能は、このパターンに一致する外部作成のノートを警告なしにスキップします。",
 	"journal_edit_name_template_no_anchor_warning": "テンプレートには日付変数がなく、番号変数を日付に反転することもできないため、自動添付機能は、このパターンに一致する外部作成のノートを黙ってスキップします。",
 	"journal_edit_name_template_label": "ノート名テンプレート",
-	"journal_edit_note_name_preview_label": "解決済みノート名:",
+	"journal_edit_note_path_preview_label": "解決済みノートパス:",
 	"journal_edit_rename_tooltip": "ジャーナル名の変更",
 	"journal_edit_reset_count_suffix": "繰り返し",
 	"journal_edit_reset_description": "その数値が時間とともにどのように変化するか。",

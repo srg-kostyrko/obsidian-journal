@@ -1450,7 +1450,7 @@
 	"journal_edit_name_template_invertibility_warning": "O modelo não pode ser analisado reversamente ( {reason} : \" {offending} ). O recurso de anexação automática ignorará silenciosamente as notas criadas externamente que corresponderem a esse padrão.",
 	"journal_edit_name_template_no_anchor_warning": "O modelo não possui uma variável de data e sua variável de numeração não pode ser revertida para uma data; portanto, a anexação automática ignorará silenciosamente as notas criadas externamente que correspondam a esse padrão.",
 	"journal_edit_name_template_label": "Modelo de nome de nota",
-	"journal_edit_note_name_preview_label": "Nome da nota resolvida:",
+	"journal_edit_note_path_preview_label": "Caminho da nota resolvido:",
 	"journal_edit_rename_tooltip": "Renomear diário",
 	"journal_edit_reset_count_suffix": "repete",
 	"journal_edit_reset_description": "Como o número muda ao longo do tempo.",

@@ -1444,7 +1444,7 @@
 	"journal_edit_name_template_invertibility_warning": "La plantilla no se puede analizar inversamente ( {reason} : \" {offending} \"). La función de adjuntar automáticamente omitirá silenciosamente las notas creadas externamente que coincidan con este patrón.",
 	"journal_edit_name_template_no_anchor_warning": "La plantilla no tiene variable de fecha y su variable de numeración no se puede convertir a fecha, por lo que la función de adjuntar automáticamente omitirá silenciosamente las notas creadas externamente que coincidan con este patrón.",
 	"journal_edit_name_template_label": "Plantilla de nombre de nota",
-	"journal_edit_note_name_preview_label": "Nota resuelta:",
+	"journal_edit_note_path_preview_label": "Ruta de nota resuelta:",
 	"journal_edit_rename_tooltip": "Cambiar el nombre del diario",
 	"journal_edit_reset_count_suffix": "repeticiones",
 	"journal_edit_reset_description": "Cómo cambia el número con el tiempo.",

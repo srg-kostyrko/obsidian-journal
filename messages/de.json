@@ -1450,7 +1450,7 @@
 	"journal_edit_name_template_invertibility_warning": "Die Vorlage kann nicht rückwärts analysiert werden ( {reason} : \" {offending} \"). Die automatische Anfügung überspringt stillschweigend extern erstellte Notizen, die diesem Muster entsprechen.",
 	"journal_edit_name_template_no_anchor_warning": "Die Vorlage verfügt über keine Datumsvariable und ihre Nummerierungsvariable kann nicht in ein Datum umgewandelt werden, daher werden extern erstellte Notizen, die diesem Muster entsprechen, von der automatischen Anfügefunktion stillschweigend übersprungen.",
 	"journal_edit_name_template_label": "Vorlage für einen Notiznamen",
-	"journal_edit_note_name_preview_label": "Name der gelösten Notiz:",
+	"journal_edit_note_path_preview_label": "Aufgelöster Notizpfad:",
 	"journal_edit_rename_tooltip": "Journal umbenennen",
 	"journal_edit_reset_count_suffix": "Wiederholungen",
 	"journal_edit_reset_description": "Wie sich die Zahl im Laufe der Zeit verändert.",

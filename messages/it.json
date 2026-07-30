@@ -1450,7 +1450,7 @@
 	"journal_edit_name_template_invertibility_warning": "Impossibile analizzare il modello inverso ( {reason} : \" {offending} \"). L'allegato automatico ignorerà silenziosamente le note create esternamente che corrispondono a questo modello.",
 	"journal_edit_name_template_no_anchor_warning": "Il modello non ha una variabile data e la sua variabile di numerazione non può essere invertita in una data, quindi l'allegato automatico ignorerà silenziosamente le note create esternamente che corrispondono a questo schema.",
 	"journal_edit_name_template_label": "Nota il modello del nome",
-	"journal_edit_note_name_preview_label": "Nome della nota risolta:",
+	"journal_edit_note_path_preview_label": "Percorso della nota risolto:",
 	"journal_edit_rename_tooltip": "Rinomina diario",
 	"journal_edit_reset_count_suffix": "ripetizioni",
 	"journal_edit_reset_description": "Come cambia il numero nel tempo.",

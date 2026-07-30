@@ -121,7 +121,7 @@ describe("NoteCreationSection", () => {
 
     it("names the colliding note path when every entry resolves to one note", () => {
       mount({ nameTemplate: "MyNote" });
-      expect(screen.getByText(/MyNote\.md/)).toBeTruthy();
+      expect(screen.getByText(/resolve to MyNote\.md/)).toBeTruthy();
     });
 
     it("does not warn about collisions for the default date template", () => {
@@ -141,7 +141,7 @@ describe("NoteCreationSection", () => {
       expect(storage.daily?.nameTemplate).toBe("{{date}}");
     });
 
-    it("live-renders the note name preview as nameTemplate changes", async () => {
+    it("live-renders the note path preview as nameTemplate changes", async () => {
       const { storage } = mount();
       const input = screen.getByDisplayValue("{{date}}");
       await userEvent.clear(input);
@@ -150,7 +150,7 @@ describe("NoteCreationSection", () => {
         expect(storage.daily?.nameTemplate).toBe("note-prefix");
       });
       await waitFor(() => {
-        expect(screen.getByText("note-prefix")).toBeTruthy();
+        expect(screen.getByText("note-prefix.md")).toBeTruthy();
       });
     });
   });

@@ -1444,7 +1444,7 @@
 	"journal_edit_name_template_invertibility_warning": "Шаблон неможливо проаналізувати у зворотному порядку ( {reason} : \" {offending} \"). Автоматичне приєднання непомітно пропустить зовнішні нотатки, створені, що відповідають цьому шаблону.",
 	"journal_edit_name_template_no_anchor_warning": "Шаблон не має змінної дати, а його змінну нумерації не можна скасувати на дату, тому автоматичне приєднання непомітно пропустить зовнішні нотатки, створені, які відповідають цьому шаблону.",
 	"journal_edit_name_template_label": "Шаблон назви нотатки",
-	"journal_edit_note_name_preview_label": "Назва вирішеної нотатки:",
+	"journal_edit_note_path_preview_label": "Вирішений шлях нотатки:",
 	"journal_edit_rename_tooltip": "Перейменувати журнал",
 	"journal_edit_reset_count_suffix": "повтори",
 	"journal_edit_reset_description": "Як число змінюється з часом.",

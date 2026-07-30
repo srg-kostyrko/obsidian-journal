@@ -15,7 +15,7 @@ import UiToggle from "@/ui/UiToggle.vue";
 import { JournalsViewModel } from "../../../view-model";
 import DateFormatPreview from "../DateFormatPreview.vue";
 import FolderInput from "../FolderInput.vue";
-import NoteNamePreview from "../NoteNamePreview.vue";
+import NotePathPreview from "../NotePathPreview.vue";
 import TemplateStringPreview from "../TemplateStringPreview.vue";
 import { useAutoCreateOnEnable } from "../use-auto-create-on-enable";
 import { useCollisionCheck } from "../use-collision-check";
@@ -57,6 +57,8 @@ function applyDateFormatRecommendation(): void {
       </span>
     </template>
 
+    <NotePathPreview :journal-name="journalName" />
+
     <UiSettingRow :name="m.journal_edit_name_template_label()">
       <template #description>
         <div>{{ m.journal_edit_name_template_description() }}</div>
@@ -67,7 +69,6 @@ function applyDateFormatRecommendation(): void {
           :has-cycle="hasCycle"
           :numbering-variable-names="numberingVariableNames"
         />
-        <NoteNamePreview :journal-name="journalName" />
         <div v-if="collision" class="journal-hint">
           {{ m.journal_edit_name_template_collision_warning(collision) }}
         </div>

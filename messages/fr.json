@@ -1450,7 +1450,7 @@
 	"journal_edit_name_template_invertibility_warning": "Le modèle ne peut pas être analysé de manière inverse ( {reason} : \" {offending} \"). L'attachement automatique ignorera silencieusement les notes créées en externe qui correspondent à ce modèle.",
 	"journal_edit_name_template_no_anchor_warning": "Le modèle ne comporte aucune variable de date et sa variable de numérotation ne peut pas être convertie en date ; par conséquent, la fonction d'attachement automatique ignorera silencieusement les notes créées en externe qui correspondent à ce modèle.",
 	"journal_edit_name_template_label": "Modèle de nom de note",
-	"journal_edit_note_name_preview_label": "Nom de la note résolue :",
+	"journal_edit_note_path_preview_label": "Chemin de la note résolu :",
 	"journal_edit_rename_tooltip": "Renommer le journal",
 	"journal_edit_reset_count_suffix": "répétitions",
 	"journal_edit_reset_description": "Comment ce nombre évolue au fil du temps.",

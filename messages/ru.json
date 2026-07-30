@@ -1450,7 +1450,7 @@
 	"journal_edit_name_template_invertibility_warning": "Шаблон не может быть подвергнут обратному анализу ( {reason} : \" {offending} \"). Автоматическое прикрепление будет молча пропускать созданные извне заметки, соответствующие этому шаблону.",
 	"journal_edit_name_template_no_anchor_warning": "В шаблоне отсутствует переменная даты, а переменная нумерации не может быть преобразована в дату в обратном порядке, поэтому функция автоматического прикрепления будет молча пропускать созданные извне заметки, соответствующие этому шаблону.",
 	"journal_edit_name_template_label": "Шаблон названия заметки",
-	"journal_edit_note_name_preview_label": "Название исправленной заметки:",
+	"journal_edit_note_path_preview_label": "Разрешённый путь к заметке:",
 	"journal_edit_rename_tooltip": "Переименовать журнал",
 	"journal_edit_reset_count_suffix": "повторы",
 	"journal_edit_reset_description": "Как это число меняется со временем.",

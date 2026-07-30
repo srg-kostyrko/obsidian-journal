@@ -19,7 +19,7 @@ import { createSettingsService } from "@/settings/testing";
 import { TemplateEngine } from "@/templates";
 import { installTestEngine } from "@/templates/testing";
 
-import NoteNamePreview from "./NoteNamePreview.vue";
+import NotePathPreview from "./NotePathPreview.vue";
 
 let teardown: () => void;
 beforeEach(() => {
@@ -33,7 +33,7 @@ afterEach(() => {
   cleanup();
 });
 
-async function setupDaily(nameTemplate = "{{date}}") {
+async function setupDaily(overrides: { nameTemplate?: string; folder?: string } = {}) {
   const { service, container } = createSettingsService({
     collections: [journalConfigCollection],
     raw: {
@@ -52,11 +52,12 @@ async function setupDaily(nameTemplate = "{{date}}") {
             addEndDate: false,
           },
           numbering: { enabled: false, anchorDate: "2026-01-01", allowBefore: false, sources: [] },
-          nameTemplate,
+          nameTemplate: "{{date}}",
           folder: "",
           templates: [],
           confirmCreation: false,
           autoCreate: false,
+          ...overrides,
         },
       },
     },
@@ -74,7 +75,7 @@ async function setupDaily(nameTemplate = "{{date}}") {
 }
 
 function renderPreview(container: Container, journalName: string) {
-  return render(NoteNamePreview, {
+  return render(NotePathPreview, {
     props: { journalName },
     global: {
       plugins: [
@@ -88,36 +89,56 @@ function renderPreview(container: Container, journalName: string) {
   });
 }
 
-describe("NoteNamePreview", () => {
-  it("renders today's resolved note basename", async () => {
+describe("NotePathPreview", () => {
+  it("renders today's resolved path for a journal with no folder", async () => {
     const container = await setupDaily();
     renderPreview(container, "daily");
-    expect(screen.getByText("2026-05-19")).toBeTruthy();
+    expect(screen.getByText("2026-05-19.md")).toBeTruthy();
+  });
+
+  it("prefixes the resolved note name with the resolved folder", async () => {
+    const container = await setupDaily({ folder: "Journals/{{date:YYYY}}" });
+    renderPreview(container, "daily");
+    expect(screen.getByText("Journals/2026/2026-05-19.md")).toBeTruthy();
+  });
+
+  it("resolves a folder that consumes the rendered note name", async () => {
+    const container = await setupDaily({ folder: "Journals/{{note_name}}" });
+    renderPreview(container, "daily");
+    expect(screen.getByText("Journals/2026-05-19/2026-05-19.md")).toBeTruthy();
   });
 
   it("updates reactively when the journal's nameTemplate changes", async () => {
-    const container = await setupDaily("{{date}}");
+    const container = await setupDaily();
     renderPreview(container, "daily");
-    expect(screen.getByText("2026-05-19")).toBeTruthy();
     container.resolve(JournalsRepository).update("daily", { nameTemplate: "note-{{date}}" });
     await waitFor(() => {
-      expect(screen.getByText("note-2026-05-19")).toBeTruthy();
+      expect(screen.getByText("note-2026-05-19.md")).toBeTruthy();
+    });
+  });
+
+  it("updates reactively when the journal's folder changes", async () => {
+    const container = await setupDaily();
+    renderPreview(container, "daily");
+    container.resolve(JournalsRepository).update("daily", { folder: "Diary" });
+    await waitFor(() => {
+      expect(screen.getByText("Diary/2026-05-19.md")).toBeTruthy();
     });
   });
 
   it("warns when the name template resolves to an empty note name", async () => {
-    const container = await setupDaily("");
+    const container = await setupDaily({ nameTemplate: "" });
     renderPreview(container, "daily");
     expect(screen.getByText(m.journal_edit_name_template_empty_warning())).toBeTruthy();
   });
 
   it("warns when the name template renders only whitespace", async () => {
-    const container = await setupDaily(" ".repeat(3));
+    const container = await setupDaily({ nameTemplate: " ".repeat(3) });
     renderPreview(container, "daily");
     expect(screen.getByText(m.journal_edit_name_template_empty_warning())).toBeTruthy();
   });
 
-  it("renders no warning when the journal no longer exists", async () => {
+  it("renders nothing when the journal no longer exists", async () => {
     const container = await setupDaily();
     const { container: dom } = renderPreview(container, "ghost");
     expect(dom.textContent ?? "").toBe("");

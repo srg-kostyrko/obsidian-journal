@@ -1444,7 +1444,7 @@
 	"journal_edit_name_template_invertibility_warning": "模板无法反向解析（ {reason} : \" {offending} \"）。自动附加功能将静默跳过与此模式匹配的外部创建的笔记。",
 	"journal_edit_name_template_no_anchor_warning": "模板没有日期变量，其编号变量也无法反转为日期，因此自动附加功能将静默跳过与此模式匹配的外部创建的笔记。",
 	"journal_edit_name_template_label": "笔记名称模板",
-	"journal_edit_note_name_preview_label": "已解决的笔记名称：",
+	"journal_edit_note_path_preview_label": "已解析的笔记路径：",
 	"journal_edit_rename_tooltip": "重命名日记",
 	"journal_edit_reset_count_suffix": "重复",
 	"journal_edit_reset_description": "这个数字如何随时间变化。",
