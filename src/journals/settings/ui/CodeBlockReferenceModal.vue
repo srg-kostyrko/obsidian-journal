@@ -40,6 +40,13 @@ const customHomeBody = `show:\n  - day\n  - month\nscale: 2\nseparator: " | "`;
       <p>{{ m.journal_edit_code_block_timeline_description() }}</p>
       <p>{{ m.journal_edit_code_block_timeline_default({ name: journalName }) }}</p>
       <TimelineCodeBlock :path="previewPath" :config="timelineConfig" />
+      <p>{{ m.journal_edit_code_block_timeline_options_lead() }}</p>
+      <ul>
+        <li><code>mode</code> — {{ m.journal_edit_code_block_timeline_option_mode() }}</li>
+        <li><code>shelf</code> — {{ m.journal_edit_code_block_timeline_option_shelf() }}</li>
+        <li><code>weeks</code> — {{ m.journal_edit_code_block_timeline_weeks() }}</li>
+        <li><code>hiddenWeekdays</code> — {{ m.journal_edit_code_block_timeline_hidden_weekdays() }}</li>
+      </ul>
       <p>{{ m.journal_edit_code_block_timeline_mode_lead() }}</p>
       <CodeBlockSnippet name="calendar-timeline" body="mode: month" />
       <p>{{ m.journal_edit_code_block_timeline_modes_lead() }}</p>
@@ -48,8 +55,6 @@ const customHomeBody = `show:\n  - day\n  - month\nscale: 2\nseparator: " | "`;
           <code>{{ mode }}</code>
         </li>
       </ul>
-      <p><code>weeks</code> — {{ m.journal_edit_code_block_timeline_weeks() }}</p>
-      <p><code>hiddenWeekdays</code> — {{ m.journal_edit_code_block_timeline_hidden_weekdays() }}</p>
     </section>
 
     <section class="code-block-reference__section">

@@ -2,7 +2,8 @@ import { cleanup, render, screen } from "@testing-library/vue";
 import { afterEach, beforeAll, describe, expect, it } from "vitest";
 
 import type { AnchorString } from "@/calendar";
-import { timelineModes } from "@/code-blocks/timeline/timeline-config";
+import { homeBlockKeys } from "@/code-blocks/home/home-config";
+import { timelineBlockKeys, timelineModes } from "@/code-blocks/timeline/timeline-config";
 import { initLocale } from "@/i18n";
 import { Container, provideInjectorOnApp } from "@/infrastructure/di";
 import { Option } from "@/infrastructure/result";
@@ -55,7 +56,14 @@ describe("CodeBlockReferenceModal", () => {
 
   it("lists every home block option", () => {
     mount();
-    for (const option of ["show", "separator", "scale", "shelf"]) {
+    for (const option of homeBlockKeys) {
+      expect(screen.getAllByText(option).length).toBeGreaterThan(0);
+    }
+  });
+
+  it("lists every timeline block option", () => {
+    mount();
+    for (const option of timelineBlockKeys) {
       expect(screen.getAllByText(option).length).toBeGreaterThan(0);
     }
   });
