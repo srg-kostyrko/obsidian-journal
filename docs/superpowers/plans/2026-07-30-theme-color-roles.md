@@ -89,21 +89,34 @@ Only `en.json` gets the new key. The other ten locales fall back to English unti
 
 `--background-modifier-error-rgb` and `--background-modifier-success-rgb` hold bare RGB triples (`255, 82, 82`), so `var(--background-modifier-error-rgb)` is invalid in `color:`, `background-color:` and `border-color:` alike. The variables are being dropped, so their labels lose their only call site.
 
+Delete them **line by line**, never by parse-and-restringify. The ten translated
+locales are written by the inlang CLI and are tab-indented with expanded arrays;
+`JSON.stringify(data, null, 2)` plus `prettier --write` reindents all eleven files
+end to end, turning a three-key change into a ~31,000-line diff that buries the real
+edit and wrecks `git blame` on the translations — and `npm run translate:i18n` writes
+tabs again on its next run, so the normalization does not even stick.
+
+Each key occupies exactly one line (a plain string value) and sits mid-object, so
+dropping the whole line leaves valid JSON:
+
 ```bash
-node -e '
-const fs = require("fs");
-const keys = ["ui_theme_color_background_modifier_error_rgb", "ui_theme_color_background_modifier_success_rgb"];
-for (const file of fs.readdirSync("messages")) {
-  const path = `messages/${file}`;
-  const data = JSON.parse(fs.readFileSync(path, "utf8"));
-  let hit = false;
-  for (const key of keys) if (key in data) { delete data[key]; hit = true; }
-  if (hit) fs.writeFileSync(path, JSON.stringify(data, null, 2) + "\n");
-}
-'
-npx prettier --write "messages/*.json"
+perl -ni -e 'print unless /^\s*"ui_theme_color_background_modifier_(error|success)_rgb":/' messages/*.json
 npm run compile:i18n
 ```
+
+Do **not** run prettier over `messages/`. It is outside the repo's nano-staged
+prettier glob (`*.{ts,mjs,js,css,md,vue}`) by design.
+
+Verify the result is a formatting-free change:
+
+```bash
+git diff --stat -- messages/
+```
+
+Expected: about 2 deleted lines in each of the ten translated locales, and en.json
+showing only the deletions plus the Step 1 insertion. Any file reporting hundreds of
+changed lines means the formatting was disturbed — restore with
+`git checkout -- messages/` and redo.
 
 - [ ] **Step 3: Write the failing test**
 
