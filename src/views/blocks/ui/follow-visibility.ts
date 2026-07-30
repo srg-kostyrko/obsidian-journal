@@ -9,7 +9,7 @@ export function spanContains(anchor: AnchorString, start: AnchorString, end: Anc
 export function monthWindowContains(anchor: AnchorString, focus: AnchorString, before: number, after: number): boolean {
   const focusMonth = periodOfKind("month", CalendarDate.fromAnchor(focus)) as MonthPeriod;
   const months = periodWindow(focusMonth, before, after);
-  // Spillover days painted in the grid's margins belong to a neighbouring month this window
+  // Spillover days painted in the grid's margins belong to a neighboring month this window
   // does not display, so they are not "already shown" for the purpose of holding a layout.
   return spanContains(
     anchor,
