@@ -1,5 +1,6 @@
 {
   "$schema": "https://inlang.com/schema/inlang-message-format",
+
   "calendar_apply_globally_desc": "If disabled, week-configuration settings apply only to dates inside journals and do not affect dates created by other plugins or Obsidian itself.",
   "calendar_apply_globally_restart_hint": "You might need to restart Obsidian for changes to take effect.",
   "calendar_apply_globally_title": "Apply week configuration to all dates in vault",
@@ -64,16 +65,8 @@
   "calendar_preset_western_used": "Canada, United States, Iceland, Portugal, Japan, Taiwan, Thailand, Hong Kong, Macau, Israel, Egypt, South Africa, the Philippines, and most of Latin America.",
   "calendar_week_config_change": "Change",
   "calendar_week_config_description": "Define which day starts the week and how the first week of the year is determined — this affects week numbers.",
-  "code_blocks_unknown_keys": [
-    {
-      "declarations": ["input count", "input keys"],
-      "selectors": ["count"],
-      "match": {
-        "count=1": "Unrecognized option ignored: {keys}.",
-        "count=*": "Unrecognized options ignored: {keys}."
-      }
-    }
-  ],
+
+  "code_blocks_unknown_keys": [{"declarations": ["input count", "input keys"], "selectors": ["count"], "match": {"count=1": "Unrecognized option ignored: {keys}.", "count=*": "Unrecognized options ignored: {keys}."}}],
   "code_blocks_yaml_error": "Could not read the options in this {key} block.",
   "code_blocks_schema_error": "Some options in this {key} block are not valid.",
   "code_blocks_nav_not_connected": "Note is not connected to a journal",
@@ -81,6 +74,7 @@
   "common_no_journals_yet": "No journals yet. Create one in the plugin settings.",
   "code_blocks_nav_next": "Next",
   "code_blocks_nav_previous": "Previous",
+
   "nav_block_section_title": "Navigation block",
   "nav_block_section_mode_label": "Mode",
   "nav_block_section_mode_option": [
@@ -155,6 +149,7 @@
   "nav_block_row_template_required": "Template is required.",
   "nav_block_row_journal_required": "Select a journal.",
   "nav_block_row_resolved_preview": "Resolved: {text}",
+
   "command_add": "Add command",
   "command_context_open_note_clarifier": "(uses the open note's date, or today)",
   "command_context_only_open_note_clarifier": "(requires an open journal note)",
@@ -298,6 +293,7 @@
       }
     }
   ],
+
   "command_connect_note": "Connect note to a journal",
   "connect_note_modal_date_label": "Date",
   "connect_note_modal_move_description": "The note's folder ({current}) differs from the journal's configured folder ({configured}).",
@@ -312,6 +308,7 @@
   "connect_note_modal_out_of_bounds": "This date is outside the journal's active timeline.",
   "connect_note_notice_connected": "Note connected to \"{journalName}\".",
   "connect_note_notice_disconnected": "Note disconnected from \"{journalName}\".",
+
   "bulk_add_notes_to_title": "Add notes to {journalName}",
   "bulk_add_folder_label": "Source folder",
   "bulk_add_folder_description": "Select the folder with existing notes you want to process.",
@@ -382,79 +379,28 @@
   "bulk_add_skip_reason_no_date": "No date found",
   "bulk_add_skip_reason_invalid_date": "Date could not be parsed",
   "bulk_add_skip_reason_out_of_bounds": "Outside the journal's timeline",
-  "bulk_add_log_skipped_occupied": [
-    {
-      "declarations": ["input mood", "input anchor"],
-      "selectors": ["mood"],
-      "match": {
-        "mood=planned": "Will skip: a note is already connected to {anchor}.",
-        "mood=done": "Skipped: a note is already connected to {anchor}."
-      }
-    }
-  ],
-  "bulk_add_log_merged": [
-    {
-      "declarations": ["input mood", "input anchor"],
-      "selectors": ["mood"],
-      "match": {
-        "mood=planned": "Will merge into the note already connected to {anchor} and delete this note.",
-        "mood=done": "Merged into the note already connected to {anchor}; this note was deleted."
-      }
-    }
-  ],
-  "bulk_add_log_replaced": [
-    {
-      "declarations": ["input mood", "input anchor"],
-      "selectors": ["mood"],
-      "match": {
-        "mood=planned": "Will replace the note already connected to {anchor}.",
-        "mood=done": "Replaced the note already connected to {anchor}."
-      }
-    }
-  ],
-  "bulk_add_log_moved": [
-    {
-      "declarations": ["input mood"],
-      "selectors": ["mood"],
-      "match": {
-        "mood=planned": "Will move into the journal's folder.",
-        "mood=done": "Moved into the journal's folder."
-      }
-    }
-  ],
-  "bulk_add_log_renamed": [
-    {
-      "declarations": ["input mood"],
-      "selectors": ["mood"],
-      "match": {
-        "mood=planned": "Will rename to match the journal.",
-        "mood=done": "Renamed to match the journal."
-      }
-    }
-  ],
-  "bulk_add_log_connected": [
-    {
-      "declarations": ["input mood", "input journalName", "input anchor"],
-      "selectors": ["mood"],
-      "match": {
-        "mood=planned": "Will connect to {journalName} at {anchor}.",
-        "mood=done": "Connected to {journalName} at {anchor}."
-      }
-    }
-  ],
+  "bulk_add_log_skipped_occupied": [{"declarations": ["input mood", "input anchor"], "selectors": ["mood"], "match": {"mood=planned": "Will skip: a note is already connected to {anchor}.", "mood=done": "Skipped: a note is already connected to {anchor}."}}],
+  "bulk_add_log_merged": [{"declarations": ["input mood", "input anchor"], "selectors": ["mood"], "match": {"mood=planned": "Will merge into the note already connected to {anchor} and delete this note.", "mood=done": "Merged into the note already connected to {anchor}; this note was deleted."}}],
+  "bulk_add_log_replaced": [{"declarations": ["input mood", "input anchor"], "selectors": ["mood"], "match": {"mood=planned": "Will replace the note already connected to {anchor}.", "mood=done": "Replaced the note already connected to {anchor}."}}],
+  "bulk_add_log_moved": [{"declarations": ["input mood"], "selectors": ["mood"], "match": {"mood=planned": "Will move into the journal's folder.", "mood=done": "Moved into the journal's folder."}}],
+  "bulk_add_log_renamed": [{"declarations": ["input mood"], "selectors": ["mood"], "match": {"mood=planned": "Will rename to match the journal.", "mood=done": "Renamed to match the journal."}}],
+  "bulk_add_log_connected": [{"declarations": ["input mood", "input journalName", "input anchor"], "selectors": ["mood"], "match": {"mood=planned": "Will connect to {journalName} at {anchor}.", "mood=done": "Connected to {journalName} at {anchor}."}}],
   "bulk_add_log_merge_occupant_missing": "Failed: the note already connected to that date disappeared before the merge.",
   "bulk_add_log_failed": "Failed: {message}",
   "bulk_add_dry_run_banner": "Dry run — nothing in your vault was changed.",
   "bulk_add_occupant": "Already connected: {path}",
   "bulk_add_target": "New path: {path}",
+
   "common_action_cancel": "Cancel",
   "common_action_close": "Close",
   "common_action_create": "Create",
   "common_action_delete": "Delete",
   "common_action_submit": "Save",
+
   "confirm_note_creation_body": "Create '{noteName}' in journal '{journalName}'?",
   "confirm_note_creation_confirm": "Create",
   "confirm_note_creation_title": "Create a new journal note?",
+
   "decoration_add": "Add decoration",
   "decoration_border_mode_label": [
     {
@@ -771,37 +717,39 @@
       }
     }
   ],
-  "ui_theme_color_background_primary": "Primary background",
-  "ui_theme_color_background_primary_alt": "Background for surfaces on top of primary background",
-  "ui_theme_color_background_secondary": "Secondary background",
-  "ui_theme_color_background_secondary_alt": "Background for surfaces on top of secondary background",
-  "ui_theme_color_background_modifier_hover": "Hovered elements",
-  "ui_theme_color_background_modifier_active_hover": "Active hovered elements",
-  "ui_theme_color_background_modifier_border": "Border color",
-  "ui_theme_color_background_modifier_border_hover": "Border color (hover)",
-  "ui_theme_color_background_modifier_border_focus": "Border color (focus)",
-  "ui_theme_color_background_modifier_error": "Error background",
-  "ui_theme_color_background_modifier_error_hover": "Error background (hover)",
-  "ui_theme_color_background_modifier_success": "Success background",
-  "ui_theme_color_background_modifier_message": "Messages background",
-  "ui_theme_color_interactive_normal": "Background for standard interactive elements",
-  "ui_theme_color_interactive_hover": "Background for standard interactive elements (hover)",
-  "ui_theme_color_interactive_accent": "Background for accented interactive elements",
-  "ui_theme_color_interactive_accent_hover": "Background for accented interactive elements (hover)",
-  "ui_theme_color_text_normal": "Normal text",
-  "ui_theme_color_text_muted": "Muted text",
-  "ui_theme_color_text_faint": "Faint text",
-  "ui_theme_color_text_on_accent": "Text on accent background when accent is dark",
-  "ui_theme_color_text_on_accent_inverted": "Text on accent background when accent is light",
-  "ui_theme_color_text_success": "Success text",
-  "ui_theme_color_text_warning": "Warning text",
-  "ui_theme_color_text_error": "Error text",
-  "ui_theme_color_text_accent": "Accent text",
-  "ui_theme_color_text_accent_hover": "Accent text (hover)",
-  "ui_theme_color_text_selection": "Selected text background",
-  "ui_theme_color_text_highlight_bg": "Highlighted text background",
-  "ui_theme_color_caret_color": "Caret color",
+	"ui_theme_color_background_primary": "Primary background",
+	"ui_theme_color_background_primary_alt": "Background for surfaces on top of primary background",
+	"ui_theme_color_background_secondary": "Secondary background",
+	"ui_theme_color_background_secondary_alt": "Background for surfaces on top of secondary background",
+	"ui_theme_color_background_modifier_hover": "Hovered elements",
+	"ui_theme_color_background_modifier_active_hover": "Active hovered elements",
+	"ui_theme_color_background_modifier_border": "Border color",
+	"ui_theme_color_background_modifier_border_hover": "Border color (hover)",
+	"ui_theme_color_background_modifier_border_focus": "Border color (focus)",
+	"ui_theme_color_background_modifier_error": "Error background",
+	"ui_theme_color_background_modifier_error_hover": "Error background (hover)",
+	"ui_theme_color_background_modifier_success": "Success background",
+	"ui_theme_color_background_modifier_message": "Messages background",
+	"ui_theme_color_interactive_normal": "Background for standard interactive elements",
+	"ui_theme_color_interactive_hover": "Background for standard interactive elements (hover)",
+	"ui_theme_color_interactive_accent": "Background for accented interactive elements",
+	"ui_theme_color_interactive_accent_hover": "Background for accented interactive elements (hover)",
+	"ui_theme_color_text_normal": "Normal text",
+	"ui_theme_color_text_muted": "Muted text",
+	"ui_theme_color_text_faint": "Faint text",
+	"ui_theme_color_text_on_accent": "Text on accent background when accent is dark",
+	"ui_theme_color_text_on_accent_inverted": "Text on accent background when accent is light",
+	"ui_theme_color_text_success": "Success text",
+	"ui_theme_color_text_warning": "Warning text",
+	"ui_theme_color_text_error": "Error text",
+	"ui_theme_color_text_accent": "Accent text",
+	"ui_theme_color_text_accent_hover": "Accent text (hover)",
+	"ui_theme_color_text_selection": "Selected text background",
+	"ui_theme_color_text_highlight_bg": "Highlighted text background",
+	"ui_theme_color_caret_color": "Caret color",
+
   "journal_add_modal_anchor_description": "This date is used to count custom intervals from. It cannot be changed after creating the journal.",
+
   "common_label_today": "Today",
   "relative_date_yesterday": "Yesterday",
   "relative_date_tomorrow": "Tomorrow",
@@ -872,6 +820,7 @@
   "relative_date_custom_next": "Next {name}",
   "relative_date_custom_ago": "{count} {name} ago",
   "relative_date_custom_from_now": "{count} {name} from now",
+
   "shelf_add": "Add shelf",
   "common_delete_name": "Delete {name}",
   "shelf_dashboard_description": "A shelf groups journals that belong together, like work or personal. A calendar view can show one shelf at a time, navigation blocks decorate from the shelf's journals, and a command can target a shelf.",
@@ -906,14 +855,18 @@
   "shelf_place_modal_title": "Place journal",
   "shelf_section_not_on_shelf": "Not on a shelf",
   "shelf_section_place_tooltip": "Place on a shelf",
+
   "flow_failure_notice": "Journal: something went wrong — {error}",
+
   "settings_load_failed": "Journal: failed to load settings — {error}",
   "settings_reload_failed": "Journal: failed to reload settings — {error}",
   "settings_reload_required_banner": "Reload Obsidian to apply the changed settings.",
+
   "startup_dashboard_section_title": "Startup",
   "startup_open_note_title": "Open on startup",
   "startup_open_note_desc": "Open a note whenever you open this vault.",
   "startup_dont_open_option": "Don't open",
+
   "uri_missing_target": "Journal URI needs a \"journal\" or \"type\" parameter.",
   "uri_unknown_write_type": "Unknown journal type \"{type}\" in the URI.",
   "uri_invalid_date": "Could not understand the date \"{date}\" in the URI.",
@@ -934,6 +887,7 @@
     }
   ],
   "uri_open_failed": "Could not open the journal entry.",
+
   "view_deleted_error": "This view was deleted. Close this tab, or create the view again in the plugin settings.",
   "view_block_unknown_error": "This block is no longer available. Remove it from the view in the plugin settings.",
   "view_block_config_error": "Some settings in this block are not valid. Reconfigure it in the plugin settings.",
@@ -987,6 +941,7 @@
   "view_toolbar_item_edit_title_detail": "Edit {type}: {detail}",
   "view_toolbar_item_remove": "Remove toolbar item",
   "view_toolbar_item_empty": "No toolbar items yet.",
+
   "view_block_month_calendar_label": "Month calendar",
   "view_block_month_calendar_description": "Shows one or more month grids around the selected date.",
   "view_block_week_calendar_label": "Week calendar",
@@ -1044,6 +999,7 @@
     }
   ],
   "view_block_config_hide_empty_label": "Hide empty journals",
+
   "view_toolbar_shelf_selector_label": "Shelf selector",
   "view_toolbar_shelf_selector_description": "Switches which shelf scopes the view's journals.",
   "view_toolbar_shelf_selector_tooltip": "Switch shelf",
@@ -1063,7 +1019,9 @@
       }
     }
   ],
+
   "view_toolbar_period_buttons_config_label": "Periods",
+
   "view_toolbar_defined_navigation_label": "Defined-note navigation",
   "view_toolbar_defined_navigation_description": "A button that jumps to the previous or next note that already exists.",
   "view_toolbar_defined_navigation_target": "Notes to step through",
@@ -1079,6 +1037,7 @@
       }
     }
   ],
+
   "view_toolbar_button_label": "Button",
   "view_toolbar_button_preset_pick_date": "Pick date",
   "view_toolbar_button_preset_pick_date_description": "Opens a date picker to jump to any note.",
@@ -1210,6 +1169,7 @@
   "calendar_week_placement_label": "Default week numbers",
   "calendar_week_placement_description": "Where the week-number column appears in calendar blocks set to \"Use global default\".",
   "view_block_config_show_heading_label": "Show month/year heading",
+
   "journal_add_modal_anchor_label": "Start date",
   "journal_add_modal_anchor_required_error": "Select a start date.",
   "journal_add_modal_duration_label": "Duration",
@@ -1225,17 +1185,7 @@
   "journal_dashboard_edit": "Configure {name}",
   "journal_dashboard_empty": "No journals created yet.",
   "journal_delete_modal_title": "Delete {name}",
-  "journal_delete_connected_count": [
-    {
-      "declarations": ["input count"],
-      "selectors": ["count"],
-      "match": {
-        "count=0": "This journal has no connected notes.",
-        "count=1": "This journal has 1 connected note.",
-        "count=*": "This journal has {count} connected notes."
-      }
-    }
-  ],
+  "journal_delete_connected_count": [{"declarations": ["input count"], "selectors": ["count"], "match": {"count=0": "This journal has no connected notes.", "count=1": "This journal has 1 connected note.", "count=*": "This journal has {count} connected notes."}}],
   "journal_delete_mode_label": "What to do with connected notes",
   "journal_delete_mode_option": [
     {
@@ -1313,17 +1263,7 @@
   "journal_edit_name_template_empty_warning": "This name template resolves to an empty note name, so no note can be created. Add a variable or some text to it.",
   "journal_edit_name_template_collision_warning": "Entries for {first} and {second} both resolve to {path}. They will share one note.",
   "journal_edit_colliding_warning": "This journal resolves to the same note path as {names}, so their notes will overwrite each other. Change the folder or name template to give it a distinct path.",
-  "journal_edit_name_template_invertibility_warning": [
-    {
-      "declarations": ["input reason", "input offending"],
-      "selectors": ["reason"],
-      "match": {
-        "reason=unknown-variable": "The name template uses \"{offending}\", which is not a known variable, so notes created outside the plugin cannot be matched to this journal.",
-        "reason=function-token": "The name template uses the function \"{offending}\", so notes created outside the plugin cannot be matched to this journal.",
-        "reason=clock-variable": "The name template uses \"{offending}\", which is a time of day, so notes created outside the plugin cannot be matched to this journal."
-      }
-    }
-  ],
+  "journal_edit_name_template_invertibility_warning": [{"declarations": ["input reason", "input offending"], "selectors": ["reason"], "match": {"reason=unknown-variable": "The name template uses \"{offending}\", which is not a known variable, so notes created outside the plugin cannot be matched to this journal.", "reason=function-token": "The name template uses the function \"{offending}\", so notes created outside the plugin cannot be matched to this journal.", "reason=clock-variable": "The name template uses \"{offending}\", which is a time of day, so notes created outside the plugin cannot be matched to this journal."}}],
   "journal_edit_name_template_no_anchor_warning": "The name template has no date variable, and its numbering variable cannot be turned back into a date, so notes created outside the plugin cannot be matched to this journal.",
   "journal_edit_name_template_label": "Note name template",
   "journal_edit_note_path_preview_label": "Resolved note path:",
@@ -1519,6 +1459,7 @@
       }
     }
   ],
+
   "logging_dump_button": "Dump logs to note",
   "logging_dump_desc": "Write the recently recorded log messages to a new note in your vault.",
   "logging_dump_empty": "No log messages have been recorded yet.",
