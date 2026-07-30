@@ -63,11 +63,14 @@ Four field roles, each allowing tags in the order they are displayed:
 Only `border` and `fill` span two tags. A single heading over an entire list says
 nothing, so headings render only when the field's result has more than one group.
 
-`border` admits text variables because accents and status colors read well as strokes —
-Obsidian draws its own focus rings with `--interactive-accent`. `fill` admits everything
-except border-only variables, because a decorative mark on a calendar cell has no
-inherent ink-or-surface nature and `text-accent` is the likeliest choice for a colored
-dot.
+`border` admits text variables because accent and status text colors — `--text-accent`,
+`--text-error`, `--text-success` — read well as strokes. Because a variable carries exactly
+one tag, the interactive-accent backgrounds cannot be offered as border colors;
+`--text-accent` is the reachable equivalent, and Obsidian defaults both to
+`var(--color-accent)` so they match unless a theme overrides them independently. `fill`
+admits everything except border-only variables, because a decorative mark on a calendar
+cell has no inherent ink-or-surface nature and `text-accent` is the likeliest choice for a
+colored dot.
 
 ### Call sites
 

@@ -82,9 +82,14 @@ describe("UiColorSettingsPicker", () => {
         expect(screen.queryAllByRole("group")).toHaveLength(0);
       });
 
-      it("renders a heading for each tag of a two-tag role", () => {
+      it("renders a heading for the border tag of a two-tag role", () => {
         mount({ type: "theme", name: "" }, "border");
         expect(screen.getByRole("group", { name: m.ui_theme_color_group_label({ group: "border" }) })).toBeTruthy();
+      });
+
+      it("renders a heading for the text tag of a two-tag role", () => {
+        mount({ type: "theme", name: "" }, "border");
+        expect(screen.getByRole("group", { name: m.ui_theme_color_group_label({ group: "text" }) })).toBeTruthy();
       });
 
       it("keeps a stored variable selected even when the field's role excludes it", () => {

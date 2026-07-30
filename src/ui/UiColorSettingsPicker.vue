@@ -12,7 +12,7 @@ const { role } = defineProps<{ role: ThemeColorFieldRole }>();
 const model = defineModel<ColorSettings>({ required: true });
 
 const groups = computed(() => themeColorGroupsFor(role));
-const offered = computed(() => new Set(groups.value.flatMap((group) => [...group.names])));
+const offered = computed(() => new Set(groups.value.flatMap((group) => group.names)));
 
 const kind = computed<ColorSettings["type"]>({
   get: () => model.value.type,

@@ -143,7 +143,7 @@ else is tracked here.
   - v2: persisted `todayMode`/`pickMode` settings (`navigate`/`create`/`switch_date`) — `src/_old-code/types/settings.types.ts:36-37`.
   - v3: the `mode` field exists in the schema (`src/views/toolbar-items/button/button-config.ts:8`) but its config editor was unreachable, so mode/levels were frozen at the add-time preset.
 
-- [x] **26. Theme color picker downgraded to free-text.** Fixed (`5933d96d`). Restored the named-theme-color dropdown + live swatch (`THEME_COLOR_NAMES` + `UiColorSettingsPicker`), reversing the earlier free-text decision per explicit user request. The dropdown lists the ~32 Obsidian theme variables by name; a previously stored variable that isn't a known theme color stays selectable so existing data round-trips.
+- [x] **26. Theme color picker downgraded to free-text.** Fixed (`5933d96d`). Restored the named-theme-color dropdown + live swatch (`THEME_COLOR_NAMES` + `UiColorSettingsPicker`), reversing the earlier free-text decision per explicit user request. The dropdown lists the ~32 Obsidian theme variables by name; a previously stored variable that isn't a known theme color stays selectable so existing data round-trips. (Since narrowed further: each field now offers only the variables suited to its role — see `docs/superpowers/specs/2026-07-30-theme-color-roles-design.md` — a deliberate follow-up narrowing, not a regression.)
   - v2: dropdown of ~32 named Obsidian theme colors + live swatch — `src/_old-code/components/ColorPicker.vue:66-71`.
   - v3: single free-text CSS-variable input, no dropdown/swatch — `src/ui/UiColorSettingsPicker.vue:44`. Affects every color control; typos silently yield `var(--typo)`.
 

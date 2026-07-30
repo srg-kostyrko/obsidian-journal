@@ -3,7 +3,7 @@ import { describe, expect, it } from "vitest";
 import { themeColorGroupsFor, type ThemeColorFieldRole } from "./theme-colors";
 
 function namesFor(role: ThemeColorFieldRole): string[] {
-  return themeColorGroupsFor(role).flatMap((group) => [...group.names]);
+  return themeColorGroupsFor(role).flatMap((group) => group.names);
 }
 
 describe("themeColorGroupsFor", () => {

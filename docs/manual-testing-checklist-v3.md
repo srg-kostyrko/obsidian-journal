@@ -567,8 +567,10 @@ preview.
 - [x] Row style **fontSize** → text size changes.
 - [x] Row style **bold** → text is bolded.
 - [x] Row style **italic** → text is italicized.
-- [x] Row style **color** → text color changes.
-- [x] Row style **background** → row background changes.
+- [x] Row style **color** → text color changes; theme mode's variable list holds
+      only text variables.
+- [x] Row style **background** → row background changes; theme mode's variable
+      list holds only background variables.
 - [x] Row **link = self** → click opens the containing entry.
 - [x] Row **link = journal** → click opens the journal's entry.
 - [x] Row **link = day** → click navigates to the day entry.
@@ -740,9 +742,11 @@ so every entry cell is styled. Swap the style per item.
 - [ ] **background** style, theme mode → the variable list holds only background variables;
       `Normal text` is absent, `Selected text background` is present.
 - [ ] **border** style, theme mode → the list is split under **Border** and **Text**
-      headings.
+      headings, and each grouped option's label stays fully readable (no truncation)
+      despite the native `<select>` indent and the picker's `12em` width cap.
 - [ ] **shape** style, theme mode → the list is split under **Text** and **Background**
-      headings, with no border variables.
+      headings, with no border variables, and every grouped label stays fully readable
+      under the same constraints.
 - [ ] A decoration saved before this change with an out-of-role variable (e.g. a text color
       of `Primary background`) → reopening it still shows that variable selected under its
       friendly label, and the cell renders exactly as before.
@@ -778,13 +782,14 @@ sitting is faster than rediscovering the pattern per screen.
       first day.
 - [ ] **calendar-week** — change week-start day → week numbers recompute.
 - [x] **calendar-week** — locale preset → dow/doy update to the preset.
-- [x] **calendar-appearance** — today color picker → applies live to today's cell.
+- [x] **calendar-appearance** — today color picker → applies live to today's cell;
+      theme mode's variable list holds only text variables.
 - [x] **calendar-appearance** — today background picker → applies live to today's
-      cell.
+      cell; theme mode's variable list holds only background variables.
 - [x] **calendar-appearance** — active color picker → applies live to the active
-      cell.
+      cell; theme mode's variable list holds only text variables.
 - [x] **calendar-appearance** — active background picker → applies live to the
-      active cell.
+      active cell; theme mode's variable list holds only background variables.
 - [x] **calendar-appearance** — a cell that is both today and active → today's
       style wins.
 - [x] **logging** — raise log level → more console output.

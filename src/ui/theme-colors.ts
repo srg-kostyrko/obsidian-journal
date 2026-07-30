@@ -78,8 +78,9 @@ const THEME_COLORS: readonly ThemeColor[] = [
 ];
 
 // Tags a field of each role accepts, in the order they are shown. A border reads well in an
-// accent or status color — Obsidian draws its own focus rings with --interactive-accent — and a
-// decorative mark has no inherent ink-or-surface nature, so those two roles span two tags.
+// accent or status color, and those live among the text-tagged variables (--text-accent,
+// --text-error, --text-success); a decorative mark has no inherent ink-or-surface nature —
+// so those two roles span two tags.
 const ROLE_TAGS: Record<ThemeColorFieldRole, readonly ThemeColorTag[]> = {
   text: ["text"],
   background: ["background"],
