@@ -9,8 +9,8 @@ itself.
 
 A calendar block holds its layout when the opened note's date lands anywhere in
 its **rendered cells**, spillover days included. A month grid renders up to six
-days of the previous month and six of the next, so a note in either neighbour
-holds the window while the view's date moves into that neighbour. Every consumer
+days of the previous month and six of the next, so a note in either neighbor
+holds the window while the view's date moves into that neighbor. Every consumer
 that reads the date directly then names a period the grid is not laid out around:
 
 - The grid shows July, a day note for August 1 opens, and the toolbar's month
@@ -32,7 +32,7 @@ The cause is one predicate asking the wrong question. `monthWindowContains`
 expands the displayed months to whole weeks before testing containment, so it
 answers _"is this date among the pixels I painted?"_ where the honest question is
 _"does my window own the period this date belongs to?"_ Spillover days belong to
-a neighbouring period the window does not own.
+a neighboring period the window does not own.
 
 Two records need correcting alongside the code. The amended spec listed v2's
 per-journal-type follow branching as a non-goal, which is right — but read its
@@ -55,7 +55,7 @@ A **note's period** is the span of time a note is its journal's entry for: a day
 for a daily journal, a week for a weekly one, an interval for a custom one.
 
 A block's **displayed periods** are the periods it lays a grid out for — the
-months of a month calendar, the weeks of a week calendar. Days of a neighbouring
+months of a month calendar, the weeks of a week calendar. Days of a neighboring
 period that a grid paints in its margins are not among them.
 
 ### Scenario: opening a note you are already inside leaves the date alone
@@ -80,9 +80,9 @@ period that a grid paints in its margins are not among them.
 ### Scenario: a block re-lays-out for a date it only paints in its margin
 
 - **Given** a calendar block is displaying a single period
-- **And** the grid paints some days of the neighbouring period alongside it
+- **And** the grid paints some days of the neighboring period alongside it
 - **When** the view's date moves, because a note opened, to one of those days
-- **Then** the block lays itself out around the neighbouring period
+- **Then** the block lays itself out around the neighboring period
 
 ### Scenario: navigating always re-centers
 
@@ -174,6 +174,12 @@ functionality.
    that block set to a `week` window, viewing July with the date on July 15 and
    opening July's month note now holds the week of the 15th where v2 swung to the
    week of the 1st. Opening a month note should not drag a day-level cursor.
+
+   The same applies at mount: a view opening while this month's month note is
+   active starts on today rather than on the 1st, since the guard runs on the
+   watcher's immediate first pass too. The amended spec's "starts on that note's
+   date rather than on today" scenario still holds for every note whose period
+   does not contain today, which is the case it was written for.
 
 The amended spec's four deliberate changes all stand, including its third — with
 `before`/`after` above zero, a held date followed by one navigation step can move
