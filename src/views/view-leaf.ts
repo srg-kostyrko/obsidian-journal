@@ -151,6 +151,7 @@ function buildRootComponent(viewId: ViewId, leafState: JournalViewLeafState, inj
       useFollowActiveNote({
         enabled: () => view.value?.followActiveDate ?? true,
         inScope: (name) => scope.all.value.includes(name),
+        currentDate: () => context.refDate.value,
         onFollow: (date) => {
           followedAnchor.value = date;
           leafState.refDate = date;
