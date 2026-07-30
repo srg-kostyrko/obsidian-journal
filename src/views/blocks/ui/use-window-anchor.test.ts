@@ -43,4 +43,18 @@ describe("useWindowAnchor", () => {
 
     expect(anchor.value).toBe(B);
   });
+
+  it("re-centers when the window narrows under a held anchor", async () => {
+    const refDate = ref(A);
+    const origin = ref<RefDateOrigin>("follow");
+    const wide = ref(true);
+    const anchor = useWindowAnchor({ refDate, origin, contains: () => wide.value });
+
+    refDate.value = B;
+    await nextTick();
+    wide.value = false;
+    await nextTick();
+
+    expect(anchor.value).toBe(B);
+  });
 });

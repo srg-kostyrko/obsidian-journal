@@ -23,5 +23,10 @@ export function useWindowAnchor(options: WindowAnchorOptions): ComputedRef<Ancho
     },
   );
 
-  return computed(() => anchor.value);
+  // A remembered anchor outlives the range that justified holding it: blocks are updated in
+  // place when their window config shrinks, which can leave the view's date outside.
+  return computed(() => {
+    const date = toValue(options.refDate);
+    return options.contains(date, anchor.value) ? anchor.value : date;
+  });
 }
