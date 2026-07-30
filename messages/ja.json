@@ -1435,7 +1435,6 @@
 	"journal_edit_fm_start_toggle_label": "開始日プロパティを追加する",
 	"journal_edit_folder_description": "新しいノートはこのフォルダに作成されます。",
 	"journal_edit_folder_label": "フォルダ",
-	"journal_edit_folder_path_preview_label": "解決済みフォルダ:",
 	"journal_edit_move_to_folder_apply_link": "推奨事項を適用する",
 	"journal_edit_move_to_folder_recommendation_date_format": "日付形式にはパス区切り文字が含まれています。日付変数をフォルダーフィールドに移動しますか？",
 	"journal_edit_move_to_folder_recommendation_name_template": "ノート名テンプレートにパス区切り文字が含まれています。パスの接頭辞をフォルダーフィールドに移動しますか？",

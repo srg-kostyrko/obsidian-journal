@@ -1441,7 +1441,6 @@
 	"journal_edit_fm_start_toggle_label": "Füge die Eigenschaft „Startdatum“ hinzu.",
 	"journal_edit_folder_description": "Neue Notizen werden in diesem Ordner erstellt.",
 	"journal_edit_folder_label": "Ordner",
-	"journal_edit_folder_path_preview_label": "Aufgelöster Ordner:",
 	"journal_edit_move_to_folder_apply_link": "Empfehlung anwenden",
 	"journal_edit_move_to_folder_recommendation_date_format": "Das Datumsformat enthält einen Pfadtrenner. Sollen die Datumsvariablen in das Feld „Ordner“ verschoben werden?",
 	"journal_edit_move_to_folder_recommendation_name_template": "Die Vorlage für den Notiznamen enthält ein Pfadtrennzeichen. Soll das Pfadpräfix in das Ordnerfeld verschoben werden?",

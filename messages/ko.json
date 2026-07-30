@@ -1435,7 +1435,6 @@
 	"journal_edit_fm_start_toggle_label": "시작일 속성을 추가합니다",
 	"journal_edit_folder_description": "새 노트는 이 폴더에 생성됩니다.",
 	"journal_edit_folder_label": "접는 사람",
-	"journal_edit_folder_path_preview_label": "해결된 폴더:",
 	"journal_edit_move_to_folder_apply_link": "추천 사항을 적용하세요",
 	"journal_edit_move_to_folder_recommendation_date_format": "날짜 형식에 경로 구분 기호가 포함되어 있습니다. 날짜 변수를 폴더 필드로 이동하시겠습니까?",
 	"journal_edit_move_to_folder_recommendation_name_template": "노트 이름 템플릿에 경로 구분 기호가 포함되어 있습니다. 경로 접두사를 폴더 필드로 옮기시겠습니까?",

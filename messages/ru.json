@@ -1441,7 +1441,6 @@
 	"journal_edit_fm_start_toggle_label": "Добавить свойство даты начала",
 	"journal_edit_folder_description": "В этой папке будут создаваться новые заметки.",
 	"journal_edit_folder_label": "Папка",
-	"journal_edit_folder_path_preview_label": "Разобранная папка:",
 	"journal_edit_move_to_folder_apply_link": "Примените рекомендацию",
 	"journal_edit_move_to_folder_recommendation_date_format": "Формат даты содержит разделитель пути. Переместить переменные даты в поле «Папка»?",
 	"journal_edit_move_to_folder_recommendation_name_template": "В шаблоне имени поля «Примечание» используется разделитель пути. Переместите префикс пути в поле «Папка»?",

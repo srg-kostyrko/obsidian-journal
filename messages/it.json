@@ -1441,7 +1441,6 @@
 	"journal_edit_fm_start_toggle_label": "Aggiungi la proprietà data di inizio",
 	"journal_edit_folder_description": "In questa cartella verranno create nuove note.",
 	"journal_edit_folder_label": "Cartella",
-	"journal_edit_folder_path_preview_label": "Cartella risolta:",
 	"journal_edit_move_to_folder_apply_link": "Applicare la raccomandazione",
 	"journal_edit_move_to_folder_recommendation_date_format": "Il formato data contiene un separatore di percorso. Spostare le variabili data nel campo Cartella?",
 	"journal_edit_move_to_folder_recommendation_name_template": "Il modello del nome della nota contiene un separatore di percorso. Spostare il prefisso del percorso nel campo Cartella?",

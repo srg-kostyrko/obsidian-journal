@@ -1441,7 +1441,6 @@
 	"journal_edit_fm_start_toggle_label": "Ajouter la propriété de date de début",
 	"journal_edit_folder_description": "De nouvelles notes seront créées dans ce dossier.",
 	"journal_edit_folder_label": "Dossier",
-	"journal_edit_folder_path_preview_label": "Dossier résolu :",
 	"journal_edit_move_to_folder_apply_link": "Appliquer la recommandation",
 	"journal_edit_move_to_folder_recommendation_date_format": "Le format de date contient un séparateur de chemin. Déplacez les variables de date dans le champ Dossier.",
 	"journal_edit_move_to_folder_recommendation_name_template": "Le modèle de nom de note contient un séparateur de chemin. Déplacer le préfixe du chemin dans le champ Dossier ?",

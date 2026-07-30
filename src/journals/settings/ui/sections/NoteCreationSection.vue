@@ -16,12 +16,13 @@ import { JournalsViewModel } from "../../../view-model";
 import DateFormatPreview from "../DateFormatPreview.vue";
 import FolderInput from "../FolderInput.vue";
 import NotePathPreview from "../NotePathPreview.vue";
-import TemplateStringPreview from "../TemplateStringPreview.vue";
 import { useAutoCreateOnEnable } from "../use-auto-create-on-enable";
 import { useCollisionCheck } from "../use-collision-check";
 import { extractFromDateFormat, extractFromNameTemplate } from "../use-folder-extractor";
 import { useInvertibilityCheck } from "../use-invertibility-check";
 import VariableReferenceHint from "../VariableReferenceHint.vue";
+import { templateHasWrongWeek } from "../wrong-week";
+import WrongWeekWarning from "../WrongWeekWarning.vue";
 
 const { journalName } = defineProps<{ journalName: string }>();
 
@@ -100,11 +101,7 @@ function applyDateFormatRecommendation(): void {
           :has-cycle="hasCycle"
           :numbering-variable-names="numberingVariableNames"
         />
-        <TemplateStringPreview
-          :journal-name="journalName"
-          :value="config.folder"
-          :label="m.journal_edit_folder_path_preview_label()"
-        />
+        <WrongWeekWarning v-if="templateHasWrongWeek(config.folder)" />
       </template>
       <FolderInput v-model="config.folder" />
     </UiSettingRow>

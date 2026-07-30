@@ -1435,7 +1435,6 @@
 	"journal_edit_fm_start_toggle_label": "添加开始日期属性",
 	"journal_edit_folder_description": "新笔记将在此文件夹中创建。",
 	"journal_edit_folder_label": "文件夹",
-	"journal_edit_folder_path_preview_label": "已解析文件夹：",
 	"journal_edit_move_to_folder_apply_link": "应用建议",
 	"journal_edit_move_to_folder_recommendation_date_format": "日期格式包含路径分隔符。是否应将日期变量移至“文件夹”字段？",
 	"journal_edit_move_to_folder_recommendation_name_template": "笔记名称模板包含路径分隔符。是否将路径前缀移至“文件夹”字段？",

@@ -1441,7 +1441,6 @@
 	"journal_edit_fm_start_toggle_label": "Adicionar propriedade de data de início",
 	"journal_edit_folder_description": "Novas notas serão criadas nesta pasta.",
 	"journal_edit_folder_label": "Pasta",
-	"journal_edit_folder_path_preview_label": "Pasta resolvida:",
 	"journal_edit_move_to_folder_apply_link": "Aplicar recomendação",
 	"journal_edit_move_to_folder_recommendation_date_format": "O formato de data contém um separador de caminho. Mover as variáveis de data para o campo Pasta?",
 	"journal_edit_move_to_folder_recommendation_name_template": "O modelo de nome da nota contém um separador de caminho. Deseja mover o prefixo do caminho para o campo Pasta?",

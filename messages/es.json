@@ -1435,7 +1435,6 @@
 	"journal_edit_fm_start_toggle_label": "Agregar propiedad de fecha de inicio",
 	"journal_edit_folder_description": "Se crearán nuevas notas en esta carpeta.",
 	"journal_edit_folder_label": "Carpeta",
-	"journal_edit_folder_path_preview_label": "Carpeta resuelta:",
 	"journal_edit_move_to_folder_apply_link": "Aplicar recomendación",
 	"journal_edit_move_to_folder_recommendation_date_format": "El formato de fecha contiene un separador de ruta. ¿Mover las variables de fecha al campo Carpeta?",
 	"journal_edit_move_to_folder_recommendation_name_template": "Nota: la plantilla de nombre contiene un separador de ruta. ¿Mover el prefijo de ruta al campo Carpeta?",

@@ -177,6 +177,18 @@ describe("NoteCreationSection", () => {
     });
   });
 
+  describe("folder field", () => {
+    it("warns when the folder's date format uses the wrong week token", () => {
+      mount({ folder: "Journals/{{date:GGGG-[W]W}}" });
+      expect(screen.getByText(m.journal_edit_wrong_week_warning())).toBeTruthy();
+    });
+
+    it("does not warn for a folder whose date format has no week token", () => {
+      mount({ folder: "Journals/{{date:YYYY}}" });
+      expect(screen.queryByText(m.journal_edit_wrong_week_warning())).toBeNull();
+    });
+  });
+
   describe("autoCreate field", () => {
     it("shows the confirmation-skip note only when confirmCreation is enabled", async () => {
       const { repo } = mount();
