@@ -111,6 +111,40 @@ describe("SettingsUiService", () => {
     });
   });
 
+  describe("replace", () => {
+    const shelfEdit = defineSubpage<{ shelfName: string }>({ key: "shelf-edit", component: Stub });
+    const journalEdit = defineSubpage<{ journalName: string }>({ key: "journal-edit", component: Stub });
+
+    it("re-points the current frame at new props", () => {
+      const service = build({ subpages: [shelfEdit] });
+      service.push(shelfEdit, { shelfName: "Work" });
+
+      service.replace({ shelfName: "Office" });
+
+      expect(service.current.value).toEqual({ subpage: shelfEdit, props: { shelfName: "Office" } });
+    });
+
+    it("leaves the frame below the current one untouched", () => {
+      const service = build({ subpages: [shelfEdit, journalEdit] });
+      service.push(shelfEdit, { shelfName: "Work" });
+      const shelfFrame = service.current.value;
+      service.push(journalEdit, { journalName: "daily" });
+
+      service.replace({ journalName: "diary" });
+      service.pop();
+
+      expect(service.current.value).toEqual(shelfFrame);
+    });
+
+    it("is a no-op when the stack is empty", () => {
+      const service = build({});
+
+      service.replace({ shelfName: "Office" });
+
+      expect(service.current.value).toBeNull();
+    });
+  });
+
   describe("reset", () => {
     it("clears the stack to dashboard", () => {
       const edit = subpage("edit");

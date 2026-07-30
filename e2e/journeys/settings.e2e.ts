@@ -86,6 +86,9 @@ describe("settings", () => {
         (s) => "weekly-renamed" in (s.journals ?? {}) && !("weekly" in (s.journals ?? {})),
         "journal rename did not re-key data.json",
       );
+      // Same as the shelf case: the re-key must not bounce the user off the journal's page.
+      await expect($('button[aria-label="Rename journal"]')).toExist();
+      await expect($(".setting-item-name*=weekly-renamed")).toExist();
     });
 
     it("deletes a journal and removes it from data.json", async () => {
@@ -134,6 +137,10 @@ describe("settings", () => {
         (s) => "rename-done" in (s.shelves ?? {}) && !("rename-me" in (s.shelves ?? {})),
         "shelf rename did not re-key data.json",
       );
+      // Re-keying invalidates the nav frame's shelf name, so the page has to follow the rename
+      // instead of falling back to the dashboard. The rename pencil only exists on the subpage.
+      await expect($('button[aria-label="Rename shelf"]')).toExist();
+      await expect($(".setting-item-name*=rename-done")).toExist();
     });
 
     it("deletes a shelf and removes it from data.json", async () => {

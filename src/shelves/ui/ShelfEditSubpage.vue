@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { computed, ref, watchEffect } from "vue";
+import { computed, onUnmounted, ref, watchEffect } from "vue";
 
 import { m } from "@/i18n";
 import { useService } from "@/infrastructure/di";
@@ -17,22 +17,32 @@ import UiSettingRow from "@/ui/UiSettingRow.vue";
 
 import { EditShelfNameFlow } from "../flows/edit-shelf-name.flow";
 import { ShelvesService } from "../service";
+import { ShelvesEventsToken } from "../tokens";
 import { ShelvesViewModel } from "../view-model";
 
 import JournalList from "./JournalList.vue";
 import { ShelfEditSectionToken } from "./shelf-edit-section";
 
-const props = defineProps<{ shelfName: string; nav: SubpageNav }>();
-const { shelfName } = props;
-const nav: SubpageNav = props.nav;
+const props = defineProps<{ shelfName: string; nav: SubpageNav<{ shelfName: string }> }>();
+// Aliased so `nav.push` below is not read as a mutation of the prop itself; the object never changes.
+const nav: SubpageNav<{ shelfName: string }> = props.nav;
 
 const flows = useService(Flows);
+const shelvesEvents = useService(ShelvesEventsToken);
 const shelvesVM = useService(ShelvesViewModel);
 const shelvesService = useService(ShelvesService);
 const journalsVM = useService(JournalsViewModel);
 const editSections = useService(ShelfEditSectionToken).toSorted((a, b) => a.order - b.order);
 
-const shelf = computed(() => shelvesVM.getShelf(shelfName).getOrUndefined());
+const shelf = computed(() => shelvesVM.getShelf(props.shelfName).getOrUndefined());
+
+// Shelves are keyed by name, so a rename makes this page's key stale: follow it before the
+// missing-shelf guard below reads it as a deletion.
+onUnmounted(
+  shelvesEvents.on("renamed", (oldName, newName) => {
+    if (oldName === props.shelfName) nav.replace({ shelfName: newName });
+  }),
+);
 
 watchEffect(() => {
   if (!shelf.value) nav.back();
@@ -50,11 +60,11 @@ const entries = computed<readonly [string, JournalConfig][]>(() =>
 const expanded = ref(true);
 
 function rename(): void {
-  void flows.invoke(EditShelfNameFlow, { shelfName });
+  void flows.invoke(EditShelfNameFlow, { shelfName: props.shelfName });
 }
 function add(): void {
   void flows.invoke(AddJournalFlow).tap(({ name }) => {
-    shelvesService.assign(name, shelfName);
+    shelvesService.assign(name, props.shelfName);
   });
 }
 function edit(journalName: string): void {
@@ -95,6 +105,11 @@ function remove(journalName: string): void {
         @delete="remove"
       />
     </UiCollapsibleBlock>
-    <component :is="section.component" v-for="section in editSections" :key="section.key" :shelf-name="shelfName" />
+    <component
+      :is="section.component"
+      v-for="section in editSections"
+      :key="section.key"
+      :shelf-name="props.shelfName"
+    />
   </div>
 </template>

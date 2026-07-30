@@ -2,6 +2,7 @@ import userEvent from "@testing-library/user-event";
 import { cleanup, render, screen } from "@testing-library/vue";
 import { createNanoEvents } from "nanoevents";
 import { afterEach, describe, expect, it, vi } from "vitest";
+import { nextTick } from "vue";
 
 import { m } from "@/i18n";
 import { type Container, provideInjectorOnApp } from "@/infrastructure/di";
@@ -16,7 +17,7 @@ import { BulkAddFlow } from "@/journals/notes/bulk-add/flows/bulk-add.flow";
 import { JournalsRepository } from "@/journals/repository";
 import { JournalsEventsToken } from "@/journals/tokens";
 import { JournalsViewModel } from "@/journals/view-model";
-import { SettingsUiService, SubpageToken } from "@/settings";
+import { SettingsUiService, SubpageToken, type SubpageNav } from "@/settings";
 import { createSettingsService } from "@/settings/testing";
 
 import { shelvesCollection } from "../config";
@@ -81,13 +82,28 @@ async function setup(options: { journals?: string[]; shelves?: Record<string, { 
   return { container, shelvesRepo, flows };
 }
 
-const noopNav = { back: () => undefined, push: () => undefined };
+const noopNav: SubpageNav<{ shelfName: string }> = {
+  back: () => undefined,
+  push: () => undefined,
+  replace: () => undefined,
+};
 
-function mount(container: Container, shelfName: string, nav = noopNav) {
+function mount(container: Container, shelfName: string, nav: SubpageNav<{ shelfName: string }> = noopNav) {
   return render(ShelfEditSubpage, {
     props: { shelfName, nav },
     global: { plugins: [{ install: (app) => provideInjectorOnApp(app, container) }] },
   });
+}
+
+// The dashboard re-renders the subpage with the frame's replaced props; stand in for it.
+function mountFollowingFrame(container: Container, shelfName: string) {
+  const back = vi.fn();
+  const utilities = mount(container, shelfName, {
+    back,
+    push: () => undefined,
+    replace: (props) => void utilities.rerender(props),
+  });
+  return { back };
 }
 
 describe("ShelfEditSubpage", () => {
@@ -122,7 +138,7 @@ describe("ShelfEditSubpage", () => {
   it("calls nav.back when the back breadcrumb is clicked", async () => {
     const { container } = await setup({ shelves: { Work: { name: "Work", journals: [] } } });
     const back = vi.fn();
-    mount(container, "Work", { back, push: () => undefined });
+    mount(container, "Work", { back, push: () => undefined, replace: () => undefined });
     await userEvent.click(screen.getByRole("button", { name: m.common_label_back() }));
     expect(back).toHaveBeenCalled();
   });
@@ -130,8 +146,26 @@ describe("ShelfEditSubpage", () => {
   it("calls nav.back when the shelf no longer exists", async () => {
     const { container } = await setup({ shelves: {} });
     const back = vi.fn();
-    mount(container, "Gone", { back, push: () => undefined });
+    mount(container, "Gone", { back, push: () => undefined, replace: () => undefined });
     expect(back).toHaveBeenCalled();
+  });
+
+  describe("when the shelf is renamed", () => {
+    it("keeps the shelf's page open", async () => {
+      const { container, shelvesRepo } = await setup({ shelves: { Work: { name: "Work", journals: [] } } });
+      const { back } = mountFollowingFrame(container, "Work");
+      shelvesRepo.rename("Work", "Office");
+      await nextTick();
+      await nextTick();
+      expect(back).not.toHaveBeenCalled();
+    });
+
+    it("shows the shelf's new name", async () => {
+      const { container, shelvesRepo } = await setup({ shelves: { Work: { name: "Work", journals: [] } } });
+      mountFollowingFrame(container, "Work");
+      shelvesRepo.rename("Work", "Office");
+      await vi.waitFor(() => expect(screen.getByText("Office")).toBeTruthy());
+    });
   });
 
   it("assigns a newly created journal to the shelf", async () => {

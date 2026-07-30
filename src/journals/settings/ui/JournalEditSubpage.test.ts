@@ -2,7 +2,7 @@ import userEvent from "@testing-library/user-event";
 import { cleanup, render, screen, waitFor } from "@testing-library/vue";
 import { createNanoEvents } from "nanoevents";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
-import { defineComponent, h } from "vue";
+import { defineComponent, h, nextTick } from "vue";
 
 import { installTestCalendar } from "@/calendar/testing";
 import { m } from "@/i18n";
@@ -25,6 +25,7 @@ import { AutoCreateService } from "@/journals/notes/auto-create";
 import { JournalsRepository } from "@/journals/repository";
 import { JournalsEventsToken } from "@/journals/tokens";
 import { JournalsViewModel } from "@/journals/view-model";
+import type { SubpageNav } from "@/settings";
 import { createSettingsService } from "@/settings/testing";
 import { TemplateEngine } from "@/templates";
 import { installTestEngine } from "@/templates/testing";
@@ -104,9 +105,13 @@ async function setup(raw?: unknown) {
   return { container, journalsRepo, flows, fakeModalService };
 }
 
-const noopNav = { back: () => undefined, push: () => undefined };
+const noopNav: SubpageNav<{ journalName: string }> = {
+  back: () => undefined,
+  push: () => undefined,
+  replace: () => undefined,
+};
 
-function mount(container: Container, journalName: string, nav: { back: () => void; push: () => void } = noopNav) {
+function mount(container: Container, journalName: string, nav: SubpageNav<{ journalName: string }> = noopNav) {
   return render(JournalEditSubpage, {
     props: { journalName, nav },
     global: {
@@ -119,6 +124,17 @@ function mount(container: Container, journalName: string, nav: { back: () => voi
       ],
     },
   });
+}
+
+// The dashboard re-renders the subpage with the frame's replaced props; stand in for it.
+function mountFollowingFrame(container: Container, journalName: string) {
+  const back = vi.fn();
+  const utilities = mount(container, journalName, {
+    back,
+    push: () => undefined,
+    replace: (props) => void utilities.rerender(props),
+  });
+  return { back };
 }
 
 describe("JournalEditSubpage", () => {
@@ -143,7 +159,7 @@ describe("JournalEditSubpage", () => {
   it("calls nav.back when the back breadcrumb is clicked", async () => {
     const back = vi.fn();
     const { container } = await setup();
-    mount(container, "daily", { back, push: () => undefined });
+    mount(container, "daily", { back, push: () => undefined, replace: () => undefined });
     await userEvent.click(screen.getByRole("button", { name: m.common_label_back() }));
     expect(back).toHaveBeenCalledTimes(1);
   });
@@ -158,10 +174,28 @@ describe("JournalEditSubpage", () => {
   it("calls nav.back when the underlying journal disappears", async () => {
     const back = vi.fn();
     const { container, journalsRepo } = await setup();
-    mount(container, "daily", { back, push: () => undefined });
+    mount(container, "daily", { back, push: () => undefined, replace: () => undefined });
     journalsRepo.delete("daily");
     await waitFor(() => {
       expect(back).toHaveBeenCalled();
+    });
+  });
+
+  describe("when the journal is renamed", () => {
+    it("keeps the journal's page open", async () => {
+      const { container, journalsRepo } = await setup();
+      const { back } = mountFollowingFrame(container, "daily");
+      journalsRepo.rename("daily", "diary");
+      await nextTick();
+      await nextTick();
+      expect(back).not.toHaveBeenCalled();
+    });
+
+    it("shows the journal's new name", async () => {
+      const { container, journalsRepo } = await setup();
+      mountFollowingFrame(container, "daily");
+      journalsRepo.rename("daily", "diary");
+      await waitFor(() => expect(screen.getByText("diary")).toBeTruthy());
     });
   });
 });

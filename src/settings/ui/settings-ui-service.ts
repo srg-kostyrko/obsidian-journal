@@ -59,6 +59,14 @@ export class SettingsUiService {
     this.#stack.value = [...this.#stack.value, { subpage: subpage as AnySubpage, props }];
   }
 
+  // Only the rendered (top) subpage can call this, so replacing the top frame is enough.
+  replace(props: unknown): void {
+    const stack = this.#stack.value;
+    const current = stack.at(-1);
+    if (!current) return;
+    this.#stack.value = [...stack.slice(0, -1), { subpage: current.subpage, props }];
+  }
+
   pop(): void {
     const stack = this.#stack.value;
     if (stack.length === 0) return;

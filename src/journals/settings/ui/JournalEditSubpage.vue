@@ -1,9 +1,10 @@
 <script setup lang="ts">
-import { computed, watchEffect } from "vue";
+import { computed, onUnmounted, watchEffect } from "vue";
 
 import { formatConjunction, m } from "@/i18n";
 import { useService } from "@/infrastructure/di";
 import { Flows } from "@/infrastructure/flows";
+import { JournalsEventsToken } from "@/journals/tokens";
 import { JournalsViewModel } from "@/journals/view-model";
 import type { SubpageNav } from "@/settings";
 import { icons } from "@/ui/icons";
@@ -17,12 +18,21 @@ import { RenameJournalFlow } from "../flows/rename-journal.flow";
 import { findCollidingJournals } from "./colliding-journals";
 import { JournalEditSectionToken } from "./journal-edit-section";
 
-const { journalName, nav } = defineProps<{ journalName: string; nav: SubpageNav }>();
+const { journalName, nav } = defineProps<{ journalName: string; nav: SubpageNav<{ journalName: string }> }>();
 
 const flows = useService(Flows);
+const journalsEvents = useService(JournalsEventsToken);
 const journalsVM = useService(JournalsViewModel);
 const editSections = useService(JournalEditSectionToken).toSorted((a, b) => a.order - b.order);
 const config = computed(() => journalsVM.getJournal(journalName).getOrUndefined());
+
+// Journals are keyed by name, so a rename makes this page's key stale: follow it before the
+// missing-journal guard below reads it as a deletion.
+onUnmounted(
+  journalsEvents.on("renamed", (oldName, newName) => {
+    if (oldName === journalName) nav.replace({ journalName: newName });
+  }),
+);
 
 watchEffect(() => {
   if (!config.value) nav.back();

@@ -76,7 +76,7 @@ async function setup(viewOverrides: Record<string, unknown> = {}) {
 }
 
 function makeNav() {
-  return { back: vi.fn(), push: vi.fn() };
+  return { back: vi.fn(), push: vi.fn(), replace: vi.fn() };
 }
 
 function mount(container: Container, nav = makeNav()) {

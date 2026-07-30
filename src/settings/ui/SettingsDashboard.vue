@@ -14,6 +14,7 @@ const current = computed(() => ui.current.value);
 const nav = {
   back: () => ui.pop(),
   push: ui.push.bind(ui),
+  replace: ui.replace.bind(ui),
 };
 
 const root = ref<HTMLElement | null>(null);

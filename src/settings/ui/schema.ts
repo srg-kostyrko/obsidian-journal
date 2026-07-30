@@ -31,7 +31,10 @@ export function defineSubpage<TProps = void>(input: SubpageDefinitionInput): Sub
   };
 }
 
-export interface SubpageNav {
+export interface SubpageNav<TProps = void> {
   back(): void;
-  push<TProps>(subpage: Subpage<TProps>, props: TProps): void;
+  push<TPushed>(subpage: Subpage<TPushed>, props: TPushed): void;
+  // A subpage that identifies its entity by name has to re-point its own frame when that entity
+  // is renamed: the old name stops resolving, so the frame would otherwise pop the user out.
+  replace(props: TProps): void;
 }
