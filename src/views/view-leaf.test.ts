@@ -133,7 +133,7 @@ function buildFollowingView(overrides: Partial<View> = {}) {
     blocks: [block],
   });
   const leaf = leafInstance as unknown as { onOpen(): Promise<void>; onClose(): Promise<void> };
-  return { leaf, probe, activeEntry };
+  return { leaf, leafInstance, probe, activeEntry };
 }
 
 describe("JournalViewLeaf", () => {
@@ -329,7 +329,11 @@ describe("JournalViewLeaf", () => {
 
   describe("refDateOrigin", () => {
     it("reports a follow origin when an in-scope journal note opens", async () => {
-      const { leaf, probe, activeEntry } = buildFollowingView();
+      const { leaf, leafInstance, probe, activeEntry } = buildFollowingView();
+      // Seeded so the view's date sits outside the daily note's own day, independent of the
+      // real wall clock — otherwise the Task 3 follow guard would hold on any run where
+      // today happens to land on 2026-03-09.
+      await leafInstance.setState({ refDate: "2026-01-01" }, {});
       await leaf.onOpen();
 
       activeEntry.setActive({ journalName: "daily", anchor: "2026-03-09" as AnchorString });
@@ -340,7 +344,9 @@ describe("JournalViewLeaf", () => {
     });
 
     it("reports a navigate origin after setRefDate overrides a followed date", async () => {
-      const { leaf, probe, activeEntry } = buildFollowingView();
+      const { leaf, leafInstance, probe, activeEntry } = buildFollowingView();
+      // Same seeding as above: keeps the initial follow independent of the real wall clock.
+      await leafInstance.setState({ refDate: "2026-01-01" }, {});
       await leaf.onOpen();
       activeEntry.setActive({ journalName: "daily", anchor: "2026-03-09" as AnchorString });
       await nextTick();
