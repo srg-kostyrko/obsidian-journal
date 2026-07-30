@@ -32,3 +32,10 @@ export class FixtureJournalMissingError extends Error {
     this.name = "FixtureJournalMissingError";
   }
 }
+
+export class NoSpilloverDayError extends Error {
+  constructor() {
+    super("no outside-month day cell rendered in three consecutive months");
+    this.name = "NoSpilloverDayError";
+  }
+}

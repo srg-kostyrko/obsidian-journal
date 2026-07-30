@@ -1,7 +1,7 @@
 import { $, $$, browser, expect } from "@wdio/globals";
 
 import { paletteCount } from "../support/commands.js";
-import { NoFreeDayError } from "../support/errors.js";
+import { NoFreeDayError, NoSpilloverDayError } from "../support/errors.js";
 import { waitForNotice } from "../support/notices.js";
 import {
   clickDialogButton,
@@ -69,6 +69,21 @@ const monthStartOf = (anchor: string, offset = 0): string => {
   const month = Number(anchor.slice(5, 7));
   return new Date(Date.UTC(year, month - 1 + offset, 1)).toISOString().slice(0, 10);
 };
+
+// A month that both starts on the week's first day and ends on its last renders no
+// outside-month cells at all, so step forward until one appears rather than computing a date
+// that only sometimes lands in the margin.
+async function spilloverDayAnchor(): Promise<string> {
+  for (let attempt = 0; attempt < 3; attempt++) {
+    const outside = await $$(`${MONTH_VIEW} .notes-month-view__day[data-outside]`).getElements();
+    const anchor = outside.length > 0 ? await outside[0]?.getAttribute("data-anchor") : null;
+    if (anchor) return anchor;
+    const before = await headerMonthAnchor();
+    await $(`${TOOLBAR} [aria-label="Next month"]`).click();
+    await waitForState(headerMonthAnchor, (current) => current !== before, "header-month did not advance");
+  }
+  throw new NoSpilloverDayError();
+}
 
 // Reads the rendered tab-icon class of the open journal-view leaf straight from Obsidian's
 // DOM (not our repository), so it observes what updateHeader() actually painted — the only
@@ -487,6 +502,44 @@ describe("calendar view", () => {
         (anchor) => anchor === monthStartOf(far, 1),
         "next month did not step on from the opened note's month",
       );
+    });
+
+    it("moves the grid to the month of a note opened from a spillover cell", async () => {
+      await openCalendarView();
+      const spillover = await spilloverDayAnchor();
+      const path = `day/${spillover}.md`;
+      await seedNote(path, `---\njournal: daily\njournal-date: ${spillover}\n---\n`);
+      await waitForJournalFrontmatter(path, { journal: "daily", date: spillover });
+
+      await openNote(path);
+
+      await waitForState(
+        headerMonthAnchor,
+        (anchor) => anchor === monthStartOf(spillover),
+        "calendar did not move to the spillover day's own month",
+      );
+    });
+
+    it("names the same month in the toolbar as the grid heading", async () => {
+      await openCalendarView();
+      const spillover = await spilloverDayAnchor();
+      const path = `day/${spillover}.md`;
+      await seedNote(path, `---\njournal: daily\njournal-date: ${spillover}\n---\n`);
+      await waitForJournalFrontmatter(path, { journal: "daily", date: spillover });
+
+      await openNote(path);
+      await waitForState(
+        headerMonthAnchor,
+        (anchor) => anchor === monthStartOf(spillover),
+        "calendar did not move to the spillover day's own month",
+      );
+
+      // The toolbar button renders the month's name, the heading carries its anchor; derive the
+      // expected name from whatever month the grid settled on so the assertion is month-agnostic.
+      const settled = (await headerMonthAnchor()) ?? "";
+      const expected = new Date(`${settled}T00:00:00Z`).toLocaleString("en-US", { month: "long", timeZone: "UTC" });
+
+      await expect($(`${TOOLBAR} [data-period="month"]`)).toHaveText(expected);
     });
   });
 
