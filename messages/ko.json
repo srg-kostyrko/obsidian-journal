@@ -29,6 +29,7 @@
 	"common_label_back": "목록으로 돌아가기",
 	"common_label_calendar": "달력",
 	"common_pick_a_date": "날짜를 정하세요",
+	"common_note_open_error": "노트를 열 수 없습니다.",
 	"calendar_picker_first_week_desc": "1월의 첫째 주에 반드시 포함되어야 하는 날짜(1~7일). 예를 들어, 4는 1월 4일이 포함된 주가 첫째 주임을 의미합니다.",
 	"calendar_picker_first_week_label": "새해 첫 주",
 	"calendar_picker_in_use_marker": "현재 사용 중",
@@ -77,8 +78,26 @@
 	"calendar_preset_western_used": "캐나다, 미국, 아이슬란드, 포르투갈, 일본, 대만, 태국, 홍콩, 마카오, 이스라엘, 이집트, 남아프리카 공화국, 필리핀, 그리고 대부분의 라틴 아메리카 국가들.",
 	"calendar_week_config_change": "변화",
 	"calendar_week_config_description": "한 주의 시작일과 새해 첫 주를 결정하는 방법을 정의하십시오. 이는 주 번호에 영향을 미칩니다.",
+	"code_blocks_unknown_keys": [
+		{
+			"declarations": [
+				"input count",
+				"input keys"
+			],
+			"selectors": [
+				"count"
+			],
+			"match": {
+				"count=1": "인식할 수 없는 옵션을 무시했습니다: {keys}.",
+				"count=*": "인식할 수 없는 옵션을 무시했습니다: {keys}."
+			}
+		}
+	],
+	"code_blocks_yaml_error": "이 {key} 블록의 옵션을 읽을 수 없습니다.",
+	"code_blocks_schema_error": "이 {key} 블록의 일부 옵션이 유효하지 않습니다.",
 	"code_blocks_nav_not_connected": "이 노트는 저널과 연결되어 있지 않습니다.",
 	"code_blocks_home_empty": "표시할 저널이 없습니다. 블록의 표시 및 서가 옵션을 확인하세요.",
+	"common_no_journals_yet": "아직 저널이 없습니다. 플러그인 설정에서 만드세요.",
 	"code_blocks_nav_next": "다음",
 	"code_blocks_nav_previous": "이전의",
 	"nav_block_section_title": "내비게이션 블록",
@@ -218,7 +237,7 @@
 	"command_modal_context_label": "문맥",
 	"command_modal_context_only_open_note_hint": "저널 노트가 열려 있는 동안에만 실행되며, 해당 노트의 날짜를 사용합니다.",
 	"command_modal_context_open_note_hint": "열려 있는 저널 노트의 날짜를 사용하거나, 열려 있는 저널 노트가 없는 경우 오늘 날짜를 사용합니다.",
-	"common_label_icon": "상",
+	"common_label_icon": "아이콘",
 	"common_label_name": "이름",
 	"command_modal_open_mode_label": "오픈 노트",
 	"common_show_in_ribbon": "리본에 표시",
@@ -265,6 +284,8 @@
 	"command_palette_shelf_name": "선반: {shelf}: {name}",
 	"command_open_no_next": "이 노트 다음에는 다음 노트가 없습니다.",
 	"command_open_no_previous": "이 글 이전에는 이전 글이 없습니다.",
+	"command_open_needs_active_note": "이 명령이 적용되는 노트를 먼저 여세요.",
+	"command_open_unavailable": "열 노트가 없습니다.",
 	"command_type_label": [
 		{
 			"declarations": [
@@ -355,6 +376,7 @@
 	"bulk_add_notes_to_title": "{journalName} 에 노트를 추가합니다.",
 	"bulk_add_folder_label": "소스 폴더",
 	"bulk_add_folder_description": "처리할 기존 노트가 있는 폴더를 선택하세요.",
+	"bulk_add_folder_not_found": "이 폴더는 볼트에 존재하지 않습니다.",
 	"bulk_add_date_place_label": "날짜를 읽어보세요",
 	"bulk_add_date_place_title": "노트 제목",
 	"bulk_add_date_place_property": "부동산",
@@ -433,6 +455,100 @@
 	"bulk_add_skip_reason_no_date": "날짜를 찾을 수 없습니다.",
 	"bulk_add_skip_reason_invalid_date": "날짜를 구문 분석할 수 없습니다.",
 	"bulk_add_skip_reason_out_of_bounds": "저널의 일정 외",
+	"bulk_add_log_skipped_occupied": [
+		{
+			"declarations": [
+				"input mood",
+				"input anchor"
+			],
+			"selectors": [
+				"mood"
+			],
+			"match": {
+				"mood=planned": "건너뜁니다: {anchor}에 이미 노트가 연결되어 있습니다.",
+				"mood=done": "건너뛰었습니다: {anchor}에 이미 노트가 연결되어 있습니다."
+			}
+		}
+	],
+	"bulk_add_log_merged": [
+		{
+			"declarations": [
+				"input mood",
+				"input anchor"
+			],
+			"selectors": [
+				"mood"
+			],
+			"match": {
+				"mood=planned": "{anchor}에 이미 연결된 노트로 병합하고 이 노트를 삭제합니다.",
+				"mood=done": "{anchor}에 이미 연결된 노트로 병합했습니다. 이 노트는 삭제되었습니다."
+			}
+		}
+	],
+	"bulk_add_log_replaced": [
+		{
+			"declarations": [
+				"input mood",
+				"input anchor"
+			],
+			"selectors": [
+				"mood"
+			],
+			"match": {
+				"mood=planned": "{anchor}에 이미 연결된 노트를 대체합니다.",
+				"mood=done": "{anchor}에 이미 연결되어 있던 노트를 대체했습니다."
+			}
+		}
+	],
+	"bulk_add_log_moved": [
+		{
+			"declarations": [
+				"input mood"
+			],
+			"selectors": [
+				"mood"
+			],
+			"match": {
+				"mood=planned": "저널 폴더로 이동합니다.",
+				"mood=done": "저널 폴더로 이동했습니다."
+			}
+		}
+	],
+	"bulk_add_log_renamed": [
+		{
+			"declarations": [
+				"input mood"
+			],
+			"selectors": [
+				"mood"
+			],
+			"match": {
+				"mood=planned": "저널에 맞게 이름을 변경합니다.",
+				"mood=done": "저널에 맞게 이름을 변경했습니다."
+			}
+		}
+	],
+	"bulk_add_log_connected": [
+		{
+			"declarations": [
+				"input mood",
+				"input journalName",
+				"input anchor"
+			],
+			"selectors": [
+				"mood"
+			],
+			"match": {
+				"mood=planned": "{anchor}에서 {journalName}에 연결합니다.",
+				"mood=done": "{anchor}에서 {journalName}에 연결했습니다."
+			}
+		}
+	],
+	"bulk_add_log_merge_occupant_missing": "실패했습니다: 해당 날짜에 이미 연결되어 있던 노트가 병합 전에 사라졌습니다.",
+	"bulk_add_log_failed": "실패했습니다: {message}",
+	"bulk_add_dry_run_banner": "시험 실행 — 볼트에서 변경된 것은 없습니다.",
+	"bulk_add_occupant": "이미 연결됨: {path}",
+	"bulk_add_target": "새 경로: {path}",
 	"common_action_cancel": "취소",
 	"common_action_close": "닫다",
 	"common_action_create": "만들다",
@@ -556,6 +672,7 @@
 		}
 	],
 	"decoration_condition_offset_label": "오프셋",
+	"decoration_condition_op_label": "조건",
 	"decoration_condition_property_condition_label": "상태",
 	"decoration_condition_property_describe": "속성 {name} {op} {value}",
 	"decoration_condition_property_value_label": "값",
@@ -573,10 +690,10 @@
 			],
 			"match": {
 				"type=title": "제목",
-				"type=tag": "꼬리표",
-				"type=property": "재산",
+				"type=tag": "태그",
+				"type=property": "속성",
 				"type=date": "날짜",
-				"type=weekday": "주일",
+				"type=weekday": "요일",
 				"type=offset": "오프셋",
 				"type=has-note": "노트가 있습니다",
 				"type=has-open-task": "미결 작업이 있습니다",
@@ -811,8 +928,8 @@
 				"type=color": "색상",
 				"type=shape": "모양",
 				"type=corner": "모서리",
-				"type=icon": "상",
-				"type=border": "국경"
+				"type=icon": "아이콘",
+				"type=border": "테두리"
 			}
 		}
 	],
@@ -832,6 +949,21 @@
 		}
 	],
 	"ui_color_theme_variable_label": "CSS 변수",
+	"ui_theme_color_group_label": [
+		{
+			"declarations": [
+				"input group"
+			],
+			"selectors": [
+				"group"
+			],
+			"match": {
+				"group=text": "텍스트",
+				"group=background": "배경",
+				"group=border": "테두리"
+			}
+		}
+	],
 	"ui_theme_color_background_primary": "기본 배경",
 	"ui_theme_color_background_primary_alt": "기본 배경 위 표면의 배경",
 	"ui_theme_color_background_secondary": "보조 배경",
@@ -957,6 +1089,7 @@
 	],
 	"shelf_add": "선반 추가",
 	"common_delete_name": "{name} 삭제",
+	"shelf_dashboard_description": "선반은 업무용이나 개인용처럼 함께 묶이는 저널을 그룹화합니다. 캘린더 뷰는 한 번에 하나의 선반을 표시하고, 내비게이션 블록은 선반의 저널을 기준으로 장식되며, 명령은 선반을 대상으로 지정할 수 있습니다.",
 	"shelf_dashboard_empty": "아직 선반이 생성되지 않았습니다.",
 	"shelf_dashboard_open": "{name} 구성합니다.",
 	"shelf_dashboard_section_title": "저널 서가",
@@ -984,6 +1117,7 @@
 		}
 	],
 	"shelf_modal_name_label": "선반 이름",
+	"shelf_name_placeholder": "예: 업무",
 	"shelf_name_required_error": "선반 이름은 필수 입력 사항입니다.",
 	"shelf_name_unchanged_error": "다른 이름을 입력하세요.",
 	"shelf_name_unique_error": "선반 이름은 고유해야 합니다.",
@@ -991,6 +1125,7 @@
 	"shelf_place_modal_title": "장소 일지",
 	"shelf_section_not_on_shelf": "선반 위에 있지 않음",
 	"shelf_section_place_tooltip": "선반 위에 놓으세요",
+	"flow_failure_notice": "저널: 문제가 발생했습니다 — {error}",
 	"settings_load_failed": "저널: 설정 로드 실패 — {error}",
 	"settings_reload_failed": "저널: 설정 다시 로드 실패 — {error}",
 	"settings_reload_required_banner": "변경된 설정을 적용하려면 Obsidian을 다시 로드하세요.",
@@ -1022,6 +1157,9 @@
 		}
 	],
 	"uri_open_failed": "저널 항목을 열 수 없습니다.",
+	"view_deleted_error": "이 뷰는 삭제되었습니다. 이 탭을 닫거나 플러그인 설정에서 뷰를 다시 만드세요.",
+	"view_block_unknown_error": "이 블록은 더 이상 사용할 수 없습니다. 플러그인 설정에서 뷰에서 제거하세요.",
+	"view_block_config_error": "이 블록의 일부 설정이 유효하지 않습니다. 플러그인 설정에서 다시 구성하세요.",
 	"view_dashboard_section_title": "조회수",
 	"view_dashboard_empty": "아직 조회수가 없습니다.",
 	"view_dashboard_add": "뷰를 추가하세요",
@@ -1050,6 +1188,8 @@
 	"view_edit_open_on_startup_description": "금고를 열 때마다 이 보기를 엽니다. 기본 설정 페이지의 시작 노트 설정과는 별개입니다.",
 	"view_edit_remember_date_label": "마지막으로 본 날짜 기억",
 	"view_edit_remember_date_description": "꺼져 있으면 실행할 때마다 캘린더가 오늘 날짜로 열립니다. 켜져 있으면 마지막으로 본 날짜로 다시 엽니다.",
+	"view_edit_follow_active_date_label": "활성 노트 따라가기",
+	"view_edit_follow_active_date_description": "켜면 저널 노트를 열 때 이 뷰가 해당 노트의 날짜로 이동합니다. 이후에도 다른 날짜로 이동할 수 있습니다.",
 	"view_edit_leaf_label": "열기",
 	"view_edit_leaf_description": "뷰가 열리는 위치: 사이드바에 도킹되거나 메인 작업 공간의 일반 탭으로 열립니다.",
 	"view_edit_leaf_left": "왼쪽 사이드바",
@@ -1241,9 +1381,24 @@
 			}
 		}
 	],
-	"view_toolbar_button_config_label_label": "상표",
+	"view_toolbar_button_config_label_label": "라벨",
 	"view_toolbar_button_config_tooltip_label": "툴팁",
-	"view_toolbar_appearance_label_label": "상표",
+	"view_toolbar_appearance_label_label": "라벨",
+	"view_toolbar_appearance_reset": [
+		{
+			"declarations": [
+				"input field"
+			],
+			"selectors": [
+				"field"
+			],
+			"match": {
+				"field=icon": "아이콘을 기본값으로 재설정",
+				"field=label": "라벨을 기본값으로 재설정",
+				"field=tooltip": "툴팁을 기본값으로 재설정"
+			}
+		}
+	],
 	"view_toolbar_appearance_tooltip_label": "툴팁",
 	"view_toolbar_button_config_journal_default": "선반 위의 모든 저널",
 	"view_toolbar_button_config_mode_label": "행동",
@@ -1346,10 +1501,26 @@
 	"journal_add_modal_write_label": "저는 글을 쓸 거예요",
 	"journal_colliding_heading": "저널 설정 충돌",
 	"journal_colliding_warning": "저널 {names} 구성이 충돌하여 노트가 서로 덮어쓰여집니다. 둘 중 하나의 폴더 또는 이름 템플릿을 변경하세요.",
+	"journal_note_name_empty_notice": "저널 \"{journalName}\"의 이름 템플릿이 빈 노트 이름을 만들어 노트를 생성할 수 없습니다. 저널 설정에서 이름 템플릿을 지정하세요.",
 	"journal_dashboard_bulk_add": "{name} 에 일괄적으로 노트를 추가합니다.",
 	"journal_dashboard_edit": "{name} 구성합니다.",
 	"journal_dashboard_empty": "아직 생성된 저널이 없습니다.",
 	"journal_delete_modal_title": "{name} 삭제",
+	"journal_delete_connected_count": [
+		{
+			"declarations": [
+				"input count"
+			],
+			"selectors": [
+				"count"
+			],
+			"match": {
+				"count=0": "이 저널에는 연결된 노트가 없습니다.",
+				"count=1": "이 저널에는 연결된 노트가 1개 있습니다.",
+				"count=*": "이 저널에는 연결된 노트가 {count}개 있습니다."
+			}
+		}
+	],
 	"journal_delete_mode_label": "연결된 노트를 어떻게 처리해야 할까요?",
 	"journal_delete_mode_option": [
 		{
@@ -1385,6 +1556,7 @@
 	"journal_edit_allow_before_label": "앵커를 내리기 전에 허용하십시오.",
 	"journal_edit_anchor_description": "이 날짜는 추가 계산을 위해 숫자를 연결하는 데 사용됩니다.",
 	"journal_edit_anchor_label": "기준일",
+	"journal_edit_clear_start_tooltip": "시작일 지우기",
 	"journal_edit_anchor_start_used": "시작일을 기준일로 사용합니다.",
 	"journal_edit_auto_create_confirmation_skip_note": "자동 생성된 노트의 경우 확인 대화 상자가 표시되지 않습니다.",
 	"journal_edit_auto_create_description": "플러그인이 로드될 때와 매일 자정(현지 시간)에 자동으로 오늘의 노트를 생성합니다.",
@@ -1394,6 +1566,8 @@
 	"journal_edit_date_format_description": "날짜 변수에 형식이 지정되지 않은 경우 기본 형식은 다음과 같습니다.",
 	"journal_edit_date_format_label": "기본 날짜 형식",
 	"journal_edit_date_format_preview_label": "형식화된 날짜:",
+	"journal_edit_date_format_week_date_note": "주간 저널에서 {slot}은 해당 주 안의 하루이며, 연도 토큰이 그 주의 연도와 일치하도록 선택됩니다.",
+	"journal_edit_date_format_week_start_note": "주의 첫날에는 {slot}을 사용하세요.",
 	"common_moment_format_reference": "moment.js 형식 참조",
 	"journal_edit_end_description": [
 		{
@@ -1437,15 +1611,32 @@
 	"journal_edit_move_to_folder_recommendation_date_format": "날짜 형식에 경로 구분 기호가 포함되어 있습니다. 날짜 변수를 폴더 필드로 이동하시겠습니까?",
 	"journal_edit_move_to_folder_recommendation_name_template": "노트 이름 템플릿에 경로 구분 기호가 포함되어 있습니다. 경로 접두사를 폴더 필드로 옮기시겠습니까?",
 	"journal_edit_name_template_description": "새 노트 이름을 생성하는 데 사용되는 템플릿입니다.",
+	"journal_edit_name_template_empty_warning": "이 이름 템플릿은 빈 노트 이름을 만들어 노트를 생성할 수 없습니다. 변수나 텍스트를 추가하세요.",
+	"journal_edit_name_template_collision_warning": "{first}와 {second} 항목이 모두 {path}로 해석됩니다. 하나의 노트를 공유하게 됩니다.",
 	"journal_edit_colliding_warning": "이 저널은 {names} 와 동일한 노트 경로로 해석되므로, 두 노트가 서로 덮어쓰여집니다. 폴더 또는 이름 템플릿을 변경하여 서로 다른 경로를 지정하십시오.",
-	"journal_edit_name_template_invertibility_warning": "템플릿을 역으로 구문 분석할 수 없습니다( {reason} : \" {offending} \"). 자동 첨부 기능은 이 패턴과 일치하는 외부에서 생성된 노트를 자동으로 건너뜁니다.",
+	"journal_edit_name_template_invertibility_warning": [
+		{
+			"declarations": [
+				"input reason",
+				"input offending"
+			],
+			"selectors": [
+				"reason"
+			],
+			"match": {
+				"reason=unknown-variable": "이름 템플릿이 알려진 변수가 아닌 \"{offending}\"을 사용하므로, 플러그인 외부에서 만든 노트를 이 저널에 연결할 수 없습니다.",
+				"reason=function-token": "이름 템플릿이 함수 \"{offending}\"을 사용하므로, 플러그인 외부에서 만든 노트를 이 저널에 연결할 수 없습니다.",
+				"reason=clock-variable": "이름 템플릿이 시각을 나타내는 \"{offending}\"을 사용하므로, 플러그인 외부에서 만든 노트를 이 저널에 연결할 수 없습니다."
+			}
+		}
+	],
 	"journal_edit_name_template_no_anchor_warning": "템플릿에 날짜 변수가 없고 번호 매기기 변수를 날짜로 역변환할 수 없으므로 자동 첨부 기능은 이 패턴과 일치하는 외부에서 생성된 노트를 자동으로 건너뜁니다.",
 	"journal_edit_name_template_label": "노트 이름 템플릿",
 	"journal_edit_note_path_preview_label": "해결된 노트 경로:",
 	"journal_edit_rename_tooltip": "저널 이름 변경",
 	"journal_edit_reset_count_suffix": "반복",
 	"journal_edit_reset_description": "시간이 지남에 따라 숫자가 어떻게 변하는지.",
-	"journal_edit_reset_label": "다시 놓기",
+	"journal_edit_reset_label": "재설정",
 	"journal_edit_reset_option": [
 		{
 			"declarations": [
@@ -1475,7 +1666,10 @@
 	"journal_edit_code_block_timeline_default": "{name} 저널의 기본 타임라인은 다음과 같습니다.",
 	"journal_edit_code_block_timeline_mode_lead": "블록에 모드 옵션을 추가하여 타임라인 모드를 변경하세요.",
 	"journal_edit_code_block_timeline_modes_lead": "지원되는 모드:",
-	"journal_edit_code_block_timeline_weeks": "주 번호 열을 제어합니다(왼쪽, 오른쪽 또는 없음).",
+	"journal_edit_code_block_timeline_options_lead": "지원되는 옵션:",
+	"journal_edit_code_block_timeline_option_mode": "타임라인에 표시할 기간을 설정합니다. 지원되는 값: week, month, quarter, calendar. 지정하지 않으면 저널 자체의 기간이 결정합니다.",
+	"journal_edit_code_block_timeline_option_shelf": "표시되는 노트를 특정 선반으로 제한합니다. 지정하지 않으면 현재 저널이 속한 선반을 사용합니다.",
+	"journal_edit_code_block_timeline_weeks": "주 번호 열을 제어합니다. 지원되는 값: default, left, right, none. 값 default는 플러그인의 캘린더 설정을 따릅니다.",
 	"journal_edit_code_block_timeline_hidden_weekdays": "나열된 요일(0 = 일요일 … 6 = 토요일)을 숨깁니다. 예를 들어 주말을 제외하려면 [0, 6]을 입력합니다.",
 	"journal_edit_code_block_home_description": "홈 화면에는 현재 저널에 있는 노트에 대한 링크가 표시됩니다.",
 	"journal_edit_code_block_home_default": "기본적으로는 다음과 같이 표시됩니다.",
@@ -1556,6 +1750,7 @@
 	"journal_property_modal_current_label": "현재 이름",
 	"common_label_new_name": "새로운 이름",
 	"journal_property_name_required": "속성 이름은 필수 입력 사항입니다.",
+	"bulk_add_date_format_required": "날짜 형식은 필수입니다.",
 	"journal_rename_modal_same_as_current_error": "다른 이름을 입력하세요.",
 	"journal_rename_modal_title": "{name} 이름 변경",
 	"journal_sequence_property_modal_title": "순차 번호 속성 이름을 편집합니다.",

@@ -29,6 +29,7 @@
 	"common_label_back": "Voltar à lista",
 	"common_label_calendar": "Calendário",
 	"common_pick_a_date": "Escolha uma data",
+	"common_note_open_error": "Não foi possível abrir a nota.",
 	"calendar_picker_first_week_desc": "O dia de janeiro (1 a 7) que deve compor a primeira semana do ano. Por exemplo, 4 significa que a primeira semana é aquela que contém o dia 4 de janeiro.",
 	"calendar_picker_first_week_label": "Primeira semana do ano",
 	"calendar_picker_in_use_marker": "Atualmente em uso",
@@ -77,8 +78,26 @@
 	"calendar_preset_western_used": "Canadá, Estados Unidos, Islândia, Portugal, Japão, Taiwan, Tailândia, Hong Kong, Macau, Israel, Egito, África do Sul, Filipinas e a maior parte da América Latina.",
 	"calendar_week_config_change": "Mudar",
 	"calendar_week_config_description": "Defina qual dia da semana começa e como a primeira semana do ano é determinada — isso afeta a numeração das semanas.",
+	"code_blocks_unknown_keys": [
+		{
+			"declarations": [
+				"input count",
+				"input keys"
+			],
+			"selectors": [
+				"count"
+			],
+			"match": {
+				"count=1": "Opção não reconhecida ignorada: {keys}.",
+				"count=*": "Opções não reconhecidas ignoradas: {keys}."
+			}
+		}
+	],
+	"code_blocks_yaml_error": "Não foi possível ler as opções deste bloco {key}.",
+	"code_blocks_schema_error": "Algumas opções deste bloco {key} não são válidas.",
 	"code_blocks_nav_not_connected": "Nota: não está relacionado a um diário.",
 	"code_blocks_home_empty": "Não há periódicos para exibir. Verifique as opções de exibição e organização do bloco.",
+	"common_no_journals_yet": "Ainda não há diários. Crie um nas configurações do plugin.",
 	"code_blocks_nav_next": "Próximo",
 	"code_blocks_nav_previous": "Anterior",
 	"nav_block_section_title": "Bloco de navegação",
@@ -265,6 +284,8 @@
 	"command_palette_shelf_name": "Prateleira: {shelf}: {name}",
 	"command_open_no_next": "Não há nota seguinte depois desta.",
 	"command_open_no_previous": "Não há nenhuma nota anterior a esta.",
+	"command_open_needs_active_note": "Abra primeiro uma nota à qual este comando se aplique.",
+	"command_open_unavailable": "Não há nenhuma nota para abrir.",
 	"command_type_label": [
 		{
 			"declarations": [
@@ -355,6 +376,7 @@
 	"bulk_add_notes_to_title": "Adicionar notas a {journalName}",
 	"bulk_add_folder_label": "Pasta de origem",
 	"bulk_add_folder_description": "Selecione a pasta com as notas existentes que você deseja processar.",
+	"bulk_add_folder_not_found": "Esta pasta não existe no seu cofre.",
 	"bulk_add_date_place_label": "Leia a data de",
 	"bulk_add_date_place_title": "Título da nota",
 	"bulk_add_date_place_property": "Uma propriedade",
@@ -433,6 +455,100 @@
 	"bulk_add_skip_reason_no_date": "Nenhuma data encontrada",
 	"bulk_add_skip_reason_invalid_date": "A data não pôde ser analisada.",
 	"bulk_add_skip_reason_out_of_bounds": "Fora da linha do tempo do diário",
+	"bulk_add_log_skipped_occupied": [
+		{
+			"declarations": [
+				"input mood",
+				"input anchor"
+			],
+			"selectors": [
+				"mood"
+			],
+			"match": {
+				"mood=planned": "Será ignorada: já há uma nota conectada a {anchor}.",
+				"mood=done": "Ignorada: já havia uma nota conectada a {anchor}."
+			}
+		}
+	],
+	"bulk_add_log_merged": [
+		{
+			"declarations": [
+				"input mood",
+				"input anchor"
+			],
+			"selectors": [
+				"mood"
+			],
+			"match": {
+				"mood=planned": "Será mesclada com a nota já conectada a {anchor} e esta nota será excluída.",
+				"mood=done": "Mesclada com a nota já conectada a {anchor}; esta nota foi excluída."
+			}
+		}
+	],
+	"bulk_add_log_replaced": [
+		{
+			"declarations": [
+				"input mood",
+				"input anchor"
+			],
+			"selectors": [
+				"mood"
+			],
+			"match": {
+				"mood=planned": "Substituirá a nota já conectada a {anchor}.",
+				"mood=done": "A nota já conectada a {anchor} foi substituída."
+			}
+		}
+	],
+	"bulk_add_log_moved": [
+		{
+			"declarations": [
+				"input mood"
+			],
+			"selectors": [
+				"mood"
+			],
+			"match": {
+				"mood=planned": "Será movida para a pasta do diário.",
+				"mood=done": "Movida para a pasta do diário."
+			}
+		}
+	],
+	"bulk_add_log_renamed": [
+		{
+			"declarations": [
+				"input mood"
+			],
+			"selectors": [
+				"mood"
+			],
+			"match": {
+				"mood=planned": "Será renomeada para corresponder ao diário.",
+				"mood=done": "Renomeada para corresponder ao diário."
+			}
+		}
+	],
+	"bulk_add_log_connected": [
+		{
+			"declarations": [
+				"input mood",
+				"input journalName",
+				"input anchor"
+			],
+			"selectors": [
+				"mood"
+			],
+			"match": {
+				"mood=planned": "Será conectada a {journalName} em {anchor}.",
+				"mood=done": "Conectada a {journalName} em {anchor}."
+			}
+		}
+	],
+	"bulk_add_log_merge_occupant_missing": "Falhou: a nota já conectada a essa data desapareceu antes da mesclagem.",
+	"bulk_add_log_failed": "Falhou: {message}",
+	"bulk_add_dry_run_banner": "Teste prático — nada no seu cofre foi alterado.",
+	"bulk_add_occupant": "Já conectada: {path}",
+	"bulk_add_target": "Novo caminho: {path}",
 	"common_action_cancel": "Cancelar",
 	"common_action_close": "Fechar",
 	"common_action_create": "Criar",
@@ -556,6 +672,7 @@
 		}
 	],
 	"decoration_condition_offset_label": "Desvio",
+	"decoration_condition_op_label": "Condição",
 	"decoration_condition_property_condition_label": "Doença",
 	"decoration_condition_property_describe": "propriedade {name} {op} {value}",
 	"decoration_condition_property_value_label": "Valor",
@@ -573,7 +690,7 @@
 			],
 			"match": {
 				"type=title": "Título",
-				"type=tag": "Marcação",
+				"type=tag": "Tag",
 				"type=property": "Propriedade",
 				"type=date": "Data",
 				"type=weekday": "Dia da semana",
@@ -812,7 +929,7 @@
 				"type=shape": "Forma",
 				"type=corner": "Canto",
 				"type=icon": "Ícone",
-				"type=border": "Fronteira"
+				"type=border": "Borda"
 			}
 		}
 	],
@@ -832,6 +949,21 @@
 		}
 	],
 	"ui_color_theme_variable_label": "Variável CSS",
+	"ui_theme_color_group_label": [
+		{
+			"declarations": [
+				"input group"
+			],
+			"selectors": [
+				"group"
+			],
+			"match": {
+				"group=text": "Texto",
+				"group=background": "Fundo",
+				"group=border": "Borda"
+			}
+		}
+	],
 	"ui_theme_color_background_primary": "Fundo primário",
 	"ui_theme_color_background_primary_alt": "Fundo para superfícies sobre o fundo primário",
 	"ui_theme_color_background_secondary": "Fundo secundário",
@@ -957,6 +1089,7 @@
 	],
 	"shelf_add": "Adicionar prateleira",
 	"common_delete_name": "Excluir {name}",
+	"shelf_dashboard_description": "Uma prateleira agrupa diários que pertencem ao mesmo contexto, como trabalho ou pessoal. Uma visualização de calendário mostra uma prateleira por vez, os blocos de navegação são decorados a partir dos diários da prateleira e um comando pode ter uma prateleira como alvo.",
 	"shelf_dashboard_empty": "Nenhuma prateleira foi criada ainda.",
 	"shelf_dashboard_open": "Configure {name}",
 	"shelf_dashboard_section_title": "Prateleiras de diários",
@@ -984,6 +1117,7 @@
 		}
 	],
 	"shelf_modal_name_label": "Nome da prateleira",
+	"shelf_name_placeholder": "ex.: Trabalho",
 	"shelf_name_required_error": "O nome da prateleira é obrigatório.",
 	"shelf_name_unchanged_error": "Digite um nome diferente.",
 	"shelf_name_unique_error": "O nome da prateleira deve ser único.",
@@ -991,6 +1125,7 @@
 	"shelf_place_modal_title": "Diário de lugares",
 	"shelf_section_not_on_shelf": "Não está em uma prateleira.",
 	"shelf_section_place_tooltip": "Coloque em uma prateleira.",
+	"flow_failure_notice": "Diário: algo deu errado — {error}",
 	"settings_load_failed": "Diário: falha ao carregar as configurações — {error}",
 	"settings_reload_failed": "Diário: falha ao recarregar as configurações — {error}",
 	"settings_reload_required_banner": "Recarregue o Obsidian para aplicar as configurações alteradas.",
@@ -1022,6 +1157,9 @@
 		}
 	],
 	"uri_open_failed": "Não foi possível abrir o registro no diário.",
+	"view_deleted_error": "Esta visualização foi excluída. Feche esta aba ou crie a visualização novamente nas configurações do plugin.",
+	"view_block_unknown_error": "Este bloco não está mais disponível. Remova-o da visualização nas configurações do plugin.",
+	"view_block_config_error": "Algumas configurações deste bloco não são válidas. Reconfigure-o nas configurações do plugin.",
 	"view_dashboard_section_title": "Vistas",
 	"view_dashboard_empty": "Ainda não há visualizações.",
 	"view_dashboard_add": "Adicionar uma vista",
@@ -1050,6 +1188,8 @@
 	"view_edit_open_on_startup_description": "Abra esta visualização sempre que abrir o cofre. Ela é diferente da configuração de notas de inicialização na página de configurações principal.",
 	"view_edit_remember_date_label": "Lembrar a última data visualizada",
 	"view_edit_remember_date_description": "Quando desativado, o calendário abre na data de hoje a cada inicialização. Quando ativado, reabre na última data visualizada.",
+	"view_edit_follow_active_date_label": "Seguir a nota ativa",
+	"view_edit_follow_active_date_description": "Quando ativado, abrir uma nota de diário leva esta visualização para a data dessa nota. Você ainda pode navegar para outra data.",
 	"view_edit_leaf_label": "Abrir em",
 	"view_edit_leaf_description": "Onde a visualização é aberta: ancorada em uma barra lateral ou como uma guia normal na área de trabalho principal.",
 	"view_edit_leaf_left": "Barra lateral esquerda",
@@ -1244,6 +1384,21 @@
 	"view_toolbar_button_config_label_label": "Rótulo",
 	"view_toolbar_button_config_tooltip_label": "Dica de ferramenta",
 	"view_toolbar_appearance_label_label": "Rótulo",
+	"view_toolbar_appearance_reset": [
+		{
+			"declarations": [
+				"input field"
+			],
+			"selectors": [
+				"field"
+			],
+			"match": {
+				"field=icon": "Redefinir o ícone para o padrão",
+				"field=label": "Redefinir o rótulo para o padrão",
+				"field=tooltip": "Redefinir a dica de ferramenta para o padrão"
+			}
+		}
+	],
 	"view_toolbar_appearance_tooltip_label": "Dica de ferramenta",
 	"view_toolbar_button_config_journal_default": "Todos os periódicos na estante",
 	"view_toolbar_button_config_mode_label": "Comportamento",
@@ -1352,10 +1507,26 @@
 	"journal_add_modal_write_label": "Estarei escrevendo",
 	"journal_colliding_heading": "Configurações de diário em conflito",
 	"journal_colliding_warning": "Os diários {names} têm configurações conflitantes, portanto, suas notas se sobrescreverão. Altere o modelo de pasta ou nome em um deles.",
+	"journal_note_name_empty_notice": "O diário \"{journalName}\" tem um modelo de nome que resulta em um nome de nota vazio, portanto nenhuma nota pode ser criada. Defina um modelo de nome nas configurações do diário.",
 	"journal_dashboard_bulk_add": "Adicionar notas em massa a {name}",
 	"journal_dashboard_edit": "Configure {name}",
 	"journal_dashboard_empty": "Nenhum diário foi criado ainda.",
 	"journal_delete_modal_title": "Excluir {name}",
+	"journal_delete_connected_count": [
+		{
+			"declarations": [
+				"input count"
+			],
+			"selectors": [
+				"count"
+			],
+			"match": {
+				"count=0": "Este diário não tem notas conectadas.",
+				"count=1": "Este diário tem 1 nota conectada.",
+				"count=*": "Este diário tem {count} notas conectadas."
+			}
+		}
+	],
 	"journal_delete_mode_label": "O que fazer com notas conectadas",
 	"journal_delete_mode_option": [
 		{
@@ -1391,6 +1562,7 @@
 	"journal_edit_allow_before_label": "Aguarde antes de ancorar",
 	"journal_edit_anchor_description": "Esta data é usada para associar um número a ela para cálculos posteriores.",
 	"journal_edit_anchor_label": "data de ancoragem",
+	"journal_edit_clear_start_tooltip": "Limpar a data de início",
 	"journal_edit_anchor_start_used": "A data de início é usada como data de referência.",
 	"journal_edit_auto_create_confirmation_skip_note": "A caixa de diálogo de confirmação não será exibida para notas criadas automaticamente.",
 	"journal_edit_auto_create_description": "Crie automaticamente a nota do dia ao carregar o plugin e todos os dias à meia-noite, no horário local.",
@@ -1400,6 +1572,8 @@
 	"journal_edit_date_format_description": "Formato padrão para variáveis de data que não especificam um formato próprio, como:",
 	"journal_edit_date_format_label": "Formato de data padrão",
 	"journal_edit_date_format_preview_label": "Data formatada:",
+	"journal_edit_date_format_week_date_note": "Em um diário semanal, {slot} é um dia dentro da semana, escolhido para que os tokens de ano correspondam ao ano da semana.",
+	"journal_edit_date_format_week_start_note": "Use {slot} para o primeiro dia da semana.",
 	"common_moment_format_reference": "Referência de formato moment.js",
 	"journal_edit_end_description": [
 		{
@@ -1443,15 +1617,32 @@
 	"journal_edit_move_to_folder_recommendation_date_format": "O formato de data contém um separador de caminho. Mover as variáveis de data para o campo Pasta?",
 	"journal_edit_move_to_folder_recommendation_name_template": "O modelo de nome da nota contém um separador de caminho. Deseja mover o prefixo do caminho para o campo Pasta?",
 	"journal_edit_name_template_description": "Modelo usado para gerar novos nomes de notas.",
+	"journal_edit_name_template_empty_warning": "Este modelo de nome resulta em um nome de nota vazio, portanto nenhuma nota pode ser criada. Adicione uma variável ou algum texto.",
+	"journal_edit_name_template_collision_warning": "As entradas de {first} e {second} resultam ambas em {path}. Elas compartilharão uma única nota.",
 	"journal_edit_colliding_warning": "Este diário resolve para o mesmo caminho de notas que {names} , portanto, suas notas se sobrescreverão. Altere o modelo de pasta ou nome para atribuir um caminho distinto.",
-	"journal_edit_name_template_invertibility_warning": "O modelo não pode ser analisado reversamente ( {reason} : \" {offending} ). O recurso de anexação automática ignorará silenciosamente as notas criadas externamente que corresponderem a esse padrão.",
+	"journal_edit_name_template_invertibility_warning": [
+		{
+			"declarations": [
+				"input reason",
+				"input offending"
+			],
+			"selectors": [
+				"reason"
+			],
+			"match": {
+				"reason=unknown-variable": "O modelo de nome usa \"{offending}\", que não é uma variável conhecida, portanto as notas criadas fora do plugin não podem ser associadas a este diário.",
+				"reason=function-token": "O modelo de nome usa a função \"{offending}\", portanto as notas criadas fora do plugin não podem ser associadas a este diário.",
+				"reason=clock-variable": "O modelo de nome usa \"{offending}\", que é uma hora do dia, portanto as notas criadas fora do plugin não podem ser associadas a este diário."
+			}
+		}
+	],
 	"journal_edit_name_template_no_anchor_warning": "O modelo não possui uma variável de data e sua variável de numeração não pode ser revertida para uma data; portanto, a anexação automática ignorará silenciosamente as notas criadas externamente que correspondam a esse padrão.",
 	"journal_edit_name_template_label": "Modelo de nome de nota",
 	"journal_edit_note_path_preview_label": "Caminho da nota resolvido:",
 	"journal_edit_rename_tooltip": "Renomear diário",
 	"journal_edit_reset_count_suffix": "repete",
 	"journal_edit_reset_description": "Como o número muda ao longo do tempo.",
-	"journal_edit_reset_label": "Reiniciar",
+	"journal_edit_reset_label": "Redefinir",
 	"journal_edit_reset_option": [
 		{
 			"declarations": [
@@ -1481,7 +1672,10 @@
 	"journal_edit_code_block_timeline_default": "A linha do tempo padrão para o diário {name} tem a seguinte aparência:",
 	"journal_edit_code_block_timeline_mode_lead": "Altere o modo da linha do tempo adicionando uma opção de modo ao bloco.",
 	"journal_edit_code_block_timeline_modes_lead": "Modos suportados:",
-	"journal_edit_code_block_timeline_weeks": "Controla a coluna do número da semana (esquerda, direita ou nenhuma).",
+	"journal_edit_code_block_timeline_options_lead": "Opções suportadas:",
+	"journal_edit_code_block_timeline_option_mode": "define qual período a linha do tempo mostra. Valores suportados: week, month, quarter, calendar. Sem essa opção, o próprio período do diário decide.",
+	"journal_edit_code_block_timeline_option_shelf": "limita as notas exibidas a uma prateleira específica. Sem essa opção, é usada a prateleira que contém o diário atual.",
+	"journal_edit_code_block_timeline_weeks": "controla a coluna do número da semana. Valores suportados: default, left, right, none. O valor default segue a configuração de calendário do plugin.",
 	"journal_edit_code_block_timeline_hidden_weekdays": "oculta os dias da semana listados (0 = domingo … 6 = sábado), por exemplo, [0, 6] para excluir os fins de semana.",
 	"journal_edit_code_block_home_description": "O bloco inicial exibe links para as notas atuais nos seus diários.",
 	"journal_edit_code_block_home_default": "Por padrão, a aparência é esta:",
@@ -1562,6 +1756,7 @@
 	"journal_property_modal_current_label": "Nome atual",
 	"common_label_new_name": "Novo nome",
 	"journal_property_name_required": "O nome da propriedade é obrigatório.",
+	"bulk_add_date_format_required": "O formato de data é obrigatório.",
 	"journal_rename_modal_same_as_current_error": "Digite um nome diferente.",
 	"journal_rename_modal_title": "Renomear {name}",
 	"journal_sequence_property_modal_title": "Editar nome da propriedade de número sequencial",

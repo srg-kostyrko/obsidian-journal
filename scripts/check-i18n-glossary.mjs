@@ -14,6 +14,8 @@ const GLOSSARY = {
     { term: "note", banned: /\bNoten?\b|Kontoauszug|Geldschein|Schuldschein|Banknote/i, use: "Notiz" },
     { term: "shelf", banned: /Bücherregal/i, use: "Regal" },
     { term: "bold", banned: /deutlich|kühn|mutig|wagemutig/i, use: "Fett" },
+    { term: "label", banned: /Etikett/i, use: "Beschriftung" },
+    { term: "property", banned: /Eigentum/i, use: "Eigenschaft" },
   ],
   es: [
     { term: "journal", banned: /revista|periódico|cuaderno/i, use: "diario" },
@@ -24,42 +26,70 @@ const GLOSSARY = {
     { term: "journal", banned: /revue|magazine/i, use: "journal" },
     { term: "note", banned: /billet|coupure|écriture comptable/i, use: "note" },
     { term: "bold", banned: /audacieu|hardi|intrépide/i, use: "gras" },
+    { term: "tag", banned: /Étiqueter/i, use: "Étiquette" },
+    { term: "border", banned: /Frontière/i, use: "Bordure" },
   ],
   it: [
     { term: "journal", banned: /rivista|giornal[ei]\b/i, use: "diario" },
     { term: "note", banned: /banconota|cambiale|scrittura contabile/i, use: "nota" },
     { term: "bold", banned: /audac|coraggios|ardit/i, use: "grassetto" },
+    { term: "border", banned: /Confine/i, use: "Bordo" },
   ],
   ja: [
     { term: "journal", banned: /雑誌|仕訳帳|定期刊行物/, use: "ジャーナル" },
     { term: "note", banned: /音符|紙幣|手形|伝票|メモ|注記/, use: "ノート" },
     { term: "bold", banned: /大胆|勇敢/, use: "太字" },
+    { term: "border", banned: /国境/, use: "ボーダー" },
+    { term: "property", banned: /財産/, use: "プロパティ" },
   ],
   ko: [
     { term: "journal", banned: /잡지|정기간행물/, use: "저널" },
     { term: "note", banned: /음표|어음|지폐|전표|메모/, use: "노트" },
     { term: "bold", banned: /용감|대담/, use: "굵게" },
+    { term: "border", banned: /국경/, use: "테두리" },
+    { term: "property", banned: /재산/, use: "속성" },
+    { term: "label", banned: /상표/, use: "라벨" },
+    { term: "tag", banned: /꼬리표/, use: "태그" },
   ],
   pt: [
     { term: "journal", banned: /revista|jornal/i, use: "diário" },
     { term: "note", banned: /promissória|cédula|anotaç/i, use: "nota" },
     { term: "bold", banned: /audacios|audaz|ousad/i, use: "negrito" },
+    { term: "border", banned: /Fronteira/i, use: "Borda" },
   ],
+  // JS `\b` is defined over ASCII word characters, so it never matches at a Cyrillic
+  // word edge — `/\bнота\b/` tests nothing and reports every text as clean. The entries
+  // that need a word edge below use Unicode letter lookaround, which does.
   ru: [
     { term: "journal", banned: /дневник|бухгалтерск/i, use: "журнал" },
-    { term: "note", banned: /записк|облигаци|вексел|\bнот[аыуеой]\b|\bсчёт|\bсчет/i, use: "заметка" },
+    {
+      term: "note",
+      banned: /записк|примечани|облигаци|вексел|(?<!\p{L})нот(а|ы|е|у|ой|ою|ам|ами|ах)?(?!\p{L})|(?<!\p{L})сч[её]т/iu,
+      use: "заметка",
+    },
     { term: "bold", banned: /смел|отважн|дерзк/i, use: "жирный" },
+    { term: "icon", banned: /(?<!\p{L})икон[аыуеой](?!\p{L})/iu, use: "значок" },
+    { term: "label", banned: /этикетк/i, use: "подпись" },
+    { term: "tag", banned: /ярлык/i, use: "тег" },
   ],
   uk: [
     { term: "journal", banned: /щоденник|бухгалтерськ/i, use: "журнал" },
-    { term: "note", banned: /записк|облігаці|вексел|\bнот[аиуоею]\b|\bрахунок/i, use: "нотатка" },
+    {
+      term: "note",
+      banned: /записк|приміт|облігаці|вексел|(?<!\p{L})нот(а|и|і|у|ою|ам|ами|ах)?(?!\p{L})|(?<!\p{L})рахунок/iu,
+      use: "нотатка",
+    },
     { term: "bold", banned: /смілив|відважн|зухвал/i, use: "жирний" },
+    { term: "border", banned: /кордон/i, use: "межа" },
+    { term: "property", banned: /нерухоміст/i, use: "властивість" },
+    { term: "background", banned: /передісторі/i, use: "фон" },
   ],
   zh: [
     // 日志 is the right word for the logging feature, and only there.
     { term: "journal", banned: /期刊|杂志|日志|日记账/, use: "日记", allowIn: /^logging_/ },
     { term: "note", banned: /音符|票据|钞票|凭证|分录|便条|备注/, use: "笔记" },
     { term: "bold", banned: /大胆|勇敢/, use: "粗体" },
+    { term: "property", banned: /财产/, use: "属性" },
   ],
 };
 

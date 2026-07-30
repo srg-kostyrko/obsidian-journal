@@ -29,6 +29,7 @@
 	"common_label_back": "リストに戻る",
 	"common_label_calendar": "カレンダー",
 	"common_pick_a_date": "日付を選択してください",
+	"common_note_open_error": "ノートを開けませんでした。",
 	"calendar_picker_first_week_desc": "年の最初の週に必ず含まれる1月中の日（1～7日）。例えば、4は1月4日を含む週を意味します。",
 	"calendar_picker_first_week_label": "年の最初の週",
 	"calendar_picker_in_use_marker": "現在使用中",
@@ -77,8 +78,26 @@
 	"calendar_preset_western_used": "カナダ、アメリカ合衆国、アイスランド、ポルトガル、日本、台湾、タイ、香港、マカオ、イスラエル、エジプト、南アフリカ、フィリピン、そしてラテンアメリカのほとんどの地域。",
 	"calendar_week_config_change": "変化",
 	"calendar_week_config_description": "週の始まりを何曜日とするか、そして年の最初の週をどのように決定するかを定義する。これは週番号に影響する。",
+	"code_blocks_unknown_keys": [
+		{
+			"declarations": [
+				"input count",
+				"input keys"
+			],
+			"selectors": [
+				"count"
+			],
+			"match": {
+				"count=1": "認識されないオプションを無視しました: {keys}。",
+				"count=*": "認識されないオプションを無視しました: {keys}。"
+			}
+		}
+	],
+	"code_blocks_yaml_error": "この {key} ブロックのオプションを読み取れませんでした。",
+	"code_blocks_schema_error": "この {key} ブロックの一部のオプションが無効です。",
 	"code_blocks_nav_not_connected": "ノートはジャーナルにリンクされていません",
 	"code_blocks_home_empty": "表示できるジャーナルがありません。ブロックの表示オプションと棚の表示オプションを確認してください。",
+	"common_no_journals_yet": "ジャーナルがまだありません。プラグイン設定で作成してください。",
 	"code_blocks_nav_next": "次",
 	"code_blocks_nav_previous": "前の",
 	"nav_block_section_title": "ナビゲーションブロック",
@@ -265,6 +284,8 @@
 	"command_palette_shelf_name": "棚: {shelf}: {name}",
 	"command_open_no_next": "このノートの後に続くノートはありません。",
 	"command_open_no_previous": "このノートの前には、ノートはありません。",
+	"command_open_needs_active_note": "先に、このコマンドの対象となるノートを開いてください。",
+	"command_open_unavailable": "開くノートがありません。",
 	"command_type_label": [
 		{
 			"declarations": [
@@ -355,6 +376,7 @@
 	"bulk_add_notes_to_title": "{journalName}にノートを追加する",
 	"bulk_add_folder_label": "ソースフォルダ",
 	"bulk_add_folder_description": "処理したい既存のノートが入っているフォルダを選択してください。",
+	"bulk_add_folder_not_found": "このフォルダは保管庫内に存在しません。",
 	"bulk_add_date_place_label": "日付を読んでください",
 	"bulk_add_date_place_title": "ノートのタイトル",
 	"bulk_add_date_place_property": "不動産",
@@ -433,6 +455,100 @@
 	"bulk_add_skip_reason_no_date": "日付が見つかりませんでした",
 	"bulk_add_skip_reason_invalid_date": "日付を解析できませんでした",
 	"bulk_add_skip_reason_out_of_bounds": "ジャーナルのタイムライン外",
+	"bulk_add_log_skipped_occupied": [
+		{
+			"declarations": [
+				"input mood",
+				"input anchor"
+			],
+			"selectors": [
+				"mood"
+			],
+			"match": {
+				"mood=planned": "スキップします: {anchor} には既にノートが接続されています。",
+				"mood=done": "スキップしました: {anchor} には既にノートが接続されています。"
+			}
+		}
+	],
+	"bulk_add_log_merged": [
+		{
+			"declarations": [
+				"input mood",
+				"input anchor"
+			],
+			"selectors": [
+				"mood"
+			],
+			"match": {
+				"mood=planned": "{anchor} に既に接続されているノートに統合し、このノートを削除します。",
+				"mood=done": "{anchor} に既に接続されているノートに統合しました。このノートは削除されました。"
+			}
+		}
+	],
+	"bulk_add_log_replaced": [
+		{
+			"declarations": [
+				"input mood",
+				"input anchor"
+			],
+			"selectors": [
+				"mood"
+			],
+			"match": {
+				"mood=planned": "{anchor} に既に接続されているノートを置き換えます。",
+				"mood=done": "{anchor} に既に接続されていたノートを置き換えました。"
+			}
+		}
+	],
+	"bulk_add_log_moved": [
+		{
+			"declarations": [
+				"input mood"
+			],
+			"selectors": [
+				"mood"
+			],
+			"match": {
+				"mood=planned": "ジャーナルのフォルダに移動します。",
+				"mood=done": "ジャーナルのフォルダに移動しました。"
+			}
+		}
+	],
+	"bulk_add_log_renamed": [
+		{
+			"declarations": [
+				"input mood"
+			],
+			"selectors": [
+				"mood"
+			],
+			"match": {
+				"mood=planned": "ジャーナルに合わせて名前を変更します。",
+				"mood=done": "ジャーナルに合わせて名前を変更しました。"
+			}
+		}
+	],
+	"bulk_add_log_connected": [
+		{
+			"declarations": [
+				"input mood",
+				"input journalName",
+				"input anchor"
+			],
+			"selectors": [
+				"mood"
+			],
+			"match": {
+				"mood=planned": "{anchor} で {journalName} に接続します。",
+				"mood=done": "{anchor} で {journalName} に接続しました。"
+			}
+		}
+	],
+	"bulk_add_log_merge_occupant_missing": "失敗しました: その日付に既に接続されていたノートが統合前に見つからなくなりました。",
+	"bulk_add_log_failed": "失敗しました: {message}",
+	"bulk_add_dry_run_banner": "予行演習 — 保管庫内は何も変更されていません。",
+	"bulk_add_occupant": "既に接続済み: {path}",
+	"bulk_add_target": "新しいパス: {path}",
 	"common_action_cancel": "キャンセル",
 	"common_action_close": "近い",
 	"common_action_create": "作成する",
@@ -556,6 +672,7 @@
 		}
 	],
 	"decoration_condition_offset_label": "オフセット",
+	"decoration_condition_op_label": "条件",
 	"decoration_condition_property_condition_label": "状態",
 	"decoration_condition_property_describe": "プロパティ{name} {op} {value}",
 	"decoration_condition_property_value_label": "価値",
@@ -574,9 +691,9 @@
 			"match": {
 				"type=title": "タイトル",
 				"type=tag": "タグ",
-				"type=property": "財産",
+				"type=property": "プロパティ",
 				"type=date": "日付",
-				"type=weekday": "平日",
+				"type=weekday": "曜日",
 				"type=offset": "オフセット",
 				"type=has-note": "ノートあり",
 				"type=has-open-task": "未完了のタスクがあります",
@@ -597,7 +714,7 @@
 				"type=tag": "タグをチェック",
 				"type=property": "フロントマタープロパティを確認してください",
 				"type=date": "日付を確認してください",
-				"type=weekday": "平日をチェック",
+				"type=weekday": "曜日をチェック",
 				"type=offset": "間隔オフセットを確認する",
 				"type=has-note": "ノートが存在するか確認する",
 				"type=has-open-task": "ノートに未完了のタスクがあるかどうか確認する",
@@ -606,7 +723,7 @@
 		}
 	],
 	"decoration_condition_weekday_describe": "曜日は{weekdays}",
-	"decoration_condition_weekday_label": "平日",
+	"decoration_condition_weekday_label": "曜日",
 	"decoration_corner_placement_label": [
 		{
 			"declarations": [
@@ -812,7 +929,7 @@
 				"type=shape": "形",
 				"type=corner": "コーナー",
 				"type=icon": "アイコン",
-				"type=border": "国境"
+				"type=border": "ボーダー"
 			}
 		}
 	],
@@ -832,6 +949,21 @@
 		}
 	],
 	"ui_color_theme_variable_label": "CSS変数",
+	"ui_theme_color_group_label": [
+		{
+			"declarations": [
+				"input group"
+			],
+			"selectors": [
+				"group"
+			],
+			"match": {
+				"group=text": "テキスト",
+				"group=background": "背景",
+				"group=border": "境界線"
+			}
+		}
+	],
 	"ui_theme_color_background_primary": "プライマリ背景",
 	"ui_theme_color_background_primary_alt": "プライマリ背景の上にある面の背景",
 	"ui_theme_color_background_secondary": "セカンダリ背景",
@@ -957,6 +1089,7 @@
 	],
 	"shelf_add": "棚を追加する",
 	"common_delete_name": "{name}を削除します。",
+	"shelf_dashboard_description": "棚は、仕事用や個人用など、まとまりのあるジャーナルをグループ化します。カレンダービューは一度に 1 つの棚を表示し、ナビゲーションブロックは棚のジャーナルから装飾され、コマンドは棚を対象にできます。",
 	"shelf_dashboard_empty": "棚はまだ作成されていません。",
 	"shelf_dashboard_open": "設定{name}",
 	"shelf_dashboard_section_title": "ジャーナル棚",
@@ -984,6 +1117,7 @@
 		}
 	],
 	"shelf_modal_name_label": "棚名",
+	"shelf_name_placeholder": "例: 仕事",
 	"shelf_name_required_error": "棚名は必須です。",
 	"shelf_name_unchanged_error": "別の名前を入力してください。",
 	"shelf_name_unique_error": "棚の名前は一意である必要があります。",
@@ -991,6 +1125,7 @@
 	"shelf_place_modal_title": "プレイスジャーナル",
 	"shelf_section_not_on_shelf": "棚には置いていません",
 	"shelf_section_place_tooltip": "棚に置く",
+	"flow_failure_notice": "ジャーナル: 問題が発生しました — {error}",
 	"settings_load_failed": "ジャーナル: 設定の読み込みに失敗しました — {error}",
 	"settings_reload_failed": "ジャーナル: 設定の再読み込みに失敗しました — {error}",
 	"settings_reload_required_banner": "変更した設定を適用するには、Obsidian を再読み込みしてください。",
@@ -1022,6 +1157,9 @@
 		}
 	],
 	"uri_open_failed": "ジャーナルエントリを開くことができませんでした。",
+	"view_deleted_error": "このビューは削除されました。このタブを閉じるか、プラグイン設定でビューを作成し直してください。",
+	"view_block_unknown_error": "このブロックは利用できなくなりました。プラグイン設定でビューから削除してください。",
+	"view_block_config_error": "このブロックの一部の設定が無効です。プラグイン設定で設定し直してください。",
 	"view_dashboard_section_title": "閲覧数",
 	"view_dashboard_empty": "まだ再生回数はありません。",
 	"view_dashboard_add": "ビューを追加",
@@ -1050,6 +1188,8 @@
 	"view_edit_open_on_startup_description": "保管庫を開くたびにこの画面が表示されます。メイン設定ページの起動時のノート設定とは別になっています。",
 	"view_edit_remember_date_label": "最後に表示した日付を記憶する",
 	"view_edit_remember_date_description": "オフの場合、起動するたびにカレンダーは今日の日付を開きます。オンの場合、最後に表示した日付を再度開きます。",
+	"view_edit_follow_active_date_label": "アクティブなノートに追従",
+	"view_edit_follow_active_date_description": "オンにすると、ジャーナルのノートを開いたときにこのビューがそのノートの日付へ移動します。その後も自由に移動できます。",
 	"view_edit_leaf_label": "開く",
 	"view_edit_leaf_description": "ビューが開く場所：サイドバーにドッキングされるか、メインワークスペースの通常のタブとして開きます。",
 	"view_edit_leaf_left": "左サイドバー",
@@ -1244,6 +1384,21 @@
 	"view_toolbar_button_config_label_label": "ラベル",
 	"view_toolbar_button_config_tooltip_label": "ツールチップ",
 	"view_toolbar_appearance_label_label": "ラベル",
+	"view_toolbar_appearance_reset": [
+		{
+			"declarations": [
+				"input field"
+			],
+			"selectors": [
+				"field"
+			],
+			"match": {
+				"field=icon": "アイコンを既定に戻す",
+				"field=label": "ラベルを既定に戻す",
+				"field=tooltip": "ツールチップを既定に戻す"
+			}
+		}
+	],
 	"view_toolbar_appearance_tooltip_label": "ツールチップ",
 	"view_toolbar_button_config_journal_default": "棚にあるすべてのジャーナル",
 	"view_toolbar_button_config_mode_label": "行動",
@@ -1331,8 +1486,8 @@
 	"view_block_config_weeks_label": "週番号",
 	"view_block_config_weeks_default": "グローバルデフォルトを使用する",
 	"view_block_config_weeks_none": "隠れた",
-	"view_block_config_weeks_left": "平日の前に",
-	"view_block_config_weeks_right": "平日以降",
+	"view_block_config_weeks_left": "曜日の前",
+	"view_block_config_weeks_right": "曜日の後",
 	"calendar_week_placement_label": "デフォルトの週番号",
 	"calendar_week_placement_description": "カレンダーブロックで「グローバルデフォルトを使用する」に週番号列が表示される場合。",
 	"view_block_config_show_heading_label": "月/年の見出しを表示する",
@@ -1346,10 +1501,26 @@
 	"journal_add_modal_write_label": "私は書くつもりです",
 	"journal_colliding_heading": "ジャーナル設定の衝突",
 	"journal_colliding_warning": "ジャーナル{names}設定が競合しているため、ノートが互いに上書きされます。いずれかのジャーナルのフォルダまたは名前テンプレートを変更してください。",
+	"journal_note_name_empty_notice": "ジャーナル \"{journalName}\" の名前テンプレートがノート名が空になる結果を返すため、ノートを作成できません。ジャーナル設定で名前テンプレートを設定してください。",
 	"journal_dashboard_bulk_add": "{name}にノートを一括追加します",
 	"journal_dashboard_edit": "設定{name}",
 	"journal_dashboard_empty": "まだジャーナルは作成されていません。",
 	"journal_delete_modal_title": "{name}を削除します。",
+	"journal_delete_connected_count": [
+		{
+			"declarations": [
+				"input count"
+			],
+			"selectors": [
+				"count"
+			],
+			"match": {
+				"count=0": "このジャーナルには接続されたノートがありません。",
+				"count=1": "このジャーナルには接続されたノートが 1 件あります。",
+				"count=*": "このジャーナルには接続されたノートが {count} 件あります。"
+			}
+		}
+	],
 	"journal_delete_mode_label": "連結ノートの扱い方",
 	"journal_delete_mode_option": [
 		{
@@ -1385,6 +1556,7 @@
 	"journal_edit_allow_before_label": "アンカーの前に許可する",
 	"journal_edit_anchor_description": "この日付は、以降の計算のために数値を結び付けるために使用されます。",
 	"journal_edit_anchor_label": "アンカー日付",
+	"journal_edit_clear_start_tooltip": "開始日をクリア",
 	"journal_edit_anchor_start_used": "開始日は基準日として使用されます。",
 	"journal_edit_auto_create_confirmation_skip_note": "自動作成されたノートには確認ダイアログは表示されません。",
 	"journal_edit_auto_create_description": "プラグインの読み込み時と、現地時間の毎正時に、今日のノートを自動的に作成します。",
@@ -1394,6 +1566,8 @@
 	"journal_edit_date_format_description": "独自の形式を指定しない日付変数のデフォルト形式は次のとおりです。",
 	"journal_edit_date_format_label": "デフォルトの日付形式",
 	"journal_edit_date_format_preview_label": "フォーマットされた日付:",
+	"journal_edit_date_format_week_date_note": "週次ジャーナルでは、{slot} は週内の 1 日であり、年トークンがその週の年と一致するように選ばれます。",
+	"journal_edit_date_format_week_start_note": "週の最初の日には {slot} を使用します。",
 	"common_moment_format_reference": "moment.js フォーマットリファレンス",
 	"journal_edit_end_description": [
 		{
@@ -1437,8 +1611,25 @@
 	"journal_edit_move_to_folder_recommendation_date_format": "日付形式にはパス区切り文字が含まれています。日付変数をフォルダーフィールドに移動しますか？",
 	"journal_edit_move_to_folder_recommendation_name_template": "ノート名テンプレートにパス区切り文字が含まれています。パスの接頭辞をフォルダーフィールドに移動しますか？",
 	"journal_edit_name_template_description": "新しい音名を生成するために使用されるテンプレート。",
+	"journal_edit_name_template_empty_warning": "この名前テンプレートはノート名が空になるため、ノートを作成できません。変数かテキストを追加してください。",
+	"journal_edit_name_template_collision_warning": "{first} と {second} のエントリはどちらも {path} になります。1 つのノートを共有します。",
 	"journal_edit_colliding_warning": "このジャーナルは{names}と同じノートパスに解決されるため、ノートが互いに上書きされます。フォルダまたは名前テンプレートを変更して、異なるパスを指定してください。",
-	"journal_edit_name_template_invertibility_warning": "テンプレートを逆解析できません ( {reason} : \" {offending} \")。自動添付機能は、このパターンに一致する外部作成のノートを警告なしにスキップします。",
+	"journal_edit_name_template_invertibility_warning": [
+		{
+			"declarations": [
+				"input reason",
+				"input offending"
+			],
+			"selectors": [
+				"reason"
+			],
+			"match": {
+				"reason=unknown-variable": "名前テンプレートは \"{offending}\" を使用していますが、これは既知の変数ではないため、プラグイン外で作成されたノートをこのジャーナルに関連付けられません。",
+				"reason=function-token": "名前テンプレートは関数 \"{offending}\" を使用しているため、プラグイン外で作成されたノートをこのジャーナルに関連付けられません。",
+				"reason=clock-variable": "名前テンプレートは時刻である \"{offending}\" を使用しているため、プラグイン外で作成されたノートをこのジャーナルに関連付けられません。"
+			}
+		}
+	],
 	"journal_edit_name_template_no_anchor_warning": "テンプレートには日付変数がなく、番号変数を日付に反転することもできないため、自動添付機能は、このパターンに一致する外部作成のノートを黙ってスキップします。",
 	"journal_edit_name_template_label": "ノート名テンプレート",
 	"journal_edit_note_path_preview_label": "解決済みノートパス:",
@@ -1475,7 +1666,10 @@
 	"journal_edit_code_block_timeline_default": "{name}ジャーナルのデフォルトのタイムラインは次のようになります。",
 	"journal_edit_code_block_timeline_mode_lead": "ブロックにモードオプションを追加することで、タイムラインモードを変更できます。",
 	"journal_edit_code_block_timeline_modes_lead": "サポートされているモード:",
-	"journal_edit_code_block_timeline_weeks": "週番号の列（左、右、またはなし）を制御します。",
+	"journal_edit_code_block_timeline_options_lead": "サポートされているオプション:",
+	"journal_edit_code_block_timeline_option_mode": "タイムラインに表示する期間を設定します。サポートされている値: week、month、quarter、calendar。指定しない場合は、ジャーナル自身の期間によって決まります。",
+	"journal_edit_code_block_timeline_option_shelf": "表示するノートを特定の棚に限定します。指定しない場合は、現在のジャーナルが属する棚が使われます。",
+	"journal_edit_code_block_timeline_weeks": "週番号の列を制御します。サポートされている値: default、left、right、none。値 default はプラグインのカレンダー設定に従います。",
 	"journal_edit_code_block_timeline_hidden_weekdays": "リストされている曜日を非表示にします（0 = 日曜日 … 6 = 土曜日）。たとえば、[0, 6] は週末を非表示にします。",
 	"journal_edit_code_block_home_description": "ホームブロックには、ジャーナル内の最新のノートへのリンクが表示されます。",
 	"journal_edit_code_block_home_default": "デフォルトでは、このように表示されます。",
@@ -1556,6 +1750,7 @@
 	"journal_property_modal_current_label": "現在の名前",
 	"common_label_new_name": "新しい名前",
 	"journal_property_name_required": "物件名は必須です。",
+	"bulk_add_date_format_required": "日付形式は必須です。",
 	"journal_rename_modal_same_as_current_error": "別の名前を入力してください。",
 	"journal_rename_modal_title": "{name}名前を変更します",
 	"journal_sequence_property_modal_title": "連番プロパティ名を編集する",

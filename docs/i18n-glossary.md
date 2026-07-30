@@ -10,6 +10,12 @@ as a magazine, a periodical and an accounting ledger.
 `npm run check:i18n` (`scripts/check-i18n-glossary.mjs`) enforces the table below and
 runs in CI. Adding a locale or a new domain noun means extending `GLOSSARY` there.
 
+When a banned term needs a word edge, write it as `(?<!\p{L})…(?!\p{L})` with the `u`
+flag, never `\b`. JavaScript defines `\b` over ASCII word characters, so it never
+matches at a Cyrillic edge — `/\bнота\b/` silently tests nothing and reports every
+Russian string as clean, which is exactly how "нота" (a musical note) survived in the
+corpus for as long as it did.
+
 ## Canonical terms
 
 | en          | de      | es      | fr      | it        | ja         | ko   | pt         | ru      | uk      | zh   |
@@ -33,6 +39,10 @@ Grammatical gender, where it decides agreement: `Journal` n. / `Notiz` f. / `Reg
   期刊 (a periodical) and 日记. 日记 is the diary sense the plugin actually means.
   **日志 is still correct for the logging feature** — the checker allows it under
   `logging_*` keys and nowhere else.
+- **ru/uk `note`.** Both locales carried a second wrong word alongside the musical
+  one: `примечание` / `примітка`, a footnote or annotation rather than a vault note.
+  It read plausibly enough to survive several passes, so both stems are banned
+  outright — no key legitimately means "footnote".
 - **`bold`.** Not a domain noun, but it failed the same way: eight of ten locales read
   it as the courage adjective rather than the typographic weight (de "Deutlich", es
   "Atrevido", fr "Audacieux", pt "Audacioso", ru "Смелый", ja 大胆な, ko 용감한, zh
@@ -41,8 +51,18 @@ Grammatical gender, where it decides agreement: `Journal` n. / `Notiz` f. / `Reg
 
 ## What the checker does not catch
 
-It bans wrong _terms_; it cannot see wrong _grammar_. Three known classes remain in the
+It bans wrong _terms_; it cannot see wrong _grammar_. Four known classes remain in the
 corpus, all from the same context-free-MT root cause:
+
+- **Homonym picked from the wrong domain.** Every non-domain UI noun is exposed the
+  same way the domain nouns were, and the table cannot grow to cover all of them.
+  A sweep fixed `border` read as a national frontier (de "Grenze", fr "Frontière",
+  it "Confine", ja 国境, ko 국경, pt "Fronteira", uk "Кордон"), `property` as assets
+  (ja 財産, ko 재산, zh 财产, uk "Нерухомість" — real estate), `label` as a trademark
+  (ko 상표) or a bottle sticker (de "Etikett", ru "Этикетка"), `icon` as a religious
+  icon (ru "Икона"), `offset` as the verb "to compensate" (fr, ru), `weekday` as a
+  workday (es, it, ja, ko), and `background` as a backstory (uk "Передісторія").
+  Nothing prevents the next one.
 
 - **Part-of-speech misparse.** `bulk_add_filter_combinator_label` is the imperative
   "Filter notes", and seven of ten locales rendered it as the noun phrase "notes about

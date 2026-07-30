@@ -29,6 +29,7 @@
 	"common_label_back": "Zurück zur Liste",
 	"common_label_calendar": "Kalender",
 	"common_pick_a_date": "Wähle ein Datum",
+	"common_note_open_error": "Die Notiz konnte nicht geöffnet werden.",
 	"calendar_picker_first_week_desc": "Der Tag im Januar (1–7), der in der ersten Woche des Jahres enthalten sein muss. Zum Beispiel bedeutet 4, dass die erste Woche den 4. Januar enthält.",
 	"calendar_picker_first_week_label": "Erste Woche des Jahres",
 	"calendar_picker_in_use_marker": "Aktuell verwendet",
@@ -77,8 +78,26 @@
 	"calendar_preset_western_used": "Kanada, die Vereinigten Staaten, Island, Portugal, Japan, Taiwan, Thailand, Hongkong, Macau, Israel, Ägypten, Südafrika, die Philippinen und der größte Teil Lateinamerikas.",
 	"calendar_week_config_change": "Ändern",
 	"calendar_week_config_description": "Definiere, welcher Tag die Woche beginnt und wie die erste Woche des Jahres bestimmt wird – dies wirkt sich auf die Wochennummerierung aus.",
+	"code_blocks_unknown_keys": [
+		{
+			"declarations": [
+				"input count",
+				"input keys"
+			],
+			"selectors": [
+				"count"
+			],
+			"match": {
+				"count=1": "Unbekannte Option ignoriert: {keys}.",
+				"count=*": "Unbekannte Optionen ignoriert: {keys}."
+			}
+		}
+	],
+	"code_blocks_yaml_error": "Die Optionen in diesem {key}-Block konnten nicht gelesen werden.",
+	"code_blocks_schema_error": "Einige Optionen in diesem {key}-Block sind ungültig.",
 	"code_blocks_nav_not_connected": "Die Notiz ist nicht mit einem Journal verbunden.",
 	"code_blocks_home_empty": "Keine Journale vorhanden. Überprüfen Sie die Anzeige- und Regaloptionen des Blocks.",
+	"common_no_journals_yet": "Noch keine Journale. Erstellen Sie eines in den Plugin-Einstellungen.",
 	"code_blocks_nav_next": "Nächste",
 	"code_blocks_nav_previous": "Vorherige",
 	"nav_block_section_title": "Navigationsblock",
@@ -265,6 +284,8 @@
 	"command_palette_shelf_name": "Regal: {shelf}: {name}",
 	"command_open_no_next": "Nach dieser Notiz folgt keine weitere.",
 	"command_open_no_previous": "Vor diesem Eintrag gibt es keinen vorherigen Eintrag.",
+	"command_open_needs_active_note": "Öffnen Sie zuerst eine Notiz, auf die dieser Befehl zutrifft.",
+	"command_open_unavailable": "Es gibt keine Notiz zum Öffnen.",
 	"command_type_label": [
 		{
 			"declarations": [
@@ -355,6 +376,7 @@
 	"bulk_add_notes_to_title": "Füge Notizen zu {journalName} hinzu.",
 	"bulk_add_folder_label": "Quellordner",
 	"bulk_add_folder_description": "Wählen Sie den Ordner mit den vorhandenen Notizen aus, die Sie bearbeiten möchten.",
+	"bulk_add_folder_not_found": "Dieser Ordner existiert nicht in Ihrem Tresor.",
 	"bulk_add_date_place_label": "Lesen Sie das Datum ab",
 	"bulk_add_date_place_title": "Titel der Notiz",
 	"bulk_add_date_place_property": "Ein Anwesen",
@@ -433,6 +455,100 @@
 	"bulk_add_skip_reason_no_date": "Kein Datum gefunden",
 	"bulk_add_skip_reason_invalid_date": "Datum konnte nicht analysiert werden",
 	"bulk_add_skip_reason_out_of_bounds": "Außerhalb des Zeitrahmens des Journals",
+	"bulk_add_log_skipped_occupied": [
+		{
+			"declarations": [
+				"input mood",
+				"input anchor"
+			],
+			"selectors": [
+				"mood"
+			],
+			"match": {
+				"mood=planned": "Wird übersprungen: Mit {anchor} ist bereits eine Notiz verknüpft.",
+				"mood=done": "Übersprungen: Mit {anchor} ist bereits eine Notiz verknüpft."
+			}
+		}
+	],
+	"bulk_add_log_merged": [
+		{
+			"declarations": [
+				"input mood",
+				"input anchor"
+			],
+			"selectors": [
+				"mood"
+			],
+			"match": {
+				"mood=planned": "Wird in die bereits mit {anchor} verknüpfte Notiz zusammengeführt, diese Notiz wird gelöscht.",
+				"mood=done": "In die bereits mit {anchor} verknüpfte Notiz zusammengeführt; diese Notiz wurde gelöscht."
+			}
+		}
+	],
+	"bulk_add_log_replaced": [
+		{
+			"declarations": [
+				"input mood",
+				"input anchor"
+			],
+			"selectors": [
+				"mood"
+			],
+			"match": {
+				"mood=planned": "Ersetzt die bereits mit {anchor} verknüpfte Notiz.",
+				"mood=done": "Die bereits mit {anchor} verknüpfte Notiz wurde ersetzt."
+			}
+		}
+	],
+	"bulk_add_log_moved": [
+		{
+			"declarations": [
+				"input mood"
+			],
+			"selectors": [
+				"mood"
+			],
+			"match": {
+				"mood=planned": "Wird in den Ordner des Journals verschoben.",
+				"mood=done": "In den Ordner des Journals verschoben."
+			}
+		}
+	],
+	"bulk_add_log_renamed": [
+		{
+			"declarations": [
+				"input mood"
+			],
+			"selectors": [
+				"mood"
+			],
+			"match": {
+				"mood=planned": "Wird passend zum Journal umbenannt.",
+				"mood=done": "Passend zum Journal umbenannt."
+			}
+		}
+	],
+	"bulk_add_log_connected": [
+		{
+			"declarations": [
+				"input mood",
+				"input journalName",
+				"input anchor"
+			],
+			"selectors": [
+				"mood"
+			],
+			"match": {
+				"mood=planned": "Wird mit {journalName} bei {anchor} verknüpft.",
+				"mood=done": "Mit {journalName} bei {anchor} verknüpft."
+			}
+		}
+	],
+	"bulk_add_log_merge_occupant_missing": "Fehlgeschlagen: Die bereits mit diesem Datum verknüpfte Notiz ist vor dem Zusammenführen verschwunden.",
+	"bulk_add_log_failed": "Fehlgeschlagen: {message}",
+	"bulk_add_dry_run_banner": "Trockenlauf — in Ihrem Tresor wurde nichts geändert.",
+	"bulk_add_occupant": "Bereits verknüpft: {path}",
+	"bulk_add_target": "Neuer Pfad: {path}",
 	"common_action_cancel": "Stornieren",
 	"common_action_close": "Schließen",
 	"common_action_create": "Erstellen",
@@ -556,6 +672,7 @@
 		}
 	],
 	"decoration_condition_offset_label": "Offset",
+	"decoration_condition_op_label": "Bedingung",
 	"decoration_condition_property_condition_label": "Zustand",
 	"decoration_condition_property_describe": "property {name} {op} {value}",
 	"decoration_condition_property_value_label": "Wert",
@@ -573,8 +690,8 @@
 			],
 			"match": {
 				"type=title": "Titel",
-				"type=tag": "Etikett",
-				"type=property": "Eigentum",
+				"type=tag": "Tag",
+				"type=property": "Eigenschaft",
 				"type=date": "Datum",
 				"type=weekday": "Wochentag",
 				"type=offset": "Offset",
@@ -777,7 +894,7 @@
 				"type=shape": "Dekorationsform",
 				"type=corner": "Dekorationsecke",
 				"type=icon": "Dekorationssymbol",
-				"type=border": "Zierbordüre"
+				"type=border": "Dekorationsrahmen"
 			}
 		}
 	],
@@ -812,7 +929,7 @@
 				"type=shape": "Form",
 				"type=corner": "Ecke",
 				"type=icon": "Symbol",
-				"type=border": "Grenze"
+				"type=border": "Rahmen"
 			}
 		}
 	],
@@ -832,6 +949,21 @@
 		}
 	],
 	"ui_color_theme_variable_label": "CSS-Variable",
+	"ui_theme_color_group_label": [
+		{
+			"declarations": [
+				"input group"
+			],
+			"selectors": [
+				"group"
+			],
+			"match": {
+				"group=text": "Text",
+				"group=background": "Hintergrund",
+				"group=border": "Rand"
+			}
+		}
+	],
 	"ui_theme_color_background_primary": "Primärer Hintergrund",
 	"ui_theme_color_background_primary_alt": "Hintergrund für Flächen über dem primären Hintergrund",
 	"ui_theme_color_background_secondary": "Sekundärer Hintergrund",
@@ -957,6 +1089,7 @@
 	],
 	"shelf_add": "Regal hinzufügen",
 	"common_delete_name": "Löschen Sie {name}",
+	"shelf_dashboard_description": "Ein Regal gruppiert Journale, die zusammengehören, etwa beruflich oder privat. Eine Kalenderansicht zeigt jeweils ein Regal, Navigationsblöcke werden aus den Journalen des Regals dekoriert, und ein Befehl kann sich auf ein Regal beziehen.",
 	"shelf_dashboard_empty": "Es wurden noch keine Regale erstellt.",
 	"shelf_dashboard_open": "Konfigurieren Sie {name}",
 	"shelf_dashboard_section_title": "Journalregale",
@@ -984,6 +1117,7 @@
 		}
 	],
 	"shelf_modal_name_label": "Regalname",
+	"shelf_name_placeholder": "z. B. Arbeit",
 	"shelf_name_required_error": "Die Angabe des Regalnamens ist erforderlich.",
 	"shelf_name_unchanged_error": "Geben Sie einen anderen Namen ein.",
 	"shelf_name_unique_error": "Der Regalname muss eindeutig sein.",
@@ -991,6 +1125,7 @@
 	"shelf_place_modal_title": "Ortsjournal",
 	"shelf_section_not_on_shelf": "Nicht im Regal",
 	"shelf_section_place_tooltip": "Auf ein Regal stellen",
+	"flow_failure_notice": "Journal: Etwas ist schiefgelaufen — {error}",
 	"settings_load_failed": "Journal: Fehler beim Laden der Einstellungen — {error}",
 	"settings_reload_failed": "Journal: Fehler beim Neuladen der Einstellungen — {error}",
 	"settings_reload_required_banner": "Laden Sie Obsidian neu, um die geänderten Einstellungen zu übernehmen.",
@@ -1022,6 +1157,9 @@
 		}
 	],
 	"uri_open_failed": "Die Journalnotiz konnte nicht geöffnet werden.",
+	"view_deleted_error": "Diese Ansicht wurde gelöscht. Schließen Sie diesen Tab oder erstellen Sie die Ansicht in den Plugin-Einstellungen erneut.",
+	"view_block_unknown_error": "Dieser Block ist nicht mehr verfügbar. Entfernen Sie ihn in den Plugin-Einstellungen aus der Ansicht.",
+	"view_block_config_error": "Einige Einstellungen in diesem Block sind ungültig. Konfigurieren Sie ihn in den Plugin-Einstellungen neu.",
 	"view_dashboard_section_title": "Ansichten",
 	"view_dashboard_empty": "Noch keine Aufrufe.",
 	"view_dashboard_add": "Ansicht hinzufügen",
@@ -1050,6 +1188,8 @@
 	"view_edit_open_on_startup_description": "Diese Ansicht wird jedes Mal angezeigt, wenn Sie den Tresor öffnen. Sie ist unabhängig von der Einstellung für die Startnotiz auf der Hauptseite der Einstellungen.",
 	"view_edit_remember_date_label": "Zuletzt angezeigtes Datum merken",
 	"view_edit_remember_date_description": "Wenn deaktiviert, öffnet der Kalender bei jedem Start das heutige Datum. Wenn aktiviert, wird das zuletzt angezeigte Datum wiederhergestellt.",
+	"view_edit_follow_active_date_label": "Aktiver Notiz folgen",
+	"view_edit_follow_active_date_description": "Wenn aktiviert, springt diese Ansicht beim Öffnen einer Journalnotiz zum Datum dieser Notiz. Sie können anschließend trotzdem weiternavigieren.",
 	"view_edit_leaf_label": "Öffnen in",
 	"view_edit_leaf_description": "Wo die Ansicht geöffnet wird: angedockt in einer Seitenleiste oder als regulärer Tab im Hauptarbeitsbereich.",
 	"view_edit_leaf_left": "Linke Seitenleiste",
@@ -1241,9 +1381,24 @@
 			}
 		}
 	],
-	"view_toolbar_button_config_label_label": "Etikett",
+	"view_toolbar_button_config_label_label": "Beschriftung",
 	"view_toolbar_button_config_tooltip_label": "Tooltip",
-	"view_toolbar_appearance_label_label": "Etikett",
+	"view_toolbar_appearance_label_label": "Beschriftung",
+	"view_toolbar_appearance_reset": [
+		{
+			"declarations": [
+				"input field"
+			],
+			"selectors": [
+				"field"
+			],
+			"match": {
+				"field=icon": "Symbol auf Standard zurücksetzen",
+				"field=label": "Beschriftung auf Standard zurücksetzen",
+				"field=tooltip": "Tooltip auf Standard zurücksetzen"
+			}
+		}
+	],
 	"view_toolbar_appearance_tooltip_label": "Tooltip",
 	"view_toolbar_button_config_journal_default": "Alle Journale im Regal",
 	"view_toolbar_button_config_mode_label": "Verhalten",
@@ -1352,10 +1507,26 @@
 	"journal_add_modal_write_label": "Ich werde schreiben",
 	"journal_colliding_heading": "Kollisionsjournaleinstellungen",
 	"journal_colliding_warning": "Journale {names} haben sich überschneidende Konfigurationen, sodass sich ihre Einträge gegenseitig überschreiben. Ändern Sie den Ordner oder die Namensvorlage in einem der Journale.",
+	"journal_note_name_empty_notice": "Das Journal \"{journalName}\" hat eine Namensvorlage, die zu einem leeren Notiznamen führt, daher kann keine Notiz erstellt werden. Legen Sie in den Journal-Einstellungen eine Namensvorlage dafür fest.",
 	"journal_dashboard_bulk_add": "Notizen massenhaft zu {name} hinzufügen",
 	"journal_dashboard_edit": "Konfigurieren Sie {name}",
 	"journal_dashboard_empty": "Es wurden noch keine Journale erstellt.",
 	"journal_delete_modal_title": "Löschen Sie {name}",
+	"journal_delete_connected_count": [
+		{
+			"declarations": [
+				"input count"
+			],
+			"selectors": [
+				"count"
+			],
+			"match": {
+				"count=0": "Dieses Journal hat keine verknüpften Notizen.",
+				"count=1": "Dieses Journal hat 1 verknüpfte Notiz.",
+				"count=*": "Dieses Journal hat {count} verknüpfte Notizen."
+			}
+		}
+	],
 	"journal_delete_mode_label": "Was tun mit verbundenen Notizen?",
 	"journal_delete_mode_option": [
 		{
@@ -1391,6 +1562,7 @@
 	"journal_edit_allow_before_label": "Vor dem Ankern warten",
 	"journal_edit_anchor_description": "Dieses Datum wird verwendet, um ihm eine Zahl für weitere Berechnungen zuzuordnen.",
 	"journal_edit_anchor_label": "Ankerdatum",
+	"journal_edit_clear_start_tooltip": "Startdatum löschen",
 	"journal_edit_anchor_start_used": "Das Startdatum wird als Ankerdatum verwendet.",
 	"journal_edit_auto_create_confirmation_skip_note": "Für automatisch erstellte Notizen wird kein Bestätigungsdialog angezeigt.",
 	"journal_edit_auto_create_description": "Automatische Erstellung der heutigen Notiz beim Laden des Plugins und jeden Tag um Mitternacht (Ortszeit).",
@@ -1400,6 +1572,8 @@
 	"journal_edit_date_format_description": "Standardformat für Datumsvariablen, die kein eigenes Format angeben, wie zum Beispiel:",
 	"journal_edit_date_format_label": "Standarddatumsformat",
 	"journal_edit_date_format_preview_label": "Formatiertes Datum:",
+	"journal_edit_date_format_week_date_note": "In einem wöchentlichen Journal ist {slot} ein Tag innerhalb der Woche, der so gewählt wird, dass Jahres-Tokens zum Jahr der Woche passen.",
+	"journal_edit_date_format_week_start_note": "Verwenden Sie {slot} für den ersten Tag der Woche.",
 	"common_moment_format_reference": "moment.js-Formatreferenz",
 	"journal_edit_end_description": [
 		{
@@ -1443,8 +1617,25 @@
 	"journal_edit_move_to_folder_recommendation_date_format": "Das Datumsformat enthält einen Pfadtrenner. Sollen die Datumsvariablen in das Feld „Ordner“ verschoben werden?",
 	"journal_edit_move_to_folder_recommendation_name_template": "Die Vorlage für den Notiznamen enthält ein Pfadtrennzeichen. Soll das Pfadpräfix in das Ordnerfeld verschoben werden?",
 	"journal_edit_name_template_description": "Vorlage zur Generierung neuer Notiznamen.",
+	"journal_edit_name_template_empty_warning": "Diese Namensvorlage führt zu einem leeren Notiznamen, daher kann keine Notiz erstellt werden. Fügen Sie eine Variable oder etwas Text hinzu.",
+	"journal_edit_name_template_collision_warning": "Die Einträge für {first} und {second} ergeben beide {path}. Sie teilen sich eine Notiz.",
 	"journal_edit_colliding_warning": "Dieses Journal verweist auf denselben Notizpfad wie {names} , sodass sich die Notizen gegenseitig überschreiben. Ändern Sie die Ordner- oder Namensvorlage, um einen eindeutigen Pfad zu vergeben.",
-	"journal_edit_name_template_invertibility_warning": "Die Vorlage kann nicht rückwärts analysiert werden ( {reason} : \" {offending} \"). Die automatische Anfügung überspringt stillschweigend extern erstellte Notizen, die diesem Muster entsprechen.",
+	"journal_edit_name_template_invertibility_warning": [
+		{
+			"declarations": [
+				"input reason",
+				"input offending"
+			],
+			"selectors": [
+				"reason"
+			],
+			"match": {
+				"reason=unknown-variable": "Die Namensvorlage verwendet \"{offending}\", was keine bekannte Variable ist, daher können außerhalb des Plugins erstellte Notizen diesem Journal nicht zugeordnet werden.",
+				"reason=function-token": "Die Namensvorlage verwendet die Funktion \"{offending}\", daher können außerhalb des Plugins erstellte Notizen diesem Journal nicht zugeordnet werden.",
+				"reason=clock-variable": "Die Namensvorlage verwendet \"{offending}\", eine Uhrzeit, daher können außerhalb des Plugins erstellte Notizen diesem Journal nicht zugeordnet werden."
+			}
+		}
+	],
 	"journal_edit_name_template_no_anchor_warning": "Die Vorlage verfügt über keine Datumsvariable und ihre Nummerierungsvariable kann nicht in ein Datum umgewandelt werden, daher werden extern erstellte Notizen, die diesem Muster entsprechen, von der automatischen Anfügefunktion stillschweigend übersprungen.",
 	"journal_edit_name_template_label": "Vorlage für einen Notiznamen",
 	"journal_edit_note_path_preview_label": "Aufgelöster Notizpfad:",
@@ -1481,7 +1672,10 @@
 	"journal_edit_code_block_timeline_default": "Die Standard-Timeline für das {name} Journal sieht folgendermaßen aus:",
 	"journal_edit_code_block_timeline_mode_lead": "Ändern Sie den Zeitleistenmodus, indem Sie dem Block eine Modusoption hinzufügen.",
 	"journal_edit_code_block_timeline_modes_lead": "Unterstützte Modi:",
-	"journal_edit_code_block_timeline_weeks": "steuert die Spalte mit der Kalenderwoche (links, rechts oder keine).",
+	"journal_edit_code_block_timeline_options_lead": "Unterstützte Optionen:",
+	"journal_edit_code_block_timeline_option_mode": "legt fest, welchen Zeitraum die Zeitleiste anzeigt. Unterstützte Werte: week, month, quarter, calendar. Ohne diese Option entscheidet der Zeitraum des Journals selbst.",
+	"journal_edit_code_block_timeline_option_shelf": "beschränkt die angezeigten Notizen auf ein bestimmtes Regal. Ohne diese Option wird das Regal des aktuellen Journals verwendet.",
+	"journal_edit_code_block_timeline_weeks": "steuert die Spalte mit der Kalenderwoche. Unterstützte Werte: default, left, right, none. Der Wert default folgt der Kalendereinstellung des Plugins.",
 	"journal_edit_code_block_timeline_hidden_weekdays": "blendet die aufgelisteten Wochentage aus (0 = Sonntag … 6 = Samstag), z. B. [0, 6], um Wochenenden auszulassen.",
 	"journal_edit_code_block_home_description": "Im Startblock werden Links zu den aktuellen Notizen in Ihren Tagebüchern angezeigt.",
 	"journal_edit_code_block_home_default": "Standardmäßig sieht es so aus:",
@@ -1562,6 +1756,7 @@
 	"journal_property_modal_current_label": "Aktueller Name",
 	"common_label_new_name": "Neuer Name",
 	"journal_property_name_required": "Die Angabe des Objektnamens ist erforderlich.",
+	"bulk_add_date_format_required": "Datumsformat ist erforderlich.",
 	"journal_rename_modal_same_as_current_error": "Geben Sie einen anderen Namen ein.",
 	"journal_rename_modal_title": "Benenne {name}",
 	"journal_sequence_property_modal_title": "Bearbeiten Sie den Namen der Eigenschaft „Sequenzielle Nummer“.",

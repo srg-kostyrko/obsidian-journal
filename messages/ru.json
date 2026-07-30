@@ -29,6 +29,7 @@
 	"common_label_back": "Вернуться к списку",
 	"common_label_calendar": "Календарь",
 	"common_pick_a_date": "Выберите дату",
+	"common_note_open_error": "Не удалось открыть заметку.",
 	"calendar_picker_first_week_desc": "День января (1–7), который обязательно должен быть в первой неделе года. Например, 4 означает, что первая неделя — это неделя, в которой есть 4 января.",
 	"calendar_picker_first_week_label": "Первая неделя года",
 	"calendar_picker_in_use_marker": "В настоящее время используется",
@@ -77,8 +78,26 @@
 	"calendar_preset_western_used": "Канада, США, Исландия, Португалия, Япония, Тайвань, Таиланд, Гонконг, Макао, Израиль, Египет, Южная Африка, Филиппины и большинство стран Латинской Америки.",
 	"calendar_week_config_change": "Изменять",
 	"calendar_week_config_description": "Определите, с какого дня начинается неделя и как определяется первая неделя года — это влияет на нумерацию недель.",
-	"code_blocks_nav_not_connected": "Примечание не связано с журналом.",
+	"code_blocks_unknown_keys": [
+		{
+			"declarations": [
+				"input count",
+				"input keys"
+			],
+			"selectors": [
+				"count"
+			],
+			"match": {
+				"count=1": "Нераспознанный параметр проигнорирован: {keys}.",
+				"count=*": "Нераспознанные параметры проигнорированы: {keys}."
+			}
+		}
+	],
+	"code_blocks_yaml_error": "Не удалось прочитать параметры в этом блоке {key}.",
+	"code_blocks_schema_error": "Некоторые параметры в этом блоке {key} недопустимы.",
+	"code_blocks_nav_not_connected": "Заметка не связана с журналом",
 	"code_blocks_home_empty": "Журналы для отображения отсутствуют. Проверьте параметры отображения и размещения на полке блока.",
+	"common_no_journals_yet": "Журналов пока нет. Создайте журнал в настройках плагина.",
 	"code_blocks_nav_next": "Следующий",
 	"code_blocks_nav_previous": "Предыдущий",
 	"nav_block_section_title": "Блок навигации",
@@ -110,7 +129,7 @@
 				"writeType=week": "Используйте значения по умолчанию для еженедельных заметок.",
 				"writeType=month": "Используйте значения по умолчанию для ежемесячных заметок.",
 				"writeType=quarter": "Используйте значения по умолчанию для квартальных заметок.",
-				"writeType=year": "Используйте значения по умолчанию для годовых примечаний.",
+				"writeType=year": "Используйте значения по умолчанию для годовых заметок.",
 				"writeType=*": "Использовать значения по умолчанию"
 			}
 		}
@@ -218,12 +237,12 @@
 	"command_modal_context_label": "Контекст",
 	"command_modal_context_only_open_note_hint": "Выполняется, только когда открыта заметка журнала, и использует дату этой заметки.",
 	"command_modal_context_open_note_hint": "Использует дату открытой заметки журнала или сегодняшнюю дату, если заметка журнала не открыта.",
-	"common_label_icon": "Икона",
+	"common_label_icon": "Значок",
 	"common_label_name": "Имя",
 	"command_modal_open_mode_label": "Открытая заметка",
 	"common_show_in_ribbon": "Показать в ленте",
 	"command_modal_type_label": "Когда выполняется команда",
-	"command_modal_write_type_label": "Тип примечания",
+	"command_modal_write_type_label": "Тип заметки",
 	"command_name_prefix_hint": [
 		{
 			"declarations": [
@@ -251,7 +270,7 @@
 			"match": {
 				"mode=active": "Замена активной заметки",
 				"mode=tab": "В новой вкладке",
-				"mode=split": "Рядом с активной нотой",
+				"mode=split": "Рядом с активной заметкой",
 				"mode=window": "Во всплывающем окне"
 			}
 		}
@@ -263,8 +282,10 @@
 	"shelf_picker_placeholder": "Поиск полок",
 	"command_palette_journal_name": "{journal}: {name}",
 	"command_palette_shelf_name": "Полка: {shelf}: {name}",
-	"command_open_no_next": "После этой ноты следующей нет.",
+	"command_open_no_next": "После этой заметки следующей нет.",
 	"command_open_no_previous": "Предшествующей заметки нет.",
+	"command_open_needs_active_note": "Сначала откройте заметку, к которой применяется эта команда.",
+	"command_open_unavailable": "Нет заметки для открытия.",
 	"command_type_label": [
 		{
 			"declarations": [
@@ -342,7 +363,7 @@
 	"connect_note_modal_date_label": "Дата",
 	"connect_note_modal_move_description": "Папка заметки ( {current} ) отличается от настроенной папки журнала ( {configured} ).",
 	"connect_note_modal_override_description": "К этой дате привязана еще одна заметка ( {path} ). Она будет отключена, если вы включите эту функцию.",
-	"connect_note_modal_override_label": "Замените примечание, уже связанное с этой датой.",
+	"connect_note_modal_override_label": "Заменить заметку, уже связанную с этой датой",
 	"connect_note_modal_rename_description": "Название заметки ( {current} ) отличается от заданного названия журнала ( {configured} ).",
 	"connect_note_modal_rename_label": "Переименуйте файл в соответствии с названием журнала.",
 	"connect_note_modal_move_label": "Переместите файл в папку журнала.",
@@ -350,13 +371,14 @@
 	"connect_note_modal_connected_to": "Эта заметка связана с \" {journalName} \".",
 	"connect_note_modal_disconnect": "Отключить",
 	"connect_note_modal_out_of_bounds": "Эта дата выходит за рамки актуального периода времени, указанного в журнале.",
-	"connect_note_notice_connected": "Примечание, связанное с \" {journalName} \".",
-	"connect_note_notice_disconnected": "Примечание отсоединено от \" {journalName} \".",
-	"bulk_add_notes_to_title": "Добавить примечания к {journalName}",
+	"connect_note_notice_connected": "Заметка связана с «{journalName}».",
+	"connect_note_notice_disconnected": "Заметка отсоединена от «{journalName}».",
+	"bulk_add_notes_to_title": "Добавить заметки в {journalName}",
 	"bulk_add_folder_label": "Исходная папка",
 	"bulk_add_folder_description": "Выберите папку с существующими заметками, которые вы хотите обработать.",
+	"bulk_add_folder_not_found": "Такой папки нет в вашем хранилище.",
 	"bulk_add_date_place_label": "Прочитайте дату с",
-	"bulk_add_date_place_title": "Примечание к заголовку",
+	"bulk_add_date_place_title": "Заголовок заметки",
 	"bulk_add_date_place_property": "Объект недвижимости",
 	"common_label_property_name": "Название объекта недвижимости",
 	"bulk_add_date_format_label": "Формат даты",
@@ -369,7 +391,7 @@
 	"bulk_add_add_filter_title": "Добавить условие заголовка",
 	"bulk_add_add_filter_tag": "Добавить условие тега",
 	"bulk_add_add_filter_property": "Добавить условие свойства",
-	"bulk_add_existing_label": "Когда примечание уже привязано к этой дате",
+	"bulk_add_existing_label": "Когда заметка уже связана с этой датой",
 	"bulk_add_existing_description": [
 		{
 			"declarations": [
@@ -382,7 +404,7 @@
 				"option=skip": "Новая заметка остаётся нетронутой и не связанной.",
 				"option=override": "Новая заметка занимает место даты; ранее связанная заметка остаётся в хранилище, но отсоединяется.",
 				"option=merge": "Содержимое новой заметки добавляется к уже связанной заметке, а новая заметка удаляется.",
-				"option=ask": "Принимайте решение по каждой ноте на экране проверки."
+				"option=ask": "Принимайте решение по каждой заметке на экране проверки."
 			}
 		}
 	],
@@ -409,8 +431,8 @@
 				"count"
 			],
 			"match": {
-				"count=1": "1 нота пропущена",
-				"count=*": "{count} заметки пропущены"
+				"count=1": "1 заметка пропущена",
+				"count=*": "{count} заметок пропущено"
 			}
 		}
 	],
@@ -423,8 +445,8 @@
 				"count"
 			],
 			"match": {
-				"count=1": "1 примечание для обработки",
-				"count=*": "{count} заметки для обработки"
+				"count=1": "1 заметка для обработки",
+				"count=*": "{count} заметок для обработки"
 			}
 		}
 	],
@@ -433,6 +455,100 @@
 	"bulk_add_skip_reason_no_date": "Дата не найдена",
 	"bulk_add_skip_reason_invalid_date": "Не удалось обработать дату.",
 	"bulk_add_skip_reason_out_of_bounds": "Вне рамок журнала",
+	"bulk_add_log_skipped_occupied": [
+		{
+			"declarations": [
+				"input mood",
+				"input anchor"
+			],
+			"selectors": [
+				"mood"
+			],
+			"match": {
+				"mood=planned": "Будет пропущено: с {anchor} уже связана заметка.",
+				"mood=done": "Пропущено: с {anchor} уже связана заметка."
+			}
+		}
+	],
+	"bulk_add_log_merged": [
+		{
+			"declarations": [
+				"input mood",
+				"input anchor"
+			],
+			"selectors": [
+				"mood"
+			],
+			"match": {
+				"mood=planned": "Будет объединено с заметкой, уже связанной с {anchor}, а эта заметка будет удалена.",
+				"mood=done": "Объединено с заметкой, уже связанной с {anchor}; эта заметка удалена."
+			}
+		}
+	],
+	"bulk_add_log_replaced": [
+		{
+			"declarations": [
+				"input mood",
+				"input anchor"
+			],
+			"selectors": [
+				"mood"
+			],
+			"match": {
+				"mood=planned": "Заменит заметку, уже связанную с {anchor}.",
+				"mood=done": "Заметка, уже связанная с {anchor}, заменена."
+			}
+		}
+	],
+	"bulk_add_log_moved": [
+		{
+			"declarations": [
+				"input mood"
+			],
+			"selectors": [
+				"mood"
+			],
+			"match": {
+				"mood=planned": "Будет перемещено в папку журнала.",
+				"mood=done": "Перемещено в папку журнала."
+			}
+		}
+	],
+	"bulk_add_log_renamed": [
+		{
+			"declarations": [
+				"input mood"
+			],
+			"selectors": [
+				"mood"
+			],
+			"match": {
+				"mood=planned": "Будет переименовано в соответствии с журналом.",
+				"mood=done": "Переименовано в соответствии с журналом."
+			}
+		}
+	],
+	"bulk_add_log_connected": [
+		{
+			"declarations": [
+				"input mood",
+				"input journalName",
+				"input anchor"
+			],
+			"selectors": [
+				"mood"
+			],
+			"match": {
+				"mood=planned": "Будет связано с {journalName} на {anchor}.",
+				"mood=done": "Связано с {journalName} на {anchor}."
+			}
+		}
+	],
+	"bulk_add_log_merge_occupant_missing": "Не удалось: заметка, уже связанная с этой датой, исчезла до объединения.",
+	"bulk_add_log_failed": "Не удалось: {message}",
+	"bulk_add_dry_run_banner": "Пробный запуск — в вашем хранилище ничего не изменено.",
+	"bulk_add_occupant": "Уже связано: {path}",
+	"bulk_add_target": "Новый путь: {path}",
 	"common_action_cancel": "Отмена",
 	"common_action_close": "Закрывать",
 	"common_action_create": "Создавать",
@@ -555,7 +671,8 @@
 			}
 		}
 	],
-	"decoration_condition_offset_label": "Компенсировать",
+	"decoration_condition_offset_label": "Смещение",
+	"decoration_condition_op_label": "Условие",
 	"decoration_condition_property_condition_label": "Состояние",
 	"decoration_condition_property_describe": "свойство {name} {op} {value}",
 	"decoration_condition_property_value_label": "Ценить",
@@ -573,12 +690,12 @@
 			],
 			"match": {
 				"type=title": "Заголовок",
-				"type=tag": "Ярлык",
+				"type=tag": "Тег",
 				"type=property": "Свойство",
 				"type=date": "Дата",
-				"type=weekday": "будний день",
-				"type=offset": "Компенсировать",
-				"type=has-note": "Есть примечание",
+				"type=weekday": "День недели",
+				"type=offset": "Смещение",
+				"type=has-note": "Есть заметка",
 				"type=has-open-task": "Имеет открытую задачу",
 				"type=all-tasks-completed": "Все задания выполнены."
 			}
@@ -811,7 +928,7 @@
 				"type=color": "Цвет",
 				"type=shape": "Форма",
 				"type=corner": "Угол",
-				"type=icon": "Икона",
+				"type=icon": "Значок",
 				"type=border": "Граница"
 			}
 		}
@@ -832,6 +949,21 @@
 		}
 	],
 	"ui_color_theme_variable_label": "CSS-переменная",
+	"ui_theme_color_group_label": [
+		{
+			"declarations": [
+				"input group"
+			],
+			"selectors": [
+				"group"
+			],
+			"match": {
+				"group=text": "Текст",
+				"group=background": "Фон",
+				"group=border": "Граница"
+			}
+		}
+	],
 	"ui_theme_color_background_primary": "Основной фон",
 	"ui_theme_color_background_primary_alt": "Фон для поверхностей поверх основного фона",
 	"ui_theme_color_background_secondary": "Вторичный фон",
@@ -957,6 +1089,7 @@
 	],
 	"shelf_add": "Добавить полку",
 	"common_delete_name": "Удалить {name}",
+	"shelf_dashboard_description": "Полка группирует журналы, которые относятся к одному контексту, например рабочие или личные. Представление календаря показывает одну полку за раз, блоки навигации оформляются по журналам полки, а команда может быть направлена на полку.",
 	"shelf_dashboard_empty": "Полки пока не созданы.",
 	"shelf_dashboard_open": "Настройте {name}",
 	"shelf_dashboard_section_title": "Полки для журналов",
@@ -984,6 +1117,7 @@
 		}
 	],
 	"shelf_modal_name_label": "Название полки",
+	"shelf_name_placeholder": "например, Работа",
 	"shelf_name_required_error": "Название полки обязательно для указания.",
 	"shelf_name_unchanged_error": "Введите другое имя.",
 	"shelf_name_unique_error": "Название полки должно быть уникальным.",
@@ -991,6 +1125,7 @@
 	"shelf_place_modal_title": "Журнал мест",
 	"shelf_section_not_on_shelf": "Нет на полке",
 	"shelf_section_place_tooltip": "Поставьте на полку",
+	"flow_failure_notice": "Журнал: что-то пошло не так — {error}",
 	"settings_load_failed": "Журнал: не удалось загрузить настройки — {error}",
 	"settings_reload_failed": "Журнал: не удалось перезагрузить настройки — {error}",
 	"settings_reload_required_banner": "Перезагрузите Obsidian, чтобы применить изменённые настройки.",
@@ -1022,6 +1157,9 @@
 		}
 	],
 	"uri_open_failed": "Не удалось открыть заметку журнала.",
+	"view_deleted_error": "Это представление удалено. Закройте эту вкладку или создайте представление заново в настройках плагина.",
+	"view_block_unknown_error": "Этот блок больше недоступен. Удалите его из представления в настройках плагина.",
+	"view_block_config_error": "Некоторые настройки этого блока недопустимы. Перенастройте его в настройках плагина.",
 	"view_dashboard_section_title": "Мнения",
 	"view_dashboard_empty": "Пока нет просмотров.",
 	"view_dashboard_add": "Добавить вид",
@@ -1047,9 +1185,11 @@
 	"view_edit_show_in_ribbon_description": "Добавьте кнопку на ленте, которая будет открывать это представление.",
 	"common_label_all_journals": "Все журналы",
 	"view_edit_open_on_startup_label": "Открывается при запуске",
-	"view_edit_open_on_startup_description": "Открывайте этот вид каждый раз при открытии хранилища. Он не связан с настройкой примечания при запуске на главной странице настроек.",
+	"view_edit_open_on_startup_description": "Открывать это представление при каждом открытии хранилища. Не связано с настройкой заметки при запуске на главной странице настроек.",
 	"view_edit_remember_date_label": "Запоминать последнюю просмотренную дату",
 	"view_edit_remember_date_description": "Если выключено, календарь при каждом запуске открывается на сегодняшней дате. Если включено, он открывается на последней просмотренной дате.",
+	"view_edit_follow_active_date_label": "Следовать за активной заметкой",
+	"view_edit_follow_active_date_description": "Когда включено, при открытии заметки журнала это представление переходит к дате этой заметки. Вы всё равно можете перейти к другой дате.",
 	"view_edit_leaf_label": "Открыть в",
 	"view_edit_leaf_description": "Где открывается окно: в виде закрепленной в боковой панели или в виде обычной вкладки в основном рабочем пространстве.",
 	"view_edit_leaf_left": "Левая боковая панель",
@@ -1164,7 +1304,7 @@
 	],
 	"view_toolbar_period_buttons_config_label": "Периоды",
 	"view_toolbar_defined_navigation_label": "Навигация по определенным заметкам",
-	"view_toolbar_defined_navigation_description": "Кнопка, позволяющая перейти к предыдущей или следующей уже существующей ноте.",
+	"view_toolbar_defined_navigation_description": "Кнопка, позволяющая перейти к предыдущей или следующей уже существующей заметке.",
 	"view_toolbar_defined_navigation_target": "Пошаговые инструкции",
 	"view_toolbar_defined_navigation_target_active": "Заметки активного журнала",
 	"view_toolbar_defined_navigation_direction": "Направление",
@@ -1186,7 +1326,7 @@
 	"view_toolbar_button_preset_pick_date": "Выберите дату",
 	"view_toolbar_button_preset_pick_date_description": "Открывает окно выбора даты для перехода к любой заметке.",
 	"view_toolbar_button_preset_open_note": "Открытая заметка",
-	"view_toolbar_button_preset_open_note_description": "Переход к примечанию текущего периода.",
+	"view_toolbar_button_preset_open_note_description": "Переход к заметке текущего периода.",
 	"view_toolbar_button_preset_navigate": "Пошаговая навигация",
 	"view_toolbar_button_preset_navigate_description": "Шаги вперед или назад с фиксированным интервалом.",
 	"view_toolbar_button_default_tooltip_pick_multi": "Откройте заметку",
@@ -1241,9 +1381,24 @@
 			}
 		}
 	],
-	"view_toolbar_button_config_label_label": "Этикетка",
+	"view_toolbar_button_config_label_label": "Подпись",
 	"view_toolbar_button_config_tooltip_label": "Всплывающая подсказка",
-	"view_toolbar_appearance_label_label": "Этикетка",
+	"view_toolbar_appearance_label_label": "Подпись",
+	"view_toolbar_appearance_reset": [
+		{
+			"declarations": [
+				"input field"
+			],
+			"selectors": [
+				"field"
+			],
+			"match": {
+				"field=icon": "Сбросить значок к значению по умолчанию",
+				"field=label": "Сбросить подпись к значению по умолчанию",
+				"field=tooltip": "Сбросить всплывающую подсказку к значению по умолчанию"
+			}
+		}
+	],
 	"view_toolbar_appearance_tooltip_label": "Всплывающая подсказка",
 	"view_toolbar_button_config_journal_default": "Все журналы на полке",
 	"view_toolbar_button_config_mode_label": "Поведение",
@@ -1352,10 +1507,26 @@
 	"journal_add_modal_write_label": "Я буду писать",
 	"journal_colliding_heading": "Конфликт настроек журнала",
 	"journal_colliding_warning": "В журналах {names} наблюдаются конфликтующие конфигурации, поэтому их заметки будут перезаписывать друг друга. Измените шаблон папки или имени в одном из них.",
+	"journal_note_name_empty_notice": "В журнале \"{journalName}\" шаблон имени даёт пустое имя заметки, поэтому заметку нельзя создать. Задайте шаблон имени в настройках журнала.",
 	"journal_dashboard_bulk_add": "Массовое добавление заметок к {name}",
 	"journal_dashboard_edit": "Настройте {name}",
 	"journal_dashboard_empty": "Журналы пока не созданы.",
 	"journal_delete_modal_title": "Удалить {name}",
+	"journal_delete_connected_count": [
+		{
+			"declarations": [
+				"input count"
+			],
+			"selectors": [
+				"count"
+			],
+			"match": {
+				"count=0": "С этим журналом не связано ни одной заметки.",
+				"count=1": "С этим журналом связана 1 заметка.",
+				"count=*": "С этим журналом связано заметок: {count}."
+			}
+		}
+	],
 	"journal_delete_mode_label": "Что делать со связанными заметками?",
 	"journal_delete_mode_option": [
 		{
@@ -1391,15 +1562,18 @@
 	"journal_edit_allow_before_label": "Дождитесь, пока не поставите якорь.",
 	"journal_edit_anchor_description": "Эта дата используется для привязки к ней числа для дальнейших вычислений.",
 	"journal_edit_anchor_label": "Якорная дата",
+	"journal_edit_clear_start_tooltip": "Очистить дату начала",
 	"journal_edit_anchor_start_used": "Дата начала используется в качестве опорной даты.",
 	"journal_edit_auto_create_confirmation_skip_note": "Диалоговое окно подтверждения не будет отображаться для автоматически созданных заметок.",
 	"journal_edit_auto_create_description": "Автоматическое создание сегодняшней заметки при загрузке плагина и каждую локальную полночь.",
 	"journal_edit_auto_create_label": "Автоматическое создание сегодняшней заметки",
-	"journal_edit_confirm_creation_description": "При переходе к дате, к которой еще нет примечания, следует отображать диалоговое окно подтверждения.",
+	"journal_edit_confirm_creation_description": "Показывать диалог подтверждения при переходе к дате, для которой ещё нет заметки.",
 	"journal_edit_confirm_creation_label": "Подтвердите создание новых заметок.",
 	"journal_edit_date_format_description": "Формат по умолчанию для переменных дат, которые не указывают свой собственный формат, например:",
 	"journal_edit_date_format_label": "Формат даты по умолчанию",
 	"journal_edit_date_format_preview_label": "Отформатированная дата:",
+	"journal_edit_date_format_week_date_note": "В еженедельном журнале {slot} — это день внутри недели, выбранный так, чтобы токены года совпадали с годом этой недели.",
+	"journal_edit_date_format_week_start_note": "Используйте {slot} для первого дня недели.",
 	"common_moment_format_reference": "Справочник по формату moment.js",
 	"journal_edit_end_description": [
 		{
@@ -1441,17 +1615,34 @@
 	"journal_edit_folder_label": "Папка",
 	"journal_edit_move_to_folder_apply_link": "Примените рекомендацию",
 	"journal_edit_move_to_folder_recommendation_date_format": "Формат даты содержит разделитель пути. Переместить переменные даты в поле «Папка»?",
-	"journal_edit_move_to_folder_recommendation_name_template": "В шаблоне имени поля «Примечание» используется разделитель пути. Переместите префикс пути в поле «Папка»?",
+	"journal_edit_move_to_folder_recommendation_name_template": "Шаблон имени заметки содержит разделитель пути. Переместить префикс пути в поле «Папка»?",
 	"journal_edit_name_template_description": "Шаблон, используемый для генерации новых названий заметок.",
+	"journal_edit_name_template_empty_warning": "Этот шаблон имени даёт пустое имя заметки, поэтому заметку нельзя создать. Добавьте переменную или текст.",
+	"journal_edit_name_template_collision_warning": "Записи для {first} и {second} дают один и тот же путь {path}. Они будут использовать общую заметку.",
 	"journal_edit_colliding_warning": "Этот журнал ссылается на тот же путь к заметкам, что и {names} , поэтому их заметки будут перезаписывать друг друга. Измените шаблон папки или имени, чтобы указать для нее отдельный путь.",
-	"journal_edit_name_template_invertibility_warning": "Шаблон не может быть подвергнут обратному анализу ( {reason} : \" {offending} \"). Автоматическое прикрепление будет молча пропускать созданные извне заметки, соответствующие этому шаблону.",
+	"journal_edit_name_template_invertibility_warning": [
+		{
+			"declarations": [
+				"input reason",
+				"input offending"
+			],
+			"selectors": [
+				"reason"
+			],
+			"match": {
+				"reason=unknown-variable": "Шаблон имени использует \"{offending}\" — это не известная переменная, поэтому заметки, созданные вне плагина, невозможно сопоставить с этим журналом.",
+				"reason=function-token": "Шаблон имени использует функцию \"{offending}\", поэтому заметки, созданные вне плагина, невозможно сопоставить с этим журналом.",
+				"reason=clock-variable": "Шаблон имени использует \"{offending}\" — это время суток, поэтому заметки, созданные вне плагина, невозможно сопоставить с этим журналом."
+			}
+		}
+	],
 	"journal_edit_name_template_no_anchor_warning": "В шаблоне отсутствует переменная даты, а переменная нумерации не может быть преобразована в дату в обратном порядке, поэтому функция автоматического прикрепления будет молча пропускать созданные извне заметки, соответствующие этому шаблону.",
 	"journal_edit_name_template_label": "Шаблон названия заметки",
 	"journal_edit_note_path_preview_label": "Разрешённый путь к заметке:",
 	"journal_edit_rename_tooltip": "Переименовать журнал",
 	"journal_edit_reset_count_suffix": "повторы",
 	"journal_edit_reset_description": "Как это число меняется со временем.",
-	"journal_edit_reset_label": "Перезагрузить",
+	"journal_edit_reset_label": "Сбросить",
 	"journal_edit_reset_option": [
 		{
 			"declarations": [
@@ -1481,7 +1672,10 @@
 	"journal_edit_code_block_timeline_default": "Стандартная временная шкала для журнала {name} выглядит следующим образом:",
 	"journal_edit_code_block_timeline_mode_lead": "Измените режим временной шкалы, добавив параметр режима в блок.",
 	"journal_edit_code_block_timeline_modes_lead": "Поддерживаемые режимы:",
-	"journal_edit_code_block_timeline_weeks": "управляет столбцом с номером недели (слева, справа или отсутствует).",
+	"journal_edit_code_block_timeline_options_lead": "Поддерживаемые параметры:",
+	"journal_edit_code_block_timeline_option_mode": "задаёт, какой период отображает временная шкала. Поддерживаемые значения: week, month, quarter, calendar. Без этого параметра период определяет сам журнал.",
+	"journal_edit_code_block_timeline_option_shelf": "ограничивает отображаемые заметки определённой полкой. Без этого параметра используется полка, содержащая текущий журнал.",
+	"journal_edit_code_block_timeline_weeks": "управляет столбцом с номером недели. Поддерживаемые значения: default, left, right, none. Значение default следует настройке календаря в плагине.",
 	"journal_edit_code_block_timeline_hidden_weekdays": "скрывает перечисленные дни недели (0 = воскресенье … 6 = суббота), например, [0, 6] для удаления выходных.",
 	"journal_edit_code_block_home_description": "В главном блоке отображаются ссылки на текущие заметки в вашем журнале.",
 	"journal_edit_code_block_home_default": "По умолчанию это выглядит так:",
@@ -1510,9 +1704,9 @@
 	"journal_edit_variable_current_date_description": "Сегодняшняя дата (по умолчанию в формате ГГГГ-ММ-ДД).",
 	"journal_edit_variable_current_time_description": "Текущее время по часам (псевдоним {slot} , по умолчанию в формате HH:mm).",
 	"journal_edit_variable_date_description": "Дата, к которой привязана заметка, — дата периода, который она охватывает.",
-	"journal_edit_variable_date_format_description": "Дата обращения в примечании, отформатированная с использованием предоставленной строки формата moment.js.",
+	"journal_edit_variable_date_format_description": "Опорная дата заметки, отформатированная предоставленной строкой формата moment.js.",
 	"journal_edit_variable_end_date_description": "Последний день периода, охватываемого данной заметкой.",
-	"journal_edit_variable_index_description": "Порядковый номер для примечания, если в журнале включена нумерация.",
+	"journal_edit_variable_index_description": "Порядковый номер заметки, если в журнале включена нумерация.",
 	"journal_edit_variable_journal_link_description": "Внутри содержимого файла шаблона указывается путь к заметке другого журнала для даты этой заметки. Вы можете самостоятельно обернуть его в ссылку или встроить (например, ![[ … ]]) и добавить модификаторы даты, такие как +1w, чтобы указать на соседний период.",
 	"journal_edit_variable_journal_name_description": "Название журнала (здесь: {name} ).",
 	"journal_edit_variable_non_invertible_warning": "Использование этого параметра здесь не позволит журналу восстановить дату из имени файла.",
@@ -1562,6 +1756,7 @@
 	"journal_property_modal_current_label": "Текущее имя",
 	"common_label_new_name": "Новое название",
 	"journal_property_name_required": "Название объекта недвижимости обязательно для указания.",
+	"bulk_add_date_format_required": "Формат даты обязателен.",
 	"journal_rename_modal_same_as_current_error": "Введите другое имя.",
 	"journal_rename_modal_title": "Переименовать {name}",
 	"journal_sequence_property_modal_title": "Изменить название свойства порядкового номера",
