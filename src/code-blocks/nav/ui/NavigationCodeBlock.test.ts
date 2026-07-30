@@ -382,6 +382,39 @@ describe("NavigationCodeBlock row click routing", () => {
     expect(h.flows.calls).toHaveLength(0);
   });
 
+  it("opens a row's note directly once the index registers it", async () => {
+    // Rows read the index for their own period, which is registered asynchronously — the
+    // neighboring period's note lands after the block has already rendered.
+    const journal = dailyWithRows([navRow({ template: "{{date}}", link: "self" })]);
+    const h = buildHarness({ daily: journal });
+    h.index.byPath.set("Daily/2026-05-27.md", {
+      journalName: "daily",
+      anchor: "2026-05-27" as AnchorString,
+      path: "Daily/2026-05-27.md" as VaultPath,
+    });
+    h.index.byAnchor.set("daily::2026-05-27", {
+      journalName: "daily",
+      anchor: "2026-05-27" as AnchorString,
+      path: "Daily/2026-05-27.md" as VaultPath,
+    });
+    h.shelves.shelves = [{ name: "main", journals: ["daily"] }];
+    mount(h, "Daily/2026-05-27.md");
+
+    const tomorrow: JournalEntry = {
+      journalName: "daily",
+      anchor: "2026-05-28" as AnchorString,
+      path: "Daily/2026-05-28.md" as VaultPath,
+    };
+    h.index.byAnchor.set("daily::2026-05-28", tomorrow);
+    h.index.events.emit("entryChanged", { entry: tomorrow, kind: "added" });
+    await nextTick();
+
+    const user = userEvent.setup({ advanceTimers: vi.advanceTimersByTime });
+    await user.click(screen.getByText("2026-05-28"));
+
+    expect(h.workspace.openNoteCalls.map((c) => c.path)).toEqual(["Daily/2026-05-28.md"]);
+  });
+
   it("notifies when the current entry cannot be opened on a 'self' row click", async () => {
     const journal = dailyWithRows([
       {

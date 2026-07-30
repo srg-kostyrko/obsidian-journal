@@ -14,6 +14,7 @@ import {
   JournalsRepository,
   NumberingService,
   OpenDateFlow,
+  useIndexVersion,
   type JournalConfig,
   type NavBlockRow,
 } from "@/journals";
@@ -47,7 +48,12 @@ const notices = useService(NoticeService);
 
 const today = computed(() => Clock.now().format("YYYY-MM-DD") as AnchorString);
 
-const entry = computed(() => index.entryByAnchor(props.journal.name, props.refDate));
+const indexVersion = useIndexVersion();
+
+const entry = computed(() => {
+  void indexVersion.value;
+  return index.entryByAnchor(props.journal.name, props.refDate);
+});
 
 const shelfJournals = computed<readonly JournalConfig[]>(() =>
   resolveLinkCandidates(props.journal.name, [...journals.find().list()], [...shelves.find().list()]),
