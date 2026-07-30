@@ -44,7 +44,11 @@ const customColor = computed<string>({
       <option value="custom">{{ m.ui_color_kind_label({ kind: "custom" }) }}</option>
     </UiDropdown>
     <template v-if="model.type === 'theme'">
-      <UiDropdown v-model="themeName" :aria-label="m.ui_color_theme_variable_label()">
+      <UiDropdown
+        v-model="themeName"
+        class="ui-color-settings-picker__theme"
+        :aria-label="m.ui_color_theme_variable_label()"
+      >
         <option value="">{{ m.ui_color_theme_variable_label() }}</option>
         <option v-for="colorName of themeColorNames" :key="colorName" :value="colorName">
           {{ themeColorLabel(colorName) }}
@@ -66,6 +70,12 @@ const customColor = computed<string>({
   display: inline-flex;
   gap: var(--size-2-2);
   align-items: center;
+}
+/* The longest theme-variable label ("Background modifier active hover") would otherwise
+   set the select's intrinsic width and stretch the row. */
+.ui-color-settings-picker__theme {
+  max-inline-size: 12em;
+  text-overflow: ellipsis;
 }
 .ui-color-settings-picker__swatch {
   inline-size: 28px;
