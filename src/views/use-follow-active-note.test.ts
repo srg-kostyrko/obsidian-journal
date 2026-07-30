@@ -149,6 +149,17 @@ describe("useFollowActiveNote", () => {
     expect(followed).toEqual(["2026-05-01"]);
   });
 
+  it("writes the week's representative day even when the week contains the view's date", async () => {
+    // ISO test calendar: the week anchored Mon 2025-12-29 is week 1 of 2026, so 2025-12-31
+    // sits inside the week but not on its representative day, Thu 2026-01-01.
+    const { followed, active } = mount({ currentDate: "2025-12-31" });
+
+    active.setActive({ journalName: "weekly", anchor: "2025-12-29" as AnchorString });
+    await nextTick();
+
+    expect(followed).toEqual(["2026-01-01"]);
+  });
+
   it("holds the view's date when the opened custom interval contains it", async () => {
     // The sprint anchored 2026-01-05 repeats every two weeks, so 2026-07-06 starts one that
     // runs through 2026-07-19.

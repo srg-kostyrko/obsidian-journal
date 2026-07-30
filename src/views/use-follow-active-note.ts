@@ -27,6 +27,18 @@ export function useFollowActiveNote(options: FollowActiveNoteOptions): void {
       .getOr(false);
   }
 
+  // Weeks are the only period whose representative day (the one carrying the week-year)
+  // differs from its start; there, the representative day is itself information the view
+  // must move to carry, so holding on the current date would hide the cross-year change.
+  function representativeIsStart(entry: ActiveEntryRef): boolean {
+    return cycle
+      .startOf(entry.journalName, entry.anchor)
+      .flatMap((start) =>
+        cycle.representativeOf(entry.journalName, entry.anchor).map((representative) => representative.isSame(start)),
+      )
+      .getOr(true);
+  }
+
   // Watching the setting alongside the active note means turning following on syncs the view
   // to the note already open, rather than waiting for the next note switch to take effect.
   // currentDate is read inside the callback on purpose: the view's date moving is not itself
@@ -38,9 +50,7 @@ export function useFollowActiveNote(options: FollowActiveNoteOptions): void {
       if (active === null || !options.inScope(active.journalName)) return;
       // The view is already inside the opened note's own period, so moving the date would
       // scroll away from what the user is looking at without showing anything new.
-      if (coversCurrentDate(active)) return;
-      // A week's stored anchor is its first day; the representative day is the one whose
-      // calendar year is the week-year, which is what a rendered {{date}} must carry.
+      if (coversCurrentDate(active) && representativeIsStart(active)) return;
       const date = cycle
         .representativeOf(active.journalName, active.anchor)
         .map((day) => day.toAnchor())

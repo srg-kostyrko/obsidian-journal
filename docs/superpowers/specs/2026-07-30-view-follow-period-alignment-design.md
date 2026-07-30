@@ -115,9 +115,15 @@ Domain scenarios above stay in domain language; concrete names live here.
 takes a new `currentDate: () => AnchorString` option. It resolves the opened
 note's span with `CycleService.startOf/endOf(journalName, anchor)` — the pairing
 `nav-row-context.ts:50-51` already uses — and returns without calling `onFollow`
-when `spanContains(currentDate(), start, end)`. Otherwise it proceeds exactly as
-today, through `representativeOf`. When either bound is `None`, because a journal
-was deleted mid-flight, it falls through to moving, which is today's behaviour.
+when `spanContains(currentDate(), start, end)` **and** the note's
+`representativeOf` day is the same as its `startOf` day. Otherwise it proceeds
+exactly as today, through `representativeOf`. The second condition matters for
+exactly one period kind: a week's representative day (the one carrying the
+week-year) can differ from its start, and that difference is itself information
+the view must move to carry, so a week whose span contains the current date
+still follows rather than holding. When either bound is `None`, because a
+journal was deleted mid-flight, it falls through to moving, which is today's
+behaviour.
 
 **Window** (`src/views/blocks/ui/use-window-anchor.ts`, block level). Unchanged
 in shape. What changes is `monthWindowContains` in `follow-visibility.ts`: the
@@ -178,7 +184,11 @@ functionality.
    but `CustomIntervalsBlock` resolves its own window from the view's date: with
    that block set to a `week` window, viewing July with the date on July 15 and
    opening July's month note now holds the week of the 15th where v2 swung to the
-   week of the 1st. Opening a month note should not drag a day-level cursor.
+   week of the 1st. Opening a month note should not drag a day-level cursor. This
+   snap is suppressed only where the note's representative day is the same as
+   its period's start — true for day, month, quarter, year and custom-interval
+   notes — so it leaves weeks alone: a weekly note still moves the date to its
+   representative day even when the view's date already sits inside that week.
 
    The same applies at mount: a view opening while this month's month note is
    active starts on today rather than on the 1st, since the guard runs on the
