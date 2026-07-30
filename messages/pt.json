@@ -139,6 +139,7 @@
 	],
 	"nav_block_row_field_template": "Modelo",
 	"nav_block_row_field_font_size": "Tamanho da fonte",
+	"nav_block_row_field_font_size_hint": "Relativo ao tamanho normal da fonte: 1 significa o mesmo tamanho do texto normal.",
 	"nav_block_row_field_text_style": "Estilo do texto",
 	"nav_block_row_field_bold": "Negrito",
 	"nav_block_row_field_italic": "Itálico",

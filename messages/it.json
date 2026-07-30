@@ -139,6 +139,7 @@
 	],
 	"nav_block_row_field_template": "Modello",
 	"nav_block_row_field_font_size": "Dimensione del carattere",
+	"nav_block_row_field_font_size_hint": "Relativo alla dimensione normale del carattere: 1 significa la stessa dimensione del testo normale.",
 	"nav_block_row_field_text_style": "Stile del testo",
 	"nav_block_row_field_bold": "Grassetto",
 	"nav_block_row_field_italic": "Corsivo",

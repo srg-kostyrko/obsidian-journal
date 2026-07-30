@@ -139,6 +139,7 @@
 	],
 	"nav_block_row_field_template": "模板",
 	"nav_block_row_field_font_size": "字体大小",
+	"nav_block_row_field_font_size_hint": "相对于正常字体大小：1 表示与正文文字大小相同。",
 	"nav_block_row_field_text_style": "文本样式",
 	"nav_block_row_field_bold": "粗体",
 	"nav_block_row_field_italic": "斜体",

@@ -139,6 +139,7 @@
 	],
 	"nav_block_row_field_template": "Plantilla",
 	"nav_block_row_field_font_size": "Tamaño de fuente",
+	"nav_block_row_field_font_size_hint": "Relativo al tamaño de fuente normal: 1 significa el mismo tamaño que el texto normal.",
 	"nav_block_row_field_text_style": "Estilo de texto",
 	"nav_block_row_field_bold": "Negrita",
 	"nav_block_row_field_italic": "Itálico",

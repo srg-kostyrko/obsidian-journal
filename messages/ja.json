@@ -139,6 +139,7 @@
 	],
 	"nav_block_row_field_template": "テンプレート",
 	"nav_block_row_field_font_size": "フォントサイズ",
+	"nav_block_row_field_font_size_hint": "通常のフォントサイズに対する相対値です。1 は通常のテキストと同じサイズであることを意味します。",
 	"nav_block_row_field_text_style": "文字スタイル",
 	"nav_block_row_field_bold": "太字",
 	"nav_block_row_field_italic": "イタリック",

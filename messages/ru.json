@@ -139,6 +139,7 @@
 	],
 	"nav_block_row_field_template": "Шаблон",
 	"nav_block_row_field_font_size": "размер шрифта",
+	"nav_block_row_field_font_size_hint": "Относительно обычного размера шрифта: 1 означает тот же размер, что и обычный текст.",
 	"nav_block_row_field_text_style": "Стиль текста",
 	"nav_block_row_field_bold": "Жирный",
 	"nav_block_row_field_italic": "Курсив",

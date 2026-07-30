@@ -139,6 +139,7 @@
 	],
 	"nav_block_row_field_template": "주형",
 	"nav_block_row_field_font_size": "글꼴 크기",
+	"nav_block_row_field_font_size_hint": "일반 글꼴 크기에 대한 상대값입니다. 1이면 일반 텍스트와 같은 크기입니다.",
 	"nav_block_row_field_text_style": "텍스트 스타일",
 	"nav_block_row_field_bold": "굵게",
 	"nav_block_row_field_italic": "이탤릭체",

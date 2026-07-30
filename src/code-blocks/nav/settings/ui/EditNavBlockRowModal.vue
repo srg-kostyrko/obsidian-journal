@@ -155,6 +155,7 @@ const onSubmit = handleSubmit((row) => {
     </UiSettingRow>
 
     <UiSettingRow :name="m.nav_block_row_field_font_size()">
+      <template #description>{{ m.nav_block_row_field_font_size_hint() }}</template>
       <UiNumberInput v-model="fontSize" :min="0.5" :step="0.1" />
     </UiSettingRow>
 

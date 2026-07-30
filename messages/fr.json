@@ -139,6 +139,7 @@
 	],
 	"nav_block_row_field_template": "Modèle",
 	"nav_block_row_field_font_size": "Taille de la police",
+	"nav_block_row_field_font_size_hint": "Relatif à la taille de police normale : 1 signifie la même taille que le texte normal.",
 	"nav_block_row_field_text_style": "Style de texte",
 	"nav_block_row_field_bold": "Gras",
 	"nav_block_row_field_italic": "Italique",
