@@ -28,6 +28,7 @@ import UiNumberInput from "@/ui/UiNumberInput.vue";
 import UiSettingRow from "@/ui/UiSettingRow.vue";
 import UiTextInput from "@/ui/UiTextInput.vue";
 import UiToggle from "@/ui/UiToggle.vue";
+import UiToggleGroup from "@/ui/UiToggleGroup.vue";
 
 import { buildNavRowContext } from "../../nav-row-context";
 
@@ -87,6 +88,21 @@ const [link] = defineField("link");
 const [journal] = defineField("journal");
 const [addDecorations] = defineField("addDecorations");
 
+type TextStyle = "bold" | "italic";
+
+const textStyleOptions: { value: TextStyle; label: string; tooltip: string; class: string }[] = [
+  { value: "bold", label: "B", tooltip: m.nav_block_row_field_bold(), class: "glyph-bold" },
+  { value: "italic", label: "I", tooltip: m.nav_block_row_field_italic(), class: "glyph-italic" },
+];
+
+const textStyles = computed<TextStyle[]>({
+  get: () => [...(bold.value ? (["bold"] as const) : []), ...(italic.value ? (["italic"] as const) : [])],
+  set: (styles) => {
+    bold.value = styles.includes("bold");
+    italic.value = styles.includes("italic");
+  },
+});
+
 const shelfMates = useShelfMateJournals(props.journalName);
 
 const numberingVariableNames = computed<readonly string[]>(() =>
@@ -142,12 +158,8 @@ const onSubmit = handleSubmit((row) => {
       <UiNumberInput v-model="fontSize" :min="0.5" :step="0.1" />
     </UiSettingRow>
 
-    <UiSettingRow :name="m.nav_block_row_field_bold()">
-      <UiToggle v-model="bold" />
-    </UiSettingRow>
-
-    <UiSettingRow :name="m.nav_block_row_field_italic()">
-      <UiToggle v-model="italic" />
+    <UiSettingRow :name="m.nav_block_row_field_text_style()">
+      <UiToggleGroup v-model="textStyles" :options="textStyleOptions" />
     </UiSettingRow>
 
     <UiSettingRow :name="m.common_label_text_color()">
@@ -193,5 +205,11 @@ const onSubmit = handleSubmit((row) => {
 .form-error {
   color: var(--text-error);
   display: block;
+}
+:deep(.glyph-bold) {
+  font-weight: var(--font-bold);
+}
+:deep(.glyph-italic) {
+  font-style: italic;
 }
 </style>

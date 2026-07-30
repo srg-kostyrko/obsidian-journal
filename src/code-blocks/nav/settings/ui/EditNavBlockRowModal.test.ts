@@ -109,6 +109,34 @@ describe("EditNavBlockRowModal", () => {
     expect(submit.mock.calls[0]?.[0]).toMatchObject({ row: { template: "{{date:YYYY}}" } });
   });
 
+  it("submits a bold row when the bold text style is toggled on", async () => {
+    const { submit } = mountModal({});
+    await userEvent.type(screen.getByLabelText(m.nav_block_row_field_template()), "x");
+    await userEvent.click(screen.getByRole("button", { name: m.nav_block_row_field_bold() }));
+    await userEvent.click(screen.getByText(m.common_action_create()));
+    await waitFor(() => {
+      expect(submit).toHaveBeenCalledTimes(1);
+    });
+    expect(submit.mock.calls[0]?.[0]).toMatchObject({ row: { bold: true, italic: false } });
+  });
+
+  it("marks the italic text style as pressed for a row that is already italic", () => {
+    mountModal({
+      row: {
+        template: "{{date:YYYY}}",
+        fontSize: 1,
+        bold: false,
+        italic: true,
+        color: { type: "theme", name: "text-normal" },
+        background: { type: "transparent" },
+        link: "none",
+        journal: "",
+        addDecorations: false,
+      },
+    });
+    expect(screen.getByRole("button", { name: m.nav_block_row_field_italic(), pressed: true })).toBeTruthy();
+  });
+
   it("does not submit when link=journal but journal is empty", async () => {
     const { submit } = mountModal({});
     await userEvent.type(screen.getByLabelText(m.nav_block_row_field_template()), "x");

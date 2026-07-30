@@ -12,11 +12,12 @@ runs in CI. Adding a locale or a new domain noun means extending `GLOSSARY` ther
 
 ## Canonical terms
 
-| en          | de      | es      | fr      | it       | ja         | ko   | pt         | ru      | uk      | zh   |
-| ----------- | ------- | ------- | ------- | -------- | ---------- | ---- | ---------- | ------- | ------- | ---- |
-| **journal** | Journal | diario  | journal | diario   | ジャーナル | 저널 | diário     | журнал  | журнал  | 日记 |
-| **note**    | Notiz   | nota    | note    | nota     | ノート     | 노트 | nota       | заметка | нотатка | 笔记 |
-| **shelf**   | Regal   | estante | étagère | scaffale | 棚         | 선반 | prateleira | полка   | полиця  | 书架 |
+| en          | de      | es      | fr      | it        | ja         | ko   | pt         | ru      | uk      | zh   |
+| ----------- | ------- | ------- | ------- | --------- | ---------- | ---- | ---------- | ------- | ------- | ---- |
+| **journal** | Journal | diario  | journal | diario    | ジャーナル | 저널 | diário     | журнал  | журнал  | 日记 |
+| **note**    | Notiz   | nota    | note    | nota      | ノート     | 노트 | nota       | заметка | нотатка | 笔记 |
+| **shelf**   | Regal   | estante | étagère | scaffale  | 棚         | 선반 | prateleira | полка   | полиця  | 书架 |
+| **bold**    | Fett    | negrita | gras    | grassetto | 太字       | 굵게 | negrito    | жирный  | жирний  | 粗体 |
 
 Grammatical gender, where it decides agreement: `Journal` n. / `Notiz` f. / `Regal` n.
 (de) · `diario` m. / `nota` f. / `estante` m. (es) · `journal` m. / `note` f. /
@@ -32,6 +33,11 @@ Grammatical gender, where it decides agreement: `Journal` n. / `Notiz` f. / `Reg
   期刊 (a periodical) and 日记. 日记 is the diary sense the plugin actually means.
   **日志 is still correct for the logging feature** — the checker allows it under
   `logging_*` keys and nowhere else.
+- **`bold`.** Not a domain noun, but it failed the same way: eight of ten locales read
+  it as the courage adjective rather than the typographic weight (de "Deutlich", es
+  "Atrevido", fr "Audacieux", pt "Audacioso", ru "Смелый", ja 大胆な, ko 용감한, zh
+  大胆的). It is in the table because the nav-row style control labels the button with
+  a bare `B` glyph, so this string is the only name the control has.
 
 ## What the checker does not catch
 

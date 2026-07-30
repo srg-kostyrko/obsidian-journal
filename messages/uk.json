@@ -139,6 +139,7 @@
 	],
 	"nav_block_row_field_template": "Шаблон",
 	"nav_block_row_field_font_size": "Розмір шрифту",
+	"nav_block_row_field_text_style": "Стиль тексту",
 	"nav_block_row_field_bold": "Жирний шрифт",
 	"nav_block_row_field_italic": "Курсив",
 	"common_label_text_color": "Колір тексту",

@@ -13,43 +13,53 @@ const GLOSSARY = {
     { term: "journal", banned: /Zeitschrift|Tagebuch|Fachblatt/i, use: "Journal" },
     { term: "note", banned: /\bNoten?\b|Kontoauszug|Geldschein|Schuldschein|Banknote/i, use: "Notiz" },
     { term: "shelf", banned: /Bücherregal/i, use: "Regal" },
+    { term: "bold", banned: /deutlich|kühn|mutig|wagemutig/i, use: "Fett" },
   ],
   es: [
     { term: "journal", banned: /revista|periódico|cuaderno/i, use: "diario" },
     { term: "note", banned: /pagaré|billete|apunte|asiento contable/i, use: "nota" },
+    { term: "bold", banned: /atrevid|audaz|valiente/i, use: "negrita" },
   ],
   fr: [
     { term: "journal", banned: /revue|magazine/i, use: "journal" },
     { term: "note", banned: /billet|coupure|écriture comptable/i, use: "note" },
+    { term: "bold", banned: /audacieu|hardi|intrépide/i, use: "gras" },
   ],
   it: [
     { term: "journal", banned: /rivista|giornal[ei]\b/i, use: "diario" },
     { term: "note", banned: /banconota|cambiale|scrittura contabile/i, use: "nota" },
+    { term: "bold", banned: /audac|coraggios|ardit/i, use: "grassetto" },
   ],
   ja: [
     { term: "journal", banned: /雑誌|仕訳帳|定期刊行物/, use: "ジャーナル" },
     { term: "note", banned: /音符|紙幣|手形|伝票|メモ|注記/, use: "ノート" },
+    { term: "bold", banned: /大胆|勇敢/, use: "太字" },
   ],
   ko: [
     { term: "journal", banned: /잡지|정기간행물/, use: "저널" },
     { term: "note", banned: /음표|어음|지폐|전표|메모/, use: "노트" },
+    { term: "bold", banned: /용감|대담/, use: "굵게" },
   ],
   pt: [
     { term: "journal", banned: /revista|jornal/i, use: "diário" },
     { term: "note", banned: /promissória|cédula|anotaç/i, use: "nota" },
+    { term: "bold", banned: /audacios|audaz|ousad/i, use: "negrito" },
   ],
   ru: [
     { term: "journal", banned: /дневник|бухгалтерск/i, use: "журнал" },
     { term: "note", banned: /записк|облигаци|вексел|\bнот[аыуеой]\b|\bсчёт|\bсчет/i, use: "заметка" },
+    { term: "bold", banned: /смел|отважн|дерзк/i, use: "жирный" },
   ],
   uk: [
     { term: "journal", banned: /щоденник|бухгалтерськ/i, use: "журнал" },
     { term: "note", banned: /записк|облігаці|вексел|\bнот[аиуоею]\b|\bрахунок/i, use: "нотатка" },
+    { term: "bold", banned: /смілив|відважн|зухвал/i, use: "жирний" },
   ],
   zh: [
     // 日志 is the right word for the logging feature, and only there.
     { term: "journal", banned: /期刊|杂志|日志|日记账/, use: "日记", allowIn: /^logging_/ },
     { term: "note", banned: /音符|票据|钞票|凭证|分录|便条|备注/, use: "笔记" },
+    { term: "bold", banned: /大胆|勇敢/, use: "粗体" },
   ],
 };
 
