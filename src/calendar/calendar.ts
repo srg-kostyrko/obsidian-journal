@@ -1,6 +1,13 @@
 import { moment } from "obsidian";
+import { shallowRef, triggerRef } from "vue";
 
 export const CUSTOM_LOCALE = "custom-journal-locale";
+
+// The week configuration lives in moment's locale registry, which no Vue effect can observe:
+// a mounted grid keeps its cached weeks until some unrelated change happens to invalidate it.
+// Every date value is built through localMoment(), so holding the locale in a ref there makes
+// anything derived from a date depend on it, and applyWeekConfig triggers the ref to re-run them.
+const weekLocale = shallowRef(CUSTOM_LOCALE);
 
 // A never-written clone of the locale as it stood before this plugin first touched it.
 // applyWeekConfig with propagateToGlobal rewrites the global locale's week, and moment's locale
@@ -62,6 +69,7 @@ export class Calendar {
     }
 
     moment.locale(currentLocale);
+    triggerRef(weekLocale);
   }
 
   localeWeek(): WeekConfig {
@@ -93,8 +101,9 @@ export function localMoment(
   strict?: boolean,
 ): moment.Moment {
   const m = moment as unknown as MomentConstructor;
+  const locale = weekLocale.value;
   // The locale has to be supplied at parse time, not applied to the result: week-based tokens
   // (w, W, gg, GG) resolve against the locale's week config while parsing, and relabelling an
   // instance afterwards cannot re-interpret a week number that has already been resolved.
-  return m(input, format, CUSTOM_LOCALE, strict).locale(CUSTOM_LOCALE);
+  return m(input, format, locale, strict).locale(locale);
 }

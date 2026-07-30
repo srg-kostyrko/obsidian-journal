@@ -1,6 +1,7 @@
 import userEvent from "@testing-library/user-event";
 import { cleanup, render, screen } from "@testing-library/vue";
 import { afterEach, beforeEach, describe, expect, it } from "vitest";
+import { nextTick } from "vue";
 
 import { DayPeriod, MonthPeriod, OpenInterval } from "@/calendar";
 import type { Period } from "@/calendar";
@@ -104,6 +105,18 @@ describe("CalendarMonthView", () => {
         .slice(0, 7)
         .map((c) => date(c.dataset.anchor!).format("ddd"));
       expect(headers).toEqual(firstWeek);
+    });
+
+    it("reorders the header row when the week config changes while mounted", async () => {
+      const outerPeriod = MonthPeriod.containing(date("2024-05-15"));
+      setWeek(1, 4);
+      mount({ outerPeriod, selected: null });
+
+      setWeek(0, 6);
+      await nextTick();
+
+      const headers = screen.getAllByTestId("weekday-header").map((h) => h.textContent);
+      expect(headers).toEqual(["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"]);
     });
   });
 });

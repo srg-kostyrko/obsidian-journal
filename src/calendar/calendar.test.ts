@@ -1,5 +1,6 @@
 import { moment } from "obsidian";
 import { afterEach, beforeEach, describe, expect, it } from "vitest";
+import { computed } from "vue";
 
 import { Calendar, CUSTOM_LOCALE, localMoment } from "./calendar";
 
@@ -119,6 +120,17 @@ describe("Calendar", () => {
       moment.updateLocale(priorLocale, { week: { dow: 0, doy: 6 } });
 
       expect(localMoment("2026-W1", "YYYY-[W]w", true).format("YYYY-MM-DD")).toBe("2025-12-29");
+    });
+
+    it("re-runs a computed that reads a date when the week config changes", () => {
+      const calendar = new Calendar();
+      calendar.applyWeekConfig({ dow: 1, doy: 4 }, { propagateToGlobal: false });
+      const weekStart = computed(() => localMoment("2024-05-15", "YYYY-MM-DD", true).startOf("week").format("dd"));
+      expect(weekStart.value).toBe("Mo");
+
+      calendar.applyWeekConfig({ dow: 0, doy: 6 }, { propagateToGlobal: false });
+
+      expect(weekStart.value).toBe("Su");
     });
   });
 
