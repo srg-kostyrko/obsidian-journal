@@ -34,9 +34,14 @@ describe("monthWindowContains", () => {
     expect(monthWindowContains(a("2026-09-10"), a("2026-05-15"), 0, 0)).toBe(false);
   });
 
-  it("includes a spillover day from an adjacent month shown in the grid", () => {
-    // The May 2026 grid renders the trailing days of April in its first week.
-    expect(monthWindowContains(a("2026-04-30"), a("2026-05-15"), 0, 0)).toBe(true);
+  it("excludes a spillover day of an adjacent month the grid only paints", () => {
+    // The May 2026 grid renders the trailing days of April in its first week, but April is
+    // not a month this window displays.
+    expect(monthWindowContains(a("2026-04-30"), a("2026-05-15"), 0, 0)).toBe(false);
+  });
+
+  it("includes a day of an adjacent month the window itself displays", () => {
+    expect(monthWindowContains(a("2026-04-30"), a("2026-05-15"), 1, 0)).toBe(true);
   });
 });
 

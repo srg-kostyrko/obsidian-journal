@@ -9,10 +9,13 @@ export function spanContains(anchor: AnchorString, start: AnchorString, end: Anc
 export function monthWindowContains(anchor: AnchorString, focus: AnchorString, before: number, after: number): boolean {
   const focusMonth = periodOfKind("month", CalendarDate.fromAnchor(focus)) as MonthPeriod;
   const months = periodWindow(focusMonth, before, after);
-  // Expand to full weeks so the check matches the grid's spillover days, mirroring v2.
-  const gridStart = periodOfKind("week", (months.at(0) ?? focusMonth).start).start;
-  const gridEnd = periodOfKind("week", (months.at(-1) ?? focusMonth).end).end;
-  return spanContains(anchor, gridStart.toAnchor(), gridEnd.toAnchor());
+  // Spillover days painted in the grid's margins belong to a neighbouring month this window
+  // does not display, so they are not "already shown" for the purpose of holding a layout.
+  return spanContains(
+    anchor,
+    (months.at(0) ?? focusMonth).start.toAnchor(),
+    (months.at(-1) ?? focusMonth).end.toAnchor(),
+  );
 }
 
 export function weekWindowContains(anchor: AnchorString, focus: AnchorString, before: number, after: number): boolean {

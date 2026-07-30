@@ -133,4 +133,28 @@ describe("MonthCalendarBlock", () => {
 
     expect(getAllByTestId("month-stub")[0]?.dataset.month).toBe("2026-03-01");
   });
+
+  it("re-lays-out for a followed date whose month it only paints in its margin", async () => {
+    const refDate = ref("2026-04-15" as AnchorString);
+    const refDateOrigin = ref<RefDateOrigin>("navigate");
+    const { getAllByTestId } = mountBlock(baseConfig, { refDate, refDateOrigin });
+
+    refDateOrigin.value = "follow";
+    refDate.value = "2026-05-01" as AnchorString;
+    await nextTick();
+
+    expect(getAllByTestId("month-stub")[0]?.dataset.month).toBe("2026-05-01");
+  });
+
+  it("holds its layout for a followed date in an adjacent month it displays", async () => {
+    const refDate = ref("2026-04-15" as AnchorString);
+    const refDateOrigin = ref<RefDateOrigin>("navigate");
+    const { getAllByTestId } = mountBlock({ ...baseConfig, after: 1 }, { refDate, refDateOrigin });
+
+    refDateOrigin.value = "follow";
+    refDate.value = "2026-05-01" as AnchorString;
+    await nextTick();
+
+    expect(getAllByTestId("month-stub")[0]?.dataset.month).toBe("2026-04-01");
+  });
 });
