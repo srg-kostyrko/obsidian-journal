@@ -1,1681 +1,1394 @@
 {
-	"$schema": "https://inlang.com/schema/inlang-message-format",
-	"calendar_apply_globally_desc": "如果禁用，周配置设置仅适用于日记中的日期，不会影响其他插件或 Obsidian 本身创建的日期。",
-	"calendar_apply_globally_restart_hint": "您可能需要重启 Obsidian 才能使更改生效。",
-	"calendar_apply_globally_title": "将周配置应用于 Vault 中的所有日期。",
-	"calendar_appearance_active_background": "活动 — 背景",
-	"calendar_appearance_active_text": "活动 — 文本",
-	"calendar_appearance_section_title": "日历高亮显示",
-	"calendar_appearance_description": [
-		{
-			"declarations": [
-				"input layer",
-				"input target"
-			],
-			"selectors": [
-				"layer",
-				"target"
-			],
-			"match": {
-				"layer=text,target=today": "日历单元格中今天日期的文本颜色。",
-				"layer=background,target=today": "今天日期的日历单元格背景颜色。",
-				"layer=text,target=active": "当前打开的笔记所在的日历单元格的文本颜色。",
-				"layer=background,target=active": "当前打开的笔记所在的日历单元格的背景颜色。"
-			}
-		}
-	],
-	"calendar_appearance_today_background": "今天——背景",
-	"calendar_appearance_today_text": "今天 — 文本",
-	"common_label_back": "返回列表",
-	"common_label_calendar": "日历",
-	"common_pick_a_date": "选择一个日期",
-	"calendar_picker_first_week_desc": "一月份的某一天（1-7日），必须包含在每年的第一周内。例如，1月4日表示第一周包含1月4日。",
-	"calendar_picker_first_week_label": "新年第一周",
-	"calendar_picker_in_use_marker": "目前使用",
-	"calendar_picker_start_week_on": "本周开始",
-	"calendar_picker_start_week_on_desc": "哪一天作为一周的第一天？",
-	"calendar_picker_update_action": "更新",
-	"calendar_picker_use_action": "使用",
-	"calendar_preset_description": [
-		{
-			"declarations": [
-				"input preset"
-			],
-			"selectors": [
-				"preset"
-			],
-			"match": {
-				"preset=locale": "使用 Obsidian 当前区域设置定义的周设置。",
-				"preset=iso-8601": "一周从星期一开始。新年第一周包含第一个星期四（1月4日）。",
-				"preset=western": "一周从星期日开始。新年第一周包含第一个星期六（1月1日）。",
-				"preset=middle-eastern": "一周从星期六开始。新年第一周包括第一个星期五（1月1日）。",
-				"preset=custom": "确定星期几为第一天，以及如何确定一年中的第一周。"
-			}
-		}
-	],
-	"calendar_preset_custom_summary": "一周从{dayName}开始。一年中的第一周包括一月{firstDayOfYear} 。",
-	"calendar_preset_iso_used": "欧盟（葡萄牙除外）和大多数其他欧洲国家，亚洲和大洋洲的大部分地区。",
-	"calendar_preset_middle_eastern_used": "中东大部分地区。",
-	"calendar_preset_name": [
-		{
-			"declarations": [
-				"input preset"
-			],
-			"selectors": [
-				"preset"
-			],
-			"match": {
-				"preset=locale": "遵循系统区域设置",
-				"preset=iso-8601": "ISO 8601",
-				"preset=western": "西方传统",
-				"preset=middle-eastern": "中东",
-				"preset=custom": "风俗"
-			}
-		}
-	],
-	"common_week_configuration": "周配置",
-	"calendar_preset_western_used": "加拿大、美国、冰岛、葡萄牙、日本、台湾、泰国、香港、澳门、以色列、埃及、南非、菲律宾以及拉丁美洲的大部分地区。",
-	"calendar_week_config_change": "改变",
-	"calendar_week_config_description": "确定一周的开始日期以及如何确定一年中的第一周——这会影响周数。",
-	"code_blocks_nav_not_connected": "笔记未与日记关联",
-	"code_blocks_home_empty": "暂无日记可供显示。请查看该栏目的显示和书架选项。",
-	"code_blocks_nav_next": "下一个",
-	"code_blocks_nav_previous": "以前的",
-	"nav_block_section_title": "导航模块",
-	"nav_block_section_mode_label": "模式",
-	"nav_block_section_mode_option": [
-		{
-			"declarations": [
-				"input kind"
-			],
-			"selectors": [
-				"kind"
-			],
-			"match": {
-				"kind=create": "创建新笔记",
-				"kind=existing": "打开现有笔记"
-			}
-		}
-	],
-	"nav_block_section_use_defaults": [
-		{
-			"declarations": [
-				"input writeType"
-			],
-			"selectors": [
-				"writeType"
-			],
-			"match": {
-				"writeType=day": "使用默认设置记录每日笔记",
-				"writeType=week": "每周笔记使用默认设置",
-				"writeType=month": "月度笔记使用默认设置",
-				"writeType=quarter": "使用季度笔记的默认值",
-				"writeType=year": "年度笔记使用默认值",
-				"writeType=*": "使用默认值"
-			}
-		}
-	],
-	"block_rows_decorate_whole_label": "装饰整个方块",
-	"block_rows_empty": "暂无行。添加一行。",
-	"block_rows_add_row": "添加行",
-	"block_rows_edit_tooltip": "编辑行",
-	"block_rows_delete_tooltip": "删除行",
-	"common_action_move_up": "向上",
-	"common_action_move_down": "向下",
-	"interval_block_section_title": "日历间隔行",
-	"nav_block_row_modal_title": [
-		{
-			"declarations": [
-				"input mode"
-			],
-			"selectors": [
-				"mode"
-			],
-			"match": {
-				"mode=add": "添加导航块行",
-				"mode=edit": "编辑导航块行"
-			}
-		}
-	],
-	"nav_block_row_field_template": "模板",
-	"nav_block_row_field_font_size": "字体大小",
-	"nav_block_row_field_font_size_hint": "相对于正常字体大小：1 表示与正文文字大小相同。",
-	"nav_block_row_field_text_style": "文本样式",
-	"nav_block_row_field_bold": "粗体",
-	"nav_block_row_field_italic": "斜体",
-	"common_label_text_color": "文本颜色",
-	"common_label_background_color": "背景颜色",
-	"nav_block_row_field_link": "关联",
-	"common_label_journal": "日记",
-	"nav_block_row_field_add_decorations": "添加装饰",
-	"nav_block_row_link_option": [
-		{
-			"declarations": [
-				"input kind"
-			],
-			"selectors": [
-				"kind"
-			],
-			"match": {
-				"kind=none": "没有任何",
-				"kind=self": "自己",
-				"kind=journal": "日记",
-				"kind=day": "天",
-				"kind=week": "星期",
-				"kind=month": "月",
-				"kind=quarter": "四分之一",
-				"kind=year": "年"
-			}
-		}
-	],
-	"nav_block_row_template_required": "必须使用模板。",
-	"nav_block_row_journal_required": "选择日记。",
-	"nav_block_row_resolved_preview": "已解决： {text}",
-	"command_add": "添加命令",
-	"command_context_open_note_clarifier": "（使用打开的笔记的日期，或今天的日期）",
-	"command_context_only_open_note_clarifier": "（需要打开一个日记笔记）",
-	"command_context_option": [
-		{
-			"declarations": [
-				"input context"
-			],
-			"selectors": [
-				"context"
-			],
-			"match": {
-				"context=today": "今天",
-				"context=open_note": "打开的笔记的日期，或今天",
-				"context=only_open_note": "仅打开的笔记的日期"
-			}
-		}
-	],
-	"command_empty": [
-		{
-			"declarations": [
-				"input scope"
-			],
-			"selectors": [
-				"scope"
-			],
-			"match": {
-				"scope=global": "尚未创建任何全局命令。",
-				"scope=journal": "目前还没有为该日记创建任何命令。",
-				"scope=shelf": "目前还没有为该书架创建任何命令。"
-			}
-		}
-	],
-	"command_section_title": "命令",
-	"command_delete_modal_confirm": "删除命令“ {name} \"？",
-	"command_delete": "删除命令",
-	"command_edit": "编辑命令",
-	"command_edit_tooltip": "编辑{name}",
-	"command_icon_required_error": "选择一个图标，以便在功能区中显示此命令。",
-	"command_insert_date_link": "插入日记笔记链接",
-	"command_label_today": "打开今天的笔记",
-	"command_label_tomorrow": "打开明天的笔记",
-	"command_label_yesterday": "打开昨天的笔记",
-	"command_modal_context_description": "选择命令将哪个日期作为当前日期。",
-	"command_modal_context_label": "语境",
-	"command_modal_context_only_open_note_hint": "仅在日记笔记打开时运行，并使用该笔记的日期。",
-	"command_modal_context_open_note_hint": "使用已打开的日记笔记的日期；若没有打开日记笔记，则使用今天的日期。",
-	"common_label_icon": "图标",
-	"common_label_name": "姓名",
-	"command_modal_open_mode_label": "打开笔记",
-	"common_show_in_ribbon": "以丝带形式展示",
-	"command_modal_type_label": "当命令运行时",
-	"command_modal_write_type_label": "笔记类型",
-	"command_name_prefix_hint": [
-		{
-			"declarations": [
-				"input kind"
-			],
-			"selectors": [
-				"kind"
-			],
-			"match": {
-				"kind=journal": "在命令面板中，日记名称会自动添加到命令名称前面。",
-				"kind=shelf": "在命令面板中，架子名称会自动添加到命令名称前面。"
-			}
-		}
-	],
-	"command_name_required_error": "命令名称为必填项。",
-	"command_name_unique_error": "命令名称必须唯一。",
-	"command_open_mode_option": [
-		{
-			"declarations": [
-				"input mode"
-			],
-			"selectors": [
-				"mode"
-			],
-			"match": {
-				"mode=active": "替换当前笔记",
-				"mode=tab": "在新标签页中",
-				"mode=split": "在当前笔记旁边",
-				"mode=window": "在弹出窗口中"
-			}
-		}
-	],
-	"command_open_next": "打开下一张笔记",
-	"command_open_previous": "打开上一条笔记",
-	"command_open_view": "打开 {name}",
-	"command_view_change_shelf": "更改 {name} 中的架子",
-	"shelf_picker_placeholder": "搜索架子",
-	"command_palette_journal_name": "{journal}: {name}",
-	"command_palette_shelf_name": "架子：{shelf}：{name}",
-	"command_open_no_next": "此笔记之后没有下一首了。",
-	"command_open_no_previous": "此前没有其他笔记。",
-	"command_type_label": [
-		{
-			"declarations": [
-				"input type",
-				"input writeType"
-			],
-			"selectors": [
-				"type",
-				"writeType"
-			],
-			"match": {
-				"type=same,writeType=day": "打开当前每日笔记",
-				"type=same,writeType=week": "打开当前周报",
-				"type=same,writeType=month": "打开当前月度笔记",
-				"type=same,writeType=quarter": "打开当前季度笔记",
-				"type=same,writeType=year": "打开当前年度笔记",
-				"type=same,writeType=custom": "打开当前自定义笔记",
-				"type=next,writeType=day": "打开下一份每日笔记",
-				"type=next,writeType=week": "打开下周笔记",
-				"type=next,writeType=month": "打开下个月的笔记",
-				"type=next,writeType=quarter": "打开下一季度笔记",
-				"type=next,writeType=year": "打开下一年度的年票",
-				"type=next,writeType=custom": "打开下一条自定义笔记",
-				"type=previous,writeType=day": "打开上一期每日笔记",
-				"type=previous,writeType=week": "打开上一周的笔记",
-				"type=previous,writeType=month": "打开上个月的月度笔记",
-				"type=previous,writeType=quarter": "打开上一季度的季度报告",
-				"type=previous,writeType=year": "打开上一年的年票",
-				"type=previous,writeType=custom": "打开之前的自定义笔记",
-				"type=previous_available,writeType=day": "打开之前的每日笔记",
-				"type=previous_available,writeType=week": "打开之前的现有周记",
-				"type=previous_available,writeType=month": "打开之前的现有月度笔记",
-				"type=previous_available,writeType=quarter": "打开之前现有的季度笔记",
-				"type=previous_available,writeType=year": "打开之前现有的年度笔记",
-				"type=previous_available,writeType=custom": "打开之前已有的自定义笔记",
-				"type=next_available,writeType=day": "打开下一个现有的每日笔记",
-				"type=next_available,writeType=week": "打开下一份现有的周报",
-				"type=next_available,writeType=month": "打开下一份现有月度账单",
-				"type=next_available,writeType=quarter": "打开下一份现有季度笔记",
-				"type=next_available,writeType=year": "打开下一个现有的年度笔记",
-				"type=next_available,writeType=custom": "打开下一个现有自定义笔记",
-				"type=same_next_week,writeType=*": "下周同一天营业",
-				"type=same_previous_week,writeType=*": "上周同一天营业",
-				"type=same_next_month,writeType=*": "下个月同一天开业",
-				"type=same_previous_month,writeType=*": "上个月同一天开业",
-				"type=same_next_year,writeType=day": "明年同一天开放",
-				"type=same_next_year,writeType=month": "明年同月开业",
-				"type=same_next_year,writeType=quarter": "明年同一季度开业",
-				"type=same_previous_year,writeType=day": "去年也是同一天开业",
-				"type=same_previous_year,writeType=month": "去年同月开业",
-				"type=same_previous_year,writeType=quarter": "去年同期开盘",
-				"type=*,writeType=*": "打开笔记"
-			}
-		}
-	],
-	"command_write_type_option": [
-		{
-			"declarations": [
-				"input writeType"
-			],
-			"selectors": [
-				"writeType"
-			],
-			"match": {
-				"writeType=day": "每日笔记",
-				"writeType=week": "每周简报",
-				"writeType=month": "月度笔记",
-				"writeType=quarter": "季度笔记",
-				"writeType=year": "年金",
-				"writeType=custom": "自定义笔记"
-			}
-		}
-	],
-	"command_connect_note": "将笔记与日记连接起来",
-	"connect_note_modal_date_label": "日期",
-	"connect_note_modal_move_description": "笔记的文件夹（ {current} ）与日记的配置文件夹（ {configured} ）不同。",
-	"connect_note_modal_override_description": "另一条注释（ {path} ）与此日期关联。如果您启用此功能，它将被断开连接。",
-	"connect_note_modal_override_label": "替换已与此日期关联的笔记",
-	"connect_note_modal_rename_description": "笔记的名称（ {current} ）与日记的配置名称（ {configured} ）不同。",
-	"connect_note_modal_rename_label": "将文件重命名为与日记匹配的名称",
-	"connect_note_modal_move_label": "将文件移入日记文件夹",
-	"connect_note_modal_connect": "连接",
-	"connect_note_modal_connected_to": "此注释与“ {journalName} \"相关联。",
-	"connect_note_modal_disconnect": "断开",
-	"connect_note_modal_out_of_bounds": "该日期不在日记的有效出版时间范围内。",
-	"connect_note_notice_connected": "注释与“ {journalName} \" 相关联。",
-	"connect_note_notice_disconnected": "注意与“ {journalName} \"断开连接。",
-	"bulk_add_notes_to_title": "添加注释到{journalName}",
-	"bulk_add_folder_label": "源文件夹",
-	"bulk_add_folder_description": "选择包含要处理的现有笔记的文件夹。",
-	"bulk_add_date_place_label": "读取日期",
-	"bulk_add_date_place_title": "笔记标题",
-	"bulk_add_date_place_property": "房产",
-	"common_label_property_name": "物业名称",
-	"bulk_add_date_format_label": "日期格式",
-	"bulk_add_date_format_omit_time": "如果您的日期包含时间部分，请将其从格式中省略。",
-	"bulk_add_date_format_property_note": "日期可能与存储格式不同——请在“源”显示模式下检查格式。",
-	"bulk_add_filter_combinator_label": "筛选笔记",
-	"bulk_add_filter_combinator_no": "无滤镜",
-	"bulk_add_filter_combinator_and": "所有条件",
-	"bulk_add_filter_combinator_or": "匹配任何条件",
-	"bulk_add_add_filter_title": "添加标题条件",
-	"bulk_add_add_filter_tag": "添加标签条件",
-	"bulk_add_add_filter_property": "添加属性条件",
-	"bulk_add_existing_label": "当笔记已与该日期关联时",
-	"bulk_add_existing_description": [
-		{
-			"declarations": [
-				"input option"
-			],
-			"selectors": [
-				"option"
-			],
-			"match": {
-				"option=skip": "新笔记保持原样，未连接。",
-				"option=override": "新笔记会接管日期；之前连接的笔记仍保留在金库中，但已断开连接。",
-				"option=merge": "新笔记的内容会附加到已连接的笔记上，而新笔记本身会被删除。",
-				"option=ask": "在审核屏幕上对每条笔记做出决定。"
-			}
-		}
-	],
-	"bulk_add_other_folder_label": "文件夹不同时",
-	"bulk_add_other_name_label": "当名称不同时",
-	"bulk_add_option_skip": "跳过",
-	"bulk_add_option_override": "代替",
-	"bulk_add_option_merge": "合并",
-	"bulk_add_option_keep": "保持",
-	"bulk_add_option_move": "移动",
-	"bulk_add_option_rename": "重命名",
-	"bulk_add_option_ask": "询问每个",
-	"bulk_add_dry_run_label": "试运行（仅供预览）",
-	"bulk_add_dry_run_description": "不要修改任何笔记——只需报告将要进行的更改即可。",
-	"bulk_add_next": "继续",
-	"bulk_add_run": "跑步",
-	"bulk_add_progress": "正在处理{done}中的{total} …",
-	"bulk_add_skipped_count": [
-		{
-			"declarations": [
-				"input count"
-			],
-			"selectors": [
-				"count"
-			],
-			"match": {
-				"count=1": "跳过1个笔记",
-				"count=*": "{count}已跳过的注释"
-			}
-		}
-	],
-	"bulk_add_planned_count": [
-		{
-			"declarations": [
-				"input count"
-			],
-			"selectors": [
-				"count"
-			],
-			"match": {
-				"count=1": "1 条待处理笔记",
-				"count=*": "{count}处理笔记"
-			}
-		}
-	],
-	"bulk_add_skip_reason_already_connected": "已连接",
-	"bulk_add_skip_reason_filtered": "已过滤",
-	"bulk_add_skip_reason_no_date": "未找到日期",
-	"bulk_add_skip_reason_invalid_date": "日期无法解析",
-	"bulk_add_skip_reason_out_of_bounds": "在日记时间线之外",
-	"common_action_cancel": "取消",
-	"common_action_close": "关闭",
-	"common_action_create": "创造",
-	"common_action_delete": "删除",
-	"common_action_submit": "节省",
-	"confirm_note_creation_body": "在日记“ {noteName} ”中创建{journalName} ”？",
-	"confirm_note_creation_confirm": "创造",
-	"confirm_note_creation_title": "创建一条新的日记笔记？",
-	"decoration_add": "添加装饰",
-	"decoration_border_mode_label": [
-		{
-			"declarations": [
-				"input mode"
-			],
-			"selectors": [
-				"mode"
-			],
-			"match": {
-				"mode=uniform": "制服",
-				"mode=different": "每侧设置"
-			}
-		}
-	],
-	"decoration_border_side_label": [
-		{
-			"declarations": [
-				"input side"
-			],
-			"selectors": [
-				"side"
-			],
-			"match": {
-				"side=top": "顶部",
-				"side=bottom": "底部",
-				"side=left": "左边",
-				"side=right": "正确的"
-			}
-		}
-	],
-	"decoration_border_style_label": [
-		{
-			"declarations": [
-				"input style"
-			],
-			"selectors": [
-				"style"
-			],
-			"match": {
-				"style=solid": "坚硬的",
-				"style=dashed": "虚线",
-				"style=dotted": "点状",
-				"style=groove": "槽",
-				"style=double": "双倍的"
-			}
-		}
-	],
-	"decoration_condition_all_tasks_completed_describe": "所有任务均已完成",
-	"decoration_condition_date_describe": [
-		{
-			"declarations": [
-				"input day",
-				"input month",
-				"input year"
-			],
-			"selectors": [
-				"year"
-			],
-			"match": {
-				"year=null": "日期为{day} / {month}",
-				"year=*": "日期为{day} / {month} / {year}"
-			}
-		}
-	],
-	"decoration_condition_date_any": "任何",
-	"decoration_condition_date_any_unit": [
-		{
-			"declarations": [
-				"input unit"
-			],
-			"selectors": [
-				"unit"
-			],
-			"match": {
-				"unit=day": "任何一天",
-				"unit=month": "任何月份",
-				"unit=year": "任何一年"
-			}
-		}
-	],
-	"decoration_condition_date_unit_label": [
-		{
-			"declarations": [
-				"input unit"
-			],
-			"selectors": [
-				"unit"
-			],
-			"match": {
-				"unit=day": "天",
-				"unit=month": "月",
-				"unit=year": "年"
-			}
-		}
-	],
-	"decoration_condition_has_note_describe": "存在一张纸条",
-	"decoration_condition_has_open_task_describe": "该笔记有一个未完成的任务",
-	"decoration_condition_offset_describe": "起始偏移量为{offset}",
-	"decoration_condition_offset_hint": [
-		{
-			"declarations": [
-				"input days",
-				"input side"
-			],
-			"selectors": [
-				"side"
-			],
-			"match": {
-				"side=start": "匹配自区间开始以来{days}天。",
-				"side=end": "匹配自区间结束之日起的{days}天。"
-			}
-		}
-	],
-	"decoration_condition_offset_label": "抵消",
-	"decoration_condition_property_condition_label": "健康）状况",
-	"decoration_condition_property_describe": "属性{name} {op} {value}",
-	"decoration_condition_property_value_label": "价值",
-	"decoration_condition_tag_describe": "标签{op} {value}",
-	"decoration_condition_tag_value_label": "标签值",
-	"decoration_condition_title_describe": "标题{op} {value}",
-	"decoration_condition_title_value_label": "标题值",
-	"decoration_condition_type_short": [
-		{
-			"declarations": [
-				"input type"
-			],
-			"selectors": [
-				"type"
-			],
-			"match": {
-				"type=title": "标题",
-				"type=tag": "标签",
-				"type=property": "财产",
-				"type=date": "日期",
-				"type=weekday": "工作日",
-				"type=offset": "抵消",
-				"type=has-note": "有笔记",
-				"type=has-open-task": "有未完成的任务",
-				"type=all-tasks-completed": "所有任务已完成"
-			}
-		}
-	],
-	"decoration_condition_type_label": [
-		{
-			"declarations": [
-				"input type"
-			],
-			"selectors": [
-				"type"
-			],
-			"match": {
-				"type=title": "检查标题",
-				"type=tag": "查看标签",
-				"type=property": "检查 frontmatter 属性",
-				"type=date": "检查日期",
-				"type=weekday": "查看工作日",
-				"type=offset": "检查间隔偏移",
-				"type=has-note": "检查是否存在笔记",
-				"type=has-open-task": "检查笔记是否有未完成的任务",
-				"type=all-tasks-completed": "检查所有任务是否已完成"
-			}
-		}
-	],
-	"decoration_condition_weekday_describe": "weekday 是{weekdays}",
-	"decoration_condition_weekday_label": "工作日",
-	"decoration_corner_placement_label": [
-		{
-			"declarations": [
-				"input placement"
-			],
-			"selectors": [
-				"placement"
-			],
-			"match": {
-				"placement=top-left": "左上",
-				"placement=top-right": "右上角",
-				"placement=bottom-left": "左下角",
-				"placement=bottom-right": "右下角"
-			}
-		}
-	],
-	"decoration_delete": "删除装饰",
-	"decoration_delete_modal_warning": "这将永久去除装饰物。",
-	"decoration_describe_mode": [
-		{
-			"declarations": [
-				"input kind"
-			],
-			"selectors": [
-				"kind"
-			],
-			"match": {
-				"kind=and": "和",
-				"kind=or": "或者"
-			}
-		}
-	],
-	"decoration_describe_when": "什么时候",
-	"decoration_edit": "编辑装饰",
-	"decoration_modal_add_condition": "添加条件",
-	"decoration_modal_add_style": "增添风格",
-	"decoration_modal_mode_label": "何时进行装饰",
-	"decoration_modal_mode_option": [
-		{
-			"declarations": [
-				"input kind"
-			],
-			"selectors": [
-				"kind"
-			],
-			"match": {
-				"kind=and": "当所有条件都满足时进行装饰。",
-				"kind=or": "满足任意条件时进行装饰。"
-			}
-		}
-	],
-	"decoration_modal_no_conditions": "尚未定义任何条件",
-	"decoration_modal_no_styles": "尚未定义任何样式",
-	"decoration_placement_x_label": [
-		{
-			"declarations": [
-				"input value"
-			],
-			"selectors": [
-				"value"
-			],
-			"match": {
-				"value=left": "左边",
-				"value=center": "中心",
-				"value=right": "正确的"
-			}
-		}
-	],
-	"decoration_placement_y_label": [
-		{
-			"declarations": [
-				"input value"
-			],
-			"selectors": [
-				"value"
-			],
-			"match": {
-				"value=top": "顶部",
-				"value=middle": "中间",
-				"value=bottom": "底部"
-			}
-		}
-	],
-	"decoration_section_description": "使用装饰元素突出显示日历中符合特定条件的日期。",
-	"decoration_section_empty": "尚未配置任何日历装饰。",
-	"decoration_section_title": "日历装饰",
-	"decoration_shape_label": [
-		{
-			"declarations": [
-				"input shape"
-			],
-			"selectors": [
-				"shape"
-			],
-			"match": {
-				"shape=square": "正方形",
-				"shape=circle": "圆圈",
-				"shape=triangle-up": "三角形（向上）",
-				"shape=triangle-down": "三角形（向下）",
-				"shape=triangle-left": "三角形（左）",
-				"shape=triangle-right": "三角形（右）"
-			}
-		}
-	],
-	"decoration_date_op_label": [
-		{
-			"declarations": [
-				"input op"
-			],
-			"selectors": [
-				"op"
-			],
-			"match": {
-				"op=exists": "存在",
-				"op=does-not-exist": "不存在",
-				"op=eq": "在",
-				"op=neq": "不",
-				"op=lt": "前",
-				"op=lte": "在或之前",
-				"op=gt": "后",
-				"op=gte": "在……之后"
-			}
-		}
-	],
-	"decoration_string_op_label": [
-		{
-			"declarations": [
-				"input op"
-			],
-			"selectors": [
-				"op"
-			],
-			"match": {
-				"op=contains": "包含",
-				"op=starts-with": "以……开头",
-				"op=ends-with": "以……结尾",
-				"op=exists": "存在",
-				"op=does-not-exist": "不存在",
-				"op=eq": "等于",
-				"op=neq": "不等于",
-				"op=lt": "<",
-				"op=lte": "&lt;=",
-				"op=gt": "&gt;",
-				"op=gte": "大于等于",
-				"op=is-true": "属实",
-				"op=is-false": "是错误的",
-				"op=does-not-contain": "不含"
-			}
-		}
-	],
-	"common_label_color": "颜色",
-	"decoration_style_border_mode_label": "边框模式",
-	"decoration_style_border_show_label": "展示",
-	"decoration_style_border_style_label": "风格",
-	"decoration_style_border_width_label": "宽度",
-	"decoration_style_corner_placement_label": "放置",
-	"decoration_style_header": [
-		{
-			"declarations": [
-				"input type"
-			],
-			"selectors": [
-				"type"
-			],
-			"match": {
-				"type=background": "装饰背景",
-				"type=color": "装饰颜色",
-				"type=shape": "装饰形状",
-				"type=corner": "装饰角",
-				"type=icon": "装饰图标",
-				"type=border": "装饰边框"
-			}
-		}
-	],
-	"common_label_placement": "放置",
-	"decoration_style_size_hint": [
-		{
-			"declarations": [
-				"input kind"
-			],
-			"selectors": [
-				"kind"
-			],
-			"match": {
-				"kind=icon": "图标大小与字体大小成正比：1 表示图标与字母大小相同。",
-				"kind=shape": "形状大小与字体大小相关：1 表示形状与字母大小相同。"
-			}
-		}
-	],
-	"common_label_size": "尺寸",
-	"decoration_style_shape_shape_label": "形状",
-	"decoration_style_type_label": [
-		{
-			"declarations": [
-				"input type"
-			],
-			"selectors": [
-				"type"
-			],
-			"match": {
-				"type=background": "背景",
-				"type=color": "颜色",
-				"type=shape": "形状",
-				"type=corner": "角落",
-				"type=icon": "图标",
-				"type=border": "边界"
-			}
-		}
-	],
-	"ui_color_kind_label": [
-		{
-			"declarations": [
-				"input kind"
-			],
-			"selectors": [
-				"kind"
-			],
-			"match": {
-				"kind=transparent": "透明的",
-				"kind=theme": "主题变量",
-				"kind=custom": "风俗"
-			}
-		}
-	],
-	"ui_color_theme_variable_label": "CSS 变量",
-	"ui_theme_color_background_primary": "主背景",
-	"ui_theme_color_background_primary_alt": "主背景之上表面的背景",
-	"ui_theme_color_background_secondary": "次背景",
-	"ui_theme_color_background_secondary_alt": "次背景之上表面的背景",
-	"ui_theme_color_background_modifier_hover": "悬停元素",
-	"ui_theme_color_background_modifier_active_hover": "激活的悬停元素",
-	"ui_theme_color_background_modifier_border": "边框颜色",
-	"ui_theme_color_background_modifier_border_hover": "边框颜色（悬停）",
-	"ui_theme_color_background_modifier_border_focus": "边框颜色（聚焦）",
-	"ui_theme_color_background_modifier_error_rgb": "错误背景，RGB 值",
-	"ui_theme_color_background_modifier_error": "错误背景",
-	"ui_theme_color_background_modifier_error_hover": "错误背景（悬停）",
-	"ui_theme_color_background_modifier_success_rgb": "成功背景，RGB 值",
-	"ui_theme_color_background_modifier_success": "成功背景",
-	"ui_theme_color_background_modifier_message": "消息背景",
-	"ui_theme_color_interactive_normal": "标准交互元素的背景",
-	"ui_theme_color_interactive_hover": "标准交互元素的背景（悬停）",
-	"ui_theme_color_interactive_accent": "强调交互元素的背景",
-	"ui_theme_color_interactive_accent_hover": "强调交互元素的背景（悬停）",
-	"ui_theme_color_text_normal": "正常文本",
-	"ui_theme_color_text_muted": "柔和文本",
-	"ui_theme_color_text_faint": "浅淡文本",
-	"ui_theme_color_text_on_accent": "强调色为深色时强调背景上的文本",
-	"ui_theme_color_text_on_accent_inverted": "强调色为浅色时强调背景上的文本",
-	"ui_theme_color_text_success": "成功文本",
-	"ui_theme_color_text_warning": "警告文本",
-	"ui_theme_color_text_error": "错误文本",
-	"ui_theme_color_text_accent": "强调文本",
-	"ui_theme_color_text_accent_hover": "强调文本（悬停）",
-	"ui_theme_color_text_selection": "选中文本的背景",
-	"ui_theme_color_text_highlight_bg": "高亮文本的背景",
-	"ui_theme_color_caret_color": "光标颜色",
-	"journal_add_modal_anchor_description": "此日期用于计算自定义时间间隔。创建日记后无法更改。",
-	"common_label_today": "今天",
-	"relative_date_yesterday": "昨天",
-	"relative_date_tomorrow": "明天",
-	"relative_date_last_named_day": "最后{weekday}",
-	"relative_date_named_day": "{weekday}",
-	"relative_date_this": [
-		{
-			"declarations": [
-				"input period"
-			],
-			"selectors": [
-				"period"
-			],
-			"match": {
-				"period=week": "本星期",
-				"period=month": "本月",
-				"period=quarter": "本季度",
-				"period=year": "今年"
-			}
-		}
-	],
-	"relative_date_last": [
-		{
-			"declarations": [
-				"input period"
-			],
-			"selectors": [
-				"period"
-			],
-			"match": {
-				"period=week": "上星期",
-				"period=month": "上个月",
-				"period=quarter": "上个季度",
-				"period=year": "去年"
-			}
-		}
-	],
-	"relative_date_next": [
-		{
-			"declarations": [
-				"input period"
-			],
-			"selectors": [
-				"period"
-			],
-			"match": {
-				"period=week": "下周",
-				"period=month": "下个月",
-				"period=quarter": "下个季度",
-				"period=year": "明年"
-			}
-		}
-	],
-	"relative_date_ago": [
-		{
-			"declarations": [
-				"input count",
-				"input period"
-			],
-			"selectors": [
-				"period"
-			],
-			"match": {
-				"period=week": "{count}",
-				"period=month": "{count}前",
-				"period=quarter": "{count}季度前",
-				"period=year": "{count}年前"
-			}
-		}
-	],
-	"relative_date_custom_this": "这个 {name}",
-	"relative_date_custom_last": "上个 {name}",
-	"relative_date_custom_next": "下个 {name}",
-	"relative_date_custom_ago": "{count} {name}前",
-	"relative_date_custom_from_now": "{count} {name}后",
-	"relative_date_from_now": [
-		{
-			"declarations": [
-				"input count",
-				"input period"
-			],
-			"selectors": [
-				"period"
-			],
-			"match": {
-				"period=week": "从现在{count}周",
-				"period=month": "从现在起的月份{count}",
-				"period=quarter": "从现在起{count}季度数",
-				"period=year": "从现在{count}"
-			}
-		}
-	],
-	"shelf_add": "添加货架",
-	"common_delete_name": "删除{name}",
-	"shelf_dashboard_empty": "尚未制作任何货架。",
-	"shelf_dashboard_open": "配置{name}",
-	"shelf_dashboard_section_title": "日记架",
-	"shelf_delete_modal_destination_label": "将日记移至",
-	"shelf_delete_modal_destination_none": "没有任何",
-	"shelf_delete_modal_destination_description": "此书架上的日记将被移至选定的书架，如果未选择任何书架，则移出该书架。笔记不受影响。",
-	"shelf_delete_modal_moved_out": "日记将从书架上移走。笔记不受影响。",
-	"shelf_delete_modal_title": "删除书架{name}",
-	"journal_create": "创建新日记",
-	"common_label_journals": "日记",
-	"shelf_rename": "重新命名书架",
-	"shelf_journals_block_title_filtered": "不在书架上的日记",
-	"shelf_member_count": [
-		{
-			"declarations": [
-				"input count"
-			],
-			"selectors": [
-				"count"
-			],
-			"match": {
-				"count=1": "1 日记",
-				"count=*": "{count}日记"
-			}
-		}
-	],
-	"shelf_modal_name_label": "书架名称",
-	"shelf_name_required_error": "书架名称为必填项。",
-	"shelf_name_unchanged_error": "请输入其他名称。",
-	"shelf_name_unique_error": "书架名称必须唯一。",
-	"common_label_shelf": "架子",
-	"shelf_place_modal_title": "地点日记",
-	"shelf_section_not_on_shelf": "不在货架上",
-	"shelf_section_place_tooltip": "放在架子上",
-	"settings_load_failed": "日记：加载设置失败 — {error}",
-	"settings_reload_failed": "日记：重新加载设置失败 — {error}",
-	"settings_reload_required_banner": "重新加载 Obsidian 以应用更改后的设置。",
-	"startup_dashboard_section_title": "创业公司",
-	"startup_open_note_title": "启动时打开",
-	"startup_open_note_desc": "每次打开此保险库时，请打开一个笔记。",
-	"startup_dont_open_option": "不要打开",
-	"uri_missing_target": "日记 URI 需要一个“journal”或“type”参数。",
-	"uri_unknown_write_type": "URI 中不存在未知的日记类型“ {type} ”。",
-	"uri_invalid_date": "无法理解 URI 中的日期“ {date} ”。",
-	"uri_invalid_mode": "URI 中存在未知的打开模式“ {mode} ”。",
-	"uri_unknown_journal": "没有名为“ {journal} ”的日记。",
-	"uri_no_journal": "没有日记收录该日期的内容。",
-	"uri_no_journal_of_type": [
-		{
-			"declarations": [
-				"input type"
-			],
-			"selectors": [
-				"type"
-			],
-			"match": {
-				"type=day": "没有任何日记创建每日笔记。",
-				"type=week": "没有任何日记创建每周笔记。",
-				"type=month": "没有任何日记创建每月笔记。",
-				"type=quarter": "没有任何日记创建季度笔记。",
-				"type=year": "没有任何日记创建每年笔记。"
-			}
-		}
-	],
-	"uri_open_failed": "无法打开日记条目。",
-	"view_dashboard_section_title": "浏览量",
-	"view_dashboard_empty": "暂无浏览量。",
-	"view_dashboard_add": "添加视图",
-	"view_dashboard_open": "配置{name}",
-	"view_dashboard_clone": "克隆{name}",
-	"view_add_modal_title": "添加视图",
-	"view_rename": "重命名视图",
-	"view_name_required_error": "姓名为必填项。",
-	"view_name_unchanged_error": "请输入其他名称。",
-	"view_delete_modal_title": "删除视图{name}",
-	"view_delete_modal_description": "视图及其区块配置已被移除。您的笔记不受影响。",
-	"view_add_block": "添加块",
-	"view_add_block_empty": "未注册任何区块类型。",
-	"view_add_picker_action": "添加{label}",
-	"view_block_divider_label": "分隔线",
-	"view_block_toolbar_label": "工具栏",
-	"view_block_toolbar_description": "用于存放工具栏项目（例如按钮和工具架选择器）的容器。",
-	"view_add_toolbar_item": "添加工具栏项",
-	"view_add_toolbar_item_empty": "未注册任何工具栏项目。",
-	"view_edit_icon_description": "显示在视图的选项卡标题和功能区中。",
-	"view_edit_default_shelf_label": "默认货架",
-	"view_edit_default_shelf_description": "这本书打开时，读者首先看到的就是书架上的这个景象。",
-	"view_edit_show_in_ribbon_description": "添加一个用于打开此视图的功能区按钮。",
-	"common_label_all_journals": "所有日记",
-	"view_edit_open_on_startup_label": "启动时打开",
-	"view_edit_open_on_startup_description": "每次打开保险库时都会打开此视图。它与主设置页面上的启动笔记设置是分开的。",
-	"view_edit_remember_date_label": "记住上次查看的日期",
-	"view_edit_remember_date_description": "关闭时，日历每次启动都会打开今天的日期。开启时，会重新打开上次查看的日期。",
-	"view_edit_leaf_label": "打开",
-	"view_edit_leaf_description": "视图打开位置：停靠在侧边栏中，或作为主工作区中的常规选项卡。",
-	"view_edit_leaf_left": "左侧边栏",
-	"view_edit_leaf_right": "右侧边栏",
-	"view_edit_leaf_tab": "新标签页",
-	"view_reposition_modal_title": "移动打开视图？",
-	"view_reposition_modal_description": "此视图已打开。将其移动到{location} ？",
-	"view_reposition_modal_confirm": "移动",
-	"view_edit_blocks_title": "积木",
-	"view_edit_blocks_empty": "目前还没有区块。",
-	"view_block_unknown_label": "未知块： {key}",
-	"view_block_edit": "编辑块",
-	"view_block_edit_title": "编辑块： {type}",
-	"view_block_remove": "移除块",
-	"view_toolbar_item_unknown_label": "未知工具栏项： {key}",
-	"view_toolbar_item_edit": "编辑工具栏项目",
-	"view_toolbar_item_edit_title": "编辑{type}",
-	"view_toolbar_item_edit_title_detail": "编辑{type} : {detail}",
-	"view_toolbar_item_remove": "移除工具栏项目",
-	"view_toolbar_item_empty": "工具栏上暂无任何项目。",
-	"view_block_month_calendar_label": "月历",
-	"view_block_month_calendar_description": "显示所选日期前后一个或多个月份的网格。",
-	"view_block_week_calendar_label": "周历",
-	"view_block_week_calendar_description": "显示所选日期前后一周或多周的日期条。",
-	"common_custom_intervals": "自定义间隔",
-	"view_block_custom_intervals_description": "列出在可配置时间范围内的自定义日记条目。",
-	"view_block_markdown_template_label": "Markdown模板",
-	"view_block_markdown_template_description": "将模板笔记渲染为 Markdown 格式，并处理日记变量。",
-	"view_block_markdown_template_path_label": "模板文件",
-	"view_block_markdown_template_path_placeholder": "path/to/template.md",
-	"view_block_markdown_template_variables_link": "支持的变量。",
-	"view_block_markdown_template_variables_modal_title": "Markdown 模板变量",
-	"view_block_markdown_template_variables_intro": "这些变量会在模板渲染时被替换。日期格式为 YYYY-MM-DD，时间格式为 HH:mm，除非您明确指定格式。",
-	"view_block_markdown_template_variable_date_description": "当前笔记的日期，或者当没有打开任何日记笔记时，视图的焦点日期。",
-	"view_block_markdown_template_variable_current_date_description": "该区块渲染时显示的日期。",
-	"view_block_markdown_template_variable_time_description": "该区块渲染时的当前实际时间。",
-	"view_block_markdown_template_variable_current_time_description": "区块渲染时的当前实际时间（时间变量的别名）。",
-	"view_block_markdown_template_variable_journal_link_description": "解析为另一篇日记中与目标日期对应的笔记的库路径。自行将其包装成链接，并添加类似 +1w 的偏移量以指向相邻的句点。",
-	"view_block_markdown_template_empty": "未选择模板",
-	"view_block_markdown_template_read_error": "无法读取模板文件。",
-	"view_block_summary_before": "{count}之前",
-	"view_block_summary_after": "{count}之后",
-	"view_block_summary_hidden_days": "隐藏： {days}",
-	"view_block_summary_journal_count": [
-		{
-			"declarations": [
-				"input count"
-			],
-			"selectors": [
-				"count"
-			],
-			"match": {
-				"count=1": "1 日记",
-				"count=*": "{count}日记"
-			}
-		}
-	],
-	"view_block_toolbar_item_count": [
-		{
-			"declarations": [
-				"input count"
-			],
-			"selectors": [
-				"count"
-			],
-			"match": {
-				"count=1": "1 件",
-				"count=*": "{count}项目"
-			}
-		}
-	],
-	"view_block_config_window_label": "窗户",
-	"view_block_config_window_current": [
-		{
-			"declarations": [
-				"input period"
-			],
-			"selectors": [
-				"period"
-			],
-			"match": {
-				"period=week": "本周",
-				"period=month": "本月",
-				"period=quarter": "本季度",
-				"period=year": "本年度"
-			}
-		}
-	],
-	"view_block_config_hide_empty_label": "隐藏空白日记本",
-	"view_toolbar_shelf_selector_label": "货架选择器",
-	"view_toolbar_shelf_selector_description": "切换视图的日记范围。",
-	"view_toolbar_shelf_selector_tooltip": "切换架",
-	"view_toolbar_spacer_label": "垫片",
-	"view_toolbar_spacer_description": "可伸缩间隙，能将相邻物体推开。",
-	"view_toolbar_period_buttons_label": "句号按钮",
-	"view_toolbar_period_buttons_description": "显示当前周、月、季度、年的可点击徽章。",
-	"view_toolbar_period_buttons_config": [
-		{
-			"declarations": [
-				"input period"
-			],
-			"selectors": [
-				"period"
-			],
-			"match": {
-				"period=week": "展会周",
-				"period=month": "展会月",
-				"period=quarter": "演出季",
-				"period=year": "演出年"
-			}
-		}
-	],
-	"view_toolbar_period_buttons_config_label": "时期",
-	"view_toolbar_defined_navigation_label": "定义笔记导航",
-	"view_toolbar_defined_navigation_description": "一个可以跳转到上一个或下一个已存在笔记的按钮。",
-	"view_toolbar_defined_navigation_target": "步骤详解",
-	"view_toolbar_defined_navigation_target_active": "活跃日记的笔记",
-	"view_toolbar_defined_navigation_direction": "方向",
-	"view_toolbar_defined_navigation_direction_option": [
-		{
-			"declarations": [
-				"input direction"
-			],
-			"selectors": [
-				"direction"
-			],
-			"match": {
-				"direction=previous": "以前的",
-				"direction=next": "下一个"
-			}
-		}
-	],
-	"view_toolbar_button_label": "按钮",
-	"view_toolbar_button_preset_pick_date": "日期",
-	"view_toolbar_button_preset_pick_date_description": "打开日期选择器，跳转到任意笔记。",
-	"view_toolbar_button_preset_open_note": "打开笔记",
-	"view_toolbar_button_preset_open_note_description": "跳转至当前期间的附注。",
-	"view_toolbar_button_preset_navigate": "按步骤导航",
-	"view_toolbar_button_preset_navigate_description": "按固定间隔向前或向后迈步。",
-	"view_toolbar_button_default_tooltip_pick_multi": "打开一张便笺",
-	"view_toolbar_button_default_label_current": "当前的",
-	"view_toolbar_button_default_tooltip_current_multi": "跳转至当前…",
-	"view_toolbar_button_default_tooltip_prev_unit": [
-		{
-			"declarations": [
-				"input unit"
-			],
-			"selectors": [
-				"unit"
-			],
-			"match": {
-				"unit=week": "上一周",
-				"unit=month": "上个月",
-				"unit=quarter": "上一季度",
-				"unit=year": "上一年"
-			}
-		}
-	],
-	"view_toolbar_button_default_tooltip_next_unit": [
-		{
-			"declarations": [
-				"input unit"
-			],
-			"selectors": [
-				"unit"
-			],
-			"match": {
-				"unit=week": "下一周",
-				"unit=month": "下个月",
-				"unit=quarter": "下一季度",
-				"unit=year": "下一年"
-			}
-		}
-	],
-	"view_toolbar_button_menu_pick": [
-		{
-			"declarations": [
-				"input unit"
-			],
-			"selectors": [
-				"unit"
-			],
-			"match": {
-				"unit=day": "选择日期",
-				"unit=week": "选择周",
-				"unit=month": "选择月份",
-				"unit=quarter": "选择季度",
-				"unit=year": "选择年份"
-			}
-		}
-	],
-	"view_toolbar_button_config_label_label": "标签",
-	"view_toolbar_button_config_tooltip_label": "工具提示",
-	"view_toolbar_appearance_label_label": "标签",
-	"view_toolbar_appearance_tooltip_label": "工具提示",
-	"view_toolbar_button_config_journal_default": "书架上所有日记",
-	"view_toolbar_button_config_mode_label": "行为",
-	"view_toolbar_button_config_levels_label": "时期",
-	"view_toolbar_button_config_mode_option": [
-		{
-			"declarations": [
-				"input mode"
-			],
-			"selectors": [
-				"mode"
-			],
-			"match": {
-				"mode=select-only": "仅移动日历",
-				"mode=navigate": "仅当存在时才可开票",
-				"mode=create": "如果笔记不存在，请创建笔记。"
-			}
-		}
-	],
-	"view_toolbar_button_config_level_option": [
-		{
-			"declarations": [
-				"input level"
-			],
-			"selectors": [
-				"level"
-			],
-			"match": {
-				"level=day": "天",
-				"level=week": "周",
-				"level=month": "月",
-				"level=quarter": "季度",
-				"level=year": "年"
-			}
-		}
-	],
-	"view_toolbar_button_config_step_label": "步进",
-	"view_toolbar_button_config_direction_label": "方向",
-	"view_toolbar_button_config_direction_option": [
-		{
-			"declarations": [
-				"input direction",
-				"input unit"
-			],
-			"selectors": [
-				"direction",
-				"unit"
-			],
-			"match": {
-				"direction=prev,unit=*": "上一个",
-				"direction=next,unit=*": "下一个"
-			}
-		}
-	],
-	"view_toolbar_button_config_granularity_label": "粒度",
-	"view_block_config_before": [
-		{
-			"declarations": [
-				"input unit"
-			],
-			"selectors": [
-				"unit"
-			],
-			"match": {
-				"unit=month": "几个月前",
-				"unit=week": "几周前"
-			}
-		}
-	],
-	"view_block_config_after": [
-		{
-			"declarations": [
-				"input unit"
-			],
-			"selectors": [
-				"unit"
-			],
-			"match": {
-				"unit=month": "数月后",
-				"unit=week": "数周后"
-			}
-		}
-	],
-	"view_block_config_hidden_weekdays_label": "一周中的日子",
-	"view_block_config_weeks_label": "周数",
-	"view_block_config_weeks_default": "使用全局默认值",
-	"view_block_config_weeks_none": "隐",
-	"view_block_config_weeks_left": "工作日之前",
-	"view_block_config_weeks_right": "工作日之后",
-	"calendar_week_placement_label": "默认周数",
-	"calendar_week_placement_description": "当日历块设置为“使用全局默认值”时，周数列将显示在此处。",
-	"view_block_config_show_heading_label": "显示月份/年份标题",
-	"journal_add_modal_anchor_label": "开始日期",
-	"journal_add_modal_anchor_required_error": "选择开始日期。",
-	"journal_add_modal_duration_label": "时长",
-	"journal_add_modal_every_label": "间隔",
-	"journal_add_modal_name_placeholder": "例如：每日",
-	"journal_add_modal_name_label": "日记名称",
-	"journal_add_modal_title": "添加日记",
-	"journal_add_modal_write_label": "我将要写",
-	"journal_colliding_heading": "冲突的日记设置",
-	"journal_colliding_warning": "日记{names}配置冲突，因此它们的笔记会互相覆盖。请更改其中一个日记的文件夹或名称模板。",
-	"journal_dashboard_bulk_add": "批量添加注释到{name}",
-	"journal_dashboard_edit": "配置{name}",
-	"journal_dashboard_empty": "尚未创建任何日记。",
-	"journal_delete_modal_title": "删除{name}",
-	"journal_delete_mode_label": "如何处理关联笔记",
-	"journal_delete_mode_option": [
-		{
-			"declarations": [
-				"input mode"
-			],
-			"selectors": [
-				"mode"
-			],
-			"match": {
-				"mode=keep": "做好笔记",
-				"mode=clear": "清晰的日记数据",
-				"mode=delete": "删除笔记"
-			}
-		}
-	],
-	"journal_delete_mode_description": [
-		{
-			"declarations": [
-				"input mode"
-			],
-			"selectors": [
-				"mode"
-			],
-			"match": {
-				"mode=keep": "笔记将保持不变地保存在您的保险库中。",
-				"mode=clear": "笔记会保留在您的存储库中，但其前言中的日记属性将被移除。",
-				"mode=delete": "与此日记相关的所有笔记都将从您的存储库中删除。"
-			}
-		}
-	],
-	"journal_edit_allow_before_description": "允许在锚定日期之前进行索引。可能会产生负数。",
-	"journal_edit_allow_before_label": "允许在锚点之前进行锚定",
-	"journal_edit_anchor_description": "此日期用于关联一个数字以供后续计算。",
-	"journal_edit_anchor_label": "锚定日期",
-	"journal_edit_anchor_start_used": "开始日期用作锚定日期。",
-	"journal_edit_auto_create_confirmation_skip_note": "自动创建的笔记不会显示确认对话框。",
-	"journal_edit_auto_create_description": "插件加载时以及每个当地时间午夜自动创建当天笔记。",
-	"journal_edit_auto_create_label": "自动创建今日笔记",
-	"journal_edit_confirm_creation_description": "当导航到尚未添加笔记的日期时，显示确认对话框。",
-	"journal_edit_confirm_creation_label": "确认创建新笔记",
-	"journal_edit_date_format_description": "对于未指定日期格式的日期变量，默认格式如下：",
-	"journal_edit_date_format_label": "默认日期格式",
-	"journal_edit_date_format_preview_label": "格式化日期：",
-	"common_moment_format_reference": "moment.js 格式参考",
-	"journal_edit_end_description": [
-		{
-			"declarations": [
-				"input kind"
-			],
-			"selectors": [
-				"kind"
-			],
-			"match": {
-				"kind=never": "写作将无限期地持续下去。",
-				"kind=date": "此日期之后将不再创建新笔记。",
-				"kind=repeats": "创建了这么多笔记后，将不会再创建新笔记。"
-			}
-		}
-	],
-	"journal_edit_end_kind": [
-		{
-			"declarations": [
-				"input kind"
-			],
-			"selectors": [
-				"kind"
-			],
-			"match": {
-				"kind=never": "绝不",
-				"kind=date": "日期之后",
-				"kind=repeats": "重复之后"
-			}
-		}
-	],
-	"journal_edit_end_repeats_needs_start_warning": "设定一个开始日期——一本在多次重复后结束的日记需要一个起始日期。",
-	"journal_edit_end_repeats_suffix": "次",
-	"journal_edit_end_writing_label": "结束写作",
-	"journal_edit_fm_end_toggle_label": "添加结束日期属性",
-	"journal_edit_fm_start_description": "对于跨越两年的周刊，开始日期可能与日期属性不同。",
-	"journal_edit_fm_start_toggle_label": "添加开始日期属性",
-	"journal_edit_folder_description": "新笔记将在此文件夹中创建。",
-	"journal_edit_folder_label": "文件夹",
-	"journal_edit_move_to_folder_apply_link": "应用建议",
-	"journal_edit_move_to_folder_recommendation_date_format": "日期格式包含路径分隔符。是否应将日期变量移至“文件夹”字段？",
-	"journal_edit_move_to_folder_recommendation_name_template": "笔记名称模板包含路径分隔符。是否将路径前缀移至“文件夹”字段？",
-	"journal_edit_name_template_description": "用于生成新笔记名称的模板。",
-	"journal_edit_colliding_warning": "此日记解析到与{names}相同的笔记路径，因此它们的笔记会互相覆盖。请更改文件夹或名称模板，使其拥有不同的路径。",
-	"journal_edit_name_template_invertibility_warning": "模板无法反向解析（ {reason} : \" {offending} \"）。自动附加功能将静默跳过与此模式匹配的外部创建的笔记。",
-	"journal_edit_name_template_no_anchor_warning": "模板没有日期变量，其编号变量也无法反转为日期，因此自动附加功能将静默跳过与此模式匹配的外部创建的笔记。",
-	"journal_edit_name_template_label": "笔记名称模板",
-	"journal_edit_note_path_preview_label": "已解析的笔记路径：",
-	"journal_edit_rename_tooltip": "重命名日记",
-	"journal_edit_reset_count_suffix": "重复",
-	"journal_edit_reset_description": "这个数字如何随时间变化。",
-	"journal_edit_reset_label": "重置",
-	"journal_edit_reset_option": [
-		{
-			"declarations": [
-				"input kind"
-			],
-			"selectors": [
-				"kind"
-			],
-			"match": {
-				"kind=never": "连续的",
-				"kind=after": "重置后"
-			}
-		}
-	],
-	"journal_edit_section_frontmatter": "前言",
-	"journal_edit_section_note_creation": "创建笔记",
-	"journal_edit_section_sequential_numbers": "连续数字",
-	"journal_edit_section_templates": "模板",
-	"journal_edit_code_block_reference_link": "支持的代码块。",
-	"journal_edit_code_block_reference_modal_title": "支持的代码块",
-	"journal_edit_code_block_copy_hint": "点击代码块即可将其复制到剪贴板。",
-	"journal_edit_code_block_copied": "已复制到剪贴板。",
-	"journal_edit_code_block_nav_description": "导航模块可帮助您在当前笔记相邻的笔记之间移动。",
-	"journal_edit_code_block_nav_current": "其{name}日记的配置如下所示：",
-	"journal_edit_code_block_nav_aliases_lead": "这些旧的代码块名称是别名，它们的行为完全相同：",
-	"journal_edit_code_block_timeline_description": "时间轴模块可帮助您在较大的时间段内进行导航。",
-	"journal_edit_code_block_timeline_default": "{name}日记的默认时间线如下所示：",
-	"journal_edit_code_block_timeline_mode_lead": "通过向模块添加模式选项来更改时间线模式。",
-	"journal_edit_code_block_timeline_modes_lead": "支持的模式：",
-	"journal_edit_code_block_timeline_weeks": "控制周数列（左、右或无）。",
-	"journal_edit_code_block_timeline_hidden_weekdays": "隐藏列出的星期几（0 = 星期日 … 6 = 星期六），例如 [0, 6] 表示去掉周末。",
-	"journal_edit_code_block_home_description": "首页模块显示指向您日记中当前笔记的链接。",
-	"journal_edit_code_block_home_default": "默认情况下，它看起来像这样：",
-	"journal_edit_code_block_home_options_lead": "支持的选项：",
-	"journal_edit_code_block_home_option_show": "控制显示哪些日记（默认仅显示当日链接）。支持的值：日、周、月、季度、年、自定义。",
-	"journal_edit_code_block_home_option_separator": "用于分隔多个链接的文本。",
-	"journal_edit_code_block_home_option_scale": "将链接大小增加到文本大小的倍数（例如，scale: 2 会将其加倍）。",
-	"journal_edit_code_block_home_option_shelf": "将展示的日记限制在特定的书架上。",
-	"journal_edit_code_block_home_custom_lead": "通过自定义选项，它可以看起来像这样：",
-	"journal_edit_section_timeline": "时间线",
-	"journal_edit_sequence_enabled_description": "给笔记分配编号（例如第 1 天、第 2 天……）。",
-	"journal_edit_sequence_enabled_label": "启用顺序编号",
-	"journal_edit_start_number_description": "在锚定日期分配的编号。",
-	"journal_edit_start_number_label": "起始号码",
-	"journal_edit_start_writing_custom_locked": "自定义间隔的开始日期无法更改：它用于计算间隔的起始日期。",
-	"journal_edit_start_writing_description": "在此日期之前不会创建新笔记。",
-	"journal_edit_start_writing_label": "开始写作",
-	"journal_edit_template_add_button": "添加模板",
-	"journal_edit_template_path_placeholder": "模板/每日.md",
-	"journal_edit_template_path_preview_label": "已解析的模板路径：",
-	"journal_edit_template_remove_tooltip": "移除模板",
-	"journal_edit_templates_description": "指向将用作创建新笔记模板的笔记的路径。如果配置了多个，则优先使用第一个已存在的笔记。",
-	"journal_edit_templater_supported": "模板语法为{slot} 。",
-	"journal_edit_templater_supported_link": "有",
-	"journal_edit_variable_additional_modifications_link": "其他修改",
-	"journal_edit_variable_current_date_description": "今天的日期（默认格式为 YYYY-MM-DD）。",
-	"journal_edit_variable_current_time_description": "当前挂钟时间（ {slot}的别名，默认格式为 HH:mm）。",
-	"journal_edit_variable_date_description": "本笔记的参考日期——本笔记涵盖期间的日期。",
-	"journal_edit_variable_date_format_description": "笔记的参考日期，使用提供的 moment.js 格式字符串进行格式化。",
-	"journal_edit_variable_end_date_description": "本通知涵盖期间的最后一天。",
-	"journal_edit_variable_index_description": "当日记启用编号功能时，笔记的顺序编号。",
-	"journal_edit_variable_journal_link_description": "在模板文件的内容中，它会解析为另一篇日记中与此笔记日期对应的笔记路径。您可以将其包装在链接或嵌入代码中（例如 ![[ … ]]），并添加日期修饰符（例如 +1w）以指向相邻的时期。",
-	"journal_edit_variable_journal_name_description": "日记名称（此处： {name} ）。",
-	"journal_edit_variable_non_invertible_warning": "在此处使用此方法可防止日记从文件名中恢复日期。",
-	"journal_edit_variable_note_name_description": "正在创建的笔记的名称。",
-	"journal_edit_variable_note_title_description": "笔记名称的别名，支持核心插件“模板”的变量。",
-	"journal_edit_variable_numbering_description": "配置的编号变量（参见“序列”部分）。",
-	"journal_edit_variable_reference_intro": "可用变量。当未指定显式格式时，日期格式默认为{dateFormat} 。",
-	"journal_edit_variable_reference_link": "支持的变量。",
-	"journal_edit_variable_reference_modal_title": "变量引用",
-	"journal_edit_variable_relative_date_description": "昨天/今天/明天/N天前（固定周期日记）；自定义日记留空。",
-	"journal_edit_variable_start_date_description": "本通知涵盖期间的第一天。",
-	"journal_edit_variable_time_description": "当前挂钟时间（默认格式为 HH:mm）。",
-	"journal_edit_wrong_week_warning": "您使用 `W` 来格式化周，但这不会遵循自定义的周设置，并且可能显示与日历视图不同的周数。请改用 `w`（如果需要，请在插件设置中更改一周的开始日期）。",
-	"journal_fm_field_label": [
-		{
-			"declarations": [
-				"input field"
-			],
-			"selectors": [
-				"field"
-			],
-			"match": {
-				"field=dateField": "日期属性名称",
-				"field=startDateField": "开始日期属性名称",
-				"field=endDateField": "结束日期属性名称"
-			}
-		}
-	],
-	"journal_fm_field_modal_title": [
-		{
-			"declarations": [
-				"input field"
-			],
-			"selectors": [
-				"field"
-			],
-			"match": {
-				"field=dateField": "编辑日期属性名称",
-				"field=startDateField": "编辑开始日期属性名称",
-				"field=endDateField": "编辑结束日期属性名称"
-			}
-		}
-	],
-	"journal_name_required_error": "日记名称为必填项。",
-	"journal_name_unique_error": "日记名称必须唯一。",
-	"journal_picker_placeholder": "搜索日记",
-	"journal_property_modal_current_label": "当前姓名",
-	"common_label_new_name": "新名称",
-	"journal_property_name_required": "房产名称为必填项。",
-	"journal_rename_modal_same_as_current_error": "请输入其他名称。",
-	"journal_rename_modal_title": "重命名{name}",
-	"journal_sequence_property_modal_title": "编辑序列号属性名称",
-	"templater_support_intro": "模板程序可能会干扰插件的操作，导致笔记部分损坏或日记数据在其前面部分丢失。",
-	"templater_support_modal_title": "模板生成器注意事项",
-	"templater_support_option_settings": "在此插件的日记设置中配置模板。",
-	"templater_support_option_trigger_off": "禁用模板程序的“在创建新文件时触发模板程序”。",
-	"templater_support_option_trigger_on": "或者保持“创建新文件时触发模板”启用状态，同时启用“启用文件夹模板”但不配置任何文件夹模板。",
-	"templater_support_outro": "这样一来，只有日记插件会处理笔记模板——它在后台运行 Templater 本身——从而避免了冲突。",
-	"templater_support_setup_intro": "最安全的方案：",
-	"variable_chip_copied": "已复制到剪贴板",
-	"variable_modifications_boundary_body": "通过添加 ` 将日期变量对齐到日历周期的开始或结束位置<startOf=unit>`或`<endOf=unit> `。",
-	"variable_modifications_boundary_example": "例如{slot}会渲染该日期所在年份的 1 月 1 日。",
-	"variable_modifications_boundary_heading": "捕捉到周期的开始或结束位置",
-	"variable_modifications_boundary_unit": [
-		{
-			"declarations": [
-				"input unit"
-			],
-			"selectors": [
-				"unit"
-			],
-			"match": {
-				"unit=day": "天",
-				"unit=week": "星期",
-				"unit=month": "月",
-				"unit=quarter": "四分之一",
-				"unit=year": "年",
-				"unit=decade": "十年（仅日期）",
-				"unit=hour": "小时（仅限时钟）"
-			}
-		}
-	],
-	"common_supported_units": "支持的单元：",
-	"variable_modifications_combined_body": "这三项修改可以同时进行。先应用偏移量，然后应用边界值，最后应用格式覆盖。",
-	"variable_modifications_combined_example": "例如{slot}将日期向前移动一周，跳转到该周的开始，并对其进行格式化。",
-	"variable_modifications_combined_heading": "合并",
-	"variable_modifications_format_body": "通过添加冒号和 moment.js 格式字符串来覆盖默认日期格式。",
-	"variable_modifications_format_example": "例如{slot}仅渲染年份。",
-	"variable_modifications_format_heading": "格式覆盖",
-	"variable_modifications_intro": "日期和时钟变量支持三种修改方式。它们可以组合在一个标记中。",
-	"variable_modifications_modal_title": "日期变量修改",
-	"variable_modifications_shift_body": "通过添加 `+N` 来增加或减少单位数量。<unit> ` 或 `-N<unit> `。",
-	"variable_modifications_shift_example": "例如{slot}将日期向前移动一周。",
-	"variable_modifications_shift_heading": "算术移位",
-	"variable_modifications_unit_d": "d — 天",
-	"variable_modifications_unit_h": "h — 小时",
-	"variable_modifications_unit_m": "m — 月",
-	"variable_modifications_unit_q": "q — 季度",
-	"variable_modifications_unit_w": "w — 周",
-	"variable_modifications_unit_y": "y — 年",
-	"journal_write": [
-		{
-			"declarations": [
-				"input duration",
-				"input every",
-				"input type"
-			],
-			"selectors": [
-				"duration",
-				"every",
-				"type"
-			],
-			"match": {
-				"duration=*,every=*,type=day": "日常的",
-				"duration=*,every=*,type=week": "每周",
-				"duration=*,every=*,type=month": "月度",
-				"duration=*,every=*,type=quarter": "季刊",
-				"duration=*,every=*,type=year": "每年",
-				"duration=1,every=day,type=custom": "每天",
-				"duration=*,every=day,type=custom": "每{duration}天",
-				"duration=1,every=week,type=custom": "每周",
-				"duration=*,every=week,type=custom": "每{duration}周",
-				"duration=1,every=month,type=custom": "每月",
-				"duration=*,every=month,type=custom": "每{duration}个月",
-				"duration=1,every=quarter,type=custom": "每季度",
-				"duration=*,every=quarter,type=custom": "每季度{duration}",
-				"duration=1,every=year,type=custom": "每年",
-				"duration=*,every=year,type=custom": "每{duration}年",
-				"duration=*,every=*,type=*": "每个{duration} {every}"
-			}
-		}
-	],
-	"journal_add_modal_every_unit": [
-		{
-			"declarations": [
-				"input unit",
-				"input count"
-			],
-			"selectors": [
-				"unit",
-				"count"
-			],
-			"match": {
-				"unit=day,count=1": "天",
-				"unit=day,count=*": "天",
-				"unit=week,count=1": "周",
-				"unit=week,count=*": "周",
-				"unit=month,count=1": "个月",
-				"unit=month,count=*": "个月",
-				"unit=quarter,count=1": "季度",
-				"unit=quarter,count=*": "季度",
-				"unit=year,count=1": "年",
-				"unit=year,count=*": "年"
-			}
-		}
-	],
-	"logging_dump_button": "转储日志以作记录",
-	"logging_dump_desc": "将最近记录的日志消息写入保险库中的新笔记。",
-	"logging_dump_empty": "目前尚未记录任何日志信息。",
-	"logging_dump_failed": "日志记录写入失败。",
-	"logging_dump_succeeded": "日志写入到{path}",
-	"logging_dump_title": "导出日志",
-	"logging_level_debug": "调试",
-	"logging_level_desc": "只有级别等于或高于此级别的日志消息才会打印到控制台并保留以供导出。",
-	"logging_level_error": "错误",
-	"logging_level_info": "信息",
-	"logging_level_title": "日志级别",
-	"logging_level_warn": "警告",
-	"logging_section_title": "日志记录"
+  "$schema": "https://inlang.com/schema/inlang-message-format",
+  "calendar_apply_globally_desc": "如果禁用，周配置设置仅适用于日记中的日期，不会影响其他插件或 Obsidian 本身创建的日期。",
+  "calendar_apply_globally_restart_hint": "您可能需要重启 Obsidian 才能使更改生效。",
+  "calendar_apply_globally_title": "将周配置应用于 Vault 中的所有日期。",
+  "calendar_appearance_active_background": "活动 — 背景",
+  "calendar_appearance_active_text": "活动 — 文本",
+  "calendar_appearance_section_title": "日历高亮显示",
+  "calendar_appearance_description": [
+    {
+      "declarations": ["input layer", "input target"],
+      "selectors": ["layer", "target"],
+      "match": {
+        "layer=text,target=today": "日历单元格中今天日期的文本颜色。",
+        "layer=background,target=today": "今天日期的日历单元格背景颜色。",
+        "layer=text,target=active": "当前打开的笔记所在的日历单元格的文本颜色。",
+        "layer=background,target=active": "当前打开的笔记所在的日历单元格的背景颜色。"
+      }
+    }
+  ],
+  "calendar_appearance_today_background": "今天——背景",
+  "calendar_appearance_today_text": "今天 — 文本",
+  "common_label_back": "返回列表",
+  "common_label_calendar": "日历",
+  "common_pick_a_date": "选择一个日期",
+  "calendar_picker_first_week_desc": "一月份的某一天（1-7日），必须包含在每年的第一周内。例如，1月4日表示第一周包含1月4日。",
+  "calendar_picker_first_week_label": "新年第一周",
+  "calendar_picker_in_use_marker": "目前使用",
+  "calendar_picker_start_week_on": "本周开始",
+  "calendar_picker_start_week_on_desc": "哪一天作为一周的第一天？",
+  "calendar_picker_update_action": "更新",
+  "calendar_picker_use_action": "使用",
+  "calendar_preset_description": [
+    {
+      "declarations": ["input preset"],
+      "selectors": ["preset"],
+      "match": {
+        "preset=locale": "使用 Obsidian 当前区域设置定义的周设置。",
+        "preset=iso-8601": "一周从星期一开始。新年第一周包含第一个星期四（1月4日）。",
+        "preset=western": "一周从星期日开始。新年第一周包含第一个星期六（1月1日）。",
+        "preset=middle-eastern": "一周从星期六开始。新年第一周包括第一个星期五（1月1日）。",
+        "preset=custom": "确定星期几为第一天，以及如何确定一年中的第一周。"
+      }
+    }
+  ],
+  "calendar_preset_custom_summary": "一周从{dayName}开始。一年中的第一周包括一月{firstDayOfYear} 。",
+  "calendar_preset_iso_used": "欧盟（葡萄牙除外）和大多数其他欧洲国家，亚洲和大洋洲的大部分地区。",
+  "calendar_preset_middle_eastern_used": "中东大部分地区。",
+  "calendar_preset_name": [
+    {
+      "declarations": ["input preset"],
+      "selectors": ["preset"],
+      "match": {
+        "preset=locale": "遵循系统区域设置",
+        "preset=iso-8601": "ISO 8601",
+        "preset=western": "西方传统",
+        "preset=middle-eastern": "中东",
+        "preset=custom": "风俗"
+      }
+    }
+  ],
+  "common_week_configuration": "周配置",
+  "calendar_preset_western_used": "加拿大、美国、冰岛、葡萄牙、日本、台湾、泰国、香港、澳门、以色列、埃及、南非、菲律宾以及拉丁美洲的大部分地区。",
+  "calendar_week_config_change": "改变",
+  "calendar_week_config_description": "确定一周的开始日期以及如何确定一年中的第一周——这会影响周数。",
+  "code_blocks_nav_not_connected": "笔记未与日记关联",
+  "code_blocks_home_empty": "暂无日记可供显示。请查看该栏目的显示和书架选项。",
+  "code_blocks_nav_next": "下一个",
+  "code_blocks_nav_previous": "以前的",
+  "nav_block_section_title": "导航模块",
+  "nav_block_section_mode_label": "模式",
+  "nav_block_section_mode_option": [
+    {
+      "declarations": ["input kind"],
+      "selectors": ["kind"],
+      "match": {
+        "kind=create": "创建新笔记",
+        "kind=existing": "打开现有笔记"
+      }
+    }
+  ],
+  "nav_block_section_use_defaults": [
+    {
+      "declarations": ["input writeType"],
+      "selectors": ["writeType"],
+      "match": {
+        "writeType=day": "使用默认设置记录每日笔记",
+        "writeType=week": "每周笔记使用默认设置",
+        "writeType=month": "月度笔记使用默认设置",
+        "writeType=quarter": "使用季度笔记的默认值",
+        "writeType=year": "年度笔记使用默认值",
+        "writeType=*": "使用默认值"
+      }
+    }
+  ],
+  "block_rows_decorate_whole_label": "装饰整个方块",
+  "block_rows_empty": "暂无行。添加一行。",
+  "block_rows_add_row": "添加行",
+  "block_rows_edit_tooltip": "编辑行",
+  "block_rows_delete_tooltip": "删除行",
+  "common_action_move_up": "向上",
+  "common_action_move_down": "向下",
+  "interval_block_section_title": "日历间隔行",
+  "nav_block_row_modal_title": [
+    {
+      "declarations": ["input mode"],
+      "selectors": ["mode"],
+      "match": {
+        "mode=add": "添加导航块行",
+        "mode=edit": "编辑导航块行"
+      }
+    }
+  ],
+  "nav_block_row_field_template": "模板",
+  "nav_block_row_field_font_size": "字体大小",
+  "nav_block_row_field_font_size_hint": "相对于正常字体大小：1 表示与正文文字大小相同。",
+  "nav_block_row_field_text_style": "文本样式",
+  "nav_block_row_field_bold": "粗体",
+  "nav_block_row_field_italic": "斜体",
+  "common_label_text_color": "文本颜色",
+  "common_label_background_color": "背景颜色",
+  "nav_block_row_field_link": "关联",
+  "common_label_journal": "日记",
+  "nav_block_row_field_add_decorations": "添加装饰",
+  "nav_block_row_link_option": [
+    {
+      "declarations": ["input kind"],
+      "selectors": ["kind"],
+      "match": {
+        "kind=none": "没有任何",
+        "kind=self": "自己",
+        "kind=journal": "日记",
+        "kind=day": "天",
+        "kind=week": "星期",
+        "kind=month": "月",
+        "kind=quarter": "四分之一",
+        "kind=year": "年"
+      }
+    }
+  ],
+  "nav_block_row_template_required": "必须使用模板。",
+  "nav_block_row_journal_required": "选择日记。",
+  "nav_block_row_resolved_preview": "已解决： {text}",
+  "command_add": "添加命令",
+  "command_context_open_note_clarifier": "（使用打开的笔记的日期，或今天的日期）",
+  "command_context_only_open_note_clarifier": "（需要打开一个日记笔记）",
+  "command_context_option": [
+    {
+      "declarations": ["input context"],
+      "selectors": ["context"],
+      "match": {
+        "context=today": "今天",
+        "context=open_note": "打开的笔记的日期，或今天",
+        "context=only_open_note": "仅打开的笔记的日期"
+      }
+    }
+  ],
+  "command_empty": [
+    {
+      "declarations": ["input scope"],
+      "selectors": ["scope"],
+      "match": {
+        "scope=global": "尚未创建任何全局命令。",
+        "scope=journal": "目前还没有为该日记创建任何命令。",
+        "scope=shelf": "目前还没有为该书架创建任何命令。"
+      }
+    }
+  ],
+  "command_section_title": "命令",
+  "command_delete_modal_confirm": "删除命令“ {name} \"？",
+  "command_delete": "删除命令",
+  "command_edit": "编辑命令",
+  "command_edit_tooltip": "编辑{name}",
+  "command_icon_required_error": "选择一个图标，以便在功能区中显示此命令。",
+  "command_insert_date_link": "插入日记笔记链接",
+  "command_label_today": "打开今天的笔记",
+  "command_label_tomorrow": "打开明天的笔记",
+  "command_label_yesterday": "打开昨天的笔记",
+  "command_modal_context_description": "选择命令将哪个日期作为当前日期。",
+  "command_modal_context_label": "语境",
+  "command_modal_context_only_open_note_hint": "仅在日记笔记打开时运行，并使用该笔记的日期。",
+  "command_modal_context_open_note_hint": "使用已打开的日记笔记的日期；若没有打开日记笔记，则使用今天的日期。",
+  "common_label_icon": "图标",
+  "common_label_name": "姓名",
+  "command_modal_open_mode_label": "打开笔记",
+  "common_show_in_ribbon": "以丝带形式展示",
+  "command_modal_type_label": "当命令运行时",
+  "command_modal_write_type_label": "笔记类型",
+  "command_name_prefix_hint": [
+    {
+      "declarations": ["input kind"],
+      "selectors": ["kind"],
+      "match": {
+        "kind=journal": "在命令面板中，日记名称会自动添加到命令名称前面。",
+        "kind=shelf": "在命令面板中，架子名称会自动添加到命令名称前面。"
+      }
+    }
+  ],
+  "command_name_required_error": "命令名称为必填项。",
+  "command_name_unique_error": "命令名称必须唯一。",
+  "command_open_mode_option": [
+    {
+      "declarations": ["input mode"],
+      "selectors": ["mode"],
+      "match": {
+        "mode=active": "替换当前笔记",
+        "mode=tab": "在新标签页中",
+        "mode=split": "在当前笔记旁边",
+        "mode=window": "在弹出窗口中"
+      }
+    }
+  ],
+  "command_open_next": "打开下一张笔记",
+  "command_open_previous": "打开上一条笔记",
+  "command_open_view": "打开 {name}",
+  "command_view_change_shelf": "更改 {name} 中的架子",
+  "shelf_picker_placeholder": "搜索架子",
+  "command_palette_journal_name": "{journal}: {name}",
+  "command_palette_shelf_name": "架子：{shelf}：{name}",
+  "command_open_no_next": "此笔记之后没有下一首了。",
+  "command_open_no_previous": "此前没有其他笔记。",
+  "command_type_label": [
+    {
+      "declarations": ["input type", "input writeType"],
+      "selectors": ["type", "writeType"],
+      "match": {
+        "type=same,writeType=day": "打开当前每日笔记",
+        "type=same,writeType=week": "打开当前周报",
+        "type=same,writeType=month": "打开当前月度笔记",
+        "type=same,writeType=quarter": "打开当前季度笔记",
+        "type=same,writeType=year": "打开当前年度笔记",
+        "type=same,writeType=custom": "打开当前自定义笔记",
+        "type=next,writeType=day": "打开下一份每日笔记",
+        "type=next,writeType=week": "打开下周笔记",
+        "type=next,writeType=month": "打开下个月的笔记",
+        "type=next,writeType=quarter": "打开下一季度笔记",
+        "type=next,writeType=year": "打开下一年度的年票",
+        "type=next,writeType=custom": "打开下一条自定义笔记",
+        "type=previous,writeType=day": "打开上一期每日笔记",
+        "type=previous,writeType=week": "打开上一周的笔记",
+        "type=previous,writeType=month": "打开上个月的月度笔记",
+        "type=previous,writeType=quarter": "打开上一季度的季度报告",
+        "type=previous,writeType=year": "打开上一年的年票",
+        "type=previous,writeType=custom": "打开之前的自定义笔记",
+        "type=previous_available,writeType=day": "打开之前的每日笔记",
+        "type=previous_available,writeType=week": "打开之前的现有周记",
+        "type=previous_available,writeType=month": "打开之前的现有月度笔记",
+        "type=previous_available,writeType=quarter": "打开之前现有的季度笔记",
+        "type=previous_available,writeType=year": "打开之前现有的年度笔记",
+        "type=previous_available,writeType=custom": "打开之前已有的自定义笔记",
+        "type=next_available,writeType=day": "打开下一个现有的每日笔记",
+        "type=next_available,writeType=week": "打开下一份现有的周报",
+        "type=next_available,writeType=month": "打开下一份现有月度账单",
+        "type=next_available,writeType=quarter": "打开下一份现有季度笔记",
+        "type=next_available,writeType=year": "打开下一个现有的年度笔记",
+        "type=next_available,writeType=custom": "打开下一个现有自定义笔记",
+        "type=same_next_week,writeType=*": "下周同一天营业",
+        "type=same_previous_week,writeType=*": "上周同一天营业",
+        "type=same_next_month,writeType=*": "下个月同一天开业",
+        "type=same_previous_month,writeType=*": "上个月同一天开业",
+        "type=same_next_year,writeType=day": "明年同一天开放",
+        "type=same_next_year,writeType=month": "明年同月开业",
+        "type=same_next_year,writeType=quarter": "明年同一季度开业",
+        "type=same_previous_year,writeType=day": "去年也是同一天开业",
+        "type=same_previous_year,writeType=month": "去年同月开业",
+        "type=same_previous_year,writeType=quarter": "去年同期开盘",
+        "type=*,writeType=*": "打开笔记"
+      }
+    }
+  ],
+  "command_write_type_option": [
+    {
+      "declarations": ["input writeType"],
+      "selectors": ["writeType"],
+      "match": {
+        "writeType=day": "每日笔记",
+        "writeType=week": "每周简报",
+        "writeType=month": "月度笔记",
+        "writeType=quarter": "季度笔记",
+        "writeType=year": "年金",
+        "writeType=custom": "自定义笔记"
+      }
+    }
+  ],
+  "command_connect_note": "将笔记与日记连接起来",
+  "connect_note_modal_date_label": "日期",
+  "connect_note_modal_move_description": "笔记的文件夹（ {current} ）与日记的配置文件夹（ {configured} ）不同。",
+  "connect_note_modal_override_description": "另一条注释（ {path} ）与此日期关联。如果您启用此功能，它将被断开连接。",
+  "connect_note_modal_override_label": "替换已与此日期关联的笔记",
+  "connect_note_modal_rename_description": "笔记的名称（ {current} ）与日记的配置名称（ {configured} ）不同。",
+  "connect_note_modal_rename_label": "将文件重命名为与日记匹配的名称",
+  "connect_note_modal_move_label": "将文件移入日记文件夹",
+  "connect_note_modal_connect": "连接",
+  "connect_note_modal_connected_to": "此注释与“ {journalName} \"相关联。",
+  "connect_note_modal_disconnect": "断开",
+  "connect_note_modal_out_of_bounds": "该日期不在日记的有效出版时间范围内。",
+  "connect_note_notice_connected": "注释与“ {journalName} \" 相关联。",
+  "connect_note_notice_disconnected": "注意与“ {journalName} \"断开连接。",
+  "bulk_add_notes_to_title": "添加注释到{journalName}",
+  "bulk_add_folder_label": "源文件夹",
+  "bulk_add_folder_description": "选择包含要处理的现有笔记的文件夹。",
+  "bulk_add_date_place_label": "读取日期",
+  "bulk_add_date_place_title": "笔记标题",
+  "bulk_add_date_place_property": "房产",
+  "common_label_property_name": "物业名称",
+  "bulk_add_date_format_label": "日期格式",
+  "bulk_add_date_format_omit_time": "如果您的日期包含时间部分，请将其从格式中省略。",
+  "bulk_add_date_format_property_note": "日期可能与存储格式不同——请在“源”显示模式下检查格式。",
+  "bulk_add_filter_combinator_label": "筛选笔记",
+  "bulk_add_filter_combinator_no": "无滤镜",
+  "bulk_add_filter_combinator_and": "所有条件",
+  "bulk_add_filter_combinator_or": "匹配任何条件",
+  "bulk_add_add_filter_title": "添加标题条件",
+  "bulk_add_add_filter_tag": "添加标签条件",
+  "bulk_add_add_filter_property": "添加属性条件",
+  "bulk_add_existing_label": "当笔记已与该日期关联时",
+  "bulk_add_existing_description": [
+    {
+      "declarations": ["input option"],
+      "selectors": ["option"],
+      "match": {
+        "option=skip": "新笔记保持原样，未连接。",
+        "option=override": "新笔记会接管日期；之前连接的笔记仍保留在金库中，但已断开连接。",
+        "option=merge": "新笔记的内容会附加到已连接的笔记上，而新笔记本身会被删除。",
+        "option=ask": "在审核屏幕上对每条笔记做出决定。"
+      }
+    }
+  ],
+  "bulk_add_other_folder_label": "文件夹不同时",
+  "bulk_add_other_name_label": "当名称不同时",
+  "bulk_add_option_skip": "跳过",
+  "bulk_add_option_override": "代替",
+  "bulk_add_option_merge": "合并",
+  "bulk_add_option_keep": "保持",
+  "bulk_add_option_move": "移动",
+  "bulk_add_option_rename": "重命名",
+  "bulk_add_option_ask": "询问每个",
+  "bulk_add_dry_run_label": "试运行（仅供预览）",
+  "bulk_add_dry_run_description": "不要修改任何笔记——只需报告将要进行的更改即可。",
+  "bulk_add_next": "继续",
+  "bulk_add_run": "跑步",
+  "bulk_add_progress": "正在处理{done}中的{total} …",
+  "bulk_add_skipped_count": [
+    {
+      "declarations": ["input count"],
+      "selectors": ["count"],
+      "match": {
+        "count=1": "跳过1个笔记",
+        "count=*": "{count}已跳过的注释"
+      }
+    }
+  ],
+  "bulk_add_planned_count": [
+    {
+      "declarations": ["input count"],
+      "selectors": ["count"],
+      "match": {
+        "count=1": "1 条待处理笔记",
+        "count=*": "{count}处理笔记"
+      }
+    }
+  ],
+  "bulk_add_skip_reason_already_connected": "已连接",
+  "bulk_add_skip_reason_filtered": "已过滤",
+  "bulk_add_skip_reason_no_date": "未找到日期",
+  "bulk_add_skip_reason_invalid_date": "日期无法解析",
+  "bulk_add_skip_reason_out_of_bounds": "在日记时间线之外",
+  "common_action_cancel": "取消",
+  "common_action_close": "关闭",
+  "common_action_create": "创造",
+  "common_action_delete": "删除",
+  "common_action_submit": "节省",
+  "confirm_note_creation_body": "在日记“ {noteName} ”中创建{journalName} ”？",
+  "confirm_note_creation_confirm": "创造",
+  "confirm_note_creation_title": "创建一条新的日记笔记？",
+  "decoration_add": "添加装饰",
+  "decoration_border_mode_label": [
+    {
+      "declarations": ["input mode"],
+      "selectors": ["mode"],
+      "match": {
+        "mode=uniform": "制服",
+        "mode=different": "每侧设置"
+      }
+    }
+  ],
+  "decoration_border_side_label": [
+    {
+      "declarations": ["input side"],
+      "selectors": ["side"],
+      "match": {
+        "side=top": "顶部",
+        "side=bottom": "底部",
+        "side=left": "左边",
+        "side=right": "正确的"
+      }
+    }
+  ],
+  "decoration_border_style_label": [
+    {
+      "declarations": ["input style"],
+      "selectors": ["style"],
+      "match": {
+        "style=solid": "坚硬的",
+        "style=dashed": "虚线",
+        "style=dotted": "点状",
+        "style=groove": "槽",
+        "style=double": "双倍的"
+      }
+    }
+  ],
+  "decoration_condition_all_tasks_completed_describe": "所有任务均已完成",
+  "decoration_condition_date_describe": [
+    {
+      "declarations": ["input day", "input month", "input year"],
+      "selectors": ["year"],
+      "match": {
+        "year=null": "日期为{day} / {month}",
+        "year=*": "日期为{day} / {month} / {year}"
+      }
+    }
+  ],
+  "decoration_condition_date_any": "任何",
+  "decoration_condition_date_any_unit": [
+    {
+      "declarations": ["input unit"],
+      "selectors": ["unit"],
+      "match": {
+        "unit=day": "任何一天",
+        "unit=month": "任何月份",
+        "unit=year": "任何一年"
+      }
+    }
+  ],
+  "decoration_condition_date_unit_label": [
+    {
+      "declarations": ["input unit"],
+      "selectors": ["unit"],
+      "match": {
+        "unit=day": "天",
+        "unit=month": "月",
+        "unit=year": "年"
+      }
+    }
+  ],
+  "decoration_condition_has_note_describe": "存在一张纸条",
+  "decoration_condition_has_open_task_describe": "该笔记有一个未完成的任务",
+  "decoration_condition_offset_describe": "起始偏移量为{offset}",
+  "decoration_condition_offset_hint": [
+    {
+      "declarations": ["input days", "input side"],
+      "selectors": ["side"],
+      "match": {
+        "side=start": "匹配自区间开始以来{days}天。",
+        "side=end": "匹配自区间结束之日起的{days}天。"
+      }
+    }
+  ],
+  "decoration_condition_offset_label": "抵消",
+  "decoration_condition_property_condition_label": "健康）状况",
+  "decoration_condition_property_describe": "属性{name} {op} {value}",
+  "decoration_condition_property_value_label": "价值",
+  "decoration_condition_tag_describe": "标签{op} {value}",
+  "decoration_condition_tag_value_label": "标签值",
+  "decoration_condition_title_describe": "标题{op} {value}",
+  "decoration_condition_title_value_label": "标题值",
+  "decoration_condition_type_short": [
+    {
+      "declarations": ["input type"],
+      "selectors": ["type"],
+      "match": {
+        "type=title": "标题",
+        "type=tag": "标签",
+        "type=property": "财产",
+        "type=date": "日期",
+        "type=weekday": "工作日",
+        "type=offset": "抵消",
+        "type=has-note": "有笔记",
+        "type=has-open-task": "有未完成的任务",
+        "type=all-tasks-completed": "所有任务已完成"
+      }
+    }
+  ],
+  "decoration_condition_type_label": [
+    {
+      "declarations": ["input type"],
+      "selectors": ["type"],
+      "match": {
+        "type=title": "检查标题",
+        "type=tag": "查看标签",
+        "type=property": "检查 frontmatter 属性",
+        "type=date": "检查日期",
+        "type=weekday": "查看工作日",
+        "type=offset": "检查间隔偏移",
+        "type=has-note": "检查是否存在笔记",
+        "type=has-open-task": "检查笔记是否有未完成的任务",
+        "type=all-tasks-completed": "检查所有任务是否已完成"
+      }
+    }
+  ],
+  "decoration_condition_weekday_describe": "weekday 是{weekdays}",
+  "decoration_condition_weekday_label": "工作日",
+  "decoration_corner_placement_label": [
+    {
+      "declarations": ["input placement"],
+      "selectors": ["placement"],
+      "match": {
+        "placement=top-left": "左上",
+        "placement=top-right": "右上角",
+        "placement=bottom-left": "左下角",
+        "placement=bottom-right": "右下角"
+      }
+    }
+  ],
+  "decoration_delete": "删除装饰",
+  "decoration_delete_modal_warning": "这将永久去除装饰物。",
+  "decoration_describe_mode": [
+    {
+      "declarations": ["input kind"],
+      "selectors": ["kind"],
+      "match": {
+        "kind=and": "和",
+        "kind=or": "或者"
+      }
+    }
+  ],
+  "decoration_describe_when": "什么时候",
+  "decoration_edit": "编辑装饰",
+  "decoration_modal_add_condition": "添加条件",
+  "decoration_modal_add_style": "增添风格",
+  "decoration_modal_mode_label": "何时进行装饰",
+  "decoration_modal_mode_option": [
+    {
+      "declarations": ["input kind"],
+      "selectors": ["kind"],
+      "match": {
+        "kind=and": "当所有条件都满足时进行装饰。",
+        "kind=or": "满足任意条件时进行装饰。"
+      }
+    }
+  ],
+  "decoration_modal_no_conditions": "尚未定义任何条件",
+  "decoration_modal_no_styles": "尚未定义任何样式",
+  "decoration_placement_x_label": [
+    {
+      "declarations": ["input value"],
+      "selectors": ["value"],
+      "match": {
+        "value=left": "左边",
+        "value=center": "中心",
+        "value=right": "正确的"
+      }
+    }
+  ],
+  "decoration_placement_y_label": [
+    {
+      "declarations": ["input value"],
+      "selectors": ["value"],
+      "match": {
+        "value=top": "顶部",
+        "value=middle": "中间",
+        "value=bottom": "底部"
+      }
+    }
+  ],
+  "decoration_section_description": "使用装饰元素突出显示日历中符合特定条件的日期。",
+  "decoration_section_empty": "尚未配置任何日历装饰。",
+  "decoration_section_title": "日历装饰",
+  "decoration_shape_label": [
+    {
+      "declarations": ["input shape"],
+      "selectors": ["shape"],
+      "match": {
+        "shape=square": "正方形",
+        "shape=circle": "圆圈",
+        "shape=triangle-up": "三角形（向上）",
+        "shape=triangle-down": "三角形（向下）",
+        "shape=triangle-left": "三角形（左）",
+        "shape=triangle-right": "三角形（右）"
+      }
+    }
+  ],
+  "decoration_date_op_label": [
+    {
+      "declarations": ["input op"],
+      "selectors": ["op"],
+      "match": {
+        "op=exists": "存在",
+        "op=does-not-exist": "不存在",
+        "op=eq": "在",
+        "op=neq": "不",
+        "op=lt": "前",
+        "op=lte": "在或之前",
+        "op=gt": "后",
+        "op=gte": "在……之后"
+      }
+    }
+  ],
+  "decoration_string_op_label": [
+    {
+      "declarations": ["input op"],
+      "selectors": ["op"],
+      "match": {
+        "op=contains": "包含",
+        "op=starts-with": "以……开头",
+        "op=ends-with": "以……结尾",
+        "op=exists": "存在",
+        "op=does-not-exist": "不存在",
+        "op=eq": "等于",
+        "op=neq": "不等于",
+        "op=lt": "<",
+        "op=lte": "&lt;=",
+        "op=gt": "&gt;",
+        "op=gte": "大于等于",
+        "op=is-true": "属实",
+        "op=is-false": "是错误的",
+        "op=does-not-contain": "不含"
+      }
+    }
+  ],
+  "common_label_color": "颜色",
+  "decoration_style_border_mode_label": "边框模式",
+  "decoration_style_border_show_label": "展示",
+  "decoration_style_border_style_label": "风格",
+  "decoration_style_border_width_label": "宽度",
+  "decoration_style_corner_placement_label": "放置",
+  "decoration_style_header": [
+    {
+      "declarations": ["input type"],
+      "selectors": ["type"],
+      "match": {
+        "type=background": "装饰背景",
+        "type=color": "装饰颜色",
+        "type=shape": "装饰形状",
+        "type=corner": "装饰角",
+        "type=icon": "装饰图标",
+        "type=border": "装饰边框"
+      }
+    }
+  ],
+  "common_label_placement": "放置",
+  "decoration_style_size_hint": [
+    {
+      "declarations": ["input kind"],
+      "selectors": ["kind"],
+      "match": {
+        "kind=icon": "图标大小与字体大小成正比：1 表示图标与字母大小相同。",
+        "kind=shape": "形状大小与字体大小相关：1 表示形状与字母大小相同。"
+      }
+    }
+  ],
+  "common_label_size": "尺寸",
+  "decoration_style_shape_shape_label": "形状",
+  "decoration_style_type_label": [
+    {
+      "declarations": ["input type"],
+      "selectors": ["type"],
+      "match": {
+        "type=background": "背景",
+        "type=color": "颜色",
+        "type=shape": "形状",
+        "type=corner": "角落",
+        "type=icon": "图标",
+        "type=border": "边界"
+      }
+    }
+  ],
+  "ui_color_kind_label": [
+    {
+      "declarations": ["input kind"],
+      "selectors": ["kind"],
+      "match": {
+        "kind=transparent": "透明的",
+        "kind=theme": "主题变量",
+        "kind=custom": "风俗"
+      }
+    }
+  ],
+  "ui_color_theme_variable_label": "CSS 变量",
+  "ui_theme_color_background_primary": "主背景",
+  "ui_theme_color_background_primary_alt": "主背景之上表面的背景",
+  "ui_theme_color_background_secondary": "次背景",
+  "ui_theme_color_background_secondary_alt": "次背景之上表面的背景",
+  "ui_theme_color_background_modifier_hover": "悬停元素",
+  "ui_theme_color_background_modifier_active_hover": "激活的悬停元素",
+  "ui_theme_color_background_modifier_border": "边框颜色",
+  "ui_theme_color_background_modifier_border_hover": "边框颜色（悬停）",
+  "ui_theme_color_background_modifier_border_focus": "边框颜色（聚焦）",
+  "ui_theme_color_background_modifier_error": "错误背景",
+  "ui_theme_color_background_modifier_error_hover": "错误背景（悬停）",
+  "ui_theme_color_background_modifier_success": "成功背景",
+  "ui_theme_color_background_modifier_message": "消息背景",
+  "ui_theme_color_interactive_normal": "标准交互元素的背景",
+  "ui_theme_color_interactive_hover": "标准交互元素的背景（悬停）",
+  "ui_theme_color_interactive_accent": "强调交互元素的背景",
+  "ui_theme_color_interactive_accent_hover": "强调交互元素的背景（悬停）",
+  "ui_theme_color_text_normal": "正常文本",
+  "ui_theme_color_text_muted": "柔和文本",
+  "ui_theme_color_text_faint": "浅淡文本",
+  "ui_theme_color_text_on_accent": "强调色为深色时强调背景上的文本",
+  "ui_theme_color_text_on_accent_inverted": "强调色为浅色时强调背景上的文本",
+  "ui_theme_color_text_success": "成功文本",
+  "ui_theme_color_text_warning": "警告文本",
+  "ui_theme_color_text_error": "错误文本",
+  "ui_theme_color_text_accent": "强调文本",
+  "ui_theme_color_text_accent_hover": "强调文本（悬停）",
+  "ui_theme_color_text_selection": "选中文本的背景",
+  "ui_theme_color_text_highlight_bg": "高亮文本的背景",
+  "ui_theme_color_caret_color": "光标颜色",
+  "journal_add_modal_anchor_description": "此日期用于计算自定义时间间隔。创建日记后无法更改。",
+  "common_label_today": "今天",
+  "relative_date_yesterday": "昨天",
+  "relative_date_tomorrow": "明天",
+  "relative_date_last_named_day": "最后{weekday}",
+  "relative_date_named_day": "{weekday}",
+  "relative_date_this": [
+    {
+      "declarations": ["input period"],
+      "selectors": ["period"],
+      "match": {
+        "period=week": "本星期",
+        "period=month": "本月",
+        "period=quarter": "本季度",
+        "period=year": "今年"
+      }
+    }
+  ],
+  "relative_date_last": [
+    {
+      "declarations": ["input period"],
+      "selectors": ["period"],
+      "match": {
+        "period=week": "上星期",
+        "period=month": "上个月",
+        "period=quarter": "上个季度",
+        "period=year": "去年"
+      }
+    }
+  ],
+  "relative_date_next": [
+    {
+      "declarations": ["input period"],
+      "selectors": ["period"],
+      "match": {
+        "period=week": "下周",
+        "period=month": "下个月",
+        "period=quarter": "下个季度",
+        "period=year": "明年"
+      }
+    }
+  ],
+  "relative_date_ago": [
+    {
+      "declarations": ["input count", "input period"],
+      "selectors": ["period"],
+      "match": {
+        "period=week": "{count}",
+        "period=month": "{count}前",
+        "period=quarter": "{count}季度前",
+        "period=year": "{count}年前"
+      }
+    }
+  ],
+  "relative_date_custom_this": "这个 {name}",
+  "relative_date_custom_last": "上个 {name}",
+  "relative_date_custom_next": "下个 {name}",
+  "relative_date_custom_ago": "{count} {name}前",
+  "relative_date_custom_from_now": "{count} {name}后",
+  "relative_date_from_now": [
+    {
+      "declarations": ["input count", "input period"],
+      "selectors": ["period"],
+      "match": {
+        "period=week": "从现在{count}周",
+        "period=month": "从现在起的月份{count}",
+        "period=quarter": "从现在起{count}季度数",
+        "period=year": "从现在{count}"
+      }
+    }
+  ],
+  "shelf_add": "添加货架",
+  "common_delete_name": "删除{name}",
+  "shelf_dashboard_empty": "尚未制作任何货架。",
+  "shelf_dashboard_open": "配置{name}",
+  "shelf_dashboard_section_title": "日记架",
+  "shelf_delete_modal_destination_label": "将日记移至",
+  "shelf_delete_modal_destination_none": "没有任何",
+  "shelf_delete_modal_destination_description": "此书架上的日记将被移至选定的书架，如果未选择任何书架，则移出该书架。笔记不受影响。",
+  "shelf_delete_modal_moved_out": "日记将从书架上移走。笔记不受影响。",
+  "shelf_delete_modal_title": "删除书架{name}",
+  "journal_create": "创建新日记",
+  "common_label_journals": "日记",
+  "shelf_rename": "重新命名书架",
+  "shelf_journals_block_title_filtered": "不在书架上的日记",
+  "shelf_member_count": [
+    {
+      "declarations": ["input count"],
+      "selectors": ["count"],
+      "match": {
+        "count=1": "1 日记",
+        "count=*": "{count}日记"
+      }
+    }
+  ],
+  "shelf_modal_name_label": "书架名称",
+  "shelf_name_required_error": "书架名称为必填项。",
+  "shelf_name_unchanged_error": "请输入其他名称。",
+  "shelf_name_unique_error": "书架名称必须唯一。",
+  "common_label_shelf": "架子",
+  "shelf_place_modal_title": "地点日记",
+  "shelf_section_not_on_shelf": "不在货架上",
+  "shelf_section_place_tooltip": "放在架子上",
+  "settings_load_failed": "日记：加载设置失败 — {error}",
+  "settings_reload_failed": "日记：重新加载设置失败 — {error}",
+  "settings_reload_required_banner": "重新加载 Obsidian 以应用更改后的设置。",
+  "startup_dashboard_section_title": "创业公司",
+  "startup_open_note_title": "启动时打开",
+  "startup_open_note_desc": "每次打开此保险库时，请打开一个笔记。",
+  "startup_dont_open_option": "不要打开",
+  "uri_missing_target": "日记 URI 需要一个“journal”或“type”参数。",
+  "uri_unknown_write_type": "URI 中不存在未知的日记类型“ {type} ”。",
+  "uri_invalid_date": "无法理解 URI 中的日期“ {date} ”。",
+  "uri_invalid_mode": "URI 中存在未知的打开模式“ {mode} ”。",
+  "uri_unknown_journal": "没有名为“ {journal} ”的日记。",
+  "uri_no_journal": "没有日记收录该日期的内容。",
+  "uri_no_journal_of_type": [
+    {
+      "declarations": ["input type"],
+      "selectors": ["type"],
+      "match": {
+        "type=day": "没有任何日记创建每日笔记。",
+        "type=week": "没有任何日记创建每周笔记。",
+        "type=month": "没有任何日记创建每月笔记。",
+        "type=quarter": "没有任何日记创建季度笔记。",
+        "type=year": "没有任何日记创建每年笔记。"
+      }
+    }
+  ],
+  "uri_open_failed": "无法打开日记条目。",
+  "view_dashboard_section_title": "浏览量",
+  "view_dashboard_empty": "暂无浏览量。",
+  "view_dashboard_add": "添加视图",
+  "view_dashboard_open": "配置{name}",
+  "view_dashboard_clone": "克隆{name}",
+  "view_add_modal_title": "添加视图",
+  "view_rename": "重命名视图",
+  "view_name_required_error": "姓名为必填项。",
+  "view_name_unchanged_error": "请输入其他名称。",
+  "view_delete_modal_title": "删除视图{name}",
+  "view_delete_modal_description": "视图及其区块配置已被移除。您的笔记不受影响。",
+  "view_add_block": "添加块",
+  "view_add_block_empty": "未注册任何区块类型。",
+  "view_add_picker_action": "添加{label}",
+  "view_block_divider_label": "分隔线",
+  "view_block_toolbar_label": "工具栏",
+  "view_block_toolbar_description": "用于存放工具栏项目（例如按钮和工具架选择器）的容器。",
+  "view_add_toolbar_item": "添加工具栏项",
+  "view_add_toolbar_item_empty": "未注册任何工具栏项目。",
+  "view_edit_icon_description": "显示在视图的选项卡标题和功能区中。",
+  "view_edit_default_shelf_label": "默认货架",
+  "view_edit_default_shelf_description": "这本书打开时，读者首先看到的就是书架上的这个景象。",
+  "view_edit_show_in_ribbon_description": "添加一个用于打开此视图的功能区按钮。",
+  "common_label_all_journals": "所有日记",
+  "view_edit_open_on_startup_label": "启动时打开",
+  "view_edit_open_on_startup_description": "每次打开保险库时都会打开此视图。它与主设置页面上的启动笔记设置是分开的。",
+  "view_edit_remember_date_label": "记住上次查看的日期",
+  "view_edit_remember_date_description": "关闭时，日历每次启动都会打开今天的日期。开启时，会重新打开上次查看的日期。",
+  "view_edit_leaf_label": "打开",
+  "view_edit_leaf_description": "视图打开位置：停靠在侧边栏中，或作为主工作区中的常规选项卡。",
+  "view_edit_leaf_left": "左侧边栏",
+  "view_edit_leaf_right": "右侧边栏",
+  "view_edit_leaf_tab": "新标签页",
+  "view_reposition_modal_title": "移动打开视图？",
+  "view_reposition_modal_description": "此视图已打开。将其移动到{location} ？",
+  "view_reposition_modal_confirm": "移动",
+  "view_edit_blocks_title": "积木",
+  "view_edit_blocks_empty": "目前还没有区块。",
+  "view_block_unknown_label": "未知块： {key}",
+  "view_block_edit": "编辑块",
+  "view_block_edit_title": "编辑块： {type}",
+  "view_block_remove": "移除块",
+  "view_toolbar_item_unknown_label": "未知工具栏项： {key}",
+  "view_toolbar_item_edit": "编辑工具栏项目",
+  "view_toolbar_item_edit_title": "编辑{type}",
+  "view_toolbar_item_edit_title_detail": "编辑{type} : {detail}",
+  "view_toolbar_item_remove": "移除工具栏项目",
+  "view_toolbar_item_empty": "工具栏上暂无任何项目。",
+  "view_block_month_calendar_label": "月历",
+  "view_block_month_calendar_description": "显示所选日期前后一个或多个月份的网格。",
+  "view_block_week_calendar_label": "周历",
+  "view_block_week_calendar_description": "显示所选日期前后一周或多周的日期条。",
+  "common_custom_intervals": "自定义间隔",
+  "view_block_custom_intervals_description": "列出在可配置时间范围内的自定义日记条目。",
+  "view_block_markdown_template_label": "Markdown模板",
+  "view_block_markdown_template_description": "将模板笔记渲染为 Markdown 格式，并处理日记变量。",
+  "view_block_markdown_template_path_label": "模板文件",
+  "view_block_markdown_template_path_placeholder": "path/to/template.md",
+  "view_block_markdown_template_variables_link": "支持的变量。",
+  "view_block_markdown_template_variables_modal_title": "Markdown 模板变量",
+  "view_block_markdown_template_variables_intro": "这些变量会在模板渲染时被替换。日期格式为 YYYY-MM-DD，时间格式为 HH:mm，除非您明确指定格式。",
+  "view_block_markdown_template_variable_date_description": "当前笔记的日期，或者当没有打开任何日记笔记时，视图的焦点日期。",
+  "view_block_markdown_template_variable_current_date_description": "该区块渲染时显示的日期。",
+  "view_block_markdown_template_variable_time_description": "该区块渲染时的当前实际时间。",
+  "view_block_markdown_template_variable_current_time_description": "区块渲染时的当前实际时间（时间变量的别名）。",
+  "view_block_markdown_template_variable_journal_link_description": "解析为另一篇日记中与目标日期对应的笔记的库路径。自行将其包装成链接，并添加类似 +1w 的偏移量以指向相邻的句点。",
+  "view_block_markdown_template_empty": "未选择模板",
+  "view_block_markdown_template_read_error": "无法读取模板文件。",
+  "view_block_summary_before": "{count}之前",
+  "view_block_summary_after": "{count}之后",
+  "view_block_summary_hidden_days": "隐藏： {days}",
+  "view_block_summary_journal_count": [
+    {
+      "declarations": ["input count"],
+      "selectors": ["count"],
+      "match": {
+        "count=1": "1 日记",
+        "count=*": "{count}日记"
+      }
+    }
+  ],
+  "view_block_toolbar_item_count": [
+    {
+      "declarations": ["input count"],
+      "selectors": ["count"],
+      "match": {
+        "count=1": "1 件",
+        "count=*": "{count}项目"
+      }
+    }
+  ],
+  "view_block_config_window_label": "窗户",
+  "view_block_config_window_current": [
+    {
+      "declarations": ["input period"],
+      "selectors": ["period"],
+      "match": {
+        "period=week": "本周",
+        "period=month": "本月",
+        "period=quarter": "本季度",
+        "period=year": "本年度"
+      }
+    }
+  ],
+  "view_block_config_hide_empty_label": "隐藏空白日记本",
+  "view_toolbar_shelf_selector_label": "货架选择器",
+  "view_toolbar_shelf_selector_description": "切换视图的日记范围。",
+  "view_toolbar_shelf_selector_tooltip": "切换架",
+  "view_toolbar_spacer_label": "垫片",
+  "view_toolbar_spacer_description": "可伸缩间隙，能将相邻物体推开。",
+  "view_toolbar_period_buttons_label": "句号按钮",
+  "view_toolbar_period_buttons_description": "显示当前周、月、季度、年的可点击徽章。",
+  "view_toolbar_period_buttons_config": [
+    {
+      "declarations": ["input period"],
+      "selectors": ["period"],
+      "match": {
+        "period=week": "展会周",
+        "period=month": "展会月",
+        "period=quarter": "演出季",
+        "period=year": "演出年"
+      }
+    }
+  ],
+  "view_toolbar_period_buttons_config_label": "时期",
+  "view_toolbar_defined_navigation_label": "定义笔记导航",
+  "view_toolbar_defined_navigation_description": "一个可以跳转到上一个或下一个已存在笔记的按钮。",
+  "view_toolbar_defined_navigation_target": "步骤详解",
+  "view_toolbar_defined_navigation_target_active": "活跃日记的笔记",
+  "view_toolbar_defined_navigation_direction": "方向",
+  "view_toolbar_defined_navigation_direction_option": [
+    {
+      "declarations": ["input direction"],
+      "selectors": ["direction"],
+      "match": {
+        "direction=previous": "以前的",
+        "direction=next": "下一个"
+      }
+    }
+  ],
+  "view_toolbar_button_label": "按钮",
+  "view_toolbar_button_preset_pick_date": "日期",
+  "view_toolbar_button_preset_pick_date_description": "打开日期选择器，跳转到任意笔记。",
+  "view_toolbar_button_preset_open_note": "打开笔记",
+  "view_toolbar_button_preset_open_note_description": "跳转至当前期间的附注。",
+  "view_toolbar_button_preset_navigate": "按步骤导航",
+  "view_toolbar_button_preset_navigate_description": "按固定间隔向前或向后迈步。",
+  "view_toolbar_button_default_tooltip_pick_multi": "打开一张便笺",
+  "view_toolbar_button_default_label_current": "当前的",
+  "view_toolbar_button_default_tooltip_current_multi": "跳转至当前…",
+  "view_toolbar_button_default_tooltip_prev_unit": [
+    {
+      "declarations": ["input unit"],
+      "selectors": ["unit"],
+      "match": {
+        "unit=week": "上一周",
+        "unit=month": "上个月",
+        "unit=quarter": "上一季度",
+        "unit=year": "上一年"
+      }
+    }
+  ],
+  "view_toolbar_button_default_tooltip_next_unit": [
+    {
+      "declarations": ["input unit"],
+      "selectors": ["unit"],
+      "match": {
+        "unit=week": "下一周",
+        "unit=month": "下个月",
+        "unit=quarter": "下一季度",
+        "unit=year": "下一年"
+      }
+    }
+  ],
+  "view_toolbar_button_menu_pick": [
+    {
+      "declarations": ["input unit"],
+      "selectors": ["unit"],
+      "match": {
+        "unit=day": "选择日期",
+        "unit=week": "选择周",
+        "unit=month": "选择月份",
+        "unit=quarter": "选择季度",
+        "unit=year": "选择年份"
+      }
+    }
+  ],
+  "view_toolbar_button_config_label_label": "标签",
+  "view_toolbar_button_config_tooltip_label": "工具提示",
+  "view_toolbar_appearance_label_label": "标签",
+  "view_toolbar_appearance_tooltip_label": "工具提示",
+  "view_toolbar_button_config_journal_default": "书架上所有日记",
+  "view_toolbar_button_config_mode_label": "行为",
+  "view_toolbar_button_config_levels_label": "时期",
+  "view_toolbar_button_config_mode_option": [
+    {
+      "declarations": ["input mode"],
+      "selectors": ["mode"],
+      "match": {
+        "mode=select-only": "仅移动日历",
+        "mode=navigate": "仅当存在时才可开票",
+        "mode=create": "如果笔记不存在，请创建笔记。"
+      }
+    }
+  ],
+  "view_toolbar_button_config_level_option": [
+    {
+      "declarations": ["input level"],
+      "selectors": ["level"],
+      "match": {
+        "level=day": "天",
+        "level=week": "周",
+        "level=month": "月",
+        "level=quarter": "季度",
+        "level=year": "年"
+      }
+    }
+  ],
+  "view_toolbar_button_config_step_label": "步进",
+  "view_toolbar_button_config_direction_label": "方向",
+  "view_toolbar_button_config_direction_option": [
+    {
+      "declarations": ["input direction", "input unit"],
+      "selectors": ["direction", "unit"],
+      "match": {
+        "direction=prev,unit=*": "上一个",
+        "direction=next,unit=*": "下一个"
+      }
+    }
+  ],
+  "view_toolbar_button_config_granularity_label": "粒度",
+  "view_block_config_before": [
+    {
+      "declarations": ["input unit"],
+      "selectors": ["unit"],
+      "match": {
+        "unit=month": "几个月前",
+        "unit=week": "几周前"
+      }
+    }
+  ],
+  "view_block_config_after": [
+    {
+      "declarations": ["input unit"],
+      "selectors": ["unit"],
+      "match": {
+        "unit=month": "数月后",
+        "unit=week": "数周后"
+      }
+    }
+  ],
+  "view_block_config_hidden_weekdays_label": "一周中的日子",
+  "view_block_config_weeks_label": "周数",
+  "view_block_config_weeks_default": "使用全局默认值",
+  "view_block_config_weeks_none": "隐",
+  "view_block_config_weeks_left": "工作日之前",
+  "view_block_config_weeks_right": "工作日之后",
+  "calendar_week_placement_label": "默认周数",
+  "calendar_week_placement_description": "当日历块设置为“使用全局默认值”时，周数列将显示在此处。",
+  "view_block_config_show_heading_label": "显示月份/年份标题",
+  "journal_add_modal_anchor_label": "开始日期",
+  "journal_add_modal_anchor_required_error": "选择开始日期。",
+  "journal_add_modal_duration_label": "时长",
+  "journal_add_modal_every_label": "间隔",
+  "journal_add_modal_name_placeholder": "例如：每日",
+  "journal_add_modal_name_label": "日记名称",
+  "journal_add_modal_title": "添加日记",
+  "journal_add_modal_write_label": "我将要写",
+  "journal_colliding_heading": "冲突的日记设置",
+  "journal_colliding_warning": "日记{names}配置冲突，因此它们的笔记会互相覆盖。请更改其中一个日记的文件夹或名称模板。",
+  "journal_dashboard_bulk_add": "批量添加注释到{name}",
+  "journal_dashboard_edit": "配置{name}",
+  "journal_dashboard_empty": "尚未创建任何日记。",
+  "journal_delete_modal_title": "删除{name}",
+  "journal_delete_mode_label": "如何处理关联笔记",
+  "journal_delete_mode_option": [
+    {
+      "declarations": ["input mode"],
+      "selectors": ["mode"],
+      "match": {
+        "mode=keep": "做好笔记",
+        "mode=clear": "清晰的日记数据",
+        "mode=delete": "删除笔记"
+      }
+    }
+  ],
+  "journal_delete_mode_description": [
+    {
+      "declarations": ["input mode"],
+      "selectors": ["mode"],
+      "match": {
+        "mode=keep": "笔记将保持不变地保存在您的保险库中。",
+        "mode=clear": "笔记会保留在您的存储库中，但其前言中的日记属性将被移除。",
+        "mode=delete": "与此日记相关的所有笔记都将从您的存储库中删除。"
+      }
+    }
+  ],
+  "journal_edit_allow_before_description": "允许在锚定日期之前进行索引。可能会产生负数。",
+  "journal_edit_allow_before_label": "允许在锚点之前进行锚定",
+  "journal_edit_anchor_description": "此日期用于关联一个数字以供后续计算。",
+  "journal_edit_anchor_label": "锚定日期",
+  "journal_edit_anchor_start_used": "开始日期用作锚定日期。",
+  "journal_edit_auto_create_confirmation_skip_note": "自动创建的笔记不会显示确认对话框。",
+  "journal_edit_auto_create_description": "插件加载时以及每个当地时间午夜自动创建当天笔记。",
+  "journal_edit_auto_create_label": "自动创建今日笔记",
+  "journal_edit_confirm_creation_description": "当导航到尚未添加笔记的日期时，显示确认对话框。",
+  "journal_edit_confirm_creation_label": "确认创建新笔记",
+  "journal_edit_date_format_description": "对于未指定日期格式的日期变量，默认格式如下：",
+  "journal_edit_date_format_label": "默认日期格式",
+  "journal_edit_date_format_preview_label": "格式化日期：",
+  "common_moment_format_reference": "moment.js 格式参考",
+  "journal_edit_end_description": [
+    {
+      "declarations": ["input kind"],
+      "selectors": ["kind"],
+      "match": {
+        "kind=never": "写作将无限期地持续下去。",
+        "kind=date": "此日期之后将不再创建新笔记。",
+        "kind=repeats": "创建了这么多笔记后，将不会再创建新笔记。"
+      }
+    }
+  ],
+  "journal_edit_end_kind": [
+    {
+      "declarations": ["input kind"],
+      "selectors": ["kind"],
+      "match": {
+        "kind=never": "绝不",
+        "kind=date": "日期之后",
+        "kind=repeats": "重复之后"
+      }
+    }
+  ],
+  "journal_edit_end_repeats_needs_start_warning": "设定一个开始日期——一本在多次重复后结束的日记需要一个起始日期。",
+  "journal_edit_end_repeats_suffix": "次",
+  "journal_edit_end_writing_label": "结束写作",
+  "journal_edit_fm_end_toggle_label": "添加结束日期属性",
+  "journal_edit_fm_start_description": "对于跨越两年的周刊，开始日期可能与日期属性不同。",
+  "journal_edit_fm_start_toggle_label": "添加开始日期属性",
+  "journal_edit_folder_description": "新笔记将在此文件夹中创建。",
+  "journal_edit_folder_label": "文件夹",
+  "journal_edit_move_to_folder_apply_link": "应用建议",
+  "journal_edit_move_to_folder_recommendation_date_format": "日期格式包含路径分隔符。是否应将日期变量移至“文件夹”字段？",
+  "journal_edit_move_to_folder_recommendation_name_template": "笔记名称模板包含路径分隔符。是否将路径前缀移至“文件夹”字段？",
+  "journal_edit_name_template_description": "用于生成新笔记名称的模板。",
+  "journal_edit_colliding_warning": "此日记解析到与{names}相同的笔记路径，因此它们的笔记会互相覆盖。请更改文件夹或名称模板，使其拥有不同的路径。",
+  "journal_edit_name_template_invertibility_warning": "模板无法反向解析（ {reason} : \" {offending} \"）。自动附加功能将静默跳过与此模式匹配的外部创建的笔记。",
+  "journal_edit_name_template_no_anchor_warning": "模板没有日期变量，其编号变量也无法反转为日期，因此自动附加功能将静默跳过与此模式匹配的外部创建的笔记。",
+  "journal_edit_name_template_label": "笔记名称模板",
+  "journal_edit_note_path_preview_label": "已解析的笔记路径：",
+  "journal_edit_rename_tooltip": "重命名日记",
+  "journal_edit_reset_count_suffix": "重复",
+  "journal_edit_reset_description": "这个数字如何随时间变化。",
+  "journal_edit_reset_label": "重置",
+  "journal_edit_reset_option": [
+    {
+      "declarations": ["input kind"],
+      "selectors": ["kind"],
+      "match": {
+        "kind=never": "连续的",
+        "kind=after": "重置后"
+      }
+    }
+  ],
+  "journal_edit_section_frontmatter": "前言",
+  "journal_edit_section_note_creation": "创建笔记",
+  "journal_edit_section_sequential_numbers": "连续数字",
+  "journal_edit_section_templates": "模板",
+  "journal_edit_code_block_reference_link": "支持的代码块。",
+  "journal_edit_code_block_reference_modal_title": "支持的代码块",
+  "journal_edit_code_block_copy_hint": "点击代码块即可将其复制到剪贴板。",
+  "journal_edit_code_block_copied": "已复制到剪贴板。",
+  "journal_edit_code_block_nav_description": "导航模块可帮助您在当前笔记相邻的笔记之间移动。",
+  "journal_edit_code_block_nav_current": "其{name}日记的配置如下所示：",
+  "journal_edit_code_block_nav_aliases_lead": "这些旧的代码块名称是别名，它们的行为完全相同：",
+  "journal_edit_code_block_timeline_description": "时间轴模块可帮助您在较大的时间段内进行导航。",
+  "journal_edit_code_block_timeline_default": "{name}日记的默认时间线如下所示：",
+  "journal_edit_code_block_timeline_mode_lead": "通过向模块添加模式选项来更改时间线模式。",
+  "journal_edit_code_block_timeline_modes_lead": "支持的模式：",
+  "journal_edit_code_block_timeline_weeks": "控制周数列（左、右或无）。",
+  "journal_edit_code_block_timeline_hidden_weekdays": "隐藏列出的星期几（0 = 星期日 … 6 = 星期六），例如 [0, 6] 表示去掉周末。",
+  "journal_edit_code_block_home_description": "首页模块显示指向您日记中当前笔记的链接。",
+  "journal_edit_code_block_home_default": "默认情况下，它看起来像这样：",
+  "journal_edit_code_block_home_options_lead": "支持的选项：",
+  "journal_edit_code_block_home_option_show": "控制显示哪些日记（默认仅显示当日链接）。支持的值：日、周、月、季度、年、自定义。",
+  "journal_edit_code_block_home_option_separator": "用于分隔多个链接的文本。",
+  "journal_edit_code_block_home_option_scale": "将链接大小增加到文本大小的倍数（例如，scale: 2 会将其加倍）。",
+  "journal_edit_code_block_home_option_shelf": "将展示的日记限制在特定的书架上。",
+  "journal_edit_code_block_home_custom_lead": "通过自定义选项，它可以看起来像这样：",
+  "journal_edit_section_timeline": "时间线",
+  "journal_edit_sequence_enabled_description": "给笔记分配编号（例如第 1 天、第 2 天……）。",
+  "journal_edit_sequence_enabled_label": "启用顺序编号",
+  "journal_edit_start_number_description": "在锚定日期分配的编号。",
+  "journal_edit_start_number_label": "起始号码",
+  "journal_edit_start_writing_custom_locked": "自定义间隔的开始日期无法更改：它用于计算间隔的起始日期。",
+  "journal_edit_start_writing_description": "在此日期之前不会创建新笔记。",
+  "journal_edit_start_writing_label": "开始写作",
+  "journal_edit_template_add_button": "添加模板",
+  "journal_edit_template_path_placeholder": "模板/每日.md",
+  "journal_edit_template_path_preview_label": "已解析的模板路径：",
+  "journal_edit_template_remove_tooltip": "移除模板",
+  "journal_edit_templates_description": "指向将用作创建新笔记模板的笔记的路径。如果配置了多个，则优先使用第一个已存在的笔记。",
+  "journal_edit_templater_supported": "模板语法为{slot} 。",
+  "journal_edit_templater_supported_link": "有",
+  "journal_edit_variable_additional_modifications_link": "其他修改",
+  "journal_edit_variable_current_date_description": "今天的日期（默认格式为 YYYY-MM-DD）。",
+  "journal_edit_variable_current_time_description": "当前挂钟时间（ {slot}的别名，默认格式为 HH:mm）。",
+  "journal_edit_variable_date_description": "本笔记的参考日期——本笔记涵盖期间的日期。",
+  "journal_edit_variable_date_format_description": "笔记的参考日期，使用提供的 moment.js 格式字符串进行格式化。",
+  "journal_edit_variable_end_date_description": "本通知涵盖期间的最后一天。",
+  "journal_edit_variable_index_description": "当日记启用编号功能时，笔记的顺序编号。",
+  "journal_edit_variable_journal_link_description": "在模板文件的内容中，它会解析为另一篇日记中与此笔记日期对应的笔记路径。您可以将其包装在链接或嵌入代码中（例如 ![[ … ]]），并添加日期修饰符（例如 +1w）以指向相邻的时期。",
+  "journal_edit_variable_journal_name_description": "日记名称（此处： {name} ）。",
+  "journal_edit_variable_non_invertible_warning": "在此处使用此方法可防止日记从文件名中恢复日期。",
+  "journal_edit_variable_note_name_description": "正在创建的笔记的名称。",
+  "journal_edit_variable_note_title_description": "笔记名称的别名，支持核心插件“模板”的变量。",
+  "journal_edit_variable_numbering_description": "配置的编号变量（参见“序列”部分）。",
+  "journal_edit_variable_reference_intro": "可用变量。当未指定显式格式时，日期格式默认为{dateFormat} 。",
+  "journal_edit_variable_reference_link": "支持的变量。",
+  "journal_edit_variable_reference_modal_title": "变量引用",
+  "journal_edit_variable_relative_date_description": "昨天/今天/明天/N天前（固定周期日记）；自定义日记留空。",
+  "journal_edit_variable_start_date_description": "本通知涵盖期间的第一天。",
+  "journal_edit_variable_time_description": "当前挂钟时间（默认格式为 HH:mm）。",
+  "journal_edit_wrong_week_warning": "您使用 `W` 来格式化周，但这不会遵循自定义的周设置，并且可能显示与日历视图不同的周数。请改用 `w`（如果需要，请在插件设置中更改一周的开始日期）。",
+  "journal_fm_field_label": [
+    {
+      "declarations": ["input field"],
+      "selectors": ["field"],
+      "match": {
+        "field=dateField": "日期属性名称",
+        "field=startDateField": "开始日期属性名称",
+        "field=endDateField": "结束日期属性名称"
+      }
+    }
+  ],
+  "journal_fm_field_modal_title": [
+    {
+      "declarations": ["input field"],
+      "selectors": ["field"],
+      "match": {
+        "field=dateField": "编辑日期属性名称",
+        "field=startDateField": "编辑开始日期属性名称",
+        "field=endDateField": "编辑结束日期属性名称"
+      }
+    }
+  ],
+  "journal_name_required_error": "日记名称为必填项。",
+  "journal_name_unique_error": "日记名称必须唯一。",
+  "journal_picker_placeholder": "搜索日记",
+  "journal_property_modal_current_label": "当前姓名",
+  "common_label_new_name": "新名称",
+  "journal_property_name_required": "房产名称为必填项。",
+  "journal_rename_modal_same_as_current_error": "请输入其他名称。",
+  "journal_rename_modal_title": "重命名{name}",
+  "journal_sequence_property_modal_title": "编辑序列号属性名称",
+  "templater_support_intro": "模板程序可能会干扰插件的操作，导致笔记部分损坏或日记数据在其前面部分丢失。",
+  "templater_support_modal_title": "模板生成器注意事项",
+  "templater_support_option_settings": "在此插件的日记设置中配置模板。",
+  "templater_support_option_trigger_off": "禁用模板程序的“在创建新文件时触发模板程序”。",
+  "templater_support_option_trigger_on": "或者保持“创建新文件时触发模板”启用状态，同时启用“启用文件夹模板”但不配置任何文件夹模板。",
+  "templater_support_outro": "这样一来，只有日记插件会处理笔记模板——它在后台运行 Templater 本身——从而避免了冲突。",
+  "templater_support_setup_intro": "最安全的方案：",
+  "variable_chip_copied": "已复制到剪贴板",
+  "variable_modifications_boundary_body": "通过添加 ` 将日期变量对齐到日历周期的开始或结束位置<startOf=unit>`或`<endOf=unit> `。",
+  "variable_modifications_boundary_example": "例如{slot}会渲染该日期所在年份的 1 月 1 日。",
+  "variable_modifications_boundary_heading": "捕捉到周期的开始或结束位置",
+  "variable_modifications_boundary_unit": [
+    {
+      "declarations": ["input unit"],
+      "selectors": ["unit"],
+      "match": {
+        "unit=day": "天",
+        "unit=week": "星期",
+        "unit=month": "月",
+        "unit=quarter": "四分之一",
+        "unit=year": "年",
+        "unit=decade": "十年（仅日期）",
+        "unit=hour": "小时（仅限时钟）"
+      }
+    }
+  ],
+  "common_supported_units": "支持的单元：",
+  "variable_modifications_combined_body": "这三项修改可以同时进行。先应用偏移量，然后应用边界值，最后应用格式覆盖。",
+  "variable_modifications_combined_example": "例如{slot}将日期向前移动一周，跳转到该周的开始，并对其进行格式化。",
+  "variable_modifications_combined_heading": "合并",
+  "variable_modifications_format_body": "通过添加冒号和 moment.js 格式字符串来覆盖默认日期格式。",
+  "variable_modifications_format_example": "例如{slot}仅渲染年份。",
+  "variable_modifications_format_heading": "格式覆盖",
+  "variable_modifications_intro": "日期和时钟变量支持三种修改方式。它们可以组合在一个标记中。",
+  "variable_modifications_modal_title": "日期变量修改",
+  "variable_modifications_shift_body": "通过添加 `+N` 来增加或减少单位数量。<unit> ` 或 `-N<unit> `。",
+  "variable_modifications_shift_example": "例如{slot}将日期向前移动一周。",
+  "variable_modifications_shift_heading": "算术移位",
+  "variable_modifications_unit_d": "d — 天",
+  "variable_modifications_unit_h": "h — 小时",
+  "variable_modifications_unit_m": "m — 月",
+  "variable_modifications_unit_q": "q — 季度",
+  "variable_modifications_unit_w": "w — 周",
+  "variable_modifications_unit_y": "y — 年",
+  "journal_write": [
+    {
+      "declarations": ["input duration", "input every", "input type"],
+      "selectors": ["duration", "every", "type"],
+      "match": {
+        "duration=*,every=*,type=day": "日常的",
+        "duration=*,every=*,type=week": "每周",
+        "duration=*,every=*,type=month": "月度",
+        "duration=*,every=*,type=quarter": "季刊",
+        "duration=*,every=*,type=year": "每年",
+        "duration=1,every=day,type=custom": "每天",
+        "duration=*,every=day,type=custom": "每{duration}天",
+        "duration=1,every=week,type=custom": "每周",
+        "duration=*,every=week,type=custom": "每{duration}周",
+        "duration=1,every=month,type=custom": "每月",
+        "duration=*,every=month,type=custom": "每{duration}个月",
+        "duration=1,every=quarter,type=custom": "每季度",
+        "duration=*,every=quarter,type=custom": "每季度{duration}",
+        "duration=1,every=year,type=custom": "每年",
+        "duration=*,every=year,type=custom": "每{duration}年",
+        "duration=*,every=*,type=*": "每个{duration} {every}"
+      }
+    }
+  ],
+  "journal_add_modal_every_unit": [
+    {
+      "declarations": ["input unit", "input count"],
+      "selectors": ["unit", "count"],
+      "match": {
+        "unit=day,count=1": "天",
+        "unit=day,count=*": "天",
+        "unit=week,count=1": "周",
+        "unit=week,count=*": "周",
+        "unit=month,count=1": "个月",
+        "unit=month,count=*": "个月",
+        "unit=quarter,count=1": "季度",
+        "unit=quarter,count=*": "季度",
+        "unit=year,count=1": "年",
+        "unit=year,count=*": "年"
+      }
+    }
+  ],
+  "logging_dump_button": "转储日志以作记录",
+  "logging_dump_desc": "将最近记录的日志消息写入保险库中的新笔记。",
+  "logging_dump_empty": "目前尚未记录任何日志信息。",
+  "logging_dump_failed": "日志记录写入失败。",
+  "logging_dump_succeeded": "日志写入到{path}",
+  "logging_dump_title": "导出日志",
+  "logging_level_debug": "调试",
+  "logging_level_desc": "只有级别等于或高于此级别的日志消息才会打印到控制台并保留以供导出。",
+  "logging_level_error": "错误",
+  "logging_level_info": "信息",
+  "logging_level_title": "日志级别",
+  "logging_level_warn": "警告",
+  "logging_section_title": "日志记录"
 }

@@ -1,80 +1,104 @@
 import { m } from "@/i18n";
 
-// Obsidian theme CSS-variable names offered by the theme color picker. The variable name
-// is the identifier stored in settings; the dropdown shows a friendly label with a live swatch.
-export const THEME_COLOR_NAMES: readonly string[] = [
-  "background-primary",
-  "background-primary-alt",
-  "background-secondary",
-  "background-secondary-alt",
-  "background-modifier-hover",
-  "background-modifier-active-hover",
-  "background-modifier-border",
-  "background-modifier-border-hover",
-  "background-modifier-border-focus",
-  "background-modifier-error-rgb",
-  "background-modifier-error",
-  "background-modifier-error-hover",
-  "background-modifier-success-rgb",
-  "background-modifier-success",
-  "background-modifier-message",
-  "interactive-normal",
-  "interactive-hover",
-  "interactive-accent",
-  "interactive-accent-hover",
-  "text-normal",
-  "text-muted",
-  "text-faint",
-  "text-on-accent",
-  "text-on-accent-inverted",
-  "text-success",
-  "text-warning",
-  "text-error",
-  "text-accent",
-  "text-accent-hover",
-  "text-selection",
-  "text-highlight-bg",
-  "caret-color",
+export type ThemeColorTag = "background" | "border" | "text";
+
+export type ThemeColorFieldRole = "text" | "background" | "border" | "fill";
+
+export interface ThemeColorGroup {
+  readonly tag: ThemeColorTag;
+  readonly names: readonly string[];
+}
+
+interface ThemeColor {
+  readonly name: string;
+  readonly tag: ThemeColorTag;
+  readonly label: () => string;
+}
+
+// The tag is what the variable is *for*, hand-assigned rather than derived from the name,
+// because the prefixes lie in both directions: --text-selection and --text-highlight-bg are
+// fills, and every --background-modifier-border* is a stroke. Obsidian's own
+// --background-modifier-{error,success}-rgb are bare RGB triples, unusable as var() colors,
+// so they are absent entirely.
+const THEME_COLORS: readonly ThemeColor[] = [
+  { name: "background-primary", tag: "background", label: () => m.ui_theme_color_background_primary() },
+  { name: "background-primary-alt", tag: "background", label: () => m.ui_theme_color_background_primary_alt() },
+  { name: "background-secondary", tag: "background", label: () => m.ui_theme_color_background_secondary() },
+  { name: "background-secondary-alt", tag: "background", label: () => m.ui_theme_color_background_secondary_alt() },
+  { name: "background-modifier-hover", tag: "background", label: () => m.ui_theme_color_background_modifier_hover() },
+  {
+    name: "background-modifier-active-hover",
+    tag: "background",
+    label: () => m.ui_theme_color_background_modifier_active_hover(),
+  },
+  { name: "background-modifier-border", tag: "border", label: () => m.ui_theme_color_background_modifier_border() },
+  {
+    name: "background-modifier-border-hover",
+    tag: "border",
+    label: () => m.ui_theme_color_background_modifier_border_hover(),
+  },
+  {
+    name: "background-modifier-border-focus",
+    tag: "border",
+    label: () => m.ui_theme_color_background_modifier_border_focus(),
+  },
+  { name: "background-modifier-error", tag: "background", label: () => m.ui_theme_color_background_modifier_error() },
+  {
+    name: "background-modifier-error-hover",
+    tag: "background",
+    label: () => m.ui_theme_color_background_modifier_error_hover(),
+  },
+  {
+    name: "background-modifier-success",
+    tag: "background",
+    label: () => m.ui_theme_color_background_modifier_success(),
+  },
+  {
+    name: "background-modifier-message",
+    tag: "background",
+    label: () => m.ui_theme_color_background_modifier_message(),
+  },
+  { name: "interactive-normal", tag: "background", label: () => m.ui_theme_color_interactive_normal() },
+  { name: "interactive-hover", tag: "background", label: () => m.ui_theme_color_interactive_hover() },
+  { name: "interactive-accent", tag: "background", label: () => m.ui_theme_color_interactive_accent() },
+  { name: "interactive-accent-hover", tag: "background", label: () => m.ui_theme_color_interactive_accent_hover() },
+  { name: "text-normal", tag: "text", label: () => m.ui_theme_color_text_normal() },
+  { name: "text-muted", tag: "text", label: () => m.ui_theme_color_text_muted() },
+  { name: "text-faint", tag: "text", label: () => m.ui_theme_color_text_faint() },
+  { name: "text-on-accent", tag: "text", label: () => m.ui_theme_color_text_on_accent() },
+  { name: "text-on-accent-inverted", tag: "text", label: () => m.ui_theme_color_text_on_accent_inverted() },
+  { name: "text-success", tag: "text", label: () => m.ui_theme_color_text_success() },
+  { name: "text-warning", tag: "text", label: () => m.ui_theme_color_text_warning() },
+  { name: "text-error", tag: "text", label: () => m.ui_theme_color_text_error() },
+  { name: "text-accent", tag: "text", label: () => m.ui_theme_color_text_accent() },
+  { name: "text-accent-hover", tag: "text", label: () => m.ui_theme_color_text_accent_hover() },
+  { name: "text-selection", tag: "background", label: () => m.ui_theme_color_text_selection() },
+  { name: "text-highlight-bg", tag: "background", label: () => m.ui_theme_color_text_highlight_bg() },
+  { name: "caret-color", tag: "text", label: () => m.ui_theme_color_caret_color() },
 ];
 
-// Friendly labels for the known theme variables (v2 parity). Kept as arrow wrappers so each
-// paraglide message is referenced statically (tree-shakeable) and read at the active locale.
-const THEME_COLOR_LABELS: Record<string, () => string> = {
-  "background-primary": () => m.ui_theme_color_background_primary(),
-  "background-primary-alt": () => m.ui_theme_color_background_primary_alt(),
-  "background-secondary": () => m.ui_theme_color_background_secondary(),
-  "background-secondary-alt": () => m.ui_theme_color_background_secondary_alt(),
-  "background-modifier-hover": () => m.ui_theme_color_background_modifier_hover(),
-  "background-modifier-active-hover": () => m.ui_theme_color_background_modifier_active_hover(),
-  "background-modifier-border": () => m.ui_theme_color_background_modifier_border(),
-  "background-modifier-border-hover": () => m.ui_theme_color_background_modifier_border_hover(),
-  "background-modifier-border-focus": () => m.ui_theme_color_background_modifier_border_focus(),
-  "background-modifier-error-rgb": () => m.ui_theme_color_background_modifier_error_rgb(),
-  "background-modifier-error": () => m.ui_theme_color_background_modifier_error(),
-  "background-modifier-error-hover": () => m.ui_theme_color_background_modifier_error_hover(),
-  "background-modifier-success-rgb": () => m.ui_theme_color_background_modifier_success_rgb(),
-  "background-modifier-success": () => m.ui_theme_color_background_modifier_success(),
-  "background-modifier-message": () => m.ui_theme_color_background_modifier_message(),
-  "interactive-normal": () => m.ui_theme_color_interactive_normal(),
-  "interactive-hover": () => m.ui_theme_color_interactive_hover(),
-  "interactive-accent": () => m.ui_theme_color_interactive_accent(),
-  "interactive-accent-hover": () => m.ui_theme_color_interactive_accent_hover(),
-  "text-normal": () => m.ui_theme_color_text_normal(),
-  "text-muted": () => m.ui_theme_color_text_muted(),
-  "text-faint": () => m.ui_theme_color_text_faint(),
-  "text-on-accent": () => m.ui_theme_color_text_on_accent(),
-  "text-on-accent-inverted": () => m.ui_theme_color_text_on_accent_inverted(),
-  "text-success": () => m.ui_theme_color_text_success(),
-  "text-warning": () => m.ui_theme_color_text_warning(),
-  "text-error": () => m.ui_theme_color_text_error(),
-  "text-accent": () => m.ui_theme_color_text_accent(),
-  "text-accent-hover": () => m.ui_theme_color_text_accent_hover(),
-  "text-selection": () => m.ui_theme_color_text_selection(),
-  "text-highlight-bg": () => m.ui_theme_color_text_highlight_bg(),
-  "caret-color": () => m.ui_theme_color_caret_color(),
+// Tags a field of each role accepts, in the order they are shown. A border reads well in an
+// accent or status color — Obsidian draws its own focus rings with --interactive-accent — and a
+// decorative mark has no inherent ink-or-surface nature, so those two roles span two tags.
+const ROLE_TAGS: Record<ThemeColorFieldRole, readonly ThemeColorTag[]> = {
+  text: ["text"],
+  background: ["background"],
+  border: ["border", "text"],
+  fill: ["text", "background"],
 };
+
+const LABELS = new Map(THEME_COLORS.map((color) => [color.name, color.label]));
+
+export const THEME_COLOR_NAMES: readonly string[] = THEME_COLORS.map((color) => color.name);
+
+export function themeColorGroupsFor(role: ThemeColorFieldRole): readonly ThemeColorGroup[] {
+  return ROLE_TAGS[role].map((tag) => ({
+    tag,
+    names: THEME_COLORS.filter((color) => color.tag === tag).map((color) => color.name),
+  }));
+}
 
 // A previously stored variable that is not a known theme color round-trips as its raw name.
 export function themeColorLabel(name: string): string {
-  return (THEME_COLOR_LABELS[name] ?? (() => name))();
+  return (LABELS.get(name) ?? (() => name))();
 }
