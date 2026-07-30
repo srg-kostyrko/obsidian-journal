@@ -7,6 +7,8 @@ import { m } from "@/i18n";
 
 import UiColorSettingsPicker from "./UiColorSettingsPicker.vue";
 
+import type { ThemeColorFieldRole } from "./theme-colors";
+
 afterEach(() => cleanup());
 
 function lastEmitted(emitted: ReturnType<typeof render>["emitted"]): ColorSettings | undefined {
@@ -14,8 +16,12 @@ function lastEmitted(emitted: ReturnType<typeof render>["emitted"]): ColorSettin
   return events.at(-1)?.[0];
 }
 
-function mount(initial: ColorSettings) {
-  return render(UiColorSettingsPicker, { props: { modelValue: initial } });
+function mount(initial: ColorSettings, role: ThemeColorFieldRole = "text") {
+  return render(UiColorSettingsPicker, { props: { modelValue: initial, role } });
+}
+
+function themeDropdown(): HTMLSelectElement {
+  return screen.getByRole<HTMLSelectElement>("combobox", { name: m.ui_color_theme_variable_label() });
 }
 
 describe("UiColorSettingsPicker", () => {
@@ -42,10 +48,7 @@ describe("UiColorSettingsPicker", () => {
   describe("theme variant", () => {
     it("emits the selected theme variable name when chosen from the dropdown", async () => {
       const { emitted } = mount({ type: "theme", name: "" });
-      await userEvent.selectOptions(
-        screen.getByRole("combobox", { name: m.ui_color_theme_variable_label() }),
-        "text-accent",
-      );
+      await userEvent.selectOptions(themeDropdown(), "text-accent");
       expect(lastEmitted(emitted)).toEqual({ type: "theme", name: "text-accent" });
     });
 
@@ -57,8 +60,45 @@ describe("UiColorSettingsPicker", () => {
 
     it("keeps a previously stored variable selectable even when it is not a known theme color", () => {
       mount({ type: "theme", name: "my-custom-var" });
-      const dropdown = screen.getByRole<HTMLSelectElement>("combobox", { name: m.ui_color_theme_variable_label() });
-      expect(dropdown.value).toBe("my-custom-var");
+      expect(themeDropdown().value).toBe("my-custom-var");
+    });
+
+    describe("field role", () => {
+      it("omits a variable outside the field's role", () => {
+        mount({ type: "theme", name: "" }, "text");
+        expect(screen.queryByRole("option", { name: m.ui_theme_color_background_primary() })).toBeNull();
+      });
+
+      it("offers a variable matching the field's role", () => {
+        mount({ type: "theme", name: "" }, "background");
+        const option = screen.getByRole<HTMLOptionElement>("option", {
+          name: m.ui_theme_color_background_primary(),
+        });
+        expect(option.value).toBe("background-primary");
+      });
+
+      it("renders no group headings for a single-tag role", () => {
+        mount({ type: "theme", name: "" }, "text");
+        expect(screen.queryAllByRole("group")).toHaveLength(0);
+      });
+
+      it("renders a heading for each tag of a two-tag role", () => {
+        mount({ type: "theme", name: "" }, "border");
+        expect(screen.getByRole("group", { name: m.ui_theme_color_group_label({ group: "border" }) })).toBeTruthy();
+      });
+
+      it("keeps a stored variable selected even when the field's role excludes it", () => {
+        mount({ type: "theme", name: "background-primary" }, "text");
+        expect(themeDropdown().value).toBe("background-primary");
+      });
+
+      it("labels a stored variable the field's role excludes with its friendly name", () => {
+        mount({ type: "theme", name: "background-primary" }, "text");
+        const option = screen.getByRole<HTMLOptionElement>("option", {
+          name: m.ui_theme_color_background_primary(),
+        });
+        expect(option.value).toBe("background-primary");
+      });
     });
   });
 

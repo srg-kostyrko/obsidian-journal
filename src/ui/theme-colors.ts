@@ -89,8 +89,6 @@ const ROLE_TAGS: Record<ThemeColorFieldRole, readonly ThemeColorTag[]> = {
 
 const LABELS = new Map(THEME_COLORS.map((color) => [color.name, color.label]));
 
-export const THEME_COLOR_NAMES: readonly string[] = THEME_COLORS.map((color) => color.name);
-
 export function themeColorGroupsFor(role: ThemeColorFieldRole): readonly ThemeColorGroup[] {
   return ROLE_TAGS[role].map((tag) => ({
     tag,

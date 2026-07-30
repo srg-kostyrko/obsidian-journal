@@ -4,13 +4,15 @@ import { computed } from "vue";
 import type { ColorSettings } from "@/decorations";
 import { m } from "@/i18n";
 
-import { THEME_COLOR_NAMES, themeColorLabel } from "./theme-colors";
+import { themeColorGroupsFor, themeColorLabel, type ThemeColorFieldRole } from "./theme-colors";
 import UiColorPicker from "./UiColorPicker.vue";
 import UiDropdown from "./UiDropdown.vue";
 
+const { role } = defineProps<{ role: ThemeColorFieldRole }>();
 const model = defineModel<ColorSettings>({ required: true });
 
-const themeColorNames = THEME_COLOR_NAMES;
+const groups = computed(() => themeColorGroupsFor(role));
+const offered = computed(() => new Set(groups.value.flatMap((group) => [...group.names])));
 
 const kind = computed<ColorSettings["type"]>({
   get: () => model.value.type,
@@ -50,10 +52,25 @@ const customColor = computed<string>({
         :aria-label="m.ui_color_theme_variable_label()"
       >
         <option value="">{{ m.ui_color_theme_variable_label() }}</option>
-        <option v-for="colorName of themeColorNames" :key="colorName" :value="colorName">
-          {{ themeColorLabel(colorName) }}
+        <template v-if="groups.length > 1">
+          <optgroup
+            v-for="group of groups"
+            :key="group.tag"
+            :label="m.ui_theme_color_group_label({ group: group.tag })"
+          >
+            <option v-for="colorName of group.names" :key="colorName" :value="colorName">
+              {{ themeColorLabel(colorName) }}
+            </option>
+          </optgroup>
+        </template>
+        <template v-else>
+          <option v-for="colorName of groups[0]?.names ?? []" :key="colorName" :value="colorName">
+            {{ themeColorLabel(colorName) }}
+          </option>
+        </template>
+        <option v-if="themeName && !offered.has(themeName)" :value="themeName">
+          {{ themeColorLabel(themeName) }}
         </option>
-        <option v-if="themeName && !themeColorNames.includes(themeName)" :value="themeName">{{ themeName }}</option>
       </UiDropdown>
       <span
         v-if="themeName"

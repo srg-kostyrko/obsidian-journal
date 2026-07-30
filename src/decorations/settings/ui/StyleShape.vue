@@ -28,7 +28,7 @@ const { value: placementY } = useField<JournalDecorationShape["placement_y"]>(`$
     </UiDropdown>
   </UiSettingRow>
   <UiSettingRow :name="m.common_label_color()">
-    <UiColorSettingsPicker v-model="color" />
+    <UiColorSettingsPicker v-model="color" role="fill" />
   </UiSettingRow>
   <UiSettingRow :name="m.common_label_size()">
     <template #description>{{ m.decoration_style_size_hint({ kind: "shape" }) }}</template>

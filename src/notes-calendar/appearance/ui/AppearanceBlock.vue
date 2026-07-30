@@ -41,23 +41,31 @@ function setActiveBackground(background: ColorSettings): void {
     </template>
     <UiSettingRow :name="m.calendar_appearance_today_text()">
       <template #description>{{ m.calendar_appearance_description({ target: "today", layer: "text" }) }}</template>
-      <UiColorSettingsPicker :model-value="slice.state.today.color" @update:model-value="setTodayColor" />
+      <UiColorSettingsPicker :model-value="slice.state.today.color" role="text" @update:model-value="setTodayColor" />
     </UiSettingRow>
     <UiSettingRow :name="m.calendar_appearance_today_background()">
       <template #description>{{
         m.calendar_appearance_description({ target: "today", layer: "background" })
       }}</template>
-      <UiColorSettingsPicker :model-value="slice.state.today.background" @update:model-value="setTodayBackground" />
+      <UiColorSettingsPicker
+        :model-value="slice.state.today.background"
+        role="background"
+        @update:model-value="setTodayBackground"
+      />
     </UiSettingRow>
     <UiSettingRow :name="m.calendar_appearance_active_text()">
       <template #description>{{ m.calendar_appearance_description({ target: "active", layer: "text" }) }}</template>
-      <UiColorSettingsPicker :model-value="slice.state.active.color" @update:model-value="setActiveColor" />
+      <UiColorSettingsPicker :model-value="slice.state.active.color" role="text" @update:model-value="setActiveColor" />
     </UiSettingRow>
     <UiSettingRow :name="m.calendar_appearance_active_background()">
       <template #description>{{
         m.calendar_appearance_description({ target: "active", layer: "background" })
       }}</template>
-      <UiColorSettingsPicker :model-value="slice.state.active.background" @update:model-value="setActiveBackground" />
+      <UiColorSettingsPicker
+        :model-value="slice.state.active.background"
+        role="background"
+        @update:model-value="setActiveBackground"
+      />
     </UiSettingRow>
   </UiCollapsibleBlock>
 </template>

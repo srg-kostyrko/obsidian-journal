@@ -22,6 +22,6 @@ const { value: color } = useField<ColorSettings>(`${name}.color`);
     </UiDropdown>
   </UiSettingRow>
   <UiSettingRow :name="m.common_label_color()">
-    <UiColorSettingsPicker v-model="color" />
+    <UiColorSettingsPicker v-model="color" role="fill" />
   </UiSettingRow>
 </template>

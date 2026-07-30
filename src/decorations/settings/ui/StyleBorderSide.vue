@@ -25,7 +25,7 @@ const { value: borderStyle } = useField<string>(`${name}.style`);
       <UiNumberInput v-model="width" :min="1" :step="1" />
     </UiSettingRow>
     <UiSettingRow :name="m.common_label_color()">
-      <UiColorSettingsPicker v-model="color" />
+      <UiColorSettingsPicker v-model="color" role="border" />
     </UiSettingRow>
     <UiSettingRow :name="m.decoration_style_border_style_label()">
       <UiDropdown v-model="borderStyle">

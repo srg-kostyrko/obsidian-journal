@@ -164,11 +164,11 @@ const onSubmit = handleSubmit((row) => {
     </UiSettingRow>
 
     <UiSettingRow :name="m.common_label_text_color()">
-      <UiColorSettingsPicker v-model="color" />
+      <UiColorSettingsPicker v-model="color" role="text" />
     </UiSettingRow>
 
     <UiSettingRow :name="m.common_label_background_color()">
-      <UiColorSettingsPicker v-model="background" />
+      <UiColorSettingsPicker v-model="background" role="background" />
     </UiSettingRow>
 
     <UiSettingRow :name="m.nav_block_row_field_link()">
