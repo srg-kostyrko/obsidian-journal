@@ -31,7 +31,7 @@
 | `src/journals/settings/ui/NotePathPreview.test.ts`              | Component tests. Renamed from `NoteNamePreview.test.ts`.                                                                                   |
 | `src/journals/settings/ui/sections/NoteCreationSection.vue`     | Mounts the preview at the top; loses both per-field previews; mounts `WrongWeekWarning` directly in the folder row.                        |
 | `src/journals/settings/ui/sections/NoteCreationSection.test.ts` | Section tests: preview position/content, warning ownership.                                                                                |
-| `messages/*.json` (12 files)                                    | `journal_edit_note_path_preview_label` added; `journal_edit_note_name_preview_label` and `journal_edit_folder_path_preview_label` removed. |
+| `messages/*.json` (11 files)                                    | `journal_edit_note_path_preview_label` added; `journal_edit_note_name_preview_label` and `journal_edit_folder_path_preview_label` removed. |
 | `docs/manual-testing-checklist-v3.md`                           | Three manual items in §2.                                                                                                                  |
 
 Unchanged and still needed: `use-today-metadata.ts` (also consumed by `TemplateStringPreview.vue`), `TemplateStringPreview.vue` (still used by `TemplatesSection.vue`), `wrong-week.ts`, `WrongWeekWarning.vue`.
@@ -48,7 +48,7 @@ The i18n key rename and the component rename land together: deleting `journal_ed
 - Rename: `src/journals/settings/ui/NoteNamePreview.test.ts` → `src/journals/settings/ui/NotePathPreview.test.ts`
 - Modify: `src/journals/settings/ui/sections/NoteCreationSection.vue` (imports; add preview at top of block; drop `<NoteNamePreview>` from the name-template row)
 - Modify: `src/journals/settings/ui/sections/NoteCreationSection.test.ts:144-155`
-- Modify: all 12 `messages/*.json`
+- Modify: all 11 `messages/*.json`
 
 **Interfaces:**
 
@@ -90,7 +90,7 @@ In each file, replace the `journal_edit_note_name_preview_label` line with a `jo
 
 Note: `messages/zh.json` uses the full-width colon `：`, and `messages/fr.json` puts a space before `:`. Preserve both.
 
-Hand-writing translations is the established practice here — `translate:i18n` needs a Google API key, so feature commits carry all 12 locales (see `247ae23f`, `3266ab12`).
+Hand-writing translations is the established practice here — `translate:i18n` needs a Google API key, so feature commits carry all 11 locales (see `247ae23f`, `3266ab12`).
 
 - [ ] **Step 3: Compile messages and verify the glossary**
 
@@ -414,7 +414,7 @@ git add messages src/journals/settings/ui/NotePathPreview.vue src/journals/setti
 git commit -m "feat(settings): preview the full new note path at the top of note creation"
 ```
 
-`git add messages` picks up the renames in all 12 files and nothing else — `messages/` holds only locale JSON. The `git mv` in Step 4 already staged the deletion of the old filenames.
+`git add messages` picks up the renames in all 11 files and nothing else — `messages/` holds only locale JSON. The `git mv` in Step 4 already staged the deletion of the old filenames.
 
 ---
 
@@ -424,7 +424,7 @@ git commit -m "feat(settings): preview the full new note path at the top of note
 
 - Modify: `src/journals/settings/ui/sections/NoteCreationSection.vue` (folder row's `#description`; imports)
 - Modify: `src/journals/settings/ui/sections/NoteCreationSection.test.ts`
-- Modify: all 12 `messages/*.json`
+- Modify: all 11 `messages/*.json`
 
 **Interfaces:**
 
@@ -496,7 +496,7 @@ with
 
 `TemplateStringPreview` rendered `<WrongWeekWarning>` outside its own resolved-value `v-if`, so the warning fired even when the preview itself was blank. The `v-if` above preserves that exactly.
 
-- [ ] **Step 4: Delete the dead i18n key from all 12 locale files**
+- [ ] **Step 4: Delete the dead i18n key from all 11 locale files**
 
 `journal_edit_folder_path_preview_label` now has no call site. Delete its line from each file:
 

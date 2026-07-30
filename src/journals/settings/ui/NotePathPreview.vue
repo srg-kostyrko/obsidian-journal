@@ -42,8 +42,10 @@ const resolved = computed<Resolved>(() => {
 .journal-hint {
   color: var(--text-warning);
 }
-/* Preserve significant whitespace in a resolved path so spaces render literally. */
+/* Preserve significant whitespace in a resolved path so spaces render literally,
+   while still letting a deep path wrap instead of overflowing the pane. */
 b {
-  white-space: pre;
+  white-space: pre-wrap;
+  overflow-wrap: anywhere; /* a single long segment has no space to break at */
 }
 </style>
