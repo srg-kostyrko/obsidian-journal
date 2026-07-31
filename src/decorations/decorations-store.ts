@@ -19,10 +19,7 @@ export class DecorationsStore {
     return match(owner)
       .with({ kind: "shelf" }, ({ shelfName }) =>
         this.#shelves.get(shelfName).match<readonly CalendarDecoration[]>({
-          // A shelf saved before calendar decorations existed parses via the schema's
-          // default, but a shelf constructed directly (tests, pre-migration storage)
-          // may still lack the field at runtime.
-          some: (shelf) => shelf.decorations ?? [],
+          some: (shelf) => shelf.decorations,
           none: () => [],
         }),
       )

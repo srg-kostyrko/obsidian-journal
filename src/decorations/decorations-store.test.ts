@@ -43,11 +43,6 @@ describe("DecorationsStore", () => {
       const { store } = build();
       expect(store.list({ kind: "journal", journalName: "gone" })).toEqual([]);
     });
-
-    it("returns an empty list for a shelf saved without a decorations field", () => {
-      const { store } = build({ shelves: { work: { name: "work", journals: [] } as unknown as ShelfConfig } });
-      expect(store.list({ kind: "shelf", shelfName: "work" })).toEqual([]);
-    });
   });
 
   describe("save", () => {
