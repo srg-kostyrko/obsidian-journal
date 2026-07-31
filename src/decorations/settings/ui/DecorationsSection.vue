@@ -59,7 +59,7 @@ function remove(index: number): void {
 <template>
   <UiCollapsibleBlock v-model:expanded="expanded">
     <template #trigger>
-      <span class="journal-section-heading">
+      <span class="decoration-section-heading">
         <UiIcon :name="icons.section.decorations" />
         <span>{{ title }}</span>
         <span class="flair">{{ decorations.length }}</span>
@@ -97,7 +97,7 @@ function remove(index: number): void {
 </template>
 
 <style scoped>
-.journal-section-heading {
+.decoration-section-heading {
   display: inline-flex;
   align-items: center;
   gap: var(--size-2-2);

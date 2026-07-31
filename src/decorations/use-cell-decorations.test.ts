@@ -454,6 +454,41 @@ describe("useCellDecorations", () => {
       expect(cells.get(key(period))?.value.at(0)).toEqual(journalStyle);
     });
 
+    it("leaves a day cell untouched when the surface does not opt in", async () => {
+      const decoration = buildCalendarDecoration({
+        mode: "or",
+        conditions: [buildCondition("weekday", { weekdays: [1] })],
+        styles: [buildStyle("background")],
+      });
+      const { c, store } = buildHarness();
+      store.save({ kind: "global" }, [decoration]);
+      const period = DayPeriod.containing(date("2026-05-25"));
+
+      const cells = mountCells(c, [period], []); // no calendarDecorations option
+      await nextTick();
+
+      expect(cells.get(key(period))?.value).toEqual([]);
+    });
+
+    it("paints a day cell when a vault-wide decoration is saved while the surface is mounted", async () => {
+      const decoration = buildCalendarDecoration({
+        mode: "or",
+        conditions: [buildCondition("weekday", { weekdays: [1] })],
+        styles: [buildStyle("background")],
+      });
+      const { c, store } = buildHarness();
+      const period = DayPeriod.containing(date("2026-05-25"));
+
+      const cells = mountCells(c, [period], [], { shelf: null });
+      await nextTick();
+      expect(cells.get(key(period))?.value).toEqual([]);
+
+      store.save({ kind: "global" }, [decoration]);
+      await nextTick();
+
+      expect(cells.get(key(period))?.value).toEqual(decoration.styles);
+    });
+
     it("orders a shelf's styles ahead of a vault-wide decoration's", async () => {
       const shelfStyle = buildStyle("background", { color: { type: "custom", color: "#333333" } });
       const globalStyle = buildStyle("background", { color: { type: "custom", color: "#444444" } });

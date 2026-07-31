@@ -121,9 +121,16 @@ order:
 
 **journal, then shelf, then global.**
 
-Most specific wins. A journal's own "has-note → blue" beats a shelf rule, which beats a
-vault-wide "weekends are grey". Global decorations act as a backdrop each journal can
-override.
+For background and text colour, most specific wins: a journal's own "has-note → blue"
+beats a shelf rule, which beats a vault-wide "weekends are grey". Global decorations act
+as a backdrop each journal can override.
+
+Borders do not get this guarantee — they are last-wins, so with the journal → shelf →
+global gathering order it is the _least_ specific owner's border that wins on a shared
+cell: a vault-wide border rule beats a journal's own border rule. Shapes, corners and
+icons stack instead of competing, so every owner's gets drawn. "Most specific wins" is
+therefore a claim about background and text colour only, not a property of the mechanism
+as a whole.
 
 ## Surfaces
 
@@ -143,6 +150,12 @@ journals shows global decorations only — no shelf's list leaks into it.
 | `NavigationCodeBlock` — whole-block scope | no                                           |
 | `CustomIntervalsBlock`                    | no                                           |
 | `PeriodButtonsItem`                       | no                                           |
+
+This table is not exhaustive on its own: `TimelineCodeBlock` renders `NotesMonthView` /
+`NotesWeekView` internally and passes them a derived shelf (the host note's journal's own
+shelf, or the block's configured `shelf` override), so it inherits the opt-in from those
+two views. A timeline fence embedded in a note owned by a journal on a shelf paints that
+shelf's calendar decorations too.
 
 The nav block's row scope is where a calendar decoration belongs, because each row is a
 different date; the whole-block scope decorates the block from the current journal's own

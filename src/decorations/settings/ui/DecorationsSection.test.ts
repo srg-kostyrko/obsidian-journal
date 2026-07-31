@@ -104,6 +104,16 @@ describe("DecorationsSection", () => {
     expect(screen.getByText(m.decoration_condition_has_note_describe())).toBeTruthy();
   });
 
+  it("renders a preview swatch for each decoration", async () => {
+    mount({ kind: "journal", journalName: "daily" }, [sampleDecoration]);
+    await userEvent.click(screen.getByText(m.decoration_section_title_journal()));
+    // Every other row assertion targets describeCondition text, which renders regardless of
+    // whether DecorationPreview resolves — an unresolved component still renders its slot
+    // content as an unknown element. Assert on DecorationPreview's own testid so a dropped
+    // import (which Vue only warns about, not throws on) fails this test.
+    expect(screen.getByTestId("decoration-preview")).toBeTruthy();
+  });
+
   it("invokes EditDecorationFlow with no index when Add is clicked", async () => {
     const { flows } = mount({ kind: "journal", journalName: "daily" }, [sampleDecoration]);
     await userEvent.click(screen.getByLabelText(m.decoration_add()));

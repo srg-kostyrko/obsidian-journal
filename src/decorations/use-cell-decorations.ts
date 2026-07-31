@@ -126,21 +126,6 @@ export function useCellDecorations(options: CellDecorationsOptions): ReadonlyMap
       void array.length;
       for (const d of array) void d;
     }
-
-    // Same dependency-touching trick for the calendar lists in scope, so a save() on
-    // either the shelf or the vault-wide slice re-runs this effect.
-    const calendar = options.calendarDecorations;
-    if (calendar && store) {
-      const shelfName = toValue(calendar.shelf);
-      const lists =
-        shelfName === null
-          ? [store.calendarList({ kind: "global" })]
-          : [store.calendarList({ kind: "shelf", shelfName }), store.calendarList({ kind: "global" })];
-      for (const list of lists) {
-        void list.length;
-        for (const d of list) void d;
-      }
-    }
   }
 
   // Re-evaluate every live cell against the current metadata without rebuilding the
