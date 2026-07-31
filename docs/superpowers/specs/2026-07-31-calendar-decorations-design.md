@@ -188,7 +188,9 @@ Unit:
 - The condition editor offers only date and weekday for a calendar owner.
 - Each flow reads and writes the list its owner names.
 
-E2E: add a global weekday decoration in settings, then assert the computed background of a
-matching calendar day cell. Colors are read via `getCSSProperty` parsed hex with a custom
-hex value, not a theme variable, per the established rules for editor zoom and computed
-style.
+E2E: seed a vault-wide decoration in the journeys fixture and assert the computed
+background of the day cell it matches. Colors are read via `getCSSProperty` parsed hex with
+a custom hex value, not a theme variable, per the established rules for editor zoom and
+computed style. The decoration is seeded rather than built through the modal because the
+behavior under test is that a journal-free decoration reaches a real calendar cell; the
+editor's condition set is covered by unit tests.
