@@ -80,20 +80,28 @@ describe("DecorationsSection", () => {
   it("invokes EditDecorationFlow with no index when Add is clicked", async () => {
     const { flows } = mount([sampleDecoration]);
     await userEvent.click(screen.getByLabelText(m.decoration_add()));
-    expect(flows.invoke).toHaveBeenCalledWith(EditDecorationFlow, { journalName: "daily" });
+    expect(flows.invoke).toHaveBeenCalledWith(EditDecorationFlow, {
+      owner: { kind: "journal", journalName: "daily" },
+    });
   });
 
   it("invokes EditDecorationFlow with the index when Edit is clicked", async () => {
     const { flows } = mount([sampleDecoration]);
     await userEvent.click(screen.getByText(m.decoration_section_title()));
     await userEvent.click(screen.getByLabelText(m.decoration_edit()));
-    expect(flows.invoke).toHaveBeenCalledWith(EditDecorationFlow, { journalName: "daily", index: 0 });
+    expect(flows.invoke).toHaveBeenCalledWith(EditDecorationFlow, {
+      owner: { kind: "journal", journalName: "daily" },
+      index: 0,
+    });
   });
 
   it("invokes DeleteDecorationFlow when Delete is clicked", async () => {
     const { flows } = mount([sampleDecoration]);
     await userEvent.click(screen.getByText(m.decoration_section_title()));
     await userEvent.click(screen.getByLabelText(m.decoration_delete()));
-    expect(flows.invoke).toHaveBeenCalledWith(DeleteDecorationFlow, { journalName: "daily", index: 0 });
+    expect(flows.invoke).toHaveBeenCalledWith(DeleteDecorationFlow, {
+      owner: { kind: "journal", journalName: "daily" },
+      index: 0,
+    });
   });
 });

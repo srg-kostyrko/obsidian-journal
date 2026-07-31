@@ -14,7 +14,6 @@ import {
 import DecorationPreview from "@/decorations/ui/DecorationPreview.vue";
 import { m } from "@/i18n";
 import { useModal } from "@/infrastructure/host/modals";
-import type { JournalConfig } from "@/journals/config";
 import { icons } from "@/ui/icons";
 import UiButton from "@/ui/UiButton.vue";
 import UiButtonDropdown from "@/ui/UiButtonDropdown.vue";
@@ -22,14 +21,12 @@ import UiDropdown from "@/ui/UiDropdown.vue";
 import UiIconButton from "@/ui/UiIconButton.vue";
 import UiSettingRow from "@/ui/UiSettingRow.vue";
 
-import { conditionTypeOptions } from "./condition-types";
 import ConditionItem from "./ConditionItem.vue";
 import StyleItem from "./StyleItem.vue";
 
 const props = defineProps<{
-  journalName: string;
   decoration?: JournalDecoration;
-  writeType: JournalConfig["write"]["type"];
+  conditionTypes: readonly JournalDecorationCondition["type"][];
 }>();
 const api = useModal<{ decoration: JournalDecoration }>();
 
@@ -47,7 +44,7 @@ const { value: mode } = useField<JournalDecoration["mode"]>("mode");
 const incomplete = computed(() => values.conditions.length === 0 || values.styles.length === 0);
 
 const addConditionOptions = computed<{ value: string; label: string }[]>(() => {
-  const allowed = conditionTypeOptions[props.writeType];
+  const allowed = props.conditionTypes;
   const used = new Set(values.conditions.map((c) => c.type));
   return allowed
     .filter((t) => !used.has(t))

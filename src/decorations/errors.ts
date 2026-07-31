@@ -1,17 +1,27 @@
 import { FlowError } from "@/infrastructure/flows";
 
+import { describeOwner, type DecorationOwner } from "./owner";
+
 export class UnknownDecorationError extends Error {
   readonly kind = "unknown-decoration" as const;
   constructor(
-    public readonly journalName: string,
+    public readonly owner: DecorationOwner,
     public readonly index: number,
   ) {
-    super(`Decoration not found: journal=${journalName} index=${index}`);
+    super(`Decoration not found: ${describeOwner(owner)} index=${index}`);
     this.name = "UnknownDecorationError";
   }
 }
 
-export type DecorationLifecycleError = UnknownDecorationError;
+export class UnknownDecorationOwnerError extends Error {
+  readonly kind = "unknown-decoration-owner" as const;
+  constructor(public readonly owner: DecorationOwner) {
+    super(`Decoration owner not found: ${describeOwner(owner)}`);
+    this.name = "UnknownDecorationOwnerError";
+  }
+}
+
+export type DecorationLifecycleError = UnknownDecorationError | UnknownDecorationOwnerError;
 
 export class DecorationLifecycleFlowError extends FlowError {
   readonly kind = "decoration-lifecycle" as const;

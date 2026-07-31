@@ -4,7 +4,6 @@ import { useModal } from "@/infrastructure/host/modals";
 import UiButton from "@/ui/UiButton.vue";
 import UiSettingRow from "@/ui/UiSettingRow.vue";
 
-defineProps<{ journalName: string }>();
 const api = useModal<{ confirmed: true }>();
 
 function confirm(): void {

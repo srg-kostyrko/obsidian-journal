@@ -1,15 +1,13 @@
-import type { JournalDecoration } from "@/decorations";
+import type { DecorationOwner, JournalDecoration, JournalDecorationCondition } from "@/decorations";
 import { m } from "@/i18n";
 import { defineModal } from "@/infrastructure/host/modals";
-import type { JournalConfig } from "@/journals/config";
 
 import DeleteDecorationModal from "./DeleteDecorationModal.vue";
 import EditDecorationModal from "./EditDecorationModal.vue";
 
 export interface EditDecorationModalProps {
-  journalName: string;
   decoration?: JournalDecoration;
-  writeType: JournalConfig["write"]["type"];
+  conditionTypes: readonly JournalDecorationCondition["type"][];
 }
 
 export const editDecorationModal = defineModal<{ decoration: JournalDecoration }>()({
@@ -20,5 +18,5 @@ export const editDecorationModal = defineModal<{ decoration: JournalDecoration }
 
 export const deleteDecorationModal = defineModal<{ confirmed: true }>()({
   component: DeleteDecorationModal,
-  title: (_: { journalName: string }) => m.decoration_delete(),
+  title: (_: { owner: DecorationOwner }) => m.decoration_delete(),
 });

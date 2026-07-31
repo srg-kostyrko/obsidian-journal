@@ -12,3 +12,5 @@ export const conditionTypeOptions: Record<
   year: ["title", "tag", "property", "has-note", "has-open-task", "all-tasks-completed"],
   custom: ["title", "tag", "property", "has-note", "has-open-task", "all-tasks-completed", "offset"],
 };
+
+export const CALENDAR_CONDITION_TYPES: readonly JournalDecorationCondition["type"][] = ["date", "weekday"];

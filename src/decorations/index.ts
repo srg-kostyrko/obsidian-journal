@@ -59,5 +59,6 @@ export {
   DecorationLifecycleFlowError,
   toDecorationFlowError,
   UnknownDecorationError,
+  UnknownDecorationOwnerError,
   type DecorationLifecycleError,
 } from "./errors";

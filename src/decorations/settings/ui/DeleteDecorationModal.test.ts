@@ -15,7 +15,6 @@ function mountModal() {
   const cancel = vi.fn();
   const api: ModalApi<{ confirmed: true }> = { submit, cancel };
   render(DeleteDecorationModal, {
-    props: { journalName: "daily" },
     global: {
       plugins: [
         {

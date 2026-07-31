@@ -32,13 +32,13 @@ const expanded = ref(false);
 const previewDay = new Date().getDate();
 
 function add(): void {
-  void flows.invoke(EditDecorationFlow, { journalName });
+  void flows.invoke(EditDecorationFlow, { owner: { kind: "journal", journalName } });
 }
 function edit(index: number): void {
-  void flows.invoke(EditDecorationFlow, { journalName, index });
+  void flows.invoke(EditDecorationFlow, { owner: { kind: "journal", journalName }, index });
 }
 function remove(index: number): void {
-  void flows.invoke(DeleteDecorationFlow, { journalName, index });
+  void flows.invoke(DeleteDecorationFlow, { owner: { kind: "journal", journalName }, index });
 }
 </script>
 

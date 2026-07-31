@@ -3,21 +3,24 @@ import { describe, expect, it } from "vitest";
 import { reactive } from "vue";
 
 import type { JournalDecoration } from "@/decorations";
-import { DecorationLifecycleFlowError, UnknownDecorationError } from "@/decorations/errors";
+import {
+  DecorationLifecycleFlowError,
+  UnknownDecorationError,
+  UnknownDecorationOwnerError,
+} from "@/decorations/errors";
 import { Flows, UserAborted } from "@/infrastructure/flows";
 import { NoticeService } from "@/infrastructure/host";
 import { ModalService } from "@/infrastructure/host/modals";
 import { FakeModalService } from "@/infrastructure/host/modals/testing";
 import { FakeNoticeService } from "@/infrastructure/host/testing";
-import {
-  JournalLifecycleFlowError,
-  JournalsRepository,
-  UnknownJournalError,
-  journalDefaultsFor,
-  type JournalConfig,
-  type JournalsEvents,
-} from "@/journals";
+import { JournalsRepository, journalDefaultsFor, type JournalConfig, type JournalsEvents } from "@/journals";
 import { createSettingsService } from "@/settings/testing";
+import { ShelvesRepository, type ShelvesEvents } from "@/shelves";
+import type { ShelfConfig } from "@/shelves/config";
+
+import { DecorationsStore } from "../../decorations-store";
+import { decorationsSlice } from "../../settings/slice";
+import { buildCalendarDecoration, buildDecoration } from "../../testing";
 
 import { EditDecorationFlow } from "./edit-decoration.flow";
 
@@ -25,39 +28,50 @@ function buildJournal(name: string, decorations: JournalDecoration[]): JournalCo
   return { ...journalDefaultsFor({ type: "day" }, name), decorations };
 }
 
-function build(initial: Record<string, JournalConfig> = {}) {
-  const { container } = createSettingsService({ collections: [] });
-  const storage = reactive<Record<string, JournalConfig>>({ ...initial });
+function build(options: { journals?: Record<string, JournalConfig>; shelves?: Record<string, ShelfConfig> } = {}) {
+  const { container } = createSettingsService({ slices: [decorationsSlice] });
+  const storage = reactive<Record<string, JournalConfig>>({ ...options.journals });
+  const shelfStorage = reactive<Record<string, ShelfConfig>>({ ...options.shelves });
   const events = createNanoEvents<JournalsEvents>();
   const repo = JournalsRepository.fromParts(storage, events);
+  const shelves = ShelvesRepository.fromParts(shelfStorage, createNanoEvents<ShelvesEvents>());
   const modals = new FakeModalService();
   container.register(ModalService).useValue(modals as unknown as ModalService);
   container.register(JournalsRepository).useValue(repo);
+  container.register(ShelvesRepository).useValue(shelves);
+  container.register(DecorationsStore).useClass(DecorationsStore);
   container.register(NoticeService).useValue(new FakeNoticeService());
   container.register(Flows).useClass(Flows);
   container.register(EditDecorationFlow).useClass(EditDecorationFlow);
-  return { storage, modals, flows: container.resolve(Flows) };
+  return { storage, modals, flows: container.resolve(Flows), store: container.resolve(DecorationsStore) };
 }
 
-const sampleDecoration: JournalDecoration = {
-  mode: "and",
+const sampleDecoration = buildDecoration({
   conditions: [{ type: "has-note" }],
   styles: [{ type: "background", color: { type: "transparent" } }],
-};
+});
+
+const sampleCalendarDecoration = buildCalendarDecoration({
+  conditions: [{ type: "weekday", weekdays: [6] }],
+  styles: [{ type: "background", color: { type: "transparent" } }],
+});
 
 describe("EditDecorationFlow", () => {
-  it("returns UnknownJournalError when the journal does not exist", async () => {
+  it("reports an unknown owner when the journal does not exist", async () => {
     const { flows } = build();
-    const result = await flows.invoke(EditDecorationFlow, { journalName: "missing" });
-    expect(result.kind === "err" && result.error).toBeInstanceOf(JournalLifecycleFlowError);
-    expect(result.kind === "err" && (result.error as JournalLifecycleFlowError).cause).toBeInstanceOf(
-      UnknownJournalError,
+    const result = await flows.invoke(EditDecorationFlow, { owner: { kind: "journal", journalName: "missing" } });
+    expect(result.kind === "err" && result.error).toBeInstanceOf(DecorationLifecycleFlowError);
+    expect(result.kind === "err" && (result.error as DecorationLifecycleFlowError).cause).toBeInstanceOf(
+      UnknownDecorationOwnerError,
     );
   });
 
   it("returns UnknownDecorationError for an out-of-range edit index", async () => {
-    const { flows } = build({ daily: buildJournal("daily", []) });
-    const result = await flows.invoke(EditDecorationFlow, { journalName: "daily", index: 5 });
+    const { flows } = build({ journals: { daily: buildJournal("daily", []) } });
+    const result = await flows.invoke(EditDecorationFlow, {
+      owner: { kind: "journal", journalName: "daily" },
+      index: 5,
+    });
     expect(result.kind === "err" && result.error).toBeInstanceOf(DecorationLifecycleFlowError);
     expect(result.kind === "err" && (result.error as DecorationLifecycleFlowError).cause).toBeInstanceOf(
       UnknownDecorationError,
@@ -65,19 +79,17 @@ describe("EditDecorationFlow", () => {
   });
 
   it("returns UserAborted when the modal is cancelled", async () => {
-    const { flows, modals } = build({ daily: buildJournal("daily", []) });
-    const promise = flows.invoke(EditDecorationFlow, { journalName: "daily" });
+    const { flows, modals } = build({ journals: { daily: buildJournal("daily", []) } });
+    const promise = flows.invoke(EditDecorationFlow, { owner: { kind: "journal", journalName: "daily" } });
     modals.lastOpen().cancel();
     const result = await promise;
     expect(result.kind === "err" && result.error).toBeInstanceOf(UserAborted);
   });
 
   it("appends and returns the new index when no index is provided", async () => {
-    const { flows, modals, storage } = build({ daily: buildJournal("daily", [sampleDecoration]) });
-    const promise = flows.invoke(EditDecorationFlow, { journalName: "daily" });
-    modals
-      .lastOpen<{ journalName: string }, { decoration: JournalDecoration }>()
-      .submit({ decoration: sampleDecoration });
+    const { flows, modals, storage } = build({ journals: { daily: buildJournal("daily", [sampleDecoration]) } });
+    const promise = flows.invoke(EditDecorationFlow, { owner: { kind: "journal", journalName: "daily" } });
+    modals.lastOpen<unknown, { decoration: JournalDecoration }>().submit({ decoration: sampleDecoration });
     const result = await promise;
     expect(result.kind === "ok" && result.value.index).toBe(1);
     expect(storage.daily?.decorations.length).toBe(2);
@@ -85,11 +97,23 @@ describe("EditDecorationFlow", () => {
 
   it("replaces the decoration at index when an index is provided", async () => {
     const updated: JournalDecoration = { ...sampleDecoration, mode: "or" };
-    const { flows, modals, storage } = build({ daily: buildJournal("daily", [sampleDecoration]) });
-    const promise = flows.invoke(EditDecorationFlow, { journalName: "daily", index: 0 });
-    modals.lastOpen<{ journalName: string }, { decoration: JournalDecoration }>().submit({ decoration: updated });
+    const { flows, modals, storage } = build({ journals: { daily: buildJournal("daily", [sampleDecoration]) } });
+    const promise = flows.invoke(EditDecorationFlow, { owner: { kind: "journal", journalName: "daily" }, index: 0 });
+    modals.lastOpen<unknown, { decoration: JournalDecoration }>().submit({ decoration: updated });
     const result = await promise;
     expect(result.kind === "ok" && result.value.index).toBe(0);
     expect(storage.daily?.decorations[0]).toEqual(updated);
+  });
+
+  it("appends a new decoration to a shelf's list", async () => {
+    const { flows, modals, store } = build({
+      shelves: { work: { name: "work", journals: [], decorations: [] } },
+    });
+    const promise = flows.invoke(EditDecorationFlow, { owner: { kind: "shelf", shelfName: "work" } });
+    modals.lastOpen<unknown, { decoration: JournalDecoration }>().submit({ decoration: sampleCalendarDecoration });
+    const result = await promise;
+
+    expect(result.kind === "ok" && result.value.index).toBe(0);
+    expect(store.list({ kind: "shelf", shelfName: "work" })).toEqual([sampleCalendarDecoration]);
   });
 });

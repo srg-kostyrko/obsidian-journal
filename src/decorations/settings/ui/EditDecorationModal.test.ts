@@ -3,7 +3,7 @@ import { cleanup, render, screen, waitFor } from "@testing-library/vue";
 import { afterEach, describe, expect, it, vi } from "vitest";
 
 import { Calendar } from "@/calendar";
-import type { JournalDecoration } from "@/decorations";
+import type { JournalDecoration, JournalDecorationCondition } from "@/decorations";
 import { m } from "@/i18n";
 import { Container, provideInjectorOnApp } from "@/infrastructure/di";
 import { InputSuggestService, MetadataTypeService } from "@/infrastructure/host";
@@ -13,6 +13,7 @@ import { InternalObsidianAppToken } from "@/infrastructure/host/internal/tokens"
 import type { ModalApi } from "@/infrastructure/host/modals";
 import { provideModalApiOnApp } from "@/infrastructure/host/modals/testing";
 
+import { CALENDAR_CONDITION_TYPES, conditionTypeOptions } from "./condition-types";
 import EditDecorationModal from "./EditDecorationModal.vue";
 
 afterEach(() => cleanup());
@@ -25,7 +26,7 @@ const minimalDecoration: JournalDecoration = {
 };
 
 function mountModal(options: {
-  writeType: "day" | "week" | "month" | "quarter" | "year" | "custom";
+  conditionTypes: readonly JournalDecorationCondition["type"][];
   decoration?: JournalDecoration;
 }) {
   const submit = vi.fn();
@@ -37,7 +38,7 @@ function mountModal(options: {
   container.register(InternalObsidianAppToken).useValue(createFakeHost().app);
   container.register(MetadataTypeService).useClass(MetadataTypeService);
   render(EditDecorationModal, {
-    props: { journalName: "daily", writeType: options.writeType, decoration: options.decoration },
+    props: { conditionTypes: options.conditionTypes, decoration: options.decoration },
     global: {
       plugins: [
         {
@@ -56,7 +57,7 @@ describe("EditDecorationModal", () => {
   describe("submit gating", () => {
     it("disables Save when no conditions are defined", () => {
       mountModal({
-        writeType: "day",
+        conditionTypes: conditionTypeOptions.day,
         decoration: { mode: "and", conditions: [], styles: [{ type: "background", color: transparent }] },
       });
       expect(screen.getByText(m.common_action_submit()).closest("button")?.disabled).toBe(true);
@@ -64,14 +65,14 @@ describe("EditDecorationModal", () => {
 
     it("disables Save when no styles are defined", () => {
       mountModal({
-        writeType: "day",
+        conditionTypes: conditionTypeOptions.day,
         decoration: { mode: "and", conditions: [{ type: "has-note" }], styles: [] },
       });
       expect(screen.getByText(m.common_action_submit()).closest("button")?.disabled).toBe(true);
     });
 
     it("submits when both arrays are populated", async () => {
-      const { submit } = mountModal({ writeType: "day", decoration: minimalDecoration });
+      const { submit } = mountModal({ conditionTypes: conditionTypeOptions.day, decoration: minimalDecoration });
       await userEvent.click(screen.getByText(m.common_action_submit()));
       await waitFor(() => {
         expect(submit).toHaveBeenCalledWith({ decoration: expect.objectContaining({ mode: "and" }) as unknown });
@@ -80,7 +81,7 @@ describe("EditDecorationModal", () => {
 
     it("blocks submit and shows an error when a property condition has a blank name", async () => {
       const { submit } = mountModal({
-        writeType: "day",
+        conditionTypes: conditionTypeOptions.day,
         decoration: {
           mode: "and",
           conditions: [{ type: "property", name: "", valueType: "text", condition: "exists", value: "" }],
@@ -95,7 +96,7 @@ describe("EditDecorationModal", () => {
 
   describe("add-condition options", () => {
     it("offers date and weekday for day write type", async () => {
-      mountModal({ writeType: "day", decoration: minimalDecoration });
+      mountModal({ conditionTypes: conditionTypeOptions.day, decoration: minimalDecoration });
       await userEvent.click(screen.getByText(m.decoration_modal_add_condition()));
       expect(screen.getByText(m.decoration_condition_type_label({ type: "date" }))).toBeTruthy();
       expect(screen.getByText(m.decoration_condition_type_label({ type: "weekday" }))).toBeTruthy();
@@ -103,23 +104,34 @@ describe("EditDecorationModal", () => {
     });
 
     it("offers offset for custom write type but not date or weekday", async () => {
-      mountModal({ writeType: "custom", decoration: minimalDecoration });
+      mountModal({ conditionTypes: conditionTypeOptions.custom, decoration: minimalDecoration });
       await userEvent.click(screen.getByText(m.decoration_modal_add_condition()));
       expect(screen.getByText(m.decoration_condition_type_label({ type: "offset" }))).toBeTruthy();
       expect(screen.queryByText(m.decoration_condition_type_label({ type: "date" }))).toBeNull();
     });
 
     it("offers only common types for week write type", async () => {
-      mountModal({ writeType: "week", decoration: minimalDecoration });
+      mountModal({ conditionTypes: conditionTypeOptions.week, decoration: minimalDecoration });
       await userEvent.click(screen.getByText(m.decoration_modal_add_condition()));
       expect(screen.queryByText(m.decoration_condition_type_label({ type: "date" }))).toBeNull();
       expect(screen.queryByText(m.decoration_condition_type_label({ type: "offset" }))).toBeNull();
+    });
+
+    it("offers only date and weekday for a calendar owner", async () => {
+      mountModal({ conditionTypes: CALENDAR_CONDITION_TYPES });
+      await userEvent.click(screen.getByText(m.decoration_modal_add_condition()));
+      expect(screen.getByText(m.decoration_condition_type_label({ type: "date" }))).toBeTruthy();
+      expect(screen.getByText(m.decoration_condition_type_label({ type: "weekday" }))).toBeTruthy();
+      expect(screen.queryByText(m.decoration_condition_type_label({ type: "has-note" }))).toBeNull();
     });
   });
 
   describe("mode change", () => {
     it("reflects the chosen mode in the submitted decoration", async () => {
-      const { submit } = mountModal({ writeType: "day", decoration: { ...minimalDecoration, mode: "and" } });
+      const { submit } = mountModal({
+        conditionTypes: conditionTypeOptions.day,
+        decoration: { ...minimalDecoration, mode: "and" },
+      });
       await userEvent.selectOptions(
         screen.getByDisplayValue(m.decoration_modal_mode_option({ kind: "and" })),
         m.decoration_modal_mode_option({ kind: "or" }),
