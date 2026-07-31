@@ -807,9 +807,13 @@
 			}
 		}
 	],
-	"decoration_section_description": "Utilizza decorazioni per evidenziare nel calendario le date che soddisfano determinate condizioni.",
-	"decoration_section_empty": "Nessuna decorazione del calendario configurata al momento.",
-	"decoration_section_title": "decorazioni del calendario",
+	"decoration_section_description_calendar": "Decora le celle dei giorni in ogni calendario, qualunque diario sia visualizzato.",
+	"decoration_section_description_journal": "Utilizza decorazioni per evidenziare nel calendario le date che soddisfano determinate condizioni.",
+	"decoration_section_description_shelf": "Decora le celle dei giorni finché questo scaffale è visualizzato, qualunque diario contenga.",
+	"decoration_section_empty": "Nessuna decorazione configurata al momento.",
+	"decoration_section_title_calendar": "Decorazioni del calendario",
+	"decoration_section_title_journal": "Decorazioni del diario",
+	"decoration_section_title_shelf": "Decorazioni dello scaffale",
 	"decoration_shape_label": [
 		{
 			"declarations": [

@@ -807,9 +807,13 @@
 			}
 		}
 	],
-	"decoration_section_description": "Використовуйте прикраси для виділення дат у календарі, які відповідають певним умовам.",
-	"decoration_section_empty": "Прикраси календаря ще не налаштовано.",
-	"decoration_section_title": "Прикраси календаря",
+	"decoration_section_description_calendar": "Оформлює клітинки днів у будь-якому календарі, незалежно від того, які журнали показано.",
+	"decoration_section_description_journal": "Використовуйте прикраси для виділення дат у календарі, які відповідають певним умовам.",
+	"decoration_section_description_shelf": "Оформлює клітинки днів, доки показано цю полицю, незалежно від того, які журнали на ній лежать.",
+	"decoration_section_empty": "Прикраси ще не налаштовано.",
+	"decoration_section_title_calendar": "Прикраси календаря",
+	"decoration_section_title_journal": "Прикраси журналу",
+	"decoration_section_title_shelf": "Прикраси полиці",
 	"decoration_shape_label": [
 		{
 			"declarations": [

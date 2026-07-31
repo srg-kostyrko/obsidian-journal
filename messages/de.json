@@ -807,9 +807,13 @@
 			}
 		}
 	],
-	"decoration_section_description": "Verwenden Sie Dekorationen, um Termine im Kalender hervorzuheben, die bestimmte Bedingungen erfüllen.",
-	"decoration_section_empty": "Es sind noch keine Kalenderdekorationen konfiguriert.",
-	"decoration_section_title": "Kalenderdekorationen",
+	"decoration_section_description_calendar": "Dekoriert Tageszellen in jedem Kalender – unabhängig davon, welche Journale angezeigt werden.",
+	"decoration_section_description_journal": "Verwenden Sie Dekorationen, um Termine im Kalender hervorzuheben, die bestimmte Bedingungen erfüllen.",
+	"decoration_section_description_shelf": "Dekoriert Tageszellen, solange dieses Regal angezeigt wird – unabhängig davon, welche Journale es enthält.",
+	"decoration_section_empty": "Es sind noch keine Dekorationen konfiguriert.",
+	"decoration_section_title_calendar": "Kalenderdekorationen",
+	"decoration_section_title_journal": "Journal-Dekorationen",
+	"decoration_section_title_shelf": "Regal-Dekorationen",
 	"decoration_shape_label": [
 		{
 			"declarations": [

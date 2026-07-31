@@ -807,9 +807,13 @@
 			}
 		}
 	],
-	"decoration_section_description": "Utilisez des décorations pour mettre en évidence les dates du calendrier qui remplissent certaines conditions.",
-	"decoration_section_empty": "Aucune décoration de calendrier n'est encore configurée.",
-	"decoration_section_title": "décorations de calendrier",
+	"decoration_section_description_calendar": "Décore les cellules de jour dans tous les calendriers, quels que soient les journaux affichés.",
+	"decoration_section_description_journal": "Utilisez des décorations pour mettre en évidence les dates du calendrier qui remplissent certaines conditions.",
+	"decoration_section_description_shelf": "Décore les cellules de jour tant que cette étagère est affichée, quels que soient les journaux qu'elle contient.",
+	"decoration_section_empty": "Aucune décoration n'est encore configurée.",
+	"decoration_section_title_calendar": "Décorations de calendrier",
+	"decoration_section_title_journal": "Décorations du journal",
+	"decoration_section_title_shelf": "Décorations de l'étagère",
 	"decoration_shape_label": [
 		{
 			"declarations": [

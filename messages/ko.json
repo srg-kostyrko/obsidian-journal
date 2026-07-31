@@ -807,9 +807,13 @@
 			}
 		}
 	],
-	"decoration_section_description": "달력에서 특정 조건을 충족하는 날짜를 강조하기 위해 장식을 사용하세요.",
-	"decoration_section_empty": "아직 달력 장식이 설정되지 않았습니다.",
-	"decoration_section_title": "달력 장식",
+	"decoration_section_description_calendar": "표시된 저널과 관계없이 모든 달력에서 날짜 칸을 장식합니다.",
+	"decoration_section_description_journal": "달력에서 특정 조건을 충족하는 날짜를 강조하기 위해 장식을 사용하세요.",
+	"decoration_section_description_shelf": "이 선반이 표시되는 동안 선반에 포함된 저널과 관계없이 날짜 칸을 장식합니다.",
+	"decoration_section_empty": "아직 장식이 설정되지 않았습니다.",
+	"decoration_section_title_calendar": "달력 장식",
+	"decoration_section_title_journal": "저널 장식",
+	"decoration_section_title_shelf": "선반 장식",
 	"decoration_shape_label": [
 		{
 			"declarations": [

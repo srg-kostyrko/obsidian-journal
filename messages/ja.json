@@ -807,9 +807,13 @@
 			}
 		}
 	],
-	"decoration_section_description": "カレンダー上で特定の条件を満たす日付を強調表示するために、装飾を使用します。",
-	"decoration_section_empty": "カレンダーの装飾はまだ設定されていません。",
-	"decoration_section_title": "カレンダーの装飾",
+	"decoration_section_description_calendar": "表示されているジャーナルに関係なく、すべてのカレンダーで日付セルを装飾します。",
+	"decoration_section_description_journal": "カレンダー上で特定の条件を満たす日付を強調表示するために、装飾を使用します。",
+	"decoration_section_description_shelf": "この棚が表示されている間、棚に含まれるジャーナルに関係なく日付セルを装飾します。",
+	"decoration_section_empty": "装飾はまだ設定されていません。",
+	"decoration_section_title_calendar": "カレンダーの装飾",
+	"decoration_section_title_journal": "ジャーナルの装飾",
+	"decoration_section_title_shelf": "棚の装飾",
 	"decoration_shape_label": [
 		{
 			"declarations": [

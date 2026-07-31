@@ -807,9 +807,13 @@
 			}
 		}
 	],
-	"decoration_section_description": "Use decorações para destacar no calendário datas que atendam a determinadas condições.",
-	"decoration_section_empty": "Nenhuma decoração de calendário foi configurada ainda.",
-	"decoration_section_title": "Decorações de calendário",
+	"decoration_section_description_calendar": "Decora as células de dia em todos os calendários, quaisquer que sejam os diários exibidos.",
+	"decoration_section_description_journal": "Use decorações para destacar no calendário datas que atendam a determinadas condições.",
+	"decoration_section_description_shelf": "Decora as células de dia enquanto esta prateleira estiver em exibição, quaisquer que sejam os diários que ela contenha.",
+	"decoration_section_empty": "Nenhuma decoração foi configurada ainda.",
+	"decoration_section_title_calendar": "Decorações de calendário",
+	"decoration_section_title_journal": "Decorações do diário",
+	"decoration_section_title_shelf": "Decorações da prateleira",
 	"decoration_shape_label": [
 		{
 			"declarations": [

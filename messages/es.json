@@ -807,9 +807,13 @@
 			}
 		}
 	],
-	"decoration_section_description": "Utilice elementos decorativos para resaltar las fechas del calendario que cumplan ciertas condiciones.",
-	"decoration_section_empty": "Aún no se han configurado decoraciones para el calendario.",
-	"decoration_section_title": "Decoraciones de calendario",
+	"decoration_section_description_calendar": "Decora las celdas de día en todos los calendarios, sean cuales sean los diarios que se muestren.",
+	"decoration_section_description_journal": "Utilice elementos decorativos para resaltar las fechas del calendario que cumplan ciertas condiciones.",
+	"decoration_section_description_shelf": "Decora las celdas de día mientras se muestra este estante, sean cuales sean los diarios que contenga.",
+	"decoration_section_empty": "Aún no se ha configurado ninguna decoración.",
+	"decoration_section_title_calendar": "Decoraciones de calendario",
+	"decoration_section_title_journal": "Decoraciones del diario",
+	"decoration_section_title_shelf": "Decoraciones del estante",
 	"decoration_shape_label": [
 		{
 			"declarations": [

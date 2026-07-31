@@ -807,9 +807,13 @@
 			}
 		}
 	],
-	"decoration_section_description": "Используйте декоративные элементы, чтобы выделить в календаре даты, отвечающие определенным условиям.",
-	"decoration_section_empty": "Пока не настроены никакие элементы оформления календаря.",
-	"decoration_section_title": "Украшения для календаря",
+	"decoration_section_description_calendar": "Оформляет ячейки дней в любом календаре, независимо от того, какие журналы показаны.",
+	"decoration_section_description_journal": "Используйте декоративные элементы, чтобы выделить в календаре даты, отвечающие определенным условиям.",
+	"decoration_section_description_shelf": "Оформляет ячейки дней, пока показана эта полка, независимо от того, какие журналы на ней лежат.",
+	"decoration_section_empty": "Украшения ещё не настроены.",
+	"decoration_section_title_calendar": "Украшения для календаря",
+	"decoration_section_title_journal": "Украшения журнала",
+	"decoration_section_title_shelf": "Украшения полки",
 	"decoration_shape_label": [
 		{
 			"declarations": [

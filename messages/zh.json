@@ -807,9 +807,13 @@
 			}
 		}
 	],
-	"decoration_section_description": "使用装饰元素突出显示日历中符合特定条件的日期。",
-	"decoration_section_empty": "尚未配置任何日历装饰。",
-	"decoration_section_title": "日历装饰",
+	"decoration_section_description_calendar": "在所有日历中装饰日期单元格，无论显示哪些日记。",
+	"decoration_section_description_journal": "使用装饰元素突出显示日历中符合特定条件的日期。",
+	"decoration_section_description_shelf": "在显示此书架时装饰日期单元格，无论该书架包含哪些日记。",
+	"decoration_section_empty": "尚未配置任何装饰。",
+	"decoration_section_title_calendar": "日历装饰",
+	"decoration_section_title_journal": "日记装饰",
+	"decoration_section_title_shelf": "书架装饰",
 	"decoration_shape_label": [
 		{
 			"declarations": [
