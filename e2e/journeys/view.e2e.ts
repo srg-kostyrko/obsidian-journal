@@ -193,6 +193,10 @@ describe("calendar view", () => {
 
     assertDecorationMatrix(calendar);
 
+    it("paints a day cell from a vault-wide decoration with no journal", async () => {
+      await expectBackgroundHex(calendar.cell(dayAnchor(DECO_DAY.global)), STYLE_HEX.global);
+    });
+
     it("renders the month decoration on the toolbar period button", async () => {
       await openCalendarView();
       await $(`${TOOLBAR} [data-period="month"] .decoration-corner`).waitForExist({

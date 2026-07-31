@@ -16,12 +16,14 @@ export const STYLE_HEX = {
   shape: "#778899",
   corner: "#99aabb",
   icon: "#aabbcc",
+  global: "#3a5f7d",
 } as const;
 
 // Day-of-month is unique within the visible month, so each test owns one day cell.
 // 02 is the seeded-note-free control. All <= 28 (in-month, non-spill, exist every month).
 export const DECO_DAY = {
   control: 2,
+  global: 3,
   frontmatterTag: 5,
   bareTag: 6,
   title: 7,

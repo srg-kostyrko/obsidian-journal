@@ -1,5 +1,29 @@
 {
   "version": 4,
+  "decorations": {
+    "decorations": [
+      {
+        "mode": "and",
+        "conditions": [
+          {
+            "type": "date",
+            "day": 3,
+            "month": -1,
+            "year": null
+          }
+        ],
+        "styles": [
+          {
+            "type": "background",
+            "color": {
+              "type": "custom",
+              "color": "#3a5f7d"
+            }
+          }
+        ]
+      }
+    ]
+  },
   "journals": {
     "daily": {
       "name": "daily",

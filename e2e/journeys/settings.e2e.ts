@@ -517,7 +517,7 @@ describe("settings", () => {
   describe("decorations", () => {
     it("edits a decoration's match mode and persists it", async () => {
       await openJournalSubpage("core", "daily");
-      await expandSection("Calendar decorations");
+      await expandSection("Journal decorations");
       // The first decoration row's edit button; multiple rows share the tooltip, so clickIcon
       // (which targets the first match) lands on index 0. The modal's first <select> is the
       // and/or mode dropdown.
@@ -536,7 +536,7 @@ describe("settings", () => {
     it("derives a property condition's operators from the picked property's type", async () => {
       await seedNote("props/rating.md", "---\nrating: 5\n---\n");
       await openJournalSubpage("core", "daily");
-      await expandSection("Calendar decorations");
+      await expandSection("Journal decorations");
       // Decoration index 2 is the fixture's property condition; the delete test removes the last
       // row only, so this index holds whichever order the specs run in.
       const edits = await $$('button[aria-label="Edit decoration"]').getElements();
@@ -553,7 +553,7 @@ describe("settings", () => {
       const initial = await getSettings();
       const before = initial.journals?.daily?.decorations?.length ?? 0;
       await openJournalSubpage("core", "daily");
-      await expandSection("Calendar decorations");
+      await expandSection("Journal decorations");
       // Delete the LAST decoration row so the index doesn't collide with the edit test's index 0.
       // These trash buttons are subpage rows (not in a modal), so query them page-scoped.
       const trash = await $$('button[aria-label="Delete decoration"]').getElements();
