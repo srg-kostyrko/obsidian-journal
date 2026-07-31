@@ -20,8 +20,16 @@ const DASHBOARD = ".journal-settings-dashboard";
 
 // Open the plugin's settings tab. Obsidian calls PluginSettingTab.display(), which mounts
 // the SettingsDashboard Vue app. open()/openTabById are runtime-only (cast like commands.ts).
+//
+// 1.13 added the `settingsPopoutWindow` vault config, on by default, which makes SettingsModal
+// render into a second Electron window instead of an in-window .modal-container. Everything the
+// specs drive from settings — and every plugin dialog they stack on top — is written against the
+// in-window modal in this window's document, so force the pre-1.13 placement per open. The key is
+// unknown to older builds, where setConfig is an inert write.
 export async function openSettings(): Promise<void> {
   await browser.executeObsidian(({ app }, id) => {
+    const vault = app.vault as unknown as { setConfig(key: string, value: unknown): void };
+    vault.setConfig("settingsPopoutWindow", false);
     const setting = (app as unknown as { setting: { open(): void; openTabById(id: string): void } }).setting;
     setting.open();
     setting.openTabById(id);
