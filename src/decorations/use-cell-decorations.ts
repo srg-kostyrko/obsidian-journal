@@ -38,7 +38,9 @@ export function useCellDecorations(options: CellDecorationsOptions): ReadonlyMap
   const index = useService(JournalsIndex);
   const notes = useService(NotesService);
   const metadata = useService(NoteMetadataService);
-  const store = useService(DecorationsStore);
+  // Presence-gated: a surface that never opts in must not force DecorationsStore (and its
+  // settings/shelves dependencies) to exist in its DI container.
+  const store = options.calendarDecorations ? useService(DecorationsStore) : undefined;
 
   const cells = new Map<string, CellStyleRef>();
   let periodsByKey = new Map<string, Period[]>();
@@ -58,7 +60,7 @@ export function useCellDecorations(options: CellDecorationsOptions): ReadonlyMap
       }
     }
     const calendar = options.calendarDecorations;
-    if (calendar) {
+    if (calendar && store) {
       const shelfName = toValue(calendar.shelf);
       if (shelfName !== null) {
         const shelfDecorations = store.calendarList({ kind: "shelf", shelfName });
@@ -128,7 +130,7 @@ export function useCellDecorations(options: CellDecorationsOptions): ReadonlyMap
     // Same dependency-touching trick for the calendar lists in scope, so a save() on
     // either the shelf or the vault-wide slice re-runs this effect.
     const calendar = options.calendarDecorations;
-    if (calendar) {
+    if (calendar && store) {
       const shelfName = toValue(calendar.shelf);
       const lists =
         shelfName === null

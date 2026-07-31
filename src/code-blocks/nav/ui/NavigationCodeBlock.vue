@@ -7,6 +7,7 @@ import { m } from "@/i18n";
 import { useService } from "@/infrastructure/di";
 import { Flows } from "@/infrastructure/flows";
 import { defineOpenMode, type CodeBlockProps } from "@/infrastructure/host";
+import { Option } from "@/infrastructure/result";
 import {
   CycleService,
   JournalsIndex,
@@ -15,7 +16,7 @@ import {
   TimelineService,
   useIndexVersion,
 } from "@/journals";
-import { ShelvesRepository } from "@/shelves";
+import { ShelvesRepository, type ShelfConfig } from "@/shelves";
 import { icons } from "@/ui/icons";
 import UiIconButton from "@/ui/UiIconButton.vue";
 
@@ -89,17 +90,27 @@ const periods = computed<Period[]>(() => {
 // only: `decorations[type].filter(d => d.journalName === journalName)`.
 const blockJournalNames = computed<readonly string[]>(() => (journal.value ? [journal.value.name] : []));
 
+// Shared by rowJournalNames and decorationShelf below, which both need "the shelf that owns
+// the current journal" and only differ in what they project out of it once found.
+const owningShelf = computed<Option<ShelfConfig>>(() => {
+  const currentJournal = journal.value;
+  if (!currentJournal) return Option.none();
+  return shelves
+    .find()
+    .filter((shelf) => shelf.journals.includes(currentJournal.name))
+    .first();
+});
+
 // v2's per-row decoration (NavigationBlockRow) draws on every same-write-type journal in scope:
 // `decorations[type]`, which useShelfProvider builds from the owning shelf's journals, or from
 // all journals when the journal belongs to no shelf.
 const rowJournalNames = computed<readonly string[]>(() => {
   const currentJournal = journal.value;
   if (!currentJournal) return [];
-  const owningJournalNames = shelves
-    .find()
-    .filter((shelf) => shelf.journals.includes(currentJournal.name))
-    .first()
-    .match<readonly string[] | null>({ some: (shelf) => shelf.journals, none: () => null });
+  const owningJournalNames = owningShelf.value.match<readonly string[] | null>({
+    some: (shelf) => shelf.journals,
+    none: () => null,
+  });
   const inScope = owningJournalNames
     ? [...journals.find().list()].filter((other) => owningJournalNames.includes(other.name))
     : [...journals.find().list()];
@@ -109,15 +120,9 @@ const rowJournalNames = computed<readonly string[]>(() => {
 // Journal-free decorations belong to the per-row scope: every row is a different date, while
 // the whole-block scope decorates the block from the current journal's own rules. Only day rows
 // are affected — a weekly journal's nav block renders week rows and shows none of these.
-const decorationShelf = computed<string | null>(() => {
-  const currentJournal = journal.value;
-  if (!currentJournal) return null;
-  return shelves
-    .find()
-    .filter((shelf) => shelf.journals.includes(currentJournal.name))
-    .first()
-    .match<string | null>({ some: (shelf) => shelf.name, none: () => null });
-});
+const decorationShelf = computed<string | null>(() =>
+  owningShelf.value.match<string | null>({ some: (shelf) => shelf.name, none: () => null }),
+);
 
 useCellDecorations({
   periods: () => periods.value,
