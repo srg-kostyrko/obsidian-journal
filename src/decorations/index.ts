@@ -1,11 +1,15 @@
 export {
   borderSideSchema,
+  calendarConditionSchema,
+  calendarDecorationSchema,
   colorSchema,
   decorationConditionSchema,
   decorationSchema,
   decorationStyleSchema,
   filterConditionSchema,
   type BorderSide,
+  type CalendarDecoration,
+  type CalendarDecorationCondition,
   type ColorSettings,
   type FilterCondition,
   type JournalDecoration,
@@ -28,7 +32,14 @@ export {
   type JournalDecorationWeekdayCondition,
 } from "./config";
 export { defaultCondition, defaultDecoration, defaultStyle } from "./defaults";
-export { DecorationEngine, hasOffsetCondition, periodMatchesWrite, type DecorationBinding } from "./engine";
+export {
+  DecorationEngine,
+  hasOffsetCondition,
+  periodMatchesWrite,
+  type CalendarDecorationBinding,
+  type DecorationBinding,
+  type JournalDecorationBinding,
+} from "./engine";
 export { decorationsModule } from "./module";
 export {
   CellDecorationMapKey,

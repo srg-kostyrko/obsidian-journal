@@ -19,12 +19,26 @@ import {
   hasOpenTask,
 } from "./engine-checks";
 
-import type { JournalDecoration, JournalDecorationCondition, JournalDecorationStyle } from "./config";
+import type {
+  CalendarDecoration,
+  CalendarDecorationCondition,
+  JournalDecoration,
+  JournalDecorationCondition,
+  JournalDecorationStyle,
+} from "./config";
 
-export interface DecorationBinding {
+export interface JournalDecorationBinding {
+  readonly kind: "journal";
   readonly journalName: string;
   readonly decoration: JournalDecoration;
 }
+
+export interface CalendarDecorationBinding {
+  readonly kind: "calendar";
+  readonly decoration: CalendarDecoration;
+}
+
+export type DecorationBinding = JournalDecorationBinding | CalendarDecorationBinding;
 
 export function periodMatchesWrite(kind: PeriodKind, writeType: JournalWrite["type"]): boolean {
   return match([kind, writeType] as const)
@@ -72,6 +86,17 @@ export class DecorationEngine {
     return mode === "or" ? conditions.some(test) : conditions.every(test);
   }
 
+  #matchesCalendar(decoration: CalendarDecoration, period: Period): boolean {
+    const { mode, conditions } = decoration;
+    if (conditions.length === 0) return false;
+    const test = (c: CalendarDecorationCondition): boolean =>
+      match(c)
+        .with({ type: "date" }, (x) => checkDate(x, period))
+        .with({ type: "weekday" }, (x) => checkWeekday(x, period))
+        .exhaustive();
+    return mode === "or" ? conditions.some(test) : conditions.every(test);
+  }
+
   #check(
     condition: JournalDecorationCondition,
     period: Period,
@@ -103,10 +128,11 @@ export class DecorationEngine {
     if (periods.length === 0 || decorations.length === 0) return result;
 
     const configs = new Map<string, JournalConfig>();
-    for (const { journalName } of decorations) {
-      if (configs.has(journalName)) continue;
-      const opt = this.#journals.get(journalName);
-      if (opt.isSome()) configs.set(journalName, opt.value);
+    for (const binding of decorations) {
+      if (binding.kind !== "journal") continue;
+      if (configs.has(binding.journalName)) continue;
+      const opt = this.#journals.get(binding.journalName);
+      if (opt.isSome()) configs.set(binding.journalName, opt.value);
     }
 
     const metaCache = new Map<string, Option<NoteMetadata>>();
@@ -121,20 +147,35 @@ export class DecorationEngine {
       return value;
     };
 
-    for (const { journalName, decoration } of decorations) {
-      const config = configs.get(journalName);
+    const push = (period: Period, styles: readonly JournalDecorationStyle[]): void => {
+      const key = cellKey(period.kind, period.anchor.toAnchor());
+      let bucket = result.get(key);
+      if (!bucket) {
+        bucket = [];
+        result.set(key, bucket);
+      }
+      bucket.push(...styles);
+    };
+
+    for (const binding of decorations) {
+      if (binding.kind === "calendar") {
+        for (const period of periods) {
+          // Journal-free decorations paint calendar days only. Custom-interval rows are also
+          // "day"-kind periods, so surfaces that render them simply do not opt in.
+          if (period.kind !== "day") continue;
+          if (!this.#matchesCalendar(binding.decoration, period)) continue;
+          push(period, binding.decoration.styles);
+        }
+        continue;
+      }
+      const config = configs.get(binding.journalName);
       if (!config) continue;
       for (const period of periods) {
         if (!periodMatchesWrite(period.kind, config.write.type)) continue;
         const anchorString = period.anchor.toAnchor();
-        if (!this.#matches(decoration, period, config, () => metadataFor(journalName, anchorString))) continue;
-        const key = cellKey(period.kind, anchorString);
-        let bucket = result.get(key);
-        if (!bucket) {
-          bucket = [];
-          result.set(key, bucket);
-        }
-        bucket.push(...decoration.styles);
+        if (!this.#matches(binding.decoration, period, config, () => metadataFor(binding.journalName, anchorString)))
+          continue;
+        push(period, binding.decoration.styles);
       }
     }
     return result;

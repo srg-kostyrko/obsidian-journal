@@ -6,7 +6,13 @@ import { NoteMetadataService, NotesService, type VaultPath } from "@/infrastruct
 import { JournalsIndex, JournalsRepository } from "@/journals";
 
 import { paddingFromAll } from "./derive-styles";
-import { cellKey, DecorationEngine, periodKindForWrite, periodMatchesWrite, type DecorationBinding } from "./engine";
+import {
+  cellKey,
+  DecorationEngine,
+  periodKindForWrite,
+  periodMatchesWrite,
+  type JournalDecorationBinding,
+} from "./engine";
 import { defaultCellDecorationScope, type CellDecorationScope, type CellStyleRef } from "./ui/cell-decoration-map-key";
 
 import type { JournalDecoration, JournalDecorationStyle } from "./config";
@@ -16,7 +22,7 @@ export function useCellDecorations(
   periodsRef: MaybeRefOrGetter<readonly Period[]>,
   journalNamesRef: MaybeRefOrGetter<readonly string[]>,
   scope: CellDecorationScope = defaultCellDecorationScope,
-  filter: (binding: DecorationBinding) => boolean = () => true,
+  filter: (binding: JournalDecorationBinding) => boolean = () => true,
 ): ReadonlyMap<string, CellStyleRef> {
   const engine = useService(DecorationEngine);
   const journals = useService(JournalsRepository);
@@ -29,13 +35,13 @@ export function useCellDecorations(
   let keysByPath = new Map<VaultPath, string>();
   let journalNamesInScope = new Set<string>();
 
-  function gatherDecorations(): readonly DecorationBinding[] {
-    const out: DecorationBinding[] = [];
+  function gatherDecorations(): readonly JournalDecorationBinding[] {
+    const out: JournalDecorationBinding[] = [];
     for (const name of toValue(journalNamesRef)) {
       const opt = journals.get(name);
       if (opt.isNone()) continue;
       for (const decoration of opt.value.decorations) {
-        const binding = { journalName: name, decoration };
+        const binding = { kind: "journal" as const, journalName: name, decoration };
         if (filter(binding)) out.push(binding);
       }
     }

@@ -196,6 +196,16 @@ export const decorationConditionSchema = v.union([
 ]);
 export type JournalDecorationCondition = v.InferOutput<typeof decorationConditionSchema>;
 
+export const calendarConditionSchema = v.union([dateConditionSchema, weekdayCondition]);
+export type CalendarDecorationCondition = v.InferOutput<typeof calendarConditionSchema>;
+
+export const calendarDecorationSchema = v.object({
+  mode: v.union([v.literal("and"), v.literal("or")]),
+  conditions: v.array(calendarConditionSchema),
+  styles: v.array(decorationStyleSchema),
+});
+export type CalendarDecoration = v.InferOutput<typeof calendarDecorationSchema>;
+
 export type JournalDecorationTitleCondition = v.InferOutput<typeof titleCondition>;
 export type JournalDecorationTagCondition = v.InferOutput<typeof tagCondition>;
 export type JournalDecorationStringPropertyCondition = v.InferOutput<typeof stringPropertyCondition>;

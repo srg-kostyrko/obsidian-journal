@@ -1,4 +1,4 @@
-import { afterEach, beforeEach, describe, expect, it } from "vitest";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
 import { DayPeriod, WeekPeriod } from "@/calendar";
 import { date, installTestCalendar } from "@/calendar/testing";
@@ -9,8 +9,8 @@ import { CycleService, JournalsIndex, JournalsRepository } from "@/journals";
 import type { JournalConfig } from "@/journals/config";
 import { fakeRepo, fixedJournal } from "@/journals/testing";
 
-import { DecorationEngine } from "./engine";
-import { buildCondition, buildDecoration, buildStyle } from "./testing";
+import { cellKey, DecorationEngine } from "./engine";
+import { buildCalendarDecoration, buildCondition, buildDecoration, buildStyle } from "./testing";
 
 function buildContainer(journals: Record<string, JournalConfig> = {}): {
   c: Container;
@@ -54,7 +54,7 @@ describe("DecorationEngine", () => {
       const engine = c.resolve(DecorationEngine);
 
       const period = DayPeriod.containing(date("2026-05-25"));
-      const result = engine.evaluateRange([period], [{ journalName: "daily", decoration }]);
+      const result = engine.evaluateRange([period], [{ kind: "journal", journalName: "daily", decoration }]);
 
       expect(result.size).toBe(0);
     });
@@ -71,7 +71,7 @@ describe("DecorationEngine", () => {
       const engine = c.resolve(DecorationEngine);
 
       const dayPeriod = DayPeriod.containing(date("2026-05-25"));
-      const result = engine.evaluateRange([dayPeriod], [{ journalName: "weekly", decoration }]);
+      const result = engine.evaluateRange([dayPeriod], [{ kind: "journal", journalName: "weekly", decoration }]);
 
       expect(result.size).toBe(0);
     });
@@ -101,8 +101,8 @@ describe("DecorationEngine", () => {
       const result = engine.evaluateRange(
         [dayPeriod, weekPeriod],
         [
-          { journalName: "daily", decoration: dayDeco },
-          { journalName: "weekly", decoration: weekDeco },
+          { kind: "journal", journalName: "daily", decoration: dayDeco },
+          { kind: "journal", journalName: "weekly", decoration: weekDeco },
         ],
       );
 
@@ -127,7 +127,7 @@ describe("DecorationEngine", () => {
       const engine = c.resolve(DecorationEngine);
 
       const weekPeriod = WeekPeriod.containing(date("2026-05-25"));
-      const result = engine.evaluateRange([weekPeriod], [{ journalName: "weekly", decoration }]);
+      const result = engine.evaluateRange([weekPeriod], [{ kind: "journal", journalName: "weekly", decoration }]);
 
       expect(result.size).toBe(1);
     });
@@ -144,7 +144,7 @@ describe("DecorationEngine", () => {
       const engine = c.resolve(DecorationEngine);
 
       const weekPeriod = WeekPeriod.containing(date("2026-05-25"));
-      const result = engine.evaluateRange([weekPeriod], [{ journalName: "weekly", decoration }]);
+      const result = engine.evaluateRange([weekPeriod], [{ kind: "journal", journalName: "weekly", decoration }]);
 
       expect(result.size).toBe(0);
     });
@@ -157,9 +157,55 @@ describe("DecorationEngine", () => {
       const engine = c.resolve(DecorationEngine);
 
       const period = DayPeriod.containing(date("2026-05-25"));
-      const result = engine.evaluateRange([period], [{ journalName: "daily", decoration }]);
+      const result = engine.evaluateRange([period], [{ kind: "journal", journalName: "daily", decoration }]);
 
       expect(result.size).toBe(0);
+    });
+
+    it("paints a day cell from a calendar decoration", () => {
+      const decoration = buildCalendarDecoration({
+        mode: "or",
+        conditions: [buildCondition("weekday", { weekdays: [1] })],
+        styles: [buildStyle("background")],
+      });
+      const { c } = buildContainer();
+      const engine = c.resolve(DecorationEngine);
+
+      // 2026-05-25 is a Monday.
+      const period = DayPeriod.containing(date("2026-05-25"));
+      const result = engine.evaluateRange([period], [{ kind: "calendar", decoration }]);
+
+      expect(result.get(cellKey("day", period.anchor.toAnchor()))).toEqual(decoration.styles);
+    });
+
+    it("leaves a week cell untouched for a calendar decoration", () => {
+      const decoration = buildCalendarDecoration({
+        mode: "or",
+        conditions: [buildCondition("weekday", { weekdays: [1] })],
+        styles: [buildStyle("background")],
+      });
+      const { c } = buildContainer();
+      const engine = c.resolve(DecorationEngine);
+
+      const period = WeekPeriod.containing(date("2026-05-25"));
+      const result = engine.evaluateRange([period], [{ kind: "calendar", decoration }]);
+
+      expect(result.size).toBe(0);
+    });
+
+    it("never reads note metadata for a calendar decoration", () => {
+      const decoration = buildCalendarDecoration({
+        mode: "or",
+        conditions: [buildCondition("weekday", { weekdays: [1] })],
+        styles: [buildStyle("background")],
+      });
+      const { c, metadata } = buildContainer();
+      const spy = vi.spyOn(metadata, "get");
+      const engine = c.resolve(DecorationEngine);
+
+      engine.evaluateRange([DayPeriod.containing(date("2026-05-25"))], [{ kind: "calendar", decoration }]);
+
+      expect(spy).not.toHaveBeenCalled();
     });
   });
 });
