@@ -63,10 +63,10 @@ const badges = computed<readonly Badge[]>(() => {
   return out;
 });
 
-useCellDecorations(
-  () => badges.value.map((badge) => badge.period),
-  () => scope.fixed.value,
-);
+useCellDecorations({
+  periods: () => badges.value.map((badge) => badge.period),
+  journalNames: () => scope.fixed.value,
+});
 
 function isActive(badge: Badge): boolean {
   const active = activeVM.active.value;

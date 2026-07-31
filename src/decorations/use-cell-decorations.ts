@@ -5,12 +5,14 @@ import { useService } from "@/infrastructure/di";
 import { NoteMetadataService, NotesService, type VaultPath } from "@/infrastructure/host";
 import { JournalsIndex, JournalsRepository } from "@/journals";
 
+import { DecorationsStore } from "./decorations-store";
 import { paddingFromAll } from "./derive-styles";
 import {
   cellKey,
   DecorationEngine,
   periodKindForWrite,
   periodMatchesWrite,
+  type DecorationBinding,
   type JournalDecorationBinding,
 } from "./engine";
 import { defaultCellDecorationScope, type CellDecorationScope, type CellStyleRef } from "./ui/cell-decoration-map-key";
@@ -18,42 +20,62 @@ import { defaultCellDecorationScope, type CellDecorationScope, type CellStyleRef
 import type { JournalDecoration, JournalDecorationStyle } from "./config";
 import type { MaybeRefOrGetter } from "vue";
 
-export function useCellDecorations(
-  periodsRef: MaybeRefOrGetter<readonly Period[]>,
-  journalNamesRef: MaybeRefOrGetter<readonly string[]>,
-  scope: CellDecorationScope = defaultCellDecorationScope,
-  filter: (binding: JournalDecorationBinding) => boolean = () => true,
-): ReadonlyMap<string, CellStyleRef> {
+export interface CellDecorationsOptions {
+  periods: MaybeRefOrGetter<readonly Period[]>;
+  journalNames: MaybeRefOrGetter<readonly string[]>;
+  scope?: CellDecorationScope;
+  filter?: (binding: JournalDecorationBinding) => boolean;
+  // Presence opts the surface into journal-free decorations. `shelf` is the shelf in scope,
+  // or null for "all journals", where only the vault-wide list applies.
+  calendarDecorations?: { shelf: MaybeRefOrGetter<string | null> };
+}
+
+export function useCellDecorations(options: CellDecorationsOptions): ReadonlyMap<string, CellStyleRef> {
+  const scope = options.scope ?? defaultCellDecorationScope;
+  const filter = options.filter ?? ((): boolean => true);
   const engine = useService(DecorationEngine);
   const journals = useService(JournalsRepository);
   const index = useService(JournalsIndex);
   const notes = useService(NotesService);
   const metadata = useService(NoteMetadataService);
+  const store = useService(DecorationsStore);
 
   const cells = new Map<string, CellStyleRef>();
   let periodsByKey = new Map<string, Period[]>();
   let keysByPath = new Map<VaultPath, string>();
   let journalNamesInScope = new Set<string>();
 
-  function gatherDecorations(): readonly JournalDecorationBinding[] {
-    const out: JournalDecorationBinding[] = [];
-    for (const name of toValue(journalNamesRef)) {
+  function gatherDecorations(): readonly DecorationBinding[] {
+    const out: DecorationBinding[] = [];
+    // Journal, then shelf, then global: backgroundFrom()/textColorFrom() take the first match,
+    // so gathering order is what makes the most specific owner win.
+    for (const name of toValue(options.journalNames)) {
       const opt = journals.get(name);
       if (opt.isNone()) continue;
       for (const decoration of opt.value.decorations) {
-        const binding = { kind: "journal" as const, journalName: name, decoration };
+        const binding = { kind: "journal", journalName: name, decoration } as const;
         if (filter(binding)) out.push(binding);
       }
+    }
+    const calendar = options.calendarDecorations;
+    if (calendar) {
+      const shelfName = toValue(calendar.shelf);
+      if (shelfName !== null) {
+        const shelfDecorations = store.calendarList({ kind: "shelf", shelfName });
+        for (const decoration of shelfDecorations) out.push({ kind: "calendar", decoration });
+      }
+      const globalDecorations = store.calendarList({ kind: "global" });
+      for (const decoration of globalDecorations) out.push({ kind: "calendar", decoration });
     }
     return out;
   }
 
   function readPeriods(): Period[] {
-    return toValue(periodsRef).map((p) => toRaw(p));
+    return toValue(options.periods).map((p) => toRaw(p));
   }
 
   function rebuildScopeMaps(periods: readonly Period[]): void {
-    const journalNames = toValue(journalNamesRef);
+    const journalNames = toValue(options.journalNames);
     journalNamesInScope = new Set(journalNames);
     keysByPath = new Map<VaultPath, string>();
     for (const period of periods) {
@@ -95,12 +117,27 @@ export function useCellDecorations(
     // Detect mutations of any consumed journal's decorations array. Touching .length
     // and each decoration reference here is enough to register watchEffect dependencies
     // on the underlying reactive proxy.
-    for (const name of toValue(journalNamesRef)) {
+    for (const name of toValue(options.journalNames)) {
       const opt = journals.get(name);
       if (opt.isNone()) continue;
       const array = opt.value.decorations as unknown as readonly JournalDecoration[];
       void array.length;
       for (const d of array) void d;
+    }
+
+    // Same dependency-touching trick for the calendar lists in scope, so a save() on
+    // either the shelf or the vault-wide slice re-runs this effect.
+    const calendar = options.calendarDecorations;
+    if (calendar) {
+      const shelfName = toValue(calendar.shelf);
+      const lists =
+        shelfName === null
+          ? [store.calendarList({ kind: "global" })]
+          : [store.calendarList({ kind: "shelf", shelfName }), store.calendarList({ kind: "global" })];
+      for (const list of lists) {
+        void list.length;
+        for (const d of list) void d;
+      }
     }
   }
 
@@ -117,11 +154,11 @@ export function useCellDecorations(
   watchEffect(reseed);
   provide(scope.map, cells);
 
-  // Reading periodsRef re-tracks membership whenever the visible range changes (e.g. month
+  // Reading options.periods re-tracks membership whenever the visible range changes (e.g. month
   // navigation re-keys the whole map), while the per-cell slot reads keep it live as
   // individual decorations come and go.
   const sharedPadding = computed(() => {
-    void toValue(periodsRef);
+    void toValue(options.periods);
     return paddingFromAll(Array.from(cells.values(), (slot) => slot.value));
   });
   provide(scope.padding, sharedPadding);

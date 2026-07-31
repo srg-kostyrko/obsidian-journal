@@ -6,7 +6,7 @@ import { nextTick } from "vue";
 
 import type { AnchorString } from "@/calendar";
 import { installTestCalendar } from "@/calendar/testing";
-import { DecorationEngine } from "@/decorations";
+import { DecorationEngine, decorationsSlice, DecorationsStore } from "@/decorations";
 import { buildCondition, buildDecoration, buildStyle } from "@/decorations/testing";
 import { initLocale, m } from "@/i18n";
 import { Container, provideInjectorOnApp } from "@/infrastructure/di";
@@ -14,14 +14,15 @@ import { Flows } from "@/infrastructure/flows";
 import {
   NoteMetadataService,
   NotesService,
+  PluginData,
   WorkspaceService,
   type NotesEvents,
   type VaultPath,
   NoticeService,
   WorkspaceOpenError,
 } from "@/infrastructure/host";
-import { FakeNoteMetadataService, FakeNoticeService } from "@/infrastructure/host/testing";
-import { LoggerFactory, LoggerFactoryToken } from "@/infrastructure/logger";
+import { FakeNoteMetadataService, FakeNoticeService, FakePluginData } from "@/infrastructure/host/testing";
+import { createLoggerTestingModule } from "@/infrastructure/logger/testing";
 import { RepositoryQuery } from "@/infrastructure/repository";
 import { AsyncResult, Option } from "@/infrastructure/result";
 import {
@@ -37,7 +38,8 @@ import {
   type NavBlockRow,
 } from "@/journals";
 import { fakeRepo } from "@/journals/testing";
-import { ShelvesRepository } from "@/shelves";
+import { SettingsEventsToken, SettingsService, SliceDefinitionToken, type SettingsEvents } from "@/settings";
+import { ShelvesRepository, type ShelfConfig } from "@/shelves";
 import { TemplateEngine } from "@/templates";
 
 import NavigationCodeBlock from "./NavigationCodeBlock.vue";
@@ -98,10 +100,18 @@ class FakeFlows {
 }
 
 class FakeShelves {
-  shelves: { name: string; journals: string[] }[] = [];
+  shelves: { name: string; journals: string[]; decorations?: ShelfConfig["decorations"] }[] = [];
   find() {
     const entries = this.shelves.map((shelf) => [shelf.name, shelf] as [string, (typeof this.shelves)[number]]);
     return new RepositoryQuery(entries[Symbol.iterator]());
+  }
+  // DecorationsStore reads a shelf's decorations through this, so fixtures that omit the
+  // field (most of them, since this suite predates calendar decorations) default to none.
+  get(name: string) {
+    return Option.fromNullable(this.shelves.find((shelf) => shelf.name === name)).map((shelf) => ({
+      ...shelf,
+      decorations: shelf.decorations ?? [],
+    }));
   }
 }
 
@@ -117,7 +127,7 @@ interface Harness {
 
 function buildHarness(journals: Record<string, JournalConfig>): Harness {
   const container = new Container();
-  container.register(LoggerFactoryToken).useClass(LoggerFactory);
+  container.addModule(createLoggerTestingModule().module);
   const journalsRepo = fakeRepo(journals);
   container.register(JournalsRepository).useValue(journalsRepo);
   const index = new FakeJournalsIndex();
@@ -139,6 +149,14 @@ function buildHarness(journals: Record<string, JournalConfig>): Harness {
   container.register(NotesService).useValue({ events: createNanoEvents<NotesEvents>() } as unknown as NotesService);
   container.register(DecorationEngine).useClass(DecorationEngine);
   container.register(TemplateEngine).useClass(TemplateEngine);
+  // The row scope always opts into calendar decorations now, so DecorationsStore's settings
+  // backing must exist even for tests that never save a vault-wide or shelf decoration.
+  container.register(PluginData).useValue(new FakePluginData() as unknown as PluginData);
+  container.register(SliceDefinitionToken).useValue(decorationsSlice);
+  container.register(SettingsEventsToken).useValue(createNanoEvents<SettingsEvents>());
+  container.register(SettingsService).useClass(SettingsService);
+  container.resolve(SettingsService).getSlice(decorationsSlice).state = { decorations: [] };
+  container.register(DecorationsStore).useClass(DecorationsStore);
   return { container, journalsRepo, index, workspace, flows, shelves, notices };
 }
 

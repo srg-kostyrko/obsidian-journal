@@ -85,12 +85,13 @@ const visiblePeriods = computed<readonly Period[]>(() => {
 // Fixed journals decorate their own cells; custom journals contribute only their
 // offset-condition decorations, which mark single days inside an interval (v2's split —
 // everything else a custom journal defines renders in the interval list instead).
-useCellDecorations(
-  () => visiblePeriods.value,
-  () => scope.all.value,
-  undefined,
-  (binding) => (scope.custom.value.includes(binding.journalName) ? hasOffsetCondition(binding.decoration) : true),
-);
+useCellDecorations({
+  periods: () => visiblePeriods.value,
+  journalNames: () => scope.all.value,
+  filter: (binding) =>
+    scope.custom.value.includes(binding.journalName) ? hasOffsetCondition(binding.decoration) : true,
+  calendarDecorations: { shelf: () => props.shelf },
+});
 
 const noop = (): void => {
   // outside-month cells have no journal action

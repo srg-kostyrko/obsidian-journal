@@ -1,17 +1,23 @@
 import { createNanoEvents } from "nanoevents";
 import { shallowRef, type ShallowRef } from "vue";
 
-import { DecorationEngine } from "@/decorations";
+import { DecorationEngine, decorationsSlice, DecorationsStore } from "@/decorations";
 import { Container } from "@/infrastructure/di";
 import { FlowsModule } from "@/infrastructure/flows";
 import {
   NoteMetadataService,
   NoticeService,
   NotesService,
+  PluginData,
   WorkspaceService,
   type NotesEvents,
 } from "@/infrastructure/host";
-import { FakeNoteMetadataService, FakeNoticeService, FakeWorkspaceService } from "@/infrastructure/host/testing";
+import {
+  FakeNoteMetadataService,
+  FakeNoticeService,
+  FakePluginData,
+  FakeWorkspaceService,
+} from "@/infrastructure/host/testing";
 import { LoggerModule } from "@/infrastructure/logger";
 import {
   CycleService,
@@ -22,6 +28,7 @@ import {
   type JournalConfig,
 } from "@/journals";
 import { fakeRepo } from "@/journals/testing";
+import { SettingsEventsToken, SettingsService, SliceDefinitionToken, type SettingsEvents } from "@/settings";
 import { ShelvesRepository, type ShelfConfig } from "@/shelves";
 import { fakeShelvesRepo } from "@/shelves/testing";
 
@@ -68,6 +75,15 @@ export function buildNotesCalendarHarness(options: {
   container.register(NotesService).useValue({ events: createNanoEvents<NotesEvents>() } as unknown as NotesService);
 
   container.register(DecorationEngine).useClass(DecorationEngine);
+
+  // DecorationsStore reads the vault-wide list unconditionally once a surface opts in via
+  // calendarDecorations, so its settings backing must exist even for tests never touching it.
+  container.register(PluginData).useValue(new FakePluginData() as unknown as PluginData);
+  container.register(SliceDefinitionToken).useValue(decorationsSlice);
+  container.register(SettingsEventsToken).useValue(createNanoEvents<SettingsEvents>());
+  container.register(SettingsService).useClass(SettingsService);
+  container.resolve(SettingsService).getSlice(decorationsSlice).state = { decorations: [] };
+  container.register(DecorationsStore).useClass(DecorationsStore);
 
   const active = new FakeActiveEntryViewModel();
   container.register(ActiveEntryViewModel).useValue(active as unknown as ActiveEntryViewModel);

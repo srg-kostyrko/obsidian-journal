@@ -73,17 +73,16 @@ const sections = computed<readonly Section[]>(() => {
 // Each interval is a "day"-kind period at its start anchor, so the engine and CellDecoration
 // agree on the cell key; scoping to the rendered custom journals keeps fixed-period decorations
 // (which live on the calendar grid) out of the interval list.
-useCellDecorations(
-  () =>
+useCellDecorations({
+  periods: () =>
     sections.value.flatMap((section) =>
       section.entries.map((entry) => periodForJournal(section.journal.write, entry.anchor)),
     ),
-  () => sections.value.map((section) => section.journalName),
-  undefined,
+  journalNames: () => sections.value.map((section) => section.journalName),
   // Offset decorations mark single days inside an interval; they render on the day
   // calendar grid, never on the whole-interval row (v2's decoration split).
-  (binding) => !hasOffsetCondition(binding.decoration),
-);
+  filter: (binding) => !hasOffsetCondition(binding.decoration),
+});
 </script>
 
 <template>

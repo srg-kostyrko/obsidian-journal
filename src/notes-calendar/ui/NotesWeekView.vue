@@ -58,12 +58,13 @@ const allPeriods = computed<readonly Period[]>(() => {
 
 // Same split as the month grid: custom journals contribute only their offset-condition
 // decorations to day cells; the rest of their decorations live in the interval list.
-useCellDecorations(
-  () => allPeriods.value,
-  () => scope.all.value,
-  undefined,
-  (binding) => (scope.custom.value.includes(binding.journalName) ? hasOffsetCondition(binding.decoration) : true),
-);
+useCellDecorations({
+  periods: () => allPeriods.value,
+  journalNames: () => scope.all.value,
+  filter: (binding) =>
+    scope.custom.value.includes(binding.journalName) ? hasOffsetCondition(binding.decoration) : true,
+  calendarDecorations: { shelf: () => props.shelf },
+});
 </script>
 
 <template>

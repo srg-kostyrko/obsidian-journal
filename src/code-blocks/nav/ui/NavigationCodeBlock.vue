@@ -106,16 +106,30 @@ const rowJournalNames = computed<readonly string[]>(() => {
   return inScope.filter((other) => other.write.type === currentJournal.write.type).map((other) => other.name);
 });
 
-useCellDecorations(
-  () => periods.value,
-  () => blockJournalNames.value,
-  navBlockDecorationScope,
-);
-useCellDecorations(
-  () => periods.value,
-  () => rowJournalNames.value,
-  navRowDecorationScope,
-);
+// Journal-free decorations belong to the per-row scope: every row is a different date, while
+// the whole-block scope decorates the block from the current journal's own rules. Only day rows
+// are affected — a weekly journal's nav block renders week rows and shows none of these.
+const decorationShelf = computed<string | null>(() => {
+  const currentJournal = journal.value;
+  if (!currentJournal) return null;
+  return shelves
+    .find()
+    .filter((shelf) => shelf.journals.includes(currentJournal.name))
+    .first()
+    .match<string | null>({ some: (shelf) => shelf.name, none: () => null });
+});
+
+useCellDecorations({
+  periods: () => periods.value,
+  journalNames: () => blockJournalNames.value,
+  scope: navBlockDecorationScope,
+});
+useCellDecorations({
+  periods: () => periods.value,
+  journalNames: () => rowJournalNames.value,
+  scope: navRowDecorationScope,
+  calendarDecorations: { shelf: () => decorationShelf.value },
+});
 
 function openAdjacent(anchor: AnchorString | undefined, event: MouseEvent): void {
   const currentJournal = journal.value;
