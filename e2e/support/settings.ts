@@ -103,6 +103,23 @@ export async function pickModalIcon(icon: string): Promise<void> {
   await $(`.journal-suggestion-icon=${icon}`).click();
 }
 
+// Choose a frontmatter property in the open modal's UiPropertySuggest, whose popup Obsidian also
+// renders at the document root. The typing is retried because a just-seeded note reaches
+// metadataTypeManager's registry a beat after the vault write, and only a fresh input event
+// reopens the popup with the current candidates.
+export async function pickModalProperty(name: string): Promise<void> {
+  const input = activeModal().$(".ui-property-suggest input");
+  const row = $(`.journal-suggestion-property=${name}`);
+  await browser.waitUntil(
+    async () => {
+      await input.setValue(name);
+      return row.isClickable();
+    },
+    { timeout: 5000, interval: 250, timeoutMsg: `the "${name}" property was never suggested` },
+  );
+  await row.click();
+}
+
 // Choose a date in the open dialog's DatePicker. The trigger opens the picker as a SECOND dialog
 // stacked over this one, so the day cell is looked up globally (activeModal resolves the first
 // dialog) via the production data-testid/data-anchor the calendar cells carry.

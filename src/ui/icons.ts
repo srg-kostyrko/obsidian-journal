@@ -41,6 +41,18 @@ export const icons = {
     definedNavigation: "chevrons-left-right",
     spacer: "move-horizontal",
   },
+  // Mirrors the icons Obsidian shows for each frontmatter property type.
+  propertyType: {
+    text: "lucide-text",
+    multitext: "lucide-list",
+    number: "lucide-binary",
+    checkbox: "lucide-check-square",
+    date: "lucide-calendar",
+    datetime: "lucide-clock",
+    aliases: "lucide-forward",
+    tags: "lucide-tags",
+    unknown: "lucide-file-question",
+  },
   section: {
     numbering: "hash",
     appearance: "palette",
@@ -52,6 +64,12 @@ export const icons = {
     timeline: "calendar-range",
   },
 } as const;
+
+const propertyTypeIcons = new Map<string, string>(Object.entries(icons.propertyType));
+
+export function propertyTypeIcon(type: string | null): string {
+  return propertyTypeIcons.get(type ?? "") ?? icons.propertyType.unknown;
+}
 
 export type IconName = {
   [Group in keyof typeof icons]: (typeof icons)[Group][keyof (typeof icons)[Group]];

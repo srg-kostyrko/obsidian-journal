@@ -9,7 +9,8 @@ import { Calendar } from "@/calendar";
 import { decorationConditionSchema, type JournalDecorationCondition } from "@/decorations";
 import { m } from "@/i18n";
 import { Container, provideInjectorOnApp } from "@/infrastructure/di";
-import { MetadataTypeService } from "@/infrastructure/host";
+import { InputSuggestService, MetadataTypeService } from "@/infrastructure/host";
+import { FakeInputSuggestService } from "@/infrastructure/host/input-suggests/testing";
 
 import ConditionItem from "./ConditionItem.vue";
 
@@ -18,7 +19,10 @@ afterEach(() => cleanup());
 function mount(initial: JournalDecorationCondition) {
   const container = new Container();
   container.register(Calendar).useValue(new Calendar());
-  container.register(MetadataTypeService).useValue({ getPropertyType: () => null } as unknown as MetadataTypeService);
+  container
+    .register(MetadataTypeService)
+    .useValue({ getPropertyType: () => null, listProperties: () => [] } as unknown as MetadataTypeService);
+  container.register(InputSuggestService).useValue(new FakeInputSuggestService() as unknown as InputSuggestService);
   const renderHost = () => h(ConditionItem, { name: "c", condition: initial });
   const Host = defineComponent({
     setup() {

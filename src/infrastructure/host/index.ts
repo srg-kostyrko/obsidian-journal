@@ -60,5 +60,14 @@ export {
 export { CommandService, type CommandRegistration } from "./commands";
 export { UriService, type UriHandler, type UriParameters } from "./uri";
 export { createHostModule } from "./module";
-export type { Note, NoteMetadata, NoteTask, NotesEvents, OpenMode, VaultPath, WorkspaceEvents } from "./types";
+export type {
+  Note,
+  NoteMetadata,
+  NoteTask,
+  NotesEvents,
+  OpenMode,
+  VaultPath,
+  VaultProperty,
+  WorkspaceEvents,
+} from "./types";
 export { InternalObsidianAppToken, InternalPluginToken } from "./internal/tokens";

@@ -13,6 +13,7 @@ import {
   openSettings,
   openShelfSubpage,
   pickModalIcon,
+  pickModalProperty,
   selectModalOption,
   selectModalSelect,
   setModalText,
@@ -528,6 +529,24 @@ describe("settings", () => {
         (s) => s.journals?.daily?.decorations?.[0]?.mode === "or",
         "decoration mode change not persisted",
       );
+    });
+
+    // The only check that metadataTypeManager still answers the way the plugin reads it: the fake
+    // in unit tests mirrors our own assumption, so a rename in Obsidian's registry only shows here.
+    it("derives a property condition's operators from the picked property's type", async () => {
+      await seedNote("props/rating.md", "---\nrating: 5\n---\n");
+      await openJournalSubpage("core", "daily");
+      await expandSection("Calendar decorations");
+      // Decoration index 2 is the fixture's property condition; the delete test removes the last
+      // row only, so this index holds whichever order the specs run in.
+      const edits = await $$('button[aria-label="Edit decoration"]').getElements();
+      await edits[2]?.click();
+      await waitForModalOpen();
+
+      await pickModalProperty("rating");
+
+      // "gt" is offered for number properties only — a text property would leave it out.
+      await expect($('.modal-container select[aria-label="Condition"] option[value="gt"]')).toExist();
     });
 
     it("deletes a decoration and shrinks the list in data.json", async () => {

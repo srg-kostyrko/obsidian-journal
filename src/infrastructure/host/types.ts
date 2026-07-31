@@ -25,6 +25,11 @@ export interface NoteTask {
   readonly completed: boolean;
 }
 
+export interface VaultProperty {
+  readonly name: string;
+  readonly type: string;
+}
+
 export interface NoteMetadata {
   readonly title: string;
   readonly tags: readonly string[];

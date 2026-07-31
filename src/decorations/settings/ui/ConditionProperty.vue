@@ -9,6 +9,7 @@ import { useService } from "@/infrastructure/di";
 import { MetadataTypeService } from "@/infrastructure/host";
 import UiDropdown from "@/ui/UiDropdown.vue";
 import UiNumberInput from "@/ui/UiNumberInput.vue";
+import UiPropertySuggest from "@/ui/UiPropertySuggest.vue";
 import UiTextInput from "@/ui/UiTextInput.vue";
 
 type ValueType = JournalDecorationPropertyCondition["valueType"];
@@ -89,7 +90,7 @@ watch(propertyName, (next) => {
 </script>
 
 <template>
-  <UiTextInput v-model="propertyName" :aria-label="m.common_label_property_name()" />
+  <UiPropertySuggest v-model="propertyName" :aria-label="m.common_label_property_name()" />
   <UiDropdown v-model="op" :aria-label="m.decoration_condition_property_condition_label()">
     <option v-for="o of opsForType" :key="o" :value="o">{{ opLabel(o) }}</option>
   </UiDropdown>
