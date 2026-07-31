@@ -61,7 +61,7 @@ function build(seeds: Record<string, View> = {}, shelves: Record<string, ShelfCo
 }
 
 function shelf(name: string): ShelfConfig {
-  return { name, journals: [] };
+  return { name, journals: [], decorations: [] };
 }
 
 describe("ViewHostService", () => {

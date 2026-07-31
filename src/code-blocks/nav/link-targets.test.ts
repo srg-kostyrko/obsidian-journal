@@ -74,7 +74,7 @@ describe("resolveLinkTarget", () => {
   });
 });
 
-const shelf = (name: string, journals: string[]): ShelfConfig => ({ name, journals });
+const shelf = (name: string, journals: string[]): ShelfConfig => ({ name, journals, decorations: [] });
 
 describe("resolveLinkCandidates", () => {
   const weekly = journalDefaultsFor({ type: "week" }, "weekly");

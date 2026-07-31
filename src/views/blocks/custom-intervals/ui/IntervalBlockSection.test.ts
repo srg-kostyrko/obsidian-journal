@@ -31,7 +31,7 @@ function mount(write: JournalWrite) {
   const storage = reactive<Record<string, JournalConfig>>({ j: journalDefaultsFor(write, "j") });
   const repo = JournalsRepository.fromParts(storage, createNanoEvents<JournalsEvents>());
   const shelvesRepo = ShelvesRepository.fromParts(
-    reactive({ home: { name: "home", journals: ["j"] } }),
+    reactive({ home: { name: "home", journals: ["j"], decorations: [] } }),
     createNanoEvents<ShelvesEvents>(),
   );
   container.register(JournalsRepository).useValue(repo);

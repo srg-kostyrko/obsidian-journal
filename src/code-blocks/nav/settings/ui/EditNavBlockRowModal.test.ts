@@ -37,7 +37,7 @@ function mountModal(options: {
   const api: ModalApi<{ row: NavBlockRow }> = { submit, cancel };
   const container = new Container();
   const journalsStorage = reactive(options.journals ?? { daily: journalDefaultsFor({ type: "day" }, "daily") });
-  const shelvesStorage = reactive(options.shelves ?? { home: { name: "home", journals: ["daily"] } });
+  const shelvesStorage = reactive(options.shelves ?? { home: { name: "home", journals: ["daily"], decorations: [] } });
   const repo = JournalsRepository.fromParts(journalsStorage, createNanoEvents<JournalsEvents>());
   const shelvesRepo = ShelvesRepository.fromParts(shelvesStorage, createNanoEvents<ShelvesEvents>());
   container.register(JournalsRepository).useValue(repo);
@@ -159,7 +159,7 @@ describe("EditNavBlockRowModal", () => {
         daily: journalDefaultsFor({ type: "day" }, "daily"),
         weekly: journalDefaultsFor({ type: "week" }, "weekly"),
       },
-      shelves: { home: { name: "home", journals: ["daily", "weekly"] } },
+      shelves: { home: { name: "home", journals: ["daily", "weekly"], decorations: [] } },
     });
     await userEvent.selectOptions(screen.getByLabelText(m.nav_block_row_field_link()), "journal");
     const dropdown = await screen.findByLabelText<HTMLSelectElement>(m.common_label_journal());

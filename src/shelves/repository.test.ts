@@ -14,14 +14,14 @@ function buildRepo(initial: Record<string, ShelfConfig> = {}) {
   return { repo, storage, events };
 }
 
-const shelf = (name: string, journals: string[] = []): ShelfConfig => ({ name, journals });
+const shelf = (name: string, journals: string[] = []): ShelfConfig => ({ name, journals, decorations: [] });
 
 describe("ShelvesRepository", () => {
   describe("create", () => {
     it("inserts a shelf with empty journals list", () => {
       const { repo, storage } = buildRepo();
       repo.create("Personal");
-      expect(storage.Personal).toEqual({ name: "Personal", journals: [] });
+      expect(storage.Personal).toEqual({ name: "Personal", journals: [], decorations: [] });
     });
 
     it("emits created", () => {
@@ -49,7 +49,7 @@ describe("ShelvesRepository", () => {
     it("stores the entry under the new key with the new name field", () => {
       const { repo, storage } = buildRepo({ Personal: shelf("Personal", ["daily"]) });
       repo.rename("Personal", "Home");
-      expect(storage.Home).toEqual({ name: "Home", journals: ["daily"] });
+      expect(storage.Home).toEqual({ name: "Home", journals: ["daily"], decorations: [] });
     });
 
     it("removes the old key on rename", () => {

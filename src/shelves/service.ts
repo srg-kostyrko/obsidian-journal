@@ -56,7 +56,7 @@ export class ShelvesService {
     if (this.#shelves.get(shelfName).isNone()) return new Err(new UnknownShelfError(shelfName));
     this.#removeJournalFromShelves(journalName);
     // Re-read AFTER the remove step — #removeJournalFromShelves may have replaced storage[shelfName] via update().
-    const target = this.#shelves.get(shelfName).getOr({ name: shelfName, journals: [] });
+    const target = this.#shelves.get(shelfName).getOr({ name: shelfName, journals: [], decorations: [] });
     this.#shelves.update(shelfName, { journals: [...target.journals, journalName] });
     return new Ok(undefined);
   }

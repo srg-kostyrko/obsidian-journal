@@ -22,7 +22,7 @@ afterEach(() => cleanup());
 function makeShelves(names: readonly string[]): ShelvesRepository {
   const storage: Record<string, ShelfConfig> = {};
   for (const name of names) {
-    storage[name] = { name, journals: [] };
+    storage[name] = { name, journals: [], decorations: [] };
   }
   return ShelvesRepository.fromParts(storage, createNanoEvents<ShelvesEvents>());
 }

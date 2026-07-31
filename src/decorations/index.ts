@@ -31,6 +31,7 @@ export {
   type JournalDecorationTitleCondition,
   type JournalDecorationWeekdayCondition,
 } from "./config";
+export { DecorationsStore } from "./decorations-store";
 export { defaultCondition, defaultDecoration, defaultStyle } from "./defaults";
 export {
   DecorationEngine,
@@ -41,6 +42,8 @@ export {
   type JournalDecorationBinding,
 } from "./engine";
 export { decorationsModule } from "./module";
+export { describeOwner, type CalendarDecorationOwner, type DecorationOwner } from "./owner";
+export { decorationsSlice } from "./settings/slice";
 export {
   CellDecorationMapKey,
   createCellDecorationScope,

@@ -147,8 +147,8 @@ describe("TimelineCodeBlock", () => {
           otherWeekly: fixedJournal("otherWeekly", { type: "week" }),
         },
         shelves: {
-          work: { name: "work", journals: ["daily"] },
-          home: { name: "home", journals: ["otherDaily", "otherWeekly"] },
+          work: { name: "work", journals: ["daily"], decorations: [] },
+          home: { name: "home", journals: ["otherDaily", "otherWeekly"], decorations: [] },
         },
       });
       h.index.register({ journalName: "daily", anchor: HOST_ANCHOR, path: HOST_PATH });
@@ -166,8 +166,8 @@ describe("TimelineCodeBlock", () => {
           weekly: fixedJournal("weekly", { type: "week" }),
         },
         shelves: {
-          owning: { name: "owning", journals: ["daily"] },
-          override: { name: "override", journals: ["weekly"] },
+          owning: { name: "owning", journals: ["daily"], decorations: [] },
+          override: { name: "override", journals: ["weekly"], decorations: [] },
         },
       });
       h.index.register({ journalName: "daily", anchor: HOST_ANCHOR, path: HOST_PATH });

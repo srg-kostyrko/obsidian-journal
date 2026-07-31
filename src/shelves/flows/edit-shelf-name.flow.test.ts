@@ -37,7 +37,7 @@ describe("EditShelfNameFlow", () => {
     const promise = flows.invoke(EditShelfNameFlow, {});
     modals.lastOpen<unknown, string>().submit("Work");
     await promise;
-    expect(repo.get("Work").getOr(undefined as never)).toEqual({ name: "Work", journals: [] });
+    expect(repo.get("Work").getOr(undefined as never)).toEqual({ name: "Work", journals: [], decorations: [] });
   });
 
   it("renames an existing shelf and keeps its journals", async () => {
@@ -47,7 +47,11 @@ describe("EditShelfNameFlow", () => {
     modals.lastOpen<unknown, string>().submit("Office");
     await promise;
     expect(repo.get("Work").isNone()).toBe(true);
-    expect(repo.get("Office").getOr(undefined as never)).toEqual({ name: "Office", journals: ["daily"] });
+    expect(repo.get("Office").getOr(undefined as never)).toEqual({
+      name: "Office",
+      journals: ["daily"],
+      decorations: [],
+    });
   });
 
   it("leaves the collection untouched when the modal is cancelled", async () => {

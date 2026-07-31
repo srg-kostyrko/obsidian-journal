@@ -256,7 +256,7 @@ describe("JournalViewLeaf", () => {
       const events = createNanoEvents<ViewsEvents>();
       const repo = ViewsRepository.fromParts({ [view.id]: view }, events);
       const shelves = ShelvesRepository.fromParts(
-        { Personal: { name: "Personal", journals: [] } },
+        { Personal: { name: "Personal", journals: [], decorations: [] } },
         createNanoEvents<ShelvesEvents>(),
       );
       const c = new Container();

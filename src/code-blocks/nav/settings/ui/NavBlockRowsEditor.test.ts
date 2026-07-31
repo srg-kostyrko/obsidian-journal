@@ -45,7 +45,7 @@ function mount(rows: NavBlockRow[]) {
   const storage = reactive<Record<string, JournalConfig>>({ daily: buildCustomJournal("daily", rows) });
   const repo = JournalsRepository.fromParts(storage, createNanoEvents<JournalsEvents>());
   const shelvesRepo = ShelvesRepository.fromParts(
-    reactive({ home: { name: "home", journals: ["daily"] } }),
+    reactive({ home: { name: "home", journals: ["daily"], decorations: [] } }),
     createNanoEvents<ShelvesEvents>(),
   );
   const invoke = vi.fn();

@@ -53,7 +53,7 @@ export class ShelvesRepository extends BaseRepository<
 
   create(name: string): Result<ShelfConfig, InvalidShelfNameError | ShelfNameTakenError> {
     if (name.length === 0) return new Err(new InvalidShelfNameError(name));
-    const entity: ShelfConfig = { name, journals: [] };
+    const entity: ShelfConfig = { name, journals: [], decorations: [] };
     const result = this.addEntity(name, entity);
     if (result.kind === "err") return new Err(new ShelfNameTakenError(name));
     return new Ok(entity);

@@ -104,7 +104,7 @@ describe("useShelfScope", () => {
         monthly: fixedJournal("monthly", { type: "month" }),
       },
       {
-        work: { name: "work", journals: ["daily", "weekly"] },
+        work: { name: "work", journals: ["daily", "weekly"], decorations: [] },
       },
     );
 

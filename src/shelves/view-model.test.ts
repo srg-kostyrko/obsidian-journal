@@ -15,7 +15,7 @@ function buildVM(initial: Record<string, ShelfConfig> = {}) {
   return { vm, repo };
 }
 
-const shelf = (name: string, journals: string[] = []): ShelfConfig => ({ name, journals });
+const shelf = (name: string, journals: string[] = []): ShelfConfig => ({ name, journals, decorations: [] });
 
 describe("ShelvesViewModel", () => {
   describe("shelves", () => {

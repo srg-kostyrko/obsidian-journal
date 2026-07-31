@@ -63,7 +63,7 @@ describe("useShelfMateJournals", () => {
     const get = mount({
       journalName: "daily",
       journals: { daily: journal("daily"), weekly: journal("weekly"), other: journal("other") },
-      shelves: { home: { name: "home", journals: ["daily", "weekly"] } },
+      shelves: { home: { name: "home", journals: ["daily", "weekly"], decorations: [] } },
     });
     expect(get()).toEqual(["weekly"]);
   });
@@ -72,7 +72,7 @@ describe("useShelfMateJournals", () => {
     const get = mount({
       journalName: "daily",
       journals: { daily: journal("daily"), weekly: journal("weekly") },
-      shelves: { home: { name: "home", journals: ["weekly"] } },
+      shelves: { home: { name: "home", journals: ["weekly"], decorations: [] } },
     });
     expect(get()).toEqual([]);
   });

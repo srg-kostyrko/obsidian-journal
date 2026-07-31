@@ -40,7 +40,7 @@ function setup(
   };
 }
 
-const shelf = (name: string, journals: string[] = []): ShelfConfig => ({ name, journals });
+const shelf = (name: string, journals: string[] = []): ShelfConfig => ({ name, journals, decorations: [] });
 const journalConfig = (name: string) => journalDefaultsFor({ type: "day" }, name);
 
 describe("ShelvesService", () => {
