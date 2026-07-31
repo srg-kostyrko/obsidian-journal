@@ -45,6 +45,21 @@ describe("DecorationsStore", () => {
     });
   });
 
+  describe("calendarList", () => {
+    it("returns a shelf's own calendar decorations", () => {
+      const { store } = build({
+        shelves: { work: { name: "work", journals: [], decorations: [calendarDecoration] } },
+      });
+      expect(store.calendarList({ kind: "shelf", shelfName: "work" })).toEqual([calendarDecoration]);
+    });
+
+    it("returns the vault-wide calendar decorations", () => {
+      const { store, service } = build();
+      service.getSlice(decorationsSlice).state = { decorations: [calendarDecoration] };
+      expect(store.calendarList({ kind: "global" })).toEqual([calendarDecoration]);
+    });
+  });
+
   describe("save", () => {
     it("writes a shelf's decorations back to the shelf", () => {
       const { store, shelfStorage } = build({ shelves: { work: { name: "work", journals: [], decorations: [] } } });
@@ -60,6 +75,17 @@ describe("DecorationsStore", () => {
   });
 
   describe("exists", () => {
+    it("reports an existing journal as present", () => {
+      const journal = journalDefaultsFor({ type: "day" }, "daily");
+      const { store } = build({ journals: { daily: journal } });
+      expect(store.exists({ kind: "journal", journalName: "daily" })).toBe(true);
+    });
+
+    it("reports a missing journal as absent", () => {
+      const { store } = build();
+      expect(store.exists({ kind: "journal", journalName: "gone" })).toBe(false);
+    });
+
     it("reports a missing shelf as absent", () => {
       const { store } = build();
       expect(store.exists({ kind: "shelf", shelfName: "gone" })).toBe(false);
