@@ -337,6 +337,18 @@ describe("calendar view", () => {
       await expectUndecorated(calendar.periodCell("week-number-cell"));
     });
 
+    it("decorates a day cell once the last of its note's several tasks is checked off", async () => {
+      const anchor = dayAnchor(23);
+      const path = "day/live-daily-tasks.md";
+      await seedNote(path, note("daily", anchor, "- [x] done\n- [ ] open"));
+      await waitForFrontmatter(path, (fm) => fm.journal === "daily", `waited for ${path} to be indexed`);
+      await expectUndecorated(calendar.cell(anchor));
+
+      await writeNote(path, note("daily", anchor, "- [x] done\n- [x] also done"));
+
+      await expectDecorated(calendar.cell(anchor));
+    });
+
     it("decorates the month header when its note's last open task is checked off", async () => {
       const month = (await calendar.periodCell("header-month").getAttribute("data-anchor")) ?? "";
       const path = "month/live-monthly.md";

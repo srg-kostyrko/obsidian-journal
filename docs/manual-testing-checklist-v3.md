@@ -622,45 +622,45 @@ them. Add decorations via Settings → Journals → &lt;journal&gt; → Decorati
 condition below, pair it with an obvious style (e.g. background red) so the match
 is visible.
 
-- [ ] On a **Week/Month/Quarter/Year** journal → the condition dropdown offers
+- [x] On a **Week/Month/Quarter/Year** journal → the condition dropdown offers
       neither `date`, `weekday`, nor `offset`.
 
-- [ ] **date** — + month=current, day=today, year=_any_ → today's cell decorated.
-- [ ] **date, year=any** → the same month/day in a _different_ year is also
+- [x] **date** — + month=current, day=today, year=_any_ → today's cell decorated.
+- [x] **date, year=any** → the same month/day in a _different_ year is also
       decorated.
-- [ ] **date, year-pinned** — + set year=current → only this year's cell.
+- [x] **date, year-pinned** — + set year=current → only this year's cell.
 - [ ] **weekday** — + select Mon+Fri → every Monday and Friday cell decorated.
 - [ ] **offset = +1** (on DecoX) → the cell one position after the journal's anchor
       is decorated.
 - [ ] **offset = −1** (on DecoX) → the cell one position before the anchor is
       decorated.
-- [ ] **has-note** → only cells that have a linked entry are decorated.
-- [ ] **has-open-task** — + a linked note with an unchecked `- [ ]` task → that
+- [x] **has-note** → only cells that have a linked entry are decorated.
+- [x] **has-open-task** — + a linked note with an unchecked `- [ ]` task → that
       cell is decorated.
-- [ ] **has-open-task** reactivity — check the task → the decoration clears.
+- [x] **has-open-task** reactivity — check the task → the decoration clears.
 - [ ] **all-tasks-completed** — + a linked note with all tasks checked → the cell
       is decorated.
-- [ ] **all-tasks-completed** reactivity — uncheck a task → the decoration clears.
-- [ ] **tag — contains** — + condition tag contains `journal` on a note tagged
+- [x] **all-tasks-completed** reactivity — uncheck a task → the decoration clears.
+- [x] **tag — contains** — + condition tag contains `journal` on a note tagged
       `#journal` → decorated.
 - [ ] **tag — starts-with** → matches by tag prefix.
-- [ ] **tag — ends-with** → matches by tag suffix.
-- [ ] **title — contains** → matches when the title contains the substring.
-- [ ] **title — starts-with** → matches by title prefix.
-- [ ] **title — ends-with** → matches by title suffix.
+- [x] **tag — ends-with** → matches by tag suffix.
+- [x] **title — contains** → matches when the title contains the substring.
+- [x] **title — starts-with** → matches by title prefix.
+- [x] **title — ends-with** → matches by title suffix.
 
 ### Property conditions (text)
 
 Setup: a linked note with frontmatter `mood: happy`.
 
-- [ ] **property text — exists** → decorated when `mood` present.
-- [ ] **property text — does-not-exist** → decorated when `mood` absent.
-- [ ] **property text — equals** `happy` → decorated.
-- [ ] **property text — not-equals** → decorated when value differs.
-- [ ] **property text — contains** `app` → decorated.
-- [ ] **property text — does-not-contain** → decorated when substring absent.
-- [ ] **property text — starts-with** `ha` → decorated.
-- [ ] **property text — ends-with** `py` → decorated.
+- [x] **property text — exists** → decorated when `mood` present.
+- [x] **property text — does-not-exist** → decorated when `mood` absent.
+- [x] **property text — equals** `happy` → decorated.
+- [x] **property text — not-equals** → decorated when value differs.
+- [x] **property text — contains** `app` → decorated.
+- [x] **property text — does-not-contain** → decorated when substring absent.
+- [x] **property text — starts-with** `ha` → decorated.
+- [x] **property text — ends-with** `py` → decorated.
 
 ### Property conditions (number)
 
