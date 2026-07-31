@@ -592,9 +592,13 @@
       }
     }
   ],
-  "decoration_section_description": "Use decorations to highlight dates in calendar that meet certain conditions.",
-  "decoration_section_empty": "No calendar decorations configured yet.",
-  "decoration_section_title": "Calendar decorations",
+  "decoration_section_description_calendar": "Decorate day cells in every calendar, whatever journals are shown.",
+  "decoration_section_description_journal": "Use decorations to highlight dates in calendar that meet certain conditions.",
+  "decoration_section_description_shelf": "Decorate day cells while this shelf is shown, whatever journals it holds.",
+  "decoration_section_empty": "No decorations configured yet.",
+  "decoration_section_title_calendar": "Calendar decorations",
+  "decoration_section_title_journal": "Journal decorations",
+  "decoration_section_title_shelf": "Shelf decorations",
   "decoration_shape_label": [
     {
       "declarations": ["input shape"],

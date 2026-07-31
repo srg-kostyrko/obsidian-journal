@@ -1,12 +1,12 @@
 <script setup lang="ts">
+import { match } from "ts-pattern";
 import { computed, ref } from "vue";
 
 import { Calendar } from "@/calendar";
-import { DecorationPreview, type JournalDecoration } from "@/decorations";
+import { DecorationPreview, DecorationsStore, type DecorationOwner, type JournalDecoration } from "@/decorations";
 import { m } from "@/i18n";
 import { useService } from "@/infrastructure/di";
 import { Flows } from "@/infrastructure/flows";
-import { JournalsViewModel } from "@/journals";
 import { icons } from "@/ui/icons";
 import UiCollapsibleBlock from "@/ui/UiCollapsibleBlock.vue";
 import UiIcon from "@/ui/UiIcon.vue";
@@ -18,27 +18,41 @@ import { EditDecorationFlow } from "../flows/edit-decoration.flow";
 
 import { describeCondition } from "./describe-condition";
 
-const { journalName } = defineProps<{ journalName: string }>();
+const { owner } = defineProps<{ owner: DecorationOwner }>();
 
 const flows = useService(Flows);
-const journalsVM = useService(JournalsViewModel);
+const store = useService(DecorationsStore);
 const calendar = useService(Calendar);
 
-const decorations = computed<readonly JournalDecoration[]>(
-  () => journalsVM.getJournal(journalName).getOrUndefined()?.decorations ?? [],
+const decorations = computed<readonly JournalDecoration[]>(() => store.list(owner));
+
+const title = computed(() =>
+  match(owner)
+    .with({ kind: "journal" }, () => m.decoration_section_title_journal())
+    .with({ kind: "shelf" }, () => m.decoration_section_title_shelf())
+    .with({ kind: "global" }, () => m.decoration_section_title_calendar())
+    .exhaustive(),
+);
+
+const description = computed(() =>
+  match(owner)
+    .with({ kind: "journal" }, () => m.decoration_section_description_journal())
+    .with({ kind: "shelf" }, () => m.decoration_section_description_shelf())
+    .with({ kind: "global" }, () => m.decoration_section_description_calendar())
+    .exhaustive(),
 );
 
 const expanded = ref(false);
 const previewDay = new Date().getDate();
 
 function add(): void {
-  void flows.invoke(EditDecorationFlow, { owner: { kind: "journal", journalName } });
+  void flows.invoke(EditDecorationFlow, { owner });
 }
 function edit(index: number): void {
-  void flows.invoke(EditDecorationFlow, { owner: { kind: "journal", journalName }, index });
+  void flows.invoke(EditDecorationFlow, { owner, index });
 }
 function remove(index: number): void {
-  void flows.invoke(DeleteDecorationFlow, { owner: { kind: "journal", journalName }, index });
+  void flows.invoke(DeleteDecorationFlow, { owner, index });
 }
 </script>
 
@@ -47,7 +61,7 @@ function remove(index: number): void {
     <template #trigger>
       <span class="journal-section-heading">
         <UiIcon :name="icons.section.decorations" />
-        <span>{{ m.decoration_section_title() }}</span>
+        <span>{{ title }}</span>
         <span class="flair">{{ decorations.length }}</span>
       </span>
     </template>
@@ -56,7 +70,7 @@ function remove(index: number): void {
     </template>
 
     <UiSettingRow no-controls>
-      <template #description>{{ m.decoration_section_description() }}</template>
+      <template #description>{{ description }}</template>
     </UiSettingRow>
 
     <UiSettingRow v-if="decorations.length === 0" no-controls>
