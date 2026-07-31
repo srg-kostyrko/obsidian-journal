@@ -2,6 +2,7 @@ import { createNanoEvents } from "nanoevents";
 import { describe, expect, it } from "vitest";
 import { reactive } from "vue";
 
+import type { AnchorString } from "@/calendar";
 import type { JournalDecoration } from "@/decorations";
 import {
   DecorationLifecycleFlowError,
@@ -21,11 +22,21 @@ import type { ShelfConfig } from "@/shelves/config";
 import { DecorationsStore } from "../../decorations-store";
 import { decorationsSlice } from "../../settings/slice";
 import { buildCalendarDecoration, buildDecoration } from "../../testing";
+import { CALENDAR_CONDITION_TYPES, conditionTypeOptions } from "../ui/condition-types";
 
 import { EditDecorationFlow } from "./edit-decoration.flow";
 
+import type { EditDecorationModalProps } from "../ui/modals";
+
 function buildJournal(name: string, decorations: JournalDecoration[]): JournalConfig {
   return { ...journalDefaultsFor({ type: "day" }, name), decorations };
+}
+
+function buildCustomJournal(name: string): JournalConfig {
+  return journalDefaultsFor(
+    { type: "custom", every: "week", duration: 2, anchorDate: "2024-01-01" as AnchorString },
+    name,
+  );
 }
 
 function build(options: { journals?: Record<string, JournalConfig>; shelves?: Record<string, ShelfConfig> } = {}) {
@@ -115,5 +126,29 @@ describe("EditDecorationFlow", () => {
 
     expect(result.kind === "ok" && result.value.index).toBe(0);
     expect(store.list({ kind: "shelf", shelfName: "work" })).toEqual([sampleCalendarDecoration]);
+  });
+
+  describe("condition types offered to the modal", () => {
+    it("offers a custom journal's write-type condition set", async () => {
+      const { flows, modals } = build({ journals: { daily: buildCustomJournal("daily") } });
+      const promise = flows.invoke(EditDecorationFlow, { owner: { kind: "journal", journalName: "daily" } });
+      const opened = modals.lastOpen<EditDecorationModalProps, { decoration: JournalDecoration }>();
+      opened.submit({ decoration: sampleDecoration });
+      await promise;
+
+      expect(opened.props.conditionTypes).toEqual(conditionTypeOptions.custom);
+    });
+
+    it("offers only calendar condition types for a shelf owner", async () => {
+      const { flows, modals } = build({
+        shelves: { work: { name: "work", journals: [], decorations: [] } },
+      });
+      const promise = flows.invoke(EditDecorationFlow, { owner: { kind: "shelf", shelfName: "work" } });
+      const opened = modals.lastOpen<EditDecorationModalProps, { decoration: JournalDecoration }>();
+      opened.submit({ decoration: sampleCalendarDecoration });
+      await promise;
+
+      expect(opened.props.conditionTypes).toEqual(CALENDAR_CONDITION_TYPES);
+    });
   });
 });
