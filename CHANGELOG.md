@@ -18,6 +18,7 @@ All notable changes to this project will be documented in this file.
 - Insert a link to a journal date at the cursor via command.
 - New `journal_link` template variable.
 - Hide specific weekdays on the calendar with a per-weekday picker.
+- Highlight calendar days by date or weekday without attaching the rule to a journal: set decorations vault-wide, or per shelf so they apply only while that shelf is in view.
 - Meaningful, stable CSS class names on calendar and code-block elements for easier theming.
 
 ### Bug Fixes

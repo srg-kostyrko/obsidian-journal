@@ -29,22 +29,22 @@ only when you are investigating a specific report or the spec is red.
 | §8 views                 | `view`, `view-blocks`, `view-clone`, `remember-date`, `startup-view`, `defined-navigation`          |
 | §9 shelves               | `nav-off-shelf`                                                                                     |
 | §10 code blocks          | `code-blocks`, `custom-interval-nav`, `home-index`                                                  |
-| §13 settings             | `settings`, `settings-first-journal`                                                                |
-| §14 startup / background | `startup-open`, `startup-confirm`, `auto-create`, `auto-attach`, `settings-reload`, `sync-settings` |
-| §15 migration            | `legacy-upgrade`, `mid-session-enable`                                                              |
-| §16 regression (locale)  | `calendar-locale`                                                                                   |
-| §17 URI handler          | `uri-open`                                                                                          |
+| §14 settings             | `settings`, `settings-first-journal`                                                                |
+| §15 startup / background | `startup-open`, `startup-confirm`, `auto-create`, `auto-attach`, `settings-reload`, `sync-settings` |
+| §16 migration            | `legacy-upgrade`, `mid-session-enable`                                                              |
+| §17 regression (locale)  | `calendar-locale`                                                                                   |
+| §18 URI handler          | `uri-open`                                                                                          |
 
 **Spend your attention where automation cannot reach.** Work the sections in this
 order, not top to bottom:
 
-1. §12 styles, §11 conditions, §19 appearance & accessibility — anything whose
+1. §12 styles, §11 conditions, §20 appearance & accessibility — anything whose
    pass condition is "a human looked at it".
-2. §18 error & recovery surfaces — mostly beyond automation, and the class where v3
+2. §19 error & recovery surfaces — mostly beyond automation, and the class where v3
    has historically failed silently.
-3. §16 regression (theme switch, large vault, malformed frontmatter) and §0's
+3. §17 regression (theme switch, large vault, malformed frontmatter) and §0's
    mobile line.
-4. §15 migration against a real user snapshot, if you have one.
+4. §16 migration against a real user snapshot, if you have one.
 5. Everything else, as a sweep, trusting the table above.
 
 ---
@@ -66,8 +66,8 @@ Setup: clone branch `v3-ai`; `npm run dev` (builds into
 - [ ] First run → the seeded view renders its calendar grid with no empty-state
       message, and does not render a bare divider rule or an empty custom-intervals
       section.
-- [ ] - Open a vault with a v2 `data.json` → loads without crash (migration, §15).
-- [ ] Mobile smoke: plugin loads on a mobile/tablet build (full mobile pass is §19).
+- [ ] - Open a vault with a v2 `data.json` → loads without crash (migration, §16).
+- [ ] Mobile smoke: plugin loads on a mobile/tablet build (full mobile pass is §20).
 
 ---
 
@@ -758,7 +758,64 @@ so every entry cell is styled. Swap the style per item.
 
 ---
 
-## 13. Settings UI navigation & validation
+## 13. Decorations — calendar and shelf lists
+
+Setup: two shelves "Work" and "Home", a day journal on each, notes on a few dates,
+and a calendar view open. Vault-wide decorations live in Settings → **Calendar
+decorations** (dashboard block); a shelf's live in Settings → Shelves → &lt;shelf&gt; →
+**Shelf decorations**. Give each one an obvious, distinct style so precedence is
+visible.
+
+Only `date` and `weekday` are offered here — everything else needs a journal's
+note. Automated by `view` (a vault-wide decoration painting a day cell).
+
+- [ ] The journal page's section is titled **Journal decorations** (not "Calendar
+      decorations" — that name now belongs to the vault-wide block).
+- [ ] A calendar or shelf decoration's condition dropdown offers **only** `date`
+      and `weekday` — no `has-note`, `tag`, `title`, `property`, or `offset`.
+- [ ] **Vault-wide, weekday** — + select Sat+Sun → every weekend cell decorated in a
+      calendar showing **all journals**.
+- [ ] The same decoration still paints when the view is scoped to a **shelf**.
+- [ ] **Shelf decoration on Work** → paints while the view is scoped to Work.
+- [ ] Switch the view to **Home** → the Work decoration is gone, the vault-wide one
+      remains.
+- [ ] Switch the view to **all journals** → shelf decorations are gone, vault-wide
+      remains. Neither shelf's list leaks in.
+- [ ] **Nav code block in a daily note** → its day rows pick up vault-wide
+      decorations.
+- [ ] **Nav code block in a weekly note** → its week rows do **not** (day cells
+      only, by design).
+- [ ] **Custom-interval rows** → not decorated by vault-wide rules, even when an
+      interval starts on a matching day.
+- [ ] **Toolbar period badges** (week/month/quarter/year) → unaffected.
+- [ ] **Timeline code block** in a note whose journal sits on Work → paints Work's
+      shelf decorations, same as the calendar view.
+
+### Precedence between owners
+
+Setup: a journal decoration, a shelf decoration and a vault-wide one whose
+conditions all match the same day cell.
+
+- [ ] **Background** — the journal's wins; remove it and the shelf's wins; remove
+      that and the vault-wide one shows. Same for **text color**.
+- [ ] **Border** — the **vault-wide** one wins over the journal's. This is
+      last-wins and is documented, not a bug (see the design spec's Precedence
+      section).
+- [ ] **Shape / corner / icon** — every owner's renders; they stack rather than
+      compete.
+
+### Lifecycle
+
+- [ ] Add a vault-wide decoration **while a calendar view is open** → the cells
+      update without reopening the view or reloading.
+- [ ] Edit it → the change lands live. Delete it → the cells clear.
+- [ ] Delete a shelf, then reopen settings → no orphaned decoration UI.
+- [ ] Open a vault whose `data.json` predates this feature → shelves keep **all
+      their journals**, both lists start empty, and nothing is reset to defaults.
+
+---
+
+## 14. Settings UI navigation & validation
 
 Setup: open the Journals settings tab.
 
@@ -775,7 +832,7 @@ Setup: open the Journals settings tab.
 - [x] Back from a **view** and a **shelf** subpage → each returns to the dashboard
       with the list scrolled where you left it.
 
-Field validation lives in §18 — it is one behavior class and testing it in one
+Field validation lives in §19 — it is one behavior class and testing it in one
 sitting is faster than rediscovering the pattern per screen.
 
 - [ ] **calendar-week** — change week-start day → calendar grids shift to the new
@@ -797,7 +854,7 @@ sitting is faster than rediscovering the pattern per screen.
 
 ---
 
-## 14. Startup & background behaviors
+## 15. Startup & background behaviors
 
 - [ ] **Open on startup** — + set startup journal = a Day journal; reload Obsidian
       → today's entry opens automatically on launch.
@@ -822,7 +879,7 @@ sitting is faster than rediscovering the pattern per screen.
 
 ---
 
-## 15. Migration (existing data)
+## 16. Migration (existing data)
 
 Setup: **back up `data.json` first.** Reload after each load to let the async note
 migration run.
@@ -860,7 +917,7 @@ covered.
 
 ---
 
-## 16. Regression / edge cases
+## 17. Regression / edge cases
 
 - [ ] **Cross-year week** — + a week spanning Dec→Jan → anchors to the correct
       owning year (the v2 `{{date:YYYY}}` bug stays fixed).
@@ -881,7 +938,7 @@ covered.
 
 ---
 
-## 17. Opening: modes, modifiers, and menus
+## 18. Opening: modes, modifiers, and menus
 
 Setup: a Day journal "Open" with a few existing entries; a calendar view, a
 `journal-nav` block, and a `journals-home` block all visible.
@@ -938,7 +995,7 @@ Covered by `uri-open`; walk manually only when investigating.
 
 ---
 
-## 18. Error & recovery surfaces
+## 19. Error & recovery surfaces
 
 This is the class v3 has historically failed **silently** — an item passes only if
 the user is actually told. "Nothing happened" is a bug here, not a pass.
@@ -1028,7 +1085,7 @@ description slot — not a notice, not a silent revert.
 
 ---
 
-## 19. Appearance & accessibility
+## 20. Appearance & accessibility
 
 No automated check can judge any of this. It is the reason a human runs this pass.
 
