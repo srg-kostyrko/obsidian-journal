@@ -48,6 +48,24 @@ export function getIconIds(): string[] {
   return ["calendar", "calendar-days", "book-open", "file-text", "terminal"];
 }
 
+interface TagSourceCache {
+  tags?: { tag: string }[];
+  frontmatter?: Record<string, unknown>;
+}
+
+// Stand-in for Obsidian's combiner: inline tags already carry the "#", frontmatter ones
+// (tag/tags, string, comma-separated string, or array) do not and get it added.
+export function getAllTags(cache: TagSourceCache): string[] | null {
+  const inline = cache.tags?.map((entry) => entry.tag) ?? [];
+  const raw: unknown = cache.frontmatter?.tags ?? cache.frontmatter?.tag;
+  const front = (Array.isArray(raw) ? raw : typeof raw === "string" ? raw.split(",") : [])
+    .filter((value): value is string => typeof value === "string")
+    .map((value) => value.trim())
+    .filter(Boolean)
+    .map((value) => (value.startsWith("#") ? value : `#${value}`));
+  return [...new Set([...inline, ...front])];
+}
+
 export function normalizePath(path: string): string {
   return path
     .replaceAll(/\\/g, "/")

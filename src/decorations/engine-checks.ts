@@ -27,13 +27,20 @@ export function checkTitle(condition: JournalDecorationTitleCondition, metadata:
     .exhaustive();
 }
 
+// Cached tags always carry a leading "#", but people type the bare name. Dropping it from
+// both sides makes "starts-with work" match #workout while "#work" keeps working too.
+function bareTag(tag: string): string {
+  return (tag.startsWith("#") ? tag.slice(1) : tag).toLowerCase();
+}
+
 export function checkTag(condition: JournalDecorationTagCondition, metadata: NoteMetadata | null): boolean {
   if (!metadata) return false;
-  const value = condition.value.toLowerCase();
+  const value = bareTag(condition.value);
+  const tags = metadata.tags.map(bareTag);
   return match(condition.condition)
-    .with("contains", () => metadata.tags.some((tag) => tag.toLowerCase().includes(value)))
-    .with("starts-with", () => metadata.tags.some((tag) => tag.toLowerCase().startsWith(value)))
-    .with("ends-with", () => metadata.tags.some((tag) => tag.toLowerCase().endsWith(value)))
+    .with("contains", () => tags.some((tag) => tag.includes(value)))
+    .with("starts-with", () => tags.some((tag) => tag.startsWith(value)))
+    .with("ends-with", () => tags.some((tag) => tag.endsWith(value)))
     .exhaustive();
 }
 

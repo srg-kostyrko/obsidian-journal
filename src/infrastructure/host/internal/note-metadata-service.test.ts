@@ -50,6 +50,25 @@ describe("NoteMetadataService", () => {
       expect(result.isSome() && result.value.tags).toEqual(["#daily"]);
     });
 
+    it("returns frontmatter tags with a leading hash added", () => {
+      const { service, host } = build();
+      seed(host, "a.md" as VaultPath, { frontmatter: { tags: ["weekly"] } });
+
+      const result = service.get("a.md" as VaultPath);
+      expect(result.isSome() && result.value.tags).toEqual(["#weekly"]);
+    });
+
+    it("combines inline and frontmatter tags", () => {
+      const { service, host } = build();
+      seed(host, "a.md" as VaultPath, {
+        tags: [{ tag: "#daily", position: anyPos() }],
+        frontmatter: { tags: ["weekly"] },
+      });
+
+      const result = service.get("a.md" as VaultPath);
+      expect(result.isSome() && result.value.tags).toEqual(["#daily", "#weekly"]);
+    });
+
     it("returns frontmatter as properties", () => {
       const { service, host } = build();
       seed(host, "a.md" as VaultPath, { frontmatter: { mood: 5, label: "ok" } });

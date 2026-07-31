@@ -1,4 +1,4 @@
-import { TFile } from "obsidian";
+import { getAllTags, TFile } from "obsidian";
 
 import { inject } from "@/infrastructure/di";
 import { None, type Option, Some } from "@/infrastructure/result";
@@ -17,7 +17,10 @@ export class NoteMetadataService {
     if (!cache) return new None<NoteMetadata>();
     return new Some<NoteMetadata>({
       title: file.basename,
-      tags: cache.tags?.map((entry) => entry.tag) ?? [],
+      // cache.tags holds inline body tags only; frontmatter tags live under
+      // cache.frontmatter and reach us only through getAllTags, which also normalizes
+      // every tag to a leading "#".
+      tags: getAllTags(cache) ?? [],
       properties: cache.frontmatter ?? {},
       tasks:
         cache.listItems?.filter((item) => item.task !== undefined).map((item) => ({ completed: item.task !== " " })) ??

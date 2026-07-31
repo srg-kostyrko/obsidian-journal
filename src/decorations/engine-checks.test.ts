@@ -74,6 +74,21 @@ describe("engine-checks", () => {
       const condition = buildCondition("tag", { condition: "starts-with", value: "#x" });
       expect(checkTag(condition, meta({ tags: ["#yoga"] }))).toBe(false);
     });
+
+    it("matches starts-with when the value omits the leading hash", () => {
+      const condition = buildCondition("tag", { condition: "starts-with", value: "work" });
+      expect(checkTag(condition, meta({ tags: ["#workout"] }))).toBe(true);
+    });
+
+    it("matches starts-with when the value carries the leading hash", () => {
+      const condition = buildCondition("tag", { condition: "starts-with", value: "#work" });
+      expect(checkTag(condition, meta({ tags: ["#workout"] }))).toBe(true);
+    });
+
+    it("does not match a nested tag segment with starts-with", () => {
+      const condition = buildCondition("tag", { condition: "starts-with", value: "work" });
+      expect(checkTag(condition, meta({ tags: ["#area/workout"] }))).toBe(false);
+    });
   });
 
   describe("checkProperty", () => {

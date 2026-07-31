@@ -22,6 +22,8 @@ export const STYLE_HEX = {
 // 02 is the seeded-note-free control. All <= 28 (in-month, non-spill, exist every month).
 export const DECO_DAY = {
   control: 2,
+  frontmatterTag: 5,
+  bareTag: 6,
   title: 7,
   tag: 10,
   property: 13,
@@ -59,6 +61,13 @@ export async function seedDecorationFixture(): Promise<void> {
   await seedNote(`day/${titleDay}.md`, note("daily", titleDay));
   const tagDay = dayAnchor(DECO_DAY.tag);
   await seedNote(`day/${tagDay}.md`, note("daily", tagDay, "marker #ctag"));
+  // Frontmatter tags reach the engine only through Obsidian's combined tag list, and a
+  // bare (hash-less) value must still match a body tag — neither is provable in unit
+  // tests, where the cache shape is our own stand-in.
+  const frontmatterTagDay = dayAnchor(DECO_DAY.frontmatterTag);
+  await seedNote(`day/${frontmatterTagDay}.md`, note("daily", frontmatterTagDay, "", ["tags:", "  - fmtag"]));
+  const bareTagDay = dayAnchor(DECO_DAY.bareTag);
+  await seedNote(`day/${bareTagDay}.md`, note("daily", bareTagDay, "marker #bodytag"));
   const propertyDay = dayAnchor(DECO_DAY.property);
   await seedNote(`day/${propertyDay}.md`, note("daily", propertyDay, "", ["cprop: present"]));
   const colorDay = dayAnchor(DECO_DAY.color);
@@ -182,6 +191,18 @@ export function assertDecorationMatrix(surface: CalendarSurface): void {
     it("decorates a day cell whose note carries the matching tag", async () => {
       await surface.cell(dayAnchor(DECO_DAY.tag)).$(".decoration-corner.top-left").waitForExist({
         timeoutMsg: "tag-condition decoration did not render on the matching day cell",
+      });
+    });
+
+    it("decorates a day cell whose tag comes from frontmatter rather than the body", async () => {
+      await surface.cell(dayAnchor(DECO_DAY.frontmatterTag)).$(".decoration-corner.top-left").waitForExist({
+        timeoutMsg: "frontmatter-tag decoration did not render on the matching day cell",
+      });
+    });
+
+    it("decorates a day cell whose body tag matches a value typed without the hash", async () => {
+      await surface.cell(dayAnchor(DECO_DAY.bareTag)).$(".decoration-corner.top-left").waitForExist({
+        timeoutMsg: "hash-less tag-condition decoration did not render on the matching day cell",
       });
     });
 
