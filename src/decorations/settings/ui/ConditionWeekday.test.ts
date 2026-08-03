@@ -53,15 +53,26 @@ describe("ConditionWeekday", () => {
     expect(screen.getByRole("group", { name: m.decoration_condition_weekday_label() })).toBeTruthy();
   });
 
-  it("adds a weekday index when its checkbox is clicked", async () => {
+  it("adds a weekday index when its segment is clicked", async () => {
     const host = mount({ type: "weekday", weekdays: [] });
-    await userEvent.click(screen.getByLabelText("Mon"));
+    await userEvent.click(screen.getByRole("button", { name: "Mon" }));
     expect(host.values.c.weekdays).toEqual([1]);
   });
 
-  it("removes a weekday index when its checkbox is unchecked", async () => {
+  it("removes a weekday index when its active segment is clicked", async () => {
     const host = mount({ type: "weekday", weekdays: [1] });
-    await userEvent.click(screen.getByLabelText("Mon"));
+    await userEvent.click(screen.getByRole("button", { name: "Mon" }));
     expect(host.values.c.weekdays).toEqual([]);
+  });
+
+  it("keeps selected weekday indices sorted", async () => {
+    const host = mount({ type: "weekday", weekdays: [3] });
+    await userEvent.click(screen.getByRole("button", { name: "Mon" }));
+    expect(host.values.c.weekdays).toEqual([1, 3]);
+  });
+
+  it("marks the segment of a selected weekday as pressed", () => {
+    mount({ type: "weekday", weekdays: [1] });
+    expect(screen.getByRole("button", { name: "Mon" }).getAttribute("aria-pressed")).toBe("true");
   });
 });

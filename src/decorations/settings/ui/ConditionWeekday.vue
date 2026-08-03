@@ -4,47 +4,25 @@ import { useField } from "vee-validate";
 import { Calendar } from "@/calendar";
 import { m } from "@/i18n";
 import { useService } from "@/infrastructure/di";
+import UiToggleGroup from "@/ui/UiToggleGroup.vue";
 
 const { name } = defineProps<{ name: string }>();
 const { value: weekdays } = useField<number[]>(`${name}.weekdays`);
 
-const orderedWeekdays = useService(Calendar).weekdaysShort();
+const weekdayOptions = useService(Calendar)
+  .weekdaysShort()
+  .map((weekday) => ({ value: weekday.index, label: weekday.label }));
 
-function toggle(index: number, checked: boolean): void {
-  const next = new Set(weekdays.value);
-  if (checked) next.add(index);
-  else next.delete(index);
-  weekdays.value = [...next].toSorted((a, b) => a - b);
-}
-
-function isChecked(index: number): boolean {
-  return weekdays.value.includes(index);
+function setWeekdays(selected: number[]): void {
+  weekdays.value = selected.toSorted((a, b) => a - b);
 }
 </script>
 
 <template>
-  <div class="weekday-grid" role="group" :aria-label="m.decoration_condition_weekday_label()">
-    <label v-for="{ index, label } in orderedWeekdays" :key="index">
-      <input
-        type="checkbox"
-        :checked="isChecked(index)"
-        @change="toggle(index, ($event.target as HTMLInputElement).checked)"
-      />
-      {{ label }}
-    </label>
-  </div>
+  <UiToggleGroup
+    :model-value="weekdays"
+    :options="weekdayOptions"
+    :aria-label="m.decoration_condition_weekday_label()"
+    @update:model-value="setWeekdays"
+  />
 </template>
-
-<style scoped>
-.weekday-grid {
-  display: grid;
-  grid-template-columns: repeat(7, 1fr);
-  gap: var(--size-2-3);
-}
-/* column-reverse keeps the day label above its checkbox (the template emits the input first). */
-.weekday-grid label {
-  display: flex;
-  flex-direction: column-reverse;
-  align-items: center;
-}
-</style>
