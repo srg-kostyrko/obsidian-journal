@@ -64,6 +64,14 @@ export async function clickButton(text: string): Promise<void> {
   await $(`button=${text}`).click();
 }
 
+// The week-configuration modal renders one "Use" button per preset row, so the plain
+// button=text selector would always hit the first. Scope by the row's visible name.
+export async function clickRowButton(rowName: string, text: string): Promise<void> {
+  await $(
+    `//div[contains(@class,"setting-item")][.//div[contains(@class,"setting-item-name")][normalize-space(.)="${rowName}"]]//button[normalize-space(.)="${text}"]`,
+  ).click();
+}
+
 // Journal-subpage sections are collapsed by default; one click on the trigger expands.
 // The title text lives on the .collapsible-trigger element; partial match keeps it stable
 // against the trailing flair count.
