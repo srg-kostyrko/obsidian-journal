@@ -4,8 +4,10 @@ import { computed, ref, toRaw } from "vue";
 
 import { Calendar, CalendarDate, periodOfKind, type AnchorString, type Period, type PeriodKind } from "@/calendar";
 import { DatePicker, useAnchorField } from "@/calendar/ui";
+import { periodForJournal } from "@/code-blocks/nav/period-for-journal";
 import { m } from "@/i18n";
 import { useService } from "@/infrastructure/di";
+import { CycleService, TimelineService } from "@/journals";
 import { JournalsRepository } from "@/journals/repository";
 import { useIndexVersion } from "@/journals/use-index-version";
 import { ShelvesRepository } from "@/shelves/repository";
@@ -38,6 +40,8 @@ const shelves = useService(ShelvesRepository);
 const store = useService(DecorationsStore);
 const engine = useService(DecorationEngine);
 const calendar = useService(Calendar);
+const cycle = useService(CycleService);
+const timeline = useService(TimelineService);
 const indexVersion = useIndexVersion();
 
 const initialPeriod = toRaw(props.period);
@@ -80,17 +84,47 @@ function formatPeriod(p: Period): string {
   return p.format(PERIOD_FORMAT[p.kind]);
 }
 
-// Ties each section's landmark to its own heading (rather than a synthetic test id), so the
-// section is nameable both for assistive tech and for scoping assertions to one cell.
-function regionId(p: Period): string {
-  return `decoration-breakdown-heading-${p.kind}-${p.anchor.toAnchor()}`;
+type BreakdownCell =
+  | {
+      readonly kind: "fixed";
+      readonly period: Period;
+      readonly isEntry: boolean;
+      readonly attribution: CellAttribution;
+      readonly styles: readonly JournalDecorationStyle[];
+    }
+  | {
+      readonly kind: "interval";
+      readonly period: Period;
+      readonly journalName: string;
+      readonly isEntry: false;
+      readonly attribution: CellAttribution;
+      readonly styles: readonly JournalDecorationStyle[];
+    };
+
+// An interval and the day cell it starts on share a period kind and anchor, so a key derived
+// from the period alone would collide — the DOM id and the v-for key both need the section's
+// kind (and, for an interval, its owning journal) to stay unique.
+function cellId(cell: BreakdownCell): string {
+  return match(cell)
+    .with(
+      { kind: "interval" },
+      (c) => `decoration-breakdown-heading-interval-${c.journalName}-${c.period.anchor.toAnchor()}`,
+    )
+    .with({ kind: "fixed" }, (c) => `decoration-breakdown-heading-${c.period.kind}-${c.period.anchor.toAnchor()}`)
+    .exhaustive();
 }
 
-interface BreakdownCell {
-  readonly period: Period;
-  readonly isEntry: boolean;
-  readonly attribution: CellAttribution;
-  readonly styles: readonly JournalDecorationStyle[];
+// The heading must key off the section's kind, not its period kind: an interval is a "day"-kind
+// period at its start anchor, so branching on period.kind would mislabel it as a day cell.
+function headingOf(cell: BreakdownCell): string {
+  return match(cell)
+    .with({ kind: "interval" }, (c) =>
+      m.decoration_breakdown_interval_heading({ journal: c.journalName, label: formatPeriod(c.period) }),
+    )
+    .with({ kind: "fixed" }, (c) =>
+      m.decoration_breakdown_cell_heading({ kind: c.period.kind, label: formatPeriod(c.period) }),
+    )
+    .exhaustive();
 }
 
 const cells = computed<readonly BreakdownCell[]>(() => {
@@ -110,8 +144,7 @@ const cells = computed<readonly BreakdownCell[]>(() => {
     includeCalendar: true,
     // A custom journal's write kind is always "day", so without this every one of its
     // decorations would attribute to the day cell. Production splits them: the day grid takes
-    // only offset-carrying ones (NotesMonthView.vue), the rest belong to the interval list —
-    // a section this modal does not render yet, so anything else is simply not shown here.
+    // only offset-carrying ones (NotesMonthView.vue), the rest belong to the interval list.
     filter: (binding) => {
       const config = journals.get(binding.journalName).getOrUndefined();
       if (config?.write.type !== "custom") return true;
@@ -125,12 +158,46 @@ const cells = computed<readonly BreakdownCell[]>(() => {
     const contributions = explained.get(cellKey(cellPeriod.kind, cellPeriod.anchor.toAnchor()));
     if (!contributions || contributions.length === 0) continue;
     out.push({
+      kind: "fixed",
       period: cellPeriod,
       isEntry: entryKey !== null && cellKey(cellPeriod.kind, cellPeriod.anchor.toAnchor()) === entryKey,
       attribution: attributeCell(contributions),
       styles: contributions.map((contribution) => contribution.style),
     });
   }
+
+  for (const name of journalNames.value) {
+    const config = journals.get(name).getOrUndefined();
+    if (config?.write.type !== "custom") continue;
+    const intervalAnchor = cycle.anchorOf(name, selectedDate).getOrUndefined();
+    if (intervalAnchor === undefined) continue;
+    if (!timeline.contains(name, intervalAnchor)) continue;
+
+    const intervalPeriod = periodForJournal(config.write, intervalAnchor);
+    // An interval is a "day"-kind period at its start anchor, so its cell key collides with
+    // the day cell's. A separate explainRange keeps the two from overwriting each other, and
+    // the complementary filter is what makes them describe different things.
+    const intervalBindings = gatherBindings(journals, store, {
+      journalNames: [name],
+      shelf: shelf.value,
+      includeCalendar: false,
+      filter: (binding) => !hasOffsetCondition(binding.decoration),
+    });
+    const intervalContributions = engine
+      .explainRange([intervalPeriod], intervalBindings)
+      .get(cellKey(intervalPeriod.kind, intervalPeriod.anchor.toAnchor()));
+    if (!intervalContributions || intervalContributions.length === 0) continue;
+
+    out.push({
+      kind: "interval",
+      period: intervalPeriod,
+      journalName: name,
+      isEntry: false,
+      attribution: attributeCell(intervalContributions),
+      styles: intervalContributions.map((contribution) => contribution.style),
+    });
+  }
+
   return out;
 });
 
@@ -200,13 +267,13 @@ function clausesOf(source: DecorationSource): readonly Clause[] {
 
     <div
       v-for="cell in cells"
-      :key="`${cell.period.kind}:${cell.period.anchor.toAnchor()}`"
+      :key="cellId(cell)"
       role="region"
-      :aria-labelledby="regionId(cell.period)"
+      :aria-labelledby="cellId(cell)"
       class="decoration-breakdown__cell"
     >
-      <h3 :id="regionId(cell.period)" class="decoration-breakdown__heading">
-        {{ m.decoration_breakdown_cell_heading({ kind: cell.period.kind, label: formatPeriod(cell.period) }) }}
+      <h3 :id="cellId(cell)" class="decoration-breakdown__heading">
+        {{ headingOf(cell) }}
         <span v-if="cell.isEntry" class="decoration-breakdown__entry-badge">{{
           m.decoration_breakdown_entry_badge()
         }}</span>

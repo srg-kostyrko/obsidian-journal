@@ -4,7 +4,7 @@ import { createNanoEvents } from "nanoevents";
 import { afterEach, beforeEach, describe, expect, it } from "vitest";
 import { reactive } from "vue";
 
-import { Calendar, DayPeriod, type Period } from "@/calendar";
+import { Calendar, DayPeriod, type AnchorString, type Period } from "@/calendar";
 import { date, installTestCalendar, testCalendar } from "@/calendar/testing";
 import {
   DecorationEngine,
@@ -283,8 +283,98 @@ describe("DecorationBreakdownModal", () => {
       period: day,
     });
 
-    expect(screen.getByText(m.decoration_breakdown_empty())).toBeTruthy();
-    expect(screen.queryByText(m.decoration_condition_has_note_describe())).toBeNull();
+    // The day cell gets zero contributions once the offset-only filter excludes this
+    // decoration, so the entry-point section (the day cell, per `period: day`) never renders.
+    // The decoration still surfaces — in the interval section, covered below.
+    expect(screen.queryByText(m.decoration_breakdown_entry_badge())).toBeNull();
+  });
+
+  it("shows an interval section for a custom journal's non-offset decoration", () => {
+    const day = DayPeriod.containing(date("2026-05-25"));
+    mount({
+      journals: {
+        sprint: customJournal("sprint", "week", 2, "2026-05-25", { decorations: [hasNoteDecoration] }),
+      },
+      notes: [{ journalName: "sprint", anchor: day }],
+      period: day,
+    });
+
+    const heading = screen.getByText(
+      m.decoration_breakdown_interval_heading({ journal: "sprint", label: "2026-05-25" }),
+    );
+    const region = heading.closest('[role="region"]');
+    expect(region).not.toBeNull();
+    expect(within(region as HTMLElement).getByText(m.decoration_condition_has_note_describe())).toBeTruthy();
+  });
+
+  it("keeps a custom journal's offset decoration out of the interval section", () => {
+    const day = DayPeriod.containing(date("2026-05-25"));
+    const offsetDecoration: JournalDecoration = buildDecoration({
+      mode: "or",
+      conditions: [buildCondition("offset", { offset: 1 })],
+      styles: [buildStyle("background")],
+    });
+    mount({
+      journals: {
+        sprint: customJournal("sprint", "week", 2, "2026-05-25", {
+          decorations: [hasNoteDecoration, offsetDecoration],
+        }),
+      },
+      notes: [{ journalName: "sprint", anchor: day }],
+      period: day,
+    });
+
+    const heading = screen.getByText(
+      m.decoration_breakdown_interval_heading({ journal: "sprint", label: "2026-05-25" }),
+    );
+    const region = heading.closest('[role="region"]');
+    expect(region).not.toBeNull();
+    expect(
+      within(region as HTMLElement).queryByText(m.decoration_condition_offset_describe({ side: "start", day: 1 })),
+    ).toBeNull();
+  });
+
+  it("highlights only the day section when opened from a day cell that starts an interval", () => {
+    const day = DayPeriod.containing(date("2026-05-25"));
+    mount({
+      journals: {
+        daily: fixedJournal("daily", { type: "day" }, { decorations: [anyDayDecoration] }),
+        sprint: customJournal("sprint", "week", 2, "2026-05-25", { decorations: [hasNoteDecoration] }),
+      },
+      notes: [{ journalName: "sprint", anchor: day }],
+      period: day,
+    });
+
+    // getByText throws on 2+ matches, so this alone proves only one section carries the badge.
+    const badge = screen.getByText(m.decoration_breakdown_entry_badge());
+    const dayRegion = badge.closest('[role="region"]');
+    expect(dayRegion).not.toBeNull();
+
+    const intervalHeading = screen.getByText(
+      m.decoration_breakdown_interval_heading({ journal: "sprint", label: "2026-05-25" }),
+    );
+    const intervalRegion = intervalHeading.closest('[role="region"]');
+    expect(intervalRegion).not.toBeNull();
+    expect(intervalRegion).not.toBe(dayRegion);
+    expect(within(intervalRegion as HTMLElement).queryByText(m.decoration_breakdown_entry_badge())).toBeNull();
+  });
+
+  it("omits an interval section for a journal whose timeline excludes the interval", () => {
+    const day = DayPeriod.containing(date("2026-05-25"));
+    mount({
+      journals: {
+        sprint: customJournal("sprint", "week", 2, "2026-05-25", {
+          decorations: [hasNoteDecoration],
+          timeline: { start: "2026-07-01" as AnchorString, end: { kind: "never" } },
+        }),
+      },
+      notes: [{ journalName: "sprint", anchor: day }],
+      period: day,
+    });
+
+    expect(
+      screen.queryByText(m.decoration_breakdown_interval_heading({ journal: "sprint", label: "2026-05-25" })),
+    ).toBeNull();
   });
 
   it("re-resolves when the shelf selection changes", async () => {
