@@ -211,11 +211,27 @@ describe("declaredProperties", () => {
       style: buildStyle("border", {
         border: "different",
         top: { show: true, width: 2, style: "solid", color: { type: "custom", color: "#abcdef" } },
+        left: { show: false, width: 0, style: "solid", color: { type: "transparent" } },
+        right: { show: false, width: 0, style: "solid", color: { type: "transparent" } },
+        bottom: { show: false, width: 0, style: "solid", color: { type: "transparent" } },
       }),
     },
     {
       name: "a per-side border with every side hidden",
-      style: buildStyle("border", { border: "different" }),
+      style: buildStyle("border", {
+        border: "different",
+        top: { show: false, width: 0, style: "solid", color: { type: "transparent" } },
+        left: { show: false, width: 0, style: "solid", color: { type: "transparent" } },
+        right: { show: false, width: 0, style: "solid", color: { type: "transparent" } },
+        bottom: { show: false, width: 0, style: "solid", color: { type: "transparent" } },
+      }),
+    },
+    {
+      name: "a uniform border that is hidden",
+      style: buildStyle("border", {
+        border: "uniform",
+        left: { show: false, width: 0, style: "solid", color: { type: "transparent" } },
+      }),
     },
     {
       name: "a corner",
