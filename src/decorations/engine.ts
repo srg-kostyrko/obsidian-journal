@@ -183,9 +183,8 @@ export class DecorationEngine {
 
     const push = (period: Period, binding: DecorationBinding): void => {
       const styles = binding.decoration.styles;
-      // A decoration with conditions but no styles must still leave the cell undecorated —
-      // creating an empty bucket here would make every consumer that checks bucket existence
-      // treat the cell as decorated even though nothing was ever pushed into it.
+      // A decoration that matches but contributes nothing should not make its cell read as
+      // decorated, so a match with zero styles produces no entry rather than an empty bucket.
       if (styles.length === 0) return;
       const key = cellKey(period.kind, period.anchor.toAnchor());
       let bucket = result.get(key);

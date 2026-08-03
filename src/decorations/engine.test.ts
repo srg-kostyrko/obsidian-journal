@@ -335,5 +335,23 @@ describe("DecorationEngine", () => {
 
       expect(result.has(cellKey("day", period.anchor.toAnchor()))).toBe(false);
     });
+
+    it("omits a decoration that matches with no styles", () => {
+      const decoration = buildDecoration({
+        mode: "or",
+        conditions: [buildCondition("weekday", { weekdays: [1] })],
+        styles: [],
+      });
+      const { c } = buildContainer({
+        daily: fixedJournal("daily", { type: "day" }, { decorations: [decoration] }),
+      });
+      const engine = c.resolve(DecorationEngine);
+
+      // 2026-05-25 is a Monday, so the condition matches; the decoration still contributes nothing.
+      const period = DayPeriod.containing(date("2026-05-25"));
+      const result = engine.explainRange([period], [{ kind: "journal", journalName: "daily", index: 0, decoration }]);
+
+      expect(result.has(cellKey("day", period.anchor.toAnchor()))).toBe(false);
+    });
   });
 });
