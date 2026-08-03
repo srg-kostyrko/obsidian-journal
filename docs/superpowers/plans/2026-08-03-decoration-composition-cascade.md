@@ -912,31 +912,31 @@ git commit -m "test(e2e): cover journal-over-vault-wide border precedence"
 
 **Spec coverage**
 
-| Spec section                                            | Task                                                                                 |
-| ------------------------------------------------------- | ------------------------------------------------------------------------------------ |
-| The cascade — vault-wide → shelf → journal ordering     | Task 2, Step 3                                                                       |
-| Sibling journals cascade in `journalNames` order        | Task 2, Step 3 (journal loop preserved verbatim)                                     |
-| Ten exclusive properties, last wins                     | Task 1, Step 3 (`resolveCell`)                                                       |
-| Border side `show: false` abstains                      | Task 1 (`sideString` + test "keeps a side when a later declaration hides that side") |
-| `transparent` is a value, not an abstention             | Task 1 (test "clears an earlier background when a later one is transparent")         |
-| Corners exclusive per placement                         | Task 1 (`corners` Map + two corner tests)                                            |
-| Nine additive mark slots, cascade order                 | Task 1 (test "keeps every mark sharing a slot in cascade order")                     |
-| Padding derived, per-side then per-grid max             | Task 1 (`applyBorder`/`applyMarkPadding`, `mergePadding`)                            |
-| `resolveCell` / `formatPadding` / `mergePadding` API    | Task 1, Step 3                                                                       |
-| `derive-styles.ts` → `resolve-cell.ts`                  | Tasks 1 and 2 (create, then delete)                                                  |
-| Two components drop to one computed                     | Task 2, Steps 5-6                                                                    |
-| `PaddingExtents` exported                               | Task 1, Step 3                                                                       |
-| `resolveCell` carries no provenance                     | Task 1 — signature takes a bare style array                                          |
-| Existing precedence tests renamed and re-pointed        | Task 2, Step 1                                                                       |
-| `derive-styles.test.ts` ports to `resolve-cell.test.ts` | Task 1, Step 1 (all seven original cases carried over)                               |
-| New unit coverage, eight behaviors                      | Task 1, Step 1                                                                       |
-| Cascade coverage, three boundaries                      | Task 2, Step 1                                                                       |
-| One e2e journey, diverging colours                      | Task 3                                                                               |
-| No migration                                            | No task needed — read-side only                                                      |
-| `CHANGELOG.md` Fixed entry                              | Task 2, Step 9                                                                       |
-| Gates: test, check:types, check:lint, test:e2e          | Task 1 Step 5, Task 2 Step 8, Task 3 Step 4                                          |
+| Spec section                                            | Task                                                                                                                                           |
+| ------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------- |
+| The cascade — vault-wide → shelf → journal ordering     | Task 2, Step 3                                                                                                                                 |
+| Sibling journals cascade in `journalNames` order        | Task 2, Step 3 (journal loop preserved verbatim)                                                                                               |
+| Ten exclusive properties, last wins                     | Task 1, Step 3 (`resolveCell`)                                                                                                                 |
+| Border side `show: false` abstains                      | Task 1 (`sideString` + test "keeps a side when a later declaration hides that side")                                                           |
+| `transparent` is a value, not an abstention             | Task 1 (test "clears an earlier background when a later one is transparent")                                                                   |
+| Corners exclusive per placement                         | Task 1 (`corners` Map + two corner tests)                                                                                                      |
+| Nine additive mark slots, cascade order                 | Task 1 (test "keeps every mark sharing a slot in cascade order")                                                                               |
+| Padding derived, per-side then per-grid max             | Task 1 (`applyBorder`/`applyMarkPadding`, `mergePadding`)                                                                                      |
+| `resolveCell` / `formatPadding` / `mergePadding` API    | Task 1, Step 3                                                                                                                                 |
+| `derive-styles.ts` → `resolve-cell.ts`                  | Tasks 1 and 2 (create, then delete)                                                                                                            |
+| Two components drop to one computed                     | Task 2, Steps 5-6                                                                                                                              |
+| `PaddingExtents` exported                               | Task 1, Step 3                                                                                                                                 |
+| `resolveCell` carries no provenance                     | Task 1 — signature takes a bare style array                                                                                                    |
+| Existing precedence tests renamed and re-pointed        | Task 2, Step 1                                                                                                                                 |
+| `derive-styles.test.ts` ports to `resolve-cell.test.ts` | Task 1, Step 1 (all seven original cases carried over)                                                                                         |
+| New unit coverage, eight behaviors                      | Task 1, Step 1                                                                                                                                 |
+| Cascade coverage, three boundaries                      | Task 2, Step 1 produced journal-over-vault-wide twice and never journal-over-shelf; caught in review and closed by a later commit (`e87239b7`) |
+| One e2e journey, diverging colours                      | Task 3                                                                                                                                         |
+| No migration                                            | No task needed — read-side only                                                                                                                |
+| `CHANGELOG.md` Fixed entry                              | Task 2, Step 9                                                                                                                                 |
+| Gates: test, check:types, check:lint, test:e2e          | Task 1 Step 5, Task 2 Step 8, Task 3 Step 4                                                                                                    |
 
-No gaps.
+One gap: Task 2's task text omitted the journal-over-shelf boundary the design doc requires, leaving journal-over-vault-wide covered twice instead. It was caught in review and closed by a later commit rather than by the plan as written.
 
 **Placeholder scan:** No TBD/TODO, no "add error handling", no "similar to Task N". Every code step carries the literal content.
 

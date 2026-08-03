@@ -91,7 +91,13 @@ scope can cancel a broader one, and it is deliberate.
 Because `defaultStyle("background")` returns a transparent color, a freshly added
 background style silently cancels anything below it. That belongs to the style editor
 piece, but it stops being merely cosmetic under this model — the editor's defaults and
-this cascade have to be resolved together.
+this cascade have to be resolved together. `defaultStyle("corner")` returns the same
+transparent color, and until now that was harmless: corners were additive, so a fresh
+transparent triangle just sat over a visible one with the visible one still showing
+through. Under per-placement exclusivity a freshly added corner instead becomes the
+winner at its placement, so its transparent default now suppresses the real corner
+beneath it rather than coexisting with it. The style-editor follow-up therefore has two
+style types' defaults to fix, not one.
 
 Corners become exclusive per placement. `DecorationCorner.vue` hardcodes `--size: 0.6em`
 with no per-style size, so two corners at one placement are identical triangles and the

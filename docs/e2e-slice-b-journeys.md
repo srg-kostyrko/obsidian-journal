@@ -301,7 +301,7 @@ with zero code change and is where such flake is triaged without blocking merges
 - **The three nav-key aliases** (`journal-nav`/`calendar-nav`/`interval-nav`) —
   one component, one registration loop; testing all three re-tests the wiring.
 - **Per-style element/inline-style rendering** — already in `CellDecoration.test.ts`
-  / `derive-styles.test.ts`; e2e asserts only the computed post-cascade value.
+  / `resolve-cell.test.ts`; e2e asserts only the computed post-cascade value.
 - **Reopen/persistence replay** — superseded by the immediate `data-active`
   assertion.
 - **Mobile** — Electron e2e is desktop-only (see strategy doc).

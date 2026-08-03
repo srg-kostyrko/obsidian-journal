@@ -33,6 +33,8 @@ All notable changes to this project will be documented in this file.
 - The open-next and open-previous note commands now work in Reading (preview) mode.
 - Interval-offset decorations now mark the interval's first day by default instead of never matching, and the editor spells out which day the offset targets.
 - Decorations now layer predictably: a journal's decoration overrides a shelf's, which overrides a vault-wide one. Previously borders resolved the opposite way, so a vault-wide border silently replaced a journal's.
+- Background and text color now follow the same layering: where two decorations in one list both set a background, the later one wins instead of the earlier one.
+- At most one corner decoration now renders per corner of a cell; previously several could stack on top of each other.
 
 ## [2.1.9] - 2025-06-07
 
