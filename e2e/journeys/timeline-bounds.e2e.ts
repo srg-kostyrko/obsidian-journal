@@ -16,6 +16,8 @@ import {
   timelineCalendar,
 } from "./code-blocks.js";
 
+import type { CellLocator } from "./calendar.js";
+
 // The e2e-bounds vault holds one bounded day journal, `daily-window`, whose timeline runs
 // 2030-06-01 .. 2030-06-30 (a `date`-kind end). A `calendar-timeline` block takes its focus
 // month from the host note's journal-date, so a note connected at 2030-05-15 / 2030-06-15 /
@@ -147,6 +149,46 @@ describe("timeline bounds", () => {
 
       await expect($(NAV_PREVIOUS_BLOCK)).toExist();
       await expect($(NAV_NEXT_BLOCK)).toExist();
+    });
+  });
+
+  // `sprint-window` is a fortnightly custom journal anchored 2031-03-03 and bounded to
+  // 2031-03-16, so exactly one of its intervals is in-timeline. Its offset-1 decoration marks
+  // each interval's first day, and custom journals paint those on the *day* grid rather than in
+  // the interval list. The cycle that resolves an offset runs unbounded in both directions, so
+  // without a timeline gate the grid marks 2031-03-17 — the next interval's start, already past
+  // the end — exactly like the in-bounds 2031-03-03. March 2031 overlaps no other journal's
+  // window here, so these cells answer for sprint-window alone.
+  describe("offset decorations", () => {
+    const SPRINT_IN_BOUNDS = "2031-03-03";
+    const SPRINT_OUT_OF_BOUNDS = "2031-03-17";
+    const OFFSET_DECORATION = ".decoration-corner.top-left";
+
+    const inBoundsMark = (): CellLocator => timelineCalendar.cell(SPRINT_IN_BOUNDS).$(OFFSET_DECORATION);
+
+    before(async () => {
+      await renderBlock(
+        "bounds/offset.md",
+        hostNote("sprint-window", SPRINT_IN_BOUNDS, TIMELINE_FENCE),
+        `${TIMELINE_BLOCK} .notes-month-view`,
+      );
+    });
+
+    it("marks the first day of an interval inside the timeline", async () => {
+      await inBoundsMark().waitForExist({
+        timeoutMsg: "offset decoration did not render on the in-bounds interval's first day",
+      });
+    });
+
+    it("leaves the first day of an interval past the timeline end unmarked", async () => {
+      // Both cells sit in the one grid rendered above, so the in-bounds cell gaining its mark
+      // proves the decoration pass has run — without it, an absence assertion would also pass
+      // against a grid that simply had not been evaluated yet.
+      await inBoundsMark().waitForExist({
+        timeoutMsg: "decoration pass never ran (in-bounds cell unmarked before the control assertion)",
+      });
+
+      await expect(timelineCalendar.cell(SPRINT_OUT_OF_BOUNDS).$(".decoration-corner")).not.toExist();
     });
   });
 
