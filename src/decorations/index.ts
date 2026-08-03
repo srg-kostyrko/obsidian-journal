@@ -58,6 +58,7 @@ export { default as CellDecoration } from "./ui/CellDecoration.vue";
 export { colorToString } from "./ui/color";
 export { default as DecorationPreview } from "./ui/DecorationPreview.vue";
 export { useCellDecorations } from "./use-cell-decorations";
+export { useDecorationMenuItems } from "./ui/use-decoration-menu-item";
 export {
   DecorationLifecycleFlowError,
   toDecorationFlowError,

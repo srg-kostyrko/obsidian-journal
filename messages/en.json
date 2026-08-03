@@ -463,6 +463,7 @@
   "decoration_breakdown_cell_heading": [{"declarations":["input kind","input label"],"selectors":["kind"],"match":{"kind=day":"Day — {label}","kind=week":"Week — {label}","kind=month":"Month — {label}","kind=quarter":"Quarter — {label}","kind=year":"Year — {label}","kind=decade":"Decade — {label}"}}],
   "decoration_breakdown_entry_badge": "Opened from here",
   "decoration_breakdown_interval_heading": "Interval — {journal} — {label}",
+  "decoration_explain_menu_item": "Explain decorations",
   "decoration_condition_all_tasks_completed_describe": "all tasks are completed",
   "decoration_condition_date_describe": [
     {
