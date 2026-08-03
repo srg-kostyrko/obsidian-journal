@@ -1,5 +1,6 @@
-import { browser, expect } from "@wdio/globals";
+import { $, browser, expect } from "@wdio/globals";
 
+import { NAV_FENCE, NAV_NOT_CONNECTED, NAV_VIEW, openInReadingMode } from "../journeys/code-blocks.js";
 import { clickButton, clickRowButton, expandSection, openSettings } from "../support/settings.js";
 import { frontmatterOf, seedNote, waitForFrontmatter, waitForJournalFrontmatter } from "../support/vault.js";
 
@@ -55,17 +56,22 @@ describe("week preset change", () => {
     expect(frontmatter?.["journal-end-date"]).toBe("2026-06-06");
   });
 
-  it("keeps the note connected to its journal after the change", async () => {
+  it("keeps the note registered in the journal index after the change", async () => {
     // vault.create refuses to write into a folder that doesn't exist on disk yet, and this
     // fixture carries no note folders; seedNote creates "week/" first, same as a real user's
-    // first weekly note would need someone (or the plugin) to have done.
-    await seedNote("week/2026-W23.md", "");
+    // first weekly note would need someone (or the plugin) to have done. The nav fence is the
+    // observable: parseEntry rejects a non-canonical anchor, so a note that fell out of
+    // JournalsIndex renders the not-connected fallback instead of .nav-view.
+    await seedNote("week/2026-W23.md", NAV_FENCE);
     await waitForJournalFrontmatter("week/2026-W23.md", { journal: "weekly", date: "2026-06-01" });
 
     await switchToWesternPreset();
 
     await waitForJournalFrontmatter("week/2026-W23.md", { journal: "weekly", date: "2026-05-31" });
-    const frontmatter = await frontmatterOf("week/2026-W23.md");
-    expect(frontmatter?.journal).toBe("weekly");
+    await openInReadingMode("week/2026-W23.md");
+    await $(NAV_VIEW).waitForExist({
+      timeoutMsg: "re-anchored note dropped out of the journal index",
+    });
+    await expect($(NAV_NOT_CONNECTED)).not.toExist();
   });
 });
