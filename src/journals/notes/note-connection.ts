@@ -8,6 +8,7 @@ import type {
   NoteRenameError,
   VaultPath,
 } from "@/infrastructure/host";
+import { LoggerFactoryToken } from "@/infrastructure/logger";
 import { AsyncResult, attempt } from "@/infrastructure/result";
 
 import { DEFAULT_FRONTMATTER_KEYS, FRONTMATTER_NAME_KEY } from "../config";
@@ -21,6 +22,7 @@ import { NotePathService } from "./note-path";
 import { splitVaultPath } from "./vault-path";
 
 import type { NoteCreationError } from "./note-creation";
+import type { JournalNotFoundError } from "../errors";
 import type { JournalMetadata } from "../types";
 
 export type ConnectError =
@@ -33,6 +35,13 @@ export type ConnectError =
   | FrontmatterError;
 
 export type DisconnectError = NoteNotFoundError | FrontmatterError;
+
+export interface ReanchorReport {
+  readonly rewritten: number;
+  readonly failed: number;
+}
+
+type ReanchorError = NoteNotFoundError | FrontmatterError | JournalNotFoundError;
 
 export interface ConnectOptions {
   override?: boolean;
@@ -47,6 +56,7 @@ export class NoteConnectionService {
   readonly #creation = inject(NoteCreationService);
   readonly #index = inject(JournalsIndex);
   readonly #cycle = inject(CycleService);
+  readonly #logger = inject(LoggerFactoryToken).named("note-connection");
 
   readonly #defaultClear = (fm: Record<string, unknown>): void => {
     for (const key of DEFAULT_FRONTMATTER_KEYS) delete fm[key];
@@ -64,6 +74,16 @@ export class NoteConnectionService {
       return;
     });
     return AsyncResult.fromPromise(all, () => undefined as never);
+  }
+
+  #reanchorOne(journalName: string, path: VaultPath, anchor: AnchorString): AsyncResult<void, ReanchorError> {
+    return attempt.in(this, async function* (this: NoteConnectionService) {
+      const metadata = yield* this.#frontmatter.buildMetadata(journalName, anchor);
+      const mutator = yield* this.#frontmatter.writeMutator(journalName, metadata);
+      yield* this.#notes.updateFrontmatter(path, mutator).tapErr((error) => {
+        this.#logger.warn("failed to re-anchor note", { path, anchor, error });
+      });
+    });
   }
 
   #combine(current: VaultPath, configured: VaultPath, options: ConnectOptions): string {
@@ -177,5 +197,41 @@ export class NoteConnectionService {
         yield* this.#notes.updateFrontmatter(path, mutator);
       }),
     );
+  }
+
+  // Targets are resolved by the caller (which alone knows the old and new week grids); this
+  // only has to apply them without letting two notes land on the same anchor.
+  reanchorAll(journalName: string, targets: ReadonlyMap<VaultPath, AnchorString>): AsyncResult<ReanchorReport, never> {
+    const entries = [...this.#index.entriesFor(journalName)];
+    const claimed = new Set<AnchorString>();
+    const moves: { path: VaultPath; to: AnchorString }[] = [];
+    let blocked = 0;
+
+    // Notes that are staying put keep their slot, so a mover cannot displace one.
+    for (const [anchor, path] of entries) {
+      const target = targets.get(path);
+      if (target === undefined || target === anchor) claimed.add(anchor);
+    }
+    for (const [anchor, path] of entries) {
+      const target = targets.get(path);
+      if (target === undefined || target === anchor) continue;
+      // A grid change can leave a year one week shorter, collapsing two weeks onto one anchor.
+      // The loser keeps its old date rather than overwriting the winner's note.
+      if (claimed.has(target)) {
+        blocked += 1;
+        this.#logger.warn("re-anchor target already claimed", { journalName, path, target });
+        continue;
+      }
+      claimed.add(target);
+      moves.push({ path, to: target });
+    }
+
+    const settled = Promise.all(moves.map((move) => this.#reanchorOne(journalName, move.path, move.to))).then(
+      (results) => {
+        const rewritten = results.filter((result) => result.isOk()).length;
+        return { rewritten, failed: blocked + results.length - rewritten };
+      },
+    );
+    return AsyncResult.fromPromise(settled, () => undefined as never);
   }
 }

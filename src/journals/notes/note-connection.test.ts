@@ -65,6 +65,11 @@ async function readFrontmatter(notes: FakeNotesService, path: VaultPath): Promis
   return captured;
 }
 
+function weeklyWith(patch: { addStartDate?: boolean; addEndDate?: boolean } = {}) {
+  const weekly = fixedJournal("weekly", { type: "week" });
+  return { weekly: { ...weekly, frontmatter: { ...weekly.frontmatter, ...patch } } };
+}
+
 describe("NoteConnectionService", () => {
   let teardown: () => void;
 
@@ -583,6 +588,139 @@ describe("NoteConnectionService", () => {
 
       expect(result.isOk()).toBe(true);
       expect(notes.find(sourcePath).isSome()).toBe(true);
+    });
+  });
+
+  describe("reanchorAll", () => {
+    it("writes the target anchor into the date field", async () => {
+      const notes = new FakeNotesService();
+      notes.seed("week/2026-W23.md" as VaultPath, "", { journal: "weekly", "journal-date": "2026-06-01" });
+      const { container, index } = build(fakeRepo(weeklyWith()), notes, new FakeModalService());
+      index.register({
+        journalName: "weekly",
+        anchor: anchor("2026-06-01"),
+        path: "week/2026-W23.md" as VaultPath,
+      });
+
+      await container
+        .resolve(NoteConnectionService)
+        .reanchorAll("weekly", new Map([["week/2026-W23.md" as VaultPath, anchor("2026-05-31")]]));
+
+      expect(notes.frontmatterOf("week/2026-W23.md" as VaultPath)?.["journal-date"]).toBe("2026-05-31");
+    });
+
+    it("recomputes the start date field from the new anchor", async () => {
+      const notes = new FakeNotesService();
+      notes.seed("week/2026-W23.md" as VaultPath, "", {
+        journal: "weekly",
+        "journal-date": "2026-06-01",
+        "journal-start-date": "2026-06-01",
+      });
+      const { container, index } = build(fakeRepo(weeklyWith({ addStartDate: true })), notes, new FakeModalService());
+      index.register({
+        journalName: "weekly",
+        anchor: anchor("2026-06-01"),
+        path: "week/2026-W23.md" as VaultPath,
+      });
+
+      await container
+        .resolve(NoteConnectionService)
+        .reanchorAll("weekly", new Map([["week/2026-W23.md" as VaultPath, anchor("2026-05-25")]]));
+
+      expect(notes.frontmatterOf("week/2026-W23.md" as VaultPath)?.["journal-start-date"]).toBe("2026-05-25");
+    });
+
+    it("leaves a note whose target equals its current anchor untouched", async () => {
+      const notes = new FakeNotesService();
+      notes.seed("week/2026-W23.md" as VaultPath, "", { journal: "weekly", "journal-date": "2026-06-01" });
+      const { container, index } = build(fakeRepo(weeklyWith()), notes, new FakeModalService());
+      index.register({
+        journalName: "weekly",
+        anchor: anchor("2026-06-01"),
+        path: "week/2026-W23.md" as VaultPath,
+      });
+      const spy = vi.spyOn(notes, "updateFrontmatter");
+
+      await container
+        .resolve(NoteConnectionService)
+        .reanchorAll("weekly", new Map([["week/2026-W23.md" as VaultPath, anchor("2026-06-01")]]));
+
+      expect(spy).not.toHaveBeenCalled();
+    });
+
+    it("reports how many notes it rewrote", async () => {
+      const notes = new FakeNotesService();
+      notes.seed("week/2026-W23.md" as VaultPath, "", { journal: "weekly", "journal-date": "2026-06-01" });
+      notes.seed("week/2026-W24.md" as VaultPath, "", { journal: "weekly", "journal-date": "2026-06-08" });
+      const { container, index } = build(fakeRepo(weeklyWith()), notes, new FakeModalService());
+      index.register({ journalName: "weekly", anchor: anchor("2026-06-01"), path: "week/2026-W23.md" as VaultPath });
+      index.register({ journalName: "weekly", anchor: anchor("2026-06-08"), path: "week/2026-W24.md" as VaultPath });
+
+      const result = await container.resolve(NoteConnectionService).reanchorAll(
+        "weekly",
+        new Map([
+          ["week/2026-W23.md" as VaultPath, anchor("2026-05-31")],
+          ["week/2026-W24.md" as VaultPath, anchor("2026-06-07")],
+        ]),
+      );
+
+      expectOk(result);
+      expect(result.value.rewritten).toBe(2);
+    });
+
+    it("keeps rewriting the remaining notes after one note fails", async () => {
+      const notes = new FakeNotesService();
+      notes.seed("week/2026-W23.md" as VaultPath, "", { journal: "weekly", "journal-date": "2026-06-01" });
+      notes.seed("week/2026-W24.md" as VaultPath, "", { journal: "weekly", "journal-date": "2026-06-08" });
+      const { container, index } = build(fakeRepo(weeklyWith()), notes, new FakeModalService());
+      index.register({ journalName: "weekly", anchor: anchor("2026-06-01"), path: "week/2026-W23.md" as VaultPath });
+      index.register({ journalName: "weekly", anchor: anchor("2026-06-08"), path: "week/2026-W24.md" as VaultPath });
+      vi.spyOn(notes, "updateFrontmatter").mockImplementationOnce(() =>
+        AsyncResult.err(new NoteNotFoundError("week/2026-W23.md" as VaultPath)),
+      );
+
+      await container.resolve(NoteConnectionService).reanchorAll(
+        "weekly",
+        new Map([
+          ["week/2026-W23.md" as VaultPath, anchor("2026-05-31")],
+          ["week/2026-W24.md" as VaultPath, anchor("2026-06-07")],
+        ]),
+      );
+
+      expect(notes.frontmatterOf("week/2026-W24.md" as VaultPath)?.["journal-date"]).toBe("2026-06-07");
+    });
+
+    it("counts a note whose write failed as failed", async () => {
+      const notes = new FakeNotesService();
+      notes.seed("week/2026-W23.md" as VaultPath, "", { journal: "weekly", "journal-date": "2026-06-01" });
+      const { container, index } = build(fakeRepo(weeklyWith()), notes, new FakeModalService());
+      index.register({ journalName: "weekly", anchor: anchor("2026-06-01"), path: "week/2026-W23.md" as VaultPath });
+      vi.spyOn(notes, "updateFrontmatter").mockImplementation(() =>
+        AsyncResult.err(new NoteNotFoundError("week/2026-W23.md" as VaultPath)),
+      );
+
+      const result = await container
+        .resolve(NoteConnectionService)
+        .reanchorAll("weekly", new Map([["week/2026-W23.md" as VaultPath, anchor("2026-05-31")]]));
+
+      expectOk(result);
+      expect(result.value.failed).toBe(1);
+    });
+
+    it("refuses a target already held by a note that is staying put", async () => {
+      const notes = new FakeNotesService();
+      notes.seed("week/2026-W23.md" as VaultPath, "", { journal: "weekly", "journal-date": "2026-06-01" });
+      notes.seed("week/2026-W24.md" as VaultPath, "", { journal: "weekly", "journal-date": "2026-06-08" });
+      const { container, index } = build(fakeRepo(weeklyWith()), notes, new FakeModalService());
+      index.register({ journalName: "weekly", anchor: anchor("2026-06-01"), path: "week/2026-W23.md" as VaultPath });
+      index.register({ journalName: "weekly", anchor: anchor("2026-06-08"), path: "week/2026-W24.md" as VaultPath });
+
+      // W23 is told to move onto W24's anchor, which W24 keeps (no target of its own).
+      await container
+        .resolve(NoteConnectionService)
+        .reanchorAll("weekly", new Map([["week/2026-W23.md" as VaultPath, anchor("2026-06-08")]]));
+
+      expect(notes.frontmatterOf("week/2026-W23.md" as VaultPath)?.["journal-date"]).toBe("2026-06-01");
     });
   });
 });
