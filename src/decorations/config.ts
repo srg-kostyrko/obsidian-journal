@@ -176,7 +176,12 @@ const weekdayCondition = v.object({
 
 const offsetCondition = v.object({
   type: v.literal("offset"),
-  offset: v.pipe(v.number(), v.integer()),
+  offset: v.pipe(
+    v.number(),
+    v.integer(),
+    // 0 is unreachable: offsets are 1-based from both ends. v2's default stored it anyway.
+    v.transform((n) => (n === 0 ? 1 : n)),
+  ),
 });
 
 const hasNoteCondition = v.object({ type: v.literal("has-note") });

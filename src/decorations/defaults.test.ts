@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 
-import { defaultStyle } from "./defaults";
+import { defaultCondition, defaultStyle } from "./defaults";
 
 // A freshly added style should render something out of the box, matching v2's visible defaults,
 // rather than being invisible until the user configures it.
@@ -27,5 +27,11 @@ describe("defaultStyle", () => {
   it("defaults an icon style to the top placement", () => {
     const style = defaultStyle("icon");
     expect(style.placement_y).toBe("top");
+  });
+});
+
+describe("defaultCondition", () => {
+  it("points a new offset condition at the interval's first day", () => {
+    expect(defaultCondition("offset")).toEqual({ type: "offset", offset: 1 });
   });
 });
