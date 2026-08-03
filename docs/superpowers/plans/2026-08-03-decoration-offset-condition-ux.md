@@ -315,9 +315,14 @@ git commit -m "feat(ui): add a single-select segmented control"
 
 **Files:**
 
-- Modify: `messages/en.json` (key `decoration_condition_offset_describe`)
+- Modify: `messages/en.json` **and all ten locale files** (`de`, `es`, `fr`, `it`, `ja`, `ko`, `pt`, `ru`, `uk`, `zh`) — key `decoration_condition_offset_describe`
 - Modify: `src/decorations/settings/ui/describe-condition.ts:49`
 - Modify: `src/decorations/settings/ui/describe-condition.test.ts:94-99`
+
+**Why every locale changes in this task:** paraglide derives a message's generated
+input type from the union of **all** locale files, not from `en.json` alone. Leaving
+`"…{offset}"` in the other ten would keep `offset` in the generated signature and break
+`check:types` at the new `{ side, day }` call site. The locale edits are not deferrable.
 
 **Interfaces:**
 
@@ -344,6 +349,28 @@ In `messages/en.json`, replace the `decoration_condition_offset_describe` line w
 ```
 
 The lowercase fragment register matches its neighbours ("a note exists", "tag contains x") — these clauses are joined into a list, not shown as sentences.
+
+- [ ] **Step 1b: Apply the same block to all ten locale files**
+
+Same key, same position, same four match keys — only the strings differ. Locale files are
+tab-indented; match the file you are editing. Use these translations verbatim:
+
+| locale | `side=start,day=1`                  | `side=start,day=*`                | `side=end,day=1`                    | `side=end,day=*`                                            |
+| ------ | ----------------------------------- | --------------------------------- | ----------------------------------- | ----------------------------------------------------------- |
+| de     | ist der erste Tag des Intervalls    | ist Tag {day} des Intervalls      | ist der letzte Tag des Intervalls   | ist Tag {day} vom Ende des Intervalls zurückgerechnet       |
+| es     | es el primer día del intervalo      | es el día {day} del intervalo     | es el último día del intervalo      | es el día {day} contando desde el final del intervalo       |
+| fr     | est le premier jour de l'intervalle | est le jour {day} de l'intervalle | est le dernier jour de l'intervalle | est le jour {day} en comptant depuis la fin de l'intervalle |
+| it     | è il primo giorno dell'intervallo   | è il giorno {day} dell'intervallo | è l'ultimo giorno dell'intervallo   | è il giorno {day} contando dalla fine dell'intervallo       |
+| ja     | 間隔の最初の日である                | 間隔の{day}日目である             | 間隔の最後の日である                | 間隔の終わりから数えて{day}日目である                       |
+| ko     | 간격의 첫째 날임                    | 간격의 {day}번째 날임             | 간격의 마지막 날임                  | 간격의 끝에서부터 {day}번째 날임                            |
+| pt     | é o primeiro dia do intervalo       | é o dia {day} do intervalo        | é o último dia do intervalo         | é o dia {day} contando a partir do fim do intervalo         |
+| ru     | это первый день интервала           | это {day}-й день интервала        | это последний день интервала        | это {day}-й день с конца интервала                          |
+| uk     | це перший день інтервалу            | це {day}-й день інтервалу         | це останній день інтервалу          | це {day}-й день з кінця інтервалу                           |
+| zh     | 是间隔的第一天                      | 是间隔的第{day}天                 | 是间隔的最后一天                    | 是从间隔末尾倒数第{day}天                                   |
+
+The interval noun matches each locale's existing `common_custom_intervals` rendering. None of
+these strings contain a glossary-protected domain noun (journal, note, shelf, bold), so
+`npm run check:i18n` has nothing to object to.
 
 - [ ] **Step 2: Compile the messages**
 
@@ -398,13 +425,16 @@ In `src/decorations/settings/ui/describe-condition.ts`, replace line 49:
 
 - [ ] **Step 6: Run the tests to verify they pass**
 
-Run: `npx vitest run src/decorations/settings/ui/describe-condition.test.ts && npm run check:types`
-Expected: PASS and clean types.
+Run: `npx vitest run src/decorations/settings/ui/describe-condition.test.ts && npm run check:types && npm run check:i18n`
+Expected: PASS, clean types, glossary clean.
+
+`check:types` is the real gate here: it passes only if every locale file carries the new
+`side`/`day` variants. If it still demands an `offset` argument, a locale was missed.
 
 - [ ] **Step 7: Commit**
 
 ```bash
-git add messages/en.json src/decorations/settings/ui/describe-condition.ts src/decorations/settings/ui/describe-condition.test.ts
+git add messages/ src/decorations/settings/ui/describe-condition.ts src/decorations/settings/ui/describe-condition.test.ts
 git commit -m "fix(decorations): describe an interval offset by the day it targets"
 ```
 
@@ -414,7 +444,7 @@ git commit -m "fix(decorations): describe an interval offset by the day it targe
 
 **Files:**
 
-- Modify: `messages/en.json` (rework `decoration_condition_offset_hint`; remove `decoration_condition_offset_label`; add `decoration_condition_offset_day_label`, `decoration_condition_offset_direction_label`, `decoration_condition_offset_direction_option`)
+- Modify: `messages/en.json` **and all ten locale files** (rework `decoration_condition_offset_hint`; remove `decoration_condition_offset_label`; add `decoration_condition_offset_day_label`, `decoration_condition_offset_direction_label`, `decoration_condition_offset_direction_option`)
 - Modify: `src/decorations/settings/ui/ConditionOffset.vue` (full rewrite)
 - Modify: `src/decorations/settings/ui/ConditionOffset.test.ts` (full rewrite)
 
@@ -462,6 +492,42 @@ In `messages/en.json`:
     }
   ],
 ```
+
+- [ ] **Step 1b: Apply the same four edits to all ten locale files**
+
+Same as Task 3: paraglide unions the generated input type across every locale, so a stale
+`{days}`/`{side}` hint block in any one of them breaks `check:types` at the new call site.
+Delete `decoration_condition_offset_label` from each file too. Locale files are tab-indented.
+
+`decoration_condition_offset_hint` — sentence register, ends with a period:
+
+| locale | `side=start,day=1`                           | `side=start,day=*`                           | `side=end,day=1`                               | `side=end,day=*`                                                    |
+| ------ | -------------------------------------------- | -------------------------------------------- | ---------------------------------------------- | ------------------------------------------------------------------- |
+| de     | Entspricht dem ersten Tag des Intervalls.    | Entspricht Tag {day} des Intervalls.         | Entspricht dem letzten Tag des Intervalls.     | Entspricht Tag {day} vom Ende des Intervalls zurückgerechnet.       |
+| es     | Coincide con el primer día del intervalo.    | Coincide con el día {day} del intervalo.     | Coincide con el último día del intervalo.      | Coincide con el día {day} contando desde el final del intervalo.    |
+| fr     | Correspond au premier jour de l'intervalle.  | Correspond au jour {day} de l'intervalle.    | Correspond au dernier jour de l'intervalle.    | Correspond au jour {day} en comptant depuis la fin de l'intervalle. |
+| it     | Corrisponde al primo giorno dell'intervallo. | Corrisponde al giorno {day} dell'intervallo. | Corrisponde all'ultimo giorno dell'intervallo. | Corrisponde al giorno {day} contando dalla fine dell'intervallo.    |
+| ja     | 間隔の最初の日に一致します。                 | 間隔の{day}日目に一致します。                | 間隔の最後の日に一致します。                   | 間隔の終わりから数えて{day}日目に一致します。                       |
+| ko     | 간격의 첫째 날과 일치합니다.                 | 간격의 {day}번째 날과 일치합니다.            | 간격의 마지막 날과 일치합니다.                 | 간격의 끝에서부터 {day}번째 날과 일치합니다.                        |
+| pt     | Corresponde ao primeiro dia do intervalo.    | Corresponde ao dia {day} do intervalo.       | Corresponde ao último dia do intervalo.        | Corresponde ao dia {day} contando a partir do fim do intervalo.     |
+| ru     | Совпадает с первым днём интервала.           | Совпадает с {day}-м днём интервала.          | Совпадает с последним днём интервала.          | Совпадает с {day}-м днём с конца интервала.                         |
+| uk     | Збігається з першим днем інтервалу.          | Збігається з {day}-м днем інтервалу.         | Збігається з останнім днем інтервалу.          | Збігається з {day}-м днем з кінця інтервалу.                        |
+| zh     | 匹配间隔的第一天。                           | 匹配间隔的第{day}天。                        | 匹配间隔的最后一天。                           | 匹配从间隔末尾倒数第{day}天。                                       |
+
+The three label keys:
+
+| locale | `_day_label` | `_direction_label`  | `_direction_option` `side=start` | `_direction_option` `side=end` |
+| ------ | ------------ | ------------------- | -------------------------------- | ------------------------------ |
+| de     | Tag          | Zählen ab           | Vom Anfang                       | Vom Ende                       |
+| es     | Día          | Contar desde        | Desde el inicio                  | Desde el final                 |
+| fr     | Jour         | Compter à partir de | Depuis le début                  | Depuis la fin                  |
+| it     | Giorno       | Conta da            | Dall'inizio                      | Dalla fine                     |
+| ja     | 日           | 起点                | 先頭から                         | 末尾から                       |
+| ko     | 일           | 기준                | 시작부터                         | 끝부터                         |
+| pt     | Dia          | Contar a partir de  | Do início                        | Do fim                         |
+| ru     | День         | Отсчёт от           | От начала                        | От конца                       |
+| uk     | День         | Відлік від          | Від початку                      | Від кінця                      |
+| zh     | 天           | 计数起点            | 从开头                           | 从末尾                         |
 
 - [ ] **Step 2: Compile the messages**
 
@@ -655,59 +721,70 @@ Expected: PASS (10 tests).
 
 - [ ] **Step 7: Run the full check**
 
-Run: `npm test && npm run check:types && npm run check:lint`
-Expected: all clean. `check:types` catches any remaining reference to the deleted `decoration_condition_offset_label`.
+Run: `npm test && npm run check:types && npm run check:lint && npm run check:i18n`
+Expected: all clean, except the known pre-existing `ConditionItem.test.ts` failure. `check:types` catches any remaining reference to the deleted `decoration_condition_offset_label` and any locale file still carrying the old hint shape.
 
 - [ ] **Step 8: Commit**
 
 ```bash
-git add messages/en.json src/decorations/settings/ui/ConditionOffset.vue src/decorations/settings/ui/ConditionOffset.test.ts
+git add messages/ src/decorations/settings/ui/ConditionOffset.vue src/decorations/settings/ui/ConditionOffset.test.ts
 git commit -m "fix(decorations): pick an interval offset by direction and day"
 ```
 
 ---
 
-### Task 5: Retranslate the locales and record the fix
+### Task 5: Audit the locale corpus and record the fix
 
-All ten non-English message files carry the old two-variant shape **and** the old incorrect meaning — `messages/uk.json:658` currently reads "зміщення від початку дорівнює {offset}", a faithful translation of wrong English. They cannot be patched by hand into the new variant structure meaningfully; they get regenerated.
+The translations themselves land in Tasks 3 and 4 — paraglide unions a message's generated
+input type across every locale file, so a locale left stale breaks `check:types` in the task
+that changes the message. This task is the audit that no locale was missed or malformed, plus
+the changelog entry.
 
 **Files:**
 
-- Modify: `messages/de.json`, `messages/es.json`, `messages/fr.json`, `messages/it.json`, `messages/ja.json`, `messages/ko.json`, `messages/pt.json`, `messages/ru.json`, `messages/uk.json`, `messages/zh.json`
+- Verify (do not routinely edit): `messages/de.json`, `messages/es.json`, `messages/fr.json`, `messages/it.json`, `messages/ja.json`, `messages/ko.json`, `messages/pt.json`, `messages/ru.json`, `messages/uk.json`, `messages/zh.json`
 - Modify: `CHANGELOG.md`
 
 **Interfaces:**
 
-- Consumes: the finished `en.json` from Tasks 3 and 4.
+- Consumes: the finished message corpus from Tasks 3 and 4.
 - Produces: nothing.
 
-- [ ] **Step 1: Delete the retired key from every locale**
+- [ ] **Step 1: Confirm the retired key is gone everywhere**
 
-`decoration_condition_offset_label` was removed from `en.json` in Task 4. The machine-translation run only adds keys, so remove the stale one from all ten locale files:
+Run: `grep -ln decoration_condition_offset_label messages/*.json`
+Expected: **no output**. Any file listed still carries the key deleted in Task 4 — remove that line from it.
+
+- [ ] **Step 2: Confirm every locale carries the new variant keys**
+
+Run:
 
 ```bash
-grep -ln decoration_condition_offset_label messages/*.json
+for L in en de es fr it ja ko pt ru uk zh; do
+  printf '%s: describe=%s hint=%s dir=%s day=%s cf=%s\n' "$L" \
+    "$(grep -c 'side=start,day=1' messages/$L.json)" \
+    "$(grep -c 'side=end,day=\*' messages/$L.json)" \
+    "$(grep -c decoration_condition_offset_direction_option messages/$L.json)" \
+    "$(grep -c decoration_condition_offset_day_label messages/$L.json)" \
+    "$(grep -c decoration_condition_offset_direction_label messages/$L.json)"
+done
 ```
 
-Delete that line from each file listed. `messages/en.json` must **not** appear in the output — if it does, Task 4 is incomplete; stop and fix it there.
+Expected: every locale reports `describe=2 hint=2 dir=1 day=1 cf=1` — the two `side=start,day=1` keys are the describe and hint blocks, likewise the two `side=end,day=*`.
 
-- [ ] **Step 2: Regenerate the translations**
+Any zero is a missed locale. Fill it from the translation tables in Tasks 3 and 4 — those tables are the source of truth, not a re-translation.
 
-Run: `npm run translate:i18n`
+- [ ] **Step 3: Confirm no match key carries a stray space**
 
-This needs a Google API key. It chains `scripts/fix-i18n-variant-keys.mjs` (which strips the space the inlang CLI injects into composite match keys like `side=start, day=1`) and then `npm run check:i18n` (the domain-noun glossary guard).
+The inlang CLI injects a space into composite match keys (`side=start, day=1`), which is why `scripts/fix-i18n-variant-keys.mjs` exists. Hand-authored entries should not have this, but verify:
 
-If no key is available, stop and report that — do not hand-write translations for ten locales.
+Run: `grep -n 'side=[a-z]*, day=' messages/*.json`
+Expected: **no output**. If a file matches, remove the space after the comma.
 
-- [ ] **Step 3: Verify the new variant keys survived**
+- [ ] **Step 4: Run the full gate**
 
-Run: `grep -A8 decoration_condition_offset_hint messages/uk.json`
-Expected: a four-entry `match` block whose keys are exactly `side=start,day=1`, `side=start,day=*`, `side=end,day=1`, `side=end,day=*` — no space after the comma.
-
-- [ ] **Step 4: Compile and run the full check**
-
-Run: `npm run compile:i18n && npm test && npm run check:types && npm run check:lint`
-Expected: all clean.
+Run: `npm run compile:i18n && npm run check:i18n && npm test && npm run check:types && npm run check:lint`
+Expected: all clean, except the known pre-existing `src/decorations/settings/ui/ConditionItem.test.ts` failure (a stale weekday query from commit `dec6adf7`, unrelated to this plan — do not fix it here).
 
 - [ ] **Step 5: Record the user-facing fix**
 
@@ -721,7 +798,7 @@ v2 shipped the same broken default (`src/_old-code/defaults.ts:299`), so this is
 
 ```bash
 git add messages/ CHANGELOG.md
-git commit -m "i18n(decorations): retranslate the interval-offset condition copy"
+git commit -m "docs(decorations): record the interval-offset condition fix"
 ```
 
 ---
