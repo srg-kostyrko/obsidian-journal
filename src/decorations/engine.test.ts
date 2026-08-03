@@ -266,4 +266,74 @@ describe("DecorationEngine", () => {
       expect(spy).not.toHaveBeenCalled();
     });
   });
+
+  describe("explainRange", () => {
+    it("labels a contribution with the decoration that produced it", () => {
+      const decoration = buildDecoration({
+        mode: "or",
+        conditions: [buildCondition("weekday", { weekdays: [1] })],
+        styles: [buildStyle("background")],
+      });
+      const { c } = buildContainer({
+        daily: fixedJournal("daily", { type: "day" }, { decorations: [decoration] }),
+      });
+      const engine = c.resolve(DecorationEngine);
+
+      // 2026-05-25 is a Monday.
+      const period = DayPeriod.containing(date("2026-05-25"));
+      const result = engine.explainRange([period], [{ kind: "journal", journalName: "daily", index: 0, decoration }]);
+
+      expect(result.get(cellKey("day", period.anchor.toAnchor()))).toEqual([
+        { source: { owner: { kind: "journal", journalName: "daily" }, index: 0 }, style: decoration.styles[0] },
+      ]);
+    });
+
+    it("returns contributions in cascade order", () => {
+      const calendarDecoration = buildCalendarDecoration({
+        mode: "or",
+        conditions: [buildCondition("weekday", { weekdays: [1] })],
+        styles: [buildStyle("background")],
+      });
+      const journalDecoration = buildDecoration({
+        mode: "or",
+        conditions: [buildCondition("weekday", { weekdays: [1] })],
+        styles: [buildStyle("corner", { placement: "top-left" })],
+      });
+      const { c } = buildContainer({
+        daily: fixedJournal("daily", { type: "day" }, { decorations: [journalDecoration] }),
+      });
+      const engine = c.resolve(DecorationEngine);
+
+      // 2026-05-25 is a Monday.
+      const period = DayPeriod.containing(date("2026-05-25"));
+      const result = engine.explainRange(
+        [period],
+        [
+          { kind: "calendar", owner: { kind: "global" }, index: 0, decoration: calendarDecoration },
+          { kind: "journal", journalName: "daily", index: 0, decoration: journalDecoration },
+        ],
+      );
+
+      const contributions = result.get(cellKey("day", period.anchor.toAnchor()));
+      expect(contributions?.map((contribution) => contribution.source.owner.kind)).toEqual(["global", "journal"]);
+    });
+
+    it("returns no entry for a period nothing matched", () => {
+      const decoration = buildDecoration({
+        mode: "or",
+        conditions: [buildCondition("weekday", { weekdays: [2] })],
+        styles: [buildStyle("background")],
+      });
+      const { c } = buildContainer({
+        daily: fixedJournal("daily", { type: "day" }, { decorations: [decoration] }),
+      });
+      const engine = c.resolve(DecorationEngine);
+
+      // 2026-05-25 is a Monday, so a Tuesday-only weekday condition never matches.
+      const period = DayPeriod.containing(date("2026-05-25"));
+      const result = engine.explainRange([period], [{ kind: "journal", journalName: "daily", index: 0, decoration }]);
+
+      expect(result.has(cellKey("day", period.anchor.toAnchor()))).toBe(false);
+    });
+  });
 });

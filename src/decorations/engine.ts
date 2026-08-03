@@ -55,6 +55,11 @@ export function sourceOf(binding: DecorationBinding): DecorationSource {
     : { owner: binding.owner, index: binding.index };
 }
 
+export interface Contribution {
+  readonly source: DecorationSource;
+  readonly style: JournalDecorationStyle;
+}
+
 export function periodMatchesWrite(kind: PeriodKind, writeType: JournalWrite["type"]): boolean {
   return match([kind, writeType] as const)
     .with(["day", "day"], ["day", "custom"], () => true)
@@ -136,11 +141,8 @@ export class DecorationEngine {
       .exhaustive();
   }
 
-  evaluateRange(
-    periods: readonly Period[],
-    decorations: readonly DecorationBinding[],
-  ): Map<string, JournalDecorationStyle[]> {
-    const result = new Map<string, JournalDecorationStyle[]>();
+  explainRange(periods: readonly Period[], decorations: readonly DecorationBinding[]): Map<string, Contribution[]> {
+    const result = new Map<string, Contribution[]>();
     if (periods.length === 0 || decorations.length === 0) return result;
 
     const configs = new Map<string, JournalConfig>();
@@ -179,14 +181,20 @@ export class DecorationEngine {
       return value;
     };
 
-    const push = (period: Period, styles: readonly JournalDecorationStyle[]): void => {
+    const push = (period: Period, binding: DecorationBinding): void => {
+      const styles = binding.decoration.styles;
+      // A decoration with conditions but no styles must still leave the cell undecorated —
+      // creating an empty bucket here would make every consumer that checks bucket existence
+      // treat the cell as decorated even though nothing was ever pushed into it.
+      if (styles.length === 0) return;
       const key = cellKey(period.kind, period.anchor.toAnchor());
       let bucket = result.get(key);
       if (!bucket) {
         bucket = [];
         result.set(key, bucket);
       }
-      bucket.push(...styles);
+      const source = sourceOf(binding);
+      for (const style of styles) bucket.push({ source, style });
     };
 
     for (const binding of decorations) {
@@ -196,7 +204,7 @@ export class DecorationEngine {
           // "day"-kind periods, so surfaces that render them simply do not opt in.
           if (period.kind !== "day") continue;
           if (!this.#matchesCalendar(binding.decoration, period)) continue;
-          push(period, binding.decoration.styles);
+          push(period, binding);
         }
         continue;
       }
@@ -208,8 +216,22 @@ export class DecorationEngine {
         const anchorString = period.anchor.toAnchor();
         if (!this.#matches(binding.decoration, period, config, () => metadataFor(binding.journalName, anchorString)))
           continue;
-        push(period, binding.decoration.styles);
+        push(period, binding);
       }
+    }
+    return result;
+  }
+
+  evaluateRange(
+    periods: readonly Period[],
+    decorations: readonly DecorationBinding[],
+  ): Map<string, JournalDecorationStyle[]> {
+    const result = new Map<string, JournalDecorationStyle[]>();
+    for (const [key, contributions] of this.explainRange(periods, decorations)) {
+      result.set(
+        key,
+        contributions.map((contribution) => contribution.style),
+      );
     }
     return result;
   }
