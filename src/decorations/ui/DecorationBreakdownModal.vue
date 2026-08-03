@@ -96,6 +96,11 @@ type BreakdownCell =
       readonly kind: "interval";
       readonly period: Period;
       readonly journalName: string;
+      // Journal names are unrestricted strings (spaces, punctuation, anything a user types), so
+      // an id built from the name could break `aria-labelledby` (which tokenizes on whitespace)
+      // or collide across names that differ only in the characters a slug would strip. The
+      // journal's position in this render's journalNames list is unique and never needs escaping.
+      readonly journalIndex: number;
       readonly isEntry: false;
       readonly attribution: CellAttribution;
       readonly styles: readonly JournalDecorationStyle[];
@@ -108,7 +113,7 @@ function cellId(cell: BreakdownCell): string {
   return match(cell)
     .with(
       { kind: "interval" },
-      (c) => `decoration-breakdown-heading-interval-${c.journalName}-${c.period.anchor.toAnchor()}`,
+      (c) => `decoration-breakdown-heading-interval-${c.journalIndex}-${c.period.anchor.toAnchor()}`,
     )
     .with({ kind: "fixed" }, (c) => `decoration-breakdown-heading-${c.period.kind}-${c.period.anchor.toAnchor()}`)
     .exhaustive();
@@ -166,7 +171,7 @@ const cells = computed<readonly BreakdownCell[]>(() => {
     });
   }
 
-  for (const name of journalNames.value) {
+  for (const [journalIndex, name] of journalNames.value.entries()) {
     const config = journals.get(name).getOrUndefined();
     if (config?.write.type !== "custom") continue;
     const intervalAnchor = cycle.anchorOf(name, selectedDate).getOrUndefined();
@@ -192,6 +197,7 @@ const cells = computed<readonly BreakdownCell[]>(() => {
       kind: "interval",
       period: intervalPeriod,
       journalName: name,
+      journalIndex,
       isEntry: false,
       attribution: attributeCell(intervalContributions),
       styles: intervalContributions.map((contribution) => contribution.style),

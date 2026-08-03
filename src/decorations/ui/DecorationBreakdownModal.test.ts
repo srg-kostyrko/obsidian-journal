@@ -307,6 +307,24 @@ describe("DecorationBreakdownModal", () => {
     expect(within(region as HTMLElement).getByText(m.decoration_condition_has_note_describe())).toBeTruthy();
   });
 
+  it("keeps the interval section's accessible name intact for a journal name containing a space", () => {
+    const day = DayPeriod.containing(date("2026-05-25"));
+    mount({
+      journals: {
+        "sprint planning": customJournal("sprint planning", "week", 2, "2026-05-25", {
+          decorations: [hasNoteDecoration],
+        }),
+      },
+      notes: [{ journalName: "sprint planning", anchor: day }],
+      period: day,
+    });
+
+    const heading = m.decoration_breakdown_interval_heading({ journal: "sprint planning", label: "2026-05-25" });
+    // `aria-labelledby` tokenizes on whitespace, so an id built from the raw journal name would
+    // resolve to nonexistent ids and the region would lose its accessible name entirely.
+    expect(screen.getByRole("region", { name: heading })).toBeTruthy();
+  });
+
   it("keeps a custom journal's offset decoration out of the interval section", () => {
     const day = DayPeriod.containing(date("2026-05-25"));
     const offsetDecoration: JournalDecoration = buildDecoration({
