@@ -48,7 +48,7 @@ function sprintDayCells(day: string): Map<string, unknown> {
     .resolve(DecorationEngine)
     .evaluateRange(
       [DayPeriod.containing(date(day))],
-      [{ kind: "journal", journalName: "sprint", decoration: sprintDecoration }],
+      [{ kind: "journal", journalName: "sprint", index: 0, decoration: sprintDecoration }],
     );
 }
 
@@ -80,7 +80,7 @@ describe("DecorationEngine", () => {
       const engine = c.resolve(DecorationEngine);
 
       const period = DayPeriod.containing(date("2026-05-25"));
-      const result = engine.evaluateRange([period], [{ kind: "journal", journalName: "daily", decoration }]);
+      const result = engine.evaluateRange([period], [{ kind: "journal", journalName: "daily", index: 0, decoration }]);
 
       expect(result.size).toBe(0);
     });
@@ -97,7 +97,10 @@ describe("DecorationEngine", () => {
       const engine = c.resolve(DecorationEngine);
 
       const dayPeriod = DayPeriod.containing(date("2026-05-25"));
-      const result = engine.evaluateRange([dayPeriod], [{ kind: "journal", journalName: "weekly", decoration }]);
+      const result = engine.evaluateRange(
+        [dayPeriod],
+        [{ kind: "journal", journalName: "weekly", index: 0, decoration }],
+      );
 
       expect(result.size).toBe(0);
     });
@@ -127,8 +130,8 @@ describe("DecorationEngine", () => {
       const result = engine.evaluateRange(
         [dayPeriod, weekPeriod],
         [
-          { kind: "journal", journalName: "daily", decoration: dayDeco },
-          { kind: "journal", journalName: "weekly", decoration: weekDeco },
+          { kind: "journal", journalName: "daily", index: 0, decoration: dayDeco },
+          { kind: "journal", journalName: "weekly", index: 0, decoration: weekDeco },
         ],
       );
 
@@ -153,7 +156,10 @@ describe("DecorationEngine", () => {
       const engine = c.resolve(DecorationEngine);
 
       const weekPeriod = WeekPeriod.containing(date("2026-05-25"));
-      const result = engine.evaluateRange([weekPeriod], [{ kind: "journal", journalName: "weekly", decoration }]);
+      const result = engine.evaluateRange(
+        [weekPeriod],
+        [{ kind: "journal", journalName: "weekly", index: 0, decoration }],
+      );
 
       expect(result.size).toBe(1);
     });
@@ -170,7 +176,10 @@ describe("DecorationEngine", () => {
       const engine = c.resolve(DecorationEngine);
 
       const weekPeriod = WeekPeriod.containing(date("2026-05-25"));
-      const result = engine.evaluateRange([weekPeriod], [{ kind: "journal", journalName: "weekly", decoration }]);
+      const result = engine.evaluateRange(
+        [weekPeriod],
+        [{ kind: "journal", journalName: "weekly", index: 0, decoration }],
+      );
 
       expect(result.size).toBe(0);
     });
@@ -183,7 +192,7 @@ describe("DecorationEngine", () => {
       const engine = c.resolve(DecorationEngine);
 
       const period = DayPeriod.containing(date("2026-05-25"));
-      const result = engine.evaluateRange([period], [{ kind: "journal", journalName: "daily", decoration }]);
+      const result = engine.evaluateRange([period], [{ kind: "journal", journalName: "daily", index: 0, decoration }]);
 
       expect(result.size).toBe(0);
     });
@@ -199,7 +208,10 @@ describe("DecorationEngine", () => {
 
       // 2026-05-25 is a Monday.
       const period = DayPeriod.containing(date("2026-05-25"));
-      const result = engine.evaluateRange([period], [{ kind: "calendar", decoration }]);
+      const result = engine.evaluateRange(
+        [period],
+        [{ kind: "calendar", owner: { kind: "global" }, index: 0, decoration }],
+      );
 
       expect(result.get(cellKey("day", period.anchor.toAnchor()))).toEqual(decoration.styles);
     });
@@ -214,7 +226,10 @@ describe("DecorationEngine", () => {
       const engine = c.resolve(DecorationEngine);
 
       const period = WeekPeriod.containing(date("2026-05-25"));
-      const result = engine.evaluateRange([period], [{ kind: "calendar", decoration }]);
+      const result = engine.evaluateRange(
+        [period],
+        [{ kind: "calendar", owner: { kind: "global" }, index: 0, decoration }],
+      );
 
       expect(result.size).toBe(0);
     });
@@ -243,7 +258,10 @@ describe("DecorationEngine", () => {
       const spy = vi.spyOn(metadata, "get");
       const engine = c.resolve(DecorationEngine);
 
-      engine.evaluateRange([DayPeriod.containing(date("2026-05-25"))], [{ kind: "calendar", decoration }]);
+      engine.evaluateRange(
+        [DayPeriod.containing(date("2026-05-25"))],
+        [{ kind: "calendar", owner: { kind: "global" }, index: 0, decoration }],
+      );
 
       expect(spy).not.toHaveBeenCalled();
     });

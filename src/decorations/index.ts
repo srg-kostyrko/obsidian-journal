@@ -37,10 +37,13 @@ export {
   DecorationEngine,
   hasOffsetCondition,
   periodMatchesWrite,
+  sourceOf,
   type CalendarDecorationBinding,
   type DecorationBinding,
+  type DecorationSource,
   type JournalDecorationBinding,
 } from "./engine";
+export { gatherBindings, type GatherOptions } from "./gather-bindings";
 export { decorationsModule } from "./module";
 export { describeOwner, type CalendarDecorationOwner, type DecorationOwner } from "./owner";
 export { decorationsSlice } from "./settings/slice";

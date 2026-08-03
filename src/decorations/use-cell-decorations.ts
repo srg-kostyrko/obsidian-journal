@@ -14,6 +14,7 @@ import {
   type DecorationBinding,
   type JournalDecorationBinding,
 } from "./engine";
+import { gatherBindings } from "./gather-bindings";
 import { formatPadding, mergePadding, resolveCell } from "./resolve-cell";
 import { defaultCellDecorationScope, type CellDecorationScope, type CellStyleRef } from "./ui/cell-decoration-map-key";
 
@@ -48,28 +49,13 @@ export function useCellDecorations(options: CellDecorationsOptions): ReadonlyMap
   let journalNamesInScope = new Set<string>();
 
   function gatherDecorations(): readonly DecorationBinding[] {
-    const out: DecorationBinding[] = [];
-    // Vault-wide, then shelf, then journal: resolveCell() takes the last declaration of each
-    // exclusive property, so gathering order is what makes the most specific owner win.
     const calendar = options.calendarDecorations;
-    if (calendar && store) {
-      const globalDecorations = store.calendarList({ kind: "global" });
-      for (const decoration of globalDecorations) out.push({ kind: "calendar", decoration });
-      const shelfName = toValue(calendar.shelf);
-      if (shelfName !== null) {
-        const shelfDecorations = store.calendarList({ kind: "shelf", shelfName });
-        for (const decoration of shelfDecorations) out.push({ kind: "calendar", decoration });
-      }
-    }
-    for (const name of toValue(options.journalNames)) {
-      const opt = journals.get(name);
-      if (opt.isNone()) continue;
-      for (const decoration of opt.value.decorations) {
-        const binding = { kind: "journal", journalName: name, decoration } as const;
-        if (filter(binding)) out.push(binding);
-      }
-    }
-    return out;
+    return gatherBindings(journals, store, {
+      journalNames: toValue(options.journalNames),
+      shelf: calendar ? toValue(calendar.shelf) : null,
+      includeCalendar: calendar !== undefined,
+      filter,
+    });
   }
 
   function readPeriods(): Period[] {

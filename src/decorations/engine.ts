@@ -26,19 +26,34 @@ import type {
   JournalDecorationCondition,
   JournalDecorationStyle,
 } from "./config";
+import type { CalendarDecorationOwner, DecorationOwner } from "./owner";
 
 export interface JournalDecorationBinding {
   readonly kind: "journal";
   readonly journalName: string;
+  readonly index: number;
   readonly decoration: JournalDecoration;
 }
 
 export interface CalendarDecorationBinding {
   readonly kind: "calendar";
+  readonly owner: CalendarDecorationOwner;
+  readonly index: number;
   readonly decoration: CalendarDecoration;
 }
 
 export type DecorationBinding = JournalDecorationBinding | CalendarDecorationBinding;
+
+export interface DecorationSource {
+  readonly owner: DecorationOwner;
+  readonly index: number;
+}
+
+export function sourceOf(binding: DecorationBinding): DecorationSource {
+  return binding.kind === "journal"
+    ? { owner: { kind: "journal", journalName: binding.journalName }, index: binding.index }
+    : { owner: binding.owner, index: binding.index };
+}
 
 export function periodMatchesWrite(kind: PeriodKind, writeType: JournalWrite["type"]): boolean {
   return match([kind, writeType] as const)
