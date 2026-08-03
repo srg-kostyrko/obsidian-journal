@@ -15,10 +15,14 @@ import type { CellStyleRef } from "./cell-decoration-map-key";
 export function useDecorationMenuItems(
   cells: ReadonlyMap<string, CellStyleRef> | null,
 ): (period: Period) => readonly MenuItemSpec[] {
+  // A surface with no decoration map can never have a decorated cell to explain, so it
+  // should not have to provide ModalService just to mount this composable.
+  if (cells === null) return () => [];
+
   const modals = useModalService();
 
   return (period: Period): readonly MenuItemSpec[] => {
-    const styles = cells?.get(cellKey(period.kind, period.anchor.toAnchor()))?.value ?? [];
+    const styles = cells.get(cellKey(period.kind, period.anchor.toAnchor()))?.value ?? [];
     if (styles.length === 0) return [];
     return [
       {

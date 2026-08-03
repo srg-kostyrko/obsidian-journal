@@ -13,7 +13,13 @@ import {
 import { m } from "@/i18n";
 import { useService } from "@/infrastructure/di";
 import { Flows } from "@/infrastructure/flows";
-import { defineOpenMode, NoticeService, WorkspaceService, type VaultPath } from "@/infrastructure/host";
+import {
+  defineOpenMode,
+  NoticeService,
+  WorkspaceService,
+  type MenuItemSpec,
+  type VaultPath,
+} from "@/infrastructure/host";
 import {
   CycleService,
   JournalsIndex,
@@ -70,6 +76,12 @@ const target = computed(() => resolveLinkTarget(props.row, props.journal, shelfJ
 const decorationCells = inject(props.decorationScope?.map ?? CellDecorationMapKey, null);
 const decorationItems = useDecorationMenuItems(decorationCells);
 
+// Offering to explain decorations this row deliberately renders none of would be
+// incoherent from the user's side, so the menu item tracks the same flag the template does.
+function contextMenuItems(period: Period): readonly MenuItemSpec[] {
+  return props.row.addDecorations ? decorationItems(period) : [];
+}
+
 const text = computed(() =>
   engine.renderString(
     props.row.template,
@@ -119,7 +131,7 @@ function onClick(event: MouseEvent): void {
 
 function onContextMenu(event: MouseEvent): void {
   if (props.preventNavigation) return;
-  workspace.openPathsMenu(pathsForTarget(target.value), event, decorationItems(props.period));
+  workspace.openPathsMenu(pathsForTarget(target.value), event, contextMenuItems(props.period));
 }
 
 const hover = useModifierHoverPreview();

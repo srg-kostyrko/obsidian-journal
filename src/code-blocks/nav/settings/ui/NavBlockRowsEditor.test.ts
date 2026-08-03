@@ -9,8 +9,6 @@ import { m } from "@/i18n";
 import { Container, provideInjectorOnApp } from "@/infrastructure/di";
 import { Flows } from "@/infrastructure/flows";
 import { WorkspaceService, NoticeService } from "@/infrastructure/host";
-import { ModalService } from "@/infrastructure/host/modals";
-import { FakeModalService } from "@/infrastructure/host/modals/testing";
 import { FakeNoticeService } from "@/infrastructure/host/testing";
 import {
   CycleService,
@@ -62,7 +60,6 @@ function mount(rows: NavBlockRow[]) {
   container.register(JournalsIndex).useClass(JournalsIndex);
   container.register(NumberingService).useClass(NumberingService);
   container.register(WorkspaceService).useValue({} as WorkspaceService);
-  container.register(ModalService).useValue(new FakeModalService() as unknown as ModalService);
   render(NavBlockRowsEditor, {
     props: { journalName: "daily", field: "intervalBlock", title: TITLE, icon: "list" },
     global: {

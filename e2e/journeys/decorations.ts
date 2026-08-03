@@ -291,8 +291,15 @@ export function assertDecorationMatrix(surface: CalendarSurface): void {
 // Obsidian's Menu exposes no ARIA roles, so .menu-item-title is the only stable handle on
 // chrome we do not own. Dispatching the event directly avoids WDIO's own right-click, which
 // also triggers Obsidian's editor context menu.
-export async function rightClickCell(anchor: string): Promise<void> {
-  const selector = `[data-anchor="${anchor}"]`;
+//
+// A week anchor can coincide with a day anchor (calendar.ts documents the same hazard), and
+// week-number cells are also NotesCalendarCells carrying data-anchor. With the fixture's
+// `weeks: "left"` a week cell renders before its row's day cells, so a bare
+// `[data-anchor="…"]` selector resolves to the week cell whenever the target day is the
+// week's first day. Scoping to the day-grid wrapper (as calendar.ts's CalendarSurface.cell
+// does) disambiguates it — every caller here targets a day cell.
+export async function rightClickCell(anchor: string, daySelector = ".notes-month-view__day"): Promise<void> {
+  const selector = `${daySelector}[data-anchor="${anchor}"]`;
   await browser.execute((sel: string) => {
     document.querySelector(sel)?.dispatchEvent(new MouseEvent("contextmenu", { bubbles: true, cancelable: true }));
   }, selector);

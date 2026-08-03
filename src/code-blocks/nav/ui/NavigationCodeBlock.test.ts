@@ -745,7 +745,7 @@ describe("NavigationCodeBlock context menu", () => {
       ],
       navBlock: {
         ...base.navBlock,
-        rows: [navRow()],
+        rows: [navRow({ addDecorations: true })],
       },
     };
     const h = buildHarness({ daily: journal });
@@ -760,6 +760,38 @@ describe("NavigationCodeBlock context menu", () => {
     if (target) await fireEvent.contextMenu(target);
 
     expect(h.workspace.pathsMenuCalls[0]?.extraItems).toHaveLength(1);
+  });
+
+  // The per-row decoration map is scoped to write-type, not to the row's own addDecorations
+  // flag (siblings need it to render their own matches), so the row itself must filter: a row
+  // that opts out of showing a decoration should not offer to explain one it never renders.
+  it("contributes no item to the context menu of a row that opts out of decorations", async () => {
+    const base = journalDefaultsFor({ type: "day" }, "daily");
+    const journal: JournalConfig = {
+      ...base,
+      decorations: [
+        buildDecoration({
+          conditions: [buildCondition("date")],
+          styles: [buildStyle("corner", { placement: "top-left" })],
+        }),
+      ],
+      navBlock: {
+        ...base.navBlock,
+        rows: [navRow({ addDecorations: false })],
+      },
+    };
+    const h = buildHarness({ daily: journal });
+    h.index.byPath.set("Daily/2026-05-27.md", {
+      journalName: "daily",
+      anchor: "2026-05-27" as AnchorString,
+      path: "Daily/2026-05-27.md" as VaultPath,
+    });
+    mount(h, "Daily/2026-05-27.md");
+
+    const target = screen.getAllByText("today")[1];
+    if (target) await fireEvent.contextMenu(target);
+
+    expect(h.workspace.pathsMenuCalls[0]?.extraItems).toEqual([]);
   });
 
   it("contributes no item to the context menu of an undecorated row", async () => {

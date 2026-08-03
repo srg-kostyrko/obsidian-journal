@@ -234,6 +234,10 @@ describe("calendar view", () => {
     });
 
     describe("context menu", () => {
+      // Inherits the "core" shelf the preceding "interactive shelf scope" test left selected
+      // (undeclared, but benign): the global, title, and control cells below are all in scope
+      // for shelf "core" the same as for the default null scope, so the shelf choice does not
+      // change what these journeys observe.
       it("offers the explain item on a decorated day cell with no note", async () => {
         await rightClickCell(dayAnchor(DECO_DAY.global));
         try {
@@ -255,7 +259,15 @@ describe("calendar view", () => {
           await browser.waitUntil(
             async () => {
               const titles = await menuItemTitles();
-              return titles.includes(EXPLAIN_MENU_ITEM) && titles.length > 1;
+              // We append both the explain item and Delete ourselves (workspace-service's
+              // openFileMenu), so titles.length > 1 alone would hold even if the
+              // `trigger("file-menu", …)` call were deleted outright. Require a title that is
+              // neither of ours — proof Obsidian's own file-menu handlers actually ran — without
+              // pinning a specific Obsidian label, which moves across the version matrix.
+              return (
+                titles.includes(EXPLAIN_MENU_ITEM) &&
+                titles.some((title) => title !== EXPLAIN_MENU_ITEM && title !== "Delete")
+              );
             },
             { timeoutMsg: "expected both the explain item and Obsidian's file entries" },
           );
