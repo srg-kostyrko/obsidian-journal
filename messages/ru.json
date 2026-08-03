@@ -655,7 +655,24 @@
 	],
 	"decoration_condition_has_note_describe": "заметка существует",
 	"decoration_condition_has_open_task_describe": "в заметке есть незавершённая задача",
-	"decoration_condition_offset_describe": "Смещение от начала равно {offset}",
+	"decoration_condition_offset_describe": [
+		{
+			"declarations": [
+				"input side",
+				"input day"
+			],
+			"selectors": [
+				"side",
+				"day"
+			],
+			"match": {
+				"side=start,day=1": "это первый день интервала",
+				"side=start,day=*": "это {day}-й день интервала",
+				"side=end,day=1": "это последний день интервала",
+				"side=end,day=*": "это {day}-й день с конца интервала"
+			}
+		}
+	],
 	"decoration_condition_offset_hint": [
 		{
 			"declarations": [

@@ -655,7 +655,24 @@
 	],
 	"decoration_condition_has_note_describe": "存在一张纸条",
 	"decoration_condition_has_open_task_describe": "该笔记有一个未完成的任务",
-	"decoration_condition_offset_describe": "起始偏移量为{offset}",
+	"decoration_condition_offset_describe": [
+		{
+			"declarations": [
+				"input side",
+				"input day"
+			],
+			"selectors": [
+				"side",
+				"day"
+			],
+			"match": {
+				"side=start,day=1": "是间隔的第一天",
+				"side=start,day=*": "是间隔的第{day}天",
+				"side=end,day=1": "是间隔的最后一天",
+				"side=end,day=*": "是从间隔末尾倒数第{day}天"
+			}
+		}
+	],
 	"decoration_condition_offset_hint": [
 		{
 			"declarations": [

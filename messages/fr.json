@@ -655,7 +655,24 @@
 	],
 	"decoration_condition_has_note_describe": "il existe une note",
 	"decoration_condition_has_open_task_describe": "la note contient une tâche ouverte",
-	"decoration_condition_offset_describe": "Le décalage par rapport au début est {offset}",
+	"decoration_condition_offset_describe": [
+		{
+			"declarations": [
+				"input side",
+				"input day"
+			],
+			"selectors": [
+				"side",
+				"day"
+			],
+			"match": {
+				"side=start,day=1": "est le premier jour de l'intervalle",
+				"side=start,day=*": "est le jour {day} de l'intervalle",
+				"side=end,day=1": "est le dernier jour de l'intervalle",
+				"side=end,day=*": "est le jour {day} en comptant depuis la fin de l'intervalle"
+			}
+		}
+	],
 	"decoration_condition_offset_hint": [
 		{
 			"declarations": [

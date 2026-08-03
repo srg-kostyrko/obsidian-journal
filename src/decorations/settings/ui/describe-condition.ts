@@ -46,7 +46,12 @@ export function describeCondition(condition: JournalDecorationCondition, calenda
         .join(", ");
       return m.decoration_condition_weekday_describe({ weekdays: list });
     })
-    .with({ type: "offset" }, (c) => m.decoration_condition_offset_describe({ offset: c.offset }))
+    .with({ type: "offset" }, (c) =>
+      m.decoration_condition_offset_describe({
+        side: c.offset < 0 ? "end" : "start",
+        day: Math.abs(c.offset),
+      }),
+    )
     .with({ type: "has-note" }, () => m.decoration_condition_has_note_describe())
     .with({ type: "has-open-task" }, () => m.decoration_condition_has_open_task_describe())
     .with({ type: "all-tasks-completed" }, () => m.decoration_condition_all_tasks_completed_describe())

@@ -473,7 +473,18 @@
   ],
   "decoration_condition_has_note_describe": "a note exists",
   "decoration_condition_has_open_task_describe": "the note has an open task",
-  "decoration_condition_offset_describe": "offset from start is {offset}",
+  "decoration_condition_offset_describe": [
+    {
+      "declarations": ["input side", "input day"],
+      "selectors": ["side", "day"],
+      "match": {
+        "side=start,day=1": "is the first day of the interval",
+        "side=start,day=*": "is day {day} of the interval",
+        "side=end,day=1": "is the last day of the interval",
+        "side=end,day=*": "is day {day} counted back from the end of the interval"
+      }
+    }
+  ],
   "decoration_condition_offset_hint": [
     {
       "declarations": ["input days", "input side"],

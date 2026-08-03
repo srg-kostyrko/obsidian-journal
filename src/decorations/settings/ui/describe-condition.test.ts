@@ -92,9 +92,24 @@ describe("describeCondition", () => {
   });
 
   describe("offset", () => {
-    it("renders the localized offset clause", () => {
+    it("names offset 1 as the first day of the interval", () => {
+      const out = describeCondition({ type: "offset", offset: 1 }, calendar);
+      expect(out).toBe(m.decoration_condition_offset_describe({ side: "start", day: 1 }));
+    });
+
+    it("names offset -1 as the last day of the interval", () => {
+      const out = describeCondition({ type: "offset", offset: -1 }, calendar);
+      expect(out).toBe(m.decoration_condition_offset_describe({ side: "end", day: 1 }));
+    });
+
+    it("counts a positive offset forward from the interval start", () => {
       const out = describeCondition({ type: "offset", offset: 5 }, calendar);
-      expect(out).toBe(m.decoration_condition_offset_describe({ offset: 5 }));
+      expect(out).toBe(m.decoration_condition_offset_describe({ side: "start", day: 5 }));
+    });
+
+    it("counts a negative offset back from the interval end", () => {
+      const out = describeCondition({ type: "offset", offset: -3 }, calendar);
+      expect(out).toBe(m.decoration_condition_offset_describe({ side: "end", day: 3 }));
     });
   });
 

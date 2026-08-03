@@ -655,7 +655,24 @@
 	],
 	"decoration_condition_has_note_describe": "Es existiert eine Notiz",
 	"decoration_condition_has_open_task_describe": "Die Notiz enthält eine offene Aufgabe",
-	"decoration_condition_offset_describe": "Offset vom Start ist {offset}",
+	"decoration_condition_offset_describe": [
+		{
+			"declarations": [
+				"input side",
+				"input day"
+			],
+			"selectors": [
+				"side",
+				"day"
+			],
+			"match": {
+				"side=start,day=1": "ist der erste Tag des Intervalls",
+				"side=start,day=*": "ist Tag {day} des Intervalls",
+				"side=end,day=1": "ist der letzte Tag des Intervalls",
+				"side=end,day=*": "ist Tag {day} vom Ende des Intervalls zurückgerechnet"
+			}
+		}
+	],
 	"decoration_condition_offset_hint": [
 		{
 			"declarations": [

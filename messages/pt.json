@@ -655,7 +655,24 @@
 	],
 	"decoration_condition_has_note_describe": "existe uma nota",
 	"decoration_condition_has_open_task_describe": "A nota tem uma tarefa em aberto.",
-	"decoration_condition_offset_describe": "O deslocamento a partir do início é {offset}",
+	"decoration_condition_offset_describe": [
+		{
+			"declarations": [
+				"input side",
+				"input day"
+			],
+			"selectors": [
+				"side",
+				"day"
+			],
+			"match": {
+				"side=start,day=1": "é o primeiro dia do intervalo",
+				"side=start,day=*": "é o dia {day} do intervalo",
+				"side=end,day=1": "é o último dia do intervalo",
+				"side=end,day=*": "é o dia {day} contando a partir do fim do intervalo"
+			}
+		}
+	],
 	"decoration_condition_offset_hint": [
 		{
 			"declarations": [

@@ -655,7 +655,24 @@
 	],
 	"decoration_condition_has_note_describe": "нотатка існує",
 	"decoration_condition_has_open_task_describe": "нотатка має відкрите завдання",
-	"decoration_condition_offset_describe": "зміщення від початку дорівнює {offset}",
+	"decoration_condition_offset_describe": [
+		{
+			"declarations": [
+				"input side",
+				"input day"
+			],
+			"selectors": [
+				"side",
+				"day"
+			],
+			"match": {
+				"side=start,day=1": "це перший день інтервалу",
+				"side=start,day=*": "це {day}-й день інтервалу",
+				"side=end,day=1": "це останній день інтервалу",
+				"side=end,day=*": "це {day}-й день з кінця інтервалу"
+			}
+		}
+	],
 	"decoration_condition_offset_hint": [
 		{
 			"declarations": [

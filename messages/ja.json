@@ -655,7 +655,24 @@
 	],
 	"decoration_condition_has_note_describe": "ノートが存在する",
 	"decoration_condition_has_open_task_describe": "ノートには未完了のタスクがあります",
-	"decoration_condition_offset_describe": "開始位置からのオフセットは{offset}です。",
+	"decoration_condition_offset_describe": [
+		{
+			"declarations": [
+				"input side",
+				"input day"
+			],
+			"selectors": [
+				"side",
+				"day"
+			],
+			"match": {
+				"side=start,day=1": "間隔の最初の日である",
+				"side=start,day=*": "間隔の{day}日目である",
+				"side=end,day=1": "間隔の最後の日である",
+				"side=end,day=*": "間隔の終わりから数えて{day}日目である"
+			}
+		}
+	],
 	"decoration_condition_offset_hint": [
 		{
 			"declarations": [

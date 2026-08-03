@@ -655,7 +655,24 @@
 	],
 	"decoration_condition_has_note_describe": "노트가 있습니다",
 	"decoration_condition_has_open_task_describe": "해당 노트에는 미해결 작업이 있습니다.",
-	"decoration_condition_offset_describe": "시작점으로부터의 오프셋은 {offset} 입니다.",
+	"decoration_condition_offset_describe": [
+		{
+			"declarations": [
+				"input side",
+				"input day"
+			],
+			"selectors": [
+				"side",
+				"day"
+			],
+			"match": {
+				"side=start,day=1": "간격의 첫째 날임",
+				"side=start,day=*": "간격의 {day}번째 날임",
+				"side=end,day=1": "간격의 마지막 날임",
+				"side=end,day=*": "간격의 끝에서부터 {day}번째 날임"
+			}
+		}
+	],
 	"decoration_condition_offset_hint": [
 		{
 			"declarations": [
