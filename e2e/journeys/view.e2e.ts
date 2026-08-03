@@ -236,33 +236,45 @@ describe("calendar view", () => {
     describe("context menu", () => {
       it("offers the explain item on a decorated day cell with no note", async () => {
         await rightClickCell(dayAnchor(DECO_DAY.global));
-        await browser.waitUntil(
-          async () => {
-            const titles = await menuItemTitles();
-            return titles.includes(EXPLAIN_MENU_ITEM);
-          },
-          { timeoutMsg: "no menu with the explain item on the decorated note-less cell" },
-        );
-        await closeAnyMenu();
+        try {
+          await browser.waitUntil(
+            async () => {
+              const titles = await menuItemTitles();
+              return titles.includes(EXPLAIN_MENU_ITEM);
+            },
+            { timeoutMsg: "no menu with the explain item on the decorated note-less cell" },
+          );
+        } finally {
+          await closeAnyMenu();
+        }
       });
 
       it("keeps Obsidian's file entries beside the explain item on a decorated cell with a note", async () => {
         await rightClickCell(dayAnchor(DECO_DAY.title));
-        await browser.waitUntil(
-          async () => {
-            const titles = await menuItemTitles();
-            return titles.includes(EXPLAIN_MENU_ITEM) && titles.length > 1;
-          },
-          { timeoutMsg: "expected both the explain item and Obsidian's file entries" },
-        );
-        await closeAnyMenu();
+        try {
+          await browser.waitUntil(
+            async () => {
+              const titles = await menuItemTitles();
+              return titles.includes(EXPLAIN_MENU_ITEM) && titles.length > 1;
+            },
+            { timeoutMsg: "expected both the explain item and Obsidian's file entries" },
+          );
+        } finally {
+          await closeAnyMenu();
+        }
       });
 
       it("opens no menu on an undecorated cell with no note", async () => {
         await rightClickCell(dayAnchor(DECO_DAY.control));
-        await browser.pause(300);
-        expect(await menuItemTitles()).toEqual([]);
-        await closeAnyMenu();
+        try {
+          // No paths and no contributed items means openPathsMenu's own no-paths/no-items
+          // guard returns before constructing a Menu — the whole handler chain from the
+          // dispatched event down to that guard is synchronous, so there is nothing to wait
+          // for; asserting immediately is not a race.
+          expect(await menuItemTitles()).toEqual([]);
+        } finally {
+          await closeAnyMenu();
+        }
       });
     });
   });
