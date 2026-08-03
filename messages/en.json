@@ -456,9 +456,11 @@
   "decoration_breakdown_empty": "Nothing decorates this date.",
   "decoration_breakdown_marks_heading": "Marks",
   "decoration_breakdown_overridden_heading": "Overridden here",
-  "decoration_breakdown_scope": [{"declarations":["input kind"],"selectors":["kind"],"match":{"kind=journal":"Journal","kind=shelf":"Shelf","kind=global":"Vault-wide"}}],
+  "decoration_breakdown_overridden_for": "Overridden here — {property}",
+  "decoration_breakdown_owner": [{"declarations":["input kind","input name"],"selectors":["kind"],"match":{"kind=journal":"Journal: {name}","kind=shelf":"Shelf: {name}","kind=global":"Vault-wide"}}],
   "decoration_breakdown_property": [{"declarations":["input property"],"selectors":["property"],"match":{"property=background":"Background","property=textColor":"Text color","property=border.top":"Border top","property=border.right":"Border right","property=border.bottom":"Border bottom","property=border.left":"Border left","property=corner.top-left":"Corner top left","property=corner.top-right":"Corner top right","property=corner.bottom-left":"Corner bottom left","property=corner.bottom-right":"Corner bottom right"}}],
-  "decoration_breakdown_period_kind": [{"declarations":["input kind"],"selectors":["kind"],"match":{"kind=day":"Day","kind=week":"Week","kind=month":"Month","kind=quarter":"Quarter","kind=year":"Year","kind=decade":"Decade"}}],
+  "decoration_breakdown_slot": [{"declarations":["input slot"],"selectors":["slot"],"match":{"slot=left_top":"Left top","slot=left_middle":"Left middle","slot=left_bottom":"Left bottom","slot=center_top":"Center top","slot=center_middle":"Center middle","slot=center_bottom":"Center bottom","slot=right_top":"Right top","slot=right_middle":"Right middle","slot=right_bottom":"Right bottom"}}],
+  "decoration_breakdown_cell_heading": [{"declarations":["input kind","input label"],"selectors":["kind"],"match":{"kind=day":"Day — {label}","kind=week":"Week — {label}","kind=month":"Month — {label}","kind=quarter":"Quarter — {label}","kind=year":"Year — {label}","kind=decade":"Decade — {label}"}}],
   "decoration_breakdown_entry_badge": "Opened from here",
   "decoration_condition_all_tasks_completed_describe": "all tasks are completed",
   "decoration_condition_date_describe": [

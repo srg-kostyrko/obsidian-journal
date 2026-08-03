@@ -118,4 +118,18 @@ describe("gatherBindings", () => {
 
     expect(bindings).toEqual([]);
   });
+
+  it("spares calendar bindings from a filter meant only for journal bindings", () => {
+    const { journals, store } = build([buildDecoration({ mode: "or", conditions: [weekday()], styles: [] })]);
+    store.save({ kind: "global" }, [buildCalendarDecoration({ mode: "or", conditions: [weekday()], styles: [] })]);
+
+    const bindings = gatherBindings(journals, store, {
+      journalNames: ["daily"],
+      shelf: null,
+      includeCalendar: true,
+      filter: () => false,
+    });
+
+    expect(bindings.map((b) => b.kind)).toEqual(["calendar"]);
+  });
 });

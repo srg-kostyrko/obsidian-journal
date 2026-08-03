@@ -185,7 +185,9 @@ describe("DecorationBreakdownModal", () => {
       name: m.decoration_breakdown_property({ property: "background" }),
     });
     expect(within(winnerGroup).getByText(m.decoration_condition_has_note_describe())).toBeTruthy();
-    expect(within(winnerGroup).getByText(m.decoration_breakdown_scope({ kind: "journal" }))).toBeTruthy();
+    expect(
+      within(winnerGroup).getByText(m.decoration_breakdown_owner({ kind: "journal", name: "daily" })),
+    ).toBeTruthy();
   });
 
   it("lists a contribution that lost a property under the overridden heading", () => {
@@ -197,9 +199,13 @@ describe("DecorationBreakdownModal", () => {
       period: day,
     });
 
-    const overriddenGroup = screen.getByRole("group", { name: m.decoration_breakdown_overridden_heading() });
+    const overriddenGroup = screen.getByRole("group", {
+      name: m.decoration_breakdown_overridden_for({
+        property: m.decoration_breakdown_property({ property: "background" }),
+      }),
+    });
     expect(within(overriddenGroup).getByText(ANY_DATE_TEXT)).toBeTruthy();
-    expect(within(overriddenGroup).getByText(m.decoration_breakdown_scope({ kind: "global" }))).toBeTruthy();
+    expect(within(overriddenGroup).getByText(m.decoration_breakdown_owner({ kind: "global", name: "" }))).toBeTruthy();
   });
 
   it("interleaves the mode word between an OR decoration's conditions", () => {
@@ -243,6 +249,23 @@ describe("DecorationBreakdownModal", () => {
     expect(screen.getByText(m.decoration_condition_has_note_describe())).toBeTruthy();
     expect(screen.getByText(ANY_DATE_TEXT)).toBeTruthy();
     expect(screen.queryByText(m.decoration_breakdown_overridden_heading())).toBeNull();
+  });
+
+  it("admits a custom journal's offset decoration to the day cell", () => {
+    const day = DayPeriod.containing(date("2026-05-25"));
+    const offsetDecoration: JournalDecoration = buildDecoration({
+      mode: "or",
+      conditions: [buildCondition("offset", { offset: 1 })],
+      styles: [buildStyle("background")],
+    });
+    mount({
+      journals: {
+        sprint: customJournal("sprint", "week", 2, "2026-05-25", { decorations: [offsetDecoration] }),
+      },
+      period: day,
+    });
+
+    expect(screen.getByText(m.decoration_condition_offset_describe({ side: "start", day: 1 }))).toBeTruthy();
   });
 
   it("excludes a custom journal's non-offset decoration from the day cell", () => {
