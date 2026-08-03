@@ -803,9 +803,67 @@ git commit -m "docs(decorations): record the interval-offset condition fix"
 
 ---
 
+### Task 6: Repair the stale weekday assertion in ConditionItem's test
+
+Not part of the offset work — a pre-existing red test in the same directory, added to this plan
+by explicit user request. `dec6adf7` ("refactor(decorations): pick weekdays with a segmented
+control") replaced `ConditionWeekday.vue`'s checkbox grid with a `UiToggleGroup` of
+`<button aria-pressed>` elements. It updated `ConditionWeekday.test.ts` but missed the sibling
+assertion in `ConditionItem.test.ts`, so the suite has been red since that commit. While it is
+red, every "npm test clean" gate in this plan is unverifiable.
+
+**Files:**
+
+- Modify: `src/decorations/settings/ui/ConditionItem.test.ts:70-73`
+
+**Interfaces:**
+
+- Consumes: nothing. Independent of the offset work.
+- Produces: a green suite, so the final review's verification gate means something.
+
+- [ ] **Step 1: Confirm the failure and its cause**
+
+Run: `npx vitest run src/decorations/settings/ui/ConditionItem.test.ts`
+Expected: FAIL at line 72 — `getAllByRole("checkbox")` finds nothing, and the printed DOM shows
+`<button aria-pressed="false" class="ui-toggle-group__option">` elements instead.
+
+- [ ] **Step 2: Query the control that is actually rendered**
+
+`UiToggleGroup` renders one `<button type="button" :aria-pressed>` per option (see
+`src/ui/UiToggleGroup.vue`), and `ConditionItem` mounts only the single leaf component, so the
+seven weekday buttons are the only buttons in the tree. Replace line 72:
+
+```ts
+expect(screen.getAllByRole("button")).toHaveLength(7);
+```
+
+Do not change the test's name or its `mount` call — the behaviour under test ("renders
+ConditionWeekday for a weekday condition") is unchanged; only the query was stale.
+
+- [ ] **Step 3: Run the file to verify it passes**
+
+Run: `npx vitest run src/decorations/settings/ui/ConditionItem.test.ts`
+Expected: PASS (9 tests).
+
+- [ ] **Step 4: Run the full suite**
+
+Run: `npm test`
+Expected: **fully green**, with no known-failure carve-out. This is the first point in the plan
+where that is true. If anything else fails, stop and report it rather than fixing it — an
+unexpected second failure is information the controller needs.
+
+- [ ] **Step 5: Commit**
+
+```bash
+git add src/decorations/settings/ui/ConditionItem.test.ts
+git commit -m "test(decorations): query the weekday toggle buttons instead of checkboxes"
+```
+
+---
+
 ## Verification
 
-Full gate after Task 5: `npm test`, `npm run check:types`, `npm run check:lint`.
+Full gate after Task 6: `npm test`, `npm run check:types`, `npm run check:lint`, `npm run check:i18n` — all green, no carve-outs.
 
 No e2e. This is presentation over an engine path (`checkOffset`, `CycleService.offsets`) that unit tests already cover, and an offset e2e would need a custom-interval journal with a decoration whose result diverges from the default path to be worth anything — the unit tests establish that far more cheaply.
 
