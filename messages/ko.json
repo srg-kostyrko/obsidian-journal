@@ -655,6 +655,7 @@
 	],
 	"decoration_condition_has_note_describe": "노트가 있습니다",
 	"decoration_condition_has_open_task_describe": "해당 노트에는 미해결 작업이 있습니다.",
+	"decoration_condition_offset_day_label": "일",
 	"decoration_condition_offset_describe": [
 		{
 			"declarations": [
@@ -673,22 +674,39 @@
 			}
 		}
 	],
-	"decoration_condition_offset_hint": [
+	"decoration_condition_offset_direction_label": "기준",
+	"decoration_condition_offset_direction_option": [
 		{
 			"declarations": [
-				"input days",
 				"input side"
 			],
 			"selectors": [
 				"side"
 			],
 			"match": {
-				"side=start": "해당 간격 시작일로부터 {days} 일과 일치합니다.",
-				"side=end": "해당 간격의 끝으로부터 {days} 일과 일치합니다."
+				"side=start": "시작부터",
+				"side=end": "끝부터"
 			}
 		}
 	],
-	"decoration_condition_offset_label": "오프셋",
+	"decoration_condition_offset_hint": [
+		{
+			"declarations": [
+				"input side",
+				"input day"
+			],
+			"selectors": [
+				"side",
+				"day"
+			],
+			"match": {
+				"side=start,day=1": "간격의 첫째 날과 일치합니다.",
+				"side=start,day=*": "간격의 {day}번째 날과 일치합니다.",
+				"side=end,day=1": "간격의 마지막 날과 일치합니다.",
+				"side=end,day=*": "간격의 끝에서부터 {day}번째 날과 일치합니다."
+			}
+		}
+	],
 	"decoration_condition_op_label": "조건",
 	"decoration_condition_property_condition_label": "상태",
 	"decoration_condition_property_describe": "속성 {name} {op} {value}",

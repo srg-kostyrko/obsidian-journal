@@ -655,6 +655,7 @@
 	],
 	"decoration_condition_has_note_describe": "存在一张纸条",
 	"decoration_condition_has_open_task_describe": "该笔记有一个未完成的任务",
+	"decoration_condition_offset_day_label": "天",
 	"decoration_condition_offset_describe": [
 		{
 			"declarations": [
@@ -673,22 +674,39 @@
 			}
 		}
 	],
-	"decoration_condition_offset_hint": [
+	"decoration_condition_offset_direction_label": "计数起点",
+	"decoration_condition_offset_direction_option": [
 		{
 			"declarations": [
-				"input days",
 				"input side"
 			],
 			"selectors": [
 				"side"
 			],
 			"match": {
-				"side=start": "匹配自区间开始以来{days}天。",
-				"side=end": "匹配自区间结束之日起的{days}天。"
+				"side=start": "从开头",
+				"side=end": "从末尾"
 			}
 		}
 	],
-	"decoration_condition_offset_label": "抵消",
+	"decoration_condition_offset_hint": [
+		{
+			"declarations": [
+				"input side",
+				"input day"
+			],
+			"selectors": [
+				"side",
+				"day"
+			],
+			"match": {
+				"side=start,day=1": "匹配间隔的第一天。",
+				"side=start,day=*": "匹配间隔的第{day}天。",
+				"side=end,day=1": "匹配间隔的最后一天。",
+				"side=end,day=*": "匹配从间隔末尾倒数第{day}天。"
+			}
+		}
+	],
 	"decoration_condition_op_label": "条件",
 	"decoration_condition_property_condition_label": "健康）状况",
 	"decoration_condition_property_describe": "属性{name} {op} {value}",

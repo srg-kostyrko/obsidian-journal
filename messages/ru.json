@@ -655,6 +655,7 @@
 	],
 	"decoration_condition_has_note_describe": "заметка существует",
 	"decoration_condition_has_open_task_describe": "в заметке есть незавершённая задача",
+	"decoration_condition_offset_day_label": "День",
 	"decoration_condition_offset_describe": [
 		{
 			"declarations": [
@@ -673,22 +674,39 @@
 			}
 		}
 	],
-	"decoration_condition_offset_hint": [
+	"decoration_condition_offset_direction_label": "Отсчёт от",
+	"decoration_condition_offset_direction_option": [
 		{
 			"declarations": [
-				"input days",
 				"input side"
 			],
 			"selectors": [
 				"side"
 			],
 			"match": {
-				"side=start": "Соответствует значениям, равным {days} дней с начала интервала.",
-				"side=end": "Соответствует значениям, находящимся на расстоянии {days} дней от конца интервала."
+				"side=start": "От начала",
+				"side=end": "От конца"
 			}
 		}
 	],
-	"decoration_condition_offset_label": "Смещение",
+	"decoration_condition_offset_hint": [
+		{
+			"declarations": [
+				"input side",
+				"input day"
+			],
+			"selectors": [
+				"side",
+				"day"
+			],
+			"match": {
+				"side=start,day=1": "Совпадает с первым днём интервала.",
+				"side=start,day=*": "Совпадает с {day}-м днём интервала.",
+				"side=end,day=1": "Совпадает с последним днём интервала.",
+				"side=end,day=*": "Совпадает с {day}-м днём с конца интервала."
+			}
+		}
+	],
 	"decoration_condition_op_label": "Условие",
 	"decoration_condition_property_condition_label": "Состояние",
 	"decoration_condition_property_describe": "свойство {name} {op} {value}",

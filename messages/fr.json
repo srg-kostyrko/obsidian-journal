@@ -655,6 +655,7 @@
 	],
 	"decoration_condition_has_note_describe": "il existe une note",
 	"decoration_condition_has_open_task_describe": "la note contient une tâche ouverte",
+	"decoration_condition_offset_day_label": "Jour",
 	"decoration_condition_offset_describe": [
 		{
 			"declarations": [
@@ -673,22 +674,39 @@
 			}
 		}
 	],
-	"decoration_condition_offset_hint": [
+	"decoration_condition_offset_direction_label": "Compter à partir de",
+	"decoration_condition_offset_direction_option": [
 		{
 			"declarations": [
-				"input days",
 				"input side"
 			],
 			"selectors": [
 				"side"
 			],
 			"match": {
-				"side=start": "Correspond à {days} jours à partir du début de l'intervalle.",
-				"side=end": "Correspond à {days} jours à partir de la fin de l'intervalle."
+				"side=start": "Depuis le début",
+				"side=end": "Depuis la fin"
 			}
 		}
 	],
-	"decoration_condition_offset_label": "Décalage",
+	"decoration_condition_offset_hint": [
+		{
+			"declarations": [
+				"input side",
+				"input day"
+			],
+			"selectors": [
+				"side",
+				"day"
+			],
+			"match": {
+				"side=start,day=1": "Correspond au premier jour de l'intervalle.",
+				"side=start,day=*": "Correspond au jour {day} de l'intervalle.",
+				"side=end,day=1": "Correspond au dernier jour de l'intervalle.",
+				"side=end,day=*": "Correspond au jour {day} en comptant depuis la fin de l'intervalle."
+			}
+		}
+	],
 	"decoration_condition_op_label": "Condition",
 	"decoration_condition_property_condition_label": "Condition",
 	"decoration_condition_property_describe": "propriété {name} {op} {value}",

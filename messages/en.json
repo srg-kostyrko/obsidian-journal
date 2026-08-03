@@ -473,6 +473,7 @@
   ],
   "decoration_condition_has_note_describe": "a note exists",
   "decoration_condition_has_open_task_describe": "the note has an open task",
+  "decoration_condition_offset_day_label": "Day",
   "decoration_condition_offset_describe": [
     {
       "declarations": ["input side", "input day"],
@@ -485,17 +486,29 @@
       }
     }
   ],
-  "decoration_condition_offset_hint": [
+  "decoration_condition_offset_direction_label": "Count from",
+  "decoration_condition_offset_direction_option": [
     {
-      "declarations": ["input days", "input side"],
+      "declarations": ["input side"],
       "selectors": ["side"],
       "match": {
-        "side=start": "Matches {days} days from the start of the interval.",
-        "side=end": "Matches {days} days from the end of the interval."
+        "side=start": "From start",
+        "side=end": "From end"
       }
     }
   ],
-  "decoration_condition_offset_label": "Offset",
+  "decoration_condition_offset_hint": [
+    {
+      "declarations": ["input side", "input day"],
+      "selectors": ["side", "day"],
+      "match": {
+        "side=start,day=1": "Matches the first day of the interval.",
+        "side=start,day=*": "Matches day {day} of the interval.",
+        "side=end,day=1": "Matches the last day of the interval.",
+        "side=end,day=*": "Matches day {day} counted back from the end of the interval."
+      }
+    }
+  ],
   "decoration_condition_op_label": "Condition",
   "decoration_condition_property_condition_label": "Condition",
   "decoration_condition_property_describe": "property {name} {op} {value}",

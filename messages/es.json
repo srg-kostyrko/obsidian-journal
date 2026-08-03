@@ -655,6 +655,7 @@
 	],
 	"decoration_condition_has_note_describe": "existe una nota",
 	"decoration_condition_has_open_task_describe": "La nota tiene una tarea abierta",
+	"decoration_condition_offset_day_label": "Día",
 	"decoration_condition_offset_describe": [
 		{
 			"declarations": [
@@ -673,22 +674,39 @@
 			}
 		}
 	],
-	"decoration_condition_offset_hint": [
+	"decoration_condition_offset_direction_label": "Contar desde",
+	"decoration_condition_offset_direction_option": [
 		{
 			"declarations": [
-				"input days",
 				"input side"
 			],
 			"selectors": [
 				"side"
 			],
 			"match": {
-				"side=start": "Coincide con {days} días desde el inicio del intervalo.",
-				"side=end": "Coincide con {days} días desde el final del intervalo."
+				"side=start": "Desde el inicio",
+				"side=end": "Desde el final"
 			}
 		}
 	],
-	"decoration_condition_offset_label": "Compensar",
+	"decoration_condition_offset_hint": [
+		{
+			"declarations": [
+				"input side",
+				"input day"
+			],
+			"selectors": [
+				"side",
+				"day"
+			],
+			"match": {
+				"side=start,day=1": "Coincide con el primer día del intervalo.",
+				"side=start,day=*": "Coincide con el día {day} del intervalo.",
+				"side=end,day=1": "Coincide con el último día del intervalo.",
+				"side=end,day=*": "Coincide con el día {day} contando desde el final del intervalo."
+			}
+		}
+	],
 	"decoration_condition_op_label": "Condición",
 	"decoration_condition_property_condition_label": "Condición",
 	"decoration_condition_property_describe": "propiedad {name} {op} {value}",

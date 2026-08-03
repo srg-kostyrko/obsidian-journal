@@ -655,6 +655,7 @@
 	],
 	"decoration_condition_has_note_describe": "Es existiert eine Notiz",
 	"decoration_condition_has_open_task_describe": "Die Notiz enthält eine offene Aufgabe",
+	"decoration_condition_offset_day_label": "Tag",
 	"decoration_condition_offset_describe": [
 		{
 			"declarations": [
@@ -673,22 +674,39 @@
 			}
 		}
 	],
-	"decoration_condition_offset_hint": [
+	"decoration_condition_offset_direction_label": "Zählen ab",
+	"decoration_condition_offset_direction_option": [
 		{
 			"declarations": [
-				"input days",
 				"input side"
 			],
 			"selectors": [
 				"side"
 			],
 			"match": {
-				"side=start": "Entspricht {days} Tagen ab Beginn des Intervalls.",
-				"side=end": "Entspricht {days} Tagen vom Ende des Intervalls."
+				"side=start": "Vom Anfang",
+				"side=end": "Vom Ende"
 			}
 		}
 	],
-	"decoration_condition_offset_label": "Offset",
+	"decoration_condition_offset_hint": [
+		{
+			"declarations": [
+				"input side",
+				"input day"
+			],
+			"selectors": [
+				"side",
+				"day"
+			],
+			"match": {
+				"side=start,day=1": "Entspricht dem ersten Tag des Intervalls.",
+				"side=start,day=*": "Entspricht Tag {day} des Intervalls.",
+				"side=end,day=1": "Entspricht dem letzten Tag des Intervalls.",
+				"side=end,day=*": "Entspricht Tag {day} vom Ende des Intervalls zurückgerechnet."
+			}
+		}
+	],
 	"decoration_condition_op_label": "Bedingung",
 	"decoration_condition_property_condition_label": "Zustand",
 	"decoration_condition_property_describe": "property {name} {op} {value}",

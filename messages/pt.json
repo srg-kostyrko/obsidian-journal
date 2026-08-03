@@ -655,6 +655,7 @@
 	],
 	"decoration_condition_has_note_describe": "existe uma nota",
 	"decoration_condition_has_open_task_describe": "A nota tem uma tarefa em aberto.",
+	"decoration_condition_offset_day_label": "Dia",
 	"decoration_condition_offset_describe": [
 		{
 			"declarations": [
@@ -673,22 +674,39 @@
 			}
 		}
 	],
-	"decoration_condition_offset_hint": [
+	"decoration_condition_offset_direction_label": "Contar a partir de",
+	"decoration_condition_offset_direction_option": [
 		{
 			"declarations": [
-				"input days",
 				"input side"
 			],
 			"selectors": [
 				"side"
 			],
 			"match": {
-				"side=start": "Corresponde {days} dias desde o início do intervalo.",
-				"side=end": "Corresponde {days} dias a partir do final do intervalo."
+				"side=start": "Do início",
+				"side=end": "Do fim"
 			}
 		}
 	],
-	"decoration_condition_offset_label": "Desvio",
+	"decoration_condition_offset_hint": [
+		{
+			"declarations": [
+				"input side",
+				"input day"
+			],
+			"selectors": [
+				"side",
+				"day"
+			],
+			"match": {
+				"side=start,day=1": "Corresponde ao primeiro dia do intervalo.",
+				"side=start,day=*": "Corresponde ao dia {day} do intervalo.",
+				"side=end,day=1": "Corresponde ao último dia do intervalo.",
+				"side=end,day=*": "Corresponde ao dia {day} contando a partir do fim do intervalo."
+			}
+		}
+	],
 	"decoration_condition_op_label": "Condição",
 	"decoration_condition_property_condition_label": "Doença",
 	"decoration_condition_property_describe": "propriedade {name} {op} {value}",

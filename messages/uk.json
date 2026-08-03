@@ -655,6 +655,7 @@
 	],
 	"decoration_condition_has_note_describe": "нотатка існує",
 	"decoration_condition_has_open_task_describe": "нотатка має відкрите завдання",
+	"decoration_condition_offset_day_label": "День",
 	"decoration_condition_offset_describe": [
 		{
 			"declarations": [
@@ -673,22 +674,39 @@
 			}
 		}
 	],
-	"decoration_condition_offset_hint": [
+	"decoration_condition_offset_direction_label": "Відлік від",
+	"decoration_condition_offset_direction_option": [
 		{
 			"declarations": [
-				"input days",
 				"input side"
 			],
 			"selectors": [
 				"side"
 			],
 			"match": {
-				"side=start": "Збігається з {days} днями від початку інтервалу.",
-				"side=end": "Збігається з {days} днями з кінця інтервалу."
+				"side=start": "Від початку",
+				"side=end": "Від кінця"
 			}
 		}
 	],
-	"decoration_condition_offset_label": "Зсув",
+	"decoration_condition_offset_hint": [
+		{
+			"declarations": [
+				"input side",
+				"input day"
+			],
+			"selectors": [
+				"side",
+				"day"
+			],
+			"match": {
+				"side=start,day=1": "Збігається з першим днем інтервалу.",
+				"side=start,day=*": "Збігається з {day}-м днем інтервалу.",
+				"side=end,day=1": "Збігається з останнім днем інтервалу.",
+				"side=end,day=*": "Збігається з {day}-м днем з кінця інтервалу."
+			}
+		}
+	],
 	"decoration_condition_op_label": "Умова",
 	"decoration_condition_property_condition_label": "Хвороба",
 	"decoration_condition_property_describe": "властивість {name} {op} {value}",

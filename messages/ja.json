@@ -655,6 +655,7 @@
 	],
 	"decoration_condition_has_note_describe": "ノートが存在する",
 	"decoration_condition_has_open_task_describe": "ノートには未完了のタスクがあります",
+	"decoration_condition_offset_day_label": "日",
 	"decoration_condition_offset_describe": [
 		{
 			"declarations": [
@@ -673,22 +674,39 @@
 			}
 		}
 	],
-	"decoration_condition_offset_hint": [
+	"decoration_condition_offset_direction_label": "起点",
+	"decoration_condition_offset_direction_option": [
 		{
 			"declarations": [
-				"input days",
 				"input side"
 			],
 			"selectors": [
 				"side"
 			],
 			"match": {
-				"side=start": "期間の開始日から{days}日以内のものに一致します。",
-				"side=end": "期間の終了日から{days}日以内のものに一致します。"
+				"side=start": "先頭から",
+				"side=end": "末尾から"
 			}
 		}
 	],
-	"decoration_condition_offset_label": "オフセット",
+	"decoration_condition_offset_hint": [
+		{
+			"declarations": [
+				"input side",
+				"input day"
+			],
+			"selectors": [
+				"side",
+				"day"
+			],
+			"match": {
+				"side=start,day=1": "間隔の最初の日に一致します。",
+				"side=start,day=*": "間隔の{day}日目に一致します。",
+				"side=end,day=1": "間隔の最後の日に一致します。",
+				"side=end,day=*": "間隔の終わりから数えて{day}日目に一致します。"
+			}
+		}
+	],
 	"decoration_condition_op_label": "条件",
 	"decoration_condition_property_condition_label": "状態",
 	"decoration_condition_property_describe": "プロパティ{name} {op} {value}",

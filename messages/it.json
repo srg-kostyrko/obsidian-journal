@@ -655,6 +655,7 @@
 	],
 	"decoration_condition_has_note_describe": "esiste una nota",
 	"decoration_condition_has_open_task_describe": "la nota ha un'attività aperta",
+	"decoration_condition_offset_day_label": "Giorno",
 	"decoration_condition_offset_describe": [
 		{
 			"declarations": [
@@ -673,22 +674,39 @@
 			}
 		}
 	],
-	"decoration_condition_offset_hint": [
+	"decoration_condition_offset_direction_label": "Conta da",
+	"decoration_condition_offset_direction_option": [
 		{
 			"declarations": [
-				"input days",
 				"input side"
 			],
 			"selectors": [
 				"side"
 			],
 			"match": {
-				"side=start": "Corrisponde a {days} giorni dall'inizio dell'intervallo.",
-				"side=end": "Corrisponde {days} giorni dalla fine dell'intervallo."
+				"side=start": "Dall'inizio",
+				"side=end": "Dalla fine"
 			}
 		}
 	],
-	"decoration_condition_offset_label": "Offset",
+	"decoration_condition_offset_hint": [
+		{
+			"declarations": [
+				"input side",
+				"input day"
+			],
+			"selectors": [
+				"side",
+				"day"
+			],
+			"match": {
+				"side=start,day=1": "Corrisponde al primo giorno dell'intervallo.",
+				"side=start,day=*": "Corrisponde al giorno {day} dell'intervallo.",
+				"side=end,day=1": "Corrisponde all'ultimo giorno dell'intervallo.",
+				"side=end,day=*": "Corrisponde al giorno {day} contando dalla fine dell'intervallo."
+			}
+		}
+	],
 	"decoration_condition_op_label": "Condizione",
 	"decoration_condition_property_condition_label": "Condizione",
 	"decoration_condition_property_describe": "proprietà {name} {op} {value}",
