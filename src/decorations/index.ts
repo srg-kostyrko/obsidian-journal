@@ -44,6 +44,7 @@ export {
   type JournalDecorationBinding,
 } from "./engine";
 export { gatherBindings, type GatherOptions } from "./gather-bindings";
+export { DecorationMatchService, type BadgeUnit, type MatchBadge } from "./match-service";
 export { decorationsModule } from "./module";
 export { describeOwner, type CalendarDecorationOwner, type DecorationOwner } from "./owner";
 export { decorationsSlice } from "./settings/slice";
