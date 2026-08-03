@@ -11,11 +11,16 @@ const { value: offset } = useField<number>(`${name}.offset`);
 
 const day = ref<number | undefined>(Math.abs(offset.value) || 1);
 
+// A day is only usable once it is a positive integer; the number input passes through
+// negatives, decimals, and 0 untouched, and this predicate is the single gate for all of them.
+const isValidDay = (next: number | undefined): next is number =>
+  typeof next === "number" && Number.isSafeInteger(next) && next >= 1;
+
 const side = computed<"start" | "end">({
   get: () => (offset.value < 0 ? "end" : "start"),
   set: (next) => {
-    // Fall back to the stored magnitude so the direction still flips while the input is empty.
-    const magnitude = typeof day.value === "number" ? day.value : Math.abs(offset.value);
+    // Fall back to the stored magnitude so the direction still flips while the input is invalid.
+    const magnitude = isValidDay(day.value) ? day.value : Math.abs(offset.value);
     offset.value = next === "end" ? -magnitude : magnitude;
   },
 });
@@ -27,7 +32,7 @@ watch(offset, (next) => {
 
 watch(day, (next) => {
   // Clearing the input yields a non-number; hold the last valid offset instead of coercing.
-  if (typeof next !== "number" || !Number.isSafeInteger(next) || next < 1) return;
+  if (!isValidDay(next)) return;
   offset.value = side.value === "end" ? -next : next;
 });
 

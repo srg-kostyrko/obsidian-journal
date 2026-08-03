@@ -73,6 +73,31 @@ describe("ConditionOffset", () => {
     expect(host.values.c.offset).toBe(4);
   });
 
+  it("stores the end direction when the day input holds a negative number", async () => {
+    const host = mount({ type: "offset", offset: 3 });
+    const input = screen.getByRole("spinbutton");
+    await userEvent.clear(input);
+    await userEvent.type(input, "-2");
+    await userEvent.click(screen.getByRole("radio", { name: fromEnd }));
+    expect(host.values.c.offset).toBe(-3);
+  });
+
+  it("does not store zero when the day input holds zero", async () => {
+    const host = mount({ type: "offset", offset: 3 });
+    const input = screen.getByRole("spinbutton");
+    await userEvent.clear(input);
+    await userEvent.type(input, "0");
+    await userEvent.click(screen.getByRole("radio", { name: fromEnd }));
+    expect(host.values.c.offset).toBe(-3);
+  });
+
+  it("flips direction using the stored magnitude while the day input is empty", async () => {
+    const host = mount({ type: "offset", offset: 4 });
+    await userEvent.clear(screen.getByRole("spinbutton"));
+    await userEvent.click(screen.getByRole("radio", { name: fromEnd }));
+    expect(host.values.c.offset).toBe(-4);
+  });
+
   it("explains day 1 from the start as the interval's first day", () => {
     mount({ type: "offset", offset: 1 });
     expect(screen.getByText(m.decoration_condition_offset_hint({ side: "start", day: 1 }))).toBeTruthy();

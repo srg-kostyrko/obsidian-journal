@@ -73,7 +73,7 @@ describe("ConditionItem", () => {
   });
 
   it("renders ConditionOffset for an offset condition", () => {
-    mount({ type: "offset", offset: 0 });
+    mount({ type: "offset", offset: 1 });
     expect(screen.getByRole("spinbutton")).toBeTruthy();
   });
 
