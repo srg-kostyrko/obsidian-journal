@@ -34,6 +34,7 @@ import {
   dayAnchor,
   expectBackgroundCleared,
   expectBackgroundHex,
+  expectBorderTop,
   expectDecorated,
   expectTextHex,
   expectUndecorated,
@@ -195,6 +196,10 @@ describe("calendar view", () => {
 
     it("paints a day cell from a vault-wide decoration with no journal", async () => {
       await expectBackgroundHex(calendar.cell(dayAnchor(DECO_DAY.global)), STYLE_HEX.global);
+    });
+
+    it("paints a journal's border over a vault-wide decoration's on the same day", async () => {
+      await expectBorderTop(calendar.cell(dayAnchor(DECO_DAY.precedence)), "3px", STYLE_HEX.precedenceJournal);
     });
 
     it("renders the month decoration on the toolbar period button", async () => {

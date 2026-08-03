@@ -21,6 +21,59 @@
             }
           }
         ]
+      },
+      {
+        "mode": "and",
+        "conditions": [
+          {
+            "type": "date",
+            "day": 8,
+            "month": -1,
+            "year": null
+          }
+        ],
+        "styles": [
+          {
+            "type": "border",
+            "border": "uniform",
+            "left": {
+              "show": true,
+              "width": 3,
+              "style": "solid",
+              "color": {
+                "type": "custom",
+                "color": "#c04040"
+              }
+            },
+            "right": {
+              "show": true,
+              "width": 3,
+              "style": "solid",
+              "color": {
+                "type": "custom",
+                "color": "#c04040"
+              }
+            },
+            "top": {
+              "show": true,
+              "width": 3,
+              "style": "solid",
+              "color": {
+                "type": "custom",
+                "color": "#c04040"
+              }
+            },
+            "bottom": {
+              "show": true,
+              "width": 3,
+              "style": "solid",
+              "color": {
+                "type": "custom",
+                "color": "#c04040"
+              }
+            }
+          }
+        ]
       }
     ]
   },
@@ -347,6 +400,59 @@
               "color": {
                 "type": "custom",
                 "color": "#ff0000"
+              }
+            }
+          ]
+        },
+        {
+          "mode": "and",
+          "conditions": [
+            {
+              "type": "date",
+              "day": 8,
+              "month": -1,
+              "year": null
+            }
+          ],
+          "styles": [
+            {
+              "type": "border",
+              "border": "uniform",
+              "left": {
+                "show": true,
+                "width": 3,
+                "style": "solid",
+                "color": {
+                  "type": "custom",
+                  "color": "#40c040"
+                }
+              },
+              "right": {
+                "show": true,
+                "width": 3,
+                "style": "solid",
+                "color": {
+                  "type": "custom",
+                  "color": "#40c040"
+                }
+              },
+              "top": {
+                "show": true,
+                "width": 3,
+                "style": "solid",
+                "color": {
+                  "type": "custom",
+                  "color": "#40c040"
+                }
+              },
+              "bottom": {
+                "show": true,
+                "width": 3,
+                "style": "solid",
+                "color": {
+                  "type": "custom",
+                  "color": "#40c040"
+                }
               }
             }
           ]

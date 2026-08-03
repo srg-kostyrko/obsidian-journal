@@ -17,6 +17,8 @@ export const STYLE_HEX = {
   corner: "#99aabb",
   icon: "#aabbcc",
   global: "#3a5f7d",
+  precedenceJournal: "#40c040",
+  precedenceGlobal: "#c04040",
 } as const;
 
 // Day-of-month is unique within the visible month, so each test owns one day cell.
@@ -24,6 +26,7 @@ export const STYLE_HEX = {
 export const DECO_DAY = {
   control: 2,
   global: 3,
+  precedence: 8,
   frontmatterTag: 5,
   bareTag: 6,
   title: 7,
