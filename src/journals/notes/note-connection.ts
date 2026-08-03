@@ -41,6 +41,16 @@ export interface ReanchorReport {
   readonly failed: number;
 }
 
+// endDate is the caller's call, not this service's: judging a stored end against a
+// duration-derived default requires the grid the value was written under, and by the time a
+// reanchor runs, the caller (WeekPresetService) has already moved the live grid to the new one.
+// Only the caller still straddles both grids, so only the caller can tell stale period metadata
+// apart from a genuine manual extension. Omitting endDate here means "let it be recomputed".
+export interface ReanchorTarget {
+  readonly anchor: AnchorString;
+  readonly endDate?: AnchorString;
+}
+
 type ReanchorError = NoteNotFoundError | FrontmatterError | JournalNotFoundError;
 
 export interface ConnectOptions {
@@ -76,25 +86,22 @@ export class NoteConnectionService {
     return AsyncResult.fromPromise(all, () => undefined as never);
   }
 
-  #reanchorOne(journalName: string, path: VaultPath, anchor: AnchorString): AsyncResult<void, ReanchorError> {
+  #reanchorOne(journalName: string, path: VaultPath, target: ReanchorTarget): AsyncResult<void, ReanchorError> {
     return attempt.in(this, async function* (this: NoteConnectionService) {
-      const built = yield* this.#frontmatter.buildMetadata(journalName, anchor);
+      const built = yield* this.#frontmatter.buildMetadata(journalName, target.anchor);
       // buildMetadata resolves endDate by looking up the index at the note's NEW anchor, but the
       // move hasn't landed yet — the note is still filed under its OLD anchor, so that lookup either
       // misses or, worse, hands back whatever other note is about to vacate the new anchor. The
-      // note's own stored entry (by path) is the only reliable source for its endDate.
-      const own = this.#index.entryByPath(path);
+      // caller's target.endDate (or its absence) is the only trustworthy source here — see
+      // ReanchorTarget for why this service can't re-derive it.
       const { endDate: _staleEndDate, ...rest } = built;
       const metadata: JournalMetadata = {
         ...rest,
-        ...(own.isSome() && own.value.endDate !== undefined && { endDate: own.value.endDate }),
+        ...(target.endDate !== undefined && { endDate: target.endDate }),
       };
-      const mutator = yield* this.#frontmatter.writeMutator(
-        journalName,
-        this.#withoutDefaultEnd(journalName, metadata),
-      );
+      const mutator = yield* this.#frontmatter.writeMutator(journalName, metadata);
       yield* this.#notes.updateFrontmatter(path, mutator).tapErr((error) => {
-        this.#logger.warn("failed to re-anchor note", { path, anchor, error });
+        this.#logger.warn("failed to re-anchor note", { path, anchor: target.anchor, error });
       });
     });
   }
@@ -214,28 +221,31 @@ export class NoteConnectionService {
 
   // Targets are resolved by the caller (which alone knows the old and new week grids); this
   // only has to apply them without letting two notes land on the same anchor.
-  reanchorAll(journalName: string, targets: ReadonlyMap<VaultPath, AnchorString>): AsyncResult<ReanchorReport, never> {
+  reanchorAll(
+    journalName: string,
+    targets: ReadonlyMap<VaultPath, ReanchorTarget>,
+  ): AsyncResult<ReanchorReport, never> {
     const entries = [...this.#index.entriesFor(journalName)];
     const claimed = new Set<AnchorString>();
-    const moves: { path: VaultPath; to: AnchorString }[] = [];
+    const moves: { path: VaultPath; to: ReanchorTarget }[] = [];
     let blocked = 0;
 
     // Notes that are staying put keep their slot, so a mover cannot displace one.
     for (const [anchor, path] of entries) {
       const target = targets.get(path);
-      if (target === undefined || target === anchor) claimed.add(anchor);
+      if (target === undefined || target.anchor === anchor) claimed.add(anchor);
     }
     for (const [anchor, path] of entries) {
       const target = targets.get(path);
-      if (target === undefined || target === anchor) continue;
+      if (target === undefined || target.anchor === anchor) continue;
       // A grid change can leave a year one week shorter, collapsing two weeks onto one anchor.
       // The loser keeps its old date rather than overwriting the winner's note.
-      if (claimed.has(target)) {
+      if (claimed.has(target.anchor)) {
         blocked += 1;
-        this.#logger.warn("re-anchor target already claimed", { journalName, path, target });
+        this.#logger.warn("re-anchor target already claimed", { journalName, path, target: target.anchor });
         continue;
       }
-      claimed.add(target);
+      claimed.add(target.anchor);
       moves.push({ path, to: target });
     }
 

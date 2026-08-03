@@ -133,6 +133,67 @@ describe("WeekPresetService", () => {
     expect(notes.frontmatterOf("week/2026-W23.md" as VaultPath)?.["journal-end-date"]).toBe("2026-06-06");
   });
 
+  // Regression: the old grid's own week end ("2026-06-07" for ISO week 23) is period metadata,
+  // not a manual extension. Judging it against the NEW grid's default (as opposed to the OLD
+  // grid's, captured before the switch) would wrongly read it as an extension and freeze the
+  // note on the old grid's end date forever — the exact bug the week-preset e2e spec caught.
+  it("recomputes the end date to the new week's own end when the stored value was the old grid's own end", async () => {
+    const { notes, index, service } = await build(weekly({ addEndDate: true }));
+    notes.seed("week/2026-W23.md" as VaultPath, "", {
+      journal: "weekly",
+      "journal-date": "2026-06-01",
+      "journal-end-date": "2026-06-07",
+    });
+    index.register({
+      journalName: "weekly",
+      anchor: "2026-06-01" as never,
+      path: "week/2026-W23.md" as VaultPath,
+      endDate: "2026-06-07" as never,
+    });
+
+    await service.apply(WESTERN);
+
+    expect(notes.frontmatterOf("week/2026-W23.md" as VaultPath)?.["journal-end-date"]).toBe("2026-06-06");
+  });
+
+  it("keeps a manually extended end date across a grid change", async () => {
+    const { notes, index, service } = await build(weekly({ addEndDate: false }));
+    notes.seed("week/2026-W23.md" as VaultPath, "", {
+      journal: "weekly",
+      "journal-date": "2026-06-01",
+      "journal-end-date": "2026-06-21",
+    });
+    index.register({
+      journalName: "weekly",
+      anchor: "2026-06-01" as never,
+      path: "week/2026-W23.md" as VaultPath,
+      endDate: "2026-06-21" as never,
+    });
+
+    await service.apply(WESTERN);
+
+    expect(notes.frontmatterOf("week/2026-W23.md" as VaultPath)?.["journal-end-date"]).toBe("2026-06-21");
+  });
+
+  it("drops a stored end date that was only the old grid's own week end when addEndDate is off", async () => {
+    const { notes, index, service } = await build(weekly({ addEndDate: false }));
+    notes.seed("week/2026-W23.md" as VaultPath, "", {
+      journal: "weekly",
+      "journal-date": "2026-06-01",
+      "journal-end-date": "2026-06-07",
+    });
+    index.register({
+      journalName: "weekly",
+      anchor: "2026-06-01" as never,
+      path: "week/2026-W23.md" as VaultPath,
+      endDate: "2026-06-07" as never,
+    });
+
+    await service.apply(WESTERN);
+
+    expect("journal-end-date" in (notes.frontmatterOf("week/2026-W23.md" as VaultPath) ?? {})).toBe(false);
+  });
+
   it("stores the new preset in the calendar slice", async () => {
     const { container, service } = await build(weekly());
 

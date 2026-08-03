@@ -604,7 +604,7 @@ describe("NoteConnectionService", () => {
 
       await container
         .resolve(NoteConnectionService)
-        .reanchorAll("weekly", new Map([["week/2026-W23.md" as VaultPath, anchor("2026-05-31")]]));
+        .reanchorAll("weekly", new Map([["week/2026-W23.md" as VaultPath, { anchor: anchor("2026-05-31") }]]));
 
       expect(notes.frontmatterOf("week/2026-W23.md" as VaultPath)?.["journal-date"]).toBe("2026-05-31");
     });
@@ -625,7 +625,7 @@ describe("NoteConnectionService", () => {
 
       await container
         .resolve(NoteConnectionService)
-        .reanchorAll("weekly", new Map([["week/2026-W23.md" as VaultPath, anchor("2026-05-25")]]));
+        .reanchorAll("weekly", new Map([["week/2026-W23.md" as VaultPath, { anchor: anchor("2026-05-25") }]]));
 
       expect(notes.frontmatterOf("week/2026-W23.md" as VaultPath)?.["journal-start-date"]).toBe("2026-05-25");
     });
@@ -643,7 +643,7 @@ describe("NoteConnectionService", () => {
 
       await container
         .resolve(NoteConnectionService)
-        .reanchorAll("weekly", new Map([["week/2026-W23.md" as VaultPath, anchor("2026-06-01")]]));
+        .reanchorAll("weekly", new Map([["week/2026-W23.md" as VaultPath, { anchor: anchor("2026-06-01") }]]));
 
       expect(spy).not.toHaveBeenCalled();
     });
@@ -659,8 +659,8 @@ describe("NoteConnectionService", () => {
       const result = await container.resolve(NoteConnectionService).reanchorAll(
         "weekly",
         new Map([
-          ["week/2026-W23.md" as VaultPath, anchor("2026-05-31")],
-          ["week/2026-W24.md" as VaultPath, anchor("2026-06-07")],
+          ["week/2026-W23.md" as VaultPath, { anchor: anchor("2026-05-31") }],
+          ["week/2026-W24.md" as VaultPath, { anchor: anchor("2026-06-07") }],
         ]),
       );
 
@@ -682,8 +682,8 @@ describe("NoteConnectionService", () => {
       await container.resolve(NoteConnectionService).reanchorAll(
         "weekly",
         new Map([
-          ["week/2026-W23.md" as VaultPath, anchor("2026-05-31")],
-          ["week/2026-W24.md" as VaultPath, anchor("2026-06-07")],
+          ["week/2026-W23.md" as VaultPath, { anchor: anchor("2026-05-31") }],
+          ["week/2026-W24.md" as VaultPath, { anchor: anchor("2026-06-07") }],
         ]),
       );
 
@@ -701,54 +701,52 @@ describe("NoteConnectionService", () => {
 
       const result = await container
         .resolve(NoteConnectionService)
-        .reanchorAll("weekly", new Map([["week/2026-W23.md" as VaultPath, anchor("2026-05-31")]]));
+        .reanchorAll("weekly", new Map([["week/2026-W23.md" as VaultPath, { anchor: anchor("2026-05-31") }]]));
 
       expectOk(result);
       expect(result.value.failed).toBe(1);
     });
 
-    it("keeps a manually extended end date after a re-anchor", async () => {
+    it("writes the target's end date into the frontmatter when the target supplies one", async () => {
+      // Whether a stored end is stale period metadata or a genuine manual extension can only be
+      // judged against the grid it was written under — by the time a reanchor runs, the caller
+      // has already moved the live grid to the new one (see ReanchorTarget). This service just
+      // applies whatever endDate the caller decided on; it doesn't re-derive that decision.
       const notes = new FakeNotesService();
-      notes.seed("week/2026-W23.md" as VaultPath, "", {
-        journal: "weekly",
-        "journal-date": "2026-06-01",
-        "journal-end-date": "2026-06-21",
-      });
+      notes.seed("week/2026-W23.md" as VaultPath, "", { journal: "weekly", "journal-date": "2026-06-01" });
       const { container, index } = build(fakeRepo(weeklyWith({ addEndDate: false })), notes, new FakeModalService());
-      index.register({
-        journalName: "weekly",
-        anchor: anchor("2026-06-01"),
-        path: "week/2026-W23.md" as VaultPath,
-        endDate: anchor("2026-06-21"),
-      });
+      index.register({ journalName: "weekly", anchor: anchor("2026-06-01"), path: "week/2026-W23.md" as VaultPath });
 
       await container
         .resolve(NoteConnectionService)
-        .reanchorAll("weekly", new Map([["week/2026-W23.md" as VaultPath, anchor("2026-05-25")]]));
+        .reanchorAll(
+          "weekly",
+          new Map([["week/2026-W23.md" as VaultPath, { anchor: anchor("2026-05-25"), endDate: anchor("2026-06-21") }]]),
+        );
 
       expect(notes.frontmatterOf("week/2026-W23.md" as VaultPath)?.["journal-end-date"]).toBe("2026-06-21");
     });
 
-    it("drops a stored end date that only matches the new week's own end", async () => {
+    it("recomputes the end date from the new anchor when the target omits one", async () => {
       const notes = new FakeNotesService();
       notes.seed("week/2026-W23.md" as VaultPath, "", {
         journal: "weekly",
         "journal-date": "2026-06-01",
-        "journal-end-date": "2026-05-31",
+        "journal-end-date": "2026-06-07",
       });
-      const { container, index } = build(fakeRepo(weeklyWith({ addEndDate: false })), notes, new FakeModalService());
+      const { container, index } = build(fakeRepo(weeklyWith({ addEndDate: true })), notes, new FakeModalService());
       index.register({
         journalName: "weekly",
         anchor: anchor("2026-06-01"),
         path: "week/2026-W23.md" as VaultPath,
-        endDate: anchor("2026-05-31"),
+        endDate: anchor("2026-06-07"),
       });
 
       await container
         .resolve(NoteConnectionService)
-        .reanchorAll("weekly", new Map([["week/2026-W23.md" as VaultPath, anchor("2026-05-25")]]));
+        .reanchorAll("weekly", new Map([["week/2026-W23.md" as VaultPath, { anchor: anchor("2026-05-25") }]]));
 
-      expect("journal-end-date" in (notes.frontmatterOf("week/2026-W23.md" as VaultPath) ?? {})).toBe(false);
+      expect(notes.frontmatterOf("week/2026-W23.md" as VaultPath)?.["journal-end-date"]).toBe("2026-05-31");
     });
 
     it("refuses a target already held by a note that is staying put", async () => {
@@ -762,7 +760,7 @@ describe("NoteConnectionService", () => {
       // W23 is told to move onto W24's anchor, which W24 keeps (no target of its own).
       await container
         .resolve(NoteConnectionService)
-        .reanchorAll("weekly", new Map([["week/2026-W23.md" as VaultPath, anchor("2026-06-08")]]));
+        .reanchorAll("weekly", new Map([["week/2026-W23.md" as VaultPath, { anchor: anchor("2026-06-08") }]]));
 
       expect(notes.frontmatterOf("week/2026-W23.md" as VaultPath)?.["journal-date"]).toBe("2026-06-01");
     });
