@@ -85,7 +85,6 @@ function zeroExtents(): PaddingExtents {
 // A hidden side abstains from the cascade rather than clearing it: a decoration that paints
 // only a left accent must leave another decoration's top accent standing.
 function sideString(side: BorderSide): string {
-  if (!side.show) return "none";
   return `${side.width}px ${side.style} ${colorToString(side.color)}`;
 }
 
@@ -95,8 +94,8 @@ function applyBorder(
   style: JournalDecorationBorder,
 ): void {
   if (style.border === "uniform") {
-    const uniform = sideString(style.left);
-    if (uniform !== "none") {
+    if (style.left.show) {
+      const uniform = sideString(style.left);
       for (const side of BORDER_SIDES) border[side] = uniform;
     }
     const width = style.left.width;
@@ -107,8 +106,8 @@ function applyBorder(
     return;
   }
   for (const side of BORDER_SIDES) {
-    const resolved = sideString(style[side]);
-    if (resolved !== "none") border[side] = resolved;
+    if (!style[side].show) continue;
+    border[side] = sideString(style[side]);
   }
   padding.topBorder = Math.max(padding.topBorder, style.top.width);
   padding.rightBorder = Math.max(padding.rightBorder, style.right.width);

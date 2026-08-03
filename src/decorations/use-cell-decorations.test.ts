@@ -452,7 +452,9 @@ describe("useCellDecorations", () => {
       const cells = mountCells(c, [period], ["daily"], { shelf: null });
       await nextTick();
 
-      expect(resolveCell(cells.get(key(period))?.value ?? []).background).toBe("#111111");
+      const styles = cells.get(key(period))?.value ?? [];
+      expect(styles).toHaveLength(2);
+      expect(resolveCell(styles).background).toBe("#111111");
     });
 
     it("resolves a journal's border over a vault-wide decoration's", async () => {
@@ -482,7 +484,9 @@ describe("useCellDecorations", () => {
       const cells = mountCells(c, [period], ["daily"], { shelf: null });
       await nextTick();
 
-      expect(resolveCell(cells.get(key(period))?.value ?? []).border.top).toBe("2px solid #111111");
+      const styles = cells.get(key(period))?.value ?? [];
+      expect(styles).toHaveLength(2);
+      expect(resolveCell(styles).border.top).toBe("2px solid #111111");
     });
 
     it("resolves a journal's background over a shelf's", async () => {
@@ -506,7 +510,9 @@ describe("useCellDecorations", () => {
       const cells = mountCells(c, [period], ["daily"], { shelf: "work" });
       await nextTick();
 
-      expect(resolveCell(cells.get(key(period))?.value ?? []).background).toBe("#555555");
+      const styles = cells.get(key(period))?.value ?? [];
+      expect(styles).toHaveLength(2);
+      expect(resolveCell(styles).background).toBe("#555555");
     });
 
     it("leaves a day cell untouched when the surface does not opt in", async () => {

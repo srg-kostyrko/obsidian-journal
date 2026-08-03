@@ -22,7 +22,8 @@ const styles = computed<readonly JournalDecorationStyle[]>(
 );
 
 const cell = computed(() => resolveCell(styles.value));
-// Named separately because `v-bind()` in the scoped style block resolves setup bindings by name.
+// Named separately so the style block's v-bind() targets stay stable across re-resolves:
+// the same resolved color keeps the same CSS custom property instead of churning it.
 const background = computed(() => cell.value.background);
 const textColor = computed(() => cell.value.textColor);
 // Within a decorated grid every cell shares one reservation so a single decoration never
