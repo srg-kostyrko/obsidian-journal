@@ -1,13 +1,14 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
 import { DayPeriod, WeekPeriod } from "@/calendar";
+import type { AnchorString } from "@/calendar";
 import { date, installTestCalendar } from "@/calendar/testing";
 import { Container } from "@/infrastructure/di";
 import { NoteMetadataService } from "@/infrastructure/host";
 import { FakeNoteMetadataService } from "@/infrastructure/host/testing";
-import { CycleService, JournalsIndex, JournalsRepository } from "@/journals";
+import { CycleService, JournalsIndex, JournalsRepository, TimelineService } from "@/journals";
 import type { JournalConfig } from "@/journals/config";
-import { fakeRepo, fixedJournal } from "@/journals/testing";
+import { customJournal, fakeRepo, fixedJournal } from "@/journals/testing";
 
 import { cellKey, DecorationEngine } from "./engine";
 import { buildCalendarDecoration, buildCondition, buildDecoration, buildStyle } from "./testing";
@@ -20,10 +21,35 @@ function buildContainer(journals: Record<string, JournalConfig> = {}): {
   c.register(JournalsRepository).useValue(fakeRepo(journals));
   c.register(JournalsIndex).useClass(JournalsIndex);
   c.register(CycleService).useClass(CycleService);
+  c.register(TimelineService).useClass(TimelineService);
   const metadata = new FakeNoteMetadataService();
   c.register(NoteMetadataService).useValue(metadata as unknown as NoteMetadataService);
   c.register(DecorationEngine).useClass(DecorationEngine);
   return { c, metadata };
+}
+
+// A fortnightly journal bounded to a single month. Its intervals start 2026-01-05, 2026-01-19,
+// 2026-02-02, …, and the offset-1 decoration marks each interval's first day on the day grid —
+// a surface that also renders days the journal's timeline never covers.
+const sprintDecoration = buildDecoration({
+  mode: "or",
+  conditions: [buildCondition("offset", { offset: 1 })],
+  styles: [buildStyle("background")],
+});
+
+function sprintDayCells(day: string): Map<string, unknown> {
+  const { c } = buildContainer({
+    sprint: customJournal("sprint", "week", 2, "2026-01-05", {
+      decorations: [sprintDecoration],
+      timeline: { start: "2026-01-05" as AnchorString, end: { kind: "date", date: "2026-02-01" as AnchorString } },
+    }),
+  });
+  return c
+    .resolve(DecorationEngine)
+    .evaluateRange(
+      [DayPeriod.containing(date(day))],
+      [{ kind: "journal", journalName: "sprint", decoration: sprintDecoration }],
+    );
 }
 
 describe("DecorationEngine", () => {
@@ -191,6 +217,20 @@ describe("DecorationEngine", () => {
       const result = engine.evaluateRange([period], [{ kind: "calendar", decoration }]);
 
       expect(result.size).toBe(0);
+    });
+
+    describe("timeline bounds", () => {
+      it("paints an interval's first day inside the timeline", () => {
+        expect(sprintDayCells("2026-01-19").size).toBe(1);
+      });
+
+      it("leaves an interval's first day past the timeline end undecorated", () => {
+        expect(sprintDayCells("2026-02-02").size).toBe(0);
+      });
+
+      it("leaves an interval's first day before the timeline start undecorated", () => {
+        expect(sprintDayCells("2025-12-22").size).toBe(0);
+      });
     });
 
     it("never reads note metadata for a calendar decoration", () => {

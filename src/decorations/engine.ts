@@ -5,7 +5,7 @@ import { inject } from "@/infrastructure/di";
 import { NoteMetadataService } from "@/infrastructure/host";
 import type { NoteMetadata } from "@/infrastructure/host";
 import type { Option } from "@/infrastructure/result";
-import { CycleService, JournalsIndex, JournalsRepository } from "@/journals";
+import { CycleService, JournalsIndex, JournalsRepository, TimelineService } from "@/journals";
 import type { JournalConfig, JournalWrite } from "@/journals/config";
 
 import {
@@ -73,6 +73,7 @@ export class DecorationEngine {
   readonly #index = inject(JournalsIndex);
   readonly #metadata = inject(NoteMetadataService);
   readonly #cycle = inject(CycleService);
+  readonly #timeline = inject(TimelineService);
 
   #matches(
     decoration: JournalDecoration,
@@ -147,6 +148,22 @@ export class DecorationEngine {
       return value;
     };
 
+    // A journal's decorations describe its own periods, and its timeline is what says which
+    // periods those are — outside it the calendar already refuses to open or create anything.
+    // A custom journal decorates day cells, so the bound is judged against the interval owning
+    // the day, not the day itself; for a fixed journal anchorOf is the period's own anchor.
+    const timelineCache = new Map<string, boolean>();
+    const inTimeline = (journalName: string, period: Period): boolean => {
+      const key = `${journalName}::${period.anchor.toAnchor()}`;
+      const hit = timelineCache.get(key);
+      if (hit !== undefined) return hit;
+      const value = this.#cycle
+        .anchorOf(journalName, period.anchor)
+        .match({ none: () => false, some: (anchor) => this.#timeline.contains(journalName, anchor) });
+      timelineCache.set(key, value);
+      return value;
+    };
+
     const push = (period: Period, styles: readonly JournalDecorationStyle[]): void => {
       const key = cellKey(period.kind, period.anchor.toAnchor());
       let bucket = result.get(key);
@@ -172,6 +189,7 @@ export class DecorationEngine {
       if (!config) continue;
       for (const period of periods) {
         if (!periodMatchesWrite(period.kind, config.write.type)) continue;
+        if (!inTimeline(binding.journalName, period)) continue;
         const anchorString = period.anchor.toAnchor();
         if (!this.#matches(binding.decoration, period, config, () => metadataFor(binding.journalName, anchorString)))
           continue;

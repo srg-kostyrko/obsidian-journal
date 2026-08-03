@@ -9,7 +9,7 @@ import { installTestCalendar } from "@/calendar/testing";
 import { provideInjectorOnApp, type Container } from "@/infrastructure/di";
 import { NoteMetadataService, NotesService, type NotesEvents, type VaultPath } from "@/infrastructure/host";
 import { FakeNoteMetadataService } from "@/infrastructure/host/testing";
-import { CycleService, JournalsIndex, JournalsRepository } from "@/journals";
+import { CycleService, JournalsIndex, JournalsRepository, TimelineService } from "@/journals";
 import type { JournalConfig } from "@/journals/config";
 import { fakeRepo, fixedJournal } from "@/journals/testing";
 import { createSettingsService } from "@/settings/testing";
@@ -52,6 +52,7 @@ function buildHarnessFrom(journals: JournalsRepository, notesEmitter: Emitter<No
   c.register(JournalsRepository).useValue(journals);
   c.register(JournalsIndex).useClass(JournalsIndex);
   c.register(CycleService).useClass(CycleService);
+  c.register(TimelineService).useClass(TimelineService);
   const fakeMetadata = new FakeNoteMetadataService();
   c.register(NoteMetadataService).useValue(fakeMetadata as unknown as NoteMetadataService);
   c.register(NotesService).useValue({ events: notesEmitter } as unknown as NotesService);
