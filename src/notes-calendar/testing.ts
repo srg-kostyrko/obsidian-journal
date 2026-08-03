@@ -12,6 +12,8 @@ import {
   WorkspaceService,
   type NotesEvents,
 } from "@/infrastructure/host";
+import { ModalService } from "@/infrastructure/host/modals";
+import { FakeModalService } from "@/infrastructure/host/modals/testing";
 import {
   FakeNoteMetadataService,
   FakeNoticeService,
@@ -69,6 +71,7 @@ export function buildNotesCalendarHarness(options: {
 
   const workspace = new FakeWorkspaceService();
   container.register(WorkspaceService).useValue(workspace as unknown as WorkspaceService);
+  container.register(ModalService).useValue(new FakeModalService() as unknown as ModalService);
 
   const metadata = new FakeNoteMetadataService();
   container.register(NoteMetadataService).useValue(metadata as unknown as NoteMetadataService);

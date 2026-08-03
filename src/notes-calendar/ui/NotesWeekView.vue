@@ -27,12 +27,6 @@ const hiddenWeekdays = computed(() => new Set(props.hiddenWeekdays));
 
 const scope = useShelfScope(() => props.shelf);
 
-const dayCell = useNotesCell({ journalNames: () => scope.day.value });
-const weekCell = useNotesCell({ journalNames: () => scope.week.value });
-const monthCell = useNotesCell({ journalNames: () => scope.month.value });
-const quarterCell = useNotesCell({ journalNames: () => scope.quarter.value });
-const yearCell = useNotesCell({ journalNames: () => scope.year.value });
-
 const rawWeek = computed(() => toRaw(props.week));
 const days = computed(() =>
   [...rawWeek.value.days()]
@@ -58,13 +52,19 @@ const allPeriods = computed<readonly Period[]>(() => {
 
 // Same split as the month grid: custom journals contribute only their offset-condition
 // decorations to day cells; the rest of their decorations live in the interval list.
-useCellDecorations({
+const cells = useCellDecorations({
   periods: () => allPeriods.value,
   journalNames: () => scope.all.value,
   filter: (binding) =>
     scope.custom.value.includes(binding.journalName) ? hasOffsetCondition(binding.decoration) : true,
   calendarDecorations: { shelf: () => props.shelf },
 });
+
+const dayCell = useNotesCell({ journalNames: () => scope.day.value, decorations: cells });
+const weekCell = useNotesCell({ journalNames: () => scope.week.value, decorations: cells });
+const monthCell = useNotesCell({ journalNames: () => scope.month.value, decorations: cells });
+const quarterCell = useNotesCell({ journalNames: () => scope.quarter.value, decorations: cells });
+const yearCell = useNotesCell({ journalNames: () => scope.year.value, decorations: cells });
 </script>
 
 <template>

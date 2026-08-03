@@ -1,4 +1,4 @@
-import { cleanup, render } from "@testing-library/vue";
+import { cleanup, fireEvent, render } from "@testing-library/vue";
 import { afterEach, beforeAll, beforeEach, describe, expect, it, vi } from "vitest";
 import { nextTick } from "vue";
 
@@ -290,6 +290,25 @@ describe("NotesMonthView", () => {
 
       const cell = container.querySelector('.notes-month-view__day[data-anchor="2026-08-05"]');
       expect(cell?.querySelector(".decoration-corner")).toBeNull();
+    });
+  });
+
+  describe("day cell context menu", () => {
+    it("contributes the explain item for a decorated day cell", async () => {
+      const decoration = buildDecoration({
+        conditions: [buildCondition("date")],
+        styles: [buildStyle("corner")],
+      });
+      const h = buildNotesCalendarHarness({
+        journals: { daily: fixedJournal("daily", { type: "day" }, { decorations: [decoration] }) },
+      });
+      const { container } = mount(h, { shelf: null, month });
+      await nextTick();
+
+      const cell = container.querySelector('.notes-month-view__day[data-anchor="2026-08-15"]');
+      await fireEvent.contextMenu(cell!);
+
+      expect(h.workspace.pathsMenuCalls.at(-1)?.extraItems).toHaveLength(1);
     });
   });
 

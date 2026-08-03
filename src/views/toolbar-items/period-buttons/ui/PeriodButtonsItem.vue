@@ -3,7 +3,7 @@ import { computed } from "vue";
 
 import { CalendarDate, periodOfKind } from "@/calendar";
 import type { Period } from "@/calendar";
-import { CellDecoration, useCellDecorations } from "@/decorations";
+import { CellDecoration, useCellDecorations, useDecorationMenuItems } from "@/decorations";
 import { useService } from "@/infrastructure/di";
 import { Flows } from "@/infrastructure/flows";
 import { defineOpenMode, WorkspaceService } from "@/infrastructure/host";
@@ -63,10 +63,11 @@ const badges = computed<readonly Badge[]>(() => {
   return out;
 });
 
-useCellDecorations({
+const cells = useCellDecorations({
   periods: () => badges.value.map((badge) => badge.period),
   journalNames: () => scope.fixed.value,
 });
+const decorationItems = useDecorationMenuItems(cells);
 
 function isActive(badge: Badge): boolean {
   const active = activeVM.active.value;
@@ -92,7 +93,7 @@ function pathsFor(badge: Badge): readonly VaultPath[] {
 // The badges mirror the in-grid header cells: right-click reaches the note's file
 // menu and Ctrl/Cmd hover previews it (v2's header rendered full calendar cells).
 function openContextMenu(badge: Badge, event: MouseEvent): void {
-  workspace.openPathsMenu(pathsFor(badge), event);
+  workspace.openPathsMenu(pathsFor(badge), event, decorationItems(badge.period));
 }
 
 const hover = useModifierHoverPreview();

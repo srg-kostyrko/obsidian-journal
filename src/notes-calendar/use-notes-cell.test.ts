@@ -1,14 +1,19 @@
 import { render } from "@testing-library/vue";
 import { afterEach, beforeEach, describe, expect, it, vi, type MockInstance } from "vitest";
-import { defineComponent, h, reactive } from "vue";
+import { defineComponent, h, reactive, shallowRef } from "vue";
 
 import { DayPeriod } from "@/calendar";
 import type { AnchorString } from "@/calendar";
 import { date, installTestCalendar } from "@/calendar/testing";
+import type { CellStyleRef } from "@/decorations";
+import { cellKey } from "@/decorations/engine";
+import { buildStyle } from "@/decorations/testing";
 import { Container, provideInjectorOnApp } from "@/infrastructure/di";
 import { Flows, FlowsModule } from "@/infrastructure/flows";
 import { WorkspaceService, NoticeService } from "@/infrastructure/host";
 import type { VaultPath } from "@/infrastructure/host";
+import { ModalService } from "@/infrastructure/host/modals";
+import { FakeModalService } from "@/infrastructure/host/modals/testing";
 import { FakeWorkspaceService, FakeNoticeService } from "@/infrastructure/host/testing";
 import { LoggerModule } from "@/infrastructure/logger";
 import { AsyncResult } from "@/infrastructure/result";
@@ -52,6 +57,7 @@ function buildHarness(): Harness {
 
   const workspace = new FakeWorkspaceService();
   c.register(WorkspaceService).useValue(workspace as unknown as WorkspaceService);
+  c.register(ModalService).useValue(new FakeModalService() as unknown as ModalService);
 
   const active = new FakeActiveEntryViewModel();
   c.register(ActiveEntryViewModel).useValue(active as unknown as ActiveEntryViewModel);
@@ -65,11 +71,15 @@ function buildHarness(): Harness {
   return { c, workspace, flows, active, index, invokeSpy };
 }
 
-function mountWithApi(c: Container, journalNames: () => readonly string[]): { api: NotesCellApi; unmount: () => void } {
+function mountWithApi(
+  c: Container,
+  journalNames: () => readonly string[],
+  decorations?: ReadonlyMap<string, CellStyleRef> | null,
+): { api: NotesCellApi; unmount: () => void } {
   let captured: NotesCellApi | null = null;
   const Host = defineComponent({
     setup() {
-      captured = useNotesCell({ journalNames });
+      captured = useNotesCell({ journalNames, decorations });
       return renderDiv;
     },
   });
@@ -193,6 +203,30 @@ describe("useNotesCell", () => {
       api.openContextMenu(may25, event);
 
       expect(workspace.pathsMenuCalls).toEqual([{ paths: [dailyPath, secondPath], event, extraItems: [] }]);
+    });
+
+    it("contributes the explain item to the context menu of a decorated cell", () => {
+      const { c, workspace } = buildHarness();
+      const decorations: ReadonlyMap<string, CellStyleRef> = new Map([
+        [cellKey(may25.kind, may25.anchor.toAnchor()), shallowRef([buildStyle("background")])],
+      ]);
+      const { api } = mountWithApi(c, () => ["daily"], decorations);
+      const event = new MouseEvent("contextmenu");
+
+      api.openContextMenu(may25, event);
+
+      expect(workspace.pathsMenuCalls[0]?.extraItems).toHaveLength(1);
+    });
+
+    it("contributes no item to the context menu of an undecorated cell", () => {
+      const { c, workspace } = buildHarness();
+      const decorations = new Map<string, CellStyleRef>();
+      const { api } = mountWithApi(c, () => ["daily"], decorations);
+      const event = new MouseEvent("contextmenu");
+
+      api.openContextMenu(may25, event);
+
+      expect(workspace.pathsMenuCalls[0]?.extraItems).toEqual([]);
     });
   });
 

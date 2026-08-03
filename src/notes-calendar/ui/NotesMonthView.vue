@@ -32,12 +32,6 @@ const dayColumns = computed(() => 7 - [0, 1, 2, 3, 4, 5, 6].filter((i) => hidden
 
 const scope = useShelfScope(() => props.shelf);
 
-const dayCell = useNotesCell({ journalNames: () => scope.day.value });
-const weekCell = useNotesCell({ journalNames: () => scope.week.value });
-const monthCell = useNotesCell({ journalNames: () => scope.month.value });
-const quarterCell = useNotesCell({ journalNames: () => scope.quarter.value });
-const yearCell = useNotesCell({ journalNames: () => scope.year.value });
-
 const rawMonth = computed(() => toRaw(props.month));
 const weeksPos = computed(() => props.weeks ?? "left");
 const showWeekNumber = computed(() => weeksPos.value !== "none");
@@ -85,13 +79,19 @@ const visiblePeriods = computed<readonly Period[]>(() => {
 // Fixed journals decorate their own cells; custom journals contribute only their
 // offset-condition decorations, which mark single days inside an interval (v2's split —
 // everything else a custom journal defines renders in the interval list instead).
-useCellDecorations({
+const cells = useCellDecorations({
   periods: () => visiblePeriods.value,
   journalNames: () => scope.all.value,
   filter: (binding) =>
     scope.custom.value.includes(binding.journalName) ? hasOffsetCondition(binding.decoration) : true,
   calendarDecorations: { shelf: () => props.shelf },
 });
+
+const dayCell = useNotesCell({ journalNames: () => scope.day.value, decorations: cells });
+const weekCell = useNotesCell({ journalNames: () => scope.week.value, decorations: cells });
+const monthCell = useNotesCell({ journalNames: () => scope.month.value, decorations: cells });
+const quarterCell = useNotesCell({ journalNames: () => scope.quarter.value, decorations: cells });
+const yearCell = useNotesCell({ journalNames: () => scope.year.value, decorations: cells });
 
 const noop = (): void => {
   // outside-month cells have no journal action

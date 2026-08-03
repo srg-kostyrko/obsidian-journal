@@ -1,9 +1,15 @@
 <script setup lang="ts">
 import { match } from "ts-pattern";
-import { computed } from "vue";
+import { computed, inject } from "vue";
 
 import { Clock, type AnchorString, type Period } from "@/calendar";
-import { CellDecoration, colorToString, type CellDecorationScope } from "@/decorations";
+import {
+  CellDecoration,
+  CellDecorationMapKey,
+  colorToString,
+  useDecorationMenuItems,
+  type CellDecorationScope,
+} from "@/decorations";
 import { m } from "@/i18n";
 import { useService } from "@/infrastructure/di";
 import { Flows } from "@/infrastructure/flows";
@@ -61,6 +67,9 @@ const shelfJournals = computed<readonly JournalConfig[]>(() =>
 
 const target = computed(() => resolveLinkTarget(props.row, props.journal, shelfJournals.value, entry.value));
 
+const decorationCells = inject(props.decorationScope?.map ?? CellDecorationMapKey, null);
+const decorationItems = useDecorationMenuItems(decorationCells);
+
 const text = computed(() =>
   engine.renderString(
     props.row.template,
@@ -110,7 +119,7 @@ function onClick(event: MouseEvent): void {
 
 function onContextMenu(event: MouseEvent): void {
   if (props.preventNavigation) return;
-  workspace.openPathsMenu(pathsForTarget(target.value), event);
+  workspace.openPathsMenu(pathsForTarget(target.value), event, decorationItems(props.period));
 }
 
 const hover = useModifierHoverPreview();

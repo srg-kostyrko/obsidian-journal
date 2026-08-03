@@ -1,8 +1,9 @@
-import { cleanup, render, screen } from "@testing-library/vue";
+import { cleanup, fireEvent, render, screen } from "@testing-library/vue";
 import { afterEach, beforeAll, beforeEach, describe, expect, it, vi } from "vitest";
 
 import { CalendarDate, WeekPeriod } from "@/calendar";
 import { anchor, installTestCalendar } from "@/calendar/testing";
+import { buildCondition, buildDecoration, buildStyle } from "@/decorations/testing";
 import { initLocale } from "@/i18n";
 import { provideInjectorOnApp } from "@/infrastructure/di";
 import { fixedJournal } from "@/journals/testing";
@@ -161,6 +162,24 @@ describe("NotesWeekView", () => {
       const h = buildNotesCalendarHarness({ journals: { daily: fixedJournal("daily", { type: "day" }) } });
       const { container } = mount(h, { shelf: null, week });
       expect(container.querySelector('[data-testid="header-quarter"]')).toBeNull();
+    });
+  });
+
+  describe("day cell context menu", () => {
+    it("contributes the explain item for a decorated day cell", async () => {
+      const decoration = buildDecoration({
+        conditions: [buildCondition("date")],
+        styles: [buildStyle("corner")],
+      });
+      const h = buildNotesCalendarHarness({
+        journals: { daily: fixedJournal("daily", { type: "day" }, { decorations: [decoration] }) },
+      });
+      const { container } = mount(h, { shelf: null, week });
+
+      const cell = container.querySelector('[data-anchor="2026-05-27"]');
+      await fireEvent.contextMenu(cell!);
+
+      expect(h.workspace.pathsMenuCalls.at(-1)?.extraItems).toHaveLength(1);
     });
   });
 

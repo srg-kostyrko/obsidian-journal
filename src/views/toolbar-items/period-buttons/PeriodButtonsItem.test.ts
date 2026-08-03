@@ -3,13 +3,19 @@ import { cleanup, fireEvent, render } from "@testing-library/vue";
 import { afterEach, beforeAll, describe, expect, it, vi } from "vitest";
 import { computed, defineComponent, h, ref, shallowRef } from "vue";
 
+import { CalendarDate, periodOfKind } from "@/calendar";
 import { anchor, installTestCalendar } from "@/calendar/testing";
 import type { AnchorString } from "@/calendar/types";
 import type * as Decorations from "@/decorations";
+import type { CellStyleRef } from "@/decorations";
+import { cellKey } from "@/decorations/engine";
+import { buildStyle } from "@/decorations/testing";
 import { Container, provideInjectorOnApp } from "@/infrastructure/di";
 import { Flows } from "@/infrastructure/flows";
 import { WorkspaceService, NoticeService } from "@/infrastructure/host";
 import type { VaultPath } from "@/infrastructure/host";
+import { ModalService } from "@/infrastructure/host/modals";
+import { FakeModalService } from "@/infrastructure/host/modals/testing";
 import { FakeWorkspaceService, FakeNoticeService } from "@/infrastructure/host/testing";
 import { AsyncResult } from "@/infrastructure/result";
 import { OpenDateFlow } from "@/journals";
@@ -32,9 +38,13 @@ const SCOPE = {
   custom: [] as readonly string[],
 };
 
+// Populated per-test via decorationCells so a test can assert the menu-item wiring without
+// standing up the real DecorationEngine/DecorationsStore harness this suite otherwise avoids.
+let decorationCells = new Map<string, CellStyleRef>();
+
 vi.mock("@/decorations", async (importOriginal) => ({
   ...(await importOriginal<typeof Decorations>()),
-  useCellDecorations: () => new Map(),
+  useCellDecorations: () => decorationCells,
   CellDecoration: defineComponent({
     props: { period: { type: Object, required: true } },
     setup:
@@ -91,6 +101,7 @@ function mountItem(
   container.register(NoticeService).useValue(new FakeNoticeService());
   container.register(Flows).useValue(flows as unknown as Flows);
   container.register(WorkspaceService).useValue(workspace as unknown as WorkspaceService);
+  container.register(ModalService).useValue(new FakeModalService() as unknown as ModalService);
   container.register(JournalsIndex).useClass(JournalsIndex);
   const index = container.resolve(JournalsIndex);
   const context = provideViewContextStub(contextOverride);
@@ -114,6 +125,7 @@ beforeAll(() => {
 afterEach(() => {
   cleanup();
   SCOPE.day = SCOPE.week = SCOPE.month = SCOPE.quarter = SCOPE.year = SCOPE.custom = [];
+  decorationCells = new Map();
 });
 
 describe("PeriodButtonsItem", () => {
@@ -144,6 +156,35 @@ describe("PeriodButtonsItem", () => {
 
       expect(workspace.previewFirstPathCalls).toHaveLength(1);
       expect(workspace.previewFirstPathCalls[0]?.paths).toEqual(["m/2026-05.md"]);
+    });
+
+    it("contributes the explain item to the context menu of a decorated period", async () => {
+      SCOPE.month = ["monthly"];
+      const refDate = "2026-05-15" as AnchorString;
+      const period = periodOfKind("month", CalendarDate.fromAnchor(refDate));
+      decorationCells = new Map([
+        [cellKey(period.kind, period.anchor.toAnchor()), shallowRef([buildStyle("background")])],
+      ]);
+      const { result, workspace } = mountItem(
+        { week: false, month: true, quarter: false, year: false },
+        { refDate: ref(refDate) },
+      );
+
+      await fireEvent.contextMenu(result.container.querySelector("[data-period='month']")!);
+
+      expect(workspace.pathsMenuCalls[0]?.extraItems).toHaveLength(1);
+    });
+
+    it("contributes no item to the context menu of an undecorated period", async () => {
+      SCOPE.month = ["monthly"];
+      const { result, workspace } = mountItem(
+        { week: false, month: true, quarter: false, year: false },
+        { refDate: ref("2026-05-15" as AnchorString) },
+      );
+
+      await fireEvent.contextMenu(result.container.querySelector("[data-period='month']")!);
+
+      expect(workspace.pathsMenuCalls[0]?.extraItems).toEqual([]);
     });
   });
 

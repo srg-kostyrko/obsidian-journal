@@ -16,11 +16,14 @@ import {
   NotesService,
   PluginData,
   WorkspaceService,
+  type MenuItemSpec,
   type NotesEvents,
   type VaultPath,
   NoticeService,
   WorkspaceOpenError,
 } from "@/infrastructure/host";
+import { ModalService } from "@/infrastructure/host/modals";
+import { FakeModalService } from "@/infrastructure/host/modals/testing";
 import { FakeNoteMetadataService, FakeNoticeService, FakePluginData } from "@/infrastructure/host/testing";
 import { createLoggerTestingModule } from "@/infrastructure/logger/testing";
 import { RepositoryQuery } from "@/infrastructure/repository";
@@ -77,14 +80,14 @@ class FakeJournalsIndex {
 
 class FakeWorkspace {
   openNoteCalls: { path: VaultPath; mode: unknown }[] = [];
-  pathsMenuCalls: { paths: readonly VaultPath[] }[] = [];
+  pathsMenuCalls: { paths: readonly VaultPath[]; extraItems: readonly MenuItemSpec[] }[] = [];
   previewFirstPathCalls: { paths: readonly VaultPath[] }[] = [];
   openNote(path: VaultPath, mode?: unknown): AsyncResult<void, WorkspaceOpenError> {
     this.openNoteCalls.push({ path, mode });
     return AsyncResult.ok(undefined);
   }
-  openPathsMenu(paths: readonly VaultPath[]) {
-    this.pathsMenuCalls.push({ paths });
+  openPathsMenu(paths: readonly VaultPath[], _event?: MouseEvent, extraItems: readonly MenuItemSpec[] = []) {
+    this.pathsMenuCalls.push({ paths, extraItems });
   }
   previewFirstPath(paths: readonly VaultPath[]) {
     this.previewFirstPathCalls.push({ paths });
@@ -139,6 +142,7 @@ function buildHarness(journals: Record<string, JournalConfig>): Harness {
   container.register(ShelvesRepository).useValue(shelves as unknown as ShelvesRepository);
   const workspace = new FakeWorkspace();
   container.register(WorkspaceService).useValue(workspace as unknown as WorkspaceService);
+  container.register(ModalService).useValue(new FakeModalService() as unknown as ModalService);
   const flows = new FakeFlows();
   const notices = new FakeNoticeService();
   container.register(NoticeService).useValue(notices);
@@ -676,7 +680,7 @@ describe("NavigationCodeBlock context menu", () => {
     const target = screen.getAllByText("today")[1];
     if (target) await fireEvent.contextMenu(target);
 
-    expect(h.workspace.pathsMenuCalls).toEqual([{ paths: ["Daily/2026-05-27.md"] }]);
+    expect(h.workspace.pathsMenuCalls).toEqual([{ paths: ["Daily/2026-05-27.md"], extraItems: [] }]);
   });
 
   it("resolves every matching path for openPathsMenu when there are multiple", async () => {
@@ -726,7 +730,53 @@ describe("NavigationCodeBlock context menu", () => {
     const target = screen.getAllByText("wk")[1];
     if (target) await fireEvent.contextMenu(target);
 
-    expect(h.workspace.pathsMenuCalls).toEqual([{ paths: ["Weekly1/W22.md", "Weekly2/W22.md"] }]);
+    expect(h.workspace.pathsMenuCalls).toEqual([{ paths: ["Weekly1/W22.md", "Weekly2/W22.md"], extraItems: [] }]);
+  });
+
+  it("contributes the explain item to the context menu of a decorated row", async () => {
+    const base = journalDefaultsFor({ type: "day" }, "daily");
+    const journal: JournalConfig = {
+      ...base,
+      decorations: [
+        buildDecoration({
+          conditions: [buildCondition("date")],
+          styles: [buildStyle("corner", { placement: "top-left" })],
+        }),
+      ],
+      navBlock: {
+        ...base.navBlock,
+        rows: [navRow()],
+      },
+    };
+    const h = buildHarness({ daily: journal });
+    h.index.byPath.set("Daily/2026-05-27.md", {
+      journalName: "daily",
+      anchor: "2026-05-27" as AnchorString,
+      path: "Daily/2026-05-27.md" as VaultPath,
+    });
+    mount(h, "Daily/2026-05-27.md");
+
+    const target = screen.getAllByText("today")[1];
+    if (target) await fireEvent.contextMenu(target);
+
+    expect(h.workspace.pathsMenuCalls[0]?.extraItems).toHaveLength(1);
+  });
+
+  it("contributes no item to the context menu of an undecorated row", async () => {
+    const base = journalDefaultsFor({ type: "day" }, "daily");
+    const journal: JournalConfig = { ...base, navBlock: { ...base.navBlock, rows: [navRow()] } };
+    const h = buildHarness({ daily: journal });
+    h.index.byPath.set("Daily/2026-05-27.md", {
+      journalName: "daily",
+      anchor: "2026-05-27" as AnchorString,
+      path: "Daily/2026-05-27.md" as VaultPath,
+    });
+    mount(h, "Daily/2026-05-27.md");
+
+    const target = screen.getAllByText("today")[1];
+    if (target) await fireEvent.contextMenu(target);
+
+    expect(h.workspace.pathsMenuCalls[0]?.extraItems).toEqual([]);
   });
 });
 
