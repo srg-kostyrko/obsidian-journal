@@ -179,7 +179,7 @@ describe("useNotesCell", () => {
       const { api } = mountWithApi(c, () => ["daily"]);
       const event = new MouseEvent("contextmenu");
       api.openContextMenu(may25, event);
-      expect(workspace.pathsMenuCalls).toEqual([{ paths: [], event }]);
+      expect(workspace.pathsMenuCalls).toEqual([{ paths: [], event, extraItems: [] }]);
     });
 
     it("resolves the existing paths across every in-scope journal at the period's anchor", () => {
@@ -192,7 +192,7 @@ describe("useNotesCell", () => {
 
       api.openContextMenu(may25, event);
 
-      expect(workspace.pathsMenuCalls).toEqual([{ paths: [dailyPath, secondPath], event }]);
+      expect(workspace.pathsMenuCalls).toEqual([{ paths: [dailyPath, secondPath], event, extraItems: [] }]);
     });
   });
 

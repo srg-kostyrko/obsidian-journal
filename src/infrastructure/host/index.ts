@@ -61,6 +61,7 @@ export { CommandService, type CommandRegistration } from "./commands";
 export { UriService, type UriHandler, type UriParameters } from "./uri";
 export { createHostModule } from "./module";
 export type {
+  MenuItemSpec,
   Note,
   NoteMetadata,
   NoteTask,

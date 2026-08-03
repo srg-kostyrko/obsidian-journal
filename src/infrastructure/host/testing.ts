@@ -25,7 +25,7 @@ import type { NoticeService } from "./internal/notice-service";
 import type { PluginData } from "./internal/plugin-data";
 import type { TemplaterService } from "./internal/templater-service";
 import type { WorkspaceService } from "./internal/workspace-service";
-import type { Note, NoteMetadata, NotesEvents, OpenMode, VaultPath, WorkspaceEvents } from "./types";
+import type { MenuItemSpec, Note, NoteMetadata, NotesEvents, OpenMode, VaultPath, WorkspaceEvents } from "./types";
 
 interface FakeEntry {
   content: string;
@@ -213,7 +213,8 @@ export class FakeWorkspaceService implements Pick<
   readonly events: Subscribable<WorkspaceEvents> = this.#emitter;
   readonly hoverPreviewCalls: { path: VaultPath; event: MouseEvent }[] = [];
   readonly fileMenuCalls: { path: VaultPath; event: MouseEvent }[] = [];
-  readonly pathsMenuCalls: { paths: readonly VaultPath[]; event: MouseEvent }[] = [];
+  readonly pathsMenuCalls: { paths: readonly VaultPath[]; event: MouseEvent; extraItems: readonly MenuItemSpec[] }[] =
+    [];
   readonly pickFromMenuCalls: { labels: readonly string[]; event: MouseEvent }[] = [];
   pickFromMenuChoice: string | null = null;
   readonly previewFirstPathCalls: { paths: readonly VaultPath[]; event: MouseEvent }[] = [];
@@ -265,8 +266,8 @@ export class FakeWorkspaceService implements Pick<
     this.fileMenuCalls.push({ path, event });
   }
 
-  openPathsMenu(paths: readonly VaultPath[], event: MouseEvent): void {
-    this.pathsMenuCalls.push({ paths, event });
+  openPathsMenu(paths: readonly VaultPath[], event: MouseEvent, extraItems: readonly MenuItemSpec[] = []): void {
+    this.pathsMenuCalls.push({ paths, event, extraItems });
   }
 
   pickFromMenu(labels: readonly string[], event: MouseEvent): AsyncResult<string, SuggestCancelled> {

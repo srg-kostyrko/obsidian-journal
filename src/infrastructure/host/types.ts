@@ -36,3 +36,11 @@ export interface NoteMetadata {
   readonly properties: Readonly<Record<string, unknown>>;
   readonly tasks: readonly NoteTask[];
 }
+
+// A menu entry a feature contributes to a host-built context menu. The host stays ignorant of
+// what the entry means — features own the title, the icon and what clicking it does.
+export interface MenuItemSpec {
+  readonly title: string;
+  readonly icon: string;
+  readonly onClick: () => void;
+}

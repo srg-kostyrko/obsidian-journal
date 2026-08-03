@@ -15,7 +15,7 @@ import { buildMarkdownLink } from "./markdown-link";
 import { toPaneType } from "./obsidian-bridge";
 import { InternalObsidianAppToken, InternalPluginToken } from "./tokens";
 
-import type { OpenMode, VaultPath, WorkspaceEvents } from "../types";
+import type { MenuItemSpec, OpenMode, VaultPath, WorkspaceEvents } from "../types";
 import type { Editor, MarkdownView, WorkspaceLeaf } from "obsidian";
 
 // Obsidian exposes link-preference settings only through the untyped Vault.getConfig.
@@ -143,10 +143,10 @@ export class WorkspaceService {
     this.#app.workspace.trigger("link-hover", this.#plugin, event.target, path, path);
   }
 
-  openFileMenu(path: VaultPath, event: MouseEvent): void {
+  openFileMenu(path: VaultPath, event: MouseEvent, into?: Menu): void {
     const file = this.#app.vault.getAbstractFileByPath(path);
     if (!(file instanceof TFile)) return;
-    const menu = new Menu();
+    const menu = into ?? new Menu();
     this.#app.workspace.trigger("file-menu", menu, file, "file-explorer-context-menu", null);
     // The file-menu event does not guarantee a Delete entry; append one like v2 did.
     menu.addItem((item) =>
@@ -157,20 +157,29 @@ export class WorkspaceService {
           (this.#app.fileManager as DeletePromptingFileManager).promptForFileDeletion?.(file);
         }),
     );
-    menu.showAtMouseEvent(event);
+    // A menu we were handed belongs to the caller, who decides when to show it.
+    if (!into) menu.showAtMouseEvent(event);
   }
 
-  openPathsMenu(paths: readonly VaultPath[], event: MouseEvent): void {
+  openPathsMenu(paths: readonly VaultPath[], event: MouseEvent, extraItems: readonly MenuItemSpec[] = []): void {
     const [first] = paths;
-    if (first === undefined) return;
-    if (paths.length === 1) {
-      this.openFileMenu(first, event);
-      return;
-    }
+    if (first === undefined && extraItems.length === 0) return;
+
     const menu = new Menu();
-    for (const path of paths) {
-      menu.addItem((item) => item.setTitle(path).onClick(() => this.openFileMenu(path, event)));
+    for (const spec of extraItems) {
+      menu.addItem((item) => item.setTitle(spec.title).setIcon(spec.icon).onClick(spec.onClick));
     }
+
+    if (first !== undefined) {
+      if (paths.length === 1) {
+        this.openFileMenu(first, event, menu);
+      } else {
+        for (const path of paths) {
+          menu.addItem((item) => item.setTitle(path).onClick(() => this.openFileMenu(path, event)));
+        }
+      }
+    }
+
     menu.showAtMouseEvent(event);
   }
 

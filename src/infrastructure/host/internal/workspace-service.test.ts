@@ -24,6 +24,10 @@ function build(): { service: WorkspaceService; host: FakeHost } {
 
 const path = "Daily/2026-05-13.md" as VaultPath;
 
+function noop(): void {
+  // Stands in for a real MenuItemSpec callback whose invocation is not under test.
+}
+
 describe("WorkspaceService", () => {
   describe("activeNote", () => {
     it("returns None when no markdown file is active", () => {
@@ -253,6 +257,75 @@ describe("WorkspaceService", () => {
 
       expect(host.workspace.triggerCalls).toHaveLength(1);
       expect(host.workspace.triggerCalls[0]?.event).toBe("file-menu");
+    });
+
+    it("shows a menu of only the extra items when there are no paths", async () => {
+      const { __testing } = await import("obsidian");
+      __testing.reset();
+
+      const { service } = build();
+      service.openPathsMenu([], new MouseEvent("contextmenu"), [
+        { title: "Explain decorations", icon: "info", onClick: noop },
+      ]);
+
+      const menu = __testing.lastOpenMenu();
+      expect(menu.items.map((item) => item.title)).toEqual(["Explain decorations"]);
+    });
+
+    it("shows no menu when there are neither paths nor extra items", async () => {
+      const { __testing } = await import("obsidian");
+      __testing.reset();
+
+      const { service } = build();
+      service.openPathsMenu([], new MouseEvent("contextmenu"), []);
+
+      expect(__testing.openMenus).toHaveLength(0);
+    });
+
+    it("keeps Obsidian's file entries alongside an extra item for a single path", async () => {
+      const { __testing } = await import("obsidian");
+      __testing.reset();
+
+      const { service, host } = build();
+      host.putFile(path);
+      service.openPathsMenu([path], new MouseEvent("contextmenu"), [
+        { title: "Explain decorations", icon: "info", onClick: noop },
+      ]);
+
+      const menu = __testing.lastOpenMenu();
+      expect(menu.items.map((item) => item.title)).toContain("Explain decorations");
+      expect(host.workspace.triggerCalls).toHaveLength(1);
+      expect(host.workspace.triggerCalls[0]?.event).toBe("file-menu");
+    });
+
+    it("prepends extra items before the path entries for several paths", async () => {
+      const { __testing } = await import("obsidian");
+      __testing.reset();
+
+      const { service } = build();
+      const other = "Daily/2026-05-14.md" as VaultPath;
+      service.openPathsMenu([path, other], new MouseEvent("contextmenu"), [
+        { title: "Explain decorations", icon: "info", onClick: noop },
+      ]);
+
+      const menu = __testing.lastOpenMenu();
+      expect(menu.items.map((item) => item.title)).toEqual(["Explain decorations", path, other]);
+    });
+
+    it("invokes an extra item's callback when it is chosen", async () => {
+      const { __testing } = await import("obsidian");
+      __testing.reset();
+
+      const { service } = build();
+      let invoked = false;
+      service.openPathsMenu([], new MouseEvent("contextmenu"), [
+        { title: "Explain decorations", icon: "info", onClick: () => (invoked = true) },
+      ]);
+
+      const [item] = __testing.lastOpenMenu().items;
+      (item as unknown as { click(): void }).click();
+
+      expect(invoked).toBe(true);
     });
   });
 
