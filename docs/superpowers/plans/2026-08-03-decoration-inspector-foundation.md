@@ -1007,6 +1007,176 @@ git commit -m "feat(decorations): open the breakdown modal from the decorations 
 
 ---
 
+### Task 6: Custom-interval sections
+
+The design says a date belongs to up to six cells — day, week, month, quarter, year, **and custom interval** — but the modal renders five. Tasks 1-5 shipped only the correctness half: a custom journal's decorations no longer misattribute to the day cell (the `hasOffsetCondition` filter mirrors the day grid). The consequence is that a custom journal's **non-offset** decorations currently have no surface in this modal at all. This task gives them one.
+
+**Files:**
+
+- Modify: `src/decorations/ui/DecorationBreakdownModal.vue`
+- Modify: `src/decorations/ui/DecorationBreakdownModal.test.ts`
+- Modify: `messages/en.json`
+
+**Interfaces:**
+
+- Consumes: `CycleService.anchorOf(journalName, date: CalendarDate): Option<AnchorString>`; `TimelineService.contains(journalName, anchor)`; `periodForJournal(write, anchor)` from `@/code-blocks/nav/period-for-journal`; `hasOffsetCondition` from `@/decorations`; `gatherBindings`, `explainRange`, `attributeCell` as already used.
+- Produces: no new exports. `BreakdownCell` becomes a discriminated union.
+
+#### Three things that will bite if you skip them
+
+**1. Cell keys collide, so a second `explainRange` call is mandatory.** `periodForJournal` maps a custom write to `periodOfKind("day", date)` — an interval is a **"day"-kind period at its start anchor**. When the selected date _is_ an interval's start date, `cellKey("day", startAnchor)` is byte-identical to the day cell's key. The two must show different decorations (the day cell shows offset-carrying ones; the interval shows the rest), so they cannot share one `explainRange` result — the second write would overwrite the first. Production solves this with two independently-scoped `useCellDecorations` calls (`NotesMonthView.vue` vs `CustomIntervalsBlock.vue`); this modal needs the same separation as two gather-and-explain passes.
+
+**2. The filter is the exact complement of the day cell's.** `CustomIntervalsBlock.vue` uses `filter: (binding) => !hasOffsetCondition(binding.decoration)`, scoped to the custom journals it renders. The interval pass must use that, and must be scoped to the one journal whose interval it is — not the whole `journalNames` list.
+
+**3. `isEntry` breaks on the same collision.** `entryKey` is a `cellKey` string. Because an interval starting on the selected date shares the day cell's key, comparing keys alone would highlight the interval section when the user opened the modal from a day cell. The comparison must consider the section's kind, not just its key.
+
+- [ ] **Step 1: Add the copy**
+
+Add to `messages/en.json`:
+
+```json
+"decoration_breakdown_interval_heading": "Interval — {journal} — {label}"
+```
+
+Run: `npm run compile:i18n`. Never stage anything under `src/i18n/paraglide`.
+
+- [ ] **Step 2: Write the failing tests**
+
+Add to `src/decorations/ui/DecorationBreakdownModal.test.ts`, following the harness and query style already in the file (`@testing-library/vue`, accessible-name queries, no CSS-class selectors):
+
+```ts
+it("shows an interval section for a custom journal's non-offset decoration", async () => {
+  // Seed a custom journal whose interval contains the selected date, carrying a
+  // decoration with a non-offset condition (e.g. has-note) and a background style.
+  // Assert a section headed with the interval heading renders, and that the
+  // decoration's condition summary appears inside it.
+});
+
+it("keeps a custom journal's offset decoration out of the interval section", async () => {
+  // Same journal, a decoration carrying an offset condition matching the selected day.
+  // Assert its condition summary does NOT appear inside the interval section.
+  // (It belongs to the day cell, which the existing admitting test already covers.)
+});
+
+it("highlights only the day section when opened from a day cell that starts an interval", async () => {
+  // Seed a custom journal whose interval STARTS on the selected date, plus a day-type
+  // journal decoration on that date, so both sections exist and share a cell key.
+  // Open with the day period. Assert the entry badge appears in the day section and
+  // not in the interval section.
+});
+
+it("omits an interval section for a journal whose timeline excludes the interval", async () => {
+  // A custom journal with a decoration that would match, but whose timeline does not
+  // contain the interval's anchor. Assert no interval section renders for it.
+});
+```
+
+Replace each comment with a real body. Reuse the file's existing fixture helpers rather than inventing new ones; the file already builds custom journals (see the admitting/excluding tests added in Task 4's fix round).
+
+- [ ] **Step 3: Run the tests to verify they fail**
+
+Run: `npm run test -- src/decorations/ui/DecorationBreakdownModal.test.ts`
+
+Expected: FAIL — no interval section is rendered, so the heading query finds nothing.
+
+- [ ] **Step 4: Make `BreakdownCell` a discriminated union**
+
+Replace the interface with:
+
+```ts
+type BreakdownCell =
+  | {
+      readonly kind: "fixed";
+      readonly period: Period;
+      readonly isEntry: boolean;
+      readonly attribution: CellAttribution;
+      readonly styles: readonly JournalDecorationStyle[];
+    }
+  | {
+      readonly kind: "interval";
+      readonly period: Period;
+      readonly journalName: string;
+      readonly isEntry: false;
+      readonly attribution: CellAttribution;
+      readonly styles: readonly JournalDecorationStyle[];
+    };
+```
+
+`isEntry` is `false` on interval sections by construction: every current entry point supplies a fixed-grid period, and typing it shut is what stops the key collision from ever highlighting the wrong section. Revisit only if a surface starts opening the modal from an interval row.
+
+Set `kind: "fixed"` on the cells the existing loop produces.
+
+- [ ] **Step 5: Build the interval sections**
+
+In the `cells` computed, after the existing fixed-period pass, add a second pass:
+
+```ts
+for (const name of journalNames.value) {
+  const config = journals.get(name).getOrUndefined();
+  if (config?.write.type !== "custom") continue;
+  const intervalAnchor = cycle.anchorOf(name, selectedDate).getOrUndefined();
+  if (intervalAnchor === undefined) continue;
+  if (!timeline.contains(name, intervalAnchor)) continue;
+
+  const intervalPeriod = periodForJournal(config.write, intervalAnchor);
+  // An interval is a "day"-kind period at its start anchor, so its cell key collides with
+  // the day cell's. A separate explainRange keeps the two from overwriting each other, and
+  // the complementary filter is what makes them describe different things.
+  const intervalBindings = gatherBindings(journals, store, {
+    journalNames: [name],
+    shelf: shelf.value,
+    includeCalendar: false,
+    filter: (binding) => !hasOffsetCondition(binding.decoration),
+  });
+  const intervalContributions = engine
+    .explainRange([intervalPeriod], intervalBindings)
+    .get(cellKey(intervalPeriod.kind, intervalPeriod.anchor.toAnchor()));
+  if (!intervalContributions || intervalContributions.length === 0) continue;
+
+  out.push({
+    kind: "interval",
+    period: intervalPeriod,
+    journalName: name,
+    isEntry: false,
+    attribution: attributeCell(intervalContributions),
+    styles: intervalContributions.map((contribution) => contribution.style),
+  });
+}
+```
+
+`includeCalendar: false` is deliberate: vault-wide and shelf decorations paint day cells only (`engine.ts`, `period.kind !== "day"` guard applies to the _calendar_ grid), so admitting them here would attribute a vault-wide rule to an interval it never decorates.
+
+Inject `CycleService` and `TimelineService` alongside the existing services, and import `periodForJournal` and `hasOffsetCondition`.
+
+- [ ] **Step 6: Render the heading**
+
+The existing heading keys off `cell.period.kind`, which is `"day"` for an interval and would mislabel it. Branch on `cell.kind`: fixed cells keep `m.decoration_breakdown_cell_heading({ kind, label })`; interval cells use `m.decoration_breakdown_interval_heading({ journal: cell.journalName, label: formatPeriod(cell.period) })`. Everything below the heading — preview, properties, overridden, marks — is unchanged and shared.
+
+- [ ] **Step 7: Run the tests to verify they pass**
+
+Run: `npm run test -- src/decorations/ui/DecorationBreakdownModal.test.ts`
+
+Expected: PASS.
+
+- [ ] **Step 8: Prove the separation is load-bearing**
+
+Temporarily merge the interval pass into the single `explainRange` call from Step 5 (one call over both period lists with one filter). Confirm the "highlights only the day section" test and one of the offset tests fail, then restore. Without this check, a future refactor collapsing the two passes would look harmless. Record the failure output in your report.
+
+- [ ] **Step 9: Run the full gates**
+
+Run: `npm run test && npm run check:types && npm run check:lint`
+
+Expected: all PASS, with the lint warning count unchanged from its baseline.
+
+- [ ] **Step 10: Commit**
+
+```bash
+git add src/decorations messages/en.json
+git commit -m "feat(decorations): show custom-interval cells in the breakdown modal"
+```
+
+---
+
 ## Self-Review
 
 **Spec coverage**
@@ -1030,6 +1200,9 @@ git commit -m "feat(decorations): open the breakdown modal from the decorations 
 | No migration                                                 | No task needed                                        |
 | Cell reach (`openPathsMenu` refactor)                        | **Plan 2**                                            |
 | Match badges                                                 | **Plan 3**                                            |
+| A date belongs to six cells, including a custom interval     | Task 6                                                |
+
+**Task 6 was added after Tasks 1-5 shipped.** The final whole-branch review found Task 4 specified none of the design's custom-interval section, leaving a custom journal's non-offset decorations with no surface in the modal at all. Two further design requirements for the modal — the strike-through and per-slot mark listing — were absent from Task 4 for the same reason and were closed in the final fix wave; this one was task-sized. The cause in every case was the plan paraphrasing the design's requirements rather than transcribing them, and it is the most repeated defect across this plan's reviews.
 
 **Deviation from the spec, deliberate:** the spec called for a test that projecting `explainRange` down to styles equals `evaluateRange`. Task 2 implements `evaluateRange` _as_ that projection, which makes such a test a tautology. The agreement test that has teeth is `declaredProperties` versus `resolveCell` (Task 3, Step 1) — two independent implementations of the same declaration rule, which genuinely can diverge.
 
