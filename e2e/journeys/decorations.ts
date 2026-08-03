@@ -1,4 +1,4 @@
-import { expect } from "@wdio/globals";
+import { browser, expect } from "@wdio/globals";
 
 import { seedNote } from "../support/vault.js";
 import { waitForState } from "../support/wait.js";
@@ -6,6 +6,10 @@ import { waitForState } from "../support/wait.js";
 import { calendar, openCalendarView } from "./view.js";
 
 import type { CalendarSurface, CellLocator, PeriodTestId } from "./calendar.js";
+
+// e2e specs cannot import from src/, so this is a plain literal. It MUST match
+// decoration_explain_menu_item in messages/en.json.
+export const EXPLAIN_MENU_ITEM = "Explain decorations";
 
 // Custom hex (never theme vars) so the computed rgb is deterministic across the
 // version matrix. These MUST match the fixture data.json style colors.
@@ -281,5 +285,25 @@ export function assertDecorationMatrix(surface: CalendarSurface): void {
         timeoutMsg: "icon decoration did not render on the matching day cell",
       });
     });
+  });
+}
+
+// Obsidian's Menu exposes no ARIA roles, so .menu-item-title is the only stable handle on
+// chrome we do not own. Dispatching the event directly avoids WDIO's own right-click, which
+// also triggers Obsidian's editor context menu.
+export async function rightClickCell(anchor: string): Promise<void> {
+  const selector = `[data-anchor="${anchor}"]`;
+  await browser.execute((sel: string) => {
+    document.querySelector(sel)?.dispatchEvent(new MouseEvent("contextmenu", { bubbles: true, cancelable: true }));
+  }, selector);
+}
+
+export function menuItemTitles(): Promise<string[]> {
+  return browser.execute(() => [...document.querySelectorAll(".menu-item-title")].map((el) => el.textContent ?? ""));
+}
+
+export async function closeAnyMenu(): Promise<void> {
+  await browser.execute(() => {
+    for (const menu of document.querySelectorAll(".menu")) menu.remove();
   });
 }
