@@ -143,9 +143,11 @@ export class WorkspaceService {
     this.#app.workspace.trigger("link-hover", this.#plugin, event.target, path, path);
   }
 
-  openFileMenu(path: VaultPath, event: MouseEvent, into?: Menu): void {
+  // Returns whether the file resolved and the menu was populated, so a caller building a
+  // combined menu can decline to show an empty one.
+  openFileMenu(path: VaultPath, event: MouseEvent, into?: Menu): boolean {
     const file = this.#app.vault.getAbstractFileByPath(path);
-    if (!(file instanceof TFile)) return;
+    if (!(file instanceof TFile)) return false;
     const menu = into ?? new Menu();
     this.#app.workspace.trigger("file-menu", menu, file, "file-explorer-context-menu", null);
     // The file-menu event does not guarantee a Delete entry; append one like v2 did.
@@ -159,6 +161,7 @@ export class WorkspaceService {
     );
     // A menu we were handed belongs to the caller, who decides when to show it.
     if (!into) menu.showAtMouseEvent(event);
+    return true;
   }
 
   openPathsMenu(paths: readonly VaultPath[], event: MouseEvent, extraItems: readonly MenuItemSpec[] = []): void {
@@ -172,7 +175,11 @@ export class WorkspaceService {
 
     if (first !== undefined) {
       if (paths.length === 1) {
-        this.openFileMenu(first, event, menu);
+        // A stale index path that no longer resolves to a file must not surface an empty
+        // popup where the pre-refactor code showed nothing; only the caller's own extras
+        // (if any) justify still opening the menu.
+        const populated = this.openFileMenu(first, event, menu);
+        if (!populated && extraItems.length === 0) return;
       } else {
         for (const path of paths) {
           menu.addItem((item) => item.setTitle(path).onClick(() => this.openFileMenu(path, event)));

@@ -296,6 +296,32 @@ describe("WorkspaceService", () => {
       expect(menu.items.map((item) => item.title)).toContain("Explain decorations");
       expect(host.workspace.triggerCalls).toHaveLength(1);
       expect(host.workspace.triggerCalls[0]?.event).toBe("file-menu");
+      // Only one menu may ever be shown for this call; a lost `!into` guard in openFileMenu
+      // would show the same menu twice (once from within openFileMenu, once at the end here).
+      expect(__testing.openMenus).toHaveLength(1);
+    });
+
+    it("shows no menu for a single stale path with no extra items", async () => {
+      const { __testing } = await import("obsidian");
+      __testing.reset();
+
+      const { service } = build();
+      service.openPathsMenu(["Stale/gone.md" as VaultPath], new MouseEvent("contextmenu"));
+
+      expect(__testing.openMenus).toHaveLength(0);
+    });
+
+    it("still shows the extra items' menu when the single path is stale", async () => {
+      const { __testing } = await import("obsidian");
+      __testing.reset();
+
+      const { service } = build();
+      service.openPathsMenu(["Stale/gone.md" as VaultPath], new MouseEvent("contextmenu"), [
+        { title: "Explain decorations", icon: "info", onClick: noop },
+      ]);
+
+      const menu = __testing.lastOpenMenu();
+      expect(menu.items.map((item) => item.title)).toEqual(["Explain decorations"]);
     });
 
     it("prepends extra items before the path entries for several paths", async () => {

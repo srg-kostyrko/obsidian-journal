@@ -262,8 +262,9 @@ export class FakeWorkspaceService implements Pick<
     this.hoverPreviewCalls.push({ path, event });
   }
 
-  openFileMenu(path: VaultPath, event: MouseEvent): void {
+  openFileMenu(path: VaultPath, event: MouseEvent): boolean {
     this.fileMenuCalls.push({ path, event });
+    return true;
   }
 
   openPathsMenu(paths: readonly VaultPath[], event: MouseEvent, extraItems: readonly MenuItemSpec[] = []): void {
