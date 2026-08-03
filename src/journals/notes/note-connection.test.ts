@@ -707,6 +707,50 @@ describe("NoteConnectionService", () => {
       expect(result.value.failed).toBe(1);
     });
 
+    it("keeps a manually extended end date after a re-anchor", async () => {
+      const notes = new FakeNotesService();
+      notes.seed("week/2026-W23.md" as VaultPath, "", {
+        journal: "weekly",
+        "journal-date": "2026-06-01",
+        "journal-end-date": "2026-06-21",
+      });
+      const { container, index } = build(fakeRepo(weeklyWith({ addEndDate: false })), notes, new FakeModalService());
+      index.register({
+        journalName: "weekly",
+        anchor: anchor("2026-06-01"),
+        path: "week/2026-W23.md" as VaultPath,
+        endDate: anchor("2026-06-21"),
+      });
+
+      await container
+        .resolve(NoteConnectionService)
+        .reanchorAll("weekly", new Map([["week/2026-W23.md" as VaultPath, anchor("2026-05-25")]]));
+
+      expect(notes.frontmatterOf("week/2026-W23.md" as VaultPath)?.["journal-end-date"]).toBe("2026-06-21");
+    });
+
+    it("drops a stored end date that only matches the new week's own end", async () => {
+      const notes = new FakeNotesService();
+      notes.seed("week/2026-W23.md" as VaultPath, "", {
+        journal: "weekly",
+        "journal-date": "2026-06-01",
+        "journal-end-date": "2026-05-31",
+      });
+      const { container, index } = build(fakeRepo(weeklyWith({ addEndDate: false })), notes, new FakeModalService());
+      index.register({
+        journalName: "weekly",
+        anchor: anchor("2026-06-01"),
+        path: "week/2026-W23.md" as VaultPath,
+        endDate: anchor("2026-05-31"),
+      });
+
+      await container
+        .resolve(NoteConnectionService)
+        .reanchorAll("weekly", new Map([["week/2026-W23.md" as VaultPath, anchor("2026-05-25")]]));
+
+      expect("journal-end-date" in (notes.frontmatterOf("week/2026-W23.md" as VaultPath) ?? {})).toBe(false);
+    });
+
     it("refuses a target already held by a note that is staying put", async () => {
       const notes = new FakeNotesService();
       notes.seed("week/2026-W23.md" as VaultPath, "", { journal: "weekly", "journal-date": "2026-06-01" });

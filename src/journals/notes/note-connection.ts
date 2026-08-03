@@ -78,8 +78,21 @@ export class NoteConnectionService {
 
   #reanchorOne(journalName: string, path: VaultPath, anchor: AnchorString): AsyncResult<void, ReanchorError> {
     return attempt.in(this, async function* (this: NoteConnectionService) {
-      const metadata = yield* this.#frontmatter.buildMetadata(journalName, anchor);
-      const mutator = yield* this.#frontmatter.writeMutator(journalName, metadata);
+      const built = yield* this.#frontmatter.buildMetadata(journalName, anchor);
+      // buildMetadata resolves endDate by looking up the index at the note's NEW anchor, but the
+      // move hasn't landed yet — the note is still filed under its OLD anchor, so that lookup either
+      // misses or, worse, hands back whatever other note is about to vacate the new anchor. The
+      // note's own stored entry (by path) is the only reliable source for its endDate.
+      const own = this.#index.entryByPath(path);
+      const { endDate: _staleEndDate, ...rest } = built;
+      const metadata: JournalMetadata = {
+        ...rest,
+        ...(own.isSome() && own.value.endDate !== undefined && { endDate: own.value.endDate }),
+      };
+      const mutator = yield* this.#frontmatter.writeMutator(
+        journalName,
+        this.#withoutDefaultEnd(journalName, metadata),
+      );
       yield* this.#notes.updateFrontmatter(path, mutator).tapErr((error) => {
         this.#logger.warn("failed to re-anchor note", { path, anchor, error });
       });
