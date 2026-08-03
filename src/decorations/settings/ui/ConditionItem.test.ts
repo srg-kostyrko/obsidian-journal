@@ -69,7 +69,7 @@ describe("ConditionItem", () => {
 
   it("renders ConditionWeekday for a weekday condition", () => {
     mount({ type: "weekday", weekdays: [] });
-    expect(screen.getAllByRole("checkbox")).toHaveLength(7);
+    expect(screen.getAllByRole("button")).toHaveLength(7);
   });
 
   it("renders ConditionOffset for an offset condition", () => {
