@@ -98,6 +98,7 @@ const placed = computed(() => placedFrom(styles.value));
   grid-area: 1/1;
   justify-content: flex-start;
   align-items: flex-start;
+  padding: 1px 0 0 1px;
 }
 .place-left_middle {
   grid-area: 2/1;
@@ -108,6 +109,7 @@ const placed = computed(() => placedFrom(styles.value));
   grid-area: 3/1;
   justify-content: flex-start;
   align-items: flex-end;
+  padding: 0 0 1px 1px;
 }
 .place-center_top {
   grid-area: 1/2;
@@ -128,6 +130,7 @@ const placed = computed(() => placedFrom(styles.value));
   grid-area: 1/3;
   justify-content: flex-end;
   align-items: flex-start;
+  padding: 1px 1px 0 0;
 }
 .place-right_middle {
   grid-area: 2/3;
@@ -138,5 +141,6 @@ const placed = computed(() => placedFrom(styles.value));
   grid-area: 3/3;
   justify-content: flex-end;
   align-items: flex-end;
+  padding: 0 1px 1px 0;
 }
 </style>
