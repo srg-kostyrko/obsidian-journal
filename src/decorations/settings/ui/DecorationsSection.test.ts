@@ -16,12 +16,15 @@ import { m } from "@/i18n";
 import { provideInjectorOnApp } from "@/infrastructure/di";
 import { Flows } from "@/infrastructure/flows";
 import { NoticeService } from "@/infrastructure/host";
+import { ModalService } from "@/infrastructure/host/modals";
+import { FakeModalService } from "@/infrastructure/host/modals/testing";
 import { FakeNoticeService } from "@/infrastructure/host/testing";
 import { JournalsRepository, journalDefaultsFor, type JournalConfig, type JournalsEvents } from "@/journals";
 import { createSettingsService } from "@/settings/testing";
 import { ShelvesRepository, type ShelvesEvents } from "@/shelves";
 import type { ShelfConfig } from "@/shelves/config";
 
+import { decorationBreakdownModal } from "../../ui/modals";
 import { DeleteDecorationFlow } from "../flows/delete-decoration.flow";
 import { EditDecorationFlow } from "../flows/edit-decoration.flow";
 
@@ -67,12 +70,14 @@ function mount(owner: DecorationOwner, decorations: readonly JournalDecoration[]
   }
 
   const flows = { invoke: vi.fn() };
+  const modals = new FakeModalService();
   container.register(JournalsRepository).useValue(journals);
   container.register(ShelvesRepository).useValue(shelves);
   container.register(DecorationsStore).useClass(DecorationsStore);
   container.register(NoticeService).useValue(new FakeNoticeService());
   container.register(Flows).useValue(flows as unknown as Flows);
   container.register(Calendar).useValue(new Calendar());
+  container.register(ModalService).useValue(modals as unknown as ModalService);
 
   const store = container.resolve(DecorationsStore);
 
@@ -88,7 +93,7 @@ function mount(owner: DecorationOwner, decorations: readonly JournalDecoration[]
       ],
     },
   });
-  return { flows, store };
+  return { flows, modals, store };
 }
 
 describe("DecorationsSection", () => {
@@ -157,5 +162,11 @@ describe("DecorationsSection", () => {
     const { flows } = mount({ kind: "global" }, []);
     await userEvent.click(screen.getByLabelText(m.decoration_add()));
     expect(flows.invoke).toHaveBeenCalledWith(EditDecorationFlow, { owner: { kind: "global" } });
+  });
+
+  it("opens the breakdown modal from the inspect button", async () => {
+    const { modals } = mount({ kind: "journal", journalName: "daily" }, [sampleDecoration]);
+    await userEvent.click(screen.getByLabelText(m.decoration_breakdown_open()));
+    expect(modals.lastOpen().definition).toBe(decorationBreakdownModal);
   });
 });

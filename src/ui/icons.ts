@@ -15,6 +15,7 @@ export const icons = {
     moveDown: "chevron-down",
     dragHandle: "grip-vertical",
     reset: "rotate-ccw",
+    search: "search",
   },
   nav: {
     prev: "chevron-left",

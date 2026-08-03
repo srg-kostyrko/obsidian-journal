@@ -7,12 +7,14 @@ import { DecorationPreview, DecorationsStore, type DecorationOwner, type Journal
 import { m } from "@/i18n";
 import { useService } from "@/infrastructure/di";
 import { Flows } from "@/infrastructure/flows";
+import { useModalService } from "@/infrastructure/host/modals";
 import { icons } from "@/ui/icons";
 import UiCollapsibleBlock from "@/ui/UiCollapsibleBlock.vue";
 import UiIcon from "@/ui/UiIcon.vue";
 import UiIconButton from "@/ui/UiIconButton.vue";
 import UiSettingRow from "@/ui/UiSettingRow.vue";
 
+import { decorationBreakdownModal } from "../../ui/modals";
 import { DeleteDecorationFlow } from "../flows/delete-decoration.flow";
 import { EditDecorationFlow } from "../flows/edit-decoration.flow";
 
@@ -23,6 +25,7 @@ const { owner } = defineProps<{ owner: DecorationOwner }>();
 const flows = useService(Flows);
 const store = useService(DecorationsStore);
 const calendar = useService(Calendar);
+const modals = useModalService();
 
 const decorations = computed<readonly JournalDecoration[]>(() => store.list(owner));
 
@@ -45,6 +48,9 @@ const description = computed(() =>
 const expanded = ref(false);
 const previewDay = new Date().getDate();
 
+function inspect(): void {
+  void modals.open(decorationBreakdownModal, {});
+}
 function add(): void {
   void flows.invoke(EditDecorationFlow, { owner });
 }
@@ -66,6 +72,7 @@ function remove(index: number): void {
       </span>
     </template>
     <template #controls>
+      <UiIconButton :icon="icons.action.search" :tooltip="m.decoration_breakdown_open()" @click="inspect" />
       <UiIconButton :icon="icons.action.add" :tooltip="m.decoration_add()" @click="add" />
     </template>
 
