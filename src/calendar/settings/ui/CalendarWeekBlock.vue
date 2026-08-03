@@ -16,6 +16,7 @@ import UiToggle from "@/ui/UiToggle.vue";
 
 import { calendarDisplaySlice, type WeekPlacement } from "../display-slice";
 import { calendarSlice, type CalendarSliceState } from "../slice";
+import { WeekPresetApplierToken } from "../week-preset-applier";
 
 import { weekPresetPickerModal } from "./modals";
 
@@ -25,6 +26,7 @@ const settings = useService(SettingsService);
 const calendar = useService(Calendar);
 const modals = useModalService();
 const reloadHint = useService(ReloadHintService);
+const applyPreset = useService(WeekPresetApplierToken);
 const slice = settings.getSlice(calendarSlice);
 const displaySlice = settings.getSlice(calendarDisplaySlice);
 const expanded = ref(false);
@@ -71,7 +73,9 @@ function touchesGlobalPatch(before: CalendarSliceState, after: CalendarSliceStat
 function change(): void {
   void modals.open(weekPresetPickerModal, { current: slice.state }).tap((value) => {
     if (touchesGlobalPatch(slice.state, value)) reloadHint.request();
-    slice.state = value;
+    // The applier owns the slice write: the new preset and the notes re-anchored onto it have
+    // to move together, or the notes drop out of the index.
+    void applyPreset.apply(value);
   });
 }
 </script>

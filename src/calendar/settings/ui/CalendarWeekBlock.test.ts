@@ -2,7 +2,7 @@ import userEvent from "@testing-library/user-event";
 import { cleanup, render, screen } from "@testing-library/vue";
 import { afterEach, describe, expect, it, vi } from "vitest";
 
-import { Calendar } from "@/calendar";
+import { Calendar, WeekPresetApplierToken } from "@/calendar";
 import { m } from "@/i18n";
 import { provideInjectorOnApp, type Container } from "@/infrastructure/di";
 import { ModalService } from "@/infrastructure/host/modals";
@@ -29,8 +29,16 @@ function setupContainer(initial?: CalendarSliceState) {
   container.register(ModalService).useValue(modalService);
   container.register(Calendar).useValue(new Calendar());
   container.register(ReloadHintService).useClass(ReloadHintService);
+  const applier = { apply: vi.fn(() => AsyncResult.ok()) };
+  container.register(WeekPresetApplierToken).useValue(applier);
 
-  return { container, settings: settings.service, modalService, reloadHint: container.resolve(ReloadHintService) };
+  return {
+    container,
+    settings: settings.service,
+    modalService,
+    reloadHint: container.resolve(ReloadHintService),
+    applier,
+  };
 }
 
 function mount(container: Container) {
@@ -162,21 +170,15 @@ describe("CalendarWeekBlock", () => {
     expect(reloadHint.pending.value).toBe(true);
   });
 
-  it("updates the slice state when the modal resolves Ok", async () => {
-    const { container, settings, modalService } = setupContainer();
+  it("hands the picked preset to the applier", async () => {
+    const { container, settings, modalService, applier } = setupContainer();
     await settings.initialize();
-    (modalService.open as ReturnType<typeof vi.fn>).mockReturnValue(
-      AsyncResult.ok<CalendarSliceState>({ mode: "custom", dow: 0, doy: 6, global: false }),
-    );
+    vi.mocked(modalService.open).mockReturnValue(AsyncResult.ok({ mode: "custom", dow: 0, doy: 6, global: false }));
     mount(container);
     await openSection();
+
     await userEvent.click(screen.getByText(m.calendar_week_config_change()));
-    await Promise.resolve();
-    expect(settings.getSlice(calendarSlice).state).toEqual({
-      mode: "custom",
-      dow: 0,
-      doy: 6,
-      global: false,
-    });
+
+    expect(applier.apply).toHaveBeenCalledWith({ mode: "custom", dow: 0, doy: 6, global: false });
   });
 });
