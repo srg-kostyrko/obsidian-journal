@@ -8,8 +8,8 @@ export class WeekPeriod implements PeriodBase<WeekPeriod> {
     return new WeekPeriod(localMoment(date.toAnchor(), "YYYY-MM-DD", true));
   }
 
-  // Seeded mid-year rather than from "now": setting weekYear while the current instant sits in
-  // week 53 clamps in a 52-week target year, and June 15 is in week-year Y for every Y and grid.
+  // Seeded mid-year rather than from "now": the result must not depend on when this code runs,
+  // and June 15 is in week-year Y for every Y and grid, so it's a stable, deterministic seed.
   static ofWeek(weekYear: number, weekOfYear: number): WeekPeriod {
     const seed = localMoment(`${weekYear}-06-15`, "YYYY-MM-DD", true);
     return new WeekPeriod(seed.weekYear(weekYear).week(weekOfYear));
