@@ -458,6 +458,8 @@
   "decoration_breakdown_overridden_heading": "Overridden here",
   "decoration_breakdown_scope": [{"declarations":["input kind"],"selectors":["kind"],"match":{"kind=journal":"Journal","kind=shelf":"Shelf","kind=global":"Vault-wide"}}],
   "decoration_breakdown_property": [{"declarations":["input property"],"selectors":["property"],"match":{"property=background":"Background","property=textColor":"Text color","property=border.top":"Border top","property=border.right":"Border right","property=border.bottom":"Border bottom","property=border.left":"Border left","property=corner.top-left":"Corner top left","property=corner.top-right":"Corner top right","property=corner.bottom-left":"Corner bottom left","property=corner.bottom-right":"Corner bottom right"}}],
+  "decoration_breakdown_period_kind": [{"declarations":["input kind"],"selectors":["kind"],"match":{"kind=day":"Day","kind=week":"Week","kind=month":"Month","kind=quarter":"Quarter","kind=year":"Year","kind=decade":"Decade"}}],
+  "decoration_breakdown_entry_badge": "Opened from here",
   "decoration_condition_all_tasks_completed_describe": "all tasks are completed",
   "decoration_condition_date_describe": [
     {
