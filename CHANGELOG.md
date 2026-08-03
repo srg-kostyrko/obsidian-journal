@@ -31,6 +31,7 @@ All notable changes to this project will be documented in this file.
 - A navigation link no longer opens two context menus at once.
 - Previously imported notes now appear on the calendar after startup.
 - The open-next and open-previous note commands now work in Reading (preview) mode.
+- Interval-offset decorations now mark the interval's first day by default instead of never matching, and the editor spells out which day the offset targets.
 
 ## [2.1.9] - 2025-06-07
 
