@@ -549,8 +549,10 @@ describe("WeekPresetService", () => {
 
     await service.apply(WESTERN);
 
-    // 2026-05-31 is the start of week 23 under a Sunday-start grid.
-    expect(WeekPeriod.containing(date("2026-05-31")).weekOfYear).toBe(23);
+    // Read the date the service actually wrote and ask the new grid what week it is —
+    // asserting a hardcoded date here would pass without the note being touched at all.
+    const written = String(notes.frontmatterOf("week/2026-W23.md" as VaultPath)?.["journal-date"]);
+    expect(WeekPeriod.containing(date(written)).weekOfYear).toBe(23);
   });
 
   it("keeps the week-year of a note whose week straddles January 1", async () => {
