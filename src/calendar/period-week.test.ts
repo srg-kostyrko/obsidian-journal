@@ -144,6 +144,27 @@ describe("WeekPeriod", () => {
     });
   });
 
+  describe("ofWeek", () => {
+    it("resolves a mid-year week to its Monday under ISO 8601", () => {
+      expect(WeekPeriod.ofWeek(2026, 23).anchor.toAnchor()).toBe("2026-06-01");
+    });
+
+    it("resolves week 1 to the previous December when the week straddles January 1", () => {
+      expect(WeekPeriod.ofWeek(2026, 1).anchor.toAnchor()).toBe("2025-12-29");
+    });
+
+    it("resolves the same week to its Sunday under a Sunday-start grid", () => {
+      teardown();
+      ({ teardown } = installTestCalendar({ dow: 0, doy: 6 }));
+      expect(WeekPeriod.ofWeek(2026, 23).anchor.toAnchor()).toBe("2026-05-31");
+    });
+
+    it("round-trips a week number through containing", () => {
+      const week = WeekPeriod.ofWeek(2026, 40);
+      expect(WeekPeriod.containing(week.anchor).weekOfYear).toBe(40);
+    });
+  });
+
   describe("non-ISO locale", () => {
     it("uses Sunday-start week when configured with dow=0", () => {
       teardown();
