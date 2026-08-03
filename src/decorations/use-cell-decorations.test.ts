@@ -18,6 +18,7 @@ import type { ShelfConfig } from "@/shelves/config";
 
 import { DecorationsStore } from "./decorations-store";
 import { cellKey, DecorationEngine } from "./engine";
+import { resolveCell } from "./resolve-cell";
 import { decorationsSlice } from "./settings/slice";
 import { buildCalendarDecoration, buildCondition, buildDecoration, buildStyle } from "./testing";
 import { CellDecorationMapKey, type CellStyleRef } from "./ui/cell-decoration-map-key";
@@ -430,7 +431,7 @@ describe("useCellDecorations", () => {
       expect(cells.get(key(period))?.value).toEqual([]);
     });
 
-    it("orders a journal's styles ahead of a vault-wide decoration's", async () => {
+    it("resolves a journal's background over a vault-wide decoration's", async () => {
       const journalStyle = buildStyle("background", { color: { type: "custom", color: "#111111" } });
       const globalStyle = buildStyle("background", { color: { type: "custom", color: "#222222" } });
       const journalDecoration = buildDecoration({
@@ -451,8 +452,37 @@ describe("useCellDecorations", () => {
       const cells = mountCells(c, [period], ["daily"], { shelf: null });
       await nextTick();
 
-      // backgroundFrom() takes the first background in the bucket, so order is the precedence rule.
-      expect(cells.get(key(period))?.value.at(0)).toEqual(journalStyle);
+      expect(resolveCell(cells.get(key(period))?.value ?? []).background).toBe("#111111");
+    });
+
+    it("resolves a journal's border over a vault-wide decoration's", async () => {
+      const journalBorder = buildStyle("border", {
+        border: "uniform",
+        left: { show: true, width: 2, style: "solid", color: { type: "custom", color: "#111111" } },
+      });
+      const globalBorder = buildStyle("border", {
+        border: "uniform",
+        left: { show: true, width: 2, style: "solid", color: { type: "custom", color: "#222222" } },
+      });
+      const journalDecoration = buildDecoration({
+        mode: "or",
+        conditions: [buildCondition("weekday", { weekdays: [1] })],
+        styles: [journalBorder],
+      });
+      const { c, store } = buildHarness([journalDecoration]);
+      store.save({ kind: "global" }, [
+        buildCalendarDecoration({
+          mode: "or",
+          conditions: [buildCondition("weekday", { weekdays: [1] })],
+          styles: [globalBorder],
+        }),
+      ]);
+      const period = DayPeriod.containing(date("2026-05-25"));
+
+      const cells = mountCells(c, [period], ["daily"], { shelf: null });
+      await nextTick();
+
+      expect(resolveCell(cells.get(key(period))?.value ?? []).border.top).toBe("2px solid #111111");
     });
 
     it("leaves a day cell untouched when the surface does not opt in", async () => {
@@ -490,7 +520,7 @@ describe("useCellDecorations", () => {
       expect(cells.get(key(period))?.value).toEqual(decoration.styles);
     });
 
-    it("orders a shelf's styles ahead of a vault-wide decoration's", async () => {
+    it("resolves a shelf's background over a vault-wide decoration's", async () => {
       const shelfStyle = buildStyle("background", { color: { type: "custom", color: "#333333" } });
       const globalStyle = buildStyle("background", { color: { type: "custom", color: "#444444" } });
       const weekdayCondition = buildCondition("weekday", { weekdays: [1] });
@@ -506,7 +536,7 @@ describe("useCellDecorations", () => {
       const cells = mountCells(c, [period], [], { shelf: "work" });
       await nextTick();
 
-      expect(cells.get(key(period))?.value.at(0)).toEqual(shelfStyle);
+      expect(resolveCell(cells.get(key(period))?.value ?? []).background).toBe("#333333");
     });
   });
 });

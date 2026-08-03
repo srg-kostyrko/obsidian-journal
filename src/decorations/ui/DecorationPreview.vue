@@ -1,14 +1,7 @@
 <script setup lang="ts">
 import { computed } from "vue";
 
-import {
-  backgroundFrom,
-  borderStylesFrom,
-  cornersFrom,
-  paddingFrom,
-  placedFrom,
-  textColorFrom,
-} from "../derive-styles";
+import { formatPadding, resolveCell } from "../resolve-cell";
 
 import DecorationCorner from "./DecorationCorner.vue";
 import DecorationIcon from "./DecorationIcon.vue";
@@ -18,20 +11,27 @@ import type { JournalDecorationStyle } from "../config";
 
 const props = defineProps<{ styles: readonly JournalDecorationStyle[] }>();
 
-const background = computed(() => backgroundFrom(props.styles));
-const textColor = computed(() => textColorFrom(props.styles));
-const border = computed(() => borderStylesFrom(props.styles));
-const padding = computed(() => paddingFrom(props.styles));
-const corners = computed(() => cornersFrom(props.styles));
-const placed = computed(() => placedFrom(props.styles));
+const cell = computed(() => resolveCell(props.styles));
+// Named separately because `v-bind()` in the scoped style block resolves setup bindings by name.
+const background = computed(() => cell.value.background);
+const textColor = computed(() => cell.value.textColor);
+const padding = computed(() => formatPadding(cell.value.padding));
 </script>
 
 <template>
   <span class="decoration-preview" data-testid="decoration-preview">
-    <span class="decoration-preview__border" :style="border" />
-    <DecorationCorner v-for="(corner, i) in corners" :key="i" :decoration="corner" />
+    <span
+      class="decoration-preview__border"
+      :style="{
+        borderTop: cell.border.top,
+        borderRight: cell.border.right,
+        borderBottom: cell.border.bottom,
+        borderLeft: cell.border.left,
+      }"
+    />
+    <DecorationCorner v-for="(corner, i) in cell.corners" :key="i" :decoration="corner" />
     <span class="decoration-preview__placed">
-      <template v-for="(group, key) in placed" :key="key">
+      <template v-for="(group, key) in cell.marks" :key="key">
         <span v-if="group.length > 0" :class="`place place-${key}`">
           <template v-for="(d, i) in group" :key="i">
             <DecorationIcon v-if="d.type === 'icon'" :decoration="d" />

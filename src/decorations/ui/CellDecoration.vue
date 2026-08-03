@@ -3,15 +3,8 @@ import { computed, inject } from "vue";
 
 import type { Period } from "@/calendar";
 
-import {
-  backgroundFrom,
-  borderStylesFrom,
-  cornersFrom,
-  paddingFrom,
-  placedFrom,
-  textColorFrom,
-} from "../derive-styles";
 import { cellKey } from "../engine";
+import { formatPadding, resolveCell } from "../resolve-cell";
 
 import { CellDecorationMapKey, CellPaddingKey, type CellDecorationScope } from "./cell-decoration-map-key";
 import DecorationCorner from "./DecorationCorner.vue";
@@ -28,22 +21,29 @@ const styles = computed<readonly JournalDecorationStyle[]>(
   () => cells?.get(cellKey(props.period.kind, props.period.anchor.toAnchor()))?.value ?? [],
 );
 
-const background = computed(() => backgroundFrom(styles.value));
-const textColor = computed(() => textColorFrom(styles.value));
-const border = computed(() => borderStylesFrom(styles.value));
+const cell = computed(() => resolveCell(styles.value));
+// Named separately because `v-bind()` in the scoped style block resolves setup bindings by name.
+const background = computed(() => cell.value.background);
+const textColor = computed(() => cell.value.textColor);
 // Within a decorated grid every cell shares one reservation so a single decoration never
 // inflates only its own row; standalone use (e.g. previews) falls back to its own styles.
-const padding = computed(() => sharedPadding?.value ?? paddingFrom(styles.value));
-const corners = computed(() => cornersFrom(styles.value));
-const placed = computed(() => placedFrom(styles.value));
+const padding = computed(() => sharedPadding?.value ?? formatPadding(cell.value.padding));
 </script>
 
 <template>
   <span class="cell-decoration" data-testid="cell-decoration">
-    <span class="cell-decoration__border" :style="border" />
-    <DecorationCorner v-for="(corner, i) in corners" :key="i" :decoration="corner" />
+    <span
+      class="cell-decoration__border"
+      :style="{
+        borderTop: cell.border.top,
+        borderRight: cell.border.right,
+        borderBottom: cell.border.bottom,
+        borderLeft: cell.border.left,
+      }"
+    />
+    <DecorationCorner v-for="(corner, i) in cell.corners" :key="i" :decoration="corner" />
     <span class="cell-decoration__placed">
-      <template v-for="(group, key) in placed" :key="key">
+      <template v-for="(group, key) in cell.marks" :key="key">
         <span v-if="group.length > 0" :class="`place place-${key}`">
           <template v-for="(d, i) in group" :key="i">
             <DecorationIcon v-if="d.type === 'icon'" :decoration="d" />

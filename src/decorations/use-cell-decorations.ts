@@ -6,7 +6,6 @@ import { NoteMetadataService, NotesService, type VaultPath } from "@/infrastruct
 import { JournalsIndex, JournalsRepository } from "@/journals";
 
 import { DecorationsStore } from "./decorations-store";
-import { paddingFromAll } from "./derive-styles";
 import {
   cellKey,
   DecorationEngine,
@@ -15,6 +14,7 @@ import {
   type DecorationBinding,
   type JournalDecorationBinding,
 } from "./engine";
+import { formatPadding, mergePadding, resolveCell } from "./resolve-cell";
 import { defaultCellDecorationScope, type CellDecorationScope, type CellStyleRef } from "./ui/cell-decoration-map-key";
 
 import type { JournalDecoration, JournalDecorationStyle } from "./config";
@@ -49,8 +49,18 @@ export function useCellDecorations(options: CellDecorationsOptions): ReadonlyMap
 
   function gatherDecorations(): readonly DecorationBinding[] {
     const out: DecorationBinding[] = [];
-    // Journal, then shelf, then global: backgroundFrom()/textColorFrom() take the first match,
-    // so gathering order is what makes the most specific owner win.
+    // Vault-wide, then shelf, then journal: resolveCell() takes the last declaration of each
+    // exclusive property, so gathering order is what makes the most specific owner win.
+    const calendar = options.calendarDecorations;
+    if (calendar && store) {
+      const globalDecorations = store.calendarList({ kind: "global" });
+      for (const decoration of globalDecorations) out.push({ kind: "calendar", decoration });
+      const shelfName = toValue(calendar.shelf);
+      if (shelfName !== null) {
+        const shelfDecorations = store.calendarList({ kind: "shelf", shelfName });
+        for (const decoration of shelfDecorations) out.push({ kind: "calendar", decoration });
+      }
+    }
     for (const name of toValue(options.journalNames)) {
       const opt = journals.get(name);
       if (opt.isNone()) continue;
@@ -58,16 +68,6 @@ export function useCellDecorations(options: CellDecorationsOptions): ReadonlyMap
         const binding = { kind: "journal", journalName: name, decoration } as const;
         if (filter(binding)) out.push(binding);
       }
-    }
-    const calendar = options.calendarDecorations;
-    if (calendar && store) {
-      const shelfName = toValue(calendar.shelf);
-      if (shelfName !== null) {
-        const shelfDecorations = store.calendarList({ kind: "shelf", shelfName });
-        for (const decoration of shelfDecorations) out.push({ kind: "calendar", decoration });
-      }
-      const globalDecorations = store.calendarList({ kind: "global" });
-      for (const decoration of globalDecorations) out.push({ kind: "calendar", decoration });
     }
     return out;
   }
@@ -146,7 +146,7 @@ export function useCellDecorations(options: CellDecorationsOptions): ReadonlyMap
   // individual decorations come and go.
   const sharedPadding = computed(() => {
     void toValue(options.periods);
-    return paddingFromAll(Array.from(cells.values(), (slot) => slot.value));
+    return formatPadding(mergePadding(Array.from(cells.values(), (slot) => resolveCell(slot.value).padding)));
   });
   provide(scope.padding, sharedPadding);
 
