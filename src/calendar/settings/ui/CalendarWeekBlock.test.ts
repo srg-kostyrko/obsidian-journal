@@ -29,7 +29,15 @@ function setupContainer(initial?: CalendarSliceState) {
   container.register(ModalService).useValue(modalService);
   container.register(Calendar).useValue(new Calendar());
   container.register(ReloadHintService).useClass(ReloadHintService);
-  const applier = { apply: vi.fn(() => AsyncResult.ok()) };
+  // Mirrors WeekPresetService.apply: the real applier writes the slice synchronously before
+  // it awaits the re-anchor, so reload-hint tests stay sensitive to call order against a
+  // stub that does the same.
+  const applier = {
+    apply: vi.fn((next: CalendarSliceState) => {
+      settings.service.getSlice(calendarSlice).state = next;
+      return AsyncResult.ok();
+    }),
+  };
   container.register(WeekPresetApplierToken).useValue(applier);
 
   return {
