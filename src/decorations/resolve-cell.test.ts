@@ -1,7 +1,10 @@
 import { describe, expect, it } from "vitest";
 
-import { formatPadding, mergePadding, resolveCell } from "./resolve-cell";
+import { declaredProperties, formatPadding, mergePadding, resolveCell, type ResolvedCell } from "./resolve-cell";
 import { buildStyle } from "./testing";
+import { colorToString } from "./ui/color";
+
+import type { JournalDecorationStyle } from "./config";
 
 describe("resolveCell", () => {
   describe("background", () => {
@@ -163,4 +166,72 @@ describe("mergePadding", () => {
   it("reserves the base extents when no cell is decorated", () => {
     expect(formatPadding(mergePadding([]))).toBe(formatPadding(resolveCell([]).padding));
   });
+});
+
+describe("declaredProperties", () => {
+  const ALL_PROPERTIES = [
+    "background",
+    "textColor",
+    "border.top",
+    "border.right",
+    "border.bottom",
+    "border.left",
+    "corner.top-left",
+    "corner.top-right",
+    "corner.bottom-left",
+    "corner.bottom-right",
+  ] as const;
+
+  // Reading a resolved cell property by its ExclusiveProperty name, so the two
+  // implementations can be compared without either knowing about the other.
+  function read(cell: ResolvedCell, property: (typeof ALL_PROPERTIES)[number]): string {
+    if (property === "background") return cell.background;
+    if (property === "textColor") return cell.textColor;
+    if (property.startsWith("border.")) {
+      const side = property.slice("border.".length) as "top" | "right" | "bottom" | "left";
+      return cell.border[side];
+    }
+    const placement = property.slice("corner.".length);
+    const corner = cell.corners.find((c) => c.placement === placement);
+    return corner ? colorToString(corner.color) : "none";
+  }
+
+  const cases: { name: string; style: JournalDecorationStyle }[] = [
+    { name: "a background style", style: buildStyle("background", { color: { type: "custom", color: "#123456" } }) },
+    { name: "a color style", style: buildStyle("color", { color: { type: "custom", color: "#654321" } }) },
+    {
+      name: "a uniform border",
+      style: buildStyle("border", {
+        border: "uniform",
+        left: { show: true, width: 2, style: "solid", color: { type: "custom", color: "#abcdef" } },
+      }),
+    },
+    {
+      name: "a per-side border with one shown side",
+      style: buildStyle("border", {
+        border: "different",
+        top: { show: true, width: 2, style: "solid", color: { type: "custom", color: "#abcdef" } },
+      }),
+    },
+    {
+      name: "a per-side border with every side hidden",
+      style: buildStyle("border", { border: "different" }),
+    },
+    {
+      name: "a corner",
+      style: buildStyle("corner", { placement: "top-right", color: { type: "custom", color: "#0abcde" } }),
+    },
+    { name: "a shape", style: buildStyle("shape", { color: { type: "custom", color: "#111111" } }) },
+    { name: "an icon", style: buildStyle("icon", { color: { type: "custom", color: "#222222" } }) },
+  ];
+
+  for (const { name, style } of cases) {
+    it(`reports exactly the properties ${name} changes when resolved`, () => {
+      const before = resolveCell([]);
+      const after = resolveCell([style]);
+      const changed = ALL_PROPERTIES.filter((property) => read(after, property) !== read(before, property));
+
+      expect([...declaredProperties(style)].toSorted()).toEqual([...changed].toSorted());
+    });
+  }
 });

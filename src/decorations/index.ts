@@ -65,3 +65,5 @@ export {
   UnknownDecorationOwnerError,
   type DecorationLifecycleError,
 } from "./errors";
+export { attributeCell, type CellAttribution, type PropertyAttribution } from "./attribute-cell";
+export { declaredProperties, type ExclusiveProperty } from "./resolve-cell";

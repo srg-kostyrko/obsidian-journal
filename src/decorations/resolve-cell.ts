@@ -178,3 +178,32 @@ export function mergePadding(all: Iterable<PaddingExtents>): PaddingExtents {
   }
   return merged;
 }
+
+export type ExclusiveProperty =
+  | "background"
+  | "textColor"
+  | "border.top"
+  | "border.right"
+  | "border.bottom"
+  | "border.left"
+  | "corner.top-left"
+  | "corner.top-right"
+  | "corner.bottom-left"
+  | "corner.bottom-right";
+
+// Which exclusive properties a style competes for. A hidden border side abstains, so it
+// declares nothing; marks never compete, so they declare nothing either.
+export function declaredProperties(style: JournalDecorationStyle): readonly ExclusiveProperty[] {
+  return match<JournalDecorationStyle, readonly ExclusiveProperty[]>(style)
+    .with({ type: "background" }, () => ["background"])
+    .with({ type: "color" }, () => ["textColor"])
+    .with({ type: "border" }, (s) => {
+      if (s.border === "uniform") {
+        return s.left.show ? ["border.top", "border.right", "border.bottom", "border.left"] : [];
+      }
+      return BORDER_SIDES.filter((side) => s[side].show).map((side) => `border.${side}` as ExclusiveProperty);
+    })
+    .with({ type: "corner" }, (s) => [`corner.${s.placement}` as ExclusiveProperty])
+    .with({ type: "shape" }, { type: "icon" }, () => [])
+    .exhaustive();
+}
