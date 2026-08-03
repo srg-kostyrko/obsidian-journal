@@ -485,6 +485,30 @@ describe("useCellDecorations", () => {
       expect(resolveCell(cells.get(key(period))?.value ?? []).border.top).toBe("2px solid #111111");
     });
 
+    it("resolves a journal's background over a shelf's", async () => {
+      const journalStyle = buildStyle("background", { color: { type: "custom", color: "#555555" } });
+      const shelfStyle = buildStyle("background", { color: { type: "custom", color: "#666666" } });
+      const journalDecoration = buildDecoration({
+        mode: "or",
+        conditions: [buildCondition("weekday", { weekdays: [1] })],
+        styles: [journalStyle],
+      });
+      const { c, store } = buildHarness([journalDecoration]);
+      store.save({ kind: "shelf", shelfName: "work" }, [
+        buildCalendarDecoration({
+          mode: "or",
+          conditions: [buildCondition("weekday", { weekdays: [1] })],
+          styles: [shelfStyle],
+        }),
+      ]);
+      const period = DayPeriod.containing(date("2026-05-25"));
+
+      const cells = mountCells(c, [period], ["daily"], { shelf: "work" });
+      await nextTick();
+
+      expect(resolveCell(cells.get(key(period))?.value ?? []).background).toBe("#555555");
+    });
+
     it("leaves a day cell untouched when the surface does not opt in", async () => {
       const decoration = buildCalendarDecoration({
         mode: "or",
