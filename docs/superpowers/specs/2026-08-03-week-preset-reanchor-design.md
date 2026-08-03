@@ -81,13 +81,17 @@ Best-effort per note, like the rest of the family: one unwritable note must
 not strand the journal. Unlike its siblings it returns
 `{ rewritten, failed }` — see [Error handling](#error-handling).
 
-### `ChangeWeekPresetFlow`
+Targets are applied under a claim check. A grid change can leave a year one
+week shorter, which collapses two weeks onto one anchor; the loser keeps its
+old date rather than overwriting the winner's note, and counts as failed.
 
-`journals/settings/flows/change-week-preset.flow.ts`. Owns the ordering,
-which is the part that is easy to get wrong:
+### `WeekPresetService`
+
+`journals/settings/week-preset-service.ts`. Owns the ordering, which is the
+part that is easy to get wrong:
 
 ```
-execute({ next })
+apply(next)
   1. snapshot   for every journal with write.type === "week":
                   entriesFor(name) → { path, weekYear, weekOfYear }   ← read under the OLD grid
   2. commit     calendarSlice.state = next
@@ -101,16 +105,28 @@ from a Vue `watchEffect` (`calendar/settings/bridge.ts:18-20`), which
 flushes on nextTick, so anything computing week boundaries immediately after
 the slice write still sees the old grid.
 
-The flow lives on the journals side because `@/calendar` must not import
+The service lives on the journals side because `@/calendar` must not import
 `@/journals` — the barrel cycle recorded in
-`[[project_journals_barrel_import_cycle]]`. `CalendarWeekBlock.vue` reaches
-it by direct submodule path, the pattern already used for journal services
-in settings UI.
+`[[project_journals_barrel_import_cycle]]`.
+
+A direct submodule import from the component was the first plan and does not
+work. `@/calendar/index.ts` → `settings/module.ts` →
+`ui/CalendarWeekBlock.vue`, so _any_ journals import from that component
+closes a cycle back through the journals side's own `@/calendar` imports
+(`journals/cycle.ts` imports the barrel for values, not just types).
+`import-x/no-cycle` is an ESLint error (`eslint.config.mjs:168`), so this
+fails the lint gate rather than merely being untidy.
+
+The seam is inverted instead: `calendar/settings/week-preset-applier.ts`
+declares a `WeekPresetApplier` interface and a DI token, the component
+resolves the token, and the journals module registers `WeekPresetService`
+against it. Calendar declares what it needs; journals supplies it; no
+calendar → journals import exists.
 
 ### Changed call site
 
-`CalendarWeekBlock.change()` invokes the flow with the picker's result
-instead of assigning `slice.state` directly. The `touchesGlobalPatch` reload
+`CalendarWeekBlock.change()` calls the resolved applier with the picker's
+result instead of assigning `slice.state` directly. The `touchesGlobalPatch` reload
 hint stays where it is. `WeekPresetPickerModal` gains v2's heads-up line —
 week numbers are kept, dates are updated — as a new `en.json` string
 following the copy rules in `docs/2026-07-13-ux-text-audit.md` §A.
@@ -140,8 +156,9 @@ The slice write cannot fail. Individual `updateFrontmatter` calls can — a
 deleted note, a lock, malformed frontmatter — and are swallowed per note and
 logged with `logger.warn`, matching `DataMigrationService`.
 
-`reanchorAll` returns `{ rewritten, failed }` and the flow raises a single
-notice when `failed > 0`. This is a deliberate divergence from the silent
+`reanchorAll` returns `{ rewritten, failed }` — `failed` covering both write
+failures and refused collisions — and the service raises a single notice when
+`failed > 0`. This is a deliberate divergence from the silent
 best-effort siblings: a note that fails to re-anchor is left in exactly the
 state this change exists to prevent — dropped from the index, blank calendar
 cell — and no other on-screen signal would reveal it. Successful rewrites
@@ -155,9 +172,10 @@ under a Sunday-start grid; for a week 1 that straddles January 1.
 **`reanchorAll`** — writes the target anchor into the date field; recomputes
 the start-date field when enabled; recomputes the end-date field when
 enabled; skips a note whose target equals its current anchor; keeps
-rewriting after one note fails; reports the failure count.
+rewriting after one note fails; reports the failure count; refuses a target
+already held by a note that is staying put.
 
-**`ChangeWeekPresetFlow`** — a Monday→Sunday change moves a weekly note's
+**`WeekPresetService`** — a Monday→Sunday change moves a weekly note's
 date back one day; that move leaves the note's week number unchanged; a note
 in the week straddling January 1 keeps its week-year (regression guard for
 the v2 calendar-year defect); the rewritten start/end reflect the new grid
