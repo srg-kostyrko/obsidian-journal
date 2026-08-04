@@ -740,6 +740,17 @@
     }
   ],
   "common_label_size": "Size",
+  "decoration_canvas_region_label": [
+    {
+      "declarations": ["input type"],
+      "selectors": ["type"],
+      "match": {
+        "type=background": "Cell background",
+        "type=color": "Cell text",
+        "type=border": "Cell outline"
+      }
+    }
+  ],
   "decoration_style_shape_shape_label": "Shape",
   "decoration_style_type_label": [
     {
