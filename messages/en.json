@@ -424,8 +424,8 @@
       "declarations": ["input mode"],
       "selectors": ["mode"],
       "match": {
-        "mode=uniform": "Uniform",
-        "mode=different": "Per side setup"
+        "mode=uniform": "Linked",
+        "mode=different": "Per side"
       }
     }
   ],
