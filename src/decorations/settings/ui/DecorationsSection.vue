@@ -3,7 +3,14 @@ import { match } from "ts-pattern";
 import { computed, ref } from "vue";
 
 import { Calendar } from "@/calendar";
-import { DecorationPreview, DecorationsStore, type DecorationOwner, type JournalDecoration } from "@/decorations";
+import {
+  DecorationMatchService,
+  DecorationPreview,
+  DecorationsStore,
+  type DecorationOwner,
+  type JournalDecoration,
+  type MatchBadge,
+} from "@/decorations";
 import { m } from "@/i18n";
 import { useService } from "@/infrastructure/di";
 import { Flows } from "@/infrastructure/flows";
@@ -25,9 +32,39 @@ const { owner } = defineProps<{ owner: DecorationOwner }>();
 const flows = useService(Flows);
 const store = useService(DecorationsStore);
 const calendar = useService(Calendar);
+const matches = useService(DecorationMatchService);
 const modals = useModalService();
 
 const decorations = computed<readonly JournalDecoration[]>(() => store.list(owner));
+
+// Memoized per section mount rather than per render: JournalsIndex is not Vue-reactive, so
+// reading useIndexVersion() here would invalidate every badge on every index change (a note
+// created, renamed, or deleted anywhere) and re-run up to 20 decorations × 90 evaluations each
+// time. Recomputing only when the decorations list changes means an edited rule gets a fresh
+// badge, but a badge does not refresh when a note is created while the section stays open —
+// that staleness is the deliberate cost trade-off, not an oversight.
+const badges = computed<readonly MatchBadge[]>(() =>
+  decorations.value.map((_, index) => matches.describe(owner, index)),
+);
+
+function badgeText(badge: MatchBadge): string {
+  return match(badge)
+    .with({ kind: "matched", direction: "past" }, (b) =>
+      m.decoration_badge_matched_past({ matched: b.matched, total: b.total, unit: b.unit }),
+    )
+    .with({ kind: "matched", direction: "future" }, (b) =>
+      m.decoration_badge_matched_future({ matched: b.matched, total: b.total, unit: b.unit }),
+    )
+    .with({ kind: "silent", direction: "past" }, (b) =>
+      m.decoration_badge_silent_past({ total: b.total, unit: b.unit }),
+    )
+    .with({ kind: "silent", direction: "future" }, (b) =>
+      m.decoration_badge_silent_future({ total: b.total, unit: b.unit }),
+    )
+    .with({ kind: "no-history" }, () => m.decoration_badge_no_history())
+    .with({ kind: "no-notes" }, () => m.decoration_badge_no_notes())
+    .exhaustive();
+}
 
 const title = computed(() =>
   match(owner)
@@ -95,6 +132,7 @@ function remove(index: number): void {
             <span v-if="i > 0" class="mode-word">{{ m.decoration_describe_mode({ kind: decoration.mode }) }}</span>
             <span>{{ describeCondition(condition, calendar) }}</span>
           </template>
+          <span class="row-badge">{{ badgeText(badges[index]) }}</span>
         </div>
       </template>
       <UiIconButton :icon="icons.action.configure" :tooltip="m.decoration_edit()" @click="edit(index)" />
@@ -126,5 +164,9 @@ function remove(index: number): void {
 .mode-word {
   text-transform: uppercase;
   font-size: 75%;
+}
+.row-badge {
+  color: var(--text-muted);
+  font-size: 85%;
 }
 </style>

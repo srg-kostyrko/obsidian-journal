@@ -413,6 +413,12 @@
   "confirm_note_creation_title": "Create a new journal note?",
 
   "decoration_add": "Add decoration",
+  "decoration_badge_matched_past": [{"declarations":["input matched","input total","input unit"],"selectors":["unit"],"match":{"unit=day":"Matched {matched} of the last {total} days","unit=week":"Matched {matched} of the last {total} weeks","unit=month":"Matched {matched} of the last {total} months","unit=quarter":"Matched {matched} of the last {total} quarters","unit=year":"Matched {matched} of the last {total} years","unit=decade":"Matched {matched} of the last {total} decades","unit=interval":"Matched {matched} of the last {total} intervals"}}],
+  "decoration_badge_matched_future": [{"declarations":["input matched","input total","input unit"],"selectors":["unit"],"match":{"unit=day":"Matched {matched} of the next {total} days","unit=week":"Matched {matched} of the next {total} weeks","unit=month":"Matched {matched} of the next {total} months","unit=quarter":"Matched {matched} of the next {total} quarters","unit=year":"Matched {matched} of the next {total} years","unit=decade":"Matched {matched} of the next {total} decades","unit=interval":"Matched {matched} of the next {total} intervals"}}],
+  "decoration_badge_silent_past": [{"declarations":["input total","input unit"],"selectors":["unit"],"match":{"unit=day":"Matched nothing in the last {total} days","unit=week":"Matched nothing in the last {total} weeks","unit=month":"Matched nothing in the last {total} months","unit=quarter":"Matched nothing in the last {total} quarters","unit=year":"Matched nothing in the last {total} years","unit=decade":"Matched nothing in the last {total} decades","unit=interval":"Matched nothing in the last {total} intervals"}}],
+  "decoration_badge_silent_future": [{"declarations":["input total","input unit"],"selectors":["unit"],"match":{"unit=day":"Matched nothing in the next {total} days","unit=week":"Matched nothing in the next {total} weeks","unit=month":"Matched nothing in the next {total} months","unit=quarter":"Matched nothing in the next {total} quarters","unit=year":"Matched nothing in the next {total} years","unit=decade":"Matched nothing in the next {total} decades","unit=interval":"Matched nothing in the next {total} intervals"}}],
+  "decoration_badge_no_history": "No history yet",
+  "decoration_badge_no_notes": "No notes yet",
   "decoration_border_mode_label": [
     {
       "declarations": ["input mode"],

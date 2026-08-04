@@ -1,11 +1,14 @@
 import userEvent from "@testing-library/user-event";
 import { cleanup, render, screen } from "@testing-library/vue";
 import { createNanoEvents } from "nanoevents";
-import { afterEach, describe, expect, it, vi } from "vitest";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { reactive } from "vue";
 
 import { Calendar } from "@/calendar";
+import { installTestCalendar, testCalendar } from "@/calendar/testing";
 import {
+  DecorationEngine,
+  DecorationMatchService,
   DecorationsStore,
   decorationsSlice,
   type CalendarDecoration,
@@ -15,22 +18,39 @@ import {
 import { m } from "@/i18n";
 import { provideInjectorOnApp } from "@/infrastructure/di";
 import { Flows } from "@/infrastructure/flows";
-import { NoticeService } from "@/infrastructure/host";
+import { NoteMetadataService, NoticeService } from "@/infrastructure/host";
 import { ModalService } from "@/infrastructure/host/modals";
 import { FakeModalService } from "@/infrastructure/host/modals/testing";
-import { FakeNoticeService } from "@/infrastructure/host/testing";
-import { JournalsRepository, journalDefaultsFor, type JournalConfig, type JournalsEvents } from "@/journals";
+import { FakeNoteMetadataService, FakeNoticeService } from "@/infrastructure/host/testing";
+import {
+  CycleService,
+  JournalsIndex,
+  JournalsRepository,
+  TimelineService,
+  journalDefaultsFor,
+  type JournalConfig,
+  type JournalsEvents,
+} from "@/journals";
 import { createSettingsService } from "@/settings/testing";
 import { ShelvesRepository, type ShelvesEvents } from "@/shelves";
 import type { ShelfConfig } from "@/shelves/config";
 
+import { buildCondition, buildDecoration, buildStyle } from "../../testing";
 import { decorationBreakdownModal } from "../../ui/modals";
 import { DeleteDecorationFlow } from "../flows/delete-decoration.flow";
 import { EditDecorationFlow } from "../flows/edit-decoration.flow";
 
 import DecorationsSection from "./DecorationsSection.vue";
 
-afterEach(() => cleanup());
+let teardown: () => void;
+beforeEach(() => {
+  ({ teardown } = installTestCalendar());
+});
+afterEach(() => {
+  vi.useRealTimers();
+  teardown();
+  cleanup();
+});
 
 const transparent = { type: "transparent" as const };
 const sampleDecoration: JournalDecoration = {
@@ -71,13 +91,20 @@ function mount(owner: DecorationOwner, decorations: readonly JournalDecoration[]
 
   const flows = { invoke: vi.fn() };
   const modals = new FakeModalService();
+  const fakeMetadata = new FakeNoteMetadataService();
   container.register(JournalsRepository).useValue(journals);
   container.register(ShelvesRepository).useValue(shelves);
   container.register(DecorationsStore).useClass(DecorationsStore);
   container.register(NoticeService).useValue(new FakeNoticeService());
   container.register(Flows).useValue(flows as unknown as Flows);
-  container.register(Calendar).useValue(new Calendar());
+  container.register(Calendar).useValue(testCalendar());
   container.register(ModalService).useValue(modals as unknown as ModalService);
+  container.register(JournalsIndex).useClass(JournalsIndex);
+  container.register(CycleService).useClass(CycleService);
+  container.register(TimelineService).useClass(TimelineService);
+  container.register(NoteMetadataService).useValue(fakeMetadata as unknown as NoteMetadataService);
+  container.register(DecorationEngine).useClass(DecorationEngine);
+  container.register(DecorationMatchService).useClass(DecorationMatchService);
 
   const store = container.resolve(DecorationsStore);
 
@@ -168,5 +195,33 @@ describe("DecorationsSection", () => {
     const { modals } = mount({ kind: "journal", journalName: "daily" }, [sampleDecoration]);
     await userEvent.click(screen.getByLabelText(m.decoration_breakdown_open()));
     expect(modals.lastOpen().definition).toBe(decorationBreakdownModal);
+  });
+
+  it("shows the match count on a decoration that fires", async () => {
+    // A Monday-only decoration matches 13 of the last 90 days ending on the pinned Monday —
+    // an implementation that reports the window total instead of the real match count (or
+    // that never renders a badge at all) fails this.
+    vi.useFakeTimers();
+    // 2026-05-25 is a Monday.
+    vi.setSystemTime(new Date(2026, 4, 25, 9, 0, 0));
+    const user = userEvent.setup({ advanceTimers: vi.advanceTimersByTime });
+    const decoration = buildDecoration({
+      mode: "or",
+      conditions: [buildCondition("weekday", { weekdays: [1] })],
+      styles: [buildStyle("background")],
+    });
+    mount({ kind: "journal", journalName: "daily" }, [decoration]);
+    await user.click(screen.getByText(m.decoration_section_title_journal()));
+
+    expect(screen.getByText(m.decoration_badge_matched_past({ matched: 13, total: 90, unit: "day" }))).toBeTruthy();
+  });
+
+  it("shows the no-notes badge on a note-needing decoration with no notes in the window", async () => {
+    // has-note is the only condition, and no note is registered in the index, so the row must
+    // report "no notes yet" rather than misreading the empty index as a silent (0-match) badge.
+    mount({ kind: "journal", journalName: "daily" }, [sampleDecoration]);
+    await userEvent.click(screen.getByText(m.decoration_section_title_journal()));
+
+    expect(screen.getByText(m.decoration_badge_no_notes())).toBeTruthy();
   });
 });

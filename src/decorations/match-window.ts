@@ -22,7 +22,13 @@ export function fixedWindow(kind: PeriodKind, today: CalendarDate, direction: Wi
   const anchorPeriod = periodOfKind(kind, today);
   const first = direction === "past" ? advance(anchorPeriod, -(horizon - 1)) : anchorPeriod;
   const out: Period[] = [first];
-  for (let i = 1; i < horizon; i += 1) out.push(advance(first, i));
+  // Step from the running cursor rather than re-walking advance(first, i) from scratch each
+  // time — the latter is quadratic (1+2+...+(horizon-1) steps) where stepping the cursor is linear.
+  let cursor = first;
+  for (let i = 1; i < horizon; i += 1) {
+    cursor = cursor.next();
+    out.push(cursor);
+  }
   return out;
 }
 
