@@ -132,8 +132,8 @@ function remove(index: number): void {
             <span v-if="i > 0" class="mode-word">{{ m.decoration_describe_mode({ kind: decoration.mode }) }}</span>
             <span>{{ describeCondition(condition, calendar) }}</span>
           </template>
-          <span class="row-badge">{{ badgeText(badges[index]) }}</span>
         </div>
+        <div class="row-badge">{{ badgeText(badges[index]) }}</div>
       </template>
       <UiIconButton :icon="icons.action.configure" :tooltip="m.decoration_edit()" @click="edit(index)" />
       <UiIconButton :icon="icons.action.delete" :tooltip="m.decoration_delete()" @click="remove(index)" />
@@ -166,6 +166,8 @@ function remove(index: number): void {
   font-size: 75%;
 }
 .row-badge {
+  display: block;
+  margin-top: var(--size-2-1);
   color: var(--text-muted);
   font-size: 85%;
 }
