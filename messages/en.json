@@ -755,6 +755,26 @@
       }
     }
   ],
+  "decoration_layer_chip_label": [
+    {
+      "declarations": ["input type", "input state"],
+      "selectors": ["type", "state"],
+      "match": {
+        "type=background,state=empty": "Background",
+        "type=background,state=occupied": "Background, in use",
+        "type=color,state=empty": "Color",
+        "type=color,state=occupied": "Color, in use",
+        "type=border,state=empty": "Border",
+        "type=border,state=occupied": "Border, in use",
+        "type=shape,state=empty": "Shape",
+        "type=shape,state=occupied": "Shape, in use",
+        "type=icon,state=empty": "Icon",
+        "type=icon,state=occupied": "Icon, in use",
+        "type=corner,state=empty": "Corner",
+        "type=corner,state=occupied": "Corner, in use"
+      }
+    }
+  ],
   "ui_color_kind_label": [
     {
       "declarations": ["input kind"],
