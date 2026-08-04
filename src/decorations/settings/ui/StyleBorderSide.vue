@@ -9,9 +9,9 @@ import UiNumberInput from "@/ui/UiNumberInput.vue";
 import UiSettingRow from "@/ui/UiSettingRow.vue";
 
 const { name } = defineProps<{ name: string }>();
-const { value: width } = useField<number>(`${name}.width`);
-const { value: color } = useField<ColorSettings>(`${name}.color`);
-const { value: borderStyle } = useField<string>(`${name}.style`);
+const { value: width } = useField<number>(`${name}.width`, undefined, { keepValueOnUnmount: true });
+const { value: color } = useField<ColorSettings>(`${name}.color`, undefined, { keepValueOnUnmount: true });
+const { value: borderStyle } = useField<string>(`${name}.style`, undefined, { keepValueOnUnmount: true });
 </script>
 
 <template>

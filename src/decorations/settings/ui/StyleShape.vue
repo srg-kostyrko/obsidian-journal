@@ -9,9 +9,11 @@ import UiNumberInput from "@/ui/UiNumberInput.vue";
 import UiSettingRow from "@/ui/UiSettingRow.vue";
 
 const { name } = defineProps<{ name: string }>();
-const { value: shape } = useField<JournalDecorationShape["shape"]>(`${name}.shape`);
-const { value: size } = useField<number>(`${name}.size`);
-const { value: color } = useField<ColorSettings>(`${name}.color`);
+const { value: shape } = useField<JournalDecorationShape["shape"]>(`${name}.shape`, undefined, {
+  keepValueOnUnmount: true,
+});
+const { value: size } = useField<number>(`${name}.size`, undefined, { keepValueOnUnmount: true });
+const { value: color } = useField<ColorSettings>(`${name}.color`, undefined, { keepValueOnUnmount: true });
 </script>
 
 <template>

@@ -143,6 +143,31 @@ describe("EditDecorationModal", () => {
     });
   });
 
+  describe("removing a condition", () => {
+    it("does not leak the removed condition's fields into the one that shifts into its place", async () => {
+      const { submit } = mountModal({
+        conditionTypes: conditionTypeOptions.day,
+        decoration: {
+          mode: "and",
+          conditions: [
+            { type: "title", condition: "contains", value: "draft" },
+            { type: "weekday", weekdays: [1, 2] },
+          ],
+          styles: [{ type: "background", color: transparent }],
+        },
+      });
+      await userEvent.click(screen.getAllByRole("button", { name: "" })[0]);
+      await userEvent.click(screen.getByText(m.common_action_submit()));
+      await waitFor(() => {
+        expect(submit).toHaveBeenCalledWith({
+          decoration: expect.objectContaining({
+            conditions: [{ type: "weekday", weekdays: [1, 2] }],
+          }) as unknown,
+        });
+      });
+    });
+  });
+
   describe("style canvas", () => {
     it("keeps the submit button disabled until the decoration has a style", async () => {
       mountModal({ conditionTypes: conditionTypeOptions.day });

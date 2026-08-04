@@ -1,6 +1,7 @@
 import userEvent from "@testing-library/user-event";
 import { cleanup, render, screen } from "@testing-library/vue";
 import { toTypedSchema } from "@vee-validate/valibot";
+import * as v from "valibot";
 import { useForm } from "vee-validate";
 import { afterEach, describe, expect, it } from "vitest";
 import { defineComponent, h } from "vue";
@@ -136,6 +137,34 @@ describe("DecorationCanvas", () => {
       await userEvent.click(screen.getByRole("button", { name: "Left" }));
       await userEvent.click(screen.getByRole("button", { name: "Remove" }));
       expect(host.values.styles).toEqual([]);
+    });
+  });
+
+  describe("switching layers", () => {
+    it("keeps the previous layer's fields after adding a second layer", async () => {
+      const host = mount();
+      await userEvent.click(screen.getByRole("button", { name: "Cell background" }));
+      await userEvent.click(screen.getByRole("button", { name: "Shape" }));
+      await userEvent.click(screen.getByRole("button", { name: "Top left" }));
+      const background = host.values.styles.find((s) => s.type === "background");
+      expect(background).toHaveProperty("color");
+    });
+
+    it("leaves a decoration that parses cleanly after adding a second layer", async () => {
+      const host = mount();
+      await userEvent.click(screen.getByRole("button", { name: "Cell background" }));
+      await userEvent.click(screen.getByRole("button", { name: "Shape" }));
+      await userEvent.click(screen.getByRole("button", { name: "Top left" }));
+      expect(v.safeParse(decorationSchema, host.values).success).toBe(true);
+    });
+
+    it("keeps the active border side's fields after switching to another layer", async () => {
+      const host = mount();
+      await userEvent.click(screen.getByRole("button", { name: "Border" }));
+      await userEvent.click(screen.getByRole("button", { name: "Cell outline" }));
+      await userEvent.click(screen.getByRole("button", { name: "Shape" }));
+      await userEvent.click(screen.getByRole("button", { name: "Top left" }));
+      expect(v.safeParse(decorationSchema, host.values).success).toBe(true);
     });
   });
 });

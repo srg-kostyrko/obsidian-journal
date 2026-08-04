@@ -7,7 +7,7 @@ import UiColorSettingsPicker from "@/ui/UiColorSettingsPicker.vue";
 import UiSettingRow from "@/ui/UiSettingRow.vue";
 
 const { name } = defineProps<{ name: string }>();
-const { value: color } = useField<ColorSettings>(`${name}.color`);
+const { value: color } = useField<ColorSettings>(`${name}.color`, undefined, { keepValueOnUnmount: true });
 </script>
 
 <template>

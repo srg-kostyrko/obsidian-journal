@@ -11,11 +11,13 @@ import type { BorderSide, JournalDecorationBorder } from "../../config";
 import type { BorderSideName } from "../../resolve-cell";
 
 const { name, side } = defineProps<{ name: string; side: BorderSideName }>();
-const { value: mode } = useField<JournalDecorationBorder["border"]>(`${name}.border`);
-const { value: top } = useField<BorderSide>(`${name}.top`);
-const { value: bottom } = useField<BorderSide>(`${name}.bottom`);
-const { value: left } = useField<BorderSide>(`${name}.left`);
-const { value: right } = useField<BorderSide>(`${name}.right`);
+const { value: mode } = useField<JournalDecorationBorder["border"]>(`${name}.border`, undefined, {
+  keepValueOnUnmount: true,
+});
+const { value: top } = useField<BorderSide>(`${name}.top`, undefined, { keepValueOnUnmount: true });
+const { value: bottom } = useField<BorderSide>(`${name}.bottom`, undefined, { keepValueOnUnmount: true });
+const { value: left } = useField<BorderSide>(`${name}.left`, undefined, { keepValueOnUnmount: true });
+const { value: right } = useField<BorderSide>(`${name}.right`, undefined, { keepValueOnUnmount: true });
 
 // Linked means one border around the cell, which is what the stored "uniform" mode already
 // means — resolveCell copies `left` to all four sides. Keeping the four in step while linked
