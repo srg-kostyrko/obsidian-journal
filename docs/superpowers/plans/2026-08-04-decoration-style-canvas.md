@@ -610,7 +610,7 @@ describe("DecorationLayerStrip", () => {
 
   it("marks the active layer as pressed", () => {
     renderStrip("shape");
-    expect(screen.getByRole("button", { name: "Shape" })).toHaveAttribute("aria-pressed", "true");
+    expect(screen.getByRole("button", { name: "Shape" }).getAttribute("aria-pressed")).toBe("true");
   });
 
   it("emits the chosen layer when a chip is clicked", async () => {
@@ -621,12 +621,12 @@ describe("DecorationLayerStrip", () => {
 
   it("names an occupied chip as in use", () => {
     renderStrip("background", ["icon"]);
-    expect(screen.getByRole("button", { name: "Icon, in use" })).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "Icon, in use" })).toBeTruthy();
   });
 
   it("names an empty chip by its layer alone", () => {
     renderStrip("background", ["icon"]);
-    expect(screen.getByRole("button", { name: "Corner" })).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "Corner" })).toBeTruthy();
   });
 });
 ```
@@ -777,12 +777,12 @@ describe("CanvasRegionSlots", () => {
 
   it("marks the occupied placement as pressed", () => {
     render(CanvasRegionSlots, { props: { occupied: "left_top" } });
-    expect(screen.getByRole("button", { name: "Top left" })).toHaveAttribute("aria-pressed", "true");
+    expect(screen.getByRole("button", { name: "Top left" }).getAttribute("aria-pressed")).toBe("true");
   });
 
   it("leaves the other placements unpressed", () => {
     render(CanvasRegionSlots, { props: { occupied: "left_top" } });
-    expect(screen.getByRole("button", { name: "Center" })).toHaveAttribute("aria-pressed", "false");
+    expect(screen.getByRole("button", { name: "Center" }).getAttribute("aria-pressed")).toBe("false");
   });
 });
 ```
@@ -935,7 +935,7 @@ describe("CanvasRegionCorners", () => {
 
   it("marks the occupied corner as pressed", () => {
     render(CanvasRegionCorners, { props: { occupied: "top-right" } });
-    expect(screen.getByRole("button", { name: "Top right" })).toHaveAttribute("aria-pressed", "true");
+    expect(screen.getByRole("button", { name: "Top right" }).getAttribute("aria-pressed")).toBe("true");
   });
 });
 ```
@@ -1144,13 +1144,13 @@ describe("CanvasRegionBorder", () => {
     it("marks a shown side as pressed", () => {
       const border = { ...perSide, left: { ...perSide.left, show: true } };
       render(CanvasRegionBorder, { props: { border, activeSide: "top" } });
-      expect(screen.getByRole("button", { name: "Left" })).toHaveAttribute("aria-pressed", "true");
+      expect(screen.getByRole("button", { name: "Left" }).getAttribute("aria-pressed")).toBe("true");
     });
 
     it("marks a hidden side as unpressed", () => {
       const border = { ...perSide, right: { ...perSide.right, show: false } };
       render(CanvasRegionBorder, { props: { border, activeSide: "top" } });
-      expect(screen.getByRole("button", { name: "Right" })).toHaveAttribute("aria-pressed", "false");
+      expect(screen.getByRole("button", { name: "Right" }).getAttribute("aria-pressed")).toBe("false");
     });
   });
 });
@@ -1402,7 +1402,7 @@ describe("DecorationCanvas", () => {
   it("shows a hint while the active layer is empty", async () => {
     mount();
     await userEvent.click(screen.getByRole("button", { name: "Icon" }));
-    expect(screen.getByText("Click a position to add an icon.")).toBeInTheDocument();
+    expect(screen.getByText("Click a position to add an icon.")).toBeTruthy();
   });
 
   it("only exposes the active layer's regions", async () => {
@@ -1893,7 +1893,7 @@ Add to `src/decorations/settings/ui/EditDecorationModal.test.ts`, keeping the ex
 it("keeps the submit button disabled until the decoration has a style", async () => {
   renderModal();
   await userEvent.click(screen.getByRole("button", { name: "Add condition" }));
-  expect(screen.getByRole("button", { name: "Create" })).toBeDisabled();
+  expect((screen.getByRole("button", { name: "Create" }) as HTMLButtonElement).disabled).toBe(true);
 });
 
 it("enables submit once a condition and a style are present", async () => {
@@ -1901,7 +1901,7 @@ it("enables submit once a condition and a style are present", async () => {
   await userEvent.click(screen.getByRole("button", { name: "Add condition" }));
   await userEvent.click(screen.getByRole("option", { name: "Has note" }));
   await userEvent.click(screen.getByRole("button", { name: "Background" }));
-  expect(screen.getByRole("button", { name: "Create" })).toBeEnabled();
+  expect((screen.getByRole("button", { name: "Create" }) as HTMLButtonElement).disabled).toBe(false);
 });
 
 it("no longer offers an add-style dropdown", () => {
