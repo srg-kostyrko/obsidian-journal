@@ -23,15 +23,8 @@ import StyleShape from "./StyleShape.vue";
 import { useStyleSlots } from "./use-style-slots";
 
 import type { JournalDecorationCorner, JournalDecorationShape, JournalDecorationStyle } from "../../config";
-import type { Placement } from "../../resolve-cell";
+import type { BorderSideName, Placement } from "../../resolve-cell";
 import type { StyleSlotKey } from "../../style-slots";
-
-// Restated rather than imported: src/vue-shim.d.ts's ambient `declare module "*.vue"` types
-// every SFC's shape as `{ default: DefineComponent }`, so typescript-eslint's type-aware
-// checker cannot see CanvasRegionBorder's own `BorderSideName` export (any named import from
-// any .vue file resolves to an error type there, even though vue-tsc resolves it correctly via
-// its Vue-aware language service). Keep this union in sync with CanvasRegionBorder.vue's.
-type BorderSideName = "top" | "right" | "bottom" | "left";
 
 const props = defineProps<{ name: string; styles: readonly JournalDecorationStyle[] }>();
 

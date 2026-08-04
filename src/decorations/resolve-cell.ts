@@ -51,7 +51,7 @@ export interface ResolvedCell {
   readonly padding: PaddingExtents;
 }
 
-type BorderSideName = keyof CellBorder;
+export type BorderSideName = keyof CellBorder;
 
 const BORDER_SIDES: readonly BorderSideName[] = ["top", "right", "bottom", "left"];
 

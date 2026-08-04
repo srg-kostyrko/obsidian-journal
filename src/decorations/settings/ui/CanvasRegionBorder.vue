@@ -4,8 +4,7 @@ import { computed } from "vue";
 import { m } from "@/i18n";
 
 import type { JournalDecorationBorder } from "../../config";
-
-export type BorderSideName = "top" | "right" | "bottom" | "left";
+import type { BorderSideName } from "../../resolve-cell";
 
 const props = defineProps<{ border?: JournalDecorationBorder; activeSide: BorderSideName }>();
 defineEmits<{ chooseRing: []; chooseSide: [side: BorderSideName] }>();

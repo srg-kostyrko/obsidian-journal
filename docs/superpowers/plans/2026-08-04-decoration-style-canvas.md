@@ -800,7 +800,7 @@ Create `src/decorations/settings/ui/CanvasRegionSlots.vue`:
 <script setup lang="ts">
 import { m } from "@/i18n";
 
-import type { Placement } from "../../resolve-cell";
+import type { BorderSideName, Placement } from "../../resolve-cell";
 
 defineProps<{ occupied?: Placement }>();
 defineEmits<{ choose: [placement: Placement] }>();
@@ -1072,7 +1072,8 @@ The one layer that can occupy several regions at once, because a border style ca
 **Interfaces:**
 
 - Consumes: `BorderSide`, `JournalDecorationBorder` from `../../config`.
-- Produces: `<CanvasRegionBorder :border="JournalDecorationBorder | undefined" :active-side="BorderSideName" @choose-ring="() => void" @choose-side="(side: BorderSideName) => void" />` where `type BorderSideName = "top" | "right" | "bottom" | "left"`, exported from this file. Renders one ring button when `border?.border === "uniform"` or the slot is empty, four edge buttons otherwise.
+- Produces: `<CanvasRegionBorder :border="JournalDecorationBorder | undefined" :active-side="BorderSideName" @choose-ring="() => void" @choose-side="(side: BorderSideName) => void" />`. Renders one ring button when `border?.border === "uniform"` or the slot is empty, four edge buttons otherwise.
+- `BorderSideName` is **exported from `src/decorations/resolve-cell.ts`**, where it already exists as `keyof CellBorder` — add the `export` keyword to the existing declaration at line 54. Do not re-declare it in an SFC: a named type export from a `.vue` file is invisible to typescript-eslint, whose ambient `*.vue` shim declares only a default export, so importing one fails lint even though `vue-tsc` accepts it.
 
 - [ ] **Step 1: Reword the mode labels**
 
@@ -1172,8 +1173,7 @@ import { computed } from "vue";
 import { m } from "@/i18n";
 
 import type { JournalDecorationBorder } from "../../config";
-
-export type BorderSideName = "top" | "right" | "bottom" | "left";
+import type { BorderSideName } from "../../resolve-cell";
 
 const props = defineProps<{ border?: JournalDecorationBorder; activeSide: BorderSideName }>();
 defineEmits<{ chooseRing: []; chooseSide: [side: BorderSideName] }>();
@@ -1486,7 +1486,7 @@ import UiSettingRow from "@/ui/UiSettingRow.vue";
 import { defaultStyle } from "../../defaults";
 import DecorationPreview from "../../ui/DecorationPreview.vue";
 
-import CanvasRegionBorder, { type BorderSideName } from "./CanvasRegionBorder.vue";
+import CanvasRegionBorder from "./CanvasRegionBorder.vue";
 import CanvasRegionCorners from "./CanvasRegionCorners.vue";
 import CanvasRegionSlots from "./CanvasRegionSlots.vue";
 import CanvasRegionWhole from "./CanvasRegionWhole.vue";
@@ -1500,7 +1500,7 @@ import StyleShape from "./StyleShape.vue";
 import { useStyleSlots } from "./use-style-slots";
 
 import type { JournalDecorationCorner, JournalDecorationShape, JournalDecorationStyle } from "../../config";
-import type { Placement } from "../../resolve-cell";
+import type { BorderSideName, Placement } from "../../resolve-cell";
 import type { StyleSlotKey } from "../../style-slots";
 
 const props = defineProps<{ name: string; styles: readonly JournalDecorationStyle[] }>();
@@ -1746,7 +1746,7 @@ Every control the canvas now owns comes out of the leaves.
 
 **Interfaces:**
 
-- Consumes: `BorderSideName` from `./CanvasRegionBorder.vue`.
+- Consumes: `BorderSideName` from `../../resolve-cell`.
 - Produces: `StyleBorder` gains a required `side: BorderSideName` prop and renders `StyleBorderSide` for that side only. Its mode control is a radio group named by `m.decoration_style_border_mode_label()` with options `m.decoration_border_mode_label({ mode })`.
 
 - [ ] **Step 1: Write the failing test for the border mode control**
@@ -1798,8 +1798,8 @@ import UiSettingRow from "@/ui/UiSettingRow.vue";
 
 import StyleBorderSide from "./StyleBorderSide.vue";
 
-import type { BorderSideName } from "./CanvasRegionBorder.vue";
 import type { BorderSide, JournalDecorationBorder } from "../../config";
+import type { BorderSideName } from "../../resolve-cell";
 
 const { name, side } = defineProps<{ name: string; side: BorderSideName }>();
 const { value: mode } = useField<JournalDecorationBorder["border"]>(`${name}.border`);
