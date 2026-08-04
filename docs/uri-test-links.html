@@ -1,0 +1,376 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>obsidian:// link test bench — Journals</title>
+    <style>
+      :root {
+        color-scheme: light dark;
+        --bg: #ffffff;
+        --fg: #1c1c1e;
+        --muted: #6b7280;
+        --line: #e5e7eb;
+        --accent: #6a5acd;
+        --code-bg: #f4f4f6;
+      }
+      @media (prefers-color-scheme: dark) {
+        :root {
+          --bg: #16161a;
+          --fg: #e8e8ea;
+          --muted: #9ca3af;
+          --line: #2c2c32;
+          --accent: #9d8cff;
+          --code-bg: #202027;
+        }
+      }
+      * {
+        box-sizing: border-box;
+      }
+      body {
+        margin: 0 auto;
+        padding: 2rem 1.25rem 5rem;
+        max-width: 60rem;
+        background: var(--bg);
+        color: var(--fg);
+        font: 16px/1.55 system-ui, -apple-system, "Segoe UI", sans-serif;
+      }
+      h1 {
+        margin: 0 0 0.25rem;
+        font-size: 1.6rem;
+      }
+      h2 {
+        margin: 2.5rem 0 0.75rem;
+        padding-bottom: 0.35rem;
+        border-bottom: 1px solid var(--line);
+        font-size: 1.15rem;
+      }
+      p.lede {
+        margin: 0 0 1.5rem;
+        color: var(--muted);
+      }
+      code,
+      input,
+      select,
+      button {
+        font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+      }
+      code {
+        padding: 0.1em 0.35em;
+        border-radius: 4px;
+        background: var(--code-bg);
+        font-size: 0.9em;
+      }
+      .toolbar {
+        position: sticky;
+        top: 0;
+        z-index: 2;
+        display: flex;
+        flex-wrap: wrap;
+        gap: 0.75rem;
+        align-items: center;
+        margin-bottom: 1.5rem;
+        padding: 0.75rem;
+        border: 1px solid var(--line);
+        border-radius: 8px;
+        background: var(--bg);
+      }
+      .toolbar label {
+        font-size: 0.85rem;
+        color: var(--muted);
+      }
+      input[type="text"] {
+        padding: 0.35rem 0.5rem;
+        min-width: 12rem;
+        border: 1px solid var(--line);
+        border-radius: 6px;
+        background: var(--bg);
+        color: var(--fg);
+        font-size: 0.9rem;
+      }
+      button {
+        padding: 0.35rem 0.7rem;
+        border: 1px solid var(--line);
+        border-radius: 6px;
+        background: var(--code-bg);
+        color: var(--fg);
+        font-size: 0.8rem;
+        cursor: pointer;
+      }
+      button:hover {
+        border-color: var(--accent);
+      }
+      ul.cases {
+        margin: 0;
+        padding: 0;
+        list-style: none;
+      }
+      li.case {
+        display: grid;
+        grid-template-columns: 1fr auto;
+        gap: 0.25rem 0.75rem;
+        padding: 0.7rem 0;
+        border-bottom: 1px solid var(--line);
+      }
+      li.case a {
+        color: var(--accent);
+        font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+        font-size: 0.92rem;
+        word-break: break-all;
+      }
+      li.case .expect {
+        grid-column: 1 / -1;
+        color: var(--muted);
+        font-size: 0.87rem;
+      }
+      li.case .setup {
+        grid-column: 1 / -1;
+        font-size: 0.87rem;
+      }
+      li.case .setup::before {
+        content: "setup: ";
+        color: var(--accent);
+        font-weight: 600;
+      }
+      .note {
+        margin: 1rem 0 0;
+        padding: 0.75rem 1rem;
+        border-left: 3px solid var(--accent);
+        background: var(--code-bg);
+        border-radius: 0 6px 6px 0;
+        font-size: 0.9rem;
+      }
+      .builder {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 0.5rem;
+        align-items: center;
+        margin-top: 0.75rem;
+      }
+      #builderOut {
+        display: block;
+        margin-top: 0.75rem;
+        word-break: break-all;
+      }
+    </style>
+  </head>
+  <body>
+    <h1>obsidian:// link test bench</h1>
+    <p class="lede">
+      Manual walk of the Journals URI handler. Clicking a link asks the browser to hand the
+      URL to Obsidian — approve the prompt. If the browser refuses the scheme outright, use
+      <strong>Copy</strong> and run <code>xdg-open '&lt;url&gt;'</code> (quoted —
+      <code>&amp;</code> is a shell operator). Close what opened between items so the next
+      result is unambiguous.
+    </p>
+
+    <div class="toolbar">
+      <label for="vault">vault</label>
+      <input type="text" id="vault" value="test-vault" spellcheck="false" />
+      <button type="button" id="copyAll">Copy all URLs</button>
+      <span id="status" style="font-size: 0.8rem; color: var(--muted)"></span>
+    </div>
+
+    <div id="sections"></div>
+
+    <h2>Ad-hoc URL</h2>
+    <div class="builder">
+      <input
+        type="text"
+        id="builderQuery"
+        size="60"
+        spellcheck="false"
+        value="journal=day&amp;date=today&amp;mode=tab"
+      />
+      <button type="button" id="builderCopy">Copy</button>
+    </div>
+    <a id="builderOut" href="#"></a>
+
+    <script>
+      const SECTIONS = [
+        {
+          title: "Journal targeting",
+          cases: [
+            {
+              q: "journal=day&date=today",
+              expect: "opens today's day entry.",
+            },
+            {
+              q: "journal=day",
+              expect: "same entry; an absent date means today.",
+            },
+            {
+              q: "journal=week&date=2026-03-05",
+              expect: "opens the week containing 2026-03-05, not a day note.",
+            },
+            { q: "journal=month&date=2026-03-05", expect: "opens 2026-03." },
+          ],
+        },
+        {
+          title: "Write-type targeting",
+          cases: [
+            {
+              q: "type=day&date=2026-03-05",
+              expect: "opens that day through the day journal.",
+            },
+            { q: "type=month&date=2026-03-05", expect: "opens 2026-03." },
+            {
+              q: "type=day&date=today",
+              setup: "a second Day journal covering the same dates",
+              expect:
+                "centered suggest modal lists both; picking one opens it, Esc opens nothing and shows no error.",
+            },
+            {
+              q: "type=quarter&date=today",
+              expect:
+                "notice naming the write type — a valid type with no journal behind it, not a silent no-op.",
+            },
+          ],
+        },
+        {
+          title: "Relative dates",
+          note: "All against journal=day — check the opened note's date.",
+          cases: [
+            { q: "journal=day&date=%2B3d", expect: "today + 3 days." },
+            { q: "journal=day&date=-2w", expect: "14 days back." },
+            { q: "journal=day&date=%2B1m", expect: "same day-of-month, next month." },
+            { q: "journal=day&date=%2B1q", expect: "three months on." },
+            { q: "journal=day&date=-1y", expect: "same date, last year." },
+            {
+              q: "journal=day&date=+3d",
+              expect:
+                "raw + instead of %2B: either resolves the same as the %2B item above or shows the unreadable-date notice; never opens the wrong date silently.",
+            },
+          ],
+        },
+        {
+          title: "Open modes",
+          cases: [
+            { q: "journal=day&mode=tab", expect: "new tab." },
+            { q: "journal=day&mode=split", expect: "split pane." },
+            {
+              q: "journal=day&mode=window",
+              expect:
+                "popout window. Close it before the next item — a stray popout steals later opens.",
+            },
+            {
+              q: "journal=day&mode=active",
+              expect: "reuses the active leaf, same as omitting mode.",
+            },
+          ],
+        },
+        {
+          title: "Failure modes",
+          note: 'Each must produce a notice; "nothing happened" is a bug.',
+          cases: [
+            { q: "date=today", expect: "neither journal nor type: error notice, no note created." },
+            { q: "type=fortnight&date=today", expect: "error notice naming fortnight." },
+            {
+              q: "journal=day&date=not-a-date",
+              expect: "error notice naming the unreadable date.",
+            },
+            { q: "journal=day&mode=sideways", expect: "error notice naming the unknown mode." },
+            {
+              q: "journal=Missing&date=today",
+              expect: "error notice naming the journal, not a silent no-op.",
+            },
+            {
+              q: "journal=day&date=2025-12-31",
+              setup: "set the day journal's timeline start to 2026-01-01 (clear it afterwards)",
+              expect:
+                "notice, no note created. Stock test-vault journals are unbounded, so without that setup the date resolves and the item proves nothing.",
+            },
+          ],
+        },
+      ];
+
+      const vaultInput = document.getElementById("vault");
+      const status = document.getElementById("status");
+
+      const urlFor = (query) =>
+        `obsidian://journals?vault=${encodeURIComponent(vaultInput.value)}&${query}`;
+
+      const flash = (message) => {
+        status.textContent = message;
+        setTimeout(() => (status.textContent = ""), 1600);
+      };
+
+      const copy = (text, message) => {
+        navigator.clipboard.writeText(text).then(
+          () => flash(message),
+          () => flash("clipboard blocked — select the link and copy manually"),
+        );
+      };
+
+      const sections = document.getElementById("sections");
+      for (const section of SECTIONS) {
+        const heading = document.createElement("h2");
+        heading.textContent = section.title;
+        sections.append(heading);
+
+        if (section.note) {
+          const note = document.createElement("p");
+          note.className = "note";
+          note.textContent = section.note;
+          sections.append(note);
+        }
+
+        const list = document.createElement("ul");
+        list.className = "cases";
+        for (const testCase of section.cases) {
+          const item = document.createElement("li");
+          item.className = "case";
+
+          const link = document.createElement("a");
+          link.dataset.query = testCase.q;
+          link.textContent = testCase.q;
+          item.append(link);
+
+          const button = document.createElement("button");
+          button.type = "button";
+          button.textContent = "Copy";
+          button.addEventListener("click", () => copy(link.href, "URL copied"));
+          item.append(button);
+
+          if (testCase.setup) {
+            const setup = document.createElement("div");
+            setup.className = "setup";
+            setup.textContent = testCase.setup;
+            item.append(setup);
+          }
+
+          const expect = document.createElement("div");
+          expect.className = "expect";
+          expect.textContent = `→ ${testCase.expect}`;
+          item.append(expect);
+
+          list.append(item);
+        }
+        sections.append(list);
+      }
+
+      const builderQuery = document.getElementById("builderQuery");
+      const builderOut = document.getElementById("builderOut");
+
+      const refresh = () => {
+        for (const link of document.querySelectorAll("a[data-query]")) {
+          link.href = urlFor(link.dataset.query);
+        }
+        builderOut.href = urlFor(builderQuery.value);
+        builderOut.textContent = builderOut.href;
+      };
+
+      vaultInput.addEventListener("input", refresh);
+      builderQuery.addEventListener("input", refresh);
+      document
+        .getElementById("builderCopy")
+        .addEventListener("click", () => copy(builderOut.href, "URL copied"));
+      document.getElementById("copyAll").addEventListener("click", () => {
+        const all = [...document.querySelectorAll("a[data-query]")].map((a) => a.href).join("\n");
+        copy(all, "all URLs copied");
+      });
+
+      refresh();
+    </script>
+  </body>
+</html>

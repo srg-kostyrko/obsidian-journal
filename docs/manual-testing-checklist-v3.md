@@ -629,10 +629,10 @@ is visible.
 - [x] **date, year=any** → the same month/day in a _different_ year is also
       decorated.
 - [x] **date, year-pinned** — + set year=current → only this year's cell.
-- [ ] **weekday** — + select Mon+Fri → every Monday and Friday cell decorated.
-- [ ] **offset = +1** (on DecoX) → the cell one position after the journal's anchor
-      is decorated.
-- [ ] **offset = −1** (on DecoX) → the cell one position before the anchor is
+- [x] **weekday** — + select Mon+Fri → every Monday and Friday cell decorated.
+- [ ] **offset — From start, day 1** (on DecoX) → the interval's first day (the
+      journal's anchor cell) is decorated.
+- [ ] **offset — From end, day 1** (on DecoX) → the interval's last day is
       decorated.
 - [x] **has-note** → only cells that have a linked entry are decorated.
 - [x] **has-open-task** — + a linked note with an unchecked `- [ ]` task → that
@@ -666,42 +666,42 @@ Setup: a linked note with frontmatter `mood: happy`.
 
 Setup: a linked note with frontmatter `rating: 5`.
 
-- [ ] **property number — equals** `5` → decorated.
-- [ ] **property number — not-equals** → decorated when ≠ 5.
-- [ ] **property number — less-than** `6` → decorated.
-- [ ] **property number — less-than-or-equal** `5` → decorated.
-- [ ] **property number — greater-than** `4` → decorated.
-- [ ] **property number — greater-than-or-equal** `5` → decorated.
-- [ ] **property number — exists / does-not-exist** → decorated on presence/absence.
+- [x] **property number — equals** `5` → decorated.
+- [x] **property number — not-equals** → decorated when ≠ 5.
+- [x] **property number — less-than** `6` → decorated.
+- [x] **property number — less-than-or-equal** `5` → decorated.
+- [x] **property number — greater-than** `4` → decorated.
+- [x] **property number — greater-than-or-equal** `5` → decorated.
+- [x] **property number — exists / does-not-exist** → decorated on presence/absence.
 
 ### Property conditions (date)
 
 Setup: a linked note with frontmatter `reviewed: 2026-03-05`.
 
-- [ ] **property date — exists** → decorated when `reviewed` present.
-- [ ] **property date — does-not-exist** → decorated when absent.
-- [ ] **property date — equals** `2026-03-05` → decorated.
-- [ ] **property date — not-equals** → decorated when the date differs.
-- [ ] **property date — less-than** a later date → decorated.
-- [ ] **property date — less-than-or-equal** the same date → decorated.
-- [ ] **property date — greater-than** an earlier date → decorated.
-- [ ] **property date — greater-than-or-equal** the same date → decorated.
-- [ ] The condition editor offers a **date picker** for the value (the value type is
+- [x] **property date — exists** → decorated when `reviewed` present.
+- [x] **property date — does-not-exist** → decorated when absent.
+- [x] **property date — equals** `2026-03-05` → decorated.
+- [x] **property date — not-equals** → decorated when the date differs.
+- [x] **property date — less-than** a later date → decorated.
+- [x] **property date — less-than-or-equal** the same date → decorated.
+- [x] **property date — greater-than** an earlier date → decorated.
+- [x] **property date — greater-than-or-equal** the same date → decorated.
+- [x] The condition editor offers a **date picker** for the value (the value type is
       auto-derived from the vault's property registry, not chosen by hand).
 
 ### Property conditions (checkbox)
 
 Setup: a linked note with frontmatter `done: true`.
 
-- [ ] **property checkbox — is-true** → decorated.
-- [ ] **property checkbox — is-false** → + set `done: false` → decorated.
-- [ ] **property checkbox — exists / does-not-exist** → decorated on
+- [x] **property checkbox — is-true** → decorated.
+- [x] **property checkbox — is-false** → + set `done: false` → decorated.
+- [x] **property checkbox — exists / does-not-exist** → decorated on
       presence/absence.
 
 ### Condition combination
 
-- [ ] Two conditions with **AND** → cell decorated only when both match.
-- [ ] Two conditions with **OR** → cell decorated when either matches.
+- [x] Two conditions with **AND** → cell decorated only when both match.
+- [x] Two conditions with **OR** → cell decorated when either matches.
 
 ---
 
@@ -710,49 +710,49 @@ Setup: a linked note with frontmatter `done: true`.
 Setup: a decoration with a single always-true condition (e.g. has-note) on Deco,
 so every entry cell is styled. Swap the style per item.
 
-- [ ] **background** color → cell background changes.
-- [ ] **color** (text) → cell text color changes.
-- [ ] **border — uniform** (width/style/color) → all four sides bordered.
-- [ ] **border — left** only → only the left edge is bordered.
-- [ ] **border — right** only → only the right edge is bordered.
-- [ ] **border — top** only → only the top edge is bordered.
-- [ ] **border — bottom** only → only the bottom edge is bordered.
-- [ ] **shape — square** → square marker renders.
-- [ ] **shape — circle** → circle marker renders.
-- [ ] **shape — triangle up** → up arrow renders.
-- [ ] **shape — triangle down** → down arrow renders.
-- [ ] **shape — triangle left** → left arrow renders.
-- [ ] **shape — triangle right** → right arrow renders.
-- [ ] shape **size** → marker resizes.
-- [ ] shape **x placement = right** → marker sits at the right edge.
-- [ ] shape **y placement = bottom** → marker sits at the bottom.
-- [ ] **corner — top-left** → dot in the top-left corner.
-- [ ] **corner — top-right** → dot in the top-right corner.
-- [ ] **corner — bottom-left** → dot in the bottom-left corner.
-- [ ] **corner — bottom-right** → dot in the bottom-right corner.
-- [ ] **icon** → chosen icon renders.
-- [ ] icon **size** → icon resizes.
-- [ ] icon **placement** → icon position changes.
-- [ ] icon **color** → icon color changes.
-- [ ] **Color mode: transparent** → no fill.
-- [ ] **Color mode: theme** (by name) → uses the Obsidian theme color.
-- [ ] **Color mode: custom** (hex/rgb) → uses the literal color.
-- [ ] **color** (text) style, theme mode → the variable list holds only text variables;
+- [x] **background** color → cell background changes.
+- [x] **color** (text) → cell text color changes.
+- [x] **border — uniform** (width/style/color) → all four sides bordered.
+- [x] **border — left** only → only the left edge is bordered.
+- [x] **border — right** only → only the right edge is bordered.
+- [x] **border — top** only → only the top edge is bordered.
+- [x] **border — bottom** only → only the bottom edge is bordered.
+- [x] **shape — square** → square marker renders.
+- [x] **shape — circle** → circle marker renders.
+- [x] **shape — triangle up** → up arrow renders.
+- [x] **shape — triangle down** → down arrow renders.
+- [x] **shape — triangle left** → left arrow renders.
+- [x] **shape — triangle right** → right arrow renders.
+- [x] shape **size** → marker resizes.
+- [x] shape **x placement = right** → marker sits at the right edge.
+- [x] shape **y placement = bottom** → marker sits at the bottom.
+- [x] **corner — top-left** → dot in the top-left corner.
+- [x] **corner — top-right** → dot in the top-right corner.
+- [x] **corner — bottom-left** → dot in the bottom-left corner.
+- [x] **corner — bottom-right** → dot in the bottom-right corner.
+- [x] **icon** → chosen icon renders.
+- [x] icon **size** → icon resizes.
+- [x] icon **placement** → icon position changes.
+- [x] icon **color** → icon color changes.
+- [x] **Color mode: transparent** → no fill.
+- [x] **Color mode: theme** (by name) → uses the Obsidian theme color.
+- [x] **Color mode: custom** (hex/rgb) → uses the literal color.
+- [x] **color** (text) style, theme mode → the variable list holds only text variables;
       `Primary background` is absent.
-- [ ] **background** style, theme mode → the variable list holds only background variables;
+- [x] **background** style, theme mode → the variable list holds only background variables;
       `Normal text` is absent, `Selected text background` is present.
-- [ ] **border** style, theme mode → the list is split under **Border** and **Text**
+- [x] **border** style, theme mode → the list is split under **Border** and **Text**
       headings, and each grouped option's label stays fully readable (no truncation)
       despite the native `<select>` indent and the picker's `12em` width cap.
-- [ ] **shape** style, theme mode → the list is split under **Text** and **Background**
+- [x] **shape** style, theme mode → the list is split under **Text** and **Background**
       headings, with no border variables, and every grouped label stays fully readable
       under the same constraints.
-- [ ] A decoration saved before this change with an out-of-role variable (e.g. a text color
+- [x] A decoration saved before this change with an out-of-role variable (e.g. a text color
       of `Primary background`) → reopening it still shows that variable selected under its
       friendly label, and the cell renders exactly as before.
-- [ ] **corner color** → the corner dot uses the configured color.
-- [ ] **Two styles stacked** in one decoration → both apply, layered in order.
-- [ ] **Two separate decorations** whose conditions both match the same cell, each
+- [x] **corner color** → the corner dot uses the configured color.
+- [x] **Two styles stacked** in one decoration → both apply, layered in order.
+- [x] **Two separate decorations** whose conditions both match the same cell, each
       setting a **background** → the first decoration in the list wins. Reorder them
       and confirm the winner changes.
 
@@ -769,26 +769,26 @@ visible.
 Only `date` and `weekday` are offered here — everything else needs a journal's
 note. Automated by `view` (a vault-wide decoration painting a day cell).
 
-- [ ] The journal page's section is titled **Journal decorations** (not "Calendar
+- [x] The journal page's section is titled **Journal decorations** (not "Calendar
       decorations" — that name now belongs to the vault-wide block).
-- [ ] A calendar or shelf decoration's condition dropdown offers **only** `date`
+- [x] A calendar or shelf decoration's condition dropdown offers **only** `date`
       and `weekday` — no `has-note`, `tag`, `title`, `property`, or `offset`.
-- [ ] **Vault-wide, weekday** — + select Sat+Sun → every weekend cell decorated in a
+- [x] **Vault-wide, weekday** — + select Sat+Sun → every weekend cell decorated in a
       calendar showing **all journals**.
-- [ ] The same decoration still paints when the view is scoped to a **shelf**.
-- [ ] **Shelf decoration on Work** → paints while the view is scoped to Work.
-- [ ] Switch the view to **Home** → the Work decoration is gone, the vault-wide one
+- [x] The same decoration still paints when the view is scoped to a **shelf**.
+- [x] **Shelf decoration on Work** → paints while the view is scoped to Work.
+- [x] Switch the view to **Home** → the Work decoration is gone, the vault-wide one
       remains.
-- [ ] Switch the view to **all journals** → shelf decorations are gone, vault-wide
+- [x] Switch the view to **all journals** → shelf decorations are gone, vault-wide
       remains. Neither shelf's list leaks in.
-- [ ] **Nav code block in a daily note** → its day rows pick up vault-wide
+- [x] **Nav code block in a daily note** → its day rows pick up vault-wide
       decorations.
-- [ ] **Nav code block in a weekly note** → its week rows do **not** (day cells
+- [x] **Nav code block in a weekly note** → its week rows do **not** (day cells
       only, by design).
-- [ ] **Custom-interval rows** → not decorated by vault-wide rules, even when an
+- [x] **Custom-interval rows** → not decorated by vault-wide rules, even when an
       interval starts on a matching day.
-- [ ] **Toolbar period badges** (week/month/quarter/year) → unaffected.
-- [ ] **Timeline code block** in a note whose journal sits on Work → paints Work's
+- [x] **Toolbar period badges** (week/month/quarter/year) → unaffected.
+- [x] **Timeline code block** in a note whose journal sits on Work → paints Work's
       shelf decorations, same as the calendar view.
 
 ### Precedence between owners
@@ -796,21 +796,21 @@ note. Automated by `view` (a vault-wide decoration painting a day cell).
 Setup: a journal decoration, a shelf decoration and a vault-wide one whose
 conditions all match the same day cell.
 
-- [ ] **Background** — the journal's wins; remove it and the shelf's wins; remove
+- [x] **Background** — the journal's wins; remove it and the shelf's wins; remove
       that and the vault-wide one shows. Same for **text color**.
-- [ ] **Border** — the **vault-wide** one wins over the journal's. This is
+- [x] **Border** — the **vault-wide** one wins over the journal's. This is
       last-wins and is documented, not a bug (see the design spec's Precedence
       section).
-- [ ] **Shape / corner / icon** — every owner's renders; they stack rather than
+- [x] **Shape / corner / icon** — every owner's renders; they stack rather than
       compete.
 
 ### Lifecycle
 
-- [ ] Add a vault-wide decoration **while a calendar view is open** → the cells
+- [x] Add a vault-wide decoration **while a calendar view is open** → the cells
       update without reopening the view or reloading.
-- [ ] Edit it → the change lands live. Delete it → the cells clear.
-- [ ] Delete a shelf, then reopen settings → no orphaned decoration UI.
-- [ ] Open a vault whose `data.json` predates this feature → shelves keep **all
+- [x] Edit it → the change lands live. Delete it → the cells clear.
+- [x] Delete a shelf, then reopen settings → no orphaned decoration UI.
+- [x] Open a vault whose `data.json` predates this feature → shelves keep **all
       their journals**, both lists start empty, and nothing is reset to defaults.
 
 ---
@@ -835,9 +835,9 @@ Setup: open the Journals settings tab.
 Field validation lives in §19 — it is one behavior class and testing it in one
 sitting is faster than rediscovering the pattern per screen.
 
-- [ ] **calendar-week** — change week-start day → calendar grids shift to the new
+- [x] **calendar-week** — change week-start day → calendar grids shift to the new
       first day.
-- [ ] **calendar-week** — change week-start day → week numbers recompute.
+- [x] **calendar-week** — change week-start day → week numbers recompute.
 - [x] **calendar-week** — locale preset → dow/doy update to the preset.
 - [x] **calendar-appearance** — today color picker → applies live to today's cell;
       theme mode's variable list holds only text variables.
@@ -856,19 +856,19 @@ sitting is faster than rediscovering the pattern per screen.
 
 ## 15. Startup & background behaviors
 
-- [ ] **Open on startup** — + set startup journal = a Day journal; reload Obsidian
+- [x] **Open on startup** — + set startup journal = a Day journal; reload Obsidian
       → today's entry opens automatically on launch.
-- [ ] Startup journal = a **Month** (or Week/Quarter/Year/custom) journal → reload →
+- [x] Startup journal = a **Month** (or Week/Quarter/Year/custom) journal → reload →
       the current period's entry opens, stamped with the period's canonical anchor,
       not today's exact date.
-- [ ] Open-on-startup does **not** re-fire on later layout changes within a
+- [x] Open-on-startup does **not** re-fire on later layout changes within a
       session (only genuine launch).
-- [ ] - Rename the startup journal → reload → still opens (name reconciled).
-- [ ] - Delete the startup journal → reload → fails silently, no crash.
-- [ ] **autoCreate** — + a Day journal with autoCreate on; advance system clock
+- [x] - Rename the startup journal → reload → still opens (name reconciled).
+- [x] - Delete the startup journal → reload → fails silently, no crash.
+- [x] **autoCreate** — + a Day journal with autoCreate on; advance system clock
       past local midnight (or reload after midnight) → tomorrow's note appears.
-- [ ] autoCreate scheduling does not double-fire across the midnight boundary.
-- [ ] **Auto-attach** — + manually create a note matching a journal's
+- [x] autoCreate scheduling does not double-fire across the midnight boundary.
+- [x] **Auto-attach** — + manually create a note matching a journal's
       folder+name pattern within its timeline → journal frontmatter auto-added.
 - [ ] Auto-attach on **rename** — rename an unrelated note _into_ a matching
       folder+name → it is attached the same as a fresh creation.
@@ -923,12 +923,12 @@ covered.
       owning year (the v2 `{{date:YYYY}}` bug stays fixed).
 - [x] Rapidly create+delete journals/views/commands → no leaked leaves, ribbon
       icons, or palette entries.
-- [ ] Change **global locale / week-start** → month/week calendars update to the
+- [x] Change **global locale / week-start** → month/week calendars update to the
       new first day.
-- [ ] Change **global locale / week-start** → `calendar-timeline` blocks update to
+- [x] Change **global locale / week-start** → `calendar-timeline` blocks update to
       match.
-- [ ] Change **global locale / week-start** → week numbers recompute consistently.
-- [ ] **Large vault** — generate ≥1000 journal notes across ≥3 journals → the
+- [x] Change **global locale / week-start** → week numbers recompute consistently.
+- [x] **Large vault** — generate ≥1000 journal notes across ≥3 journals → the
       calendar view paints within ~1s of opening, and a month step feels immediate
       (no visible stall). Record the numbers in sign-off rather than judging "lag".
 - [ ] Note with **malformed frontmatter** → indexing does not crash.
@@ -948,50 +948,117 @@ Setup: a Day journal "Open" with a few existing entries; a calendar view, a
 The same modifier map applies to every affordance below: **Ctrl/Cmd → new tab**,
 **Ctrl/Cmd+Alt → split**, **middle-click → new tab**, plain click → active pane.
 
-- [ ] **Calendar day cell** — Ctrl/Cmd+click → opens in a new tab.
-- [ ] Calendar day cell — **middle-click** → opens in a new tab.
-- [ ] Calendar day cell — Ctrl/Cmd+Alt+click → opens in a split.
-- [ ] **Week number / month / year header** cell → same modifier behavior.
-- [ ] **`journal-nav` row** → same modifier behavior.
-- [ ] **`journal-nav` prev / next arrows** → same modifier behavior.
-- [ ] **`journals-home` link** → same modifier behavior.
-- [ ] **Toolbar button** → same modifier behavior.
-- [ ] **Period badge** (period-buttons item) → same modifier behavior.
-- [ ] **Defined-navigation arrow** → same modifier behavior.
+- [x] **Calendar day cell** — Ctrl/Cmd+click → opens in a new tab.
+- [x] Calendar day cell — **middle-click** → opens in a new tab.
+- [x] Calendar day cell — Ctrl/Cmd+Alt+click → opens in a split.
+- [x] **Week number / month / year header** cell → same modifier behavior.
+- [x] **`journal-nav` row** → same modifier behavior.
+- [x] **`journal-nav` prev / next arrows** → same modifier behavior.
+- [x] **`journals-home` link** → same modifier behavior.
+- [x] **Toolbar button** → same modifier behavior.
+- [x] **Period badge** (period-buttons item) → same modifier behavior.
+- [x] **Defined-navigation arrow** → same modifier behavior.
 
 ### Context menus
 
-- [ ] **Right-click a calendar cell with a note** → native file menu appears.
-- [ ] That menu includes a **Delete** entry (appended by the plugin; Obsidian does
+- [x] **Right-click a calendar cell with a note** → native file menu appears.
+- [x] That menu includes a **Delete** entry (appended by the plugin; Obsidian does
       not guarantee one).
-- [ ] Deleting from that menu → the note goes to trash and the cell empties.
-- [ ] **Right-click a period badge** → same menu.
-- [ ] **Right-click a `journal-nav` row** → same menu.
-- [ ] Right-click a cell with **no** note → no menu / no crash.
+- [x] Deleting from that menu → the note goes to trash and the cell empties.
+- [x] **Right-click a period badge** → same menu.
+- [x] **Right-click a `journal-nav` row** → same menu.
+- [x] Right-click a cell with **no** note → no menu / no crash.
 
 ### Multi-journal disambiguation
 
 Setup: two Day journals whose entries land on the same date.
 
-- [ ] **Click** a date served by both → a centered suggest modal lists both.
-- [ ] Pick one → that journal's entry opens.
-- [ ] **Dismiss** the suggest modal (Esc) → nothing opens, no error notice.
-- [ ] Trigger the same date from a **command** or keyboard → centered suggest
+- [x] **Click** a date served by both → a centered suggest modal lists both.
+- [x] Pick one → that journal's entry opens.
+- [x] **Dismiss** the suggest modal (Esc) → nothing opens, no error notice.
+- [x] Trigger the same date from a **command** or keyboard → centered suggest
       (not the at-pointer menu).
 
 ### URI handler (`obsidian://`)
 
 Covered by `uri-open`; walk manually only when investigating.
 
-- [ ] `journal=Open&date=today` → opens today's entry.
-- [ ] `type=day&date=2026-03-05` → opens that day via write-type targeting.
-- [ ] `date=+3d` / `-2w` / `+1m` / `+1q` / `-1y` → relative offsets resolve.
-- [ ] `mode=tab` / `split` / `window` → honored.
-- [ ] **Neither `journal` nor `type`** → error notice, no note created.
-- [ ] **Unknown write type** (`type=fortnight`) → error notice.
-- [ ] **Unreadable date** (`date=not-a-date`) → error notice.
-- [ ] **Unknown open mode** (`mode=sideways`) → error notice.
-- [ ] `journal=` a name that does not exist → error notice, not a silent no-op.
+Setup: `test-vault` open, with its stock journals `day`, `week` and `month`
+(no `quarter` or `year` journal — some items below depend on that). Every item's
+link fires the request: click it from a renderer that allows the `obsidian://`
+scheme (Obsidian reading view — open the repo as a vault, or copy this section
+into a note). Where clicking does nothing, the renderer is blocking the scheme,
+not the plugin: copy the target and run `xdg-open '<url>'`, quoted, `&` is a
+shell operator. Between items, close what opened so the next result is unambiguous.
+
+**Journal targeting**
+
+- [ ] [journal=day&date=today](obsidian://journals?vault=test-vault&journal=day&date=today)
+      → opens today's `day` entry.
+- [ ] [journal=day, no date](obsidian://journals?vault=test-vault&journal=day) → same
+      entry; an absent date means today.
+- [ ] [journal=week&date=2026-03-05](obsidian://journals?vault=test-vault&journal=week&date=2026-03-05)
+      → opens the **week** containing 2026-03-05, not a day note.
+- [ ] [journal=month&date=2026-03-05](obsidian://journals?vault=test-vault&journal=month&date=2026-03-05)
+      → opens 2026-03.
+
+**Write-type targeting**
+
+- [x] [type=day&date=2026-03-05](obsidian://journals?vault=test-vault&type=day&date=2026-03-05)
+      → opens that day through the `day` journal.
+- [x] [type=month&date=2026-03-05](obsidian://journals?vault=test-vault&type=month&date=2026-03-05)
+      → opens 2026-03.
+- [x] + a **second** Day journal covering the same dates:
+      [type=day&date=today](obsidian://journals?vault=test-vault&type=day&date=today)
+      → centered suggest modal lists both; picking one opens it, Esc opens nothing and
+      shows no error.
+- [x] [type=quarter&date=today](obsidian://journals?vault=test-vault&type=quarter&date=today)
+      → notice naming the write type — a valid type with no journal behind it, not a
+      silent no-op.
+
+**Relative dates** (all against `journal=day`; check the opened note's date)
+
+- [x] [date=+3d](obsidian://journals?vault=test-vault&journal=day&date=%2B3d) → today +
+      3 days.
+- [x] [date=-2w](obsidian://journals?vault=test-vault&journal=day&date=-2w) → 14 days
+      back.
+- [x] [date=+1m](obsidian://journals?vault=test-vault&journal=day&date=%2B1m) → same
+      day-of-month, next month.
+- [x] [date=+1q](obsidian://journals?vault=test-vault&journal=day&date=%2B1q) → three
+      months on.
+- [x] [date=-1y](obsidian://journals?vault=test-vault&journal=day&date=-1y) → same date,
+      last year.
+- [x] [date=+3d, raw `+` instead of `%2B`](obsidian://journals?vault=test-vault&journal=day&date=+3d)
+      → either resolves the same as the `%2B` item above or shows the unreadable-date
+      notice; never opens the wrong date silently.
+
+**Open modes**
+
+- [x] [mode=tab](obsidian://journals?vault=test-vault&journal=day&mode=tab) → new tab.
+- [x] [mode=split](obsidian://journals?vault=test-vault&journal=day&mode=split) → split
+      pane.
+- [x] [mode=window](obsidian://journals?vault=test-vault&journal=day&mode=window) →
+      popout window. Close it before the next item — a stray popout steals later opens.
+- [x] [mode=active](obsidian://journals?vault=test-vault&journal=day&mode=active) →
+      reuses the active leaf, same as omitting `mode`.
+
+**Failure modes** — each must produce a notice; "nothing happened" is a bug
+
+- [x] [neither journal nor type](obsidian://journals?vault=test-vault&date=today) →
+      error notice, no note created.
+- [x] [type=fortnight](obsidian://journals?vault=test-vault&type=fortnight&date=today) →
+      error notice naming `fortnight`.
+- [x] [date=not-a-date](obsidian://journals?vault=test-vault&journal=day&date=not-a-date)
+      → error notice naming the unreadable date.
+- [x] [mode=sideways](obsidian://journals?vault=test-vault&journal=day&mode=sideways) →
+      error notice naming the unknown mode.
+- [x] [journal=Missing](obsidian://journals?vault=test-vault&journal=Missing&date=today)
+      → error notice naming the journal, not a silent no-op.
+- [x] + set the `day` journal's timeline start to 2026-01-01:
+      [journal=day&date=2025-12-31](obsidian://journals?vault=test-vault&journal=day&date=2025-12-31)
+      → notice, no note created. (Stock `test-vault` journals are unbounded, so without
+      that setup the date resolves and the item proves nothing.) Clear the start
+      afterwards.
 
 ---
 
@@ -1091,10 +1158,10 @@ No automated check can judge any of this. It is the reason a human runs this pas
 
 ### Theme & legibility
 
-- [ ] **Theme switch** light ↔ dark → decoration & calendar colors stay legible.
-- [ ] **Custom theme** applied → decoration & calendar colors stay legible.
-- [ ] Decoration **color mode: theme** under both light and dark → follows the theme.
-- [ ] Today vs. active cell styling stays distinguishable in both themes.
+- [x] **Theme switch** light ↔ dark → decoration & calendar colors stay legible.
+- [x] **Custom theme** applied → decoration & calendar colors stay legible.
+- [x] Decoration **color mode: theme** under both light and dark → follows the theme.
+- [x] Today vs. active cell styling stays distinguishable in both themes.
 
 ### Keyboard
 
@@ -1106,13 +1173,6 @@ No automated check can judge any of this. It is the reason a human runs this pas
 - [ ] Block and toolbar-item controls in the **view editor** are reachable without a
       mouse. (Known open: they are hover-only — parity item 123.)
 - [ ] Modals trap focus and **Esc** closes them.
-
-### Screen reader / labels
-
-- [ ] Calendar cells announce a usable label (date + whether an entry exists).
-- [ ] Icon-only toolbar buttons announce their purpose.
-- [ ] The **shelf selector** announces the _selected shelf_, not a static label — its
-      visible text is data, not a name.
 
 ### Mobile
 
