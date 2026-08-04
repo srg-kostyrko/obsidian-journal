@@ -100,6 +100,87 @@
 	"common_no_journals_yet": "Aucun journal pour l’instant. Créez-en un dans les paramètres du plugin.",
 	"code_blocks_nav_next": "Suivant",
 	"code_blocks_nav_previous": "Précédent",
+	"decoration_canvas_empty_hint": [
+		{
+			"declarations": [
+				"input type"
+			],
+			"selectors": [
+				"type"
+			],
+			"match": {
+				"type=background": "Cliquez sur la cellule pour ajouter un arrière-plan.",
+				"type=color": "Cliquez sur le nombre pour définir une couleur de texte.",
+				"type=border": "Cliquez sur le contour pour ajouter une bordure.",
+				"type=shape": "Cliquez sur une position pour ajouter une forme.",
+				"type=icon": "Cliquez sur une position pour ajouter une icône.",
+				"type=corner": "Cliquez sur un coin pour ajouter un triangle."
+			}
+		}
+	],
+	"decoration_canvas_region_label": [
+		{
+			"declarations": [
+				"input type"
+			],
+			"selectors": [
+				"type"
+			],
+			"match": {
+				"type=background": "Arrière-plan de la cellule",
+				"type=color": "Texte de la cellule",
+				"type=border": "Contour de la cellule"
+			}
+		}
+	],
+	"decoration_canvas_remove_label": "Supprimer",
+	"decoration_canvas_slot_label": [
+		{
+			"declarations": [
+				"input slot"
+			],
+			"selectors": [
+				"slot"
+			],
+			"match": {
+				"slot=left_top": "En haut à gauche",
+				"slot=center_top": "En haut au centre",
+				"slot=right_top": "En haut à droite",
+				"slot=left_middle": "Au milieu à gauche",
+				"slot=center_middle": "Au centre",
+				"slot=right_middle": "Au milieu à droite",
+				"slot=left_bottom": "En bas à gauche",
+				"slot=center_bottom": "En bas au centre",
+				"slot=right_bottom": "En bas à droite"
+			}
+		}
+	],
+	"decoration_layer_chip_label": [
+		{
+			"declarations": [
+				"input type",
+				"input state"
+			],
+			"selectors": [
+				"type",
+				"state"
+			],
+			"match": {
+				"type=background,state=empty": "Arrière-plan",
+				"type=background,state=occupied": "Arrière-plan, utilisé",
+				"type=color,state=empty": "Couleur",
+				"type=color,state=occupied": "Couleur, utilisé",
+				"type=border,state=empty": "Bordure",
+				"type=border,state=occupied": "Bordure, utilisé",
+				"type=shape,state=empty": "Forme",
+				"type=shape,state=occupied": "Forme, utilisé",
+				"type=icon,state=empty": "Icône",
+				"type=icon,state=occupied": "Icône, utilisé",
+				"type=corner,state=empty": "Coin",
+				"type=corner,state=occupied": "Coin, utilisé"
+			}
+		}
+	],
 	"nav_block_section_title": "Bloc de navigation",
 	"nav_block_section_mode_label": "Mode",
 	"nav_block_section_mode_option": [
@@ -567,8 +648,8 @@
 				"mode"
 			],
 			"match": {
-				"mode=uniform": "Uniforme",
-				"mode=different": "Configuration par côté"
+				"mode=uniform": "Lié",
+				"mode=different": "Par côté"
 			}
 		}
 	],
@@ -811,37 +892,6 @@
 		}
 	],
 	"decoration_modal_no_conditions": "Aucune condition n'est encore définie.",
-	"decoration_modal_no_styles": "Aucun style défini pour le moment",
-	"decoration_placement_x_label": [
-		{
-			"declarations": [
-				"input value"
-			],
-			"selectors": [
-				"value"
-			],
-			"match": {
-				"value=left": "Gauche",
-				"value=center": "Centre",
-				"value=right": "Droite"
-			}
-		}
-	],
-	"decoration_placement_y_label": [
-		{
-			"declarations": [
-				"input value"
-			],
-			"selectors": [
-				"value"
-			],
-			"match": {
-				"value=top": "Haut",
-				"value=middle": "Milieu",
-				"value=bottom": "Bas"
-			}
-		}
-	],
 	"decoration_section_description_calendar": "Décore les cellules de jour dans tous les calendriers, quels que soient les journaux affichés.",
 	"decoration_section_description_journal": "Utilisez des décorations pour mettre en évidence les dates du calendrier qui remplissent certaines conditions.",
 	"decoration_section_description_shelf": "Décore les cellules de jour tant que cette étagère est affichée, quels que soient les journaux qu'elle contient.",
@@ -915,29 +965,8 @@
 	],
 	"common_label_color": "Couleur",
 	"decoration_style_border_mode_label": "Mode bordure",
-	"decoration_style_border_show_label": "Montrer",
 	"decoration_style_border_style_label": "Style",
 	"decoration_style_border_width_label": "Largeur",
-	"decoration_style_corner_placement_label": "Placement",
-	"decoration_style_header": [
-		{
-			"declarations": [
-				"input type"
-			],
-			"selectors": [
-				"type"
-			],
-			"match": {
-				"type=background": "Fond décoratif",
-				"type=color": "Couleur décorative",
-				"type=shape": "Forme décorative",
-				"type=corner": "Coin décoration",
-				"type=icon": "icône décorative",
-				"type=border": "Bordure décorative"
-			}
-		}
-	],
-	"common_label_placement": "Placement",
 	"decoration_style_size_hint": [
 		{
 			"declarations": [

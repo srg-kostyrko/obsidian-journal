@@ -100,6 +100,87 @@
 	"common_no_journals_yet": "ジャーナルがまだありません。プラグイン設定で作成してください。",
 	"code_blocks_nav_next": "次",
 	"code_blocks_nav_previous": "前の",
+	"decoration_canvas_empty_hint": [
+		{
+			"declarations": [
+				"input type"
+			],
+			"selectors": [
+				"type"
+			],
+			"match": {
+				"type=background": "セルをクリックして背景を追加します。",
+				"type=color": "数字をクリックして文字色を設定します。",
+				"type=border": "枠線をクリックしてボーダーを追加します。",
+				"type=shape": "位置をクリックして図形を追加します。",
+				"type=icon": "位置をクリックしてアイコンを追加します。",
+				"type=corner": "角をクリックして三角形を追加します。"
+			}
+		}
+	],
+	"decoration_canvas_region_label": [
+		{
+			"declarations": [
+				"input type"
+			],
+			"selectors": [
+				"type"
+			],
+			"match": {
+				"type=background": "セルの背景",
+				"type=color": "セルのテキスト",
+				"type=border": "セルの枠線"
+			}
+		}
+	],
+	"decoration_canvas_remove_label": "削除",
+	"decoration_canvas_slot_label": [
+		{
+			"declarations": [
+				"input slot"
+			],
+			"selectors": [
+				"slot"
+			],
+			"match": {
+				"slot=left_top": "左上",
+				"slot=center_top": "上中央",
+				"slot=right_top": "右上",
+				"slot=left_middle": "左中央",
+				"slot=center_middle": "中央",
+				"slot=right_middle": "右中央",
+				"slot=left_bottom": "左下",
+				"slot=center_bottom": "下中央",
+				"slot=right_bottom": "右下"
+			}
+		}
+	],
+	"decoration_layer_chip_label": [
+		{
+			"declarations": [
+				"input type",
+				"input state"
+			],
+			"selectors": [
+				"type",
+				"state"
+			],
+			"match": {
+				"type=background,state=empty": "背景",
+				"type=background,state=occupied": "背景（使用中）",
+				"type=color,state=empty": "色",
+				"type=color,state=occupied": "色（使用中）",
+				"type=border,state=empty": "ボーダー",
+				"type=border,state=occupied": "ボーダー（使用中）",
+				"type=shape,state=empty": "形",
+				"type=shape,state=occupied": "形（使用中）",
+				"type=icon,state=empty": "アイコン",
+				"type=icon,state=occupied": "アイコン（使用中）",
+				"type=corner,state=empty": "コーナー",
+				"type=corner,state=occupied": "コーナー（使用中）"
+			}
+		}
+	],
 	"nav_block_section_title": "ナビゲーションブロック",
 	"nav_block_section_mode_label": "モード",
 	"nav_block_section_mode_option": [
@@ -567,8 +648,8 @@
 				"mode"
 			],
 			"match": {
-				"mode=uniform": "均一",
-				"mode=different": "片側ごとの設定"
+				"mode=uniform": "連動",
+				"mode=different": "辺ごと"
 			}
 		}
 	],
@@ -811,37 +892,6 @@
 		}
 	],
 	"decoration_modal_no_conditions": "条件はまだ定義されていません",
-	"decoration_modal_no_styles": "スタイルはまだ定義されていません",
-	"decoration_placement_x_label": [
-		{
-			"declarations": [
-				"input value"
-			],
-			"selectors": [
-				"value"
-			],
-			"match": {
-				"value=left": "左",
-				"value=center": "中心",
-				"value=right": "右"
-			}
-		}
-	],
-	"decoration_placement_y_label": [
-		{
-			"declarations": [
-				"input value"
-			],
-			"selectors": [
-				"value"
-			],
-			"match": {
-				"value=top": "トップ",
-				"value=middle": "真ん中",
-				"value=bottom": "底"
-			}
-		}
-	],
 	"decoration_section_description_calendar": "表示されているジャーナルに関係なく、すべてのカレンダーで日付セルを装飾します。",
 	"decoration_section_description_journal": "カレンダー上で特定の条件を満たす日付を強調表示するために、装飾を使用します。",
 	"decoration_section_description_shelf": "この棚が表示されている間、棚に含まれるジャーナルに関係なく日付セルを装飾します。",
@@ -915,29 +965,8 @@
 	],
 	"common_label_color": "色",
 	"decoration_style_border_mode_label": "ボーダーモード",
-	"decoration_style_border_show_label": "見せる",
 	"decoration_style_border_style_label": "スタイル",
 	"decoration_style_border_width_label": "幅",
-	"decoration_style_corner_placement_label": "配置",
-	"decoration_style_header": [
-		{
-			"declarations": [
-				"input type"
-			],
-			"selectors": [
-				"type"
-			],
-			"match": {
-				"type=background": "装飾背景",
-				"type=color": "装飾色",
-				"type=shape": "装飾形状",
-				"type=corner": "デコレーションコーナー",
-				"type=icon": "装飾アイコン",
-				"type=border": "装飾ボーダー"
-			}
-		}
-	],
-	"common_label_placement": "配置",
 	"decoration_style_size_hint": [
 		{
 			"declarations": [

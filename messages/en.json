@@ -626,29 +626,6 @@
     }
   ],
   "decoration_modal_no_conditions": "No conditions defined yet",
-  "decoration_modal_no_styles": "No styles defined yet",
-  "decoration_placement_x_label": [
-    {
-      "declarations": ["input value"],
-      "selectors": ["value"],
-      "match": {
-        "value=left": "Left",
-        "value=center": "Center",
-        "value=right": "Right"
-      }
-    }
-  ],
-  "decoration_placement_y_label": [
-    {
-      "declarations": ["input value"],
-      "selectors": ["value"],
-      "match": {
-        "value=top": "Top",
-        "value=middle": "Middle",
-        "value=bottom": "Bottom"
-      }
-    }
-  ],
   "decoration_section_description_calendar": "Decorate day cells in every calendar, whatever journals are shown.",
   "decoration_section_description_journal": "Use decorations to highlight dates in calendar that meet certain conditions.",
   "decoration_section_description_shelf": "Decorate day cells while this shelf is shown, whatever journals it holds.",
@@ -710,25 +687,8 @@
   ],
   "common_label_color": "Color",
   "decoration_style_border_mode_label": "Border mode",
-  "decoration_style_border_show_label": "Show",
   "decoration_style_border_style_label": "Style",
   "decoration_style_border_width_label": "Width",
-  "decoration_style_corner_placement_label": "Placement",
-  "decoration_style_header": [
-    {
-      "declarations": ["input type"],
-      "selectors": ["type"],
-      "match": {
-        "type=background": "Decorating background",
-        "type=color": "Decorating color",
-        "type=shape": "Decorating shape",
-        "type=corner": "Decorating corner",
-        "type=icon": "Decorating icon",
-        "type=border": "Decorating border"
-      }
-    }
-  ],
-  "common_label_placement": "Placement",
   "decoration_style_size_hint": [
     {
       "declarations": ["input kind"],

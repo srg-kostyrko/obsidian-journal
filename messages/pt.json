@@ -100,6 +100,87 @@
 	"common_no_journals_yet": "Ainda não há diários. Crie um nas configurações do plugin.",
 	"code_blocks_nav_next": "Próximo",
 	"code_blocks_nav_previous": "Anterior",
+	"decoration_canvas_empty_hint": [
+		{
+			"declarations": [
+				"input type"
+			],
+			"selectors": [
+				"type"
+			],
+			"match": {
+				"type=background": "Clique na célula para adicionar um fundo.",
+				"type=color": "Clique no número para definir uma cor de texto.",
+				"type=border": "Clique no contorno para adicionar uma borda.",
+				"type=shape": "Clique em uma posição para adicionar uma forma.",
+				"type=icon": "Clique em uma posição para adicionar um ícone.",
+				"type=corner": "Clique em um canto para adicionar um triângulo."
+			}
+		}
+	],
+	"decoration_canvas_region_label": [
+		{
+			"declarations": [
+				"input type"
+			],
+			"selectors": [
+				"type"
+			],
+			"match": {
+				"type=background": "Fundo da célula",
+				"type=color": "Texto da célula",
+				"type=border": "Contorno da célula"
+			}
+		}
+	],
+	"decoration_canvas_remove_label": "Remover",
+	"decoration_canvas_slot_label": [
+		{
+			"declarations": [
+				"input slot"
+			],
+			"selectors": [
+				"slot"
+			],
+			"match": {
+				"slot=left_top": "Superior esquerdo",
+				"slot=center_top": "Superior centro",
+				"slot=right_top": "Superior direito",
+				"slot=left_middle": "Meio esquerdo",
+				"slot=center_middle": "Centro",
+				"slot=right_middle": "Meio direito",
+				"slot=left_bottom": "Inferior esquerdo",
+				"slot=center_bottom": "Inferior centro",
+				"slot=right_bottom": "Inferior direito"
+			}
+		}
+	],
+	"decoration_layer_chip_label": [
+		{
+			"declarations": [
+				"input type",
+				"input state"
+			],
+			"selectors": [
+				"type",
+				"state"
+			],
+			"match": {
+				"type=background,state=empty": "Fundo",
+				"type=background,state=occupied": "Fundo, em uso",
+				"type=color,state=empty": "Cor",
+				"type=color,state=occupied": "Cor, em uso",
+				"type=border,state=empty": "Borda",
+				"type=border,state=occupied": "Borda, em uso",
+				"type=shape,state=empty": "Forma",
+				"type=shape,state=occupied": "Forma, em uso",
+				"type=icon,state=empty": "Ícone",
+				"type=icon,state=occupied": "Ícone, em uso",
+				"type=corner,state=empty": "Canto",
+				"type=corner,state=occupied": "Canto, em uso"
+			}
+		}
+	],
 	"nav_block_section_title": "Bloco de navegação",
 	"nav_block_section_mode_label": "Modo",
 	"nav_block_section_mode_option": [
@@ -567,8 +648,8 @@
 				"mode"
 			],
 			"match": {
-				"mode=uniform": "Uniforme",
-				"mode=different": "Configuração por lado"
+				"mode=uniform": "Vinculado",
+				"mode=different": "Por lado"
 			}
 		}
 	],
@@ -811,37 +892,6 @@
 		}
 	],
 	"decoration_modal_no_conditions": "Nenhuma condição foi definida ainda.",
-	"decoration_modal_no_styles": "Ainda não há estilos definidos.",
-	"decoration_placement_x_label": [
-		{
-			"declarations": [
-				"input value"
-			],
-			"selectors": [
-				"value"
-			],
-			"match": {
-				"value=left": "Esquerda",
-				"value=center": "Centro",
-				"value=right": "Certo"
-			}
-		}
-	],
-	"decoration_placement_y_label": [
-		{
-			"declarations": [
-				"input value"
-			],
-			"selectors": [
-				"value"
-			],
-			"match": {
-				"value=top": "Principal",
-				"value=middle": "Meio",
-				"value=bottom": "Fundo"
-			}
-		}
-	],
 	"decoration_section_description_calendar": "Decora as células de dia em todos os calendários, quaisquer que sejam os diários exibidos.",
 	"decoration_section_description_journal": "Use decorações para destacar no calendário datas que atendam a determinadas condições.",
 	"decoration_section_description_shelf": "Decora as células de dia enquanto esta prateleira estiver em exibição, quaisquer que sejam os diários que ela contenha.",
@@ -915,29 +965,8 @@
 	],
 	"common_label_color": "Cor",
 	"decoration_style_border_mode_label": "Modo de borda",
-	"decoration_style_border_show_label": "Mostrar",
 	"decoration_style_border_style_label": "Estilo",
 	"decoration_style_border_width_label": "Largura",
-	"decoration_style_corner_placement_label": "Colocação",
-	"decoration_style_header": [
-		{
-			"declarations": [
-				"input type"
-			],
-			"selectors": [
-				"type"
-			],
-			"match": {
-				"type=background": "Fundo decorativo",
-				"type=color": "Cor decorativa",
-				"type=shape": "Forma decorativa",
-				"type=corner": "Cantinho da decoração",
-				"type=icon": "Ícone de decoração",
-				"type=border": "Borda decorativa"
-			}
-		}
-	],
-	"common_label_placement": "Colocação",
 	"decoration_style_size_hint": [
 		{
 			"declarations": [

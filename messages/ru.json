@@ -100,6 +100,87 @@
 	"common_no_journals_yet": "Журналов пока нет. Создайте журнал в настройках плагина.",
 	"code_blocks_nav_next": "Следующий",
 	"code_blocks_nav_previous": "Предыдущий",
+	"decoration_canvas_empty_hint": [
+		{
+			"declarations": [
+				"input type"
+			],
+			"selectors": [
+				"type"
+			],
+			"match": {
+				"type=background": "Нажмите на ячейку, чтобы добавить фон.",
+				"type=color": "Нажмите на число, чтобы задать цвет текста.",
+				"type=border": "Нажмите на контур, чтобы добавить границу.",
+				"type=shape": "Нажмите на позицию, чтобы добавить фигуру.",
+				"type=icon": "Нажмите на позицию, чтобы добавить значок.",
+				"type=corner": "Нажмите на угол, чтобы добавить треугольник."
+			}
+		}
+	],
+	"decoration_canvas_region_label": [
+		{
+			"declarations": [
+				"input type"
+			],
+			"selectors": [
+				"type"
+			],
+			"match": {
+				"type=background": "Фон ячейки",
+				"type=color": "Текст ячейки",
+				"type=border": "Контур ячейки"
+			}
+		}
+	],
+	"decoration_canvas_remove_label": "Удалить",
+	"decoration_canvas_slot_label": [
+		{
+			"declarations": [
+				"input slot"
+			],
+			"selectors": [
+				"slot"
+			],
+			"match": {
+				"slot=left_top": "Вверху слева",
+				"slot=center_top": "Вверху по центру",
+				"slot=right_top": "Вверху справа",
+				"slot=left_middle": "По центру слева",
+				"slot=center_middle": "По центру",
+				"slot=right_middle": "По центру справа",
+				"slot=left_bottom": "Внизу слева",
+				"slot=center_bottom": "Внизу по центру",
+				"slot=right_bottom": "Внизу справа"
+			}
+		}
+	],
+	"decoration_layer_chip_label": [
+		{
+			"declarations": [
+				"input type",
+				"input state"
+			],
+			"selectors": [
+				"type",
+				"state"
+			],
+			"match": {
+				"type=background,state=empty": "Фон",
+				"type=background,state=occupied": "Фон, используется",
+				"type=color,state=empty": "Цвет",
+				"type=color,state=occupied": "Цвет, используется",
+				"type=border,state=empty": "Граница",
+				"type=border,state=occupied": "Граница, используется",
+				"type=shape,state=empty": "Форма",
+				"type=shape,state=occupied": "Форма, используется",
+				"type=icon,state=empty": "Значок",
+				"type=icon,state=occupied": "Значок, используется",
+				"type=corner,state=empty": "Угол",
+				"type=corner,state=occupied": "Угол, используется"
+			}
+		}
+	],
 	"nav_block_section_title": "Блок навигации",
 	"nav_block_section_mode_label": "Режим",
 	"nav_block_section_mode_option": [
@@ -567,8 +648,8 @@
 				"mode"
 			],
 			"match": {
-				"mode=uniform": "Униформа",
-				"mode=different": "Настройка по сторонам"
+				"mode=uniform": "Связаны",
+				"mode=different": "По сторонам"
 			}
 		}
 	],
@@ -811,37 +892,6 @@
 		}
 	],
 	"decoration_modal_no_conditions": "Условия пока не определены.",
-	"decoration_modal_no_styles": "Стили пока не определены.",
-	"decoration_placement_x_label": [
-		{
-			"declarations": [
-				"input value"
-			],
-			"selectors": [
-				"value"
-			],
-			"match": {
-				"value=left": "Левый",
-				"value=center": "Центр",
-				"value=right": "Верно"
-			}
-		}
-	],
-	"decoration_placement_y_label": [
-		{
-			"declarations": [
-				"input value"
-			],
-			"selectors": [
-				"value"
-			],
-			"match": {
-				"value=top": "Вершина",
-				"value=middle": "Середина",
-				"value=bottom": "Нижний"
-			}
-		}
-	],
 	"decoration_section_description_calendar": "Оформляет ячейки дней в любом календаре, независимо от того, какие журналы показаны.",
 	"decoration_section_description_journal": "Используйте декоративные элементы, чтобы выделить в календаре даты, отвечающие определенным условиям.",
 	"decoration_section_description_shelf": "Оформляет ячейки дней, пока показана эта полка, независимо от того, какие журналы на ней лежат.",
@@ -915,29 +965,8 @@
 	],
 	"common_label_color": "Цвет",
 	"decoration_style_border_mode_label": "Режим границы",
-	"decoration_style_border_show_label": "Показывать",
 	"decoration_style_border_style_label": "Стиль",
 	"decoration_style_border_width_label": "Ширина",
-	"decoration_style_corner_placement_label": "Трудоустройство",
-	"decoration_style_header": [
-		{
-			"declarations": [
-				"input type"
-			],
-			"selectors": [
-				"type"
-			],
-			"match": {
-				"type=background": "Декорирование фона",
-				"type=color": "Цвет для оформления",
-				"type=shape": "Форма для декора",
-				"type=corner": "Уголок декора",
-				"type=icon": "Декоративная иконка",
-				"type=border": "Декоративная рамка"
-			}
-		}
-	],
-	"common_label_placement": "Трудоустройство",
 	"decoration_style_size_hint": [
 		{
 			"declarations": [

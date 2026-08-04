@@ -100,6 +100,87 @@
 	"common_no_journals_yet": "Журналів ще немає. Створіть журнал у налаштуваннях плагіна.",
 	"code_blocks_nav_next": "Далі",
 	"code_blocks_nav_previous": "Попередній",
+	"decoration_canvas_empty_hint": [
+		{
+			"declarations": [
+				"input type"
+			],
+			"selectors": [
+				"type"
+			],
+			"match": {
+				"type=background": "Натисніть на комірку, щоб додати фон.",
+				"type=color": "Натисніть на число, щоб задати колір тексту.",
+				"type=border": "Натисніть на контур, щоб додати межу.",
+				"type=shape": "Натисніть на позицію, щоб додати фігуру.",
+				"type=icon": "Натисніть на позицію, щоб додати значок.",
+				"type=corner": "Натисніть на кут, щоб додати трикутник."
+			}
+		}
+	],
+	"decoration_canvas_region_label": [
+		{
+			"declarations": [
+				"input type"
+			],
+			"selectors": [
+				"type"
+			],
+			"match": {
+				"type=background": "Фон комірки",
+				"type=color": "Текст комірки",
+				"type=border": "Контур комірки"
+			}
+		}
+	],
+	"decoration_canvas_remove_label": "Видалити",
+	"decoration_canvas_slot_label": [
+		{
+			"declarations": [
+				"input slot"
+			],
+			"selectors": [
+				"slot"
+			],
+			"match": {
+				"slot=left_top": "Угорі ліворуч",
+				"slot=center_top": "Угорі по центру",
+				"slot=right_top": "Угорі праворуч",
+				"slot=left_middle": "По центру ліворуч",
+				"slot=center_middle": "По центру",
+				"slot=right_middle": "По центру праворуч",
+				"slot=left_bottom": "Внизу ліворуч",
+				"slot=center_bottom": "Внизу по центру",
+				"slot=right_bottom": "Внизу праворуч"
+			}
+		}
+	],
+	"decoration_layer_chip_label": [
+		{
+			"declarations": [
+				"input type",
+				"input state"
+			],
+			"selectors": [
+				"type",
+				"state"
+			],
+			"match": {
+				"type=background,state=empty": "Фон",
+				"type=background,state=occupied": "Фон, використовується",
+				"type=color,state=empty": "Колір",
+				"type=color,state=occupied": "Колір, використовується",
+				"type=border,state=empty": "Межа",
+				"type=border,state=occupied": "Межа, використовується",
+				"type=shape,state=empty": "Форма",
+				"type=shape,state=occupied": "Форма, використовується",
+				"type=icon,state=empty": "Значок",
+				"type=icon,state=occupied": "Значок, використовується",
+				"type=corner,state=empty": "Кут",
+				"type=corner,state=occupied": "Кут, використовується"
+			}
+		}
+	],
 	"nav_block_section_title": "Блок навігації",
 	"nav_block_section_mode_label": "Режим",
 	"nav_block_section_mode_option": [
@@ -567,8 +648,8 @@
 				"mode"
 			],
 			"match": {
-				"mode=uniform": "Уніформа",
-				"mode=different": "Налаштування для кожної сторони"
+				"mode=uniform": "Пов'язані",
+				"mode=different": "Для кожної сторони"
 			}
 		}
 	],
@@ -811,37 +892,6 @@
 		}
 	],
 	"decoration_modal_no_conditions": "Умови ще не визначені",
-	"decoration_modal_no_styles": "Стилі ще не визначені",
-	"decoration_placement_x_label": [
-		{
-			"declarations": [
-				"input value"
-			],
-			"selectors": [
-				"value"
-			],
-			"match": {
-				"value=left": "Ліворуч",
-				"value=center": "Центр",
-				"value=right": "Праворуч"
-			}
-		}
-	],
-	"decoration_placement_y_label": [
-		{
-			"declarations": [
-				"input value"
-			],
-			"selectors": [
-				"value"
-			],
-			"match": {
-				"value=top": "Верх",
-				"value=middle": "Середній",
-				"value=bottom": "Дно"
-			}
-		}
-	],
 	"decoration_section_description_calendar": "Оформлює клітинки днів у будь-якому календарі, незалежно від того, які журнали показано.",
 	"decoration_section_description_journal": "Використовуйте прикраси для виділення дат у календарі, які відповідають певним умовам.",
 	"decoration_section_description_shelf": "Оформлює клітинки днів, доки показано цю полицю, незалежно від того, які журнали на ній лежать.",
@@ -915,29 +965,8 @@
 	],
 	"common_label_color": "Колір",
 	"decoration_style_border_mode_label": "Режим межі",
-	"decoration_style_border_show_label": "Показати",
 	"decoration_style_border_style_label": "Стиль",
 	"decoration_style_border_width_label": "Ширина",
-	"decoration_style_corner_placement_label": "Розміщення",
-	"decoration_style_header": [
-		{
-			"declarations": [
-				"input type"
-			],
-			"selectors": [
-				"type"
-			],
-			"match": {
-				"type=background": "Декорування фону",
-				"type=color": "Колір декорування",
-				"type=shape": "Декорування форми",
-				"type=corner": "Декорування куточка",
-				"type=icon": "Декорування значка",
-				"type=border": "Декорування межі"
-			}
-		}
-	],
-	"common_label_placement": "Розміщення",
 	"decoration_style_size_hint": [
 		{
 			"declarations": [

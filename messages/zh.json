@@ -100,6 +100,87 @@
 	"common_no_journals_yet": "还没有日记。请在插件设置中创建一个。",
 	"code_blocks_nav_next": "下一个",
 	"code_blocks_nav_previous": "以前的",
+	"decoration_canvas_empty_hint": [
+		{
+			"declarations": [
+				"input type"
+			],
+			"selectors": [
+				"type"
+			],
+			"match": {
+				"type=background": "点击单元格添加背景。",
+				"type=color": "点击数字设置文字颜色。",
+				"type=border": "点击轮廓添加边框。",
+				"type=shape": "点击某个位置添加形状。",
+				"type=icon": "点击某个位置添加图标。",
+				"type=corner": "点击某个角添加三角形。"
+			}
+		}
+	],
+	"decoration_canvas_region_label": [
+		{
+			"declarations": [
+				"input type"
+			],
+			"selectors": [
+				"type"
+			],
+			"match": {
+				"type=background": "单元格背景",
+				"type=color": "单元格文字",
+				"type=border": "单元格轮廓"
+			}
+		}
+	],
+	"decoration_canvas_remove_label": "移除",
+	"decoration_canvas_slot_label": [
+		{
+			"declarations": [
+				"input slot"
+			],
+			"selectors": [
+				"slot"
+			],
+			"match": {
+				"slot=left_top": "左上",
+				"slot=center_top": "正上",
+				"slot=right_top": "右上",
+				"slot=left_middle": "左中",
+				"slot=center_middle": "正中",
+				"slot=right_middle": "右中",
+				"slot=left_bottom": "左下",
+				"slot=center_bottom": "正下",
+				"slot=right_bottom": "右下"
+			}
+		}
+	],
+	"decoration_layer_chip_label": [
+		{
+			"declarations": [
+				"input type",
+				"input state"
+			],
+			"selectors": [
+				"type",
+				"state"
+			],
+			"match": {
+				"type=background,state=empty": "背景",
+				"type=background,state=occupied": "背景（已使用）",
+				"type=color,state=empty": "颜色",
+				"type=color,state=occupied": "颜色（已使用）",
+				"type=border,state=empty": "边框",
+				"type=border,state=occupied": "边框（已使用）",
+				"type=shape,state=empty": "形状",
+				"type=shape,state=occupied": "形状（已使用）",
+				"type=icon,state=empty": "图标",
+				"type=icon,state=occupied": "图标（已使用）",
+				"type=corner,state=empty": "角落",
+				"type=corner,state=occupied": "角落（已使用）"
+			}
+		}
+	],
 	"nav_block_section_title": "导航模块",
 	"nav_block_section_mode_label": "模式",
 	"nav_block_section_mode_option": [
@@ -567,8 +648,8 @@
 				"mode"
 			],
 			"match": {
-				"mode=uniform": "制服",
-				"mode=different": "每侧设置"
+				"mode=uniform": "联动",
+				"mode=different": "逐边设置"
 			}
 		}
 	],
@@ -811,37 +892,6 @@
 		}
 	],
 	"decoration_modal_no_conditions": "尚未定义任何条件",
-	"decoration_modal_no_styles": "尚未定义任何样式",
-	"decoration_placement_x_label": [
-		{
-			"declarations": [
-				"input value"
-			],
-			"selectors": [
-				"value"
-			],
-			"match": {
-				"value=left": "左边",
-				"value=center": "中心",
-				"value=right": "正确的"
-			}
-		}
-	],
-	"decoration_placement_y_label": [
-		{
-			"declarations": [
-				"input value"
-			],
-			"selectors": [
-				"value"
-			],
-			"match": {
-				"value=top": "顶部",
-				"value=middle": "中间",
-				"value=bottom": "底部"
-			}
-		}
-	],
 	"decoration_section_description_calendar": "在所有日历中装饰日期单元格，无论显示哪些日记。",
 	"decoration_section_description_journal": "使用装饰元素突出显示日历中符合特定条件的日期。",
 	"decoration_section_description_shelf": "在显示此书架时装饰日期单元格，无论该书架包含哪些日记。",
@@ -915,29 +965,8 @@
 	],
 	"common_label_color": "颜色",
 	"decoration_style_border_mode_label": "边框模式",
-	"decoration_style_border_show_label": "展示",
 	"decoration_style_border_style_label": "风格",
 	"decoration_style_border_width_label": "宽度",
-	"decoration_style_corner_placement_label": "放置",
-	"decoration_style_header": [
-		{
-			"declarations": [
-				"input type"
-			],
-			"selectors": [
-				"type"
-			],
-			"match": {
-				"type=background": "装饰背景",
-				"type=color": "装饰颜色",
-				"type=shape": "装饰形状",
-				"type=corner": "装饰角",
-				"type=icon": "装饰图标",
-				"type=border": "装饰边框"
-			}
-		}
-	],
-	"common_label_placement": "放置",
 	"decoration_style_size_hint": [
 		{
 			"declarations": [
