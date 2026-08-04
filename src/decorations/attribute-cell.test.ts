@@ -43,6 +43,9 @@ describe("attributeCell", () => {
       buildStyle("border", {
         border: "different",
         top: { show: true, width: 1, style: "solid", color: { type: "custom", color: "#ff0000" } },
+        left: { show: false, width: 1, style: "solid", color: { type: "theme", name: "text-accent" } },
+        right: { show: false, width: 1, style: "solid", color: { type: "theme", name: "text-accent" } },
+        bottom: { show: false, width: 1, style: "solid", color: { type: "theme", name: "text-accent" } },
       }),
       "a",
     );
@@ -50,6 +53,9 @@ describe("attributeCell", () => {
       buildStyle("border", {
         border: "different",
         left: { show: true, width: 1, style: "solid", color: { type: "custom", color: "#00ff00" } },
+        top: { show: false, width: 1, style: "solid", color: { type: "theme", name: "text-accent" } },
+        right: { show: false, width: 1, style: "solid", color: { type: "theme", name: "text-accent" } },
+        bottom: { show: false, width: 1, style: "solid", color: { type: "theme", name: "text-accent" } },
       }),
       "b",
     );

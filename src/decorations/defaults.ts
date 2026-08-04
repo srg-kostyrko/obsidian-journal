@@ -10,12 +10,15 @@ import type {
   JournalDecorationStyle,
 } from "./config";
 
-const transparentColor: ColorSettings = { type: "transparent" };
-const textNormalColor: ColorSettings = { type: "theme", name: "text-normal" };
-const defaultBorderSide = (show = false): BorderSide => ({
-  show,
+// Every slot arrives visible. Under the last-wins cascade a transparent value is a declaration
+// that cancels a broader scope's, not an absence, so an invisible default silently switches off
+// a vault-wide rule. Theme variables rather than hex so a decoration follows the user's theme.
+const accentFill: ColorSettings = { type: "theme", name: "interactive-accent" };
+const accentInk: ColorSettings = { type: "theme", name: "text-accent" };
+const defaultBorderSide = (): BorderSide => ({
+  show: true,
   width: 1,
-  color: transparentColor,
+  color: accentInk,
   style: "solid",
 });
 
@@ -28,12 +31,12 @@ export function defaultStyle<T extends JournalDecorationStyle["type"]>(
 ): Extract<JournalDecorationStyle, { type: T }>;
 export function defaultStyle(type: JournalDecorationStyle["type"]): JournalDecorationStyle {
   return match<JournalDecorationStyle["type"], JournalDecorationStyle>(type)
-    .with("background", () => ({ type: "background", color: transparentColor }))
-    .with("color", () => ({ type: "color", color: textNormalColor }))
+    .with("background", () => ({ type: "background", color: accentFill }))
+    .with("color", () => ({ type: "color", color: accentInk }))
     .with("border", () => ({
       type: "border",
       border: "uniform",
-      left: defaultBorderSide(true),
+      left: defaultBorderSide(),
       right: defaultBorderSide(),
       top: defaultBorderSide(),
       bottom: defaultBorderSide(),
@@ -42,17 +45,19 @@ export function defaultStyle(type: JournalDecorationStyle["type"]): JournalDecor
       type: "shape",
       size: 0.4,
       shape: "circle",
-      color: transparentColor,
+      color: accentInk,
       placement_x: "center",
       placement_y: "bottom",
     }))
-    .with("corner", () => ({ type: "corner", placement: "top-left", color: transparentColor }))
+    .with("corner", () => ({ type: "corner", placement: "top-left", color: accentInk }))
     .with("icon", () => ({
       type: "icon",
-      icon: "",
+      // A stored icon name is user data typed into UiIconSuggest, so it stays a free-form
+      // string rather than coming from src/ui/icons.ts.
+      icon: "star",
       placement_x: "center",
       placement_y: "top",
-      color: transparentColor,
+      color: accentInk,
       size: 0.5,
     }))
     .exhaustive();
