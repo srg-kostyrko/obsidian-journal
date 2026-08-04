@@ -1,4 +1,4 @@
-import { advance, periodOfKind, type CalendarDate, type Period, type PeriodKind } from "@/calendar";
+import { periodOfKind, window, type CalendarDate, type Period, type PeriodKind } from "@/calendar";
 
 import type { JournalDecoration, JournalDecorationCondition } from "./config";
 
@@ -17,19 +17,14 @@ export const CUSTOM_MATCH_HORIZON = 20;
 
 export type WindowDirection = "past" | "future";
 
-export function fixedWindow(kind: PeriodKind, today: CalendarDate, direction: WindowDirection): readonly Period[] {
+// "reference" rather than "today": a finished journal anchors this at its own end, not the
+// calendar's today — see DecorationMatchService's referenceDate.
+export function fixedWindow(kind: PeriodKind, reference: CalendarDate, direction: WindowDirection): readonly Period[] {
   const horizon = MATCH_HORIZON[kind];
-  const anchorPeriod = periodOfKind(kind, today);
-  const first = direction === "past" ? advance(anchorPeriod, -(horizon - 1)) : anchorPeriod;
-  const out: Period[] = [first];
-  // Step from the running cursor rather than re-walking advance(first, i) from scratch each
-  // time — the latter is quadratic (1+2+...+(horizon-1) steps) where stepping the cursor is linear.
-  let cursor = first;
-  for (let i = 1; i < horizon; i += 1) {
-    cursor = cursor.next();
-    out.push(cursor);
-  }
-  return out;
+  const anchorPeriod = periodOfKind(kind, reference);
+  // Delegates to calendar/period.ts's window(), which already chains a cursor forward
+  // instead of re-deriving each period from scratch (the bug this file used to have).
+  return direction === "past" ? window(anchorPeriod, horizon - 1, 0) : window(anchorPeriod, 0, horizon - 1);
 }
 
 const NOTE_BASED: ReadonlySet<JournalDecorationCondition["type"]> = new Set([

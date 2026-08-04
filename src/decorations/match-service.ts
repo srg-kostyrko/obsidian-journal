@@ -3,6 +3,7 @@ import { match } from "ts-pattern";
 import { CalendarDate, type AnchorString, type Period, type PeriodKind } from "@/calendar";
 import { periodForJournal } from "@/code-blocks/nav/period-for-journal";
 import { inject } from "@/infrastructure/di";
+import { Option } from "@/infrastructure/result";
 import { CycleService, JournalsIndex, JournalsRepository, TimelineService } from "@/journals";
 import type { JournalConfig } from "@/journals/config";
 
@@ -79,15 +80,15 @@ export class DecorationMatchService {
       rawWindow = fixedWindow(unit, referenceDate, direction);
     }
 
-    // A custom journal's periods are keyed by the interval that owns them, not by the day
-    // itself — resolving through the cycle before checking the timeline is what lets a
-    // day-granular offset window clip against the right interval instead of a phantom one
-    // built by treating a mid-interval day as if it were an interval's own anchor.
-    const clipped = rawWindow.filter((period) =>
-      this.#cycle
-        .anchorOf(journalName, period.anchor)
-        .match({ none: () => false, some: (anchor) => this.#timeline.contains(journalName, anchor) }),
-    );
+    // Only a day-granular window needs anchorOf's cycle walk: its periods are individual days,
+    // not the intervals the timeline is judged against. The interval-anchored and fixed-journal
+    // windows never need it — their periods came out of #customWindow's previousAnchor/nextAnchor
+    // walk or fixedWindow's own periodOfKind call, so period.anchor is already the canonical
+    // anchor the timeline expects, and re-resolving it through anchorOf is the identity walked
+    // the expensive way.
+    const clipped = dayGranular
+      ? this.#clipDayGranular(journalName, rawWindow)
+      : rawWindow.filter((period) => this.#timeline.contains(journalName, period.anchor.toAnchor()));
     if (clipped.length === 0) return { kind: "no-history" };
 
     if (needsNotes(decoration) && clipped.every((period) => !this.#index.has(journalName, period.anchor.toAnchor()))) {
@@ -119,11 +120,49 @@ export class DecorationMatchService {
       const stepOpt =
         direction === "past" ? this.#cycle.previousAnchor(name, current) : this.#cycle.nextAnchor(name, current);
       if (stepOpt.isNone()) break;
+      // Mirrors CycleService.intervalsInRange/countRepeats' own non-advancing-step guards: a
+      // corrupt stored endDate could fail to advance the walk. Without this, a stuck step keeps
+      // pushing the same anchor for the rest of the horizon; explainRange's cellKey dedupe then
+      // silently drops the duplicates from the match count while total keeps counting them,
+      // under-reporting a rule that actually matched everything.
+      if (stepOpt.value === current) break;
       current = stepOpt.value;
       anchors.push(current);
     }
     if (direction === "past") anchors.reverse();
     return anchors.map((anchor) => periodForJournal(config.write, anchor));
+  }
+
+  // Resolves each day to the custom interval that owns it, without anchorOf's cycle walk per
+  // day. anchorOf runs once, on the window's first (earliest) day; from there the days are
+  // consecutive and ascending (fixedWindow's own guarantee), so the cursor only steps to the
+  // next interval — via nextAnchor, a single step, not a re-derivation from the cycle anchor —
+  // when a day crosses out of the interval currently in hand.
+  #clipDayGranular(journalName: string, days: readonly Period[]): Period[] {
+    if (days.length === 0) return [];
+    const firstAnchorOpt = this.#cycle.anchorOf(journalName, days[0].anchor);
+    if (firstAnchorOpt.isNone()) return [];
+    let intervalAnchor = firstAnchorOpt.value;
+    let intervalEnd = this.#cycle.endOf(journalName, intervalAnchor);
+    let inTimeline = this.#timeline.contains(journalName, intervalAnchor);
+    const out: Period[] = [];
+    for (const day of days) {
+      while (intervalEnd.isSome() && day.anchor.isAfter(intervalEnd.value)) {
+        const nextOpt = this.#cycle.nextAnchor(journalName, intervalAnchor);
+        // Same non-advancing-step guard as #customWindow: treat the rest of the days as
+        // unresolvable rather than spin on a duplicate anchor.
+        if (nextOpt.isNone() || nextOpt.value === intervalAnchor) {
+          intervalEnd = Option.none();
+          inTimeline = false;
+          break;
+        }
+        intervalAnchor = nextOpt.value;
+        intervalEnd = this.#cycle.endOf(journalName, intervalAnchor);
+        inTimeline = this.#timeline.contains(journalName, intervalAnchor);
+      }
+      if (inTimeline) out.push(day);
+    }
+    return out;
   }
 
   #describeCalendar(owner: CalendarDecorationOwner, index: number, decoration: CalendarDecoration): MatchBadge {

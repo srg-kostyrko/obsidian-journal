@@ -172,6 +172,25 @@ describe("DecorationMatchService", () => {
   });
 
   describe("evidence", () => {
+    it("reports a single-period total for a journal whose timeline starts today", () => {
+      // The design was corrected to say a journal starting today still has today's own period —
+      // it reports against a denominator of one rather than emptying into "no history yet". A
+      // one-character regression in TimelineService.contains that starts excluding a journal's
+      // own start date (e.g. flipping >= to >) would silently turn every fresh journal's badge
+      // into "no history yet", the exact state the design says must not be the fresh-journal case.
+      const decoration = neverMatches();
+      const h = buildHarness({
+        daily: fixedJournal(
+          "daily",
+          { type: "day" },
+          { decorations: [decoration], timeline: { start: date("2026-05-25").toAnchor(), end: { kind: "never" } } },
+        ),
+      });
+
+      const badge = expectSilent(h.service.describe({ kind: "journal", journalName: "daily" }, 0));
+      expect(badge.total).toBe(1);
+    });
+
     it("reports no notes for a note-needing decoration over a note-free window", () => {
       // Without the notes gate, an empty index would silently read as "silent" (0 matched)
       // rather than the "we cannot tell yet" state the note-based condition demands.
@@ -243,6 +262,34 @@ describe("DecorationMatchService", () => {
 
       const badge = expectMatched(h.service.describe({ kind: "journal", journalName: "daily" }, 0));
       expect(badge.direction).toBe("past");
+    });
+  });
+
+  describe("custom-interval clipping", () => {
+    it("clips a day-granular window by the interval owning each day, not the day itself", () => {
+      // The timeline start (2026-03-15) falls inside the interval anchored 2026-03-09, which
+      // straddles it and so stays entirely in-timeline — including its six pre-start days. The
+      // interval anchored 2026-02-23 ends (2026-03-08) before the start and is dropped whole.
+      // Correct total: 90 window days minus the 12 that belong to the dropped interval = 78,
+      // with 6 offset-1 matches (one per surviving interval's first day). An implementation that
+      // clips each day against the timeline directly, instead of resolving it to its owning
+      // interval first, wrongly excludes the straddling interval's six pre-start days and
+      // reports 72 instead of 78.
+      const decoration = buildDecoration({
+        mode: "or",
+        conditions: [buildCondition("offset", { offset: 1 })],
+        styles: [buildStyle("background")],
+      });
+      const h = buildHarness({
+        sprint: customJournal("sprint", "week", 2, "2020-01-06", {
+          decorations: [decoration],
+          timeline: { start: date("2026-03-15").toAnchor(), end: { kind: "never" } },
+        }),
+      });
+
+      const badge = expectMatched(h.service.describe({ kind: "journal", journalName: "sprint" }, 0));
+      expect(badge.total).toBe(78);
+      expect(badge.matched).toBe(6);
     });
   });
 
