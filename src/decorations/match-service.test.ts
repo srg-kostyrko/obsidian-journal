@@ -15,6 +15,7 @@ import { ShelvesRepository, type ShelfConfig, type ShelvesEvents } from "@/shelv
 import { DecorationsStore } from "./decorations-store";
 import { DecorationEngine } from "./engine";
 import { DecorationMatchService } from "./match-service";
+import { CUSTOM_MATCH_HORIZON } from "./match-window";
 import { decorationsSlice } from "./settings/slice";
 import { buildCalendarDecoration, buildCondition, buildDecoration, buildStyle } from "./testing";
 
@@ -142,30 +143,35 @@ describe("DecorationMatchService", () => {
     });
   });
 
-  describe("evidence", () => {
-    it("reports no history for a journal whose timeline starts today", () => {
-      // A timeline that starts today and has already ended (a hand-edited end before its own
-      // start — TimelineService.boundsOf documents this as reachable) clips every candidate
-      // period away, including today's own. Without the empty-window check first, this would
-      // fall through to "silent" instead of "no-history".
+  describe("finished journals", () => {
+    it("reports a real match count for a journal whose timeline has already ended", () => {
+      // Anchoring at today instead of the timeline's own end would clip this journal's
+      // entire 2020-2021 history away and misreport it as having none: today's window
+      // (roughly 2026-02-25 through 2026-05-25) shares no periods with a timeline that ended
+      // in mid-2021, so every one of those periods would fail the end-bound check.
       const decoration = buildDecoration({ mode: "or", conditions: [wildcard], styles: [buildStyle("background")] });
-      const today = date("2026-05-25").toAnchor();
-      const yesterday = date("2026-05-24").toAnchor();
       const h = buildHarness({
         daily: fixedJournal(
           "daily",
           { type: "day" },
           {
             decorations: [decoration],
-            timeline: { start: today, end: { kind: "date", date: yesterday } },
+            timeline: {
+              start: date("2020-01-01").toAnchor(),
+              end: { kind: "date", date: date("2021-06-30").toAnchor() },
+            },
           },
         ),
       });
 
-      const badge = h.service.describe({ kind: "journal", journalName: "daily" }, 0);
-      expect(badge.kind).toBe("no-history");
+      const badge = expectMatched(h.service.describe({ kind: "journal", journalName: "daily" }, 0));
+      expect(badge.matched).toBe(90);
+      expect(badge.total).toBe(90);
+      expect(badge.direction).toBe("past");
     });
+  });
 
+  describe("evidence", () => {
     it("reports no notes for a note-needing decoration over a note-free window", () => {
       // Without the notes gate, an empty index would silently read as "silent" (0 matched)
       // rather than the "we cannot tell yet" state the note-based condition demands.
@@ -251,14 +257,42 @@ describe("DecorationMatchService", () => {
 
     it("reports intervals for a custom journal", () => {
       // periodKindForWrite("custom") is "day"; a service that reports that raw value instead
-      // of overriding to "interval" fails this.
-      const decoration = buildDecoration({ mode: "or", conditions: [wildcard], styles: [buildStyle("background")] });
+      // of overriding to "interval" fails the unit assertion. And a service that substitutes
+      // a day-granular window of the right length (right total, wrong spacing) fails the
+      // matched count: interval anchors 14 days apart all land on the same weekday
+      // (2020-01-06 is a Monday), but 20 consecutive days would not.
+      const decoration = buildDecoration({
+        mode: "or",
+        conditions: [buildCondition("weekday", { weekdays: [1] })],
+        styles: [buildStyle("background")],
+      });
       const h = buildHarness({
         sprint: customJournal("sprint", "week", 2, "2020-01-06", { decorations: [decoration] }),
       });
 
       const badge = expectMatched(h.service.describe({ kind: "journal", journalName: "sprint" }, 0));
+      expect(badge.total).toBe(CUSTOM_MATCH_HORIZON);
+      expect(badge.matched).toBe(CUSTOM_MATCH_HORIZON);
       expect(badge.unit).toBe("interval");
+    });
+
+    it("reports days for an offset decoration on a custom journal", () => {
+      // periodForJournal maps every interval to its own first day, so an interval-anchored
+      // window can only ever satisfy offset 1 — reusing it for an offset-3 decoration would
+      // report "silent" forever. A day-granular window is the only way this can fire, and
+      // its unit must read "day" rather than "interval" to match what was actually walked.
+      const decoration = buildDecoration({
+        mode: "or",
+        conditions: [buildCondition("offset", { offset: 3 })],
+        styles: [buildStyle("background")],
+      });
+      const h = buildHarness({
+        sprint: customJournal("sprint", "week", 2, "2020-01-06", { decorations: [decoration] }),
+      });
+
+      const badge = expectMatched(h.service.describe({ kind: "journal", journalName: "sprint" }, 0));
+      expect(badge.matched).toBe(7);
+      expect(badge.unit).toBe("day");
     });
 
     it("reports days for a vault-wide decoration", () => {

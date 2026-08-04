@@ -7,12 +7,12 @@ import { CycleService, JournalsIndex, JournalsRepository, TimelineService } from
 import type { JournalConfig } from "@/journals/config";
 
 import { DecorationsStore } from "./decorations-store";
-import { DecorationEngine, periodKindForWrite, type DecorationBinding } from "./engine";
+import { DecorationEngine, hasOffsetCondition, periodKindForWrite, type DecorationBinding } from "./engine";
 import { UnknownDecorationError } from "./errors";
 import { CUSTOM_MATCH_HORIZON, fixedWindow, needsNotes, type WindowDirection } from "./match-window";
 
-import type { CalendarDecoration } from "./config";
-import type { DecorationOwner } from "./owner";
+import type { CalendarDecoration, JournalDecoration } from "./config";
+import type { CalendarDecorationOwner, DecorationOwner } from "./owner";
 
 export type BadgeUnit = PeriodKind | "interval";
 
@@ -41,38 +41,61 @@ export class DecorationMatchService {
   readonly #cycle = inject(CycleService);
   readonly #timeline = inject(TimelineService);
 
-  #describeJournal(journalName: string, binding: DecorationBinding): MatchBadge {
+  #describeJournal(journalName: string, index: number, decoration: JournalDecoration): MatchBadge {
     const configOpt = this.#journals.get(journalName);
     if (configOpt.isNone()) return { kind: "no-history" };
     const config = configOpt.value;
 
     const today = CalendarDate.today();
     const startOpt = this.#timeline.startOf(journalName);
+    const endOpt = this.#timeline.endOf(journalName);
     let direction: WindowDirection = "past";
     let referenceDate = today;
     if (startOpt.isSome() && startOpt.value.isAfter(today)) {
       direction = "future";
       referenceDate = startOpt.value;
+    } else if (endOpt.isSome() && endOpt.value.isBefore(today)) {
+      // A journal that has already ended has no "today" to anchor on — its timeline stops
+      // before today ever entered the picture. Anchoring at today would clip its whole
+      // history away; anchoring at its own end measures it against the data it actually ran on.
+      referenceDate = endOpt.value;
     }
 
     const isCustom = config.write.type === "custom";
-    const rawWindow = isCustom
-      ? this.#customWindow(journalName, config, referenceDate, direction)
-      : fixedWindow(periodKindForWrite(config.write.type), referenceDate, direction);
+    // Offset conditions mark single days inside an interval, so they can only ever be
+    // satisfied by a day-granular window — an interval-anchored window always lands on the
+    // interval's first day, making every offset but 1 permanently unreachable.
+    const dayGranular = isCustom && hasOffsetCondition(decoration);
+    let rawWindow: readonly Period[];
+    let unit: BadgeUnit;
+    if (dayGranular) {
+      rawWindow = fixedWindow("day", referenceDate, direction);
+      unit = "day";
+    } else if (isCustom) {
+      rawWindow = this.#customWindow(journalName, config, referenceDate, direction);
+      unit = "interval";
+    } else {
+      unit = periodKindForWrite(config.write.type);
+      rawWindow = fixedWindow(unit, referenceDate, direction);
+    }
 
-    const clipped = rawWindow.filter((period) => this.#timeline.contains(journalName, period.anchor.toAnchor()));
+    // A custom journal's periods are keyed by the interval that owns them, not by the day
+    // itself — resolving through the cycle before checking the timeline is what lets a
+    // day-granular offset window clip against the right interval instead of a phantom one
+    // built by treating a mid-interval day as if it were an interval's own anchor.
+    const clipped = rawWindow.filter((period) =>
+      this.#cycle
+        .anchorOf(journalName, period.anchor)
+        .match({ none: () => false, some: (anchor) => this.#timeline.contains(journalName, anchor) }),
+    );
     if (clipped.length === 0) return { kind: "no-history" };
 
-    if (
-      binding.kind === "journal" &&
-      needsNotes(binding.decoration) &&
-      clipped.every((period) => !this.#index.has(journalName, period.anchor.toAnchor()))
-    ) {
+    if (needsNotes(decoration) && clipped.every((period) => !this.#index.has(journalName, period.anchor.toAnchor()))) {
       return { kind: "no-notes" };
     }
 
+    const binding: DecorationBinding = { kind: "journal", journalName, index, decoration };
     const matched = this.#engine.explainRange(clipped, [binding]).size;
-    const unit: BadgeUnit = isCustom ? "interval" : periodKindForWrite(config.write.type);
     const total = clipped.length;
     return matched > 0
       ? { kind: "matched", matched, total, unit, direction }
@@ -103,8 +126,9 @@ export class DecorationMatchService {
     return anchors.map((anchor) => periodForJournal(config.write, anchor));
   }
 
-  #describeCalendar(binding: DecorationBinding): MatchBadge {
+  #describeCalendar(owner: CalendarDecorationOwner, index: number, decoration: CalendarDecoration): MatchBadge {
     const window = fixedWindow("day", CalendarDate.today(), "past");
+    const binding: DecorationBinding = { kind: "calendar", owner, index, decoration };
     const matched = this.#engine.explainRange(window, [binding]).size;
     return matched > 0
       ? { kind: "matched", matched, total: window.length, unit: "day", direction: "past" }
@@ -115,13 +139,8 @@ export class DecorationMatchService {
     const decoration = this.#store.list(owner).at(index);
     if (decoration === undefined) throw new UnknownDecorationError(owner, index);
 
-    const binding: DecorationBinding =
-      owner.kind === "journal"
-        ? { kind: "journal", journalName: owner.journalName, index, decoration }
-        : { kind: "calendar", owner, index, decoration: decoration as CalendarDecoration };
-
     return match(owner)
-      .with({ kind: "journal" }, (o) => this.#describeJournal(o.journalName, binding))
-      .otherwise(() => this.#describeCalendar(binding));
+      .with({ kind: "journal" }, (o) => this.#describeJournal(o.journalName, index, decoration))
+      .otherwise((o) => this.#describeCalendar(o, index, decoration as CalendarDecoration));
   }
 }
