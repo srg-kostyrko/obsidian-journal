@@ -2,20 +2,27 @@
 import { useField } from "vee-validate";
 import { watch } from "vue";
 
-import type { BorderSide, JournalDecorationBorder } from "@/decorations";
 import { m } from "@/i18n";
-import UiDropdown from "@/ui/UiDropdown.vue";
 import UiSettingRow from "@/ui/UiSettingRow.vue";
 
 import StyleBorderSide from "./StyleBorderSide.vue";
 
-const { name } = defineProps<{ name: string }>();
+import type { BorderSide, JournalDecorationBorder } from "../../config";
+import type { BorderSideName } from "../../resolve-cell";
+
+const { name, side } = defineProps<{ name: string; side: BorderSideName }>();
 const { value: mode } = useField<JournalDecorationBorder["border"]>(`${name}.border`);
 const { value: top } = useField<BorderSide>(`${name}.top`);
 const { value: bottom } = useField<BorderSide>(`${name}.bottom`);
 const { value: left } = useField<BorderSide>(`${name}.left`);
 const { value: right } = useField<BorderSide>(`${name}.right`);
 
+// Linked means one border around the cell, which is what the stored "uniform" mode already
+// means — resolveCell copies `left` to all four sides. Keeping the four in step while linked
+// makes switching to per side a no-op on the data.
+//
+// The watcher must not write `top`, which it also watches, or every edit re-triggers it. The
+// "turn every side on" half of linking therefore lives in setMode, which runs once per click.
 watch(
   [top, mode],
   () => {
@@ -26,34 +33,23 @@ watch(
   },
   { deep: true },
 );
+
+function setMode(next: JournalDecorationBorder["border"]): void {
+  if (next === "uniform" && !top.value.show) top.value = { ...top.value, show: true };
+  mode.value = next;
+}
 </script>
 
 <template>
   <UiSettingRow :name="m.decoration_style_border_mode_label()">
-    <UiDropdown v-model="mode">
-      <option value="uniform">{{ m.decoration_border_mode_label({ mode: "uniform" }) }}</option>
-      <option value="different">{{ m.decoration_border_mode_label({ mode: "different" }) }}</option>
-    </UiDropdown>
+    <label>
+      <input type="radio" :checked="mode === 'uniform'" @change="setMode('uniform')" />
+      {{ m.decoration_border_mode_label({ mode: "uniform" }) }}
+    </label>
+    <label>
+      <input type="radio" :checked="mode === 'different'" @change="setMode('different')" />
+      {{ m.decoration_border_mode_label({ mode: "different" }) }}
+    </label>
   </UiSettingRow>
-  <template v-if="mode === 'uniform'">
-    <StyleBorderSide :name="`${name}.top`" />
-  </template>
-  <template v-else>
-    <UiSettingRow heading>
-      <template #name>{{ m.decoration_border_side_label({ side: "top" }) }}</template>
-    </UiSettingRow>
-    <StyleBorderSide :name="`${name}.top`" />
-    <UiSettingRow heading>
-      <template #name>{{ m.decoration_border_side_label({ side: "bottom" }) }}</template>
-    </UiSettingRow>
-    <StyleBorderSide :name="`${name}.bottom`" />
-    <UiSettingRow heading>
-      <template #name>{{ m.decoration_border_side_label({ side: "left" }) }}</template>
-    </UiSettingRow>
-    <StyleBorderSide :name="`${name}.left`" />
-    <UiSettingRow heading>
-      <template #name>{{ m.decoration_border_side_label({ side: "right" }) }}</template>
-    </UiSettingRow>
-    <StyleBorderSide :name="`${name}.right`" />
-  </template>
+  <StyleBorderSide :name="`${name}.${mode === 'uniform' ? 'top' : side}`" />
 </template>

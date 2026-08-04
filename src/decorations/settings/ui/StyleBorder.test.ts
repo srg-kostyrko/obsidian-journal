@@ -7,23 +7,14 @@ import { afterEach, describe, expect, it } from "vitest";
 import { defineComponent, h } from "vue";
 
 import { decorationStyleSchema, type JournalDecorationStyle } from "@/decorations";
-import { m } from "@/i18n";
+
+import { defaultStyle } from "../../defaults";
 
 import StyleBorder from "./StyleBorder.vue";
 
 type Border = Extract<JournalDecorationStyle, { type: "border" }>;
 
-const blankSide = () => ({ show: false, width: 1, color: { type: "transparent" as const }, style: "solid" });
-const uniform: Border = {
-  type: "border",
-  border: "uniform",
-  top: blankSide(),
-  bottom: blankSide(),
-  left: blankSide(),
-  right: blankSide(),
-};
-
-const renderStyleBorderHost = () => h(StyleBorder, { name: "s" });
+const renderStyleBorderHost = () => h(StyleBorder, { name: "s", side: "top" });
 
 afterEach(() => cleanup());
 
@@ -44,24 +35,27 @@ function mount(initial: Border) {
 }
 
 describe("StyleBorder", () => {
-  it("shows only one side editor in uniform mode", () => {
-    mount(uniform);
-    expect(screen.getAllByText(m.decoration_style_border_show_label())).toHaveLength(1);
+  it("switches the stored mode to per side", async () => {
+    const host = mount({ ...defaultStyle("border") });
+    await userEvent.click(screen.getByRole("radio", { name: "Per side" }));
+    expect(host.values.s.border).toBe("different");
   });
 
-  it("shows four side editors in different mode", () => {
-    mount({ ...uniform, border: "different" });
-    expect(screen.getAllByText(m.decoration_style_border_show_label())).toHaveLength(4);
+  it("turns every side on when switching back to linked", async () => {
+    const host = mount({
+      ...defaultStyle("border"),
+      border: "different",
+      top: { show: false, width: 1, color: { type: "transparent" }, style: "solid" },
+    });
+    await userEvent.click(screen.getByRole("radio", { name: "Linked" }));
+    expect(host.values.s.top.show).toBe(true);
   });
 
-  it("mirrors width changes from top to other sides in uniform mode", async () => {
-    const host = mount({ ...uniform, top: { ...blankSide(), show: true } });
-    const number = screen.getByRole("spinbutton");
-    await userEvent.clear(number);
-    await userEvent.type(number, "5");
-    expect(host.values.s.top.width).toBe(5);
-    expect(host.values.s.bottom.width).toBe(5);
-    expect(host.values.s.left.width).toBe(5);
-    expect(host.values.s.right.width).toBe(5);
+  it("edits only the named side", async () => {
+    const host = mount({ ...defaultStyle("border"), border: "different" });
+    await userEvent.clear(screen.getByRole("spinbutton"));
+    await userEvent.type(screen.getByRole("spinbutton"), "4");
+    expect(host.values.s.top.width).toBe(4);
+    expect(host.values.s.left.width).toBe(1);
   });
 });

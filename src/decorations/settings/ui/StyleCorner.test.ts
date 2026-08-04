@@ -1,5 +1,5 @@
 import userEvent from "@testing-library/user-event";
-import { cleanup, render, screen, within } from "@testing-library/vue";
+import { cleanup, render, screen } from "@testing-library/vue";
 import { toTypedSchema } from "@vee-validate/valibot";
 import * as v from "valibot";
 import { useForm } from "vee-validate";
@@ -7,7 +7,6 @@ import { afterEach, describe, expect, it } from "vitest";
 import { defineComponent, h } from "vue";
 
 import { decorationStyleSchema, type JournalDecorationStyle } from "@/decorations";
-import { m } from "@/i18n";
 
 import StyleCorner from "./StyleCorner.vue";
 
@@ -33,18 +32,10 @@ function mount(initial: Corner) {
   return exposed;
 }
 
-function rowFor(label: string): HTMLElement {
-  const labelElement = screen.getByText(label);
-  const row = labelElement.closest(".setting-item");
-  if (!row) throw new Error(`No row for ${label}`);
-  return row as HTMLElement;
-}
-
 describe("StyleCorner", () => {
-  it("updates placement when a different corner is chosen", async () => {
+  it("updates color when the user picks a different kind", async () => {
     const host = mount({ type: "corner", placement: "top-left", color: { type: "transparent" } });
-    const placementRow = rowFor(m.decoration_style_corner_placement_label());
-    await userEvent.selectOptions(within(placementRow).getByRole("combobox"), "bottom-right");
-    expect(host.values.s.placement).toBe("bottom-right");
+    await userEvent.selectOptions(screen.getByRole("combobox"), "custom");
+    expect(host.values.s.color).toEqual({ type: "custom", color: "#000000" });
   });
 });

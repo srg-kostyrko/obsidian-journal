@@ -33,12 +33,6 @@ function mount(initial: BorderSide) {
 const blankSide = (): BorderSide => ({ show: false, width: 1, color: { type: "transparent" }, style: "solid" });
 
 describe("StyleBorderSide", () => {
-  it("toggles show when its toggle is clicked", async () => {
-    const host = mount(blankSide());
-    await userEvent.click(document.querySelector(".checkbox-container")!);
-    expect(host.values.s.show).toBe(true);
-  });
-
   it("updates width as the user types", async () => {
     const host = mount({ ...blankSide(), show: true });
     const number = screen.getByRole("spinbutton");

@@ -12,8 +12,6 @@ const { name } = defineProps<{ name: string }>();
 const { value: shape } = useField<JournalDecorationShape["shape"]>(`${name}.shape`);
 const { value: size } = useField<number>(`${name}.size`);
 const { value: color } = useField<ColorSettings>(`${name}.color`);
-const { value: placementX } = useField<JournalDecorationShape["placement_x"]>(`${name}.placement_x`);
-const { value: placementY } = useField<JournalDecorationShape["placement_y"]>(`${name}.placement_y`);
 </script>
 
 <template>
@@ -33,17 +31,5 @@ const { value: placementY } = useField<JournalDecorationShape["placement_y"]>(`$
   <UiSettingRow :name="m.common_label_size()">
     <template #description>{{ m.decoration_style_size_hint({ kind: "shape" }) }}</template>
     <UiNumberInput v-model="size" :min="0.1" :step="0.1" />
-  </UiSettingRow>
-  <UiSettingRow :name="m.common_label_placement()">
-    <UiDropdown v-model="placementX">
-      <option value="left">{{ m.decoration_placement_x_label({ value: "left" }) }}</option>
-      <option value="center">{{ m.decoration_placement_x_label({ value: "center" }) }}</option>
-      <option value="right">{{ m.decoration_placement_x_label({ value: "right" }) }}</option>
-    </UiDropdown>
-    <UiDropdown v-model="placementY">
-      <option value="top">{{ m.decoration_placement_y_label({ value: "top" }) }}</option>
-      <option value="middle">{{ m.decoration_placement_y_label({ value: "middle" }) }}</option>
-      <option value="bottom">{{ m.decoration_placement_y_label({ value: "bottom" }) }}</option>
-    </UiDropdown>
   </UiSettingRow>
 </template>

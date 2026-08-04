@@ -96,10 +96,7 @@ describe("DecorationCanvas", () => {
       expect(host.values.styles.at(0)).toMatchObject({ type: "border", border: "uniform" });
     });
 
-    // Depends on Task 9: StyleBorder.vue doesn't expose a Linked/Per side radio group yet
-    // (it currently uses a dropdown), so there is no "Per side" radio to click. Restore
-    // this once Task 9 lands.
-    it.todo("switches the stored mode when per side is chosen", async () => {
+    it("switches the stored mode when per side is chosen", async () => {
       const host = mount();
       await userEvent.click(screen.getByRole("button", { name: "Border" }));
       await userEvent.click(screen.getByRole("button", { name: "Cell outline" }));
