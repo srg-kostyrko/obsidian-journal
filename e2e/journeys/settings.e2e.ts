@@ -24,6 +24,8 @@ import {
 } from "../support/settings.js";
 import { seedNote, waitForFrontmatter, waitForJournalFrontmatter } from "../support/vault.js";
 
+import { runStyleCanvasJourney } from "./decorations.js";
+
 import type { StoredView } from "../support/plugin-data.js";
 
 // Views are UUID-keyed; the specs know views by name, so resolve the id from the persisted
@@ -564,6 +566,13 @@ describe("settings", () => {
         (s) => (s.journals?.daily?.decorations?.length ?? 0) === before - 1,
         "decoration delete not persisted",
       );
+    });
+
+    // The unit suite mounts the style canvas against __mocks__/obsidian.ts, which proves
+    // nothing about the real modal: this is the only check that clicking a canvas region
+    // actually writes a style and that the calendar then renders it.
+    it("authors a decoration through the style canvas and renders it on the calendar", async () => {
+      await runStyleCanvasJourney();
     });
   });
 

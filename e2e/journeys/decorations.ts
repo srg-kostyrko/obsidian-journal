@@ -1,5 +1,15 @@
-import { browser, expect } from "@wdio/globals";
+import { $, browser, expect } from "@wdio/globals";
 
+import { getSettings, waitForSettings } from "../support/plugin-data.js";
+import {
+  clickButton,
+  clickIcon,
+  closeSettings,
+  expandSection,
+  openJournalSubpage,
+  submitModal,
+  waitForModalOpen,
+} from "../support/settings.js";
 import { seedNote } from "../support/vault.js";
 import { waitForState } from "../support/wait.js";
 
@@ -41,6 +51,9 @@ export const DECO_DAY = {
   shape: 22,
   corner: 25,
   icon: 28,
+  // Owned by runStyleCanvasJourney below — a day none of the fixture's other daily
+  // decorations key off, so it stays undecorated except for what the journey itself adds.
+  styleCanvas: 27,
 } as const;
 
 export function dayAnchor(day: number): string {
@@ -312,5 +325,96 @@ export function menuItemTitles(): Promise<string[]> {
 export async function closeAnyMenu(): Promise<void> {
   await browser.execute(() => {
     for (const menu of document.querySelectorAll(".menu")) menu.remove();
+  });
+}
+
+// --- style canvas journey ---
+//
+// Everything above (assertDecorationMatrix, the fixture seed) renders decorations that were
+// already sitting in data.json, either fixture-seeded or reached through non-canvas settings
+// fields. None of that proves a click on a CANVAS REGION writes anything: the canvas only
+// exists behind __mocks__/obsidian.ts in the unit suite, which mounts no canvas at all. This
+// is the one place a region click is proven to reach data.json and that Obsidian's real CSS
+// cascade renders the result back out.
+
+// e2e specs cannot import from src/, so these are plain literals. They MUST match, in
+// messages/en.json: decoration_modal_add_condition, decoration_condition_type_label
+// (type=has-note — the ADD-CONDITION DROPDOWN's option text; decoration_condition_type_short
+// names the row after the condition exists and is a different string), decoration_layer_chip_label
+// (type=background/shape, state=empty), decoration_canvas_region_label (type=background),
+// decoration_canvas_slot_label (slot=center_bottom).
+const ADD_CONDITION_BUTTON = "Add condition";
+const HAS_NOTE_CONDITION_OPTION = "Check if note exists";
+const BACKGROUND_LAYER_CHIP = "Background";
+const SHAPE_LAYER_CHIP = "Shape";
+const CELL_BACKGROUND_REGION = "Cell background";
+const BOTTOM_CENTER_SLOT = "Bottom center";
+
+// Authored live through the canvas rather than seeded in fixture data.json, so it is kept
+// separate from STYLE_HEX above. Distinct from every theme color so the render assertion
+// cannot pass against a themed default.
+export const STYLE_CANVAS_HEX = "#8844ff";
+
+// UiColorSettingsPicker's color-kind <select> carries no aria-label of its own, but the
+// canvas shows at most one style inspector at a time, so the class scope is unambiguous.
+async function chooseCustomColorKind(): Promise<void> {
+  await $(".ui-color-settings-picker select").selectByAttribute("value", "custom");
+}
+
+// input[type="color"] rejects typed keystrokes through the driver, and clicking it would pop
+// an OS color-picker dialog WDIO cannot drive. Writing the value and firing the same "input"
+// event Vue's v-model listens for is the only way to commit a hex through this control.
+async function setCustomColorHex(hex: string): Promise<void> {
+  await $('.ui-color-settings-picker input[type="color"]').waitForExist({
+    timeoutMsg: "custom color input did not render after switching the color kind",
+  });
+  await browser.execute((value: string) => {
+    const el = document.querySelector<HTMLInputElement>('.ui-color-settings-picker input[type="color"]');
+    if (!el) return;
+    el.value = value;
+    el.dispatchEvent(new Event("input", { bubbles: true }));
+  }, hex);
+}
+
+// Authors a decoration entirely through canvas clicks (layer chip -> region -> custom hex,
+// then a second layer chip -> mark slot), saves, closes settings, and asserts the calendar
+// renders what was clicked. The persisted-count check proves the click reached data.json; the
+// CSS + mark-placement checks prove the render pipeline picked the write back up. Assumes the
+// caller has already opened settings (see settings.e2e.ts's beforeEach(openSettings)).
+export async function runStyleCanvasJourney(): Promise<void> {
+  const anchor = dayAnchor(DECO_DAY.styleCanvas);
+  await seedNote(`day/${anchor}.md`, note("daily", anchor));
+
+  const initial = await getSettings();
+  const before = initial.journals?.daily?.decorations?.length ?? 0;
+
+  await openJournalSubpage("core", "daily");
+  await expandSection("Journal decorations");
+  await clickIcon("Add decoration");
+  await waitForModalOpen();
+
+  await clickButton(ADD_CONDITION_BUTTON);
+  await clickButton(HAS_NOTE_CONDITION_OPTION);
+
+  await clickIcon(BACKGROUND_LAYER_CHIP);
+  await clickIcon(CELL_BACKGROUND_REGION);
+  await chooseCustomColorKind();
+  await setCustomColorHex(STYLE_CANVAS_HEX);
+
+  await clickIcon(SHAPE_LAYER_CHIP);
+  await clickIcon(BOTTOM_CENTER_SLOT);
+
+  await submitModal();
+  await waitForSettings(
+    (s) => (s.journals?.daily?.decorations?.length ?? 0) === before + 1,
+    "canvas-authored decoration was not persisted to data.json",
+  );
+  await closeSettings();
+
+  await openCalendarView();
+  const cell = calendar.cell(anchor);
+  await expectBackgroundHex(cell, STYLE_CANVAS_HEX);
+  await cell.$(".place-center_bottom .shape-decoration.shape-circle").waitForExist({
+    timeoutMsg: "shape decoration did not render at the bottom-center placement chosen on the canvas",
   });
 }
