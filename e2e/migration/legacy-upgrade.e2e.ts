@@ -100,6 +100,15 @@ describe("legacy vault upgrade", () => {
     });
   });
 
+  it("migrates a legacy note that already sits at its journal's derived path", async () => {
+    // The other legacy notes live in archive/ under names no journal derives, so auto-attach can
+    // never see them. This one matches the day journal's folder and date format exactly: on boot
+    // Obsidian replays a create event for it, and an auto-attach that acts on that burst rewrites
+    // `journal` to the new name before the migration walk arrives — after which the walk, which
+    // looks notes up by their old journal id, no longer recognizes it and its legacy keys stay.
+    await waitForMigratedNote("2024-03-12.md", { journal: "My Journal Day", date: "2024-03-12" });
+  });
+
   it("leaves a note without journal frontmatter untouched", async () => {
     // A migrated note is the deterministic checkpoint: once it converges, the
     // migration walk has demonstrably run, so the absence on the unrelated note is

@@ -2,11 +2,16 @@ import { describe, it, expect, vi } from "vitest";
 
 import { anchor } from "@/calendar/testing";
 import { Container } from "@/infrastructure/di";
-import { NotesService, TemplaterService } from "@/infrastructure/host";
-import type { VaultPath } from "@/infrastructure/host";
+import { NoteMetadataService, NotesService, TemplaterService, WorkspaceService } from "@/infrastructure/host";
+import type { NoteMetadata, VaultPath } from "@/infrastructure/host";
 import { ModalService } from "@/infrastructure/host/modals";
 import { FakeModalService } from "@/infrastructure/host/modals/testing";
-import { FakeNotesService, FakeTemplaterService } from "@/infrastructure/host/testing";
+import {
+  FakeNoteMetadataService,
+  FakeNotesService,
+  FakeTemplaterService,
+  FakeWorkspaceService,
+} from "@/infrastructure/host/testing";
 import { LoggerModule } from "@/infrastructure/logger";
 import { TemplateEngine } from "@/templates";
 
@@ -24,11 +29,24 @@ import { NotePathService } from "./note-path";
 import { SelfWriteGuard } from "./self-write-guard";
 import { TemplateContentService } from "./template-content";
 
-function build(repo: JournalsRepository, notes: FakeNotesService): Container {
+function loadedWorkspace(): FakeWorkspaceService {
+  const workspace = new FakeWorkspaceService();
+  workspace.setLayoutReady(true);
+  return workspace;
+}
+
+function build(
+  repo: JournalsRepository,
+  notes: FakeNotesService,
+  metadata: FakeNoteMetadataService = new FakeNoteMetadataService(),
+  workspace: FakeWorkspaceService = loadedWorkspace(),
+): Container {
   const c = new Container();
   c.addModule(LoggerModule);
   c.register(JournalsRepository).useValue(repo);
   c.register(NotesService).useValue(notes as unknown as NotesService);
+  c.register(NoteMetadataService).useValue(metadata as unknown as NoteMetadataService);
+  c.register(WorkspaceService).useValue(workspace as unknown as WorkspaceService);
   c.register(ModalService).useValue(new FakeModalService() as unknown as ModalService);
   c.register(TemplaterService).useValue(new FakeTemplaterService() as unknown as TemplaterService);
   c.register(JournalsIndex).useClass(JournalsIndex);
@@ -175,5 +193,65 @@ describe("AutoAttachService", () => {
     await new Promise((r) => window.setTimeout(r, 0));
     expect(spy).toHaveBeenCalledTimes(1);
     expect(spy.mock.calls[0]?.[1]).toBe("2026-05-19.md");
+  });
+
+  it("leaves a note claiming a journal this version doesn't know", async () => {
+    const repo = fakeRepo({
+      daily: fixedJournal(
+        "daily",
+        { type: "day" },
+        { timeline: { start: anchor("2020-01-01"), end: { kind: "never" } } },
+      ),
+    });
+    const notes = new FakeNotesService();
+    const metadata = new FakeNoteMetadataService();
+    metadata.setMetadata(
+      "2026-05-19.md" as VaultPath,
+      {
+        properties: { journal: "legacy-id", "journal-section": "day" },
+      } as unknown as NoteMetadata,
+    );
+    const container = build(repo, notes, metadata);
+    const spy = vi.spyOn(container.resolve(NoteCreationService), "attachNote");
+    await container.resolve(AutoAttachService).initialize();
+    await notes.create("2026-05-19.md" as VaultPath, "");
+    await new Promise((r) => window.setTimeout(r, 0));
+    expect(spy).not.toHaveBeenCalled();
+  });
+
+  it("ignores the notes Obsidian replays while the vault is still loading", async () => {
+    const repo = fakeRepo({
+      daily: fixedJournal(
+        "daily",
+        { type: "day" },
+        { timeline: { start: anchor("2020-01-01"), end: { kind: "never" } } },
+      ),
+    });
+    const notes = new FakeNotesService();
+    const container = build(repo, notes, new FakeNoteMetadataService(), new FakeWorkspaceService());
+    const spy = vi.spyOn(container.resolve(NoteCreationService), "attachNote");
+    await container.resolve(AutoAttachService).initialize();
+    await notes.create("2026-05-19.md" as VaultPath, "");
+    await new Promise((r) => window.setTimeout(r, 0));
+    expect(spy).not.toHaveBeenCalled();
+  });
+
+  it("attaches a note created once the vault has finished loading", async () => {
+    const repo = fakeRepo({
+      daily: fixedJournal(
+        "daily",
+        { type: "day" },
+        { timeline: { start: anchor("2020-01-01"), end: { kind: "never" } } },
+      ),
+    });
+    const notes = new FakeNotesService();
+    const workspace = new FakeWorkspaceService();
+    const container = build(repo, notes, new FakeNoteMetadataService(), workspace);
+    const spy = vi.spyOn(container.resolve(NoteCreationService), "attachNote");
+    await container.resolve(AutoAttachService).initialize();
+    workspace.setLayoutReady(true);
+    await notes.create("2026-05-19.md" as VaultPath, "");
+    await new Promise((r) => window.setTimeout(r, 0));
+    expect(spy).toHaveBeenCalledTimes(1);
   });
 });
