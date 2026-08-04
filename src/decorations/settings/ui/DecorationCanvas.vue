@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { computed, ref } from "vue";
+import { computed, ref, watch } from "vue";
 
 import { m } from "@/i18n";
 import { icons } from "@/ui/icons";
@@ -32,11 +32,27 @@ const slots = useStyleSlots(props.name, () => props.styles);
 const activeLayer = ref<StyleSlotKey>("background");
 const activeSide = ref<BorderSideName>("top");
 
+const SIDES: readonly BorderSideName[] = ["top", "right", "bottom", "left"];
+
 const previewDay = new Date().getDate();
 
 const slotIndexOfActive = computed(() => props.styles.findLastIndex((s) => s.type === activeLayer.value));
 const activeName = computed(() => `${props.name}.${slotIndexOfActive.value}`);
 const isOccupied = computed(() => slotIndexOfActive.value !== -1);
+
+const border = computed(() => slots.get("border"));
+
+// activeSide is UI-only state — it does not come from the stored border, so nothing else keeps
+// it pointed at a side that is actually shown. Left stale (e.g. after opening a per-side border
+// that only shows `bottom`, or after Remove hides the currently active side) the inspector edits
+// a hidden side invisibly and a second Remove click becomes a silent no-op. Reconcile whenever
+// the border layer is active and the stored per-side border changes.
+watch([activeLayer, border], ([layer, current]) => {
+  if (layer !== "border" || current?.border !== "different") return;
+  if (current[activeSide.value].show) return;
+  const next = SIDES.find((side) => current[side].show);
+  if (next !== undefined) activeSide.value = next;
+});
 
 const markPlacement = computed<Placement | undefined>(() => {
   const style = slots.get(activeLayer.value);
@@ -104,10 +120,10 @@ function chooseRing(): void {
 
 function chooseSide(side: BorderSideName): void {
   activeSide.value = side;
-  const border = slots.get("border");
-  if (border === undefined) return;
-  if (border[side].show) return;
-  slots.put("border", { ...border, [side]: { ...border[side], show: true } });
+  const current = slots.get("border");
+  if (current === undefined) return;
+  if (current[side].show) return;
+  slots.put("border", { ...current, [side]: { ...current[side], show: true } });
 }
 
 // A border with every side hidden would be a filled slot declaring nothing at all, which is
@@ -118,14 +134,14 @@ function removeActive(): void {
     slots.remove(layer);
     return;
   }
-  const border = slots.get("border");
-  if (border === undefined) return;
-  if (border.border === "uniform") {
+  const current = slots.get("border");
+  if (current === undefined) return;
+  if (current.border === "uniform") {
     slots.remove("border");
     return;
   }
-  const next = { ...border, [activeSide.value]: { ...border[activeSide.value], show: false } };
-  const anyShown = (["top", "right", "bottom", "left"] as const).some((side) => next[side].show);
+  const next = { ...current, [activeSide.value]: { ...current[activeSide.value], show: false } };
+  const anyShown = SIDES.some((side) => next[side].show);
   if (anyShown) slots.put("border", next);
   else slots.remove("border");
 }
@@ -152,7 +168,7 @@ function removeActive(): void {
         <CanvasRegionCorners v-else-if="activeLayer === 'corner'" :occupied="cornerPlacement" @choose="chooseCorner" />
         <CanvasRegionBorder
           v-else
-          :border="slots.get('border')"
+          :border="border"
           :active-side="activeSide"
           @choose-ring="chooseRing"
           @choose-side="chooseSide"
@@ -198,11 +214,17 @@ function removeActive(): void {
 }
 .cell {
   position: relative;
-  width: 180px;
-  height: 180px;
+  width: 320px;
+  height: 320px;
   display: flex;
   align-items: center;
   justify-content: center;
   font-size: var(--font-ui-larger);
+}
+/* The overlay regions are absolutely positioned against .cell, so the preview must fill the
+   same box or the two coordinate spaces drift apart (see the CRITICAL 1 review finding). */
+.cell :deep(.decoration-preview) {
+  width: 100%;
+  height: 100%;
 }
 </style>

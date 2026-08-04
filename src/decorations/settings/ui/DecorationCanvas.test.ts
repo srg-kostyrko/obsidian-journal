@@ -7,13 +7,36 @@ import { afterEach, describe, expect, it } from "vitest";
 import { defineComponent, h } from "vue";
 
 import { decorationSchema, type JournalDecoration } from "@/decorations";
+import { m } from "@/i18n";
+import { Container, provideInjectorOnApp } from "@/infrastructure/di";
+import { InputSuggestService } from "@/infrastructure/host";
+import { FakeInputSuggestService } from "@/infrastructure/host/input-suggests/testing";
+
+import { STYLE_SLOT_KEYS, type StyleSlotKey } from "../../style-slots";
 
 import DecorationCanvas from "./DecorationCanvas.vue";
 
 afterEach(() => cleanup());
 
+function layerChipLabel(type: StyleSlotKey, occupied: boolean): string {
+  return m.decoration_layer_chip_label({ type, state: occupied ? "occupied" : "empty" });
+}
+
+// Each layer creates its style through a different gesture: a whole-cell region for
+// background/color, a 3x3 mark slot for shape/icon, a corner, or the border ring.
+const createStyleIn: Record<StyleSlotKey, () => Promise<void>> = {
+  background: () => userEvent.click(screen.getByRole("button", { name: "Cell background" })),
+  color: () => userEvent.click(screen.getByRole("button", { name: "Cell text" })),
+  border: () => userEvent.click(screen.getByRole("button", { name: "Cell outline" })),
+  shape: () => userEvent.click(screen.getByRole("button", { name: "Top left" })),
+  icon: () => userEvent.click(screen.getByRole("button", { name: "Top left" })),
+  corner: () => userEvent.click(screen.getByRole("button", { name: "Top left" })),
+};
+
 function mount(styles: JournalDecoration["styles"] = []) {
   const exposed = {} as { values: JournalDecoration };
+  const container = new Container();
+  container.register(InputSuggestService).useValue(new FakeInputSuggestService() as unknown as InputSuggestService);
   const Host = defineComponent({
     setup() {
       const form = useForm<JournalDecoration>({
@@ -24,7 +47,17 @@ function mount(styles: JournalDecoration["styles"] = []) {
       return () => h(DecorationCanvas, { name: "styles", styles: form.values.styles });
     },
   });
-  render(Host);
+  render(Host, {
+    global: {
+      plugins: [
+        {
+          install(app) {
+            provideInjectorOnApp(app, container);
+          },
+        },
+      ],
+    },
+  });
   return exposed;
 }
 
@@ -138,6 +171,25 @@ describe("DecorationCanvas", () => {
       await userEvent.click(screen.getByRole("button", { name: "Remove" }));
       expect(host.values.styles).toEqual([]);
     });
+
+    // activeSide starts on "top" and only chooseSide ever moves it, so opening a border whose
+    // only shown side is something else — without first clicking that side's edge — must still
+    // reconcile before Remove runs, or Remove silently rewrites the already-hidden "top" side.
+    it("removes the only shown side when the layer is opened without selecting it first", async () => {
+      const host = mount([
+        {
+          type: "border",
+          border: "different",
+          top: { show: false, width: 1, color: { type: "transparent" }, style: "solid" },
+          right: { show: false, width: 1, color: { type: "transparent" }, style: "solid" },
+          bottom: { show: true, width: 1, color: { type: "theme", name: "text-accent" }, style: "solid" },
+          left: { show: false, width: 1, color: { type: "transparent" }, style: "solid" },
+        },
+      ]);
+      await userEvent.click(screen.getByRole("button", { name: "Border, in use" }));
+      await userEvent.click(screen.getByRole("button", { name: "Remove" }));
+      expect(host.values.styles).toEqual([]);
+    });
   });
 
   describe("switching layers", () => {
@@ -164,6 +216,32 @@ describe("DecorationCanvas", () => {
       await userEvent.click(screen.getByRole("button", { name: "Cell outline" }));
       await userEvent.click(screen.getByRole("button", { name: "Shape" }));
       await userEvent.click(screen.getByRole("button", { name: "Top left" }));
+      expect(v.safeParse(decorationSchema, host.values).success).toBe(true);
+    });
+
+    // Every Style*.vue leaf sets keepValueOnUnmount so vee-validate doesn't prune its fields when
+    // its inspector unmounts on a layer switch. Only exercising a couple of leaves would let the
+    // flag silently go missing from the rest, so this covers all six.
+    it.each(STYLE_SLOT_KEYS)("keeps a %s style parseable after switching layers", async (layer) => {
+      const host = mount();
+      await userEvent.click(screen.getByRole("button", { name: layerChipLabel(layer, false) }));
+      await createStyleIn[layer]();
+      const other = STYLE_SLOT_KEYS.find((key) => key !== layer);
+      if (other === undefined) throw new Error("expected a second layer to switch to");
+      await userEvent.click(screen.getByRole("button", { name: layerChipLabel(other, false) }));
+      await createStyleIn[other]();
+      expect(v.safeParse(decorationSchema, host.values).success).toBe(true);
+    });
+
+    it("keeps the second style parseable after removing the first", async () => {
+      const host = mount();
+      await userEvent.click(screen.getByRole("button", { name: layerChipLabel("background", false) }));
+      await createStyleIn.background();
+      await userEvent.click(screen.getByRole("button", { name: layerChipLabel("shape", false) }));
+      await createStyleIn.shape();
+      await userEvent.click(screen.getByRole("button", { name: layerChipLabel("background", true) }));
+      await userEvent.click(screen.getByRole("button", { name: "Remove" }));
+      expect(host.values.styles).toHaveLength(1);
       expect(v.safeParse(decorationSchema, host.values).success).toBe(true);
     });
   });
