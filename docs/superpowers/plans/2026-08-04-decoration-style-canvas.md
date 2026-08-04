@@ -550,9 +550,40 @@ git commit -m "feat(decorations): bind decoration style slots to the edit form"
 **Interfaces:**
 
 - Consumes: `STYLE_SLOT_KEYS`, `StyleSlotKey` from `../../style-slots`.
-- Produces: `<DecorationLayerStrip v-model="activeLayer" :occupied="Set<StyleSlotKey>" />`. `defineModel<StyleSlotKey>()`. Each chip is a `<button type="button">` whose accessible name is `m.decoration_style_type_label({ type })`, with `aria-pressed` reflecting the active layer.
+- Produces: `<DecorationLayerStrip v-model="activeLayer" :occupied="Set<StyleSlotKey>" />`. `defineModel<StyleSlotKey>()`. Each chip is a `<button type="button">` whose accessible name is `m.decoration_layer_chip_label({ type, state })`, with `aria-pressed` reflecting the active layer.
 
-- [ ] **Step 1: Write the failing tests**
+- [ ] **Step 1: Add the chip label key**
+
+Occupancy goes in the accessible name rather than a `data-*` attribute: the Global Constraints forbid test-only `data-*` hooks, and putting the state in the name also tells a screen reader which layers hold something — today the dot would convey that visually only.
+
+In `messages/en.json`, add:
+
+```json
+"decoration_layer_chip_label": [
+  {
+    "declarations": ["input type", "input state"],
+    "selectors": ["type", "state"],
+    "match": {
+      "type=background,state=empty": "Background",
+      "type=background,state=occupied": "Background, in use",
+      "type=color,state=empty": "Color",
+      "type=color,state=occupied": "Color, in use",
+      "type=border,state=empty": "Border",
+      "type=border,state=occupied": "Border, in use",
+      "type=shape,state=empty": "Shape",
+      "type=shape,state=occupied": "Shape, in use",
+      "type=icon,state=empty": "Icon",
+      "type=icon,state=occupied": "Icon, in use",
+      "type=corner,state=empty": "Corner",
+      "type=corner,state=occupied": "Corner, in use"
+    }
+  }
+]
+```
+
+Run: `npm run compile:i18n`
+
+- [ ] **Step 2: Write the failing tests**
 
 Create `src/decorations/settings/ui/DecorationLayerStrip.test.ts`:
 
@@ -588,26 +619,26 @@ describe("DecorationLayerStrip", () => {
     expect(emitted("update:modelValue")).toEqual([["corner"]]);
   });
 
-  it("badges a chip whose slot is occupied", () => {
+  it("names an occupied chip as in use", () => {
     renderStrip("background", ["icon"]);
-    expect(screen.getByRole("button", { name: "Icon" })).toHaveAttribute("data-occupied", "true");
+    expect(screen.getByRole("button", { name: "Icon, in use" })).toBeInTheDocument();
   });
 
-  it("leaves an empty slot's chip unbadged", () => {
+  it("names an empty chip by its layer alone", () => {
     renderStrip("background", ["icon"]);
-    expect(screen.getByRole("button", { name: "Corner" })).toHaveAttribute("data-occupied", "false");
+    expect(screen.getByRole("button", { name: "Corner" })).toBeInTheDocument();
   });
 });
 ```
 
-`data-occupied` is a rendered state attribute the badge's CSS selects on, not a test hook — the badge is a purely decorative dot, so there is nothing accessible to query instead.
+Note the third test queries `{ name: "Corner" }` while the corner slot is empty, so it keeps working — an occupied chip would be named "Corner, in use" and would not match.
 
-- [ ] **Step 2: Run the tests to verify they fail**
+- [ ] **Step 3: Run the tests to verify they fail**
 
 Run: `npx vitest run src/decorations/settings/ui/DecorationLayerStrip.test.ts`
 Expected: FAIL — cannot resolve `./DecorationLayerStrip.vue`.
 
-- [ ] **Step 3: Write the implementation**
+- [ ] **Step 4: Write the implementation**
 
 Create `src/decorations/settings/ui/DecorationLayerStrip.vue`:
 
@@ -629,10 +660,11 @@ const active = defineModel<StyleSlotKey>({ required: true });
       type="button"
       class="layer-chip"
       :aria-pressed="active === key"
-      :data-occupied="occupied.has(key)"
+      :aria-label="m.decoration_layer_chip_label({ type: key, state: occupied.has(key) ? 'occupied' : 'empty' })"
       @click="active = key"
     >
       {{ m.decoration_style_type_label({ type: key }) }}
+      <span v-if="occupied.has(key)" class="layer-badge" aria-hidden="true" />
     </button>
   </div>
 </template>
@@ -654,8 +686,7 @@ const active = defineModel<StyleSlotKey>({ required: true });
   background-color: var(--interactive-accent);
   color: var(--text-on-accent);
 }
-.layer-chip[data-occupied="true"]::after {
-  content: "";
+.layer-badge {
   width: var(--size-2-1);
   height: var(--size-2-1);
   border-radius: 50%;
@@ -664,15 +695,17 @@ const active = defineModel<StyleSlotKey>({ required: true });
 </style>
 ```
 
-- [ ] **Step 4: Run the tests to verify they pass**
+The visible label stays `decoration_style_type_label` so the chip reads the same as everywhere else; `aria-label` carries the longer name, and the dot is `aria-hidden` because the name already says it.
+
+- [ ] **Step 5: Run the tests to verify they pass**
 
 Run: `npx vitest run src/decorations/settings/ui/DecorationLayerStrip.test.ts`
 Expected: PASS, 5 tests.
 
-- [ ] **Step 5: Commit**
+- [ ] **Step 6: Commit**
 
 ```bash
-git add src/decorations/settings/ui/DecorationLayerStrip.vue src/decorations/settings/ui/DecorationLayerStrip.test.ts
+git add src/decorations/settings/ui/DecorationLayerStrip.vue src/decorations/settings/ui/DecorationLayerStrip.test.ts messages/en.json
 git commit -m "feat(decorations): add the decoration layer strip"
 ```
 
@@ -1405,7 +1438,7 @@ describe("DecorationCanvas", () => {
           left: { show: true, width: 1, color: { type: "theme", name: "text-accent" }, style: "solid" },
         },
       ]);
-      await userEvent.click(screen.getByRole("button", { name: "Border" }));
+      await userEvent.click(screen.getByRole("button", { name: "Border, in use" }));
       await userEvent.click(screen.getByRole("button", { name: "Top" }));
       const border = host.values.styles.at(0);
       expect(border?.type === "border" && border.top.show).toBe(true);
@@ -1422,7 +1455,7 @@ describe("DecorationCanvas", () => {
           left: { show: true, width: 1, color: { type: "theme", name: "text-accent" }, style: "solid" },
         },
       ]);
-      await userEvent.click(screen.getByRole("button", { name: "Border" }));
+      await userEvent.click(screen.getByRole("button", { name: "Border, in use" }));
       await userEvent.click(screen.getByRole("button", { name: "Left" }));
       await userEvent.click(screen.getByRole("button", { name: "Remove" }));
       expect(host.values.styles).toEqual([]);
