@@ -775,6 +775,23 @@
       }
     }
   ],
+  "decoration_canvas_slot_label": [
+    {
+      "declarations": ["input slot"],
+      "selectors": ["slot"],
+      "match": {
+        "slot=left_top": "Top left",
+        "slot=center_top": "Top center",
+        "slot=right_top": "Top right",
+        "slot=left_middle": "Middle left",
+        "slot=center_middle": "Center",
+        "slot=right_middle": "Middle right",
+        "slot=left_bottom": "Bottom left",
+        "slot=center_bottom": "Bottom center",
+        "slot=right_bottom": "Bottom right"
+      }
+    }
+  ],
   "ui_color_kind_label": [
     {
       "declarations": ["input kind"],
