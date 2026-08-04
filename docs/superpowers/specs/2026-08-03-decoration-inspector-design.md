@@ -187,8 +187,13 @@ Backward, the window covers periods where notes exist, so the badge measures the
 real data. `date` and `weekday` rules fire on schedule and read the same either direction. A
 finished journal stops being a special case, because backward is its natural direction.
 
+The window is anchored at today for a live journal, and at the timeline's end for a finished
+one. Anchoring a finished journal at today would clip every period away and report it as
+having no history, which is both wrong and the opposite of what backward-looking is for — its
+history is exactly what there is to measure.
+
 A journal whose timeline lies entirely in the future has no past to check, and looks forward
-instead.
+from its start instead.
 
 ### Unit and horizon
 
@@ -198,6 +203,13 @@ journal's timeline, so a journal with twelve weeks of history reports against tw
 
 Horizons are a fixed table, tuned rather than derived: 90 days, 26 weeks, 12 months, 8
 quarters, 5 years, 20 custom intervals. Not user-configurable.
+
+A custom journal is windowed by interval, except for a decoration carrying an offset
+condition, which is windowed by day and reports days. An interval is represented by a period
+at its first day, and `checkOffset` compares against that day's offsets — so an interval
+window can only ever match `offset` 1, and every other offset rule would report as dead. This
+mirrors the split the engine already makes: offset decorations render on the day grid, the
+rest on the interval list.
 
 ### Three states
 
@@ -210,9 +222,11 @@ quarters, 5 years, 20 custom intervals. Not user-configurable.
 The alarming state requires evidence, so two suppressions apply. Both are cheap, because the
 periods and the index are already being walked.
 
-A window of zero periods reports no history yet. This catches a journal created today, whose
-every rule would otherwise report as dead the moment it is set up. A journal younger than its
-horizon gets a correspondingly small denominator rather than a false alarm.
+A window of zero periods reports no history yet. This is not the fresh-journal case: a journal
+whose timeline starts today still has today's own period, so it reports against a denominator
+of one rather than emptying. What protects a fresh journal is the notes suppression below,
+plus the small denominator — `0 of the last 1 days` does not read as an accusation. The empty
+window belongs to a journal whose timeline has no periods to measure at all.
 
 A window containing no notes reports no notes yet, for a decoration that needs notes. Whether
 a decoration needs notes depends on its mode: under `and` it needs notes if any condition is
