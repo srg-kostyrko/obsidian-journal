@@ -58,4 +58,11 @@ describe("StyleBorder", () => {
     expect(host.values.s.top.width).toBe(4);
     expect(host.values.s.left.width).toBe(1);
   });
+
+  it("propagates a width edit in linked mode to the other sides", async () => {
+    const host = mount({ ...defaultStyle("border") });
+    await userEvent.clear(screen.getByRole("spinbutton"));
+    await userEvent.type(screen.getByRole("spinbutton"), "5");
+    expect(host.values.s.left.width).toBe(5);
+  });
 });

@@ -1,8 +1,9 @@
 <script setup lang="ts">
 import { useField } from "vee-validate";
-import { watch } from "vue";
+import { computed, watch } from "vue";
 
 import { m } from "@/i18n";
+import UiSegmentedControl from "@/ui/UiSegmentedControl.vue";
 import UiSettingRow from "@/ui/UiSettingRow.vue";
 
 import StyleBorderSide from "./StyleBorderSide.vue";
@@ -40,18 +41,23 @@ function setMode(next: JournalDecorationBorder["border"]): void {
   if (next === "uniform" && !top.value.show) top.value = { ...top.value, show: true };
   mode.value = next;
 }
+
+// UiSegmentedControl binds via plain v-model, but switching modes needs setMode's "turn `top`
+// on when linking" side effect, so the model routes writes through it instead of `mode` directly.
+const modeProxy = computed<JournalDecorationBorder["border"]>({
+  get: () => mode.value,
+  set: (next) => setMode(next),
+});
+
+const modeOptions = [
+  { value: "uniform" as const, label: m.decoration_border_mode_label({ mode: "uniform" }) },
+  { value: "different" as const, label: m.decoration_border_mode_label({ mode: "different" }) },
+];
 </script>
 
 <template>
   <UiSettingRow :name="m.decoration_style_border_mode_label()">
-    <label>
-      <input type="radio" :checked="mode === 'uniform'" @change="setMode('uniform')" />
-      {{ m.decoration_border_mode_label({ mode: "uniform" }) }}
-    </label>
-    <label>
-      <input type="radio" :checked="mode === 'different'" @change="setMode('different')" />
-      {{ m.decoration_border_mode_label({ mode: "different" }) }}
-    </label>
+    <UiSegmentedControl v-model="modeProxy" :options="modeOptions" />
   </UiSettingRow>
   <StyleBorderSide :name="`${name}.${mode === 'uniform' ? 'top' : side}`" />
 </template>
