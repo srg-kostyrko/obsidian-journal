@@ -803,6 +803,21 @@
       }
     }
   ],
+  "decoration_canvas_empty_hint": [
+    {
+      "declarations": ["input type"],
+      "selectors": ["type"],
+      "match": {
+        "type=background": "Click the cell to add a background.",
+        "type=color": "Click the number to set a text color.",
+        "type=border": "Click the outline to add a border.",
+        "type=shape": "Click a position to add a shape.",
+        "type=icon": "Click a position to add an icon.",
+        "type=corner": "Click a corner to add a triangle."
+      }
+    }
+  ],
+  "decoration_canvas_remove_label": "Remove",
   "ui_color_kind_label": [
     {
       "declarations": ["input kind"],
