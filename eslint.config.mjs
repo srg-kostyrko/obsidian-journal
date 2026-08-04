@@ -17,6 +17,7 @@ export default [
     ignores: [
       "**/build/**",
       "**/test-vault/**",
+      "**/perf-vault/**",
       "**/*.mjs",
       "**/*.json",
       "**/__mocks__/**",
