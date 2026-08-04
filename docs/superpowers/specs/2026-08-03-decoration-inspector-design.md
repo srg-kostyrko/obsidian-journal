@@ -226,7 +226,11 @@ A window of zero periods reports no history yet. This is not the fresh-journal c
 whose timeline starts today still has today's own period, so it reports against a denominator
 of one rather than emptying. What protects a fresh journal is the notes suppression below,
 plus the small denominator — `0 of the last 1 days` does not read as an accusation. The empty
-window belongs to a journal whose timeline has no periods to measure at all.
+window belongs to a journal whose timeline has no periods to measure at all. Once a finished
+journal anchors at its own end, that leaves only a malformed timeline — an end before its
+start, which settings cannot produce but a hand-edited `data.json` can. The state is kept as a
+defensive branch rather than removed, because the alternative is reporting `matched nothing in
+the last 0 days`.
 
 A window containing no notes reports no notes yet, for a decoration that needs notes. Whether
 a decoration needs notes depends on its mode: under `and` it needs notes if any condition is
