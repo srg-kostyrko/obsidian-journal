@@ -13,7 +13,7 @@ export interface EditDecorationModalProps {
 export const editDecorationModal = defineModal<{ decoration: JournalDecoration }>()({
   component: EditDecorationModal,
   title: ({ decoration }: EditDecorationModalProps) => (decoration ? m.decoration_edit() : m.decoration_add()),
-  width: 800,
+  width: 900,
 });
 
 export const deleteDecorationModal = defineModal<{ confirmed: true }>()({

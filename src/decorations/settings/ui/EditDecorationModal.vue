@@ -6,12 +6,9 @@ import { computed } from "vue";
 import {
   decorationSchema,
   defaultCondition,
-  defaultStyle,
   type JournalDecoration,
   type JournalDecorationCondition,
-  type JournalDecorationStyle,
 } from "@/decorations";
-import DecorationPreview from "@/decorations/ui/DecorationPreview.vue";
 import { m } from "@/i18n";
 import { useModal } from "@/infrastructure/host/modals";
 import { icons } from "@/ui/icons";
@@ -22,7 +19,7 @@ import UiIconButton from "@/ui/UiIconButton.vue";
 import UiSettingRow from "@/ui/UiSettingRow.vue";
 
 import ConditionItem from "./ConditionItem.vue";
-import StyleItem from "./StyleItem.vue";
+import DecorationCanvas from "./DecorationCanvas.vue";
 
 const props = defineProps<{
   decoration?: JournalDecoration;
@@ -38,7 +35,6 @@ const { values, handleSubmit } = useForm<JournalDecoration>({
 });
 
 const conditions = useFieldArray<JournalDecorationCondition>("conditions");
-const styles = useFieldArray<JournalDecorationStyle>("styles");
 const { value: mode } = useField<JournalDecoration["mode"]>("mode");
 
 const incomplete = computed(() => values.conditions.length === 0 || values.styles.length === 0);
@@ -51,19 +47,8 @@ const addConditionOptions = computed<{ value: string; label: string }[]>(() => {
     .map((t) => ({ value: t, label: m.decoration_condition_type_label({ type: t }) }));
 });
 
-const addStyleOptions = computed<{ value: string; label: string }[]>(() => {
-  const all = ["background", "color", "shape", "corner", "icon", "border"] as const;
-  const used = new Set(values.styles.map((s) => s.type));
-  return all.filter((t) => !used.has(t)).map((t) => ({ value: t, label: m.decoration_style_type_label({ type: t }) }));
-});
-
-const previewDay = new Date().getDate();
-
 function addCondition(type: string): void {
   conditions.push(defaultCondition(type as JournalDecorationCondition["type"]));
-}
-function addStyle(type: string): void {
-  styles.push(defaultStyle(type as JournalDecorationStyle["type"]));
 }
 
 const onSubmit = handleSubmit((decoration) => {
@@ -74,51 +59,32 @@ const onSubmit = handleSubmit((decoration) => {
 
 <template>
   <form @submit.prevent="onSubmit">
-    <UiSettingRow :name="m.decoration_modal_mode_label()">
-      <UiDropdown v-model="mode">
-        <option value="and">{{ m.decoration_modal_mode_option({ kind: "and" }) }}</option>
-        <option value="or">{{ m.decoration_modal_mode_option({ kind: "or" }) }}</option>
-      </UiDropdown>
-    </UiSettingRow>
-
-    <UiSettingRow>
-      <UiButtonDropdown :options="addConditionOptions" @select="addCondition">
-        {{ m.decoration_modal_add_condition() }}
-      </UiButtonDropdown>
-    </UiSettingRow>
-    <UiSettingRow v-if="values.conditions.length === 0" no-controls>
-      <template #description>{{ m.decoration_modal_no_conditions() }}</template>
-    </UiSettingRow>
-    <div v-for="(condition, i) of values.conditions" :key="i" class="condition-row">
-      <span v-if="i > 0" class="mode-hint">{{ m.decoration_describe_mode({ kind: mode }) }}</span>
-      <UiSettingRow :name="m.decoration_condition_type_short({ type: condition.type })">
-        <ConditionItem :name="`conditions.${i}`" :condition="condition" />
-        <UiIconButton :icon="icons.action.delete" @click="conditions.remove(i)" />
-      </UiSettingRow>
-    </div>
-
-    <hr />
-
-    <div class="preview-grid">
-      <div class="preview">
-        <DecorationPreview :styles="values.styles">{{ previewDay }}</DecorationPreview>
-      </div>
-      <div>
+    <div class="edit-decoration-panes">
+      <div class="pane-conditions">
+        <UiSettingRow :name="m.decoration_modal_mode_label()">
+          <UiDropdown v-model="mode">
+            <option value="and">{{ m.decoration_modal_mode_option({ kind: "and" }) }}</option>
+            <option value="or">{{ m.decoration_modal_mode_option({ kind: "or" }) }}</option>
+          </UiDropdown>
+        </UiSettingRow>
         <UiSettingRow>
-          <UiButtonDropdown :options="addStyleOptions" @select="addStyle">
-            {{ m.decoration_modal_add_style() }}
+          <UiButtonDropdown :options="addConditionOptions" @select="addCondition">
+            {{ m.decoration_modal_add_condition() }}
           </UiButtonDropdown>
         </UiSettingRow>
-        <UiSettingRow v-if="values.styles.length === 0" no-controls>
-          <template #description>{{ m.decoration_modal_no_styles() }}</template>
+        <UiSettingRow v-if="values.conditions.length === 0" no-controls>
+          <template #description>{{ m.decoration_modal_no_conditions() }}</template>
         </UiSettingRow>
-        <template v-for="(style, i) of values.styles" :key="i">
-          <UiSettingRow heading>
-            <template #name>{{ m.decoration_style_header({ type: style.type }) }}</template>
-            <UiIconButton :icon="icons.action.delete" @click="styles.remove(i)" />
+        <div v-for="(condition, i) of values.conditions" :key="i" class="condition-row">
+          <span v-if="i > 0" class="mode-hint">{{ m.decoration_describe_mode({ kind: mode }) }}</span>
+          <UiSettingRow :name="m.decoration_condition_type_short({ type: condition.type })">
+            <ConditionItem :name="`conditions.${i}`" :condition="condition" />
+            <UiIconButton :icon="icons.action.delete" @click="conditions.remove(i)" />
           </UiSettingRow>
-          <StyleItem :name="`styles.${i}`" :style="style" />
-        </template>
+        </div>
+      </div>
+      <div class="pane-canvas">
+        <DecorationCanvas name="styles" :styles="values.styles" />
       </div>
     </div>
 
@@ -132,16 +98,26 @@ const onSubmit = handleSubmit((decoration) => {
 </template>
 
 <style scoped>
-.preview-grid {
+.edit-decoration-panes {
   display: grid;
-  grid-template-columns: 25% 1fr;
-  gap: var(--size-4-2);
+  grid-template-columns: 1fr 1fr;
+  gap: var(--size-4-4);
+  align-items: start;
 }
-.preview {
-  display: flex;
-  justify-content: center;
-  align-items: flex-start;
-  padding: var(--size-4-2);
+.pane-canvas {
+  border-left: 1px solid var(--background-modifier-border);
+  padding-left: var(--size-4-4);
+}
+@media (max-width: 700px) {
+  .edit-decoration-panes {
+    grid-template-columns: 1fr;
+  }
+  .pane-canvas {
+    border-left: none;
+    border-top: 1px solid var(--background-modifier-border);
+    padding-left: 0;
+    padding-top: var(--size-4-4);
+  }
 }
 .condition-row {
   position: relative;

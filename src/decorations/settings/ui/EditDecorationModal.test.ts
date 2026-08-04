@@ -142,4 +142,29 @@ describe("EditDecorationModal", () => {
       });
     });
   });
+
+  describe("style canvas", () => {
+    it("keeps the submit button disabled until the decoration has a style", async () => {
+      mountModal({ conditionTypes: conditionTypeOptions.day });
+      await userEvent.click(screen.getByRole("button", { name: m.decoration_modal_add_condition() }));
+      expect(screen.getByRole<HTMLButtonElement>("button", { name: m.common_action_create() }).disabled).toBe(true);
+    });
+
+    it("enables submit once a condition and a style are present", async () => {
+      mountModal({ conditionTypes: conditionTypeOptions.day });
+      await userEvent.click(screen.getByRole("button", { name: m.decoration_modal_add_condition() }));
+      await userEvent.click(
+        screen.getByRole("button", { name: m.decoration_condition_type_label({ type: "has-note" }) }),
+      );
+      await userEvent.click(
+        screen.getByRole("button", { name: m.decoration_canvas_region_label({ type: "background" }) }),
+      );
+      expect(screen.getByRole<HTMLButtonElement>("button", { name: m.common_action_create() }).disabled).toBe(false);
+    });
+
+    it("no longer offers an add-style dropdown", () => {
+      mountModal({ conditionTypes: conditionTypeOptions.day });
+      expect(screen.queryByRole("button", { name: m.decoration_modal_add_style() })).toBeNull();
+    });
+  });
 });
