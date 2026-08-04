@@ -172,6 +172,9 @@ describe("EditDecorationModal", () => {
     it("keeps the submit button disabled until the decoration has a style", async () => {
       mountModal({ conditionTypes: conditionTypeOptions.day });
       await userEvent.click(screen.getByRole("button", { name: m.decoration_modal_add_condition() }));
+      await userEvent.click(
+        screen.getByRole("button", { name: m.decoration_condition_type_label({ type: "has-note" }) }),
+      );
       expect(screen.getByRole<HTMLButtonElement>("button", { name: m.common_action_create() }).disabled).toBe(true);
     });
 
