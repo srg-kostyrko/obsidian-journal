@@ -1053,7 +1053,7 @@ Expected: PASS, 3 tests.
 - [ ] **Step 6: Commit**
 
 ```bash
-git add src/decorations/settings/ui/CanvasRegionWhole.vue src/decorations/settings/ui/CanvasRegionCorners.vue src/decorations/settings/ui/CanvasRegionCorners.test.ts
+git add src/decorations/settings/ui/CanvasRegionWhole.vue src/decorations/settings/ui/CanvasRegionCorners.vue src/decorations/settings/ui/CanvasRegionCorners.test.ts messages/en.json
 git commit -m "feat(decorations): add the whole-cell and corner regions to the style canvas"
 ```
 
@@ -1483,6 +1483,7 @@ import { icons } from "@/ui/icons";
 import UiIconButton from "@/ui/UiIconButton.vue";
 import UiSettingRow from "@/ui/UiSettingRow.vue";
 
+import { defaultStyle } from "../../defaults";
 import DecorationPreview from "../../ui/DecorationPreview.vue";
 
 import CanvasRegionBorder, { type BorderSideName } from "./CanvasRegionBorder.vue";
@@ -1550,17 +1551,21 @@ const MARK_PLACEMENTS: Record<
 
 // Marks and corners each hold one occupant, so a click on another region moves it rather than
 // adding a second. Border is the exception and is handled by chooseSide.
+//
+// Each handler performs exactly ONE write. An add()-then-put() pair would be wrong: `styles`
+// arrives as a prop, and put() re-reads it to find the slot's index, so within one handler the
+// second call can still see the pre-add array and push a duplicate. Building the finished style
+// from `get() ?? defaultStyle()` and writing once sidesteps the ordering entirely.
 function chooseMark(placement: Placement): void {
   const layer = activeLayer.value;
   if (layer !== "shape" && layer !== "icon") return;
   const { x, y } = MARK_PLACEMENTS[placement];
-  const style = slots.get(layer) ?? slots.add(layer);
+  const style = slots.get(layer) ?? defaultStyle(layer);
   slots.put(layer, { ...style, placement_x: x, placement_y: y });
 }
 
 function chooseCorner(placement: JournalDecorationCorner["placement"]): void {
-  const existing = slots.get("corner");
-  const style = existing ?? slots.add("corner");
+  const style = slots.get("corner") ?? defaultStyle("corner");
   slots.put("corner", { ...style, placement });
 }
 
