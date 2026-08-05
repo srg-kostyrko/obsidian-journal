@@ -177,6 +177,35 @@ describe("code blocks", () => {
           for (const menu of document.querySelectorAll(".menu")) menu.remove();
         });
       });
+
+      it("paints the appended Delete entry with Obsidian's destructive styling", async () => {
+        await renderBlock("nav/context-menu.md", navHost("2026-06-20", ""), NAV_VIEW);
+        const row = `${NAV_CURRENT} .nav-row`;
+        await $(row).waitForExist({ timeoutMsg: "nav row did not render" });
+
+        await browser.execute((sel: string) => {
+          document
+            .querySelector(sel)
+            ?.dispatchEvent(new MouseEvent("contextmenu", { bubbles: true, cancelable: true }));
+        }, row);
+
+        // setWarning is only observable through the class Obsidian stamps on the rendered item.
+        await browser.waitUntil(
+          async () =>
+            await browser.execute(() =>
+              [...document.querySelectorAll(".menu-item")].some(
+                (item) =>
+                  item.classList.contains("is-warning") &&
+                  item.querySelector(".menu-item-title")?.textContent === "Delete",
+              ),
+            ),
+          { timeoutMsg: "the Delete menu item did not render with Obsidian's is-warning styling" },
+        );
+
+        await browser.execute(() => {
+          for (const menu of document.querySelectorAll(".menu")) menu.remove();
+        });
+      });
     });
 
     describe("decorations", () => {

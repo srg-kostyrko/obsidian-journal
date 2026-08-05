@@ -21,7 +21,7 @@ declare module "obsidian" {
   }
 
   interface Menu {
-    readonly items: { title: string; icon: string }[];
+    readonly items: { title: string; icon: string; section: string; warning: boolean }[];
     showAtMouseEventCalls: MouseEvent[];
   }
 

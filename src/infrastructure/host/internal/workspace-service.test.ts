@@ -193,6 +193,28 @@ describe("WorkspaceService", () => {
       expect(menu.items.at(-1)?.title).toBe("Delete");
     });
 
+    it("marks the Delete item as a warning so it matches Obsidian's destructive styling", async () => {
+      const { __testing } = await import("obsidian");
+      __testing.reset();
+
+      const { service, host } = build();
+      host.putFile(path);
+      service.openFileMenu(path, new MouseEvent("contextmenu"));
+
+      expect(__testing.lastOpenMenu().items.at(-1)?.warning).toBe(true);
+    });
+
+    it("files the Delete item into Obsidian's danger section", async () => {
+      const { __testing } = await import("obsidian");
+      __testing.reset();
+
+      const { service, host } = build();
+      host.putFile(path);
+      service.openFileMenu(path, new MouseEvent("contextmenu"));
+
+      expect(__testing.lastOpenMenu().items.at(-1)?.section).toBe("danger");
+    });
+
     it("prompts Obsidian's file deletion when the Delete item is clicked", async () => {
       const { __testing } = await import("obsidian");
       __testing.reset();

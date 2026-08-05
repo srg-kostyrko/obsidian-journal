@@ -155,6 +155,10 @@ export class WorkspaceService {
       item
         .setTitle(m.common_action_delete())
         .setIcon(icons.action.delete)
+        // Obsidian's own file menus put deletion in the trailing danger section and paint it
+        // with the error color; matching that keeps our menu indistinguishable from a core one.
+        .setSection("danger")
+        .setWarning(true)
         .onClick(() => {
           (this.#app.fileManager as DeletePromptingFileManager).promptForFileDeletion?.(file);
         }),

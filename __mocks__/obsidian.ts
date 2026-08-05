@@ -211,6 +211,8 @@ export interface FakeMenuItemConfig {
 export class MenuItem {
   title = "";
   icon = "";
+  section = "";
+  warning = false;
   #onClick: (event: MouseEvent | KeyboardEvent) => void = () => {};
 
   setTitle(title: string): this {
@@ -219,6 +221,14 @@ export class MenuItem {
   }
   setIcon(icon: string): this {
     this.icon = icon;
+    return this;
+  }
+  setSection(section: string): this {
+    this.section = section;
+    return this;
+  }
+  setWarning(warning: boolean): this {
+    this.warning = warning;
     return this;
   }
   onClick(callback: (event: MouseEvent | KeyboardEvent) => void): this {
