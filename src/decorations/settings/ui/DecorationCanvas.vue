@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { computed, ref, watch } from "vue";
+import { computed, ref, useId, watch } from "vue";
 
 import { m } from "@/i18n";
 import { icons } from "@/ui/icons";
@@ -7,6 +7,7 @@ import UiIconButton from "@/ui/UiIconButton.vue";
 import UiSettingRow from "@/ui/UiSettingRow.vue";
 
 import { defaultStyle } from "../../defaults";
+import { STYLE_SLOT_KEYS } from "../../style-slots";
 import DecorationPreview from "../../ui/DecorationPreview.vue";
 
 import CanvasRegionBorder from "./CanvasRegionBorder.vue";
@@ -29,8 +30,14 @@ import type { StyleSlotKey } from "../../style-slots";
 const props = defineProps<{ name: string; styles: readonly JournalDecorationStyle[] }>();
 
 const slots = useStyleSlots(props.name, () => props.styles);
-const activeLayer = ref<StyleSlotKey>("background");
+// An existing decoration opens on what it actually declares — the first occupied slot in strip
+// order — so editing one starts on a filled layer instead of an empty Background. A decoration
+// being created has none, and falls back to the first tab.
+const activeLayer = ref<StyleSlotKey>(STYLE_SLOT_KEYS.find((key) => slots.occupied.value.has(key)) ?? "background");
 const activeSide = ref<BorderSideName>("top");
+
+// The six chips are tabs over one inspector, so every tab points at the same panel.
+const inspectorId = useId();
 
 const SIDES: readonly BorderSideName[] = ["top", "right", "bottom", "left"];
 
@@ -46,13 +53,19 @@ const border = computed(() => slots.get("border"));
 // it pointed at a side that is actually shown. Left stale (e.g. after opening a per-side border
 // that only shows `bottom`, or after Remove hides the currently active side) the inspector edits
 // a hidden side invisibly and a second Remove click becomes a silent no-op. Reconcile whenever
-// the border layer is active and the stored per-side border changes.
-watch([activeLayer, border], ([layer, current]) => {
-  if (layer !== "border" || current?.border !== "different") return;
-  if (current[activeSide.value].show) return;
-  const next = SIDES.find((side) => current[side].show);
-  if (next !== undefined) activeSide.value = next;
-});
+// the border layer is active and the stored per-side border changes — immediately included,
+// since a decoration whose first occupied slot is the border now opens on that layer without
+// anyone ever switching to it.
+watch(
+  [activeLayer, border],
+  ([layer, current]) => {
+    if (layer !== "border" || current?.border !== "different") return;
+    if (current[activeSide.value].show) return;
+    const next = SIDES.find((side) => current[side].show);
+    if (next !== undefined) activeSide.value = next;
+  },
+  { immediate: true },
+);
 
 const markPlacement = computed<Placement | undefined>(() => {
   const style = slots.get(activeLayer.value);
@@ -149,7 +162,7 @@ function removeActive(): void {
 
 <template>
   <div class="decoration-canvas">
-    <DecorationLayerStrip v-model="activeLayer" :occupied="slots.occupied.value" />
+    <DecorationLayerStrip v-model="activeLayer" :occupied="slots.occupied.value" :panel-id="inspectorId" />
 
     <div class="stage">
       <div class="cell">
@@ -176,7 +189,12 @@ function removeActive(): void {
       </div>
     </div>
 
-    <div class="inspector">
+    <div
+      :id="inspectorId"
+      class="inspector"
+      role="tabpanel"
+      :aria-label="m.decoration_style_type_label({ type: activeLayer })"
+    >
       <template v-if="isOccupied">
         <StyleBackground v-if="activeLayer === 'background'" :name="activeName" />
         <StyleColor v-else-if="activeLayer === 'color'" :name="activeName" />
@@ -203,6 +221,14 @@ function removeActive(): void {
 
 <style scoped>
 .decoration-canvas {
+  /* The canvas is a magnifier, not a big cell: the preview renders at the size a calendar
+     cell really is and the whole thing is scaled up. Stretching the preview over the square
+     instead leaves a 1px border a hairline and a 0.4em dot a speck, twelve times smaller than
+     the share of the cell they will really occupy — which is the one thing the canvas exists
+     to show. 26px is the cell height floor NotesCalendarCell reserves. */
+  --cell-source-size: 26px;
+  --cell-magnification: 12;
+
   display: flex;
   flex-direction: column;
   gap: var(--size-4-2);
@@ -214,17 +240,21 @@ function removeActive(): void {
 }
 .cell {
   position: relative;
-  width: 320px;
-  height: 320px;
+  width: calc(var(--cell-source-size) * var(--cell-magnification));
+  height: calc(var(--cell-source-size) * var(--cell-magnification));
   display: flex;
   align-items: center;
   justify-content: center;
-  font-size: var(--font-ui-larger);
 }
-/* The overlay regions are absolutely positioned against .cell, so the preview must fill the
-   same box or the two coordinate spaces drift apart (see the CRITICAL 1 review finding). */
+/* The overlay regions are absolutely positioned against .cell, so the scaled preview must
+   land on exactly the same box or the two coordinate spaces drift apart (see the CRITICAL 1
+   review finding). It does: a centered source-sized box scaled about its own centre. The
+   preview's own 2em floor would fight that, so the box is stated outright instead. */
 .cell :deep(.decoration-preview) {
-  width: 100%;
-  height: 100%;
+  width: var(--cell-source-size);
+  height: var(--cell-source-size);
+  min-width: 0;
+  min-height: 0;
+  transform: scale(var(--cell-magnification));
 }
 </style>

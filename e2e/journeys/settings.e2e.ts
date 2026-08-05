@@ -49,6 +49,15 @@ function calendarToolbarItems(views: Record<string, StoredView> | undefined): { 
 // (poll, saveData is async) and reflected in the DOM. Entities are distinct per it, so the
 // single boot's accumulating data.json is order-independent.
 
+// Opens the style canvas of the fixture's first decoration. Its geometry is what the canvas
+// layout checks are about, so which decoration it belongs to does not matter.
+async function openStyleCanvas(): Promise<void> {
+  await openJournalSubpage("core", "daily");
+  await expandSection("Journal decorations");
+  await clickIcon("Edit decoration");
+  await waitForModalOpen();
+}
+
 describe("settings", () => {
   before(async () => {
     await browser.reloadObsidian({ vault: "./e2e/fixtures/e2e-journeys", plugins: ["journals"] });
@@ -573,6 +582,36 @@ describe("settings", () => {
     // actually writes a style and that the calendar then renders it.
     it("authors a decoration through the style canvas and renders it on the calendar", async () => {
       await runStyleCanvasJourney();
+    });
+
+    // Obsidian's global `button` rule fixes every button's height, which outranks the region
+    // overlay's own layout and collapses each region to a 30px strip. The unit suite mounts
+    // without app.css and so cannot see it; the same override keeps the cell, ring and corner
+    // regions honest, and this slot is their canary.
+    it("sizes a canvas mark slot to a third of the cell", async () => {
+      await openStyleCanvas();
+      await $('.decoration-canvas button[aria-label^="Shape"]').click();
+
+      const cell = await $(".decoration-canvas .cell").getSize();
+      const slot = await $('.decoration-canvas button[aria-label="Center"]').getSize();
+
+      expect(slot.height / cell.height).toBeGreaterThan(0.3);
+    });
+
+    // The canvas magnifies a cell-sized preview, and the regions are a map of it, so the two
+    // land on one box only while the source size and the scale factor stay in step. jsdom has
+    // no layout, so a drift between them shows up nowhere but a real boot. Measured through
+    // getBoundingClientRect because getSize reports the pre-transform layout box.
+    it("lands the magnified preview on the region overlay's box", async () => {
+      await openStyleCanvas();
+
+      const [cellWidth, previewWidth] = await browser.execute(() =>
+        [".decoration-canvas .cell", ".decoration-canvas .decoration-preview"].map(
+          (selector) => document.querySelector(selector)?.getBoundingClientRect().width ?? 0,
+        ),
+      );
+
+      expect(previewWidth).toBeCloseTo(cellWidth, 0);
     });
   });
 

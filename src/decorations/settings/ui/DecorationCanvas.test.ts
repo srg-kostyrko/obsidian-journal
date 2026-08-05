@@ -62,6 +62,25 @@ function mount(styles: JournalDecoration["styles"] = []) {
 }
 
 describe("DecorationCanvas", () => {
+  it("opens an existing decoration on its first occupied layer", () => {
+    mount([{ type: "corner", placement: "top-left", color: { type: "theme", name: "text-accent" } }]);
+    expect(screen.getByRole("tab", { name: layerChipLabel("corner", true) }).getAttribute("aria-selected")).toBe(
+      "true",
+    );
+  });
+
+  // Strip order, not the order the styles were authored in: the tab that lights up is the
+  // leftmost filled one, which is what the user sees rather than what data.json happens to list.
+  it("opens on the leftmost occupied layer rather than the first authored style", () => {
+    mount([
+      { type: "corner", placement: "top-left", color: { type: "theme", name: "text-accent" } },
+      { type: "background", color: { type: "theme", name: "interactive-accent" } },
+    ]);
+    expect(screen.getByRole("tab", { name: layerChipLabel("background", true) }).getAttribute("aria-selected")).toBe(
+      "true",
+    );
+  });
+
   it("creates a background when the empty cell is clicked", async () => {
     const host = mount();
     await userEvent.click(screen.getByRole("button", { name: "Cell background" }));
@@ -70,7 +89,7 @@ describe("DecorationCanvas", () => {
 
   it("creates a shape at the position that was clicked", async () => {
     const host = mount();
-    await userEvent.click(screen.getByRole("button", { name: "Shape" }));
+    await userEvent.click(screen.getByRole("tab", { name: "Shape" }));
     await userEvent.click(screen.getByRole("button", { name: "Top left" }));
     expect(host.values.styles.at(0)).toMatchObject({
       type: "shape",
@@ -81,7 +100,7 @@ describe("DecorationCanvas", () => {
 
   it("moves an existing shape rather than adding a second", async () => {
     const host = mount();
-    await userEvent.click(screen.getByRole("button", { name: "Shape" }));
+    await userEvent.click(screen.getByRole("tab", { name: "Shape" }));
     await userEvent.click(screen.getByRole("button", { name: "Top left" }));
     await userEvent.click(screen.getByRole("button", { name: "Bottom right" }));
     expect(host.values.styles).toHaveLength(1);
@@ -89,7 +108,7 @@ describe("DecorationCanvas", () => {
 
   it("places the moved shape at the new position", async () => {
     const host = mount();
-    await userEvent.click(screen.getByRole("button", { name: "Shape" }));
+    await userEvent.click(screen.getByRole("tab", { name: "Shape" }));
     await userEvent.click(screen.getByRole("button", { name: "Top left" }));
     await userEvent.click(screen.getByRole("button", { name: "Bottom right" }));
     expect(host.values.styles.at(0)).toMatchObject({ placement_x: "right", placement_y: "bottom" });
@@ -97,7 +116,7 @@ describe("DecorationCanvas", () => {
 
   it("moves an existing corner rather than adding a second", async () => {
     const host = mount();
-    await userEvent.click(screen.getByRole("button", { name: "Corner" }));
+    await userEvent.click(screen.getByRole("tab", { name: "Corner" }));
     await userEvent.click(screen.getByRole("button", { name: "Top left" }));
     await userEvent.click(screen.getByRole("button", { name: "Bottom right" }));
     expect(host.values.styles).toHaveLength(1);
@@ -112,27 +131,27 @@ describe("DecorationCanvas", () => {
 
   it("shows a hint while the active layer is empty", async () => {
     mount();
-    await userEvent.click(screen.getByRole("button", { name: "Icon" }));
+    await userEvent.click(screen.getByRole("tab", { name: "Icon" }));
     expect(screen.getByText("Click a position to add an icon.")).toBeTruthy();
   });
 
   it("only exposes the active layer's regions", async () => {
     mount();
-    await userEvent.click(screen.getByRole("button", { name: "Corner" }));
+    await userEvent.click(screen.getByRole("tab", { name: "Corner" }));
     expect(screen.queryByRole("button", { name: "Middle left" })).toBeNull();
   });
 
   describe("border", () => {
     it("creates a linked border when the ring is clicked", async () => {
       const host = mount();
-      await userEvent.click(screen.getByRole("button", { name: "Border" }));
+      await userEvent.click(screen.getByRole("tab", { name: "Border" }));
       await userEvent.click(screen.getByRole("button", { name: "Cell outline" }));
       expect(host.values.styles.at(0)).toMatchObject({ type: "border", border: "uniform" });
     });
 
     it("switches the stored mode when per side is chosen", async () => {
       const host = mount();
-      await userEvent.click(screen.getByRole("button", { name: "Border" }));
+      await userEvent.click(screen.getByRole("tab", { name: "Border" }));
       await userEvent.click(screen.getByRole("button", { name: "Cell outline" }));
       await userEvent.click(screen.getByRole("radio", { name: "Per side" }));
       expect(host.values.styles.at(0)).toMatchObject({ border: "different" });
@@ -149,7 +168,7 @@ describe("DecorationCanvas", () => {
           left: { show: true, width: 1, color: { type: "theme", name: "text-accent" }, style: "solid" },
         },
       ]);
-      await userEvent.click(screen.getByRole("button", { name: "Border, in use" }));
+      await userEvent.click(screen.getByRole("tab", { name: "Border, in use" }));
       await userEvent.click(screen.getByRole("button", { name: "Top" }));
       const border = host.values.styles.at(0);
       expect(border?.type === "border" && border.top.show).toBe(true);
@@ -166,7 +185,7 @@ describe("DecorationCanvas", () => {
           left: { show: true, width: 1, color: { type: "theme", name: "text-accent" }, style: "solid" },
         },
       ]);
-      await userEvent.click(screen.getByRole("button", { name: "Border, in use" }));
+      await userEvent.click(screen.getByRole("tab", { name: "Border, in use" }));
       await userEvent.click(screen.getByRole("button", { name: "Left" }));
       await userEvent.click(screen.getByRole("button", { name: "Remove" }));
       expect(host.values.styles).toEqual([]);
@@ -186,7 +205,7 @@ describe("DecorationCanvas", () => {
           left: { show: false, width: 1, color: { type: "transparent" }, style: "solid" },
         },
       ]);
-      await userEvent.click(screen.getByRole("button", { name: "Border, in use" }));
+      await userEvent.click(screen.getByRole("tab", { name: "Border, in use" }));
       await userEvent.click(screen.getByRole("button", { name: "Remove" }));
       expect(host.values.styles).toEqual([]);
     });
@@ -196,7 +215,7 @@ describe("DecorationCanvas", () => {
     it("keeps the previous layer's fields after adding a second layer", async () => {
       const host = mount();
       await userEvent.click(screen.getByRole("button", { name: "Cell background" }));
-      await userEvent.click(screen.getByRole("button", { name: "Shape" }));
+      await userEvent.click(screen.getByRole("tab", { name: "Shape" }));
       await userEvent.click(screen.getByRole("button", { name: "Top left" }));
       const background = host.values.styles.find((s) => s.type === "background");
       expect(background).toHaveProperty("color");
@@ -205,16 +224,16 @@ describe("DecorationCanvas", () => {
     it("leaves a decoration that parses cleanly after adding a second layer", async () => {
       const host = mount();
       await userEvent.click(screen.getByRole("button", { name: "Cell background" }));
-      await userEvent.click(screen.getByRole("button", { name: "Shape" }));
+      await userEvent.click(screen.getByRole("tab", { name: "Shape" }));
       await userEvent.click(screen.getByRole("button", { name: "Top left" }));
       expect(v.safeParse(decorationSchema, host.values).success).toBe(true);
     });
 
     it("keeps the active border side's fields after switching to another layer", async () => {
       const host = mount();
-      await userEvent.click(screen.getByRole("button", { name: "Border" }));
+      await userEvent.click(screen.getByRole("tab", { name: "Border" }));
       await userEvent.click(screen.getByRole("button", { name: "Cell outline" }));
-      await userEvent.click(screen.getByRole("button", { name: "Shape" }));
+      await userEvent.click(screen.getByRole("tab", { name: "Shape" }));
       await userEvent.click(screen.getByRole("button", { name: "Top left" }));
       expect(v.safeParse(decorationSchema, host.values).success).toBe(true);
     });
@@ -224,22 +243,22 @@ describe("DecorationCanvas", () => {
     // flag silently go missing from the rest, so this covers all six.
     it.each(STYLE_SLOT_KEYS)("keeps a %s style parseable after switching layers", async (layer) => {
       const host = mount();
-      await userEvent.click(screen.getByRole("button", { name: layerChipLabel(layer, false) }));
+      await userEvent.click(screen.getByRole("tab", { name: layerChipLabel(layer, false) }));
       await createStyleIn[layer]();
       const other = STYLE_SLOT_KEYS.find((key) => key !== layer);
       if (other === undefined) throw new Error("expected a second layer to switch to");
-      await userEvent.click(screen.getByRole("button", { name: layerChipLabel(other, false) }));
+      await userEvent.click(screen.getByRole("tab", { name: layerChipLabel(other, false) }));
       await createStyleIn[other]();
       expect(v.safeParse(decorationSchema, host.values).success).toBe(true);
     });
 
     it("keeps the second style parseable after removing the first", async () => {
       const host = mount();
-      await userEvent.click(screen.getByRole("button", { name: layerChipLabel("background", false) }));
+      await userEvent.click(screen.getByRole("tab", { name: layerChipLabel("background", false) }));
       await createStyleIn.background();
-      await userEvent.click(screen.getByRole("button", { name: layerChipLabel("shape", false) }));
+      await userEvent.click(screen.getByRole("tab", { name: layerChipLabel("shape", false) }));
       await createStyleIn.shape();
-      await userEvent.click(screen.getByRole("button", { name: layerChipLabel("background", true) }));
+      await userEvent.click(screen.getByRole("tab", { name: layerChipLabel("background", true) }));
       await userEvent.click(screen.getByRole("button", { name: "Remove" }));
       expect(host.values.styles).toHaveLength(1);
       expect(v.safeParse(decorationSchema, host.values).success).toBe(true);
