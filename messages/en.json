@@ -777,6 +777,7 @@
       }
     }
   ],
+  "decoration_canvas_layers_label": "Style layers",
   "decoration_canvas_remove_label": "Remove",
   "ui_color_kind_label": [
     {
