@@ -35,6 +35,8 @@ const PLACEMENTS: readonly Placement[] = ["top-left", "top-right", "bottom-left"
   position: absolute;
   width: 33%;
   height: 33%;
+  /* Obsidian's `button` rounds its corners, which reads as a pill rather than a quadrant. */
+  border-radius: 0;
   background-color: transparent;
   box-shadow: none;
   border: 1px dashed var(--background-modifier-border);

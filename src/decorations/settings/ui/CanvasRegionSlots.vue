@@ -42,6 +42,11 @@ const PLACEMENTS: readonly Placement[] = [
   grid-template-rows: repeat(3, 1fr);
 }
 .slot {
+  /* Obsidian's `button` ships a fixed height, so without this each slot collapses to a
+     30px strip at the top of its grid row instead of filling it. Its rounded corners
+     would break the grid the nine slots are meant to read as. */
+  height: 100%;
+  border-radius: 0;
   border: 1px dashed var(--background-modifier-border);
   background-color: transparent;
   box-shadow: none;
