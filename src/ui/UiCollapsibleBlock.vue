@@ -53,6 +53,17 @@ function toggle() {
   display: flex;
   align-items: center;
   flex-grow: 1;
+  /* Without this the heading refuses to shrink below its content and the controls give up
+     their width instead, which is what stacked them. */
+  min-width: 0;
+}
+/* An inline box wraps its buttons like words, so a heading long enough to squeeze this flex
+   item stacked the controls vertically instead of keeping them on one line. */
+.collapsible-trigger-controls {
+  display: flex;
+  align-items: center;
+  gap: var(--size-2-2);
+  flex-shrink: 0;
 }
 .collapsible-content {
   padding-top: var(--size-4-2);
