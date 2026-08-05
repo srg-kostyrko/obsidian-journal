@@ -134,9 +134,26 @@ describe("resolveCell", () => {
   });
 
   describe("padding", () => {
-    it("reserves a shape's size on its placement side", () => {
+    it("reserves a shape's size on its placement axis", () => {
       const shape = buildStyle("shape", { size: 0.6, placement_y: "top", placement_x: "center" });
-      expect(formatPadding(resolveCell([shape]).padding)).toMatch(/max\(0\.7em, 2px\)/);
+      expect(formatPadding(resolveCell([shape]).padding)).toBe("max(0.7em, 2px) max(0.1em, 2px)");
+    });
+
+    it("mirrors a side mark's reservation onto the opposite side", () => {
+      const shape = buildStyle("shape", { size: 0.6, placement_y: "middle", placement_x: "left" });
+      expect(formatPadding(resolveCell([shape]).padding)).toBe("max(0.1em, 2px) max(0.7em, 2px)");
+    });
+
+    it("mirrors a single border side's width onto the opposite side", () => {
+      const hidden = { show: false, width: 0, style: "solid", color: { type: "custom" as const, color: "#000000" } };
+      const border = buildStyle("border", {
+        border: "different",
+        left: { show: true, width: 4, style: "solid", color: { type: "custom", color: "#000000" } },
+        right: hidden,
+        top: hidden,
+        bottom: hidden,
+      });
+      expect(formatPadding(resolveCell([border]).padding)).toBe("max(0.1em, 2px) max(0.1em, 6px)");
     });
 
     it("reserves a uniform border's left width on all four sides", () => {
@@ -148,19 +165,17 @@ describe("resolveCell", () => {
         top: wide,
         bottom: wide,
       });
-      const padding = formatPadding(resolveCell([border]).padding);
-      expect(padding.split("max(0.1em, 6px)").length - 1).toBe(4);
+      expect(formatPadding(resolveCell([border]).padding)).toBe("max(0.1em, 6px) max(0.1em, 6px)");
     });
   });
 });
 
 describe("mergePadding", () => {
-  it("takes the per-side maximum reservation across cells", () => {
-    const bottomShape = buildStyle("shape", { size: 0.4, placement_y: "bottom", placement_x: "center" });
-    const topShape = buildStyle("shape", { size: 0.6, placement_y: "top", placement_x: "center" });
-    const padding = formatPadding(mergePadding([resolveCell([bottomShape]).padding, resolveCell([topShape]).padding]));
-    expect(padding).toMatch(/max\(0\.7em, 2px\)/);
-    expect(padding).toMatch(/max\(0\.5em, 2px\)/);
+  it("takes the maximum reservation across cells", () => {
+    const smaller = buildStyle("shape", { size: 0.4, placement_y: "top", placement_x: "center" });
+    const larger = buildStyle("shape", { size: 0.6, placement_y: "top", placement_x: "center" });
+    const padding = formatPadding(mergePadding([resolveCell([smaller]).padding, resolveCell([larger]).padding]));
+    expect(padding).toBe("max(0.7em, 2px) max(0.1em, 2px)");
   });
 
   it("reserves the base extents when no cell is decorated", () => {

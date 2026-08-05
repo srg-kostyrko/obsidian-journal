@@ -157,8 +157,22 @@ export function resolveCell(styles: readonly JournalDecorationStyle[]): Resolved
   return { background, textColor, border, corners: [...corners.values()], marks, padding };
 }
 
+// Each axis reserves the larger of its two sides on both: the cell centers its content in the
+// padding box, so reserving on one side alone would push the text off the cell's own centre.
 export function formatPadding(extents: PaddingExtents): string {
-  return `max(${extents.top + 0.1}em, ${extents.topBorder + 2}px) max(${extents.right + 0.1}em, ${extents.rightBorder + 2}px) max(${extents.bottom + 0.1}em, ${extents.bottomBorder + 2}px) max(${extents.left + 0.1}em, ${extents.leftBorder + 2}px)`;
+  const vertical = axisReservation(
+    Math.max(extents.top, extents.bottom),
+    Math.max(extents.topBorder, extents.bottomBorder),
+  );
+  const horizontal = axisReservation(
+    Math.max(extents.left, extents.right),
+    Math.max(extents.leftBorder, extents.rightBorder),
+  );
+  return `${vertical} ${horizontal}`;
+}
+
+function axisReservation(mark: number, border: number): string {
+  return `max(${mark + 0.1}em, ${border + 2}px)`;
 }
 
 // Reserve the same padding on every cell — the per-side maximum across all cells — so a
