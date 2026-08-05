@@ -133,6 +133,7 @@
 			}
 		}
 	],
+	"decoration_canvas_layers_label": "Calques de style",
 	"decoration_canvas_remove_label": "Supprimer",
 	"decoration_canvas_slot_label": [
 		{

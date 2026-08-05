@@ -133,6 +133,7 @@
 			}
 		}
 	],
+	"decoration_canvas_layers_label": "样式图层",
 	"decoration_canvas_remove_label": "移除",
 	"decoration_canvas_slot_label": [
 		{

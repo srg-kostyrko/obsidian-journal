@@ -133,6 +133,7 @@
 			}
 		}
 	],
+	"decoration_canvas_layers_label": "スタイルレイヤー",
 	"decoration_canvas_remove_label": "削除",
 	"decoration_canvas_slot_label": [
 		{

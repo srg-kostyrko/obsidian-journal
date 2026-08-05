@@ -133,6 +133,7 @@
 			}
 		}
 	],
+	"decoration_canvas_layers_label": "Слои стиля",
 	"decoration_canvas_remove_label": "Удалить",
 	"decoration_canvas_slot_label": [
 		{
