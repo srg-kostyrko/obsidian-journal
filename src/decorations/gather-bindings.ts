@@ -5,8 +5,8 @@ import type { DecorationBinding, JournalDecorationBinding } from "./engine";
 
 export interface GatherOptions {
   readonly journalNames: readonly string[];
-  // The shelf in scope, or null for "all journals" — a shelf's decorations apply only
-  // while that shelf is shown.
+  // The shelf in scope, or null for "all journals", which takes every shelf's list — such a
+  // surface shows every shelf's journals, so it already draws on all of their decorations.
   readonly shelf: string | null;
   // Surfaces that never render journal-free decorations opt out entirely.
   readonly includeCalendar: boolean;
@@ -28,8 +28,8 @@ export function gatherBindings(
     for (const [index, decoration] of globalDecorations.entries()) {
       out.push({ kind: "calendar", owner: { kind: "global" }, index, decoration });
     }
-    const shelfName = options.shelf;
-    if (shelfName !== null) {
+    const shelfNames = options.shelf === null ? store.shelfNames() : [options.shelf];
+    for (const shelfName of shelfNames) {
       const shelfDecorations = store.calendarList({ kind: "shelf", shelfName });
       for (const [index, decoration] of shelfDecorations.entries()) {
         out.push({ kind: "calendar", owner: { kind: "shelf", shelfName }, index, decoration });

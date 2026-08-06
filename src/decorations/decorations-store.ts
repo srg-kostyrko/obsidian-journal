@@ -15,6 +15,10 @@ export class DecorationsStore {
   readonly #shelves = inject(ShelvesRepository);
   readonly #slice = inject(SettingsService).getSlice(decorationsSlice);
 
+  shelfNames(): readonly string[] {
+    return [...this.#shelves.find().map((shelf) => shelf.name)];
+  }
+
   calendarList(owner: CalendarDecorationOwner): readonly CalendarDecoration[] {
     return match(owner)
       .with({ kind: "shelf" }, ({ shelfName }) =>

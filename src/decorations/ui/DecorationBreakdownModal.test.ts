@@ -398,16 +398,19 @@ describe("DecorationBreakdownModal", () => {
   it("re-resolves when the shelf selection changes", async () => {
     const day = DayPeriod.containing(date("2026-05-25"));
     mount({
-      shelves: { work: { name: "work", journals: [], decorations: [anyDayCalendarDecoration] } },
+      shelves: {
+        work: { name: "work", journals: [], decorations: [] },
+        home: { name: "home", journals: [], decorations: [anyDayCalendarDecoration] },
+      },
       period: day,
     });
 
-    expect(screen.getByText(m.decoration_breakdown_empty())).toBeTruthy();
+    // "All journals" unions every shelf's list, so narrowing to a shelf that owns none drops it.
+    expect(screen.getByTestId("decoration-preview")).toBeTruthy();
 
     await userEvent.selectOptions(screen.getByRole("combobox"), "work");
 
-    expect(screen.queryByText(m.decoration_breakdown_empty())).toBeNull();
-    expect(screen.getByTestId("decoration-preview")).toBeTruthy();
+    expect(screen.getByText(m.decoration_breakdown_empty())).toBeTruthy();
   });
 
   it("shows the empty state for a date nothing decorates", () => {

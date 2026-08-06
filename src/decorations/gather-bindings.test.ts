@@ -21,6 +21,7 @@ function build(journalDecorations: JournalConfig["decorations"] = []) {
   c.register(JournalsRepository).useValue(journals);
   const shelfStorage = reactive<Record<string, ShelfConfig>>({
     work: { name: "work", journals: [], decorations: [] },
+    home: { name: "home", journals: [], decorations: [] },
   });
   c.register(ShelvesRepository).useValue(ShelvesRepository.fromParts(shelfStorage, createNanoEvents<ShelvesEvents>()));
   c.register(DecorationsStore).useClass(DecorationsStore);
@@ -86,15 +87,44 @@ describe("gatherBindings", () => {
     expect(bindings.map((b) => b.index)).toEqual([0, 1]);
   });
 
-  it("omits a shelf's bindings when no shelf is in scope", () => {
+  it("gathers every shelf's bindings when no shelf is in scope", () => {
     const { journals, store } = build();
+    store.save({ kind: "shelf", shelfName: "work" }, [
+      buildCalendarDecoration({ mode: "or", conditions: [weekday()], styles: [] }),
+    ]);
+    store.save({ kind: "shelf", shelfName: "home" }, [
+      buildCalendarDecoration({ mode: "or", conditions: [weekday()], styles: [] }),
+    ]);
+
+    const bindings = gatherBindings(journals, store, { journalNames: [], shelf: null, includeCalendar: true });
+
+    expect(bindings.map((b) => (b.kind === "calendar" ? b.owner : null))).toEqual([
+      { kind: "shelf", shelfName: "work" },
+      { kind: "shelf", shelfName: "home" },
+    ]);
+  });
+
+  it("omits other shelves' bindings when one shelf is in scope", () => {
+    const { journals, store } = build();
+    store.save({ kind: "shelf", shelfName: "home" }, [
+      buildCalendarDecoration({ mode: "or", conditions: [weekday()], styles: [] }),
+    ]);
+
+    const bindings = gatherBindings(journals, store, { journalNames: [], shelf: "work", includeCalendar: true });
+
+    expect(bindings).toEqual([]);
+  });
+
+  it("orders vault-wide bindings before shelf bindings", () => {
+    const { journals, store } = build();
+    store.save({ kind: "global" }, [buildCalendarDecoration({ mode: "or", conditions: [weekday()], styles: [] })]);
     store.save({ kind: "shelf", shelfName: "work" }, [
       buildCalendarDecoration({ mode: "or", conditions: [weekday()], styles: [] }),
     ]);
 
     const bindings = gatherBindings(journals, store, { journalNames: [], shelf: null, includeCalendar: true });
 
-    expect(bindings).toEqual([]);
+    expect(bindings.map((b) => (b.kind === "calendar" ? b.owner.kind : null))).toEqual(["global", "shelf"]);
   });
 
   it("omits every calendar binding when the surface does not opt in", () => {

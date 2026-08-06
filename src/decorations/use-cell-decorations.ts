@@ -27,7 +27,7 @@ export interface CellDecorationsOptions {
   scope?: CellDecorationScope;
   filter?: (binding: JournalDecorationBinding) => boolean;
   // Presence opts the surface into journal-free decorations. `shelf` is the shelf in scope,
-  // or null for "all journals", where only the vault-wide list applies.
+  // or null for "all journals", where the vault-wide list and every shelf's list apply.
   calendarDecorations?: { shelf: MaybeRefOrGetter<string | null> };
 }
 

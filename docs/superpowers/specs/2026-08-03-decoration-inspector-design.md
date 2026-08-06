@@ -103,9 +103,9 @@ A date with no decorated cells says so rather than rendering an empty table.
 
 ### The shelf selector
 
-Shelf decorations apply only while that shelf is in view, so "what decorates this cell" has
-different answers under different shelf scopes, and from settings there is no shelf in scope
-at all. There is no single true answer to give.
+A shelf's decorations apply while that shelf is in view, and "all journals" unions every
+shelf's, so "what decorates this cell" has different answers under different shelf scopes —
+narrowing to one shelf drops the others. There is no single true answer to give.
 
 The modal carries a shelf selector mirroring the calendar toolbar's, seeded from the entry
 point — the surface's current shelf, or all journals from settings. Changing it re-resolves.

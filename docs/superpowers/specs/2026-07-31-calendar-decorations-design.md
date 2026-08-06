@@ -137,11 +137,19 @@ as a whole.
 `useCellDecorations` takes four positional parameters today and callers already pass
 `undefined` for the scope slot. It moves to an options object and gains
 `calendarShelf?: MaybeRefOrGetter<string | null>`. Passing the option opts the surface in:
-`null` means global only, a shelf name means global plus that shelf's list.
+a shelf name means global plus that shelf's list, `null` means global plus every shelf's
+list, in settings order.
 
 The global list therefore always applies wherever calendar decorations apply at all, and a
-shelf's list adds to it only while that shelf is the one in scope. A calendar showing all
-journals shows global decorations only — no shelf's list leaks into it.
+shelf's list adds to it whenever that shelf is in scope — including "all journals", which
+scopes to no shelf and so unions them all.
+
+`null` reaches the gatherer for two different reasons — the user picked "all journals", or
+the surface's owning journal is on no shelf — but both already widen the _journal_ scope to
+every journal, so both widen the shelf scope the same way. A rule owned by one shelf is
+extra paint, not a filter, so unioning cannot hide anything; the cost is that two shelves
+with conflicting background rules resolve by settings order, which the breakdown modal
+attributes per binding.
 
 | Surface                                   | Opts in                                      |
 | ----------------------------------------- | -------------------------------------------- |
