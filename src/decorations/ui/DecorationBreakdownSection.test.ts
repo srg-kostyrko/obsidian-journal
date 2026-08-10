@@ -152,6 +152,8 @@ describe("DecorationBreakdownSection", () => {
       ],
     });
 
+    expect(screen.getByText(m.decoration_condition_has_note_describe())).toBeTruthy();
+    expect(screen.getByText(ANY_DATE_TEXT)).toBeTruthy();
     expect(screen.getByText(m.decoration_describe_mode({ kind: "or" }))).toBeTruthy();
   });
 
@@ -161,14 +163,25 @@ describe("DecorationBreakdownSection", () => {
       conditions: [buildCondition("has-note")],
       styles: [buildStyle("shape")],
     });
+    const globalMark: CalendarDecoration = buildCalendarDecoration({
+      mode: "or",
+      conditions: [buildCondition("date", { day: -1, month: -1, year: null })],
+      styles: [buildStyle("shape")],
+    });
     mountSection({
       journalDecorations: [journalMark],
+      globalDecorations: [globalMark],
       contributions: [
         { source: { owner: { kind: "journal", journalName: "daily" }, index: 0 }, style: buildStyle("shape") },
+        { source: { owner: { kind: "global" }, index: 0 }, style: buildStyle("shape") },
       ],
     });
 
+    // Both marks' condition text must resolve through DecorationsStore's owner+index lookup,
+    // not just structurally appear under the marks heading without naming a winner.
     expect(screen.getByText(m.decoration_breakdown_marks_heading())).toBeTruthy();
+    expect(screen.getByText(m.decoration_condition_has_note_describe())).toBeTruthy();
+    expect(screen.getByText(ANY_DATE_TEXT)).toBeTruthy();
     expect(screen.queryByText(m.decoration_breakdown_overridden_heading())).toBeNull();
   });
 
