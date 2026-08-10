@@ -460,6 +460,7 @@
   "decoration_breakdown_shelf_label": "Shelf in view",
   "decoration_breakdown_shelf_all": "All journals",
   "decoration_breakdown_empty": "Nothing decorates this date.",
+  "decoration_breakdown_cell_empty": "Nothing decorates this cell.",
   "decoration_breakdown_marks_heading": "Marks",
   "decoration_breakdown_overridden_heading": "Overridden here",
   "decoration_breakdown_overridden_for": "Overridden here — {property}",

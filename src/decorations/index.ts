@@ -69,4 +69,5 @@ export {
 } from "./errors";
 export { attributeCell, type CellAttribution, type PropertyAttribution } from "./attribute-cell";
 export { declaredProperties, type ExclusiveProperty } from "./resolve-cell";
-export { decorationBreakdownModal } from "./ui/modals";
+export { decorationBreakdownModal, decorationCellModal } from "./ui/modals";
+export type { BreakdownEntry } from "./ui/breakdown-entry";
