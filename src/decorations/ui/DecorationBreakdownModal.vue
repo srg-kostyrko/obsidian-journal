@@ -78,6 +78,9 @@ const cells = computed<readonly BreakdownCell[]>(() => {
     });
   }
 
+  // An interval is a "day"-kind period at its start anchor, so its cell key collides with the
+  // day cell's. A separate explainRange keeps the two from overwriting each other — merging
+  // them into one call over a combined period list silently drops one side's contributions.
   for (const name of journalNames.value) {
     const config = journals.get(name).getOrUndefined();
     if (config?.write.type !== "custom") continue;
@@ -86,7 +89,7 @@ const cells = computed<readonly BreakdownCell[]>(() => {
     if (!timeline.contains(name, intervalAnchor)) continue;
 
     const intervalPeriod = periodForJournal(config.write, intervalAnchor);
-    const intervalBindings = gatherIntervalBindings(journals, store, { journalName: name, shelf: shelf.value });
+    const intervalBindings = gatherIntervalBindings(journals, { journalName: name });
     const intervalContributions = engine
       .explainRange([intervalPeriod], intervalBindings)
       .get(cellKey(intervalPeriod.kind, intervalPeriod.anchor.toAnchor()));

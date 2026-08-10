@@ -202,17 +202,17 @@ describe("gatherFixedBindings and gatherIntervalBindings", () => {
   });
 
   it("excludes a custom journal's offset decoration from an interval", () => {
-    const { journals, store } = buildWithSprint();
+    const { journals } = buildWithSprint();
 
-    const bindings = gatherIntervalBindings(journals, store, { journalName: "sprint", shelf: null });
+    const bindings = gatherIntervalBindings(journals, { journalName: "sprint" });
 
     expect(bindings.some((b) => b.kind === "journal" && b.index === OFFSET_INDEX)).toBe(false);
   });
 
   it("admits a custom journal's non-offset decoration to an interval", () => {
-    const { journals, store } = buildWithSprint();
+    const { journals } = buildWithSprint();
 
-    const bindings = gatherIntervalBindings(journals, store, { journalName: "sprint", shelf: null });
+    const bindings = gatherIntervalBindings(journals, { journalName: "sprint" });
 
     expect(bindings.some((b) => b.kind === "journal" && b.index === NON_OFFSET_INDEX)).toBe(true);
   });

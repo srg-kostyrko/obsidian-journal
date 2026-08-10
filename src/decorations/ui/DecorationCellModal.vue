@@ -28,6 +28,10 @@ const store = useService(DecorationsStore);
 const engine = useService(DecorationEngine);
 const indexVersion = useIndexVersion();
 
+// A no-op in production (vue-modal-host.ts passes props to createApp un-proxied) but
+// load-bearing under @testing-library/vue, whose reactive props proxy would otherwise wrap
+// Period in a Proxy on read — and its private-field methods (e.g. CalendarDate#format) throw
+// when called with `this` bound to that Proxy, since a Proxy carries no private-field brand.
 const entry = toRaw(props.entry);
 const period = toRaw(entry.period);
 
@@ -50,7 +54,7 @@ const journalNames = computed<readonly string[]>(() => {
 
 function bindingsFor(): readonly DecorationBinding[] {
   if (entry.kind === "interval") {
-    return gatherIntervalBindings(journals, store, { journalName: entry.journalName, shelf: shelf.value });
+    return gatherIntervalBindings(journals, { journalName: entry.journalName });
   }
   return gatherFixedBindings(journals, store, { journalNames: journalNames.value, shelf: shelf.value });
 }

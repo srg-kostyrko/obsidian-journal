@@ -1,16 +1,16 @@
 <script setup lang="ts">
 import { match } from "ts-pattern";
 
-import { Calendar } from "@/calendar";
+import { Calendar, type Period, type PeriodKind } from "@/calendar";
 import { m } from "@/i18n";
 import { useService } from "@/infrastructure/di";
 
 import { DecorationsStore } from "../decorations-store";
 import { describeCondition } from "../settings/ui/describe-condition";
 
-import { formatPeriod, type BreakdownCell } from "./breakdown-cell";
 import DecorationPreview from "./DecorationPreview.vue";
 
+import type { BreakdownCell } from "./breakdown-cell";
 import type { CellAttribution } from "../attribute-cell";
 import type { JournalDecoration } from "../config";
 import type { Contribution, DecorationSource } from "../engine";
@@ -21,6 +21,19 @@ const props = defineProps<{ cell: BreakdownCell; index: number }>();
 
 const store = useService(DecorationsStore);
 const calendar = useService(Calendar);
+
+const PERIOD_FORMAT: Record<PeriodKind, string> = {
+  day: "YYYY-MM-DD",
+  week: "YYYY-[W]w",
+  month: "YYYY-MM",
+  quarter: "YYYY-[Q]Q",
+  year: "YYYY",
+  decade: "YYYY",
+};
+
+function formatPeriod(p: Period): string {
+  return p.format(PERIOD_FORMAT[p.kind]);
+}
 
 // An interval and the day cell it starts on share a period kind and anchor, so a key derived
 // from the period alone would collide. The section's position in this render is unique and,

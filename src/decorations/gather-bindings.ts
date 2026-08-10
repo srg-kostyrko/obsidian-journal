@@ -52,8 +52,15 @@ export function gatherBindings(
 
 // A custom journal writes "day"-kind periods, so its decorations would otherwise land on the
 // day cell its interval starts on. These two are complementary halves of one rule: the day
-// grid takes the offset-carrying decorations, the interval list takes the rest. Split across
-// call sites, a one-sided edit makes the two views disagree about the same cell.
+// grid takes the offset-carrying decorations, the interval list takes the rest.
+//
+// This predicate is duplicated, not centralized: two calendar-render call sites reimplement the
+// day-grid half directly against `useCellDecorations`'s own `filter` option rather than routing
+// through `gatherFixedBindings` — `src/notes-calendar/ui/NotesMonthView.vue` and its verbatim
+// twin `NotesWeekView.vue` — and two more reimplement the interval half the same way —
+// `src/views/blocks/custom-intervals/ui/CustomIntervalsBlock.vue` and
+// `src/code-blocks/nav/ui/NavigationCodeBlock.vue`'s per-row scope. Editing the split here does
+// not touch any of them; keep all five in sync by hand.
 export function gatherFixedBindings(
   journals: JournalsRepository,
   store: DecorationsStore | undefined,
@@ -71,14 +78,15 @@ export function gatherFixedBindings(
   });
 }
 
+// Never draws on calendar decorations (see the block comment above), so it takes no store or
+// shelf — a caller has nothing to pass that could change the result.
 export function gatherIntervalBindings(
   journals: JournalsRepository,
-  store: DecorationsStore | undefined,
-  options: { readonly journalName: string; readonly shelf: string | null },
+  options: { readonly journalName: string },
 ): readonly DecorationBinding[] {
-  return gatherBindings(journals, store, {
+  return gatherBindings(journals, undefined, {
     journalNames: [options.journalName],
-    shelf: options.shelf,
+    shelf: null,
     includeCalendar: false,
     filter: (binding) => !hasOffsetCondition(binding.decoration),
   });
