@@ -924,20 +924,10 @@ describe("DecorationCellModal", () => {
 
     expect(screen.getByText(m.decoration_breakdown_cell_empty())).toBeTruthy();
   });
-
-  it("offers no date picker", () => {
-    const day = DayPeriod.containing(date("2026-05-25"));
-    mount({
-      journals: { daily: fixedJournal("daily", { type: "day" }, { decorations: [anyDayDecoration] }) },
-      entry: { kind: "fixed", period: day },
-    });
-
-    expect(screen.queryByText(m.decoration_breakdown_date_label())).toBeNull();
-  });
 });
 ```
 
-**Note on the last test.** The spec argued against asserting the picker's absence. It is included here because it is the single behaviour that distinguishes this screen from the explorer, and a one-line `queryBy` is cheap insurance against someone "helpfully" adding the control back. If the reviewer disagrees, delete it — nothing else depends on it.
+**Note.** An earlier draft also asserted the date picker's absence. The spec declined that assertion — it edges into testing the wiring, and "renders only the clicked cell" already proves this is a one-cell readout. Do not add it back.
 
 - [ ] **Step 4: Run it to verify it fails**
 
@@ -1085,7 +1075,7 @@ export type { BreakdownEntry } from "./ui/breakdown-entry";
 npx vitest run src/decorations/ui/DecorationCellModal.test.ts
 ```
 
-Expected: PASS, 7 tests.
+Expected: PASS, 6 tests.
 
 - [ ] **Step 9: Run the gates**
 
@@ -1356,13 +1346,15 @@ expect(screen.queryByText(m.decoration_breakdown_cell_heading({ kind: "day", lab
 
 In the same file, remove `period?: Period;` from `MountOptions`, remove `period: options.period` from the `render` props (leaving `props: { shelf: options.shelf }`), and delete every `period: day,` line from the remaining tests' `mount({...})` calls. Remove the now-unused `Period` type import if nothing else uses it.
 
-- [ ] **Step 3: Run to verify it fails**
+- [ ] **Step 3: Checkpoint — confirm the suite is green before deleting code**
+
+There is no red test in this task. It removes dead code, and the suite staying green across the removal is the evidence. Establish the green baseline first:
 
 ```bash
 npx vitest run src/decorations/ui/DecorationBreakdownModal.test.ts
 ```
 
-Expected: PASS actually — the component still accepts an ignored prop. This step is a checkpoint, not a red test: the deletions below are removals of dead code, and the suite staying green is the evidence.
+Expected: PASS. The component still accepts a prop nothing passes; Steps 4-8 delete it.
 
 - [ ] **Step 4: Strip the component**
 
@@ -1468,10 +1460,11 @@ git commit -m "refactor(decorations): drop the explorer's dead entry-point state
 
 No gaps.
 
-**Deviations from the spec, both deliberate**
+**Deviation from the spec, deliberate**
 
-1. The spec placed `journalIndex` on `BreakdownCell` for DOM-id uniqueness. Task 1 uses the section's render `index` prop instead — equally unique, and it removes a field that had to be threaded through cell construction. The whitespace-in-journal-name test still guards the property that mattered.
-2. The spec declined the "no date picker" assertion. Task 3 includes it, flagged inline, with an explicit note that deleting it costs nothing.
+The spec placed `journalIndex` on `BreakdownCell` for DOM-id uniqueness. Task 1 uses the section's render `index` prop instead — equally unique, and it removes a field that had to be threaded through cell construction. The whitespace-in-journal-name test still guards the property that mattered.
+
+A second deviation (asserting the date picker's absence) was raised in pre-flight and resolved in the spec's favour: the assertion is not in the plan.
 
 **Type consistency**
 
