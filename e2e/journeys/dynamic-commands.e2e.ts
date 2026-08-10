@@ -1,5 +1,6 @@
 import { browser, expect } from "@wdio/globals";
 
+import { m } from "../../src/i18n/paraglide/messages.js";
 import { openPalette, paletteLists, promptChoose, runCommand } from "../support/commands.js";
 import { waitForNotice } from "../support/notices.js";
 import {
@@ -80,7 +81,7 @@ describe("dynamic commands", () => {
 
       await runCommand("journals:advance-from-entry");
 
-      await waitForNotice("Open a note this command applies to first.");
+      await waitForNotice(m.command_open_needs_active_note());
     });
   });
 });

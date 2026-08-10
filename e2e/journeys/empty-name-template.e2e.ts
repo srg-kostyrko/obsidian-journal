@@ -1,19 +1,12 @@
-import { readFileSync } from "node:fs";
-import { fileURLToPath } from "node:url";
-
 import { browser, expect } from "@wdio/globals";
 
+import { m } from "../../src/i18n/paraglide/messages.js";
 import { runCommand } from "../support/commands.js";
 import { waitForNotice } from "../support/notices.js";
 
-// Read straight from messages/en.json rather than retyping the copy, so the assertion
-// can't silently drift from the string the plugin actually ships.
-const messages = JSON.parse(
-  readFileSync(fileURLToPath(new URL("../../messages/en.json", import.meta.url)), "utf8"),
-) as Record<string, string>;
 // e2e-empty-name defines a day journal whose nameTemplate is "", so every note it would
 // create resolves to the invisible dotfile ".md". The plugin must refuse and say so.
-const NOTICE = messages.journal_note_name_empty_notice.replace("{journalName}", "daily");
+const NOTICE = m.journal_note_name_empty_notice({ journalName: "daily" });
 
 describe("empty note name template", () => {
   before(async () => {

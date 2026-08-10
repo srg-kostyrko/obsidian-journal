@@ -1,5 +1,6 @@
 import { $, $$, browser, expect } from "@wdio/globals";
 
+import { m } from "../../src/i18n/paraglide/messages.js";
 import { paletteCount } from "../support/commands.js";
 import { NoFreeDayError, NoSpilloverDayError } from "../support/errors.js";
 import { waitForNotice } from "../support/notices.js";
@@ -571,7 +572,7 @@ describe("calendar view", () => {
       await modal.waitForExist({ timeoutMsg: "date-picker modal did not open" });
       await modal.$(`[data-testid="month-cell"][data-anchor="${anchor}"]`).click();
 
-      await waitForNotice("There is no note to open.");
+      await waitForNotice(m.command_open_unavailable());
     });
 
     // The regression this guards: the calendar used to keep a private focus for the opened
