@@ -11,8 +11,8 @@ import UiSettingRow from "@/ui/UiSettingRow.vue";
 
 import { attributeCell } from "../attribute-cell";
 import { DecorationsStore } from "../decorations-store";
-import { cellKey, DecorationEngine, hasOffsetCondition } from "../engine";
-import { gatherBindings } from "../gather-bindings";
+import { cellKey, DecorationEngine } from "../engine";
+import { gatherFixedBindings, gatherIntervalBindings } from "../gather-bindings";
 
 import DecorationBreakdownSection from "./DecorationBreakdownSection.vue";
 
@@ -48,28 +48,11 @@ const journalNames = computed<readonly string[]>(() => {
   });
 });
 
-// An interval and the day cell it starts on share a cell key, and the two are told apart by
-// complementary filters: the day grid takes a custom journal's offset-carrying decorations,
-// the interval list takes the rest. The entry says which side was clicked.
 function bindingsFor(): readonly DecorationBinding[] {
   if (entry.kind === "interval") {
-    return gatherBindings(journals, store, {
-      journalNames: [entry.journalName],
-      shelf: shelf.value,
-      includeCalendar: false,
-      filter: (binding) => !hasOffsetCondition(binding.decoration),
-    });
+    return gatherIntervalBindings(journals, store, { journalName: entry.journalName, shelf: shelf.value });
   }
-  return gatherBindings(journals, store, {
-    journalNames: journalNames.value,
-    shelf: shelf.value,
-    includeCalendar: true,
-    filter: (binding) => {
-      const config = journals.get(binding.journalName).getOrUndefined();
-      if (config?.write.type !== "custom") return true;
-      return hasOffsetCondition(binding.decoration);
-    },
-  });
+  return gatherFixedBindings(journals, store, { journalNames: journalNames.value, shelf: shelf.value });
 }
 
 const cell = computed<BreakdownCell | null>(() => {

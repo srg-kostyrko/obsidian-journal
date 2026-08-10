@@ -1,7 +1,8 @@
 import type { JournalsRepository } from "@/journals";
 
+import { hasOffsetCondition, type DecorationBinding, type JournalDecorationBinding } from "./engine";
+
 import type { DecorationsStore } from "./decorations-store";
-import type { DecorationBinding, JournalDecorationBinding } from "./engine";
 
 export interface GatherOptions {
   readonly journalNames: readonly string[];
@@ -47,4 +48,38 @@ export function gatherBindings(
   }
 
   return out;
+}
+
+// A custom journal writes "day"-kind periods, so its decorations would otherwise land on the
+// day cell its interval starts on. These two are complementary halves of one rule: the day
+// grid takes the offset-carrying decorations, the interval list takes the rest. Split across
+// call sites, a one-sided edit makes the two views disagree about the same cell.
+export function gatherFixedBindings(
+  journals: JournalsRepository,
+  store: DecorationsStore | undefined,
+  options: { readonly journalNames: readonly string[]; readonly shelf: string | null },
+): readonly DecorationBinding[] {
+  return gatherBindings(journals, store, {
+    journalNames: options.journalNames,
+    shelf: options.shelf,
+    includeCalendar: true,
+    filter: (binding) => {
+      const config = journals.get(binding.journalName).getOrUndefined();
+      if (config?.write.type !== "custom") return true;
+      return hasOffsetCondition(binding.decoration);
+    },
+  });
+}
+
+export function gatherIntervalBindings(
+  journals: JournalsRepository,
+  store: DecorationsStore | undefined,
+  options: { readonly journalName: string; readonly shelf: string | null },
+): readonly DecorationBinding[] {
+  return gatherBindings(journals, store, {
+    journalNames: [options.journalName],
+    shelf: options.shelf,
+    includeCalendar: false,
+    filter: (binding) => !hasOffsetCondition(binding.decoration),
+  });
 }

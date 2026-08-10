@@ -15,8 +15,8 @@ import UiSettingRow from "@/ui/UiSettingRow.vue";
 
 import { attributeCell } from "../attribute-cell";
 import { DecorationsStore } from "../decorations-store";
-import { cellKey, DecorationEngine, hasOffsetCondition, periodKindForWrite } from "../engine";
-import { gatherBindings } from "../gather-bindings";
+import { cellKey, DecorationEngine, periodKindForWrite } from "../engine";
+import { gatherFixedBindings, gatherIntervalBindings } from "../gather-bindings";
 
 import DecorationBreakdownSection from "./DecorationBreakdownSection.vue";
 
@@ -63,19 +63,7 @@ const cells = computed<readonly BreakdownCell[]>(() => {
   }
 
   const periods = [...kinds].map((kind) => periodOfKind(kind, selectedDate));
-  const bindings = gatherBindings(journals, store, {
-    journalNames: journalNames.value,
-    shelf: shelf.value,
-    includeCalendar: true,
-    // A custom journal's write kind is always "day", so without this every one of its
-    // decorations would attribute to the day cell. Production splits them: the day grid takes
-    // only offset-carrying ones (NotesMonthView.vue), the rest belong to the interval list.
-    filter: (binding) => {
-      const config = journals.get(binding.journalName).getOrUndefined();
-      if (config?.write.type !== "custom") return true;
-      return hasOffsetCondition(binding.decoration);
-    },
-  });
+  const bindings = gatherFixedBindings(journals, store, { journalNames: journalNames.value, shelf: shelf.value });
   const explained = engine.explainRange(periods, bindings);
 
   const out: BreakdownCell[] = [];
@@ -98,15 +86,7 @@ const cells = computed<readonly BreakdownCell[]>(() => {
     if (!timeline.contains(name, intervalAnchor)) continue;
 
     const intervalPeriod = periodForJournal(config.write, intervalAnchor);
-    // An interval is a "day"-kind period at its start anchor, so its cell key collides with
-    // the day cell's. A separate explainRange keeps the two from overwriting each other, and
-    // the complementary filter is what makes them describe different things.
-    const intervalBindings = gatherBindings(journals, store, {
-      journalNames: [name],
-      shelf: shelf.value,
-      includeCalendar: false,
-      filter: (binding) => !hasOffsetCondition(binding.decoration),
-    });
+    const intervalBindings = gatherIntervalBindings(journals, store, { journalName: name, shelf: shelf.value });
     const intervalContributions = engine
       .explainRange([intervalPeriod], intervalBindings)
       .get(cellKey(intervalPeriod.kind, intervalPeriod.anchor.toAnchor()));
