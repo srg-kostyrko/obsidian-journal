@@ -1455,6 +1455,167 @@ git commit -m "refactor(decorations): drop the explorer's dead entry-point state
 
 ---
 
+### Task 6: Extract the fixed/interval binding rule
+
+Added after Task 3's review found the offset/non-offset filter duplicated verbatim across both modals. It is the rule that decides whether a decoration belongs to a day cell or the custom interval sharing that day's anchor — the one place where a one-sided edit silently makes the two screens disagree. Separated from Task 5 so the strip and the extraction can be judged independently.
+
+`NotesMonthView.vue:86` carries a third, related variant. It stays out of scope: it filters a whole grid of periods rather than resolving one cell, and repointing it would drag the calendar render path into a refactor the plan deliberately avoids.
+
+**Files:**
+
+- Modify: `src/decorations/gather-bindings.ts`
+- Modify: `src/decorations/gather-bindings.test.ts`
+- Modify: `src/decorations/ui/DecorationCellModal.vue`
+- Modify: `src/decorations/ui/DecorationBreakdownModal.vue`
+- Modify: `src/decorations/index.ts` (only if the barrel already re-exports `gatherBindings`; match whatever it does today)
+
+**Interfaces:**
+
+- Consumes: `gatherBindings`, `hasOffsetCondition`, `DecorationBinding` — all existing.
+- Produces:
+  - `gatherFixedBindings(journals: JournalsRepository, store: DecorationsStore | undefined, options: { journalNames: readonly string[]; shelf: string | null }): readonly DecorationBinding[]`
+  - `gatherIntervalBindings(journals: JournalsRepository, store: DecorationsStore | undefined, options: { journalName: string; shelf: string | null }): readonly DecorationBinding[]`
+
+- [ ] **Step 1: Write the failing tests**
+
+Add to `src/decorations/gather-bindings.test.ts`, following that file's existing fixture patterns:
+
+```ts
+it("excludes a custom journal's non-offset decoration from a fixed cell", () => {
+  // The day grid takes only a custom journal's offset-carrying rules; everything else it
+  // defines belongs to the interval sharing that day's anchor.
+  const bindings = gatherFixedBindings(journals, store, { journalNames: ["sprint"], shelf: null });
+
+  expect(bindings.some((b) => b.kind === "journal" && b.index === NON_OFFSET_INDEX)).toBe(false);
+});
+
+it("admits a custom journal's offset decoration to a fixed cell", () => {
+  const bindings = gatherFixedBindings(journals, store, { journalNames: ["sprint"], shelf: null });
+
+  expect(bindings.some((b) => b.kind === "journal" && b.index === OFFSET_INDEX)).toBe(true);
+});
+
+it("excludes a custom journal's offset decoration from an interval", () => {
+  const bindings = gatherIntervalBindings(journals, store, { journalName: "sprint", shelf: null });
+
+  expect(bindings.some((b) => b.kind === "journal" && b.index === OFFSET_INDEX)).toBe(false);
+});
+
+it("admits a custom journal's non-offset decoration to an interval", () => {
+  const bindings = gatherIntervalBindings(journals, store, { journalName: "sprint", shelf: null });
+
+  expect(bindings.some((b) => b.kind === "journal" && b.index === NON_OFFSET_INDEX)).toBe(true);
+});
+
+it("keeps a non-custom journal's decorations in a fixed cell regardless of offset", () => {
+  const bindings = gatherFixedBindings(journals, store, { journalNames: ["daily"], shelf: null });
+
+  expect(bindings.some((b) => b.kind === "journal" && b.journalName === "daily")).toBe(true);
+});
+```
+
+Build the `sprint` fixture with `customJournal("sprint", "week", 2, "2026-05-25", { decorations: [<non-offset>, <offset>] })` so `NON_OFFSET_INDEX` is 0 and `OFFSET_INDEX` is 1. Use `buildDecoration` + `buildCondition("has-note")` and `buildCondition("offset", { offset: 1 })` from `src/decorations/testing.ts`. Match the existing file's container/harness setup rather than inventing one.
+
+The fifth test guards the branch that is easy to get backwards: the custom-journal filter must apply _only_ to custom journals, never narrowing a day or week journal's rules.
+
+- [ ] **Step 2: Run to verify they fail**
+
+```bash
+npx vitest run src/decorations/gather-bindings.test.ts
+```
+
+Expected: FAIL — `gatherFixedBindings is not defined`.
+
+- [ ] **Step 3: Add the two helpers**
+
+In `src/decorations/gather-bindings.ts`, below `gatherBindings`:
+
+```ts
+// A custom journal writes "day"-kind periods, so its decorations would otherwise land on the
+// day cell its interval starts on. These two are complementary halves of one rule: the day
+// grid takes the offset-carrying decorations, the interval list takes the rest. Split across
+// call sites, a one-sided edit makes the two views disagree about the same cell.
+export function gatherFixedBindings(
+  journals: JournalsRepository,
+  store: DecorationsStore | undefined,
+  options: { readonly journalNames: readonly string[]; readonly shelf: string | null },
+): readonly DecorationBinding[] {
+  return gatherBindings(journals, store, {
+    journalNames: options.journalNames,
+    shelf: options.shelf,
+    includeCalendar: true,
+    filter: (binding) => {
+      const config = journals.get(binding.journalName).getOrUndefined();
+      if (config?.write.type !== "custom") return true;
+      return hasOffsetCondition(binding.decoration);
+    },
+  });
+}
+
+export function gatherIntervalBindings(
+  journals: JournalsRepository,
+  store: DecorationsStore | undefined,
+  options: { readonly journalName: string; readonly shelf: string | null },
+): readonly DecorationBinding[] {
+  return gatherBindings(journals, store, {
+    journalNames: [options.journalName],
+    shelf: options.shelf,
+    includeCalendar: false,
+    filter: (binding) => !hasOffsetCondition(binding.decoration),
+  });
+}
+```
+
+Import `hasOffsetCondition` from `./engine` and `DecorationsStore` / `JournalsRepository` as the file's existing imports require.
+
+- [ ] **Step 4: Run to verify they pass**
+
+```bash
+npx vitest run src/decorations/gather-bindings.test.ts
+```
+
+Expected: PASS.
+
+- [ ] **Step 5: Repoint both modals**
+
+In `src/decorations/ui/DecorationCellModal.vue`, replace the body of `bindingsFor()` with:
+
+```ts
+function bindingsFor(): readonly DecorationBinding[] {
+  if (entry.kind === "interval") {
+    return gatherIntervalBindings(journals, store, { journalName: entry.journalName, shelf: shelf.value });
+  }
+  return gatherFixedBindings(journals, store, { journalNames: journalNames.value, shelf: shelf.value });
+}
+```
+
+and delete the now-redundant WHY comment above it — the rule's explanation now lives with the helpers. Keep the comment that explains what the _entry_ discriminates, if the file has one.
+
+In `src/decorations/ui/DecorationBreakdownModal.vue`, replace the `gatherBindings({... includeCalendar: true, filter: ...})` call in the `cells` computed with `gatherFixedBindings(journals, store, { journalNames: journalNames.value, shelf: shelf.value })`, and the per-interval `gatherBindings({... includeCalendar: false, filter: ...})` call with `gatherIntervalBindings(journals, store, { journalName: name, shelf: shelf.value })`. Delete both inlined filters and their comments. Remove the `gatherBindings` and `hasOffsetCondition` imports if nothing else in the file uses them.
+
+- [ ] **Step 6: Run the covering suites**
+
+```bash
+npx vitest run src/decorations/
+```
+
+Expected: PASS. `DecorationBreakdownModal.test.ts` and `DecorationCellModal.test.ts` are the real regression net here — they already cover both filter directions, so a botched extraction fails them.
+
+- [ ] **Step 7: Run the gates**
+
+```bash
+npm test && npm run check:types && npm run check:lint
+```
+
+- [ ] **Step 8: Commit**
+
+```bash
+git add src/decorations/
+git commit -m "refactor(decorations): extract the fixed/interval binding rule"
+```
+
+---
+
 ## Self-Review
 
 **Spec coverage**
