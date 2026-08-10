@@ -366,7 +366,7 @@
 	"command_palette_shelf_name": "Estante: {shelf}: {name}",
 	"command_open_no_next": "No hay ninguna otra nota después de esta.",
 	"command_open_no_previous": "No hay ninguna nota anterior a esta.",
-	"command_open_needs_active_note": "Primero abra una nota a la que se aplique este comando.",
+	"command_open_needs_active_note": "Primero abra una nota del diario.",
 	"command_open_unavailable": "No hay ninguna nota que abrir.",
 	"command_type_label": [
 		{

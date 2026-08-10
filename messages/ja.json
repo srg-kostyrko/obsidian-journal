@@ -366,7 +366,7 @@
 	"command_palette_shelf_name": "棚: {shelf}: {name}",
 	"command_open_no_next": "このノートの後に続くノートはありません。",
 	"command_open_no_previous": "このノートの前には、ノートはありません。",
-	"command_open_needs_active_note": "先に、このコマンドの対象となるノートを開いてください。",
+	"command_open_needs_active_note": "先にジャーナルノートを開いてください。",
 	"command_open_unavailable": "開くノートがありません。",
 	"command_type_label": [
 		{

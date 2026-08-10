@@ -197,9 +197,17 @@ describe("DynamicCommandRegistry availability", () => {
     expect(host.commands.get("cmd-1")?.checkCallback?.(true)).toBe(false);
   });
 
-  it("is unavailable for only_open_note context without a matching active note", async () => {
+  it("is unavailable for only_open_note context without an active journal note", async () => {
     const { host, commandsRepo, journalsRepo } = await build();
     journalsRepo.create("daily", { type: "day" });
+    commandsRepo.create("cmd-1", makeCommand({ context: "only_open_note" }));
+    expect(host.commands.get("cmd-1")?.checkCallback?.(true)).toBe(false);
+  });
+
+  it("is unavailable for only_open_note context when the active note belongs to no journal", async () => {
+    const { host, commandsRepo, journalsRepo, workspace } = await build();
+    journalsRepo.create("daily", { type: "day" });
+    workspace.setActive("inbox/scratch.md" as VaultPath);
     commandsRepo.create("cmd-1", makeCommand({ context: "only_open_note" }));
     expect(host.commands.get("cmd-1")?.checkCallback?.(true)).toBe(false);
   });
@@ -209,6 +217,17 @@ describe("DynamicCommandRegistry availability", () => {
     journalsRepo.create("daily", { type: "day" });
     const path = "daily/2026-05-21.md" as VaultPath;
     index.register({ journalName: "daily", anchor: anchor("2026-05-21"), path });
+    workspace.setActive(path);
+    commandsRepo.create("cmd-1", makeCommand({ context: "only_open_note" }));
+    expect(host.commands.get("cmd-1")?.checkCallback?.(true)).toBe(true);
+  });
+
+  it("is available for only_open_note context when the active note belongs to another journal", async () => {
+    const { host, commandsRepo, journalsRepo, index, workspace } = await build();
+    journalsRepo.create("daily", { type: "day" });
+    journalsRepo.create("monthly", { type: "month" });
+    const path = "monthly/2026-05.md" as VaultPath;
+    index.register({ journalName: "monthly", anchor: anchor("2026-05-01"), path });
     workspace.setActive(path);
     commandsRepo.create("cmd-1", makeCommand({ context: "only_open_note" }));
     expect(host.commands.get("cmd-1")?.checkCallback?.(true)).toBe(true);
@@ -299,6 +318,54 @@ describe("DynamicCommandRegistry execution", () => {
         existingOnly: false,
       },
       { context: { command: "Cmd" } },
+    );
+  });
+
+  it("dates an open_note command from a note in a journal it does not target", async () => {
+    const { host, commandsRepo, journalsRepo, index, workspace, flows } = await build();
+    journalsRepo.create("daily", { type: "day" });
+    journalsRepo.create("monthly", { type: "month" });
+    const path = "daily/2026-05-21.md" as VaultPath;
+    index.register({ journalName: "daily", anchor: anchor("2026-05-21"), path });
+    workspace.setActive(path);
+    const invokeSpy = vi
+      .spyOn(flows, "invoke")
+      .mockReturnValue(AsyncResult.ok({ path: "monthly/x.md", created: false }));
+    commandsRepo.create(
+      "cmd-1",
+      makeCommand({ target: { kind: "all", writeType: "month" }, type: "next", context: "open_note" }),
+    );
+
+    host.commands.get("cmd-1")?.checkCallback?.(false);
+
+    expect(invokeSpy).toHaveBeenCalledWith(
+      OpenDateFlow,
+      expect.objectContaining({ anchor: anchor("2026-06-01"), journalNames: ["monthly"] }),
+      expect.anything(),
+    );
+  });
+
+  it("dates an only_open_note command from a note in a journal it does not target", async () => {
+    const { host, commandsRepo, journalsRepo, index, workspace, flows } = await build();
+    journalsRepo.create("daily", { type: "day" });
+    journalsRepo.create("monthly", { type: "month" });
+    const path = "daily/2026-05-21.md" as VaultPath;
+    index.register({ journalName: "daily", anchor: anchor("2026-05-21"), path });
+    workspace.setActive(path);
+    const invokeSpy = vi
+      .spyOn(flows, "invoke")
+      .mockReturnValue(AsyncResult.ok({ path: "monthly/x.md", created: false }));
+    commandsRepo.create(
+      "cmd-1",
+      makeCommand({ target: { kind: "all", writeType: "month" }, type: "next", context: "only_open_note" }),
+    );
+
+    host.commands.get("cmd-1")?.checkCallback?.(false);
+
+    expect(invokeSpy).toHaveBeenCalledWith(
+      OpenDateFlow,
+      expect.objectContaining({ anchor: anchor("2026-06-01"), journalNames: ["monthly"] }),
+      expect.anything(),
     );
   });
 

@@ -366,7 +366,7 @@
 	"command_palette_shelf_name": "선반: {shelf}: {name}",
 	"command_open_no_next": "이 노트 다음에는 다음 노트가 없습니다.",
 	"command_open_no_previous": "이 글 이전에는 이전 글이 없습니다.",
-	"command_open_needs_active_note": "이 명령이 적용되는 노트를 먼저 여세요.",
+	"command_open_needs_active_note": "저널 노트를 먼저 여세요.",
 	"command_open_unavailable": "열 노트가 없습니다.",
 	"command_type_label": [
 		{

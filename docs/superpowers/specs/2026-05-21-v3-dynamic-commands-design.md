@@ -61,8 +61,7 @@ unique id. The id doubles as the Obsidian command id when the registry calls
 
 ```ts
 type CommandTarget =
-  | { kind: "all"; writeType: "day" | "week" | "month" | "quarter" | "year" }
-  | { kind: "journal"; journalName: string };
+  { kind: "all"; writeType: "day" | "week" | "month" | "quarter" | "year" } | { kind: "journal"; journalName: string };
 
 type CommandType =
   | "same"
@@ -167,8 +166,8 @@ Each `CommandRegistration` it builds:
 - `ribbon` — the `showInRibbon` flag.
 - `check` — true when there is at least one candidate journal, the command's
   `type` is in `supportedTypes(writeType)`, the reference and target anchors
-  resolve, and — for `only_open_note` context — the active note belongs to a
-  candidate journal.
+  resolve, and — for `only_open_note` context — a journal note is active (any
+  journal's, not only a candidate one).
 - `execute` — resolve the target anchor, then
   `Flows.invoke(OpenDateFlow, { anchor, journalNames, openMode, existingOnly: false })`.
   `OpenDateFlow` already handles the multi-journal picker and note creation.

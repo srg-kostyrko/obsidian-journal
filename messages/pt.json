@@ -366,7 +366,7 @@
 	"command_palette_shelf_name": "Prateleira: {shelf}: {name}",
 	"command_open_no_next": "Não há nota seguinte depois desta.",
 	"command_open_no_previous": "Não há nenhuma nota anterior a esta.",
-	"command_open_needs_active_note": "Abra primeiro uma nota à qual este comando se aplique.",
+	"command_open_needs_active_note": "Abra primeiro uma nota do diário.",
 	"command_open_unavailable": "Não há nenhuma nota para abrir.",
 	"command_type_label": [
 		{

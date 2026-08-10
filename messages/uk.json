@@ -366,7 +366,7 @@
 	"command_palette_shelf_name": "Полиця: {shelf}: {name}",
 	"command_open_no_next": "Після цієї нотатки наступної немає.",
 	"command_open_no_previous": "Перед цією нотаткою немає жодної попередньої.",
-	"command_open_needs_active_note": "Спочатку відкрийте нотатку, до якої застосовується ця команда.",
+	"command_open_needs_active_note": "Спочатку відкрийте нотатку журналу.",
 	"command_open_unavailable": "Немає нотатки для відкриття.",
 	"command_type_label": [
 		{

@@ -366,7 +366,7 @@
 	"command_palette_shelf_name": "Étagère : {shelf} : {name}",
 	"command_open_no_next": "Il n'y a pas de note suivante après celle-ci.",
 	"command_open_no_previous": "Il n'y a pas de note précédente.",
-	"command_open_needs_active_note": "Ouvrez d’abord une note à laquelle cette commande s’applique.",
+	"command_open_needs_active_note": "Ouvrez d’abord une note de journal.",
 	"command_open_unavailable": "Il n’y a aucune note à ouvrir.",
 	"command_type_label": [
 		{

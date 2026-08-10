@@ -366,7 +366,7 @@
 	"command_palette_shelf_name": "Mensola: {shelf}: {name}",
 	"command_open_no_next": "Non c'è una nota successiva a questa.",
 	"command_open_no_previous": "Non esiste alcuna nota precedente a questa.",
-	"command_open_needs_active_note": "Apri prima una nota a cui si applica questo comando.",
+	"command_open_needs_active_note": "Apri prima una nota del diario.",
 	"command_open_unavailable": "Non c’è nessuna nota da aprire.",
 	"command_type_label": [
 		{

@@ -366,7 +366,7 @@
 	"command_palette_shelf_name": "Regal: {shelf}: {name}",
 	"command_open_no_next": "Nach dieser Notiz folgt keine weitere.",
 	"command_open_no_previous": "Vor diesem Eintrag gibt es keinen vorherigen Eintrag.",
-	"command_open_needs_active_note": "Öffnen Sie zuerst eine Notiz, auf die dieser Befehl zutrifft.",
+	"command_open_needs_active_note": "Öffnen Sie zuerst eine Journalnotiz.",
 	"command_open_unavailable": "Es gibt keine Notiz zum Öffnen.",
 	"command_type_label": [
 		{

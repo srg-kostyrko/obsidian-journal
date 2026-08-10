@@ -366,7 +366,7 @@
 	"command_palette_shelf_name": "Полка: {shelf}: {name}",
 	"command_open_no_next": "После этой заметки следующей нет.",
 	"command_open_no_previous": "Предшествующей заметки нет.",
-	"command_open_needs_active_note": "Сначала откройте заметку, к которой применяется эта команда.",
+	"command_open_needs_active_note": "Сначала откройте заметку журнала.",
 	"command_open_unavailable": "Нет заметки для открытия.",
 	"command_type_label": [
 		{

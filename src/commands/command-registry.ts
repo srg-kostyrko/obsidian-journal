@@ -102,7 +102,7 @@ export class DynamicCommandRegistry {
 
   #plan(command: CommandConfig): Option<CommandPlan> {
     return this.#targetJournals(command).flatMap((journalNames) =>
-      this.#reference(command, journalNames).flatMap((reference) =>
+      this.#reference(command).flatMap((reference) =>
         // Listing and running must share one predicate. OpenDateFlow drops journals whose
         // timeline excludes the anchor, so planning without that filter lets a command list in
         // the palette, run, and end in NoApplicableJournals — a flow error that never reaches
@@ -120,15 +120,13 @@ export class DynamicCommandRegistry {
     if (!isAvailableType(command.type)) return this.#plan(command).isSome();
     // An available-type command lists whenever it has a reference date to search from: whether
     // a note exists in that direction is answered by running it, not by hiding it.
-    return this.#targetJournals(command)
-      .flatMap((journalNames) => this.#reference(command, journalNames))
-      .isSome();
+    return this.#targetJournals(command).isSome() && this.#reference(command).isSome();
   }
 
   #unavailableNotice(command: CommandConfig): string {
     const journalNames = this.#targetJournals(command);
     if (!journalNames.isSome()) return m.command_open_unavailable();
-    if (this.#reference(command, journalNames.value).isNone()) return m.command_open_needs_active_note();
+    if (this.#reference(command).isNone()) return m.command_open_needs_active_note();
     return match(command.type)
       .with("previous_available", () => m.command_open_no_previous())
       .with("next_available", () => m.command_open_no_next())
@@ -161,7 +159,10 @@ export class DynamicCommandRegistry {
       .exhaustive();
   }
 
-  #reference(command: CommandConfig, candidates: readonly string[]): Option<CalendarDate> {
+  // Any journal note dates the command, not just one of its own target journals: the open note
+  // supplies a date, and each target journal answers for the period of its own granularity
+  // containing it — a "next month" command run from a daily note means the month that day sits in.
+  #reference(command: CommandConfig): Option<CalendarDate> {
     return match(command.context)
       .with("today", () => Option.some(CalendarDate.today()))
       .with("open_note", () =>
@@ -171,11 +172,7 @@ export class DynamicCommandRegistry {
             .getOr(CalendarDate.today()),
         ),
       )
-      .with("only_open_note", () =>
-        this.#activeEntry()
-          .filter((entry) => candidates.includes(entry.journalName))
-          .map((entry) => CalendarDate.fromAnchor(entry.anchor)),
-      )
+      .with("only_open_note", () => this.#activeEntry().map((entry) => CalendarDate.fromAnchor(entry.anchor)))
       .exhaustive();
   }
 
