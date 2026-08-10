@@ -29,6 +29,28 @@ interface DeletePromptingFileManager {
   promptForFileDeletion?(file: TFile): void;
 }
 
+// Declaring the section order is also undocumented, though core calls it on every file menu
+// it builds before triggering the event.
+interface SectionedMenu {
+  addSections?(sections: readonly string[]): void;
+}
+
+// Obsidian sorts a menu by section on show, and items carrying no section sink below every
+// registered one — so without this our contributed items landed under the trailing Delete.
+// This is core's own file-explorer order, "" being the slot those section-less items take.
+const FILE_MENU_SECTIONS = [
+  "title",
+  "open",
+  "action-primary",
+  "action",
+  "info",
+  "info.copy",
+  "view",
+  "system",
+  "",
+  "danger",
+];
+
 export class WorkspaceService {
   readonly #app = inject(InternalObsidianAppToken);
   readonly #plugin = inject(InternalPluginToken);
@@ -149,6 +171,7 @@ export class WorkspaceService {
     const file = this.#app.vault.getAbstractFileByPath(path);
     if (!(file instanceof TFile)) return false;
     const menu = into ?? new Menu();
+    (menu as SectionedMenu).addSections?.(FILE_MENU_SECTIONS);
     this.#app.workspace.trigger("file-menu", menu, file, "file-explorer-context-menu", null);
     // The file-menu event does not guarantee a Delete entry; append one like v2 did.
     menu.addItem((item) =>

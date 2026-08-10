@@ -276,6 +276,26 @@ describe("calendar view", () => {
         }
       });
 
+      it("sorts the explain item above the trailing Delete entry", async () => {
+        await rightClickCell(dayAnchor(DECO_DAY.title));
+        try {
+          await browser.waitUntil(
+            async () => {
+              const titles = await menuItemTitles();
+              // Obsidian re-sorts a menu by section as it shows it, so insertion order proves
+              // nothing — only the rendered order does. Items carrying no section sink below
+              // every registered one unless the menu declares where the "" slot sits.
+              const explain = titles.indexOf(EXPLAIN_MENU_ITEM);
+              const remove = titles.indexOf("Delete");
+              return explain !== -1 && remove !== -1 && explain < remove;
+            },
+            { timeoutMsg: "the explain item did not render above Delete" },
+          );
+        } finally {
+          await closeAnyMenu();
+        }
+      });
+
       it("opens no menu on an undecorated cell with no note", async () => {
         await rightClickCell(dayAnchor(DECO_DAY.control));
         try {
