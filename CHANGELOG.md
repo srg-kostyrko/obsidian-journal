@@ -19,6 +19,8 @@ All notable changes to this project will be documented in this file.
 - New `journal_link` template variable.
 - Hide specific weekdays on the calendar with a per-weekday picker.
 - Highlight calendar days by date or weekday without attaching the rule to a journal: set decorations vault-wide, or per shelf so they apply only while that shelf is in view.
+- See why a calendar cell looks the way it does: right-click it for a breakdown naming the rule behind each color, border, and mark, and the rules those overrode. The breakdown follows the shelf you are viewing, and a custom interval explains itself rather than the day it begins on.
+- Tell a decoration that never fires from one whose day simply has not come up: every rule in settings reports whether it has matched recently, and an inspector shows everything decorating a chosen date across all three scopes.
 - Meaningful, stable CSS class names on calendar and code-block elements for easier theming.
 
 ### Bug Fixes
