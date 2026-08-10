@@ -7,7 +7,6 @@ export type BreakdownCell =
   | {
       readonly kind: "fixed";
       readonly period: Period;
-      readonly isEntry: boolean;
       readonly attribution: CellAttribution;
       readonly styles: readonly JournalDecorationStyle[];
     }
@@ -15,7 +14,6 @@ export type BreakdownCell =
       readonly kind: "interval";
       readonly period: Period;
       readonly journalName: string;
-      readonly isEntry: false;
       readonly attribution: CellAttribution;
       readonly styles: readonly JournalDecorationStyle[];
     };

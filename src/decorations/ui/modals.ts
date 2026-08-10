@@ -1,4 +1,3 @@
-import type { Period } from "@/calendar";
 import { m } from "@/i18n";
 import { defineModal } from "@/infrastructure/host/modals";
 
@@ -9,7 +8,7 @@ import type { BreakdownEntry } from "./breakdown-entry";
 
 export const decorationBreakdownModal = defineModal()({
   component: DecorationBreakdownModal,
-  title: (_: { period?: Period; shelf?: string | null }) => m.decoration_breakdown_title(),
+  title: (_: { shelf?: string | null }) => m.decoration_breakdown_title(),
   width: 700,
 });
 

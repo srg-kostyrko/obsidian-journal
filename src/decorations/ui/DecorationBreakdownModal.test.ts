@@ -1,10 +1,10 @@
 import userEvent from "@testing-library/user-event";
 import { cleanup, render, screen, within } from "@testing-library/vue";
 import { createNanoEvents } from "nanoevents";
-import { afterEach, beforeEach, describe, expect, it } from "vitest";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { reactive } from "vue";
 
-import { Calendar, DayPeriod, type AnchorString, type Period } from "@/calendar";
+import { Calendar, DayPeriod, type AnchorString } from "@/calendar";
 import { date, installTestCalendar, testCalendar } from "@/calendar/testing";
 import {
   DecorationEngine,
@@ -30,12 +30,6 @@ import { buildCalendarDecoration, buildCondition, buildDecoration, buildStyle } 
 
 import DecorationBreakdownModal from "./DecorationBreakdownModal.vue";
 
-const ANY_DATE_TEXT = m.decoration_condition_date_describe({
-  day: m.decoration_condition_date_any(),
-  month: m.decoration_condition_date_any(),
-  year: m.decoration_condition_date_any(),
-});
-
 interface Note {
   readonly journalName: string;
   readonly anchor: DayPeriod;
@@ -45,7 +39,6 @@ interface MountOptions {
   journals?: Record<string, JournalConfig>;
   shelves?: Record<string, ShelfConfig>;
   globalDecorations?: readonly CalendarDecoration[];
-  period?: Period;
   shelf?: string | null;
   // Registered into JournalsIndex before render, so has-note conditions resolve on the very
   // first computed read — JournalsIndex is event-based rather than Vue-reactive, so seeding it
@@ -84,7 +77,7 @@ function mount(options: MountOptions = {}) {
   container.register(ModalService).useValue(new FakeModalService() as unknown as ModalService);
 
   render(DecorationBreakdownModal, {
-    props: { period: options.period, shelf: options.shelf },
+    props: { shelf: options.shelf },
     global: {
       plugins: [
         {
@@ -118,63 +111,41 @@ const hasNoteDecoration: JournalDecoration = buildDecoration({
 describe("DecorationBreakdownModal", () => {
   let teardown: () => void;
   beforeEach(() => {
+    // The explorer defaults its anchor to CalendarDate.today(), so the fixtures' custom-journal
+    // intervals (anchored at 2026-05-25) need the system clock pinned there to stay date-stable.
+    vi.useFakeTimers({ toFake: ["Date"] });
+    vi.setSystemTime(new Date("2026-05-25T10:00:00Z"));
     ({ teardown } = installTestCalendar());
   });
   afterEach(() => {
     teardown();
     cleanup();
+    vi.useRealTimers();
   });
 
   it("shows a section for each decorated cell the date belongs to", () => {
-    const day = DayPeriod.containing(date("2026-05-25"));
     mount({
       journals: {
         daily: fixedJournal("daily", { type: "day" }, { decorations: [anyDayDecoration] }),
         weekly: fixedJournal("weekly", { type: "week" }, { decorations: [anyDayDecoration] }),
       },
-      period: day,
     });
 
     expect(screen.getAllByTestId("decoration-preview")).toHaveLength(2);
   });
 
   it("omits a cell no decoration matched", () => {
-    const day = DayPeriod.containing(date("2026-05-25"));
     mount({
       journals: {
         daily: fixedJournal("daily", { type: "day" }, { decorations: [anyDayDecoration] }),
         weekly: fixedJournal("weekly", { type: "week" }, { decorations: [] }),
       },
-      period: day,
     });
 
     expect(screen.getAllByTestId("decoration-preview")).toHaveLength(1);
   });
 
-  it("highlights the section for the entry-point cell", () => {
-    const day = DayPeriod.containing(date("2026-05-25"));
-    mount({
-      journals: {
-        daily: fixedJournal("daily", { type: "day" }, { decorations: [hasNoteDecoration] }),
-        weekly: fixedJournal("weekly", { type: "week" }, { decorations: [anyDayDecoration] }),
-      },
-      notes: [{ journalName: "daily", anchor: day }],
-      period: day,
-    });
-
-    // getByText throws on 0 or 2+ matches, so this alone proves the badge is singular.
-    const badge = screen.getByText(m.decoration_breakdown_entry_badge());
-    const entryRegion = badge.closest('[role="region"]');
-    expect(entryRegion).not.toBeNull();
-
-    // The entry point was the day cell (daily's has-note rule), not the week cell
-    // (weekly's date-wildcard rule) — proves the highlighted section is the right one.
-    expect(within(entryRegion as HTMLElement).getByText(m.decoration_condition_has_note_describe())).toBeTruthy();
-    expect(within(entryRegion as HTMLElement).queryByText(ANY_DATE_TEXT)).toBeNull();
-  });
-
   it("admits a custom journal's offset decoration to the day cell", () => {
-    const day = DayPeriod.containing(date("2026-05-25"));
     const offsetDecoration: JournalDecoration = buildDecoration({
       mode: "or",
       conditions: [buildCondition("offset", { offset: 1 })],
@@ -184,7 +155,6 @@ describe("DecorationBreakdownModal", () => {
       journals: {
         sprint: customJournal("sprint", "week", 2, "2026-05-25", { decorations: [offsetDecoration] }),
       },
-      period: day,
     });
 
     expect(screen.getByText(m.decoration_condition_offset_describe({ side: "start", day: 1 }))).toBeTruthy();
@@ -202,13 +172,11 @@ describe("DecorationBreakdownModal", () => {
         sprint: customJournal("sprint", "week", 2, "2026-05-25", { decorations: [nonOffsetDecoration] }),
       },
       notes: [{ journalName: "sprint", anchor: day }],
-      period: day,
     });
 
     // The day cell gets zero contributions once the offset-only filter excludes this
-    // decoration, so the entry-point section (the day cell, per `period: day`) never renders.
-    // The decoration still surfaces — in the interval section, covered below.
-    expect(screen.queryByText(m.decoration_breakdown_entry_badge())).toBeNull();
+    // decoration, so no day section renders. It still surfaces in the interval section below.
+    expect(screen.queryByText(m.decoration_breakdown_cell_heading({ kind: "day", label: "2026-05-25" }))).toBeNull();
   });
 
   it("shows an interval section for a custom journal's non-offset decoration", () => {
@@ -218,7 +186,6 @@ describe("DecorationBreakdownModal", () => {
         sprint: customJournal("sprint", "week", 2, "2026-05-25", { decorations: [hasNoteDecoration] }),
       },
       notes: [{ journalName: "sprint", anchor: day }],
-      period: day,
     });
 
     const heading = screen.getByText(
@@ -243,7 +210,6 @@ describe("DecorationBreakdownModal", () => {
         }),
       },
       notes: [{ journalName: "sprint", anchor: day }],
-      period: day,
     });
 
     const heading = screen.getByText(
@@ -256,31 +222,6 @@ describe("DecorationBreakdownModal", () => {
     ).toBeNull();
   });
 
-  it("highlights only the day section when opened from a day cell that starts an interval", () => {
-    const day = DayPeriod.containing(date("2026-05-25"));
-    mount({
-      journals: {
-        daily: fixedJournal("daily", { type: "day" }, { decorations: [anyDayDecoration] }),
-        sprint: customJournal("sprint", "week", 2, "2026-05-25", { decorations: [hasNoteDecoration] }),
-      },
-      notes: [{ journalName: "sprint", anchor: day }],
-      period: day,
-    });
-
-    // getByText throws on 2+ matches, so this alone proves only one section carries the badge.
-    const badge = screen.getByText(m.decoration_breakdown_entry_badge());
-    const dayRegion = badge.closest('[role="region"]');
-    expect(dayRegion).not.toBeNull();
-
-    const intervalHeading = screen.getByText(
-      m.decoration_breakdown_interval_heading({ journal: "sprint", label: "2026-05-25" }),
-    );
-    const intervalRegion = intervalHeading.closest('[role="region"]');
-    expect(intervalRegion).not.toBeNull();
-    expect(intervalRegion).not.toBe(dayRegion);
-    expect(within(intervalRegion as HTMLElement).queryByText(m.decoration_breakdown_entry_badge())).toBeNull();
-  });
-
   it("omits an interval section for a journal whose timeline excludes the interval", () => {
     const day = DayPeriod.containing(date("2026-05-25"));
     mount({
@@ -291,7 +232,6 @@ describe("DecorationBreakdownModal", () => {
         }),
       },
       notes: [{ journalName: "sprint", anchor: day }],
-      period: day,
     });
 
     expect(
@@ -300,13 +240,11 @@ describe("DecorationBreakdownModal", () => {
   });
 
   it("re-resolves when the shelf selection changes", async () => {
-    const day = DayPeriod.containing(date("2026-05-25"));
     mount({
       shelves: {
         work: { name: "work", journals: [], decorations: [] },
         home: { name: "home", journals: [], decorations: [anyDayCalendarDecoration] },
       },
-      period: day,
     });
 
     // "All journals" unions every shelf's list, so narrowing to a shelf that owns none drops it.
@@ -318,13 +256,11 @@ describe("DecorationBreakdownModal", () => {
   });
 
   it("resolves against the shelf it was opened under", async () => {
-    const day = DayPeriod.containing(date("2026-05-25"));
     mount({
       shelves: {
         work: { name: "work", journals: [], decorations: [] },
         home: { name: "home", journals: [], decorations: [anyDayCalendarDecoration] },
       },
-      period: day,
       shelf: "work",
     });
 
@@ -338,8 +274,7 @@ describe("DecorationBreakdownModal", () => {
   });
 
   it("shows the empty state for a date nothing decorates", () => {
-    const day = DayPeriod.containing(date("2026-05-25"));
-    mount({ period: day });
+    mount({});
 
     expect(screen.getByText(m.decoration_breakdown_empty())).toBeTruthy();
   });

@@ -1,7 +1,7 @@
 <script setup lang="ts">
-import { computed, ref, toRaw } from "vue";
+import { computed, ref } from "vue";
 
-import { CalendarDate, periodOfKind, type AnchorString, type Period, type PeriodKind } from "@/calendar";
+import { CalendarDate, periodOfKind, type AnchorString, type PeriodKind } from "@/calendar";
 import { DatePicker, useAnchorField } from "@/calendar/ui";
 import { periodForJournal } from "@/code-blocks/nav/period-for-journal";
 import { m } from "@/i18n";
@@ -22,7 +22,7 @@ import DecorationBreakdownSection from "./DecorationBreakdownSection.vue";
 
 import type { BreakdownCell } from "./breakdown-cell";
 
-const props = defineProps<{ period?: Period; shelf?: string | null }>();
+const props = defineProps<{ shelf?: string | null }>();
 
 const journals = useService(JournalsRepository);
 const shelves = useService(ShelvesRepository);
@@ -32,15 +32,8 @@ const cycle = useService(CycleService);
 const timeline = useService(TimelineService);
 const indexVersion = useIndexVersion();
 
-const initialPeriod = toRaw(props.period);
-const anchor = ref<AnchorString>(
-  initialPeriod ? toRaw(initialPeriod.anchor).toAnchor() : CalendarDate.today().toAnchor(),
-);
+const anchor = ref<AnchorString>(CalendarDate.today().toAnchor());
 const datePickerModel = useAnchorField({ anchor, picking: "day" });
-
-// Same kind + anchor as the entry-point period identifies "the cell it came from" — a week's
-// anchor can coincide with one of its days, so kind must be part of the identity too.
-const entryKey = initialPeriod ? cellKey(initialPeriod.kind, initialPeriod.anchor.toAnchor()) : null;
 
 const shelf = ref<string | null>(props.shelf ?? null);
 const shelfModel = computed<string>({
@@ -92,7 +85,6 @@ const cells = computed<readonly BreakdownCell[]>(() => {
     out.push({
       kind: "fixed",
       period: cellPeriod,
-      isEntry: entryKey !== null && cellKey(cellPeriod.kind, cellPeriod.anchor.toAnchor()) === entryKey,
       attribution: attributeCell(contributions),
       styles: contributions.map((contribution) => contribution.style),
     });
@@ -124,7 +116,6 @@ const cells = computed<readonly BreakdownCell[]>(() => {
       kind: "interval",
       period: intervalPeriod,
       journalName: name,
-      isEntry: false,
       attribution: attributeCell(intervalContributions),
       styles: intervalContributions.map((contribution) => contribution.style),
     });

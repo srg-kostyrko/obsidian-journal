@@ -92,12 +92,7 @@ function clausesOf(source: DecorationSource): readonly Clause[] {
 
 <template>
   <div role="region" :aria-labelledby="headingId" class="decoration-breakdown__cell">
-    <h3 :id="headingId" class="decoration-breakdown__heading">
-      {{ headingOf(cell) }}
-      <span v-if="cell.isEntry" class="decoration-breakdown__entry-badge">{{
-        m.decoration_breakdown_entry_badge()
-      }}</span>
-    </h3>
+    <h3 :id="headingId" class="decoration-breakdown__heading">{{ headingOf(cell) }}</h3>
 
     <div class="decoration-breakdown__body">
       <DecorationPreview :styles="cell.styles" />
@@ -173,11 +168,6 @@ function clausesOf(source: DecorationSource): readonly Clause[] {
   display: flex;
   align-items: baseline;
   gap: var(--size-4-2);
-}
-.decoration-breakdown__entry-badge {
-  text-transform: uppercase;
-  font-size: 65%;
-  color: var(--text-accent);
 }
 .decoration-breakdown__body {
   display: flex;

@@ -72,7 +72,6 @@ function mountSection(options: {
   const cell: BreakdownCell = markRaw({
     kind: "fixed",
     period: DayPeriod.containing(date("2026-05-25")),
-    isEntry: false,
     attribution: attributeCell(options.contributions),
     styles: options.contributions.map((contribution) => contribution.style),
   });
@@ -199,7 +198,6 @@ describe("DecorationBreakdownSection", () => {
       kind: "interval",
       period: DayPeriod.containing(date("2026-05-25")),
       journalName: "sprint planning",
-      isEntry: false,
       attribution: attributeCell([]),
       styles: [],
     });

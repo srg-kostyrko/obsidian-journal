@@ -82,8 +82,8 @@ const cell = computed<BreakdownCell | null>(() => {
   const attribution = attributeCell(contributions);
   const styles = contributions.map((contribution) => contribution.style);
   return entry.kind === "interval"
-    ? { kind: "interval", period, journalName: entry.journalName, isEntry: false, attribution, styles }
-    : { kind: "fixed", period, isEntry: false, attribution, styles };
+    ? { kind: "interval", period, journalName: entry.journalName, attribution, styles }
+    : { kind: "fixed", period, attribution, styles };
 });
 </script>
 
