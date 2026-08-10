@@ -40,7 +40,7 @@ import {
   type JournalEntry,
   type NavBlockRow,
 } from "@/journals";
-import { fakeRepo } from "@/journals/testing";
+import { customJournal, fakeRepo } from "@/journals/testing";
 import { SettingsEventsToken, SettingsService, SliceDefinitionToken, type SettingsEvents } from "@/settings";
 import { ShelvesRepository, type ShelfConfig } from "@/shelves";
 import { TemplateEngine } from "@/templates";
@@ -126,6 +126,7 @@ interface Harness {
   flows: FakeFlows;
   shelves: FakeShelves;
   notices: FakeNoticeService;
+  modals: FakeModalService;
 }
 
 function buildHarness(journals: Record<string, JournalConfig>): Harness {
@@ -142,7 +143,8 @@ function buildHarness(journals: Record<string, JournalConfig>): Harness {
   container.register(ShelvesRepository).useValue(shelves as unknown as ShelvesRepository);
   const workspace = new FakeWorkspace();
   container.register(WorkspaceService).useValue(workspace as unknown as WorkspaceService);
-  container.register(ModalService).useValue(new FakeModalService() as unknown as ModalService);
+  const modals = new FakeModalService();
+  container.register(ModalService).useValue(modals as unknown as ModalService);
   const flows = new FakeFlows();
   const notices = new FakeNoticeService();
   container.register(NoticeService).useValue(notices);
@@ -161,7 +163,7 @@ function buildHarness(journals: Record<string, JournalConfig>): Harness {
   container.register(SettingsService).useClass(SettingsService);
   container.resolve(SettingsService).getSlice(decorationsSlice).state = { decorations: [] };
   container.register(DecorationsStore).useClass(DecorationsStore);
-  return { container, journalsRepo, index, workspace, flows, shelves, notices };
+  return { container, journalsRepo, index, workspace, flows, shelves, notices, modals };
 }
 
 function mount(h: Harness, path: string) {
@@ -809,6 +811,47 @@ describe("NavigationCodeBlock context menu", () => {
     if (target) await fireEvent.contextMenu(target);
 
     expect(h.workspace.pathsMenuCalls[0]?.extraItems).toEqual([]);
+  });
+
+  it("opens an interval entry from a custom journal's row", async () => {
+    const base = customJournal("sprint", "week", 2, "2026-05-25");
+    const journal: JournalConfig = {
+      ...base,
+      decorations: [
+        buildDecoration({
+          conditions: [buildCondition("date")],
+          styles: [buildStyle("corner", { placement: "top-left" })],
+        }),
+      ],
+      // "existing" mode avoids CycleService entirely for adjacent-period navigation, which the
+      // fake index in this suite does not support for custom journals — the fixture is not
+      // testing adjacent navigation, only the row's own context menu.
+      navBlock: {
+        ...base.navBlock,
+        type: "existing",
+        rows: [navRow({ template: "sprint", addDecorations: true })],
+      },
+    };
+    const h = buildHarness({ sprint: journal });
+    h.index.byPath.set("Sprint/2026-05-25.md", {
+      journalName: "sprint",
+      anchor: "2026-05-25" as AnchorString,
+      path: "Sprint/2026-05-25.md" as VaultPath,
+    });
+    mount(h, "Sprint/2026-05-25.md");
+
+    // With no previous/next existing entries registered, only the current block renders,
+    // so its row is the sole "sprint" match.
+    const target = screen.getAllByText("sprint")[0];
+    if (target) await fireEvent.contextMenu(target);
+
+    const items = h.workspace.pathsMenuCalls.at(-1)?.extraItems ?? [];
+    items[0]?.onClick();
+
+    expect(h.modals.lastOpen<{ entry: { kind: string; journalName?: string } }, void>().props.entry).toMatchObject({
+      kind: "interval",
+      journalName: "sprint",
+    });
   });
 });
 

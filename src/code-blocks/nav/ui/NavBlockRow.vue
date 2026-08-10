@@ -80,7 +80,12 @@ const decorationItems = useDecorationMenuItems(decorationCells, () => props.shel
 // Offering to explain decorations this row deliberately renders none of would be
 // incoherent from the user's side, so the menu item tracks the same flag the template does.
 function contextMenuItems(period: Period): readonly MenuItemSpec[] {
-  return props.row.addDecorations ? decorationItems(period) : [];
+  if (!props.row.addDecorations) return [];
+  // A custom journal's row IS the interval, and an interval is a "day"-kind period at its
+  // start anchor — indistinguishable from the day cell without saying so here.
+  return props.journal.write.type === "custom"
+    ? decorationItems({ kind: "interval", period, journalName: props.journal.name })
+    : decorationItems({ kind: "fixed", period });
 }
 
 const text = computed(() =>

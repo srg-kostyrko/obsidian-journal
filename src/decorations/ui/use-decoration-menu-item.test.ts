@@ -14,9 +14,10 @@ import { icons } from "@/ui/icons";
 import { cellKey } from "../engine";
 import { buildStyle } from "../testing";
 
-import { decorationBreakdownModal } from "./modals";
+import { decorationCellModal } from "./modals";
 import { useDecorationMenuItems } from "./use-decoration-menu-item";
 
+import type { BreakdownEntry } from "./breakdown-entry";
 import type { CellStyleRef } from "./cell-decoration-map-key";
 
 function date(s: string): CalendarDate {
@@ -33,14 +34,14 @@ function mountItems(
   cells: ReadonlyMap<string, CellStyleRef> | null,
   shelf: string | null = null,
 ): {
-  itemsFor: (period: Period) => readonly MenuItemSpec[];
+  itemsFor: (entry: BreakdownEntry) => readonly MenuItemSpec[];
   modals: FakeModalService;
 } {
   const modals = new FakeModalService();
   const container = new Container();
   container.register(ModalService).useValue(modals as unknown as ModalService);
 
-  const captured: { value: ((period: Period) => readonly MenuItemSpec[]) | null } = { value: null };
+  const captured: { value: ((entry: BreakdownEntry) => readonly MenuItemSpec[]) | null } = { value: null };
   const Host = defineComponent({
     setup() {
       captured.value = useDecorationMenuItems(cells, shelf);
@@ -82,7 +83,7 @@ describe("useDecorationMenuItems", () => {
 
     const { itemsFor } = mountItems(cells);
 
-    expect(itemsFor(period)).toEqual([]);
+    expect(itemsFor({ kind: "fixed", period })).toEqual([]);
   });
 
   it("contributes no item when no cell map was provided", () => {
@@ -90,7 +91,7 @@ describe("useDecorationMenuItems", () => {
 
     const { itemsFor } = mountItems(null);
 
-    expect(itemsFor(period)).toEqual([]);
+    expect(itemsFor({ kind: "fixed", period })).toEqual([]);
   });
 
   it("contributes an item for a cell carrying at least one style", () => {
@@ -98,32 +99,45 @@ describe("useDecorationMenuItems", () => {
     const cells = cellsWith(period, shallowRef([buildStyle("background")]));
 
     const { itemsFor } = mountItems(cells);
-    const items = itemsFor(period);
+    const items = itemsFor({ kind: "fixed", period });
 
     expect(items).toHaveLength(1);
     expect(items[0]).toMatchObject({ icon: icons.action.search });
   });
 
-  it("opens the breakdown modal for the clicked cell's period", () => {
+  it("opens the cell readout for the clicked cell", () => {
     const period = DayPeriod.containing(date("2026-05-25"));
     const cells = cellsWith(period, shallowRef([buildStyle("background")]));
 
     const { itemsFor, modals } = mountItems(cells);
-    const items = itemsFor(period);
-    items[0].onClick();
+    itemsFor({ kind: "fixed", period })[0].onClick();
 
-    const opened = modals.lastOpen<{ period: Period }, void>();
-    expect(opened.definition).toBe(decorationBreakdownModal);
-    expect(opened.props.period).toBe(period);
+    const opened = modals.lastOpen<{ entry: BreakdownEntry }, void>();
+    expect(opened.definition).toBe(decorationCellModal);
+    expect(opened.props.entry).toEqual({ kind: "fixed", period });
   });
 
-  it("scopes the breakdown it opens to the surface's shelf", () => {
+  it("scopes the readout it opens to the surface's shelf", () => {
     const period = DayPeriod.containing(date("2026-05-25"));
     const cells = cellsWith(period, shallowRef([buildStyle("background")]));
 
     const { itemsFor, modals } = mountItems(cells, "Work");
-    itemsFor(period)[0].onClick();
+    itemsFor({ kind: "fixed", period })[0].onClick();
 
     expect(modals.lastOpen<{ shelf: string | null }, void>().props.shelf).toBe("Work");
+  });
+
+  it("forwards an interval entry unchanged", () => {
+    const period = DayPeriod.containing(date("2026-05-25"));
+    const cells = cellsWith(period, shallowRef([buildStyle("background")]));
+
+    const { itemsFor, modals } = mountItems(cells);
+    itemsFor({ kind: "interval", period, journalName: "sprint" })[0].onClick();
+
+    expect(modals.lastOpen<{ entry: BreakdownEntry }, void>().props.entry).toEqual({
+      kind: "interval",
+      period,
+      journalName: "sprint",
+    });
   });
 });

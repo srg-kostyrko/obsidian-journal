@@ -1,6 +1,5 @@
 import { toValue, type MaybeRefOrGetter } from "vue";
 
-import type { Period } from "@/calendar";
 import { m } from "@/i18n";
 import type { MenuItemSpec } from "@/infrastructure/host";
 import { useModalService } from "@/infrastructure/host/modals";
@@ -8,8 +7,9 @@ import { icons } from "@/ui/icons";
 
 import { cellKey } from "../engine";
 
-import { decorationBreakdownModal } from "./modals";
+import { decorationCellModal } from "./modals";
 
+import type { BreakdownEntry } from "./breakdown-entry";
 import type { CellStyleRef } from "./cell-decoration-map-key";
 
 // Contributing nothing for an undecorated cell is what keeps a plain empty cell menu-less:
@@ -20,14 +20,15 @@ export function useDecorationMenuItems(
   // surface's shelf rather than all journals — otherwise it can name a winner the cell does
   // not render, or cite a journal that shelf excludes.
   shelf: MaybeRefOrGetter<string | null>,
-): (period: Period) => readonly MenuItemSpec[] {
+): (entry: BreakdownEntry) => readonly MenuItemSpec[] {
   // A surface with no decoration map can never have a decorated cell to explain, so it
   // should not have to provide ModalService just to mount this composable.
   if (cells === null) return () => [];
 
   const modals = useModalService();
 
-  return (period: Period): readonly MenuItemSpec[] => {
+  return (entry: BreakdownEntry): readonly MenuItemSpec[] => {
+    const { period } = entry;
     const styles = cells.get(cellKey(period.kind, period.anchor.toAnchor()))?.value ?? [];
     if (styles.length === 0) return [];
     return [
@@ -35,7 +36,7 @@ export function useDecorationMenuItems(
         title: m.decoration_explain_menu_item(),
         icon: icons.action.search,
         onClick: () => {
-          void modals.open(decorationBreakdownModal, { period, shelf: toValue(shelf) });
+          void modals.open(decorationCellModal, { entry, shelf: toValue(shelf) });
         },
       },
     ];

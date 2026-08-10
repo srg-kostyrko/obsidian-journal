@@ -65,7 +65,7 @@ export function useNotesCell(options: {
   const decorationItems = useDecorationMenuItems(options.decorations ?? null, () => toValue(options.shelf) ?? null);
 
   const openContextMenu = (period: Period, event: MouseEvent): void => {
-    workspace.openPathsMenu(existingPathsAt(period), event, decorationItems(period));
+    workspace.openPathsMenu(existingPathsAt(period), event, decorationItems({ kind: "fixed", period }));
   };
 
   return { open, openContextMenu, openPreview, isActive, isActionable };
