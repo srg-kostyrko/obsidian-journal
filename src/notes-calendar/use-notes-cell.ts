@@ -23,6 +23,7 @@ export function useNotesCell(options: {
   // Passed in rather than injected: the views that call this also call useCellDecorations,
   // and a component's own provide() is invisible to its own inject().
   decorations?: ReadonlyMap<string, CellStyleRef> | null;
+  shelf?: MaybeRefOrGetter<string | null>;
 }): NotesCellApi {
   const flows = useService(Flows);
   const workspace = useService(WorkspaceService);
@@ -61,7 +62,7 @@ export function useNotesCell(options: {
     workspace.previewFirstPath(existingPathsAt(period), event);
   };
 
-  const decorationItems = useDecorationMenuItems(options.decorations ?? null);
+  const decorationItems = useDecorationMenuItems(options.decorations ?? null, () => toValue(options.shelf) ?? null);
 
   const openContextMenu = (period: Period, event: MouseEvent): void => {
     workspace.openPathsMenu(existingPathsAt(period), event, decorationItems(period));

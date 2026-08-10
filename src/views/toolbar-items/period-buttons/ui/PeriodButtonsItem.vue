@@ -67,7 +67,7 @@ const cells = useCellDecorations({
   periods: () => badges.value.map((badge) => badge.period),
   journalNames: () => scope.fixed.value,
 });
-const decorationItems = useDecorationMenuItems(cells);
+const decorationItems = useDecorationMenuItems(cells, () => context.shelf.value);
 
 function isActive(badge: Badge): boolean {
   const active = activeVM.active.value;

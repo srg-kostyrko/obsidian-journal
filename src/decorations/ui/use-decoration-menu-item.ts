@@ -1,3 +1,5 @@
+import { toValue, type MaybeRefOrGetter } from "vue";
+
 import type { Period } from "@/calendar";
 import { m } from "@/i18n";
 import type { MenuItemSpec } from "@/infrastructure/host";
@@ -14,6 +16,10 @@ import type { CellStyleRef } from "./cell-decoration-map-key";
 // the host only builds a menu when there are paths or contributed items.
 export function useDecorationMenuItems(
   cells: ReadonlyMap<string, CellStyleRef> | null,
+  // A shelf narrows which decorations painted the cell, so the breakdown resolves against the
+  // surface's shelf rather than all journals — otherwise it can name a winner the cell does
+  // not render, or cite a journal that shelf excludes.
+  shelf: MaybeRefOrGetter<string | null>,
 ): (period: Period) => readonly MenuItemSpec[] {
   // A surface with no decoration map can never have a decorated cell to explain, so it
   // should not have to provide ModalService just to mount this composable.
@@ -29,7 +35,7 @@ export function useDecorationMenuItems(
         title: m.decoration_explain_menu_item(),
         icon: icons.action.search,
         onClick: () => {
-          void modals.open(decorationBreakdownModal, { period });
+          void modals.open(decorationBreakdownModal, { period, shelf: toValue(shelf) });
         },
       },
     ];

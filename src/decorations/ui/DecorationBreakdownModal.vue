@@ -33,7 +33,7 @@ import type { JournalDecoration, JournalDecorationStyle } from "../config";
 import type { DecorationOwner } from "../owner";
 import type { Placement } from "../resolve-cell";
 
-const props = defineProps<{ period?: Period }>();
+const props = defineProps<{ period?: Period; shelf?: string | null }>();
 
 const journals = useService(JournalsRepository);
 const shelves = useService(ShelvesRepository);
@@ -54,7 +54,7 @@ const datePickerModel = useAnchorField({ anchor, picking: "day" });
 // anchor can coincide with one of its days, so kind must be part of the identity too.
 const entryKey = initialPeriod ? cellKey(initialPeriod.kind, initialPeriod.anchor.toAnchor()) : null;
 
-const shelf = ref<string | null>(null);
+const shelf = ref<string | null>(props.shelf ?? null);
 const shelfModel = computed<string>({
   get: () => shelf.value ?? "",
   set: (value) => {

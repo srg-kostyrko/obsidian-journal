@@ -46,6 +46,7 @@ const props = defineProps<{
   // Which provided decoration map a per-row decoration draws from. Omitted (the custom-interval
   // view) falls back to the default scope; the nav code block passes its per-row scope.
   decorationScope?: CellDecorationScope;
+  shelf?: string | null;
 }>();
 
 const journals = useService(JournalsRepository);
@@ -74,7 +75,7 @@ const shelfJournals = computed<readonly JournalConfig[]>(() =>
 const target = computed(() => resolveLinkTarget(props.row, props.journal, shelfJournals.value, entry.value));
 
 const decorationCells = inject(props.decorationScope?.map ?? CellDecorationMapKey, null);
-const decorationItems = useDecorationMenuItems(decorationCells);
+const decorationItems = useDecorationMenuItems(decorationCells, () => props.shelf ?? null);
 
 // Offering to explain decorations this row deliberately renders none of would be
 // incoherent from the user's side, so the menu item tracks the same flag the template does.

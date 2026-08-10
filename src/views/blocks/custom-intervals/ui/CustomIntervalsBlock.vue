@@ -105,6 +105,7 @@ useCellDecorations({
           :journal="section.journal"
           :ref-date="entry.anchor"
           :period="periodForJournal(section.journal.write, entry.anchor)"
+          :shelf="context.shelf.value"
         />
       </div>
     </section>

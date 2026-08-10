@@ -29,7 +29,10 @@ function renderDiv() {
   return h("div");
 }
 
-function mountItems(cells: ReadonlyMap<string, CellStyleRef> | null): {
+function mountItems(
+  cells: ReadonlyMap<string, CellStyleRef> | null,
+  shelf: string | null = null,
+): {
   itemsFor: (period: Period) => readonly MenuItemSpec[];
   modals: FakeModalService;
 } {
@@ -40,7 +43,7 @@ function mountItems(cells: ReadonlyMap<string, CellStyleRef> | null): {
   const captured: { value: ((period: Period) => readonly MenuItemSpec[]) | null } = { value: null };
   const Host = defineComponent({
     setup() {
-      captured.value = useDecorationMenuItems(cells);
+      captured.value = useDecorationMenuItems(cells, shelf);
       return renderDiv;
     },
   });
@@ -112,5 +115,15 @@ describe("useDecorationMenuItems", () => {
     const opened = modals.lastOpen<{ period: Period }, void>();
     expect(opened.definition).toBe(decorationBreakdownModal);
     expect(opened.props.period).toBe(period);
+  });
+
+  it("scopes the breakdown it opens to the surface's shelf", () => {
+    const period = DayPeriod.containing(date("2026-05-25"));
+    const cells = cellsWith(period, shallowRef([buildStyle("background")]));
+
+    const { itemsFor, modals } = mountItems(cells, "Work");
+    itemsFor(period)[0].onClick();
+
+    expect(modals.lastOpen<{ shelf: string | null }, void>().props.shelf).toBe("Work");
   });
 });

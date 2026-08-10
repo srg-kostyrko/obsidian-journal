@@ -160,6 +160,7 @@ function openAdjacent(anchor: AnchorString | undefined, event: MouseEvent): void
         :period="periodForJournal(journal.write, adjacent.previous)"
         :block-scope="navBlockDecorationScope"
         :row-scope="navRowDecorationScope"
+        :shelf="decorationShelf"
       />
       <UiIconButton
         :icon="icons.nav.prev"
@@ -179,6 +180,7 @@ function openAdjacent(anchor: AnchorString | undefined, event: MouseEvent): void
       :period="periodForJournal(journal.write, currentAnchor)"
       :block-scope="navBlockDecorationScope"
       :row-scope="navRowDecorationScope"
+      :shelf="decorationShelf"
     />
 
     <div v-if="adjacent.next" class="nav-block-relative">
@@ -197,6 +199,7 @@ function openAdjacent(anchor: AnchorString | undefined, event: MouseEvent): void
         :period="periodForJournal(journal.write, adjacent.next)"
         :block-scope="navBlockDecorationScope"
         :row-scope="navRowDecorationScope"
+        :shelf="decorationShelf"
       />
     </div>
     <div v-else class="nav-block-placeholder" />

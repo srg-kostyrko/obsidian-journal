@@ -46,6 +46,7 @@ interface MountOptions {
   shelves?: Record<string, ShelfConfig>;
   globalDecorations?: readonly CalendarDecoration[];
   period?: Period;
+  shelf?: string | null;
   // Registered into JournalsIndex before render, so has-note conditions resolve on the very
   // first computed read — JournalsIndex is event-based rather than Vue-reactive, so seeding it
   // after mount would need a manual re-trigger instead of just asserting the rendered output.
@@ -83,7 +84,7 @@ function mount(options: MountOptions = {}) {
   container.register(ModalService).useValue(new FakeModalService() as unknown as ModalService);
 
   render(DecorationBreakdownModal, {
-    props: { period: options.period },
+    props: { period: options.period, shelf: options.shelf },
     global: {
       plugins: [
         {
@@ -411,6 +412,26 @@ describe("DecorationBreakdownModal", () => {
     await userEvent.selectOptions(screen.getByRole("combobox"), "work");
 
     expect(screen.getByText(m.decoration_breakdown_empty())).toBeTruthy();
+  });
+
+  it("resolves against the shelf it was opened under", async () => {
+    const day = DayPeriod.containing(date("2026-05-25"));
+    mount({
+      shelves: {
+        work: { name: "work", journals: [], decorations: [] },
+        home: { name: "home", journals: [], decorations: [anyDayCalendarDecoration] },
+      },
+      period: day,
+      shelf: "work",
+    });
+
+    expect(screen.getByText(m.decoration_breakdown_empty())).toBeTruthy();
+
+    // Widening to all journals unions every shelf, so home's rule surfaces — proving the
+    // empty state above came from the seeded scope and not from an unpopulated fixture.
+    await userEvent.selectOptions(screen.getByRole("combobox"), "");
+
+    expect(screen.getByTestId("decoration-preview")).toBeTruthy();
   });
 
   it("shows the empty state for a date nothing decorates", () => {

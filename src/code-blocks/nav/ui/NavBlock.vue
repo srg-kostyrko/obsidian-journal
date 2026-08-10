@@ -16,6 +16,7 @@ defineProps<{
   preventNavigation?: boolean;
   blockScope?: CellDecorationScope;
   rowScope?: CellDecorationScope;
+  shelf?: string | null;
 }>();
 </script>
 
@@ -30,6 +31,7 @@ defineProps<{
           :period
           :prevent-navigation="preventNavigation"
           :decoration-scope="rowScope"
+          :shelf
         />
         <slot name="rowAction" :index :is-first="index === 0" :is-last="index === block.rows.length - 1" />
       </div>
@@ -43,6 +45,7 @@ defineProps<{
           :period
           :prevent-navigation="preventNavigation"
           :decoration-scope="rowScope"
+          :shelf
         />
         <slot name="rowAction" :index :is-first="index === 0" :is-last="index === block.rows.length - 1" />
       </div>

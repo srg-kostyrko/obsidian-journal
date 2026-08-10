@@ -60,11 +60,15 @@ const cells = useCellDecorations({
   calendarDecorations: { shelf: () => props.shelf },
 });
 
-const dayCell = useNotesCell({ journalNames: () => scope.day.value, decorations: cells });
-const weekCell = useNotesCell({ journalNames: () => scope.week.value, decorations: cells });
-const monthCell = useNotesCell({ journalNames: () => scope.month.value, decorations: cells });
-const quarterCell = useNotesCell({ journalNames: () => scope.quarter.value, decorations: cells });
-const yearCell = useNotesCell({ journalNames: () => scope.year.value, decorations: cells });
+const dayCell = useNotesCell({ journalNames: () => scope.day.value, decorations: cells, shelf: () => props.shelf });
+const weekCell = useNotesCell({ journalNames: () => scope.week.value, decorations: cells, shelf: () => props.shelf });
+const monthCell = useNotesCell({ journalNames: () => scope.month.value, decorations: cells, shelf: () => props.shelf });
+const quarterCell = useNotesCell({
+  journalNames: () => scope.quarter.value,
+  decorations: cells,
+  shelf: () => props.shelf,
+});
+const yearCell = useNotesCell({ journalNames: () => scope.year.value, decorations: cells, shelf: () => props.shelf });
 </script>
 
 <template>
