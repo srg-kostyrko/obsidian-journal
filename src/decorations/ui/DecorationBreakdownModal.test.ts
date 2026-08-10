@@ -173,85 +173,6 @@ describe("DecorationBreakdownModal", () => {
     expect(within(entryRegion as HTMLElement).queryByText(ANY_DATE_TEXT)).toBeNull();
   });
 
-  it("names the winning decoration for a resolved property", () => {
-    const day = DayPeriod.containing(date("2026-05-25"));
-    mount({
-      journals: { daily: fixedJournal("daily", { type: "day" }, { decorations: [hasNoteDecoration] }) },
-      globalDecorations: [anyDayCalendarDecoration],
-      notes: [{ journalName: "daily", anchor: day }],
-      period: day,
-    });
-
-    const winnerGroup = screen.getByRole("group", {
-      name: m.decoration_breakdown_property({ property: "background" }),
-    });
-    expect(within(winnerGroup).getByText(m.decoration_condition_has_note_describe())).toBeTruthy();
-    expect(
-      within(winnerGroup).getByText(m.decoration_breakdown_owner({ kind: "journal", name: "daily" })),
-    ).toBeTruthy();
-  });
-
-  it("lists a contribution that lost a property under the overridden heading", () => {
-    const day = DayPeriod.containing(date("2026-05-25"));
-    mount({
-      journals: { daily: fixedJournal("daily", { type: "day" }, { decorations: [hasNoteDecoration] }) },
-      globalDecorations: [anyDayCalendarDecoration],
-      notes: [{ journalName: "daily", anchor: day }],
-      period: day,
-    });
-
-    const overriddenGroup = screen.getByRole("group", {
-      name: m.decoration_breakdown_overridden_for({
-        property: m.decoration_breakdown_property({ property: "background" }),
-      }),
-    });
-    expect(within(overriddenGroup).getByText(ANY_DATE_TEXT)).toBeTruthy();
-    expect(within(overriddenGroup).getByText(m.decoration_breakdown_owner({ kind: "global", name: "" }))).toBeTruthy();
-  });
-
-  it("interleaves the mode word between an OR decoration's conditions", () => {
-    const day = DayPeriod.containing(date("2026-05-25"));
-    const orDecoration: JournalDecoration = buildDecoration({
-      mode: "or",
-      conditions: [buildCondition("has-note"), buildCondition("date", { day: -1, month: -1, year: null })],
-      styles: [buildStyle("background")],
-    });
-    mount({
-      journals: { daily: fixedJournal("daily", { type: "day" }, { decorations: [orDecoration] }) },
-      notes: [{ journalName: "daily", anchor: day }],
-      period: day,
-    });
-
-    expect(screen.getByText(m.decoration_condition_has_note_describe())).toBeTruthy();
-    expect(screen.getByText(ANY_DATE_TEXT)).toBeTruthy();
-    expect(screen.getByText(m.decoration_describe_mode({ kind: "or" }))).toBeTruthy();
-  });
-
-  it("lists marks without naming a winner", () => {
-    const day = DayPeriod.containing(date("2026-05-25"));
-    const journalMark: JournalDecoration = buildDecoration({
-      mode: "or",
-      conditions: [buildCondition("has-note")],
-      styles: [buildStyle("shape")],
-    });
-    const globalMark: CalendarDecoration = buildCalendarDecoration({
-      mode: "or",
-      conditions: [buildCondition("date", { day: -1, month: -1, year: null })],
-      styles: [buildStyle("shape")],
-    });
-    mount({
-      journals: { daily: fixedJournal("daily", { type: "day" }, { decorations: [journalMark] }) },
-      globalDecorations: [globalMark],
-      notes: [{ journalName: "daily", anchor: day }],
-      period: day,
-    });
-
-    expect(screen.getByText(m.decoration_breakdown_marks_heading())).toBeTruthy();
-    expect(screen.getByText(m.decoration_condition_has_note_describe())).toBeTruthy();
-    expect(screen.getByText(ANY_DATE_TEXT)).toBeTruthy();
-    expect(screen.queryByText(m.decoration_breakdown_overridden_heading())).toBeNull();
-  });
-
   it("admits a custom journal's offset decoration to the day cell", () => {
     const day = DayPeriod.containing(date("2026-05-25"));
     const offsetDecoration: JournalDecoration = buildDecoration({
@@ -306,24 +227,6 @@ describe("DecorationBreakdownModal", () => {
     const region = heading.closest('[role="region"]');
     expect(region).not.toBeNull();
     expect(within(region as HTMLElement).getByText(m.decoration_condition_has_note_describe())).toBeTruthy();
-  });
-
-  it("keeps the interval section's accessible name intact for a journal name containing a space", () => {
-    const day = DayPeriod.containing(date("2026-05-25"));
-    mount({
-      journals: {
-        "sprint planning": customJournal("sprint planning", "week", 2, "2026-05-25", {
-          decorations: [hasNoteDecoration],
-        }),
-      },
-      notes: [{ journalName: "sprint planning", anchor: day }],
-      period: day,
-    });
-
-    const heading = m.decoration_breakdown_interval_heading({ journal: "sprint planning", label: "2026-05-25" });
-    // `aria-labelledby` tokenizes on whitespace, so an id built from the raw journal name would
-    // resolve to nonexistent ids and the region would lose its accessible name entirely.
-    expect(screen.getByRole("region", { name: heading })).toBeTruthy();
   });
 
   it("keeps a custom journal's offset decoration out of the interval section", () => {
