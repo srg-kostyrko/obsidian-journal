@@ -558,6 +558,11 @@ describe("DecorationBreakdownSection", () => {
       ],
     });
 
+    // Both condition texts are asserted alongside the mode word: the mode-word span renders
+    // whenever there are two clauses, so without them a regression in describeCondition's
+    // output for either condition would slip through.
+    expect(screen.getByText(m.decoration_condition_has_note_describe())).toBeTruthy();
+    expect(screen.getByText(ANY_DATE_TEXT)).toBeTruthy();
     expect(screen.getByText(m.decoration_describe_mode({ kind: "or" }))).toBeTruthy();
   });
 
@@ -567,14 +572,24 @@ describe("DecorationBreakdownSection", () => {
       conditions: [buildCondition("has-note")],
       styles: [buildStyle("shape")],
     });
+    const globalMark: CalendarDecoration = buildCalendarDecoration({
+      mode: "or",
+      conditions: [buildCondition("date", { day: -1, month: -1, year: null })],
+      styles: [buildStyle("shape")],
+    });
+    // Two competing marks, not one: "without naming a winner" is only a claim about plural
+    // marks. A single contribution would also pass against a section that resolved nothing.
     mountSection({
       journalDecorations: [journalMark],
+      globalDecorations: [globalMark],
       contributions: [
         { source: { owner: { kind: "journal", journalName: "daily" }, index: 0 }, style: buildStyle("shape") },
+        { source: { owner: { kind: "global" }, index: 0 }, style: buildStyle("shape") },
       ],
     });
 
-    expect(screen.getByText(m.decoration_breakdown_marks_heading())).toBeTruthy();
+    expect(screen.getByText(m.decoration_condition_has_note_describe())).toBeTruthy();
+    expect(screen.getByText(ANY_DATE_TEXT)).toBeTruthy();
     expect(screen.queryByText(m.decoration_breakdown_overridden_heading())).toBeNull();
   });
 
