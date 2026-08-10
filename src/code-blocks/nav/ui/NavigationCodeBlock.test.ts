@@ -7,7 +7,7 @@ import { nextTick } from "vue";
 import type { AnchorString } from "@/calendar";
 import { installTestCalendar } from "@/calendar/testing";
 import { DecorationEngine, decorationsSlice, DecorationsStore } from "@/decorations";
-import { buildCondition, buildDecoration, buildStyle } from "@/decorations/testing";
+import { buildCalendarDecoration, buildCondition, buildDecoration, buildStyle } from "@/decorations/testing";
 import { initLocale, m } from "@/i18n";
 import { Container, provideInjectorOnApp } from "@/infrastructure/di";
 import { Flows } from "@/infrastructure/flows";
@@ -1024,6 +1024,35 @@ describe("NavigationCodeBlock decorations", () => {
     mount(h, "Daily/2026-05-27.md");
 
     expect(document.querySelector(".decoration-corner.top-left")).not.toBeNull();
+  });
+
+  it("excludes a vault-wide date decoration from a custom journal's row", () => {
+    const base = customJournal("sprint", "week", 2, "2026-05-25");
+    const journal: JournalConfig = {
+      ...base,
+      navBlock: {
+        ...base.navBlock,
+        type: "existing",
+        rows: [navRow({ template: "sprint", addDecorations: true })],
+      },
+    };
+    const h = buildHarness({ sprint: journal });
+    h.container.resolve(SettingsService).getSlice(decorationsSlice).state = {
+      decorations: [
+        buildCalendarDecoration({
+          conditions: [buildCondition("date")],
+          styles: [buildStyle("corner", { placement: "top-left" })],
+        }),
+      ],
+    };
+    h.index.byPath.set("Sprint/2026-05-25.md", {
+      journalName: "sprint",
+      anchor: "2026-05-25" as AnchorString,
+      path: "Sprint/2026-05-25.md" as VaultPath,
+    });
+    mount(h, "Sprint/2026-05-25.md");
+
+    expect(document.querySelector(".decoration-corner.top-left")).toBeNull();
   });
 
   it("wraps the entire column with CellDecoration when decorateWholeBlock is true", () => {

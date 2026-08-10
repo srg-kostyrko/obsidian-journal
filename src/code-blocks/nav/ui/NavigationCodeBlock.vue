@@ -2,7 +2,7 @@
 import { computed } from "vue";
 
 import type { AnchorString, Period } from "@/calendar";
-import { useCellDecorations } from "@/decorations";
+import { hasOffsetCondition, useCellDecorations } from "@/decorations";
 import { m } from "@/i18n";
 import { useService } from "@/infrastructure/di";
 import { Flows } from "@/infrastructure/flows";
@@ -118,8 +118,9 @@ const rowJournalNames = computed<readonly string[]>(() => {
 });
 
 // Journal-free decorations belong to the per-row scope: every row is a different date, while
-// the whole-block scope decorates the block from the current journal's own rules. Only day rows
-// are affected — a weekly journal's nav block renders week rows and shows none of these.
+// the whole-block scope decorates the block from the current journal's own rules. Only fixed
+// (day-kind) journals are affected — a weekly journal's nav block renders week rows and shows
+// none of these, and a custom journal's rows are excluded below despite also being day-kind.
 const decorationShelf = computed<string | null>(() =>
   owningShelf.value.match<string | null>({ some: (shelf) => shelf.name, none: () => null }),
 );
@@ -129,11 +130,18 @@ useCellDecorations({
   journalNames: () => blockJournalNames.value,
   scope: navBlockDecorationScope,
 });
+// A custom journal's rows are "day"-kind periods at their interval's start anchor, colliding
+// with the day cell beneath them (CustomIntervalsBlock.vue:76-85 draws the same distinction).
+// Calendar (vault-wide/shelf) rules paint days, not intervals, so they're left out entirely;
+// the journal's own offset-carrying rules mark a single day inside the interval and belong to
+// the day grid instead — only its non-offset rules describe the interval itself.
 useCellDecorations({
   periods: () => periods.value,
   journalNames: () => rowJournalNames.value,
   scope: navRowDecorationScope,
-  calendarDecorations: { shelf: () => decorationShelf.value },
+  ...(journal.value?.write.type === "custom"
+    ? { filter: (binding) => !hasOffsetCondition(binding.decoration) }
+    : { calendarDecorations: { shelf: () => decorationShelf.value } }),
 });
 
 function openAdjacent(anchor: AnchorString | undefined, event: MouseEvent): void {
