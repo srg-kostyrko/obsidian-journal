@@ -45,7 +45,7 @@ import {
   rightClickCell,
   seedDecorationFixture,
 } from "./decorations.js";
-import { calendar, LIVE_LEAF, MONTH_VIEW, openCalendarView, TOOLBAR } from "./view.js";
+import { calendar, LIVE_LEAF, MONTH_VIEW, openCalendarView, openSeededCalendarView, TOOLBAR } from "./view.js";
 
 // Slice B chunk 0 — the view-leaf render + real ribbon-click seam. Our Vue calendar
 // mounts in a real Obsidian leaf, a real ribbon click opens it, and a real cell
@@ -729,19 +729,25 @@ describe("calendar view", () => {
     });
 
     it("seeds two toolbar rows above the month grid", async () => {
-      await openCalendarView();
+      await openSeededCalendarView();
       await expect($$(`${LIVE_LEAF} .journal-view-toolbar`)).toBeElementsArrayOfSize(2);
     });
 
     it("seeds three flexible spacers across the two toolbar rows", async () => {
-      await openCalendarView();
+      await openSeededCalendarView();
       await expect($$(`${LIVE_LEAF} .jv-toolbar-spacer`)).toBeElementsArrayOfSize(3);
     });
 
     it("hides the month grid's own month/year heading", async () => {
-      await openCalendarView();
+      await openSeededCalendarView();
       await $(MONTH_VIEW).waitForExist({ timeoutMsg: "month grid did not render" });
       await expect($(`${LIVE_LEAF} .notes-month-view__header`)).not.toBeExisting();
+    });
+
+    // v2 reached the calendar only through the open-calendar command; it never put an icon
+    // in the ribbon, so the seeded view must not add one.
+    it("keeps the seeded Calendar view out of the ribbon", async () => {
+      await expect($('[aria-label="Open Calendar"]')).not.toBeExisting();
     });
 
     // The seeded view used to carry both its own open command and a separate fixed

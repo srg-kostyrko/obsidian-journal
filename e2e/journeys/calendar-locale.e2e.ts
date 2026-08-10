@@ -3,7 +3,7 @@ import { $, browser, expect } from "@wdio/globals";
 import { closeSettings, openSettings, submitModal, waitForModalOpen } from "../support/settings.js";
 
 import { TIMELINE_BLOCK, TIMELINE_FENCE, plainNote, renderBlock } from "./code-blocks.js";
-import { LIVE_LEAF, openCalendarView } from "./view.js";
+import { LIVE_LEAF, openSeededCalendarView } from "./view.js";
 
 // The dashboard has two sections whose title starts with "Calendar" ("Calendar" and "Calendar
 // highlighting"), so the week block's trigger needs an exact title match rather than a substring.
@@ -25,7 +25,7 @@ describe("calendar locale", () => {
   });
 
   it("starts the week on Monday when the custom first-day-of-week is Monday", async () => {
-    await openCalendarView();
+    await openSeededCalendarView();
     const firstWeekday = $(`${LIVE_LEAF} .notes-month-view__weekday`);
     await firstWeekday.waitForExist({ timeoutMsg: "the weekday header did not render" });
     expect(await firstWeekday.getText()).toBe("Mon");
@@ -36,7 +36,7 @@ describe("calendar locale", () => {
   // some unrelated change happened to re-render it. The view stays mounted behind the settings
   // modal throughout, so a header that flips to Sunday can only come from a live re-render.
   it("re-renders an open view when the week preset changes", async () => {
-    await openCalendarView();
+    await openSeededCalendarView();
     const firstWeekday = $(`${LIVE_LEAF} .notes-month-view__weekday`);
     await firstWeekday.waitForExist({ timeoutMsg: "the weekday header did not render" });
 

@@ -1,5 +1,7 @@
 import { $ } from "@wdio/globals";
 
+import { runCommand } from "../support/commands.js";
+
 import { calendarSurface } from "./calendar.js";
 
 const RIBBON_OPEN_CALENDAR = '[aria-label="Open Calendar"]';
@@ -18,12 +20,22 @@ export const TOOLBAR = `${LIVE_LEAF} .journal-view-toolbar`;
 // The single view-leaf calendar surface, bound to the live-leaf month root.
 export const calendar = calendarSurface(MONTH_VIEW);
 
-// The auto-seeded default view registers a left-ribbon button whose accessible name
-// is its command name ("Open Calendar"). Clicking it is the real click path into the
-// view-leaf mount — not executeCommandById.
+// A view with showInRibbon on registers a left-ribbon button whose accessible name is its
+// command name ("Open Calendar"). Clicking it is the real click path into the view-leaf
+// mount — not executeCommandById. Only fixtures that pin showInRibbon can use this; the
+// auto-seeded default view keeps the ribbon off for v2 parity (see openSeededCalendarView).
 export async function openCalendarView(): Promise<void> {
   await $(RIBBON_OPEN_CALENDAR).click();
   await $(MONTH_VIEW).waitForExist({
     timeoutMsg: "calendar month view did not render after the Open Calendar ribbon click",
+  });
+}
+
+// Fixtures with no persisted `views` get the auto-seeded default view, which has no ribbon
+// icon, so its command is the only way in.
+export async function openSeededCalendarView(): Promise<void> {
+  await runCommand("journals:open-calendar");
+  await $(MONTH_VIEW).waitForExist({
+    timeoutMsg: "calendar month view did not render after the open-calendar command",
   });
 }

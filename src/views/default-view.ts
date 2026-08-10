@@ -31,7 +31,9 @@ export function defaultCalendarView(): View {
     name: m.common_label_calendar(),
     icon: icons.entity.month,
     defaultShelf: null,
-    showInRibbon: true,
+    // v2 parity: the calendar was reachable only via the open-calendar command, never a
+    // ribbon icon — v2's ribbon entries all came from journal/plugin commands.
+    showInRibbon: false,
     leaf: "right",
     openOnStartup: true,
     rememberDate: false,
