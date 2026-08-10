@@ -86,6 +86,11 @@ contributions include it. No second capability.
 
 A `defineModal<void>()` viewer taking an optional `Period`.
 
+> **Superseded** by [decoration breakdown: cell readout vs date explorer](2026-08-10-decoration-breakdown-entry-mode-design.md).
+> Behaviour now does vary by entry point: the context menu opens a static readout of the one
+> cell it came from, and only the settings entry keeps the date explorer described below. The
+> shelf selector's seeding, spec'd here and never implemented, is fixed there.
+
 Behaviour does not vary by entry point. For a date, the modal shows every decorated cell that
 date belongs to. A date belongs to up to six cells — day, week, month, quarter, year, custom
 interval — but only kinds some journal writes exist, and only cells with at least one
