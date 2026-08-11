@@ -9,8 +9,8 @@ import { Flows } from "@/infrastructure/flows";
 import { icons } from "@/ui/icons";
 import UiCollapsibleBlock from "@/ui/UiCollapsibleBlock.vue";
 import UiDropdown from "@/ui/UiDropdown.vue";
-import UiIcon from "@/ui/UiIcon.vue";
 import UiIconButton from "@/ui/UiIconButton.vue";
+import UiIconedRow from "@/ui/UiIconedRow.vue";
 import UiNumberInput from "@/ui/UiNumberInput.vue";
 import UiSettingRow from "@/ui/UiSettingRow.vue";
 import UiToggle from "@/ui/UiToggle.vue";
@@ -63,10 +63,7 @@ function editSequenceKey(): void {
 <template>
   <UiCollapsibleBlock v-if="config" v-model:expanded="expanded">
     <template #trigger>
-      <span class="journal-section-heading">
-        <UiIcon :name="icons.section.numbering" />
-        <span>{{ m.journal_edit_section_sequential_numbers() }}</span>
-      </span>
+      <UiIconedRow :icon="icons.section.numbering">{{ m.journal_edit_section_sequential_numbers() }}</UiIconedRow>
     </template>
 
     <UiSettingRow :name="m.journal_edit_sequence_enabled_label()">
@@ -123,12 +120,3 @@ function editSequenceKey(): void {
     </template>
   </UiCollapsibleBlock>
 </template>
-
-<style scoped>
-.journal-section-heading {
-  display: inline-flex;
-  align-items: center;
-  gap: var(--size-2-2);
-  font-weight: var(--font-semibold);
-}
-</style>

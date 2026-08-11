@@ -9,7 +9,7 @@ import { icons } from "@/ui/icons";
 import UiButton from "@/ui/UiButton.vue";
 import UiCollapsibleBlock from "@/ui/UiCollapsibleBlock.vue";
 import UiDropdown from "@/ui/UiDropdown.vue";
-import UiIcon from "@/ui/UiIcon.vue";
+import UiIconedRow from "@/ui/UiIconedRow.vue";
 import UiSettingRow from "@/ui/UiSettingRow.vue";
 
 import { DumpLogsFlow } from "../../flows/dump-logs.flow";
@@ -36,10 +36,7 @@ function dump(): void {
 <template>
   <UiCollapsibleBlock v-model:expanded="expanded">
     <template #trigger>
-      <span class="section-heading">
-        <UiIcon :name="icons.section.logging" />
-        <span class="section-title">{{ m.logging_section_title() }}</span>
-      </span>
+      <UiIconedRow :icon="icons.section.logging">{{ m.logging_section_title() }}</UiIconedRow>
     </template>
     <UiSettingRow :name="m.logging_level_title()">
       <template #description>{{ m.logging_level_desc() }}</template>
@@ -56,14 +53,3 @@ function dump(): void {
     </UiSettingRow>
   </UiCollapsibleBlock>
 </template>
-
-<style scoped>
-.section-heading {
-  display: inline-flex;
-  align-items: center;
-  gap: var(--size-2-2);
-}
-.section-title {
-  font-weight: var(--font-semibold);
-}
-</style>

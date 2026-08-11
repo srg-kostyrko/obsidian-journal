@@ -41,7 +41,7 @@ function openJournal(journalName: string): void {
 .journal-warning :deep(.setting-item) {
   padding: 0;
 }
-.journal-warning :deep(.setting-item--heading .setting-item-name) {
+.journal-warning :deep(.setting-item-heading .setting-item-name) {
   color: var(--text-error);
 }
 .journal-warning-links {

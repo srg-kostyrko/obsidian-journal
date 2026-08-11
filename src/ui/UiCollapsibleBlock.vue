@@ -49,10 +49,13 @@ function toggle() {
   padding-bottom: var(--size-2-2);
   min-height: 38px;
 }
+/* The block owns its heading weight so every trigger reads the same; call sites supply only
+   the icon and the words. */
 .collapsible-trigger-text {
   display: flex;
   align-items: center;
   flex-grow: 1;
+  font-weight: var(--font-semibold);
   /* Without this the heading refuses to shrink below its content and the controls give up
      their width instead, which is what stacked them. */
   min-width: 0;

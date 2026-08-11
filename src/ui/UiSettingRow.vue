@@ -9,7 +9,7 @@ defineProps<{
 </script>
 
 <template>
-  <div class="setting-item" :class="{ 'setting-item--heading': heading, 'setting-item--stacked': stacked }">
+  <div class="setting-item" :class="{ 'setting-item-heading': heading, 'setting-item--stacked': stacked }">
     <div v-if="!controlsOnly" class="setting-item-info">
       <div class="setting-item-name">
         <slot name="name">{{ name ?? "" }}</slot>

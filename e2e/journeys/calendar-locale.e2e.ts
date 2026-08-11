@@ -8,7 +8,7 @@ import { LIVE_LEAF, openSeededCalendarView } from "./view.js";
 // The dashboard has two sections whose title starts with "Calendar" ("Calendar" and "Calendar
 // highlighting"), so the week block's trigger needs an exact title match rather than a substring.
 const CALENDAR_SECTION =
-  '//div[contains(@class,"collapsible-trigger")][.//span[contains(@class,"section-title")][normalize-space(.)="Calendar"]]';
+  '//div[contains(@class,"collapsible-trigger")][.//div[contains(@class,"iconed-row")][normalize-space(.)="Calendar"]]';
 
 // The preset rows all carry a "Use" button; pick the one in the row with this preset's name.
 function presetUseButton(preset: string): string {

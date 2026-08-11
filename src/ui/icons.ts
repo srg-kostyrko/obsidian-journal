@@ -55,6 +55,7 @@ export const icons = {
     unknown: "lucide-file-question",
   },
   section: {
+    calendar: "calendar",
     numbering: "hash",
     appearance: "palette",
     decorations: "paintbrush",

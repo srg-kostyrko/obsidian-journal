@@ -17,8 +17,8 @@ import { Flows } from "@/infrastructure/flows";
 import { useModalService } from "@/infrastructure/host/modals";
 import { icons } from "@/ui/icons";
 import UiCollapsibleBlock from "@/ui/UiCollapsibleBlock.vue";
-import UiIcon from "@/ui/UiIcon.vue";
 import UiIconButton from "@/ui/UiIconButton.vue";
+import UiIconedRow from "@/ui/UiIconedRow.vue";
 import UiSettingRow from "@/ui/UiSettingRow.vue";
 
 import { decorationBreakdownModal } from "../../ui/modals";
@@ -102,11 +102,10 @@ function remove(index: number): void {
 <template>
   <UiCollapsibleBlock v-model:expanded="expanded">
     <template #trigger>
-      <span class="decoration-section-heading">
-        <UiIcon :name="icons.section.decorations" />
-        <span>{{ title }}</span>
+      <UiIconedRow :icon="icons.section.decorations">
+        {{ title }}
         <span class="flair">{{ decorations.length }}</span>
-      </span>
+      </UiIconedRow>
     </template>
     <template #controls>
       <UiIconButton :icon="icons.action.search" :tooltip="m.decoration_breakdown_open()" @click="inspect" />
@@ -142,12 +141,6 @@ function remove(index: number): void {
 </template>
 
 <style scoped>
-.decoration-section-heading {
-  display: inline-flex;
-  align-items: center;
-  gap: var(--size-2-2);
-  font-weight: var(--font-semibold);
-}
 .row-preview {
   display: inline-block;
   min-width: 2em;

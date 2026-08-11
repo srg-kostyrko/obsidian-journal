@@ -7,7 +7,7 @@ import VariableChip from "@/templates/ui/VariableChip.vue";
 import I18nWithSlot from "@/ui/I18nWithSlot.vue";
 import { icons } from "@/ui/icons";
 import UiCollapsibleBlock from "@/ui/UiCollapsibleBlock.vue";
-import UiIcon from "@/ui/UiIcon.vue";
+import UiIconedRow from "@/ui/UiIconedRow.vue";
 import UiSettingRow from "@/ui/UiSettingRow.vue";
 import UiTextInput from "@/ui/UiTextInput.vue";
 import UiToggle from "@/ui/UiToggle.vue";
@@ -52,10 +52,7 @@ function applyDateFormatRecommendation(): void {
 <template>
   <UiCollapsibleBlock v-if="config" v-model:expanded="expanded">
     <template #trigger>
-      <span class="journal-section-heading">
-        <UiIcon :name="icons.action.addFile" />
-        <span>{{ m.journal_edit_section_note_creation() }}</span>
-      </span>
+      <UiIconedRow :icon="icons.action.addFile">{{ m.journal_edit_section_note_creation() }}</UiIconedRow>
     </template>
 
     <NotePathPreview :journal-name="journalName" />
@@ -156,12 +153,6 @@ function applyDateFormatRecommendation(): void {
 </template>
 
 <style scoped>
-.journal-section-heading {
-  display: inline-flex;
-  align-items: center;
-  gap: var(--size-2-2);
-  font-weight: var(--font-semibold);
-}
 .journal-hint {
   color: var(--text-warning);
 }

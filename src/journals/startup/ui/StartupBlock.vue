@@ -7,7 +7,7 @@ import { SettingsService } from "@/settings";
 import { icons } from "@/ui/icons";
 import UiCollapsibleBlock from "@/ui/UiCollapsibleBlock.vue";
 import UiDropdown from "@/ui/UiDropdown.vue";
-import UiIcon from "@/ui/UiIcon.vue";
+import UiIconedRow from "@/ui/UiIconedRow.vue";
 import UiSettingRow from "@/ui/UiSettingRow.vue";
 
 import { JournalsRepository } from "../../repository";
@@ -31,10 +31,7 @@ const journalName = computed({
 <template>
   <UiCollapsibleBlock v-model:expanded="expanded">
     <template #trigger>
-      <span class="section-heading">
-        <UiIcon :name="icons.section.startup" />
-        <span class="section-title">{{ m.startup_dashboard_section_title() }}</span>
-      </span>
+      <UiIconedRow :icon="icons.section.startup">{{ m.startup_dashboard_section_title() }}</UiIconedRow>
     </template>
     <UiSettingRow :name="m.startup_open_note_title()">
       <template #description>{{ m.startup_open_note_desc() }}</template>
@@ -45,14 +42,3 @@ const journalName = computed({
     </UiSettingRow>
   </UiCollapsibleBlock>
 </template>
-
-<style scoped>
-.section-heading {
-  display: inline-flex;
-  align-items: center;
-  gap: var(--size-2-2);
-}
-.section-title {
-  font-weight: var(--font-semibold);
-}
-</style>

@@ -10,8 +10,8 @@ import { icons } from "@/ui/icons";
 import UiButton from "@/ui/UiButton.vue";
 import UiCollapsibleBlock from "@/ui/UiCollapsibleBlock.vue";
 import UiDropdown from "@/ui/UiDropdown.vue";
-import UiIcon from "@/ui/UiIcon.vue";
 import UiIconButton from "@/ui/UiIconButton.vue";
+import UiIconedRow from "@/ui/UiIconedRow.vue";
 import UiSettingRow from "@/ui/UiSettingRow.vue";
 import UiToggle from "@/ui/UiToggle.vue";
 
@@ -75,11 +75,10 @@ function moveDown(index: number): void {
 <template>
   <UiCollapsibleBlock v-if="config" v-model:expanded="expanded">
     <template #trigger>
-      <span class="journal-section-heading">
-        <UiIcon :name="icon" />
-        <span>{{ title }}</span>
+      <UiIconedRow :icon="icon">
+        {{ title }}
         <span class="flair">{{ config[field].rows.length }}</span>
-      </span>
+      </UiIconedRow>
     </template>
     <template #controls>
       <UiIconButton :icon="icons.action.add" :tooltip="m.block_rows_add_row()" @click="add" />
@@ -138,12 +137,6 @@ function moveDown(index: number): void {
 </template>
 
 <style scoped>
-.journal-section-heading {
-  display: inline-flex;
-  align-items: center;
-  gap: var(--size-2-2);
-  font-weight: var(--font-semibold);
-}
 .nav-block-preview {
   padding: var(--size-4-2) 0;
 }

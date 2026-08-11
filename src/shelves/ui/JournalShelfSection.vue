@@ -6,8 +6,8 @@ import { useService } from "@/infrastructure/di";
 import { Flows } from "@/infrastructure/flows";
 import { icons } from "@/ui/icons";
 import UiCollapsibleBlock from "@/ui/UiCollapsibleBlock.vue";
-import UiIcon from "@/ui/UiIcon.vue";
 import UiIconButton from "@/ui/UiIconButton.vue";
+import UiIconedRow from "@/ui/UiIconedRow.vue";
 import UiSettingRow from "@/ui/UiSettingRow.vue";
 
 import { PlaceJournalFlow } from "../flows/place-journal.flow";
@@ -31,10 +31,7 @@ function place(): void {
 <template>
   <UiCollapsibleBlock v-if="hasShelves" v-model:expanded="expanded">
     <template #trigger>
-      <span class="journal-section-heading">
-        <UiIcon :name="icons.entity.shelf" />
-        <span>{{ m.common_label_shelf() }}</span>
-      </span>
+      <UiIconedRow :icon="icons.entity.shelf">{{ m.common_label_shelf() }}</UiIconedRow>
     </template>
 
     <UiSettingRow :name="m.common_label_shelf()">
@@ -43,12 +40,3 @@ function place(): void {
     </UiSettingRow>
   </UiCollapsibleBlock>
 </template>
-
-<style scoped>
-.journal-section-heading {
-  display: inline-flex;
-  align-items: center;
-  gap: var(--size-2-2);
-  font-weight: var(--font-semibold);
-}
-</style>

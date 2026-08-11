@@ -6,8 +6,8 @@ import { useService } from "@/infrastructure/di";
 import { Flows } from "@/infrastructure/flows";
 import { icons } from "@/ui/icons";
 import UiCollapsibleBlock from "@/ui/UiCollapsibleBlock.vue";
-import UiIcon from "@/ui/UiIcon.vue";
 import UiIconButton from "@/ui/UiIconButton.vue";
+import UiIconedRow from "@/ui/UiIconedRow.vue";
 import UiSettingRow from "@/ui/UiSettingRow.vue";
 import UiToggle from "@/ui/UiToggle.vue";
 
@@ -32,10 +32,7 @@ function editFm(fieldName: "dateField" | "startDateField" | "endDateField"): voi
 <template>
   <UiCollapsibleBlock v-if="config" v-model:expanded="expanded">
     <template #trigger>
-      <span class="journal-section-heading">
-        <UiIcon :name="icons.section.properties" />
-        <span>{{ m.journal_edit_section_frontmatter() }}</span>
-      </span>
+      <UiIconedRow :icon="icons.section.properties">{{ m.journal_edit_section_frontmatter() }}</UiIconedRow>
     </template>
 
     <UiSettingRow :name="m.journal_fm_field_label({ field: 'dateField' })">
@@ -73,12 +70,3 @@ function editFm(fieldName: "dateField" | "startDateField" | "endDateField"): voi
     </UiSettingRow>
   </UiCollapsibleBlock>
 </template>
-
-<style scoped>
-.journal-section-heading {
-  display: inline-flex;
-  align-items: center;
-  gap: var(--size-2-2);
-  font-weight: var(--font-semibold);
-}
-</style>

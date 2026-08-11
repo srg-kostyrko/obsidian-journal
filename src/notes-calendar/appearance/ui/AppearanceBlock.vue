@@ -8,7 +8,7 @@ import { SettingsService } from "@/settings";
 import { icons } from "@/ui/icons";
 import UiCollapsibleBlock from "@/ui/UiCollapsibleBlock.vue";
 import UiColorSettingsPicker from "@/ui/UiColorSettingsPicker.vue";
-import UiIcon from "@/ui/UiIcon.vue";
+import UiIconedRow from "@/ui/UiIconedRow.vue";
 import UiSettingRow from "@/ui/UiSettingRow.vue";
 
 import { appearanceSlice } from "../slice";
@@ -34,10 +34,7 @@ function setActiveBackground(background: ColorSettings): void {
 <template>
   <UiCollapsibleBlock v-model:expanded="expanded">
     <template #trigger>
-      <span class="section-heading">
-        <UiIcon :name="icons.section.appearance" />
-        <span class="section-title">{{ m.calendar_appearance_section_title() }}</span>
-      </span>
+      <UiIconedRow :icon="icons.section.appearance">{{ m.calendar_appearance_section_title() }}</UiIconedRow>
     </template>
     <UiSettingRow :name="m.calendar_appearance_today_text()">
       <template #description>{{ m.calendar_appearance_description({ target: "today", layer: "text" }) }}</template>
@@ -69,14 +66,3 @@ function setActiveBackground(background: ColorSettings): void {
     </UiSettingRow>
   </UiCollapsibleBlock>
 </template>
-
-<style scoped>
-.section-heading {
-  display: inline-flex;
-  align-items: center;
-  gap: var(--size-2-2);
-}
-.section-title {
-  font-weight: var(--font-semibold);
-}
-</style>

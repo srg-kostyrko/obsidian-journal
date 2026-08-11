@@ -16,7 +16,7 @@ const WARNING = ".journal-warning";
 function colorVerdicts(): Promise<string> {
   return browser.execute(() => {
     const warning = document.querySelector(".journal-warning");
-    const name = warning?.querySelector(".setting-item--heading .setting-item-name");
+    const name = warning?.querySelector(".setting-item-heading .setting-item-name");
     const probe = document.createElement("div");
     probe.style.color = "var(--text-error)";
     document.body.append(probe);

@@ -7,10 +7,11 @@ import { m } from "@/i18n";
 import { useService } from "@/infrastructure/di";
 import { useModalService } from "@/infrastructure/host/modals";
 import { ReloadHintService, SettingsService } from "@/settings";
+import { icons } from "@/ui/icons";
 import UiButton from "@/ui/UiButton.vue";
 import UiCollapsibleBlock from "@/ui/UiCollapsibleBlock.vue";
 import UiDropdown from "@/ui/UiDropdown.vue";
-import UiIcon from "@/ui/UiIcon.vue";
+import UiIconedRow from "@/ui/UiIconedRow.vue";
 import UiSettingRow from "@/ui/UiSettingRow.vue";
 import UiToggle from "@/ui/UiToggle.vue";
 
@@ -83,10 +84,7 @@ function change(): void {
 <template>
   <UiCollapsibleBlock v-model:expanded="expanded">
     <template #trigger>
-      <span class="section-heading">
-        <UiIcon name="calendar" />
-        <span class="section-title">{{ m.common_label_calendar() }}</span>
-      </span>
+      <UiIconedRow :icon="icons.section.calendar">{{ m.common_label_calendar() }}</UiIconedRow>
     </template>
     <UiSettingRow heading :name="m.common_week_configuration()">
       <template #description>
@@ -118,14 +116,6 @@ function change(): void {
 </template>
 
 <style scoped>
-.section-heading {
-  display: inline-flex;
-  align-items: center;
-  gap: var(--size-2-2);
-}
-.section-title {
-  font-weight: var(--font-semibold);
-}
 .rationale {
   margin-bottom: var(--size-2-2);
 }
