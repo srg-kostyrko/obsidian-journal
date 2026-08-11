@@ -90,35 +90,63 @@ watch(propertyName, (next) => {
 </script>
 
 <template>
-  <UiPropertySuggest v-model="propertyName" :aria-label="m.common_label_property_name()" />
-  <UiDropdown v-model="op" :aria-label="m.decoration_condition_property_condition_label()">
-    <option v-for="o of opsForType" :key="o" :value="o">{{ opLabel(o) }}</option>
-  </UiDropdown>
-  <template v-if="showValueField">
-    <UiTextInput
-      v-if="valueType === 'text'"
-      v-model="textModel"
-      :aria-label="m.decoration_condition_property_value_label()"
-    />
-    <UiNumberInput
-      v-else-if="valueType === 'number'"
-      v-model="numberModel"
-      :aria-label="m.decoration_condition_property_value_label()"
-    />
-    <input
-      v-else-if="valueType === 'date'"
-      v-model="textModel"
-      type="date"
-      class="property-date-input"
-      :aria-label="m.decoration_condition_property_value_label()"
-    />
-  </template>
-  <span v-if="nameError" class="condition-property-error">{{ nameError }}</span>
+  <div class="property-editor">
+    <div class="property-controls">
+      <UiPropertySuggest v-model="propertyName" :aria-label="m.common_label_property_name()" />
+      <UiDropdown v-model="op" :aria-label="m.decoration_condition_property_condition_label()">
+        <option v-for="o of opsForType" :key="o" :value="o">{{ opLabel(o) }}</option>
+      </UiDropdown>
+      <template v-if="showValueField">
+        <UiTextInput
+          v-if="valueType === 'text'"
+          v-model="textModel"
+          :aria-label="m.decoration_condition_property_value_label()"
+        />
+        <UiNumberInput
+          v-else-if="valueType === 'number'"
+          v-model="numberModel"
+          :aria-label="m.decoration_condition_property_value_label()"
+        />
+        <input
+          v-else-if="valueType === 'date'"
+          v-model="textModel"
+          type="date"
+          class="property-date-input"
+          :aria-label="m.decoration_condition_property_value_label()"
+        />
+      </template>
+    </div>
+    <span v-if="nameError" class="condition-property-error">{{ nameError }}</span>
+  </div>
 </template>
 
 <style scoped>
+.property-editor {
+  display: flex;
+  flex-direction: column;
+  gap: var(--size-2-3);
+  align-items: stretch;
+  min-width: 0;
+  text-align: left;
+}
+.property-controls {
+  display: flex;
+  gap: var(--size-4-2);
+  align-items: center;
+  min-width: 0;
+}
+/* Inputs carry an intrinsic width that would otherwise push the conditions pane past its
+   grid column and shove the style canvas off-screen. They share the row instead. */
+.property-controls > * {
+  flex: 1 1 0;
+  min-width: 0;
+}
+.property-controls :deep(input),
+.property-controls :deep(select) {
+  min-width: 0;
+  width: 100%;
+}
 .condition-property-error {
   color: var(--text-error);
-  flex-basis: 100%;
 }
 </style>

@@ -77,9 +77,14 @@ const onSubmit = handleSubmit((decoration) => {
         </UiSettingRow>
         <div v-for="(condition, i) of values.conditions" :key="i" class="condition-row">
           <span v-if="i > 0" class="mode-hint">{{ m.decoration_describe_mode({ kind: mode }) }}</span>
-          <UiSettingRow :name="m.decoration_condition_type_short({ type: condition.type })">
+          <UiSettingRow stacked>
+            <template #name>
+              <div class="condition-header">
+                <span>{{ m.decoration_condition_type_short({ type: condition.type }) }}</span>
+                <UiIconButton :icon="icons.action.delete" @click="conditions.remove(i)" />
+              </div>
+            </template>
             <ConditionItem :name="`conditions.${i}`" :condition="condition" />
-            <UiIconButton :icon="icons.action.delete" @click="conditions.remove(i)" />
           </UiSettingRow>
         </div>
       </div>
@@ -104,6 +109,12 @@ const onSubmit = handleSubmit((decoration) => {
   gap: var(--size-4-4);
   align-items: start;
 }
+/* Grid items default to min-width: auto, which lets a wide condition row push its column past
+   half the modal and shove the canvas off-screen. */
+.pane-conditions,
+.pane-canvas {
+  min-width: 0;
+}
 .pane-canvas {
   border-left: 1px solid var(--background-modifier-border);
   padding-left: var(--size-4-4);
@@ -121,6 +132,17 @@ const onSubmit = handleSubmit((decoration) => {
 }
 .condition-row {
   position: relative;
+}
+/* The mode badge straddles the row's top border, so the preceding row needs clearance
+   beyond its own bottom padding or the badge lands on that row's last line. */
+.condition-row + .condition-row {
+  margin-top: var(--size-4-3);
+}
+.condition-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--size-4-2);
 }
 .mode-hint {
   position: absolute;

@@ -50,16 +50,32 @@ const hint = computed(() =>
 </script>
 
 <template>
-  <UiSegmentedControl
-    v-model="side"
-    :options="directionOptions"
-    :aria-label="m.decoration_condition_offset_direction_label()"
-  />
-  <UiNumberInput v-model="day" :min="1" narrow :aria-label="m.decoration_condition_offset_day_label()" />
-  <span class="offset-hint">{{ hint }}</span>
+  <div class="offset-editor">
+    <div class="offset-controls">
+      <UiSegmentedControl
+        v-model="side"
+        :options="directionOptions"
+        :aria-label="m.decoration_condition_offset_direction_label()"
+      />
+      <UiNumberInput v-model="day" :min="1" narrow :aria-label="m.decoration_condition_offset_day_label()" />
+    </div>
+    <span class="offset-hint">{{ hint }}</span>
+  </div>
 </template>
 
 <style scoped>
+.offset-editor {
+  display: flex;
+  flex-direction: column;
+  gap: var(--size-2-3);
+  align-items: flex-start;
+  text-align: left;
+}
+.offset-controls {
+  display: flex;
+  gap: var(--size-4-2);
+  align-items: center;
+}
 .offset-hint {
   color: var(--text-muted);
 }
