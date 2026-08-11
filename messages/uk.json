@@ -1348,7 +1348,6 @@
 			}
 		}
 	],
-	"view_block_config_hide_empty_label": "Приховати порожні журнали",
 	"view_toolbar_shelf_selector_label": "Вибір полиці",
 	"view_toolbar_shelf_selector_description": "Перемикає, яка полиця охоплює журнали подання.",
 	"view_toolbar_shelf_selector_tooltip": "Перемикач полиці",

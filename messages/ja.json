@@ -1348,7 +1348,6 @@
 			}
 		}
 	],
-	"view_block_config_hide_empty_label": "空のジャーナルを非表示にする",
 	"view_toolbar_shelf_selector_label": "棚セレクター",
 	"view_toolbar_shelf_selector_description": "ビューのジャーナルをどのシェルフスコープにするかを切り替えます。",
 	"view_toolbar_shelf_selector_tooltip": "スイッチ棚",

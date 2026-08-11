@@ -438,7 +438,8 @@ registered: `toolbar`, `month-calendar`, `week-calendar`, `custom-intervals`,
       month-calendar — spot-check one).
 - [x] **custom-intervals** lists intervals for its assigned journals.
 - [x] custom-intervals **window = month** (etc.) → lists periods at that scale.
-- [ ] custom-intervals **hideEmpty** → periods with no note are hidden.
+- [x] custom-intervals with a journal whose intervals all fall outside the
+      window → that journal contributes no section and no divider.
 - [x] **divider** renders a separator line.
 - [x] **markdown-template** + `templatePath` set → renders that file's markdown.
 - [ ] markdown-template with **date-format tokens in the path** → resolves to a

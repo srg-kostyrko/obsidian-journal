@@ -97,10 +97,7 @@ describe("CustomIntervalsBlock", () => {
     SCOPE.custom = ["foo", "bar"];
     JOURNALS.foo = customJournal("foo", "day", 1, "2026-01-01");
     JOURNALS.bar = customJournal("bar", "day", 1, "2026-01-01");
-    const { container } = mountBlock(
-      { window: "month", hideEmpty: false },
-      { refDate: ref("2026-05-15" as AnchorString) },
-    );
+    const { container } = mountBlock({ window: "month" }, { refDate: ref("2026-05-15" as AnchorString) });
     expect(container.querySelectorAll("[data-journal]").length).toBe(2);
   });
 
@@ -109,7 +106,7 @@ describe("CustomIntervalsBlock", () => {
     JOURNALS.foo = customJournal("foo", "day", 1, "2026-01-01");
     JOURNALS.bar = customJournal("bar", "day", 1, "2026-01-01");
     const { container } = mountBlock(
-      { journals: ["foo"], window: "month", hideEmpty: false },
+      { journals: ["foo"], window: "month" },
       { refDate: ref("2026-05-15" as AnchorString) },
     );
     const sections = container.querySelectorAll("[data-journal]");
@@ -120,10 +117,7 @@ describe("CustomIntervalsBlock", () => {
   it("lists every scheduled interval in the window even when no notes exist", () => {
     SCOPE.custom = ["foo"];
     JOURNALS.foo = customJournal("foo", "day", 1, "2026-01-01");
-    const { container } = mountBlock(
-      { window: "month", hideEmpty: true },
-      { refDate: ref("2026-05-15" as AnchorString) },
-    );
+    const { container } = mountBlock({ window: "month" }, { refDate: ref("2026-05-15" as AnchorString) });
     expect(container.querySelectorAll("[data-anchor]").length).toBe(31);
   });
 
@@ -132,10 +126,7 @@ describe("CustomIntervalsBlock", () => {
     JOURNALS.foo = customJournal("foo", "day", 1, "2026-01-01", {
       timeline: { start: "2026-01-01" as AnchorString, end: { kind: "date", date: "2026-05-10" as AnchorString } },
     });
-    const { container } = mountBlock(
-      { window: "month", hideEmpty: true },
-      { refDate: ref("2026-05-15" as AnchorString) },
-    );
+    const { container } = mountBlock({ window: "month" }, { refDate: ref("2026-05-15" as AnchorString) });
     const anchors = [...container.querySelectorAll<HTMLElement>("[data-anchor]")].map((el) => el.dataset.anchor);
     expect(anchors).toEqual([
       "2026-05-01",
@@ -155,7 +146,7 @@ describe("CustomIntervalsBlock", () => {
     SCOPE.custom = ["foo"];
     JOURNALS.foo = customJournal("foo", "day", 1, "2026-01-01");
     const refDate = ref("2026-05-15" as AnchorString);
-    const { container } = mountBlock({ window: "month", hideEmpty: true }, { refDate });
+    const { container } = mountBlock({ window: "month" }, { refDate });
 
     refDate.value = "2026-07-10" as AnchorString;
     await nextTick();
@@ -164,42 +155,23 @@ describe("CustomIntervalsBlock", () => {
     expect(anchors.every((anchor) => anchor.startsWith("2026-07"))).toBe(true);
   });
 
-  it("hides a journal with no in-window intervals when hideEmpty is true", () => {
+  it("hides a journal with no in-window intervals", () => {
     SCOPE.custom = ["foo", "bar"];
     JOURNALS.foo = customJournal("foo", "day", 1, "2026-01-01");
     JOURNALS.bar = customJournal("bar", "day", 1, "2026-01-01", {
       timeline: { start: "2020-01-01" as AnchorString, end: { kind: "date", date: "2020-01-01" as AnchorString } },
     });
-    const { container } = mountBlock(
-      { window: "month", hideEmpty: true },
-      { refDate: ref("2026-05-15" as AnchorString) },
-    );
+    const { container } = mountBlock({ window: "month" }, { refDate: ref("2026-05-15" as AnchorString) });
     const sections = container.querySelectorAll("[data-journal]");
     expect(sections.length).toBe(1);
     expect((sections[0] as HTMLElement).dataset.journal).toBe("foo");
-  });
-
-  it("shows an empty journal section when hideEmpty is false", () => {
-    SCOPE.custom = ["foo", "bar"];
-    JOURNALS.foo = customJournal("foo", "day", 1, "2026-01-01");
-    JOURNALS.bar = customJournal("bar", "day", 1, "2026-01-01", {
-      timeline: { start: "2020-01-01" as AnchorString, end: { kind: "date", date: "2020-01-01" as AnchorString } },
-    });
-    const { container } = mountBlock(
-      { window: "month", hideEmpty: false },
-      { refDate: ref("2026-05-15" as AnchorString) },
-    );
-    expect(container.querySelectorAll("[data-journal]").length).toBe(2);
   });
 
   it("marks the entry matching the active note as active", () => {
     SCOPE.custom = ["foo"];
     JOURNALS.foo = customJournal("foo", "day", 1, "2026-01-01");
     ACTIVE.value = { journalName: "foo", anchor: "2026-05-12" as AnchorString };
-    const { container } = mountBlock(
-      { window: "month", hideEmpty: false },
-      { refDate: ref("2026-05-15" as AnchorString) },
-    );
+    const { container } = mountBlock({ window: "month" }, { refDate: ref("2026-05-15" as AnchorString) });
     const active = container.querySelectorAll<HTMLElement>(".journal-view-custom-intervals__entry[data-active]");
     expect(active.length).toBe(1);
     expect(active[0]?.dataset.anchor).toBe("2026-05-12");
@@ -209,10 +181,7 @@ describe("CustomIntervalsBlock", () => {
     SCOPE.custom = ["foo"];
     JOURNALS.foo = customJournal("foo", "day", 1, "2026-01-01");
     ACTIVE.value = { journalName: "bar", anchor: "2026-05-12" as AnchorString };
-    const { container } = mountBlock(
-      { window: "month", hideEmpty: false },
-      { refDate: ref("2026-05-15" as AnchorString) },
-    );
+    const { container } = mountBlock({ window: "month" }, { refDate: ref("2026-05-15" as AnchorString) });
     expect(container.querySelectorAll(".journal-view-custom-intervals__entry[data-active]").length).toBe(0);
   });
 
@@ -220,7 +189,7 @@ describe("CustomIntervalsBlock", () => {
     it("decorates the interval entry whose note matches the journal decoration", async () => {
       SCOPE.custom = ["foo"];
       JOURNALS.foo = customJournal("foo", "day", 1, "2026-01-01", { decorations: [cornerHasNote()] });
-      const view = mountBlock({ window: "month", hideEmpty: false }, { refDate: ref("2026-05-15" as AnchorString) });
+      const view = mountBlock({ window: "month" }, { refDate: ref("2026-05-15" as AnchorString) });
 
       const path = "foo/2026-05-12.md" as VaultPath;
       view.metadata.setMetadata(path, { title: "2026-05-12", tags: [], properties: {}, tasks: [] });
@@ -244,7 +213,7 @@ describe("CustomIntervalsBlock", () => {
           }),
         ],
       });
-      const view = mountBlock({ window: "month", hideEmpty: false }, { refDate: ref("2026-05-15" as AnchorString) });
+      const view = mountBlock({ window: "month" }, { refDate: ref("2026-05-15" as AnchorString) });
       await nextTick();
 
       const entry = view.container.querySelector('.journal-view-custom-intervals__entry[data-anchor="2026-05-11"]');
@@ -255,7 +224,7 @@ describe("CustomIntervalsBlock", () => {
     it("leaves an interval entry without a note undecorated", async () => {
       SCOPE.custom = ["foo"];
       JOURNALS.foo = customJournal("foo", "day", 1, "2026-01-01", { decorations: [cornerHasNote()] });
-      const view = mountBlock({ window: "month", hideEmpty: false }, { refDate: ref("2026-05-15" as AnchorString) });
+      const view = mountBlock({ window: "month" }, { refDate: ref("2026-05-15" as AnchorString) });
 
       const path = "foo/2026-05-12.md" as VaultPath;
       view.metadata.setMetadata(path, { title: "2026-05-12", tags: [], properties: {}, tasks: [] });

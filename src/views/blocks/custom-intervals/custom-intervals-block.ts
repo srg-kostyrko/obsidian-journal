@@ -18,7 +18,6 @@ const schema = v.object({
       v.transform((legacy) => legacy.replace("current-", "") as (typeof windowKinds)[number]),
     ),
   ]),
-  hideEmpty: v.boolean(),
 });
 
 export type CustomIntervalsConfig = v.InferOutput<typeof schema>;
@@ -30,7 +29,7 @@ export const customIntervalsBlock = defineViewBlock<CustomIntervalsConfig>({
   description: m.view_block_custom_intervals_description(),
   icon: icons.entity.customInterval,
   schema,
-  defaultConfig: { window: "month", hideEmpty: true },
+  defaultConfig: { window: "month" },
   component: CustomIntervalsBlock,
   configComponent: CustomIntervalsBlockConfig,
   summary: (config) => {

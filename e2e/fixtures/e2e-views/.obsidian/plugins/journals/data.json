@@ -115,7 +115,7 @@
         {
           "id": "e5f6a7b8-4c5d-4e6f-8a7b-8c9d0e1f2a3b",
           "key": "custom-intervals",
-          "config": { "window": "year", "hideEmpty": true }
+          "config": { "window": "year" }
         }
       ]
     }

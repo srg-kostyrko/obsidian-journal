@@ -1348,7 +1348,6 @@
 			}
 		}
 	],
-	"view_block_config_hide_empty_label": "Ocultar diarios vacíos",
 	"view_toolbar_shelf_selector_label": "Selector de estantes",
 	"view_toolbar_shelf_selector_description": "Cambia qué estante delimita los diarios de la vista.",
 	"view_toolbar_shelf_selector_tooltip": "Estante de interruptor",

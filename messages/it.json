@@ -1348,7 +1348,6 @@
 			}
 		}
 	],
-	"view_block_config_hide_empty_label": "Nascondi i diari vuoti",
 	"view_toolbar_shelf_selector_label": "Selettore di ripiani",
 	"view_toolbar_shelf_selector_description": "Interruttori che definiscono l'ambito dei registri della vista.",
 	"view_toolbar_shelf_selector_tooltip": "Interruttore scaffale",

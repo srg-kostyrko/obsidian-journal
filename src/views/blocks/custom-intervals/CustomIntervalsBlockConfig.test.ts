@@ -19,22 +19,14 @@ afterEach(() => cleanup());
 describe("CustomIntervalsBlockConfig", () => {
   it("emits onChange with the chosen window when the dropdown changes", async () => {
     const onChange = vi.fn();
-    mountConfig({ window: "month", hideEmpty: true }, onChange);
+    mountConfig({ window: "month" }, onChange);
     const select = screen.getByRole("combobox");
     await userEvent.selectOptions(select, "quarter");
-    expect(onChange).toHaveBeenLastCalledWith({ window: "quarter", hideEmpty: true });
-  });
-
-  it("emits onChange when hideEmpty toggles", async () => {
-    const onChange = vi.fn();
-    mountConfig({ window: "month", hideEmpty: true }, onChange);
-    const [hideEmptyToggle] = screen.getAllByRole("checkbox");
-    await userEvent.click(hideEmptyToggle);
-    expect(onChange).toHaveBeenCalledWith({ window: "month", hideEmpty: false });
+    expect(onChange).toHaveBeenLastCalledWith({ window: "quarter" });
   });
 
   it("normalizes a legacy current-* window value to the bare period kind", () => {
-    const parsed = v.parse(customIntervalsBlock.schema, { window: "current-quarter", hideEmpty: false });
+    const parsed = v.parse(customIntervalsBlock.schema, { window: "current-quarter" });
     expect(parsed.window).toBe("quarter");
   });
 });

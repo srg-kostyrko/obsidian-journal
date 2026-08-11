@@ -1348,7 +1348,6 @@
 			}
 		}
 	],
-	"view_block_config_hide_empty_label": "Скрыть пустые журналы",
 	"view_toolbar_shelf_selector_label": "селектор полок",
 	"view_toolbar_shelf_selector_description": "Переключатели, определяющие область видимости журналов представления на полке.",
 	"view_toolbar_shelf_selector_tooltip": "Полка выключателей",

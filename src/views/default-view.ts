@@ -100,7 +100,7 @@ export function defaultCalendarView(): View {
         config: { before: 0, after: 0, hiddenWeekdays: [], weeks: "default", showHeading: false },
       },
       { id: DIVIDER_BLOCK_ID, key: "divider", config: {} },
-      { id: CUSTOM_INTERVALS_BLOCK_ID, key: "custom-intervals", config: { window: "current-month", hideEmpty: true } },
+      { id: CUSTOM_INTERVALS_BLOCK_ID, key: "custom-intervals", config: { window: "current-month" } },
     ],
   };
 }

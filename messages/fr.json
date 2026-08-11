@@ -1348,7 +1348,6 @@
 			}
 		}
 	],
-	"view_block_config_hide_empty_label": "Masquer les journaux vides",
 	"view_toolbar_shelf_selector_label": "Sélecteur d'étagères",
 	"view_toolbar_shelf_selector_description": "Commutateurs qui définissent la portée des journaux de la vue.",
 	"view_toolbar_shelf_selector_tooltip": "Étagère de commutation",

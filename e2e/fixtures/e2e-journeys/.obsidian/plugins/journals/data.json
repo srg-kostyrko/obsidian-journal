@@ -1023,8 +1023,7 @@
           "id": "bc2f3a4d-2d3e-4f6a-8b7c-9d0e1f2a3b4c",
           "key": "custom-intervals",
           "config": {
-            "window": "current-month",
-            "hideEmpty": true
+            "window": "current-month"
           }
         }
       ]

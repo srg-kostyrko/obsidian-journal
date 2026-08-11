@@ -1348,7 +1348,6 @@
 			}
 		}
 	],
-	"view_block_config_hide_empty_label": "隐藏空白日记本",
 	"view_toolbar_shelf_selector_label": "货架选择器",
 	"view_toolbar_shelf_selector_description": "切换视图的日记范围。",
 	"view_toolbar_shelf_selector_tooltip": "切换架",

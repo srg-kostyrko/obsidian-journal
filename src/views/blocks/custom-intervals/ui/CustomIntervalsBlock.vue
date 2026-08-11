@@ -64,7 +64,9 @@ const sections = computed<readonly Section[]>(() => {
       .intervalsInRange(name, window.value.start, window.value.end)
       .filter((anchor) => timeline.contains(name, anchor))
       .map((anchor) => ({ anchor }));
-    if (entries.length === 0 && props.config.hideEmpty) continue;
+    // A section renders no journal name of its own, so an entry-less one would show as a bare
+    // divider. v2 hid these unconditionally (`.calendar-view-interval:empty { display: none }`).
+    if (entries.length === 0) continue;
     out.push({ journalName: name, journal: cfg, block: cfg.intervalBlock, entries });
   }
   return out;

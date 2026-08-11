@@ -1085,7 +1085,6 @@
       }
     }
   ],
-  "view_block_config_hide_empty_label": "Hide empty journals",
 
   "view_toolbar_shelf_selector_label": "Shelf selector",
   "view_toolbar_shelf_selector_description": "Switches which shelf scopes the view's journals.",

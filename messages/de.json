@@ -1348,7 +1348,6 @@
 			}
 		}
 	],
-	"view_block_config_hide_empty_label": "Leere Journale ausblenden",
 	"view_toolbar_shelf_selector_label": "Regalwähler",
 	"view_toolbar_shelf_selector_description": "Schalter, die die Journale der Ansicht eingrenzen.",
 	"view_toolbar_shelf_selector_tooltip": "Schalterleiste",

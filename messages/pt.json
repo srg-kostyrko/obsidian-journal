@@ -1348,7 +1348,6 @@
 			}
 		}
 	],
-	"view_block_config_hide_empty_label": "Esconder diários vazios",
 	"view_toolbar_shelf_selector_label": "Seletor de prateleira",
 	"view_toolbar_shelf_selector_description": "Alterna quais menus da prateleira exibem os periódicos da visualização.",
 	"view_toolbar_shelf_selector_tooltip": "Prateleira de interruptor",

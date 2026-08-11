@@ -2,7 +2,6 @@
 import { m } from "@/i18n";
 import UiDropdown from "@/ui/UiDropdown.vue";
 import UiSettingRow from "@/ui/UiSettingRow.vue";
-import UiToggle from "@/ui/UiToggle.vue";
 
 import type { CustomIntervalsConfig, CustomIntervalsConfigChange } from "../custom-intervals-block";
 
@@ -28,12 +27,5 @@ const update = (patch: Partial<CustomIntervalsConfig>): void => props.onChange({
       <option value="quarter">{{ m.view_block_config_window_current({ period: "quarter" }) }}</option>
       <option value="year">{{ m.view_block_config_window_current({ period: "year" }) }}</option>
     </UiDropdown>
-  </UiSettingRow>
-  <UiSettingRow>
-    <template #name>{{ m.view_block_config_hide_empty_label() }}</template>
-    <UiToggle
-      :model-value="config.hideEmpty"
-      @update:model-value="(value: boolean | undefined) => update({ hideEmpty: value ?? false })"
-    />
   </UiSettingRow>
 </template>
