@@ -441,6 +441,7 @@
 			}
 		}
 	],
+	"common_vault_root": "Tresor-Stammverzeichnis",
 	"command_connect_note": "Notiz mit einem Journal verknüpfen",
 	"connect_note_modal_date_label": "Datum",
 	"connect_note_modal_move_description": "Der Ordner der Notiz ( {current} ) unterscheidet sich vom konfigurierten Ordner des Journals ( {configured} ).",

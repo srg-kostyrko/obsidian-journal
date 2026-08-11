@@ -441,6 +441,7 @@
 			}
 		}
 	],
+	"common_vault_root": "raiz do cofre",
 	"command_connect_note": "Conectar a nota a um diário",
 	"connect_note_modal_date_label": "Data",
 	"connect_note_modal_move_description": "A pasta da nota ( {current} ) difere da pasta configurada do diário ( {configured} ).",

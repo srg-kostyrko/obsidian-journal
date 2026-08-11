@@ -441,6 +441,7 @@
 			}
 		}
 	],
+	"common_vault_root": "radice del vault",
 	"command_connect_note": "Collega la nota a un diario",
 	"connect_note_modal_date_label": "Data",
 	"connect_note_modal_move_description": "La cartella della nota ( {current} ) è diversa dalla cartella configurata del diario ( {configured} ).",

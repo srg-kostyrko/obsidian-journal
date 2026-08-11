@@ -305,6 +305,8 @@
     }
   ],
 
+  "common_vault_root": "vault root",
+
   "command_connect_note": "Connect note to a journal",
   "connect_note_modal_date_label": "Date",
   "connect_note_modal_move_description": "The note's folder ({current}) differs from the journal's configured folder ({configured}).",

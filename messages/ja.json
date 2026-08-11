@@ -441,6 +441,7 @@
 			}
 		}
 	],
+	"common_vault_root": "保管庫のルート",
 	"command_connect_note": "ノートをジャーナルに接続する",
 	"connect_note_modal_date_label": "日付",
 	"connect_note_modal_move_description": "ノートのフォルダ ( {current} ) は、ジャーナルの設定済みフォルダ ( {configured} ) と異なります。",

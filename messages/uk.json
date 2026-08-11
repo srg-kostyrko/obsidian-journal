@@ -441,6 +441,7 @@
 			}
 		}
 	],
+	"common_vault_root": "корінь сховища",
 	"command_connect_note": "Підключити нотатку до журналу",
 	"connect_note_modal_date_label": "Дата",
 	"connect_note_modal_move_description": "Папка нотатки ( {current} ) відрізняється від налаштованої папки журналу ( {configured} ).",

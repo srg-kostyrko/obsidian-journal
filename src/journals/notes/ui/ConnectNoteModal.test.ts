@@ -241,5 +241,33 @@ describe("ConnectNoteModal", () => {
         screen.getByText(m.connect_note_modal_move_description({ current: "inbox", configured: "journals" })),
       ).toBeTruthy();
     });
+
+    it("names the vault root as the folder of a root-level note", async () => {
+      const repo = fakeRepo({ daily: fixedJournal("daily", { type: "day" }, { folder: "journals" }) });
+      const { container, modals } = buildContainer(repo);
+      const api: ModalApi<ConnectNoteResult> = { submit: vi.fn(), cancel: vi.fn() };
+
+      mountModal("note.md" as VaultPath, container, api);
+      await pickDate(modals, "2026-06-15");
+      expect(
+        screen.getByText(
+          m.connect_note_modal_move_description({ current: m.common_vault_root(), configured: "journals" }),
+        ),
+      ).toBeTruthy();
+    });
+
+    it("names the vault root as the configured folder of a root-level journal", async () => {
+      const repo = fakeRepo({ daily: fixedJournal("daily", { type: "day" }, { folder: "" }) });
+      const { container, modals } = buildContainer(repo);
+      const api: ModalApi<ConnectNoteResult> = { submit: vi.fn(), cancel: vi.fn() };
+
+      mountModal("inbox/note.md" as VaultPath, container, api);
+      await pickDate(modals, "2026-06-15");
+      expect(
+        screen.getByText(
+          m.connect_note_modal_move_description({ current: "inbox", configured: m.common_vault_root() }),
+        ),
+      ).toBeTruthy();
+    });
   });
 });

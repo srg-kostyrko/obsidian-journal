@@ -441,6 +441,7 @@
 			}
 		}
 	],
+	"common_vault_root": "корень хранилища",
 	"command_connect_note": "Привяжите заметку к журналу",
 	"connect_note_modal_date_label": "Дата",
 	"connect_note_modal_move_description": "Папка заметки ( {current} ) отличается от настроенной папки журнала ( {configured} ).",

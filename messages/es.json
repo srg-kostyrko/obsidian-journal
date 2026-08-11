@@ -441,6 +441,7 @@
 			}
 		}
 	],
+	"common_vault_root": "raíz de la bóveda",
 	"command_connect_note": "Conectar la nota a un diario",
 	"connect_note_modal_date_label": "Fecha",
 	"connect_note_modal_move_description": "La carpeta de la nota ( {current} ) difiere de la carpeta configurada del diario ( {configured} ).",

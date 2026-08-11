@@ -441,6 +441,7 @@
 			}
 		}
 	],
+	"common_vault_root": "보관함 루트",
 	"command_connect_note": "노트를 일기에 연결하세요",
 	"connect_note_modal_date_label": "날짜",
 	"connect_note_modal_move_description": "노트의 폴더( {current} )는 저널의 구성된 폴더( {configured} )와 다릅니다.",

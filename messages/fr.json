@@ -441,6 +441,7 @@
 			}
 		}
 	],
+	"common_vault_root": "racine du coffre-fort",
 	"command_connect_note": "Associer la note à un journal",
 	"connect_note_modal_date_label": "Date",
 	"connect_note_modal_move_description": "Le dossier de la note ( {current} ) diffère du dossier configuré du journal ( {configured} ).",

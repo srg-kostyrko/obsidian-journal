@@ -89,8 +89,14 @@ const needMove = computed(() => {
 
 const currentName = computed(() => splitVaultPath(props.path)[1]);
 const configuredName = computed(() => (configuredPath.value ? splitVaultPath(configuredPath.value)[1] : ""));
-const currentFolder = computed(() => splitVaultPath(props.path)[0]);
-const configuredFolder = computed(() => (configuredPath.value ? splitVaultPath(configuredPath.value)[0] : ""));
+// A root-level note has an empty folder, which reads as a hole in the move description.
+function folderLabel(folder: string): string {
+  return folder === "" ? m.common_vault_root() : folder;
+}
+const currentFolder = computed(() => folderLabel(splitVaultPath(props.path)[0]));
+const configuredFolder = computed(() =>
+  configuredPath.value ? folderLabel(splitVaultPath(configuredPath.value)[0]) : "",
+);
 
 const outOfBounds = computed(() => {
   const a = anchor.value;

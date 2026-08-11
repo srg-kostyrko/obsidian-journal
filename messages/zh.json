@@ -441,6 +441,7 @@
 			}
 		}
 	],
+	"common_vault_root": "库根目录",
 	"command_connect_note": "将笔记与日记连接起来",
 	"connect_note_modal_date_label": "日期",
 	"connect_note_modal_move_description": "笔记的文件夹（ {current} ）与日记的配置文件夹（ {configured} ）不同。",
