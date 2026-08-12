@@ -1608,12 +1608,12 @@
 		}
 	],
 	"view_toolbar_period_buttons_config_label": "Периоды",
-	"view_toolbar_defined_navigation_label": "Навигация по существующим заметкам",
-	"view_toolbar_defined_navigation_description": "Кнопка, позволяющая перейти к предыдущей или следующей уже существующей заметке.",
-	"view_toolbar_defined_navigation_target": "Заметки для перехода",
-	"view_toolbar_defined_navigation_target_active": "Заметки активного журнала",
-	"view_toolbar_defined_navigation_direction": "Направление",
-	"view_toolbar_defined_navigation_direction_option": [
+	"view_toolbar_existing_navigation_label": "Навигация по существующим заметкам",
+	"view_toolbar_existing_navigation_description": "Кнопка, позволяющая перейти к предыдущей или следующей уже существующей заметке.",
+	"view_toolbar_existing_navigation_target": "Заметки для перехода",
+	"view_toolbar_existing_navigation_target_active": "Заметки активного журнала",
+	"view_toolbar_existing_navigation_direction": "Направление",
+	"view_toolbar_existing_navigation_direction_option": [
 		{
 			"declarations": [
 				"input direction"

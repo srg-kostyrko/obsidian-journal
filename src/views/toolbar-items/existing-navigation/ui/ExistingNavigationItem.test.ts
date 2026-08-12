@@ -16,11 +16,11 @@ import { ActiveEntryViewModel, type ActiveEntryRef } from "@/notes-calendar/acti
 
 import { provideViewContextStub } from "../../../testing";
 import { provideViewContext, type ViewContext } from "../../../view-context";
-import { definedNavigationConfigFor } from "../defined-navigation-config";
-import { definedNavigationItem } from "../defined-navigation-item";
+import { existingNavigationConfigFor } from "../existing-navigation-config";
+import { existingNavigationItem } from "../existing-navigation-item";
 
 import type { BlockInstanceId } from "../../../config";
-import type { DefinedNavigationConfig } from "../defined-navigation-config";
+import type { ExistingNavigationConfig } from "../existing-navigation-config";
 
 const SCOPE = {
   day: [] as readonly string[],
@@ -68,11 +68,11 @@ class FakeNoticeService {
   }
 }
 
-const renderRoot = (config: DefinedNavigationConfig): ReturnType<typeof h> =>
-  h(definedNavigationItem.component, { instanceId: "i-1" as BlockInstanceId, config });
+const renderRoot = (config: ExistingNavigationConfig): ReturnType<typeof h> =>
+  h(existingNavigationItem.component, { instanceId: "i-1" as BlockInstanceId, config });
 
 function mountItem(
-  config: DefinedNavigationConfig,
+  config: ExistingNavigationConfig,
   options: { active?: ActiveEntryRef | null; entries?: readonly { journalName: string; anchor: string }[] } = {},
   contextOverride: Partial<ViewContext> = {},
 ) {
@@ -117,7 +117,7 @@ afterEach(() => {
   SCOPE.day = SCOPE.week = SCOPE.month = SCOPE.quarter = SCOPE.year = SCOPE.custom = [];
 });
 
-describe("DefinedNavigationItem", () => {
+describe("ExistingNavigationItem", () => {
   it("opens the nearest earlier existing note when the previous button is clicked", async () => {
     SCOPE.day = ["daily"];
     const { result, flows, notices } = mountItem(
@@ -216,32 +216,32 @@ describe("DefinedNavigationItem", () => {
   });
 
   it("renders the seeded chevron label", () => {
-    const { result } = mountItem(definedNavigationConfigFor("day", "next"));
+    const { result } = mountItem(existingNavigationConfigFor("day", "next"));
     expect(result.getByText("›")).toBeTruthy();
   });
 
   it("renders a custom label in place of the chevron", () => {
-    const { result } = mountItem({ ...definedNavigationConfigFor("day", "next"), label: "Older" });
+    const { result } = mountItem({ ...existingNavigationConfigFor("day", "next"), label: "Older" });
     expect(result.getByText("Older")).toBeTruthy();
   });
 
   it("renders no chevron when the label is cleared", () => {
-    const { result } = mountItem({ ...definedNavigationConfigFor("day", "next"), label: "" });
+    const { result } = mountItem({ ...existingNavigationConfigFor("day", "next"), label: "" });
     expect(result.queryByText("›")).toBeNull();
   });
 
   it("uses the seeded tooltip as the button aria-label", () => {
-    const { result } = mountItem(definedNavigationConfigFor("day", "previous"));
+    const { result } = mountItem(existingNavigationConfigFor("day", "previous"));
     expect(result.getByLabelText(m.command_open_previous())).toBeTruthy();
   });
 
   it("uses a custom tooltip as the button aria-label", () => {
-    const { result } = mountItem({ ...definedNavigationConfigFor("day", "next"), tooltip: "Jump back" });
+    const { result } = mountItem({ ...existingNavigationConfigFor("day", "next"), tooltip: "Jump back" });
     expect(result.getByLabelText("Jump back")).toBeTruthy();
   });
 
   it("omits the aria-label attribute when the tooltip is emptied", () => {
-    const { result } = mountItem({ ...definedNavigationConfigFor("day", "next"), tooltip: "" });
+    const { result } = mountItem({ ...existingNavigationConfigFor("day", "next"), tooltip: "" });
     expect(result.getByRole("button").getAttribute("aria-label")).toBeNull();
   });
 

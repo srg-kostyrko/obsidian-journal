@@ -7,15 +7,15 @@ import { Container, provideInjectorOnApp } from "@/infrastructure/di";
 import { InputSuggestService } from "@/infrastructure/host";
 import { FakeInputSuggestService } from "@/infrastructure/host/input-suggests/testing";
 
-import { definedNavigationConfigFor } from "./defined-navigation-config";
-import DefinedNavigationItemConfig from "./ui/DefinedNavigationItemConfig.vue";
+import { existingNavigationConfigFor } from "./existing-navigation-config";
+import ExistingNavigationItemConfig from "./ui/ExistingNavigationItemConfig.vue";
 
-import type { DefinedNavigationConfig, DefinedNavigationConfigChange } from "./defined-navigation-config";
+import type { ExistingNavigationConfig, ExistingNavigationConfigChange } from "./existing-navigation-config";
 
-function mountConfig(config: DefinedNavigationConfig, onChange: DefinedNavigationConfigChange) {
+function mountConfig(config: ExistingNavigationConfig, onChange: ExistingNavigationConfigChange) {
   const container = new Container();
   container.register(InputSuggestService).useValue(new FakeInputSuggestService() as unknown as InputSuggestService);
-  return render(DefinedNavigationItemConfig, {
+  return render(ExistingNavigationItemConfig, {
     props: { config, onChange },
     global: { plugins: [{ install: (app) => provideInjectorOnApp(app, container) }] },
   });
@@ -24,7 +24,7 @@ function mountConfig(config: DefinedNavigationConfig, onChange: DefinedNavigatio
 // Dropdowns render in order: target, direction.
 afterEach(() => cleanup());
 
-describe("DefinedNavigationItemConfig", () => {
+describe("ExistingNavigationItemConfig", () => {
   it("emits onChange with the chosen target when the target dropdown changes", async () => {
     const onChange = vi.fn();
     mountConfig({ target: "day", direction: "next" }, onChange);
@@ -58,14 +58,14 @@ describe("DefinedNavigationItemConfig", () => {
   });
 
   it("shows the direction's seeded label in the label field", () => {
-    mountConfig(definedNavigationConfigFor("day", "next"), vi.fn());
+    mountConfig(existingNavigationConfigFor("day", "next"), vi.fn());
     const [, labelInput] = screen.getAllByRole("textbox");
     expect((labelInput as HTMLInputElement).value).toBe("›");
   });
 
   it("emits the full config when an appearance field changes", async () => {
     const onChange = vi.fn();
-    const config = definedNavigationConfigFor("day", "next");
+    const config = existingNavigationConfigFor("day", "next");
     mountConfig(config, onChange);
     const [, labelInput] = screen.getAllByRole("textbox");
     await userEvent.clear(labelInput);
@@ -74,7 +74,7 @@ describe("DefinedNavigationItemConfig", () => {
 
   it("restores the current direction's label when the label reset is pressed", async () => {
     const onChange = vi.fn();
-    const config: DefinedNavigationConfig = { ...definedNavigationConfigFor("day", "next"), label: "‹" };
+    const config: ExistingNavigationConfig = { ...existingNavigationConfigFor("day", "next"), label: "‹" };
     mountConfig(config, onChange);
     const labelReset = screen.getByRole("button", { name: m.view_toolbar_appearance_reset({ field: "label" }) });
     await userEvent.click(labelReset);

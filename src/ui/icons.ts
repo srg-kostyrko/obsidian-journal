@@ -39,7 +39,7 @@ export const icons = {
     toolbar: "panel-top",
     markdownTemplate: "file-text",
     button: "square",
-    definedNavigation: "chevrons-left-right",
+    existingNavigation: "chevrons-left-right",
     spacer: "move-horizontal",
   },
   // Mirrors the icons Obsidian shows for each frontmatter property type.

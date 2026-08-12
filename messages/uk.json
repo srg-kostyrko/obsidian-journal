@@ -1415,12 +1415,12 @@
 		}
 	],
 	"view_toolbar_period_buttons_config_label": "Періоди",
-	"view_toolbar_defined_navigation_label": "Навігація наявними нотатками",
-	"view_toolbar_defined_navigation_description": "Кнопка, яка переходить до попередньої або наступної нотатки, яка вже існує.",
-	"view_toolbar_defined_navigation_target": "Нотатки для покрокового переходу",
-	"view_toolbar_defined_navigation_target_active": "Нотатки в активному журналі",
-	"view_toolbar_defined_navigation_direction": "Напрямок",
-	"view_toolbar_defined_navigation_direction_option": [
+	"view_toolbar_existing_navigation_label": "Навігація наявними нотатками",
+	"view_toolbar_existing_navigation_description": "Кнопка, яка переходить до попередньої або наступної нотатки, яка вже існує.",
+	"view_toolbar_existing_navigation_target": "Нотатки для покрокового переходу",
+	"view_toolbar_existing_navigation_target_active": "Нотатки в активному журналі",
+	"view_toolbar_existing_navigation_direction": "Напрямок",
+	"view_toolbar_existing_navigation_direction_option": [
 		{
 			"declarations": [
 				"input direction"

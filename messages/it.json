@@ -1561,12 +1561,12 @@
 		}
 	],
 	"view_toolbar_period_buttons_config_label": "Periodi",
-	"view_toolbar_defined_navigation_label": "Navigazione a note definite",
-	"view_toolbar_defined_navigation_description": "Un pulsante che permette di passare alla nota precedente o successiva già presente.",
-	"view_toolbar_defined_navigation_target": "Note da scorrere",
-	"view_toolbar_defined_navigation_target_active": "Note del diario attivo",
-	"view_toolbar_defined_navigation_direction": "Direzione",
-	"view_toolbar_defined_navigation_direction_option": [
+	"view_toolbar_existing_navigation_label": "Navigazione tra note esistenti",
+	"view_toolbar_existing_navigation_description": "Un pulsante che permette di passare alla nota precedente o successiva già presente.",
+	"view_toolbar_existing_navigation_target": "Note da scorrere",
+	"view_toolbar_existing_navigation_target_active": "Note del diario attivo",
+	"view_toolbar_existing_navigation_direction": "Direzione",
+	"view_toolbar_existing_navigation_direction_option": [
 		{
 			"declarations": [
 				"input direction"

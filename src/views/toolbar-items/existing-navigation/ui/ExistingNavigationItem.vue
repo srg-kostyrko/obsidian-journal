@@ -15,11 +15,11 @@ import UiIcon from "@/ui/UiIcon.vue";
 import { useViewContext } from "../../../view-context";
 
 import type { BlockInstanceId } from "../../../config";
-import type { DefinedNavigationConfig } from "../defined-navigation-config";
+import type { ExistingNavigationConfig } from "../existing-navigation-config";
 
 const props = defineProps<{
   instanceId: BlockInstanceId;
-  config: DefinedNavigationConfig;
+  config: ExistingNavigationConfig;
 }>();
 
 const context = useViewContext();

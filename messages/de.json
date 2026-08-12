@@ -1561,12 +1561,12 @@
 		}
 	],
 	"view_toolbar_period_buttons_config_label": "Zeiträume",
-	"view_toolbar_defined_navigation_label": "Navigation zu vorhandenen Notizen",
-	"view_toolbar_defined_navigation_description": "Eine Schaltfläche, die zur vorherigen oder nächsten bereits vorhandenen Notiz springt.",
-	"view_toolbar_defined_navigation_target": "Notizen zum Durchblättern",
-	"view_toolbar_defined_navigation_target_active": "Notizen im aktiven Journal",
-	"view_toolbar_defined_navigation_direction": "Richtung",
-	"view_toolbar_defined_navigation_direction_option": [
+	"view_toolbar_existing_navigation_label": "Navigation zu vorhandenen Notizen",
+	"view_toolbar_existing_navigation_description": "Eine Schaltfläche, die zur vorherigen oder nächsten bereits vorhandenen Notiz springt.",
+	"view_toolbar_existing_navigation_target": "Notizen zum Durchblättern",
+	"view_toolbar_existing_navigation_target_active": "Notizen im aktiven Journal",
+	"view_toolbar_existing_navigation_direction": "Richtung",
+	"view_toolbar_existing_navigation_direction_option": [
 		{
 			"declarations": [
 				"input direction"

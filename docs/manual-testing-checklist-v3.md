@@ -26,7 +26,7 @@ only when you are investigating a specific report or the spec is red.
 | §5 connection            | `commands` (insert date link)                                                                       |
 | §6 bulk add              | `bulk-add`                                                                                          |
 | §7 commands              | `commands`, `default-commands`, `dynamic-commands`, `available-command`                             |
-| §8 views                 | `view`, `view-blocks`, `view-clone`, `remember-date`, `startup-view`, `defined-navigation`          |
+| §8 views                 | `view`, `view-blocks`, `view-clone`, `remember-date`, `startup-view`, `existing-navigation`         |
 | §9 shelves               | `nav-off-shelf`                                                                                     |
 | §10 code blocks          | `code-blocks`, `custom-interval-nav`, `home-index`                                                  |
 | §14 settings             | `settings`, `settings-first-journal`                                                                |
@@ -63,10 +63,10 @@ Setup: clone branch `v3-ai`; `npm run dev` (builds into
 - [x] - Open a **brand-new empty vault**, install the plugin → exactly one Calendar
       view is seeded, it opens on startup, it shows a ribbon icon, and no journals
       exist.
-- [ ] First run → the seeded view renders its calendar grid with no empty-state
+- [x] First run → the seeded view renders its calendar grid with no empty-state
       message, and does not render a bare divider rule or an empty custom-intervals
       section.
-- [ ] - Open a vault with a v2 `data.json` → loads without crash (migration, §16).
+- [x] - Open a vault with a v2 `data.json` → loads without crash (migration, §16).
 - [ ] Mobile smoke: plugin loads on a mobile/tablet build (full mobile pass is §20).
 
 ---
@@ -128,13 +128,13 @@ rewrite every connected note (see the item below).
 - [x] **Date format** change → existing notes keep their old names (no rewrite).
 - [x] **Folder** set to `Journals/Cfg` → new note created there.
 - [x] **Folder** with a not-yet-existing nested path → folders auto-created.
-- [ ] **Note path preview** — set **Folder** to `Journals/{{date:YYYY}}/{{date:MM}}` → the
+- [x] **Note path preview** — set **Folder** to `Journals/{{date:YYYY}}/{{date:MM}}` → the
       preview at the top of the Note creation section shows the whole path including `.md`,
       it matches where the created note actually lands, and the deep path wraps onto
       multiple lines instead of overflowing the settings pane.
-- [ ] **Note path preview** with **Folder** `Journals/{{note_name}}` → the preview
+- [x] **Note path preview** with **Folder** `Journals/{{note_name}}` → the preview
       resolves the folder instead of going blank.
-- [ ] **Note path preview** with the **name template cleared** → the preview is replaced
+- [x] **Note path preview** with the **name template cleared** → the preview is replaced
       by the empty-note-name warning.
 - [x] **Template** — + add `templates/daily template.md` → new note's body is the
       template content.
@@ -193,7 +193,7 @@ command + a view block targeting it.
 - [x] **Delete → clear notes** → files remain, journal frontmatter keys stripped.
 - [x] **Delete → delete notes** → notes moved to **trash** (recoverable), not
       permanently erased.
-- [ ] **Delete → keep notes**, then create a journal with the **same name** → the kept
+- [x] **Delete → keep notes**, then create a journal with the **same name** → the kept
       notes reconnect immediately (the delete modal counts them again, the calendar
       shows them), with no reload.
 - [x] Create a second journal with a **different name** but the same
@@ -232,25 +232,25 @@ so the number is visible in filenames.
 Setup: a Day journal "Conn" with a folder + name template; an arbitrary note
 `Scratch.md` open.
 
-- [ ] **Connect note** command on `Scratch.md` → pick Conn + a date → journal
+- [x] **Connect note** command on `Scratch.md` → pick Conn + a date → journal
       frontmatter written to the note.
-- [ ] - Date already has a note → **override** prompt appears → choosing override
+- [x] - Date already has a note → **override** prompt appears → choosing override
       replaces the connection.
-- [ ] 🔴 Override **with rename+move on**, so the incoming note takes the occupant's
+- [x] 🔴 Override **with rename+move on**, so the incoming note takes the occupant's
       exact path → the old occupant file is moved to **trash**.
-- [ ] 🔴 Override **without** rename+move → the old occupant is only _disconnected_
+- [x] 🔴 Override **without** rename+move → the old occupant is only _disconnected_
       (frontmatter stripped); its file stays in place as an orphan. Confirm this is
       what you see — the two outcomes differ and only one deletes a file.
-- [ ] - **Rename toggle on** → `Scratch.md` renamed to Conn's name template.
-- [ ] - **Move toggle on** → file moved into Conn's folder.
+- [x] - **Rename toggle on** → `Scratch.md` renamed to Conn's name template.
+- [x] - **Move toggle on** → file moved into Conn's folder.
 - [x] **Connect** on an already-connected note → button shows **Disconnect** →
       frontmatter keys stripped.
-- [ ] Connect a note dated **outside Conn's timeline** → the attempt is refused with
+- [x] Connect a note dated **outside Conn's timeline** → the attempt is refused with
       an explanation; the note's frontmatter is unchanged afterwards.
-- [ ] **Connect note** in a vault with **no journals** → an empty-state explains why,
+- [x] **Connect note** in a vault with **no journals** → an empty-state explains why,
       with only Cancel.
-- [ ] **Insert date link** command in an editor → inserts a journal/date link.
-- [ ] Click the inserted link → navigates to / creates that entry.
+- [x] **Insert date link** command in an editor → inserts a journal/date link.
+- [x] Click the inserted link → navigates to / creates that entry.
 
 ---
 
@@ -326,9 +326,9 @@ Setup: one command of each `type`, targeting the relevant journal write type.
 - [x] **next_available** — + gaps between existing notes → jumps to the next entry
       that _exists_, skipping the gap (not merely +1 period).
 - [x] **previous_available** → jumps to the previous existing entry.
-- [ ] **next_available** with nothing ahead → an explicit "no next note" notice, not
+- [x] **next_available** with nothing ahead → an explicit "no next note" notice, not
       silence.
-- [ ] **previous_available** with nothing behind → an explicit "no previous note"
+- [x] **previous_available** with nothing behind → an explicit "no previous note"
       notice.
 - [x] Day journal — **same** → today's entry.
 - [x] Day journal — **next** → +1 day.
@@ -459,7 +459,7 @@ registered: `toolbar`, `month-calendar`, `week-calendar`, `custom-intervals`,
 ### Toolbar items
 
 Setup: edit a view's toolbar block → add each item. Five item types are registered:
-`button`, `shelf-selector`, `spacer`, `period-buttons`, `defined-navigation` — add
+`button`, `shelf-selector`, `spacer`, `period-buttons`, `existing-navigation` — add
 every one at least once.
 
 - [x] **Add item** picker lists all five types, including the three button presets
@@ -467,12 +467,12 @@ every one at least once.
 - [x] **Reorder toolbar items** by drag → the new order survives a reload.
 - [x] **Remove a toolbar item** → it disappears; siblings keep their order.
 - [x] **spacer** → pushes the items after it to the far edge of the strip.
-- [x] **defined-navigation**, direction **previous** → steps back at its configured
+- [x] **existing-navigation**, direction **previous** → steps back at its configured
       target.
-- [x] defined-navigation, direction **next** → steps forward.
-- [ ] defined-navigation **target = active** → follows the active note's journal
+- [x] existing-navigation, direction **next** → steps forward.
+- [x] existing-navigation **target = active** → follows the active note's journal
       rather than a fixed period.
-- [ ] defined-navigation targets **day / week / month / quarter / year / custom** →
+- [x] existing-navigation targets **day / week / month / quarter / year / custom** →
       each steps at that scale.
 - [x] **button → pick-date** → click opens a date picker.
 - [x] pick-date **day** level → selecting a day navigates to that day.
@@ -497,13 +497,13 @@ every one at least once.
 - [x] button **mode = create** → opens _or creates_ the entry.
 - [x] button with **two or more levels** configured → clicking pops a menu to choose
       the level instead of acting directly.
-- [ ] button **bound to a specific journal** → acts on that journal regardless of the
+- [x] button **bound to a specific journal** → acts on that journal regardless of the
       view's shelf scope.
 - [x] **shelf-selector** dropdown → lists the available shelves.
 - [x] **shelf-selector** selection → re-scopes the calendar to that shelf's
       journals.
-- [ ] shelf-selector selection **persists** across closing and reopening the view.
-- [ ] **Delete the selected shelf** → the selector falls back gracefully rather than
+- [x] shelf-selector selection **persists** across closing and reopening the view.
+- [x] **Delete the selected shelf** → the selector falls back gracefully rather than
       showing a dangling name.
 - [x] **period-buttons — week** toggle → shows/hides the week level.
 - [x] **period-buttons — month** toggle → shows/hides the month level.
@@ -631,9 +631,9 @@ is visible.
       decorated.
 - [x] **date, year-pinned** — + set year=current → only this year's cell.
 - [x] **weekday** — + select Mon+Fri → every Monday and Friday cell decorated.
-- [ ] **offset — From start, day 1** (on DecoX) → the interval's first day (the
+- [x] **offset — From start, day 1** (on DecoX) → the interval's first day (the
       journal's anchor cell) is decorated.
-- [ ] **offset — From end, day 1** (on DecoX) → the interval's last day is
+- [x] **offset — From end, day 1** (on DecoX) → the interval's last day is
       decorated.
 - [x] **has-note** → only cells that have a linked entry are decorated.
 - [x] **has-open-task** — + a linked note with an unchecked `- [ ]` task → that
@@ -644,7 +644,7 @@ is visible.
 - [x] **all-tasks-completed** reactivity — uncheck a task → the decoration clears.
 - [x] **tag — contains** — + condition tag contains `journal` on a note tagged
       `#journal` → decorated.
-- [ ] **tag — starts-with** → matches by tag prefix.
+- [x] **tag — starts-with** → matches by tag prefix.
 - [x] **tag — ends-with** → matches by tag suffix.
 - [x] **title — contains** → matches when the title contains the substring.
 - [x] **title — starts-with** → matches by title prefix.
@@ -958,7 +958,7 @@ The same modifier map applies to every affordance below: **Ctrl/Cmd → new tab*
 - [x] **`journals-home` link** → same modifier behavior.
 - [x] **Toolbar button** → same modifier behavior.
 - [x] **Period badge** (period-buttons item) → same modifier behavior.
-- [x] **Defined-navigation arrow** → same modifier behavior.
+- [x] **Existing-notes navigation arrow** → same modifier behavior.
 
 ### Context menus
 

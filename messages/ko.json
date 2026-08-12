@@ -1561,12 +1561,12 @@
 		}
 	],
 	"view_toolbar_period_buttons_config_label": "기간",
-	"view_toolbar_defined_navigation_label": "기존 노트 탐색",
-	"view_toolbar_defined_navigation_description": "이미 존재하는 이전 또는 다음 노트로 이동하는 버튼입니다.",
-	"view_toolbar_defined_navigation_target": "이동할 노트",
-	"view_toolbar_defined_navigation_target_active": "활성 저널의 노트",
-	"view_toolbar_defined_navigation_direction": "방향",
-	"view_toolbar_defined_navigation_direction_option": [
+	"view_toolbar_existing_navigation_label": "기존 노트 탐색",
+	"view_toolbar_existing_navigation_description": "이미 존재하는 이전 또는 다음 노트로 이동하는 버튼입니다.",
+	"view_toolbar_existing_navigation_target": "이동할 노트",
+	"view_toolbar_existing_navigation_target_active": "활성 저널의 노트",
+	"view_toolbar_existing_navigation_direction": "방향",
+	"view_toolbar_existing_navigation_direction_option": [
 		{
 			"declarations": [
 				"input direction"

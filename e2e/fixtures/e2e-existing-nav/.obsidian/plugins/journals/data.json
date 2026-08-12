@@ -20,7 +20,7 @@
   "views": {
     "f1e2d3c4-0b1a-4c2d-8e3f-4a5b6c7d8e9f": {
       "id": "f1e2d3c4-0b1a-4c2d-8e3f-4a5b6c7d8e9f",
-      "name": "Defined Nav",
+      "name": "Existing Nav",
       "icon": "chevrons-left-right",
       "defaultShelf": null,
       "showInRibbon": true,
@@ -33,7 +33,7 @@
             "items": [
               {
                 "id": "b3c4d5e6-2f3a-4b4c-8d5e-6f7a8b9c0d1e",
-                "key": "defined-navigation",
+                "key": "existing-navigation",
                 "config": { "target": "day", "direction": "previous", "label": "‹", "tooltip": "Open previous note" }
               }
             ]

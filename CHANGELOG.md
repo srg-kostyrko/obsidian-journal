@@ -10,7 +10,7 @@ All notable changes to this project will be documented in this file.
 - Build and customize your own calendar views by composing blocks (month, week, quarter, year, decade, and custom-interval calendars, plus toolbars, dividers, and spacers) and toolbar items (shelf selector, period buttons, navigation buttons, and more).
 - Target a specific journal from a custom command or toolbar button, so hotkeys act on it without prompting.
 - Choose where the week-number column appears per block, with a global default.
-- Open the nearest existing note for a journal or shelf, via command or a defined-navigation toolbar item.
+- Open the nearest existing note for a journal or shelf, via command or an existing notes navigation toolbar item.
 - New markdown-template block for custom views that renders a template file inline.
 - Automatically attach externally created notes that match a journal's naming.
 - Logging tools that capture activity and dump it to a note for troubleshooting.

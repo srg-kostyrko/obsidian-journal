@@ -1372,12 +1372,12 @@
 		}
 	],
 	"view_toolbar_period_buttons_config_label": "周期",
-	"view_toolbar_defined_navigation_label": "已有笔记导航",
-	"view_toolbar_defined_navigation_description": "一个可以跳转到上一个或下一个已存在笔记的按钮。",
-	"view_toolbar_defined_navigation_target": "要遍历的笔记",
-	"view_toolbar_defined_navigation_target_active": "当前日记的笔记",
-	"view_toolbar_defined_navigation_direction": "方向",
-	"view_toolbar_defined_navigation_direction_option": [
+	"view_toolbar_existing_navigation_label": "已有笔记导航",
+	"view_toolbar_existing_navigation_description": "一个可以跳转到上一个或下一个已存在笔记的按钮。",
+	"view_toolbar_existing_navigation_target": "要遍历的笔记",
+	"view_toolbar_existing_navigation_target_active": "当前日记的笔记",
+	"view_toolbar_existing_navigation_direction": "方向",
+	"view_toolbar_existing_navigation_direction_option": [
 		{
 			"declarations": [
 				"input direction"

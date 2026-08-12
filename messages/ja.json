@@ -1372,12 +1372,12 @@
 		}
 	],
 	"view_toolbar_period_buttons_config_label": "期間",
-	"view_toolbar_defined_navigation_label": "既存ノートのナビゲーション",
-	"view_toolbar_defined_navigation_description": "既に存在する前のノートまたは次のノートへジャンプするボタン。",
-	"view_toolbar_defined_navigation_target": "移動対象のノート",
-	"view_toolbar_defined_navigation_target_active": "アクティブなジャーナルのノート",
-	"view_toolbar_defined_navigation_direction": "方向",
-	"view_toolbar_defined_navigation_direction_option": [
+	"view_toolbar_existing_navigation_label": "既存ノートのナビゲーション",
+	"view_toolbar_existing_navigation_description": "既に存在する前のノートまたは次のノートへジャンプするボタン。",
+	"view_toolbar_existing_navigation_target": "移動対象のノート",
+	"view_toolbar_existing_navigation_target_active": "アクティブなジャーナルのノート",
+	"view_toolbar_existing_navigation_direction": "方向",
+	"view_toolbar_existing_navigation_direction_option": [
 		{
 			"declarations": [
 				"input direction"
