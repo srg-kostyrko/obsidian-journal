@@ -65,6 +65,7 @@ const hover = useModifierHoverPreview();
      floor instead of resolving its height: 100% against a parent that has only a min-height. */
   display: flex;
   min-height: 26px;
+  border-radius: var(--radius-s);
 }
 .notes-calendar-cell[data-inactive] {
   cursor: default;

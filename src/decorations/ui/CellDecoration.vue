@@ -70,12 +70,16 @@ const padding = computed(() => sharedPadding?.value ?? formatPadding(cell.value.
   line-height: 1;
   position: relative;
   box-sizing: border-box;
+  /* The decoration paints over its whole host, so its fill and border have to follow whatever
+     rounding the host has (rounded calendar cells, square nav blocks) instead of squaring it off. */
+  border-radius: inherit;
 }
 
 .cell-decoration__border {
   position: absolute;
   inset: 0;
   pointer-events: none;
+  border-radius: inherit;
 }
 
 .cell-decoration__placed {
