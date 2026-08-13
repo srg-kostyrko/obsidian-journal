@@ -183,10 +183,9 @@ on it.
   silent drift. `tsconfig.e2e.json` needs `allowJs` **and** an explicit
   `include` entry for the generated `.js`; it is a composite project, so without
   the entry TS6307 fires on every file in it. The suite does **not** follow this
-  uniformly — four specs import `m`, while selectors and a number of assertions
-  retype the literal, and `e2e/journeys/decorations.ts` states in a comment that
-  "e2e specs cannot import from `src/`", which those four disprove. Import for
-  new assertions; treat the retyped literals as known debt, not as the pattern.
+  uniformly — four of sixty-one e2e files import `m`, while selectors and a
+  number of assertions retype the literal. Import for new assertions; treat the
+  retyped literals as known debt, not as the pattern.
 - e2e helpers also drive settings through visible tooltips and button labels, so
   renaming a message can break e2e with no unit-test failure. Grep `e2e/` for
   the old literal when changing one.

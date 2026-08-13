@@ -17,7 +17,9 @@ import { calendar, openCalendarView } from "./view.js";
 
 import type { CalendarSurface, CellLocator, PeriodTestId } from "./calendar.js";
 
-// e2e specs cannot import from src/, so this is a plain literal. It MUST match
+// Retyped rather than imported, which is debt, not a constraint: specs in this
+// directory do import `m` from ../../src/i18n/paraglide/messages.js, and this
+// file shares their module graph. Until it does, this MUST match
 // decoration_explain_menu_item in messages/en.json.
 export const EXPLAIN_MENU_ITEM = "Explain decorations";
 
@@ -337,7 +339,8 @@ export async function closeAnyMenu(): Promise<void> {
 // is the one place a region click is proven to reach data.json and that Obsidian's real CSS
 // cascade renders the result back out.
 
-// e2e specs cannot import from src/, so these are plain literals. They MUST match, in
+// Retyped rather than imported (see above — nothing blocks the import; each of these is a
+// paraglide message callable with its args object). They MUST match, in
 // messages/en.json: decoration_modal_add_condition, decoration_condition_type_label
 // (type=has-note — the ADD-CONDITION DROPDOWN's option text; decoration_condition_type_short
 // names the row after the condition exists and is a different string), decoration_layer_chip_label
