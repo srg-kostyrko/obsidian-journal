@@ -257,13 +257,12 @@ year/month/quarter.
 **Journal-edit warnings** — `src/journals/settings/ui/` hosts several independent
 template-diagnostic checks surfaced while editing a journal: `useInvertibilityCheck`
 (can auto-attach recover an anchor from this name/folder template?),
-`templateHasWrongWeek` (does a format use the `W` token, which breaks under custom
-week configs, since a week's anchor depends on the week's owning year),
-`useCollisionCheck` (walks up to 40 of the
-journal's own periods and reports the first repeated note path, via the pure
-`findPathCollision` core — does one journal's own template collapse two entries onto
-one note?), and `findCollidingJournals` (do two different journals resolve to the
-same path?).
+`templateHasWrongWeek` (does a format use the `W` token, which is fixed to ISO week
+numbering and so disagrees with `w` under a custom week configuration),
+`useCollisionCheck` (walks up to 40 of the journal's own periods and reports the
+first repeated note path, via the pure `findPathCollision` core — does one
+journal's own template collapse two entries onto one note?), and
+`findCollidingJournals` (do two different journals resolve to the same path?).
 
 > **Don't fuse by shape.** These look alike — each is a warning predicate over a
 > template string — but check unrelated failure modes (invertibility vs. week-format

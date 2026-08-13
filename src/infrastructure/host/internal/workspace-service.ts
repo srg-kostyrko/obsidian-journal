@@ -64,8 +64,7 @@ export class WorkspaceService {
       this.#app.workspace.on("active-leaf-change", (leaf) => {
         // Focusing a leaf with no file (e.g. the calendar sidebar) must not clear the active
         // note, or the calendar's active-day highlight would disappear whenever that sidebar
-        // gets focus. Only react to leaves that carry a file; note closes leave the last note
-        // active.
+        // gets focus. Only react to leaves that carry a file.
         const file = this.#fileOf(leaf);
         if (!file) return;
         this.#emitter.emit("active-note-changed", this.#pathOf(file));

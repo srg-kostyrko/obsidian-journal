@@ -19,8 +19,10 @@ export class TemplateContext {
     return new TemplateContext(next);
   }
 
-  // Exact match wins first, so two variables differing only in case each keep their own binding
-  // — numbering source names are user-authored and unique only case-sensitively (config.ts).
+  // The fallback lets a template token spelled in a different case (e.g. `{{Date}}`) still
+  // resolve its variable's binding. Exact match wins first, so two variables differing only in
+  // case each keep their own binding — numbering source names are user-authored and unique only
+  // case-sensitively (config.ts).
   #lookup(name: string): { name: string; spec: VariableSpec } | undefined {
     const exact = this.#variables.get(name);
     if (exact) return { name, spec: exact };

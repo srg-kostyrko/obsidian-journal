@@ -25,7 +25,7 @@ A comprehensive journaling solution for [Obsidian](https://obsidian.md/) that tr
 - **Custom Commands**: Create shortcuts for your most common journal operations, including opening the next, previous, or nearest existing note, and target them at one journal, a whole shelf, or every journal of one period type
 - **Templating**: Powerful variable system for consistent journal entries, with Templater support
 - **Frontmatter**: Automatic metadata for better organization
-- **Auto-attach**: Notes you create yourself are connected to a journal automatically when their path matches that journal's folder and name template
+- **Auto-attach**: Notes you create yourself are connected to a journal automatically when their path matches that journal's folder and name template, the date it resolves to falls within that journal's timeline, and no other journal matches the same note
 
 ### Integrations & Tooling
 
@@ -231,7 +231,7 @@ This ensures that only journal plugin is processing note template thus avoiding 
 These variables can be used in the note name template, the folder path, and the content of a template note. Each journal's settings has a **Supported variables** link that opens the same list for that journal, with its own date format and numbering variables filled in.
 
 - `{{journal_name}}` - name of journal note belongs to
-- `{{date}}` - date used as reference to specific period, formatted using date format from settings. In most cases it is the first day of the month, quarter, year or custom interval. The exception is week notes, where `{{date}}` renders the week's representative day rather than its first day — with the ISO-8601 week configuration that is the Thursday, so `{{date:YYYY}}` on a week straddling January 1 gives the week's own year. Format can be overridden using following syntax `{{date:format}}` where format is string using [Moment.js format rules](https://momentjs.com/docs/#/displaying/format/) (like `{{date:YYYY-MM-DD}}`).
+- `{{date}}` - date used as reference to specific period, formatted using date format from settings. In most cases it is the first day of the month, quarter, year or custom interval. The exception is week notes, where `{{date}}` renders the week's representative day rather than its first day — with the ISO-8601 week configuration that is the Thursday. Format can be overridden using following syntax `{{date:format}}` where format is string using [Moment.js format rules](https://momentjs.com/docs/#/displaying/format/) (like `{{date:YYYY-MM-DD}}`).
 - `{{start_date}}` - first day of week, month, quarter, year or interval depending on note type, formatting rules are the same as in `{{date}}`, as well as the calculations
 - `{{end_date}}` - last day of week, month, quarter, year or interval depending on note type, formatting rules are the same as in `{{date}}`, as well as the calculations
 - `{{index}}` - the journal's numbering variable, which is named `index` by default. A journal can define several numbering variables under its own names, each with its own frontmatter property; the name you give it there is the name you use here. Numbering is on by default for custom-interval journals and can be enabled for any journal type.
