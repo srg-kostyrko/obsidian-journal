@@ -367,7 +367,7 @@ describe("TemplateEngine.validate", () => {
   });
 });
 
-describe("default daily and weekly date formats", () => {
+describe("renders realistic journal templates against a real calendar", () => {
   let teardown: () => void;
   beforeEach(() => {
     ({ teardown } = installTestCalendar());
