@@ -27,13 +27,18 @@ export class WeekPeriod implements PeriodBase<WeekPeriod> {
     const start = reference.clone().startOf("week");
     const end = reference.clone().endOf("week").startOf("day");
     const doy = reference.localeData().firstDayOfYear();
+    const dow = reference.localeData().firstDayOfWeek();
 
     this.start = CalendarDate._fromMoment(start);
     this.end = CalendarDate._fromMoment(end);
     this.anchor = this.start;
     // The locale's representative day: the one whose calendar year is the week-year, so
-    // {{date:YYYY}} resolves correctly for a week straddling January 1.
-    this.representative = CalendarDate._fromMoment(start.clone().add(doy - 1, "day"));
+    // {{date:YYYY}} resolves correctly for a week straddling January 1. The offset is
+    // `doy - dow`, not `doy - 1`: moment guarantees January `7 + dow - doy` falls in week 1,
+    // and only the day `7 - that` into the week is inside January 1-7 of the week-year
+    // wherever that guaranteed day happens to land. The two expressions coincide when the
+    // week starts Monday, which is why ISO configurations never saw the difference.
+    this.representative = CalendarDate._fromMoment(start.clone().add(doy - dow, "day"));
     this.weekOfYear = reference.week();
     this.year = reference.weekYear();
   }
