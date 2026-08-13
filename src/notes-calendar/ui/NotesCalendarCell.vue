@@ -71,8 +71,8 @@ const hover = useModifierHoverPreview();
   cursor: default;
 }
 /* A cell takes a tab stop, so it has to show where the keyboard is. A real <button> gets a
-   focus ring from Obsidian for free; a span with tabindex does not, which left a keyboard
-   user tabbing ~35 cells with nothing to see. Same rule as the date-picker grid. */
+   focus ring from Obsidian for free; a span with tabindex does not, which would leave a
+   keyboard user tabbing ~35 cells with nothing to see. Same rule as the date-picker grid. */
 .notes-calendar-cell:focus-visible {
   outline: 2px solid var(--background-modifier-border-focus);
   outline-offset: -1px;

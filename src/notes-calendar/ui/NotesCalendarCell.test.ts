@@ -207,8 +207,6 @@ describe("NotesCalendarCell", () => {
     });
 
     it("previews when the modifier is pressed while hovering", () => {
-      // Complements the already-held case above: the keydown listener registered on enter
-      // fires the preview even when the modifier arrives after the pointer does.
       const openPreview = vi.fn();
       const { container } = mount({ period: may25, cell: stubApi({ openPreview }) });
       const cell = container.querySelector<HTMLElement>(".notes-calendar-cell")!;
