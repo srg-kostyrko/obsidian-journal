@@ -1,6 +1,6 @@
-# Manual Testing Checklist — Journals v3 in Obsidian
+# Manual Testing Checklist — Journals in Obsidian
 
-Branch: `v3-ai`. Run before tagging a beta / merging to `main`.
+Run before tagging a release.
 
 **How to read an item.** Each group opens with a **Setup:** preamble — do it once
 for the whole group. Each `[ ]` item is one behavior: it states any extra setup
@@ -51,7 +51,7 @@ order, not top to bottom:
 
 ## 0. Setup & smoke
 
-Setup: clone branch `v3-ai`; `npm run dev` (builds into
+Setup: clone the repository; `npm run dev` (builds into
 `test-vault/.obsidian/plugins/journals` with hot-reload).
 
 - [x] Dev build completes with no errors and writes `main.js`.
@@ -218,7 +218,7 @@ so the number is visible in filenames.
       mirrored).
 - [x] **allowBefore = off** → entries before the anchor are blocked.
 - [x] **reset_after = N** → index cycles within `[anchor, anchor+N-1]` then
-      restarts (v3 differs from v2 `index %= N`; confirm intended).
+      restarts.
 - [x] **Increment / start value** → first index matches the configured start.
 - [x] The **allowBefore** toggle only appears when the journal has no timeline
       start _and_ reset is `never` — set `reset_after` first and confirm it hides.
@@ -269,8 +269,7 @@ Settings → Journals → Bulk → **Bulk add**.
 - [ ] **Two filters + combinator `and`** → only notes matching both survive.
 - [ ] **Two filters + combinator `or`** → notes matching either survive.
 - [ ] **Dry-run preview** → lists each note with connect/skip and a skip _reason_.
-- [ ] Dry-run **off** → the run commits directly (preview-first is the v3 default;
-      confirm the opt-out still works).
+- [ ] Dry-run **off** → the run commits directly.
 
 The three decisions below each have a **fixed** setting applied silently to every
 note _and_ an `ask` setting that produces the per-note dropdown. Test both arms.
