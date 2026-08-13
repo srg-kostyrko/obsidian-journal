@@ -60,7 +60,6 @@ export default [
       "**/*.mjs",
       "**/*.json",
       "**/__mocks__/**",
-      "src/_old-code/**",
       "src/i18n/paraglide/**",
       "coverage/**",
       ".obsidian-cache/**",
@@ -353,7 +352,7 @@ export default [
   },
   {
     files: ["src/**/*.vue"],
-    ignores: ["src/**/ui/**", "src/_old-code/**"],
+    ignores: ["src/**/ui/**"],
     rules: {
       "no-restricted-syntax": [
         "error",
@@ -366,7 +365,7 @@ export default [
   },
   {
     files: ["src/**/*.flow.ts", "src/**/*.flow.test.ts"],
-    ignores: ["src/**/flows/**", "src/_old-code/**"],
+    ignores: ["src/**/flows/**"],
     rules: {
       "no-restricted-syntax": [
         "error",
@@ -379,14 +378,13 @@ export default [
   },
   {
     files: ["src/**/*.ts"],
-    ignores: ["**/*.test.ts", "**/*.bench.ts", "src/_old-code/**", "src/i18n/paraglide/**"],
+    ignores: ["**/*.test.ts", "**/*.bench.ts", "src/i18n/paraglide/**"],
     rules: {
       "unicorn/filename-case": ["error", { case: "kebabCase", checkDirectories: false }],
     },
   },
   {
     files: ["src/**/*.vue"],
-    ignores: ["src/_old-code/**"],
     rules: {
       "unicorn/filename-case": ["error", { case: "pascalCase", checkDirectories: false }],
     },

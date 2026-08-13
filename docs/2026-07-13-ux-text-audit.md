@@ -116,8 +116,7 @@ new strings:
   no user-visible signal. See D3 for the recommended shape.
 - **i18n readiness**: the structural blockers found (split sentences, concatenated
   tooltips, "(s)" plurals, raw enum interpolation) are now fixed; remaining known
-  gap is seeded command names being en-only data (unavoidable) and `_old-code/`
-  (excluded from audit).
+  gap is seeded command names being en-only data (unavoidable).
 - **Copy style rules** (section A) should govern new strings; consider enforcing the
   match-key no-spaces rule too — `"a=b, c=d"` silently declares a `" c"` selector
   (caught by check:types via the generated message signature).

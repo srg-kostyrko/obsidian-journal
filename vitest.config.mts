@@ -26,8 +26,8 @@ export default defineConfig({
           isolate: false,
           setupFiles: ["./vitest.setup.ts", "./vitest.setup.shared.ts"],
           include: ["src/**/*.test.ts"],
-          exclude: ["**/node_modules/**", "**/dist/**", "src/_old-code/**", "src/**/*.isolated.test.ts"],
-          benchmark: { include: ["src/**/*.bench.ts"], exclude: ["**/node_modules/**", "src/_old-code/**"] },
+          exclude: ["**/node_modules/**", "**/dist/**", "src/**/*.isolated.test.ts"],
+          benchmark: { include: ["src/**/*.bench.ts"], exclude: ["**/node_modules/**"] },
         },
       },
       {
@@ -37,7 +37,7 @@ export default defineConfig({
           name: "isolated",
           setupFiles: ["./vitest.setup.ts"],
           include: ["src/**/*.isolated.test.ts"],
-          exclude: ["**/node_modules/**", "**/dist/**", "src/_old-code/**"],
+          exclude: ["**/node_modules/**", "**/dist/**"],
           // Benchmarks belong to the "shared" project; without this they would run once per project.
           benchmark: { include: [] },
         },

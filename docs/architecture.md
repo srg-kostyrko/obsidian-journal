@@ -30,8 +30,8 @@ Enforced location rules _(eslint)_:
 - `defineModal()` calls are only allowed in `<feature>/ui/modals.ts` or
   `src/infrastructure/host/modals/**/*.ts`.
 - `src/**/*.ts` filenames are kebab-case; `src/**/*.vue` filenames are
-  PascalCase. `**/*.test.ts`, `**/*.bench.ts`, `src/_old-code/**`, and
-  `src/i18n/paraglide/**` are exempt and may use either case — a test file
+  PascalCase. `**/*.test.ts`, `**/*.bench.ts`, and `src/i18n/paraglide/**`
+  are exempt and may use either case — a test file
   commonly takes its component's PascalCase name instead (e.g.
   `src/ui/UiCollapsibleBlock.test.ts`, colocated with `UiCollapsibleBlock.vue`).
 

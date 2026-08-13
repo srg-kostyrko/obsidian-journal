@@ -38,6 +38,5 @@ ignorePaths:
   - build
   - coverage
   - test-vault
-  - src/_old-code
   - "*.snap"
   - package-lock.json
