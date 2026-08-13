@@ -141,6 +141,19 @@ rejected because:
 > new condition type is not forced into it. Low-traffic; revisit only if condition
 > types start changing often.
 
+**Decoration cascade / `resolveCell`** — decorations matching a cell are gathered
+**vault-wide → shelf → journal**, and every **exclusive** property (background,
+text colour, four border sides, four corner placements — ten total) resolves to
+its **last** declaration; nine additive **mark** slots (shapes/icons) accumulate
+instead. All of it lives in `resolveCell` (`src/decorations/resolve-cell.ts`).
+Two rules that are easy to break when touching this: a border side with
+`show: false` **abstains** — it must not clear an earlier side, which is what
+lets one decoration paint only a left accent while another paints only a top
+accent; `transparent` is a **value, not an abstention** — a narrower-scope
+decoration with a transparent background deliberately cancels a broader one,
+the only way a narrower scope cancels a broader one. Never assert precedence by
+array position in a test — assert through `resolveCell(...)`.
+
 ## Journals
 
 **JournalWrite / JournalConfig** — `JournalConfig` is the persisted,
@@ -151,7 +164,14 @@ interval (`day`/`week`/`month`/`quarter`/`year`) or a **custom** one (`every` un
 `timeline`, `dateFormat`, `numbering`, `nameTemplate`, `folder`, `templates`,
 `frontmatter` key names, `decorations`, and the `navBlock`/`intervalBlock`
 definitions. A journal's identity key is its `name` (both `idKey` and `nameKey`);
-renaming mutates the key in place and emits a dedicated `renamed` event.
+renaming mutates the key in place and emits a dedicated `renamed` event. The
+`journals` and `shelves` settings collections are stored **keyed by this name**
+— `JournalsRepository`/`ShelvesRepository` look entities up via `storage[name]`,
+and `BaseRepository.get(id)` is literally `Option.fromNullable(this.storage[id])`
+— so any migration that emits journals/shelves MUST key by name, never by a
+generated id: the `v3-to-v4` migration once keyed them by `nanoid()` instead,
+making every migrated entity unreachable by name and silently breaking
+auto-attach, the calendar, commands, and the legacy-note frontmatter rewrite.
 
 **anchor / `anchorOf`** — an **anchor** is the `YYYY-MM-DD` string that uniquely
 names _the period a date falls in_ for a given journal. It is the universal join
@@ -161,7 +181,22 @@ for fixed cycles via `periodOfKind` (the period's owning year/month matters, not
 naive `startOf`); for custom cycles by walking from
 `config.anchorDate` in `duration`-sized steps. `""` is the sentinel for an unset
 anchor (legitimately empty for `timeline.start` and `numbering.anchorDate` until
-the user picks a date).
+the user picks a date). For a week, the anchor is the **week's first day**
+(Monday under ISO, Sunday under a Sunday-start locale) — `anchor === start`,
+matching every other period kind.
+
+**representative / `representativeOf`** — a **formatting-only** field, distinct
+from a period's **anchor**. Every period's anchor _is_ its start; conflating the
+two is the bug this codebase keeps reproducing for weeks specifically, because a
+week's representative day is not its start. `representative` is
+`startOf("week") + (doy − dow)`: Thursday under ISO, Saturday under a
+Sunday-start locale. Its calendar year equals the week-year, which is what makes
+`{{date:YYYY}}` render correctly for a week straddling January 1 — the offset is
+`doy − dow`, not `doy − 1`, which only coincides with the right answer when the
+week starts Monday. `Period.format()` routes through it, and
+`CycleService.representativeOf(name, anchor)` exposes it to the journals layer.
+**Bind `{{date}}` anywhere through `representativeOf`, never through the raw
+anchor.**
 
 **`JournalCycle` / `CycleService`** — the stepping engine over a journal's periods:
 `nextAnchor`, `previousAnchor`, `startOf`, `endOf`, `countRepeats` (signed),
@@ -324,7 +359,15 @@ a journal note for a date computed relative to a reference date. It is
 _configuration_, not a hard-coded plugin command: persisted as a settings
 collection and materialized into real Obsidian commands (and optional ribbon
 buttons) by the registry. Shape: `name`, `icon`, `showInRibbon`, `openMode`,
-`target`, `type`, `context`.
+`target`, `type`, `context`. Unlike journals/shelves, commands have no
+name-key invariant — the `commands` collection is keyed by id. Commands
+created inside v3 get a `nanoid()` id; seeds use `default-*` keys. The
+`v3-to-v4` migration instead keys backfilled commands by their **v2
+registration slug** (lowercase, whitespace→dashes, prefixed by journal name /
+`Shelf: <name>` / `""` for plugin-level) so that Obsidian hotkey bindings
+persisted under `journals:<slug>` keep resolving after migration —
+"normalizing" a migrated command's id to `nanoid()` silently orphans its v2
+hotkey.
 
 **`CommandTarget` / `CommandType` / `CommandContext`** — the three selectors.
 `CommandTarget` picks which journals open: `all` + `writeType`, `journal` +
@@ -348,8 +391,13 @@ silently) and cascades journal/shelf rename and delete onto dependent commands.
 
 > **Availability and execution share one resolver** (`#plan`): the palette entry is
 > visible iff a `CommandPlan` (a concrete `anchor` + `journalNames`) can be
-> produced, and `#run` re-derives the same plan and returns early if none — a
-> command never executes when its `check` would have hidden it.
+> produced, and `#run` re-derives the same plan. When none can be produced, `#run`
+> is not a silent no-op — it shows `#unavailableNotice` and only then returns.
+> This is _not_ license for a caller-side `if (!check()) return`: `check` only
+> gates what appears in the palette, while a ribbon click or a bound hotkey reach
+> `execute`/`#run` regardless, so every command must own a notice-then-return of
+> its own, the way `#run` does, rather than re-gating on `check` and returning
+> silently.
 
 ## Notes-calendar
 
