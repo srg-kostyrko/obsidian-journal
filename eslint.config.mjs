@@ -12,6 +12,28 @@ import importX from "eslint-plugin-import-x";
 import obsidianmd from "eslint-plugin-obsidianmd";
 import mocha from "eslint-plugin-mocha";
 
+const noRawError = {
+  selector: "NewExpression[callee.name='Error']",
+  message: "Throw a named Error subclass instead of raw `new Error()`.",
+};
+
+const noStrayDefineModal = {
+  selector: "CallExpression[callee.name='defineModal']",
+  message: "`defineModal()` is only allowed in `<feature>/ui/modals.ts`. Move the modal definition there.",
+};
+
+// `initLocale()` runs inside `onload()`, long after the import graph has evaluated, so a message
+// resolved at module scope freezes in the base locale for every user. Calls inside a function body
+// (including arrows and getters) and class field initializers run later, so they are exempt.
+// `.vue` files are exempt too: `<script setup>` bodies read as module scope in the AST but execute
+// per component instance.
+const noEagerMessage = {
+  selector:
+    "CallExpression[callee.object.name='m']:not(:function CallExpression):not(PropertyDefinition CallExpression)",
+  message:
+    "`m.*()` at module scope resolves to the base locale because `initLocale()` runs in `onload()`. Wrap it in a factory called at use time.",
+};
+
 export default [
   {
     ignores: [
@@ -152,17 +174,7 @@ export default [
           ],
         },
       ],
-      "no-restricted-syntax": [
-        "error",
-        {
-          selector: "NewExpression[callee.name='Error']",
-          message: "Throw a named Error subclass instead of raw `new Error()`.",
-        },
-        {
-          selector: "CallExpression[callee.name='defineModal']",
-          message: "`defineModal()` is only allowed in `<feature>/ui/modals.ts`. Move the modal definition there.",
-        },
-      ],
+      "no-restricted-syntax": ["error", noRawError, noStrayDefineModal],
 
       "@eslint-community/eslint-comments/no-use": ["error", { allow: [] }],
 
@@ -180,6 +192,14 @@ export default [
       "import-x/newline-after-import": "error",
 
       "@cspell/spellchecker": ["error", { checkComments: true, autoFix: false }],
+    },
+  },
+  {
+    // Plugin sources are what the locale-freeze guard protects; test and e2e modules are
+    // imported by a runner that has already picked a locale.
+    files: ["src/**/*.ts"],
+    rules: {
+      "no-restricted-syntax": ["error", noRawError, noStrayDefineModal, noEagerMessage],
     },
   },
   {
@@ -277,13 +297,7 @@ export default [
   {
     files: ["**/ui/modals.ts", "src/infrastructure/host/modals/**/*.ts"],
     rules: {
-      "no-restricted-syntax": [
-        "error",
-        {
-          selector: "NewExpression[callee.name='Error']",
-          message: "Throw a named Error subclass instead of raw `new Error()`.",
-        },
-      ],
+      "no-restricted-syntax": ["error", noRawError, noEagerMessage],
     },
   },
   {
