@@ -41,12 +41,22 @@ again.
 
 Use Node 24, matching CI.
 
+`npm ci` also installs a pre-commit hook (Husky + `nano-staged`) that runs
+eslint on staged `*.ts`/`*.vue` files and reformats staged `*.ts`, `*.mjs`,
+`*.js`, `*.css`, `*.md`, and `*.vue` files with Prettier. It's the only thing
+enforcing formatting — there's no `check:format` script and no CI job runs
+Prettier — so it can catch a first commit off guard: fix any eslint error it
+reports and re-stage; the Prettier pass rewrites files in place, so just
+`git add` the result and commit again.
+
 ## Quality gates
 
-CI runs `compile:i18n` → `check:i18n` → `check:types` → `test` → `check:lint`
-on every push (`compile:i18n` is covered in Development setup above). Run the
-other four before opening a pull request; the order between them doesn't
-matter locally:
+`checks.yml` runs `compile:i18n` → `check:i18n` → `check:types` → `test` →
+`check:lint` on every push (`compile:i18n` is covered in Development setup
+above). It triggers on `push`, not `pull_request`, so for a pull request from
+a fork it runs in your fork rather than as a check on the PR itself — these
+four are your real gate, not just a convenience. Run them before opening a
+pull request; the order between them doesn't matter locally:
 
 ```bash
 npm run check:types   # vue-tsc, no emit
@@ -73,8 +83,11 @@ The `journeys` suite has no npm alias; run it directly:
 npx wdio run ./wdio.conf.mts --suite journeys
 ```
 
-`npm run test:e2e` runs the whole stable suite (all five). Pull requests run
-all five in CI.
+There's no single script that runs exactly those five: `npm run test:e2e`
+runs the bare `./e2e/**/*.e2e.ts` glob, which is the nightly lane — it also
+picks up `quarantine`, the non-blocking flaky lane that never gates a merge.
+Run the per-suite scripts above, plus `journeys`, to reproduce what pull
+requests actually run in CI.
 
 ## Making a change
 
@@ -83,9 +96,15 @@ Write the test first. Unit tests sit beside the implementation as `*.test.ts`.
 No `eslint-disable` comments — the lint config rejects the comment itself, so
 the fix has to be in the code.
 
-User-facing copy goes in `messages/en.json` and nowhere else: not in another
-locale file, which is machine-translated and reviewed separately, and not in
-the generated `src/i18n/paraglide` output. Sentence case, en-US.
+User-facing copy goes in `messages/en.json`, not in the generated
+`src/i18n/paraglide` output. Sentence case, en-US.
+
+The other ten locale files are hand-authored, not machine-translated — there
+is no `translate:i18n` script (see `docs/i18n-glossary.md`). `check:i18n` has
+no key-parity check, so adding a key to `en.json` alone passes every gate
+while the string silently falls back to English in the other ten locales
+until someone translates it by hand. Leave the other locale files alone in
+your pull request; the maintainer adds the translation separately.
 
 ## AI-assisted contributions
 

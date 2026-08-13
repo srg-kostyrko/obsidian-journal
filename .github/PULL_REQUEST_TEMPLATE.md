@@ -10,7 +10,7 @@ Fixes #
 - [ ] `npm test` passes
 - [ ] `npm run check:lint` passes
 - [ ] `npm run check:i18n` passes
-- [ ] `npm run test:e2e` passes, if this changes runtime behavior
+- [ ] the e2e per-suite scripts pass (see CONTRIBUTING.md), if this changes runtime behavior
 - [ ] User-facing copy is in `messages/en.json` only
 - [ ] `CHANGELOG.md` has an `[Unreleased]` entry, written for the user
 

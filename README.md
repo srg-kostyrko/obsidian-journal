@@ -365,15 +365,14 @@ End conditions: Date (term end date)
 
 ### What to do if you encounter bugs
 
-1. Check the console for error messages (Ctrl+Shift+I in Obsidian)
+1. Check the console for error messages (Ctrl+Shift+I on Windows/Linux, Cmd+Option+I on macOS)
 2. Verify you're using the latest version of the plugin
 3. Try with a minimal configuration to isolate the issue
-4. Report bugs on [GitHub](https://github.com/srg-kostyrko/obsidian-journal/issues) with:
-   - Steps to reproduce
-   - Expected behavior
-   - Actual behavior
-   - Console logs if available
-   - Plugin version and Obsidian version
+4. Raise the log level in the plugin's settings, under **Logging**, and dump the recent
+   log messages to a note — it often captures more than the console alone
+5. Open an [issue](https://github.com/srg-kostyrko/obsidian-journal/issues/new/choose) and
+   pick the bug report form; it asks for steps to reproduce, plugin and Obsidian version,
+   console output, and your journal configuration
 
 ## Glossary
 

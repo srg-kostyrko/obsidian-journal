@@ -27,7 +27,8 @@ Enforced location rules _(eslint)_:
 
 - Vue SFCs must live under a `<feature>/ui/` directory.
 - `*.flow.ts` files must live under a `<feature>/flows/` directory.
-- `defineModal()` calls are only allowed in `<feature>/ui/modals.ts`.
+- `defineModal()` calls are only allowed in `<feature>/ui/modals.ts` or
+  `src/infrastructure/host/modals/**/*.ts`.
 - `src/**/*.ts` filenames are kebab-case; `src/**/*.vue` filenames are
   PascalCase. `**/*.test.ts`, `**/*.bench.ts`, `src/_old-code/**`, and
   `src/i18n/paraglide/**` are exempt and may use either case — a test file
@@ -135,17 +136,22 @@ crosses a module boundary.
 User-facing copy goes in `messages/en.json` only. `compile:i18n` generates
 `src/i18n/paraglide`, which is git-ignored and must never be staged.
 
-No `m.*()` call at module scope _(eslint)_: `initLocale()` runs inside
-`onload()`, so a message resolved at module-evaluation time freezes to the base
-locale for every user, before the user's actual locale is known. Wrap the call
-in a factory (a function, arrow, or class field initializer) invoked at use
-time instead.
+No `m.*()` call at module scope in `src/**/*.ts` _(eslint)_: `initLocale()`
+runs inside `onload()`, so a message resolved at module-evaluation time
+freezes to the base locale for every user, before the user's actual locale is
+known. Wrap the call in a factory (a function, arrow, or class field
+initializer) invoked at use time instead. The rule doesn't run on `.vue`
+files: a `<script setup>` body reads as module scope in the AST, but Vue
+executes it per component instance rather than at import time, so the
+eager-evaluation hazard the rule guards against doesn't arise there.
 
 Do not wrap an `m.*()` call in `computed()` unless its arguments include
 reactive data — a static string needs no reactive wrapper.
 
-`check:i18n` guards the glossary in `docs/i18n-glossary.md` against terms used
-inconsistently across messages.
+`check:i18n` checks the ten translated locale files against hardcoded
+banned-term, literal-token, and mechanical rules in
+`scripts/check-i18n-glossary.mjs`; `docs/i18n-glossary.md` documents those
+rules and the mistranslations that motivated them.
 
 ## Testing
 
