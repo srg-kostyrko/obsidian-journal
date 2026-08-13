@@ -392,12 +392,10 @@ silently) and cascades journal/shelf rename and delete onto dependent commands.
 > **Availability and execution share one resolver** (`#plan`): the palette entry is
 > visible iff a `CommandPlan` (a concrete `anchor` + `journalNames`) can be
 > produced, and `#run` re-derives the same plan. When none can be produced, `#run`
-> is not a silent no-op — it shows `#unavailableNotice` and only then returns.
-> This is _not_ license for a caller-side `if (!check()) return`: `check` only
-> gates what appears in the palette, while a ribbon click or a bound hotkey reach
-> `execute`/`#run` regardless, so every command must own a notice-then-return of
-> its own, the way `#run` does, rather than re-gating on `check` and returning
-> silently.
+> shows `#unavailableNotice` **before** returning — the early return is preceded
+> by a user-visible notice, never a silent no-op. See [`CLAUDE.md`](CLAUDE.md)'s
+> "Commands and flows" section for the caller-side re-gating trap this guards
+> against.
 
 ## Notes-calendar
 
