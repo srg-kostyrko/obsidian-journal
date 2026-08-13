@@ -56,8 +56,12 @@ Project-wide decisions with no other home. They decide what counts as a bug.
 - **v2 fidelity is the default when porting.** Every v2 variant, mode, and
   option survives the port. Extending v2 behavior is fine; dropping any of it
   needs the maintainer's explicit opt-in, so "v2 had this and v3 doesn't" is a
-  gap to report rather than a decision already made. The exceptions that _were_
-  opted into are listed under "Deliberate non-bugs" below.
+  gap to report rather than a decision already made. One deviation _was_ opted
+  into: the v1 → v2 migration runs non-interactively in v3, recorded in the
+  migration section of
+  [`docs/manual-testing-checklist.md`](docs/manual-testing-checklist.md).
+  Settled decisions that merely _read_ as regressions are under "Deliberate
+  non-bugs" below; none of those is a dropped v2 feature.
 
 ## Traps
 
