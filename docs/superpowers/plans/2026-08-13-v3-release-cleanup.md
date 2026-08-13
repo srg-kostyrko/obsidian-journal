@@ -214,9 +214,18 @@ These six tasks share one procedure and differ only in which files they cover. *
 ```diff
   # src/templates/modifiers.ts:39
 - // v2 order: arithmetic shifts first, then boundary
-+ // Arithmetic shifts apply before boundary snapping, so `+1d|endOfWeek` means
-+ // "the end of next day's week", not "tomorrow's end-of-week".
++ // Shifts apply before boundaries regardless of written order, so
++ // {{date<endOf=week>+1d}} is the end of tomorrow's week, not the day after
++ // this week's end.
 ```
+
+Note what makes that rewrite correct: it cites **real** template syntax
+(`<endOf=week>`, per `src/templates/grammar.ts:4` — there is no `|` separator
+or `endOfWeek` spelling), and its contrast is a genuine one. `applyModifiers`
+partitions shifts from boundaries and runs every shift first, so written order
+does not matter — which is exactly the non-obvious fact the comment exists to
+record. **Check any syntax you put in a comment against the grammar before you
+write it.**
 
 ```diff
   # src/decorations/config.ts:194

@@ -59,8 +59,9 @@ convention exists to protect. Deleting the rationale is not an option; only the
 
 ```diff
 - // v2 order: arithmetic shifts first, then boundary
-+ // Arithmetic shifts apply before boundary snapping, so `+1d|endOfWeek` means
-+ // "the end of next day's week", not "tomorrow's end-of-week".
++ // Shifts apply before boundaries regardless of written order, so
++ // {{date<endOf=week>+1d}} is the end of tomorrow's week, not the day after
++ // this week's end.
 
 - // 0 is unreachable: offsets are 1-based from both ends. v2's default stored it anyway.
 + // 0 is unreachable — offsets are 1-based from both ends — but it is accepted
