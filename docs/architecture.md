@@ -192,7 +192,5 @@ unit suite can't reach it — is documented separately in
   in.
 - [`docs/e2e-testing-strategy.md`](e2e-testing-strategy.md) — the end-to-end
   testing layer.
-- `docs/superpowers/specs/` and `docs/superpowers/plans/` — the specs and
-  plans behind larger features.
 - [`docs/i18n-glossary.md`](i18n-glossary.md) — the internationalization term
   glossary.

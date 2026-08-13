@@ -46,3 +46,6 @@ data.json
 coverage
 
 .superpowers/
+
+# Retired 2026-08-13 — specs and plans now live in .superpowers/
+docs/superpowers/
