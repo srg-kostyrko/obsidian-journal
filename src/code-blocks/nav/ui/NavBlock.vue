@@ -6,8 +6,9 @@ import type { JournalConfig, JournalNavBlock } from "@/journals";
 import NavBlockRow from "./NavBlockRow.vue";
 
 // blockScope/rowScope name the provided decoration maps the whole-block and per-row decorations
-// draw from. v2 scopes them differently, so the nav code block passes two distinct scopes; the
-// custom-interval view passes neither and both fall back to the default (its single provided map).
+// draw from (see decoration-scopes.ts). The nav code block passes two distinct scopes since the
+// two decorate differently; the custom-interval view passes neither, so both fall back to the
+// default — its single provided map.
 defineProps<{
   block: JournalNavBlock;
   journal: JournalConfig;

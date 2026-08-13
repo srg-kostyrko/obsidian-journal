@@ -11,7 +11,7 @@ export type LinkTarget =
   | { readonly kind: "open"; readonly journalNames: readonly string[] };
 
 // A journal on a shelf links only to its shelf-mates; an off-shelf journal links across every
-// journal, matching v2's all-journals fallback.
+// journal, falling back to all journals rather than to an empty set.
 export function resolveLinkCandidates(
   noteJournalName: string,
   allJournals: readonly JournalConfig[],

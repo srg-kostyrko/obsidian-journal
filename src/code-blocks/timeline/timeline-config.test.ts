@@ -15,14 +15,17 @@ describe("timelineBlockSchema", () => {
   });
 
   it("treats an unknown mode value as unset so the journal-derived mode applies", () => {
-    // v2 fell back to the host journal's mode on a typo; the block must not hard-error.
+    // `asTimelineMode` only recognizes the four listed modes; anything else — including
+    // "decade", a real period unit elsewhere in the app — degrades to undefined rather
+    // than failing.
     const result = v.parse(timelineBlockSchema, { mode: "decade" });
     expect(result.mode).toBeUndefined();
   });
 
   it("applies the journal-derived mode when the source is a non-object scalar", () => {
-    // `mode:month` with no space after the colon parses to the bare string "mode:month";
-    // v2's line-split processor still rendered a timeline instead of an error panel.
+    // `mode:month` with no space after the colon parses to the bare string "mode:month"
+    // rather than a mapping; `asRecord` degrades that to {}, so every field, including
+    // mode, ends up unset.
     const result = v.parse(timelineBlockSchema, "mode:month");
     expect(result.mode).toBeUndefined();
   });

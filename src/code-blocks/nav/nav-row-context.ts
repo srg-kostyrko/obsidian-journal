@@ -27,9 +27,9 @@ function fixedPeriodKindFor(write: JournalWrite): Exclude<PeriodKind, "decade"> 
 }
 
 // Custom intervals have no fixed period unit, so relative_date names the interval by the
-// journal itself ("This/Last/Next <journal>", "N <journal> ago") — v2 parity, minus v2's
-// English plural since a user's journal name can't be inflected. Steps are counted from the
-// interval containing today to the row's interval.
+// journal itself ("This/Last/Next <journal>", "N <journal> ago") rather than pluralizing an
+// English unit name, since a user's journal name can't be inflected. Steps are counted from
+// the interval containing today to the row's interval.
 function customRelativeDate(name: string, cycle: CycleService, refDate: AnchorString, today: AnchorString): string {
   const stepsOpt = cycle
     .anchorOf(name, CalendarDate.fromAnchor(today))

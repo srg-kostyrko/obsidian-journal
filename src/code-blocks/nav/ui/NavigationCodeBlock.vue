@@ -86,8 +86,8 @@ const periods = computed<Period[]>(() => {
   return list;
 });
 
-// v2's whole-block decoration (NavigationBlock) draws on the current journal's own decorations
-// only: `decorations[type].filter(d => d.journalName === journalName)`.
+// The whole-block scope draws only on the current journal's own decorations, so this resolves
+// to just its name.
 const blockJournalNames = computed<readonly string[]>(() => (journal.value ? [journal.value.name] : []));
 
 // Shared by rowJournalNames and decorationShelf below, which both need "the shelf that owns
@@ -101,9 +101,8 @@ const owningShelf = computed<Option<ShelfConfig>>(() => {
     .first();
 });
 
-// v2's per-row decoration (NavigationBlockRow) draws on every same-write-type journal in scope:
-// `decorations[type]`, which useShelfProvider builds from the owning shelf's journals, or from
-// all journals when the journal belongs to no shelf.
+// The per-row scope draws on every same-write-type journal in scope: the owning shelf's
+// journals, or all journals when the current journal belongs to no shelf.
 const rowJournalNames = computed<readonly string[]>(() => {
   const currentJournal = journal.value;
   if (!currentJournal) return [];

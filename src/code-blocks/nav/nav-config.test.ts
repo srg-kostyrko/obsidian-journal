@@ -9,8 +9,8 @@ describe("navBlockSchema", () => {
   });
 
   it("degrades a non-mapping fence body to an empty config instead of failing", () => {
-    // v2 never read the nav fence body, so a scalar or sequence must not blank the block
-    // into an error panel — mirror the home/timeline tolerance.
+    // The nav fence carries no options, so a scalar or sequence body must not blank the block
+    // into an error panel — mirrors the home/timeline tolerance for the same malformed input.
     expect(v.parse(navBlockSchema, "journal-nav")).toEqual({});
     expect(v.parse(navBlockSchema, ["a", "b"])).toEqual({});
   });

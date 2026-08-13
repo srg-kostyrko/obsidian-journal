@@ -26,7 +26,7 @@ describe("homeBlockSchema", () => {
   });
 
   it("drops unknown entries from show and keeps the valid ones", () => {
-    // v2 filtered invalid entries and rendered the rest; a typo must not blank the block.
+    // An unrecognized entry filters out silently; a typo must not blank the block.
     const result = v.parse(homeBlockSchema, { show: ["day", "decade", "week"] });
     expect(result.show).toEqual(["day", "week"]);
   });
@@ -37,7 +37,8 @@ describe("homeBlockSchema", () => {
   });
 
   it("falls back to the default scale for a non-numeric value", () => {
-    // v2 coerced with `scale || 1`; a typo must degrade to the default, not blank the block.
+    // A non-numeric scale fails the `v.number` check, so a typo degrades to the default
+    // rather than blanking the block.
     expect(v.parse(homeBlockSchema, { scale: "big" }).scale).toBe(1);
   });
 
@@ -50,12 +51,13 @@ describe("homeBlockSchema", () => {
   });
 
   it("coerces an empty separator to the default bullet", () => {
-    // v2 used `separator || " • "`, so an explicit empty string falls back to the bullet.
+    // An empty string is falsy, so it coerces to the bullet the same as an unset separator.
     expect(v.parse(homeBlockSchema, { separator: "" }).separator).toBe(" • ");
   });
 
   it("applies defaults when the source is a non-object scalar", () => {
-    // `show:day` with no space parses to the bare string "show:day"; v2 still rendered.
+    // `show:day` with no space parses to the bare string "show:day", not a mapping — the
+    // scalar-body case `asRecord` degrades to {}.
     const result = v.parse(homeBlockSchema, "show:day");
     expect(result.show).toEqual(["day"]);
     expect(result.separator).toBe(" • ");
@@ -63,14 +65,14 @@ describe("homeBlockSchema", () => {
   });
 
   it("degrades a scalar show to the default list", () => {
-    // `show: month` (no list) parses to the bare string "month"; v2 caught the resulting
-    // `.filter` throw and fell back to the default rather than blanking the block.
+    // `show: month` (no list) parses to the bare string "month", which fails the `v.array`
+    // check and falls back to the default via `v.fallback` rather than blanking the block.
     expect(v.parse(homeBlockSchema, { show: "month" }).show).toEqual(["day"]);
   });
 
   it("coerces a non-string shelf to its string form", () => {
-    // An unquoted `shelf: 2024` parses to the number 2024; v2 passed it through untouched
-    // (matching no shelf) instead of erroring. Coercing keeps that graceful outcome.
+    // An unquoted `shelf: 2024` parses to the number 2024; coercing it to a string form keeps
+    // it usable as a shelf-name filter instead of erroring, harmless even if it never matches.
     expect(v.parse(homeBlockSchema, { shelf: 2024 }).shelf).toBe("2024");
   });
 });

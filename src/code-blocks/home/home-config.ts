@@ -14,9 +14,10 @@ function isHomeEntry(value: unknown): value is HomeEntry {
 
 const homeBlockEntries = {
   // A typo'd entry drops out instead of failing the whole block into an error
-  // panel — v2 filtered invalid entries and rendered the rest. A non-array
-  // `show` (e.g. the scalar `show: month`) degrades to the default rather than
-  // erroring: v2 caught the resulting `.filter` throw and fell back the same way.
+  // panel: `isHomeEntry` filters it out silently. A non-array `show` (e.g. the
+  // scalar `show: month`) degrades to the default the same way — `v.array`
+  // rejects it before the filter runs, so `v.fallback` supplies the default
+  // instead of erroring.
   show: v.optional(
     v.fallback(
       v.pipe(
@@ -28,7 +29,7 @@ const homeBlockEntries = {
     () => ["day"] as const,
   ),
   // A null / wrong-type value degrades to the default, and an empty string coerces to the
-  // bullet too (v2 coerced with `separator || " • "`).
+  // bullet too — an explicitly blank separator is still treated as unset, not as "no separator".
   separator: v.optional(
     v.fallback(
       v.pipe(
@@ -39,7 +40,8 @@ const homeBlockEntries = {
     ),
     " • ",
   ),
-  // Non-number degrades to 1; a zero scale coerces to 1 so the block stays visible (v2 `scale || 1`).
+  // Non-number degrades to 1; a zero scale also coerces to 1, since it multiplies the font
+  // size and a scale of 0 would render the entry invisible.
   scale: v.optional(
     v.fallback(
       v.pipe(
