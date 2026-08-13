@@ -228,8 +228,7 @@ on it.
   outlier, not the model), and
   the action buttons in their own `controls-only` row rather than a bespoke
   wrapper. `errorBag.<field>` is iterated directly — `v-for` over `undefined`
-  renders nothing, so no `?? []`. (`src/ui/UiFormErrors.vue` exists but no
-  component imports it; don't reach for it expecting the house pattern.)
+  renders nothing, so no `?? []`.
 - Join a human-readable name list with `formatConjunction` from `@/i18n`, never
   `.join(" and ")` — separator and placement vary by locale and item count. The
   joined value goes into the message as a parameter; only the joining is code.
