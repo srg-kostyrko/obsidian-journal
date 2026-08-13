@@ -65,6 +65,14 @@ mocked resolution doesn't care about module load order — and only aborts
 Break a cycle with a lazy `InjectorToken` resolved at use time rather than
 importing the token's owning module directly.
 
+The same default makes **flows stateless by requirement**. A flow registers with
+a bare `useClass`, so it takes the container lifetime, and `Flows.invoke`
+resolves the identical instance on every call — everything an invocation needs
+must live in its `execute()` parameters and locals. A per-invocation field (a
+`#pending` promise, a cached lookup) compiles, passes its unit tests because
+each test builds a fresh container, and corrupts the second invocation in
+production only.
+
 ## Result and Option
 
 Compose a `Result`/`AsyncResult` pipeline as a single do-notation block instead
@@ -190,6 +198,8 @@ unit suite can't reach it — is documented separately in
 
 - [`CONTEXT.md`](../CONTEXT.md) — the domain vocabulary this codebase reasons
   in.
+- [`CLAUDE.md`](../CLAUDE.md) — standing project rules and the traps no
+  convention here covers.
 - [`docs/e2e-testing-strategy.md`](e2e-testing-strategy.md) — the end-to-end
   testing layer.
 - [`docs/i18n-glossary.md`](i18n-glossary.md) — the internationalization term

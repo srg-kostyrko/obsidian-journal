@@ -60,14 +60,14 @@ Setup: clone the repository; `npm run dev` (builds into
 - [x] Disable the plugin in Community Plugins → no errors, calendar leaves close.
 - [x] Re-enable the plugin → re-initializes, default view available again.
 - [x] Reload Obsidian (Ctrl/Cmd+R) → clean re-init, no duplicate ribbon icons.
-- [x] - Open a **brand-new empty vault**, install the plugin → exactly one Calendar
+- [x] Open a **brand-new empty vault**, install the plugin → exactly one Calendar
       view is seeded, it opens on startup, it shows **no** ribbon icon (the seed sets
       `showInRibbon: false`, matching v2, which exposed the calendar by command
       only), and no journals exist.
 - [x] First run → the seeded view renders its calendar grid with no empty-state
       message, and does not render a bare divider rule or an empty custom-intervals
       section.
-- [x] - Open a vault with a v2 `data.json` → loads without crash (migration, §16).
+- [x] Open a vault with a v2 `data.json` → loads without crash (migration, §16).
 - [ ] Mobile smoke: plugin loads on a mobile/tablet build (full mobile pass is §20).
 
 ---
@@ -235,15 +235,15 @@ Setup: a Day journal "Conn" with a folder + name template; an arbitrary note
 
 - [x] **Connect note** command on `Scratch.md` → pick Conn + a date → journal
       frontmatter written to the note.
-- [x] - Date already has a note → **override** prompt appears → choosing override
+- [x] Date already has a note → **override** prompt appears → choosing override
       replaces the connection.
 - [x] 🔴 Override **with rename+move on**, so the incoming note takes the occupant's
       exact path → the old occupant file is moved to **trash**.
 - [x] 🔴 Override **without** rename+move → the old occupant is only _disconnected_
       (frontmatter stripped); its file stays in place as an orphan. Confirm this is
       what you see — the two outcomes differ and only one deletes a file.
-- [x] - **Rename toggle on** → `Scratch.md` renamed to Conn's name template.
-- [x] - **Move toggle on** → file moved into Conn's folder.
+- [x] **Rename toggle on** → `Scratch.md` renamed to Conn's name template.
+- [x] **Move toggle on** → file moved into Conn's folder.
 - [x] **Connect** on an already-connected note → button shows **Disconnect** →
       frontmatter keys stripped.
 - [x] Connect a note dated **outside Conn's timeline** → the attempt is refused with
@@ -864,8 +864,8 @@ sitting is faster than rediscovering the pattern per screen.
       not today's exact date.
 - [x] Open-on-startup does **not** re-fire on later layout changes within a
       session (only genuine launch).
-- [x] - Rename the startup journal → reload → still opens (name reconciled).
-- [x] - Delete the startup journal → reload → fails silently, no crash.
+- [x] Rename the startup journal → reload → still opens (name reconciled).
+- [x] Delete the startup journal → reload → fails silently, no crash.
 - [x] **autoCreate** — + a Day journal with autoCreate on; advance system clock
       past local midnight (or reload after midnight) → tomorrow's note appears.
 - [x] autoCreate scheduling does not double-fire across the midnight boundary.

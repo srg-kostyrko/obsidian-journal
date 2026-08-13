@@ -109,8 +109,8 @@ your pull request; the maintainer adds the translation separately.
 ## AI-assisted contributions
 
 AI-assisted contributions are welcome. Point the agent at
-[`CONTEXT.md`](CONTEXT.md) and [`docs/architecture.md`](docs/architecture.md)
-before it writes anything, and
+[`CONTEXT.md`](CONTEXT.md), [`docs/architecture.md`](docs/architecture.md), and
+[`CLAUDE.md`](CLAUDE.md) before it writes anything, and
 hold the result to the same quality gates as a human contribution. You are the
 author of what you submit: read the diff before you open the pull request.
 
