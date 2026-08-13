@@ -11,7 +11,7 @@ writeFileSync("manifest.json", JSON.stringify(manifest, null, "\t"));
 // bump version in manifest-beta.json
 let manifestBeta = JSON.parse(readFileSync("manifest-beta.json", "utf8"));
 manifestBeta.version = targetVersion;
-writeFileSync("manifest-beta.json", JSON.stringify(manifest, null, "\t"));
+writeFileSync("manifest-beta.json", JSON.stringify(manifestBeta, null, "\t"));
 
 // update versions.json with target version and minAppVersion from manifest.json
 let versions = JSON.parse(readFileSync("versions.json", "utf8"));

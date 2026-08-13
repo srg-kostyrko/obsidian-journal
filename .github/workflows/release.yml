@@ -23,6 +23,7 @@ jobs:
 
       - name: Run checks
         run: |
+          npm run compile:i18n
           npm run check:types
           npm test
 

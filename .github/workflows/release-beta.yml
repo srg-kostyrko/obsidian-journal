@@ -36,6 +36,7 @@ jobs:
 
       - name: Run checks
         run: |
+          npm run compile:i18n
           npm run check:types
           npm test
 
@@ -43,12 +44,21 @@ jobs:
         run: |
           npm run build
 
+      # BRAT installs the manifest.json attached to the release, not the one in
+      # the repository, and warns the user when its version disagrees with the
+      # release tag. The tag comes from manifest-beta.json, so that is the
+      # manifest the release has to carry.
+      - name: Stage beta manifest
+        run: |
+          mkdir -p release-assets
+          cp manifest-beta.json release-assets/manifest.json
+
       - name: Attest build provenance
         uses: actions/attest-build-provenance@v2
         with:
           subject-path: |
             build/main.js
-            manifest.json
+            release-assets/manifest.json
             build/styles.css
 
       - name: Create release
@@ -59,5 +69,7 @@ jobs:
 
           gh release create "$version" \
             --title="$version" \
+            --target "$GITHUB_SHA" \
+            --prerelease \
             --draft \
-            build/main.js manifest.json build/styles.css
+            build/main.js release-assets/manifest.json build/styles.css
