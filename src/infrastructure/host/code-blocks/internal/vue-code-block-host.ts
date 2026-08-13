@@ -31,15 +31,11 @@ export class VueCodeBlockHost extends MarkdownRenderChild {
   onload(): void {
     for (const cls of this.#cssClass) this.containerEl.classList.add(cls);
     if (this.#notice !== undefined) {
-      const notice = activeDocument.createElement("div");
-      notice.className = "code-block-notice";
-      notice.textContent = this.#notice;
-      this.containerEl.append(notice);
+      this.containerEl.createDiv({ cls: "code-block-notice", text: this.#notice });
     }
     // Vue replaces its mount target's children, so the block mounts into its own child and the
     // notice above survives. The css classes stay on containerEl, where they always were.
-    const mountPoint = activeDocument.createElement("div");
-    this.containerEl.append(mountPoint);
+    const mountPoint = this.containerEl.createDiv();
     const app = createApp(this.#component, this.#props);
     provideInjectorOnApp(app, this.#injector);
     this.#vueApp = app;

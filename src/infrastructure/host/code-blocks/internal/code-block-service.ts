@@ -103,31 +103,21 @@ export class CodeBlockService {
     { detail, issues }: { detail?: string; issues?: readonly BaseIssue<unknown>[] } = {},
   ): void {
     element.replaceChildren();
-    const root = activeDocument.createElement("div");
-    root.className = "code-block-error";
-    const head = activeDocument.createElement("div");
-    head.textContent = message;
-    root.append(head);
+    const root = element.createDiv({ cls: "code-block-error" });
+    root.createDiv({ text: message });
     if (detail !== undefined && detail !== "") {
       // Monospace and preserved whitespace: the parser aligns a caret under the offending
       // column, which only lines up in a <pre>.
-      const detailElement = activeDocument.createElement("pre");
-      detailElement.className = "code-block-error__detail";
-      detailElement.textContent = detail;
-      root.append(detailElement);
+      root.createEl("pre", { cls: "code-block-error__detail", text: detail });
     }
     if (issues && issues.length > 0) {
-      const list = activeDocument.createElement("ul");
+      const list = root.createEl("ul");
       for (const issue of issues) {
         const pathSegments = Array.isArray(issue.path)
           ? issue.path.map((segment: { key?: unknown }) => String(segment.key)).join(".")
           : "";
-        const item = activeDocument.createElement("li");
-        item.textContent = pathSegments ? `${pathSegments}: ${issue.message}` : issue.message;
-        list.append(item);
+        list.createEl("li", { text: pathSegments ? `${pathSegments}: ${issue.message}` : issue.message });
       }
-      root.append(list);
     }
-    element.append(root);
   }
 }

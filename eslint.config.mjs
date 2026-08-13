@@ -251,7 +251,7 @@ export default [
     },
   },
   {
-    files: ["**/*.test.ts", "**/*.bench.ts", "**/testing.ts", "**/testing/**"],
+    files: ["**/*.test.ts", "**/*.bench.ts", "**/testing.ts", "**/testing/**", "vitest.setup.ts"],
     plugins: { vitest },
     rules: {
       ...vitest.configs.recommended.rules,
@@ -272,6 +272,8 @@ export default [
       // Obsidian's DOM API describes plugin runtime code. Test scaffolding builds detached
       // elements under happy-dom, where `createDiv`/`activeDocument` do not exist — and both
       // rules autofix, so `--fix` would rewrite a passing test into a ReferenceError.
+      // `vitest.setup.ts` is the shim that defines those helpers, so it has to reach for
+      // `document.createElement` itself.
       "obsidianmd/prefer-active-doc": "off",
       "obsidianmd/prefer-create-el": "off",
       "vitest/expect-expect": ["error", { assertFunctionNames: ["expect", "expectTypeOf", "expectOk", "expectErr"] }],

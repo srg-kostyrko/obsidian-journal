@@ -10,16 +10,30 @@ Object.defineProperty(window, "activeDocument", {
 });
 
 // Obsidian augments HTMLElement with DOM builder helpers that happy-dom does not provide.
-// Suggestion renderers build their rows with them, so tests need the same shape.
+// Suggestion renderers and code-block panels build their DOM with them, so tests need the
+// same shape.
+interface DomElementInfo {
+  text?: string;
+  cls?: string;
+}
+
+function createEl(this: HTMLElement, tag: string, options?: DomElementInfo): HTMLElement {
+  const element = window.document.createElement(tag);
+  if (options?.text !== undefined) element.textContent = options.text;
+  if (options?.cls !== undefined) element.className = options.cls;
+  this.append(element);
+  return element;
+}
+
 Object.assign(HTMLElement.prototype, {
   setText(this: HTMLElement, text: string): void {
     this.textContent = text;
   },
-  createSpan(this: HTMLElement, options?: { text?: string; cls?: string }): HTMLSpanElement {
-    const span = window.document.createElement("span");
-    if (options?.text !== undefined) span.textContent = options.text;
-    if (options?.cls !== undefined) span.className = options.cls;
-    this.append(span);
-    return span;
+  createEl,
+  createDiv(this: HTMLElement, options?: DomElementInfo): HTMLElement {
+    return createEl.call(this, "div", options);
+  },
+  createSpan(this: HTMLElement, options?: DomElementInfo): HTMLElement {
+    return createEl.call(this, "span", options);
   },
 });
