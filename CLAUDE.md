@@ -294,7 +294,12 @@ on it.
   carried forward as a resolved value, never re-derived downstream.
 - The week-preset change and the notes it invalidates move together, and
   `WeekPresetApplier` (`WeekPresetService`, behind `WeekPresetApplierToken`) is
-  the only thing that writes the calendar slice: it snapshots every weekly note's
+  the only thing that writes the **week grid** (`mode`/`dow`/`doy`) — the one
+  other slice write, `CalendarWeekBlock.vue`'s "apply globally" toggle, sets
+  `global` in place, and `global` only decides whether `applyWeekConfig` also
+  patches the global moment locale; `CUSTOM_LOCALE`, the locale `localMoment()`
+  reads, gets the same `{dow, doy}` either way, so the grid does not move. The
+  applier snapshots every weekly note's
   `(weekYear, weekOfYear, endDate)` under the old grid, writes the slice, awaits
   a `nextTick` so the settings bridge's `watchEffect` has installed the new grid,
   then re-anchors through `NoteConnectionService.reanchorAll`. Setting
