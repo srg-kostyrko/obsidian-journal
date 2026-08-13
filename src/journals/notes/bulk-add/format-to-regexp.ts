@@ -9,7 +9,7 @@ interface MomentLocaleInternals {
 
 function buildParts(): Map<string, string> {
   const localeData = localMoment().localeData();
-  // Access the undocumented _config to read the ordinal parse pattern, same as v2;
+  // Access the undocumented _config to read the ordinal parse pattern;
   // .source strips the regexp delimiters; the pattern always begins with \d{1,2} which we drop
   const ordinalRegexp = (localeData as unknown as MomentLocaleInternals)._config?.dayOfMonthOrdinalParse;
   const ordinalPattern =

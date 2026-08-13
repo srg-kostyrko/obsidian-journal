@@ -44,7 +44,8 @@ export class TimelineService {
         .with({ kind: "date" }, ({ date }) => date === "" || anchor <= date)
         // A repeats bound counts forward from the timeline start, so with no start there is
         // nothing to count from: the bound is un-countable and the journal stays unbounded
-        // rather than writing nothing at all (v2 required a start for this bound too).
+        // rather than rejecting every date — the settings UI warns but does not block this
+        // combination.
         .with({ kind: "repeats" }, ({ count }) => {
           if (config.timeline.start === "") return true;
           const repeats = this.#cycle.countRepeats(name, config.timeline.start, anchor);

@@ -77,7 +77,7 @@ export class NoteConnectionService {
     op: (path: VaultPath) => AsyncResult<void, unknown>,
   ): AsyncResult<void, never> {
     const paths = [...this.#index.entriesFor(journalName)].map(([, path]) => path);
-    // Best-effort, matching v2: an AsyncResult never rejects, so Promise.all settles even when
+    // Best-effort: an AsyncResult never rejects, so Promise.all settles even when
     // individual notes fail. We discard the per-note Results so one bad note can't strand the
     // journal-wide operation. Spreading entriesFor up front snapshots paths before the ops mutate the index.
     const all: Promise<void> = Promise.all(paths.map((path) => op(path))).then(() => {
@@ -133,7 +133,7 @@ export class NoteConnectionService {
   ): AsyncResult<{ path: VaultPath }, ConnectError> {
     return attempt.in(this, async function* (this: NoteConnectionService) {
       // Metadata is resolved from the anchor's stored entry (incl. any endDate), so an
-      // overridden slot's period metadata transfers to the new note — matching v2 connect.
+      // overridden slot's period metadata transfers to the new note.
       const metadata = yield* this.#frontmatter.buildMetadata(journalName, anchor);
 
       let target = path;

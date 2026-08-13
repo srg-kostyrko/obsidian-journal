@@ -48,7 +48,7 @@ export class NumberingService {
     if (!numbering.enabled) return Option.none();
     if (!numbering.allowBefore && anchor < anchorDate) return Option.none();
 
-    // v2 parity: derive from the nearest previous existing note, else back-compute from the
+    // Derive from the nearest previous existing note, else back-compute from the
     // nearest next existing note, else fall to the config anchor. A manually renumbered note
     // thus pins the sequence in both directions — countRepeats is signed, so a next-note basis
     // subtracts the steps between them.
@@ -110,7 +110,7 @@ export class NumberingService {
     return result;
   }
 
-  // v2 parity: a defined start date IS the numbering anchor — the settings UI hides the anchor
+  // A defined start date IS the numbering anchor — the settings UI hides the anchor
   // picker and labels the start as the anchor, so fall back to the explicit picker only when no
   // start date is set.
   #anchorDateFor(config: JournalConfig): AnchorString {

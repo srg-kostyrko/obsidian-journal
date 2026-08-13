@@ -372,7 +372,7 @@ describe("CycleService", () => {
       const cycle = c.resolve(CycleService);
       // 2024-03-06 (Wed) of the Mon 2024-03-04 — Sun 2024-03-10 week.
       // From start Mon: day 3 (Mon=1, Tue=2, Wed=3). To end Sun: -5 (Wed is 4 days before Sun,
-      // negated and decremented by 1 to match v2 calculateOffset semantics).
+      // negated and decremented by 1 so offsets are 1-based from both ends, never 0).
       const off = cycle.offsets("w", unwrapResult(CalendarDate.parse("2024-03-06")));
       expect(off.isSome() && off.value).toEqual([3, -5]);
     });

@@ -36,7 +36,7 @@ export class EditFrontmatterFieldFlow implements Flow<
       });
       // Move the value to the new key in every connected note so nothing is stranded: renaming
       // the date field would otherwise orphan the note entirely, and renaming a start/end key
-      // would leave a dead property behind (v2 rewrote every field).
+      // would leave a dead property behind.
       if (submitted.newValue !== oldValue) {
         yield* this.#connection.renameFieldAll(parameters.journalName, oldValue, submitted.newValue);
       }

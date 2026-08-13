@@ -116,7 +116,7 @@ export class FrontmatterService {
           delete fm[fields.startDateField];
         }
 
-        // v2 parity: an end equal to the auto-derived period end is redundant metadata, not a
+        // An end equal to the auto-derived period end is redundant metadata, not a
         // manual extension, so it is persisted only when the end-date field is enabled. A genuine
         // extension (end differs from the default period end) is always kept.
         const isManualExtension =

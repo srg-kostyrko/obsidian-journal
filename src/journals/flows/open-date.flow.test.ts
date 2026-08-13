@@ -118,7 +118,7 @@ describe("OpenDateFlow", () => {
   });
 
   it("picks via a menu at the mouse event when pickAt is provided", async () => {
-    // v2 disambiguated mouse-driven clicks with a native menu at the pointer; the
+    // Mouse-driven clicks disambiguate with a native menu at the pointer; the
     // centered suggest stays for keyboard/command/URI entry points.
     const repo = fakeRepo({
       a: fixedJournal("a", { type: "day" }, { folder: "A", timeline: TIMELINE_OPEN }),

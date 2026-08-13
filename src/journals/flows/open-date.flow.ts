@@ -24,7 +24,7 @@ export interface OpenDateParameters {
   openMode?: OpenMode;
   existingOnly?: boolean;
   // The originating mouse event, when there is one: multi-journal disambiguation then
-  // shows a menu at the pointer (v2 behavior) instead of the centered suggest.
+  // shows a menu at the pointer instead of the centered suggest.
   pickAt?: MouseEvent;
 }
 

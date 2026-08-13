@@ -30,7 +30,7 @@ export class TemplateContentService {
     if (config.templates.length === 0) return AsyncResult.ok("");
 
     // One context for both the template's path and its body: paths resolve
-    // {{note_name}}/{{title}} too (v2 parity).
+    // {{note_name}}/{{title}} too.
     const context = this.#path.bodyContextFor(config, metadata, noteName);
 
     return AsyncResult.fromPromise(
@@ -41,8 +41,8 @@ export class TemplateContentService {
           if (this.#notes.find(renderedPath).isNone()) continue;
           const readResult = await this.#notes.read(renderedPath);
           if (readResult.isErr()) throw readResult.error;
-          // An empty template falls through to the next candidate (v2's truthy check);
-          // only a template with content wins the slot.
+          // An empty template falls through to the next candidate; only a template with
+          // content wins the slot.
           if (readResult.value === "") continue;
           const rendered = this.#engine.renderString(readResult.value, context);
           const applied = await this.#templater.apply(renderedPath, targetPath, rendered);

@@ -43,7 +43,7 @@ export class EditSequencePropertyFlow implements Flow<
         numbering: { ...config.numbering, sources: updatedSources },
       });
       // Move the stored index to the new key in every connected note so a manually-set value
-      // survives the rename instead of being stranded under the old key (v2 rewrote it).
+      // survives the rename instead of being stranded under the old key.
       if (oldKey !== undefined && submitted.newValue !== oldKey) {
         yield* this.#connection.renameFieldAll(parameters.journalName, oldKey, submitted.newValue);
       }

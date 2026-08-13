@@ -37,8 +37,7 @@ export class AutoCreateService {
   initialize(): AsyncResult<void, never> {
     // ensureNote's index lookup is the only thing keeping a connected note that lives away from
     // its derived path (bulk-added keeping its name, renamed, moved) from being duplicated, and
-    // the index is empty until the boot-time vault walk lands. v2 ran auto-create inside
-    // onLayoutReady, strictly after its own reindex, for the same reason.
+    // the index is empty until the boot-time vault walk lands.
     void this.#index.whenReady().then(() => this.#tick());
     return AsyncResult.ok();
   }

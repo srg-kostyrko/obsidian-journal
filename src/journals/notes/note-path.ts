@@ -62,7 +62,7 @@ export class NotePathService {
       // trailing space to a different path.
       if (noteName.trim() === "") return new Err(new EmptyNoteNameError(name));
       // The rendered note name feeds back into the folder as {{note_name}}/{{title}},
-      // so the filename must render first (v2 order).
+      // so the filename must render first.
       const folderContext = this.#withNoteName(context, noteName);
       const folder = config.folder ? this.#engine.renderString(config.folder, folderContext) : "";
       const joined = folder ? `${folder}/${noteName}.md` : `${noteName}.md`;
@@ -134,8 +134,8 @@ export class NotePathService {
     if (endOpt.isSome()) context = context.date("end_date", endOpt.value, config.dateFormat);
     for (const source of config.numbering.sources) {
       const value = metadata.numbers?.[source.variable];
-      // v2 fidelity: a declared numbering variable that didn't resolve renders empty
-      // (e.g. numbering disabled) rather than leaking the literal `{{index}}` token.
+      // A declared numbering variable that didn't resolve renders empty (e.g. numbering
+      // disabled) rather than leaking the literal `{{index}}` token.
       context = value === undefined ? context.string(source.variable, "") : context.number(source.variable, value);
     }
     // Render-time snapshots — invertible:false so they don't enter the filename→date round-trip.

@@ -29,7 +29,7 @@ const journalsVM = useService(JournalsViewModel);
 const notes = useService(NotesService);
 
 // Prefill the date format from the journal's own format so a non-ISO journal starts from the
-// right pattern instead of a hardcoded YYYY-MM-DD (v2 parity).
+// right pattern instead of a hardcoded YYYY-MM-DD.
 const journalDateFormat = journalsVM.getJournal(journalName).getOrUndefined()?.dateFormat;
 
 // The folder exists only at runtime, so the schema in config.ts cannot check it; without this the

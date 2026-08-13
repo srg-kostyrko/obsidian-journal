@@ -279,7 +279,7 @@ export class CycleService {
       match(cycle)
         .with({ kind: "fixed" }, (c) => {
           // Both ends must sit on the journal's grid before diffing: `from` is free-form (a
-          // timeline start or numbering anchor the user picked mid-period, or a v2 config
+          // timeline start or numbering anchor the user picked mid-period, or a migrated config
           // carried over verbatim) while `to` is always a canonical anchor. A raw diff counts
           // whole periods only when both share the same intra-period offset — a Wednesday
           // start against Monday week anchors otherwise collapses two weeks into one step.
