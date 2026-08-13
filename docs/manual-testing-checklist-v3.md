@@ -871,11 +871,11 @@ sitting is faster than rediscovering the pattern per screen.
 - [x] autoCreate scheduling does not double-fire across the midnight boundary.
 - [x] **Auto-attach** — + manually create a note matching a journal's
       folder+name pattern within its timeline → journal frontmatter auto-added.
-- [ ] Auto-attach on **rename** — rename an unrelated note _into_ a matching
+- [x] Auto-attach on **rename** — rename an unrelated note _into_ a matching
       folder+name → it is attached the same as a fresh creation.
 - [x] Auto-attach does **not** double-process a note the plugin itself just
       created (self-write guard, ~5s window).
-- [ ] Auto-attach leaves a note untouched when **multiple journals** could match
+- [x] Auto-attach leaves a note untouched when **multiple journals** could match
       (ambiguous).
 
 ---
@@ -892,28 +892,28 @@ only needed to test _entering_ the chain part-way; if you have a real one from a
 user report, use it, otherwise note in sign-off that only the full chain was
 covered.
 
-- [ ] **v1 → v2** — load v1 config → calendar journals split into per-period
+- [x] **v1 → v2** — load v1 config → calendar journals split into per-period
       journals; interval journals preserved with unique names; shelves created;
       default commands present.
-- [ ] **v1→v2 note rewrite** (async, after load) → connected notes get the new
+- [x] **v1→v2 note rewrite** (async, after load) → connected notes get the new
       journal name; old keys (e.g. `journal-section`) removed; interval indexes
       migrated to numbering keys; orphaned keys stripped.
-- [ ] No note left **half-migrated** after the async pass completes.
-- [ ] **v2 → v3** — commands collection added.
-- [ ] **v2 → v3** — `shelf.commands` array present.
-- [ ] **v3 → v4** — journals/shelves stay keyed by **name**; migrated commands are
+- [x] No note left **half-migrated** after the async pass completes.
+- [x] **v2 → v3** — commands collection added.
+- [x] **v2 → v3** — `shelf.commands` array present.
+- [x] **v3 → v4** — journals/shelves stay keyed by **name**; migrated commands are
       keyed by their **v2 hotkey slug** so existing hotkey bindings survive. (Only
       commands created fresh in v3 get a nanoid id — migration mints none.)
-- [ ] **v3 → v4** — per-journal/shelf command arrays flattened into the global
+- [x] **v3 → v4** — per-journal/shelf command arrays flattened into the global
       commands collection.
-- [ ] **v3 → v4, week journals** — the async pass rewrites each week note's date
+- [x] **v3 → v4, week journals** — the async pass rewrites each week note's date
       field to the canonical week anchor.
-- [ ] **v3 → v4** — startup slice added.
-- [ ] **v3 → v4** — views reshaped to the new config.
-- [ ] **Idempotent** — reload a migrated vault a second time → no duplicate
+- [x] **v3 → v4** — startup slice added.
+- [x] **v3 → v4** — views reshaped to the new config.
+- [x] **Idempotent** — reload a migrated vault a second time → no duplicate
       journals/commands/shelves.
-- [ ] Existing notes in a migrated vault still **open and navigate**.
-- [ ] (v1→v2 migration is **non-interactive** in v3 by design — confirm, don't
+- [x] Existing notes in a migrated vault still **open and navigate**.
+- [x] (v1→v2 migration is **non-interactive** in v3 by design — confirm, don't
       file as a bug.)
 
 ---
