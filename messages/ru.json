@@ -1429,6 +1429,7 @@
 	"settings_load_failed": "Журнал: не удалось загрузить настройки — {error}",
 	"settings_reload_failed": "Журнал: не удалось перезагрузить настройки — {error}",
 	"settings_reload_required_banner": "Перезагрузите Obsidian, чтобы применить изменённые настройки.",
+	"settings_tab_title": "Журналы",
 	"startup_dashboard_section_title": "Запуск",
 	"startup_open_note_title": "Открывать при запуске",
 	"startup_open_note_desc": "Открывать заметку при каждом открытии этого хранилища.",

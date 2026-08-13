@@ -1236,6 +1236,7 @@
 	"settings_load_failed": "Журнал: не вдалося завантажити налаштування — {error}",
 	"settings_reload_failed": "Журнал: не вдалося перезавантажити налаштування — {error}",
 	"settings_reload_required_banner": "Перезавантажте Obsidian, щоб застосувати змінені налаштування.",
+	"settings_tab_title": "Журнали",
 	"startup_dashboard_section_title": "Запуск",
 	"startup_open_note_title": "Відкривати під час запуску",
 	"startup_open_note_desc": "Відкривати нотатку щоразу, коли ви відкриваєте це сховище.",

@@ -1388,6 +1388,7 @@
 	"settings_load_failed": "Diario: error al cargar la configuración — {error}",
 	"settings_reload_failed": "Diario: error al recargar la configuración — {error}",
 	"settings_reload_required_banner": "Recarga Obsidian para aplicar los cambios de configuración.",
+	"settings_tab_title": "Diarios",
 	"startup_dashboard_section_title": "Inicio",
 	"startup_open_note_title": "Abrir al iniciar",
 	"startup_open_note_desc": "Abre una nota cada vez que abras esta bóveda.",

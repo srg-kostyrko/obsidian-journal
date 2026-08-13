@@ -1393,6 +1393,7 @@
 	"settings_load_failed": "Journal : échec du chargement des paramètres — {error}",
 	"settings_reload_failed": "Journal : échec du rechargement des paramètres — {error}",
 	"settings_reload_required_banner": "Rechargez Obsidian pour appliquer les paramètres modifiés.",
+	"settings_tab_title": "Journaux",
 	"startup_dashboard_section_title": "Démarrage",
 	"startup_open_note_title": "Ouvrir au démarrage",
 	"startup_open_note_desc": "Ouvrir une note chaque fois que vous ouvrez ce coffre-fort.",

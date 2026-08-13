@@ -1199,6 +1199,7 @@
 	"settings_load_failed": "日记：加载设置失败——{error}",
 	"settings_reload_failed": "日记：重新加载设置失败——{error}",
 	"settings_reload_required_banner": "重新加载 Obsidian 以应用更改后的设置。",
+	"settings_tab_title": "日记",
 	"startup_dashboard_section_title": "启动",
 	"startup_open_note_title": "启动时打开",
 	"startup_open_note_desc": "每次打开此库时自动打开一条笔记。",

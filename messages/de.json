@@ -1388,6 +1388,7 @@
 	"settings_load_failed": "Journal: Fehler beim Laden der Einstellungen – {error}",
 	"settings_reload_failed": "Journal: Fehler beim Neuladen der Einstellungen – {error}",
 	"settings_reload_required_banner": "Lade Obsidian neu, damit die geänderten Einstellungen wirksam werden.",
+	"settings_tab_title": "Journale",
 	"startup_dashboard_section_title": "Programmstart",
 	"startup_open_note_title": "Beim Start öffnen",
 	"startup_open_note_desc": "Öffnet eine Notiz, wenn du diesen Vault öffnest.",

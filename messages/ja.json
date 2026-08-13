@@ -1199,6 +1199,7 @@
 	"settings_load_failed": "ジャーナル: 設定の読み込みに失敗しました — {error}",
 	"settings_reload_failed": "ジャーナル: 設定の再読み込みに失敗しました — {error}",
 	"settings_reload_required_banner": "変更した設定を適用するには、Obsidian を再読み込みしてください。",
+	"settings_tab_title": "ジャーナル",
 	"startup_dashboard_section_title": "起動時",
 	"startup_open_note_title": "起動時に開く",
 	"startup_open_note_desc": "この保管庫を開くたびにノートを開きます。",

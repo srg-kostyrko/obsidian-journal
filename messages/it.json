@@ -1388,6 +1388,7 @@
 	"settings_load_failed": "Diario: impossibile caricare le impostazioni — {error}",
 	"settings_reload_failed": "Diario: impossibile ricaricare le impostazioni — {error}",
 	"settings_reload_required_banner": "Ricarica Obsidian per applicare le impostazioni modificate.",
+	"settings_tab_title": "Diari",
 	"startup_dashboard_section_title": "Avvio",
 	"startup_open_note_title": "Apri all'avvio",
 	"startup_open_note_desc": "Apri una nota ogni volta che apri questo vault.",
