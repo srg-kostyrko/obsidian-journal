@@ -28,8 +28,11 @@ Enforced location rules _(eslint)_:
 - Vue SFCs must live under a `<feature>/ui/` directory.
 - `*.flow.ts` files must live under a `<feature>/flows/` directory.
 - `defineModal()` calls are only allowed in `<feature>/ui/modals.ts`.
-- `src/**/*.ts` filenames are kebab-case, `src/**/*.vue` filenames are
-  PascalCase.
+- `src/**/*.ts` filenames are kebab-case; `src/**/*.vue` filenames are
+  PascalCase. `**/*.test.ts`, `**/*.bench.ts`, `src/_old-code/**`, and
+  `src/i18n/paraglide/**` are exempt and may use either case — a test file
+  commonly takes its component's PascalCase name instead (e.g.
+  `src/ui/UiCollapsibleBlock.test.ts`, colocated with `UiCollapsibleBlock.vue`).
 
 ## Dependency injection
 
@@ -88,12 +91,24 @@ casts.
 
 Every `Error` subclass — including internal invariant errors — lives in its
 feature's `errors.ts`, never declared inline at the throw site. Raw `new
-Error()` is rejected _(eslint)_ in favor of a named subclass.
+Error()` is rejected in production source _(eslint)_ in favor of a named
+subclass. The rule is switched off for `*.test.ts`, `*.bench.ts`, `testing.ts`,
+and `**/testing/**` files, where constructing a raw `Error` to simulate a
+failure (e.g. via `vi.spyOn`) is normal and common.
 
 ## Dates and union dispatch
 
-`moment` is reachable only through the calendar abstraction in `src/calendar/`
-_(eslint)_ — feature code never imports `moment` directly.
+The convention is to reach `moment` only through the calendar abstraction in
+`src/calendar/`, never by importing it directly elsewhere. Lint enforces part
+of this: `no-restricted-imports` bans the bare package import,
+`import moment from "moment"` _(eslint)_. It does not, and cannot easily,
+catch `import { moment } from "obsidian"` — the Obsidian API's own re-export
+— which is how `src/calendar/calendar.ts` itself obtains `moment`, and which
+several other production files also use directly (e.g.
+`src/templates/format-regex.ts`, `src/views/blocks/calendar-block-summary.ts`).
+Treat the calendar-abstraction rule as a review convention outside
+`src/calendar/`, not a lint guarantee: `import { moment } from "obsidian"` is
+the loophole lint doesn't close.
 
 Step dates with `Period.next()`/`Period.previous()` and `CalendarDate`, never a
 raw `localMoment().add(...)` call in domain code. Weekday and month names come
