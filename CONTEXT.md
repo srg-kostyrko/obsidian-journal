@@ -158,7 +158,7 @@ names _the period a date falls in_ for a given journal. It is the universal join
 key — the index, numbering, timeline, note paths, and the calendar all key off it.
 `CycleService.anchorOf(name, date)` maps any date to its owning period's anchor:
 for fixed cycles via `periodOfKind` (the period's owning year/month matters, not a
-naive `startOf` — the v2 cross-year week bug); for custom cycles by walking from
+naive `startOf`); for custom cycles by walking from
 `config.anchorDate` in `duration`-sized steps. `""` is the sentinel for an unset
 anchor (legitimately empty for `timeline.start` and `numbering.anchorDate` until
 the user picks a date).
@@ -258,7 +258,8 @@ year/month/quarter.
 template-diagnostic checks surfaced while editing a journal: `useInvertibilityCheck`
 (can auto-attach recover an anchor from this name/folder template?),
 `templateHasWrongWeek` (does a format use the `W` token, which breaks under custom
-week configs — the v2 cross-year bug), `useCollisionCheck` (walks up to 40 of the
+week configs, since a week's anchor depends on the week's owning year),
+`useCollisionCheck` (walks up to 40 of the
 journal's own periods and reports the first repeated note path, via the pure
 `findPathCollision` core — does one journal's own template collapse two entries onto
 one note?), and `findCollidingJournals` (do two different journals resolve to the
@@ -302,7 +303,7 @@ holds the `FunctionHandlerToken` registry and exposes `renderString`/`renderStre
 
 **Modifier (shift & boundary)** — a `shift` (`+1w`, `-3d`) or `boundary`
 (`<startOf=month>`). `applyModifiers` always applies **all shifts first, then all
-boundaries**, regardless of written order (v2 semantics); `unapplyModifiers`
+boundaries**, regardless of written order; `unapplyModifiers`
 reverses shifts and treats boundaries as identity, which is what makes parsing
 invertible. `Unit` (`y/q/m/w/d/h`) and `BoundaryUnit` (`year…decade/hour`) are two
 distinct vocabularies.
@@ -313,8 +314,9 @@ the protocol; consuming features supply behavior — the only real handler is
 journals' `journal_link`. A function token makes a template **not-invertible**, as
 do unknown variables and clock variables (`TemplateParseError{kind:"not-invertible"}`).
 `formatToRegexp` converts a moment-style date format into the matcher `parse` uses,
-capturing locale data (month/weekday names) **once at module-import time** (v2
-fidelity — runtime locale changes don't affect compiled patterns).
+capturing locale data (month/weekday names) **once at module-import time** — plugin
+load fixes the locale before this module imports, so runtime locale changes don't
+affect compiled patterns.
 
 ## Commands
 
@@ -399,8 +401,8 @@ is parsed from the **fence body** against a valibot `schema`; the component rece
 > **Don't fuse with View blocks.** A code block is keyed by markdown language
 > string(s) and parses config from fence text; a `View block` is a stored
 > `{ id, key, config }` entry resolved through `ViewBlockDefinitionToken`. Different
-> registries, different concepts. (`keys` is a list because one renderer answers to
-> several legacy v2 aliases — `journal-nav`/`calendar-nav`/`interval-nav`.)
+> registries, different concepts. (`keys` is a list because the nav block supports
+> three aliases — `journal-nav`/`calendar-nav`/`interval-nav`.)
 
 **the `home` block (`journals-home`)** — a compact "jump to today's notes" link
 strip, one `HomeItem` per configured period entry. Effective shelf is inferred from
@@ -471,7 +473,7 @@ code never imports `obsidian` directly. Only host internals touch `TFile`/`App`/
 a plain definition object separate from the `XxxService` that registers/renders it
 (modals use the curried `defineModal<TResult>()(input)` with a phantom `__result`
 witness); and **imperative-with-`Disposer`** — a `register`/`attach`/`render` call
-returns a `Disposer` the caller invokes to tear down (the idiom behind v3's dynamic
+returns a `Disposer` the caller invokes to tear down (the idiom behind dynamic
 views). The unit suite fakes this boundary via `__mocks__/obsidian.ts`; the
 **real** boundary (metadataCache timing, vault events, migration, interop) is the
 job of e2e — see [`docs/e2e-testing-strategy.md`](docs/e2e-testing-strategy.md).
