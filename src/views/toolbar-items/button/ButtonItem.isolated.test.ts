@@ -268,8 +268,8 @@ describe("ButtonItem", () => {
     });
 
     it("opens the picker on the currently displayed period with it selected", async () => {
-      // v2 passed the calendar's refDate into the picker so it opened where the user
-      // is looking, not on today's month.
+      // The picker opens on the currently displayed period, not on today's month, so it
+      // matches where the user is looking.
       const { result, modals } = mountItem(buttonConfigFor({ type: "pick-date", mode: "navigate", levels: ["day"] }), {
         refDate: ref("2031-02-14" as AnchorString),
       });

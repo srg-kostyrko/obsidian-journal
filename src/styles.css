@@ -1,7 +1,7 @@
 /* Global styles for markup the plugin builds outside Vue, where a scoped SFC style cannot
    reach it. Everything else lives in its component's <style scoped>.
    Imported from main.ts so vite emits it into build/styles.css, which is what the release
-   workflow ships — the styles.css at the repo root is a v2 leftover and is bundled nowhere. */
+   workflow ships. */
 
 /* Feedback a code block renders about itself: a fatal parse/validation failure, and a
    non-fatal notice (an unrecognized option that was ignored). Both must read as plugin

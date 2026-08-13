@@ -5,10 +5,10 @@ interface HoverTarget {
   readonly fire: (event: MouseEvent) => void;
 }
 
-// v2 behavior: a preview fires when Ctrl/Cmd is already held entering a cell OR pressed
-// while hovering it. The window keydown listener exists only between enter and leave, so
-// idle components cost nothing. `enter` takes the fire callback so one composable serves
-// components hosting many hover targets (e.g. the period badge strip).
+// A preview fires when Ctrl/Cmd is already held entering a cell, or pressed while hovering
+// it. The window keydown listener exists only between enter and leave, so idle components
+// cost nothing. `enter` takes the fire callback so one composable serves components hosting
+// many hover targets (e.g. the period badge strip).
 export function useModifierHoverPreview(): {
   enter(event: MouseEvent, fire: (event: MouseEvent) => void): void;
   leave(): void;

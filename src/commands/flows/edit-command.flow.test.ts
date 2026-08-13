@@ -65,8 +65,8 @@ describe("EditCommandFlow", () => {
   });
 
   describe("takenNames scope", () => {
-    // Commands live in one flat collection, but v2 namespaced names per owner — two
-    // journals may each hold an "Open today's note"; only same-owner names collide.
+    // Commands live in one flat collection, but names collide only within the same owner —
+    // two journals may each hold an "Open today's note" without conflict.
     const raw = {
       version: 4,
       commands: {

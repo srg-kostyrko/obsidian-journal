@@ -13,8 +13,8 @@ const templates = useService(TemplatesService);
 const definition = computed(() =>
   defineInputSuggest<string>({
     fetch: (query) => {
-      // No suggestions until the user types (v2 parity) — an empty query must not pop the
-      // entire vault's template path list on focus.
+      // No suggestions until the user types — an empty query must not pop the entire
+      // vault's template path list on focus.
       if (query === "") return [];
       const q = query.toLowerCase();
       return templates

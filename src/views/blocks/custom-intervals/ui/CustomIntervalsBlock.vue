@@ -65,7 +65,7 @@ const sections = computed<readonly Section[]>(() => {
       .filter((anchor) => timeline.contains(name, anchor))
       .map((anchor) => ({ anchor }));
     // A section renders no journal name of its own, so an entry-less one would show as a bare
-    // divider. v2 hid these unconditionally (`.calendar-view-interval:empty { display: none }`).
+    // divider; skip it rather than rendering empty chrome.
     if (entries.length === 0) continue;
     out.push({ journalName: name, journal: cfg, block: cfg.intervalBlock, entries });
   }
@@ -82,7 +82,7 @@ useCellDecorations({
     ),
   journalNames: () => sections.value.map((section) => section.journalName),
   // Offset decorations mark single days inside an interval; they render on the day
-  // calendar grid, never on the whole-interval row (v2's decoration split).
+  // calendar grid, never on the whole-interval row.
   filter: (binding) => !hasOffsetCondition(binding.decoration),
 });
 </script>
@@ -135,7 +135,7 @@ useCellDecorations({
   background-color: var(--journal-cell-active-bg);
 }
 /* The nav rows set their own per-row color, so the active highlight forces its color on
-   the nested content to win, matching v2's active interval row. */
+   the nested content to win. */
 .journal-view-custom-intervals__entry[data-active] :deep(*) {
   color: var(--journal-cell-active-color) !important;
 }

@@ -91,7 +91,7 @@ function pathsFor(badge: Badge): readonly VaultPath[] {
 }
 
 // The badges mirror the in-grid header cells: right-click reaches the note's file
-// menu and Ctrl/Cmd hover previews it (v2's header rendered full calendar cells).
+// menu and Ctrl/Cmd hover previews it.
 function openContextMenu(badge: Badge, event: MouseEvent): void {
   workspace.openPathsMenu(pathsFor(badge), event, decorationItems({ kind: "fixed", period: badge.period }));
 }

@@ -36,7 +36,7 @@ export const viewSchema = v.object({
   showInRibbon: v.boolean(),
   leaf: v.optional(v.picklist(["left", "right", "tab"]), "right"),
   openOnStartup: v.optional(v.boolean(), false),
-  // When off (v2 default), a fresh launch centers the calendar on today; when on, the last
+  // When off, a fresh launch centers the calendar on today; when on, the last
   // viewed date is persisted and restored across restarts.
   rememberDate: v.optional(v.boolean(), false),
   // Following writes the opened note's date into this view's date; each calendar block's

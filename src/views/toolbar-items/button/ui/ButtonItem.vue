@@ -54,8 +54,8 @@ async function applyMode(
   journalNames: readonly string[],
   event: MouseEvent,
 ): Promise<void> {
-  // v2 parity: the pick/today interaction always moves the displayed period to the
-  // chosen date; the mode only decides whether an open follows.
+  // The pick/today interaction always moves the displayed period to the chosen date;
+  // the mode only decides whether an open follows.
   context.setRefDate(anchor);
   if (mode === "select-only") return;
   const opened = await flows.invoke(OpenDateFlow, {
@@ -78,7 +78,7 @@ async function applyMode(
 async function fire(level: ButtonLevel, event: MouseEvent): Promise<void> {
   await match(props.config.action)
     .with({ type: "pick-date" }, async (action) => {
-      // Open the picker on the period containing the currently selected date, pre-selected (v2 parity).
+      // Open the picker on the period containing the currently selected date, pre-selected.
       const displayed = periodFor(level, CalendarDate.fromAnchor(context.refDate.value));
       const result = await modals.open(datePickerModal, { picking: level, selected: displayed });
       if (result.isErr()) return;
@@ -96,7 +96,7 @@ async function fire(level: ButtonLevel, event: MouseEvent): Promise<void> {
         .exhaustive();
       // Shift the ref date itself rather than snapping to the period anchor, so paging by a
       // unit coarser than the grid (e.g. year on a month calendar) keeps the displayed month
-      // instead of jumping to January. v2 parity: navigate always did refDate.add(±n, unit).
+      // instead of jumping to January.
       const shifted = date.shift(direction * action.amount, STEP_SHIFT_UNIT[action.unit]);
       context.setRefDate(shifted.toAnchor());
     })

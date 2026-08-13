@@ -30,9 +30,9 @@ export class JournalViewLeaf extends ItemView {
   #state: JournalViewLeafState = reactive({});
   #vueApp: VueApp | null = null;
 
-  // Calendar-type views opt out of navigation history (Obsidian convention, v2 parity).
-  // Without it a tab-placed view leaf is treated as navigable and Obsidian may reuse or
-  // replace it when a note opens; v2 was sidebar-only and immune by construction.
+  // Calendar-type views opt out of navigation history, the Obsidian convention for
+  // non-navigable panes. Without it a tab-placed view leaf is treated as navigable, and
+  // Obsidian may reuse or replace it when a note opens.
   navigation = false;
 
   constructor(
@@ -64,8 +64,8 @@ export class JournalViewLeaf extends ItemView {
   getState(): Record<string, unknown> {
     const state = { ...this.#state };
     // Persist the viewed date across restarts only when the view opts in; otherwise a fresh
-    // launch centers on today (v2 default). In-session navigation is unaffected — it reads
-    // the live reactive state, not the serialized snapshot.
+    // launch centers on today. In-session navigation is unaffected — it reads the live
+    // reactive state, not the serialized snapshot.
     const remembers = this.injector
       .resolve(ViewsRepository)
       .get(this.viewId)

@@ -31,7 +31,7 @@ function mountHandle() {
 
 describe("UiTemplateInput", () => {
   it("offers no suggestions for an empty query", () => {
-    // v2's template suggester returned [] on empty input rather than popping the full path list.
+    // An empty query must not pop the entire vault's template path list.
     expect(mountHandle().query("")).toEqual([]);
   });
 

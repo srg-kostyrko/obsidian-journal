@@ -191,8 +191,8 @@ describe("ViewHostService", () => {
   });
 
   describe("default Calendar view command", () => {
-    // v2 exposed one fixed `open-calendar` id users bound hotkeys to; the seeded view owns
-    // that id so those bindings survive without a second command twinning it in the palette.
+    // A fixed `open-calendar` id predates per-view generated ids; the seeded view owns that
+    // id so existing hotkey bindings survive without a second command twinning it in the palette.
     it("registers the default Calendar view under the fixed open-calendar id", () => {
       const { host } = build({ [DEFAULT_CALENDAR_VIEW_ID]: seedView(DEFAULT_CALENDAR_VIEW_ID) });
       expect(host.commands.has("open-calendar")).toBe(true);

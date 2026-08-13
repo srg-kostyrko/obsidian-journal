@@ -158,8 +158,8 @@ describe("CodeBlockService", () => {
     });
 
     it("says nothing about unknown keys for a block that declares none", () => {
-      // The nav fence takes no options at all — v2 ignored its body — so every key would
-      // otherwise be "unrecognized" and every nav block would carry a notice.
+      // The nav fence's schema declares no fields and no known keys, so every key in its
+      // body would otherwise be flagged "unrecognized" and every nav block would carry a notice.
       bind();
       const { el } = context.host.runCodeBlockProcessor("journals-home", "anything: 1\n");
       expect(el.querySelector(".code-block-notice")).toBeNull();

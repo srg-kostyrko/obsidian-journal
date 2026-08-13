@@ -24,7 +24,8 @@ interface ConfigurableVault {
 }
 
 // The confirm-and-delete prompt is an undocumented FileManager method (same one core
-// file-explorer menus use); v2 relied on it for the appended Delete item.
+// file-explorer menus use) — used below to give the appended Delete item the native
+// confirm-before-delete behavior.
 interface DeletePromptingFileManager {
   promptForFileDeletion?(file: TFile): void;
 }
@@ -61,16 +62,17 @@ export class WorkspaceService {
   constructor() {
     this.#plugin.registerEvent(
       this.#app.workspace.on("active-leaf-change", (leaf) => {
-        // Focusing a leaf with no file (e.g. the calendar sidebar) must not clear the active note —
-        // v2 tracked only file-open, so the calendar's active-day highlight persisted. Only react
-        // to leaves that carry a file; note closes leave the last note active, as in v2.
+        // Focusing a leaf with no file (e.g. the calendar sidebar) must not clear the active
+        // note, or the calendar's active-day highlight would disappear whenever that sidebar
+        // gets focus. Only react to leaves that carry a file; note closes leave the last note
+        // active.
         const file = this.#fileOf(leaf);
         if (!file) return;
         this.#emitter.emit("active-note-changed", this.#pathOf(file));
       }),
     );
     // Same-leaf navigation (a link click, open-in-place) fires file-open without an
-    // active-leaf-change; both feed the active-note signal (v2 tracked file-open).
+    // active-leaf-change; both feed the active-note signal.
     this.#plugin.registerEvent(
       this.#app.workspace.on("file-open", (file) => {
         this.#emitter.emit("active-note-changed", this.#pathOf(file));
@@ -173,7 +175,7 @@ export class WorkspaceService {
     const menu = into ?? new Menu();
     (menu as SectionedMenu).addSections?.(FILE_MENU_SECTIONS);
     this.#app.workspace.trigger("file-menu", menu, file, "file-explorer-context-menu", null);
-    // The file-menu event does not guarantee a Delete entry; append one like v2 did.
+    // The file-menu event does not guarantee a Delete entry, so append one explicitly.
     menu.addItem((item) =>
       item
         .setTitle(m.common_action_delete())
@@ -217,9 +219,9 @@ export class WorkspaceService {
     menu.showAtMouseEvent(event);
   }
 
-  // A pick-one menu at the pointer (v2's multi-journal disambiguation). Cancellation is
-  // decided a task later than onHide because Obsidian can hide the menu before the
-  // clicked item's handler runs — the same ordering hazard as SuggestModal.onClose.
+  // A pick-one menu at the pointer, for disambiguating when multiple journals apply.
+  // Cancellation is decided a task later than onHide because Obsidian can hide the menu
+  // before the clicked item's handler runs — the same ordering hazard as SuggestModal.onClose.
   pickFromMenu(labels: readonly string[], event: MouseEvent): AsyncResult<string, SuggestCancelled> {
     return AsyncResult.fromPromise(
       new Promise<string>((resolve, reject) => {

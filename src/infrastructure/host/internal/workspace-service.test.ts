@@ -97,8 +97,8 @@ describe("WorkspaceService", () => {
     });
 
     it("does not clear the active note when focus moves to a leaf with no file", () => {
-      // v2 tracked only file-open, so focusing the calendar sidebar (a leaf with no file) never
-      // cleared the active note; the calendar's active-day highlight must persist.
+      // Focusing the calendar sidebar (a leaf with no file) must not clear the active note,
+      // or its active-day highlight would disappear.
       const { service, host } = build();
       const file = host.putFile(path);
       const received: (VaultPath | null)[] = [];
@@ -112,7 +112,7 @@ describe("WorkspaceService", () => {
 
     it("emits Some(path) when a file opens in the already-active leaf", () => {
       // A link click or open-in-place fires file-open without active-leaf-change;
-      // the active-note signal must follow it too (v2 tracked file-open).
+      // the active-note signal must follow it too.
       const { service, host } = build();
       const file = host.putFile(path);
       const received: string[] = [];

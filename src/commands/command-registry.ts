@@ -77,7 +77,7 @@ export class DynamicCommandRegistry {
   }
 
   // The palette lists every journal's commands side by side; the owning journal/shelf
-  // prefix is what disambiguates same-named commands across owners (v2 format).
+  // prefix is what disambiguates same-named commands across owners.
   #paletteName(command: CommandConfig): string {
     return match(command.target)
       .with({ kind: "journal" }, (target) =>
@@ -106,7 +106,8 @@ export class DynamicCommandRegistry {
         // Listing and running must share one predicate. OpenDateFlow drops journals whose
         // timeline excludes the anchor, so planning without that filter lets a command list in
         // the palette, run, and end in NoApplicableJournals — a flow error that never reaches
-        // the notice below. v2 gated availability and execution on the same check.
+        // the notice below. check() only gates what appears in the palette; a ribbon click or
+        // hotkey reaches execute() regardless, which is why #run() shows its own notice here.
         this.#anchor(command, journalNames, reference).flatMap((resolved) => {
           const inTimeline = journalNames.filter((name) => this.#timeline.contains(name, resolved));
           if (inTimeline.length === 0) return Option.none<CommandPlan>();

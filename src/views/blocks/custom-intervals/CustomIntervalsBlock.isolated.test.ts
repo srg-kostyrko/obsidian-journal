@@ -202,7 +202,7 @@ describe("CustomIntervalsBlock", () => {
 
     it("does not paint an offset decoration on interval rows", async () => {
       // Offset decorations mark single days inside an interval; they render on the day
-      // calendar grid, never on the whole-interval row (v2's decoration split).
+      // calendar grid, never on the whole-interval row.
       SCOPE.custom = ["foo"];
       JOURNALS.foo = customJournal("foo", "day", 10, "2026-05-01", {
         decorations: [

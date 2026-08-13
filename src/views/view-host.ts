@@ -57,10 +57,10 @@ export class ViewHostService {
     }
   }
 
-  // v2 parity: startup places the view without revealing it — a collapsed sidebar stays
-  // collapsed and focus is not stolen. A leaf already restored from the persisted layout is
-  // left untouched; only a genuinely missing one is placed (inactive). Explicit open
-  // commands still reveal — see open().
+  // Startup places the view without revealing it — a collapsed sidebar stays collapsed and
+  // focus is not stolen. A leaf already restored from the persisted layout is left untouched;
+  // only a genuinely missing one is placed (inactive). Explicit open commands still
+  // reveal — see open().
   async #placeOnStartup(id: ViewId): Promise<void> {
     const viewType = viewTypeOf(id);
     if (this.#app.workspace.getLeavesOfType(viewType).length > 0) return;
@@ -144,8 +144,8 @@ export class ViewHostService {
     };
   }
 
-  // v2's change-calendar-shelf palette command, per view: pick a shelf (or all
-  // journals) from a suggest and apply it to the view's open leaves.
+  // Each view can show its own shelf, so shelf-picking is a per-view command: pick a shelf
+  // (or all journals) from a suggest and apply it to this view's open leaves.
   #shelfCommandDescriptorFor(id: ViewId, view: View) {
     return {
       id: shelfCommandIdOf(id),
@@ -198,9 +198,9 @@ export class ViewHostService {
     });
   }
 
-  // v2 parity: reveal makes the view visible (expanding a collapsed sidebar, selecting its tab)
-  // without activating it. Activation focuses the leaf, and Obsidian closes an open settings
-  // window whenever a leaf takes focus — which would dismiss the settings page a view is opened from.
+  // Reveal makes the view visible (expanding a collapsed sidebar, selecting its tab) without
+  // activating it. Activation focuses the leaf, and Obsidian closes an open settings window
+  // whenever a leaf takes focus — which would dismiss the settings page a view is opened from.
   async open(id: ViewId): Promise<void> {
     const viewType = viewTypeOf(id);
     const [existing] = this.#app.workspace.getLeavesOfType(viewType);
@@ -239,9 +239,9 @@ function viewTypeOf(id: ViewId): string {
   return `journal-view:${id}`;
 }
 
-// v2 exposed one fixed `open-calendar` command id users bound hotkeys to. The seeded
-// Calendar view owns that id as its own open command, so those hotkeys keep working
-// without a second command shadowing it in the palette.
+// A fixed `open-calendar` command id predates per-view generated ids, and users may already
+// have hotkeys bound to it. The seeded Calendar view owns that id as its own open command, so
+// those hotkeys keep working without a second command shadowing it in the palette.
 function commandIdOf(id: ViewId): string {
   if (id === DEFAULT_CALENDAR_VIEW_ID) return "open-calendar";
   return `open-view:${id}`;

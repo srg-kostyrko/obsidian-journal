@@ -31,8 +31,8 @@ export function defaultCalendarView(): View {
     name: m.common_label_calendar(),
     icon: icons.entity.month,
     defaultShelf: null,
-    // v2 parity: the calendar was reachable only via the open-calendar command, never a
-    // ribbon icon — v2's ribbon entries all came from journal/plugin commands.
+    // This seed also feeds the v3-to-v4 migration for existing vaults (see
+    // settings/legacy/v3-to-v4.ts); a migrated vault must not gain a ribbon icon it never had.
     showInRibbon: false,
     leaf: "right",
     openOnStartup: true,
