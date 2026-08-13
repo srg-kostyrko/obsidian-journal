@@ -23,7 +23,7 @@ export const calendar = calendarSurface(MONTH_VIEW);
 // A view with showInRibbon on registers a left-ribbon button whose accessible name is its
 // command name ("Open Calendar"). Clicking it is the real click path into the view-leaf
 // mount — not executeCommandById. Only fixtures that pin showInRibbon can use this; the
-// auto-seeded default view keeps the ribbon off for v2 parity (see openSeededCalendarView).
+// auto-seeded default view keeps the ribbon off by design (see openSeededCalendarView).
 export async function openCalendarView(): Promise<void> {
   await $(RIBBON_OPEN_CALENDAR).click();
   await $(MONTH_VIEW).waitForExist({

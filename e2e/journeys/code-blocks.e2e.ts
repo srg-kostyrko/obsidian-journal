@@ -280,8 +280,8 @@ describe("code blocks", () => {
       });
 
       it("falls back to the derived timeline when the fence mode is invalid", async () => {
-        // A typo'd mode no longer blanks the block into an error panel (v2 parity):
-        // it parses as unset, and a non-journal host derives the week mode.
+        // A typo'd mode renders with the derived default instead of blanking the block into
+        // an error panel: it parses as unset, and a non-journal host derives the week mode.
         await seedNote("blocks/bad-timeline.md", plainNote(TIMELINE_BAD_FENCE));
         await openInReadingMode("blocks/bad-timeline.md");
         await $(`${TIMELINE_BLOCK} .notes-week-view`).waitForExist({

@@ -656,7 +656,7 @@ describe("calendar view", () => {
     // The block projects the sprint's recurring schedule (every 2 weeks, never-ending) through
     // CycleService + TimelineService — resolved from the real view-leaf container, a seam the
     // unit test fakes. Any displayed month overlaps at least two 14-day intervals, so the section
-    // must list them with no note created yet (the v2-parity behavior this restored).
+    // must list them even though no note has been created yet.
     it("lists projected interval entries when no note has been created yet", async () => {
       await openCalendarView();
 
@@ -718,9 +718,10 @@ describe("calendar view", () => {
     });
 
     // A custom interval is anchored to its start date, which coincides with one day cell's
-    // anchor. v2 only ever rendered a custom interval's decoration in the interval list, never
-    // on the day calendar grid; the day cell sharing that anchor must stay undecorated even
-    // though the interval note (matching the sprint's has-note decoration) exists.
+    // anchor. The day grid excludes custom journals from its decoration scope, so a custom
+    // interval's decoration renders only in the interval list, never on the day calendar grid;
+    // the day cell sharing that anchor must stay undecorated even though the interval note
+    // (matching the sprint's has-note decoration) exists.
     it("keeps the custom interval's decoration off the day cell at its start anchor", async () => {
       await openCalendarView();
 
@@ -765,8 +766,8 @@ describe("calendar view", () => {
       await expect($(`${LIVE_LEAF} .notes-month-view__header`)).not.toBeExisting();
     });
 
-    // v2 reached the calendar only through the open-calendar command; it never put an icon
-    // in the ribbon, so the seeded view must not add one.
+    // The seeded Calendar view has no ribbon icon by design — it's reached only through the
+    // open-calendar command — so the seeded view must not add one.
     it("keeps the seeded Calendar view out of the ribbon", async () => {
       await expect($('[aria-label="Open Calendar"]')).not.toBeExisting();
     });

@@ -58,7 +58,7 @@ describe("templater interop", () => {
     // Frontmatter occupies lines 0-3 and "intro" is line 4, so the marker sat on
     // line 5; the jump removes it and lands the cursor at the start of "tail". The
     // fixture enables Templater's auto_jump_to_cursor, which gates the jump our
-    // bridge requests — matching v2 and Templater's own create-from-template flow.
+    // bridge requests — matching Templater's own create-from-template flow.
     await waitForCursorLine(5, "waited for the editor cursor to jump to the Templater marker");
 
     const cursor = await cursorOf();

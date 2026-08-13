@@ -13,7 +13,7 @@ import {
 } from "./code-blocks.js";
 
 // A journal that belongs to no shelf must link its cross-type nav rows across *every* journal,
-// not an empty set (v2's all-journals fallback). The daily journal here sits on no shelf and its
+// not an empty set. The daily journal here sits on no shelf and its
 // nav block carries a single month-link row; clicking it has to reach the off-shelf monthly
 // journal. Before the fix the off-shelf candidate set was empty, so the row resolved to a dead
 // link and the click created nothing.

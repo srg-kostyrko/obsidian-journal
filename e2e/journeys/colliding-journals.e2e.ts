@@ -4,8 +4,8 @@ import { closeSettings, openSettings } from "../support/settings.js";
 
 // e2e-colliding defines two day journals (alpha, beta) sharing folder + dateFormat + the
 // default {{date}} template, so their notes resolve to the same path. The dashboard's
-// colliding-journals block warns about the clash and, ported from v2, frames the warning
-// in the theme error color (a solid border plus an error-colored heading).
+// colliding-journals block warns about the clash, framing the warning in the theme error
+// color (a solid border plus an error-colored heading).
 const WARNING = ".journal-warning";
 
 // Resolves --text-error to its computed rgb in this theme so color assertions stay
