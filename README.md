@@ -32,7 +32,7 @@ A comprehensive journaling solution for [Obsidian](https://obsidian.md/) that tr
 - **URI Scheme**: Open (and create, applying templates) journal notes via `obsidian://` links
 - **Insert Link to Journal Note**: Command to insert a link to any journal date at the cursor
 - **Translated Interface**: The interface follows Obsidian's language setting, with translations for ten languages besides English (Chinese, German, French, Russian, Spanish, Portuguese, Japanese, Korean, Italian, Ukrainian)
-- **Theming Hooks**: Stable class names on the plugin's code blocks and calendar cells, so themes and CSS snippets can restyle them
+- **Theming Hooks**: Stable class names on the plugin's code blocks, so themes and CSS snippets can restyle them
 - **Logging**: Capture plugin activity and dump it to a note for troubleshooting
 
 ## Installation
@@ -120,7 +120,7 @@ Each journal can be configured separately with these settings:
   - Enable sequential numbers
   - Anchor date and start number: The note on the anchor date gets the start number, later notes count up from it
   - Reset: Continuous, or resets after N repeats
-  - Allow before anchor: Permit numbering earlier notes, which may produce negative numbers
+  - Allow before anchor: Permit numbering earlier notes, which may produce negative numbers. Offered only when the journal has no start date and Reset is Continuous
   - Property name: The frontmatter property the number is stored in
 
 - **Frontmatter**: Customize the properties the plugin writes
@@ -231,7 +231,7 @@ This ensures that only journal plugin is processing note template thus avoiding 
 These variables can be used in the note name template, the folder path, and the content of a template note. Each journal's settings has a **Supported variables** link that opens the same list for that journal, with its own date format and numbering variables filled in.
 
 - `{{journal_name}}` - name of journal note belongs to
-- `{{date}}` - date used as reference to specific period, formatted using date format from settings. In most cases it is the first day of the month, quarter, year or custom interval. The exception is week notes, where `{{date}}` is the week's representative day — the day inside the week whose calendar year is the week's own year — so `{{date:YYYY}}` on a week straddling January 1 gives the year the week belongs to. Format can be overridden using following syntax `{{date:format}}` where format is string using [Moment.js format rules](https://momentjs.com/docs/#/displaying/format/) (like `{{date:YYYY-MM-DD}}`).
+- `{{date}}` - date used as reference to specific period, formatted using date format from settings. In most cases it is the first day of the month, quarter, year or custom interval. The exception is week notes, where `{{date}}` renders the week's representative day rather than its first day — with the ISO-8601 week configuration that is the Thursday, so `{{date:YYYY}}` on a week straddling January 1 gives the week's own year. Format can be overridden using following syntax `{{date:format}}` where format is string using [Moment.js format rules](https://momentjs.com/docs/#/displaying/format/) (like `{{date:YYYY-MM-DD}}`).
 - `{{start_date}}` - first day of week, month, quarter, year or interval depending on note type, formatting rules are the same as in `{{date}}`, as well as the calculations
 - `{{end_date}}` - last day of week, month, quarter, year or interval depending on note type, formatting rules are the same as in `{{date}}`, as well as the calculations
 - `{{index}}` - the journal's numbering variable, which is named `index` by default. A journal can define several numbering variables under its own names, each with its own frontmatter property; the name you give it there is the name you use here. Numbering is on by default for custom-interval journals and can be enabled for any journal type.
