@@ -149,3 +149,5 @@ Branch from `main` and open the pull request against `main`.
 - [`CONTEXT.md`](CONTEXT.md) — the domain vocabulary the codebase reasons in.
 - [`docs/e2e-testing-strategy.md`](docs/e2e-testing-strategy.md) — what the
   end-to-end suite covers and why it exists alongside the unit suite.
+- [`docs/releasing.md`](docs/releasing.md) — how a version reaches the
+  community plugin browser. Maintainer-facing; you don't need it to contribute.
