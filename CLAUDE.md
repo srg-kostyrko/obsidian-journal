@@ -153,9 +153,10 @@ on it.
 - `browser.setWindowSize` is unsupported and `app.emulateMobile(true)` reloads
   the app and detaches `executeObsidian`. Exercise responsive reflow by forcing
   a width on the block root through `browser.execute`.
-- Notes written with `seedNote` do not survive `browser.reloadObsidian()` — the
-  reboot restores the pristine fixture. Seed-then-reload therefore cannot stage
-  a note that must already exist at boot; it has to ship in the fixture.
+- Per [`docs/e2e-testing-strategy.md`](docs/e2e-testing-strategy.md)'s
+  `reloadObsidian` behavior, notes written with `seedNote` do not survive a
+  reboot. Seed-then-reload therefore cannot stage a note that must already
+  exist at boot; it has to ship in the fixture.
 - Cold-boot metadata races cannot be reproduced in e2e: fresh fixture notes fire
   `metadataCache` "changed", which live listeners catch, masking the bug. Test
   these at unit level by faking `getFileCache` to return null until "resolved".
