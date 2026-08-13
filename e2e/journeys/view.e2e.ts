@@ -718,10 +718,10 @@ describe("calendar view", () => {
     });
 
     // A custom interval is anchored to its start date, which coincides with one day cell's
-    // anchor. The day grid excludes custom journals from its decoration scope, so a custom
-    // interval's decoration renders only in the interval list, never on the day calendar grid;
-    // the day cell sharing that anchor must stay undecorated even though the interval note
-    // (matching the sprint's has-note decoration) exists.
+    // anchor. The day grid takes only a custom journal's offset-condition decorations, which
+    // mark single days inside an interval; everything else it defines — like the sprint's
+    // has-note decoration here — belongs to the interval list, so the day cell sharing that
+    // anchor must stay undecorated even though the interval note exists.
     it("keeps the custom interval's decoration off the day cell at its start anchor", async () => {
       await openCalendarView();
 
