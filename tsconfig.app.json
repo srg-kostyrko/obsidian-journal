@@ -1,6 +1,6 @@
 {
   "extends": "@vue/tsconfig/tsconfig.dom.json",
-  "include": ["env.d.ts", "src/**/*", "src/**/*.vue"],
+  "include": ["env.d.ts", "src/**/*", "src/**/*.vue", "vitest.setup.*"],
   "exclude": ["src/**/__tests__/*", "__mocks__/**/*", "src/_old-code/**/*"],
   "compilerOptions": {
     "composite": true,

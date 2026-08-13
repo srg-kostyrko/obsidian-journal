@@ -14,6 +14,7 @@ export default defineConfig(({ mode }) => ({
     paraglideVitePlugin({
       project: "./project.inlang",
       outdir: "./src/i18n/paraglide",
+      outputStructure: "locale-modules",
     }),
     vue(),
     viteStaticCopy({

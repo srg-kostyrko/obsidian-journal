@@ -262,7 +262,14 @@ export default [
     },
   },
   {
-    files: ["**/*.test.ts", "**/*.bench.ts", "**/testing.ts", "**/testing/**", "vitest.setup.ts"],
+    files: [
+      "**/*.test.ts",
+      "**/*.bench.ts",
+      "**/testing.ts",
+      "**/testing/**",
+      "vitest.setup.ts",
+      "vitest.setup.shared.ts",
+    ],
     plugins: { vitest },
     rules: {
       ...vitest.configs.recommended.rules,
@@ -288,6 +295,20 @@ export default [
       "obsidianmd/prefer-active-doc": "off",
       "obsidianmd/prefer-create-el": "off",
       "vitest/expect-expect": ["error", { assertFunctionNames: ["expect", "expectTypeOf", "expectOk", "expectErr"] }],
+    },
+  },
+  {
+    files: ["**/*.test.ts"],
+    ignores: ["**/*.isolated.test.ts"],
+    rules: {
+      "no-restricted-syntax": [
+        "error",
+        {
+          selector: "CallExpression[callee.object.name='vi'][callee.property.name='mock']",
+          message:
+            "vi.mock replaces the module for every later file sharing the worker's registry. Rename this file to *.isolated.test.ts so it runs in its own.",
+        },
+      ],
     },
   },
   {

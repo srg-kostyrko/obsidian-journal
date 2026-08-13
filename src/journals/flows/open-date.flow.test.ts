@@ -1,6 +1,6 @@
-import { assert, describe, it, expect } from "vitest";
+import { afterEach, assert, beforeEach, describe, it, expect } from "vitest";
 
-import { anchor } from "@/calendar/testing";
+import { anchor, installTestCalendar } from "@/calendar/testing";
 import { Container } from "@/infrastructure/di";
 import { Flows, FlowsModule, UserAborted } from "@/infrastructure/flows";
 import { NotesService, SuggestService, TemplaterService, WorkspaceService, NoticeService } from "@/infrastructure/host";
@@ -64,6 +64,18 @@ function build(repo: JournalsRepository, suggests: FakeSuggestService) {
 const TIMELINE_OPEN = { start: anchor("2020-01-01"), end: { kind: "never" as const } };
 
 describe("OpenDateFlow", () => {
+  let teardown: () => void;
+
+  // The mid-period cases below expect Sunday-anchored weeks, so the grid has to be stated rather
+  // than inherited from whatever locale the machine happens to run under.
+  beforeEach(() => {
+    ({ teardown } = installTestCalendar({ dow: 0, doy: 6 }));
+  });
+
+  afterEach(() => {
+    teardown();
+  });
+
   it("errors with NoApplicableJournals when no journal covers the anchor", async () => {
     const repo = fakeRepo({
       daily: fixedJournal(

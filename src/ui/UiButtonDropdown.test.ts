@@ -52,15 +52,17 @@ describe("UiButtonDropdown", () => {
   });
 
   it("closes the popout when clicking outside, without emitting", async () => {
-    const { baseElement, container, emitted, getByRole } = render(UiButtonDropdown, {
+    const { container, emitted, getByRole } = render(UiButtonDropdown, {
       props: { options: OPTIONS },
       slots: { default: "Open" },
     });
     await userEvent.click(getByRole("button", { name: "Open" }));
 
-    const outside = baseElement.ownerDocument.createElement("button");
+    // Appended inside the render container, not onto the document body: cleanup only unmounts what
+    // it mounted, so a body-level node would outlive this file and be found by the next one.
+    const outside = container.ownerDocument.createElement("button");
     outside.textContent = "Outside";
-    baseElement.append(outside);
+    container.append(outside);
     await userEvent.click(outside);
 
     expect(container.querySelector(".button-dropdown-popout")).toBeNull();

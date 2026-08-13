@@ -29,6 +29,21 @@ export function installTestCalendar(week?: Partial<WeekConfig>): { teardown: () 
   };
 }
 
+// moment's locale registry is process-global, so when test files share a worker's module registry
+// the custom locale outlives the file that defined it and the next file silently inherits its week
+// grid. Putting the custom locale back on the machine locale's week between files restores the
+// starting point a file gets when it is the first one to touch the calendar.
+export function resetCalendarLocale(): void {
+  installed = undefined;
+  if (!moment.locales().includes(CUSTOM_LOCALE)) return;
+  const currentLocale = moment.locale();
+  const machine = moment.localeData(currentLocale);
+  moment.updateLocale(CUSTOM_LOCALE, {
+    week: { dow: machine.firstDayOfWeek(), doy: machine.firstDayOfYear() },
+  });
+  moment.locale(currentLocale);
+}
+
 // Component tests must resolve this instance rather than constructing their own: the Calendar
 // constructor re-seeds the custom locale's week from the system locale, so a fresh instance
 // silently discards whatever installTestCalendar configured and the test asserts against the
