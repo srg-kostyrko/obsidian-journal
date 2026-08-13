@@ -30,8 +30,8 @@ npm run compile:i18n   # generates src/i18n/paraglide, which is git-ignored
 npm run dev            # builds into test-vault/.obsidian/plugins/journals, with hot-reload
 ```
 
-Then open `test-vault/` as a vault in Obsidian and enable the plugin under
-Community plugins.
+Then open `test-vault/` as a vault in Obsidian — the plugin is already
+enabled there, alongside Hot Reload, Templater, and Calendar.
 
 `compile:i18n` must run before the first `check:types` on a fresh clone: the
 paraglide module it generates is not committed, so type-checking fails against
@@ -43,7 +43,10 @@ Use Node 24, matching CI.
 
 ## Quality gates
 
-CI runs these four on every push, in this order:
+CI runs `compile:i18n` → `check:i18n` → `check:types` → `test` → `check:lint`
+on every push (`compile:i18n` is covered in Development setup above). Run the
+other four before opening a pull request; the order between them doesn't
+matter locally:
 
 ```bash
 npm run check:types   # vue-tsc, no emit
@@ -51,8 +54,6 @@ npm test              # vitest, the unit and component suite
 npm run check:lint    # eslint over the whole project
 npm run check:i18n    # guards messages/*.json against reintroducing banned mistranslations
 ```
-
-Run them locally before opening a pull request.
 
 The e2e layer drives a real Obsidian binary through WebdriverIO. It's slow, so
 run it locally when your change touches runtime behavior — note creation,
@@ -107,9 +108,13 @@ docs(changelog): add three missing entries to the 3.0.0 draft
 The usual types apply (`feat`, `fix`, `docs`, `refactor`, `test`, `chore`),
 plus a project-specific `i18n(scope):` for translation-only changes.
 
-Close the issue from the commit or pull request body with a closing keyword
-(`Fixes #123`) — release notes are assembled from these, so an unlinked fix
-won't be credited.
+Reference the issue in the commit or pull request body with a closing keyword
+(`Fixes #123`) when there is one — release notes are assembled by matching
+commits against closed issues, and a closing keyword is the reliable way to
+link your fix to its issue and pick up the issue's title as the changelog
+wording. A `fix` commit with no issue reference is still swept in and
+summarized on its own, so nothing is silently dropped, but linking avoids a
+duplicate or orphaned bullet.
 
 Add a `CHANGELOG.md` entry under `[Unreleased]`, in `### Features` or
 `### Bug Fixes`, written for the person using the plugin — what changed for
