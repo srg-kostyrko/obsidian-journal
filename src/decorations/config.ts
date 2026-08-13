@@ -191,7 +191,8 @@ const offsetCondition = v.object({
   offset: v.pipe(
     v.number(),
     v.integer(),
-    // 0 is unreachable: offsets are 1-based from both ends. v2's default stored it anyway.
+    // 0 is unreachable — offsets are 1-based from both ends — but it is accepted rather
+    // than rejected, since existing configs carry it.
     v.transform((n) => (n === 0 ? 1 : n)),
   ),
 });

@@ -8,7 +8,7 @@ import { appearanceSlice, type AppearanceSliceState } from "./slice";
 
 // Bound as inline CSS vars on each calendar surface (cells, period badges, interval rows) rather
 // than once on the document body, so a calendar in any window — including a popout opened after
-// the last appearance change — reflects the current colors, and edits update live (v2 behavior).
+// the last appearance change — reflects the current colors, and edits update live.
 export function appearanceVariables(state: AppearanceSliceState): Record<string, string> {
   return {
     "--journal-cell-today-color": colorToString(state.today.color),

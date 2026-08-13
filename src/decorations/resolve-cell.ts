@@ -177,7 +177,7 @@ function axisReservation(mark: number, border: number): string {
 
 // Reserve the same padding on every cell — the per-side maximum across all cells — so a
 // decoration on one cell shifts its content identically to its siblings instead of
-// inflating only its own grid row (the v2 calendar kept rows aligned via fixed row height).
+// inflating only its own grid row.
 export function mergePadding(all: Iterable<PaddingExtents>): PaddingExtents {
   const merged = zeroExtents();
   for (const extents of all) {

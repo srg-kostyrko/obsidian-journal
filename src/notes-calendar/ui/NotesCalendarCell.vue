@@ -60,9 +60,9 @@ const hover = useModifierHoverPreview();
   cursor: pointer;
   /* Height would otherwise come entirely from the decorations' shared padding, so a vault with no
      journals — or one whose decorations are colour-only and reserve no padding — collapses every
-     row to a bare text line. 26px is v2's cell line-height; it is a floor, not a fixed row, so
-     taller decorations still grow it. The cell is flex so the decoration stretches to fill that
-     floor instead of resolving its height: 100% against a parent that has only a min-height. */
+     row to a bare text line. 26px is a floor, not a fixed row, so taller decorations still grow
+     it. The cell is flex so the decoration stretches to fill that floor instead of resolving its
+     height: 100% against a parent that has only a min-height. */
   display: flex;
   min-height: 26px;
   border-radius: var(--radius-s);
@@ -70,15 +70,15 @@ const hover = useModifierHoverPreview();
 .notes-calendar-cell[data-inactive] {
   cursor: default;
 }
-/* A cell takes a tab stop, so it has to show where the keyboard is. v2's cell was a real
-   <button> and got this from Obsidian for free; a span with tabindex does not, which left a
-   keyboard user tabbing ~35 cells with nothing to see. Same rule as the date-picker grid. */
+/* A cell takes a tab stop, so it has to show where the keyboard is. A real <button> gets a
+   focus ring from Obsidian for free; a span with tabindex does not, which left a keyboard
+   user tabbing ~35 cells with nothing to see. Same rule as the date-picker grid. */
 .notes-calendar-cell:focus-visible {
   outline: 2px solid var(--background-modifier-border-focus);
   outline-offset: -1px;
 }
 /* [data-active] follows [data-today] so a cell that is both the open note and today resolves
-   to the active colors — the note you're viewing wins over the today marker (v2). */
+   to the active colors — the note you're viewing wins over the today marker. */
 .notes-calendar-cell[data-today] {
   color: var(--journal-cell-today-color);
   background-color: var(--journal-cell-today-bg);

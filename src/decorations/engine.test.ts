@@ -184,7 +184,7 @@ describe("DecorationEngine", () => {
       expect(result.size).toBe(0);
     });
 
-    it("returns no entries when conditions list is empty (v2 parity)", () => {
+    it("returns no entries when conditions list is empty", () => {
       const decoration = buildDecoration({ styles: [buildStyle("background")] });
       const { c } = buildContainer({
         daily: fixedJournal("daily", { type: "day" }, { decorations: [decoration] }),

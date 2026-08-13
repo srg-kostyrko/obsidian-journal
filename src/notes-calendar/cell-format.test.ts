@@ -8,12 +8,12 @@ describe("defaultFormatPattern", () => {
   });
 
   it("returns '[W]w' for week", () => {
-    // v2 labels: unpadded week numbers (W1, not W01).
+    // Unpadded week numbers: W1, not W01.
     expect(defaultFormatPattern("week")).toBe("[W]w");
   });
 
   it("returns 'MMMM' for month", () => {
-    // v2 labels: the in-grid month heading shows the full month name.
+    // The in-grid month heading shows the full month name.
     expect(defaultFormatPattern("month")).toBe("MMMM");
   });
 

@@ -254,9 +254,9 @@ describe("NotesMonthView", () => {
       expect(cell?.querySelector(".decoration-corner")).toBeNull();
     });
 
-    // v2 carved one exception out of the fixed-only day grid: a custom journal's
-    // offset-condition decorations mark specific days inside an interval, so they
-    // belong on the day cells even though the journal itself renders as intervals.
+    // The day grid is otherwise fixed-only, but a custom journal's offset-condition
+    // decorations mark specific days inside an interval, so they belong on the day
+    // cells even though the journal itself renders as intervals.
     it("paints a custom journal's offset decoration on the matching day cell", async () => {
       const decoration = buildDecoration({
         mode: "or",

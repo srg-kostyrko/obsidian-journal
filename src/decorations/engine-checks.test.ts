@@ -113,7 +113,7 @@ describe("engine-checks", () => {
         expect(checkProperty(condition, meta({ properties: {} }))).toBe(true);
       });
 
-      it("matches eq case-sensitively for strings (v2 parity)", () => {
+      it("matches eq case-sensitively for strings", () => {
         const condition = buildCondition("property", {
           name: "label",
           valueType: "text",
@@ -349,7 +349,7 @@ describe("engine-checks", () => {
       expect(hasOpenTask(meta({ tasks: [{ completed: true }] }))).toBe(false);
     });
 
-    it("is false on empty task list (v2 parity)", () => {
+    it("is false on empty task list", () => {
       expect(hasOpenTask(meta({ tasks: [] }))).toBe(false);
     });
   });
@@ -363,7 +363,7 @@ describe("engine-checks", () => {
       expect(allTasksCompleted(meta({ tasks: [{ completed: true }, { completed: false }] }))).toBe(false);
     });
 
-    it("is false on empty task list (v2 parity)", () => {
+    it("is false on empty task list", () => {
       expect(allTasksCompleted(meta({ tasks: [] }))).toBe(false);
     });
   });

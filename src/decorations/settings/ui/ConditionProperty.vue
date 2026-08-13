@@ -66,7 +66,7 @@ const opsForType = computed<readonly Op[]>(() =>
     .exhaustive(),
 );
 
-// Existence checks take no operand, so the value input is meaningless for them (v2 hid it too).
+// Existence checks take no operand, so the value input is meaningless for them.
 const showValueField = computed(() => op.value !== "exists" && op.value !== "does-not-exist");
 
 type DateOp = Parameters<typeof m.decoration_date_op_label>[0]["op"];

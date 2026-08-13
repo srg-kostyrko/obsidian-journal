@@ -15,7 +15,7 @@ describe("slotIndex", () => {
     expect(slotIndex([defaultStyle("background")], "icon")).toBe(-1);
   });
 
-  // Unreachable from the editor and from v2, but a hand-edited data.json can hold duplicates.
+  // Unreachable from the editor, but a hand-edited data.json can hold duplicates.
   // The cascade resolves exclusive properties last-wins, so the editor agrees with it.
   it("resolves a duplicated type to the last occurrence", () => {
     const styles: JournalDecorationStyle[] = [

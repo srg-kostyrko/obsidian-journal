@@ -4,7 +4,8 @@ import { describe, expect, it } from "vitest";
 import { decorationConditionSchema } from "./config";
 
 // Interval offsets are 1-based in both directions (1 = first day, -1 = last day), so a
-// stored 0 could never match anything. v2 shipped it as the default, so it exists in the wild.
+// stored 0 could never match anything. It is coerced rather than rejected, since existing
+// configs carry it.
 describe("offset condition schema", () => {
   it("reads a stored zero offset as the interval's first day", () => {
     const parsed = v.parse(decorationConditionSchema, { type: "offset", offset: 0 });
