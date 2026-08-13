@@ -13,7 +13,7 @@ restate it.
 | [`CONTEXT.md`](CONTEXT.md)                                             | domain vocabulary — periods, journals, shelves, decorations                                      |
 | [`docs/architecture.md`](docs/architecture.md)                         | code layout, DI, `Result`/`Option`, dates and union dispatch, schemas, i18n, testing conventions |
 | [`docs/e2e-testing-strategy.md`](docs/e2e-testing-strategy.md)         | the e2e layer — runner, fixtures, selectors, execution model                                     |
-| [`docs/i18n-glossary.md`](docs/i18n-glossary.md)                       | translation terms and the `check:i18n` tables                                                    |
+| [`docs/i18n-glossary.md`](docs/i18n-glossary.md)                       | translation terms, and the `check:i18n` rules that `scripts/check-i18n-glossary.mjs` enforces    |
 | [`docs/2026-07-13-ux-text-audit.md`](docs/2026-07-13-ux-text-audit.md) | user-facing copy style — sentence case, error grammar, en-US                                     |
 | [`docs/manual-testing-checklist.md`](docs/manual-testing-checklist.md) | the manual verification pass                                                                     |
 | [`docs/releasing.md`](docs/releasing.md)                               | how a version reaches the community store                                                        |
@@ -47,16 +47,13 @@ on it.
   markers.
 - The `onLayoutReady` `appStartup` guard gates the startup _note_ only. View
   auto-open must run unconditionally.
-- Startup never re-places a restored view leaf. A view on the "wrong side" is a
-  stale `workspace.json`, not a bug.
-- The seeded default Calendar view carries no ribbon icon, matching v2, which
-  exposed the calendar through a command only. Fixtures with no persisted
-  `views` key get that seed and must open the view by command.
 
 ### Vue and reactivity
 
 - `JournalsIndex` is **not** Vue-reactive. A computed reading it must call
-  `useIndexVersion()` or it caches "not connected" forever.
+  `useIndexVersion()` or it caches "not connected" forever. A regression test
+  must register the entry _after_ mount and emit `entryChanged`; one that seeds
+  the index before mount passes with the bridge deleted.
 - `toRaw` is shallow. Config editors embed reactive proxies at depth via spread,
   so cloning a view config needs a deep strip (`cloneFnJSON`) or it throws
   `DataCloneError`. Reproducible only through a reactive store.
@@ -73,12 +70,14 @@ on it.
 
 - Obsidian calls `SuggestModal.onClose` **before** `onChooseSuggestion` on a
   mouse pick. Defer cancel verdicts a microtask.
-- `focusLeaf` calls `app.setting.close()`. Never activate a leaf opened from
-  settings.
+- `focusLeaf` calls `app.setting.close()`, and `setViewState({ active: true })`
+  reaches it. `revealLeaf()` alone does not, so a leaf placed as a side effect
+  of a settings interaction is placed then revealed, never activated.
 - `app.metadataTypeManager` is undocumented and its shape changed at Obsidian
   1.9: property entries lost their `type` field in favor of `widget`, and
   `getPropertyInfo` now returns a fallback object instead of null, so it can no
-  longer signal "never seen". Read `getAllProperties()` and try both spellings.
+  longer signal "never seen". Read `getAllProperties()` instead, try both field
+  and method spellings, and prefer the user-assigned type over the inferred one.
   Unit tests mirror the fake, so only an e2e that picks a _number_ property
   catches a registry rename.
 
@@ -101,7 +100,9 @@ on it.
   missing-entity guard reads that as a deletion and pops to the dashboard.
   Subscribe to the repository's synchronous `renamed` event and call
   `nav.replace({ <name>: newName })`; tapping the rename flow's result runs a
-  microtask too late. View-edit is id-keyed and immune.
+  microtask too late. `vue/no-mutating-props` flags `nav` calls on a
+  reactive-destructured prop — alias it as `const nav = props.nav`. View-edit is
+  id-keyed and immune.
 - A toolbar item's schema, inferred config types, and appearance resolver live in
   `<x>-config.ts`. `<x>-item.ts` holds only the `defineToolbarItem()` wiring:
   it imports the `.vue` components, so a view importing the resolver back from
@@ -113,14 +114,13 @@ on it.
   `<script setup>`) and off in tests. Use `.at()` with a `??` fallback; a config
   carve-out silences the rule just as much as an inline disable.
 - `compile:i18n` and the Vite plugin both pass
-  `--output-structure locale-modules`. The default `message-modules` emits 677
-  files and costs ~1.1 s of module loading in every test file that touches
-  `@/i18n`. A bare `npx paraglide-js compile` silently restores it.
-- Never reformat `messages/*.json`. The ten translated locales are tab-indented
-  CLI output deliberately kept outside the prettier glob; a `JSON.stringify`
-  round-trip rewrites all eleven files end to end. Delete a key by dropping its
-  line, add one matching the surrounding indentation, and check
-  `git diff --stat -- messages/` before committing.
+  `--output-structure locale-modules`. The default `message-modules` emits one
+  module per message, which dominates unit-suite wall clock through every test
+  file that touches `@/i18n`. A bare `npx paraglide-js compile` silently
+  restores it.
+- Never reformat `messages/*.json` — edit them line-wise. They sit outside the
+  prettier glob on purpose, so a `JSON.stringify` round-trip rewrites all eleven
+  files end to end. Check `git diff --stat -- messages/` before committing.
 - `Promise.withResolvers<void>()` fails `no-invalid-void-type` in production
   source — the rule permits `void` on type-reference generics but its matcher
   does not cover call-expression type arguments. Use the
@@ -157,19 +157,15 @@ on it.
   reboot restores the pristine fixture. Seed-then-reload therefore cannot stage
   a note that must already exist at boot; it has to ship in the fixture.
 - Cold-boot metadata races cannot be reproduced in e2e: fresh fixture notes fire
-  `metadataCache` "changed", which live listeners catch and the bug hides.
-  Reproducing needs metadata loaded _from cache_, which the harness cannot ship
-  — test these at unit level by faking `getFileCache` to return null until
-  "resolved".
+  `metadataCache` "changed", which live listeners catch, masking the bug. Test
+  these at unit level by faking `getFileCache` to return null until "resolved".
 - The junit reporter writes a fixed filename, so after a full-suite run the
   report holds only the last spec file. Locate a failure through
   `e2e/.reports/screenshots/` — one PNG per failing test, named for the test
   title.
-- A live `npm run dev` is `vite build --watch` rebuilding the same bundle the
-  suite loads. Reverting a fix to prove a spec goes red races the watcher: late
-  workers load the rebuilt bundle and the suite passes with the bug supposedly
-  reinstated. Pause the watcher around any revert-and-verify window and confirm
-  the revert is still on disk afterwards.
+- A live `npm run dev` rebuilds the same bundle the suite loads, so reverting a
+  fix to prove a spec goes red races the watcher and can pass with the bug
+  supposedly reinstated. Pause the watcher around any revert-and-verify window.
 - A config-editor modal that auto-opens over the view-editor subpage sits under
   the `UiIconSuggest` dropdown, which refocuses in a microtask. A physical WDIO
   click hits the overlay instead of Save and the close hangs — dispatch the
@@ -177,10 +173,6 @@ on it.
 - An e2e proving a "target a specific journal" feature must pin a target whose
   result **differs** from what the default path resolves. A pin that agrees with
   shelf scope passes even with the feature code deleted.
-- No `SelfWriteGuard` e2e exists, on purpose. Against real Obsidian, guard-on
-  and guard-off converge to byte-identical frontmatter; the only divergent case
-  is a non-deterministic race. Such a test is either a tautology or a flake, so
-  don't fill the gap — unit tests cover the guard.
 - Pin Templater to 2.18.0. From 2.21 it declares `minAppVersion: 1.13.0`, so on
   stable Obsidian it lands in `enabledPlugins` but never instantiates:
   `getPlugin("templater-obsidian")` returns null and `<% %>` passes through
@@ -188,11 +180,13 @@ on it.
 
 ### UI conventions
 
-- Modal forms are composed entirely from `UiSettingRow` — one row per field with
-  the field's `FormErrors` in the `#description` slot, and the action buttons in
-  their own `controls-only` row. Pass `errorBag.<field>` straight through; the
-  `errors` prop accepts `undefined`, so never write `?? []`. No bespoke actions
-  wrapper, no `FormErrors` as a sibling of the row.
+- Modal forms are composed entirely from `UiSettingRow`: one row per field, its
+  errors in the `#description` slot as
+  `<span v-for="error of errorBag.<field>" class="<feature>-form-error">`, and
+  the action buttons in their own `controls-only` row rather than a bespoke
+  wrapper. `errorBag.<field>` is iterated directly — `v-for` over `undefined`
+  renders nothing, so no `?? []`. (`src/ui/UiFormErrors.vue` exists but no
+  component imports it; don't reach for it expecting the house pattern.)
 - Join a human-readable name list with `formatConjunction` from `@/i18n`, never
   `.join(" and ")` — separator and placement vary by locale and item count. The
   joined value goes into the message as a parameter; only the joining is code.
@@ -204,9 +198,8 @@ on it.
   F1) — don't re-propose the items trimmed there.
 - Authored icons come from the frozen `icons` map in `src/ui/icons.ts`, keyed by
   domain (`icons.action.edit`, `icons.entity.shelf`), never a bare Lucide
-  literal — scattered literals drifted (`trash` vs `trash-2`). User-entered icon
-  fields stay free-form strings, and the renderer keeps a `(name: string)`
-  signature so it handles both.
+  literal. User-entered icon fields stay free-form strings, and the renderer
+  keeps a `(name: string)` signature so it handles both.
 
 ### Testing conventions
 
@@ -223,23 +216,20 @@ on it.
   the actual `Err` earns its place; one that hides a matcher does not.
 - The unit suite runs `isolate: false` in a shared vitest project, so workers
   reuse one module registry across files. A test that reaches past its own file
-  through a process-global belongs in `*.isolated.test.ts`: `vi.mock` (its
-  factory replaces the module for every later file in the worker, and eslint
-  enforces the naming) and rewriting moment's global locale are the two known
-  kinds. A shared-registry flake surfaces as a nondeterministic off-by-one count
-  in a _different_ file than the polluting one.
+  through a process-global belongs in `*.isolated.test.ts` — `vi.mock`
+  (eslint-enforced) and rewriting moment's global locale are the two known
+  kinds. The resulting flake surfaces as a nondeterministic count in a
+  _different_ file than the polluting one.
 
 ### Performance
 
-- `CycleService.anchorOf` does not compute an anchor for a custom cycle — it
-  walks one step at a time from the journal's anchor date, each step hitting the
-  index plus a moment round-trip. `pathForDate` calls it first, so calling
-  `pathForDate` in a loop is quadratic on custom-interval journals. When you
-  already hold a canonical anchor, render through `buildMetadata` → `pathFor`
-  instead. The general trap: a loop that is linear in its own steps is not
-  linear end to end when the callee walks.
+- The custom-cycle walk [`CONTEXT.md`](CONTEXT.md) describes under `anchorOf`
+  has a cost the definition doesn't mention: `pathForDate` calls `anchorOf`
+  first, so a loop over N anchors is quadratic on custom-interval journals.
+  When you already hold a canonical anchor, render through `buildMetadata` →
+  `pathFor` instead.
 
-### Behavior rules
+### Commands and flows
 
 - `CommandRegistration.check` is a listing predicate only — it filters the
   palette. A ribbon click and a bound hotkey reach `execute` unconditionally, so
@@ -247,13 +237,14 @@ on it.
   feedback. Every command owns its own dead-end message. `NoApplicableJournals`
   is a benign flow error that the flow layer logs and shows nothing for, so a
   caller that needs the user to know must notice it itself.
-- The decoration engine models a custom interval as a "day"-kind period at its
-  start anchor, which collides with the genuine day cell at that anchor. The
-  month and week grids do not resolve this by excluding custom journals: they
-  pass the full shelf scope and filter each binding so a custom journal
-  contributes only its offset-condition decorations, which mark single days.
-  Everything else it defines renders in the interval list. The fixed-only scope
-  survives in exactly one consumer, `PeriodButtonsItem.vue`.
+- A flow that opens a modal keeps its cheap existence guard **before** the
+  `attempt.in` block. Moving it inside as a leading `yield*` opens the modal one
+  microtask later, and every flow test that grabs the modal synchronously after
+  invoking then fails. Read the option's `.value` after `isNone()` narrows it —
+  the cast the restructure was meant to remove was never needed.
+
+### Calendar periods
+
 - `CycleService` and everything under it (`periodOfKind`, `defaultEndOf`,
   `startOf`, `endOf`) answers for the week grid installed in moment _right now_;
   it has no notion of the grid an anchor was written under. Any decision that
@@ -261,17 +252,6 @@ on it.
   calendar slice is written — in `WeekPresetService`'s snapshot, the one place
   straddling both grids — and carried forward as a resolved value, never
   re-derived downstream.
-- A flow that opens a modal keeps its cheap existence guard **before** the
-  `attempt.in` block. Moving it inside as a leading `yield*` opens the modal one
-  microtask later, and every flow test that grabs the modal synchronously after
-  invoking then fails. Read the option's `.value` after `isNone()` narrows it —
-  the cast the restructure was meant to remove was never needed.
-- Nav-block decorations use two scopes, ported from v2 and not from the v3 nav
-  design: whole-block decoration takes the current journal's own decorations,
-  while a per-row decoration takes every journal of the same write type in scope
-  — the owning shelf's journals, or all journals when the journal is on no
-  shelf. `NavBlock` is shared with the custom-interval view, so the scope
-  arrives as a prop and is never hardcoded inside it.
 - Changing the week preset writes only the calendar settings slice. Existing
   weekly notes keep the frontmatter date they were created with, which is no
   longer the week's start, so the frontmatter parser rejects it as non-canonical
@@ -280,8 +260,41 @@ on it.
   v3 has no counterpart, and a fix means re-anchoring the notes, not touching
   the render path.
 
+### Decorations and nav blocks
+
+- The decoration engine models a custom interval as a "day"-kind period at its
+  start anchor, which collides with the genuine day cell at that anchor. The
+  month and week grids do not resolve this by excluding custom journals: they
+  pass the full shelf scope and filter each binding so a custom journal
+  contributes only its offset-condition decorations, which mark single days.
+  Everything else it defines renders in the interval list. The fixed-only scope
+  survives in exactly one consumer, `PeriodButtonsItem.vue`.
+- Whole-block nav decoration is scoped as [`README.md`](README.md) describes it.
+  Per-row decoration is scoped differently and is the part no doc states: every
+  journal of the same write type in scope — the owning shelf's journals, or all
+  journals when the journal is on no shelf. Both come from v2, not from the v3
+  nav design, which specifies shelf-grouped same-type for everything and is
+  wrong. `NavBlock` is shared with the custom-interval view, so the scope
+  arrives as a prop and is never hardcoded inside it.
+
 ### Deliberate non-bugs
 
+Settled decisions that read as regressions. Don't "fix" them; changing any needs
+the maintainer's opt-in.
+
+- Startup never re-places a restored view leaf — a leaf dragged elsewhere keeps
+  its position, and the dragged layout wins over the setting. A view on the
+  "wrong side" is a stale `workspace.json`; check where the leaf sits in the
+  workspace tree before touching the view host.
+- The seeded default Calendar view's missing ribbon icon is deliberate — see
+  `src/views/default-view.ts` and the first-run step in
+  [`docs/manual-testing-checklist.md`](docs/manual-testing-checklist.md).
+  Fixtures with no persisted `views` key get that seed, so an e2e must open the
+  view by command; a ribbon click works only on a fixture that pins it on.
+- No `SelfWriteGuard` e2e exists. Against real Obsidian, guard-on and guard-off
+  converge to byte-identical frontmatter; the only divergent case is a
+  non-deterministic race, so the test would be a tautology or a flake. Unit
+  tests cover the guard.
 - Three nav consumers compute a journal's shelf scope and their off-shelf
   fallbacks differ on purpose. A write-type link row means "open the journal of
   this kind in my scope", so it falls back to _all_ journals; a "journal" link

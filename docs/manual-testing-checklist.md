@@ -61,8 +61,9 @@ Setup: clone the repository; `npm run dev` (builds into
 - [x] Re-enable the plugin → re-initializes, default view available again.
 - [x] Reload Obsidian (Ctrl/Cmd+R) → clean re-init, no duplicate ribbon icons.
 - [x] - Open a **brand-new empty vault**, install the plugin → exactly one Calendar
-      view is seeded, it opens on startup, it shows a ribbon icon, and no journals
-      exist.
+      view is seeded, it opens on startup, it shows **no** ribbon icon (the seed sets
+      `showInRibbon: false`, matching v2, which exposed the calendar by command
+      only), and no journals exist.
 - [x] First run → the seeded view renders its calendar grid with no empty-state
       message, and does not render a bare divider rule or an empty custom-intervals
       section.
