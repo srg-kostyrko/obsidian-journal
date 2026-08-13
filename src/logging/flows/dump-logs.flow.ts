@@ -1,5 +1,4 @@
-import { moment } from "obsidian";
-
+import { localMoment } from "@/calendar";
 import { m } from "@/i18n";
 import { inject } from "@/infrastructure/di";
 import type { Flow } from "@/infrastructure/flows";
@@ -11,8 +10,6 @@ import { attempt, type AsyncResult } from "@/infrastructure/result";
 import { formatLogDump } from "./format-dump";
 
 type DumpLogsError = NoteCreateError | NoteAlreadyExistsError;
-
-type MomentFactory = () => moment.Moment;
 
 export class DumpLogsFlow implements Flow<void, void, DumpLogsError> {
   readonly #buffer = inject(BufferSinkToken);
@@ -26,7 +23,7 @@ export class DumpLogsFlow implements Flow<void, void, DumpLogsError> {
         this.#notices.show(m.logging_dump_empty());
         return;
       }
-      const now = (moment as unknown as MomentFactory)();
+      const now = localMoment();
       const path = `journal-log-${now.format("YYYYMMDD-HHmmss")}.md` as VaultPath;
       const note = yield* this.#notes
         .create(path, formatLogDump(records))

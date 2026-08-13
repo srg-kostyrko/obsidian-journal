@@ -1,5 +1,4 @@
-import { moment } from "obsidian";
-
+import { localeData } from "@/calendar";
 import { m } from "@/i18n";
 
 interface CalendarLikeConfig {
@@ -21,7 +20,7 @@ export function calendarBlockSummary(config: CalendarLikeConfig): string | undef
     parts.push(padding.join(", "));
   }
   if (config.hiddenWeekdays && config.hiddenWeekdays.length > 0) {
-    const names = moment.localeData().weekdaysShort();
+    const names = localeData().weekdaysShort();
     parts.push(m.view_block_summary_hidden_days({ days: config.hiddenWeekdays.map((day) => names[day]).join(", ") }));
   }
   return parts.length > 0 ? parts.join(" · ") : undefined;

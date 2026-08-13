@@ -99,22 +99,26 @@ failure (e.g. via `vi.spyOn`) is normal and common.
 
 ## Dates and union dispatch
 
-The convention is to reach `moment` only through the calendar abstraction in
-`src/calendar/`, never by importing it directly elsewhere. Lint enforces part
-of this: `no-restricted-imports` bans the bare package import,
-`import moment from "moment"` _(eslint)_. It does not, and cannot easily,
-catch `import { moment } from "obsidian"` — the Obsidian API's own re-export
-— which is how `src/calendar/calendar.ts` itself obtains `moment`, and which
-several other production files also use directly (e.g.
-`src/templates/format-regex.ts`, `src/views/blocks/calendar-block-summary.ts`).
-Treat the calendar-abstraction rule as a review convention outside
-`src/calendar/`, not a lint guarantee: `import { moment } from "obsidian"` is
-the loophole lint doesn't close.
+`src/calendar/` owns every `moment` access; nothing outside it imports `moment`
+at all. `no-restricted-imports` bans both routes _(eslint)_: the bare package
+(`import moment from "moment"`) and the Obsidian API's own re-export
+(`import { moment } from "obsidian"`), which is the one the plugin actually
+reaches for. `src/calendar/**` is exempt from the second — that module is the
+abstraction — and so are test files, whose fixtures build dates without the
+plugin's locale coupling.
+
+What to use instead, all from `@/calendar`:
+
+| Need                                | Use                                        |
+| ----------------------------------- | ------------------------------------------ |
+| A date to work with                 | `localMoment()`                            |
+| Week config, weekday / month names  | `Calendar`                                 |
+| Raw locale names and parse patterns | `localeData()`, `dayOfMonthOrdinalParse()` |
 
 Step dates with `Period.next()`/`Period.previous()` and `CalendarDate`, never a
 raw `localMoment().add(...)` call in domain code. Weekday and month names come
-from `moment.localeData()` (see `src/calendar/calendar.ts`), not from a
-hand-duplicated list.
+from the locale (see `src/calendar/calendar.ts`), not from a hand-duplicated
+list.
 
 Dispatch on discriminated unions with `ts-pattern`'s `match().with().exhaustive()`
 rather than a `switch` statement — `switch` is not the default here, because

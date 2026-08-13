@@ -95,6 +95,23 @@ export class Calendar {
   }
 }
 
+interface MomentLocaleInternals {
+  _config?: { dayOfMonthOrdinalParse?: RegExp };
+}
+
+// The global locale, not CUSTOM_LOCALE: callers here want the locale's names and parse
+// patterns, which the clone does not alter — it differs from the global locale only in its
+// week config. Reading the clone instead would tie name lookups to the week-start setting.
+export function localeData(): moment.Locale {
+  return moment.localeData();
+}
+
+// moment publishes the locale's ordinal-parse pattern only on the undocumented `_config`.
+// The cast lives here so nothing outside this module has to reach into moment's internals.
+export function dayOfMonthOrdinalParse(): RegExp | undefined {
+  return (moment.localeData() as unknown as MomentLocaleInternals)._config?.dayOfMonthOrdinalParse;
+}
+
 export function localMoment(
   input?: string | number | Date | moment.Moment | null,
   format?: string,

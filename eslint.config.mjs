@@ -27,6 +27,23 @@ const noStrayDefineModal = {
 // (including arrows and getters) and class field initializers run later, so they are exempt.
 // `.vue` files are exempt too: `<script setup>` bodies read as module scope in the AST but execute
 // per component instance.
+// `src/calendar/` owns every moment access. Banning the bare `moment` package alone left the
+// loophole open, since Obsidian re-exports moment and that is how the plugin actually reaches it —
+// so both specifiers are restricted, and `src/calendar/` is where the exemption lives.
+const bareMomentImport = {
+  name: "moment",
+  message: "Import moment via the calendar abstraction; do not depend on moment directly.",
+};
+
+const obsidianMomentImport = {
+  name: "obsidian",
+  importNames: ["moment"],
+  message:
+    "Obsidian re-exports moment; reach it through the calendar abstraction instead — `localMoment()` for a date, `Calendar` for week config, `localeData()` for names and parse patterns.",
+};
+
+const momentImportPaths = [bareMomentImport, obsidianMomentImport];
+
 const noEagerMessage = {
   selector:
     "CallExpression[callee.object.name='m']:not(:function CallExpression):not(PropertyDefinition CallExpression)",
@@ -163,17 +180,7 @@ export default [
       // Replacing `===` chains with `.includes()` drops the union narrowing the call sites rely on.
       "unicorn/prefer-includes-over-repeated-comparisons": "off",
 
-      "no-restricted-imports": [
-        "error",
-        {
-          paths: [
-            {
-              name: "moment",
-              message: "Import moment via the calendar abstraction; do not depend on moment directly.",
-            },
-          ],
-        },
-      ],
+      "no-restricted-imports": ["error", { paths: momentImportPaths }],
       "no-restricted-syntax": ["error", noRawError, noStrayDefineModal],
 
       "@eslint-community/eslint-comments/no-use": ["error", { allow: [] }],
@@ -260,6 +267,8 @@ export default [
       // `splice(0)` deliberately drains-and-snapshots a listener array mid-iteration.
       "unicorn/no-unnecessary-splice": "off",
       "no-restricted-syntax": "off",
+      // Fixtures build dates directly, without the plugin's locale coupling.
+      "no-restricted-imports": "off",
       // Obsidian's DOM API describes plugin runtime code. Test scaffolding builds detached
       // elements under happy-dom, where `createDiv`/`activeDocument` do not exist — and both
       // rules autofix, so `--fix` would rewrite a passing test into a ReferenceError.
@@ -298,6 +307,14 @@ export default [
     files: ["**/ui/modals.ts", "src/infrastructure/host/modals/**/*.ts"],
     rules: {
       "no-restricted-syntax": ["error", noRawError, noEagerMessage],
+    },
+  },
+  {
+    files: ["src/calendar/**/*.ts"],
+    rules: {
+      // The calendar module IS the abstraction, so `import { moment } from "obsidian"` belongs
+      // here and nowhere else. The bare-package ban still applies.
+      "no-restricted-imports": ["error", { paths: [bareMomentImport] }],
     },
   },
   {
