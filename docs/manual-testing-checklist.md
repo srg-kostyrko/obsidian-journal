@@ -40,8 +40,8 @@ order, not top to bottom:
 
 1. §12 styles, §11 conditions, §20 appearance & accessibility — anything whose
    pass condition is "a human looked at it".
-2. §19 error & recovery surfaces — mostly beyond automation, and the class where v3
-   has historically failed silently.
+2. §19 error & recovery surfaces — mostly beyond automation, and the class most
+   prone to failing silently.
 3. §17 regression (theme switch, large vault, malformed frontmatter) and §0's
    mobile line.
 4. §16 migration against a real user snapshot, if you have one.
@@ -1064,7 +1064,7 @@ shell operator. Between items, close what opened so the next result is unambiguo
 
 ## 19. Error & recovery surfaces
 
-This is the class v3 has historically failed **silently** — an item passes only if
+This is the class most prone to failing **silently** — an item passes only if
 the user is actually told. "Nothing happened" is a bug here, not a pass.
 
 ### Flow failures reach the user

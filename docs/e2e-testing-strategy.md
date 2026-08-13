@@ -42,8 +42,11 @@ over Playwright+Electron because the Obsidian-specific misery (multi-version
 download, headless boot, vault provisioning) is already solved. Accepted cost: a
 second test framework alongside Vitest/`@testing-library`.
 
-> Verify on implementation: pin `wdio-obsidian-service` + Obsidian-version
-> compatibility against our `obsidian@^1.12.3` API floor.
+Obsidian-version compatibility is pinned in CI, not left to chance:
+`.github/workflows/e2e.yml`'s nightly matrix runs `earliest/earliest`,
+`latest/earliest`, and `latest/latest`, with `earliest` sourced from
+`manifest.json`'s `minAppVersion` — see [Install and version
+modes](#install-and-version-modes) below.
 
 #### Install and version modes
 
@@ -197,8 +200,10 @@ e2e always installs the **freshly built** `build/` output (`main.js` +
 local `test:e2e` script and the CI e2e job. **No committed plugin artifact** is
 ever installed into an e2e fixture.
 
-> Verify on implementation: confirm `npm run build` alone yields a loadable plugin
-> (i18n/paraglide compile wired in), else run `compile:i18n && build`.
+`npm run build` alone yields a loadable, translated plugin: `vite.config.mts`
+wires `paraglideVitePlugin` into the build itself, so paraglide compiles as
+part of `vite build` — no separate `compile:i18n` step is needed, and the CI
+e2e job runs exactly this single command before installing the fixture.
 
 ## Authoring conventions
 
