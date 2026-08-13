@@ -148,10 +148,11 @@ eager-evaluation hazard the rule guards against doesn't arise there.
 Do not wrap an `m.*()` call in `computed()` unless its arguments include
 reactive data — a static string needs no reactive wrapper.
 
-`check:i18n` checks the ten translated locale files against hardcoded
-banned-term, literal-token, and mechanical rules in
-`scripts/check-i18n-glossary.mjs`; `docs/i18n-glossary.md` documents those
-rules and the mistranslations that motivated them.
+`check:i18n` checks all eleven message files (including `en.json`) against
+hardcoded banned-term, literal-token, and mechanical rules in
+`scripts/check-i18n-glossary.mjs`; the banned-term glossary applies only to
+the ten translated locales. `docs/i18n-glossary.md` documents those rules and
+the mistranslations that motivated them.
 
 ## Testing
 

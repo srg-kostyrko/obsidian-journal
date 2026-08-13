@@ -46,8 +46,8 @@ eslint on staged `*.ts`/`*.vue` files and reformats staged `*.ts`, `*.mjs`,
 `*.js`, `*.css`, `*.md`, and `*.vue` files with Prettier. It's the only thing
 enforcing formatting — there's no `check:format` script and no CI job runs
 Prettier — so it can catch a first commit off guard: fix any eslint error it
-reports and re-stage; the Prettier pass rewrites files in place, so just
-`git add` the result and commit again.
+reports and re-stage; Prettier reformats your staged files and the commit
+proceeds.
 
 ## Quality gates
 
