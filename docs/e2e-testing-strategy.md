@@ -1,8 +1,8 @@
 # End-to-end testing strategy
 
 How we introduce e2e tests that exercise the plugin inside a **real Obsidian
-process** — the one seam our 299 mock-based unit/component tests structurally
-cannot reach.
+process** — the one seam our 3518 mock-based unit/component tests (359 files)
+structurally cannot reach.
 
 ## Why e2e at all
 
@@ -20,7 +20,7 @@ require one.
 
 ### Scope
 
-All four are in scope, sequenced (see Roadmap):
+All four are implemented, in the build order described in Roadmap:
 
 - **(A) Integration boundary** — the plugin's contract with real Obsidian
   (metadataCache timing, vault events, command/view registration, settings
@@ -29,7 +29,7 @@ All four are in scope, sequenced (see Roadmap):
   calendar renders → reopen, still correct).
 - **(C) Migration** — real v1/v2 vaults upgrade to v3 without data loss.
 - **(D) Interop** — real Templater coexistence (template parsing + cursor jump).
-  There is no community-Calendar-plugin interop in v3, so "Calendar" is dropped
+  There is no community-Calendar-plugin interop, so "Calendar" is dropped
   from this slice.
 
 ## Decisions
@@ -110,14 +110,14 @@ Obsidian.
 - **Grouping is via WDIO `suites`** — named groups of spec-file globs in the
   config, run with `--suite <name>`. One suite per slice plus a quarantine suite:
 
-  ```js
+  ```ts
   suites: {
-    smoke:       ['./e2e/smoke/**/*.e2e.ts'],
-    integration: ['./e2e/integration/**/*.e2e.ts'],  // slice A
-    migration:   ['./e2e/migration/**/*.e2e.ts'],     // slice C
-    interop:     ['./e2e/interop/**/*.e2e.ts'],       // slice D
-    journeys:    ['./e2e/journeys/**/*.e2e.ts'],      // slice B
-    quarantine:  ['./e2e/quarantine/**/*.e2e.ts'],
+    smoke: ["./e2e/smoke/**/*.e2e.ts"],
+    integration: ["./e2e/integration/**/*.e2e.ts"], // slice A
+    migration: ["./e2e/migration/**/*.e2e.ts"], // slice C
+    interop: ["./e2e/interop/**/*.e2e.ts"], // slice D
+    journeys: ["./e2e/journeys/**/*.e2e.ts"], // slice B
+    quarantine: ["./e2e/quarantine/**/*.e2e.ts"],
   }
   ```
 
@@ -136,8 +136,10 @@ integration --suite migration --suite interop --suite journeys`), omitting
 
 ### Fixtures and isolation
 
-- **Fixture template** — a starting-state vault checked into the repo. The catalog
-  is small: `empty` (A/B), `legacy-v1` / `legacy-v2` (C), `with-templater` (D).
+- **Fixture template** — a starting-state vault checked into the repo. Most A/B
+  scenarios get their own purpose-built vault (`empty`, `daily`, `journeys`, …);
+  migration (C) runs against a single `legacy-v1` fixture whose real legacy
+  `data.json` walks the full migration chain; interop (D) uses `templater`.
 - **Vault instance** — the running copy a test mutates: a **fresh temp copy of the
   named template per spec file**. Copying is cheap (filesystem, milliseconds);
   the expensive thing is the Obsidian boot.
@@ -298,12 +300,12 @@ Sequenced by (value only-real-Obsidian can prove) ÷ (fixture/flakiness cost).
 1. **(A) Integration seam — note creation → auto-attach timing.** The mock's
    biggest lie. Minimal fixtures, highest "only real Obsidian can catch this"
    value.
-2. **(C) Migration v1/v2 → v3.** High value; needs curated real legacy-vault
-   fixtures.
+2. **(C) Migration v1/v2 → v3.** High value, delivered against a curated real
+   legacy-vault fixture.
 3. **(D) Templater interop.** Requires installing the real Templater plugin into
    the fixture (community registry, pinned to a version compatible across the
-   Obsidian matrix, enabled per-boot). v3 has no community-Calendar interop, so the
-   slice is Templater-only. Cursor jump is gated behind Templater's
+   Obsidian matrix, enabled per-boot). The plugin has no community-Calendar
+   interop, so the slice is Templater-only. Cursor jump is gated behind Templater's
    `auto_jump_to_cursor` setting (the fixture enables it), matching v2 and
    Templater's own create-from-template flow — not a plugin bug.
 4. **(B) Full click-through journeys.** Flakiest and slowest; rides on
