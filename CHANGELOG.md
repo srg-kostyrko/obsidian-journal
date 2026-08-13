@@ -12,6 +12,7 @@ All notable changes to this project will be documented in this file.
 - Choose where the week-number column appears per block, with a global default.
 - Open the nearest existing note for a journal or shelf, via command or an existing notes navigation toolbar item.
 - New markdown-template block for custom views that renders a template file inline.
+- Look up what a code block or template variable produces without leaving settings: a reference modal lists each one with a live preview and click-to-copy snippets.
 - Automatically attach externally created notes that match a journal's naming.
 - Logging tools that capture activity and dump it to a note for troubleshooting.
 - Open journal notes through the Obsidian URI scheme.
@@ -21,11 +22,13 @@ All notable changes to this project will be documented in this file.
 - Highlight calendar days by date or weekday without attaching the rule to a journal: set decorations vault-wide, or per shelf so they apply only while that shelf is in view.
 - See why a calendar cell looks the way it does: right-click it for a breakdown naming the rule behind each color, border, and mark, and the rules those overrode. The breakdown follows the shelf you are viewing, and a custom interval explains itself rather than the day it begins on.
 - Tell a decoration that never fires from one whose day simply has not come up: every rule in settings reports whether it has matched recently, and an inspector shows everything decorating a chosen date across all three scopes.
+- The interface now speaks ten languages besides English — Chinese, German, French, Russian, Spanish, Portuguese, Japanese, Korean, Italian, and Ukrainian — each reviewed key by key.
 - Meaningful, stable CSS class names on calendar and code-block elements for easier theming.
 
 ### Bug Fixes
 
 - Warn when a name template would connect every entry to the same note; previously, notes with only a title and no date all collided onto a single note.
+- Renaming the property a journal writes its date or numbering into now moves that value in every connected note; previously the notes kept the old property name and silently dropped off the journal.
 - Weekly navigation now reaches ISO week 53 at year boundaries instead of skipping it.
 - Sequence numbering resets now cycle correctly.
 - Creating a weekly journal mid-week now creates the current note immediately instead of waiting for the next week.
