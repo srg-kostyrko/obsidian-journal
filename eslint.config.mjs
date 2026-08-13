@@ -180,6 +180,17 @@ export default [
       // Replacing `===` chains with `.includes()` drops the union narrowing the call sites rely on.
       "unicorn/prefer-includes-over-repeated-comparisons": "off",
 
+      // Rules newly added to unicorn's recommended set in v73, likewise not adopted:
+      // `.then(onOk, onErr)` is the thenable contract AsyncResult implements, and moving
+      // rejection handling into `.catch()` would also swallow throws from the ok handler.
+      "unicorn/prefer-then-catch": "off",
+      // Expanding one-line `/** … */` and `/* no-op */` into three lines fights the terse
+      // comment style the codebase keeps.
+      "unicorn/single-line-block-comment-style": "off",
+      // Reordering `&&`/`||` operands by "simplicity" puts the incidental guard ahead of the
+      // domain-meaningful check at every site it flags.
+      "unicorn/prefer-simple-condition-first": "off",
+
       "no-restricted-imports": ["error", { paths: momentImportPaths }],
       "no-restricted-syntax": ["error", noRawError, noStrayDefineModal],
 
