@@ -44,7 +44,7 @@ export class TemplateEngine {
   #renderVariable(token: Extract<Token, { kind: "variable" }>, context: TemplateContext): string {
     const spec = context.get(token.name);
     if (!spec) return token.raw;
-    // v2 fidelity: modifiers and :format are only meaningful on date/clock kinds.
+    // Modifiers and :format are only meaningful on date/clock kinds.
     // For string/number variables with either present, emit the raw token unchanged.
     if (spec.kind !== "date" && spec.kind !== "clock" && (token.modifiers.length > 0 || token.format !== undefined)) {
       return token.raw;

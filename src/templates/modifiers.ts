@@ -36,7 +36,8 @@ export function unapplyModifier(date: CalendarDate, modifier: Modifier): Calenda
 }
 
 export function applyModifiers<S extends Shiftable<S>>(value: S, modifiers: readonly Modifier[]): S {
-  // v2 order: arithmetic shifts first, then boundary
+  // Arithmetic shifts apply before boundary snapping, so `+1d|endOfWeek` means
+  // "the end of next day's week", not "tomorrow's end-of-week".
   const shifts = modifiers.filter(
     (modifier): modifier is Extract<Modifier, { kind: "shift" }> => modifier.kind === "shift",
   );

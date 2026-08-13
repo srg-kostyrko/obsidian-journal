@@ -93,7 +93,7 @@ describe("TemplateEngine.renderString", () => {
     expect(engine.renderString(template, buildFakeContext())).toBe(expected);
   });
 
-  describe("v2 pass-through fidelity", () => {
+  describe("unresolvable tokens pass through as raw text", () => {
     it("passes through unknown variable name verbatim", () => {
       const engine = installTestEngine();
       expect(engine.renderString("hello {{not_a_var}}", buildFakeContext())).toBe("hello {{not_a_var}}");
@@ -367,7 +367,7 @@ describe("TemplateEngine.validate", () => {
   });
 });
 
-describe("v2 parity", () => {
+describe("default daily and weekly date formats", () => {
   let teardown: () => void;
   beforeEach(() => {
     ({ teardown } = installTestCalendar());
@@ -376,24 +376,24 @@ describe("v2 parity", () => {
     teardown();
   });
 
-  it("renders v2 daily anchor in default format", () => {
+  it("renders the daily anchor in its default format", () => {
     const engine = installTestEngine();
     expect(engine.renderString("{{date}}", buildFakeContext())).toBe("2022-01-05");
   });
 
-  it("renders v2 daily anchor with format override", () => {
+  it("renders the daily anchor with a format override", () => {
     const engine = installTestEngine();
     expect(engine.renderString("{{date:MMM D, YYYY}}", buildFakeContext())).toBe("Jan 5, 2022");
   });
 
-  it("renders v2 daily nameTemplate with index plus date", () => {
+  it("renders an index-plus-date name template", () => {
     const engine = installTestEngine();
     expect(engine.renderString("Sprint {{index}} — {{date:YYYY-MM-DD}}", buildFakeContext())).toBe(
       "Sprint 7 — 2022-01-05",
     );
   });
 
-  it("renders v2 weekly anchor with ISO-week format", () => {
+  it("renders the weekly anchor in ISO-week format", () => {
     const engine = installTestEngine();
     const context = TemplateContext.empty()
       .date("date", CalendarDate.fromAnchor(anchor("2022-01-05")), "YYYY-[W]w")

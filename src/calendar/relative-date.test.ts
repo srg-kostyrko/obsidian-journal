@@ -86,7 +86,8 @@ describe("relativeDate", () => {
       expect(relativeDate("day", anchor("2026-05-30"), anchor("2026-05-27"))).toBe("Saturday");
     });
     it("returns 'N days ago' for a day exactly a week in the past", () => {
-      // v2 bucketed ±7 days into the day-count phrasing, not the named-weekday window.
+      // Confirms the named-weekday window's boundary: it is ±(2-6) days, so a full week
+      // falls through to day-count phrasing instead of naming the weekday.
       expect(relativeDate("day", anchor("2026-05-20"), anchor("2026-05-27"))).toBe("7 days ago");
     });
     it("returns 'in N days' for a day exactly a week in the future", () => {

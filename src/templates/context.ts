@@ -19,8 +19,6 @@ export class TemplateContext {
     return new TemplateContext(next);
   }
 
-  // v2 matched date/time variables case-insensitively (its regexes carried "gi") while string
-  // and number ones went through an exact `replaceAll`. v3 applies one rule to every variable.
   // Exact match wins first, so two variables differing only in case each keep their own binding
   // — numbering source names are user-authored and unique only case-sensitively (config.ts).
   #lookup(name: string): { name: string; spec: VariableSpec } | undefined {

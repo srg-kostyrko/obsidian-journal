@@ -1,8 +1,9 @@
 import { dayOfMonthOrdinalParse, localeData } from "@/calendar";
 
-// Locale data is captured at module-import time, matching v2 behavior. Plugin load
-// fixes the locale before this module is imported; runtime locale changes do not
-// affect compiled patterns. Tests therefore exercise locale-insensitive tokens only.
+// Locale data is captured at module-import time, which existing templates still
+// assume. Plugin load fixes the locale before this module is imported; runtime locale
+// changes do not affect compiled patterns. Tests therefore exercise locale-insensitive
+// tokens only.
 const locale = localeData();
 
 // .source strips the delimiters and the leading \d{1,2} (the day digits, matched by the D token).

@@ -106,10 +106,11 @@ describe("formatToRegexp", () => {
     });
   });
 
-  describe("inherited v2 limitations", () => {
-    it("rejects day-of-year values containing 0 for DDD (v2 parity)", () => {
+  describe("format tokens it cannot round-trip", () => {
+    it("rejects day-of-year values containing the digit 0 for DDD", () => {
       const re = new RegExp(`^${formatToRegexp("DDD").source}$`);
-      // Day-of-year 100 should match but v2 pattern rejects 0 in the digit set.
+      // DDD compiles to the digit class [1-9], so any value containing a literal 0
+      // fails to match even when the value itself, like 100, is a valid day-of-year.
       expect(re.test("100")).toBe(false);
     });
   });

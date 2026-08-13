@@ -36,7 +36,7 @@ function formatDay(anchor: AnchorString, today: AnchorString): string {
   if (diff === 0) return m.common_label_today();
   if (diff === -1) return m.relative_date_yesterday();
   if (diff === 1) return m.relative_date_tomorrow();
-  // Match v2: the named-weekday window is ±(2-6) days; exactly a week falls to the day-count
+  // The named-weekday window is ±(2-6) days; exactly a week falls to the day-count
   // phrasing ("7 days ago" / "in 7 days") rather than naming the weekday.
   if (diff >= -6 && diff < 0) return m.relative_date_last_named_day({ weekday: anchorMoment.format("dddd") });
   if (diff > 1 && diff <= 6) return m.relative_date_named_day({ weekday: anchorMoment.format("dddd") });

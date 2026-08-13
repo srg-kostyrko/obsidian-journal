@@ -23,7 +23,7 @@ describe("applyModifiers / unapplyModifiers", () => {
       expect(result.toAnchor()).toBe("2022-01-02");
     });
 
-    it("applies arithmetic before boundary in v2 order", () => {
+    it("applies arithmetic shifts before boundary snapping", () => {
       const date = CalendarDate.fromAnchor(anchor("2022-01-01"));
       const mods: Modifier[] = [
         { kind: "shift", sign: 1, amount: 1, unit: "w" },
