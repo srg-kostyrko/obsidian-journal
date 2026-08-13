@@ -22,9 +22,8 @@ afterEach(() => cleanup());
 
 describe("TimelineMonth", () => {
   it("keeps adjacent-month days actionable", () => {
-    // Unlike quarter/calendar mode, which blanks overflow days because every month renders
-    // its own full grid elsewhere, month mode has no other grid to duplicate — the
-    // leading/trailing day is the only view onto that date.
+    // Unlike quarter/calendar mode, which blanks overflow days, month mode keeps them
+    // open so a leading/trailing day can still open its note.
     const { getByTestId } = render(TimelineMonth, {
       props: { refDate: "2026-05-15" as AnchorString, shelf: null },
     });

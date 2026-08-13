@@ -24,8 +24,7 @@ describe("timelineBlockSchema", () => {
 
   it("applies the journal-derived mode when the source is a non-object scalar", () => {
     // `mode:month` with no space after the colon parses to the bare string "mode:month"
-    // rather than a mapping; `asRecord` degrades that to {}, so every field, including
-    // mode, ends up unset.
+    // rather than a mapping, so the block still renders a timeline instead of an error panel.
     const result = v.parse(timelineBlockSchema, "mode:month");
     expect(result.mode).toBeUndefined();
   });

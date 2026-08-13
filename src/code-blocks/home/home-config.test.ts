@@ -57,7 +57,7 @@ describe("homeBlockSchema", () => {
 
   it("applies defaults when the source is a non-object scalar", () => {
     // `show:day` with no space parses to the bare string "show:day", not a mapping — the
-    // scalar-body case `asRecord` degrades to {}.
+    // block still renders with defaults instead of failing into an error panel.
     const result = v.parse(homeBlockSchema, "show:day");
     expect(result.show).toEqual(["day"]);
     expect(result.separator).toBe(" • ");
@@ -71,8 +71,8 @@ describe("homeBlockSchema", () => {
   });
 
   it("coerces a non-string shelf to its string form", () => {
-    // An unquoted `shelf: 2024` parses to the number 2024; coercing it to a string form keeps
-    // it usable as a shelf-name filter instead of erroring, harmless even if it never matches.
+    // An unquoted `shelf: 2024` parses to the number 2024; coercing it back to a string lets
+    // the fence still match a shelf the user genuinely named "2024".
     expect(v.parse(homeBlockSchema, { shelf: 2024 }).shelf).toBe("2024");
   });
 });

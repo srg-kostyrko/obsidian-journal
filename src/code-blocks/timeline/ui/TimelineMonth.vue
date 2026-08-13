@@ -17,8 +17,7 @@ const month = computed(() => MonthPeriod.containing(CalendarDate.fromAnchor(prop
 <template>
   <div class="timeline-month">
     <!-- Adjacent-month days stay actionable: a leading/trailing day can open that day's
-         note. Quarter/calendar modes render every month as its own full grid, so their
-         overflow days are already active elsewhere and get blanked here instead. -->
+         note. Quarter/calendar modes blank them instead. -->
     <NotesMonthView :shelf :month :weeks="weeks" :hidden-weekdays="hiddenWeekdays" outside-dates="active" />
   </div>
 </template>
