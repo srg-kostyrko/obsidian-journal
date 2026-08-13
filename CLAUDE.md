@@ -34,6 +34,31 @@ git log --diff-filter=D --format=%H -1 -- docs/superpowers
 git show <sha>^:docs/superpowers/specs/<name>.md
 ```
 
+`src/_old-code/` is gone the same way, and it was what nearly every deleted spec
+cited for "v2 did X". `main` is the last v2 release, so check such a claim
+against `main` directly:
+
+```bash
+git show main:src/journals/journal.ts
+git grep <term> main -- src
+```
+
+## Standing rules
+
+Project-wide decisions with no other home. They decide what counts as a bug.
+
+- **v3 has not shipped.** While `manifest.json` reads a 2.x version and the v3
+  rewrite sits under `[Unreleased]` in `CHANGELOG.md`, nobody is running v3 and
+  no v3-era data exists in the wild. A data gap introduced and fixed inside v3
+  therefore gets a documented note, not a repair migration; only the v2 → v3
+  path carries data anyone owns. Re-check the two conditions before applying
+  this — once a v3 version is tagged the conclusion inverts.
+- **v2 fidelity is the default when porting.** Every v2 variant, mode, and
+  option survives the port. Extending v2 behavior is fine; dropping any of it
+  needs the maintainer's explicit opt-in, so "v2 had this and v3 doesn't" is a
+  gap to report rather than a decision already made. The exceptions that _were_
+  opted into are listed under "Deliberate non-bugs" below.
+
 ## Traps
 
 Behavior that is expensive to rediscover and invisible in the code that depends
@@ -100,13 +125,20 @@ on it.
   missing-entity guard reads that as a deletion and pops to the dashboard.
   Subscribe to the repository's synchronous `renamed` event and call
   `nav.replace({ <name>: newName })`; tapping the rename flow's result runs a
-  microtask too late. `vue/no-mutating-props` flags `nav` calls on a
-  reactive-destructured prop — alias it as `const nav = props.nav`. View-edit is
-  id-keyed and immune.
-- A toolbar item's schema, inferred config types, and appearance resolver live in
-  `<x>-config.ts`. `<x>-item.ts` holds only the `defineToolbarItem()` wiring:
-  it imports the `.vue` components, so a view importing the resolver back from
-  it would close a runtime import cycle.
+  microtask too late. Calling `nav.replace` straight off a reactive-destructured
+  prop is fine (`JournalEditSubpage.vue`); `nav.push` is not. `vue/no-mutating-props`
+  matches the mutating-array-method names, so `push` on a prop-derived object
+  reads as a mutation of the prop — alias it as `const nav = props.nav`, the way
+  `ShelfEditSubpage.vue` does. View-edit is id-keyed and immune.
+- A toolbar item that has an **appearance resolver** splits its schema, inferred
+  config types, and that resolver into `<x>-config.ts`, leaving `<x>-item.ts`
+  with only the `defineToolbarItem()` wiring: the item file imports the `.vue`
+  components, so a view importing the resolver back from it would close a
+  runtime import cycle (`src/views/default-view.ts` reaches `buttonConfigFor`
+  through `button-config.ts` for exactly that reason). Items with no resolver —
+  `period-buttons`, `shelf-selector`, `spacer` — declare their schema inline in
+  `<x>-item.ts`. That is the current shape, not an oversight: split when a
+  resolver appears, not on principle.
 
 ### Lint and tooling
 
@@ -134,19 +166,23 @@ on it.
   host behavior. JSDoc on an exported API is one short line of intent, never a
   paragraph or a file-header narrative.
 
-### e2e
+### e2e traps and harness limits
 
 - Obsidian's editor zoom scales authored pixels (3px renders as 2.66667px).
   Assert widths through the rounding reader and colors via `getCSSProperty`
   parsed hex, from a custom hex fixture rather than a theme variable.
 - A test that opens `mode=window` must call `closePopoutWindows()`, or the
   popout steals the next test's modals.
-- e2e specs import the shipped copy — `m.some_key()` from the generated
-  paraglide messages, with an args object for interpolation — and never retype a
-  user-facing string, so a reword becomes a typecheck failure instead of a
+- Assert user-facing copy through `m.some_key()` imported from the generated
+  paraglide messages (`../../src/i18n/paraglide/messages.js`), with an args
+  object for interpolation, so a reword becomes a typecheck failure instead of
   silent drift. `tsconfig.e2e.json` needs `allowJs` **and** an explicit
   `include` entry for the generated `.js`; it is a composite project, so without
-  the entry TS6307 fires on every one of the ~700 files.
+  the entry TS6307 fires on every file in it. The suite does **not** follow this
+  uniformly — four specs import `m`, while selectors and a number of assertions
+  retype the literal, and `e2e/journeys/decorations.ts` states in a comment that
+  "e2e specs cannot import from `src/`", which those four disprove. Import for
+  new assertions; treat the retyped literals as known debt, not as the pattern.
 - e2e helpers also drive settings through visible tooltips and button labels, so
   renaming a message can break e2e with no unit-test failure. Grep `e2e/` for
   the old literal when changing one.
@@ -183,7 +219,10 @@ on it.
 
 - Modal forms are composed entirely from `UiSettingRow`: one row per field, its
   errors in the `#description` slot as
-  `<span v-for="error of errorBag.<field>" class="<feature>-form-error">`, and
+  `<span v-for="error of errorBag.<field>" class="<feature>-form-error">`
+  (`journal-`, `shelf-`, `view-`, `command-`, `bulk-add-` — twelve of the
+  fourteen sites; `EditNavBlockRowModal.vue` uses a bare `form-error` and is the
+  outlier, not the model), and
   the action buttons in their own `controls-only` row rather than a bespoke
   wrapper. `errorBag.<field>` is iterated directly — `v-for` over `undefined`
   renders nothing, so no `?? []`. (`src/ui/UiFormErrors.vue` exists but no
@@ -197,12 +236,12 @@ on it.
   rulings this generalizes from are recorded in
   [`docs/2026-07-13-ux-text-audit.md`](docs/2026-07-13-ux-text-audit.md) (D3,
   F1) — don't re-propose the items trimmed there.
-- Authored icons come from the frozen `icons` map in `src/ui/icons.ts`, keyed by
+- Authored icons come from the `as const` `icons` map in `src/ui/icons.ts`, keyed by
   domain (`icons.action.edit`, `icons.entity.shelf`), never a bare Lucide
   literal. User-entered icon fields stay free-form strings, and the renderer
   keeps a `(name: string)` signature so it handles both.
 
-### Testing conventions
+### Unit-suite gotchas
 
 - No `simulate*Error` queues in fakes. A test that needs an error path uses
   `vi.spyOn` with `mockReturnValueOnce`; a baked-in queue adds a parallel state
@@ -246,20 +285,25 @@ on it.
 
 ### Calendar periods
 
-- `CycleService` and everything under it (`periodOfKind`, `defaultEndOf`,
-  `startOf`, `endOf`) answers for the week grid installed in moment _right now_;
-  it has no notion of the grid an anchor was written under. Any decision that
-  compares data written under the old grid must be computed **before** the
-  calendar slice is written — in `WeekPresetService`'s snapshot, the one place
-  straddling both grids — and carried forward as a resolved value, never
-  re-derived downstream.
-- Changing the week preset writes only the calendar settings slice. Existing
-  weekly notes keep the frontmatter date they were created with, which is no
-  longer the week's start, so the frontmatter parser rejects it as non-canonical
-  and they drop out of `JournalsIndex` — the calendar reads "no note" even
-  though the files are untouched. v2's `updateWeeklyJournals` re-anchored them;
-  v3 has no counterpart, and a fix means re-anchoring the notes, not touching
-  the render path.
+- `CycleService` (`startOf`, `endOf`, `defaultEndOf`, …) and the free
+  `periodOfKind` in `src/calendar/period.ts` all answer for the week grid
+  installed in moment _right now_; nothing in that layer knows the grid an
+  anchor was written under. Any decision that compares data written under the
+  old grid must be computed **before** the calendar slice is written — in
+  `WeekPresetService`'s snapshot, the one place straddling both grids — and
+  carried forward as a resolved value, never re-derived downstream.
+- The week-preset change and the notes it invalidates move together, and
+  `WeekPresetApplier` (`WeekPresetService`, behind `WeekPresetApplierToken`) is
+  the only thing that writes the calendar slice: it snapshots every weekly note's
+  `(weekYear, weekOfYear, endDate)` under the old grid, writes the slice, awaits
+  a `nextTick` so the settings bridge's `watchEffect` has installed the new grid,
+  then re-anchors through `NoteConnectionService.reanchorAll`. Setting
+  `calendarSlice.state` directly is the trap: the grid moves, the notes keep a
+  frontmatter date that is no longer their week's start, the parser rejects it as
+  non-canonical, and they fall out of `JournalsIndex` — the calendar reads "no
+  note" over untouched files. Even on the supported path a shorter year can
+  collapse two weeks onto one anchor; the loser keeps its old date rather than
+  overwriting the winner, and that count reaches the user as a notice.
 
 ### Decorations and nav blocks
 
@@ -270,13 +314,14 @@ on it.
   contributes only its offset-condition decorations, which mark single days.
   Everything else it defines renders in the interval list. The fixed-only scope
   survives in exactly one consumer, `PeriodButtonsItem.vue`.
-- Whole-block nav decoration is scoped as [`README.md`](README.md) describes it.
-  Per-row decoration is scoped differently and is the part no doc states: every
-  journal of the same write type in scope — the owning shelf's journals, or all
-  journals when the journal is on no shelf. Both come from v2, not from the v3
-  nav design, which specifies shelf-grouped same-type for everything and is
-  wrong. `NavBlock` is shared with the custom-interval view, so the scope
-  arrives as a prop and is never hardcoded inside it.
+- Whole-block nav decoration is scoped as the _Whole block decoration_ setting
+  in [`README.md`](README.md#navigation-blocks) describes it. Per-row decoration
+  is scoped differently and is the part no doc states: every journal of the same
+  write type in scope — the owning shelf's journals, or all journals when the
+  journal is on no shelf. Both scopes come from v2. The symmetry is tempting and
+  wrong: don't "correct" the per-row scope to shelf-grouped same-type to match
+  the block scope. `NavBlock` is shared with the custom-interval view, so the
+  scope arrives as a prop and is never hardcoded inside it.
 
 ### Deliberate non-bugs
 

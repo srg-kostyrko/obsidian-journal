@@ -461,21 +461,20 @@ the journal owning the host file when unset.
 
 ## Infrastructure primitives
 
-Cross-cutting vocabulary the whole codebase reasons in. (Conventions for _using_
-these — DI lifetimes, `attempt.in` idioms, the `errors.ts` rule — live in the
-engineering notes, not here; this section names the concepts, not the house style.)
+Cross-cutting vocabulary the whole codebase reasons in. This section names the
+concepts; the house rules for _using_ them — DI lifetimes and module factories,
+`attempt.in` idioms, the `errors.ts` rule — are in
+[`docs/architecture.md`](docs/architecture.md).
 
 **`Result<T, E>` / `AsyncResult<T, E>` / `Option<T>`** — railway error handling: no
 exceptions cross domain boundaries, failures are values. `Result` is `Ok | Err`;
 `AsyncResult` is a `PromiseLike<Result>` that **never rejects** (every constructor
 maps a rejection into `Err`); `Option` is `Some | None`, bridged to `Result` via
-`okOr`/`okOrElse`. **`tap` is ok-only; `tapErr` is err-only** — branch dispatch
-lives in the API, callers never inspect `kind` to fork.
+`okOr`/`okOrElse`.
 
 **`attempt` / `attempt.in` (do-notation)** — generator-based do-notation linearizing
-Result pipelines. `attempt.in(self, function* () { … })` binds `this` to `self` so
-the body reaches `this.#field` without shadowing; `yield*` unwraps an ok value or
-**short-circuits** the whole block on the first `Err`. Sync vs async is
+Result pipelines. `yield*` unwraps an ok value or **short-circuits** the whole
+block on the first `Err`. Sync vs async is
 auto-dispatched on the generator kind (sync → `Result`, async → `AsyncResult`), and
 the error channel widens to the union of every `yield*` site. `InvariantError` is
 thrown only if a short-circuited iterator is wrongly resumed — a "this is
@@ -484,7 +483,9 @@ impossible" guard, not a domain error.
 **`Flow<P, R, E>` / `Flows`** — a flow is a single user-initiated, multi-step
 operation as one class with one `execute(parameters): AsyncResult<R, E>` entry
 point, living in a `.flow.ts` file. A _service_ owns persistent state and exposes
-many methods; a _flow_ is a one-shot orchestration whose body is typically one
+many methods; a _flow_ is a one-shot orchestration that carries **no state between
+invocations** (see [`docs/architecture.md`](docs/architecture.md) for the DI
+lifetime that makes that mandatory), whose body is typically one
 `attempt.in(this, async function*)` that injects services + modals and `yield*`s
 through them. Flows compose by `yield*`-ing operations, not by nesting flow classes.
 The **`Flows`** runner invokes a flow through DI and centralizes logging keyed off
@@ -497,23 +498,28 @@ TypedEmitter<X>` and exposes `events: Subscribable<X>` (read-only `on`) so
 collaborators subscribe but only the owner emits. `on` returns an unsubscribe
 disposer. Event maps are defined per-owner, never centrally.
 
-**DI: `Container` / `Module` / token / `Lifetime` / `inject` / `autoLoad`** — the
-wiring layer. A `Module` (`register(c)`) contributes bindings; zero-arg modules are
-a plain `const xModule: Module` value, a `createXxxModule(args)` **factory** is used
-only when construction needs arguments (e.g. `createHostModule(plugin)`). Tokens are
-opaque branded keys; a `MultiToken` resolves to an array (empty, never throws) while
-an unregistered single token throws. `Lifetime` is `Container` (default, one per
-container — never spelled out), `Scoped`, or `Transient`. `inject(token)` is
-field-level injection valid **only during construction/resolution** (it reads an
-ambient resolver stack) — DI is a boot/wiring tool, not a runtime service locator.
-`.eager()` bindings are force-instantiated by a **separate `autoLoad()` step**, not
-at container build. Vue components reach services only through `useService(token)`.
+**DI: `Container` / `Module` / token / `Lifetime` / `inject`** — the wiring layer.
+A `Module` (`register(c)`) contributes bindings. Tokens are opaque branded keys; a
+`MultiToken` resolves to an array (empty, never throws) while an unregistered
+single token throws. `Lifetime` is `Container`, `Scoped`, or `Transient`.
+`inject(token)` is field-level injection valid **only during
+construction/resolution** — it reads an ambient resolver stack, so there is
+nothing to read outside one. Vue components reach services only through
+`useService(token)`.
 
-**Host (the Obsidian boundary)** — the layer wrapping Obsidian's runtime so feature
-code never imports `obsidian` directly. Only host internals touch `TFile`/`App`/
-`Plugin`; `obsidian-bridge` translates them into domain nouns (`Note`, `VaultPath`,
-`OpenMode`, `NoteMetadata`). Each Obsidian-facing concern is a host service
-(`NotesService`, `WorkspaceService`, `ModalService`, `CommandService`,
+**Host (the Obsidian boundary)** — the layer wrapping Obsidian's runtime, so that
+feature code reaches the host through services rather than the `obsidian` module.
+The stateful surface holds absolutely: `App` appears only inside host internals and
+`Plugin` only in `src/main.ts`. The rest is a strong convention with known
+exceptions and nothing enforcing it — fourteen non-host production files import
+`obsidian` directly, almost all for leaf-level helpers (`normalizePath`,
+`setTooltip`, `getIconIds`, `Notice`, `Menu`), plus `ItemView` in
+`src/views/view-host.ts` and `src/views/view-leaf.ts`, `TFile` in
+`src/journals/vault-subscription.ts`, and the `moment` re-export in
+`src/calendar/calendar.ts` (the one module allowed to touch it at all).
+`obsidian-bridge` translates the host's types into domain nouns (`Note`,
+`VaultPath`, `OpenMode`, `NoteMetadata`). Each Obsidian-facing concern is a host
+service (`NotesService`, `WorkspaceService`, `ModalService`, `CommandService`,
 `CodeBlockService`, …). Two patterns recur: a **`defineXxx(input)`** builder returns
 a plain definition object separate from the `XxxService` that registers/renders it
 (modals use the curried `defineModal<TResult>()(input)` with a phantom `__result`
