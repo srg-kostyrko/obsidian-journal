@@ -15,8 +15,8 @@ export { EXISTING_NAVIGATION_TARGETS } from "./existing-navigation-targets";
 
 export const existingNavigationItem = defineToolbarItem<ExistingNavigationConfig>({
   key: "existing-navigation",
-  label: m.view_toolbar_existing_navigation_label(),
-  description: m.view_toolbar_existing_navigation_description(),
+  label: () => m.view_toolbar_existing_navigation_label(),
+  description: () => m.view_toolbar_existing_navigation_description(),
   icon: icons.block.existingNavigation,
   schema: existingNavigationSchema,
   defaultConfig: () => existingNavigationConfigFor("day", "next"),

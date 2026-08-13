@@ -9,8 +9,11 @@ export interface ViewBlockProps<TConfig> {
 
 export interface ViewBlockDefinitionInput<TConfig> {
   readonly key: string;
-  readonly label: string;
-  readonly description?: string;
+  // Factories rather than values: they resolve paraglide messages, which read the active locale
+  // only after JournalPlugin.onload() runs — evaluating them at module-evaluation time would
+  // freeze the text in the base locale.
+  readonly label: () => string;
+  readonly description?: () => string;
   readonly icon?: string;
   readonly schema: BaseSchema<unknown, TConfig, BaseIssue<unknown>>;
   readonly defaultConfig: TConfig;

@@ -9,7 +9,7 @@ import DividerBlock from "./ui/DividerBlock.vue";
 
 export const dividerBlock = defineViewBlock({
   key: "divider",
-  label: m.view_block_divider_label(),
+  label: () => m.view_block_divider_label(),
   icon: icons.block.divider,
   schema: v.object({}),
   defaultConfig: {},

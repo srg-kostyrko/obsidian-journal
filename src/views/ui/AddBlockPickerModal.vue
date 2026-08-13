@@ -21,13 +21,13 @@ const api = useModal<string>();
     </UiSettingRow>
     <UiSettingRow v-for="d of definitions" :key="d.key">
       <template #name>
-        <UiIconedRow v-if="d.icon" :icon="d.icon">{{ d.label }}</UiIconedRow>
-        <template v-else>{{ d.label }}</template>
+        <UiIconedRow v-if="d.icon" :icon="d.icon">{{ d.label() }}</UiIconedRow>
+        <template v-else>{{ d.label() }}</template>
       </template>
-      <template v-if="d.description" #description>{{ d.description }}</template>
+      <template v-if="d.description" #description>{{ d.description() }}</template>
       <UiIconButton
         :icon="icons.action.add"
-        :tooltip="m.view_add_picker_action({ label: d.label })"
+        :tooltip="m.view_add_picker_action({ label: d.label() })"
         @click="api.submit(d.key)"
       />
     </UiSettingRow>

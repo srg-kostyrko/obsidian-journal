@@ -20,8 +20,8 @@ export type MonthCalendarConfigChange = (next: MonthCalendarConfig) => void;
 
 export const monthCalendarBlock = defineViewBlock<MonthCalendarConfig>({
   key: "month-calendar",
-  label: m.view_block_month_calendar_label(),
-  description: m.view_block_month_calendar_description(),
+  label: () => m.view_block_month_calendar_label(),
+  description: () => m.view_block_month_calendar_description(),
   icon: icons.entity.month,
   schema,
   defaultConfig: {

@@ -16,7 +16,7 @@ afterEach(() => cleanup());
 function toolbarItemDefinition(key: string, label: string): ToolbarItemDefinition {
   return {
     key,
-    label,
+    label: () => label,
     schema: v.object({}),
     defaultConfig: () => ({}),
     component: { render: () => null },
@@ -31,10 +31,14 @@ function toolbarItemDefinitionWithPresets(
 ): ToolbarItemDefinition {
   return {
     key,
-    label,
+    label: () => label,
     schema: v.object({}),
     defaultConfig: () => ({}),
-    presets,
+    presets: presets.map((preset) => ({
+      ...preset,
+      label: () => preset.label,
+      description: preset.description === undefined ? undefined : () => preset.description,
+    })),
     component: { render: () => null },
     __brand: "toolbar-item",
   } as unknown as ToolbarItemDefinition;

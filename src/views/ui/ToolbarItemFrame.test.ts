@@ -17,7 +17,7 @@ const itemId = "11111111-1111-1111-1111-aaaaaaaaaaaa" as BlockInstanceId;
 
 const definition = {
   key: "button",
-  label: "Button",
+  label: () => "Button",
   schema: v.object({}),
   defaultConfig: {},
   component: { render: () => h("span", "PREVIEW") },

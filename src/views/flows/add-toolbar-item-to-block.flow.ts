@@ -39,7 +39,7 @@ export class AddToolbarItemToBlockFlow implements Flow<AddToolbarItemParameters,
         .open(editToolbarItemModal, {
           component: definition.configComponent,
           config: seed,
-          typeLabel: definition.label,
+          typeLabel: definition.label(),
           summary: definition.summary?.(seed),
         })
         .match<Record<string, unknown> | null>({ ok: (next) => next, err: () => null });

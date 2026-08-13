@@ -21,7 +21,7 @@ const noop = () => null;
 
 const trivialBlock = defineViewBlock<unknown>({
   key: "test-block",
-  label: "Test Block",
+  label: () => "Test Block",
   schema: v.object({ x: v.number() }),
   defaultConfig: { x: 0 },
   component: { setup: () => noop },
@@ -496,7 +496,7 @@ describe("ViewsService", () => {
 
 const toolbarBlock = defineViewBlock<{ items: { id: string; key: string; config: Record<string, unknown> }[] }>({
   key: "toolbar",
-  label: "Toolbar",
+  label: () => "Toolbar",
   schema: v.object({
     items: v.array(
       v.object({
@@ -512,7 +512,7 @@ const toolbarBlock = defineViewBlock<{ items: { id: string; key: string; config:
 
 const dummyItem = defineToolbarItem<{ x: number }>({
   key: "dummy",
-  label: "Dummy",
+  label: () => "Dummy",
   schema: v.object({ x: v.number() }),
   defaultConfig: () => ({ x: 0 }),
   component: { setup: () => noop },

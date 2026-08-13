@@ -39,7 +39,7 @@ const itemIdB = "11111111-1111-1111-1111-bbbbbbbbbbbb" as BlockInstanceId;
 
 const toolbarBlockDefinition = {
   key: "toolbar",
-  label: "Toolbar",
+  label: () => "Toolbar",
   schema: v.object({ items: v.array(v.unknown()) }),
   defaultConfig: { items: [] },
   component: { render: () => null },
@@ -47,7 +47,7 @@ const toolbarBlockDefinition = {
 
 const shelfSelectorDefinition = {
   key: "shelf-selector",
-  label: "Shelf selector",
+  label: () => "Shelf selector",
   icon: "layers",
   schema: v.object({}),
   defaultConfig: {},
@@ -58,7 +58,7 @@ const shelfSelectorDefinition = {
 
 const buttonDefinition = {
   key: "button",
-  label: "Button",
+  label: () => "Button",
   icon: "square",
   schema: v.object({ label: v.optional(v.string()), action: v.optional(v.unknown()) }),
   defaultConfig: {},

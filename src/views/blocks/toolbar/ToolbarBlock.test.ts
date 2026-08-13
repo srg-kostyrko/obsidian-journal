@@ -24,7 +24,7 @@ function stubName(config: unknown): string {
 
 const stubItem = defineToolbarItem<{ name: string }>({
   key: "stub",
-  label: "Stub",
+  label: () => "Stub",
   schema: v.object({ name: v.string() }),
   defaultConfig: () => ({ name: "" }),
   component: defineComponent({

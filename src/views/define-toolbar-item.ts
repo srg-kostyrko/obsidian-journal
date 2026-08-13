@@ -8,21 +8,21 @@ export interface ToolbarItemProps<TConfig> {
 }
 
 export interface ToolbarItemPreset<TConfig> {
-  readonly label: string;
-  readonly description?: string;
-  // A factory rather than a value: it resolves paraglide messages, which read the active locale
-  // only after JournalPlugin.onload() runs — calling it eagerly at module-evaluation time would
-  // freeze seeded text in the base locale.
+  // Factories rather than values: they resolve paraglide messages, which read the active locale
+  // only after JournalPlugin.onload() runs — evaluating them at module-evaluation time would
+  // freeze the text in the base locale.
+  readonly label: () => string;
+  readonly description?: () => string;
   readonly defaultConfig: () => TConfig;
 }
 
 export interface ToolbarItemDefinitionInput<TConfig> {
   readonly key: string;
-  readonly label: string;
-  readonly description?: string;
+  // See ToolbarItemPreset for why these are factories, not values.
+  readonly label: () => string;
+  readonly description?: () => string;
   readonly icon?: string;
   readonly schema: BaseSchema<unknown, TConfig, BaseIssue<unknown>>;
-  // See ToolbarItemPreset.defaultConfig for why this is a factory, not a value.
   readonly defaultConfig: () => TConfig;
   readonly component: Component;
   readonly configComponent?: Component;

@@ -66,7 +66,7 @@ function edit(row: Row): void {
     .open(editToolbarItemModal, {
       component: row.definition.configComponent,
       config: row.config,
-      typeLabel: row.definition.label,
+      typeLabel: row.definition.label(),
       summary: row.definition.summary?.(row.config),
     })
     .tap((next) => void viewsService.updateToolbarItemConfig(props.viewId, props.blockId, row.id, next));

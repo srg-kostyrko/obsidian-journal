@@ -37,7 +37,7 @@ const blockIdA = "aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa" as BlockInstanceId;
 
 const dividerDefinition = {
   key: "divider",
-  label: "Divider block",
+  label: () => "Divider block",
   icon: "minus",
   schema: v.object({}),
   defaultConfig: {},
@@ -46,7 +46,7 @@ const dividerDefinition = {
 
 const toolbarBlockDefinition = {
   key: "toolbar",
-  label: "Toolbar",
+  label: () => "Toolbar",
   schema: v.object({ items: v.array(v.unknown()) }),
   defaultConfig: { items: [] },
   component: { render: () => null },
@@ -54,7 +54,7 @@ const toolbarBlockDefinition = {
 
 const calendarDefinition = {
   key: "week-calendar",
-  label: "Week calendar",
+  label: () => "Week calendar",
   icon: "calendar",
   schema: v.object({ weeks: v.optional(v.string()) }),
   defaultConfig: { weeks: "left" },
@@ -64,7 +64,7 @@ const calendarDefinition = {
 
 const stubToolbarItemDefinition = {
   key: "stub-item",
-  label: "Stub item",
+  label: () => "Stub item",
   schema: v.object({}),
   defaultConfig: {},
   component: { render: () => null },
@@ -145,7 +145,7 @@ describe("BlocksList", () => {
   it("renders a block's config summary", async () => {
     const summaryDefinition = {
       key: "with-summary",
-      label: "Summary block",
+      label: () => "Summary block",
       schema: v.object({}),
       defaultConfig: {},
       component: { render: () => null },

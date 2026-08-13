@@ -11,8 +11,8 @@ const schema = v.object({});
 
 export const shelfSelectorItem = defineToolbarItem({
   key: "shelf-selector",
-  label: m.view_toolbar_shelf_selector_label(),
-  description: m.view_toolbar_shelf_selector_description(),
+  label: () => m.view_toolbar_shelf_selector_label(),
+  description: () => m.view_toolbar_shelf_selector_description(),
   icon: icons.entity.shelf,
   schema,
   defaultConfig: () => ({}),

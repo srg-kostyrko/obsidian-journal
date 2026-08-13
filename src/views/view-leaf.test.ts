@@ -60,7 +60,7 @@ function contextProbeBlock(): { block: ViewBlockDefinition; probe: ContextProbe 
   const probe: ContextProbe = { context: null };
   const block = defineViewBlock<unknown>({
     key: "context-probe",
-    label: "Probe",
+    label: () => "Probe",
     schema: v.object({}),
     defaultConfig: {},
     component: {
@@ -291,7 +291,7 @@ describe("JournalViewLeaf", () => {
     it("reports a block whose config fails the registered schema", async () => {
       const trivialBlock = defineViewBlock<{ x: number }>({
         key: "trivial-block",
-        label: "Trivial",
+        label: () => "Trivial",
         schema: v.object({ x: v.number() }),
         defaultConfig: { x: 0 },
         component: { setup: () => noop },

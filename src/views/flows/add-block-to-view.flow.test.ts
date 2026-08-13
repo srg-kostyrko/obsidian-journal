@@ -25,7 +25,7 @@ const id = "11111111-1111-1111-1111-111111111111" as ViewId;
 
 const dividerDefinition = {
   key: "divider",
-  label: "Divider",
+  label: () => "Divider",
   schema: v.object({}),
   defaultConfig: {},
   component: { render: () => null },
@@ -33,7 +33,7 @@ const dividerDefinition = {
 
 const configurableDefinition = {
   key: "month-calendar",
-  label: "Month calendar",
+  label: () => "Month calendar",
   schema: v.object({ showWeekNumbers: v.boolean() }),
   defaultConfig: { showWeekNumbers: false },
   component: { render: () => null },

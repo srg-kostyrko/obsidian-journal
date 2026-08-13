@@ -28,7 +28,7 @@ const blockId = "aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa" as BlockInstanceId;
 
 const toolbarBlockDefinition = {
   key: "toolbar",
-  label: "Toolbar",
+  label: () => "Toolbar",
   schema: v.object({ items: v.array(v.unknown()) }),
   defaultConfig: { items: [] },
   component: { render: () => null },
@@ -36,7 +36,7 @@ const toolbarBlockDefinition = {
 
 const shelfSelectorDefinition = {
   key: "shelf-selector",
-  label: "Shelf selector",
+  label: () => "Shelf selector",
   schema: v.object({}),
   defaultConfig: {},
   component: { render: () => null },
@@ -45,7 +45,7 @@ const shelfSelectorDefinition = {
 
 const configurableDefinition = {
   key: "period-buttons",
-  label: "Period buttons",
+  label: () => "Period buttons",
   schema: v.object({ periods: v.array(v.string()) }),
   defaultConfig: { periods: [] },
   component: { render: () => null },

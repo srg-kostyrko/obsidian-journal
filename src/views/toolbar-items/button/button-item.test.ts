@@ -5,6 +5,19 @@ import { initLocale, m } from "@/i18n";
 import { buttonItem } from "./button-item";
 
 describe("buttonItem", () => {
+  describe("label", () => {
+    beforeAll(() => initLocale("de"));
+    afterAll(() => initLocale("en"));
+
+    it("resolves in the locale active when the picker reads it", () => {
+      expect(buttonItem.label()).toBe(m.view_toolbar_button_label({}, { locale: "de" }));
+    });
+
+    it("resolves a preset label in the locale active when the picker reads it", () => {
+      expect(buttonItem.presets?.[0]?.label()).toBe(m.view_toolbar_button_preset_pick_date({}, { locale: "de" }));
+    });
+  });
+
   describe("defaultConfig", () => {
     // The module graph — and buttonItem — evaluates before JournalPlugin.onload() calls
     // initLocale(), so a seed captured at module scope would freeze in the base locale. Switching

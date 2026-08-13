@@ -28,18 +28,18 @@ const rows = computed<readonly Row[]>(() => {
       for (const preset of d.presets) {
         out.push({
           key: d.key,
-          label: preset.label,
+          label: preset.label(),
           icon: d.icon,
-          description: preset.description ?? d.description,
+          description: (preset.description ?? d.description)?.(),
           defaultConfig: preset.defaultConfig,
         });
       }
     } else {
       out.push({
         key: d.key,
-        label: d.label,
+        label: d.label(),
         icon: d.icon,
-        description: d.description,
+        description: d.description?.(),
         defaultConfig: d.defaultConfig,
       });
     }

@@ -33,7 +33,7 @@ export class AddBlockToViewFlow implements Flow<{ viewId: ViewId }, void, FlowEr
         .open(editBlockModal, {
           component: definition.configComponent,
           config: cloneFnJSON(definition.defaultConfig as Record<string, unknown>),
-          typeLabel: definition.label,
+          typeLabel: definition.label(),
         })
         .match<Record<string, unknown> | null>({ ok: (next) => next, err: () => null });
       if (submitted === null) return;

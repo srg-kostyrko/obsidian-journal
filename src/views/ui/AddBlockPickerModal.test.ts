@@ -16,7 +16,7 @@ afterEach(() => cleanup());
 function blockDefinition(key: string, label: string): ViewBlockDefinition {
   return {
     key,
-    label,
+    label: () => label,
     schema: v.object({}),
     defaultConfig: {},
     component: { render: () => null },

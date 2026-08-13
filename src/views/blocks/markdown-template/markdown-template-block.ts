@@ -15,8 +15,8 @@ export type MarkdownTemplateConfigChange = (next: MarkdownTemplateConfig) => voi
 
 export const markdownTemplateBlock = defineViewBlock<MarkdownTemplateConfig>({
   key: "markdown-template",
-  label: m.view_block_markdown_template_label(),
-  description: m.view_block_markdown_template_description(),
+  label: () => m.view_block_markdown_template_label(),
+  description: () => m.view_block_markdown_template_description(),
   icon: icons.block.markdownTemplate,
   schema,
   defaultConfig: { templatePath: "" },

@@ -8,8 +8,8 @@ import ToolbarBlock from "./ui/ToolbarBlock.vue";
 
 export const toolbarBlock = defineViewBlock<ToolbarConfig>({
   key: "toolbar",
-  label: m.view_block_toolbar_label(),
-  description: m.view_block_toolbar_description(),
+  label: () => m.view_block_toolbar_label(),
+  description: () => m.view_block_toolbar_description(),
   icon: icons.block.toolbar,
   schema: toolbarBlockSchema,
   defaultConfig: { items: [] },

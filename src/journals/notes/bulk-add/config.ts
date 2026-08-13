@@ -27,7 +27,10 @@ export const bulkAddParametersSchema = v.pipe(
     folder: v.string(),
     datePlace: v.picklist(["title", "property"]),
     propertyName: v.string(),
-    dateFormat: v.pipe(v.string(), v.minLength(1, m.bulk_add_date_format_required())),
+    dateFormat: v.pipe(
+      v.string(),
+      v.minLength(1, () => m.bulk_add_date_format_required()),
+    ),
     filterCombinator: v.picklist(["no", "and", "or"]),
     filters: v.array(filterConditionSchema),
     existingNote: v.picklist(["skip", "override", "merge", "ask"]),
@@ -39,7 +42,7 @@ export const bulkAddParametersSchema = v.pipe(
     v.partialCheck(
       [["datePlace"], ["propertyName"]],
       (input) => input.datePlace !== "property" || input.propertyName.trim().length > 0,
-      m.journal_property_name_required(),
+      () => m.journal_property_name_required(),
     ),
     ["propertyName"],
   ),

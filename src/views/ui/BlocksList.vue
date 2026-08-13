@@ -54,7 +54,7 @@ useSortableList(listEl, rows, (orderedIds) => {
 });
 
 function labelOf(row: RowEntry): string {
-  return row.definition ? row.definition.label : m.view_block_unknown_label({ key: row.key });
+  return row.definition ? row.definition.label() : m.view_block_unknown_label({ key: row.key });
 }
 
 function summaryOf(row: RowEntry): string | undefined {
@@ -69,7 +69,7 @@ function edit(row: RowEntry): void {
     .open(editBlockModal, {
       component: row.definition.configComponent,
       config: row.config,
-      typeLabel: row.definition.label,
+      typeLabel: row.definition.label(),
     })
     .tap((next) => void viewsService.updateBlockConfig(props.viewId, row.id, next));
 }

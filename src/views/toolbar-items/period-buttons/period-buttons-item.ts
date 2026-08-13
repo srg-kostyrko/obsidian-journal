@@ -20,8 +20,8 @@ export type PeriodButtonsConfigChange = (next: PeriodButtonsConfig) => void;
 
 export const periodButtonsItem = defineToolbarItem<PeriodButtonsConfig>({
   key: "period-buttons",
-  label: m.view_toolbar_period_buttons_label(),
-  description: m.view_toolbar_period_buttons_description(),
+  label: () => m.view_toolbar_period_buttons_label(),
+  description: () => m.view_toolbar_period_buttons_description(),
   icon: icons.entity.week,
   schema,
   defaultConfig: () => ({ week: false, month: true, quarter: true, year: true }),

@@ -21,7 +21,7 @@ const noop = () => null;
 
 const dummy = defineToolbarItem<{ x: number }>({
   key: "dummy",
-  label: "Dummy",
+  label: () => "Dummy",
   schema: v.object({ x: v.number() }),
   defaultConfig: () => ({ x: 0 }),
   component: { setup: () => noop },

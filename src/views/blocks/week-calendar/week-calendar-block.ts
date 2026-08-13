@@ -20,8 +20,8 @@ export type WeekCalendarConfigChange = (next: WeekCalendarConfig) => void;
 
 export const weekCalendarBlock = defineViewBlock<WeekCalendarConfig>({
   key: "week-calendar",
-  label: m.view_block_week_calendar_label(),
-  description: m.view_block_week_calendar_description(),
+  label: () => m.view_block_week_calendar_label(),
+  description: () => m.view_block_week_calendar_description(),
   icon: icons.entity.week,
   schema,
   defaultConfig: {
