@@ -48,7 +48,9 @@ export function patternForKind(spec: VariableSpec, format?: string): string {
       return escapeRegexLiteral(spec.value);
     }
     case "number": {
-      return format === ORDINAL_FORMAT ? String.raw`-?\d+` + ordinalPattern : String.raw`-?\d+`;
+      // The suffix is optional: a locale whose ordinal() degrades to a bare number (see
+      // ordinalFor) still round-trips, at the cost of also matching a plainly-numbered name.
+      return format === ORDINAL_FORMAT ? String.raw`-?\d+` + `(?:${ordinalPattern})?` : String.raw`-?\d+`;
     }
     case "date": {
       const effective = format ?? spec.defaultFormat;

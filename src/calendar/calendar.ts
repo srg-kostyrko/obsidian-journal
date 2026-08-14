@@ -113,13 +113,16 @@ export function dayOfMonthOrdinalParse(): RegExp | undefined {
 }
 
 interface OrdinalLocale {
-  ordinal(n: number, period: string): string;
+  ordinal(n: number, period: string): unknown;
 }
 
 // The period must be "D" (day-of-month) because dayOfMonthOrdinalParse is what inverts this
 // output, and moment.Locale#ordinal can render a different suffix per period.
 export function ordinalFor(value: number): string {
-  return (moment.localeData() as unknown as OrdinalLocale).ordinal(value, "D");
+  const ordinal = (moment.localeData() as unknown as OrdinalLocale).ordinal(value, "D");
+  // A locale whose ordinal table has no entry for this value (e.g. az/kk/ky/tg on negatives)
+  // returns null; a filename must never contain "null".
+  return typeof ordinal === "string" ? ordinal : String(value);
 }
 
 export function localMoment(

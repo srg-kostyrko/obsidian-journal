@@ -11,9 +11,28 @@ const localeImporters = {
   ja: () => import("moment/locale/ja"),
   // @ts-expect-error -- see above
   fr: () => import("moment/locale/fr"),
+  // @ts-expect-error -- see above
+  az: () => import("moment/locale/az"),
+  // @ts-expect-error -- see above
+  cy: () => import("moment/locale/cy"),
+  // @ts-expect-error -- see above
+  ka: () => import("moment/locale/ka"),
 };
 
-const locales = Object.keys(localeImporters) as (keyof typeof localeImporters)[];
+type Locale = keyof typeof localeImporters;
+
+async function loadKindsUnder(locale: Locale) {
+  vi.resetModules();
+  await localeImporters[locale]();
+  const { moment: freshMoment } = await import("obsidian");
+  freshMoment.locale(locale);
+
+  const kinds = await import("./kinds");
+  // format-regex.ts captures locale data at module-import time, so it must be imported after
+  // the locale is set, in the same reset generation as ./kinds.
+  await import("./format-regex");
+  return kinds;
+}
 
 describe("renderNumber / patternForKind ordinal round-trip", () => {
   afterEach(() => {
@@ -21,18 +40,30 @@ describe("renderNumber / patternForKind ordinal round-trip", () => {
     vi.resetModules();
   });
 
-  it.each(locales)("inverts an ordinal rendered under %s", async (locale) => {
-    vi.resetModules();
-    await localeImporters[locale]();
-    const { moment: freshMoment } = await import("obsidian");
-    freshMoment.locale(locale);
-
-    const { renderNumber, patternForKind } = await import("./kinds");
-    await import("./format-regex");
+  it.each(["uk", "ru", "ja", "fr"] as const)("inverts a positive ordinal rendered under %s", async (locale) => {
+    const { renderNumber, patternForKind } = await loadKindsUnder(locale);
 
     const rendered = renderNumber({ kind: "number", value: 7 }, [], "o");
     const pattern = new RegExp("^" + patternForKind({ kind: "number", value: 0 }, "o") + "$");
 
     expect(pattern.test(rendered)).toBe(true);
+  });
+
+  it.each(["cy", "ka"] as const)("inverts a zero-value ordinal rendered under %s", async (locale) => {
+    const { renderNumber, patternForKind } = await loadKindsUnder(locale);
+
+    const rendered = renderNumber({ kind: "number", value: 0 }, [], "o");
+    const pattern = new RegExp("^" + patternForKind({ kind: "number", value: 0 }, "o") + "$");
+
+    expect(pattern.test(rendered)).toBe(true);
+  });
+
+  it('renders a negative ordinal under az without a literal "null"', async () => {
+    const { renderNumber } = await loadKindsUnder("az");
+
+    const rendered = renderNumber({ kind: "number", value: -3 }, [], "o");
+
+    expect(typeof rendered).toBe("string");
+    expect(rendered).not.toContain("null");
   });
 });

@@ -118,7 +118,13 @@ describe("kinds", () => {
     it("matches an ordinal for the o format", () => {
       const pattern = new RegExp(`^${patternForKind({ kind: "number", value: 0 }, "o")}$`);
       expect(pattern.test("3rd")).toBe(true);
-      expect(pattern.test("3")).toBe(false);
+    });
+
+    // The suffix is optional so a locale whose ordinal() degrades to a bare number (e.g. az/kk/ky/tg
+    // on negatives, cy/ka on zero) still round-trips; the accepted cost is also matching a plain number.
+    it("also matches a bare number for the o format", () => {
+      const pattern = new RegExp(`^${patternForKind({ kind: "number", value: 0 }, "o")}$`);
+      expect(pattern.test("3")).toBe(true);
     });
 
     it("matches an ordinal past two digits", () => {
