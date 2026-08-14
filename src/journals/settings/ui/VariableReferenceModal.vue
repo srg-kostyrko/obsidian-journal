@@ -97,7 +97,12 @@ function handleModificationsClick(event: Event): void {
 
       <div v-for="numberingName in numberingVariableNames" :key="numberingName" class="variable-reference__row">
         <dt><VariableChip :name="numberingName" /></dt>
-        <dd>{{ m.journal_edit_variable_numbering_description() }}</dd>
+        <dd>
+          {{ m.journal_edit_variable_numbering_description() }}
+          <a href="#" @click="handleModificationsClick">
+            {{ m.journal_edit_variable_additional_modifications_link() }}
+          </a>
+        </dd>
       </div>
 
       <div class="variable-reference__row">
