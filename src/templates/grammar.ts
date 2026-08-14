@@ -40,9 +40,10 @@ export function tokenize(template: string): TokenStream {
 const NAME_PREFIX_RE = /^([a-zA-Z_][a-zA-Z0-9_]*)/;
 const ARITH_PREFIX_RE = /^([+-]\d+[a-z])/;
 const BOUNDARY_PREFIX_RE = /^(<[a-zA-Z]+=[a-zA-Z]+>)/;
-// Tried after ARITH_PREFIX_RE: a leading offset would swallow the `+3` of
-// `{{date+3d}}` and leave `d` as unparsable junk, silently turning every
-// existing date shift into a dropped token.
+// The `\d` in the lookahead is load-bearing: for a maximal digit run, ARITH_PREFIX_RE
+// matches iff the next character is a letter and this matches iff it is not, so the two
+// are mutually exclusive. Weakened to `(?![a-z])`, `\d+` backtracks one digit and `+34d`
+// matches as an offset of `+3`, dropping every multi-digit date shift.
 const OFFSET_PREFIX_RE = /^([+-]\d+)(?![\da-z])/;
 
 function parseTokenInner(inner: string, raw: string): Token | undefined {
