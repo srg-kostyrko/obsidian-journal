@@ -163,7 +163,7 @@ describe("blocks view", () => {
 
       // Under the fixture's Sunday-start locale a week's canonical anchor is its first day,
       // so Sun 2026-01-11 is what the note stores. {{date}} renders the week's representative
-      // day instead — Fri 2026-01-16, the day whose calendar year is the week-year.
+      // day instead — Sat 2026-01-17, the day `doy - dow` into the week.
       const path = "week/2026-01-11.md";
       await seedNote(path, "---\njournal: weekly\njournal-date: 2026-01-11\n---\n");
       await waitForJournalFrontmatter(path, { journal: "weekly", date: "2026-01-11" });
@@ -172,7 +172,7 @@ describe("blocks view", () => {
 
       const block = $(MARKDOWN_TEMPLATE);
       await block.waitForExist({ timeoutMsg: "markdown-template block did not render" });
-      await expect(block).toHaveText("Active date: 2026-01-16", { containing: true });
+      await expect(block).toHaveText("Active date: 2026-01-17", { containing: true });
     });
   });
 });
