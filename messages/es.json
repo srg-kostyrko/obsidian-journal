@@ -1762,6 +1762,7 @@
 	"journal_colliding_warning": "Los diarios {names} tienen configuraciones conflictivas, por lo que sus notas se sobrescribirán entre sí. Cambia la carpeta o la plantilla de nombre en uno de ellos.",
 	"journal_note_name_empty_notice": "El diario «{journalName}» tiene una plantilla de nombre que da como resultado un nombre de nota vacío, por lo que no se puede crear ninguna nota. Define una plantilla de nombre en los ajustes del diario.",
 	"journal_dashboard_bulk_add": "Agregar notas en bloque a {name}",
+	"journal_dashboard_duplicate": "Duplicar {name}",
 	"journal_dashboard_edit": "Configurar {name}",
 	"journal_dashboard_empty": "Aún no se ha creado ningún diario.",
 	"journal_delete_modal_title": "Eliminar {name}",
@@ -1811,6 +1812,11 @@
 			}
 		}
 	],
+	"journal_duplicate_copy_name": "{name} copia",
+	"journal_duplicate_copy_name_indexed": "{name} copia {index}",
+	"journal_duplicate_modal_description": "Se copian los ajustes y los comandos. Las notas no.",
+	"journal_duplicate_modal_name_label": "Nuevo nombre del diario",
+	"journal_duplicate_modal_title": "Duplicar {name}",
 	"journal_edit_allow_before_description": "Permite la indexación antes de la fecha de anclaje. Puede generar números negativos.",
 	"journal_edit_allow_before_label": "Permitir antes del anclaje",
 	"journal_edit_anchor_description": "La numeración empieza en esta fecha. La nota de esta fecha recibe el número inicial y las notas posteriores cuentan a partir de ella.",

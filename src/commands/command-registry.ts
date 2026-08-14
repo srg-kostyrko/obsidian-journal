@@ -1,3 +1,4 @@
+import { nanoid } from "nanoid";
 import { match } from "ts-pattern";
 
 import { CalendarDate } from "@/calendar";
@@ -241,6 +242,16 @@ export class DynamicCommandRegistry {
     }
   }
 
+  #onJournalDuplicated(sourceName: string, newName: string): void {
+    // Snapshot first: create() writes into the same storage the query iterates.
+    const sourceCommands = [...this.#commandsRepo.find().entries()].filter(
+      ([, command]) => command.target.kind === "journal" && command.target.journalName === sourceName,
+    );
+    for (const [, command] of sourceCommands) {
+      this.#commandsRepo.create(nanoid(), { ...command, target: { kind: "journal", journalName: newName } });
+    }
+  }
+
   #onJournalDeleted(journalName: string): void {
     for (const [id, command] of this.#commandsRepo.find().entries()) {
       if (command.target.kind === "journal" && command.target.journalName === journalName) {
@@ -272,6 +283,7 @@ export class DynamicCommandRegistry {
     this.#commandsEvents.on("deleted", () => this.#reconcile());
     this.#journalsEvents.on("renamed", (oldName, newName) => this.#onJournalRenamed(oldName, newName));
     this.#journalsEvents.on("deleted", (journalName) => this.#onJournalDeleted(journalName));
+    this.#journalsEvents.on("duplicated", (sourceName, newName) => this.#onJournalDuplicated(sourceName, newName));
     this.#shelvesEvents.on("renamed", (oldName, newName) => this.#onShelfRenamed(oldName, newName));
     this.#shelvesEvents.on("deleted", (shelfName) => this.#onShelfDeleted(shelfName));
     // An external settings sync rewrites the collections without firing repository

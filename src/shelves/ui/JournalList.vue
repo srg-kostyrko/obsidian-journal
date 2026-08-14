@@ -9,7 +9,12 @@ defineProps<{
   entries: readonly [string, JournalConfig][];
   emptyText: string;
 }>();
-defineEmits<{ "bulk-add": [name: string]; edit: [name: string]; delete: [name: string] }>();
+defineEmits<{
+  "bulk-add": [name: string];
+  edit: [name: string];
+  duplicate: [name: string];
+  delete: [name: string];
+}>();
 </script>
 
 <template>
@@ -31,6 +36,11 @@ defineEmits<{ "bulk-add": [name: string]; edit: [name: string]; delete: [name: s
         :icon="icons.action.configure"
         :tooltip="m.journal_dashboard_edit({ name })"
         @click="$emit('edit', name)"
+      />
+      <UiIconButton
+        :icon="icons.action.copy"
+        :tooltip="m.journal_dashboard_duplicate({ name })"
+        @click="$emit('duplicate', name)"
       />
       <UiIconButton
         :icon="icons.action.delete"

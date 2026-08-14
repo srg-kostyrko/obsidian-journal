@@ -10,7 +10,13 @@ import { NoticeService } from "@/infrastructure/host";
 import { ModalService } from "@/infrastructure/host/modals";
 import { FakeModalService } from "@/infrastructure/host/modals/testing";
 import { FakeNoticeService } from "@/infrastructure/host/testing";
-import { AddJournalFlow, DeleteJournalFlow, journalConfigCollection, journalEditSubpage } from "@/journals";
+import {
+  AddJournalFlow,
+  DeleteJournalFlow,
+  DuplicateJournalFlow,
+  journalConfigCollection,
+  journalEditSubpage,
+} from "@/journals";
 import { BulkAddFlow } from "@/journals/notes/bulk-add/flows/bulk-add.flow";
 import { JournalsRepository } from "@/journals/repository";
 import { JournalsEventsToken } from "@/journals/tokens";
@@ -134,5 +140,12 @@ describe("JournalsDashboardBlock", () => {
     mount(container);
     await userEvent.click(screen.getByLabelText(m.journal_dashboard_bulk_add({ name: "daily" })));
     expect(flows.invoke).toHaveBeenCalledWith(BulkAddFlow, { journalName: "daily" });
+  });
+
+  it("invokes DuplicateJournalFlow when duplicate is clicked", async () => {
+    const { container, flows } = await setup({ journals: ["daily"] });
+    mount(container);
+    await userEvent.click(screen.getByLabelText(m.journal_dashboard_duplicate({ name: "daily" })));
+    expect(flows.invoke).toHaveBeenCalledWith(DuplicateJournalFlow, { journalName: "daily" });
   });
 });

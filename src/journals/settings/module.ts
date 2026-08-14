@@ -4,6 +4,7 @@ import { DashboardBlockToken, SubpageToken, defineDashboardBlock } from "@/setti
 
 import { AddJournalFlow } from "./flows/add-journal.flow";
 import { DeleteJournalFlow } from "./flows/delete-journal.flow";
+import { DuplicateJournalFlow } from "./flows/duplicate-journal.flow";
 import { EditFrontmatterFieldFlow } from "./flows/edit-frontmatter-field.flow";
 import { EditSequencePropertyFlow } from "./flows/edit-sequence-property.flow";
 import { RenameJournalFlow } from "./flows/rename-journal.flow";
@@ -16,6 +17,7 @@ export const journalsSettingsModule: Module = {
     c.register(AddJournalFlow).useClass(AddJournalFlow);
     c.register(RenameJournalFlow).useClass(RenameJournalFlow);
     c.register(DeleteJournalFlow).useClass(DeleteJournalFlow);
+    c.register(DuplicateJournalFlow).useClass(DuplicateJournalFlow);
     c.register(EditFrontmatterFieldFlow).useClass(EditFrontmatterFieldFlow);
     c.register(EditSequencePropertyFlow).useClass(EditSequencePropertyFlow);
     c.register(SubpageToken).useValue(journalEditSubpage);

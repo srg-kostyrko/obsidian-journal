@@ -1777,6 +1777,7 @@
 	"journal_colliding_warning": "Les journaux {names} ont des configurations conflictuelles, leurs notes s’écraseront donc mutuellement. Modifiez le dossier ou le modèle de nom dans l’un d’eux.",
 	"journal_note_name_empty_notice": "Le journal « {journalName} » possède un modèle de nom qui aboutit à un nom de note vide, aucune note ne peut donc être créée. Définissez un modèle de nom dans les paramètres du journal.",
 	"journal_dashboard_bulk_add": "Ajouter des notes en masse à {name}",
+	"journal_dashboard_duplicate": "Dupliquer {name}",
 	"journal_dashboard_edit": "Configurer {name}",
 	"journal_dashboard_empty": "Aucun journal n’a encore été créé.",
 	"journal_delete_modal_title": "Supprimer {name}",
@@ -1828,6 +1829,11 @@
 			}
 		}
 	],
+	"journal_duplicate_copy_name": "{name} copie",
+	"journal_duplicate_copy_name_indexed": "{name} copie {index}",
+	"journal_duplicate_modal_description": "Les paramètres et les commandes sont copiés. Les notes ne le sont pas.",
+	"journal_duplicate_modal_name_label": "Nouveau nom du journal",
+	"journal_duplicate_modal_title": "Dupliquer {name}",
 	"journal_edit_allow_before_description": "Autoriser l’indexation avant la date d’ancrage. Peut produire des nombres négatifs.",
 	"journal_edit_allow_before_label": "Autoriser avant l’ancrage",
 	"journal_edit_anchor_description": "La numérotation commence à cette date. La note de cette date reçoit le numéro de départ, et les notes suivantes sont numérotées à partir de là.",

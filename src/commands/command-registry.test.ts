@@ -526,6 +526,87 @@ describe("DynamicCommandRegistry journal cascade", () => {
   });
 });
 
+function commandsTargeting(commandsRepo: CommandsRepository, journalName: string): [string, CommandConfig][] {
+  return [...commandsRepo.find().entries()].filter(
+    ([, command]) => command.target.kind === "journal" && command.target.journalName === journalName,
+  );
+}
+
+describe("DynamicCommandRegistry journal duplication", () => {
+  it("copies a journal-target command onto the duplicate", async () => {
+    const { commandsRepo, journalsRepo } = await build();
+    journalsRepo.create("daily", { type: "day" });
+    commandsRepo.create(
+      "cmd-1",
+      makeCommand({
+        name: "Open today",
+        icon: "sun",
+        showInRibbon: true,
+        target: { kind: "journal", journalName: "daily" },
+      }),
+    );
+
+    journalsRepo.duplicate("daily", "daily copy");
+
+    const copies = commandsTargeting(commandsRepo, "daily copy");
+    expect(copies).toHaveLength(1);
+    expect(copies.at(0)?.[1]).toEqual(
+      makeCommand({
+        name: "Open today",
+        icon: "sun",
+        showInRibbon: true,
+        target: { kind: "journal", journalName: "daily copy" },
+      }),
+    );
+  });
+
+  it("gives the copied command its own id and leaves the source command in place", async () => {
+    const { commandsRepo, journalsRepo } = await build();
+    journalsRepo.create("daily", { type: "day" });
+    commandsRepo.create("cmd-1", makeCommand({ target: { kind: "journal", journalName: "daily" } }));
+
+    journalsRepo.duplicate("daily", "daily copy");
+
+    expect(commandsTargeting(commandsRepo, "daily")).toHaveLength(1);
+    expect(commandsTargeting(commandsRepo, "daily copy").at(0)?.[0]).not.toBe("cmd-1");
+  });
+
+  it("registers the copied command with the host", async () => {
+    const { host, commandsRepo, journalsRepo } = await build();
+    journalsRepo.create("daily", { type: "day" });
+    commandsRepo.create("cmd-1", makeCommand({ target: { kind: "journal", journalName: "daily" } }));
+
+    journalsRepo.duplicate("daily", "daily copy");
+
+    const copyId = commandsTargeting(commandsRepo, "daily copy").at(0)?.[0] ?? "";
+    expect(host.commands.get(copyId)).toBeDefined();
+  });
+
+  it("leaves commands targeting other journals alone", async () => {
+    const { commandsRepo, journalsRepo } = await build();
+    journalsRepo.create("daily", { type: "day" });
+    journalsRepo.create("weekly", { type: "week" });
+    commandsRepo.create("cmd-1", makeCommand({ target: { kind: "journal", journalName: "weekly" } }));
+
+    const before = commandsRepo.count();
+    journalsRepo.duplicate("daily", "daily copy");
+
+    expect(commandsTargeting(commandsRepo, "daily copy")).toHaveLength(0);
+    expect(commandsRepo.count()).toBe(before);
+  });
+
+  it("does not copy all-target commands", async () => {
+    const { commandsRepo, journalsRepo } = await build();
+    journalsRepo.create("daily", { type: "day" });
+    commandsRepo.create("cmd-1", makeCommand({ target: { kind: "all", writeType: "day" } }));
+
+    const before = commandsRepo.count();
+    journalsRepo.duplicate("daily", "daily copy");
+
+    expect(commandsRepo.count()).toBe(before);
+  });
+});
+
 describe("DynamicCommandRegistry shelf targets", () => {
   it("registers a shelf-targeted command when the shelf has a matching journal", async () => {
     const { host, commandsRepo, journalsRepo, shelvesRepo } = await build();

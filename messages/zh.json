@@ -1573,6 +1573,7 @@
 	"journal_colliding_warning": "日记 {names} 的配置存在冲突，因此它们的笔记会互相覆盖。请更改其中一个日记的文件夹或名称模板。",
 	"journal_note_name_empty_notice": "日记“{journalName}”的名称模板解析出的笔记名称为空，因此无法创建笔记。请在该日记的设置中设置名称模板。",
 	"journal_dashboard_bulk_add": "批量向 {name} 添加笔记",
+	"journal_dashboard_duplicate": "复制{name}",
 	"journal_dashboard_edit": "配置{name}",
 	"journal_dashboard_empty": "尚未创建任何日记。",
 	"journal_delete_modal_title": "删除{name}",
@@ -1622,6 +1623,11 @@
 			}
 		}
 	],
+	"journal_duplicate_copy_name": "{name} 副本",
+	"journal_duplicate_copy_name_indexed": "{name} 副本 {index}",
+	"journal_duplicate_modal_description": "设置和命令会被复制，笔记不会。",
+	"journal_duplicate_modal_name_label": "新日记名称",
+	"journal_duplicate_modal_title": "复制{name}",
 	"journal_edit_allow_before_description": "允许在锚定日期之前进行索引。可能会产生负数。",
 	"journal_edit_allow_before_label": "允许早于锚定日期",
 	"journal_edit_anchor_description": "编号从此日期开始计算。此日期的笔记获得起始编号，之后的笔记依次递增。",

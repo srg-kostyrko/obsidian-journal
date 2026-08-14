@@ -2,7 +2,7 @@ import { createNanoEvents, type Emitter } from "nanoevents";
 import { describe, expect, it, vi } from "vitest";
 import { reactive } from "vue";
 
-import { journalDefaultsFor, type JournalConfig } from "./config";
+import { journalDefaultsFor, type JournalConfig, type NavBlockRow } from "./config";
 import {
   InvalidJournalNameError,
   InvalidJournalUpdateError,
@@ -11,6 +11,18 @@ import {
   UnknownJournalError,
 } from "./errors";
 import { JournalsRepository, type JournalsEvents } from "./repository";
+
+const addedRow: NavBlockRow = {
+  template: "added to the copy",
+  fontSize: 1,
+  bold: false,
+  italic: false,
+  link: "none",
+  journal: "",
+  color: { type: "theme", name: "text-normal" },
+  background: { type: "transparent" },
+  addDecorations: false,
+};
 
 function buildRepo(initial: Record<string, JournalConfig> = {}) {
   const storage = reactive<Record<string, JournalConfig>>({ ...initial });
@@ -113,6 +125,82 @@ describe("JournalsRepository", () => {
       });
       const result = repo.rename("a", "b");
       expect(result.isErr() && result.error).toBeInstanceOf(JournalNameTakenError);
+    });
+  });
+
+  describe("duplicate", () => {
+    it("stores a copy of the source config under the new name", () => {
+      const source = { ...journalDefaultsFor({ type: "day" }, "daily"), folder: "Daily/", confirmCreation: true };
+      const { repo, storage } = buildRepo({ daily: source });
+      repo.duplicate("daily", "daily copy");
+      expect(storage["daily copy"]).toStrictEqual({ ...source, name: "daily copy" });
+    });
+
+    it("leaves the source journal in place", () => {
+      const source = journalDefaultsFor({ type: "day" }, "daily");
+      const { repo, storage } = buildRepo({ daily: source });
+      repo.duplicate("daily", "daily copy");
+      expect(storage.daily).toStrictEqual(source);
+    });
+
+    it("detaches nested values so editing the copy leaves the source untouched", () => {
+      const { repo, storage } = buildRepo({ daily: journalDefaultsFor({ type: "day" }, "daily") });
+      repo.duplicate("daily", "daily copy");
+      storage["daily copy"]?.navBlock.rows.push(addedRow);
+      expect(storage.daily?.navBlock.rows).not.toContainEqual(
+        expect.objectContaining({ template: "added to the copy" }),
+      );
+    });
+
+    it("returns the stored copy", () => {
+      const { repo } = buildRepo({ daily: journalDefaultsFor({ type: "day" }, "daily") });
+      const result = repo.duplicate("daily", "daily copy");
+      expect(result.isOk() && result.value.name).toBe("daily copy");
+    });
+
+    it("emits duplicated with the source and new name", () => {
+      const { repo, events } = buildRepo({ daily: journalDefaultsFor({ type: "day" }, "daily") });
+      const spy = vi.fn();
+      events.on("duplicated", spy);
+      repo.duplicate("daily", "daily copy");
+      expect(spy).toHaveBeenCalledWith("daily", "daily copy");
+    });
+
+    it("emits duplicated after created so listeners see the stored copy", () => {
+      const { repo, events } = buildRepo({ daily: journalDefaultsFor({ type: "day" }, "daily") });
+      const calls: string[] = [];
+      events.on("created", () => calls.push("created"));
+      events.on("duplicated", () => calls.push("duplicated"));
+      repo.duplicate("daily", "daily copy");
+      expect(calls).toStrictEqual(["created", "duplicated"]);
+    });
+
+    it("rejects an empty new name with InvalidJournalNameError", () => {
+      const { repo } = buildRepo({ daily: journalDefaultsFor({ type: "day" }, "daily") });
+      const result = repo.duplicate("daily", "");
+      expect(result.isErr() && result.error).toBeInstanceOf(InvalidJournalNameError);
+    });
+
+    it("rejects an unknown source name with UnknownJournalError", () => {
+      const { repo } = buildRepo();
+      const result = repo.duplicate("nope", "copy");
+      expect(result.isErr() && result.error).toBeInstanceOf(UnknownJournalError);
+    });
+
+    it("rejects a new name already in use with JournalNameTakenError", () => {
+      const { repo } = buildRepo({
+        a: journalDefaultsFor({ type: "day" }, "a"),
+        b: journalDefaultsFor({ type: "day" }, "b"),
+      });
+      const result = repo.duplicate("a", "b");
+      expect(result.isErr() && result.error).toBeInstanceOf(JournalNameTakenError);
+    });
+
+    it("writes nothing when the new name is taken", () => {
+      const b = journalDefaultsFor({ type: "day" }, "b");
+      const { repo, storage } = buildRepo({ a: { ...journalDefaultsFor({ type: "day" }, "a"), folder: "A/" }, b });
+      repo.duplicate("a", "b");
+      expect(storage.b).toStrictEqual(b);
     });
   });
 

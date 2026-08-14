@@ -4,6 +4,7 @@ import { defineModal } from "@/infrastructure/host/modals";
 import AddJournalModal from "./AddJournalModal.vue";
 import CodeBlockReferenceModal from "./CodeBlockReferenceModal.vue";
 import DeleteJournalModal from "./DeleteJournalModal.vue";
+import DuplicateJournalModal from "./DuplicateJournalModal.vue";
 import EditFrontmatterFieldModal from "./EditFrontmatterFieldModal.vue";
 import EditSequencePropertyModal from "./EditSequencePropertyModal.vue";
 import RenameJournalModal from "./RenameJournalModal.vue";
@@ -21,6 +22,12 @@ export const addJournalModal = defineModal<{ name: string; write: JournalWrite }
 export const deleteJournalModal = defineModal<{ mode: "keep" | "clear" | "delete" }>()({
   component: DeleteJournalModal,
   title: ({ journalName }: { journalName: string }) => m.journal_delete_modal_title({ name: journalName }),
+});
+
+export const duplicateJournalModal = defineModal<{ newName: string }>()({
+  component: DuplicateJournalModal,
+  title: ({ sourceName }: { sourceName: string; suggestedName: string }) =>
+    m.journal_duplicate_modal_title({ name: sourceName }),
 });
 
 export type FrontmatterFieldName = "dateField" | "startDateField" | "endDateField";
