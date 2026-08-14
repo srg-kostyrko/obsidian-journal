@@ -1,18 +1,25 @@
-import { CalendarDate } from "@/calendar";
+import { CalendarDate, localeData } from "@/calendar";
 import { Err, Ok, type Result } from "@/infrastructure/result";
 
 import { TemplateParseError } from "./errors";
 import { escapeRegexLiteral, formatToRegexp } from "./format-regex";
-import { applyModifiers, unapplyModifiers } from "./modifiers";
+import { applyModifiers, applyOffsets, unapplyModifiers } from "./modifiers";
 
 import type { Modifier, VariableSpec } from "./types";
+
+export const ORDINAL_FORMAT = "o";
 
 export function renderString(spec: Extract<VariableSpec, { kind: "string" }>): string {
   return spec.value;
 }
 
-export function renderNumber(spec: Extract<VariableSpec, { kind: "number" }>): string {
-  return spec.value.toString();
+export function renderNumber(
+  spec: Extract<VariableSpec, { kind: "number" }>,
+  modifiers: readonly Modifier[] = [],
+  format?: string,
+): string {
+  const value = applyOffsets(spec.value, modifiers);
+  return format === ORDINAL_FORMAT ? localeData().ordinal(value) : value.toString();
 }
 
 export function renderDate(

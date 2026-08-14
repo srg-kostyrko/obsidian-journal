@@ -36,6 +36,28 @@ describe("kinds", () => {
     it("formats with toString", () => {
       expect(renderNumber({ kind: "number", value: 42 })).toBe("42");
     });
+
+    it("applies an offset before rendering", () => {
+      const mods: Modifier[] = [{ kind: "offset", sign: 1, amount: 3 }];
+      expect(renderNumber({ kind: "number", value: 4 }, mods)).toBe("7");
+    });
+
+    it("renders an ordinal for the o format", () => {
+      expect(renderNumber({ kind: "number", value: 4 }, [], "o")).toBe("4th");
+    });
+
+    it("renders an ordinal past two digits", () => {
+      expect(renderNumber({ kind: "number", value: 102 }, [], "o")).toBe("102nd");
+    });
+
+    it("applies the offset before the ordinal", () => {
+      const mods: Modifier[] = [{ kind: "offset", sign: 1, amount: 3 }];
+      expect(renderNumber({ kind: "number", value: 4 }, mods, "o")).toBe("7th");
+    });
+
+    it("renders zero as an ordinal", () => {
+      expect(renderNumber({ kind: "number", value: 0 }, [], "o")).toBe("0th");
+    });
   });
 
   describe("renderDate", () => {
