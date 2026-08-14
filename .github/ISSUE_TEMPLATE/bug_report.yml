@@ -1,0 +1,75 @@
+name: Bug report
+description: Something in the plugin does not work as expected
+labels: ["bug"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thanks for taking the time to report this. Please check the
+        [existing issues](https://github.com/srg-kostyrko/obsidian-journal/issues) first — if
+        yours is already there, a comment with your details is more useful than a new issue.
+  - type: textarea
+    id: what-happened
+    attributes:
+      label: What happened
+      description: What did you expect, and what happened instead?
+    validations:
+      required: true
+  - type: textarea
+    id: steps
+    attributes:
+      label: Steps to reproduce
+      placeholder: |
+        1. Open settings and ...
+        2. Click ...
+        3. The note is created in the wrong folder
+    validations:
+      required: true
+  - type: input
+    id: plugin-version
+    attributes:
+      label: Plugin version
+      description: Settings → Community plugins → Journals
+    validations:
+      required: true
+  - type: input
+    id: obsidian-version
+    attributes:
+      label: Obsidian version
+      description: Settings → About → Current version
+    validations:
+      required: true
+  - type: dropdown
+    id: platform
+    attributes:
+      label: Platform
+      options:
+        - Windows
+        - macOS
+        - Linux
+        - iOS
+        - Android
+    validations:
+      required: true
+  - type: textarea
+    id: console
+    attributes:
+      label: Console output
+      description: >-
+        Open the developer console (Ctrl+Shift+I, or Cmd+Option+I on macOS) and paste anything
+        that appears when the problem happens. Raising the log level in the plugin's settings and
+        dumping the log to a note often captures more.
+      render: text
+  - type: textarea
+    id: journal-config
+    attributes:
+      label: Relevant journal configuration
+      description: >-
+        The settings of the journal involved — write type, name template, date format, folder.
+  - type: textarea
+    id: other-plugins
+    attributes:
+      label: Other plugins involved
+      description: >-
+        Especially Templater, Calendar, Periodic Notes, or the Daily notes core plugin. If the
+        problem goes away with other plugins disabled, say so.

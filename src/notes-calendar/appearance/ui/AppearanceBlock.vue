@@ -1,0 +1,68 @@
+<script setup lang="ts">
+import { ref } from "vue";
+
+import type { ColorSettings } from "@/decorations";
+import { m } from "@/i18n";
+import { useService } from "@/infrastructure/di";
+import { SettingsService } from "@/settings";
+import { icons } from "@/ui/icons";
+import UiCollapsibleBlock from "@/ui/UiCollapsibleBlock.vue";
+import UiColorSettingsPicker from "@/ui/UiColorSettingsPicker.vue";
+import UiIconedRow from "@/ui/UiIconedRow.vue";
+import UiSettingRow from "@/ui/UiSettingRow.vue";
+
+import { appearanceSlice } from "../slice";
+
+const settings = useService(SettingsService);
+const slice = settings.getSlice(appearanceSlice);
+const expanded = ref(false);
+
+function setTodayColor(color: ColorSettings): void {
+  slice.state = { ...slice.state, today: { ...slice.state.today, color } };
+}
+function setTodayBackground(background: ColorSettings): void {
+  slice.state = { ...slice.state, today: { ...slice.state.today, background } };
+}
+function setActiveColor(color: ColorSettings): void {
+  slice.state = { ...slice.state, active: { ...slice.state.active, color } };
+}
+function setActiveBackground(background: ColorSettings): void {
+  slice.state = { ...slice.state, active: { ...slice.state.active, background } };
+}
+</script>
+
+<template>
+  <UiCollapsibleBlock v-model:expanded="expanded">
+    <template #trigger>
+      <UiIconedRow :icon="icons.section.appearance">{{ m.calendar_appearance_section_title() }}</UiIconedRow>
+    </template>
+    <UiSettingRow :name="m.calendar_appearance_today_text()">
+      <template #description>{{ m.calendar_appearance_description({ target: "today", layer: "text" }) }}</template>
+      <UiColorSettingsPicker :model-value="slice.state.today.color" role="text" @update:model-value="setTodayColor" />
+    </UiSettingRow>
+    <UiSettingRow :name="m.calendar_appearance_today_background()">
+      <template #description>
+        {{ m.calendar_appearance_description({ target: "today", layer: "background" }) }}
+      </template>
+      <UiColorSettingsPicker
+        :model-value="slice.state.today.background"
+        role="background"
+        @update:model-value="setTodayBackground"
+      />
+    </UiSettingRow>
+    <UiSettingRow :name="m.calendar_appearance_active_text()">
+      <template #description>{{ m.calendar_appearance_description({ target: "active", layer: "text" }) }}</template>
+      <UiColorSettingsPicker :model-value="slice.state.active.color" role="text" @update:model-value="setActiveColor" />
+    </UiSettingRow>
+    <UiSettingRow :name="m.calendar_appearance_active_background()">
+      <template #description>
+        {{ m.calendar_appearance_description({ target: "active", layer: "background" }) }}
+      </template>
+      <UiColorSettingsPicker
+        :model-value="slice.state.active.background"
+        role="background"
+        @update:model-value="setActiveBackground"
+      />
+    </UiSettingRow>
+  </UiCollapsibleBlock>
+</template>

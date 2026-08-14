@@ -1,0 +1,49 @@
+import { describe, expect, it, vi } from "vitest";
+
+import { Container } from "@/infrastructure/di";
+import { Flows } from "@/infrastructure/flows";
+import { NoticeService } from "@/infrastructure/host";
+import { ModalService } from "@/infrastructure/host/modals";
+import { FakeModalService } from "@/infrastructure/host/modals/testing";
+import { FakeNoticeService } from "@/infrastructure/host/testing";
+import { LoggerModule } from "@/infrastructure/logger";
+import { AsyncResult } from "@/infrastructure/result";
+
+import { BulkAddService } from "../bulk-add-service";
+import { defaultBulkAddParameters } from "../config";
+
+import { BulkAddFlow } from "./bulk-add.flow";
+
+function build() {
+  const c = new Container();
+  c.addModule(LoggerModule);
+  const service = { plan: vi.fn(() => AsyncResult.ok({ notes: [] })) };
+  const modals = new FakeModalService();
+  c.register(ModalService).useValue(modals as unknown as ModalService);
+  c.register(BulkAddService).useValue(service as unknown as BulkAddService);
+  c.register(NoticeService).useValue(new FakeNoticeService());
+  c.register(Flows).useClass(Flows);
+  c.register(BulkAddFlow).useClass(BulkAddFlow);
+  return { flows: c.resolve(Flows), modals, service };
+}
+
+describe("BulkAddFlow", () => {
+  it("plans with the configured parameters then opens the process modal", async () => {
+    const { flows, modals, service } = build();
+    const promise = flows.invoke(BulkAddFlow, { journalName: "daily" });
+    modals.lastOpen().submit({ ...defaultBulkAddParameters(), folder: "src" });
+    await vi.waitFor(() => expect(modals.opens).toHaveLength(2));
+    expect(service.plan).toHaveBeenCalledWith("daily", expect.objectContaining({ folder: "src" }));
+    modals.lastOpen<unknown, void>().submit(undefined);
+    await promise;
+  });
+
+  it("aborts cleanly when the configure modal is cancelled", async () => {
+    const { flows, modals, service } = build();
+    const promise = flows.invoke(BulkAddFlow, { journalName: "daily" });
+    modals.lastOpen().cancel();
+    const result = await promise;
+    expect(result.kind).toBe("err");
+    expect(service.plan).not.toHaveBeenCalled();
+  });
+});

@@ -1,107 +1,107 @@
-import { JournalAnchorDate } from "@/types/journal.types";
-import { ref } from "vue";
+import type { AnchorString } from "@/calendar";
+import type { VaultPath } from "@/infrastructure/host";
+import { InvariantError, Option } from "@/infrastructure/result";
 
 export class JournalIndex {
-  #map = ref(new Map<string, string>());
-  #reversedMap = new Map<string, JournalAnchorDate>();
-  #sortedDates: string[] = [];
+  readonly #byAnchor = new Map<AnchorString, VaultPath>();
+  readonly #sortedAnchors: AnchorString[] = [];
 
-  has(anchorDate: JournalAnchorDate): boolean {
-    return this.#map.value.has(anchorDate);
+  #insertSorted(anchor: AnchorString): void {
+    const result = this.#bsearch(anchor);
+    if (result.found) throw new InvariantError("anchor already present in sorted array");
+    this.#sortedAnchors.splice(result.insertionPoint, 0, anchor);
   }
 
-  get(anchorDate: JournalAnchorDate): string | null {
-    return this.#map.value.get(anchorDate) ?? null;
+  #removeSorted(anchor: AnchorString): void {
+    const result = this.#bsearch(anchor);
+    if (!result.found) return;
+    this.#sortedAnchors.splice(result.index, 1);
   }
 
-  getAll(): string[] {
-    return [...this.#map.value.values()];
-  }
-
-  set(anchorDate: JournalAnchorDate, path: string) {
-    const has = this.#map.value.has(anchorDate);
-    this.#map.value.set(anchorDate, path);
-    this.#reversedMap.set(path, anchorDate);
-    if (!has) {
-      this.#insertSortedDate(anchorDate);
+  #bsearch(target: AnchorString): { found: true; index: number } | { found: false; insertionPoint: number } {
+    let lo = 0;
+    let hi = this.#sortedAnchors.length;
+    while (lo < hi) {
+      const mid = (lo + hi) >>> 1;
+      const current = this.#sortedAnchors[mid];
+      if (current === target) return { found: true, index: mid };
+      if (current < target) lo = mid + 1;
+      else hi = mid;
     }
+    return { found: false, insertionPoint: lo };
   }
 
-  delete(anchorDate: JournalAnchorDate) {
-    const path = this.#map.value.get(anchorDate);
-    this.#map.value.delete(anchorDate);
-    if (path) {
-      this.#reversedMap.delete(path);
+  has(anchor: AnchorString): boolean {
+    return this.#byAnchor.has(anchor);
+  }
+
+  get(anchor: AnchorString): Option<VaultPath> {
+    return Option.fromNullable(this.#byAnchor.get(anchor));
+  }
+
+  set(anchor: AnchorString, path: VaultPath): void {
+    if (!this.#byAnchor.has(anchor)) this.#insertSorted(anchor);
+    this.#byAnchor.set(anchor, path);
+  }
+
+  delete(anchor: AnchorString): void {
+    if (!this.#byAnchor.has(anchor)) return;
+    this.#removeSorted(anchor);
+    this.#byAnchor.delete(anchor);
+  }
+
+  clear(): void {
+    this.#byAnchor.clear();
+    this.#sortedAnchors.length = 0;
+  }
+
+  get size(): number {
+    return this.#byAnchor.size;
+  }
+
+  getRange(start: AnchorString, end: AnchorString): ReadonlyMap<AnchorString, VaultPath> {
+    const out = new Map<AnchorString, VaultPath>();
+    if (start > end) return out;
+    const startResult = this.#bsearch(start);
+    const startIndex = startResult.found ? startResult.index : startResult.insertionPoint;
+    for (let i = startIndex; i < this.#sortedAnchors.length; i++) {
+      const anchor = this.#sortedAnchors[i];
+      if (anchor > end) break;
+      const path = this.#byAnchor.get(anchor);
+      if (path === undefined) throw new InvariantError("sorted anchor missing from byAnchor map");
+      out.set(anchor, path);
     }
-    this.#removeSortedDate(anchorDate);
+    return out;
   }
 
-  deleteForPath(path: string) {
-    const anchorDate = this.#reversedMap.get(path);
-    if (anchorDate) {
-      this.delete(anchorDate);
+  findNext(from: AnchorString): Option<VaultPath> {
+    const result = this.#bsearch(from);
+    const nextIndex = result.found ? result.index + 1 : result.insertionPoint;
+    return Option.fromNullable(this.#sortedAnchors[nextIndex]).flatMap((anchor) => this.get(anchor));
+  }
+
+  findPrevious(from: AnchorString): Option<VaultPath> {
+    const result = this.#bsearch(from);
+    const previousIndex = (result.found ? result.index : result.insertionPoint) - 1;
+    return Option.fromNullable(this.#sortedAnchors[previousIndex]).flatMap((anchor) => this.get(anchor));
+  }
+
+  findClosestAnchor(to: AnchorString): Option<AnchorString> {
+    if (this.#sortedAnchors.length === 0) return Option.none();
+    const result = this.#bsearch(to);
+    if (result.found) return Option.some(to);
+    const first = this.#sortedAnchors[0];
+    if (to < first) return Option.some(first);
+    const last = this.#sortedAnchors.at(-1);
+    if (last !== undefined && to > last) return Option.some(last);
+    return Option.fromNullable(this.#sortedAnchors[result.insertionPoint - 1]);
+  }
+
+  *[Symbol.iterator](): IterableIterator<readonly [AnchorString, VaultPath]> {
+    for (const anchor of this.#sortedAnchors) {
+      const path = this.#byAnchor.get(anchor);
+      if (path === undefined) throw new InvariantError("sorted anchor missing from byAnchor map");
+      yield [anchor, path] as const;
     }
-  }
-
-  findNext(anchorDate: JournalAnchorDate): string | null {
-    const index = this.#bsearchSortedDate(anchorDate);
-    if (index === -1) return null;
-    if (index === this.#sortedDates.length - 1) return null;
-    const nextDate = this.#sortedDates[index + 1];
-    return nextDate ? (this.#map.value.get(nextDate) ?? null) : null;
-  }
-
-  findPrevious(anchorDate: JournalAnchorDate): string | null {
-    const index = this.#bsearchSortedDate(anchorDate);
-    if (index === -1) return null;
-    if (index === 0) return null;
-    const previousDate = this.#sortedDates[index - 1];
-    return previousDate ? (this.#map.value.get(previousDate) ?? null) : null;
-  }
-
-  findClosestDate(date: string): JournalAnchorDate | undefined {
-    if (this.#map.value.size === 0) return;
-    if (this.#map.value.has(date)) return JournalAnchorDate(date);
-    const first = this.#sortedDates[0];
-    if (first && date <= first) return JournalAnchorDate(first);
-    const last = this.#sortedDates.at(-1);
-    if (last && date >= last) return JournalAnchorDate(last);
-    const index = this.#bsearchSortedDate(date);
-    if (index === -1) return;
-    return this.#sortedDates[index] ? JournalAnchorDate(this.#sortedDates[index]) : undefined;
-  }
-
-  *[Symbol.iterator]() {
-    yield* this.#map.value;
-  }
-
-  #insertSortedDate(date: string) {
-    const pos = this.#bsearchSortedDate(date);
-    this.#sortedDates.splice(pos + 1, 0, date);
-    return pos + 1;
-  }
-
-  #removeSortedDate(date: string) {
-    const pos = this.#bsearchSortedDate(date);
-    if (pos === -1) return;
-    this.#sortedDates.splice(pos, 1);
-  }
-
-  #bsearchSortedDate(date: string) {
-    if (this.#sortedDates.length === 0) return -1;
-    let start = 0;
-    let end = this.#sortedDates.length;
-    while (end - start > 1) {
-      const mid = Math.floor((start + end) / 2);
-      const midDate = this.#sortedDates[mid];
-      if (!midDate) break;
-      if (midDate === date) return mid;
-      if (midDate < date) {
-        start = mid;
-      } else {
-        end = mid;
-      }
-    }
-    return start === 0 && this.#sortedDates[0] && this.#sortedDates[0] > date ? -1 : start;
   }
 }

@@ -9,12 +9,12 @@ jobs:
     outputs:
       PACKAGE_VERSION: ${{ steps.version.outputs.PACKAGE_VERSION }}
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
 
       - name: Use Node.js
-        uses: actions/setup-node@v4
+        uses: actions/setup-node@v5
         with:
-          node-version: "20.x"
+          node-version: "24.x"
       - id: version
         name: Get version
         run: echo "PACKAGE_VERSION=$(node -p "require('./manifest-beta.json').version")" >> "$GITHUB_OUTPUT"
@@ -24,24 +24,42 @@ jobs:
     env:
       PACKAGE_VERSION: ${{ needs.get-version.outputs.PACKAGE_VERSION }}
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
 
       - name: Use Node.js
-        uses: actions/setup-node@v4
+        uses: actions/setup-node@v5
         with:
-          node-version: "20.x"
+          node-version: "24.x"
 
       - name: Install dependencies
         run: npm ci
 
       - name: Run checks
         run: |
-          npm run ts-check
+          npm run compile:i18n
+          npm run check:types
           npm test
 
       - name: Build plugin
         run: |
           npm run build
+
+      # BRAT installs the manifest.json attached to the release, not the one in
+      # the repository, and warns the user when its version disagrees with the
+      # release tag. The tag comes from manifest-beta.json, so that is the
+      # manifest the release has to carry.
+      - name: Stage beta manifest
+        run: |
+          mkdir -p release-assets
+          cp manifest-beta.json release-assets/manifest.json
+
+      - name: Attest build provenance
+        uses: actions/attest-build-provenance@v2
+        with:
+          subject-path: |
+            build/main.js
+            release-assets/manifest.json
+            build/styles.css
 
       - name: Create release
         env:
@@ -51,5 +69,7 @@ jobs:
 
           gh release create "$version" \
             --title="$version" \
+            --target "$GITHUB_SHA" \
+            --prerelease \
             --draft \
-            build/main.js manifest.json build/styles.css
+            build/main.js release-assets/manifest.json build/styles.css

@@ -1,0 +1,2151 @@
+{
+	"$schema": "https://inlang.com/schema/inlang-message-format",
+	"calendar_apply_globally_desc": "Si cette option est désactivée, les paramètres de configuration hebdomadaire s’appliquent uniquement aux dates contenues dans les journaux et n’affectent pas les dates créées par d’autres plugins ou par Obsidian lui-même.",
+	"calendar_apply_globally_restart_hint": "Il vous faudra peut-être redémarrer Obsidian pour que les modifications soient prises en compte.",
+	"calendar_apply_globally_title": "Appliquer la configuration hebdomadaire à toutes les dates du coffre-fort",
+	"calendar_appearance_active_background": "Actif — arrière-plan",
+	"calendar_appearance_active_text": "Actif — texte",
+	"calendar_appearance_section_title": "Mise en surbrillance du calendrier",
+	"calendar_appearance_description": [
+		{
+			"declarations": [
+				"input layer",
+				"input target"
+			],
+			"selectors": [
+				"layer",
+				"target"
+			],
+			"match": {
+				"layer=text,target=today": "Couleur du texte de la cellule du calendrier correspondant à la date du jour.",
+				"layer=background,target=today": "Couleur de fond de la cellule du calendrier correspondant à la date du jour.",
+				"layer=text,target=active": "Couleur du texte de la cellule du calendrier dont la note est actuellement ouverte.",
+				"layer=background,target=active": "Couleur de fond de la cellule du calendrier dont la note est actuellement ouverte."
+			}
+		}
+	],
+	"calendar_appearance_today_background": "Aujourd’hui — arrière-plan",
+	"calendar_appearance_today_text": "Aujourd’hui — texte",
+	"common_label_back": "Retour à la liste",
+	"common_label_calendar": "Calendrier",
+	"common_pick_a_date": "Choisir une date",
+	"common_note_open_error": "Impossible d’ouvrir la note.",
+	"calendar_picker_first_week_desc": "Le jour de janvier (1 à 7) que doit contenir la première semaine de l’année. Par exemple, 4 signifie que la première semaine est celle qui contient le 4 janvier.",
+	"calendar_picker_first_week_label": "Première semaine de l’année",
+	"calendar_picker_in_use_marker": "Actuellement utilisé",
+	"calendar_picker_reanchor_hint": "Les notes hebdomadaires conservent leur numéro de semaine. Leurs dates sont mises à jour pour correspondre à la nouvelle configuration.",
+	"calendar_reanchor_failed_notice": [
+		{
+			"declarations": [
+				"input count",
+				"local countPlural = count: plural"
+			],
+			"selectors": [
+				"countPlural"
+			],
+			"match": {
+				"countPlural=one": "{count} note hebdomadaire n’a pas pu être mise à jour vers la nouvelle configuration de semaine.",
+				"countPlural=*": "{count} notes hebdomadaires n’ont pas pu être mises à jour vers la nouvelle configuration de semaine."
+			}
+		}
+	],
+	"calendar_picker_start_week_on": "Commencer la semaine le",
+	"calendar_picker_start_week_on_desc": "Le jour à considérer comme premier jour de la semaine.",
+	"calendar_picker_update_action": "Mettre à jour",
+	"calendar_picker_use_action": "Utiliser",
+	"calendar_preset_description": [
+		{
+			"declarations": [
+				"input preset"
+			],
+			"selectors": [
+				"preset"
+			],
+			"match": {
+				"preset=locale": "Utilisez les paramètres hebdomadaires définis par les paramètres régionaux actuels d’Obsidian.",
+				"preset=iso-8601": "La semaine commence le lundi. La première semaine de l’année comprend le premier jeudi (4 janvier).",
+				"preset=western": "La semaine commence le dimanche. La première semaine de l’année comprend le premier samedi (1er janvier).",
+				"preset=middle-eastern": "La semaine commence le samedi. La première semaine de l’année comprend le premier vendredi (1er janvier).",
+				"preset=custom": "Définir quel jour de la semaine considérer comme le premier et comment la première semaine de l’année est déterminée."
+			}
+		}
+	],
+	"calendar_preset_custom_summary": "La semaine commence le {dayName}. La première semaine de l’année comprend le {firstDayOfYear} janvier.",
+	"calendar_preset_iso_used": "L’UE (à l’exclusion du Portugal) et la plupart des autres pays européens, la majeure partie de l’Asie et de l’Océanie.",
+	"calendar_preset_middle_eastern_used": "Une grande partie du Moyen-Orient.",
+	"calendar_preset_name": [
+		{
+			"declarations": [
+				"input preset"
+			],
+			"selectors": [
+				"preset"
+			],
+			"match": {
+				"preset=locale": "Suivre les paramètres régionaux du système",
+				"preset=iso-8601": "ISO 8601",
+				"preset=western": "Tradition occidentale",
+				"preset=middle-eastern": "Moyen-Orient",
+				"preset=custom": "Personnalisé"
+			}
+		}
+	],
+	"common_week_configuration": "Configuration de la semaine",
+	"calendar_preset_western_used": "Canada, États-Unis, Islande, Portugal, Japon, Taïwan, Thaïlande, Hong Kong, Macao, Israël, Égypte, Afrique du Sud, Philippines et la majeure partie de l’Amérique latine.",
+	"calendar_week_config_change": "Modifier",
+	"calendar_week_config_description": "Définissez quel jour marque le début de la semaine et comment la première semaine de l’année est déterminée — cela influe sur la numérotation des semaines.",
+	"code_blocks_unknown_keys": [
+		{
+			"declarations": [
+				"input count",
+				"input keys",
+				"local countPlural = count: plural"
+			],
+			"selectors": [
+				"countPlural"
+			],
+			"match": {
+				"countPlural=one": "Option non reconnue ignorée : {keys}.",
+				"countPlural=*": "Options non reconnues ignorées : {keys}."
+			}
+		}
+	],
+	"code_blocks_yaml_error": "Impossible de lire les options de ce bloc {key}.",
+	"code_blocks_schema_error": "Certaines options de ce bloc {key} ne sont pas valides.",
+	"code_blocks_nav_not_connected": "Note non connectée à un journal",
+	"code_blocks_home_empty": "Aucun journal à afficher. Vérifiez les options show et shelf du bloc.",
+	"common_no_journals_yet": "Aucun journal pour l’instant. Créez-en un dans les paramètres du plugin.",
+	"code_blocks_nav_next": "Suivant",
+	"code_blocks_nav_previous": "Précédent",
+	"decoration_canvas_empty_hint": [
+		{
+			"declarations": [
+				"input type"
+			],
+			"selectors": [
+				"type"
+			],
+			"match": {
+				"type=background": "Cliquez sur la cellule pour ajouter un arrière-plan.",
+				"type=color": "Cliquez sur le nombre pour définir une couleur de texte.",
+				"type=border": "Cliquez sur le contour pour ajouter une bordure.",
+				"type=shape": "Cliquez sur une position pour ajouter une forme.",
+				"type=icon": "Cliquez sur une position pour ajouter une icône.",
+				"type=corner": "Cliquez sur un coin pour ajouter un triangle."
+			}
+		}
+	],
+	"decoration_canvas_region_label": [
+		{
+			"declarations": [
+				"input type"
+			],
+			"selectors": [
+				"type"
+			],
+			"match": {
+				"type=background": "Arrière-plan de la cellule",
+				"type=color": "Texte de la cellule",
+				"type=border": "Contour de la cellule"
+			}
+		}
+	],
+	"decoration_canvas_layers_label": "Calques de style",
+	"decoration_canvas_remove_label": "Supprimer",
+	"decoration_canvas_slot_label": [
+		{
+			"declarations": [
+				"input slot"
+			],
+			"selectors": [
+				"slot"
+			],
+			"match": {
+				"slot=left_top": "En haut à gauche",
+				"slot=center_top": "En haut au centre",
+				"slot=right_top": "En haut à droite",
+				"slot=left_middle": "Au milieu à gauche",
+				"slot=center_middle": "Au centre",
+				"slot=right_middle": "Au milieu à droite",
+				"slot=left_bottom": "En bas à gauche",
+				"slot=center_bottom": "En bas au centre",
+				"slot=right_bottom": "En bas à droite"
+			}
+		}
+	],
+	"decoration_layer_chip_label": [
+		{
+			"declarations": [
+				"input type",
+				"input state"
+			],
+			"selectors": [
+				"type",
+				"state"
+			],
+			"match": {
+				"type=background,state=empty": "Arrière-plan",
+				"type=background,state=occupied": "Arrière-plan, utilisé",
+				"type=color,state=empty": "Couleur",
+				"type=color,state=occupied": "Couleur, utilisée",
+				"type=border,state=empty": "Bordure",
+				"type=border,state=occupied": "Bordure, utilisée",
+				"type=shape,state=empty": "Forme",
+				"type=shape,state=occupied": "Forme, utilisée",
+				"type=icon,state=empty": "Icône",
+				"type=icon,state=occupied": "Icône, utilisée",
+				"type=corner,state=empty": "Coin",
+				"type=corner,state=occupied": "Coin, utilisé"
+			}
+		}
+	],
+	"nav_block_section_title": "Bloc de navigation",
+	"nav_block_section_mode_label": "Mode",
+	"nav_block_section_mode_option": [
+		{
+			"declarations": [
+				"input kind"
+			],
+			"selectors": [
+				"kind"
+			],
+			"match": {
+				"kind=create": "Créer une nouvelle note",
+				"kind=existing": "Ouvrir la note existante"
+			}
+		}
+	],
+	"nav_block_section_use_defaults": [
+		{
+			"declarations": [
+				"input writeType"
+			],
+			"selectors": [
+				"writeType"
+			],
+			"match": {
+				"writeType=day": "Utiliser les valeurs par défaut pour les notes quotidiennes",
+				"writeType=week": "Utiliser les valeurs par défaut pour les notes hebdomadaires",
+				"writeType=month": "Utiliser les valeurs par défaut pour les notes mensuelles",
+				"writeType=quarter": "Utiliser les valeurs par défaut pour les notes trimestrielles",
+				"writeType=year": "Utiliser les valeurs par défaut pour les notes annuelles",
+				"writeType=*": "Utiliser les valeurs par défaut"
+			}
+		}
+	],
+	"block_rows_decorate_whole_label": "Décorer tout le bloc",
+	"block_rows_empty": "Aucune ligne pour l’instant. Ajoutez-en une.",
+	"block_rows_add_row": "Ajouter une ligne",
+	"block_rows_edit_tooltip": "Modifier la ligne",
+	"block_rows_delete_tooltip": "Supprimer la ligne",
+	"common_action_move_up": "Monter",
+	"common_action_move_down": "Descendre",
+	"interval_block_section_title": "Lignes d’intervalle du calendrier",
+	"nav_block_row_modal_title": [
+		{
+			"declarations": [
+				"input mode"
+			],
+			"selectors": [
+				"mode"
+			],
+			"match": {
+				"mode=add": "Ajouter une ligne de bloc de navigation",
+				"mode=edit": "Modifier la ligne du bloc de navigation"
+			}
+		}
+	],
+	"nav_block_row_field_template": "Modèle",
+	"nav_block_row_field_font_size": "Taille de la police",
+	"nav_block_row_field_font_size_hint": "Relatif à la taille de police normale : 1 signifie la même taille que le texte normal.",
+	"nav_block_row_field_text_style": "Style de texte",
+	"nav_block_row_field_bold": "Gras",
+	"nav_block_row_field_italic": "Italique",
+	"common_label_text_color": "Couleur du texte",
+	"common_label_background_color": "Couleur de fond",
+	"nav_block_row_field_link": "Lien",
+	"common_label_journal": "Journal",
+	"nav_block_row_field_add_decorations": "Ajouter des décorations",
+	"nav_block_row_link_option": [
+		{
+			"declarations": [
+				"input kind"
+			],
+			"selectors": [
+				"kind"
+			],
+			"match": {
+				"kind=none": "Aucun",
+				"kind=self": "Cette note",
+				"kind=journal": "Journal",
+				"kind=day": "Jour",
+				"kind=week": "Semaine",
+				"kind=month": "Mois",
+				"kind=quarter": "Trimestre",
+				"kind=year": "Année"
+			}
+		}
+	],
+	"nav_block_row_template_required": "Un modèle est requis.",
+	"nav_block_row_journal_required": "Choisissez un journal.",
+	"nav_block_row_resolved_preview": "Résolu : {text}",
+	"command_add": "Ajouter une commande",
+	"command_context_open_note_clarifier": "(utilise la date de la note ouverte, ou celle du jour)",
+	"command_context_only_open_note_clarifier": "(nécessite une note de journal ouverte)",
+	"command_context_option": [
+		{
+			"declarations": [
+				"input context"
+			],
+			"selectors": [
+				"context"
+			],
+			"match": {
+				"context=today": "Aujourd’hui",
+				"context=open_note": "Date de la note ouverte, ou aujourd’hui",
+				"context=only_open_note": "Uniquement la date de la note ouverte"
+			}
+		}
+	],
+	"command_empty": [
+		{
+			"declarations": [
+				"input scope"
+			],
+			"selectors": [
+				"scope"
+			],
+			"match": {
+				"scope=global": "Aucune commande globale n’a encore été créée.",
+				"scope=journal": "Aucune commande n’a encore été créée pour ce journal.",
+				"scope=shelf": "Aucune commande n’a encore été créée pour cette étagère."
+			}
+		}
+	],
+	"command_section_title": "Commandes",
+	"command_delete_modal_confirm": "Supprimer la commande « {name} » ?",
+	"command_delete": "Supprimer la commande",
+	"command_edit": "Modifier la commande",
+	"command_edit_tooltip": "Modifier {name}",
+	"command_icon_required_error": "Choisissez une icône pour afficher cette commande dans le ruban.",
+	"command_insert_date_link": "Insérer un lien vers la note de journal",
+	"command_label_today": "Ouvrir la note du jour",
+	"command_label_tomorrow": "Ouvrir la note de demain",
+	"command_label_yesterday": "Ouvrir la note d’hier",
+	"command_modal_context_description": "Choisissez la date de la note que la commande considère comme la date actuelle.",
+	"command_modal_context_label": "Contexte",
+	"command_modal_context_only_open_note_hint": "S’exécute uniquement lorsqu’une note de journal est ouverte, en utilisant la date de cette note.",
+	"command_modal_context_open_note_hint": "Utilise la date de la note de journal ouverte, ou la date du jour lorsqu’aucune note de journal n’est ouverte.",
+	"common_label_icon": "Icône",
+	"common_label_name": "Nom",
+	"command_modal_open_mode_label": "Ouvrir la note",
+	"common_show_in_ribbon": "Afficher dans le ruban",
+	"command_modal_type_label": "Lorsque la commande s’exécute",
+	"command_modal_write_type_label": "Type de note",
+	"command_name_prefix_hint": [
+		{
+			"declarations": [
+				"input kind"
+			],
+			"selectors": [
+				"kind"
+			],
+			"match": {
+				"kind=journal": "Le nom du journal est automatiquement ajouté devant le nom de la commande dans la palette.",
+				"kind=shelf": "Le nom de l’étagère est automatiquement ajouté devant le nom de la commande dans la palette."
+			}
+		}
+	],
+	"command_name_required_error": "Le nom de la commande est obligatoire.",
+	"command_name_unique_error": "Le nom de la commande doit être unique.",
+	"command_open_mode_option": [
+		{
+			"declarations": [
+				"input mode"
+			],
+			"selectors": [
+				"mode"
+			],
+			"match": {
+				"mode=active": "Remplacement de la note active",
+				"mode=tab": "Dans un nouvel onglet",
+				"mode=split": "À côté de la note active",
+				"mode=window": "Dans une fenêtre contextuelle"
+			}
+		}
+	],
+	"command_open_next": "Ouvrir la note suivante",
+	"command_open_previous": "Ouvrir la note précédente",
+	"command_open_view": "Ouvrir {name}",
+	"command_view_change_shelf": "Changer d’étagère dans {name}",
+	"shelf_picker_placeholder": "Rechercher une étagère",
+	"command_palette_journal_name": "{journal} : {name}",
+	"command_palette_shelf_name": "Étagère : {shelf} : {name}",
+	"command_open_no_next": "Il n’y a pas de note suivante après celle-ci.",
+	"command_open_no_previous": "Il n’y a pas de note précédente avant celle-ci.",
+	"command_open_needs_active_note": "Ouvrez d’abord une note de journal.",
+	"command_open_unavailable": "Il n’y a aucune note à ouvrir.",
+	"command_type_label": [
+		{
+			"declarations": [
+				"input type",
+				"input writeType"
+			],
+			"selectors": [
+				"type",
+				"writeType"
+			],
+			"match": {
+				"type=same,writeType=day": "Ouvrir la note quotidienne actuelle",
+				"type=same,writeType=week": "Ouvrir la note hebdomadaire actuelle",
+				"type=same,writeType=month": "Ouvrir la note mensuelle actuelle",
+				"type=same,writeType=quarter": "Ouvrir la note trimestrielle actuelle",
+				"type=same,writeType=year": "Ouvrir la note annuelle actuelle",
+				"type=same,writeType=custom": "Ouvrir la note personnalisée actuelle",
+				"type=next,writeType=day": "Ouvrir la note quotidienne suivante",
+				"type=next,writeType=week": "Ouvrir la note hebdomadaire suivante",
+				"type=next,writeType=month": "Ouvrir la note mensuelle suivante",
+				"type=next,writeType=quarter": "Ouvrir la note trimestrielle suivante",
+				"type=next,writeType=year": "Ouvrir la note annuelle suivante",
+				"type=next,writeType=custom": "Ouvrir la note personnalisée suivante",
+				"type=previous,writeType=day": "Ouvrir la note quotidienne précédente",
+				"type=previous,writeType=week": "Ouvrir la note hebdomadaire précédente",
+				"type=previous,writeType=month": "Ouvrir la note mensuelle précédente",
+				"type=previous,writeType=quarter": "Ouvrir la note trimestrielle précédente",
+				"type=previous,writeType=year": "Ouvrir la note annuelle précédente",
+				"type=previous,writeType=custom": "Ouvrir la note personnalisée précédente",
+				"type=previous_available,writeType=day": "Ouvrir la note quotidienne existante précédente",
+				"type=previous_available,writeType=week": "Ouvrir la note hebdomadaire existante précédente",
+				"type=previous_available,writeType=month": "Ouvrir la note mensuelle existante précédente",
+				"type=previous_available,writeType=quarter": "Ouvrir la note trimestrielle existante précédente",
+				"type=previous_available,writeType=year": "Ouvrir la note annuelle existante précédente",
+				"type=previous_available,writeType=custom": "Ouvrir la note personnalisée existante précédente",
+				"type=next_available,writeType=day": "Ouvrir la note quotidienne existante suivante",
+				"type=next_available,writeType=week": "Ouvrir la note hebdomadaire existante suivante",
+				"type=next_available,writeType=month": "Ouvrir la note mensuelle existante suivante",
+				"type=next_available,writeType=quarter": "Ouvrir la note trimestrielle existante suivante",
+				"type=next_available,writeType=year": "Ouvrir la note annuelle existante suivante",
+				"type=next_available,writeType=custom": "Ouvrir la note personnalisée existante suivante",
+				"type=same_next_week,writeType=*": "Ouvrir le même jour la semaine prochaine",
+				"type=same_previous_week,writeType=*": "Ouvrir le même jour la semaine dernière",
+				"type=same_next_month,writeType=*": "Ouvrir le même jour le mois prochain",
+				"type=same_previous_month,writeType=*": "Ouvrir le même jour le mois dernier",
+				"type=same_next_year,writeType=day": "Ouvrir le même jour l’année prochaine",
+				"type=same_next_year,writeType=month": "Ouvrir le même mois l’année prochaine",
+				"type=same_next_year,writeType=quarter": "Ouvrir le même trimestre l’année prochaine",
+				"type=same_previous_year,writeType=day": "Ouvrir le même jour l’année dernière",
+				"type=same_previous_year,writeType=month": "Ouvrir le même mois l’année dernière",
+				"type=same_previous_year,writeType=quarter": "Ouvrir le même trimestre l’année dernière",
+				"type=*,writeType=*": "Ouvrir la note"
+			}
+		}
+	],
+	"command_write_type_option": [
+		{
+			"declarations": [
+				"input writeType"
+			],
+			"selectors": [
+				"writeType"
+			],
+			"match": {
+				"writeType=day": "Note quotidienne",
+				"writeType=week": "Note hebdomadaire",
+				"writeType=month": "Note mensuelle",
+				"writeType=quarter": "Note trimestrielle",
+				"writeType=year": "Note annuelle",
+				"writeType=custom": "Note personnalisée"
+			}
+		}
+	],
+	"common_vault_root": "racine du coffre-fort",
+	"command_connect_note": "Connecter la note à un journal",
+	"connect_note_modal_date_label": "Date",
+	"connect_note_modal_move_description": "Le dossier de la note ({current}) diffère du dossier configuré du journal ({configured}).",
+	"connect_note_modal_override_description": "Une autre note ({path}) est connectée à cette date. Elle sera déconnectée si vous activez cette option.",
+	"connect_note_modal_override_label": "Remplacer la note déjà connectée à cette date",
+	"connect_note_modal_rename_description": "Le nom de la note ({current}) diffère du nom configuré du journal ({configured}).",
+	"connect_note_modal_rename_label": "Renommer le fichier pour qu’il corresponde au journal",
+	"connect_note_modal_move_label": "Déplacer le fichier dans le dossier du journal",
+	"connect_note_modal_connect": "Connecter",
+	"connect_note_modal_connected_to": "Cette note est connectée à « {journalName} ».",
+	"connect_note_modal_disconnect": "Déconnecter",
+	"connect_note_modal_out_of_bounds": "Cette date se situe en dehors de la période active du journal.",
+	"connect_note_notice_connected": "Note connectée à « {journalName} ».",
+	"connect_note_notice_disconnected": "Note déconnectée de « {journalName} ».",
+	"bulk_add_notes_to_title": "Ajouter des notes à {journalName}",
+	"bulk_add_folder_label": "Dossier source",
+	"bulk_add_folder_description": "Sélectionnez le dossier contenant les notes existantes que vous souhaitez traiter.",
+	"bulk_add_folder_not_found": "Ce dossier n’existe pas dans votre coffre-fort.",
+	"bulk_add_date_place_label": "Lire la date depuis",
+	"bulk_add_date_place_title": "Titre de la note",
+	"bulk_add_date_place_property": "Une propriété",
+	"common_label_property_name": "Nom de la propriété",
+	"bulk_add_date_format_label": "Format de date",
+	"bulk_add_date_format_omit_time": "Si vos dates incluent une heure, omettez-la du format.",
+	"bulk_add_date_format_property_note": "Les dates peuvent différer de la façon dont elles sont stockées — vérifiez le format en mode d’affichage Source.",
+	"bulk_add_filter_combinator_label": "Filtrer les notes",
+	"bulk_add_filter_combinator_no": "Aucun filtre",
+	"bulk_add_filter_combinator_and": "Correspondre à toutes les conditions",
+	"bulk_add_filter_combinator_or": "Correspondre à au moins une condition",
+	"bulk_add_add_filter_title": "Ajouter une condition de titre",
+	"bulk_add_add_filter_tag": "Ajouter une condition d’étiquette",
+	"bulk_add_add_filter_property": "Ajouter une condition de propriété",
+	"bulk_add_existing_label": "Lorsqu’une note est déjà connectée à cette date",
+	"bulk_add_existing_description": [
+		{
+			"declarations": [
+				"input option"
+			],
+			"selectors": [
+				"option"
+			],
+			"match": {
+				"option=skip": "La nouvelle note reste intacte et n’est pas connectée.",
+				"option=override": "La nouvelle note prend la place à cette date ; la note précédemment connectée reste dans le coffre-fort mais est déconnectée.",
+				"option=merge": "Le contenu de la nouvelle note est ajouté à la note déjà connectée, puis la nouvelle note est supprimée.",
+				"option=ask": "Décider pour chaque note sur l’écran de vérification."
+			}
+		}
+	],
+	"bulk_add_other_folder_label": "Lorsque le dossier diffère",
+	"bulk_add_other_name_label": "Lorsque le nom diffère",
+	"bulk_add_option_skip": "Ignorer",
+	"bulk_add_option_override": "Remplacer",
+	"bulk_add_option_merge": "Fusionner",
+	"bulk_add_option_keep": "Conserver",
+	"bulk_add_option_move": "Déplacer",
+	"bulk_add_option_rename": "Renommer",
+	"bulk_add_option_ask": "Demander pour chacune",
+	"bulk_add_dry_run_label": "Simulation (aperçu uniquement)",
+	"bulk_add_dry_run_description": "Ne modifie aucune note — signale simplement les modifications qui seraient apportées.",
+	"bulk_add_next": "Continuer",
+	"bulk_add_run": "Exécuter",
+	"bulk_add_progress": "Traitement de {done} sur {total}…",
+	"bulk_add_skipped_count": [
+		{
+			"declarations": [
+				"input count",
+				"local countPlural = count: plural"
+			],
+			"selectors": [
+				"countPlural"
+			],
+			"match": {
+				"countPlural=one": "{count} note ignorée",
+				"countPlural=*": "{count} notes ignorées"
+			}
+		}
+	],
+	"bulk_add_planned_count": [
+		{
+			"declarations": [
+				"input count",
+				"local countPlural = count: plural"
+			],
+			"selectors": [
+				"countPlural"
+			],
+			"match": {
+				"countPlural=one": "{count} note à traiter",
+				"countPlural=*": "{count} notes à traiter"
+			}
+		}
+	],
+	"bulk_add_skip_reason_already_connected": "Déjà connectée",
+	"bulk_add_skip_reason_filtered": "Exclue par le filtre",
+	"bulk_add_skip_reason_no_date": "Aucune date trouvée",
+	"bulk_add_skip_reason_invalid_date": "Impossible d’analyser la date",
+	"bulk_add_skip_reason_out_of_bounds": "En dehors de la chronologie du journal",
+	"bulk_add_log_skipped_occupied": [
+		{
+			"declarations": [
+				"input mood",
+				"input anchor"
+			],
+			"selectors": [
+				"mood"
+			],
+			"match": {
+				"mood=planned": "Sera ignorée : une note est déjà connectée à {anchor}.",
+				"mood=done": "Ignorée : une note est déjà connectée à {anchor}."
+			}
+		}
+	],
+	"bulk_add_log_merged": [
+		{
+			"declarations": [
+				"input mood",
+				"input anchor"
+			],
+			"selectors": [
+				"mood"
+			],
+			"match": {
+				"mood=planned": "Sera fusionnée avec la note déjà connectée à {anchor}, puis cette note sera supprimée.",
+				"mood=done": "Fusionnée avec la note déjà connectée à {anchor} ; cette note a été supprimée."
+			}
+		}
+	],
+	"bulk_add_log_replaced": [
+		{
+			"declarations": [
+				"input mood",
+				"input anchor"
+			],
+			"selectors": [
+				"mood"
+			],
+			"match": {
+				"mood=planned": "Remplacera la note déjà connectée à {anchor}.",
+				"mood=done": "A remplacé la note déjà connectée à {anchor}."
+			}
+		}
+	],
+	"bulk_add_log_moved": [
+		{
+			"declarations": [
+				"input mood"
+			],
+			"selectors": [
+				"mood"
+			],
+			"match": {
+				"mood=planned": "Sera déplacée dans le dossier du journal.",
+				"mood=done": "Déplacée dans le dossier du journal."
+			}
+		}
+	],
+	"bulk_add_log_renamed": [
+		{
+			"declarations": [
+				"input mood"
+			],
+			"selectors": [
+				"mood"
+			],
+			"match": {
+				"mood=planned": "Sera renommée pour correspondre au journal.",
+				"mood=done": "Renommée pour correspondre au journal."
+			}
+		}
+	],
+	"bulk_add_log_connected": [
+		{
+			"declarations": [
+				"input mood",
+				"input journalName",
+				"input anchor"
+			],
+			"selectors": [
+				"mood"
+			],
+			"match": {
+				"mood=planned": "Sera connectée à {journalName} à {anchor}.",
+				"mood=done": "Connectée à {journalName} à {anchor}."
+			}
+		}
+	],
+	"bulk_add_log_merge_occupant_missing": "Échec : la note déjà connectée à cette date a disparu avant la fusion.",
+	"bulk_add_log_failed": "Échec : {message}",
+	"bulk_add_dry_run_banner": "Simulation — rien n’a été modifié dans votre coffre-fort.",
+	"bulk_add_occupant": "Déjà connectée : {path}",
+	"bulk_add_target": "Nouveau chemin : {path}",
+	"common_action_cancel": "Annuler",
+	"common_action_close": "Fermer",
+	"common_action_create": "Créer",
+	"common_action_delete": "Supprimer",
+	"common_action_submit": "Enregistrer",
+	"confirm_note_creation_body": "Créer « {noteName} » dans le journal « {journalName} » ?",
+	"confirm_note_creation_confirm": "Créer",
+	"confirm_note_creation_title": "Créer une nouvelle note de journal ?",
+	"decoration_add": "Ajouter une décoration",
+	"decoration_badge_matched_past": [
+		{
+			"declarations": [
+				"input matched",
+				"input total",
+				"input unit"
+			],
+			"selectors": [
+				"unit"
+			],
+			"match": {
+				"unit=day": "{matched} correspondances sur les {total} derniers jours",
+				"unit=week": "{matched} correspondances sur les {total} dernières semaines",
+				"unit=month": "{matched} correspondances sur les {total} derniers mois",
+				"unit=quarter": "{matched} correspondances sur les {total} derniers trimestres",
+				"unit=year": "{matched} correspondances sur les {total} dernières années",
+				"unit=decade": "{matched} correspondances sur les {total} dernières décennies",
+				"unit=interval": "{matched} correspondances sur les {total} derniers intervalles"
+			}
+		}
+	],
+	"decoration_badge_matched_future": [
+		{
+			"declarations": [
+				"input matched",
+				"input total",
+				"input unit"
+			],
+			"selectors": [
+				"unit"
+			],
+			"match": {
+				"unit=day": "{matched} correspondances sur les {total} prochains jours",
+				"unit=week": "{matched} correspondances sur les {total} prochaines semaines",
+				"unit=month": "{matched} correspondances sur les {total} prochains mois",
+				"unit=quarter": "{matched} correspondances sur les {total} prochains trimestres",
+				"unit=year": "{matched} correspondances sur les {total} prochaines années",
+				"unit=decade": "{matched} correspondances sur les {total} prochaines décennies",
+				"unit=interval": "{matched} correspondances sur les {total} prochains intervalles"
+			}
+		}
+	],
+	"decoration_badge_silent_past": [
+		{
+			"declarations": [
+				"input total",
+				"input unit"
+			],
+			"selectors": [
+				"unit"
+			],
+			"match": {
+				"unit=day": "Aucune correspondance sur les {total} derniers jours",
+				"unit=week": "Aucune correspondance sur les {total} dernières semaines",
+				"unit=month": "Aucune correspondance sur les {total} derniers mois",
+				"unit=quarter": "Aucune correspondance sur les {total} derniers trimestres",
+				"unit=year": "Aucune correspondance sur les {total} dernières années",
+				"unit=decade": "Aucune correspondance sur les {total} dernières décennies",
+				"unit=interval": "Aucune correspondance sur les {total} derniers intervalles"
+			}
+		}
+	],
+	"decoration_badge_silent_future": [
+		{
+			"declarations": [
+				"input total",
+				"input unit"
+			],
+			"selectors": [
+				"unit"
+			],
+			"match": {
+				"unit=day": "Aucune correspondance sur les {total} prochains jours",
+				"unit=week": "Aucune correspondance sur les {total} prochaines semaines",
+				"unit=month": "Aucune correspondance sur les {total} prochains mois",
+				"unit=quarter": "Aucune correspondance sur les {total} prochains trimestres",
+				"unit=year": "Aucune correspondance sur les {total} prochaines années",
+				"unit=decade": "Aucune correspondance sur les {total} prochaines décennies",
+				"unit=interval": "Aucune correspondance sur les {total} prochains intervalles"
+			}
+		}
+	],
+	"decoration_badge_no_history": "Aucun historique pour l’instant",
+	"decoration_badge_no_notes": "Aucune note pour l’instant",
+	"decoration_border_mode_label": [
+		{
+			"declarations": [
+				"input mode"
+			],
+			"selectors": [
+				"mode"
+			],
+			"match": {
+				"mode=uniform": "Lié",
+				"mode=different": "Par côté"
+			}
+		}
+	],
+	"decoration_border_side_label": [
+		{
+			"declarations": [
+				"input side"
+			],
+			"selectors": [
+				"side"
+			],
+			"match": {
+				"side=top": "Haut",
+				"side=bottom": "Bas",
+				"side=left": "Gauche",
+				"side=right": "Droite"
+			}
+		}
+	],
+	"decoration_border_style_label": [
+		{
+			"declarations": [
+				"input style"
+			],
+			"selectors": [
+				"style"
+			],
+			"match": {
+				"style=solid": "Continu",
+				"style=dashed": "Tirets",
+				"style=dotted": "Pointillés",
+				"style=groove": "Rainure",
+				"style=double": "Double"
+			}
+		}
+	],
+	"decoration_breakdown_title": "Détail des décorations",
+	"decoration_breakdown_open": "Inspecter une date",
+	"decoration_breakdown_date_label": "Date",
+	"decoration_breakdown_shelf_label": "Étagère affichée",
+	"decoration_breakdown_shelf_all": "Tous les journaux",
+	"decoration_breakdown_empty": "Aucune décoration ne s’applique à cette date.",
+	"decoration_breakdown_cell_empty": "Aucune décoration ne s’applique à cette cellule.",
+	"decoration_breakdown_marks_heading": "Marques",
+	"decoration_breakdown_overridden_heading": "Remplacé ici",
+	"decoration_breakdown_overridden_for": "Remplacé ici — {property}",
+	"decoration_breakdown_owner": [
+		{
+			"declarations": [
+				"input kind",
+				"input name"
+			],
+			"selectors": [
+				"kind"
+			],
+			"match": {
+				"kind=journal": "Journal : {name}",
+				"kind=shelf": "Étagère : {name}",
+				"kind=global": "Tout le coffre-fort"
+			}
+		}
+	],
+	"decoration_breakdown_property": [
+		{
+			"declarations": [
+				"input property"
+			],
+			"selectors": [
+				"property"
+			],
+			"match": {
+				"property=background": "Arrière-plan",
+				"property=textColor": "Couleur du texte",
+				"property=border.top": "Bordure haute",
+				"property=border.right": "Bordure droite",
+				"property=border.bottom": "Bordure basse",
+				"property=border.left": "Bordure gauche",
+				"property=corner.top-left": "Coin en haut à gauche",
+				"property=corner.top-right": "Coin en haut à droite",
+				"property=corner.bottom-left": "Coin en bas à gauche",
+				"property=corner.bottom-right": "Coin en bas à droite"
+			}
+		}
+	],
+	"decoration_breakdown_slot": [
+		{
+			"declarations": [
+				"input slot"
+			],
+			"selectors": [
+				"slot"
+			],
+			"match": {
+				"slot=left_top": "En haut à gauche",
+				"slot=left_middle": "Au milieu à gauche",
+				"slot=left_bottom": "En bas à gauche",
+				"slot=center_top": "En haut au centre",
+				"slot=center_middle": "Au centre",
+				"slot=center_bottom": "En bas au centre",
+				"slot=right_top": "En haut à droite",
+				"slot=right_middle": "Au milieu à droite",
+				"slot=right_bottom": "En bas à droite"
+			}
+		}
+	],
+	"decoration_breakdown_cell_heading": [
+		{
+			"declarations": [
+				"input kind",
+				"input label"
+			],
+			"selectors": [
+				"kind"
+			],
+			"match": {
+				"kind=day": "Jour — {label}",
+				"kind=week": "Semaine — {label}",
+				"kind=month": "Mois — {label}",
+				"kind=quarter": "Trimestre — {label}",
+				"kind=year": "Année — {label}",
+				"kind=decade": "Décennie — {label}"
+			}
+		}
+	],
+	"decoration_breakdown_interval_heading": "Intervalle — {journal} — {label}",
+	"decoration_explain_menu_item": "Expliquer les décorations",
+	"decoration_condition_all_tasks_completed_describe": "toutes les tâches sont terminées",
+	"decoration_condition_date_describe": [
+		{
+			"declarations": [
+				"input day",
+				"input month",
+				"input year"
+			],
+			"selectors": [
+				"year"
+			],
+			"match": {
+				"year=null": "la date est {day}/{month}",
+				"year=*": "la date est {day}/{month}/{year}"
+			}
+		}
+	],
+	"decoration_condition_date_any": "n’importe lequel",
+	"decoration_condition_date_any_unit": [
+		{
+			"declarations": [
+				"input unit"
+			],
+			"selectors": [
+				"unit"
+			],
+			"match": {
+				"unit=day": "N’importe quel jour",
+				"unit=month": "N’importe quel mois",
+				"unit=year": "N’importe quelle année"
+			}
+		}
+	],
+	"decoration_condition_date_unit_label": [
+		{
+			"declarations": [
+				"input unit"
+			],
+			"selectors": [
+				"unit"
+			],
+			"match": {
+				"unit=day": "Jour",
+				"unit=month": "Mois",
+				"unit=year": "Année"
+			}
+		}
+	],
+	"decoration_condition_has_note_describe": "il existe une note",
+	"decoration_condition_has_open_task_describe": "la note contient une tâche ouverte",
+	"decoration_condition_offset_day_label": "Jour",
+	"decoration_condition_offset_describe": [
+		{
+			"declarations": [
+				"input side",
+				"input day"
+			],
+			"selectors": [
+				"side",
+				"day"
+			],
+			"match": {
+				"side=start,day=1": "est le premier jour de l’intervalle",
+				"side=start,day=*": "est le jour {day} de l’intervalle",
+				"side=end,day=1": "est le dernier jour de l’intervalle",
+				"side=end,day=*": "est le jour {day} en comptant depuis la fin de l’intervalle"
+			}
+		}
+	],
+	"decoration_condition_offset_direction_label": "Compter à partir de",
+	"decoration_condition_offset_direction_option": [
+		{
+			"declarations": [
+				"input side"
+			],
+			"selectors": [
+				"side"
+			],
+			"match": {
+				"side=start": "Depuis le début",
+				"side=end": "Depuis la fin"
+			}
+		}
+	],
+	"decoration_condition_offset_hint": [
+		{
+			"declarations": [
+				"input side",
+				"input day"
+			],
+			"selectors": [
+				"side",
+				"day"
+			],
+			"match": {
+				"side=start,day=1": "Correspond au premier jour de l’intervalle.",
+				"side=start,day=*": "Correspond au jour {day} de l’intervalle.",
+				"side=end,day=1": "Correspond au dernier jour de l’intervalle.",
+				"side=end,day=*": "Correspond au jour {day} en comptant depuis la fin de l’intervalle."
+			}
+		}
+	],
+	"decoration_condition_op_label": "Condition",
+	"decoration_condition_property_condition_label": "Condition",
+	"decoration_condition_property_describe": "propriété {name} {op} {value}",
+	"decoration_condition_property_value_label": "Valeur",
+	"decoration_condition_tag_describe": "étiquette {op} {value}",
+	"decoration_condition_tag_value_label": "Valeur de l’étiquette",
+	"decoration_condition_title_describe": "titre {op} {value}",
+	"decoration_condition_title_value_label": "Valeur du titre",
+	"decoration_condition_type_short": [
+		{
+			"declarations": [
+				"input type"
+			],
+			"selectors": [
+				"type"
+			],
+			"match": {
+				"type=title": "Titre",
+				"type=tag": "Étiquette",
+				"type=property": "Propriété",
+				"type=date": "Date",
+				"type=weekday": "Jour de la semaine",
+				"type=offset": "Décalage",
+				"type=has-note": "A une note",
+				"type=has-open-task": "A une tâche ouverte",
+				"type=all-tasks-completed": "Toutes les tâches terminées"
+			}
+		}
+	],
+	"decoration_condition_type_label": [
+		{
+			"declarations": [
+				"input type"
+			],
+			"selectors": [
+				"type"
+			],
+			"match": {
+				"type=title": "Vérifier le titre",
+				"type=tag": "Vérifier les étiquettes",
+				"type=property": "Vérifier une propriété du frontmatter",
+				"type=date": "Vérifier la date",
+				"type=weekday": "Vérifier le jour de la semaine",
+				"type=offset": "Vérifier le décalage d’intervalle",
+				"type=has-note": "Vérifier si la note existe",
+				"type=has-open-task": "Vérifier si la note a des tâches ouvertes",
+				"type=all-tasks-completed": "Vérifier si toutes les tâches sont terminées"
+			}
+		}
+	],
+	"decoration_condition_weekday_describe": "le jour de la semaine est {weekdays}",
+	"decoration_condition_weekday_label": "Jours de la semaine",
+	"decoration_corner_placement_label": [
+		{
+			"declarations": [
+				"input placement"
+			],
+			"selectors": [
+				"placement"
+			],
+			"match": {
+				"placement=top-left": "En haut à gauche",
+				"placement=top-right": "En haut à droite",
+				"placement=bottom-left": "En bas à gauche",
+				"placement=bottom-right": "En bas à droite"
+			}
+		}
+	],
+	"decoration_delete": "Supprimer la décoration",
+	"decoration_delete_modal_warning": "La décoration sera définitivement supprimée.",
+	"decoration_describe_mode": [
+		{
+			"declarations": [
+				"input kind"
+			],
+			"selectors": [
+				"kind"
+			],
+			"match": {
+				"kind=and": "et",
+				"kind=or": "ou"
+			}
+		}
+	],
+	"decoration_describe_when": "quand",
+	"decoration_edit": "Modifier la décoration",
+	"decoration_modal_add_condition": "Ajouter une condition",
+	"decoration_modal_add_style": "Ajouter un style",
+	"decoration_modal_mode_label": "Quand décorer",
+	"decoration_modal_mode_option": [
+		{
+			"declarations": [
+				"input kind"
+			],
+			"selectors": [
+				"kind"
+			],
+			"match": {
+				"kind=and": "Décorer lorsque toutes les conditions sont remplies",
+				"kind=or": "Décorer lorsqu’au moins une condition est remplie"
+			}
+		}
+	],
+	"decoration_modal_no_conditions": "Aucune condition définie pour l’instant",
+	"decoration_section_description_calendar": "Décore les cellules de jour dans tous les calendriers, quels que soient les journaux affichés.",
+	"decoration_section_description_journal": "Utilisez des décorations pour mettre en évidence les dates du calendrier qui remplissent certaines conditions.",
+	"decoration_section_description_shelf": "Décore les cellules de jour tant que cette étagère est affichée, quels que soient les journaux qu’elle contient.",
+	"decoration_section_empty": "Aucune décoration n’est encore configurée.",
+	"decoration_section_title_calendar": "Décorations de calendrier",
+	"decoration_section_title_journal": "Décorations du journal",
+	"decoration_section_title_shelf": "Décorations de l’étagère",
+	"decoration_shape_label": [
+		{
+			"declarations": [
+				"input shape"
+			],
+			"selectors": [
+				"shape"
+			],
+			"match": {
+				"shape=square": "Carré",
+				"shape=circle": "Cercle",
+				"shape=triangle-up": "Triangle (vers le haut)",
+				"shape=triangle-down": "Triangle (vers le bas)",
+				"shape=triangle-left": "Triangle (vers la gauche)",
+				"shape=triangle-right": "Triangle (vers la droite)"
+			}
+		}
+	],
+	"decoration_date_op_label": [
+		{
+			"declarations": [
+				"input op"
+			],
+			"selectors": [
+				"op"
+			],
+			"match": {
+				"op=exists": "existe",
+				"op=does-not-exist": "n’existe pas",
+				"op=eq": "le",
+				"op=neq": "pas le",
+				"op=lt": "avant",
+				"op=lte": "au plus tard le",
+				"op=gt": "après",
+				"op=gte": "au plus tôt le"
+			}
+		}
+	],
+	"decoration_string_op_label": [
+		{
+			"declarations": [
+				"input op"
+			],
+			"selectors": [
+				"op"
+			],
+			"match": {
+				"op=contains": "contient",
+				"op=starts-with": "commence par",
+				"op=ends-with": "se termine par",
+				"op=exists": "existe",
+				"op=does-not-exist": "n’existe pas",
+				"op=eq": "est égal à",
+				"op=neq": "n’est pas égal à",
+				"op=lt": "<",
+				"op=lte": "<=",
+				"op=gt": ">",
+				"op=gte": ">=",
+				"op=is-true": "est vrai",
+				"op=is-false": "est faux",
+				"op=does-not-contain": "ne contient pas"
+			}
+		}
+	],
+	"common_label_color": "Couleur",
+	"decoration_style_border_mode_label": "Mode bordure",
+	"decoration_style_border_style_label": "Style",
+	"decoration_style_border_width_label": "Largeur",
+	"decoration_style_size_hint": [
+		{
+			"declarations": [
+				"input kind"
+			],
+			"selectors": [
+				"kind"
+			],
+			"match": {
+				"kind=icon": "La taille de l’icône est relative à la taille de la police : 1 signifie que l’icône a la même taille qu’une lettre.",
+				"kind=shape": "La taille de la forme est relative à la taille de la police : 1 signifie que la forme a la même taille qu’une lettre."
+			}
+		}
+	],
+	"common_label_size": "Taille",
+	"decoration_style_shape_shape_label": "Forme",
+	"decoration_style_type_label": [
+		{
+			"declarations": [
+				"input type"
+			],
+			"selectors": [
+				"type"
+			],
+			"match": {
+				"type=background": "Arrière-plan",
+				"type=color": "Couleur",
+				"type=shape": "Forme",
+				"type=corner": "Coin",
+				"type=icon": "Icône",
+				"type=border": "Bordure"
+			}
+		}
+	],
+	"ui_color_kind_label": [
+		{
+			"declarations": [
+				"input kind"
+			],
+			"selectors": [
+				"kind"
+			],
+			"match": {
+				"kind=transparent": "Transparent",
+				"kind=theme": "Variable de thème",
+				"kind=custom": "Personnalisé"
+			}
+		}
+	],
+	"ui_color_theme_variable_label": "Variable CSS",
+	"ui_theme_color_group_label": [
+		{
+			"declarations": [
+				"input group"
+			],
+			"selectors": [
+				"group"
+			],
+			"match": {
+				"group=text": "Texte",
+				"group=background": "Arrière-plan",
+				"group=border": "Bordure"
+			}
+		}
+	],
+	"ui_theme_color_background_primary": "Arrière-plan principal",
+	"ui_theme_color_background_primary_alt": "Arrière-plan des surfaces au-dessus de l’arrière-plan principal",
+	"ui_theme_color_background_secondary": "Arrière-plan secondaire",
+	"ui_theme_color_background_secondary_alt": "Arrière-plan des surfaces au-dessus de l’arrière-plan secondaire",
+	"ui_theme_color_background_modifier_hover": "Éléments survolés",
+	"ui_theme_color_background_modifier_active_hover": "Éléments actifs survolés",
+	"ui_theme_color_background_modifier_border": "Couleur de bordure",
+	"ui_theme_color_background_modifier_border_hover": "Couleur de bordure (survol)",
+	"ui_theme_color_background_modifier_border_focus": "Couleur de bordure (focus)",
+	"ui_theme_color_background_modifier_error": "Arrière-plan d’erreur",
+	"ui_theme_color_background_modifier_error_hover": "Arrière-plan d’erreur (survol)",
+	"ui_theme_color_background_modifier_success": "Arrière-plan de succès",
+	"ui_theme_color_background_modifier_message": "Arrière-plan des messages",
+	"ui_theme_color_interactive_normal": "Arrière-plan des éléments interactifs standard",
+	"ui_theme_color_interactive_hover": "Arrière-plan des éléments interactifs standard (survol)",
+	"ui_theme_color_interactive_accent": "Arrière-plan des éléments interactifs accentués",
+	"ui_theme_color_interactive_accent_hover": "Arrière-plan des éléments interactifs accentués (survol)",
+	"ui_theme_color_text_normal": "Texte normal",
+	"ui_theme_color_text_muted": "Texte atténué",
+	"ui_theme_color_text_faint": "Texte estompé",
+	"ui_theme_color_text_on_accent": "Texte sur fond d’accent lorsque l’accent est sombre",
+	"ui_theme_color_text_on_accent_inverted": "Texte sur fond d’accent lorsque l’accent est clair",
+	"ui_theme_color_text_success": "Texte de succès",
+	"ui_theme_color_text_warning": "Texte d’avertissement",
+	"ui_theme_color_text_error": "Texte d’erreur",
+	"ui_theme_color_text_accent": "Texte d’accent",
+	"ui_theme_color_text_accent_hover": "Texte d’accent (survol)",
+	"ui_theme_color_text_selection": "Arrière-plan du texte sélectionné",
+	"ui_theme_color_text_highlight_bg": "Arrière-plan du texte surligné",
+	"ui_theme_color_caret_color": "Couleur du curseur",
+	"journal_add_modal_anchor_description": "Cette date sert de point de départ au comptage des intervalles personnalisés. Elle ne peut plus être modifiée après la création du journal.",
+	"common_label_today": "Aujourd’hui",
+	"relative_date_yesterday": "Hier",
+	"relative_date_tomorrow": "Demain",
+	"relative_date_last_named_day": "{weekday} dernier",
+	"relative_date_named_day": "{weekday}",
+	"relative_date_this": [
+		{
+			"declarations": [
+				"input period"
+			],
+			"selectors": [
+				"period"
+			],
+			"match": {
+				"period=week": "Cette semaine",
+				"period=month": "Ce mois-ci",
+				"period=quarter": "Ce trimestre",
+				"period=year": "Cette année"
+			}
+		}
+	],
+	"relative_date_last": [
+		{
+			"declarations": [
+				"input period"
+			],
+			"selectors": [
+				"period"
+			],
+			"match": {
+				"period=week": "La semaine dernière",
+				"period=month": "Le mois dernier",
+				"period=quarter": "Le trimestre dernier",
+				"period=year": "L’année dernière"
+			}
+		}
+	],
+	"relative_date_next": [
+		{
+			"declarations": [
+				"input period"
+			],
+			"selectors": [
+				"period"
+			],
+			"match": {
+				"period=week": "La semaine prochaine",
+				"period=month": "Le mois prochain",
+				"period=quarter": "Le trimestre prochain",
+				"period=year": "L’année prochaine"
+			}
+		}
+	],
+	"relative_date_ago": [
+		{
+			"declarations": [
+				"input count",
+				"input period"
+			],
+			"selectors": [
+				"period"
+			],
+			"match": {
+				"period=week": "il y a {count} semaines",
+				"period=month": "il y a {count} mois",
+				"period=quarter": "il y a {count} trimestres",
+				"period=year": "il y a {count} ans"
+			}
+		}
+	],
+	"relative_date_custom_this": "Ce {name}",
+	"relative_date_custom_last": "{name} dernier",
+	"relative_date_custom_next": "{name} prochain",
+	"relative_date_custom_ago": "il y a {count} {name}",
+	"relative_date_custom_from_now": "dans {count} {name}",
+	"relative_date_from_now": [
+		{
+			"declarations": [
+				"input count",
+				"input period"
+			],
+			"selectors": [
+				"period"
+			],
+			"match": {
+				"period=week": "dans {count} semaines",
+				"period=month": "dans {count} mois",
+				"period=quarter": "dans {count} trimestres",
+				"period=year": "dans {count} ans"
+			}
+		}
+	],
+	"shelf_add": "Ajouter une étagère",
+	"common_delete_name": "Supprimer {name}",
+	"shelf_dashboard_description": "Une étagère regroupe des journaux qui vont ensemble, par exemple professionnels ou personnels. Une vue calendrier peut afficher une étagère à la fois, les blocs de navigation prennent leurs décorations des journaux de l’étagère, et une commande peut cibler une étagère.",
+	"shelf_dashboard_empty": "Aucune étagère n’a encore été créée.",
+	"shelf_dashboard_open": "Configurer {name}",
+	"shelf_dashboard_section_title": "Étagères de journaux",
+	"shelf_delete_modal_destination_label": "Déplacer les journaux vers",
+	"shelf_delete_modal_destination_none": "Aucun",
+	"shelf_delete_modal_destination_description": "Les journaux posés sur cette étagère sont déplacés vers l’étagère sélectionnée, ou retirés de l’étagère si aucune n’est sélectionnée. Les notes ne sont pas affectées.",
+	"shelf_delete_modal_moved_out": "Les journaux seront retirés de l’étagère. Les notes ne sont pas affectées.",
+	"shelf_delete_modal_title": "Supprimer l’étagère {name}",
+	"journal_create": "Créer un nouveau journal",
+	"common_label_journals": "Journaux",
+	"shelf_rename": "Renommer l’étagère",
+	"shelf_journals_block_title_filtered": "Journaux non rangés sur une étagère",
+	"shelf_member_count": [
+		{
+			"declarations": [
+				"input count",
+				"local countPlural = count: plural"
+			],
+			"selectors": [
+				"countPlural"
+			],
+			"match": {
+				"countPlural=one": "{count} journal",
+				"countPlural=*": "{count} journaux"
+			}
+		}
+	],
+	"shelf_modal_name_label": "Nom de l’étagère",
+	"shelf_name_placeholder": "p. ex. Travail",
+	"shelf_name_required_error": "Le nom de l’étagère est obligatoire.",
+	"shelf_name_unchanged_error": "Saisissez un autre nom.",
+	"shelf_name_unique_error": "Le nom de l’étagère doit être unique.",
+	"common_label_shelf": "Étagère",
+	"shelf_place_modal_title": "Placer le journal",
+	"shelf_section_not_on_shelf": "Pas sur une étagère",
+	"shelf_section_place_tooltip": "Placer sur une étagère",
+	"flow_failure_notice": "Journal : une erreur est survenue — {error}",
+	"settings_load_failed": "Journal : échec du chargement des paramètres — {error}",
+	"settings_reload_failed": "Journal : échec du rechargement des paramètres — {error}",
+	"settings_reload_required_banner": "Rechargez Obsidian pour appliquer les paramètres modifiés.",
+	"settings_tab_title": "Journaux",
+	"startup_dashboard_section_title": "Démarrage",
+	"startup_open_note_title": "Ouvrir au démarrage",
+	"startup_open_note_desc": "Ouvrir une note chaque fois que vous ouvrez ce coffre-fort.",
+	"startup_dont_open_option": "Ne pas ouvrir",
+	"uri_missing_target": "L’URI du journal nécessite un paramètre « journal » ou « type ».",
+	"uri_unknown_write_type": "Type de journal inconnu « {type} » dans l’URI.",
+	"uri_invalid_date": "Impossible de comprendre la date « {date} » dans l’URI.",
+	"uri_invalid_mode": "Mode d’ouverture inconnu « {mode} » dans l’URI.",
+	"uri_unknown_journal": "Il n’existe aucun journal nommé « {journal} ».",
+	"uri_no_journal": "Aucun journal ne couvre cette date.",
+	"uri_no_journal_of_type": [
+		{
+			"declarations": [
+				"input type"
+			],
+			"selectors": [
+				"type"
+			],
+			"match": {
+				"type=day": "Aucun journal ne crée de notes quotidiennes.",
+				"type=week": "Aucun journal ne crée de notes hebdomadaires.",
+				"type=month": "Aucun journal ne crée de notes mensuelles.",
+				"type=quarter": "Aucun journal ne crée de notes trimestrielles.",
+				"type=year": "Aucun journal ne crée de notes annuelles."
+			}
+		}
+	],
+	"uri_open_failed": "Impossible d’ouvrir la note du journal.",
+	"view_deleted_error": "Cette vue a été supprimée. Fermez cet onglet ou recréez la vue dans les paramètres du plugin.",
+	"view_block_unknown_error": "Ce bloc n’est plus disponible. Retirez-le de la vue dans les paramètres du plugin.",
+	"view_block_config_error": "Certains paramètres de ce bloc ne sont pas valides. Reconfigurez-le dans les paramètres du plugin.",
+	"view_dashboard_section_title": "Vues",
+	"view_dashboard_empty": "Aucune vue pour le moment.",
+	"view_dashboard_add": "Ajouter une vue",
+	"view_dashboard_open": "Configurer {name}",
+	"view_dashboard_clone": "Cloner {name}",
+	"view_add_modal_title": "Ajouter une vue",
+	"view_rename": "Renommer la vue",
+	"view_name_required_error": "Le nom est obligatoire.",
+	"view_name_unchanged_error": "Saisissez un autre nom.",
+	"view_delete_modal_title": "Supprimer la vue {name}",
+	"view_delete_modal_description": "La vue et sa configuration de blocs sont supprimées. Vos notes ne sont pas affectées.",
+	"view_add_block": "Ajouter un bloc",
+	"view_add_block_empty": "Aucun type de bloc n’est enregistré.",
+	"view_add_picker_action": "Ajouter {label}",
+	"view_block_divider_label": "Séparateur",
+	"view_block_toolbar_label": "Barre d’outils",
+	"view_block_toolbar_description": "Conteneur pour les éléments de la barre d’outils tels que les boutons et le sélecteur d’étagères.",
+	"view_add_toolbar_item": "Ajouter un élément à la barre d’outils",
+	"view_add_toolbar_item_empty": "Aucun élément de barre d’outils n’est enregistré.",
+	"view_edit_icon_description": "Affiché dans l’en-tête de l’onglet de la vue et dans le ruban.",
+	"view_edit_default_shelf_label": "Étagère par défaut",
+	"view_edit_default_shelf_description": "L’étagère sur laquelle cette vue commence lorsqu’elle s’ouvre.",
+	"view_edit_show_in_ribbon_description": "Ajouter un bouton de ruban qui ouvre cette vue.",
+	"common_label_all_journals": "Tous les journaux",
+	"view_edit_open_on_startup_label": "Ouvrir au démarrage",
+	"view_edit_open_on_startup_description": "Ouvrir cette vue chaque fois que vous ouvrez le coffre-fort. Ce réglage est distinct du paramètre de note de démarrage de la page principale.",
+	"view_edit_remember_date_label": "Mémoriser la dernière date consultée",
+	"view_edit_remember_date_description": "Lorsque désactivé, le calendrier s’ouvre sur aujourd’hui à chaque lancement. Lorsque activé, il rouvre sur la dernière date consultée.",
+	"view_edit_follow_active_date_label": "Suivre la note active",
+	"view_edit_follow_active_date_description": "Lorsque cette option est activée, l’ouverture d’une note de journal amène cette vue à la date de cette note. Vous pouvez toujours naviguer ailleurs ensuite.",
+	"view_edit_leaf_label": "Ouvrir dans",
+	"view_edit_leaf_description": "Emplacement d’ouverture de la vue : ancrée dans une barre latérale ou sous forme d’onglet classique dans l’espace de travail principal.",
+	"view_edit_leaf_left": "Barre latérale gauche",
+	"view_edit_leaf_right": "Barre latérale droite",
+	"view_edit_leaf_tab": "Nouvel onglet",
+	"view_reposition_modal_title": "Déplacer la vue ouverte ?",
+	"view_reposition_modal_description": "Cette vue est ouverte. La déplacer vers {location} ?",
+	"view_reposition_modal_confirm": "Déplacer",
+	"view_edit_blocks_title": "Blocs",
+	"view_edit_blocks_empty": "Aucun bloc pour l’instant.",
+	"view_block_unknown_label": "Bloc inconnu : {key}",
+	"view_block_edit": "Modifier le bloc",
+	"view_block_edit_title": "Modifier le bloc : {type}",
+	"view_block_remove": "Supprimer le bloc",
+	"view_toolbar_item_unknown_label": "Élément de barre d’outils inconnu : {key}",
+	"view_toolbar_item_edit": "Modifier l’élément de la barre d’outils",
+	"view_toolbar_item_edit_title": "Modifier {type}",
+	"view_toolbar_item_edit_title_detail": "Modifier {type} : {detail}",
+	"view_toolbar_item_remove": "Supprimer l’élément de la barre d’outils",
+	"view_toolbar_item_empty": "Aucun élément de barre d’outils pour le moment.",
+	"view_block_month_calendar_label": "Calendrier mensuel",
+	"view_block_month_calendar_description": "Affiche une ou plusieurs grilles mensuelles autour de la date sélectionnée.",
+	"view_block_week_calendar_label": "Calendrier de la semaine",
+	"view_block_week_calendar_description": "Affiche une ou plusieurs bandes de semaines autour de la date sélectionnée.",
+	"common_custom_intervals": "Intervalles personnalisés",
+	"view_block_custom_intervals_description": "Liste les entrées des journaux personnalisés qui se situent dans une période configurable.",
+	"view_block_markdown_template_label": "Modèle Markdown",
+	"view_block_markdown_template_description": "Générer une note modèle au format Markdown, avec traitement des variables du journal.",
+	"view_block_markdown_template_path_label": "Fichier modèle",
+	"view_block_markdown_template_path_placeholder": "chemin/vers/template.md",
+	"view_block_markdown_template_variables_link": "Variables prises en charge.",
+	"view_block_markdown_template_variables_modal_title": "Variables de modèle Markdown",
+	"view_block_markdown_template_variables_intro": "Ces variables sont remplacées lors du rendu du modèle. Les dates utilisent le format YYYY-MM-DD et les heures le format HH:mm, sauf si vous indiquez un format explicite.",
+	"view_block_markdown_template_variable_date_description": "La date de la note active, ou la date de la vue ciblée lorsqu’aucune note de journal n’est ouverte.",
+	"view_block_markdown_template_variable_current_date_description": "Date du jour au moment du rendu du bloc.",
+	"view_block_markdown_template_variable_time_description": "L’heure locale au moment du rendu du bloc.",
+	"view_block_markdown_template_variable_current_time_description": "L’heure locale au moment du rendu du bloc (alias de la variable time).",
+	"view_block_markdown_template_variable_journal_link_description": "Renvoie le chemin, dans le coffre-fort, de la note d’un autre journal pour la date sélectionnée. Intégrez-le vous-même dans un lien et ajoutez un décalage, par exemple +1w, pour pointer vers une période voisine.",
+	"view_block_markdown_template_empty": "Aucun modèle sélectionné",
+	"view_block_markdown_template_read_error": "Impossible de lire le fichier modèle.",
+	"view_block_summary_before": "{count} avant",
+	"view_block_summary_after": "{count} après",
+	"view_block_summary_hidden_days": "Masqués : {days}",
+	"view_block_summary_journal_count": [
+		{
+			"declarations": [
+				"input count",
+				"local countPlural = count: plural"
+			],
+			"selectors": [
+				"countPlural"
+			],
+			"match": {
+				"countPlural=one": "{count} journal",
+				"countPlural=*": "{count} journaux"
+			}
+		}
+	],
+	"view_block_toolbar_item_count": [
+		{
+			"declarations": [
+				"input count",
+				"local countPlural = count: plural"
+			],
+			"selectors": [
+				"countPlural"
+			],
+			"match": {
+				"countPlural=one": "{count} élément",
+				"countPlural=*": "{count} éléments"
+			}
+		}
+	],
+	"view_block_config_window_label": "Fenêtre",
+	"view_block_config_window_current": [
+		{
+			"declarations": [
+				"input period"
+			],
+			"selectors": [
+				"period"
+			],
+			"match": {
+				"period=week": "Semaine en cours",
+				"period=month": "Mois en cours",
+				"period=quarter": "Trimestre en cours",
+				"period=year": "Année en cours"
+			}
+		}
+	],
+	"view_toolbar_shelf_selector_label": "Sélecteur d’étagères",
+	"view_toolbar_shelf_selector_description": "Change l’étagère qui délimite les journaux de la vue.",
+	"view_toolbar_shelf_selector_tooltip": "Changer d’étagère",
+	"view_toolbar_spacer_label": "Espacement",
+	"view_toolbar_spacer_description": "Espace flexible qui écarte les éléments voisins.",
+	"view_toolbar_period_buttons_label": "Boutons de période",
+	"view_toolbar_period_buttons_description": "Affiche des badges cliquables pour les périodes de la semaine, du mois, du trimestre et de l’année en cours.",
+	"view_toolbar_period_buttons_config": [
+		{
+			"declarations": [
+				"input period"
+			],
+			"selectors": [
+				"period"
+			],
+			"match": {
+				"period=week": "Afficher la semaine",
+				"period=month": "Afficher le mois",
+				"period=quarter": "Afficher le trimestre",
+				"period=year": "Afficher l’année"
+			}
+		}
+	],
+	"view_toolbar_period_buttons_config_label": "Périodes",
+	"view_toolbar_existing_navigation_label": "Navigation entre notes existantes",
+	"view_toolbar_existing_navigation_description": "Un bouton qui saute à la note précédente ou suivante déjà existante.",
+	"view_toolbar_existing_navigation_target": "Notes à parcourir",
+	"view_toolbar_existing_navigation_target_active": "Notes du journal actif",
+	"view_toolbar_existing_navigation_direction": "Direction",
+	"view_toolbar_existing_navigation_direction_option": [
+		{
+			"declarations": [
+				"input direction"
+			],
+			"selectors": [
+				"direction"
+			],
+			"match": {
+				"direction=previous": "Précédent",
+				"direction=next": "Suivant"
+			}
+		}
+	],
+	"view_toolbar_button_label": "Bouton",
+	"view_toolbar_button_preset_pick_date": "Choisir une date",
+	"view_toolbar_button_preset_pick_date_description": "Ouvre un sélecteur de date pour accéder à n’importe quelle note.",
+	"view_toolbar_button_preset_open_note": "Ouvrir la note",
+	"view_toolbar_button_preset_open_note_description": "Passe à la note de la période actuelle.",
+	"view_toolbar_button_preset_navigate": "Naviguer étape par étape",
+	"view_toolbar_button_preset_navigate_description": "Avancer ou reculer d’un intervalle fixe.",
+	"view_toolbar_button_default_tooltip_pick_multi": "Ouvrir une note",
+	"view_toolbar_button_default_label_current": "Actuel",
+	"view_toolbar_button_default_tooltip_current_multi": "Aller à la période actuelle…",
+	"view_toolbar_button_default_tooltip_prev_unit": [
+		{
+			"declarations": [
+				"input unit"
+			],
+			"selectors": [
+				"unit"
+			],
+			"match": {
+				"unit=week": "Semaine précédente",
+				"unit=month": "Mois précédent",
+				"unit=quarter": "Trimestre précédent",
+				"unit=year": "Année précédente"
+			}
+		}
+	],
+	"view_toolbar_button_default_tooltip_next_unit": [
+		{
+			"declarations": [
+				"input unit"
+			],
+			"selectors": [
+				"unit"
+			],
+			"match": {
+				"unit=week": "Semaine suivante",
+				"unit=month": "Mois suivant",
+				"unit=quarter": "Trimestre suivant",
+				"unit=year": "Année suivante"
+			}
+		}
+	],
+	"view_toolbar_button_menu_pick": [
+		{
+			"declarations": [
+				"input unit"
+			],
+			"selectors": [
+				"unit"
+			],
+			"match": {
+				"unit=day": "Choisir une date",
+				"unit=week": "Choisir une semaine",
+				"unit=month": "Choisir un mois",
+				"unit=quarter": "Choisir un trimestre",
+				"unit=year": "Choisir une année"
+			}
+		}
+	],
+	"view_toolbar_button_config_label_label": "Étiquette",
+	"view_toolbar_button_config_tooltip_label": "Infobulle",
+	"view_toolbar_appearance_label_label": "Étiquette",
+	"view_toolbar_appearance_reset": [
+		{
+			"declarations": [
+				"input field"
+			],
+			"selectors": [
+				"field"
+			],
+			"match": {
+				"field=icon": "Rétablir l’icône par défaut",
+				"field=label": "Rétablir l’étiquette par défaut",
+				"field=tooltip": "Rétablir l’infobulle par défaut"
+			}
+		}
+	],
+	"view_toolbar_appearance_tooltip_label": "Infobulle",
+	"view_toolbar_button_config_journal_default": "Tous les journaux de l’étagère",
+	"view_toolbar_button_config_mode_label": "Comportement",
+	"view_toolbar_button_config_levels_label": "Périodes",
+	"view_toolbar_button_config_mode_option": [
+		{
+			"declarations": [
+				"input mode"
+			],
+			"selectors": [
+				"mode"
+			],
+			"match": {
+				"mode=select-only": "Déplacer uniquement le calendrier",
+				"mode=navigate": "N’ouvrir la note que si elle existe",
+				"mode=create": "Créer la note si elle n’existe pas"
+			}
+		}
+	],
+	"view_toolbar_button_config_level_option": [
+		{
+			"declarations": [
+				"input level"
+			],
+			"selectors": [
+				"level"
+			],
+			"match": {
+				"level=day": "Jour",
+				"level=week": "Semaine",
+				"level=month": "Mois",
+				"level=quarter": "Trimestre",
+				"level=year": "Année"
+			}
+		}
+	],
+	"view_toolbar_button_config_step_label": "Déplacement",
+	"view_toolbar_button_config_direction_label": "Direction",
+	"view_toolbar_button_config_direction_option": [
+		{
+			"declarations": [
+				"input direction",
+				"input unit"
+			],
+			"selectors": [
+				"direction",
+				"unit"
+			],
+			"match": {
+				"direction=prev,unit=week": "Précédente",
+				"direction=next,unit=week": "Suivante",
+				"direction=prev,unit=month": "Précédent",
+				"direction=next,unit=month": "Suivant",
+				"direction=prev,unit=quarter": "Précédent",
+				"direction=next,unit=quarter": "Suivant",
+				"direction=prev,unit=year": "Précédente",
+				"direction=next,unit=year": "Suivante",
+				"direction=prev,unit=*": "Précédent",
+				"direction=next,unit=*": "Suivant"
+			}
+		}
+	],
+	"view_toolbar_button_config_granularity_label": "Granularité",
+	"view_block_config_before": [
+		{
+			"declarations": [
+				"input unit"
+			],
+			"selectors": [
+				"unit"
+			],
+			"match": {
+				"unit=month": "Mois avant",
+				"unit=week": "Semaines avant"
+			}
+		}
+	],
+	"view_block_config_after": [
+		{
+			"declarations": [
+				"input unit"
+			],
+			"selectors": [
+				"unit"
+			],
+			"match": {
+				"unit=month": "Mois après",
+				"unit=week": "Semaines après"
+			}
+		}
+	],
+	"view_block_config_hidden_weekdays_label": "Jours de la semaine",
+	"view_block_config_weeks_label": "Numéros de semaine",
+	"view_block_config_weeks_default": "Utiliser la valeur par défaut globale",
+	"view_block_config_weeks_none": "Masqués",
+	"view_block_config_weeks_left": "Avant les jours de la semaine",
+	"view_block_config_weeks_right": "Après les jours de la semaine",
+	"calendar_week_placement_label": "Numéros de semaine par défaut",
+	"calendar_week_placement_description": "Emplacement de la colonne des numéros de semaine dans les blocs de calendrier réglés sur « Utiliser la valeur par défaut globale ».",
+	"view_block_config_show_heading_label": "Afficher l’en-tête mois/année",
+	"journal_add_modal_anchor_label": "Date de début",
+	"journal_add_modal_anchor_required_error": "Sélectionnez une date de début.",
+	"journal_add_modal_duration_label": "Durée",
+	"journal_add_modal_every_label": "Intervalle",
+	"journal_add_modal_name_placeholder": "p. ex. Quotidien",
+	"journal_add_modal_name_label": "Nom du journal",
+	"journal_add_modal_title": "Ajouter un journal",
+	"journal_add_modal_write_label": "Je vais écrire",
+	"journal_colliding_heading": "Paramètres de journaux en conflit",
+	"journal_colliding_warning": "Les journaux {names} ont des configurations conflictuelles, leurs notes s’écraseront donc mutuellement. Modifiez le dossier ou le modèle de nom dans l’un d’eux.",
+	"journal_note_name_empty_notice": "Le journal « {journalName} » possède un modèle de nom qui aboutit à un nom de note vide, aucune note ne peut donc être créée. Définissez un modèle de nom dans les paramètres du journal.",
+	"journal_dashboard_bulk_add": "Ajouter des notes en masse à {name}",
+	"journal_dashboard_edit": "Configurer {name}",
+	"journal_dashboard_empty": "Aucun journal n’a encore été créé.",
+	"journal_delete_modal_title": "Supprimer {name}",
+	"journal_delete_connected_count": [
+		{
+			"declarations": [
+				"input count",
+				"local countPlural = count: plural"
+			],
+			"selectors": [
+				"count",
+				"countPlural"
+			],
+			"match": {
+				"count=0,countPlural=*": "Ce journal n’a aucune note connectée.",
+				"count=*,countPlural=one": "Ce journal a {count} note connectée.",
+				"count=*,countPlural=*": "Ce journal a {count} notes connectées."
+			}
+		}
+	],
+	"journal_delete_mode_label": "Que faire des notes connectées ?",
+	"journal_delete_mode_option": [
+		{
+			"declarations": [
+				"input mode"
+			],
+			"selectors": [
+				"mode"
+			],
+			"match": {
+				"mode=keep": "Conserver les notes",
+				"mode=clear": "Effacer les données du journal",
+				"mode=delete": "Supprimer les notes"
+			}
+		}
+	],
+	"journal_delete_mode_description": [
+		{
+			"declarations": [
+				"input mode"
+			],
+			"selectors": [
+				"mode"
+			],
+			"match": {
+				"mode=keep": "Vos notes restent inchangées dans votre coffre-fort.",
+				"mode=clear": "Les notes restent dans votre coffre-fort, mais les propriétés du journal sont retirées de leur frontmatter.",
+				"mode=delete": "Toutes les notes connectées à ce journal sont supprimées de votre coffre-fort."
+			}
+		}
+	],
+	"journal_edit_allow_before_description": "Autoriser l’indexation avant la date d’ancrage. Peut produire des nombres négatifs.",
+	"journal_edit_allow_before_label": "Autoriser avant l’ancrage",
+	"journal_edit_anchor_description": "La numérotation commence à cette date. La note de cette date reçoit le numéro de départ, et les notes suivantes sont numérotées à partir de là.",
+	"journal_edit_anchor_label": "Date d’ancrage",
+	"journal_edit_clear_start_tooltip": "Effacer la date de début",
+	"journal_edit_anchor_start_used": "La date de début sert de date d’ancrage.",
+	"journal_edit_auto_create_confirmation_skip_note": "La boîte de dialogue de confirmation ne s’affichera pas pour les notes créées automatiquement.",
+	"journal_edit_auto_create_description": "Création automatique de la note du jour au chargement du plugin et à minuit (heure locale).",
+	"journal_edit_auto_create_label": "Création automatique de la note du jour",
+	"journal_edit_confirm_creation_description": "Afficher une boîte de dialogue de confirmation lors de la navigation vers une date qui ne comporte pas encore de note.",
+	"journal_edit_confirm_creation_label": "Confirmer la création de nouvelles notes",
+	"journal_edit_date_format_description": "Format par défaut pour les variables de date qui ne spécifient pas leur propre format, comme :",
+	"journal_edit_date_format_label": "Format de date par défaut",
+	"journal_edit_date_format_preview_label": "Date formatée :",
+	"journal_edit_date_format_week_date_note": "Dans un journal hebdomadaire, {slot} est un jour de la semaine, choisi pour que les jetons d’année correspondent à l’année de la semaine.",
+	"journal_edit_date_format_week_start_note": "Utilisez {slot} pour le premier jour de la semaine.",
+	"common_moment_format_reference": "Référence de format moment.js",
+	"journal_edit_end_description": [
+		{
+			"declarations": [
+				"input kind"
+			],
+			"selectors": [
+				"kind"
+			],
+			"match": {
+				"kind=never": "L’écriture se poursuit indéfiniment.",
+				"kind=date": "Aucune nouvelle note ne sera créée après cette date.",
+				"kind=repeats": "Une fois ce nombre de notes créé, aucune nouvelle note ne sera créée."
+			}
+		}
+	],
+	"journal_edit_end_kind": [
+		{
+			"declarations": [
+				"input kind"
+			],
+			"selectors": [
+				"kind"
+			],
+			"match": {
+				"kind=never": "Jamais",
+				"kind=date": "Après la date",
+				"kind=repeats": "Après un nombre de répétitions"
+			}
+		}
+	],
+	"journal_edit_end_repeats_needs_start_warning": "Définissez une date de début — un journal qui se termine après un certain nombre de répétitions nécessite une date de départ.",
+	"journal_edit_end_repeats_suffix": "fois",
+	"journal_edit_end_writing_label": "Fin de l’écriture",
+	"journal_edit_fm_end_toggle_label": "Ajouter la propriété de date de fin",
+	"journal_edit_fm_start_description": "Pour les journaux hebdomadaires couvrant deux ans, la date de début peut différer de la propriété de date.",
+	"journal_edit_fm_start_toggle_label": "Ajouter la propriété de date de début",
+	"journal_edit_folder_description": "De nouvelles notes seront créées dans ce dossier.",
+	"journal_edit_folder_label": "Dossier",
+	"journal_edit_move_to_folder_apply_link": "Appliquer la recommandation",
+	"journal_edit_move_to_folder_recommendation_date_format": "Le format de date contient un séparateur de chemin. Déplacer les variables de date dans le champ Dossier ?",
+	"journal_edit_move_to_folder_recommendation_name_template": "Le modèle de nom de note contient un séparateur de chemin. Déplacer le préfixe du chemin dans le champ Dossier ?",
+	"journal_edit_name_template_description": "Modèle utilisé pour générer les nouveaux noms de notes.",
+	"journal_edit_name_template_empty_warning": "Ce modèle de nom aboutit à un nom de note vide, aucune note ne peut donc être créée. Ajoutez-y une variable ou du texte.",
+	"journal_edit_name_template_collision_warning": "Les entrées pour {first} et {second} aboutissent toutes deux à {path}. Elles partageront une seule note.",
+	"journal_edit_colliding_warning": "Ce journal aboutit au même chemin de note que {names}, leurs notes s’écraseront donc mutuellement. Modifiez le dossier ou le modèle de nom pour lui donner un chemin distinct.",
+	"journal_edit_name_template_invertibility_warning": [
+		{
+			"declarations": [
+				"input reason",
+				"input offending"
+			],
+			"selectors": [
+				"reason"
+			],
+			"match": {
+				"reason=unknown-variable": "Le modèle de nom utilise « {offending} », qui n’est pas une variable connue ; les notes créées en dehors du plugin ne peuvent donc pas être associées à ce journal.",
+				"reason=function-token": "Le modèle de nom utilise la fonction « {offending} » ; les notes créées en dehors du plugin ne peuvent donc pas être associées à ce journal.",
+				"reason=clock-variable": "Le modèle de nom utilise « {offending} », qui est une heure de la journée ; les notes créées en dehors du plugin ne peuvent donc pas être associées à ce journal."
+			}
+		}
+	],
+	"journal_edit_name_template_no_anchor_warning": "Le modèle de nom ne comporte aucune variable de date et sa variable de numérotation ne peut pas être reconvertie en date ; les notes créées en dehors du plugin ne peuvent donc pas être associées à ce journal.",
+	"journal_edit_name_template_label": "Modèle de nom de note",
+	"journal_edit_note_path_preview_label": "Chemin de la note résolu :",
+	"journal_edit_rename_tooltip": "Renommer le journal",
+	"journal_edit_reset_count_suffix": "répétitions",
+	"journal_edit_reset_description": "Comment ce nombre évolue au fil du temps.",
+	"journal_edit_reset_label": "Réinitialisation",
+	"journal_edit_reset_option": [
+		{
+			"declarations": [
+				"input kind"
+			],
+			"selectors": [
+				"kind"
+			],
+			"match": {
+				"kind=never": "Continu",
+				"kind=after": "Se réinitialise après"
+			}
+		}
+	],
+	"journal_edit_section_frontmatter": "Frontmatter",
+	"journal_edit_section_note_creation": "Création de notes",
+	"journal_edit_section_sequential_numbers": "Numéros séquentiels",
+	"journal_edit_section_templates": "Modèles",
+	"journal_edit_code_block_reference_link": "Blocs de code pris en charge.",
+	"journal_edit_code_block_reference_modal_title": "Blocs de code pris en charge",
+	"journal_edit_code_block_copy_hint": "Cliquez sur un bloc de code pour le copier dans votre presse-papiers.",
+	"journal_edit_code_block_copied": "Copié dans le presse-papiers.",
+	"journal_edit_code_block_nav_description": "Le bloc de navigation vous permet de vous déplacer entre les notes adjacentes à la note actuelle.",
+	"journal_edit_code_block_nav_current": "Sa configuration pour le journal {name} ressemble à ceci :",
+	"journal_edit_code_block_nav_aliases_lead": "Ces anciens noms de blocs sont des alias qui se comportent de manière identique :",
+	"journal_edit_code_block_timeline_description": "Le bloc de chronologie vous permet de naviguer au sein de périodes plus longues.",
+	"journal_edit_code_block_timeline_default": "La chronologie par défaut du journal {name} ressemble à ceci :",
+	"journal_edit_code_block_timeline_mode_lead": "Modifiez le mode de la chronologie en ajoutant une option de mode au bloc.",
+	"journal_edit_code_block_timeline_modes_lead": "Modes pris en charge :",
+	"journal_edit_code_block_timeline_options_lead": "Options prises en charge :",
+	"journal_edit_code_block_timeline_option_mode": "définit la période affichée par la chronologie. Valeurs prises en charge : week, month, quarter, calendar. Sans cette option, c’est la période du journal qui décide.",
+	"journal_edit_code_block_timeline_option_shelf": "limite les notes affichées à une étagère spécifique. Sans cette option, l’étagère contenant le journal actuel est utilisée.",
+	"journal_edit_code_block_timeline_weeks": "contrôle la colonne du numéro de semaine. Valeurs prises en charge : default, left, right, none. La valeur default suit le réglage de calendrier du plugin.",
+	"journal_edit_code_block_timeline_hidden_weekdays": "masque les jours de la semaine listés (0 = dimanche … 6 = samedi), par exemple [0, 6] pour supprimer les week-ends.",
+	"journal_edit_code_block_home_description": "Le bloc d’accueil affiche des liens vers les notes actuelles de vos journaux.",
+	"journal_edit_code_block_home_default": "Par défaut, cela ressemble à ceci :",
+	"journal_edit_code_block_home_options_lead": "Options prises en charge :",
+	"journal_edit_code_block_home_option_show": "contrôle les journaux affichés (par défaut, seul le lien du jour). Valeurs prises en charge : day, week, month, quarter, year, custom.",
+	"journal_edit_code_block_home_option_separator": "le texte utilisé pour séparer plusieurs liens.",
+	"journal_edit_code_block_home_option_scale": "augmente la taille du lien en fonction de la taille du texte (par exemple, scale: 2 la double).",
+	"journal_edit_code_block_home_option_shelf": "limite les journaux affichés à une étagère spécifique.",
+	"journal_edit_code_block_home_custom_lead": "Avec des options personnalisées, cela peut ressembler à ceci :",
+	"journal_edit_section_timeline": "Chronologie",
+	"journal_edit_sequence_enabled_description": "Attribuer des numéros aux notes (p. ex. Jour 1, Jour 2, …).",
+	"journal_edit_sequence_enabled_label": "Activer les numéros séquentiels",
+	"journal_edit_start_number_description": "Numéro attribué à la date d’ancrage.",
+	"journal_edit_start_number_label": "Numéro de départ",
+	"journal_edit_start_writing_custom_locked": "La date de début des intervalles personnalisés ne peut pas être modifiée : elle sert de point de départ au comptage des intervalles.",
+	"journal_edit_start_writing_description": "Aucune nouvelle note antérieure à cette date ne sera créée.",
+	"journal_edit_start_writing_label": "Commencer à écrire le",
+	"journal_edit_template_add_button": "Ajouter un modèle",
+	"journal_edit_template_path_placeholder": "modèles/daily.md",
+	"journal_edit_template_path_preview_label": "Chemin du modèle résolu :",
+	"journal_edit_template_remove_tooltip": "Supprimer le modèle",
+	"journal_edit_templates_description": "Chemin vers une note qui servira de modèle lors de la création de nouvelles notes. Si plusieurs sont configurés, le premier qui existe est utilisé.",
+	"journal_edit_templater_supported": "La syntaxe Templater est {slot}.",
+	"journal_edit_templater_supported_link": "prise en charge",
+	"journal_edit_variable_additional_modifications_link": "modifications supplémentaires",
+	"journal_edit_variable_current_date_description": "Date du jour (au format YYYY-MM-DD par défaut).",
+	"journal_edit_variable_current_time_description": "Heure actuelle (alias de {slot}, au format HH:mm par défaut).",
+	"journal_edit_variable_date_description": "Date de référence de la note — la date de la période couverte par cette note.",
+	"journal_edit_variable_date_format_description": "Date de référence de la note, formatée selon la chaîne de format moment.js fournie.",
+	"journal_edit_variable_end_date_description": "Le dernier jour de la période couverte par cette note.",
+	"journal_edit_variable_index_description": "Numéro séquentiel de la note lorsque la numérotation du journal est activée.",
+	"journal_edit_variable_journal_link_description": "Dans le contenu d’un fichier modèle, cette variable renvoie le chemin de la note d’un autre journal pour la date de cette note. Intégrez-la vous-même dans un lien ou une intégration (par exemple ![[ … ]]), et ajoutez des modificateurs de date comme +1w pour pointer vers une période voisine.",
+	"journal_edit_variable_journal_name_description": "Le nom du journal (ici : {name}).",
+	"journal_edit_variable_non_invertible_warning": "Son utilisation ici empêche le journal de récupérer la date à partir du nom du fichier.",
+	"journal_edit_variable_note_name_description": "Le nom de la note en cours de création.",
+	"journal_edit_variable_note_title_description": "Alias du nom de la note, prenant en charge la variable du plugin principal « Modèles ».",
+	"journal_edit_variable_numbering_description": "La variable de numérotation configurée (voir la section Numéros séquentiels).",
+	"journal_edit_variable_reference_intro": "Variables disponibles. Le format de date par défaut est {dateFormat} lorsqu’aucun format explicite n’est spécifié.",
+	"journal_edit_variable_reference_link": "Variables prises en charge.",
+	"journal_edit_variable_reference_modal_title": "Référence des variables",
+	"journal_edit_variable_relative_date_description": "hier / aujourd’hui / demain / il y a N jours pour les journaux à cycle fixe ; ce / dernier / prochain <journal> et il y a N <journal> pour les journaux personnalisés.",
+	"journal_edit_variable_start_date_description": "Le premier jour de la période couverte par cette note.",
+	"journal_edit_variable_time_description": "Heure actuelle (au format HH:mm par défaut).",
+	"journal_edit_wrong_week_warning": "Vous utilisez `W` pour formater les semaines, ce qui ne tient pas compte des paramètres de semaine personnalisés et peut afficher un numéro de semaine différent de celui de la vue Calendrier. Utilisez plutôt `w` (et modifiez le début de la semaine dans les paramètres du plugin si nécessaire).",
+	"journal_fm_field_label": [
+		{
+			"declarations": [
+				"input field"
+			],
+			"selectors": [
+				"field"
+			],
+			"match": {
+				"field=dateField": "Nom de la propriété Date",
+				"field=startDateField": "Nom de la propriété Date de début",
+				"field=endDateField": "Nom de la propriété Date de fin"
+			}
+		}
+	],
+	"journal_fm_field_modal_title": [
+		{
+			"declarations": [
+				"input field"
+			],
+			"selectors": [
+				"field"
+			],
+			"match": {
+				"field=dateField": "Modifier le nom de la propriété Date",
+				"field=startDateField": "Modifier le nom de la propriété Date de début",
+				"field=endDateField": "Modifier le nom de la propriété Date de fin"
+			}
+		}
+	],
+	"journal_name_required_error": "Le nom du journal est obligatoire.",
+	"journal_name_unique_error": "Le nom du journal doit être unique.",
+	"journal_picker_placeholder": "Rechercher un journal",
+	"journal_property_modal_current_label": "Nom actuel",
+	"common_label_new_name": "Nouveau nom",
+	"journal_property_name_required": "Le nom de la propriété est obligatoire.",
+	"bulk_add_date_format_required": "Le format de date est obligatoire.",
+	"journal_rename_modal_same_as_current_error": "Saisissez un autre nom.",
+	"journal_rename_modal_title": "Renommer {name}",
+	"journal_sequence_property_modal_title": "Modifier le nom de la propriété de numéro séquentiel",
+	"templater_support_intro": "Templater peut interférer avec les actions du plugin et laisser une note partiellement cassée ou des données de journal absentes de son frontmatter.",
+	"templater_support_modal_title": "Mises en garde concernant Templater",
+	"templater_support_option_settings": "Configurez le modèle dans les paramètres de journal de ce plugin.",
+	"templater_support_option_trigger_off": "Désactivez l’option « Trigger Templater on new file creation » de Templater.",
+	"templater_support_option_trigger_on": "Ou laissez « Trigger Templater on new file creation » activée, avec « Enable Folder Templates » activée et aucun modèle de dossier configuré.",
+	"templater_support_outro": "De cette manière, seul le plugin de journal traite le modèle de note (il exécute Templater en interne), ce qui évite les conflits.",
+	"templater_support_setup_intro": "La configuration la plus sûre :",
+	"variable_chip_copied": "Copié dans le presse-papiers",
+	"variable_modifications_boundary_body": "Alignez une variable de date sur le début ou la fin d’une période calendaire en ajoutant `<startOf=unit>` ou `<endOf=unit>`.",
+	"variable_modifications_boundary_example": "Par exemple {slot} affiche le 1er janvier de l’année de la date.",
+	"variable_modifications_boundary_heading": "Aligner sur le début ou la fin d’une période",
+	"variable_modifications_boundary_unit": [
+		{
+			"declarations": [
+				"input unit"
+			],
+			"selectors": [
+				"unit"
+			],
+			"match": {
+				"unit=day": "day — jour",
+				"unit=week": "week — semaine",
+				"unit=month": "month — mois",
+				"unit=quarter": "quarter — trimestre",
+				"unit=year": "year — année",
+				"unit=decade": "decade — décennie (dates uniquement)",
+				"unit=hour": "hour — heure (horloges uniquement)"
+			}
+		}
+	],
+	"common_supported_units": "Unités prises en charge :",
+	"variable_modifications_combined_body": "Ces trois modifications peuvent être combinées. Les décalages s’appliquent en premier, puis les limites, et enfin la modification de format.",
+	"variable_modifications_combined_example": "Par exemple {slot} décale la date d’une semaine vers l’avant, la positionne au début de cette semaine et la formate.",
+	"variable_modifications_combined_heading": "Combiné",
+	"variable_modifications_format_body": "Remplacez le format de date par défaut en ajoutant deux points et une chaîne de format moment.js.",
+	"variable_modifications_format_example": "Par exemple {slot} ne renvoie que l’année.",
+	"variable_modifications_format_heading": "Remplacement du format",
+	"variable_modifications_intro": "Les variables de date et d’horloge prennent en charge trois types de modifications. Elles peuvent être combinées dans un même jeton.",
+	"variable_modifications_modal_title": "Modifications des variables de date",
+	"variable_modifications_shift_body": "Ajoutez ou soustrayez un nombre d’unités en ajoutant `+N<unit>` ou `-N<unit>`.",
+	"variable_modifications_shift_example": "Par exemple {slot} décale la date d’une semaine.",
+	"variable_modifications_shift_heading": "Décalages arithmétiques",
+	"variable_modifications_unit_d": "d — jours",
+	"variable_modifications_unit_h": "h — heures",
+	"variable_modifications_unit_m": "m — mois",
+	"variable_modifications_unit_q": "q — trimestres",
+	"variable_modifications_unit_w": "w — semaines",
+	"variable_modifications_unit_y": "y — années",
+	"journal_write": [
+		{
+			"declarations": [
+				"input type",
+				"input every",
+				"input duration"
+			],
+			"selectors": [
+				"type",
+				"every",
+				"duration"
+			],
+			"match": {
+				"type=day,every=*,duration=*": "quotidien",
+				"type=week,every=*,duration=*": "hebdomadaire",
+				"type=month,every=*,duration=*": "mensuel",
+				"type=quarter,every=*,duration=*": "trimestriel",
+				"type=year,every=*,duration=*": "annuel",
+				"type=custom,every=day,duration=1": "chaque jour",
+				"type=custom,every=day,duration=*": "tous les {duration} jours",
+				"type=custom,every=week,duration=1": "chaque semaine",
+				"type=custom,every=week,duration=*": "toutes les {duration} semaines",
+				"type=custom,every=month,duration=1": "chaque mois",
+				"type=custom,every=month,duration=*": "tous les {duration} mois",
+				"type=custom,every=quarter,duration=1": "chaque trimestre",
+				"type=custom,every=quarter,duration=*": "tous les {duration} trimestres",
+				"type=custom,every=year,duration=1": "chaque année",
+				"type=custom,every=year,duration=*": "tous les {duration} ans",
+				"type=*,every=*,duration=*": "tous les {duration} {every}"
+			}
+		}
+	],
+	"journal_add_modal_every_unit": [
+		{
+			"declarations": [
+				"input unit",
+				"input count",
+				"local countPlural = count: plural"
+			],
+			"selectors": [
+				"unit",
+				"countPlural"
+			],
+			"match": {
+				"unit=day,countPlural=one": "jour",
+				"unit=day,countPlural=*": "jours",
+				"unit=week,countPlural=one": "semaine",
+				"unit=week,countPlural=*": "semaines",
+				"unit=month,countPlural=one": "mois",
+				"unit=month,countPlural=*": "mois",
+				"unit=quarter,countPlural=one": "trimestre",
+				"unit=quarter,countPlural=*": "trimestres",
+				"unit=year,countPlural=one": "année",
+				"unit=year,countPlural=*": "années"
+			}
+		}
+	],
+	"logging_dump_button": "Exporter les logs vers une note",
+	"logging_dump_desc": "Écrire dans une nouvelle note de votre coffre-fort les messages de log récemment enregistrés.",
+	"logging_dump_empty": "Aucun message de log n’a encore été enregistré.",
+	"logging_dump_failed": "Impossible d’écrire la note de logs.",
+	"logging_dump_succeeded": "Logs écrits dans {path}",
+	"logging_dump_title": "Exporter les logs",
+	"logging_level_debug": "Débogage",
+	"logging_level_desc": "Seuls les messages de log de ce niveau ou supérieur sont affichés dans la console et conservés pour l’export.",
+	"logging_level_error": "Erreur",
+	"logging_level_info": "Info",
+	"logging_level_title": "Niveau de log",
+	"logging_level_warn": "Avertissement",
+	"logging_section_title": "Logs"
+}

@@ -2,8 +2,8 @@
 	"id": "journals",
 	"name": "Journals",
 	"version": "2.1.10",
-	"minAppVersion": "1.0.0",
-	"description": "Manage your journals in Obsidian",
+	"minAppVersion": "1.8.7",
+	"description": "Manage your journals, calendars, and periodic notes.",
 	"author": "Sergii Kostyrko",
 	"authorUrl": "https://github.com/srg-kostyrko",
 	"isDesktopOnly": false

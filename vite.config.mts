@@ -1,15 +1,21 @@
-/* eslint-disable @cspell/spellchecker */
+import { builtinModules as builtins } from "node:module";
 import { fileURLToPath, URL } from "node:url";
-import { defineConfig } from "vite";
-import builtins from "builtin-modules";
-import { viteStaticCopy } from "vite-plugin-static-copy";
+
+import { paraglideVitePlugin } from "@inlang/paraglide-js";
 import vue from "@vitejs/plugin-vue";
+import { defineConfig } from "vite";
+import { viteStaticCopy } from "vite-plugin-static-copy";
 
 const isWatch = process.argv.includes("--watch");
 
 // https://vitejs.dev/config/
 export default defineConfig(({ mode }) => ({
   plugins: [
+    paraglideVitePlugin({
+      project: "./project.inlang",
+      outdir: "./src/i18n/paraglide",
+      outputStructure: "locale-modules",
+    }),
     vue(),
     viteStaticCopy({
       targets: [

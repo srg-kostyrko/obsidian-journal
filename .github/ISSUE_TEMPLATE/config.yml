@@ -1,0 +1,8 @@
+blank_issues_enabled: false
+contact_links:
+  - name: Documentation
+    url: https://github.com/srg-kostyrko/obsidian-journal#readme
+    about: Settings reference, template variables, code blocks, and troubleshooting.
+  - name: Obsidian forum
+    url: https://forum.obsidian.md/
+    about: Questions about Obsidian itself, rather than about this plugin.

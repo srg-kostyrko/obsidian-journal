@@ -1,0 +1,12 @@
+export { shelvesCollection } from "./config";
+export type { ShelfConfig } from "./config";
+export { InvalidShelfNameError, InvalidShelfUpdateError, ShelfNameTakenError, UnknownShelfError } from "./errors";
+export { shelvesModule } from "./module";
+export { shelfPickerSuggest } from "./shelf-picker";
+export { ShelvesRepository } from "./repository";
+export type { ShelvesEvents } from "./repository";
+export { ShelvesEventsToken } from "./tokens";
+export { ShelvesService } from "./service";
+export { ShelvesViewModel } from "./view-model";
+export { ShelfEditSectionToken, defineShelfEditSection } from "./ui/shelf-edit-section";
+export type { ShelfEditSection } from "./ui/shelf-edit-section";

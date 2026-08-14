@@ -1,0 +1,16 @@
+{
+  "extends": "@tsconfig/node20/tsconfig.json",
+  "include": ["wdio.conf.mts", "e2e/**/*.ts", "src/i18n/paraglide/**/*.js"],
+  "compilerOptions": {
+    "composite": true,
+    "noEmit": true,
+    "tsBuildInfoFile": "./node_modules/.tmp/tsconfig.e2e.tsbuildinfo",
+    "module": "ESNext",
+    "moduleResolution": "Bundler",
+    // Assertions import the shipped copy from src/i18n/paraglide, which is generated JS
+    // carrying its types in JSDoc — the same reason tsconfig.app.json allows JS.
+    "allowJs": true,
+    "lib": ["ES2022", "DOM"],
+    "types": ["node", "mocha", "@wdio/globals/types", "wdio-obsidian-service"]
+  }
+}

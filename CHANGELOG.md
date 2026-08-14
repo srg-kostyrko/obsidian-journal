@@ -2,12 +2,45 @@
 
 All notable changes to this project will be documented in this file.
 
-## [unreleased]
+## [Unreleased]
+
+### Features
+
+- Complete rewrite of the plugin on a new modular foundation, with automatic migration of settings and existing notes from earlier versions.
+- Build and customize your own calendar views by composing blocks (month, week, quarter, year, decade, and custom-interval calendars, plus toolbars, dividers, and spacers) and toolbar items (shelf selector, period buttons, navigation buttons, and more).
+- Target a specific journal from a custom command or toolbar button, so hotkeys act on it without prompting.
+- Choose where the week-number column appears per block, with a global default.
+- Open the nearest existing note for a journal or shelf, via command or an existing notes navigation toolbar item.
+- New markdown-template block for custom views that renders a template file inline.
+- Look up what a code block or template variable produces without leaving settings: a reference modal lists each one with a live preview and click-to-copy snippets.
+- Automatically attach externally created notes that match a journal's naming.
+- Logging tools that capture activity and dump it to a note for troubleshooting.
+- Open journal notes through the Obsidian URI scheme.
+- Insert a link to a journal date at the cursor via command.
+- New `journal_link` template variable.
+- Hide specific weekdays on the calendar with a per-weekday picker.
+- Highlight calendar days by date or weekday without attaching the rule to a journal: set decorations vault-wide, or per shelf so they apply only while that shelf is in view.
+- See why a calendar cell looks the way it does: right-click it for a breakdown naming the rule behind each color, border, and mark, and the rules those overrode. The breakdown follows the shelf you are viewing, and a custom interval explains itself rather than the day it begins on.
+- Tell a decoration that never fires from one whose day simply has not come up: every rule in settings reports whether it has matched recently, and an inspector shows everything decorating a chosen date across all three scopes.
+- The interface now speaks ten languages besides English — Chinese, German, French, Russian, Spanish, Portuguese, Japanese, Korean, Italian, and Ukrainian — each reviewed key by key.
+- Meaningful, stable CSS class names on calendar and code-block elements for easier theming.
 
 ### Bug Fixes
 
-- Fix hover preview to support pressing contol key after hover
-- Fix custom interval calculation for month intervals starting on last days of month
+- Warn when a name template would connect every entry to the same note; previously, notes with only a title and no date all collided onto a single note.
+- Renaming the property a journal writes its date or numbering into now moves that value in every connected note; previously the notes kept the old property name and silently dropped off the journal.
+- Weekly navigation now reaches ISO week 53 at year boundaries instead of skipping it.
+- Sequence numbering resets now cycle correctly.
+- Creating a weekly journal mid-week now creates the current note immediately instead of waiting for the next week.
+- Decorations based on a checkbox (boolean) property now match correctly.
+- A navigation link no longer opens two context menus at once.
+- Previously imported notes now appear on the calendar after startup.
+- The open-next and open-previous note commands now work in Reading (preview) mode.
+- Interval-offset decorations now mark the interval's first day by default instead of never matching, and the editor spells out which day the offset targets.
+- Decorations now layer predictably: a journal's decoration overrides a shelf's, which overrides a vault-wide one. Previously borders resolved the opposite way, so a vault-wide border silently replaced a journal's.
+- Background and text color now follow the same layering: where two decorations in one list both set a background, the later one wins instead of the earlier one.
+- At most one corner decoration now renders per corner of a cell; previously several could stack on top of each other.
+- Adding a background or corner to a decoration no longer silently cancels a vault-wide or shelf rule; new styles now arrive with a visible color instead of a transparent one.
 
 ## [2.1.9] - 2025-06-07
 

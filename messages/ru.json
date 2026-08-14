@@ -1,0 +1,2220 @@
+{
+	"$schema": "https://inlang.com/schema/inlang-message-format",
+	"calendar_apply_globally_desc": "Если эта функция отключена, параметры настройки недели применяются только к датам внутри журналов и не влияют на даты, созданные другими плагинами или самой Obsidian.",
+	"calendar_apply_globally_restart_hint": "Возможно, потребуется перезапустить Obsidian, чтобы изменения вступили в силу.",
+	"calendar_apply_globally_title": "Применять конфигурацию недели ко всем датам в хранилище",
+	"calendar_appearance_active_background": "Активный — фон",
+	"calendar_appearance_active_text": "Активный — текст",
+	"calendar_appearance_section_title": "Подсветка в календаре",
+	"calendar_appearance_description": [
+		{
+			"declarations": [
+				"input layer",
+				"input target"
+			],
+			"selectors": [
+				"layer",
+				"target"
+			],
+			"match": {
+				"layer=text,target=today": "Цвет текста ячейки календаря для сегодняшней даты.",
+				"layer=background,target=today": "Цвет фона ячейки календаря для сегодняшней даты.",
+				"layer=text,target=active": "Цвет текста ячейки календаря, заметка в которой в данный момент открыта.",
+				"layer=background,target=active": "Цвет фона ячейки календаря, заметка в которой в данный момент открыта."
+			}
+		}
+	],
+	"calendar_appearance_today_background": "Сегодня — фон",
+	"calendar_appearance_today_text": "Сегодня — текст",
+	"common_label_back": "Вернуться к списку",
+	"common_label_calendar": "Календарь",
+	"common_pick_a_date": "Выбрать дату",
+	"common_note_open_error": "Не удалось открыть заметку.",
+	"calendar_picker_first_week_desc": "День января (1–7), который обязательно должен быть в первой неделе года. Например, 4 означает, что первая неделя — это неделя, в которой есть 4 января.",
+	"calendar_picker_first_week_label": "Первая неделя года",
+	"calendar_picker_in_use_marker": "Используется сейчас",
+	"calendar_picker_reanchor_hint": "Еженедельные заметки сохраняют свой номер недели. Их даты обновляются в соответствии с новой конфигурацией.",
+	"calendar_picker_start_week_on": "Начало недели",
+	"calendar_picker_start_week_on_desc": "Какой день считать первым днём недели.",
+	"calendar_picker_update_action": "Обновить",
+	"calendar_picker_use_action": "Использовать",
+	"calendar_preset_description": [
+		{
+			"declarations": [
+				"input preset"
+			],
+			"selectors": [
+				"preset"
+			],
+			"match": {
+				"preset=locale": "Использовать настройки недели из текущей локали Obsidian.",
+				"preset=iso-8601": "Неделя начинается в понедельник. Первая неделя года включает первый четверг (4 января).",
+				"preset=western": "Неделя начинается в воскресенье. Первая неделя года включает первую субботу (1 января).",
+				"preset=middle-eastern": "Неделя начинается в субботу. Первая неделя года включает первую пятницу (1 января).",
+				"preset=custom": "Задайте, какой день недели считать первым и как определяется первая неделя года."
+			}
+		}
+	],
+	"calendar_preset_custom_summary": "Начало недели: {dayName}. Первая неделя года включает {firstDayOfYear} января.",
+	"calendar_preset_iso_used": "ЕС (за исключением Португалии) и большинство других европейских стран, а также большая часть Азии и Океании.",
+	"calendar_preset_middle_eastern_used": "Большая часть Ближнего Востока.",
+	"calendar_preset_name": [
+		{
+			"declarations": [
+				"input preset"
+			],
+			"selectors": [
+				"preset"
+			],
+			"match": {
+				"preset=locale": "Системная локаль",
+				"preset=iso-8601": "ISO 8601",
+				"preset=western": "Западный традиционный",
+				"preset=middle-eastern": "Ближневосточный",
+				"preset=custom": "Пользовательский"
+			}
+		}
+	],
+	"common_week_configuration": "Конфигурация недели",
+	"calendar_preset_western_used": "Канада, США, Исландия, Португалия, Япония, Тайвань, Таиланд, Гонконг, Макао, Израиль, Египет, Южная Африка, Филиппины и большинство стран Латинской Америки.",
+	"calendar_reanchor_failed_notice": [
+		{
+			"declarations": [
+				"input count",
+				"local countPlural = count: plural"
+			],
+			"selectors": [
+				"countPlural"
+			],
+			"match": {
+				"countPlural=one": "{count} еженедельную заметку не удалось перевести на новую конфигурацию недели.",
+				"countPlural=few": "{count} еженедельные заметки не удалось перевести на новую конфигурацию недели.",
+				"countPlural=many": "{count} еженедельных заметок не удалось перевести на новую конфигурацию недели.",
+				"countPlural=*": "{count} еженедельной заметки не удалось перевести на новую конфигурацию недели."
+			}
+		}
+	],
+	"calendar_week_config_change": "Изменить",
+	"calendar_week_config_description": "Определите, с какого дня начинается неделя и как определяется первая неделя года — это влияет на нумерацию недель.",
+	"code_blocks_unknown_keys": [
+		{
+			"declarations": [
+				"input count",
+				"input keys",
+				"local countPlural = count: plural"
+			],
+			"selectors": [
+				"countPlural"
+			],
+			"match": {
+				"countPlural=one": "Нераспознанный параметр проигнорирован: {keys}.",
+				"countPlural=*": "Нераспознанные параметры проигнорированы: {keys}."
+			}
+		}
+	],
+	"code_blocks_yaml_error": "Не удалось прочитать параметры в этом блоке {key}.",
+	"code_blocks_schema_error": "Некоторые параметры в этом блоке {key} недопустимы.",
+	"code_blocks_nav_not_connected": "Заметка не связана с журналом",
+	"code_blocks_home_empty": "Журналы для отображения отсутствуют. Проверьте параметры show и shelf этого блока.",
+	"common_no_journals_yet": "Журналов пока нет. Создайте журнал в настройках плагина.",
+	"code_blocks_nav_next": "Следующий",
+	"code_blocks_nav_previous": "Предыдущий",
+	"decoration_canvas_empty_hint": [
+		{
+			"declarations": [
+				"input type"
+			],
+			"selectors": [
+				"type"
+			],
+			"match": {
+				"type=background": "Нажмите на ячейку, чтобы добавить фон.",
+				"type=color": "Нажмите на число, чтобы задать цвет текста.",
+				"type=border": "Нажмите на контур, чтобы добавить границу.",
+				"type=shape": "Нажмите на позицию, чтобы добавить фигуру.",
+				"type=icon": "Нажмите на позицию, чтобы добавить значок.",
+				"type=corner": "Нажмите на угол, чтобы добавить треугольник."
+			}
+		}
+	],
+	"decoration_canvas_region_label": [
+		{
+			"declarations": [
+				"input type"
+			],
+			"selectors": [
+				"type"
+			],
+			"match": {
+				"type=background": "Фон ячейки",
+				"type=color": "Текст ячейки",
+				"type=border": "Контур ячейки"
+			}
+		}
+	],
+	"decoration_canvas_layers_label": "Слои стиля",
+	"decoration_canvas_remove_label": "Удалить",
+	"decoration_canvas_slot_label": [
+		{
+			"declarations": [
+				"input slot"
+			],
+			"selectors": [
+				"slot"
+			],
+			"match": {
+				"slot=left_top": "Вверху слева",
+				"slot=center_top": "Вверху по центру",
+				"slot=right_top": "Вверху справа",
+				"slot=left_middle": "По центру слева",
+				"slot=center_middle": "По центру",
+				"slot=right_middle": "По центру справа",
+				"slot=left_bottom": "Внизу слева",
+				"slot=center_bottom": "Внизу по центру",
+				"slot=right_bottom": "Внизу справа"
+			}
+		}
+	],
+	"decoration_layer_chip_label": [
+		{
+			"declarations": [
+				"input type",
+				"input state"
+			],
+			"selectors": [
+				"type",
+				"state"
+			],
+			"match": {
+				"type=background,state=empty": "Фон",
+				"type=background,state=occupied": "Фон, используется",
+				"type=color,state=empty": "Цвет",
+				"type=color,state=occupied": "Цвет, используется",
+				"type=border,state=empty": "Граница",
+				"type=border,state=occupied": "Граница, используется",
+				"type=shape,state=empty": "Форма",
+				"type=shape,state=occupied": "Форма, используется",
+				"type=icon,state=empty": "Значок",
+				"type=icon,state=occupied": "Значок, используется",
+				"type=corner,state=empty": "Угол",
+				"type=corner,state=occupied": "Угол, используется"
+			}
+		}
+	],
+	"nav_block_section_title": "Блок навигации",
+	"nav_block_section_mode_label": "Режим",
+	"nav_block_section_mode_option": [
+		{
+			"declarations": [
+				"input kind"
+			],
+			"selectors": [
+				"kind"
+			],
+			"match": {
+				"kind=create": "Создать новую заметку",
+				"kind=existing": "Открыть существующую заметку"
+			}
+		}
+	],
+	"nav_block_section_use_defaults": [
+		{
+			"declarations": [
+				"input writeType"
+			],
+			"selectors": [
+				"writeType"
+			],
+			"match": {
+				"writeType=day": "Использовать значения по умолчанию для ежедневных заметок",
+				"writeType=week": "Использовать значения по умолчанию для еженедельных заметок",
+				"writeType=month": "Использовать значения по умолчанию для ежемесячных заметок",
+				"writeType=quarter": "Использовать значения по умолчанию для ежеквартальных заметок",
+				"writeType=year": "Использовать значения по умолчанию для ежегодных заметок",
+				"writeType=*": "Использовать значения по умолчанию"
+			}
+		}
+	],
+	"block_rows_decorate_whole_label": "Оформлять весь блок",
+	"block_rows_empty": "Строк пока нет. Добавьте одну.",
+	"block_rows_add_row": "Добавить строку",
+	"block_rows_edit_tooltip": "Редактировать строку",
+	"block_rows_delete_tooltip": "Удалить строку",
+	"common_action_move_up": "Переместить вверх",
+	"common_action_move_down": "Переместить вниз",
+	"interval_block_section_title": "Строки календарных интервалов",
+	"nav_block_row_modal_title": [
+		{
+			"declarations": [
+				"input mode"
+			],
+			"selectors": [
+				"mode"
+			],
+			"match": {
+				"mode=add": "Добавить строку навигационного блока",
+				"mode=edit": "Редактировать строку навигационного блока"
+			}
+		}
+	],
+	"nav_block_row_field_template": "Шаблон",
+	"nav_block_row_field_font_size": "Размер шрифта",
+	"nav_block_row_field_font_size_hint": "Относительно обычного размера шрифта: 1 означает тот же размер, что и обычный текст.",
+	"nav_block_row_field_text_style": "Стиль текста",
+	"nav_block_row_field_bold": "Жирный",
+	"nav_block_row_field_italic": "Курсив",
+	"common_label_text_color": "Цвет текста",
+	"common_label_background_color": "Цвет фона",
+	"nav_block_row_field_link": "Ссылка",
+	"common_label_journal": "Журнал",
+	"nav_block_row_field_add_decorations": "Добавить оформление",
+	"nav_block_row_link_option": [
+		{
+			"declarations": [
+				"input kind"
+			],
+			"selectors": [
+				"kind"
+			],
+			"match": {
+				"kind=none": "Нет",
+				"kind=self": "На себя",
+				"kind=journal": "Журнал",
+				"kind=day": "День",
+				"kind=week": "Неделя",
+				"kind=month": "Месяц",
+				"kind=quarter": "Квартал",
+				"kind=year": "Год"
+			}
+		}
+	],
+	"nav_block_row_template_required": "Требуется шаблон.",
+	"nav_block_row_journal_required": "Выберите журнал.",
+	"nav_block_row_resolved_preview": "Результат: {text}",
+	"command_add": "Добавить команду",
+	"command_context_open_note_clarifier": "(использует дату открытой заметки или сегодняшнюю дату)",
+	"command_context_only_open_note_clarifier": "(требуется открытая заметка журнала)",
+	"command_context_option": [
+		{
+			"declarations": [
+				"input context"
+			],
+			"selectors": [
+				"context"
+			],
+			"match": {
+				"context=today": "Сегодня",
+				"context=open_note": "Дата открытой заметки или сегодня",
+				"context=only_open_note": "Только дата открытой заметки"
+			}
+		}
+	],
+	"command_empty": [
+		{
+			"declarations": [
+				"input scope"
+			],
+			"selectors": [
+				"scope"
+			],
+			"match": {
+				"scope=global": "Глобальные команды пока не созданы.",
+				"scope=journal": "Для этого журнала пока не создано ни одной команды.",
+				"scope=shelf": "Для этой полки пока не создано ни одной команды."
+			}
+		}
+	],
+	"command_section_title": "Команды",
+	"command_delete_modal_confirm": "Удалить команду «{name}»?",
+	"command_delete": "Удалить команду",
+	"command_edit": "Редактировать команду",
+	"command_edit_tooltip": "Редактировать {name}",
+	"command_icon_required_error": "Выберите значок, чтобы отобразить эту команду на ленте.",
+	"command_insert_date_link": "Вставить ссылку на заметку журнала",
+	"command_label_today": "Открыть сегодняшнюю заметку",
+	"command_label_tomorrow": "Открыть завтрашнюю заметку",
+	"command_label_yesterday": "Открыть вчерашнюю заметку",
+	"command_modal_context_description": "Выберите, дату какой заметки команда считает текущей.",
+	"command_modal_context_label": "Контекст",
+	"command_modal_context_only_open_note_hint": "Выполняется, только когда открыта заметка журнала, и использует дату этой заметки.",
+	"command_modal_context_open_note_hint": "Использует дату открытой заметки журнала или сегодняшнюю дату, если заметка журнала не открыта.",
+	"common_label_icon": "Значок",
+	"common_label_name": "Название",
+	"command_modal_open_mode_label": "Открывать заметку",
+	"common_show_in_ribbon": "Показывать на ленте",
+	"command_modal_type_label": "Когда выполняется команда",
+	"command_modal_write_type_label": "Тип заметки",
+	"command_name_prefix_hint": [
+		{
+			"declarations": [
+				"input kind"
+			],
+			"selectors": [
+				"kind"
+			],
+			"match": {
+				"kind=journal": "Название журнала автоматически добавляется перед названием команды в палитре.",
+				"kind=shelf": "Название полки автоматически добавляется перед названием команды в палитре."
+			}
+		}
+	],
+	"command_name_required_error": "Название команды обязательно.",
+	"command_name_unique_error": "Название команды должно быть уникальным.",
+	"command_open_mode_option": [
+		{
+			"declarations": [
+				"input mode"
+			],
+			"selectors": [
+				"mode"
+			],
+			"match": {
+				"mode=active": "Замена активной заметки",
+				"mode=tab": "В новой вкладке",
+				"mode=split": "Рядом с активной заметкой",
+				"mode=window": "Во всплывающем окне"
+			}
+		}
+	],
+	"command_open_next": "Открыть следующую заметку",
+	"command_open_previous": "Открыть предыдущую заметку",
+	"command_open_view": "Открыть {name}",
+	"command_view_change_shelf": "Изменить полку в {name}",
+	"shelf_picker_placeholder": "Поиск полок",
+	"command_palette_journal_name": "{journal}: {name}",
+	"command_palette_shelf_name": "Полка: {shelf}: {name}",
+	"command_open_no_next": "После этой заметки следующей нет.",
+	"command_open_no_previous": "Перед этой заметкой предыдущей нет.",
+	"command_open_needs_active_note": "Сначала откройте заметку журнала.",
+	"command_open_unavailable": "Нет заметки для открытия.",
+	"command_type_label": [
+		{
+			"declarations": [
+				"input type",
+				"input writeType"
+			],
+			"selectors": [
+				"type",
+				"writeType"
+			],
+			"match": {
+				"type=same,writeType=day": "Открыть текущую ежедневную заметку",
+				"type=same,writeType=week": "Открыть текущую еженедельную заметку",
+				"type=same,writeType=month": "Открыть текущую ежемесячную заметку",
+				"type=same,writeType=quarter": "Открыть текущую ежеквартальную заметку",
+				"type=same,writeType=year": "Открыть текущую ежегодную заметку",
+				"type=same,writeType=custom": "Открыть текущую пользовательскую заметку",
+				"type=next,writeType=day": "Открыть следующую ежедневную заметку",
+				"type=next,writeType=week": "Открыть следующую еженедельную заметку",
+				"type=next,writeType=month": "Открыть следующую ежемесячную заметку",
+				"type=next,writeType=quarter": "Открыть следующую ежеквартальную заметку",
+				"type=next,writeType=year": "Открыть следующую ежегодную заметку",
+				"type=next,writeType=custom": "Открыть следующую пользовательскую заметку",
+				"type=previous,writeType=day": "Открыть предыдущую ежедневную заметку",
+				"type=previous,writeType=week": "Открыть предыдущую еженедельную заметку",
+				"type=previous,writeType=month": "Открыть предыдущую ежемесячную заметку",
+				"type=previous,writeType=quarter": "Открыть предыдущую ежеквартальную заметку",
+				"type=previous,writeType=year": "Открыть предыдущую ежегодную заметку",
+				"type=previous,writeType=custom": "Открыть предыдущую пользовательскую заметку",
+				"type=previous_available,writeType=day": "Открыть предыдущую существующую ежедневную заметку",
+				"type=previous_available,writeType=week": "Открыть предыдущую существующую еженедельную заметку",
+				"type=previous_available,writeType=month": "Открыть предыдущую существующую ежемесячную заметку",
+				"type=previous_available,writeType=quarter": "Открыть предыдущую существующую ежеквартальную заметку",
+				"type=previous_available,writeType=year": "Открыть предыдущую существующую ежегодную заметку",
+				"type=previous_available,writeType=custom": "Открыть предыдущую существующую пользовательскую заметку",
+				"type=next_available,writeType=day": "Открыть следующую существующую ежедневную заметку",
+				"type=next_available,writeType=week": "Открыть следующую существующую еженедельную заметку",
+				"type=next_available,writeType=month": "Открыть следующую существующую ежемесячную заметку",
+				"type=next_available,writeType=quarter": "Открыть следующую существующую ежеквартальную заметку",
+				"type=next_available,writeType=year": "Открыть следующую существующую ежегодную заметку",
+				"type=next_available,writeType=custom": "Открыть следующую существующую пользовательскую заметку",
+				"type=same_next_week,writeType=*": "Открыть тот же день следующей недели",
+				"type=same_previous_week,writeType=*": "Открыть тот же день прошлой недели",
+				"type=same_next_month,writeType=*": "Открыть тот же день следующего месяца",
+				"type=same_previous_month,writeType=*": "Открыть тот же день прошлого месяца",
+				"type=same_next_year,writeType=day": "Открыть тот же день следующего года",
+				"type=same_next_year,writeType=month": "Открыть тот же месяц следующего года",
+				"type=same_next_year,writeType=quarter": "Открыть тот же квартал следующего года",
+				"type=same_previous_year,writeType=day": "Открыть тот же день прошлого года",
+				"type=same_previous_year,writeType=month": "Открыть тот же месяц прошлого года",
+				"type=same_previous_year,writeType=quarter": "Открыть тот же квартал прошлого года",
+				"type=*,writeType=*": "Открыть заметку"
+			}
+		}
+	],
+	"command_write_type_option": [
+		{
+			"declarations": [
+				"input writeType"
+			],
+			"selectors": [
+				"writeType"
+			],
+			"match": {
+				"writeType=day": "Ежедневная заметка",
+				"writeType=week": "Еженедельная заметка",
+				"writeType=month": "Ежемесячная заметка",
+				"writeType=quarter": "Ежеквартальная заметка",
+				"writeType=year": "Ежегодная заметка",
+				"writeType=custom": "Пользовательская заметка"
+			}
+		}
+	],
+	"common_vault_root": "корень хранилища",
+	"command_connect_note": "Связать заметку с журналом",
+	"connect_note_modal_date_label": "Дата",
+	"connect_note_modal_move_description": "Папка заметки ({current}) отличается от настроенной папки журнала ({configured}).",
+	"connect_note_modal_override_description": "К этой дате привязана другая заметка ({path}). Если включить эту опцию, она будет отвязана.",
+	"connect_note_modal_override_label": "Заменить заметку, уже связанную с этой датой",
+	"connect_note_modal_rename_description": "Название заметки ({current}) отличается от заданного названия журнала ({configured}).",
+	"connect_note_modal_rename_label": "Переименовать файл в соответствии с журналом",
+	"connect_note_modal_move_label": "Переместить файл в папку журнала",
+	"connect_note_modal_connect": "Связать",
+	"connect_note_modal_connected_to": "Эта заметка связана с «{journalName}».",
+	"connect_note_modal_disconnect": "Отвязать",
+	"connect_note_modal_out_of_bounds": "Эта дата вне активной шкалы времени журнала.",
+	"connect_note_notice_connected": "Заметка связана с «{journalName}».",
+	"connect_note_notice_disconnected": "Заметка отвязана от «{journalName}».",
+	"bulk_add_notes_to_title": "Добавить заметки в {journalName}",
+	"bulk_add_folder_label": "Исходная папка",
+	"bulk_add_folder_description": "Выберите папку с существующими заметками, которые вы хотите обработать.",
+	"bulk_add_folder_not_found": "Такой папки нет в вашем хранилище.",
+	"bulk_add_date_place_label": "Читать дату из",
+	"bulk_add_date_place_title": "Заголовок заметки",
+	"bulk_add_date_place_property": "Свойство",
+	"common_label_property_name": "Название свойства",
+	"bulk_add_date_format_label": "Формат даты",
+	"bulk_add_date_format_omit_time": "Если ваши даты содержат временную составляющую, опустите её из формата.",
+	"bulk_add_date_format_property_note": "Даты могут отличаться от того, как они хранятся — проверьте формат в режиме отображения источника.",
+	"bulk_add_filter_combinator_label": "Фильтровать заметки",
+	"bulk_add_filter_combinator_no": "Без фильтра",
+	"bulk_add_filter_combinator_and": "Соответствует всем условиям",
+	"bulk_add_filter_combinator_or": "Соответствует любому условию",
+	"bulk_add_add_filter_title": "Добавить условие заголовка",
+	"bulk_add_add_filter_tag": "Добавить условие тега",
+	"bulk_add_add_filter_property": "Добавить условие свойства",
+	"bulk_add_existing_label": "Когда заметка уже связана с этой датой",
+	"bulk_add_existing_description": [
+		{
+			"declarations": [
+				"input option"
+			],
+			"selectors": [
+				"option"
+			],
+			"match": {
+				"option=skip": "Новая заметка остаётся нетронутой и не связывается с датой.",
+				"option=override": "Новая заметка занимает эту дату; ранее связанная заметка остаётся в хранилище, но отвязывается.",
+				"option=merge": "Содержимое новой заметки добавляется к уже связанной заметке, а новая заметка удаляется.",
+				"option=ask": "Решать для каждой заметки на экране проверки."
+			}
+		}
+	],
+	"bulk_add_other_folder_label": "Когда папка отличается",
+	"bulk_add_other_name_label": "Когда имя отличается",
+	"bulk_add_option_skip": "Пропустить",
+	"bulk_add_option_override": "Заменить",
+	"bulk_add_option_merge": "Объединить",
+	"bulk_add_option_keep": "Оставить",
+	"bulk_add_option_move": "Переместить",
+	"bulk_add_option_rename": "Переименовать",
+	"bulk_add_option_ask": "Спрашивать для каждой",
+	"bulk_add_dry_run_label": "Пробный запуск (только предпросмотр)",
+	"bulk_add_dry_run_description": "Не изменять заметки — только показать, какие изменения были бы внесены.",
+	"bulk_add_next": "Продолжить",
+	"bulk_add_run": "Выполнить",
+	"bulk_add_progress": "Обработка {done} из {total}…",
+	"bulk_add_skipped_count": [
+		{
+			"declarations": [
+				"input count",
+				"local countPlural = count: plural"
+			],
+			"selectors": [
+				"countPlural"
+			],
+			"match": {
+				"countPlural=one": "{count} заметка пропущена",
+				"countPlural=few": "{count} заметки пропущено",
+				"countPlural=many": "{count} заметок пропущено",
+				"countPlural=*": "{count} заметки пропущено"
+			}
+		}
+	],
+	"bulk_add_planned_count": [
+		{
+			"declarations": [
+				"input count",
+				"local countPlural = count: plural"
+			],
+			"selectors": [
+				"countPlural"
+			],
+			"match": {
+				"countPlural=one": "{count} заметка для обработки",
+				"countPlural=few": "{count} заметки для обработки",
+				"countPlural=many": "{count} заметок для обработки",
+				"countPlural=*": "{count} заметки для обработки"
+			}
+		}
+	],
+	"bulk_add_skip_reason_already_connected": "Уже связана",
+	"bulk_add_skip_reason_filtered": "Отфильтрована",
+	"bulk_add_skip_reason_no_date": "Дата не найдена",
+	"bulk_add_skip_reason_invalid_date": "Не удалось разобрать дату",
+	"bulk_add_skip_reason_out_of_bounds": "Вне шкалы времени журнала",
+	"bulk_add_log_skipped_occupied": [
+		{
+			"declarations": [
+				"input mood",
+				"input anchor"
+			],
+			"selectors": [
+				"mood"
+			],
+			"match": {
+				"mood=planned": "Будет пропущено: с {anchor} уже связана заметка.",
+				"mood=done": "Пропущено: с {anchor} уже связана заметка."
+			}
+		}
+	],
+	"bulk_add_log_merged": [
+		{
+			"declarations": [
+				"input mood",
+				"input anchor"
+			],
+			"selectors": [
+				"mood"
+			],
+			"match": {
+				"mood=planned": "Будет объединено с заметкой, уже связанной с {anchor}, а эта заметка будет удалена.",
+				"mood=done": "Объединено с заметкой, уже связанной с {anchor}; эта заметка удалена."
+			}
+		}
+	],
+	"bulk_add_log_replaced": [
+		{
+			"declarations": [
+				"input mood",
+				"input anchor"
+			],
+			"selectors": [
+				"mood"
+			],
+			"match": {
+				"mood=planned": "Заменит заметку, уже связанную с {anchor}.",
+				"mood=done": "Заметка, уже связанная с {anchor}, заменена."
+			}
+		}
+	],
+	"bulk_add_log_moved": [
+		{
+			"declarations": [
+				"input mood"
+			],
+			"selectors": [
+				"mood"
+			],
+			"match": {
+				"mood=planned": "Будет перемещено в папку журнала.",
+				"mood=done": "Перемещено в папку журнала."
+			}
+		}
+	],
+	"bulk_add_log_renamed": [
+		{
+			"declarations": [
+				"input mood"
+			],
+			"selectors": [
+				"mood"
+			],
+			"match": {
+				"mood=planned": "Будет переименовано в соответствии с журналом.",
+				"mood=done": "Переименовано в соответствии с журналом."
+			}
+		}
+	],
+	"bulk_add_log_connected": [
+		{
+			"declarations": [
+				"input mood",
+				"input journalName",
+				"input anchor"
+			],
+			"selectors": [
+				"mood"
+			],
+			"match": {
+				"mood=planned": "Будет связано с {journalName} на {anchor}.",
+				"mood=done": "Связано с {journalName} на {anchor}."
+			}
+		}
+	],
+	"bulk_add_log_merge_occupant_missing": "Не удалось: заметка, уже связанная с этой датой, исчезла до объединения.",
+	"bulk_add_log_failed": "Не удалось: {message}",
+	"bulk_add_dry_run_banner": "Пробный запуск — в вашем хранилище ничего не изменено.",
+	"bulk_add_occupant": "Уже связана: {path}",
+	"bulk_add_target": "Новый путь: {path}",
+	"common_action_cancel": "Отмена",
+	"common_action_close": "Закрыть",
+	"common_action_create": "Создать",
+	"common_action_delete": "Удалить",
+	"common_action_submit": "Сохранить",
+	"confirm_note_creation_body": "Создать «{noteName}» в журнале «{journalName}»?",
+	"confirm_note_creation_confirm": "Создать",
+	"confirm_note_creation_title": "Создать новую заметку журнала?",
+	"decoration_add": "Добавить оформление",
+	"decoration_badge_matched_past": [
+		{
+			"declarations": [
+				"input matched",
+				"input total",
+				"input unit"
+			],
+			"selectors": [
+				"unit"
+			],
+			"match": {
+				"unit=day": "Совпадений: {matched} из {total} последних дней",
+				"unit=week": "Совпадений: {matched} из {total} последних недель",
+				"unit=month": "Совпадений: {matched} из {total} последних месяцев",
+				"unit=quarter": "Совпадений: {matched} из {total} последних кварталов",
+				"unit=year": "Совпадений: {matched} из {total} последних лет",
+				"unit=decade": "Совпадений: {matched} из {total} последних десятилетий",
+				"unit=interval": "Совпадений: {matched} из {total} последних интервалов"
+			}
+		}
+	],
+	"decoration_badge_matched_future": [
+		{
+			"declarations": [
+				"input matched",
+				"input total",
+				"input unit"
+			],
+			"selectors": [
+				"unit"
+			],
+			"match": {
+				"unit=day": "Совпадений: {matched} из {total} следующих дней",
+				"unit=week": "Совпадений: {matched} из {total} следующих недель",
+				"unit=month": "Совпадений: {matched} из {total} следующих месяцев",
+				"unit=quarter": "Совпадений: {matched} из {total} следующих кварталов",
+				"unit=year": "Совпадений: {matched} из {total} следующих лет",
+				"unit=decade": "Совпадений: {matched} из {total} следующих десятилетий",
+				"unit=interval": "Совпадений: {matched} из {total} следующих интервалов"
+			}
+		}
+	],
+	"decoration_badge_silent_past": [
+		{
+			"declarations": [
+				"input total",
+				"input unit"
+			],
+			"selectors": [
+				"unit"
+			],
+			"match": {
+				"unit=day": "Ни одного совпадения за {total} последних дней",
+				"unit=week": "Ни одного совпадения за {total} последних недель",
+				"unit=month": "Ни одного совпадения за {total} последних месяцев",
+				"unit=quarter": "Ни одного совпадения за {total} последних кварталов",
+				"unit=year": "Ни одного совпадения за {total} последних лет",
+				"unit=decade": "Ни одного совпадения за {total} последних десятилетий",
+				"unit=interval": "Ни одного совпадения за {total} последних интервалов"
+			}
+		}
+	],
+	"decoration_badge_silent_future": [
+		{
+			"declarations": [
+				"input total",
+				"input unit"
+			],
+			"selectors": [
+				"unit"
+			],
+			"match": {
+				"unit=day": "Ни одного совпадения за {total} следующих дней",
+				"unit=week": "Ни одного совпадения за {total} следующих недель",
+				"unit=month": "Ни одного совпадения за {total} следующих месяцев",
+				"unit=quarter": "Ни одного совпадения за {total} следующих кварталов",
+				"unit=year": "Ни одного совпадения за {total} следующих лет",
+				"unit=decade": "Ни одного совпадения за {total} следующих десятилетий",
+				"unit=interval": "Ни одного совпадения за {total} следующих интервалов"
+			}
+		}
+	],
+	"decoration_badge_no_history": "Истории пока нет",
+	"decoration_badge_no_notes": "Заметок пока нет",
+	"decoration_border_mode_label": [
+		{
+			"declarations": [
+				"input mode"
+			],
+			"selectors": [
+				"mode"
+			],
+			"match": {
+				"mode=uniform": "Связаны",
+				"mode=different": "По сторонам"
+			}
+		}
+	],
+	"decoration_border_side_label": [
+		{
+			"declarations": [
+				"input side"
+			],
+			"selectors": [
+				"side"
+			],
+			"match": {
+				"side=top": "Сверху",
+				"side=bottom": "Снизу",
+				"side=left": "Слева",
+				"side=right": "Справа"
+			}
+		}
+	],
+	"decoration_border_style_label": [
+		{
+			"declarations": [
+				"input style"
+			],
+			"selectors": [
+				"style"
+			],
+			"match": {
+				"style=solid": "Сплошной",
+				"style=dashed": "Штриховой",
+				"style=dotted": "Пунктирный",
+				"style=groove": "Желобчатый",
+				"style=double": "Двойной"
+			}
+		}
+	],
+	"decoration_breakdown_title": "Разбор оформления",
+	"decoration_breakdown_open": "Проверить дату",
+	"decoration_breakdown_date_label": "Дата",
+	"decoration_breakdown_shelf_label": "Полка в представлении",
+	"decoration_breakdown_shelf_all": "Все журналы",
+	"decoration_breakdown_empty": "Эту дату ничто не оформляет.",
+	"decoration_breakdown_cell_empty": "Эту ячейку ничто не оформляет.",
+	"decoration_breakdown_marks_heading": "Метки",
+	"decoration_breakdown_overridden_heading": "Переопределено здесь",
+	"decoration_breakdown_overridden_for": "Переопределено здесь — {property}",
+	"decoration_breakdown_owner": [
+		{
+			"declarations": [
+				"input kind",
+				"input name"
+			],
+			"selectors": [
+				"kind"
+			],
+			"match": {
+				"kind=journal": "Журнал: {name}",
+				"kind=shelf": "Полка: {name}",
+				"kind=global": "Всё хранилище"
+			}
+		}
+	],
+	"decoration_breakdown_property": [
+		{
+			"declarations": [
+				"input property"
+			],
+			"selectors": [
+				"property"
+			],
+			"match": {
+				"property=background": "Фон",
+				"property=textColor": "Цвет текста",
+				"property=border.top": "Граница сверху",
+				"property=border.right": "Граница справа",
+				"property=border.bottom": "Граница снизу",
+				"property=border.left": "Граница слева",
+				"property=corner.top-left": "Угол сверху слева",
+				"property=corner.top-right": "Угол сверху справа",
+				"property=corner.bottom-left": "Угол снизу слева",
+				"property=corner.bottom-right": "Угол снизу справа"
+			}
+		}
+	],
+	"decoration_breakdown_slot": [
+		{
+			"declarations": [
+				"input slot"
+			],
+			"selectors": [
+				"slot"
+			],
+			"match": {
+				"slot=left_top": "Вверху слева",
+				"slot=left_middle": "По центру слева",
+				"slot=left_bottom": "Внизу слева",
+				"slot=center_top": "Вверху по центру",
+				"slot=center_middle": "По центру",
+				"slot=center_bottom": "Внизу по центру",
+				"slot=right_top": "Вверху справа",
+				"slot=right_middle": "По центру справа",
+				"slot=right_bottom": "Внизу справа"
+			}
+		}
+	],
+	"decoration_breakdown_cell_heading": [
+		{
+			"declarations": [
+				"input kind",
+				"input label"
+			],
+			"selectors": [
+				"kind"
+			],
+			"match": {
+				"kind=day": "День — {label}",
+				"kind=week": "Неделя — {label}",
+				"kind=month": "Месяц — {label}",
+				"kind=quarter": "Квартал — {label}",
+				"kind=year": "Год — {label}",
+				"kind=decade": "Десятилетие — {label}"
+			}
+		}
+	],
+	"decoration_breakdown_interval_heading": "Интервал — {journal} — {label}",
+	"decoration_explain_menu_item": "Объяснить оформление",
+	"decoration_condition_all_tasks_completed_describe": "все задачи выполнены",
+	"decoration_condition_date_describe": [
+		{
+			"declarations": [
+				"input day",
+				"input month",
+				"input year"
+			],
+			"selectors": [
+				"year"
+			],
+			"match": {
+				"year=null": "дата — {day}/{month}",
+				"year=*": "дата — {day}/{month}/{year}"
+			}
+		}
+	],
+	"decoration_condition_date_any": "любой",
+	"decoration_condition_date_any_unit": [
+		{
+			"declarations": [
+				"input unit"
+			],
+			"selectors": [
+				"unit"
+			],
+			"match": {
+				"unit=day": "Любой день",
+				"unit=month": "Любой месяц",
+				"unit=year": "Любой год"
+			}
+		}
+	],
+	"decoration_condition_date_unit_label": [
+		{
+			"declarations": [
+				"input unit"
+			],
+			"selectors": [
+				"unit"
+			],
+			"match": {
+				"unit=day": "День",
+				"unit=month": "Месяц",
+				"unit=year": "Год"
+			}
+		}
+	],
+	"decoration_condition_has_note_describe": "заметка существует",
+	"decoration_condition_has_open_task_describe": "в заметке есть незавершённая задача",
+	"decoration_condition_offset_day_label": "День",
+	"decoration_condition_offset_describe": [
+		{
+			"declarations": [
+				"input side",
+				"input day"
+			],
+			"selectors": [
+				"side",
+				"day"
+			],
+			"match": {
+				"side=start,day=1": "это первый день интервала",
+				"side=start,day=*": "это {day}-й день интервала",
+				"side=end,day=1": "это последний день интервала",
+				"side=end,day=*": "это {day}-й день с конца интервала"
+			}
+		}
+	],
+	"decoration_condition_offset_direction_label": "Отсчёт от",
+	"decoration_condition_offset_direction_option": [
+		{
+			"declarations": [
+				"input side"
+			],
+			"selectors": [
+				"side"
+			],
+			"match": {
+				"side=start": "От начала",
+				"side=end": "От конца"
+			}
+		}
+	],
+	"decoration_condition_offset_hint": [
+		{
+			"declarations": [
+				"input side",
+				"input day"
+			],
+			"selectors": [
+				"side",
+				"day"
+			],
+			"match": {
+				"side=start,day=1": "Совпадает с первым днём интервала.",
+				"side=start,day=*": "Совпадает с {day}-м днём интервала.",
+				"side=end,day=1": "Совпадает с последним днём интервала.",
+				"side=end,day=*": "Совпадает с {day}-м днём с конца интервала."
+			}
+		}
+	],
+	"decoration_condition_op_label": "Условие",
+	"decoration_condition_property_condition_label": "Условие",
+	"decoration_condition_property_describe": "свойство {name} {op} {value}",
+	"decoration_condition_property_value_label": "Значение",
+	"decoration_condition_tag_describe": "тег {op} {value}",
+	"decoration_condition_tag_value_label": "Значение тега",
+	"decoration_condition_title_describe": "заголовок {op} {value}",
+	"decoration_condition_title_value_label": "Значение заголовка",
+	"decoration_condition_type_short": [
+		{
+			"declarations": [
+				"input type"
+			],
+			"selectors": [
+				"type"
+			],
+			"match": {
+				"type=title": "Заголовок",
+				"type=tag": "Тег",
+				"type=property": "Свойство",
+				"type=date": "Дата",
+				"type=weekday": "День недели",
+				"type=offset": "Смещение",
+				"type=has-note": "Есть заметка",
+				"type=has-open-task": "Есть незавершённая задача",
+				"type=all-tasks-completed": "Все задачи выполнены"
+			}
+		}
+	],
+	"decoration_condition_type_label": [
+		{
+			"declarations": [
+				"input type"
+			],
+			"selectors": [
+				"type"
+			],
+			"match": {
+				"type=title": "Проверить заголовок",
+				"type=tag": "Проверить теги",
+				"type=property": "Проверить свойство frontmatter",
+				"type=date": "Проверить дату",
+				"type=weekday": "Проверить день недели",
+				"type=offset": "Проверить смещение в интервале",
+				"type=has-note": "Проверить, существует ли заметка",
+				"type=has-open-task": "Проверить, есть ли в заметке незавершённые задачи",
+				"type=all-tasks-completed": "Проверить, все ли задачи выполнены"
+			}
+		}
+	],
+	"decoration_condition_weekday_describe": "день недели — {weekdays}",
+	"decoration_condition_weekday_label": "Дни недели",
+	"decoration_corner_placement_label": [
+		{
+			"declarations": [
+				"input placement"
+			],
+			"selectors": [
+				"placement"
+			],
+			"match": {
+				"placement=top-left": "Вверху слева",
+				"placement=top-right": "Вверху справа",
+				"placement=bottom-left": "Внизу слева",
+				"placement=bottom-right": "Внизу справа"
+			}
+		}
+	],
+	"decoration_delete": "Удалить оформление",
+	"decoration_delete_modal_warning": "Это навсегда удалит оформление.",
+	"decoration_describe_mode": [
+		{
+			"declarations": [
+				"input kind"
+			],
+			"selectors": [
+				"kind"
+			],
+			"match": {
+				"kind=and": "и",
+				"kind=or": "или"
+			}
+		}
+	],
+	"decoration_describe_when": "когда",
+	"decoration_edit": "Редактировать оформление",
+	"decoration_modal_add_condition": "Добавить условие",
+	"decoration_modal_add_style": "Добавить стиль",
+	"decoration_modal_mode_label": "Когда оформлять",
+	"decoration_modal_mode_option": [
+		{
+			"declarations": [
+				"input kind"
+			],
+			"selectors": [
+				"kind"
+			],
+			"match": {
+				"kind=and": "Оформлять, когда выполнены все условия",
+				"kind=or": "Оформлять, когда выполнено любое условие"
+			}
+		}
+	],
+	"decoration_modal_no_conditions": "Условия пока не определены",
+	"decoration_section_description_calendar": "Оформляет ячейки дней в любом календаре, независимо от того, какие журналы показаны.",
+	"decoration_section_description_journal": "Используйте оформление, чтобы выделять в календаре даты, отвечающие определённым условиям.",
+	"decoration_section_description_shelf": "Оформляет ячейки дней, пока показана эта полка, независимо от того, какие журналы на ней лежат.",
+	"decoration_section_empty": "Оформление ещё не настроено.",
+	"decoration_section_title_calendar": "Оформление календаря",
+	"decoration_section_title_journal": "Оформление журнала",
+	"decoration_section_title_shelf": "Оформление полки",
+	"decoration_shape_label": [
+		{
+			"declarations": [
+				"input shape"
+			],
+			"selectors": [
+				"shape"
+			],
+			"match": {
+				"shape=square": "Квадрат",
+				"shape=circle": "Круг",
+				"shape=triangle-up": "Треугольник (вверх)",
+				"shape=triangle-down": "Треугольник (вниз)",
+				"shape=triangle-left": "Треугольник (влево)",
+				"shape=triangle-right": "Треугольник (вправо)"
+			}
+		}
+	],
+	"decoration_date_op_label": [
+		{
+			"declarations": [
+				"input op"
+			],
+			"selectors": [
+				"op"
+			],
+			"match": {
+				"op=exists": "существует",
+				"op=does-not-exist": "не существует",
+				"op=eq": "приходится на",
+				"op=neq": "не приходится на",
+				"op=lt": "раньше",
+				"op=lte": "не позже",
+				"op=gt": "позже",
+				"op=gte": "не раньше"
+			}
+		}
+	],
+	"decoration_string_op_label": [
+		{
+			"declarations": [
+				"input op"
+			],
+			"selectors": [
+				"op"
+			],
+			"match": {
+				"op=contains": "содержит",
+				"op=starts-with": "начинается с",
+				"op=ends-with": "заканчивается на",
+				"op=exists": "существует",
+				"op=does-not-exist": "не существует",
+				"op=eq": "равно",
+				"op=neq": "не равно",
+				"op=lt": "<",
+				"op=lte": "<=",
+				"op=gt": ">",
+				"op=gte": ">=",
+				"op=is-true": "истинно",
+				"op=is-false": "ложно",
+				"op=does-not-contain": "не содержит"
+			}
+		}
+	],
+	"common_label_color": "Цвет",
+	"decoration_style_border_mode_label": "Режим границы",
+	"decoration_style_border_style_label": "Стиль",
+	"decoration_style_border_width_label": "Ширина",
+	"decoration_style_size_hint": [
+		{
+			"declarations": [
+				"input kind"
+			],
+			"selectors": [
+				"kind"
+			],
+			"match": {
+				"kind=icon": "Размер значка зависит от размера шрифта: значение 1 означает, что размер значка равен размеру буквы.",
+				"kind=shape": "Размер фигуры зависит от размера шрифта: значение 1 означает, что фигура имеет тот же размер, что и буква."
+			}
+		}
+	],
+	"common_label_size": "Размер",
+	"decoration_style_shape_shape_label": "Форма",
+	"decoration_style_type_label": [
+		{
+			"declarations": [
+				"input type"
+			],
+			"selectors": [
+				"type"
+			],
+			"match": {
+				"type=background": "Фон",
+				"type=color": "Цвет",
+				"type=shape": "Форма",
+				"type=corner": "Угол",
+				"type=icon": "Значок",
+				"type=border": "Граница"
+			}
+		}
+	],
+	"ui_color_kind_label": [
+		{
+			"declarations": [
+				"input kind"
+			],
+			"selectors": [
+				"kind"
+			],
+			"match": {
+				"kind=transparent": "Прозрачный",
+				"kind=theme": "Переменная темы",
+				"kind=custom": "Свой"
+			}
+		}
+	],
+	"ui_color_theme_variable_label": "CSS-переменная",
+	"ui_theme_color_group_label": [
+		{
+			"declarations": [
+				"input group"
+			],
+			"selectors": [
+				"group"
+			],
+			"match": {
+				"group=text": "Текст",
+				"group=background": "Фон",
+				"group=border": "Граница"
+			}
+		}
+	],
+	"ui_theme_color_background_primary": "Основной фон",
+	"ui_theme_color_background_primary_alt": "Фон для поверхностей поверх основного фона",
+	"ui_theme_color_background_secondary": "Вторичный фон",
+	"ui_theme_color_background_secondary_alt": "Фон для поверхностей поверх вторичного фона",
+	"ui_theme_color_background_modifier_hover": "Элементы при наведении",
+	"ui_theme_color_background_modifier_active_hover": "Активные элементы при наведении",
+	"ui_theme_color_background_modifier_border": "Цвет границы",
+	"ui_theme_color_background_modifier_border_hover": "Цвет границы (наведение)",
+	"ui_theme_color_background_modifier_border_focus": "Цвет границы (фокус)",
+	"ui_theme_color_background_modifier_error": "Фон ошибки",
+	"ui_theme_color_background_modifier_error_hover": "Фон ошибки (наведение)",
+	"ui_theme_color_background_modifier_success": "Фон успеха",
+	"ui_theme_color_background_modifier_message": "Фон сообщений",
+	"ui_theme_color_interactive_normal": "Фон стандартных интерактивных элементов",
+	"ui_theme_color_interactive_hover": "Фон стандартных интерактивных элементов (наведение)",
+	"ui_theme_color_interactive_accent": "Фон акцентных интерактивных элементов",
+	"ui_theme_color_interactive_accent_hover": "Фон акцентных интерактивных элементов (наведение)",
+	"ui_theme_color_text_normal": "Обычный текст",
+	"ui_theme_color_text_muted": "Приглушённый текст",
+	"ui_theme_color_text_faint": "Бледный текст",
+	"ui_theme_color_text_on_accent": "Текст на акцентном фоне, когда акцент тёмный",
+	"ui_theme_color_text_on_accent_inverted": "Текст на акцентном фоне, когда акцент светлый",
+	"ui_theme_color_text_success": "Текст успеха",
+	"ui_theme_color_text_warning": "Текст предупреждения",
+	"ui_theme_color_text_error": "Текст ошибки",
+	"ui_theme_color_text_accent": "Акцентный текст",
+	"ui_theme_color_text_accent_hover": "Акцентный текст (наведение)",
+	"ui_theme_color_text_selection": "Фон выделенного текста",
+	"ui_theme_color_text_highlight_bg": "Фон подсвеченного текста",
+	"ui_theme_color_caret_color": "Цвет курсора",
+	"journal_add_modal_anchor_description": "Эта дата используется для отсчёта пользовательских интервалов. Её нельзя изменить после создания журнала.",
+	"common_label_today": "Сегодня",
+	"relative_date_yesterday": "Вчера",
+	"relative_date_tomorrow": "Завтра",
+	"relative_date_last_named_day": "{weekday} (прошлая неделя)",
+	"relative_date_named_day": "{weekday}",
+	"relative_date_this": [
+		{
+			"declarations": [
+				"input period"
+			],
+			"selectors": [
+				"period"
+			],
+			"match": {
+				"period=week": "На этой неделе",
+				"period=month": "В этом месяце",
+				"period=quarter": "В этом квартале",
+				"period=year": "В этом году"
+			}
+		}
+	],
+	"relative_date_last": [
+		{
+			"declarations": [
+				"input period"
+			],
+			"selectors": [
+				"period"
+			],
+			"match": {
+				"period=week": "На прошлой неделе",
+				"period=month": "В прошлом месяце",
+				"period=quarter": "В прошлом квартале",
+				"period=year": "В прошлом году"
+			}
+		}
+	],
+	"relative_date_next": [
+		{
+			"declarations": [
+				"input period"
+			],
+			"selectors": [
+				"period"
+			],
+			"match": {
+				"period=week": "На следующей неделе",
+				"period=month": "В следующем месяце",
+				"period=quarter": "В следующем квартале",
+				"period=year": "В следующем году"
+			}
+		}
+	],
+	"relative_date_ago": [
+		{
+			"declarations": [
+				"input count",
+				"input period",
+				"local countPlural = count: plural"
+			],
+			"selectors": [
+				"period",
+				"countPlural"
+			],
+			"match": {
+				"period=week,countPlural=one": "{count} неделю назад",
+				"period=week,countPlural=few": "{count} недели назад",
+				"period=week,countPlural=many": "{count} недель назад",
+				"period=week,countPlural=*": "{count} недели назад",
+				"period=month,countPlural=one": "{count} месяц назад",
+				"period=month,countPlural=few": "{count} месяца назад",
+				"period=month,countPlural=many": "{count} месяцев назад",
+				"period=month,countPlural=*": "{count} месяца назад",
+				"period=quarter,countPlural=one": "{count} квартал назад",
+				"period=quarter,countPlural=few": "{count} квартала назад",
+				"period=quarter,countPlural=many": "{count} кварталов назад",
+				"period=quarter,countPlural=*": "{count} квартала назад",
+				"period=year,countPlural=one": "{count} год назад",
+				"period=year,countPlural=few": "{count} года назад",
+				"period=year,countPlural=many": "{count} лет назад",
+				"period=year,countPlural=*": "{count} года назад"
+			}
+		}
+	],
+	"relative_date_custom_this": "Этот {name}",
+	"relative_date_custom_last": "Прошлый {name}",
+	"relative_date_custom_next": "Следующий {name}",
+	"relative_date_custom_ago": "{count} {name} назад",
+	"relative_date_custom_from_now": "через {count} {name}",
+	"relative_date_from_now": [
+		{
+			"declarations": [
+				"input count",
+				"input period",
+				"local countPlural = count: plural"
+			],
+			"selectors": [
+				"period",
+				"countPlural"
+			],
+			"match": {
+				"period=week,countPlural=one": "через {count} неделю",
+				"period=week,countPlural=few": "через {count} недели",
+				"period=week,countPlural=many": "через {count} недель",
+				"period=week,countPlural=*": "через {count} недели",
+				"period=month,countPlural=one": "через {count} месяц",
+				"period=month,countPlural=few": "через {count} месяца",
+				"period=month,countPlural=many": "через {count} месяцев",
+				"period=month,countPlural=*": "через {count} месяца",
+				"period=quarter,countPlural=one": "через {count} квартал",
+				"period=quarter,countPlural=few": "через {count} квартала",
+				"period=quarter,countPlural=many": "через {count} кварталов",
+				"period=quarter,countPlural=*": "через {count} квартала",
+				"period=year,countPlural=one": "через {count} год",
+				"period=year,countPlural=few": "через {count} года",
+				"period=year,countPlural=many": "через {count} лет",
+				"period=year,countPlural=*": "через {count} года"
+			}
+		}
+	],
+	"shelf_add": "Добавить полку",
+	"common_delete_name": "Удалить {name}",
+	"shelf_dashboard_description": "Полка группирует журналы, которые относятся к одному контексту, например рабочие или личные. Представление календаря показывает одну полку за раз, блоки навигации оформляются по журналам полки, а команда может быть направлена на полку.",
+	"shelf_dashboard_empty": "Полки пока не созданы.",
+	"shelf_dashboard_open": "Настроить {name}",
+	"shelf_dashboard_section_title": "Полки для журналов",
+	"shelf_delete_modal_destination_label": "Переместить журналы в",
+	"shelf_delete_modal_destination_none": "Нет",
+	"shelf_delete_modal_destination_description": "Журналы на этой полке перемещаются на выбранную полку или снимаются с полки, если ни одна не выбрана. Заметки остаются без изменений.",
+	"shelf_delete_modal_moved_out": "Журналы будут сняты с полки. Заметки останутся без изменений.",
+	"shelf_delete_modal_title": "Удалить полку {name}",
+	"journal_create": "Создать новый журнал",
+	"common_label_journals": "Журналы",
+	"shelf_rename": "Переименовать полку",
+	"shelf_journals_block_title_filtered": "Журналы не на полке",
+	"shelf_member_count": [
+		{
+			"declarations": [
+				"input count",
+				"local countPlural = count: plural"
+			],
+			"selectors": [
+				"countPlural"
+			],
+			"match": {
+				"countPlural=one": "{count} журнал",
+				"countPlural=few": "{count} журнала",
+				"countPlural=many": "{count} журналов",
+				"countPlural=*": "{count} журнала"
+			}
+		}
+	],
+	"shelf_modal_name_label": "Название полки",
+	"shelf_name_placeholder": "например, Работа",
+	"shelf_name_required_error": "Название полки обязательно.",
+	"shelf_name_unchanged_error": "Введите другое название.",
+	"shelf_name_unique_error": "Название полки должно быть уникальным.",
+	"common_label_shelf": "Полка",
+	"shelf_place_modal_title": "Разместить журнал",
+	"shelf_section_not_on_shelf": "Не на полке",
+	"shelf_section_place_tooltip": "Поставить на полку",
+	"flow_failure_notice": "Журнал: что-то пошло не так — {error}",
+	"settings_load_failed": "Журнал: не удалось загрузить настройки — {error}",
+	"settings_reload_failed": "Журнал: не удалось перезагрузить настройки — {error}",
+	"settings_reload_required_banner": "Перезагрузите Obsidian, чтобы применить изменённые настройки.",
+	"settings_tab_title": "Журналы",
+	"startup_dashboard_section_title": "Запуск",
+	"startup_open_note_title": "Открывать при запуске",
+	"startup_open_note_desc": "Открывать заметку при каждом открытии этого хранилища.",
+	"startup_dont_open_option": "Не открывать",
+	"uri_missing_target": "Для URI журнала нужен параметр «journal» или «type».",
+	"uri_unknown_write_type": "Неизвестный тип журнала «{type}» в URI.",
+	"uri_invalid_date": "Не удалось распознать дату «{date}» в URI.",
+	"uri_invalid_mode": "Неизвестный режим открытия «{mode}» в URI.",
+	"uri_unknown_journal": "Журнала с названием «{journal}» не существует.",
+	"uri_no_journal": "Ни один журнал не охватывает эту дату.",
+	"uri_no_journal_of_type": [
+		{
+			"declarations": [
+				"input type"
+			],
+			"selectors": [
+				"type"
+			],
+			"match": {
+				"type=day": "Ни один журнал не создаёт ежедневные заметки.",
+				"type=week": "Ни один журнал не создаёт еженедельные заметки.",
+				"type=month": "Ни один журнал не создаёт ежемесячные заметки.",
+				"type=quarter": "Ни один журнал не создаёт ежеквартальные заметки.",
+				"type=year": "Ни один журнал не создаёт ежегодные заметки."
+			}
+		}
+	],
+	"uri_open_failed": "Не удалось открыть заметку журнала.",
+	"view_deleted_error": "Это представление удалено. Закройте эту вкладку или создайте представление заново в настройках плагина.",
+	"view_block_unknown_error": "Этот блок больше недоступен. Удалите его из представления в настройках плагина.",
+	"view_block_config_error": "Некоторые настройки этого блока недопустимы. Перенастройте его в настройках плагина.",
+	"view_dashboard_section_title": "Представления",
+	"view_dashboard_empty": "Представлений пока нет.",
+	"view_dashboard_add": "Добавить представление",
+	"view_dashboard_open": "Настроить {name}",
+	"view_dashboard_clone": "Клонировать {name}",
+	"view_add_modal_title": "Добавить представление",
+	"view_rename": "Переименовать представление",
+	"view_name_required_error": "Название обязательно.",
+	"view_name_unchanged_error": "Введите другое название.",
+	"view_delete_modal_title": "Удалить представление {name}",
+	"view_delete_modal_description": "Представление и конфигурация его блоков удаляются. Ваши заметки не затрагиваются.",
+	"view_add_block": "Добавить блок",
+	"view_add_block_empty": "Типы блоков не зарегистрированы.",
+	"view_add_picker_action": "Добавить {label}",
+	"view_block_divider_label": "Разделитель",
+	"view_block_toolbar_label": "Панель инструментов",
+	"view_block_toolbar_description": "Контейнер для элементов панели инструментов, таких как кнопки и выбор полки.",
+	"view_add_toolbar_item": "Добавить элемент панели инструментов",
+	"view_add_toolbar_item_empty": "Элементы панели инструментов не зарегистрированы.",
+	"view_edit_icon_description": "Отображается в заголовке вкладки представления и на ленте.",
+	"view_edit_default_shelf_label": "Полка по умолчанию",
+	"view_edit_default_shelf_description": "Полка, с которой это представление открывается.",
+	"view_edit_show_in_ribbon_description": "Добавить на ленту кнопку, открывающую это представление.",
+	"common_label_all_journals": "Все журналы",
+	"view_edit_open_on_startup_label": "Открывать при запуске",
+	"view_edit_open_on_startup_description": "Открывать это представление при каждом открытии хранилища. Не связано с настройкой заметки при запуске на главной странице настроек.",
+	"view_edit_remember_date_label": "Запоминать последнюю просмотренную дату",
+	"view_edit_remember_date_description": "Если выключено, календарь при каждом запуске открывается на сегодняшней дате. Если включено, он открывается на последней просмотренной дате.",
+	"view_edit_follow_active_date_label": "Следовать за активной заметкой",
+	"view_edit_follow_active_date_description": "Когда включено, при открытии заметки журнала это представление переходит к дате этой заметки. Вы всё равно можете перейти к другой дате.",
+	"view_edit_leaf_label": "Открыть в",
+	"view_edit_leaf_description": "Где открывается представление: закреплённым в боковой панели или обычной вкладкой в основном рабочем пространстве.",
+	"view_edit_leaf_left": "Левая боковая панель",
+	"view_edit_leaf_right": "Правая боковая панель",
+	"view_edit_leaf_tab": "Новая вкладка",
+	"view_reposition_modal_title": "Переместить открытое представление?",
+	"view_reposition_modal_description": "Это представление открыто. Переместить его в {location}?",
+	"view_reposition_modal_confirm": "Переместить",
+	"view_edit_blocks_title": "Блоки",
+	"view_edit_blocks_empty": "Пока нет блоков.",
+	"view_block_unknown_label": "Неизвестный блок: {key}",
+	"view_block_edit": "Редактировать блок",
+	"view_block_edit_title": "Редактировать блок: {type}",
+	"view_block_remove": "Удалить блок",
+	"view_toolbar_item_unknown_label": "Неизвестный элемент панели инструментов: {key}",
+	"view_toolbar_item_edit": "Редактировать элемент панели инструментов",
+	"view_toolbar_item_edit_title": "Редактировать {type}",
+	"view_toolbar_item_edit_title_detail": "Редактировать {type}: {detail}",
+	"view_toolbar_item_remove": "Удалить элемент панели инструментов",
+	"view_toolbar_item_empty": "Элементов панели инструментов пока нет.",
+	"view_block_month_calendar_label": "Календарь на месяц",
+	"view_block_month_calendar_description": "Показывает одну или несколько месячных сеток вокруг выбранной даты.",
+	"view_block_week_calendar_label": "Календарь на неделю",
+	"view_block_week_calendar_description": "Показывает одну или несколько недельных полос вокруг выбранной даты.",
+	"common_custom_intervals": "Пользовательские интервалы",
+	"view_block_custom_intervals_description": "Перечисляет заметки пользовательских журналов, попадающие в настраиваемое временное окно.",
+	"view_block_markdown_template_label": "Шаблон Markdown",
+	"view_block_markdown_template_description": "Отображает шаблонную заметку как Markdown с обработкой переменных журнала.",
+	"view_block_markdown_template_path_label": "Файл шаблона",
+	"view_block_markdown_template_path_placeholder": "путь/к/шаблону.md",
+	"view_block_markdown_template_variables_link": "Поддерживаемые переменные.",
+	"view_block_markdown_template_variables_modal_title": "Переменные шаблона Markdown",
+	"view_block_markdown_template_variables_intro": "Эти переменные заменяются при отрисовке шаблона. Даты выводятся в формате YYYY-MM-DD, а время — в формате HH:mm, если не указан явный формат.",
+	"view_block_markdown_template_variable_date_description": "Дата активной заметки или дата в фокусе представления, если заметка журнала не открыта.",
+	"view_block_markdown_template_variable_current_date_description": "Сегодняшняя дата на момент отображения блока.",
+	"view_block_markdown_template_variable_time_description": "Текущее время по часам на момент отображения блока.",
+	"view_block_markdown_template_variable_current_time_description": "Текущее время по часам на момент отображения блока (псевдоним переменной времени).",
+	"view_block_markdown_template_variable_journal_link_description": "Преобразуется в путь в хранилище к заметке другого журнала за дату в фокусе. Оберните его в ссылку самостоятельно и добавьте сдвиг, например +1w, чтобы указать на соседний период.",
+	"view_block_markdown_template_empty": "Шаблон не выбран",
+	"view_block_markdown_template_read_error": "Не удалось прочитать файл шаблона.",
+	"view_block_summary_before": "{count} до",
+	"view_block_summary_after": "{count} после",
+	"view_block_summary_hidden_days": "Скрыто: {days}",
+	"view_block_summary_journal_count": [
+		{
+			"declarations": [
+				"input count",
+				"local countPlural = count: plural"
+			],
+			"selectors": [
+				"countPlural"
+			],
+			"match": {
+				"countPlural=one": "{count} журнал",
+				"countPlural=few": "{count} журнала",
+				"countPlural=many": "{count} журналов",
+				"countPlural=*": "{count} журнала"
+			}
+		}
+	],
+	"view_block_toolbar_item_count": [
+		{
+			"declarations": [
+				"input count",
+				"local countPlural = count: plural"
+			],
+			"selectors": [
+				"countPlural"
+			],
+			"match": {
+				"countPlural=one": "{count} элемент",
+				"countPlural=few": "{count} элемента",
+				"countPlural=many": "{count} элементов",
+				"countPlural=*": "{count} элемента"
+			}
+		}
+	],
+	"view_block_config_window_label": "Окно",
+	"view_block_config_window_current": [
+		{
+			"declarations": [
+				"input period"
+			],
+			"selectors": [
+				"period"
+			],
+			"match": {
+				"period=week": "Текущая неделя",
+				"period=month": "Текущий месяц",
+				"period=quarter": "Текущий квартал",
+				"period=year": "Текущий год"
+			}
+		}
+	],
+	"view_toolbar_shelf_selector_label": "Выбор полки",
+	"view_toolbar_shelf_selector_description": "Определяет, какая полка ограничивает журналы представления.",
+	"view_toolbar_shelf_selector_tooltip": "Сменить полку",
+	"view_toolbar_spacer_label": "Отступ",
+	"view_toolbar_spacer_description": "Гибкий промежуток, раздвигающий соседние элементы.",
+	"view_toolbar_period_buttons_label": "Кнопки периодов",
+	"view_toolbar_period_buttons_description": "Отображает кликабельные значки для текущей недели, месяца, квартала и года.",
+	"view_toolbar_period_buttons_config": [
+		{
+			"declarations": [
+				"input period"
+			],
+			"selectors": [
+				"period"
+			],
+			"match": {
+				"period=week": "Показывать неделю",
+				"period=month": "Показывать месяц",
+				"period=quarter": "Показывать квартал",
+				"period=year": "Показывать год"
+			}
+		}
+	],
+	"view_toolbar_period_buttons_config_label": "Периоды",
+	"view_toolbar_existing_navigation_label": "Навигация по существующим заметкам",
+	"view_toolbar_existing_navigation_description": "Кнопка, позволяющая перейти к предыдущей или следующей уже существующей заметке.",
+	"view_toolbar_existing_navigation_target": "Заметки для перехода",
+	"view_toolbar_existing_navigation_target_active": "Заметки активного журнала",
+	"view_toolbar_existing_navigation_direction": "Направление",
+	"view_toolbar_existing_navigation_direction_option": [
+		{
+			"declarations": [
+				"input direction"
+			],
+			"selectors": [
+				"direction"
+			],
+			"match": {
+				"direction=previous": "Предыдущий",
+				"direction=next": "Следующий"
+			}
+		}
+	],
+	"view_toolbar_button_label": "Кнопка",
+	"view_toolbar_button_preset_pick_date": "Выбрать дату",
+	"view_toolbar_button_preset_pick_date_description": "Открывает окно выбора даты для перехода к любой заметке.",
+	"view_toolbar_button_preset_open_note": "Открыть заметку",
+	"view_toolbar_button_preset_open_note_description": "Переход к заметке текущего периода.",
+	"view_toolbar_button_preset_navigate": "Пошаговая навигация",
+	"view_toolbar_button_preset_navigate_description": "Шаг вперёд или назад на фиксированный интервал.",
+	"view_toolbar_button_default_tooltip_pick_multi": "Открыть заметку",
+	"view_toolbar_button_default_label_current": "Текущий",
+	"view_toolbar_button_default_tooltip_current_multi": "Перейти к текущему…",
+	"view_toolbar_button_default_tooltip_prev_unit": [
+		{
+			"declarations": [
+				"input unit"
+			],
+			"selectors": [
+				"unit"
+			],
+			"match": {
+				"unit=week": "Предыдущая неделя",
+				"unit=month": "Предыдущий месяц",
+				"unit=quarter": "Предыдущий квартал",
+				"unit=year": "Предыдущий год"
+			}
+		}
+	],
+	"view_toolbar_button_default_tooltip_next_unit": [
+		{
+			"declarations": [
+				"input unit"
+			],
+			"selectors": [
+				"unit"
+			],
+			"match": {
+				"unit=week": "Следующая неделя",
+				"unit=month": "Следующий месяц",
+				"unit=quarter": "Следующий квартал",
+				"unit=year": "Следующий год"
+			}
+		}
+	],
+	"view_toolbar_button_menu_pick": [
+		{
+			"declarations": [
+				"input unit"
+			],
+			"selectors": [
+				"unit"
+			],
+			"match": {
+				"unit=day": "Выбрать дату",
+				"unit=week": "Выбрать неделю",
+				"unit=month": "Выбрать месяц",
+				"unit=quarter": "Выбрать квартал",
+				"unit=year": "Выбрать год"
+			}
+		}
+	],
+	"view_toolbar_button_config_label_label": "Подпись",
+	"view_toolbar_button_config_tooltip_label": "Подсказка",
+	"view_toolbar_appearance_label_label": "Подпись",
+	"view_toolbar_appearance_reset": [
+		{
+			"declarations": [
+				"input field"
+			],
+			"selectors": [
+				"field"
+			],
+			"match": {
+				"field=icon": "Вернуть значок по умолчанию",
+				"field=label": "Вернуть подпись по умолчанию",
+				"field=tooltip": "Вернуть подсказку по умолчанию"
+			}
+		}
+	],
+	"view_toolbar_appearance_tooltip_label": "Подсказка",
+	"view_toolbar_button_config_journal_default": "Все журналы на полке",
+	"view_toolbar_button_config_mode_label": "Поведение",
+	"view_toolbar_button_config_levels_label": "Периоды",
+	"view_toolbar_button_config_mode_option": [
+		{
+			"declarations": [
+				"input mode"
+			],
+			"selectors": [
+				"mode"
+			],
+			"match": {
+				"mode=select-only": "Только перемещать календарь",
+				"mode=navigate": "Открывать заметку, только если она существует",
+				"mode=create": "Создавать заметку, если её нет"
+			}
+		}
+	],
+	"view_toolbar_button_config_level_option": [
+		{
+			"declarations": [
+				"input level"
+			],
+			"selectors": [
+				"level"
+			],
+			"match": {
+				"level=day": "День",
+				"level=week": "Неделя",
+				"level=month": "Месяц",
+				"level=quarter": "Квартал",
+				"level=year": "Год"
+			}
+		}
+	],
+	"view_toolbar_button_config_step_label": "Шаг",
+	"view_toolbar_button_config_direction_label": "Направление",
+	"view_toolbar_button_config_direction_option": [
+		{
+			"declarations": [
+				"input direction",
+				"input unit"
+			],
+			"selectors": [
+				"direction",
+				"unit"
+			],
+			"match": {
+				"direction=prev,unit=week": "Предыдущая",
+				"direction=next,unit=week": "Следующая",
+				"direction=prev,unit=month": "Предыдущий",
+				"direction=next,unit=month": "Следующий",
+				"direction=prev,unit=quarter": "Предыдущий",
+				"direction=next,unit=quarter": "Следующий",
+				"direction=prev,unit=year": "Предыдущий",
+				"direction=next,unit=year": "Следующий",
+				"direction=prev,unit=*": "Предыдущий",
+				"direction=next,unit=*": "Следующий"
+			}
+		}
+	],
+	"view_toolbar_button_config_granularity_label": "Детализация",
+	"view_block_config_before": [
+		{
+			"declarations": [
+				"input unit"
+			],
+			"selectors": [
+				"unit"
+			],
+			"match": {
+				"unit=month": "Месяцев до",
+				"unit=week": "Недель до"
+			}
+		}
+	],
+	"view_block_config_after": [
+		{
+			"declarations": [
+				"input unit"
+			],
+			"selectors": [
+				"unit"
+			],
+			"match": {
+				"unit=month": "Месяцев после",
+				"unit=week": "Недель после"
+			}
+		}
+	],
+	"view_block_config_hidden_weekdays_label": "Дни недели",
+	"view_block_config_weeks_label": "Номера недель",
+	"view_block_config_weeks_default": "Использовать глобальное значение по умолчанию",
+	"view_block_config_weeks_none": "Скрыты",
+	"view_block_config_weeks_left": "Перед днями недели",
+	"view_block_config_weeks_right": "После дней недели",
+	"calendar_week_placement_label": "Номера недель по умолчанию",
+	"calendar_week_placement_description": "Где отображается столбец с номерами недель в блоках календаря, для которых выбрано «Использовать глобальное значение по умолчанию».",
+	"view_block_config_show_heading_label": "Показывать заголовок месяца/года",
+	"journal_add_modal_anchor_label": "Дата начала",
+	"journal_add_modal_anchor_required_error": "Выберите дату начала.",
+	"journal_add_modal_duration_label": "Продолжительность",
+	"journal_add_modal_every_label": "Интервал",
+	"journal_add_modal_name_placeholder": "например, Ежедневный",
+	"journal_add_modal_name_label": "Название журнала",
+	"journal_add_modal_title": "Добавить журнал",
+	"journal_add_modal_write_label": "Я буду писать",
+	"journal_colliding_heading": "Конфликт настроек журнала",
+	"journal_colliding_warning": "У журналов {names} конфликтующие конфигурации, поэтому их заметки будут перезаписывать друг друга. Измените папку или шаблон названия в одном из них.",
+	"journal_note_name_empty_notice": "В журнале «{journalName}» шаблон названия даёт пустое название заметки, поэтому заметку нельзя создать. Задайте шаблон названия в настройках журнала.",
+	"journal_dashboard_bulk_add": "Массовое добавление заметок в {name}",
+	"journal_dashboard_edit": "Настроить {name}",
+	"journal_dashboard_empty": "Журналы пока не созданы.",
+	"journal_delete_modal_title": "Удалить {name}",
+	"journal_delete_connected_count": [
+		{
+			"declarations": [
+				"input count",
+				"local countPlural = count: plural"
+			],
+			"selectors": [
+				"count",
+				"countPlural"
+			],
+			"match": {
+				"count=0,countPlural=*": "С этим журналом не связано ни одной заметки.",
+				"count=*,countPlural=one": "С этим журналом связана {count} заметка.",
+				"count=*,countPlural=few": "С этим журналом связаны {count} заметки.",
+				"count=*,countPlural=many": "С этим журналом связано {count} заметок.",
+				"count=*,countPlural=*": "С этим журналом связано {count} заметки."
+			}
+		}
+	],
+	"journal_delete_mode_label": "Что делать со связанными заметками",
+	"journal_delete_mode_option": [
+		{
+			"declarations": [
+				"input mode"
+			],
+			"selectors": [
+				"mode"
+			],
+			"match": {
+				"mode=keep": "Оставить заметки",
+				"mode=clear": "Очистить данные журнала",
+				"mode=delete": "Удалить заметки"
+			}
+		}
+	],
+	"journal_delete_mode_description": [
+		{
+			"declarations": [
+				"input mode"
+			],
+			"selectors": [
+				"mode"
+			],
+			"match": {
+				"mode=keep": "Заметки остаются в вашем хранилище без изменений.",
+				"mode=clear": "Заметки остаются в вашем хранилище, но свойства журнала удаляются из их frontmatter.",
+				"mode=delete": "Все заметки, связанные с этим журналом, удаляются из вашего хранилища."
+			}
+		}
+	],
+	"journal_edit_allow_before_description": "Разрешить индексацию до даты привязки. Может давать отрицательные номера.",
+	"journal_edit_allow_before_label": "Разрешить до даты привязки",
+	"journal_edit_anchor_description": "Нумерация начинается с этой даты. Заметка за эту дату получает начальный номер, а следующие нумеруются дальше.",
+	"journal_edit_anchor_label": "Дата привязки",
+	"journal_edit_clear_start_tooltip": "Очистить дату начала",
+	"journal_edit_anchor_start_used": "Дата начала используется как дата привязки.",
+	"journal_edit_auto_create_confirmation_skip_note": "Диалоговое окно подтверждения не будет отображаться для автоматически созданных заметок.",
+	"journal_edit_auto_create_description": "Автоматически создавать сегодняшнюю заметку при загрузке плагина и каждую местную полночь.",
+	"journal_edit_auto_create_label": "Автоматически создавать сегодняшнюю заметку",
+	"journal_edit_confirm_creation_description": "Показывать диалог подтверждения при переходе к дате, для которой ещё нет заметки.",
+	"journal_edit_confirm_creation_label": "Подтверждать создание новых заметок",
+	"journal_edit_date_format_description": "Формат по умолчанию для переменных дат, которые не указывают свой собственный формат, например:",
+	"journal_edit_date_format_label": "Формат даты по умолчанию",
+	"journal_edit_date_format_preview_label": "Отформатированная дата:",
+	"journal_edit_date_format_week_date_note": "В еженедельном журнале {slot} — это день внутри недели, выбранный так, чтобы токены года совпадали с годом этой недели.",
+	"journal_edit_date_format_week_start_note": "Используйте {slot} для первого дня недели.",
+	"common_moment_format_reference": "Справочник по формату moment.js",
+	"journal_edit_end_description": [
+		{
+			"declarations": [
+				"input kind"
+			],
+			"selectors": [
+				"kind"
+			],
+			"match": {
+				"kind=never": "Заметки создаются бесконечно.",
+				"kind=date": "Новые заметки после этой даты создаваться не будут.",
+				"kind=repeats": "После создания указанного количества заметок новые заметки создаваться не будут."
+			}
+		}
+	],
+	"journal_edit_end_kind": [
+		{
+			"declarations": [
+				"input kind"
+			],
+			"selectors": [
+				"kind"
+			],
+			"match": {
+				"kind=never": "Никогда",
+				"kind=date": "После даты",
+				"kind=repeats": "После повторения"
+			}
+		}
+	],
+	"journal_edit_end_repeats_needs_start_warning": "Укажите дату начала — журналу, который заканчивается после определённого числа повторений, нужна точка отсчёта.",
+	"journal_edit_end_repeats_suffix": "раз",
+	"journal_edit_end_writing_label": "Создавать заметки до",
+	"journal_edit_fm_end_toggle_label": "Добавить свойство даты окончания",
+	"journal_edit_fm_start_description": "Для еженедельных журналов, охватывающих два года, дата начала может отличаться от свойства date.",
+	"journal_edit_fm_start_toggle_label": "Добавить свойство даты начала",
+	"journal_edit_folder_description": "В этой папке будут создаваться новые заметки.",
+	"journal_edit_folder_label": "Папка",
+	"journal_edit_move_to_folder_apply_link": "Применить рекомендацию",
+	"journal_edit_move_to_folder_recommendation_date_format": "Формат даты содержит разделитель пути. Переместить переменные даты в поле «Папка»?",
+	"journal_edit_move_to_folder_recommendation_name_template": "Шаблон названия заметки содержит разделитель пути. Переместить префикс пути в поле «Папка»?",
+	"journal_edit_name_template_description": "Шаблон, по которому создаются названия новых заметок.",
+	"journal_edit_name_template_empty_warning": "Этот шаблон названия даёт пустое название заметки, поэтому заметку нельзя создать. Добавьте переменную или текст.",
+	"journal_edit_name_template_collision_warning": "Периоды {first} и {second} дают один и тот же путь {path}. У них будет одна общая заметка.",
+	"journal_edit_colliding_warning": "Этот журнал даёт тот же путь к заметкам, что и {names}, поэтому их заметки будут перезаписывать друг друга. Измените папку или шаблон названия, чтобы у него был отдельный путь.",
+	"journal_edit_name_template_invertibility_warning": [
+		{
+			"declarations": [
+				"input reason",
+				"input offending"
+			],
+			"selectors": [
+				"reason"
+			],
+			"match": {
+				"reason=unknown-variable": "Шаблон названия использует «{offending}» — это не известная переменная, поэтому заметки, созданные вне плагина, невозможно сопоставить с этим журналом.",
+				"reason=function-token": "Шаблон названия использует функцию «{offending}», поэтому заметки, созданные вне плагина, невозможно сопоставить с этим журналом.",
+				"reason=clock-variable": "Шаблон названия использует «{offending}» — это время суток, поэтому заметки, созданные вне плагина, невозможно сопоставить с этим журналом."
+			}
+		}
+	],
+	"journal_edit_name_template_no_anchor_warning": "В шаблоне названия нет переменной даты, а его переменную нумерации нельзя преобразовать обратно в дату, поэтому заметки, созданные вне плагина, невозможно сопоставить с этим журналом.",
+	"journal_edit_name_template_label": "Шаблон названия заметки",
+	"journal_edit_note_path_preview_label": "Итоговый путь к заметке:",
+	"journal_edit_rename_tooltip": "Переименовать журнал",
+	"journal_edit_reset_count_suffix": "повторений",
+	"journal_edit_reset_description": "Как номер меняется со временем.",
+	"journal_edit_reset_label": "Сброс",
+	"journal_edit_reset_option": [
+		{
+			"declarations": [
+				"input kind"
+			],
+			"selectors": [
+				"kind"
+			],
+			"match": {
+				"kind=never": "Непрерывный",
+				"kind=after": "Сбрасывается после"
+			}
+		}
+	],
+	"journal_edit_section_frontmatter": "Frontmatter",
+	"journal_edit_section_note_creation": "Создание заметок",
+	"journal_edit_section_sequential_numbers": "Последовательные номера",
+	"journal_edit_section_templates": "Шаблоны",
+	"journal_edit_code_block_reference_link": "Поддерживаемые блоки кода.",
+	"journal_edit_code_block_reference_modal_title": "Поддерживаемые блоки кода",
+	"journal_edit_code_block_copy_hint": "Щёлкните по блоку кода, чтобы скопировать его в буфер обмена.",
+	"journal_edit_code_block_copied": "Скопировано в буфер обмена.",
+	"journal_edit_code_block_nav_description": "Блок навигации позволяет перемещаться между заметками, расположенными рядом с текущей.",
+	"journal_edit_code_block_nav_current": "Его конфигурация для журнала {name} выглядит так:",
+	"journal_edit_code_block_nav_aliases_lead": "Эти старые названия блоков — псевдонимы с тем же поведением:",
+	"journal_edit_code_block_timeline_description": "Блок временной шкалы помогает перемещаться по более крупным временным периодам.",
+	"journal_edit_code_block_timeline_default": "Стандартная временная шкала для журнала {name} выглядит так:",
+	"journal_edit_code_block_timeline_mode_lead": "Измените режим временной шкалы, добавив в блок параметр mode.",
+	"journal_edit_code_block_timeline_modes_lead": "Поддерживаемые режимы:",
+	"journal_edit_code_block_timeline_options_lead": "Поддерживаемые параметры:",
+	"journal_edit_code_block_timeline_option_mode": "задаёт, какой период отображает временная шкала. Поддерживаемые значения: week, month, quarter, calendar. Без этого параметра период определяет сам журнал.",
+	"journal_edit_code_block_timeline_option_shelf": "ограничивает отображаемые заметки определённой полкой. Без этого параметра используется полка, содержащая текущий журнал.",
+	"journal_edit_code_block_timeline_weeks": "управляет столбцом с номером недели. Поддерживаемые значения: default, left, right, none. Значение default следует настройке календаря в плагине.",
+	"journal_edit_code_block_timeline_hidden_weekdays": "скрывает перечисленные дни недели (0 = воскресенье … 6 = суббота), например, [0, 6] для удаления выходных.",
+	"journal_edit_code_block_home_description": "Блок home отображает ссылки на текущие заметки в ваших журналах.",
+	"journal_edit_code_block_home_default": "По умолчанию это выглядит так:",
+	"journal_edit_code_block_home_options_lead": "Поддерживаемые параметры:",
+	"journal_edit_code_block_home_option_show": "управляет тем, какие журналы отображаются (по умолчанию только ссылка на день). Поддерживаемые значения: day, week, month, quarter, year, custom.",
+	"journal_edit_code_block_home_option_separator": "текст, используемый для разделения нескольких ссылок.",
+	"journal_edit_code_block_home_option_scale": "увеличивает размер ссылки как множитель размера текста (например, scale: 2 удваивает его).",
+	"journal_edit_code_block_home_option_shelf": "ограничивает отображаемые журналы определённой полкой.",
+	"journal_edit_code_block_home_custom_lead": "При наличии пользовательских настроек это может выглядеть так:",
+	"journal_edit_section_timeline": "Временная шкала",
+	"journal_edit_sequence_enabled_description": "Присваивать заметкам номера (например, День 1, День 2, …).",
+	"journal_edit_sequence_enabled_label": "Включить последовательные номера",
+	"journal_edit_start_number_description": "Номер, присвоенный в дату привязки.",
+	"journal_edit_start_number_label": "Начальный номер",
+	"journal_edit_start_writing_custom_locked": "Дату начала для пользовательских интервалов изменить нельзя: она используется для отсчёта интервалов.",
+	"journal_edit_start_writing_description": "Заметки до этой даты создаваться не будут.",
+	"journal_edit_start_writing_label": "Создавать заметки с",
+	"journal_edit_template_add_button": "Добавить шаблон",
+	"journal_edit_template_path_placeholder": "шаблоны/ежедневный.md",
+	"journal_edit_template_path_preview_label": "Итоговый путь к шаблону:",
+	"journal_edit_template_remove_tooltip": "Удалить шаблон",
+	"journal_edit_templates_description": "Путь к заметке, которая будет использоваться как шаблон при создании новых заметок. Если задано несколько, приоритет отдаётся первому существующему.",
+	"journal_edit_templater_supported": "Синтаксис Templater {slot}.",
+	"journal_edit_templater_supported_link": "поддерживается",
+	"journal_edit_variable_additional_modifications_link": "дополнительные модификации",
+	"journal_edit_variable_current_date_description": "Сегодняшняя дата (по умолчанию в формате YYYY-MM-DD).",
+	"journal_edit_variable_current_time_description": "Текущее время по часам (псевдоним {slot}, по умолчанию в формате HH:mm).",
+	"journal_edit_variable_date_description": "Опорная дата заметки — дата периода, который она охватывает.",
+	"journal_edit_variable_date_format_description": "Опорная дата заметки, отформатированная предоставленной строкой формата moment.js.",
+	"journal_edit_variable_end_date_description": "Последний день периода, охватываемого данной заметкой.",
+	"journal_edit_variable_index_description": "Порядковый номер заметки, если в журнале включена нумерация.",
+	"journal_edit_variable_journal_link_description": "Внутри содержимого файла шаблона указывается путь к заметке другого журнала для даты этой заметки. Вы можете самостоятельно обернуть его в ссылку или встроить (например, ![[ … ]]) и добавить модификаторы даты, такие как +1w, чтобы указать на соседний период.",
+	"journal_edit_variable_journal_name_description": "Название журнала (здесь: {name}).",
+	"journal_edit_variable_non_invertible_warning": "Использование этого здесь не позволит журналу восстановить дату из имени файла.",
+	"journal_edit_variable_note_name_description": "Название создаваемой заметки.",
+	"journal_edit_variable_note_title_description": "Псевдоним названия заметки, поддерживающий переменную основного плагина «Шаблоны».",
+	"journal_edit_variable_numbering_description": "Настраиваемая переменная нумерации (см. раздел «Последовательность»).",
+	"journal_edit_variable_reference_intro": "Доступные переменные. Формат даты по умолчанию равен {dateFormat}, если явный формат не указан.",
+	"journal_edit_variable_reference_link": "Поддерживаемые переменные.",
+	"journal_edit_variable_reference_modal_title": "Справочник по переменным",
+	"journal_edit_variable_relative_date_description": "вчера / сегодня / завтра / N дней назад — для журналов с фиксированным циклом; этот / прошлый / следующий <журнал> и N <журналов> назад — для пользовательских журналов.",
+	"journal_edit_variable_start_date_description": "Первый день периода, охватываемого этой заметкой.",
+	"journal_edit_variable_time_description": "Текущее время по часам (по умолчанию в формате HH:mm).",
+	"journal_edit_wrong_week_warning": "Вы используете `W` для форматирования недель, а он не учитывает пользовательские настройки недели и может показывать не тот номер недели, что в представлении «Календарь». Используйте вместо него `w` (и при необходимости измените начало недели в настройках плагина).",
+	"journal_fm_field_label": [
+		{
+			"declarations": [
+				"input field"
+			],
+			"selectors": [
+				"field"
+			],
+			"match": {
+				"field=dateField": "Название свойства даты",
+				"field=startDateField": "Название свойства даты начала",
+				"field=endDateField": "Название свойства даты окончания"
+			}
+		}
+	],
+	"journal_fm_field_modal_title": [
+		{
+			"declarations": [
+				"input field"
+			],
+			"selectors": [
+				"field"
+			],
+			"match": {
+				"field=dateField": "Изменить название свойства даты",
+				"field=startDateField": "Изменить название свойства даты начала",
+				"field=endDateField": "Изменить название свойства даты окончания"
+			}
+		}
+	],
+	"journal_name_required_error": "Название журнала обязательно.",
+	"journal_name_unique_error": "Название журнала должно быть уникальным.",
+	"journal_picker_placeholder": "Поиск журналов",
+	"journal_property_modal_current_label": "Текущее название",
+	"common_label_new_name": "Новое название",
+	"journal_property_name_required": "Название свойства обязательно.",
+	"bulk_add_date_format_required": "Формат даты обязателен.",
+	"journal_rename_modal_same_as_current_error": "Введите другое название.",
+	"journal_rename_modal_title": "Переименовать {name}",
+	"journal_sequence_property_modal_title": "Изменить название свойства порядкового номера",
+	"templater_support_intro": "Templater может мешать работе плагина: заметка может остаться частично повреждённой, а данные журнала — не попасть в её frontmatter.",
+	"templater_support_modal_title": "Предостережения по Templater",
+	"templater_support_option_settings": "Настройте шаблон в настройках журнала этого плагина.",
+	"templater_support_option_trigger_off": "Отключите в Templater опцию «Trigger Templater on new file creation».",
+	"templater_support_option_trigger_on": "Или оставьте «Trigger Templater on new file creation» включённой, с включённой «Enable Folder Templates» и без настроенных шаблонов папок.",
+	"templater_support_outro": "Так шаблон заметки обрабатывает только плагин журналов — он сам запускает Templater «под капотом», что позволяет избежать конфликтов.",
+	"templater_support_setup_intro": "Наиболее безопасная конфигурация:",
+	"variable_chip_copied": "Скопировано в буфер обмена",
+	"variable_modifications_boundary_body": "Привяжите переменную даты к началу или концу календарного периода, добавив `<startOf=unit>` или `<endOf=unit>`.",
+	"variable_modifications_boundary_example": "Например {slot} отображает 1 января соответствующего года.",
+	"variable_modifications_boundary_heading": "Привязка к началу или концу периода",
+	"variable_modifications_boundary_unit": [
+		{
+			"declarations": [
+				"input unit"
+			],
+			"selectors": [
+				"unit"
+			],
+			"match": {
+				"unit=day": "day — день",
+				"unit=week": "week — неделя",
+				"unit=month": "month — месяц",
+				"unit=quarter": "quarter — квартал",
+				"unit=year": "year — год",
+				"unit=decade": "decade — десятилетие (только дата)",
+				"unit=hour": "hour — час (только часы)"
+			}
+		}
+	],
+	"common_supported_units": "Поддерживаемые единицы:",
+	"variable_modifications_combined_body": "Все три модификации можно комбинировать. Сначала применяются сдвиги, затем границы, а затем переопределение формата.",
+	"variable_modifications_combined_example": "Например {slot} сдвигает дату на одну неделю вперёд, привязывает её к началу этой недели и форматирует.",
+	"variable_modifications_combined_heading": "Комбинирование",
+	"variable_modifications_format_body": "Переопределите формат даты по умолчанию, добавив двоеточие и строку форматирования moment.js.",
+	"variable_modifications_format_example": "Например {slot} отображает только год.",
+	"variable_modifications_format_heading": "Переопределение формата",
+	"variable_modifications_intro": "Переменные даты и времени поддерживают три типа модификаций. Их можно объединить в одном токене.",
+	"variable_modifications_modal_title": "Модификации переменных даты",
+	"variable_modifications_shift_body": "Прибавьте или вычтите количество единиц, добавив `+N<unit>` или `-N<unit>`.",
+	"variable_modifications_shift_example": "Например {slot} сдвигает дату на одну неделю вперёд.",
+	"variable_modifications_shift_heading": "Арифметические сдвиги",
+	"variable_modifications_unit_d": "d — дни",
+	"variable_modifications_unit_h": "h — часы",
+	"variable_modifications_unit_m": "m — месяцы",
+	"variable_modifications_unit_q": "q — кварталы",
+	"variable_modifications_unit_w": "w — недели",
+	"variable_modifications_unit_y": "y — годы",
+	"journal_write": [
+		{
+			"declarations": [
+				"input type",
+				"input every",
+				"input duration",
+				"local durationPlural = duration: plural"
+			],
+			"selectors": [
+				"type",
+				"every",
+				"duration",
+				"durationPlural"
+			],
+			"match": {
+				"type=day,every=*,duration=*,durationPlural=*": "ежедневно",
+				"type=week,every=*,duration=*,durationPlural=*": "еженедельно",
+				"type=month,every=*,duration=*,durationPlural=*": "ежемесячно",
+				"type=quarter,every=*,duration=*,durationPlural=*": "ежеквартально",
+				"type=year,every=*,duration=*,durationPlural=*": "ежегодно",
+				"type=custom,every=day,duration=1,durationPlural=*": "каждый день",
+				"type=custom,every=day,duration=*,durationPlural=one": "каждый {duration} день",
+				"type=custom,every=day,duration=*,durationPlural=few": "каждые {duration} дня",
+				"type=custom,every=day,duration=*,durationPlural=many": "каждые {duration} дней",
+				"type=custom,every=day,duration=*,durationPlural=*": "каждые {duration} дня",
+				"type=custom,every=week,duration=1,durationPlural=*": "каждую неделю",
+				"type=custom,every=week,duration=*,durationPlural=one": "каждую {duration} неделю",
+				"type=custom,every=week,duration=*,durationPlural=few": "каждые {duration} недели",
+				"type=custom,every=week,duration=*,durationPlural=many": "каждые {duration} недель",
+				"type=custom,every=week,duration=*,durationPlural=*": "каждые {duration} недели",
+				"type=custom,every=month,duration=1,durationPlural=*": "каждый месяц",
+				"type=custom,every=month,duration=*,durationPlural=one": "каждый {duration} месяц",
+				"type=custom,every=month,duration=*,durationPlural=few": "каждые {duration} месяца",
+				"type=custom,every=month,duration=*,durationPlural=many": "каждые {duration} месяцев",
+				"type=custom,every=month,duration=*,durationPlural=*": "каждые {duration} месяца",
+				"type=custom,every=quarter,duration=1,durationPlural=*": "каждый квартал",
+				"type=custom,every=quarter,duration=*,durationPlural=one": "каждый {duration} квартал",
+				"type=custom,every=quarter,duration=*,durationPlural=few": "каждые {duration} квартала",
+				"type=custom,every=quarter,duration=*,durationPlural=many": "каждые {duration} кварталов",
+				"type=custom,every=quarter,duration=*,durationPlural=*": "каждые {duration} квартала",
+				"type=custom,every=year,duration=1,durationPlural=*": "каждый год",
+				"type=custom,every=year,duration=*,durationPlural=one": "каждый {duration} год",
+				"type=custom,every=year,duration=*,durationPlural=few": "каждые {duration} года",
+				"type=custom,every=year,duration=*,durationPlural=many": "каждые {duration} лет",
+				"type=custom,every=year,duration=*,durationPlural=*": "каждые {duration} года",
+				"type=*,every=*,duration=*,durationPlural=*": "каждые {duration} {every}"
+			}
+		}
+	],
+	"journal_add_modal_every_unit": [
+		{
+			"declarations": [
+				"input unit",
+				"input count",
+				"local countPlural = count: plural"
+			],
+			"selectors": [
+				"unit",
+				"countPlural"
+			],
+			"match": {
+				"unit=day,countPlural=one": "день",
+				"unit=day,countPlural=few": "дня",
+				"unit=day,countPlural=many": "дней",
+				"unit=day,countPlural=*": "дня",
+				"unit=week,countPlural=one": "неделя",
+				"unit=week,countPlural=few": "недели",
+				"unit=week,countPlural=many": "недель",
+				"unit=week,countPlural=*": "недели",
+				"unit=month,countPlural=one": "месяц",
+				"unit=month,countPlural=few": "месяца",
+				"unit=month,countPlural=many": "месяцев",
+				"unit=month,countPlural=*": "месяца",
+				"unit=quarter,countPlural=one": "квартал",
+				"unit=quarter,countPlural=few": "квартала",
+				"unit=quarter,countPlural=many": "кварталов",
+				"unit=quarter,countPlural=*": "квартала",
+				"unit=year,countPlural=one": "год",
+				"unit=year,countPlural=few": "года",
+				"unit=year,countPlural=many": "лет",
+				"unit=year,countPlural=*": "года"
+			}
+		}
+	],
+	"logging_dump_button": "Сохранить логи в заметку",
+	"logging_dump_desc": "Записать недавние сообщения лога в новую заметку в вашем хранилище.",
+	"logging_dump_empty": "Сообщений лога пока нет.",
+	"logging_dump_failed": "Не удалось создать заметку с логами.",
+	"logging_dump_succeeded": "Логи записаны в {path}",
+	"logging_dump_title": "Экспорт логов",
+	"logging_level_debug": "Отладка",
+	"logging_level_desc": "В консоль выводятся и сохраняются для экспорта только сообщения уровня не ниже указанного.",
+	"logging_level_error": "Ошибка",
+	"logging_level_info": "Информация",
+	"logging_level_title": "Уровень логирования",
+	"logging_level_warn": "Предупреждение",
+	"logging_section_title": "Логирование"
+}

@@ -1,0 +1,158 @@
+{
+  "version": 4,
+  "journals": {
+    "daily-window": {
+      "name": "daily-window",
+      "write": {
+        "type": "day"
+      },
+      "folder": "window",
+      "timeline": {
+        "start": "2030-06-01",
+        "end": {
+          "kind": "date",
+          "date": "2030-06-30"
+        }
+      },
+      "dateFormat": "YYYY-MM-DD",
+      "frontmatter": {
+        "dateField": "journal-date",
+        "startDateField": "journal-start-date",
+        "endDateField": "journal-end-date",
+        "addStartDate": false,
+        "addEndDate": false
+      },
+      "numbering": {
+        "enabled": false,
+        "anchorDate": "",
+        "allowBefore": false,
+        "sources": []
+      },
+      "navBlock": {
+        "type": "create",
+        "decorateWholeBlock": false,
+        "rows": [
+          {
+            "template": "{{date:YYYY-MM-DD}}",
+            "fontSize": 1,
+            "bold": false,
+            "italic": false,
+            "link": "self",
+            "journal": "",
+            "color": {
+              "type": "theme",
+              "name": "text-normal"
+            },
+            "background": {
+              "type": "transparent"
+            },
+            "addDecorations": false
+          }
+        ]
+      }
+    },
+    "daily-repeats": {
+      "name": "daily-repeats",
+      "write": {
+        "type": "day"
+      },
+      "folder": "repeat",
+      "timeline": {
+        "start": "2030-09-01",
+        "end": {
+          "kind": "repeats",
+          "count": 5
+        }
+      },
+      "dateFormat": "YYYY-MM-DD",
+      "frontmatter": {
+        "dateField": "journal-date",
+        "startDateField": "journal-start-date",
+        "endDateField": "journal-end-date",
+        "addStartDate": false,
+        "addEndDate": false
+      },
+      "numbering": {
+        "enabled": false,
+        "anchorDate": "",
+        "allowBefore": false,
+        "sources": []
+      }
+    },
+    "sprint-window": {
+      "name": "sprint-window",
+      "write": {
+        "type": "custom",
+        "every": "week",
+        "duration": 2,
+        "anchorDate": "2031-03-03"
+      },
+      "folder": "sprint",
+      "timeline": {
+        "start": "2031-03-03",
+        "end": {
+          "kind": "date",
+          "date": "2031-03-16"
+        }
+      },
+      "dateFormat": "YYYY-MM-DD",
+      "frontmatter": {
+        "dateField": "journal-date",
+        "startDateField": "journal-start-date",
+        "endDateField": "journal-end-date",
+        "addStartDate": false,
+        "addEndDate": false
+      },
+      "numbering": {
+        "enabled": false,
+        "anchorDate": "",
+        "allowBefore": false,
+        "sources": []
+      },
+      "decorations": [
+        {
+          "mode": "and",
+          "conditions": [
+            {
+              "type": "offset",
+              "offset": 1
+            }
+          ],
+          "styles": [
+            {
+              "type": "corner",
+              "placement": "top-left",
+              "color": {
+                "type": "custom",
+                "color": "#ff00ff"
+              }
+            }
+          ]
+        }
+      ],
+      "intervalBlock": {
+        "type": "create",
+        "decorateWholeBlock": true,
+        "rows": [
+          {
+            "template": "{{date}}",
+            "fontSize": 1,
+            "bold": false,
+            "italic": false,
+            "color": {
+              "type": "theme",
+              "name": "text-normal"
+            },
+            "background": {
+              "type": "transparent"
+            },
+            "link": "self",
+            "journal": "",
+            "addDecorations": false
+          }
+        ]
+      }
+    }
+  },
+  "shelves": {}
+}

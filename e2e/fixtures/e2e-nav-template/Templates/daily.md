@@ -1,0 +1,5 @@
+# Daily {{date}}
+
+```calendar-nav
+
+```

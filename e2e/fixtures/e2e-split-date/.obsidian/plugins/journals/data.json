@@ -1,0 +1,22 @@
+{
+  "version": 4,
+  "journals": {
+    "daily": {
+      "name": "daily",
+      "write": { "type": "day" },
+      "folder": "Journals/{{date:YYYY}}/{{date:MM}}",
+      "nameTemplate": "{{date:DD}}",
+      "timeline": { "start": "", "end": { "kind": "never" } },
+      "dateFormat": "YYYY-MM-DD",
+      "frontmatter": {
+        "dateField": "journal-date",
+        "startDateField": "journal-start-date",
+        "endDateField": "journal-end-date",
+        "addStartDate": false,
+        "addEndDate": false
+      },
+      "numbering": { "enabled": false, "anchorDate": "", "allowBefore": false, "sources": [] }
+    }
+  },
+  "shelves": {}
+}

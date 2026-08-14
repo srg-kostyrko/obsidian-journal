@@ -1,0 +1,130 @@
+<script setup lang="ts">
+import { toTypedSchema } from "@vee-validate/valibot";
+import * as v from "valibot";
+import { useForm } from "vee-validate";
+import { computed, type Ref } from "vue";
+
+import type { AnchorString } from "@/calendar";
+import { DatePicker, useAnchorField } from "@/calendar/ui";
+import { m } from "@/i18n";
+import { useService } from "@/infrastructure/di";
+import { useModal } from "@/infrastructure/host/modals";
+import { JournalsViewModel } from "@/journals/view-model";
+import UiButton from "@/ui/UiButton.vue";
+import UiDropdown from "@/ui/UiDropdown.vue";
+import UiNumberInput from "@/ui/UiNumberInput.vue";
+import UiSettingRow from "@/ui/UiSettingRow.vue";
+import UiTextInput from "@/ui/UiTextInput.vue";
+
+import type { JournalWrite } from "../../config";
+
+const api = useModal<{ name: string; write: JournalWrite }>();
+const journalsVM = useService(JournalsViewModel);
+
+const { defineField, errorBag, handleSubmit, values } = useForm({
+  initialValues: {
+    name: "",
+    type: "day" as JournalWrite["type"],
+    every: "day" as Exclude<JournalWrite["type"], "custom">,
+    duration: 1,
+    anchorDate: "",
+  },
+  validationSchema: toTypedSchema(
+    v.pipe(
+      v.object({
+        name: v.pipe(
+          v.string(),
+          v.nonEmpty(m.journal_name_required_error()),
+          v.check((value) => journalsVM.isJournalNameAvailable(value), m.journal_name_unique_error()),
+        ),
+        type: v.picklist(["day", "week", "month", "quarter", "year", "custom"]),
+        every: v.picklist(["day", "week", "month", "quarter", "year"]),
+        duration: v.pipe(v.number(), v.integer(), v.minValue(1)),
+        anchorDate: v.string(),
+      }),
+      v.forward(
+        v.partialCheck(
+          [["type"], ["anchorDate"]],
+          ({ type, anchorDate }) => (type === "custom" ? anchorDate.length > 0 : true),
+          m.journal_add_modal_anchor_required_error(),
+        ),
+        ["anchorDate"],
+      ),
+    ),
+  ),
+});
+
+const [name, nameAttrs] = defineField("name");
+const [type, typeAttrs] = defineField("type");
+const [every, everyAttrs] = defineField("every");
+const [duration, durationAttrs] = defineField("duration");
+const [anchorDate] = defineField("anchorDate");
+
+const anchorDateModel = useAnchorField({ anchor: anchorDate as unknown as Ref<AnchorString>, picking: "day" });
+
+const isCustom = computed(() => values.type === "custom");
+const unitCount = computed(() => values.duration ?? 1);
+
+const onSubmit = handleSubmit((vs) => {
+  const write: JournalWrite =
+    vs.type === "custom"
+      ? { type: "custom", every: vs.every, duration: vs.duration, anchorDate: vs.anchorDate as AnchorString }
+      : { type: vs.type };
+  api.submit({ name: vs.name, write });
+});
+</script>
+
+<template>
+  <form @submit.prevent="onSubmit">
+    <UiSettingRow :name="m.journal_add_modal_name_label()">
+      <template #description>
+        <span v-for="error of errorBag.name" :key="error" class="journal-form-error">{{ error }}</span>
+      </template>
+      <UiTextInput v-model="name" v-bind="nameAttrs" :placeholder="m.journal_add_modal_name_placeholder()" />
+    </UiSettingRow>
+    <UiSettingRow :name="m.journal_add_modal_write_label()">
+      <UiDropdown v-model="type" v-bind="typeAttrs">
+        <option value="day">{{ m.journal_write({ type: "day", every: "day", duration: 1 }) }}</option>
+        <option value="week">{{ m.journal_write({ type: "week", every: "day", duration: 1 }) }}</option>
+        <option value="month">{{ m.journal_write({ type: "month", every: "day", duration: 1 }) }}</option>
+        <option value="quarter">{{ m.journal_write({ type: "quarter", every: "day", duration: 1 }) }}</option>
+        <option value="year">{{ m.journal_write({ type: "year", every: "day", duration: 1 }) }}</option>
+        <option value="custom">{{ m.common_custom_intervals() }}</option>
+      </UiDropdown>
+    </UiSettingRow>
+    <UiSettingRow v-if="isCustom" :name="m.journal_add_modal_every_label()">
+      <UiNumberInput
+        v-model="duration"
+        v-bind="durationAttrs"
+        narrow
+        :min="1"
+        :aria-label="m.journal_add_modal_duration_label()"
+      />
+      <UiDropdown v-model="every" v-bind="everyAttrs" :aria-label="m.journal_add_modal_every_label()">
+        <option value="day">{{ m.journal_add_modal_every_unit({ unit: "day", count: unitCount }) }}</option>
+        <option value="week">{{ m.journal_add_modal_every_unit({ unit: "week", count: unitCount }) }}</option>
+        <option value="month">{{ m.journal_add_modal_every_unit({ unit: "month", count: unitCount }) }}</option>
+        <option value="quarter">{{ m.journal_add_modal_every_unit({ unit: "quarter", count: unitCount }) }}</option>
+        <option value="year">{{ m.journal_add_modal_every_unit({ unit: "year", count: unitCount }) }}</option>
+      </UiDropdown>
+    </UiSettingRow>
+    <UiSettingRow v-if="isCustom" :name="m.journal_add_modal_anchor_label()">
+      <template #description>
+        <div>{{ m.journal_add_modal_anchor_description() }}</div>
+        <span v-for="error of errorBag.anchorDate" :key="error" class="journal-form-error">{{ error }}</span>
+      </template>
+      <DatePicker v-model="anchorDateModel" picking="day" />
+    </UiSettingRow>
+    <UiSettingRow controls-only>
+      <UiButton @click="api.cancel()">{{ m.common_action_cancel() }}</UiButton>
+      <UiButton cta type="submit">{{ m.common_action_create() }}</UiButton>
+    </UiSettingRow>
+  </form>
+</template>
+
+<style scoped>
+.journal-form-error {
+  color: var(--text-error);
+  display: block;
+}
+</style>

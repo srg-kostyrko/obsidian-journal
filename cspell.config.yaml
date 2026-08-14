@@ -1,0 +1,42 @@
+version: "0.2"
+language: en
+words:
+  - bivariance
+  - bivariant
+  - callsite
+  - unapply
+  - chrono
+  - collab
+  - haspopup
+  - iconed
+  - inlang
+  - invertibility
+  - Keymap
+  - labelledby
+  - lezer
+  - linkpath
+  - multitext
+  - offref
+  - paraglide
+  - passthroughs
+  - popout
+  - rangeset
+  - reanchor
+  - recentered
+  - recenters
+  - spinbutton
+  - subpages
+  - templater
+  - tfile
+  - unpadded
+  - unrenderable
+  - vueuse
+  - wdio
+  - wikilinks
+ignorePaths:
+  - node_modules
+  - build
+  - coverage
+  - test-vault
+  - "*.snap"
+  - package-lock.json

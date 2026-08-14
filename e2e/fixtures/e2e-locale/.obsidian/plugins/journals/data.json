@@ -1,0 +1,582 @@
+{
+  "version": 4,
+  "journals": {
+    "daily": {
+      "name": "daily",
+      "write": {
+        "type": "day"
+      },
+      "folder": "day",
+      "timeline": {
+        "start": "",
+        "end": {
+          "kind": "never"
+        }
+      },
+      "dateFormat": "YYYY-MM-DD",
+      "frontmatter": {
+        "dateField": "journal-date",
+        "startDateField": "journal-start-date",
+        "endDateField": "journal-end-date",
+        "addStartDate": false,
+        "addEndDate": false
+      },
+      "numbering": {
+        "enabled": false,
+        "anchorDate": "",
+        "allowBefore": false,
+        "sources": []
+      },
+      "decorations": [
+        {
+          "mode": "and",
+          "conditions": [
+            {
+              "type": "title",
+              "condition": "ends-with",
+              "value": "-07"
+            }
+          ],
+          "styles": [
+            {
+              "type": "corner",
+              "placement": "top-left",
+              "color": {
+                "type": "custom",
+                "color": "#ff0000"
+              }
+            }
+          ]
+        },
+        {
+          "mode": "and",
+          "conditions": [
+            {
+              "type": "tag",
+              "condition": "contains",
+              "value": "ctag"
+            }
+          ],
+          "styles": [
+            {
+              "type": "corner",
+              "placement": "top-left",
+              "color": {
+                "type": "custom",
+                "color": "#ff0000"
+              }
+            }
+          ]
+        },
+        {
+          "mode": "and",
+          "conditions": [
+            {
+              "type": "property",
+              "name": "cprop",
+              "valueType": "text",
+              "condition": "exists",
+              "value": ""
+            }
+          ],
+          "styles": [
+            {
+              "type": "corner",
+              "placement": "top-left",
+              "color": {
+                "type": "custom",
+                "color": "#ff0000"
+              }
+            }
+          ]
+        },
+        {
+          "mode": "and",
+          "conditions": [
+            {
+              "type": "tag",
+              "condition": "contains",
+              "value": "scolor"
+            }
+          ],
+          "styles": [
+            {
+              "type": "color",
+              "color": {
+                "type": "custom",
+                "color": "#112233"
+              }
+            }
+          ]
+        },
+        {
+          "mode": "and",
+          "conditions": [
+            {
+              "type": "tag",
+              "condition": "contains",
+              "value": "sborder"
+            }
+          ],
+          "styles": [
+            {
+              "type": "border",
+              "border": "uniform",
+              "left": {
+                "show": true,
+                "width": 3,
+                "style": "solid",
+                "color": {
+                  "type": "custom",
+                  "color": "#445566"
+                }
+              },
+              "right": {
+                "show": true,
+                "width": 3,
+                "style": "solid",
+                "color": {
+                  "type": "custom",
+                  "color": "#445566"
+                }
+              },
+              "top": {
+                "show": true,
+                "width": 3,
+                "style": "solid",
+                "color": {
+                  "type": "custom",
+                  "color": "#445566"
+                }
+              },
+              "bottom": {
+                "show": true,
+                "width": 3,
+                "style": "solid",
+                "color": {
+                  "type": "custom",
+                  "color": "#445566"
+                }
+              }
+            }
+          ]
+        },
+        {
+          "mode": "and",
+          "conditions": [
+            {
+              "type": "tag",
+              "condition": "contains",
+              "value": "sshape"
+            }
+          ],
+          "styles": [
+            {
+              "type": "shape",
+              "size": 1,
+              "shape": "circle",
+              "color": {
+                "type": "custom",
+                "color": "#778899"
+              },
+              "placement_x": "center",
+              "placement_y": "middle"
+            }
+          ]
+        },
+        {
+          "mode": "and",
+          "conditions": [
+            {
+              "type": "tag",
+              "condition": "contains",
+              "value": "scorner"
+            }
+          ],
+          "styles": [
+            {
+              "type": "corner",
+              "placement": "bottom-right",
+              "color": {
+                "type": "custom",
+                "color": "#99aabb"
+              }
+            }
+          ]
+        },
+        {
+          "mode": "and",
+          "conditions": [
+            {
+              "type": "tag",
+              "condition": "contains",
+              "value": "sicon"
+            }
+          ],
+          "styles": [
+            {
+              "type": "icon",
+              "icon": "star",
+              "placement_x": "right",
+              "placement_y": "top",
+              "color": {
+                "type": "custom",
+                "color": "#aabbcc"
+              },
+              "size": 1
+            }
+          ]
+        }
+      ],
+      "navBlock": {
+        "type": "create",
+        "decorateWholeBlock": true,
+        "rows": [
+          {
+            "template": "{{date}}",
+            "fontSize": 1,
+            "bold": false,
+            "italic": false,
+            "color": {
+              "type": "theme",
+              "name": "text-normal"
+            },
+            "background": {
+              "type": "transparent"
+            },
+            "link": "self",
+            "journal": "",
+            "addDecorations": false
+          }
+        ]
+      }
+    },
+    "weekly": {
+      "name": "weekly",
+      "write": {
+        "type": "week"
+      },
+      "folder": "week",
+      "timeline": {
+        "start": "",
+        "end": {
+          "kind": "never"
+        }
+      },
+      "dateFormat": "YYYY-[W]ww",
+      "frontmatter": {
+        "dateField": "journal-date",
+        "startDateField": "journal-start-date",
+        "endDateField": "journal-end-date",
+        "addStartDate": false,
+        "addEndDate": false
+      },
+      "numbering": {
+        "enabled": false,
+        "anchorDate": "",
+        "allowBefore": false,
+        "sources": []
+      },
+      "decorations": [
+        {
+          "mode": "and",
+          "conditions": [
+            {
+              "type": "has-open-task"
+            }
+          ],
+          "styles": [
+            {
+              "type": "corner",
+              "placement": "top-left",
+              "color": {
+                "type": "custom",
+                "color": "#ff0000"
+              }
+            }
+          ]
+        }
+      ]
+    },
+    "monthly": {
+      "name": "monthly",
+      "write": {
+        "type": "month"
+      },
+      "folder": "month",
+      "timeline": {
+        "start": "",
+        "end": {
+          "kind": "never"
+        }
+      },
+      "dateFormat": "YYYY-MM",
+      "frontmatter": {
+        "dateField": "journal-date",
+        "startDateField": "journal-start-date",
+        "endDateField": "journal-end-date",
+        "addStartDate": false,
+        "addEndDate": false
+      },
+      "numbering": {
+        "enabled": true,
+        "anchorDate": "2026-01-01",
+        "allowBefore": false,
+        "sources": [
+          {
+            "variable": "index",
+            "frontmatterKey": "journal-index",
+            "anchorValue": 1,
+            "reset": {
+              "kind": "never"
+            }
+          }
+        ]
+      },
+      "decorations": [
+        {
+          "mode": "and",
+          "conditions": [
+            {
+              "type": "all-tasks-completed"
+            }
+          ],
+          "styles": [
+            {
+              "type": "corner",
+              "placement": "top-left",
+              "color": {
+                "type": "custom",
+                "color": "#ff0000"
+              }
+            }
+          ]
+        }
+      ],
+      "navBlock": {
+        "type": "existing",
+        "decorateWholeBlock": false,
+        "rows": [
+          {
+            "template": "{{date}}",
+            "fontSize": 1,
+            "bold": false,
+            "italic": false,
+            "color": {
+              "type": "theme",
+              "name": "text-normal"
+            },
+            "background": {
+              "type": "transparent"
+            },
+            "link": "self",
+            "journal": "",
+            "addDecorations": false
+          }
+        ]
+      }
+    },
+    "quarterly": {
+      "name": "quarterly",
+      "write": {
+        "type": "quarter"
+      },
+      "folder": "quarter",
+      "timeline": {
+        "start": "",
+        "end": {
+          "kind": "never"
+        }
+      },
+      "dateFormat": "YYYY-[Q]Q",
+      "frontmatter": {
+        "dateField": "journal-date",
+        "startDateField": "journal-start-date",
+        "endDateField": "journal-end-date",
+        "addStartDate": false,
+        "addEndDate": false
+      },
+      "numbering": {
+        "enabled": false,
+        "anchorDate": "",
+        "allowBefore": false,
+        "sources": []
+      },
+      "decorations": [
+        {
+          "mode": "and",
+          "conditions": [
+            {
+              "type": "has-note"
+            }
+          ],
+          "styles": [
+            {
+              "type": "corner",
+              "placement": "top-left",
+              "color": {
+                "type": "custom",
+                "color": "#ff0000"
+              }
+            }
+          ]
+        }
+      ]
+    },
+    "yearly": {
+      "name": "yearly",
+      "write": {
+        "type": "year"
+      },
+      "folder": "year",
+      "timeline": {
+        "start": "",
+        "end": {
+          "kind": "never"
+        }
+      },
+      "dateFormat": "YYYY",
+      "frontmatter": {
+        "dateField": "journal-date",
+        "startDateField": "journal-start-date",
+        "endDateField": "journal-end-date",
+        "addStartDate": false,
+        "addEndDate": false
+      },
+      "numbering": {
+        "enabled": false,
+        "anchorDate": "",
+        "allowBefore": false,
+        "sources": []
+      },
+      "decorations": [
+        {
+          "mode": "and",
+          "conditions": [
+            {
+              "type": "has-note"
+            }
+          ],
+          "styles": [
+            {
+              "type": "background",
+              "color": {
+                "type": "custom",
+                "color": "#203040"
+              }
+            }
+          ]
+        }
+      ]
+    },
+    "sprint": {
+      "name": "sprint",
+      "write": {
+        "type": "custom",
+        "every": "week",
+        "duration": 2,
+        "anchorDate": "2026-01-05"
+      },
+      "folder": "sprint",
+      "timeline": {
+        "start": "",
+        "end": {
+          "kind": "never"
+        }
+      },
+      "dateFormat": "YYYY-MM-DD",
+      "frontmatter": {
+        "dateField": "journal-date",
+        "startDateField": "journal-start-date",
+        "endDateField": "journal-end-date",
+        "addStartDate": false,
+        "addEndDate": false
+      },
+      "numbering": {
+        "enabled": false,
+        "anchorDate": "",
+        "allowBefore": false,
+        "sources": []
+      },
+      "intervalBlock": {
+        "type": "create",
+        "decorateWholeBlock": false,
+        "rows": [
+          {
+            "template": "{{date}}",
+            "fontSize": 1,
+            "bold": false,
+            "italic": false,
+            "color": {
+              "type": "theme",
+              "name": "text-normal"
+            },
+            "background": {
+              "type": "transparent"
+            },
+            "link": "self",
+            "journal": "",
+            "addDecorations": false
+          }
+        ]
+      }
+    }
+  },
+  "shelves": {
+    "core": {
+      "name": "core",
+      "journals": [
+        "daily",
+        "weekly"
+      ]
+    },
+    "extra": {
+      "name": "extra",
+      "journals": [
+        "monthly",
+        "quarterly",
+        "yearly"
+      ]
+    },
+    "rename-me": {
+      "name": "rename-me",
+      "journals": []
+    },
+    "delete-me": {
+      "name": "delete-me",
+      "journals": []
+    }
+  },
+  "commands": {
+    "cmd-edit": {
+      "name": "Editable command",
+      "icon": "calendar-days",
+      "showInRibbon": false,
+      "openMode": "active",
+      "target": {
+        "kind": "all",
+        "writeType": "day"
+      },
+      "type": "same",
+      "context": "today"
+    },
+    "cmd-delete": {
+      "name": "Disposable command",
+      "icon": "calendar-days",
+      "showInRibbon": false,
+      "openMode": "active",
+      "target": {
+        "kind": "all",
+        "writeType": "day"
+      },
+      "type": "same",
+      "context": "today"
+    }
+  },
+  "calendar": {
+    "mode": "custom",
+    "dow": 1,
+    "doy": 4,
+    "global": false
+  }
+}
