@@ -1,0 +1,78 @@
+{
+  $schema: "https://docs.renovatebot.com/renovate-schema.json",
+  extends: ["config:recommended"],
+
+  // Matches the UTC crons in e2e.yml and stale.yml, so every scheduled job in
+  // this repo is read against one clock.
+  timezone: "Etc/UTC",
+  schedule: ["before 06:00 on monday"],
+
+  // Every pull request costs a full e2e job — build plus a real Obsidian
+  // download plus five suites. Batching weekly and capping concurrency keeps
+  // that bill bounded; the dependency dashboard carries whatever is held back.
+  prConcurrentLimit: 5,
+  prHourlyLimit: 0,
+
+  // The repo has "Allow auto-merge" off and no branch protection on main, so
+  // GitHub's native auto-merge is never offered. Renovate has to watch the
+  // branch status and merge through the API itself.
+  platformAutomerge: false,
+
+  labels: ["dependencies"],
+
+  lockFileMaintenance: {
+    enabled: true,
+    schedule: ["before 06:00 on the first day of the month"],
+  },
+
+  // A vulnerability fix must not sit until Monday.
+  vulnerabilityAlerts: {
+    schedule: ["at any time"],
+    labels: ["dependencies", "security"],
+  },
+  osvVulnerabilityAlerts: true,
+
+  packageRules: [
+    {
+      matchManagers: ["npm"],
+      matchDepTypes: ["devDependencies"],
+      matchUpdateTypes: ["minor", "patch", "pin", "digest"],
+      groupName: "devDependencies",
+      semanticCommitType: "chore",
+      semanticCommitScope: "deps-dev",
+      automerge: true,
+    },
+    {
+      matchManagers: ["npm"],
+      matchDepTypes: ["dependencies"],
+      matchUpdateTypes: ["minor", "patch"],
+      groupName: "dependencies",
+      semanticCommitType: "chore",
+      semanticCommitScope: "deps",
+    },
+    {
+      matchManagers: ["github-actions"],
+      groupName: "github actions",
+      semanticCommitType: "chore",
+      semanticCommitScope: "ci",
+      schedule: ["before 06:00 on the first day of the month"],
+    },
+    {
+      // The typings and manifest.json's minAppVersion move independently, and
+      // nothing in CI catches a newly-typed API that is missing on our floor.
+      matchPackageNames: ["obsidian"],
+      groupName: null,
+      automerge: false,
+      prBodyNotes: [
+        "> [!WARNING]",
+        "> This bumps the Obsidian **typings** only. `manifest.json`'s `minAppVersion` is a separate, deliberate decision — raising it drops users on older Obsidian builds, and `e2e.yml`'s `earliest/earliest` matrix leg pins the floor the suite actually runs against. Check any newly available API against that floor before merging.",
+      ],
+    },
+    {
+      // .tool-versions says `nodejs latest`, which is not a version Renovate
+      // can reason about. Off explicitly rather than by accident.
+      matchManagers: ["asdf"],
+      enabled: false,
+    },
+  ],
+}
