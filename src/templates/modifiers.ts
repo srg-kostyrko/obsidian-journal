@@ -25,6 +25,7 @@ export function applyModifier<S extends Shiftable<S>>(value: S, modifier: Modifi
       if (!isBoundaryUnit(unit)) return value;
       return direction === "start" ? value.startOf(unit) : value.endOf(unit);
     })
+    .with({ kind: "offset" }, () => value)
     .exhaustive();
 }
 
@@ -32,6 +33,7 @@ export function unapplyModifier(date: CalendarDate, modifier: Modifier): Calenda
   return match(modifier)
     .with({ kind: "shift" }, ({ sign, amount, unit }) => date.shift(-(sign * amount), unit))
     .with({ kind: "boundary" }, () => date)
+    .with({ kind: "offset" }, () => date)
     .exhaustive();
 }
 
@@ -58,6 +60,22 @@ export function unapplyModifiers(date: CalendarDate, modifiers: readonly Modifie
   let result = date;
   for (let i = shifts.length - 1; i >= 0; i--) {
     result = unapplyModifier(result, shifts[i]);
+  }
+  return result;
+}
+
+export function applyOffsets(value: number, modifiers: readonly Modifier[]): number {
+  let result = value;
+  for (const modifier of modifiers) {
+    if (modifier.kind === "offset") result += modifier.sign * modifier.amount;
+  }
+  return result;
+}
+
+export function unapplyOffsets(value: number, modifiers: readonly Modifier[]): number {
+  let result = value;
+  for (const modifier of modifiers) {
+    if (modifier.kind === "offset") result -= modifier.sign * modifier.amount;
   }
   return result;
 }
