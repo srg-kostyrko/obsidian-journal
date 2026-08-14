@@ -146,6 +146,15 @@ on it.
 
 ### Lint and tooling
 
+- `parserOptions.extraFileExtensions` must hold the **same value for every
+  linted file**, `.vue` or not. typescript-eslint pushes it into the project
+  service per file, and any change from the previous file's value calls
+  TypeScript's `reloadProjects()`, rebuilding every open program from scratch.
+  Declaring it only on the `**/*.vue` block turned each `.ts`/`.vue`
+  alternation into a full reload — 42 rebuilds across `src/journals` alone, and
+  an uncached `check:lint` of 11 minutes against 1 minute once hoisted to the
+  shared block. `TIMING=all` does not show this: rule time was 65s of that 660s,
+  and the rest sat in parsing and module resolution.
 - `no-non-null-assertion` is on in production source (including `.vue`
   `<script setup>`) and off in tests. Use `.at()` with a `??` fallback; a config
   carve-out silences the rule just as much as an inline disable.

@@ -91,7 +91,11 @@ export default [
   },
   {
     languageOptions: {
-      parserOptions: { projectService: true },
+      // `extraFileExtensions` must carry the same value for every linted file, `.vue` or not.
+      // typescript-eslint pushes it to the project service per file, and any change calls
+      // TypeScript's `reloadProjects()`, which rebuilds every open program from scratch —
+      // so declaring it only on the `.vue` block makes each .ts/.vue alternation a full reload.
+      parserOptions: { projectService: true, extraFileExtensions: [".vue"] },
       globals: { ...globals.node },
     },
   },
