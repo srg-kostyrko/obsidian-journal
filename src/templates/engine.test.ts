@@ -41,6 +41,31 @@ describe("TemplateEngine.renderString", () => {
     expect(engine.renderString("Sprint {{index}}", buildFakeContext())).toBe("Sprint 7");
   });
 
+  it("renders a number variable with an offset", () => {
+    const engine = installTestEngine();
+    expect(engine.renderString("Sprint {{index+3}}", buildFakeContext())).toBe("Sprint 10");
+  });
+
+  it("renders a number variable as an ordinal", () => {
+    const engine = installTestEngine();
+    expect(engine.renderString("The {{index:o}} sprint", buildFakeContext())).toBe("The 7th sprint");
+  });
+
+  it("emits the raw token for a shift modifier on a number", () => {
+    const engine = installTestEngine();
+    expect(engine.renderString("{{index+1d}}", buildFakeContext())).toBe("{{index+1d}}");
+  });
+
+  it("emits the raw token for an unsupported number format", () => {
+    const engine = installTestEngine();
+    expect(engine.renderString("{{index:000}}", buildFakeContext())).toBe("{{index:000}}");
+  });
+
+  it("ignores an offset on a date variable", () => {
+    const engine = installTestEngine();
+    expect(engine.renderString("{{date+3}}", buildFakeContext())).toBe("2022-01-05");
+  });
+
   it("renders a date variable whose name is capitalized", () => {
     const engine = installTestEngine();
     expect(engine.renderString("{{Date:YYYY-MM-DD}}", buildFakeContext())).toBe("2022-01-05");
@@ -294,6 +319,30 @@ describe("TemplateEngine.parse", () => {
       expect(result.error.detail.kind).toBe("conflict");
     });
   });
+
+  it("unapplies an offset when parsing a captured number", () => {
+    const engine = installTestEngine();
+    const stream = tokenize("Sprint {{index+3}}");
+    const result = engine.parse(stream, "Sprint 10", buildFakeContext());
+    expectOk(result);
+    expect(result.value.get("index")).toEqual({ kind: "number", value: 7 });
+  });
+
+  it("reconciles the same number captured with and without an offset", () => {
+    const engine = installTestEngine();
+    const stream = tokenize("Sprint {{index}} of {{index+3}}");
+    const result = engine.parse(stream, "Sprint 7 of 10", buildFakeContext());
+    expectOk(result);
+    expect(result.value.get("index")).toEqual({ kind: "number", value: 7 });
+  });
+
+  it("parses a number captured as an ordinal", () => {
+    const engine = installTestEngine();
+    const stream = tokenize("The {{index:o}} sprint");
+    const result = engine.parse(stream, "The 7th sprint", buildFakeContext());
+    expectOk(result);
+    expect(result.value.get("index")).toEqual({ kind: "number", value: 7 });
+  });
 });
 
 describe("TemplateEngine.validate", () => {
@@ -364,6 +413,36 @@ describe("TemplateEngine.validate", () => {
     const stream = tokenize("{{index+1d}}");
     const problems = engine.validate(stream, buildFakeContext());
     expect(problems.some((problem) => problem.problem === "modifiers-on-non-date")).toBe(true);
+  });
+
+  it("accepts an offset on a number variable", () => {
+    const engine = installTestEngine();
+    const problems = engine.validate(tokenize("{{index+3}}"), buildFakeContext());
+    expect(problems).toEqual([]);
+  });
+
+  it("accepts the ordinal format on a number variable", () => {
+    const engine = installTestEngine();
+    const problems = engine.validate(tokenize("{{index:o}}"), buildFakeContext());
+    expect(problems).toEqual([]);
+  });
+
+  it("flags an unsupported format on a number variable", () => {
+    const engine = installTestEngine();
+    const problems = engine.validate(tokenize("{{index:000}}"), buildFakeContext());
+    expect(problems.some((problem) => problem.problem === "unsupported-number-format")).toBe(true);
+  });
+
+  it("flags an offset on a date variable", () => {
+    const engine = installTestEngine();
+    const problems = engine.validate(tokenize("{{date+3}}"), buildFakeContext());
+    expect(problems.some((problem) => problem.problem === "offset-on-date")).toBe(true);
+  });
+
+  it("still flags a format on a string variable", () => {
+    const engine = installTestEngine();
+    const problems = engine.validate(tokenize("{{journal_name:YYYY}}"), buildFakeContext());
+    expect(problems.some((problem) => problem.problem === "format-on-non-date")).toBe(true);
   });
 });
 

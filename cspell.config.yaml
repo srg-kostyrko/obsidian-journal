@@ -24,10 +24,12 @@ words:
   - reanchor
   - recentered
   - recenters
+  - renderable
   - spinbutton
   - subpages
   - templater
   - tfile
+  - unapplies
   - unitless
   - unpadded
   - unrenderable

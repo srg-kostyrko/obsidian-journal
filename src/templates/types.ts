@@ -33,6 +33,8 @@ export interface ValidationProblem {
     | "function-not-allowed"
     | "format-on-non-date"
     | "modifiers-on-non-date"
+    | "unsupported-number-format"
+    | "offset-on-date"
     | "unknown-unit"
     | "unknown-function";
 }
