@@ -49,7 +49,7 @@ jobs:
         run: npm ci
 
       - name: Cache Obsidian binaries
-        uses: actions/cache@v4
+        uses: actions/cache@v6
         with:
           path: .obsidian-cache
           key: obsidian-cache-${{ runner.os }}-${{ env.OBSIDIAN_VERSIONS }}
@@ -68,7 +68,7 @@ jobs:
 
       - name: Publish e2e results
         if: always()
-        uses: mikepenz/action-junit-report@v5
+        uses: mikepenz/action-junit-report@v6
         with:
           report_paths: e2e/.reports/e2e-junit.xml
           check_name: e2e results (${{ matrix.os }}, ${{ matrix.obsidian }})
@@ -78,7 +78,7 @@ jobs:
 
       - name: Upload e2e reports
         if: always()
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: e2e-reports-${{ matrix.os }}-${{ strategy.job-index }}
           path: e2e/.reports/
