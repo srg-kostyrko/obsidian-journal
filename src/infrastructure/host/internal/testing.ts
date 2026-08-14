@@ -47,6 +47,12 @@ class FakeDispatcher {
 export interface FakeWorkspaceState {
   activeFile: TFile | null;
   openPaths: Set<string>;
+  // Which window each open path's leaf sits in, and which window the user is currently in.
+  // Popout windows are what make workspace-wide leaf reuse steal focus, so leaf lookups that
+  // must stay window-local can only be exercised with both modelled.
+  openWindows: Map<string, string>;
+  activeWindow: string;
+  focusedPaths: string[];
   openCalls: { path: string; mode: PaneType | false }[];
   triggerCalls: { event: string; arguments_: unknown[] }[];
   detachedTypes: string[];
@@ -69,6 +75,12 @@ interface FakeLeaf {
   openFile(file: TFile): Promise<void>;
   setViewState(state: { type: string; active?: boolean }): Promise<void>;
   updateHeader(): void;
+}
+
+interface FakeMarkdownLeaf {
+  view: { file: TFile | null };
+  openFile(): Promise<undefined>;
+  getContainer(): { win: Window };
 }
 
 export interface FakeFileSystemEntry {
@@ -118,6 +130,8 @@ export interface FakeHost {
   ): { el: HTMLElement; ctx: MarkdownPostProcessorContext; child?: MarkdownRenderChild };
 }
 
+const MAIN_WINDOW = "main";
+
 function makeFile(path: string): TFile {
   const file = new TFile();
   file.path = path;
@@ -152,6 +166,9 @@ export function createFakeHost(): FakeHost {
   const workspaceState: FakeWorkspaceState = {
     activeFile: null,
     openPaths: new Set(),
+    openWindows: new Map(),
+    activeWindow: MAIN_WINDOW,
+    focusedPaths: [],
     openCalls: [],
     triggerCalls: [],
     detachedTypes: [],
@@ -172,6 +189,7 @@ export function createFakeHost(): FakeHost {
   const codeBlockProcessors = new Map<string, CodeBlockProcessor>();
   const registeredViews = new Map<string, FakeRegisteredView>();
   const viewLeavesByType = new Map<string, FakeLeaf[]>();
+  const windowObjects = new Map<string, Window>();
   const unloadCallbacks: (() => void)[] = [];
   const layoutReadyCallbacks: (() => void)[] = [];
 
@@ -334,11 +352,27 @@ export function createFakeHost(): FakeHost {
     },
   };
 
+  // Every window answers `activeWindow` the way Obsidian's does — with whichever window currently
+  // holds focus — so a service can reach the focused window from any window it already holds.
+  function windowFor(id: string): Window {
+    const existing = windowObjects.get(id);
+    if (existing) return existing;
+    const created = {
+      id,
+      get activeWindow(): Window {
+        return windowFor(workspaceState.activeWindow);
+      },
+    } as unknown as Window;
+    windowObjects.set(id, created);
+    return created;
+  }
+
   function makeLeaf(placement: "left" | "right" | "tab", openMode: PaneType | false = false) {
     let assignedType: string | null = null;
     const leaf = {
       async openFile(file: TFile): Promise<void> {
         workspaceState.openPaths.add(file.path);
+        workspaceState.openWindows.set(file.path, workspaceState.activeWindow);
         workspaceState.openCalls.push({ path: file.path, mode: openMode });
         workspaceState.activeFile = file;
       },
@@ -365,7 +399,7 @@ export function createFakeHost(): FakeHost {
     getActiveFile(): TFile | null {
       return workspaceState.activeFile;
     },
-    getLeavesOfType(type: string): FakeLeaf[] | { view: { file: TFile | null }; openFile: () => Promise<undefined> }[] {
+    getLeavesOfType(type: string): FakeLeaf[] | FakeMarkdownLeaf[] {
       // The tracked branch is keyed by registered journal view types (`journal-view:*`),
       // so it never collides with the note-path fallback used for `"markdown"` lookups.
       const tracked = viewLeavesByType.get(type);
@@ -373,10 +407,13 @@ export function createFakeHost(): FakeHost {
       return [...workspaceState.openPaths].map((path) => ({
         view: { file: fileObjects.get(path) ?? null },
         openFile: async () => undefined,
+        getContainer: () => ({ win: windowFor(workspaceState.openWindows.get(path) ?? MAIN_WINDOW) }),
       }));
     },
-    setActiveLeaf(): void {
-      /* no-op */
+    containerEl: { win: windowFor(MAIN_WINDOW) },
+    setActiveLeaf(leaf: FakeMarkdownLeaf): void {
+      const file = leaf.view.file;
+      if (file) workspaceState.focusedPaths.push(file.path);
     },
     getLeaf(mode: PaneType | false) {
       return makeLeaf("tab", mode);

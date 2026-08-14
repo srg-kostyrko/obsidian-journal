@@ -106,6 +106,15 @@ on it.
 - `focusLeaf` calls `app.setting.close()`, and `setViewState({ active: true })`
   reaches it. `revealLeaf()` alone does not, so a leaf placed as a side effect
   of a settings interaction is placed then revealed, never activated.
+- `getLeavesOfType` is `iterateAllLeaves` underneath, so it spans **popout windows**
+  and sidebars. Any "is this note already open" reuse that then focuses the match
+  must be pinned to one window, or opening a note drags the user into whichever
+  window happens to hold it. The focused window is
+  `workspace.containerEl.win.activeWindow` — same value as the `activeWindow`
+  global but reachable through the injected `App`, where the global is not
+  fakeable and `workspace.activeLeaf` is deprecated. e2e can drive it:
+  `containerEl.win.focus()` moves `activeWindow` inside the WDIO harness, which
+  a leaf merely becoming active does not.
 - `app.metadataTypeManager` is undocumented and its shape changed at Obsidian
   1.9: property entries lost their `type` field in favor of `widget`, and
   `getPropertyInfo` now returns a fallback object instead of null, so it can no

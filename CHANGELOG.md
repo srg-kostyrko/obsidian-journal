@@ -2,6 +2,13 @@
 
 All notable changes to this project will be documented in this file.
 
+## [Unreleased]
+
+### Bug Fixes
+
+- Opening a journal note now opens it in the window you are working in; previously, if the note was already open in another window, Obsidian jumped you over to that window.
+- Middle-clicking or Ctrl/Cmd-clicking to open a journal note in a new tab, split, or window now does so even when the note is already open somewhere; previously the request was ignored and the existing pane was focused instead.
+
 ## [3.0.0] - 2026-08-14
 
 ### Features

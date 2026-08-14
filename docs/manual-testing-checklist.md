@@ -960,6 +960,21 @@ The same modifier map applies to every affordance below: **Ctrl/Cmd → new tab*
 - [x] **Period badge** (period-buttons item) → same modifier behavior.
 - [x] **Existing-notes navigation arrow** → same modifier behavior.
 
+### Entry already open
+
+`uri-open` covers this seam through the URI handler; walk it here for the
+affordances the harness cannot drive.
+
+Setup: pop a journal entry out into its own window (drag its tab out, or open it
+with **Open mode: new window**), then click back into the main window.
+
+- [ ] **Open that same entry** from a command, a calendar cell, or a `journal-nav`
+      row → it opens in the window you are in. Focus must not jump to the popout.
+- [ ] Repeat with the popout focused → the entry opens there, and no second pane
+      appears in the main window.
+- [ ] **Ctrl/Cmd+click** a cell whose note is already open in the current window →
+      a second pane appears; the existing pane is not merely focused.
+
 ### Context menus
 
 - [x] **Right-click a calendar cell with a note** → native file menu appears.
