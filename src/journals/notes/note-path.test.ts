@@ -172,6 +172,22 @@ describe("NotePathService.pathForDate", () => {
   });
 });
 
+describe("NotePathService.noteNameFor", () => {
+  it("renders the name template without the folder or the .md extension", () => {
+    const config = fixedJournal("daily", { type: "day" }, { folder: "Journals/{{date:YYYY}}" });
+    const c = buildContainer(fakeRepo({ daily: config }));
+    const meta: JournalMetadata = { journalName: "daily", anchor: anchor("2026-05-19") };
+    expect(c.resolve(NotePathService).noteNameFor(config, meta)).toBe("2026-05-19");
+  });
+
+  it("renders a numbering variable from the metadata's stored numbers", () => {
+    const config = customJournal("sprint", "week", 2, "2024-01-01", { nameTemplate: "Sprint {{index}}" });
+    const c = buildContainer(fakeRepo({ sprint: config }));
+    const meta: JournalMetadata = { journalName: "sprint", anchor: anchor("2024-01-15"), numbers: { index: 2 } };
+    expect(c.resolve(NotePathService).noteNameFor(config, meta)).toBe("Sprint 2");
+  });
+});
+
 describe("NotePathService.candidateFor", () => {
   it("inverts a {{date}}.md path into a metadata anchor", () => {
     const repo = fakeRepo({ daily: fixedJournal("daily", { type: "day" }) });

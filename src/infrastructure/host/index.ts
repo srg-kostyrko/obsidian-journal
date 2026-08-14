@@ -23,6 +23,7 @@ export { TemplaterService } from "./internal/templater-service";
 export { TemplatesService } from "./internal/templates-service";
 export { renderIcon } from "./internal/icons";
 export { defineOpenMode } from "./define-open-mode";
+export { basenameOf } from "./paths";
 export {
   defineModal,
   ModalCancelled,

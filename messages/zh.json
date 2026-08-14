@@ -1774,7 +1774,7 @@
 	"journal_edit_variable_journal_link_description": "在模板文件的内容中，它会解析为另一篇日记中与此笔记日期对应的笔记路径。请自行将其包装在链接或嵌入中（例如 ![[ … ]]），并添加类似 +1w 的日期修饰符以指向相邻周期。",
 	"journal_edit_variable_journal_name_description": "日记名称（此处：{name}）。",
 	"journal_edit_variable_non_invertible_warning": "在此处使用它会导致日记无法从文件名中还原日期。",
-	"journal_edit_variable_note_name_description": "正在创建的笔记的名称。",
+	"journal_edit_variable_note_name_description": "本周期笔记的名称。",
 	"journal_edit_variable_note_title_description": "笔记名称的别名，支持核心插件“模板”的变量。",
 	"journal_edit_variable_numbering_description": "配置的编号变量（参见“顺序编号”部分）。",
 	"journal_edit_variable_reference_intro": "可用变量。当未指定显式格式时，日期格式默认为{dateFormat}。",

@@ -1821,7 +1821,7 @@
 	"journal_edit_variable_journal_link_description": "Усередині вмісту файлу шаблону переходить до шляху до нотатки іншого журналу для дати цієї нотатки. Оберніть її самостійно в посилання або вбудуйте (наприклад, ![[ … ]]) та додайте модифікатори дати, такі як +1w, щоб вказати на сусідній період.",
 	"journal_edit_variable_journal_name_description": "Назва журналу (тут: {name}).",
 	"journal_edit_variable_non_invertible_warning": "Використання цього тут запобігає відновленню дати з імені файлу журналом.",
-	"journal_edit_variable_note_name_description": "Ім’я нотатки, що створюється.",
+	"journal_edit_variable_note_name_description": "Назва нотатки за цей період.",
 	"journal_edit_variable_note_title_description": "Псевдонім імені нотатки, що підтримує змінну основного плагіна «Шаблони».",
 	"journal_edit_variable_numbering_description": "Налаштована змінна нумерації (див. розділ «Послідовність»).",
 	"journal_edit_variable_reference_intro": "Доступні змінні. Формат дати за замовчуванням має значення {dateFormat} якщо явний формат не вказано.",

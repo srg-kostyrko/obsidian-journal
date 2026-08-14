@@ -14,7 +14,7 @@ const showInvertibilityWarning = computed(() => NON_INVERTIBLE_CONTEXTS.has(prop
 const showNavRowVariables = computed(() => props.context === "nav-row");
 const showTemplateContentVariables = computed(() => props.context === "template-path");
 // note_name/title are bound after the filename renders, so the name template can't use them.
-const NOTE_NAME_CONTEXTS = new Set<VariableReferenceModalProps["context"]>(["folder-path", "template-path"]);
+const NOTE_NAME_CONTEXTS = new Set<VariableReferenceModalProps["context"]>(["folder-path", "template-path", "nav-row"]);
 const showNoteNameVariables = computed(() => NOTE_NAME_CONTEXTS.has(props.context));
 
 function handleModificationsClick(event: Event): void {

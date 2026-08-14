@@ -13,6 +13,8 @@ import { FakeNoticeService } from "@/infrastructure/host/testing";
 import {
   CycleService,
   JournalsIndex,
+  FrontmatterService,
+  NotePathService,
   NumberingService,
   JournalsRepository,
   JournalsViewModel,
@@ -59,6 +61,8 @@ function mount(rows: NavBlockRow[]) {
   container.register(CycleService).useClass(CycleService);
   container.register(JournalsIndex).useClass(JournalsIndex);
   container.register(NumberingService).useClass(NumberingService);
+  container.register(FrontmatterService).useClass(FrontmatterService);
+  container.register(NotePathService).useClass(NotePathService);
   container.register(WorkspaceService).useValue({} as WorkspaceService);
   render(NavBlockRowsEditor, {
     props: { journalName: "daily", field: "intervalBlock", title: TITLE, icon: "list" },

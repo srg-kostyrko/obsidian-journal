@@ -32,6 +32,8 @@ import {
   CycleService,
   JournalsIndex,
   JournalsRepository,
+  FrontmatterService,
+  NotePathService,
   NumberingService,
   OpenDateFlow,
   TimelineService,
@@ -139,6 +141,8 @@ function buildHarness(journals: Record<string, JournalConfig>): Harness {
   container.register(CycleService).useClass(CycleService);
   container.register(TimelineService).useClass(TimelineService);
   container.register(NumberingService).useClass(NumberingService);
+  container.register(FrontmatterService).useClass(FrontmatterService);
+  container.register(NotePathService).useClass(NotePathService);
   const shelves = new FakeShelves();
   container.register(ShelvesRepository).useValue(shelves as unknown as ShelvesRepository);
   const workspace = new FakeWorkspace();
@@ -281,6 +285,32 @@ describe("NavigationCodeBlock columns", () => {
     expect(screen.queryByText("26")).toBeNull();
     expect(screen.queryByText("28")).toBeNull();
     expect(screen.getByText("27")).toBeTruthy();
+  });
+});
+
+describe("NavigationCodeBlock row templates", () => {
+  beforeEach(() => {
+    vi.useFakeTimers();
+    vi.setSystemTime(new Date("2026-05-27T10:00:00Z"));
+  });
+
+  it("renders note_name as the connected note's own name, and as the prospective name where no note exists", () => {
+    const daily: JournalConfig = { ...journalDefaultsFor({ type: "day" }, "daily") };
+    daily.navBlock = { ...daily.navBlock, rows: [navRow({ template: "{{note_name}}" })] };
+    const h = buildHarness({ daily });
+    const entry: JournalEntry = {
+      journalName: "daily",
+      anchor: "2026-05-27" as AnchorString,
+      path: "Daily/Renamed day.md" as VaultPath,
+    };
+    h.index.byPath.set(entry.path, entry);
+    h.index.byAnchor.set("daily::2026-05-27", entry);
+    h.shelves.shelves = [{ name: "main", journals: ["daily"] }];
+    mount(h, entry.path);
+
+    expect(screen.getByText("Renamed day")).toBeTruthy();
+    expect(screen.getByText("2026-05-26")).toBeTruthy();
+    expect(screen.getByText("2026-05-28")).toBeTruthy();
   });
 });
 
