@@ -242,7 +242,7 @@ export class DynamicCommandRegistry {
     }
   }
 
-  #onJournalDuplicated(sourceName: string, newName: string): void {
+  #onJournalCloned(sourceName: string, newName: string): void {
     // Snapshot first: create() writes into the same storage the query iterates.
     const sourceCommands = [...this.#commandsRepo.find().entries()].filter(
       ([, command]) => command.target.kind === "journal" && command.target.journalName === sourceName,
@@ -283,7 +283,7 @@ export class DynamicCommandRegistry {
     this.#commandsEvents.on("deleted", () => this.#reconcile());
     this.#journalsEvents.on("renamed", (oldName, newName) => this.#onJournalRenamed(oldName, newName));
     this.#journalsEvents.on("deleted", (journalName) => this.#onJournalDeleted(journalName));
-    this.#journalsEvents.on("duplicated", (sourceName, newName) => this.#onJournalDuplicated(sourceName, newName));
+    this.#journalsEvents.on("cloned", (sourceName, newName) => this.#onJournalCloned(sourceName, newName));
     this.#shelvesEvents.on("renamed", (oldName, newName) => this.#onShelfRenamed(oldName, newName));
     this.#shelvesEvents.on("deleted", (shelfName) => this.#onShelfDeleted(shelfName));
     // An external settings sync rewrites the collections without firing repository

@@ -70,12 +70,12 @@ describe("JournalList", () => {
     expect(emitted().edit).toEqual([["Journal A"]]);
   });
 
-  it("emits duplicate with the journal name", async () => {
+  it("emits clone with the journal name", async () => {
     const { emitted } = render(JournalList, {
       props: { entries: [["Journal A", makeJournal("Journal A")]], emptyText: "Nothing here" },
     });
-    await userEvent.click(screen.getByLabelText(m.journal_dashboard_duplicate({ name: "Journal A" })));
-    expect(emitted().duplicate).toEqual([["Journal A"]]);
+    await userEvent.click(screen.getByLabelText(m.journal_dashboard_clone({ name: "Journal A" })));
+    expect(emitted().clone).toEqual([["Journal A"]]);
   });
 
   it("emits delete with the journal name", async () => {

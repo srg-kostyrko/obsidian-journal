@@ -8,19 +8,19 @@ import { JournalsRepository } from "@/journals/repository";
 import { SettingsUiService } from "@/settings";
 
 import { journalEditSubpage } from "../ui/journals-subpage";
-import { duplicateJournalModal } from "../ui/modals";
+import { cloneJournalModal } from "../ui/modals";
 
-export class DuplicateJournalFlow implements Flow<{ journalName: string }, { name: string }, FlowError> {
+export class CloneJournalFlow implements Flow<{ journalName: string }, { name: string }, FlowError> {
   readonly #modals = inject(ModalService);
   readonly #repository = inject(JournalsRepository);
   readonly #ui = inject(SettingsUiService);
 
   #suggestName(sourceName: string): string {
-    let candidate = m.journal_duplicate_copy_name({ name: sourceName });
+    let candidate = m.journal_clone_copy_name({ name: sourceName });
     let index = 1;
     while (this.#repository.exists(candidate)) {
       index += 1;
-      candidate = m.journal_duplicate_copy_name_indexed({ name: sourceName, index });
+      candidate = m.journal_clone_copy_name_indexed({ name: sourceName, index });
     }
     return candidate;
   }
@@ -30,11 +30,11 @@ export class DuplicateJournalFlow implements Flow<{ journalName: string }, { nam
       return AsyncResult.err(toFlowError(new UnknownJournalError(parameters.journalName)));
     }
     const suggestedName = this.#suggestName(parameters.journalName);
-    return attempt.in(this, async function* (this: DuplicateJournalFlow) {
+    return attempt.in(this, async function* (this: CloneJournalFlow) {
       const submitted = yield* this.#modals
-        .open(duplicateJournalModal, { sourceName: parameters.journalName, suggestedName })
-        .mapErr(() => new UserAborted("duplicate-journal-modal"));
-      yield* this.#repository.duplicate(parameters.journalName, submitted.newName).mapErr(toFlowError);
+        .open(cloneJournalModal, { sourceName: parameters.journalName, suggestedName })
+        .mapErr(() => new UserAborted("clone-journal-modal"));
+      yield* this.#repository.clone(parameters.journalName, submitted.newName).mapErr(toFlowError);
       this.#ui.push(journalEditSubpage, { journalName: submitted.newName });
       return { name: submitted.newName };
     });

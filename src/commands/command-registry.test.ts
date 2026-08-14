@@ -532,8 +532,8 @@ function commandsTargeting(commandsRepo: CommandsRepository, journalName: string
   );
 }
 
-describe("DynamicCommandRegistry journal duplication", () => {
-  it("copies a journal-target command onto the duplicate", async () => {
+describe("DynamicCommandRegistry journal cloning", () => {
+  it("copies a journal-target command onto the clone", async () => {
     const { commandsRepo, journalsRepo } = await build();
     journalsRepo.create("daily", { type: "day" });
     commandsRepo.create(
@@ -546,7 +546,7 @@ describe("DynamicCommandRegistry journal duplication", () => {
       }),
     );
 
-    journalsRepo.duplicate("daily", "daily copy");
+    journalsRepo.clone("daily", "daily copy");
 
     const copies = commandsTargeting(commandsRepo, "daily copy");
     expect(copies).toHaveLength(1);
@@ -565,7 +565,7 @@ describe("DynamicCommandRegistry journal duplication", () => {
     journalsRepo.create("daily", { type: "day" });
     commandsRepo.create("cmd-1", makeCommand({ target: { kind: "journal", journalName: "daily" } }));
 
-    journalsRepo.duplicate("daily", "daily copy");
+    journalsRepo.clone("daily", "daily copy");
 
     expect(commandsTargeting(commandsRepo, "daily")).toHaveLength(1);
     expect(commandsTargeting(commandsRepo, "daily copy").at(0)?.[0]).not.toBe("cmd-1");
@@ -576,7 +576,7 @@ describe("DynamicCommandRegistry journal duplication", () => {
     journalsRepo.create("daily", { type: "day" });
     commandsRepo.create("cmd-1", makeCommand({ target: { kind: "journal", journalName: "daily" } }));
 
-    journalsRepo.duplicate("daily", "daily copy");
+    journalsRepo.clone("daily", "daily copy");
 
     const copyId = commandsTargeting(commandsRepo, "daily copy").at(0)?.[0] ?? "";
     expect(host.commands.get(copyId)).toBeDefined();
@@ -589,7 +589,7 @@ describe("DynamicCommandRegistry journal duplication", () => {
     commandsRepo.create("cmd-1", makeCommand({ target: { kind: "journal", journalName: "weekly" } }));
 
     const before = commandsRepo.count();
-    journalsRepo.duplicate("daily", "daily copy");
+    journalsRepo.clone("daily", "daily copy");
 
     expect(commandsTargeting(commandsRepo, "daily copy")).toHaveLength(0);
     expect(commandsRepo.count()).toBe(before);
@@ -601,7 +601,7 @@ describe("DynamicCommandRegistry journal duplication", () => {
     commandsRepo.create("cmd-1", makeCommand({ target: { kind: "all", writeType: "day" } }));
 
     const before = commandsRepo.count();
-    journalsRepo.duplicate("daily", "daily copy");
+    journalsRepo.clone("daily", "daily copy");
 
     expect(commandsRepo.count()).toBe(before);
   });

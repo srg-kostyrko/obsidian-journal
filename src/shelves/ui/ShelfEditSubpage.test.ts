@@ -12,7 +12,7 @@ import { ModalService } from "@/infrastructure/host/modals";
 import { FakeModalService } from "@/infrastructure/host/modals/testing";
 import { FakeNoticeService } from "@/infrastructure/host/testing";
 import { AsyncResult } from "@/infrastructure/result";
-import { AddJournalFlow, DuplicateJournalFlow, journalConfigCollection } from "@/journals";
+import { AddJournalFlow, CloneJournalFlow, journalConfigCollection } from "@/journals";
 import { BulkAddFlow } from "@/journals/notes/bulk-add/flows/bulk-add.flow";
 import { JournalsRepository } from "@/journals/repository";
 import { JournalsEventsToken } from "@/journals/tokens";
@@ -127,15 +127,15 @@ describe("ShelfEditSubpage", () => {
     expect(flows.invoke).toHaveBeenCalledWith(BulkAddFlow, { journalName: "daily" });
   });
 
-  it("invokes DuplicateJournalFlow when a member journal's duplicate is clicked", async () => {
+  it("invokes CloneJournalFlow when a member journal's clone is clicked", async () => {
     const { container, flows } = await setup({
       journals: ["daily"],
       shelves: { Work: { name: "Work", journals: ["daily"] } },
     });
     vi.spyOn(flows, "invoke").mockReturnValue(AsyncResult.ok({ name: "daily copy" }));
     mount(container, "Work");
-    await userEvent.click(screen.getByLabelText(m.journal_dashboard_duplicate({ name: "daily" })));
-    expect(flows.invoke).toHaveBeenCalledWith(DuplicateJournalFlow, { journalName: "daily" });
+    await userEvent.click(screen.getByLabelText(m.journal_dashboard_clone({ name: "daily" })));
+    expect(flows.invoke).toHaveBeenCalledWith(CloneJournalFlow, { journalName: "daily" });
   });
 
   it("invokes EditShelfNameFlow with the shelf name when rename is clicked", async () => {

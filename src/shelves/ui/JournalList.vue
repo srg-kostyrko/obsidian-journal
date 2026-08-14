@@ -12,7 +12,7 @@ defineProps<{
 defineEmits<{
   "bulk-add": [name: string];
   edit: [name: string];
-  duplicate: [name: string];
+  clone: [name: string];
   delete: [name: string];
 }>();
 </script>
@@ -39,8 +39,8 @@ defineEmits<{
       />
       <UiIconButton
         :icon="icons.action.copy"
-        :tooltip="m.journal_dashboard_duplicate({ name })"
-        @click="$emit('duplicate', name)"
+        :tooltip="m.journal_dashboard_clone({ name })"
+        @click="$emit('clone', name)"
       />
       <UiIconButton
         :icon="icons.action.delete"

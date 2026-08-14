@@ -91,6 +91,6 @@ export { describeWrite } from "./settings/describe-write";
 
 export { AddJournalFlow } from "./settings/flows/add-journal.flow";
 export { DeleteJournalFlow } from "./settings/flows/delete-journal.flow";
-export { DuplicateJournalFlow } from "./settings/flows/duplicate-journal.flow";
+export { CloneJournalFlow } from "./settings/flows/clone-journal.flow";
 
 export { journalEditSubpage } from "./settings/ui/journals-subpage";

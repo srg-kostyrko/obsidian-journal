@@ -35,9 +35,9 @@ const onSubmit = handleSubmit((vs) => api.submit({ newName: vs.newName }));
 
 <template>
   <form @submit.prevent="onSubmit">
-    <UiSettingRow :name="m.journal_duplicate_modal_name_label()">
+    <UiSettingRow :name="m.journal_clone_modal_name_label()">
       <template #description>
-        <div>{{ m.journal_duplicate_modal_description() }}</div>
+        <div>{{ m.journal_clone_modal_description() }}</div>
         <span v-for="error of errorBag.newName" :key="error" class="journal-form-error">{{ error }}</span>
       </template>
       <UiTextInput v-model="newName" v-bind="newNameAttrs" />

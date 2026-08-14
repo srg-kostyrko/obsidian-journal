@@ -13,8 +13,8 @@ import { JournalsEventsToken } from "@/journals/tokens";
 import { JournalsViewModel } from "@/journals/view-model";
 import { createSettingsService } from "@/settings/testing";
 
-import DuplicateJournalModal from "./DuplicateJournalModal.vue";
-import { duplicateJournalModal } from "./modals";
+import CloneJournalModal from "./CloneJournalModal.vue";
+import { cloneJournalModal } from "./modals";
 
 afterEach(() => cleanup());
 
@@ -49,7 +49,7 @@ async function mountModal(props: { sourceName: string; suggestedName: string }, 
   const submit = vi.fn();
   const cancel = vi.fn();
   const api: ModalApi<{ newName: string }> = { submit, cancel };
-  render(DuplicateJournalModal, {
+  render(CloneJournalModal, {
     props,
     global: {
       plugins: [
@@ -65,30 +65,30 @@ async function mountModal(props: { sourceName: string; suggestedName: string }, 
   return { submit, cancel };
 }
 
-describe("duplicateJournalModal definition", () => {
+describe("cloneJournalModal definition", () => {
   it("titles the modal with the source journal name", () => {
-    expect(duplicateJournalModal.title({ sourceName: "daily", suggestedName: "daily copy" })).toBe(
-      m.journal_duplicate_modal_title({ name: "daily" }),
+    expect(cloneJournalModal.title({ sourceName: "daily", suggestedName: "daily (copy)" })).toBe(
+      m.journal_clone_modal_title({ name: "daily" }),
     );
   });
 });
 
-describe("DuplicateJournalModal", () => {
+describe("CloneJournalModal", () => {
   it("prefills the name field with the suggested name", async () => {
-    await mountModal({ sourceName: "daily", suggestedName: "daily copy" });
-    expect(screen.getByRole("textbox")).toHaveProperty("value", "daily copy");
+    await mountModal({ sourceName: "daily", suggestedName: "daily (copy)" });
+    expect(screen.getByRole("textbox")).toHaveProperty("value", "daily (copy)");
   });
 
   it("submits the suggested name unchanged", async () => {
-    const { submit } = await mountModal({ sourceName: "daily", suggestedName: "daily copy" });
+    const { submit } = await mountModal({ sourceName: "daily", suggestedName: "daily (copy)" });
     await userEvent.click(screen.getByText(m.common_action_submit()));
     await waitFor(() => {
-      expect(submit).toHaveBeenCalledWith({ newName: "daily copy" });
+      expect(submit).toHaveBeenCalledWith({ newName: "daily (copy)" });
     });
   });
 
   it("submits a name the user typed", async () => {
-    const { submit } = await mountModal({ sourceName: "daily", suggestedName: "daily copy" });
+    const { submit } = await mountModal({ sourceName: "daily", suggestedName: "daily (copy)" });
     const input = screen.getByRole("textbox");
     await userEvent.clear(input);
     await userEvent.type(input, "mornings");
@@ -98,13 +98,13 @@ describe("DuplicateJournalModal", () => {
     });
   });
 
-  it("states what a duplicate carries", async () => {
-    await mountModal({ sourceName: "daily", suggestedName: "daily copy" });
-    expect(screen.getByText(m.journal_duplicate_modal_description())).toBeTruthy();
+  it("states what a clone carries", async () => {
+    await mountModal({ sourceName: "daily", suggestedName: "daily (copy)" });
+    expect(screen.getByText(m.journal_clone_modal_description())).toBeTruthy();
   });
 
   it("rejects a name already in use", async () => {
-    const { submit } = await mountModal({ sourceName: "daily", suggestedName: "daily copy" }, ["weekly"]);
+    const { submit } = await mountModal({ sourceName: "daily", suggestedName: "daily (copy)" }, ["weekly"]);
     const input = screen.getByRole("textbox");
     await userEvent.clear(input);
     await userEvent.type(input, "weekly");
@@ -116,7 +116,7 @@ describe("DuplicateJournalModal", () => {
   });
 
   it("rejects an empty name", async () => {
-    const { submit } = await mountModal({ sourceName: "daily", suggestedName: "daily copy" });
+    const { submit } = await mountModal({ sourceName: "daily", suggestedName: "daily (copy)" });
     await userEvent.clear(screen.getByRole("textbox"));
     await userEvent.click(screen.getByText(m.common_action_submit()));
     await waitFor(() => {
@@ -126,7 +126,7 @@ describe("DuplicateJournalModal", () => {
   });
 
   it("cancels when the user clicks Cancel", async () => {
-    const { cancel } = await mountModal({ sourceName: "daily", suggestedName: "daily copy" });
+    const { cancel } = await mountModal({ sourceName: "daily", suggestedName: "daily (copy)" });
     await userEvent.click(screen.getByText(m.common_action_cancel()));
     expect(cancel).toHaveBeenCalledTimes(1);
   });

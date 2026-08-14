@@ -28,7 +28,7 @@ export class ShelvesService {
     this.#journals = journals;
     journalEvents.on("renamed", (oldName, newName) => this.#renameJournalInShelves(oldName, newName));
     journalEvents.on("deleted", (journalName) => this.#removeJournalFromShelves(journalName));
-    journalEvents.on("duplicated", (sourceName, newName) => this.#shelveCopyWithSource(sourceName, newName));
+    journalEvents.on("cloned", (sourceName, newName) => this.#shelveCopyWithSource(sourceName, newName));
   }
 
   #shelveCopyWithSource(sourceName: string, newName: string): void {

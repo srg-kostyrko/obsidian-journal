@@ -13,7 +13,7 @@ import { FakeNoticeService } from "@/infrastructure/host/testing";
 import {
   AddJournalFlow,
   DeleteJournalFlow,
-  DuplicateJournalFlow,
+  CloneJournalFlow,
   journalConfigCollection,
   journalEditSubpage,
 } from "@/journals";
@@ -142,10 +142,10 @@ describe("JournalsDashboardBlock", () => {
     expect(flows.invoke).toHaveBeenCalledWith(BulkAddFlow, { journalName: "daily" });
   });
 
-  it("invokes DuplicateJournalFlow when duplicate is clicked", async () => {
+  it("invokes CloneJournalFlow when clone is clicked", async () => {
     const { container, flows } = await setup({ journals: ["daily"] });
     mount(container);
-    await userEvent.click(screen.getByLabelText(m.journal_dashboard_duplicate({ name: "daily" })));
-    expect(flows.invoke).toHaveBeenCalledWith(DuplicateJournalFlow, { journalName: "daily" });
+    await userEvent.click(screen.getByLabelText(m.journal_dashboard_clone({ name: "daily" })));
+    expect(flows.invoke).toHaveBeenCalledWith(CloneJournalFlow, { journalName: "daily" });
   });
 });

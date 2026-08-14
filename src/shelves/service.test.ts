@@ -128,7 +128,7 @@ describe("ShelvesService", () => {
     });
   });
 
-  describe("cascade on journal duplicate", () => {
+  describe("cascade on journal clone", () => {
     it("adds the copy beside the source on every shelf holding it", () => {
       const { journalsRepo, shelvesStorage } = setup({
         journals: { daily: journalConfig("daily") },
@@ -137,7 +137,7 @@ describe("ShelvesService", () => {
           Home: shelf("Home", ["other", "daily"]),
         },
       });
-      journalsRepo.duplicate("daily", "daily copy");
+      journalsRepo.clone("daily", "daily copy");
       expect(shelvesStorage.Personal?.journals).toEqual(["daily", "daily copy"]);
       expect(shelvesStorage.Home?.journals).toEqual(["other", "daily", "daily copy"]);
     });
@@ -147,7 +147,7 @@ describe("ShelvesService", () => {
         journals: { daily: journalConfig("daily") },
         shelves: { Personal: shelf("Personal", ["daily"]), Work: shelf("Work", ["other"]) },
       });
-      journalsRepo.duplicate("daily", "daily copy");
+      journalsRepo.clone("daily", "daily copy");
       expect(shelvesStorage.Work?.journals).toEqual(["other"]);
     });
 
@@ -156,7 +156,7 @@ describe("ShelvesService", () => {
         journals: { daily: journalConfig("daily") },
         shelves: { Personal: shelf("Personal", ["other"]) },
       });
-      journalsRepo.duplicate("daily", "daily copy");
+      journalsRepo.clone("daily", "daily copy");
       expect(shelvesStorage.Personal?.journals).toEqual(["other"]);
     });
   });

@@ -19,7 +19,7 @@ import type { Emitter } from "nanoevents";
 
 export interface JournalsEvents extends RepositoryEvents<string, JournalConfig> {
   renamed: (oldName: string, newName: string) => void;
-  duplicated: (sourceName: string, newName: string) => void;
+  cloned: (sourceName: string, newName: string) => void;
 }
 
 export class JournalsRepository extends BaseRepository<
@@ -72,7 +72,7 @@ export class JournalsRepository extends BaseRepository<
     return new Ok(entity);
   }
 
-  duplicate(
+  clone(
     sourceName: string,
     newName: string,
   ): Result<JournalConfig, InvalidJournalNameError | JournalNameTakenError | UnknownJournalError> {
@@ -84,7 +84,7 @@ export class JournalsRepository extends BaseRepository<
     const entity: JournalConfig = { ...cloneFnJSON(source), name: newName };
     const result = this.addEntity(newName, entity);
     if (result.kind === "err") return new Err(new JournalNameTakenError(newName));
-    this.events.emit("duplicated", sourceName, newName);
+    this.events.emit("cloned", sourceName, newName);
     return new Ok(entity);
   }
 
