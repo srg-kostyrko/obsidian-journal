@@ -9,10 +9,10 @@ jobs:
     outputs:
       PACKAGE_VERSION: ${{ steps.version.outputs.PACKAGE_VERSION }}
     steps:
-      - uses: actions/checkout@v5
+      - uses: actions/checkout@v7
 
       - name: Use Node.js
-        uses: actions/setup-node@v5
+        uses: actions/setup-node@v7
         with:
           node-version: "24.x"
       - id: version
@@ -24,10 +24,10 @@ jobs:
     env:
       PACKAGE_VERSION: ${{ needs.get-version.outputs.PACKAGE_VERSION }}
     steps:
-      - uses: actions/checkout@v5
+      - uses: actions/checkout@v7
 
       - name: Use Node.js
-        uses: actions/setup-node@v5
+        uses: actions/setup-node@v7
         with:
           node-version: "24.x"
 
