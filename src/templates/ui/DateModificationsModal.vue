@@ -65,19 +65,19 @@ const boundaryUnits = [
       <li v-for="unit in boundaryUnits" :key="unit.key">{{ unit.label() }}</li>
     </ul>
 
-    <h4>{{ m.variable_modifications_number_heading() }}</h4>
-    <p>{{ m.variable_modifications_number_body() }}</p>
-    <p>
-      <I18nWithSlot :message="m.variable_modifications_number_example">
-        <VariableChip name="index+3:o" />
-      </I18nWithSlot>
-    </p>
-
     <h4>{{ m.variable_modifications_combined_heading() }}</h4>
     <p>{{ m.variable_modifications_combined_body() }}</p>
     <p>
       <I18nWithSlot :message="m.variable_modifications_combined_example">
         <VariableChip name="date+1w<startOf=week>:MMM DD, YYYY" />
+      </I18nWithSlot>
+    </p>
+
+    <h4>{{ m.variable_modifications_number_heading() }}</h4>
+    <p>{{ m.variable_modifications_number_body() }}</p>
+    <p>
+      <I18nWithSlot :message="m.variable_modifications_number_example">
+        <VariableChip name="index+3:o" />
       </I18nWithSlot>
     </p>
   </div>
