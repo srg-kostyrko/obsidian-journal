@@ -10,9 +10,9 @@ All notable changes to this project will be documented in this file.
 - Build and customize your own calendar views by composing blocks (month, week, quarter, year, decade, and custom-interval calendars, plus toolbars, dividers, and spacers) and toolbar items (shelf selector, period buttons, navigation buttons, and more).
 - Target a specific journal from a custom command or toolbar button, so hotkeys act on it without prompting.
 - Choose where the week-number column appears per block, with a global default.
-- Set the week numbering scheme from a preset — ISO 8601, Western, or Middle Eastern — instead of entering the first day of the week and the first week of the year by hand. Changing it re-anchors the weekly notes you already have onto the new grid, so they stay attached to their journal.
-- Choose where each view opens — left sidebar, right sidebar, or a main tab — and whether it opens automatically at startup.
-- Have a view reopen on the date you last visited, and have a calendar block follow the note you are editing, both settable per view.
+- Open a view as a main tab, not only in the left or right sidebar, and decide per view whether it opens at startup.
+- Have a view reopen on the date you last visited instead of always starting on today.
+- Middle-click or Ctrl/Cmd+Alt-click a navigation link to open the note in a new tab or a split, the way an ordinary Obsidian link behaves.
 - Open the nearest existing note for a journal or shelf, via command or an existing notes navigation toolbar item.
 - New markdown-template block for custom views that renders a template file inline.
 - Look up what a code block or template variable produces without leaving settings: a reference modal lists each one with a live preview and click-to-copy snippets.
@@ -37,15 +37,13 @@ All notable changes to this project will be documented in this file.
 - Creating a weekly journal mid-week now creates the current note immediately instead of waiting for the next week.
 - Decorations based on a checkbox (boolean) property now match correctly.
 - A navigation link no longer opens two context menus at once.
-- Middle-click and Ctrl/Cmd+Alt-click on a navigation link now open the note in a new tab or a split, the way they do on an ordinary Obsidian link.
 - Navigation blocks now wrap to fit a narrow pane instead of overflowing and clipping on mobile.
 - Previously imported notes now appear on the calendar after startup.
 - The open-next and open-previous note commands now work in Reading (preview) mode.
 - Interval-offset decorations now mark the interval's first day by default instead of never matching, and the editor spells out which day the offset targets.
-- Decorations now layer predictably: a journal's decoration overrides a shelf's, which overrides a vault-wide one. Previously borders resolved the opposite way, so a vault-wide border silently replaced a journal's.
-- Background and text color now follow the same layering: where two decorations in one list both set a background, the later one wins instead of the earlier one.
-- At most one corner decoration now renders per corner of a cell; previously several could stack on top of each other.
-- Adding a background or corner to a decoration no longer silently cancels a vault-wide or shelf rule; new styles now arrive with a visible color instead of a transparent one.
+- Where two of a journal's decorations both set a background or a text color, the later one now wins; previously the earlier one did, which disagreed with how borders already resolved.
+- At most one corner decoration now renders per corner of a cell; previously every matching corner stacked on top of the others.
+- A newly added background, corner, shape, or icon style now arrives with a visible color instead of a transparent one that rendered as nothing.
 
 ## [2.1.9] - 2025-06-07
 
