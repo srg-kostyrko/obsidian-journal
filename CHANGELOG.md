@@ -33,7 +33,11 @@ All notable changes to this project will be documented in this file.
 - Warn when a name template would connect every entry to the same note; previously, notes with only a title and no date all collided onto a single note.
 - Renaming the property a journal writes its date or numbering into now moves that value in every connected note; previously the notes kept the old property name and silently dropped off the journal.
 - Weekly navigation now reaches ISO week 53 at year boundaries instead of skipping it.
+- Changing the week configuration now updates the calendar straight away; previously the old first day of the week stayed in place until Obsidian was restarted.
+- Upgrading repairs weekly notes whose stored date was not the first day of their week; previously such a note dropped off the calendar and the open-this-week command reached the previous week's note.
 - Sequence numbering resets now cycle correctly.
+- A journal numbered from zero now renders its index in note names and writes it to frontmatter; previously the first entry lost its index entirely.
+- A custom interval anchored mid-week now keeps that day as its anchor instead of snapping back to the start of the week.
 - Creating a weekly journal mid-week now creates the current note immediately instead of waiting for the next week.
 - Decorations based on a checkbox (boolean) property now match correctly.
 - A navigation link no longer opens two context menus at once.
@@ -44,6 +48,7 @@ All notable changes to this project will be documented in this file.
 - Where two of a journal's decorations both set a background or a text color, the later one now wins; previously the earlier one did, which disagreed with how borders already resolved.
 - At most one corner decoration now renders per corner of a cell; previously every matching corner stacked on top of the others.
 - A newly added background, corner, shape, or icon style now arrives with a visible color instead of a transparent one that rendered as nothing.
+- Corrected a misspelling in the description of the vault-wide week configuration setting.
 
 ## [2.1.9] - 2025-06-07
 
