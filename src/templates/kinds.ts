@@ -1,4 +1,4 @@
-import { CalendarDate, localeData } from "@/calendar";
+import { CalendarDate, ordinalFor } from "@/calendar";
 import { Err, Ok, type Result } from "@/infrastructure/result";
 
 import { TemplateParseError } from "./errors";
@@ -19,7 +19,7 @@ export function renderNumber(
   format?: string,
 ): string {
   const value = applyOffsets(spec.value, modifiers);
-  return format === ORDINAL_FORMAT ? localeData().ordinal(value) : value.toString();
+  return format === ORDINAL_FORMAT ? ordinalFor(value) : value.toString();
 }
 
 export function renderDate(

@@ -112,6 +112,16 @@ export function dayOfMonthOrdinalParse(): RegExp | undefined {
   return (moment.localeData() as unknown as MomentLocaleInternals)._config?.dayOfMonthOrdinalParse;
 }
 
+interface OrdinalLocale {
+  ordinal(n: number, period: string): string;
+}
+
+// The period must be "D" (day-of-month) because dayOfMonthOrdinalParse is what inverts this
+// output, and moment.Locale#ordinal can render a different suffix per period.
+export function ordinalFor(value: number): string {
+  return (moment.localeData() as unknown as OrdinalLocale).ordinal(value, "D");
+}
+
 export function localMoment(
   input?: string | number | Date | moment.Moment | null,
   format?: string,
