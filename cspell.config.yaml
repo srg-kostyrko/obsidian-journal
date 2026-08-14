@@ -28,6 +28,7 @@ words:
   - subpages
   - templater
   - tfile
+  - unitless
   - unpadded
   - unrenderable
   - vueuse

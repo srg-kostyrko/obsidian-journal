@@ -40,6 +40,10 @@ export function tokenize(template: string): TokenStream {
 const NAME_PREFIX_RE = /^([a-zA-Z_][a-zA-Z0-9_]*)/;
 const ARITH_PREFIX_RE = /^([+-]\d+[a-z])/;
 const BOUNDARY_PREFIX_RE = /^(<[a-zA-Z]+=[a-zA-Z]+>)/;
+// Tried after ARITH_PREFIX_RE: a leading offset would swallow the `+3` of
+// `{{date+3d}}` and leave `d` as unparsable junk, silently turning every
+// existing date shift into a dropped token.
+const OFFSET_PREFIX_RE = /^([+-]\d+)(?![\da-z])/;
 
 function parseTokenInner(inner: string, raw: string): Token | undefined {
   let rest = inner.trim();
@@ -64,6 +68,7 @@ function parseTokenInner(inner: string, raw: string): Token | undefined {
   while (rest.length > 0 && !rest.startsWith(":") && !rest.startsWith("}")) {
     const arithMatch = ARITH_PREFIX_RE.exec(rest);
     const boundaryMatch = BOUNDARY_PREFIX_RE.exec(rest);
+    const offsetMatch = OFFSET_PREFIX_RE.exec(rest);
     if (arithMatch) {
       const modifierText = arithMatch[1];
       const modifierParts = MODIFIER_RE.exec(modifierText);
@@ -87,6 +92,14 @@ function parseTokenInner(inner: string, raw: string): Token | undefined {
         unit: boundaryParts[2],
       });
       rest = rest.slice(boundaryText.length).trimStart();
+    } else if (offsetMatch) {
+      const offsetText = offsetMatch[1];
+      modifiers.push({
+        kind: "offset",
+        sign: offsetText.startsWith("+") ? 1 : -1,
+        amount: Number.parseInt(offsetText.slice(1), 10),
+      });
+      rest = rest.slice(offsetText.length).trimStart();
     } else {
       return undefined; // unparsable junk
     }

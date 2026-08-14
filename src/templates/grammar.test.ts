@@ -71,6 +71,49 @@ describe("tokenize", () => {
       const tokens = tokenize("{{time:HH:mm:ss}}");
       expect(tokens[0]).toMatchObject({ format: "HH:mm:ss" });
     });
+
+    it("parses a unitless positive offset", () => {
+      const tokens = tokenize("{{index+3}}");
+      expect(tokens[0]).toMatchObject({
+        kind: "variable",
+        name: "index",
+        modifiers: [{ kind: "offset", sign: 1, amount: 3 }],
+      });
+    });
+
+    it("parses a unitless negative offset", () => {
+      const tokens = tokenize("{{index-2}}");
+      expect(tokens[0]).toMatchObject({
+        modifiers: [{ kind: "offset", sign: -1, amount: 2 }],
+      });
+    });
+
+    it("parses a multi-digit offset", () => {
+      const tokens = tokenize("{{index+34}}");
+      expect(tokens[0]).toMatchObject({
+        modifiers: [{ kind: "offset", sign: 1, amount: 34 }],
+      });
+    });
+
+    it("keeps a unit-bearing shift a shift, not an offset", () => {
+      const tokens = tokenize("{{date+34d}}");
+      expect(tokens[0]).toMatchObject({
+        modifiers: [{ kind: "shift", sign: 1, amount: 34, unit: "d" }],
+      });
+    });
+
+    it("parses an offset combined with a format", () => {
+      const tokens = tokenize("{{index+3:o}}");
+      expect(tokens[0]).toMatchObject({
+        name: "index",
+        modifiers: [{ kind: "offset", sign: 1, amount: 3 }],
+        format: "o",
+      });
+    });
+
+    it("still rejects a multi-letter unit", () => {
+      expect(tokenize("{{date+3days}}")).toEqual([{ kind: "literal", text: "{{date+3days}}" }]);
+    });
   });
 
   describe("function tokens", () => {
