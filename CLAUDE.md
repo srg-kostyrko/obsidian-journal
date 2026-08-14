@@ -30,35 +30,39 @@ repository content — `docs/superpowers/` was retired on 2026-08-13 and is
 ignored to keep it retired. Earlier specs remain in git history:
 
 ```bash
-git log --diff-filter=D --format=%H -1 -- docs/superpowers
-git show <sha>^:docs/superpowers/specs/<name>.md
+SHA=$(git log --all --diff-filter=D --format=%H -1 -- docs/superpowers)
+git ls-tree -r --name-only "$SHA^" -- docs/superpowers   # 202 files
+git show "$SHA^:docs/superpowers/specs/<name>.md"
 ```
 
+`--all` is load-bearing: without it, history simplification prunes the deleting
+commit and the lookup silently returns nothing, reading as "unrecoverable".
+
 `src/_old-code/` is gone the same way, and it was what nearly every deleted spec
-cited for "v2 did X". `main` is the last v2 release, so check such a claim
-against `main` directly:
+cited for "v2 did X". Since the v3 merge `main` **is** v3 — the last v2 release
+is the `2.1.10` tag, so check such a claim there:
 
 ```bash
-git show main:src/journals/journal.ts
-git grep <term> main -- src
+git show 2.1.10:src/journals/journal.ts
+git grep <term> 2.1.10 -- src
 ```
 
 ## Standing rules
 
 Project-wide decisions with no other home. They decide what counts as a bug.
 
-- **v3 has not shipped.** While `manifest.json` reads a 2.x version and the v3
-  rewrite sits under `[Unreleased]` in `CHANGELOG.md`, nobody is running v3 and
-  no v3-era data exists in the wild. A data gap introduced and fixed inside v3
-  therefore gets a documented note, not a repair migration; only the v2 → v3
-  path carries data anyone owns. Re-check the two conditions before applying
-  this — once a v3 version is tagged the conclusion inverts.
-- **v2 fidelity is the default when porting.** Every v2 variant, mode, and
-  option survives the port. Extending v2 behavior is fine; dropping any of it
-  needs the maintainer's explicit opt-in, so "v2 had this and v3 doesn't" is a
-  gap to report rather than a decision already made. One deviation _was_ opted
-  into: the v1 → v2 migration runs non-interactively in v3, recorded in the
-  migration section of
+- **v3 has shipped.** `3.0.0` was tagged on 2026-08-14 — `manifest.json` reads
+  3.0.0 and `CHANGELOG.md` carries a dated `[3.0.0]` section. People now run v3,
+  so a shape written by 3.0.x is data someone owns: a gap found in it needs a
+  repair path, not a documented note. This inverts the pre-release rule, and
+  decisions in git history that accepted a v3-era gap were made under that older
+  rule — they are not precedent for a gap found today.
+- **A missing v2 behavior is a bug report, not a settled decision.** The port is
+  finished and `src/_old-code/` is gone, but v2 users upgrade into v3 and report
+  what they lost. Check the claim against the v2 source at the `2.1.10` tag
+  before answering, and treat a real gap as a defect unless it appears under
+  "Deliberate non-bugs" below. One deviation _was_ opted into: the v1 → v2
+  migration runs non-interactively in v3, recorded in the migration section of
   [`docs/manual-testing-checklist.md`](docs/manual-testing-checklist.md).
   Settled decisions that merely _read_ as regressions are under "Deliberate
   non-bugs" below; none of those is a dropped v2 feature.
@@ -215,6 +219,10 @@ on it.
 - A live `npm run dev` rebuilds the same bundle the suite loads, so reverting a
   fix to prove a spec goes red races the watcher and can pass with the bug
   supposedly reinstated. Pause the watcher around any revert-and-verify window.
+- Confirm a suspected regression by running the single spec at a base commit in
+  a scratch `git worktree`, never through `git stash` — stash cannot revert
+  work that is already committed. `npm run build` first; a stale bundle has
+  caused a misdiagnosis before.
 - A config-editor modal that auto-opens over the view-editor subpage sits under
   the `UiIconSuggest` dropdown, which refocuses in a microtask. A physical WDIO
   click hits the overlay instead of Save and the close hangs — dispatch the
