@@ -2,7 +2,7 @@
 
 All notable changes to this project will be documented in this file.
 
-## [Unreleased]
+## [3.0.0] - 2026-08-14
 
 ### Features
 
@@ -10,6 +10,9 @@ All notable changes to this project will be documented in this file.
 - Build and customize your own calendar views by composing blocks (month, week, quarter, year, decade, and custom-interval calendars, plus toolbars, dividers, and spacers) and toolbar items (shelf selector, period buttons, navigation buttons, and more).
 - Target a specific journal from a custom command or toolbar button, so hotkeys act on it without prompting.
 - Choose where the week-number column appears per block, with a global default.
+- Set the week numbering scheme from a preset — ISO 8601, Western, or Middle Eastern — instead of entering the first day of the week and the first week of the year by hand. Changing it re-anchors the weekly notes you already have onto the new grid, so they stay attached to their journal.
+- Choose where each view opens — left sidebar, right sidebar, or a main tab — and whether it opens automatically at startup.
+- Have a view reopen on the date you last visited, and have a calendar block follow the note you are editing, both settable per view.
 - Open the nearest existing note for a journal or shelf, via command or an existing notes navigation toolbar item.
 - New markdown-template block for custom views that renders a template file inline.
 - Look up what a code block or template variable produces without leaving settings: a reference modal lists each one with a live preview and click-to-copy snippets.
@@ -34,6 +37,8 @@ All notable changes to this project will be documented in this file.
 - Creating a weekly journal mid-week now creates the current note immediately instead of waiting for the next week.
 - Decorations based on a checkbox (boolean) property now match correctly.
 - A navigation link no longer opens two context menus at once.
+- Middle-click and Ctrl/Cmd+Alt-click on a navigation link now open the note in a new tab or a split, the way they do on an ordinary Obsidian link.
+- Navigation blocks now wrap to fit a narrow pane instead of overflowing and clipping on mobile.
 - Previously imported notes now appear on the calendar after startup.
 - The open-next and open-previous note commands now work in Reading (preview) mode.
 - Interval-offset decorations now mark the interval's first day by default instead of never matching, and the editor spells out which day the offset targets.
