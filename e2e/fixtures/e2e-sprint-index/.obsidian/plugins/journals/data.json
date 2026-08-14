@@ -39,6 +39,84 @@
           "kind": "never"
         }
       }
+    },
+    "pi": {
+      "name": "pi",
+      "write": {
+        "type": "custom",
+        "every": "week",
+        "duration": 2,
+        "anchorDate": "2026-01-05"
+      },
+      "nameTemplate": "PI {{index+3}}",
+      "dateFormat": "YYYY-MM-DD",
+      "frontmatter": {
+        "dateField": "journal-date",
+        "startDateField": "journal-start-date",
+        "endDateField": "journal-end-date",
+        "addStartDate": false,
+        "addEndDate": false
+      },
+      "numbering": {
+        "enabled": true,
+        "anchorDate": "2026-01-05",
+        "allowBefore": false,
+        "sources": [
+          {
+            "variable": "index",
+            "frontmatterKey": "journal-index",
+            "anchorValue": 1,
+            "reset": {
+              "kind": "never"
+            }
+          }
+        ]
+      },
+      "timeline": {
+        "start": "",
+        "end": {
+          "kind": "never"
+        }
+      }
+    },
+    "cycle": {
+      "name": "cycle",
+      "write": {
+        "type": "custom",
+        "every": "week",
+        "duration": 2,
+        "anchorDate": "2026-01-05"
+      },
+      "nameTemplate": "Cycle {{index:o}}",
+      "dateFormat": "YYYY-MM-DD",
+      "frontmatter": {
+        "dateField": "journal-date",
+        "startDateField": "journal-start-date",
+        "endDateField": "journal-end-date",
+        "addStartDate": false,
+        "addEndDate": false
+      },
+      "numbering": {
+        "enabled": true,
+        "anchorDate": "2026-01-05",
+        "allowBefore": false,
+        "sources": [
+          {
+            "variable": "index",
+            "frontmatterKey": "journal-index",
+            "anchorValue": 1,
+            "reset": {
+              "kind": "never"
+            }
+          }
+        ]
+      },
+      "timeline": {
+        "start": "",
+        "end": {
+          "kind": "never"
+        }
+      }
     }
   }
 }
