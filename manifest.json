@@ -1,7 +1,7 @@
 {
 	"id": "journals",
 	"name": "Journals",
-	"version": "2.1.10",
+	"version": "3.0.0",
 	"minAppVersion": "1.8.7",
 	"description": "Manage your journals, calendars, and periodic notes.",
 	"author": "Sergii Kostyrko",
