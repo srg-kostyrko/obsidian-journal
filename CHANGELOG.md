@@ -6,7 +6,7 @@ All notable changes to this project will be documented in this file.
 
 ### Features
 
-- A numbering variable can now be offset and rendered as an ordinal: `{{index+3}}` adds three to the rendered value, `{{index-1}}` subtracts one, and `{{index:o}}` renders it as an ordinal ("4th"). They combine as `{{index+3:o}}`, and both survive the round-trip out of a note name, so a journal named `Sprint {{index+3}}` still recognizes its own notes.
+- A numbering variable can now be offset and rendered as an ordinal: `{{index+3}}` adds three to the rendered value, `{{index-1}}` subtracts one, and `{{index:o}}` renders it as an ordinal ("4th"). They combine as `{{index+3:o}}`, and both survive the round-trip out of a note name, so a journal named `Sprint {{index+3}}` still recognizes its own notes. This offset syntax now applies to any variable name, not only numbering ones, so a template that happened to contain a literal `+3` or `-1` after a variable name (for example `{{date+3}}`) will render differently from before.
 
 ## [3.0.0] - 2026-08-14
 
