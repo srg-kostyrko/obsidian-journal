@@ -1,0 +1,51 @@
+name: Stale
+
+on:
+  schedule:
+    # Daily, offset from the nightly e2e run (07:00 UTC).
+    - cron: "0 3 * * *"
+  workflow_dispatch:
+    inputs:
+      debug-only:
+        description: "Dry run: log what would happen without touching issues"
+        type: boolean
+        default: true
+
+permissions:
+  issues: write
+
+jobs:
+  stale:
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/stale@v11
+        with:
+          # Only issues the maintainer has explicitly marked as blocked on the
+          # reporter. Everything else — unanswered feature requests included —
+          # is the project's backlog, not the reporter's to keep alive.
+          only-issue-labels: "awaiting feedback"
+
+          # 23 + 7 closes at day 30 of reporter silence, with a warning at 23.
+          # The close clock runs from the stale label, not the warning comment.
+          days-before-issue-stale: 23
+          days-before-issue-close: 7
+          days-before-pr-stale: -1
+          days-before-pr-close: -1
+
+          stale-issue-label: "stale"
+          stale-issue-message: >
+            This issue is waiting on more information from the reporter and has
+            been quiet for 23 days. Comment with the details asked for above and
+            it stays open — otherwise it closes in 7 days. A closed issue can be
+            reopened at any time.
+          close-issue-message: >
+            Closing this after 30 days with no reply. That's not a verdict on
+            the report — comment with the missing details and it can be reopened.
+          close-issue-reason: not_planned
+
+          # An answer clears both labels, so the issue lands back in the normal
+          # triage flow instead of re-arming the timer.
+          labels-to-remove-when-unstale: "awaiting feedback"
+
+          debug-only: ${{ inputs.debug-only || false }}
