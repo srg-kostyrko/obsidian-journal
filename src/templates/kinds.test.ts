@@ -108,6 +108,23 @@ describe("kinds", () => {
       const pattern = patternForKind(spec);
       expect(new RegExp(`^${pattern}$`).test("2022-01-01")).toBe(true);
     });
+
+    it("matches a plain integer for a number with no format", () => {
+      const pattern = new RegExp(`^${patternForKind({ kind: "number", value: 0 })}$`);
+      expect(pattern.test("42")).toBe(true);
+      expect(pattern.test("42nd")).toBe(false);
+    });
+
+    it("matches an ordinal for the o format", () => {
+      const pattern = new RegExp(`^${patternForKind({ kind: "number", value: 0 }, "o")}$`);
+      expect(pattern.test("3rd")).toBe(true);
+      expect(pattern.test("3")).toBe(false);
+    });
+
+    it("matches an ordinal past two digits", () => {
+      const pattern = new RegExp(`^${patternForKind({ kind: "number", value: 0 }, "o")}$`);
+      expect(pattern.test("100th")).toBe(true);
+    });
   });
 
   describe("renderClock", () => {

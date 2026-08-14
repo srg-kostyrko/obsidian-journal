@@ -2,7 +2,7 @@ import { CalendarDate, localeData } from "@/calendar";
 import { Err, Ok, type Result } from "@/infrastructure/result";
 
 import { TemplateParseError } from "./errors";
-import { escapeRegexLiteral, formatToRegexp } from "./format-regex";
+import { escapeRegexLiteral, formatToRegexp, ordinalPattern } from "./format-regex";
 import { applyModifiers, applyOffsets, unapplyModifiers } from "./modifiers";
 
 import type { Modifier, VariableSpec } from "./types";
@@ -48,7 +48,7 @@ export function patternForKind(spec: VariableSpec, format?: string): string {
       return escapeRegexLiteral(spec.value);
     }
     case "number": {
-      return String.raw`-?\d+`;
+      return format === ORDINAL_FORMAT ? String.raw`-?\d+` + ordinalPattern : String.raw`-?\d+`;
     }
     case "date": {
       const effective = format ?? spec.defaultFormat;
