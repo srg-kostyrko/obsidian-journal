@@ -128,6 +128,12 @@ Each journal can be configured separately with these settings:
   - Add start date property, with its own property name
   - Add end date property, with its own property name
 
+Every journal row also has a **clone** action. The copy carries the source's whole configuration
+under a new name, joins the same shelf, and gets its own copy of the source's commands. Notes are
+never copied. The copy starts out with the source's folder and note name template, so the two
+resolve to the same note paths until you change one — the colliding journals warning says so until
+you do.
+
 ### Decoration System
 
 Journals provides a decoration system to visually distinguish notes in calendars and navigation blocks. Decorations live in three scopes:
