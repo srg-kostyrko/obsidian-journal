@@ -12,6 +12,7 @@ import {
   CycleService,
   JournalsIndex,
   JournalsViewModel,
+  NotePathService,
   NumberingService,
   navBlockRowSchema,
   type JournalConfig,
@@ -41,6 +42,7 @@ const journalsVM = useService(JournalsViewModel);
 const engine = useService(TemplateEngine);
 const cycle = useService(CycleService);
 const numbering = useService(NumberingService);
+const notePath = useService(NotePathService);
 const index = useService(JournalsIndex);
 
 const config = computed<JournalConfig | undefined>(() => journalsVM.getJournal(props.journalName).getOrUndefined());
@@ -124,6 +126,7 @@ const resolved = computed(() => {
       entry: index.entryByAnchor(config.value.name, today),
       cycle,
       numbering,
+      notePath,
       today,
     }),
   );
