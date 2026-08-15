@@ -32,7 +32,7 @@ import { JournalsEventsToken } from "@/journals/tokens";
 import { TemplateEngine } from "@/templates";
 import { installTestEngine } from "@/templates/testing";
 
-import { EditSequencePropertyFlow } from "../../flows/edit-sequence-property.flow";
+import { EditNumberingDigitFlow } from "../../flows/edit-numbering-digit.flow";
 
 import SequenceSection from "./SequenceSection.vue";
 
@@ -115,7 +115,7 @@ describe("SequenceSection", () => {
   });
 
   describe("sequence property pencil", () => {
-    it("invokes EditSequencePropertyFlow when the sequence property pencil is clicked", async () => {
+    it("invokes EditNumberingDigitFlow when the sequence property pencil is clicked", async () => {
       const { flows } = mount({
         numbering: {
           enabled: true,
@@ -126,7 +126,7 @@ describe("SequenceSection", () => {
       });
       await userEvent.click(screen.getByText(m.journal_edit_section_sequential_numbers()));
       await userEvent.click(screen.getByLabelText(m.journal_sequence_property_modal_title()));
-      expect(flows.invoke).toHaveBeenCalledWith(EditSequencePropertyFlow, { journalName: "daily", sourceIndex: 0 });
+      expect(flows.invoke).toHaveBeenCalledWith(EditNumberingDigitFlow, { journalName: "daily", sourceIndex: 0 });
     });
   });
 

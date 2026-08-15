@@ -17,7 +17,7 @@ import UiToggle from "@/ui/UiToggle.vue";
 
 import { pickingForWrite } from "../../../picking";
 import { JournalsViewModel } from "../../../view-model";
-import { EditSequencePropertyFlow } from "../../flows/edit-sequence-property.flow";
+import { EditNumberingDigitFlow } from "../../flows/edit-numbering-digit.flow";
 
 import type { NumberingReset } from "../../../config";
 
@@ -56,7 +56,7 @@ function setResetKind(kind: NumberingReset["kind"]): void {
   source.reset = kind === "never" ? { kind: "never" } : { kind: "after", count: 2 };
 }
 function editSequenceKey(): void {
-  void flows.invoke(EditSequencePropertyFlow, { journalName, sourceIndex: 0 });
+  void flows.invoke(EditNumberingDigitFlow, { journalName, sourceIndex: 0 });
 }
 </script>
 
