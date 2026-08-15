@@ -128,6 +128,39 @@ describe("ShelvesService", () => {
     });
   });
 
+  describe("cascade on journal clone", () => {
+    it("adds the copy beside the source on every shelf holding it", () => {
+      const { journalsRepo, shelvesStorage } = setup({
+        journals: { daily: journalConfig("daily") },
+        shelves: {
+          Personal: shelf("Personal", ["daily"]),
+          Home: shelf("Home", ["other", "daily"]),
+        },
+      });
+      journalsRepo.clone("daily", "daily copy");
+      expect(shelvesStorage.Personal?.journals).toEqual(["daily", "daily copy"]);
+      expect(shelvesStorage.Home?.journals).toEqual(["other", "daily", "daily copy"]);
+    });
+
+    it("leaves shelves that do not hold the source untouched", () => {
+      const { journalsRepo, shelvesStorage } = setup({
+        journals: { daily: journalConfig("daily") },
+        shelves: { Personal: shelf("Personal", ["daily"]), Work: shelf("Work", ["other"]) },
+      });
+      journalsRepo.clone("daily", "daily copy");
+      expect(shelvesStorage.Work?.journals).toEqual(["other"]);
+    });
+
+    it("adds the copy to no shelf when the source is on none", () => {
+      const { journalsRepo, shelvesStorage } = setup({
+        journals: { daily: journalConfig("daily") },
+        shelves: { Personal: shelf("Personal", ["other"]) },
+      });
+      journalsRepo.clone("daily", "daily copy");
+      expect(shelvesStorage.Personal?.journals).toEqual(["other"]);
+    });
+  });
+
   describe("cascade on journal delete", () => {
     it("removes the journal name from every shelf", () => {
       const { journalsRepo, shelvesStorage } = setup({

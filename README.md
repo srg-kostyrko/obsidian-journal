@@ -128,6 +128,12 @@ Each journal can be configured separately with these settings:
   - Add start date property, with its own property name
   - Add end date property, with its own property name
 
+Every journal row also has a **clone** action. The copy carries the source's whole configuration
+under a new name, joins the same shelf, and gets its own copy of the source's commands. Notes are
+never copied. The copy starts out with the source's folder and note name template, so the two
+resolve to the same note paths until you change one — the colliding journals warning says so until
+you do.
+
 ### Decoration System
 
 Journals provides a decoration system to visually distinguish notes in calendars and navigation blocks. Decorations live in three scopes:
@@ -240,7 +246,7 @@ These variables can be used in the note name template, the folder path, and the 
   `{{index:o}}` renders it as an ordinal ("4th"). They combine as
   `{{index+3:o}}`. Both survive the round-trip out of a note name, so a journal
   named `Sprint {{index+3}}` still recognizes its own notes.
-- `{{note_name}}` / `{{title}}` - the rendered note name. Available in the folder path and in template content, but not in the note name template itself, since the name has to render first.
+- `{{note_name}}` / `{{title}}` - the note's name. Available in the folder path, in template content and in navigation block rows, but not in the note name template itself, since the name has to render first. In a navigation block row it is the name of the note the row opens; for a period whose note does not exist yet, the name that note would get.
 - `{{current_date}}` - the date the note is rendered on (not the reference period), formatted with `{{current_date:format}}`
 - `{{current_time}}` / `{{time}}` - the clock time at render, formatted with `{{time:HH:mm}}`
 - `{{relative_date}}` - "Yesterday", "Today", "Last Tuesday", "This month", "3 weeks ago", and so on. Available in navigation block rows.

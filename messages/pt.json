@@ -1770,6 +1770,7 @@
 	"journal_colliding_warning": "Os diários {names} têm configurações conflitantes, portanto suas notas se sobrescreverão. Altere a pasta ou o modelo de nome em um deles.",
 	"journal_note_name_empty_notice": "O diário \"{journalName}\" tem um modelo de nome que resulta em um nome de nota vazio, portanto nenhuma nota pode ser criada. Defina um modelo de nome nas configurações do diário.",
 	"journal_dashboard_bulk_add": "Adicionar notas em massa a {name}",
+	"journal_dashboard_clone": "Clonar {name}",
 	"journal_dashboard_edit": "Configurar {name}",
 	"journal_dashboard_empty": "Nenhum diário foi criado ainda.",
 	"journal_delete_modal_title": "Excluir {name}",
@@ -1819,6 +1820,11 @@
 			}
 		}
 	],
+	"journal_clone_copy_name": "{name} (cópia)",
+	"journal_clone_copy_name_indexed": "{name} (cópia) {index}",
+	"journal_clone_modal_description": "As configurações e os comandos são copiados. As notas não.",
+	"journal_clone_modal_name_label": "Novo nome do diário",
+	"journal_clone_modal_title": "Clonar {name}",
 	"journal_edit_allow_before_description": "Permitir indexação antes da data de ancoragem. Pode gerar números negativos.",
 	"journal_edit_allow_before_label": "Permitir antes da data de ancoragem",
 	"journal_edit_anchor_description": "A numeração começa nesta data. A nota desta data recebe o número inicial, e as notas seguintes contam a partir dela.",
@@ -1971,7 +1977,7 @@
 	"journal_edit_variable_journal_link_description": "Dentro do conteúdo de um arquivo de modelo, o caminho aponta para a nota de outro diário na data desta nota. Você pode inserir o caminho em um link ou embuti-lo (por exemplo, ![[ … ]]) e adicionar modificadores de data como +1w para apontar para um período adjacente.",
 	"journal_edit_variable_journal_name_description": "O nome do diário (aqui: {name}).",
 	"journal_edit_variable_non_invertible_warning": "Usar isso aqui impede que o diário recupere a data a partir do nome do arquivo.",
-	"journal_edit_variable_note_name_description": "O nome da nota que está sendo criada.",
+	"journal_edit_variable_note_name_description": "O nome da nota deste período.",
 	"journal_edit_variable_note_title_description": "Alias do nome da nota, compatível com a variável do plugin principal Modelos.",
 	"journal_edit_variable_numbering_description": "A variável de numeração configurada (consulte a seção Sequência).",
 	"journal_edit_variable_reference_intro": "Variáveis disponíveis. O formato de data padrão é {dateFormat} quando nenhum formato explícito é fornecido.",

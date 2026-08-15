@@ -1573,6 +1573,7 @@
 	"journal_colliding_warning": "ジャーナル {names} の設定が競合しているため、ノートが互いに上書きされます。いずれかのフォルダまたは名前テンプレートを変更してください。",
 	"journal_note_name_empty_notice": "ジャーナル「{journalName}」の名前テンプレートはノート名が空になるため、ノートを作成できません。ジャーナル設定で名前テンプレートを設定してください。",
 	"journal_dashboard_bulk_add": "{name}にノートを一括追加",
+	"journal_dashboard_clone": "{name}を複製",
 	"journal_dashboard_edit": "{name}を設定",
 	"journal_dashboard_empty": "まだジャーナルは作成されていません。",
 	"journal_delete_modal_title": "{name}を削除",
@@ -1622,6 +1623,11 @@
 			}
 		}
 	],
+	"journal_clone_copy_name": "{name}（コピー）",
+	"journal_clone_copy_name_indexed": "{name}（コピー） {index}",
+	"journal_clone_modal_description": "設定とコマンドはコピーされます。ノートはコピーされません。",
+	"journal_clone_modal_name_label": "新しいジャーナル名",
+	"journal_clone_modal_title": "{name}を複製",
 	"journal_edit_allow_before_description": "アンカー日より前の日付にも番号を付けます。負の数になる場合があります。",
 	"journal_edit_allow_before_label": "アンカー日より前を許可",
 	"journal_edit_anchor_description": "この日付から番号付けが始まります。この日付のノートに開始番号が付き、以降のノートは順に加算されます。",
@@ -1774,7 +1780,7 @@
 	"journal_edit_variable_journal_link_description": "テンプレートファイルの中では、このノートの日付に対応する別のジャーナルのノートのパスに解決されます。リンクや埋め込み（例: ![[ … ]]）で自分で囲み、+1w のような日付修飾子を付けると隣接する期間を指せます。",
 	"journal_edit_variable_journal_name_description": "ジャーナル名（ここでは {name}）。",
 	"journal_edit_variable_non_invertible_warning": "ここでこれを使用すると、ジャーナルがファイル名から日付を復元できなくなります。",
-	"journal_edit_variable_note_name_description": "作成されるノートの名前。",
+	"journal_edit_variable_note_name_description": "この期間のノートの名前。",
 	"journal_edit_variable_note_title_description": "ノート名のエイリアスで、コアプラグイン「テンプレート」の変数に対応します。",
 	"journal_edit_variable_numbering_description": "設定した番号付け変数（連番セクションを参照）。",
 	"journal_edit_variable_reference_intro": "使用できる変数。明示的な形式を指定しない場合、日付形式は{dateFormat}になります。",

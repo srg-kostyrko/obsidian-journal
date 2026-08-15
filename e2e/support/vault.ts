@@ -110,6 +110,39 @@ export function popoutWindowCount(): Promise<number> {
   });
 }
 
+// Whether a markdown leaf in the main window holds this note. Opening a note that is already open
+// reuses whichever leaf has it, so the active *file* is the target either way — a leaf in the main
+// window holding it is what separates "opened in my window" from "focus jumped to the popout".
+export function mainWindowHoldsNote(path: string): Promise<boolean> {
+  return browser.executeObsidian(
+    ({ app }, notePath) =>
+      app.workspace.getLeavesOfType("markdown").some((leaf) => {
+        const view = leaf.view as { file?: { path: string } | null };
+        return leaf.getRoot() === app.workspace.rootSplit && view.file?.path === notePath;
+      }),
+    path,
+  );
+}
+
+// Puts the user back in the main window after a popout opened — the state a report of "it takes me
+// to a different window" starts from, since opening in a popout leaves that popout focused. Focus
+// has to reach the window itself: the plugin reads Obsidian's `activeWindow`, which only moves on a
+// real window focus, not on a leaf becoming active.
+export async function focusMainWindow(): Promise<void> {
+  await browser.executeObsidian(({ app }) => {
+    app.workspace.containerEl.win.focus();
+    const inMain = app.workspace.getLeavesOfType("markdown").find((leaf) => leaf.getRoot() === app.workspace.rootSplit);
+    if (inMain) app.workspace.setActiveLeaf(inMain, { focus: true });
+  });
+  await browser.waitUntil(
+    async () =>
+      browser.executeObsidian(
+        ({ app }) => app.workspace.containerEl.win.activeWindow === app.workspace.containerEl.win,
+      ),
+    { timeoutMsg: "main window never regained focus after the popout opened" },
+  );
+}
+
 // Detaches every leaf rooted outside the main window, which closes its popout. A test that opens a
 // popout must call this before finishing: an open popout stays the active window, so the next
 // test's modals render in the popout's document where the main-window selectors can't reach them.

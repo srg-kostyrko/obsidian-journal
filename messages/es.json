@@ -1762,6 +1762,7 @@
 	"journal_colliding_warning": "Los diarios {names} tienen configuraciones conflictivas, por lo que sus notas se sobrescribirán entre sí. Cambia la carpeta o la plantilla de nombre en uno de ellos.",
 	"journal_note_name_empty_notice": "El diario «{journalName}» tiene una plantilla de nombre que da como resultado un nombre de nota vacío, por lo que no se puede crear ninguna nota. Define una plantilla de nombre en los ajustes del diario.",
 	"journal_dashboard_bulk_add": "Agregar notas en bloque a {name}",
+	"journal_dashboard_clone": "Clonar {name}",
 	"journal_dashboard_edit": "Configurar {name}",
 	"journal_dashboard_empty": "Aún no se ha creado ningún diario.",
 	"journal_delete_modal_title": "Eliminar {name}",
@@ -1811,6 +1812,11 @@
 			}
 		}
 	],
+	"journal_clone_copy_name": "{name} (copia)",
+	"journal_clone_copy_name_indexed": "{name} (copia) {index}",
+	"journal_clone_modal_description": "Se copian los ajustes y los comandos. Las notas no.",
+	"journal_clone_modal_name_label": "Nuevo nombre del diario",
+	"journal_clone_modal_title": "Clonar {name}",
 	"journal_edit_allow_before_description": "Permite la indexación antes de la fecha de anclaje. Puede generar números negativos.",
 	"journal_edit_allow_before_label": "Permitir antes del anclaje",
 	"journal_edit_anchor_description": "La numeración empieza en esta fecha. La nota de esta fecha recibe el número inicial y las notas posteriores cuentan a partir de ella.",
@@ -1963,7 +1969,7 @@
 	"journal_edit_variable_journal_link_description": "Dentro del contenido de un archivo de plantilla, se resuelve a la ruta de la nota de otro diario para la fecha de esta nota. Inclúyela en un enlace o incrustación (por ejemplo, ![[ … ]]) y agrega modificadores de fecha como +1w para apuntar a un período adyacente.",
 	"journal_edit_variable_journal_name_description": "El nombre del diario (aquí: {name}).",
 	"journal_edit_variable_non_invertible_warning": "Usar esto aquí impide que el diario recupere la fecha a partir del nombre del archivo.",
-	"journal_edit_variable_note_name_description": "El nombre de la nota que se está creando.",
+	"journal_edit_variable_note_name_description": "El nombre de la nota de este período.",
 	"journal_edit_variable_note_title_description": "Alias del nombre de la nota, compatible con la variable del complemento principal «Plantillas».",
 	"journal_edit_variable_numbering_description": "La variable de numeración configurada (consulta la sección Números secuenciales).",
 	"journal_edit_variable_reference_intro": "Variables disponibles. El formato de fecha predeterminado es {dateFormat} cuando no se proporciona un formato explícito.",

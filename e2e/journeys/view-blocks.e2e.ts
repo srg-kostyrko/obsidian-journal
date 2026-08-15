@@ -15,6 +15,25 @@ import {
 // default Calendar view. The view-leaf mount is the real seam: a ribbon click renders
 // the configured blocks in an Obsidian leaf.
 
+const INTERVAL_ENTRY = `${CUSTOM_INTERVALS} .journal-view-custom-intervals__entry`;
+// The intervals the year window renders; which sprints those are depends on the run date.
+async function intervalAnchors(): Promise<string[]> {
+  await $(INTERVAL_ENTRY).waitForExist({ timeoutMsg: "no custom-interval entry rendered" });
+  return browser.execute(
+    (selector) => Array.from(document.querySelectorAll<HTMLElement>(selector), (el) => el.dataset.anchor ?? ""),
+    INTERVAL_ENTRY,
+  );
+}
+
+// The `Note: {{note_name}}` row is the last of the three the fixture configures.
+async function noteNameRow(anchor: string): Promise<string> {
+  return browser.execute((selector) => {
+    const entry = document.querySelector<HTMLElement>(selector);
+    const rows = entry ? [...entry.querySelectorAll<HTMLElement>(".nav-row")] : [];
+    return rows.at(-1)?.textContent?.trim() ?? "";
+  }, `${INTERVAL_ENTRY}[data-anchor="${anchor}"]`);
+}
+
 describe("blocks view", () => {
   before(async () => {
     await browser.reloadObsidian({ vault: "./e2e/fixtures/e2e-views", plugins: ["journals"] });
@@ -122,7 +141,7 @@ describe("blocks view", () => {
       // The sprint journal seeds no notes, so every rendered interval is un-created; its
       // "self" row must create-or-open rather than sit inert. Read a real entry's anchor
       // instead of assuming which sprint falls in the current year window.
-      const entry = $(`${CUSTOM_INTERVALS} .journal-view-custom-intervals__entry`);
+      const entry = $(INTERVAL_ENTRY);
       await entry.waitForExist({ timeoutMsg: "no custom-interval entry rendered" });
       const anchor = (await entry.getAttribute("data-anchor")) ?? "";
       const path = `sprint/${anchor}.md`;
@@ -131,6 +150,47 @@ describe("blocks view", () => {
 
       await waitForJournalFrontmatter(path, { journal: "sprint", date: anchor });
       expect(await activeNotePath()).toBe(path);
+    });
+  });
+
+  // The fixture gives the sprint journal a third interval row, `Note: {{note_name}}`. The nav
+  // row context bound no note name at all before the fix, so every interval in the list — the
+  // surface #219 reported — rendered the raw token.
+  describe("custom-intervals note names", () => {
+    before(async () => {
+      await browser.reloadObsidian({ vault: "./e2e/fixtures/e2e-views", plugins: ["journals"] });
+    });
+
+    it("names an interval with no note by what that note would be called", async () => {
+      await openBlocksView();
+
+      const anchors = await intervalAnchors();
+      const anchor = anchors.at(0) ?? "";
+      expect(anchor).not.toBe("");
+
+      // The journal keeps the default `{{date}}` name template under a YYYY-MM-DD date
+      // format, so an un-created interval's prospective note name is its own anchor.
+      await browser.waitUntil(async () => (await noteNameRow(anchor)) === `Note: ${anchor}`, {
+        timeoutMsg: `interval ${anchor} did not resolve note_name to its prospective note name`,
+      });
+    });
+
+    it("names an interval whose note was renamed by that note's own name", async () => {
+      await openBlocksView();
+
+      const anchors = await intervalAnchors();
+      const anchor = anchors.at(1) ?? "";
+      expect(anchor).not.toBe("");
+
+      // A name the journal's template can never render, so a pass can only mean the row read
+      // the connected note's own path rather than re-rendering the template.
+      const path = "sprint/Redesign kickoff.md";
+      await seedNote(path, `---\njournal: sprint\njournal-date: ${anchor}\n---\n`);
+      await waitForJournalFrontmatter(path, { journal: "sprint", date: anchor });
+
+      await browser.waitUntil(async () => (await noteNameRow(anchor)) === `Note: Redesign kickoff`, {
+        timeoutMsg: `interval ${anchor} did not follow the connected note's own name`,
+      });
     });
   });
 

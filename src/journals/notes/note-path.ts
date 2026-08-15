@@ -145,6 +145,11 @@ export class NotePathService {
     return context;
   }
 
+  /** What this journal calls the note for a period, whether or not that note exists yet. */
+  noteNameFor(config: JournalConfig, metadata: JournalMetadata): string {
+    return this.#engine.renderString(config.nameTemplate, this.contextFor(config, metadata));
+  }
+
   bodyContextFor(config: JournalConfig, metadata: JournalMetadata, noteName: string): TemplateContext {
     return this.#withNoteName(this.contextFor(config, metadata), noteName);
   }

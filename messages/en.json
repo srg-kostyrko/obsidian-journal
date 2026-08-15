@@ -1269,6 +1269,7 @@
   "journal_colliding_warning": "Journals {names} have colliding configurations, so their notes will overwrite each other. Change the folder or name template in one of them.",
   "journal_note_name_empty_notice": "Journal \"{journalName}\" has a name template that resolves to an empty note name, so no note can be created. Set a name template for it in journal settings.",
   "journal_dashboard_bulk_add": "Bulk add notes to {name}",
+  "journal_dashboard_clone": "Clone {name}",
   "journal_dashboard_edit": "Configure {name}",
   "journal_dashboard_empty": "No journals created yet.",
   "journal_delete_modal_title": "Delete {name}",
@@ -1296,6 +1297,11 @@
       }
     }
   ],
+  "journal_clone_copy_name": "{name} (copy)",
+  "journal_clone_copy_name_indexed": "{name} (copy) {index}",
+  "journal_clone_modal_description": "Settings and commands are copied. Notes are not.",
+  "journal_clone_modal_name_label": "New journal name",
+  "journal_clone_modal_title": "Clone {name}",
   "journal_edit_allow_before_description": "Allow indexing before the anchor date. May produce negative numbers.",
   "journal_edit_allow_before_label": "Allow before anchor",
   "journal_edit_anchor_description": "Numbering starts from this date. The note for this date gets the start number, and later notes count up from it.",
@@ -1421,7 +1427,7 @@
   "journal_edit_variable_journal_link_description": "Inside a template file's content, resolves to the path of another journal's note for this note's date. Wrap it yourself in a link or embed (for example ![[ … ]]), and add date modifiers like +1w to point at a neighboring period.",
   "journal_edit_variable_journal_name_description": "The journal name (here: {name}).",
   "journal_edit_variable_non_invertible_warning": "Using this here prevents the journal from recovering the date from the filename.",
-  "journal_edit_variable_note_name_description": "The name of the note being created.",
+  "journal_edit_variable_note_name_description": "The name of the note for this period.",
   "journal_edit_variable_note_title_description": "Alias of the note name, supporting the core Templates plugin's variable.",
   "journal_edit_variable_numbering_description": "The configured numbering variable (see the Sequence section).",
   "journal_edit_variable_reference_intro": "Available variables. Date format defaults to {dateFormat} when no explicit format is given.",

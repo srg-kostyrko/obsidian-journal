@@ -32,6 +32,7 @@ export interface StoredView {
 
 export interface StoredCommand {
   name?: string;
+  target?: { kind?: string; journalName?: string };
 }
 
 export interface StoredSettings {

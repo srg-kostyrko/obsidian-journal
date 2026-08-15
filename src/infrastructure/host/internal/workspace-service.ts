@@ -80,7 +80,9 @@ export class WorkspaceService {
   }
 
   async #open(path: VaultPath, mode: OpenMode): Promise<void> {
-    const existing = this.#findOpenLeaf(path);
+    // A tab/split/window request is the user asking for a new pane; only the default "active"
+    // mode may collapse onto a leaf that already holds the note.
+    const existing = mode === "active" ? this.#findOpenLeaf(path, this.#activeWindow()) : null;
     if (existing) {
       this.#app.workspace.setActiveLeaf(existing, { focus: true });
       return;
@@ -90,8 +92,17 @@ export class WorkspaceService {
     await this.#app.workspace.getLeaf(toPaneType(mode)).openFile(file, { active: true });
   }
 
-  #findOpenLeaf(path: VaultPath): WorkspaceLeaf | null {
+  // Obsidian tracks the focused window here, differing from the main window only while a popout
+  // holds focus. Read off containerEl rather than the `activeWindow` global so it stays injectable.
+  #activeWindow(): Window {
+    return this.#app.workspace.containerEl.win.activeWindow;
+  }
+
+  // getLeavesOfType spans popout windows, so reuse has to be pinned to one window or opening a
+  // note already open elsewhere drags the user's focus to that other window.
+  #findOpenLeaf(path: VaultPath, win?: Window): WorkspaceLeaf | null {
     for (const leaf of this.#app.workspace.getLeavesOfType("markdown")) {
+      if (win && leaf.getContainer().win !== win) continue;
       const file = this.#fileOf(leaf);
       if (file?.path === path) return leaf;
     }
