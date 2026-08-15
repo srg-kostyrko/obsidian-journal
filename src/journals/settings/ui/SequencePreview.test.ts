@@ -131,4 +131,53 @@ describe("SequencePreview", () => {
     });
     expect(screen.queryByText("Note2026-01-18")).toBeNull();
   });
+
+  it("does not warn about duplicate keys when the preview window crosses a carry with mostly-repeated names", async () => {
+    const warnSpy = vi.spyOn(console, "warn").mockImplementation(() => undefined);
+    // A stale template — omits the fast digit — so most previewed steps render the same name.
+    const { journalsIndex } = mount({
+      write: { type: "custom", every: "week", duration: 1, anchorDate: "2026-01-05" as AnchorString },
+      nameTemplate: "Release{{release}}",
+      numbering: {
+        enabled: true,
+        anchorDate: "2026-01-05" as AnchorString,
+        allowBefore: false,
+        sources: [
+          { variable: "release", frontmatterKey: "journal-release", anchorValue: 4711, reset: { kind: "never" } },
+          {
+            variable: "sprint",
+            frontmatterKey: "journal-sprint",
+            anchorValue: 1,
+            reset: { kind: "after", count: 6 },
+          },
+        ],
+      },
+    });
+
+    expect(await screen.findAllByText("Release4711")).toHaveLength(5);
+
+    // Advance three weeks so the preview window (steps 3-7) crosses the sprint-6 carry inside
+    // its unresolved middle range: Vue's head/tail quick sync matches steps 3-5 (still
+    // Release4711) directly, leaving steps 6-7 (both Release4712) as the two elements Vue's
+    // keyed diff must resolve together — the pair that trips the duplicate-key check. Vue only
+    // runs that check during a patch, so registering an unrelated index entry forces the
+    // re-render; the initial mount alone never reaches it.
+    vi.setSystemTime(new Date("2026-01-26T12:00:00"));
+    journalsIndex.register({
+      journalName: "daily",
+      anchor: "2026-01-05" as AnchorString,
+      path: "daily/2026-01-05.md" as VaultPath,
+      endDate: "2026-01-10" as AnchorString,
+    });
+
+    await waitFor(() => {
+      expect(screen.getAllByText("Release4712")).toHaveLength(2);
+    });
+    expect(screen.getAllByText("Release4711")).toHaveLength(3);
+    expect(warnSpy.mock.calls.some((call) => typeof call[0] === "string" && call[0].includes("Duplicate keys"))).toBe(
+      false,
+    );
+
+    warnSpy.mockRestore();
+  });
 });

@@ -43,7 +43,7 @@ const names = computed<readonly string[]>(() => {
 <template>
   <div v-if="names.length > 0" class="sequence-preview">
     <div class="sequence-preview__label">{{ m.journal_sequence_preview_label() }}</div>
-    <div v-for="name of names" :key="name" class="sequence-preview__name">{{ name }}</div>
+    <div v-for="(name, i) of names" :key="i" class="sequence-preview__name">{{ name }}</div>
   </div>
 </template>
 

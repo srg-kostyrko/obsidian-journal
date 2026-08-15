@@ -410,7 +410,7 @@ describe("NumberingService", () => {
       expect(n.anchorForNumbers("s", { index: 2 }).isNone()).toBe(true);
     });
 
-    it("returns None for multiple numbering sources", () => {
+    it("returns None when a non-top source has a never reset", () => {
       const c = buildContainer({
         s: customJournal("s", "week", 1, "2024-01-01", {
           numbering: {
