@@ -652,7 +652,7 @@ describe("settings", () => {
       await submitModal();
 
       await waitForSettings(
-        (s) => s.journals?.daily?.navBlock?.rows?.[0]?.template === "{{date}} edited",
+        (s) => s.journals?.daily?.navBlock?.lines?.[0]?.[0]?.template === "{{date}} edited",
         "nav row template change not persisted",
       );
     });

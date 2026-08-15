@@ -10,7 +10,7 @@ export interface StoredJournal {
   frontmatter?: { dateField?: string };
   numbering?: { sources?: { frontmatterKey?: string }[] };
   decorations?: { mode?: string }[];
-  navBlock?: { rows?: { template?: string }[] };
+  navBlock?: { lines?: { template?: string }[][] };
 }
 
 export interface StoredShelf {

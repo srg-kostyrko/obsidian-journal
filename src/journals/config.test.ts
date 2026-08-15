@@ -248,7 +248,7 @@ describe("journalConfigSchema intervalBlock default", () => {
 });
 
 describe("navBlockSchema", () => {
-  it("accepts a populated nav block", () => {
+  it("accepts a populated nav block and defaults a missing linkDate to empty string", () => {
     const value = {
       type: "create" as const,
       decorateWholeBlock: false,
@@ -268,7 +268,37 @@ describe("navBlockSchema", () => {
         ],
       ],
     };
-    expect(v.safeParse(navBlockSchema, value).success).toBe(true);
+    const parsed = v.safeParse(navBlockSchema, value);
+    expect(parsed.success).toBe(true);
+    if (!parsed.success) return;
+    expect(parsed.output.lines[0]?.[0]?.linkDate).toBe("");
+  });
+
+  it("accepts a segment with linkDate explicitly present", () => {
+    const value = {
+      type: "create" as const,
+      decorateWholeBlock: false,
+      lines: [
+        [
+          {
+            template: "{{date}}",
+            fontSize: 1,
+            bold: false,
+            italic: false,
+            color: { type: "theme" as const, name: "text-normal" },
+            background: { type: "transparent" as const },
+            link: "self" as const,
+            journal: "",
+            linkDate: "",
+            addDecorations: false,
+          },
+        ],
+      ],
+    };
+    const parsed = v.safeParse(navBlockSchema, value);
+    expect(parsed.success).toBe(true);
+    if (!parsed.success) return;
+    expect(parsed.output.lines[0]?.[0]?.linkDate).toBe("");
   });
 
   it("rejects unknown link kinds", () => {

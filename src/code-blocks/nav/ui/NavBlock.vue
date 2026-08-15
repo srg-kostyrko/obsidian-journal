@@ -82,4 +82,8 @@ defineProps<{
   align-items: baseline;
   gap: 0 0.35em;
 }
+.nav-block-line > .nav-row {
+  flex: 1 1 auto;
+  min-width: 0;
+}
 </style>

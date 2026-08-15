@@ -47,4 +47,9 @@ describe("v4ToV5Migration", () => {
     const raw = { journals: { bare: { name: "bare" } } };
     expect(() => v4ToV5Migration.migrate(raw)).not.toThrow();
   });
+
+  it("skips a null journal entry instead of throwing", () => {
+    const raw = { journals: { daily: null } };
+    expect(() => v4ToV5Migration.migrate(raw)).not.toThrow();
+  });
 });

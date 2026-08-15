@@ -34,8 +34,7 @@ export class EditNavBlockRowFlow implements Flow<EditNavBlockRowParameters, Edit
     if (isEdit && (rowIndex < 0 || rowIndex >= config[field].lines.length)) {
       return AsyncResult.err(toNavRowFlowError(new UnknownNavRowError(parameters.journalName, rowIndex)));
     }
-    // Temporary shim: a line is still addressed as a single segment at index 0. Task 7
-    // replaces this with real line/segment addressing.
+    // A line currently holds exactly one segment, so editing replaces the whole line.
     const existing = isEdit ? config[field].lines[rowIndex]?.[0] : undefined;
     return attempt.in(this, async function* (this: EditNavBlockRowFlow) {
       const submitted = yield* this.#modals
