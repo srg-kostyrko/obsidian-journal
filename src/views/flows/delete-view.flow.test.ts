@@ -23,7 +23,7 @@ import type { ViewId } from "../config";
 async function build() {
   const id = "11111111-1111-1111-1111-111111111111" as ViewId;
   const raw = {
-    version: 4,
+    version: 5,
     views: {
       [id]: { id, name: "Weekly", icon: "calendar-days", defaultShelf: null, showInRibbon: false, blocks: [] },
     },

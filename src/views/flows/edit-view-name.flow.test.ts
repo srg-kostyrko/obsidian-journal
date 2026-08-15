@@ -75,7 +75,7 @@ describe("EditViewNameFlow", () => {
   it("renames an existing view", async () => {
     const id = "11111111-1111-1111-1111-111111111111" as ViewId;
     const raw = {
-      version: 4,
+      version: 5,
       views: {
         [id]: { id, name: "Old", icon: "calendar-days", defaultShelf: null, showInRibbon: false, blocks: [] },
       },
@@ -90,7 +90,7 @@ describe("EditViewNameFlow", () => {
   it("keeps the existing icon when renaming", async () => {
     const id = "11111111-1111-1111-1111-111111111111" as ViewId;
     const raw = {
-      version: 4,
+      version: 5,
       views: {
         [id]: { id, name: "Old", icon: "calendar-days", defaultShelf: null, showInRibbon: false, blocks: [] },
       },

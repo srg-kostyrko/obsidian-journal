@@ -40,7 +40,7 @@ import {
   journalDefaultsFor,
   type JournalConfig,
   type JournalEntry,
-  type NavBlockRow,
+  type NavBlockSegment,
 } from "@/journals";
 import { customJournal, fakeRepo } from "@/journals/testing";
 import { SettingsEventsToken, SettingsService, SliceDefinitionToken, type SettingsEvents } from "@/settings";
@@ -192,7 +192,7 @@ afterEach(() => {
 
 beforeAll(() => initLocale("en"));
 
-function navRow(overrides: Partial<NavBlockRow> = {}): NavBlockRow {
+function navRow(overrides: Partial<NavBlockSegment> = {}): NavBlockSegment {
   return {
     template: "today",
     fontSize: 1,
@@ -202,20 +202,21 @@ function navRow(overrides: Partial<NavBlockRow> = {}): NavBlockRow {
     background: { type: "transparent" },
     link: "none",
     journal: "",
+    linkDate: "",
     addDecorations: false,
     ...overrides,
   };
 }
 
 function withWholeBlockDecoration(base: JournalConfig): JournalConfig {
-  return { ...base, decorations: [], navBlock: { ...base.navBlock, decorateWholeBlock: true, rows: [navRow()] } };
+  return { ...base, decorations: [], navBlock: { ...base.navBlock, decorateWholeBlock: true, lines: [[navRow()]] } };
 }
 
 function withPerRowDecoration(base: JournalConfig): JournalConfig {
   return {
     ...base,
     decorations: [],
-    navBlock: { ...base.navBlock, decorateWholeBlock: false, rows: [navRow({ addDecorations: true })] },
+    navBlock: { ...base.navBlock, decorateWholeBlock: false, lines: [[navRow({ addDecorations: true })]] },
   };
 }
 
@@ -296,7 +297,7 @@ describe("NavigationCodeBlock row templates", () => {
 
   it("renders note_name as the connected note's own name, and as the prospective name where no note exists", () => {
     const daily: JournalConfig = { ...journalDefaultsFor({ type: "day" }, "daily") };
-    daily.navBlock = { ...daily.navBlock, rows: [navRow({ template: "{{note_name}}" })] };
+    daily.navBlock = { ...daily.navBlock, lines: [[navRow({ template: "{{note_name}}" })]] };
     const h = buildHarness({ daily });
     const entry: JournalEntry = {
       journalName: "daily",
@@ -390,9 +391,9 @@ describe("NavigationCodeBlock arrows", () => {
   });
 });
 
-function dailyWithRows(rows: JournalConfig["navBlock"]["rows"]): JournalConfig {
+function dailyWithRows(rows: NavBlockSegment[]): JournalConfig {
   const base = journalDefaultsFor({ type: "day" }, "daily");
-  return { ...base, navBlock: { ...base.navBlock, rows } };
+  return { ...base, navBlock: { ...base.navBlock, lines: rows.map((row) => [row]) } };
 }
 
 describe("NavigationCodeBlock row click routing", () => {
@@ -412,6 +413,7 @@ describe("NavigationCodeBlock row click routing", () => {
         background: { type: "transparent" },
         link: "self",
         journal: "",
+        linkDate: "",
         addDecorations: false,
       },
     ]);
@@ -480,6 +482,7 @@ describe("NavigationCodeBlock row click routing", () => {
         background: { type: "transparent" },
         link: "self",
         journal: "",
+        linkDate: "",
         addDecorations: false,
       },
     ]);
@@ -517,6 +520,7 @@ describe("NavigationCodeBlock row click routing", () => {
         background: { type: "transparent" },
         link: "self",
         journal: "",
+        linkDate: "",
         addDecorations: false,
       },
     ]);
@@ -552,6 +556,7 @@ describe("NavigationCodeBlock row click routing", () => {
         background: { type: "transparent" },
         link: "self",
         journal: "",
+        linkDate: "",
         addDecorations: false,
       },
     ]);
@@ -587,6 +592,7 @@ describe("NavigationCodeBlock row click routing", () => {
         background: { type: "transparent" },
         link: "journal",
         journal: "weekly",
+        linkDate: "",
         addDecorations: false,
       },
     ]);
@@ -617,6 +623,7 @@ describe("NavigationCodeBlock row click routing", () => {
         background: { type: "transparent" },
         link: "week",
         journal: "",
+        linkDate: "",
         addDecorations: false,
       },
     ]);
@@ -651,6 +658,7 @@ describe("NavigationCodeBlock row click routing", () => {
         background: { type: "transparent" },
         link: "none",
         journal: "",
+        linkDate: "",
         addDecorations: false,
       },
     ]);
@@ -683,18 +691,21 @@ describe("NavigationCodeBlock context menu", () => {
       ...base,
       navBlock: {
         ...base.navBlock,
-        rows: [
-          {
-            template: "today",
-            fontSize: 1,
-            bold: false,
-            italic: false,
-            color: { type: "transparent" },
-            background: { type: "transparent" },
-            link: "self",
-            journal: "",
-            addDecorations: false,
-          },
+        lines: [
+          [
+            {
+              template: "today",
+              fontSize: 1,
+              bold: false,
+              italic: false,
+              color: { type: "transparent" },
+              background: { type: "transparent" },
+              link: "self",
+              journal: "",
+              linkDate: "",
+              addDecorations: false,
+            },
+          ],
         ],
       },
     };
@@ -721,18 +732,21 @@ describe("NavigationCodeBlock context menu", () => {
       ...base,
       navBlock: {
         ...base.navBlock,
-        rows: [
-          {
-            template: "wk",
-            fontSize: 1,
-            bold: false,
-            italic: false,
-            color: { type: "transparent" },
-            background: { type: "transparent" },
-            link: "week",
-            journal: "",
-            addDecorations: false,
-          },
+        lines: [
+          [
+            {
+              template: "wk",
+              fontSize: 1,
+              bold: false,
+              italic: false,
+              color: { type: "transparent" },
+              background: { type: "transparent" },
+              link: "week",
+              journal: "",
+              linkDate: "",
+              addDecorations: false,
+            },
+          ],
         ],
       },
     };
@@ -777,7 +791,7 @@ describe("NavigationCodeBlock context menu", () => {
       ],
       navBlock: {
         ...base.navBlock,
-        rows: [navRow({ addDecorations: true })],
+        lines: [[navRow({ addDecorations: true })]],
       },
     };
     const h = buildHarness({ daily: journal });
@@ -809,7 +823,7 @@ describe("NavigationCodeBlock context menu", () => {
       ],
       navBlock: {
         ...base.navBlock,
-        rows: [navRow({ addDecorations: false })],
+        lines: [[navRow({ addDecorations: false })]],
       },
     };
     const h = buildHarness({ daily: journal });
@@ -828,7 +842,7 @@ describe("NavigationCodeBlock context menu", () => {
 
   it("contributes no item to the context menu of an undecorated row", async () => {
     const base = journalDefaultsFor({ type: "day" }, "daily");
-    const journal: JournalConfig = { ...base, navBlock: { ...base.navBlock, rows: [navRow()] } };
+    const journal: JournalConfig = { ...base, navBlock: { ...base.navBlock, lines: [[navRow()]] } };
     const h = buildHarness({ daily: journal });
     h.index.byPath.set("Daily/2026-05-27.md", {
       journalName: "daily",
@@ -859,7 +873,7 @@ describe("NavigationCodeBlock context menu", () => {
       navBlock: {
         ...base.navBlock,
         type: "existing",
-        rows: [navRow({ template: "sprint", addDecorations: true })],
+        lines: [[navRow({ template: "sprint", addDecorations: true })]],
       },
     };
     const h = buildHarness({ sprint: journal });
@@ -897,18 +911,21 @@ describe("NavigationCodeBlock hover preview", () => {
       ...base,
       navBlock: {
         ...base.navBlock,
-        rows: [
-          {
-            template: "today",
-            fontSize: 1,
-            bold: false,
-            italic: false,
-            color: { type: "transparent" },
-            background: { type: "transparent" },
-            link: "self",
-            journal: "",
-            addDecorations: false,
-          },
+        lines: [
+          [
+            {
+              template: "today",
+              fontSize: 1,
+              bold: false,
+              italic: false,
+              color: { type: "transparent" },
+              background: { type: "transparent" },
+              link: "self",
+              journal: "",
+              linkDate: "",
+              addDecorations: false,
+            },
+          ],
         ],
       },
     };
@@ -943,18 +960,21 @@ describe("NavigationCodeBlock decorations", () => {
       navBlock: {
         ...base.navBlock,
         decorateWholeBlock: false,
-        rows: [
-          {
-            template: "today",
-            fontSize: 1,
-            bold: false,
-            italic: false,
-            color: { type: "transparent" },
-            background: { type: "transparent" },
-            link: "self",
-            journal: "",
-            addDecorations: true,
-          },
+        lines: [
+          [
+            {
+              template: "today",
+              fontSize: 1,
+              bold: false,
+              italic: false,
+              color: { type: "transparent" },
+              background: { type: "transparent" },
+              link: "self",
+              journal: "",
+              linkDate: "",
+              addDecorations: true,
+            },
+          ],
         ],
       },
     };
@@ -984,18 +1004,21 @@ describe("NavigationCodeBlock decorations", () => {
       navBlock: {
         ...base.navBlock,
         decorateWholeBlock: true,
-        rows: [
-          {
-            template: "today",
-            fontSize: 1,
-            bold: false,
-            italic: false,
-            color: { type: "transparent" },
-            background: { type: "transparent" },
-            link: "none",
-            journal: "",
-            addDecorations: false,
-          },
+        lines: [
+          [
+            {
+              template: "today",
+              fontSize: 1,
+              bold: false,
+              italic: false,
+              color: { type: "transparent" },
+              background: { type: "transparent" },
+              link: "none",
+              journal: "",
+              linkDate: "",
+              addDecorations: false,
+            },
+          ],
         ],
       },
     };
@@ -1063,7 +1086,7 @@ describe("NavigationCodeBlock decorations", () => {
       navBlock: {
         ...base.navBlock,
         type: "existing",
-        rows: [navRow({ template: "sprint", addDecorations: true })],
+        lines: [[navRow({ template: "sprint", addDecorations: true })]],
       },
     };
     const h = buildHarness({ sprint: journal });
@@ -1092,18 +1115,21 @@ describe("NavigationCodeBlock decorations", () => {
       navBlock: {
         ...base.navBlock,
         decorateWholeBlock: true,
-        rows: [
-          {
-            template: "today",
-            fontSize: 1,
-            bold: false,
-            italic: false,
-            color: { type: "transparent" },
-            background: { type: "transparent" },
-            link: "none",
-            journal: "",
-            addDecorations: false,
-          },
+        lines: [
+          [
+            {
+              template: "today",
+              fontSize: 1,
+              bold: false,
+              italic: false,
+              color: { type: "transparent" },
+              background: { type: "transparent" },
+              link: "none",
+              journal: "",
+              linkDate: "",
+              addDecorations: false,
+            },
+          ],
         ],
       },
     };

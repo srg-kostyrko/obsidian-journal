@@ -40,7 +40,7 @@ async function mountModal(props: { sourceName: string; suggestedName: string }, 
   for (const name of others) journals[name] = makeJournal(name);
   const { service: settings, container } = createSettingsService({
     collections: [journalConfigCollection],
-    raw: { version: 4, journals },
+    raw: { version: 5, journals },
   });
   await settings.initialize();
   container.register(JournalsEventsToken).useFactory(() => createNanoEvents());

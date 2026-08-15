@@ -37,7 +37,7 @@ function makeJournal(name: string) {
 
 async function mountModal(currentName: string, initial?: { journals: Record<string, unknown> }) {
   const baseJournals: Record<string, unknown> = { [currentName]: makeJournal(currentName) };
-  const raw = { version: 4, journals: { ...baseJournals, ...initial?.journals } };
+  const raw = { version: 5, journals: { ...baseJournals, ...initial?.journals } };
   const { service: settings, container } = createSettingsService({
     collections: [journalConfigCollection],
     raw,

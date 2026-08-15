@@ -37,7 +37,7 @@ async function setupDaily(overrides: { nameTemplate?: string; folder?: string } 
   const { service, container } = createSettingsService({
     collections: [journalConfigCollection],
     raw: {
-      version: 4,
+      version: 5,
       journals: {
         daily: {
           name: "daily",

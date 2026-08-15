@@ -24,31 +24,45 @@ defineProps<{
 <template>
   <div class="nav-block">
     <CellDecoration v-if="block.decorateWholeBlock" :period="period" :scope="blockScope" class="nav-block-inner">
-      <div v-for="(row, index) of block.rows" :key="index" class="nav-block-line">
+      <div v-for="(line, lineIndex) of block.lines" :key="lineIndex" class="nav-block-line">
         <NavBlockRow
+          v-for="(segment, segmentIndex) of line"
+          :key="segmentIndex"
           :journal
-          :row
+          :row="segment"
           :ref-date="refDate"
           :period
           :prevent-navigation="preventNavigation"
           :decoration-scope="rowScope"
           :shelf
         />
-        <slot name="rowAction" :index :is-first="index === 0" :is-last="index === block.rows.length - 1" />
+        <slot
+          name="lineAction"
+          :index="lineIndex"
+          :is-first="lineIndex === 0"
+          :is-last="lineIndex === block.lines.length - 1"
+        />
       </div>
     </CellDecoration>
     <template v-else>
-      <div v-for="(row, index) of block.rows" :key="index" class="nav-block-line">
+      <div v-for="(line, lineIndex) of block.lines" :key="lineIndex" class="nav-block-line">
         <NavBlockRow
+          v-for="(segment, segmentIndex) of line"
+          :key="segmentIndex"
           :journal
-          :row
+          :row="segment"
           :ref-date="refDate"
           :period
           :prevent-navigation="preventNavigation"
           :decoration-scope="rowScope"
           :shelf
         />
-        <slot name="rowAction" :index :is-first="index === 0" :is-last="index === block.rows.length - 1" />
+        <slot
+          name="lineAction"
+          :index="lineIndex"
+          :is-first="lineIndex === 0"
+          :is-last="lineIndex === block.lines.length - 1"
+        />
       </div>
     </template>
   </div>
@@ -62,5 +76,10 @@ defineProps<{
 }
 .nav-block-line {
   position: relative;
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  align-items: baseline;
+  gap: 0 0.35em;
 }
 </style>

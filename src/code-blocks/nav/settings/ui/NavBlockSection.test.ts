@@ -21,7 +21,7 @@ import {
   journalDefaultsFor,
   type JournalConfig,
   type JournalsEvents,
-  type NavBlockRow,
+  type NavBlockSegment,
 } from "@/journals";
 import { ShelvesRepository, type ShelvesEvents } from "@/shelves";
 import { TemplateEngine } from "@/templates";
@@ -32,12 +32,12 @@ import NavBlockSection from "./NavBlockSection.vue";
 
 afterEach(() => cleanup());
 
-function buildJournal(name: string, rows: NavBlockRow[]): JournalConfig {
+function buildJournal(name: string, rows: NavBlockSegment[]): JournalConfig {
   const base = journalDefaultsFor({ type: "day" }, name);
-  return { ...base, navBlock: { ...base.navBlock, rows } };
+  return { ...base, navBlock: { ...base.navBlock, lines: rows.map((row) => [row]) } };
 }
 
-function mount(rows: NavBlockRow[]) {
+function mount(rows: NavBlockSegment[]) {
   const container = new Container();
   const storage = reactive<Record<string, JournalConfig>>({ daily: buildJournal("daily", rows) });
   const events = createNanoEvents<JournalsEvents>();
@@ -75,7 +75,7 @@ function mount(rows: NavBlockRow[]) {
   return { storage, invoke };
 }
 
-const sampleRow: NavBlockRow = {
+const sampleRow: NavBlockSegment = {
   template: "{{date:YYYY}}",
   fontSize: 1,
   bold: false,
@@ -84,6 +84,7 @@ const sampleRow: NavBlockRow = {
   background: { type: "transparent" },
   link: "none",
   journal: "",
+  linkDate: "",
   addDecorations: false,
 };
 
@@ -99,7 +100,7 @@ describe("NavBlockSection", () => {
     const { storage } = mount([]);
     await userEvent.click(screen.getByText(m.nav_block_section_title()));
     await userEvent.click(screen.getByText(m.nav_block_section_use_defaults({ writeType: "day" })));
-    expect(storage.daily?.navBlock.rows.length).toBeGreaterThan(0);
+    expect(storage.daily?.navBlock.lines.length).toBeGreaterThan(0);
   });
 
   it("invokes the flow with rowIndex when an edit button is clicked", async () => {
@@ -121,8 +122,8 @@ describe("NavBlockSection", () => {
     await userEvent.click(screen.getByText(m.nav_block_section_title()));
     const deleteButtons = screen.getAllByLabelText(m.block_rows_delete_tooltip());
     await userEvent.click(deleteButtons[0]);
-    expect(storage.daily?.navBlock.rows.length).toBe(1);
-    expect(storage.daily?.navBlock.rows[0]?.template).toBe("{{date:MM}}");
+    expect(storage.daily?.navBlock.lines.length).toBe(1);
+    expect(storage.daily?.navBlock.lines[0]?.[0]?.template).toBe("{{date:MM}}");
   });
 
   it("swaps a row up when the up button is clicked on the second row", async () => {
@@ -132,7 +133,7 @@ describe("NavBlockSection", () => {
     await userEvent.click(screen.getByText(m.nav_block_section_title()));
     const ups = screen.getAllByLabelText(m.common_action_move_up());
     await userEvent.click(ups.at(1)!);
-    expect(storage.daily?.navBlock.rows.map((r) => r.template)).toEqual(["B", "A"]);
+    expect(storage.daily?.navBlock.lines.map((line) => line[0]?.template)).toEqual(["B", "A"]);
   });
 
   it("disables the up arrow on the first row", async () => {

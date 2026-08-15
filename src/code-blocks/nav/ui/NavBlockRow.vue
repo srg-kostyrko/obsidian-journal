@@ -29,7 +29,7 @@ import {
   OpenDateFlow,
   useIndexVersion,
   type JournalConfig,
-  type NavBlockRow,
+  type NavBlockSegment,
 } from "@/journals";
 import { ShelvesRepository } from "@/shelves";
 import { TemplateEngine } from "@/templates";
@@ -40,7 +40,7 @@ import { buildNavRowContext } from "../nav-row-context";
 
 const props = defineProps<{
   journal: JournalConfig;
-  row: NavBlockRow;
+  row: NavBlockSegment;
   refDate: AnchorString;
   period: Period;
   preventNavigation?: boolean;

@@ -31,7 +31,7 @@ afterEach(() => cleanup());
 async function setup(views: Record<string, unknown> = {}) {
   const { service: settings, container } = createSettingsService({
     collections: [viewsCollection],
-    raw: { version: 4, views },
+    raw: { version: 5, views },
   });
   await settings.initialize();
   container.register(ModalService).useValue(new FakeModalService() as unknown as ModalService);

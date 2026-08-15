@@ -15,7 +15,7 @@ import {
   journalDefaultsFor,
   type JournalConfig,
   type JournalsEvents,
-  type NavBlockRow,
+  type NavBlockSegment,
 } from "@/journals";
 import { createSettingsService } from "@/settings/testing";
 
@@ -23,17 +23,17 @@ import { NavRowLifecycleFlowError, UnknownNavRowError } from "../errors";
 
 import { EditNavBlockRowFlow } from "./edit-nav-row.flow";
 
-function buildJournal(name: string, rows: NavBlockRow[]): JournalConfig {
+function buildJournal(name: string, rows: NavBlockSegment[]): JournalConfig {
   const base = journalDefaultsFor({ type: "day" }, name);
-  return { ...base, navBlock: { ...base.navBlock, rows } };
+  return { ...base, navBlock: { ...base.navBlock, lines: rows.map((row) => [row]) } };
 }
 
-function buildCustomJournal(name: string, rows: NavBlockRow[]): JournalConfig {
+function buildCustomJournal(name: string, rows: NavBlockSegment[]): JournalConfig {
   const base = journalDefaultsFor(
     { type: "custom", every: "day", duration: 1, anchorDate: "2026-01-01" as AnchorString },
     name,
   );
-  return { ...base, intervalBlock: { ...base.intervalBlock, rows } };
+  return { ...base, intervalBlock: { ...base.intervalBlock, lines: rows.map((row) => [row]) } };
 }
 
 function build(initial: Record<string, JournalConfig> = {}) {
@@ -50,7 +50,7 @@ function build(initial: Record<string, JournalConfig> = {}) {
   return { storage, modals, flows: container.resolve(Flows) };
 }
 
-const sampleRow: NavBlockRow = {
+const sampleRow: NavBlockSegment = {
   template: "{{date:YYYY}}",
   fontSize: 1,
   bold: false,
@@ -59,6 +59,7 @@ const sampleRow: NavBlockRow = {
   background: { type: "transparent" },
   link: "none",
   journal: "",
+  linkDate: "",
   addDecorations: false,
 };
 
@@ -92,28 +93,28 @@ describe("EditNavBlockRowFlow", () => {
   it("appends and returns the new index when no rowIndex is provided", async () => {
     const { flows, modals, storage } = build({ daily: buildJournal("daily", [sampleRow]) });
     const promise = flows.invoke(EditNavBlockRowFlow, { journalName: "daily" });
-    modals.lastOpen<{ journalName: string }, { row: NavBlockRow }>().submit({ row: sampleRow });
+    modals.lastOpen<{ journalName: string }, { row: NavBlockSegment }>().submit({ row: sampleRow });
     const result = await promise;
     expect(result.kind === "ok" && result.value.index).toBe(1);
-    expect(storage.daily?.navBlock.rows.length).toBe(2);
+    expect(storage.daily?.navBlock.lines.length).toBe(2);
   });
 
   it("appends to intervalBlock rows when the field is intervalBlock", async () => {
     const { flows, modals, storage } = build({ custom: buildCustomJournal("custom", [sampleRow]) });
     const promise = flows.invoke(EditNavBlockRowFlow, { journalName: "custom", field: "intervalBlock" });
-    modals.lastOpen<{ journalName: string }, { row: NavBlockRow }>().submit({ row: sampleRow });
+    modals.lastOpen<{ journalName: string }, { row: NavBlockSegment }>().submit({ row: sampleRow });
     const result = await promise;
     expect(result.kind === "ok" && result.value.index).toBe(1);
-    expect(storage.custom?.intervalBlock.rows.length).toBe(2);
+    expect(storage.custom?.intervalBlock.lines.length).toBe(2);
   });
 
   it("replaces the row at rowIndex when a rowIndex is provided", async () => {
-    const updated: NavBlockRow = { ...sampleRow, template: "x" };
+    const updated: NavBlockSegment = { ...sampleRow, template: "x" };
     const { flows, modals, storage } = build({ daily: buildJournal("daily", [sampleRow]) });
     const promise = flows.invoke(EditNavBlockRowFlow, { journalName: "daily", rowIndex: 0 });
-    modals.lastOpen<{ journalName: string }, { row: NavBlockRow }>().submit({ row: updated });
+    modals.lastOpen<{ journalName: string }, { row: NavBlockSegment }>().submit({ row: updated });
     const result = await promise;
     expect(result.kind === "ok" && result.value.index).toBe(0);
-    expect(storage.daily?.navBlock.rows[0]).toEqual(updated);
+    expect(storage.daily?.navBlock.lines[0]).toEqual([updated]);
   });
 });

@@ -36,7 +36,7 @@ const viewId = "11111111-1111-1111-1111-111111111111" as ViewId;
 
 async function setup(viewOverrides: Record<string, unknown> = {}) {
   const raw = {
-    version: 4,
+    version: 5,
     views: {
       [viewId]: {
         id: viewId,

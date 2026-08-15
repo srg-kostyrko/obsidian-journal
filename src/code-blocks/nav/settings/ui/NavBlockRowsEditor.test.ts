@@ -21,7 +21,7 @@ import {
   journalDefaultsFor,
   type JournalConfig,
   type JournalsEvents,
-  type NavBlockRow,
+  type NavBlockSegment,
 } from "@/journals";
 import { ShelvesRepository, type ShelvesEvents } from "@/shelves";
 import { TemplateEngine } from "@/templates";
@@ -34,15 +34,18 @@ afterEach(() => cleanup());
 
 const TITLE = "Interval rows";
 
-function buildCustomJournal(name: string, rows: NavBlockRow[]): JournalConfig {
+function buildCustomJournal(name: string, rows: NavBlockSegment[]): JournalConfig {
   const base = journalDefaultsFor(
     { type: "custom", every: "day", duration: 1, anchorDate: "2026-01-01" as AnchorString },
     name,
   );
-  return { ...base, intervalBlock: { ...base.intervalBlock, rows, decorateWholeBlock: false } };
+  return {
+    ...base,
+    intervalBlock: { ...base.intervalBlock, lines: rows.map((row) => [row]), decorateWholeBlock: false },
+  };
 }
 
-function mount(rows: NavBlockRow[]) {
+function mount(rows: NavBlockSegment[]) {
   const container = new Container();
   const storage = reactive<Record<string, JournalConfig>>({ daily: buildCustomJournal("daily", rows) });
   const repo = JournalsRepository.fromParts(storage, createNanoEvents<JournalsEvents>());
@@ -73,7 +76,7 @@ function mount(rows: NavBlockRow[]) {
   return { storage, invoke };
 }
 
-const sampleRow: NavBlockRow = {
+const sampleRow: NavBlockSegment = {
   template: "{{date:YYYY}}",
   fontSize: 1,
   bold: false,
@@ -82,6 +85,7 @@ const sampleRow: NavBlockRow = {
   background: { type: "transparent" },
   link: "none",
   journal: "",
+  linkDate: "",
   addDecorations: false,
 };
 
@@ -121,7 +125,7 @@ describe("NavBlockRowsEditor", () => {
     await userEvent.click(screen.getByText(TITLE));
     const deleteButtons = screen.getAllByLabelText(m.block_rows_delete_tooltip());
     await userEvent.click(deleteButtons[0]);
-    expect(storage.daily?.intervalBlock.rows.map((r) => r.template)).toEqual(["{{date:MM}}"]);
+    expect(storage.daily?.intervalBlock.lines.map((line) => line[0]?.template)).toEqual(["{{date:MM}}"]);
   });
 
   it("toggles decorateWholeBlock on intervalBlock", async () => {

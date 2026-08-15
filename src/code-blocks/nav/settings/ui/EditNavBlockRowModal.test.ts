@@ -20,7 +20,7 @@ import {
   journalDefaultsFor,
   type JournalConfig,
   type JournalsEvents,
-  type NavBlockRow,
+  type NavBlockSegment,
 } from "@/journals";
 import { ShelvesRepository, type ShelfConfig, type ShelvesEvents } from "@/shelves";
 import { TemplateEngine } from "@/templates";
@@ -30,13 +30,13 @@ import EditNavBlockRowModal from "./EditNavBlockRowModal.vue";
 afterEach(() => cleanup());
 
 function mountModal(options: {
-  row?: NavBlockRow;
+  row?: NavBlockSegment;
   journals?: Record<string, JournalConfig>;
   shelves?: Record<string, ShelfConfig>;
 }) {
   const submit = vi.fn();
   const cancel = vi.fn();
-  const api: ModalApi<{ row: NavBlockRow }> = { submit, cancel };
+  const api: ModalApi<{ row: NavBlockSegment }> = { submit, cancel };
   const container = new Container();
   const journalsStorage = reactive(options.journals ?? { daily: journalDefaultsFor({ type: "day" }, "daily") });
   const shelvesStorage = reactive(options.shelves ?? { home: { name: "home", journals: ["daily"], decorations: [] } });
@@ -87,6 +87,7 @@ describe("EditNavBlockRowModal", () => {
         background: { type: "transparent" },
         link: "year",
         journal: "",
+        linkDate: "",
         addDecorations: true,
       },
     });
@@ -135,6 +136,7 @@ describe("EditNavBlockRowModal", () => {
         background: { type: "transparent" },
         link: "none",
         journal: "",
+        linkDate: "",
         addDecorations: false,
       },
     });

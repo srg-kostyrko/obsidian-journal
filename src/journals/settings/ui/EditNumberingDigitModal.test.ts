@@ -43,7 +43,7 @@ function makeJournal(name: string, sources: DigitFixture[]) {
 }
 
 async function mountModal(journalName: string, sources: DigitFixture[], sourceIndex?: number) {
-  const raw = { version: 4, journals: { [journalName]: makeJournal(journalName, sources) } };
+  const raw = { version: 5, journals: { [journalName]: makeJournal(journalName, sources) } };
   const { service: settings, container } = createSettingsService({
     collections: [journalConfigCollection],
     raw,

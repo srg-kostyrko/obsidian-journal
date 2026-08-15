@@ -27,7 +27,7 @@ function makeConfig(name: string): CommandConfig {
 }
 
 async function build() {
-  const raw = { version: 4, commands: { "cmd-1": makeConfig("Doomed") } };
+  const raw = { version: 5, commands: { "cmd-1": makeConfig("Doomed") } };
   const { service: settings, container } = createSettingsService({
     collections: [commandCollection],
     raw,

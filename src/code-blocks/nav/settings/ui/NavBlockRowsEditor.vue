@@ -5,7 +5,8 @@ import { Clock, type AnchorString } from "@/calendar";
 import { m } from "@/i18n";
 import { useService } from "@/infrastructure/di";
 import { Flows } from "@/infrastructure/flows";
-import { JournalsViewModel, journalDefaultsFor } from "@/journals";
+import { journalDefaultsFor } from "@/journals/config";
+import { JournalsViewModel } from "@/journals/view-model";
 import { icons } from "@/ui/icons";
 import UiButton from "@/ui/UiButton.vue";
 import UiCollapsibleBlock from "@/ui/UiCollapsibleBlock.vue";
@@ -48,7 +49,7 @@ const previewPeriod = computed(() =>
 
 function applyDefaults(): void {
   if (!config.value) return;
-  config.value[field].rows = journalDefaultsFor(config.value.write, config.value.name)[field].rows;
+  config.value[field].lines = journalDefaultsFor(config.value.write, config.value.name)[field].lines;
 }
 
 function add(): void {
@@ -58,17 +59,17 @@ function edit(index: number): void {
   void flows.invoke(EditNavBlockRowFlow, { journalName, field, rowIndex: index });
 }
 function remove(index: number): void {
-  config.value?.[field].rows.splice(index, 1);
+  config.value?.[field].lines.splice(index, 1);
 }
 function moveUp(index: number): void {
-  const rows = config.value?.[field].rows;
-  if (!rows || index <= 0) return;
-  [rows[index - 1], rows[index]] = [rows[index], rows[index - 1]];
+  const lines = config.value?.[field].lines;
+  if (!lines || index <= 0) return;
+  [lines[index - 1], lines[index]] = [lines[index], lines[index - 1]];
 }
 function moveDown(index: number): void {
-  const rows = config.value?.[field].rows;
-  if (!rows || index >= rows.length - 1) return;
-  [rows[index], rows[index + 1]] = [rows[index + 1], rows[index]];
+  const lines = config.value?.[field].lines;
+  if (!lines || index >= lines.length - 1) return;
+  [lines[index], lines[index + 1]] = [lines[index + 1], lines[index]];
 }
 </script>
 
@@ -77,7 +78,7 @@ function moveDown(index: number): void {
     <template #trigger>
       <UiIconedRow :icon="icon">
         {{ title }}
-        <span class="flair">{{ config[field].rows.length }}</span>
+        <span class="flair">{{ config[field].lines.length }}</span>
       </UiIconedRow>
     </template>
     <template #controls>
@@ -95,13 +96,13 @@ function moveDown(index: number): void {
       <UiToggle v-model="config[field].decorateWholeBlock" />
     </UiSettingRow>
 
-    <UiSettingRow v-if="useDefaults && config[field].rows.length === 0" controls-only>
+    <UiSettingRow v-if="useDefaults && config[field].lines.length === 0" controls-only>
       <UiButton @click="applyDefaults">
         {{ m.nav_block_section_use_defaults({ writeType: config.write.type }) }}
       </UiButton>
     </UiSettingRow>
 
-    <UiSettingRow v-if="config[field].rows.length === 0" no-controls>
+    <UiSettingRow v-if="config[field].lines.length === 0" no-controls>
       <template #description>{{ m.block_rows_empty() }}</template>
     </UiSettingRow>
 
@@ -113,7 +114,7 @@ function moveDown(index: number): void {
         :period="previewPeriod!"
         prevent-navigation
       >
-        <template #rowAction="{ index, isFirst, isLast }">
+        <template #lineAction="{ index, isFirst, isLast }">
           <span class="nav-row-gutter">
             <UiIconButton
               :icon="icons.action.moveUp"

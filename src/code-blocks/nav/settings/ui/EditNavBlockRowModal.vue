@@ -8,19 +8,15 @@ import { Clock, type AnchorString } from "@/calendar";
 import { m } from "@/i18n";
 import { useService } from "@/infrastructure/di";
 import { useModal } from "@/infrastructure/host/modals";
-import {
-  CycleService,
-  JournalsIndex,
-  JournalsViewModel,
-  NotePathService,
-  NumberingService,
-  navBlockRowSchema,
-  type JournalConfig,
-  type NavBlockRow,
-} from "@/journals";
+import { navBlockSegmentSchema, type JournalConfig, type NavBlockSegment } from "@/journals/config";
+import { CycleService } from "@/journals/cycle";
+import { JournalsIndex } from "@/journals/journals-index";
+import { NotePathService } from "@/journals/notes";
+import { NumberingService } from "@/journals/numbering";
 import VariableReferenceHint from "@/journals/settings/ui/VariableReferenceHint.vue";
 import { templateHasWrongWeek } from "@/journals/settings/ui/wrong-week";
 import WrongWeekWarning from "@/journals/settings/ui/WrongWeekWarning.vue";
+import { JournalsViewModel } from "@/journals/view-model";
 import { TemplateEngine } from "@/templates";
 import UiButton from "@/ui/UiButton.vue";
 import UiColorSettingsPicker from "@/ui/UiColorSettingsPicker.vue";
@@ -35,8 +31,8 @@ import { buildNavRowContext } from "../../nav-row-context";
 
 import { useShelfMateJournals } from "./use-shelf-mate-journals";
 
-const props = defineProps<{ journalName: string; row?: NavBlockRow }>();
-const api = useModal<{ row: NavBlockRow }>();
+const props = defineProps<{ journalName: string; row?: NavBlockSegment }>();
+const api = useModal<{ row: NavBlockSegment }>();
 
 const journalsVM = useService(JournalsViewModel);
 const engine = useService(TemplateEngine);
@@ -47,20 +43,21 @@ const index = useService(JournalsIndex);
 
 const config = computed<JournalConfig | undefined>(() => journalsVM.getJournal(props.journalName).getOrUndefined());
 
-const initial: NavBlockRow = props.row ?? {
+const initial: NavBlockSegment = props.row ?? {
   template: "",
   fontSize: 1,
   bold: false,
   italic: false,
   link: "none",
   journal: "",
+  linkDate: "",
   color: { type: "theme", name: "text-normal" },
   background: { type: "transparent" },
   addDecorations: false,
 };
 
 const schema = v.pipe(
-  navBlockRowSchema,
+  navBlockSegmentSchema,
   v.forward(
     v.partialCheck([["template"]], ({ template }) => template.trim().length > 0, m.nav_block_row_template_required()),
     ["template"],
@@ -75,8 +72,8 @@ const schema = v.pipe(
   ),
 );
 
-const { defineField, errorBag, handleSubmit } = useForm<NavBlockRow>({
-  initialValues: JSON.parse(JSON.stringify(initial)) as NavBlockRow,
+const { defineField, errorBag, handleSubmit } = useForm<NavBlockSegment>({
+  initialValues: JSON.parse(JSON.stringify(initial)) as NavBlockSegment,
   validationSchema: toTypedSchema(schema),
 });
 

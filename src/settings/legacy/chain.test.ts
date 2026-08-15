@@ -43,15 +43,15 @@ function v1(): PluginSettingsV1 {
 }
 
 describe("legacy migration chain", () => {
-  it("migrates a v1 blob (no version) up to version 4", () => {
-    const result = runMigrations(v1() as unknown as Record<string, unknown>, legacyMigrations, 4);
+  it("migrates a v1 blob (no version) up to version 5", () => {
+    const result = runMigrations(v1() as unknown as Record<string, unknown>, legacyMigrations, 5);
     expect(result.kind).toBe("ok");
     if (result.kind !== "ok") return;
-    expect(result.value.version).toBe(4);
+    expect(result.value.version).toBe(5);
   });
 
   it("produces journals that parse against the new collection schema", () => {
-    const result = runMigrations(v1() as unknown as Record<string, unknown>, legacyMigrations, 4);
+    const result = runMigrations(v1() as unknown as Record<string, unknown>, legacyMigrations, 5);
     if (result.kind !== "ok") throw new Error("expected ok");
     const journals = result.value.journals as Record<string, unknown>;
     const item = Object.values(journals)[0];

@@ -24,8 +24,8 @@ function baseConfig(overrides: Partial<JournalConfig>): JournalConfig {
     confirmCreation: false,
     autoCreate: false,
     decorations: [],
-    navBlock: { type: "create", rows: [], decorateWholeBlock: false },
-    intervalBlock: { type: "create", rows: [], decorateWholeBlock: false },
+    navBlock: { type: "create", lines: [], decorateWholeBlock: false },
+    intervalBlock: { type: "create", lines: [], decorateWholeBlock: false },
     ...overrides,
   };
 }

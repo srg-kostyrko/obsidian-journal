@@ -63,7 +63,7 @@ function build(
 describe("SettingsService", () => {
   describe("initialize — happy path", () => {
     it("hydrates a slice from a stored root", async () => {
-      const { service } = build({ raw: { version: 4, calendar: { dow: 0, global: false } } });
+      const { service } = build({ raw: { version: 5, calendar: { dow: 0, global: false } } });
       const init = await service.initialize();
       expectOk(init);
       expect(service.getSlice(calendarSlice).state.dow).toBe(0);
@@ -80,7 +80,7 @@ describe("SettingsService", () => {
     it("treats a missing root version as 0 and runs migrations up to current", async () => {
       const bumpToCurrent: Migration = {
         fromVersion: 0,
-        toVersion: 4,
+        toVersion: 5,
         migrate: (r) => ({ ...r, calendar: { dow: 5, global: true } }),
       };
       const { service } = build({ raw: { calendar: { dow: 0, global: false } }, migrations: [bumpToCurrent] });
@@ -92,7 +92,7 @@ describe("SettingsService", () => {
 
   describe("initialize — slice validation fallback", () => {
     it("falls back to defaults when a stored slice fails validation", async () => {
-      const { service } = build({ raw: { version: 4, calendar: { dow: "not-a-number" } } });
+      const { service } = build({ raw: { version: 5, calendar: { dow: "not-a-number" } } });
       await service.initialize();
       expect(service.getSlice(calendarSlice).state.dow).toBe(1);
     });
@@ -163,13 +163,13 @@ describe("SettingsService", () => {
     });
 
     it("seeds a collection when its key is absent from stored data", async () => {
-      const { service } = build({ slices: [], collections: [seededCollection], raw: { version: 4 } });
+      const { service } = build({ slices: [], collections: [seededCollection], raw: { version: 5 } });
       await service.initialize();
       expect(service.recordOf(seededCollection)).toEqual({ alpha: { name: "seeded-alpha" } });
     });
 
     it("does not seed when the collection key is present but empty", async () => {
-      const { service } = build({ slices: [], collections: [seededCollection], raw: { version: 4, seeded: {} } });
+      const { service } = build({ slices: [], collections: [seededCollection], raw: { version: 5, seeded: {} } });
       await service.initialize();
       expect(service.recordOf(seededCollection)).toEqual({});
     });
@@ -183,9 +183,9 @@ describe("SettingsService", () => {
     });
 
     it("applies externally changed slice values to in-memory state", async () => {
-      const { service, data } = build({ raw: { version: 4, calendar: { dow: 0, global: false } } });
+      const { service, data } = build({ raw: { version: 5, calendar: { dow: 0, global: false } } });
       await service.initialize();
-      await data.save({ version: 4, calendar: { dow: 6, global: true } });
+      await data.save({ version: 5, calendar: { dow: 6, global: true } });
       const reload = await service.reload();
       expectOk(reload);
       expect(service.getSlice(calendarSlice).state.dow).toBe(6);
@@ -195,11 +195,11 @@ describe("SettingsService", () => {
       const { service, data } = build({
         slices: [],
         collections: [journalCollection],
-        raw: { version: 4, journals: { a: { name: "a" } } },
+        raw: { version: 5, journals: { a: { name: "a" } } },
       });
       await service.initialize();
       const record = service.recordOf(journalCollection);
-      await data.save({ version: 4, journals: { a: { name: "a-renamed" }, b: { name: "b" } } });
+      await data.save({ version: 5, journals: { a: { name: "a-renamed" }, b: { name: "b" } } });
       await service.reload();
       expect(record.a).toEqual({ name: "a-renamed" });
       expect(record.b).toEqual({ name: "b" });
@@ -209,17 +209,17 @@ describe("SettingsService", () => {
       const { service, data } = build({
         slices: [],
         collections: [journalCollection],
-        raw: { version: 4, journals: { a: { name: "a" }, b: { name: "b" } } },
+        raw: { version: 5, journals: { a: { name: "a" }, b: { name: "b" } } },
       });
       await service.initialize();
       const record = service.recordOf(journalCollection);
-      await data.save({ version: 4, journals: { a: { name: "a" } } });
+      await data.save({ version: 5, journals: { a: { name: "a" } } });
       await service.reload();
       expect(record.b).toBeUndefined();
     });
 
     it("propagates a migration failure as an error", async () => {
-      const { service, data } = build({ raw: { version: 4 } });
+      const { service, data } = build({ raw: { version: 5 } });
       await service.initialize();
       await data.save({ version: 99 });
       const reload = await service.reload();
@@ -228,11 +228,11 @@ describe("SettingsService", () => {
     });
 
     it("emits reloaded so event-driven subsystems can re-derive", async () => {
-      const { service, data, events } = build({ raw: { version: 4 } });
+      const { service, data, events } = build({ raw: { version: 5 } });
       await service.initialize();
       const listener = vi.fn();
       events.on("reloaded", listener);
-      await data.save({ version: 4, calendar: { dow: 3, global: true } });
+      await data.save({ version: 5, calendar: { dow: 3, global: true } });
       await service.reload();
       expect(listener).toHaveBeenCalledTimes(1);
     });
@@ -247,9 +247,9 @@ describe("SettingsService", () => {
     });
 
     it("does not write back to disk when refreshing from an external change", async () => {
-      const { service, data } = build({ raw: { version: 4, calendar: { dow: 0, global: false } } });
+      const { service, data } = build({ raw: { version: 5, calendar: { dow: 0, global: false } } });
       await service.initialize();
-      await data.save({ version: 4, calendar: { dow: 2, global: true } });
+      await data.save({ version: 5, calendar: { dow: 2, global: true } });
       const saveSpy = vi.spyOn(data, "save");
       const reload = await service.reload();
       expectOk(reload);
@@ -267,7 +267,7 @@ describe("SettingsService", () => {
     });
 
     it("coalesces multiple mutations within the debounce window into one save", async () => {
-      const { service, data } = build({ raw: { version: 4 } });
+      const { service, data } = build({ raw: { version: 5 } });
       await service.initialize();
       const saveSpy = vi.spyOn(data, "save");
       const slice = service.getSlice(calendarSlice);
@@ -280,7 +280,7 @@ describe("SettingsService", () => {
     });
 
     it("does not save during the debounce window", async () => {
-      const { service, data } = build({ raw: { version: 4 } });
+      const { service, data } = build({ raw: { version: 5 } });
       await service.initialize();
       const saveSpy = vi.spyOn(data, "save");
       service.getSlice(calendarSlice).state.dow = 2;
@@ -298,7 +298,7 @@ describe("SettingsService", () => {
     });
 
     it("keeps state in memory when save fails", async () => {
-      const { service, data } = build({ raw: { version: 4 } });
+      const { service, data } = build({ raw: { version: 5 } });
       await service.initialize();
       vi.spyOn(data, "save").mockReturnValue(AsyncResult.err(new PluginDataIOError("save", new Error("disk"))));
       service.getSlice(calendarSlice).state.dow = 7;
@@ -317,7 +317,7 @@ describe("SettingsService", () => {
     });
 
     it("cancels a pending save so it does not fire after dispose", async () => {
-      const { service, data } = build({ raw: { version: 4 } });
+      const { service, data } = build({ raw: { version: 5 } });
       await service.initialize();
       const saveSpy = vi.spyOn(data, "save");
       service.getSlice(calendarSlice).state.dow = 9;
@@ -327,7 +327,7 @@ describe("SettingsService", () => {
     });
 
     it("stops reacting to mutations after dispose", async () => {
-      const { service, data } = build({ raw: { version: 4 } });
+      const { service, data } = build({ raw: { version: 5 } });
       await service.initialize();
       const saveSpy = vi.spyOn(data, "save");
       service[Symbol.dispose]();

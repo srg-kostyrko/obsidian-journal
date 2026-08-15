@@ -98,7 +98,7 @@ describe("journalDefaultsFor navBlock per write type", () => {
     const { navBlock } = journalDefaultsFor({ type: "day" }, "daily");
     expect(navBlock.type).toBe("create");
     expect(navBlock.decorateWholeBlock).toBe(false);
-    expect(navBlock.rows.map((r) => r.template)).toEqual([
+    expect(navBlock.lines.map((line) => line[0]?.template)).toEqual([
       "{{date:ddd}}",
       "{{date:D}}",
       "{{relative_date}}",
@@ -106,36 +106,44 @@ describe("journalDefaultsFor navBlock per write type", () => {
       "{{date:MMMM}}",
       "{{date:YYYY}}",
     ]);
-    expect(navBlock.rows[1]).toMatchObject({ fontSize: 3, bold: true, link: "self", addDecorations: true });
+    expect(navBlock.lines[1]?.[0]).toMatchObject({ fontSize: 3, bold: true, link: "self", addDecorations: true });
   });
 
   it("week journal has big week + relative + month + year rows", () => {
     const { navBlock } = journalDefaultsFor({ type: "week" }, "weekly");
-    expect(navBlock.rows.map((r) => r.template)).toEqual([
+    expect(navBlock.lines.map((line) => line[0]?.template)).toEqual([
       "{{date:[W]w}}",
       "{{relative_date}}",
       "{{date:MMMM}}",
       "{{date:YYYY}}",
     ]);
-    expect(navBlock.rows[0]).toMatchObject({ fontSize: 3, bold: true, link: "self", addDecorations: true });
+    expect(navBlock.lines[0]?.[0]).toMatchObject({ fontSize: 3, bold: true, link: "self", addDecorations: true });
   });
 
   it("month journal has big month + relative + year rows", () => {
     const { navBlock } = journalDefaultsFor({ type: "month" }, "monthly");
-    expect(navBlock.rows.map((r) => r.template)).toEqual(["{{date:MMMM}}", "{{relative_date}}", "{{date:YYYY}}"]);
-    expect(navBlock.rows[0]).toMatchObject({ fontSize: 3, bold: true, link: "self", addDecorations: true });
+    expect(navBlock.lines.map((line) => line[0]?.template)).toEqual([
+      "{{date:MMMM}}",
+      "{{relative_date}}",
+      "{{date:YYYY}}",
+    ]);
+    expect(navBlock.lines[0]?.[0]).toMatchObject({ fontSize: 3, bold: true, link: "self", addDecorations: true });
   });
 
   it("quarter journal has big quarter + relative + year rows", () => {
     const { navBlock } = journalDefaultsFor({ type: "quarter" }, "quarterly");
-    expect(navBlock.rows.map((r) => r.template)).toEqual(["{{date:[Q]Q}}", "{{relative_date}}", "{{date:YYYY}}"]);
-    expect(navBlock.rows[0]).toMatchObject({ fontSize: 3, bold: true, link: "self", addDecorations: true });
+    expect(navBlock.lines.map((line) => line[0]?.template)).toEqual([
+      "{{date:[Q]Q}}",
+      "{{relative_date}}",
+      "{{date:YYYY}}",
+    ]);
+    expect(navBlock.lines[0]?.[0]).toMatchObject({ fontSize: 3, bold: true, link: "self", addDecorations: true });
   });
 
   it("year journal has big year + relative rows", () => {
     const { navBlock } = journalDefaultsFor({ type: "year" }, "yearly");
-    expect(navBlock.rows.map((r) => r.template)).toEqual(["{{date:YYYY}}", "{{relative_date}}"]);
-    expect(navBlock.rows[0]).toMatchObject({ fontSize: 3, bold: true, link: "self", addDecorations: true });
+    expect(navBlock.lines.map((line) => line[0]?.template)).toEqual(["{{date:YYYY}}", "{{relative_date}}"]);
+    expect(navBlock.lines[0]?.[0]).toMatchObject({ fontSize: 3, bold: true, link: "self", addDecorations: true });
   });
 
   it("custom journal has big title + start_date + 'to' + end_date rows", () => {
@@ -143,13 +151,13 @@ describe("journalDefaultsFor navBlock per write type", () => {
       { type: "custom", every: "week", duration: 2, anchorDate: "2024-01-01" as AnchorString },
       "biweekly",
     );
-    expect(navBlock.rows.map((r) => r.template)).toEqual([
+    expect(navBlock.lines.map((line) => line[0]?.template)).toEqual([
       "{{journal_name}} {{index}}",
       "{{start_date}}",
       "to",
       "{{end_date}}",
     ]);
-    expect(navBlock.rows[0]).toMatchObject({ fontSize: 3, bold: true, link: "self", addDecorations: true });
+    expect(navBlock.lines[0]?.[0]).toMatchObject({ fontSize: 3, bold: true, link: "self", addDecorations: true });
   });
 });
 
@@ -170,11 +178,11 @@ describe("journalDefaultsFor custom-interval defaults", () => {
     const { intervalBlock } = journalDefaultsFor(customWrite, "biweekly");
     expect(intervalBlock.type).toBe("create");
     expect(intervalBlock.decorateWholeBlock).toBe(true);
-    expect(intervalBlock.rows.map((r) => r.template)).toEqual([
+    expect(intervalBlock.lines.map((line) => line[0]?.template)).toEqual([
       "{{journal_name}} {{index}}",
       "{{start_date}} to {{end_date}}",
     ]);
-    expect(intervalBlock.rows[0]).toMatchObject({ fontSize: 1.2, bold: true, link: "self" });
+    expect(intervalBlock.lines[0]?.[0]).toMatchObject({ fontSize: 1.2, bold: true, link: "self" });
   });
 
   it("seeds a left-border accent decoration for notes that exist", () => {
@@ -211,7 +219,7 @@ describe("journalConfigSchema navBlock default", () => {
     const parsed = v.parse(journalConfigSchema, withoutNavBlock);
     expect(parsed.navBlock).toEqual({
       type: "create",
-      rows: [],
+      lines: [],
       decorateWholeBlock: false,
     });
   });
@@ -222,7 +230,7 @@ describe("journalConfigSchema intervalBlock default", () => {
     const cfg = journalDefaultsFor({ type: "day" }, "daily");
     expect(cfg.intervalBlock).toEqual({
       type: "create",
-      rows: [],
+      lines: [],
       decorateWholeBlock: false,
     });
   });
@@ -233,7 +241,7 @@ describe("journalConfigSchema intervalBlock default", () => {
     const parsed = v.parse(journalConfigSchema, withoutIntervalBlock);
     expect(parsed.intervalBlock).toEqual({
       type: "create",
-      rows: [],
+      lines: [],
       decorateWholeBlock: false,
     });
   });
@@ -244,18 +252,20 @@ describe("navBlockSchema", () => {
     const value = {
       type: "create" as const,
       decorateWholeBlock: false,
-      rows: [
-        {
-          template: "{{date}}",
-          fontSize: 1,
-          bold: false,
-          italic: false,
-          color: { type: "theme" as const, name: "text-normal" },
-          background: { type: "transparent" as const },
-          link: "self" as const,
-          journal: "",
-          addDecorations: false,
-        },
+      lines: [
+        [
+          {
+            template: "{{date}}",
+            fontSize: 1,
+            bold: false,
+            italic: false,
+            color: { type: "theme" as const, name: "text-normal" },
+            background: { type: "transparent" as const },
+            link: "self" as const,
+            journal: "",
+            addDecorations: false,
+          },
+        ],
       ],
     };
     expect(v.safeParse(navBlockSchema, value).success).toBe(true);
@@ -265,18 +275,20 @@ describe("navBlockSchema", () => {
     const value = {
       type: "create" as const,
       decorateWholeBlock: false,
-      rows: [
-        {
-          template: "",
-          fontSize: 1,
-          bold: false,
-          italic: false,
-          color: { type: "transparent" as const },
-          background: { type: "transparent" as const },
-          link: "nonsense" as unknown as "self",
-          journal: "",
-          addDecorations: false,
-        },
+      lines: [
+        [
+          {
+            template: "",
+            fontSize: 1,
+            bold: false,
+            italic: false,
+            color: { type: "transparent" as const },
+            background: { type: "transparent" as const },
+            link: "nonsense" as unknown as "self",
+            journal: "",
+            addDecorations: false,
+          },
+        ],
       ],
     };
     expect(v.safeParse(navBlockSchema, value).success).toBe(false);

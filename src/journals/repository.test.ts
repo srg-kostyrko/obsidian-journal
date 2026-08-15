@@ -2,7 +2,7 @@ import { createNanoEvents, type Emitter } from "nanoevents";
 import { describe, expect, it, vi } from "vitest";
 import { reactive } from "vue";
 
-import { journalDefaultsFor, type JournalConfig, type NavBlockRow } from "./config";
+import { journalDefaultsFor, type JournalConfig, type NavBlockSegment } from "./config";
 import {
   InvalidJournalNameError,
   InvalidJournalUpdateError,
@@ -12,13 +12,14 @@ import {
 } from "./errors";
 import { JournalsRepository, type JournalsEvents } from "./repository";
 
-const addedRow: NavBlockRow = {
+const addedRow: NavBlockSegment = {
   template: "added to the copy",
   fontSize: 1,
   bold: false,
   italic: false,
   link: "none",
   journal: "",
+  linkDate: "",
   color: { type: "theme", name: "text-normal" },
   background: { type: "transparent" },
   addDecorations: false,
@@ -146,10 +147,10 @@ describe("JournalsRepository", () => {
     it("detaches nested values so editing the copy leaves the source untouched", () => {
       const { repo, storage } = buildRepo({ daily: journalDefaultsFor({ type: "day" }, "daily") });
       repo.clone("daily", "daily copy");
-      storage["daily copy"]?.navBlock.rows.push(addedRow);
-      expect(storage.daily?.navBlock.rows).not.toContainEqual(
+      storage["daily copy"]?.navBlock.lines.push([addedRow]);
+      expect(storage.daily?.navBlock.lines).not.toContainEqual([
         expect.objectContaining({ template: "added to the copy" }),
-      );
+      ]);
     });
 
     it("returns the stored copy", () => {

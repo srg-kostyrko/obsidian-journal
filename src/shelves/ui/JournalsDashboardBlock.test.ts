@@ -59,7 +59,7 @@ async function setup(options: { journals?: string[]; shelves?: Record<string, { 
   const { service: settings, container } = createSettingsService({
     collections: [journalConfigCollection, shelvesCollection],
     raw: {
-      version: 4,
+      version: 5,
       journals: Object.fromEntries((options.journals ?? []).map((n) => [n, makeJournal(n)])),
       shelves: options.shelves ?? {},
     },

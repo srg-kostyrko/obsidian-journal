@@ -42,7 +42,7 @@ function makeJournal(name: string) {
 
 async function build() {
   const raw = {
-    version: 4,
+    version: 5,
     journals: { daily: makeJournal("daily") },
     shelves: { Work: { name: "Work", journals: [] } },
   };

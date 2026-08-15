@@ -56,7 +56,7 @@ function makeJournal(name: string) {
 
 async function setup(options: { journals?: string[]; shelves?: Record<string, { name: string; journals: string[] }> }) {
   const raw = {
-    version: 4,
+    version: 5,
     journals: Object.fromEntries((options.journals ?? []).map((n) => [n, makeJournal(n)])),
     shelves: options.shelves ?? {},
   };
