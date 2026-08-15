@@ -6,6 +6,7 @@ import { reactive } from "vue";
 import { Calendar, type AnchorString } from "@/calendar";
 import { installTestCalendar, testCalendar } from "@/calendar/testing";
 import { Container, provideInjectorOnApp } from "@/infrastructure/di";
+import type { VaultPath } from "@/infrastructure/host";
 import { createLoggerTestingModule } from "@/infrastructure/logger/testing";
 import {
   CycleService,
@@ -55,10 +56,11 @@ function mount(overrides: Partial<JournalConfig> = {}) {
   container.register(NotePathService).useClass(NotePathService);
   container.register(TemplateEngine).useValue(installTestEngine());
   container.register(Calendar).useValue(testCalendar());
-  return render(SequencePreview, {
+  const rendered = render(SequencePreview, {
     props: { journalName: "daily" },
     global: { plugins: [{ install: (app) => provideInjectorOnApp(app, container) }] },
   });
+  return { ...rendered, journalsIndex: container.resolve(JournalsIndex) };
 }
 
 describe("SequencePreview", () => {
@@ -88,7 +90,7 @@ describe("SequencePreview", () => {
     expect(screen.queryByText("Release4711Sprint6")).toBeNull();
   });
 
-  it("renders nothing when the journal has no resolvable anchor", async () => {
+  it("renders nothing when numbering has no digits", async () => {
     const { container } = mount({
       numbering: { enabled: true, anchorDate: "" as AnchorString, allowBefore: false, sources: [] },
     });
@@ -96,5 +98,37 @@ describe("SequencePreview", () => {
     await waitFor(() => {
       expect(container.querySelector(".sequence-preview")).toBeNull();
     });
+  });
+
+  it("re-renders when the index gains a stored end date for an already-rendered anchor", async () => {
+    const { journalsIndex } = mount({
+      write: { type: "custom", every: "week", duration: 2, anchorDate: "2026-01-05" as AnchorString },
+      nameTemplate: "Note{{end_date}}",
+      numbering: {
+        enabled: true,
+        anchorDate: "2026-01-05" as AnchorString,
+        allowBefore: false,
+        sources: [{ variable: "index", frontmatterKey: "journal-index", anchorValue: 1, reset: { kind: "never" } }],
+      },
+    });
+
+    // With no stored entry, today's period's end date is the cycle's default: two weeks
+    // from the 2026-01-05 anchor, minus a day.
+    expect(await screen.findByText("Note2026-01-18")).toBeTruthy();
+
+    // Registering a stored end date for that same anchor is the only way JournalsIndex
+    // changes without a reactive config edit — it must flow through useIndexVersion's
+    // entryChanged bridge, not through Vue's own reactivity, for the preview to notice.
+    journalsIndex.register({
+      journalName: "daily",
+      anchor: "2026-01-05" as AnchorString,
+      path: "daily/2026-01-05.md" as VaultPath,
+      endDate: "2026-01-10" as AnchorString,
+    });
+
+    await waitFor(() => {
+      expect(screen.getByText("Note2026-01-10")).toBeTruthy();
+    });
+    expect(screen.queryByText("Note2026-01-18")).toBeNull();
   });
 });
