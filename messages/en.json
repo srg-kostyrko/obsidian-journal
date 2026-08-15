@@ -1394,6 +1394,8 @@
   "journal_edit_code_block_timeline_option_shelf": "limits the displayed notes to a specific shelf. Without it, the shelf holding the current journal is used.",
   "journal_edit_code_block_timeline_weeks": "controls the week-number column. Supported values: default, left, right, none. The value default follows the plugin’s calendar setting.",
   "journal_edit_code_block_timeline_hidden_weekdays": "hides the listed days of the week (0 = Sunday … 6 = Saturday), e.g. [0, 6] to drop weekends.",
+  "journal_edit_code_block_timeline_option_before": "adds this many earlier periods above the current one. Applies to the week and month modes only.",
+  "journal_edit_code_block_timeline_option_after": "adds this many later periods below the current one. Applies to the week and month modes only.",
   "journal_edit_code_block_home_description": "The home block displays links to the current notes in your journals.",
   "journal_edit_code_block_home_default": "By default it looks like this:",
   "journal_edit_code_block_home_options_lead": "Supported options:",

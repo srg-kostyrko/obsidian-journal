@@ -1953,6 +1953,8 @@
 	"journal_edit_code_block_timeline_option_shelf": "limite les notes affichées à une étagère spécifique. Sans cette option, l’étagère contenant le journal actuel est utilisée.",
 	"journal_edit_code_block_timeline_weeks": "contrôle la colonne du numéro de semaine. Valeurs prises en charge : default, left, right, none. La valeur default suit le réglage de calendrier du plugin.",
 	"journal_edit_code_block_timeline_hidden_weekdays": "masque les jours de la semaine listés (0 = dimanche … 6 = samedi), par exemple [0, 6] pour supprimer les week-ends.",
+	"journal_edit_code_block_timeline_option_before": "ajoute autant de périodes précédentes au-dessus de la période actuelle. S’applique uniquement aux modes week et month.",
+	"journal_edit_code_block_timeline_option_after": "ajoute autant de périodes suivantes en dessous de la période actuelle. S’applique uniquement aux modes week et month.",
 	"journal_edit_code_block_home_description": "Le bloc d’accueil affiche des liens vers les notes actuelles de vos journaux.",
 	"journal_edit_code_block_home_default": "Par défaut, cela ressemble à ceci :",
 	"journal_edit_code_block_home_options_lead": "Options prises en charge :",

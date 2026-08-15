@@ -1747,6 +1747,8 @@
 	"journal_edit_code_block_timeline_option_shelf": "表示するノートを特定の棚に限定します。指定しない場合は、現在のジャーナルが属する棚が使われます。",
 	"journal_edit_code_block_timeline_weeks": "週番号の列を制御します。サポートされている値: default、left、right、none。値 default はプラグインのカレンダー設定に従います。",
 	"journal_edit_code_block_timeline_hidden_weekdays": "リストされている曜日を非表示にします（0 = 日曜日 … 6 = 土曜日）。たとえば、[0, 6] は週末を非表示にします。",
+	"journal_edit_code_block_timeline_option_before": "現在の期間の上に、指定した数だけ前の期間を追加します。week と month モードでのみ有効です。",
+	"journal_edit_code_block_timeline_option_after": "現在の期間の下に、指定した数だけ後の期間を追加します。week と month モードでのみ有効です。",
 	"journal_edit_code_block_home_description": "ホームブロックには、各ジャーナルの現在のノートへのリンクが表示されます。",
 	"journal_edit_code_block_home_default": "デフォルトでは次のように表示されます:",
 	"journal_edit_code_block_home_options_lead": "サポートされているオプション:",

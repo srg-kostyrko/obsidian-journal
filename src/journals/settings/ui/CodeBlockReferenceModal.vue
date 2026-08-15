@@ -46,6 +46,8 @@ const customHomeBody = `show:\n  - day\n  - month\nscale: 2\nseparator: " | "`;
         <li><code>shelf</code> — {{ m.journal_edit_code_block_timeline_option_shelf() }}</li>
         <li><code>weeks</code> — {{ m.journal_edit_code_block_timeline_weeks() }}</li>
         <li><code>hiddenWeekdays</code> — {{ m.journal_edit_code_block_timeline_hidden_weekdays() }}</li>
+        <li><code>before</code> — {{ m.journal_edit_code_block_timeline_option_before() }}</li>
+        <li><code>after</code> — {{ m.journal_edit_code_block_timeline_option_after() }}</li>
       </ul>
       <p>{{ m.journal_edit_code_block_timeline_mode_lead() }}</p>
       <CodeBlockSnippet name="calendar-timeline" body="mode: month" />
