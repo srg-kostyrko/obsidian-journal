@@ -1,6 +1,6 @@
 import { inject } from "@/infrastructure/di";
 import { UserAborted } from "@/infrastructure/flows";
-import { NotesService } from "@/infrastructure/host";
+import { basenameOf, NotesService } from "@/infrastructure/host";
 import type {
   FrontmatterError,
   NoteCreateError,
@@ -48,11 +48,6 @@ export class NoteCreationService {
   readonly #modals = inject(ModalService);
   readonly #guard = inject(SelfWriteGuard);
 
-  #basename(path: VaultPath): string {
-    const filename = path.split("/").pop() ?? path;
-    return filename.replace(/\.md$/, "");
-  }
-
   ensureNote(
     name: string,
     metadata: JournalMetadata,
@@ -88,7 +83,7 @@ export class NoteCreationService {
       const config = this.#journals.get(name).getOrUndefined();
       if (!options?.skipConfirmation && config?.confirmCreation) {
         const confirmed = yield* this.#modals
-          .open(confirmCreationModal, { journalName: name, noteName: this.#basename(path) })
+          .open(confirmCreationModal, { journalName: name, noteName: basenameOf(path) })
           .mapErr(() => new UserAborted("confirm-creation") as NoteCreationError);
         if (!confirmed) return yield* new Err(new UserAborted("confirm-creation"));
       }
@@ -99,7 +94,7 @@ export class NoteCreationService {
         return yield* new Err(createResult.error as NoteCreationError);
       }
       const content = yield* this.#content
-        .renderFor(name, metadata, this.#basename(path), path)
+        .renderFor(name, metadata, basenameOf(path), path)
         .tapErr(() => this.#guard.release(path));
       if (content !== "") {
         yield* this.#notes.write(path, content).tapErr(() => this.#guard.release(path));
@@ -131,7 +126,7 @@ export class NoteCreationService {
       // first, then attach frontmatter last — matching ensureNote's order.
       const existing = yield* this.#notes.read(path);
       if (existing.trim() === "") {
-        const content = yield* this.#content.renderFor(name, metadata, this.#basename(path), path);
+        const content = yield* this.#content.renderFor(name, metadata, basenameOf(path), path);
         if (content !== "") yield* this.#notes.write(path, content);
       }
       yield* this.#notes.updateFrontmatter(path, mutator);

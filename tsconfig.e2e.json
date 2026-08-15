@@ -1,5 +1,5 @@
 {
-  "extends": "@tsconfig/node20/tsconfig.json",
+  "extends": "@tsconfig/node22/tsconfig.json",
   "include": ["wdio.conf.mts", "e2e/**/*.ts", "src/i18n/paraglide/**/*.js"],
   "compilerOptions": {
     "composite": true,

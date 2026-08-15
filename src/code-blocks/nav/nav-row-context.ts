@@ -2,9 +2,18 @@ import { match } from "ts-pattern";
 
 import { CalendarDate, relativeDate, type AnchorString, type PeriodKind } from "@/calendar";
 import { m } from "@/i18n";
-import { Option } from "@/infrastructure/result";
-import type { CycleService, JournalConfig, JournalEntry, NumberingService, JournalWrite } from "@/journals";
-import { TemplateContext } from "@/templates";
+import { basenameOf } from "@/infrastructure/host";
+import type { Option } from "@/infrastructure/result";
+import type {
+  CycleService,
+  JournalConfig,
+  JournalEntry,
+  JournalMetadata,
+  NotePathService,
+  NumberingService,
+  JournalWrite,
+} from "@/journals";
+import type { TemplateContext } from "@/templates";
 
 export interface NavRowContextInputs {
   readonly journal: JournalConfig;
@@ -12,6 +21,7 @@ export interface NavRowContextInputs {
   readonly entry: Option<JournalEntry>;
   readonly cycle: CycleService;
   readonly numbering: NumberingService;
+  readonly notePath: NotePathService;
   readonly today: AnchorString;
 }
 
@@ -44,34 +54,32 @@ function customRelativeDate(name: string, cycle: CycleService, refDate: AnchorSt
 }
 
 export function buildNavRowContext(inputs: NavRowContextInputs): TemplateContext {
-  const { journal, refDate, entry, cycle, numbering, today } = inputs;
-  const refCalendarDate = CalendarDate.fromAnchor(refDate);
-  const renderDate = cycle.representativeOf(journal.name, refDate).getOr(refCalendarDate);
-  const startDate = cycle.startOf(journal.name, refDate).getOr(refCalendarDate);
-  const endDate = cycle.endOf(journal.name, refDate).getOr(refCalendarDate);
+  const { journal, refDate, entry, cycle, numbering, notePath, today } = inputs;
   const periodKind = fixedPeriodKindFor(journal.write);
   const relative =
     periodKind === null
       ? customRelativeDate(journal.name, cycle, refDate, today)
       : relativeDate(periodKind, refDate, today);
 
-  let context = TemplateContext.empty()
-    .date("date", renderDate, journal.dateFormat)
-    .date("start_date", startDate, journal.dateFormat)
-    .date("end_date", endDate, journal.dateFormat)
-    .string("relative_date", relative)
-    .string("journal_name", journal.name);
-
   // A note's stored numbers are authoritative (manual extension/renumber); fall back to the
   // computed numbering so the row resolves the index even before the note exists.
   const numbers =
     entry.isSome() && entry.value.numbers
-      ? Option.some(entry.value.numbers)
-      : numbering.assignNumbers(journal.name, refDate);
-  if (numbers.isSome()) {
-    for (const [variable, value] of Object.entries(numbers.value)) {
-      if (typeof value === "number") context = context.number(variable, value);
-    }
-  }
-  return context;
+      ? entry.value.numbers
+      : numbering.assignNumbers(journal.name, refDate).getOrUndefined();
+  const metadata: JournalMetadata = { journalName: journal.name, anchor: refDate, ...(numbers && { numbers }) };
+
+  // A row names the note it opens, so an existing note is named as it actually is — renamed,
+  // or created under a name template the journal has since changed. Only a note that does not
+  // exist yet is named by rendering the template.
+  const noteName = entry.isSome() ? basenameOf(entry.value.path) : notePath.noteNameFor(journal, metadata);
+  const noteSpec = { kind: "string", value: noteName } as const;
+
+  // Sharing the note's own render context is what keeps a row's variables in step with the
+  // note's — the date trio, the numbering fallbacks and the render-time clock included.
+  return notePath
+    .contextFor(journal, metadata)
+    .string("relative_date", relative)
+    .withSpec("note_name", noteSpec)
+    .withSpec("title", noteSpec);
 }

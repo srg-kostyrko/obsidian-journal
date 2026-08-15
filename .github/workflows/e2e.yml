@@ -37,10 +37,10 @@ jobs:
       WDIO_SUITES: ${{ (github.event_name == 'schedule') && '' || '--suite smoke --suite integration --suite migration --suite interop --suite journeys' }}
 
     steps:
-      - uses: actions/checkout@v5
+      - uses: actions/checkout@v7
 
       - name: Use Node.js
-        uses: actions/setup-node@v5
+        uses: actions/setup-node@v7
         with:
           node-version: "24.x"
           cache: npm

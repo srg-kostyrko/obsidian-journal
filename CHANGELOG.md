@@ -6,6 +6,8 @@ All notable changes to this project will be documented in this file.
 
 ### Bug Fixes
 
+- Navigation block rows — including the custom-interval list in a view — now render `{{note_name}}` and `{{title}}`. A row shows the name of the note it opens, or the name that note would get for a period whose note does not exist yet.
+- `{{current_date}}`, `{{time}}` and `{{current_time}}` now resolve in navigation block rows; the variable reference listed them, but they came out as literal text.
 - A week configuration arriving from sync now re-anchors weekly notes on the receiving device, the same way changing it on that device does; previously the calendar moved but the notes did not, so their cells read as empty and the open-this-week command could start a second note for the week.
 
 ## [3.0.0] - 2026-08-14
