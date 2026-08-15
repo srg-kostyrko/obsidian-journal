@@ -99,12 +99,18 @@ the fix has to be in the code.
 User-facing copy goes in `messages/en.json`, not in the generated
 `src/i18n/paraglide` output. Sentence case, en-US.
 
-The other ten locale files are hand-authored, not machine-translated — there
-is no `translate:i18n` script (see `docs/i18n-glossary.md`). `check:i18n` has
-no key-parity check, so adding a key to `en.json` alone passes every gate
-while the string silently falls back to English in the other ten locales
-until someone translates it by hand. Leave the other locale files alone in
-your pull request; the maintainer adds the translation separately.
+Add the key to the other ten locale files in the same pull request. `check:i18n`
+has no key-parity check, so `en.json` alone passes every gate while the string
+silently falls back to English everywhere else — nothing will tell you, or the
+maintainer, that a locale has gone stale.
+
+There is no `translate:i18n` script and no bulk translator: read
+[`docs/i18n-glossary.md`](docs/i18n-glossary.md) first, reuse its canonical
+terms, and match the register and quoting of the keys around the one you are
+adding. That file records what a context-free pipeline shipped to production
+and why it was removed. If you cannot translate a locale responsibly, say so in
+the PR and leave that file to the maintainer — an honest gap beats a plausible
+wrong word, which is the failure mode the glossary exists to prevent.
 
 ## AI-assisted contributions
 
