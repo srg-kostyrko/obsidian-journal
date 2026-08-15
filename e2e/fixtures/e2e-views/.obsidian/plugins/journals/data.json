@@ -82,6 +82,17 @@
             "color": { "type": "theme", "name": "text-normal" },
             "background": { "type": "transparent" },
             "addDecorations": false
+          },
+          {
+            "template": "Note: {{note_name}}",
+            "fontSize": 1,
+            "bold": false,
+            "italic": false,
+            "link": "none",
+            "journal": "",
+            "color": { "type": "theme", "name": "text-normal" },
+            "background": { "type": "transparent" },
+            "addDecorations": false
           }
         ]
       }

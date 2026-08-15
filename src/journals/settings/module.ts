@@ -22,7 +22,9 @@ export const journalsSettingsModule: Module = {
     c.register(DashboardBlockToken).useValue(
       defineDashboardBlock({ key: "colliding-journals", component: CollidingJournalsBlock, order: 2 }),
     );
-    c.register(WeekPresetService).useClass(WeekPresetService);
+    // Eager: it subscribes to the settings reload seam, which fires whether or not anyone has
+    // opened the preset picker that resolves it through WeekPresetApplierToken.
+    c.register(WeekPresetService).useClass(WeekPresetService).eager();
     c.register(WeekPresetApplierToken).useFactory(() => inject(WeekPresetService));
   },
 };

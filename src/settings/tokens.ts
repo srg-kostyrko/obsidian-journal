@@ -5,6 +5,10 @@ import type { DashboardBlock, AnySubpage } from "./ui/schema";
 import type { Emitter } from "nanoevents";
 
 export interface SettingsEvents {
+  // Fired while the previous state is still live, so a listener whose data is only
+  // interpretable under it (the week grid, and every anchor written against it) can read
+  // what it needs before the incoming data.json overwrites the slices.
+  reloading: () => void;
   reloaded: () => void;
 }
 

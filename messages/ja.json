@@ -1774,7 +1774,7 @@
 	"journal_edit_variable_journal_link_description": "テンプレートファイルの中では、このノートの日付に対応する別のジャーナルのノートのパスに解決されます。リンクや埋め込み（例: ![[ … ]]）で自分で囲み、+1w のような日付修飾子を付けると隣接する期間を指せます。",
 	"journal_edit_variable_journal_name_description": "ジャーナル名（ここでは {name}）。",
 	"journal_edit_variable_non_invertible_warning": "ここでこれを使用すると、ジャーナルがファイル名から日付を復元できなくなります。",
-	"journal_edit_variable_note_name_description": "作成されるノートの名前。",
+	"journal_edit_variable_note_name_description": "この期間のノートの名前。",
 	"journal_edit_variable_note_title_description": "ノート名のエイリアスで、コアプラグイン「テンプレート」の変数に対応します。",
 	"journal_edit_variable_numbering_description": "設定した番号付け変数（連番セクションを参照）。",
 	"journal_edit_variable_reference_intro": "使用できる変数。明示的な形式を指定しない場合、日付形式は{dateFormat}になります。",

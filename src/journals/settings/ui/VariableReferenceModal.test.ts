@@ -85,7 +85,7 @@ describe("VariableReferenceModal — rules table", () => {
       expect(screen.queryByText("{{title}}")).toBeNull();
     });
 
-    it.each(["folder-path", "template-path"] as const)("renders note_name and title in %s", (context) => {
+    it.each(["folder-path", "template-path", "nav-row"] as const)("renders note_name and title in %s", (context) => {
       renderModal({ context });
       expect(screen.getByText("{{note_name}}")).toBeTruthy();
       expect(screen.getByText("{{title}}")).toBeTruthy();

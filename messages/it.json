@@ -1971,7 +1971,7 @@
 	"journal_edit_variable_journal_link_description": "All'interno del contenuto di un file modello, restituisce il percorso della nota di un altro diario per la data di questa nota. Inseriscilo tu stesso in un collegamento o in un embed (ad esempio ![[ … ]]) e aggiungi modificatori di data come +1w per puntare a un periodo adiacente.",
 	"journal_edit_variable_journal_name_description": "Il nome del diario (qui: {name}).",
 	"journal_edit_variable_non_invertible_warning": "Usarlo qui impedisce al diario di ricavare la data dal nome del file.",
-	"journal_edit_variable_note_name_description": "Il nome della nota che si sta creando.",
+	"journal_edit_variable_note_name_description": "Il nome della nota di questo periodo.",
 	"journal_edit_variable_note_title_description": "Alias del nome della nota, per supportare la variabile del plugin principale \"Modelli\".",
 	"journal_edit_variable_numbering_description": "La variabile di numerazione configurata (vedere la sezione Sequenza).",
 	"journal_edit_variable_reference_intro": "Variabili disponibili. Il formato della data predefinito è {dateFormat} quando non viene specificato alcun formato esplicito.",
