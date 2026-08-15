@@ -138,8 +138,10 @@ Each journal can be configured separately with these settings:
   - A live **preview** shows the next five note names the current configuration produces
   - A note named only by its digits (no date anywhere in the name or folder) can still auto-attach
     to its journal, but only when the slowest digit is Continuous **and** every digit appears in
-    the name or folder template. If the slowest digit resets, its numbers repeat forever and
-    cannot be turned back into a date, so the note creation section warns about it specifically
+    the name or folder template. When it can't, the note creation and sequence sections warn with
+    the specific reason: which digits the template leaves out, which digit resets and so repeats
+    its numbers forever, or which digit below the slowest never resets and so freezes every digit
+    above it
 
   For example, a name template of `Release{{release}}Sprint{{sprint}}` with `release` starting at
   4711 (Continuous) and `sprint` starting at 1 (6 per release) produces `Release4711Sprint1` …

@@ -6,7 +6,7 @@ import { reactive } from "vue";
 
 import { Calendar, DayPeriod, type AnchorString } from "@/calendar";
 import { date, installTestCalendar, testCalendar } from "@/calendar/testing";
-import { m } from "@/i18n";
+import { formatConjunction, m } from "@/i18n";
 import { Container, provideInjectorOnApp } from "@/infrastructure/di";
 import { Flows } from "@/infrastructure/flows";
 import { InputSuggestService, NotesService, TemplaterService, NoticeService } from "@/infrastructure/host";
@@ -281,6 +281,20 @@ describe("SequenceSection", () => {
       await userEvent.click(screen.getByText(m.journal_edit_section_sequential_numbers()));
 
       expect(await screen.findByText(m.journal_edit_name_template_cyclic_top_warning())).toBeTruthy();
+    });
+
+    it("names the digits the template leaves out", async () => {
+      mount({
+        nameTemplate: "Sprint {{sprint}}",
+        numbering: enabledNumbering(["release", "sprint"]),
+      });
+      await userEvent.click(screen.getByText(m.journal_edit_section_sequential_numbers()));
+
+      expect(
+        await screen.findByText(
+          m.journal_edit_name_template_unused_digits_warning({ missing: formatConjunction(["release"]) }),
+        ),
+      ).toBeTruthy();
     });
 
     it("shows no warning once the template covers every numbering variable", async () => {

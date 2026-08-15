@@ -3,7 +3,7 @@ import { computed, ref } from "vue";
 
 import type { AnchorString } from "@/calendar";
 import { DatePicker, useAnchorField, type Picking } from "@/calendar/ui";
-import { m } from "@/i18n";
+import { formatConjunction, m } from "@/i18n";
 import { useService } from "@/infrastructure/di";
 import { Flows } from "@/infrastructure/flows";
 import { icons } from "@/ui/icons";
@@ -156,8 +156,13 @@ function summaryFor(sourceIndex: number): string {
         <template v-else-if="invertibility.kind === 'cyclic-top'">
           {{ m.journal_edit_name_template_cyclic_top_warning() }}
         </template>
+        <template v-else-if="invertibility.kind === 'no-carry'">
+          {{ m.journal_edit_name_template_no_carry_warning(invertibility) }}
+        </template>
         <template v-else>
-          {{ m.journal_edit_name_template_no_anchor_warning() }}
+          {{
+            m.journal_edit_name_template_unused_digits_warning({ missing: formatConjunction(invertibility.missing) })
+          }}
         </template>
       </div>
 

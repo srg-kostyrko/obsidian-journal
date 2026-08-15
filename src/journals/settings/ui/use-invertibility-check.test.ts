@@ -129,7 +129,7 @@ describe("useInvertibilityCheck", () => {
     expect(warning.value).toBeNull();
   });
 
-  it("reports no-anchor when an invertible digit is missing from the template", () => {
+  it("names the digits missing from the template", () => {
     const config = withName("Sprint{{sprint}}");
     config.numbering = {
       enabled: true,
@@ -141,6 +141,66 @@ describe("useInvertibilityCheck", () => {
       ],
     };
     const { warning } = probe(ref(config));
-    expect(warning.value).toEqual({ kind: "no-anchor" });
+    expect(warning.value).toEqual({ kind: "unused-digits", missing: ["release"] });
+  });
+
+  it("counts a digit used only in the folder as present", () => {
+    const config = fixedJournal("daily", { type: "day" }, { nameTemplate: "Sprint{{sprint}}", folder: "R{{release}}" });
+    config.numbering = {
+      enabled: true,
+      anchorDate: "2026-01-05" as AnchorString,
+      allowBefore: false,
+      sources: [
+        { variable: "release", frontmatterKey: "journal-release", anchorValue: 4711, reset: { kind: "never" } },
+        { variable: "sprint", frontmatterKey: "journal-sprint", anchorValue: 1, reset: { kind: "after", count: 6 } },
+      ],
+    };
+    const { warning } = probe(ref(config));
+    expect(warning.value).toBeNull();
+  });
+
+  it("names the digit that emits no carry", () => {
+    const config = withName("Release{{release}}Sprint{{sprint}}");
+    config.numbering = {
+      enabled: true,
+      anchorDate: "2026-01-05" as AnchorString,
+      allowBefore: false,
+      sources: [
+        { variable: "release", frontmatterKey: "journal-release", anchorValue: 4711, reset: { kind: "never" } },
+        { variable: "sprint", frontmatterKey: "journal-sprint", anchorValue: 1, reset: { kind: "never" } },
+      ],
+    };
+    const { warning } = probe(ref(config));
+    expect(warning.value).toEqual({ kind: "no-carry", offending: "sprint" });
+  });
+
+  it("reports the cyclic first digit ahead of a lower digit that emits no carry", () => {
+    const config = withName("Release{{release}}Sprint{{sprint}}");
+    config.numbering = {
+      enabled: true,
+      anchorDate: "2026-01-05" as AnchorString,
+      allowBefore: false,
+      sources: [
+        { variable: "release", frontmatterKey: "journal-release", anchorValue: 1, reset: { kind: "after", count: 4 } },
+        { variable: "sprint", frontmatterKey: "journal-sprint", anchorValue: 1, reset: { kind: "never" } },
+      ],
+    };
+    const { warning } = probe(ref(config));
+    expect(warning.value).toEqual({ kind: "cyclic-top" });
+  });
+
+  it("stays silent while sequential numbers are turned off", () => {
+    const config = withName("Sprint{{sprint}}");
+    config.numbering = {
+      enabled: false,
+      anchorDate: "2026-01-05" as AnchorString,
+      allowBefore: false,
+      sources: [
+        { variable: "release", frontmatterKey: "journal-release", anchorValue: 4711, reset: { kind: "never" } },
+        { variable: "sprint", frontmatterKey: "journal-sprint", anchorValue: 1, reset: { kind: "after", count: 6 } },
+      ],
+    };
+    const { warning } = probe(ref(config));
+    expect(warning.value).toBeNull();
   });
 });

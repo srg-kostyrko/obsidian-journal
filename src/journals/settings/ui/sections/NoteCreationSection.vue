@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { computed, ref } from "vue";
 
-import { m } from "@/i18n";
+import { formatConjunction, m } from "@/i18n";
 import { useService } from "@/infrastructure/di";
 import VariableChip from "@/templates/ui/VariableChip.vue";
 import I18nWithSlot from "@/ui/I18nWithSlot.vue";
@@ -77,8 +77,13 @@ function applyDateFormatRecommendation(): void {
           <template v-else-if="invertibility.kind === 'cyclic-top'">
             {{ m.journal_edit_name_template_cyclic_top_warning() }}
           </template>
+          <template v-else-if="invertibility.kind === 'no-carry'">
+            {{ m.journal_edit_name_template_no_carry_warning(invertibility) }}
+          </template>
           <template v-else>
-            {{ m.journal_edit_name_template_no_anchor_warning() }}
+            {{
+              m.journal_edit_name_template_unused_digits_warning({ missing: formatConjunction(invertibility.missing) })
+            }}
           </template>
         </div>
         <div v-if="config.nameTemplate.includes('/')" class="journal-recommendation">
