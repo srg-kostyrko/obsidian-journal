@@ -168,4 +168,60 @@ describe("EditNumberingDigitModal", () => {
     await userEvent.click(screen.getByText(m.common_action_cancel()));
     expect(cancel).toHaveBeenCalledTimes(1);
   });
+
+  it("rejects a corrupted non-top digit's count below 2 even though its stored reset is never", async () => {
+    const corrupted: DigitFixture[] = [
+      { variable: "index", frontmatterKey: "journal-index", anchorValue: 1, reset: { kind: "never" } },
+      { variable: "sprint", frontmatterKey: "journal-sprint", anchorValue: 1, reset: { kind: "never" } },
+    ];
+    const { submit } = await mountModal("daily", corrupted, 1);
+    const [countInput] = screen.getAllByRole<HTMLInputElement>("spinbutton").slice(1);
+    await userEvent.clear(countInput);
+    await userEvent.type(countInput, "1");
+    await userEvent.click(screen.getByText(m.common_action_submit()));
+
+    await waitFor(() => {
+      expect(screen.getByText(m.journal_sequence_count_min())).toBeTruthy();
+    });
+    expect(submit).not.toHaveBeenCalled();
+  });
+
+  describe("property key default", () => {
+    it("fills a new digit's property key from the variable name as it is typed", async () => {
+      await mountModal("daily", [twoDigits[0]], undefined);
+      const [variableInput, keyInput] = screen.getAllByRole<HTMLInputElement>("textbox");
+      await userEvent.type(variableInput, "sprint");
+
+      await waitFor(() => {
+        expect(keyInput.value).toBe("journal-sprint");
+      });
+    });
+
+    it("stops tracking the variable once the property key is edited by hand", async () => {
+      await mountModal("daily", [twoDigits[0]], undefined);
+      const [variableInput, keyInput] = screen.getAllByRole<HTMLInputElement>("textbox");
+      await userEvent.type(variableInput, "sprint");
+      await waitFor(() => expect(keyInput.value).toBe("journal-sprint"));
+
+      await userEvent.clear(keyInput);
+      await userEvent.type(keyInput, "custom-key");
+      await userEvent.type(variableInput, "2");
+
+      await waitFor(() => {
+        expect(keyInput.value).toBe("custom-key");
+      });
+    });
+
+    it("does not overwrite an existing digit's property key when its variable is renamed", async () => {
+      await mountModal("daily", twoDigits, 1);
+      const [variableInput, keyInput] = screen.getAllByRole<HTMLInputElement>("textbox");
+      await userEvent.clear(variableInput);
+      await userEvent.type(variableInput, "cycle");
+
+      await waitFor(() => {
+        expect(variableInput.value).toBe("cycle");
+      });
+      expect(keyInput.value).toBe("journal-sprint");
+    });
+  });
 });

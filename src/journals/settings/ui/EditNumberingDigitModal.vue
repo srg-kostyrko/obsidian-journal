@@ -2,7 +2,7 @@
 import { toTypedSchema } from "@vee-validate/valibot";
 import * as v from "valibot";
 import { useForm } from "vee-validate";
-import { computed } from "vue";
+import { computed, ref, watch } from "vue";
 
 import { m } from "@/i18n";
 import { useService } from "@/infrastructure/di";
@@ -37,6 +37,15 @@ const takenVariables = computed(() =>
 const takenKeys = computed(() =>
   sources.value.filter((_, i) => i !== props.sourceIndex).map((source) => source.frontmatterKey),
 );
+
+// isTopDigit gates only which control renders — a non-top digit's resetKind field can still
+// carry a stale "never" from a value the schema deliberately does not police (a hand-edited
+// config, or sources changing reactively while the modal is open). Both the count-required
+// validation and the submitted reset must agree on the same test, or a corrupted non-top
+// digit can pass validation while submitting a count-less reset.
+function willReset(resetKind: "after" | "never"): boolean {
+  return !(isTopDigit.value && resetKind === "never");
+}
 
 const { defineField, errorBag, handleSubmit, values } = useForm({
   initialValues: {
@@ -75,7 +84,7 @@ const { defineField, errorBag, handleSubmit, values } = useForm({
         resetCount: v.pipe(v.number(), v.integer()),
       }),
       v.forward(
-        v.check((entered) => entered.resetKind !== "after" || entered.resetCount >= 2, m.journal_sequence_count_min()),
+        v.check((entered) => !willReset(entered.resetKind) || entered.resetCount >= 2, m.journal_sequence_count_min()),
         ["resetCount"],
       ),
     ),
@@ -88,19 +97,24 @@ const [anchorValue] = defineField("anchorValue");
 const [resetKind] = defineField("resetKind");
 const [resetCount] = defineField("resetCount");
 
+// Only a new digit's key auto-fills, and only until the user edits it themselves — an
+// existing digit's key is never overwritten from a variable rename.
+const keyTouched = ref(current.value !== undefined);
+function onFrontmatterKeyInput(value: string | undefined): void {
+  keyTouched.value = true;
+  frontmatterKey.value = value ?? "";
+}
+watch(variable, (value) => {
+  if (keyTouched.value) return;
+  frontmatterKey.value = value ? `journal-${value}` : "";
+});
+
 const onSubmit = handleSubmit((entered) =>
   api.submit({
     variable: entered.variable,
     frontmatterKey: entered.frontmatterKey,
     anchorValue: entered.anchorValue,
-    // isTopDigit gates only which control renders — a non-top digit's resetKind field can
-    // still carry a stale "never" from a value the schema deliberately does not police
-    // (a hand-edited config, or sources changing reactively while the modal is open), so the
-    // invariant is enforced here rather than trusted from the field.
-    reset:
-      isTopDigit.value && entered.resetKind === "never"
-        ? { kind: "never" }
-        : { kind: "after", count: entered.resetCount },
+    reset: willReset(entered.resetKind) ? { kind: "after", count: entered.resetCount } : { kind: "never" },
   }),
 );
 </script>
@@ -147,7 +161,11 @@ const onSubmit = handleSubmit((entered) =>
       <template #description>
         <span v-for="error of errorBag.frontmatterKey" :key="error" class="journal-form-error">{{ error }}</span>
       </template>
-      <UiTextInput v-model="frontmatterKey" v-bind="frontmatterKeyAttrs" />
+      <UiTextInput
+        :model-value="frontmatterKey"
+        v-bind="frontmatterKeyAttrs"
+        @update:model-value="onFrontmatterKeyInput"
+      />
     </UiSettingRow>
 
     <UiSettingRow controls-only>
