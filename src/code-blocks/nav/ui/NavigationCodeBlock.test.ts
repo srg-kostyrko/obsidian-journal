@@ -97,9 +97,9 @@ class FakeWorkspace {
 }
 
 class FakeFlows {
-  calls: { parameters: unknown }[] = [];
-  invoke(_flow: unknown, parameters: unknown) {
-    this.calls.push({ parameters });
+  calls: { flow: unknown; parameters: unknown }[] = [];
+  invoke(flow: unknown, parameters: unknown) {
+    this.calls.push({ flow, parameters });
     return AsyncResult.ok({ path: "x" as VaultPath, created: false });
   }
 }
@@ -233,6 +233,14 @@ function quarterlyWithNote(): Record<string, JournalConfig> {
 function renderNavWithSegment(overrides: Partial<NavBlockSegment>) {
   return mountWithLines([[navSegment(overrides)]], quarterlyWithNote(), (h) => {
     h.shelves.shelves = [{ name: "main", journals: ["yearly", "quarterly"] }];
+  });
+}
+
+function seedQuarterlyNote(h: Harness): void {
+  h.index.byAnchor.set("quarterly::2025-04-01", {
+    journalName: "quarterly",
+    anchor: "2025-04-01" as AnchorString,
+    path: "Quarterly/2025-Q2.md" as VaultPath,
   });
 }
 
@@ -718,17 +726,16 @@ describe("NavigationCodeBlock row click routing", () => {
     const target = screen.getAllByText("Q2")[1];
     if (target) await user.click(target);
 
-    const parameters = h.flows.calls[0]?.parameters as { anchor: string };
+    expect(h.flows.calls).toHaveLength(1);
+    expect(h.flows.calls[0]?.flow).toBe(OpenDateFlow);
+    const parameters = h.flows.calls[0]?.parameters as { anchor: string; journalNames: string[] };
     expect(parameters.anchor).toBe("2025-04-01");
+    expect(parameters.journalNames).toEqual(["quarterly"]);
   });
 
   it("resolves the shifted date's paths for the context menu", async () => {
     const h = renderNavWithSegment({ link: "quarter", linkDate: "+1q", template: "{{date+1q:[Q]Q}}" });
-    h.index.byAnchor.set("quarterly::2025-04-01", {
-      journalName: "quarterly",
-      anchor: "2025-04-01" as AnchorString,
-      path: "Quarterly/2025-Q2.md" as VaultPath,
-    });
+    seedQuarterlyNote(h);
 
     const target = screen.getAllByText("Q2")[1];
     if (target) await fireEvent.contextMenu(target);
@@ -738,11 +745,7 @@ describe("NavigationCodeBlock row click routing", () => {
 
   it("previews the shifted date's note on modifier hover", async () => {
     const h = renderNavWithSegment({ link: "quarter", linkDate: "+1q", template: "{{date+1q:[Q]Q}}" });
-    h.index.byAnchor.set("quarterly::2025-04-01", {
-      journalName: "quarterly",
-      anchor: "2025-04-01" as AnchorString,
-      path: "Quarterly/2025-Q2.md" as VaultPath,
-    });
+    seedQuarterlyNote(h);
 
     const target = screen.getAllByText("Q2")[1];
     if (target) await fireEvent.pointerEnter(target, { ctrlKey: true });
