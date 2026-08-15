@@ -1,4 +1,4 @@
-export { Calendar, dayOfMonthOrdinalParse, localeData, localMoment } from "./calendar";
+export { Calendar, dayOfMonthOrdinalParse, localeData, localMoment, ordinalFor } from "./calendar";
 export { CalendarDate } from "./calendar-date";
 export { Clock } from "./clock";
 export { Interval } from "./interval";

@@ -60,6 +60,12 @@ describe("VariableReferenceModal — rules table", () => {
       expect(screen.getByText("{{page_no}}")).toBeTruthy();
     });
 
+    it("renders a modifications link on each numbering row", () => {
+      renderModal({ context, numberingVariableNames: ["week_no", "page_no"] });
+      const links = screen.getAllByRole("link", { name: /additional modifications/i });
+      expect(links.length).toBe(6);
+    });
+
     it("renders current_date", () => {
       renderModal({ context });
       expect(screen.getByText("{{current_date}}")).toBeTruthy();

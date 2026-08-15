@@ -28,3 +28,40 @@ describe("auto-attach with an index-only template", () => {
     expect(frontmatter?.["journal-index"]).toBe(4);
   });
 });
+
+// The same fixture carries two more index-only journals whose name templates exercise the
+// number modifications: `PI {{index+3}}` and `Cycle {{index:o}}`. Both share the sprint's
+// 2-week cycle (anchorDate 2026-01-05, anchorValue 1), so index 3 is 2026-02-02. Neither
+// template holds a date variable — with one, the anchor would come from the date and the
+// numbering inversion would never run.
+describe("auto-attach with an offset index template", () => {
+  before(async () => {
+    await browser.reloadObsidian({ vault: "./e2e/fixtures/e2e-sprint-index", plugins: ["journals"] });
+  });
+
+  it("subtracts the offset before reversing the index to an anchor date", async () => {
+    await createNote("PI 6.md");
+
+    // A rendered 6 is index 3, two 2-week steps past anchorValue 1. Without the offset
+    // unapplied it reads as index 6 — five steps — and attaches at 2026-03-16.
+    await waitForJournalFrontmatter("PI 6.md", { journal: "pi", date: "2026-02-02" });
+  });
+
+  it("records the offset-corrected index as numbering frontmatter", async () => {
+    await createNote("PI 8.md");
+    await waitForJournalFrontmatter("PI 8.md", { journal: "pi", date: "2026-03-02" });
+
+    const frontmatter = await frontmatterOf("PI 8.md");
+
+    expect(frontmatter?.["journal-index"]).toBe(5);
+  });
+
+  it("reverses an ordinal index to an anchor date", async () => {
+    await createNote("Cycle 3rd.md");
+    await waitForJournalFrontmatter("Cycle 3rd.md", { journal: "cycle", date: "2026-02-02" });
+
+    const frontmatter = await frontmatterOf("Cycle 3rd.md");
+
+    expect(frontmatter?.["journal-index"]).toBe(3);
+  });
+});

@@ -40,6 +40,11 @@ export function tokenize(template: string): TokenStream {
 const NAME_PREFIX_RE = /^([a-zA-Z_][a-zA-Z0-9_]*)/;
 const ARITH_PREFIX_RE = /^([+-]\d+[a-z])/;
 const BOUNDARY_PREFIX_RE = /^(<[a-zA-Z]+=[a-zA-Z]+>)/;
+// The `\d` in the lookahead is load-bearing: for a maximal digit run, ARITH_PREFIX_RE
+// matches iff the next character is a letter and this matches iff it is not, so the two
+// are mutually exclusive. Weakened to `(?![a-z])`, `\d+` backtracks one digit and `+34d`
+// matches as an offset of `+3`, dropping every multi-digit date shift.
+const OFFSET_PREFIX_RE = /^([+-]\d+)(?![\da-z])/;
 
 function parseTokenInner(inner: string, raw: string): Token | undefined {
   let rest = inner.trim();
@@ -64,6 +69,7 @@ function parseTokenInner(inner: string, raw: string): Token | undefined {
   while (rest.length > 0 && !rest.startsWith(":") && !rest.startsWith("}")) {
     const arithMatch = ARITH_PREFIX_RE.exec(rest);
     const boundaryMatch = BOUNDARY_PREFIX_RE.exec(rest);
+    const offsetMatch = OFFSET_PREFIX_RE.exec(rest);
     if (arithMatch) {
       const modifierText = arithMatch[1];
       const modifierParts = MODIFIER_RE.exec(modifierText);
@@ -87,6 +93,14 @@ function parseTokenInner(inner: string, raw: string): Token | undefined {
         unit: boundaryParts[2],
       });
       rest = rest.slice(boundaryText.length).trimStart();
+    } else if (offsetMatch) {
+      const offsetText = offsetMatch[1];
+      modifiers.push({
+        kind: "offset",
+        sign: offsetText.startsWith("+") ? 1 : -1,
+        amount: Number.parseInt(offsetText.slice(1), 10),
+      });
+      rest = rest.slice(offsetText.length).trimStart();
     } else {
       return undefined; // unparsable junk
     }

@@ -72,5 +72,13 @@ const boundaryUnits = [
         <VariableChip name="date+1w<startOf=week>:MMM DD, YYYY" />
       </I18nWithSlot>
     </p>
+
+    <h4>{{ m.variable_modifications_number_heading() }}</h4>
+    <p>{{ m.variable_modifications_number_body() }}</p>
+    <p>
+      <I18nWithSlot :message="m.variable_modifications_number_example">
+        <VariableChip name="index+3:o" />
+      </I18nWithSlot>
+    </p>
   </div>
 </template>

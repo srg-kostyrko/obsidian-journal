@@ -36,6 +36,28 @@ describe("kinds", () => {
     it("formats with toString", () => {
       expect(renderNumber({ kind: "number", value: 42 })).toBe("42");
     });
+
+    it("applies an offset before rendering", () => {
+      const mods: Modifier[] = [{ kind: "offset", sign: 1, amount: 3 }];
+      expect(renderNumber({ kind: "number", value: 4 }, mods)).toBe("7");
+    });
+
+    it("renders an ordinal for the o format", () => {
+      expect(renderNumber({ kind: "number", value: 4 }, [], "o")).toBe("4th");
+    });
+
+    it("renders an ordinal past two digits", () => {
+      expect(renderNumber({ kind: "number", value: 102 }, [], "o")).toBe("102nd");
+    });
+
+    it("applies the offset before the ordinal", () => {
+      const mods: Modifier[] = [{ kind: "offset", sign: 1, amount: 3 }];
+      expect(renderNumber({ kind: "number", value: 4 }, mods, "o")).toBe("7th");
+    });
+
+    it("renders zero as an ordinal", () => {
+      expect(renderNumber({ kind: "number", value: 0 }, [], "o")).toBe("0th");
+    });
   });
 
   describe("renderDate", () => {
@@ -85,6 +107,29 @@ describe("kinds", () => {
       };
       const pattern = patternForKind(spec);
       expect(new RegExp(`^${pattern}$`).test("2022-01-01")).toBe(true);
+    });
+
+    it("matches a plain integer for a number with no format", () => {
+      const pattern = new RegExp(`^${patternForKind({ kind: "number", value: 0 })}$`);
+      expect(pattern.test("42")).toBe(true);
+      expect(pattern.test("42nd")).toBe(false);
+    });
+
+    it("matches an ordinal for the o format", () => {
+      const pattern = new RegExp(`^${patternForKind({ kind: "number", value: 0 }, "o")}$`);
+      expect(pattern.test("3rd")).toBe(true);
+    });
+
+    // The suffix is optional so a locale whose ordinal() degrades to a bare number (e.g. az/kk/ky/tg
+    // on negatives, cy/ka on zero) still round-trips; the accepted cost is also matching a plain number.
+    it("also matches a bare number for the o format", () => {
+      const pattern = new RegExp(`^${patternForKind({ kind: "number", value: 0 }, "o")}$`);
+      expect(pattern.test("3")).toBe(true);
+    });
+
+    it("matches an ordinal past two digits", () => {
+      const pattern = new RegExp(`^${patternForKind({ kind: "number", value: 0 }, "o")}$`);
+      expect(pattern.test("100th")).toBe(true);
     });
   });
 

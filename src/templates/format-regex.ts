@@ -7,7 +7,7 @@ const locale = localeData();
 
 // .source strips the delimiters and the leading \d{1,2} (the day digits, matched by the D token).
 const ordinalRegexp = dayOfMonthOrdinalParse();
-const ordinalPattern =
+export const ordinalPattern =
   ordinalRegexp == null ? "(?:th|st|nd|rd)" : ordinalRegexp.source.replace(String.raw`\d{1,2}`, "");
 
 const formatRegExpParts = new Map<string, string>([

@@ -243,6 +243,9 @@ const GLOSSARY = {
 // term table cannot see. `startsWith` guards the single-character shift tokens
 // (a locale once rendered "d — days" as "д — дней"); `contains` guards enum values.
 const LITERALS = [
+  // `+N`, `-N` and `:o` are syntax the user types into a name template. `o` in
+  // particular reads as an abbreviation and invites translation.
+  { key: "variable_modifications_number_body", contains: ["+N", "-N", ":o"] },
   { pattern: /^variable_modifications_unit_(?<token>[a-z])$/, startsWith: (m) => m.groups.token },
   { key: "journal_edit_code_block_home_option_show", contains: ["day", "week", "month", "quarter", "year", "custom"] },
   { key: "journal_edit_code_block_home_option_scale", contains: ["scale:"] },

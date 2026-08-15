@@ -241,6 +241,11 @@ These variables can be used in the note name template, the folder path, and the 
 - `{{start_date}}` - first day of week, month, quarter, year or interval depending on note type, formatting rules are the same as in `{{date}}`, as well as the calculations
 - `{{end_date}}` - last day of week, month, quarter, year or interval depending on note type, formatting rules are the same as in `{{date}}`, as well as the calculations
 - `{{index}}` - the journal's numbering variable, which is named `index` by default. A journal can define several numbering variables under its own names, each with its own frontmatter property; the name you give it there is the name you use here. Numbering is on by default for custom-interval journals and can be enabled for any journal type.
+  A numbering variable can be offset and rendered as an ordinal: `{{index+3}}`
+  adds three to the rendered value, `{{index-1}}` subtracts one, and
+  `{{index:o}}` renders it as an ordinal ("4th"). They combine as
+  `{{index+3:o}}`. Both survive the round-trip out of a note name, so a journal
+  named `Sprint {{index+3}}` still recognizes its own notes.
 - `{{note_name}}` / `{{title}}` - the note's name. Available in the folder path, in template content and in navigation block rows, but not in the note name template itself, since the name has to render first. In a navigation block row it is the name of the note the row opens; for a period whose note does not exist yet, the name that note would get.
 - `{{current_date}}` - the date the note is rendered on (not the reference period), formatted with `{{current_date:format}}`
 - `{{current_time}}` / `{{time}}` - the clock time at render, formatted with `{{time:HH:mm}}`

@@ -26,6 +26,11 @@ describe("DateModificationsModal", () => {
     expect(screen.getByText("{{date+1w<startOf=week>:MMM DD, YYYY}}")).toBeTruthy();
   });
 
+  it("renders the number example chip", () => {
+    render(DateModificationsModal);
+    expect(screen.getByText("{{index+3:o}}")).toBeTruthy();
+  });
+
   it("lists every shift unit", () => {
     render(DateModificationsModal);
     for (const unit of ["d", "w", "m", "q", "y", "h"]) {

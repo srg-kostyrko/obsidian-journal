@@ -8,6 +8,7 @@ import { TemplateParseError } from "./errors";
 import { tokenize } from "./grammar";
 import { FunctionHandlerToken, type FunctionHandler } from "./handlers";
 import {
+  ORDINAL_FORMAT,
   parseDate,
   parseNumber,
   parseString,
@@ -17,7 +18,7 @@ import {
   renderNumber,
   renderString,
 } from "./kinds";
-import { isBoundaryUnit } from "./modifiers";
+import { isBoundaryUnit, unapplyOffsets } from "./modifiers";
 
 import type { TemplateContext } from "./context";
 import type { Bindings, BoundValue, Token, TokenStream, ValidationProblem, VariableSpec } from "./types";
@@ -44,14 +45,19 @@ export class TemplateEngine {
   #renderVariable(token: Extract<Token, { kind: "variable" }>, context: TemplateContext): string {
     const spec = context.get(token.name);
     if (!spec) return token.raw;
-    // Modifiers and :format are only meaningful on date/clock kinds.
-    // For string/number variables with either present, emit the raw token unchanged.
-    if (spec.kind !== "date" && spec.kind !== "clock" && (token.modifiers.length > 0 || token.format !== undefined)) {
+    if (spec.kind === "number") {
+      if (!isRenderableNumberToken(token)) return token.raw;
+    } else if (
+      // A string variable takes neither modifiers nor a format; emit the raw token unchanged.
+      spec.kind !== "date" &&
+      spec.kind !== "clock" &&
+      (token.modifiers.length > 0 || token.format !== undefined)
+    ) {
       return token.raw;
     }
     return match(spec)
       .with({ kind: "string" }, (s) => renderString(s))
-      .with({ kind: "number" }, (s) => renderNumber(s))
+      .with({ kind: "number" }, (s) => renderNumber(s, token.modifiers, token.format))
       .with({ kind: "date" }, (s) => renderDate(s, token.modifiers, token.format))
       .with({ kind: "clock" }, (s) => renderClock(s, token.modifiers, token.format))
       .exhaustive();
@@ -127,7 +133,9 @@ export class TemplateEngine {
       })
       .with({ kind: "number" }, () => {
         const result = parseNumber(capture, token.name);
-        return result.kind === "ok" ? ok({ kind: "number", value: result.value }) : err(result.error);
+        return result.kind === "ok"
+          ? ok({ kind: "number", value: unapplyOffsets(result.value, token.modifiers) })
+          : err(result.error);
       })
       .with({ kind: "date" }, (dateSpec) => {
         const format = token.format ?? dateSpec.defaultFormat;
@@ -250,7 +258,14 @@ export class TemplateEngine {
         position += token.raw.length;
         continue;
       }
-      if (spec.kind !== "date" && spec.kind !== "clock") {
+      if (spec.kind === "number") {
+        if (token.format !== undefined && token.format !== ORDINAL_FORMAT) {
+          problems.push({ token, position, problem: "unsupported-number-format" });
+        }
+        if (token.modifiers.some((modifier) => modifier.kind !== "offset")) {
+          problems.push({ token, position, problem: "modifiers-on-non-date" });
+        }
+      } else if (spec.kind !== "date" && spec.kind !== "clock") {
         if (token.format !== undefined) {
           problems.push({ token, position, problem: "format-on-non-date" });
         }
@@ -262,7 +277,9 @@ export class TemplateEngine {
         // not understand — leaving the date silently unsnapped rather than wrong in a way anyone
         // could see. This problem type was declared from the start and never raised.
         for (const modifier of token.modifiers) {
-          if (modifier.kind === "boundary" && !isBoundaryUnit(modifier.unit)) {
+          if (modifier.kind === "offset") {
+            problems.push({ token, position, problem: "offset-on-date" });
+          } else if (modifier.kind === "boundary" && !isBoundaryUnit(modifier.unit)) {
             problems.push({ token, position, problem: "unknown-unit" });
           }
         }
@@ -386,6 +403,13 @@ function fieldsAgree(fields: Set<DateField>, a: CalendarDate, b: CalendarDate): 
     if (a[field] !== b[field]) return false;
   }
   return true;
+}
+
+function isRenderableNumberToken(token: Extract<Token, { kind: "variable" }>): boolean {
+  return (
+    token.modifiers.every((modifier) => modifier.kind === "offset") &&
+    (token.format === undefined || token.format === ORDINAL_FORMAT)
+  );
 }
 
 function isWildcard(spec: VariableSpec | undefined): boolean {

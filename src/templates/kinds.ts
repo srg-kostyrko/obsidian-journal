@@ -1,18 +1,25 @@
-import { CalendarDate } from "@/calendar";
+import { CalendarDate, ordinalFor } from "@/calendar";
 import { Err, Ok, type Result } from "@/infrastructure/result";
 
 import { TemplateParseError } from "./errors";
-import { escapeRegexLiteral, formatToRegexp } from "./format-regex";
-import { applyModifiers, unapplyModifiers } from "./modifiers";
+import { escapeRegexLiteral, formatToRegexp, ordinalPattern } from "./format-regex";
+import { applyModifiers, applyOffsets, unapplyModifiers } from "./modifiers";
 
 import type { Modifier, VariableSpec } from "./types";
+
+export const ORDINAL_FORMAT = "o";
 
 export function renderString(spec: Extract<VariableSpec, { kind: "string" }>): string {
   return spec.value;
 }
 
-export function renderNumber(spec: Extract<VariableSpec, { kind: "number" }>): string {
-  return spec.value.toString();
+export function renderNumber(
+  spec: Extract<VariableSpec, { kind: "number" }>,
+  modifiers: readonly Modifier[] = [],
+  format?: string,
+): string {
+  const value = applyOffsets(spec.value, modifiers);
+  return format === ORDINAL_FORMAT ? ordinalFor(value) : value.toString();
 }
 
 export function renderDate(
@@ -41,7 +48,9 @@ export function patternForKind(spec: VariableSpec, format?: string): string {
       return escapeRegexLiteral(spec.value);
     }
     case "number": {
-      return String.raw`-?\d+`;
+      // The suffix is optional: a locale whose ordinal() degrades to a bare number (see
+      // ordinalFor) still round-trips, at the cost of also matching a plainly-numbered name.
+      return format === ORDINAL_FORMAT ? String.raw`-?\d+` + `(?:${ordinalPattern})?` : String.raw`-?\d+`;
     }
     case "date": {
       const effective = format ?? spec.defaultFormat;
