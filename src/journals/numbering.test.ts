@@ -428,6 +428,82 @@ describe("NumberingService", () => {
       expect(n.anchorForNumbers("s", { phase: 1, n: 5 }).isNone()).toBe(true);
     });
 
+    it("inverts a two-digit odometer back to its anchor", () => {
+      const c = buildContainer({
+        s: customJournal("s", "week", 1, "2024-01-01", {
+          numbering: {
+            enabled: true,
+            anchorDate: "2024-01-01" as AnchorString,
+            allowBefore: false,
+            sources: [
+              { variable: "release", frontmatterKey: "journal-release", anchorValue: 4711, reset: { kind: "never" } },
+              {
+                variable: "sprint",
+                frontmatterKey: "journal-sprint",
+                anchorValue: 1,
+                reset: { kind: "after", count: 6 },
+              },
+            ],
+          },
+        }),
+      });
+      const n = c.resolve(NumberingService);
+
+      // (4712 - 4711) * 6 + (3 - 1) = 8 weekly steps past 2024-01-01.
+      expect(unwrap(n.anchorForNumbers("s", { release: 4712, sprint: 3 }))).toBe("2024-02-26");
+      expect(unwrap(n.anchorForNumbers("s", { release: 4711, sprint: 1 }))).toBe("2024-01-01");
+    });
+
+    it("returns None when a declared digit is absent from the numbers", () => {
+      const c = buildContainer({
+        s: customJournal("s", "week", 1, "2024-01-01", {
+          numbering: {
+            enabled: true,
+            anchorDate: "2024-01-01" as AnchorString,
+            allowBefore: false,
+            sources: [
+              { variable: "release", frontmatterKey: "journal-release", anchorValue: 4711, reset: { kind: "never" } },
+              {
+                variable: "sprint",
+                frontmatterKey: "journal-sprint",
+                anchorValue: 1,
+                reset: { kind: "after", count: 6 },
+              },
+            ],
+          },
+        }),
+      });
+      const n = c.resolve(NumberingService);
+
+      expect(n.anchorForNumbers("s", { release: 4712 }).isNone()).toBe(true);
+    });
+
+    it("returns None for an inner digit outside its cycle rather than wrapping it", () => {
+      const c = buildContainer({
+        s: customJournal("s", "week", 1, "2024-01-01", {
+          numbering: {
+            enabled: true,
+            anchorDate: "2024-01-01" as AnchorString,
+            allowBefore: false,
+            sources: [
+              { variable: "release", frontmatterKey: "journal-release", anchorValue: 4711, reset: { kind: "never" } },
+              {
+                variable: "sprint",
+                frontmatterKey: "journal-sprint",
+                anchorValue: 1,
+                reset: { kind: "after", count: 6 },
+              },
+            ],
+          },
+        }),
+      });
+      const n = c.resolve(NumberingService);
+
+      // Wrapping would land Sprint9 on the same anchor as Release4712Sprint3 and let two
+      // notes attach to one period.
+      expect(n.anchorForNumbers("s", { release: 4711, sprint: 9 }).isNone()).toBe(true);
+    });
+
     it("recovers an anchor via timeline.start when anchorDate is empty", () => {
       const c = buildContainer({
         s: fixedJournal(

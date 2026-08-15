@@ -4,7 +4,7 @@ import { CalendarDate } from "@/calendar";
 import { useService } from "@/infrastructure/di";
 import { TemplateContext, TemplateEngine, tokenize } from "@/templates";
 
-import { invertibleNumberingVariable } from "../../numbering";
+import { invertibleNumberingVariables } from "../../numbering";
 
 import type { JournalConfig } from "../../config";
 
@@ -51,9 +51,9 @@ export function useInvertibilityCheck(
     // captured from either the name or folder template.
     const nameVariables = variableNames(value.nameTemplate);
     if (nameVariables.has("date")) return null;
-    const invertibleVariable = invertibleNumberingVariable(numbering);
+    const invertibleVariables = invertibleNumberingVariables(numbering);
     const pathVariables = new Set([...nameVariables, ...variableNames(value.folder)]);
-    if (invertibleVariable !== null && pathVariables.has(invertibleVariable)) return null;
+    if (invertibleVariables?.every((name) => pathVariables.has(name))) return null;
     const usesNumberingVariable = numbering.sources.some((source) => pathVariables.has(source.variable));
     return usesNumberingVariable ? { kind: "no-anchor" } : null;
   });

@@ -11,16 +11,17 @@ import { JournalsRepository } from "./repository";
 
 import type { JournalConfig, JournalNumberingConfig, NumberingSource } from "./config";
 
-// Only a single, never-resetting source is reversible: its value increases monotonically
-// with the cycle count, so subtracting anchorValue recovers the step offset. Cyclic (reset
-// "after") sources wrap modulo a count and multiple sources can't be disentangled from one
-// captured number, so neither can be inverted back to a unique anchor.
-export function invertibleNumberingVariable(numbering: JournalNumberingConfig): string | null {
+// An odometer is a mixed-radix numeral: it inverts when the most significant digit is
+// unbounded and every digit below it wraps at a fixed count. A cyclic index 0 makes the
+// whole tuple recoverable only modulo its period, and a `never` digit below index 0 emits
+// no carry, so the digits above it never move and carry no information.
+export function invertibleNumberingVariables(numbering: JournalNumberingConfig): readonly string[] | null {
   if (!numbering.enabled) return null;
-  if (numbering.sources.length !== 1) return null;
-  const [source] = numbering.sources;
-  if (source.reset.kind !== "never") return null;
-  return source.variable;
+  if (numbering.sources.length === 0) return null;
+  const [first, ...rest] = numbering.sources;
+  if (first.reset.kind !== "never") return null;
+  if (rest.some((source) => source.reset.kind !== "after")) return null;
+  return numbering.sources.map((source) => source.variable);
 }
 
 export class NumberingService {
@@ -154,12 +155,26 @@ export class NumberingService {
     const config = configOpt.value;
     const numbering = config.numbering;
     const anchorDate = this.#anchorDateFor(config);
-    const variable = invertibleNumberingVariable(numbering);
-    if (variable === null || !anchorDate) return Option.none();
-    const value = numbers[variable];
-    if (value === undefined) return Option.none();
-    const [source] = numbering.sources;
-    const steps = value - source.anchorValue;
+    if (invertibleNumberingVariables(numbering) === null || !anchorDate) return Option.none();
+
+    let steps = 0;
+    let placeValue = 1;
+    for (let i = numbering.sources.length - 1; i >= 0; i--) {
+      const source = numbering.sources[i];
+      const value = numbers[source.variable];
+      if (value === undefined) return Option.none();
+      const position = value - source.anchorValue;
+      if (source.reset.kind === "after") {
+        // Out of range is rejected, not wrapped: normalizing would map two distinct names
+        // onto one anchor and let both notes attach to the same period.
+        if (position < 0 || position >= source.reset.count) return Option.none();
+        steps += position * placeValue;
+        placeValue *= source.reset.count;
+      } else {
+        steps += position * placeValue;
+      }
+    }
+
     if (steps < 0 && !numbering.allowBefore) return Option.none();
     return this.#cycle.anchorAtOffset(name, anchorDate, steps);
   }
