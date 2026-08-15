@@ -1,7 +1,6 @@
 <script setup lang="ts">
-import { computed } from "vue";
-
-import { CalendarDate, MonthPeriod, type AnchorString } from "@/calendar";
+import type { AnchorString } from "@/calendar";
+import { usePeriodWindow } from "@/calendar/ui";
 import { NotesMonthView } from "@/notes-calendar";
 
 const props = defineProps<{
@@ -9,23 +8,40 @@ const props = defineProps<{
   shelf: string | null;
   weeks?: "none" | "left" | "right";
   hiddenWeekdays?: readonly number[];
+  before?: number;
+  after?: number;
 }>();
 
-const month = computed(() => MonthPeriod.containing(CalendarDate.fromAnchor(props.refDate)));
+const monthPeriods = usePeriodWindow(
+  "month",
+  () => props.refDate,
+  () => props.before ?? 0,
+  () => props.after ?? 0,
+);
 </script>
 
 <template>
   <div class="timeline-month">
     <!-- Adjacent-month days stay actionable: a leading/trailing day can open that day's
          note. Quarter/calendar modes blank them instead. -->
-    <NotesMonthView :shelf :month :weeks="weeks" :hidden-weekdays="hiddenWeekdays" outside-dates="active" />
+    <NotesMonthView
+      v-for="month of monthPeriods"
+      :key="month.start.toAnchor()"
+      :shelf
+      :month
+      :weeks="weeks"
+      :hidden-weekdays="hiddenWeekdays"
+      outside-dates="active"
+    />
   </div>
 </template>
 
 <style scoped>
 .timeline-month {
   display: flex;
-  justify-content: center;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--size-4-2);
 }
 .timeline-month > * {
   width: 400px;

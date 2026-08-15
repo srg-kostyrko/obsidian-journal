@@ -47,6 +47,18 @@ function mount(h: NotesCalendarHarness, props: { path: VaultPath; config: Timeli
   });
 }
 
+function dailyHarness() {
+  const h = buildNotesCalendarHarness({ journals: { daily: fixedJournal("daily", { type: "day" }) } });
+  h.index.register({ journalName: "daily", anchor: HOST_ANCHOR, path: HOST_PATH });
+  return h;
+}
+
+function weekAnchors(container: Element): string[] {
+  return [...container.querySelectorAll<HTMLElement>('[data-testid="week-number-cell"]')].map(
+    (cell) => cell.dataset.anchor ?? "",
+  );
+}
+
 afterEach(() => {
   cleanup();
   vi.useRealTimers();
@@ -216,6 +228,52 @@ describe("TimelineCodeBlock", () => {
 
       const row = container.querySelector<HTMLElement>(".notes-week-view__row");
       expect(row?.dataset.weeks).toBe("right");
+    });
+  });
+
+  describe("period padding", () => {
+    it("renders only the host week when no padding is set", () => {
+      const { container } = mount(dailyHarness(), { path: HOST_PATH, config: { mode: "week" } });
+
+      expect(weekAnchors(container).length).toBe(1);
+    });
+
+    it("renders the padded weeks in order around the host week", () => {
+      const bare = mount(dailyHarness(), { path: HOST_PATH, config: { mode: "week" } });
+      const hostWeek = weekAnchors(bare.container).at(0);
+
+      const padded = mount(dailyHarness(), { path: HOST_PATH, config: { mode: "week", before: 1, after: 1 } });
+
+      const anchors = weekAnchors(padded.container);
+      expect(anchors.length).toBe(3);
+      expect(anchors.at(1)).toBe(hostWeek);
+      expect(anchors.toSorted()).toEqual(anchors);
+    });
+
+    it("pads only forward when before is absent", () => {
+      const { container } = mount(dailyHarness(), { path: HOST_PATH, config: { mode: "week", after: 2 } });
+
+      const anchors = weekAnchors(container);
+      expect(anchors.length).toBe(3);
+      expect(anchors.at(0)).toBe(weekAnchors(mount(dailyHarness(), { path: HOST_PATH, config: {} }).container).at(0));
+    });
+
+    it("renders a run of month grids when the month mode is padded", () => {
+      const { container } = mount(dailyHarness(), {
+        path: HOST_PATH,
+        config: { mode: "month", before: 1, after: 1 },
+      });
+
+      expect(container.querySelectorAll(".notes-month-view__grid").length).toBe(3);
+    });
+
+    it("ignores padding in quarter mode", () => {
+      const bare = mount(dailyHarness(), { path: HOST_PATH, config: { mode: "quarter" } });
+      const padded = mount(dailyHarness(), { path: HOST_PATH, config: { mode: "quarter", before: 1, after: 1 } });
+
+      expect(padded.container.querySelectorAll(".notes-month-view__grid").length).toBe(
+        bare.container.querySelectorAll(".notes-month-view__grid").length,
+      );
     });
   });
 
