@@ -72,7 +72,11 @@ export class NumberingService {
   ): Option<Readonly<Record<string, number>>> {
     const basis = pathOpt
       .flatMap((path) => this.#index.entryByPath(path))
-      .flatMap((entry) => Option.fromNullable(entry.numbers).map((numbers) => ({ anchor: entry.anchor, numbers })));
+      .flatMap((entry) => Option.fromNullable(entry.numbers).map((numbers) => ({ anchor: entry.anchor, numbers })))
+      // A note written before a digit was added carries the old digits only. Cascading from
+      // it would anchor the new digit's phase to whichever neighbor the index happened to
+      // return, so an incomplete entry is no basis at all — fall through to the anchor date.
+      .filter(({ numbers }) => sources.every((source) => numbers[source.variable] !== undefined));
     if (basis.isNone()) return Option.none();
     return this.#cycle
       .countRepeats(name, basis.value.anchor, anchor)

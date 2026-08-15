@@ -272,6 +272,39 @@ describe("NumberingService", () => {
       const result = n.assignNumbers("s", "2024-02-12" as AnchorString);
       expect(result.isSome() && result.value).toEqual({ release: 4712, sprint: 1 });
     });
+
+    it("ignores a stored basis that is missing a declared variable", () => {
+      const c = buildContainer({
+        s: customJournal("s", "week", 1, "2024-01-01", {
+          numbering: {
+            enabled: true,
+            anchorDate: "2024-01-01" as AnchorString,
+            allowBefore: false,
+            sources: [
+              { variable: "release", frontmatterKey: "journal-release", anchorValue: 4711, reset: { kind: "never" } },
+              {
+                variable: "sprint",
+                frontmatterKey: "journal-sprint",
+                anchorValue: 1,
+                reset: { kind: "after", count: 6 },
+              },
+            ],
+          },
+        }),
+      });
+      const index = c.resolve(JournalsIndex);
+      // A note written before `sprint` existed: it carries `release` only.
+      index.register({
+        journalName: "s",
+        anchor: "2024-01-29" as AnchorString,
+        path: "S/old.md" as VaultPath,
+        numbers: { release: 9000 },
+      });
+      const n = c.resolve(NumberingService);
+
+      // Recomputed from the anchor date: 2024-02-05 is 5 weekly steps past 2024-01-01.
+      expect(unwrap(n.assignNumbers("s", "2024-02-05" as AnchorString))).toEqual({ release: 4711, sprint: 6 });
+    });
   });
 
   describe("assignNumbers — next-entry back-propagation", () => {
