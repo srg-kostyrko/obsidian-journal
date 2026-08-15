@@ -155,19 +155,14 @@ describe("VariableReferenceModal nav-row context", () => {
     expect(screen.getByText(m.journal_edit_variable_relative_date_description())).toBeTruthy();
   });
 
-  it("renders index row when context is nav-row", () => {
-    renderModal({ context: "nav-row", hasCycle: true });
-    expect(screen.getByText("{{index}}")).toBeTruthy();
-    expect(screen.getByText(m.journal_edit_variable_index_description())).toBeTruthy();
-  });
-
   it("does not render relative_date when context is name-template", () => {
     renderModal({ context: "name-template" });
     expect(screen.queryByText("{{relative_date}}")).toBeNull();
   });
 
-  it("does not render index when context is name-template", () => {
-    renderModal({ context: "name-template" });
+  it("advertises only the journal's own numbering variables in a nav-row context", () => {
+    renderModal({ context: "nav-row", numberingVariableNames: ["sprint"] });
+    expect(screen.getByText("{{sprint}}")).toBeTruthy();
     expect(screen.queryByText("{{index}}")).toBeNull();
   });
 });
