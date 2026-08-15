@@ -218,6 +218,20 @@ describe("SequenceSection", () => {
       });
     });
 
+    it("promotes the next digit to index 0 when the top digit is deleted", async () => {
+      const { config } = mount({ numbering: enabledNumbering(["release", "sprint"]) });
+      await userEvent.click(screen.getByText(m.journal_edit_section_sequential_numbers()));
+
+      await userEvent.click(screen.getAllByLabelText(m.journal_sequence_digit_delete())[0]);
+
+      await waitFor(() => {
+        expect(config.numbering.sources.map((source) => source.variable)).toEqual(["sprint"]);
+      });
+      // Promotion by position only — the promoted digit keeps its after-N reset rather than
+      // being silently rewritten to never, which is still a legal index-0 kind.
+      expect(config.numbering.sources[0]?.reset).toEqual({ kind: "after", count: 6 });
+    });
+
     it("does not offer to delete the only remaining digit", async () => {
       mount({ numbering: enabledNumbering(["index"]) });
       await userEvent.click(screen.getByText(m.journal_edit_section_sequential_numbers()));
