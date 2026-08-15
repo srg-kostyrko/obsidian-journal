@@ -21,7 +21,9 @@ const indexVersion = useIndexVersion();
 
 const PREVIEW_LENGTH = 5;
 
-const names = computed<readonly string[]>(() => {
+// Rendered through buildMetadata -> pathFor rather than pathForDate: the latter re-derives
+// the anchor on every step, which is quadratic on a custom-interval journal.
+const notePaths = computed<readonly string[]>(() => {
   void indexVersion.value;
   const config = journalsVM.getJournal(journalName).getOrUndefined();
   if (!config || !config.numbering.enabled || config.numbering.sources.length === 0) return [];
@@ -34,16 +36,18 @@ const names = computed<readonly string[]>(() => {
     if (stepAnchor.isNone()) break;
     const metadata = frontmatter.buildMetadata(journalName, stepAnchor.value);
     if (metadata.isErr()) break;
-    rendered.push(paths.noteNameFor(config, metadata.value));
+    const path = paths.pathFor(journalName, metadata.value);
+    if (path.isErr()) break;
+    rendered.push(path.value);
   }
   return rendered;
 });
 </script>
 
 <template>
-  <div v-if="names.length > 0" class="sequence-preview">
+  <div v-if="notePaths.length > 0" class="sequence-preview">
     <div class="sequence-preview__label">{{ m.journal_sequence_preview_label() }}</div>
-    <div v-for="(name, i) of names" :key="i" class="sequence-preview__name">{{ name }}</div>
+    <div v-for="(notePath, i) of notePaths" :key="i" class="sequence-preview__path">{{ notePath }}</div>
   </div>
 </template>
 
@@ -59,9 +63,12 @@ const names = computed<readonly string[]>(() => {
   letter-spacing: 0.08em;
   color: var(--text-faint);
 }
-.sequence-preview__name {
+.sequence-preview__path {
   font-family: var(--font-monospace);
   font-size: var(--font-ui-small);
+  /* Preserve significant whitespace so a template rendering spaces reads literally,
+     while still letting a deep path wrap instead of overflowing the pane. */
+  white-space: pre-wrap;
   overflow-wrap: anywhere;
 }
 </style>

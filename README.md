@@ -135,7 +135,8 @@ Each journal can be configured separately with these settings:
   - The last remaining digit cannot be deleted; deleting the slowest one promotes the next digit
     to take its place
   - Allow before anchor: Permit numbering earlier notes, which may produce negative numbers. Offered only when the journal has no start date and the slowest digit is Continuous
-  - A live **preview** shows the next five note names the current configuration produces
+  - A live **preview** shows the full paths of the next five notes the current configuration
+    produces, so a digit used only in the folder template is visible too
   - A note named only by its digits (no date anywhere in the name or folder) can still auto-attach
     to its journal, but only when the slowest digit is Continuous **and** every digit appears in
     the name or folder template. When it can't, the note creation and sequence sections warn with

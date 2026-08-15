@@ -248,14 +248,28 @@ digit's own settings (start value, reset, property key) live behind the row's
 - [ ] **Delete the top (slowest) digit** → the next digit is promoted to the
       top row and keeps its own reset (not silently switched to `Never`).
 - [ ] With only one digit left, its delete (✕) control is not offered.
-- [ ] The **preview** below the digit list shows the next 5 note names computed
-      from today's anchor, and updates when a digit's settings change.
+- [ ] The **preview** below the digit list shows the next 5 note paths computed
+      from today's anchor — folder included, ending in `.md` — and updates when a
+      digit's settings change.
+- [ ] Move a digit into the **folder** (e.g. Folder `Releases/R{{release}}`, name
+      template `Sprint{{sprint}}`) → the preview shows
+      `Releases/R<N>/Sprint1.md`, so the folder-only digit is visible.
+- [ ] Clear the **name template** while numbering is on → the preview disappears
+      rather than listing bare `.md` paths.
 - [ ] Rename a digit's **variable** (e.g. `index` → `release`) without updating
       the name/folder template → a warning naming the stale variable appears
       **in the Sequence section**, not only in Note creation.
 - [ ] With two or more digits, set the **top digit** to `After N` (cyclic) → a
       distinct warning explains the numbering can never be inverted, shown in
       the Sequence section.
+- [ ] With two digits and no `{{date}}` anywhere, remove one from the name and
+      folder templates → the warning **names the missing variable** and asks for
+      it, rather than a generic "cannot be turned back into a date".
+- [ ] Set a digit **below the top** to `Never` → the warning names that digit and
+      says the digits above it never change. Distinct from the cyclic-top text.
+- [ ] Turn **sequential numbers off** while a digit variable is still in the name
+      template → no invertibility warning is shown (the digit renders empty; a
+      known gap, not this warning's job).
 
 ---
 

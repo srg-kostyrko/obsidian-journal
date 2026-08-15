@@ -64,7 +64,7 @@ function mount(overrides: Partial<JournalConfig> = {}) {
 }
 
 describe("SequencePreview", () => {
-  it("renders the next five note names for a two-digit journal", async () => {
+  it("renders the next five note paths for a two-digit journal", async () => {
     mount({
       write: { type: "custom", every: "week", duration: 2, anchorDate: "2026-01-05" as AnchorString },
       nameTemplate: "Release{{release}}Sprint{{sprint}}",
@@ -85,9 +85,50 @@ describe("SequencePreview", () => {
     });
 
     // System time is pinned to 2026-01-05 in beforeEach, so today's period is the anchor.
-    expect(await screen.findByText("Release4711Sprint1")).toBeTruthy();
-    expect(screen.getByText("Release4711Sprint5")).toBeTruthy();
-    expect(screen.queryByText("Release4711Sprint6")).toBeNull();
+    expect(await screen.findByText("Release4711Sprint1.md")).toBeTruthy();
+    expect(screen.getByText("Release4711Sprint5.md")).toBeTruthy();
+    expect(screen.queryByText("Release4711Sprint6.md")).toBeNull();
+  });
+
+  it("renders a numbering digit that only the folder template uses", async () => {
+    mount({
+      write: { type: "custom", every: "week", duration: 2, anchorDate: "2026-01-05" as AnchorString },
+      folder: "Releases/R{{release}}",
+      nameTemplate: "Sprint{{sprint}}",
+      numbering: {
+        enabled: true,
+        anchorDate: "2026-01-05" as AnchorString,
+        allowBefore: false,
+        sources: [
+          { variable: "release", frontmatterKey: "journal-release", anchorValue: 4711, reset: { kind: "never" } },
+          {
+            variable: "sprint",
+            frontmatterKey: "journal-sprint",
+            anchorValue: 1,
+            reset: { kind: "after", count: 6 },
+          },
+        ],
+      },
+    });
+
+    expect(await screen.findByText("Releases/R4711/Sprint1.md")).toBeTruthy();
+    expect(screen.getByText("Releases/R4711/Sprint5.md")).toBeTruthy();
+  });
+
+  it("renders nothing when the name template resolves to an empty note name", async () => {
+    const { container } = mount({
+      nameTemplate: "",
+      numbering: {
+        enabled: true,
+        anchorDate: "2026-01-05" as AnchorString,
+        allowBefore: false,
+        sources: [{ variable: "index", frontmatterKey: "journal-index", anchorValue: 1, reset: { kind: "never" } }],
+      },
+    });
+
+    await waitFor(() => {
+      expect(container.querySelector(".sequence-preview")).toBeNull();
+    });
   });
 
   it("renders nothing when numbering has no digits", async () => {
@@ -114,7 +155,7 @@ describe("SequencePreview", () => {
 
     // With no stored entry, today's period's end date is the cycle's default: two weeks
     // from the 2026-01-05 anchor, minus a day.
-    expect(await screen.findByText("Note2026-01-18")).toBeTruthy();
+    expect(await screen.findByText("Note2026-01-18.md")).toBeTruthy();
 
     // Registering a stored end date for that same anchor is the only way JournalsIndex
     // changes without a reactive config edit — it must flow through useIndexVersion's
@@ -127,9 +168,9 @@ describe("SequencePreview", () => {
     });
 
     await waitFor(() => {
-      expect(screen.getByText("Note2026-01-10")).toBeTruthy();
+      expect(screen.getByText("Note2026-01-10.md")).toBeTruthy();
     });
-    expect(screen.queryByText("Note2026-01-18")).toBeNull();
+    expect(screen.queryByText("Note2026-01-18.md")).toBeNull();
   });
 
   it("does not warn about duplicate keys when the preview window crosses a carry with mostly-repeated names", async () => {
@@ -154,7 +195,7 @@ describe("SequencePreview", () => {
       },
     });
 
-    expect(await screen.findAllByText("Release4711")).toHaveLength(5);
+    expect(await screen.findAllByText("Release4711.md")).toHaveLength(5);
 
     // Advance three weeks so the preview window (steps 3-7) crosses the sprint-6 carry inside
     // its unresolved middle range: Vue's head/tail quick sync matches steps 3-5 (still
@@ -171,9 +212,9 @@ describe("SequencePreview", () => {
     });
 
     await waitFor(() => {
-      expect(screen.getAllByText("Release4712")).toHaveLength(2);
+      expect(screen.getAllByText("Release4712.md")).toHaveLength(2);
     });
-    expect(screen.getAllByText("Release4711")).toHaveLength(3);
+    expect(screen.getAllByText("Release4711.md")).toHaveLength(3);
     expect(warnSpy.mock.calls.some((call) => typeof call[0] === "string" && call[0].includes("Duplicate keys"))).toBe(
       false,
     );
