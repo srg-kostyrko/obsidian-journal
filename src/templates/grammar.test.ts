@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 
-import { tokenize } from "./grammar";
+import { tokenize, parseModifiers } from "./grammar";
 
 describe("tokenize", () => {
   describe("literals", () => {
@@ -170,5 +170,38 @@ describe("tokenize", () => {
       const tokens = tokenize("{{date+xx}}");
       expect(tokens).toEqual([{ kind: "literal", text: "{{date+xx}}" }]);
     });
+  });
+});
+
+describe("parseModifiers", () => {
+  it("returns no modifiers for an empty string", () => {
+    expect(parseModifiers("")).toEqual([]);
+  });
+
+  it("parses a single date shift", () => {
+    expect(parseModifiers("+1q")).toEqual([{ kind: "shift", sign: 1, amount: 1, unit: "q" }]);
+  });
+
+  it("parses a multi-digit negative shift", () => {
+    expect(parseModifiers("-12m")).toEqual([{ kind: "shift", sign: -1, amount: 12, unit: "m" }]);
+  });
+
+  it("parses a boundary modifier", () => {
+    expect(parseModifiers("<startOf=month>")).toEqual([{ kind: "boundary", direction: "start", unit: "month" }]);
+  });
+
+  it("parses a shift followed by a boundary", () => {
+    expect(parseModifiers("+1y<endOf=quarter>")).toEqual([
+      { kind: "shift", sign: 1, amount: 1, unit: "y" },
+      { kind: "boundary", direction: "end", unit: "quarter" },
+    ]);
+  });
+
+  it("rejects text it cannot parse whole", () => {
+    expect(parseModifiers("+1q nonsense")).toBeUndefined();
+  });
+
+  it("rejects an unknown unit", () => {
+    expect(parseModifiers("+1z")).toBeUndefined();
   });
 });

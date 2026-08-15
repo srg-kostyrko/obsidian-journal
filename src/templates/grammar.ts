@@ -46,26 +46,14 @@ const BOUNDARY_PREFIX_RE = /^(<[a-zA-Z]+=[a-zA-Z]+>)/;
 // matches as an offset of `+3`, dropping every multi-digit date shift.
 const OFFSET_PREFIX_RE = /^([+-]\d+)(?![\da-z])/;
 
-function parseTokenInner(inner: string, raw: string): Token | undefined {
-  let rest = inner.trim();
-  // name
-  const nameMatch = NAME_PREFIX_RE.exec(rest);
-  if (!nameMatch) return undefined;
-  const name = nameMatch[1];
-  rest = rest.slice(name.length);
+interface ModifierWalk {
+  readonly modifiers: Modifier[];
+  readonly rest: string;
+}
 
-  // optional (argument)
-  let argument: string | undefined;
-  if (rest.startsWith("(")) {
-    const closeParen = rest.indexOf(")");
-    if (closeParen === -1) return undefined;
-    argument = rest.slice(1, closeParen).trim();
-    rest = rest.slice(closeParen + 1);
-  }
-  rest = rest.trimStart();
-
-  // optional modifiers (any order; we walk eagerly)
+function walkModifiers(input: string): ModifierWalk | undefined {
   const modifiers: Modifier[] = [];
+  let rest = input;
   while (rest.length > 0 && !rest.startsWith(":") && !rest.startsWith("}")) {
     const arithMatch = ARITH_PREFIX_RE.exec(rest);
     const boundaryMatch = BOUNDARY_PREFIX_RE.exec(rest);
@@ -102,9 +90,40 @@ function parseTokenInner(inner: string, raw: string): Token | undefined {
       });
       rest = rest.slice(offsetText.length).trimStart();
     } else {
-      return undefined; // unparsable junk
+      return undefined;
     }
   }
+  return { modifiers, rest };
+}
+
+export function parseModifiers(text: string): Modifier[] | undefined {
+  const walked = walkModifiers(text.trim());
+  if (!walked || walked.rest.length > 0) return undefined;
+  return walked.modifiers;
+}
+
+function parseTokenInner(inner: string, raw: string): Token | undefined {
+  let rest = inner.trim();
+  // name
+  const nameMatch = NAME_PREFIX_RE.exec(rest);
+  if (!nameMatch) return undefined;
+  const name = nameMatch[1];
+  rest = rest.slice(name.length);
+
+  // optional (argument)
+  let argument: string | undefined;
+  if (rest.startsWith("(")) {
+    const closeParen = rest.indexOf(")");
+    if (closeParen === -1) return undefined;
+    argument = rest.slice(1, closeParen).trim();
+    rest = rest.slice(closeParen + 1);
+  }
+  rest = rest.trimStart();
+
+  const walked = walkModifiers(rest);
+  if (!walked) return undefined;
+  const modifiers = walked.modifiers;
+  rest = walked.rest;
 
   // optional :format
   let format: string | undefined;
