@@ -26,6 +26,10 @@ function isWeekdayIndex(value: unknown): value is number {
   return typeof value === "number" && Number.isSafeInteger(value) && value >= 0 && value <= 6;
 }
 
+function asPadding(value: unknown): number | undefined {
+  return typeof value === "number" && Number.isSafeInteger(value) && value >= 0 ? value : undefined;
+}
+
 const timelineBlockEntries = {
   // Every key degrades rather than erroring: a typo in one option must not blank the whole
   // block into an error panel, which is the rule the home fence follows and mode already did.
@@ -40,6 +44,10 @@ const timelineBlockEntries = {
     v.optional(v.unknown()),
     v.transform((value) => (Array.isArray(value) ? value.filter(isWeekdayIndex) : undefined)),
   ),
+  // Padding applies to the week and month modes only — quarter and calendar never receive
+  // it, so a value set under them is inert rather than reported as an unrecognized key.
+  before: v.pipe(v.optional(v.unknown()), v.transform(asPadding)),
+  after: v.pipe(v.optional(v.unknown()), v.transform(asPadding)),
 };
 
 export const timelineBlockSchema = v.pipe(v.unknown(), v.transform(asRecord), v.object(timelineBlockEntries));

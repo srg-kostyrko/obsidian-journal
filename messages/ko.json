@@ -1936,6 +1936,8 @@
 	"journal_edit_code_block_timeline_option_shelf": "표시되는 노트를 특정 선반으로 제한합니다. 지정하지 않으면 현재 저널이 놓인 선반을 사용합니다.",
 	"journal_edit_code_block_timeline_weeks": "주 번호 열을 제어합니다. 지원되는 값: default, left, right, none. default는 플러그인의 달력 설정을 따릅니다.",
 	"journal_edit_code_block_timeline_hidden_weekdays": "나열한 요일(0 = 일요일 … 6 = 토요일)을 숨깁니다. 예를 들어 주말을 빼려면 [0, 6]을 씁니다.",
+	"journal_edit_code_block_timeline_option_before": "현재 기간 위에 지정한 수만큼 이전 기간을 추가합니다. week 및 month 모드에서만 적용됩니다.",
+	"journal_edit_code_block_timeline_option_after": "현재 기간 아래에 지정한 수만큼 이후 기간을 추가합니다. week 및 month 모드에서만 적용됩니다.",
 	"journal_edit_code_block_home_description": "홈 블록은 저널의 현재 노트로 연결되는 링크를 표시합니다.",
 	"journal_edit_code_block_home_default": "기본적으로는 다음과 같습니다:",
 	"journal_edit_code_block_home_options_lead": "지원되는 옵션:",

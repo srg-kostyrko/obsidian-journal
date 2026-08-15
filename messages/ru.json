@@ -1995,6 +1995,8 @@
 	"journal_edit_code_block_timeline_option_shelf": "ограничивает отображаемые заметки определённой полкой. Без этого параметра используется полка, содержащая текущий журнал.",
 	"journal_edit_code_block_timeline_weeks": "управляет столбцом с номером недели. Поддерживаемые значения: default, left, right, none. Значение default следует настройке календаря в плагине.",
 	"journal_edit_code_block_timeline_hidden_weekdays": "скрывает перечисленные дни недели (0 = воскресенье … 6 = суббота), например, [0, 6] для удаления выходных.",
+	"journal_edit_code_block_timeline_option_before": "добавляет указанное количество предыдущих периодов над текущим. Применяется только к режимам week и month.",
+	"journal_edit_code_block_timeline_option_after": "добавляет указанное количество следующих периодов под текущим. Применяется только к режимам week и month.",
 	"journal_edit_code_block_home_description": "Блок home отображает ссылки на текущие заметки в ваших журналах.",
 	"journal_edit_code_block_home_default": "По умолчанию это выглядит так:",
 	"journal_edit_code_block_home_options_lead": "Поддерживаемые параметры:",

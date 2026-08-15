@@ -1794,6 +1794,8 @@
 	"journal_edit_code_block_timeline_option_shelf": "обмежує відображувані нотатки певною полицею. Без цієї опції використовується полиця, що містить поточний журнал.",
 	"journal_edit_code_block_timeline_weeks": "керує стовпцем номера тижня. Підтримувані значення: default, left, right, none. Значення default відповідає налаштуванню календаря в плагіні.",
 	"journal_edit_code_block_timeline_hidden_weekdays": "приховує перелічені дні тижня (0 = неділя … 6 = субота), наприклад, [0, 6], щоб видалити вихідні.",
+	"journal_edit_code_block_timeline_option_before": "додає вказану кількість попередніх періодів над поточним. Застосовується лише до режимів week і month.",
+	"journal_edit_code_block_timeline_option_after": "додає вказану кількість наступних періодів під поточним. Застосовується лише до режимів week і month.",
 	"journal_edit_code_block_home_description": "У блоці «Головна» відображаються посилання на поточні нотатки у ваших журналах.",
 	"journal_edit_code_block_home_default": "За замовчуванням це виглядає так:",
 	"journal_edit_code_block_home_options_lead": "Підтримувані опції:",

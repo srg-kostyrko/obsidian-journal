@@ -1936,6 +1936,8 @@
 	"journal_edit_code_block_timeline_option_shelf": "limita las notas mostradas a un estante específico. Sin esta opción, se usa el estante que contiene el diario actual.",
 	"journal_edit_code_block_timeline_weeks": "controla la columna del número de semana. Valores compatibles: default, left, right, none. El valor default sigue la configuración de calendario del complemento.",
 	"journal_edit_code_block_timeline_hidden_weekdays": "oculta los días de la semana indicados (0 = domingo … 6 = sábado), por ejemplo [0, 6] para omitir los fines de semana.",
+	"journal_edit_code_block_timeline_option_before": "añade esta cantidad de periodos anteriores encima del actual. Solo se aplica a los modos week y month.",
+	"journal_edit_code_block_timeline_option_after": "añade esta cantidad de periodos posteriores debajo del actual. Solo se aplica a los modos week y month.",
 	"journal_edit_code_block_home_description": "El bloque de inicio muestra enlaces a las notas actuales de tus diarios.",
 	"journal_edit_code_block_home_default": "Por defecto se ve así:",
 	"journal_edit_code_block_home_options_lead": "Opciones compatibles:",

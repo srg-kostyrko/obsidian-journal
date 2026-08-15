@@ -303,6 +303,18 @@ Supports following settings:
 - `shelf` - limits the displayed notes to a specific shelf. Without it, the shelf holding the current journal is used.
 - `weeks` - where the week-number column appears. Supported values are - `default`, `left`, `right`, `none`. `default` follows the plugin's calendar setting.
 - `hiddenWeekdays` - hides the listed days of the week, where `0` is Sunday and `6` is Saturday, e.g. `[0, 6]` to drop weekends.
+- `before` - adds this many earlier periods above the current one. Applies to the `week` and `month` modes only.
+- `after` - adds this many later periods below the current one. Applies to the `week` and `month` modes only.
+
+To see the previous and next week alongside the current one:
+
+````markdown
+```calendar-timeline
+mode: week
+before: 1
+after: 1
+```
+````
 
 Sample week timeline
 

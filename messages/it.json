@@ -1944,6 +1944,8 @@
 	"journal_edit_code_block_timeline_option_shelf": "limita le note visualizzate a uno scaffale specifico. Senza questa opzione viene usato lo scaffale che contiene il diario corrente.",
 	"journal_edit_code_block_timeline_weeks": "controlla la colonna del numero della settimana. Valori supportati: default, left, right, none. Il valore default segue l'impostazione del calendario del plugin.",
 	"journal_edit_code_block_timeline_hidden_weekdays": "nasconde i giorni della settimana elencati (0 = domenica … 6 = sabato), ad esempio [0, 6] per escludere i fine settimana.",
+	"journal_edit_code_block_timeline_option_before": "aggiunge questo numero di periodi precedenti sopra quello corrente. Si applica solo alle modalità week e month.",
+	"journal_edit_code_block_timeline_option_after": "aggiunge questo numero di periodi successivi sotto quello corrente. Si applica solo alle modalità week e month.",
 	"journal_edit_code_block_home_description": "Il blocco home mostra i collegamenti alle note correnti dei tuoi diari.",
 	"journal_edit_code_block_home_default": "Per impostazione predefinita si presenta così:",
 	"journal_edit_code_block_home_options_lead": "Opzioni supportate:",

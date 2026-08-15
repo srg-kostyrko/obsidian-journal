@@ -71,6 +71,33 @@ describe("timelineBlockSchema", () => {
     expect(result.shelf).toBe("2024");
   });
 
+  describe.each(["before", "after"] as const)("%s padding", (key) => {
+    it("accepts a positive count", () => {
+      const result = v.parse(timelineBlockSchema, { [key]: 2 });
+      expect(result[key]).toBe(2);
+    });
+
+    it("accepts zero", () => {
+      const result = v.parse(timelineBlockSchema, { [key]: 0 });
+      expect(result[key]).toBe(0);
+    });
+
+    it("treats a negative count as unset", () => {
+      const result = v.parse(timelineBlockSchema, { [key]: -1 });
+      expect(result[key]).toBeUndefined();
+    });
+
+    it("treats a fractional count as unset", () => {
+      const result = v.parse(timelineBlockSchema, { [key]: 1.5 });
+      expect(result[key]).toBeUndefined();
+    });
+
+    it("treats a non-numeric count as unset", () => {
+      const result = v.parse(timelineBlockSchema, { [key]: "two" });
+      expect(result[key]).toBeUndefined();
+    });
+  });
+
   it("infers TimelineMode as the mode union", () => {
     expectTypeOf<TimelineMode>().toEqualTypeOf<"week" | "month" | "quarter" | "calendar">();
   });
@@ -81,6 +108,8 @@ describe("timelineBlockSchema", () => {
       shelf?: string | undefined;
       weeks?: "default" | "none" | "left" | "right" | undefined;
       hiddenWeekdays?: number[] | undefined;
+      before?: number | undefined;
+      after?: number | undefined;
     }>();
   });
 });

@@ -1946,6 +1946,8 @@
 	"journal_edit_code_block_timeline_option_shelf": "beschränkt die angezeigten Notizen auf ein bestimmtes Regal. Ohne diese Option wird das Regal des aktuellen Journals verwendet.",
 	"journal_edit_code_block_timeline_weeks": "steuert die Spalte mit den Wochennummern. Unterstützte Werte: default, left, right, none. Der Wert default folgt der Kalendereinstellung des Plugins.",
 	"journal_edit_code_block_timeline_hidden_weekdays": "blendet die aufgelisteten Wochentage aus (0 = Sonntag … 6 = Samstag), z. B. [0, 6], um Wochenenden auszulassen.",
+	"journal_edit_code_block_timeline_option_before": "fügt so viele frühere Zeiträume oberhalb des aktuellen hinzu. Gilt nur für die Modi week und month.",
+	"journal_edit_code_block_timeline_option_after": "fügt so viele spätere Zeiträume unterhalb des aktuellen hinzu. Gilt nur für die Modi week und month.",
 	"journal_edit_code_block_home_description": "Der Home-Block zeigt Links zu den aktuellen Notizen in deinen Journalen an.",
 	"journal_edit_code_block_home_default": "Standardmäßig sieht es so aus:",
 	"journal_edit_code_block_home_options_lead": "Unterstützte Optionen:",

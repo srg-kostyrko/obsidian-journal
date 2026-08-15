@@ -74,12 +74,16 @@ const weekPlacement = useResolvedWeekPlacement(() => config.weeks);
 </script>
 
 <template>
+  <!-- Only the week and month modes take padding; quarter and calendar never receive it,
+       so a `before`/`after` set under them is inert by construction. -->
   <TimelineWeek
     v-if="mode === 'week'"
     :ref-date="refDate"
     :shelf="shelf"
     :weeks="weekPlacement"
     :hidden-weekdays="config.hiddenWeekdays"
+    :before="config.before"
+    :after="config.after"
   />
   <TimelineMonth
     v-else-if="mode === 'month'"
@@ -87,6 +91,8 @@ const weekPlacement = useResolvedWeekPlacement(() => config.weeks);
     :shelf="shelf"
     :weeks="weekPlacement"
     :hidden-weekdays="config.hiddenWeekdays"
+    :before="config.before"
+    :after="config.after"
   />
   <TimelineQuarter
     v-else-if="mode === 'quarter'"

@@ -1747,6 +1747,8 @@
 	"journal_edit_code_block_timeline_option_shelf": "将显示的笔记限制在特定书架上。不设置时，使用包含当前日记的书架。",
 	"journal_edit_code_block_timeline_weeks": "控制周数列。支持的值：default、left、right、none。值 default 跟随插件的日历设置。",
 	"journal_edit_code_block_timeline_hidden_weekdays": "隐藏列出的星期几（0 = 星期日 … 6 = 星期六），例如 [0, 6] 表示去掉周末。",
+	"journal_edit_code_block_timeline_option_before": "在当前时段上方添加指定数量的更早时段。仅适用于 week 和 month 模式。",
+	"journal_edit_code_block_timeline_option_after": "在当前时段下方添加指定数量的更晚时段。仅适用于 week 和 month 模式。",
 	"journal_edit_code_block_home_description": "主页块显示指向您日记中当前笔记的链接。",
 	"journal_edit_code_block_home_default": "默认情况下，它看起来像这样：",
 	"journal_edit_code_block_home_options_lead": "支持的选项：",

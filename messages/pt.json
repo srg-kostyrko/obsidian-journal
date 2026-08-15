@@ -1944,6 +1944,8 @@
 	"journal_edit_code_block_timeline_option_shelf": "limita as notas exibidas a uma prateleira específica. Sem essa opção, é usada a prateleira que contém o diário atual.",
 	"journal_edit_code_block_timeline_weeks": "controla a coluna do número da semana. Valores suportados: default, left, right, none. O valor default segue a configuração de calendário do plugin.",
 	"journal_edit_code_block_timeline_hidden_weekdays": "oculta os dias da semana listados (0 = domingo … 6 = sábado), por exemplo, [0, 6] para excluir os fins de semana.",
+	"journal_edit_code_block_timeline_option_before": "adiciona esta quantidade de períodos anteriores acima do atual. Aplica-se apenas aos modos week e month.",
+	"journal_edit_code_block_timeline_option_after": "adiciona esta quantidade de períodos posteriores abaixo do atual. Aplica-se apenas aos modos week e month.",
 	"journal_edit_code_block_home_description": "O bloco inicial exibe links para as notas atuais nos seus diários.",
 	"journal_edit_code_block_home_default": "Por padrão, a aparência é esta:",
 	"journal_edit_code_block_home_options_lead": "Opções suportadas:",
