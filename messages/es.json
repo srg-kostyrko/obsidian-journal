@@ -1969,7 +1969,7 @@
 	"journal_edit_variable_journal_link_description": "Dentro del contenido de un archivo de plantilla, se resuelve a la ruta de la nota de otro diario para la fecha de esta nota. Inclúyela en un enlace o incrustación (por ejemplo, ![[ … ]]) y agrega modificadores de fecha como +1w para apuntar a un período adyacente.",
 	"journal_edit_variable_journal_name_description": "El nombre del diario (aquí: {name}).",
 	"journal_edit_variable_non_invertible_warning": "Usar esto aquí impide que el diario recupere la fecha a partir del nombre del archivo.",
-	"journal_edit_variable_note_name_description": "El nombre de la nota que se está creando.",
+	"journal_edit_variable_note_name_description": "El nombre de la nota de este período.",
 	"journal_edit_variable_note_title_description": "Alias del nombre de la nota, compatible con la variable del complemento principal «Plantillas».",
 	"journal_edit_variable_numbering_description": "La variable de numeración configurada (consulta la sección Números secuenciales).",
 	"journal_edit_variable_reference_intro": "Variables disponibles. El formato de fecha predeterminado es {dateFormat} cuando no se proporciona un formato explícito.",

@@ -1977,7 +1977,7 @@
 	"journal_edit_variable_journal_link_description": "Dentro do conteúdo de um arquivo de modelo, o caminho aponta para a nota de outro diário na data desta nota. Você pode inserir o caminho em um link ou embuti-lo (por exemplo, ![[ … ]]) e adicionar modificadores de data como +1w para apontar para um período adjacente.",
 	"journal_edit_variable_journal_name_description": "O nome do diário (aqui: {name}).",
 	"journal_edit_variable_non_invertible_warning": "Usar isso aqui impede que o diário recupere a data a partir do nome do arquivo.",
-	"journal_edit_variable_note_name_description": "O nome da nota que está sendo criada.",
+	"journal_edit_variable_note_name_description": "O nome da nota deste período.",
 	"journal_edit_variable_note_title_description": "Alias do nome da nota, compatível com a variável do plugin principal Modelos.",
 	"journal_edit_variable_numbering_description": "A variável de numeração configurada (consulte a seção Sequência).",
 	"journal_edit_variable_reference_intro": "Variáveis disponíveis. O formato de data padrão é {dateFormat} quando nenhum formato explícito é fornecido.",

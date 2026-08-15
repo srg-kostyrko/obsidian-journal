@@ -1986,7 +1986,7 @@
 	"journal_edit_variable_journal_link_description": "Dans le contenu d’un fichier modèle, cette variable renvoie le chemin de la note d’un autre journal pour la date de cette note. Intégrez-la vous-même dans un lien ou une intégration (par exemple ![[ … ]]), et ajoutez des modificateurs de date comme +1w pour pointer vers une période voisine.",
 	"journal_edit_variable_journal_name_description": "Le nom du journal (ici : {name}).",
 	"journal_edit_variable_non_invertible_warning": "Son utilisation ici empêche le journal de récupérer la date à partir du nom du fichier.",
-	"journal_edit_variable_note_name_description": "Le nom de la note en cours de création.",
+	"journal_edit_variable_note_name_description": "Le nom de la note de cette période.",
 	"journal_edit_variable_note_title_description": "Alias du nom de la note, prenant en charge la variable du plugin principal « Modèles ».",
 	"journal_edit_variable_numbering_description": "La variable de numérotation configurée (voir la section Numéros séquentiels).",
 	"journal_edit_variable_reference_intro": "Variables disponibles. Le format de date par défaut est {dateFormat} lorsqu’aucun format explicite n’est spécifié.",

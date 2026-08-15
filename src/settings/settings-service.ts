@@ -134,6 +134,7 @@ export class SettingsService {
         window.clearTimeout(this.#saveTimer);
         this.#saveTimer = undefined;
       }
+      this.#events.emit("reloading");
       this.#refresh(migrated);
       this.#stopWatch = watch(this.#root, () => this.#scheduleSave(), { deep: true });
       // Reactive consumers pick up #root mutations on their own, but event-driven

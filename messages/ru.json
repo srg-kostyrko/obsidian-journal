@@ -2028,7 +2028,7 @@
 	"journal_edit_variable_journal_link_description": "Внутри содержимого файла шаблона указывается путь к заметке другого журнала для даты этой заметки. Вы можете самостоятельно обернуть его в ссылку или встроить (например, ![[ … ]]) и добавить модификаторы даты, такие как +1w, чтобы указать на соседний период.",
 	"journal_edit_variable_journal_name_description": "Название журнала (здесь: {name}).",
 	"journal_edit_variable_non_invertible_warning": "Использование этого здесь не позволит журналу восстановить дату из имени файла.",
-	"journal_edit_variable_note_name_description": "Название создаваемой заметки.",
+	"journal_edit_variable_note_name_description": "Название заметки за этот период.",
 	"journal_edit_variable_note_title_description": "Псевдоним названия заметки, поддерживающий переменную основного плагина «Шаблоны».",
 	"journal_edit_variable_numbering_description": "Настраиваемая переменная нумерации (см. раздел «Последовательность»).",
 	"journal_edit_variable_reference_intro": "Доступные переменные. Формат даты по умолчанию равен {dateFormat}, если явный формат не указан.",

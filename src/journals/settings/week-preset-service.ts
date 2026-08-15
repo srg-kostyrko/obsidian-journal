@@ -7,7 +7,7 @@ import { inject } from "@/infrastructure/di";
 import { NoticeService } from "@/infrastructure/host";
 import type { VaultPath } from "@/infrastructure/host";
 import { attempt, type AsyncResult } from "@/infrastructure/result";
-import { SettingsService } from "@/settings";
+import { SettingsEventsToken, SettingsService } from "@/settings";
 
 import { CycleService } from "../cycle";
 import { JournalsIndex } from "../journals-index";
@@ -35,6 +35,31 @@ export class WeekPresetService implements WeekPresetApplier {
   readonly #cycle = inject(CycleService);
   readonly #connection = inject(NoteConnectionService);
   readonly #notices = inject(NoticeService);
+  readonly #settingsEvents = inject(SettingsEventsToken);
+  readonly #unsubscribes: (() => void)[] = [];
+  #pending: readonly WeekSnapshot[] | undefined;
+
+  // apply() is the picker's path and holds "move the grid" and "re-anchor the notes" together as
+  // one transaction. A data.json from Obsidian Sync reaches the same slice without passing through
+  // it — SettingsService.reload() refreshes every slice at once — so the invariant is re-established
+  // here, at the settings layer's own seam, rather than only at the UI entry point.
+  constructor() {
+    this.#unsubscribes.push(
+      // The snapshot has to be taken under the OLD grid: week identity is what survives the
+      // change, and once the incoming slice lands nothing can recover which week an anchor meant.
+      this.#settingsEvents.on("reloading", () => {
+        const snapshots = this.#snapshot();
+        this.#pending = snapshots.some(({ notes }) => notes.length > 0) ? snapshots : undefined;
+      }),
+      this.#settingsEvents.on("reloaded", () => {
+        const snapshots = this.#pending;
+        this.#pending = undefined;
+        // A reload that left the grid alone re-anchors every note onto the anchor it already
+        // has, which reanchorAll skips without writing — so no comparison is needed here.
+        if (snapshots) void this.#reanchor(snapshots);
+      }),
+    );
+  }
 
   // A stored end equal to the OLD grid's duration-derived default is period metadata the grid
   // change invalidates, not a manual extension — NoteConnectionService can't tell the two apart
@@ -94,5 +119,10 @@ export class WeekPresetService implements WeekPresetApplier {
     const snapshots = this.#snapshot();
     this.#settings.getSlice(calendarSlice).state = next;
     return this.#reanchor(snapshots);
+  }
+
+  [Symbol.dispose](): void {
+    for (const off of this.#unsubscribes) off();
+    this.#unsubscribes.length = 0;
   }
 }

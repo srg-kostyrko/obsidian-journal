@@ -24,6 +24,7 @@ import {
   CycleService,
   JournalsIndex,
   JournalsRepository,
+  NotePathService,
   NumberingService,
   OpenDateFlow,
   useIndexVersion,
@@ -53,6 +54,7 @@ const journals = useService(JournalsRepository);
 const index = useService(JournalsIndex);
 const cycle = useService(CycleService);
 const numbering = useService(NumberingService);
+const notePath = useService(NotePathService);
 const shelves = useService(ShelvesRepository);
 const engine = useService(TemplateEngine);
 const flows = useService(Flows);
@@ -97,6 +99,7 @@ const text = computed(() =>
       entry: entry.value,
       cycle,
       numbering,
+      notePath,
       today: today.value,
     }),
   ),

@@ -12,6 +12,8 @@ import { FakeModalService, provideModalApiOnApp } from "@/infrastructure/host/mo
 import {
   CycleService,
   JournalsIndex,
+  FrontmatterService,
+  NotePathService,
   NumberingService,
   JournalsRepository,
   JournalsViewModel,
@@ -49,6 +51,8 @@ function mountModal(options: {
   container.register(CycleService).useClass(CycleService);
   container.register(JournalsIndex).useClass(JournalsIndex);
   container.register(NumberingService).useClass(NumberingService);
+  container.register(FrontmatterService).useClass(FrontmatterService);
+  container.register(NotePathService).useClass(NotePathService);
   render(EditNavBlockRowModal, {
     props: { journalName: "daily", row: options.row },
     global: {
