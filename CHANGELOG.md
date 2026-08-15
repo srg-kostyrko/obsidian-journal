@@ -9,6 +9,8 @@ All notable changes to this project will be documented in this file.
 - Clone a journal from settings: the copy carries the source's whole configuration, joins the same shelf, and gets its own copy of the source's commands. Notes are not copied.
 - A numbering variable can now be offset and rendered as an ordinal: `{{index+3}}` adds three to the rendered value, `{{index-1}}` subtracts one, and `{{index:o}}` renders it as an ordinal ("4th"). They combine as `{{index+3:o}}`, and both survive the round-trip out of a note name, so a journal named `Sprint {{index+3}}` still recognizes its own notes. This offset syntax now applies to any variable name, not only numbering ones, so a template that happened to contain a literal `+3` or `-1` after a variable name (for example `{{date+3}}`) will render differently from before.
 
+- A `calendar-timeline` code block in `week` or `month` mode can now show neighboring periods around the current one, using the new `before` and `after` options: `before: 1` with `after: 1` in week mode renders the previous, current and next week together.
+
 ### Bug Fixes
 
 - Navigation block rows — including the custom-interval list in a view — now render `{{note_name}}` and `{{title}}`. A row shows the name of the note it opens, or the name that note would get for a period whose note does not exist yet.

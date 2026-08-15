@@ -604,6 +604,14 @@ preview.
 - [x] timeline **hiddenWeekdays** with an out-of-range entry → the valid entries
       still apply, the block does not error.
 - [x] **shelf** option → scopes the timeline to that shelf.
+- [ ] timeline **mode: week** with **before: 1** and **after: 1** → the previous,
+      current and next week render stacked in that order.
+- [ ] timeline **mode: month** with **before: 1** → the previous month renders
+      above the current one.
+- [ ] timeline **before/after** under **mode: quarter** or **mode: calendar** →
+      ignored, and the block does not report an unrecognized option.
+- [ ] timeline **before: -1** or a non-numeric **after** → treated as unset, the
+      block does not error.
 
 ### Reference help
 
