@@ -15,25 +15,25 @@ Severity for bugs you log: 🔴 data loss / crash · 🟡 feature broken · 🟢
 below names a spec, that ground is already covered on every run; walk it manually
 only when you are investigating a specific report or the spec is red.
 
-| Section                  | Automated by                                                                                        |
-| ------------------------ | --------------------------------------------------------------------------------------------------- |
-| §0 smoke                 | `plugin-activates`, `re-enable`                                                                     |
-| §1 write types           | `custom-interval`, `weekly-midweek-start`                                                           |
-| §2 config                | `confirm-creation`, `auto-attach-template`, `templater`                                             |
-| §2 timeline bounds       | `timeline-bounds`                                                                                   |
-| §3 lifecycle             | `delete-journal`, `colliding-journals`                                                              |
-| §4 numbering             | `home-index`, `auto-attach-index`, `adoption-guard`, `adoption-guard-custom`                        |
-| §5 connection            | `commands` (insert date link)                                                                       |
-| §6 bulk add              | `bulk-add`                                                                                          |
-| §7 commands              | `commands`, `default-commands`, `dynamic-commands`, `available-command`                             |
-| §8 views                 | `view`, `view-blocks`, `view-clone`, `remember-date`, `startup-view`, `existing-navigation`         |
-| §9 shelves               | `nav-off-shelf`                                                                                     |
-| §10 code blocks          | `code-blocks`, `custom-interval-nav`, `home-index`                                                  |
-| §14 settings             | `settings`, `settings-first-journal`                                                                |
-| §15 startup / background | `startup-open`, `startup-confirm`, `auto-create`, `auto-attach`, `settings-reload`, `sync-settings` |
-| §16 migration            | `legacy-upgrade`, `mid-session-enable`                                                              |
-| §17 regression (locale)  | `calendar-locale`                                                                                   |
-| §18 URI handler          | `uri-open`                                                                                          |
+| Section                  | Automated by                                                                                            |
+| ------------------------ | ------------------------------------------------------------------------------------------------------- |
+| §0 smoke                 | `plugin-activates`, `re-enable`                                                                         |
+| §1 write types           | `custom-interval`, `weekly-midweek-start`                                                               |
+| §2 config                | `confirm-creation`, `auto-attach-template`, `templater`                                                 |
+| §2 timeline bounds       | `timeline-bounds`                                                                                       |
+| §3 lifecycle             | `delete-journal`, `colliding-journals`                                                                  |
+| §4 numbering             | `home-index`, `auto-attach-index`, `auto-attach-multi-digit`, `adoption-guard`, `adoption-guard-custom` |
+| §5 connection            | `commands` (insert date link)                                                                           |
+| §6 bulk add              | `bulk-add`                                                                                              |
+| §7 commands              | `commands`, `default-commands`, `dynamic-commands`, `available-command`                                 |
+| §8 views                 | `view`, `view-blocks`, `view-clone`, `remember-date`, `startup-view`, `existing-navigation`             |
+| §9 shelves               | `nav-off-shelf`                                                                                         |
+| §10 code blocks          | `code-blocks`, `custom-interval-nav`, `home-index`                                                      |
+| §14 settings             | `settings`, `settings-first-journal`                                                                    |
+| §15 startup / background | `startup-open`, `startup-confirm`, `auto-create`, `auto-attach`, `settings-reload`, `sync-settings`     |
+| §16 migration            | `legacy-upgrade`, `mid-session-enable`                                                                  |
+| §17 regression (locale)  | `calendar-locale`                                                                                       |
+| §18 URI handler          | `uri-open`                                                                                              |
 
 **Spend your attention where automation cannot reach.** Work the sections in this
 order, not top to bottom:
@@ -210,21 +210,52 @@ command + a view block targeting it.
 
 ## 4. Numbering
 
-Setup: Day journal "Num" → enable Numbering. Use `{{index}}` in its name template
-so the number is visible in filenames.
+Setup: Day journal "Num" → enable Numbering (a single `index` digit is seeded).
+Use `{{index}}` in its name template so the number is visible in filenames. The
+digit's own settings (start value, reset, property key) live behind the row's
+**⚙** button, not directly in the section.
 
 - [x] **Enabled** → consecutive entries increment the index by 1.
-- [x] **anchorDate** set → counting starts (index 1) at the anchor period.
+- [x] **Anchor date** set → counting starts (index 1) at the anchor period.
 - [x] **allowBefore = on** → periods before the anchor receive numbers (negative /
       mirrored).
 - [x] **allowBefore = off** → entries before the anchor are blocked.
-- [x] **reset_after = N** → index cycles within `[anchor, anchor+N-1]` then
-      restarts.
-- [x] **Increment / start value** → first index matches the configured start.
-- [x] The **allowBefore** toggle only appears when the journal has no timeline
-      start _and_ reset is `never` — set `reset_after` first and confirm it hides.
 - [x] Set a **timeline start** (§2) → the Sequence section hides its own anchor
       picker and numbering counts from the timeline start instead.
+- [ ] Click the digit row's **⚙** → the edit-digit modal opens with the current
+      variable name, start value, reset, and property key.
+- [ ] Edit the top digit's **start value** → the next entry's index matches the
+      configured start.
+- [ ] Edit the top digit's reset to **After N** → index cycles within
+      `[start, start+N-1]` then restarts.
+- [ ] The **allowBefore** toggle only appears when the journal has no timeline
+      start _and_ the top digit's reset is `Never` — edit the top digit to
+      `After N` and confirm it hides.
+- [ ] Edit the top digit's **property key** → the numbered value is written to
+      that frontmatter key instead of the default.
+- [ ] **+** on the section header → appends a new digit below the existing
+      one(s); the new digit's row shows a "how many per `<parent>`" count field
+      instead of a Never/After dropdown (only index 0 offers `Never`).
+- [ ] The new digit's **property key** defaults to `journal-<variable>` as you
+      type its variable name, and stops following the variable once you edit
+      the key by hand.
+- [ ] **Two-digit odometer** — add a second digit (e.g. `sprint`, 6 per
+      `release`) → the **preview** shows `Release<N>Sprint1` … `Sprint6`, then
+      `Release<N+1>Sprint1`; creating entries in order reproduces that
+      sequence.
+- [ ] **Delete** the fastest (bottom) digit → the slower digit(s) are
+      unaffected.
+- [ ] **Delete the top (slowest) digit** → the next digit is promoted to the
+      top row and keeps its own reset (not silently switched to `Never`).
+- [ ] With only one digit left, its delete (✕) control is not offered.
+- [ ] The **preview** below the digit list shows the next 5 note names computed
+      from today's anchor, and updates when a digit's settings change.
+- [ ] Rename a digit's **variable** (e.g. `index` → `release`) without updating
+      the name/folder template → a warning naming the stale variable appears
+      **in the Sequence section**, not only in Note creation.
+- [ ] With two or more digits, set the **top digit** to `After N` (cyclic) → a
+      distinct warning explains the numbering can never be inverted, shown in
+      the Sequence section.
 
 ---
 
