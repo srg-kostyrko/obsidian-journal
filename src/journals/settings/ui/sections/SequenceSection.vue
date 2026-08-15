@@ -17,12 +17,15 @@ import { pickingForWrite } from "../../../picking";
 import { JournalsViewModel } from "../../../view-model";
 import { EditNumberingDigitFlow } from "../../flows/edit-numbering-digit.flow";
 import SequencePreview from "../SequencePreview.vue";
+import { useInvertibilityCheck } from "../use-invertibility-check";
 
 const { journalName } = defineProps<{ journalName: string }>();
 
 const flows = useService(Flows);
 const journalsVM = useService(JournalsViewModel);
 const config = computed(() => journalsVM.getJournal(journalName).getOrUndefined());
+
+const invertibility = useInvertibilityCheck(config);
 
 const expanded = ref(false);
 
@@ -146,12 +149,27 @@ function summaryFor(sourceIndex: number): string {
         <div v-if="sources.length > 1" class="sequence-digits__edge">{{ m.journal_sequence_fastest_label() }}</div>
       </div>
 
+      <div v-if="invertibility" class="journal-hint">
+        <template v-if="invertibility.kind === 'non-invertible'">
+          {{ m.journal_edit_name_template_invertibility_warning(invertibility) }}
+        </template>
+        <template v-else-if="invertibility.kind === 'cyclic-top'">
+          {{ m.journal_edit_name_template_cyclic_top_warning() }}
+        </template>
+        <template v-else>
+          {{ m.journal_edit_name_template_no_anchor_warning() }}
+        </template>
+      </div>
+
       <SequencePreview :journal-name="journalName" />
     </template>
   </UiCollapsibleBlock>
 </template>
 
 <style scoped>
+.journal-hint {
+  color: var(--text-warning);
+}
 .sequence-digits {
   padding: var(--size-4-2) 0;
 }

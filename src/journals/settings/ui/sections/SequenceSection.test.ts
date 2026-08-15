@@ -225,4 +225,64 @@ describe("SequenceSection", () => {
       expect(screen.queryByLabelText(m.journal_sequence_digit_delete())).toBeNull();
     });
   });
+
+  describe("invertibility warning", () => {
+    it("warns about a stale numbering variable left over from a rename", async () => {
+      mount({
+        nameTemplate: "{{index}}",
+        numbering: enabledNumbering(["release", "sprint"]),
+      });
+      await userEvent.click(screen.getByText(m.journal_edit_section_sequential_numbers()));
+
+      expect(
+        await screen.findByText(
+          m.journal_edit_name_template_invertibility_warning({ reason: "unknown-variable", offending: "index" }),
+        ),
+      ).toBeTruthy();
+    });
+
+    it("warns when the first digit is cyclic", async () => {
+      mount({
+        nameTemplate: "{{release}}-{{sprint}}",
+        numbering: {
+          enabled: true,
+          anchorDate: "2026-01-05" as AnchorString,
+          allowBefore: false,
+          sources: [
+            {
+              variable: "release",
+              frontmatterKey: "journal-release",
+              anchorValue: 1,
+              reset: { kind: "after", count: 4 },
+            },
+            {
+              variable: "sprint",
+              frontmatterKey: "journal-sprint",
+              anchorValue: 1,
+              reset: { kind: "after", count: 6 },
+            },
+          ],
+        },
+      });
+      await userEvent.click(screen.getByText(m.journal_edit_section_sequential_numbers()));
+
+      expect(await screen.findByText(m.journal_edit_name_template_cyclic_top_warning())).toBeTruthy();
+    });
+
+    it("shows no warning once the template covers every numbering variable", async () => {
+      mount({
+        nameTemplate: "{{release}}-{{sprint}}",
+        numbering: enabledNumbering(["release", "sprint"]),
+      });
+      await userEvent.click(screen.getByText(m.journal_edit_section_sequential_numbers()));
+
+      expect(await screen.findByText("release")).toBeTruthy();
+      expect(screen.queryByText(m.journal_edit_name_template_cyclic_top_warning())).toBeNull();
+      expect(
+        screen.queryByText(
+          m.journal_edit_name_template_invertibility_warning({ reason: "unknown-variable", offending: "index" }),
+        ),
+      ).toBeNull();
+    });
+  });
 });
