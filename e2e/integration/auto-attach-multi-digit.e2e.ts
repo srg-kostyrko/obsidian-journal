@@ -31,7 +31,14 @@ describe("auto-attach with a two-digit odometer template", () => {
     // Wrapping sprint 9 would land it on the same anchor as Release4712Sprint3.
     await createNote("Release4711Sprint9.md");
 
-    await browser.pause(2000);
+    // frontmatterOf returns undefined for a missing file, for a file with no frontmatter yet,
+    // and for a file auto-attach genuinely rejects — a wall-clock pause can't tell those apart.
+    // A control note created in the same act that SHOULD attach pins the wait to an observed
+    // completion of auto-attach instead: once it has attached, the out-of-range note above —
+    // created first, in the same batch — has had its own chance to attach too.
+    await createNote("Release4711Sprint4.md");
+    await waitForJournalFrontmatter("Release4711Sprint4.md", { journal: "release", date: "2026-02-16" });
+
     const frontmatter = await frontmatterOf("Release4711Sprint9.md");
 
     expect(frontmatter?.["journal-date"]).toBeUndefined();
