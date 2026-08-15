@@ -472,6 +472,20 @@ describe("renders realistic journal templates against a real calendar", () => {
     );
   });
 
+  it("round-trips a Cyrillic variable name embedded in Cyrillic literal text", () => {
+    const engine = installTestEngine();
+    const context = TemplateContext.empty().number("реліз", 4712).number("спринт", 3);
+    const template = "Реліз{{реліз}}Спринт{{спринт}}";
+
+    const rendered = engine.renderString(template, context);
+    expect(rendered).toBe("Реліз4712Спринт3");
+
+    const result = engine.parse(tokenize(template), rendered, context);
+    expectOk(result);
+    expect(result.value.get("реліз")).toEqual({ kind: "number", value: 4712 });
+    expect(result.value.get("спринт")).toEqual({ kind: "number", value: 3 });
+  });
+
   it("renders the weekly anchor in ISO-week format", () => {
     const engine = installTestEngine();
     const context = TemplateContext.empty()

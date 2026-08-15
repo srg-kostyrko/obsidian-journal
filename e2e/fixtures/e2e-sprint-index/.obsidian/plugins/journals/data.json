@@ -79,6 +79,54 @@
         }
       }
     },
+    "release": {
+      "name": "release",
+      "write": {
+        "type": "custom",
+        "every": "week",
+        "duration": 2,
+        "anchorDate": "2026-01-05"
+      },
+      "nameTemplate": "Release{{release}}Sprint{{sprint}}",
+      "dateFormat": "YYYY-MM-DD",
+      "frontmatter": {
+        "dateField": "journal-date",
+        "startDateField": "journal-start-date",
+        "endDateField": "journal-end-date",
+        "addStartDate": false,
+        "addEndDate": false
+      },
+      "numbering": {
+        "enabled": true,
+        "anchorDate": "2026-01-05",
+        "allowBefore": false,
+        "sources": [
+          {
+            "variable": "release",
+            "frontmatterKey": "journal-release",
+            "anchorValue": 4711,
+            "reset": {
+              "kind": "never"
+            }
+          },
+          {
+            "variable": "sprint",
+            "frontmatterKey": "journal-sprint",
+            "anchorValue": 1,
+            "reset": {
+              "kind": "after",
+              "count": 6
+            }
+          }
+        ]
+      },
+      "timeline": {
+        "start": "",
+        "end": {
+          "kind": "never"
+        }
+      }
+    },
     "cycle": {
       "name": "cycle",
       "write": {

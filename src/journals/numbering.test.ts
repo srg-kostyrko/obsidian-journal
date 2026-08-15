@@ -7,9 +7,22 @@ import type { VaultPath } from "@/infrastructure/host";
 
 import { CycleService } from "./cycle";
 import { JournalsIndex } from "./journals-index";
-import { NumberingService } from "./numbering";
+import { invertibleNumberingVariables, NumberingService } from "./numbering";
 import { JournalsRepository } from "./repository";
 import { customJournal, fakeRepo, fixedJournal, unwrap } from "./testing";
+
+import type { JournalNumberingConfig, NumberingSource } from "./config";
+
+type DigitSpec = "never" | number;
+
+function sourcesFrom(specs: readonly DigitSpec[]): NumberingSource[] {
+  return specs.map((spec, i) => ({
+    variable: `v${i}`,
+    frontmatterKey: `journal-v${i}`,
+    anchorValue: 1,
+    reset: spec === "never" ? ({ kind: "never" } as const) : ({ kind: "after", count: spec } as const),
+  }));
+}
 
 function buildContainer(journals: Parameters<typeof fakeRepo>[0]): Container {
   const c = new Container();
@@ -19,6 +32,29 @@ function buildContainer(journals: Parameters<typeof fakeRepo>[0]): Container {
   c.register(NumberingService).useClass(NumberingService);
   return c;
 }
+
+describe("invertibleNumberingVariables", () => {
+  const cases: { label: string; specs: DigitSpec[]; expected: readonly string[] | null }[] = [
+    { label: "[never]", specs: ["never"], expected: ["v0"] },
+    { label: "[after 26]", specs: [26], expected: null },
+    { label: "[never, after 6]", specs: ["never", 6], expected: ["v0", "v1"] },
+    { label: "[after 4, after 6]", specs: [4, 6], expected: null },
+    { label: "[never, after 4, after 3]", specs: ["never", 4, 3], expected: ["v0", "v1", "v2"] },
+    { label: "[after 4, never]", specs: [4, "never"], expected: null },
+    { label: "[never, never]", specs: ["never", "never"], expected: null },
+    { label: "[never, never, after 6]", specs: ["never", "never", 6], expected: null },
+  ];
+
+  it.each(cases)("$label", ({ specs, expected }) => {
+    const numbering: JournalNumberingConfig = {
+      enabled: true,
+      anchorDate: "2024-01-01" as AnchorString,
+      allowBefore: false,
+      sources: sourcesFrom(specs),
+    };
+    expect(invertibleNumberingVariables(numbering)).toEqual(expected);
+  });
+});
 
 describe("NumberingService", () => {
   let teardown: () => void;
@@ -202,6 +238,31 @@ describe("NumberingService", () => {
       expect(unwrap(n.assignNumbers("s", "2024-02-12" as AnchorString))).toEqual({ release: 4712, sprint: 1 });
     });
 
+    it("carries through a middle digit across a three-digit cascade", () => {
+      const c = buildContainer({
+        s: customJournal("s", "week", 1, "2024-01-01", {
+          numbering: {
+            enabled: true,
+            anchorDate: "2024-01-01" as AnchorString,
+            allowBefore: false,
+            sources: [
+              { variable: "phase", frontmatterKey: "journal-phase", anchorValue: 1, reset: { kind: "never" } },
+              { variable: "tier", frontmatterKey: "journal-tier", anchorValue: 1, reset: { kind: "after", count: 4 } },
+              { variable: "unit", frontmatterKey: "journal-unit", anchorValue: 1, reset: { kind: "after", count: 3 } },
+            ],
+          },
+        }),
+      });
+      const n = c.resolve(NumberingService);
+      expect(unwrap(n.assignNumbers("s", "2024-01-01" as AnchorString))).toEqual({ phase: 1, tier: 1, unit: 1 });
+      // Step 11: tier has wrapped 3 times (0..3, each 3 units) without reaching its own count
+      // of 4, so tier itself is mid-cycle and phase hasn't carried yet.
+      expect(unwrap(n.assignNumbers("s", "2024-03-18" as AnchorString))).toEqual({ phase: 1, tier: 4, unit: 3 });
+      // Step 13: tier has now wrapped a 4th time (crossing its own count), handing a carry up
+      // to phase — the middle-index innerResetsCrossed-feeds-sourceSteps handoff.
+      expect(unwrap(n.assignNumbers("s", "2024-04-01" as AnchorString))).toEqual({ phase: 2, tier: 1, unit: 2 });
+    });
+
     it("outer source stays at anchorValue when inner reset is never", () => {
       const c = buildContainer({
         s: customJournal("s", "week", 1, "2024-01-01", {
@@ -218,6 +279,31 @@ describe("NumberingService", () => {
       });
       const n = c.resolve(NumberingService);
       expect(unwrap(n.assignNumbers("s", "2024-01-29" as AnchorString))).toEqual({ phase: 1, n: 5 });
+    });
+
+    it("borrows from the outer digit for a negative step across the inner reset boundary", () => {
+      const c = buildContainer({
+        s: customJournal("s", "week", 1, "2024-02-05", {
+          numbering: {
+            enabled: true,
+            anchorDate: "2024-02-05" as AnchorString,
+            allowBefore: true,
+            sources: [
+              { variable: "release", frontmatterKey: "journal-release", anchorValue: 4711, reset: { kind: "never" } },
+              {
+                variable: "sprint",
+                frontmatterKey: "journal-sprint",
+                anchorValue: 1,
+                reset: { kind: "after", count: 6 },
+              },
+            ],
+          },
+        }),
+      });
+      const n = c.resolve(NumberingService);
+      // One week before the anchor: sprint borrows down from 1 to 6, and release borrows down
+      // from 4711 to 4710 — the odometer's negative-steps counterpart to carrying up.
+      expect(unwrap(n.assignNumbers("s", "2024-01-29" as AnchorString))).toEqual({ release: 4710, sprint: 6 });
     });
   });
 
@@ -271,6 +357,39 @@ describe("NumberingService", () => {
       const n = c.resolve(NumberingService);
       const result = n.assignNumbers("s", "2024-02-12" as AnchorString);
       expect(result.isSome() && result.value).toEqual({ release: 4712, sprint: 1 });
+    });
+
+    it("ignores a stored basis that is missing a declared variable", () => {
+      const c = buildContainer({
+        s: customJournal("s", "week", 1, "2024-01-01", {
+          numbering: {
+            enabled: true,
+            anchorDate: "2024-01-01" as AnchorString,
+            allowBefore: false,
+            sources: [
+              { variable: "release", frontmatterKey: "journal-release", anchorValue: 4711, reset: { kind: "never" } },
+              {
+                variable: "sprint",
+                frontmatterKey: "journal-sprint",
+                anchorValue: 1,
+                reset: { kind: "after", count: 6 },
+              },
+            ],
+          },
+        }),
+      });
+      const index = c.resolve(JournalsIndex);
+      // A note written before `sprint` existed: it carries `release` only.
+      index.register({
+        journalName: "s",
+        anchor: "2024-01-29" as AnchorString,
+        path: "S/old.md" as VaultPath,
+        numbers: { release: 9000 },
+      });
+      const n = c.resolve(NumberingService);
+
+      // Recomputed from the anchor date: 2024-02-05 is 5 weekly steps past 2024-01-01.
+      expect(unwrap(n.assignNumbers("s", "2024-02-05" as AnchorString))).toEqual({ release: 4711, sprint: 6 });
     });
   });
 
@@ -377,7 +496,7 @@ describe("NumberingService", () => {
       expect(n.anchorForNumbers("s", { index: 2 }).isNone()).toBe(true);
     });
 
-    it("returns None for multiple numbering sources", () => {
+    it("returns None when a non-top source has a never reset", () => {
       const c = buildContainer({
         s: customJournal("s", "week", 1, "2024-01-01", {
           numbering: {
@@ -393,6 +512,82 @@ describe("NumberingService", () => {
       });
       const n = c.resolve(NumberingService);
       expect(n.anchorForNumbers("s", { phase: 1, n: 5 }).isNone()).toBe(true);
+    });
+
+    it("inverts a two-digit odometer back to its anchor", () => {
+      const c = buildContainer({
+        s: customJournal("s", "week", 1, "2024-01-01", {
+          numbering: {
+            enabled: true,
+            anchorDate: "2024-01-01" as AnchorString,
+            allowBefore: false,
+            sources: [
+              { variable: "release", frontmatterKey: "journal-release", anchorValue: 4711, reset: { kind: "never" } },
+              {
+                variable: "sprint",
+                frontmatterKey: "journal-sprint",
+                anchorValue: 1,
+                reset: { kind: "after", count: 6 },
+              },
+            ],
+          },
+        }),
+      });
+      const n = c.resolve(NumberingService);
+
+      // (4712 - 4711) * 6 + (3 - 1) = 8 weekly steps past 2024-01-01.
+      expect(unwrap(n.anchorForNumbers("s", { release: 4712, sprint: 3 }))).toBe("2024-02-26");
+      expect(unwrap(n.anchorForNumbers("s", { release: 4711, sprint: 1 }))).toBe("2024-01-01");
+    });
+
+    it("returns None when a declared digit is absent from the numbers", () => {
+      const c = buildContainer({
+        s: customJournal("s", "week", 1, "2024-01-01", {
+          numbering: {
+            enabled: true,
+            anchorDate: "2024-01-01" as AnchorString,
+            allowBefore: false,
+            sources: [
+              { variable: "release", frontmatterKey: "journal-release", anchorValue: 4711, reset: { kind: "never" } },
+              {
+                variable: "sprint",
+                frontmatterKey: "journal-sprint",
+                anchorValue: 1,
+                reset: { kind: "after", count: 6 },
+              },
+            ],
+          },
+        }),
+      });
+      const n = c.resolve(NumberingService);
+
+      expect(n.anchorForNumbers("s", { release: 4712 }).isNone()).toBe(true);
+    });
+
+    it("returns None for an inner digit outside its cycle rather than wrapping it", () => {
+      const c = buildContainer({
+        s: customJournal("s", "week", 1, "2024-01-01", {
+          numbering: {
+            enabled: true,
+            anchorDate: "2024-01-01" as AnchorString,
+            allowBefore: false,
+            sources: [
+              { variable: "release", frontmatterKey: "journal-release", anchorValue: 4711, reset: { kind: "never" } },
+              {
+                variable: "sprint",
+                frontmatterKey: "journal-sprint",
+                anchorValue: 1,
+                reset: { kind: "after", count: 6 },
+              },
+            ],
+          },
+        }),
+      });
+      const n = c.resolve(NumberingService);
+
+      // Wrapping would land Sprint9 on the same anchor as Release4712Sprint3 and let two
+      // notes attach to one period.
+      expect(n.anchorForNumbers("s", { release: 4711, sprint: 9 }).isNone()).toBe(true);
     });
 
     it("recovers an anchor via timeline.start when anchorDate is empty", () => {

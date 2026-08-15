@@ -6,7 +6,7 @@ import { reactive } from "vue";
 
 import { Calendar, DayPeriod, type AnchorString } from "@/calendar";
 import { date, installTestCalendar, testCalendar } from "@/calendar/testing";
-import { m } from "@/i18n";
+import { formatConjunction, m } from "@/i18n";
 import { Container, provideInjectorOnApp } from "@/infrastructure/di";
 import { Flows } from "@/infrastructure/flows";
 import { InputSuggestService, NotesService, TemplaterService, NoticeService } from "@/infrastructure/host";
@@ -32,7 +32,7 @@ import { JournalsEventsToken } from "@/journals/tokens";
 import { TemplateEngine } from "@/templates";
 import { installTestEngine } from "@/templates/testing";
 
-import { EditSequencePropertyFlow } from "../../flows/edit-sequence-property.flow";
+import { EditNumberingDigitFlow } from "../../flows/edit-numbering-digit.flow";
 
 import SequenceSection from "./SequenceSection.vue";
 
@@ -77,12 +77,27 @@ function mount(overrides: Partial<JournalConfig> = {}) {
   container.register(NoticeService).useValue(new FakeNoticeService());
   container.register(Flows).useClass(Flows);
   const flows = container.resolve(Flows);
-  vi.spyOn(flows, "invoke").mockReturnValue({} as never);
+  const invoke = vi.spyOn(flows, "invoke").mockReturnValue({} as never);
   render(SequenceSection, {
     props: { journalName: "daily" },
     global: { plugins: [{ install: (app) => provideInjectorOnApp(app, container) }] },
   });
-  return { storage, repo, flows, fakeModalService };
+  const config = storage.daily;
+  return { storage, repo, flows, invoke, config, fakeModalService };
+}
+
+function enabledNumbering(variables: readonly string[]): JournalConfig["numbering"] {
+  return {
+    enabled: true,
+    anchorDate: "2026-01-05" as AnchorString,
+    allowBefore: false,
+    sources: variables.map((variable, i) => ({
+      variable,
+      frontmatterKey: `journal-${variable}`,
+      anchorValue: 1,
+      reset: i === 0 ? ({ kind: "never" } as const) : ({ kind: "after", count: 6 } as const),
+    })),
+  };
 }
 
 describe("SequenceSection", () => {
@@ -111,22 +126,6 @@ describe("SequenceSection", () => {
       });
       await userEvent.click(screen.getByText(m.journal_edit_section_sequential_numbers()));
       expect(screen.queryByText(m.journal_edit_allow_before_label())).toBeNull();
-    });
-  });
-
-  describe("sequence property pencil", () => {
-    it("invokes EditSequencePropertyFlow when the sequence property pencil is clicked", async () => {
-      const { flows } = mount({
-        numbering: {
-          enabled: true,
-          anchorDate: "2024-01-01" as AnchorString,
-          allowBefore: false,
-          sources: [{ variable: "index", frontmatterKey: "journal-index", anchorValue: 1, reset: { kind: "never" } }],
-        },
-      });
-      await userEvent.click(screen.getByText(m.journal_edit_section_sequential_numbers()));
-      await userEvent.click(screen.getByLabelText(m.journal_sequence_property_modal_title()));
-      expect(flows.invoke).toHaveBeenCalledWith(EditSequencePropertyFlow, { journalName: "daily", sourceIndex: 0 });
     });
   });
 
@@ -163,6 +162,155 @@ describe("SequenceSection", () => {
       await waitFor(() => {
         expect(storage.daily?.numbering.anchorDate).toBe("2025-01-10");
       });
+    });
+  });
+
+  describe("digit list", () => {
+    it("renders one row per digit", async () => {
+      mount({
+        numbering: {
+          enabled: true,
+          anchorDate: "2026-01-05" as AnchorString,
+          allowBefore: false,
+          sources: [
+            { variable: "release", frontmatterKey: "journal-release", anchorValue: 4711, reset: { kind: "never" } },
+            {
+              variable: "sprint",
+              frontmatterKey: "journal-sprint",
+              anchorValue: 1,
+              reset: { kind: "after", count: 6 },
+            },
+          ],
+        },
+      });
+      await userEvent.click(screen.getByText(m.journal_edit_section_sequential_numbers()));
+
+      expect(await screen.findByText("release")).toBeTruthy();
+      expect(await screen.findByText("sprint")).toBeTruthy();
+    });
+
+    it("invokes the digit flow with no index when adding", async () => {
+      const { invoke } = mount({ numbering: enabledNumbering(["index"]) });
+      await userEvent.click(screen.getByText(m.journal_edit_section_sequential_numbers()));
+
+      await userEvent.click(screen.getByLabelText(m.journal_sequence_digit_add()));
+
+      expect(invoke).toHaveBeenCalledWith(EditNumberingDigitFlow, { journalName: "daily" });
+    });
+
+    it("invokes the digit flow with the row index when editing", async () => {
+      const { invoke } = mount({ numbering: enabledNumbering(["release", "sprint"]) });
+      await userEvent.click(screen.getByText(m.journal_edit_section_sequential_numbers()));
+
+      await userEvent.click(screen.getAllByLabelText(m.journal_sequence_digit_edit())[1]);
+
+      expect(invoke).toHaveBeenCalledWith(EditNumberingDigitFlow, { journalName: "daily", sourceIndex: 1 });
+    });
+
+    it("removes the digit at the clicked row", async () => {
+      const { config } = mount({ numbering: enabledNumbering(["release", "sprint"]) });
+      await userEvent.click(screen.getByText(m.journal_edit_section_sequential_numbers()));
+
+      await userEvent.click(screen.getAllByLabelText(m.journal_sequence_digit_delete())[1]);
+
+      await waitFor(() => {
+        expect(config.numbering.sources.map((source) => source.variable)).toEqual(["release"]);
+      });
+    });
+
+    it("promotes the next digit to index 0 when the top digit is deleted", async () => {
+      const { config } = mount({ numbering: enabledNumbering(["release", "sprint"]) });
+      await userEvent.click(screen.getByText(m.journal_edit_section_sequential_numbers()));
+
+      await userEvent.click(screen.getAllByLabelText(m.journal_sequence_digit_delete())[0]);
+
+      await waitFor(() => {
+        expect(config.numbering.sources.map((source) => source.variable)).toEqual(["sprint"]);
+      });
+      // Promotion by position only — the promoted digit keeps its after-N reset rather than
+      // being silently rewritten to never, which is still a legal index-0 kind.
+      expect(config.numbering.sources[0]?.reset).toEqual({ kind: "after", count: 6 });
+    });
+
+    it("does not offer to delete the only remaining digit", async () => {
+      mount({ numbering: enabledNumbering(["index"]) });
+      await userEvent.click(screen.getByText(m.journal_edit_section_sequential_numbers()));
+
+      expect(screen.queryByLabelText(m.journal_sequence_digit_delete())).toBeNull();
+    });
+  });
+
+  describe("invertibility warning", () => {
+    it("warns about a stale numbering variable left over from a rename", async () => {
+      mount({
+        nameTemplate: "{{index}}",
+        numbering: enabledNumbering(["release", "sprint"]),
+      });
+      await userEvent.click(screen.getByText(m.journal_edit_section_sequential_numbers()));
+
+      expect(
+        await screen.findByText(
+          m.journal_edit_name_template_invertibility_warning({ reason: "unknown-variable", offending: "index" }),
+        ),
+      ).toBeTruthy();
+    });
+
+    it("warns when the first digit is cyclic", async () => {
+      mount({
+        nameTemplate: "{{release}}-{{sprint}}",
+        numbering: {
+          enabled: true,
+          anchorDate: "2026-01-05" as AnchorString,
+          allowBefore: false,
+          sources: [
+            {
+              variable: "release",
+              frontmatterKey: "journal-release",
+              anchorValue: 1,
+              reset: { kind: "after", count: 4 },
+            },
+            {
+              variable: "sprint",
+              frontmatterKey: "journal-sprint",
+              anchorValue: 1,
+              reset: { kind: "after", count: 6 },
+            },
+          ],
+        },
+      });
+      await userEvent.click(screen.getByText(m.journal_edit_section_sequential_numbers()));
+
+      expect(await screen.findByText(m.journal_edit_name_template_cyclic_top_warning())).toBeTruthy();
+    });
+
+    it("names the digits the template leaves out", async () => {
+      mount({
+        nameTemplate: "Sprint {{sprint}}",
+        numbering: enabledNumbering(["release", "sprint"]),
+      });
+      await userEvent.click(screen.getByText(m.journal_edit_section_sequential_numbers()));
+
+      expect(
+        await screen.findByText(
+          m.journal_edit_name_template_unused_digits_warning({ missing: formatConjunction(["release"]) }),
+        ),
+      ).toBeTruthy();
+    });
+
+    it("shows no warning once the template covers every numbering variable", async () => {
+      mount({
+        nameTemplate: "{{release}}-{{sprint}}",
+        numbering: enabledNumbering(["release", "sprint"]),
+      });
+      await userEvent.click(screen.getByText(m.journal_edit_section_sequential_numbers()));
+
+      expect(await screen.findByText("release")).toBeTruthy();
+      expect(screen.queryByText(m.journal_edit_name_template_cyclic_top_warning())).toBeNull();
+      expect(
+        screen.queryByText(
+          m.journal_edit_name_template_invertibility_warning({ reason: "unknown-variable", offending: "index" }),
+        ),
+      ).toBeNull();
     });
   });
 });

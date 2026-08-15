@@ -10,9 +10,11 @@ All notable changes to this project will be documented in this file.
 - A numbering variable can now be offset and rendered as an ordinal: `{{index+3}}` adds three to the rendered value, `{{index-1}}` subtracts one, and `{{index:o}}` renders it as an ordinal ("4th"). They combine as `{{index+3:o}}`, and both survive the round-trip out of a note name, so a journal named `Sprint {{index+3}}` still recognizes its own notes. This offset syntax now applies to any variable name, not only numbering ones, so a template that happened to contain a literal `+3` or `-1` after a variable name (for example `{{date+3}}`) will render differently from before.
 
 - A `calendar-timeline` code block in `week` or `month` mode can now show neighboring periods around the current one, using the new `before` and `after` options: `before: 1` with `after: 1` in week mode renders the previous, current and next week together.
+- Sequential numbering can now chain several digits together, each with its own variable name, start number, and reset rule, so the fastest one carries into the next when it wraps — a name template of `Release{{release}}Sprint{{sprint}}` with `release` never resetting and `sprint` resetting every 6 notes produces `Release4711Sprint1` … `Release4711Sprint6`, then `Release4712Sprint1`.
 
 ### Bug Fixes
 
+- The warning shown when a name template without a date variable cannot be turned back into a date now says which digit is at fault instead of a single generic message: it names the numbering variables the name and folder templates leave out, or the digit below the slowest one that never resets and so freezes every digit above it.
 - Navigation block rows — including the custom-interval list in a view — now render `{{note_name}}` and `{{title}}`. A row shows the name of the note it opens, or the name that note would get for a period whose note does not exist yet.
 - `{{current_date}}`, `{{time}}` and `{{current_time}}` now resolve in navigation block rows; the variable reference listed them, but they came out as literal text.
 - A week configuration arriving from sync now re-anchors weekly notes on the receiving device, the same way changing it on that device does; previously the calendar moved but the notes did not, so their cells read as empty and the open-this-week command could start a second note for the week.

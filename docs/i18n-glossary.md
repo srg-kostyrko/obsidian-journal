@@ -22,7 +22,14 @@ locale:
 
 These were not edge cases; they were the default output for any word with a second
 sense. Fixing them by hand and re-running the pipeline would have reintroduced them, so
-the pipeline is gone. New locales and new strings come from people.
+the pipeline is gone.
+
+What is banned is the **context-free** pipeline, not every non-native translator. The
+failures above all trace to one string at a time with no domain context; a translator —
+person or agent — that reads this file, reuses the canonical terms, and matches the
+register of the neighbouring keys is working with exactly the context the pipeline
+lacked. Say which kind of pass a locale has had under "Coverage" below, and never
+re-run a bulk translator over the corpus.
 
 `npm run check:i18n` (`scripts/check-i18n-glossary.mjs`) runs in CI and enforces
 everything below. Adding a locale or a new domain noun means extending it there.
@@ -116,7 +123,10 @@ calendar` and `default left right none`.
 - **HTML entities.** `decoration_string_op_label` shipped `&lt;=`, `&gt;`, `&gt;=` in
   all ten locales, rendered literally in the UI. Nothing may contain an entity.
 - **Padded placeholders.** The CLI wrote `"{name} ."` and `( {current} )`. Roughly
-  fifteen per locale.
+  fifteen per locale. The rule matches `[ \t]` only, which is what makes French legal:
+  `fr` puts **U+202F** (narrow no-break space) inside `« … »` and before `;` `:` `?` `!`,
+  so `« {name} »` passes with U+202F and fails with an ordinary space. Copy the spacing
+  from an existing `fr` string rather than typing the guillemets fresh.
 - **Whitespace in match keys.** Paraglide splits composite keys on `,` without
   trimming, so `side=start, day=1` leaks a leading space into the generated input name
   and breaks the types. This is what `fix-i18n-variant-keys.mjs` used to repair after
@@ -224,7 +234,7 @@ classes still in the corpus, all from the same context-free-MT root cause:
 
 ## Coverage
 
-All eleven locales are complete at **674/674**. Every locale has had a line-by-line pass
+All eleven locales are complete at **705/705**. Every locale has had a line-by-line pass
 over every key against `en.json`, and the `decoration_breakdown_*`, `decoration_badge_*`
 and week-reanchor keys are translated everywhere.
 
@@ -232,6 +242,11 @@ Be precise about what that pass was, because "reviewed" overstates it for nine o
 
 - **uk** was reviewed by a native speaker. It is the only locale where the output was
   verified by someone who reads the language.
+- The 22 `journal_sequence_*` and numbering-warning keys were translated by an agent
+  working from this file — the same standard as the sweep below, not native-verified.
+  Its choices worth a native eye: the word for an odometer **digit** (de `Stelle`, ru
+  `разряд`, uk `розряд`, ja `桁`, ko `자리`, zh `位`), and whether _Slowest_ / _Fastest_
+  read as speed rather than as a ranking of importance.
 - **de, es, fr, it, ja, ko, pt, ru, zh** were swept by a reviewer working from the domain
   context this file records — the thing the original one-string-at-a-time pipeline never
   had. That is enough to remove wrong-domain homonyms, part-of-speech misparses and

@@ -6,13 +6,13 @@ import CloneJournalModal from "./CloneJournalModal.vue";
 import CodeBlockReferenceModal from "./CodeBlockReferenceModal.vue";
 import DeleteJournalModal from "./DeleteJournalModal.vue";
 import EditFrontmatterFieldModal from "./EditFrontmatterFieldModal.vue";
-import EditSequencePropertyModal from "./EditSequencePropertyModal.vue";
+import EditNumberingDigitModal from "./EditNumberingDigitModal.vue";
 import RenameJournalModal from "./RenameJournalModal.vue";
 import TemplaterSupportModal from "./TemplaterSupportModal.vue";
 import VariableReferenceModal from "./VariableReferenceModal.vue";
 
 import type { VariableModalContext } from "./variable-context";
-import type { JournalWrite } from "../../config";
+import type { JournalWrite, NumberingReset } from "../../config";
 
 export const addJournalModal = defineModal<{ name: string; write: JournalWrite }>()({
   component: AddJournalModal,
@@ -38,9 +38,17 @@ export const editFrontmatterFieldModal = defineModal<{ newValue: string }>()({
     m.journal_fm_field_modal_title({ field: fieldName }),
 });
 
-export const editSequencePropertyModal = defineModal<{ newValue: string }>()({
-  component: EditSequencePropertyModal,
-  title: (_: { journalName: string; sourceIndex: number }) => m.journal_sequence_property_modal_title(),
+export interface NumberingDigitDraft {
+  variable: string;
+  frontmatterKey: string;
+  anchorValue: number;
+  reset: NumberingReset;
+}
+
+export const editNumberingDigitModal = defineModal<NumberingDigitDraft>()({
+  component: EditNumberingDigitModal,
+  title: ({ sourceIndex }: { journalName: string; sourceIndex?: number }) =>
+    m.journal_sequence_digit_modal_title({ mode: sourceIndex === undefined ? "add" : "edit" }),
 });
 
 export const renameJournalModal = defineModal<{ newName: string }>()({

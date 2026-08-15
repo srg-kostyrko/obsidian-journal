@@ -4,13 +4,13 @@ import { CalendarDate } from "@/calendar";
 import { useService } from "@/infrastructure/di";
 import { TemplateContext, TemplateEngine, tokenize } from "@/templates";
 
-import { invertibleNumberingVariable } from "../../numbering";
-
 import type { JournalConfig } from "../../config";
 
 export type InvertibilityWarning =
   | { kind: "non-invertible"; reason: "function-token" | "unknown-variable" | "clock-variable"; offending: string }
-  | { kind: "no-anchor" };
+  | { kind: "cyclic-top" }
+  | { kind: "no-carry"; offending: string }
+  | { kind: "unused-digits"; missing: readonly string[] };
 
 function variableNames(template: string): Set<string> {
   const names = new Set<string>();
@@ -47,14 +47,23 @@ export function useInvertibilityCheck(
       }
     }
     // The template compiles, but auto-attach still needs to recover an anchor. The date
-    // variable does that directly; otherwise it inverts a single non-cyclic numbering value
-    // captured from either the name or folder template.
+    // variable does that directly; otherwise it inverts the whole odometer, captured across
+    // the name and folder templates.
     const nameVariables = variableNames(value.nameTemplate);
     if (nameVariables.has("date")) return null;
-    const invertibleVariable = invertibleNumberingVariable(numbering);
+    // A disabled sequence renders its digits as empty strings, which is a separate defect;
+    // none of the numbering verdicts below describes it.
+    if (!numbering.enabled) return null;
     const pathVariables = new Set([...nameVariables, ...variableNames(value.folder)]);
-    if (invertibleVariable !== null && pathVariables.has(invertibleVariable)) return null;
-    const usesNumberingVariable = numbering.sources.some((source) => pathVariables.has(source.variable));
-    return usesNumberingVariable ? { kind: "no-anchor" } : null;
+    if (numbering.sources.every((source) => !pathVariables.has(source.variable))) return null;
+    // A wrapping most significant digit repeats, so no template arrangement recovers a date.
+    if (numbering.sources.at(0)?.reset.kind === "after") return { kind: "cyclic-top" };
+    // A `never` digit below the top emits no carry, so every digit above it stays frozen.
+    const noCarry = numbering.sources.slice(1).find((source) => source.reset.kind === "never");
+    if (noCarry) return { kind: "no-carry", offending: noCarry.variable };
+    const missing = numbering.sources
+      .filter((source) => !pathVariables.has(source.variable))
+      .map((source) => source.variable);
+    return missing.length > 0 ? { kind: "unused-digits", missing } : null;
   });
 }

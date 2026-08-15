@@ -68,10 +68,6 @@ function handleModificationsClick(event: Event): void {
           <dt><VariableChip name="relative_date" /></dt>
           <dd>{{ m.journal_edit_variable_relative_date_description() }}</dd>
         </div>
-        <div class="variable-reference__row">
-          <dt><VariableChip name="index" /></dt>
-          <dd>{{ m.journal_edit_variable_index_description() }}</dd>
-        </div>
       </template>
 
       <template v-if="hasCycle">

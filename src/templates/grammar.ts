@@ -37,7 +37,7 @@ export function tokenize(template: string): TokenStream {
   return tokens;
 }
 
-const NAME_PREFIX_RE = /^([a-zA-Z_][a-zA-Z0-9_]*)/;
+const NAME_PREFIX_RE = /^([\p{L}_][\p{L}\p{Nd}_]*)/u;
 const ARITH_PREFIX_RE = /^([+-]\d+[a-z])/;
 const BOUNDARY_PREFIX_RE = /^(<[a-zA-Z]+=[a-zA-Z]+>)/;
 // The `\d` in the lookahead is load-bearing: for a maximal digit run, ARITH_PREFIX_RE
