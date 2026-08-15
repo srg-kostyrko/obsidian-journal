@@ -83,7 +83,7 @@ describe("useInvertibilityCheck", () => {
     expect(warning.value).toBeNull();
   });
 
-  it("flags a no-anchor warning for an index-only template when the numbering is cyclic", () => {
+  it("flags a cyclic-top warning for an index-only template when the sole digit is cyclic", () => {
     const config = customJournal("sprints", "week", 1, "2024-01-01", {
       nameTemplate: "Sprint {{index}}",
       numbering: {
@@ -95,6 +95,51 @@ describe("useInvertibilityCheck", () => {
         ],
       },
     });
+    const { warning } = probe(ref(config));
+    expect(warning.value).toEqual({ kind: "cyclic-top" });
+  });
+
+  it("reports cyclic-top when the most significant digit resets", () => {
+    const config = withName("Q{{quarter}}W{{week}}");
+    config.numbering = {
+      enabled: true,
+      anchorDate: "2026-01-05" as AnchorString,
+      allowBefore: false,
+      sources: [
+        { variable: "quarter", frontmatterKey: "journal-quarter", anchorValue: 1, reset: { kind: "after", count: 4 } },
+        { variable: "week", frontmatterKey: "journal-week", anchorValue: 1, reset: { kind: "after", count: 13 } },
+      ],
+    };
+    const { warning } = probe(ref(config));
+    expect(warning.value).toEqual({ kind: "cyclic-top" });
+  });
+
+  it("reports no warning when every invertible digit appears in the template", () => {
+    const config = withName("Release{{release}}Sprint{{sprint}}");
+    config.numbering = {
+      enabled: true,
+      anchorDate: "2026-01-05" as AnchorString,
+      allowBefore: false,
+      sources: [
+        { variable: "release", frontmatterKey: "journal-release", anchorValue: 4711, reset: { kind: "never" } },
+        { variable: "sprint", frontmatterKey: "journal-sprint", anchorValue: 1, reset: { kind: "after", count: 6 } },
+      ],
+    };
+    const { warning } = probe(ref(config));
+    expect(warning.value).toBeNull();
+  });
+
+  it("reports no-anchor when an invertible digit is missing from the template", () => {
+    const config = withName("Sprint{{sprint}}");
+    config.numbering = {
+      enabled: true,
+      anchorDate: "2026-01-05" as AnchorString,
+      allowBefore: false,
+      sources: [
+        { variable: "release", frontmatterKey: "journal-release", anchorValue: 4711, reset: { kind: "never" } },
+        { variable: "sprint", frontmatterKey: "journal-sprint", anchorValue: 1, reset: { kind: "after", count: 6 } },
+      ],
+    };
     const { warning } = probe(ref(config));
     expect(warning.value).toEqual({ kind: "no-anchor" });
   });

@@ -10,6 +10,7 @@ import type { JournalConfig } from "../../config";
 
 export type InvertibilityWarning =
   | { kind: "non-invertible"; reason: "function-token" | "unknown-variable" | "clock-variable"; offending: string }
+  | { kind: "cyclic-top" }
   | { kind: "no-anchor" };
 
 function variableNames(template: string): Set<string> {
@@ -55,6 +56,9 @@ export function useInvertibilityCheck(
     const pathVariables = new Set([...nameVariables, ...variableNames(value.folder)]);
     if (invertibleVariables?.every((name) => pathVariables.has(name))) return null;
     const usesNumberingVariable = numbering.sources.some((source) => pathVariables.has(source.variable));
-    return usesNumberingVariable ? { kind: "no-anchor" } : null;
+    if (!usesNumberingVariable) return null;
+    // A wrapping most significant digit repeats, so no template arrangement recovers a date.
+    if (numbering.sources.at(0)?.reset.kind === "after") return { kind: "cyclic-top" };
+    return { kind: "no-anchor" };
   });
 }
