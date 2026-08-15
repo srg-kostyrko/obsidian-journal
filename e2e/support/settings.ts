@@ -109,6 +109,16 @@ export async function setModalText(value: string): Promise<void> {
   await activeModal().$('input[type="text"]').setValue(value);
 }
 
+// Set a text input in a modal that has more than one, located by its UiSettingRow name — the
+// first-input assumption in setModalText would silently land on the wrong field there.
+export async function setModalRowText(rowName: string, value: string): Promise<void> {
+  await activeModal()
+    .$(
+      `.//div[contains(@class,"setting-item")][.//div[contains(@class,"setting-item-name")][normalize-space(.)="${rowName}"]]//input[@type="text"]`,
+    )
+    .setValue(value);
+}
+
 // Choose an icon in the open modal's UiIconSuggest. Typing only filters — the value is committed
 // by clicking a suggestion row, which Obsidian renders in a popup at the document root rather
 // than inside the dialog, so the row is looked up globally. Pass the id as getIconIds() reports

@@ -1,5 +1,6 @@
 import { $, $$, browser, expect } from "@wdio/globals";
 
+import { m } from "../../src/i18n/paraglide/messages.js";
 import { getSettings, waitForSettings } from "../support/plugin-data.js";
 import {
   clickIcon,
@@ -16,6 +17,7 @@ import {
   pickModalProperty,
   selectModalOption,
   selectModalSelect,
+  setModalRowText,
   setModalText,
   submitModal,
   submitOverlaidModal,
@@ -127,8 +129,8 @@ describe("settings", () => {
     it("edits the sequence property name and persists it", async () => {
       await openJournalSubpage("extra", "monthly");
       await expandSection("Sequential numbers");
-      await clickIcon("Edit sequential number property name");
-      await setModalText("seq-index");
+      await clickIcon(m.journal_sequence_digit_edit());
+      await setModalRowText(m.common_label_property_name(), "seq-index");
       await submitModal();
 
       await waitForSettings(
