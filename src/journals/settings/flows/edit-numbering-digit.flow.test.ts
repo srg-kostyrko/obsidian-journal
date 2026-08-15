@@ -2,7 +2,7 @@ import { createNanoEvents } from "nanoevents";
 import { describe, expect, it, vi } from "vitest";
 import { reactive } from "vue";
 
-import { Flows } from "@/infrastructure/flows";
+import { Flows, UserAborted } from "@/infrastructure/flows";
 import { NoticeService } from "@/infrastructure/host";
 import { ModalService } from "@/infrastructure/host/modals";
 import { FakeModalService } from "@/infrastructure/host/modals/testing";
@@ -107,6 +107,31 @@ describe("EditNumberingDigitFlow", () => {
     await promise;
 
     expect(connection.renameFieldAll).not.toHaveBeenCalled();
+  });
+
+  it("returns the appended digit's variable on submit", async () => {
+    const { flows, modals } = await build({ j: configWithDigits("j", ["index"]) });
+    const promise = flows.invoke(EditNumberingDigitFlow, { journalName: "j" });
+    modals.lastOpen<unknown, NumberingDigitDraft>().submit(draft());
+    const result = await promise;
+
+    expect(result.isOk() && result.value).toEqual({ variable: "sprint" });
+  });
+
+  it("returns UserAborted and leaves sources unchanged when the modal is cancelled", async () => {
+    const { flows, modals, repo } = await build({ j: configWithDigits("j", ["index"]) });
+    const promise = flows.invoke(EditNumberingDigitFlow, { journalName: "j" });
+    modals.lastOpen().cancel();
+    const result = await promise;
+
+    expect(result.isErr()).toBe(true);
+    expect(result.isErr() && result.error).toBeInstanceOf(UserAborted);
+    expect(
+      repo
+        .get("j")
+        .getOrUndefined()
+        ?.numbering.sources.map((s) => s.variable),
+    ).toEqual(["index"]);
   });
 
   it("errors for an unknown journal", async () => {

@@ -93,7 +93,14 @@ const onSubmit = handleSubmit((entered) =>
     variable: entered.variable,
     frontmatterKey: entered.frontmatterKey,
     anchorValue: entered.anchorValue,
-    reset: entered.resetKind === "never" ? { kind: "never" } : { kind: "after", count: entered.resetCount },
+    // isTopDigit gates only which control renders — a non-top digit's resetKind field can
+    // still carry a stale "never" from a value the schema deliberately does not police
+    // (a hand-edited config, or sources changing reactively while the modal is open), so the
+    // invariant is enforced here rather than trusted from the field.
+    reset:
+      isTopDigit.value && entered.resetKind === "never"
+        ? { kind: "never" }
+        : { kind: "after", count: entered.resetCount },
   }),
 );
 </script>
