@@ -75,6 +75,40 @@ describe("WorkspaceService", () => {
       expect(host.workspace.openCalls.at(-1)?.mode).toBe("tab");
     });
 
+    it("focuses the existing leaf when the note is already open in this window", async () => {
+      const { service, host } = build();
+      host.putFile(path);
+      await service.openNote(path);
+
+      await service.openNote(path);
+
+      expect(host.workspace.focusedPaths).toEqual([path]);
+      expect(host.workspace.openCalls).toHaveLength(1);
+    });
+
+    it("opens a new leaf when the note is only open in another window", async () => {
+      const { service, host } = build();
+      host.putFile(path);
+      await service.openNote(path);
+      host.workspace.activeWindow = "popout";
+
+      await service.openNote(path);
+
+      expect(host.workspace.focusedPaths).toEqual([]);
+      expect(host.workspace.openCalls).toHaveLength(2);
+    });
+
+    it("opens a new pane for an explicit mode even when the note is already open here", async () => {
+      const { service, host } = build();
+      host.putFile(path);
+      await service.openNote(path);
+
+      await service.openNote(path, "tab");
+
+      expect(host.workspace.focusedPaths).toEqual([]);
+      expect(host.workspace.openCalls.at(-1)).toEqual({ path, mode: "tab" });
+    });
+
     it("returns WorkspaceOpenError when the path is unknown", async () => {
       const { service } = build();
       const result = await service.openNote(path);

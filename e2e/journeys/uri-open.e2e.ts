@@ -5,7 +5,9 @@ import { openViaUri } from "../support/uri.js";
 import {
   closeAllLeaves,
   closePopoutWindows,
+  focusMainWindow,
   frontmatterOf,
+  mainWindowHoldsNote,
   markdownLeafCount,
   openNote,
   popoutWindowCount,
@@ -101,6 +103,40 @@ describe("open via uri", () => {
 
       // The popout would otherwise stay the active window and steal the next test's modals.
       await closePopoutWindows();
+    });
+  });
+
+  // Opening a note that is already open reuses its leaf. Obsidian's leaf lookup spans popout
+  // windows, so an unscoped reuse pulls the user into whichever window happens to hold the note,
+  // and it also swallows an explicit tab/split/window request. Neither is reachable in the unit
+  // suite: both need a real second window and a real workspace to open into.
+  describe("entry already open", () => {
+    it("opens the entry here when it is only open in a popout window", async () => {
+      await closeAllLeaves();
+      await openNote("baseline.md");
+      await openViaUri({ journal: "work", date: "2027-06-04", mode: "window" });
+      await waitForActiveNote("work/2027-06-04.md");
+      await focusMainWindow();
+
+      await openViaUri({ journal: "work", date: "2027-06-04" });
+      await waitForActiveNote("work/2027-06-04.md");
+
+      expect(await mainWindowHoldsNote("work/2027-06-04.md")).toBe(true);
+
+      await closePopoutWindows();
+    });
+
+    it("opens a second pane for an explicit tab mode when the entry is already open", async () => {
+      await closeAllLeaves();
+      await openViaUri({ journal: "work", date: "2027-06-05" });
+      await waitForActiveNote("work/2027-06-05.md");
+      const before = await markdownLeafCount();
+
+      await openViaUri({ journal: "work", date: "2027-06-05", mode: "tab" });
+
+      await browser.waitUntil(async () => (await markdownLeafCount()) === before + 1, {
+        timeoutMsg: "tab mode reused the leaf already holding the entry instead of adding one",
+      });
     });
   });
 
