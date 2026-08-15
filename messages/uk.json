@@ -1616,6 +1616,7 @@
 	"journal_colliding_warning": "Журнали {names} мають конфігурації, що конфліктують, тому їхні нотатки перезаписуватимуть одна одну. Змініть папку або шаблон назви в одному з них.",
 	"journal_note_name_empty_notice": "У журналі «{journalName}» шаблон назви дає порожню назву нотатки, тому нотатку неможливо створити. Задайте шаблон назви в налаштуваннях журналу.",
 	"journal_dashboard_bulk_add": "Масове додавання нотаток до {name}",
+	"journal_dashboard_clone": "Клонувати {name}",
 	"journal_dashboard_edit": "Налаштувати {name}",
 	"journal_dashboard_empty": "Жодних журналів ще не створено.",
 	"journal_delete_modal_title": "Видалити {name}",
@@ -1669,6 +1670,11 @@
 			}
 		}
 	],
+	"journal_clone_copy_name": "{name} (копія)",
+	"journal_clone_copy_name_indexed": "{name} (копія) {index}",
+	"journal_clone_modal_description": "Налаштування та команди копіюються. Нотатки — ні.",
+	"journal_clone_modal_name_label": "Нова назва журналу",
+	"journal_clone_modal_title": "Клонувати {name}",
 	"journal_edit_allow_before_description": "Дозволити індексацію до дати прив’язки. Може видавати від’ємні числа.",
 	"journal_edit_allow_before_label": "Дозволити перед прив’язкою",
 	"journal_edit_anchor_description": "Нумерація починається з цієї дати. Нотатка за цю дату отримує початковий номер, а наступні нотатки нумеруються далі.",

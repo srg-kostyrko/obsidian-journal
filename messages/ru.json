@@ -1817,6 +1817,7 @@
 	"journal_colliding_warning": "У журналов {names} конфликтующие конфигурации, поэтому их заметки будут перезаписывать друг друга. Измените папку или шаблон названия в одном из них.",
 	"journal_note_name_empty_notice": "В журнале «{journalName}» шаблон названия даёт пустое название заметки, поэтому заметку нельзя создать. Задайте шаблон названия в настройках журнала.",
 	"journal_dashboard_bulk_add": "Массовое добавление заметок в {name}",
+	"journal_dashboard_clone": "Клонировать {name}",
 	"journal_dashboard_edit": "Настроить {name}",
 	"journal_dashboard_empty": "Журналы пока не созданы.",
 	"journal_delete_modal_title": "Удалить {name}",
@@ -1870,6 +1871,11 @@
 			}
 		}
 	],
+	"journal_clone_copy_name": "{name} (копия)",
+	"journal_clone_copy_name_indexed": "{name} (копия) {index}",
+	"journal_clone_modal_description": "Настройки и команды копируются. Заметки — нет.",
+	"journal_clone_modal_name_label": "Новое название журнала",
+	"journal_clone_modal_title": "Клонировать {name}",
 	"journal_edit_allow_before_description": "Разрешить индексацию до даты привязки. Может давать отрицательные номера.",
 	"journal_edit_allow_before_label": "Разрешить до даты привязки",
 	"journal_edit_anchor_description": "Нумерация начинается с этой даты. Заметка за эту дату получает начальный номер, а следующие нумеруются дальше.",

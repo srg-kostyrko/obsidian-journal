@@ -4,7 +4,7 @@ import { computed, onUnmounted, ref, watchEffect } from "vue";
 import { m } from "@/i18n";
 import { useService } from "@/infrastructure/di";
 import { Flows } from "@/infrastructure/flows";
-import { AddJournalFlow, DeleteJournalFlow, JournalsViewModel, journalEditSubpage } from "@/journals";
+import { AddJournalFlow, DeleteJournalFlow, CloneJournalFlow, JournalsViewModel, journalEditSubpage } from "@/journals";
 import type { JournalConfig } from "@/journals";
 import { BulkAddFlow } from "@/journals/notes/bulk-add/flows/bulk-add.flow";
 import type { SubpageNav } from "@/settings";
@@ -73,6 +73,9 @@ function edit(journalName: string): void {
 function bulkAdd(journalName: string): void {
   void flows.invoke(BulkAddFlow, { journalName });
 }
+function clone(journalName: string): void {
+  void flows.invoke(CloneJournalFlow, { journalName });
+}
 function remove(journalName: string): void {
   void flows.invoke(DeleteJournalFlow, { journalName });
 }
@@ -102,6 +105,7 @@ function remove(journalName: string): void {
         :empty-text="m.journal_dashboard_empty()"
         @bulk-add="bulkAdd"
         @edit="edit"
+        @clone="clone"
         @delete="remove"
       />
     </UiCollapsibleBlock>

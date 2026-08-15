@@ -7,6 +7,7 @@ import { Flows } from "@/infrastructure/flows";
 import {
   AddJournalFlow,
   DeleteJournalFlow,
+  CloneJournalFlow,
   JournalsViewModel,
   journalEditSubpage,
   type JournalConfig,
@@ -48,6 +49,9 @@ function edit(journalName: string): void {
 function bulkAdd(journalName: string): void {
   void flows.invoke(BulkAddFlow, { journalName });
 }
+function clone(journalName: string): void {
+  void flows.invoke(CloneJournalFlow, { journalName });
+}
 function remove(journalName: string): void {
   void flows.invoke(DeleteJournalFlow, { journalName });
 }
@@ -69,6 +73,7 @@ function remove(journalName: string): void {
       :empty-text="m.journal_dashboard_empty()"
       @bulk-add="bulkAdd"
       @edit="edit"
+      @clone="clone"
       @delete="remove"
     />
   </UiCollapsibleBlock>

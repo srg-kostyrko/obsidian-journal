@@ -4,6 +4,10 @@ All notable changes to this project will be documented in this file.
 
 ## [Unreleased]
 
+### Features
+
+- Clone a journal from settings: the copy carries the source's whole configuration, joins the same shelf, and gets its own copy of the source's commands. Notes are not copied.
+
 ### Bug Fixes
 
 - Navigation block rows — including the custom-interval list in a view — now render `{{note_name}}` and `{{title}}`. A row shows the name of the note it opens, or the name that note would get for a period whose note does not exist yet.

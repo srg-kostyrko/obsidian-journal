@@ -1762,6 +1762,7 @@
 	"journal_colliding_warning": "{names} 저널의 구성이 서로 충돌해 노트가 덮어써집니다. 그중 한 저널의 폴더나 이름 템플릿을 변경하세요.",
 	"journal_note_name_empty_notice": "\"{journalName}\" 저널의 이름 템플릿이 빈 노트 이름으로 확정되어 노트를 만들 수 없습니다. 저널 설정에서 이름 템플릿을 지정하세요.",
 	"journal_dashboard_bulk_add": "{name}에 노트 일괄 추가",
+	"journal_dashboard_clone": "{name} 복제",
 	"journal_dashboard_edit": "{name} 구성",
 	"journal_dashboard_empty": "아직 만든 저널이 없습니다.",
 	"journal_delete_modal_title": "{name} 삭제",
@@ -1811,6 +1812,11 @@
 			}
 		}
 	],
+	"journal_clone_copy_name": "{name} (사본)",
+	"journal_clone_copy_name_indexed": "{name} (사본) {index}",
+	"journal_clone_modal_description": "설정과 명령은 복사됩니다. 노트는 복사되지 않습니다.",
+	"journal_clone_modal_name_label": "새 저널 이름",
+	"journal_clone_modal_title": "{name} 복제",
 	"journal_edit_allow_before_description": "기준일 이전에도 번호를 매길 수 있게 합니다. 음수가 나올 수 있습니다.",
 	"journal_edit_allow_before_label": "기준일 이전 허용",
 	"journal_edit_anchor_description": "이 날짜부터 번호가 시작됩니다. 이 날짜의 노트가 시작 번호를 받고, 이후 노트는 거기서부터 하나씩 올라갑니다.",

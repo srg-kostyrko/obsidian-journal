@@ -28,6 +28,14 @@ export class ShelvesService {
     this.#journals = journals;
     journalEvents.on("renamed", (oldName, newName) => this.#renameJournalInShelves(oldName, newName));
     journalEvents.on("deleted", (journalName) => this.#removeJournalFromShelves(journalName));
+    journalEvents.on("cloned", (sourceName, newName) => this.#shelveCopyWithSource(sourceName, newName));
+  }
+
+  #shelveCopyWithSource(sourceName: string, newName: string): void {
+    for (const shelf of this.#shelves.find().list()) {
+      if (!shelf.journals.includes(sourceName)) continue;
+      this.#shelves.update(shelf.name, { journals: [...shelf.journals, newName] });
+    }
   }
 
   #renameJournalInShelves(oldName: string, newName: string): void {
