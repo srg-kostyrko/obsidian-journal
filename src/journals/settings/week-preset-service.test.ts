@@ -1,4 +1,5 @@
-import { afterEach, beforeEach, describe, expect, it } from "vitest";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
+import { nextTick } from "vue";
 
 import { Calendar, WeekPeriod, calendarSlice } from "@/calendar";
 import { CalendarSettingsBridge } from "@/calendar/settings/bridge";
@@ -36,11 +37,11 @@ function weekly(patch: { addStartDate?: boolean; addEndDate?: boolean } = {}): R
   return { weekly: { ...config, frontmatter: { ...config.frontmatter, ...patch } } };
 }
 
-async function build(journals: Record<string, JournalConfig>) {
+async function build(journals: Record<string, JournalConfig>, initial: typeof ISO | typeof WESTERN = ISO) {
   const notes = new FakeNotesService();
   const settings = createSettingsService({
     slices: [calendarSlice],
-    raw: { version: 4, calendar: ISO },
+    raw: { version: 4, calendar: initial },
   });
   const c = settings.container;
   c.register(Calendar).useValue(testCalendar());
@@ -66,7 +67,20 @@ async function build(journals: Record<string, JournalConfig>) {
   // Resolving the bridge starts the watchEffect that applies the grid, exactly as autoLoad does.
   c.resolve(CalendarSettingsBridge);
 
-  return { container: c, notes, index: c.resolve(JournalsIndex), service: c.resolve(WeekPresetService) };
+  // Resolving the service starts its subscription to the settings reload seam, exactly as the
+  // eager registration does in the real container.
+  const service = c.resolve(WeekPresetService);
+
+  // Stands in for Obsidian Sync replacing data.json and the plugin's onExternalSettingsChange:
+  // the new raw lands on "disk", then reload() refreshes every slice from it. The re-anchor it
+  // triggers is fire-and-forget, so callers wait on the note itself.
+  async function syncCalendar(next: typeof ISO | typeof WESTERN): Promise<void> {
+    await settings.data.save({ version: 4, calendar: next });
+    await settings.service.reload();
+    await nextTick();
+  }
+
+  return { container: c, notes, index: c.resolve(JournalsIndex), service, syncCalendar };
 }
 
 function seedWeek(notes: FakeNotesService, index: JournalsIndex, path: string, date: string): void {
@@ -220,6 +234,61 @@ describe("WeekPresetService", () => {
     await service.apply(WESTERN);
 
     expect(notes.frontmatterOf("month/2026-06.md" as VaultPath)?.["journal-date"]).toBe("2026-06-01");
+  });
+
+  // A week grid can also arrive from Obsidian Sync, which never passes through apply(): reload()
+  // refreshes the calendar slice along with every other one. Without a re-anchor there, the note
+  // keeps a stored date that is no longer its week's first day, so the calendar reads "no note"
+  // over a file that is sitting right there.
+  describe("week grid arriving from an external settings reload", () => {
+    it("re-anchors a weekly note onto the synced grid", async () => {
+      const { notes, index, syncCalendar } = await build(weekly());
+      seedWeek(notes, index, "week/2026-W23.md", "2026-06-01");
+
+      await syncCalendar(WESTERN);
+
+      await vi.waitFor(() =>
+        expect(notes.frontmatterOf("week/2026-W23.md" as VaultPath)?.["journal-date"]).toBe("2026-05-31"),
+      );
+    });
+
+    // The re-anchor has to preserve which WEEK the note was, not which week now contains its old
+    // anchor. Going Western -> ISO the two answers differ by a full week for every anchor: the
+    // Western anchor is a Sunday, which ISO counts as the LAST day of the preceding week. Resolving
+    // by containment (anchorOf, as the v1 migration's canonicalization does) would silently shift a
+    // user's whole weekly archive back one week.
+    it("keeps the note's week identity rather than re-reading its old anchor under the new grid", async () => {
+      const { notes, index, syncCalendar } = await build(weekly(), WESTERN);
+      seedWeek(notes, index, "week/2025-W45.md", "2025-11-02");
+
+      await syncCalendar(ISO);
+
+      // 2025-10-27 is the containment answer — the ISO week holding the old Sunday anchor.
+      await vi.waitFor(() =>
+        expect(notes.frontmatterOf("week/2025-W45.md" as VaultPath)?.["journal-date"]).toBe("2025-11-03"),
+      );
+    });
+
+    it("recomputes the end date against the synced grid", async () => {
+      const { notes, index, syncCalendar } = await build(weekly({ addEndDate: true }));
+      seedWeek(notes, index, "week/2026-W23.md", "2026-06-01");
+
+      await syncCalendar(WESTERN);
+
+      await vi.waitFor(() =>
+        expect(notes.frontmatterOf("week/2026-W23.md" as VaultPath)?.["journal-end-date"]).toBe("2026-06-06"),
+      );
+    });
+
+    it("writes nothing when the reload does not move the grid", async () => {
+      const { notes, index, syncCalendar } = await build(weekly());
+      seedWeek(notes, index, "week/2026-W23.md", "2026-06-01");
+      const update = vi.spyOn(notes, "updateFrontmatter");
+
+      await syncCalendar(ISO);
+
+      expect(update).not.toHaveBeenCalled();
+    });
   });
 
   it("leaves a custom weekly interval's notes alone", async () => {
