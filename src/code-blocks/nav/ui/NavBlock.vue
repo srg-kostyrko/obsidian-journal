@@ -3,7 +3,7 @@ import type { AnchorString, Period } from "@/calendar";
 import { CellDecoration, type CellDecorationScope } from "@/decorations";
 import type { JournalConfig, JournalNavBlock } from "@/journals";
 
-import NavBlockRow from "./NavBlockRow.vue";
+import NavBlockSegment from "./NavBlockSegment.vue";
 
 // blockScope/rowScope name the provided decoration maps the whole-block and per-row decorations
 // draw from (see decoration-scopes.ts). The nav code block passes two distinct scopes since the
@@ -25,11 +25,11 @@ defineProps<{
   <div class="nav-block">
     <CellDecoration v-if="block.decorateWholeBlock" :period="period" :scope="blockScope" class="nav-block-inner">
       <div v-for="(line, lineIndex) of block.lines" :key="lineIndex" class="nav-block-line">
-        <NavBlockRow
+        <NavBlockSegment
           v-for="(segment, segmentIndex) of line"
           :key="segmentIndex"
           :journal
-          :row="segment"
+          :segment
           :ref-date="refDate"
           :period
           :prevent-navigation="preventNavigation"
@@ -46,11 +46,11 @@ defineProps<{
     </CellDecoration>
     <template v-else>
       <div v-for="(line, lineIndex) of block.lines" :key="lineIndex" class="nav-block-line">
-        <NavBlockRow
+        <NavBlockSegment
           v-for="(segment, segmentIndex) of line"
           :key="segmentIndex"
           :journal
-          :row="segment"
+          :segment
           :ref-date="refDate"
           :period
           :prevent-navigation="preventNavigation"

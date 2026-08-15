@@ -35,12 +35,13 @@ import { ShelvesRepository } from "@/shelves";
 import { TemplateEngine } from "@/templates";
 import { useModifierHoverPreview } from "@/ui/use-modifier-hover-preview";
 
-import { resolveLinkCandidates, resolveLinkTarget, type LinkTarget } from "../link-targets";
+import { resolveLinkCandidates, type LinkTarget } from "../link-targets";
 import { buildNavRowContext } from "../nav-row-context";
+import { resolveSegmentLink } from "../segment-link";
 
 const props = defineProps<{
   journal: JournalConfig;
-  row: NavBlockSegment;
+  segment: NavBlockSegment;
   refDate: AnchorString;
   period: Period;
   preventNavigation?: boolean;
@@ -74,7 +75,11 @@ const shelfJournals = computed<readonly JournalConfig[]>(() =>
   resolveLinkCandidates(props.journal.name, [...journals.find().list()], [...shelves.find().list()]),
 );
 
-const target = computed(() => resolveLinkTarget(props.row, props.journal, shelfJournals.value, entry.value));
+const resolved = computed(() =>
+  resolveSegmentLink(props.segment, props.journal, shelfJournals.value, entry.value, props.refDate),
+);
+const target = computed(() => resolved.value.target);
+const linkAnchor = computed(() => resolved.value.date.toAnchor());
 
 const decorationCells = inject(props.decorationScope?.map ?? CellDecorationMapKey, null);
 const decorationItems = useDecorationMenuItems(decorationCells, () => props.shelf ?? null);
@@ -82,7 +87,7 @@ const decorationItems = useDecorationMenuItems(decorationCells, () => props.shel
 // Offering to explain decorations this row deliberately renders none of would be
 // incoherent from the user's side, so the menu item tracks the same flag the template does.
 function contextMenuItems(period: Period): readonly MenuItemSpec[] {
-  if (!props.row.addDecorations) return [];
+  if (!props.segment.addDecorations) return [];
   // A custom journal's row IS the interval, and an interval is a "day"-kind period at its
   // start anchor — indistinguishable from the day cell without saying so here.
   return props.journal.write.type === "custom"
@@ -92,7 +97,7 @@ function contextMenuItems(period: Period): readonly MenuItemSpec[] {
 
 const text = computed(() =>
   engine.renderString(
-    props.row.template,
+    props.segment.template,
     buildNavRowContext({
       journal: props.journal,
       refDate: props.refDate,
@@ -105,18 +110,18 @@ const text = computed(() =>
   ),
 );
 
-const fontSize = computed(() => `${props.row.fontSize}em`);
-const fontWeight = computed(() => (props.row.bold ? "bold" : "normal"));
-const fontStyle = computed(() => (props.row.italic ? "italic" : "normal"));
-const color = computed(() => colorToString(props.row.color));
-const background = computed(() => colorToString(props.row.background));
+const fontSize = computed(() => `${props.segment.fontSize}em`);
+const fontWeight = computed(() => (props.segment.bold ? "bold" : "normal"));
+const fontStyle = computed(() => (props.segment.italic ? "italic" : "normal"));
+const color = computed(() => colorToString(props.segment.color));
+const background = computed(() => colorToString(props.segment.background));
 const cursor = computed(() => (target.value.kind === "none" ? "default" : "pointer"));
 
 function pathsForTarget(t: LinkTarget): readonly VaultPath[] {
   return match(t)
     .with({ kind: "none" }, () => [])
     .with({ kind: "self" }, ({ path }) => [path])
-    .with({ kind: "open" }, ({ journalNames }) => index.pathsAt(journalNames, props.refDate))
+    .with({ kind: "open" }, ({ journalNames }) => index.pathsAt(journalNames, linkAnchor.value))
     .exhaustive();
 }
 
@@ -131,7 +136,7 @@ function onClick(event: MouseEvent): void {
     return;
   }
   void flows.invoke(OpenDateFlow, {
-    anchor: props.refDate,
+    anchor: linkAnchor.value,
     journalNames: [...t.journalNames],
     openMode: defineOpenMode(event),
     pickAt: event,
@@ -160,7 +165,7 @@ function onPointerEnter(event: PointerEvent): void {
     @pointerenter="onPointerEnter"
     @pointerleave="hover.leave()"
   >
-    <CellDecoration v-if="row.addDecorations" :period="period" :scope="decorationScope">{{ text }}</CellDecoration>
+    <CellDecoration v-if="segment.addDecorations" :period="period" :scope="decorationScope">{{ text }}</CellDecoration>
     <template v-else>{{ text }}</template>
   </div>
 </template>

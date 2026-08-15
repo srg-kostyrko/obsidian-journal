@@ -192,7 +192,7 @@ afterEach(() => {
 
 beforeAll(() => initLocale("en"));
 
-function navRow(overrides: Partial<NavBlockSegment> = {}): NavBlockSegment {
+function navSegment(overrides: Partial<NavBlockSegment> = {}): NavBlockSegment {
   return {
     template: "today",
     fontSize: 1,
@@ -208,15 +208,47 @@ function navRow(overrides: Partial<NavBlockSegment> = {}): NavBlockSegment {
   };
 }
 
+function mountWithLines(
+  lines: NavBlockSegment[][],
+  extra: Record<string, JournalConfig> = {},
+  configure?: (h: Harness) => void,
+) {
+  const base = journalDefaultsFor({ type: "year" }, "yearly");
+  const yearly: JournalConfig = { ...base, navBlock: { ...base.navBlock, lines } };
+  const h = buildHarness({ yearly, ...extra });
+  const entry = { journalName: "yearly", anchor: "2025-01-01" as AnchorString, path: "Yearly/2025.md" as VaultPath };
+  h.index.byPath.set("Yearly/2025.md", entry);
+  h.index.byAnchor.set("yearly::2025-01-01", entry);
+  configure?.(h);
+  mount(h, "Yearly/2025.md");
+  return h;
+}
+
+function quarterlyWithNote(): Record<string, JournalConfig> {
+  return { quarterly: journalDefaultsFor({ type: "quarter" }, "quarterly") };
+}
+
+// Shelves must be seeded before mount: FakeShelves is plain, non-reactive data, so
+// shelfJournals (a computed) only sees a mutation made ahead of the initial render.
+function renderNavWithSegment(overrides: Partial<NavBlockSegment>) {
+  return mountWithLines([[navSegment(overrides)]], quarterlyWithNote(), (h) => {
+    h.shelves.shelves = [{ name: "main", journals: ["yearly", "quarterly"] }];
+  });
+}
+
 function withWholeBlockDecoration(base: JournalConfig): JournalConfig {
-  return { ...base, decorations: [], navBlock: { ...base.navBlock, decorateWholeBlock: true, lines: [[navRow()]] } };
+  return {
+    ...base,
+    decorations: [],
+    navBlock: { ...base.navBlock, decorateWholeBlock: true, lines: [[navSegment()]] },
+  };
 }
 
 function withPerRowDecoration(base: JournalConfig): JournalConfig {
   return {
     ...base,
     decorations: [],
-    navBlock: { ...base.navBlock, decorateWholeBlock: false, lines: [[navRow({ addDecorations: true })]] },
+    navBlock: { ...base.navBlock, decorateWholeBlock: false, lines: [[navSegment({ addDecorations: true })]] },
   };
 }
 
@@ -297,7 +329,7 @@ describe("NavigationCodeBlock row templates", () => {
 
   it("renders note_name as the connected note's own name, and as the prospective name where no note exists", () => {
     const daily: JournalConfig = { ...journalDefaultsFor({ type: "day" }, "daily") };
-    daily.navBlock = { ...daily.navBlock, lines: [[navRow({ template: "{{note_name}}" })]] };
+    daily.navBlock = { ...daily.navBlock, lines: [[navSegment({ template: "{{note_name}}" })]] };
     const h = buildHarness({ daily });
     const entry: JournalEntry = {
       journalName: "daily",
@@ -441,7 +473,7 @@ describe("NavigationCodeBlock row click routing", () => {
   it("opens a row's note directly once the index registers it", async () => {
     // Rows read the index for their own period, which is registered asynchronously — the
     // neighboring period's note lands after the block has already rendered.
-    const journal = dailyWithRows([navRow({ template: "{{date}}", link: "self" })]);
+    const journal = dailyWithRows([navSegment({ template: "{{date}}", link: "self" })]);
     const h = buildHarness({ daily: journal });
     h.index.byPath.set("Daily/2026-05-27.md", {
       journalName: "daily",
@@ -677,6 +709,46 @@ describe("NavigationCodeBlock row click routing", () => {
     expect(h.workspace.openNoteCalls).toHaveLength(0);
     expect(h.flows.calls).toHaveLength(0);
   });
+
+  it("invokes OpenDateFlow with the shifted date for a segment carrying a linkDate", async () => {
+    // yearly is anchored at 2025-01-01; the segment shows and opens Q2, not the plain Q1.
+    const h = renderNavWithSegment({ link: "quarter", linkDate: "+1q", template: "{{date+1q:[Q]Q}}" });
+
+    const user = userEvent.setup({ advanceTimers: vi.advanceTimersByTime });
+    const target = screen.getAllByText("Q2")[1];
+    if (target) await user.click(target);
+
+    const parameters = h.flows.calls[0]?.parameters as { anchor: string };
+    expect(parameters.anchor).toBe("2025-04-01");
+  });
+
+  it("resolves the shifted date's paths for the context menu", async () => {
+    const h = renderNavWithSegment({ link: "quarter", linkDate: "+1q", template: "{{date+1q:[Q]Q}}" });
+    h.index.byAnchor.set("quarterly::2025-04-01", {
+      journalName: "quarterly",
+      anchor: "2025-04-01" as AnchorString,
+      path: "Quarterly/2025-Q2.md" as VaultPath,
+    });
+
+    const target = screen.getAllByText("Q2")[1];
+    if (target) await fireEvent.contextMenu(target);
+
+    expect(h.workspace.pathsMenuCalls).toEqual([{ paths: ["Quarterly/2025-Q2.md"], extraItems: [] }]);
+  });
+
+  it("previews the shifted date's note on modifier hover", async () => {
+    const h = renderNavWithSegment({ link: "quarter", linkDate: "+1q", template: "{{date+1q:[Q]Q}}" });
+    h.index.byAnchor.set("quarterly::2025-04-01", {
+      journalName: "quarterly",
+      anchor: "2025-04-01" as AnchorString,
+      path: "Quarterly/2025-Q2.md" as VaultPath,
+    });
+
+    const target = screen.getAllByText("Q2")[1];
+    if (target) await fireEvent.pointerEnter(target, { ctrlKey: true });
+
+    expect(h.workspace.previewFirstPathCalls).toEqual([{ paths: ["Quarterly/2025-Q2.md"] }]);
+  });
 });
 
 describe("NavigationCodeBlock context menu", () => {
@@ -791,7 +863,7 @@ describe("NavigationCodeBlock context menu", () => {
       ],
       navBlock: {
         ...base.navBlock,
-        lines: [[navRow({ addDecorations: true })]],
+        lines: [[navSegment({ addDecorations: true })]],
       },
     };
     const h = buildHarness({ daily: journal });
@@ -823,7 +895,7 @@ describe("NavigationCodeBlock context menu", () => {
       ],
       navBlock: {
         ...base.navBlock,
-        lines: [[navRow({ addDecorations: false })]],
+        lines: [[navSegment({ addDecorations: false })]],
       },
     };
     const h = buildHarness({ daily: journal });
@@ -842,7 +914,7 @@ describe("NavigationCodeBlock context menu", () => {
 
   it("contributes no item to the context menu of an undecorated row", async () => {
     const base = journalDefaultsFor({ type: "day" }, "daily");
-    const journal: JournalConfig = { ...base, navBlock: { ...base.navBlock, lines: [[navRow()]] } };
+    const journal: JournalConfig = { ...base, navBlock: { ...base.navBlock, lines: [[navSegment()]] } };
     const h = buildHarness({ daily: journal });
     h.index.byPath.set("Daily/2026-05-27.md", {
       journalName: "daily",
@@ -873,7 +945,7 @@ describe("NavigationCodeBlock context menu", () => {
       navBlock: {
         ...base.navBlock,
         type: "existing",
-        lines: [[navRow({ template: "sprint", addDecorations: true })]],
+        lines: [[navSegment({ template: "sprint", addDecorations: true })]],
       },
     };
     const h = buildHarness({ sprint: journal });
@@ -1086,7 +1158,7 @@ describe("NavigationCodeBlock decorations", () => {
       navBlock: {
         ...base.navBlock,
         type: "existing",
-        lines: [[navRow({ template: "sprint", addDecorations: true })]],
+        lines: [[navSegment({ template: "sprint", addDecorations: true })]],
       },
     };
     const h = buildHarness({ sprint: journal });

@@ -35,9 +35,9 @@ vi.mock("@/notes-calendar/use-shelf-scope", () => ({
   }),
 }));
 
-vi.mock("@/code-blocks/nav/ui/NavBlockRow.vue", () => ({
+vi.mock("@/code-blocks/nav/ui/NavBlockSegment.vue", () => ({
   default: defineComponent({
-    props: { journal: { type: Object, required: true }, row: { type: Object, required: true } },
+    props: { journal: { type: Object, required: true }, segment: { type: Object, required: true } },
     setup: (p) => () =>
       h("div", { "data-testid": "row-stub", "data-row-journal": (p.journal as { name: string }).name }),
   }),
