@@ -5,7 +5,7 @@ import { tokenize } from "@/templates";
 import { NUMBERING_VARIABLE_RE, RESERVED_VARIABLE_NAMES } from "./numbering-variables";
 
 describe("numbering variable rules", () => {
-  it.each(["index", "sprint", "_private", "pi24", "Release"])("accepts %s", (name) => {
+  it.each(["index", "sprint", "_private", "pi24", "Release", "спринт", "реліз", "спринт2"])("accepts %s", (name) => {
     expect(NUMBERING_VARIABLE_RE.test(name)).toBe(true);
   });
 
@@ -16,7 +16,7 @@ describe("numbering variable rules", () => {
   // A name the tokenizer cannot parse renders as a literal `{{...}}` in the note filename
   // rather than failing loudly, so the rule must match the tokenizer exactly.
   it("accepts exactly the names the tokenizer parses as a variable", () => {
-    for (const name of ["sprint", "_private", "Release"]) {
+    for (const name of ["sprint", "_private", "Release", "спринт", "реліз", "спринт2"]) {
       const template = `{{${name}}}`;
       expect(tokenize(template)).toEqual([{ kind: "variable", name, modifiers: [], format: undefined, raw: template }]);
     }
