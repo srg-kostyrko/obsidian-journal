@@ -115,13 +115,35 @@ Each journal can be configured separately with these settings:
   - Start writing on: When this journal begins
   - End writing: When to stop creating notes (never, after a date, or after N repeats)
 
-- **Sequential numbers**: For numbered entries (like "Sprint 1")
+- **Sequential numbers**: For numbered entries (like "Sprint 1"), and for chained ones (like "Release4711Sprint1")
 
   - Enable sequential numbers
-  - Anchor date and start number: The note on the anchor date gets the start number, later notes count up from it
-  - Reset: Continuous, or resets after N repeats
-  - Allow before anchor: Permit numbering earlier notes, which may produce negative numbers. Offered only when the journal has no start date and Reset is Continuous
-  - Property name: The frontmatter property the number is stored in
+  - A journal's numbering is an ordered list of **digits**, slowest first. The last (fastest)
+    digit advances once per note; when it wraps around, it carries into the digit above it, the
+    way a car odometer's ones wheel turns the tens wheel. Each digit has its own:
+    - **Variable name**, used as `{{name}}` in the note name template and folder path
+    - **Start number**
+    - **Reset rule** — only the first (slowest) digit can be set to _Continuous_ (never resets);
+      every digit below it resets after a fixed count, shown as "how many per _\<the digit above
+      it\>_"
+    - **Frontmatter property** the digit's number is stored in
+  - Anchor date: The note on the anchor date gets every digit's start number, and later notes count up from there
+  - Digits can only be added at the bottom, as a new fastest digit — there is no way to insert a
+    slower one above the current top. To turn a single-counter journal into a chained one (say,
+    adding Release above an existing Sprint), rename the existing digit to `release`, give it its
+    new start number, and add a finer `sprint` digit beneath it
+  - The last remaining digit cannot be deleted; deleting the slowest one promotes the next digit
+    to take its place
+  - Allow before anchor: Permit numbering earlier notes, which may produce negative numbers. Offered only when the journal has no start date and the slowest digit is Continuous
+  - A live **preview** shows the next five note names the current configuration produces
+  - A note named only by its digits (no date anywhere in the name or folder) can still auto-attach
+    to its journal, but only when the slowest digit is Continuous **and** every digit appears in
+    the name or folder template. If the slowest digit resets, its numbers repeat forever and
+    cannot be turned back into a date, so the note creation section warns about it specifically
+
+  For example, a name template of `Release{{release}}Sprint{{sprint}}` with `release` starting at
+  4711 (Continuous) and `sprint` starting at 1 (6 per release) produces `Release4711Sprint1` …
+  `Release4711Sprint6`, then `Release4712Sprint1`.
 
 - **Frontmatter**: Customize the properties the plugin writes
   - Date property name
@@ -240,7 +262,11 @@ These variables can be used in the note name template, the folder path, and the 
 - `{{date}}` - date used as reference to specific period, formatted using date format from settings. In most cases it is the first day of the month, quarter, year or custom interval. The exception is week notes, where `{{date}}` renders the week's representative day rather than its first day — the day whose calendar year is the week's own year, which is the Thursday under the ISO-8601 week configuration. This is what makes `{{date:YYYY}}` resolve to the right year on a week straddling January 1, whichever week configuration you use. Format can be overridden using following syntax `{{date:format}}` where format is string using [Moment.js format rules](https://momentjs.com/docs/#/displaying/format/) (like `{{date:YYYY-MM-DD}}`).
 - `{{start_date}}` - first day of week, month, quarter, year or interval depending on note type, formatting rules are the same as in `{{date}}`, as well as the calculations
 - `{{end_date}}` - last day of week, month, quarter, year or interval depending on note type, formatting rules are the same as in `{{date}}`, as well as the calculations
-- `{{index}}` - the journal's numbering variable, which is named `index` by default. A journal can define several numbering variables under its own names, each with its own frontmatter property; the name you give it there is the name you use here. Numbering is on by default for custom-interval journals and can be enabled for any journal type.
+- `{{index}}` - a journal's numbering variable; its first (and by default only) digit is named
+  `index` unless renamed. A journal can chain several digits together, each under its own
+  variable name and frontmatter property — see **Sequential numbers** below; the name you give a
+  digit there is the name you use here. Numbering is on by default for custom-interval journals
+  and can be enabled for any journal type.
   A numbering variable can be offset and rendered as an ordinal: `{{index+3}}`
   adds three to the rendered value, `{{index-1}}` subtracts one, and
   `{{index:o}}` renders it as an ordinal ("4th"). They combine as
@@ -414,6 +440,20 @@ Start writing on: Term start date
 End writing: After date (term end date)
 ```
 
+#### Release and Sprint Numbering
+
+```yaml
+Type: Custom
+Every: Week
+Duration: 2
+Folder: Projects/{{journal_name}}/Releases
+Name Template: Release{{release}}Sprint{{sprint}}
+Sequential numbers: Enabled, digit "release" starts at 4711 (Continuous), digit "sprint" starts at 1 (6 per release)
+```
+
+Produces `Release4711Sprint1` through `Release4711Sprint6`, then rolls over to
+`Release4712Sprint1`.
+
 ## Troubleshooting
 
 ### Common Issues
@@ -475,7 +515,7 @@ End writing: After date (term end date)
 
 **Timeline**: A calendar-like view that displays days of a specific period (week, month, etc.) with links to corresponding journal entries.
 
-**Sequential number**: A number assigned to journal entries (like Sprint 1, Sprint 2). Useful for tracking iterations or repeating periods. It is exposed as a template variable, named `index` by default.
+**Sequential number**: A number assigned to journal entries (like Sprint 1, Sprint 2). Useful for tracking iterations or repeating periods. It is exposed as a template variable, named `index` by default. A journal can chain several of these **digits** together, most significant first, so the fastest one carries into the next when it resets (like Release4711Sprint1, Release4711Sprint2).
 
 **Template Variables**: Special placeholders like `{{date}}` or `{{index}}` that the plugin replaces with actual values when creating notes.
 
