@@ -1480,6 +1480,7 @@
   "journal_sequence_fastest_label": "Fastest — advances every note",
   "journal_sequence_per_parent_description": "After this many, {name} restarts and {parent} goes up by one.",
   "journal_sequence_per_parent_label": "How many per {parent}",
+  "journal_sequence_preview_label": "Preview",
   "journal_sequence_property_duplicate": "Another digit already writes to \"{name}\".",
   "journal_sequence_property_modal_title": "Edit sequential number property name",
   "journal_sequence_slowest_label": "Slowest",
