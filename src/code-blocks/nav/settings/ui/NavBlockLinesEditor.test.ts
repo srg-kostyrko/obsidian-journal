@@ -104,6 +104,20 @@ describe("NavBlockLinesEditor", () => {
     expect(screen.queryByText(m.nav_block_section_use_defaults({ writeType: "custom" }))).toBeNull();
   });
 
+  it("lets a lone segment fill its line so its background and click target span the block", async () => {
+    mount([[sampleSegment]]);
+    await userEvent.click(screen.getByText(TITLE));
+    const line = document.querySelector<HTMLElement>(".nav-block-line");
+    expect(line?.classList.contains("nav-block-line--multi")).toBe(false);
+  });
+
+  it("marks a line holding several segments so they hug their text instead of sharing the width", async () => {
+    mount([[sampleSegment, { ...sampleSegment, template: "second" }]]);
+    await userEvent.click(screen.getByText(TITLE));
+    const line = document.querySelector<HTMLElement>(".nav-block-line");
+    expect(line?.classList.contains("nav-block-line--multi")).toBe(true);
+  });
+
   it("invokes the flow with the intervalBlock field when the header 'add line' button is clicked", async () => {
     const { invoke } = mount([[sampleSegment]]);
     await userEvent.click(screen.getByText(TITLE));

@@ -185,6 +185,9 @@ function onDropAtStart(orderedIds: string[]): void {
 <style scoped>
 .nav-block-preview {
   padding: var(--size-4-2) 0;
+  /* Tracks the gutter's four icon buttons rather than hardcoding a width, so it follows the
+     theme's icon and spacing tokens. The trailing gap is breathing room before the segments. */
+  --nav-line-gutter-reserve: calc(4 * (var(--icon-s) + 2 * var(--size-2-2)) + 3 * var(--size-2-1) + var(--size-2-2));
 }
 /* Decorated blocks wrap rows in a centered, shrink-wrapped CellDecoration; stretch it so the
    action gutter reaches the row edge instead of bunching after the centered preview text. */
@@ -193,14 +196,20 @@ function onDropAtStart(orderedIds: string[]): void {
   width: 100%;
   min-width: 0;
 }
+/* The gutter leaves the flex flow so it cannot absorb the line's free space: an in-flow
+   `margin-left: auto` would eat all of it and push a hugging multi-segment line hard left,
+   defeating the centring. `padding-right` reserves its width so segments never run under it. */
 .nav-block-preview :deep(.nav-block-line) {
   display: flex;
   align-items: center;
   gap: var(--size-2-2);
   padding-block: var(--size-2-3);
+  padding-right: var(--nav-line-gutter-reserve);
 }
-.nav-block-preview :deep(.nav-row) {
-  flex: 1 1 auto;
-  min-width: 0;
+.nav-block-preview :deep(.nav-line-gutter) {
+  position: absolute;
+  right: 0;
+  top: 50%;
+  transform: translateY(-50%);
 }
 </style>

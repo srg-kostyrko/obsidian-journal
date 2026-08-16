@@ -33,7 +33,11 @@ function setLineEl(index: number, el: Element | null): void {
 <template>
   <slot name="beforeLines" />
   <template v-for="(line, lineIndex) of block.lines" :key="lineIndex">
-    <div :ref="(el) => setLineEl(lineIndex, el as Element | null)" class="nav-block-line">
+    <div
+      :ref="(el) => setLineEl(lineIndex, el as Element | null)"
+      class="nav-block-line"
+      :class="{ 'nav-block-line--multi': line.length > 1 }"
+    >
       <NavBlockSegment
         v-for="(segment, segmentIndex) of line"
         :key="segmentIndex"
@@ -66,8 +70,16 @@ function setLineEl(index: number, el: Element | null): void {
   align-items: baseline;
   gap: 0 0.35em;
 }
+/* A lone segment fills its line, so the background band its colour paints and its click target
+   span the whole block — the shape a row had before a line could hold more than one. */
 .nav-block-line > .nav-row {
   flex: 1 1 auto;
   min-width: 0;
+}
+/* Several segments hug their own text and cluster at the centre instead of sharing the line's
+   width equally, which spreads them apart on a wide column and reads as separate columns
+   rather than one phrase. It also keeps each segment's background behind its own words. */
+.nav-block-line--multi > .nav-row {
+  flex: 0 1 auto;
 }
 </style>
