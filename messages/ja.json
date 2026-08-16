@@ -2172,5 +2172,6 @@
 	"maintenance_snapshot_row": "設定バージョン {version} からのアップグレード前に作成",
 	"maintenance_snapshot_restore": "復元",
 	"maintenance_snapshot_restored": "{takenAt} に作成されたスナップショットから設定を復元しました。",
-	"maintenance_snapshot_failed": "そのスナップショットを復元できませんでした。破損している可能性があります。"
+	"maintenance_snapshot_failed": "そのスナップショットを復元できませんでした。破損している可能性があります。",
+	"maintenance_snapshots_load_failed": "スナップショットを確認できませんでした。存在しないという意味ではありません。このページを再度開いてみてください。"
 }

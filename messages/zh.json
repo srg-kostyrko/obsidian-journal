@@ -2172,5 +2172,6 @@
 	"maintenance_snapshot_row": "在从设置版本 {version} 升级之前创建",
 	"maintenance_snapshot_restore": "恢复",
 	"maintenance_snapshot_restored": "已从 {takenAt} 创建的快照恢复设置。",
-	"maintenance_snapshot_failed": "无法恢复该快照,可能已损坏。"
+	"maintenance_snapshot_failed": "无法恢复该快照,可能已损坏。",
+	"maintenance_snapshots_load_failed": "无法检查快照。这并不意味着不存在快照——请尝试重新打开此页面。"
 }

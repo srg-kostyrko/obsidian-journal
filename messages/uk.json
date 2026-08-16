@@ -2250,5 +2250,6 @@
 	"maintenance_snapshot_row": "Створено перед оновленням з версії налаштувань {version}",
 	"maintenance_snapshot_restore": "Відновити",
 	"maintenance_snapshot_restored": "Налаштування відновлено зі знімка, створеного {takenAt}.",
-	"maintenance_snapshot_failed": "Не вдалося відновити цей знімок. Можливо, він пошкоджений."
+	"maintenance_snapshot_failed": "Не вдалося відновити цей знімок. Можливо, він пошкоджений.",
+	"maintenance_snapshots_load_failed": "Не вдалося перевірити знімки. Це не означає, що їх немає — спробуйте відкрити сторінку знову."
 }

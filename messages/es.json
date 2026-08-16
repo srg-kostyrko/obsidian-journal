@@ -2172,5 +2172,6 @@
 	"maintenance_snapshot_row": "Tomada antes de actualizar desde la versión de configuración {version}",
 	"maintenance_snapshot_restore": "Restaurar",
 	"maintenance_snapshot_restored": "Configuración restaurada desde la instantánea tomada el {takenAt}.",
-	"maintenance_snapshot_failed": "No se pudo restaurar esa instantánea. Puede estar dañada."
+	"maintenance_snapshot_failed": "No se pudo restaurar esa instantánea. Puede estar dañada.",
+	"maintenance_snapshots_load_failed": "No se pudieron comprobar las instantáneas. Esto no significa que no exista ninguna: intenta volver a abrir esta página."
 }

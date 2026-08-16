@@ -2182,5 +2182,6 @@
 	"maintenance_snapshot_row": "Erstellt vor dem Upgrade von Einstellungsversion {version}",
 	"maintenance_snapshot_restore": "Wiederherstellen",
 	"maintenance_snapshot_restored": "Einstellungen aus dem am {takenAt} erstellten Snapshot wiederhergestellt.",
-	"maintenance_snapshot_failed": "Dieser Snapshot konnte nicht wiederhergestellt werden. Er ist möglicherweise beschädigt."
+	"maintenance_snapshot_failed": "Dieser Snapshot konnte nicht wiederhergestellt werden. Er ist möglicherweise beschädigt.",
+	"maintenance_snapshots_load_failed": "Snapshots konnten nicht überprüft werden. Das bedeutet nicht, dass keine vorhanden sind – versuche, diese Seite erneut zu öffnen."
 }

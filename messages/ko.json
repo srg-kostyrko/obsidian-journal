@@ -2172,5 +2172,6 @@
 	"maintenance_snapshot_row": "설정 버전 {version}에서 업그레이드하기 전에 생성됨",
 	"maintenance_snapshot_restore": "복원",
 	"maintenance_snapshot_restored": "{takenAt}에 생성된 스냅샷에서 설정을 복원했습니다.",
-	"maintenance_snapshot_failed": "해당 스냅샷을 복원할 수 없습니다. 손상되었을 수 있습니다."
+	"maintenance_snapshot_failed": "해당 스냅샷을 복원할 수 없습니다. 손상되었을 수 있습니다.",
+	"maintenance_snapshots_load_failed": "스냅샷을 확인할 수 없습니다. 스냅샷이 없다는 의미는 아닙니다. 이 페이지를 다시 열어보세요."
 }

@@ -1605,5 +1605,6 @@
   "maintenance_snapshot_row": "Taken before upgrading from settings version {version}",
   "maintenance_snapshot_restore": "Restore",
   "maintenance_snapshot_restored": "Settings restored from the snapshot taken on {takenAt}.",
-  "maintenance_snapshot_failed": "That snapshot could not be restored. It may be damaged."
+  "maintenance_snapshot_failed": "That snapshot could not be restored. It may be damaged.",
+  "maintenance_snapshots_load_failed": "Snapshots could not be checked. This does not mean none exist — try reopening this page."
 }

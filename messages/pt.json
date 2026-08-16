@@ -2180,5 +2180,6 @@
 	"maintenance_snapshot_row": "Criado antes de atualizar da versão de configurações {version}",
 	"maintenance_snapshot_restore": "Restaurar",
 	"maintenance_snapshot_restored": "Configurações restauradas a partir do instantâneo criado em {takenAt}.",
-	"maintenance_snapshot_failed": "Não foi possível restaurar esse instantâneo. Ele pode estar corrompido."
+	"maintenance_snapshot_failed": "Não foi possível restaurar esse instantâneo. Ele pode estar corrompido.",
+	"maintenance_snapshots_load_failed": "Não foi possível verificar os instantâneos. Isso não significa que não existam — tente reabrir esta página."
 }

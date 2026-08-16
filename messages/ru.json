@@ -2259,5 +2259,6 @@
 	"maintenance_snapshot_row": "Создан перед обновлением с версии настроек {version}",
 	"maintenance_snapshot_restore": "Восстановить",
 	"maintenance_snapshot_restored": "Настройки восстановлены из снимка, созданного {takenAt}.",
-	"maintenance_snapshot_failed": "Не удалось восстановить этот снимок. Возможно, он повреждён."
+	"maintenance_snapshot_failed": "Не удалось восстановить этот снимок. Возможно, он повреждён.",
+	"maintenance_snapshots_load_failed": "Не удалось проверить снимки. Это не значит, что их нет — попробуйте открыть страницу снова."
 }

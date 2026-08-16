@@ -61,6 +61,18 @@ describe("MaintenanceSubpage", () => {
     expect(await screen.findByText(m.maintenance_snapshots_empty())).toBeTruthy();
   });
 
+  it("shows a distinct error state, not the empty state, when snapshots cannot be listed", async () => {
+    const { container, data } = await setup();
+    vi.spyOn(data, "listFiles").mockReturnValueOnce(
+      AsyncResult.err(new PluginDataIOError("list", new Error("permission denied"))),
+    );
+
+    mount(container);
+
+    expect(await screen.findByText(m.maintenance_snapshots_load_failed())).toBeTruthy();
+    expect(screen.queryByText(m.maintenance_snapshots_empty())).toBeNull();
+  });
+
   it("calls nav.back when the back breadcrumb is clicked", async () => {
     const { container } = await setup();
     const { nav } = mount(container);

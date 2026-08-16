@@ -18,9 +18,11 @@ const settings = useService(SettingsService);
 const notices = useService(NoticeService);
 
 const available = ref<SnapshotInfo[]>([]);
+const listFailed = ref(false);
 
 async function refresh(): Promise<void> {
   const listed = await snapshots.list();
+  listFailed.value = listed.isErr();
   available.value = listed.match({ ok: (value) => value, err: () => [] });
 }
 
@@ -45,7 +47,10 @@ onMounted(refresh);
     <UiBackLink @click="nav.back()" />
 
     <UiSettingRow heading :name="m.maintenance_snapshots_heading()" />
-    <UiSettingRow v-if="available.length === 0">
+    <UiSettingRow v-if="listFailed">
+      <template #description>{{ m.maintenance_snapshots_load_failed() }}</template>
+    </UiSettingRow>
+    <UiSettingRow v-else-if="available.length === 0">
       <template #description>{{ m.maintenance_snapshots_empty() }}</template>
     </UiSettingRow>
     <UiSettingRow v-for="info of available" :key="info.name" :name="info.takenAt">
