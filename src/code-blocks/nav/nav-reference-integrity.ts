@@ -39,7 +39,7 @@ export class NavReferenceIntegrity {
         if (!changed) continue;
         // An explicit branch, not a computed key: the repository's update takes a typed
         // partial, and `{ [field]: … }` widens to `string` and fails the typecheck. This is
-        // the shape `edit-nav-row.flow.ts` uses for the same reason.
+        // the shape `edit-nav-segment.flow.ts` uses for the same reason.
         const block = { ...journal[field], lines: next };
         this.#journals.update(journal.name, field === "navBlock" ? { navBlock: block } : { intervalBlock: block });
       }

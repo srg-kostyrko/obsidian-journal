@@ -1,5 +1,5 @@
 import userEvent from "@testing-library/user-event";
-import { cleanup, render, screen } from "@testing-library/vue";
+import { cleanup, render, screen, within } from "@testing-library/vue";
 import { createNanoEvents } from "nanoevents";
 import { afterEach, describe, expect, it, vi } from "vitest";
 import { reactive } from "vue";
@@ -26,28 +26,28 @@ import {
 import { ShelvesRepository, type ShelvesEvents } from "@/shelves";
 import { TemplateEngine } from "@/templates";
 
-import { EditNavBlockRowFlow } from "../flows/edit-nav-row.flow";
+import { EditNavBlockSegmentFlow } from "../flows/edit-nav-segment.flow";
 
-import NavBlockRowsEditor from "./NavBlockRowsEditor.vue";
+import NavBlockLinesEditor from "./NavBlockLinesEditor.vue";
 
 afterEach(() => cleanup());
 
 const TITLE = "Interval rows";
 
-function buildCustomJournal(name: string, rows: NavBlockSegment[]): JournalConfig {
+function buildCustomJournal(name: string, lines: NavBlockSegment[][]): JournalConfig {
   const base = journalDefaultsFor(
     { type: "custom", every: "day", duration: 1, anchorDate: "2026-01-01" as AnchorString },
     name,
   );
   return {
     ...base,
-    intervalBlock: { ...base.intervalBlock, lines: rows.map((row) => [row]), decorateWholeBlock: false },
+    intervalBlock: { ...base.intervalBlock, lines, decorateWholeBlock: false },
   };
 }
 
-function mount(rows: NavBlockSegment[]) {
+function mount(lines: NavBlockSegment[][]) {
   const container = new Container();
-  const storage = reactive<Record<string, JournalConfig>>({ daily: buildCustomJournal("daily", rows) });
+  const storage = reactive<Record<string, JournalConfig>>({ daily: buildCustomJournal("daily", lines) });
   const repo = JournalsRepository.fromParts(storage, createNanoEvents<JournalsEvents>());
   const shelvesRepo = ShelvesRepository.fromParts(
     reactive({ home: { name: "home", journals: ["daily"], decorations: [] } }),
@@ -67,7 +67,7 @@ function mount(rows: NavBlockSegment[]) {
   container.register(FrontmatterService).useClass(FrontmatterService);
   container.register(NotePathService).useClass(NotePathService);
   container.register(WorkspaceService).useValue({} as WorkspaceService);
-  render(NavBlockRowsEditor, {
+  render(NavBlockLinesEditor, {
     props: { journalName: "daily", field: "intervalBlock", title: TITLE, icon: "list" },
     global: {
       plugins: [{ install: (app) => provideInjectorOnApp(app, container) }],
@@ -76,8 +76,8 @@ function mount(rows: NavBlockSegment[]) {
   return { storage, invoke };
 }
 
-const sampleRow: NavBlockSegment = {
-  template: "{{date:YYYY}}",
+const sampleSegment: NavBlockSegment = {
+  template: "static text",
   fontSize: 1,
   bold: false,
   italic: false,
@@ -89,9 +89,9 @@ const sampleRow: NavBlockSegment = {
   addDecorations: false,
 };
 
-describe("NavBlockRowsEditor", () => {
+describe("NavBlockLinesEditor", () => {
   it("hides the mode dropdown when mode is not enabled", async () => {
-    mount([sampleRow]);
+    mount([[sampleSegment]]);
     await userEvent.click(screen.getByText(TITLE));
     expect(screen.queryByText(m.nav_block_section_mode_label())).toBeNull();
   });
@@ -102,34 +102,47 @@ describe("NavBlockRowsEditor", () => {
     expect(screen.queryByText(m.nav_block_section_use_defaults({ writeType: "custom" }))).toBeNull();
   });
 
-  it("invokes the flow with the intervalBlock field when 'add row' is clicked", async () => {
-    const { invoke } = mount([sampleRow]);
+  it("invokes the flow with the intervalBlock field when the header 'add row' button is clicked", async () => {
+    const { invoke } = mount([[sampleSegment]]);
     await userEvent.click(screen.getByText(TITLE));
-    await userEvent.click(screen.getByLabelText(m.block_rows_add_row()));
-    expect(invoke).toHaveBeenCalledWith(EditNavBlockRowFlow, { journalName: "daily", field: "intervalBlock" });
+    await userEvent.click(screen.getAllByLabelText(m.block_rows_add_row()).at(0)!);
+    expect(invoke).toHaveBeenCalledWith(EditNavBlockSegmentFlow, { journalName: "daily", field: "intervalBlock" });
   });
 
-  it("invokes the flow with the intervalBlock field and rowIndex when edit is clicked", async () => {
-    const { invoke } = mount([sampleRow]);
+  it("invokes the flow with lineIndex when a line's gutter 'add' button is clicked", async () => {
+    const { invoke } = mount([[sampleSegment]]);
     await userEvent.click(screen.getByText(TITLE));
-    await userEvent.click(screen.getByLabelText(m.block_rows_edit_tooltip()));
-    expect(invoke).toHaveBeenCalledWith(EditNavBlockRowFlow, {
+    const preview = document.querySelector<HTMLElement>(".nav-block-preview")!;
+    await userEvent.click(within(preview).getByLabelText(m.block_rows_add_row()));
+    expect(invoke).toHaveBeenCalledWith(EditNavBlockSegmentFlow, {
       journalName: "daily",
       field: "intervalBlock",
-      rowIndex: 0,
+      lineIndex: 0,
     });
   });
 
-  it("removes a row from intervalBlock when its delete button is clicked", async () => {
-    const { storage } = mount([sampleRow, { ...sampleRow, template: "{{date:MM}}" }]);
+  it("invokes the flow with lineIndex and segmentIndex when a segment is clicked", async () => {
+    const { invoke } = mount([[sampleSegment]]);
+    await userEvent.click(screen.getByText(TITLE));
+    await userEvent.click(screen.getByText("static text"));
+    expect(invoke).toHaveBeenCalledWith(EditNavBlockSegmentFlow, {
+      journalName: "daily",
+      field: "intervalBlock",
+      lineIndex: 0,
+      segmentIndex: 0,
+    });
+  });
+
+  it("removes a line from intervalBlock when its delete button is clicked", async () => {
+    const { storage } = mount([[sampleSegment], [{ ...sampleSegment, template: "other" }]]);
     await userEvent.click(screen.getByText(TITLE));
     const deleteButtons = screen.getAllByLabelText(m.block_rows_delete_tooltip());
     await userEvent.click(deleteButtons[0]);
-    expect(storage.daily?.intervalBlock.lines.map((line) => line[0]?.template)).toEqual(["{{date:MM}}"]);
+    expect(storage.daily?.intervalBlock.lines.map((line) => line[0]?.template)).toEqual(["other"]);
   });
 
   it("toggles decorateWholeBlock on intervalBlock", async () => {
-    const { storage } = mount([sampleRow]);
+    const { storage } = mount([[sampleSegment]]);
     await userEvent.click(screen.getByText(TITLE));
     await userEvent.click(screen.getByRole("checkbox"));
     expect(storage.daily?.intervalBlock.decorateWholeBlock).toBe(true);

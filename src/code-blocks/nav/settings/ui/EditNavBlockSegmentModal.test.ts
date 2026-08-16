@@ -25,18 +25,18 @@ import {
 import { ShelvesRepository, type ShelfConfig, type ShelvesEvents } from "@/shelves";
 import { TemplateEngine } from "@/templates";
 
-import EditNavBlockRowModal from "./EditNavBlockRowModal.vue";
+import EditNavBlockSegmentModal from "./EditNavBlockSegmentModal.vue";
 
 afterEach(() => cleanup());
 
 function mountModal(options: {
-  row?: NavBlockSegment;
+  segment?: NavBlockSegment;
   journals?: Record<string, JournalConfig>;
   shelves?: Record<string, ShelfConfig>;
 }) {
   const submit = vi.fn();
   const cancel = vi.fn();
-  const api: ModalApi<{ row: NavBlockSegment }> = { submit, cancel };
+  const api: ModalApi<{ segment: NavBlockSegment }> = { submit, cancel };
   const container = new Container();
   const journalsStorage = reactive(options.journals ?? { daily: journalDefaultsFor({ type: "day" }, "daily") });
   const shelvesStorage = reactive(options.shelves ?? { home: { name: "home", journals: ["daily"], decorations: [] } });
@@ -53,8 +53,8 @@ function mountModal(options: {
   container.register(NumberingService).useClass(NumberingService);
   container.register(FrontmatterService).useClass(FrontmatterService);
   container.register(NotePathService).useClass(NotePathService);
-  render(EditNavBlockRowModal, {
-    props: { journalName: "daily", row: options.row },
+  render(EditNavBlockSegmentModal, {
+    props: { journalName: "daily", segment: options.segment },
     global: {
       plugins: [
         {
@@ -69,16 +69,16 @@ function mountModal(options: {
   return { submit, cancel };
 }
 
-describe("EditNavBlockRowModal", () => {
-  it("opens blank when row prop is undefined", () => {
+describe("EditNavBlockSegmentModal", () => {
+  it("opens blank when segment prop is undefined", () => {
     mountModal({});
     const input = screen.getByLabelText<HTMLInputElement>(m.nav_block_row_field_template());
     expect(input.value).toBe("");
   });
 
-  it("opens with pre-filled values when a row is provided", () => {
+  it("opens with pre-filled values when a segment is provided", () => {
     mountModal({
-      row: {
+      segment: {
         template: "{{date:YYYY}}",
         fontSize: 1.5,
         bold: true,
@@ -111,10 +111,10 @@ describe("EditNavBlockRowModal", () => {
     await waitFor(() => {
       expect(submit).toHaveBeenCalledTimes(1);
     });
-    expect(submit.mock.calls[0]?.[0]).toMatchObject({ row: { template: "{{date:YYYY}}" } });
+    expect(submit.mock.calls[0]?.[0]).toMatchObject({ segment: { template: "{{date:YYYY}}" } });
   });
 
-  it("submits a bold row when the bold text style is toggled on", async () => {
+  it("submits a bold segment when the bold text style is toggled on", async () => {
     const { submit } = mountModal({});
     await userEvent.type(screen.getByLabelText(m.nav_block_row_field_template()), "x");
     await userEvent.click(screen.getByRole("button", { name: m.nav_block_row_field_bold() }));
@@ -122,12 +122,12 @@ describe("EditNavBlockRowModal", () => {
     await waitFor(() => {
       expect(submit).toHaveBeenCalledTimes(1);
     });
-    expect(submit.mock.calls[0]?.[0]).toMatchObject({ row: { bold: true, italic: false } });
+    expect(submit.mock.calls[0]?.[0]).toMatchObject({ segment: { bold: true, italic: false } });
   });
 
-  it("marks the italic text style as pressed for a row that is already italic", () => {
+  it("marks the italic text style as pressed for a segment that is already italic", () => {
     mountModal({
-      row: {
+      segment: {
         template: "{{date:YYYY}}",
         fontSize: 1,
         bold: false,

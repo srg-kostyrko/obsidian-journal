@@ -31,8 +31,8 @@ import { buildNavRowContext } from "../../nav-row-context";
 
 import { useShelfMateJournals } from "./use-shelf-mate-journals";
 
-const props = defineProps<{ journalName: string; row?: NavBlockSegment }>();
-const api = useModal<{ row: NavBlockSegment }>();
+const props = defineProps<{ journalName: string; segment?: NavBlockSegment }>();
+const api = useModal<{ segment: NavBlockSegment }>();
 
 const journalsVM = useService(JournalsViewModel);
 const engine = useService(TemplateEngine);
@@ -43,7 +43,7 @@ const index = useService(JournalsIndex);
 
 const config = computed<JournalConfig | undefined>(() => journalsVM.getJournal(props.journalName).getOrUndefined());
 
-const initial: NavBlockSegment = props.row ?? {
+const initial: NavBlockSegment = props.segment ?? {
   template: "",
   fontSize: 1,
   bold: false,
@@ -131,8 +131,8 @@ const resolved = computed(() => {
 
 const linkOptions = ["none", "self", "journal", "day", "week", "month", "quarter", "year"] as const;
 
-const onSubmit = handleSubmit((row) => {
-  api.submit({ row });
+const onSubmit = handleSubmit((segment) => {
+  api.submit({ segment });
 });
 </script>
 
@@ -196,7 +196,7 @@ const onSubmit = handleSubmit((row) => {
     <UiSettingRow controls-only>
       <UiButton @click="api.cancel()">{{ m.common_action_cancel() }}</UiButton>
       <UiButton cta type="submit">
-        {{ row === undefined ? m.common_action_create() : m.common_action_submit() }}
+        {{ segment === undefined ? m.common_action_create() : m.common_action_submit() }}
       </UiButton>
     </UiSettingRow>
   </form>

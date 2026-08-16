@@ -18,7 +18,7 @@ import UiToggle from "@/ui/UiToggle.vue";
 
 import { periodForJournal } from "../../period-for-journal";
 import NavBlock from "../../ui/NavBlock.vue";
-import { EditNavBlockRowFlow } from "../flows/edit-nav-row.flow";
+import { EditNavBlockSegmentFlow } from "../flows/edit-nav-segment.flow";
 
 const {
   journalName,
@@ -53,23 +53,26 @@ function applyDefaults(): void {
 }
 
 function add(): void {
-  void flows.invoke(EditNavBlockRowFlow, { journalName, field });
+  void flows.invoke(EditNavBlockSegmentFlow, { journalName, field });
 }
-function edit(index: number): void {
-  void flows.invoke(EditNavBlockRowFlow, { journalName, field, rowIndex: index });
+function addSegment(lineIndex: number): void {
+  void flows.invoke(EditNavBlockSegmentFlow, { journalName, field, lineIndex });
 }
-function remove(index: number): void {
-  config.value?.[field].lines.splice(index, 1);
+function editSegment(lineIndex: number, segmentIndex: number): void {
+  void flows.invoke(EditNavBlockSegmentFlow, { journalName, field, lineIndex, segmentIndex });
 }
-function moveUp(index: number): void {
+function removeLine(lineIndex: number): void {
+  config.value?.[field].lines.splice(lineIndex, 1);
+}
+function moveUp(lineIndex: number): void {
   const lines = config.value?.[field].lines;
-  if (!lines || index <= 0) return;
-  [lines[index - 1], lines[index]] = [lines[index], lines[index - 1]];
+  if (!lines || lineIndex <= 0) return;
+  [lines[lineIndex - 1], lines[lineIndex]] = [lines[lineIndex], lines[lineIndex - 1]];
 }
-function moveDown(index: number): void {
+function moveDown(lineIndex: number): void {
   const lines = config.value?.[field].lines;
-  if (!lines || index >= lines.length - 1) return;
-  [lines[index], lines[index + 1]] = [lines[index + 1], lines[index]];
+  if (!lines || lineIndex >= lines.length - 1) return;
+  [lines[lineIndex], lines[lineIndex + 1]] = [lines[lineIndex + 1], lines[lineIndex]];
 }
 </script>
 
@@ -112,10 +115,11 @@ function moveDown(index: number): void {
         :journal="config"
         :ref-date="todayAnchor"
         :period="previewPeriod!"
-        prevent-navigation
+        editable
+        @edit="editSegment"
       >
         <template #lineAction="{ index, isFirst, isLast }">
-          <span class="nav-row-gutter">
+          <span class="nav-line-gutter">
             <UiIconButton
               :icon="icons.action.moveUp"
               :tooltip="m.common_action_move_up()"
@@ -128,8 +132,12 @@ function moveDown(index: number): void {
               :disabled="isLast"
               @click="moveDown(index)"
             />
-            <UiIconButton :icon="icons.action.configure" :tooltip="m.block_rows_edit_tooltip()" @click="edit(index)" />
-            <UiIconButton :icon="icons.action.delete" :tooltip="m.block_rows_delete_tooltip()" @click="remove(index)" />
+            <UiIconButton :icon="icons.action.add" :tooltip="m.block_rows_add_row()" @click="addSegment(index)" />
+            <UiIconButton
+              :icon="icons.action.delete"
+              :tooltip="m.block_rows_delete_tooltip()"
+              @click="removeLine(index)"
+            />
           </span>
         </template>
       </NavBlock>
@@ -158,19 +166,19 @@ function moveDown(index: number): void {
   flex: 1 1 auto;
   min-width: 0;
 }
-.nav-row-gutter {
+.nav-line-gutter {
   display: inline-flex;
   align-items: center;
   gap: var(--size-2-1);
   color: var(--text-muted);
   --icon-size: var(--icon-s);
 }
-.nav-row-gutter :deep(.icon-button) {
+.nav-line-gutter :deep(.icon-button) {
   padding: var(--size-2-1) var(--size-2-2);
 }
-/* The move buttons stay in place on the edge rows so every row's gutter keeps the same
+/* The move buttons stay in place on the edge lines so every line's gutter keeps the same
    columns; dimmed so an unusable one does not read as clickable. */
-.nav-row-gutter :deep(.icon-button:disabled) {
+.nav-line-gutter :deep(.icon-button:disabled) {
   opacity: 0.5;
 }
 </style>

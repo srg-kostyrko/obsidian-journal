@@ -1,12 +1,12 @@
 import type { Module } from "@/infrastructure/di";
 import { JournalEditSectionToken, defineJournalEditSection } from "@/journals";
 
-import { EditNavBlockRowFlow } from "./flows/edit-nav-row.flow";
+import { EditNavBlockSegmentFlow } from "./flows/edit-nav-segment.flow";
 import NavBlockSection from "./ui/NavBlockSection.vue";
 
 export const navBlockSettingsModule: Module = {
   register(c) {
-    c.register(EditNavBlockRowFlow).useClass(EditNavBlockRowFlow);
+    c.register(EditNavBlockSegmentFlow).useClass(EditNavBlockSegmentFlow);
     c.register(JournalEditSectionToken).useValue(
       defineJournalEditSection({
         key: "nav-block",

@@ -1,12 +1,12 @@
 import { describe, expect, it } from "vitest";
 
-import { toNavRowFlowError, UnknownNavRowError, NavRowLifecycleFlowError } from "./errors";
+import { toNavSegmentFlowError, UnknownNavSegmentError, NavSegmentLifecycleFlowError } from "./errors";
 
-describe("toNavRowFlowError", () => {
-  it("wraps an UnknownNavRowError in a NavRowLifecycleFlowError carrying the cause", () => {
-    const cause = new UnknownNavRowError("daily", 3);
-    const wrapped = toNavRowFlowError(cause);
-    expect(wrapped).toBeInstanceOf(NavRowLifecycleFlowError);
+describe("toNavSegmentFlowError", () => {
+  it("wraps an UnknownNavSegmentError in a NavSegmentLifecycleFlowError carrying the cause", () => {
+    const cause = new UnknownNavSegmentError("daily", 3);
+    const wrapped = toNavSegmentFlowError(cause);
+    expect(wrapped).toBeInstanceOf(NavSegmentLifecycleFlowError);
     expect(wrapped.cause).toBe(cause);
   });
 });

@@ -40,8 +40,11 @@ const props = defineProps<{
   segment: NavBlockSegment;
   refDate: AnchorString;
   preventNavigation?: boolean;
+  editable?: boolean;
   shelf?: string | null;
 }>();
+
+const emit = defineEmits<{ edit: [] }>();
 
 const journals = useService(JournalsRepository);
 const index = useService(JournalsIndex);
@@ -136,7 +139,7 @@ const fontWeight = computed(() => (props.segment.bold ? "bold" : "normal"));
 const fontStyle = computed(() => (props.segment.italic ? "italic" : "normal"));
 const color = computed(() => colorToString(props.segment.color));
 const background = computed(() => colorToString(props.segment.background));
-const cursor = computed(() => (target.value.kind === "none" ? "default" : "pointer"));
+const cursor = computed(() => (props.editable || target.value.kind !== "none" ? "pointer" : "default"));
 
 function pathsForTarget(t: LinkTarget): readonly VaultPath[] {
   return match(t)
@@ -147,6 +150,10 @@ function pathsForTarget(t: LinkTarget): readonly VaultPath[] {
 }
 
 function onClick(event: MouseEvent): void {
+  if (props.editable) {
+    emit("edit");
+    return;
+  }
   if (props.preventNavigation) return;
   const t = target.value;
   if (t.kind === "none") return;
@@ -165,14 +172,14 @@ function onClick(event: MouseEvent): void {
 }
 
 function onContextMenu(event: MouseEvent): void {
-  if (props.preventNavigation) return;
+  if (props.editable || props.preventNavigation) return;
   workspace.openPathsMenu(pathsForTarget(target.value), event, contextMenuItems());
 }
 
 const hover = useModifierHoverPreview();
 
 function onPointerEnter(event: PointerEvent): void {
-  if (props.preventNavigation) return;
+  if (props.editable || props.preventNavigation) return;
   hover.enter(event, (hoverEvent) => workspace.previewFirstPath(pathsForTarget(target.value), hoverEvent));
 }
 </script>
@@ -194,6 +201,7 @@ function onPointerEnter(event: PointerEvent): void {
       {{ text }}
     </CellDecoration>
     <template v-else>{{ text }}</template>
+    <span v-if="editable && text.length === 0" class="nav-segment-placeholder">—</span>
   </div>
 </template>
 
@@ -206,5 +214,8 @@ function onPointerEnter(event: PointerEvent): void {
   background-color: v-bind(background);
   cursor: v-bind(cursor);
   position: relative;
+}
+.nav-segment-placeholder {
+  color: var(--text-faint);
 }
 </style>

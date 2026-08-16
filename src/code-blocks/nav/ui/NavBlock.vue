@@ -14,9 +14,12 @@ defineProps<{
   refDate: AnchorString;
   period: Period;
   preventNavigation?: boolean;
+  editable?: boolean;
   blockScope?: CellDecorationScope;
   shelf?: string | null;
 }>();
+
+defineEmits<{ edit: [lineIndex: number, segmentIndex: number] }>();
 </script>
 
 <template>
@@ -30,7 +33,9 @@ defineProps<{
           :segment
           :ref-date="refDate"
           :prevent-navigation="preventNavigation"
+          :editable
           :shelf
+          @edit="$emit('edit', lineIndex, segmentIndex)"
         />
         <slot
           name="lineAction"
@@ -49,7 +54,9 @@ defineProps<{
           :segment
           :ref-date="refDate"
           :prevent-navigation="preventNavigation"
+          :editable
           :shelf
+          @edit="$emit('edit', lineIndex, segmentIndex)"
         />
         <slot
           name="lineAction"

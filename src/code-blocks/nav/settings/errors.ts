@@ -1,26 +1,26 @@
 import { FlowError } from "@/infrastructure/flows";
 
-export class UnknownNavRowError extends Error {
-  readonly kind = "unknown-nav-row" as const;
+export class UnknownNavSegmentError extends Error {
+  readonly kind = "unknown-nav-segment" as const;
   constructor(
     public readonly journalName: string,
     public readonly index: number,
   ) {
-    super(`Nav block row not found: journal=${journalName} index=${index}`);
-    this.name = "UnknownNavRowError";
+    super(`Nav block segment not found: journal=${journalName} index=${index}`);
+    this.name = "UnknownNavSegmentError";
   }
 }
 
-export type NavRowLifecycleError = UnknownNavRowError;
+export type NavSegmentLifecycleError = UnknownNavSegmentError;
 
-export class NavRowLifecycleFlowError extends FlowError {
-  readonly kind = "nav-row-lifecycle" as const;
-  constructor(public override readonly cause: NavRowLifecycleError) {
+export class NavSegmentLifecycleFlowError extends FlowError {
+  readonly kind = "nav-segment-lifecycle" as const;
+  constructor(public override readonly cause: NavSegmentLifecycleError) {
     super(cause.message);
-    this.name = "NavRowLifecycleFlowError";
+    this.name = "NavSegmentLifecycleFlowError";
   }
 }
 
-export function toNavRowFlowError(cause: NavRowLifecycleError): NavRowLifecycleFlowError {
-  return new NavRowLifecycleFlowError(cause);
+export function toNavSegmentFlowError(cause: NavSegmentLifecycleError): NavSegmentLifecycleFlowError {
+  return new NavSegmentLifecycleFlowError(cause);
 }
