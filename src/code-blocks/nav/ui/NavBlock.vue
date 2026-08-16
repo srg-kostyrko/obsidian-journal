@@ -29,7 +29,6 @@ defineProps<{
           :journal
           :segment
           :ref-date="refDate"
-          :period
           :prevent-navigation="preventNavigation"
           :shelf
         />
@@ -49,7 +48,6 @@ defineProps<{
           :journal
           :segment
           :ref-date="refDate"
-          :period
           :prevent-navigation="preventNavigation"
           :shelf
         />

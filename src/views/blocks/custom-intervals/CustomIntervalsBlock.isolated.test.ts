@@ -5,15 +5,19 @@ import { computed, defineComponent, h, nextTick, ref } from "vue";
 
 import { installTestCalendar } from "@/calendar/testing";
 import type { AnchorString } from "@/calendar/types";
-import { DecorationEngine } from "@/decorations";
+import { decorationsSlice, DecorationEngine, DecorationsStore } from "@/decorations";
 import { buildCondition, buildDecoration, buildStyle } from "@/decorations/testing";
 import { Container, provideInjectorOnApp } from "@/infrastructure/di";
-import { NoteMetadataService, NotesService, type NotesEvents, type VaultPath } from "@/infrastructure/host";
-import { FakeNoteMetadataService } from "@/infrastructure/host/testing";
+import { NoteMetadataService, NotesService, PluginData, type NotesEvents, type VaultPath } from "@/infrastructure/host";
+import { FakeNoteMetadataService, FakePluginData } from "@/infrastructure/host/testing";
+import { createLoggerTestingModule } from "@/infrastructure/logger/testing";
 import { CycleService, JournalsIndex, JournalsRepository, TimelineService } from "@/journals";
 import type { JournalConfig } from "@/journals";
 import { customJournal, fakeRepo } from "@/journals/testing";
 import { ActiveEntryViewModel, type ActiveEntryRef } from "@/notes-calendar";
+import { SettingsEventsToken, SettingsService, SliceDefinitionToken, type SettingsEvents } from "@/settings";
+import { ShelvesRepository } from "@/shelves";
+import { fakeShelvesRepo } from "@/shelves/testing";
 
 import { provideViewContextStub } from "../../testing";
 import { provideViewContext, type ViewContext } from "../../view-context";
@@ -54,7 +58,9 @@ const ACTIVE = ref<ActiveEntryRef | null>(null);
 
 function mountBlock(config: CustomIntervalsConfig, contextOverride: Partial<ViewContext> = {}) {
   const container = new Container();
+  container.addModule(createLoggerTestingModule().module);
   container.register(JournalsRepository).useValue(fakeRepo(JOURNALS));
+  container.register(ShelvesRepository).useValue(fakeShelvesRepo());
   container.register(JournalsIndex).useClass(JournalsIndex);
   container.register(CycleService).useClass(CycleService);
   container.register(TimelineService).useClass(TimelineService);
@@ -63,6 +69,14 @@ function mountBlock(config: CustomIntervalsConfig, contextOverride: Partial<View
   const metadata = new FakeNoteMetadataService();
   container.register(NoteMetadataService).useValue(metadata as unknown as NoteMetadataService);
   container.register(NotesService).useValue({ events: createNanoEvents<NotesEvents>() } as unknown as NotesService);
+  // The fixed decoration scope always opts into calendar decorations, so DecorationsStore's
+  // settings backing must exist even for tests that never save a vault-wide or shelf decoration.
+  container.register(PluginData).useValue(new FakePluginData() as unknown as PluginData);
+  container.register(SliceDefinitionToken).useValue(decorationsSlice);
+  container.register(SettingsEventsToken).useValue(createNanoEvents<SettingsEvents>());
+  container.register(SettingsService).useClass(SettingsService);
+  container.resolve(SettingsService).getSlice(decorationsSlice).state = { decorations: [] };
+  container.register(DecorationsStore).useClass(DecorationsStore);
   const index = container.resolve(JournalsIndex);
   const context = provideViewContextStub(contextOverride);
   const renderRoot = () => h(customIntervalsBlock.component, { instanceId: "block-1" as BlockInstanceId, config });

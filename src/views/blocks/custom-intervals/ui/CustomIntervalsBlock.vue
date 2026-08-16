@@ -2,16 +2,19 @@
 import { computed } from "vue";
 
 import type { AnchorString } from "@/calendar";
-import { navSegmentIntervalScope } from "@/code-blocks/nav/decoration-scopes";
+import { navSegmentFixedScope, navSegmentIntervalScope } from "@/code-blocks/nav/decoration-scopes";
 import { periodForJournal } from "@/code-blocks/nav/period-for-journal";
+import { resolveSegmentDecoration, type SegmentDecorationCell } from "@/code-blocks/nav/segment-decoration";
 import NavBlock from "@/code-blocks/nav/ui/NavBlock.vue";
 import { hasOffsetCondition, useCellDecorations } from "@/decorations";
 import { useService } from "@/infrastructure/di";
+import { Option } from "@/infrastructure/result";
 import { CycleService, JournalsRepository, TimelineService, useIndexVersion } from "@/journals";
 import type { JournalConfig, JournalNavBlock } from "@/journals";
 import { ActiveEntryViewModel } from "@/notes-calendar/active-entry";
 import { useCalendarAppearanceStyle } from "@/notes-calendar/appearance/use-appearance-style";
 import { useShelfScope } from "@/notes-calendar/use-shelf-scope";
+import { ShelvesRepository } from "@/shelves";
 
 import { useViewContext } from "../../../view-context";
 import { resolveWindow } from "../window-resolution";
@@ -27,6 +30,7 @@ const props = defineProps<{
 const context = useViewContext();
 const appearanceStyle = useCalendarAppearanceStyle();
 const journalsRepo = useService(JournalsRepository);
+const shelvesRepo = useService(ShelvesRepository);
 const cycle = useService(CycleService);
 const timeline = useService(TimelineService);
 const activeEntry = useService(ActiveEntryViewModel);
@@ -86,6 +90,44 @@ useCellDecorations({
   // Offset decorations mark single days inside an interval; they render on the day
   // calendar grid, never on the whole-interval row.
   filter: (binding) => !hasOffsetCondition(binding.decoration),
+});
+
+// intervalBlock segments are edited through the same segment editor as navBlock's, so one can
+// carry any link kind — a non-self link resolves to a fixed-period target, which the interval
+// scope above does not register. Without this, that segment injects null and paints nothing,
+// silently. See segment-decoration.ts: entry is irrelevant to the resolved cell, so
+// Option.none() is safe here even though there's no single "note behind this row".
+const fixedCells = computed<readonly SegmentDecorationCell[]>(() => {
+  const all = [...journalsRepo.find().list()];
+  const shelfList = [...shelvesRepo.find().list()];
+  const out: SegmentDecorationCell[] = [];
+  for (const section of sections.value) {
+    for (const entry of section.entries) {
+      for (const line of section.block.lines) {
+        for (const segment of line) {
+          if (!segment.addDecorations) continue;
+          const cell = resolveSegmentDecoration(
+            segment,
+            section.journal,
+            all,
+            shelfList,
+            Option.none(),
+            entry.anchor,
+            cycle,
+          );
+          if (cell?.scopeKind === "fixed") out.push(cell);
+        }
+      }
+    }
+  }
+  return out;
+});
+
+useCellDecorations({
+  periods: () => fixedCells.value.map((cell) => cell.period),
+  journalNames: () => [...new Set(fixedCells.value.flatMap((cell) => cell.journalNames))],
+  scope: navSegmentFixedScope,
+  calendarDecorations: { shelf: () => context.shelf.value },
 });
 </script>
 

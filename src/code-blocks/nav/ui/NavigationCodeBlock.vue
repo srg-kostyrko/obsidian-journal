@@ -15,17 +15,14 @@ import {
   OpenDateFlow,
   TimelineService,
   useIndexVersion,
-  type JournalConfig,
 } from "@/journals";
 import { ShelvesRepository, type ShelfConfig } from "@/shelves";
 import { icons } from "@/ui/icons";
 import UiIconButton from "@/ui/UiIconButton.vue";
 
 import { navBlockDecorationScope, navSegmentFixedScope, navSegmentIntervalScope } from "../decoration-scopes";
-import { resolveLinkCandidates } from "../link-targets";
 import { periodForJournal } from "../period-for-journal";
-import { segmentDecorationCell, type SegmentDecorationCell } from "../segment-decoration";
-import { resolveSegmentLink } from "../segment-link";
+import { resolveSegmentDecoration, type SegmentDecorationCell } from "../segment-decoration";
 
 import NavBlock from "./NavBlock.vue";
 
@@ -118,7 +115,7 @@ const segmentCells = computed<readonly SegmentDecorationCell[]>(() => {
   const currentJournal = journal.value;
   if (!currentJournal) return [];
   const all = [...journals.find().list()];
-  const candidates = resolveLinkCandidates(currentJournal.name, all, [...shelves.find().list()]);
+  const shelfList = [...shelves.find().list()];
   const anchors = [currentAnchor.value, adjacent.value.previous, adjacent.value.next].filter(
     (anchor): anchor is AnchorString => anchor !== undefined,
   );
@@ -127,26 +124,14 @@ const segmentCells = computed<readonly SegmentDecorationCell[]>(() => {
     for (const line of currentJournal.navBlock.lines) {
       for (const segment of line) {
         if (!segment.addDecorations) continue;
-        const { target, date } = resolveSegmentLink(
+        const cell = resolveSegmentDecoration(
           segment,
           currentJournal,
-          candidates,
+          all,
+          shelfList,
           index.entryByAnchor(currentJournal.name, anchor),
           anchor,
-        );
-        const targetJournals =
-          target.kind === "open"
-            ? target.journalNames
-                .map((name) => journals.get(name).getOrUndefined())
-                .filter((config): config is JournalConfig => config !== undefined)
-            : [];
-        const cell = segmentDecorationCell(
-          segment,
-          currentJournal,
-          targetJournals,
-          (n, d) => cycle.anchorOf(n, d),
-          date,
-          anchor,
+          cycle,
         );
         if (cell) out.push(cell);
       }

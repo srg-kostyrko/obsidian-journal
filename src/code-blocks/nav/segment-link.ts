@@ -8,6 +8,9 @@ import { resolveLinkTarget, type LinkTarget } from "./link-targets";
 export interface ResolvedSegmentLink {
   readonly target: LinkTarget;
   readonly date: CalendarDate;
+  // Whether linkDate carried modifiers that actually shifted the date. A shifted `self`
+  // opens (and must decorate) at that shifted date rather than the host's own period.
+  readonly shifted: boolean;
 }
 
 export function resolveSegmentLink(
@@ -20,8 +23,9 @@ export function resolveSegmentLink(
   const modifiers = parseModifiers(segment.linkDate) ?? [];
   const date = applyModifiers(CalendarDate.fromAnchor(refDate), modifiers);
   const base = resolveLinkTarget(segment, noteJournal, shelfJournals, noteEntry);
-  if (segment.link === "self" && modifiers.length > 0) {
-    return { target: { kind: "open", journalNames: [noteJournal.name] }, date };
+  const shifted = modifiers.length > 0;
+  if (segment.link === "self" && shifted) {
+    return { target: { kind: "open", journalNames: [noteJournal.name] }, date, shifted };
   }
-  return { target: base, date };
+  return { target: base, date, shifted };
 }

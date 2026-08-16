@@ -2,7 +2,7 @@
 import { match } from "ts-pattern";
 import { computed, inject } from "vue";
 
-import { Clock, type AnchorString, type Period } from "@/calendar";
+import { Clock, type AnchorString } from "@/calendar";
 import { CellDecoration, colorToString, useDecorationMenuItems } from "@/decorations";
 import { m } from "@/i18n";
 import { useService } from "@/infrastructure/di";
@@ -32,14 +32,13 @@ import { useModifierHoverPreview } from "@/ui/use-modifier-hover-preview";
 import { navSegmentFixedScope, navSegmentIntervalScope } from "../decoration-scopes";
 import { resolveLinkCandidates, type LinkTarget } from "../link-targets";
 import { buildNavRowContext } from "../nav-row-context";
-import { segmentDecorationCell } from "../segment-decoration";
+import { resolveSegmentDecoration } from "../segment-decoration";
 import { resolveSegmentLink } from "../segment-link";
 
 const props = defineProps<{
   journal: JournalConfig;
   segment: NavBlockSegment;
   refDate: AnchorString;
-  period: Period;
   preventNavigation?: boolean;
   shelf?: string | null;
 }>();
@@ -74,24 +73,19 @@ const resolved = computed(() =>
 const target = computed(() => resolved.value.target);
 const linkAnchor = computed(() => resolved.value.date.toAnchor());
 
-const targetJournals = computed<readonly JournalConfig[]>(() => {
-  const t = target.value;
-  if (t.kind !== "open") return [];
-  return t.journalNames
-    .map((name) => journals.get(name).getOrUndefined())
-    .filter((config): config is JournalConfig => config !== undefined);
-});
-
 // A segment decorates from its own resolved link target rather than the block's period —
-// see segment-decoration.ts for the fixed/interval scope split this depends on.
+// see segment-decoration.ts for the fixed/interval scope split this depends on. This mirrors
+// NavigationCodeBlock's own per-segment cell derivation exactly (same shared helper), so a
+// period this segment can resolve to is always one the surrounding scope has registered.
 const decorationCell = computed(() =>
-  segmentDecorationCell(
+  resolveSegmentDecoration(
     props.segment,
     props.journal,
-    targetJournals.value,
-    (n, d) => cycle.anchorOf(n, d),
-    resolved.value.date,
+    [...journals.find().list()],
+    [...shelves.find().list()],
+    entry.value,
     props.refDate,
+    cycle,
   ),
 );
 const decorationScope = computed(() =>
@@ -192,7 +186,11 @@ function onPointerEnter(event: PointerEvent): void {
     @pointerenter="onPointerEnter"
     @pointerleave="hover.leave()"
   >
-    <CellDecoration v-if="segment.addDecorations" :period="decorationCell?.period ?? period" :scope="decorationScope">
+    <CellDecoration
+      v-if="segment.addDecorations && decorationCell"
+      :period="decorationCell.period"
+      :scope="decorationScope"
+    >
       {{ text }}
     </CellDecoration>
     <template v-else>{{ text }}</template>
