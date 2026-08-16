@@ -159,7 +159,7 @@ function buildHarness(journals: Record<string, JournalConfig>): Harness {
   container.register(NotesService).useValue({ events: createNanoEvents<NotesEvents>() } as unknown as NotesService);
   container.register(DecorationEngine).useClass(DecorationEngine);
   container.register(TemplateEngine).useClass(TemplateEngine);
-  // The row scope always opts into calendar decorations now, so DecorationsStore's settings
+  // The segment scope always opts into calendar decorations now, so DecorationsStore's settings
   // backing must exist even for tests that never save a vault-wide or shelf decoration.
   container.register(PluginData).useValue(new FakePluginData() as unknown as PluginData);
   container.register(SliceDefinitionToken).useValue(decorationsSlice);
@@ -357,7 +357,7 @@ describe("NavigationCodeBlock columns", () => {
   });
 });
 
-describe("NavigationCodeBlock row templates", () => {
+describe("NavigationCodeBlock segment templates", () => {
   beforeEach(() => {
     vi.useFakeTimers();
     vi.setSystemTime(new Date("2026-05-27T10:00:00Z"));
@@ -464,13 +464,13 @@ function dailyWithRows(rows: NavBlockSegment[]): JournalConfig {
   return { ...base, navBlock: { ...base.navBlock, lines: rows.map((row) => [row]) } };
 }
 
-describe("NavigationCodeBlock row click routing", () => {
+describe("NavigationCodeBlock segment click routing", () => {
   beforeEach(() => {
     vi.useFakeTimers();
     vi.setSystemTime(new Date("2026-05-27T10:00:00Z"));
   });
 
-  it("opens the current entry via WorkspaceService.openNote on a 'self' row click", async () => {
+  it("opens the current entry via WorkspaceService.openNote on a 'self' segment click", async () => {
     const journal = dailyWithRows([
       {
         template: "today",
@@ -506,7 +506,7 @@ describe("NavigationCodeBlock row click routing", () => {
     expect(h.flows.calls).toHaveLength(0);
   });
 
-  it("opens a row's note directly once the index registers it", async () => {
+  it("opens a segment's note directly once the index registers it", async () => {
     // Rows read the index for their own period, which is registered asynchronously — the
     // neighboring period's note lands after the block has already rendered.
     const journal = dailyWithRows([navSegment({ template: "{{date}}", link: "self" })]);
@@ -539,7 +539,7 @@ describe("NavigationCodeBlock row click routing", () => {
     expect(h.workspace.openNoteCalls.map((c) => c.path)).toEqual(["Daily/2026-05-28.md"]);
   });
 
-  it("notifies when the current entry cannot be opened on a 'self' row click", async () => {
+  it("notifies when the current entry cannot be opened on a 'self' segment click", async () => {
     const journal = dailyWithRows([
       {
         template: "today",
@@ -577,7 +577,7 @@ describe("NavigationCodeBlock row click routing", () => {
     await vi.waitFor(() => expect(h.notices.messages).toContain(m.common_note_open_error()));
   });
 
-  it("opens the current entry in a new tab on a middle-click of a 'self' row", async () => {
+  it("opens the current entry in a new tab on a middle-click of a 'self' segment", async () => {
     const journal = dailyWithRows([
       {
         template: "today",
@@ -613,7 +613,7 @@ describe("NavigationCodeBlock row click routing", () => {
     expect(h.workspace.openNoteCalls[0]?.mode).toBe("tab");
   });
 
-  it("opens the current entry in a split on a ctrl+alt click of a 'self' row", async () => {
+  it("opens the current entry in a split on a ctrl+alt click of a 'self' segment", async () => {
     const journal = dailyWithRows([
       {
         template: "today",
@@ -649,7 +649,7 @@ describe("NavigationCodeBlock row click routing", () => {
     expect(h.workspace.openNoteCalls[0]?.mode).toBe("split");
   });
 
-  it("invokes OpenDateFlow with the row's journal for link 'journal'", async () => {
+  it("invokes OpenDateFlow with the segment's journal for link 'journal'", async () => {
     const journal = dailyWithRows([
       {
         template: "go",
@@ -715,7 +715,7 @@ describe("NavigationCodeBlock row click routing", () => {
     expect(parameters.journalNames.toSorted()).toEqual(["weekly1", "weekly2"]);
   });
 
-  it("does nothing for a 'none' row click", async () => {
+  it("does nothing for a 'none' segment click", async () => {
     const journal = dailyWithRows([
       {
         template: "static",
@@ -882,7 +882,7 @@ describe("NavigationCodeBlock context menu", () => {
     expect(h.workspace.pathsMenuCalls).toEqual([{ paths: ["Weekly1/W22.md", "Weekly2/W22.md"], extraItems: [] }]);
   });
 
-  it("contributes the explain item to the context menu of a decorated row", async () => {
+  it("contributes the explain item to the context menu of a decorated segment", async () => {
     const base = journalDefaultsFor({ type: "day" }, "daily");
     const journal: JournalConfig = {
       ...base,
@@ -911,10 +911,10 @@ describe("NavigationCodeBlock context menu", () => {
     expect(h.workspace.pathsMenuCalls[0]?.extraItems).toHaveLength(1);
   });
 
-  // The per-row decoration map is scoped to write-type, not to the row's own addDecorations
-  // flag (siblings need it to render their own matches), so the row itself must filter: a row
+  // The per-segment decoration map is scoped to write-type, not to the segment's own addDecorations
+  // flag (siblings need it to render their own matches), so the segment itself must filter: a segment
   // that opts out of showing a decoration should not offer to explain one it never renders.
-  it("contributes no item to the context menu of a row that opts out of decorations", async () => {
+  it("contributes no item to the context menu of a segment that opts out of decorations", async () => {
     const base = journalDefaultsFor({ type: "day" }, "daily");
     const journal: JournalConfig = {
       ...base,
@@ -943,7 +943,7 @@ describe("NavigationCodeBlock context menu", () => {
     expect(h.workspace.pathsMenuCalls[0]?.extraItems).toEqual([]);
   });
 
-  it("contributes no item to the context menu of an undecorated row", async () => {
+  it("contributes no item to the context menu of an undecorated segment", async () => {
     const base = journalDefaultsFor({ type: "day" }, "daily");
     const journal: JournalConfig = { ...base, navBlock: { ...base.navBlock, lines: [[navSegment()]] } };
     const h = buildHarness({ daily: journal });
@@ -960,7 +960,7 @@ describe("NavigationCodeBlock context menu", () => {
     expect(h.workspace.pathsMenuCalls[0]?.extraItems).toEqual([]);
   });
 
-  it("opens an interval entry from a custom journal's row", async () => {
+  it("opens an interval entry from a custom journal's segment", async () => {
     const base = customJournal("sprint", "week", 2, "2026-05-25");
     const journal: JournalConfig = {
       ...base,
@@ -972,7 +972,7 @@ describe("NavigationCodeBlock context menu", () => {
       ],
       // "existing" mode avoids CycleService entirely for adjacent-period navigation, which the
       // fake index in this suite does not support for custom journals — the fixture is not
-      // testing adjacent navigation, only the row's own context menu.
+      // testing adjacent navigation, only the segment's own context menu.
       navBlock: {
         ...base.navBlock,
         type: "existing",
@@ -988,7 +988,7 @@ describe("NavigationCodeBlock context menu", () => {
     mount(h, "Sprint/2026-05-25.md");
 
     // With no previous/next existing entries registered, only the current block renders,
-    // so its row is the sole "sprint" match.
+    // so its segment is the sole "sprint" match.
     const target = screen.getAllByText("sprint")[0];
     if (target) await fireEvent.contextMenu(target);
 
@@ -1008,7 +1008,7 @@ describe("NavigationCodeBlock hover preview", () => {
     vi.setSystemTime(new Date("2026-05-27T10:00:00Z"));
   });
 
-  it("resolves the target path for previewFirstPath when pointer enters a row", async () => {
+  it("resolves the target path for previewFirstPath when pointer enters a segment", async () => {
     const base = journalDefaultsFor({ type: "day" }, "daily");
     const journal: JournalConfig = {
       ...base,
@@ -1056,7 +1056,7 @@ describe("NavigationCodeBlock decorations", () => {
     vi.setSystemTime(new Date("2026-05-27T10:00:00Z"));
   });
 
-  it("wraps individual row text with CellDecoration when addDecorations is true", () => {
+  it("wraps individual segment text with CellDecoration when addDecorations is true", () => {
     const base = journalDefaultsFor({ type: "day" }, "daily");
     const journal: JournalConfig = {
       ...base,
@@ -1159,7 +1159,7 @@ describe("NavigationCodeBlock decorations", () => {
     expect(document.querySelector(".decoration-corner.top-left")).toBeNull();
   });
 
-  it("includes a same-type shelf mate's decorations in a per-row decoration", () => {
+  it("includes a same-type shelf mate's decorations in a per-segment decoration", () => {
     const daily = withPerRowDecoration(journalDefaultsFor({ type: "day" }, "daily"));
     const other: JournalConfig = {
       ...journalDefaultsFor({ type: "day" }, "other"),
@@ -1205,7 +1205,7 @@ describe("NavigationCodeBlock decorations", () => {
     expect(document.querySelector(".decoration-corner.top-left")).not.toBeNull();
   });
 
-  it("excludes a vault-wide date decoration from a custom journal's row", () => {
+  it("excludes a vault-wide date decoration from a custom journal's segment", () => {
     const base = customJournal("sprint", "week", 2, "2026-05-25");
     const journal: JournalConfig = {
       ...base,
