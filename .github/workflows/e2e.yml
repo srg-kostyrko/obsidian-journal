@@ -8,6 +8,11 @@ on:
     # Nightly drift-detection across the OS + version matrix (07:00 UTC).
     - cron: "0 7 * * *"
   workflow_dispatch:
+    inputs:
+      full_matrix:
+        description: "Add the nightly version axis (floor + installer mismatch)"
+        type: boolean
+        default: true
 
 concurrency:
   group: e2e-${{ github.ref }}-${{ github.event_name }}
@@ -21,9 +26,11 @@ jobs:
         # PR + merge run latest/latest on every OS: the host differences that break this
         # plugin are platform-shaped (native vs DOM menus, path separators, popout focus)
         # and a Linux-only gate cannot see them. Nightly adds the version axis — the floor
-        # and the newest-app/oldest-installer mismatch (see docs/e2e-testing-strategy.md).
+        # and the newest-app/oldest-installer mismatch (see docs/e2e-testing-strategy.md),
+        # which a manual dispatch can ask for too — a floor-only failure is otherwise
+        # unverifiable until the next 07:00 UTC.
         os: ["ubuntu-latest", "windows-latest", "macos-latest"]
-        obsidian: ${{ (github.event_name == 'schedule') && fromJSON('["earliest/earliest", "latest/earliest", "latest/latest"]') || fromJSON('["latest/latest"]') }}
+        obsidian: ${{ (github.event_name == 'schedule' || inputs.full_matrix) && fromJSON('["earliest/earliest", "latest/earliest", "latest/latest"]') || fromJSON('["latest/latest"]') }}
 
     runs-on: ${{ matrix.os }}
     permissions:
@@ -36,7 +43,7 @@ jobs:
       # Named explicitly rather than falling back to the bare glob: `A && '' || B` yields B
       # in a GitHub expression, because the empty string is falsy — the old form silently
       # gave every run the same list, so quarantine had never run.
-      WDIO_SUITES: ${{ (github.event_name == 'schedule') && '--suite smoke --suite integration --suite migration --suite interop --suite journeys --suite quarantine' || '--suite smoke --suite integration --suite migration --suite interop --suite journeys' }}
+      WDIO_SUITES: ${{ (github.event_name == 'schedule' || inputs.full_matrix) && '--suite smoke --suite integration --suite migration --suite interop --suite journeys --suite quarantine' || '--suite smoke --suite integration --suite migration --suite interop --suite journeys' }}
 
     steps:
       - uses: actions/checkout@v7

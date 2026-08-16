@@ -209,6 +209,18 @@ on it.
 
 ### e2e traps and harness limits
 
+- `browser.executeObsidian` returns `undefined` as **null** — the WebDriver wire
+  serializes it. A poll predicate guarding only on `undefined` therefore receives
+  `null` and throws out of `waitUntil` instead of retrying, turning "not parsed
+  yet" into a hard failure on whichever combo happens to be slow. `waitForState`
+  guards both; anything hand-rolling a `waitUntil` must too.
+- Obsidian's own markup drifts across the supported range, so a selector can
+  encode a version floor tighter than `manifest.minAppVersion`. The settings
+  sidebar entry is the known case: `data-setting-id` and
+  `.vertical-tab-nav-item-title` are 1.12+, absent at the 1.8 floor. Reach
+  registry objects (`app.setting.pluginTabs`) rather than newer chrome. The
+  cached asars under `.obsidian-cache/obsidian-app/` settle such a question
+  directly — `npx asar extract` one and grep `app.js`.
 - Obsidian's editor zoom scales authored pixels (3px renders as 2.66667px).
   Assert widths through the rounding reader and colors via `getCSSProperty`
   parsed hex, from a custom hex fixture rather than a theme variable.
