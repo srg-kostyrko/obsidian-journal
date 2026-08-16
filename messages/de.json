@@ -2174,5 +2174,13 @@
 	"logging_level_info": "Info",
 	"logging_level_title": "Protokollstufe",
 	"logging_level_warn": "Warnung",
-	"logging_section_title": "Protokollierung"
+	"logging_section_title": "Protokollierung",
+	"maintenance_heading": "Wartung",
+	"maintenance_open": "Öffnen",
+	"maintenance_snapshots_heading": "Einstellungs-Snapshots",
+	"maintenance_snapshots_empty": "Noch keine Snapshots vorhanden. Vor jeder Migration deiner Einstellungen auf eine neue Version wird automatisch einer erstellt.",
+	"maintenance_snapshot_row": "Erstellt vor dem Upgrade von Einstellungsversion {version}",
+	"maintenance_snapshot_restore": "Wiederherstellen",
+	"maintenance_snapshot_restored": "Einstellungen aus dem am {takenAt} erstellten Snapshot wiederhergestellt.",
+	"maintenance_snapshot_failed": "Dieser Snapshot konnte nicht wiederhergestellt werden. Er ist möglicherweise beschädigt."
 }

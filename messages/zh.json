@@ -2164,5 +2164,13 @@
 		}
 	],
 	"decoration_breakdown_interval_heading": "间隔·{journal}·{label}",
-	"decoration_explain_menu_item": "查看装饰明细"
+	"decoration_explain_menu_item": "查看装饰明细",
+	"maintenance_heading": "维护",
+	"maintenance_open": "打开",
+	"maintenance_snapshots_heading": "设置快照",
+	"maintenance_snapshots_empty": "目前还没有快照。插件在将设置迁移到新版本之前会自动创建一个快照。",
+	"maintenance_snapshot_row": "在从设置版本 {version} 升级之前创建",
+	"maintenance_snapshot_restore": "恢复",
+	"maintenance_snapshot_restored": "已从 {takenAt} 创建的快照恢复设置。",
+	"maintenance_snapshot_failed": "无法恢复该快照,可能已损坏。"
 }

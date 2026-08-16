@@ -2251,5 +2251,13 @@
 	"logging_level_info": "Информация",
 	"logging_level_title": "Уровень логирования",
 	"logging_level_warn": "Предупреждение",
-	"logging_section_title": "Логирование"
+	"logging_section_title": "Логирование",
+	"maintenance_heading": "Обслуживание",
+	"maintenance_open": "Открыть",
+	"maintenance_snapshots_heading": "Снимки настроек",
+	"maintenance_snapshots_empty": "Снимков пока нет. Снимок создаётся автоматически перед тем, как плагин переносит ваши настройки на новую версию.",
+	"maintenance_snapshot_row": "Создан перед обновлением с версии настроек {version}",
+	"maintenance_snapshot_restore": "Восстановить",
+	"maintenance_snapshot_restored": "Настройки восстановлены из снимка, созданного {takenAt}.",
+	"maintenance_snapshot_failed": "Не удалось восстановить этот снимок. Возможно, он повреждён."
 }

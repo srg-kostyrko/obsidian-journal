@@ -2164,5 +2164,13 @@
 	"logging_level_info": "정보",
 	"logging_level_title": "로그 수준",
 	"logging_level_warn": "경고",
-	"logging_section_title": "로깅"
+	"logging_section_title": "로깅",
+	"maintenance_heading": "유지관리",
+	"maintenance_open": "열기",
+	"maintenance_snapshots_heading": "설정 스냅샷",
+	"maintenance_snapshots_empty": "아직 스냅샷이 없습니다. 플러그인이 설정을 새 버전으로 마이그레이션하기 전에 자동으로 생성됩니다.",
+	"maintenance_snapshot_row": "설정 버전 {version}에서 업그레이드하기 전에 생성됨",
+	"maintenance_snapshot_restore": "복원",
+	"maintenance_snapshot_restored": "{takenAt}에 생성된 스냅샷에서 설정을 복원했습니다.",
+	"maintenance_snapshot_failed": "해당 스냅샷을 복원할 수 없습니다. 손상되었을 수 있습니다."
 }
