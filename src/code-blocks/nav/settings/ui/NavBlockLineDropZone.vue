@@ -16,9 +16,11 @@ const empty = ref<{ id: string }[]>([]);
 useSortableList(zoneEl, empty, (orderedIds) => emit("drop", orderedIds), {
   group: props.group,
   draggable: ".nav-row",
-  // The strip is deliberately thin so it costs no layout, so lean on SortableJS's own
-  // out-of-box forgiveness rather than growing the box to catch the pointer.
-  emptyInsertThreshold: 16,
+  // Forgiveness has to stay well under the distance to the next zone, which is only one line's
+  // height: expand it much and a zone's catch area reaches across the line between them, so the
+  // pointer sits inside two competing targets at once and SortableJS flips between them on
+  // every move. Just enough to catch a thin strip, not enough to reach the line.
+  emptyInsertThreshold: 6,
 });
 </script>
 
