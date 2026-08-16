@@ -216,9 +216,9 @@
 			}
 		}
 	],
-	"block_rows_decorate_whole_label": "装饰整个块",
-	"block_rows_empty": "暂无行。添加一行。",
-	"block_rows_add_row": "添加行",
+	"block_lines_decorate_whole_label": "装饰整个块",
+	"block_lines_empty": "暂无行。添加一行。",
+	"block_lines_add_line": "添加行",
 	"block_lines_add_segment": "添加段",
 	"block_lines_delete_tooltip": "删除行",
 	"block_lines_empty_segment": "(空)",
@@ -252,7 +252,7 @@
 	"nav_block_segment_field_link_date": "链接日期",
 	"nav_block_segment_link_date_hint": "使用与模板相同的语法偏移此链接打开的日期：+1q、-1y、<startOf=month>。",
 	"nav_block_segment_link_date_invalid": "链接日期不是有效的日期偏移。",
-	"nav_block_segment_link_date_preview": "打开 {date} 的笔记",
+	"nav_block_segment_link_date_preview": "偏移至 {date}",
 	"nav_block_segment_field_add_decorations": "添加装饰",
 	"nav_block_segment_link_option": [
 		{

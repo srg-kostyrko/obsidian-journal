@@ -216,9 +216,9 @@
 			}
 		}
 	],
-	"block_rows_decorate_whole_label": "Оформлювати весь блок",
-	"block_rows_empty": "Ще немає рядків. Додайте один.",
-	"block_rows_add_row": "Додати рядок",
+	"block_lines_decorate_whole_label": "Оформлювати весь блок",
+	"block_lines_empty": "Ще немає рядків. Додайте один.",
+	"block_lines_add_line": "Додати рядок",
 	"block_lines_add_segment": "Додати сегмент",
 	"block_lines_delete_tooltip": "Видалити рядок",
 	"block_lines_empty_segment": "(порожньо)",
@@ -252,7 +252,7 @@
 	"nav_block_segment_field_link_date": "Дата посилання",
 	"nav_block_segment_link_date_hint": "Зсуває дату, яку відкриває це посилання, за тим самим синтаксисом, що й у шаблонах: +1q, -1y, <startOf=month>.",
 	"nav_block_segment_link_date_invalid": "Дата посилання — недійсний зсув дати.",
-	"nav_block_segment_link_date_preview": "Відкриває нотатку за {date}",
+	"nav_block_segment_link_date_preview": "Зсувається на {date}",
 	"nav_block_segment_field_add_decorations": "Додати оформлення",
 	"nav_block_segment_link_option": [
 		{

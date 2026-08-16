@@ -216,9 +216,9 @@
 			}
 		}
 	],
-	"block_rows_decorate_whole_label": "ブロック全体を装飾",
-	"block_rows_empty": "行がまだありません。1行追加してください。",
-	"block_rows_add_row": "行を追加",
+	"block_lines_decorate_whole_label": "ブロック全体を装飾",
+	"block_lines_empty": "行がまだありません。1行追加してください。",
+	"block_lines_add_line": "行を追加",
 	"block_lines_add_segment": "セグメントを追加",
 	"block_lines_delete_tooltip": "行を削除",
 	"block_lines_empty_segment": "(空)",
@@ -252,7 +252,7 @@
 	"nav_block_segment_field_link_date": "リンク日付",
 	"nav_block_segment_link_date_hint": "このリンクが開く日付をずらします。テンプレートと同じ構文を使います: +1q, -1y, <startOf=month>。",
 	"nav_block_segment_link_date_invalid": "リンク日付が有効な日付シフトではありません。",
-	"nav_block_segment_link_date_preview": "{date}のノートを開きます",
+	"nav_block_segment_link_date_preview": "{date}にシフトします",
 	"nav_block_segment_field_add_decorations": "装飾を追加",
 	"nav_block_segment_link_option": [
 		{

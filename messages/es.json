@@ -231,15 +231,15 @@
 			}
 		}
 	],
-	"block_rows_decorate_whole_label": "Decorar todo el bloque",
-	"block_rows_empty": "Aún no hay filas. Agrega una.",
-	"block_rows_add_row": "Agregar fila",
+	"block_lines_decorate_whole_label": "Decorar todo el bloque",
+	"block_lines_empty": "Aún no hay líneas. Agrega una.",
+	"block_lines_add_line": "Agregar línea",
 	"block_lines_add_segment": "Agregar segmento",
 	"block_lines_delete_tooltip": "Eliminar línea",
 	"block_lines_empty_segment": "(vacío)",
 	"common_action_move_up": "Subir",
 	"common_action_move_down": "Bajar",
-	"interval_block_section_title": "Filas de intervalo de calendario",
+	"interval_block_section_title": "Líneas de intervalo de calendario",
 	"nav_block_segment_modal_title": [
 		{
 			"declarations": [
@@ -267,7 +267,7 @@
 	"nav_block_segment_field_link_date": "Fecha del enlace",
 	"nav_block_segment_link_date_hint": "Desplaza la fecha que abre este enlace, usando la misma sintaxis que las plantillas: +1q, -1y, <startOf=month>.",
 	"nav_block_segment_link_date_invalid": "La fecha del enlace no es un desplazamiento de fecha válido.",
-	"nav_block_segment_link_date_preview": "Abre la nota del {date}",
+	"nav_block_segment_link_date_preview": "Se desplaza a {date}",
 	"nav_block_segment_field_add_decorations": "Agregar decoraciones",
 	"nav_block_segment_link_option": [
 		{

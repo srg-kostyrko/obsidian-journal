@@ -231,9 +231,9 @@
 			}
 		}
 	],
-	"block_rows_decorate_whole_label": "Gesamten Block dekorieren",
-	"block_rows_empty": "Noch keine Zeilen. Füge eine hinzu.",
-	"block_rows_add_row": "Zeile hinzufügen",
+	"block_lines_decorate_whole_label": "Gesamten Block dekorieren",
+	"block_lines_empty": "Noch keine Zeilen. Füge eine hinzu.",
+	"block_lines_add_line": "Zeile hinzufügen",
 	"block_lines_add_segment": "Segment hinzufügen",
 	"block_lines_delete_tooltip": "Zeile löschen",
 	"block_lines_empty_segment": "(leer)",
@@ -267,7 +267,7 @@
 	"nav_block_segment_field_link_date": "Link-Datum",
 	"nav_block_segment_link_date_hint": "Verschiebt das Datum, das dieser Link öffnet, mit der gleichen Syntax wie bei Vorlagen: +1q, -1y, <startOf=month>.",
 	"nav_block_segment_link_date_invalid": "Das Link-Datum ist keine gültige Datumsverschiebung.",
-	"nav_block_segment_link_date_preview": "Öffnet die Notiz für {date}",
+	"nav_block_segment_link_date_preview": "Verschiebt sich auf {date}",
 	"nav_block_segment_field_add_decorations": "Dekorationen hinzufügen",
 	"nav_block_segment_link_option": [
 		{

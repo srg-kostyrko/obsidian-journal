@@ -112,15 +112,15 @@
       }
     }
   ],
-  "block_rows_decorate_whole_label": "Decorate whole block",
-  "block_rows_empty": "No rows yet. Add one.",
-  "block_rows_add_row": "Add row",
+  "block_lines_decorate_whole_label": "Decorate whole block",
+  "block_lines_empty": "No lines yet. Add one.",
+  "block_lines_add_line": "Add line",
   "block_lines_add_segment": "Add segment",
   "block_lines_delete_tooltip": "Delete line",
   "block_lines_empty_segment": "(empty)",
   "common_action_move_up": "Move up",
   "common_action_move_down": "Move down",
-  "interval_block_section_title": "Calendar interval rows",
+  "interval_block_section_title": "Calendar interval lines",
   "nav_block_segment_modal_title": [
     {
       "declarations": ["input mode"],
@@ -144,7 +144,7 @@
   "nav_block_segment_field_link_date": "Link date",
   "nav_block_segment_link_date_hint": "Shift the date this link opens, using the same syntax as templates: +1q, -1y, <startOf=month>.",
   "nav_block_segment_link_date_invalid": "Link date is not a valid date shift.",
-  "nav_block_segment_link_date_preview": "Opens the note for {date}",
+  "nav_block_segment_link_date_preview": "Shifts to {date}",
   "nav_block_segment_field_add_decorations": "Add decorations",
   "nav_block_segment_link_option": [
     {

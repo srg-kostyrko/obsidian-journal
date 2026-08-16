@@ -142,8 +142,13 @@ const resolved = computed(() => {
   );
 });
 
+// Named "shifts to", not "opens the note for": the target note's own anchor (a quarter note's
+// 1 Oct, say) is almost never this shifted day itself except for a day-write journal, so a
+// phrase naming the note would be wrong for every link kind but "day". A bare date is true
+// regardless of which journal or period the shift ultimately resolves against.
 const linkDatePreview = computed(() => {
-  const modifiers = parseModifiers(linkDate.value ?? "");
+  if (!linkDate.value) return "";
+  const modifiers = parseModifiers(linkDate.value);
   if (modifiers === undefined) return "";
   const today = Clock.now().format("YYYY-MM-DD") as AnchorString;
   const date = applyModifiers(CalendarDate.fromAnchor(today), modifiers);

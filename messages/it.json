@@ -231,9 +231,9 @@
 			}
 		}
 	],
-	"block_rows_decorate_whole_label": "Decora l'intero blocco",
-	"block_rows_empty": "Nessuna riga finora. Aggiungine una.",
-	"block_rows_add_row": "Aggiungi riga",
+	"block_lines_decorate_whole_label": "Decora l'intero blocco",
+	"block_lines_empty": "Nessuna riga finora. Aggiungine una.",
+	"block_lines_add_line": "Aggiungi riga",
 	"block_lines_add_segment": "Aggiungi segmento",
 	"block_lines_delete_tooltip": "Elimina riga",
 	"block_lines_empty_segment": "(vuoto)",
@@ -267,7 +267,7 @@
 	"nav_block_segment_field_link_date": "Data del collegamento",
 	"nav_block_segment_link_date_hint": "Sposta la data aperta da questo collegamento, con la stessa sintassi dei modelli: +1q, -1y, <startOf=month>.",
 	"nav_block_segment_link_date_invalid": "La data del collegamento non è uno spostamento di data valido.",
-	"nav_block_segment_link_date_preview": "Apre la nota per il {date}",
+	"nav_block_segment_link_date_preview": "Si sposta al {date}",
 	"nav_block_segment_field_add_decorations": "Aggiungi decorazioni",
 	"nav_block_segment_link_option": [
 		{

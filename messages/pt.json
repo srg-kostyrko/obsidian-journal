@@ -231,9 +231,9 @@
 			}
 		}
 	],
-	"block_rows_decorate_whole_label": "Decorar o bloco inteiro",
-	"block_rows_empty": "Ainda não há linhas. Adicione uma.",
-	"block_rows_add_row": "Adicionar linha",
+	"block_lines_decorate_whole_label": "Decorar o bloco inteiro",
+	"block_lines_empty": "Ainda não há linhas. Adicione uma.",
+	"block_lines_add_line": "Adicionar linha",
 	"block_lines_add_segment": "Adicionar segmento",
 	"block_lines_delete_tooltip": "Excluir linha",
 	"block_lines_empty_segment": "(vazio)",
@@ -267,7 +267,7 @@
 	"nav_block_segment_field_link_date": "Data do link",
 	"nav_block_segment_link_date_hint": "Desloca a data que este link abre, usando a mesma sintaxe dos modelos: +1q, -1y, <startOf=month>.",
 	"nav_block_segment_link_date_invalid": "A data do link não é um deslocamento de data válido.",
-	"nav_block_segment_link_date_preview": "Abre a nota de {date}",
+	"nav_block_segment_link_date_preview": "Desloca para {date}",
 	"nav_block_segment_field_add_decorations": "Adicionar decorações",
 	"nav_block_segment_link_option": [
 		{

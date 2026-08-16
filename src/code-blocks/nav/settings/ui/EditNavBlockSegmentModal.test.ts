@@ -216,6 +216,19 @@ describe("EditNavBlockSegmentModal", () => {
     expect(submit).not.toHaveBeenCalled();
   });
 
+  it("shows no shift preview when the link date is empty", () => {
+    mountModal({ segment: baseSegment({ link: "quarter", linkDate: "" }) });
+    expect(screen.queryByText(/Shifts to/)).toBeNull();
+  });
+
+  it("shows the shifted-date preview once a valid link date is entered", async () => {
+    mountModal({ segment: baseSegment({ link: "quarter", template: "x" }) });
+    await userEvent.type(screen.getByLabelText(m.nav_block_segment_field_link_date()), "+1q");
+    await waitFor(() => {
+      expect(screen.queryByText(/Shifts to/)).toBeTruthy();
+    });
+  });
+
   it("accepts a valid link date", async () => {
     const { submit } = mountModal({ segment: baseSegment({ link: "quarter", template: "x" }) });
     await userEvent.type(screen.getByLabelText(m.nav_block_segment_field_link_date()), "+1q");

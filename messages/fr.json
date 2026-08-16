@@ -233,9 +233,9 @@
 			}
 		}
 	],
-	"block_rows_decorate_whole_label": "Décorer tout le bloc",
-	"block_rows_empty": "Aucune ligne pour l’instant. Ajoutez-en une.",
-	"block_rows_add_row": "Ajouter une ligne",
+	"block_lines_decorate_whole_label": "Décorer tout le bloc",
+	"block_lines_empty": "Aucune ligne pour l’instant. Ajoutez-en une.",
+	"block_lines_add_line": "Ajouter une ligne",
 	"block_lines_add_segment": "Ajouter un segment",
 	"block_lines_delete_tooltip": "Supprimer la ligne",
 	"block_lines_empty_segment": "(vide)",
@@ -269,7 +269,7 @@
 	"nav_block_segment_field_link_date": "Date du lien",
 	"nav_block_segment_link_date_hint": "Décale la date que ce lien ouvre, avec la même syntaxe que les modèles : +1q, -1y, <startOf=month>.",
 	"nav_block_segment_link_date_invalid": "La date du lien n’est pas un décalage de date valide.",
-	"nav_block_segment_link_date_preview": "Ouvre la note du {date}",
+	"nav_block_segment_link_date_preview": "Se décale au {date}",
 	"nav_block_segment_field_add_decorations": "Ajouter des décorations",
 	"nav_block_segment_link_option": [
 		{

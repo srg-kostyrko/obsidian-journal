@@ -235,9 +235,9 @@
 			}
 		}
 	],
-	"block_rows_decorate_whole_label": "Оформлять весь блок",
-	"block_rows_empty": "Строк пока нет. Добавьте одну.",
-	"block_rows_add_row": "Добавить строку",
+	"block_lines_decorate_whole_label": "Оформлять весь блок",
+	"block_lines_empty": "Строк пока нет. Добавьте одну.",
+	"block_lines_add_line": "Добавить строку",
 	"block_lines_add_segment": "Добавить сегмент",
 	"block_lines_delete_tooltip": "Удалить строку",
 	"block_lines_empty_segment": "(пусто)",
@@ -271,7 +271,7 @@
 	"nav_block_segment_field_link_date": "Дата ссылки",
 	"nav_block_segment_link_date_hint": "Сдвигает дату, которую открывает эта ссылка, по такому же синтаксису, как в шаблонах: +1q, -1y, <startOf=month>.",
 	"nav_block_segment_link_date_invalid": "Дата ссылки — недопустимый сдвиг даты.",
-	"nav_block_segment_link_date_preview": "Открывает заметку за {date}",
+	"nav_block_segment_link_date_preview": "Сдвигается на {date}",
 	"nav_block_segment_field_add_decorations": "Добавить оформление",
 	"nav_block_segment_link_option": [
 		{

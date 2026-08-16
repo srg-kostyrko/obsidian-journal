@@ -231,9 +231,9 @@
 			}
 		}
 	],
-	"block_rows_decorate_whole_label": "블록 전체 장식",
-	"block_rows_empty": "아직 행이 없습니다. 행을 추가하세요.",
-	"block_rows_add_row": "행 추가",
+	"block_lines_decorate_whole_label": "블록 전체 장식",
+	"block_lines_empty": "아직 행이 없습니다. 행을 추가하세요.",
+	"block_lines_add_line": "행 추가",
 	"block_lines_add_segment": "세그먼트 추가",
 	"block_lines_delete_tooltip": "행 삭제",
 	"block_lines_empty_segment": "(비어 있음)",
@@ -267,7 +267,7 @@
 	"nav_block_segment_field_link_date": "링크 날짜",
 	"nav_block_segment_link_date_hint": "이 링크가 여는 날짜를 이동합니다. 템플릿과 같은 구문을 사용합니다: +1q, -1y, <startOf=month>.",
 	"nav_block_segment_link_date_invalid": "링크 날짜가 올바른 날짜 이동식이 아닙니다.",
-	"nav_block_segment_link_date_preview": "{date}의 노트를 엽니다",
+	"nav_block_segment_link_date_preview": "{date}(으)로 이동합니다",
 	"nav_block_segment_field_add_decorations": "장식 추가",
 	"nav_block_segment_link_option": [
 		{
