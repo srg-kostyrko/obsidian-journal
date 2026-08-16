@@ -37,6 +37,19 @@ export async function openSettings(): Promise<void> {
   await $(DASHBOARD).waitForExist({ timeoutMsg: "settings dashboard did not mount" });
 }
 
+// The label Obsidian shows for the plugin's entry in the settings sidebar. Its markup moved
+// within the supported range: at the 1.8 floor `addSettingTab` puts the name straight on
+// `.vertical-tab-nav-item`, while 1.12+ nests it in a `.vertical-tab-nav-item-title` child and
+// adds the `data-setting-id` attribute. Selecting on either would pass only on newer builds, so
+// read the registered tab's own navEl — the element Obsidian caches at addSettingTab time. Its
+// icon and chevron children are SVG, so textContent is the name on both shapes.
+export function settingsTabLabel(): Promise<string | undefined> {
+  return browser.executeObsidian(({ app }, id) => {
+    const setting = (app as unknown as { setting: { pluginTabs: { id: string; navEl?: HTMLElement }[] } }).setting;
+    return setting.pluginTabs.find((tab) => tab.id === id)?.navEl?.textContent?.trim();
+  }, PLUGIN_ID);
+}
+
 // Whether the settings panel is still on screen — Obsidian closes it whenever a workspace leaf
 // takes focus, so actions triggered from a settings page have to be checked against it.
 export function isSettingsOpen(): Promise<boolean> {

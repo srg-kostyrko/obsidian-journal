@@ -2,7 +2,14 @@ import { $, browser, expect } from "@wdio/globals";
 
 import { m } from "../../src/i18n/paraglide/messages.js";
 import { waitForSettings } from "../support/plugin-data.js";
-import { clickIcon, openSettings, selectModalSelect, setModalText, submitModal } from "../support/settings.js";
+import {
+  clickIcon,
+  openSettings,
+  selectModalSelect,
+  setModalText,
+  settingsTabLabel,
+  submitModal,
+} from "../support/settings.js";
 
 // Slice B chunk 3 — first-journal-from-empty. e2e-empty has no journals (views auto-seed
 // the default calendar view at onload); the dashboard renders the empty state until the
@@ -17,9 +24,7 @@ describe("first journal", () => {
   it("labels its settings sidebar entry with the translated tab title", async () => {
     await openSettings();
 
-    await expect($('.vertical-tab-nav-item[data-setting-id="journals"] .vertical-tab-nav-item-title')).toHaveText(
-      m.settings_tab_title(),
-    );
+    expect(await settingsTabLabel()).toBe(m.settings_tab_title());
   });
 
   it("creates the first journal from an empty vault and replaces the empty state", async () => {
