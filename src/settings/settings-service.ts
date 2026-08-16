@@ -158,6 +158,28 @@ export class SettingsService {
     });
   }
 
+  // Restoring a snapshot. The pending flush must be cancelled before the write, not after:
+  // a debounce scheduled from an edit made just beforehand would otherwise fire between the
+  // save and the re-hydrate and put the replaced state straight back.
+  replaceStoredData(
+    raw: Record<string, unknown>,
+  ): AsyncResult<void, SettingsLoadError | MigrationFailedError | SettingsSaveError> {
+    return attempt.in(this, async function* () {
+      if (!this.#initialized) return;
+      if (this.#saveTimer !== undefined) {
+        window.clearTimeout(this.#saveTimer);
+        this.#saveTimer = undefined;
+      }
+      this.#stopWatch?.();
+      yield* this.#pluginData.save(raw).mapErr((cause) => new SettingsSaveError(cause));
+      const migrated = yield* this.#loadAndMigrate();
+      this.#events.emit("reloading");
+      this.#refresh(migrated);
+      this.#stopWatch = watch(this.#root, () => this.#scheduleSave(), { deep: true });
+      this.#events.emit("reloaded");
+    });
+  }
+
   getSlice<TKey extends string, TSchema extends AnySchema>(
     slice: SliceDefinition<TKey, TSchema>,
   ): SliceHandle<InferOutput<TSchema>> {

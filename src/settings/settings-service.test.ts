@@ -1,6 +1,7 @@
 import { createNanoEvents } from "nanoevents";
 import * as v from "valibot";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
+import { nextTick } from "vue";
 
 import { Container } from "@/infrastructure/di";
 import { PluginData, PluginDataIOError } from "@/infrastructure/host";
@@ -351,6 +352,60 @@ describe("SettingsService", () => {
       await vi.advanceTimersByTimeAsync(300);
       await vi.runAllTimersAsync();
       expect(service.getSlice(calendarSlice).state.dow).toBe(7);
+    });
+  });
+
+  describe("replaceStoredData", () => {
+    it("writes the replacement and re-hydrates from it", async () => {
+      const { service, data } = build({ raw: { version: 5, calendar: { dow: 1, global: true } } });
+      await service.initialize();
+
+      expectOk(await service.replaceStoredData({ version: 5, calendar: { dow: 6, global: false } }));
+
+      expect(service.getSlice(calendarSlice).state.dow).toBe(6);
+      expectOk(await data.load());
+    });
+
+    it("cancels a pending save so it cannot land on top of the replacement", async () => {
+      vi.useFakeTimers();
+      const { service, data } = build({ raw: { version: 5, calendar: { dow: 1, global: true } } });
+      await service.initialize();
+      const saveSpy = vi.spyOn(data, "save");
+      service.getSlice(calendarSlice).state = { dow: 3, global: true };
+      await nextTick();
+
+      expectOk(await service.replaceStoredData({ version: 5, calendar: { dow: 6, global: false } }));
+      vi.advanceTimersByTime(1000);
+      await Promise.resolve();
+
+      // #flush() reads the live #root, so a stale timer firing after replaceStoredData
+      // finishes would just re-save the already-correct state — asserting the restored
+      // dow alone can't tell a cancelled timer from one that fired harmlessly. The call
+      // count is what actually distinguishes them: replaceStoredData's own write is the
+      // only save that should happen.
+      expect(saveSpy).toHaveBeenCalledTimes(1);
+      vi.useRealTimers();
+    });
+
+    it("emits reloaded so event-driven subsystems re-derive", async () => {
+      const { service, events } = build({ raw: { version: 5, calendar: { dow: 1, global: true } } });
+      await service.initialize();
+      let reloaded = 0;
+      events.on("reloaded", () => (reloaded += 1));
+
+      await service.replaceStoredData({ version: 5, calendar: { dow: 6, global: false } });
+
+      expect(reloaded).toBe(1);
+    });
+
+    it("does nothing before initialize", async () => {
+      const { service, data } = build();
+
+      expectOk(await service.replaceStoredData({ version: 5 }));
+
+      const stored = await data.load();
+      expectOk(stored);
+      expect(stored.value).toBeUndefined();
     });
   });
 
