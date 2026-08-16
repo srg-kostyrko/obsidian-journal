@@ -104,6 +104,13 @@ describe("NavBlockLinesEditor", () => {
     expect(screen.queryByText(m.nav_block_section_use_defaults({ writeType: "custom" }))).toBeNull();
   });
 
+  it("marks segments as editable so they carry a hover and focus affordance for drag and edit", async () => {
+    mount([[sampleSegment]]);
+    await userEvent.click(screen.getByText(TITLE));
+    const segment = document.querySelector<HTMLElement>(".nav-block-preview .nav-row");
+    expect(segment?.classList.contains("nav-row--editable")).toBe(true);
+  });
+
   it("lets a lone segment fill its line so its background and click target span the block", async () => {
     mount([[sampleSegment]]);
     await userEvent.click(screen.getByText(TITLE));

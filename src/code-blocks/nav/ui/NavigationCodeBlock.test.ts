@@ -324,6 +324,11 @@ describe("NavigationCodeBlock columns", () => {
     vi.setSystemTime(new Date("2026-05-27T10:00:00Z"));
   });
 
+  it("leaves the rendered block's segments free of the editor's drag and edit affordance", () => {
+    mountWithLines([[navSegment({ template: "static text" })]]);
+    expect(screen.getAllByText("static text").at(0)?.classList.contains("nav-row--editable")).toBe(false);
+  });
+
   it("renders the current journal date in 'create' mode with prev/next periods from CycleService", () => {
     const daily = journalDefaultsFor({ type: "day" }, "daily");
     const h = buildHarness({ daily });

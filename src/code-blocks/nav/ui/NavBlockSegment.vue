@@ -141,7 +141,13 @@ const fontWeight = computed(() => (props.segment.bold ? "bold" : "normal"));
 const fontStyle = computed(() => (props.segment.italic ? "italic" : "normal"));
 const color = computed(() => colorToString(props.segment.color));
 const background = computed(() => colorToString(props.segment.background));
-const cursor = computed(() => (props.editable || target.value.kind !== "none" ? "pointer" : "default"));
+// In the editor the whole segment is the drag handle, so it shows the grab cursor rather than
+// the link cursor its target would imply — dragging is the affordance a reader has no way to
+// guess otherwise, and the note-opening cursor means nothing on a settings preview.
+const cursor = computed(() => {
+  if (props.editable) return "grab";
+  return target.value.kind === "none" ? "default" : "pointer";
+});
 
 function pathsForTarget(t: LinkTarget): readonly VaultPath[] {
   return match(t)
@@ -199,6 +205,7 @@ function onPointerEnter(event: PointerEvent): void {
        a single row and now wraps a whole line of segments. -->
   <div
     class="nav-row"
+    :class="{ 'nav-row--editable': editable }"
     :tabindex="editable ? 0 : undefined"
     :role="editable ? 'button' : undefined"
     :aria-label="editable && text.length === 0 ? m.block_lines_empty_segment() : undefined"
@@ -232,6 +239,18 @@ function onPointerEnter(event: PointerEvent): void {
   background-color: v-bind(background);
   cursor: v-bind(cursor);
   position: relative;
+}
+/* Nothing else tells a reader a segment can be dragged or clicked to edit: it is plain text in
+   a preview. An outline rather than a border so revealing it reflows nothing, and the same
+   treatment on keyboard focus since the segment is reachable by tab. */
+.nav-row--editable:hover,
+.nav-row--editable:focus-visible {
+  outline: 1px dashed var(--text-faint);
+  outline-offset: 2px;
+  border-radius: var(--radius-s);
+}
+.nav-row--editable:active {
+  cursor: grabbing;
 }
 .nav-segment-placeholder {
   color: var(--text-faint);
