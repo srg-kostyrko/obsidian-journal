@@ -140,7 +140,7 @@ function onDropAtStart(orderedIds: string[]): void {
       <template #description>{{ m.block_lines_empty() }}</template>
     </UiSettingRow>
 
-    <div v-else class="nav-block-preview">
+    <div v-else class="nav-block-preview" :class="{ 'nav-block-preview--dragging': anyDragging }">
       <NavBlock
         :block="config[field]"
         :journal="config"
@@ -205,6 +205,15 @@ function onDropAtStart(orderedIds: string[]): void {
   gap: var(--size-2-2);
   padding-block: var(--size-2-3);
   padding-right: var(--nav-line-gutter-reserve);
+}
+/* A segment's width normally depends on how many segments share its line — alone it fills the
+   line, with siblings it hugs its text. That is right at rest and wrong mid-drag: crossing from
+   a one-segment line into a shared one collapsed the dragged segment from the line's full width
+   to its text's width and back, so the browser's drag image (captured at the original width)
+   sat far from the cursor and every crossing re-flowed both lines. Freeze every segment to
+   hug-width for the duration of a drag: one settle as the drag begins, stable geometry after. */
+.nav-block-preview--dragging :deep(.nav-row) {
+  flex: 0 1 auto;
 }
 .nav-block-preview :deep(.nav-line-gutter) {
   position: absolute;
