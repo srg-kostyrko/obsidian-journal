@@ -35,12 +35,13 @@ const journalCollection = defineCollection("journals", journalSchema, (id) => ({
 function build(
   options: {
     raw?: unknown;
+    data?: FakePluginData;
     slices?: readonly unknown[];
     collections?: readonly unknown[];
     migrations?: readonly Migration[];
   } = {},
 ): { service: SettingsService; data: FakePluginData; events: ReturnType<typeof createNanoEvents<SettingsEvents>> } {
-  const data = new FakePluginData(options.raw);
+  const data = options.data ?? new FakePluginData(options.raw);
   const events = createNanoEvents<SettingsEvents>();
   const c = new Container();
   c.register(PluginData).useValue(data as unknown as PluginData);
@@ -159,6 +160,32 @@ describe("SettingsService", () => {
 
       expectOk(init);
       expect(service.getSlice(calendarSlice).state.dow).toBe(5);
+    });
+
+    it("writes no second snapshot on a later boot over the same unchanged stored data", async () => {
+      // initialize() never flushes the migrated result back to data.json, so a user who
+      // upgrades and never touches a setting re-enters #loadAndMigrate with the same
+      // pre-migration raw on every subsequent launch. The FakePluginData instance is
+      // reused across two SettingsService builds to stand in for that: same stored bytes,
+      // same version, a fresh in-memory service each time — exactly a second boot.
+      //
+      // The clock is advanced between boots so the two writes would land under distinct
+      // timestamped filenames if the guard were absent — same-second collisions already
+      // dedupe by accident, which would make this pass whether or not the fix is present.
+      vi.useFakeTimers();
+      vi.setSystemTime(new Date("2026-08-16T10:20:30.000Z"));
+      const raw = { version: 4, calendar: { dow: 5, global: false } };
+      const data = new FakePluginData(raw);
+      const first = build({ data, migrations: [bump] });
+      await first.service.initialize();
+      expect([...data.files.keys()]).toHaveLength(1);
+
+      vi.setSystemTime(new Date("2026-08-16T10:25:00.000Z"));
+      const second = build({ data, migrations: [bump] });
+      await second.service.initialize();
+
+      expect([...data.files.keys()]).toHaveLength(1);
+      vi.useRealTimers();
     });
   });
 
@@ -363,7 +390,23 @@ describe("SettingsService", () => {
       expectOk(await service.replaceStoredData({ version: 5, calendar: { dow: 6, global: false } }));
 
       expect(service.getSlice(calendarSlice).state.dow).toBe(6);
-      expectOk(await data.load());
+      const stored = await data.load();
+      expectOk(stored);
+      expect(stored.value).toEqual({ version: 5, calendar: { dow: 6, global: false } });
+    });
+
+    it("leaves data.json untouched when the replacement cannot be migrated", async () => {
+      const { service, data } = build({ raw: { version: 5, calendar: { dow: 1, global: true } } });
+      await service.initialize();
+
+      const replaced = await service.replaceStoredData({ version: 99 });
+
+      expectErr(replaced);
+      expect(replaced.error).toBeInstanceOf(MigrationFailedError);
+      const stored = await data.load();
+      expectOk(stored);
+      expect(stored.value).toEqual({ version: 5, calendar: { dow: 1, global: true } });
+      expect(service.getSlice(calendarSlice).state.dow).toBe(1);
     });
 
     it("cancels a pending save so it cannot land on top of the replacement", async () => {

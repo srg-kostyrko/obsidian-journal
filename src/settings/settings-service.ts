@@ -72,11 +72,21 @@ export class SettingsService {
   }
 
   // A migration is the only event that can still lose a whole config, so it is the only one
-  // that snapshots. A snapshot that cannot be written must not stop the plugin loading —
-  // migrating unprotected beats refusing to start.
+  // that snapshots — one per version transition (see the spec's "Rolling backups" non-goal).
+  // initialize() never flushes the migrated result back to disk, so an unchanged data.json
+  // re-enters this on every subsequent boot; listing first and skipping a version already
+  // snapshotted is what keeps that to one file. A snapshot that cannot be written, or a list
+  // that cannot be read, must not stop the plugin loading — migrating unprotected beats
+  // refusing to start.
   async #snapshotIfBehind(root: Record<string, unknown>): Promise<void> {
     const storedVersion = typeof root.version === "number" ? root.version : 0;
     if (storedVersion >= CURRENT_VERSION) return;
+    const existing = await this.#snapshots.list();
+    const alreadyTaken = existing.match({
+      ok: (snapshots) => snapshots.some((snapshot) => snapshot.fromVersion === storedVersion),
+      err: () => false,
+    });
+    if (alreadyTaken) return;
     const written = await this.#snapshots.write(storedVersion, JSON.stringify(root), new Date().toISOString());
     written.tapErr((error) => {
       this.#logger.warn("could not snapshot settings before migrating", { storedVersion, error });
@@ -167,6 +177,13 @@ export class SettingsService {
   // Restoring a snapshot. The pending flush must be cancelled before the write, not after:
   // a debounce scheduled from an edit made just beforehand would otherwise fire between the
   // save and the re-hydrate and put the replaced state straight back.
+  //
+  // Whether the payload can migrate is checked before data.json is touched. A payload runMigrations rejects —
+  // a snapshot written by a newer plugin version and restored after a downgrade, or a
+  // hand-edited file that is still valid JSON — must not overwrite the working file: the
+  // in-memory state would be the only remaining copy until a later save, and quitting before
+  // that leaves the next boot hitting MigrationFailedError with no plugin and no Maintenance
+  // page to recover from.
   replaceStoredData(
     raw: Record<string, unknown>,
   ): AsyncResult<void, SettingsLoadError | MigrationFailedError | SettingsSaveError> {
@@ -176,6 +193,7 @@ export class SettingsService {
         window.clearTimeout(this.#saveTimer);
         this.#saveTimer = undefined;
       }
+      yield* runMigrations(raw, this.#migrations, CURRENT_VERSION);
       yield* this.#pluginData.save(raw).mapErr((cause) => new SettingsSaveError(cause));
       const migrated = yield* this.#loadAndMigrate();
       this.#applyMigrated(migrated);
