@@ -39,3 +39,17 @@ export class NoSpilloverDayError extends Error {
     this.name = "NoSpilloverDayError";
   }
 }
+
+export class NativeMenuUnavailableError extends Error {
+  constructor() {
+    super("electron.remote.Menu is unavailable, so native menus cannot be captured");
+    this.name = "NativeMenuUnavailableError";
+  }
+}
+
+export class NativeMenuItemMissingError extends Error {
+  constructor(menuIndex: number, itemIndex: number) {
+    super(`no clickable item at index ${String(itemIndex)} of captured native menu ${String(menuIndex)}`);
+    this.name = "NativeMenuItemMissingError";
+  }
+}

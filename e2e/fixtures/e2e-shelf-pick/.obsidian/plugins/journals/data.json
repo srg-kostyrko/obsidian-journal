@@ -1,0 +1,56 @@
+{
+  "version": 4,
+  "journals": {
+    "work": {
+      "name": "work",
+      "write": { "type": "day" },
+      "folder": "work",
+      "timeline": { "start": "", "end": { "kind": "never" } },
+      "dateFormat": "YYYY-MM-DD",
+      "frontmatter": {
+        "dateField": "journal-date",
+        "startDateField": "journal-start-date",
+        "endDateField": "journal-end-date",
+        "addStartDate": false,
+        "addEndDate": false
+      },
+      "numbering": { "enabled": false, "anchorDate": "", "allowBefore": false, "sources": [] }
+    },
+    "personal": {
+      "name": "personal",
+      "write": { "type": "day" },
+      "folder": "personal",
+      "timeline": { "start": "", "end": { "kind": "never" } },
+      "dateFormat": "YYYY-MM-DD",
+      "frontmatter": {
+        "dateField": "journal-date",
+        "startDateField": "journal-start-date",
+        "endDateField": "journal-end-date",
+        "addStartDate": false,
+        "addEndDate": false
+      },
+      "numbering": { "enabled": false, "anchorDate": "", "allowBefore": false, "sources": [] }
+    }
+  },
+  "shelves": {
+    "office": { "name": "office", "journals": ["work"] },
+    "home": { "name": "home", "journals": ["personal"] }
+  },
+  "views": {
+    "d0cca100-0000-4000-8000-000000000001": {
+      "id": "d0cca100-0000-4000-8000-000000000001",
+      "name": "Calendar",
+      "icon": "calendar-days",
+      "defaultShelf": null,
+      "showInRibbon": true,
+      "leaf": "right",
+      "blocks": [
+        {
+          "id": "d0cca100-0000-4000-8000-000000000002",
+          "key": "month-calendar",
+          "config": { "before": 0, "after": 0, "hiddenWeekdays": [], "weeks": "left" }
+        }
+      ]
+    }
+  }
+}

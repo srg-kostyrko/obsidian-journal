@@ -108,10 +108,12 @@ on it.
   on `menu-will-close` and delivers the pick over IPC an unbounded number of
   tasks later, so any "no pick by the time we hid" verdict fires on every pick.
   Obsidian defaults `nativeMenus` **on for macOS** (`null` config → `true`) and
-  off elsewhere, so this is invisible on Linux and Windows and untestable in
-  e2e. A menu whose result feeds a promise must call `setUseNativeMenu(false)`
-  — `WorkspaceService.pickFromMenu` does. Menus whose items only run side
-  effects (`openPathsMenu`) are order-independent and keep the host default.
+  off elsewhere, so this is invisible on Linux and Windows. A menu whose result
+  feeds a promise must call `setUseNativeMenu(false)` —
+  `WorkspaceService.pickFromMenu` does. Menus whose items only run side effects
+  (`openPathsMenu`) are order-independent and keep the host default. e2e pins the
+  DOM rendering suite-wide and reproduces the native one on demand; see the menu
+  section of [`docs/e2e-testing-strategy.md`](docs/e2e-testing-strategy.md).
 - `focusLeaf` calls `app.setting.close()`, and `setViewState({ active: true })`
   reaches it. `revealLeaf()` alone does not, so a leaf placed as a side effect
   of a settings interaction is placed then revealed, never activated.
