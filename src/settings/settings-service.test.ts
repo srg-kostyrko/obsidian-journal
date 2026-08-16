@@ -12,6 +12,7 @@ import { expectErr, expectOk } from "@/infrastructure/result/testing";
 import { SliceKeyConflictError, MigrationFailedError, UnregisteredSliceError } from "./errors";
 import { defineCollection, defineSlice, type Migration } from "./schema";
 import { SettingsService } from "./settings-service";
+import { SnapshotService } from "./snapshots/snapshot-service";
 import {
   CollectionDefinitionToken,
   MigrationToken,
@@ -42,6 +43,7 @@ function build(
   const events = createNanoEvents<SettingsEvents>();
   const c = new Container();
   c.register(PluginData).useValue(data as unknown as PluginData);
+  c.register(SnapshotService).useClass(SnapshotService);
   c.register(SettingsEventsToken).useValue(events);
   c.addModule(createLoggerTestingModule().module);
   const slices = options.slices ?? [calendarSlice];
@@ -112,6 +114,50 @@ describe("SettingsService", () => {
       const init = await service.initialize();
       expectErr(init);
       expect(init.error).toBeInstanceOf(MigrationFailedError);
+    });
+  });
+
+  describe("initialize — snapshot before migration", () => {
+    const bump: Migration = { fromVersion: 4, toVersion: 5, migrate: (raw) => ({ ...raw, migrated: true }) };
+
+    it("writes the pre-migration data when the stored version is behind", async () => {
+      const raw = { version: 4, calendar: { dow: 5, global: false } };
+      const { service, data } = build({ raw, migrations: [bump] });
+
+      await service.initialize();
+
+      const names = [...data.files.keys()];
+      expect(names).toHaveLength(1);
+      expect(JSON.parse(data.files.get(names[0]) ?? "")).toEqual(raw);
+    });
+
+    it("writes nothing when the stored version is already current", async () => {
+      const { service, data } = build({ raw: { version: 5, calendar: { dow: 5, global: false } } });
+
+      await service.initialize();
+
+      expect([...data.files.keys()]).toEqual([]);
+    });
+
+    it("writes nothing on a fresh install with no stored data", async () => {
+      const { service, data } = build();
+
+      await service.initialize();
+
+      expect([...data.files.keys()]).toEqual([]);
+    });
+
+    it("still loads when the snapshot cannot be written", async () => {
+      const raw = { version: 4, calendar: { dow: 5, global: false } };
+      const { service, data } = build({ raw, migrations: [bump] });
+      vi.spyOn(data, "writeFile").mockReturnValueOnce(
+        AsyncResult.err(new PluginDataIOError("write-file", new Error("disk full"))),
+      );
+
+      const init = await service.initialize();
+
+      expectOk(init);
+      expect(service.getSlice(calendarSlice).state.dow).toBe(5);
     });
   });
 

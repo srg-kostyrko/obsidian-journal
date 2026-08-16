@@ -15,6 +15,7 @@ import {
   UnregisteredSliceError,
 } from "./errors";
 import { runMigrations } from "./migrations";
+import { SnapshotService } from "./snapshots/snapshot-service";
 import { CollectionDefinitionToken, MigrationToken, SettingsEventsToken, SliceDefinitionToken } from "./tokens";
 import { CURRENT_VERSION } from "./version";
 
@@ -28,6 +29,7 @@ const DEBOUNCE_MS = 300;
 
 export class SettingsService {
   readonly #pluginData = inject(PluginData);
+  readonly #snapshots = inject(SnapshotService);
   readonly #slices: readonly AnySliceDefinition[] = inject(SliceDefinitionToken);
   readonly #collections: readonly AnyCollectionDefinition[] = inject(CollectionDefinitionToken);
   readonly #migrations = inject(MigrationToken);
@@ -64,7 +66,20 @@ export class SettingsService {
       const root: Record<string, unknown> = isStoredObject
         ? (raw as Record<string, unknown>)
         : { version: CURRENT_VERSION };
+      if (isStoredObject) await this.#snapshotIfBehind(root);
       return yield* runMigrations(root, this.#migrations, CURRENT_VERSION);
+    });
+  }
+
+  // A migration is the only event that can still lose a whole config, so it is the only one
+  // that snapshots. A snapshot that cannot be written must not stop the plugin loading —
+  // migrating unprotected beats refusing to start.
+  async #snapshotIfBehind(root: Record<string, unknown>): Promise<void> {
+    const storedVersion = typeof root.version === "number" ? root.version : 0;
+    if (storedVersion >= CURRENT_VERSION) return;
+    const written = await this.#snapshots.write(storedVersion, JSON.stringify(root), new Date().toISOString());
+    written.tapErr((error) => {
+      this.#logger.warn("could not snapshot settings before migrating", { storedVersion, error });
     });
   }
 

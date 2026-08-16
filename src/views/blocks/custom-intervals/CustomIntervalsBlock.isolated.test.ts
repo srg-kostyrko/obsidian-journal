@@ -16,6 +16,7 @@ import type { JournalConfig } from "@/journals";
 import { customJournal, fakeRepo } from "@/journals/testing";
 import { ActiveEntryViewModel, type ActiveEntryRef } from "@/notes-calendar";
 import { SettingsEventsToken, SettingsService, SliceDefinitionToken, type SettingsEvents } from "@/settings";
+import { SnapshotService } from "@/settings/snapshots/snapshot-service";
 import { ShelvesRepository } from "@/shelves";
 import { fakeShelvesRepo } from "@/shelves/testing";
 
@@ -72,6 +73,7 @@ function mountBlock(config: CustomIntervalsConfig, contextOverride: Partial<View
   // The fixed decoration scope always opts into calendar decorations, so DecorationsStore's
   // settings backing must exist even for tests that never save a vault-wide or shelf decoration.
   container.register(PluginData).useValue(new FakePluginData() as unknown as PluginData);
+  container.register(SnapshotService).useClass(SnapshotService);
   container.register(SliceDefinitionToken).useValue(decorationsSlice);
   container.register(SettingsEventsToken).useValue(createNanoEvents<SettingsEvents>());
   container.register(SettingsService).useClass(SettingsService);
