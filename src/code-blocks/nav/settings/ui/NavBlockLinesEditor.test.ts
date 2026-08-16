@@ -230,6 +230,16 @@ describe("NavBlockLinesEditor", () => {
     expect(dropZones.map((el) => el.dataset.lineIndex)).toEqual(["0", "1", "2"]);
   });
 
+  it("keeps drop zones in layout when idle so revealing them cannot shift the list mid-drag", async () => {
+    mount([[sampleSegment], [{ ...sampleSegment, template: "other" }]]);
+    await userEvent.click(screen.getByText(TITLE));
+    const preview = document.querySelector<HTMLElement>(".nav-block-preview");
+    const zones = [...(preview?.querySelectorAll<HTMLElement>(".nav-line-drop") ?? [])];
+    expect(zones).toHaveLength(3);
+    expect(zones.every((el) => el.style.display !== "none")).toBe(true);
+    expect(zones.some((el) => el.classList.contains("nav-line-drop--showing"))).toBe(false);
+  });
+
   it("toggles decorateWholeBlock on intervalBlock", async () => {
     const { storage } = mount([[sampleSegment]]);
     await userEvent.click(screen.getByText(TITLE));

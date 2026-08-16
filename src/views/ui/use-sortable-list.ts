@@ -14,6 +14,10 @@ export interface SortableListOptions {
   // job runs, silently swallowing the event.
   onDragStart?: () => void;
   onDragEnd?: () => void;
+  // How far outside an empty container's box a drop still counts. Lets a permanently-thin
+  // drop target stay easy to hit without reserving its forgiveness as real layout — SortableJS
+  // defaults to 5px, which is unforgiving for a strip only a few pixels tall.
+  emptyInsertThreshold?: number;
 }
 
 function idsInDomOrder(container: HTMLElement): string[] {
@@ -53,6 +57,7 @@ export function useSortableList<T extends { id: string }>(
     // dragging for every caller that doesn't pass these, not just the ones that do.
     ...(options.group !== undefined && { group: options.group }),
     ...(options.draggable !== undefined && { draggable: options.draggable }),
+    ...(options.emptyInsertThreshold !== undefined && { emptyInsertThreshold: options.emptyInsertThreshold }),
     onStart: () => {
       dragging.value = true;
       options.onDragStart?.();
