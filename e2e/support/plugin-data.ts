@@ -5,7 +5,8 @@ import { CURRENT_VERSION } from "../../src/settings/version.js";
 import { PluginDataMissingError } from "./errors.js";
 import { waitForState } from "./wait.js";
 
-const PLUGIN_DATA_PATH = ".obsidian/plugins/journals/data.json";
+const PLUGIN_DATA_DIR = ".obsidian/plugins/journals";
+const PLUGIN_DATA_PATH = `${PLUGIN_DATA_DIR}/data.json`;
 
 export interface StoredJournal {
   name?: string;
@@ -112,4 +113,45 @@ export async function writeRawSettings(raw: string): Promise<void> {
     PLUGIN_DATA_PATH,
     raw,
   );
+}
+
+// Files the plugin writes into its own config directory alongside data.json — snapshot
+// backups (SnapshotService/PluginData.writeFile) land here, not under a subfolder.
+export async function listPluginDataFiles(): Promise<string[]> {
+  return browser.executeObsidian(async ({ app }, dir) => {
+    const listing = await app.vault.adapter.list(dir);
+    return listing.files.map((file) => file.slice(dir.length + 1));
+  }, PLUGIN_DATA_DIR);
+}
+
+export async function readPluginDataFile(name: string): Promise<string | undefined> {
+  return browser.executeObsidian(
+    async ({ app }, dir, fileName) => {
+      const path = `${dir}/${fileName}`;
+      if (!(await app.vault.adapter.exists(path))) return;
+      return app.vault.adapter.read(path);
+    },
+    PLUGIN_DATA_DIR,
+    name,
+  );
+}
+
+// Polls until the plugin has written at least one snapshot backup file — the observable
+// signal that #loadAndMigrate's pre-migration write completed, independent of whether the
+// migrated data.json itself has been flushed back to disk yet (that write is debounced and,
+// absent any other settings change, may never happen).
+async function matchingPluginDataFiles(pattern: RegExp): Promise<string[] | undefined> {
+  const files = await listPluginDataFiles();
+  const matched = files.filter((name) => pattern.test(name));
+  return matched.length > 0 ? matched : undefined;
+}
+
+export async function waitForSnapshotFiles(pattern: RegExp): Promise<string[]> {
+  await waitForState(
+    () => matchingPluginDataFiles(pattern),
+    () => true,
+    "waited for a pre-migration snapshot backup file to be written",
+  );
+  const matched = await matchingPluginDataFiles(pattern);
+  return matched ?? [];
 }
