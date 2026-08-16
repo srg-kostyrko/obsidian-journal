@@ -42,6 +42,24 @@ describe("SnapshotService", () => {
     expect(result.value.at(0)?.takenAt).toBe("2026-08-16T10:20:30Z");
   });
 
+  it("sorts by taken-at date rather than name, where a double-digit version would put a name sort out of order", async () => {
+    // "v9" and "v10" are the case a name sort gets in the wrong order: comparing the
+    // strings character-by-character hits "9" vs "1" before the date is even reached, so
+    // "backup-v9-…" sorts as the larger string and would be listed first — even though the
+    // v10 snapshot (versions only move forward) was taken years later.
+    const { service, data } = build();
+    data.files.set("backup-v9-2020-01-01T00-00-00.json", "{}");
+    data.files.set("backup-v10-2026-08-16T10-20-30.json", "{}");
+
+    const result = await service.list();
+
+    expectOk(result);
+    expect(result.value.map((s) => s.name)).toEqual([
+      "backup-v10-2026-08-16T10-20-30.json",
+      "backup-v9-2020-01-01T00-00-00.json",
+    ]);
+  });
+
   it("reads a snapshot back as an object", async () => {
     const { service, data } = build();
     data.files.set("backup-v3-2026-08-16T10-20-30.json", '{"version":3,"journals":{}}');
