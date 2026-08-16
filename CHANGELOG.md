@@ -20,6 +20,7 @@ All notable changes to this project will be documented in this file.
 - A week configuration arriving from sync now re-anchors weekly notes on the receiving device, the same way changing it on that device does; previously the calendar moved but the notes did not, so their cells read as empty and the open-this-week command could start a second note for the week.
 - Opening a journal note now opens it in the window you are working in; previously, if the note was already open in another window, Obsidian jumped you over to that window.
 - Middle-clicking or Ctrl/Cmd-clicking to open a journal note in a new tab, split, or window now does so even when the note is already open somewhere; previously the request was ignored and the existing pane was focused instead.
+- Picking a journal from the menu that appears when several journals cover the clicked date now opens or creates that journal's note on macOS; previously the pick was silently discarded, so a date that more than one journal could answer for — the usual case in a calendar scoped to all journals — could not be opened at all. The menu still uses whichever style macOS is set to show.
 
 ## [3.0.0] - 2026-08-14
 

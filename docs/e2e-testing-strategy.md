@@ -126,8 +126,11 @@ Obsidian.
 
   **PR and merge-to-main** name every stable suite (`--suite smoke --suite
 integration --suite migration --suite interop --suite journeys`), omitting
-  `quarantine`. **Nightly** runs the bare glob — all suites, including
-  `quarantine` — across the OS + version matrix. Quarantining a flaky test = moving
+  `quarantine`. **Nightly** names those plus `--suite quarantine`, across the
+  version matrix. Both name their suites explicitly rather than letting nightly
+  fall through to the bare glob: `A && '' || B` yields `B` in a GitHub
+  expression, so the fall-through form silently gave every run the same list.
+  The bare glob remains a local-run convenience. Quarantining a flaky test = moving
   its file into the `quarantine` suite; it keeps running nightly and never blocks a
   merge — no separate mechanism needed.
 
@@ -171,6 +174,31 @@ integration --suite migration --suite interop --suite journeys`), omitting
   `enabledPlugins.has("journals")`, where activation genuinely is the contract.
 - **Trigger via `executeCommandById` for A/C** (deterministic, outcome is the
   point); **trigger via real UI clicks for B** (the click path is the point).
+
+#### Menus render two ways
+
+Obsidian's `Menu` is a DOM node on Linux and Windows and an Electron/OS menu on
+macOS, where the `nativeMenus` config defaults on. The native rendering puts
+nothing in the document, so a `.menu-item-title` assertion cannot fail
+informatively — it reads as "menu did not open" whatever actually broke.
+
+`wdio.conf.mts` therefore pins the DOM rendering before every test, so an
+ordinary menu spec means the same thing on every OS and a macOS failure is a
+finding rather than an artifact.
+
+A spec that needs the _native_ path opts in with `e2e/support/native-menu.ts`,
+which flips Obsidian's static and swaps Electron's `buildFromTemplate` for a
+capture. That is not a simulation — it is the real native branch of
+`showAtPosition`, with only the OS popup replaced by something WebDriver can
+read. Because it works on any OS, macOS-only behavior is reproducible on the
+Linux PR gate.
+
+The capture also replays what makes the native menu different: it closes first
+and delivers the pick afterwards, the reverse of the DOM menu. **Anything whose
+result is a value — a promise the pick resolves and the close would cancel —
+must be tested under both orderings**, because the two disagree about what a
+close means. `e2e/journeys/multi-journal-pick.e2e.ts` is the worked example, one
+test per ordering; issue #238 is what it costs to cover only one.
 
 ### Waiting and flakiness budget
 
@@ -271,13 +299,14 @@ Each entry is an `(appVersion, installerVersion)` pair (see Install and version
 modes). `appVersion: earliest` resolves the manifest's `minAppVersion`;
 `installerVersion: earliest` resolves to the **oldest installer still compatible
 with that app version** — so `latest/earliest` is always a real, bootable combo,
-never an impossible one. The PR/merge fast path runs one combo on Linux; nightly
-multiplies the version combos below by the OS matrix (Windows / macOS / Linux).
+never an impossible one. **OS is the PR axis, version is the nightly axis**: the
+host differences that break this plugin are platform-shaped (menu rendering, path
+separators, popout focus) and a single-OS gate cannot see them, so PR and merge
+run `latest/latest` on all three. Nightly multiplies that by the version combos.
 
 | Clock      | OS              | appVersion | installerVersion | Catches                                                                                                                               |
 | ---------- | --------------- | ---------- | ---------------- | ------------------------------------------------------------------------------------------------------------------------------------- |
-| PR + merge | Linux           | `latest`   | `latest`         | the common, modern case — fast merge signal                                                                                           |
-| Nightly    | Win/macOS/Linux | `latest`   | `latest`         | the modern case re-confirmed on every OS                                                                                              |
+| PR + merge | Win/macOS/Linux | `latest`   | `latest`         | the common, modern case, on every host — fast merge signal                                                                            |
 | Nightly    | Win/macOS/Linux | `earliest` | `earliest`       | a contract test, not a real user — proves the advertised `minAppVersion` floor isn't a lie                                            |
 | Nightly    | Win/macOS/Linux | `latest`   | `earliest`       | **the common real user**: Obsidian auto-updates the app but not the installer, so a long-time user runs today's JS on an old Electron |
 

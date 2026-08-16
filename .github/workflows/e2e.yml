@@ -18,11 +18,11 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        # PR + merge run a single fast combo (Linux, latest app on latest installer).
-        # Nightly widens to every OS and to the floor + the newest-app/oldest-installer
-        # mismatch, re-confirming latest/latest across platforms too (see
-        # docs/e2e-testing-strategy.md).
-        os: ${{ (github.event_name == 'schedule') && fromJSON('["ubuntu-latest", "windows-latest", "macos-latest"]') || fromJSON('["ubuntu-latest"]') }}
+        # PR + merge run latest/latest on every OS: the host differences that break this
+        # plugin are platform-shaped (native vs DOM menus, path separators, popout focus)
+        # and a Linux-only gate cannot see them. Nightly adds the version axis — the floor
+        # and the newest-app/oldest-installer mismatch (see docs/e2e-testing-strategy.md).
+        os: ["ubuntu-latest", "windows-latest", "macos-latest"]
         obsidian: ${{ (github.event_name == 'schedule') && fromJSON('["earliest/earliest", "latest/earliest", "latest/latest"]') || fromJSON('["latest/latest"]') }}
 
     runs-on: ${{ matrix.os }}
@@ -32,9 +32,11 @@ jobs:
       pull-requests: write
     env:
       OBSIDIAN_VERSIONS: ${{ matrix.obsidian }}
-      # PR + merge run the full set of stable suites. Nightly (empty -> bare glob)
-      # additionally picks up the non-blocking `quarantine` lane.
-      WDIO_SUITES: ${{ (github.event_name == 'schedule') && '' || '--suite smoke --suite integration --suite migration --suite interop --suite journeys' }}
+      # PR + merge run the stable suites; nightly adds the non-blocking `quarantine` lane.
+      # Named explicitly rather than falling back to the bare glob: `A && '' || B` yields B
+      # in a GitHub expression, because the empty string is falsy — the old form silently
+      # gave every run the same list, so quarantine had never run.
+      WDIO_SUITES: ${{ (github.event_name == 'schedule') && '--suite smoke --suite integration --suite migration --suite interop --suite journeys --suite quarantine' || '--suite smoke --suite integration --suite migration --suite interop --suite journeys' }}
 
     steps:
       - uses: actions/checkout@v7

@@ -52,6 +52,12 @@ const FILE_MENU_SECTIONS = [
   "danger",
 ];
 
+// How long after a native menu closes a pick may still arrive from the main process before
+// the close is read as a cancel. Electron sends both in the same main-process turn, so the
+// real gap is a single IPC hop; this is that hop with room for a loaded machine, not a
+// measured bound. Sized generously on purpose — see pickFromMenu for why waiting is free.
+export const NATIVE_PICK_DELIVERY_GRACE_MS = 500;
+
 export class WorkspaceService {
   readonly #app = inject(InternalObsidianAppToken);
   readonly #plugin = inject(InternalPluginToken);
@@ -230,8 +236,18 @@ export class WorkspaceService {
   }
 
   // A pick-one menu at the pointer, for disambiguating when multiple journals apply.
-  // Cancellation is decided a task later than onHide because Obsidian can hide the menu
-  // before the clicked item's handler runs — the same ordering hazard as SuggestModal.onClose.
+  //
+  // Obsidian renders a Menu two ways and they put the pick on opposite sides of the close.
+  // The DOM menu runs the item callback and *then* hides. The native (Electron) menu — the
+  // default on macOS — hides on "menu-will-close" and only then lets the pick cross IPC from
+  // the main process. Electron has no "and no pick is coming" signal, so under the native
+  // rendering the close cannot be the cancel verdict; it can only start the wait for one.
+  //
+  // Hence the grace below rather than the old zero-delay verdict, which cancelled every
+  // native pick before it arrived (issue #238). A late cancel is free: Flows logs UserAborted
+  // and shows nothing, and no caller reacts to it, so nothing observable is waiting on it —
+  // while a dropped pick costs the user the note they asked for. A pick that lands first
+  // short-circuits, so the DOM rendering never even arms the timer.
   pickFromMenu(labels: readonly string[], event: MouseEvent): AsyncResult<string, SuggestCancelled> {
     return AsyncResult.fromPromise(
       new Promise<string>((resolve, reject) => {
@@ -246,9 +262,10 @@ export class WorkspaceService {
           );
         }
         menu.onHide(() => {
+          if (chosen) return;
           window.setTimeout(() => {
             if (!chosen) reject(new SuggestCancelled());
-          }, 0);
+          }, NATIVE_PICK_DELIVERY_GRACE_MS);
         });
         menu.showAtMouseEvent(event);
       }),
