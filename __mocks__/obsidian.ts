@@ -243,6 +243,10 @@ export class MenuItem {
 export class Menu {
   readonly items: MenuItem[] = [];
   showAtMouseEventCalls: MouseEvent[] = [];
+  // Obsidian defaults this on for macOS, and the native menu delivers a pick *after* it has
+  // closed — the reverse of the DOM menu. The fake defaults to the hostile ordering so that
+  // ordering-sensitive code fails here instead of only on a maintainer's Mac.
+  useNativeMenu = true;
   #onHide: (() => void) | null = null;
 
   addItem(build: (item: MenuItem) => unknown): this {
@@ -251,9 +255,27 @@ export class Menu {
     this.items.push(item);
     return this;
   }
+  setUseNativeMenu(useNativeMenu: boolean): this {
+    this.useNativeMenu = useNativeMenu;
+    return this;
+  }
   onHide(callback: () => void): this {
     this.#onHide = callback;
     return this;
+  }
+  // Picks an item the way the host would: the DOM menu runs the item callback and then hides,
+  // the native menu hides first and lets Electron deliver the callback a task later.
+  async pick(index: number): Promise<void> {
+    const item = this.items[index];
+    if (item === undefined) throw new Error(`No menu item at index ${String(index)}`);
+    if (!this.useNativeMenu) {
+      item.click();
+      this.hide();
+      return;
+    }
+    this.hide();
+    await new Promise<void>((resolve) => setTimeout(resolve, 0));
+    item.click();
   }
   showAtMouseEvent(event: MouseEvent): void {
     this.showAtMouseEventCalls.push(event);

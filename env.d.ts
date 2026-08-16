@@ -23,6 +23,7 @@ declare module "obsidian" {
   interface Menu {
     readonly items: { title: string; icon: string; section: string; warning: boolean }[];
     showAtMouseEventCalls: MouseEvent[];
+    pick(index: number): Promise<void>;
   }
 
   export const __testing: {

@@ -103,6 +103,15 @@ on it.
 
 - Obsidian calls `SuggestModal.onClose` **before** `onChooseSuggestion` on a
   mouse pick. Defer cancel verdicts a microtask.
+- `Menu` has two renderings and they invert the pick/hide order. The DOM menu
+  runs the item callback and _then_ `hide()`; the native (Electron) menu hides
+  on `menu-will-close` and delivers the pick over IPC an unbounded number of
+  tasks later, so any "no pick by the time we hid" verdict fires on every pick.
+  Obsidian defaults `nativeMenus` **on for macOS** (`null` config → `true`) and
+  off elsewhere, so this is invisible on Linux and Windows and untestable in
+  e2e. A menu whose result feeds a promise must call `setUseNativeMenu(false)`
+  — `WorkspaceService.pickFromMenu` does. Menus whose items only run side
+  effects (`openPathsMenu`) are order-independent and keep the host default.
 - `focusLeaf` calls `app.setting.close()`, and `setViewState({ active: true })`
   reaches it. `revealLeaf()` alone does not, so a leaf placed as a side effect
   of a settings interaction is placed then revealed, never activated.

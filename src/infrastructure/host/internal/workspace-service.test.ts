@@ -438,6 +438,18 @@ describe("WorkspaceService", () => {
       expect(settled.isOk() && settled.value).toBe("work");
     });
 
+    it("resolves a pick that the host would deliver only after closing the menu", async () => {
+      const { __testing } = await import("obsidian");
+      __testing.reset();
+
+      const { service } = build();
+      const result = service.pickFromMenu(["daily", "work"], new MouseEvent("click"));
+      await __testing.lastOpenMenu().pick(1);
+
+      const settled = await result;
+      expect(settled.isOk() && settled.value).toBe("work");
+    });
+
     it("cancels when the menu hides without a pick", async () => {
       const { __testing } = await import("obsidian");
       __testing.reset();

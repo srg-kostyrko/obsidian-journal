@@ -232,10 +232,14 @@ export class WorkspaceService {
   // A pick-one menu at the pointer, for disambiguating when multiple journals apply.
   // Cancellation is decided a task later than onHide because Obsidian can hide the menu
   // before the clicked item's handler runs — the same ordering hazard as SuggestModal.onClose.
+  // The native menu (Obsidian's default on macOS) makes that gap unbounded: it hides on
+  // Electron's "menu-will-close" and lets the pick arrive over IPC an arbitrary number of
+  // tasks later, so every pick reads as a cancel. This is the one menu whose meaning depends
+  // on pick-before-hide, so it opts out of native rendering; the rest keep the host default.
   pickFromMenu(labels: readonly string[], event: MouseEvent): AsyncResult<string, SuggestCancelled> {
     return AsyncResult.fromPromise(
       new Promise<string>((resolve, reject) => {
-        const menu = new Menu();
+        const menu = new Menu().setUseNativeMenu(false);
         let chosen = false;
         for (const label of labels) {
           menu.addItem((item) =>
