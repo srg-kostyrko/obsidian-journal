@@ -140,7 +140,7 @@ function onDropAtStart(orderedIds: string[]): void {
       <template #description>{{ m.block_lines_empty() }}</template>
     </UiSettingRow>
 
-    <div v-else class="nav-block-preview" :class="{ 'nav-block-preview--dragging': anyDragging }">
+    <div v-else class="nav-block-preview">
       <NavBlock
         :block="config[field]"
         :journal="config"
@@ -206,13 +206,14 @@ function onDropAtStart(orderedIds: string[]): void {
   padding-block: var(--size-2-3);
   padding-right: var(--nav-line-gutter-reserve);
 }
-/* A segment's width normally depends on how many segments share its line — alone it fills the
-   line, with siblings it hugs its text. That is right at rest and wrong mid-drag: crossing from
-   a one-segment line into a shared one collapsed the dragged segment from the line's full width
-   to its text's width and back, so the browser's drag image (captured at the original width)
-   sat far from the cursor and every crossing re-flowed both lines. Freeze every segment to
-   hug-width for the duration of a drag: one settle as the drag begins, stable geometry after. */
-.nav-block-preview--dragging :deep(.nav-row) {
+/* In the rendered block a lone segment fills its line, so its background band spans the block.
+   In this preview it hugs its text instead, always. Width there depends on how many segments
+   share a line, and dragging changes that mid-flight: the browser captures the drag image at
+   dragstart, synchronously, so a segment that is about to collapse from the line's full width
+   to its text's width is photographed at the old size and the image lands far from the cursor.
+   Hugging from the start removes the collapse rather than racing it, and it makes the hover
+   outline trace the thing you would actually drag. */
+.nav-block-preview :deep(.nav-row) {
   flex: 0 1 auto;
 }
 .nav-block-preview :deep(.nav-line-gutter) {
