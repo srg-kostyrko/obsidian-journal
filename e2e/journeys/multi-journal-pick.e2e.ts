@@ -46,9 +46,13 @@ describe("multi-journal pick", () => {
 
     await calendar.cell(NATIVE_ANCHOR).click();
 
-    await browser.waitUntil(async () => (await nativeMenuLabels()).length > 0, {
-      timeoutMsg: "the journal pick menu did not reach Electron",
-    });
+    await browser.waitUntil(
+      async () => {
+        const captured = await nativeMenuLabels();
+        return captured.length > 0;
+      },
+      { timeoutMsg: "the journal pick menu did not reach Electron" },
+    );
     expect(await nativeMenuLabels()).toEqual([["work", "personal"]]);
 
     await pickNativeItem(0, 1);

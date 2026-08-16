@@ -182,16 +182,23 @@ macOS, where the `nativeMenus` config defaults on. The native rendering puts
 nothing in the document, so a `.menu-item-title` assertion cannot fail
 informatively — it reads as "menu did not open" whatever actually broke.
 
-`wdio.conf.mts` therefore pins the DOM rendering before every test, so a menu
-spec means the same thing on every OS. A spec that needs the _native_ path opts
-in with `e2e/support/native-menu.ts`, which flips the static and swaps Electron's
-`buildFromTemplate` for a capture — on any OS, so the macOS-only behavior is
-reproducible on the Linux PR gate. The capture also replays the ordering that
-makes the native menu different: it closes first and delivers the pick
-afterwards, the reverse of the DOM menu. Anything that resolves a promise on the
-pick and cancels on the close must be tested through it
-(`e2e/journeys/multi-journal-pick.e2e.ts` is the worked example, and issue #238
-is what it costs to skip).
+`wdio.conf.mts` therefore pins the DOM rendering before every test, so an
+ordinary menu spec means the same thing on every OS and a macOS failure is a
+finding rather than an artifact.
+
+A spec that needs the _native_ path opts in with `e2e/support/native-menu.ts`,
+which flips Obsidian's static and swaps Electron's `buildFromTemplate` for a
+capture. That is not a simulation — it is the real native branch of
+`showAtPosition`, with only the OS popup replaced by something WebDriver can
+read. Because it works on any OS, macOS-only behavior is reproducible on the
+Linux PR gate.
+
+The capture also replays what makes the native menu different: it closes first
+and delivers the pick afterwards, the reverse of the DOM menu. **Anything whose
+result is a value — a promise the pick resolves and the close would cancel —
+must be tested under both orderings**, because the two disagree about what a
+close means. `e2e/journeys/multi-journal-pick.e2e.ts` is the worked example, one
+test per ordering; issue #238 is what it costs to cover only one.
 
 ### Waiting and flakiness budget
 
