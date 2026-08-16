@@ -126,8 +126,11 @@ Obsidian.
 
   **PR and merge-to-main** name every stable suite (`--suite smoke --suite
 integration --suite migration --suite interop --suite journeys`), omitting
-  `quarantine`. **Nightly** runs the bare glob — all suites, including
-  `quarantine` — across the OS + version matrix. Quarantining a flaky test = moving
+  `quarantine`. **Nightly** names those plus `--suite quarantine`, across the
+  version matrix. Both name their suites explicitly rather than letting nightly
+  fall through to the bare glob: `A && '' || B` yields `B` in a GitHub
+  expression, so the fall-through form silently gave every run the same list.
+  The bare glob remains a local-run convenience. Quarantining a flaky test = moving
   its file into the `quarantine` suite; it keeps running nightly and never blocks a
   merge — no separate mechanism needed.
 
