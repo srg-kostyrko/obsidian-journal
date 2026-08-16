@@ -203,15 +203,54 @@ function parseCollectionValue<TItem extends AnySchema>(
     const parsed = v.safeParse(definition.itemSchema, value);
     if (parsed.success) {
       out[id] = parsed.output;
-    } else {
-      out[id] = definition.defaultItem(id);
-      logger.warn("collection entry reset to defaults", {
-        sliceKey: `${definition.key}/${id}`,
-        issues: parsed.issues.map((issue) => issue.message),
-      });
+      continue;
     }
+
+    const issues = parsed.issues.map((issue) => issue.message);
+    const repaired = repairCollectionEntry(definition, id, value, parsed.issues);
+    if (repaired) {
+      out[id] = repaired.value;
+      logger.warn("collection entry fields reset to defaults", {
+        sliceKey: `${definition.key}/${id}`,
+        fields: repaired.fields,
+        issues,
+      });
+      continue;
+    }
+
+    out[id] = definition.defaultItem(id, value);
+    logger.warn("collection entry reset to defaults", { sliceKey: `${definition.key}/${id}`, issues });
   }
   return out;
+}
+
+// Resetting a whole entity because one field went bad silently discards everything the
+// user configured — and the next save writes that loss over their data. Substitute the
+// default only for the fields the issues name, so a broken date format costs a date
+// format rather than the journal's write type, folder and templates.
+function repairCollectionEntry<TItem extends AnySchema>(
+  definition: CollectionDefinition<string, TItem>,
+  id: string,
+  value: unknown,
+  issues: readonly BaseIssue<unknown>[],
+): { value: InferOutput<TItem>; fields: string[] } | undefined {
+  if (value === null || typeof value !== "object" || Array.isArray(value)) return undefined;
+
+  const fields = new Set<string>();
+  for (const issue of issues) {
+    // A root-level check reports no path, so there is no field to swap out.
+    const key = issue.path?.[0]?.key;
+    if (typeof key !== "string") return undefined;
+    fields.add(key);
+  }
+  if (fields.size === 0) return undefined;
+
+  const defaults = definition.defaultItem(id, value) as Record<string, unknown>;
+  const candidate: Record<string, unknown> = { ...(value as Record<string, unknown>) };
+  for (const field of fields) candidate[field] = defaults[field];
+
+  const parsed = v.safeParse(definition.itemSchema, candidate);
+  return parsed.success ? { value: parsed.output, fields: [...fields] } : undefined;
 }
 
 function parseSliceValue<TSchema extends AnySchema>(

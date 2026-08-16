@@ -13,7 +13,8 @@ export interface CollectionDefinition<TKey extends string, TItem extends AnySche
   readonly __brand: "collection";
   readonly key: TKey;
   readonly itemSchema: TItem;
-  readonly defaultItem: (id: string) => InferOutput<TItem>;
+  /** `raw` is the stored entry that failed validation, so a default can keep what still parses. */
+  readonly defaultItem: (id: string, raw?: unknown) => InferOutput<TItem>;
   readonly seed?: () => Record<string, InferOutput<TItem>>;
 }
 
@@ -31,7 +32,7 @@ export function defineSlice<TKey extends string, TSchema extends AnySchema>(
 export function defineCollection<TKey extends string, TItem extends AnySchema>(
   key: TKey,
   itemSchema: TItem,
-  defaultItem: (id: string) => InferOutput<TItem>,
+  defaultItem: (id: string, raw?: unknown) => InferOutput<TItem>,
   options?: { seed?: () => Record<string, InferOutput<TItem>> },
 ): CollectionDefinition<TKey, TItem> {
   return { __brand: "collection", key, itemSchema, defaultItem, seed: options?.seed };
