@@ -176,6 +176,13 @@ function onContextMenu(event: MouseEvent): void {
   workspace.openPathsMenu(pathsForTarget(target.value), event, contextMenuItems());
 }
 
+function onKeydown(event: KeyboardEvent): void {
+  if (!props.editable) return;
+  if (event.key !== "Enter" && event.key !== " ") return;
+  event.preventDefault();
+  emit("edit");
+}
+
 const hover = useModifierHoverPreview();
 
 function onPointerEnter(event: PointerEvent): void {
@@ -187,11 +194,15 @@ function onPointerEnter(event: PointerEvent): void {
 <template>
   <div
     class="nav-row"
+    :tabindex="editable ? 0 : undefined"
+    :role="editable ? 'button' : undefined"
+    :aria-label="editable ? m.block_rows_edit_tooltip() : undefined"
     @click.prevent="onClick"
     @auxclick.middle.prevent="onClick"
     @contextmenu.prevent="onContextMenu"
     @pointerenter="onPointerEnter"
     @pointerleave="hover.leave()"
+    @keydown="onKeydown"
   >
     <CellDecoration
       v-if="segment.addDecorations && decorationCell"

@@ -133,6 +133,34 @@ describe("NavBlockLinesEditor", () => {
     });
   });
 
+  it("shows a placeholder for an empty segment that stays clickable", async () => {
+    const emptySegment: NavBlockSegment = { ...sampleSegment, template: "" };
+    const { invoke } = mount([[emptySegment]]);
+    await userEvent.click(screen.getByText(TITLE));
+    const placeholder = screen.getByText("—");
+    await userEvent.click(placeholder);
+    expect(invoke).toHaveBeenCalledWith(EditNavBlockSegmentFlow, {
+      journalName: "daily",
+      field: "intervalBlock",
+      lineIndex: 0,
+      segmentIndex: 0,
+    });
+  });
+
+  it("invokes the flow when Enter is pressed on a focused segment", async () => {
+    const { invoke } = mount([[sampleSegment]]);
+    await userEvent.click(screen.getByText(TITLE));
+    const segmentEl = screen.getByText("static text");
+    segmentEl.focus();
+    await userEvent.keyboard("{Enter}");
+    expect(invoke).toHaveBeenCalledWith(EditNavBlockSegmentFlow, {
+      journalName: "daily",
+      field: "intervalBlock",
+      lineIndex: 0,
+      segmentIndex: 0,
+    });
+  });
+
   it("removes a line from intervalBlock when its delete button is clicked", async () => {
     const { storage } = mount([[sampleSegment], [{ ...sampleSegment, template: "other" }]]);
     await userEvent.click(screen.getByText(TITLE));

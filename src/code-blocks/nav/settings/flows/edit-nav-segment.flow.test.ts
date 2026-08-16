@@ -120,34 +120,54 @@ describe("EditNavBlockSegmentFlow", () => {
     const { flows, modals, repo } = build({ daily: buildJournal("daily", [[segA], [segB]]) });
     const promise = flows.invoke(EditNavBlockSegmentFlow, { journalName: "daily" });
     submit(modals, submittedSegment);
-    await promise;
+    const result = await promise;
     expect(linesOf(repo)).toHaveLength(3);
     expect(linesOf(repo).at(2)).toEqual([submittedSegment]);
+    expect(result.kind === "ok" && result.value).toEqual({
+      segment: submittedSegment,
+      lineIndex: 2,
+      segmentIndex: 0,
+    });
   });
 
   it("appends a segment to an existing line when only lineIndex is given", async () => {
     const { flows, modals, repo } = build({ daily: buildJournal("daily", [[segA], [segB]]) });
     const promise = flows.invoke(EditNavBlockSegmentFlow, { journalName: "daily", lineIndex: 1 });
     submit(modals, submittedSegment);
-    await promise;
+    const result = await promise;
     expect(linesOf(repo)).toHaveLength(2);
     expect(linesOf(repo).at(1)).toEqual([segB, submittedSegment]);
+    expect(result.kind === "ok" && result.value).toEqual({
+      segment: submittedSegment,
+      lineIndex: 1,
+      segmentIndex: 1,
+    });
   });
 
   it("replaces a segment in place when both indices are given", async () => {
     const { flows, modals, repo } = build({ daily: buildJournal("daily", [[segA, segB]]) });
     const promise = flows.invoke(EditNavBlockSegmentFlow, { journalName: "daily", lineIndex: 0, segmentIndex: 1 });
     submit(modals, submittedSegment);
-    await promise;
+    const result = await promise;
     expect(linesOf(repo).at(0)).toEqual([segA, submittedSegment]);
+    expect(result.kind === "ok" && result.value).toEqual({
+      segment: submittedSegment,
+      lineIndex: 0,
+      segmentIndex: 1,
+    });
   });
 
   it("appends to intervalBlock lines when the field is intervalBlock", async () => {
     const { flows, modals, repo } = build({ custom: buildCustomJournal("custom", [[segA]]) });
     const promise = flows.invoke(EditNavBlockSegmentFlow, { journalName: "custom", field: "intervalBlock" });
     submit(modals, submittedSegment);
-    await promise;
+    const result = await promise;
     expect(repo.get("custom").getOrUndefined()?.intervalBlock.lines).toHaveLength(2);
+    expect(result.kind === "ok" && result.value).toEqual({
+      segment: submittedSegment,
+      lineIndex: 1,
+      segmentIndex: 0,
+    });
   });
 
   it("passes the existing segment to the modal when editing in place", async () => {
