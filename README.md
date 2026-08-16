@@ -220,24 +220,31 @@ The plugin ships a set of commands for opening the current, next, and previous n
 
 ### Navigation Blocks
 
-Each journal configures two row lists, both edited the same way:
+Each journal configures two line lists, both edited the same way:
 
-- **Navigation block**: The rows the `journal-nav` code block renders inside a note of this journal. Each journal type ships a sensible default you can reset to.
-- **Calendar interval rows**: The rows a custom-interval journal's entries get in the _Custom intervals_ view block.
+- **Navigation block**: The lines the `journal-nav` code block renders inside a note of this journal. Each journal type ships a sensible default you can reset to.
+- **Calendar interval lines**: The lines a custom-interval journal's entries get in the _Custom intervals_ view block.
 
-Each row is configured with:
+A **line** is one or more **segments** placed side by side. A line starts as a
+single segment; splitting it off into its own line (or joining two segments back
+into one, or dragging a segment onto another line) is done from the settings
+preview, not through a separate control. Each segment has its own:
 
-- **Row customization**:
+- Template text with variables (see [Supported variables](#supported-variables))
+- Font size, relative to regular text, plus bold and italic
+- Colors (text and background)
+- Link: none, the segment's own note, another journal's current note, or the note for the containing day, week, month, quarter, or year
+- **Link date**: shift the date the link opens, using the same syntax as template date variables — see [Date modifications](#date-modifications) — for example `+1q` to open next quarter's note instead of this quarter's, or `<startOf=month>` to always land on the first day of the month. Leave it empty to open the date the link would open anyway.
+- Add decorations: apply the matching visual decorations to the segment. A decorated segment shows the decorations of the note its link opens, not the host note's — a segment linking to the year journal decorates from the year's own rules, not the day's.
 
-  - Template text with variables (see [Supported variables](#supported-variables))
-  - Font size, relative to regular text, plus bold and italic
-  - Colors (text and background)
-  - Link: none, the row's own note, the journal's current note, or the note for the containing day, week, month, quarter, or year
-  - Add decorations: apply the matching visual decorations to the row
+The `nav-row` CSS class on each segment is a stable styling hook, kept for user
+CSS snippets and existing selectors even though the segment vocabulary above
+replaced "row".
 
-- **Settings**:
-  - Mode: create a new note when a row is clicked, or only open notes that already exist
-  - Whole block decoration: decorate the block as a whole from the current journal's rules
+**Settings**:
+
+- Mode: create a new note when a segment is clicked, or only open notes that already exist
+- Whole block decoration: decorate the block as a whole from the current journal's rules
 
 ## Compatibility with other plugins
 
@@ -275,10 +282,10 @@ These variables can be used in the note name template, the folder path, and the 
   `{{index:o}}` renders it as an ordinal ("4th"). They combine as
   `{{index+3:o}}`. Both survive the round-trip out of a note name, so a journal
   named `Sprint {{index+3}}` still recognizes its own notes.
-- `{{note_name}}` / `{{title}}` - the note's name. Available in the folder path, in template content and in navigation block rows, but not in the note name template itself, since the name has to render first. In a navigation block row it is the name of the note the row opens; for a period whose note does not exist yet, the name that note would get.
+- `{{note_name}}` / `{{title}}` - the note's name. Available in the folder path, in template content and in navigation block segments, but not in the note name template itself, since the name has to render first. In a navigation block segment it is the name of the note the segment opens; for a period whose note does not exist yet, the name that note would get.
 - `{{current_date}}` - the date the note is rendered on (not the reference period), formatted with `{{current_date:format}}`
 - `{{current_time}}` / `{{time}}` - the clock time at render, formatted with `{{time:HH:mm}}`
-- `{{relative_date}}` - "Yesterday", "Today", "Last Tuesday", "This month", "3 weeks ago", and so on. Available in navigation block rows.
+- `{{relative_date}}` - "Yesterday", "Today", "Last Tuesday", "This month", "3 weeks ago", and so on. Available in navigation block segments.
 - `{{journal_link(journal_name)}}` - inside a template note's content, and in the markdown template view block, resolves to the vault path of the corresponding note in another journal. Wrap it in a link or embed yourself, for example `[[{{journal_link(daily)}}]]`.
 
 ### Date modifications

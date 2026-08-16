@@ -20,8 +20,9 @@ import { ShelvesRepository, type ShelfConfig } from "@/shelves";
 import { icons } from "@/ui/icons";
 import UiIconButton from "@/ui/UiIconButton.vue";
 
-import { navBlockDecorationScope, navRowDecorationScope } from "../decoration-scopes";
+import { navBlockDecorationScope, navSegmentFixedScope, navSegmentIntervalScope } from "../decoration-scopes";
 import { periodForJournal } from "../period-for-journal";
+import { resolveSegmentDecoration, type SegmentDecorationCell } from "../segment-decoration";
 
 import NavBlock from "./NavBlock.vue";
 
@@ -90,8 +91,7 @@ const periods = computed<Period[]>(() => {
 // to just its name.
 const blockJournalNames = computed<readonly string[]>(() => (journal.value ? [journal.value.name] : []));
 
-// Shared by rowJournalNames and decorationShelf below, which both need "the shelf that owns
-// the current journal" and only differ in what they project out of it once found.
+// Shared by decorationShelf below and by owning-shelf lookups elsewhere.
 const owningShelf = computed<Option<ShelfConfig>>(() => {
   const currentJournal = journal.value;
   if (!currentJournal) return Option.none();
@@ -101,46 +101,69 @@ const owningShelf = computed<Option<ShelfConfig>>(() => {
     .first();
 });
 
-// The per-row scope draws on every same-write-type journal in scope: the owning shelf's
-// journals, or all journals when the current journal belongs to no shelf.
-const rowJournalNames = computed<readonly string[]>(() => {
-  const currentJournal = journal.value;
-  if (!currentJournal) return [];
-  const owningJournalNames = owningShelf.value.match<readonly string[] | null>({
-    some: (shelf) => shelf.journals,
-    none: () => null,
-  });
-  const inScope = owningJournalNames
-    ? [...journals.find().list()].filter((other) => owningJournalNames.includes(other.name))
-    : [...journals.find().list()];
-  return inScope.filter((other) => other.write.type === currentJournal.write.type).map((other) => other.name);
-});
-
-// Journal-free decorations belong to the per-row scope: every row is a different date, while
-// the whole-block scope decorates the block from the current journal's own rules. Only fixed
-// (day-kind) journals are affected — a weekly journal's nav block renders week rows and shows
-// none of these, and a custom journal's rows are excluded below despite also being day-kind.
+// Journal-free decorations belong to the per-segment scope: every segment is a different date,
+// while the whole-block scope decorates the block from the current journal's own rules.
 const decorationShelf = computed<string | null>(() =>
   owningShelf.value.match<string | null>({ some: (shelf) => shelf.name, none: () => null }),
 );
+
+// Each segment's decoration follows its own link target rather than the host period, so the
+// cells are built per segment across all three rendered blocks (previous/current/next) and
+// then split by scope kind — a fixed target and a custom-journal interval target can collide
+// on the same cell key, so they can never share one decoration map (see decoration-scopes.ts).
+const segmentCells = computed<readonly SegmentDecorationCell[]>(() => {
+  const currentJournal = journal.value;
+  if (!currentJournal) return [];
+  const all = [...journals.find().list()];
+  const shelfList = [...shelves.find().list()];
+  const anchors = [currentAnchor.value, adjacent.value.previous, adjacent.value.next].filter(
+    (anchor): anchor is AnchorString => anchor !== undefined,
+  );
+  const out: SegmentDecorationCell[] = [];
+  for (const anchor of anchors) {
+    for (const line of currentJournal.navBlock.lines) {
+      for (const segment of line) {
+        if (!segment.addDecorations) continue;
+        const cell = resolveSegmentDecoration(
+          segment,
+          currentJournal,
+          all,
+          shelfList,
+          index.entryByAnchor(currentJournal.name, anchor),
+          anchor,
+          cycle,
+        );
+        if (cell) out.push(cell);
+      }
+    }
+  }
+  return out;
+});
+
+const fixedCells = computed(() => segmentCells.value.filter((cell) => cell.scopeKind === "fixed"));
+const intervalCells = computed(() => segmentCells.value.filter((cell) => cell.scopeKind === "interval"));
 
 useCellDecorations({
   periods: () => periods.value,
   journalNames: () => blockJournalNames.value,
   scope: navBlockDecorationScope,
 });
-// A custom journal's rows are "day"-kind periods at their interval's start anchor, colliding
-// with the day cell beneath them (CustomIntervalsBlock.vue:76-85 draws the same distinction).
+useCellDecorations({
+  periods: () => fixedCells.value.map((cell) => cell.period),
+  journalNames: () => [...new Set(fixedCells.value.flatMap((cell) => cell.journalNames))],
+  scope: navSegmentFixedScope,
+  calendarDecorations: { shelf: () => decorationShelf.value },
+});
+// A custom journal's target is a "day"-kind period at its interval's start anchor, colliding
+// with the day cell beneath it (CustomIntervalsBlock.vue:76-85 draws the same distinction).
 // Calendar (vault-wide/shelf) rules paint days, not intervals, so they're left out entirely;
 // the journal's own offset-carrying rules mark a single day inside the interval and belong to
 // the day grid instead — only its non-offset rules describe the interval itself.
 useCellDecorations({
-  periods: () => periods.value,
-  journalNames: () => rowJournalNames.value,
-  scope: navRowDecorationScope,
-  ...(journal.value?.write.type === "custom"
-    ? { filter: (binding) => !hasOffsetCondition(binding.decoration) }
-    : { calendarDecorations: { shelf: () => decorationShelf.value } }),
+  periods: () => intervalCells.value.map((cell) => cell.period),
+  journalNames: () => [...new Set(intervalCells.value.flatMap((cell) => cell.journalNames))],
+  scope: navSegmentIntervalScope,
+  filter: (binding) => !hasOffsetCondition(binding.decoration),
 });
 
 function openAdjacent(anchor: AnchorString | undefined, event: MouseEvent): void {
@@ -166,7 +189,6 @@ function openAdjacent(anchor: AnchorString | undefined, event: MouseEvent): void
         :ref-date="adjacent.previous"
         :period="periodForJournal(journal.write, adjacent.previous)"
         :block-scope="navBlockDecorationScope"
-        :row-scope="navRowDecorationScope"
         :shelf="decorationShelf"
       />
       <UiIconButton
@@ -186,7 +208,6 @@ function openAdjacent(anchor: AnchorString | undefined, event: MouseEvent): void
       :ref-date="currentAnchor"
       :period="periodForJournal(journal.write, currentAnchor)"
       :block-scope="navBlockDecorationScope"
-      :row-scope="navRowDecorationScope"
       :shelf="decorationShelf"
     />
 
@@ -205,7 +226,6 @@ function openAdjacent(anchor: AnchorString | undefined, event: MouseEvent): void
         :ref-date="adjacent.next"
         :period="periodForJournal(journal.write, adjacent.next)"
         :block-scope="navBlockDecorationScope"
-        :row-scope="navRowDecorationScope"
         :shelf="decorationShelf"
       />
     </div>

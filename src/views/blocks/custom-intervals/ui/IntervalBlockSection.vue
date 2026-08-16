@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { computed } from "vue";
 
-import NavBlockRowsEditor from "@/code-blocks/nav/settings/ui/NavBlockRowsEditor.vue";
+import NavBlockLinesEditor from "@/code-blocks/nav/settings/ui/NavBlockLinesEditor.vue";
 import { m } from "@/i18n";
 import { useService } from "@/infrastructure/di";
 import { JournalsViewModel } from "@/journals";
@@ -15,7 +15,7 @@ const isCustom = computed(() => config.value?.write.type === "custom");
 </script>
 
 <template>
-  <NavBlockRowsEditor
+  <NavBlockLinesEditor
     v-if="isCustom"
     :journal-name="journalName"
     field="intervalBlock"

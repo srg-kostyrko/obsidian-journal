@@ -49,6 +49,8 @@ everything below. Adding a locale or a new domain noun means extending it there.
 | **condition**   | Bedingung   | condición   | condition   | condizione  | 条件           | 조건       | condição     | условие       | умова         | 条件        |
 | **log** (noun)  | Protokoll   | registro    | log         | log         | ログ           | 로그       | log          | лог           | лог           | 日志        |
 | **bold**        | Fett        | negrita     | gras        | grassetto   | 太字           | 굵게       | negrito      | жирный        | жирний        | 粗体        |
+| **line**        | Zeile       | línea       | ligne       | riga        | 行             | 행         | linha        | строка        | рядок         | 行          |
+| **segment**     | Segment     | segmento    | segment     | segmento    | セグメント     | 세그먼트   | segmento     | сегмент       | сегмент       | 段          |
 
 Grammatical gender, where it decides agreement: `Journal` n. / `Notiz` f. / `Regal` n.
 (de) · `diario` m. / `nota` f. / `estante` m. (es) · `journal` m. / `note` f. /
@@ -83,6 +85,18 @@ Grammatical gender, where it decides agreement: `Journal` n. / `Notiz` f. / `Reg
   "Atrevido", fr "Audacieux", pt "Audacioso", ru "Смелый", ja 大胆な, ko 용감한, zh
   大胆的). It is in the table because the nav-row style control labels the button with
   a bare `B` glyph, so this string is the only name the control has.
+- **`line` / `segment`.** New with the nav-block reshape: a **line** is the horizontal
+  group (`block_lines_*`, `interval_block_section_title`), a **segment** is the styled,
+  linked unit within it (`block_lines_add_segment`, `nav_block_segment_*`). English
+  settled on "line" over "row" for the container noun (see `CLAUDE.md`'s UI-conventions
+  section for the reasoning). Most locales' existing wording for these keys was already
+  the standard word for "a line of text" (de `Zeile`, fr `ligne`, pt `linha`, it `riga`,
+  ru `строка`, uk `рядок`, ja/zh 行), so only the key names needed to move off `block_rows_*`.
+  **es was a real gap**: `fila` means a row of chairs or a queue, not a line of text —
+  corrected to `línea`. **ko `행`** is left as-is but unverified: it is the standard word
+  for a spreadsheet/table row, and Korean has a separate, more colloquial word for "a line
+  of text" (`줄`); this pairing needs a native check the way uk got one. The `nav-row` CSS
+  class stays as a legacy styling hook and is intentionally not part of this pair.
 
 ## Literal tokens
 
@@ -213,7 +227,7 @@ classes still in the corpus, all from the same context-free-MT root cause:
   commands and options in one, descriptions and errors in another — but which form is
   correct is a per-language convention, not a rule this file can impose.
 - **Ambiguous English source.** A subset of these are not translation defects at all.
-  Three independent locales rendered `block_rows_decorate_whole_label` ("Decorate whole
+  Three independent locales rendered `block_lines_decorate_whole_label` ("Decorate whole
   block") as a _city block_; two read `view_toolbar_period_buttons_config` ("Show week")
   as a noun phrase about a theatrical show; `journal_delete_mode_option` ("Clear") was
   read as the adjective in three. Bare English UI shorthand carries no part-of-speech
@@ -234,7 +248,7 @@ classes still in the corpus, all from the same context-free-MT root cause:
 
 ## Coverage
 
-All eleven locales are complete at **705/705**. Every locale has had a line-by-line pass
+All eleven locales are complete at **711/711**. Every locale has had a line-by-line pass
 over every key against `en.json`, and the `decoration_breakdown_*`, `decoration_badge_*`
 and week-reanchor keys are translated everywhere.
 

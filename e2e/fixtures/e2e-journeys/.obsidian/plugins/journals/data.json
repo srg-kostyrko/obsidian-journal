@@ -770,6 +770,123 @@
           }
         ]
       }
+    },
+    "year-nav": {
+      "name": "year-nav",
+      "write": {
+        "type": "year"
+      },
+      "folder": "Yearly",
+      "timeline": {
+        "start": "2025-01-01",
+        "end": {
+          "kind": "date",
+          "date": "2025-12-31"
+        }
+      },
+      "dateFormat": "YYYY",
+      "frontmatter": {
+        "dateField": "journal-date",
+        "startDateField": "journal-start-date",
+        "endDateField": "journal-end-date",
+        "addStartDate": false,
+        "addEndDate": false
+      },
+      "numbering": {
+        "enabled": false,
+        "anchorDate": "",
+        "allowBefore": false,
+        "sources": []
+      },
+      "navBlock": {
+        "type": "existing",
+        "decorateWholeBlock": false,
+        "lines": [
+          [
+            {
+              "template": "{{date:[Q]Q}}",
+              "fontSize": 1,
+              "bold": false,
+              "italic": false,
+              "color": {
+                "type": "theme",
+                "name": "text-normal"
+              },
+              "background": {
+                "type": "transparent"
+              },
+              "link": "quarter",
+              "journal": "",
+              "linkDate": "",
+              "addDecorations": false
+            },
+            {
+              "template": "{{date+1q:[Q]Q}}",
+              "fontSize": 1,
+              "bold": false,
+              "italic": false,
+              "color": {
+                "type": "theme",
+                "name": "text-normal"
+              },
+              "background": {
+                "type": "transparent"
+              },
+              "link": "quarter",
+              "journal": "",
+              "linkDate": "+1q",
+              "addDecorations": false
+            }
+          ],
+          [
+            {
+              "template": "{{date:YYYY}}",
+              "fontSize": 1,
+              "bold": false,
+              "italic": false,
+              "color": {
+                "type": "theme",
+                "name": "text-normal"
+              },
+              "background": {
+                "type": "transparent"
+              },
+              "link": "self",
+              "journal": "",
+              "linkDate": "",
+              "addDecorations": false
+            }
+          ]
+        ]
+      }
+    },
+    "quarter-nav": {
+      "name": "quarter-nav",
+      "write": {
+        "type": "quarter"
+      },
+      "folder": "Quarterly",
+      "timeline": {
+        "start": "2025-01-01",
+        "end": {
+          "kind": "date",
+          "date": "2025-12-31"
+        }
+      },
+      "dateFormat": "YYYY-[Q]Q",
+      "frontmatter": {
+        "dateField": "journal-date",
+        "startDateField": "journal-start-date",
+        "endDateField": "journal-end-date",
+        "addStartDate": false,
+        "addEndDate": false
+      },
+      "numbering": {
+        "enabled": false,
+        "anchorDate": "",
+        "allowBefore": false,
+        "sources": []
+      }
     }
   },
   "shelves": {
@@ -805,6 +922,13 @@
     "catch-me": {
       "name": "catch-me",
       "journals": []
+    },
+    "nav-dates": {
+      "name": "nav-dates",
+      "journals": [
+        "year-nav",
+        "quarter-nav"
+      ]
     }
   },
   "commands": {

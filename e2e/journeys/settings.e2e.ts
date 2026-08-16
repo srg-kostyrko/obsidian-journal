@@ -525,6 +525,140 @@ describe("settings", () => {
         return now[0] === secondId && now[1] === firstId;
       }, "drag reorder did not persist a swapped toolbar item order");
     });
+
+    it("moves a segment across lines via SortableJS drag, merging it onto the target line", async () => {
+      // year-nav ships with two lines: line 0 holds the Q1/Q2 segments (data-id "0:0"/"0:1"),
+      // line 1 holds a single "{{date:YYYY}}" segment (data-id "1:0") — see the fixture's
+      // data.json. Both lines share NavBlockLinesEditor's per-journal dragGroup, so SortableJS
+      // treats them as one cross-container drop target.
+      await openJournalSubpage("nav-dates", "year-nav");
+      await expandSection(m.nav_block_section_title());
+      await $('.nav-block-preview .nav-row[data-id="1:0"]').waitForExist({
+        timeoutMsg: "navigation block preview did not mount its second line",
+      });
+      await $('.nav-block-preview .nav-row[data-id="0:0"]').waitForExist({
+        timeoutMsg: "navigation block preview did not mount its first line",
+      });
+
+      // Same native-HTML5-drag recipe as the toolbar reorder above — this composable
+      // (useSortableList) backs both. The `.nav-row` element is its own drag handle.
+      await browser.execute(async () => {
+        const sourceFrame = document.querySelector<HTMLElement>('.nav-block-preview .nav-row[data-id="1:0"]');
+        const targetFrame = document.querySelector<HTMLElement>('.nav-block-preview .nav-row[data-id="0:0"]');
+        // Both rows are confirmed present by the waitForExist calls above this execute block;
+        // this narrows the querySelector type without a raw throw inside the stringified callback.
+        if (!sourceFrame || !targetFrame) return;
+
+        const centerOf = (el: HTMLElement): { x: number; y: number } => {
+          const rect = el.getBoundingClientRect();
+          return { x: rect.left + rect.width / 2, y: rect.top + rect.height / 2 };
+        };
+        const source = centerOf(sourceFrame);
+        const target = centerOf(targetFrame);
+        const dataTransfer = new DataTransfer();
+
+        const firePointer = (el: HTMLElement, type: string, point: { x: number; y: number }): void => {
+          el.dispatchEvent(
+            new PointerEvent(type, { bubbles: true, cancelable: true, clientX: point.x, clientY: point.y }),
+          );
+        };
+        const fireDrag = (el: HTMLElement, type: string, point: { x: number; y: number }): void => {
+          el.dispatchEvent(
+            new DragEvent(type, {
+              bubbles: true,
+              cancelable: true,
+              dataTransfer,
+              clientX: point.x,
+              clientY: point.y,
+            }),
+          );
+        };
+
+        firePointer(sourceFrame, "pointerdown", source);
+        fireDrag(sourceFrame, "dragstart", source);
+        await new Promise<void>((resolve) => requestAnimationFrame(() => resolve()));
+        await new Promise<void>((resolve) => requestAnimationFrame(() => resolve()));
+        fireDrag(targetFrame, "dragenter", target);
+        fireDrag(targetFrame, "dragover", target);
+        await new Promise<void>((resolve) => requestAnimationFrame(() => resolve()));
+        fireDrag(targetFrame, "dragover", target);
+        fireDrag(targetFrame, "drop", target);
+        fireDrag(sourceFrame, "dragend", target);
+        firePointer(sourceFrame, "pointerup", target);
+      });
+
+      // applySegmentReorder prunes a line once it's emptied by the drag, so a successful
+      // cross-line move collapses the two lines into one holding all three segments.
+      await waitForSettings((s) => {
+        const lines = s.journals?.["year-nav"]?.navBlock?.lines ?? [];
+        return lines.length === 1 && lines[0]?.length === 3;
+      }, "cross-line segment drag did not persist a merged line");
+    });
+
+    it("parks the dragged segment in only the split zone under the pointer", async () => {
+      // The zone that will take the drop is styled apart from the rest so a user can see where
+      // a new line appears, and it identifies itself by holding the dragged segment — SortableJS
+      // parks it in the container it would drop into. That is a behavior of the library, not
+      // something this code sets, so it is worth pinning: if it ever stopped, every split zone
+      // would look alike again with nothing failing.
+      await openJournalSubpage("nav-dates", "year-nav");
+      await expandSection(m.nav_block_section_title());
+      await $('.nav-block-preview .nav-row[data-id="0:0"]').waitForExist({
+        timeoutMsg: "navigation block preview did not mount",
+      });
+
+      // Deliberately not pinned to a fixed zone index or count: an earlier test in this describe
+      // merges lines, so how many zones exist depends on run order. The claim under test is
+      // "exactly the hovered one is occupied", which holds whatever the block looks like.
+      const occupancy = await browser.execute(async () => {
+        const source = document.querySelector<HTMLElement>('.nav-block-preview .nav-row[data-id="0:0"]');
+        const zones = [...document.querySelectorAll<HTMLElement>(".nav-line-drop")];
+        const zone = zones.at(-1);
+        if (!source || !zone) return [];
+
+        const centerOf = (el: HTMLElement): { x: number; y: number } => {
+          const rect = el.getBoundingClientRect();
+          return { x: rect.left + rect.width / 2, y: rect.top + rect.height / 2 };
+        };
+        const dataTransfer = new DataTransfer();
+        const firePointer = (el: HTMLElement, type: string, p: { x: number; y: number }): void => {
+          el.dispatchEvent(new PointerEvent(type, { bubbles: true, cancelable: true, clientX: p.x, clientY: p.y }));
+        };
+        const fireDrag = (el: HTMLElement, type: string, p: { x: number; y: number }): void => {
+          el.dispatchEvent(
+            new DragEvent(type, { bubbles: true, cancelable: true, dataTransfer, clientX: p.x, clientY: p.y }),
+          );
+        };
+        const from = centerOf(source);
+        firePointer(source, "pointerdown", from);
+        fireDrag(source, "dragstart", from);
+        // SortableJS finishes its drag-start setup inside a requestAnimationFrame scheduled from
+        // its own dragstart handler, so the move only registers a frame later.
+        await new Promise<void>((resolve) => requestAnimationFrame(() => resolve()));
+        await new Promise<void>((resolve) => requestAnimationFrame(() => resolve()));
+
+        const to = centerOf(zone);
+        fireDrag(zone, "dragenter", to);
+        fireDrag(zone, "dragover", to);
+        await new Promise<void>((resolve) => requestAnimationFrame(() => resolve()));
+        // SortableJS's first dragover after entering a container only sets its state up; the
+        // node is parked on a later one. One dragover is enough on a fast machine and is not
+        // on CI, so drive a second rather than racing it — the sibling drag test does the same.
+        fireDrag(zone, "dragover", to);
+        await new Promise<void>((resolve) => requestAnimationFrame(() => resolve()));
+        const all = [...document.querySelectorAll<HTMLElement>(".nav-line-drop")];
+        const armed = {
+          occupied: all.filter((z) => z.childElementCount > 0).length,
+          hoveredIsOccupied: zone.childElementCount > 0,
+        };
+
+        fireDrag(source, "dragend", to);
+        firePointer(source, "pointerup", to);
+        return armed;
+      });
+
+      expect(occupancy).toEqual({ occupied: 1, hoveredIsOccupied: true });
+    });
   });
 
   describe("decorations", () => {
@@ -642,17 +776,19 @@ describe("settings", () => {
     });
   });
 
-  describe("navigation block row", () => {
-    it("edits a nav block row template and persists it", async () => {
+  describe("navigation block segment", () => {
+    it("edits a nav block segment template and persists it", async () => {
       await openJournalSubpage("core", "daily");
       await expandSection("Navigation block");
-      await clickIcon("Edit row");
-      // The EditNavBlockRowModal's first text input is the template field.
+      // The segment's own rendered text is its accessible name, not a fixed tooltip, so
+      // target the first editable segment structurally instead of by label.
+      await $("[data-drag-handle]").click();
+      // The EditNavBlockSegmentModal's first text input is the template field.
       await setModalText("{{date}} edited");
       await submitModal();
 
       await waitForSettings(
-        (s) => s.journals?.daily?.navBlock?.rows?.[0]?.template === "{{date}} edited",
+        (s) => s.journals?.daily?.navBlock?.lines?.[0]?.[0]?.template === "{{date}} edited",
         "nav row template change not persisted",
       );
     });

@@ -3,7 +3,7 @@ import { describe, expect, it } from "vitest";
 import type { AnchorString } from "@/calendar";
 import type { VaultPath } from "@/infrastructure/host";
 import { Option } from "@/infrastructure/result";
-import { journalDefaultsFor, type JournalConfig, type JournalEntry, type NavBlockRow } from "@/journals";
+import { journalDefaultsFor, type JournalConfig, type JournalEntry, type NavBlockSegment } from "@/journals";
 import type { ShelfConfig } from "@/shelves";
 
 import { resolveLinkCandidates, resolveLinkTarget } from "./link-targets";
@@ -14,7 +14,7 @@ const noteEntry: Option<JournalEntry> = Option.some({
   anchor: "2026-05-27" as AnchorString,
   path: "Daily/2026-05-27.md" as VaultPath,
 });
-const baseRow: NavBlockRow = {
+const baseRow: NavBlockSegment = {
   template: "",
   fontSize: 1,
   bold: false,
@@ -23,6 +23,7 @@ const baseRow: NavBlockRow = {
   background: { type: "transparent" },
   link: "none",
   journal: "",
+  linkDate: "",
   addDecorations: false,
 };
 

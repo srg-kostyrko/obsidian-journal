@@ -145,6 +145,17 @@ export class DecorationEngine {
     const result = new Map<string, Contribution[]>();
     if (periods.length === 0 || decorations.length === 0) return result;
 
+    // Contributions accumulate into a bucket keyed by cell, so the same cell listed twice would
+    // paint its decorations twice. Callers legitimately produce repeats: a nav block resolves
+    // each of its three adjacent day anchors through a month-linked segment and gets one month
+    // period back three times. A cell is a cell — collapse before matching.
+    const cells = new Map<string, Period>();
+    for (const period of periods) {
+      const key = cellKey(period.kind, period.anchor.toAnchor());
+      if (!cells.has(key)) cells.set(key, period);
+    }
+    const uniquePeriods = [...cells.values()];
+
     const configs = new Map<string, JournalConfig>();
     for (const binding of decorations) {
       if (binding.kind !== "journal") continue;
@@ -198,7 +209,7 @@ export class DecorationEngine {
 
     for (const binding of decorations) {
       if (binding.kind === "calendar") {
-        for (const period of periods) {
+        for (const period of uniquePeriods) {
           // Journal-free decorations paint calendar days only. Custom-interval rows are also
           // "day"-kind periods, so surfaces that render them simply do not opt in.
           if (period.kind !== "day") continue;
@@ -209,7 +220,7 @@ export class DecorationEngine {
       }
       const config = configs.get(binding.journalName);
       if (!config) continue;
-      for (const period of periods) {
+      for (const period of uniquePeriods) {
         if (!periodMatchesWrite(period.kind, config.write.type)) continue;
         if (!inTimeline(binding.journalName, period)) continue;
         const anchorString = period.anchor.toAnchor();

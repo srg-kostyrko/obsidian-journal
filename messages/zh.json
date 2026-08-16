@@ -216,15 +216,16 @@
 			}
 		}
 	],
-	"block_rows_decorate_whole_label": "装饰整个块",
-	"block_rows_empty": "暂无行。添加一行。",
-	"block_rows_add_row": "添加行",
-	"block_rows_edit_tooltip": "编辑行",
-	"block_rows_delete_tooltip": "删除行",
+	"block_lines_decorate_whole_label": "装饰整个块",
+	"block_lines_empty": "暂无行。添加一行。",
+	"block_lines_add_line": "添加行",
+	"block_lines_add_segment": "添加段",
+	"block_lines_delete_tooltip": "删除行",
+	"block_lines_empty_segment": "(空)",
 	"common_action_move_up": "上移",
 	"common_action_move_down": "下移",
 	"interval_block_section_title": "日历间隔行",
-	"nav_block_row_modal_title": [
+	"nav_block_segment_modal_title": [
 		{
 			"declarations": [
 				"input mode"
@@ -233,23 +234,27 @@
 				"mode"
 			],
 			"match": {
-				"mode=add": "添加导航块行",
-				"mode=edit": "编辑导航块行"
+				"mode=add": "添加导航块段",
+				"mode=edit": "编辑导航块段"
 			}
 		}
 	],
-	"nav_block_row_field_template": "模板",
-	"nav_block_row_field_font_size": "字体大小",
-	"nav_block_row_field_font_size_hint": "相对于正常字体大小：1 表示与正文文字大小相同。",
-	"nav_block_row_field_text_style": "文本样式",
-	"nav_block_row_field_bold": "粗体",
-	"nav_block_row_field_italic": "斜体",
+	"nav_block_segment_field_template": "模板",
+	"nav_block_segment_field_font_size": "字体大小",
+	"nav_block_segment_field_font_size_hint": "相对于正常字体大小：1 表示与正文文字大小相同。",
+	"nav_block_segment_field_text_style": "文本样式",
+	"nav_block_segment_field_bold": "粗体",
+	"nav_block_segment_field_italic": "斜体",
 	"common_label_text_color": "文本颜色",
 	"common_label_background_color": "背景颜色",
-	"nav_block_row_field_link": "链接",
+	"nav_block_segment_field_link": "链接",
 	"common_label_journal": "日记",
-	"nav_block_row_field_add_decorations": "添加装饰",
-	"nav_block_row_link_option": [
+	"nav_block_segment_field_link_date": "链接日期",
+	"nav_block_segment_link_date_hint": "使用与模板相同的语法偏移此链接打开的日期：+1q、-1y、<startOf=month>。",
+	"nav_block_segment_link_date_invalid": "链接日期不是有效的日期偏移。",
+	"nav_block_segment_link_date_preview": "偏移至 {date}",
+	"nav_block_segment_field_add_decorations": "添加装饰",
+	"nav_block_segment_link_option": [
 		{
 			"declarations": [
 				"input kind"
@@ -269,9 +274,9 @@
 			}
 		}
 	],
-	"nav_block_row_template_required": "模板不能为空。",
-	"nav_block_row_journal_required": "请选择日记。",
-	"nav_block_row_resolved_preview": "解析结果：{text}",
+	"nav_block_segment_template_required": "模板不能为空。",
+	"nav_block_segment_journal_required": "请选择日记。",
+	"nav_block_segment_resolved_preview": "解析结果：{text}",
 	"command_add": "添加命令",
 	"command_context_open_note_clarifier": "（使用已打开笔记的日期，或今天的日期）",
 	"command_context_only_open_note_clarifier": "（需要打开一个日记笔记）",

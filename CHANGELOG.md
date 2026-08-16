@@ -6,6 +6,8 @@ All notable changes to this project will be documented in this file.
 
 ### Features
 
+- Navigation block rows can now hold several segments side by side, each with its own template text, style, link and decorations — split a row into segments, or join segments back into one row, by dragging them in the settings preview.
+- A navigation segment's link can open a shifted date instead of the date it would open by default: the **Link date** field takes the same shift syntax as template date variables, so a row can open next quarter's note, yesterday's note, or the month a row names.
 - Clone a journal from settings: the copy carries the source's whole configuration, joins the same shelf, and gets its own copy of the source's commands. Notes are not copied.
 - A numbering variable can now be offset and rendered as an ordinal: `{{index+3}}` adds three to the rendered value, `{{index-1}}` subtracts one, and `{{index:o}}` renders it as an ordinal ("4th"). They combine as `{{index+3:o}}`, and both survive the round-trip out of a note name, so a journal named `Sprint {{index+3}}` still recognizes its own notes. This offset syntax now applies to any variable name, not only numbering ones, so a template that happened to contain a literal `+3` or `-1` after a variable name (for example `{{date+3}}`) will render differently from before.
 
@@ -14,6 +16,9 @@ All notable changes to this project will be documented in this file.
 
 ### Bug Fixes
 
+- A navigation segment whose template shifts the displayed date (for example `{{date+1q:[Q]Q}}`, labelled one quarter ahead) now opens that shifted date on click, from the context menu, and in link previews; previously it opened the note's own date while showing the next one's label.
+- A decorated navigation segment now shows the decorations of the note its link opens, rather than the host note's — a row linking to the year journal now decorates from the year's own rules instead of the day's. If **Add decorations** is on for a row that links to something other than the current period, its appearance will change after upgrading.
+- Renaming a journal now updates any navigation segment that links to it by name, and deleting a journal clears that link instead of leaving the segment pointing at a journal that no longer exists.
 - The warning shown when a name template without a date variable cannot be turned back into a date now says which digit is at fault instead of a single generic message: it names the numbering variables the name and folder templates leave out, or the digit below the slowest one that never resets and so freezes every digit above it.
 - Navigation block rows — including the custom-interval list in a view — now render `{{note_name}}` and `{{title}}`. A row shows the name of the note it opens, or the name that note would get for a period whose note does not exist yet.
 - `{{current_date}}`, `{{time}}` and `{{current_time}}` now resolve in navigation block rows; the variable reference listed them, but they came out as literal text.

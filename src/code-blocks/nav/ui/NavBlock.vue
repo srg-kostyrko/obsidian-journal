@@ -3,54 +3,38 @@ import type { AnchorString, Period } from "@/calendar";
 import { CellDecoration, type CellDecorationScope } from "@/decorations";
 import type { JournalConfig, JournalNavBlock } from "@/journals";
 
-import NavBlockRow from "./NavBlockRow.vue";
+import NavBlockLines from "./NavBlockLines.vue";
 
-// blockScope/rowScope name the provided decoration maps the whole-block and per-row decorations
-// draw from (see decoration-scopes.ts). The nav code block passes two distinct scopes since the
-// two decorate differently; the custom-interval view passes neither, so both fall back to the
-// default — its single provided map.
+// blockScope names the provided decoration map the whole-block decoration draws from (see
+// decoration-scopes.ts). Each segment derives its own per-segment scope from its resolved link
+// target, so it needs no scope prop here.
 defineProps<{
   block: JournalNavBlock;
   journal: JournalConfig;
   refDate: AnchorString;
   period: Period;
-  preventNavigation?: boolean;
+  editable?: boolean;
   blockScope?: CellDecorationScope;
-  rowScope?: CellDecorationScope;
   shelf?: string | null;
 }>();
+
+defineEmits<{ edit: [lineIndex: number, segmentIndex: number] }>();
 </script>
 
 <template>
   <div class="nav-block">
     <CellDecoration v-if="block.decorateWholeBlock" :period="period" :scope="blockScope" class="nav-block-inner">
-      <div v-for="(row, index) of block.rows" :key="index" class="nav-block-line">
-        <NavBlockRow
-          :journal
-          :row
-          :ref-date="refDate"
-          :period
-          :prevent-navigation="preventNavigation"
-          :decoration-scope="rowScope"
-          :shelf
-        />
-        <slot name="rowAction" :index :is-first="index === 0" :is-last="index === block.rows.length - 1" />
-      </div>
+      <NavBlockLines :block :journal :ref-date="refDate" :editable :shelf @edit="(l, s) => $emit('edit', l, s)">
+        <template #beforeLines><slot name="beforeLines" /></template>
+        <template #lineAction="slotProps"><slot name="lineAction" v-bind="slotProps" /></template>
+        <template #afterLine="slotProps"><slot name="afterLine" v-bind="slotProps" /></template>
+      </NavBlockLines>
     </CellDecoration>
-    <template v-else>
-      <div v-for="(row, index) of block.rows" :key="index" class="nav-block-line">
-        <NavBlockRow
-          :journal
-          :row
-          :ref-date="refDate"
-          :period
-          :prevent-navigation="preventNavigation"
-          :decoration-scope="rowScope"
-          :shelf
-        />
-        <slot name="rowAction" :index :is-first="index === 0" :is-last="index === block.rows.length - 1" />
-      </div>
-    </template>
+    <NavBlockLines v-else :block :journal :ref-date="refDate" :editable :shelf @edit="(l, s) => $emit('edit', l, s)">
+      <template #beforeLines><slot name="beforeLines" /></template>
+      <template #lineAction="slotProps"><slot name="lineAction" v-bind="slotProps" /></template>
+      <template #afterLine="slotProps"><slot name="afterLine" v-bind="slotProps" /></template>
+    </NavBlockLines>
   </div>
 </template>
 
@@ -59,8 +43,5 @@ defineProps<{
   display: flex;
   flex-direction: column;
   text-align: center;
-}
-.nav-block-line {
-  position: relative;
 }
 </style>

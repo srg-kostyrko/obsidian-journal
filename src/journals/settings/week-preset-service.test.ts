@@ -41,7 +41,7 @@ async function build(journals: Record<string, JournalConfig>, initial: typeof IS
   const notes = new FakeNotesService();
   const settings = createSettingsService({
     slices: [calendarSlice],
-    raw: { version: 4, calendar: initial },
+    raw: { version: 5, calendar: initial },
   });
   const c = settings.container;
   c.register(Calendar).useValue(testCalendar());
@@ -75,7 +75,7 @@ async function build(journals: Record<string, JournalConfig>, initial: typeof IS
   // the new raw lands on "disk", then reload() refreshes every slice from it. The re-anchor it
   // triggers is fire-and-forget, so callers wait on the note itself.
   async function syncCalendar(next: typeof ISO | typeof WESTERN): Promise<void> {
-    await settings.data.save({ version: 4, calendar: next });
+    await settings.data.save({ version: 5, calendar: next });
     await settings.service.reload();
     await nextTick();
   }

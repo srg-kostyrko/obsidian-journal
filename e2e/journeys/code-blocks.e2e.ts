@@ -54,6 +54,33 @@ function monthPath(offset: number): string {
   return `month/${monthAnchor(offset).slice(0, 7)}.md`;
 }
 
+// Segments are still `.nav-row` elements within a line; picking one by its rendered text is
+// the only handle a two-segment line offers, since both segments share the same block. Like
+// clickNavNext, a real WebDriver click can't reach a nav row in this reading-mode layout (the
+// Electron harness lacks the window/rect command scrollIntoView relies on) — dispatch a native
+// DOM click instead, which still fires the Vue @click handler.
+async function clickNavSegment(text: string): Promise<void> {
+  const rowSelector = `${NAV_CURRENT} .nav-row`;
+  await browser.waitUntil(
+    async () =>
+      browser.execute(
+        (sel: string, target: string) =>
+          [...document.querySelectorAll(sel)].some((el) => el.textContent?.trim() === target),
+        rowSelector,
+        text,
+      ),
+    { timeoutMsg: `nav segment "${text}" did not render` },
+  );
+  await browser.execute(
+    (sel: string, target: string) => {
+      const el = [...document.querySelectorAll<HTMLElement>(sel)].find((row) => row.textContent?.trim() === target);
+      el?.click();
+    },
+    rowSelector,
+    text,
+  );
+}
+
 describe("code blocks", () => {
   describe("navigation code block", () => {
     before(async () => {
@@ -225,6 +252,25 @@ describe("code blocks", () => {
         await renderBlock("nav/deco-color.md", navHost("2026-06-09", "#scolor"), NAV_VIEW);
         // cspell:enable
         await expectTextHex($(NAV_CURRENT), STYLE_HEX.color);
+      });
+    });
+
+    describe("segment link dates", () => {
+      // year-nav's current-block line carries two segments on the *same* line, each linked to
+      // "quarter" — the plain Q1 segment (no linkDate) and a Q2 segment shifted +1q. The fixture
+      // ships both Quarterly/2025-Q1.md and Quarterly/2025-Q2.md pre-existing (seedNote does not
+      // survive the reboot in the top-level before hook), and Yearly/2025.md anchors at
+      // 2025-01-01 so the two segments resolve to genuinely different notes (issue #169).
+      it("opens the shifted quarter from a segment carrying a link date", async () => {
+        await openInReadingMode("Yearly/2025.md");
+        await clickNavSegment("Q2");
+        expect(await activeNotePath()).toBe("Quarterly/2025-Q2.md");
+      });
+
+      it("opens the unshifted quarter from the sibling segment on the same line", async () => {
+        await openInReadingMode("Yearly/2025.md");
+        await clickNavSegment("Q1");
+        expect(await activeNotePath()).toBe("Quarterly/2025-Q1.md");
       });
     });
   });

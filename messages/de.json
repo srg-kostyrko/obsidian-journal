@@ -231,15 +231,16 @@
 			}
 		}
 	],
-	"block_rows_decorate_whole_label": "Gesamten Block dekorieren",
-	"block_rows_empty": "Noch keine Zeilen. Füge eine hinzu.",
-	"block_rows_add_row": "Zeile hinzufügen",
-	"block_rows_edit_tooltip": "Zeile bearbeiten",
-	"block_rows_delete_tooltip": "Zeile löschen",
+	"block_lines_decorate_whole_label": "Gesamten Block dekorieren",
+	"block_lines_empty": "Noch keine Zeilen. Füge eine hinzu.",
+	"block_lines_add_line": "Zeile hinzufügen",
+	"block_lines_add_segment": "Segment hinzufügen",
+	"block_lines_delete_tooltip": "Zeile löschen",
+	"block_lines_empty_segment": "(leer)",
 	"common_action_move_up": "Nach oben verschieben",
 	"common_action_move_down": "Nach unten verschieben",
 	"interval_block_section_title": "Kalender-Intervallzeilen",
-	"nav_block_row_modal_title": [
+	"nav_block_segment_modal_title": [
 		{
 			"declarations": [
 				"input mode"
@@ -248,23 +249,27 @@
 				"mode"
 			],
 			"match": {
-				"mode=add": "Navigationsblock-Zeile hinzufügen",
-				"mode=edit": "Navigationsblock-Zeile bearbeiten"
+				"mode=add": "Navigationsblock-Segment hinzufügen",
+				"mode=edit": "Navigationsblock-Segment bearbeiten"
 			}
 		}
 	],
-	"nav_block_row_field_template": "Vorlage",
-	"nav_block_row_field_font_size": "Schriftgröße",
-	"nav_block_row_field_font_size_hint": "Relativ zur normalen Schriftgröße: 1 bedeutet die gleiche Größe wie normaler Text.",
-	"nav_block_row_field_text_style": "Textstil",
-	"nav_block_row_field_bold": "Fett",
-	"nav_block_row_field_italic": "Kursiv",
+	"nav_block_segment_field_template": "Vorlage",
+	"nav_block_segment_field_font_size": "Schriftgröße",
+	"nav_block_segment_field_font_size_hint": "Relativ zur normalen Schriftgröße: 1 bedeutet die gleiche Größe wie normaler Text.",
+	"nav_block_segment_field_text_style": "Textstil",
+	"nav_block_segment_field_bold": "Fett",
+	"nav_block_segment_field_italic": "Kursiv",
 	"common_label_text_color": "Textfarbe",
 	"common_label_background_color": "Hintergrundfarbe",
-	"nav_block_row_field_link": "Link",
+	"nav_block_segment_field_link": "Link",
 	"common_label_journal": "Journal",
-	"nav_block_row_field_add_decorations": "Dekorationen hinzufügen",
-	"nav_block_row_link_option": [
+	"nav_block_segment_field_link_date": "Link-Datum",
+	"nav_block_segment_link_date_hint": "Verschiebt das Datum, das dieser Link öffnet, mit der gleichen Syntax wie bei Vorlagen: +1q, -1y, <startOf=month>.",
+	"nav_block_segment_link_date_invalid": "Das Link-Datum ist keine gültige Datumsverschiebung.",
+	"nav_block_segment_link_date_preview": "Verschiebt sich auf {date}",
+	"nav_block_segment_field_add_decorations": "Dekorationen hinzufügen",
+	"nav_block_segment_link_option": [
 		{
 			"declarations": [
 				"input kind"
@@ -284,9 +289,9 @@
 			}
 		}
 	],
-	"nav_block_row_template_required": "Vorlage ist erforderlich.",
-	"nav_block_row_journal_required": "Wähle ein Journal aus.",
-	"nav_block_row_resolved_preview": "Aufgelöst: {text}",
+	"nav_block_segment_template_required": "Vorlage ist erforderlich.",
+	"nav_block_segment_journal_required": "Wähle ein Journal aus.",
+	"nav_block_segment_resolved_preview": "Aufgelöst: {text}",
 	"command_add": "Befehl hinzufügen",
 	"command_context_open_note_clarifier": "(verwendet das Datum der geöffneten Notiz oder das heutige Datum)",
 	"command_context_only_open_note_clarifier": "(erfordert eine geöffnete Journalnotiz)",

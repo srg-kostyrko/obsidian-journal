@@ -39,11 +39,11 @@ describe("legacy vault upgrade", () => {
   });
 
   it("upgrades the stored data.json to the current settings version", async () => {
-    await waitForSettingsVersion(4);
+    await waitForSettingsVersion();
   });
 
   it("preserves every legacy journal under its migrated name", async () => {
-    await waitForSettingsVersion(4);
+    await waitForSettingsVersion();
     const settings = await getSettings();
 
     expect(journalNamesOf(settings)).toEqual(
@@ -59,7 +59,7 @@ describe("legacy vault upgrade", () => {
   });
 
   it("keys migrated journals by name so the plugin can resolve them", async () => {
-    await waitForSettingsVersion(4);
+    await waitForSettingsVersion();
     const settings = await getSettings();
 
     expect(journalKeysOf(settings)).toEqual(expect.arrayContaining(["My Journal Day", "Sprints"]));
@@ -69,7 +69,7 @@ describe("legacy vault upgrade", () => {
     // Obsidian persists user hotkeys keyed by the full command id; v2 registered the
     // seeded "Open today's note" as journals::open-today's-note. The migration must
     // key the command so the same id re-registers, or every v2 hotkey silently unbinds.
-    await waitForSettingsVersion(4);
+    await waitForSettingsVersion();
     const registered = await browser.executeObsidian(({ app }, id) => {
       const runtime = app as unknown as { commands: { findCommand(id: string): unknown } };
       return runtime.commands.findCommand(id) !== undefined && runtime.commands.findCommand(id) !== null;
@@ -78,7 +78,7 @@ describe("legacy vault upgrade", () => {
   });
 
   it("keys the migrated shelf by name", async () => {
-    await waitForSettingsVersion(4);
+    await waitForSettingsVersion();
     const settings = await getSettings();
 
     expect(shelfKeysOf(settings)).toEqual(["My Journal"]);

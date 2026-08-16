@@ -35,8 +35,8 @@ function makeJournal(name: string): JournalConfig {
     confirmCreation: false,
     decorations: [],
     autoCreate: false,
-    navBlock: { type: "create", rows: [], decorateWholeBlock: false },
-    intervalBlock: { type: "create", rows: [], decorateWholeBlock: false },
+    navBlock: { type: "create", lines: [], decorateWholeBlock: false },
+    intervalBlock: { type: "create", lines: [], decorateWholeBlock: false },
   };
 }
 

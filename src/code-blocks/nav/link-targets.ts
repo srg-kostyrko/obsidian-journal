@@ -2,7 +2,7 @@ import { match, P } from "ts-pattern";
 
 import type { VaultPath } from "@/infrastructure/host";
 import type { Option } from "@/infrastructure/result";
-import type { JournalConfig, JournalEntry, NavBlockRow } from "@/journals";
+import type { JournalConfig, JournalEntry, NavBlockSegment } from "@/journals";
 import type { ShelfConfig } from "@/shelves";
 
 export type LinkTarget =
@@ -23,7 +23,7 @@ export function resolveLinkCandidates(
 }
 
 export function resolveLinkTarget(
-  row: NavBlockRow,
+  row: NavBlockSegment,
   noteJournal: JournalConfig,
   shelfJournals: readonly JournalConfig[],
   noteEntry: Option<JournalEntry>,

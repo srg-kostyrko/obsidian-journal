@@ -72,7 +72,7 @@ function makeJournal(name: string, overrides: Partial<Record<string, unknown>> =
 
 async function setup(raw?: unknown) {
   const initial = raw ?? {
-    version: 4,
+    version: 5,
     journals: { daily: makeJournal("daily") },
   };
   const { service: settings, container } = createSettingsService({
@@ -140,7 +140,7 @@ function mountFollowingFrame(container: Container, journalName: string) {
 describe("JournalEditSubpage", () => {
   it("renders the journal name", async () => {
     const { container } = await setup({
-      version: 4,
+      version: 5,
       journals: { work: makeJournal("work", { write: { type: "week" } }) },
     });
     mount(container, "work");
@@ -149,7 +149,7 @@ describe("JournalEditSubpage", () => {
 
   it("renders the write frequency", async () => {
     const { container } = await setup({
-      version: 4,
+      version: 5,
       journals: { work: makeJournal("work", { write: { type: "week" } }) },
     });
     mount(container, "work");
@@ -203,7 +203,7 @@ describe("JournalEditSubpage", () => {
 describe("JournalEditSubpage collision warning", () => {
   it("names another journal that resolves to the same note path", async () => {
     const { container } = await setup({
-      version: 4,
+      version: 5,
       journals: { daily: makeJournal("daily"), weekly: makeJournal("weekly") },
     });
     mount(container, "daily");
@@ -212,7 +212,7 @@ describe("JournalEditSubpage collision warning", () => {
 
   it("stays hidden when no other journal shares the resolved path", async () => {
     const { container } = await setup({
-      version: 4,
+      version: 5,
       journals: { daily: makeJournal("daily"), weekly: makeJournal("weekly", { folder: "week" }) },
     });
     mount(container, "daily");

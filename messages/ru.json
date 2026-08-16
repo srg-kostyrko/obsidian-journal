@@ -235,15 +235,16 @@
 			}
 		}
 	],
-	"block_rows_decorate_whole_label": "Оформлять весь блок",
-	"block_rows_empty": "Строк пока нет. Добавьте одну.",
-	"block_rows_add_row": "Добавить строку",
-	"block_rows_edit_tooltip": "Редактировать строку",
-	"block_rows_delete_tooltip": "Удалить строку",
+	"block_lines_decorate_whole_label": "Оформлять весь блок",
+	"block_lines_empty": "Строк пока нет. Добавьте одну.",
+	"block_lines_add_line": "Добавить строку",
+	"block_lines_add_segment": "Добавить сегмент",
+	"block_lines_delete_tooltip": "Удалить строку",
+	"block_lines_empty_segment": "(пусто)",
 	"common_action_move_up": "Переместить вверх",
 	"common_action_move_down": "Переместить вниз",
 	"interval_block_section_title": "Строки календарных интервалов",
-	"nav_block_row_modal_title": [
+	"nav_block_segment_modal_title": [
 		{
 			"declarations": [
 				"input mode"
@@ -252,23 +253,27 @@
 				"mode"
 			],
 			"match": {
-				"mode=add": "Добавить строку навигационного блока",
-				"mode=edit": "Редактировать строку навигационного блока"
+				"mode=add": "Добавить сегмент блока навигации",
+				"mode=edit": "Редактировать сегмент блока навигации"
 			}
 		}
 	],
-	"nav_block_row_field_template": "Шаблон",
-	"nav_block_row_field_font_size": "Размер шрифта",
-	"nav_block_row_field_font_size_hint": "Относительно обычного размера шрифта: 1 означает тот же размер, что и обычный текст.",
-	"nav_block_row_field_text_style": "Стиль текста",
-	"nav_block_row_field_bold": "Жирный",
-	"nav_block_row_field_italic": "Курсив",
+	"nav_block_segment_field_template": "Шаблон",
+	"nav_block_segment_field_font_size": "Размер шрифта",
+	"nav_block_segment_field_font_size_hint": "Относительно обычного размера шрифта: 1 означает тот же размер, что и обычный текст.",
+	"nav_block_segment_field_text_style": "Стиль текста",
+	"nav_block_segment_field_bold": "Жирный",
+	"nav_block_segment_field_italic": "Курсив",
 	"common_label_text_color": "Цвет текста",
 	"common_label_background_color": "Цвет фона",
-	"nav_block_row_field_link": "Ссылка",
+	"nav_block_segment_field_link": "Ссылка",
 	"common_label_journal": "Журнал",
-	"nav_block_row_field_add_decorations": "Добавить оформление",
-	"nav_block_row_link_option": [
+	"nav_block_segment_field_link_date": "Дата ссылки",
+	"nav_block_segment_link_date_hint": "Сдвигает дату, которую открывает эта ссылка, по такому же синтаксису, как в шаблонах: +1q, -1y, <startOf=month>.",
+	"nav_block_segment_link_date_invalid": "Дата ссылки — недопустимый сдвиг даты.",
+	"nav_block_segment_link_date_preview": "Сдвигается на {date}",
+	"nav_block_segment_field_add_decorations": "Добавить оформление",
+	"nav_block_segment_link_option": [
 		{
 			"declarations": [
 				"input kind"
@@ -288,9 +293,9 @@
 			}
 		}
 	],
-	"nav_block_row_template_required": "Требуется шаблон.",
-	"nav_block_row_journal_required": "Выберите журнал.",
-	"nav_block_row_resolved_preview": "Результат: {text}",
+	"nav_block_segment_template_required": "Требуется шаблон.",
+	"nav_block_segment_journal_required": "Выберите журнал.",
+	"nav_block_segment_resolved_preview": "Результат: {text}",
 	"command_add": "Добавить команду",
 	"command_context_open_note_clarifier": "(использует дату открытой заметки или сегодняшнюю дату)",
 	"command_context_only_open_note_clarifier": "(требуется открытая заметка журнала)",

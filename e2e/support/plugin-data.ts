@@ -1,5 +1,7 @@
 import { browser } from "@wdio/globals";
 
+import { CURRENT_VERSION } from "../../src/settings/version.js";
+
 import { PluginDataMissingError } from "./errors.js";
 import { waitForState } from "./wait.js";
 
@@ -10,7 +12,7 @@ export interface StoredJournal {
   frontmatter?: { dateField?: string };
   numbering?: { sources?: { frontmatterKey?: string }[] };
   decorations?: { mode?: string }[];
-  navBlock?: { rows?: { template?: string }[] };
+  navBlock?: { lines?: { template?: string }[][] };
 }
 
 export interface StoredShelf {
@@ -79,7 +81,7 @@ export function shelfKeysOf(settings: StoredSettings): string[] {
 
 // Migration persists asynchronously (debounced saveData after the note walk
 // clears its pending markers), so poll the stored version until it converges.
-export function waitForSettingsVersion(version: number): Promise<void> {
+export function waitForSettingsVersion(version: number = CURRENT_VERSION): Promise<void> {
   return waitForState(
     readSettings,
     (settings) => settings.version === version,

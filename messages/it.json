@@ -231,15 +231,16 @@
 			}
 		}
 	],
-	"block_rows_decorate_whole_label": "Decora l'intero blocco",
-	"block_rows_empty": "Nessuna riga finora. Aggiungine una.",
-	"block_rows_add_row": "Aggiungi riga",
-	"block_rows_edit_tooltip": "Modifica riga",
-	"block_rows_delete_tooltip": "Elimina riga",
+	"block_lines_decorate_whole_label": "Decora l'intero blocco",
+	"block_lines_empty": "Nessuna riga finora. Aggiungine una.",
+	"block_lines_add_line": "Aggiungi riga",
+	"block_lines_add_segment": "Aggiungi segmento",
+	"block_lines_delete_tooltip": "Elimina riga",
+	"block_lines_empty_segment": "(vuoto)",
 	"common_action_move_up": "Sposta su",
 	"common_action_move_down": "Sposta giù",
 	"interval_block_section_title": "Righe degli intervalli del calendario",
-	"nav_block_row_modal_title": [
+	"nav_block_segment_modal_title": [
 		{
 			"declarations": [
 				"input mode"
@@ -248,23 +249,27 @@
 				"mode"
 			],
 			"match": {
-				"mode=add": "Aggiungi riga del blocco di navigazione",
-				"mode=edit": "Modifica riga del blocco di navigazione"
+				"mode=add": "Aggiungi segmento del blocco di navigazione",
+				"mode=edit": "Modifica segmento del blocco di navigazione"
 			}
 		}
 	],
-	"nav_block_row_field_template": "Modello",
-	"nav_block_row_field_font_size": "Dimensione del carattere",
-	"nav_block_row_field_font_size_hint": "Relativo alla dimensione normale del carattere: 1 significa la stessa dimensione del testo normale.",
-	"nav_block_row_field_text_style": "Stile del testo",
-	"nav_block_row_field_bold": "Grassetto",
-	"nav_block_row_field_italic": "Corsivo",
+	"nav_block_segment_field_template": "Modello",
+	"nav_block_segment_field_font_size": "Dimensione del carattere",
+	"nav_block_segment_field_font_size_hint": "Relativo alla dimensione normale del carattere: 1 significa la stessa dimensione del testo normale.",
+	"nav_block_segment_field_text_style": "Stile del testo",
+	"nav_block_segment_field_bold": "Grassetto",
+	"nav_block_segment_field_italic": "Corsivo",
 	"common_label_text_color": "Colore del testo",
 	"common_label_background_color": "Colore di sfondo",
-	"nav_block_row_field_link": "Collegamento",
+	"nav_block_segment_field_link": "Collegamento",
 	"common_label_journal": "Diario",
-	"nav_block_row_field_add_decorations": "Aggiungi decorazioni",
-	"nav_block_row_link_option": [
+	"nav_block_segment_field_link_date": "Data del collegamento",
+	"nav_block_segment_link_date_hint": "Sposta la data aperta da questo collegamento, con la stessa sintassi dei modelli: +1q, -1y, <startOf=month>.",
+	"nav_block_segment_link_date_invalid": "La data del collegamento non è uno spostamento di data valido.",
+	"nav_block_segment_link_date_preview": "Si sposta al {date}",
+	"nav_block_segment_field_add_decorations": "Aggiungi decorazioni",
+	"nav_block_segment_link_option": [
 		{
 			"declarations": [
 				"input kind"
@@ -284,9 +289,9 @@
 			}
 		}
 	],
-	"nav_block_row_template_required": "È necessario un modello.",
-	"nav_block_row_journal_required": "Seleziona un diario.",
-	"nav_block_row_resolved_preview": "Risolto: {text}",
+	"nav_block_segment_template_required": "È necessario un modello.",
+	"nav_block_segment_journal_required": "Seleziona un diario.",
+	"nav_block_segment_resolved_preview": "Risolto: {text}",
 	"command_add": "Aggiungi comando",
 	"command_context_open_note_clarifier": "(usa la data della nota aperta, oppure quella di oggi)",
 	"command_context_only_open_note_clarifier": "(richiede una nota del diario aperta)",

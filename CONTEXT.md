@@ -173,6 +173,17 @@ generated id: the `v3-to-v4` migration once keyed them by `nanoid()` instead,
 making every migrated entity unreachable by name and silently breaking
 auto-attach, the calendar, commands, and the legacy-note frontmatter rewrite.
 
+**Navigation block: line / segment** — a journal's `navBlock` and `intervalBlock`
+(`JournalNavBlock`) each hold `lines: NavBlockSegment[][]`. A **line** is a
+horizontal group of **segments** rendered together as one row; a **segment** is a
+styled, linked, decoratable unit of text carrying its own `template`, font size,
+bold/italic, colors, `link` (+ `journal` when the link kind is `journal`),
+`linkDate`, and `addDecorations`. Both are **positional, not identity-keyed** — a
+line is just its index in `lines`, a segment just its index within the line, and
+neither stores an id — which is why an emptied line (its last segment moved or
+deleted away) is simply dropped from the array rather than left behind as a
+stored-but-empty entity that would need its own cleanup path.
+
 **anchor / `anchorOf`** — an **anchor** is the `YYYY-MM-DD` string that uniquely
 names _the period a date falls in_ for a given journal. It is the universal join
 key — the index, numbering, timeline, note paths, and the calendar all key off it.

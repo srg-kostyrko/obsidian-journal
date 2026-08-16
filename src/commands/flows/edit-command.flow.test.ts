@@ -45,7 +45,7 @@ async function build(raw?: unknown) {
 
 describe("EditCommandFlow", () => {
   it("adds a new command to the collection on submit", async () => {
-    const { flows, modals, repo } = await build({ version: 4, commands: {} });
+    const { flows, modals, repo } = await build({ version: 5, commands: {} });
     const promise = flows.invoke(EditCommandFlow, { target: { kind: "all", writeType: "day" } });
     modals.lastOpen<unknown, CommandConfig>().submit(makeConfig("Added"));
     await promise;
@@ -53,7 +53,7 @@ describe("EditCommandFlow", () => {
   });
 
   it("overwrites the existing entry when editing", async () => {
-    const raw = { version: 4, commands: { "cmd-1": makeConfig("Old") } };
+    const raw = { version: 5, commands: { "cmd-1": makeConfig("Old") } };
     const { flows, modals, repo } = await build(raw);
     const promise = flows.invoke(EditCommandFlow, {
       commandId: "cmd-1",
@@ -68,7 +68,7 @@ describe("EditCommandFlow", () => {
     // Commands live in one flat collection, but names collide only within the same owner —
     // two journals may each hold an "Open today's note" without conflict.
     const raw = {
-      version: 4,
+      version: 5,
       commands: {
         a: makeConfig("Daily open", { kind: "journal", journalName: "daily" }),
         b: makeConfig("Work open", { kind: "journal", journalName: "work" }),
@@ -105,7 +105,7 @@ describe("EditCommandFlow", () => {
   });
 
   it("leaves the collection untouched when the modal is cancelled", async () => {
-    const { flows, modals, repo } = await build({ version: 4, commands: {} });
+    const { flows, modals, repo } = await build({ version: 5, commands: {} });
     const promise = flows.invoke(EditCommandFlow, { target: { kind: "all", writeType: "day" } });
     modals.lastOpen().cancel();
     const result = await promise;

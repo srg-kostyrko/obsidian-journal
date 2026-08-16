@@ -71,7 +71,7 @@ const buttonDefinition = {
 
 async function setup(items: { id: BlockInstanceId; key: string; config: Record<string, unknown> }[]) {
   const raw = {
-    version: 4,
+    version: 5,
     views: {
       [viewId]: {
         id: viewId,

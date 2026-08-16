@@ -1,15 +1,16 @@
 import { m } from "@/i18n";
 import { defineModal } from "@/infrastructure/host/modals";
-import type { NavBlockRow } from "@/journals";
+import type { NavBlockSegment } from "@/journals/config";
 
-import EditNavBlockRowModal from "./EditNavBlockRowModal.vue";
+import EditNavBlockSegmentModal from "./EditNavBlockSegmentModal.vue";
 
-export interface EditNavBlockRowModalProps {
+export interface EditNavBlockSegmentModalProps {
   journalName: string;
-  row?: NavBlockRow;
+  segment?: NavBlockSegment;
 }
 
-export const editNavBlockRowModal = defineModal<{ row: NavBlockRow }>()({
-  component: EditNavBlockRowModal,
-  title: ({ row }: EditNavBlockRowModalProps) => m.nav_block_row_modal_title({ mode: row ? "edit" : "add" }),
+export const editNavBlockSegmentModal = defineModal<{ segment: NavBlockSegment }>()({
+  component: EditNavBlockSegmentModal,
+  title: ({ segment }: EditNavBlockSegmentModalProps) =>
+    m.nav_block_segment_modal_title({ mode: segment ? "edit" : "add" }),
 });

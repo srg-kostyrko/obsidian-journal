@@ -231,15 +231,16 @@
 			}
 		}
 	],
-	"block_rows_decorate_whole_label": "블록 전체 장식",
-	"block_rows_empty": "아직 행이 없습니다. 행을 추가하세요.",
-	"block_rows_add_row": "행 추가",
-	"block_rows_edit_tooltip": "행 편집",
-	"block_rows_delete_tooltip": "행 삭제",
+	"block_lines_decorate_whole_label": "블록 전체 장식",
+	"block_lines_empty": "아직 행이 없습니다. 행을 추가하세요.",
+	"block_lines_add_line": "행 추가",
+	"block_lines_add_segment": "세그먼트 추가",
+	"block_lines_delete_tooltip": "행 삭제",
+	"block_lines_empty_segment": "(비어 있음)",
 	"common_action_move_up": "위로 이동",
 	"common_action_move_down": "아래로 이동",
 	"interval_block_section_title": "달력 간격 행",
-	"nav_block_row_modal_title": [
+	"nav_block_segment_modal_title": [
 		{
 			"declarations": [
 				"input mode"
@@ -248,23 +249,27 @@
 				"mode"
 			],
 			"match": {
-				"mode=add": "탐색 블록 행 추가",
-				"mode=edit": "탐색 블록 행 편집"
+				"mode=add": "탐색 블록 세그먼트 추가",
+				"mode=edit": "탐색 블록 세그먼트 편집"
 			}
 		}
 	],
-	"nav_block_row_field_template": "템플릿",
-	"nav_block_row_field_font_size": "글꼴 크기",
-	"nav_block_row_field_font_size_hint": "일반 글꼴 크기에 대한 상댓값입니다. 1이면 일반 텍스트와 같은 크기입니다.",
-	"nav_block_row_field_text_style": "텍스트 스타일",
-	"nav_block_row_field_bold": "굵게",
-	"nav_block_row_field_italic": "기울임",
+	"nav_block_segment_field_template": "템플릿",
+	"nav_block_segment_field_font_size": "글꼴 크기",
+	"nav_block_segment_field_font_size_hint": "일반 글꼴 크기에 대한 상댓값입니다. 1이면 일반 텍스트와 같은 크기입니다.",
+	"nav_block_segment_field_text_style": "텍스트 스타일",
+	"nav_block_segment_field_bold": "굵게",
+	"nav_block_segment_field_italic": "기울임",
 	"common_label_text_color": "텍스트 색상",
 	"common_label_background_color": "배경색",
-	"nav_block_row_field_link": "링크",
+	"nav_block_segment_field_link": "링크",
 	"common_label_journal": "저널",
-	"nav_block_row_field_add_decorations": "장식 추가",
-	"nav_block_row_link_option": [
+	"nav_block_segment_field_link_date": "링크 날짜",
+	"nav_block_segment_link_date_hint": "이 링크가 여는 날짜를 이동합니다. 템플릿과 같은 구문을 사용합니다: +1q, -1y, <startOf=month>.",
+	"nav_block_segment_link_date_invalid": "링크 날짜가 올바른 날짜 이동식이 아닙니다.",
+	"nav_block_segment_link_date_preview": "{date}(으)로 이동합니다",
+	"nav_block_segment_field_add_decorations": "장식 추가",
+	"nav_block_segment_link_option": [
 		{
 			"declarations": [
 				"input kind"
@@ -284,9 +289,9 @@
 			}
 		}
 	],
-	"nav_block_row_template_required": "템플릿을 입력하세요.",
-	"nav_block_row_journal_required": "저널을 선택하세요.",
-	"nav_block_row_resolved_preview": "결과: {text}",
+	"nav_block_segment_template_required": "템플릿을 입력하세요.",
+	"nav_block_segment_journal_required": "저널을 선택하세요.",
+	"nav_block_segment_resolved_preview": "결과: {text}",
 	"command_add": "명령어 추가",
 	"command_context_open_note_clarifier": "(열려 있는 노트의 날짜 또는 오늘 날짜를 사용합니다)",
 	"command_context_only_open_note_clarifier": "(저널 노트가 열려 있어야 합니다)",

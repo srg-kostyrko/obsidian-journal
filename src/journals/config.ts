@@ -91,33 +91,36 @@ const numberingSchema = v.pipe(
   ),
 );
 
-const navBlockRowLinkSchema = v.union([
+const navBlockSegmentLinkSchema = v.union([
   v.literal("none"),
   v.literal("self"),
   v.literal("journal"),
   v.picklist(["day", "week", "month", "quarter", "year"]),
 ]);
 
-export const navBlockRowSchema = v.object({
+export const navBlockSegmentSchema = v.object({
   template: v.string(),
   fontSize: v.number(),
   bold: v.boolean(),
   italic: v.boolean(),
   color: colorSchema,
   background: colorSchema,
-  link: navBlockRowLinkSchema,
+  link: navBlockSegmentLinkSchema,
   journal: v.string(),
+  // Clearable, so no minLength: a clearable field that fails the parse resets the whole
+  // journal to defaults on reload. Optional so a hand-edited data.json still loads.
+  linkDate: v.optional(v.string(), ""),
   addDecorations: v.boolean(),
 });
 
 export const navBlockSchema = v.object({
   type: v.picklist(["create", "existing"]),
-  rows: v.array(navBlockRowSchema),
+  lines: v.array(v.array(navBlockSegmentSchema)),
   decorateWholeBlock: v.boolean(),
 });
 
-export type NavBlockRowLink = v.InferOutput<typeof navBlockRowLinkSchema>;
-export type NavBlockRow = v.InferOutput<typeof navBlockRowSchema>;
+export type NavBlockSegmentLink = v.InferOutput<typeof navBlockSegmentLinkSchema>;
+export type NavBlockSegment = v.InferOutput<typeof navBlockSegmentSchema>;
 export type JournalNavBlock = v.InferOutput<typeof navBlockSchema>;
 
 export const journalConfigSchema = v.object({
@@ -138,12 +141,12 @@ export const journalConfigSchema = v.object({
   decorations: v.optional(v.array(decorationSchema), []),
   navBlock: v.optional(navBlockSchema, () => ({
     type: "create" as const,
-    rows: [] as NavBlockRow[],
+    lines: [] as NavBlockSegment[][],
     decorateWholeBlock: false,
   })),
   intervalBlock: v.optional(navBlockSchema, () => ({
     type: "create" as const,
-    rows: [] as NavBlockRow[],
+    lines: [] as NavBlockSegment[][],
     decorateWholeBlock: false,
   })),
 });
@@ -181,92 +184,99 @@ const NAME_TEMPLATES: Record<JournalWrite["type"], string> = {
 
 const EMPTY_ANCHOR = "" as AnchorString;
 
-const emptyNavRow: NavBlockRow = {
+const emptyNavSegment: NavBlockSegment = {
   template: "",
   fontSize: 1,
   bold: false,
   italic: false,
   link: "none",
   journal: "",
+  linkDate: "",
   color: { type: "theme", name: "text-normal" },
   background: { type: "transparent" },
   addDecorations: false,
 };
 
-const rowNavWeek: NavBlockRow = { ...emptyNavRow, template: "{{date:[W]w}}", link: "week" };
-const rowNavMonth: NavBlockRow = { ...emptyNavRow, template: "{{date:MMMM}}", link: "month" };
-const rowNavYear: NavBlockRow = { ...emptyNavRow, template: "{{date:YYYY}}", link: "year" };
-const rowNavRelative: NavBlockRow = { ...emptyNavRow, template: "{{relative_date}}", fontSize: 0.7 };
+const segNavWeek: NavBlockSegment = { ...emptyNavSegment, template: "{{date:[W]w}}", link: "week" };
+const segNavMonth: NavBlockSegment = { ...emptyNavSegment, template: "{{date:MMMM}}", link: "month" };
+const segNavYear: NavBlockSegment = { ...emptyNavSegment, template: "{{date:YYYY}}", link: "year" };
+const segNavRelative: NavBlockSegment = { ...emptyNavSegment, template: "{{relative_date}}", fontSize: 0.7 };
 
 const defaultNavBlocks: Record<JournalWrite["type"], JournalNavBlock> = {
   day: {
     type: "create",
     decorateWholeBlock: false,
-    rows: [
-      { ...emptyNavRow, template: "{{date:ddd}}" },
-      { ...emptyNavRow, template: "{{date:D}}", fontSize: 3, bold: true, link: "self", addDecorations: true },
-      rowNavRelative,
-      rowNavWeek,
-      rowNavMonth,
-      rowNavYear,
+    lines: [
+      [{ ...emptyNavSegment, template: "{{date:ddd}}" }],
+      [{ ...emptyNavSegment, template: "{{date:D}}", fontSize: 3, bold: true, link: "self", addDecorations: true }],
+      [segNavRelative],
+      [segNavWeek],
+      [segNavMonth],
+      [segNavYear],
     ],
   },
   week: {
     type: "create",
     decorateWholeBlock: false,
-    rows: [
-      { ...rowNavWeek, fontSize: 3, bold: true, link: "self", addDecorations: true },
-      rowNavRelative,
-      rowNavMonth,
-      rowNavYear,
+    lines: [
+      [{ ...segNavWeek, fontSize: 3, bold: true, link: "self", addDecorations: true }],
+      [segNavRelative],
+      [segNavMonth],
+      [segNavYear],
     ],
   },
   month: {
     type: "create",
     decorateWholeBlock: false,
-    rows: [{ ...rowNavMonth, fontSize: 3, bold: true, link: "self", addDecorations: true }, rowNavRelative, rowNavYear],
+    lines: [
+      [{ ...segNavMonth, fontSize: 3, bold: true, link: "self", addDecorations: true }],
+      [segNavRelative],
+      [segNavYear],
+    ],
   },
   quarter: {
     type: "create",
     decorateWholeBlock: false,
-    rows: [
-      { ...emptyNavRow, template: "{{date:[Q]Q}}", fontSize: 3, bold: true, link: "self", addDecorations: true },
-      rowNavRelative,
-      rowNavYear,
+    lines: [
+      [{ ...emptyNavSegment, template: "{{date:[Q]Q}}", fontSize: 3, bold: true, link: "self", addDecorations: true }],
+      [segNavRelative],
+      [segNavYear],
     ],
   },
   year: {
     type: "create",
     decorateWholeBlock: false,
-    rows: [{ ...rowNavYear, fontSize: 3, bold: true, link: "self", addDecorations: true }, rowNavRelative],
+    lines: [[{ ...segNavYear, fontSize: 3, bold: true, link: "self", addDecorations: true }], [segNavRelative]],
   },
   custom: {
     type: "create",
     decorateWholeBlock: false,
-    rows: [
-      {
-        ...emptyNavRow,
-        template: "{{journal_name}} {{index}}",
-        link: "self",
-        fontSize: 3,
-        bold: true,
-        addDecorations: true,
-      },
-      { ...emptyNavRow, template: "{{start_date}}" },
-      { ...emptyNavRow, template: "to" },
-      { ...emptyNavRow, template: "{{end_date}}" },
+    lines: [
+      [
+        {
+          ...emptyNavSegment,
+          template: "{{journal_name}} {{index}}",
+          link: "self",
+          fontSize: 3,
+          bold: true,
+          addDecorations: true,
+        },
+      ],
+      [{ ...emptyNavSegment, template: "{{start_date}}" }],
+      [{ ...emptyNavSegment, template: "to" }],
+      [{ ...emptyNavSegment, template: "{{end_date}}" }],
     ],
   },
 };
 
-const emptyIntervalBlock: JournalNavBlock = { type: "create", rows: [], decorateWholeBlock: false };
+const emptyIntervalBlock: JournalNavBlock = { type: "create", lines: [], decorateWholeBlock: false };
 
 const customIntervalBlock: JournalNavBlock = {
   type: "create",
   decorateWholeBlock: true,
-  rows: [
-    { ...emptyNavRow, template: "{{journal_name}} {{index}}", link: "self", fontSize: 1.2, bold: true },
-    { ...emptyNavRow, template: "{{start_date}} to {{end_date}}" },
+  lines: [
+    [{ ...emptyNavSegment, template: "{{journal_name}} {{index}}", link: "self", fontSize: 1.2, bold: true }],
+    [{ ...emptyNavSegment, template: "{{start_date}} to {{end_date}}" }],
   ],
 };
 

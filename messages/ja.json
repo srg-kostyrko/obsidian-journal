@@ -216,15 +216,16 @@
 			}
 		}
 	],
-	"block_rows_decorate_whole_label": "ブロック全体を装飾",
-	"block_rows_empty": "行がまだありません。1行追加してください。",
-	"block_rows_add_row": "行を追加",
-	"block_rows_edit_tooltip": "行を編集",
-	"block_rows_delete_tooltip": "行を削除",
+	"block_lines_decorate_whole_label": "ブロック全体を装飾",
+	"block_lines_empty": "行がまだありません。1行追加してください。",
+	"block_lines_add_line": "行を追加",
+	"block_lines_add_segment": "セグメントを追加",
+	"block_lines_delete_tooltip": "行を削除",
+	"block_lines_empty_segment": "(空)",
 	"common_action_move_up": "上へ移動",
 	"common_action_move_down": "下へ移動",
 	"interval_block_section_title": "カレンダーの間隔行",
-	"nav_block_row_modal_title": [
+	"nav_block_segment_modal_title": [
 		{
 			"declarations": [
 				"input mode"
@@ -233,23 +234,27 @@
 				"mode"
 			],
 			"match": {
-				"mode=add": "ナビゲーションブロック行を追加",
-				"mode=edit": "ナビゲーションブロック行を編集"
+				"mode=add": "ナビゲーションブロックのセグメントを追加",
+				"mode=edit": "ナビゲーションブロックのセグメントを編集"
 			}
 		}
 	],
-	"nav_block_row_field_template": "テンプレート",
-	"nav_block_row_field_font_size": "フォントサイズ",
-	"nav_block_row_field_font_size_hint": "通常のフォントサイズに対する相対値です。1は通常のテキストと同じサイズです。",
-	"nav_block_row_field_text_style": "テキストスタイル",
-	"nav_block_row_field_bold": "太字",
-	"nav_block_row_field_italic": "イタリック",
+	"nav_block_segment_field_template": "テンプレート",
+	"nav_block_segment_field_font_size": "フォントサイズ",
+	"nav_block_segment_field_font_size_hint": "通常のフォントサイズに対する相対値です。1は通常のテキストと同じサイズです。",
+	"nav_block_segment_field_text_style": "テキストスタイル",
+	"nav_block_segment_field_bold": "太字",
+	"nav_block_segment_field_italic": "イタリック",
 	"common_label_text_color": "テキストの色",
 	"common_label_background_color": "背景色",
-	"nav_block_row_field_link": "リンク",
+	"nav_block_segment_field_link": "リンク",
 	"common_label_journal": "ジャーナル",
-	"nav_block_row_field_add_decorations": "装飾を追加",
-	"nav_block_row_link_option": [
+	"nav_block_segment_field_link_date": "リンク日付",
+	"nav_block_segment_link_date_hint": "このリンクが開く日付をずらします。テンプレートと同じ構文を使います: +1q, -1y, <startOf=month>。",
+	"nav_block_segment_link_date_invalid": "リンク日付が有効な日付シフトではありません。",
+	"nav_block_segment_link_date_preview": "{date}にシフトします",
+	"nav_block_segment_field_add_decorations": "装飾を追加",
+	"nav_block_segment_link_option": [
 		{
 			"declarations": [
 				"input kind"
@@ -269,9 +274,9 @@
 			}
 		}
 	],
-	"nav_block_row_template_required": "テンプレートが必要です。",
-	"nav_block_row_journal_required": "ジャーナルを選択してください。",
-	"nav_block_row_resolved_preview": "解決結果: {text}",
+	"nav_block_segment_template_required": "テンプレートが必要です。",
+	"nav_block_segment_journal_required": "ジャーナルを選択してください。",
+	"nav_block_segment_resolved_preview": "解決結果: {text}",
 	"command_add": "コマンドを追加",
 	"command_context_open_note_clarifier": "（開いているノートの日付、なければ今日の日付を使用します）",
 	"command_context_only_open_note_clarifier": "（ジャーナルノートが開いている必要があります）",

@@ -30,7 +30,7 @@ function makeConfig(name: string, target: CommandConfig["target"]): CommandConfi
 async function setup(commands: Record<string, CommandConfig> = {}) {
   const { service: settings, container } = createSettingsService({
     collections: [commandCollection, shelvesCollection],
-    raw: { version: 4, commands, shelves: { work: { name: "work", journals: [] } } },
+    raw: { version: 5, commands, shelves: { work: { name: "work", journals: [] } } },
   });
   await settings.initialize();
   container.register(ModalService).useValue(new FakeModalService() as unknown as ModalService);

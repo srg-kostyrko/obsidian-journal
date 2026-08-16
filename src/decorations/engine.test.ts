@@ -85,6 +85,26 @@ describe("DecorationEngine", () => {
       expect(result.size).toBe(0);
     });
 
+    it("contributes a matching decoration once when the same cell is listed several times", () => {
+      const decoration = buildDecoration({
+        mode: "or",
+        conditions: [buildCondition("weekday", { weekdays: [0, 1, 2, 3, 4, 5, 6] })],
+        styles: [buildStyle("background")],
+      });
+      const { c } = buildContainer({
+        daily: fixedJournal("daily", { type: "day" }, { decorations: [decoration] }),
+      });
+      const engine = c.resolve(DecorationEngine);
+
+      const period = DayPeriod.containing(date("2026-05-25"));
+      const result = engine.evaluateRange(
+        [period, DayPeriod.containing(date("2026-05-25")), period],
+        [{ kind: "journal", journalName: "daily", index: 0, decoration }],
+      );
+
+      expect(result.get(cellKey(period.kind, period.anchor.toAnchor()))).toHaveLength(1);
+    });
+
     it("returns no entries when period kind mismatches journal write-type", () => {
       const decoration = buildDecoration({
         mode: "or",
