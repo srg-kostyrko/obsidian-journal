@@ -2,7 +2,7 @@ import { $, $$, browser, expect } from "@wdio/globals";
 
 import { m } from "../../src/i18n/paraglide/messages.js";
 import { listPluginDataFiles, readPluginDataFile, waitForSnapshotFiles } from "../support/plugin-data.js";
-import { clickButton, closeSettings, openSettings } from "../support/settings.js";
+import { clickButton, closeSettings, expandSection, openSettings } from "../support/settings.js";
 
 // Colons are illegal in a Windows filename, hence the dashes — see snapshot-service.ts's NAME_PATTERN.
 const BACKUP_PATTERN = /^backup-v(\d+)-\d{4}-\d{2}-\d{2}T\d{2}-\d{2}-\d{2}\.json$/;
@@ -33,16 +33,33 @@ describe("pre-migration settings snapshot", () => {
     expect(journal?.navBlock?.lines).toBeUndefined();
   });
 
-  it("does not write a second snapshot once the migration has run", async () => {
-    // The backup write happens once, inside the same boot's #loadAndMigrate — nothing re-triggers
-    // it later. Re-listing after the assertions above confirms the count stays at one rather than
-    // the first test merely having caught it early.
+  it("does not write a second snapshot on a later boot of the same not-yet-migrated data.json", async () => {
+    // #loadAndMigrate never flushes the migrated result back to data.json — that write is
+    // debounced and, absent any other settings change, may never happen (see the comment on
+    // waitForSnapshotFiles in plugin-data.ts) — so a later boot re-enters #snapshotIfBehind
+    // with the same still-v4 payload on disk. Reloading with no vault path restarts Obsidian
+    // on the *same* on-disk vault rather than a fresh copy of the fixture, so the snapshot
+    // this suite already wrote is still there to be deduplicated against.
+    await browser.reloadObsidian();
+
+    // Opening Settings only succeeds once the plugin's async initialize() — and the
+    // #snapshotIfBehind call inside it — has resolved, so this is the deterministic signal
+    // that the second boot's migration pass has finished, not a fixed sleep.
+    await openSettings();
+    await expandSection(m.maintenance_heading());
+    await clickButton(m.maintenance_open());
+    await $(`div=${m.maintenance_snapshots_heading()}`).waitForExist({
+      timeoutMsg: "Maintenance subpage did not open after the second boot",
+    });
+    await closeSettings();
+
     const files = await listPluginDataFiles();
     expect(files.filter((name) => BACKUP_PATTERN.test(name))).toHaveLength(1);
   });
 
   it("lists exactly one snapshot on the Maintenance page", async () => {
     await openSettings();
+    await expandSection(m.maintenance_heading());
     await clickButton(m.maintenance_open());
 
     await $(`div=${m.maintenance_snapshots_heading()}`).waitForExist({
