@@ -5,14 +5,18 @@ import { browser } from "@wdio/globals";
 // (metadataCache catch-up, debounced saveData, the live editor) converges on its
 // own clock, observable only by re-reading.
 export async function waitForState<T>(
-  read: () => Promise<T | undefined>,
+  read: () => Promise<T | undefined | null>,
   predicate: (value: T) => boolean,
   timeoutMsg: string,
 ): Promise<void> {
   await browser.waitUntil(
     async () => {
       const value = await read();
-      return value !== undefined && predicate(value);
+      // Null as well as undefined: a reader built on `executeObsidian` returns its value over
+      // the WebDriver wire, which serializes `undefined` to `null`. Testing only for `undefined`
+      // let the not-ready-yet read reach the predicate, so "no frontmatter parsed yet" threw
+      // out of waitUntil instead of polling again — the retry this primitive exists to provide.
+      return value !== undefined && value !== null && predicate(value);
     },
     { timeoutMsg },
   );
