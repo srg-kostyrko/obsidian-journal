@@ -44,8 +44,24 @@ useSortableList(zoneEl, empty, (orderedIds) => emit("drop", orderedIds), {
   transition: opacity 120ms ease-out;
   opacity: 0;
 }
+/* Every split point, faint: where a new line *could* be made. */
 .nav-line-drop--showing {
-  border-top-color: var(--color-accent);
-  opacity: 0.6;
+  border-top-color: var(--text-faint);
+  opacity: 0.5;
+}
+/* The one that will actually take the drop. SortableJS parks the dragged segment inside the
+   container it would drop into, so a non-empty zone is exactly the armed one — no guessing
+   from coordinates. Paint only: growing the strip here would shift everything below it and
+   push the pointer back across the boundary it just crossed. */
+.nav-line-drop--showing:not(:empty) {
+  border-top-style: solid;
+  border-top-color: var(--interactive-accent);
+  box-shadow: 0 -2px 0 0 var(--interactive-accent);
+  opacity: 1;
+}
+/* The parked segment is a full-height row inside a strip a few pixels tall — it would paint
+   over the lines either side. The accent bar above is the insertion preview instead. */
+.nav-line-drop > * {
+  display: none;
 }
 </style>

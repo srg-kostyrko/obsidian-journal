@@ -594,6 +594,66 @@ describe("settings", () => {
         return lines.length === 1 && lines[0]?.length === 3;
       }, "cross-line segment drag did not persist a merged line");
     });
+
+    it("parks the dragged segment in only the split zone under the pointer", async () => {
+      // The zone that will take the drop is styled apart from the rest so a user can see where
+      // a new line appears, and it identifies itself by holding the dragged segment — SortableJS
+      // parks it in the container it would drop into. That is a behavior of the library, not
+      // something this code sets, so it is worth pinning: if it ever stopped, every split zone
+      // would look alike again with nothing failing.
+      await openJournalSubpage("nav-dates", "year-nav");
+      await expandSection(m.nav_block_section_title());
+      await $('.nav-block-preview .nav-row[data-id="0:0"]').waitForExist({
+        timeoutMsg: "navigation block preview did not mount",
+      });
+
+      // Deliberately not pinned to a fixed zone index or count: an earlier test in this describe
+      // merges lines, so how many zones exist depends on run order. The claim under test is
+      // "exactly the hovered one is occupied", which holds whatever the block looks like.
+      const occupancy = await browser.execute(async () => {
+        const source = document.querySelector<HTMLElement>('.nav-block-preview .nav-row[data-id="0:0"]');
+        const zones = [...document.querySelectorAll<HTMLElement>(".nav-line-drop")];
+        const zone = zones.at(-1);
+        if (!source || !zone) return [];
+
+        const centerOf = (el: HTMLElement): { x: number; y: number } => {
+          const rect = el.getBoundingClientRect();
+          return { x: rect.left + rect.width / 2, y: rect.top + rect.height / 2 };
+        };
+        const dataTransfer = new DataTransfer();
+        const firePointer = (el: HTMLElement, type: string, p: { x: number; y: number }): void => {
+          el.dispatchEvent(new PointerEvent(type, { bubbles: true, cancelable: true, clientX: p.x, clientY: p.y }));
+        };
+        const fireDrag = (el: HTMLElement, type: string, p: { x: number; y: number }): void => {
+          el.dispatchEvent(
+            new DragEvent(type, { bubbles: true, cancelable: true, dataTransfer, clientX: p.x, clientY: p.y }),
+          );
+        };
+        const from = centerOf(source);
+        firePointer(source, "pointerdown", from);
+        fireDrag(source, "dragstart", from);
+        // SortableJS finishes its drag-start setup inside a requestAnimationFrame scheduled from
+        // its own dragstart handler, so the move only registers a frame later.
+        await new Promise<void>((resolve) => requestAnimationFrame(() => resolve()));
+        await new Promise<void>((resolve) => requestAnimationFrame(() => resolve()));
+
+        const to = centerOf(zone);
+        fireDrag(zone, "dragenter", to);
+        fireDrag(zone, "dragover", to);
+        await new Promise<void>((resolve) => requestAnimationFrame(() => resolve()));
+        const all = [...document.querySelectorAll<HTMLElement>(".nav-line-drop")];
+        const armed = {
+          occupied: all.filter((z) => z.childElementCount > 0).length,
+          hoveredIsOccupied: zone.childElementCount > 0,
+        };
+
+        fireDrag(source, "dragend", to);
+        firePointer(source, "pointerup", to);
+        return armed;
+      });
+
+      expect(occupancy).toEqual({ occupied: 1, hoveredIsOccupied: true });
+    });
   });
 
   describe("decorations", () => {
