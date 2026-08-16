@@ -5,10 +5,9 @@ import type { JournalConfig, JournalNavBlock } from "@/journals";
 
 import NavBlockSegment from "./NavBlockSegment.vue";
 
-// blockScope/rowScope name the provided decoration maps the whole-block and per-row decorations
-// draw from (see decoration-scopes.ts). The nav code block passes two distinct scopes since the
-// two decorate differently; the custom-interval view passes neither, so both fall back to the
-// default — its single provided map.
+// blockScope names the provided decoration map the whole-block decoration draws from (see
+// decoration-scopes.ts). Each segment derives its own per-segment scope from its resolved link
+// target, so it needs no scope prop here.
 defineProps<{
   block: JournalNavBlock;
   journal: JournalConfig;
@@ -16,7 +15,6 @@ defineProps<{
   period: Period;
   preventNavigation?: boolean;
   blockScope?: CellDecorationScope;
-  rowScope?: CellDecorationScope;
   shelf?: string | null;
 }>();
 </script>
@@ -33,7 +31,6 @@ defineProps<{
           :ref-date="refDate"
           :period
           :prevent-navigation="preventNavigation"
-          :decoration-scope="rowScope"
           :shelf
         />
         <slot
@@ -54,7 +51,6 @@ defineProps<{
           :ref-date="refDate"
           :period
           :prevent-navigation="preventNavigation"
-          :decoration-scope="rowScope"
           :shelf
         />
         <slot

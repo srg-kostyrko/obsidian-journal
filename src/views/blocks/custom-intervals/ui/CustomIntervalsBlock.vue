@@ -2,6 +2,7 @@
 import { computed } from "vue";
 
 import type { AnchorString } from "@/calendar";
+import { navSegmentIntervalScope } from "@/code-blocks/nav/decoration-scopes";
 import { periodForJournal } from "@/code-blocks/nav/period-for-journal";
 import NavBlock from "@/code-blocks/nav/ui/NavBlock.vue";
 import { hasOffsetCondition, useCellDecorations } from "@/decorations";
@@ -81,6 +82,7 @@ useCellDecorations({
       section.entries.map((entry) => periodForJournal(section.journal.write, entry.anchor)),
     ),
   journalNames: () => sections.value.map((section) => section.journalName),
+  scope: navSegmentIntervalScope,
   // Offset decorations mark single days inside an interval; they render on the day
   // calendar grid, never on the whole-interval row.
   filter: (binding) => !hasOffsetCondition(binding.decoration),
@@ -107,6 +109,7 @@ useCellDecorations({
           :journal="section.journal"
           :ref-date="entry.anchor"
           :period="periodForJournal(section.journal.write, entry.anchor)"
+          :block-scope="navSegmentIntervalScope"
           :shelf="context.shelf.value"
         />
       </div>

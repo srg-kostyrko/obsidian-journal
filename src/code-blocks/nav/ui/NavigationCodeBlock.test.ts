@@ -244,6 +244,18 @@ function seedQuarterlyNote(h: Harness): void {
   });
 }
 
+function decoratedJournal(base: JournalConfig): JournalConfig {
+  return {
+    ...base,
+    decorations: [
+      buildDecoration({
+        conditions: [buildCondition("date")],
+        styles: [buildStyle("corner", { placement: "top-left" })],
+      }),
+    ],
+  };
+}
+
 function withWholeBlockDecoration(base: JournalConfig): JournalConfig {
   return {
     ...base,
@@ -252,11 +264,17 @@ function withWholeBlockDecoration(base: JournalConfig): JournalConfig {
   };
 }
 
+// link: "day" so the segment's target resolves to every same-write-type shelf journal, not
+// just the host — a "none"/"self" segment decorates from the host alone (see segment-decoration.ts).
 function withPerRowDecoration(base: JournalConfig): JournalConfig {
   return {
     ...base,
     decorations: [],
-    navBlock: { ...base.navBlock, decorateWholeBlock: false, lines: [[navSegment({ addDecorations: true })]] },
+    navBlock: {
+      ...base.navBlock,
+      decorateWholeBlock: false,
+      lines: [[navSegment({ addDecorations: true, link: "day" })]],
+    },
   };
 }
 
@@ -1219,5 +1237,51 @@ describe("NavigationCodeBlock decorations", () => {
 
     const decorations = document.querySelectorAll("[data-testid='cell-decoration']");
     expect(decorations.length).toBe(3);
+  });
+
+  it("decorates a year-link segment from the year journal, not the host daily journal", () => {
+    const base = journalDefaultsFor({ type: "day" }, "daily");
+    const daily: JournalConfig = {
+      ...base,
+      navBlock: {
+        ...base.navBlock,
+        decorateWholeBlock: false,
+        lines: [[navSegment({ template: "{{date:YYYY}}", link: "year", addDecorations: true })]],
+      },
+    };
+    const yearly = decoratedJournal(journalDefaultsFor({ type: "year" }, "yearly"));
+    const h = buildHarness({ daily, yearly });
+    h.index.byPath.set("Daily/2026-05-27.md", {
+      journalName: "daily",
+      anchor: "2026-05-27" as AnchorString,
+      path: "Daily/2026-05-27.md" as VaultPath,
+    });
+    h.shelves.shelves = [{ name: "main", journals: ["daily", "yearly"] }];
+    mount(h, "Daily/2026-05-27.md");
+
+    expect(document.querySelector(".decoration-corner.top-left")).not.toBeNull();
+  });
+
+  it("leaves a year-link segment undecorated when only the host journal has decorations", () => {
+    const base = decoratedJournal(journalDefaultsFor({ type: "day" }, "daily"));
+    const daily: JournalConfig = {
+      ...base,
+      navBlock: {
+        ...base.navBlock,
+        decorateWholeBlock: false,
+        lines: [[navSegment({ template: "{{date:YYYY}}", link: "year", addDecorations: true })]],
+      },
+    };
+    const yearly = journalDefaultsFor({ type: "year" }, "yearly");
+    const h = buildHarness({ daily, yearly });
+    h.index.byPath.set("Daily/2026-05-27.md", {
+      journalName: "daily",
+      anchor: "2026-05-27" as AnchorString,
+      path: "Daily/2026-05-27.md" as VaultPath,
+    });
+    h.shelves.shelves = [{ name: "main", journals: ["daily", "yearly"] }];
+    mount(h, "Daily/2026-05-27.md");
+
+    expect(document.querySelector(".decoration-corner.top-left")).toBeNull();
   });
 });

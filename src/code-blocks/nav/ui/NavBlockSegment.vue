@@ -3,13 +3,7 @@ import { match } from "ts-pattern";
 import { computed, inject } from "vue";
 
 import { Clock, type AnchorString, type Period } from "@/calendar";
-import {
-  CellDecoration,
-  CellDecorationMapKey,
-  colorToString,
-  useDecorationMenuItems,
-  type CellDecorationScope,
-} from "@/decorations";
+import { CellDecoration, colorToString, useDecorationMenuItems } from "@/decorations";
 import { m } from "@/i18n";
 import { useService } from "@/infrastructure/di";
 import { Flows } from "@/infrastructure/flows";
@@ -35,8 +29,10 @@ import { ShelvesRepository } from "@/shelves";
 import { TemplateEngine } from "@/templates";
 import { useModifierHoverPreview } from "@/ui/use-modifier-hover-preview";
 
+import { navSegmentFixedScope, navSegmentIntervalScope } from "../decoration-scopes";
 import { resolveLinkCandidates, type LinkTarget } from "../link-targets";
 import { buildNavRowContext } from "../nav-row-context";
+import { segmentDecorationCell } from "../segment-decoration";
 import { resolveSegmentLink } from "../segment-link";
 
 const props = defineProps<{
@@ -45,9 +41,6 @@ const props = defineProps<{
   refDate: AnchorString;
   period: Period;
   preventNavigation?: boolean;
-  // Which provided decoration map a per-row decoration draws from. Omitted (the custom-interval
-  // view) falls back to the default scope; the nav code block passes its per-row scope.
-  decorationScope?: CellDecorationScope;
   shelf?: string | null;
 }>();
 
@@ -81,18 +74,52 @@ const resolved = computed(() =>
 const target = computed(() => resolved.value.target);
 const linkAnchor = computed(() => resolved.value.date.toAnchor());
 
-const decorationCells = inject(props.decorationScope?.map ?? CellDecorationMapKey, null);
-const decorationItems = useDecorationMenuItems(decorationCells, () => props.shelf ?? null);
+const targetJournals = computed<readonly JournalConfig[]>(() => {
+  const t = target.value;
+  if (t.kind !== "open") return [];
+  return t.journalNames
+    .map((name) => journals.get(name).getOrUndefined())
+    .filter((config): config is JournalConfig => config !== undefined);
+});
 
-// Offering to explain decorations this row deliberately renders none of would be
+// A segment decorates from its own resolved link target rather than the block's period —
+// see segment-decoration.ts for the fixed/interval scope split this depends on.
+const decorationCell = computed(() =>
+  segmentDecorationCell(
+    props.segment,
+    props.journal,
+    targetJournals.value,
+    (n, d) => cycle.anchorOf(n, d),
+    resolved.value.date,
+    props.refDate,
+  ),
+);
+const decorationScope = computed(() =>
+  decorationCell.value?.scopeKind === "interval" ? navSegmentIntervalScope : navSegmentFixedScope,
+);
+
+// Both scopes are injected unconditionally at setup so the choice between them can stay a
+// plain computed — inject() itself must run synchronously during setup, not lazily.
+const fixedCells = inject(navSegmentFixedScope.map, null);
+const intervalCells = inject(navSegmentIntervalScope.map, null);
+const fixedDecorationItems = useDecorationMenuItems(fixedCells, () => props.shelf ?? null);
+const intervalDecorationItems = useDecorationMenuItems(intervalCells, () => props.shelf ?? null);
+
+// Offering to explain decorations this segment deliberately renders none of would be
 // incoherent from the user's side, so the menu item tracks the same flag the template does.
-function contextMenuItems(period: Period): readonly MenuItemSpec[] {
+function contextMenuItems(): readonly MenuItemSpec[] {
   if (!props.segment.addDecorations) return [];
-  // A custom journal's row IS the interval, and an interval is a "day"-kind period at its
+  const cell = decorationCell.value;
+  if (!cell) return [];
+  // A custom journal's target IS the interval, and an interval is a "day"-kind period at its
   // start anchor — indistinguishable from the day cell without saying so here.
-  return props.journal.write.type === "custom"
-    ? decorationItems({ kind: "interval", period, journalName: props.journal.name })
-    : decorationItems({ kind: "fixed", period });
+  return cell.scopeKind === "interval"
+    ? intervalDecorationItems({
+        kind: "interval",
+        period: cell.period,
+        journalName: cell.journalNames.at(0) ?? props.journal.name,
+      })
+    : fixedDecorationItems({ kind: "fixed", period: cell.period });
 }
 
 const text = computed(() =>
@@ -145,7 +172,7 @@ function onClick(event: MouseEvent): void {
 
 function onContextMenu(event: MouseEvent): void {
   if (props.preventNavigation) return;
-  workspace.openPathsMenu(pathsForTarget(target.value), event, contextMenuItems(props.period));
+  workspace.openPathsMenu(pathsForTarget(target.value), event, contextMenuItems());
 }
 
 const hover = useModifierHoverPreview();
@@ -165,7 +192,9 @@ function onPointerEnter(event: PointerEvent): void {
     @pointerenter="onPointerEnter"
     @pointerleave="hover.leave()"
   >
-    <CellDecoration v-if="segment.addDecorations" :period="period" :scope="decorationScope">{{ text }}</CellDecoration>
+    <CellDecoration v-if="segment.addDecorations" :period="decorationCell?.period ?? period" :scope="decorationScope">
+      {{ text }}
+    </CellDecoration>
     <template v-else>{{ text }}</template>
   </div>
 </template>
