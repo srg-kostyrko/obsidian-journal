@@ -525,6 +525,75 @@ describe("settings", () => {
         return now[0] === secondId && now[1] === firstId;
       }, "drag reorder did not persist a swapped toolbar item order");
     });
+
+    it("moves a segment across lines via SortableJS drag, merging it onto the target line", async () => {
+      // year-nav ships with two lines: line 0 holds the Q1/Q2 segments (data-id "0:0"/"0:1"),
+      // line 1 holds a single "{{date:YYYY}}" segment (data-id "1:0") — see the fixture's
+      // data.json. Both lines share NavBlockLinesEditor's per-journal dragGroup, so SortableJS
+      // treats them as one cross-container drop target.
+      await openJournalSubpage("nav-dates", "year-nav");
+      await expandSection(m.nav_block_section_title());
+      await $('.nav-block-preview .nav-row[data-id="1:0"]').waitForExist({
+        timeoutMsg: "navigation block preview did not mount its second line",
+      });
+      await $('.nav-block-preview .nav-row[data-id="0:0"]').waitForExist({
+        timeoutMsg: "navigation block preview did not mount its first line",
+      });
+
+      // Same native-HTML5-drag recipe as the toolbar reorder above — this composable
+      // (useSortableList) backs both. The `.nav-row` element is its own drag handle.
+      await browser.execute(async () => {
+        const sourceFrame = document.querySelector<HTMLElement>('.nav-block-preview .nav-row[data-id="1:0"]');
+        const targetFrame = document.querySelector<HTMLElement>('.nav-block-preview .nav-row[data-id="0:0"]');
+        // Both rows are confirmed present by the waitForExist calls above this execute block;
+        // this narrows the querySelector type without a raw throw inside the stringified callback.
+        if (!sourceFrame || !targetFrame) return;
+
+        const centerOf = (el: HTMLElement): { x: number; y: number } => {
+          const rect = el.getBoundingClientRect();
+          return { x: rect.left + rect.width / 2, y: rect.top + rect.height / 2 };
+        };
+        const source = centerOf(sourceFrame);
+        const target = centerOf(targetFrame);
+        const dataTransfer = new DataTransfer();
+
+        const firePointer = (el: HTMLElement, type: string, point: { x: number; y: number }): void => {
+          el.dispatchEvent(
+            new PointerEvent(type, { bubbles: true, cancelable: true, clientX: point.x, clientY: point.y }),
+          );
+        };
+        const fireDrag = (el: HTMLElement, type: string, point: { x: number; y: number }): void => {
+          el.dispatchEvent(
+            new DragEvent(type, {
+              bubbles: true,
+              cancelable: true,
+              dataTransfer,
+              clientX: point.x,
+              clientY: point.y,
+            }),
+          );
+        };
+
+        firePointer(sourceFrame, "pointerdown", source);
+        fireDrag(sourceFrame, "dragstart", source);
+        await new Promise<void>((resolve) => requestAnimationFrame(() => resolve()));
+        await new Promise<void>((resolve) => requestAnimationFrame(() => resolve()));
+        fireDrag(targetFrame, "dragenter", target);
+        fireDrag(targetFrame, "dragover", target);
+        await new Promise<void>((resolve) => requestAnimationFrame(() => resolve()));
+        fireDrag(targetFrame, "dragover", target);
+        fireDrag(targetFrame, "drop", target);
+        fireDrag(sourceFrame, "dragend", target);
+        firePointer(sourceFrame, "pointerup", target);
+      });
+
+      // applySegmentReorder prunes a line once it's emptied by the drag, so a successful
+      // cross-line move collapses the two lines into one holding all three segments.
+      await waitForSettings((s) => {
+        const lines = s.journals?.["year-nav"]?.navBlock?.lines ?? [];
+        return lines.length === 1 && lines[0]?.length === 3;
+      }, "cross-line segment drag did not persist a merged line");
+    });
   });
 
   describe("decorations", () => {
