@@ -1,6 +1,9 @@
 {
   "extends": "@tsconfig/node22/tsconfig.json",
-  "include": ["wdio.conf.mts", "e2e/**/*.ts", "src/i18n/paraglide/**/*.js"],
+  // src/settings/version.ts is listed for the same reason as the paraglide messages: the
+  // migration specs assert the shipped constant rather than retyping it, and this is a
+  // composite project, so an imported file outside `include` raises TS6307 on every file here.
+  "include": ["wdio.conf.mts", "e2e/**/*.ts", "src/i18n/paraglide/**/*.js", "src/settings/version.ts"],
   "compilerOptions": {
     "composite": true,
     "noEmit": true,

@@ -778,9 +778,10 @@
       },
       "folder": "Yearly",
       "timeline": {
-        "start": "",
+        "start": "2025-01-01",
         "end": {
-          "kind": "never"
+          "kind": "date",
+          "date": "2025-12-31"
         }
       },
       "dateFormat": "YYYY",
@@ -866,9 +867,10 @@
       },
       "folder": "Quarterly",
       "timeline": {
-        "start": "",
+        "start": "2025-01-01",
         "end": {
-          "kind": "never"
+          "kind": "date",
+          "date": "2025-12-31"
         }
       },
       "dateFormat": "YYYY-[Q]Q",

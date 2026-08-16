@@ -641,6 +641,11 @@ describe("settings", () => {
         fireDrag(zone, "dragenter", to);
         fireDrag(zone, "dragover", to);
         await new Promise<void>((resolve) => requestAnimationFrame(() => resolve()));
+        // SortableJS's first dragover after entering a container only sets its state up; the
+        // node is parked on a later one. One dragover is enough on a fast machine and is not
+        // on CI, so drive a second rather than racing it — the sibling drag test does the same.
+        fireDrag(zone, "dragover", to);
+        await new Promise<void>((resolve) => requestAnimationFrame(() => resolve()));
         const all = [...document.querySelectorAll<HTMLElement>(".nav-line-drop")];
         const armed = {
           occupied: all.filter((z) => z.childElementCount > 0).length,

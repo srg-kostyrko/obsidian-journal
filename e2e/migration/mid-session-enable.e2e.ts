@@ -24,6 +24,6 @@ describe("legacy upgrade on mid-session enable", () => {
   });
 
   it("upgrades the stored data.json when enabled after startup is complete", async () => {
-    await waitForSettingsVersion(4);
+    await waitForSettingsVersion();
   });
 });
