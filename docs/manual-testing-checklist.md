@@ -635,6 +635,21 @@ preview.
 - [x] Nav block **type = existing** → prev/next only reach periods that already have
       notes.
 - [x] Edit a row via its edit-row modal → change persists in the rendered block.
+- [ ] Journal settings → nav block editor → **click a segment** in the live
+      preview → opens the segment edit modal (not navigation).
+- [ ] **Keyboard edit path** → Tab/focus a segment in the editor preview, press
+      Enter or Space → opens the same edit modal as a click.
+- [ ] **Drag within a line** → reorder two segments on the same line by dragging
+      one past the other.
+- [ ] **Drag across lines** → drag a segment from one line onto another line →
+      it joins that line at the drop position.
+- [ ] **Split a line via the gap drop zone** → drag a segment into the gap
+      between two lines (including the leading gap above the first line) → it
+      becomes its own new line at that position.
+- [ ] **Auto-pruned empty line** → drag the only segment out of a line → the
+      now-empty line disappears with no leftover placeholder.
+- [ ] **Link date field** → set a link date like `+1q` on a segment → the
+      resolved-date hint updates; leaving it empty shows no hint.
 
 ### calendar-timeline
 
@@ -968,6 +983,13 @@ covered.
 - [x] Existing notes in a migrated vault still **open and navigate**.
 - [x] (v1→v2 migration is **non-interactive** in v3 by design — confirm, don't
       file as a bug.)
+- [ ] **v4 → v5** — open a 3.0.x vault (shipped before nav lines/link dates) and
+      confirm every `navBlock`/`intervalBlock` renders **identically** to before:
+      each old row becomes a one-segment line, in the same order, same styling,
+      same links, with `linkDate` empty.
+- [ ] **v4 → v5** — re-running the migration on an already-`lines`-shaped block
+      (a hand-authored v5 fixture, or a second load) does not wipe it back to
+      empty.
 
 ---
 

@@ -249,9 +249,8 @@ on it.
 - Modal forms are composed entirely from `UiSettingRow`: one row per field, its
   errors in the `#description` slot as
   `<span v-for="error of errorBag.<field>" class="<feature>-form-error">`
-  (`journal-`, `shelf-`, `view-`, `command-`, `bulk-add-` — twelve of the
-  fourteen sites; `EditNavBlockRowModal.vue` uses a bare `form-error` and is the
-  outlier, not the model), and
+  (`journal-`, `shelf-`, `view-`, `command-`, `bulk-add-`, `nav-` — every site
+  conforms), and
   the action buttons in their own `controls-only` row rather than a bespoke
   wrapper. `errorBag.<field>` is iterated directly — `v-for` over `undefined`
   renders nothing, so no `?? []`.
