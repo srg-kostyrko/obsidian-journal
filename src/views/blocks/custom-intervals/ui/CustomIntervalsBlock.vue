@@ -77,27 +77,13 @@ const sections = computed<readonly Section[]>(() => {
   return out;
 });
 
-// Each interval is a "day"-kind period at its start anchor, so the engine and CellDecoration
-// agree on the cell key; scoping to the rendered custom journals keeps fixed-period decorations
-// (which live on the calendar grid) out of the interval list.
-useCellDecorations({
-  periods: () =>
-    sections.value.flatMap((section) =>
-      section.entries.map((entry) => periodForJournal(section.journal.write, entry.anchor)),
-    ),
-  journalNames: () => sections.value.map((section) => section.journalName),
-  scope: navSegmentIntervalScope,
-  // Offset decorations mark single days inside an interval; they render on the day
-  // calendar grid, never on the whole-interval row.
-  filter: (binding) => !hasOffsetCondition(binding.decoration),
-});
-
 // intervalBlock segments are edited through the same segment editor as navBlock's, so one can
-// carry any link kind — a non-self link resolves to a fixed-period target, which the interval
-// scope above does not register. Without this, that segment injects null and paints nothing,
-// silently. See segment-decoration.ts: entry is irrelevant to the resolved cell, so
-// Option.none() is safe here even though there's no single "note behind this row".
-const fixedCells = computed<readonly SegmentDecorationCell[]>(() => {
+// carry any link kind — a non-self link resolves to a fixed-period target, or to another custom
+// journal's own interval anchor, neither of which the raw section periods below cover. Without
+// this, that segment injects null and paints nothing, silently. See segment-decoration.ts: entry
+// is irrelevant to the resolved cell, so Option.none() is safe here even though there's no single
+// "note behind this row".
+const segmentCells = computed<readonly SegmentDecorationCell[]>(() => {
   const all = [...journalsRepo.find().list()];
   const shelfList = [...shelvesRepo.find().list()];
   const out: SegmentDecorationCell[] = [];
@@ -115,12 +101,39 @@ const fixedCells = computed<readonly SegmentDecorationCell[]>(() => {
             entry.anchor,
             cycle,
           );
-          if (cell?.scopeKind === "fixed") out.push(cell);
+          if (cell) out.push(cell);
         }
       }
     }
   }
   return out;
+});
+
+const fixedCells = computed(() => segmentCells.value.filter((cell) => cell.scopeKind === "fixed"));
+const intervalCells = computed(() => segmentCells.value.filter((cell) => cell.scopeKind === "interval"));
+
+// Each interval is a "day"-kind period at its start anchor, so the engine and CellDecoration
+// agree on the cell key; scoping to the rendered custom journals keeps fixed-period decorations
+// (which live on the calendar grid) out of the interval list. Union in the segment-derived
+// interval cells too: a segment can link to another custom journal or a shifted self that
+// resolves to an anchor outside the rendered window, which the raw section periods don't cover.
+useCellDecorations({
+  periods: () => [
+    ...sections.value.flatMap((section) =>
+      section.entries.map((entry) => periodForJournal(section.journal.write, entry.anchor)),
+    ),
+    ...intervalCells.value.map((cell) => cell.period),
+  ],
+  journalNames: () => [
+    ...new Set([
+      ...sections.value.map((section) => section.journalName),
+      ...intervalCells.value.flatMap((cell) => cell.journalNames),
+    ]),
+  ],
+  scope: navSegmentIntervalScope,
+  // Offset decorations mark single days inside an interval; they render on the day
+  // calendar grid, never on the whole-interval row.
+  filter: (binding) => !hasOffsetCondition(binding.decoration),
 });
 
 useCellDecorations({

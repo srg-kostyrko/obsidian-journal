@@ -152,20 +152,31 @@ describe("CustomIntervalsBlock fixed-scope decoration", () => {
     expect(cells?.get(key)?.value.some((style) => style.type === "corner")).toBe(true);
   });
 
-  it("leaves the interval scope registering only the raw section periods, unaffected by the fixed-target segment", () => {
+  it("registers another custom journal's own interval anchor for a journal-linked interval segment, not only the raw section periods", () => {
     SCOPE.custom = ["sprint"];
     JOURNALS.sprint = customJournal("sprint", "week", 1, "2026-01-05", {
       intervalBlock: {
         type: "create",
         decorateWholeBlock: false,
-        lines: [[segment({ template: "{{date:YYYY}}", link: "year", addDecorations: true })]],
+        lines: [[segment({ template: "{{date:YYYY}}", link: "journal", journal: "sprint2", addDecorations: true })]],
       },
     });
-    JOURNALS.yearly = journalDefaultsFor({ type: "year" }, "yearly");
+    // A different weekly schedule so its resolved anchor never coincides with one of sprint's
+    // own raw section anchors — proving the cell comes from the segment's target resolution,
+    // not the section periods sprint itself already registers.
+    JOURNALS.sprint2 = customJournal("sprint2", "week", 1, "2026-01-01", {
+      decorations: [
+        buildDecoration({
+          conditions: [buildCondition("date")],
+          styles: [buildStyle("corner", { placement: "top-left" })],
+        }),
+      ],
+    });
 
     mountBlock({ window: "month" }, { refDate: ref("2026-05-15" as AnchorString) });
 
-    const key = cellKey("year", "2026-01-01" as AnchorString);
-    expect(CAPTURED.interval?.has(key)).toBe(false);
+    const cells = CAPTURED.interval;
+    expect(cells).not.toBeNull();
+    expect([...(cells?.values() ?? [])].some((ref) => ref.value.some((style) => style.type === "corner"))).toBe(true);
   });
 });
