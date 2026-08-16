@@ -13,7 +13,10 @@ const emit = defineEmits<{ drop: [orderedIds: string[]] }>();
 const zoneEl = ref<HTMLElement | null>(null);
 const empty = ref<{ id: string }[]>([]);
 
-useSortableList(zoneEl, empty, (orderedIds) => emit("drop", orderedIds), { group: props.group });
+useSortableList(zoneEl, empty, (orderedIds) => emit("drop", orderedIds), {
+  group: props.group,
+  draggable: ".nav-row",
+});
 </script>
 
 <template>

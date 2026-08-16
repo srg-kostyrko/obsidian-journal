@@ -143,13 +143,14 @@ function reorderSegments(targetLine: number, orderedIds: string[]): void {
         editable
         @edit="editSegment"
       >
-        <template #lineAction="{ index, isFirst, isLast }">
+        <template #lineAction="{ index, isFirst, isLast, lineEl }">
           <NavBlockLineGutter
             :line-index="index"
             :segment-count="config[field].lines[index]?.length ?? 0"
             :is-first="isFirst"
             :is-last="isLast"
             :group="dragGroup"
+            :line-el="lineEl"
             @move-up="moveUp(index)"
             @move-down="moveDown(index)"
             @add-segment="addSegment(index)"

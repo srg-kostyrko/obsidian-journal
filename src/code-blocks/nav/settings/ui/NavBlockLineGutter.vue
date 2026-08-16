@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { computed, ref, watch } from "vue";
+import { computed } from "vue";
 
 import { m } from "@/i18n";
 import { icons } from "@/ui/icons";
@@ -12,6 +12,7 @@ const props = defineProps<{
   isFirst: boolean;
   isLast: boolean;
   group: string;
+  lineEl: HTMLElement | null;
 }>();
 
 const emit = defineEmits<{
@@ -24,11 +25,6 @@ const emit = defineEmits<{
   dragEnd: [];
 }>();
 
-// Rendered through NavBlock's lineAction slot, the gutter's own root is a child of the line's
-// container — the element useSortableList needs to manage that line's segments as one group.
-const rootEl = ref<HTMLElement | null>(null);
-const lineEl = computed(() => rootEl.value?.parentElement ?? null);
-
 // A computed, not a watch keyed on segmentCount alone: this instance is reused by position
 // (NavBlock's lines are keyed by index), so lineIndex can change under it independently of
 // segmentCount — both must stay live inputs or the synthesized ids go stale.
@@ -36,18 +32,17 @@ const segmentsVm = computed(() =>
   Array.from({ length: props.segmentCount }, (_, segmentIndex) => ({ id: `${props.lineIndex}:${segmentIndex}` })),
 );
 
-const { dragging } = useSortableList(lineEl, segmentsVm, (orderedIds) => emit("reorder", orderedIds), {
+const lineEl = computed(() => props.lineEl);
+useSortableList(lineEl, segmentsVm, (orderedIds) => emit("reorder", orderedIds), {
   group: props.group,
   draggable: ".nav-row",
-});
-watch(dragging, (isDragging) => {
-  if (isDragging) emit("dragStart");
-  else emit("dragEnd");
+  onDragStart: () => emit("dragStart"),
+  onDragEnd: () => emit("dragEnd"),
 });
 </script>
 
 <template>
-  <span ref="rootEl" class="nav-line-gutter">
+  <span class="nav-line-gutter">
     <UiIconButton
       :icon="icons.action.moveUp"
       :tooltip="m.common_action_move_up()"

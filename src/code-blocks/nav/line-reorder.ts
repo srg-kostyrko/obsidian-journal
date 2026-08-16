@@ -1,11 +1,6 @@
 import type { NavBlockSegment } from "@/journals";
 
-// ids are "<lineIndex>:<segmentIndex>" against the pre-drag lines. A drop always names a
-// target line to insert a fresh slot at (splice, not overwrite) — a join reads as an insert
-// too because the target's own untouched segments are already part of orderedIds (SortableJS
-// hands back the full post-drop DOM order of whatever container received the drop), so the
-// freshly inserted slot ends up holding exactly that line's full new content. Lines left empty
-// by the move, including one displaced by the insert, are dropped at the end.
+// ids are "<lineIndex>:<segmentIndex>" against the pre-drag lines.
 export function applySegmentReorder(
   lines: readonly (readonly NavBlockSegment[])[],
   targetLine: number,

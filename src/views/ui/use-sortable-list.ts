@@ -8,11 +8,19 @@ export interface SortableListOptions {
   // Restricts which direct children SortableJS treats as items, so non-item content sharing
   // the same container (e.g. a trailing toolbar) never becomes part of the drag order.
   draggable?: string;
+  // Called synchronously from SortableJS's own callbacks, never through `dragging` plus a
+  // `watch` — a watch is a queued job, and a drag that empties its own source container can
+  // have that container's component unmounted (stopping its effect scope) before the queued
+  // job runs, silently swallowing the event.
+  onDragStart?: () => void;
+  onDragEnd?: () => void;
 }
 
 function idsInDomOrder(container: HTMLElement): string[] {
+  // Plain instanceof, not Obsidian's cross-window-safe .instanceOf(): that method only
+  // exists once the real app installs it, so it throws under the test environment's DOM.
   return Array.from(container.children, (child) =>
-    child.instanceOf(HTMLElement) ? child.dataset.id : undefined,
+    child instanceof HTMLElement ? child.dataset.id : undefined,
   ).filter((id): id is string => id !== undefined);
 }
 
@@ -24,20 +32,31 @@ export function useSortableList<T extends { id: string }>(
 ): { dragging: Ref<boolean> } {
   const dragging = ref(false);
   useSortable(el, list, {
+    // `el` can still be null at this component's own mount (e.g. an element owned by an
+    // ancestor and handed down through props/slots, not yet propagated on the first render);
+    // watchElement re-initializes Sortable once it resolves instead of a one-shot mount read.
+    watchElement: true,
     handle: "[data-drag-handle]",
     animation: 150,
-    group: options.group,
-    draggable: options.draggable,
+    // SortableJS applies its own default for an option only when the key is absent
+    // (`!(name in options)`), so passing `group: undefined`/`draggable: undefined` outright —
+    // rather than omitting the key — suppresses its `draggable: '>*'` default and breaks
+    // dragging for every caller that doesn't pass these, not just the ones that do.
+    ...(options.group !== undefined && { group: options.group }),
+    ...(options.draggable !== undefined && { draggable: options.draggable }),
     onStart: () => {
       dragging.value = true;
+      options.onDragStart?.();
     },
     // useSortable's default onUpdate applies the reordered array to `list` only on
     // nextTick, but SortableJS fires onEnd synchronously — reading `list.value` here
     // would see the pre-drag order. Derive the new order from the drag indices instead.
-    // SortableJS never fires 'end' for a cross-container move (only 'add'/'remove'/'sort'),
-    // so this only ever runs for a same-container reorder; onAdd below covers the rest.
+    // onEnd always fires on the drag's source instance, cross-container or not; the
+    // from/to guard is what actually distinguishes a cross-container drop (handled by
+    // onAdd below instead, since only the target instance can see the final DOM order).
     onEnd: (event) => {
       dragging.value = false;
+      options.onDragEnd?.();
       const { oldIndex, newIndex, from, to } = event;
       if (from !== to) return;
       if (oldIndex === undefined || newIndex === undefined || oldIndex === newIndex) return;
@@ -52,17 +71,13 @@ export function useSortableList<T extends { id: string }>(
     // (driven by onReorder mutating the source data) is the only thing that ever actually
     // moves a Vue-owned DOM node. Left un-reverted, the raw node SortableJS moved would sit
     // in the target as an untracked orphan, invisible to Vue's own diffing.
-    onAdd: options.group
-      ? (event) => {
-          dragging.value = false;
-          const orderedIds = idsInDomOrder(event.to);
-          event.item.remove();
-          event.from.insertBefore(event.item, event.from.children[event.oldIndex ?? 0] ?? null);
-          onReorder(orderedIds);
-        }
-      : undefined,
-    onRemove: () => {
+    onAdd: (event) => {
+      if (!options.group) return;
       dragging.value = false;
+      const orderedIds = idsInDomOrder(event.to);
+      event.item.remove();
+      event.from.insertBefore(event.item, event.from.children[event.oldIndex ?? 0] ?? null);
+      onReorder(orderedIds);
     },
   });
   return { dragging };

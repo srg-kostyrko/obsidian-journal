@@ -48,11 +48,6 @@ describe("applySegmentReorder", () => {
     expect(applySegmentReorder([[a], [b], [c]], 2, ["2:0", "1:0"])).toEqual([[a], [c, b]]);
   });
 
-  // Not in the brief: the given Step-3 sketch only ever appends a fresh line at the very
-  // end (targetLine === lines.length) or overwrites an existing line whose full content is
-  // already reflected in orderedIds (a join). Dropping into a gap strictly between two
-  // untouched lines needs a genuine insert, or the line already sitting at that index gets
-  // clobbered. This is the case the brief's own "mid-list line drop" warning points at.
   it("inserts a new line into a gap without clobbering the line already there", () => {
     expect(applySegmentReorder([[a, b], [c]], 1, ["0:0"])).toEqual([[b], [a], [c]]);
   });
