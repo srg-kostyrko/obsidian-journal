@@ -9,7 +9,10 @@ function toLines(block: OldBlock): Record<string, unknown> {
   const { rows, ...rest } = block;
   // A block with no `rows` but an existing `lines` array is already v5-shaped (a hand-authored
   // fixture staged ahead of a version bump, or a future migration run twice); rebuilding `lines`
-  // from a missing `rows` would silently wipe it back to empty.
+  // from a missing `rows` would silently wipe it back to empty. This is a recorded exception for
+  // that one shape, not generic defensiveness: when both keys are present, `rows` still wins
+  // below and overwrites whatever `lines` already held, since a v4 payload is never expected to
+  // carry a `lines` array of its own.
   if (!Array.isArray(rows)) return "lines" in rest ? rest : { ...rest, lines: [] };
   return { ...rest, lines: rows.map((row) => [{ ...(row as Record<string, unknown>), linkDate: "" }]) };
 }

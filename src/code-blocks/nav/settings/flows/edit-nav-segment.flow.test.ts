@@ -90,9 +90,9 @@ describe("EditNavBlockSegmentFlow", () => {
     const { flows } = build({ daily: buildJournal("daily", [[segA]]) });
     const result = await flows.invoke(EditNavBlockSegmentFlow, { journalName: "daily", lineIndex: 5 });
     expect(result.kind === "err" && result.error).toBeInstanceOf(NavSegmentLifecycleFlowError);
-    expect(result.kind === "err" && (result.error as NavSegmentLifecycleFlowError).cause).toBeInstanceOf(
-      UnknownNavSegmentError,
-    );
+    const cause = result.kind === "err" && (result.error as NavSegmentLifecycleFlowError).cause;
+    expect(cause).toBeInstanceOf(UnknownNavSegmentError);
+    expect((cause as UnknownNavSegmentError).target).toBe("line");
   });
 
   it("errors for a segment index out of range", async () => {
@@ -103,9 +103,9 @@ describe("EditNavBlockSegmentFlow", () => {
       segmentIndex: 4,
     });
     expect(result.kind === "err" && result.error).toBeInstanceOf(NavSegmentLifecycleFlowError);
-    expect(result.kind === "err" && (result.error as NavSegmentLifecycleFlowError).cause).toBeInstanceOf(
-      UnknownNavSegmentError,
-    );
+    const cause = result.kind === "err" && (result.error as NavSegmentLifecycleFlowError).cause;
+    expect(cause).toBeInstanceOf(UnknownNavSegmentError);
+    expect((cause as UnknownNavSegmentError).target).toBe("segment");
   });
 
   it("returns UserAborted when the modal is cancelled", async () => {

@@ -22,6 +22,9 @@ export class NavReferenceIntegrity {
         segment.journal === name ? { ...segment, link: "none" as const, journal: "" } : segment,
       );
     });
+    // No "cloned" handler: a clone's own segments point at other journals and stay valid, and
+    // the segment editor already excludes self-references. Recorded here as a decision, not an
+    // omission — mirroring ShelvesService without a "cloned" handler would be an oversight.
   }
 
   #rewrite(map: (segment: NavBlockSegment) => NavBlockSegment): void {

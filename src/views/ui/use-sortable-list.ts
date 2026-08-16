@@ -38,6 +38,15 @@ export function useSortableList<T extends { id: string }>(
     watchElement: true,
     handle: "[data-drag-handle]",
     animation: 150,
+    // useSortable's own default onUpdate writes the reordered array back into `list` via
+    // moveArrayElement — but onEnd/onAdd below already derive and apply the real reorder from
+    // drag indices, so that write is both redundant and, whenever a caller's `list` is a
+    // computed view-model (no setter), a "computed value is readonly" warning on every
+    // same-container drag. No-op it unconditionally rather than relying on every caller to
+    // remember `list` must be writable.
+    onUpdate: () => {
+      // Deliberately empty — see comment above.
+    },
     // SortableJS applies its own default for an option only when the key is absent
     // (`!(name in options)`), so passing `group: undefined`/`draggable: undefined` outright —
     // rather than omitting the key — suppresses its `draggable: '>*'` default and breaks

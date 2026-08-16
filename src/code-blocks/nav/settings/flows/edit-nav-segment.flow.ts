@@ -37,11 +37,15 @@ export class EditNavBlockSegmentFlow implements Flow<
     const config = configOption.value;
     const { lineIndex, segmentIndex } = parameters;
     if (lineIndex !== undefined && (lineIndex < 0 || lineIndex >= config[field].lines.length)) {
-      return AsyncResult.err(toNavSegmentFlowError(new UnknownNavSegmentError(parameters.journalName, lineIndex)));
+      return AsyncResult.err(
+        toNavSegmentFlowError(new UnknownNavSegmentError(parameters.journalName, "line", lineIndex)),
+      );
     }
     const line = lineIndex === undefined ? undefined : config[field].lines[lineIndex];
     if (line && segmentIndex !== undefined && (segmentIndex < 0 || segmentIndex >= line.length)) {
-      return AsyncResult.err(toNavSegmentFlowError(new UnknownNavSegmentError(parameters.journalName, segmentIndex)));
+      return AsyncResult.err(
+        toNavSegmentFlowError(new UnknownNavSegmentError(parameters.journalName, "segment", segmentIndex)),
+      );
     }
     const existing = line && segmentIndex !== undefined ? line[segmentIndex] : undefined;
     return attempt.in(this, async function* (this: EditNavBlockSegmentFlow) {

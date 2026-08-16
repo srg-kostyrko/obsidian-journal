@@ -142,8 +142,23 @@ describe("segmentDecorationCell", () => {
     expect(cell).toEqual({ period: dayPeriod("2024-08-15"), journalNames: ["daily"], scopeKind: "fixed" });
   });
 
-  it("returns null when no target journal resolves an anchor", () => {
+  it("returns null when the target list is empty", () => {
     expect(segmentDecorationCell(segment({ link: "year" }), daily, [daily], [], anchorOf, DATE, REF, false)).toBeNull();
+  });
+
+  it("returns null when the target journal's own anchor lookup resolves to none", () => {
+    const monthly = journal("monthly", "month");
+    const cell = segmentDecorationCell(
+      segment({ link: "month" }),
+      daily,
+      [daily],
+      [monthly],
+      anchorOf,
+      DATE,
+      REF,
+      false,
+    );
+    expect(cell).toBeNull();
   });
 });
 

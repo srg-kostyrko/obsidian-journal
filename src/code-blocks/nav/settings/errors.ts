@@ -4,9 +4,13 @@ export class UnknownNavSegmentError extends Error {
   readonly kind = "unknown-nav-segment" as const;
   constructor(
     public readonly journalName: string,
+    // Which kind of index was out of range — a line index and a segment index are validated
+    // separately in edit-nav-segment.flow.ts, and without this the message can't say which one
+    // actually failed.
+    public readonly target: "line" | "segment",
     public readonly index: number,
   ) {
-    super(`Nav block segment not found: journal=${journalName} index=${index}`);
+    super(`Nav block ${target} not found: journal=${journalName} index=${index}`);
     this.name = "UnknownNavSegmentError";
   }
 }

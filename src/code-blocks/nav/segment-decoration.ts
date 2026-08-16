@@ -30,6 +30,10 @@ export function segmentDecorationCell(
   // so it falls into the target-resolution branch below instead.
   const isHostLike = segment.link === "none" || (segment.link === "self" && !shifted);
   const journals = isHostLike ? sameWriteTypeJournals : targetJournals;
+  // journals.at(0) is safe here: a period-kind link (day…year) selects one write type, a
+  // "journal" link selects one journal, and a shifted self selects the host — every non-host-like
+  // branch narrows to a single-write-type target list, so anchor/write/period all come from one
+  // representative journal even while journalNames below still reports every name in the list.
   const anchorJournal = isHostLike ? hostJournal : journals.at(0);
   const anchoredTo = isHostLike ? CalendarDate.fromAnchor(refDate) : date;
   if (!anchorJournal) return null;
