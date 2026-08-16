@@ -4,6 +4,7 @@ import "./styles.css";
 
 import { CalendarModule, calendarSettingsModule } from "@/calendar";
 import { codeBlocksModule } from "@/code-blocks";
+import { NavReferenceIntegrity } from "@/code-blocks/nav/nav-reference-integrity";
 import { navBlockSettingsModule } from "@/code-blocks/nav/settings/module";
 import { commandsModule } from "@/commands";
 import { DynamicCommandRegistry } from "@/commands/command-registry";
@@ -53,6 +54,7 @@ export default class JournalPlugin extends Plugin {
     container.addModule(viewsModule);
     container.addModule(codeBlocksModule);
     container.addModule(navBlockSettingsModule);
+    container.register(NavReferenceIntegrity).useClass(NavReferenceIntegrity).eager();
     container.addModule(commandsModule);
     container.addModule(startupModule);
     container.addModule(loggingModule);
