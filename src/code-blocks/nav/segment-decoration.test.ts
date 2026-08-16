@@ -63,7 +63,27 @@ const anchorOf = (name: string, date: CalendarDate): Option<AnchorString> =>
 describe("segmentDecorationCell", () => {
   it("decorates a self segment as the host period, drawing on the host alone when no shelf mate shares its write type", () => {
     const cell = segmentDecorationCell(segment({ link: "self" }), daily, [daily], [], anchorOf, DATE, REF, false);
-    expect(cell).toEqual({ period: dayPeriod("2025-08-15"), journalNames: ["daily"], scopeKind: "fixed" });
+    expect(cell).toEqual({
+      period: dayPeriod("2025-08-15"),
+      journalNames: ["daily"],
+      scopeKind: "fixed",
+      anchorJournalName: "daily",
+    });
+  });
+
+  it("anchors a host-like segment to the host even when an earlier journal shares its write type", () => {
+    const cycles = journal("cycles", "custom");
+    const cell = segmentDecorationCell(
+      segment({ link: "self" }),
+      sprint,
+      [cycles, sprint],
+      [],
+      anchorOf,
+      DATE,
+      REF,
+      false,
+    );
+    expect(cell?.anchorJournalName).toBe("sprint");
   });
 
   it("decorates an unshifted self segment from every same-write-type journal in scope, not just the host", () => {
@@ -97,7 +117,12 @@ describe("segmentDecorationCell", () => {
 
   it("decorates a year-link segment from the year journals at the year period", () => {
     const cell = segmentDecorationCell(segment({ link: "year" }), daily, [daily], [yearly], anchorOf, DATE, REF, false);
-    expect(cell).toEqual({ period: yearPeriod("2025-01-01"), journalNames: ["yearly"], scopeKind: "fixed" });
+    expect(cell).toEqual({
+      period: yearPeriod("2025-01-01"),
+      journalNames: ["yearly"],
+      scopeKind: "fixed",
+      anchorJournalName: "yearly",
+    });
   });
 
   it("routes a custom-journal target into the interval scope", () => {
@@ -139,7 +164,12 @@ describe("segmentDecorationCell", () => {
       REF,
       true,
     );
-    expect(cell).toEqual({ period: dayPeriod("2024-08-15"), journalNames: ["daily"], scopeKind: "fixed" });
+    expect(cell).toEqual({
+      period: dayPeriod("2024-08-15"),
+      journalNames: ["daily"],
+      scopeKind: "fixed",
+      anchorJournalName: "daily",
+    });
   });
 
   it("returns null when the target list is empty", () => {
@@ -176,7 +206,12 @@ describe("resolveSegmentDecoration", () => {
       REF,
       cycle,
     );
-    expect(cell).toEqual({ period: yearPeriod("2025-01-01"), journalNames: ["yearly"], scopeKind: "fixed" });
+    expect(cell).toEqual({
+      period: yearPeriod("2025-01-01"),
+      journalNames: ["yearly"],
+      scopeKind: "fixed",
+      anchorJournalName: "yearly",
+    });
   });
 
   it("decorates an unshifted self segment from every same-write-type shelf mate", () => {
@@ -215,6 +250,11 @@ describe("resolveSegmentDecoration", () => {
       "2025-08-15" as AnchorString,
       cycle,
     );
-    expect(cell).toEqual({ period: dayPeriod("2024-08-15"), journalNames: ["daily"], scopeKind: "fixed" });
+    expect(cell).toEqual({
+      period: dayPeriod("2024-08-15"),
+      journalNames: ["daily"],
+      scopeKind: "fixed",
+      anchorJournalName: "daily",
+    });
   });
 });

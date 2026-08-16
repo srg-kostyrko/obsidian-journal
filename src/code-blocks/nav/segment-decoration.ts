@@ -11,6 +11,11 @@ export interface SegmentDecorationCell {
   readonly period: Period;
   readonly journalNames: readonly string[];
   readonly scopeKind: "fixed" | "interval";
+  // Which journal the period is anchored to. Distinct from journalNames, which reports every
+  // journal whose decorations reach the cell: on a host-like segment that list is every
+  // same-write-type journal in scope, in repository order, so its first entry need not be the
+  // host. An interval breakdown has to name the journal that owns the interval.
+  readonly anchorJournalName: string;
 }
 
 export function segmentDecorationCell(
@@ -43,6 +48,7 @@ export function segmentDecorationCell(
     period: periodForJournal(anchorJournal.write, anchor.value),
     journalNames: journals.map((journal) => journal.name),
     scopeKind: anchorJournal.write.type === "custom" ? "interval" : "fixed",
+    anchorJournalName: anchorJournal.name,
   };
 }
 

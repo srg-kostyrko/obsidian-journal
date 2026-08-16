@@ -116,7 +116,7 @@ function contextMenuItems(): readonly MenuItemSpec[] {
     ? intervalDecorationItems({
         kind: "interval",
         period: cell.period,
-        journalName: cell.journalNames.at(0) ?? props.journal.name,
+        journalName: cell.anchorJournalName,
       })
     : fixedDecorationItems({ kind: "fixed", period: cell.period });
 }
