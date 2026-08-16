@@ -17,8 +17,8 @@ export const config: WebdriverIO.Config = {
   runner: "local",
   framework: "mocha",
 
-  // Suites are the grouping axis (see docs/e2e-testing-strategy.md). PR and merge
-  // runs name the stable suites; nightly runs the bare glob and so adds `quarantine`.
+  // Suites are the grouping axis (see docs/e2e-testing-strategy.md). Every CI run names
+  // its suites; nightly names `quarantine` too. The bare glob is a local-run convenience.
   specs: ["./e2e/**/*.e2e.ts"],
   suites: {
     smoke: ["./e2e/smoke/**/*.e2e.ts"],
@@ -68,6 +68,19 @@ export const config: WebdriverIO.Config = {
   mochaOpts: {
     ui: "bdd",
     timeout: 60_000,
+  },
+
+  // Obsidian renders menus two ways, and only one of them is a DOM node: `nativeMenus`
+  // defaults on for macOS, and the native path hands the items to Electron, leaving nothing
+  // for `.menu-item-title` to find. Left alone, every menu assertion in the suite passes on
+  // Linux and Windows and fails on macOS as "menu did not open" — a platform accident, not a
+  // finding. Pin the DOM rendering so menu specs mean the same thing on every OS; a spec that
+  // wants the native path opts into it explicitly with e2e/support/native-menu.ts, which
+  // reproduces it on all three. Re-applied per test because reloadObsidian resets the static.
+  beforeTest: async function () {
+    await browser.executeObsidian(({ obsidian }) => {
+      (obsidian as unknown as { Menu: { useNativeMenu: unknown } }).Menu.useNativeMenu = false;
+    });
   },
 
   // Headless CI failures are near-impossible to debug without a capture (see
