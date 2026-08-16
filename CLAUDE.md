@@ -347,14 +347,42 @@ on it.
   contributes only its offset-condition decorations, which mark single days.
   Everything else it defines renders in the interval list. The fixed-only scope
   survives in exactly one consumer, `PeriodButtonsItem.vue`.
-- Whole-block nav decoration is scoped as the _Whole block decoration_ setting
-  in [`README.md`](README.md#navigation-blocks) describes it. Per-row decoration
-  is scoped differently and is the part no doc states: every journal of the same
-  write type in scope — the owning shelf's journals, or all journals when the
-  journal is on no shelf. Both scopes come from v2. The symmetry is tempting and
-  wrong: don't "correct" the per-row scope to shelf-grouped same-type to match
-  the block scope. `NavBlock` is shared with the custom-interval view, so the
-  scope arrives as a prop and is never hardcoded inside it.
+- Whole-block nav decoration draws only on the current journal's own
+  decorations — the _Whole block decoration_ setting in
+  [`README.md`](README.md#navigation-blocks) describes it, and
+  `navBlockDecorationScope` (`decoration-scopes.ts`) is the one map it reads.
+  Per-segment decoration is scoped differently and is the part no doc states,
+  and unlike the block it is not one scope: a segment linked `none`, or an
+  unshifted `self`, decorates as every journal of the same write type in
+  scope — the owning shelf's journals, or all journals when the journal is on
+  no shelf, the pre-existing v2-inherited shape
+  (`segmentDecorationCell` in `src/code-blocks/nav/segment-decoration.ts`).
+  Every other link — `journal`, a fixed-period kind, or a shifted `self` —
+  decorates from its **resolved link target** instead: the journal(s) the
+  segment actually opens, not the host. Both outcomes then split across two
+  provide/inject maps, `navSegmentFixedScope` and `navSegmentIntervalScope`,
+  because a custom journal's interval is a "day"-kind period at its start
+  anchor and would otherwise collide with the genuine day cell there — the
+  same reason the month/week grids above keep custom intervals out of the
+  fixed scope. The block scope and the none/self per-segment scope both come
+  from v2. The symmetry between them is tempting and wrong: don't "correct"
+  the none/self per-segment scope to the block's narrower current-journal-only
+  scope to match it — the shelf-grouped same-write-type set is deliberate and
+  still applies. `NavBlock` is shared with the custom-interval view, so the
+  scope reaching its `CellDecoration` for the block-level draw arrives as a
+  `blockScope` prop (`navSegmentIntervalScope`, for `CustomIntervalsBlock`)
+  and is never hardcoded inside it.
+- A segment's decoration period comes from `segmentDecorationCell`
+  (`src/code-blocks/nav/segment-decoration.ts`), and any period it can return
+  must also be registered in the matching `useCellDecorations` call for that
+  scope kind, or `CellDecoration` renders nothing on the cache miss —
+  silently, no error thrown. `CustomIntervalsBlock.vue` hits this directly:
+  `intervalBlock` segments are edited through the same segment editor as
+  `navBlock`'s, so one can carry any link kind — a non-self link resolves to a
+  **fixed**-period target, which the interval-scope `useCellDecorations` call
+  there does not register. It needs its own fixed-scope call alongside the
+  interval one, registering only the fixed cells (filtered by
+  `cell.scopeKind === "fixed"`), or those segments paint nothing.
 
 ### Deliberate non-bugs
 

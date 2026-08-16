@@ -225,19 +225,22 @@ Each journal configures two row lists, both edited the same way:
 - **Navigation block**: The rows the `journal-nav` code block renders inside a note of this journal. Each journal type ships a sensible default you can reset to.
 - **Calendar interval rows**: The rows a custom-interval journal's entries get in the _Custom intervals_ view block.
 
-Each row is configured with:
+Each row is a **line** of one or more **segments** placed side by side. A line
+starts as a single segment; splitting it off into its own segment (or joining two
+segments back into one, or dragging a segment onto another line) is done from the
+settings preview, not through a separate control. Each segment has its own:
 
-- **Row customization**:
+- Template text with variables (see [Supported variables](#supported-variables))
+- Font size, relative to regular text, plus bold and italic
+- Colors (text and background)
+- Link: none, the segment's own note, another journal's current note, or the note for the containing day, week, month, quarter, or year
+- **Link date**: shift the date the link opens, using the same syntax as template date variables — see [Date modifications](#date-modifications) — for example `+1q` to open next quarter's note instead of this quarter's, or `<startOf=month>` to always land on the first day of the month. Leave it empty to open the date the link would open anyway.
+- Add decorations: apply the matching visual decorations to the segment. A decorated segment shows the decorations of the note its link opens, not the host note's — a row linking to the year journal decorates from the year's own rules, not the day's.
 
-  - Template text with variables (see [Supported variables](#supported-variables))
-  - Font size, relative to regular text, plus bold and italic
-  - Colors (text and background)
-  - Link: none, the row's own note, the journal's current note, or the note for the containing day, week, month, quarter, or year
-  - Add decorations: apply the matching visual decorations to the row
+**Settings**:
 
-- **Settings**:
-  - Mode: create a new note when a row is clicked, or only open notes that already exist
-  - Whole block decoration: decorate the block as a whole from the current journal's rules
+- Mode: create a new note when a segment is clicked, or only open notes that already exist
+- Whole block decoration: decorate the block as a whole from the current journal's rules
 
 ## Compatibility with other plugins
 
