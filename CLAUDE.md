@@ -105,13 +105,19 @@ on it.
   mouse pick. Defer cancel verdicts a microtask.
 - `Menu` has two renderings and they invert the pick/hide order. The DOM menu
   runs the item callback and _then_ `hide()`; the native (Electron) menu hides
-  on `menu-will-close` and delivers the pick over IPC an unbounded number of
-  tasks later, so any "no pick by the time we hid" verdict fires on every pick.
+  on `menu-will-close` and only then lets the pick cross IPC, with **no signal
+  that no pick is coming**. So under the native rendering a close is not a
+  cancel, and any "no pick by the time we hid" verdict fires on every pick.
   Obsidian defaults `nativeMenus` **on for macOS** (`null` config → `true`) and
-  off elsewhere, so this is invisible on Linux and Windows and untestable in
-  e2e. A menu whose result feeds a promise must call `setUseNativeMenu(false)`
-  — `WorkspaceService.pickFromMenu` does. Menus whose items only run side
-  effects (`openPathsMenu`) are order-independent and keep the host default.
+  off elsewhere, so this is invisible on Linux and Windows. Do not "fix" it by
+  forcing `setUseNativeMenu(false)` — that trades the platform's own menu for
+  determinism the design does not need. A close may only _start_ the wait for a
+  pick (`NATIVE_PICK_DELIVERY_GRACE_MS` in `workspace-service.ts`): a late
+  cancel is free because `Flows` logs `UserAborted` and shows nothing and no
+  caller reacts to it, while a dropped pick costs a note. Menus whose items only
+  run side effects (`openPathsMenu`) are order-independent and need none of
+  this. e2e drives both renderings on every OS; see the menu section of
+  [`docs/e2e-testing-strategy.md`](docs/e2e-testing-strategy.md).
 - `focusLeaf` calls `app.setting.close()`, and `setViewState({ active: true })`
   reaches it. `revealLeaf()` alone does not, so a leaf placed as a side effect
   of a settings interaction is placed then revealed, never activated.

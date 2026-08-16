@@ -1,4 +1,4 @@
-import { describe, expect, it } from "vitest";
+import { describe, expect, it, vi } from "vitest";
 
 import { Container } from "@/infrastructure/di";
 import { Some } from "@/infrastructure/result";
@@ -438,7 +438,9 @@ describe("WorkspaceService", () => {
       expect(settled.isOk() && settled.value).toBe("work");
     });
 
-    it("resolves a pick that the host would deliver only after closing the menu", async () => {
+    // Obsidian's native rendering closes the menu before the main process delivers the pick.
+    // The DOM rendering does the opposite. Both must land on the same answer.
+    it("resolves a pick the host delivers only after closing the menu", async () => {
       const { __testing } = await import("obsidian");
       __testing.reset();
 
@@ -450,13 +452,33 @@ describe("WorkspaceService", () => {
       expect(settled.isOk() && settled.value).toBe("work");
     });
 
+    it("resolves a pick the host delivers before closing the menu", async () => {
+      const { __testing } = await import("obsidian");
+      __testing.reset();
+
+      const { service } = build();
+      const result = service.pickFromMenu(["daily", "work"], new MouseEvent("click"));
+      await __testing.lastOpenMenu().setUseNativeMenu(false).pick(1);
+
+      const settled = await result;
+      expect(settled.isOk() && settled.value).toBe("work");
+    });
+
     it("cancels when the menu hides without a pick", async () => {
       const { __testing } = await import("obsidian");
       __testing.reset();
 
       const { service } = build();
       const result = service.pickFromMenu(["daily"], new MouseEvent("click"));
-      __testing.lastOpenMenu().hide();
+      // The verdict waits out the window a native pick could still arrive in, so drive the
+      // clock rather than sitting through it.
+      vi.useFakeTimers();
+      try {
+        __testing.lastOpenMenu().hide();
+        await vi.runAllTimersAsync();
+      } finally {
+        vi.useRealTimers();
+      }
 
       const settled = await result;
       expect(settled.isErr()).toBe(true);
