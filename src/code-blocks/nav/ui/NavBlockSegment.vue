@@ -199,7 +199,7 @@ function onPointerEnter(event: PointerEvent): void {
     class="nav-row"
     :tabindex="editable ? 0 : undefined"
     :role="editable ? 'button' : undefined"
-    :aria-label="editable ? m.block_rows_edit_tooltip() : undefined"
+    :aria-label="editable && text.length === 0 ? m.block_lines_empty_segment() : undefined"
     :data-id="dragId"
     :data-drag-handle="editable ? '' : undefined"
     @click.prevent="onClick"

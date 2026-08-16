@@ -234,12 +234,13 @@
 	"block_rows_decorate_whole_label": "Decorar o bloco inteiro",
 	"block_rows_empty": "Ainda não há linhas. Adicione uma.",
 	"block_rows_add_row": "Adicionar linha",
-	"block_rows_edit_tooltip": "Editar linha",
-	"block_rows_delete_tooltip": "Excluir linha",
+	"block_lines_add_segment": "Adicionar segmento",
+	"block_lines_delete_tooltip": "Excluir linha",
+	"block_lines_empty_segment": "(vazio)",
 	"common_action_move_up": "Mover para cima",
 	"common_action_move_down": "Mover para baixo",
 	"interval_block_section_title": "Linhas de intervalo do calendário",
-	"nav_block_row_modal_title": [
+	"nav_block_segment_modal_title": [
 		{
 			"declarations": [
 				"input mode"
@@ -248,23 +249,27 @@
 				"mode"
 			],
 			"match": {
-				"mode=add": "Adicionar linha ao bloco de navegação",
-				"mode=edit": "Editar linha do bloco de navegação"
+				"mode=add": "Adicionar segmento ao bloco de navegação",
+				"mode=edit": "Editar segmento do bloco de navegação"
 			}
 		}
 	],
-	"nav_block_row_field_template": "Modelo",
-	"nav_block_row_field_font_size": "Tamanho da fonte",
-	"nav_block_row_field_font_size_hint": "Relativo ao tamanho normal da fonte: 1 significa o mesmo tamanho do texto normal.",
-	"nav_block_row_field_text_style": "Estilo do texto",
-	"nav_block_row_field_bold": "Negrito",
-	"nav_block_row_field_italic": "Itálico",
+	"nav_block_segment_field_template": "Modelo",
+	"nav_block_segment_field_font_size": "Tamanho da fonte",
+	"nav_block_segment_field_font_size_hint": "Relativo ao tamanho normal da fonte: 1 significa o mesmo tamanho do texto normal.",
+	"nav_block_segment_field_text_style": "Estilo do texto",
+	"nav_block_segment_field_bold": "Negrito",
+	"nav_block_segment_field_italic": "Itálico",
 	"common_label_text_color": "Cor do texto",
 	"common_label_background_color": "Cor de fundo",
-	"nav_block_row_field_link": "Link",
+	"nav_block_segment_field_link": "Link",
 	"common_label_journal": "Diário",
-	"nav_block_row_field_add_decorations": "Adicionar decorações",
-	"nav_block_row_link_option": [
+	"nav_block_segment_field_link_date": "Data do link",
+	"nav_block_segment_link_date_hint": "Desloca a data que este link abre, usando a mesma sintaxe dos modelos: +1q, -1y, <startOf=month>.",
+	"nav_block_segment_link_date_invalid": "A data do link não é um deslocamento de data válido.",
+	"nav_block_segment_link_date_preview": "Abre a nota de {date}",
+	"nav_block_segment_field_add_decorations": "Adicionar decorações",
+	"nav_block_segment_link_option": [
 		{
 			"declarations": [
 				"input kind"
@@ -284,9 +289,9 @@
 			}
 		}
 	],
-	"nav_block_row_template_required": "O modelo é obrigatório.",
-	"nav_block_row_journal_required": "Selecione um diário.",
-	"nav_block_row_resolved_preview": "Resolvido: {text}",
+	"nav_block_segment_template_required": "O modelo é obrigatório.",
+	"nav_block_segment_journal_required": "Selecione um diário.",
+	"nav_block_segment_resolved_preview": "Resolvido: {text}",
 	"command_add": "Adicionar comando",
 	"command_context_open_note_clarifier": "(usa a data da nota aberta, ou a de hoje)",
 	"command_context_only_open_note_clarifier": "(requer uma nota de diário aberta)",

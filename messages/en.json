@@ -115,33 +115,38 @@
   "block_rows_decorate_whole_label": "Decorate whole block",
   "block_rows_empty": "No rows yet. Add one.",
   "block_rows_add_row": "Add row",
-  "block_rows_edit_tooltip": "Edit row",
-  "block_rows_delete_tooltip": "Delete row",
+  "block_lines_add_segment": "Add segment",
+  "block_lines_delete_tooltip": "Delete line",
+  "block_lines_empty_segment": "(empty)",
   "common_action_move_up": "Move up",
   "common_action_move_down": "Move down",
   "interval_block_section_title": "Calendar interval rows",
-  "nav_block_row_modal_title": [
+  "nav_block_segment_modal_title": [
     {
       "declarations": ["input mode"],
       "selectors": ["mode"],
       "match": {
-        "mode=add": "Add nav block row",
-        "mode=edit": "Edit nav block row"
+        "mode=add": "Add nav block segment",
+        "mode=edit": "Edit nav block segment"
       }
     }
   ],
-  "nav_block_row_field_template": "Template",
-  "nav_block_row_field_font_size": "Font size",
-  "nav_block_row_field_font_size_hint": "Relative to the regular font size: 1 means the same size as regular text.",
-  "nav_block_row_field_text_style": "Text style",
-  "nav_block_row_field_bold": "Bold",
-  "nav_block_row_field_italic": "Italic",
+  "nav_block_segment_field_template": "Template",
+  "nav_block_segment_field_font_size": "Font size",
+  "nav_block_segment_field_font_size_hint": "Relative to the regular font size: 1 means the same size as regular text.",
+  "nav_block_segment_field_text_style": "Text style",
+  "nav_block_segment_field_bold": "Bold",
+  "nav_block_segment_field_italic": "Italic",
   "common_label_text_color": "Text color",
   "common_label_background_color": "Background color",
-  "nav_block_row_field_link": "Link",
+  "nav_block_segment_field_link": "Link",
   "common_label_journal": "Journal",
-  "nav_block_row_field_add_decorations": "Add decorations",
-  "nav_block_row_link_option": [
+  "nav_block_segment_field_link_date": "Link date",
+  "nav_block_segment_link_date_hint": "Shift the date this link opens, using the same syntax as templates: +1q, -1y, <startOf=month>.",
+  "nav_block_segment_link_date_invalid": "Link date is not a valid date shift.",
+  "nav_block_segment_link_date_preview": "Opens the note for {date}",
+  "nav_block_segment_field_add_decorations": "Add decorations",
+  "nav_block_segment_link_option": [
     {
       "declarations": ["input kind"],
       "selectors": ["kind"],
@@ -157,9 +162,9 @@
       }
     }
   ],
-  "nav_block_row_template_required": "Template is required.",
-  "nav_block_row_journal_required": "Select a journal.",
-  "nav_block_row_resolved_preview": "Resolved: {text}",
+  "nav_block_segment_template_required": "Template is required.",
+  "nav_block_segment_journal_required": "Select a journal.",
+  "nav_block_segment_resolved_preview": "Resolved: {text}",
 
   "command_add": "Add command",
   "command_context_open_note_clarifier": "(uses the open note's date, or today)",

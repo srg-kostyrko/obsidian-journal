@@ -236,12 +236,13 @@
 	"block_rows_decorate_whole_label": "Décorer tout le bloc",
 	"block_rows_empty": "Aucune ligne pour l’instant. Ajoutez-en une.",
 	"block_rows_add_row": "Ajouter une ligne",
-	"block_rows_edit_tooltip": "Modifier la ligne",
-	"block_rows_delete_tooltip": "Supprimer la ligne",
+	"block_lines_add_segment": "Ajouter un segment",
+	"block_lines_delete_tooltip": "Supprimer la ligne",
+	"block_lines_empty_segment": "(vide)",
 	"common_action_move_up": "Monter",
 	"common_action_move_down": "Descendre",
 	"interval_block_section_title": "Lignes d’intervalle du calendrier",
-	"nav_block_row_modal_title": [
+	"nav_block_segment_modal_title": [
 		{
 			"declarations": [
 				"input mode"
@@ -250,23 +251,27 @@
 				"mode"
 			],
 			"match": {
-				"mode=add": "Ajouter une ligne de bloc de navigation",
-				"mode=edit": "Modifier la ligne du bloc de navigation"
+				"mode=add": "Ajouter un segment de bloc de navigation",
+				"mode=edit": "Modifier le segment du bloc de navigation"
 			}
 		}
 	],
-	"nav_block_row_field_template": "Modèle",
-	"nav_block_row_field_font_size": "Taille de la police",
-	"nav_block_row_field_font_size_hint": "Relatif à la taille de police normale : 1 signifie la même taille que le texte normal.",
-	"nav_block_row_field_text_style": "Style de texte",
-	"nav_block_row_field_bold": "Gras",
-	"nav_block_row_field_italic": "Italique",
+	"nav_block_segment_field_template": "Modèle",
+	"nav_block_segment_field_font_size": "Taille de la police",
+	"nav_block_segment_field_font_size_hint": "Relatif à la taille de police normale : 1 signifie la même taille que le texte normal.",
+	"nav_block_segment_field_text_style": "Style de texte",
+	"nav_block_segment_field_bold": "Gras",
+	"nav_block_segment_field_italic": "Italique",
 	"common_label_text_color": "Couleur du texte",
 	"common_label_background_color": "Couleur de fond",
-	"nav_block_row_field_link": "Lien",
+	"nav_block_segment_field_link": "Lien",
 	"common_label_journal": "Journal",
-	"nav_block_row_field_add_decorations": "Ajouter des décorations",
-	"nav_block_row_link_option": [
+	"nav_block_segment_field_link_date": "Date du lien",
+	"nav_block_segment_link_date_hint": "Décale la date que ce lien ouvre, avec la même syntaxe que les modèles : +1q, -1y, <startOf=month>.",
+	"nav_block_segment_link_date_invalid": "La date du lien n’est pas un décalage de date valide.",
+	"nav_block_segment_link_date_preview": "Ouvre la note du {date}",
+	"nav_block_segment_field_add_decorations": "Ajouter des décorations",
+	"nav_block_segment_link_option": [
 		{
 			"declarations": [
 				"input kind"
@@ -286,9 +291,9 @@
 			}
 		}
 	],
-	"nav_block_row_template_required": "Un modèle est requis.",
-	"nav_block_row_journal_required": "Choisissez un journal.",
-	"nav_block_row_resolved_preview": "Résolu : {text}",
+	"nav_block_segment_template_required": "Un modèle est requis.",
+	"nav_block_segment_journal_required": "Choisissez un journal.",
+	"nav_block_segment_resolved_preview": "Résolu : {text}",
 	"command_add": "Ajouter une commande",
 	"command_context_open_note_clarifier": "(utilise la date de la note ouverte, ou celle du jour)",
 	"command_context_only_open_note_clarifier": "(nécessite une note de journal ouverte)",

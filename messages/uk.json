@@ -219,12 +219,13 @@
 	"block_rows_decorate_whole_label": "Оформлювати весь блок",
 	"block_rows_empty": "Ще немає рядків. Додайте один.",
 	"block_rows_add_row": "Додати рядок",
-	"block_rows_edit_tooltip": "Редагувати рядок",
-	"block_rows_delete_tooltip": "Видалити рядок",
+	"block_lines_add_segment": "Додати сегмент",
+	"block_lines_delete_tooltip": "Видалити рядок",
+	"block_lines_empty_segment": "(порожньо)",
 	"common_action_move_up": "Перемістити вгору",
 	"common_action_move_down": "Перемістити вниз",
 	"interval_block_section_title": "Рядки календарного інтервалу",
-	"nav_block_row_modal_title": [
+	"nav_block_segment_modal_title": [
 		{
 			"declarations": [
 				"input mode"
@@ -233,23 +234,27 @@
 				"mode"
 			],
 			"match": {
-				"mode=add": "Додати рядок навігаційного блоку",
-				"mode=edit": "Редагувати рядок навігаційного блоку"
+				"mode=add": "Додати сегмент блоку навігації",
+				"mode=edit": "Редагувати сегмент блоку навігації"
 			}
 		}
 	],
-	"nav_block_row_field_template": "Шаблон",
-	"nav_block_row_field_font_size": "Розмір шрифту",
-	"nav_block_row_field_font_size_hint": "Відносно звичайного розміру шрифту: 1 означає такий самий розмір, як і звичайний текст.",
-	"nav_block_row_field_text_style": "Стиль тексту",
-	"nav_block_row_field_bold": "Жирний шрифт",
-	"nav_block_row_field_italic": "Курсив",
+	"nav_block_segment_field_template": "Шаблон",
+	"nav_block_segment_field_font_size": "Розмір шрифту",
+	"nav_block_segment_field_font_size_hint": "Відносно звичайного розміру шрифту: 1 означає такий самий розмір, як і звичайний текст.",
+	"nav_block_segment_field_text_style": "Стиль тексту",
+	"nav_block_segment_field_bold": "Жирний шрифт",
+	"nav_block_segment_field_italic": "Курсив",
 	"common_label_text_color": "Колір тексту",
 	"common_label_background_color": "Колір фону",
-	"nav_block_row_field_link": "Посилання",
+	"nav_block_segment_field_link": "Посилання",
 	"common_label_journal": "Журнал",
-	"nav_block_row_field_add_decorations": "Додати оформлення",
-	"nav_block_row_link_option": [
+	"nav_block_segment_field_link_date": "Дата посилання",
+	"nav_block_segment_link_date_hint": "Зсуває дату, яку відкриває це посилання, за тим самим синтаксисом, що й у шаблонах: +1q, -1y, <startOf=month>.",
+	"nav_block_segment_link_date_invalid": "Дата посилання — недійсний зсув дати.",
+	"nav_block_segment_link_date_preview": "Відкриває нотатку за {date}",
+	"nav_block_segment_field_add_decorations": "Додати оформлення",
+	"nav_block_segment_link_option": [
 		{
 			"declarations": [
 				"input kind"
@@ -269,9 +274,9 @@
 			}
 		}
 	],
-	"nav_block_row_template_required": "Шаблон обов’язковий.",
-	"nav_block_row_journal_required": "Виберіть журнал.",
-	"nav_block_row_resolved_preview": "Результат: {text}",
+	"nav_block_segment_template_required": "Шаблон обов’язковий.",
+	"nav_block_segment_journal_required": "Виберіть журнал.",
+	"nav_block_segment_resolved_preview": "Результат: {text}",
 	"command_add": "Додати команду",
 	"command_context_open_note_clarifier": "(використовує дату відкритої нотатки або сьогоднішню дату)",
 	"command_context_only_open_note_clarifier": "(потрібна відкрита нотатка журналу)",

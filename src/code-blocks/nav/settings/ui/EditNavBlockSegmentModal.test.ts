@@ -69,10 +69,26 @@ function mountModal(options: {
   return { submit, cancel };
 }
 
+function baseSegment(overrides: Partial<NavBlockSegment> = {}): NavBlockSegment {
+  return {
+    template: "",
+    fontSize: 1,
+    bold: false,
+    italic: false,
+    color: { type: "theme", name: "text-normal" },
+    background: { type: "transparent" },
+    link: "none",
+    journal: "",
+    linkDate: "",
+    addDecorations: false,
+    ...overrides,
+  };
+}
+
 describe("EditNavBlockSegmentModal", () => {
   it("opens blank when segment prop is undefined", () => {
     mountModal({});
-    const input = screen.getByLabelText<HTMLInputElement>(m.nav_block_row_field_template());
+    const input = screen.getByLabelText<HTMLInputElement>(m.nav_block_segment_field_template());
     expect(input.value).toBe("");
   });
 
@@ -91,7 +107,7 @@ describe("EditNavBlockSegmentModal", () => {
         addDecorations: true,
       },
     });
-    const input = screen.getByLabelText<HTMLInputElement>(m.nav_block_row_field_template());
+    const input = screen.getByLabelText<HTMLInputElement>(m.nav_block_segment_field_template());
     expect(input.value).toBe("{{date:YYYY}}");
   });
 
@@ -99,14 +115,14 @@ describe("EditNavBlockSegmentModal", () => {
     const { submit } = mountModal({});
     await userEvent.click(screen.getByText(m.common_action_create()));
     await waitFor(() => {
-      expect(screen.getByText(m.nav_block_row_template_required())).toBeTruthy();
+      expect(screen.getByText(m.nav_block_segment_template_required())).toBeTruthy();
     });
     expect(submit).not.toHaveBeenCalled();
   });
 
   it("submits when template is present", async () => {
     const { submit } = mountModal({});
-    await userEvent.type(screen.getByLabelText(m.nav_block_row_field_template()), "{{{{date:YYYY}}");
+    await userEvent.type(screen.getByLabelText(m.nav_block_segment_field_template()), "{{{{date:YYYY}}");
     await userEvent.click(screen.getByText(m.common_action_create()));
     await waitFor(() => {
       expect(submit).toHaveBeenCalledTimes(1);
@@ -116,8 +132,8 @@ describe("EditNavBlockSegmentModal", () => {
 
   it("submits a bold segment when the bold text style is toggled on", async () => {
     const { submit } = mountModal({});
-    await userEvent.type(screen.getByLabelText(m.nav_block_row_field_template()), "x");
-    await userEvent.click(screen.getByRole("button", { name: m.nav_block_row_field_bold() }));
+    await userEvent.type(screen.getByLabelText(m.nav_block_segment_field_template()), "x");
+    await userEvent.click(screen.getByRole("button", { name: m.nav_block_segment_field_bold() }));
     await userEvent.click(screen.getByText(m.common_action_create()));
     await waitFor(() => {
       expect(submit).toHaveBeenCalledTimes(1);
@@ -140,16 +156,16 @@ describe("EditNavBlockSegmentModal", () => {
         addDecorations: false,
       },
     });
-    expect(screen.getByRole("button", { name: m.nav_block_row_field_italic(), pressed: true })).toBeTruthy();
+    expect(screen.getByRole("button", { name: m.nav_block_segment_field_italic(), pressed: true })).toBeTruthy();
   });
 
   it("does not submit when link=journal but journal is empty", async () => {
     const { submit } = mountModal({});
-    await userEvent.type(screen.getByLabelText(m.nav_block_row_field_template()), "x");
-    await userEvent.selectOptions(screen.getByLabelText(m.nav_block_row_field_link()), "journal");
+    await userEvent.type(screen.getByLabelText(m.nav_block_segment_field_template()), "x");
+    await userEvent.selectOptions(screen.getByLabelText(m.nav_block_segment_field_link()), "journal");
     await userEvent.click(screen.getByText(m.common_action_create()));
     await waitFor(() => {
-      expect(screen.getByText(m.nav_block_row_journal_required())).toBeTruthy();
+      expect(screen.getByText(m.nav_block_segment_journal_required())).toBeTruthy();
     });
     expect(submit).not.toHaveBeenCalled();
   });
@@ -167,7 +183,7 @@ describe("EditNavBlockSegmentModal", () => {
       },
       shelves: { home: { name: "home", journals: ["daily", "weekly"], decorations: [] } },
     });
-    await userEvent.selectOptions(screen.getByLabelText(m.nav_block_row_field_link()), "journal");
+    await userEvent.selectOptions(screen.getByLabelText(m.nav_block_segment_field_link()), "journal");
     const dropdown = await screen.findByLabelText<HTMLSelectElement>(m.common_label_journal());
     const optionValues = [...dropdown.options].map((option) => option.value);
     expect(optionValues).toContain("weekly");
@@ -178,5 +194,35 @@ describe("EditNavBlockSegmentModal", () => {
     const { cancel } = mountModal({});
     await userEvent.click(screen.getByText(m.common_action_cancel()));
     expect(cancel).toHaveBeenCalled();
+  });
+
+  it("shows the link date field for a period link", () => {
+    mountModal({ segment: baseSegment({ link: "quarter" }) });
+    expect(screen.getByLabelText(m.nav_block_segment_field_link_date())).toBeTruthy();
+  });
+
+  it("hides the link date field when the link is none", () => {
+    mountModal({ segment: baseSegment({ link: "none" }) });
+    expect(screen.queryByLabelText(m.nav_block_segment_field_link_date())).toBeNull();
+  });
+
+  it("reports an unparsable link date", async () => {
+    const { submit } = mountModal({ segment: baseSegment({ link: "quarter", template: "x" }) });
+    await userEvent.type(screen.getByLabelText(m.nav_block_segment_field_link_date()), "nonsense");
+    await userEvent.click(screen.getByText(m.common_action_submit()));
+    await waitFor(() => {
+      expect(screen.getByText(m.nav_block_segment_link_date_invalid())).toBeTruthy();
+    });
+    expect(submit).not.toHaveBeenCalled();
+  });
+
+  it("accepts a valid link date", async () => {
+    const { submit } = mountModal({ segment: baseSegment({ link: "quarter", template: "x" }) });
+    await userEvent.type(screen.getByLabelText(m.nav_block_segment_field_link_date()), "+1q");
+    await userEvent.click(screen.getByText(m.common_action_submit()));
+    await waitFor(() => {
+      expect(submit).toHaveBeenCalledTimes(1);
+    });
+    expect(submit.mock.calls[0]?.[0]).toMatchObject({ segment: { linkDate: "+1q" } });
   });
 });

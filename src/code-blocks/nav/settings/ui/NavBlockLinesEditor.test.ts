@@ -105,7 +105,7 @@ describe("NavBlockLinesEditor", () => {
   it("invokes the flow with the intervalBlock field when the header 'add row' button is clicked", async () => {
     const { invoke } = mount([[sampleSegment]]);
     await userEvent.click(screen.getByText(TITLE));
-    await userEvent.click(screen.getAllByLabelText(m.block_rows_add_row()).at(0)!);
+    await userEvent.click(screen.getByLabelText(m.block_rows_add_row()));
     expect(invoke).toHaveBeenCalledWith(EditNavBlockSegmentFlow, { journalName: "daily", field: "intervalBlock" });
   });
 
@@ -113,7 +113,7 @@ describe("NavBlockLinesEditor", () => {
     const { invoke } = mount([[sampleSegment]]);
     await userEvent.click(screen.getByText(TITLE));
     const preview = document.querySelector<HTMLElement>(".nav-block-preview")!;
-    await userEvent.click(within(preview).getByLabelText(m.block_rows_add_row()));
+    await userEvent.click(within(preview).getByLabelText(m.block_lines_add_segment()));
     expect(invoke).toHaveBeenCalledWith(EditNavBlockSegmentFlow, {
       journalName: "daily",
       field: "intervalBlock",
@@ -147,6 +147,19 @@ describe("NavBlockLinesEditor", () => {
     });
   });
 
+  it("uses the segment's own text as the accessible name when it is not empty", async () => {
+    mount([[sampleSegment]]);
+    await userEvent.click(screen.getByText(TITLE));
+    expect(screen.getByRole("button", { name: "static text" })).toBeTruthy();
+  });
+
+  it("uses the empty-segment message as the accessible name for an empty segment", async () => {
+    const emptySegment: NavBlockSegment = { ...sampleSegment, template: "" };
+    mount([[emptySegment]]);
+    await userEvent.click(screen.getByText(TITLE));
+    expect(screen.getByRole("button", { name: m.block_lines_empty_segment() })).toBeTruthy();
+  });
+
   it("invokes the flow when Enter is pressed on a focused segment", async () => {
     const { invoke } = mount([[sampleSegment]]);
     await userEvent.click(screen.getByText(TITLE));
@@ -164,7 +177,7 @@ describe("NavBlockLinesEditor", () => {
   it("removes a line from intervalBlock when its delete button is clicked", async () => {
     const { storage } = mount([[sampleSegment], [{ ...sampleSegment, template: "other" }]]);
     await userEvent.click(screen.getByText(TITLE));
-    const deleteButtons = screen.getAllByLabelText(m.block_rows_delete_tooltip());
+    const deleteButtons = screen.getAllByLabelText(m.block_lines_delete_tooltip());
     await userEvent.click(deleteButtons[0]);
     expect(storage.daily?.intervalBlock.lines.map((line) => line[0]?.template)).toEqual(["other"]);
   });

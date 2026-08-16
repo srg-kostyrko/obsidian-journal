@@ -55,8 +55,8 @@ useSortableList(lineEl, segmentsVm, (orderedIds) => emit("reorder", orderedIds),
       :disabled="isLast"
       @click="emit('moveDown')"
     />
-    <UiIconButton :icon="icons.action.add" :tooltip="m.block_rows_add_row()" @click="emit('addSegment')" />
-    <UiIconButton :icon="icons.action.delete" :tooltip="m.block_rows_delete_tooltip()" @click="emit('removeLine')" />
+    <UiIconButton :icon="icons.action.add" :tooltip="m.block_lines_add_segment()" @click="emit('addSegment')" />
+    <UiIconButton :icon="icons.action.delete" :tooltip="m.block_lines_delete_tooltip()" @click="emit('removeLine')" />
   </span>
 </template>
 

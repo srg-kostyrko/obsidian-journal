@@ -4,7 +4,7 @@ import * as v from "valibot";
 import { useForm } from "vee-validate";
 import { computed } from "vue";
 
-import { Clock, type AnchorString } from "@/calendar";
+import { CalendarDate, Clock, type AnchorString } from "@/calendar";
 import { m } from "@/i18n";
 import { useService } from "@/infrastructure/di";
 import { useModal } from "@/infrastructure/host/modals";
@@ -17,7 +17,7 @@ import VariableReferenceHint from "@/journals/settings/ui/VariableReferenceHint.
 import { templateHasWrongWeek } from "@/journals/settings/ui/wrong-week";
 import WrongWeekWarning from "@/journals/settings/ui/WrongWeekWarning.vue";
 import { JournalsViewModel } from "@/journals/view-model";
-import { TemplateEngine } from "@/templates";
+import { applyModifiers, parseModifiers, TemplateEngine } from "@/templates";
 import UiButton from "@/ui/UiButton.vue";
 import UiColorSettingsPicker from "@/ui/UiColorSettingsPicker.vue";
 import UiDropdown from "@/ui/UiDropdown.vue";
@@ -59,16 +59,28 @@ const initial: NavBlockSegment = props.segment ?? {
 const schema = v.pipe(
   navBlockSegmentSchema,
   v.forward(
-    v.partialCheck([["template"]], ({ template }) => template.trim().length > 0, m.nav_block_row_template_required()),
+    v.partialCheck(
+      [["template"]],
+      ({ template }) => template.trim().length > 0,
+      m.nav_block_segment_template_required(),
+    ),
     ["template"],
   ),
   v.forward(
     v.partialCheck(
       [["link"], ["journal"]],
       ({ link, journal }) => link !== "journal" || journal.length > 0,
-      m.nav_block_row_journal_required(),
+      m.nav_block_segment_journal_required(),
     ),
     ["journal"],
+  ),
+  v.forward(
+    v.partialCheck(
+      [["linkDate"]],
+      ({ linkDate }) => linkDate.length === 0 || parseModifiers(linkDate) !== undefined,
+      m.nav_block_segment_link_date_invalid(),
+    ),
+    ["linkDate"],
   ),
 );
 
@@ -85,13 +97,14 @@ const [color] = defineField("color");
 const [background] = defineField("background");
 const [link] = defineField("link");
 const [journal] = defineField("journal");
+const [linkDate] = defineField("linkDate");
 const [addDecorations] = defineField("addDecorations");
 
 type TextStyle = "bold" | "italic";
 
 const textStyleOptions: { value: TextStyle; label: string; tooltip: string; class: string }[] = [
-  { value: "bold", label: "B", tooltip: m.nav_block_row_field_bold(), class: "glyph-bold" },
-  { value: "italic", label: "I", tooltip: m.nav_block_row_field_italic(), class: "glyph-italic" },
+  { value: "bold", label: "B", tooltip: m.nav_block_segment_field_bold(), class: "glyph-bold" },
+  { value: "italic", label: "I", tooltip: m.nav_block_segment_field_italic(), class: "glyph-italic" },
 ];
 
 const textStyles = computed<TextStyle[]>({
@@ -129,6 +142,14 @@ const resolved = computed(() => {
   );
 });
 
+const linkDatePreview = computed(() => {
+  const modifiers = parseModifiers(linkDate.value ?? "");
+  if (modifiers === undefined) return "";
+  const today = Clock.now().format("YYYY-MM-DD") as AnchorString;
+  const date = applyModifiers(CalendarDate.fromAnchor(today), modifiers);
+  return m.nav_block_segment_link_date_preview({ date: date.toAnchor() });
+});
+
 const linkOptions = ["none", "self", "journal", "day", "week", "month", "quarter", "year"] as const;
 
 const onSubmit = handleSubmit((segment) => {
@@ -138,7 +159,7 @@ const onSubmit = handleSubmit((segment) => {
 
 <template>
   <form v-if="config" novalidate @submit.prevent="onSubmit">
-    <UiSettingRow :name="m.nav_block_row_field_template()">
+    <UiSettingRow :name="m.nav_block_segment_field_template()">
       <template #description>
         <VariableReferenceHint
           context="nav-row"
@@ -147,19 +168,19 @@ const onSubmit = handleSubmit((segment) => {
           :has-cycle="hasCycle"
           :numbering-variable-names="numberingVariableNames"
         />
-        <div>{{ m.nav_block_row_resolved_preview({ text: resolved }) }}</div>
+        <div>{{ m.nav_block_segment_resolved_preview({ text: resolved }) }}</div>
         <WrongWeekWarning v-if="wrongWeek" />
-        <span v-for="error of errorBag.template" :key="error" class="form-error">{{ error }}</span>
+        <span v-for="error of errorBag.template" :key="error" class="nav-form-error">{{ error }}</span>
       </template>
-      <UiTextInput v-model="template" :aria-label="m.nav_block_row_field_template()" />
+      <UiTextInput v-model="template" :aria-label="m.nav_block_segment_field_template()" />
     </UiSettingRow>
 
-    <UiSettingRow :name="m.nav_block_row_field_font_size()">
-      <template #description>{{ m.nav_block_row_field_font_size_hint() }}</template>
+    <UiSettingRow :name="m.nav_block_segment_field_font_size()">
+      <template #description>{{ m.nav_block_segment_field_font_size_hint() }}</template>
       <UiNumberInput v-model="fontSize" :min="0.5" :step="0.1" />
     </UiSettingRow>
 
-    <UiSettingRow :name="m.nav_block_row_field_text_style()">
+    <UiSettingRow :name="m.nav_block_segment_field_text_style()">
       <UiToggleGroup v-model="textStyles" :options="textStyleOptions" />
     </UiSettingRow>
 
@@ -171,17 +192,17 @@ const onSubmit = handleSubmit((segment) => {
       <UiColorSettingsPicker v-model="background" role="background" />
     </UiSettingRow>
 
-    <UiSettingRow :name="m.nav_block_row_field_link()">
-      <UiDropdown v-model="link" :aria-label="m.nav_block_row_field_link()">
+    <UiSettingRow :name="m.nav_block_segment_field_link()">
+      <UiDropdown v-model="link" :aria-label="m.nav_block_segment_field_link()">
         <option v-for="kind of linkOptions" :key="kind" :value="kind">
-          {{ m.nav_block_row_link_option({ kind }) }}
+          {{ m.nav_block_segment_link_option({ kind }) }}
         </option>
       </UiDropdown>
     </UiSettingRow>
 
     <UiSettingRow v-if="link === 'journal'" :name="m.common_label_journal()">
       <template #description>
-        <span v-for="error of errorBag.journal" :key="error" class="form-error">{{ error }}</span>
+        <span v-for="error of errorBag.journal" :key="error" class="nav-form-error">{{ error }}</span>
       </template>
       <UiDropdown v-model="journal" :aria-label="m.common_label_journal()">
         <option value="" disabled>—</option>
@@ -189,7 +210,16 @@ const onSubmit = handleSubmit((segment) => {
       </UiDropdown>
     </UiSettingRow>
 
-    <UiSettingRow :name="m.nav_block_row_field_add_decorations()">
+    <UiSettingRow v-if="link !== 'none'" :name="m.nav_block_segment_field_link_date()">
+      <template #description>
+        <div>{{ m.nav_block_segment_link_date_hint() }}</div>
+        <div v-if="linkDatePreview">{{ linkDatePreview }}</div>
+        <span v-for="error of errorBag.linkDate" :key="error" class="nav-form-error">{{ error }}</span>
+      </template>
+      <UiTextInput v-model="linkDate" :aria-label="m.nav_block_segment_field_link_date()" />
+    </UiSettingRow>
+
+    <UiSettingRow :name="m.nav_block_segment_field_add_decorations()">
       <UiToggle v-model="addDecorations" />
     </UiSettingRow>
 
@@ -203,7 +233,7 @@ const onSubmit = handleSubmit((segment) => {
 </template>
 
 <style scoped>
-.form-error {
+.nav-form-error {
   color: var(--text-error);
   display: block;
 }

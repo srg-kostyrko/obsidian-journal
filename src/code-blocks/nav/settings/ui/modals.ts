@@ -12,5 +12,5 @@ export interface EditNavBlockSegmentModalProps {
 export const editNavBlockSegmentModal = defineModal<{ segment: NavBlockSegment }>()({
   component: EditNavBlockSegmentModal,
   title: ({ segment }: EditNavBlockSegmentModalProps) =>
-    m.nav_block_row_modal_title({ mode: segment ? "edit" : "add" }),
+    m.nav_block_segment_modal_title({ mode: segment ? "edit" : "add" }),
 });

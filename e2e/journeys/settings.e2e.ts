@@ -642,12 +642,14 @@ describe("settings", () => {
     });
   });
 
-  describe("navigation block row", () => {
-    it("edits a nav block row template and persists it", async () => {
+  describe("navigation block segment", () => {
+    it("edits a nav block segment template and persists it", async () => {
       await openJournalSubpage("core", "daily");
       await expandSection("Navigation block");
-      await clickIcon("Edit row");
-      // The EditNavBlockRowModal's first text input is the template field.
+      // The segment's own rendered text is its accessible name, not a fixed tooltip, so
+      // target the first editable segment structurally instead of by label.
+      await $("[data-drag-handle]").click();
+      // The EditNavBlockSegmentModal's first text input is the template field.
       await setModalText("{{date}} edited");
       await submitModal();
 

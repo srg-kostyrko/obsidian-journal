@@ -118,7 +118,7 @@ describe("NavBlockSection", () => {
   it("invokes the flow without indices when the header 'add row' button is clicked", async () => {
     const { invoke } = mount([[sampleSegment]]);
     await userEvent.click(screen.getByText(m.nav_block_section_title()));
-    await userEvent.click(screen.getAllByLabelText(m.block_rows_add_row()).at(0)!);
+    await userEvent.click(screen.getByLabelText(m.block_rows_add_row()));
     expect(invoke).toHaveBeenCalledWith(EditNavBlockSegmentFlow, { journalName: "daily", field: "navBlock" });
   });
 
@@ -126,7 +126,7 @@ describe("NavBlockSection", () => {
     const { invoke } = mount([[sampleSegment]]);
     await userEvent.click(screen.getByText(m.nav_block_section_title()));
     const preview = document.querySelector<HTMLElement>(".nav-block-preview")!;
-    await userEvent.click(within(preview).getByLabelText(m.block_rows_add_row()));
+    await userEvent.click(within(preview).getByLabelText(m.block_lines_add_segment()));
     expect(invoke).toHaveBeenCalledWith(EditNavBlockSegmentFlow, {
       journalName: "daily",
       field: "navBlock",
@@ -137,7 +137,7 @@ describe("NavBlockSection", () => {
   it("removes a line when its delete button is clicked", async () => {
     const { storage } = mount([[sampleSegment], [{ ...sampleSegment, template: "{{date:MM}}" }]]);
     await userEvent.click(screen.getByText(m.nav_block_section_title()));
-    const deleteButtons = screen.getAllByLabelText(m.block_rows_delete_tooltip());
+    const deleteButtons = screen.getAllByLabelText(m.block_lines_delete_tooltip());
     await userEvent.click(deleteButtons[0]);
     expect(storage.daily?.navBlock.lines.length).toBe(1);
     expect(storage.daily?.navBlock.lines[0]?.[0]?.template).toBe("{{date:MM}}");
