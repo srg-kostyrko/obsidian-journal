@@ -92,7 +92,7 @@ describe("NavBlockSection", () => {
   it("shows the empty-state message and 'use defaults' button when lines are empty", async () => {
     mount([]);
     await userEvent.click(screen.getByText(m.nav_block_section_title()));
-    expect(screen.getByText(m.block_rows_empty())).toBeTruthy();
+    expect(screen.getByText(m.block_lines_empty())).toBeTruthy();
     expect(screen.getByText(m.nav_block_section_use_defaults({ writeType: "day" }))).toBeTruthy();
   });
 
@@ -115,10 +115,10 @@ describe("NavBlockSection", () => {
     });
   });
 
-  it("invokes the flow without indices when the header 'add row' button is clicked", async () => {
+  it("invokes the flow without indices when the header 'add line' button is clicked", async () => {
     const { invoke } = mount([[sampleSegment]]);
     await userEvent.click(screen.getByText(m.nav_block_section_title()));
-    await userEvent.click(screen.getByLabelText(m.block_rows_add_row()));
+    await userEvent.click(screen.getByLabelText(m.block_lines_add_line()));
     expect(invoke).toHaveBeenCalledWith(EditNavBlockSegmentFlow, { journalName: "daily", field: "navBlock" });
   });
 

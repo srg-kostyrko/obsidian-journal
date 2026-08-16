@@ -99,6 +99,12 @@ function reorderSegments(targetLine: number, orderedIds: string[]): void {
   if (!config.value) return;
   config.value[field].lines = applySegmentReorder(config.value[field].lines, targetLine, orderedIds);
 }
+
+// The only drop zone that isn't paired with an "afterLine" line index — it sits above the first
+// line, the one gap #afterLine can never reach, so a segment can split off into a new first line.
+function onDropAtStart(orderedIds: string[]): void {
+  reorderSegments(0, orderedIds);
+}
 </script>
 
 <template>
@@ -110,7 +116,7 @@ function reorderSegments(targetLine: number, orderedIds: string[]): void {
       </UiIconedRow>
     </template>
     <template #controls>
-      <UiIconButton :icon="icons.action.add" :tooltip="m.block_rows_add_row()" @click="add" />
+      <UiIconButton :icon="icons.action.add" :tooltip="m.block_lines_add_line()" @click="add" />
     </template>
 
     <UiSettingRow v-if="mode" :name="m.nav_block_section_mode_label()">
@@ -120,7 +126,7 @@ function reorderSegments(targetLine: number, orderedIds: string[]): void {
       </UiDropdown>
     </UiSettingRow>
 
-    <UiSettingRow :name="m.block_rows_decorate_whole_label()">
+    <UiSettingRow :name="m.block_lines_decorate_whole_label()">
       <UiToggle v-model="config[field].decorateWholeBlock" />
     </UiSettingRow>
 
@@ -131,7 +137,7 @@ function reorderSegments(targetLine: number, orderedIds: string[]): void {
     </UiSettingRow>
 
     <UiSettingRow v-if="config[field].lines.length === 0" no-controls>
-      <template #description>{{ m.block_rows_empty() }}</template>
+      <template #description>{{ m.block_lines_empty() }}</template>
     </UiSettingRow>
 
     <div v-else class="nav-block-preview">
@@ -143,6 +149,9 @@ function reorderSegments(targetLine: number, orderedIds: string[]): void {
         editable
         @edit="editSegment"
       >
+        <template #beforeLines>
+          <NavBlockLineDropZone :target-line="0" :showing="anyDragging" :group="dragGroup" @drop="onDropAtStart" />
+        </template>
         <template #lineAction="{ index, isFirst, isLast, lineEl }">
           <NavBlockLineGutter
             :line-index="index"

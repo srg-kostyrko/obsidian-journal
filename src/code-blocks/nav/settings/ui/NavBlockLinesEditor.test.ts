@@ -34,20 +34,22 @@ afterEach(() => cleanup());
 
 const TITLE = "Interval rows";
 
-function buildCustomJournal(name: string, lines: NavBlockSegment[][]): JournalConfig {
+function buildCustomJournal(name: string, lines: NavBlockSegment[][], decorateWholeBlock = false): JournalConfig {
   const base = journalDefaultsFor(
     { type: "custom", every: "day", duration: 1, anchorDate: "2026-01-01" as AnchorString },
     name,
   );
   return {
     ...base,
-    intervalBlock: { ...base.intervalBlock, lines, decorateWholeBlock: false },
+    intervalBlock: { ...base.intervalBlock, lines, decorateWholeBlock },
   };
 }
 
-function mount(lines: NavBlockSegment[][]) {
+function mount(lines: NavBlockSegment[][], decorateWholeBlock = false) {
   const container = new Container();
-  const storage = reactive<Record<string, JournalConfig>>({ daily: buildCustomJournal("daily", lines) });
+  const storage = reactive<Record<string, JournalConfig>>({
+    daily: buildCustomJournal("daily", lines, decorateWholeBlock),
+  });
   const repo = JournalsRepository.fromParts(storage, createNanoEvents<JournalsEvents>());
   const shelvesRepo = ShelvesRepository.fromParts(
     reactive({ home: { name: "home", journals: ["daily"], decorations: [] } }),
@@ -102,10 +104,10 @@ describe("NavBlockLinesEditor", () => {
     expect(screen.queryByText(m.nav_block_section_use_defaults({ writeType: "custom" }))).toBeNull();
   });
 
-  it("invokes the flow with the intervalBlock field when the header 'add row' button is clicked", async () => {
+  it("invokes the flow with the intervalBlock field when the header 'add line' button is clicked", async () => {
     const { invoke } = mount([[sampleSegment]]);
     await userEvent.click(screen.getByText(TITLE));
-    await userEvent.click(screen.getByLabelText(m.block_rows_add_row()));
+    await userEvent.click(screen.getByLabelText(m.block_lines_add_line()));
     expect(invoke).toHaveBeenCalledWith(EditNavBlockSegmentFlow, { journalName: "daily", field: "intervalBlock" });
   });
 
@@ -123,6 +125,21 @@ describe("NavBlockLinesEditor", () => {
 
   it("invokes the flow with lineIndex and segmentIndex when a segment is clicked", async () => {
     const { invoke } = mount([[sampleSegment]]);
+    await userEvent.click(screen.getByText(TITLE));
+    await userEvent.click(screen.getByText("static text"));
+    expect(invoke).toHaveBeenCalledWith(EditNavBlockSegmentFlow, {
+      journalName: "daily",
+      field: "intervalBlock",
+      lineIndex: 0,
+      segmentIndex: 0,
+    });
+  });
+
+  it("invokes the flow with lineIndex and segmentIndex when a segment is clicked, with the whole block decorated", async () => {
+    // customIntervalBlock's shipped default has decorateWholeBlock: true — the only branch of
+    // NavBlock's two render paths this editor drives in production. Cover it explicitly rather
+    // than only the decorateWholeBlock: false branch every other test in this file exercises.
+    const { invoke } = mount([[sampleSegment]], true);
     await userEvent.click(screen.getByText(TITLE));
     await userEvent.click(screen.getByText("static text"));
     expect(invoke).toHaveBeenCalledWith(EditNavBlockSegmentFlow, {
@@ -180,6 +197,16 @@ describe("NavBlockLinesEditor", () => {
     const deleteButtons = screen.getAllByLabelText(m.block_lines_delete_tooltip());
     await userEvent.click(deleteButtons[0]);
     expect(storage.daily?.intervalBlock.lines.map((line) => line[0]?.template)).toEqual(["other"]);
+  });
+
+  it("renders a leading drop zone above the first line, so a segment can split into a new first line", async () => {
+    mount([[sampleSegment], [{ ...sampleSegment, template: "other" }]]);
+    await userEvent.click(screen.getByText(TITLE));
+    const preview = document.querySelector<HTMLElement>(".nav-block-preview")!;
+    const dropZones = [...preview.querySelectorAll<HTMLElement>(".nav-line-drop")];
+    expect(dropZones[0]?.dataset.lineIndex).toBe("0");
+    // One before every line and one after each, so two lines get three zones: 0, 1, 2.
+    expect(dropZones.map((el) => el.dataset.lineIndex)).toEqual(["0", "1", "2"]);
   });
 
   it("toggles decorateWholeBlock on intervalBlock", async () => {

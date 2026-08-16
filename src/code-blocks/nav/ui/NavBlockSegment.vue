@@ -39,7 +39,6 @@ const props = defineProps<{
   journal: JournalConfig;
   segment: NavBlockSegment;
   refDate: AnchorString;
-  preventNavigation?: boolean;
   editable?: boolean;
   shelf?: string | null;
   // The editor's synthesized positional id ("<lineIndex>:<segmentIndex>"), read off the DOM
@@ -157,7 +156,6 @@ function onClick(event: MouseEvent): void {
     emit("edit");
     return;
   }
-  if (props.preventNavigation) return;
   const t = target.value;
   if (t.kind === "none") return;
   if (t.kind === "self") {
@@ -175,7 +173,7 @@ function onClick(event: MouseEvent): void {
 }
 
 function onContextMenu(event: MouseEvent): void {
-  if (props.editable || props.preventNavigation) return;
+  if (props.editable) return;
   workspace.openPathsMenu(pathsForTarget(target.value), event, contextMenuItems());
 }
 
@@ -189,12 +187,16 @@ function onKeydown(event: KeyboardEvent): void {
 const hover = useModifierHoverPreview();
 
 function onPointerEnter(event: PointerEvent): void {
-  if (props.editable || props.preventNavigation) return;
+  if (props.editable) return;
   hover.enter(event, (hoverEvent) => workspace.previewFirstPath(pathsForTarget(target.value), hoverEvent));
 }
 </script>
 
 <template>
+  <!-- The "nav-row" class name is a deliberate holdover: user CSS snippets and e2e selectors
+       target it as a stable styling hook, even though the TypeScript vocabulary moved to
+       "segment". ".nav-block-line" (in NavBlock.vue) changed meaning instead — it used to wrap
+       a single row and now wraps a whole line of segments. -->
   <div
     class="nav-row"
     :tabindex="editable ? 0 : undefined"
