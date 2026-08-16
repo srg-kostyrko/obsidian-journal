@@ -7,8 +7,11 @@ interface OldBlock {
 
 function toLines(block: OldBlock): Record<string, unknown> {
   const { rows, ...rest } = block;
-  const source = Array.isArray(rows) ? rows : [];
-  return { ...rest, lines: source.map((row) => [{ ...(row as Record<string, unknown>), linkDate: "" }]) };
+  // A block with no `rows` but an existing `lines` array is already v5-shaped (a hand-authored
+  // fixture staged ahead of a version bump, or a future migration run twice); rebuilding `lines`
+  // from a missing `rows` would silently wipe it back to empty.
+  if (!Array.isArray(rows)) return "lines" in rest ? rest : { ...rest, lines: [] };
+  return { ...rest, lines: rows.map((row) => [{ ...(row as Record<string, unknown>), linkDate: "" }]) };
 }
 
 export const v4ToV5Migration: Migration = {

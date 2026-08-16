@@ -43,6 +43,35 @@ describe("v4ToV5Migration", () => {
     expect(out.journals.sprint.intervalBlock.lines).toEqual([[{ template: "x", linkDate: "" }]]);
   });
 
+  it("leaves an already-lines-shaped block untouched", () => {
+    const raw = {
+      journals: {
+        "year-nav": {
+          name: "year-nav",
+          navBlock: {
+            type: "existing",
+            decorateWholeBlock: false,
+            lines: [
+              [
+                { template: "a", link: "quarter" },
+                { template: "b", link: "quarter", linkDate: "+1q" },
+              ],
+            ],
+          },
+        },
+      },
+    };
+    const out = v4ToV5Migration.migrate(raw) as {
+      journals: { "year-nav": { navBlock: { lines: unknown[][] } } };
+    };
+    expect(out.journals["year-nav"].navBlock.lines).toEqual([
+      [
+        { template: "a", link: "quarter" },
+        { template: "b", link: "quarter", linkDate: "+1q" },
+      ],
+    ]);
+  });
+
   it("leaves a journal with no blocks untouched", () => {
     const raw = { journals: { bare: { name: "bare" } } };
     expect(() => v4ToV5Migration.migrate(raw)).not.toThrow();
