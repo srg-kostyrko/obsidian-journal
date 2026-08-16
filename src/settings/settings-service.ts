@@ -125,6 +125,20 @@ export class SettingsService {
     }
   }
 
+  // Suspends the save watcher across the refresh so applying externally-sourced data does
+  // not echo a save back to disk, then re-arms it and signals event-driven subsystems
+  // (command registry, journal index) that only re-derive on an explicit "reloaded". Must
+  // run only after every fallible step has succeeded — reload() and replaceStoredData()
+  // both stay safe-by-construction that way: an Err short-circuits before the watcher is
+  // ever touched, so a failed load or save never leaves it permanently stopped.
+  #applyMigrated(migrated: Record<string, unknown>): void {
+    this.#stopWatch?.();
+    this.#events.emit("reloading");
+    this.#refresh(migrated);
+    this.#stopWatch = watch(this.#root, () => this.#scheduleSave(), { deep: true });
+    this.#events.emit("reloaded");
+  }
+
   initialize(): AsyncResult<void, SettingsLoadError | MigrationFailedError | SliceKeyConflictError> {
     return attempt.in(this, async function* () {
       const conflict = this.#findKeyConflict();
@@ -142,19 +156,11 @@ export class SettingsService {
     return attempt.in(this, async function* () {
       if (!this.#initialized) return;
       const migrated = yield* this.#loadAndMigrate();
-      // Suspend the save watcher across the refresh so reloading external data does not
-      // echo a saveData back to disk (which Sync would treat as a fresh local change).
-      this.#stopWatch?.();
       if (this.#saveTimer !== undefined) {
         window.clearTimeout(this.#saveTimer);
         this.#saveTimer = undefined;
       }
-      this.#events.emit("reloading");
-      this.#refresh(migrated);
-      this.#stopWatch = watch(this.#root, () => this.#scheduleSave(), { deep: true });
-      // Reactive consumers pick up #root mutations on their own, but event-driven
-      // subsystems (command registry, journal index) only re-derive on an explicit signal.
-      this.#events.emit("reloaded");
+      this.#applyMigrated(migrated);
     });
   }
 
@@ -170,13 +176,9 @@ export class SettingsService {
         window.clearTimeout(this.#saveTimer);
         this.#saveTimer = undefined;
       }
-      this.#stopWatch?.();
       yield* this.#pluginData.save(raw).mapErr((cause) => new SettingsSaveError(cause));
       const migrated = yield* this.#loadAndMigrate();
-      this.#events.emit("reloading");
-      this.#refresh(migrated);
-      this.#stopWatch = watch(this.#root, () => this.#scheduleSave(), { deep: true });
-      this.#events.emit("reloaded");
+      this.#applyMigrated(migrated);
     });
   }
 

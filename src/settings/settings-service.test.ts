@@ -10,7 +10,7 @@ import { createLoggerTestingModule } from "@/infrastructure/logger/testing";
 import { AsyncResult } from "@/infrastructure/result";
 import { expectErr, expectOk } from "@/infrastructure/result/testing";
 
-import { SliceKeyConflictError, MigrationFailedError, UnregisteredSliceError } from "./errors";
+import { SliceKeyConflictError, MigrationFailedError, SettingsSaveError, UnregisteredSliceError } from "./errors";
 import { defineCollection, defineSlice, type Migration } from "./schema";
 import { SettingsService } from "./settings-service";
 import { SnapshotService } from "./snapshots/snapshot-service";
@@ -384,6 +384,25 @@ describe("SettingsService", () => {
       // count is what actually distinguishes them: replaceStoredData's own write is the
       // only save that should happen.
       expect(saveSpy).toHaveBeenCalledTimes(1);
+      vi.useRealTimers();
+    });
+
+    it("leaves the watcher armed when the write fails, so a later mutation still schedules a save", async () => {
+      vi.useFakeTimers();
+      const { service, data } = build({ raw: { version: 5, calendar: { dow: 1, global: true } } });
+      await service.initialize();
+      const saveSpy = vi
+        .spyOn(data, "save")
+        .mockReturnValueOnce(AsyncResult.err(new PluginDataIOError("save", new Error("disk full"))));
+
+      const replaced = await service.replaceStoredData({ version: 5, calendar: { dow: 6, global: false } });
+      expectErr(replaced);
+      expect(replaced.error).toBeInstanceOf(SettingsSaveError);
+
+      service.getSlice(calendarSlice).state.dow = 9;
+      await vi.advanceTimersByTimeAsync(300);
+
+      expect(saveSpy).toHaveBeenCalledTimes(2);
       vi.useRealTimers();
     });
 
