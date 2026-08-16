@@ -193,7 +193,9 @@ export class SettingsService {
         window.clearTimeout(this.#saveTimer);
         this.#saveTimer = undefined;
       }
-      yield* runMigrations(raw, this.#migrations, CURRENT_VERSION);
+      // Migrations mutate their input in place, so validating against `raw` itself would
+      // corrupt it before it reaches save() below — validate a disposable clone instead.
+      yield* runMigrations(structuredClone(raw), this.#migrations, CURRENT_VERSION);
       yield* this.#pluginData.save(raw).mapErr((cause) => new SettingsSaveError(cause));
       const migrated = yield* this.#loadAndMigrate();
       this.#applyMigrated(migrated);

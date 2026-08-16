@@ -11,6 +11,7 @@ import { AsyncResult } from "@/infrastructure/result";
 import { expectErr, expectOk } from "@/infrastructure/result/testing";
 
 import { SliceKeyConflictError, MigrationFailedError, SettingsSaveError, UnregisteredSliceError } from "./errors";
+import { v4ToV5Migration } from "./legacy/v4-to-v5";
 import { defineCollection, defineSlice, type Migration } from "./schema";
 import { SettingsService } from "./settings-service";
 import { SnapshotService } from "./snapshots/snapshot-service";
@@ -468,6 +469,35 @@ describe("SettingsService", () => {
       const stored = await data.load();
       expectOk(stored);
       expect(stored.value).toBeUndefined();
+    });
+
+    it("saves a behind-current payload byte-for-byte, not the object the validation pass mutated in place", async () => {
+      const { service, data } = build({
+        raw: { version: 5, calendar: { dow: 1, global: true } },
+        collections: [],
+        migrations: [v4ToV5Migration],
+      });
+      await service.initialize();
+
+      const legacyPayload = {
+        version: 4,
+        calendar: { dow: 1, global: true },
+        journals: {
+          daily: { navBlock: { rows: [{ kind: "shift", shift: -1 }] } },
+        },
+      };
+      let savedPayload: unknown;
+      const originalSave = data.save.bind(data);
+      vi.spyOn(data, "save").mockImplementation((payload: unknown) => {
+        savedPayload = JSON.parse(JSON.stringify(payload));
+        return originalSave(payload);
+      });
+
+      expectOk(await service.replaceStoredData(legacyPayload));
+
+      const stored = savedPayload as { version: number; journals: { daily: { navBlock: unknown } } };
+      expect(stored.version).toBe(4);
+      expect(stored.journals.daily.navBlock).toEqual({ rows: [{ kind: "shift", shift: -1 }] });
     });
   });
 
