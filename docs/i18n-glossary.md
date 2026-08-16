@@ -36,21 +36,23 @@ everything below. Adding a locale or a new domain noun means extending it there.
 
 ## Canonical terms
 
-| en              | de          | es          | fr          | it          | ja             | ko         | pt           | ru            | uk            | zh          |
-| --------------- | ----------- | ----------- | ----------- | ----------- | -------------- | ---------- | ------------ | ------------- | ------------- | ----------- |
-| **journal**     | Journal     | diario      | journal     | diario      | ジャーナル     | 저널       | diário       | журнал        | журнал        | 日记        |
-| **note**        | Notiz       | nota        | note        | nota        | ノート         | 노트       | nota         | заметка       | нотатка       | 笔记        |
-| **shelf**       | Regal       | estante     | étagère     | scaffale    | 棚             | 선반       | prateleira   | полка         | полиця        | 书架        |
-| **view**        | Ansicht     | vista       | vue         | vista       | ビュー         | 뷰         | visualização | представление | представлення | 视图        |
-| **decoration**  | Dekoration  | decoración  | décoration  | decorazione | 装飾           | 장식       | decoração    | оформление    | оформлення    | 装饰        |
-| **vault**       | Vault       | bóveda      | coffre-fort | vault       | 保管庫         | 보관함     | cofre        | хранилище     | сховище       | 库          |
-| **frontmatter** | Frontmatter | Frontmatter | Frontmatter | Frontmatter | フロントマター | 프런트매터 | Frontmatter  | Frontmatter   | Фронтматер    | Frontmatter |
-| **property**    | Eigenschaft | propiedad   | propriété   | proprietà   | プロパティ     | 속성       | propriedade  | свойство      | властивість   | 属性        |
-| **condition**   | Bedingung   | condición   | condition   | condizione  | 条件           | 조건       | condição     | условие       | умова         | 条件        |
-| **log** (noun)  | Protokoll   | registro    | log         | log         | ログ           | 로그       | log          | лог           | лог           | 日志        |
-| **bold**        | Fett        | negrita     | gras        | grassetto   | 太字           | 굵게       | negrito      | жирный        | жирний        | 粗体        |
-| **line**        | Zeile       | línea       | ligne       | riga        | 行             | 행         | linha        | строка        | рядок         | 行          |
-| **segment**     | Segment     | segmento    | segment     | segmento    | セグメント     | 세그먼트   | segmento     | сегмент       | сегмент       | 段          |
+| en              | de          | es            | fr          | it           | ja               | ko         | pt           | ru            | uk             | zh          |
+| --------------- | ----------- | ------------- | ----------- | ------------ | ---------------- | ---------- | ------------ | ------------- | -------------- | ----------- |
+| **journal**     | Journal     | diario        | journal     | diario       | ジャーナル       | 저널       | diário       | журнал        | журнал         | 日记        |
+| **note**        | Notiz       | nota          | note        | nota         | ノート           | 노트       | nota         | заметка       | нотатка        | 笔记        |
+| **shelf**       | Regal       | estante       | étagère     | scaffale     | 棚               | 선반       | prateleira   | полка         | полиця         | 书架        |
+| **view**        | Ansicht     | vista         | vue         | vista        | ビュー           | 뷰         | visualização | представление | представлення  | 视图        |
+| **decoration**  | Dekoration  | decoración    | décoration  | decorazione  | 装飾             | 장식       | decoração    | оформление    | оформлення     | 装饰        |
+| **vault**       | Vault       | bóveda        | coffre-fort | vault        | 保管庫           | 보관함     | cofre        | хранилище     | сховище        | 库          |
+| **frontmatter** | Frontmatter | Frontmatter   | Frontmatter | Frontmatter  | フロントマター   | 프런트매터 | Frontmatter  | Frontmatter   | Фронтматер     | Frontmatter |
+| **property**    | Eigenschaft | propiedad     | propriété   | proprietà    | プロパティ       | 속성       | propriedade  | свойство      | властивість    | 属性        |
+| **condition**   | Bedingung   | condición     | condition   | condizione   | 条件             | 조건       | condição     | условие       | умова          | 条件        |
+| **log** (noun)  | Protokoll   | registro      | log         | log          | ログ             | 로그       | log          | лог           | лог            | 日志        |
+| **bold**        | Fett        | negrita       | gras        | grassetto    | 太字             | 굵게       | negrito      | жирный        | жирний         | 粗体        |
+| **line**        | Zeile       | línea         | ligne       | riga         | 行               | 행         | linha        | строка        | рядок          | 行          |
+| **segment**     | Segment     | segmento      | segment     | segmento     | セグメント       | 세그먼트   | segmento     | сегмент       | сегмент        | 段          |
+| **snapshot**    | Snapshot    | instantánea   | instantané  | istantanea   | スナップショット | 스냅샷     | instantâneo  | снимок        | знімок         | 快照        |
+| **maintenance** | Wartung     | mantenimiento | maintenance | manutenzione | メンテナンス     | 유지관리   | manutenção   | обслуживание  | обслуговування | 维护        |
 
 Grammatical gender, where it decides agreement: `Journal` n. / `Notiz` f. / `Regal` n.
 (de) · `diario` m. / `nota` f. / `estante` m. (es) · `journal` m. / `note` f. /
