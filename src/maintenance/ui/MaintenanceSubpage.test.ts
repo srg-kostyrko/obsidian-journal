@@ -4,8 +4,10 @@ import { afterEach, describe, expect, it, vi } from "vitest";
 
 import { m } from "@/i18n";
 import { type Container, provideInjectorOnApp } from "@/infrastructure/di";
-import { NoticeService } from "@/infrastructure/host";
+import { NoticeService, PluginDataIOError } from "@/infrastructure/host";
 import { FakeNoticeService } from "@/infrastructure/host/testing";
+import { AsyncResult } from "@/infrastructure/result";
+import { CURRENT_VERSION } from "@/settings";
 import { createSettingsService } from "@/settings/testing";
 
 import MaintenanceSubpage from "./MaintenanceSubpage.vue";
@@ -13,7 +15,7 @@ import MaintenanceSubpage from "./MaintenanceSubpage.vue";
 afterEach(() => cleanup());
 
 async function setup(files: Record<string, string> = {}) {
-  const { service: settings, data, container } = createSettingsService({ raw: { version: 4 } });
+  const { service: settings, data, container } = createSettingsService({ raw: { version: CURRENT_VERSION } });
   await settings.initialize();
   for (const [name, contents] of Object.entries(files)) data.files.set(name, contents);
   const notices = new FakeNoticeService();
@@ -70,7 +72,7 @@ describe("MaintenanceSubpage", () => {
 
   it("restores settings and shows a notice when Restore is clicked", async () => {
     const { container, notices } = await setup({
-      "backup-v3-2026-08-16T10-20-30.json": '{"version":3,"journals":{}}',
+      "backup-v3-2026-08-16T10-20-30.json": JSON.stringify({ version: CURRENT_VERSION, journals: {} }),
     });
     mount(container);
     await screen.findByText(m.maintenance_snapshot_row({ version: 3 }));
@@ -84,6 +86,21 @@ describe("MaintenanceSubpage", () => {
 
   it("shows a failure notice when the snapshot cannot be read", async () => {
     const { container, notices } = await setup({ "backup-v3-2026-08-16T10-20-30.json": "not json" });
+    mount(container);
+    await screen.findByText(m.maintenance_snapshot_row({ version: 3 }));
+
+    await userEvent.click(
+      within(row("2026-08-16T10:20:30Z")).getByRole("button", { name: m.maintenance_snapshot_restore() }),
+    );
+
+    expect(notices.messages).toContain(m.maintenance_snapshot_failed());
+  });
+
+  it("shows a failure notice when the snapshot reads fine but cannot be applied", async () => {
+    const { container, data, notices } = await setup({
+      "backup-v3-2026-08-16T10-20-30.json": JSON.stringify({ version: CURRENT_VERSION, journals: {} }),
+    });
+    vi.spyOn(data, "save").mockReturnValueOnce(AsyncResult.err(new PluginDataIOError("save", new Error("disk full"))));
     mount(container);
     await screen.findByText(m.maintenance_snapshot_row({ version: 3 }));
 
