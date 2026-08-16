@@ -109,7 +109,7 @@ export class WorkspaceOpenError extends HostError {
 export class PluginDataIOError extends HostError {
   readonly kind = "plugin-data-io-failed" as const;
   constructor(
-    readonly operation: "load" | "save",
+    readonly operation: "load" | "save" | "list" | "read-file" | "write-file" | "delete-file",
     override readonly cause: unknown,
   ) {
     super(`Plugin data ${operation} failed`);
