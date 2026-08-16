@@ -25,46 +25,54 @@ defineEmits<{ edit: [lineIndex: number, segmentIndex: number] }>();
 <template>
   <div class="nav-block">
     <CellDecoration v-if="block.decorateWholeBlock" :period="period" :scope="blockScope" class="nav-block-inner">
-      <div v-for="(line, lineIndex) of block.lines" :key="lineIndex" class="nav-block-line">
-        <NavBlockSegment
-          v-for="(segment, segmentIndex) of line"
-          :key="segmentIndex"
-          :journal
-          :segment
-          :ref-date="refDate"
-          :prevent-navigation="preventNavigation"
-          :editable
-          :shelf
-          @edit="$emit('edit', lineIndex, segmentIndex)"
-        />
-        <slot
-          name="lineAction"
-          :index="lineIndex"
-          :is-first="lineIndex === 0"
-          :is-last="lineIndex === block.lines.length - 1"
-        />
-      </div>
+      <template v-for="(line, lineIndex) of block.lines" :key="lineIndex">
+        <div class="nav-block-line">
+          <NavBlockSegment
+            v-for="(segment, segmentIndex) of line"
+            :key="segmentIndex"
+            :journal
+            :segment
+            :ref-date="refDate"
+            :prevent-navigation="preventNavigation"
+            :editable
+            :shelf
+            :drag-id="editable ? `${lineIndex}:${segmentIndex}` : undefined"
+            @edit="$emit('edit', lineIndex, segmentIndex)"
+          />
+          <slot
+            name="lineAction"
+            :index="lineIndex"
+            :is-first="lineIndex === 0"
+            :is-last="lineIndex === block.lines.length - 1"
+          />
+        </div>
+        <slot name="afterLine" :index="lineIndex" />
+      </template>
     </CellDecoration>
     <template v-else>
-      <div v-for="(line, lineIndex) of block.lines" :key="lineIndex" class="nav-block-line">
-        <NavBlockSegment
-          v-for="(segment, segmentIndex) of line"
-          :key="segmentIndex"
-          :journal
-          :segment
-          :ref-date="refDate"
-          :prevent-navigation="preventNavigation"
-          :editable
-          :shelf
-          @edit="$emit('edit', lineIndex, segmentIndex)"
-        />
-        <slot
-          name="lineAction"
-          :index="lineIndex"
-          :is-first="lineIndex === 0"
-          :is-last="lineIndex === block.lines.length - 1"
-        />
-      </div>
+      <template v-for="(line, lineIndex) of block.lines" :key="lineIndex">
+        <div class="nav-block-line">
+          <NavBlockSegment
+            v-for="(segment, segmentIndex) of line"
+            :key="segmentIndex"
+            :journal
+            :segment
+            :ref-date="refDate"
+            :prevent-navigation="preventNavigation"
+            :editable
+            :shelf
+            :drag-id="editable ? `${lineIndex}:${segmentIndex}` : undefined"
+            @edit="$emit('edit', lineIndex, segmentIndex)"
+          />
+          <slot
+            name="lineAction"
+            :index="lineIndex"
+            :is-first="lineIndex === 0"
+            :is-last="lineIndex === block.lines.length - 1"
+          />
+        </div>
+        <slot name="afterLine" :index="lineIndex" />
+      </template>
     </template>
   </div>
 </template>

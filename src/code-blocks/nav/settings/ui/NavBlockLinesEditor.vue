@@ -16,9 +16,13 @@ import UiIconedRow from "@/ui/UiIconedRow.vue";
 import UiSettingRow from "@/ui/UiSettingRow.vue";
 import UiToggle from "@/ui/UiToggle.vue";
 
+import { applySegmentReorder } from "../../line-reorder";
 import { periodForJournal } from "../../period-for-journal";
 import NavBlock from "../../ui/NavBlock.vue";
 import { EditNavBlockSegmentFlow } from "../flows/edit-nav-segment.flow";
+
+import NavBlockLineDropZone from "./NavBlockLineDropZone.vue";
+import NavBlockLineGutter from "./NavBlockLineGutter.vue";
 
 const {
   journalName,
@@ -74,6 +78,27 @@ function moveDown(lineIndex: number): void {
   if (!lines || lineIndex >= lines.length - 1) return;
   [lines[lineIndex], lines[lineIndex + 1]] = [lines[lineIndex + 1], lines[lineIndex]];
 }
+
+// Unique per rendered block so dragging never crosses from, say, navBlock into intervalBlock,
+// or between two journals' editors open on the same page.
+const dragGroup = computed(() => `nav-lines:${journalName}:${field}`);
+
+// Each line owns its own dragging flag (only the drag's source line ever reports true), so
+// the drop zones need the OR of all of them — a counter rather than a boolean survives two
+// lines' start/end events landing out of the order a single drag would produce.
+const dragCount = ref(0);
+const anyDragging = computed(() => dragCount.value > 0);
+function onDragStart(): void {
+  dragCount.value += 1;
+}
+function onDragEnd(): void {
+  dragCount.value = Math.max(0, dragCount.value - 1);
+}
+
+function reorderSegments(targetLine: number, orderedIds: string[]): void {
+  if (!config.value) return;
+  config.value[field].lines = applySegmentReorder(config.value[field].lines, targetLine, orderedIds);
+}
 </script>
 
 <template>
@@ -119,26 +144,28 @@ function moveDown(lineIndex: number): void {
         @edit="editSegment"
       >
         <template #lineAction="{ index, isFirst, isLast }">
-          <span class="nav-line-gutter">
-            <UiIconButton
-              :icon="icons.action.moveUp"
-              :tooltip="m.common_action_move_up()"
-              :disabled="isFirst"
-              @click="moveUp(index)"
-            />
-            <UiIconButton
-              :icon="icons.action.moveDown"
-              :tooltip="m.common_action_move_down()"
-              :disabled="isLast"
-              @click="moveDown(index)"
-            />
-            <UiIconButton :icon="icons.action.add" :tooltip="m.block_rows_add_row()" @click="addSegment(index)" />
-            <UiIconButton
-              :icon="icons.action.delete"
-              :tooltip="m.block_rows_delete_tooltip()"
-              @click="removeLine(index)"
-            />
-          </span>
+          <NavBlockLineGutter
+            :line-index="index"
+            :segment-count="config[field].lines[index]?.length ?? 0"
+            :is-first="isFirst"
+            :is-last="isLast"
+            :group="dragGroup"
+            @move-up="moveUp(index)"
+            @move-down="moveDown(index)"
+            @add-segment="addSegment(index)"
+            @remove-line="removeLine(index)"
+            @reorder="(orderedIds) => reorderSegments(index, orderedIds)"
+            @drag-start="onDragStart"
+            @drag-end="onDragEnd"
+          />
+        </template>
+        <template #afterLine="{ index }">
+          <NavBlockLineDropZone
+            :target-line="index + 1"
+            :showing="anyDragging"
+            :group="dragGroup"
+            @drop="(orderedIds) => reorderSegments(index + 1, orderedIds)"
+          />
         </template>
       </NavBlock>
     </div>
@@ -165,20 +192,5 @@ function moveDown(lineIndex: number): void {
 .nav-block-preview :deep(.nav-row) {
   flex: 1 1 auto;
   min-width: 0;
-}
-.nav-line-gutter {
-  display: inline-flex;
-  align-items: center;
-  gap: var(--size-2-1);
-  color: var(--text-muted);
-  --icon-size: var(--icon-s);
-}
-.nav-line-gutter :deep(.icon-button) {
-  padding: var(--size-2-1) var(--size-2-2);
-}
-/* The move buttons stay in place on the edge lines so every line's gutter keeps the same
-   columns; dimmed so an unusable one does not read as clickable. */
-.nav-line-gutter :deep(.icon-button:disabled) {
-  opacity: 0.5;
 }
 </style>

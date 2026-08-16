@@ -42,6 +42,9 @@ const props = defineProps<{
   preventNavigation?: boolean;
   editable?: boolean;
   shelf?: string | null;
+  // The editor's synthesized positional id ("<lineIndex>:<segmentIndex>"), read off the DOM
+  // by the drag wiring in settings/ui — unused outside the editor.
+  dragId?: string;
 }>();
 
 const emit = defineEmits<{ edit: [] }>();
@@ -197,6 +200,8 @@ function onPointerEnter(event: PointerEvent): void {
     :tabindex="editable ? 0 : undefined"
     :role="editable ? 'button' : undefined"
     :aria-label="editable ? m.block_rows_edit_tooltip() : undefined"
+    :data-id="dragId"
+    :data-drag-handle="editable ? '' : undefined"
     @click.prevent="onClick"
     @auxclick.middle.prevent="onClick"
     @contextmenu.prevent="onContextMenu"
