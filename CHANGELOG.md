@@ -2,7 +2,7 @@
 
 All notable changes to this project will be documented in this file.
 
-## [Unreleased]
+## [3.1.0] - 2026-08-17
 
 ### Features
 
@@ -12,9 +12,9 @@ All notable changes to this project will be documented in this file.
 - A numbering variable can now be offset and rendered as an ordinal: `{{index+3}}` adds three to the rendered value, `{{index-1}}` subtracts one, and `{{index:o}}` renders it as an ordinal ("4th"). They combine as `{{index+3:o}}`, and both survive the round-trip out of a note name, so a journal named `Sprint {{index+3}}` still recognizes its own notes. This offset syntax now applies to any variable name, not only numbering ones, so a template that happened to contain a literal `+3` or `-1` after a variable name (for example `{{date+3}}`) will render differently from before.
 - A new Maintenance page in settings gives you a way back if an update to the plugin damages your settings: before your settings are migrated to a new version, a snapshot is saved automatically, and you can restore it from the Maintenance page with one click.
 - The Maintenance page can also run a vault check: it finds notes whose frontmatter no longer matches their journal — notes the calendar can no longer see, notes whose period range is wrong, and notes more than one file claims the same period for — and repairs the safe cases individually or all at once. Notes it cannot safely repair are listed with an explanation instead of a guess.
-
 - A `calendar-timeline` code block in `week` or `month` mode can now show neighboring periods around the current one, using the new `before` and `after` options: `before: 1` with `after: 1` in week mode renders the previous, current and next week together.
 - Sequential numbering can now chain several digits together, each with its own variable name, start number, and reset rule, so the fastest one carries into the next when it wraps — a name template of `Release{{release}}Sprint{{sprint}}` with `release` never resetting and `sprint` resetting every 6 notes produces `Release4711Sprint1` … `Release4711Sprint6`, then `Release4712Sprint1`.
+- A numbering digit's variable name can be written in any script — `{{спринт}}` or `{{スプリント}}` is accepted where only Latin letters were before.
 
 ### Bug Fixes
 
