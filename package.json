@@ -55,7 +55,7 @@
     "@eslint/js": "^10.0.1",
     "@testing-library/user-event": "^14.6.4",
     "@testing-library/vue": "^8.1.0",
-    "@tsconfig/node22": "^22.0.0",
+    "@tsconfig/node24": "^24.0.0",
     "@types/mocha": "^10.0.10",
     "@types/node": "^26.2.0",
     "@types/sortablejs": "^1.15.9",
