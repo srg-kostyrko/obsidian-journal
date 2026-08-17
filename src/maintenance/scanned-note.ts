@@ -131,4 +131,11 @@ export class ScannedNoteResolver {
       return { kind: "unreadable", message: error instanceof Error ? error.message : String(error) };
     }
   }
+
+  // A settings reload, a journal edit or a snapshot restore can change what a journal's template
+  // inverts to, and the resolver is a container-lifetime singleton — so a scan must start from a
+  // clean cache or it keeps inverting against a journal config that no longer exists.
+  resetInverters(): void {
+    this.#inverters.clear();
+  }
 }

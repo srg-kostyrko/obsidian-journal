@@ -104,6 +104,10 @@ export class ScanService {
   // Before the index is ready every note reads as stranded, so the walk waits rather than reporting on an empty index.
   async scan(): Promise<ScanReport> {
     await this.#index.whenReady();
+    // The resolver's per-journal inverter cache is built from whatever config was live at first
+    // use and never invalidates on its own; a settings change between two scans must not survive
+    // into this one.
+    this.#resolver.resetInverters();
 
     const resolved: ScannedNote[] = [];
     const unreadable: UnreadableNote[] = [];

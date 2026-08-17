@@ -304,6 +304,21 @@ describe("ScanService", () => {
     expect(report.findings.at(0)?.repair).toEqual({ kind: "rewrite", anchor: anchor("2026-01-12") });
   });
 
+  it("stops using a stale path inverter after the journal's name template changes between scans", async () => {
+    const weekly = fixedJournal("weekly", { type: "week" }, { nameTemplate: "Nope" });
+    const { service, index, notes, metadata } = buildScan({ weekly });
+    seed(notes, metadata, "2026-W03.md", { journal: "weekly", "journal-date": "not-a-date" });
+    index.markReady();
+
+    const first = await service.scan();
+    expect(first.findings.at(0)?.repair).toEqual({ kind: "undecidable", reason: "path-not-invertible" });
+
+    weekly.nameTemplate = "{{date:YYYY-[W]ww}}";
+    const second = await service.scan();
+
+    expect(second.findings.at(0)?.repair).toEqual({ kind: "rewrite", anchor: anchor("2026-01-12") });
+  });
+
   it("reports a note whose journal no longer exists", async () => {
     const { service, index, notes, metadata } = buildScan({ weekly: fixedJournal("weekly", { type: "week" }) });
     seed(notes, metadata, "old.md", { journal: "gone", "journal-date": "2026-01-12" });
