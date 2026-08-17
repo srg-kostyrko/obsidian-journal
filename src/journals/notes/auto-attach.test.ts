@@ -190,10 +190,7 @@ describe("AutoAttachService", () => {
       ),
     });
     const notes = new FakeNotesService();
-    // A renamed note was already in the vault, so Obsidian carries its parsed metadata across.
-    const metadata = new FakeNoteMetadataService();
-    metadata.setMetadata("2026-05-19.md" as VaultPath, { properties: {} } as unknown as NoteMetadata);
-    const container = build(repo, notes, metadata);
+    const container = build(repo, notes);
     const spy = vi.spyOn(container.resolve(NoteCreationService), "attachNote");
     notes.seed("Inbox/draft.md" as VaultPath, "");
     await container.resolve(AutoAttachService).initialize();
@@ -244,6 +241,31 @@ describe("AutoAttachService", () => {
     notes.emitMetadataChanged("2026-05-19.md" as VaultPath);
     await new Promise((r) => window.setTimeout(r, 0));
     expect(spy).not.toHaveBeenCalled();
+  });
+
+  // A rename re-keys metadataCache without re-parsing, so no metadata-changed follows it. A
+  // renamed path held back to wait for one would never be adopted at all.
+  it("attaches a renamed note without waiting for a metadata-changed that never comes", async () => {
+    const repo = fakeRepo({
+      daily: fixedJournal(
+        "daily",
+        { type: "day" },
+        { timeline: { start: anchor("2020-01-01"), end: { kind: "never" } } },
+      ),
+    });
+    const notes = new FakeNotesService();
+    const container = build(repo, notes);
+    const spy = vi.spyOn(container.resolve(NoteCreationService), "attachNote");
+    await container.resolve(AutoAttachService).initialize();
+
+    // Created at a non-matching path and renamed into a matching one before anything parsed it,
+    // so the create is still parked and the rename is the only signal that will ever arrive.
+    await notes.create("Inbox/draft.md" as VaultPath, "");
+    await notes.rename("Inbox/draft.md" as VaultPath, "2026-05-19.md" as VaultPath);
+    await new Promise((r) => window.setTimeout(r, 0));
+
+    expect(spy).toHaveBeenCalledTimes(1);
+    expect(spy.mock.calls[0]?.[1]).toBe("2026-05-19.md");
   });
 
   it("waits for a created note to be parsed before deciding anything about it", async () => {

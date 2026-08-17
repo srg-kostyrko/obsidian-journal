@@ -48,9 +48,15 @@ export class AutoAttachService {
   // carries a complete claim is adopted and rewritten — which for a custom interval destroys a
   // manually set end date, and that end date *is* the sequence every later interval steps from.
   // VaultSubscriptionService answers this by never acting on "created" and waiting for
-  // metadata-changed instead; auto-attach follows the same rule. It subscribes at layout-ready,
-  // after that service's own subscription, so a note that parses into a valid entry is in the
-  // index by the time this runs and #handle's first guard drops it untouched.
+  // metadata-changed instead; a created path waits the same way here. It subscribes at
+  // layout-ready, after that service's own subscription, so a note that parses into a valid entry
+  // is in the index by the time this runs and #handle's first guard drops it untouched.
+  //
+  // Renames must NOT wait: a rename changes no content, so Obsidian re-keys the cache without
+  // re-parsing and no metadata-changed ever follows. A renamed path parked here would never be
+  // adopted at all. They need no wait either — VaultSubscriptionService registers its
+  // renamed -> transferPath handler at initialize, ahead of this one, so an already-connected
+  // note carries its index entry across and #handle's guard sees it.
   #handleWhenParsed(path: VaultPath): void {
     if (this.#metadata.get(path).isSome()) {
       void this.#handle(path);
@@ -110,7 +116,7 @@ export class AutoAttachService {
         }),
         this.#notes.events.on("renamed", ({ from, to }) => {
           this.#awaitingParse.delete(from);
-          this.#handleWhenParsed(to);
+          void this.#handle(to);
         }),
         this.#notes.events.on("deleted", (path) => {
           this.#awaitingParse.delete(path);
