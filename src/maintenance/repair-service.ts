@@ -58,7 +58,10 @@ export class RepairService {
   }
 
   async #applyAll(actions: readonly RepairAction[]): Promise<RepairLogEntry[]> {
-    const log: RepairLogEntry[] = [];
+    // Paired positionally rather than re-matched by path afterwards: a batch can carry two
+    // actions for the same path (a strip-claim and a rewrite, or two rewrites), and matching by
+    // path alone would verify every entry for that path against whichever intent `find` hit first.
+    const results: { entry: RepairLogEntry; intent?: Intent }[] = [];
     const intents: Intent[] = [];
     // After the scan's collision gate this should never refuse anything; if it does, the gate
     // has a bug and one of the two notes would otherwise have vanished from the calendar.
@@ -80,43 +83,52 @@ export class RepairService {
 
       if (action.repair.kind === "strip-claim") {
         const result = await this.#connection.disconnect(action.path);
-        log.push({
-          path: action.path,
-          journalName: action.journalName,
-          outcome:
-            result.kind === "err"
-              ? { kind: "failed", reason: "write-failed", message: result.error.message }
-              : { kind: "repaired" },
+        results.push({
+          entry: {
+            path: action.path,
+            journalName: action.journalName,
+            outcome:
+              result.kind === "err"
+                ? { kind: "failed", reason: "write-failed", message: result.error.message }
+                : { kind: "repaired" },
+          },
         });
         continue;
       }
 
       const anchor = action.repair.anchor;
       if (!claim(action.journalName, anchor)) {
-        log.push({
-          path: action.path,
-          journalName: action.journalName,
-          outcome: { kind: "failed", reason: "contested" },
+        results.push({
+          entry: {
+            path: action.path,
+            journalName: action.journalName,
+            outcome: { kind: "failed", reason: "contested" },
+          },
         });
         continue;
       }
       const result = await this.#connection.reanchor(action.journalName, action.path, { anchor });
       if (result.kind === "err") {
-        log.push({
-          path: action.path,
-          journalName: action.journalName,
-          outcome: { kind: "failed", reason: "write-failed", message: result.error.message },
+        results.push({
+          entry: {
+            path: action.path,
+            journalName: action.journalName,
+            outcome: { kind: "failed", reason: "write-failed", message: result.error.message },
+          },
         });
         continue;
       }
-      intents.push({ path: action.path, journalName: action.journalName, anchor });
-      log.push({ path: action.path, journalName: action.journalName, outcome: { kind: "repaired" } });
+      const intent: Intent = { path: action.path, journalName: action.journalName, anchor };
+      intents.push(intent);
+      results.push({
+        entry: { path: action.path, journalName: action.journalName, outcome: { kind: "repaired" } },
+        intent,
+      });
     }
 
     await this.#awaitIndexed(intents);
 
-    const verified = log.map((entry) => {
-      const intent = intents.find((candidate) => candidate.path === entry.path);
+    const verified = results.map(({ entry, intent }) => {
       if (intent === undefined || entry.outcome.kind === "failed") return entry;
       return this.#satisfied([intent])
         ? entry

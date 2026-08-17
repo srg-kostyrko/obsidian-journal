@@ -110,4 +110,37 @@ describe("RepairService", () => {
 
     expect(connection.reanchor).not.toHaveBeenCalled();
   });
+
+  it("verifies each entry against its own intent when the same path appears twice in a batch", async () => {
+    vi.useFakeTimers();
+    const { service, index, connection } = build();
+    connection.reanchor.mockImplementation((journalName: string, path: VaultPath, target: { anchor: string }) => {
+      index.register({ journalName, anchor: target.anchor as never, path });
+      return AsyncResult.ok(undefined);
+    });
+
+    const running = service.apply([rewrite("a.md", "2026-01-12"), rewrite("a.md", "2026-01-19")]);
+    await vi.runAllTimersAsync();
+    const result = await running;
+
+    expectOk(result);
+    expect(result.value.at(0)?.outcome).toEqual({ kind: "failed", reason: "still-rejected" });
+    expect(result.value.at(1)?.outcome).toEqual({ kind: "repaired" });
+    vi.useRealTimers();
+  });
+
+  it("resolves through the entryChanged event without waiting out the settle timeout", async () => {
+    const { service, index, connection } = build();
+    connection.reanchor.mockImplementation((journalName: string, path: VaultPath, target: { anchor: string }) => {
+      window.setTimeout(() => {
+        index.register({ journalName, anchor: target.anchor as never, path });
+      }, 0);
+      return AsyncResult.ok(undefined);
+    });
+
+    const result = await service.apply([rewrite("a.md", "2026-01-12")]);
+
+    expectOk(result);
+    expect(result.value.at(0)?.outcome).toEqual({ kind: "repaired" });
+  });
 });
