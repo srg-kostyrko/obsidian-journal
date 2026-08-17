@@ -6,6 +6,8 @@ import { clickButton, closeSettings, expandSection, openSettings } from "../supp
 
 // Colons are illegal in a Windows filename, hence the dashes — see snapshot-service.ts's NAME_PATTERN.
 const BACKUP_PATTERN = /^backup-v(\d+)-\d{4}-\d{2}-\d{2}T\d{2}-\d{2}-\d{2}\.json$/;
+// Distinct from BACKUP_PATTERN: SnapshotService names a pre-restore snapshot backup-restore-v<n>-<timestamp>.json.
+const PRE_RESTORE_PATTERN = /^backup-restore-v(\d+)-\d{4}-\d{2}-\d{2}T\d{2}-\d{2}-\d{2}\.json$/;
 
 // Slice C — the migration seam, narrowed to the snapshot SettingsService takes before it
 // rewrites a behind-CURRENT_VERSION data.json. The e2e-snapshot-upgrade fixture ships a v4
@@ -79,13 +81,7 @@ describe("pre-migration settings snapshot", () => {
     await clickButton(m.maintenance_open());
     await clickButton(m.maintenance_snapshot_restore());
 
-    await browser.waitUntil(
-      async () => {
-        const files = await listPluginDataFiles();
-        return files.some((name) => name.startsWith("backup-restore-v"));
-      },
-      { timeoutMsg: "no pre-restore snapshot was written" },
-    );
+    await waitForSnapshotFiles(PRE_RESTORE_PATTERN);
 
     await closeSettings();
   });

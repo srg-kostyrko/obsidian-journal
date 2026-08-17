@@ -1,8 +1,8 @@
-import { browser, expect } from "@wdio/globals";
+import { browser } from "@wdio/globals";
 
 import { m } from "../../src/i18n/paraglide/messages.js";
 import { clickButton, closeSettings, expandSection, openSettings } from "../support/settings.js";
-import { frontmatterOf } from "../support/vault.js";
+import { waitForJournalFrontmatter } from "../support/vault.js";
 
 // The fixture ships no calendar override, so the week grid comes from this harness's global
 // locale (dow: 0, doy: 6 — Sunday-start), not the ISO grid: 2026-W03 runs 2026-01-11..17, so
@@ -14,8 +14,9 @@ describe("maintenance vault check", () => {
   });
 
   it("re-anchors a note the calendar could not see", async () => {
-    const before = await frontmatterOf("Weeks/2026-W03.md");
-    expect(before?.["journal-date"]).toBe("2026-01-14");
+    // reloadObsidian only guarantees onLayoutReady, not that metadataCache has resolved every
+    // note yet, so even this "starts stranded" check has to poll rather than read once.
+    await waitForJournalFrontmatter("Weeks/2026-W03.md", { journal: "weekly", date: "2026-01-14" });
 
     await openSettings();
     await expandSection(m.maintenance_heading());
@@ -24,13 +25,7 @@ describe("maintenance vault check", () => {
 
     // The repair is only real once the note is indexed at its intended anchor, and that
     // round-trips through metadataCache — poll rather than assert straight after the click.
-    await browser.waitUntil(
-      async () => {
-        const fm = await frontmatterOf("Weeks/2026-W03.md");
-        return fm?.["journal-date"] === "2026-01-11";
-      },
-      { timeoutMsg: "note was never re-anchored to its week's first day" },
-    );
+    await waitForJournalFrontmatter("Weeks/2026-W03.md", { journal: "weekly", date: "2026-01-11" });
 
     await closeSettings();
   });
