@@ -246,6 +246,56 @@ describe("NotePathService.candidateFor", () => {
     expect(unwrap(result).anchor).toBe("2026-05-19");
   });
 
+  it("inverts a quarter split between a year folder and the filename", () => {
+    const repo = fakeRepo({
+      quarterly: fixedJournal(
+        "quarterly",
+        { type: "quarter" },
+        { folder: "Quarters/{{date:YYYY}}", nameTemplate: "{{date:[Q]Q}}" },
+      ),
+    });
+    const c = buildContainer(repo);
+    const svc = c.resolve(NotePathService);
+    expect(unwrap(svc.candidateFor("quarterly", "Quarters/2027/Q3.md" as VaultPath)).anchor).toBe("2027-07-01");
+    expect(unwrap(svc.candidateFor("quarterly", "Quarters/2025/Q1.md" as VaultPath)).anchor).toBe("2025-01-01");
+  });
+
+  it("round-trips every quarter of a split template, including across years", () => {
+    const repo = fakeRepo({
+      quarterly: fixedJournal(
+        "quarterly",
+        { type: "quarter" },
+        { folder: "Quarters/{{date:YYYY}}", nameTemplate: "{{date:[Q]Q}}" },
+      ),
+    });
+    const c = buildContainer(repo);
+    const svc = c.resolve(NotePathService);
+    for (const a of ["2025-01-01", "2025-04-01", "2025-07-01", "2025-10-01", "2027-10-01"]) {
+      const path = svc.pathFor("quarterly", { journalName: "quarterly", anchor: anchor(a) });
+      assert(path.isOk());
+      expect(unwrap(svc.candidateFor("quarterly", path.value)).anchor).toBe(a);
+    }
+  });
+
+  // A week's tokens render from its representative day, so the year written into the folder is the
+  // week-year -- a week starting in the previous calendar year has to invert back to its own start.
+  it("round-trips a week split between a year folder and the filename across a year boundary", () => {
+    const repo = fakeRepo({
+      weekly: fixedJournal("weekly", { type: "week" }, { folder: "{{date:YYYY}}", nameTemplate: "{{date:[W]ww}}" }),
+    });
+    const c = buildContainer(repo);
+    const svc = c.resolve(NotePathService);
+    const cycle = c.resolve(CycleService);
+    // Each seed day sits in a week whose start falls in the previous calendar year.
+    for (const seed of ["2026-01-01", "2025-01-01", "2024-01-01"]) {
+      const expected = cycle.anchorOf("weekly", CalendarDate.fromAnchor(anchor(seed)));
+      assert(expected.isSome());
+      const path = svc.pathFor("weekly", { journalName: "weekly", anchor: expected.value });
+      assert(path.isOk());
+      expect(unwrap(svc.candidateFor("weekly", path.value)).anchor).toBe(expected.value);
+    }
+  });
+
   it("recovers the period anchor from a note named by its start date", () => {
     const repo = fakeRepo({
       weekly: fixedJournal("weekly", { type: "week" }, { nameTemplate: "{{start_date:YYYY-MM-DD}}" }),

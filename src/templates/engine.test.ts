@@ -310,6 +310,57 @@ describe("TemplateEngine.parse", () => {
       expect(asDateBinding(result.value.get("date")).toAnchor()).toBe("2022-05-19");
     });
 
+    it("combines a year folder with a quarter file name", () => {
+      const engine = installTestEngine();
+      const stream = tokenize("{{date:YYYY}}/{{date:[Q]Q}}.md");
+      const result = engine.parse(stream, "2027/Q3.md", buildFakeContext());
+      expectOk(result);
+      expect(asDateBinding(result.value.get("date")).toAnchor()).toBe("2027-07-01");
+    });
+
+    it("combines a year folder with a quarter file name for a year that is not the current one", () => {
+      const engine = installTestEngine();
+      const stream = tokenize("{{date:YYYY}}/{{date:[Q]Q}}.md");
+      const result = engine.parse(stream, "2025/Q1.md", buildFakeContext());
+      expectOk(result);
+      expect(asDateBinding(result.value.get("date")).toAnchor()).toBe("2025-01-01");
+    });
+
+    it("combines a year folder with a week file name", () => {
+      const engine = installTestEngine();
+      const stream = tokenize("{{date:YYYY}}/{{date:[W]ww}}.md");
+      const result = engine.parse(stream, "2026/W03.md", buildFakeContext());
+      expectOk(result);
+      expect(asDateBinding(result.value.get("date")).toAnchor()).toBe("2026-01-12");
+    });
+
+    // The year a week renders under is its week-year -- WeekPeriod renders from a representative
+    // day chosen for exactly that -- so a week starting in the previous calendar year must invert
+    // from the week-year it was written with, not from the calendar year of its start.
+    it("combines a year folder with a week that starts in the previous calendar year", () => {
+      const engine = installTestEngine();
+      const stream = tokenize("{{date:YYYY}}/{{date:[W]ww}}.md");
+      const result = engine.parse(stream, "2026/W01.md", buildFakeContext());
+      expectOk(result);
+      expect(asDateBinding(result.value.get("date")).toAnchor()).toBe("2025-12-29");
+    });
+
+    it("combines a year folder with a day-of-year file name", () => {
+      const engine = installTestEngine();
+      const stream = tokenize("{{date:YYYY}}/{{date:DDDD}}.md");
+      const result = engine.parse(stream, "2026/003.md", buildFakeContext());
+      expectOk(result);
+      expect(asDateBinding(result.value.get("date")).toAnchor()).toBe("2026-01-03");
+    });
+
+    it("returns conflict when a month and a quarter capture disagree", () => {
+      const engine = installTestEngine();
+      const stream = tokenize("{{date:YYYY-MM}}/{{date:[Q]Q}}.md");
+      const result = engine.parse(stream, "2027-02/Q3.md", buildFakeContext());
+      expectErr(result);
+      expect(result.error.detail.kind).toBe("conflict");
+    });
+
     it("returns conflict when split components disagree on a shared field", () => {
       const engine = installTestEngine();
       const context = buildFakeContext();
