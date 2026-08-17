@@ -3,7 +3,7 @@ import { describe, expect, it } from "vitest";
 import { anchor } from "@/calendar/testing";
 import type { VaultPath } from "@/infrastructure/host";
 
-import { gateCollisions } from "./scan-service";
+import { gateCollisions, orphanFindings, pendingOldIdsOf } from "./scan-service";
 
 import type { Finding } from "./findings";
 import type { ScannedNote } from "./scanned-note";
@@ -90,5 +90,39 @@ describe("gateCollisions", () => {
     const notes = [note("a.md"), note("b.md", { claimedJournal: "other" })];
 
     expect(gateCollisions(notes, []).filter((f) => f.check === "duplicate-anchor")).toHaveLength(0);
+  });
+});
+
+describe("orphanFindings", () => {
+  it("reports a note whose journal no longer exists", () => {
+    const notes = [note("old.md", { journalExists: false, claimedJournal: "gone" })];
+
+    const result = orphanFindings(notes, new Set());
+
+    expect(result).toHaveLength(1);
+    expect(result.at(0)?.check).toBe("orphaned-claim");
+    expect(result.at(0)?.journalName).toBe("gone");
+    expect(result.at(0)?.repair).toEqual({ kind: "undecidable", reason: "needs-choice" });
+  });
+
+  it("never reports a note still waiting on the legacy note migration", () => {
+    const notes = [note("legacy.md", { journalExists: false, claimedJournal: "legacy-id-7" })];
+
+    expect(orphanFindings(notes, new Set(["legacy-id-7"]))).toHaveLength(0);
+  });
+
+  it("ignores notes whose journal exists", () => {
+    expect(orphanFindings([note("fine.md")], new Set())).toHaveLength(0);
+  });
+});
+
+describe("pendingOldIdsOf", () => {
+  it("collects the old journal ids the note migration still has to rewrite", () => {
+    const ids = pendingOldIdsOf([
+      { kind: "interval", oldJournalId: "legacy-id-7", name: "Sprint" },
+      { kind: "week-anchor", journalName: "weekly" },
+    ]);
+
+    expect([...ids]).toEqual(["legacy-id-7"]);
   });
 });

@@ -1,5 +1,6 @@
 import type { AnchorString } from "@/calendar";
 import type { VaultPath } from "@/infrastructure/host";
+import type { PendingNoteMigration } from "@/settings/legacy/pending-note-migration";
 
 import type { Finding } from "./findings";
 import type { ScannedNote } from "./scanned-note";
@@ -55,4 +56,32 @@ export function gateCollisions(notes: readonly ScannedNote[], findings: readonly
     });
   }
   return gated;
+}
+
+export function pendingOldIdsOf(markers: readonly PendingNoteMigration[]): Set<string> {
+  const ids = new Set<string>();
+  for (const marker of markers) {
+    if (marker.kind !== "week-anchor") ids.add(marker.oldJournalId);
+  }
+  return ids;
+}
+
+// An inventory, not a defect list. Keep-mode deletion deliberately leaves these keys behind and
+// records nothing, so nothing in the data tells it apart from a failed migration — and a note
+// still keyed by a legacy id is excluded outright, because stripping that key strands its
+// legacy frontmatter forever (the same reason auto-attach refuses to adopt one).
+export function orphanFindings(notes: readonly ScannedNote[], pendingOldIds: ReadonlySet<string>): readonly Finding[] {
+  const out: Finding[] = [];
+  for (const note of notes) {
+    if (note.journalExists) continue;
+    if (pendingOldIds.has(note.claimedJournal)) continue;
+    out.push({
+      check: "orphaned-claim",
+      path: note.path,
+      journalName: note.claimedJournal,
+      detail: { kind: "orphaned" },
+      repair: { kind: "undecidable", reason: "needs-choice" },
+    });
+  }
+  return out;
 }
