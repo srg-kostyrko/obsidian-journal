@@ -83,4 +83,52 @@ describe("SnapshotService", () => {
 
     expectErr(await service.read("backup-v3-2026-08-16T10-20-30.json"));
   });
+
+  it("writes a pre-restore snapshot under its own name shape", async () => {
+    const { service, data } = build();
+
+    expectOk(await service.writePreRestore(5, '{"version":5}', "2026-08-17T11:22:33.000Z"));
+
+    expect([...data.files.keys()]).toEqual(["backup-restore-v5-2026-08-17T11-22-33.json"]);
+  });
+
+  it("reports which event each snapshot was taken for", async () => {
+    const { service, data } = build();
+    data.files.set("backup-v3-2026-08-16T10-20-30.json", "{}");
+    data.files.set("backup-restore-v5-2026-08-17T11-22-33.json", "{}");
+
+    const result = await service.list();
+
+    expectOk(result);
+    expect(result.value.map((s) => [s.name, s.reason, s.fromVersion])).toEqual([
+      ["backup-restore-v5-2026-08-17T11-22-33.json", "pre-restore", 5],
+      ["backup-v3-2026-08-16T10-20-30.json", "migration", 3],
+    ]);
+  });
+
+  it("prunes pre-restore snapshots beyond the keep count, newest first", async () => {
+    const { service, data } = build();
+    data.files.set("backup-restore-v5-2026-08-01T00-00-00.json", "{}");
+    data.files.set("backup-restore-v5-2026-08-02T00-00-00.json", "{}");
+    data.files.set("backup-restore-v5-2026-08-03T00-00-00.json", "{}");
+    data.files.set("backup-v3-2026-07-01T00-00-00.json", "{}");
+
+    expectOk(await service.prune("pre-restore", 2));
+
+    expect([...data.files.keys()].toSorted()).toEqual([
+      "backup-restore-v5-2026-08-02T00-00-00.json",
+      "backup-restore-v5-2026-08-03T00-00-00.json",
+      "backup-v3-2026-07-01T00-00-00.json",
+    ]);
+  });
+
+  it("leaves migration snapshots alone when pruning pre-restore ones", async () => {
+    const { service, data } = build();
+    data.files.set("backup-v3-2026-07-01T00-00-00.json", "{}");
+    data.files.set("backup-v4-2026-07-02T00-00-00.json", "{}");
+
+    expectOk(await service.prune("pre-restore", 0));
+
+    expect([...data.files.keys()]).toHaveLength(2);
+  });
 });
