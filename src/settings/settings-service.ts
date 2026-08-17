@@ -99,7 +99,10 @@ export class SettingsService {
   // the restore the user actually asked for.
   async #snapshotBeforeRestore(): Promise<void> {
     const current = await this.#pluginData.load();
-    if (current.kind === "err") return;
+    if (current.kind === "err") {
+      this.#logger.warn("could not read current settings before restoring", { error: current.error });
+      return;
+    }
     const raw = current.value;
     if (raw === null || typeof raw !== "object" || Array.isArray(raw)) return;
     const stored = raw as Record<string, unknown>;
