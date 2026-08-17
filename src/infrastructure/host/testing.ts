@@ -89,6 +89,12 @@ export class FakeNotesService implements Pick<
     this.#registerParentFolders(path);
   }
 
+  // A file landing in the vault and Obsidian having parsed it are two separate moments; only
+  // the second one makes its frontmatter readable. Tests that care about the gap drive them apart.
+  emitMetadataChanged(path: VaultPath): void {
+    this.#emitter.emit("metadata-changed", path);
+  }
+
   externalEdit(path: VaultPath, content: string): void {
     const entry = this.#files.get(path);
     this.#files.set(path, {

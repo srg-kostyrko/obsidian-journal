@@ -20,7 +20,7 @@ import { FrontmatterService } from "../frontmatter";
 import { JournalsIndex } from "../journals-index";
 import { NumberingService } from "../numbering";
 import { JournalsRepository } from "../repository";
-import { fakeRepo, fixedJournal } from "../testing";
+import { customJournal, fakeRepo, fixedJournal } from "../testing";
 import { TimelineService } from "../timeline";
 
 import { AutoAttachService } from "./auto-attach";
@@ -77,6 +77,7 @@ describe("AutoAttachService", () => {
     const spy = vi.spyOn(container.resolve(NoteCreationService), "attachNote");
     await container.resolve(AutoAttachService).initialize();
     await notes.create("2026-05-19.md" as VaultPath, "");
+    notes.emitMetadataChanged("2026-05-19.md" as VaultPath);
     await new Promise((r) => window.setTimeout(r, 0));
     expect(spy).toHaveBeenCalledTimes(1);
     expect(spy.mock.calls[0]?.[0]).toBe("daily");
@@ -96,6 +97,7 @@ describe("AutoAttachService", () => {
     const container = build(repo, notes);
     await container.resolve(AutoAttachService).initialize();
     await notes.create("Inbox/random.md" as VaultPath, "");
+    notes.emitMetadataChanged("Inbox/random.md" as VaultPath);
     await new Promise((r) => window.setTimeout(r, 0));
     expect(
       container
@@ -115,6 +117,7 @@ describe("AutoAttachService", () => {
     const spy = vi.spyOn(container.resolve(NoteCreationService), "attachNote");
     await container.resolve(AutoAttachService).initialize();
     await notes.create("2026-05-19.md" as VaultPath, "");
+    notes.emitMetadataChanged("2026-05-19.md" as VaultPath);
     await new Promise((r) => window.setTimeout(r, 0));
     expect(spy).not.toHaveBeenCalled();
   });
@@ -150,6 +153,7 @@ describe("AutoAttachService", () => {
     const spy = vi.spyOn(container.resolve(NoteCreationService), "attachNote");
     await container.resolve(AutoAttachService).initialize();
     await notes.create("2026-05-19.md" as VaultPath, "");
+    notes.emitMetadataChanged("2026-05-19.md" as VaultPath);
     await new Promise((r) => window.setTimeout(r, 0));
     expect(spy).not.toHaveBeenCalled();
   });
@@ -172,6 +176,7 @@ describe("AutoAttachService", () => {
     const spy = vi.spyOn(container.resolve(NoteCreationService), "attachNote");
     await container.resolve(AutoAttachService).initialize();
     await notes.create("2026-05-19.md" as VaultPath, "");
+    notes.emitMetadataChanged("2026-05-19.md" as VaultPath);
     await new Promise((r) => window.setTimeout(r, 0));
     expect(spy).not.toHaveBeenCalled();
   });
@@ -185,7 +190,10 @@ describe("AutoAttachService", () => {
       ),
     });
     const notes = new FakeNotesService();
-    const container = build(repo, notes);
+    // A renamed note was already in the vault, so Obsidian carries its parsed metadata across.
+    const metadata = new FakeNoteMetadataService();
+    metadata.setMetadata("2026-05-19.md" as VaultPath, { properties: {} } as unknown as NoteMetadata);
+    const container = build(repo, notes, metadata);
     const spy = vi.spyOn(container.resolve(NoteCreationService), "attachNote");
     notes.seed("Inbox/draft.md" as VaultPath, "");
     await container.resolve(AutoAttachService).initialize();
@@ -215,6 +223,7 @@ describe("AutoAttachService", () => {
     const spy = vi.spyOn(container.resolve(NoteCreationService), "attachNote");
     await container.resolve(AutoAttachService).initialize();
     await notes.create("2026-05-19.md" as VaultPath, "");
+    notes.emitMetadataChanged("2026-05-19.md" as VaultPath);
     await new Promise((r) => window.setTimeout(r, 0));
     expect(spy).not.toHaveBeenCalled();
   });
@@ -232,7 +241,55 @@ describe("AutoAttachService", () => {
     const spy = vi.spyOn(container.resolve(NoteCreationService), "attachNote");
     await container.resolve(AutoAttachService).initialize();
     await notes.create("2026-05-19.md" as VaultPath, "");
+    notes.emitMetadataChanged("2026-05-19.md" as VaultPath);
     await new Promise((r) => window.setTimeout(r, 0));
+    expect(spy).not.toHaveBeenCalled();
+  });
+
+  it("waits for a created note to be parsed before deciding anything about it", async () => {
+    const repo = fakeRepo({
+      daily: fixedJournal(
+        "daily",
+        { type: "day" },
+        { timeline: { start: anchor("2020-01-01"), end: { kind: "never" } } },
+      ),
+    });
+    const notes = new FakeNotesService();
+    const container = build(repo, notes);
+    const spy = vi.spyOn(container.resolve(NoteCreationService), "attachNote");
+    await container.resolve(AutoAttachService).initialize();
+
+    await notes.create("2026-05-19.md" as VaultPath, "");
+    await new Promise((r) => window.setTimeout(r, 0));
+    expect(spy).not.toHaveBeenCalled();
+
+    notes.emitMetadataChanged("2026-05-19.md" as VaultPath);
+    await new Promise((r) => window.setTimeout(r, 0));
+    expect(spy).toHaveBeenCalledTimes(1);
+  });
+
+  it("leaves a synced custom-interval note alone once parsing registers it", async () => {
+    const repo = fakeRepo({
+      sprint: customJournal("sprint", "week", 2, "2026-08-03", { nameTemplate: "{{date}}" }),
+    });
+    const notes = new FakeNotesService();
+    const container = build(repo, notes);
+    const index = container.resolve(JournalsIndex);
+    const spy = vi.spyOn(container.resolve(NoteCreationService), "attachNote");
+    await container.resolve(AutoAttachService).initialize();
+
+    // Sync writes the note; Obsidian has not parsed it, so nothing knows its manual end date yet.
+    await notes.create("2026-08-03.md" as VaultPath, "");
+    // Parsing registers it through VaultSubscriptionService, which subscribes ahead of auto-attach.
+    index.register({
+      journalName: "sprint",
+      anchor: anchor("2026-08-03"),
+      path: "2026-08-03.md" as VaultPath,
+      endDate: anchor("2026-08-23"),
+    });
+    notes.emitMetadataChanged("2026-08-03.md" as VaultPath);
+    await new Promise((r) => window.setTimeout(r, 0));
+
     expect(spy).not.toHaveBeenCalled();
   });
 
@@ -251,6 +308,7 @@ describe("AutoAttachService", () => {
     await container.resolve(AutoAttachService).initialize();
     workspace.setLayoutReady(true);
     await notes.create("2026-05-19.md" as VaultPath, "");
+    notes.emitMetadataChanged("2026-05-19.md" as VaultPath);
     await new Promise((r) => window.setTimeout(r, 0));
     expect(spy).toHaveBeenCalledTimes(1);
   });
