@@ -13,15 +13,15 @@ import { DumpLogsFlow } from "./dump-logs.flow";
 const record: LogRecord = { timestamp: Date.parse("2026-06-04T12:30:00Z"), level: "warn", name: "x", message: "hi" };
 
 function makeNote(path: VaultPath): Note {
-  return { path, basename: "", folder: "" as VaultPath };
+  return { path, basename: "", folder: "" as VaultPath, size: 0, mtime: 0 };
 }
 
 function build(records: readonly LogRecord[]) {
   const buffer = new BufferSink();
   for (const r of records) buffer.write(r);
   const notes = {
-    create: vi.fn(
-      (path: VaultPath): AsyncResult<Note, NoteAlreadyExistsError | NoteCreateError> => AsyncResult.ok(makeNote(path)),
+    create: vi.fn((path: VaultPath): AsyncResult<Note, NoteAlreadyExistsError | NoteCreateError> =>
+      AsyncResult.ok(makeNote(path)),
     ),
   };
   const notices: NoticeService = { show: vi.fn() };

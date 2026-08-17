@@ -43,12 +43,24 @@ describe("NotesService", () => {
         path,
         basename: "2026-05-13",
         folder: "Daily" as VaultPath,
+        size: 0,
+        mtime: 0,
       });
     });
 
     it("returns None when the file does not exist", () => {
       const { service } = build();
       expect(service.find(path).isNone()).toBe(true);
+    });
+
+    it("carries a note's size and modified time", () => {
+      const { service, host } = build();
+      const file = host.putFile("Weeks/W03.md");
+      file.stat = { ctime: 0, mtime: 1_760_000_000_000, size: 412 };
+
+      const found = service.find("Weeks/W03.md" as VaultPath);
+
+      expect(found.isSome() && found.value).toMatchObject({ size: 412, mtime: 1_760_000_000_000 });
     });
   });
 

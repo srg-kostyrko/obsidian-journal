@@ -6,6 +6,8 @@ export interface Note {
   readonly path: VaultPath;
   readonly basename: string;
   readonly folder: VaultPath;
+  readonly size: number;
+  readonly mtime: number;
 }
 
 export type OpenMode = "active" | "tab" | "split" | "window";
