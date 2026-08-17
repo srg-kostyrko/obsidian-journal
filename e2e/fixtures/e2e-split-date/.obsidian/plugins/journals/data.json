@@ -16,6 +16,22 @@
         "addEndDate": false
       },
       "numbering": { "enabled": false, "anchorDate": "", "allowBefore": false, "sources": [] }
+    },
+    "quarterly": {
+      "name": "quarterly",
+      "write": { "type": "quarter" },
+      "folder": "Quarters/{{date:YYYY}}",
+      "nameTemplate": "{{date:[Q]Q}}",
+      "timeline": { "start": "", "end": { "kind": "never" } },
+      "dateFormat": "YYYY-[Q]Q",
+      "frontmatter": {
+        "dateField": "journal-date",
+        "startDateField": "journal-start-date",
+        "endDateField": "journal-end-date",
+        "addStartDate": false,
+        "addEndDate": false
+      },
+      "numbering": { "enabled": false, "anchorDate": "", "allowBefore": false, "sources": [] }
     }
   },
   "shelves": {}

@@ -1,6 +1,6 @@
 import { match } from "ts-pattern";
 
-import { CalendarDate } from "@/calendar";
+import { CalendarDate, localMoment } from "@/calendar";
 import { inject, InjectorToken } from "@/infrastructure/di";
 import { Err, Ok, type Result } from "@/infrastructure/result";
 
@@ -170,7 +170,7 @@ export class TemplateEngine {
     // (e.g. a week's <startOf>/<endOf> pair), fall back to parsing each independently and
     // requiring the normalized lower bounds to agree.
     const noModifiers = entries.every((entry) => entry.token.modifiers.length === 0);
-    const fieldSets = noModifiers ? entries.map((entry) => ymdFields(entry.format)) : undefined;
+    const fieldSets = noModifiers ? entries.map((entry) => dateFields(entry.format)) : undefined;
     if (!fieldSets || fieldSets.includes(undefined)) {
       const parsed: BoundValue[] = [];
       for (const entry of entries) {
@@ -180,7 +180,9 @@ export class TemplateEngine {
       }
       return mergeCandidates(name, parsed);
     }
-    const definiteFields = fieldSets.filter((fields): fields is Set<DateField> => fields !== undefined);
+    const definiteFields = withWeekYearReading(
+      fieldSets.filter((fields): fields is Set<DateField> => fields !== undefined),
+    );
     const combinedInput = entries.map((entry) => entry.capture).join(DATE_PART_SEP);
     const combinedFormat = entries.map((entry) => entry.format).join(`[${DATE_PART_SEP}]`);
     const combined = CalendarDate.parse(combinedInput, combinedFormat);
@@ -351,30 +353,52 @@ interface DateCapture {
   format: string;
 }
 
-type DateField = "year" | "month" | "day";
+type DateField = "year" | "weekYear" | "month" | "day" | "quarter" | "week" | "isoWeek" | "dayOfYear";
+
+// How each field is read off a date, so a token's own capture can be checked against the combined
+// parse whatever calendar unit it names. moment is the only thing that answers for the week and
+// quarter units, so every field goes through it rather than through CalendarDate's y/m/d.
+const FIELD_READERS: Record<DateField, (m: ReturnType<typeof localMoment>) => number> = {
+  year: (m) => m.year(),
+  weekYear: (m) => m.weekYear(),
+  month: (m) => m.month(),
+  day: (m) => m.date(),
+  quarter: (m) => m.quarter(),
+  week: (m) => m.week(),
+  isoWeek: (m) => m.isoWeek(),
+  dayOfYear: (m) => m.dayOfYear(),
+};
 
 // A separator that can't occur inside a captured date component, so combining
 // component captures into one moment parse stays unambiguous.
 const DATE_PART_SEP = "\u{0}";
 
-// The calendar fields a date format constrains, or undefined if it uses any field
-// (week, quarter, weekday, day-of-year, ...) this component combiner can't reconcile —
-// those route back to the agreement-based merge instead.
-function ymdFields(format: string): Set<DateField> | undefined {
+// The calendar fields a date format constrains, or undefined if it names a unit this component
+// combiner can't reconcile — a weekday or a day-of-month ordinal, neither of which a year and a
+// period-within-the-year pin down. Those route back to the agreement-based merge instead.
+function dateFields(format: string): Set<DateField> | undefined {
   const fields = new Set<DateField>();
   let inLiteral = false;
   let symbol = "";
   let count = 0;
   let unsupported = false;
-  // Symbols that carry date information this combiner can't safely reconcile:
-  // quarter, week-of-year, ISO week, weekday, ordinal, week-year.
-  const unreconcilable = new Set(["Q", "w", "W", "d", "o", "g", "e"]);
   const flush = () => {
     if (count === 0) return;
-    if (symbol === "Y") fields.add("year");
-    else if (symbol === "M") fields.add("month");
-    else if (symbol === "D" && count < 3) fields.add("day");
-    else if (symbol === "D" || unreconcilable.has(symbol)) unsupported = true;
+    const named = match(symbol)
+      .returnType<DateField | "unreconcilable" | "no-field">()
+      .with("Y", () => "year")
+      .with("g", "G", () => "weekYear")
+      .with("M", () => "month")
+      .with("Q", () => "quarter")
+      .with("w", () => "week")
+      .with("W", () => "isoWeek")
+      .with("D", () => (count < 3 ? "day" : "dayOfYear"))
+      // A weekday ("d", "e", "E") names no period a year can complete, and "o" is a day-of-month
+      // ordinal whose own capture moment will not read back out of a combined format.
+      .with("d", "e", "E", "o", () => "unreconcilable")
+      .otherwise(() => "no-field");
+    if (named === "unreconcilable") unsupported = true;
+    else if (named !== "no-field") fields.add(named);
     count = 0;
     symbol = "";
   };
@@ -399,10 +423,29 @@ function ymdFields(format: string): Set<DateField> | undefined {
 }
 
 function fieldsAgree(fields: Set<DateField>, a: CalendarDate, b: CalendarDate): boolean {
+  const left = localMoment(a.toAnchor(), "YYYY-MM-DD", true);
+  const right = localMoment(b.toAnchor(), "YYYY-MM-DD", true);
   for (const field of fields) {
-    if (a[field] !== b[field]) return false;
+    const read = FIELD_READERS[field];
+    if (read(left) !== read(right)) return false;
   }
   return true;
+}
+
+// moment consumes a plain year token as the *week*-year once a week token shares the format, and
+// that is the reading the renderer writes: WeekPeriod renders its tokens from a representative day
+// picked so {{date:YYYY}} is the week-year. So a year captured alongside a week has to be verified
+// as a week-year too, or a week starting in the previous calendar year reads as a conflict.
+function withWeekYearReading(fieldSets: Set<DateField>[]): Set<DateField>[] {
+  const hasWeek = fieldSets.some((fields) => fields.has("week") || fields.has("isoWeek"));
+  if (!hasWeek) return fieldSets;
+  return fieldSets.map((fields) => {
+    if (!fields.has("year")) return fields;
+    const next = new Set(fields);
+    next.delete("year");
+    next.add("weekYear");
+    return next;
+  });
 }
 
 function isRenderableNumberToken(token: Extract<Token, { kind: "variable" }>): boolean {
