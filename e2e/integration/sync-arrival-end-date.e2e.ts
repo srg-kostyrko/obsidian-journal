@@ -21,12 +21,10 @@ import { frontmatterOf, seedNote, waitForJournalFrontmatter } from "../support/v
 // Only real Obsidian orders "created" ahead of the metadataCache parse; a fake that resolves
 // metadata synchronously never reproduces the window this depends on.
 //
-// The shifted sequence itself is deliberately not asserted here. JournalsIndex.register returns
-// early when a path's journal and anchor are unchanged, so the rewritten endDate never reaches the
-// index within the session and the walk still reads the original one — the shift only appears
-// after a restart rebuilds the index from the damaged frontmatter. Staging that would need the
-// note to exist at boot, and a note that exists at boot never takes the "created" path this is
-// about. The frontmatter above is the damage; the shift is its consequence, covered by unit tests.
+// The shifted sequence itself is deliberately not asserted here: staging it would need the note to
+// exist at boot, and a note that exists at boot never takes the "created" path this is about. The
+// frontmatter above is the damage; the shift is its consequence, covered by unit tests and — for
+// an edit rather than an arrival — by interval-edit-index.e2e.ts.
 
 const EXTENDED_END = "2026-08-23";
 const SPRINT = `Sprints/2026-08-03.md`;
