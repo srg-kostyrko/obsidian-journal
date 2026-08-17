@@ -1,0 +1,21 @@
+{
+  "version": 5,
+  "journals": {
+    "weekly": {
+      "name": "weekly",
+      "write": { "type": "week" },
+      "timeline": { "start": "", "end": { "kind": "never" } },
+      "dateFormat": "YYYY-[W]ww",
+      "nameTemplate": "{{date:YYYY-[W]ww}}",
+      "folder": "Weeks",
+      "frontmatter": {
+        "dateField": "journal-date",
+        "startDateField": "journal-start-date",
+        "endDateField": "journal-end-date",
+        "addStartDate": false,
+        "addEndDate": false
+      },
+      "numbering": { "enabled": false, "anchorDate": "", "allowBefore": false, "sources": [] }
+    }
+  }
+}

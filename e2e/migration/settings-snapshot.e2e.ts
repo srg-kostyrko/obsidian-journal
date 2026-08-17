@@ -72,4 +72,21 @@ describe("pre-migration settings snapshot", () => {
 
     await closeSettings();
   });
+
+  it("snapshots the current settings before restoring an older one", async () => {
+    await openSettings();
+    await expandSection(m.maintenance_heading());
+    await clickButton(m.maintenance_open());
+    await clickButton(m.maintenance_snapshot_restore());
+
+    await browser.waitUntil(
+      async () => {
+        const files = await listPluginDataFiles();
+        return files.some((name) => name.startsWith("backup-restore-v"));
+      },
+      { timeoutMsg: "no pre-restore snapshot was written" },
+    );
+
+    await closeSettings();
+  });
 });
