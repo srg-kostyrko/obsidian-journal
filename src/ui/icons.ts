@@ -54,6 +54,11 @@ export const icons = {
     tags: "lucide-tags",
     unknown: "lucide-file-question",
   },
+  // Whether a listed problem is one the plugin will repair or one only the user can settle.
+  status: {
+    willFix: "lucide-check",
+    needsYou: "lucide-alert-triangle",
+  },
   section: {
     calendar: "calendar",
     numbering: "hash",

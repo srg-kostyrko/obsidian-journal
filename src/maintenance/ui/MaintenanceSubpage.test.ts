@@ -293,7 +293,7 @@ describe("MaintenanceSubpage", () => {
     await flushPromises();
 
     expect(wrapper.text()).toContain(m.maintenance_check_fix_all());
-    expect(wrapper.findAll("button").filter((b) => b.text() === m.maintenance_check_fix())).toHaveLength(0);
+    expect(wrapper.findAll(".collapsible-trigger-controls button")).toHaveLength(0);
   });
 
   it("applies only rewrites when fixing everything safe", async () => {
@@ -387,7 +387,7 @@ describe("MaintenanceSubpage", () => {
       m.maintenance_check_group_duplicate({ journal: "weekly", anchor: anchor("2026-02-16") }),
     );
 
-    const rows = [...dom.querySelectorAll(".setting-item")];
+    const rows = [...dom.querySelectorAll(".maintenance-finding")];
     const aRow = rows.find((element) => element.textContent?.includes("a.md"));
     const keepButton = aRow?.querySelector("button");
     if (!keepButton) throw new Error("expected a Keep this one button on a.md's row");
@@ -420,7 +420,7 @@ describe("MaintenanceSubpage", () => {
     await flushPromises();
 
     expect(wrapper.text()).toContain(m.maintenance_reason_anchor_contested());
-    expect(wrapper.findAll("button").filter((b) => b.text() === m.maintenance_check_fix())).toHaveLength(0);
+    expect(wrapper.findAll(".collapsible-trigger-controls button")).toHaveLength(0);
   });
 
   it("formats a duplicate's mtime instead of showing the raw epoch", async () => {
@@ -494,9 +494,7 @@ describe("MaintenanceSubpage", () => {
     });
     await flushPromises();
 
-    const fixButton = [...dom.querySelectorAll("button")].find(
-      (button) => button.textContent?.trim() === m.maintenance_check_fix(),
-    );
+    const fixButton = dom.querySelector<HTMLButtonElement>(".collapsible-trigger-controls button");
     const fixAll = [...dom.querySelectorAll("button")].find(
       (button) => button.textContent?.trim() === m.maintenance_check_fix_all(),
     );

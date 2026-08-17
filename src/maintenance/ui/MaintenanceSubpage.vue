@@ -9,8 +9,11 @@ import { JournalsIndex } from "@/journals/journals-index";
 import { SettingsService } from "@/settings";
 import type { SubpageNav } from "@/settings";
 import { SnapshotService, type SnapshotInfo } from "@/settings/snapshots/snapshot-service";
+import { icons } from "@/ui/icons";
 import UiBackLink from "@/ui/UiBackLink.vue";
 import UiButton from "@/ui/UiButton.vue";
+import UiCollapsibleBlock from "@/ui/UiCollapsibleBlock.vue";
+import UiIcon from "@/ui/UiIcon.vue";
 import UiSettingRow from "@/ui/UiSettingRow.vue";
 
 import { RepairService } from "../repair-service";
@@ -191,12 +194,26 @@ function reasonText(reason: UndecidableReason): string {
   }
 }
 
-// The only row a repair.reason can explain: a corroborated/date-only finding withdrawn by the
-// collision gate still shows a "→" move in its detail text with no button next to it, which
-// otherwise reads as trivially fixable rather than blocked.
-function rowText(finding: Finding): string {
-  const detail = detailText(finding);
-  return finding.repair.kind === "undecidable" ? `${detail} ${reasonText(finding.repair.reason)}` : detail;
+// A group's Fix button covers only the rows it can rewrite, which is routinely fewer than the
+// rows on screen — a rejected-anchor group mixes repairable notes with a path/date disagreement
+// we refuse to guess at. Naming the count stops the button promising the whole group.
+function willFix(finding: Finding): boolean {
+  return finding.repair.kind === "rewrite";
+}
+
+// Why a row is being left alone, rendered under it rather than appended to the detail sentence
+// so the two read as separate facts.
+function rowReason(finding: Finding): string | undefined {
+  return finding.repair.kind === "undecidable" ? reasonText(finding.repair.reason) : undefined;
+}
+
+const collapsed = ref(new Set<string>());
+
+function setExpanded(key: string, expanded: boolean | undefined): void {
+  const next = new Set(collapsed.value);
+  if (expanded) next.delete(key);
+  else next.add(key);
+  collapsed.value = next;
 }
 
 function stripOf(finding: Finding): RepairAction {
@@ -281,18 +298,34 @@ onMounted(runScan);
       <UiSettingRow v-if="report.findings.length === 0">
         <template #description>{{ m.maintenance_check_clean() }}</template>
       </UiSettingRow>
-      <template v-for="group of groups" :key="group.key">
-        <UiSettingRow :name="groupTitle(group)">
+      <UiCollapsibleBlock
+        v-for="group of groups"
+        :key="group.key"
+        :expanded="!collapsed.has(group.key)"
+        @update:expanded="setExpanded(group.key, $event)"
+      >
+        <template #trigger>{{ groupTitle(group) }}</template>
+        <template #controls>
           <UiButton
             v-if="groupActions(group).length > 0"
             :disabled="fixDisabled"
             @click="applyAndRescan(groupActions(group))"
           >
-            {{ m.maintenance_check_fix() }}
+            {{ m.maintenance_check_fix_count({ count: groupActions(group).length }) }}
           </UiButton>
-        </UiSettingRow>
-        <UiSettingRow v-for="finding of group.findings" :key="finding.path">
-          <template #description>{{ rowText(finding) }}</template>
+        </template>
+
+        <div v-for="finding of group.findings" :key="finding.path" class="maintenance-finding">
+          <UiIcon
+            class="maintenance-finding-mark"
+            :class="willFix(finding) ? 'is-will-fix' : 'is-needs-you'"
+            :name="willFix(finding) ? icons.status.willFix : icons.status.needsYou"
+            :aria-label="willFix(finding) ? m.maintenance_check_row_will_fix() : m.maintenance_check_row_needs_you()"
+          />
+          <div class="maintenance-finding-body">
+            <div class="maintenance-finding-detail">{{ detailText(finding) }}</div>
+            <div v-if="rowReason(finding)" class="maintenance-finding-reason">{{ rowReason(finding) }}</div>
+          </div>
           <UiButton v-if="group.check === 'duplicate-anchor'" :disabled="fixDisabled" @click="keepOnly(group, finding)">
             {{ m.maintenance_duplicate_keep() }}
           </UiButton>
@@ -303,11 +336,11 @@ onMounted(runScan);
           >
             {{ m.maintenance_orphan_clear() }}
           </UiButton>
-        </UiSettingRow>
-        <UiSettingRow v-if="group.check === 'orphaned-claim'">
-          <template #description>{{ m.maintenance_orphan_reassign_hint() }}</template>
-        </UiSettingRow>
-      </template>
+        </div>
+        <div v-if="group.check === 'orphaned-claim'" class="maintenance-finding-reason">
+          {{ m.maintenance_orphan_reassign_hint() }}
+        </div>
+      </UiCollapsibleBlock>
       <UiSettingRow v-for="entry of report.unreadable" :key="entry.path">
         <template #description>
           {{ m.maintenance_unreadable_row({ path: entry.path, message: entry.message }) }}
@@ -321,3 +354,40 @@ onMounted(runScan);
     </template>
   </div>
 </template>
+
+<style scoped>
+.maintenance-finding {
+  display: flex;
+  align-items: flex-start;
+  gap: var(--size-4-2);
+  padding: var(--size-2-3) 0;
+  border-bottom: 1px solid var(--background-modifier-border);
+}
+.maintenance-finding:last-of-type {
+  border-bottom: none;
+}
+/* Aligns the mark with the first line of the detail rather than the centre of a wrapped row. */
+.maintenance-finding-mark {
+  display: flex;
+  flex: none;
+  padding-top: 2px;
+}
+.maintenance-finding-mark.is-will-fix {
+  color: var(--color-green);
+}
+.maintenance-finding-mark.is-needs-you {
+  color: var(--color-yellow);
+}
+.maintenance-finding-body {
+  flex-grow: 1;
+  min-width: 0;
+}
+.maintenance-finding-detail {
+  font-size: var(--font-ui-small);
+}
+.maintenance-finding-reason {
+  font-size: var(--font-ui-smaller);
+  color: var(--text-muted);
+  margin-top: var(--size-2-1);
+}
+</style>
