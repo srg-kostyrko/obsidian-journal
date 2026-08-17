@@ -52,6 +52,7 @@ describe("checkStaleRange", () => {
       storedStart: "2026-01-14",
       expectedStart: anchor("2026-01-12"),
     });
+    expect(result?.repair).toEqual({ kind: "rewrite", anchor: anchor("2026-01-12") });
   });
 
   it("ignores a note that is already reported as rejected", () => {
