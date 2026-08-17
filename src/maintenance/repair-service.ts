@@ -4,6 +4,7 @@ import { NotesService } from "@/infrastructure/host";
 import type { VaultPath } from "@/infrastructure/host";
 import { LoggerFactoryToken } from "@/infrastructure/logger";
 import { AsyncResult, InvariantError } from "@/infrastructure/result";
+import { FrontmatterService } from "@/journals/frontmatter";
 import { JournalsIndex } from "@/journals/journals-index";
 import { NoteConnectionService } from "@/journals/notes/note-connection";
 
@@ -30,6 +31,7 @@ export class RepairService {
   readonly #connection = inject(NoteConnectionService);
   readonly #index = inject(JournalsIndex);
   readonly #notes = inject(NotesService);
+  readonly #frontmatter = inject(FrontmatterService);
   readonly #logger = inject(LoggerFactoryToken).named("maintenance");
 
   #satisfied(intents: readonly Intent[]): boolean {
@@ -116,7 +118,15 @@ export class RepairService {
       if (action.repair.kind === "undecidable") continue;
 
       if (action.repair.kind === "strip-claim") {
-        const result = await this.#connection.disconnect(action.path);
+        // disconnect() resolves the journal through the index, which is exactly what a stranded
+        // duplicate loser or a rejected note is absent from -- it would fall back to clearing only
+        // the five default keys and leave a custom-field journal's real keys behind. The action
+        // already carries the claimed journal's name; use it directly when that journal still
+        // exists. When it doesn't (the orphan case), nothing can know the field names it used.
+        const cleared = this.#frontmatter.clearMutator(action.journalName);
+        const result = cleared.isOk()
+          ? await this.#notes.updateFrontmatter(action.path, cleared.value)
+          : await this.#connection.disconnect(action.path);
         if (result.kind === "ok") stripped.push(action.path);
         results.push({
           entry: {

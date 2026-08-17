@@ -6,8 +6,10 @@ import { Container } from "@/infrastructure/di";
 import { NotesService } from "@/infrastructure/host";
 import type { NotesEvents, VaultPath } from "@/infrastructure/host";
 import { LoggerModule } from "@/infrastructure/logger";
-import { AsyncResult } from "@/infrastructure/result";
+import { AsyncResult, Err, Ok } from "@/infrastructure/result";
 import { expectOk } from "@/infrastructure/result/testing";
+import { JournalNotFoundError } from "@/journals/errors";
+import { FrontmatterService } from "@/journals/frontmatter";
 import { JournalsIndex } from "@/journals/journals-index";
 import { NoteConnectionService } from "@/journals/notes/note-connection";
 
@@ -22,6 +24,8 @@ function build(): {
     reanchor: Mock<NoteConnectionService["reanchor"]>;
     disconnect: Mock<NoteConnectionService["disconnect"]>;
   };
+  notes: { updateFrontmatter: Mock<NotesService["updateFrontmatter"]> };
+  frontmatter: { clearMutator: Mock<FrontmatterService["clearMutator"]> };
   emitMetadataChanged: (path: VaultPath) => void;
 } {
   const connection = {
@@ -29,16 +33,28 @@ function build(): {
     disconnect: vi.fn<NoteConnectionService["disconnect"]>(() => AsyncResult.ok(undefined)),
   };
   const notesEmitter = createNanoEvents<NotesEvents>();
+  const notes = {
+    events: notesEmitter,
+    updateFrontmatter: vi.fn<NotesService["updateFrontmatter"]>(() => AsyncResult.ok(undefined)),
+  };
+  // Defaults to "unknown journal" so every existing strip-claim test (journalName "gone") keeps
+  // exercising the disconnect() fallback unchanged; Fix-8 tests override this per case.
+  const frontmatter = {
+    clearMutator: vi.fn<FrontmatterService["clearMutator"]>(() => new Err(new JournalNotFoundError("gone"))),
+  };
   const c = new Container();
   c.addModule(LoggerModule);
   c.register(JournalsIndex).useClass(JournalsIndex);
   c.register(NoteConnectionService).useValue(connection as unknown as NoteConnectionService);
-  c.register(NotesService).useValue({ events: notesEmitter } as unknown as NotesService);
+  c.register(NotesService).useValue(notes as unknown as NotesService);
+  c.register(FrontmatterService).useValue(frontmatter as unknown as FrontmatterService);
   c.register(RepairService).useClass(RepairService);
   return {
     service: c.resolve(RepairService),
     index: c.resolve(JournalsIndex),
     connection,
+    notes,
+    frontmatter,
     emitMetadataChanged: (path) => notesEmitter.emit("metadata-changed", path),
   };
 }
@@ -126,6 +142,32 @@ describe("RepairService", () => {
 
     expectOk(result);
     expect(connection.disconnect).toHaveBeenCalledWith("old.md");
+    expect(result.value.at(0)?.outcome).toEqual({ kind: "repaired" });
+    vi.useRealTimers();
+  });
+
+  it("strips through the journal's own configured fields when the journal still exists", async () => {
+    vi.useFakeTimers();
+    const { service, connection, notes, frontmatter, emitMetadataChanged } = build();
+    const mutator = vi.fn((fm: Record<string, unknown>) => {
+      delete fm["custom-date"];
+    });
+    frontmatter.clearMutator.mockReturnValueOnce(new Ok(mutator));
+    notes.updateFrontmatter.mockImplementation((path: VaultPath) => {
+      window.setTimeout(() => emitMetadataChanged(path), 0);
+      return AsyncResult.ok(undefined);
+    });
+
+    const running = service.apply([
+      { path: "loser.md" as VaultPath, journalName: "weekly", repair: { kind: "strip-claim" } },
+    ]);
+    await vi.advanceTimersByTimeAsync(0);
+    const result = await running;
+
+    expectOk(result);
+    expect(frontmatter.clearMutator).toHaveBeenCalledWith("weekly");
+    expect(notes.updateFrontmatter).toHaveBeenCalledWith("loser.md", mutator);
+    expect(connection.disconnect).not.toHaveBeenCalled();
     expect(result.value.at(0)?.outcome).toEqual({ kind: "repaired" });
     vi.useRealTimers();
   });
