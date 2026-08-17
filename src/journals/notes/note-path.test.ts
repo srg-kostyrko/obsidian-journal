@@ -420,6 +420,44 @@ describe("NotePathService.candidateFor weekly round trip", () => {
   });
 });
 
+describe("NotePathService.inverterFor", () => {
+  let teardown: () => void;
+
+  beforeEach(() => {
+    ({ teardown } = installTestCalendar());
+  });
+  afterEach(() => {
+    teardown();
+  });
+
+  it("inverts many paths with one prepared inverter, matching candidateFor", () => {
+    const repo = fakeRepo({
+      weekly: fixedJournal(
+        "weekly",
+        { type: "week" },
+        { folder: "Weeks/{{date:YYYY}}", nameTemplate: "{{date:MM-DD}}" },
+      ),
+    });
+    const c = buildContainer(repo);
+    const service = c.resolve(NotePathService);
+    const inverter = unwrap(service.inverterFor("weekly"));
+
+    const firstPath = "Weeks/2026/01-15.md" as VaultPath;
+    const secondPath = "Weeks/2026/01-22.md" as VaultPath;
+    const first = inverter.invert(firstPath);
+    const second = inverter.invert(secondPath);
+
+    expect(unwrap(first).anchor).toBe(unwrap(service.candidateFor("weekly", firstPath)).anchor);
+    expect(unwrap(second).anchor).toBe(unwrap(service.candidateFor("weekly", secondPath)).anchor);
+    expect(unwrap(first).anchor).not.toBe(unwrap(second).anchor);
+  });
+
+  it("returns none for a journal that does not exist", () => {
+    const c = buildContainer(fakeRepo({}));
+    expect(c.resolve(NotePathService).inverterFor("missing").isSome()).toBe(false);
+  });
+});
+
 // ISO test calendar: the week anchored Mon 2025-12-29 is week 1 of 2026, running to
 // Sun 2026-01-04, and its representative day is Thu 2026-01-01.
 function weeklyContextValue(variable: string): string {
