@@ -29,6 +29,8 @@ import type { MenuItemSpec, Note, NoteMetadata, NotesEvents, OpenMode, VaultPath
 interface FakeEntry {
   content: string;
   frontmatter: Record<string, unknown>;
+  size: number;
+  mtime: number;
 }
 
 function basename(path: VaultPath): string {
@@ -41,8 +43,8 @@ function folderOf(path: VaultPath): VaultPath {
   return (index === -1 ? "" : path.slice(0, index)) as VaultPath;
 }
 
-function noteOf(path: VaultPath): Note {
-  return { path, basename: basename(path), folder: folderOf(path) };
+function noteOf(path: VaultPath, stat: { size: number; mtime: number }): Note {
+  return { path, basename: basename(path), folder: folderOf(path), size: stat.size, mtime: stat.mtime };
 }
 
 export class FakeNotesService implements Pick<
@@ -77,19 +79,30 @@ export class FakeNotesService implements Pick<
     }
   }
 
-  seed(path: VaultPath, content = "", frontmatter: Record<string, unknown> = {}): void {
-    this.#files.set(path, { content, frontmatter });
+  seed(
+    path: VaultPath,
+    content = "",
+    frontmatter: Record<string, unknown> = {},
+    stat: { size?: number; mtime?: number } = {},
+  ): void {
+    this.#files.set(path, { content, frontmatter, size: stat.size ?? 0, mtime: stat.mtime ?? 0 });
     this.#registerParentFolders(path);
   }
 
   externalEdit(path: VaultPath, content: string): void {
     const entry = this.#files.get(path);
-    this.#files.set(path, { content, frontmatter: entry?.frontmatter ?? {} });
+    this.#files.set(path, {
+      content,
+      frontmatter: entry?.frontmatter ?? {},
+      size: entry?.size ?? 0,
+      mtime: entry?.mtime ?? 0,
+    });
     this.#emitter.emit("metadata-changed", path);
   }
 
   find(path: VaultPath): Option<Note> {
-    return this.#files.has(path) ? new Some<Note>(noteOf(path)) : new None<Note>();
+    const entry = this.#files.get(path);
+    return entry ? new Some<Note>(noteOf(path, entry)) : new None<Note>();
   }
 
   frontmatterOf(path: VaultPath): Record<string, unknown> | undefined {
@@ -119,8 +132,8 @@ export class FakeNotesService implements Pick<
   create(path: VaultPath, content: string): AsyncResult<Note, NoteAlreadyExistsError | NoteCreateError> {
     if (this.#files.has(path)) return AsyncResult.err(new NoteAlreadyExistsError(path));
     this.#registerParentFolders(path);
-    this.#files.set(path, { content, frontmatter: {} });
-    const note = noteOf(path);
+    this.#files.set(path, { content, frontmatter: {}, size: 0, mtime: 0 });
+    const note = noteOf(path, { size: 0, mtime: 0 });
     this.#emitter.emit("created", note);
     return AsyncResult.ok(note);
   }
@@ -154,7 +167,7 @@ export class FakeNotesService implements Pick<
     if (this.#files.has(newPath)) return AsyncResult.err(new NoteAlreadyExistsError(newPath));
     this.#files.delete(path);
     this.#files.set(newPath, entry);
-    const note = noteOf(newPath);
+    const note = noteOf(newPath, entry);
     this.#emitter.emit("renamed", { from: path, to: newPath });
     return AsyncResult.ok(note);
   }

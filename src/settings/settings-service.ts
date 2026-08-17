@@ -26,6 +26,7 @@ import type { BaseIssue, BaseSchema, InferOutput } from "valibot";
 type AnySchema = BaseSchema<unknown, unknown, BaseIssue<unknown>>;
 
 const DEBOUNCE_MS = 300;
+const PRE_RESTORE_KEEP = 3;
 
 export class SettingsService {
   readonly #pluginData = inject(PluginData);
@@ -90,6 +91,34 @@ export class SettingsService {
     const written = await this.#snapshots.write(storedVersion, JSON.stringify(root), new Date().toISOString());
     written.tapErr((error) => {
       this.#logger.warn("could not snapshot settings before migrating", { storedVersion, error });
+    });
+  }
+
+  // Restore is the second event that destroys a configuration wholesale, and unlike a migration
+  // it is a single click with no undo. Keep the last few, and never let a failed snapshot block
+  // the restore the user actually asked for.
+  async #snapshotBeforeRestore(): Promise<void> {
+    const current = await this.#pluginData.load();
+    if (current.kind === "err") {
+      this.#logger.warn("could not read current settings before restoring", { error: current.error });
+      return;
+    }
+    const raw = current.value;
+    if (raw === null || typeof raw !== "object" || Array.isArray(raw)) return;
+    const stored = raw as Record<string, unknown>;
+    const fromVersion = typeof stored.version === "number" ? stored.version : 0;
+    const written = await this.#snapshots.writePreRestore(
+      fromVersion,
+      JSON.stringify(stored),
+      new Date().toISOString(),
+    );
+    if (written.kind === "err") {
+      this.#logger.warn("could not snapshot settings before restoring", { error: written.error });
+      return;
+    }
+    const pruned = await this.#snapshots.prune("pre-restore", PRE_RESTORE_KEEP);
+    pruned.tapErr((error) => {
+      this.#logger.warn("could not prune pre-restore snapshots", { error });
     });
   }
 
@@ -196,6 +225,7 @@ export class SettingsService {
       // Migrations mutate their input in place, so validating against `raw` itself would
       // corrupt it before it reaches save() below — validate a disposable clone instead.
       yield* runMigrations(structuredClone(raw), this.#migrations, CURRENT_VERSION);
+      await this.#snapshotBeforeRestore();
       yield* this.#pluginData.save(raw).mapErr((cause) => new SettingsSaveError(cause));
       const migrated = yield* this.#loadAndMigrate();
       this.#applyMigrated(migrated);

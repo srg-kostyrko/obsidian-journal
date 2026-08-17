@@ -128,7 +128,7 @@ describe("VaultSubscriptionService", () => {
     await sub.initialize();
     const index = rig.container.resolve(JournalsIndex);
 
-    rig.emit("created", { path: "D/A.md" as VaultPath, basename: "A", folder: "D" as VaultPath });
+    rig.emit("created", { path: "D/A.md" as VaultPath, basename: "A", folder: "D" as VaultPath, size: 0, mtime: 0 });
     expect(index.entryByPath("D/A.md" as VaultPath).isNone()).toBe(true);
   });
 

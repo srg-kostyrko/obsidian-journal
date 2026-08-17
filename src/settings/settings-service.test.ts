@@ -23,6 +23,7 @@ import {
   SliceDefinitionToken,
   type SettingsEvents,
 } from "./tokens";
+import { CURRENT_VERSION } from "./version";
 
 const calendarSchema = v.object({
   dow: v.number(),
@@ -97,6 +98,16 @@ function build(
   return { service: c.resolve(SettingsService), data, events };
 }
 
+function buildWith(data: FakePluginData): { service: SettingsService; snapshots: SnapshotService } {
+  const c = new Container();
+  c.register(PluginData).useValue(data as unknown as PluginData);
+  c.register(SnapshotService).useClass(SnapshotService);
+  c.register(SettingsEventsToken).useValue(createNanoEvents<SettingsEvents>());
+  c.addModule(createLoggerTestingModule().module);
+  c.register(SettingsService).useClass(SettingsService);
+  return { service: c.resolve(SettingsService), snapshots: c.resolve(SnapshotService) };
+}
+
 describe("SettingsService", () => {
   describe("initialize — happy path", () => {
     it("hydrates a slice from a stored root", async () => {
@@ -130,17 +141,20 @@ describe("SettingsService", () => {
   describe("initialize — slice validation fallback", () => {
     it("falls back to defaults when a stored slice fails validation", async () => {
       const { service } = build({ raw: { version: 5, calendar: { dow: "not-a-number" } } });
-      await service.initialize();
+      expectOk(await service.initialize());
       expect(service.getSlice(calendarSlice).state.dow).toBe(1);
     });
   });
 
+  // These fixtures are already at CURRENT_VERSION and register no migration: a stored version
+  // below it would fail runMigrations, and initialize would return Err before hydrating — which
+  // surfaces as an undefined collection record rather than a migration error. Hence expectOk.
   describe("initialize — collection entry repair", () => {
     it("keeps the fields that validate and repairs only the ones that do not", async () => {
-      const raw = { version: 4, pets: { Rex: { name: "Rex", kind: "dog", sound: "", toys: ["ball"] } } };
+      const raw = { version: 5, pets: { Rex: { name: "Rex", kind: "dog", sound: "", toys: ["ball"] } } };
       const { service } = build({ raw, collections: [petCollection] });
 
-      await service.initialize();
+      expectOk(await service.initialize());
 
       expect(service.recordOf(petCollection).Rex).toEqual({
         name: "Rex",
@@ -151,27 +165,27 @@ describe("SettingsService", () => {
     });
 
     it("derives the repaired value from the entry's own stored fields", async () => {
-      const raw = { version: 4, pets: { Rex: { name: "Rex", kind: "dog", sound: "" } } };
+      const raw = { version: 5, pets: { Rex: { name: "Rex", kind: "dog", sound: "" } } };
       const { service } = build({ raw, collections: [petCollection] });
 
-      await service.initialize();
+      expectOk(await service.initialize());
 
       expect(service.recordOf(petCollection).Rex.sound).toBe("woof");
     });
 
     it("falls back to the whole default when the entry is not an object", async () => {
-      const { service } = build({ raw: { version: 4, pets: { Rex: "not an entry" } }, collections: [petCollection] });
+      const { service } = build({ raw: { version: 5, pets: { Rex: "not an entry" } }, collections: [petCollection] });
 
-      await service.initialize();
+      expectOk(await service.initialize());
 
       expect(service.recordOf(petCollection).Rex).toEqual({ name: "Rex", kind: "cat", sound: "meow", toys: [] });
     });
 
     it("falls back to the whole default when the failure names no field", async () => {
-      const raw = { version: 4, pets: { Rex: { name: "woof", kind: "dog", sound: "woof", toys: ["ball"] } } };
+      const raw = { version: 5, pets: { Rex: { name: "woof", kind: "dog", sound: "woof", toys: ["ball"] } } };
       const { service } = build({ raw, collections: [checkedPetCollection] });
 
-      await service.initialize();
+      expectOk(await service.initialize());
 
       expect(service.recordOf(checkedPetCollection).Rex).toEqual({
         name: "Rex",
@@ -206,33 +220,33 @@ describe("SettingsService", () => {
 
     it("stays a weekly journal", async () => {
       const { service } = build({
-        raw: { version: 4, journals: { "Journal weekly": weekly } },
+        raw: { version: 5, journals: { "Journal weekly": weekly } },
         collections: [journalConfigCollection],
       });
 
-      await service.initialize();
+      expectOk(await service.initialize());
 
       expect(service.recordOf(journalConfigCollection)["Journal weekly"].write).toEqual({ type: "week" });
     });
 
     it("repairs the date format from its own write type", async () => {
       const { service } = build({
-        raw: { version: 4, journals: { "Journal weekly": weekly } },
+        raw: { version: 5, journals: { "Journal weekly": weekly } },
         collections: [journalConfigCollection],
       });
 
-      await service.initialize();
+      expectOk(await service.initialize());
 
       expect(service.recordOf(journalConfigCollection)["Journal weekly"].dateFormat).toBe("YYYY-[W]w");
     });
 
     it("keeps the folder, name template and templates the user configured", async () => {
       const { service } = build({
-        raw: { version: 4, journals: { "Journal weekly": weekly } },
+        raw: { version: 5, journals: { "Journal weekly": weekly } },
         collections: [journalConfigCollection],
       });
 
-      await service.initialize();
+      expectOk(await service.initialize());
 
       expect(service.recordOf(journalConfigCollection)["Journal weekly"]).toMatchObject({
         nameTemplate: "{{date:YYYY-[W]ww}}",
@@ -637,6 +651,54 @@ describe("SettingsService", () => {
       const stored = savedPayload as { version: number; journals: { daily: { navBlock: unknown } } };
       expect(stored.version).toBe(4);
       expect(stored.journals.daily.navBlock).toEqual({ rows: [{ kind: "shift", shift: -1 }] });
+    });
+
+    it("snapshots the current data.json before a restore overwrites it", async () => {
+      const data = new FakePluginData({ version: CURRENT_VERSION, journals: { daily: { name: "daily" } } });
+      const { service, snapshots } = buildWith(data);
+      expectOk(await service.initialize());
+
+      expectOk(await service.replaceStoredData({ version: CURRENT_VERSION, journals: {} }));
+
+      const listed = await snapshots.list();
+      expectOk(listed);
+      const preRestore = listed.value.filter((info) => info.reason === "pre-restore");
+      expect(preRestore).toHaveLength(1);
+      const contents = await snapshots.read(preRestore.at(0)?.name ?? "");
+      expectOk(contents);
+      expect(contents.value.journals).toEqual({ daily: { name: "daily" } });
+    });
+
+    it("keeps only the three most recent pre-restore snapshots", async () => {
+      // Advance the clock a full second between restores: stampOf truncates to whole
+      // seconds, so four restores issued back-to-back on the real clock would collide
+      // onto one filename and this would pass with prune() never called.
+      vi.useFakeTimers();
+      vi.setSystemTime(new Date("2026-08-17T00:00:00.000Z"));
+      const data = new FakePluginData({ version: CURRENT_VERSION });
+      const { service, snapshots } = buildWith(data);
+      expectOk(await service.initialize());
+
+      for (let i = 0; i < 4; i++) {
+        vi.setSystemTime(new Date(Date.now() + 1000));
+        expectOk(await service.replaceStoredData({ version: CURRENT_VERSION, marker: i }));
+      }
+
+      const listed = await snapshots.list();
+      expectOk(listed);
+      expect(listed.value.filter((info) => info.reason === "pre-restore")).toHaveLength(3);
+      vi.useRealTimers();
+    });
+
+    it("still restores when the pre-restore snapshot cannot be written", async () => {
+      const data = new FakePluginData({ version: CURRENT_VERSION });
+      const { service, snapshots } = buildWith(data);
+      expectOk(await service.initialize());
+      vi.spyOn(snapshots, "writePreRestore").mockReturnValueOnce(
+        AsyncResult.err(new PluginDataIOError("write-file", { message: "disk full" })),
+      );
+
+      expectOk(await service.replaceStoredData({ version: CURRENT_VERSION, marker: "restored" }));
     });
   });
 

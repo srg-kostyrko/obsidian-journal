@@ -2,10 +2,12 @@ import { $, $$, browser, expect } from "@wdio/globals";
 
 import { m } from "../../src/i18n/paraglide/messages.js";
 import { listPluginDataFiles, readPluginDataFile, waitForSnapshotFiles } from "../support/plugin-data.js";
-import { clickButton, closeSettings, expandSection, openSettings } from "../support/settings.js";
+import { clickButton, closeSettings, openSettings } from "../support/settings.js";
 
 // Colons are illegal in a Windows filename, hence the dashes — see snapshot-service.ts's NAME_PATTERN.
 const BACKUP_PATTERN = /^backup-v(\d+)-\d{4}-\d{2}-\d{2}T\d{2}-\d{2}-\d{2}\.json$/;
+// Distinct from BACKUP_PATTERN: SnapshotService names a pre-restore snapshot backup-restore-v<n>-<timestamp>.json.
+const PRE_RESTORE_PATTERN = /^backup-restore-v(\d+)-\d{4}-\d{2}-\d{2}T\d{2}-\d{2}-\d{2}\.json$/;
 
 // Slice C — the migration seam, narrowed to the snapshot SettingsService takes before it
 // rewrites a behind-CURRENT_VERSION data.json. The e2e-snapshot-upgrade fixture ships a v4
@@ -46,7 +48,6 @@ describe("pre-migration settings snapshot", () => {
     // #snapshotIfBehind call inside it — has resolved, so this is the deterministic signal
     // that the second boot's migration pass has finished, not a fixed sleep.
     await openSettings();
-    await expandSection(m.maintenance_heading());
     await clickButton(m.maintenance_open());
     await $(`div=${m.maintenance_snapshots_heading()}`).waitForExist({
       timeoutMsg: "Maintenance subpage did not open after the second boot",
@@ -59,7 +60,6 @@ describe("pre-migration settings snapshot", () => {
 
   it("lists exactly one snapshot on the Maintenance page", async () => {
     await openSettings();
-    await expandSection(m.maintenance_heading());
     await clickButton(m.maintenance_open());
 
     await $(`div=${m.maintenance_snapshots_heading()}`).waitForExist({
@@ -69,6 +69,16 @@ describe("pre-migration settings snapshot", () => {
 
     const restoreButtons = await $$(`button=${m.maintenance_snapshot_restore()}`).getElements();
     expect(restoreButtons).toHaveLength(1);
+
+    await closeSettings();
+  });
+
+  it("snapshots the current settings before restoring an older one", async () => {
+    await openSettings();
+    await clickButton(m.maintenance_open());
+    await clickButton(m.maintenance_snapshot_restore());
+
+    await waitForSnapshotFiles(PRE_RESTORE_PATTERN);
 
     await closeSettings();
   });

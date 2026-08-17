@@ -18,6 +18,11 @@ import { EmptyNoteNameError } from "./errors";
 import type { JournalConfig } from "../config";
 import type { JournalMetadata } from "../types";
 
+/** A journal's path template, tokenized once, ready to invert many paths. */
+export interface PathInverter {
+  invert(path: VaultPath): Option<JournalMetadata>;
+}
+
 export class NotePathService {
   readonly #journals = inject(JournalsRepository);
   readonly #cycle = inject(CycleService);
@@ -71,6 +76,10 @@ export class NotePathService {
   }
 
   candidateFor(name: string, path: VaultPath): Option<JournalMetadata> {
+    return this.inverterFor(name).flatMap((inverter) => inverter.invert(path));
+  }
+
+  inverterFor(name: string): Option<PathInverter> {
     const config = this.configFor(name);
     if (!config) return Option.none();
     const context = this.#parseContext(config);
@@ -78,37 +87,46 @@ export class NotePathService {
     // segments and the filename (e.g. Journals/{{date:YYYY}}/{{date:MM}}/{{date:DD}})
     // reassembles into a single anchor rather than losing the folder's components.
     const template = config.folder ? `${config.folder}/${config.nameTemplate}.md` : `${config.nameTemplate}.md`;
-    const parsed = this.#engine.parse(tokenize(template), path, context);
-    if (parsed.kind === "err") return Option.none();
-    const bindings = parsed.value;
-    const numbers: Record<string, number> = {};
-    for (const source of config.numbering.sources) {
-      const captured = bindings.get(source.variable);
-      if (captured?.kind === "number") numbers[source.variable] = captured.value;
-    }
-    // The date variable is the canonical anchor source; start_date/end_date fall inside the
-    // same period, so a note named by its bounds recovers the anchor too. A template with no
-    // date at all (e.g. "Sprint {{index}}") falls back to inverting the captured numbering.
-    const dateBinding = bindings.get("date") ?? bindings.get("start_date") ?? bindings.get("end_date");
-    let anchor: AnchorString;
-    if (dateBinding?.kind === "date") {
-      // A coarse format (e.g. a week's "YYYY-[W]w") parses back to some day inside the
-      // period, not necessarily the period's canonical anchor. Resolve it, or the note
-      // attaches with a date parseEntry will reject.
-      const resolved = this.#cycle.anchorOf(name, dateBinding.value);
-      if (resolved.isNone()) return Option.none();
-      anchor = resolved.value;
-    } else {
-      const inverted = this.#numbering.anchorForNumbers(name, numbers);
-      if (inverted.isNone()) return Option.none();
-      anchor = inverted.value;
-    }
-    const metadata: JournalMetadata = {
-      journalName: name,
-      anchor,
-      ...(Object.keys(numbers).length > 0 && { numbers }),
-    };
-    return Option.some(metadata);
+    const tokens = tokenize(template);
+    const engine = this.#engine;
+    const cycle = this.#cycle;
+    const numbering = this.#numbering;
+
+    return Option.some({
+      invert: (path: VaultPath): Option<JournalMetadata> => {
+        const parsed = engine.parse(tokens, path, context);
+        if (parsed.kind === "err") return Option.none();
+        const bindings = parsed.value;
+        const numbers: Record<string, number> = {};
+        for (const source of config.numbering.sources) {
+          const captured = bindings.get(source.variable);
+          if (captured?.kind === "number") numbers[source.variable] = captured.value;
+        }
+        // The date variable is the canonical anchor source; start_date/end_date fall inside the
+        // same period, so a note named by its bounds recovers the anchor too. A template with no
+        // date at all (e.g. "Sprint {{index}}") falls back to inverting the captured numbering.
+        const dateBinding = bindings.get("date") ?? bindings.get("start_date") ?? bindings.get("end_date");
+        let anchor: AnchorString;
+        if (dateBinding?.kind === "date") {
+          // A coarse format (e.g. a week's "YYYY-[W]w") parses back to some day inside the
+          // period, not necessarily the period's canonical anchor. Resolve it, or the note
+          // attaches with a date parseEntry will reject.
+          const resolved = cycle.anchorOf(name, dateBinding.value);
+          if (resolved.isNone()) return Option.none();
+          anchor = resolved.value;
+        } else {
+          const inverted = numbering.anchorForNumbers(name, numbers);
+          if (inverted.isNone()) return Option.none();
+          anchor = inverted.value;
+        }
+        const metadata: JournalMetadata = {
+          journalName: name,
+          anchor,
+          ...(Object.keys(numbers).length > 0 && { numbers }),
+        };
+        return Option.some(metadata);
+      },
+    });
   }
 
   configFor(name: string): JournalConfig | undefined {
