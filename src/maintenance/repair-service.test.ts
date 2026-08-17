@@ -3,11 +3,13 @@ import { describe, expect, it, vi, type Mock } from "vitest";
 
 import { anchor } from "@/calendar/testing";
 import { Container } from "@/infrastructure/di";
-import { NotesService } from "@/infrastructure/host";
+import { NoteMetadataService, NotesService } from "@/infrastructure/host";
 import type { NotesEvents, VaultPath } from "@/infrastructure/host";
+import { FakeNoteMetadataService } from "@/infrastructure/host/testing";
 import { LoggerModule } from "@/infrastructure/logger";
 import { AsyncResult, Err, Ok } from "@/infrastructure/result";
 import { expectOk } from "@/infrastructure/result/testing";
+import { FRONTMATTER_NAME_KEY } from "@/journals/config";
 import { JournalNotFoundError } from "@/journals/errors";
 import { FrontmatterService } from "@/journals/frontmatter";
 import { JournalsIndex } from "@/journals/journals-index";
@@ -27,6 +29,7 @@ function build(): {
   notes: { updateFrontmatter: Mock<NotesService["updateFrontmatter"]> };
   frontmatter: { clearMutator: Mock<FrontmatterService["clearMutator"]> };
   emitMetadataChanged: (path: VaultPath) => void;
+  claim: (path: VaultPath, journalName: string | undefined) => void;
 } {
   const connection = {
     reanchor: vi.fn<NoteConnectionService["reanchor"]>(() => AsyncResult.ok(undefined)),
@@ -42,11 +45,13 @@ function build(): {
   const frontmatter = {
     clearMutator: vi.fn<FrontmatterService["clearMutator"]>(() => new Err(new JournalNotFoundError("gone"))),
   };
+  const metadata = new FakeNoteMetadataService();
   const c = new Container();
   c.addModule(LoggerModule);
   c.register(JournalsIndex).useClass(JournalsIndex);
   c.register(NoteConnectionService).useValue(connection as unknown as NoteConnectionService);
   c.register(NotesService).useValue(notes as unknown as NotesService);
+  c.register(NoteMetadataService).useValue(metadata as unknown as NoteMetadataService);
   c.register(FrontmatterService).useValue(frontmatter as unknown as FrontmatterService);
   c.register(RepairService).useClass(RepairService);
   return {
@@ -56,6 +61,14 @@ function build(): {
     notes,
     frontmatter,
     emitMetadataChanged: (path) => notesEmitter.emit("metadata-changed", path),
+    claim: (path, journalName) => {
+      metadata.setMetadata(path, {
+        title: path,
+        tags: [],
+        properties: journalName === undefined ? {} : { [FRONTMATTER_NAME_KEY]: journalName },
+        tasks: [],
+      });
+    },
   };
 }
 
@@ -128,9 +141,13 @@ describe("RepairService", () => {
 
   it("strips a claim through the existing disconnect path", async () => {
     vi.useFakeTimers();
-    const { service, connection, emitMetadataChanged } = build();
+    const { service, connection, emitMetadataChanged, claim } = build();
+    claim("old.md" as VaultPath, "gone");
     connection.disconnect.mockImplementation((path: VaultPath) => {
-      window.setTimeout(() => emitMetadataChanged(path), 0);
+      window.setTimeout(() => {
+        claim(path, undefined);
+        emitMetadataChanged(path);
+      }, 0);
       return AsyncResult.ok(undefined);
     });
 
@@ -148,13 +165,17 @@ describe("RepairService", () => {
 
   it("strips through the journal's own configured fields when the journal still exists", async () => {
     vi.useFakeTimers();
-    const { service, connection, notes, frontmatter, emitMetadataChanged } = build();
+    const { service, connection, notes, frontmatter, emitMetadataChanged, claim } = build();
+    claim("loser.md" as VaultPath, "weekly");
     const mutator = vi.fn((fm: Record<string, unknown>) => {
       delete fm["custom-date"];
     });
     frontmatter.clearMutator.mockReturnValueOnce(new Ok(mutator));
     notes.updateFrontmatter.mockImplementation((path: VaultPath) => {
-      window.setTimeout(() => emitMetadataChanged(path), 0);
+      window.setTimeout(() => {
+        claim(path, undefined);
+        emitMetadataChanged(path);
+      }, 0);
       return AsyncResult.ok(undefined);
     });
 
@@ -174,7 +195,8 @@ describe("RepairService", () => {
 
   it("does not settle a strip until the stripped note's metadata has actually changed", async () => {
     vi.useFakeTimers();
-    const { service, emitMetadataChanged } = build();
+    const { service, emitMetadataChanged, claim } = build();
+    claim("old.md" as VaultPath, "gone");
 
     let settled = false;
     const running = service
@@ -189,10 +211,49 @@ describe("RepairService", () => {
     await vi.advanceTimersByTimeAsync(1000);
     expect(settled).toBe(false);
 
+    claim("old.md" as VaultPath, undefined);
     emitMetadataChanged("old.md" as VaultPath);
     await running;
 
     expect(settled).toBe(true);
+    vi.useRealTimers();
+  });
+
+  it("reports a strip failed when the claim is still in place after the wait", async () => {
+    vi.useFakeTimers();
+    const { service, claim } = build();
+    claim("old.md" as VaultPath, "gone");
+
+    const running = service.apply([
+      { path: "old.md" as VaultPath, journalName: "gone", repair: { kind: "strip-claim" } },
+    ]);
+    await vi.runAllTimersAsync();
+    const result = await running;
+
+    expectOk(result);
+    expect(result.value.at(0)?.outcome).toEqual({ kind: "failed", reason: "still-claimed" });
+    vi.useRealTimers();
+  });
+
+  it("settles a strip whose metadata already dropped the claim before the listener attached", async () => {
+    vi.useFakeTimers();
+    const { service, claim } = build();
+    claim("old.md" as VaultPath, undefined);
+
+    let settled = false;
+    const running = service
+      .apply([{ path: "old.md" as VaultPath, journalName: "gone", repair: { kind: "strip-claim" } }])
+      .then((result) => {
+        settled = true;
+        return result;
+      });
+
+    await vi.advanceTimersByTimeAsync(0);
+    expect(settled).toBe(true);
+
+    const result = await running;
+    expectOk(result);
+    expect(result.value.at(0)?.outcome).toEqual({ kind: "repaired" });
     vi.useRealTimers();
   });
 

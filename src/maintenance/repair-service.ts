@@ -1,9 +1,10 @@
 import type { AnchorString } from "@/calendar";
 import { inject } from "@/infrastructure/di";
-import { NotesService } from "@/infrastructure/host";
+import { NoteMetadataService, NotesService } from "@/infrastructure/host";
 import type { VaultPath } from "@/infrastructure/host";
 import { LoggerFactoryToken } from "@/infrastructure/logger";
 import { AsyncResult, InvariantError } from "@/infrastructure/result";
+import { FRONTMATTER_NAME_KEY } from "@/journals/config";
 import { FrontmatterService } from "@/journals/frontmatter";
 import { JournalsIndex } from "@/journals/journals-index";
 import { NoteConnectionService } from "@/journals/notes/note-connection";
@@ -13,7 +14,8 @@ import type { RepairAction } from "./findings";
 const INDEX_SETTLE_TIMEOUT_MS = 2000;
 
 export type RepairOutcome =
-  { kind: "repaired" } | { kind: "failed"; reason: "write-failed" | "still-rejected" | "contested"; message?: string };
+  | { kind: "repaired" }
+  | { kind: "failed"; reason: "write-failed" | "still-rejected" | "still-claimed" | "contested"; message?: string };
 
 export interface RepairLogEntry {
   readonly path: VaultPath;
@@ -31,6 +33,7 @@ export class RepairService {
   readonly #connection = inject(NoteConnectionService);
   readonly #index = inject(JournalsIndex);
   readonly #notes = inject(NotesService);
+  readonly #metadata = inject(NoteMetadataService);
   readonly #frontmatter = inject(FrontmatterService);
   readonly #logger = inject(LoggerFactoryToken).named("maintenance");
 
@@ -61,14 +64,26 @@ export class RepairService {
     });
   }
 
+  // The strip counterpart of #satisfied. clearMutator and disconnect both remove the claim key
+  // whatever else they touch, so its absence from metadataCache is the one affirmative signal
+  // that the write landed and Obsidian re-parsed it. An unparsed note reads as not-yet-cleared:
+  // a strip is only a repair once the vault can be seen to have accepted it.
+  #claimCleared(path: VaultPath): boolean {
+    const metadata = this.#metadata.get(path);
+    return metadata.isSome() && metadata.value.properties[FRONTMATTER_NAME_KEY] === undefined;
+  }
+
   // A strip pushes no Intent, so #awaitIndexed sees nothing to wait for and resolves immediately
   // -- but a strip still reaches the vault only through processFrontMatter, which the caller's
   // re-scan reads back via metadataCache, not the write itself. An orphaned claim was never in the
   // index, so entryChanged (used above) has no signal for it either; metadataCache's own
   // "changed" event is the one signal that covers both the orphan and the duplicate-loser case.
   #awaitMetadataChanged(paths: readonly VaultPath[]): Promise<void> {
-    if (paths.length === 0) return Promise.resolve();
-    const remaining = new Set(paths);
+    // The listener attaches only after the whole write loop has run, so for an orphaned claim --
+    // never in the index, nothing else waiting on it -- the event has often already fired. Without
+    // this the batch idles out the full timeout on the path where that is most likely.
+    const remaining = new Set(paths.filter((path) => !this.#claimCleared(path)));
+    if (remaining.size === 0) return Promise.resolve();
     return new Promise<void>((resolve) => {
       let done = false;
       const finish = (): void => {
@@ -79,6 +94,7 @@ export class RepairService {
         resolve();
       };
       const off = this.#notes.events.on("metadata-changed", (path) => {
+        if (!this.#claimCleared(path)) return;
         remaining.delete(path);
         if (remaining.size === 0) finish();
       });
@@ -90,7 +106,7 @@ export class RepairService {
     // Paired positionally rather than re-matched by path afterwards: a batch can carry two
     // actions for the same path (a strip-claim and a rewrite, or two rewrites), and matching by
     // path alone would verify every entry for that path against whichever intent `find` hit first.
-    const results: { entry: RepairLogEntry; intent?: Intent }[] = [];
+    const results: { entry: RepairLogEntry; intent?: Intent; stripped?: VaultPath }[] = [];
     const intents: Intent[] = [];
     const stripped: VaultPath[] = [];
     // Seeded from every anchor currently in the index, so a stale-range rewrite — by construction
@@ -137,6 +153,7 @@ export class RepairService {
                 ? { kind: "failed", reason: "write-failed", message: result.error.message }
                 : { kind: "repaired" },
           },
+          ...(result.kind === "ok" && { stripped: action.path }),
         });
         continue;
       }
@@ -175,8 +192,14 @@ export class RepairService {
     // metadataCache directly, and the caller's re-scan must not run ahead of either.
     await Promise.all([this.#awaitIndexed(intents), this.#awaitMetadataChanged(stripped)]);
 
-    const verified = results.map(({ entry, intent }) => {
-      if (intent === undefined || entry.outcome.kind === "failed") return entry;
+    const verified = results.map(({ entry, intent, stripped: strippedPath }) => {
+      if (entry.outcome.kind === "failed") return entry;
+      if (strippedPath !== undefined) {
+        return this.#claimCleared(strippedPath)
+          ? entry
+          : { ...entry, outcome: { kind: "failed", reason: "still-claimed" } as const };
+      }
+      if (intent === undefined) return entry;
       return this.#satisfied([intent])
         ? entry
         : { ...entry, outcome: { kind: "failed", reason: "still-rejected" } as const };
