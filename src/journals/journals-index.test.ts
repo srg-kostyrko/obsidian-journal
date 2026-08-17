@@ -55,6 +55,56 @@ describe("JournalsIndex", () => {
       expect(captured.entryChanged).toEqual([]);
     });
 
+    it("re-registering an unmoved path with a new end date stores it", () => {
+      const index = new JournalsIndex();
+      const path = "Custom/2022-01-01.md";
+      index.register({ ...entry("custom", "2022-01-01", path), endDate: a("2022-01-14") });
+      index.register({ ...entry("custom", "2022-01-01", path), endDate: a("2022-01-21") });
+      const result = index.entryByPath(p(path));
+      assert(result.isSome());
+      expect(result.value.endDate).toBe(a("2022-01-21"));
+    });
+
+    it("re-registering an unmoved path with new numbers stores them", () => {
+      const index = new JournalsIndex();
+      const path = "Custom/2022-01-01.md";
+      index.register({ ...entry("custom", "2022-01-01", path), numbers: { index: 1 } });
+      index.register({ ...entry("custom", "2022-01-01", path), numbers: { index: 7 } });
+      const result = index.entryByPath(p(path));
+      assert(result.isSome());
+      expect(result.value.numbers).toEqual({ index: 7 });
+    });
+
+    it("a payload-only change announces the new entry without removing the old", () => {
+      const index = new JournalsIndex();
+      const path = "Custom/2022-01-01.md";
+      index.register({ ...entry("custom", "2022-01-01", path), endDate: a("2022-01-14") });
+      const captured = capture(index);
+      const updated: JournalEntry = { ...entry("custom", "2022-01-01", path), endDate: a("2022-01-21") };
+      index.register(updated);
+      expect(captured.entryChanged).toEqual([{ entry: updated, kind: "added" }]);
+    });
+
+    it("a payload-only change marks the journal dirty", async () => {
+      const index = new JournalsIndex();
+      const path = "Custom/2022-01-01.md";
+      index.register({ ...entry("custom", "2022-01-01", path), numbers: { index: 1 } });
+      const captured = capture(index);
+      index.register({ ...entry("custom", "2022-01-01", path), numbers: { index: 7 } });
+      await Promise.resolve();
+      expect(captured.journalDirty).toEqual([{ journalName: "custom" }]);
+    });
+
+    it("a payload-only change keeps the anchor slot pointing at the same path", () => {
+      const index = new JournalsIndex();
+      const path = "Custom/2022-01-01.md";
+      index.register({ ...entry("custom", "2022-01-01", path), endDate: a("2022-01-14") });
+      index.register({ ...entry("custom", "2022-01-01", path), endDate: a("2022-01-21") });
+      const slot = index.get("custom", a("2022-01-01"));
+      assert(slot.isSome());
+      expect(slot.value).toBe(p(path));
+    });
+
     it("re-registering a path with a new anchor emits removed for the old entry and added for the new", () => {
       const index = new JournalsIndex();
       const oldEntry = entry("daily", "2022-01-01", "Daily/2022-01-01.md");
