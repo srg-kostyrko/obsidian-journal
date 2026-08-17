@@ -9,6 +9,17 @@ import { JournalIndex } from "./journal-index";
 
 import type { JournalEntry, JournalsIndexEvents } from "./types";
 
+// Everything an entry carries beyond the (journalName, anchor) slot it occupies. A custom cycle
+// steps from the stored endDate, so a stale payload silently freezes the sequence for the session.
+function samePayload(a: JournalEntry, b: JournalEntry): boolean {
+  if (a.endDate !== b.endDate) return false;
+  const aNumbers = a.numbers ?? {};
+  const bNumbers = b.numbers ?? {};
+  const keys = Object.keys(aNumbers);
+  if (keys.length !== Object.keys(bNumbers).length) return false;
+  return keys.every((key) => aNumbers[key] === bNumbers[key]);
+}
+
 export class JournalsIndex {
   readonly #journals = new Map<string, JournalIndex>();
   readonly #byPath = new Map<VaultPath, JournalEntry>();
@@ -67,6 +78,12 @@ export class JournalsIndex {
   register(entry: JournalEntry): "registered" | "collision" {
     const existing = this.#byPath.get(entry.path);
     if (existing?.journalName === entry.journalName && existing?.anchor === entry.anchor) {
+      // The note has not moved, so the anchor slot and the collision verdict below are settled —
+      // but the payload can still have changed and must not be skipped along with them.
+      if (samePayload(existing, entry)) return "registered";
+      this.#byPath.set(entry.path, entry);
+      this.#emitter.emit("entryChanged", { entry, kind: "added" });
+      this.#markDirty(entry.journalName);
       return "registered";
     }
     if (existing) {

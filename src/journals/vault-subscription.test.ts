@@ -1,10 +1,12 @@
 import { afterEach, beforeEach, describe, expect, it } from "vitest";
 
+import type { AnchorString } from "@/calendar";
 import { installTestCalendar } from "@/calendar/testing";
 import type { VaultPath } from "@/infrastructure/host";
 
+import { CycleService } from "./cycle";
 import { JournalsIndex } from "./journals-index";
-import { customJournal, fixedJournal } from "./testing";
+import { customJournal, fixedJournal, unwrap } from "./testing";
 import { VaultSubscriptionService } from "./vault-subscription";
 import { buildRig } from "./vault-subscription.testing";
 
@@ -53,6 +55,62 @@ describe("VaultSubscriptionService", () => {
 
     const index = rig.container.resolve(JournalsIndex);
     expect(index.entryByPath("D/X.md" as VaultPath).isSome()).toBe(true);
+  });
+
+  it("updates the indexed end date when an interval's note is edited", async () => {
+    const rig = buildRig({ custom: customJournal("custom", "week", 2, "2026-08-03") }, ["C/1.md" as VaultPath]);
+    rig.setFrontmatter("C/1.md", {
+      journal: "custom",
+      "journal-date": "2026-08-03",
+      "journal-end-date": "2026-08-16",
+    });
+    const sub = rig.container.resolve(VaultSubscriptionService);
+    await sub.initialize();
+    const index = rig.container.resolve(JournalsIndex);
+
+    rig.setFrontmatter("C/1.md", {
+      journal: "custom",
+      "journal-date": "2026-08-03",
+      "journal-end-date": "2026-08-23",
+    });
+    rig.emit("metadata-changed", "C/1.md" as VaultPath);
+
+    expect(unwrap(index.entryByPath("C/1.md" as VaultPath)).endDate).toBe("2026-08-23");
+  });
+
+  it("updates the indexed numbering when a note's number is edited", async () => {
+    const rig = buildRig({ custom: customJournal("custom", "week", 2, "2026-08-03") }, ["C/1.md" as VaultPath]);
+    rig.setFrontmatter("C/1.md", { journal: "custom", "journal-date": "2026-08-03", "journal-index": 1 });
+    const sub = rig.container.resolve(VaultSubscriptionService);
+    await sub.initialize();
+    const index = rig.container.resolve(JournalsIndex);
+
+    rig.setFrontmatter("C/1.md", { journal: "custom", "journal-date": "2026-08-03", "journal-index": 7 });
+    rig.emit("metadata-changed", "C/1.md" as VaultPath);
+
+    expect(unwrap(index.entryByPath("C/1.md" as VaultPath)).numbers).toEqual({ index: 7 });
+  });
+
+  it("moves the next interval's anchor when an interval's end date is edited", async () => {
+    const rig = buildRig({ custom: customJournal("custom", "week", 2, "2026-08-03") }, ["C/1.md" as VaultPath]);
+    rig.setFrontmatter("C/1.md", {
+      journal: "custom",
+      "journal-date": "2026-08-03",
+      "journal-end-date": "2026-08-16",
+    });
+    const sub = rig.container.resolve(VaultSubscriptionService);
+    await sub.initialize();
+    const cycle = rig.container.resolve(CycleService);
+    expect(unwrap(cycle.nextAnchor("custom", "2026-08-03" as AnchorString))).toBe("2026-08-17");
+
+    rig.setFrontmatter("C/1.md", {
+      journal: "custom",
+      "journal-date": "2026-08-03",
+      "journal-end-date": "2026-08-23",
+    });
+    rig.emit("metadata-changed", "C/1.md" as VaultPath);
+
+    expect(unwrap(cycle.nextAnchor("custom", "2026-08-03" as AnchorString))).toBe("2026-08-24");
   });
 
   it("unregisters a note when its frontmatter no longer parses", async () => {
