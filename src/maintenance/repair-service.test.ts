@@ -1,8 +1,10 @@
+import { createNanoEvents } from "nanoevents";
 import { describe, expect, it, vi, type Mock } from "vitest";
 
 import { anchor } from "@/calendar/testing";
 import { Container } from "@/infrastructure/di";
-import type { VaultPath } from "@/infrastructure/host";
+import { NotesService } from "@/infrastructure/host";
+import type { NotesEvents, VaultPath } from "@/infrastructure/host";
 import { LoggerModule } from "@/infrastructure/logger";
 import { AsyncResult } from "@/infrastructure/result";
 import { expectOk } from "@/infrastructure/result/testing";
@@ -20,17 +22,25 @@ function build(): {
     reanchor: Mock<NoteConnectionService["reanchor"]>;
     disconnect: Mock<NoteConnectionService["disconnect"]>;
   };
+  emitMetadataChanged: (path: VaultPath) => void;
 } {
   const connection = {
     reanchor: vi.fn<NoteConnectionService["reanchor"]>(() => AsyncResult.ok(undefined)),
     disconnect: vi.fn<NoteConnectionService["disconnect"]>(() => AsyncResult.ok(undefined)),
   };
+  const notesEmitter = createNanoEvents<NotesEvents>();
   const c = new Container();
   c.addModule(LoggerModule);
   c.register(JournalsIndex).useClass(JournalsIndex);
   c.register(NoteConnectionService).useValue(connection as unknown as NoteConnectionService);
+  c.register(NotesService).useValue({ events: notesEmitter } as unknown as NotesService);
   c.register(RepairService).useClass(RepairService);
-  return { service: c.resolve(RepairService), index: c.resolve(JournalsIndex), connection };
+  return {
+    service: c.resolve(RepairService),
+    index: c.resolve(JournalsIndex),
+    connection,
+    emitMetadataChanged: (path) => notesEmitter.emit("metadata-changed", path),
+  };
 }
 
 function rewrite(path: string, to: string): RepairAction {
@@ -101,15 +111,47 @@ describe("RepairService", () => {
   });
 
   it("strips a claim through the existing disconnect path", async () => {
-    const { service, connection } = build();
+    vi.useFakeTimers();
+    const { service, connection, emitMetadataChanged } = build();
+    connection.disconnect.mockImplementation((path: VaultPath) => {
+      window.setTimeout(() => emitMetadataChanged(path), 0);
+      return AsyncResult.ok(undefined);
+    });
 
-    const result = await service.apply([
+    const running = service.apply([
       { path: "old.md" as VaultPath, journalName: "gone", repair: { kind: "strip-claim" } },
     ]);
+    await vi.advanceTimersByTimeAsync(0);
+    const result = await running;
 
     expectOk(result);
     expect(connection.disconnect).toHaveBeenCalledWith("old.md");
     expect(result.value.at(0)?.outcome).toEqual({ kind: "repaired" });
+    vi.useRealTimers();
+  });
+
+  it("does not settle a strip until the stripped note's metadata has actually changed", async () => {
+    vi.useFakeTimers();
+    const { service, emitMetadataChanged } = build();
+
+    let settled = false;
+    const running = service
+      .apply([{ path: "old.md" as VaultPath, journalName: "gone", repair: { kind: "strip-claim" } }])
+      .then((result) => {
+        settled = true;
+        return result;
+      });
+
+    // Short of the settle timeout, so this only proves anything if the wait is on the
+    // metadata-changed signal rather than on microtask flush alone.
+    await vi.advanceTimersByTimeAsync(1000);
+    expect(settled).toBe(false);
+
+    emitMetadataChanged("old.md" as VaultPath);
+    await running;
+
+    expect(settled).toBe(true);
+    vi.useRealTimers();
   });
 
   it("does nothing for an undecidable action", async () => {

@@ -1,5 +1,6 @@
 import type { AnchorString } from "@/calendar";
 import { inject } from "@/infrastructure/di";
+import { NotesService } from "@/infrastructure/host";
 import type { VaultPath } from "@/infrastructure/host";
 import { LoggerFactoryToken } from "@/infrastructure/logger";
 import { AsyncResult, InvariantError } from "@/infrastructure/result";
@@ -28,6 +29,7 @@ interface Intent {
 export class RepairService {
   readonly #connection = inject(NoteConnectionService);
   readonly #index = inject(JournalsIndex);
+  readonly #notes = inject(NotesService);
   readonly #logger = inject(LoggerFactoryToken).named("maintenance");
 
   #satisfied(intents: readonly Intent[]): boolean {
@@ -57,12 +59,38 @@ export class RepairService {
     });
   }
 
+  // A strip pushes no Intent, so #awaitIndexed sees nothing to wait for and resolves immediately
+  // -- but a strip still reaches the vault only through processFrontMatter, which the caller's
+  // re-scan reads back via metadataCache, not the write itself. An orphaned claim was never in the
+  // index, so entryChanged (used above) has no signal for it either; metadataCache's own
+  // "changed" event is the one signal that covers both the orphan and the duplicate-loser case.
+  #awaitMetadataChanged(paths: readonly VaultPath[]): Promise<void> {
+    if (paths.length === 0) return Promise.resolve();
+    const remaining = new Set(paths);
+    return new Promise<void>((resolve) => {
+      let done = false;
+      const finish = (): void => {
+        if (done) return;
+        done = true;
+        off();
+        window.clearTimeout(timer);
+        resolve();
+      };
+      const off = this.#notes.events.on("metadata-changed", (path) => {
+        remaining.delete(path);
+        if (remaining.size === 0) finish();
+      });
+      const timer = window.setTimeout(finish, INDEX_SETTLE_TIMEOUT_MS);
+    });
+  }
+
   async #applyAll(actions: readonly RepairAction[]): Promise<RepairLogEntry[]> {
     // Paired positionally rather than re-matched by path afterwards: a batch can carry two
     // actions for the same path (a strip-claim and a rewrite, or two rewrites), and matching by
     // path alone would verify every entry for that path against whichever intent `find` hit first.
     const results: { entry: RepairLogEntry; intent?: Intent }[] = [];
     const intents: Intent[] = [];
+    const stripped: VaultPath[] = [];
     // Seeded from every anchor currently in the index, so a stale-range rewrite — by construction
     // a rewrite at the note's own existing anchor — finds its own slot already taken. Let a note
     // reclaim the anchor it already owns; only a different path contesting the anchor should fail.
@@ -89,6 +117,7 @@ export class RepairService {
 
       if (action.repair.kind === "strip-claim") {
         const result = await this.#connection.disconnect(action.path);
+        if (result.kind === "ok") stripped.push(action.path);
         results.push({
           entry: {
             path: action.path,
@@ -132,7 +161,9 @@ export class RepairService {
       });
     }
 
-    await this.#awaitIndexed(intents);
+    // Both waits run concurrently: rewrites settle through the index, strips through
+    // metadataCache directly, and the caller's re-scan must not run ahead of either.
+    await Promise.all([this.#awaitIndexed(intents), this.#awaitMetadataChanged(stripped)]);
 
     const verified = results.map(({ entry, intent }) => {
       if (intent === undefined || entry.outcome.kind === "failed") return entry;
