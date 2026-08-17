@@ -1,4 +1,4 @@
-import { afterEach, beforeEach, describe, expect, it } from "vitest";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
 import { anchor, installTestCalendar } from "@/calendar/testing";
 import { Container } from "@/infrastructure/di";
@@ -22,6 +22,7 @@ function build(journals: Record<string, JournalConfig>): {
   resolver: ScannedNoteResolver;
   notes: FakeNotesService;
   metadata: FakeNoteMetadataService;
+  notePath: NotePathService;
 } {
   const notes = new FakeNotesService();
   const metadata = new FakeNoteMetadataService();
@@ -37,7 +38,11 @@ function build(journals: Record<string, JournalConfig>): {
   c.register(NotesService).useValue(notes as unknown as NotesService);
   c.register(NoteMetadataService).useValue(metadata as unknown as NoteMetadataService);
   c.register(ScannedNoteResolver).useClass(ScannedNoteResolver);
-  return { resolver: c.resolve(ScannedNoteResolver), notes, metadata };
+  const resolver = c.resolve(ScannedNoteResolver);
+  // Same container-scoped instance the resolver injected — resolving it again after
+  // the resolver returns the cached singleton, not a fresh one.
+  const notePath = c.resolve(NotePathService);
+  return { resolver, notes, metadata, notePath };
 }
 
 function seed(
@@ -134,5 +139,40 @@ describe("ScannedNoteResolver", () => {
     if (outcome.kind !== "resolved") return;
     expect(outcome.note.journalExists).toBe(false);
     expect(outcome.note.claimedJournal).toBe("gone");
+  });
+
+  it("prepares a journal's path inverter only once across multiple stranded notes", () => {
+    const { resolver, notes, metadata, notePath } = build({
+      weekly: fixedJournal("weekly", { type: "week" }, { nameTemplate: "{{date:YYYY-[W]ww}}" }),
+    });
+    // Both notes must be suspect — a healthy note never calls inverterFor at all,
+    // so it would not exercise the cache either way.
+    seed(notes, metadata, "2026-W03.md", { journal: "weekly", "journal-date": "2026-01-14" });
+    seed(notes, metadata, "2026-W04.md", { journal: "weekly", "journal-date": "2026-01-21" });
+    const inverterForSpy = vi.spyOn(notePath, "inverterFor");
+
+    const first = resolver.resolve("2026-W03.md" as VaultPath);
+    const second = resolver.resolve("2026-W04.md" as VaultPath);
+
+    expect(first.kind).toBe("resolved");
+    expect(second.kind).toBe("resolved");
+    if (first.kind !== "resolved" || second.kind !== "resolved") return;
+    expect(first.note.pathAnchor).toBe(anchor("2026-01-12"));
+    expect(second.note.pathAnchor).toBe(anchor("2026-01-19"));
+    // Without the per-journal cache each resolve would call inverterFor directly —
+    // this would read 2, not 1.
+    expect(inverterForSpy).toHaveBeenCalledTimes(1);
+  });
+
+  it("reports a note as unreadable when a collaborator throws", () => {
+    const { resolver, notes, metadata } = build({ weekly: fixedJournal("weekly", { type: "week" }) });
+    seed(notes, metadata, "2026-W03.md", { journal: "weekly", "journal-date": "2026-01-12" });
+    vi.spyOn(metadata, "get").mockImplementationOnce(() => {
+      throw new Error("boom");
+    });
+
+    const outcome = resolver.resolve("2026-W03.md" as VaultPath);
+
+    expect(outcome).toEqual({ kind: "unreadable", message: "boom" });
   });
 });
