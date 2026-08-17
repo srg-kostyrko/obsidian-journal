@@ -6,6 +6,9 @@ import VariableChip from "./VariableChip.vue";
 
 const writeText = vi.fn().mockResolvedValue(undefined);
 
+// Isolated: this replaces the whole navigator for the rest of the worker, and sortablejs reads
+// navigator.userAgent at import time, so under the shared registry it kills whichever later file
+// imports it first.
 vi.stubGlobal("navigator", {
   clipboard: { writeText },
 });
