@@ -130,6 +130,7 @@ describe("RepairService", () => {
   });
 
   it("resolves through the entryChanged event without waiting out the settle timeout", async () => {
+    vi.useFakeTimers();
     const { service, index, connection } = build();
     connection.reanchor.mockImplementation((journalName: string, path: VaultPath, target: { anchor: string }) => {
       window.setTimeout(() => {
@@ -138,9 +139,12 @@ describe("RepairService", () => {
       return AsyncResult.ok(undefined);
     });
 
-    const result = await service.apply([rewrite("a.md", "2026-01-12")]);
+    const running = service.apply([rewrite("a.md", "2026-01-12")]);
+    await vi.advanceTimersByTimeAsync(0);
+    const result = await running;
 
     expectOk(result);
     expect(result.value.at(0)?.outcome).toEqual({ kind: "repaired" });
+    vi.useRealTimers();
   });
 });
