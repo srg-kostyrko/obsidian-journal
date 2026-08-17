@@ -130,17 +130,20 @@ describe("SettingsService", () => {
   describe("initialize — slice validation fallback", () => {
     it("falls back to defaults when a stored slice fails validation", async () => {
       const { service } = build({ raw: { version: 5, calendar: { dow: "not-a-number" } } });
-      await service.initialize();
+      expectOk(await service.initialize());
       expect(service.getSlice(calendarSlice).state.dow).toBe(1);
     });
   });
 
+  // These fixtures are already at CURRENT_VERSION and register no migration: a stored version
+  // below it would fail runMigrations, and initialize would return Err before hydrating — which
+  // surfaces as an undefined collection record rather than a migration error. Hence expectOk.
   describe("initialize — collection entry repair", () => {
     it("keeps the fields that validate and repairs only the ones that do not", async () => {
-      const raw = { version: 4, pets: { Rex: { name: "Rex", kind: "dog", sound: "", toys: ["ball"] } } };
+      const raw = { version: 5, pets: { Rex: { name: "Rex", kind: "dog", sound: "", toys: ["ball"] } } };
       const { service } = build({ raw, collections: [petCollection] });
 
-      await service.initialize();
+      expectOk(await service.initialize());
 
       expect(service.recordOf(petCollection).Rex).toEqual({
         name: "Rex",
@@ -151,27 +154,27 @@ describe("SettingsService", () => {
     });
 
     it("derives the repaired value from the entry's own stored fields", async () => {
-      const raw = { version: 4, pets: { Rex: { name: "Rex", kind: "dog", sound: "" } } };
+      const raw = { version: 5, pets: { Rex: { name: "Rex", kind: "dog", sound: "" } } };
       const { service } = build({ raw, collections: [petCollection] });
 
-      await service.initialize();
+      expectOk(await service.initialize());
 
       expect(service.recordOf(petCollection).Rex.sound).toBe("woof");
     });
 
     it("falls back to the whole default when the entry is not an object", async () => {
-      const { service } = build({ raw: { version: 4, pets: { Rex: "not an entry" } }, collections: [petCollection] });
+      const { service } = build({ raw: { version: 5, pets: { Rex: "not an entry" } }, collections: [petCollection] });
 
-      await service.initialize();
+      expectOk(await service.initialize());
 
       expect(service.recordOf(petCollection).Rex).toEqual({ name: "Rex", kind: "cat", sound: "meow", toys: [] });
     });
 
     it("falls back to the whole default when the failure names no field", async () => {
-      const raw = { version: 4, pets: { Rex: { name: "woof", kind: "dog", sound: "woof", toys: ["ball"] } } };
+      const raw = { version: 5, pets: { Rex: { name: "woof", kind: "dog", sound: "woof", toys: ["ball"] } } };
       const { service } = build({ raw, collections: [checkedPetCollection] });
 
-      await service.initialize();
+      expectOk(await service.initialize());
 
       expect(service.recordOf(checkedPetCollection).Rex).toEqual({
         name: "Rex",
@@ -206,33 +209,33 @@ describe("SettingsService", () => {
 
     it("stays a weekly journal", async () => {
       const { service } = build({
-        raw: { version: 4, journals: { "Journal weekly": weekly } },
+        raw: { version: 5, journals: { "Journal weekly": weekly } },
         collections: [journalConfigCollection],
       });
 
-      await service.initialize();
+      expectOk(await service.initialize());
 
       expect(service.recordOf(journalConfigCollection)["Journal weekly"].write).toEqual({ type: "week" });
     });
 
     it("repairs the date format from its own write type", async () => {
       const { service } = build({
-        raw: { version: 4, journals: { "Journal weekly": weekly } },
+        raw: { version: 5, journals: { "Journal weekly": weekly } },
         collections: [journalConfigCollection],
       });
 
-      await service.initialize();
+      expectOk(await service.initialize());
 
       expect(service.recordOf(journalConfigCollection)["Journal weekly"].dateFormat).toBe("YYYY-[W]w");
     });
 
     it("keeps the folder, name template and templates the user configured", async () => {
       const { service } = build({
-        raw: { version: 4, journals: { "Journal weekly": weekly } },
+        raw: { version: 5, journals: { "Journal weekly": weekly } },
         collections: [journalConfigCollection],
       });
 
-      await service.initialize();
+      expectOk(await service.initialize());
 
       expect(service.recordOf(journalConfigCollection)["Journal weekly"]).toMatchObject({
         nameTemplate: "{{date:YYYY-[W]ww}}",
