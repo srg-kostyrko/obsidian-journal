@@ -569,4 +569,13 @@ describe("JournalsIndex", () => {
       expect(index.pathsAt(["daily"], a("2022-01-01"))).toEqual([]);
     });
   });
+
+  describe("isReady", () => {
+    it("is false before markReady and true after", () => {
+      const index = new JournalsIndex();
+      expect(index.isReady()).toBe(false);
+      index.markReady();
+      expect(index.isReady()).toBe(true);
+    });
+  });
 });

@@ -4,6 +4,7 @@ import { computed, onMounted, ref } from "vue";
 import { m } from "@/i18n";
 import { useService } from "@/infrastructure/di";
 import { NoticeService } from "@/infrastructure/host";
+import { JournalsIndex } from "@/journals/journals-index";
 import { SettingsService } from "@/settings";
 import type { SubpageNav } from "@/settings";
 import { SnapshotService, type SnapshotInfo } from "@/settings/snapshots/snapshot-service";
@@ -23,6 +24,7 @@ const settings = useService(SettingsService);
 const notices = useService(NoticeService);
 const scanner = useService(ScanService);
 const repairs = useService(RepairService);
+const index = useService(JournalsIndex);
 
 const available = ref<SnapshotInfo[]>([]);
 const listFailed = ref(false);
@@ -30,6 +32,7 @@ const restoring = ref(false);
 
 const report = ref<ScanReport | undefined>(undefined);
 const scanning = ref(false);
+const indexReady = ref(index.isReady());
 
 const safeActions = computed<RepairAction[]>(() =>
   (report.value?.findings ?? [])
@@ -38,19 +41,28 @@ const safeActions = computed<RepairAction[]>(() =>
 );
 
 interface FindingGroup {
+  readonly key: string;
   readonly check: CheckKey;
   readonly journalName: string;
   readonly findings: Finding[];
+}
+
+// A journal can carry two independent duplicate-anchor collisions at once (different anchors,
+// different note pairs), so the anchor must be part of the key — check + journalName alone would
+// merge them into one group, and keepOnly would then strip claims from notes the user never chose.
+function groupKeyOf(finding: Finding): string {
+  const anchorPart = finding.detail.kind === "duplicate" ? finding.detail.anchor : "";
+  return `${finding.check}::${finding.journalName}::${anchorPart}`;
 }
 
 const groups = computed<FindingGroup[]>(() => {
   const byKey = new Map<string, FindingGroup>();
   const findings = report.value?.findings ?? [];
   for (const finding of findings) {
-    const key = `${finding.check}::${finding.journalName}`;
+    const key = groupKeyOf(finding);
     const bucket = byKey.get(key);
     if (bucket) bucket.findings.push(finding);
-    else byKey.set(key, { check: finding.check, journalName: finding.journalName, findings: [finding] });
+    else byKey.set(key, { key, check: finding.check, journalName: finding.journalName, findings: [finding] });
   }
   return [...byKey.values()];
 });
@@ -63,6 +75,14 @@ async function refresh(): Promise<void> {
 
 async function runScan(): Promise<void> {
   scanning.value = true;
+  indexReady.value = index.isReady();
+  if (!indexReady.value) {
+    await index.whenReady();
+    indexReady.value = true;
+  }
+  // scanner.scan() awaits the same gate internally, so this second wait is a no-op by the time
+  // it runs — the point of the one above is to flip indexReady while still showing the "scanning"
+  // row, so the message can tell "still indexing" apart from "reading your notes".
   report.value = await scanner.scan();
   scanning.value = false;
 }
@@ -199,7 +219,9 @@ onMounted(runScan);
       <template #description>{{ m.maintenance_check_config_note() }}</template>
     </UiSettingRow>
     <UiSettingRow v-if="scanning">
-      <template #description>{{ m.maintenance_check_scanning() }}</template>
+      <template #description>
+        {{ indexReady ? m.maintenance_check_scanning() : m.maintenance_check_indexing() }}
+      </template>
     </UiSettingRow>
     <template v-else-if="report">
       <UiSettingRow v-if="report.pendingMigration">
@@ -219,7 +241,7 @@ onMounted(runScan);
       <UiSettingRow v-if="report.findings.length === 0">
         <template #description>{{ m.maintenance_check_clean() }}</template>
       </UiSettingRow>
-      <template v-for="group of groups" :key="`${group.check}-${group.journalName}`">
+      <template v-for="group of groups" :key="group.key">
         <UiSettingRow :name="groupTitle(group)">
           <UiButton v-if="groupActions(group).length > 0" @click="applyAndRescan(groupActions(group))">
             {{ m.maintenance_check_fix() }}

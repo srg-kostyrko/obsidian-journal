@@ -16,6 +16,7 @@ export class JournalsIndex {
   readonly #dirty = new Set<string>();
   #flushScheduled = false;
   #resolveReady: (() => void) | undefined;
+  #readyFlag = false;
   // The boot-time vault walk populates the index behind layout-ready and all-notes-resolved, so
   // until it lands the index is empty rather than authoritative — and "no entry for this anchor"
   // means "not indexed yet", not "no note exists". A consumer that would act on that difference
@@ -44,7 +45,12 @@ export class JournalsIndex {
     return this.#ready;
   }
 
+  isReady(): boolean {
+    return this.#readyFlag;
+  }
+
   markReady(): void {
+    this.#readyFlag = true;
     this.#resolveReady?.();
   }
 

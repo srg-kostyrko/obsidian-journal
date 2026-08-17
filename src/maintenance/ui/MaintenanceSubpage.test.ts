@@ -1,5 +1,5 @@
 import userEvent from "@testing-library/user-event";
-import { cleanup, render, screen, within } from "@testing-library/vue";
+import { cleanup, render, screen, waitFor, within } from "@testing-library/vue";
 import { afterEach, describe, expect, it, vi } from "vitest";
 
 import { anchor } from "@/calendar/testing";
@@ -9,6 +9,7 @@ import { NoticeService, PluginDataIOError } from "@/infrastructure/host";
 import type { VaultPath } from "@/infrastructure/host";
 import { FakeNoticeService } from "@/infrastructure/host/testing";
 import { AsyncResult } from "@/infrastructure/result";
+import { JournalsIndex } from "@/journals/journals-index";
 import { CURRENT_VERSION } from "@/settings";
 import { createSettingsService } from "@/settings/testing";
 
@@ -28,8 +29,8 @@ function flushPromises(): Promise<void> {
 
 const EMPTY_REPORT: ScanReport = { findings: [], analysed: 0, unreadable: [], unparsed: 0, pendingMigration: false };
 
-function fakeScanService(report: ScanReport): ScanService {
-  return { scan: () => Promise.resolve(report) } as unknown as ScanService;
+function fakeScanService(scan: () => Promise<ScanReport>): ScanService {
+  return { scan } as unknown as ScanService;
 }
 
 function fakeRepairService(
@@ -38,9 +39,28 @@ function fakeRepairService(
   return { apply } as unknown as RepairService;
 }
 
+// A ready-by-default index: the maintenance page's own "still indexing" state is exercised at
+// the JournalsIndex level (journals-index.test.ts); these fixtures only need scans to settle
+// promptly so they aren't about proving that behavior.
+function readyIndex(): JournalsIndex {
+  const index = new JournalsIndex();
+  index.markReady();
+  return index;
+}
+
 interface StubOptions {
   scan?: ScanReport;
+  scanFn?: () => Promise<ScanReport>;
   apply?: (actions: readonly RepairAction[]) => AsyncResult<RepairLogEntry[], never>;
+}
+
+function registerStubs(container: Container, stubs: StubOptions, notices: FakeNoticeService): void {
+  container.register(NoticeService).useValue(notices);
+  container.register(JournalsIndex).useValue(readyIndex());
+  container
+    .register(ScanService)
+    .useValue(fakeScanService(stubs.scanFn ?? (() => Promise.resolve(stubs.scan ?? EMPTY_REPORT))));
+  container.register(RepairService).useValue(fakeRepairService(stubs.apply ?? (() => AsyncResult.ok([]))));
 }
 
 async function setup(files: Record<string, string> = {}, stubs: StubOptions = {}) {
@@ -48,9 +68,7 @@ async function setup(files: Record<string, string> = {}, stubs: StubOptions = {}
   await settings.initialize();
   for (const [name, contents] of Object.entries(files)) data.files.set(name, contents);
   const notices = new FakeNoticeService();
-  container.register(NoticeService).useValue(notices);
-  container.register(ScanService).useValue(fakeScanService(stubs.scan ?? EMPTY_REPORT));
-  container.register(RepairService).useValue(fakeRepairService(stubs.apply ?? (() => AsyncResult.ok([]))));
+  registerStubs(container, stubs, notices);
   return { container, settings, data, notices };
 }
 
@@ -76,12 +94,12 @@ function row(label: string): HTMLElement {
 }
 
 // Bridges the DOM the component actually renders to the wrapper.text()/findAll() shape a
-// component test naturally wants, without pulling in a second test-rendering library.
+// component test naturally wants, without pulling in a second test-rendering library. Also
+// hands back the raw DOM root for tests that need to target one row among several identical
+// ones (e.g. two "Keep this one" buttons that read the same but belong to different findings).
 function mountSubpage(stubs: StubOptions = {}) {
   const { container } = createSettingsService({ raw: { version: CURRENT_VERSION } });
-  container.register(NoticeService).useValue(new FakeNoticeService());
-  container.register(ScanService).useValue(fakeScanService(stubs.scan ?? EMPTY_REPORT));
-  container.register(RepairService).useValue(fakeRepairService(stubs.apply ?? (() => AsyncResult.ok([]))));
+  registerStubs(container, stubs, new FakeNoticeService());
 
   const { container: root } = mount(container);
 
@@ -94,7 +112,7 @@ function mountSubpage(stubs: StubOptions = {}) {
       })),
   };
 
-  return { wrapper };
+  return { wrapper, dom: root };
 }
 
 describe("MaintenanceSubpage", () => {
@@ -176,6 +194,73 @@ describe("MaintenanceSubpage", () => {
     expect(notices.messages).toContain(m.maintenance_snapshot_failed());
   });
 
+  it("disables the Restore button while a restore is in flight", async () => {
+    const { container, data } = await setup({
+      "backup-v3-2026-08-16T10-20-30.json": JSON.stringify({ version: CURRENT_VERSION, journals: {} }),
+    });
+    const { promise: gate, resolve: releaseRead } = Promise.withResolvers<void>();
+    const content = data.files.get("backup-v3-2026-08-16T10-20-30.json") ?? "";
+    vi.spyOn(data, "readFile").mockReturnValueOnce(
+      AsyncResult.fromPromise(
+        gate.then(() => content),
+        () => new PluginDataIOError("read-file", new Error("unused")),
+      ),
+    );
+    mount(container);
+    await screen.findByText(m.maintenance_snapshot_row({ version: 3 }));
+
+    const restoreButton = within(row("2026-08-16T10:20:30Z")).getByRole<HTMLButtonElement>("button", {
+      name: m.maintenance_snapshot_restore(),
+    });
+    await userEvent.click(restoreButton);
+
+    await waitFor(() => expect(restoreButton.disabled).toBe(true));
+
+    releaseRead();
+
+    await waitFor(() => expect(restoreButton.disabled).toBe(false));
+  });
+
+  it("discards displayed findings and re-scans after a successful restore", async () => {
+    const staleReport: ScanReport = {
+      findings: [
+        {
+          check: "stale-range",
+          path: "stale.md" as VaultPath,
+          journalName: "weekly",
+          detail: { kind: "zero-length-range", anchor: anchor("2026-01-12") },
+          repair: { kind: "rewrite", anchor: anchor("2026-01-12") },
+        },
+      ],
+      analysed: 1,
+      unreadable: [],
+      unparsed: 0,
+      pendingMigration: false,
+    };
+    const scan = vi
+      .fn<() => Promise<ScanReport>>()
+      .mockResolvedValueOnce(staleReport)
+      .mockResolvedValueOnce(EMPTY_REPORT);
+
+    const { container } = await setup(
+      { "backup-v3-2026-08-16T10-20-30.json": JSON.stringify({ version: CURRENT_VERSION, journals: {} }) },
+      { scanFn: scan },
+    );
+    mount(container);
+    await screen.findByText(m.maintenance_check_group_stale({ journal: "weekly" }));
+    expect(scan).toHaveBeenCalledTimes(1);
+
+    await userEvent.click(
+      within(row("2026-08-16T10:20:30Z")).getByRole("button", { name: m.maintenance_snapshot_restore() }),
+    );
+
+    await waitFor(() => expect(scan).toHaveBeenCalledTimes(2));
+    await waitFor(() => {
+      expect(screen.queryByText(m.maintenance_check_group_stale({ journal: "weekly" }))).toBeNull();
+    });
+    expect(screen.getByText(m.maintenance_check_clean())).toBeTruthy();
+  });
+
   it("shows the completeness line even when nothing is wrong", async () => {
     const { wrapper } = mountSubpage({
       scan: { findings: [], analysed: 12, unreadable: [], unparsed: 0, pendingMigration: false },
@@ -228,7 +313,7 @@ describe("MaintenanceSubpage", () => {
             path: "dup.md" as VaultPath,
             journalName: "weekly",
             detail: { kind: "duplicate", anchor: anchor("2026-01-12"), size: 1, mtime: 2 },
-            repair: { kind: "undecidable", reason: "anchor-contested" },
+            repair: { kind: "undecidable", reason: "needs-choice" },
           },
         ],
         analysed: 2,
@@ -247,5 +332,69 @@ describe("MaintenanceSubpage", () => {
     expect(apply).toHaveBeenCalledWith([
       { path: "safe.md", journalName: "weekly", repair: { kind: "rewrite", anchor: anchor("2026-01-12") } },
     ]);
+  });
+
+  it("keeps two independent duplicate collisions in the same journal as separate groups", async () => {
+    const apply = vi.fn(() => AsyncResult.ok([]));
+    const { wrapper, dom } = mountSubpage({
+      apply,
+      scan: {
+        findings: [
+          {
+            check: "duplicate-anchor",
+            path: "a.md" as VaultPath,
+            journalName: "weekly",
+            detail: { kind: "duplicate", anchor: anchor("2026-01-12"), size: 100, mtime: 10 },
+            repair: { kind: "undecidable", reason: "needs-choice" },
+          },
+          {
+            check: "duplicate-anchor",
+            path: "b.md" as VaultPath,
+            journalName: "weekly",
+            detail: { kind: "duplicate", anchor: anchor("2026-01-12"), size: 200, mtime: 20 },
+            repair: { kind: "undecidable", reason: "needs-choice" },
+          },
+          {
+            check: "duplicate-anchor",
+            path: "c.md" as VaultPath,
+            journalName: "weekly",
+            detail: { kind: "duplicate", anchor: anchor("2026-02-16"), size: 300, mtime: 30 },
+            repair: { kind: "undecidable", reason: "needs-choice" },
+          },
+          {
+            check: "duplicate-anchor",
+            path: "d.md" as VaultPath,
+            journalName: "weekly",
+            detail: { kind: "duplicate", anchor: anchor("2026-02-16"), size: 400, mtime: 40 },
+            repair: { kind: "undecidable", reason: "needs-choice" },
+          },
+        ],
+        analysed: 4,
+        unreadable: [],
+        unparsed: 0,
+        pendingMigration: false,
+      },
+    });
+    await flushPromises();
+
+    // Both collisions must surface as their own heading, correctly anchored — a merged group
+    // would show only one of these, and possibly with the wrong anchor in it.
+    expect(wrapper.text()).toContain(
+      m.maintenance_check_group_duplicate({ journal: "weekly", anchor: anchor("2026-01-12") }),
+    );
+    expect(wrapper.text()).toContain(
+      m.maintenance_check_group_duplicate({ journal: "weekly", anchor: anchor("2026-02-16") }),
+    );
+
+    const rows = [...dom.querySelectorAll(".setting-item")];
+    const aRow = rows.find((element) => element.textContent?.includes("a.md"));
+    const keepButton = aRow?.querySelector("button");
+    if (!keepButton) throw new Error("expected a Keep this one button on a.md's row");
+    await userEvent.click(keepButton);
+
+    // Only b.md — a.md's own collision partner — may be stripped. A grouping key that ignores
+    // the anchor would merge both collisions and also strip c.md and d.md, which the user never
+    // touched.
+    expect(apply).toHaveBeenCalledWith([{ path: "b.md", journalName: "weekly", repair: { kind: "strip-claim" } }]);
   });
 });
