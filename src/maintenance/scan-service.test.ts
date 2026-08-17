@@ -91,6 +91,32 @@ describe("gateCollisions", () => {
 
     expect(gateCollisions(notes, []).filter((f) => f.check === "duplicate-anchor")).toHaveLength(0);
   });
+
+  it("contributes nothing for an unhealthy note whose only finding is undecidable", () => {
+    const notes = [
+      note("target.md"),
+      note("unplaced.md", { storedAnchor: anchor("2026-01-12"), canonicalAnchor: anchor("2026-01-20") }),
+    ];
+    const undecidable: Finding = {
+      check: "rejected-anchor",
+      path: "unplaced.md" as VaultPath,
+      journalName: "weekly",
+      detail: { kind: "path-overrides-date", pathAnchor: anchor("2026-01-20"), dateAnchor: anchor("2026-01-20") },
+      repair: { kind: "undecidable", reason: "path-and-date-disagree" },
+    };
+    const result = gateCollisions(notes, [rewrite("target.md", "2026-01-12"), undecidable]);
+
+    expect(result).toHaveLength(2);
+    expect(result.filter((f) => f.check === "duplicate-anchor")).toHaveLength(0);
+    expect(result.find((f) => f.path === "target.md")?.repair).toEqual({
+      kind: "rewrite",
+      anchor: anchor("2026-01-12"),
+    });
+    expect(result.find((f) => f.path === "unplaced.md")?.repair).toEqual({
+      kind: "undecidable",
+      reason: "path-and-date-disagree",
+    });
+  });
 });
 
 describe("orphanFindings", () => {
