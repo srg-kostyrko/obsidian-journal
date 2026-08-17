@@ -63,17 +63,23 @@ export class RepairService {
     // path alone would verify every entry for that path against whichever intent `find` hit first.
     const results: { entry: RepairLogEntry; intent?: Intent }[] = [];
     const intents: Intent[] = [];
-    // After the scan's collision gate this should never refuse anything; if it does, the gate
+    // Seeded from every anchor currently in the index, so a stale-range rewrite — by construction
+    // a rewrite at the note's own existing anchor — finds its own slot already taken. Let a note
+    // reclaim the anchor it already owns; only a different path contesting the anchor should fail.
+    // After the scan's collision gate no *other* contest should reach here; if one does, the gate
     // has a bug and one of the two notes would otherwise have vanished from the calendar.
     const claimed = new Map<string, Set<AnchorString>>();
-    const claim = (journalName: string, anchor: AnchorString): boolean => {
+    const claim = (journalName: string, anchor: AnchorString, path: VaultPath): boolean => {
       let taken = claimed.get(journalName);
       if (!taken) {
         taken = new Set<AnchorString>();
         for (const [existing] of this.#index.entriesFor(journalName)) taken.add(existing);
         claimed.set(journalName, taken);
       }
-      if (taken.has(anchor)) return false;
+      if (taken.has(anchor)) {
+        const occupant = this.#index.entryByAnchor(journalName, anchor);
+        if (!(occupant.isSome() && occupant.value.path === path)) return false;
+      }
       taken.add(anchor);
       return true;
     };
@@ -97,7 +103,7 @@ export class RepairService {
       }
 
       const anchor = action.repair.anchor;
-      if (!claim(action.journalName, anchor)) {
+      if (!claim(action.journalName, anchor, action.path)) {
         results.push({
           entry: {
             path: action.path,

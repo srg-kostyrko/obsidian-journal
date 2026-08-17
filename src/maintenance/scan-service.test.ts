@@ -288,6 +288,22 @@ describe("ScanService", () => {
     expect(report.findings.some((f) => f.repair.kind === "rewrite")).toBe(false);
   });
 
+  it("finds a note whose period range collapsed and offers a rewrite at its own anchor", async () => {
+    const { service, index, notes, metadata } = buildScan({ weekly: fixedJournal("weekly", { type: "week" }) });
+    seed(notes, metadata, "2026-W03.md", {
+      journal: "weekly",
+      "journal-date": "2026-01-12",
+      "journal-end-date": "2026-01-12",
+    });
+    index.markReady();
+
+    const report = await service.scan();
+
+    expect(report.findings).toHaveLength(1);
+    expect(report.findings.at(0)?.check).toBe("stale-range");
+    expect(report.findings.at(0)?.repair).toEqual({ kind: "rewrite", anchor: anchor("2026-01-12") });
+  });
+
   it("reports a note whose journal no longer exists", async () => {
     const { service, index, notes, metadata } = buildScan({ weekly: fixedJournal("weekly", { type: "week" }) });
     seed(notes, metadata, "old.md", { journal: "gone", "journal-date": "2026-01-12" });

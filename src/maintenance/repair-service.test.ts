@@ -64,6 +64,21 @@ describe("RepairService", () => {
     vi.useRealTimers();
   });
 
+  it("lets a stale-range rewrite reclaim the anchor its own note already occupies", async () => {
+    const { service, index, connection } = build();
+    index.register({ journalName: "weekly", anchor: anchor("2026-01-12"), path: "a.md" as VaultPath });
+    connection.reanchor.mockImplementation((journalName: string, path: VaultPath, target: { anchor: string }) => {
+      index.register({ journalName, anchor: target.anchor as never, path });
+      return AsyncResult.ok(undefined);
+    });
+
+    const result = await service.apply([rewrite("a.md", "2026-01-12")]);
+
+    expectOk(result);
+    expect(result.value.at(0)?.outcome).toEqual({ kind: "repaired" });
+    expect(connection.reanchor).toHaveBeenCalledTimes(1);
+  });
+
   it("refuses a second write onto an anchor this run already claimed", async () => {
     const { service, connection } = build();
 
