@@ -246,6 +246,23 @@ replaced "row".
 - Mode: create a new note when a segment is clicked, or only open notes that already exist
 - Whole block decoration: decorate the block as a whole from the current journal's rules
 
+### Maintenance
+
+A settings page for recovering from vault or settings damage. It does nothing on its own — open it from **Settings → Journals → Maintenance** when you suspect something is wrong.
+
+**Settings snapshots**: Before your settings are migrated to a new plugin version, and before you restore an earlier snapshot, a copy of the current settings file is saved automatically. The page lists every snapshot it finds, what it was taken before, and lets you restore one with a click — which itself snapshots whatever it's about to overwrite first. Migration snapshots are kept indefinitely; the three most recent pre-restore snapshots are kept.
+
+**Vault check**: Scans every note that claims a journal in its frontmatter for four kinds of mismatch:
+
+- **Notes the calendar can't see** — a note's stored date no longer matches its journal, usually from a note opened while that journal was misconfigured.
+- **Notes with the wrong period range** — a note's start/end dates no longer match the period its own date falls in.
+- **Two notes claiming the same period** — you pick which one keeps it; the other has its journal keys removed, its content left otherwise untouched.
+- **Notes claiming a journal that no longer exists** — shown as an inventory rather than a problem, since deleting a journal while keeping its notes is a deliberate choice. Remove the leftover keys, or reconnect the notes to a different journal with the "Connect note to a journal" command.
+
+A finding the check can repair safely shows a **Fix** button, or use **Fix everything safe** to apply every safe repair at once. A finding it cannot safely resolve — for example, when a note's file name and its own date disagree about which period it belongs to — is listed with an explanation instead of a guess, so you can open the note and decide. The page re-scans after every repair and only reports a note fixed once Obsidian has confirmed the change landed.
+
+Findings are computed against your journals as currently configured, so if you suspect your settings themselves are wrong, restore a snapshot first — repairing notes against a broken configuration can make things worse.
+
 ## Compatibility with other plugins
 
 - `Daily notes` core plugin - this plugin intends to be a replacement for it. Notes created through Daily notes will not be connected to any journal so it is advised to disable this plugin.

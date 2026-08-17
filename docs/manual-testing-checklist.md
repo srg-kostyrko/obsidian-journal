@@ -34,6 +34,7 @@ only when you are investigating a specific report or the spec is red.
 | §16 migration            | `legacy-upgrade`, `mid-session-enable`                                                                  |
 | §17 regression (locale)  | `calendar-locale`                                                                                       |
 | §18 URI handler          | `uri-open`                                                                                              |
+| §19 maintenance page     | `settings-snapshot`, `vault-check`                                                                      |
 
 **Spend your attention where automation cannot reach.** Work the sections in this
 order, not top to bottom:
@@ -1212,6 +1213,37 @@ Setup: journal "Err" whose template path points at a missing file.
       in settings.
 - [ ] **Dump logs** button → writes a `journal-log-*.md` note.
 - [ ] Dump logs with **no buffered logs** → an empty-state notice, no stray note.
+
+### Maintenance page
+
+Setup: **Settings → Journals → Maintenance**.
+
+- [ ] Snapshots list shows what each was taken before (a settings version, or a
+      restore) → **Restore** applies it and shows a confirmation notice.
+- [ ] Vault check on a healthy vault → "No problems found" **and** a completeness
+      line accounting for every note (analyzed / unreadable / still indexing).
+- [ ] A note opened while its journal was misconfigured (rejected anchor) → the
+      check finds it, **Fix** repairs it, and the calendar shows the note
+      afterward — not just a log line.
+- [ ] A note with a collapsed period range (stale-range: `journal-end-date` equal
+      to the anchor, or `journal-start-date` off) → **Fix** repairs the range in
+      one write.
+- [ ] Two notes claiming the same period (duplicate anchor) → both listed with
+      size and mtime; **Keep this one** strips the other's journal keys and
+      leaves its content untouched.
+- [ ] A note claiming a deleted journal (orphaned claim) → shown as an inventory,
+      not worded as damage; **Remove journal keys** clears it, and the reassign
+      hint points at the "Connect note to a journal" command.
+- [ ] A finding the check cannot safely resolve (e.g. the file name and the
+      note's own date disagree about the period) → no Fix button, and the row
+      explains why instead of looking like an ordinary unfixed item.
+- [ ] **Fix everything safe** is disabled whenever the scan reports notes it
+      could not read.
+- [ ] Every Fix action (group fix, keep-this-one, remove-journal-keys, fix-all)
+      is disabled while a legacy note migration is pending, matching the
+      "let that finish first" message on the page.
+- [ ] Restoring a snapshot discards the findings on screen and forces a re-scan
+      — Fix actions are unavailable until it completes.
 
 ### Field validation
 
