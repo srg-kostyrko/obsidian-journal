@@ -87,6 +87,48 @@ describe("v3ToV4Migration", () => {
     expect(journal).not.toHaveProperty("index");
   });
 
+  // v2 property conditions carried no valueType — the field arrived with the typed
+  // property conditions in v3, and without it the whole journal fails validation.
+  it("tags a v2 property decoration condition as a text condition", () => {
+    const data = monolithV3();
+    (data.journals as Record<string, { decorations: unknown[] }>)["My Journal Day"].decorations = [
+      {
+        mode: "and",
+        conditions: [{ type: "property", name: "mood", condition: "contains", value: "good" }],
+        styles: [{ type: "background", color: { type: "transparent" } }],
+      },
+    ];
+
+    const out = v3ToV4Migration.migrate(data);
+
+    const journal = Object.values(out.journals as Record<string, Record<string, unknown>>)[0];
+    const decorations = journal.decorations as { conditions: Record<string, unknown>[] }[];
+    expect(decorations[0].conditions[0]).toEqual({
+      type: "property",
+      name: "mood",
+      valueType: "text",
+      condition: "contains",
+      value: "good",
+    });
+  });
+
+  it("leaves a property condition that already declares its value type alone", () => {
+    const data = monolithV3();
+    (data.journals as Record<string, { decorations: unknown[] }>)["My Journal Day"].decorations = [
+      {
+        mode: "and",
+        conditions: [{ type: "property", name: "streak", valueType: "number", condition: "gt", value: 3 }],
+        styles: [{ type: "background", color: { type: "transparent" } }],
+      },
+    ];
+
+    const out = v3ToV4Migration.migrate(data);
+
+    const journal = Object.values(out.journals as Record<string, Record<string, unknown>>)[0];
+    const decorations = journal.decorations as { conditions: Record<string, unknown>[] }[];
+    expect(decorations[0].conditions[0]).toMatchObject({ valueType: "number", condition: "gt", value: 3 });
+  });
+
   it("keys each journal by its name so the repository resolves it", () => {
     const out = v3ToV4Migration.migrate(monolithV3());
     expect(Object.keys(out.journals as Record<string, unknown>)).toEqual(["My Journal Day"]);

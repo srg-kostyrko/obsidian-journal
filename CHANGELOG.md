@@ -26,6 +26,8 @@ All notable changes to this project will be documented in this file.
 - Opening a journal note now opens it in the window you are working in; previously, if the note was already open in another window, Obsidian jumped you over to that window.
 - Middle-clicking or Ctrl/Cmd-clicking to open a journal note in a new tab, split, or window now does so even when the note is already open somewhere; previously the request was ignored and the existing pane was focused instead.
 - Picking a journal from the menu that appears when several journals cover the clicked date now opens or creates that journal's note on macOS; previously the pick was silently discarded, so a date that more than one journal could answer for — the usual case in a calendar scoped to all journals — could not be opened at all. The menu still uses whichever style macOS is set to show.
+- A journal carrying one unreadable setting now keeps everything else it has — its period, folder, name template, templates and decorations — and only the unreadable setting falls back to its default. Previously the whole journal was replaced by a daily journal that kept nothing but its name, so an upgraded vault could end up with every journal writing days: clicking a date offered all of them at once, and the week, month, quarter and year cells stopped responding.
+- A decoration that matches on a note property no longer costs its journal its configuration when upgrading from an earlier version. Such conditions predate property value types and are now read as text conditions.
 
 ## [3.0.0] - 2026-08-14
 

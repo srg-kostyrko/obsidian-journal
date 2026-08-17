@@ -4,7 +4,13 @@ import type { Migration } from "@/settings";
 import type { View, ViewBlockInstance } from "@/views";
 import { DEFAULT_CALENDAR_VIEW_ID, defaultCalendarView } from "@/views/default-view";
 
-import type { OldJournalCommand, OldJournalSettings, OldPluginCommand, OldPluginSettings } from "./old-shapes";
+import type {
+  JournalDecorationCondition,
+  OldJournalCommand,
+  OldJournalSettings,
+  OldPluginCommand,
+  OldPluginSettings,
+} from "./old-shapes";
 
 type CommandTarget =
   | { kind: "all"; writeType: OldPluginCommand["writeType"] }
@@ -32,6 +38,21 @@ function mapMode(mode: "navigate" | "create" | "switch_date"): "navigate" | "cre
     .exhaustive();
 }
 
+// v2 property conditions predate v3's typed property conditions and carry no valueType.
+// Every v2 operator exists on the text condition, so tagging them text preserves the
+// decoration; leaving the field out fails the schema and costs the whole journal.
+function withPropertyValueType(condition: JournalDecorationCondition): unknown {
+  if (condition.type !== "property" || "valueType" in condition) return condition;
+  return { ...condition, valueType: "text" };
+}
+
+function reshapeDecorations(decorations: OldJournalSettings["decorations"] | undefined): unknown[] {
+  return (decorations ?? []).map((decoration) => ({
+    ...decoration,
+    conditions: decoration.conditions.map((condition) => withPropertyValueType(condition)),
+  }));
+}
+
 function reshapeJournal(old: OldJournalSettings): Record<string, unknown> {
   return {
     name: old.name,
@@ -42,7 +63,7 @@ function reshapeJournal(old: OldJournalSettings): Record<string, unknown> {
     dateFormat: old.dateFormat,
     folder: old.folder,
     templates: old.templates,
-    decorations: old.decorations,
+    decorations: reshapeDecorations(old.decorations),
     navBlock: old.navBlock,
     timeline: { start: old.start, end: mapEnd(old.end) },
     numbering: {

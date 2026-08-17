@@ -3,7 +3,7 @@ import { describe, it, expect } from "vitest";
 
 import type { AnchorString } from "@/calendar";
 
-import { journalConfigSchema, journalDefaultsFor, navBlockSchema } from "./config";
+import { journalConfigCollection, journalConfigSchema, journalDefaultsFor, navBlockSchema } from "./config";
 
 describe("journalDefaultsFor", () => {
   it("defaults nameTemplate to {{date}}", () => {
@@ -322,5 +322,29 @@ describe("navBlockSchema", () => {
       ],
     };
     expect(v.safeParse(navBlockSchema, value).success).toBe(false);
+  });
+});
+
+describe("journalConfigCollection default item", () => {
+  it("keeps the stored write type so a journal that fails validation stays its own kind", () => {
+    const item = journalConfigCollection.defaultItem("Journal weekly", { write: { type: "week" } });
+
+    expect(item.write).toEqual({ type: "week" });
+    expect(item.dateFormat).toBe("YYYY-[W]w");
+  });
+
+  it("keeps a stored custom write type with its interval", () => {
+    const item = journalConfigCollection.defaultItem("Sprints", {
+      write: { type: "custom", every: "week", duration: 2, anchorDate: "2024-01-01" },
+    });
+
+    expect(item.write).toEqual({ type: "custom", every: "week", duration: 2, anchorDate: "2024-01-01" });
+  });
+
+  it("falls back to day when the stored write type is unusable", () => {
+    const item = journalConfigCollection.defaultItem("Broken", { write: { type: "fortnight" } });
+
+    expect(item.write).toEqual({ type: "day" });
+    expect(item.name).toBe("Broken");
   });
 });

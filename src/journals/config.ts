@@ -362,6 +362,11 @@ export function journalDefaultsFor(write: JournalWrite, name = ""): JournalConfi
   };
 }
 
-export const journalConfigCollection = defineCollection("journals", journalConfigSchema, (id) =>
-  journalDefaultsFor({ type: "day" }, id),
+function storedWrite(raw: unknown): JournalWrite {
+  const parsed = v.safeParse(writeSchema, (raw as { write?: unknown } | null)?.write);
+  return parsed.success ? parsed.output : { type: "day" };
+}
+
+export const journalConfigCollection = defineCollection("journals", journalConfigSchema, (id, raw) =>
+  journalDefaultsFor(storedWrite(raw), id),
 );
