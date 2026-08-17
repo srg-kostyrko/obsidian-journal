@@ -2,6 +2,7 @@ import userEvent from "@testing-library/user-event";
 import { cleanup, render, screen, waitFor, within } from "@testing-library/vue";
 import { afterEach, describe, expect, it, vi } from "vitest";
 
+import { localMoment } from "@/calendar";
 import { anchor } from "@/calendar/testing";
 import { m } from "@/i18n";
 import { type Container, provideInjectorOnApp } from "@/infrastructure/di";
@@ -27,7 +28,7 @@ function flushPromises(): Promise<void> {
   return new Promise((resolve) => window.setTimeout(resolve, 0));
 }
 
-const EMPTY_REPORT: ScanReport = { findings: [], analysed: 0, unreadable: [], unparsed: 0, pendingMigration: false };
+const EMPTY_REPORT: ScanReport = { findings: [], analyzed: 0, unreadable: [], unparsed: 0, pendingMigration: false };
 
 function fakeScanService(scan: () => Promise<ScanReport>): ScanService {
   return { scan } as unknown as ScanService;
@@ -232,7 +233,7 @@ describe("MaintenanceSubpage", () => {
           repair: { kind: "rewrite", anchor: anchor("2026-01-12") },
         },
       ],
-      analysed: 1,
+      analyzed: 1,
       unreadable: [],
       unparsed: 0,
       pendingMigration: false,
@@ -263,12 +264,12 @@ describe("MaintenanceSubpage", () => {
 
   it("shows the completeness line even when nothing is wrong", async () => {
     const { wrapper } = mountSubpage({
-      scan: { findings: [], analysed: 12, unreadable: [], unparsed: 0, pendingMigration: false },
+      scan: { findings: [], analyzed: 12, unreadable: [], unparsed: 0, pendingMigration: false },
     });
     await flushPromises();
 
     expect(wrapper.text()).toContain(m.maintenance_check_clean());
-    expect(wrapper.text()).toContain(m.maintenance_check_completeness({ analysed: 12, unreadable: 0, unparsed: 0 }));
+    expect(wrapper.text()).toContain(m.maintenance_check_completeness({ analyzed: 12, unreadable: 0, unparsed: 0 }));
   });
 
   it("offers no fix for a finding it cannot decide", async () => {
@@ -283,7 +284,7 @@ describe("MaintenanceSubpage", () => {
             repair: { kind: "undecidable", reason: "path-and-date-disagree" },
           },
         ],
-        analysed: 1,
+        analyzed: 1,
         unreadable: [],
         unparsed: 0,
         pendingMigration: false,
@@ -316,7 +317,7 @@ describe("MaintenanceSubpage", () => {
             repair: { kind: "undecidable", reason: "needs-choice" },
           },
         ],
-        analysed: 2,
+        analyzed: 2,
         unreadable: [],
         unparsed: 0,
         pendingMigration: false,
@@ -369,7 +370,7 @@ describe("MaintenanceSubpage", () => {
             repair: { kind: "undecidable", reason: "needs-choice" },
           },
         ],
-        analysed: 4,
+        analyzed: 4,
         unreadable: [],
         unparsed: 0,
         pendingMigration: false,
@@ -396,5 +397,110 @@ describe("MaintenanceSubpage", () => {
     // the anchor would merge both collisions and also strip c.md and d.md, which the user never
     // touched.
     expect(apply).toHaveBeenCalledWith([{ path: "b.md", journalName: "weekly", repair: { kind: "strip-claim" } }]);
+  });
+
+  it("explains why a rewrite withdrawn by the collision gate has no Fix button", async () => {
+    const { wrapper } = mountSubpage({
+      scan: {
+        findings: [
+          {
+            check: "rejected-anchor",
+            path: "a.md" as VaultPath,
+            journalName: "weekly",
+            detail: { kind: "corroborated", from: anchor("2026-01-14"), to: anchor("2026-01-12") },
+            repair: { kind: "undecidable", reason: "anchor-contested" },
+          },
+        ],
+        analyzed: 1,
+        unreadable: [],
+        unparsed: 0,
+        pendingMigration: false,
+      },
+    });
+    await flushPromises();
+
+    expect(wrapper.text()).toContain(m.maintenance_reason_anchor_contested());
+    expect(wrapper.findAll("button").filter((b) => b.text() === m.maintenance_check_fix())).toHaveLength(0);
+  });
+
+  it("formats a duplicate's mtime instead of showing the raw epoch", async () => {
+    const mtime = Date.UTC(2026, 5, 15, 8, 30);
+    const { wrapper } = mountSubpage({
+      scan: {
+        findings: [
+          {
+            check: "duplicate-anchor",
+            path: "a.md" as VaultPath,
+            journalName: "weekly",
+            detail: { kind: "duplicate", anchor: anchor("2026-01-12"), size: 10, mtime },
+            repair: { kind: "undecidable", reason: "needs-choice" },
+          },
+        ],
+        analyzed: 1,
+        unreadable: [],
+        unparsed: 0,
+        pendingMigration: false,
+      },
+    });
+    await flushPromises();
+
+    expect(wrapper.text()).not.toContain(String(mtime));
+    expect(wrapper.text()).toContain(localMoment(mtime).format("YYYY-MM-DD HH:mm"));
+  });
+
+  it("disables fix everything safe when the scan could not read every note", async () => {
+    const { dom } = mountSubpage({
+      scan: {
+        findings: [
+          {
+            check: "rejected-anchor",
+            path: "safe.md" as VaultPath,
+            journalName: "weekly",
+            detail: { kind: "corroborated", from: anchor("2026-01-14"), to: anchor("2026-01-12") },
+            repair: { kind: "rewrite", anchor: anchor("2026-01-12") },
+          },
+        ],
+        analyzed: 1,
+        unreadable: [{ path: "broken.md" as VaultPath, message: "boom" }],
+        unparsed: 0,
+        pendingMigration: false,
+      },
+    });
+    await flushPromises();
+
+    const fixAll = [...dom.querySelectorAll("button")].find(
+      (button) => button.textContent?.trim() === m.maintenance_check_fix_all(),
+    );
+    expect(fixAll?.disabled).toBe(true);
+  });
+
+  it("disables every fix action while the legacy note migration is pending", async () => {
+    const { dom } = mountSubpage({
+      scan: {
+        findings: [
+          {
+            check: "rejected-anchor",
+            path: "safe.md" as VaultPath,
+            journalName: "weekly",
+            detail: { kind: "corroborated", from: anchor("2026-01-14"), to: anchor("2026-01-12") },
+            repair: { kind: "rewrite", anchor: anchor("2026-01-12") },
+          },
+        ],
+        analyzed: 1,
+        unreadable: [],
+        unparsed: 0,
+        pendingMigration: true,
+      },
+    });
+    await flushPromises();
+
+    const fixButton = [...dom.querySelectorAll("button")].find(
+      (button) => button.textContent?.trim() === m.maintenance_check_fix(),
+    );
+    const fixAll = [...dom.querySelectorAll("button")].find(
+      (button) => button.textContent?.trim() === m.maintenance_check_fix_all(),
+    );
+    expect(fixButton?.disabled).toBe(true);
+    expect(fixAll?.disabled).toBe(true);
   });
 });

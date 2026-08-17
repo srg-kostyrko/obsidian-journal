@@ -232,7 +232,7 @@ describe("ScanService", () => {
 
     index.markReady();
     const report = await running;
-    expect(report.analysed).toBe(0);
+    expect(report.analyzed).toBe(0);
   });
 
   it("counts notes it could not analyze", async () => {
@@ -243,7 +243,7 @@ describe("ScanService", () => {
 
     const report = await service.scan();
 
-    expect(report.analysed).toBe(1);
+    expect(report.analyzed).toBe(1);
     expect(report.unparsed).toBe(1);
     expect(report.findings).toHaveLength(0);
   });
@@ -273,7 +273,7 @@ describe("ScanService", () => {
     const report = await service.scan();
 
     expect(report.unreadable).toHaveLength(1);
-    expect(report.analysed).toBe(1);
+    expect(report.analyzed).toBe(1);
   });
 
   it("withdraws two rewrites that would land on the same anchor and reports the collision", async () => {
@@ -342,7 +342,7 @@ describe("ScanService", () => {
 
     const report = await service.scan();
 
-    expect(report.analysed).toBe(1);
+    expect(report.analyzed).toBe(1);
     expect(report.unparsed).toBe(0);
     expect(report.unreadable).toHaveLength(0);
   });

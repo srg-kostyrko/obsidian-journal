@@ -147,7 +147,7 @@ export class ScanService {
 
     return {
       findings,
-      analysed: resolved.length,
+      analyzed: resolved.length,
       unreadable,
       unparsed,
       pendingMigration: this.#pending.state.length > 0,

@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { computed, onMounted, ref } from "vue";
 
+import { localMoment } from "@/calendar";
 import { m } from "@/i18n";
 import { useService } from "@/infrastructure/di";
 import { NoticeService } from "@/infrastructure/host";
@@ -15,7 +16,7 @@ import UiSettingRow from "@/ui/UiSettingRow.vue";
 import { RepairService } from "../repair-service";
 import { ScanService } from "../scan-service";
 
-import type { CheckKey, Finding, RepairAction, ScanReport } from "../findings";
+import type { CheckKey, Finding, RepairAction, ScanReport, UndecidableReason } from "../findings";
 
 const { nav } = defineProps<{ nav: SubpageNav }>();
 
@@ -38,6 +39,16 @@ const safeActions = computed<RepairAction[]>(() =>
   (report.value?.findings ?? [])
     .filter((finding) => finding.repair.kind === "rewrite")
     .map((finding) => ({ path: finding.path, journalName: finding.journalName, repair: finding.repair })),
+);
+
+// Findings are computed against the config live when the scan ran; a restore invalidates them,
+// and the page says so above (maintenance_check_pending_migration / config_note).
+const fixDisabled = computed(() => report.value?.pendingMigration ?? false);
+// A note the scan could not read is invisible to the collision gate, so its anchor is absent
+// from projected space entirely — "every rewrite whose projected target is claimed by exactly
+// one note" cannot be verified while any note went unread.
+const fixAllDisabled = computed(
+  () => fixDisabled.value || safeActions.value.length === 0 || (report.value?.unreadable.length ?? 0) > 0,
 );
 
 interface FindingGroup {
@@ -151,12 +162,41 @@ function detailText(finding: Finding): string {
       });
     }
     case "duplicate": {
-      return m.maintenance_detail_duplicate({ path, size: detail.size, mtime: detail.mtime });
+      return m.maintenance_detail_duplicate({
+        path,
+        size: detail.size,
+        mtime: localMoment(detail.mtime).format("YYYY-MM-DD HH:mm"),
+      });
     }
     case "orphaned": {
       return m.maintenance_detail_orphaned({ path });
     }
   }
+}
+
+function reasonText(reason: UndecidableReason): string {
+  switch (reason) {
+    case "anchor-contested": {
+      return m.maintenance_reason_anchor_contested();
+    }
+    case "path-and-date-disagree": {
+      return m.maintenance_reason_path_and_date_disagree();
+    }
+    case "path-not-invertible": {
+      return m.maintenance_reason_path_not_invertible();
+    }
+    case "needs-choice": {
+      return m.maintenance_reason_needs_choice();
+    }
+  }
+}
+
+// The only row a repair.reason can explain: a corroborated/date-only finding withdrawn by the
+// collision gate still shows a "→" move in its detail text with no button next to it, which
+// otherwise reads as trivially fixable rather than blocked.
+function rowText(finding: Finding): string {
+  const detail = detailText(finding);
+  return finding.repair.kind === "undecidable" ? `${detail} ${reasonText(finding.repair.reason)}` : detail;
 }
 
 function stripOf(finding: Finding): RepairAction {
@@ -231,7 +271,7 @@ onMounted(runScan);
         <template #description>
           {{
             m.maintenance_check_completeness({
-              analysed: report.analysed,
+              analyzed: report.analyzed,
               unreadable: report.unreadable.length,
               unparsed: report.unparsed,
             })
@@ -243,16 +283,24 @@ onMounted(runScan);
       </UiSettingRow>
       <template v-for="group of groups" :key="group.key">
         <UiSettingRow :name="groupTitle(group)">
-          <UiButton v-if="groupActions(group).length > 0" @click="applyAndRescan(groupActions(group))">
+          <UiButton
+            v-if="groupActions(group).length > 0"
+            :disabled="fixDisabled"
+            @click="applyAndRescan(groupActions(group))"
+          >
             {{ m.maintenance_check_fix() }}
           </UiButton>
         </UiSettingRow>
         <UiSettingRow v-for="finding of group.findings" :key="finding.path">
-          <template #description>{{ detailText(finding) }}</template>
-          <UiButton v-if="group.check === 'duplicate-anchor'" @click="keepOnly(group, finding)">
+          <template #description>{{ rowText(finding) }}</template>
+          <UiButton v-if="group.check === 'duplicate-anchor'" :disabled="fixDisabled" @click="keepOnly(group, finding)">
             {{ m.maintenance_duplicate_keep() }}
           </UiButton>
-          <UiButton v-else-if="group.check === 'orphaned-claim'" @click="applyAndRescan([stripOf(finding)])">
+          <UiButton
+            v-else-if="group.check === 'orphaned-claim'"
+            :disabled="fixDisabled"
+            @click="applyAndRescan([stripOf(finding)])"
+          >
             {{ m.maintenance_orphan_clear() }}
           </UiButton>
         </UiSettingRow>
@@ -266,7 +314,7 @@ onMounted(runScan);
         </template>
       </UiSettingRow>
       <UiSettingRow controls-only>
-        <UiButton :disabled="safeActions.length === 0" @click="applyAndRescan(safeActions)">
+        <UiButton :disabled="fixAllDisabled" @click="applyAndRescan(safeActions)">
           {{ m.maintenance_check_fix_all() }}
         </UiButton>
       </UiSettingRow>

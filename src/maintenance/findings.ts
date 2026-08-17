@@ -46,7 +46,7 @@ export interface UnreadableNote {
 
 export interface ScanReport {
   readonly findings: readonly Finding[];
-  readonly analysed: number;
+  readonly analyzed: number;
   readonly unreadable: readonly UnreadableNote[];
   readonly unparsed: number;
   readonly pendingMigration: boolean;
