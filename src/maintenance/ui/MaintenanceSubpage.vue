@@ -239,9 +239,9 @@ onMounted(runScan);
         </UiSettingRow>
       </template>
       <UiSettingRow v-for="entry of report.unreadable" :key="entry.path">
-        <template #description>{{
-          m.maintenance_unreadable_row({ path: entry.path, message: entry.message })
-        }}</template>
+        <template #description>
+          {{ m.maintenance_unreadable_row({ path: entry.path, message: entry.message }) }}
+        </template>
       </UiSettingRow>
       <UiSettingRow controls-only>
         <UiButton :disabled="safeActions.length === 0" @click="applyAndRescan(safeActions)">
