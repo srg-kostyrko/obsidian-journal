@@ -765,4 +765,44 @@ describe("NoteConnectionService", () => {
       expect(notes.frontmatterOf("week/2026-W23.md" as VaultPath)?.["journal-date"]).toBe("2026-06-01");
     });
   });
+
+  describe("reanchor", () => {
+    it("rewrites a note the index never accepted", async () => {
+      const notes = new FakeNotesService();
+      notes.seed("Weeks/W03.md" as VaultPath, "", { journal: "weekly", "journal-date": "2026-01-14" });
+      const { container } = build(fakeRepo(weeklyWith()), notes, new FakeModalService());
+      // Deliberately not registering in the index — this is a note the index rejected.
+
+      const result = await container
+        .resolve(NoteConnectionService)
+        .reanchor("weekly", "Weeks/W03.md" as VaultPath, { anchor: anchor("2026-01-12") });
+
+      expectOk(result);
+      expect(notes.frontmatterOf("Weeks/W03.md" as VaultPath)?.["journal-date"]).toBe("2026-01-12");
+    });
+
+    it("recomputes the period end from config when the target carries no end date", async () => {
+      const notes = new FakeNotesService();
+      notes.seed("Weeks/W03.md" as VaultPath, "", {
+        journal: "weekly",
+        "journal-date": "2026-01-12",
+        "journal-start-date": "2026-01-12",
+        "journal-end-date": "2026-01-12",
+      });
+      const { container } = build(
+        fakeRepo(weeklyWith({ addStartDate: true, addEndDate: true })),
+        notes,
+        new FakeModalService(),
+      );
+
+      const result = await container
+        .resolve(NoteConnectionService)
+        .reanchor("weekly", "Weeks/W03.md" as VaultPath, { anchor: anchor("2026-01-12") });
+
+      expectOk(result);
+      const fm = notes.frontmatterOf("Weeks/W03.md" as VaultPath);
+      expect(fm?.["journal-start-date"]).toBe("2026-01-12");
+      expect(fm?.["journal-end-date"]).toBe("2026-01-18");
+    });
+  });
 });

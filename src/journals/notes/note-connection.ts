@@ -51,7 +51,7 @@ export interface ReanchorTarget {
   readonly endDate?: AnchorString;
 }
 
-type ReanchorError = NoteNotFoundError | FrontmatterError | JournalNotFoundError;
+export type ReanchorError = NoteNotFoundError | FrontmatterError | JournalNotFoundError;
 
 export interface ConnectOptions {
   override?: boolean;
@@ -123,6 +123,12 @@ export class NoteConnectionService {
     if (fallback.isNone() || fallback.value.toAnchor() !== metadata.endDate) return metadata;
     const { endDate: _dropped, ...rest } = metadata;
     return rest;
+  }
+
+  // Maintenance repairs notes the index rejected, which reanchorAll (index-driven) cannot reach
+  // and connect must not touch — connect renders the journal template into an empty note.
+  reanchor(journalName: string, path: VaultPath, target: ReanchorTarget): AsyncResult<void, ReanchorError> {
+    return this.#reanchorOne(journalName, path, target);
   }
 
   connect(
