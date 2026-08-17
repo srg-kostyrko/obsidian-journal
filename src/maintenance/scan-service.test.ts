@@ -1,9 +1,24 @@
-import { describe, expect, it } from "vitest";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
-import { anchor } from "@/calendar/testing";
+import { anchor, installTestCalendar } from "@/calendar/testing";
+import { Container } from "@/infrastructure/di";
+import { NoteMetadataService, NotesService } from "@/infrastructure/host";
 import type { VaultPath } from "@/infrastructure/host";
+import { FakeNoteMetadataService, FakeNotesService } from "@/infrastructure/host/testing";
+import { LoggerModule } from "@/infrastructure/logger";
+import type { JournalConfig } from "@/journals/config";
+import { CycleService } from "@/journals/cycle";
+import { FrontmatterService } from "@/journals/frontmatter";
+import { JournalsIndex } from "@/journals/journals-index";
+import { NotePathService } from "@/journals/notes/note-path";
+import { NumberingService } from "@/journals/numbering";
+import { JournalsRepository } from "@/journals/repository";
+import { fakeRepo, fixedJournal } from "@/journals/testing";
+import { SettingsService } from "@/settings";
+import { TemplateEngine } from "@/templates";
 
-import { gateCollisions, orphanFindings, pendingOldIdsOf } from "./scan-service";
+import { gateCollisions, orphanFindings, pendingOldIdsOf, ScanService } from "./scan-service";
+import { ScannedNoteResolver } from "./scanned-note";
 
 import type { Finding } from "./findings";
 import type { ScannedNote } from "./scanned-note";
@@ -150,5 +165,114 @@ describe("pendingOldIdsOf", () => {
     ]);
 
     expect([...ids]).toEqual(["legacy-id-7"]);
+  });
+});
+
+function buildScan(journals: Record<string, JournalConfig>): {
+  service: ScanService;
+  index: JournalsIndex;
+  notes: FakeNotesService;
+  metadata: FakeNoteMetadataService;
+  resolver: ScannedNoteResolver;
+} {
+  const notes = new FakeNotesService();
+  const metadata = new FakeNoteMetadataService();
+  const c = new Container();
+  c.addModule(LoggerModule);
+  c.register(JournalsRepository).useValue(fakeRepo(journals));
+  c.register(JournalsIndex).useClass(JournalsIndex);
+  c.register(CycleService).useClass(CycleService);
+  c.register(NumberingService).useClass(NumberingService);
+  c.register(FrontmatterService).useClass(FrontmatterService);
+  c.register(TemplateEngine).useClass(TemplateEngine);
+  c.register(NotePathService).useClass(NotePathService);
+  c.register(NotesService).useValue(notes as unknown as NotesService);
+  c.register(NoteMetadataService).useValue(metadata as unknown as NoteMetadataService);
+  c.register(ScannedNoteResolver).useClass(ScannedNoteResolver);
+  c.register(SettingsService).useValue({ getSlice: () => ({ state: [] }) } as unknown as SettingsService);
+  c.register(ScanService).useClass(ScanService);
+  return {
+    service: c.resolve(ScanService),
+    index: c.resolve(JournalsIndex),
+    notes,
+    metadata,
+    resolver: c.resolve(ScannedNoteResolver),
+  };
+}
+
+function seed(
+  notes: FakeNotesService,
+  metadata: FakeNoteMetadataService,
+  path: string,
+  frontmatter: Record<string, unknown>,
+): void {
+  notes.seed(path as VaultPath, "", frontmatter, { size: 100, mtime: 5 });
+  metadata.setMetadata(path as VaultPath, { title: path, tags: [], properties: frontmatter, tasks: [] });
+}
+
+describe("ScanService", () => {
+  let teardown: () => void;
+  beforeEach(() => {
+    teardown = installTestCalendar({ dow: 1, doy: 4 }).teardown;
+  });
+  afterEach(() => {
+    teardown();
+  });
+
+  it("waits for the index before reporting anything", async () => {
+    const { service, index } = buildScan({ weekly: fixedJournal("weekly", { type: "week" }) });
+    let settled = false;
+    const running = service.scan().then((report) => {
+      settled = true;
+      return report;
+    });
+
+    await Promise.resolve();
+    expect(settled).toBe(false);
+
+    index.markReady();
+    const report = await running;
+    expect(report.analysed).toBe(0);
+  });
+
+  it("counts notes it could not analyze", async () => {
+    const { service, index, notes, metadata } = buildScan({ weekly: fixedJournal("weekly", { type: "week" }) });
+    seed(notes, metadata, "good.md", { journal: "weekly", "journal-date": "2026-01-12" });
+    notes.seed("pending.md" as VaultPath, "", { journal: "weekly" });
+    index.markReady();
+
+    const report = await service.scan();
+
+    expect(report.analysed).toBe(1);
+    expect(report.unparsed).toBe(1);
+    expect(report.findings).toHaveLength(0);
+  });
+
+  it("finds a stranded note and offers a repair", async () => {
+    const { service, index, notes, metadata } = buildScan({
+      weekly: fixedJournal("weekly", { type: "week" }, { nameTemplate: "{{date:YYYY-[W]ww}}" }),
+    });
+    seed(notes, metadata, "2026-W03.md", { journal: "weekly", "journal-date": "2026-01-14" });
+    index.markReady();
+
+    const report = await service.scan();
+
+    expect(report.findings).toHaveLength(1);
+    expect(report.findings.at(0)?.repair).toEqual({ kind: "rewrite", anchor: anchor("2026-01-12") });
+  });
+
+  it("reports a note whose resolution threw without losing the rest of the scan", async () => {
+    const { service, index, notes, metadata, resolver } = buildScan({
+      weekly: fixedJournal("weekly", { type: "week" }),
+    });
+    seed(notes, metadata, "good.md", { journal: "weekly", "journal-date": "2026-01-12" });
+    seed(notes, metadata, "bad.md", { journal: "weekly", "journal-date": "2026-01-12" });
+    vi.spyOn(resolver, "resolve").mockImplementationOnce(() => ({ kind: "unreadable", message: "boom" }));
+    index.markReady();
+
+    const report = await service.scan();
+
+    expect(report.unreadable).toHaveLength(1);
+    expect(report.analysed).toBe(1);
   });
 });

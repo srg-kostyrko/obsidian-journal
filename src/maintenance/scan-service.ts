@@ -1,8 +1,17 @@
 import type { AnchorString } from "@/calendar";
+import { inject } from "@/infrastructure/di";
+import { NotesService } from "@/infrastructure/host";
 import type { VaultPath } from "@/infrastructure/host";
+import { JournalsIndex } from "@/journals/journals-index";
+import { SettingsService } from "@/settings";
+import { pendingNoteMigrationSlice } from "@/settings/legacy/pending-note-migration";
 import type { PendingNoteMigration } from "@/settings/legacy/pending-note-migration";
 
-import type { Finding } from "./findings";
+import { checkRejectedAnchor } from "./checks/rejected-anchor";
+import { checkStaleRange } from "./checks/stale-range";
+import { ScannedNoteResolver } from "./scanned-note";
+
+import type { Finding, ScanReport, UnreadableNote } from "./findings";
 import type { ScannedNote } from "./scanned-note";
 
 function keyOf(journalName: string, anchor: AnchorString): string {
@@ -84,4 +93,60 @@ export function orphanFindings(notes: readonly ScannedNote[], pendingOldIds: Rea
     });
   }
   return out;
+}
+
+export class ScanService {
+  readonly #notes = inject(NotesService);
+  readonly #index = inject(JournalsIndex);
+  readonly #resolver = inject(ScannedNoteResolver);
+  readonly #pending = inject(SettingsService).getSlice(pendingNoteMigrationSlice);
+
+  // Before the index is ready every note reads as stranded, so the walk waits rather than reporting on an empty index.
+  async scan(): Promise<ScanReport> {
+    await this.#index.whenReady();
+
+    const resolved: ScannedNote[] = [];
+    const unreadable: UnreadableNote[] = [];
+    let unparsed = 0;
+
+    for (const path of this.#notes.allMarkdownNotes()) {
+      const outcome = this.#resolver.resolve(path);
+      switch (outcome.kind) {
+        case "resolved": {
+          resolved.push(outcome.note);
+          break;
+        }
+        case "unparsed": {
+          unparsed += 1;
+          break;
+        }
+        case "unreadable": {
+          unreadable.push({ path, message: outcome.message });
+          break;
+        }
+        default: {
+          break;
+        }
+      }
+    }
+
+    const classified: Finding[] = [];
+    for (const note of resolved) {
+      const rejected = checkRejectedAnchor(note);
+      if (rejected) classified.push(rejected);
+      const stale = checkStaleRange(note);
+      if (stale) classified.push(stale);
+    }
+
+    const pendingOldIds = pendingOldIdsOf(this.#pending.state);
+    const findings = [...gateCollisions(resolved, classified), ...orphanFindings(resolved, pendingOldIds)];
+
+    return {
+      findings,
+      analysed: resolved.length,
+      unreadable,
+      unparsed,
+      pendingMigration: this.#pending.state.length > 0,
+    };
+  }
 }
