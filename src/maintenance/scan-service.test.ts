@@ -13,7 +13,7 @@ import { JournalsIndex } from "@/journals/journals-index";
 import { NotePathService } from "@/journals/notes/note-path";
 import { NumberingService } from "@/journals/numbering";
 import { JournalsRepository } from "@/journals/repository";
-import { fakeRepo, fixedJournal } from "@/journals/testing";
+import { customJournal, fakeRepo, fixedJournal } from "@/journals/testing";
 import { SettingsService } from "@/settings";
 import { TemplateEngine } from "@/templates";
 
@@ -274,5 +274,45 @@ describe("ScanService", () => {
 
     expect(report.unreadable).toHaveLength(1);
     expect(report.analysed).toBe(1);
+  });
+
+  it("withdraws two rewrites that would land on the same anchor and reports the collision", async () => {
+    const { service, index, notes, metadata } = buildScan({ weekly: fixedJournal("weekly", { type: "week" }) });
+    seed(notes, metadata, "a.md", { journal: "weekly", "journal-date": "2026-01-13" });
+    seed(notes, metadata, "b.md", { journal: "weekly", "journal-date": "2026-01-14" });
+    index.markReady();
+
+    const report = await service.scan();
+
+    expect(report.findings.filter((f) => f.check === "duplicate-anchor")).toHaveLength(2);
+    expect(report.findings.some((f) => f.repair.kind === "rewrite")).toBe(false);
+  });
+
+  it("reports a note whose journal no longer exists", async () => {
+    const { service, index, notes, metadata } = buildScan({ weekly: fixedJournal("weekly", { type: "week" }) });
+    seed(notes, metadata, "old.md", { journal: "gone", "journal-date": "2026-01-12" });
+    index.markReady();
+
+    const report = await service.scan();
+
+    expect(report.findings.filter((f) => f.check === "orphaned-claim")).toHaveLength(1);
+    expect(report.findings.at(0)?.journalName).toBe("gone");
+  });
+
+  it("excludes notes with no journal claim and custom-journal notes from every counter", async () => {
+    const { service, index, notes, metadata } = buildScan({
+      weekly: fixedJournal("weekly", { type: "week" }),
+      sprint: customJournal("sprint", "day", 14, "2026-01-05"),
+    });
+    seed(notes, metadata, "good.md", { journal: "weekly", "journal-date": "2026-01-12" });
+    seed(notes, metadata, "Plain.md", { title: "hello" });
+    seed(notes, metadata, "Sprints/1.md", { journal: "sprint", "journal-date": "2026-01-05" });
+    index.markReady();
+
+    const report = await service.scan();
+
+    expect(report.analysed).toBe(1);
+    expect(report.unparsed).toBe(0);
+    expect(report.unreadable).toHaveLength(0);
   });
 });
