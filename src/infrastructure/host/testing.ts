@@ -4,7 +4,7 @@ import type { Subscribable, TypedEmitter } from "@/infrastructure/events";
 import { AsyncResult, None, Some } from "@/infrastructure/result";
 import type { Option } from "@/infrastructure/result";
 
-import { FolderNotFoundError, NoteAlreadyExistsError, NoteNotFoundError } from "./errors";
+import { FolderNotFoundError, NoteAlreadyExistsError, NoteNotFoundError, PluginDataIOError } from "./errors";
 import { SuggestCancelled } from "./suggests/errors";
 
 import type {
@@ -14,7 +14,6 @@ import type {
   NoteReadError,
   NoteRenameError,
   NoteWriteError,
-  PluginDataIOError,
   WorkspaceOpenError,
 } from "./errors";
 import type { Disposer } from "./input-suggests/types";
@@ -283,8 +282,12 @@ export class FakeWorkspaceService implements Pick<
   }
 }
 
-export class FakePluginData implements Pick<PluginData, "load" | "save"> {
+export class FakePluginData implements Pick<
+  PluginData,
+  "load" | "save" | "listFiles" | "readFile" | "writeFile" | "deleteFile"
+> {
   #current: unknown;
+  readonly files = new Map<string, string>();
 
   constructor(initial: unknown = undefined) {
     this.#current = initial;
@@ -296,6 +299,27 @@ export class FakePluginData implements Pick<PluginData, "load" | "save"> {
 
   save(data: unknown): AsyncResult<void, PluginDataIOError> {
     this.#current = data;
+    return AsyncResult.ok(undefined);
+  }
+
+  listFiles(): AsyncResult<string[], PluginDataIOError> {
+    return AsyncResult.ok([...this.files.keys()]);
+  }
+
+  readFile(name: string): AsyncResult<string, PluginDataIOError> {
+    const found = this.files.get(name);
+    return found === undefined
+      ? AsyncResult.err(new PluginDataIOError("read-file", new Error(`missing ${name}`)))
+      : AsyncResult.ok(found);
+  }
+
+  writeFile(name: string, contents: string): AsyncResult<void, PluginDataIOError> {
+    this.files.set(name, contents);
+    return AsyncResult.ok(undefined);
+  }
+
+  deleteFile(name: string): AsyncResult<void, PluginDataIOError> {
+    this.files.delete(name);
     return AsyncResult.ok(undefined);
   }
 }

@@ -2182,5 +2182,14 @@
 	"logging_level_info": "Info",
 	"logging_level_title": "Niveau de log",
 	"logging_level_warn": "Avertissement",
-	"logging_section_title": "Logs"
+	"logging_section_title": "Logs",
+	"maintenance_heading": "Maintenance",
+	"maintenance_open": "Ouvrir",
+	"maintenance_snapshots_heading": "Instantanés des paramètres",
+	"maintenance_snapshots_empty": "Aucun instantané pour l'instant. Un instantané est pris automatiquement avant que l'extension ne migre vos paramètres vers une nouvelle version.",
+	"maintenance_snapshot_row": "Pris avant la mise à niveau depuis la version des paramètres {version}",
+	"maintenance_snapshot_restore": "Restaurer",
+	"maintenance_snapshot_restored": "Paramètres restaurés à partir de l'instantané pris le {takenAt}.",
+	"maintenance_snapshot_failed": "Cet instantané n'a pas pu être restauré. Il est peut-être endommagé.",
+	"maintenance_snapshots_load_failed": "Impossible de vérifier les instantanés. Cela ne signifie pas qu'aucun n'existe — essayez de rouvrir cette page."
 }

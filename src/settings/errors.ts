@@ -68,3 +68,14 @@ export class UnregisteredSubpageError extends SettingsError {
     this.name = "UnregisteredSubpageError";
   }
 }
+
+export class SnapshotUnreadableError extends SettingsError {
+  readonly kind = "snapshot-unreadable" as const;
+  constructor(
+    readonly snapshotName: string,
+    override readonly cause?: unknown,
+  ) {
+    super(`Snapshot "${snapshotName}" could not be read`);
+    this.name = "SnapshotUnreadableError";
+  }
+}

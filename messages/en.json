@@ -1597,5 +1597,14 @@
   "logging_level_info": "Info",
   "logging_level_title": "Log level",
   "logging_level_warn": "Warning",
-  "logging_section_title": "Logging"
+  "logging_section_title": "Logging",
+  "maintenance_heading": "Maintenance",
+  "maintenance_open": "Open",
+  "maintenance_snapshots_heading": "Settings snapshots",
+  "maintenance_snapshots_empty": "No snapshots yet. One is taken automatically before the plugin migrates your settings to a new version.",
+  "maintenance_snapshot_row": "Taken before upgrading from settings version {version}",
+  "maintenance_snapshot_restore": "Restore",
+  "maintenance_snapshot_restored": "Settings restored from the snapshot taken on {takenAt}.",
+  "maintenance_snapshot_failed": "That snapshot could not be restored. It may be damaged.",
+  "maintenance_snapshots_load_failed": "Snapshots could not be checked. This does not mean none exist — try reopening this page."
 }

@@ -2164,5 +2164,14 @@
 	"logging_level_info": "Información",
 	"logging_level_title": "Nivel de registro",
 	"logging_level_warn": "Advertencia",
-	"logging_section_title": "Registro"
+	"logging_section_title": "Registro",
+	"maintenance_heading": "Mantenimiento",
+	"maintenance_open": "Abrir",
+	"maintenance_snapshots_heading": "Instantáneas de configuración",
+	"maintenance_snapshots_empty": "Aún no hay instantáneas. Se toma una automáticamente antes de que el plugin migre tu configuración a una nueva versión.",
+	"maintenance_snapshot_row": "Tomada antes de actualizar desde la versión de configuración {version}",
+	"maintenance_snapshot_restore": "Restaurar",
+	"maintenance_snapshot_restored": "Configuración restaurada desde la instantánea tomada el {takenAt}.",
+	"maintenance_snapshot_failed": "No se pudo restaurar esa instantánea. Puede estar dañada.",
+	"maintenance_snapshots_load_failed": "No se pudieron comprobar las instantáneas. Esto no significa que no exista ninguna: intenta volver a abrir esta página."
 }

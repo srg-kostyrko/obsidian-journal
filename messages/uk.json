@@ -2242,5 +2242,14 @@
 				"kind=decade": "Десятиліття — {label}"
 			}
 		}
-	]
+	],
+	"maintenance_heading": "Обслуговування",
+	"maintenance_open": "Відкрити",
+	"maintenance_snapshots_heading": "Знімки налаштувань",
+	"maintenance_snapshots_empty": "Знімків ще немає. Знімок створюється автоматично перед тим, як додаток переносить ваші налаштування на нову версію.",
+	"maintenance_snapshot_row": "Створено перед оновленням з версії налаштувань {version}",
+	"maintenance_snapshot_restore": "Відновити",
+	"maintenance_snapshot_restored": "Налаштування відновлено зі знімка, створеного {takenAt}.",
+	"maintenance_snapshot_failed": "Не вдалося відновити цей знімок. Можливо, він пошкоджений.",
+	"maintenance_snapshots_load_failed": "Не вдалося перевірити знімки. Це не означає, що їх немає — спробуйте відкрити сторінку знову."
 }

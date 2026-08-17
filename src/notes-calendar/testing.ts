@@ -31,6 +31,7 @@ import {
 } from "@/journals";
 import { fakeRepo } from "@/journals/testing";
 import { SettingsEventsToken, SettingsService, SliceDefinitionToken, type SettingsEvents } from "@/settings";
+import { SnapshotService } from "@/settings/snapshots/snapshot-service";
 import { ShelvesRepository, type ShelfConfig } from "@/shelves";
 import { fakeShelvesRepo } from "@/shelves/testing";
 
@@ -82,6 +83,7 @@ export function buildNotesCalendarHarness(options: {
   // DecorationsStore reads the vault-wide list unconditionally once a surface opts in via
   // calendarDecorations, so its settings backing must exist even for tests never touching it.
   container.register(PluginData).useValue(new FakePluginData() as unknown as PluginData);
+  container.register(SnapshotService).useClass(SnapshotService);
   container.register(SliceDefinitionToken).useValue(decorationsSlice);
   container.register(SettingsEventsToken).useValue(createNanoEvents<SettingsEvents>());
   container.register(SettingsService).useClass(SettingsService);

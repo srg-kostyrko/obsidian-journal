@@ -2172,5 +2172,14 @@
 	"logging_level_info": "Informação",
 	"logging_level_title": "Nível de log",
 	"logging_level_warn": "Aviso",
-	"logging_section_title": "Logs"
+	"logging_section_title": "Logs",
+	"maintenance_heading": "Manutenção",
+	"maintenance_open": "Abrir",
+	"maintenance_snapshots_heading": "Instantâneos de configurações",
+	"maintenance_snapshots_empty": "Ainda não há instantâneos. Um é criado automaticamente antes de o plugin migrar suas configurações para uma nova versão.",
+	"maintenance_snapshot_row": "Criado antes de atualizar da versão de configurações {version}",
+	"maintenance_snapshot_restore": "Restaurar",
+	"maintenance_snapshot_restored": "Configurações restauradas a partir do instantâneo criado em {takenAt}.",
+	"maintenance_snapshot_failed": "Não foi possível restaurar esse instantâneo. Ele pode estar corrompido.",
+	"maintenance_snapshots_load_failed": "Não foi possível verificar os instantâneos. Isso não significa que não existam — tente reabrir esta página."
 }

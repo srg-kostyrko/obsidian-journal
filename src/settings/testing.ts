@@ -6,6 +6,7 @@ import { FakePluginData } from "@/infrastructure/host/testing";
 import { createLoggerTestingModule } from "@/infrastructure/logger/testing";
 
 import { SettingsService } from "./settings-service";
+import { SnapshotService } from "./snapshots/snapshot-service";
 import {
   CollectionDefinitionToken,
   DashboardBlockToken,
@@ -39,6 +40,7 @@ export function createSettingsService(options: CreateSettingsServiceOptions = {}
   const data = new FakePluginData(options.raw);
   const c = new Container();
   c.register(PluginData).useValue(data as unknown as PluginData);
+  c.register(SnapshotService).useClass(SnapshotService);
   c.register(SettingsEventsToken).useFactory(() => createNanoEvents<SettingsEvents>());
   c.addModule(createLoggerTestingModule().module);
   const slices = options.slices ?? [];

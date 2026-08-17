@@ -2172,5 +2172,14 @@
 	"logging_level_info": "Informazioni",
 	"logging_level_title": "Livello di log",
 	"logging_level_warn": "Avviso",
-	"logging_section_title": "Log"
+	"logging_section_title": "Log",
+	"maintenance_heading": "Manutenzione",
+	"maintenance_open": "Apri",
+	"maintenance_snapshots_heading": "Istantanee delle impostazioni",
+	"maintenance_snapshots_empty": "Nessuna istantanea ancora. Ne viene creata una automaticamente prima che il plugin migri le tue impostazioni a una nuova versione.",
+	"maintenance_snapshot_row": "Creata prima dell'aggiornamento dalla versione delle impostazioni {version}",
+	"maintenance_snapshot_restore": "Ripristina",
+	"maintenance_snapshot_restored": "Impostazioni ripristinate dall'istantanea creata il {takenAt}.",
+	"maintenance_snapshot_failed": "Impossibile ripristinare questa istantanea. Potrebbe essere danneggiata.",
+	"maintenance_snapshots_load_failed": "Impossibile controllare le istantanee. Questo non significa che non ce ne siano — prova a riaprire questa pagina."
 }

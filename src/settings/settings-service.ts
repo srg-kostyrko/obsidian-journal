@@ -15,6 +15,7 @@ import {
   UnregisteredSliceError,
 } from "./errors";
 import { runMigrations } from "./migrations";
+import { SnapshotService } from "./snapshots/snapshot-service";
 import { CollectionDefinitionToken, MigrationToken, SettingsEventsToken, SliceDefinitionToken } from "./tokens";
 import { CURRENT_VERSION } from "./version";
 
@@ -28,6 +29,7 @@ const DEBOUNCE_MS = 300;
 
 export class SettingsService {
   readonly #pluginData = inject(PluginData);
+  readonly #snapshots = inject(SnapshotService);
   readonly #slices: readonly AnySliceDefinition[] = inject(SliceDefinitionToken);
   readonly #collections: readonly AnyCollectionDefinition[] = inject(CollectionDefinitionToken);
   readonly #migrations = inject(MigrationToken);
@@ -64,7 +66,30 @@ export class SettingsService {
       const root: Record<string, unknown> = isStoredObject
         ? (raw as Record<string, unknown>)
         : { version: CURRENT_VERSION };
+      if (isStoredObject) await this.#snapshotIfBehind(root);
       return yield* runMigrations(root, this.#migrations, CURRENT_VERSION);
+    });
+  }
+
+  // A migration is the only event that can still lose a whole config, so it is the only one
+  // that snapshots — one per version transition (see the spec's "Rolling backups" non-goal).
+  // initialize() never flushes the migrated result back to disk, so an unchanged data.json
+  // re-enters this on every subsequent boot; listing first and skipping a version already
+  // snapshotted is what keeps that to one file. A snapshot that cannot be written, or a list
+  // that cannot be read, must not stop the plugin loading — migrating unprotected beats
+  // refusing to start.
+  async #snapshotIfBehind(root: Record<string, unknown>): Promise<void> {
+    const storedVersion = typeof root.version === "number" ? root.version : 0;
+    if (storedVersion >= CURRENT_VERSION) return;
+    const existing = await this.#snapshots.list();
+    const alreadyTaken = existing.match({
+      ok: (snapshots) => snapshots.some((snapshot) => snapshot.fromVersion === storedVersion),
+      err: () => false,
+    });
+    if (alreadyTaken) return;
+    const written = await this.#snapshots.write(storedVersion, JSON.stringify(root), new Date().toISOString());
+    written.tapErr((error) => {
+      this.#logger.warn("could not snapshot settings before migrating", { storedVersion, error });
     });
   }
 
@@ -110,6 +135,20 @@ export class SettingsService {
     }
   }
 
+  // Suspends the save watcher across the refresh so applying externally-sourced data does
+  // not echo a save back to disk, then re-arms it and signals event-driven subsystems
+  // (command registry, journal index) that only re-derive on an explicit "reloaded". Must
+  // run only after every fallible step has succeeded — reload() and replaceStoredData()
+  // both stay safe-by-construction that way: an Err short-circuits before the watcher is
+  // ever touched, so a failed load or save never leaves it permanently stopped.
+  #applyMigrated(migrated: Record<string, unknown>): void {
+    this.#stopWatch?.();
+    this.#events.emit("reloading");
+    this.#refresh(migrated);
+    this.#stopWatch = watch(this.#root, () => this.#scheduleSave(), { deep: true });
+    this.#events.emit("reloaded");
+  }
+
   initialize(): AsyncResult<void, SettingsLoadError | MigrationFailedError | SliceKeyConflictError> {
     return attempt.in(this, async function* () {
       const conflict = this.#findKeyConflict();
@@ -127,19 +166,39 @@ export class SettingsService {
     return attempt.in(this, async function* () {
       if (!this.#initialized) return;
       const migrated = yield* this.#loadAndMigrate();
-      // Suspend the save watcher across the refresh so reloading external data does not
-      // echo a saveData back to disk (which Sync would treat as a fresh local change).
-      this.#stopWatch?.();
       if (this.#saveTimer !== undefined) {
         window.clearTimeout(this.#saveTimer);
         this.#saveTimer = undefined;
       }
-      this.#events.emit("reloading");
-      this.#refresh(migrated);
-      this.#stopWatch = watch(this.#root, () => this.#scheduleSave(), { deep: true });
-      // Reactive consumers pick up #root mutations on their own, but event-driven
-      // subsystems (command registry, journal index) only re-derive on an explicit signal.
-      this.#events.emit("reloaded");
+      this.#applyMigrated(migrated);
+    });
+  }
+
+  // Restoring a snapshot. The pending flush must be cancelled before the write, not after:
+  // a debounce scheduled from an edit made just beforehand would otherwise fire between the
+  // save and the re-hydrate and put the replaced state straight back.
+  //
+  // Whether the payload can migrate is checked before data.json is touched. A payload runMigrations rejects —
+  // a snapshot written by a newer plugin version and restored after a downgrade, or a
+  // hand-edited file that is still valid JSON — must not overwrite the working file: the
+  // in-memory state would be the only remaining copy until a later save, and quitting before
+  // that leaves the next boot hitting MigrationFailedError with no plugin and no Maintenance
+  // page to recover from.
+  replaceStoredData(
+    raw: Record<string, unknown>,
+  ): AsyncResult<void, SettingsLoadError | MigrationFailedError | SettingsSaveError> {
+    return attempt.in(this, async function* () {
+      if (!this.#initialized) return;
+      if (this.#saveTimer !== undefined) {
+        window.clearTimeout(this.#saveTimer);
+        this.#saveTimer = undefined;
+      }
+      // Migrations mutate their input in place, so validating against `raw` itself would
+      // corrupt it before it reaches save() below — validate a disposable clone instead.
+      yield* runMigrations(structuredClone(raw), this.#migrations, CURRENT_VERSION);
+      yield* this.#pluginData.save(raw).mapErr((cause) => new SettingsSaveError(cause));
+      const migrated = yield* this.#loadAndMigrate();
+      this.#applyMigrated(migrated);
     });
   }
 

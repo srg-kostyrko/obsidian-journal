@@ -2164,5 +2164,14 @@
 		}
 	],
 	"decoration_breakdown_interval_heading": "間隔 — {journal} — {label}",
-	"decoration_explain_menu_item": "装飾の内訳を表示"
+	"decoration_explain_menu_item": "装飾の内訳を表示",
+	"maintenance_heading": "メンテナンス",
+	"maintenance_open": "開く",
+	"maintenance_snapshots_heading": "設定のスナップショット",
+	"maintenance_snapshots_empty": "スナップショットはまだありません。プラグインが設定を新しいバージョンに移行する前に自動的に作成されます。",
+	"maintenance_snapshot_row": "設定バージョン {version} からのアップグレード前に作成",
+	"maintenance_snapshot_restore": "復元",
+	"maintenance_snapshot_restored": "{takenAt} に作成されたスナップショットから設定を復元しました。",
+	"maintenance_snapshot_failed": "そのスナップショットを復元できませんでした。破損している可能性があります。",
+	"maintenance_snapshots_load_failed": "スナップショットを確認できませんでした。存在しないという意味ではありません。このページを再度開いてみてください。"
 }

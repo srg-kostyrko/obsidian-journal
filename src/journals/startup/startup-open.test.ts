@@ -17,6 +17,7 @@ import {
 } from "@/infrastructure/host/testing";
 import { LoggerModule } from "@/infrastructure/logger";
 import { SettingsEventsToken, SettingsService, SliceDefinitionToken, type SettingsEvents } from "@/settings";
+import { SnapshotService } from "@/settings/snapshots/snapshot-service";
 import { TemplateEngine } from "@/templates";
 
 import { CycleService } from "../cycle";
@@ -59,6 +60,7 @@ function build(journals: Record<string, JournalConfig>): Harness {
   c.addModule(FlowsModule);
   c.register(NoticeService).useValue(new FakeNoticeService());
   c.register(PluginData).useValue(new FakePluginData() as unknown as PluginData);
+  c.register(SnapshotService).useClass(SnapshotService);
   c.register(SliceDefinitionToken).useValue(startupSlice);
   c.register(SettingsEventsToken).useValue(createNanoEvents<SettingsEvents>());
   c.register(SettingsService).useClass(SettingsService);

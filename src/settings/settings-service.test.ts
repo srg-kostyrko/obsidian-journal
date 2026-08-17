@@ -1,6 +1,7 @@
 import { createNanoEvents } from "nanoevents";
 import * as v from "valibot";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
+import { nextTick } from "vue";
 
 import { Container } from "@/infrastructure/di";
 import { PluginData, PluginDataIOError } from "@/infrastructure/host";
@@ -10,9 +11,11 @@ import { AsyncResult } from "@/infrastructure/result";
 import { expectErr, expectOk } from "@/infrastructure/result/testing";
 import { journalConfigCollection } from "@/journals/config";
 
-import { SliceKeyConflictError, MigrationFailedError, UnregisteredSliceError } from "./errors";
+import { SliceKeyConflictError, MigrationFailedError, SettingsSaveError, UnregisteredSliceError } from "./errors";
+import { v4ToV5Migration } from "./legacy/v4-to-v5";
 import { defineCollection, defineSlice, type Migration } from "./schema";
 import { SettingsService } from "./settings-service";
+import { SnapshotService } from "./snapshots/snapshot-service";
 import {
   CollectionDefinitionToken,
   MigrationToken,
@@ -65,15 +68,17 @@ const checkedPetCollection = defineCollection(
 function build(
   options: {
     raw?: unknown;
+    data?: FakePluginData;
     slices?: readonly unknown[];
     collections?: readonly unknown[];
     migrations?: readonly Migration[];
   } = {},
 ): { service: SettingsService; data: FakePluginData; events: ReturnType<typeof createNanoEvents<SettingsEvents>> } {
-  const data = new FakePluginData(options.raw);
+  const data = options.data ?? new FakePluginData(options.raw);
   const events = createNanoEvents<SettingsEvents>();
   const c = new Container();
   c.register(PluginData).useValue(data as unknown as PluginData);
+  c.register(SnapshotService).useClass(SnapshotService);
   c.register(SettingsEventsToken).useValue(events);
   c.addModule(createLoggerTestingModule().module);
   const slices = options.slices ?? [calendarSlice];
@@ -251,6 +256,76 @@ describe("SettingsService", () => {
       const init = await service.initialize();
       expectErr(init);
       expect(init.error).toBeInstanceOf(MigrationFailedError);
+    });
+  });
+
+  describe("initialize — snapshot before migration", () => {
+    const bump: Migration = { fromVersion: 4, toVersion: 5, migrate: (raw) => ({ ...raw, migrated: true }) };
+
+    it("writes the pre-migration data when the stored version is behind", async () => {
+      const raw = { version: 4, calendar: { dow: 5, global: false } };
+      const { service, data } = build({ raw, migrations: [bump] });
+
+      await service.initialize();
+
+      const names = [...data.files.keys()];
+      expect(names).toHaveLength(1);
+      expect(JSON.parse(data.files.get(names[0]) ?? "")).toEqual(raw);
+    });
+
+    it("writes nothing when the stored version is already current", async () => {
+      const { service, data } = build({ raw: { version: 5, calendar: { dow: 5, global: false } } });
+
+      await service.initialize();
+
+      expect([...data.files.keys()]).toEqual([]);
+    });
+
+    it("writes nothing on a fresh install with no stored data", async () => {
+      const { service, data } = build();
+
+      await service.initialize();
+
+      expect([...data.files.keys()]).toEqual([]);
+    });
+
+    it("still loads when the snapshot cannot be written", async () => {
+      const raw = { version: 4, calendar: { dow: 5, global: false } };
+      const { service, data } = build({ raw, migrations: [bump] });
+      vi.spyOn(data, "writeFile").mockReturnValueOnce(
+        AsyncResult.err(new PluginDataIOError("write-file", new Error("disk full"))),
+      );
+
+      const init = await service.initialize();
+
+      expectOk(init);
+      expect(service.getSlice(calendarSlice).state.dow).toBe(5);
+    });
+
+    it("writes no second snapshot on a later boot over the same unchanged stored data", async () => {
+      // initialize() never flushes the migrated result back to data.json, so a user who
+      // upgrades and never touches a setting re-enters #loadAndMigrate with the same
+      // pre-migration raw on every subsequent launch. The FakePluginData instance is
+      // reused across two SettingsService builds to stand in for that: same stored bytes,
+      // same version, a fresh in-memory service each time — exactly a second boot.
+      //
+      // The clock is advanced between boots so the two writes would land under distinct
+      // timestamped filenames if the guard were absent — same-second collisions already
+      // dedupe by accident, which would make this pass whether or not the fix is present.
+      vi.useFakeTimers();
+      vi.setSystemTime(new Date("2026-08-16T10:20:30.000Z"));
+      const raw = { version: 4, calendar: { dow: 5, global: false } };
+      const data = new FakePluginData(raw);
+      const first = build({ data, migrations: [bump] });
+      await first.service.initialize();
+      expect([...data.files.keys()]).toHaveLength(1);
+
+      vi.setSystemTime(new Date("2026-08-16T10:25:00.000Z"));
+      const second = build({ data, migrations: [bump] });
+      await second.service.initialize();
+
+      expect([...data.files.keys()]).toHaveLength(1);
+      vi.useRealTimers();
     });
   });
 
@@ -444,6 +519,124 @@ describe("SettingsService", () => {
       await vi.advanceTimersByTimeAsync(300);
       await vi.runAllTimersAsync();
       expect(service.getSlice(calendarSlice).state.dow).toBe(7);
+    });
+  });
+
+  describe("replaceStoredData", () => {
+    it("writes the replacement and re-hydrates from it", async () => {
+      const { service, data } = build({ raw: { version: 5, calendar: { dow: 1, global: true } } });
+      await service.initialize();
+
+      expectOk(await service.replaceStoredData({ version: 5, calendar: { dow: 6, global: false } }));
+
+      expect(service.getSlice(calendarSlice).state.dow).toBe(6);
+      const stored = await data.load();
+      expectOk(stored);
+      expect(stored.value).toEqual({ version: 5, calendar: { dow: 6, global: false } });
+    });
+
+    it("leaves data.json untouched when the replacement cannot be migrated", async () => {
+      const { service, data } = build({ raw: { version: 5, calendar: { dow: 1, global: true } } });
+      await service.initialize();
+
+      const replaced = await service.replaceStoredData({ version: 99 });
+
+      expectErr(replaced);
+      expect(replaced.error).toBeInstanceOf(MigrationFailedError);
+      const stored = await data.load();
+      expectOk(stored);
+      expect(stored.value).toEqual({ version: 5, calendar: { dow: 1, global: true } });
+      expect(service.getSlice(calendarSlice).state.dow).toBe(1);
+    });
+
+    it("cancels a pending save so it cannot land on top of the replacement", async () => {
+      vi.useFakeTimers();
+      const { service, data } = build({ raw: { version: 5, calendar: { dow: 1, global: true } } });
+      await service.initialize();
+      const saveSpy = vi.spyOn(data, "save");
+      service.getSlice(calendarSlice).state = { dow: 3, global: true };
+      await nextTick();
+
+      expectOk(await service.replaceStoredData({ version: 5, calendar: { dow: 6, global: false } }));
+      vi.advanceTimersByTime(1000);
+      await Promise.resolve();
+
+      // #flush() reads the live #root, so a stale timer firing after replaceStoredData
+      // finishes would just re-save the already-correct state — asserting the restored
+      // dow alone can't tell a cancelled timer from one that fired harmlessly. The call
+      // count is what actually distinguishes them: replaceStoredData's own write is the
+      // only save that should happen.
+      expect(saveSpy).toHaveBeenCalledTimes(1);
+      vi.useRealTimers();
+    });
+
+    it("leaves the watcher armed when the write fails, so a later mutation still schedules a save", async () => {
+      vi.useFakeTimers();
+      const { service, data } = build({ raw: { version: 5, calendar: { dow: 1, global: true } } });
+      await service.initialize();
+      const saveSpy = vi
+        .spyOn(data, "save")
+        .mockReturnValueOnce(AsyncResult.err(new PluginDataIOError("save", new Error("disk full"))));
+
+      const replaced = await service.replaceStoredData({ version: 5, calendar: { dow: 6, global: false } });
+      expectErr(replaced);
+      expect(replaced.error).toBeInstanceOf(SettingsSaveError);
+
+      service.getSlice(calendarSlice).state.dow = 9;
+      await vi.advanceTimersByTimeAsync(300);
+
+      expect(saveSpy).toHaveBeenCalledTimes(2);
+      vi.useRealTimers();
+    });
+
+    it("emits reloaded so event-driven subsystems re-derive", async () => {
+      const { service, events } = build({ raw: { version: 5, calendar: { dow: 1, global: true } } });
+      await service.initialize();
+      let reloaded = 0;
+      events.on("reloaded", () => (reloaded += 1));
+
+      await service.replaceStoredData({ version: 5, calendar: { dow: 6, global: false } });
+
+      expect(reloaded).toBe(1);
+    });
+
+    it("does nothing before initialize", async () => {
+      const { service, data } = build();
+
+      expectOk(await service.replaceStoredData({ version: 5 }));
+
+      const stored = await data.load();
+      expectOk(stored);
+      expect(stored.value).toBeUndefined();
+    });
+
+    it("saves a behind-current payload byte-for-byte, not the object the validation pass mutated in place", async () => {
+      const { service, data } = build({
+        raw: { version: 5, calendar: { dow: 1, global: true } },
+        collections: [],
+        migrations: [v4ToV5Migration],
+      });
+      await service.initialize();
+
+      const legacyPayload = {
+        version: 4,
+        calendar: { dow: 1, global: true },
+        journals: {
+          daily: { navBlock: { rows: [{ kind: "shift", shift: -1 }] } },
+        },
+      };
+      let savedPayload: unknown;
+      const originalSave = data.save.bind(data);
+      vi.spyOn(data, "save").mockImplementation((payload: unknown) => {
+        savedPayload = JSON.parse(JSON.stringify(payload));
+        return originalSave(payload);
+      });
+
+      expectOk(await service.replaceStoredData(legacyPayload));
+
+      const stored = savedPayload as { version: number; journals: { daily: { navBlock: unknown } } };
+      expect(stored.version).toBe(4);
+      expect(stored.journals.daily.navBlock).toEqual({ rows: [{ kind: "shift", shift: -1 }] });
     });
   });
 

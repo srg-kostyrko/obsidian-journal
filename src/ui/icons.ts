@@ -64,6 +64,7 @@ export const icons = {
     properties: "table-properties",
     templates: "notepad-text-dashed",
     timeline: "calendar-range",
+    maintenance: "wrench",
   },
 } as const;
 

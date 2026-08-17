@@ -1,0 +1,1 @@
+export { maintenanceModule } from "./module";

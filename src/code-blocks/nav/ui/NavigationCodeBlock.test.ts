@@ -44,6 +44,7 @@ import {
 } from "@/journals";
 import { customJournal, fakeRepo } from "@/journals/testing";
 import { SettingsEventsToken, SettingsService, SliceDefinitionToken, type SettingsEvents } from "@/settings";
+import { SnapshotService } from "@/settings/snapshots/snapshot-service";
 import { ShelvesRepository, type ShelfConfig } from "@/shelves";
 import { TemplateEngine } from "@/templates";
 
@@ -162,6 +163,7 @@ function buildHarness(journals: Record<string, JournalConfig>): Harness {
   // The segment scope always opts into calendar decorations now, so DecorationsStore's settings
   // backing must exist even for tests that never save a vault-wide or shelf decoration.
   container.register(PluginData).useValue(new FakePluginData() as unknown as PluginData);
+  container.register(SnapshotService).useClass(SnapshotService);
   container.register(SliceDefinitionToken).useValue(decorationsSlice);
   container.register(SettingsEventsToken).useValue(createNanoEvents<SettingsEvents>());
   container.register(SettingsService).useClass(SettingsService);
