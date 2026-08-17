@@ -1,0 +1,64 @@
+{
+  "version": 4,
+  "journals": {
+    "sprint": {
+      "name": "sprint",
+      "write": {
+        "type": "custom",
+        "every": "week",
+        "duration": 2,
+        "anchorDate": "2026-08-03"
+      },
+      "folder": "Sprints",
+      "nameTemplate": "{{date}}",
+      "dateFormat": "YYYY-MM-DD",
+      "frontmatter": {
+        "dateField": "journal-date",
+        "startDateField": "journal-start-date",
+        "endDateField": "journal-end-date",
+        "addStartDate": false,
+        "addEndDate": false
+      },
+      "numbering": { "enabled": false, "anchorDate": "", "allowBefore": false, "sources": [] },
+      "timeline": { "start": "", "end": { "kind": "never" } }
+    },
+    "cadence": {
+      "name": "cadence",
+      "write": {
+        "type": "custom",
+        "every": "week",
+        "duration": 2,
+        "anchorDate": "2026-08-03"
+      },
+      "folder": "Cadence",
+      "nameTemplate": "{{date}}",
+      "dateFormat": "YYYY-MM-DD",
+      "frontmatter": {
+        "dateField": "journal-date",
+        "startDateField": "journal-start-date",
+        "endDateField": "journal-end-date",
+        "addStartDate": false,
+        "addEndDate": true
+      },
+      "numbering": { "enabled": false, "anchorDate": "", "allowBefore": false, "sources": [] },
+      "timeline": { "start": "", "end": { "kind": "never" } }
+    },
+    "daily": {
+      "name": "daily",
+      "write": { "type": "day" },
+      "folder": "Daily",
+      "nameTemplate": "{{date}}",
+      "dateFormat": "YYYY-MM-DD",
+      "frontmatter": {
+        "dateField": "journal-date",
+        "startDateField": "journal-start-date",
+        "endDateField": "journal-end-date",
+        "addStartDate": false,
+        "addEndDate": false
+      },
+      "numbering": { "enabled": false, "anchorDate": "", "allowBefore": false, "sources": [] },
+      "timeline": { "start": "", "end": { "kind": "never" } }
+    }
+  },
+  "shelves": {}
+}
