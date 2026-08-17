@@ -789,11 +789,21 @@ describe("NoteConnectionService", () => {
         "journal-start-date": "2026-01-12",
         "journal-end-date": "2026-01-12",
       });
-      const { container } = build(
+      const { container, index } = build(
         fakeRepo(weeklyWith({ addStartDate: true, addEndDate: true })),
         notes,
         new FakeModalService(),
       );
+      // buildMetadata resolves endDate from whatever entry the index holds at the target
+      // anchor. Seed a stale one here so the test actually exercises #reanchorOne's strip —
+      // without this the index is empty, buildMetadata's endDate is already undefined, and the
+      // strip has nothing to do.
+      index.register({
+        journalName: "weekly",
+        anchor: anchor("2026-01-12"),
+        path: "Weeks/other.md" as VaultPath,
+        endDate: anchor("2099-01-01"),
+      });
 
       const result = await container
         .resolve(NoteConnectionService)
