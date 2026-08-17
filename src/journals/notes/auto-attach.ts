@@ -29,6 +29,7 @@ export class AutoAttachService {
   readonly #journals = inject(JournalsRepository);
   readonly #logger = inject(LoggerFactoryToken).named("auto-attach");
   readonly #unsubscribes: (() => void)[] = [];
+  readonly #awaitingParse = new Set<VaultPath>();
 
   // A note naming a journal this version can't resolve is already claimed: a legacy id the
   // note migration still has to rewrite, or a journal deleted in "keep notes" mode. Adopting
@@ -39,6 +40,29 @@ export class AutoAttachService {
     if (metadata.isNone()) return false;
     const claimed = metadata.value.properties[FRONTMATTER_NAME_KEY];
     return typeof claimed === "string" && this.#journals.get(claimed).isNone();
+  }
+
+  // Every decision below reads state Obsidian only has once it has parsed the note: the index
+  // entry, the existing claim, and the endDate attachNote rebuilds through buildMetadata. A
+  // "created" event arrives before any of that, so all three read empty and a note that already
+  // carries a complete claim is adopted and rewritten — which for a custom interval destroys a
+  // manually set end date, and that end date *is* the sequence every later interval steps from.
+  // VaultSubscriptionService answers this by never acting on "created" and waiting for
+  // metadata-changed instead; a created path waits the same way here. It subscribes at
+  // layout-ready, after that service's own subscription, so a note that parses into a valid entry
+  // is in the index by the time this runs and #handle's first guard drops it untouched.
+  //
+  // Renames must NOT wait: a rename changes no content, so Obsidian re-keys the cache without
+  // re-parsing and no metadata-changed ever follows. A renamed path parked here would never be
+  // adopted at all. They need no wait either — VaultSubscriptionService registers its
+  // renamed -> transferPath handler at initialize, ahead of this one, so an already-connected
+  // note carries its index entry across and #handle's guard sees it.
+  #handleWhenParsed(path: VaultPath): void {
+    if (this.#metadata.get(path).isSome()) {
+      void this.#handle(path);
+      return;
+    }
+    this.#awaitingParse.add(path);
   }
 
   async #handle(path: VaultPath): Promise<void> {
@@ -88,10 +112,18 @@ export class AutoAttachService {
     this.#workspace.onLayoutReady(() => {
       this.#unsubscribes.push(
         this.#notes.events.on("created", (note) => {
-          void this.#handle(note.path);
+          this.#handleWhenParsed(note.path);
         }),
-        this.#notes.events.on("renamed", ({ to }) => {
+        this.#notes.events.on("renamed", ({ from, to }) => {
+          this.#awaitingParse.delete(from);
           void this.#handle(to);
+        }),
+        this.#notes.events.on("deleted", (path) => {
+          this.#awaitingParse.delete(path);
+        }),
+        this.#notes.events.on("metadata-changed", (path) => {
+          if (!this.#awaitingParse.delete(path)) return;
+          void this.#handle(path);
         }),
       );
     });
@@ -101,5 +133,6 @@ export class AutoAttachService {
   async [Symbol.asyncDispose](): Promise<void> {
     for (const off of this.#unsubscribes) off();
     this.#unsubscribes.length = 0;
+    this.#awaitingParse.clear();
   }
 }
