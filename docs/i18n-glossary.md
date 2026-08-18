@@ -258,7 +258,7 @@ Be precise about what that pass was, because "reviewed" overstates it for nine o
 
 - **uk** was reviewed by a native speaker. It is the only locale where the output was
   verified by someone who reads the language.
-- The 22 `journal_sequence_*` and numbering-warning keys were translated by an agent
+- The 23 `journal_sequence_*` and numbering-warning keys were translated by an agent
   working from this file — the same standard as the sweep below, not native-verified.
   Its choices worth a native eye: the word for an odometer **digit** (de `Stelle`, ru
   `разряд`, uk `розряд`, ja `桁`, ko `자리`, zh `位`), and whether _Slowest_ / _Fastest_

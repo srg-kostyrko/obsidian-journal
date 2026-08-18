@@ -536,6 +536,27 @@ describe("CycleService", () => {
       expect(result.isSome() && result.value).toBe("2024-01-04");
     });
 
+    it("keeps a month-end anchor's phase across many intervals", () => {
+      const c = buildContainer({ s: customJournal("s", "month", 2, "2024-01-31") });
+      const cycle = c.resolve(CycleService);
+      const result = cycle.anchorAtOffset("s", "2024-01-31" as AnchorString, 7);
+      expect(result.isSome() && result.value).toBe("2025-03-31");
+    });
+
+    it("returns an off-grid custom anchor unchanged for a zero offset", () => {
+      const c = buildContainer({ s: customJournal("s", "month", 2, "2024-01-31") });
+      const cycle = c.resolve(CycleService);
+      const result = cycle.anchorAtOffset("s", "2024-01-01" as AnchorString, 0);
+      expect(result.isSome() && result.value).toBe("2024-01-01");
+    });
+
+    it("snaps an off-grid start onto the fixed cycle before stepping", () => {
+      const c = buildContainer({ q: fixedJournal("q", { type: "quarter" }) });
+      const cycle = c.resolve(CycleService);
+      const result = cycle.anchorAtOffset("q", "2024-02-15" as AnchorString, 5);
+      expect(result.isSome() && result.value).toBe("2025-04-01");
+    });
+
     it("returns None for an unknown journal", () => {
       const c = buildContainer({});
       const cycle = c.resolve(CycleService);

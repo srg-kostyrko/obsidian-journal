@@ -1365,6 +1365,7 @@
   "journal_edit_name_template_unused_digits_warning": "The name template has no date variable, so every numbering variable must appear in the note name or folder. Add {missing}, or add a date variable, so notes created outside the plugin can be matched to this journal.",
   "journal_edit_name_template_no_carry_warning": "\"{offending}\" never resets, so the digits above it never change and the numbers cannot be turned back into a date. Set it to reset after a count, or add a date variable, so notes created outside the plugin can be matched to this journal.",
   "journal_edit_name_template_cyclic_top_warning": "The first numbering digit resets, so the numbers repeat and cannot be turned back into a date. Add a date variable to the name template, or set the first digit to continuous, so notes created outside the plugin can be matched to this journal.",
+  "journal_edit_name_template_coarse_date_warning": "The date variable in the name template is not precise enough to tell this journal's periods apart, so more than one period gets the same note name. Use a date format that changes every period, or turn on sequential numbers and put every digit in the name or folder, so notes created outside the plugin can be matched to this journal.",
   "journal_edit_name_template_label": "Note name template",
   "journal_edit_note_path_preview_label": "Resolved note path:",
   "journal_edit_rename_tooltip": "Rename journal",

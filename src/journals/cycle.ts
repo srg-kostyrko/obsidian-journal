@@ -248,22 +248,32 @@ export class CycleService {
     return out;
   }
 
+  // Multiplied rather than walked: an offset is a numbering digit's distance from its anchor
+  // date, which reaches into the thousands on a long-running daily journal, and every note the
+  // inverter reads pays for it. Both branches step by a fixed duration off a normalized start,
+  // so one multiplied step lands where n single ones do.
   anchorAtOffset(name: string, from: AnchorString, steps: number): Option<AnchorString> {
     return this.#cycleFor(name).map((cycle) =>
       match(cycle)
         .with({ kind: "fixed" }, (c) => {
-          let period = periodOfKind(c.period, CalendarDate.fromAnchor(from));
-          for (let i = 0; i < Math.abs(steps); i++) {
-            period = steps >= 0 ? period.next() : period.previous();
-          }
-          return period.anchor.toAnchor();
+          const start = periodOfKind(c.period, CalendarDate.fromAnchor(from)).anchor;
+          const moved = localMoment(start.toAnchor(), "YYYY-MM-DD", true).add(steps, c.period);
+          return periodOfKind(
+            c.period,
+            CalendarDate.fromAnchor(moved.format("YYYY-MM-DD") as AnchorString),
+          ).anchor.toAnchor();
         })
         .with({ kind: "custom" }, (c) => {
-          let current = from;
-          for (let i = 0; i < Math.abs(steps); i++) {
-            current = steps >= 0 ? customStepForward(current, c) : customStepBackward(current, c);
+          // A zero offset answers with the anchor it was handed, off-grid or not: the
+          // month-family step re-derives the day of month from the cycle's phase, which would
+          // otherwise move an anchor nobody asked to move.
+          if (steps === 0) return from;
+          const months = monthsPerStep(c);
+          if (months.isSome() && isParseableAnchor(c.anchor)) {
+            return customStepMonths(from, c.anchor, months.value * steps);
           }
-          return current;
+          const moved = localMoment(from, "YYYY-MM-DD", true).add(c.duration * steps, c.every);
+          return moved.format("YYYY-MM-DD") as AnchorString;
         })
         .exhaustive(),
     );

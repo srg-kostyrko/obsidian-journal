@@ -1903,6 +1903,7 @@
 	"journal_edit_name_template_unused_digits_warning": "이름 템플릿에 날짜 변수가 없으므로 모든 번호 매기기 변수가 노트 이름이나 폴더에 나타나야 합니다. {missing}을(를) 추가하거나 날짜 변수를 추가하세요. 그러면 플러그인 밖에서 만든 노트를 이 저널에 연결할 수 있습니다.",
 	"journal_edit_name_template_no_carry_warning": "\"{offending}\" 자리는 초기화되지 않으므로 그 위의 자리가 전혀 바뀌지 않아 번호를 날짜로 되돌릴 수 없습니다. 지정한 횟수 후 초기화되도록 설정하거나 날짜 변수를 추가하세요. 그러면 플러그인 밖에서 만든 노트를 이 저널에 연결할 수 있습니다.",
 	"journal_edit_name_template_cyclic_top_warning": "번호의 첫 자리가 초기화되어 번호가 반복되므로 날짜로 되돌릴 수 없습니다. 이름 템플릿에 날짜 변수를 추가하거나 첫 자리를 \"연속\"으로 설정하세요. 그러면 플러그인 밖에서 만든 노트를 이 저널에 연결할 수 있습니다.",
+	"journal_edit_name_template_coarse_date_warning": "이름 템플릿의 날짜 변수가 이 저널의 기간을 구분할 만큼 정밀하지 않아 여러 기간이 같은 노트 이름을 갖습니다. 기간마다 바뀌는 날짜 형식을 사용하거나, 순차 번호를 켜고 모든 자리를 이름이나 폴더에 넣으세요. 그러면 플러그인 밖에서 만든 노트를 이 저널에 연결할 수 있습니다.",
 	"journal_edit_name_template_label": "노트 이름 템플릿",
 	"journal_edit_note_path_preview_label": "생성될 노트 경로:",
 	"journal_edit_rename_tooltip": "저널 이름 변경",
