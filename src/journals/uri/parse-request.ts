@@ -1,4 +1,4 @@
-import { CalendarDate } from "@/calendar";
+import { parseDateExpression, type CalendarDate } from "@/calendar";
 import type { OpenMode } from "@/infrastructure/host";
 import { Err, Ok } from "@/infrastructure/result";
 import type { Result } from "@/infrastructure/result";
@@ -14,7 +14,6 @@ import type { UriError } from "./errors";
 
 const WRITE_TYPES = ["day", "week", "month", "quarter", "year"] as const;
 const OPEN_MODES = ["active", "tab", "split", "window"] as const;
-const RELATIVE_DATE = /^([+-])(\d+)([dwmqy])$/;
 
 export type JournalUriWriteType = (typeof WRITE_TYPES)[number];
 
@@ -54,19 +53,8 @@ function parseTarget(parameters: Record<string, string | undefined>): Result<Jou
 }
 
 function parseDate(raw: string | undefined): Result<CalendarDate, UriError> {
-  const value = raw?.trim();
-  if (!value || value === "today") return new Ok(CalendarDate.today());
-
-  const relative = RELATIVE_DATE.exec(value);
-  if (relative) {
-    const sign = relative[1] === "-" ? -1 : 1;
-    const amount = sign * Number(relative[2]);
-    const unit = relative[3] as "d" | "w" | "m" | "q" | "y";
-    return new Ok(CalendarDate.today().shift(amount, unit));
-  }
-
-  const parsed = CalendarDate.parse(value);
-  if (parsed.isErr()) return new Err(new InvalidUriDateError(value));
+  const parsed = parseDateExpression(raw ?? "");
+  if (parsed.isNone()) return new Err(new InvalidUriDateError((raw ?? "").trim()));
   return new Ok(parsed.value);
 }
 
