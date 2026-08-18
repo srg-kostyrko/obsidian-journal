@@ -59,6 +59,15 @@ export class NumberingService {
     const fromNext = this.#basisNumbers(this.#index.findNext(name, anchor), name, anchor, numbering.sources);
     if (fromNext.isSome()) return fromNext;
 
+    return this.#fromAnchorDate(name, anchor, numbering, anchorDate);
+  }
+
+  #fromAnchorDate(
+    name: string,
+    anchor: AnchorString,
+    numbering: JournalNumberingConfig,
+    anchorDate: AnchorString,
+  ): Option<Readonly<Record<string, number>>> {
     const stepsOpt = this.#cycle.countRepeats(name, anchorDate, anchor);
     if (stepsOpt.isNone()) return Option.none();
 
@@ -147,6 +156,28 @@ export class NumberingService {
     const result = this.#compute(name, anchor, numbering, anchorDate);
     bucket.values.set(anchor, result.isSome() ? result.value : null);
     return result;
+  }
+
+  // What the sequence's own arithmetic says a period's digits are, where assignNumbers answers
+  // what a note there would carry: a manually renumbered neighbor moves the second and not the
+  // first. Inverting a note name reads this one, so a name resolves to the same period whatever
+  // the index happens to hold at the time.
+  sequenceNumbersFor(name: string, anchor: AnchorString): Option<Readonly<Record<string, number>>> {
+    const configOpt = this.#journals.get(name);
+    if (configOpt.isNone()) return Option.none();
+    const config = configOpt.value;
+    const anchorDate = this.#anchorDateFor(config);
+    if (!config.numbering.enabled) return Option.none();
+    if (!config.numbering.allowBefore && anchor < anchorDate) return Option.none();
+    return this.#fromAnchorDate(name, anchor, config.numbering, anchorDate);
+  }
+
+  /** The digits one period on from `numbers` — the step a walk over consecutive periods takes. */
+  nextNumbers(name: string, numbers: Readonly<Record<string, number>>): Option<Readonly<Record<string, number>>> {
+    return this.#journals
+      .get(name)
+      .filter((config) => config.numbering.enabled)
+      .map((config) => this.#cascade(config.numbering.sources, numbers, 1));
   }
 
   anchorForNumbers(name: string, numbers: Readonly<Record<string, number>>): Option<AnchorString> {

@@ -18,6 +18,10 @@ import { EmptyNoteNameError } from "./errors";
 import type { JournalConfig } from "../config";
 import type { JournalMetadata } from "../types";
 
+// A date variable names at most a year of periods on any cycle this plugin writes; the cap is
+// what stops a format that renders no date at all (e.g. "{{date:[Log]}}") from walking forever.
+const NAMED_PERIOD_SEARCH_LIMIT = 400;
+
 /** A journal's path template, tokenized once, ready to invert many paths. */
 export interface PathInverter {
   invert(path: VaultPath): Option<JournalMetadata>;
@@ -91,9 +95,47 @@ export class NotePathService {
     const engine = this.#engine;
     const cycle = this.#cycle;
     const numbering = this.#numbering;
-    const rendersAs = (metadata: JournalMetadata, path: VaultPath): boolean => {
-      const rendered = this.pathFor(name, metadata);
+    const rendersAs = (
+      anchor: AnchorString,
+      numbers: Readonly<Record<string, number>> | undefined,
+      path: VaultPath,
+    ) => {
+      const rendered = this.pathFor(name, { journalName: name, anchor, ...(numbers && { numbers }) });
       return rendered.isOk() && rendered.value === path;
+    };
+    // Which period a name belongs to is not always a formula: a date variable can be too coarse
+    // to tell the journal's periods apart ("{{date:YYYY}}" on a two-week cycle) while the
+    // numbering beside it is cyclic and answers only within the year, so neither half inverts
+    // alone and together they still do. The date bounds the search — the periods it names — and
+    // the one whose own digits render the path is the answer.
+    const searchNamedPeriod = (
+      seed: AnchorString,
+      path: VaultPath,
+      captured: Readonly<Record<string, number>>,
+    ): AnchorString | undefined => {
+      let anchor = seed;
+      let digits = numbering.sequenceNumbersFor(name, anchor).getOrUndefined();
+      let named = false;
+      for (let steps = 0; steps < NAMED_PERIOD_SEARCH_LIMIT; steps++) {
+        // Holding the captured digits fixed leaves only the date tokens free, so this asks
+        // whether the period is one of those the name's date can mean. The window is contiguous:
+        // once past it, no later period can name this date.
+        if (rendersAs(anchor, captured, path)) {
+          named = true;
+          // Ties go to the earliest period. A journal that names two periods identically, digits
+          // and all, has no answer to give; the date's own reading picked the earliest too.
+          if (rendersAs(anchor, digits, path)) return anchor;
+        } else if (named) break;
+        const next = cycle.nextAnchor(name, anchor);
+        if (next.isNone() || next.value <= anchor) break;
+        anchor = next.value;
+        // Stepped rather than recomputed: deriving digits from the anchor date costs a walk of
+        // its own on a custom cycle, which would make the search quadratic.
+        digits = digits
+          ? numbering.nextNumbers(name, digits).getOrUndefined()
+          : numbering.sequenceNumbersFor(name, anchor).getOrUndefined();
+      }
+      return undefined;
     };
 
     return Option.some({
@@ -113,31 +155,27 @@ export class NotePathService {
         });
         // The date variable is the canonical anchor source; start_date/end_date fall inside the
         // same period, so a note named by its bounds recovers the anchor too. A template with no
-        // date at all (e.g. "Sprint {{index}}") falls back to inverting the captured numbering.
+        // date at all (e.g. "Sprint {{index}}") has nothing to bound a search with, and inverts
+        // the captured numbering instead — which needs the odometer to be invertible on its own.
         const dateBinding = bindings.get("date") ?? bindings.get("start_date") ?? bindings.get("end_date");
-        let anchor: AnchorString;
         if (dateBinding?.kind === "date") {
-          // A date variable is only as precise as its format, and the odometer is exact:
-          // "{{date:YYYY}}" on a two-week cycle names every note of the year alike and parses
-          // back to whichever interval holds January 1st. So the numbering's reading wins
-          // whenever it renders the very path being inverted — which it can only do when the
-          // name's date agrees with it or is too coarse to tell the two periods apart.
-          const inverted = numbering
-            .anchorForNumbers(name, numbers)
-            .filter((candidate) => rendersAs(metadataFor(candidate), path));
-          if (inverted.isSome()) return Option.some(metadataFor(inverted.value));
           // A coarse format (e.g. a week's "YYYY-[W]w") parses back to some day inside the
           // period, not necessarily the period's canonical anchor. Resolve it, or the note
           // attaches with a date parseEntry will reject.
-          const resolved = cycle.anchorOf(name, dateBinding.value);
-          if (resolved.isNone()) return Option.none();
-          anchor = resolved.value;
-        } else {
-          const inverted = numbering.anchorForNumbers(name, numbers);
-          if (inverted.isNone()) return Option.none();
-          anchor = inverted.value;
+          const seed = cycle.anchorOf(name, dateBinding.value);
+          if (seed.isNone()) return Option.none();
+          // An odometer that never repeats names its period outright, so there is nothing to
+          // search for: it agrees with the search by construction — no other period carries
+          // these digits — and answering from it keeps the walk below off the common path.
+          const outright = numbering
+            .anchorForNumbers(name, numbers)
+            .filter((candidate) => rendersAs(candidate, numbers, path));
+          if (outright.isSome()) return Option.some(metadataFor(outright.value));
+          return Option.some(metadataFor(searchNamedPeriod(seed.value, path, numbers) ?? seed.value));
         }
-        return Option.some(metadataFor(anchor));
+        const inverted = numbering.anchorForNumbers(name, numbers);
+        if (inverted.isNone()) return Option.none();
+        return Option.some(metadataFor(inverted.value));
       },
     });
   }

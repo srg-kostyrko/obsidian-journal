@@ -487,6 +487,62 @@ describe("NotePathService.candidateFor", () => {
 
     expect(unwrap(result).anchor).toBe("2026-05-19");
   });
+  it("finds the period a coarse date and a cyclic digit identify only together", () => {
+    const repo = fakeRepo({
+      monthly: fixedJournal(
+        "monthly",
+        { type: "month" },
+        {
+          nameTemplate: "{{date:YYYY}}-M{{month}}",
+          numbering: {
+            enabled: true,
+            anchorDate: "2026-01-01" as AnchorString,
+            allowBefore: false,
+            sources: [
+              {
+                variable: "month",
+                frontmatterKey: "journal-month",
+                anchorValue: 1,
+                reset: { kind: "after", count: 12 },
+              },
+            ],
+          },
+        },
+      ),
+    });
+    const c = buildContainer(repo);
+    const service = c.resolve(NotePathService);
+
+    expect(unwrap(service.candidateFor("monthly", "2026-M5.md" as VaultPath)).anchor).toBe("2026-05-01");
+    expect(unwrap(service.candidateFor("monthly", "2026-M11.md" as VaultPath)).anchor).toBe("2026-11-01");
+    expect(unwrap(service.candidateFor("monthly", "2027-M5.md" as VaultPath)).anchor).toBe("2027-05-01");
+  });
+
+  it("takes the earliest period when a coarse date and a short cycle name several alike", () => {
+    const repo = fakeRepo({
+      sprints: customJournal("sprints", "week", 2, "2026-01-05", {
+        nameTemplate: "{{date:YYYY}}-S{{sprint}}",
+        numbering: {
+          enabled: true,
+          anchorDate: "2026-01-05" as AnchorString,
+          allowBefore: false,
+          sources: [
+            {
+              variable: "sprint",
+              frontmatterKey: "journal-sprint",
+              anchorValue: 1,
+              reset: { kind: "after", count: 3 },
+            },
+          ],
+        },
+      }),
+    });
+    const c = buildContainer(repo);
+
+    const result = c.resolve(NotePathService).candidateFor("sprints", "2026-S2.md" as VaultPath);
+
+    expect(unwrap(result).anchor).toBe("2026-01-19");
+  });
 });
 
 describe("NotePathService.candidateFor weekly round trip", () => {

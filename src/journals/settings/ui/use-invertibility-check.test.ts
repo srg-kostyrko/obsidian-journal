@@ -285,4 +285,23 @@ describe("useInvertibilityCheck", () => {
     const { warning } = probe(ref(config));
     expect(warning.value).toBeNull();
   });
+  it("stays silent when a cyclic digit completes a coarse date exactly", () => {
+    const config = fixedJournal(
+      "monthly",
+      { type: "month" },
+      {
+        nameTemplate: "{{date:YYYY}}-M{{month}}",
+        numbering: {
+          enabled: true,
+          anchorDate: "2026-01-01" as AnchorString,
+          allowBefore: false,
+          sources: [
+            { variable: "month", frontmatterKey: "journal-month", anchorValue: 1, reset: { kind: "after", count: 12 } },
+          ],
+        },
+      },
+    );
+    const { warning } = probe(ref(config));
+    expect(warning.value).toBeNull();
+  });
 });
