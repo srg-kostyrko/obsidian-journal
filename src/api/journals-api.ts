@@ -1,8 +1,12 @@
 import type { CalendarDate, AnchorString } from "@/calendar";
 import { inject } from "@/infrastructure/di";
+import { Flows, UserAborted } from "@/infrastructure/flows";
+import { WorkspaceOpenError } from "@/infrastructure/host";
 import type { VaultPath } from "@/infrastructure/host";
 import { NoteFileService } from "@/infrastructure/host/internal/note-file-service";
 import { CycleService } from "@/journals/cycle";
+import { EnsureJournalEntryFlow, JournalDateResolver, OpenJournalEntryFlow } from "@/journals/flows";
+import type { ApplicableJournal } from "@/journals/flows";
 import { FrontmatterService } from "@/journals/frontmatter";
 import { JournalsIndex } from "@/journals/journals-index";
 import { NotePathService } from "@/journals/notes/note-path";
@@ -13,7 +17,16 @@ import { ShelvesService } from "@/shelves/service";
 import { normalizeSelector, toCalendarDate, toJournalInfo } from "./convert";
 import { ApiError } from "./errors";
 
-import type { DateInput, ExistingJournalNote, JournalInfo, JournalNote, JournalSelector } from "./public-api";
+import type {
+  DateInput,
+  EnsureNoteOptions,
+  EnsureResult,
+  ExistingJournalNote,
+  JournalInfo,
+  JournalNote,
+  JournalSelector,
+  OpenNoteOptions,
+} from "./public-api";
 
 const API_VERSION = 1;
 
@@ -32,6 +45,9 @@ export class JournalsApiService {
   readonly #frontmatter = inject(FrontmatterService);
   readonly #paths = inject(NotePathService);
   readonly #files = inject(NoteFileService);
+  readonly #resolver = inject(JournalDateResolver);
+  readonly #flows = inject(Flows);
+  readonly #inFlight = new Map<string, Promise<EnsureResult>>();
 
   readonly apiVersion = API_VERSION;
 
@@ -98,6 +114,81 @@ export class JournalsApiService {
     };
   }
 
+  // Eligibility is "a note exists OR the date is in timeline", not the resolver's
+  // timeline-only rule. Refusing a note the API just reported as existing would make
+  // `ensure` a lie; the calendar's stricter gate is a UI affordance, not a data rule.
+  #eligible(names: readonly string[], date: CalendarDate): ApplicableJournal[] {
+    return names.flatMap((name) => {
+      const resolved = this.#cycle.anchorOf(name, date);
+      if (resolved.isNone()) return [];
+      const anchor = resolved.value;
+      const exists = this.#index.entryByAnchor(name, anchor).isSome();
+      if (!exists && !this.#timeline.contains(name, anchor)) return [];
+      return [{ name, anchor }];
+    });
+  }
+
+  async #resolveOne(selector: JournalSelector, date: DateInput): Promise<ApplicableJournal> {
+    const calendarDate = this.#date(date);
+    const names = this.#select(selector);
+    if (names.length === 0) {
+      const normalized = normalizeSelector(selector);
+      if (normalized.journal !== undefined && this.#journals.get(normalized.journal).isNone()) {
+        throw new ApiError("journal-not-found", `Journal not found: ${normalized.journal}`, normalized.journal);
+      }
+      throw new ApiError("no-matching-journal", "No journal matches that selector");
+    }
+
+    const eligible = this.#eligible(names, calendarDate);
+    if (eligible.length === 0) {
+      // "No period for that date" means the journal is misconfigured for this input;
+      // "a period, out of range" is a different answer callers act on differently.
+      const mappable = names.some((name) => this.#cycle.anchorOf(name, calendarDate).isSome());
+      throw mappable
+        ? new ApiError("outside-timeline", "That date is outside the journal's timeline")
+        : new ApiError("unmappable-date", "That date cannot be placed in a period of that journal");
+    }
+
+    const [only] = eligible;
+    if (eligible.length === 1 && only !== undefined) return only;
+
+    const chosen = await this.#resolver.pick(eligible.map((entry) => entry.name));
+    if (chosen === null) throw new ApiError("aborted", "The journal picker was dismissed");
+    const match = eligible.find((entry) => entry.name === chosen);
+    if (match === undefined) throw new ApiError("no-matching-journal", `No journal named ${chosen} matched`);
+    return match;
+  }
+
+  #existing(name: string, anchor: AnchorString): ExistingJournalNote {
+    const note = this.#noteAtAnchor(name, anchor);
+    if (note?.path == null || note.file === null) {
+      throw new ApiError("creation-failed", `The note for ${name} could not be read back`, name);
+    }
+    return { ...note, path: note.path, file: note.file };
+  }
+
+  // Between the existence check and the write, NoteCreationService may await a confirmation
+  // modal — seconds wide. Two callers ensuring the same period would otherwise get two
+  // prompts and one NoteAlreadyExistsError.
+  #dedupe(name: string, anchor: AnchorString, run: () => Promise<EnsureResult>): Promise<EnsureResult> {
+    const key = `${name}\u{0}${anchor}`;
+    const pending = this.#inFlight.get(key);
+    if (pending) return pending;
+    const started = run().finally(() => this.#inFlight.delete(key));
+    this.#inFlight.set(key, started);
+    return started;
+  }
+
+  #skipConfirmation(options: EnsureNoteOptions | undefined): boolean | undefined {
+    return options?.confirm === undefined ? undefined : !options.confirm;
+  }
+
+  #toApiError(cause: unknown, journal: string): ApiError {
+    if (cause instanceof UserAborted) return new ApiError("aborted", "The operation was cancelled", journal);
+    if (cause instanceof WorkspaceOpenError) return new ApiError("open-failed", cause.message, journal);
+    return new ApiError("creation-failed", cause instanceof Error ? cause.message : String(cause), journal);
+  }
+
   async listJournals(selector?: JournalSelector): Promise<readonly JournalInfo[]> {
     return this.#select(selector).flatMap((name) => {
       const config = this.#journals.get(name);
@@ -117,6 +208,39 @@ export class JournalsApiService {
     return this.#select(selector).flatMap((name) => {
       const note = this.#noteAt(name, calendarDate);
       return note === null ? [] : [note];
+    });
+  }
+
+  async ensureNote(selector: JournalSelector, date: DateInput, options?: EnsureNoteOptions): Promise<EnsureResult> {
+    await this.#readyForNotes();
+    const { name, anchor } = await this.#resolveOne(selector, date);
+    return this.#dedupe(name, anchor, async () => {
+      const result = await this.#flows.invoke(
+        EnsureJournalEntryFlow,
+        { journalName: name, anchor, skipConfirmation: this.#skipConfirmation(options) },
+        { notify: false, context: { via: "api" } },
+      );
+      if (result.isErr()) throw this.#toApiError(result.error, name);
+      return { note: this.#existing(name, anchor), created: result.value.created };
+    });
+  }
+
+  async openNote(selector: JournalSelector, date: DateInput, options?: OpenNoteOptions): Promise<EnsureResult> {
+    await this.#readyForNotes();
+    const { name, anchor } = await this.#resolveOne(selector, date);
+    return this.#dedupe(name, anchor, async () => {
+      const result = await this.#flows.invoke(
+        OpenJournalEntryFlow,
+        {
+          journalName: name,
+          anchor,
+          openMode: options?.openMode,
+          skipConfirmation: this.#skipConfirmation(options),
+        },
+        { notify: false, context: { via: "api" } },
+      );
+      if (result.isErr()) throw this.#toApiError(result.error, name);
+      return { note: this.#existing(name, anchor), created: result.value.created };
     });
   }
 
