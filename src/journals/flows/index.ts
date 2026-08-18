@@ -1,3 +1,4 @@
+export { JournalDateResolver, type ApplicableJournal } from "./journal-date-resolver";
 export { OpenDateFlow } from "./open-date.flow";
 export { OpenJournalEntryFlow } from "./open-journal-entry.flow";
 export { journalFlowsModule } from "./module";
