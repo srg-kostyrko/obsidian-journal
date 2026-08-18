@@ -1,3 +1,4 @@
+import { createNanoEvents } from "nanoevents";
 import { afterEach, beforeEach, describe, expect, it } from "vitest";
 
 import type { AnchorString } from "@/calendar";
@@ -18,8 +19,10 @@ import { NoteCreationService } from "@/journals/notes/note-creation";
 import { NotePathService } from "@/journals/notes/note-path";
 import { NumberingService } from "@/journals/numbering";
 import { JournalsRepository } from "@/journals/repository";
-import { fakeRepo, fixedJournal } from "@/journals/testing";
+import type { JournalsEvents } from "@/journals/repository";
+import { fixedJournal } from "@/journals/testing";
 import { TimelineService } from "@/journals/timeline";
+import { JournalsEventsToken } from "@/journals/tokens";
 import { ShelvesService } from "@/shelves/service";
 import { TemplateEngine } from "@/templates";
 
@@ -45,8 +48,12 @@ function buildApi(journals: Record<string, JournalConfig>, options: BuildOptions
 
   const c = new Container();
   c.addModule(LoggerModule);
-  const repo = fakeRepo(journals);
+  // fakeRepo would build its own emitter; the API subscribes through the DI token, so both
+  // sides have to share one.
+  const journalEvents = createNanoEvents<JournalsEvents>();
+  const repo = JournalsRepository.fromParts(journals, journalEvents);
   c.register(JournalsRepository).useValue(repo);
+  c.register(JournalsEventsToken).useValue(journalEvents);
   c.register(JournalsIndex).useClass(JournalsIndex);
   c.register(CycleService).useClass(CycleService);
   c.register(TimelineService).useClass(TimelineService);
@@ -385,5 +392,108 @@ describe("JournalsApiService writes", () => {
     await Promise.all([api.ensureNote("daily", "2026-08-18"), api.ensureNote("daily", "2026-08-19")]);
 
     expect(flowCalls).toHaveLength(2);
+  });
+});
+
+describe("JournalsApiService events", () => {
+  let teardown: () => void;
+
+  beforeEach(() => {
+    ({ teardown } = installTestCalendar(ISO_WEEK));
+  });
+
+  afterEach(() => {
+    teardown();
+  });
+
+  it("reports a rename with both names", () => {
+    const { api, repo } = buildApi({ daily: fixedJournal("daily", { type: "day" }) });
+    const seen: { from: string; to: string }[] = [];
+    api.on("journalRenamed", (event) => {
+      seen.push(event);
+    });
+
+    repo.rename("daily", "journal");
+
+    expect(seen).toEqual([{ from: "daily", to: "journal" }]);
+  });
+
+  it("reports an added note by date", () => {
+    const { api, index } = buildApi({ daily: fixedJournal("daily", { type: "day" }) });
+    const seen: { journal: string; date: string; path: string }[] = [];
+    api.on("noteAdded", (event) => {
+      seen.push(event);
+    });
+
+    index.register({
+      journalName: "daily",
+      anchor: "2026-08-18" as AnchorString,
+      path: "Journal/2026-08-18.md" as VaultPath,
+    });
+
+    expect(seen).toEqual([{ journal: "daily", date: "2026-08-18", path: "Journal/2026-08-18.md" }]);
+  });
+
+  it("reports a removed note", () => {
+    const { api, index } = buildApi({ daily: fixedJournal("daily", { type: "day" }) });
+    index.register({
+      journalName: "daily",
+      anchor: "2026-08-18" as AnchorString,
+      path: "Journal/2026-08-18.md" as VaultPath,
+    });
+    const seen: { journal: string; date: string }[] = [];
+    api.on("noteRemoved", (event) => {
+      seen.push({ journal: event.journal, date: event.date });
+    });
+
+    index.unregister("Journal/2026-08-18.md" as VaultPath);
+
+    expect(seen).toEqual([{ journal: "daily", date: "2026-08-18" }]);
+  });
+
+  it("stops delivering after the disposer runs", () => {
+    const { api, index } = buildApi({ daily: fixedJournal("daily", { type: "day" }) });
+    let calls = 0;
+    const off = api.on("noteAdded", () => {
+      calls += 1;
+    });
+
+    off();
+    index.register({
+      journalName: "daily",
+      anchor: "2026-08-18" as AnchorString,
+      path: "Journal/2026-08-18.md" as VaultPath,
+    });
+
+    expect(calls).toBe(0);
+  });
+});
+
+describe("JournalsApiService unloading", () => {
+  let teardown: () => void;
+
+  beforeEach(() => {
+    ({ teardown } = installTestCalendar(ISO_WEEK));
+  });
+
+  afterEach(() => {
+    teardown();
+  });
+
+  it("rejects an in-flight call with plugin-unloaded", async () => {
+    const { api } = buildApi({ daily: fixedJournal("daily", { type: "day" }) }, { ready: false });
+    const pending = api.notesFor("daily", "2026-08-18");
+
+    await api[Symbol.asyncDispose]();
+
+    await expect(pending).rejects.toMatchObject({ code: "plugin-unloaded" });
+  });
+
+  it("rejects calls made after disposal", async () => {
+    const { api } = buildApi({ daily: fixedJournal("daily", { type: "day" }) });
+
+    await api[Symbol.asyncDispose]();
+
+    await expect(api.notesFor("daily", "2026-08-18")).rejects.toMatchObject({ code: "plugin-unloaded" });
   });
 });

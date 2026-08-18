@@ -1,3 +1,5 @@
+import { match } from "ts-pattern";
+
 import type { CalendarDate, AnchorString } from "@/calendar";
 import { inject } from "@/infrastructure/di";
 import { Flows, UserAborted } from "@/infrastructure/flows";
@@ -12,6 +14,7 @@ import { JournalsIndex } from "@/journals/journals-index";
 import { NotePathService } from "@/journals/notes/note-path";
 import { JournalsRepository } from "@/journals/repository";
 import { TimelineService } from "@/journals/timeline";
+import { JournalsEventsToken } from "@/journals/tokens";
 import { ShelvesService } from "@/shelves/service";
 
 import { normalizeSelector, toCalendarDate, toJournalInfo } from "./convert";
@@ -25,6 +28,8 @@ import type {
   JournalInfo,
   JournalNote,
   JournalSelector,
+  JournalsApi,
+  JournalsApiEvents,
   OpenNoteOptions,
 } from "./public-api";
 
@@ -36,8 +41,9 @@ function describeDateInput(input: DateInput): string {
   return "the given date-like value";
 }
 
-export class JournalsApiService {
+export class JournalsApiService implements JournalsApi {
   readonly #journals = inject(JournalsRepository);
+  readonly #journalEvents = inject(JournalsEventsToken);
   readonly #shelves = inject(ShelvesService);
   readonly #cycle = inject(CycleService);
   readonly #timeline = inject(TimelineService);
@@ -48,14 +54,30 @@ export class JournalsApiService {
   readonly #resolver = inject(JournalDateResolver);
   readonly #flows = inject(Flows);
   readonly #inFlight = new Map<string, Promise<EnsureResult>>();
+  readonly #unloaded: Promise<never>;
+  #rejectUnloaded: ((reason: unknown) => void) | undefined;
+  #disposed = false;
 
   readonly apiVersion = API_VERSION;
+
+  constructor() {
+    this.#unloaded = new Promise<never>((_, reject) => {
+      this.#rejectUnloaded = reject;
+    });
+    // Nothing may be awaiting it at disposal time; without a terminal handler that
+    // rejection surfaces as an unhandled rejection in the host.
+    void this.#unloaded.catch(() => null);
+  }
 
   // listJournals/journalInfo read the settings-backed repository, which is populated before
   // `api` is even assigned; only the index reads wait, because the index is filled by a
   // whole-vault walk that takes seconds and answers "no note" for real notes until it lands.
   async #readyForNotes(): Promise<void> {
-    await this.#index.whenReady();
+    if (this.#disposed) throw new ApiError("plugin-unloaded", "Journals has been unloaded");
+    // whenReady never settles if readiness never arrives, so a consumer awaiting a call
+    // when the user disables Journals would hang forever inside their own plugin.
+    await Promise.race([this.#index.whenReady(), this.#unloaded]);
+    if (this.#disposed) throw new ApiError("plugin-unloaded", "Journals has been unloaded");
   }
 
   #date(input: DateInput): CalendarDate {
@@ -253,5 +275,53 @@ export class JournalsApiService {
     // We were handed the file; re-resolving entry.path would add a null branch that
     // conflates "not a journal note" with a resolution hiccup.
     return { ...note, path: entry.value.path, file: file as ExistingJournalNote["file"] };
+  }
+
+  on<K extends keyof JournalsApiEvents>(event: K, handler: JournalsApiEvents[K]): () => void {
+    // Widened off the generic: matching on `K` leaves ts-pattern excluding arms it has not
+    // seen, so exhaustiveness stops type-checking after the third one.
+    const name: keyof JournalsApiEvents = event;
+    return match(name)
+      .with("journalCreated", () =>
+        this.#journalEvents.on("created", (name) => {
+          (handler as JournalsApiEvents["journalCreated"])({ journal: name });
+        }),
+      )
+      .with("journalDeleted", () =>
+        this.#journalEvents.on("deleted", (name) => {
+          (handler as JournalsApiEvents["journalDeleted"])({ journal: name });
+        }),
+      )
+      .with("journalRenamed", () =>
+        this.#journalEvents.on("renamed", (from, to) => {
+          (handler as JournalsApiEvents["journalRenamed"])({ from, to });
+        }),
+      )
+      .with("noteAdded", () =>
+        this.#index.events.on("entryChanged", ({ entry, kind }) => {
+          if (kind !== "added") return;
+          (handler as JournalsApiEvents["noteAdded"])({
+            journal: entry.journalName,
+            date: entry.anchor,
+            path: entry.path,
+          });
+        }),
+      )
+      .with("noteRemoved", () =>
+        this.#index.events.on("entryChanged", ({ entry, kind }) => {
+          if (kind !== "removed") return;
+          (handler as JournalsApiEvents["noteRemoved"])({
+            journal: entry.journalName,
+            date: entry.anchor,
+            path: entry.path,
+          });
+        }),
+      )
+      .exhaustive();
+  }
+
+  async [Symbol.asyncDispose](): Promise<void> {
+    this.#disposed = true;
+    this.#rejectUnloaded?.(new ApiError("plugin-unloaded", "Journals has been unloaded"));
   }
 }
