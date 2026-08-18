@@ -2,6 +2,8 @@ import { getLanguage, Notice, Plugin } from "obsidian";
 
 import "./styles.css";
 
+import { apiModule, JournalsApiService } from "@/api";
+import type { JournalsApi } from "@/api";
 import { CalendarModule, calendarSettingsModule } from "@/calendar";
 import { codeBlocksModule } from "@/code-blocks";
 import { navBlockSettingsModule } from "@/code-blocks/nav/settings/module";
@@ -32,6 +34,9 @@ import { viewsModule, ViewHostService } from "@/views";
 export default class JournalPlugin extends Plugin {
   #container?: Container;
 
+  /** The public plugin API. See docs/plugin-api.md. */
+  api?: JournalsApi;
+
   async onload(): Promise<void> {
     initLocale(getLanguage());
 
@@ -58,6 +63,7 @@ export default class JournalPlugin extends Plugin {
     container.addModule(startupModule);
     container.addModule(loggingModule);
     container.addModule(maintenanceModule);
+    container.addModule(apiModule);
 
     const init = await container.resolve(SettingsService).initialize();
     if (init.kind === "err") {
@@ -65,6 +71,11 @@ export default class JournalPlugin extends Plugin {
       await container.dispose();
       return;
     }
+
+    // Before autoLoad on purpose: assigning at the end of onload would leave `api` undefined
+    // during our own async initialization, and a consumer probing then reads "Journals is not
+    // installed" rather than "not ready yet".
+    this.api = container.resolve(JournalsApiService);
 
     await container.autoLoad();
 
@@ -90,6 +101,7 @@ export default class JournalPlugin extends Plugin {
   }
 
   onunload(): void {
+    this.api = undefined;
     void this.#container?.dispose().catch(() => null);
     this.#container = undefined;
   }
