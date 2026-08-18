@@ -402,4 +402,24 @@ export default [
       "unicorn/filename-case": ["error", { case: "pascalCase", checkDirectories: false }],
     },
   },
+  {
+    // Copied verbatim into the published packages/api/index.d.ts, so it may reference
+    // nothing a consumer does not have. The moment someone imports a branded type here,
+    // the published types break at *their* typecheck, not ours.
+    files: ["src/api/public-api.ts"],
+    rules: {
+      "no-restricted-imports": [
+        "error",
+        {
+          patterns: [
+            {
+              group: ["*", "!obsidian"],
+              message:
+                'public-api.ts is copied verbatim into the published .d.ts. Only `import type { TFile } from "obsidian"` is allowed.',
+            },
+          ],
+        },
+      ],
+    },
+  },
 ];
