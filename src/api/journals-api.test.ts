@@ -76,9 +76,10 @@ function buildApi(journals: Record<string, JournalConfig>, options: BuildOptions
   const index = c.resolve(JournalsIndex);
   if (options.ready !== false) index.markReady();
 
-  // Stands in for Flows: records what was invoked and registers the entry the way a real
-  // write does once metadataCache has parsed it. Idempotent for an entry that already
-  // exists, matching NoteCreationService.ensureNote.
+  // Stands in for Flows. It deliberately does NOT register the new entry: a real write
+  // returns as soon as the note is on disk, and JournalsIndex only learns about it once
+  // Obsidian re-parses the frontmatter. Idempotent for an entry that already exists,
+  // matching NoteCreationService.ensureNote.
   c.register(Flows).useValue({
     invoke: (cls: { name: string }, parameters: Record<string, unknown>) => {
       flowCalls.push({ flow: cls.name, parameters });
@@ -86,9 +87,7 @@ function buildApi(journals: Record<string, JournalConfig>, options: BuildOptions
       const anchor = String(parameters.anchor) as AnchorString;
       const existing = index.entryByAnchor(name, anchor);
       if (existing.isSome()) return AsyncResult.ok({ path: existing.value.path, created: false });
-      const path = `${name}/${anchor}.md` as VaultPath;
-      index.register({ journalName: name, anchor, path });
-      return AsyncResult.ok({ path, created: true });
+      return AsyncResult.ok({ path: `${name}/${anchor}.md` as VaultPath, created: true });
     },
   } as never);
   c.register(JournalsApiService).useClass(JournalsApiService);
@@ -276,6 +275,18 @@ describe("JournalsApiService writes", () => {
     expect(result.note.journal).toBe("daily");
     expect(result.note.file).not.toBeNull();
     expect(flowCalls.at(-1)?.flow).toBe("EnsureJournalEntryFlow");
+  });
+
+  it("returns the created note before the index has caught up", async () => {
+    const { api, index } = buildApi({ daily: fixedJournal("daily", { type: "day" }) });
+
+    const result = await api.ensureNote("daily", "2026-08-18");
+
+    // The index is still empty — the result must come from the write, not a lookup.
+    expect(index.entryByAnchor("daily", "2026-08-18" as AnchorString).isNone()).toBe(true);
+    expect(result.note.path).toBe("daily/2026-08-18.md");
+    expect(result.note.file).not.toBeNull();
+    expect(result.note.endDate).toBe("2026-08-18");
   });
 
   it("opens through the open flow, passing the open mode", async () => {

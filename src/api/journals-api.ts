@@ -181,12 +181,24 @@ export class JournalsApiService implements JournalsApi {
     return match;
   }
 
-  #existing(name: string, anchor: AnchorString): ExistingJournalNote {
-    const note = this.#noteAtAnchor(name, anchor);
-    if (note?.path == null || note.file === null) {
+  // Built from the write's own result, never re-read through the index: JournalsIndex only
+  // learns about a new note once Obsidian re-parses its frontmatter, so a lookup here
+  // reports `file: null` for the note we just created.
+  #existing(name: string, anchor: AnchorString, path: string): ExistingJournalNote {
+    const display = this.#cycle.representativeOf(name, anchor);
+    const end = this.#cycle.endOf(name, anchor);
+    const file = this.#files.resolve(path);
+    if (display.isNone() || end.isNone() || file === null) {
       throw new ApiError("creation-failed", `The note for ${name} could not be read back`, name);
     }
-    return { ...note, path: note.path, file: note.file };
+    return {
+      journal: name,
+      date: anchor,
+      displayDate: display.value.toAnchor(),
+      endDate: end.value.toAnchor(),
+      path,
+      file,
+    };
   }
 
   // Between the existence check and the write, NoteCreationService may await a confirmation
@@ -243,7 +255,7 @@ export class JournalsApiService implements JournalsApi {
         { notify: false, context: { via: "api" } },
       );
       if (result.isErr()) throw this.#toApiError(result.error, name);
-      return { note: this.#existing(name, anchor), created: result.value.created };
+      return { note: this.#existing(name, anchor, result.value.path), created: result.value.created };
     });
   }
 
@@ -262,7 +274,7 @@ export class JournalsApiService implements JournalsApi {
         { notify: false, context: { via: "api" } },
       );
       if (result.isErr()) throw this.#toApiError(result.error, name);
-      return { note: this.#existing(name, anchor), created: result.value.created };
+      return { note: this.#existing(name, anchor, result.value.path), created: result.value.created };
     });
   }
 
