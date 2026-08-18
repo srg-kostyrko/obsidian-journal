@@ -105,15 +105,15 @@ failures, and the second usually means a stored reference went stale — see
 
 ## Dates
 
-`DateInput` accepts four forms:
+`DateInput` accepts:
 
-```ts
-"2026-08-18"; // recommended
-"today";
-"+1w" / "-3d"; // the same relative grammar the obsidian:// URI uses
-new Date();
-moment(); // anything with toDate()
-```
+| form                                                          | example          |
+| ------------------------------------------------------------- | ---------------- |
+| an ISO date string — **recommended**                          | `"2026-08-18"`   |
+| `"today"`                                                     | `"today"`        |
+| a relative shift, the same grammar the `obsidian://` URI uses | `"+1w"`, `"-3d"` |
+| a `Date`                                                      | `new Date()`     |
+| anything with `toDate()`, such as a moment                    | `moment()`       |
 
 > **Prefer the string form.** A `Date` is a timestamp, not a date. A user in
 > UTC+13 calling `notesFor(sel, new Date())` near midnight — or passing a `Date`
