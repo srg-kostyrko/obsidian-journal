@@ -17,6 +17,7 @@ restate it.
 | [`docs/2026-07-13-ux-text-audit.md`](docs/2026-07-13-ux-text-audit.md) | user-facing copy style — sentence case, error grammar, en-US                                     |
 | [`docs/manual-testing-checklist.md`](docs/manual-testing-checklist.md) | the manual verification pass                                                                     |
 | [`docs/releasing.md`](docs/releasing.md)                               | how a version reaches the community store                                                        |
+| [`docs/plugin-api.md`](docs/plugin-api.md)                             | the plugin-facing API — its surface, stability policy, and the npm package                       |
 | [`CONTRIBUTING.md`](CONTRIBUTING.md)                                   | setup, quality gates, commit and PR conventions                                                  |
 
 **If a rule belongs to one of those documents, it goes there, not here.** This

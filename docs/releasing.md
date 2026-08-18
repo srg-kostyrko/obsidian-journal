@@ -97,3 +97,32 @@ default, which stays at read.
 `checks.yml` does run on the tag push, but in a separate workflow that cannot
 stop the draft. And the beta path has not shipped anything since the 2.0.1
 series — treat the first v3 beta as untested machinery.
+
+## API package release
+
+`packages/api` (`obsidian-journals-api`) is published from your machine — no
+workflow, no `NPM_TOKEN`.
+
+**1. The plugin stable release completes first.** The published types describe a
+surface users must already have; publishing ahead of it hands integrators a
+compile-clean call against an API nobody is running.
+
+**2. Bump `packages/api/package.json`.** Major only when `apiVersion` moves in
+`src/api/public-api.ts`; minor for additions.
+
+**3. Publish.**
+
+```bash
+cd packages/api && npm publish --access public
+```
+
+`prepublishOnly` regenerates `index.d.ts` from `src/api/public-api.ts` and
+refuses to publish if the committed file disagrees with its source.
+
+**4. Record it in `CHANGELOG.md`** under the plugin version that shipped the
+surface.
+
+Publishing locally means the package carries **no npm provenance attestation**
+(`--provenance` needs CI's OIDC token, unlike the plugin's build artifacts), and
+that your npm 2FA prompt applies. Both are deliberate: the alternative is an
+automation token sitting in repository secrets.
