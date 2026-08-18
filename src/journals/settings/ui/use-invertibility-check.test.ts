@@ -249,4 +249,40 @@ describe("useInvertibilityCheck", () => {
     const { warning } = probe(ref(config));
     expect(warning.value).toBeNull();
   });
+  it("flags a date variable too coarse to tell the periods apart when nothing numbers the notes", () => {
+    const config = customJournal("sprints", "week", 2, "2026-01-05", {
+      nameTemplate: "{{date:YYYY}}",
+      numbering: {
+        enabled: false,
+        anchorDate: "2026-01-05" as AnchorString,
+        allowBefore: false,
+        sources: [],
+      },
+    });
+    const { warning } = probe(ref(config));
+    expect(warning.value).toEqual({ kind: "coarse-date" });
+  });
+
+  it("flags a coarse date variable when the numbering runs but names no digit in the path", () => {
+    const config = customJournal("sprints", "week", 2, "2026-01-05", {
+      nameTemplate: "{{date:YYYY}}",
+      numbering: {
+        enabled: true,
+        anchorDate: "2026-01-05" as AnchorString,
+        allowBefore: false,
+        sources: [{ variable: "sprint", frontmatterKey: "journal-sprint", anchorValue: 1, reset: { kind: "never" } }],
+      },
+    });
+    const { warning } = probe(ref(config));
+    expect(warning.value).toEqual({ kind: "coarse-date" });
+  });
+
+  it("stays silent for a static name, which names no date to be too coarse", () => {
+    const config = customJournal("sprints", "week", 2, "2026-01-05", {
+      nameTemplate: "static-note",
+      numbering: { enabled: false, anchorDate: "2026-01-05" as AnchorString, allowBefore: false, sources: [] },
+    });
+    const { warning } = probe(ref(config));
+    expect(warning.value).toBeNull();
+  });
 });

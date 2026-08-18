@@ -12,9 +12,12 @@ import type { JournalConfig } from "../../config";
 
 export type InvertibilityWarning =
   | { kind: "non-invertible"; reason: "function-token" | "unknown-variable" | "clock-variable"; offending: string }
+  | { kind: "coarse-date" }
   | { kind: "cyclic-top" }
   | { kind: "no-carry"; offending: string }
   | { kind: "unused-digits"; missing: readonly string[] };
+
+const DATE_VARIABLES = new Set(["date", "start_date", "end_date"]);
 
 function variableNames(template: string): Set<string> {
   const names = new Set<string>();
@@ -80,11 +83,15 @@ export function useInvertibilityCheck(
       roundTripsAt(value.name, next.value)
     )
       return null;
+    const pathVariables = new Set([...variableNames(value.nameTemplate), ...variableNames(value.folder)]);
+    // A template with no date at all is answered by the numbering verdicts alone — a name that
+    // never names a date is not the same defect as one whose date names too many periods.
+    const dated = [...pathVariables].some((name) => DATE_VARIABLES.has(name.toLowerCase()));
     // A disabled sequence renders its digits as empty strings, which is a separate defect;
     // none of the numbering verdicts below describes it.
-    if (!numbering.enabled) return null;
-    const pathVariables = new Set([...variableNames(value.nameTemplate), ...variableNames(value.folder)]);
-    if (numbering.sources.every((source) => !pathVariables.has(source.variable))) return null;
+    if (!numbering.enabled) return dated ? { kind: "coarse-date" } : null;
+    if (numbering.sources.every((source) => !pathVariables.has(source.variable)))
+      return dated ? { kind: "coarse-date" } : null;
     // A wrapping most significant digit repeats, so no template arrangement recovers a date.
     if (numbering.sources.at(0)?.reset.kind === "after") return { kind: "cyclic-top" };
     // A `never` digit below the top emits no carry, so every digit above it stays frozen.
