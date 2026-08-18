@@ -120,3 +120,12 @@ export interface JournalsApi {
   /** Synchronous — returns its unsubscribe disposer. */
   on<K extends keyof JournalsApiEvents>(event: K, handler: JournalsApiEvents[K]): () => void;
 }
+
+/**
+ * Returns the Journals plugin API, or null when Journals is not installed, not enabled, or
+ * older than the release that introduced the API.
+ *
+ * Call this at the point of use rather than caching it: there is no readiness event, and
+ * reloading the plugin replaces the object.
+ */
+export declare function getJournalsApi(app: import("obsidian").App): JournalsApi | null;
