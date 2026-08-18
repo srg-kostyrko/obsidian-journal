@@ -30,6 +30,7 @@ import { JournalsRepository } from "../repository";
 import { fakeRepo, fixedJournal } from "../testing";
 import { TimelineService } from "../timeline";
 
+import { JournalDateResolver } from "./journal-date-resolver";
 import { OpenDateFlow } from "./open-date.flow";
 import { OpenJournalEntryFlow } from "./open-journal-entry.flow";
 
@@ -57,6 +58,7 @@ function build(repo: JournalsRepository, suggests: FakeSuggestService) {
   c.register(SelfWriteGuard).useClass(SelfWriteGuard);
   c.register(NoteCreationService).useClass(NoteCreationService);
   c.register(OpenJournalEntryFlow).useClass(OpenJournalEntryFlow);
+  c.register(JournalDateResolver).useClass(JournalDateResolver);
   c.register(OpenDateFlow).useClass(OpenDateFlow);
   return { container: c, notes, workspace };
 }
