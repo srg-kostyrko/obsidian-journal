@@ -2,7 +2,7 @@
 // repo compiles; nothing else proves the thing we publish is usable from TypeScript — which
 // is how the package once shipped without a declaration for its own entry point.
 import { execFileSync } from "node:child_process";
-import { cpSync, mkdirSync, mkdtempSync, symlinkSync, writeFileSync } from "node:fs";
+import { cpSync, mkdirSync, mkdtempSync, readFileSync, symlinkSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
@@ -16,7 +16,24 @@ mkdirSync(installed, { recursive: true });
 for (const file of ["index.d.ts", "index.js", "package.json"]) {
   cpSync(join(root, "packages/api", file), join(installed, file));
 }
+// The consumer supplies the peers, so model that rather than pretending they are absent —
+// and separately assert the package actually declares everything its types reach for.
 symlinkSync(join(root, "node_modules/obsidian"), join(modules, "obsidian"));
+
+const types = readFileSync(join(root, "packages/api/index.d.ts"), "utf8");
+const manifest = JSON.parse(readFileSync(join(root, "packages/api/package.json"), "utf8"));
+const declared = new Set([
+  ...Object.keys(manifest.dependencies ?? {}),
+  ...Object.keys(manifest.peerDependencies ?? {}),
+]);
+const referenced = new Set([...types.matchAll(/(?:from|import\()\s*"([^."][^"]*)"/g)].map((match) => match[1]));
+const undeclared = [...referenced].filter((name) => !declared.has(name));
+if (undeclared.length > 0) {
+  throw new Error(
+    `packages/api/index.d.ts references ${undeclared.join(", ")}, which packages/api/package.json ` +
+      "does not declare as a dependency or peerDependency. A consumer without it cannot resolve the types.",
+  );
+}
 
 writeFileSync(
   join(scratch, "consumer.ts"),
@@ -64,4 +81,4 @@ execFileSync(
   { stdio: "inherit", cwd: scratch },
 );
 
-console.log("api package: a consumer compiles against the published types");
+console.log("api package: declares its peers, and a consumer compiles against the published types");
