@@ -91,6 +91,10 @@ export class NotePathService {
     const engine = this.#engine;
     const cycle = this.#cycle;
     const numbering = this.#numbering;
+    const rendersAs = (metadata: JournalMetadata, path: VaultPath): boolean => {
+      const rendered = this.pathFor(name, metadata);
+      return rendered.isOk() && rendered.value === path;
+    };
 
     return Option.some({
       invert: (path: VaultPath): Option<JournalMetadata> => {
@@ -102,12 +106,26 @@ export class NotePathService {
           const captured = bindings.get(source.variable);
           if (captured?.kind === "number") numbers[source.variable] = captured.value;
         }
+        const metadataFor = (anchor: AnchorString): JournalMetadata => ({
+          journalName: name,
+          anchor,
+          ...(Object.keys(numbers).length > 0 && { numbers }),
+        });
         // The date variable is the canonical anchor source; start_date/end_date fall inside the
         // same period, so a note named by its bounds recovers the anchor too. A template with no
         // date at all (e.g. "Sprint {{index}}") falls back to inverting the captured numbering.
         const dateBinding = bindings.get("date") ?? bindings.get("start_date") ?? bindings.get("end_date");
         let anchor: AnchorString;
         if (dateBinding?.kind === "date") {
+          // A date variable is only as precise as its format, and the odometer is exact:
+          // "{{date:YYYY}}" on a two-week cycle names every note of the year alike and parses
+          // back to whichever interval holds January 1st. So the numbering's reading wins
+          // whenever it renders the very path being inverted — which it can only do when the
+          // name's date agrees with it or is too coarse to tell the two periods apart.
+          const inverted = numbering
+            .anchorForNumbers(name, numbers)
+            .filter((candidate) => rendersAs(metadataFor(candidate), path));
+          if (inverted.isSome()) return Option.some(metadataFor(inverted.value));
           // A coarse format (e.g. a week's "YYYY-[W]w") parses back to some day inside the
           // period, not necessarily the period's canonical anchor. Resolve it, or the note
           // attaches with a date parseEntry will reject.
@@ -119,12 +137,7 @@ export class NotePathService {
           if (inverted.isNone()) return Option.none();
           anchor = inverted.value;
         }
-        const metadata: JournalMetadata = {
-          journalName: name,
-          anchor,
-          ...(Object.keys(numbers).length > 0 && { numbers }),
-        };
-        return Option.some(metadata);
+        return Option.some(metadataFor(anchor));
       },
     });
   }

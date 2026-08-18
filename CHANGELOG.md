@@ -2,6 +2,13 @@
 
 All notable changes to this project will be documented in this file.
 
+## [Unreleased]
+
+### Bug Fixes
+
+- A note whose name carries a date too coarse to tell the journal's periods apart — a year in front of sequential numbers, say — is now matched to its period by those numbers. Previously the date alone decided, so on a journal named `{{date:YYYY}}-C{{cycle}}-S{{sprint}}` every note of the year attached to whichever interval contained January 1st: notes arriving from sync, added in bulk, or repaired by the vault check all landed on the wrong period.
+- The name template warning in settings no longer falls silent just because the name contains a date variable. A template whose numbering cannot be turned back into a date is now flagged when the date variable in it is too coarse to identify a period on its own.
+
 ## [3.1.0] - 2026-08-17
 
 ### Features

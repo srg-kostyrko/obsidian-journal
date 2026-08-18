@@ -188,6 +188,21 @@ describe("NotePathService.noteNameFor", () => {
   });
 });
 
+function sprintJournal(anchorDate: string): JournalConfig {
+  return customJournal("sprints", "week", 2, anchorDate, {
+    nameTemplate: "{{date:YYYY}}-C{{cycle}}-S{{sprint}}",
+    numbering: {
+      enabled: true,
+      anchorDate: anchorDate as AnchorString,
+      allowBefore: false,
+      sources: [
+        { variable: "cycle", frontmatterKey: "journal-cycle", anchorValue: 1, reset: { kind: "never" } },
+        { variable: "sprint", frontmatterKey: "journal-sprint", anchorValue: 1, reset: { kind: "after", count: 3 } },
+      ],
+    },
+  });
+}
+
 describe("NotePathService.candidateFor", () => {
   it("inverts a {{date}}.md path into a metadata anchor", () => {
     const repo = fakeRepo({ daily: fixedJournal("daily", { type: "day" }) });
@@ -426,6 +441,51 @@ describe("NotePathService.candidateFor", () => {
         .candidateFor("sprints", "Sprint 2.md" as VaultPath)
         .isNone(),
     ).toBe(true);
+  });
+  it("inverts the numbering when the name's date variable cannot tell the periods apart", () => {
+    const repo = fakeRepo({ sprints: sprintJournal("2026-01-05") });
+    const c = buildContainer(repo);
+    const service = c.resolve(NotePathService);
+
+    expect(unwrap(service.candidateFor("sprints", "2026-C1-S1.md" as VaultPath)).anchor).toBe("2026-01-05");
+    expect(unwrap(service.candidateFor("sprints", "2026-C1-S2.md" as VaultPath)).anchor).toBe("2026-01-19");
+    expect(unwrap(service.candidateFor("sprints", "2026-C2-S1.md" as VaultPath)).anchor).toBe("2026-02-16");
+    expect(unwrap(service.candidateFor("sprints", "2026-C3-S3.md" as VaultPath)).anchor).toBe("2026-04-27");
+  });
+
+  // The year the date variable parses back to lands inside the journal's very first interval
+  // of that year, so that one interval renders the note name it was handed — a name the rest
+  // of the year renders too.
+  it("inverts the numbering when the coarse date renders back the same name as its own period", () => {
+    const repo = fakeRepo({ sprints: sprintJournal("2026-01-01") });
+    const c = buildContainer(repo);
+    const service = c.resolve(NotePathService);
+
+    expect(unwrap(service.candidateFor("sprints", "2026-C1-S1.md" as VaultPath)).anchor).toBe("2026-01-01");
+    expect(unwrap(service.candidateFor("sprints", "2026-C2-S1.md" as VaultPath)).anchor).toBe("2026-02-12");
+  });
+
+  it("keeps the date's reading when the numbering names a period the note name does not", () => {
+    const repo = fakeRepo({
+      issues: fixedJournal(
+        "issues",
+        { type: "day" },
+        {
+          nameTemplate: "Issue {{index}} - {{date}}",
+          numbering: {
+            enabled: true,
+            anchorDate: "2026-01-01" as AnchorString,
+            allowBefore: false,
+            sources: [{ variable: "index", frontmatterKey: "issue-number", anchorValue: 1, reset: { kind: "never" } }],
+          },
+        },
+      ),
+    });
+    const c = buildContainer(repo);
+
+    const result = c.resolve(NotePathService).candidateFor("issues", "Issue 42 - 2026-05-19.md" as VaultPath);
+
+    expect(unwrap(result).anchor).toBe("2026-05-19");
   });
 });
 
