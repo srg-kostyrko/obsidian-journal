@@ -63,6 +63,7 @@ const noEagerMessage = {
 export default [
   {
     ignores: [
+      "packages/**",
       "**/build/**",
       "**/test-vault/**",
       "**/perf-vault/**",
