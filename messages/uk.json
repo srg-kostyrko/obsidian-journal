@@ -749,6 +749,38 @@
 	],
 	"decoration_condition_has_note_describe": "нотатка існує",
 	"decoration_condition_has_open_task_describe": "нотатка має відкрите завдання",
+	"decoration_condition_note_size_describe": [
+		{
+			"declarations": [
+				"input unit",
+				"input op",
+				"input value"
+			],
+			"selectors": [
+				"unit"
+			],
+			"match": {
+				"unit=words": "у нотатці {op} {value} слів",
+				"unit=characters": "у нотатці {op} {value} символів"
+			}
+		}
+	],
+	"decoration_condition_note_size_unit_label": "Одиниця",
+	"decoration_condition_note_size_unit_option": [
+		{
+			"declarations": [
+				"input unit"
+			],
+			"selectors": [
+				"unit"
+			],
+			"match": {
+				"unit=words": "Слова",
+				"unit=characters": "Символи"
+			}
+		}
+	],
+	"decoration_condition_note_size_value_label": "Значення розміру нотатки",
 	"decoration_condition_offset_day_label": "День",
 	"decoration_condition_offset_describe": [
 		{
@@ -826,7 +858,8 @@
 				"type=offset": "Зсув",
 				"type=has-note": "Має нотатку",
 				"type=has-open-task": "Має відкрите завдання",
-				"type=all-tasks-completed": "Усі завдання виконано"
+				"type=all-tasks-completed": "Усі завдання виконано",
+				"type=note-size": "Розмір нотатки"
 			}
 		}
 	],
@@ -847,7 +880,8 @@
 				"type=offset": "Перевірити зсув інтервалу",
 				"type=has-note": "Перевірити, чи існує нотатка",
 				"type=has-open-task": "Перевірити, чи є в нотатці відкриті завдання",
-				"type=all-tasks-completed": "Перевірити, чи всі завдання виконано"
+				"type=all-tasks-completed": "Перевірити, чи всі завдання виконано",
+				"type=note-size": "Перевірити розмір нотатки"
 			}
 		}
 	],

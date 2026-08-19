@@ -932,6 +932,38 @@
 	],
 	"decoration_condition_has_note_describe": "esiste una nota",
 	"decoration_condition_has_open_task_describe": "la nota ha un'attività aperta",
+	"decoration_condition_note_size_describe": [
+		{
+			"declarations": [
+				"input unit",
+				"input op",
+				"input value"
+			],
+			"selectors": [
+				"unit"
+			],
+			"match": {
+				"unit=words": "la nota ha {op} {value} parole",
+				"unit=characters": "la nota ha {op} {value} caratteri"
+			}
+		}
+	],
+	"decoration_condition_note_size_unit_label": "Unità",
+	"decoration_condition_note_size_unit_option": [
+		{
+			"declarations": [
+				"input unit"
+			],
+			"selectors": [
+				"unit"
+			],
+			"match": {
+				"unit=words": "Parole",
+				"unit=characters": "Caratteri"
+			}
+		}
+	],
+	"decoration_condition_note_size_value_label": "Valore della dimensione della nota",
 	"decoration_condition_offset_day_label": "Giorno",
 	"decoration_condition_offset_describe": [
 		{
@@ -1009,7 +1041,8 @@
 				"type=offset": "Offset",
 				"type=has-note": "Ha una nota",
 				"type=has-open-task": "Ha un'attività aperta",
-				"type=all-tasks-completed": "Tutte le attività completate"
+				"type=all-tasks-completed": "Tutte le attività completate",
+				"type=note-size": "Dimensione nota"
 			}
 		}
 	],
@@ -1030,7 +1063,8 @@
 				"type=offset": "Controlla l'offset nell'intervallo",
 				"type=has-note": "Controlla se la nota esiste",
 				"type=has-open-task": "Controlla se la nota ha attività aperte",
-				"type=all-tasks-completed": "Controlla se tutte le attività sono completate"
+				"type=all-tasks-completed": "Controlla se tutte le attività sono completate",
+				"type=note-size": "Controlla la dimensione della nota"
 			}
 		}
 	],

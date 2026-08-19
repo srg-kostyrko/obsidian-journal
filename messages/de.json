@@ -932,6 +932,38 @@
 	],
 	"decoration_condition_has_note_describe": "eine Notiz existiert",
 	"decoration_condition_has_open_task_describe": "die Notiz hat eine offene Aufgabe",
+	"decoration_condition_note_size_describe": [
+		{
+			"declarations": [
+				"input unit",
+				"input op",
+				"input value"
+			],
+			"selectors": [
+				"unit"
+			],
+			"match": {
+				"unit=words": "Notiz hat {op} {value} Wörter",
+				"unit=characters": "Notiz hat {op} {value} Zeichen"
+			}
+		}
+	],
+	"decoration_condition_note_size_unit_label": "Einheit",
+	"decoration_condition_note_size_unit_option": [
+		{
+			"declarations": [
+				"input unit"
+			],
+			"selectors": [
+				"unit"
+			],
+			"match": {
+				"unit=words": "Wörter",
+				"unit=characters": "Zeichen"
+			}
+		}
+	],
+	"decoration_condition_note_size_value_label": "Wert der Notizgröße",
 	"decoration_condition_offset_day_label": "Tag",
 	"decoration_condition_offset_describe": [
 		{
@@ -1009,7 +1041,8 @@
 				"type=offset": "Offset",
 				"type=has-note": "Notiz vorhanden",
 				"type=has-open-task": "Offene Aufgabe vorhanden",
-				"type=all-tasks-completed": "Alle Aufgaben erledigt"
+				"type=all-tasks-completed": "Alle Aufgaben erledigt",
+				"type=note-size": "Notizgröße"
 			}
 		}
 	],
@@ -1030,7 +1063,8 @@
 				"type=offset": "Intervall-Offset prüfen",
 				"type=has-note": "Prüfen, ob eine Notiz existiert",
 				"type=has-open-task": "Prüfen, ob die Notiz offene Aufgaben hat",
-				"type=all-tasks-completed": "Prüfen, ob alle Aufgaben erledigt sind"
+				"type=all-tasks-completed": "Prüfen, ob alle Aufgaben erledigt sind",
+				"type=note-size": "Notizgröße prüfen"
 			}
 		}
 	],

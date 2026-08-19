@@ -932,6 +932,38 @@
 	],
 	"decoration_condition_has_note_describe": "노트가 있음",
 	"decoration_condition_has_open_task_describe": "노트에 미완료 작업이 있음",
+	"decoration_condition_note_size_describe": [
+		{
+			"declarations": [
+				"input unit",
+				"input op",
+				"input value"
+			],
+			"selectors": [
+				"unit"
+			],
+			"match": {
+				"unit=words": "노트 단어 수가 {op} {value}",
+				"unit=characters": "노트 문자 수가 {op} {value}"
+			}
+		}
+	],
+	"decoration_condition_note_size_unit_label": "단위",
+	"decoration_condition_note_size_unit_option": [
+		{
+			"declarations": [
+				"input unit"
+			],
+			"selectors": [
+				"unit"
+			],
+			"match": {
+				"unit=words": "단어",
+				"unit=characters": "문자"
+			}
+		}
+	],
+	"decoration_condition_note_size_value_label": "노트 크기 값",
 	"decoration_condition_offset_day_label": "일",
 	"decoration_condition_offset_describe": [
 		{
@@ -1009,7 +1041,8 @@
 				"type=offset": "오프셋",
 				"type=has-note": "노트 있음",
 				"type=has-open-task": "미완료 작업 있음",
-				"type=all-tasks-completed": "모든 작업 완료"
+				"type=all-tasks-completed": "모든 작업 완료",
+				"type=note-size": "노트 크기"
 			}
 		}
 	],
@@ -1030,7 +1063,8 @@
 				"type=offset": "간격 오프셋 확인",
 				"type=has-note": "노트 존재 여부 확인",
 				"type=has-open-task": "노트의 미완료 작업 확인",
-				"type=all-tasks-completed": "모든 작업 완료 여부 확인"
+				"type=all-tasks-completed": "모든 작업 완료 여부 확인",
+				"type=note-size": "노트 크기 확인"
 			}
 		}
 	],
