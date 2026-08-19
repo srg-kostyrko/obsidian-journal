@@ -1,3 +1,4 @@
+export { EnsureJournalEntryFlow, type EnsureJournalEntryParameters } from "./ensure-journal-entry.flow";
 export { JournalDateResolver, type ApplicableJournal } from "./journal-date-resolver";
 export { OpenDateFlow } from "./open-date.flow";
 export { OpenJournalEntryFlow } from "./open-journal-entry.flow";

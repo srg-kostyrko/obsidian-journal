@@ -1,0 +1,31 @@
+{
+  "name": "obsidian-journals-api",
+  "version": "1.0.0",
+  "description": "Types and locator for the Obsidian Journals plugin API",
+  "license": "MIT",
+  "type": "module",
+  "main": "index.js",
+  "types": "index.d.ts",
+  "peerDependencies": {
+    "obsidian": ">=1.0.0"
+  },
+  "files": [
+    "index.js",
+    "index.d.ts",
+    "README.md"
+  ],
+  "keywords": [
+    "obsidian",
+    "obsidian-plugin",
+    "journals",
+    "periodic-notes"
+  ],
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/srg-kostyrko/obsidian-journal.git",
+    "directory": "packages/api"
+  },
+  "scripts": {
+    "prepublishOnly": "node ../../scripts/build-api-types.mjs && git diff --exit-code index.d.ts"
+  }
+}

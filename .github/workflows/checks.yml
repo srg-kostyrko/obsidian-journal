@@ -18,3 +18,10 @@ jobs:
       - run: npm run check:types
       - run: npm test
       - run: npm run check:lint
+      # The published API types are generated from src/api/public-api.ts and committed,
+      # so any change to the public surface shows up as a diff in the PR that caused it.
+      - run: npm run build:api
+      - run: git diff --exit-code packages/api/index.d.ts
+      # check:types proves this repo compiles; this proves the package we publish is
+      # usable from TypeScript, which is a different thing.
+      - run: npm run check:api

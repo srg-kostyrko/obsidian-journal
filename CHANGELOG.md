@@ -4,6 +4,10 @@ All notable changes to this project will be documented in this file.
 
 ## [Unreleased]
 
+### Features
+
+- Other plugins can now integrate with Journals through a documented API at `app.plugins.plugins.journals.api`, with types published as [`obsidian-journals-api`](https://www.npmjs.com/package/obsidian-journals-api). It covers listing journals, finding the note for a date, creating and opening one, and subscribing to journal and note changes. Because a vault can hold several journals of the same kind, reads return every match and writes ask which one to use — the same picker you see clicking a calendar cell. See [`docs/plugin-api.md`](docs/plugin-api.md).
+
 ### Bug Fixes
 
 - A note whose name carries a date too coarse to tell the journal's periods apart — a year in front of sequential numbers, say — is now matched to its period by the whole name rather than by the date alone. Previously every note of the year attached to whichever period contained January 1st: a journal named `{{date:YYYY}}-C{{cycle}}-S{{sprint}}` collapsed its whole year onto one interval, and a monthly journal named `{{date:YYYY}}-M{{month}}` put all twelve months on January. Notes arriving from sync, added in bulk, or repaired by the vault check all landed on the wrong period. The date and the numbers now identify the period together, so numbering that repeats — twelve months, four quarters — is enough as long as the date says which year it repeats in.

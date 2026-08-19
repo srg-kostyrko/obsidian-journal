@@ -15,6 +15,7 @@ export interface OpenJournalEntryParameters {
   journalName: string;
   anchor: AnchorString;
   openMode?: OpenMode;
+  skipConfirmation?: boolean;
 }
 
 export interface OpenJournalEntryResult {
@@ -35,7 +36,9 @@ export class OpenJournalEntryFlow implements Flow<
   execute(p: OpenJournalEntryParameters): AsyncResult<OpenJournalEntryResult, NoteCreationError | WorkspaceOpenError> {
     return attempt.in(this, async function* (this: OpenJournalEntryFlow) {
       const metadata = yield* this.#frontmatter.buildMetadata(p.journalName, p.anchor);
-      const { path, created } = yield* this.#creation.ensureNote(p.journalName, metadata);
+      const { path, created } = yield* this.#creation.ensureNote(p.journalName, metadata, {
+        skipConfirmation: p.skipConfirmation,
+      });
       yield* this.#workspace.openNote(path, p.openMode ?? "active");
       if (created) yield* this.#templater.cursorJump(path);
       return { path, created };

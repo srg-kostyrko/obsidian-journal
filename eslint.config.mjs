@@ -44,6 +44,15 @@ const obsidianMomentImport = {
 
 const momentImportPaths = [bareMomentImport, obsidianMomentImport];
 
+// `NoteFileService` is the single place a raw `TFile` leaves the host layer, and it exists
+// only so the public API can hand integrators one. Every other consumer takes the domain
+// `Note` from `NotesService`; the exemption below is `src/api/` and the host itself.
+const noteFileServiceImport = {
+  group: ["**/host/internal/note-file-service"],
+  message:
+    "NoteFileService is the single TFile escape hatch and belongs to src/api only. Use NotesService and the domain `Note` instead.",
+};
+
 const noEagerMessage = {
   selector:
     "CallExpression[callee.object.name='m']:not(:function CallExpression):not(PropertyDefinition CallExpression)",
@@ -54,6 +63,7 @@ const noEagerMessage = {
 export default [
   {
     ignores: [
+      "packages/**",
       "**/build/**",
       "**/test-vault/**",
       "**/perf-vault/**",
@@ -194,7 +204,7 @@ export default [
       // domain-meaningful check at every site it flags.
       "unicorn/prefer-simple-condition-first": "off",
 
-      "no-restricted-imports": ["error", { paths: momentImportPaths }],
+      "no-restricted-imports": ["error", { paths: momentImportPaths, patterns: [noteFileServiceImport] }],
       "no-restricted-syntax": ["error", noRawError, noStrayDefineModal],
 
       "@eslint-community/eslint-comments/no-use": ["error", { allow: [] }],
@@ -360,7 +370,7 @@ export default [
     rules: {
       // The calendar module IS the abstraction, so `import { moment } from "obsidian"` belongs
       // here and nowhere else. The bare-package ban still applies.
-      "no-restricted-imports": ["error", { paths: [bareMomentImport] }],
+      "no-restricted-imports": ["error", { paths: [bareMomentImport], patterns: [noteFileServiceImport] }],
     },
   },
   {
@@ -400,6 +410,34 @@ export default [
     files: ["src/**/*.vue"],
     rules: {
       "unicorn/filename-case": ["error", { case: "pascalCase", checkDirectories: false }],
+    },
+  },
+  {
+    // The two directories the TFile escape hatch is for: the API that returns one, and the
+    // host layer that owns it.
+    files: ["src/api/**/*.ts", "src/infrastructure/host/**/*.ts"],
+    rules: {
+      "no-restricted-imports": ["error", { paths: momentImportPaths }],
+    },
+  },
+  {
+    // Copied verbatim into the published packages/api/index.d.ts, so it may reference
+    // nothing a consumer does not have. The moment someone imports a branded type here,
+    // the published types break at *their* typecheck, not ours.
+    files: ["src/api/public-api.ts"],
+    rules: {
+      "no-restricted-imports": [
+        "error",
+        {
+          patterns: [
+            {
+              group: ["*", "!obsidian"],
+              message:
+                'public-api.ts is copied verbatim into the published .d.ts. Only `import type { TFile } from "obsidian"` is allowed.',
+            },
+          ],
+        },
+      ],
     },
   },
 ];
