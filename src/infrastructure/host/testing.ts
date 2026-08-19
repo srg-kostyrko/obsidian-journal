@@ -186,6 +186,8 @@ export class FakeNotesService implements Pick<
     const entry = this.#files.get(path);
     if (!entry) return AsyncResult.err(new NoteNotFoundError(path));
     this.#files.set(path, { ...entry, content: entry.content + content });
+    this.#emitter.emit("modified", path);
+    this.#emitter.emit("metadata-changed", path);
     return AsyncResult.ok(undefined);
   }
 
@@ -219,6 +221,10 @@ export class FakeNotesService implements Pick<
     const next = { ...entry.frontmatter };
     mutate(next);
     this.#files.set(path, { ...entry, frontmatter: next });
+    // `modified` means "the bytes changed", full stop — the real service emits it off
+    // the generic vault "modify" listener with no opinion on whether the change is
+    // interesting. processFrontMatter is a vault write like any other, so it fires too.
+    this.#emitter.emit("modified", path);
     this.#emitter.emit("metadata-changed", path);
     return AsyncResult.ok(undefined);
   }
