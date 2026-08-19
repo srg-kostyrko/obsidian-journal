@@ -65,6 +65,7 @@ export type {
   MenuItemSpec,
   Note,
   NoteMetadata,
+  NoteSize,
   NoteTask,
   NotesEvents,
   OpenMode,

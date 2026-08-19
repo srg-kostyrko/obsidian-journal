@@ -352,6 +352,15 @@ export default [
     },
   },
   {
+    // The two character classes here are copied byte-for-byte from Obsidian's own app.js so
+    // this count matches the status bar exactly; rewriting the `\uXXXX` escapes to code point
+    // escapes would defeat the point of a byte-for-byte transcription.
+    files: ["src/infrastructure/host/internal/note-size.ts"],
+    rules: {
+      "unicorn/prefer-unicode-code-point-escapes": "off",
+    },
+  },
+  {
     files: ["src/settings/legacy/old-shapes.ts"],
     rules: {
       // Frozen snapshot of legacy persisted shapes; `calendar.global` is a data

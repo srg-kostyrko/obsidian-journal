@@ -39,6 +39,11 @@ export interface NoteMetadata {
   readonly tasks: readonly NoteTask[];
 }
 
+export interface NoteSize {
+  readonly words: number;
+  readonly characters: number;
+}
+
 // A menu entry a feature contributes to a host-built context menu. The host stays ignorant of
 // what the entry means — features own the title, the icon and what clicking it does.
 export interface MenuItemSpec {
