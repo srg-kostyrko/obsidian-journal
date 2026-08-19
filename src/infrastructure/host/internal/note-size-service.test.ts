@@ -227,4 +227,68 @@ describe("NoteSizeService", () => {
 
     expect(service.get("a.md" as VaultPath).isNone()).toBe(true);
   });
+
+  it("clears #pending on delete so a note that lands back at the same path gets its own fill", async () => {
+    const { service, host } = build();
+    const file = host.putFile("a.md", "one two three");
+    // The fill for the doomed "a.md" starts and hangs mid-read.
+    const { promise: staleRead, resolve: releaseStale } = Promise.withResolvers<string>();
+    const spy = vi.spyOn(host.app.vault, "cachedRead");
+    spy.mockReturnValueOnce(staleRead);
+    service.get("a.md" as VaultPath);
+
+    await host.app.vault.delete(file);
+
+    // A new note lands at the now-free "a.md" path and a cell asks for it. If delete
+    // left the stale entry in #pending, this get() would see "already in flight" and
+    // skip starting its own fill.
+    host.putFile("a.md", "one two");
+    service.get("a.md" as VaultPath);
+    await settle();
+
+    expect(spy).toHaveBeenCalledTimes(2);
+
+    releaseStale("one two three");
+    await settle();
+
+    const result = service.get("a.md" as VaultPath);
+    expect(result.isSome() && result.value.words).toBe(2);
+  });
+
+  it("does not let a superseded fill's cleanup clear #pending out from under a still in-flight fill", async () => {
+    const { service, host } = build();
+    const file = host.putFile("a.md", "one two three four five");
+    // Fill A starts and hangs mid-read.
+    const { promise: readA, resolve: releaseA } = Promise.withResolvers<string>();
+    const spy = vi.spyOn(host.app.vault, "cachedRead");
+    spy.mockReturnValueOnce(readA);
+    service.get("a.md" as VaultPath);
+
+    // "a.md" is renamed away, bumping its generation while A is still in flight.
+    await host.app.vault.rename(file, "renamed-away.md");
+
+    // A new note lands at the now-free "a.md" path; fill B starts and also hangs mid-read.
+    const { promise: readB, resolve: releaseB } = Promise.withResolvers<string>();
+    spy.mockReturnValueOnce(readB);
+    host.putFile("a.md", "one two");
+    service.get("a.md" as VaultPath);
+
+    // A's stale read resolves. Its generation no longer matches, so it takes the
+    // superseded branch — its cleanup must not touch #pending, which B still owns.
+    releaseA("one two three four five");
+    await settle();
+
+    // If the cleanup guard were dropped, A would have deleted "a.md" from #pending on
+    // its way out even though B still owns it, so this get() would start a redundant
+    // fill C instead of collapsing into B.
+    service.get("a.md" as VaultPath);
+    await settle();
+    expect(spy).toHaveBeenCalledTimes(2);
+
+    releaseB("one two");
+    await settle();
+
+    const result = service.get("a.md" as VaultPath);
+    expect(result.isSome() && result.value.words).toBe(2);
+  });
 });

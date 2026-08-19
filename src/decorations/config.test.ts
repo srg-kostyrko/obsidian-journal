@@ -48,4 +48,14 @@ describe("note-size condition schema", () => {
     });
     expect(result.success).toBe(false);
   });
+
+  it("rejects a fractional note-size threshold", () => {
+    const result = v.safeParse(decorationConditionSchema, {
+      type: "note-size",
+      unit: "words",
+      condition: "gt",
+      value: 1.5,
+    });
+    expect(result.success).toBe(false);
+  });
 });

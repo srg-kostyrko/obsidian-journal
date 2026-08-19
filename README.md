@@ -190,7 +190,7 @@ They **layer**: for each property a cell can only have once — background, text
 
 - **Combinations**: Use AND logic (all conditions must match) or OR logic (any condition can match)
 
-- **Match badge**: Each decoration in the settings list reports how often it matched recently ("Matched 3 of the last 90 days"), so a rule that never fires is easy to spot
+- **Match badge**: Each decoration in the settings list reports how often it matched recently ("Matched 3 of the last 90 days"), so a rule that never fires is easy to spot. A note-size rule shows no badge — estimating it would mean reading every note in the window
 
 - **Decoration breakdown**: Right-click a decorated cell — in a calendar, a navigation block, or a toolbar's period buttons — and choose _Explain decorations_ to see, property by property, which rule produced each color, border, and mark, and which rules it overrode
 

@@ -53,8 +53,8 @@ everything below. Adding a locale or a new domain noun means extending it there.
 | **segment**     | Segment     | segmento      | segment     | segmento     | セグメント       | 세그먼트   | segmento     | сегмент       | сегмент        | 段          |
 | **snapshot**    | Snapshot    | instantánea   | instantané  | istantanea   | スナップショット | 스냅샷     | instantâneo  | снимок        | знімок         | 快照        |
 | **maintenance** | Wartung     | mantenimiento | maintenance | manutenzione | メンテナンス     | 유지관리   | manutenção   | обслуживание  | обслуговування | 维护        |
-| **word**        | Wörter      | Palabras      | Mots        | Parole       | 単語             | 단어       | Palavras     | Слова         | Слова          | 单词        |
-| **character**   | Zeichen     | Caracteres    | Caractères  | Caratteri    | 文字             | 문자       | Caracteres   | Символы       | Символи        | 字符        |
+| **word**        | Wort        | palabra       | mot         | parola       | 単語             | 단어       | palavra      | слово         | слово          | 单词        |
+| **character**   | Zeichen     | carácter      | caractère   | carattere    | 文字             | 문자       | caractere    | символ        | символ         | 字符        |
 
 Grammatical gender, where it decides agreement: `Journal` n. / `Notiz` f. / `Regal` n.
 (de) · `diario` m. / `nota` f. / `estante` m. (es) · `journal` m. / `note` f. /

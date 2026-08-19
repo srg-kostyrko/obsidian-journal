@@ -67,6 +67,8 @@ function badgeText(badge: MatchBadge): string | null {
     .exhaustive();
 }
 
+const badgeTexts = computed<readonly (string | null)[]>(() => badges.value.map(badgeText));
+
 const title = computed(() =>
   match(owner)
     .with({ kind: "journal" }, () => m.decoration_section_title_journal())
@@ -133,7 +135,7 @@ function remove(index: number): void {
             <span>{{ describeCondition(condition, calendar) }}</span>
           </template>
         </div>
-        <div v-if="badgeText(badges[index])" class="row-badge">{{ badgeText(badges[index]) }}</div>
+        <div v-if="badgeTexts[index]" class="row-badge">{{ badgeTexts[index] }}</div>
       </template>
       <UiIconButton :icon="icons.action.configure" :tooltip="m.decoration_edit()" @click="edit(index)" />
       <UiIconButton :icon="icons.action.delete" :tooltip="m.decoration_delete()" @click="remove(index)" />

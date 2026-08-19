@@ -41,7 +41,14 @@ export class NoteSizeService {
       this.#bumpGeneration(from);
       if (hit === undefined) return;
       this.#sizes.set(to, hit);
-      this.#emitter.emit("size-changed", to);
+      // Emit runs subscribers synchronously and one of them re-evaluates decorations, so this
+      // must not be able to let a throwing subscriber escape into NotesService's own emitter —
+      // the same reasoning #fill's catch below documents.
+      try {
+        this.#emitter.emit("size-changed", to);
+      } catch (error) {
+        this.#logger.warn("a size-changed subscriber threw", { path: to, error });
+      }
     });
   }
 

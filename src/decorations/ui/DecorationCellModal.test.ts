@@ -2,7 +2,7 @@ import userEvent from "@testing-library/user-event";
 import { cleanup, render, screen } from "@testing-library/vue";
 import { createNanoEvents } from "nanoevents";
 import { afterEach, beforeEach, describe, expect, it } from "vitest";
-import { reactive } from "vue";
+import { nextTick, reactive } from "vue";
 
 import { Calendar, DayPeriod, WeekPeriod } from "@/calendar";
 import { date, installTestCalendar, testCalendar } from "@/calendar/testing";
@@ -70,7 +70,8 @@ function mount(options: MountOptions) {
   container.register(CycleService).useClass(CycleService);
   container.register(TimelineService).useClass(TimelineService);
   container.register(NoteMetadataService).useValue(fakeMetadata as unknown as NoteMetadataService);
-  container.register(NoteSizeService).useValue(new FakeNoteSizeService() as unknown as NoteSizeService);
+  const size = new FakeNoteSizeService();
+  container.register(NoteSizeService).useValue(size as unknown as NoteSizeService);
   container.register(DecorationEngine).useClass(DecorationEngine);
   container.register(Calendar).useValue(testCalendar());
 
@@ -86,6 +87,8 @@ function mount(options: MountOptions) {
       ],
     },
   });
+
+  return { size };
 }
 
 const anyDayDecoration: JournalDecoration = buildDecoration({
@@ -97,6 +100,12 @@ const anyDayDecoration: JournalDecoration = buildDecoration({
 const hasNoteDecoration: JournalDecoration = buildDecoration({
   mode: "or",
   conditions: [buildCondition("has-note")],
+  styles: [buildStyle("background")],
+});
+
+const noteSizeDecoration: JournalDecoration = buildDecoration({
+  mode: "or",
+  conditions: [buildCondition("note-size", { condition: "gt", value: 100 })],
   styles: [buildStyle("background")],
 });
 
@@ -210,5 +219,24 @@ describe("DecorationCellModal", () => {
     await userEvent.selectOptions(screen.getByRole("combobox"), "work");
 
     expect(screen.getByText(m.decoration_breakdown_cell_empty())).toBeTruthy();
+  });
+
+  it("shows a note-size decoration once its size lands", async () => {
+    const day = DayPeriod.containing(date("2026-05-25"));
+    const path = "daily/2026-05-25.md" as VaultPath;
+    const { size } = mount({
+      journals: {
+        daily: fixedJournal("daily", { type: "day" }, { decorations: [noteSizeDecoration] }),
+      },
+      notes: [{ journalName: "daily", anchor: day }],
+      entry: { kind: "fixed", period: day },
+    });
+
+    expect(screen.getByText(m.decoration_breakdown_cell_empty())).toBeTruthy();
+
+    size.setSize(path, { words: 400, characters: 2200 });
+    await nextTick();
+
+    expect(screen.getByTestId("decoration-preview")).toBeTruthy();
   });
 });

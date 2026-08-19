@@ -711,6 +711,10 @@ is visible.
 - [ ] **all-tasks-completed** — + a linked note with all tasks checked → the cell
       is decorated.
 - [x] **all-tasks-completed** reactivity — uncheck a task → the decoration clears.
+- [ ] **note-size** — open a note carrying a note-size decoration → the word/character
+      count the decoration matched on equals what Obsidian's own status bar shows for
+      that note. (Note-size decorations are absent on first paint and appear a moment
+      later once the size loads — by design; e2e can only partly prove this.)
 - [x] **tag — contains** — + condition tag contains `journal` on a note tagged
       `#journal` → decorated.
 - [x] **tag — starts-with** → matches by tag prefix.

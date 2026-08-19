@@ -201,6 +201,7 @@ const noteSizeCondition = v.object({
   type: v.literal("note-size"),
   unit: v.union([v.literal("words"), v.literal("characters")]),
   condition: v.union([v.literal("lt"), v.literal("lte"), v.literal("gt"), v.literal("gte")]),
+  // Strict pipe is safe only because `ConditionNoteSize.vue` (isValidThreshold) is the sole writer and never lets a cleared or fractional value through.
   value: v.pipe(v.number(), v.integer(), v.minValue(0)),
 });
 

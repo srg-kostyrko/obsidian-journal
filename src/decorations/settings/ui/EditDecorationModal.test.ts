@@ -3,7 +3,7 @@ import { cleanup, render, screen, waitFor } from "@testing-library/vue";
 import { afterEach, describe, expect, it, vi } from "vitest";
 
 import { Calendar } from "@/calendar";
-import { defaultCondition, type JournalDecoration, type JournalDecorationCondition } from "@/decorations";
+import type { JournalDecoration, JournalDecorationCondition } from "@/decorations";
 import { m } from "@/i18n";
 import { Container, provideInjectorOnApp } from "@/infrastructure/di";
 import { InputSuggestService, MetadataTypeService } from "@/infrastructure/host";
@@ -12,6 +12,8 @@ import { createFakeHost } from "@/infrastructure/host/internal/testing";
 import { InternalObsidianAppToken } from "@/infrastructure/host/internal/tokens";
 import type { ModalApi } from "@/infrastructure/host/modals";
 import { provideModalApiOnApp } from "@/infrastructure/host/modals/testing";
+
+import { buildCondition } from "../../testing";
 
 import { CALENDAR_CONDITION_TYPES, conditionTypeOptions } from "./condition-types";
 import EditDecorationModal from "./EditDecorationModal.vue";
@@ -65,8 +67,6 @@ const ALL_CONDITION_TYPES: readonly JournalDecorationCondition["type"][] = [
   "weekday",
   "offset",
 ];
-
-const buildCondition = defaultCondition;
 
 async function mountWith(options: { conditions: JournalDecorationCondition[] }) {
   mountModal({
