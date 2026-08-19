@@ -49,6 +49,11 @@ export class NotesService {
       }),
     );
     this.#plugin.registerEvent(
+      this.#app.vault.on("modify", (file) => {
+        if (file instanceof TFile) this.#emitter.emit("modified", file.path as VaultPath);
+      }),
+    );
+    this.#plugin.registerEvent(
       this.#app.metadataCache.on("changed", (file) => {
         if (file instanceof TFile) this.#emitter.emit("metadata-changed", file.path as VaultPath);
       }),
@@ -132,6 +137,14 @@ export class NotesService {
     const file = this.#requireFile(path);
     if (!file.isOk()) return AsyncResult.err(file.error);
     return AsyncResult.fromPromise(this.#app.vault.read(file.value), (cause) => new NoteReadError(path, cause));
+  }
+
+  // `read` bypasses Obsidian's in-memory cache; callers that don't need write-fresh
+  // content (a size count, for instance) should read through the cache instead.
+  readCached(path: VaultPath): AsyncResult<string, NoteNotFoundError | NoteReadError> {
+    const file = this.#requireFile(path);
+    if (!file.isOk()) return AsyncResult.err(file.error);
+    return AsyncResult.fromPromise(this.#app.vault.cachedRead(file.value), (cause) => new NoteReadError(path, cause));
   }
 
   write(path: VaultPath, content: string): AsyncResult<void, NoteNotFoundError | NoteWriteError> {

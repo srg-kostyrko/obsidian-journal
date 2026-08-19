@@ -15,6 +15,7 @@ export {
 export { MarkdownRenderService } from "./internal/markdown-render-service";
 export { MetadataTypeService } from "./internal/metadata-type-service";
 export { NoteMetadataService } from "./internal/note-metadata-service";
+export { NoteSizeService, type NoteSizeEvents } from "./internal/note-size-service";
 export { NoticeService } from "./internal/notice-service";
 export { NotesService } from "./internal/notes-service";
 export { PluginData } from "./internal/plugin-data";

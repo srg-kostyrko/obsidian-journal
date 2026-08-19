@@ -19,12 +19,22 @@ import type {
 import type { Disposer } from "./input-suggests/types";
 import type { MarkdownRenderService } from "./internal/markdown-render-service";
 import type { NoteMetadataService } from "./internal/note-metadata-service";
+import type { NoteSizeEvents, NoteSizeService } from "./internal/note-size-service";
 import type { NotesService } from "./internal/notes-service";
 import type { NoticeService } from "./internal/notice-service";
 import type { PluginData } from "./internal/plugin-data";
 import type { TemplaterService } from "./internal/templater-service";
 import type { WorkspaceService } from "./internal/workspace-service";
-import type { MenuItemSpec, Note, NoteMetadata, NotesEvents, OpenMode, VaultPath, WorkspaceEvents } from "./types";
+import type {
+  MenuItemSpec,
+  Note,
+  NoteMetadata,
+  NotesEvents,
+  NoteSize,
+  OpenMode,
+  VaultPath,
+  WorkspaceEvents,
+} from "./types";
 
 interface FakeEntry {
   content: string;
@@ -396,6 +406,24 @@ export class FakeNoteMetadataService implements Pick<NoteMetadataService, "get" 
 
   emitResolved(): void {
     for (const callback of this.#resolvedCallbacks) callback();
+  }
+}
+
+export class FakeNoteSizeService implements Pick<NoteSizeService, "get" | "events"> {
+  readonly #sizes = new Map<VaultPath, NoteSize>();
+  readonly #emitter: TypedEmitter<NoteSizeEvents> = createNanoEvents();
+  readonly events: Subscribable<NoteSizeEvents> = this.#emitter;
+
+  // Stores and announces in one call, the way a real fill does — so a test that seeds
+  // after mount exercises the subscription rather than the seeding path.
+  setSize(path: VaultPath, size: NoteSize): void {
+    this.#sizes.set(path, size);
+    this.#emitter.emit("size-changed", path);
+  }
+
+  get(path: VaultPath): Option<NoteSize> {
+    const hit = this.#sizes.get(path);
+    return hit === undefined ? new None<NoteSize>() : new Some<NoteSize>(hit);
   }
 }
 

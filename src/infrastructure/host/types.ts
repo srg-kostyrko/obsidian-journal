@@ -16,7 +16,10 @@ export interface NotesEvents {
   created: (note: Note) => void;
   renamed: (event: { from: VaultPath; to: VaultPath }) => void;
   deleted: (path: VaultPath) => void;
+  // The parse changed. For "the bytes changed", use `modified`.
   "metadata-changed": (path: VaultPath) => void;
+  // The bytes changed. Fires before metadata-changed and without its parse.
+  modified: (path: VaultPath) => void;
 }
 
 export interface WorkspaceEvents {
