@@ -18,6 +18,7 @@ import UiDropdown from "@/ui/UiDropdown.vue";
 import UiIconButton from "@/ui/UiIconButton.vue";
 import UiSettingRow from "@/ui/UiSettingRow.vue";
 
+import { SINGLETON_CONDITION_TYPES } from "./condition-types";
 import ConditionItem from "./ConditionItem.vue";
 import DecorationCanvas from "./DecorationCanvas.vue";
 
@@ -43,7 +44,7 @@ const addConditionOptions = computed<{ value: string; label: string }[]>(() => {
   const allowed = props.conditionTypes;
   const used = new Set(values.conditions.map((c) => c.type));
   return allowed
-    .filter((t) => !used.has(t))
+    .filter((t) => !(used.has(t) && SINGLETON_CONDITION_TYPES.has(t)))
     .map((t) => ({ value: t, label: m.decoration_condition_type_label({ type: t }) }));
 });
 

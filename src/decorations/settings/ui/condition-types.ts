@@ -14,3 +14,13 @@ export const conditionTypeOptions: Record<
 };
 
 export const CALENDAR_CONDITION_TYPES: readonly JournalDecorationCondition["type"][] = ["date", "weekday"];
+
+// A type may repeat when a second instance can say something the first cannot. The three
+// parameterless predicates are idempotent; weekday already takes a set of days, so a second
+// instance collapses to the first under "or" and to nothing under "and".
+export const SINGLETON_CONDITION_TYPES: ReadonlySet<JournalDecorationCondition["type"]> = new Set([
+  "weekday",
+  "has-note",
+  "has-open-task",
+  "all-tasks-completed",
+]);

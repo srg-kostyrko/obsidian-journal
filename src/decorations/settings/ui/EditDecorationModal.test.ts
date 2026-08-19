@@ -3,7 +3,7 @@ import { cleanup, render, screen, waitFor } from "@testing-library/vue";
 import { afterEach, describe, expect, it, vi } from "vitest";
 
 import { Calendar } from "@/calendar";
-import type { JournalDecoration, JournalDecorationCondition } from "@/decorations";
+import { defaultCondition, type JournalDecoration, type JournalDecorationCondition } from "@/decorations";
 import { m } from "@/i18n";
 import { Container, provideInjectorOnApp } from "@/infrastructure/di";
 import { InputSuggestService, MetadataTypeService } from "@/infrastructure/host";
@@ -51,6 +51,33 @@ function mountModal(options: {
     },
   });
   return { submit, cancel };
+}
+
+const ALL_CONDITION_TYPES: readonly JournalDecorationCondition["type"][] = [
+  "title",
+  "tag",
+  "property",
+  "has-note",
+  "note-size",
+  "has-open-task",
+  "all-tasks-completed",
+  "date",
+  "weekday",
+  "offset",
+];
+
+const buildCondition = defaultCondition;
+
+async function mountWith(options: { conditions: JournalDecorationCondition[] }) {
+  mountModal({
+    conditionTypes: ALL_CONDITION_TYPES,
+    decoration: { mode: "and", conditions: options.conditions, styles: [{ type: "background", color: transparent }] },
+  });
+  await userEvent.click(screen.getByText(m.decoration_modal_add_condition()));
+  const rendered = ALL_CONDITION_TYPES.filter(
+    (t) => screen.queryByText(m.decoration_condition_type_label({ type: t })) !== null,
+  ).map((t) => ({ value: t, label: m.decoration_condition_type_label({ type: t }) }));
+  return { options: rendered };
 }
 
 describe("EditDecorationModal", () => {
@@ -123,6 +150,22 @@ describe("EditDecorationModal", () => {
       expect(screen.getByText(m.decoration_condition_type_label({ type: "date" }))).toBeTruthy();
       expect(screen.getByText(m.decoration_condition_type_label({ type: "weekday" }))).toBeTruthy();
       expect(screen.queryByText(m.decoration_condition_type_label({ type: "has-note" }))).toBeNull();
+    });
+
+    it("offers note-size again once one is already present", async () => {
+      const { options } = await mountWith({ conditions: [buildCondition("note-size")] });
+      expect(options.map((o) => o.value)).toContain("note-size");
+    });
+
+    it("does not offer has-note twice", async () => {
+      const { options } = await mountWith({ conditions: [buildCondition("has-note")] });
+      expect(options.map((o) => o.value)).not.toContain("has-note");
+    });
+
+    it("does not offer weekday twice", async () => {
+      // weekdays is already a set, so a second condition can say nothing new.
+      const { options } = await mountWith({ conditions: [buildCondition("weekday")] });
+      expect(options.map((o) => o.value)).not.toContain("weekday");
     });
   });
 
