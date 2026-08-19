@@ -72,8 +72,8 @@ export class NoteSizeService {
       if (this.#generation.get(path) !== generation) return;
       result.match({
         // Leaving the entry absent is the safe state, and the next get retries.
-        err: () => {
-          this.#logger.debug("failed to read note for sizing", { path });
+        err: (error) => {
+          this.#logger.debug("failed to read note for sizing", { path, error });
         },
         ok: (content) => {
           const next = countNoteSize(content);
@@ -88,7 +88,13 @@ export class NoteSizeService {
         },
       });
     } catch (error) {
-      this.#logger.debug("failed to size note", { path, error });
+      // AsyncResult's promise never rejects (every constructor maps rejection into
+      // Err), so the only way execution reaches here is a `size-changed` subscriber
+      // throwing during the emit above — a bug in whatever is listening (the
+      // decoration engine, from Task 5 on). nanoevents aborts its subscriber loop on
+      // a throw, so left uncaught this would also silently starve every subscriber
+      // registered after the one that threw.
+      this.#logger.warn("a size-changed subscriber threw", { path, error });
     } finally {
       if (this.#generation.get(path) === generation) this.#pending.delete(path);
     }

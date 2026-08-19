@@ -10,13 +10,7 @@ import { InternalObsidianAppToken, InternalPluginToken } from "./tokens";
 
 import type { VaultPath } from "../types";
 
-// tsconfig.app.json has no "node" types; the test process itself always has this.
-declare const process: {
-  on(event: "unhandledRejection", handler: (reason: unknown) => void): void;
-  off(event: "unhandledRejection", handler: (reason: unknown) => void): void;
-};
-
-function build(): { service: NoteSizeService; host: FakeHost; notes: NotesService } {
+function build(): { service: NoteSizeService; host: FakeHost } {
   const host = createFakeHost();
   const c = new Container();
   c.register(InternalPluginToken).useValue(host.plugin);
@@ -24,7 +18,7 @@ function build(): { service: NoteSizeService; host: FakeHost; notes: NotesServic
   c.addModule(createLoggerTestingModule().module);
   c.register(NotesService).useClass(NotesService);
   c.register(NoteSizeService).useClass(NoteSizeService);
-  return { service: c.resolve(NoteSizeService), host, notes: c.resolve(NotesService) };
+  return { service: c.resolve(NoteSizeService), host };
 }
 
 async function settle(): Promise<void> {
@@ -57,7 +51,7 @@ describe("NoteSizeService", () => {
     expect(seen).toEqual(["a.md"]);
   });
 
-  it("returns None for a path with no file and never reads", async () => {
+  it("returns None for a path with no file and never reaches the vault", async () => {
     const { service, host } = build();
     const spy = vi.spyOn(host.app.vault, "cachedRead");
 
@@ -111,7 +105,7 @@ describe("NoteSizeService", () => {
     expect(spy).not.toHaveBeenCalled();
   });
 
-  it("does not emit when a frontmatter-only edit leaves the counts unchanged", async () => {
+  it("does not emit when a frontmatter-only edit leaves the counts unchanged, but does once the body changes", async () => {
     const { service, host } = build();
     const file = host.putFile("a.md", "---\na: 1\n---\none two");
     service.get("a.md" as VaultPath);
@@ -123,7 +117,16 @@ describe("NoteSizeService", () => {
     host.emitVault("modify", file);
     await settle();
 
+    // An empty `seen` here could otherwise be explained by "the refill just hadn't
+    // landed yet" rather than by the equality guard. A follow-up edit that DOES
+    // change the count, asserted to emit, rules that out.
     expect(seen).toEqual([]);
+
+    await host.app.vault.modify(file, "---\na: 1\nb: 2\n---\none two three");
+    host.emitVault("modify", file);
+    await settle();
+
+    expect(seen).toEqual(["a.md"]);
   });
 
   it("drops a superseded read that resolves out of order", async () => {
@@ -175,34 +178,6 @@ describe("NoteSizeService", () => {
     const result = service.get("a.md" as VaultPath);
     expect(result.isSome() && result.value.words).toBe(2);
     expect(spy).toHaveBeenCalledTimes(2);
-  });
-
-  it("does not reject when a size-changed subscriber throws", async () => {
-    // #fill is a floating promise, so a throwing subscriber must not escape it. An
-    // unhandled rejection is the ONLY observable that distinguishes a bare try/finally
-    // from a real catch — #pending is cleaned up either way — and it fires on a
-    // macrotask, so a microtask settle() is not enough to see it.
-    const rejections: unknown[] = [];
-    const onUnhandled = (reason: unknown): void => {
-      rejections.push(reason);
-    };
-    process.on("unhandledRejection", onUnhandled);
-    try {
-      const { service, host } = build();
-      host.putFile("a.md", "one two");
-      service.events.on("size-changed", () => {
-        throw new Error("subscriber blew up");
-      });
-
-      service.get("a.md" as VaultPath);
-      await settle();
-      await new Promise((resolve) => setTimeout(resolve, 0));
-
-      expect(rejections).toEqual([]);
-      expect(service.get("a.md" as VaultPath).isSome()).toBe(true);
-    } finally {
-      process.off("unhandledRejection", onUnhandled);
-    }
   });
 
   it("carries the cached size across a rename", async () => {

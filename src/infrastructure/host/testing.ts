@@ -66,6 +66,7 @@ export class FakeNotesService implements Pick<
   | "allMarkdownNotes"
   | "create"
   | "read"
+  | "readCached"
   | "write"
   | "append"
   | "rename"
@@ -105,6 +106,12 @@ export class FakeNotesService implements Pick<
     this.#emitter.emit("metadata-changed", path);
   }
 
+  // Mirrors the real service: `modify` fires for the byte change, and the metadata
+  // re-parse (`metadata-changed`) follows it.
+  emitModified(path: VaultPath): void {
+    this.#emitter.emit("modified", path);
+  }
+
   externalEdit(path: VaultPath, content: string): void {
     const entry = this.#files.get(path);
     this.#files.set(path, {
@@ -113,6 +120,7 @@ export class FakeNotesService implements Pick<
       size: entry?.size ?? 0,
       mtime: entry?.mtime ?? 0,
     });
+    this.#emitter.emit("modified", path);
     this.#emitter.emit("metadata-changed", path);
   }
 
@@ -160,10 +168,17 @@ export class FakeNotesService implements Pick<
     return AsyncResult.ok(entry.content);
   }
 
+  // The fake has no in-memory-cache/disk distinction, so a cached read is just a read.
+  readCached(path: VaultPath): AsyncResult<string, NoteNotFoundError | NoteReadError> {
+    return this.read(path);
+  }
+
   write(path: VaultPath, content: string): AsyncResult<void, NoteNotFoundError | NoteWriteError> {
     const entry = this.#files.get(path);
     if (!entry) return AsyncResult.err(new NoteNotFoundError(path));
     this.#files.set(path, { ...entry, content });
+    this.#emitter.emit("modified", path);
+    this.#emitter.emit("metadata-changed", path);
     return AsyncResult.ok(undefined);
   }
 
