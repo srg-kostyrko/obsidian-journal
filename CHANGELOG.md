@@ -7,6 +7,8 @@ All notable changes to this project will be documented in this file.
 ### Features
 
 - Other plugins can now integrate with Journals through a documented API at `app.plugins.plugins.journals.api`, with types published as [`obsidian-journals-api`](https://www.npmjs.com/package/obsidian-journals-api). It covers listing journals, finding the note for a date, creating and opening one, and subscribing to journal and note changes. Because a vault can hold several journals of the same kind, reads return every match and writes ask which one to use — the same picker you see clicking a calendar cell. See [`docs/plugin-api.md`](docs/plugin-api.md).
+- A decoration can now match on a journal note's size: word or character count against a threshold, using `>`, `>=`, `<`, or `<=`. The count uses the same definition as Obsidian's own word count — frontmatter is not counted, everything else is, including code blocks and comments — so it matches the number Obsidian shows in its status bar.
+- Decorations can now carry more than one condition of the same type. Property, tag, title, date, offset, and note-size conditions can repeat; weekday, has note, has open tasks, and all tasks completed still cannot, since a second instance of those says nothing the first does not. This is what lets a single decoration express a band, like note size >= 250 and < 1000.
 
 ### Bug Fixes
 
