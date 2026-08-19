@@ -125,6 +125,17 @@ export function useCellDecorations(options: CellDecorationsOptions): ReadonlyMap
     }
   }
 
+  // Shared by metadata-changed and size-changed: both name a path, and both mean
+  // "re-evaluate whichever cell owns it, if any is currently live."
+  function repaintCell(path: VaultPath): void {
+    const key = keysByPath.get(path);
+    if (key === undefined) return;
+    const periodsAtKey = periodsByKey.get(key);
+    const slot = cells.get(key);
+    if (!periodsAtKey || !slot) return;
+    slot.value = engine.evaluateRange(periodsAtKey, gatherDecorations()).get(key) ?? [];
+  }
+
   watchEffect(reseed);
   provide(scope.map, cells);
 
@@ -138,22 +149,8 @@ export function useCellDecorations(options: CellDecorationsOptions): ReadonlyMap
   provide(scope.padding, sharedPadding);
 
   onMounted(() => {
-    const offMeta = notes.events.on("metadata-changed", (path) => {
-      const key = keysByPath.get(path);
-      if (key === undefined) return;
-      const periodsAtKey = periodsByKey.get(key);
-      const slot = cells.get(key);
-      if (!periodsAtKey || !slot) return;
-      slot.value = engine.evaluateRange(periodsAtKey, gatherDecorations()).get(key) ?? [];
-    });
-    const offSize = size.events.on("size-changed", (path) => {
-      const key = keysByPath.get(path);
-      if (key === undefined) return;
-      const periodsAtKey = periodsByKey.get(key);
-      const slot = cells.get(key);
-      if (!periodsAtKey || !slot) return;
-      slot.value = engine.evaluateRange(periodsAtKey, gatherDecorations()).get(key) ?? [];
-    });
+    const offMeta = notes.events.on("metadata-changed", repaintCell);
+    const offSize = size.events.on("size-changed", repaintCell);
     const offIndex = index.events.on("entryChanged", ({ entry, kind }) => {
       if (!journalNamesInScope.has(entry.journalName)) return;
       const journalOpt = journals.get(entry.journalName);

@@ -30,13 +30,18 @@ export class NoteSizeService {
       this.#pending.delete(path);
       this.#bumpGeneration(path);
     });
-    // A rename leaves content untouched, so the size moves with the path.
+    // A rename leaves content untouched, so the size moves with the path. From `to`'s
+    // perspective its size has just become known, having been unknown a moment earlier,
+    // so announce it the same way a fresh fill would — a listener keyed on `to` (e.g. a
+    // decoration cell that just adopted this path) has nothing else to react to.
     this.#notes.events.on("renamed", ({ from, to }) => {
       const hit = this.#sizes.get(from);
       this.#sizes.delete(from);
       this.#pending.delete(from);
       this.#bumpGeneration(from);
-      if (hit !== undefined) this.#sizes.set(to, hit);
+      if (hit === undefined) return;
+      this.#sizes.set(to, hit);
+      this.#emitter.emit("size-changed", to);
     });
   }
 

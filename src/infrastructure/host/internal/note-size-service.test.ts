@@ -193,6 +193,30 @@ describe("NoteSizeService", () => {
     expect(service.get("a.md" as VaultPath).isNone()).toBe(true);
   });
 
+  it("emits size-changed for the destination path when a rename moves a cached size", async () => {
+    const { service, host } = build();
+    const file = host.putFile("a.md", "one two");
+    service.get("a.md" as VaultPath);
+    await settle();
+
+    const seen: VaultPath[] = [];
+    service.events.on("size-changed", (path) => seen.push(path));
+    await host.app.vault.rename(file, "b.md");
+
+    expect(seen).toEqual(["b.md"]);
+  });
+
+  it("emits nothing when a renamed path had no cached size", async () => {
+    const { service, host } = build();
+    const file = host.putFile("a.md", "one two");
+
+    const seen: VaultPath[] = [];
+    service.events.on("size-changed", (path) => seen.push(path));
+    await host.app.vault.rename(file, "b.md");
+
+    expect(seen).toEqual([]);
+  });
+
   it("drops the cached size on delete", async () => {
     const { service, host } = build();
     const file = host.putFile("a.md", "one two");
