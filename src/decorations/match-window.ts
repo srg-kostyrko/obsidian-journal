@@ -49,3 +49,7 @@ export function needsNotes(decoration: JournalDecoration): boolean {
   if (conditions.length === 0) return false;
   return decoration.mode === "and" ? conditions.some(isNoteBased) : conditions.every(isNoteBased);
 }
+
+export function hasNoteSizeCondition(decoration: JournalDecoration): boolean {
+  return decoration.conditions.some((condition) => condition.type === "note-size");
+}

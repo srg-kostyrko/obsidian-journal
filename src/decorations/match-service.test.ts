@@ -236,6 +236,57 @@ describe("DecorationMatchService", () => {
     });
   });
 
+  describe("note-size", () => {
+    const noteSizeDecoration = buildDecoration({
+      mode: "or",
+      conditions: [buildCondition("note-size", { condition: "gt", value: 100 })],
+      styles: [buildStyle("background")],
+    });
+
+    it("does not preview a decoration carrying a note-size condition", () => {
+      // The window is not warm and a count would be a guess, so no badge is offered.
+      const path = "Daily/2026-05-25.md" as VaultPath;
+      const h = buildHarness({ daily: fixedJournal("daily", { type: "day" }, { decorations: [noteSizeDecoration] }) });
+      h.index.register({ journalName: "daily", anchor: date("2026-05-25").toAnchor(), path });
+      h.fakeMetadata.setMetadata(path, { title: "2026-05-25", tags: [], properties: {}, tasks: [] });
+
+      const badge = h.service.describe({ kind: "journal", journalName: "daily" }, 0);
+      expect(badge.kind).toBe("not-previewable");
+    });
+
+    it("still reports no-history for a note-size rule on a journal with no history", () => {
+      // The early return sits below the no-history check, so a journal whose timeline never
+      // overlaps the window still gets the more actionable verdict rather than going silent.
+      const h = buildHarness({
+        daily: fixedJournal(
+          "daily",
+          { type: "day" },
+          {
+            decorations: [noteSizeDecoration],
+            timeline: {
+              start: date("2026-08-01").toAnchor(),
+              end: { kind: "date", date: date("2026-01-01").toAnchor() },
+            },
+          },
+        ),
+      });
+
+      const badge = h.service.describe({ kind: "journal", journalName: "daily" }, 0);
+      expect(badge.kind).toBe("no-history");
+    });
+
+    it("still reports no-notes for a note-size rule when the window holds no notes", () => {
+      // The early return sits below the no-notes check too: needsNotes still fires for a
+      // note-size-only rule because match-window.ts's NOTE_BASED set carries "note-size".
+      const h = buildHarness({
+        daily: fixedJournal("daily", { type: "day" }, { decorations: [noteSizeDecoration] }),
+      });
+
+      const badge = h.service.describe({ kind: "journal", journalName: "daily" }, 0);
+      expect(badge.kind).toBe("no-notes");
+    });
+  });
+
   describe("direction", () => {
     it("looks forward for a journal whose timeline starts in the future", () => {
       // Swapping the isAfter comparison (or dropping the future branch entirely) leaves this

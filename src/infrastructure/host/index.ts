@@ -25,6 +25,7 @@ export { TemplatesService } from "./internal/templates-service";
 export { renderIcon } from "./internal/icons";
 export { defineOpenMode } from "./define-open-mode";
 export { basenameOf } from "./paths";
+export { useNoteSizeVersion } from "./use-note-size-version";
 export {
   defineModal,
   ModalCancelled,

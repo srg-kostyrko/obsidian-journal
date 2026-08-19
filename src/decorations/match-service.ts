@@ -10,7 +10,13 @@ import type { JournalConfig } from "@/journals/config";
 import { DecorationsStore } from "./decorations-store";
 import { DecorationEngine, hasOffsetCondition, periodKindForWrite, type DecorationBinding } from "./engine";
 import { UnknownDecorationError } from "./errors";
-import { CUSTOM_MATCH_HORIZON, fixedWindow, needsNotes, type WindowDirection } from "./match-window";
+import {
+  CUSTOM_MATCH_HORIZON,
+  fixedWindow,
+  hasNoteSizeCondition,
+  needsNotes,
+  type WindowDirection,
+} from "./match-window";
 
 import type { CalendarDecoration, JournalDecoration } from "./config";
 import type { CalendarDecorationOwner, DecorationOwner } from "./owner";
@@ -32,7 +38,8 @@ export type MatchBadge =
       readonly direction: WindowDirection;
     }
   | { readonly kind: "no-history" }
-  | { readonly kind: "no-notes" };
+  | { readonly kind: "no-notes" }
+  | { readonly kind: "not-previewable" };
 
 export class DecorationMatchService {
   readonly #engine = inject(DecorationEngine);
@@ -94,6 +101,10 @@ export class DecorationMatchService {
     if (needsNotes(decoration) && clipped.every((period) => !this.#index.has(journalName, period.anchor.toAnchor()))) {
       return { kind: "no-notes" };
     }
+
+    // A note-size rule cannot be estimated synchronously, and returning here means the
+    // settings page reads no files at all.
+    if (hasNoteSizeCondition(decoration)) return { kind: "not-previewable" };
 
     const binding: DecorationBinding = { kind: "journal", journalName, index, decoration };
     const matched = this.#engine.explainRange(clipped, [binding]).size;

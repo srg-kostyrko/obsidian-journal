@@ -47,7 +47,7 @@ const badges = computed<readonly MatchBadge[]>(() =>
   decorations.value.map((_, index) => matches.describe(owner, index)),
 );
 
-function badgeText(badge: MatchBadge): string {
+function badgeText(badge: MatchBadge): string | null {
   return match(badge)
     .with({ kind: "matched", direction: "past" }, (b) =>
       m.decoration_badge_matched_past({ matched: b.matched, total: b.total, unit: b.unit }),
@@ -63,6 +63,7 @@ function badgeText(badge: MatchBadge): string {
     )
     .with({ kind: "no-history" }, () => m.decoration_badge_no_history())
     .with({ kind: "no-notes" }, () => m.decoration_badge_no_notes())
+    .with({ kind: "not-previewable" }, () => null)
     .exhaustive();
 }
 
@@ -132,7 +133,7 @@ function remove(index: number): void {
             <span>{{ describeCondition(condition, calendar) }}</span>
           </template>
         </div>
-        <div class="row-badge">{{ badgeText(badges[index]) }}</div>
+        <div v-if="badgeText(badges[index])" class="row-badge">{{ badgeText(badges[index]) }}</div>
       </template>
       <UiIconButton :icon="icons.action.configure" :tooltip="m.decoration_edit()" @click="edit(index)" />
       <UiIconButton :icon="icons.action.delete" :tooltip="m.decoration_delete()" @click="remove(index)" />
