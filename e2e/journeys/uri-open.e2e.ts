@@ -34,6 +34,11 @@ describe("open via uri", () => {
     await seedNote("uri-weekly-template.md", "Weekly template for {{journal_name}}.\n");
   });
 
+  // A leaked popout stays the active window and steals the next spec's modals, so the cleanup
+  // has to survive a failing assertion — inline at the end of a test, it is skipped by the very
+  // failures that make the leak matter.
+  afterEach(closePopoutWindows);
+
   describe("by journal name", () => {
     it("opens the journal's entry for an explicit date", async () => {
       await openViaUri({ journal: "work", date: "2027-04-05" });
@@ -100,9 +105,6 @@ describe("open via uri", () => {
       await browser.waitUntil(async () => (await popoutWindowCount()) === before + 1, {
         timeoutMsg: "window mode did not open a popout window",
       });
-
-      // The popout would otherwise stay the active window and steal the next test's modals.
-      await closePopoutWindows();
     });
   });
 
@@ -122,8 +124,6 @@ describe("open via uri", () => {
       await waitForActiveNote("work/2027-06-04.md");
 
       expect(await mainWindowHoldsNote("work/2027-06-04.md")).toBe(true);
-
-      await closePopoutWindows();
     });
 
     it("opens a second pane for an explicit tab mode when the entry is already open", async () => {
