@@ -4,8 +4,8 @@ import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { CalendarDate } from "@/calendar";
 import { installTestCalendar } from "@/calendar/testing";
 import type { Container } from "@/infrastructure/di";
-import { NoteMetadataService, type VaultPath } from "@/infrastructure/host";
-import { FakeNoteMetadataService } from "@/infrastructure/host/testing";
+import { NoteMetadataService, NoteSizeService, type VaultPath } from "@/infrastructure/host";
+import { FakeNoteMetadataService, FakeNoteSizeService } from "@/infrastructure/host/testing";
 import { CycleService, JournalsIndex, JournalsRepository, TimelineService } from "@/journals";
 import type { JournalConfig } from "@/journals/config";
 import { customJournal, fakeRepo, fixedJournal } from "@/journals/testing";
@@ -41,6 +41,7 @@ function buildHarness(journals: Record<string, JournalConfig> = {}): Harness {
   c.register(TimelineService).useClass(TimelineService);
   const fakeMetadata = new FakeNoteMetadataService();
   c.register(NoteMetadataService).useValue(fakeMetadata as unknown as NoteMetadataService);
+  c.register(NoteSizeService).useValue(new FakeNoteSizeService() as unknown as NoteSizeService);
   c.register(DecorationEngine).useClass(DecorationEngine);
   const shelfStorage: Record<string, ShelfConfig> = {};
   c.register(ShelvesRepository).useValue(ShelvesRepository.fromParts(shelfStorage, createNanoEvents<ShelvesEvents>()));

@@ -2,8 +2,8 @@ import { match } from "ts-pattern";
 
 import type { AnchorString, Period, PeriodKind } from "@/calendar";
 import { inject } from "@/infrastructure/di";
-import { NoteMetadataService } from "@/infrastructure/host";
-import type { NoteMetadata } from "@/infrastructure/host";
+import { NoteMetadataService, NoteSizeService } from "@/infrastructure/host";
+import type { NoteMetadata, NoteSize } from "@/infrastructure/host";
 import type { Option } from "@/infrastructure/result";
 import { CycleService, JournalsIndex, JournalsRepository, TimelineService } from "@/journals";
 import type { JournalConfig, JournalWrite } from "@/journals/config";
@@ -11,6 +11,7 @@ import type { JournalConfig, JournalWrite } from "@/journals/config";
 import {
   allTasksCompleted,
   checkDate,
+  checkNoteSize,
   checkOffset,
   checkProperty,
   checkTag,
@@ -92,6 +93,7 @@ export class DecorationEngine {
   readonly #journals = inject(JournalsRepository);
   readonly #index = inject(JournalsIndex);
   readonly #metadata = inject(NoteMetadataService);
+  readonly #size = inject(NoteSizeService);
   readonly #cycle = inject(CycleService);
   readonly #timeline = inject(TimelineService);
 
@@ -100,10 +102,11 @@ export class DecorationEngine {
     period: Period,
     journal: JournalConfig,
     metadata: () => Option<NoteMetadata>,
+    size: () => Option<NoteSize>,
   ): boolean {
     const { mode, conditions } = decoration;
     if (conditions.length === 0) return false;
-    const test = (c: JournalDecorationCondition): boolean => this.#check(c, period, journal, metadata);
+    const test = (c: JournalDecorationCondition): boolean => this.#check(c, period, journal, metadata, size);
     return mode === "or" ? conditions.some(test) : conditions.every(test);
   }
 
@@ -123,6 +126,7 @@ export class DecorationEngine {
     period: Period,
     journal: JournalConfig,
     metadata: () => Option<NoteMetadata>,
+    size: () => Option<NoteSize>,
   ): boolean {
     const meta = (): NoteMetadata | null => {
       const opt = metadata();
@@ -138,6 +142,7 @@ export class DecorationEngine {
       .with({ type: "has-note" }, () => metadata().isSome())
       .with({ type: "has-open-task" }, () => metadata().match({ none: () => false, some: hasOpenTask }))
       .with({ type: "all-tasks-completed" }, () => metadata().match({ none: () => false, some: allTasksCompleted }))
+      .with({ type: "note-size" }, (c) => size().match({ none: () => false, some: (s) => checkNoteSize(c, s) }))
       .exhaustive();
   }
 
@@ -173,6 +178,16 @@ export class DecorationEngine {
         .entryByAnchor(journalName, anchorString)
         .flatMap((entry) => this.#metadata.get(entry.path));
       metaCache.set(key, value);
+      return value;
+    };
+
+    const sizeCache = new Map<string, Option<NoteSize>>();
+    const sizeFor = (journalName: string, anchorString: AnchorString): Option<NoteSize> => {
+      const key = `${journalName}::${anchorString}`;
+      const hit = sizeCache.get(key);
+      if (hit !== undefined) return hit;
+      const value = this.#index.entryByAnchor(journalName, anchorString).flatMap((entry) => this.#size.get(entry.path));
+      sizeCache.set(key, value);
       return value;
     };
 
@@ -224,8 +239,14 @@ export class DecorationEngine {
         if (!periodMatchesWrite(period.kind, config.write.type)) continue;
         if (!inTimeline(binding.journalName, period)) continue;
         const anchorString = period.anchor.toAnchor();
-        if (!this.#matches(binding.decoration, period, config, () => metadataFor(binding.journalName, anchorString)))
-          continue;
+        const matched = this.#matches(
+          binding.decoration,
+          period,
+          config,
+          () => metadataFor(binding.journalName, anchorString),
+          () => sizeFor(binding.journalName, anchorString),
+        );
+        if (!matched) continue;
         push(period, binding);
       }
     }

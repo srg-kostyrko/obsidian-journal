@@ -7,8 +7,14 @@ import { CalendarDate, DayPeriod, WeekPeriod } from "@/calendar";
 import type { Period } from "@/calendar";
 import { installTestCalendar } from "@/calendar/testing";
 import { provideInjectorOnApp, type Container } from "@/infrastructure/di";
-import { NoteMetadataService, NotesService, type NotesEvents, type VaultPath } from "@/infrastructure/host";
-import { FakeNoteMetadataService } from "@/infrastructure/host/testing";
+import {
+  NoteMetadataService,
+  NoteSizeService,
+  NotesService,
+  type NotesEvents,
+  type VaultPath,
+} from "@/infrastructure/host";
+import { FakeNoteMetadataService, FakeNoteSizeService } from "@/infrastructure/host/testing";
 import { CycleService, JournalsIndex, JournalsRepository, TimelineService } from "@/journals";
 import type { JournalConfig } from "@/journals/config";
 import { fakeRepo, fixedJournal } from "@/journals/testing";
@@ -33,6 +39,7 @@ interface Harness {
   c: Container;
   notesEmitter: Emitter<NotesEvents>;
   fakeMetadata: FakeNoteMetadataService;
+  size: FakeNoteSizeService;
   store: DecorationsStore;
 }
 
@@ -56,6 +63,8 @@ function buildHarnessFrom(journals: JournalsRepository, notesEmitter: Emitter<No
   c.register(TimelineService).useClass(TimelineService);
   const fakeMetadata = new FakeNoteMetadataService();
   c.register(NoteMetadataService).useValue(fakeMetadata as unknown as NoteMetadataService);
+  const size = new FakeNoteSizeService();
+  c.register(NoteSizeService).useValue(size as unknown as NoteSizeService);
   c.register(NotesService).useValue({ events: notesEmitter } as unknown as NotesService);
   c.register(DecorationEngine).useClass(DecorationEngine);
   const shelfStorage = reactive<Record<string, ShelfConfig>>({
@@ -64,7 +73,7 @@ function buildHarnessFrom(journals: JournalsRepository, notesEmitter: Emitter<No
   c.register(ShelvesRepository).useValue(ShelvesRepository.fromParts(shelfStorage, createNanoEvents<ShelvesEvents>()));
   c.register(DecorationsStore).useClass(DecorationsStore);
   const store = c.resolve(DecorationsStore);
-  return { c, notesEmitter, fakeMetadata, store };
+  return { c, notesEmitter, fakeMetadata, size, store };
 }
 
 function buildHarness(decorations: JournalConfig["decorations"] = []): Harness {

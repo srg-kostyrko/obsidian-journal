@@ -21,6 +21,7 @@ export {
   type JournalDecorationCorner,
   type JournalDecorationDateCondition,
   type JournalDecorationIcon,
+  type JournalDecorationNoteSizeCondition,
   type JournalDecorationNumberPropertyCondition,
   type JournalDecorationOffsetCondition,
   type JournalDecorationPropertyCondition,

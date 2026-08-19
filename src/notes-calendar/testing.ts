@@ -6,6 +6,7 @@ import { Container } from "@/infrastructure/di";
 import { FlowsModule } from "@/infrastructure/flows";
 import {
   NoteMetadataService,
+  NoteSizeService,
   NoticeService,
   NotesService,
   PluginData,
@@ -16,6 +17,7 @@ import { ModalService } from "@/infrastructure/host/modals";
 import { FakeModalService } from "@/infrastructure/host/modals/testing";
 import {
   FakeNoteMetadataService,
+  FakeNoteSizeService,
   FakeNoticeService,
   FakePluginData,
   FakeWorkspaceService,
@@ -50,6 +52,7 @@ export interface NotesCalendarHarness {
   readonly index: JournalsIndex;
   readonly workspace: FakeWorkspaceService;
   readonly metadata: FakeNoteMetadataService;
+  readonly size: FakeNoteSizeService;
   readonly active: FakeActiveEntryViewModel;
 }
 
@@ -76,6 +79,8 @@ export function buildNotesCalendarHarness(options: {
 
   const metadata = new FakeNoteMetadataService();
   container.register(NoteMetadataService).useValue(metadata as unknown as NoteMetadataService);
+  const size = new FakeNoteSizeService();
+  container.register(NoteSizeService).useValue(size as unknown as NoteSizeService);
   container.register(NotesService).useValue({ events: createNanoEvents<NotesEvents>() } as unknown as NotesService);
 
   container.register(DecorationEngine).useClass(DecorationEngine);
@@ -95,5 +100,5 @@ export function buildNotesCalendarHarness(options: {
 
   const index = container.resolve(JournalsIndex);
 
-  return { container, index, workspace, metadata, active };
+  return { container, index, workspace, metadata, size, active };
 }

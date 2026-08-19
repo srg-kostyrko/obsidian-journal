@@ -77,6 +77,11 @@ describe("ConditionItem", () => {
     expect(screen.getByRole("spinbutton")).toBeTruthy();
   });
 
+  it("renders ConditionNoteSize for a note-size condition", () => {
+    mount({ type: "note-size", unit: "words", condition: "gt", value: 0 });
+    expect(screen.getByLabelText(m.decoration_condition_note_size_value_label())).toBeTruthy();
+  });
+
   it("renders ConditionTypeOnly for has-note", () => {
     mount({ type: "has-note" });
     expect(screen.getByText(m.decoration_condition_has_note_describe())).toBeTruthy();

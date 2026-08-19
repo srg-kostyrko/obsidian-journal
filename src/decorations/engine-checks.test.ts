@@ -9,6 +9,7 @@ import type { JournalConfig } from "@/journals/config";
 import {
   allTasksCompleted,
   checkDate,
+  checkNoteSize,
   checkOffset,
   checkProperty,
   checkTag,
@@ -365,6 +366,40 @@ describe("engine-checks", () => {
 
     it("is false on empty task list", () => {
       expect(allTasksCompleted(meta({ tasks: [] }))).toBe(false);
+    });
+  });
+
+  describe("checkNoteSize", () => {
+    const size = { words: 250, characters: 1400 };
+
+    it("compares words with gt", () => {
+      expect(checkNoteSize(buildCondition("note-size", { condition: "gt", value: 249 }), size)).toBe(true);
+      expect(checkNoteSize(buildCondition("note-size", { condition: "gt", value: 250 }), size)).toBe(false);
+    });
+
+    it("compares words with gte", () => {
+      expect(checkNoteSize(buildCondition("note-size", { condition: "gte", value: 250 }), size)).toBe(true);
+    });
+
+    it("compares words with lt", () => {
+      expect(checkNoteSize(buildCondition("note-size", { condition: "lt", value: 251 }), size)).toBe(true);
+      expect(checkNoteSize(buildCondition("note-size", { condition: "lt", value: 250 }), size)).toBe(false);
+    });
+
+    it("compares words with lte", () => {
+      expect(checkNoteSize(buildCondition("note-size", { condition: "lte", value: 250 }), size)).toBe(true);
+    });
+
+    it("compares characters when the unit is characters", () => {
+      const condition = buildCondition("note-size", { unit: "characters", condition: "gt", value: 1000 });
+      expect(checkNoteSize(condition, size)).toBe(true);
+      expect(checkNoteSize({ ...condition, value: 1400 }, size)).toBe(false);
+    });
+
+    it("matches an empty note against a lt threshold", () => {
+      expect(
+        checkNoteSize(buildCondition("note-size", { condition: "lt", value: 100 }), { words: 0, characters: 0 }),
+      ).toBe(true);
     });
   });
 });

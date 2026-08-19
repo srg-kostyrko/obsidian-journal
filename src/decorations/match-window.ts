@@ -32,6 +32,7 @@ const NOTE_BASED: ReadonlySet<JournalDecorationCondition["type"]> = new Set([
   "tag",
   "property",
   "has-note",
+  "note-size",
   "has-open-task",
   "all-tasks-completed",
 ]);

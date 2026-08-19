@@ -53,6 +53,13 @@ export function describeCondition(condition: JournalDecorationCondition, calenda
       }),
     )
     .with({ type: "has-note" }, () => m.decoration_condition_has_note_describe())
+    .with({ type: "note-size" }, (c) =>
+      m.decoration_condition_note_size_describe({
+        unit: c.unit,
+        op: m.decoration_string_op_label({ op: c.condition }),
+        value: c.value,
+      }),
+    )
     .with({ type: "has-open-task" }, () => m.decoration_condition_has_open_task_describe())
     .with({ type: "all-tasks-completed" }, () => m.decoration_condition_all_tasks_completed_describe())
     .exhaustive();

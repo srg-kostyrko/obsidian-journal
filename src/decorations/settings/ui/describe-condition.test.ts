@@ -127,6 +127,30 @@ describe("describeCondition", () => {
     });
   });
 
+  describe("note-size", () => {
+    it("renders the localized note-size clause in words", () => {
+      expect(describeCondition({ type: "note-size", unit: "words", condition: "gt", value: 250 }, calendar)).toBe(
+        m.decoration_condition_note_size_describe({
+          unit: "words",
+          op: m.decoration_string_op_label({ op: "gt" }),
+          value: 250,
+        }),
+      );
+    });
+
+    it("renders the localized note-size clause in characters", () => {
+      expect(
+        describeCondition({ type: "note-size", unit: "characters", condition: "lte", value: 1000 }, calendar),
+      ).toBe(
+        m.decoration_condition_note_size_describe({
+          unit: "characters",
+          op: m.decoration_string_op_label({ op: "lte" }),
+          value: 1000,
+        }),
+      );
+    });
+  });
+
   describe("all-tasks-completed", () => {
     it("renders the localized all-tasks-completed clause", () => {
       expect(describeCondition({ type: "all-tasks-completed" }, calendar)).toBe(

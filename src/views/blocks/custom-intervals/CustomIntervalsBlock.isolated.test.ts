@@ -8,8 +8,15 @@ import type { AnchorString } from "@/calendar/types";
 import { decorationsSlice, DecorationEngine, DecorationsStore } from "@/decorations";
 import { buildCondition, buildDecoration, buildStyle } from "@/decorations/testing";
 import { Container, provideInjectorOnApp } from "@/infrastructure/di";
-import { NoteMetadataService, NotesService, PluginData, type NotesEvents, type VaultPath } from "@/infrastructure/host";
-import { FakeNoteMetadataService, FakePluginData } from "@/infrastructure/host/testing";
+import {
+  NoteMetadataService,
+  NoteSizeService,
+  NotesService,
+  PluginData,
+  type NotesEvents,
+  type VaultPath,
+} from "@/infrastructure/host";
+import { FakeNoteMetadataService, FakeNoteSizeService, FakePluginData } from "@/infrastructure/host/testing";
 import { createLoggerTestingModule } from "@/infrastructure/logger/testing";
 import { CycleService, JournalsIndex, JournalsRepository, TimelineService } from "@/journals";
 import type { JournalConfig } from "@/journals";
@@ -69,6 +76,7 @@ function mountBlock(config: CustomIntervalsConfig, contextOverride: Partial<View
   container.register(DecorationEngine).useClass(DecorationEngine);
   const metadata = new FakeNoteMetadataService();
   container.register(NoteMetadataService).useValue(metadata as unknown as NoteMetadataService);
+  container.register(NoteSizeService).useValue(new FakeNoteSizeService() as unknown as NoteSizeService);
   container.register(NotesService).useValue({ events: createNanoEvents<NotesEvents>() } as unknown as NotesService);
   // The fixed decoration scope always opts into calendar decorations, so DecorationsStore's
   // settings backing must exist even for tests that never save a vault-wide or shelf decoration.

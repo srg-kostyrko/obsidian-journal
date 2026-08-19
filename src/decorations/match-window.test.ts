@@ -84,6 +84,11 @@ describe("needsNotes", () => {
     expect(needsNotes(decoration)).toBe(true);
   });
 
+  it("treats a note-size condition as needing notes", () => {
+    const decoration = buildDecoration({ mode: "and", conditions: [buildCondition("note-size")] });
+    expect(needsNotes(decoration)).toBe(true);
+  });
+
   it("treats an offset condition as not needing notes", () => {
     const decoration = buildDecoration({ mode: "and", conditions: [buildCondition("offset")] });
     expect(needsNotes(decoration)).toBe(false);

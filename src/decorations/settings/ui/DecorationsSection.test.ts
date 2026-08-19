@@ -18,10 +18,10 @@ import {
 import { m } from "@/i18n";
 import { provideInjectorOnApp } from "@/infrastructure/di";
 import { Flows } from "@/infrastructure/flows";
-import { NoteMetadataService, NoticeService } from "@/infrastructure/host";
+import { NoteMetadataService, NoteSizeService, NoticeService } from "@/infrastructure/host";
 import { ModalService } from "@/infrastructure/host/modals";
 import { FakeModalService } from "@/infrastructure/host/modals/testing";
-import { FakeNoteMetadataService, FakeNoticeService } from "@/infrastructure/host/testing";
+import { FakeNoteMetadataService, FakeNoteSizeService, FakeNoticeService } from "@/infrastructure/host/testing";
 import {
   CycleService,
   JournalsIndex,
@@ -103,6 +103,7 @@ function mount(owner: DecorationOwner, decorations: readonly JournalDecoration[]
   container.register(CycleService).useClass(CycleService);
   container.register(TimelineService).useClass(TimelineService);
   container.register(NoteMetadataService).useValue(fakeMetadata as unknown as NoteMetadataService);
+  container.register(NoteSizeService).useValue(new FakeNoteSizeService() as unknown as NoteSizeService);
   container.register(DecorationEngine).useClass(DecorationEngine);
   container.register(DecorationMatchService).useClass(DecorationMatchService);
 

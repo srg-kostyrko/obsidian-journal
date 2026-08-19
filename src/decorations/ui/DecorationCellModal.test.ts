@@ -15,8 +15,8 @@ import {
 } from "@/decorations";
 import { m } from "@/i18n";
 import { provideInjectorOnApp } from "@/infrastructure/di";
-import { NoteMetadataService, type VaultPath } from "@/infrastructure/host";
-import { FakeNoteMetadataService } from "@/infrastructure/host/testing";
+import { NoteMetadataService, NoteSizeService, type VaultPath } from "@/infrastructure/host";
+import { FakeNoteMetadataService, FakeNoteSizeService } from "@/infrastructure/host/testing";
 import { CycleService, JournalsIndex, JournalsRepository, TimelineService, type JournalsEvents } from "@/journals";
 import type { JournalConfig } from "@/journals/config";
 import { customJournal, fixedJournal } from "@/journals/testing";
@@ -70,6 +70,7 @@ function mount(options: MountOptions) {
   container.register(CycleService).useClass(CycleService);
   container.register(TimelineService).useClass(TimelineService);
   container.register(NoteMetadataService).useValue(fakeMetadata as unknown as NoteMetadataService);
+  container.register(NoteSizeService).useValue(new FakeNoteSizeService() as unknown as NoteSizeService);
   container.register(DecorationEngine).useClass(DecorationEngine);
   container.register(Calendar).useValue(testCalendar());
 
