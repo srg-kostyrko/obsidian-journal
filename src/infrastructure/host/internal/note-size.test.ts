@@ -57,6 +57,29 @@ describe("countNoteSize", () => {
     it("counts everything when there is no frontmatter", () => {
       expect(countNoteSize("body text").words).toBe(2);
     });
+
+    it("counts everything when the opening delimiter has trailing whitespace before the newline", () => {
+      // Obsidian's own opening-delimiter regex (`/^---(\r?\n)/`) requires "---" immediately
+      // followed by the line break, so trailing spaces here mean this never opens frontmatter.
+      expect(countNoteSize("---   \nfoo\n---\nbody").words).toBe(4);
+    });
+
+    it("counts everything when the closing delimiter has trailing whitespace before the newline", () => {
+      // Same rule applied to the close: Obsidian's closing regex (`/---(\r?\n|$)/`) requires
+      // "---" immediately followed by the line break, so this "close" is never recognized and
+      // the block reads as unterminated.
+      expect(countNoteSize("---\nfoo\n---   \nbody").words).toBe(4);
+    });
+
+    it("strips CRLF frontmatter", () => {
+      const result = countNoteSize("---\r\nfoo\r\n---\r\nbody");
+      expect(result.words).toBe(1);
+      expect(result.characters).toBe("body".length);
+    });
+
+    it("requires the closing delimiter to start its own line", () => {
+      expect(countNoteSize("---\nfoo ---\nbar\n").words).toBe(4);
+    });
   });
 
   describe("characters", () => {

@@ -13,19 +13,29 @@ const WORD_PATTERN = new RegExp(
   "g",
 );
 
-const FRONTMATTER_CLOSE = /^---\s*$/m;
-
+// Mirrors Obsidian's own frontmatter boundaries (`_T` in app.js) exactly: both delimiters
+// must be `---` immediately followed by `\r?\n` (no trailing whitespace tolerated), and the
+// closing one must start its own line. `frontmatterClose` is `g`-flagged and driven by
+// `lastIndex`, so it is constructed fresh inside the function on every call rather than
+// hoisted to module scope — a shared regex would carry `lastIndex` state across calls (or
+// across a reentrant call landing mid-loop), producing an intermittent wrong count that no
+// single-call table test would reliably catch.
 function stripFrontmatter(content: string): string {
-  if (!content.startsWith("---")) return content;
-  const firstBreak = content.indexOf("\n");
-  if (firstBreak === -1) return content;
-  if (content.slice(3, firstBreak).trim() !== "") return content;
-  const rest = content.slice(firstBreak + 1);
-  const close = FRONTMATTER_CLOSE.exec(rest);
+  const open = /^---(\r?\n)/.exec(content);
+  if (!open) return content;
+  const afterOpen = open.index + open[0].length;
+
+  const frontmatterClose = /---(\r?\n|$)/g;
+  frontmatterClose.lastIndex = afterOpen;
+  let close = frontmatterClose.exec(content);
+  // The closing delimiter must start its own line — a "---" mid-line (e.g. "foo ---\n")
+  // does not end the block, so keep searching past it.
+  while (close && content.charAt(close.index - 1) !== "\n") {
+    close = frontmatterClose.exec(content);
+  }
   // An unterminated block is not frontmatter — the whole content counts.
   if (!close) return content;
-  const after = rest.indexOf("\n", close.index);
-  return after === -1 ? "" : rest.slice(after + 1);
+  return content.slice(close.index + close[0].length);
 }
 
 export function countNoteSize(content: string): NoteSize {
