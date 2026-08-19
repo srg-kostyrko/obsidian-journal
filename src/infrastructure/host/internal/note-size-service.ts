@@ -28,16 +28,29 @@ export class NoteSizeService {
     this.#notes.events.on("deleted", (path) => {
       this.#sizes.delete(path);
       this.#pending.delete(path);
-      this.#generation.delete(path);
+      this.#bumpGeneration(path);
     });
     // A rename leaves content untouched, so the size moves with the path.
     this.#notes.events.on("renamed", ({ from, to }) => {
       const hit = this.#sizes.get(from);
       this.#sizes.delete(from);
       this.#pending.delete(from);
-      this.#generation.delete(from);
+      this.#bumpGeneration(from);
       if (hit !== undefined) this.#sizes.set(to, hit);
     });
+  }
+
+  // Deleting the entry (rather than bumping it) would reset the sequence to 0, so
+  // the next fill for this path would reuse generation 1 — the same number a still
+  // in-flight fill from before the delete/rename may be holding. That in-flight fill
+  // would then pass the "am I still current" check and both clobber #sizes with
+  // stale content and delete #pending out from under the fresh fill. Bumping instead
+  // guarantees every future fill for this path gets a generation no in-flight fill
+  // could already hold.
+  #bumpGeneration(path: VaultPath): number {
+    const next = (this.#generation.get(path) ?? 0) + 1;
+    this.#generation.set(path, next);
+    return next;
   }
 
   // Only paths already in flight or cached are worth re-reading; anything else is a
@@ -51,8 +64,7 @@ export class NoteSizeService {
   // Called as a floating promise, so it must not be able to reject: the emit below runs
   // subscribers synchronously and one of them re-evaluates decorations.
   async #fill(path: VaultPath): Promise<void> {
-    const generation = (this.#generation.get(path) ?? 0) + 1;
-    this.#generation.set(path, generation);
+    const generation = this.#bumpGeneration(path);
     this.#pending.add(path);
     try {
       const result = await this.#notes.readCached(path);

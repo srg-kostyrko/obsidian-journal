@@ -149,6 +149,34 @@ describe("NoteSizeService", () => {
     expect(spy).toHaveBeenCalledTimes(2);
   });
 
+  it("does not let a stale fill for a renamed-away path corrupt a fresh note at the same path", async () => {
+    const { service, host } = build();
+    const file = host.putFile("a.md", "one two three four five");
+    // Fill A starts for "a.md" and hangs mid-read.
+    const { promise: staleRead, resolve: releaseStale } = Promise.withResolvers<string>();
+    const spy = vi.spyOn(host.app.vault, "cachedRead");
+    spy.mockReturnValueOnce(staleRead);
+    service.get("a.md" as VaultPath);
+
+    // "a.md" is renamed away while A is still in flight.
+    await host.app.vault.rename(file, "renamed-away.md");
+
+    // A new note lands at the now-free "a.md" path and a cell asks for it — fill B.
+    host.putFile("a.md", "one two");
+    service.get("a.md" as VaultPath);
+    await settle();
+
+    // The stale read for the old "a.md" resolves last, after B already landed. It must
+    // not overwrite B's fresh value, even though a naive generation reset (delete
+    // instead of bump on rename) would let it reuse B's own generation number.
+    releaseStale("one two three four five");
+    await settle();
+
+    const result = service.get("a.md" as VaultPath);
+    expect(result.isSome() && result.value.words).toBe(2);
+    expect(spy).toHaveBeenCalledTimes(2);
+  });
+
   it("does not reject when a size-changed subscriber throws", async () => {
     // #fill is a floating promise, so a throwing subscriber must not escape it. An
     // unhandled rejection is the ONLY observable that distinguishes a bare try/finally
