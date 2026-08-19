@@ -943,8 +943,8 @@
 				"unit"
 			],
 			"match": {
-				"unit=words": "노트 단어 수가 {op} {value}",
-				"unit=characters": "노트 문자 수가 {op} {value}"
+				"unit=words": "노트 단어 수 {op} {value}",
+				"unit=characters": "노트 문자 수 {op} {value}"
 			}
 		}
 	],

@@ -754,8 +754,8 @@
 				"unit"
 			],
 			"match": {
-				"unit=words": "ノートの単語数が {op} {value}",
-				"unit=characters": "ノートの文字数が {op} {value}"
+				"unit=words": "ノートの単語数 {op} {value}",
+				"unit=characters": "ノートの文字数 {op} {value}"
 			}
 		}
 	],
