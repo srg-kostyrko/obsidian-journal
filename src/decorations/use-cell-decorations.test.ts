@@ -389,6 +389,59 @@ describe("useCellDecorations", () => {
       expect(slot.value).toHaveLength(1);
     });
 
+    it("updates the affected anchor when a note size lands", async () => {
+      const decoration = buildDecoration({
+        mode: "or",
+        conditions: [buildCondition("note-size", { condition: "gt", value: 100 })],
+        styles: [buildStyle("background")],
+      });
+      const h = buildHarness([decoration]);
+      const period = DayPeriod.containing(date("2026-05-25"));
+      const path = "Daily/2026-05-25.md" as VaultPath;
+      h.c.resolve(JournalsIndex).register({ journalName: "daily", anchor: period.anchor.toAnchor(), path });
+
+      const { captured } = mount(h.c, () =>
+        useCellDecorations({ periods: () => [period], journalNames: () => ["daily"] }),
+      );
+      await nextTick();
+
+      const slot = captured.value!.get(key(period))!;
+      // Absent on first paint by design: the size has not been read yet.
+      expect(slot.value).toHaveLength(0);
+
+      h.size.setSize(path, { words: 400, characters: 2200 });
+      await nextTick();
+
+      expect(slot.value).toHaveLength(1);
+    });
+
+    it("does not touch the slot when a size lands for an out-of-scope path", async () => {
+      const decoration = buildDecoration({
+        mode: "or",
+        conditions: [buildCondition("note-size", { condition: "gt", value: 100 })],
+        styles: [buildStyle("background")],
+      });
+      const h = buildHarness([decoration]);
+      const period = DayPeriod.containing(date("2026-05-25"));
+      h.c.resolve(JournalsIndex).register({
+        journalName: "daily",
+        anchor: period.anchor.toAnchor(),
+        path: "Daily/2026-05-25.md" as VaultPath,
+      });
+
+      const { captured } = mount(h.c, () =>
+        useCellDecorations({ periods: () => [period], journalNames: () => ["daily"] }),
+      );
+      await nextTick();
+
+      const slot = captured.value!.get(key(period))!;
+      const initial = slot.value;
+      h.size.setSize("Other/random.md" as VaultPath, { words: 400, characters: 2200 });
+      await nextTick();
+
+      expect(slot.value).toBe(initial);
+    });
+
     it("detaches subscriptions on unmount", async () => {
       const { h, period, path } = withHasNote();
       const { captured, unmount } = mount(h.c, () =>

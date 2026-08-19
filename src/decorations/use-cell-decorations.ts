@@ -2,7 +2,7 @@ import { computed, onMounted, onUnmounted, provide, shallowRef, toRaw, toValue, 
 
 import type { Period } from "@/calendar";
 import { useService } from "@/infrastructure/di";
-import { NoteMetadataService, NotesService, type VaultPath } from "@/infrastructure/host";
+import { NoteMetadataService, NoteSizeService, NotesService, type VaultPath } from "@/infrastructure/host";
 import { JournalsIndex, JournalsRepository } from "@/journals";
 
 import { DecorationsStore } from "./decorations-store";
@@ -39,6 +39,7 @@ export function useCellDecorations(options: CellDecorationsOptions): ReadonlyMap
   const index = useService(JournalsIndex);
   const notes = useService(NotesService);
   const metadata = useService(NoteMetadataService);
+  const size = useService(NoteSizeService);
   // Presence-gated: a surface that never opts in must not force DecorationsStore (and its
   // settings/shelves dependencies) to exist in its DI container.
   const store = options.calendarDecorations ? useService(DecorationsStore) : undefined;
@@ -145,6 +146,14 @@ export function useCellDecorations(options: CellDecorationsOptions): ReadonlyMap
       if (!periodsAtKey || !slot) return;
       slot.value = engine.evaluateRange(periodsAtKey, gatherDecorations()).get(key) ?? [];
     });
+    const offSize = size.events.on("size-changed", (path) => {
+      const key = keysByPath.get(path);
+      if (key === undefined) return;
+      const periodsAtKey = periodsByKey.get(key);
+      const slot = cells.get(key);
+      if (!periodsAtKey || !slot) return;
+      slot.value = engine.evaluateRange(periodsAtKey, gatherDecorations()).get(key) ?? [];
+    });
     const offIndex = index.events.on("entryChanged", ({ entry, kind }) => {
       if (!journalNamesInScope.has(entry.journalName)) return;
       const journalOpt = journals.get(entry.journalName);
@@ -173,6 +182,7 @@ export function useCellDecorations(options: CellDecorationsOptions): ReadonlyMap
     });
     onUnmounted(() => {
       offMeta();
+      offSize();
       offIndex();
       offRename();
       offResolved();
