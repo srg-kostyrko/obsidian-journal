@@ -27,14 +27,41 @@ const DASHBOARD = ".journal-settings-dashboard";
 // in-window modal in this window's document, so force the pre-1.13 placement per open. The key is
 // unknown to older builds, where setConfig is an inert write.
 export async function openSettings(): Promise<void> {
-  await browser.executeObsidian(({ app }, id) => {
-    const vault = app.vault as unknown as { setConfig(key: string, value: unknown): void };
-    vault.setConfig("settingsPopoutWindow", false);
-    const setting = (app as unknown as { setting: { open(): void; openTabById(id: string): void } }).setting;
-    setting.open();
-    setting.openTabById(id);
-  }, PLUGIN_ID);
-  await $(DASHBOARD).waitForExist({ timeoutMsg: "settings dashboard did not mount" });
+  // Obsidian closes the settings modal whenever a workspace leaf takes focus, and the plugin's own
+  // startup opens a note from onload — after container.autoLoad() has registered the settings tab,
+  // so there is a window where the tab can be opened and is then torn down again. reloadObsidian
+  // resolves on the wdio helper plugin plus onLayoutReady, never on our onload, so a test that
+  // opens settings right after a reload lands in that window: the modal it opened is gone and the
+  // dashboard never mounts. A single open cannot survive it — re-issue until it sticks.
+  let mountedInARow = 0;
+  await browser.waitUntil(
+    async () => {
+      const mounted = await browser.executeObsidian(
+        ({ app }, id, dashboard) => {
+          const setting = (
+            app as unknown as {
+              setting: { open(): void; openTabById(id: string): void; pluginTabs: { id: string }[] };
+            }
+          ).setting;
+          if (document.querySelector(dashboard)) return true;
+          // openTabById returns null for an id it does not know, so opening before the plugin has
+          // registered its tab silently lands on whatever tab was last used.
+          if (setting.pluginTabs.every((tab) => tab.id !== id)) return false;
+          const vault = app.vault as unknown as { setConfig(key: string, value: unknown): void };
+          vault.setConfig("settingsPopoutWindow", false);
+          setting.open();
+          setting.openTabById(id);
+          return document.querySelector(dashboard) !== null;
+        },
+        PLUGIN_ID,
+        DASHBOARD,
+      );
+      // Two polls apart, so an open that startup is about to close does not read as success.
+      mountedInARow = mounted ? mountedInARow + 1 : 0;
+      return mountedInARow >= 2;
+    },
+    { timeoutMsg: "settings dashboard did not mount" },
+  );
 }
 
 // The label Obsidian shows for the plugin's entry in the settings sidebar. Its markup moved
