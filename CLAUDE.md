@@ -200,6 +200,18 @@ on it.
   does not cover call-expression type arguments. Use the
   `new Promise<void>((resolve) => ...)` longhand. The rule is off in test files,
   and non-void type arguments are fine everywhere.
+- `expect-webdriverio` 6.x ships `types/expect-webdriverio.d.ts` importing
+  `../src/matchers/modifiers/some.js`, but its `.npmignore` re-includes only
+  `lib/**/*.js` and `types/**/*.d.ts`, so `src/` never reaches the tarball. The
+  dangling import turns `Expect` into an error type, `skipLibCheck` hides that
+  from `tsc` and `check:types` stays green, and then every `expect()` under
+  `e2e/` trips `@typescript-eslint/no-unsafe-call` — 60 errors across files
+  nobody edited, from a transitive bump. `@wdio/globals` peers
+  `expect-webdriverio@^6.0.5` and every published 6.x carries the same dangling
+  import, so pinning back is not available;
+  `patches/expect-webdriverio+6.0.5.patch` supplies the missing declaration
+  through `patch-package`'s `postinstall`. Delete the patch once upstream ships
+  `src/` or inlines the type.
 - Never write requirement or design section numbers in comments ("Satisfies
   Requirement 5.3", "(Requirement 2.5)"), in source, in tests, or in
   `describe()` labels. Bare numbers point nowhere and rot on renumbering.
