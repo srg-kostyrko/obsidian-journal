@@ -79,11 +79,13 @@ jobs:
         if: always()
         uses: mikepenz/action-junit-report@v6
         with:
-          report_paths: e2e/.reports/e2e-junit.xml
+          report_paths: e2e/.reports/e2e-junit-*.xml
           check_name: e2e results (${{ matrix.os }}, ${{ matrix.obsidian }})
           # Tolerate a suite that crashed before emitting XML; the run step
           # already failed the job in that case.
           require_tests: false
+          # Otherwise the results check reports success next to a failed run step.
+          fail_on_failure: true
 
       - name: Upload e2e reports
         if: always()
@@ -92,3 +94,7 @@ jobs:
           name: e2e-reports-${{ matrix.os }}-${{ strategy.job-index }}
           path: e2e/.reports/
           if-no-files-found: ignore
+          # e2e/.reports is a dot-directory, and upload-artifact skips hidden paths by
+          # default — so every run so far uploaded nothing and CI-only failures had no
+          # screenshot and no junit XML to diagnose from.
+          include-hidden-files: true

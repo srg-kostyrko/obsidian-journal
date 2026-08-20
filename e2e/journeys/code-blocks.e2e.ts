@@ -1,6 +1,6 @@
 import { $, browser, expect } from "@wdio/globals";
 
-import { activeNotePath, seedNote, waitForJournalFrontmatter } from "../support/vault.js";
+import { activeNotePath, seedNote, waitForActiveNote, waitForJournalFrontmatter } from "../support/vault.js";
 
 import {
   CODE_BLOCK_ERROR,
@@ -264,13 +264,13 @@ describe("code blocks", () => {
       it("opens the shifted quarter from a segment carrying a link date", async () => {
         await openInReadingMode("Yearly/2025.md");
         await clickNavSegment("Q2");
-        expect(await activeNotePath()).toBe("Quarterly/2025-Q2.md");
+        await waitForActiveNote("Quarterly/2025-Q2.md");
       });
 
       it("opens the unshifted quarter from the sibling segment on the same line", async () => {
         await openInReadingMode("Yearly/2025.md");
         await clickNavSegment("Q1");
-        expect(await activeNotePath()).toBe("Quarterly/2025-Q1.md");
+        await waitForActiveNote("Quarterly/2025-Q1.md");
       });
     });
   });

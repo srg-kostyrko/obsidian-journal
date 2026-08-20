@@ -111,10 +111,23 @@ export interface NavLayout {
 // only way to drive the production flex reflow: with flex-wrap the blocks stack and stay
 // clip-free; without it they'd hold one row.
 export async function narrowNavLayout(widthPx: number): Promise<NavLayout> {
+  // Every test here opens its host in a new leaf, so earlier leaves keep their own .nav-view in
+  // the DOM at zero width, and the leaf just opened can have its .nav-view mounted before the
+  // leaf has any layout. Measuring a zero-sized view is not an error that surfaces: every
+  // getBoundingClientRect() in it reads 0, so all three blocks share top 0 and the reader reports
+  // `rows: 1, overflowX: 0` — "the blocks did not wrap", indistinguishable from a real
+  // regression. Wait for a laid-out view rather than measuring whichever one is at hand.
+  await browser.waitUntil(
+    async () =>
+      browser.execute(
+        (sel: string) => [...document.querySelectorAll<HTMLElement>(sel)].some((v) => v.clientWidth > 0),
+        NAV_VIEW,
+      ),
+    { timeoutMsg: `no laid-out ${NAV_VIEW} to narrow to ${widthPx}px` },
+  );
   return browser.execute(
     (sel: string, width: number) => {
-      const views = [...document.querySelectorAll<HTMLElement>(sel)];
-      const view = views.find((v) => v.clientWidth > 0) ?? views[0];
+      const view = [...document.querySelectorAll<HTMLElement>(sel)].find((v) => v.clientWidth > 0);
       if (!view) return { overflowX: -1, rows: 0 };
       const block = view.closest<HTMLElement>(".block-language-calendar-nav");
       if (block) block.style.width = `${width}px`;
