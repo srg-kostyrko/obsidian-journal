@@ -58,11 +58,15 @@ const label = computed(() => navigationLabel(props.periods));
 </template>
 
 <style scoped>
+/* Centred rather than spread to the row's edges: Obsidian overlays its own edit-block button
+   on the top-right corner of a rendered code block, and a control parked under it never
+   receives the click. Quarter and calendar modes span the whole block, so an edge-aligned next button sat
+   exactly under it — and week and month reach the same edges in a narrow pane. */
 .timeline-navigation {
   display: flex;
   align-items: center;
-  justify-content: space-between;
-  gap: var(--size-2-2);
+  justify-content: center;
+  gap: var(--size-4-2);
 }
 .timeline-navigation__middle {
   display: flex;

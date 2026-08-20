@@ -10,6 +10,7 @@ import {
   clickTimelineNav,
   livePreviewNote,
   openInLivePreview,
+  timelineNavEditButtonOverlap,
   timelineWeekAnchors,
 } from "./code-blocks.js";
 
@@ -119,5 +120,27 @@ describe("timeline navigation", () => {
 
     await expect($(TIMELINE_NAV)).toBeExisting();
     expect(await timelineWeekAnchors()).toEqual(paged);
+  });
+
+  // Obsidian puts its edit-block affordance on the block's top-right corner. A control parked
+  // under it never receives the click — the corner belongs to Obsidian in every mode, and at
+  // every pane width.
+  describe("clearing Obsidian's edit-block button", () => {
+    for (const mode of ["week", "month", "quarter", "calendar"] as const) {
+      it(`keeps the next control clear of it in ${mode} mode`, async () => {
+        const path = `nav/edit-overlap-${mode}.md`;
+        await seedNote(
+          path,
+          livePreviewNote("daily", HOST_ANCHOR, `\`\`\`calendar-timeline\nmode: ${mode}\nnavigation: true\n\`\`\``),
+        );
+        await openInLivePreview(path);
+        await $(TIMELINE_NAV).waitForExist({ timeoutMsg: `navigation row did not render in ${mode} mode` });
+
+        const overlap = await timelineNavEditButtonOverlap();
+
+        expect(overlap.measured).toBe(true);
+        expect(overlap.overlaps).toBe(false);
+      });
+    }
   });
 });

@@ -178,3 +178,24 @@ export function timelineWeekAnchors(): Promise<string[]> {
     return [...document.querySelectorAll<HTMLElement>(sel)].map((cell) => cell.dataset.anchor ?? "");
   }, `${TIMELINE_BLOCK} [data-testid="week-number-cell"]`);
 }
+
+// Obsidian overlays its own edit-block affordance on the top-right corner of a rendered code
+// block, which is where a full-width navigation row would put its next control. Reports the
+// two rects so a spec can assert they stay apart.
+export function timelineNavEditButtonOverlap(): Promise<{ measured: boolean; overlaps: boolean }> {
+  return browser.execute(() => {
+    const leaf = [...document.querySelectorAll<HTMLElement>(".workspace-leaf")]
+      .filter((l) => !l.style.display.includes("none"))
+      .find((l) => l.querySelector(".timeline-navigation"));
+    const next = leaf?.querySelector<HTMLElement>('.timeline-navigation [data-nav="next"]');
+    const block = next?.closest<HTMLElement>(".block-language-calendar-timeline");
+    const edit = block?.parentElement?.querySelector<HTMLElement>(".edit-block-button");
+    if (!next || !edit) return { measured: false, overlaps: false };
+    const a = next.getBoundingClientRect();
+    const b = edit.getBoundingClientRect();
+    return {
+      measured: true,
+      overlaps: a.left < b.right && a.right > b.left && a.top < b.bottom && a.bottom > b.top,
+    };
+  });
+}
