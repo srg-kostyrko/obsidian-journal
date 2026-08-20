@@ -44,6 +44,6 @@ const monthPeriods = usePeriodWindow(
   gap: var(--size-4-2);
 }
 .timeline-month > * {
-  width: 400px;
+  width: 100%;
 }
 </style>

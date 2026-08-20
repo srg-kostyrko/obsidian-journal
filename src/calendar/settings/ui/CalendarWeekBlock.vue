@@ -36,6 +36,13 @@ function setWeekPlacement(weekPlacement: WeekPlacement): void {
   displaySlice.state = { ...displaySlice.state, weekPlacement };
 }
 
+const timelineNavigation = computed({
+  get: () => displaySlice.state.timelineNavigation,
+  set: (timelineNavigation: boolean) => {
+    displaySlice.state = { ...displaySlice.state, timelineNavigation };
+  },
+});
+
 const activePreset = computed<ActivePreset>(() => {
   if (slice.state.mode === "locale") return "locale";
   const detected = detectCurrentPreset({ dow: slice.state.dow, doy: slice.state.doy });
@@ -111,6 +118,10 @@ function change(): void {
         <option value="left">{{ m.view_block_config_weeks_left() }}</option>
         <option value="right">{{ m.view_block_config_weeks_right() }}</option>
       </UiDropdown>
+    </UiSettingRow>
+    <UiSettingRow :name="m.calendar_timeline_navigation_label()">
+      <template #description>{{ m.calendar_timeline_navigation_description() }}</template>
+      <UiToggle v-model="timelineNavigation" />
     </UiSettingRow>
   </UiCollapsibleBlock>
 </template>

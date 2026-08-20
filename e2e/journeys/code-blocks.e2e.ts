@@ -31,8 +31,9 @@ import { STYLE_HEX, assertDecorationMatrix, expectTextHex, seedDecorationFixture
 
 // Slice B chunk 2 — the code-block mount seam. Our Vue surfaces mount via
 // VueCodeBlockHost (a reading-mode MarkdownRenderChild) instead of createApp on an
-// ItemView. Code blocks only render in reading mode, which no __mocks__/obsidian.ts
-// post-processor pipeline reproduces.
+// ItemView. This suite drives them in reading mode, which no __mocks__/obsidian.ts
+// post-processor pipeline reproduces; Live Preview mounts them too and is covered by
+// timeline-navigation.e2e.ts.
 
 // A daily host note carries a calendar-nav fence and connects via frontmatter so the
 // nav renders its `.nav-view` (vs the not-connected fallback).

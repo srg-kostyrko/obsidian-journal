@@ -60,6 +60,7 @@ The Journals plugin offers extensive configuration options to customize your jou
 - **Open on startup**: Pick one journal whose current note opens whenever you open the vault. Views carry their own, separate _Open on startup_ toggle.
 - **Calendar decorations**: Decorations that apply to every calendar, whatever journals are on screen. See the decoration system below.
 - **Week numbers**: Set the global default for where the week-number column appears (before weekdays, after weekdays, or hidden — the default is before); individual view blocks and the `calendar-timeline` code block can override it.
+- **Timeline navigation**: Set the global default for whether `calendar-timeline` code blocks carry previous/next controls (off by default); an individual block can override it with its `navigation` option.
 - **Logging**: Set the log level (debug, info, warn, or error — the default is warn) and dump captured activity to a note for troubleshooting.
 
 ### Calendar Settings
@@ -364,6 +365,7 @@ Supports following settings:
 - `hiddenWeekdays` - hides the listed days of the week, where `0` is Sunday and `6` is Saturday, e.g. `[0, 6]` to drop weekends.
 - `before` - adds this many earlier periods above the current one. Applies to the `week` and `month` modes only.
 - `after` - adds this many later periods below the current one. Applies to the `week` and `month` modes only.
+- `navigation` - shows previous/next controls above the timeline, so you can look at other periods without opening or creating a note. Supported values are - `true`, `false`. Without it, the plugin's **Timeline navigation** calendar setting decides.
 
 To see the previous and next week alongside the current one:
 
@@ -374,6 +376,17 @@ before: 1
 after: 1
 ```
 ````
+
+To page through periods without leaving the note:
+
+````markdown
+```calendar-timeline
+mode: week
+navigation: true
+```
+````
+
+The controls step by the timeline's own period — a week in `week` mode, a month in `month` mode, a quarter in `quarter` mode and a year in `calendar` mode — and name the periods on screen. Paging never opens or creates a note; a reset control appears once you have moved, and returns the block to the period of the note holding it. The block returns there on its own whenever Obsidian re-renders it.
 
 Sample week timeline
 

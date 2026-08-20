@@ -115,6 +115,7 @@
 	"common_no_journals_yet": "Ainda não há diários. Crie um nas configurações do plugin.",
 	"code_blocks_nav_next": "Próximo",
 	"code_blocks_nav_previous": "Anterior",
+	"code_blocks_timeline_navigation_range": "{from} – {to}",
 	"decoration_canvas_empty_hint": [
 		{
 			"declarations": [
@@ -1796,6 +1797,8 @@
 	"view_block_config_weeks_right": "Depois dos dias da semana",
 	"calendar_week_placement_label": "Números de semana padrão",
 	"calendar_week_placement_description": "Onde a coluna do número da semana aparece nos blocos de calendário definidos como \"Usar padrão global\".",
+	"calendar_timeline_navigation_label": "Navegação padrão da linha do tempo",
+	"calendar_timeline_navigation_description": "Mostra os controles de período anterior e seguinte nos blocos de código calendar-timeline. Um bloco pode substituir isso com sua opção navigation.",
 	"view_block_config_show_heading_label": "Exibir cabeçalho de mês/ano",
 	"journal_add_modal_anchor_label": "Data de início",
 	"journal_add_modal_anchor_required_error": "Selecione uma data de início.",
@@ -1988,6 +1991,8 @@
 	"journal_edit_code_block_timeline_hidden_weekdays": "oculta os dias da semana listados (0 = domingo … 6 = sábado), por exemplo, [0, 6] para excluir os fins de semana.",
 	"journal_edit_code_block_timeline_option_before": "adiciona esta quantidade de períodos anteriores acima do atual. Aplica-se apenas aos modos week e month.",
 	"journal_edit_code_block_timeline_option_after": "adiciona esta quantidade de períodos posteriores abaixo do atual. Aplica-se apenas aos modos week e month.",
+	"journal_edit_code_block_timeline_option_navigation": "mostra os controles de período anterior e seguinte acima da linha do tempo, para você ver outros períodos sem abrir uma nota. Valores suportados: true, false. Sem essa opção, a configuração de calendário do plugin decide.",
+	"journal_edit_code_block_timeline_navigation_lead": "Com os controles de navegação, fica assim:",
 	"journal_edit_code_block_home_description": "O bloco inicial exibe links para as notas atuais nos seus diários.",
 	"journal_edit_code_block_home_default": "Por padrão, a aparência é esta:",
 	"journal_edit_code_block_home_options_lead": "Opções suportadas:",

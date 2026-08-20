@@ -117,6 +117,7 @@
 	"common_no_journals_yet": "Aucun journal pour l’instant. Créez-en un dans les paramètres du plugin.",
 	"code_blocks_nav_next": "Suivant",
 	"code_blocks_nav_previous": "Précédent",
+	"code_blocks_timeline_navigation_range": "{from} – {to}",
 	"decoration_canvas_empty_hint": [
 		{
 			"declarations": [
@@ -1803,6 +1804,8 @@
 	"view_block_config_weeks_right": "Après les jours de la semaine",
 	"calendar_week_placement_label": "Numéros de semaine par défaut",
 	"calendar_week_placement_description": "Emplacement de la colonne des numéros de semaine dans les blocs de calendrier réglés sur « Utiliser la valeur par défaut globale ».",
+	"calendar_timeline_navigation_label": "Navigation par défaut de la chronologie",
+	"calendar_timeline_navigation_description": "Affiche les contrôles de période précédente et suivante dans les blocs de code calendar-timeline. Un bloc peut le remplacer avec son option navigation.",
 	"view_block_config_show_heading_label": "Afficher l’en-tête mois/année",
 	"journal_add_modal_anchor_label": "Date de début",
 	"journal_add_modal_anchor_required_error": "Sélectionnez une date de début.",
@@ -1997,6 +2000,8 @@
 	"journal_edit_code_block_timeline_hidden_weekdays": "masque les jours de la semaine listés (0 = dimanche … 6 = samedi), par exemple [0, 6] pour supprimer les week-ends.",
 	"journal_edit_code_block_timeline_option_before": "ajoute autant de périodes précédentes au-dessus de la période actuelle. S’applique uniquement aux modes week et month.",
 	"journal_edit_code_block_timeline_option_after": "ajoute autant de périodes suivantes en dessous de la période actuelle. S’applique uniquement aux modes week et month.",
+	"journal_edit_code_block_timeline_option_navigation": "affiche des contrôles de période précédente et suivante au-dessus de la chronologie, pour consulter d’autres périodes sans ouvrir de note. Valeurs prises en charge : true, false. Sans cette option, le réglage de calendrier du plugin décide.",
+	"journal_edit_code_block_timeline_navigation_lead": "Avec les contrôles de navigation, cela ressemble à ceci :",
 	"journal_edit_code_block_home_description": "Le bloc d’accueil affiche des liens vers les notes actuelles de vos journaux.",
 	"journal_edit_code_block_home_default": "Par défaut, cela ressemble à ceci :",
 	"journal_edit_code_block_home_options_lead": "Options prises en charge :",

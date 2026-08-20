@@ -253,6 +253,8 @@ const LITERALS = [
   { key: "journal_edit_code_block_timeline_weeks", contains: ["default", "left", "right", "none"] },
   { key: "journal_edit_code_block_timeline_option_before", contains: ["week", "month"] },
   { key: "journal_edit_code_block_timeline_option_after", contains: ["week", "month"] },
+  { key: "journal_edit_code_block_timeline_option_navigation", contains: ["true", "false"] },
+  { key: "calendar_timeline_navigation_description", contains: ["calendar-timeline", "navigation"] },
   { key: "code_blocks_home_empty", contains: ["show", "shelf"] },
   // The "Supported units" list under `<startOf=unit>` — each row IS the token the
   // user types. Nine of ten locales had translated them ("<startOf=Jahr>").

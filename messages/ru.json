@@ -119,6 +119,7 @@
 	"common_no_journals_yet": "Журналов пока нет. Создайте журнал в настройках плагина.",
 	"code_blocks_nav_next": "Следующий",
 	"code_blocks_nav_previous": "Предыдущий",
+	"code_blocks_timeline_navigation_range": "{from} – {to}",
 	"decoration_canvas_empty_hint": [
 		{
 			"declarations": [
@@ -1843,6 +1844,8 @@
 	"view_block_config_weeks_right": "После дней недели",
 	"calendar_week_placement_label": "Номера недель по умолчанию",
 	"calendar_week_placement_description": "Где отображается столбец с номерами недель в блоках календаря, для которых выбрано «Использовать глобальное значение по умолчанию».",
+	"calendar_timeline_navigation_label": "Навигация временной шкалы по умолчанию",
+	"calendar_timeline_navigation_description": "Показывает кнопки перехода к предыдущему и следующему периоду в блоках кода calendar-timeline. Блок может переопределить это параметром navigation.",
 	"view_block_config_show_heading_label": "Показывать заголовок месяца/года",
 	"journal_add_modal_anchor_label": "Дата начала",
 	"journal_add_modal_anchor_required_error": "Выберите дату начала.",
@@ -2039,6 +2042,8 @@
 	"journal_edit_code_block_timeline_hidden_weekdays": "скрывает перечисленные дни недели (0 = воскресенье … 6 = суббота), например, [0, 6] для удаления выходных.",
 	"journal_edit_code_block_timeline_option_before": "добавляет указанное количество предыдущих периодов над текущим. Применяется только к режимам week и month.",
 	"journal_edit_code_block_timeline_option_after": "добавляет указанное количество следующих периодов под текущим. Применяется только к режимам week и month.",
+	"journal_edit_code_block_timeline_option_navigation": "показывает над временной шкалой кнопки перехода к предыдущему и следующему периоду, чтобы просматривать другие периоды, не открывая заметку. Поддерживаемые значения: true, false. Без этого параметра решает настройка календаря плагина.",
+	"journal_edit_code_block_timeline_navigation_lead": "С кнопками навигации он выглядит так:",
 	"journal_edit_code_block_home_description": "Блок home отображает ссылки на текущие заметки в ваших журналах.",
 	"journal_edit_code_block_home_default": "По умолчанию это выглядит так:",
 	"journal_edit_code_block_home_options_lead": "Поддерживаемые параметры:",

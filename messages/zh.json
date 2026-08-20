@@ -100,6 +100,7 @@
 	"common_no_journals_yet": "还没有日记。请在插件设置中创建一个。",
 	"code_blocks_nav_next": "下一个",
 	"code_blocks_nav_previous": "上一个",
+	"code_blocks_timeline_navigation_range": "{from}～{to}",
 	"decoration_canvas_empty_hint": [
 		{
 			"declarations": [
@@ -1599,6 +1600,8 @@
 	"view_block_config_weeks_right": "在星期列之后",
 	"calendar_week_placement_label": "默认周数",
 	"calendar_week_placement_description": "在设置为“使用全局默认值”的日历块中，周数列的显示位置。",
+	"calendar_timeline_navigation_label": "默认时间线导航",
+	"calendar_timeline_navigation_description": "在 calendar-timeline 代码块中显示上一个和下一个时段的按钮。块可以通过其 navigation 选项覆盖此设置。",
 	"view_block_config_show_heading_label": "显示月份/年份标题",
 	"journal_add_modal_anchor_label": "开始日期",
 	"journal_add_modal_anchor_required_error": "请选择开始日期。",
@@ -1791,6 +1794,8 @@
 	"journal_edit_code_block_timeline_hidden_weekdays": "隐藏列出的星期几（0 = 星期日 … 6 = 星期六），例如 [0, 6] 表示去掉周末。",
 	"journal_edit_code_block_timeline_option_before": "在当前时段上方添加指定数量的更早时段。仅适用于 week 和 month 模式。",
 	"journal_edit_code_block_timeline_option_after": "在当前时段下方添加指定数量的更晚时段。仅适用于 week 和 month 模式。",
+	"journal_edit_code_block_timeline_option_navigation": "在时间线上方显示上一个和下一个时段的按钮，让您无需打开笔记即可查看其他时段。支持的值：true、false。未设置时由插件的日历设置决定。",
+	"journal_edit_code_block_timeline_navigation_lead": "显示导航按钮后，它看起来像这样：",
 	"journal_edit_code_block_home_description": "主页块显示指向您日记中当前笔记的链接。",
 	"journal_edit_code_block_home_default": "默认情况下，它看起来像这样：",
 	"journal_edit_code_block_home_options_lead": "支持的选项：",
