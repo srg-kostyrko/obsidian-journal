@@ -11,6 +11,7 @@ import {
   livePreviewNote,
   openInLivePreview,
   timelineNavEditButtonOverlap,
+  timelineNavLabelOffset,
   timelineWeekAnchors,
 } from "./code-blocks.js";
 
@@ -142,5 +143,23 @@ describe("timeline navigation", () => {
         expect(overlap.overlaps).toBe(false);
       });
     }
+  });
+
+  // The reset control occupies a slot that is held open whether or not it is rendered, so the
+  // label does not jump sideways when you page away. That slot must not push the label off the
+  // row's centre while it is empty.
+  describe("label centring", () => {
+    it("centres the label while the reset slot is empty", async () => {
+      expect(Math.abs((await timelineNavLabelOffset()) ?? 999)).toBeLessThanOrEqual(1);
+    });
+
+    it("keeps the label centred once the reset control appears", async () => {
+      const before = await timelineNavLabelOffset();
+
+      await clickTimelineNav(TIMELINE_NAV_NEXT);
+      await $(TIMELINE_NAV_RESET).waitForExist({ timeoutMsg: "reset control did not appear" });
+
+      expect(await timelineNavLabelOffset()).toBe(before);
+    });
   });
 });

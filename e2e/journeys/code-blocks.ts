@@ -199,3 +199,18 @@ export function timelineNavEditButtonOverlap(): Promise<{ measured: boolean; ove
     };
   });
 }
+
+// Pixels the navigation label's centre sits away from the row's own centre. Positive is right.
+export function timelineNavLabelOffset(): Promise<number | null> {
+  return browser.execute(() => {
+    const leaf = [...document.querySelectorAll<HTMLElement>(".workspace-leaf")]
+      .filter((l) => !l.style.display.includes("none"))
+      .find((l) => l.querySelector(".timeline-navigation"));
+    const nav = leaf?.querySelector<HTMLElement>(".timeline-navigation");
+    const label = nav?.querySelector<HTMLElement>(".timeline-navigation__label");
+    if (!nav || !label) return null;
+    const row = nav.getBoundingClientRect();
+    const text = label.getBoundingClientRect();
+    return Math.round((text.left + text.right) / 2 - (row.left + row.right) / 2);
+  });
+}

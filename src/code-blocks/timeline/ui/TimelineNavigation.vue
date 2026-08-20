@@ -31,9 +31,11 @@ const label = computed(() => navigationLabel(props.periods));
       <UiIcon :name="icons.nav.prev" />
     </UiButton>
     <span class="timeline-navigation__middle">
+      <!-- Mirrors the reset slot opposite it. The slot keeps its width whether or not the
+           button is in it, so the label does not shift sideways the moment the block is paged
+           away — but on its own it would push the label off centre by half its width. -->
+      <span class="timeline-navigation__reset-slot" aria-hidden="true"></span>
       <span class="timeline-navigation__label">{{ label }}</span>
-      <!-- The slot keeps its width whether or not the button is in it, so the label does not
-           shift sideways the moment the block is paged away from its note. -->
       <span class="timeline-navigation__reset-slot">
         <UiButton
           v-if="moved"
