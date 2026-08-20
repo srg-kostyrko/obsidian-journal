@@ -1,0 +1,15 @@
+diff --git a/node_modules/expect-webdriverio/src/matchers/modifiers/some.d.ts b/node_modules/expect-webdriverio/src/matchers/modifiers/some.d.ts
+new file mode 100644
+index 0000000..619ace4
+--- /dev/null
++++ b/node_modules/expect-webdriverio/src/matchers/modifiers/some.d.ts
+@@ -0,0 +1,9 @@
++declare const SOME_SYMBOL: unique symbol;
++export declare class SomeElementsWrapper<T> {
++    readonly elements: T;
++    readonly [SOME_SYMBOL] = true;
++    constructor(elements: T);
++}
++export declare function some<T>(elements: T): SomeElementsWrapper<T>;
++export declare function isSomeWrapper(value: unknown): value is SomeElementsWrapper<unknown>;
++export {};

@@ -23,7 +23,8 @@
     "coverage": "vitest run --coverage",
     "bench": "vitest bench",
     "check:types": "vue-tsc -b",
-    "prepare": "husky"
+    "prepare": "husky",
+    "postinstall": "patch-package"
   },
   "repository": {
     "type": "git",
@@ -86,6 +87,7 @@
     "husky": "^9.1.7",
     "mocha": "^11.8.0",
     "nano-staged": "^1.0.2",
+    "patch-package": "^8.0.1",
     "prettier": "^3.9.6",
     "tslib": "^2.8.1",
     "tsx": "^4.23.12",
