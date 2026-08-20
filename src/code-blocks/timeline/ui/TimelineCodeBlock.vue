@@ -1,8 +1,19 @@
 <script setup lang="ts">
 import { match } from "ts-pattern";
-import { computed } from "vue";
+import { computed, ref, watch } from "vue";
 
-import { Clock, useResolvedWeekPlacement, type AnchorString } from "@/calendar";
+import {
+  CalendarDate,
+  advance,
+  periodOfKind,
+  window as periodWindow,
+  Clock,
+  useResolvedTimelineNavigation,
+  useResolvedWeekPlacement,
+  type AnchorString,
+  type Period,
+  type PeriodKind,
+} from "@/calendar";
 import { useService } from "@/infrastructure/di";
 import type { CodeBlockProps } from "@/infrastructure/host";
 import { JournalsIndex, JournalsRepository, useIndexVersion } from "@/journals";
@@ -10,6 +21,7 @@ import { ShelvesRepository } from "@/shelves";
 
 import TimelineCalendar from "./TimelineCalendar.vue";
 import TimelineMonth from "./TimelineMonth.vue";
+import TimelineNavigation from "./TimelineNavigation.vue";
 import TimelineQuarter from "./TimelineQuarter.vue";
 import TimelineWeek from "./TimelineWeek.vue";
 
@@ -37,7 +49,7 @@ const journal = computed(() =>
     }),
 );
 
-const refDate = computed<AnchorString>(() =>
+const hostDate = computed<AnchorString>(() =>
   entry.value.match({
     some: (hostEntry) => hostEntry.anchor,
     none: () => Clock.now().format("YYYY-MM-DD") as AnchorString,
@@ -71,41 +83,111 @@ const derivedShelf = computed(() => {
 const shelf = computed(() => config.shelf ?? derivedShelf.value);
 
 const weekPlacement = useResolvedWeekPlacement(() => config.weeks);
+const navigation = useResolvedTimelineNavigation(() => config.navigation);
+
+// The period one arrow press moves by, which is the one the mode is built around.
+const unit = computed<Exclude<PeriodKind, "day" | "decade">>(() =>
+  match(mode.value)
+    .with("week", () => "week" as const)
+    .with("month", () => "month" as const)
+    .with("quarter", () => "quarter" as const)
+    .with("calendar", () => "year" as const)
+    .exhaustive(),
+);
+
+// How many `unit` periods away from the host note the block is currently showing. Local to
+// the mount by design: Obsidian rebuilds a code block on its own schedule, and a window that
+// outlived its note's period would be stranded with no way back.
+const offset = ref(0);
+watch(hostDate, () => {
+  offset.value = 0;
+});
+
+const focus = computed<Period>(() => {
+  const hostPeriod = periodOfKind(unit.value, CalendarDate.fromAnchor(hostDate.value));
+  // Reading the offset only while the row is shown keeps a paged window from being stranded
+  // when navigation is switched off, without a watcher to clear it.
+  return navigation.value ? advance(hostPeriod, offset.value) : hostPeriod;
+});
+
+const refDate = computed<AnchorString>(() => focus.value.anchor.toAnchor());
+
+// Padding applies to the week and month modes only, so every other mode shows one period and
+// the row names that one rather than a range.
+const padded = computed(() => mode.value === "week" || mode.value === "month");
+const visiblePeriods = computed<readonly Period[]>(() =>
+  padded.value ? periodWindow(focus.value, config.before ?? 0, config.after ?? 0) : [focus.value],
+);
+
+function step(steps: number): void {
+  offset.value += steps;
+}
 </script>
 
 <template>
-  <!-- Only the week and month modes take padding; quarter and calendar never receive it,
-       so a `before`/`after` set under them is inert by construction. -->
-  <TimelineWeek
-    v-if="mode === 'week'"
-    :ref-date="refDate"
-    :shelf="shelf"
-    :weeks="weekPlacement"
-    :hidden-weekdays="config.hiddenWeekdays"
-    :before="config.before"
-    :after="config.after"
-  />
-  <TimelineMonth
-    v-else-if="mode === 'month'"
-    :ref-date="refDate"
-    :shelf="shelf"
-    :weeks="weekPlacement"
-    :hidden-weekdays="config.hiddenWeekdays"
-    :before="config.before"
-    :after="config.after"
-  />
-  <TimelineQuarter
-    v-else-if="mode === 'quarter'"
-    :ref-date="refDate"
-    :shelf="shelf"
-    :weeks="weekPlacement"
-    :hidden-weekdays="config.hiddenWeekdays"
-  />
-  <TimelineCalendar
-    v-else
-    :ref-date="refDate"
-    :shelf="shelf"
-    :weeks="weekPlacement"
-    :hidden-weekdays="config.hiddenWeekdays"
-  />
+  <div class="journal-timeline" :data-mode="mode">
+    <TimelineNavigation
+      v-if="navigation"
+      :periods="visiblePeriods"
+      :unit="unit"
+      :moved="offset !== 0"
+      @step="step"
+      @reset="offset = 0"
+    />
+    <!-- Only the week and month modes take padding; quarter and calendar never receive it,
+         so a `before`/`after` set under them is inert by construction. -->
+    <TimelineWeek
+      v-if="mode === 'week'"
+      :ref-date="refDate"
+      :shelf="shelf"
+      :weeks="weekPlacement"
+      :hidden-weekdays="config.hiddenWeekdays"
+      :before="config.before"
+      :after="config.after"
+    />
+    <TimelineMonth
+      v-else-if="mode === 'month'"
+      :ref-date="refDate"
+      :shelf="shelf"
+      :weeks="weekPlacement"
+      :hidden-weekdays="config.hiddenWeekdays"
+      :before="config.before"
+      :after="config.after"
+    />
+    <TimelineQuarter
+      v-else-if="mode === 'quarter'"
+      :ref-date="refDate"
+      :shelf="shelf"
+      :weeks="weekPlacement"
+      :hidden-weekdays="config.hiddenWeekdays"
+    />
+    <TimelineCalendar
+      v-else
+      :ref-date="refDate"
+      :shelf="shelf"
+      :weeks="weekPlacement"
+      :hidden-weekdays="config.hiddenWeekdays"
+    />
+  </div>
 </template>
+
+<style scoped>
+/* The grids' width lives here rather than in each mode component: the navigation row has to
+   match whatever the grids below it are, and week/month centre a fixed strip while quarter
+   and calendar fill the note. */
+.journal-timeline {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--size-4-2);
+  --timeline-content: 100%;
+}
+.journal-timeline[data-mode="week"],
+.journal-timeline[data-mode="month"] {
+  --timeline-content: 400px;
+}
+.journal-timeline > * {
+  width: var(--timeline-content);
+  max-width: 100%;
+}
+</style>

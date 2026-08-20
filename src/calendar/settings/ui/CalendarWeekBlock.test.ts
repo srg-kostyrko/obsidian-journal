@@ -1,5 +1,5 @@
 import userEvent from "@testing-library/user-event";
-import { cleanup, render, screen } from "@testing-library/vue";
+import { cleanup, render, screen, within } from "@testing-library/vue";
 import { afterEach, describe, expect, it, vi } from "vitest";
 
 import { Calendar, WeekPresetApplierToken } from "@/calendar";
@@ -65,6 +65,13 @@ function mount(container: Container) {
 
 async function openSection(): Promise<void> {
   await userEvent.click(screen.getByText(m.common_label_calendar()));
+}
+
+// The section holds several toggles, so each one is reached through the row that names it.
+function toggleInRow(name: string): HTMLElement {
+  const row = screen.getByText(name).closest(".setting-item");
+  if (!row) throw new Error(`no setting row named ${name}`);
+  return within(row as HTMLElement).getByRole("checkbox");
 }
 
 afterEach(() => cleanup());
@@ -137,10 +144,20 @@ describe("CalendarWeekBlock", () => {
     await settings.initialize();
     mount(container);
     await openSection();
-    const toggle = screen.getByRole("checkbox");
-    await userEvent.click(toggle);
+    await userEvent.click(toggleInRow(m.calendar_apply_globally_title()));
     const state = settings.getSlice(calendarSlice).state;
     expect(state).toEqual({ mode: "custom", dow: 1, doy: 4, global: true });
+  });
+
+  it("writes timelineNavigation to the display slice when its toggle is flipped", async () => {
+    const { container, settings } = setupContainer({ mode: "custom", dow: 1, doy: 4, global: false });
+    await settings.initialize();
+    mount(container);
+    await openSection();
+
+    await userEvent.click(toggleInRow(m.calendar_timeline_navigation_label()));
+
+    expect(settings.getSlice(calendarDisplaySlice).state.timelineNavigation).toBe(true);
   });
 
   it("requests a reload when the apply-globally toggle is flipped", async () => {
@@ -148,7 +165,7 @@ describe("CalendarWeekBlock", () => {
     await settings.initialize();
     mount(container);
     await openSection();
-    await userEvent.click(screen.getByRole("checkbox"));
+    await userEvent.click(toggleInRow(m.calendar_apply_globally_title()));
     expect(reloadHint.pending.value).toBe(true);
   });
 

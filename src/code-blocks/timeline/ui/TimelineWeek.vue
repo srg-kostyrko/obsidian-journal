@@ -41,6 +41,6 @@ const weekPeriods = usePeriodWindow(
   gap: var(--size-4-2);
 }
 .timeline-week > * {
-  width: 400px;
+  width: 100%;
 }
 </style>

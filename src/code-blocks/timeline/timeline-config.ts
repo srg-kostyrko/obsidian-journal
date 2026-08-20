@@ -26,6 +26,10 @@ function isWeekdayIndex(value: unknown): value is number {
   return typeof value === "number" && Number.isSafeInteger(value) && value >= 0 && value <= 6;
 }
 
+function asNavigation(value: unknown): boolean | undefined {
+  return typeof value === "boolean" ? value : undefined;
+}
+
 function asPadding(value: unknown): number | undefined {
   return typeof value === "number" && Number.isSafeInteger(value) && value >= 0 ? value : undefined;
 }
@@ -48,6 +52,10 @@ const timelineBlockEntries = {
   // it, so a value set under them is inert rather than reported as an unrecognized key.
   before: v.pipe(v.optional(v.unknown()), v.transform(asPadding)),
   after: v.pipe(v.optional(v.unknown()), v.transform(asPadding)),
+  // Unset follows the plugin's calendar setting, as `weeks` does. A boolean is required
+  // rather than an on/off word: js-yaml 4 reads only true/false as booleans, so `on` would
+  // arrive as the string "on" and degrade to unset.
+  navigation: v.pipe(v.optional(v.unknown()), v.transform(asNavigation)),
 };
 
 export const timelineBlockSchema = v.pipe(v.unknown(), v.transform(asRecord), v.object(timelineBlockEntries));

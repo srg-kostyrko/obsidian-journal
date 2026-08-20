@@ -85,6 +85,7 @@
   "common_no_journals_yet": "No journals yet. Create one in the plugin settings.",
   "code_blocks_nav_next": "Next",
   "code_blocks_nav_previous": "Previous",
+  "code_blocks_timeline_navigation_range": "{from} – {to}",
 
   "nav_block_section_title": "Navigation block",
   "nav_block_section_mode_label": "Mode",
@@ -1284,6 +1285,8 @@
   "view_block_config_weeks_right": "After weekdays",
   "calendar_week_placement_label": "Default week numbers",
   "calendar_week_placement_description": "Where the week-number column appears in calendar blocks set to \"Use global default\".",
+  "calendar_timeline_navigation_label": "Default timeline navigation",
+  "calendar_timeline_navigation_description": "Show previous and next controls on calendar-timeline code blocks. A block can override this with its navigation option.",
   "view_block_config_show_heading_label": "Show month/year heading",
 
   "journal_add_modal_anchor_label": "Start date",
@@ -1428,6 +1431,8 @@
   "journal_edit_code_block_timeline_hidden_weekdays": "hides the listed days of the week (0 = Sunday … 6 = Saturday), e.g. [0, 6] to drop weekends.",
   "journal_edit_code_block_timeline_option_before": "adds this many earlier periods above the current one. Applies to the week and month modes only.",
   "journal_edit_code_block_timeline_option_after": "adds this many later periods below the current one. Applies to the week and month modes only.",
+  "journal_edit_code_block_timeline_option_navigation": "shows previous and next controls above the timeline, so you can look at other periods without opening a note. Supported values: true, false. Without it, the plugin's calendar setting decides.",
+  "journal_edit_code_block_timeline_navigation_lead": "With navigation controls it looks like this:",
   "journal_edit_code_block_home_description": "The home block displays links to the current notes in your journals.",
   "journal_edit_code_block_home_default": "By default it looks like this:",
   "journal_edit_code_block_home_options_lead": "Supported options:",

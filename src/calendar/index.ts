@@ -26,3 +26,4 @@ export { calendarDisplaySlice, type WeekPlacement, type CalendarDisplaySliceStat
 export { calendarSettingsModule } from "./settings/module";
 export { WeekPresetApplierToken, type WeekPresetApplier } from "./settings/week-preset-applier";
 export { resolveWeekPlacement, useResolvedWeekPlacement, type WeekPlacementConfig } from "./week-placement";
+export { useResolvedTimelineNavigation } from "./timeline-navigation";

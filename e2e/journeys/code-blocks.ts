@@ -61,7 +61,6 @@ export function plainNote(fence: string): string {
   return `${fence}\n`;
 }
 
-// Reading mode is the only mode where Obsidian runs code-block post-processors;
 // openFile carries the mode in its view state so the block renders on open. This
 // wdio-obsidian-service build exposes no executeObsidianCommand, so there is no toggle
 // command to call — the state on openFile is the mechanism. A fresh leaf avoids
@@ -138,4 +137,93 @@ export async function narrowNavLayout(widthPx: number): Promise<NavLayout> {
     NAV_VIEW,
     widthPx,
   );
+}
+
+// Live Preview, the other mode a code block mounts in: `source` with `source: false` is the
+// editor-with-widgets rendering, vs `source: true` for raw text. Live Preview un-renders the
+// block holding the cursor, and a freshly opened note puts the cursor on the first body line
+// — which for these fixtures is the fence itself, so the block would come up as source text
+// and never mount. Parking the cursor on the last line is what makes it render, so the note
+// must carry a line *after* the fence: livePreviewNote() appends one.
+export async function openInLivePreview(path: string): Promise<void> {
+  const found = await browser.executeObsidian(async ({ app, obsidian }, notePath) => {
+    const file = app.vault.getAbstractFileByPath(notePath);
+    if (!(file instanceof obsidian.TFile)) return false;
+    const leaf = app.workspace.getLeaf(true);
+    await leaf.openFile(file, { state: { mode: "source", source: false } });
+    const view = app.workspace.getActiveViewOfType(obsidian.MarkdownView);
+    view?.editor.setCursor({ line: view.editor.lastLine(), ch: 0 });
+    return true;
+  }, path);
+  if (!found) throw new FixtureFileMissingError(path);
+}
+
+// The trailing line openInLivePreview parks the cursor on. Named so a spec reads as
+// "this note is for live preview" rather than carrying an unexplained paragraph.
+export const LIVE_PREVIEW_TAIL = "tail paragraph";
+
+export function livePreviewNote(journal: string, anchor: string, fence: string): string {
+  return hostNote(journal, anchor, `${fence}\n\n${LIVE_PREVIEW_TAIL}`);
+}
+
+// The timeline's previous/next row. Buttons carry data-nav rather than a class so the
+// selector does not ride on styling hooks a theme may want to rename.
+export const TIMELINE_NAV = `${TIMELINE_BLOCK} .timeline-navigation`;
+export const TIMELINE_NAV_PREV = `${TIMELINE_NAV} [data-nav="prev"]`;
+export const TIMELINE_NAV_NEXT = `${TIMELINE_NAV} [data-nav="next"]`;
+export const TIMELINE_NAV_RESET = `${TIMELINE_NAV} [data-nav="reset"]`;
+export const TIMELINE_NAV_LABEL = `${TIMELINE_NAV} .timeline-navigation__label`;
+
+export const TIMELINE_NAV_FENCE = "```calendar-timeline\nmode: week\nweeks: left\nnavigation: true\n```";
+
+// Same hit-test limitation clickNavNext documents: a real WebDriver click cannot reach a
+// control inside a rendered code block, so dispatch a native DOM click. The Vue handler
+// runs either way; only the pointer path is bypassed.
+export async function clickTimelineNav(selector: string): Promise<void> {
+  await browser.execute((sel: string) => {
+    document.querySelector<HTMLElement>(sel)?.click();
+  }, selector);
+}
+
+// The week-number cells of every grid the block currently shows, in order.
+export function timelineWeekAnchors(): Promise<string[]> {
+  return browser.execute((sel: string) => {
+    return [...document.querySelectorAll<HTMLElement>(sel)].map((cell) => cell.dataset.anchor ?? "");
+  }, `${TIMELINE_BLOCK} [data-testid="week-number-cell"]`);
+}
+
+// Obsidian overlays its own edit-block affordance on the top-right corner of a rendered code
+// block, which is where a full-width navigation row would put its next control. Reports the
+// two rects so a spec can assert they stay apart.
+export function timelineNavEditButtonOverlap(): Promise<{ measured: boolean; overlaps: boolean }> {
+  return browser.execute(() => {
+    const leaf = [...document.querySelectorAll<HTMLElement>(".workspace-leaf")]
+      .filter((l) => !l.style.display.includes("none"))
+      .find((l) => l.querySelector(".timeline-navigation"));
+    const next = leaf?.querySelector<HTMLElement>('.timeline-navigation [data-nav="next"]');
+    const block = next?.closest<HTMLElement>(".block-language-calendar-timeline");
+    const edit = block?.parentElement?.querySelector<HTMLElement>(".edit-block-button");
+    if (!next || !edit) return { measured: false, overlaps: false };
+    const a = next.getBoundingClientRect();
+    const b = edit.getBoundingClientRect();
+    return {
+      measured: true,
+      overlaps: a.left < b.right && a.right > b.left && a.top < b.bottom && a.bottom > b.top,
+    };
+  });
+}
+
+// Pixels the navigation label's centre sits away from the row's own centre. Positive is right.
+export function timelineNavLabelOffset(): Promise<number | null> {
+  return browser.execute(() => {
+    const leaf = [...document.querySelectorAll<HTMLElement>(".workspace-leaf")]
+      .filter((l) => !l.style.display.includes("none"))
+      .find((l) => l.querySelector(".timeline-navigation"));
+    const nav = leaf?.querySelector<HTMLElement>(".timeline-navigation");
+    const label = nav?.querySelector<HTMLElement>(".timeline-navigation__label");
+    if (!nav || !label) return null;
+    const row = nav.getBoundingClientRect();
+    const text = label.getBoundingClientRect();
+    return Math.round((text.left + text.right) / 2 - (row.left + row.right) / 2);
+  });
 }

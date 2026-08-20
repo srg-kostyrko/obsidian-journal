@@ -15,6 +15,9 @@ const previewPath = useCodeBlockPreviewPath(props.journalName);
 
 const navConfig: Record<string, never> = {};
 const timelineConfig: TimelineBlockConfig = {};
+// The default preview follows the vault setting, which ships off — so the navigation row gets
+// its own preview rather than being described and never shown.
+const timelineNavigationConfig: TimelineBlockConfig = { navigation: true };
 const defaultHomeConfig: HomeBlockConfig = { show: ["day"], separator: " • ", scale: 1 };
 const customHomeConfig: HomeBlockConfig = { show: ["day", "month"], separator: " | ", scale: 2 };
 const customHomeBody = `show:\n  - day\n  - month\nscale: 2\nseparator: " | "`;
@@ -48,7 +51,11 @@ const customHomeBody = `show:\n  - day\n  - month\nscale: 2\nseparator: " | "`;
         <li><code>hiddenWeekdays</code> — {{ m.journal_edit_code_block_timeline_hidden_weekdays() }}</li>
         <li><code>before</code> — {{ m.journal_edit_code_block_timeline_option_before() }}</li>
         <li><code>after</code> — {{ m.journal_edit_code_block_timeline_option_after() }}</li>
+        <li><code>navigation</code> — {{ m.journal_edit_code_block_timeline_option_navigation() }}</li>
       </ul>
+      <p>{{ m.journal_edit_code_block_timeline_navigation_lead() }}</p>
+      <CodeBlockSnippet name="calendar-timeline" body="navigation: true" />
+      <TimelineCodeBlock :path="previewPath" :config="timelineNavigationConfig" />
       <p>{{ m.journal_edit_code_block_timeline_mode_lead() }}</p>
       <CodeBlockSnippet name="calendar-timeline" body="mode: month" />
       <p>{{ m.journal_edit_code_block_timeline_modes_lead() }}</p>

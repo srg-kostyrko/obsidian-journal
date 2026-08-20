@@ -673,6 +673,21 @@ preview.
       ignored, and the block does not report an unrecognized option.
 - [ ] timeline **before: -1** or a non-numeric **after** → treated as unset, the
       block does not error.
+- [ ] timeline **navigation: true** → a row of previous/next controls appears
+      above the grid, naming the periods on screen.
+- [ ] timeline **navigation** pressed forward → the grid moves by the mode's own
+      period, no note is opened and none is created.
+- [ ] timeline **navigation** pressed forward with **before: 1** and **after: 1**
+      → the window slides by one period and overlaps what it showed before; the
+      label names the whole visible range.
+- [ ] timeline **navigation** reset → the control appears only after paging away,
+      and returns the block to the host note's period.
+- [ ] timeline **navigation** in Live Preview → the controls work, and typing
+      elsewhere in the note leaves the paged window where it is.
+- [ ] Calendar settings **Timeline navigation** on → blocks with no `navigation`
+      option gain the row; a block with `navigation: false` still has none.
+- [ ] timeline **navigation** past a bounded journal's timeline end → the grid
+      keeps paging and its cells render inactive; the arrows stay enabled.
 
 ### Reference help
 

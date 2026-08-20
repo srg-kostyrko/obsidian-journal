@@ -1,7 +1,7 @@
 import * as v from "valibot";
 import { describe, expect, expectTypeOf, it } from "vitest";
 
-import { timelineBlockSchema, type TimelineBlockConfig, type TimelineMode } from "./timeline-config";
+import { timelineBlockKeys, timelineBlockSchema, type TimelineBlockConfig, type TimelineMode } from "./timeline-config";
 
 describe("timelineBlockSchema", () => {
   it("accepts an empty object", () => {
@@ -98,6 +98,24 @@ describe("timelineBlockSchema", () => {
     });
   });
 
+  describe("navigation", () => {
+    it.each([true, false])("accepts %s", (value) => {
+      const result = v.parse(timelineBlockSchema, { navigation: value });
+      expect(result.navigation).toBe(value);
+    });
+
+    it("treats a non-boolean value as unset so the configured default applies", () => {
+      // Same rule as mode and weeks: a typo degrades to the global default rather than
+      // blanking the block into an error panel.
+      const result = v.parse(timelineBlockSchema, { navigation: "yes" });
+      expect(result.navigation).toBeUndefined();
+    });
+
+    it("is a known key, so it is not reported as unrecognized", () => {
+      expect(timelineBlockKeys).toContain("navigation");
+    });
+  });
+
   it("infers TimelineMode as the mode union", () => {
     expectTypeOf<TimelineMode>().toEqualTypeOf<"week" | "month" | "quarter" | "calendar">();
   });
@@ -110,6 +128,7 @@ describe("timelineBlockSchema", () => {
       hiddenWeekdays?: number[] | undefined;
       before?: number | undefined;
       after?: number | undefined;
+      navigation?: boolean | undefined;
     }>();
   });
 });

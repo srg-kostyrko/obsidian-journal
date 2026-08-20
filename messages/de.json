@@ -115,6 +115,7 @@
 	"common_no_journals_yet": "Noch keine Journale. Erstelle eines in den Plugin-Einstellungen.",
 	"code_blocks_nav_next": "Nächste",
 	"code_blocks_nav_previous": "Vorherige",
+	"code_blocks_timeline_navigation_range": "{from} – {to}",
 	"decoration_canvas_empty_hint": [
 		{
 			"declarations": [
@@ -1798,6 +1799,8 @@
 	"view_block_config_weeks_right": "Nach den Wochentagen",
 	"calendar_week_placement_label": "Standard-Wochennummern",
 	"calendar_week_placement_description": "Legt fest, wo die Spalte mit den Wochennummern in Kalenderblöcken erscheint, die auf „Globalen Standard verwenden“ eingestellt sind.",
+	"calendar_timeline_navigation_label": "Standardnavigation der Zeitleiste",
+	"calendar_timeline_navigation_description": "Zeigt in calendar-timeline-Codeblöcken Schaltflächen für den vorherigen und nächsten Zeitraum an. Ein Block kann dies mit seiner Option navigation überschreiben.",
 	"view_block_config_show_heading_label": "Monat/Jahr-Überschrift anzeigen",
 	"journal_add_modal_anchor_label": "Startdatum",
 	"journal_add_modal_anchor_required_error": "Wähle ein Startdatum.",
@@ -1990,6 +1993,8 @@
 	"journal_edit_code_block_timeline_hidden_weekdays": "blendet die aufgelisteten Wochentage aus (0 = Sonntag … 6 = Samstag), z. B. [0, 6], um Wochenenden auszulassen.",
 	"journal_edit_code_block_timeline_option_before": "fügt so viele frühere Zeiträume oberhalb des aktuellen hinzu. Gilt nur für die Modi week und month.",
 	"journal_edit_code_block_timeline_option_after": "fügt so viele spätere Zeiträume unterhalb des aktuellen hinzu. Gilt nur für die Modi week und month.",
+	"journal_edit_code_block_timeline_option_navigation": "zeigt oberhalb der Zeitleiste Schaltflächen für den vorherigen und nächsten Zeitraum, sodass du andere Zeiträume ansehen kannst, ohne eine Notiz zu öffnen. Unterstützte Werte: true, false. Ohne diese Option entscheidet die Kalendereinstellung des Plugins.",
+	"journal_edit_code_block_timeline_navigation_lead": "Mit Navigationsschaltflächen sieht er so aus:",
 	"journal_edit_code_block_home_description": "Der Home-Block zeigt Links zu den aktuellen Notizen in deinen Journalen an.",
 	"journal_edit_code_block_home_default": "Standardmäßig sieht es so aus:",
 	"journal_edit_code_block_home_options_lead": "Unterstützte Optionen:",
