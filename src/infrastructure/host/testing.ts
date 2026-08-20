@@ -19,12 +19,22 @@ import type {
 import type { Disposer } from "./input-suggests/types";
 import type { MarkdownRenderService } from "./internal/markdown-render-service";
 import type { NoteMetadataService } from "./internal/note-metadata-service";
+import type { NoteSizeEvents, NoteSizeService } from "./internal/note-size-service";
 import type { NotesService } from "./internal/notes-service";
 import type { NoticeService } from "./internal/notice-service";
 import type { PluginData } from "./internal/plugin-data";
 import type { TemplaterService } from "./internal/templater-service";
 import type { WorkspaceService } from "./internal/workspace-service";
-import type { MenuItemSpec, Note, NoteMetadata, NotesEvents, OpenMode, VaultPath, WorkspaceEvents } from "./types";
+import type {
+  MenuItemSpec,
+  Note,
+  NoteMetadata,
+  NotesEvents,
+  NoteSize,
+  OpenMode,
+  VaultPath,
+  WorkspaceEvents,
+} from "./types";
 
 interface FakeEntry {
   content: string;
@@ -56,6 +66,7 @@ export class FakeNotesService implements Pick<
   | "allMarkdownNotes"
   | "create"
   | "read"
+  | "readCached"
   | "write"
   | "append"
   | "rename"
@@ -95,6 +106,12 @@ export class FakeNotesService implements Pick<
     this.#emitter.emit("metadata-changed", path);
   }
 
+  // Mirrors the real service: `modify` fires for the byte change, and the metadata
+  // re-parse (`metadata-changed`) follows it.
+  emitModified(path: VaultPath): void {
+    this.#emitter.emit("modified", path);
+  }
+
   externalEdit(path: VaultPath, content: string): void {
     const entry = this.#files.get(path);
     this.#files.set(path, {
@@ -103,6 +120,7 @@ export class FakeNotesService implements Pick<
       size: entry?.size ?? 0,
       mtime: entry?.mtime ?? 0,
     });
+    this.#emitter.emit("modified", path);
     this.#emitter.emit("metadata-changed", path);
   }
 
@@ -150,10 +168,17 @@ export class FakeNotesService implements Pick<
     return AsyncResult.ok(entry.content);
   }
 
+  // The fake has no in-memory-cache/disk distinction, so a cached read is just a read.
+  readCached(path: VaultPath): AsyncResult<string, NoteNotFoundError | NoteReadError> {
+    return this.read(path);
+  }
+
   write(path: VaultPath, content: string): AsyncResult<void, NoteNotFoundError | NoteWriteError> {
     const entry = this.#files.get(path);
     if (!entry) return AsyncResult.err(new NoteNotFoundError(path));
     this.#files.set(path, { ...entry, content });
+    this.#emitter.emit("modified", path);
+    this.#emitter.emit("metadata-changed", path);
     return AsyncResult.ok(undefined);
   }
 
@@ -161,6 +186,8 @@ export class FakeNotesService implements Pick<
     const entry = this.#files.get(path);
     if (!entry) return AsyncResult.err(new NoteNotFoundError(path));
     this.#files.set(path, { ...entry, content: entry.content + content });
+    this.#emitter.emit("modified", path);
+    this.#emitter.emit("metadata-changed", path);
     return AsyncResult.ok(undefined);
   }
 
@@ -194,6 +221,10 @@ export class FakeNotesService implements Pick<
     const next = { ...entry.frontmatter };
     mutate(next);
     this.#files.set(path, { ...entry, frontmatter: next });
+    // `modified` means "the bytes changed", full stop — the real service emits it off
+    // the generic vault "modify" listener with no opinion on whether the change is
+    // interesting. processFrontMatter is a vault write like any other, so it fires too.
+    this.#emitter.emit("modified", path);
     this.#emitter.emit("metadata-changed", path);
     return AsyncResult.ok(undefined);
   }
@@ -396,6 +427,24 @@ export class FakeNoteMetadataService implements Pick<NoteMetadataService, "get" 
 
   emitResolved(): void {
     for (const callback of this.#resolvedCallbacks) callback();
+  }
+}
+
+export class FakeNoteSizeService implements Pick<NoteSizeService, "get" | "events"> {
+  readonly #sizes = new Map<VaultPath, NoteSize>();
+  readonly #emitter: TypedEmitter<NoteSizeEvents> = createNanoEvents();
+  readonly events: Subscribable<NoteSizeEvents> = this.#emitter;
+
+  // Stores and announces in one call, the way a real fill does — so a test that seeds
+  // after mount exercises the subscription rather than the seeding path.
+  setSize(path: VaultPath, size: NoteSize): void {
+    this.#sizes.set(path, size);
+    this.#emitter.emit("size-changed", path);
+  }
+
+  get(path: VaultPath): Option<NoteSize> {
+    const hit = this.#sizes.get(path);
+    return hit === undefined ? new None<NoteSize>() : new Some<NoteSize>(hit);
   }
 }
 

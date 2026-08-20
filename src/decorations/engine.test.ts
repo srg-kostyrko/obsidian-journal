@@ -4,8 +4,9 @@ import { DayPeriod, WeekPeriod } from "@/calendar";
 import type { AnchorString } from "@/calendar";
 import { date, installTestCalendar } from "@/calendar/testing";
 import { Container } from "@/infrastructure/di";
-import { NoteMetadataService } from "@/infrastructure/host";
-import { FakeNoteMetadataService } from "@/infrastructure/host/testing";
+import { NoteMetadataService, NoteSizeService } from "@/infrastructure/host";
+import type { NoteSize, VaultPath } from "@/infrastructure/host";
+import { FakeNoteMetadataService, FakeNoteSizeService } from "@/infrastructure/host/testing";
 import { CycleService, JournalsIndex, JournalsRepository, TimelineService } from "@/journals";
 import type { JournalConfig } from "@/journals/config";
 import { customJournal, fakeRepo, fixedJournal } from "@/journals/testing";
@@ -13,9 +14,12 @@ import { customJournal, fakeRepo, fixedJournal } from "@/journals/testing";
 import { cellKey, DecorationEngine } from "./engine";
 import { buildCalendarDecoration, buildCondition, buildDecoration, buildStyle } from "./testing";
 
+import type { JournalDecoration } from "./config";
+
 function buildContainer(journals: Record<string, JournalConfig> = {}): {
   c: Container;
   metadata: FakeNoteMetadataService;
+  size: FakeNoteSizeService;
 } {
   const c = new Container();
   c.register(JournalsRepository).useValue(fakeRepo(journals));
@@ -24,8 +28,10 @@ function buildContainer(journals: Record<string, JournalConfig> = {}): {
   c.register(TimelineService).useClass(TimelineService);
   const metadata = new FakeNoteMetadataService();
   c.register(NoteMetadataService).useValue(metadata as unknown as NoteMetadataService);
+  const size = new FakeNoteSizeService();
+  c.register(NoteSizeService).useValue(size as unknown as NoteSizeService);
   c.register(DecorationEngine).useClass(DecorationEngine);
-  return { c, metadata };
+  return { c, metadata, size };
 }
 
 // A fortnightly journal bounded to a single month. Its intervals start 2026-01-05, 2026-01-19,
@@ -50,6 +56,25 @@ function sprintDayCells(day: string): Map<string, unknown> {
       [DayPeriod.containing(date(day))],
       [{ kind: "journal", journalName: "sprint", index: 0, decoration: sprintDecoration }],
     );
+}
+
+const NOTE_PATH = "journals/2026-05-25.md" as VaultPath;
+
+function evaluateDaily(
+  decoration: JournalDecoration,
+  options: { registerNote: boolean; size?: NoteSize },
+): Map<string, unknown> {
+  const { c, size: sizes } = buildContainer({
+    daily: fixedJournal("daily", { type: "day" }, { decorations: [decoration] }),
+  });
+  const period = DayPeriod.containing(date("2026-05-25"));
+  if (options.registerNote) {
+    c.resolve(JournalsIndex).register({ journalName: "daily", anchor: period.anchor.toAnchor(), path: NOTE_PATH });
+  }
+  if (options.size !== undefined) sizes.setSize(NOTE_PATH, options.size);
+  return c
+    .resolve(DecorationEngine)
+    .evaluateRange([period], [{ kind: "journal", journalName: "daily", index: 0, decoration }]);
 }
 
 describe("DecorationEngine", () => {
@@ -265,6 +290,30 @@ describe("DecorationEngine", () => {
 
       it("leaves an interval's first day before the timeline start undecorated", () => {
         expect(sprintDayCells("2025-12-22").size).toBe(0);
+      });
+    });
+
+    describe("note-size conditions", () => {
+      const lessThan100 = buildDecoration({
+        mode: "and",
+        conditions: [buildCondition("note-size", { condition: "lt", value: 100 })],
+        styles: [buildStyle("background")],
+      });
+
+      it("does not match a period with no note", () => {
+        expect(evaluateDaily(lessThan100, { registerNote: false }).size).toBe(0);
+      });
+
+      it("does not match a note whose size has not been read yet", () => {
+        expect(evaluateDaily(lessThan100, { registerNote: true }).size).toBe(0);
+      });
+
+      it("matches once the size is known", () => {
+        expect(evaluateDaily(lessThan100, { registerNote: true, size: { words: 40, characters: 220 } }).size).toBe(1);
+      });
+
+      it("does not match when the size is over the threshold", () => {
+        expect(evaluateDaily(lessThan100, { registerNote: true, size: { words: 400, characters: 2200 } }).size).toBe(0);
       });
     });
 

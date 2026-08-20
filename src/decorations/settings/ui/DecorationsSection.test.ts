@@ -4,7 +4,7 @@ import { createNanoEvents } from "nanoevents";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { reactive } from "vue";
 
-import { Calendar } from "@/calendar";
+import { Calendar, CalendarDate } from "@/calendar";
 import { installTestCalendar, testCalendar } from "@/calendar/testing";
 import {
   DecorationEngine,
@@ -18,10 +18,10 @@ import {
 import { m } from "@/i18n";
 import { provideInjectorOnApp } from "@/infrastructure/di";
 import { Flows } from "@/infrastructure/flows";
-import { NoteMetadataService, NoticeService } from "@/infrastructure/host";
+import { NoteMetadataService, NoteSizeService, NoticeService, type VaultPath } from "@/infrastructure/host";
 import { ModalService } from "@/infrastructure/host/modals";
 import { FakeModalService } from "@/infrastructure/host/modals/testing";
-import { FakeNoteMetadataService, FakeNoticeService } from "@/infrastructure/host/testing";
+import { FakeNoteMetadataService, FakeNoteSizeService, FakeNoticeService } from "@/infrastructure/host/testing";
 import {
   CycleService,
   JournalsIndex,
@@ -70,7 +70,7 @@ function buildJournal(name: string, decorations: JournalDecoration[]): JournalCo
 
 // Seeds decorations only into the storage backing the owner under test, so a mismatched owner
 // (e.g. a journal owner while a shelf has decorations) would surface as a genuine test failure.
-function mount(owner: DecorationOwner, decorations: readonly JournalDecoration[]) {
+function mount(owner: DecorationOwner, decorations: readonly JournalDecoration[], options: { hasNote?: boolean } = {}) {
   const { container, service } = createSettingsService({ slices: [decorationsSlice] });
 
   const journalDecorations = owner.kind === "journal" ? [...decorations] : [];
@@ -99,10 +99,18 @@ function mount(owner: DecorationOwner, decorations: readonly JournalDecoration[]
   container.register(Flows).useValue(flows as unknown as Flows);
   container.register(Calendar).useValue(testCalendar());
   container.register(ModalService).useValue(modals as unknown as ModalService);
-  container.register(JournalsIndex).useClass(JournalsIndex);
+  const index = new JournalsIndex();
+  if (options.hasNote) {
+    const anchor = CalendarDate.today().toAnchor();
+    const path = `Daily/${anchor}.md` as VaultPath;
+    index.register({ journalName: "daily", anchor, path });
+    fakeMetadata.setMetadata(path, { title: "daily", tags: [], properties: {}, tasks: [] });
+  }
+  container.register(JournalsIndex).useValue(index);
   container.register(CycleService).useClass(CycleService);
   container.register(TimelineService).useClass(TimelineService);
   container.register(NoteMetadataService).useValue(fakeMetadata as unknown as NoteMetadataService);
+  container.register(NoteSizeService).useValue(new FakeNoteSizeService() as unknown as NoteSizeService);
   container.register(DecorationEngine).useClass(DecorationEngine);
   container.register(DecorationMatchService).useClass(DecorationMatchService);
 
@@ -223,5 +231,19 @@ describe("DecorationsSection", () => {
     await userEvent.click(screen.getByText(m.decoration_section_title_journal()));
 
     expect(screen.getByText(m.decoration_badge_no_notes())).toBeTruthy();
+  });
+
+  it("renders no badge row for a note-size decoration", async () => {
+    // The badge would need up to 90 unwarmed file reads with no reactive path to correct it,
+    // so it goes silent — and the row must be absent entirely, not an empty line.
+    const noteSizeDecoration = buildDecoration({
+      mode: "or",
+      conditions: [buildCondition("note-size", { condition: "gt", value: 100 })],
+      styles: [buildStyle("background")],
+    });
+    mount({ kind: "journal", journalName: "daily" }, [noteSizeDecoration], { hasNote: true });
+    await userEvent.click(screen.getByText(m.decoration_section_title_journal()));
+
+    expect(document.querySelector(".row-badge")).toBeNull();
   });
 });

@@ -1,0 +1,35 @@
+{
+  "version": 4,
+  "journals": {
+    "daily": {
+      "name": "daily",
+      "write": { "type": "day" },
+      "timeline": { "start": "", "end": { "kind": "never" } },
+      "dateFormat": "YYYY-MM-DD",
+      "frontmatter": {
+        "dateField": "journal-date",
+        "startDateField": "journal-start-date",
+        "endDateField": "journal-end-date",
+        "addStartDate": false,
+        "addEndDate": false
+      },
+      "numbering": { "enabled": false, "anchorDate": "", "allowBefore": false, "sources": [] },
+      "decorations": [
+        {
+          "mode": "and",
+          "conditions": [{ "type": "note-size", "unit": "words", "condition": "gt", "value": 5 }],
+          "styles": [
+            { "type": "corner", "placement": "top-left", "color": { "type": "custom", "color": "#ff0000" } }
+          ]
+        },
+        {
+          "mode": "and",
+          "conditions": [{ "type": "note-size", "unit": "words", "condition": "lt", "value": 1 }],
+          "styles": [
+            { "type": "corner", "placement": "top-left", "color": { "type": "custom", "color": "#ff0000" } }
+          ]
+        }
+      ]
+    }
+  }
+}

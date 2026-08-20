@@ -936,6 +936,38 @@
 	],
 	"decoration_condition_has_note_describe": "il existe une note",
 	"decoration_condition_has_open_task_describe": "la note contient une tâche ouverte",
+	"decoration_condition_note_size_describe": [
+		{
+			"declarations": [
+				"input unit",
+				"input op",
+				"input value"
+			],
+			"selectors": [
+				"unit"
+			],
+			"match": {
+				"unit=words": "la note a {op} {value} mots",
+				"unit=characters": "la note a {op} {value} caractères"
+			}
+		}
+	],
+	"decoration_condition_note_size_unit_label": "Unité",
+	"decoration_condition_note_size_unit_option": [
+		{
+			"declarations": [
+				"input unit"
+			],
+			"selectors": [
+				"unit"
+			],
+			"match": {
+				"unit=words": "Mots",
+				"unit=characters": "Caractères"
+			}
+		}
+	],
+	"decoration_condition_note_size_value_label": "Valeur de la taille de la note",
 	"decoration_condition_offset_day_label": "Jour",
 	"decoration_condition_offset_describe": [
 		{
@@ -1013,7 +1045,8 @@
 				"type=offset": "Décalage",
 				"type=has-note": "A une note",
 				"type=has-open-task": "A une tâche ouverte",
-				"type=all-tasks-completed": "Toutes les tâches terminées"
+				"type=all-tasks-completed": "Toutes les tâches terminées",
+				"type=note-size": "Taille de la note"
 			}
 		}
 	],
@@ -1034,7 +1067,8 @@
 				"type=offset": "Vérifier le décalage d’intervalle",
 				"type=has-note": "Vérifier si la note existe",
 				"type=has-open-task": "Vérifier si la note a des tâches ouvertes",
-				"type=all-tasks-completed": "Vérifier si toutes les tâches sont terminées"
+				"type=all-tasks-completed": "Vérifier si toutes les tâches sont terminées",
+				"type=note-size": "Vérifier la taille de la note"
 			}
 		}
 	],

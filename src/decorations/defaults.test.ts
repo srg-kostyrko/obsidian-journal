@@ -55,4 +55,8 @@ describe("defaultCondition", () => {
   it("points a new offset condition at the interval's first day", () => {
     expect(defaultCondition("offset")).toEqual({ type: "offset", offset: 1 });
   });
+
+  it("defaults a note-size condition to words greater than zero", () => {
+    expect(defaultCondition("note-size")).toEqual({ type: "note-size", unit: "words", condition: "gt", value: 0 });
+  });
 });

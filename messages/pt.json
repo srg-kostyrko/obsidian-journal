@@ -932,6 +932,38 @@
 	],
 	"decoration_condition_has_note_describe": "existe uma nota",
 	"decoration_condition_has_open_task_describe": "a nota tem uma tarefa em aberto",
+	"decoration_condition_note_size_describe": [
+		{
+			"declarations": [
+				"input unit",
+				"input op",
+				"input value"
+			],
+			"selectors": [
+				"unit"
+			],
+			"match": {
+				"unit=words": "a nota tem {op} {value} palavras",
+				"unit=characters": "a nota tem {op} {value} caracteres"
+			}
+		}
+	],
+	"decoration_condition_note_size_unit_label": "Unidade",
+	"decoration_condition_note_size_unit_option": [
+		{
+			"declarations": [
+				"input unit"
+			],
+			"selectors": [
+				"unit"
+			],
+			"match": {
+				"unit=words": "Palavras",
+				"unit=characters": "Caracteres"
+			}
+		}
+	],
+	"decoration_condition_note_size_value_label": "Valor do tamanho da nota",
 	"decoration_condition_offset_day_label": "Dia",
 	"decoration_condition_offset_describe": [
 		{
@@ -1009,7 +1041,8 @@
 				"type=offset": "Deslocamento",
 				"type=has-note": "Tem nota",
 				"type=has-open-task": "Tem tarefa em aberto",
-				"type=all-tasks-completed": "Todas as tarefas concluídas"
+				"type=all-tasks-completed": "Todas as tarefas concluídas",
+				"type=note-size": "Tamanho da nota"
 			}
 		}
 	],
@@ -1030,7 +1063,8 @@
 				"type=offset": "Verificar o deslocamento no intervalo",
 				"type=has-note": "Verificar se a nota existe",
 				"type=has-open-task": "Verificar se a nota tem tarefas em aberto",
-				"type=all-tasks-completed": "Verificar se todas as tarefas estão concluídas"
+				"type=all-tasks-completed": "Verificar se todas as tarefas estão concluídas",
+				"type=note-size": "Verificar o tamanho da nota"
 			}
 		}
 	],

@@ -6,6 +6,7 @@ import { InputSuggestService } from "./input-suggests/internal/input-suggest-ser
 import { MarkdownRenderService } from "./internal/markdown-render-service";
 import { MetadataTypeService } from "./internal/metadata-type-service";
 import { NoteMetadataService } from "./internal/note-metadata-service";
+import { NoteSizeService } from "./internal/note-size-service";
 import { NotesService } from "./internal/notes-service";
 import { NoticeService } from "./internal/notice-service";
 import { PluginData } from "./internal/plugin-data";
@@ -26,6 +27,7 @@ export function createHostModule(plugin: Plugin): Module {
       c.register(InternalObsidianAppToken).useValue(plugin.app);
       c.register(NotesService).useClass(NotesService).eager();
       c.register(NoteMetadataService).useClass(NoteMetadataService);
+      c.register(NoteSizeService).useClass(NoteSizeService);
       c.register(MetadataTypeService).useClass(MetadataTypeService);
       c.register(MarkdownRenderService).useClass(MarkdownRenderService);
       c.register(NoticeService).useClass(NoticeService);

@@ -173,6 +173,7 @@ They **layer**: for each property a cell can only have once — background, text
 
   - **Note content** (journal decorations): Title, tag, or frontmatter property. Titles and tags match by contains, starts with, or ends with; properties also offer exists, equals, comparisons, and true/false for checkboxes
   - **Note status** (journal decorations): Has note, has open tasks, all tasks completed
+  - **Note size** (journal decorations): Matches on the note's word or character count, using the same definition as Obsidian's own word count — frontmatter is not counted, everything else is, including code blocks and comments. The number is the one Obsidian shows in the status bar.
   - **Date and weekday** (calendar and shelf decorations, and daily journals): A specific day, month, and/or year — each of which can be left as "any" — or a set of weekdays
   - **Position** (custom-interval journals): The Nth day of the interval, counted from its start or from its end
 
@@ -189,11 +190,16 @@ They **layer**: for each property a cell can only have once — background, text
 
 - **Combinations**: Use AND logic (all conditions must match) or OR logic (any condition can match)
 
-- **Match badge**: Each decoration in the settings list reports how often it matched recently ("Matched 3 of the last 90 days"), so a rule that never fires is easy to spot
+- **Match badge**: Each decoration in the settings list reports how often it matched recently ("Matched 3 of the last 90 days"), so a rule that never fires is easy to spot. A note-size rule shows no badge — estimating it would mean reading every note in the window
 
 - **Decoration breakdown**: Right-click a decorated cell — in a calendar, a navigation block, or a toolbar's period buttons — and choose _Explain decorations_ to see, property by property, which rule produced each color, border, and mark, and which rules it overrode
 
 - **Inspect a date**: From any decorations section, open _Inspect a date_ to pick a date and a shelf and see everything decorating it across all three scopes
+
+- **Recipes**:
+
+  - **Coming from the Calendar plugin?** Its "words per dot" ladder (default 250, capped at five dots) becomes five decorations here, each with one dot style: a _has note_ condition, then note size > 500, > 750, > 1000, and > 1250
+  - **One dot per band, instead of a growing row**: add two note-size conditions to the same decoration — >= 250 and < 1000 — and it matches only inside that band, so each band can carry its own color or shape
 
 ### Custom Commands
 

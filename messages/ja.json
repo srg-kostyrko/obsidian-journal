@@ -743,6 +743,38 @@
 	],
 	"decoration_condition_has_note_describe": "ノートが存在する",
 	"decoration_condition_has_open_task_describe": "ノートに未完了のタスクがある",
+	"decoration_condition_note_size_describe": [
+		{
+			"declarations": [
+				"input unit",
+				"input op",
+				"input value"
+			],
+			"selectors": [
+				"unit"
+			],
+			"match": {
+				"unit=words": "ノートの単語数 {op} {value}",
+				"unit=characters": "ノートの文字数 {op} {value}"
+			}
+		}
+	],
+	"decoration_condition_note_size_unit_label": "単位",
+	"decoration_condition_note_size_unit_option": [
+		{
+			"declarations": [
+				"input unit"
+			],
+			"selectors": [
+				"unit"
+			],
+			"match": {
+				"unit=words": "単語",
+				"unit=characters": "文字"
+			}
+		}
+	],
+	"decoration_condition_note_size_value_label": "ノートのサイズの値",
 	"decoration_condition_offset_day_label": "日",
 	"decoration_condition_offset_describe": [
 		{
@@ -820,7 +852,8 @@
 				"type=offset": "オフセット",
 				"type=has-note": "ノートあり",
 				"type=has-open-task": "未完了タスクあり",
-				"type=all-tasks-completed": "全タスク完了"
+				"type=all-tasks-completed": "全タスク完了",
+				"type=note-size": "ノートのサイズ"
 			}
 		}
 	],
@@ -841,7 +874,8 @@
 				"type=offset": "間隔内のオフセットを確認",
 				"type=has-note": "ノートの有無を確認",
 				"type=has-open-task": "未完了タスクの有無を確認",
-				"type=all-tasks-completed": "すべてのタスクが完了しているか確認"
+				"type=all-tasks-completed": "すべてのタスクが完了しているか確認",
+				"type=note-size": "ノートのサイズを確認"
 			}
 		}
 	],

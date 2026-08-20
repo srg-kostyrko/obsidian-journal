@@ -15,6 +15,7 @@ export {
 export { MarkdownRenderService } from "./internal/markdown-render-service";
 export { MetadataTypeService } from "./internal/metadata-type-service";
 export { NoteMetadataService } from "./internal/note-metadata-service";
+export { NoteSizeService, type NoteSizeEvents } from "./internal/note-size-service";
 export { NoticeService } from "./internal/notice-service";
 export { NotesService } from "./internal/notes-service";
 export { PluginData } from "./internal/plugin-data";
@@ -24,6 +25,7 @@ export { TemplatesService } from "./internal/templates-service";
 export { renderIcon } from "./internal/icons";
 export { defineOpenMode } from "./define-open-mode";
 export { basenameOf } from "./paths";
+export { useNoteSizeVersion } from "./use-note-size-version";
 export {
   defineModal,
   ModalCancelled,
@@ -65,6 +67,7 @@ export type {
   MenuItemSpec,
   Note,
   NoteMetadata,
+  NoteSize,
   NoteTask,
   NotesEvents,
   OpenMode,

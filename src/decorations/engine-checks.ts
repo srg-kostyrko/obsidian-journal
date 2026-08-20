@@ -1,7 +1,7 @@
 import { match, P } from "ts-pattern";
 
 import type { Period } from "@/calendar";
-import type { NoteMetadata } from "@/infrastructure/host";
+import type { NoteMetadata, NoteSize } from "@/infrastructure/host";
 import type { CycleService } from "@/journals";
 import type { JournalConfig } from "@/journals/config";
 
@@ -9,6 +9,7 @@ import { matchesDate } from "./date-condition";
 
 import type {
   JournalDecorationDateCondition,
+  JournalDecorationNoteSizeCondition,
   JournalDecorationOffsetCondition,
   JournalDecorationPropertyCondition,
   JournalDecorationTagCondition,
@@ -152,6 +153,16 @@ export function checkOffset(
   const [positive, negative] = result.value;
   if (condition.offset < 0) return negative === condition.offset;
   return positive === condition.offset;
+}
+
+export function checkNoteSize(condition: JournalDecorationNoteSizeCondition, size: NoteSize): boolean {
+  const actual = condition.unit === "words" ? size.words : size.characters;
+  return match(condition.condition)
+    .with("lt", () => actual < condition.value)
+    .with("lte", () => actual <= condition.value)
+    .with("gt", () => actual > condition.value)
+    .with("gte", () => actual >= condition.value)
+    .exhaustive();
 }
 
 export function hasOpenTask(metadata: NoteMetadata): boolean {

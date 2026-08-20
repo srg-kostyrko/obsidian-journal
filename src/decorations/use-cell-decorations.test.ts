@@ -7,8 +7,14 @@ import { CalendarDate, DayPeriod, WeekPeriod } from "@/calendar";
 import type { Period } from "@/calendar";
 import { installTestCalendar } from "@/calendar/testing";
 import { provideInjectorOnApp, type Container } from "@/infrastructure/di";
-import { NoteMetadataService, NotesService, type NotesEvents, type VaultPath } from "@/infrastructure/host";
-import { FakeNoteMetadataService } from "@/infrastructure/host/testing";
+import {
+  NoteMetadataService,
+  NoteSizeService,
+  NotesService,
+  type NotesEvents,
+  type VaultPath,
+} from "@/infrastructure/host";
+import { FakeNoteMetadataService, FakeNoteSizeService } from "@/infrastructure/host/testing";
 import { CycleService, JournalsIndex, JournalsRepository, TimelineService } from "@/journals";
 import type { JournalConfig } from "@/journals/config";
 import { fakeRepo, fixedJournal } from "@/journals/testing";
@@ -33,6 +39,7 @@ interface Harness {
   c: Container;
   notesEmitter: Emitter<NotesEvents>;
   fakeMetadata: FakeNoteMetadataService;
+  size: FakeNoteSizeService;
   store: DecorationsStore;
 }
 
@@ -56,6 +63,8 @@ function buildHarnessFrom(journals: JournalsRepository, notesEmitter: Emitter<No
   c.register(TimelineService).useClass(TimelineService);
   const fakeMetadata = new FakeNoteMetadataService();
   c.register(NoteMetadataService).useValue(fakeMetadata as unknown as NoteMetadataService);
+  const size = new FakeNoteSizeService();
+  c.register(NoteSizeService).useValue(size as unknown as NoteSizeService);
   c.register(NotesService).useValue({ events: notesEmitter } as unknown as NotesService);
   c.register(DecorationEngine).useClass(DecorationEngine);
   const shelfStorage = reactive<Record<string, ShelfConfig>>({
@@ -64,7 +73,7 @@ function buildHarnessFrom(journals: JournalsRepository, notesEmitter: Emitter<No
   c.register(ShelvesRepository).useValue(ShelvesRepository.fromParts(shelfStorage, createNanoEvents<ShelvesEvents>()));
   c.register(DecorationsStore).useClass(DecorationsStore);
   const store = c.resolve(DecorationsStore);
-  return { c, notesEmitter, fakeMetadata, store };
+  return { c, notesEmitter, fakeMetadata, size, store };
 }
 
 function buildHarness(decorations: JournalConfig["decorations"] = []): Harness {
@@ -378,6 +387,59 @@ describe("useCellDecorations", () => {
       await nextTick();
 
       expect(slot.value).toHaveLength(1);
+    });
+
+    it("updates the affected anchor when a note size lands", async () => {
+      const decoration = buildDecoration({
+        mode: "or",
+        conditions: [buildCondition("note-size", { condition: "gt", value: 100 })],
+        styles: [buildStyle("background")],
+      });
+      const h = buildHarness([decoration]);
+      const period = DayPeriod.containing(date("2026-05-25"));
+      const path = "Daily/2026-05-25.md" as VaultPath;
+      h.c.resolve(JournalsIndex).register({ journalName: "daily", anchor: period.anchor.toAnchor(), path });
+
+      const { captured } = mount(h.c, () =>
+        useCellDecorations({ periods: () => [period], journalNames: () => ["daily"] }),
+      );
+      await nextTick();
+
+      const slot = captured.value!.get(key(period))!;
+      // Absent on first paint by design: the size has not been read yet.
+      expect(slot.value).toHaveLength(0);
+
+      h.size.setSize(path, { words: 400, characters: 2200 });
+      await nextTick();
+
+      expect(slot.value).toHaveLength(1);
+    });
+
+    it("does not touch the slot when a size lands for an out-of-scope path", async () => {
+      const decoration = buildDecoration({
+        mode: "or",
+        conditions: [buildCondition("note-size", { condition: "gt", value: 100 })],
+        styles: [buildStyle("background")],
+      });
+      const h = buildHarness([decoration]);
+      const period = DayPeriod.containing(date("2026-05-25"));
+      h.c.resolve(JournalsIndex).register({
+        journalName: "daily",
+        anchor: period.anchor.toAnchor(),
+        path: "Daily/2026-05-25.md" as VaultPath,
+      });
+
+      const { captured } = mount(h.c, () =>
+        useCellDecorations({ periods: () => [period], journalNames: () => ["daily"] }),
+      );
+      await nextTick();
+
+      const slot = captured.value!.get(key(period))!;
+      const initial = slot.value;
+      h.size.setSize("Other/random.md" as VaultPath, { words: 400, characters: 2200 });
+      await nextTick();
+
+      expect(slot.value).toBe(initial);
     });
 
     it("detaches subscriptions on unmount", async () => {

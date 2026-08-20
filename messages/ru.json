@@ -942,6 +942,38 @@
 	],
 	"decoration_condition_has_note_describe": "заметка существует",
 	"decoration_condition_has_open_task_describe": "в заметке есть незавершённая задача",
+	"decoration_condition_note_size_describe": [
+		{
+			"declarations": [
+				"input unit",
+				"input op",
+				"input value"
+			],
+			"selectors": [
+				"unit"
+			],
+			"match": {
+				"unit=words": "в заметке {op} {value} слов",
+				"unit=characters": "в заметке {op} {value} символов"
+			}
+		}
+	],
+	"decoration_condition_note_size_unit_label": "Единица",
+	"decoration_condition_note_size_unit_option": [
+		{
+			"declarations": [
+				"input unit"
+			],
+			"selectors": [
+				"unit"
+			],
+			"match": {
+				"unit=words": "Слова",
+				"unit=characters": "Символы"
+			}
+		}
+	],
+	"decoration_condition_note_size_value_label": "Значение размера заметки",
 	"decoration_condition_offset_day_label": "День",
 	"decoration_condition_offset_describe": [
 		{
@@ -1019,7 +1051,8 @@
 				"type=offset": "Смещение",
 				"type=has-note": "Есть заметка",
 				"type=has-open-task": "Есть незавершённая задача",
-				"type=all-tasks-completed": "Все задачи выполнены"
+				"type=all-tasks-completed": "Все задачи выполнены",
+				"type=note-size": "Размер заметки"
 			}
 		}
 	],
@@ -1040,7 +1073,8 @@
 				"type=offset": "Проверить смещение в интервале",
 				"type=has-note": "Проверить, существует ли заметка",
 				"type=has-open-task": "Проверить, есть ли в заметке незавершённые задачи",
-				"type=all-tasks-completed": "Проверить, все ли задачи выполнены"
+				"type=all-tasks-completed": "Проверить, все ли задачи выполнены",
+				"type=note-size": "Проверить размер заметки"
 			}
 		}
 	],

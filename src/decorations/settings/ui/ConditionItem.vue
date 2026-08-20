@@ -5,6 +5,7 @@ import { computed, type Component } from "vue";
 import type { JournalDecorationCondition } from "@/decorations";
 
 import ConditionDate from "./ConditionDate.vue";
+import ConditionNoteSize from "./ConditionNoteSize.vue";
 import ConditionOffset from "./ConditionOffset.vue";
 import ConditionProperty from "./ConditionProperty.vue";
 import ConditionTag from "./ConditionTag.vue";
@@ -22,6 +23,7 @@ const leaf = computed<Component>(() =>
     .with("date", () => ConditionDate)
     .with("weekday", () => ConditionWeekday)
     .with("offset", () => ConditionOffset)
+    .with("note-size", () => ConditionNoteSize)
     .with("has-note", "has-open-task", "all-tasks-completed", () => ConditionTypeOnly)
     .exhaustive(),
 );

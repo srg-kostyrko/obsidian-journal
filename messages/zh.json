@@ -743,6 +743,38 @@
 	],
 	"decoration_condition_has_note_describe": "存在笔记",
 	"decoration_condition_has_open_task_describe": "笔记有未完成的任务",
+	"decoration_condition_note_size_describe": [
+		{
+			"declarations": [
+				"input unit",
+				"input op",
+				"input value"
+			],
+			"selectors": [
+				"unit"
+			],
+			"match": {
+				"unit=words": "笔记字数 {op} {value}",
+				"unit=characters": "笔记字符数 {op} {value}"
+			}
+		}
+	],
+	"decoration_condition_note_size_unit_label": "单位",
+	"decoration_condition_note_size_unit_option": [
+		{
+			"declarations": [
+				"input unit"
+			],
+			"selectors": [
+				"unit"
+			],
+			"match": {
+				"unit=words": "单词",
+				"unit=characters": "字符"
+			}
+		}
+	],
+	"decoration_condition_note_size_value_label": "笔记大小数值",
 	"decoration_condition_offset_day_label": "天数",
 	"decoration_condition_offset_describe": [
 		{
@@ -820,7 +852,8 @@
 				"type=offset": "偏移",
 				"type=has-note": "有笔记",
 				"type=has-open-task": "有未完成的任务",
-				"type=all-tasks-completed": "所有任务已完成"
+				"type=all-tasks-completed": "所有任务已完成",
+				"type=note-size": "笔记大小"
 			}
 		}
 	],
@@ -841,7 +874,8 @@
 				"type=offset": "检查间隔偏移",
 				"type=has-note": "检查是否存在笔记",
 				"type=has-open-task": "检查笔记是否有未完成的任务",
-				"type=all-tasks-completed": "检查是否所有任务都已完成"
+				"type=all-tasks-completed": "检查是否所有任务都已完成",
+				"type=note-size": "检查笔记大小"
 			}
 		}
 	],

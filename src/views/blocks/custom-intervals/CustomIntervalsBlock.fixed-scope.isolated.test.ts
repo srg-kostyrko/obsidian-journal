@@ -10,8 +10,14 @@ import { decorationsSlice, DecorationEngine, DecorationsStore, type CellStyleRef
 import { cellKey } from "@/decorations/engine";
 import { buildCondition, buildDecoration, buildStyle } from "@/decorations/testing";
 import { Container, provideInjectorOnApp } from "@/infrastructure/di";
-import { NoteMetadataService, NotesService, PluginData, type NotesEvents } from "@/infrastructure/host";
-import { FakeNoteMetadataService, FakePluginData } from "@/infrastructure/host/testing";
+import {
+  NoteMetadataService,
+  NoteSizeService,
+  NotesService,
+  PluginData,
+  type NotesEvents,
+} from "@/infrastructure/host";
+import { FakeNoteMetadataService, FakeNoteSizeService, FakePluginData } from "@/infrastructure/host/testing";
 import { createLoggerTestingModule } from "@/infrastructure/logger/testing";
 import { CycleService, JournalsIndex, JournalsRepository, journalDefaultsFor, TimelineService } from "@/journals";
 import type { JournalConfig, NavBlockSegment } from "@/journals";
@@ -94,6 +100,7 @@ function mountBlock(config: CustomIntervalsConfig, contextOverride: Partial<View
   container.register(DecorationEngine).useClass(DecorationEngine);
   const metadata = new FakeNoteMetadataService();
   container.register(NoteMetadataService).useValue(metadata as unknown as NoteMetadataService);
+  container.register(NoteSizeService).useValue(new FakeNoteSizeService() as unknown as NoteSizeService);
   container.register(NotesService).useValue({ events: createNanoEvents<NotesEvents>() } as unknown as NotesService);
   container.register(PluginData).useValue(new FakePluginData() as unknown as PluginData);
   container.register(SnapshotService).useClass(SnapshotService);

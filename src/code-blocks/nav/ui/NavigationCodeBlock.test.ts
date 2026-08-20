@@ -13,6 +13,7 @@ import { Container, provideInjectorOnApp } from "@/infrastructure/di";
 import { Flows } from "@/infrastructure/flows";
 import {
   NoteMetadataService,
+  NoteSizeService,
   NotesService,
   PluginData,
   WorkspaceService,
@@ -24,7 +25,12 @@ import {
 } from "@/infrastructure/host";
 import { ModalService } from "@/infrastructure/host/modals";
 import { FakeModalService } from "@/infrastructure/host/modals/testing";
-import { FakeNoteMetadataService, FakeNoticeService, FakePluginData } from "@/infrastructure/host/testing";
+import {
+  FakeNoteMetadataService,
+  FakeNoteSizeService,
+  FakeNoticeService,
+  FakePluginData,
+} from "@/infrastructure/host/testing";
 import { createLoggerTestingModule } from "@/infrastructure/logger/testing";
 import { RepositoryQuery } from "@/infrastructure/repository";
 import { AsyncResult, Option } from "@/infrastructure/result";
@@ -157,6 +163,7 @@ function buildHarness(journals: Record<string, JournalConfig>): Harness {
   container.register(OpenDateFlow).useValue({} as OpenDateFlow);
   const fakeMetadata = new FakeNoteMetadataService();
   container.register(NoteMetadataService).useValue(fakeMetadata as unknown as NoteMetadataService);
+  container.register(NoteSizeService).useValue(new FakeNoteSizeService() as unknown as NoteSizeService);
   container.register(NotesService).useValue({ events: createNanoEvents<NotesEvents>() } as unknown as NotesService);
   container.register(DecorationEngine).useClass(DecorationEngine);
   container.register(TemplateEngine).useClass(TemplateEngine);

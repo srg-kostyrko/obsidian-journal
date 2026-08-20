@@ -4,8 +4,8 @@ import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { CalendarDate } from "@/calendar";
 import { installTestCalendar } from "@/calendar/testing";
 import type { Container } from "@/infrastructure/di";
-import { NoteMetadataService, type VaultPath } from "@/infrastructure/host";
-import { FakeNoteMetadataService } from "@/infrastructure/host/testing";
+import { NoteMetadataService, NoteSizeService, type VaultPath } from "@/infrastructure/host";
+import { FakeNoteMetadataService, FakeNoteSizeService } from "@/infrastructure/host/testing";
 import { CycleService, JournalsIndex, JournalsRepository, TimelineService } from "@/journals";
 import type { JournalConfig } from "@/journals/config";
 import { customJournal, fakeRepo, fixedJournal } from "@/journals/testing";
@@ -41,6 +41,7 @@ function buildHarness(journals: Record<string, JournalConfig> = {}): Harness {
   c.register(TimelineService).useClass(TimelineService);
   const fakeMetadata = new FakeNoteMetadataService();
   c.register(NoteMetadataService).useValue(fakeMetadata as unknown as NoteMetadataService);
+  c.register(NoteSizeService).useValue(new FakeNoteSizeService() as unknown as NoteSizeService);
   c.register(DecorationEngine).useClass(DecorationEngine);
   const shelfStorage: Record<string, ShelfConfig> = {};
   c.register(ShelvesRepository).useValue(ShelvesRepository.fromParts(shelfStorage, createNanoEvents<ShelvesEvents>()));
@@ -232,6 +233,57 @@ describe("DecorationMatchService", () => {
 
       const badge = h.service.describe({ kind: "journal", journalName: "daily" }, 0);
       expect(badge.kind).toBe("silent");
+    });
+  });
+
+  describe("note-size", () => {
+    const noteSizeDecoration = buildDecoration({
+      mode: "or",
+      conditions: [buildCondition("note-size", { condition: "gt", value: 100 })],
+      styles: [buildStyle("background")],
+    });
+
+    it("does not preview a decoration carrying a note-size condition", () => {
+      // The window is not warm and a count would be a guess, so no badge is offered.
+      const path = "Daily/2026-05-25.md" as VaultPath;
+      const h = buildHarness({ daily: fixedJournal("daily", { type: "day" }, { decorations: [noteSizeDecoration] }) });
+      h.index.register({ journalName: "daily", anchor: date("2026-05-25").toAnchor(), path });
+      h.fakeMetadata.setMetadata(path, { title: "2026-05-25", tags: [], properties: {}, tasks: [] });
+
+      const badge = h.service.describe({ kind: "journal", journalName: "daily" }, 0);
+      expect(badge.kind).toBe("not-previewable");
+    });
+
+    it("still reports no-history for a note-size rule on a journal with no history", () => {
+      // The early return sits below the no-history check, so a journal whose timeline never
+      // overlaps the window still gets the more actionable verdict rather than going silent.
+      const h = buildHarness({
+        daily: fixedJournal(
+          "daily",
+          { type: "day" },
+          {
+            decorations: [noteSizeDecoration],
+            timeline: {
+              start: date("2026-08-01").toAnchor(),
+              end: { kind: "date", date: date("2026-01-01").toAnchor() },
+            },
+          },
+        ),
+      });
+
+      const badge = h.service.describe({ kind: "journal", journalName: "daily" }, 0);
+      expect(badge.kind).toBe("no-history");
+    });
+
+    it("still reports no-notes for a note-size rule when the window holds no notes", () => {
+      // The early return sits below the no-notes check too: needsNotes still fires for a
+      // note-size-only rule because match-window.ts's NOTE_BASED set carries "note-size".
+      const h = buildHarness({
+        daily: fixedJournal("daily", { type: "day" }, { decorations: [noteSizeDecoration] }),
+      });
+
+      const badge = h.service.describe({ kind: "journal", journalName: "daily" }, 0);
+      expect(badge.kind).toBe("no-notes");
     });
   });
 

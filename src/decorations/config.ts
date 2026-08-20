@@ -197,6 +197,14 @@ const offsetCondition = v.object({
   ),
 });
 
+const noteSizeCondition = v.object({
+  type: v.literal("note-size"),
+  unit: v.union([v.literal("words"), v.literal("characters")]),
+  condition: v.union([v.literal("lt"), v.literal("lte"), v.literal("gt"), v.literal("gte")]),
+  // Strict pipe is safe only because `ConditionNoteSize.vue` (isValidThreshold) is the sole writer and never lets a cleared or fractional value through.
+  value: v.pipe(v.number(), v.integer(), v.minValue(0)),
+});
+
 const hasNoteCondition = v.object({ type: v.literal("has-note") });
 const hasOpenTaskCondition = v.object({ type: v.literal("has-open-task") });
 const allTasksCompletedCondition = v.object({ type: v.literal("all-tasks-completed") });
@@ -211,6 +219,7 @@ export const decorationConditionSchema = v.union([
   hasNoteCondition,
   hasOpenTaskCondition,
   allTasksCompletedCondition,
+  noteSizeCondition,
 ]);
 export type JournalDecorationCondition = v.InferOutput<typeof decorationConditionSchema>;
 
@@ -233,6 +242,7 @@ export type JournalDecorationPropertyCondition = v.InferOutput<typeof propertyCo
 export type JournalDecorationDateCondition = v.InferOutput<typeof dateConditionSchema>;
 export type JournalDecorationWeekdayCondition = v.InferOutput<typeof weekdayCondition>;
 export type JournalDecorationOffsetCondition = v.InferOutput<typeof offsetCondition>;
+export type JournalDecorationNoteSizeCondition = v.InferOutput<typeof noteSizeCondition>;
 
 export const decorationSchema = v.object({
   mode: v.union([v.literal("and"), v.literal("or")]),

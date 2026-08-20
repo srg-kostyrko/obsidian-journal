@@ -116,7 +116,7 @@ export interface FakeHost {
   putFolder(path: string): TFolder;
   setPropertyType(name: string, type: string): void;
   assignPropertyType(name: string, type: string): void;
-  emitVault(event: "create" | "rename" | "delete", ...arguments_: unknown[]): void;
+  emitVault(event: "create" | "rename" | "delete" | "modify", ...arguments_: unknown[]): void;
   emitMetadata(path: string, metadata?: CachedMetadata): void;
   emitActiveLeafChange(file: TFile | null): void;
   emitFileOpen(file: TFile | null): void;
@@ -254,6 +254,9 @@ export function createFakeHost(): FakeHost {
       return file;
     },
     async read(file: TFile): Promise<string> {
+      return files.get(file.path)?.content ?? "";
+    },
+    async cachedRead(file: TFile): Promise<string> {
       return files.get(file.path)?.content ?? "";
     },
     async modify(file: TFile, content: string): Promise<void> {

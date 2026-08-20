@@ -15,11 +15,15 @@ words:
   - labelledby
   - lezer
   - linkpath
+  - macrotask
   - multitext
+  - nanoevents
   - offref
   - paraglide
+  - parameterless
   - passthroughs
   - popout
+  - previewable
   - rangeset
   - reanchor
   - recentered

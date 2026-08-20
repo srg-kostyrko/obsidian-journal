@@ -16,7 +16,10 @@ export interface NotesEvents {
   created: (note: Note) => void;
   renamed: (event: { from: VaultPath; to: VaultPath }) => void;
   deleted: (path: VaultPath) => void;
+  // The parse changed. For "the bytes changed", use `modified`.
   "metadata-changed": (path: VaultPath) => void;
+  // The bytes changed. Fires before metadata-changed and without its parse.
+  modified: (path: VaultPath) => void;
 }
 
 export interface WorkspaceEvents {
@@ -37,6 +40,11 @@ export interface NoteMetadata {
   readonly tags: readonly string[];
   readonly properties: Readonly<Record<string, unknown>>;
   readonly tasks: readonly NoteTask[];
+}
+
+export interface NoteSize {
+  readonly words: number;
+  readonly characters: number;
 }
 
 // A menu entry a feature contributes to a host-built context menu. The host stays ignorant of

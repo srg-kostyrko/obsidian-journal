@@ -17,3 +17,45 @@ describe("offset condition schema", () => {
     expect(parsed).toEqual({ type: "offset", offset: -3 });
   });
 });
+
+describe("note-size condition schema", () => {
+  it("parses a note-size condition", () => {
+    const result = v.safeParse(decorationConditionSchema, {
+      type: "note-size",
+      unit: "words",
+      condition: "gt",
+      value: 250,
+    });
+    expect(result.success).toBe(true);
+  });
+
+  it("rejects a negative note-size threshold", () => {
+    const result = v.safeParse(decorationConditionSchema, {
+      type: "note-size",
+      unit: "words",
+      condition: "gt",
+      value: -1,
+    });
+    expect(result.success).toBe(false);
+  });
+
+  it("rejects an eq operator on a note-size condition", () => {
+    const result = v.safeParse(decorationConditionSchema, {
+      type: "note-size",
+      unit: "words",
+      condition: "eq",
+      value: 250,
+    });
+    expect(result.success).toBe(false);
+  });
+
+  it("rejects a fractional note-size threshold", () => {
+    const result = v.safeParse(decorationConditionSchema, {
+      type: "note-size",
+      unit: "words",
+      condition: "gt",
+      value: 1.5,
+    });
+    expect(result.success).toBe(false);
+  });
+});

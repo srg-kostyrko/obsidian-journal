@@ -513,6 +513,28 @@
   ],
   "decoration_condition_has_note_describe": "a note exists",
   "decoration_condition_has_open_task_describe": "the note has an open task",
+  "decoration_condition_note_size_describe": [
+    {
+      "declarations": ["input unit", "input op", "input value"],
+      "selectors": ["unit"],
+      "match": {
+        "unit=words": "note has {op} {value} words",
+        "unit=characters": "note has {op} {value} characters"
+      }
+    }
+  ],
+  "decoration_condition_note_size_unit_label": "Unit",
+  "decoration_condition_note_size_unit_option": [
+    {
+      "declarations": ["input unit"],
+      "selectors": ["unit"],
+      "match": {
+        "unit=words": "Words",
+        "unit=characters": "Characters"
+      }
+    }
+  ],
+  "decoration_condition_note_size_value_label": "Note size value",
   "decoration_condition_offset_day_label": "Day",
   "decoration_condition_offset_describe": [
     {
@@ -570,7 +592,8 @@
         "type=offset": "Offset",
         "type=has-note": "Has note",
         "type=has-open-task": "Has open task",
-        "type=all-tasks-completed": "All tasks completed"
+        "type=all-tasks-completed": "All tasks completed",
+        "type=note-size": "Note size"
       }
     }
   ],
@@ -587,7 +610,8 @@
         "type=offset": "Check interval offset",
         "type=has-note": "Check if note exists",
         "type=has-open-task": "Check if note has open tasks",
-        "type=all-tasks-completed": "Check if all tasks are completed"
+        "type=all-tasks-completed": "Check if all tasks are completed",
+        "type=note-size": "Check note size"
       }
     }
   ],
