@@ -249,10 +249,16 @@ on it.
 - Cold-boot metadata races cannot be reproduced in e2e: fresh fixture notes fire
   `metadataCache` "changed", which live listeners catch, masking the bug. Test
   these at unit level by faking `getFileCache` to return null until "resolved".
-- The junit reporter writes a fixed filename, so after a full-suite run the
-  report holds only the last spec file. Locate a failure through
-  `e2e/.reports/screenshots/` — one PNG per failing test, named for the test
-  title.
+- The junit reporter resolves its filename once per runner, and `cid` is unique
+  per spec file, so the name must carry it (`e2e-junit-${cid}.xml`) or each spec
+  overwrites the last and the run's report ends up holding only whichever
+  finished last. That is why CI's results check read "1 tests run" beside a
+  failed job. `report_paths` in the workflow globs the set. A failing test also
+  leaves a PNG in `e2e/.reports/screenshots/`, named for the test title.
+- `e2e/.reports` is a dot-directory, so anything reading it from CI needs to opt
+  into hidden paths — `actions/upload-artifact` skips them by default and says so
+  only as "No files were found with the provided path", which reads like the
+  suite wrote nothing.
 - A live `npm run dev` rebuilds the same bundle the suite loads, so reverting a
   fix to prove a spec goes red races the watcher and can pass with the bug
   supposedly reinstated. Pause the watcher around any revert-and-verify window.

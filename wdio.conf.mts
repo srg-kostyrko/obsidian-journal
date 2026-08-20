@@ -54,7 +54,13 @@ export const config: WebdriverIO.Config = {
   // retry/quarantine visibility a CI artifact.
   reporters: [
     "obsidian",
-    ["junit", { outputDir: "./e2e/.reports", outputFileFormat: () => "e2e-junit.xml" }],
+    // One report per spec file: getLogFile resolves this once per runner and `cid` is unique per
+    // spec, so a fixed name would leave the whole suite's report holding only the last spec to
+    // finish — which is why CI's junit check reported "1 tests run" beside a failed job.
+    [
+      "junit",
+      { outputDir: "./e2e/.reports", outputFileFormat: ({ cid }: { cid: string }) => `e2e-junit-${cid}.xml` },
+    ],
   ],
 
   cacheDir: path.resolve(".obsidian-cache"),
