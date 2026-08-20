@@ -60,6 +60,7 @@ export { default as CellDecoration } from "./ui/CellDecoration.vue";
 export { colorToString } from "./ui/color";
 export { default as DecorationPreview } from "./ui/DecorationPreview.vue";
 export { useCellDecorations } from "./use-cell-decorations";
+export { useCellPadding } from "./use-cell-padding";
 export { useDecorationMenuItems } from "./ui/use-decoration-menu-item";
 export {
   DecorationLifecycleFlowError,
@@ -69,6 +70,6 @@ export {
   type DecorationLifecycleError,
 } from "./errors";
 export { attributeCell, type CellAttribution, type PropertyAttribution } from "./attribute-cell";
-export { declaredProperties, type ExclusiveProperty } from "./resolve-cell";
+export { declaredProperties, horizontalReservation, type ExclusiveProperty } from "./resolve-cell";
 export { decorationBreakdownModal, decorationCellModal } from "./ui/modals";
 export type { BreakdownEntry } from "./ui/breakdown-entry";

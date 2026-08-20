@@ -21,6 +21,7 @@ import {
   TIMELINE_QUARTER_FENCE,
   clickNavNext,
   hostNote,
+  monthGridLayout,
   narrowNavLayout,
   openInReadingMode,
   plainNote,
@@ -352,6 +353,20 @@ describe("code blocks", () => {
       });
 
       assertDecorationMatrix(timelineCalendar);
+
+      it("keeps every month of a quarter timeline the same width", async () => {
+        await renderBlock(
+          "blocks/timeline-quarter-decorated.md",
+          plainNote(TIMELINE_QUARTER_FENCE),
+          `${TIMELINE_BLOCK} .notes-month-view`,
+        );
+        // The fixture's notes all sit in the current month, so a reservation taken from the
+        // cells that matched gave that month wider cells than its two siblings, squeezed them
+        // to their own content and pushed the last one out of the note.
+        const layout = await monthGridLayout(`${TIMELINE_BLOCK} .timeline-quarter`, 1000);
+        expect(new Set(layout.widths).size).toBe(1);
+        expect(layout.overflowX).toBe(0);
+      });
     });
   });
 });
