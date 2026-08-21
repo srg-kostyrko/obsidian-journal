@@ -60,6 +60,15 @@ const noEagerMessage = {
     "`m.*()` at module scope resolves to the base locale because `initLocale()` runs in `onload()`. Wrap it in a factory called at use time.",
 };
 
+// `Container.override` exists for the test host boundary (src/testing.ts) and is defined and
+// tested under src/infrastructure/di/**; production wiring registers once, in a module. ESLint
+// selectors can't see types, so this also matches any other object's `.override(...)` method —
+// accepted, since none exists in this codebase today.
+const noProductionOverride = {
+  selector: "CallExpression[callee.property.name='override'][callee.object.type!='ThisExpression']",
+  message: "Container.override exists for the test host boundary. Production wiring registers once, in a module.",
+};
+
 export default [
   {
     ignores: [
@@ -233,17 +242,22 @@ export default [
     files: ["src/**/*.ts"],
     ignores: ["src/infrastructure/di/**"],
     rules: {
-      "no-restricted-syntax": [
-        "error",
-        noRawError,
-        noStrayDefineModal,
-        noEagerMessage,
-        {
-          selector: "CallExpression[callee.property.name='override'][callee.object.type!='ThisExpression']",
-          message:
-            "Container.override exists for the test host boundary. Production wiring registers once, in a module.",
-        },
-      ],
+      "no-restricted-syntax": ["error", noRawError, noStrayDefineModal, noEagerMessage, noProductionOverride],
+    },
+  },
+  {
+    // `.vue` files get the override ban too — nothing stops a component importing a
+    // `Container` and calling `.override(...)` — but not `noEagerMessage`: a `<script setup>`
+    // body reads as module scope in the AST but executes per component instance, so the rule
+    // would be a guaranteed false positive here (see the exemption note above `noEagerMessage`).
+    // `noRawError`/`noStrayDefineModal` are already enforced for `.vue` through the base rules
+    // block above (it carries no `files` filter); repeating them here just keeps this block's
+    // `no-restricted-syntax` array from silently dropping that enforcement, since flat config
+    // rule values replace rather than merge.
+    files: ["src/**/*.vue"],
+    ignores: ["src/infrastructure/di/**"],
+    rules: {
+      "no-restricted-syntax": ["error", noRawError, noStrayDefineModal, noProductionOverride],
     },
   },
   {
