@@ -514,4 +514,20 @@ describe("override", () => {
 
     expect(() => c.override(token)).toThrow(ContainerDisposedError);
   });
+
+  it("throws CannotOverrideError for a Scoped binding", () => {
+    const c = new Container();
+    const token = createToken<string>("scoped");
+    c.register(token).useValue("original").lifetime(Lifetime.Scoped);
+
+    expect(() => c.override(token)).toThrow(CannotOverrideError);
+  });
+
+  it("reports reason 'scoped' for a Scoped binding", () => {
+    const c = new Container();
+    const token = createToken<string>("scoped");
+    c.register(token).useValue("original").lifetime(Lifetime.Scoped);
+
+    expect(() => c.override(token)).toThrow(expect.objectContaining({ reason: "scoped" }));
+  });
 });

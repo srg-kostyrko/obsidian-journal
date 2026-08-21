@@ -69,6 +69,7 @@ export class Container implements Resolver {
     if (tokenKind(token) !== "single") throw new CannotOverrideError(token, "multi");
     const stored = this.#bindings.lookup(token)?.at(0);
     if (!stored) throw new CannotOverrideError(token, "unregistered");
+    if (stored.entry.lifetime === Lifetime.Scoped) throw new CannotOverrideError(token, "scoped");
     // Container-lifetime instances are memoized in the slot, so replacing the entry after a
     // resolve would silently keep the old instance. Refusing is safe: overrides run before
     // autoLoad(), which is when eager bindings first resolve.
