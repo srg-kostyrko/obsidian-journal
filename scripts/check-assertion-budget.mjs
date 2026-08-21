@@ -5,7 +5,7 @@ import { join, relative } from "node:path";
 const ROOT = new URL("..", import.meta.url).pathname;
 const SRC = join(ROOT, "src");
 const BASELINE = join(ROOT, "assertion-budget.json");
-const ASSERTION = /\b(?:expect|expectTypeOf|expectOk|expectErr)\s*\(/g;
+const ASSERTION = /\bexpect(?:[A-Z]\w*)?\s*\(/g;
 
 async function testFiles(dir) {
   const out = [];
@@ -41,15 +41,57 @@ if (process.argv.includes("--write")) {
   process.exit(0);
 }
 
-const baseline = JSON.parse(readFileSync(BASELINE, "utf8"));
-const shortfalls = Object.entries(baseline)
-  .map(([bucket, expected]) => ({ bucket, expected, found: actual[bucket] ?? 0 }))
-  .filter(({ expected, found }) => found < expected);
+const baselineText = readFileSync(BASELINE, "utf8");
+const baseline = JSON.parse(baselineText);
 
-if (shortfalls.length > 0) {
-  console.error("Assertion budget shortfall:\n");
-  for (const { bucket, expected, found } of shortfalls) {
-    console.error(`  ${bucket}: ${found} assertions, baseline ${expected} (-${expected - found})`);
+// F3: Validate baseline is a non-empty plain object with numeric values
+if (
+  typeof baseline !== "object" ||
+  baseline === null ||
+  Array.isArray(baseline) ||
+  Object.keys(baseline).length === 0 ||
+  !Object.values(baseline).every((v) => typeof v === "number")
+) {
+  console.error("Invalid baseline: assertion-budget.json must be a non-empty object with numeric values.");
+  process.exit(1);
+}
+
+// F2: Compare over UNION of baseline and actual keys
+const allBuckets = new Set([...Object.keys(baseline), ...Object.keys(actual)]);
+const issues = [];
+
+for (const bucket of allBuckets) {
+  const expected = baseline[bucket];
+  const found = actual[bucket] ?? 0;
+
+  if (expected === undefined) {
+    issues.push({
+      type: "new",
+      bucket,
+      found,
+    });
+  } else if (found < expected) {
+    issues.push({
+      type: "shortfall",
+      bucket,
+      expected,
+      found,
+    });
+  }
+}
+
+if (issues.length > 0) {
+  console.error("Assertion budget issues:\n");
+  for (const issue of issues) {
+    if (issue.type === "new") {
+      console.error(
+        `  new bucket "${issue.bucket}" (${issue.found} assertions) is not in the baseline — run \`npm run check:assertions -- --write\` to adopt it`,
+      );
+    } else {
+      console.error(
+        `  ${issue.bucket}: ${issue.found} assertions, baseline ${issue.expected} (-${issue.expected - issue.found})`,
+      );
+    }
   }
   console.error(
     "\nIf the reduction is intended, run `npm run check:assertions -- --write` and commit the" +
