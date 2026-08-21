@@ -5,7 +5,7 @@ import { join, relative } from "node:path";
 const ROOT = new URL("..", import.meta.url).pathname;
 const SRC = join(ROOT, "src");
 const BASELINE = join(ROOT, "assertion-budget.json");
-const ASSERTION = /\bexpect(?:[A-Z]\w*)?\s*\(/g;
+const ASSERTION = /(?<!function\s+)\bexpect(?:[A-Z]\w*)?\s*\(/g;
 
 async function testFiles(dir) {
   const out = [];
@@ -44,15 +44,18 @@ if (process.argv.includes("--write")) {
 const baselineText = readFileSync(BASELINE, "utf8");
 const baseline = JSON.parse(baselineText);
 
-// F3: Validate baseline is a non-empty plain object with numeric values
+// F3: Validate baseline is a non-empty plain object with non-negative integers
 if (
   typeof baseline !== "object" ||
   baseline === null ||
   Array.isArray(baseline) ||
   Object.keys(baseline).length === 0 ||
-  !Object.values(baseline).every((v) => typeof v === "number")
+  !Object.values(baseline).every((v) => Number.isInteger(v) && v >= 0)
 ) {
-  console.error("Invalid baseline: assertion-budget.json must be a non-empty object with numeric values.");
+  console.error(
+    "Invalid baseline: assertion-budget.json must be a non-empty object with non-negative integer values. " +
+      "Run `npm run check:assertions -- --write` to regenerate it.",
+  );
   process.exit(1);
 }
 
