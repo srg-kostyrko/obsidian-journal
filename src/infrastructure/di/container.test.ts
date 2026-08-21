@@ -470,14 +470,8 @@ describe("override", () => {
   it("reports reason 'unregistered' when the token was never registered", () => {
     const c = new Container();
     const token = createToken<string>("absent");
-    let captured: unknown;
-    try {
-      c.override(token);
-    } catch (error) {
-      captured = error;
-    }
 
-    expect((captured as CannotOverrideError).reason).toBe("unregistered");
+    expect(() => c.override(token)).toThrow(expect.objectContaining({ reason: "unregistered" }));
   });
 
   it("throws CannotOverrideError for a multi-token", () => {
@@ -502,14 +496,8 @@ describe("override", () => {
     const token = createToken<string>("greeting");
     c.register(token).useValue("original");
     c.resolve(token);
-    let captured: unknown;
-    try {
-      c.override(token);
-    } catch (error) {
-      captured = error;
-    }
 
-    expect((captured as CannotOverrideError).reason).toBe("resolved");
+    expect(() => c.override(token)).toThrow(expect.objectContaining({ reason: "resolved" }));
   });
 
   it("throws InvalidTokenError when given a non-token", () => {
