@@ -277,6 +277,15 @@ describe("seed guard", () => {
     ).rejects.toThrow(TestContainerInvalidSeedError);
   });
 
+  it("rejects a fixture whose collection value is not an object", async () => {
+    await expect(
+      testContainer({
+        modules: [journalsCoreModule],
+        data: { journals: "nonsense" },
+      }),
+    ).rejects.toThrow(TestContainerInvalidSeedError);
+  });
+
   it("accepts a deliberately broken fixture when the test opts in", async () => {
     const harness = await testContainer({
       modules: [journalsCoreModule],

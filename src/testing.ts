@@ -33,12 +33,13 @@ import { templatesModule } from "@/templates";
 
 import type { App } from "vue";
 
-// Copied string literals: these are the four warnings SettingsService logs when a parse repairs
+// Copied string literals: these are the warnings SettingsService logs when a parse repairs
 // rather than rejects. A message reworded there without this list is a guard that stops firing.
 const REPAIR_WARNINGS = new Set([
   "collection entry reset to defaults",
   "collection entry fields reset to defaults",
   "collection seed entry failed validation; omitting",
+  "collection discarded; stored value is not an object",
   "slice reset to defaults",
 ]);
 
