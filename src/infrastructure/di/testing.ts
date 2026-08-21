@@ -5,10 +5,6 @@ import { tokenName, type AnyTokenLike } from "./token";
 
 import type { Module } from "./module";
 
-export function createTestContainer(): Container {
-  return new Container();
-}
-
 export function registrationOrder(module: Module): string[] {
   const c = new Container();
   const order: string[] = [];

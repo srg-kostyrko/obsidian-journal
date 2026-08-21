@@ -3,8 +3,7 @@ import { cleanup, render, screen, waitFor } from "@testing-library/vue";
 import { afterEach, describe, expect, it, vi } from "vitest";
 
 import { m } from "@/i18n";
-import { provideInjectorOnApp } from "@/infrastructure/di";
-import { createTestContainer } from "@/infrastructure/di/testing";
+import { Container, provideInjectorOnApp } from "@/infrastructure/di";
 import { InputSuggestService } from "@/infrastructure/host";
 import { FakeInputSuggestService } from "@/infrastructure/host/input-suggests/testing";
 import type { ModalApi } from "@/infrastructure/host/modals";
@@ -17,7 +16,7 @@ import ViewNameModal from "./ViewNameModal.vue";
 afterEach(() => cleanup());
 
 function mountModal(props: { currentName?: string } = {}) {
-  const container = createTestContainer();
+  const container = new Container();
   const suggests = new FakeInputSuggestService();
   container.register(InputSuggestService).useValue(suggests as unknown as InputSuggestService);
   const submit = vi.fn();
