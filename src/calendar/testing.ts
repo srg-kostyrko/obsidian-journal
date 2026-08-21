@@ -21,9 +21,9 @@ export function installTestCalendar(week?: Partial<WeekConfig>): { teardown: () 
   return { calendar, teardown: resetCalendarLocale };
 }
 
-// Puts the week grid back to the value every test starts on. The global afterEach calls this, so a
-// test that changed the grid cannot hand it to the next test in the same worker — which the previous
-// afterAll-only reset allowed.
+// Puts the week grid back to the value every test starts on, for a caller holding the `teardown`
+// handle installTestCalendar returns — nothing else reaches it. A test that changed the grid cannot
+// hand it to the next one regardless: the global beforeEach re-pins the grid before every test.
 export function resetCalendarLocale(): void {
   if (!moment.locales().includes(CUSTOM_LOCALE)) return;
   installed?.applyWeekConfig(DEFAULT_TEST_WEEK, { propagateToGlobal: false });
