@@ -1,0 +1,20 @@
+{
+  "api": 64,
+  "calendar": 429,
+  "code-blocks": 338,
+  "commands": 157,
+  "decorations": 506,
+  "i18n": 4,
+  "infrastructure": 750,
+  "journals": 1295,
+  "logging": 15,
+  "maintenance": 149,
+  "notes-calendar": 124,
+  "settings": 261,
+  "shelves": 122,
+  "stub.test.ts": 1,
+  "templates": 223,
+  "testing.test.ts": 14,
+  "ui": 106,
+  "views": 712
+}
