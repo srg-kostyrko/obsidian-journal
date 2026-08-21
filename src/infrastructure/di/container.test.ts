@@ -460,43 +460,30 @@ describe("override", () => {
     expect(c.resolve(Real).kind).toBe("fake");
   });
 
-  it("throws CannotOverrideError for an unregistered token", () => {
+  it("refuses an unregistered token", () => {
     const c = new Container();
     const token = createToken<string>("absent");
 
     expect(() => c.override(token)).toThrow(CannotOverrideError);
-  });
-
-  it("reports reason 'unregistered' when the token was never registered", () => {
-    const c = new Container();
-    const token = createToken<string>("absent");
-
     expect(() => c.override(token)).toThrow(expect.objectContaining({ reason: "unregistered" }));
   });
 
-  it("throws CannotOverrideError for a multi-token", () => {
+  it("refuses a multi-token", () => {
     const c = new Container();
     const token = createMultiToken<string>("plugins");
     c.register(token).useValue("one");
 
     expect(() => c.override(token)).toThrow(CannotOverrideError);
+    expect(() => c.override(token)).toThrow(expect.objectContaining({ reason: "multi" }));
   });
 
-  it("throws CannotOverrideError once the token has been resolved", () => {
+  it("refuses an already-resolved token", () => {
     const c = new Container();
     const token = createToken<string>("greeting");
     c.register(token).useValue("original");
     c.resolve(token);
 
     expect(() => c.override(token)).toThrow(CannotOverrideError);
-  });
-
-  it("reports reason 'resolved' when the instance already exists", () => {
-    const c = new Container();
-    const token = createToken<string>("greeting");
-    c.register(token).useValue("original");
-    c.resolve(token);
-
     expect(() => c.override(token)).toThrow(expect.objectContaining({ reason: "resolved" }));
   });
 
@@ -515,19 +502,12 @@ describe("override", () => {
     expect(() => c.override(token)).toThrow(ContainerDisposedError);
   });
 
-  it("throws CannotOverrideError for a Scoped binding", () => {
+  it("refuses a Scoped binding", () => {
     const c = new Container();
     const token = createToken<string>("scoped");
     c.register(token).useValue("original").lifetime(Lifetime.Scoped);
 
     expect(() => c.override(token)).toThrow(CannotOverrideError);
-  });
-
-  it("reports reason 'scoped' for a Scoped binding", () => {
-    const c = new Container();
-    const token = createToken<string>("scoped");
-    c.register(token).useValue("original").lifetime(Lifetime.Scoped);
-
     expect(() => c.override(token)).toThrow(expect.objectContaining({ reason: "scoped" }));
   });
 });
