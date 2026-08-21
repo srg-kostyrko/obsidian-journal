@@ -15,8 +15,9 @@ import {
   type JournalDecorationBinding,
 } from "./engine";
 import { gatherBindings } from "./gather-bindings";
-import { formatPadding, mergePadding, resolveCell } from "./resolve-cell";
+import { formatPadding } from "./resolve-cell";
 import { defaultCellDecorationScope, type CellDecorationScope, type CellStyleRef } from "./ui/cell-decoration-map-key";
+import { useCellPadding } from "./use-cell-padding";
 
 import type { JournalDecoration, JournalDecorationStyle } from "./config";
 import type { MaybeRefOrGetter } from "vue";
@@ -139,13 +140,12 @@ export function useCellDecorations(options: CellDecorationsOptions): ReadonlyMap
   watchEffect(reseed);
   provide(scope.map, cells);
 
-  // Reading options.periods re-tracks membership whenever the visible range changes (e.g. month
-  // navigation re-keys the whole map), while the per-cell slot reads keep it live as
-  // individual decorations come and go.
-  const sharedPadding = computed(() => {
-    void toValue(options.periods);
-    return formatPadding(mergePadding(Array.from(cells.values(), (slot) => resolveCell(slot.value).padding)));
+  const paddingExtents = useCellPadding({
+    journalNames: options.journalNames,
+    filter: options.filter,
+    calendarDecorations: options.calendarDecorations,
   });
+  const sharedPadding = computed(() => formatPadding(paddingExtents.value));
   provide(scope.padding, sharedPadding);
 
   onMounted(() => {

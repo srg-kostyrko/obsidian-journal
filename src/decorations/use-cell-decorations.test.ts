@@ -27,7 +27,7 @@ import { cellKey, DecorationEngine } from "./engine";
 import { resolveCell } from "./resolve-cell";
 import { decorationsSlice } from "./settings/slice";
 import { buildCalendarDecoration, buildCondition, buildDecoration, buildStyle } from "./testing";
-import { CellDecorationMapKey, type CellStyleRef } from "./ui/cell-decoration-map-key";
+import { CellDecorationMapKey, CellPaddingKey, type CellStyleRef } from "./ui/cell-decoration-map-key";
 import { useCellDecorations } from "./use-cell-decorations";
 
 // The cell map is keyed by period kind + anchor; mirror that for lookups.
@@ -152,6 +152,37 @@ function mountCells(
   const cells = captured.value;
   if (!cells) throw new Error("cell map was not provided");
   return cells;
+}
+
+function mountPadding(container: Container, periods: readonly Period[], journalNames: readonly string[]): Ref<string> {
+  const captured = { value: null as Ref<string> | null };
+  const Child = defineComponent({
+    template: "<div />",
+    setup() {
+      captured.value = vInject(CellPaddingKey)!;
+    },
+  });
+  const renderChild = () => h(Child);
+  const Host = defineComponent({
+    setup() {
+      useCellDecorations({ periods: () => periods, journalNames: () => journalNames });
+      return renderChild;
+    },
+  });
+  render(Host, {
+    global: {
+      plugins: [
+        {
+          install(app) {
+            provideInjectorOnApp(app, container);
+          },
+        },
+      ],
+    },
+  });
+  const padding = captured.value;
+  if (!padding) throw new Error("padding was not provided");
+  return padding;
 }
 
 function withHasNote(): { h: Harness; period: DayPeriod; path: VaultPath } {
@@ -629,6 +660,23 @@ describe("useCellDecorations", () => {
       await nextTick();
 
       expect(resolveCell(cells.get(key(period))?.value ?? []).background).toBe("#333333");
+    });
+  });
+  describe("shared padding", () => {
+    it("reserves the same padding whether or not a decoration matches a visible cell", async () => {
+      const decoration = buildDecoration({
+        mode: "or",
+        conditions: [buildCondition("weekday", { weekdays: [1] })], // Mon
+        styles: [buildStyle("shape", { placement_x: "right", placement_y: "middle", size: 0.5 })],
+      });
+      const { c } = buildHarness([decoration]);
+
+      const matching = mountPadding(c, [DayPeriod.containing(date("2026-05-25"))], ["daily"]); // Mon
+      const nonMatching = mountPadding(c, [DayPeriod.containing(date("2026-05-26"))], ["daily"]); // Tue
+      await nextTick();
+
+      expect(matching.value).toBe("max(0.1em, 2px) max(0.6em, 2px)");
+      expect(nonMatching.value).toBe(matching.value);
     });
   });
 });

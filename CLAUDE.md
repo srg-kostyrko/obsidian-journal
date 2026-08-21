@@ -239,6 +239,22 @@ on it.
   parsed hex, from a custom hex fixture rather than a theme variable.
 - A test that opens `mode=window` must call `closePopoutWindows()`, or the
   popout steals the next test's modals.
+- Mocha runs a suite's **own** tests before its nested suites, and the shared
+  matrix helpers (`assertDecorationMatrix(surface)` in `e2e/journeys/decorations.ts`)
+  are `describe` factories that read like plain statements at the call site. A bare
+  `it()` written next to one therefore runs **first**, before every test the helper
+  registered — so anything it renders replaces what the suite's `before` staged. This
+  cost PR #268 two CI failures: a quarter timeline swapped in ahead of the matrix, and
+  `calendarSurface.periodCell` is `$()`, first match, which in a quarter grid is the
+  _first_ month's `header-month`/`week-number-cell` rather than the seeded current one
+  (`NotesMonthView.vue` emits both per month view, and a quarter mounts three).
+  Day cells survived it — they are pinned by `data-anchor` — so the damage read as two
+  unrelated task-decoration failures. Give any test added beside a matrix call its own
+  `describe`. Note also that reverting `src/` while leaving the new spec in place
+  cannot detect this: the pollution lives in the test file, so both arms of that
+  comparison fail identically and it reads as a pre-existing environment failure.
+  Bisect a suspected regression by reverting the **whole** branch, per the worktree
+  rule below.
 - Assert user-facing copy through `m.some_key()` imported from the generated
   paraglide messages (`../../src/i18n/paraglide/messages.js`), with an args
   object for interpolation, so a reword becomes a typecheck failure instead of

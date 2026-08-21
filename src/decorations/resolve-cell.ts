@@ -164,11 +164,13 @@ export function formatPadding(extents: PaddingExtents): string {
     Math.max(extents.top, extents.bottom),
     Math.max(extents.topBorder, extents.bottomBorder),
   );
-  const horizontal = axisReservation(
-    Math.max(extents.left, extents.right),
-    Math.max(extents.leftBorder, extents.rightBorder),
-  );
-  return `${vertical} ${horizontal}`;
+  return `${vertical} ${horizontalReservation(extents)}`;
+}
+
+// The inline half of formatPadding on its own, for a grid that sizes its columns around the
+// reservation rather than painting it.
+export function horizontalReservation(extents: PaddingExtents): string {
+  return axisReservation(Math.max(extents.left, extents.right), Math.max(extents.leftBorder, extents.rightBorder));
 }
 
 function axisReservation(mark: number, border: number): string {

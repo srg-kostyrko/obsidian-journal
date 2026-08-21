@@ -103,6 +103,46 @@ export interface NavLayout {
   rows: number;
 }
 
+export interface MonthGridLayout {
+  // Rounded width of each month in the grid; more than one value means the months disagree.
+  widths: number[];
+  // px the months overflow the grid's box; 0 means none of them is clipped.
+  overflowX: number;
+}
+
+// Cell padding is reserved per decoration scope, so months whose decorations differ in what
+// they match must still come out the same width. Editor zoom scales authored pixels, hence
+// the rounding reader and the widths-against-each-other comparison rather than absolutes.
+// The forced width stands in for a roomy note: the e2e window's own note is narrower than a
+// month decorated as heavily as the fixture's, where no column count can avoid clipping.
+export async function monthGridLayout(gridSelector: string, widthPx: number): Promise<MonthGridLayout> {
+  await browser.waitUntil(
+    async () =>
+      browser.execute(
+        (sel: string) => [...document.querySelectorAll<HTMLElement>(sel)].some((grid) => grid.clientWidth > 0),
+        gridSelector,
+      ),
+    { timeoutMsg: `no laid-out ${gridSelector} to measure` },
+  );
+  return browser.execute(
+    (sel: string, width: number) => {
+      const grid = [...document.querySelectorAll<HTMLElement>(sel)].find((candidate) => candidate.clientWidth > 0);
+      if (!grid) return { widths: [], overflowX: -1 };
+      // On the block root, not the grid: the grid is what the width has to reach *through*, so
+      // forcing it there would hand the row a width its own column rule never saw.
+      const block = grid.closest<HTMLElement>(".block-language-calendar-timeline");
+      if (block) block.style.width = `${width}px`;
+      void grid.offsetHeight;
+      return {
+        widths: [...grid.children].map((month) => Math.round(month.getBoundingClientRect().width)),
+        overflowX: grid.scrollWidth - grid.clientWidth,
+      };
+    },
+    gridSelector,
+    widthPx,
+  );
+}
+
 // The mobile overflow guard (#216) can't resize the window — this wdio-obsidian build
 // rejects setWindowSize, and app.emulateMobile() reloads the app and detaches the
 // executeObsidian bridge. Reading mode also auto-sizes .nav-view to its content, so it
