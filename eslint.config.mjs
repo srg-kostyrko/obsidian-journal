@@ -396,9 +396,12 @@ export default [
     },
   },
   {
+    // Modal definitions are what `noStrayDefineModal` exists to allow here, so this array drops it
+    // — but flat-config rule values replace rather than merge, so every other selector has to be
+    // repeated or it silently stops applying to these files.
     files: ["**/ui/modals.ts", "src/infrastructure/host/modals/**/*.ts"],
     rules: {
-      "no-restricted-syntax": ["error", noRawError, noEagerMessage],
+      "no-restricted-syntax": ["error", noRawError, noEagerMessage, noProductionOverride],
     },
   },
   {
