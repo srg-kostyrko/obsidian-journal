@@ -190,6 +190,11 @@ Don't test module wiring, barrel shapes, or the fakes/mocks themselves — the
 compiler and the tooling already guarantee those, and a test for a fake tests
 test infrastructure rather than behavior.
 
+`src/testing.ts` is the exception the rule implies rather than contradicts: its guards and options
+have behavior that can fail — a seed silently repaired, a leak undetected, an override applied
+after the service resolved — and a defect there makes every test in the repo lie. Test those; its
+wiring stays untested like any other module's.
+
 The e2e layer — what it covers, how it's structured, and why the mock-based
 unit suite can't reach it — is documented separately in
 [`docs/e2e-testing-strategy.md`](e2e-testing-strategy.md).

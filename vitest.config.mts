@@ -17,6 +17,18 @@ const base = {
 // own registry instead.
 export default defineConfig({
   test: {
+    coverage: {
+      provider: "v8",
+      reporter: ["text-summary", "json-summary", "html"],
+      include: ["src/**"],
+      exclude: [
+        "src/i18n/paraglide/**",
+        "**/testing.ts",
+        "**/*.testing.ts",
+        "**/*.test.ts",
+        "**/*.bench.ts",
+      ],
+    },
     projects: [
       {
         plugins: [vue()],
