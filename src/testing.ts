@@ -1,5 +1,7 @@
+import { onTestFinished } from "vitest";
+
 import { CalendarModule } from "@/calendar";
-import { Container, type Module } from "@/infrastructure/di";
+import { type AnyTokenLike, Container, type MultiToken, type Module, type TokenLike } from "@/infrastructure/di";
 import { FlowsModule } from "@/infrastructure/flows";
 import {
   InputSuggestService,
@@ -65,7 +67,9 @@ export interface TestContainerOptions {
 }
 
 export interface TestHarness {
-  readonly c: Container;
+  readonly container: Container;
+  resolve<T>(token: TokenLike<T>): T;
+  resolve<T>(token: MultiToken<T>): T[];
   /**
    * `host.pluginData` is inert: it backs the fake plugin's own `loadData`/`saveData`, but
    * `PluginData` is overridden below, so nothing in the resolved graph ever reaches it. `data`
@@ -135,9 +139,20 @@ export async function testContainer(options: TestContainerOptions = {}): Promise
   if (leaked.length > 0) throw new TestContainerLeakedHostStateError(leaked);
 
   const dispose = (): Promise<void> => c.dispose();
+  // settings.initialize() arms a deep watch and #scheduleSave sets a timeout; under isolate:false a
+  // container left alive fires its debounce inside a LATER file. Registering here is why no
+  // converted test needs an afterEach.
+  onTestFinished(() => dispose());
+
+  function resolve<T>(token: TokenLike<T>): T;
+  function resolve<T>(token: MultiToken<T>): T[];
+  function resolve(token: AnyTokenLike): unknown {
+    return c.resolve(token as TokenLike<unknown>);
+  }
 
   return {
-    c,
+    container: c,
+    resolve,
     host,
     logs,
     modals,
