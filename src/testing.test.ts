@@ -4,11 +4,11 @@ import type { CannotOverrideError } from "@/infrastructure/di";
 import { InputSuggestService, NoticeService, SuggestService, TemplaterService } from "@/infrastructure/host";
 import { ModalService } from "@/infrastructure/host/modals";
 import { FakeModalService } from "@/infrastructure/host/modals/testing";
-import { CycleService, journalsCoreModule } from "@/journals";
+import { CycleService, journalsCoreModule, journalsModule } from "@/journals";
 import { JournalsRepository } from "@/journals/repository";
 import { fixedJournal } from "@/journals/testing";
 
-import { testContainer, type TestHarness } from "./testing";
+import { TestContainerLeakedHostStateError, testContainer, type TestHarness } from "./testing";
 
 describe("testContainer", () => {
   let harness: TestHarness | undefined;
@@ -86,19 +86,24 @@ describe("testContainer", () => {
     expect([...harness.host.commands.keys()]).toHaveLength(0);
   });
 
-  it("logs a warning when a seeded journal fails schema validation", async () => {
+  it("repairs a seeded journal that fails schema validation", async () => {
     harness = await testContainer({
       modules: [journalsCoreModule],
       data: { journals: { daily: { name: "daily" } } },
     });
 
-    expect(harness.logs.records).not.toEqual([]);
+    const stored = harness.c.resolve(JournalsRepository).get("daily");
+
+    expect(stored.isSome() && stored.value.write.type).toBe("day");
   });
 
-  it("allows overriding an eager service before autoLoad runs", async () => {
+  it("takes effect for an override made before autoLoad runs", async () => {
     harness = await testContainer({ modules: [journalsCoreModule], autoLoad: false });
+    const stub = { kind: "stub" } as unknown as JournalsRepository;
 
-    expect(() => harness?.c.override(JournalsRepository)).not.toThrow();
+    harness.c.override(JournalsRepository).useValue(stub);
+
+    expect(harness.c.resolve(JournalsRepository)).toBe(stub);
   });
 
   it("refuses overriding an eager service once autoLoad has resolved it", async () => {
@@ -110,6 +115,10 @@ describe("testContainer", () => {
   });
 
   it("rejects when the seeded version cannot migrate", async () => {
-    await expect(testContainer({ data: { version: 0 } })).rejects.toThrow();
+    await expect(testContainer({ data: { version: 0 } }).then((created) => (harness = created))).rejects.toThrow();
+  });
+
+  it("throws a named error when a full module leaks host state", async () => {
+    await expect(testContainer({ modules: [journalsModule] })).rejects.toThrow(TestContainerLeakedHostStateError);
   });
 });

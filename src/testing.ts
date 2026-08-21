@@ -19,16 +19,38 @@ import { createLoggerTestingModule, type MemorySink } from "@/infrastructure/log
 import { CURRENT_VERSION, SettingsService, settingsCoreModule } from "@/settings";
 import { templatesModule } from "@/templates";
 
+/**
+ * Thrown when a `testContainer` boot leaves host side effects (a registered command, setting
+ * tab, or ribbon icon) that a CORE module never produces. The likely cause is a FULL
+ * `<feature>Module` passed in `modules` instead of its core half — see the `modules` option's
+ * doc comment below for why the type system does not catch this.
+ */
+export class TestContainerLeakedHostStateError extends Error {
+  constructor(leaked: readonly string[]) {
+    super(
+      `testContainer booted with host side effects: ${leaked.join(", ")}. ` +
+        "This usually means a FULL <feature>Module was passed in `modules` instead of its " +
+        "CORE half — the multi-tokens a full module adds beyond core register additively, so " +
+        "the mistake is not caught at the type level.",
+    );
+    this.name = "TestContainerLeakedHostStateError";
+  }
+}
+
 export interface TestContainerOptions {
   /**
    * Feature CORE modules this test opts into. `testContainer` always adds
-   * `settingsCoreModule`, `CalendarModule` and `templatesModule` itself — passing a FULL
-   * `<feature>Module` (or anything that transitively re-registers those) throws
-   * `DuplicateRegistrationError`, since single-kind tokens reject a second registration. A
-   * passed module's `register()` must also not resolve anything itself: overrides run after
-   * every module is added, so a module that resolves during registration would either see the
-   * un-overridden real service or throw `CannotOverrideError` pointing at this file, not at the
-   * module that resolved too early.
+   * `settingsCoreModule`, `CalendarModule` and `templatesModule` itself. Pass CORE modules only
+   * — a FULL `<feature>Module` is not rejected by the type system: the tokens a full module adds
+   * on top of its core half (`CollectionDefinitionToken`, `FunctionHandlerToken`,
+   * `JournalEditSectionToken`) are all multi-tokens, whose bindings are additive, so registering
+   * one a second time succeeds silently instead of throwing. A boot with a full module registers
+   * exactly the host side effects (commands, setting tabs, ribbon icons) the core/full split
+   * exists to keep out of tests; `testContainer` throws `TestContainerLeakedHostStateError` after
+   * `autoLoad` if it finds any, naming this as the likely cause. A passed module's `register()`
+   * must also not resolve anything itself: overrides run after every module is added, so a
+   * module that resolves during registration would either see the un-overridden real service or
+   * throw `CannotOverrideError` pointing at this file, not at the module that resolved too early.
    */
   readonly modules?: readonly Module[];
   /**
@@ -105,6 +127,12 @@ export async function testContainer(options: TestContainerOptions = {}): Promise
   // vault-event-driven indexing does not run. Notes seeded via host.putFile() will not surface
   // through JournalsIndex. Whether to change that is a Phase 1 decision for the journals slice.
   if (options.autoLoad !== false) await c.autoLoad();
+
+  const leaked: string[] = [];
+  if (host.commands.size > 0) leaked.push("commands");
+  if (host.settingTabs.length > 0) leaked.push("settingTabs");
+  if (host.ribbonIcons.length > 0) leaked.push("ribbonIcons");
+  if (leaked.length > 0) throw new TestContainerLeakedHostStateError(leaked);
 
   const dispose = (): Promise<void> => c.dispose();
 
