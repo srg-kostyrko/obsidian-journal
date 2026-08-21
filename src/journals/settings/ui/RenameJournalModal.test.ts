@@ -17,17 +17,17 @@ describe("renameJournalModal definition", () => {
 });
 
 describe("RenameJournalModal", () => {
-  let h: TestHarness;
+  let harness: TestHarness;
 
   beforeEach(async () => {
-    h = await testContainer({
+    harness = await testContainer({
       modules: [journalsCoreModule],
       data: { journals: { daily: fixedJournal("daily", { type: "day" }) } },
     });
   });
 
   it("submits the new name on save", async () => {
-    const { submit } = h.renderModal<typeof RenameJournalModal, { newName: string }>(RenameJournalModal, {
+    const { submit } = harness.renderModal<typeof RenameJournalModal, { newName: string }>(RenameJournalModal, {
       props: { currentName: "daily" },
     });
 
@@ -44,7 +44,7 @@ describe("RenameJournalModal", () => {
   });
 
   it("rejects an unchanged name with same-as-current error", async () => {
-    const { submit } = h.renderModal(RenameJournalModal, { props: { currentName: "daily" } });
+    const { submit } = harness.renderModal(RenameJournalModal, { props: { currentName: "daily" } });
 
     await userEvent.click(screen.getByText(m.common_action_submit()));
 
@@ -55,7 +55,7 @@ describe("RenameJournalModal", () => {
   });
 
   it("rejects an empty new name with required error", async () => {
-    const { submit } = h.renderModal(RenameJournalModal, { props: { currentName: "daily" } });
+    const { submit } = harness.renderModal(RenameJournalModal, { props: { currentName: "daily" } });
 
     await userEvent.clear(screen.getByRole("textbox"));
     await userEvent.click(screen.getByText(m.common_action_submit()));
@@ -67,7 +67,7 @@ describe("RenameJournalModal", () => {
   });
 
   it("cancels when the user clicks Cancel", async () => {
-    const { cancel } = h.renderModal(RenameJournalModal, { props: { currentName: "daily" } });
+    const { cancel } = harness.renderModal(RenameJournalModal, { props: { currentName: "daily" } });
 
     await userEvent.click(screen.getByText(m.common_action_cancel()));
 
@@ -76,10 +76,10 @@ describe("RenameJournalModal", () => {
 });
 
 describe("RenameJournalModal with a second journal in the vault", () => {
-  let h: TestHarness;
+  let harness: TestHarness;
 
   beforeEach(async () => {
-    h = await testContainer({
+    harness = await testContainer({
       modules: [journalsCoreModule],
       data: {
         journals: {
@@ -91,7 +91,7 @@ describe("RenameJournalModal with a second journal in the vault", () => {
   });
 
   it("rejects a name that collides with another existing journal", async () => {
-    const { submit } = h.renderModal(RenameJournalModal, { props: { currentName: "daily" } });
+    const { submit } = harness.renderModal(RenameJournalModal, { props: { currentName: "daily" } });
 
     await userEvent.clear(screen.getByRole("textbox"));
     await userEvent.type(screen.getByRole("textbox"), "morning");

@@ -31,10 +31,10 @@ describe("CycleService", () => {
     });
 
     describe("fixed weekly", () => {
-      let h: TestHarness;
+      let harness: TestHarness;
 
       beforeEach(async () => {
-        h = await testContainer({
+        harness = await testContainer({
           modules: [journalsCoreModule],
           data: { journals: { weekly: fixedJournal("weekly", { type: "week" }) } },
         });
@@ -43,7 +43,7 @@ describe("CycleService", () => {
       it("returns a year-2020 anchor for a date the week-year considers 2020", () => {
         // Week containing Wed 2020-12-30 starts Mon 2020-12-28, ends Sun 2021-01-03.
         // With dow=1, the anchor is the week's first day = Mon 2020-12-28.
-        const result = h.resolve(CycleService).anchorOf("weekly", date("2020-12-30"));
+        const result = harness.resolve(CycleService).anchorOf("weekly", date("2020-12-30"));
 
         expect(result.isSome() && result.value).toBe("2020-12-28");
       });
@@ -52,7 +52,7 @@ describe("CycleService", () => {
         // Week containing Thu 2021-01-07 starts Mon 2021-01-04, ends Sun 2021-01-10.
         // With dow=1, the anchor is the week's first day = Mon 2021-01-04. A mid-week input
         // keeps this distinct from an identity function.
-        const result = h.resolve(CycleService).anchorOf("weekly", date("2021-01-07"));
+        const result = harness.resolve(CycleService).anchorOf("weekly", date("2021-01-07"));
 
         expect(result.isSome() && result.value).toBe("2021-01-04");
       });
@@ -184,36 +184,36 @@ describe("CycleService", () => {
     });
 
     describe("custom monthly anchored to a month end", () => {
-      let h: TestHarness;
+      let harness: TestHarness;
 
       beforeEach(async () => {
-        h = await testContainer({
+        harness = await testContainer({
           modules: [journalsCoreModule],
           data: { journals: { s: customJournal("s", "month", 1, "2025-01-31") } },
         });
       });
 
       it("clamps to the last day of a month too short for the configured day", () => {
-        const next = h.resolve(CycleService).nextAnchor("s", anchor("2025-01-31"));
+        const next = harness.resolve(CycleService).nextAnchor("s", anchor("2025-01-31"));
 
         expect(next.isSome() && next.value).toBe("2025-02-28");
       });
 
       it("returns to the month end after passing through a short month", () => {
-        const next = h.resolve(CycleService).nextAnchor("s", anchor("2025-02-28"));
+        const next = harness.resolve(CycleService).nextAnchor("s", anchor("2025-02-28"));
 
         expect(next.isSome() && next.value).toBe("2025-03-31");
       });
 
       it("resumes the configured phase from an anchor left off-grid by an extension", () => {
-        h.resolve(JournalsIndex).register({
+        harness.resolve(JournalsIndex).register({
           journalName: "s",
           anchor: anchor("2025-02-28"),
           path: "S/feb.md" as VaultPath,
           endDate: anchor("2025-03-04"), // extended past its computed end of 2025-03-30
         });
 
-        const next = h.resolve(CycleService).nextAnchor("s", anchor("2025-03-05"));
+        const next = harness.resolve(CycleService).nextAnchor("s", anchor("2025-03-05"));
 
         expect(next.isSome() && next.value).toBe("2025-04-30");
       });
@@ -565,14 +565,14 @@ describe("CycleService", () => {
       // The first interval is extended a full week past its default end of 01-07, so the
       // index-aware grid is 01-01, 01-15, 01-22, 01-29, 02-05 — 4 steps, not the 5 a raw
       // 7-day stepping (ignoring the extension) would produce.
-      let h: TestHarness;
+      let harness: TestHarness;
 
       beforeEach(async () => {
-        h = await testContainer({
+        harness = await testContainer({
           modules: [journalsCoreModule],
           data: { journals: { s: customJournal("s", "week", 1, "2024-01-01") } },
         });
-        h.resolve(JournalsIndex).register({
+        harness.resolve(JournalsIndex).register({
           journalName: "s",
           anchor: anchor("2024-01-01"),
           path: "S/1.md" as VaultPath,
@@ -581,7 +581,7 @@ describe("CycleService", () => {
       });
 
       it("counts the same number of intervals as stepping through nextAnchor", () => {
-        const cycle = h.resolve(CycleService);
+        const cycle = harness.resolve(CycleService);
         const to = anchor("2024-02-05");
 
         let current = anchor("2024-01-01");
@@ -602,7 +602,7 @@ describe("CycleService", () => {
       it("counts the same number of intervals as stepping through previousAnchor", () => {
         // Mirror of the forward case: stepping backward through the same grid is
         // 02-05, 01-29, 01-22, 01-15, 01-01.
-        const cycle = h.resolve(CycleService);
+        const cycle = harness.resolve(CycleService);
         const to = anchor("2024-01-01");
 
         let current = anchor("2024-02-05");
