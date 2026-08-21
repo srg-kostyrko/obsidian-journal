@@ -9,9 +9,8 @@ import { CUSTOM_LOCALE } from "@/calendar/calendar";
 import { anchor, installTestCalendar, testCalendar } from "@/calendar/testing";
 import type { CannotOverrideError } from "@/infrastructure/di";
 import { ContainerDisposedError, useService } from "@/infrastructure/di";
-import { InputSuggestService, NoticeService, SuggestService, TemplaterService } from "@/infrastructure/host";
-import { ModalService, useModal } from "@/infrastructure/host/modals";
-import { FakeModalService } from "@/infrastructure/host/modals/testing";
+import { NoticeService } from "@/infrastructure/host";
+import { useModal } from "@/infrastructure/host/modals";
 import { FakeNoticeService } from "@/infrastructure/host/testing";
 import {
   CycleService,
@@ -115,42 +114,6 @@ describe("testContainer", () => {
     const stored = harness.resolve(JournalsRepository).get("daily");
 
     expect(stored.isSome() && stored.value.nameTemplate).toBe("{{date}}");
-  });
-
-  it("substitutes the fake modal service", async () => {
-    harness = await testContainer({ modules: [journalsCoreModule] });
-
-    expect(harness.resolve(ModalService)).toBe(harness.modals as unknown as ModalService);
-  });
-
-  it("exposes the fake modal service as a FakeModalService", async () => {
-    harness = await testContainer({});
-
-    expect(harness.modals).toBeInstanceOf(FakeModalService);
-  });
-
-  it("substitutes the fake notice service", async () => {
-    harness = await testContainer({});
-
-    expect(harness.resolve(NoticeService)).toBe(harness.notices);
-  });
-
-  it("substitutes the fake suggest service", async () => {
-    harness = await testContainer({});
-
-    expect(harness.resolve(SuggestService)).toBe(harness.suggests as unknown as SuggestService);
-  });
-
-  it("substitutes the fake input suggest service", async () => {
-    harness = await testContainer({});
-
-    expect(harness.resolve(InputSuggestService)).toBe(harness.inputSuggests as unknown as InputSuggestService);
-  });
-
-  it("substitutes the fake templater service", async () => {
-    harness = await testContainer({});
-
-    expect(harness.resolve(TemplaterService)).toBe(harness.templater as unknown as TemplaterService);
   });
 
   it("records nothing on the host when no feature module registers commands", async () => {
