@@ -510,4 +510,48 @@ describe("override", () => {
     expect(() => c.override(token)).toThrow(CannotOverrideError);
     expect(() => c.override(token)).toThrow(expect.objectContaining({ reason: "scoped" }));
   });
+
+  it("keeps the overridden binding eager", async () => {
+    const c = new Container();
+    const token = createToken<string>("greeting");
+    c.register(token).useValue("original").eager();
+
+    const built: string[] = [];
+    c.override(token).useFactory(() => {
+      built.push("replacement");
+      return "replaced";
+    });
+    await c.autoLoad();
+
+    expect(built).toEqual(["replacement"]);
+  });
+
+  it("keeps the overridden binding's lifetime", () => {
+    const c = new Container();
+    const token = createToken<object>("transient");
+    c.register(token)
+      .useFactory(() => ({}))
+      .lifetime(Lifetime.Transient);
+
+    c.override(token).useFactory(() => ({}));
+
+    expect(c.resolve(token)).not.toBe(c.resolve(token));
+  });
+
+  it("lets the override widen a lazy binding to eager", async () => {
+    const c = new Container();
+    const token = createToken<string>("greeting");
+    c.register(token).useValue("original");
+
+    const built: string[] = [];
+    c.override(token)
+      .useFactory(() => {
+        built.push("replacement");
+        return "replaced";
+      })
+      .eager();
+    await c.autoLoad();
+
+    expect(built).toEqual(["replacement"]);
+  });
 });
