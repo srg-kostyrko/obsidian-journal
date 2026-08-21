@@ -1,7 +1,6 @@
 import { beforeEach, describe, expect, it } from "vitest";
 
-import type { AnchorString } from "@/calendar";
-import { date } from "@/calendar/testing";
+import { anchor, date } from "@/calendar/testing";
 import type { VaultPath } from "@/infrastructure/host";
 import { testContainer, type TestHarness } from "@/testing";
 
@@ -117,7 +116,7 @@ describe("CycleService", () => {
         data: { journals: { weekly: fixedJournal("weekly", { type: "week" }) } },
       });
 
-      const result = resolve(CycleService).representativeOf("weekly", "2025-03-10" as AnchorString);
+      const result = resolve(CycleService).representativeOf("weekly", anchor("2025-03-10"));
 
       expect(unwrap(result).toAnchor()).toBe("2025-03-13");
     });
@@ -128,7 +127,7 @@ describe("CycleService", () => {
         data: { journals: { monthly: fixedJournal("monthly", { type: "month" }) } },
       });
 
-      const result = resolve(CycleService).representativeOf("monthly", "2025-03-01" as AnchorString);
+      const result = resolve(CycleService).representativeOf("monthly", anchor("2025-03-01"));
 
       expect(unwrap(result).toAnchor()).toBe("2025-03-01");
     });
@@ -139,7 +138,7 @@ describe("CycleService", () => {
         data: { journals: { sprints: customJournal("sprints", "week", 2, "2024-01-01") } },
       });
 
-      const result = resolve(CycleService).representativeOf("sprints", "2024-01-01" as AnchorString);
+      const result = resolve(CycleService).representativeOf("sprints", anchor("2024-01-01"));
 
       expect(unwrap(result).toAnchor()).toBe("2024-01-01");
     });
@@ -147,7 +146,7 @@ describe("CycleService", () => {
     it("returns none for an unknown journal", async () => {
       const { resolve } = await testContainer({ modules: [journalsCoreModule], data: { journals: {} } });
 
-      const result = resolve(CycleService).representativeOf("missing", "2025-03-10" as AnchorString);
+      const result = resolve(CycleService).representativeOf("missing", anchor("2025-03-10"));
 
       expect(result.isNone()).toBe(true);
     });
@@ -162,7 +161,7 @@ describe("CycleService", () => {
 
       // With the test calendar (dow=1), the anchor of a week is its first day (Monday).
       // next() of the week containing 2024-03-04 (Mon): next week = Mon 2024-03-11.
-      const next = resolve(CycleService).nextAnchor("w", "2024-03-04" as AnchorString);
+      const next = resolve(CycleService).nextAnchor("w", anchor("2024-03-04"));
 
       expect(next.isSome() && next.value).toBe("2024-03-11");
     });
@@ -173,7 +172,7 @@ describe("CycleService", () => {
         data: { journals: { s: customJournal("s", "month", 1, "2024-01-15") } },
       });
 
-      const next = resolve(CycleService).nextAnchor("s", "2024-01-15" as AnchorString);
+      const next = resolve(CycleService).nextAnchor("s", anchor("2024-01-15"));
 
       expect(next.isSome() && next.value).toBe("2024-02-15");
     });
@@ -181,11 +180,7 @@ describe("CycleService", () => {
     it("returns None for an unknown journal", async () => {
       const { resolve } = await testContainer({ modules: [journalsCoreModule], data: { journals: {} } });
 
-      expect(
-        resolve(CycleService)
-          .nextAnchor("missing", "2024-01-01" as AnchorString)
-          .isNone(),
-      ).toBe(true);
+      expect(resolve(CycleService).nextAnchor("missing", anchor("2024-01-01")).isNone()).toBe(true);
     });
 
     describe("custom monthly anchored to a month end", () => {
@@ -199,13 +194,13 @@ describe("CycleService", () => {
       });
 
       it("clamps to the last day of a month too short for the configured day", () => {
-        const next = h.resolve(CycleService).nextAnchor("s", "2025-01-31" as AnchorString);
+        const next = h.resolve(CycleService).nextAnchor("s", anchor("2025-01-31"));
 
         expect(next.isSome() && next.value).toBe("2025-02-28");
       });
 
       it("returns to the month end after passing through a short month", () => {
-        const next = h.resolve(CycleService).nextAnchor("s", "2025-02-28" as AnchorString);
+        const next = h.resolve(CycleService).nextAnchor("s", anchor("2025-02-28"));
 
         expect(next.isSome() && next.value).toBe("2025-03-31");
       });
@@ -213,12 +208,12 @@ describe("CycleService", () => {
       it("resumes the configured phase from an anchor left off-grid by an extension", () => {
         h.resolve(JournalsIndex).register({
           journalName: "s",
-          anchor: "2025-02-28" as AnchorString,
+          anchor: anchor("2025-02-28"),
           path: "S/feb.md" as VaultPath,
-          endDate: "2025-03-04" as AnchorString, // extended past its computed end of 2025-03-30
+          endDate: anchor("2025-03-04"), // extended past its computed end of 2025-03-30
         });
 
-        const next = h.resolve(CycleService).nextAnchor("s", "2025-03-05" as AnchorString);
+        const next = h.resolve(CycleService).nextAnchor("s", anchor("2025-03-05"));
 
         expect(next.isSome() && next.value).toBe("2025-04-30");
       });
@@ -231,7 +226,7 @@ describe("CycleService", () => {
           data: { journals: { s: customJournal("s", "month", 1, "2024-01-30") } },
         });
 
-        const next = resolve(CycleService).nextAnchor("s", "2024-02-29" as AnchorString);
+        const next = resolve(CycleService).nextAnchor("s", anchor("2024-02-29"));
 
         expect(next.isSome() && next.value).toBe("2024-03-30");
       });
@@ -244,7 +239,7 @@ describe("CycleService", () => {
           data: { journals: { s: customJournal("s", "quarter", 1, "2025-01-31") } },
         });
 
-        const next = resolve(CycleService).nextAnchor("s", "2025-04-30" as AnchorString);
+        const next = resolve(CycleService).nextAnchor("s", anchor("2025-04-30"));
 
         expect(next.isSome() && next.value).toBe("2025-07-31");
       });
@@ -257,7 +252,7 @@ describe("CycleService", () => {
           data: { journals: { s: customJournal("s", "year", 1, "2024-02-29") } },
         });
 
-        const next = resolve(CycleService).nextAnchor("s", "2027-02-28" as AnchorString);
+        const next = resolve(CycleService).nextAnchor("s", anchor("2027-02-28"));
 
         expect(next.isSome() && next.value).toBe("2028-02-29");
       });
@@ -273,7 +268,7 @@ describe("CycleService", () => {
 
       // With the test calendar (dow=1), 2024-03-04 is the anchor of the week Mon 2024-03-04 –
       // Sun 2024-03-10; the prior week's anchor is its first day = Mon 2024-02-26.
-      const previous = resolve(CycleService).previousAnchor("w", "2024-03-04" as AnchorString);
+      const previous = resolve(CycleService).previousAnchor("w", anchor("2024-03-04"));
 
       expect(previous.isSome() && previous.value).toBe("2024-02-26");
     });
@@ -284,7 +279,7 @@ describe("CycleService", () => {
         data: { journals: { s: customJournal("s", "month", 1, "2024-01-15") } },
       });
 
-      const previous = resolve(CycleService).previousAnchor("s", "2024-02-15" as AnchorString);
+      const previous = resolve(CycleService).previousAnchor("s", anchor("2024-02-15"));
 
       expect(previous.isSome() && previous.value).toBe("2024-01-15");
     });
@@ -295,7 +290,7 @@ describe("CycleService", () => {
         data: { journals: { s: customJournal("s", "month", 1, "2025-01-31") } },
       });
 
-      const previous = resolve(CycleService).previousAnchor("s", "2025-03-31" as AnchorString);
+      const previous = resolve(CycleService).previousAnchor("s", anchor("2025-03-31"));
 
       expect(previous.isSome() && previous.value).toBe("2025-02-28");
     });
@@ -306,7 +301,7 @@ describe("CycleService", () => {
         data: { journals: { s: customJournal("s", "quarter", 1, "2025-01-31") } },
       });
 
-      const previous = resolve(CycleService).previousAnchor("s", "2025-04-30" as AnchorString);
+      const previous = resolve(CycleService).previousAnchor("s", anchor("2025-04-30"));
 
       expect(previous.isSome() && previous.value).toBe("2025-01-31");
     });
@@ -319,12 +314,12 @@ describe("CycleService", () => {
         data: { journals: { w: fixedJournal("w", { type: "week" }) } },
       });
       const cycle = resolve(CycleService);
-      const anchor = unwrap(cycle.anchorOf("w", date("2024-03-06")));
+      const weekAnchor = unwrap(cycle.anchorOf("w", date("2024-03-06")));
 
       // The test calendar's dow=1 doy=4 puts the week containing 2024-03-06 (Wednesday) at
       // Mon 2024-03-04 through Sun 2024-03-10.
-      const start = cycle.startOf("w", anchor);
-      const end = cycle.endOf("w", anchor);
+      const start = cycle.startOf("w", weekAnchor);
+      const end = cycle.endOf("w", weekAnchor);
 
       expect(start.isSome() && start.value.toAnchor()).toBe("2024-03-04");
       expect(end.isSome() && end.value.toAnchor()).toBe("2024-03-10");
@@ -337,8 +332,8 @@ describe("CycleService", () => {
       });
       const cycle = resolve(CycleService);
 
-      const start = cycle.startOf("s", "2024-01-15" as AnchorString);
-      const end = cycle.endOf("s", "2024-01-15" as AnchorString);
+      const start = cycle.startOf("s", anchor("2024-01-15"));
+      const end = cycle.endOf("s", anchor("2024-01-15"));
 
       expect(start.isSome() && start.value.toAnchor()).toBe("2024-01-15");
       expect(end.isSome() && end.value.toAnchor()).toBe("2024-02-14"); // the day before the next anchor
@@ -351,12 +346,12 @@ describe("CycleService", () => {
       });
       resolve(JournalsIndex).register({
         journalName: "s",
-        anchor: "2024-01-01" as AnchorString,
+        anchor: anchor("2024-01-01"),
         path: "S/1.md" as VaultPath,
-        endDate: "2024-01-14" as AnchorString,
+        endDate: anchor("2024-01-14"),
       });
 
-      const end = resolve(CycleService).endOf("s", "2024-01-01" as AnchorString);
+      const end = resolve(CycleService).endOf("s", anchor("2024-01-01"));
 
       expect(end.isSome() && end.value.toAnchor()).toBe("2024-01-14");
     });
@@ -365,8 +360,8 @@ describe("CycleService", () => {
       const { resolve } = await testContainer({ modules: [journalsCoreModule], data: { journals: {} } });
       const cycle = resolve(CycleService);
 
-      expect(cycle.startOf("missing", "2024-01-01" as AnchorString).isNone()).toBe(true);
-      expect(cycle.endOf("missing", "2024-01-01" as AnchorString).isNone()).toBe(true);
+      expect(cycle.startOf("missing", anchor("2024-01-01")).isNone()).toBe(true);
+      expect(cycle.endOf("missing", anchor("2024-01-01")).isNone()).toBe(true);
     });
   });
 
@@ -378,12 +373,12 @@ describe("CycleService", () => {
       });
       resolve(JournalsIndex).register({
         journalName: "s",
-        anchor: "2024-01-01" as AnchorString,
+        anchor: anchor("2024-01-01"),
         path: "S/1.md" as VaultPath,
-        endDate: "2024-01-14" as AnchorString, // extended through Jan 14 instead of Jan 7
+        endDate: anchor("2024-01-14"), // extended through Jan 14 instead of Jan 7
       });
 
-      const next = resolve(CycleService).nextAnchor("s", "2024-01-01" as AnchorString);
+      const next = resolve(CycleService).nextAnchor("s", anchor("2024-01-01"));
 
       expect(next.isSome() && next.value).toBe("2024-01-15");
     });
@@ -395,16 +390,16 @@ describe("CycleService", () => {
       });
       resolve(JournalsIndex).register({
         journalName: "s",
-        anchor: "2024-01-01" as AnchorString,
+        anchor: anchor("2024-01-01"),
         path: "S/1.md" as VaultPath,
-        endDate: "2024-01-14" as AnchorString, // extended through Jan 14 instead of Jan 7
+        endDate: anchor("2024-01-14"), // extended through Jan 14 instead of Jan 7
       });
 
       // 2024-01-10 lies in the extended first interval [2024-01-01, 2024-01-14], not a
       // phantom computed week starting 2024-01-08.
-      const anchor = resolve(CycleService).anchorOf("s", date("2024-01-10"));
+      const result = resolve(CycleService).anchorOf("s", date("2024-01-10"));
 
-      expect(anchor.isSome() && anchor.value).toBe("2024-01-01");
+      expect(result.isSome() && result.value).toBe("2024-01-01");
     });
 
     it("anchorOf steps past an extended interval to the next computed anchor", async () => {
@@ -414,15 +409,15 @@ describe("CycleService", () => {
       });
       resolve(JournalsIndex).register({
         journalName: "s",
-        anchor: "2024-01-01" as AnchorString,
+        anchor: anchor("2024-01-01"),
         path: "S/1.md" as VaultPath,
-        endDate: "2024-01-14" as AnchorString,
+        endDate: anchor("2024-01-14"),
       });
 
       // The interval after the extension starts 2024-01-15; 2024-01-20 falls inside it.
-      const anchor = resolve(CycleService).anchorOf("s", date("2024-01-20"));
+      const result = resolve(CycleService).anchorOf("s", date("2024-01-20"));
 
-      expect(anchor.isSome() && anchor.value).toBe("2024-01-15");
+      expect(result.isSome() && result.value).toBe("2024-01-15");
     });
 
     it("anchorOf maps a date inside an extended interval that precedes the configured anchor", async () => {
@@ -432,16 +427,16 @@ describe("CycleService", () => {
       });
       resolve(JournalsIndex).register({
         journalName: "s",
-        anchor: "2023-12-18" as AnchorString,
+        anchor: anchor("2023-12-18"),
         path: "S/prev.md" as VaultPath,
-        endDate: "2024-01-14" as AnchorString, // extended right up to the day before the anchor
+        endDate: anchor("2024-01-14"), // extended right up to the day before the anchor
       });
 
       // 2024-01-05 lies in the stored interval [2023-12-18, 2024-01-14], reached by walking
       // backward from the configured anchor 2024-01-15.
-      const anchor = resolve(CycleService).anchorOf("s", date("2024-01-05"));
+      const result = resolve(CycleService).anchorOf("s", date("2024-01-05"));
 
-      expect(anchor.isSome() && anchor.value).toBe("2023-12-18");
+      expect(result.isSome() && result.value).toBe("2023-12-18");
     });
   });
 
@@ -474,11 +469,7 @@ describe("CycleService", () => {
         data: { journals: { s: customJournal("s", "week", 1, "2024-01-01") } },
       });
 
-      const result = resolve(CycleService).intervalsInRange(
-        "s",
-        "2024-01-05" as AnchorString,
-        "2024-01-20" as AnchorString,
-      );
+      const result = resolve(CycleService).intervalsInRange("s", anchor("2024-01-05"), anchor("2024-01-20"));
 
       expect([...result]).toEqual(["2024-01-01", "2024-01-08", "2024-01-15"]);
     });
@@ -492,11 +483,7 @@ describe("CycleService", () => {
       });
 
       // 2024-01-01 (Mon) and 2024-01-22 (Mon) are 3 weeks apart.
-      const result = resolve(CycleService).countRepeats(
-        "w",
-        "2024-01-01" as AnchorString,
-        "2024-01-22" as AnchorString,
-      );
+      const result = resolve(CycleService).countRepeats("w", anchor("2024-01-01"), anchor("2024-01-22"));
 
       expect(result.isSome() && result.value).toBe(3);
     });
@@ -507,7 +494,7 @@ describe("CycleService", () => {
         data: { journals: { w: fixedJournal("w", { type: "week" }) } },
       });
 
-      const result = resolve(CycleService).countRepeats("w", "" as AnchorString, "2024-01-22" as AnchorString);
+      const result = resolve(CycleService).countRepeats("w", anchor(""), anchor("2024-01-22"));
 
       expect(result.isNone()).toBe(true);
     });
@@ -518,7 +505,7 @@ describe("CycleService", () => {
         data: { journals: { w: fixedJournal("w", { type: "week" }) } },
       });
 
-      const result = resolve(CycleService).countRepeats("w", "2024-01-01" as AnchorString, "nonsense" as AnchorString);
+      const result = resolve(CycleService).countRepeats("w", anchor("2024-01-01"), anchor("nonsense"));
 
       expect(result.isNone()).toBe(true);
     });
@@ -531,11 +518,7 @@ describe("CycleService", () => {
 
       // Wed 2024-01-03 sits in the week anchored Mon 2024-01-01; the week anchored
       // 2024-01-15 is two weeks on, however far into its week the start date falls.
-      const result = resolve(CycleService).countRepeats(
-        "w",
-        "2024-01-03" as AnchorString,
-        "2024-01-15" as AnchorString,
-      );
+      const result = resolve(CycleService).countRepeats("w", anchor("2024-01-03"), anchor("2024-01-15"));
 
       expect(result.isSome() && result.value).toBe(2);
     });
@@ -546,11 +529,7 @@ describe("CycleService", () => {
         data: { journals: { m: fixedJournal("m", { type: "month" }) } },
       });
 
-      const result = resolve(CycleService).countRepeats(
-        "m",
-        "2024-06-15" as AnchorString,
-        "2024-08-01" as AnchorString,
-      );
+      const result = resolve(CycleService).countRepeats("m", anchor("2024-06-15"), anchor("2024-08-01"));
 
       expect(result.isSome() && result.value).toBe(2);
     });
@@ -562,8 +541,8 @@ describe("CycleService", () => {
       });
       const cycle = resolve(CycleService);
 
-      const forward = unwrap(cycle.countRepeats("w", "2024-01-01" as AnchorString, "2024-01-22" as AnchorString));
-      const backward = unwrap(cycle.countRepeats("w", "2024-01-22" as AnchorString, "2024-01-01" as AnchorString));
+      const forward = unwrap(cycle.countRepeats("w", anchor("2024-01-01"), anchor("2024-01-22")));
+      const backward = unwrap(cycle.countRepeats("w", anchor("2024-01-22"), anchor("2024-01-01")));
 
       expect(Math.abs(forward)).toBe(Math.abs(backward));
     });
@@ -577,11 +556,7 @@ describe("CycleService", () => {
         data: { journals: { s: customJournal("s", "day", 7, "2026-06-01") } },
       });
 
-      const result = resolve(CycleService).countRepeats(
-        "s",
-        "2026-06-03" as AnchorString,
-        "2026-06-22" as AnchorString,
-      );
+      const result = resolve(CycleService).countRepeats("s", anchor("2026-06-03"), anchor("2026-06-22"));
 
       expect(result.isSome() && result.value).toBe(3);
     });
@@ -599,17 +574,17 @@ describe("CycleService", () => {
         });
         h.resolve(JournalsIndex).register({
           journalName: "s",
-          anchor: "2024-01-01" as AnchorString,
+          anchor: anchor("2024-01-01"),
           path: "S/1.md" as VaultPath,
-          endDate: "2024-01-14" as AnchorString,
+          endDate: anchor("2024-01-14"),
         });
       });
 
       it("counts the same number of intervals as stepping through nextAnchor", () => {
         const cycle = h.resolve(CycleService);
-        const to = "2024-02-05" as AnchorString;
+        const to = anchor("2024-02-05");
 
-        let current = "2024-01-01" as AnchorString;
+        let current = anchor("2024-01-01");
         let steps = 0;
         // Capped so a stalled nextAnchor fails the test below rather than hanging the run.
         const maxSteps = 8;
@@ -620,7 +595,7 @@ describe("CycleService", () => {
 
         expect(current).toBe(to);
         expect(steps).toBe(4);
-        const result = cycle.countRepeats("s", "2024-01-01" as AnchorString, to);
+        const result = cycle.countRepeats("s", anchor("2024-01-01"), to);
         expect(result.isSome() && result.value).toBe(steps);
       });
 
@@ -628,9 +603,9 @@ describe("CycleService", () => {
         // Mirror of the forward case: stepping backward through the same grid is
         // 02-05, 01-29, 01-22, 01-15, 01-01.
         const cycle = h.resolve(CycleService);
-        const to = "2024-01-01" as AnchorString;
+        const to = anchor("2024-01-01");
 
-        let current = "2024-02-05" as AnchorString;
+        let current = anchor("2024-02-05");
         let steps = 0;
         // Capped so a stalled previousAnchor fails the test below rather than hanging the run.
         const maxSteps = 8;
@@ -641,7 +616,7 @@ describe("CycleService", () => {
 
         expect(current).toBe(to);
         expect(steps).toBe(4);
-        const result = cycle.countRepeats("s", "2024-02-05" as AnchorString, to);
+        const result = cycle.countRepeats("s", anchor("2024-02-05"), to);
         expect(result.isSome() && result.value).toBe(-steps);
       });
     });
@@ -654,7 +629,7 @@ describe("CycleService", () => {
         data: { journals: { s: customJournal("s", "week", 1, "2024-01-01") } },
       });
 
-      const result = resolve(CycleService).anchorAtOffset("s", "2024-01-01" as AnchorString, 3);
+      const result = resolve(CycleService).anchorAtOffset("s", anchor("2024-01-01"), 3);
 
       expect(result.isSome() && result.value).toBe("2024-01-22");
     });
@@ -665,7 +640,7 @@ describe("CycleService", () => {
         data: { journals: { s: customJournal("s", "week", 1, "2024-01-01") } },
       });
 
-      const result = resolve(CycleService).anchorAtOffset("s", "2024-01-22" as AnchorString, -3);
+      const result = resolve(CycleService).anchorAtOffset("s", anchor("2024-01-22"), -3);
 
       expect(result.isSome() && result.value).toBe("2024-01-01");
     });
@@ -676,7 +651,7 @@ describe("CycleService", () => {
         data: { journals: { s: customJournal("s", "week", 1, "2024-01-01") } },
       });
 
-      const result = resolve(CycleService).anchorAtOffset("s", "2024-01-08" as AnchorString, 0);
+      const result = resolve(CycleService).anchorAtOffset("s", anchor("2024-01-08"), 0);
 
       expect(result.isSome() && result.value).toBe("2024-01-08");
     });
@@ -687,7 +662,7 @@ describe("CycleService", () => {
         data: { journals: { d: fixedJournal("d", { type: "day" }) } },
       });
 
-      const result = resolve(CycleService).anchorAtOffset("d", "2024-01-01" as AnchorString, 3);
+      const result = resolve(CycleService).anchorAtOffset("d", anchor("2024-01-01"), 3);
 
       expect(result.isSome() && result.value).toBe("2024-01-04");
     });
@@ -698,7 +673,7 @@ describe("CycleService", () => {
         data: { journals: { s: customJournal("s", "month", 2, "2024-01-31") } },
       });
 
-      const result = resolve(CycleService).anchorAtOffset("s", "2024-01-31" as AnchorString, 7);
+      const result = resolve(CycleService).anchorAtOffset("s", anchor("2024-01-31"), 7);
 
       expect(result.isSome() && result.value).toBe("2025-03-31");
     });
@@ -709,7 +684,7 @@ describe("CycleService", () => {
         data: { journals: { s: customJournal("s", "month", 2, "2024-01-31") } },
       });
 
-      const result = resolve(CycleService).anchorAtOffset("s", "2024-01-01" as AnchorString, 0);
+      const result = resolve(CycleService).anchorAtOffset("s", anchor("2024-01-01"), 0);
 
       expect(result.isSome() && result.value).toBe("2024-01-01");
     });
@@ -720,7 +695,7 @@ describe("CycleService", () => {
         data: { journals: { q: fixedJournal("q", { type: "quarter" }) } },
       });
 
-      const result = resolve(CycleService).anchorAtOffset("q", "2024-02-15" as AnchorString, 5);
+      const result = resolve(CycleService).anchorAtOffset("q", anchor("2024-02-15"), 5);
 
       expect(result.isSome() && result.value).toBe("2025-04-01");
     });
@@ -728,7 +703,7 @@ describe("CycleService", () => {
     it("returns None for an unknown journal", async () => {
       const { resolve } = await testContainer({ modules: [journalsCoreModule], data: { journals: {} } });
 
-      const result = resolve(CycleService).anchorAtOffset("missing", "2024-01-01" as AnchorString, 2);
+      const result = resolve(CycleService).anchorAtOffset("missing", anchor("2024-01-01"), 2);
 
       expect(result.isNone()).toBe(true);
     });
@@ -741,7 +716,7 @@ describe("CycleService", () => {
         data: { journals: { daily: fixedJournal("daily", { type: "day" }) } },
       });
 
-      const result = resolve(CycleService).isCanonicalAnchor("daily", "2024-06-15" as AnchorString);
+      const result = resolve(CycleService).isCanonicalAnchor("daily", anchor("2024-06-15"));
 
       expect(result.isSome() && result.value).toBe(true);
     });
@@ -752,7 +727,7 @@ describe("CycleService", () => {
         data: { journals: { m: fixedJournal("m", { type: "month" }) } },
       });
 
-      const result = resolve(CycleService).isCanonicalAnchor("m", "2024-06-15" as AnchorString);
+      const result = resolve(CycleService).isCanonicalAnchor("m", anchor("2024-06-15"));
 
       expect(result.isSome() && result.value).toBe(false);
     });
@@ -763,7 +738,7 @@ describe("CycleService", () => {
         data: { journals: { m: fixedJournal("m", { type: "month" }) } },
       });
 
-      const result = resolve(CycleService).isCanonicalAnchor("m", "2024-06-01" as AnchorString);
+      const result = resolve(CycleService).isCanonicalAnchor("m", anchor("2024-06-01"));
 
       expect(result.isSome() && result.value).toBe(true);
     });
@@ -774,7 +749,7 @@ describe("CycleService", () => {
         data: { journals: { s: customJournal("s", "month", 1, "2024-01-15") } },
       });
 
-      const result = resolve(CycleService).isCanonicalAnchor("s", "2024-02-20" as AnchorString);
+      const result = resolve(CycleService).isCanonicalAnchor("s", anchor("2024-02-20"));
 
       expect(result.isSome() && result.value).toBe(false);
     });
@@ -785,7 +760,7 @@ describe("CycleService", () => {
         data: { journals: { s: customJournal("s", "month", 1, "2024-01-15") } },
       });
 
-      const result = resolve(CycleService).isCanonicalAnchor("s", "2024-02-15" as AnchorString);
+      const result = resolve(CycleService).isCanonicalAnchor("s", anchor("2024-02-15"));
 
       expect(result.isSome() && result.value).toBe(true);
     });
@@ -793,7 +768,7 @@ describe("CycleService", () => {
     it("returns None for an unknown journal", async () => {
       const { resolve } = await testContainer({ modules: [journalsCoreModule], data: { journals: {} } });
 
-      const result = resolve(CycleService).isCanonicalAnchor("missing", "2024-06-01" as AnchorString);
+      const result = resolve(CycleService).isCanonicalAnchor("missing", anchor("2024-06-01"));
 
       expect(result.isNone()).toBe(true);
     });
