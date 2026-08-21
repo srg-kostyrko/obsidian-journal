@@ -7,41 +7,26 @@ import type { AnchorString } from "./types";
 
 let installed: Calendar | undefined;
 
-export function installTestCalendar(week?: Partial<WeekConfig>): { teardown: () => void; calendar: Calendar } {
-  const priorLocale = moment.locale();
-  const priorWeek = moment.locales().includes(CUSTOM_LOCALE)
-    ? {
-        dow: moment.localeData(CUSTOM_LOCALE).firstDayOfWeek(),
-        doy: moment.localeData(CUSTOM_LOCALE).firstDayOfYear(),
-      }
-    : { dow: 1, doy: 4 };
-  const calendar = new Calendar();
-  calendar.applyWeekConfig({ dow: week?.dow ?? 1, doy: week?.doy ?? 4 }, { propagateToGlobal: false });
-  installed = calendar;
+const DEFAULT_TEST_WEEK: WeekConfig = { dow: 1, doy: 4 };
 
-  return {
-    calendar,
-    teardown: () => {
-      installed = undefined;
-      moment.updateLocale(CUSTOM_LOCALE, { week: priorWeek });
-      moment.locale(priorLocale);
-    },
-  };
+export function installTestCalendar(week?: Partial<WeekConfig>): { teardown: () => void; calendar: Calendar } {
+  // Reuse the installed instance: the Calendar constructor re-seeds CUSTOM_LOCALE from the system
+  // locale, so a second `new Calendar()` inside one test discards the first's grid.
+  const calendar = installed ?? new Calendar();
+  calendar.applyWeekConfig(
+    { dow: week?.dow ?? DEFAULT_TEST_WEEK.dow, doy: week?.doy ?? DEFAULT_TEST_WEEK.doy },
+    { propagateToGlobal: false },
+  );
+  installed = calendar;
+  return { calendar, teardown: resetCalendarLocale };
 }
 
-// moment's locale registry is process-global, so when test files share a worker's module registry
-// the custom locale outlives the file that defined it and the next file silently inherits its week
-// grid. Putting the custom locale back on the machine locale's week between files restores the
-// starting point a file gets when it is the first one to touch the calendar.
+// Puts the week grid back to the value every test starts on. The global afterEach calls this, so a
+// test that changed the grid cannot hand it to the next test in the same worker — which the previous
+// afterAll-only reset allowed.
 export function resetCalendarLocale(): void {
-  installed = undefined;
   if (!moment.locales().includes(CUSTOM_LOCALE)) return;
-  const currentLocale = moment.locale();
-  const machine = moment.localeData(currentLocale);
-  moment.updateLocale(CUSTOM_LOCALE, {
-    week: { dow: machine.firstDayOfWeek(), doy: machine.firstDayOfYear() },
-  });
-  moment.locale(currentLocale);
+  installed?.applyWeekConfig(DEFAULT_TEST_WEEK, { propagateToGlobal: false });
 }
 
 // Component tests must resolve this instance rather than constructing their own: the Calendar

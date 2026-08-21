@@ -1,6 +1,7 @@
 import { onTestFinished } from "vitest";
 
-import { CalendarModule } from "@/calendar";
+import { Calendar, CalendarModule } from "@/calendar";
+import { testCalendar } from "@/calendar/testing";
 import {
   type AnyTokenLike,
   type Class,
@@ -180,6 +181,11 @@ export async function testContainer(options: TestContainerOptions = {}): Promise
     options.data === undefined ? undefined : { version: CURRENT_VERSION, ...options.data },
   );
   c.override(PluginData).useValue(data as unknown as PluginData);
+
+  // CalendarModule registers Calendar eager, and its constructor re-seeds CUSTOM_LOCALE's week from
+  // the SYSTEM locale — so autoLoad() would silently discard the grid the ambient installTestCalendar
+  // set, and a test asking for {dow:0} would assert against the machine's.
+  c.override(Calendar).useValue(testCalendar());
 
   // Interaction services await a user decision or stand in for an absent external plugin, so a
   // test has to drive them. Everything else in the host module runs real against the fake vault.

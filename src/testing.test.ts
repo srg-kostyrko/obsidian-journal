@@ -1,7 +1,9 @@
+import { moment } from "obsidian";
 import { afterEach, beforeEach, describe, expect, it } from "vitest";
 
 import { Calendar } from "@/calendar";
-import { anchor } from "@/calendar/testing";
+import { CUSTOM_LOCALE } from "@/calendar/calendar";
+import { anchor, installTestCalendar, testCalendar } from "@/calendar/testing";
 import type { CannotOverrideError } from "@/infrastructure/di";
 import { ContainerDisposedError } from "@/infrastructure/di";
 import { InputSuggestService, NoticeService, SuggestService, TemplaterService } from "@/infrastructure/host";
@@ -26,6 +28,14 @@ it("exposes a bound resolve", async () => {
   const harness = await testContainer({ modules: [journalsCoreModule] });
 
   expect(harness.resolve(CycleService)).toBeInstanceOf(CycleService);
+});
+
+it("resolves the ambient test calendar rather than constructing its own", async () => {
+  installTestCalendar({ dow: 0, doy: 6 });
+  const harness = await testContainer();
+
+  expect(harness.resolve(Calendar)).toBe(testCalendar());
+  expect(moment.localeData(CUSTOM_LOCALE).firstDayOfWeek()).toBe(0);
 });
 
 // Cross-test ordering is normally a smell; here it is the subject under test — proving the
