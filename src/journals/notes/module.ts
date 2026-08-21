@@ -14,6 +14,21 @@ import { NotePathService } from "./note-path";
 import { SelfWriteGuard } from "./self-write-guard";
 import { TemplateContentService } from "./template-content";
 
+export const journalNotesCoreModule: Module = {
+  register(c) {
+    c.register(NotePathService).useClass(NotePathService);
+    c.register(FunctionHandlerToken).useClass(JournalLinkHandler);
+    c.register(TemplateContentService).useClass(TemplateContentService);
+    c.register(SelfWriteGuard).useClass(SelfWriteGuard);
+    c.register(NoteCreationService).useClass(NoteCreationService);
+    c.register(NoteConnectionService).useClass(NoteConnectionService);
+    c.register(AutoAttachService).useClass(AutoAttachService).eager();
+    c.register(AutoCreateService).useClass(AutoCreateService);
+    journalNotesFlowsModule.register(c);
+    bulkAddModule.register(c);
+  },
+};
+
 export const journalNotesModule: Module = {
   register(c) {
     c.register(NotePathService).useClass(NotePathService);
