@@ -354,18 +354,25 @@ describe("code blocks", () => {
 
       assertDecorationMatrix(timelineCalendar);
 
-      it("keeps every month of a quarter timeline the same width", async () => {
-        await renderBlock(
-          "blocks/timeline-quarter-decorated.md",
-          plainNote(TIMELINE_QUARTER_FENCE),
-          `${TIMELINE_BLOCK} .notes-month-view`,
-        );
-        // The fixture's notes all sit in the current month, so a reservation taken from the
-        // cells that matched gave that month wider cells than its two siblings, squeezed them
-        // to their own content and pushed the last one out of the note.
-        const layout = await monthGridLayout(`${TIMELINE_BLOCK} .timeline-quarter`, 1000);
-        expect(new Set(layout.widths).size).toBe(1);
-        expect(layout.overflowX).toBe(0);
+      // Its own suite, not a bare it(): mocha runs a suite's direct tests before its nested
+      // suites, so a test registered alongside assertDecorationMatrix's describes would swap
+      // the month timeline for a quarter one *before* the matrix reads it — and the matrix's
+      // periodCell() takes the first data-testid match, which in a quarter is the first
+      // month's header and week, not the seeded current one.
+      describe("quarter month sizing", () => {
+        it("keeps every month of a quarter timeline the same width", async () => {
+          await renderBlock(
+            "blocks/timeline-quarter-decorated.md",
+            plainNote(TIMELINE_QUARTER_FENCE),
+            `${TIMELINE_BLOCK} .notes-month-view`,
+          );
+          // The fixture's notes all sit in the current month, so a reservation taken from the
+          // cells that matched gave that month wider cells than its two siblings, squeezed them
+          // to their own content and pushed the last one out of the note.
+          const layout = await monthGridLayout(`${TIMELINE_BLOCK} .timeline-quarter`, 1000);
+          expect(new Set(layout.widths).size).toBe(1);
+          expect(layout.overflowX).toBe(0);
+        });
       });
     });
   });
