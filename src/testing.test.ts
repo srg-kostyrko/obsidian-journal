@@ -4,7 +4,7 @@ import { moment } from "obsidian";
 import { afterEach, beforeEach, describe, expect, it } from "vitest";
 import { defineComponent, h } from "vue";
 
-import { Calendar } from "@/calendar";
+import { Calendar, calendarSettingsModule } from "@/calendar";
 import { CUSTOM_LOCALE } from "@/calendar/calendar";
 import { anchor, installTestCalendar, testCalendar } from "@/calendar/testing";
 import type { CannotOverrideError } from "@/infrastructure/di";
@@ -65,18 +65,20 @@ describe("disposal", () => {
 });
 
 describe("teardown from beforeEach", () => {
-  let built: TestHarness;
+  let built: TestHarness | undefined;
+  let previous: TestHarness | undefined;
 
   beforeEach(async () => {
+    previous = built;
     built = await testContainer();
   });
 
   it("resolves while the test is running", () => {
-    expect(built.resolve(SettingsService)).toBeDefined();
+    expect(built?.resolve(SettingsService)).toBeDefined();
   });
 
-  it("has a live container in the next test too", () => {
-    expect(built.resolve(SettingsService)).toBeDefined();
+  it("has disposed the harness the previous test built", () => {
+    expect(() => previous?.resolve(SettingsService)).toThrow(ContainerDisposedError);
   });
 });
 
@@ -157,10 +159,10 @@ describe("testContainer", () => {
     expect([...harness.host.commands.keys()]).toHaveLength(0);
   });
 
-  it("repairs a seeded journal that fails schema validation", async () => {
+  it("replaces a seeded journal that is not an object with whole-entity defaults", async () => {
     harness = await testContainer({
       modules: [journalsCoreModule],
-      data: { journals: { daily: { name: "daily" } } },
+      data: { journals: { daily: "nonsense" } },
       allow: { dataRepair: true },
     });
 
@@ -264,6 +266,15 @@ describe("seed guard", () => {
         warnings: expect.arrayContaining([expect.stringContaining("journals/daily")]) as readonly string[],
       } satisfies Partial<TestContainerInvalidSeedError>),
     );
+  });
+
+  it("rejects a fixture whose slice the settings parse reset to defaults", async () => {
+    await expect(
+      testContainer({
+        modules: [calendarSettingsModule],
+        data: { calendar: { mode: "custom", dow: 9, doy: 4, global: false } },
+      }),
+    ).rejects.toThrow(TestContainerInvalidSeedError);
   });
 
   it("accepts a deliberately broken fixture when the test opts in", async () => {

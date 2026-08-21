@@ -33,10 +33,13 @@ import { templatesModule } from "@/templates";
 
 import type { App } from "vue";
 
+// Copied string literals: these are the four warnings SettingsService logs when a parse repairs
+// rather than rejects. A message reworded there without this list is a guard that stops firing.
 const REPAIR_WARNINGS = new Set([
   "collection entry reset to defaults",
   "collection entry fields reset to defaults",
   "collection seed entry failed validation; omitting",
+  "slice reset to defaults",
 ]);
 
 /**
@@ -73,16 +76,14 @@ export class TestContainerInvalidSeedError extends Error {
   }
 }
 
-export interface TestOverride {
-  readonly apply: (c: Container) => void;
-}
+export type TestOverride = (c: Container) => void;
 
 export function overrideWith<T>(token: TokenLike<T>, value: T): TestOverride {
-  return { apply: (c) => void c.override(token).useValue(value) };
+  return (c) => void c.override(token).useValue(value);
 }
 
 export function overrideWithClass<T>(token: TokenLike<T>, ctor: Class<T>): TestOverride {
-  return { apply: (c) => void c.override(token).useClass(ctor) };
+  return (c) => void c.override(token).useClass(ctor);
 }
 
 interface Initializable {
@@ -186,6 +187,13 @@ export async function testContainer(options: TestContainerOptions = {}): Promise
   const host = createFakeHost();
   const c = new Container();
 
+  const dispose = (): Promise<void> => c.dispose();
+  // settings.initialize() arms a deep watch and #scheduleSave sets a timeout; under isolate:false a
+  // container left alive fires its debounce inside a LATER file. Registering before anything can
+  // throw is what disposes the container of a boot that trips a guard, and is why no converted test
+  // needs an afterEach.
+  onTestFinished(() => dispose());
+
   const { module: loggerModule, sink: logs } = createLoggerTestingModule();
   c.addModule(loggerModule);
   c.addModule(FlowsModule);
@@ -223,7 +231,7 @@ export async function testContainer(options: TestContainerOptions = {}): Promise
   c.override(TemplaterService).useValue(templater as unknown as TemplaterService);
 
   const overrides = options.overrides ?? [];
-  for (const override of overrides) override.apply(c);
+  for (const override of overrides) override(c);
 
   const settings = c.resolve(SettingsService);
   const init = await settings.initialize();
@@ -251,12 +259,6 @@ export async function testContainer(options: TestContainerOptions = {}): Promise
     if (host.ribbonIcons.length > 0) leaked.push("ribbonIcons");
     if (leaked.length > 0) throw new TestContainerLeakedHostStateError(leaked);
   }
-
-  const dispose = (): Promise<void> => c.dispose();
-  // settings.initialize() arms a deep watch and #scheduleSave sets a timeout; under isolate:false a
-  // container left alive fires its debounce inside a LATER file. Registering here is why no
-  // converted test needs an afterEach.
-  onTestFinished(() => dispose());
 
   function resolve<T>(token: TokenLike<T>): T;
   function resolve<T>(token: MultiToken<T>): T[];
