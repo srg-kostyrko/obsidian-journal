@@ -26,7 +26,11 @@ const boundaryUnits = [
 
 <template>
   <div class="date-modifications">
-    <p>{{ m.variable_modifications_intro() }}</p>
+    <p>
+      <I18nWithSlot :message="m.variable_modifications_intro">
+        <VariableChip name="week_of_month" />
+      </I18nWithSlot>
+    </p>
 
     <h4>{{ m.variable_modifications_format_heading() }}</h4>
     <p>{{ m.variable_modifications_format_body() }}</p>

@@ -1559,7 +1559,7 @@
   "variable_modifications_format_body": "Override the default date format by adding a colon and a moment.js format string.",
   "variable_modifications_format_example": "For example {slot} renders only the year.",
   "variable_modifications_format_heading": "Format override",
-  "variable_modifications_intro": "Date and clock variables support three kinds of modifications. They can be combined in a single token.",
+  "variable_modifications_intro": "Date and clock variables support three kinds of modifications. They can be combined in a single token. {slot} takes the shifts and boundaries below — they choose the date it counts from — and the number modifications at the end.",
   "variable_modifications_modal_title": "Variable modifications",
   "variable_modifications_number_body": "Numbering variables support two modifications. Append `+N` or `-N` to add or subtract a fixed amount, and `:o` to render the value as an ordinal.",
   "variable_modifications_number_example": "For example {slot} renders the index plus three as an ordinal.",

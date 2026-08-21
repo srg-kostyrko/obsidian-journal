@@ -2131,7 +2131,7 @@
 	"variable_modifications_format_body": "Sovrascrivi il formato data predefinito aggiungendo due punti e una stringa di formato moment.js.",
 	"variable_modifications_format_example": "Ad esempio {slot} visualizza solo l'anno.",
 	"variable_modifications_format_heading": "Sovrascrittura del formato",
-	"variable_modifications_intro": "Le variabili di data e ora supportano tre tipi di modifiche. Possono essere combinate in un unico token.",
+	"variable_modifications_intro": "Le variabili di data e ora supportano tre tipi di modifiche. Possono essere combinate in un unico token. {slot} accetta gli spostamenti e i limiti qui sotto — scelgono la data da cui contare — e le modifiche numeriche in fondo.",
 	"variable_modifications_modal_title": "Modifiche delle variabili",
 	"variable_modifications_number_body": "Le variabili di numerazione supportano due modifiche. Aggiungi `+N` o `-N` per sommare o sottrarre una quantità fissa e `:o` per mostrare il valore come ordinale.",
 	"variable_modifications_number_example": "Ad esempio {slot} mostra l'indice più tre come ordinale.",

@@ -2123,7 +2123,7 @@
 	"variable_modifications_format_body": "Anula el formato de fecha predeterminado agregando dos puntos y una cadena de formato de moment.js.",
 	"variable_modifications_format_example": "Por ejemplo {slot} muestra solo el año.",
 	"variable_modifications_format_heading": "Anulación del formato",
-	"variable_modifications_intro": "Las variables de fecha y hora admiten tres tipos de modificaciones. Se pueden combinar en un único token.",
+	"variable_modifications_intro": "Las variables de fecha y hora admiten tres tipos de modificaciones. Se pueden combinar en un único token. {slot} admite los desplazamientos y los límites de abajo —que eligen la fecha desde la que se cuenta— y las modificaciones numéricas del final.",
 	"variable_modifications_modal_title": "Modificaciones de variables",
 	"variable_modifications_number_body": "Las variables de numeración admiten dos modificaciones. Añade `+N` o `-N` para sumar o restar una cantidad fija, y `:o` para representar el valor como ordinal.",
 	"variable_modifications_number_example": "Por ejemplo, {slot} representa el índice más tres como ordinal.",

@@ -2123,7 +2123,7 @@
 	"variable_modifications_format_body": "콜론과 moment.js 형식 문자열을 붙이면 기본 날짜 형식을 재정의할 수 있습니다.",
 	"variable_modifications_format_example": "예를 들어 {slot} 형태로 쓰면 연도만 표시됩니다.",
 	"variable_modifications_format_heading": "형식 재정의",
-	"variable_modifications_intro": "날짜 및 시각 변수는 세 가지 수정을 지원합니다. 하나의 토큰 안에서 함께 쓸 수 있습니다.",
+	"variable_modifications_intro": "날짜 및 시각 변수는 세 가지 수정을 지원합니다. 하나의 토큰 안에서 함께 쓸 수 있습니다. {slot} 변수는 아래의 이동과 경계를 지원하며(세는 기준 날짜를 정합니다), 마지막의 숫자 수정도 사용할 수 있습니다.",
 	"variable_modifications_modal_title": "변수 수정",
 	"variable_modifications_number_body": "번호 매기기 변수는 두 가지 수정을 지원합니다. 고정된 값을 더하거나 빼려면 `+N` 또는 `-N`을, 값을 서수로 표시하려면 `:o`를 붙입니다.",
 	"variable_modifications_number_example": "예를 들어 {slot}은 인덱스에 3을 더한 값을 서수로 표시합니다.",

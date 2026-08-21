@@ -2133,7 +2133,7 @@
 	"variable_modifications_format_body": "Das Standarddatumsformat kann durch Hinzufügen eines Doppelpunkts und einer moment.js-Formatzeichenfolge überschrieben werden.",
 	"variable_modifications_format_example": "Beispielsweise ergibt {slot} nur das Jahr.",
 	"variable_modifications_format_heading": "Formatüberschreibung",
-	"variable_modifications_intro": "Datums- und Uhrzeitvariablen unterstützen drei Arten von Modifikationen. Mehrere davon lassen sich in einem einzigen Token kombinieren.",
+	"variable_modifications_intro": "Datums- und Uhrzeitvariablen unterstützen drei Arten von Modifikationen. Mehrere davon lassen sich in einem einzigen Token kombinieren. {slot} übernimmt die Verschiebungen und Grenzen unten – sie bestimmen das Datum, ab dem gezählt wird – sowie die Zahlenmodifikationen am Ende.",
 	"variable_modifications_modal_title": "Variablenmodifikationen",
 	"variable_modifications_number_body": "Nummerierungsvariablen unterstützen zwei Modifikationen. Hänge `+N` oder `-N` an, um einen festen Betrag zu addieren oder zu subtrahieren, und `:o`, um den Wert als Ordnungszahl darzustellen.",
 	"variable_modifications_number_example": "Zum Beispiel stellt {slot} den Index plus drei als Ordnungszahl dar.",

@@ -1934,7 +1934,7 @@
 	"variable_modifications_format_body": "通过添加冒号和 moment.js 格式字符串来覆盖默认日期格式。",
 	"variable_modifications_format_example": "例如 {slot} 只渲染年份。",
 	"variable_modifications_format_heading": "格式覆盖",
-	"variable_modifications_intro": "日期和时钟变量支持三种修改方式，它们可以组合在同一个变量中。",
+	"variable_modifications_intro": "日期和时钟变量支持三种修改方式，它们可以组合在同一个变量中。{slot} 支持下面的位移和边界（它们决定从哪个日期开始计数），以及末尾的数字修改方式。",
 	"variable_modifications_modal_title": "变量修饰",
 	"variable_modifications_number_body": "编号变量支持两种修饰。追加 `+N` 或 `-N` 可加减固定数值，追加 `:o` 可将值显示为序数。",
 	"variable_modifications_number_example": "例如 {slot} 将索引加三后以序数形式显示。",

@@ -2131,7 +2131,7 @@
 	"variable_modifications_format_body": "Substitua o formato de data padrão adicionando dois pontos e uma string de formatação do moment.js.",
 	"variable_modifications_format_example": "Por exemplo {slot} renderiza apenas o ano.",
 	"variable_modifications_format_heading": "Substituição de formato",
-	"variable_modifications_intro": "As variáveis de data e relógio suportam três tipos de modificações. Elas podem ser combinadas em um único token.",
+	"variable_modifications_intro": "As variáveis de data e relógio suportam três tipos de modificações. Elas podem ser combinadas em um único token. {slot} aceita os deslocamentos e os limites abaixo — que escolhem a data a partir da qual se conta — e as modificações numéricas do final.",
 	"variable_modifications_modal_title": "Modificações de variáveis",
 	"variable_modifications_number_body": "As variáveis de numeração suportam duas modificações. Acrescente `+N` ou `-N` para somar ou subtrair um valor fixo e `:o` para apresentar o valor como ordinal.",
 	"variable_modifications_number_example": "Por exemplo, {slot} apresenta o índice mais três como ordinal.",
