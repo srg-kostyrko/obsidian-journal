@@ -2,6 +2,7 @@ import { match } from "ts-pattern";
 
 import { Bindings, type StoredEntry, disposeSlots } from "./bindings";
 import {
+  CannotOverrideError,
   ContainerDisposedError,
   InvalidTokenError,
   ScopedResolutionOutsideScopeError,
@@ -58,6 +59,22 @@ export class Container implements Resolver {
         return;
       }
       stored = this.#bindings.commit(token, entry);
+    });
+  }
+
+  override<T>(token: TokenLike<T> | MultiToken<T>): RegistrationBuilder<T>;
+  override<T>(token: AnyTokenLike): RegistrationBuilder<T> {
+    this.#ensureNotDisposed();
+    if (!isToken(token)) throw new InvalidTokenError(token);
+    if (tokenKind(token) !== "single") throw new CannotOverrideError(token, "multi");
+    const stored = this.#bindings.lookup(token)?.at(0);
+    if (!stored) throw new CannotOverrideError(token, "unregistered");
+    // Container-lifetime instances are memoized in the slot, so replacing the entry after a
+    // resolve would silently keep the old instance. Refusing is safe: overrides run before
+    // autoLoad(), which is when eager bindings first resolve.
+    if (stored.slot.has) throw new CannotOverrideError(token, "resolved");
+    return new RegistrationBuilder<T>((entry) => {
+      stored.entry = entry;
     });
   }
 

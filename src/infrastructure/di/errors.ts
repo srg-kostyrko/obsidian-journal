@@ -85,6 +85,28 @@ export class MissingInjectorProviderError extends Error {
   }
 }
 
+export type CannotOverrideReason = "unregistered" | "multi" | "resolved";
+
+const OVERRIDE_MESSAGES: Record<CannotOverrideReason, (name: string) => string> = {
+  unregistered: (name) => `Token "${name}" has no registration to override. Register it first.`,
+  multi: (name) => `Token "${name}" is a multi-token; its bindings are additive and cannot be overridden.`,
+  resolved: (name) =>
+    `Token "${name}" was already resolved, so an override would leave the existing instance in place. Override before the first resolve.`,
+};
+
+export class CannotOverrideError extends Error {
+  readonly tokenName: string;
+  readonly reason: CannotOverrideReason;
+
+  constructor(token: AnyTokenLike, reason: CannotOverrideReason) {
+    const name = tokenName(token);
+    super(OVERRIDE_MESSAGES[reason](name));
+    this.name = "CannotOverrideError";
+    this.tokenName = name;
+    this.reason = reason;
+  }
+}
+
 function describeValue(value: unknown): string {
   if (value === null) return "null";
   if (typeof value === "object") return "object";
