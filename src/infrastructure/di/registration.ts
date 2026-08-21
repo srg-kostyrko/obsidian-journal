@@ -10,7 +10,7 @@ export interface RegistrationEntry<T> {
 
 export type OnRegistrationChange<T> = (entry: RegistrationEntry<T>) => void;
 
-export interface RegistrationDefaults {
+interface RegistrationDefaults {
   readonly lifetime: Lifetime;
   readonly eager: boolean;
 }
