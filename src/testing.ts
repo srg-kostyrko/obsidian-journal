@@ -1,4 +1,5 @@
-import { onTestFinished } from "vitest";
+import { render as tlRender, type RenderOptions, type RenderResult } from "@testing-library/vue";
+import { onTestFinished, vi, type Mock } from "vitest";
 
 import { Calendar, CalendarModule } from "@/calendar";
 import { testCalendar } from "@/calendar/testing";
@@ -9,6 +10,7 @@ import {
   type MultiToken,
   type Module,
   type TokenLike,
+  provideInjectorOnApp,
 } from "@/infrastructure/di";
 import { FlowsModule } from "@/infrastructure/flows";
 import {
@@ -21,13 +23,15 @@ import {
 } from "@/infrastructure/host";
 import { FakeInputSuggestService } from "@/infrastructure/host/input-suggests/testing";
 import { createFakeHost, type FakeHost } from "@/infrastructure/host/internal/testing";
-import { ModalService } from "@/infrastructure/host/modals";
-import { FakeModalService } from "@/infrastructure/host/modals/testing";
+import { ModalService, type ModalApi } from "@/infrastructure/host/modals";
+import { FakeModalService, provideModalApiOnApp } from "@/infrastructure/host/modals/testing";
 import { FakeSuggestService } from "@/infrastructure/host/suggests/testing";
 import { FakeNoticeService, FakePluginData, FakeTemplaterService } from "@/infrastructure/host/testing";
 import { createLoggerTestingModule, type MemorySink } from "@/infrastructure/logger/testing";
 import { CURRENT_VERSION, SettingsService, settingsCoreModule } from "@/settings";
 import { templatesModule } from "@/templates";
+
+import type { App } from "vue";
 
 const REPAIR_WARNINGS = new Set([
   "collection entry reset to defaults",
@@ -83,6 +87,13 @@ export function overrideWithClass<T>(token: TokenLike<T>, ctor: Class<T>): TestO
 
 interface Initializable {
   initialize(): unknown;
+}
+
+function withPlugins<C>(options: RenderOptions<C> | undefined, install: (app: App) => void): RenderOptions<C> {
+  return {
+    ...options,
+    global: { ...options?.global, plugins: [{ install }, ...(options?.global?.plugins ?? [])] },
+  };
 }
 
 export interface TestContainerOptions {
@@ -156,6 +167,17 @@ export interface TestHarness {
   readonly templater: FakeTemplaterService;
   readonly data: FakePluginData;
   readonly settings: SettingsService;
+  /** Mounts under the harness's own injector. Merges a caller's `global.plugins`/`stubs`/`provide`. */
+  render<C>(component: C, options?: RenderOptions<C>): RenderResult;
+  /**
+   * Mounts a component that IS a modal, wiring its `useModal()` to mock `submit`/`cancel`. For a
+   * component that OPENS a modal, assert on `modals.lastOpen()` instead — the two seams are not
+   * interchangeable.
+   */
+  renderModal<C, Result = void>(
+    component: C,
+    options?: RenderOptions<C>,
+  ): RenderResult & { submit: Mock<(value: Result) => void>; cancel: Mock<() => void> };
   readonly dispose: () => Promise<void>;
   readonly [Symbol.asyncDispose]: () => Promise<void>;
 }
@@ -242,6 +264,29 @@ export async function testContainer(options: TestContainerOptions = {}): Promise
     return c.resolve(token as TokenLike<unknown>);
   }
 
+  function render<C>(component: C, renderOptions?: RenderOptions<C>): RenderResult {
+    return tlRender(
+      component,
+      withPlugins(renderOptions, (app) => provideInjectorOnApp(app, c)),
+    );
+  }
+
+  function renderModal<C, Result = void>(
+    component: C,
+    renderOptions?: RenderOptions<C>,
+  ): RenderResult & { submit: Mock<(value: Result) => void>; cancel: Mock<() => void> } {
+    const submit = vi.fn<(value: Result) => void>();
+    const cancel = vi.fn<() => void>();
+    const result = tlRender(
+      component,
+      withPlugins(renderOptions, (app) => {
+        provideInjectorOnApp(app, c);
+        provideModalApiOnApp(app, { submit, cancel } as ModalApi<unknown>);
+      }),
+    );
+    return { ...result, submit, cancel };
+  }
+
   return {
     container: c,
     resolve,
@@ -254,6 +299,8 @@ export async function testContainer(options: TestContainerOptions = {}): Promise
     templater,
     data,
     settings,
+    render,
+    renderModal,
     dispose,
     [Symbol.asyncDispose]: dispose,
   };

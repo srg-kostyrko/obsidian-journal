@@ -1,16 +1,26 @@
+import userEvent from "@testing-library/user-event";
+import { screen } from "@testing-library/vue";
 import { moment } from "obsidian";
 import { afterEach, beforeEach, describe, expect, it } from "vitest";
+import { defineComponent, h } from "vue";
 
 import { Calendar } from "@/calendar";
 import { CUSTOM_LOCALE } from "@/calendar/calendar";
 import { anchor, installTestCalendar, testCalendar } from "@/calendar/testing";
 import type { CannotOverrideError } from "@/infrastructure/di";
-import { ContainerDisposedError } from "@/infrastructure/di";
+import { ContainerDisposedError, useService } from "@/infrastructure/di";
 import { InputSuggestService, NoticeService, SuggestService, TemplaterService } from "@/infrastructure/host";
-import { ModalService } from "@/infrastructure/host/modals";
+import { ModalService, useModal } from "@/infrastructure/host/modals";
 import { FakeModalService } from "@/infrastructure/host/modals/testing";
 import { FakeNoticeService } from "@/infrastructure/host/testing";
-import { CycleService, JournalsIndex, VaultSubscriptionService, journalsCoreModule, journalsModule } from "@/journals";
+import {
+  CycleService,
+  JournalsIndex,
+  JournalsViewModel,
+  VaultSubscriptionService,
+  journalsCoreModule,
+  journalsModule,
+} from "@/journals";
 import { JournalsRepository } from "@/journals/repository";
 import { fixedJournal } from "@/journals/testing";
 import { SettingsService } from "@/settings";
@@ -264,5 +274,51 @@ describe("seed guard", () => {
     });
 
     expect(harness.resolve(JournalsRepository).get("daily").isSome()).toBe(true);
+  });
+});
+
+describe("render", () => {
+  it("provides the injector so a component can resolve a service", async () => {
+    const harness = await testContainer({
+      modules: [journalsCoreModule],
+      data: { journals: { daily: fixedJournal("daily", { type: "day" }) } },
+    });
+    const Probe = defineComponent({
+      setup: () => {
+        const vm = useService(JournalsViewModel);
+        return () => h("span", String(vm.journalCount.value));
+      },
+    });
+
+    harness.render(Probe);
+
+    expect(screen.getByText("1", { selector: "span" })).toBeTruthy();
+  });
+
+  it("keeps a caller-supplied global plugin", async () => {
+    const harness = await testContainer();
+    const installed: string[] = [];
+    const Probe = defineComponent({ render: () => h("span", "ok") });
+
+    harness.render(Probe, { global: { plugins: [{ install: () => void installed.push("caller") }] } });
+
+    expect(installed).toEqual(["caller"]);
+  });
+});
+
+describe("renderModal", () => {
+  it("resolves the modal api's submit with the component's result", async () => {
+    const harness = await testContainer();
+    const Probe = defineComponent({
+      setup: () => {
+        const api = useModal<{ ok: boolean }>();
+        return () => h("button", { onClick: () => api.submit({ ok: true }) }, "go");
+      },
+    });
+
+    const { submit } = harness.renderModal(Probe);
+    await userEvent.click(screen.getByText("go"));
+
+    expect(submit).toHaveBeenCalledWith({ ok: true });
   });
 });
