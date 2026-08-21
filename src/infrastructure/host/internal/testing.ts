@@ -10,6 +10,7 @@ import {
   type MarkdownRenderChild,
   type PaneType,
   type Plugin,
+  type PluginSettingTab,
   type WorkspaceLeaf,
 } from "obsidian";
 
@@ -108,6 +109,7 @@ export interface FakeHost {
   readonly commands: Map<string, Command>;
   readonly protocolHandlers: Map<string, (parameters: Record<string, string>) => void>;
   readonly ribbonIcons: FakeRibbonIcon[];
+  readonly settingTabs: PluginSettingTab[];
   readonly codeBlockProcessors: Map<string, CodeBlockProcessor>;
   readonly registeredViews: Map<string, FakeRegisteredView>;
   readonly promptedDeletions: readonly TFile[];
@@ -186,6 +188,7 @@ export function createFakeHost(): FakeHost {
   const commands = new Map<string, Command>();
   const protocolHandlers = new Map<string, (parameters: Record<string, string>) => void>();
   const ribbonIcons: FakeRibbonIcon[] = [];
+  const settingTabs: PluginSettingTab[] = [];
   const codeBlockProcessors = new Map<string, CodeBlockProcessor>();
   const registeredViews = new Map<string, FakeRegisteredView>();
   const viewLeavesByType = new Map<string, FakeLeaf[]>();
@@ -490,6 +493,9 @@ export function createFakeHost(): FakeHost {
       registeredViews.set(type, { type, factory });
       unloadCallbacks.push(() => registeredViews.delete(type));
     },
+    addSettingTab(tab: PluginSettingTab): void {
+      settingTabs.push(tab);
+    },
   } as unknown as Plugin;
 
   return {
@@ -503,6 +509,7 @@ export function createFakeHost(): FakeHost {
     commands,
     protocolHandlers,
     ribbonIcons,
+    settingTabs,
     codeBlockProcessors,
     registeredViews,
     promptedDeletions,
