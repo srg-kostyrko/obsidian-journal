@@ -77,14 +77,14 @@ export class TestContainerInvalidSeedError extends Error {
   }
 }
 
-export type TestOverride = (c: Container) => void;
+export type TestOverride = (container: Container) => void;
 
 export function overrideWith<T>(token: TokenLike<T>, value: T): TestOverride {
-  return (c) => void c.override(token).useValue(value);
+  return (container) => void container.override(token).useValue(value);
 }
 
 export function overrideWithClass<T>(token: TokenLike<T>, ctor: Class<T>): TestOverride {
-  return (c) => void c.override(token).useClass(ctor);
+  return (container) => void container.override(token).useClass(ctor);
 }
 
 interface Initializable {
@@ -186,9 +186,9 @@ export interface TestHarness {
 
 export async function testContainer(options: TestContainerOptions = {}): Promise<TestHarness> {
   const host = createFakeHost();
-  const c = new Container();
+  const container = new Container();
 
-  const dispose = (): Promise<void> => c.dispose();
+  const dispose = (): Promise<void> => container.dispose();
   // settings.initialize() arms a deep watch and #scheduleSave sets a timeout; under isolate:false a
   // container left alive fires its debounce inside a LATER file. Registering before anything can
   // throw is what disposes the container of a boot that trips a guard, and is why no converted test
@@ -196,13 +196,13 @@ export async function testContainer(options: TestContainerOptions = {}): Promise
   onTestFinished(() => dispose());
 
   const { module: loggerModule, sink: logs } = createLoggerTestingModule();
-  c.addModule(loggerModule);
-  c.addModule(FlowsModule);
-  c.addModule(createHostModule(host.plugin));
-  c.addModule(settingsCoreModule);
-  c.addModule(CalendarModule);
-  c.addModule(templatesModule);
-  c.addModules(options.modules ?? []);
+  container.addModule(loggerModule);
+  container.addModule(FlowsModule);
+  container.addModule(createHostModule(host.plugin));
+  container.addModule(settingsCoreModule);
+  container.addModule(CalendarModule);
+  container.addModule(templatesModule);
+  container.addModules(options.modules ?? []);
 
   // The real PluginData reads app.vault.adapter and plugin.manifest.dir, neither of which
   // createFakeHost models, so it is overridden unconditionally rather than only when a test
@@ -211,12 +211,12 @@ export async function testContainer(options: TestContainerOptions = {}): Promise
   const data = new FakePluginData(
     options.data === undefined ? undefined : { version: CURRENT_VERSION, ...options.data },
   );
-  c.override(PluginData).useValue(data as unknown as PluginData);
+  container.override(PluginData).useValue(data as unknown as PluginData);
 
   // CalendarModule registers Calendar eager, and its constructor re-seeds CUSTOM_LOCALE's week from
   // the SYSTEM locale — so autoLoad() would silently discard the grid the ambient installTestCalendar
   // set, and a test asking for {dow:0} would assert against the machine's.
-  c.override(Calendar).useValue(testCalendar());
+  container.override(Calendar).useValue(testCalendar());
 
   // Interaction services await a user decision or stand in for an absent external plugin, so a
   // test has to drive them. Everything else in the host module runs real against the fake vault.
@@ -225,16 +225,16 @@ export async function testContainer(options: TestContainerOptions = {}): Promise
   const suggests = new FakeSuggestService();
   const inputSuggests = new FakeInputSuggestService();
   const templater = new FakeTemplaterService();
-  c.override(ModalService).useValue(modals as unknown as ModalService);
-  c.override(NoticeService).useValue(notices);
-  c.override(SuggestService).useValue(suggests as unknown as SuggestService);
-  c.override(InputSuggestService).useValue(inputSuggests as unknown as InputSuggestService);
-  c.override(TemplaterService).useValue(templater as unknown as TemplaterService);
+  container.override(ModalService).useValue(modals as unknown as ModalService);
+  container.override(NoticeService).useValue(notices);
+  container.override(SuggestService).useValue(suggests as unknown as SuggestService);
+  container.override(InputSuggestService).useValue(inputSuggests as unknown as InputSuggestService);
+  container.override(TemplaterService).useValue(templater as unknown as TemplaterService);
 
   const overrides = options.overrides ?? [];
-  for (const override of overrides) override(c);
+  for (const override of overrides) override(container);
 
-  const settings = c.resolve(SettingsService);
+  const settings = container.resolve(SettingsService);
   const init = await settings.initialize();
   if (init.kind === "err") throw init.error;
 
@@ -248,10 +248,10 @@ export async function testContainer(options: TestContainerOptions = {}): Promise
   // Services that require an explicit initialize() call in main.ts (VaultSubscriptionService,
   // AutoAttachService, and their neighbors) are constructed here but never initialized: a test
   // names the ones its own scenario needs via `initialize`, run below after autoLoad.
-  if (options.autoLoad !== false) await c.autoLoad();
+  if (options.autoLoad !== false) await container.autoLoad();
 
   const toInitialize = options.initialize ?? [];
-  for (const token of toInitialize) await c.resolve(token).initialize();
+  for (const token of toInitialize) await container.resolve(token).initialize();
 
   if (options.allow?.hostState !== true) {
     const leaked: string[] = [];
@@ -264,13 +264,13 @@ export async function testContainer(options: TestContainerOptions = {}): Promise
   function resolve<T>(token: TokenLike<T>): T;
   function resolve<T>(token: MultiToken<T>): T[];
   function resolve(token: AnyTokenLike): unknown {
-    return c.resolve(token as TokenLike<unknown>);
+    return container.resolve(token as TokenLike<unknown>);
   }
 
   function render<C>(component: C, renderOptions?: RenderOptions<C>): RenderResult {
     return tlRender(
       component,
-      withPlugins(renderOptions, (app) => provideInjectorOnApp(app, c)),
+      withPlugins(renderOptions, (app) => provideInjectorOnApp(app, container)),
     );
   }
 
@@ -283,7 +283,7 @@ export async function testContainer(options: TestContainerOptions = {}): Promise
     const result = tlRender(
       component,
       withPlugins(renderOptions, (app) => {
-        provideInjectorOnApp(app, c);
+        provideInjectorOnApp(app, container);
         provideModalApiOnApp(app, { submit, cancel } as ModalApi<unknown>);
       }),
     );
@@ -291,7 +291,7 @@ export async function testContainer(options: TestContainerOptions = {}): Promise
   }
 
   return {
-    container: c,
+    container,
     resolve,
     host,
     logs,
