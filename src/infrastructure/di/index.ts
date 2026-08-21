@@ -26,6 +26,7 @@ export { InjectorToken, type Injector } from "./injector";
 export { provideInjector, provideInjectorOnApp, useInjector, useService } from "./vue";
 
 export {
+  CannotOverrideError,
   CircularDependencyError,
   ContainerDisposedError,
   DuplicateRegistrationError,

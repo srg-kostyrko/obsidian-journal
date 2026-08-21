@@ -9,7 +9,7 @@ import { journalFlowsModule } from "./flows/module";
 import { FrontmatterService } from "./frontmatter";
 import { JournalsIndex } from "./journals-index";
 import { JournalNavigationCommands } from "./navigation-commands";
-import { journalNotesModule } from "./notes/module";
+import { journalNotesCoreModule, journalNotesStartupModule } from "./notes/module";
 import { NumberingService } from "./numbering";
 import { JournalsRepository, type JournalsEvents } from "./repository";
 import { JournalEditSectionToken, defineJournalEditSection } from "./settings/ui/journal-edit-section";
@@ -24,7 +24,7 @@ import { journalUriModule } from "./uri/module";
 import { VaultSubscriptionService } from "./vault-subscription";
 import { JournalsViewModel } from "./view-model";
 
-export const journalsModule: Module = {
+export const journalsCoreModule: Module = {
   register(c) {
     c.register(CollectionDefinitionToken).useValue(journalConfigCollection);
     c.register(JournalsIndex).useClass(JournalsIndex);
@@ -33,13 +33,20 @@ export const journalsModule: Module = {
     c.register(NumberingService).useClass(NumberingService);
     c.register(FrontmatterService).useClass(FrontmatterService);
     c.register(VaultSubscriptionService).useClass(VaultSubscriptionService).eager();
-    c.register(JournalNavigationCommands).useClass(JournalNavigationCommands).eager();
     c.register(JournalsEventsToken).useFactory(() => createNanoEvents<JournalsEvents>());
     c.register(JournalsRepository).useClass(JournalsRepository).eager();
     c.register(JournalsViewModel).useClass(JournalsViewModel).eager();
-    journalNotesModule.register(c);
+    journalNotesCoreModule.register(c);
     journalFlowsModule.register(c);
     journalUriModule.register(c);
+  },
+};
+
+export const journalsModule: Module = {
+  register(c) {
+    journalsCoreModule.register(c);
+    journalNotesStartupModule.register(c);
+    c.register(JournalNavigationCommands).useClass(JournalNavigationCommands).eager();
     c.register(JournalEditSectionToken).useValue(
       defineJournalEditSection({ key: "note-creation", order: 20, component: NoteCreationSection }),
     );

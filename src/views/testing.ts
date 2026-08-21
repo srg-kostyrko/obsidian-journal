@@ -1,19 +1,12 @@
 import { render, type RenderResult } from "@testing-library/vue";
-import { createNanoEvents } from "nanoevents";
 import { defineComponent, h, ref } from "vue";
 
 import type { AnchorString } from "@/calendar/types";
 
-import { ViewsRepository } from "./repository";
 import { provideViewContext, type RefDateOrigin, type ViewContext } from "./view-context";
 
-import type { BlockInstanceId, View, ViewId } from "./config";
+import type { BlockInstanceId, ViewId } from "./config";
 import type { ViewBlockDefinition } from "./define-view-block";
-import type { ViewsEvents } from "./tokens";
-
-export function fakeViewsRepo(views: Record<string, View> = {}): ViewsRepository {
-  return ViewsRepository.fromParts(views, createNanoEvents<ViewsEvents>());
-}
 
 export function provideViewContextStub(partial: Partial<ViewContext> = {}): ViewContext {
   return {

@@ -5,13 +5,12 @@ import { afterEach, beforeEach, describe, expect, it } from "vitest";
 import { Calendar, MonthPeriod, OpenInterval, YearPeriod } from "@/calendar";
 import type { Period } from "@/calendar";
 import { date, installTestCalendar, testCalendar } from "@/calendar/testing";
-import { provideInjectorOnApp } from "@/infrastructure/di";
-import { createTestContainer } from "@/infrastructure/di/testing";
+import { Container, provideInjectorOnApp } from "@/infrastructure/di";
 
 import CalendarYearView from "./CalendarYearView.vue";
 
 function mount(props: { outerPeriod: YearPeriod; selected: Period | null; bounds?: OpenInterval }) {
-  const container = createTestContainer();
+  const container = new Container();
   container.register(Calendar).useValue(testCalendar());
 
   return render(CalendarYearView, {

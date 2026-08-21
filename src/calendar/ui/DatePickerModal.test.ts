@@ -14,8 +14,7 @@ import {
   YearPeriod,
 } from "@/calendar";
 import { date, installTestCalendar, testCalendar } from "@/calendar/testing";
-import { provideInjectorOnApp } from "@/infrastructure/di";
-import { createTestContainer } from "@/infrastructure/di/testing";
+import { Container, provideInjectorOnApp } from "@/infrastructure/di";
 import { provideModalApiOnApp } from "@/infrastructure/host/modals/testing";
 
 import DatePickerModal from "./DatePickerModal.vue";
@@ -27,7 +26,7 @@ function renderModal(options: {
   submit?: (v: unknown) => void;
   cancel?: () => void;
 }) {
-  const container = createTestContainer();
+  const container = new Container();
   container.register(Calendar).useValue(testCalendar());
   const submit = options.submit ?? vi.fn();
   const cancel = options.cancel ?? vi.fn();

@@ -2,6 +2,7 @@ import { describe, expect, it } from "vitest";
 
 import { Container } from "./container";
 import {
+  CannotOverrideError,
   CircularDependencyError,
   ContainerDisposedError,
   DuplicateRegistrationError,
@@ -422,5 +423,91 @@ describe("Container.addModule", () => {
     const c = new Container();
     const M: Module = { register: () => undefined };
     expect(c.addModule(M)).toBe(c);
+  });
+});
+
+describe("override", () => {
+  it("replaces the factory of an existing single binding", () => {
+    const c = new Container();
+    const token = createToken<string>("greeting");
+    c.register(token).useValue("original");
+
+    c.override(token).useValue("replaced");
+
+    expect(c.resolve(token)).toBe("replaced");
+  });
+
+  it("keeps the replacement for every later resolve", () => {
+    const c = new Container();
+    const token = createToken<string>("greeting");
+    c.register(token).useValue("original");
+    c.override(token).useValue("replaced");
+
+    c.resolve(token);
+
+    expect(c.resolve(token)).toBe("replaced");
+  });
+
+  it("lets a class binding be replaced by a value", () => {
+    class Real {
+      readonly kind = "real";
+    }
+    const c = new Container();
+    c.register(Real).useClass(Real);
+
+    c.override(Real).useValue({ kind: "fake" } as unknown as Real);
+
+    expect(c.resolve(Real).kind).toBe("fake");
+  });
+
+  it("refuses an unregistered token", () => {
+    const c = new Container();
+    const token = createToken<string>("absent");
+
+    expect(() => c.override(token)).toThrow(CannotOverrideError);
+    expect(() => c.override(token)).toThrow(expect.objectContaining({ reason: "unregistered" }));
+  });
+
+  it("refuses a multi-token", () => {
+    const c = new Container();
+    const token = createMultiToken<string>("plugins");
+    c.register(token).useValue("one");
+
+    expect(() => c.override(token)).toThrow(CannotOverrideError);
+    expect(() => c.override(token)).toThrow(expect.objectContaining({ reason: "multi" }));
+  });
+
+  it("refuses an already-resolved token", () => {
+    const c = new Container();
+    const token = createToken<string>("greeting");
+    c.register(token).useValue("original");
+    c.resolve(token);
+
+    expect(() => c.override(token)).toThrow(CannotOverrideError);
+    expect(() => c.override(token)).toThrow(expect.objectContaining({ reason: "resolved" }));
+  });
+
+  it("throws InvalidTokenError when given a non-token", () => {
+    const c = new Container();
+
+    expect(() => c.override({} as never)).toThrow(InvalidTokenError);
+  });
+
+  it("throws ContainerDisposedError after dispose", async () => {
+    const c = new Container();
+    const token = createToken<string>("greeting");
+    c.register(token).useValue("original");
+    await c.dispose();
+
+    expect(() => c.override(token)).toThrow(ContainerDisposedError);
+  });
+
+  it("refuses a Scoped binding", () => {
+    const c = new Container();
+    const token = createToken<string>("scoped");
+    c.register(token).useValue("original").lifetime(Lifetime.Scoped);
+
+    expect(() => c.override(token)).toThrow(CannotOverrideError);
+    expect(() => c.override(token)).toThrow(expect.objectContaining({ reason: "scoped" }));
   });
 });

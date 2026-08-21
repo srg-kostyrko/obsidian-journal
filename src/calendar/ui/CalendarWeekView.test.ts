@@ -5,8 +5,7 @@ import { afterEach, beforeEach, describe, expect, it } from "vitest";
 import { Calendar, MonthPeriod, OpenInterval, WeekPeriod } from "@/calendar";
 import type { Period } from "@/calendar";
 import { date, installTestCalendar, testCalendar } from "@/calendar/testing";
-import { provideInjectorOnApp } from "@/infrastructure/di";
-import { createTestContainer } from "@/infrastructure/di/testing";
+import { Container, provideInjectorOnApp } from "@/infrastructure/di";
 
 import CalendarWeekView from "./CalendarWeekView.vue";
 
@@ -14,7 +13,7 @@ function mount(
   props: { outerPeriod: MonthPeriod; selected: Period | null; bounds?: OpenInterval },
   calendar?: Calendar,
 ) {
-  const container = createTestContainer();
+  const container = new Container();
   container.register(Calendar).useValue(calendar ?? testCalendar());
 
   return render(CalendarWeekView, {

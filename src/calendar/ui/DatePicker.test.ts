@@ -5,8 +5,7 @@ import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { Calendar, DayPeriod, type OpenInterval, type Period } from "@/calendar";
 import { date, installTestCalendar, testCalendar } from "@/calendar/testing";
 import { m } from "@/i18n";
-import { provideInjectorOnApp } from "@/infrastructure/di";
-import { createTestContainer } from "@/infrastructure/di/testing";
+import { Container, provideInjectorOnApp } from "@/infrastructure/di";
 import { ModalService } from "@/infrastructure/host/modals";
 import { FakeModalService } from "@/infrastructure/host/modals/testing";
 
@@ -24,7 +23,7 @@ interface MountProps {
 }
 
 function mount(props: MountProps) {
-  const container = createTestContainer();
+  const container = new Container();
   const fakeService = new FakeModalService();
   container.register(Calendar).useValue(testCalendar());
   container.register(ModalService).useValue(fakeService as unknown as ModalService);
