@@ -1,16 +1,26 @@
 import { afterEach, beforeEach, describe, expect, it } from "vitest";
 
+import { Calendar } from "@/calendar";
+import { anchor } from "@/calendar/testing";
 import type { CannotOverrideError } from "@/infrastructure/di";
 import { ContainerDisposedError } from "@/infrastructure/di";
 import { InputSuggestService, NoticeService, SuggestService, TemplaterService } from "@/infrastructure/host";
 import { ModalService } from "@/infrastructure/host/modals";
 import { FakeModalService } from "@/infrastructure/host/modals/testing";
-import { CycleService, journalsCoreModule, journalsModule } from "@/journals";
+import { FakeNoticeService } from "@/infrastructure/host/testing";
+import { CycleService, JournalsIndex, VaultSubscriptionService, journalsCoreModule, journalsModule } from "@/journals";
 import { JournalsRepository } from "@/journals/repository";
 import { fixedJournal } from "@/journals/testing";
 import { SettingsService } from "@/settings";
 
-import { TestContainerLeakedHostStateError, testContainer, type TestHarness } from "./testing";
+import {
+  TestContainerInvalidSeedError,
+  TestContainerLeakedHostStateError,
+  overrideWith,
+  overrideWithClass,
+  testContainer,
+  type TestHarness,
+} from "./testing";
 
 it("exposes a bound resolve", async () => {
   const harness = await testContainer({ modules: [journalsCoreModule] });
@@ -77,6 +87,7 @@ describe("testContainer", () => {
     harness = await testContainer({
       modules: [journalsCoreModule],
       data: { journals: { daily: { name: "daily", write: { type: "day" } } } },
+      allow: { dataRepair: true },
     });
 
     const stored = harness.resolve(JournalsRepository).get("daily");
@@ -130,6 +141,7 @@ describe("testContainer", () => {
     harness = await testContainer({
       modules: [journalsCoreModule],
       data: { journals: { daily: { name: "daily" } } },
+      allow: { dataRepair: true },
     });
 
     const stored = harness.resolve(JournalsRepository).get("daily");
@@ -160,5 +172,87 @@ describe("testContainer", () => {
 
   it("throws a named error when a full module leaks host state", async () => {
     await expect(testContainer({ modules: [journalsModule] })).rejects.toThrow(TestContainerLeakedHostStateError);
+  });
+});
+
+describe("overrides", () => {
+  it("replaces a service before eager construction resolves it", async () => {
+    const seen: string[] = [];
+    class RecordingCalendar extends Calendar {
+      constructor() {
+        super();
+        seen.push("fake");
+      }
+    }
+
+    const harness = await testContainer({ overrides: [overrideWithClass(Calendar, RecordingCalendar)] });
+
+    expect(seen).toEqual(["fake"]);
+    expect(harness.resolve(Calendar)).toBeInstanceOf(RecordingCalendar);
+  });
+
+  it("replaces a service the caller supplies as a value", async () => {
+    const replacement = new FakeNoticeService();
+    const harness = await testContainer({ overrides: [overrideWith(NoticeService, replacement)] });
+
+    expect(harness.resolve(NoticeService)).toBe(replacement);
+  });
+});
+
+describe("initialize", () => {
+  it("routes a seeded note into the index when vault subscription is initialized", async () => {
+    const harness = await testContainer({
+      modules: [journalsCoreModule],
+      data: { journals: { daily: fixedJournal("daily", { type: "day" }) } },
+      initialize: [VaultSubscriptionService],
+    });
+    harness.host.putFile("2026-05-19.md", "", { journal: "daily", "journal-date": "2026-05-19" });
+    harness.host.emitMetadata("2026-05-19.md");
+
+    expect(harness.resolve(JournalsIndex).get("daily", anchor("2026-05-19")).isSome()).toBe(true);
+  });
+
+  it("leaves a seeded note out of the index when it is not initialized", async () => {
+    const harness = await testContainer({
+      modules: [journalsCoreModule],
+      data: { journals: { daily: fixedJournal("daily", { type: "day" }) } },
+    });
+    harness.host.putFile("2026-05-19.md", "", { journal: "daily", "journal-date": "2026-05-19" });
+
+    expect(harness.resolve(JournalsIndex).get("daily", anchor("2026-05-19")).isNone()).toBe(true);
+  });
+});
+
+describe("seed guard", () => {
+  it("rejects a fixture the settings parse had to repair", async () => {
+    await expect(
+      testContainer({
+        modules: [journalsCoreModule],
+        data: { journals: { daily: { ...fixedJournal("daily", { type: "day" }), dateFormat: "" } } },
+      }),
+    ).rejects.toThrow(TestContainerInvalidSeedError);
+  });
+
+  it("names the failing slice in the error", async () => {
+    await expect(
+      testContainer({
+        modules: [journalsCoreModule],
+        data: { journals: { daily: { ...fixedJournal("daily", { type: "day" }), dateFormat: "" } } },
+      }),
+    ).rejects.toThrow(
+      expect.objectContaining({
+        warnings: expect.arrayContaining([expect.stringContaining("journals/daily")]) as readonly string[],
+      } satisfies Partial<TestContainerInvalidSeedError>),
+    );
+  });
+
+  it("accepts a deliberately broken fixture when the test opts in", async () => {
+    const harness = await testContainer({
+      modules: [journalsCoreModule],
+      data: { journals: { daily: { ...fixedJournal("daily", { type: "day" }), dateFormat: "" } } },
+      allow: { dataRepair: true },
+    });
+
+    expect(harness.resolve(JournalsRepository).get("daily").isSome()).toBe(true);
   });
 });

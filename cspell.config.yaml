@@ -10,6 +10,7 @@ words:
   - haspopup
   - iconed
   - inlang
+  - Initializable
   - invertibility
   - Keymap
   - labelledby
