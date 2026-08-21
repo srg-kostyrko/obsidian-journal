@@ -50,6 +50,10 @@ export class TemplateContext {
     });
   }
 
+  derived(name: string, value: CalendarDate, compute: (date: CalendarDate) => number): TemplateContext {
+    return this.#with(name, { kind: "derived", value, compute });
+  }
+
   clock(name: string, value: Clock, defaultFormat: string): TemplateContext {
     return this.#with(name, { kind: "clock", value, defaultFormat });
   }

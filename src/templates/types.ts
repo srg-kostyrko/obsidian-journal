@@ -18,7 +18,10 @@ export type VariableSpec =
   | { kind: "string"; value: string }
   | { kind: "number"; value: number }
   | { kind: "date"; value: CalendarDate; defaultFormat: string; invertible?: boolean }
-  | { kind: "clock"; value: Clock; defaultFormat: string };
+  | { kind: "clock"; value: Clock; defaultFormat: string }
+  // A number read off a date: it takes the date modifiers and the number offsets alike, and it
+  // never binds on inversion — the date it is computed from is what a template has to recover.
+  | { kind: "derived"; value: CalendarDate; compute: (date: CalendarDate) => number };
 
 export type BoundValue =
   { kind: "string"; value: string } | { kind: "number"; value: number } | { kind: "date"; value: CalendarDate };

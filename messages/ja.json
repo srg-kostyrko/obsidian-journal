@@ -1837,6 +1837,7 @@
 	"journal_edit_variable_relative_date_description": "固定サイクルのジャーナルでは「昨日」「今日」「明日」「N日前」。カスタムジャーナルでは「今回の<ジャーナル>」「前回の<ジャーナル>」「次回の<ジャーナル>」「N<ジャーナル>前」。",
 	"journal_edit_variable_start_date_description": "このノートが対象とする期間の初日。",
 	"journal_edit_variable_time_description": "現在の時刻（デフォルトでは HH:mm 形式）。",
+	"journal_edit_variable_week_of_month_description": "ノートの週が、その月の何週目かを示します。月の初日を含む週が第 1 週です。",
 	"journal_edit_wrong_week_warning": "週の書式に「W」を使っています。これはカスタムの週設定を反映しないため、カレンダービューとは異なる週番号が表示される場合があります。代わりに「w」を使用してください（必要に応じてプラグイン設定で週の開始日を変更してください）。",
 	"journal_fm_field_label": [
 		{

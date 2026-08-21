@@ -42,6 +42,11 @@ describe("VariableReferenceModal — rules table", () => {
       expect(screen.getByText("{{journal_name}}")).toBeTruthy();
     });
 
+    it("renders the week_of_month variable", () => {
+      renderModal({ context });
+      expect(screen.getByText("{{week_of_month}}")).toBeTruthy();
+    });
+
     it("omits start_date and end_date when hasCycle is false", () => {
       renderModal({ context, hasCycle: false });
       expect(screen.queryByText("{{start_date}}")).toBeNull();
@@ -63,7 +68,7 @@ describe("VariableReferenceModal — rules table", () => {
     it("renders a modifications link on each numbering row", () => {
       renderModal({ context, numberingVariableNames: ["week_no", "page_no"] });
       const links = screen.getAllByRole("link", { name: /additional modifications/i });
-      expect(links.length).toBe(6);
+      expect(links.length).toBe(7);
     });
 
     it("renders current_date", () => {
@@ -119,7 +124,7 @@ describe("VariableReferenceModal — rules table", () => {
     it("renders a link on every date/clock row", () => {
       renderModal({ context: "name-template" });
       const links = screen.getAllByRole("link", { name: /additional modifications/i });
-      expect(links.length).toBe(4);
+      expect(links.length).toBe(5);
     });
 
     it("invokes openModifications when the link is clicked", async () => {

@@ -1,6 +1,6 @@
 import { computed, type ComputedRef, type Ref } from "vue";
 
-import { CalendarDate } from "@/calendar";
+import { CalendarDate, weekOfMonth } from "@/calendar";
 import type { AnchorString } from "@/calendar";
 import { useService } from "@/infrastructure/di";
 import { TemplateContext, TemplateEngine, tokenize } from "@/templates";
@@ -57,7 +57,8 @@ export function useInvertibilityCheck(
       .string("journal_name", "preview")
       .date("date", today, "YYYY-MM-DD")
       .date("start_date", today, "YYYY-MM-DD")
-      .date("end_date", today, "YYYY-MM-DD");
+      .date("end_date", today, "YYYY-MM-DD")
+      .derived("week_of_month", today, weekOfMonth);
     for (const source of numbering.sources) {
       context = context.number(source.variable, 0);
     }

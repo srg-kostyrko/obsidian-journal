@@ -2034,6 +2034,7 @@
 	"journal_edit_variable_relative_date_description": "ieri / oggi / domani / N giorni fa per i diari a ciclo fisso; <diario> corrente / precedente / seguente e N <diari> fa per i diari personalizzati.",
 	"journal_edit_variable_start_date_description": "Il primo giorno del periodo a cui si riferisce questa nota.",
 	"journal_edit_variable_time_description": "Ora corrente del sistema (nel formato HH:mm per impostazione predefinita).",
+	"journal_edit_variable_week_of_month_description": "Il numero della settimana della nota all'interno del suo mese; la settimana che contiene il primo giorno del mese è la settimana 1.",
 	"journal_edit_wrong_week_warning": "Per formattare le settimane usi `W`, che non rispetta le impostazioni personalizzate della settimana e può mostrare un numero di settimana diverso da quello della vista Calendario. Usa invece `w` (e, se necessario, modifica l'inizio della settimana nelle impostazioni del plugin).",
 	"journal_fm_field_label": [
 		{

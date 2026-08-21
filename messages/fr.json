@@ -2043,6 +2043,7 @@
 	"journal_edit_variable_relative_date_description": "hier / aujourd’hui / demain / il y a N jours pour les journaux à cycle fixe ; ce / dernier / prochain <journal> et il y a N <journal> pour les journaux personnalisés.",
 	"journal_edit_variable_start_date_description": "Le premier jour de la période couverte par cette note.",
 	"journal_edit_variable_time_description": "Heure actuelle (au format HH:mm par défaut).",
+	"journal_edit_variable_week_of_month_description": "Le numéro de la semaine de la note dans son mois ; la semaine qui contient le premier jour du mois est la semaine 1.",
 	"journal_edit_wrong_week_warning": "Vous utilisez `W` pour formater les semaines, ce qui ne tient pas compte des paramètres de semaine personnalisés et peut afficher un numéro de semaine différent de celui de la vue Calendrier. Utilisez plutôt `w` (et modifiez le début de la semaine dans les paramètres du plugin si nécessaire).",
 	"journal_fm_field_label": [
 		{

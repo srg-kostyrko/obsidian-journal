@@ -15,6 +15,7 @@ import {
   patternForKind,
   renderClock,
   renderDate,
+  renderDerived,
   renderNumber,
   renderString,
 } from "./kinds";
@@ -47,6 +48,8 @@ export class TemplateEngine {
     if (!spec) return token.raw;
     if (spec.kind === "number") {
       if (!isRenderableNumberToken(token)) return token.raw;
+    } else if (spec.kind === "derived") {
+      if (!hasNumberFormat(token)) return token.raw;
     } else if (
       // A string variable takes neither modifiers nor a format; emit the raw token unchanged.
       spec.kind !== "date" &&
@@ -58,6 +61,7 @@ export class TemplateEngine {
     return match(spec)
       .with({ kind: "string" }, (s) => renderString(s))
       .with({ kind: "number" }, (s) => renderNumber(s, token.modifiers, token.format))
+      .with({ kind: "derived" }, (s) => renderDerived(s, token.modifiers, token.format))
       .with({ kind: "date" }, (s) => renderDate(s, token.modifiers, token.format))
       .with({ kind: "clock" }, (s) => renderClock(s, token.modifiers, token.format))
       .exhaustive();
@@ -110,6 +114,10 @@ export class TemplateEngine {
           new TemplateParseError({ kind: "not-invertible", reason: "unknown-variable", offending: token.name }),
         );
       }
+      if (spec.kind === "derived") {
+        parts.push(`(?:${patternForKind(spec, token.format)})`);
+        continue;
+      }
       const captureIndex = captureTokens.length;
       const pattern = patternForKind(spec, token.format);
       parts.push(`(?<v_${captureIndex}>${pattern})`);
@@ -121,7 +129,7 @@ export class TemplateEngine {
 
   #parseCapture(
     capture: string,
-    spec: VariableSpec,
+    spec: Exclude<VariableSpec, { kind: "derived" }>,
     token: Extract<Token, { kind: "variable" }>,
   ): Result<BoundValue, TemplateParseError> {
     const ok = (value: BoundValue): Result<BoundValue, TemplateParseError> => new Ok(value);
@@ -267,6 +275,15 @@ export class TemplateEngine {
         if (token.modifiers.some((modifier) => modifier.kind !== "offset")) {
           problems.push({ token, position, problem: "modifiers-on-non-date" });
         }
+      } else if (spec.kind === "derived") {
+        if (!hasNumberFormat(token)) {
+          problems.push({ token, position, problem: "unsupported-number-format" });
+        }
+        for (const modifier of token.modifiers) {
+          if (modifier.kind === "boundary" && !isBoundaryUnit(modifier.unit)) {
+            problems.push({ token, position, problem: "unknown-unit" });
+          }
+        }
       } else if (spec.kind !== "date" && spec.kind !== "clock") {
         if (token.format !== undefined) {
           problems.push({ token, position, problem: "format-on-non-date" });
@@ -314,7 +331,7 @@ export class TemplateEngine {
       const capture = groups[`v_${index}`];
       if (capture === undefined) continue;
       const spec = context.get(token.name);
-      if (!spec) continue;
+      if (!spec || spec.kind === "derived") continue;
       // Key by the defined name, not the token's spelling: `{{Date}}` binds `date`, which is
       // what every caller reads.
       const name = context.canonicalName(token.name) ?? token.name;
@@ -449,10 +466,11 @@ function withWeekYearReading(fieldSets: Set<DateField>[]): Set<DateField>[] {
 }
 
 function isRenderableNumberToken(token: Extract<Token, { kind: "variable" }>): boolean {
-  return (
-    token.modifiers.every((modifier) => modifier.kind === "offset") &&
-    (token.format === undefined || token.format === ORDINAL_FORMAT)
-  );
+  return token.modifiers.every((modifier) => modifier.kind === "offset") && hasNumberFormat(token);
+}
+
+function hasNumberFormat(token: Extract<Token, { kind: "variable" }>): boolean {
+  return token.format === undefined || token.format === ORDINAL_FORMAT;
 }
 
 function isWildcard(spec: VariableSpec | undefined): boolean {

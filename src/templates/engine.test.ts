@@ -51,6 +51,31 @@ describe("TemplateEngine.renderString", () => {
     expect(engine.renderString("The {{index:o}} sprint", buildFakeContext())).toBe("The 7th sprint");
   });
 
+  it("renders a derived variable from its date", () => {
+    const engine = installTestEngine();
+    expect(engine.renderString("Day {{day_of_month}}", buildFakeContext())).toBe("Day 5");
+  });
+
+  it("computes a derived variable from the date a boundary modifier snaps to", () => {
+    const engine = installTestEngine();
+    expect(engine.renderString("{{day_of_month<endOf=week>}}", buildFakeContext())).toBe("9");
+  });
+
+  it("applies an offset to a derived variable after computing it", () => {
+    const engine = installTestEngine();
+    expect(engine.renderString("{{day_of_month+1d-1}}", buildFakeContext())).toBe("5");
+  });
+
+  it("renders a derived variable as an ordinal", () => {
+    const engine = installTestEngine();
+    expect(engine.renderString("The {{day_of_month:o}} day", buildFakeContext())).toBe("The 5th day");
+  });
+
+  it("emits the raw token for an unsupported derived format", () => {
+    const engine = installTestEngine();
+    expect(engine.renderString("{{day_of_month:YYYY}}", buildFakeContext())).toBe("{{day_of_month:YYYY}}");
+  });
+
   it("emits the raw token for a shift modifier on a number", () => {
     const engine = installTestEngine();
     expect(engine.renderString("{{index+1d}}", buildFakeContext())).toBe("{{index+1d}}");
@@ -231,6 +256,24 @@ describe("TemplateEngine.parse", () => {
     const result = engine.parse(stream, "2022-01-05-anything-here.md", context);
     expectOk(result);
     expect(result.value.has("current_date")).toBe(false);
+  });
+
+  it("matches a derived variable without capturing it", () => {
+    const engine = installTestEngine();
+    const stream = tokenize("{{date:YYYY-MM-DD}}-{{day_of_month}}.md");
+    const result = engine.parse(stream, "2022-01-05-5.md", buildFakeContext());
+    expectOk(result);
+    expect(result.value.has("day_of_month")).toBe(false);
+  });
+
+  // A derived variable's digits sit right against the date's with no separator between them,
+  // so only backtracking tells the greedy number pattern where to stop.
+  it("gives back digits a following date token needs", () => {
+    const engine = installTestEngine();
+    const stream = tokenize("{{day_of_month}}{{date:YYYY}}.md");
+    const result = engine.parse(stream, "52022.md", buildFakeContext());
+    expectOk(result);
+    expect(asDateBinding(result.value.get("date")).year).toBe(2022);
   });
 
   it("returns no-match when literal text does not match", () => {
@@ -476,6 +519,24 @@ describe("TemplateEngine.validate", () => {
     const engine = installTestEngine();
     const problems = engine.validate(tokenize("{{index:o}}"), buildFakeContext());
     expect(problems).toEqual([]);
+  });
+
+  it("accepts a boundary modifier and an offset together on a derived variable", () => {
+    const engine = installTestEngine();
+    const problems = engine.validate(tokenize("{{day_of_month<endOf=week>-1}}"), buildFakeContext());
+    expect(problems).toEqual([]);
+  });
+
+  it("flags an unsupported format on a derived variable", () => {
+    const engine = installTestEngine();
+    const problems = engine.validate(tokenize("{{day_of_month:YYYY}}"), buildFakeContext());
+    expect(problems.map((problem) => problem.problem)).toEqual(["unsupported-number-format"]);
+  });
+
+  it("flags a boundary unit a derived variable does not understand", () => {
+    const engine = installTestEngine();
+    const problems = engine.validate(tokenize("{{day_of_month<endOf=fortnight>}}"), buildFakeContext());
+    expect(problems.map((problem) => problem.problem)).toEqual(["unknown-unit"]);
   });
 
   it("flags an unsupported format on a number variable", () => {
