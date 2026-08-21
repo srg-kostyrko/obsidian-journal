@@ -227,10 +227,23 @@ export default [
   },
   {
     // Plugin sources are what the locale-freeze guard protects; test and e2e modules are
-    // imported by a runner that has already picked a locale.
+    // imported by a runner that has already picked a locale. Container.override is defined
+    // and tested under src/infrastructure/di/**, so that directory is exempt from the
+    // override-ban selector below.
     files: ["src/**/*.ts"],
+    ignores: ["src/infrastructure/di/**"],
     rules: {
-      "no-restricted-syntax": ["error", noRawError, noStrayDefineModal, noEagerMessage],
+      "no-restricted-syntax": [
+        "error",
+        noRawError,
+        noStrayDefineModal,
+        noEagerMessage,
+        {
+          selector: "CallExpression[callee.property.name='override'][callee.object.type!='ThisExpression']",
+          message:
+            "Container.override exists for the test host boundary. Production wiring registers once, in a module.",
+        },
+      ],
     },
   },
   {
