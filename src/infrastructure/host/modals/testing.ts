@@ -3,6 +3,7 @@ import { AsyncResult, InvariantError } from "@/infrastructure/result";
 import { ModalCancelled } from "./errors";
 import { ModalContextKey } from "./internal/modal-context";
 
+import type { ModalService } from "./internal/modal-service";
 import type { ModalApi, ModalDefinition } from "./types";
 import type { App } from "vue";
 
@@ -53,7 +54,7 @@ export class FakeModalHandle<TProps, TResult> {
   }
 }
 
-export class FakeModalService {
+export class FakeModalService implements Pick<ModalService, "open"> {
   readonly #opens: FakeModalHandle<unknown, unknown>[] = [];
 
   get opens(): readonly FakeModalHandle<unknown, unknown>[] {

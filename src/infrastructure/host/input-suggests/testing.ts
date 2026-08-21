@@ -1,5 +1,6 @@
 import { InvariantError } from "@/infrastructure/result";
 
+import type { InputSuggestService } from "./internal/input-suggest-service";
 import type { InputSuggestDefinition } from "./types";
 
 export interface FakeInputSuggestHandle<TResult> {
@@ -10,7 +11,7 @@ export interface FakeInputSuggestHandle<TResult> {
   readonly isAttached: boolean;
 }
 
-export class FakeInputSuggestService {
+export class FakeInputSuggestService implements Pick<InputSuggestService, "attach"> {
   readonly #handles: FakeInputSuggestHandle<unknown>[] = [];
 
   get attachments(): readonly FakeInputSuggestHandle<unknown>[] {

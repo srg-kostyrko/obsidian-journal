@@ -2,6 +2,7 @@ import { AsyncResult, InvariantError } from "@/infrastructure/result";
 
 import { SuggestCancelled } from "./errors";
 
+import type { SuggestService } from "./internal/suggest-service";
 import type { SuggestDefinition } from "./types";
 
 export class FakeSuggestHandle<TInput, TResult> {
@@ -41,7 +42,7 @@ export class FakeSuggestHandle<TInput, TResult> {
   }
 }
 
-export class FakeSuggestService {
+export class FakeSuggestService implements Pick<SuggestService, "open"> {
   readonly #opens: FakeSuggestHandle<unknown, unknown>[] = [];
 
   get opens(): readonly FakeSuggestHandle<unknown, unknown>[] {
