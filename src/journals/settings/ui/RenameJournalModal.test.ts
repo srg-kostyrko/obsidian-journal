@@ -27,7 +27,9 @@ describe("RenameJournalModal", () => {
   });
 
   it("submits the new name on save", async () => {
-    const { submit } = h.renderModal(RenameJournalModal, { props: { currentName: "daily" } });
+    const { submit } = h.renderModal<typeof RenameJournalModal, { newName: string }>(RenameJournalModal, {
+      props: { currentName: "daily" },
+    });
 
     await userEvent.clear(screen.getByRole("textbox"));
     await userEvent.type(screen.getByRole("textbox"), "morning");
@@ -45,28 +47,6 @@ describe("RenameJournalModal", () => {
 
     await waitFor(() => {
       expect(screen.getByText(m.journal_rename_modal_same_as_current_error())).toBeTruthy();
-    });
-    expect(submit).not.toHaveBeenCalled();
-  });
-
-  it("rejects a name that collides with another existing journal", async () => {
-    h = await testContainer({
-      modules: [journalsCoreModule],
-      data: {
-        journals: {
-          daily: fixedJournal("daily", { type: "day" }),
-          morning: fixedJournal("morning", { type: "day" }),
-        },
-      },
-    });
-    const { submit } = h.renderModal(RenameJournalModal, { props: { currentName: "daily" } });
-
-    await userEvent.clear(screen.getByRole("textbox"));
-    await userEvent.type(screen.getByRole("textbox"), "morning");
-    await userEvent.click(screen.getByText(m.common_action_submit()));
-
-    await waitFor(() => {
-      expect(screen.getByText(m.journal_name_unique_error())).toBeTruthy();
     });
     expect(submit).not.toHaveBeenCalled();
   });
@@ -89,5 +69,34 @@ describe("RenameJournalModal", () => {
     await userEvent.click(screen.getByText(m.common_action_cancel()));
 
     expect(cancel).toHaveBeenCalledTimes(1);
+  });
+});
+
+describe("RenameJournalModal with a second journal in the vault", () => {
+  let h: TestHarness;
+
+  beforeEach(async () => {
+    h = await testContainer({
+      modules: [journalsCoreModule],
+      data: {
+        journals: {
+          daily: fixedJournal("daily", { type: "day" }),
+          morning: fixedJournal("morning", { type: "day" }),
+        },
+      },
+    });
+  });
+
+  it("rejects a name that collides with another existing journal", async () => {
+    const { submit } = h.renderModal(RenameJournalModal, { props: { currentName: "daily" } });
+
+    await userEvent.clear(screen.getByRole("textbox"));
+    await userEvent.type(screen.getByRole("textbox"), "morning");
+    await userEvent.click(screen.getByText(m.common_action_submit()));
+
+    await waitFor(() => {
+      expect(screen.getByText(m.journal_name_unique_error())).toBeTruthy();
+    });
+    expect(submit).not.toHaveBeenCalled();
   });
 });
