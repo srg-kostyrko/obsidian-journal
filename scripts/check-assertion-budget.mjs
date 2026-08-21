@@ -1,11 +1,20 @@
+// Guards against tests that shrink coverage without a red build: a test collapsed into another
+// (e.g. by asserting only one of two fields it used to check) keeps line coverage at 100% while
+// deleting a real check, which coverage tooling cannot detect. Per-bucket assertion counts can.
+// A count that only ever grows or holds means no assertion silently vanished.
 import { readFileSync, writeFileSync } from "node:fs";
 import { readdir } from "node:fs/promises";
-import { join, relative } from "node:path";
+import { dirname, join, relative } from "node:path";
+import { fileURLToPath } from "node:url";
 
-const ROOT = new URL("..", import.meta.url).pathname;
+const ROOT = join(dirname(fileURLToPath(import.meta.url)), "..");
 const SRC = join(ROOT, "src");
 const BASELINE = join(ROOT, "assertion-budget.json");
-const ASSERTION = /(?<!function\s+)\bexpect(?:[A-Z]\w*)?\s*\(/g;
+// Excludes both a `function expectFoo(` declaration and a class/object method-shorthand
+// definition (`expectFoo(x) { ... }`, optionally with a TS return-type annotation before the
+// brace) — either would otherwise inflate the baseline with a helper's signature rather than
+// a real assertion.
+const ASSERTION = /(?<!function\s+)\bexpect(?:[A-Z]\w*)?\s*\((?![^()]*\)\s*(?::[^{;]*)?\{)/g;
 
 async function testFiles(dir) {
   const out = [];
@@ -44,7 +53,7 @@ if (process.argv.includes("--write")) {
 const baselineText = readFileSync(BASELINE, "utf8");
 const baseline = JSON.parse(baselineText);
 
-// F3: Validate baseline is a non-empty plain object with non-negative integers
+// Validate baseline is a non-empty plain object with non-negative integers
 if (
   typeof baseline !== "object" ||
   baseline === null ||
@@ -59,7 +68,7 @@ if (
   process.exit(1);
 }
 
-// F2: Compare over UNION of baseline and actual keys
+// Compare over UNION of baseline and actual keys
 const allBuckets = new Set([...Object.keys(baseline), ...Object.keys(actual)]);
 const issues = [];
 
