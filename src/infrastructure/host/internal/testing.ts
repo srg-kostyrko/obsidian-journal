@@ -157,6 +157,14 @@ function parentPath(path: string): string {
   return index === -1 ? "" : path.slice(0, index);
 }
 
+// getFileCache reads `metadata`, every write path sets `frontmatter`. Deriving one from the other
+// on write is what keeps a seeded note and a service-written note equally visible to the index.
+// Nothing here emits: events stay explicit through emitVault/emitMetadata.
+function entryFor(content: string, frontmatter: Record<string, unknown>): FakeFileSystemEntry {
+  const hasFrontmatter = Object.keys(frontmatter).length > 0;
+  return { content, frontmatter, metadata: hasFrontmatter ? { frontmatter } : {} };
+}
+
 export function createFakeHost(): FakeHost {
   const files = new Map<string, FakeFileSystemEntry>();
   const folders = new Set<string>([""]);
@@ -248,7 +256,7 @@ export function createFakeHost(): FakeHost {
     async create(path: string, content: string): Promise<TFile> {
       if (fileObjects.has(path)) throw new Error(`exists: ${path}`);
       ensureFolderChain(parentPath(path));
-      files.set(path, { content, frontmatter: {}, metadata: {} });
+      files.set(path, entryFor(content, {}));
       const file = makeFile(path);
       setParent(file);
       fileObjects.set(path, file);
@@ -334,7 +342,7 @@ export function createFakeHost(): FakeHost {
       if (!existing) throw new Error(`missing: ${file.path}`);
       const next = { ...existing.frontmatter };
       mutate(next);
-      files.set(file.path, { ...existing, frontmatter: next });
+      files.set(file.path, entryFor(existing.content, next));
     },
     async trashFile(file: TFile): Promise<void> {
       detachChild(file);
@@ -515,7 +523,7 @@ export function createFakeHost(): FakeHost {
     promptedDeletions,
     putFile(path, content = "", frontmatter = {}): TFile {
       ensureFolderChain(parentPath(path));
-      files.set(path, { content, frontmatter, metadata: {} });
+      files.set(path, entryFor(content, frontmatter));
       const file = makeFile(path);
       setParent(file);
       fileObjects.set(path, file);
