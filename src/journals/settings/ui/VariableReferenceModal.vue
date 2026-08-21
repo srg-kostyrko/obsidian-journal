@@ -43,6 +43,16 @@ function handleModificationsClick(event: Event): void {
       </div>
 
       <div class="variable-reference__row">
+        <dt><VariableChip name="week_of_month" /></dt>
+        <dd>
+          {{ m.journal_edit_variable_week_of_month_description() }}
+          <a href="#" @click="handleModificationsClick">
+            {{ m.journal_edit_variable_additional_modifications_link() }}
+          </a>
+        </dd>
+      </div>
+
+      <div class="variable-reference__row">
         <dt><VariableChip name="journal_name" /></dt>
         <dd>{{ m.journal_edit_variable_journal_name_description({ name: journalName }) }}</dd>
       </div>

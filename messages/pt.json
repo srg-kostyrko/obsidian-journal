@@ -2034,6 +2034,7 @@
 	"journal_edit_variable_relative_date_description": "ontem / hoje / amanhã / há N dias para diários de ciclo fixo; este / último / próximo <diário> e há N <diário>s para diários personalizados.",
 	"journal_edit_variable_start_date_description": "O primeiro dia do período abrangido por esta nota.",
 	"journal_edit_variable_time_description": "Hora atual do relógio (em HH:mm por padrão).",
+	"journal_edit_variable_week_of_month_description": "O número da semana da nota dentro do seu mês; a semana que contém o primeiro dia do mês é a semana 1.",
 	"journal_edit_wrong_week_warning": "Você usa `W` para formatar as semanas, o que não respeita as configurações personalizadas de semana e pode exibir um número de semana diferente da visualização do Calendário. Use `w` em vez disso (e altere o início da semana nas configurações do plugin, se necessário).",
 	"journal_fm_field_label": [
 		{
@@ -2130,7 +2131,7 @@
 	"variable_modifications_format_body": "Substitua o formato de data padrão adicionando dois pontos e uma string de formatação do moment.js.",
 	"variable_modifications_format_example": "Por exemplo {slot} renderiza apenas o ano.",
 	"variable_modifications_format_heading": "Substituição de formato",
-	"variable_modifications_intro": "As variáveis de data e relógio suportam três tipos de modificações. Elas podem ser combinadas em um único token.",
+	"variable_modifications_intro": "As variáveis de data e relógio suportam três tipos de modificações. Elas podem ser combinadas em um único token. {slot} aceita os deslocamentos e os limites abaixo — que escolhem a data a partir da qual se conta — e as modificações numéricas do final.",
 	"variable_modifications_modal_title": "Modificações de variáveis",
 	"variable_modifications_number_body": "As variáveis de numeração suportam duas modificações. Acrescente `+N` ou `-N` para somar ou subtrair um valor fixo e `:o` para apresentar o valor como ordinal.",
 	"variable_modifications_number_example": "Por exemplo, {slot} apresenta o índice mais três como ordinal.",

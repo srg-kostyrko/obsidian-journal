@@ -1,0 +1,65 @@
+{
+    "version": 4,
+    "journals": {
+        "weekly": {
+            "name": "weekly",
+            "write": {
+                "type": "week"
+            },
+            "nameTemplate": "{{date:YYYY MMMM}} week {{week_of_month}}",
+            "dateFormat": "YYYY-MM-DD",
+            "timeline": {
+                "start": "",
+                "end": {
+                    "kind": "never"
+                }
+            },
+            "frontmatter": {
+                "dateField": "journal-date",
+                "startDateField": "journal-start-date",
+                "endDateField": "journal-end-date",
+                "addStartDate": false,
+                "addEndDate": false
+            },
+            "numbering": {
+                "enabled": false,
+                "anchorDate": "",
+                "allowBefore": false,
+                "sources": []
+            }
+        },
+        "planner": {
+            "name": "planner",
+            "write": {
+                "type": "week"
+            },
+            "nameTemplate": "Plan {{date<endOf=week>:YYYY MMMM}} week {{week_of_month<endOf=week>}}",
+            "dateFormat": "YYYY-MM-DD",
+            "timeline": {
+                "start": "",
+                "end": {
+                    "kind": "never"
+                }
+            },
+            "frontmatter": {
+                "dateField": "journal-date",
+                "startDateField": "journal-start-date",
+                "endDateField": "journal-end-date",
+                "addStartDate": false,
+                "addEndDate": false
+            },
+            "numbering": {
+                "enabled": false,
+                "anchorDate": "",
+                "allowBefore": false,
+                "sources": []
+            }
+        }
+    },
+    "calendar": {
+        "mode": "custom",
+        "dow": 1,
+        "doy": 4,
+        "global": false
+    }
+}

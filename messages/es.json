@@ -2026,6 +2026,7 @@
 	"journal_edit_variable_relative_date_description": "ayer / hoy / mañana / hace N días para los diarios de ciclo fijo; <diario> actual / anterior / siguiente y hace N <diario> para los diarios personalizados.",
 	"journal_edit_variable_start_date_description": "El primer día del período que abarca esta nota.",
 	"journal_edit_variable_time_description": "Hora actual del reloj (en formato HH:mm por defecto).",
+	"journal_edit_variable_week_of_month_description": "El número de la semana de la nota dentro de su mes; la semana que contiene el primer día del mes es la semana 1.",
 	"journal_edit_wrong_week_warning": "Usas `W` para formatear las semanas, lo cual no respeta la configuración de semana personalizada y puede mostrar un número de semana distinto al de la vista de calendario. Usa `w` en su lugar (y cambia el inicio de la semana en los ajustes del complemento si hace falta).",
 	"journal_fm_field_label": [
 		{
@@ -2122,7 +2123,7 @@
 	"variable_modifications_format_body": "Anula el formato de fecha predeterminado agregando dos puntos y una cadena de formato de moment.js.",
 	"variable_modifications_format_example": "Por ejemplo {slot} muestra solo el año.",
 	"variable_modifications_format_heading": "Anulación del formato",
-	"variable_modifications_intro": "Las variables de fecha y hora admiten tres tipos de modificaciones. Se pueden combinar en un único token.",
+	"variable_modifications_intro": "Las variables de fecha y hora admiten tres tipos de modificaciones. Se pueden combinar en un único token. {slot} admite los desplazamientos y los límites de abajo —que eligen la fecha desde la que se cuenta— y las modificaciones numéricas del final.",
 	"variable_modifications_modal_title": "Modificaciones de variables",
 	"variable_modifications_number_body": "Las variables de numeración admiten dos modificaciones. Añade `+N` o `-N` para sumar o restar una cantidad fija, y `:o` para representar el valor como ordinal.",
 	"variable_modifications_number_example": "Por ejemplo, {slot} representa el índice más tres como ordinal.",

@@ -1,6 +1,6 @@
 import { normalizePath } from "obsidian";
 
-import { CalendarDate, Clock } from "@/calendar";
+import { CalendarDate, Clock, weekOfMonth } from "@/calendar";
 import type { AnchorString } from "@/calendar";
 import { inject } from "@/infrastructure/di";
 import type { VaultPath } from "@/infrastructure/host";
@@ -47,6 +47,7 @@ export class NotePathService {
       .date("date", CalendarDate.today(), config.dateFormat)
       .date("start_date", CalendarDate.today(), config.dateFormat)
       .date("end_date", CalendarDate.today(), config.dateFormat)
+      .derived("week_of_month", CalendarDate.today(), weekOfMonth)
       .string("journal_name", config.name);
     for (const source of config.numbering.sources) {
       context = context.number(source.variable, 0);
@@ -198,6 +199,7 @@ export class NotePathService {
         : Option.some(CalendarDate.fromAnchor(metadata.endDate));
     let context = TemplateContext.empty()
       .date("date", dateValue, config.dateFormat)
+      .derived("week_of_month", dateValue, weekOfMonth)
       .string("journal_name", config.name);
     if (startOpt.isSome()) context = context.date("start_date", startOpt.value, config.dateFormat);
     if (endOpt.isSome()) context = context.date("end_date", endOpt.value, config.dateFormat);

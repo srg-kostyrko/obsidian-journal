@@ -736,3 +736,55 @@ describe("bodyContextFor", () => {
     expect(path.get("title")).toBeUndefined();
   });
 });
+
+describe("NotePathService week_of_month", () => {
+  let teardown: () => void;
+
+  beforeEach(() => {
+    ({ teardown } = installTestCalendar());
+  });
+  afterEach(() => {
+    teardown();
+  });
+
+  it("renders the week's position within its own month", () => {
+    const repo = fakeRepo({
+      weekly: fixedJournal("weekly", { type: "week" }, { nameTemplate: "{{date:MMMM}} week {{week_of_month}}" }),
+    });
+    const c = buildContainer(repo);
+    const meta: JournalMetadata = { journalName: "weekly", anchor: anchor("2026-09-14") };
+
+    const result = c.resolve(NotePathService).pathFor("weekly", meta);
+
+    expect(result.isOk() && result.value).toBe("September week 3.md");
+  });
+
+  // Reading both halves of the name off the end of the week keeps them agreeing on a week that
+  // straddles two months: August 31 2026 opens the week September 1 falls in.
+  it("counts within the month the week ends in when read from the end of the week", () => {
+    const repo = fakeRepo({
+      daily: fixedJournal(
+        "daily",
+        { type: "day" },
+        { nameTemplate: "{{date<endOf=week>:MMMM}} week {{week_of_month<endOf=week>}}" },
+      ),
+    });
+    const c = buildContainer(repo);
+    const meta: JournalMetadata = { journalName: "daily", anchor: anchor("2026-08-31") };
+
+    const result = c.resolve(NotePathService).pathFor("daily", meta);
+
+    expect(result.isOk() && result.value).toBe("September week 1.md");
+  });
+
+  it("recovers the week whose number a name carries", () => {
+    const repo = fakeRepo({
+      weekly: fixedJournal("weekly", { type: "week" }, { nameTemplate: "{{date:MMMM}} week {{week_of_month}}" }),
+    });
+    const c = buildContainer(repo);
+
+    const result = c.resolve(NotePathService).candidateFor("weekly", "September week 3.md" as VaultPath);
+
+    expect(unwrap(result).anchor).toBe("2026-09-14");
+  });
+});

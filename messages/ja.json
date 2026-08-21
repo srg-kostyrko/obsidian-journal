@@ -1837,6 +1837,7 @@
 	"journal_edit_variable_relative_date_description": "固定サイクルのジャーナルでは「昨日」「今日」「明日」「N日前」。カスタムジャーナルでは「今回の<ジャーナル>」「前回の<ジャーナル>」「次回の<ジャーナル>」「N<ジャーナル>前」。",
 	"journal_edit_variable_start_date_description": "このノートが対象とする期間の初日。",
 	"journal_edit_variable_time_description": "現在の時刻（デフォルトでは HH:mm 形式）。",
+	"journal_edit_variable_week_of_month_description": "ノートの週が、その月の何週目かを示します。月の初日を含む週が第 1 週です。",
 	"journal_edit_wrong_week_warning": "週の書式に「W」を使っています。これはカスタムの週設定を反映しないため、カレンダービューとは異なる週番号が表示される場合があります。代わりに「w」を使用してください（必要に応じてプラグイン設定で週の開始日を変更してください）。",
 	"journal_fm_field_label": [
 		{
@@ -1933,7 +1934,7 @@
 	"variable_modifications_format_body": "デフォルトの日付形式を上書きするには、コロンと moment.js の書式文字列を続けます。",
 	"variable_modifications_format_example": "例えば {slot} は年だけを表示します。",
 	"variable_modifications_format_heading": "書式の上書き",
-	"variable_modifications_intro": "日付変数と時刻変数は、3種類の変更方法をサポートしています。これらは1つのトークン内で組み合わせることができます。",
+	"variable_modifications_intro": "日付変数と時刻変数は、3種類の変更方法をサポートしています。これらは1つのトークン内で組み合わせることができます。{slot} は、下のシフトと境界（数える基準となる日付を選びます）と、末尾の数値の変更方法をサポートしています。",
 	"variable_modifications_modal_title": "変数の修飾",
 	"variable_modifications_number_body": "採番変数は2種類の修飾に対応しています。一定量を加算・減算するには `+N` または `-N` を、値を序数で表示するには `:o` を付けます。",
 	"variable_modifications_number_example": "例えば {slot} はインデックスに3を加えた値を序数で表示します。",

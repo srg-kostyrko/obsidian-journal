@@ -1474,6 +1474,7 @@
   "journal_edit_variable_relative_date_description": "yesterday / today / tomorrow / N days ago for fixed-cycle journals; this / last / next <journal> and N <journal>s ago for custom journals.",
   "journal_edit_variable_start_date_description": "The first day of the period this note covers.",
   "journal_edit_variable_time_description": "Current wall-clock time (in HH:mm by default).",
+  "journal_edit_variable_week_of_month_description": "The number of the note's week within its month, counting the week that contains the first day of the month as week 1.",
   "journal_edit_wrong_week_warning": "You use `W` to format weeks, which does not respect custom week settings and may show a different week number than the Calendar view. Use `w` instead (and change the start of the week in the plugin settings if needed).",
   "journal_fm_field_label": [
     {
@@ -1558,7 +1559,7 @@
   "variable_modifications_format_body": "Override the default date format by adding a colon and a moment.js format string.",
   "variable_modifications_format_example": "For example {slot} renders only the year.",
   "variable_modifications_format_heading": "Format override",
-  "variable_modifications_intro": "Date and clock variables support three kinds of modifications. They can be combined in a single token.",
+  "variable_modifications_intro": "Date and clock variables support three kinds of modifications. They can be combined in a single token. {slot} takes the shifts and boundaries below — they choose the date it counts from — and the number modifications at the end.",
   "variable_modifications_modal_title": "Variable modifications",
   "variable_modifications_number_body": "Numbering variables support two modifications. Append `+N` or `-N` to add or subtract a fixed amount, and `:o` to render the value as an ordinal.",
   "variable_modifications_number_example": "For example {slot} renders the index plus three as an ordinal.",

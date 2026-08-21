@@ -2034,6 +2034,7 @@
 	"journal_edit_variable_relative_date_description": "ieri / oggi / domani / N giorni fa per i diari a ciclo fisso; <diario> corrente / precedente / seguente e N <diari> fa per i diari personalizzati.",
 	"journal_edit_variable_start_date_description": "Il primo giorno del periodo a cui si riferisce questa nota.",
 	"journal_edit_variable_time_description": "Ora corrente del sistema (nel formato HH:mm per impostazione predefinita).",
+	"journal_edit_variable_week_of_month_description": "Il numero della settimana della nota all'interno del suo mese; la settimana che contiene il primo giorno del mese è la settimana 1.",
 	"journal_edit_wrong_week_warning": "Per formattare le settimane usi `W`, che non rispetta le impostazioni personalizzate della settimana e può mostrare un numero di settimana diverso da quello della vista Calendario. Usa invece `w` (e, se necessario, modifica l'inizio della settimana nelle impostazioni del plugin).",
 	"journal_fm_field_label": [
 		{
@@ -2130,7 +2131,7 @@
 	"variable_modifications_format_body": "Sovrascrivi il formato data predefinito aggiungendo due punti e una stringa di formato moment.js.",
 	"variable_modifications_format_example": "Ad esempio {slot} visualizza solo l'anno.",
 	"variable_modifications_format_heading": "Sovrascrittura del formato",
-	"variable_modifications_intro": "Le variabili di data e ora supportano tre tipi di modifiche. Possono essere combinate in un unico token.",
+	"variable_modifications_intro": "Le variabili di data e ora supportano tre tipi di modifiche. Possono essere combinate in un unico token. {slot} accetta gli spostamenti e i limiti qui sotto — scelgono la data da cui contare — e le modifiche numeriche in fondo.",
 	"variable_modifications_modal_title": "Modifiche delle variabili",
 	"variable_modifications_number_body": "Le variabili di numerazione supportano due modifiche. Aggiungi `+N` o `-N` per sommare o sottrarre una quantità fissa e `:o` per mostrare il valore come ordinale.",
 	"variable_modifications_number_example": "Ad esempio {slot} mostra l'indice più tre come ordinale.",

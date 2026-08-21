@@ -1837,6 +1837,7 @@
 	"journal_edit_variable_relative_date_description": "固定周期日记：昨天 / 今天 / 明天 / N 天前；自定义日记：本 <日记> / 上个 <日记> / 下个 <日记>，以及 N 个 <日记> 前。",
 	"journal_edit_variable_start_date_description": "本笔记所涵盖周期的第一天。",
 	"journal_edit_variable_time_description": "当前的时钟时间（默认格式为 HH:mm）。",
+	"journal_edit_variable_week_of_month_description": "笔记所在周在当月中的序号；包含当月第一天的那一周为第 1 周。",
 	"journal_edit_wrong_week_warning": "您使用 `W` 来格式化周，但这不会遵循自定义的周设置，并且可能显示与日历视图不同的周数。请改用 `w`（如果需要，请在插件设置中更改一周的开始日期）。",
 	"journal_fm_field_label": [
 		{
@@ -1933,7 +1934,7 @@
 	"variable_modifications_format_body": "通过添加冒号和 moment.js 格式字符串来覆盖默认日期格式。",
 	"variable_modifications_format_example": "例如 {slot} 只渲染年份。",
 	"variable_modifications_format_heading": "格式覆盖",
-	"variable_modifications_intro": "日期和时钟变量支持三种修改方式，它们可以组合在同一个变量中。",
+	"variable_modifications_intro": "日期和时钟变量支持三种修改方式，它们可以组合在同一个变量中。{slot} 支持下面的位移和边界（它们决定从哪个日期开始计数），以及末尾的数字修改方式。",
 	"variable_modifications_modal_title": "变量修饰",
 	"variable_modifications_number_body": "编号变量支持两种修饰。追加 `+N` 或 `-N` 可加减固定数值，追加 `:o` 可将值显示为序数。",
 	"variable_modifications_number_example": "例如 {slot} 将索引加三后以序数形式显示。",

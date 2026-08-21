@@ -2026,6 +2026,7 @@
 	"journal_edit_variable_relative_date_description": "고정 주기 저널에서는 어제 / 오늘 / 내일 / N일 전으로, 사용자 지정 저널에서는 이번 / 지난 / 다음 <저널> 및 N <저널> 전으로 표시됩니다.",
 	"journal_edit_variable_start_date_description": "이 노트가 다루는 기간의 첫째 날입니다.",
 	"journal_edit_variable_time_description": "현재 시각입니다(기본 형식은 HH:mm).",
+	"journal_edit_variable_week_of_month_description": "노트의 주가 해당 월에서 몇 번째 주인지를 나타냅니다. 그 달의 첫날이 포함된 주가 1주입니다.",
 	"journal_edit_wrong_week_warning": "`W`로 주 형식을 지정하면 사용자 지정 주 설정이 반영되지 않아 달력 뷰와 다른 주 번호가 표시될 수 있습니다. 대신 `w`를 사용하세요(필요하면 플러그인 설정에서 주 시작 요일을 바꾸세요).",
 	"journal_fm_field_label": [
 		{
@@ -2122,7 +2123,7 @@
 	"variable_modifications_format_body": "콜론과 moment.js 형식 문자열을 붙이면 기본 날짜 형식을 재정의할 수 있습니다.",
 	"variable_modifications_format_example": "예를 들어 {slot} 형태로 쓰면 연도만 표시됩니다.",
 	"variable_modifications_format_heading": "형식 재정의",
-	"variable_modifications_intro": "날짜 및 시각 변수는 세 가지 수정을 지원합니다. 하나의 토큰 안에서 함께 쓸 수 있습니다.",
+	"variable_modifications_intro": "날짜 및 시각 변수는 세 가지 수정을 지원합니다. 하나의 토큰 안에서 함께 쓸 수 있습니다. {slot} 변수는 아래의 이동과 경계를 지원하며(세는 기준 날짜를 정합니다), 마지막의 숫자 수정도 사용할 수 있습니다.",
 	"variable_modifications_modal_title": "변수 수정",
 	"variable_modifications_number_body": "번호 매기기 변수는 두 가지 수정을 지원합니다. 고정된 값을 더하거나 빼려면 `+N` 또는 `-N`을, 값을 서수로 표시하려면 `:o`를 붙입니다.",
 	"variable_modifications_number_example": "예를 들어 {slot}은 인덱스에 3을 더한 값을 서수로 표시합니다.",

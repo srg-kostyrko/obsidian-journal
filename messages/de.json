@@ -2036,6 +2036,7 @@
 	"journal_edit_variable_relative_date_description": "gestern / heute / morgen / vor N Tagen bei Journalen mit festem Zyklus; dieses / letztes / nächstes <Journal> und vor N <Journal> bei benutzerdefinierten Journalen.",
 	"journal_edit_variable_start_date_description": "Der erste Tag des Zeitraums, den diese Notiz abdeckt.",
 	"journal_edit_variable_time_description": "Aktuelle Uhrzeit (standardmäßig in HH:mm).",
+	"journal_edit_variable_week_of_month_description": "Die Nummer der Woche der Notiz innerhalb ihres Monats; die Woche, die den ersten Tag des Monats enthält, ist Woche 1.",
 	"journal_edit_wrong_week_warning": "Du verwendest `W` zur Formatierung von Wochen. Das berücksichtigt keine benutzerdefinierten Wocheneinstellungen und kann eine andere Wochennummer anzeigen als die Kalenderansicht. Verwende stattdessen `w` (und ändere bei Bedarf den Wochenbeginn in den Plugin-Einstellungen).",
 	"journal_fm_field_label": [
 		{
@@ -2132,7 +2133,7 @@
 	"variable_modifications_format_body": "Das Standarddatumsformat kann durch Hinzufügen eines Doppelpunkts und einer moment.js-Formatzeichenfolge überschrieben werden.",
 	"variable_modifications_format_example": "Beispielsweise ergibt {slot} nur das Jahr.",
 	"variable_modifications_format_heading": "Formatüberschreibung",
-	"variable_modifications_intro": "Datums- und Uhrzeitvariablen unterstützen drei Arten von Modifikationen. Mehrere davon lassen sich in einem einzigen Token kombinieren.",
+	"variable_modifications_intro": "Datums- und Uhrzeitvariablen unterstützen drei Arten von Modifikationen. Mehrere davon lassen sich in einem einzigen Token kombinieren. {slot} übernimmt die Verschiebungen und Grenzen unten – sie bestimmen das Datum, ab dem gezählt wird – sowie die Zahlenmodifikationen am Ende.",
 	"variable_modifications_modal_title": "Variablenmodifikationen",
 	"variable_modifications_number_body": "Nummerierungsvariablen unterstützen zwei Modifikationen. Hänge `+N` oder `-N` an, um einen festen Betrag zu addieren oder zu subtrahieren, und `:o`, um den Wert als Ordnungszahl darzustellen.",
 	"variable_modifications_number_example": "Zum Beispiel stellt {slot} den Index plus drei als Ordnungszahl dar.",

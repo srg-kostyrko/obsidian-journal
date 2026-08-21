@@ -2043,6 +2043,7 @@
 	"journal_edit_variable_relative_date_description": "hier / aujourd’hui / demain / il y a N jours pour les journaux à cycle fixe ; ce / dernier / prochain <journal> et il y a N <journal> pour les journaux personnalisés.",
 	"journal_edit_variable_start_date_description": "Le premier jour de la période couverte par cette note.",
 	"journal_edit_variable_time_description": "Heure actuelle (au format HH:mm par défaut).",
+	"journal_edit_variable_week_of_month_description": "Le numéro de la semaine de la note dans son mois ; la semaine qui contient le premier jour du mois est la semaine 1.",
 	"journal_edit_wrong_week_warning": "Vous utilisez `W` pour formater les semaines, ce qui ne tient pas compte des paramètres de semaine personnalisés et peut afficher un numéro de semaine différent de celui de la vue Calendrier. Utilisez plutôt `w` (et modifiez le début de la semaine dans les paramètres du plugin si nécessaire).",
 	"journal_fm_field_label": [
 		{
@@ -2139,7 +2140,7 @@
 	"variable_modifications_format_body": "Remplacez le format de date par défaut en ajoutant deux points et une chaîne de format moment.js.",
 	"variable_modifications_format_example": "Par exemple {slot} ne renvoie que l’année.",
 	"variable_modifications_format_heading": "Remplacement du format",
-	"variable_modifications_intro": "Les variables de date et d’horloge prennent en charge trois types de modifications. Elles peuvent être combinées dans un même jeton.",
+	"variable_modifications_intro": "Les variables de date et d’horloge prennent en charge trois types de modifications. Elles peuvent être combinées dans un même jeton. {slot} accepte les décalages et les limites ci-dessous — ils choisissent la date à partir de laquelle le comptage commence — ainsi que les modifications numériques à la fin.",
 	"variable_modifications_modal_title": "Modifications de variables",
 	"variable_modifications_number_body": "Les variables de numérotation prennent en charge deux modifications. Ajoutez `+N` ou `-N` pour additionner ou soustraire une valeur fixe, et `:o` pour afficher la valeur sous forme ordinale.",
 	"variable_modifications_number_example": "Par exemple, {slot} affiche l’index plus trois sous forme ordinale.",

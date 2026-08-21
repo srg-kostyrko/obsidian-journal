@@ -18,7 +18,19 @@ export function renderNumber(
   modifiers: readonly Modifier[] = [],
   format?: string,
 ): string {
-  const value = applyOffsets(spec.value, modifiers);
+  return formatNumber(applyOffsets(spec.value, modifiers), format);
+}
+
+export function renderDerived(
+  spec: Extract<VariableSpec, { kind: "derived" }>,
+  modifiers: readonly Modifier[],
+  format?: string,
+): string {
+  const shifted = applyModifiers(spec.value, modifiers);
+  return formatNumber(applyOffsets(spec.compute(shifted), modifiers), format);
+}
+
+function formatNumber(value: number, format?: string): string {
   return format === ORDINAL_FORMAT ? ordinalFor(value) : value.toString();
 }
 
@@ -47,7 +59,8 @@ export function patternForKind(spec: VariableSpec, format?: string): string {
       // literal so inversion can't capture arbitrary text in its place.
       return escapeRegexLiteral(spec.value);
     }
-    case "number": {
+    case "number":
+    case "derived": {
       // The suffix is optional: a locale whose ordinal() degrades to a bare number (see
       // ordinalFor) still round-trips, at the cost of also matching a plainly-numbered name.
       return format === ORDINAL_FORMAT ? String.raw`-?\d+` + `(?:${ordinalPattern})?` : String.raw`-?\d+`;

@@ -11,6 +11,11 @@ describe("DateModificationsModal", () => {
     expect(screen.getByText("{{date:YYYY}}")).toBeTruthy();
   });
 
+  it("names week_of_month in the intro, since it takes both the date and the number modifications", () => {
+    render(DateModificationsModal);
+    expect(screen.getByText("{{week_of_month}}")).toBeTruthy();
+  });
+
   it("renders the shift example chip", () => {
     render(DateModificationsModal);
     expect(screen.getByText("{{date+1w}}")).toBeTruthy();

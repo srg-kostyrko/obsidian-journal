@@ -15,7 +15,8 @@ export function buildFakeContext(): TemplateContext {
     .date("start_date", CalendarDate.fromAnchor(anchor("2022-01-03")), "YYYY-MM-DD")
     .date("end_date", CalendarDate.fromAnchor(anchor("2022-01-09")), "YYYY-MM-DD")
     .string("journal_name", "Daily")
-    .number("index", 7);
+    .number("index", 7)
+    .derived("day_of_month", CalendarDate.fromAnchor(anchor("2022-01-05")), (value) => value.day);
 }
 
 export function installTestEngine(handlers: FunctionHandler[] = []): TemplateEngine {
