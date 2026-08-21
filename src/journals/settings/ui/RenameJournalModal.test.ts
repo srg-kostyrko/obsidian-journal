@@ -35,11 +35,8 @@ describe("RenameJournalModal", () => {
     await userEvent.type(screen.getByRole("textbox"), "morning");
     await userEvent.click(screen.getByText(m.common_action_submit()));
 
-    // `toHaveBeenCalledWith` declares its arguments as a free generic, so the submitted shape is
-    // never compared against the mock's signature. Reading the call and pinning the expected value
-    // with `satisfies` is what makes renderModal's Result generic check anything.
     await waitFor(() => {
-      expect(submit.mock.lastCall?.[0]).toEqual({ newName: "morning" } satisfies Parameters<typeof submit>[0]);
+      expect(submit).toHaveBeenCalledWith({ newName: "morning" });
     });
   });
 
