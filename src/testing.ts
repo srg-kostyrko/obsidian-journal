@@ -175,6 +175,11 @@ export interface TestHarness {
    * Mounts a component that IS a modal, wiring its `useModal()` to mock `submit`/`cancel`. For a
    * component that OPENS a modal, assert on `modals.lastOpen()` instead — the two seams are not
    * interchangeable.
+   *
+   * `Result` types `submit`, but vitest's `toHaveBeenCalledWith`/`toEqual` take unconstrained
+   * generics and never check the expected value against it, so a typo'd key still passes. Assert
+   * via `submit.mock.lastCall?.[0]` with `satisfies Parameters<typeof submit>[0]` for a checked
+   * assertion — see `RenameJournalModal.test.ts`.
    */
   renderModal<C, Result = void>(
     component: C,
