@@ -9,13 +9,19 @@ import { SettingsEventsToken, type SettingsEvents } from "./tokens";
 import { PluginSettingTabAdapter } from "./ui/plugin-setting-tab";
 import { SettingsUiService } from "./ui/settings-ui-service";
 
-export const settingsModule: Module = {
+export const settingsCoreModule: Module = {
   register(c) {
     c.register(SettingsEventsToken).useFactory(() => createNanoEvents<SettingsEvents>());
     c.register(SnapshotService).useClass(SnapshotService);
     c.register(SettingsService).useClass(SettingsService).eager();
     c.register(SettingsUiService).useClass(SettingsUiService);
     c.register(ReloadHintService).useClass(ReloadHintService);
+  },
+};
+
+export const settingsModule: Module = {
+  register(c) {
+    settingsCoreModule.register(c);
     c.register(PluginSettingTabAdapter).useClass(PluginSettingTabAdapter).eager();
   },
 };

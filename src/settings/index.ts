@@ -16,7 +16,7 @@ export {
   UnregisteredSliceError,
   UnregisteredSubpageError,
 } from "./errors";
-export { settingsModule } from "./module";
+export { settingsCoreModule, settingsModule } from "./module";
 export { ReloadHintService } from "./reload-hint";
 export { SettingsService } from "./settings-service";
 export {
