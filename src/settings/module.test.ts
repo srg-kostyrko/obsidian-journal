@@ -1,6 +1,7 @@
 import { describe, expect, it } from "vitest";
 
 import { Container } from "@/infrastructure/di";
+import { isOrderedSubsequence, registrationOrder } from "@/infrastructure/di/testing";
 import { InternalObsidianAppToken, InternalPluginToken, PluginData } from "@/infrastructure/host";
 import { createFakeHost } from "@/infrastructure/host/internal/testing";
 import { FakePluginData } from "@/infrastructure/host/testing";
@@ -43,5 +44,21 @@ describe("settingsModule", () => {
     await c.autoLoad();
 
     expect(host.settingTabs).toHaveLength(1);
+  });
+});
+
+describe("settingsCoreModule against settingsModule", () => {
+  it("registers its tokens in the same relative order as the full module", () => {
+    const core = registrationOrder(settingsCoreModule);
+    const full = registrationOrder(settingsModule);
+
+    expect(isOrderedSubsequence(core, full)).toBe(true);
+  });
+
+  it("registers no token the full module omits", () => {
+    const core = registrationOrder(settingsCoreModule);
+    const full = new Set(registrationOrder(settingsModule));
+
+    expect(core.filter((name) => !full.has(name))).toEqual([]);
   });
 });
