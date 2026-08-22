@@ -267,6 +267,12 @@ export class SettingsService {
   }
 }
 
+function describeShape(raw: unknown): string {
+  if (raw === null) return "null";
+  if (Array.isArray(raw)) return "array";
+  return typeof raw;
+}
+
 function parseCollectionValue<TItem extends AnySchema>(
   definition: CollectionDefinition<string, TItem>,
   raw: unknown,
@@ -287,7 +293,16 @@ function parseCollectionValue<TItem extends AnySchema>(
     }
     return out;
   }
-  if (raw === null || typeof raw !== "object" || Array.isArray(raw)) return out;
+  // Absence is the fresh-install case and must stay silent; a stored value of the wrong shape is
+  // a corrupted file, and discarding it silently costs the user every entry with no diagnostic.
+  if (raw === undefined) return out;
+  if (raw === null || typeof raw !== "object" || Array.isArray(raw)) {
+    logger.warn("collection discarded; stored value is not an object", {
+      sliceKey: definition.key,
+      stored: describeShape(raw),
+    });
+    return out;
+  }
   for (const [id, value] of Object.entries(raw)) {
     const parsed = v.safeParse(definition.itemSchema, value);
     if (parsed.success) {

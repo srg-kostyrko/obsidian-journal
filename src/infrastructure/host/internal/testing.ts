@@ -157,6 +157,22 @@ function parentPath(path: string): string {
   return index === -1 ? "" : path.slice(0, index);
 }
 
+// getFileCache reads `metadata`, every write path sets `frontmatter`. Deriving one from the other
+// on write is what keeps a seeded note and a service-written note equally visible to the index.
+// Nothing here emits: events stay explicit through emitVault/emitMetadata.
+function entryFor(content: string, frontmatter: Record<string, unknown>): FakeFileSystemEntry {
+  return { content, frontmatter, metadata: metadataWithFrontmatter({}, frontmatter) };
+}
+
+// A frontmatter write must leave the rest of a staged CachedMetadata — tags, links, headings put
+// there by emitMetadata — untouched, so it patches the frontmatter field rather than rebuilding.
+function metadataWithFrontmatter(metadata: CachedMetadata, frontmatter: Record<string, unknown>): CachedMetadata {
+  const next: CachedMetadata = { ...metadata };
+  if (Object.keys(frontmatter).length > 0) next.frontmatter = frontmatter;
+  else delete next.frontmatter;
+  return next;
+}
+
 export function createFakeHost(): FakeHost {
   const files = new Map<string, FakeFileSystemEntry>();
   const folders = new Set<string>([""]);
@@ -248,7 +264,7 @@ export function createFakeHost(): FakeHost {
     async create(path: string, content: string): Promise<TFile> {
       if (fileObjects.has(path)) throw new Error(`exists: ${path}`);
       ensureFolderChain(parentPath(path));
-      files.set(path, { content, frontmatter: {}, metadata: {} });
+      files.set(path, entryFor(content, {}));
       const file = makeFile(path);
       setParent(file);
       fileObjects.set(path, file);
@@ -334,7 +350,11 @@ export function createFakeHost(): FakeHost {
       if (!existing) throw new Error(`missing: ${file.path}`);
       const next = { ...existing.frontmatter };
       mutate(next);
-      files.set(file.path, { ...existing, frontmatter: next });
+      files.set(file.path, {
+        ...existing,
+        frontmatter: next,
+        metadata: metadataWithFrontmatter(existing.metadata, next),
+      });
     },
     async trashFile(file: TFile): Promise<void> {
       detachChild(file);
@@ -515,7 +535,7 @@ export function createFakeHost(): FakeHost {
     promptedDeletions,
     putFile(path, content = "", frontmatter = {}): TFile {
       ensureFolderChain(parentPath(path));
-      files.set(path, { content, frontmatter, metadata: {} });
+      files.set(path, entryFor(content, frontmatter));
       const file = makeFile(path);
       setParent(file);
       fileObjects.set(path, file);
@@ -538,7 +558,11 @@ export function createFakeHost(): FakeHost {
     emitMetadata(path, cached): void {
       if (cached) {
         const existing = files.get(path);
-        if (existing) files.set(path, { ...existing, metadata: cached });
+        // The entry's own `frontmatter` is what a later processFrontMatter mutates, so staged
+        // frontmatter has to reach it or the next write drops what this call staged.
+        if (existing) {
+          files.set(path, { ...existing, frontmatter: cached.frontmatter ?? existing.frontmatter, metadata: cached });
+        }
       }
       metadata.emit("changed", fileObjects.get(path), "", cached ?? {});
     },

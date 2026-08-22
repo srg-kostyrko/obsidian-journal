@@ -74,9 +74,13 @@ export class Container implements Resolver {
     // resolve would silently keep the old instance. Refusing is safe: overrides run before
     // autoLoad(), which is when eager bindings first resolve.
     if (stored.slot.has) throw new CannotOverrideError(token, "resolved");
-    return new RegistrationBuilder<T>((entry) => {
-      stored.entry = entry;
-    });
+    const { lifetime, eager } = stored.entry;
+    return new RegistrationBuilder<T>(
+      (entry) => {
+        stored.entry = entry;
+      },
+      { lifetime, eager },
+    );
   }
 
   resolve<T>(token: TokenLike<T>): T;

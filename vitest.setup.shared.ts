@@ -1,10 +1,11 @@
 import { cleanup } from "@testing-library/vue";
-import { afterAll, afterEach } from "vitest";
+import { afterEach, beforeEach } from "vitest";
 
-import { resetCalendarLocale } from "@/calendar/testing";
+import { installTestCalendar } from "@/calendar/testing";
 
-// Files in the "shared" project run against one module registry per worker, so anything a file
-// leaves behind in a process-global is still there when the next file starts. These hooks hand the
-// next file the same blank slate a freshly isolated worker would.
+// The beforeEach re-pins every test to the same calendar grid before it runs, which is what
+// supersedes the old afterAll-only reset (once per worker, not once per test).
+beforeEach(() => void installTestCalendar());
+// Workers share one happy-dom document across the files they run, so a component left mounted
+// answers the next test's queries.
 afterEach(cleanup);
-afterAll(resetCalendarLocale);

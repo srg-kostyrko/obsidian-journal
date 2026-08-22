@@ -6,7 +6,7 @@ import { nextTick } from "vue";
 import { Container } from "@/infrastructure/di";
 import { PluginData, PluginDataIOError } from "@/infrastructure/host";
 import { FakePluginData } from "@/infrastructure/host/testing";
-import { createLoggerTestingModule } from "@/infrastructure/logger/testing";
+import { createLoggerTestingModule, type MemorySink } from "@/infrastructure/logger/testing";
 import { AsyncResult } from "@/infrastructure/result";
 import { expectErr, expectOk } from "@/infrastructure/result/testing";
 import { journalConfigCollection } from "@/journals/config";
@@ -74,14 +74,20 @@ function build(
     collections?: readonly unknown[];
     migrations?: readonly Migration[];
   } = {},
-): { service: SettingsService; data: FakePluginData; events: ReturnType<typeof createNanoEvents<SettingsEvents>> } {
+): {
+  service: SettingsService;
+  data: FakePluginData;
+  events: ReturnType<typeof createNanoEvents<SettingsEvents>>;
+  logs: MemorySink;
+} {
   const data = options.data ?? new FakePluginData(options.raw);
   const events = createNanoEvents<SettingsEvents>();
   const c = new Container();
   c.register(PluginData).useValue(data as unknown as PluginData);
   c.register(SnapshotService).useClass(SnapshotService);
   c.register(SettingsEventsToken).useValue(events);
-  c.addModule(createLoggerTestingModule().module);
+  const { module: loggerModule, sink: logs } = createLoggerTestingModule();
+  c.addModule(loggerModule);
   const slices = options.slices ?? [calendarSlice];
   for (const s of slices) {
     c.register(SliceDefinitionToken).useValue(s as never);
@@ -95,7 +101,7 @@ function build(
     c.register(MigrationToken).useValue(m);
   }
   c.register(SettingsService).useClass(SettingsService);
-  return { service: c.resolve(SettingsService), data, events };
+  return { service: c.resolve(SettingsService), data, events, logs };
 }
 
 function buildWith(data: FakePluginData): { service: SettingsService; snapshots: SnapshotService } {
@@ -400,6 +406,46 @@ describe("SettingsService", () => {
       const { service } = build({ slices: [], collections: [seededCollection], raw: { version: 5, seeded: {} } });
       await service.initialize();
       expect(service.recordOf(seededCollection)).toEqual({});
+    });
+  });
+
+  describe("collection value validation", () => {
+    it.each([
+      ["string", "nonsense"],
+      ["null", null],
+      ["array", []],
+    ])("names a discarded collection value's stored shape as %s", async (shape, stored) => {
+      const { service, logs } = build({
+        slices: [],
+        collections: [journalCollection],
+        raw: { version: 5, journals: stored },
+      });
+
+      expectOk(await service.initialize());
+
+      expect(
+        logs.records.filter((record) => record.message === "collection discarded; stored value is not an object"),
+      ).toEqual([expect.objectContaining({ fields: { sliceKey: "journals", stored: shape } })]);
+    });
+
+    it("discards a stored collection value that is not an object", async () => {
+      const { service } = build({
+        slices: [],
+        collections: [journalCollection],
+        raw: { version: 5, journals: "nonsense" },
+      });
+
+      expectOk(await service.initialize());
+
+      expect(service.recordOf(journalCollection)).toEqual({});
+    });
+
+    it("stays silent when a collection key is absent from stored data", async () => {
+      const { service, logs } = build({ slices: [], collections: [journalCollection], raw: { version: 5 } });
+
+      expectOk(await service.initialize());
+
+      expect(logs.records.filter((record) => record.level === "warn")).toEqual([]);
     });
   });
 
