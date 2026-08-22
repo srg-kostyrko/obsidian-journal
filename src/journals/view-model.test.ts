@@ -6,7 +6,7 @@ import { journalDefaultsFor, type JournalConfig } from "./config";
 import { JournalsRepository, type JournalsEvents } from "./repository";
 import { JournalsViewModel } from "./view-model";
 
-function buildViewModel(initial: Record<string, JournalConfig> = {}) {
+function viewModelOver(initial: Record<string, JournalConfig> = {}) {
   const storage = reactive<Record<string, JournalConfig>>({ ...initial });
   const events = createNanoEvents<JournalsEvents>();
   const repo = JournalsRepository.fromParts(storage, events);
@@ -17,12 +17,12 @@ function buildViewModel(initial: Record<string, JournalConfig> = {}) {
 describe("JournalsViewModel", () => {
   describe("journals", () => {
     it("yields the current entities", () => {
-      const { vm } = buildViewModel({ daily: journalDefaultsFor({ type: "day" }, "daily") });
+      const { vm } = viewModelOver({ daily: journalDefaultsFor({ type: "day" }, "daily") });
       expect(vm.journals.value.map((journal) => journal.name)).toEqual(["daily"]);
     });
 
     it("reflects mutations after create", () => {
-      const { vm, repo } = buildViewModel();
+      const { vm, repo } = viewModelOver();
       repo.create("daily", { type: "day" });
       expect(vm.journals.value.map((journal) => journal.name)).toEqual(["daily"]);
     });
@@ -30,7 +30,7 @@ describe("JournalsViewModel", () => {
 
   describe("journalOptions", () => {
     it("returns name-labelled options for each journal", () => {
-      const { vm } = buildViewModel({
+      const { vm } = viewModelOver({
         daily: journalDefaultsFor({ type: "day" }, "daily"),
         weekly: journalDefaultsFor({ type: "week" }, "weekly"),
       });
@@ -43,36 +43,36 @@ describe("JournalsViewModel", () => {
 
   describe("journalCount", () => {
     it("returns the number of journals", () => {
-      const { vm } = buildViewModel({ daily: journalDefaultsFor({ type: "day" }, "daily") });
+      const { vm } = viewModelOver({ daily: journalDefaultsFor({ type: "day" }, "daily") });
       expect(vm.journalCount.value).toBe(1);
     });
   });
 
   describe("getJournal", () => {
     it("returns Some for a known name", () => {
-      const { vm } = buildViewModel({ daily: journalDefaultsFor({ type: "day" }, "daily") });
+      const { vm } = viewModelOver({ daily: journalDefaultsFor({ type: "day" }, "daily") });
       expect(vm.getJournal("daily").isSome()).toBe(true);
     });
 
     it("returns None for an unknown name", () => {
-      const { vm } = buildViewModel();
+      const { vm } = viewModelOver();
       expect(vm.getJournal("nope").isNone()).toBe(true);
     });
   });
 
   describe("isJournalNameAvailable", () => {
     it("is false when the name is in use", () => {
-      const { vm } = buildViewModel({ daily: journalDefaultsFor({ type: "day" }, "daily") });
+      const { vm } = viewModelOver({ daily: journalDefaultsFor({ type: "day" }, "daily") });
       expect(vm.isJournalNameAvailable("daily")).toBe(false);
     });
 
     it("is true when the name is free", () => {
-      const { vm } = buildViewModel({ daily: journalDefaultsFor({ type: "day" }, "daily") });
+      const { vm } = viewModelOver({ daily: journalDefaultsFor({ type: "day" }, "daily") });
       expect(vm.isJournalNameAvailable("other")).toBe(true);
     });
 
     it("treats the excludeCurrent name as available", () => {
-      const { vm } = buildViewModel({ daily: journalDefaultsFor({ type: "day" }, "daily") });
+      const { vm } = viewModelOver({ daily: journalDefaultsFor({ type: "day" }, "daily") });
       expect(vm.isJournalNameAvailable("daily", "daily")).toBe(true);
     });
   });

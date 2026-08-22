@@ -352,6 +352,67 @@ export default [
     },
   },
   {
+    // Must sit after the two test blocks above: rule options replace rather than merge, so the
+    // vi.mock selector is re-declared here, and no-restricted-imports is switched back on from
+    // the "off" the general test block sets.
+    files: ["src/journals/**/*.test.ts"],
+    ignores: ["**/*.isolated.test.ts"],
+    rules: {
+      "no-restricted-syntax": [
+        "error",
+        {
+          selector: "CallExpression[callee.object.name='vi'][callee.property.name='mock']",
+          message:
+            "vi.mock replaces the module for every later file sharing the worker's registry. Rename this file to *.isolated.test.ts so it runs in its own.",
+        },
+        {
+          selector: "NewExpression[callee.name='Container']",
+          message: "Build the container with testContainer() from @/testing.",
+        },
+        {
+          // Narrowed to a binding chain inside a test body. A bare `.register(` also names
+          // JournalsIndex.register, the domain method the suite seeds index entries through.
+          selector:
+            "CallExpression[callee.name=/^(it|test|beforeEach|beforeAll)$/] MemberExpression[object.callee.property.name='register'][property.name=/^use(Value|Class|Factory|Existing)$/]",
+          message: "Pass a feature CORE/UI module to testContainer({ modules }) instead of registering by hand.",
+        },
+        {
+          selector:
+            "FunctionDeclaration[id.name=/^(make|build|seed|create)(Journal|Command|View|Shelf|Decoration|Config)/]",
+          message: "Entity fixtures live in the feature's testing.ts — use fixedJournal/customJournal.",
+        },
+      ],
+    },
+  },
+  {
+    // Split from the block above so the three pure component tests can opt out of this one rule
+    // without losing the syntax bans. Their components inject nothing and take everything as
+    // props, so the harness's render would bind an injector nothing reads — c00576a4 removed the
+    // container from two of them for exactly that reason. Delete an entry the moment its
+    // component starts resolving a service.
+    files: ["src/journals/**/*.test.ts"],
+    ignores: [
+      "**/*.isolated.test.ts",
+      "src/journals/settings/ui/DateFormatPreview.test.ts",
+      "src/journals/settings/ui/TemplaterSupportModal.test.ts",
+      "src/journals/settings/ui/VariableReferenceModal.test.ts",
+    ],
+    rules: {
+      "no-restricted-imports": [
+        "error",
+        {
+          paths: [
+            {
+              name: "@testing-library/vue",
+              importNames: ["render"],
+              message: "Use the harness's render, which binds the injector for you.",
+            },
+          ],
+        },
+      ],
+    },
+  },
+  {
     // moment is available transitively through the "obsidian" devDependency (which pins its own
     // "moment"), not declared directly; the ordinal round-trip test needs the real locale data
     // from these subpath imports for its assertions to mean anything.

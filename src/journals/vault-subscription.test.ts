@@ -1,7 +1,8 @@
 import { TFile } from "obsidian";
-import { assert, beforeEach, describe, expect, it } from "vitest";
+import { assert, beforeEach, describe, expect, it, vi } from "vitest";
 
 import type { AnchorString } from "@/calendar";
+import { NoteMetadataService } from "@/infrastructure/host";
 import type { VaultPath } from "@/infrastructure/host";
 import type { FakeHost } from "@/infrastructure/host/internal/testing";
 import { SettingsEventsToken } from "@/settings";
@@ -13,7 +14,6 @@ import { journalsCoreModule } from "./module";
 import { JournalsRepository } from "./repository";
 import { customJournal, fixedJournal, unwrap } from "./testing";
 import { VaultSubscriptionService } from "./vault-subscription";
-import { buildRig } from "./vault-subscription.testing";
 
 function requireFile(host: FakeHost, path: VaultPath): TFile {
   const file = host.app.vault.getAbstractFileByPath(path);
@@ -132,19 +132,35 @@ describe("VaultSubscriptionService", () => {
     });
   });
 
-  // Imported note: on disk at boot, but metadataCache has not parsed it yet — createFakeHost
-  // resolves a putFile's metadata immediately, so this boot-race window can only be modelled by
-  // the hand-built rig below.
+  // Imported note: on disk at boot, but metadataCache has not parsed it yet. createFakeHost fills
+  // a putFile's cache atomically with the file and emits no "resolved" batch, so both halves of
+  // that window are staged here — withhold the cache, then drive the batch the walk waits on.
   it("indexes an imported note whose metadata resolves only after the boot walk", async () => {
-    const rig = buildRig({ daily: fixedJournal("daily", { type: "day" }) }, ["day/2024-01-01.md" as VaultPath]);
-    rig.setFrontmatter("day/2024-01-01.md", { journal: "daily", "journal-date": "2024-01-01" });
-    rig.setResolved("day/2024-01-01.md", false);
-    const sub = rig.container.resolve(VaultSubscriptionService);
-    await sub.initialize();
-    const index = rig.container.resolve(JournalsIndex);
+    const harness = await testContainer({
+      modules: [journalsCoreModule],
+      data: { journals: { daily: fixedJournal("daily", { type: "day" }) } },
+    });
+    const imported = harness.host.putFile("day/2024-01-01.md", "", {
+      journal: "daily",
+      "journal-date": "2024-01-01",
+    });
+    const cache = harness.host.app.metadataCache;
+    const read = cache.getFileCache.bind(cache);
+    const unparsed = vi
+      .spyOn(cache, "getFileCache")
+      .mockImplementation((file) => (file === imported ? null : read(file)));
+    const batches: (() => void)[] = [];
+    vi.spyOn(harness.resolve(NoteMetadataService), "onResolved").mockImplementation((callback) => {
+      batches.push(callback);
+      return () => void batches.splice(batches.indexOf(callback), 1);
+    });
 
-    rig.setResolved("day/2024-01-01.md", true);
-    rig.emitResolved();
+    await harness.resolve(VaultSubscriptionService).initialize();
+    const index = harness.resolve(JournalsIndex);
+    expect(index.entryByPath("day/2024-01-01.md" as VaultPath).isNone()).toBe(true);
+
+    unparsed.mockImplementation(read);
+    for (const batch of batches.splice(0)) batch();
 
     expect(index.entryByPath("day/2024-01-01.md" as VaultPath).isSome()).toBe(true);
   });

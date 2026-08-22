@@ -1,27 +1,22 @@
-import { createNanoEvents } from "nanoevents";
-import { describe, expect, it, vi } from "vitest";
+import { beforeEach, describe, expect, it, vi } from "vitest";
 
 import { CalendarDate } from "@/calendar";
 import { anchor } from "@/calendar/testing";
-import { Flows, FlowsModule, UserAborted } from "@/infrastructure/flows";
-import { NoticeService, UriService } from "@/infrastructure/host";
-import { createFakeHost } from "@/infrastructure/host/internal/testing";
-import { InternalPluginToken } from "@/infrastructure/host/internal/tokens";
-import { FakeNoticeService } from "@/infrastructure/host/testing";
-import { AsyncResult } from "@/infrastructure/result";
-import {
-  CycleService,
-  JournalsIndex,
-  JournalsRepository,
-  JournalsEventsToken,
-  NoApplicableJournals,
-  OpenDateFlow,
-  journalConfigCollection,
-} from "@/journals";
-import type { JournalsEvents } from "@/journals";
-import { createSettingsService } from "@/settings/testing";
+import { Flows } from "@/infrastructure/flows";
+import { testContainer, type TestHarness } from "@/testing";
+
+import { journalsCoreModule } from "../module";
+import { fixedJournal } from "../testing";
 
 import { JournalUriHandler } from "./journal-uri-handler";
+
+const DAILY = fixedJournal("daily", { type: "day" });
+const WORK = fixedJournal("work", { type: "day" });
+const FUTURE_DAILY = fixedJournal(
+  "daily",
+  { type: "day" },
+  { timeline: { start: anchor("2027-01-01"), end: { kind: "never" } } },
+);
 
 async function flush(): Promise<void> {
   await new Promise<void>((resolve) => {
@@ -29,158 +24,130 @@ async function flush(): Promise<void> {
   });
 }
 
-async function build() {
-  const { service: settings, container } = createSettingsService({
-    collections: [journalConfigCollection],
-  });
-  await settings.initialize();
-
-  const journalsStorage = settings.recordOf(journalConfigCollection);
-  const journalsEvents = createNanoEvents<JournalsEvents>();
-  const journalsRepo = JournalsRepository.fromParts(journalsStorage, journalsEvents);
-
-  const host = createFakeHost();
-  const notices = new FakeNoticeService();
-
-  container.register(InternalPluginToken).useValue(host.plugin);
-  container.register(UriService).useClass(UriService);
-  container.register(NoticeService).useValue(notices);
-  container.register(JournalsIndex).useClass(JournalsIndex);
-  container.register(CycleService).useClass(CycleService);
-  container.register(JournalsEventsToken).useValue(journalsEvents);
-  container.register(JournalsRepository).useValue(journalsRepo);
-  container.addModule(FlowsModule);
-  container.register(JournalUriHandler).useClass(JournalUriHandler);
-
-  const flows = container.resolve(Flows);
-  const handler = container.resolve(JournalUriHandler);
-  handler.initialize();
-
-  function trigger(parameters: Record<string, string>): void {
-    host.emitProtocol("journals", { action: "journals", ...parameters });
-  }
-
-  return { host, journalsRepo, notices, flows, trigger };
+function trigger(harness: TestHarness, parameters: Record<string, string>): void {
+  harness.host.emitProtocol("journals", { action: "journals", ...parameters });
 }
 
 describe("JournalUriHandler dispatch", () => {
-  it("invokes OpenDateFlow for a named journal and ISO date", async () => {
-    const { journalsRepo, flows, trigger } = await build();
-    journalsRepo.create("daily", { type: "day" });
-    const invokeSpy = vi.spyOn(flows, "invoke").mockReturnValue(AsyncResult.ok({ path: "daily/x.md", created: false }));
+  describe("one daily journal", () => {
+    let harness: TestHarness;
 
-    trigger({ journal: "daily", date: "2026-06-04", mode: "tab" });
-    await flush();
+    beforeEach(async () => {
+      harness = await testContainer({
+        modules: [journalsCoreModule],
+        data: { journals: { daily: DAILY } },
+        initialize: [JournalUriHandler],
+      });
+    });
 
-    expect(invokeSpy).toHaveBeenCalledWith(
-      OpenDateFlow,
-      {
-        anchor: "2026-06-04",
-        journalNames: ["daily"],
-        openMode: "tab",
-        existingOnly: false,
-      },
-      { notify: false },
-    );
-  });
+    it("invokes OpenDateFlow for a named journal and ISO date", async () => {
+      trigger(harness, { journal: "daily", date: "2026-06-04", mode: "tab" });
+      await flush();
 
-  it("defaults to today when no date is given", async () => {
-    const { journalsRepo, flows, trigger } = await build();
-    journalsRepo.create("daily", { type: "day" });
-    const invokeSpy = vi.spyOn(flows, "invoke").mockReturnValue(AsyncResult.ok({ path: "daily/x.md", created: false }));
+      expect(harness.host.workspace.openCalls).toEqual([{ path: "2026-06-04.md", mode: "tab" }]);
+    });
 
-    trigger({ journal: "daily" });
-    await flush();
+    it("defaults to today when no date is given", async () => {
+      trigger(harness, { journal: "daily" });
+      await flush();
 
-    expect(invokeSpy).toHaveBeenCalledWith(
-      OpenDateFlow,
-      {
-        anchor: CalendarDate.today().toAnchor(),
-        journalNames: ["daily"],
-        openMode: "active",
-        existingOnly: false,
-      },
-      { notify: false },
-    );
+      expect(harness.host.workspace.openCalls).toEqual([
+        { path: `${CalendarDate.today().toAnchor()}.md`, mode: false },
+      ]);
+    });
   });
 
   it("passes every journal of a write type as candidates", async () => {
-    const { journalsRepo, flows, trigger } = await build();
-    journalsRepo.create("daily", { type: "day" });
-    journalsRepo.create("work", { type: "day" });
-    const invokeSpy = vi.spyOn(flows, "invoke").mockReturnValue(AsyncResult.ok({ path: "daily/x.md", created: false }));
+    const harness = await testContainer({
+      modules: [journalsCoreModule],
+      data: { journals: { daily: DAILY, work: WORK } },
+      initialize: [JournalUriHandler],
+    });
 
-    trigger({ type: "day", date: "2026-06-04" });
+    trigger(harness, { type: "day", date: "2026-06-04" });
     await flush();
 
-    expect(invokeSpy).toHaveBeenCalledWith(
-      OpenDateFlow,
-      {
-        anchor: "2026-06-04",
-        journalNames: ["daily", "work"],
-        openMode: "active",
-        existingOnly: false,
-      },
-      { notify: false },
-    );
+    expect(harness.suggests.lastOpen<readonly string[], string>().input).toEqual(["daily", "work"]);
   });
 });
 
 describe("JournalUriHandler errors", () => {
-  it("notifies and opens nothing for an unknown journal name", async () => {
-    const { notices, flows, trigger } = await build();
-    const invokeSpy = vi.spyOn(flows, "invoke");
+  // Both tests below keep the dispatch spy: their refusals happen before any note is touched, so
+  // the vault cannot tell a flow that was not dispatched at all from one dispatched and refused.
+  describe("no journals configured", () => {
+    let harness: TestHarness;
 
-    trigger({ journal: "missing" });
-    await flush();
+    beforeEach(async () => {
+      harness = await testContainer({
+        modules: [journalsCoreModule],
+        data: { journals: {} },
+        initialize: [JournalUriHandler],
+      });
+    });
 
-    expect(invokeSpy).not.toHaveBeenCalled();
-    expect(notices.messages).toHaveLength(1);
+    it("notifies and opens nothing for an unknown journal name", async () => {
+      const invokeSpy = vi.spyOn(harness.resolve(Flows), "invoke");
+
+      trigger(harness, { journal: "missing" });
+      await flush();
+
+      expect(invokeSpy).not.toHaveBeenCalled();
+      expect(harness.notices.messages).toHaveLength(1);
+    });
+
+    it("notifies when no journal of the requested type exists", async () => {
+      const invokeSpy = vi.spyOn(harness.resolve(Flows), "invoke");
+
+      trigger(harness, { type: "week" });
+      await flush();
+
+      expect(invokeSpy).not.toHaveBeenCalled();
+      expect(harness.notices.messages).toHaveLength(1);
+      expect(harness.notices.messages[0]).toContain("week");
+    });
   });
 
   it("notifies and opens nothing for a date that cannot be parsed", async () => {
-    const { journalsRepo, notices, flows, trigger } = await build();
-    journalsRepo.create("daily", { type: "day" });
-    const invokeSpy = vi.spyOn(flows, "invoke");
+    const harness = await testContainer({
+      modules: [journalsCoreModule],
+      data: { journals: { daily: DAILY } },
+      initialize: [JournalUriHandler],
+    });
 
-    trigger({ journal: "daily", date: "not-a-date" });
+    trigger(harness, { journal: "daily", date: "not-a-date" });
     await flush();
 
-    expect(invokeSpy).not.toHaveBeenCalled();
-    expect(notices.messages).toHaveLength(1);
-  });
-
-  it("notifies when no journal of the requested type exists", async () => {
-    const { notices, flows, trigger } = await build();
-    const invokeSpy = vi.spyOn(flows, "invoke");
-
-    trigger({ type: "week" });
-    await flush();
-
-    expect(invokeSpy).not.toHaveBeenCalled();
-    expect(notices.messages).toHaveLength(1);
-    expect(notices.messages[0]).toContain("week");
+    expect(harness.host.workspace.openCalls).toEqual([]);
+    expect(harness.notices.messages).toHaveLength(1);
   });
 
   it("notifies when the flow reports no applicable journals", async () => {
-    const { journalsRepo, notices, flows, trigger } = await build();
-    journalsRepo.create("daily", { type: "day" });
-    vi.spyOn(flows, "invoke").mockReturnValue(AsyncResult.err(new NoApplicableJournals(anchor("2026-06-04"))));
+    const harness = await testContainer({
+      modules: [journalsCoreModule],
+      data: { journals: { daily: FUTURE_DAILY } },
+      initialize: [JournalUriHandler],
+    });
 
-    trigger({ journal: "daily", date: "2026-06-04" });
+    // anchorOf answers for a journal outside its own timeline, so the handler dispatches and the
+    // flow is the one that finds nothing applicable — the seam this test is about.
+    trigger(harness, { journal: "daily", date: "2026-06-04" });
     await flush();
 
-    expect(notices.messages).toHaveLength(1);
+    expect(harness.notices.messages).toHaveLength(1);
   });
 
   it("stays silent when the journal picker is dismissed", async () => {
-    const { journalsRepo, notices, flows, trigger } = await build();
-    journalsRepo.create("daily", { type: "day" });
-    vi.spyOn(flows, "invoke").mockReturnValue(AsyncResult.err(new UserAborted("journal-picker")));
+    const harness = await testContainer({
+      modules: [journalsCoreModule],
+      data: { journals: { daily: DAILY, work: WORK } },
+      initialize: [JournalUriHandler],
+    });
 
-    trigger({ journal: "daily" });
+    trigger(harness, { type: "day", date: "2026-06-04" });
+    await flush();
+    harness.suggests.lastOpen().cancel();
     await flush();
 
-    expect(notices.messages).toHaveLength(0);
+    expect(harness.notices.messages).toHaveLength(0);
   });
 });
