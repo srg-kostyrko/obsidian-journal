@@ -1,13 +1,14 @@
-import { cleanup, render, screen } from "@testing-library/vue";
-import { afterEach, describe, expect, it } from "vitest";
+import { screen } from "@testing-library/vue";
+import { describe, expect, it } from "vitest";
+
+import { testContainer } from "@/testing";
 
 import TemplaterSupportModal from "./TemplaterSupportModal.vue";
 
-afterEach(() => cleanup());
-
 describe("TemplaterSupportModal", () => {
-  it("lists the three safe-setup options", () => {
-    render(TemplaterSupportModal);
+  it("lists the three safe-setup options", async () => {
+    const harness = await testContainer();
+    harness.renderModal(TemplaterSupportModal);
     expect(screen.getAllByRole("listitem")).toHaveLength(3);
   });
 });
