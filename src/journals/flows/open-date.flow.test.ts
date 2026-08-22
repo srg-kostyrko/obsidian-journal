@@ -17,6 +17,8 @@ import { OpenDateFlow } from "./open-date.flow";
 const TIMELINE_OPEN = { start: anchor("2020-01-01"), end: { kind: "never" as const } };
 
 describe("OpenDateFlow", () => {
+  // The mid-period cases below expect Sunday-anchored weeks, so the grid has to be stated rather
+  // than inherited from whatever locale the machine happens to run under.
   it("errors with NoApplicableJournals when no journal covers the anchor", async () => {
     installTestCalendar({ dow: 0, doy: 6 });
     const harness = await testContainer({
@@ -102,7 +104,7 @@ describe("OpenDateFlow", () => {
       const menu = __testing.lastOpenMenu();
       expect(menu.items.map((item) => item.title)).toEqual(["a", "b"]);
       expect(menu.showAtMouseEventCalls).toEqual([event]);
-      (menu.items[1] as unknown as { click(): void } | undefined)?.click();
+      await menu.pick(1);
       const result = await promise;
 
       expect(result.isOk()).toBe(true);
