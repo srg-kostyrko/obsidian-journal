@@ -1,8 +1,8 @@
 <script setup lang="ts">
 import { computed, toRaw } from "vue";
 
-import { CalendarDate } from "@/calendar";
 import type { Period } from "@/calendar";
+import { useToday } from "@/calendar/ui";
 import { CellDecoration } from "@/decorations";
 import { useModifierHoverPreview } from "@/ui/use-modifier-hover-preview";
 
@@ -20,7 +20,8 @@ const rawPeriod = computed(() => toRaw(props.period));
 const label = computed(() => rawPeriod.value.format(props.format ?? defaultFormatPattern(rawPeriod.value.kind)));
 const isActive = computed(() => props.cell.isActive(rawPeriod.value));
 const isInactive = computed(() => !props.cell.isActionable(rawPeriod.value));
-const isToday = computed(() => rawPeriod.value.contains(CalendarDate.today()));
+const today = useToday();
+const isToday = computed(() => rawPeriod.value.contains(today.value));
 // Only an actionable cell is a control; an inert one is decoration and naming it would add
 // noise to the announcement without offering anything to activate.
 const accessibleName = computed(() =>

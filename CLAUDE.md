@@ -88,6 +88,16 @@ on it.
   `useIndexVersion()` or it caches "not connected" forever. A regression test
   must register the entry _after_ mount and emit `entryChanged`; one that seeds
   the index before mount passes with the bridge deleted.
+- The wall clock is not reactive either. `CalendarDate.today()` and `Clock.now()`
+  read inside a `computed` cache the day the component mounted, so a surface left
+  open across midnight keeps marking yesterday until Obsidian restarts (#275).
+  Anything that _renders_ or _links to_ today reads `useToday()`
+  (`src/calendar/ui/use-today.ts`); a read inside an event handler is fine, it
+  runs at click time. The composable re-checks on window focus and on
+  `visibilitychange` as well as at midnight, because Chromium's timers do not
+  advance while the machine is suspended — a laptop asleep across midnight wakes
+  with hours still left on the timeout. e2e cannot reach any of this: the suite
+  has no control over the system clock.
 - `toRaw` is shallow. Config editors embed reactive proxies at depth via spread,
   so cloning a view config needs a deep strip (`cloneFnJSON`) or it throws
   `DataCloneError`. Reproducible only through a reactive store.

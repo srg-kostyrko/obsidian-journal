@@ -2,7 +2,8 @@
 import { match } from "ts-pattern";
 import { computed, inject } from "vue";
 
-import { Clock, type AnchorString } from "@/calendar";
+import type { AnchorString } from "@/calendar";
+import { useToday } from "@/calendar/ui";
 import { CellDecoration, colorToString, useDecorationMenuItems } from "@/decorations";
 import { m } from "@/i18n";
 import { useService } from "@/infrastructure/di";
@@ -59,7 +60,8 @@ const flows = useService(Flows);
 const workspace = useService(WorkspaceService);
 const notices = useService(NoticeService);
 
-const today = computed(() => Clock.now().format("YYYY-MM-DD") as AnchorString);
+const today = useToday();
+const todayAnchor = computed(() => today.value.toAnchor());
 
 const indexVersion = useIndexVersion();
 
@@ -131,7 +133,7 @@ const text = computed(() =>
       cycle,
       numbering,
       notePath,
-      today: today.value,
+      today: todayAnchor.value,
     }),
   ),
 );

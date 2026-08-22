@@ -1,12 +1,13 @@
 <script setup lang="ts">
 import { computed, toRaw } from "vue";
 
-import { CalendarDate, DayPeriod } from "@/calendar";
+import { DayPeriod } from "@/calendar";
 import type { MonthPeriod, OpenInterval, Period } from "@/calendar";
 import UiButton from "@/ui/UiButton.vue";
 
 import CalendarGrid from "./CalendarGrid.vue";
 import { useCalendarGrid } from "./use-calendar-grid";
+import { useToday } from "./use-today";
 
 const props = defineProps<{
   outerPeriod: MonthPeriod;
@@ -25,7 +26,7 @@ const cells = computed(() => {
 // separately-rotated weekday list can drift from the cells it labels.
 const weekdays = computed(() => cells.value.slice(0, 7).map((d) => d.start.format("ddd")));
 
-const today = CalendarDate.today();
+const today = useToday();
 
 const grid = useCalendarGrid({
   cells,
