@@ -5,6 +5,7 @@ import { testContainer, type TestHarness } from "@/testing";
 
 import { journalsCoreModule } from "../../../module";
 import { fixedJournal } from "../../../testing";
+import { BulkAddService } from "../bulk-add-service";
 import { defaultBulkAddParameters } from "../config";
 
 import { BulkAddFlow } from "./bulk-add.flow";
@@ -38,12 +39,15 @@ describe("BulkAddFlow", () => {
   });
 
   it("aborts cleanly when the configure modal is cancelled", async () => {
+    // plan() is read-only and leaves no vault trace, so a cancelled flow that wrongly proceeded
+    // to plan anyway would look identical on any vault-state assertion — only a spy sees it.
+    const plan = vi.spyOn(harness.resolve(BulkAddService), "plan");
     const promise = harness.resolve(Flows).invoke(BulkAddFlow, { journalName: "daily" });
 
     harness.modals.lastOpen().cancel();
     const result = await promise;
 
     expect(result.kind).toBe("err");
-    expect(harness.modals.opens).toHaveLength(1);
+    expect(plan).not.toHaveBeenCalled();
   });
 });

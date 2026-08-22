@@ -2,7 +2,6 @@ import userEvent from "@testing-library/user-event";
 import { screen, waitFor } from "@testing-library/vue";
 import { beforeEach, describe, expect, it } from "vitest";
 
-import type { AnchorString } from "@/calendar";
 import { anchor } from "@/calendar/testing";
 import { m } from "@/i18n";
 import type { VaultPath } from "@/infrastructure/host";
@@ -15,20 +14,7 @@ import { defaultBulkAddParameters } from "../config";
 
 import ProcessBulkAddModal from "./ProcessBulkAddModal.vue";
 
-import type { PlannedAction, PlannedSkip } from "../bulk-add-service";
-
-function connectAction(overrides: Partial<PlannedAction> = {}): PlannedAction {
-  return {
-    kind: "action",
-    path: "src/a.md" as VaultPath,
-    anchor: "2026-06-01" as AnchorString,
-    targetPath: "src/a.md" as VaultPath,
-    existing: "none",
-    folder: "n/a",
-    name: "n/a",
-    ...overrides,
-  };
-}
+import type { PlannedSkip } from "../bulk-add-service";
 
 describe("ProcessBulkAddModal", () => {
   let harness: TestHarness;
@@ -45,7 +31,19 @@ describe("ProcessBulkAddModal", () => {
     harness.renderModal(ProcessBulkAddModal, {
       props: {
         journalName: "daily",
-        plan: { notes: [connectAction()] },
+        plan: {
+          notes: [
+            {
+              kind: "action",
+              path: "src/a.md" as VaultPath,
+              anchor: anchor("2026-06-01"),
+              targetPath: "src/a.md" as VaultPath,
+              existing: "none",
+              folder: "n/a",
+              name: "n/a",
+            },
+          ],
+        },
         parameters: { ...defaultBulkAddParameters(), dryRun: false },
       },
     });
@@ -60,7 +58,19 @@ describe("ProcessBulkAddModal", () => {
     harness.renderModal(ProcessBulkAddModal, {
       props: {
         journalName: "daily",
-        plan: { notes: [connectAction()] },
+        plan: {
+          notes: [
+            {
+              kind: "action",
+              path: "src/a.md" as VaultPath,
+              anchor: anchor("2026-06-01"),
+              targetPath: "src/a.md" as VaultPath,
+              existing: "none",
+              folder: "n/a",
+              name: "n/a",
+            },
+          ],
+        },
         parameters: { ...defaultBulkAddParameters(), dryRun: true },
       },
     });
@@ -99,7 +109,19 @@ describe("ProcessBulkAddModal", () => {
     harness.renderModal(ProcessBulkAddModal, {
       props: {
         journalName: "daily",
-        plan: { notes: [connectAction()] },
+        plan: {
+          notes: [
+            {
+              kind: "action",
+              path: "src/a.md" as VaultPath,
+              anchor: anchor("2026-06-01"),
+              targetPath: "src/a.md" as VaultPath,
+              existing: "none",
+              folder: "n/a",
+              name: "n/a",
+            },
+          ],
+        },
         parameters: { ...defaultBulkAddParameters(), dryRun: true },
       },
     });
@@ -116,13 +138,16 @@ describe("ProcessBulkAddModal", () => {
         journalName: "daily",
         plan: {
           notes: [
-            connectAction({
+            {
+              kind: "action",
+              path: "src/a.md" as VaultPath,
+              anchor: anchor("2026-06-01"),
               occupant: "daily/2026-06-01.md" as VaultPath,
               targetPath: "daily/2026-06-01.md" as VaultPath,
               existing: "ask",
               folder: "move",
               name: "rename",
-            }),
+            },
           ],
         },
         parameters: { ...defaultBulkAddParameters(), dryRun: false },
@@ -148,7 +173,19 @@ describe("ProcessBulkAddModal", () => {
     harness.renderModal(ProcessBulkAddModal, {
       props: {
         journalName: "daily",
-        plan: { notes: [connectAction({ targetPath: "Daily/a.md" as VaultPath, folder: "ask" })] },
+        plan: {
+          notes: [
+            {
+              kind: "action",
+              path: "src/a.md" as VaultPath,
+              anchor: anchor("2026-06-01"),
+              targetPath: "Daily/a.md" as VaultPath,
+              existing: "none",
+              folder: "ask",
+              name: "n/a",
+            },
+          ],
+        },
         parameters: { ...defaultBulkAddParameters(), dryRun: false },
       },
     });
@@ -176,7 +213,18 @@ describe("ProcessBulkAddModal", () => {
       props: {
         journalName: "daily",
         plan: {
-          notes: [connectAction({ occupant: "Daily/2026-06-01.md" as VaultPath, existing: "ask" })],
+          notes: [
+            {
+              kind: "action",
+              path: "src/a.md" as VaultPath,
+              anchor: anchor("2026-06-01"),
+              targetPath: "src/a.md" as VaultPath,
+              occupant: "Daily/2026-06-01.md" as VaultPath,
+              existing: "ask",
+              folder: "n/a",
+              name: "n/a",
+            },
+          ],
         },
         parameters: { ...defaultBulkAddParameters(), dryRun: false },
       },
@@ -195,7 +243,19 @@ describe("ProcessBulkAddModal", () => {
     harness.renderModal(ProcessBulkAddModal, {
       props: {
         journalName: "daily",
-        plan: { notes: [connectAction({ targetPath: "src/2026-06-01.md" as VaultPath, name: "ask" })] },
+        plan: {
+          notes: [
+            {
+              kind: "action",
+              path: "src/a.md" as VaultPath,
+              anchor: anchor("2026-06-01"),
+              targetPath: "src/2026-06-01.md" as VaultPath,
+              existing: "none",
+              folder: "n/a",
+              name: "ask",
+            },
+          ],
+        },
         parameters: { ...defaultBulkAddParameters(), dryRun: false },
       },
     });

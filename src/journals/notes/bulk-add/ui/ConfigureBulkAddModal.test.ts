@@ -101,16 +101,14 @@ describe("ConfigureBulkAddModal", () => {
 
     await waitFor(() => expect(submit).toHaveBeenCalledWith(expect.objectContaining({ folder: "Daily" })));
   });
-});
 
-describe("ConfigureBulkAddModal with a non-default journal date format", () => {
   it("prefills the date format from the journal's configured format", async () => {
-    const harness = await testContainer({
+    const withNonDefaultFormat = await testContainer({
       modules: [journalsCoreModule],
       data: { journals: { daily: fixedJournal("daily", { type: "day" }, { dateFormat: "YYYY-MM" }) } },
     });
 
-    harness.renderModal(ConfigureBulkAddModal, { props: { journalName: "daily" } });
+    withNonDefaultFormat.renderModal(ConfigureBulkAddModal, { props: { journalName: "daily" } });
 
     const input = screen.getByRole("textbox", { name: m.bulk_add_date_format_label() });
     expect((input as HTMLInputElement).value).toBe("YYYY-MM");
