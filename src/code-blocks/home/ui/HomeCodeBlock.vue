@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { computed } from "vue";
 
-import { CalendarDate, Clock, type AnchorString } from "@/calendar";
+import { useToday } from "@/calendar/ui";
 import { m } from "@/i18n";
 import { useService } from "@/infrastructure/di";
 import { Flows } from "@/infrastructure/flows";
@@ -21,7 +21,8 @@ const shelves = useService(ShelvesRepository);
 const notePaths = useService(NotePathService);
 const flows = useService(Flows);
 
-const today = computed(() => Clock.now().format("YYYY-MM-DD") as AnchorString);
+const today = useToday();
+const todayAnchor = computed(() => today.value.toAnchor());
 
 const indexVersion = useIndexVersion();
 
@@ -53,9 +54,9 @@ const effectiveShelf = computed(() => {
 const allJournals = computed(() => [...journals.find().list()]);
 
 const items = computed<readonly HomeItem[]>(() =>
-  buildHomeItems(config, allJournals.value, today.value, effectiveShelf.value, shelfByJournal.value, {
+  buildHomeItems(config, allJournals.value, todayAnchor.value, effectiveShelf.value, shelfByJournal.value, {
     pathForCustom: (journal) => {
-      const result = notePaths.pathForDate(journal.name, CalendarDate.fromAnchor(today.value));
+      const result = notePaths.pathForDate(journal.name, today.value);
       if (result.kind === "err") return null;
       const fullPath = result.value;
       const slash = fullPath.lastIndexOf("/");
@@ -67,7 +68,7 @@ const items = computed<readonly HomeItem[]>(() =>
 
 function open(item: HomeItem, event: MouseEvent): void {
   void flows.invoke(OpenDateFlow, {
-    anchor: today.value,
+    anchor: todayAnchor.value,
     journalNames: [...item.journalNames],
     openMode: defineOpenMode(event),
     // Without this the picker falls back to a center-screen modal, unlike every other place

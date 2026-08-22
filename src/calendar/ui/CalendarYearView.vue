@@ -1,12 +1,12 @@
 <script setup lang="ts">
 import { computed, toRaw } from "vue";
 
-import { CalendarDate } from "@/calendar";
 import type { MonthPeriod, OpenInterval, Period, YearPeriod } from "@/calendar";
 import UiButton from "@/ui/UiButton.vue";
 
 import CalendarGrid from "./CalendarGrid.vue";
 import { useCalendarGrid } from "./use-calendar-grid";
+import { useToday } from "./use-today";
 
 const props = defineProps<{
   outerPeriod: YearPeriod;
@@ -18,7 +18,7 @@ const emit = defineEmits<{ select: [cell: MonthPeriod, event: MouseEvent] }>();
 
 const cells = computed(() => [...toRaw(props.outerPeriod).months()]);
 
-const today = CalendarDate.today();
+const today = useToday();
 
 const grid = useCalendarGrid({
   cells,

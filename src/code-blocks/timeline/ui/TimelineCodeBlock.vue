@@ -7,13 +7,13 @@ import {
   advance,
   periodOfKind,
   window as periodWindow,
-  Clock,
   useResolvedTimelineNavigation,
   useResolvedWeekPlacement,
   type AnchorString,
   type Period,
   type PeriodKind,
 } from "@/calendar";
+import { useToday } from "@/calendar/ui";
 import { useService } from "@/infrastructure/di";
 import type { CodeBlockProps } from "@/infrastructure/host";
 import { JournalsIndex, JournalsRepository, useIndexVersion } from "@/journals";
@@ -49,10 +49,11 @@ const journal = computed(() =>
     }),
 );
 
+const today = useToday();
 const hostDate = computed<AnchorString>(() =>
   entry.value.match({
     some: (hostEntry) => hostEntry.anchor,
-    none: () => Clock.now().format("YYYY-MM-DD") as AnchorString,
+    none: () => today.value.toAnchor(),
   }),
 );
 

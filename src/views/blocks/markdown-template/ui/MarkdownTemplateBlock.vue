@@ -2,6 +2,7 @@
 import { computed, onMounted, onUnmounted, ref, watch } from "vue";
 
 import { CalendarDate, Clock } from "@/calendar";
+import { useToday } from "@/calendar/ui";
 import { m } from "@/i18n";
 import { useService } from "@/infrastructure/di";
 import { NotesService } from "@/infrastructure/host";
@@ -19,6 +20,7 @@ const props = defineProps<{ instanceId: BlockInstanceId; config: MarkdownTemplat
 const notes = useService(NotesService);
 const engine = useService(TemplateEngine);
 const viewContext = useViewContext();
+const today = useToday();
 
 const rawTemplate = ref<string | null>(null);
 const readFailed = ref(false);
@@ -49,7 +51,7 @@ const rendered = computed(() => {
   const clockSpec = { kind: "clock", value: Clock.now(), defaultFormat: "HH:mm" } as const;
   const context = TemplateContext.empty()
     .date("date", focus, "YYYY-MM-DD")
-    .date("current_date", CalendarDate.today(), "YYYY-MM-DD", { invertible: false })
+    .date("current_date", today.value, "YYYY-MM-DD", { invertible: false })
     .withSpec("time", clockSpec)
     .withSpec("current_time", clockSpec);
   return engine.renderString(rawTemplate.value, context);

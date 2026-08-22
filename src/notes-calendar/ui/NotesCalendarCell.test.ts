@@ -47,6 +47,7 @@ describe("NotesCalendarCell", () => {
     ({ teardown } = installTestCalendar());
   });
   afterEach(() => {
+    vi.useRealTimers();
     vi.restoreAllMocks();
     teardown();
     cleanup();
@@ -158,6 +159,30 @@ describe("NotesCalendarCell", () => {
       const { container } = mount({ period: may25, cell: stubApi() });
       const cell = container.querySelector<HTMLElement>(".notes-calendar-cell");
       expect(cell?.dataset.today).toBeUndefined();
+    });
+
+    it("drops the marker when the local date rolls over while the cell stays mounted", async () => {
+      vi.useFakeTimers();
+      vi.setSystemTime(new Date(2026, 4, 25, 23, 59, 0));
+      const { container } = mount({ period: may25, cell: stubApi() });
+      const cell = container.querySelector<HTMLElement>(".notes-calendar-cell");
+      expect(cell?.dataset.today).toBe("true");
+
+      await vi.advanceTimersByTimeAsync(61_000);
+
+      expect(cell?.dataset.today).toBeUndefined();
+    });
+
+    it("takes the marker when the local date rolls over onto the cell's period", async () => {
+      vi.useFakeTimers();
+      vi.setSystemTime(new Date(2026, 4, 24, 23, 59, 0));
+      const { container } = mount({ period: may25, cell: stubApi() });
+      const cell = container.querySelector<HTMLElement>(".notes-calendar-cell");
+      expect(cell?.dataset.today).toBeUndefined();
+
+      await vi.advanceTimersByTimeAsync(61_000);
+
+      expect(cell?.dataset.today).toBe("true");
     });
   });
 
