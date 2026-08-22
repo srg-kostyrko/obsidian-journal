@@ -4,6 +4,7 @@ import { describe, expect, it, vi } from "vitest";
 
 import { m } from "@/i18n";
 import { Flows } from "@/infrastructure/flows";
+import { AsyncResult } from "@/infrastructure/result";
 import { journalsCoreModule } from "@/journals/module";
 import { fixedJournal } from "@/journals/testing";
 import { testContainer } from "@/testing";
@@ -28,7 +29,7 @@ describe("FrontmatterSection", () => {
         data: { journals: { daily: fixedJournal("daily", { type: "day" }) } },
       });
       const flows = harness.resolve(Flows);
-      vi.spyOn(flows, "invoke").mockReturnValue({} as never);
+      vi.spyOn(flows, "invoke").mockReturnValue(AsyncResult.ok(undefined));
       harness.render(FrontmatterSection, { props: { journalName: "daily" } });
 
       await userEvent.click(screen.getByText(m.journal_edit_section_frontmatter()));

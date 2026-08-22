@@ -6,6 +6,7 @@ import { defineComponent, h, nextTick } from "vue";
 import { m } from "@/i18n";
 import type { Module } from "@/infrastructure/di";
 import { Flows } from "@/infrastructure/flows";
+import { AsyncResult } from "@/infrastructure/result";
 import { journalsCoreModule } from "@/journals/module";
 import { JournalsRepository } from "@/journals/repository";
 import { fixedJournal } from "@/journals/testing";
@@ -74,7 +75,7 @@ describe("JournalEditSubpage", () => {
 
     it("invokes RenameJournalFlow when the rename pencil is clicked", async () => {
       const flows = harness.resolve(Flows);
-      vi.spyOn(flows, "invoke").mockReturnValue({} as never);
+      vi.spyOn(flows, "invoke").mockReturnValue(AsyncResult.ok(undefined));
       harness.render(JournalEditSubpage, { props: { journalName: "daily", nav: noopNav } });
 
       await userEvent.click(screen.getByLabelText(m.journal_edit_rename_tooltip()));

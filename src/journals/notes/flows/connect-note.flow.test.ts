@@ -3,6 +3,7 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
 import { anchor } from "@/calendar/testing";
 import { m } from "@/i18n";
 import { Flows } from "@/infrastructure/flows";
+import { NoteNotFoundError } from "@/infrastructure/host";
 import type { VaultPath } from "@/infrastructure/host";
 import { AsyncResult } from "@/infrastructure/result";
 import { testContainer, type TestHarness } from "@/testing";
@@ -86,7 +87,7 @@ describe("ConnectNoteFlow", () => {
   it("does not report success when the connection fails", async () => {
     harness.host.putFile(SOURCE, "");
     vi.spyOn(harness.resolve(NoteConnectionService), "connect").mockReturnValue(
-      AsyncResult.err(new Error("boom")) as never,
+      AsyncResult.err(new NoteNotFoundError(SOURCE)),
     );
     const promise = harness.resolve(Flows).invoke(ConnectNoteFlow, { path: SOURCE });
 

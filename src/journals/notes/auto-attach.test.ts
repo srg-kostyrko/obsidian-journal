@@ -124,6 +124,7 @@ describe("AutoAttachService", () => {
     // renamed path held back to wait for one would never be adopted at all.
     it("attaches a renamed note without waiting for a metadata-changed that never comes", async () => {
       withholdUntilParsed(harness, "Inbox/draft.md" as VaultPath);
+      withholdUntilParsed(harness, "2026-05-19.md" as VaultPath);
       await harness.resolve(AutoAttachService).initialize();
 
       // Created at a non-matching path and renamed into a matching one before anything parsed it,

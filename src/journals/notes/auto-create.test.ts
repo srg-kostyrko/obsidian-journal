@@ -5,6 +5,7 @@ import type { VaultPath } from "@/infrastructure/host";
 import { AsyncResult } from "@/infrastructure/result";
 import { testContainer, type TestHarness } from "@/testing";
 
+import { JournalNotFoundError } from "../errors";
 import { JournalsIndex } from "../journals-index";
 import { journalsCoreModule } from "../module";
 import { fixedJournal } from "../testing";
@@ -118,7 +119,10 @@ describe("AutoCreateService", () => {
           ended: fixedJournal(
             "ended",
             { type: "day" },
-            { autoCreate: true, timeline: { start: "2026-01-01", end: { kind: "date", date: "2026-01-31" } } as never },
+            {
+              autoCreate: true,
+              timeline: { start: anchor("2026-01-01"), end: { kind: "date", date: anchor("2026-01-31") } },
+            },
           ),
         },
       },
@@ -139,7 +143,7 @@ describe("AutoCreateService", () => {
           upcoming: fixedJournal(
             "upcoming",
             { type: "day" },
-            { autoCreate: true, timeline: { start: "2026-06-01", end: { kind: "never" } } as never },
+            { autoCreate: true, timeline: { start: anchor("2026-06-01"), end: { kind: "never" } } },
           ),
         },
       },
@@ -163,7 +167,7 @@ describe("AutoCreateService", () => {
       },
     });
     vi.spyOn(harness.resolve(NoteCreationService), "ensureNote").mockImplementationOnce(() =>
-      AsyncResult.err(new Error("forced failure") as never),
+      AsyncResult.err(new JournalNotFoundError("a")),
     );
     harness.resolve(JournalsIndex).markReady();
 

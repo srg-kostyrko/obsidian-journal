@@ -6,6 +6,7 @@ import { DayPeriod } from "@/calendar";
 import { anchor, date } from "@/calendar/testing";
 import { formatConjunction, m } from "@/i18n";
 import { Flows } from "@/infrastructure/flows";
+import { AsyncResult } from "@/infrastructure/result";
 import { JournalsRepository } from "@/journals";
 import type { JournalConfig } from "@/journals";
 import { journalsCoreModule } from "@/journals/module";
@@ -225,7 +226,7 @@ describe("SequenceSection", () => {
       });
 
       it("invokes the digit flow with no index when adding", async () => {
-        const invoke = vi.spyOn(harness.resolve(Flows), "invoke").mockReturnValue({} as never);
+        const invoke = vi.spyOn(harness.resolve(Flows), "invoke").mockReturnValue(AsyncResult.ok(undefined));
         await userEvent.click(screen.getByText(m.journal_edit_section_sequential_numbers()));
 
         await userEvent.click(screen.getByLabelText(m.journal_sequence_digit_add()));
@@ -256,7 +257,7 @@ describe("SequenceSection", () => {
       });
 
       it("invokes the digit flow with the row index when editing", async () => {
-        const invoke = vi.spyOn(harness.resolve(Flows), "invoke").mockReturnValue({} as never);
+        const invoke = vi.spyOn(harness.resolve(Flows), "invoke").mockReturnValue(AsyncResult.ok(undefined));
         await userEvent.click(screen.getByText(m.journal_edit_section_sequential_numbers()));
 
         await userEvent.click(screen.getAllByLabelText(m.journal_sequence_digit_edit())[1]);
