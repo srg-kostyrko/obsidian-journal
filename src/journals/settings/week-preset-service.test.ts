@@ -28,7 +28,11 @@ function weekly(patch: { addStartDate?: boolean; addEndDate?: boolean } = {}): R
 
 function seedWeek(harness: TestHarness, path: string, anchorDate: string, endDate?: string): void {
   const vaultPath = path as VaultPath;
-  harness.host.putFile(vaultPath, "", { journal: "weekly", "journal-date": anchorDate });
+  harness.host.putFile(vaultPath, "", {
+    journal: "weekly",
+    "journal-date": anchorDate,
+    ...(endDate !== undefined && { "journal-end-date": endDate }),
+  });
   harness.resolve(JournalsIndex).register({
     journalName: "weekly",
     anchor: anchorDate as AnchorString,
@@ -45,12 +49,12 @@ function frontmatterOf(harness: TestHarness, path: string): Record<string, unkno
 // new raw lands on "disk", then reload() refreshes every slice from it. Sync rewrites the WHOLE
 // file, so the journals collection must ride along unchanged — omitting it here would make
 // reload() see no journals at all and wipe the repository, not merely leave the calendar synced.
-async function syncCalendar(
-  harness: TestHarness,
-  journals: Record<string, JournalConfig>,
-  next: typeof ISO | typeof WESTERN,
-): Promise<void> {
-  await harness.data.save({ version: CURRENT_VERSION, journals, calendar: next, calendarDisplay: {} });
+// Reading the current raw back (rather than taking `journals` as a parameter) means there is
+// nothing for a caller to forget to keep in sync with its own testContainer seed.
+async function syncCalendar(harness: TestHarness, next: typeof ISO | typeof WESTERN): Promise<void> {
+  const loaded = await harness.data.load();
+  const current = loaded.isOk() ? (loaded.value as Record<string, unknown>) : {};
+  await harness.data.save({ ...current, version: CURRENT_VERSION, calendar: next });
   await harness.settings.reload();
 }
 
@@ -230,7 +234,7 @@ describe("WeekPresetService", () => {
       it("re-anchors a weekly note onto the synced grid", async () => {
         seedWeek(harness, "week/2026-W23.md", "2026-06-01");
 
-        await syncCalendar(harness, journals, WESTERN);
+        await syncCalendar(harness, WESTERN);
 
         await vi.waitFor(() => expect(frontmatterOf(harness, "week/2026-W23.md")?.["journal-date"]).toBe("2026-05-31"));
       });
@@ -239,7 +243,7 @@ describe("WeekPresetService", () => {
         seedWeek(harness, "week/2026-W23.md", "2026-06-01");
         const spy = vi.spyOn(harness.resolve(NotesService), "updateFrontmatter");
 
-        await syncCalendar(harness, journals, ISO);
+        await syncCalendar(harness, ISO);
 
         expect(spy).not.toHaveBeenCalled();
       });
@@ -258,7 +262,7 @@ describe("WeekPresetService", () => {
       });
       seedWeek(harness, "week/2025-W45.md", "2025-11-02");
 
-      await syncCalendar(harness, journals, ISO);
+      await syncCalendar(harness, ISO);
 
       // 2025-10-27 is the containment answer — the ISO week holding the old Sunday anchor.
       await vi.waitFor(() => expect(frontmatterOf(harness, "week/2025-W45.md")?.["journal-date"]).toBe("2025-11-03"));
@@ -269,7 +273,7 @@ describe("WeekPresetService", () => {
       const harness = await testContainer({ modules: MODULES, data: { journals, calendar: ISO, calendarDisplay: {} } });
       seedWeek(harness, "week/2026-W23.md", "2026-06-01");
 
-      await syncCalendar(harness, journals, WESTERN);
+      await syncCalendar(harness, WESTERN);
 
       await vi.waitFor(() =>
         expect(frontmatterOf(harness, "week/2026-W23.md")?.["journal-end-date"]).toBe("2026-06-06"),

@@ -64,12 +64,12 @@ describe("AddJournalFlow", () => {
   });
 
   it("maps a name-taken error to JournalLifecycleFlowError", async () => {
-    const withDaily = await testContainer({
+    harness = await testContainer({
       modules: [journalsCoreModule, journalsSettingsCoreModule, journalsSettingsUiModule],
       data: { journals: { daily: fixedJournal("daily", { type: "day" }) } },
     });
-    const promise = withDaily.resolve(Flows).invoke(AddJournalFlow, undefined);
-    withDaily.modals.lastOpen<void, { name: string; write: { type: "day" } }>().submit({
+    const promise = harness.resolve(Flows).invoke(AddJournalFlow, undefined);
+    harness.modals.lastOpen<void, { name: string; write: { type: "day" } }>().submit({
       name: "daily",
       write: { type: "day" },
     });
