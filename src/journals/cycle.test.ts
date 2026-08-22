@@ -59,26 +59,27 @@ describe("CycleService", () => {
     });
 
     describe("custom monthly", () => {
-      it("lands on the configured anchor for dates inside the first step", async () => {
-        const { resolve } = await testContainer({
-          modules: [journalsCoreModule],
-          data: { journals: { s: customJournal("s", "month", 1, "2024-01-15") } },
+      describe("anchored at 2024-01-15", () => {
+        let harness: TestHarness;
+
+        beforeEach(async () => {
+          harness = await testContainer({
+            modules: [journalsCoreModule],
+            data: { journals: { s: customJournal("s", "month", 1, "2024-01-15") } },
+          });
         });
 
-        const result = resolve(CycleService).anchorOf("s", date("2024-01-20"));
+        it("lands on the configured anchor for dates inside the first step", () => {
+          const result = harness.resolve(CycleService).anchorOf("s", date("2024-01-20"));
 
-        expect(result.isSome() && result.value).toBe("2024-01-15");
-      });
-
-      it("steps forward to the next anchor for a date past the first interval end", async () => {
-        const { resolve } = await testContainer({
-          modules: [journalsCoreModule],
-          data: { journals: { s: customJournal("s", "month", 1, "2024-01-15") } },
+          expect(result.isSome() && result.value).toBe("2024-01-15");
         });
 
-        const result = resolve(CycleService).anchorOf("s", date("2024-02-20"));
+        it("steps forward to the next anchor for a date past the first interval end", () => {
+          const result = harness.resolve(CycleService).anchorOf("s", date("2024-02-20"));
 
-        expect(result.isSome() && result.value).toBe("2024-02-15");
+          expect(result.isSome() && result.value).toBe("2024-02-15");
+        });
       });
 
       it("clamps a day-30 anchor to the last day of a shorter month", async () => {
@@ -366,58 +367,42 @@ describe("CycleService", () => {
   });
 
   describe("custom variant extension awareness", () => {
-    it("nextAnchor after an extended interval starts at endDate + 1 day", async () => {
-      const { resolve } = await testContainer({
-        modules: [journalsCoreModule],
-        data: { journals: { s: customJournal("s", "week", 1, "2024-01-01") } },
-      });
-      resolve(JournalsIndex).register({
-        journalName: "s",
-        anchor: anchor("2024-01-01"),
-        path: "S/1.md" as VaultPath,
-        endDate: anchor("2024-01-14"), // extended through Jan 14 instead of Jan 7
-      });
+    describe("interval anchored 2024-01-01, extended through 2024-01-14", () => {
+      let harness: TestHarness;
 
-      const next = resolve(CycleService).nextAnchor("s", anchor("2024-01-01"));
-
-      expect(next.isSome() && next.value).toBe("2024-01-15");
-    });
-
-    it("anchorOf maps a date inside an extended interval to that interval's anchor", async () => {
-      const { resolve } = await testContainer({
-        modules: [journalsCoreModule],
-        data: { journals: { s: customJournal("s", "week", 1, "2024-01-01") } },
-      });
-      resolve(JournalsIndex).register({
-        journalName: "s",
-        anchor: anchor("2024-01-01"),
-        path: "S/1.md" as VaultPath,
-        endDate: anchor("2024-01-14"), // extended through Jan 14 instead of Jan 7
+      beforeEach(async () => {
+        harness = await testContainer({
+          modules: [journalsCoreModule],
+          data: { journals: { s: customJournal("s", "week", 1, "2024-01-01") } },
+        });
+        harness.resolve(JournalsIndex).register({
+          journalName: "s",
+          anchor: anchor("2024-01-01"),
+          path: "S/1.md" as VaultPath,
+          endDate: anchor("2024-01-14"), // extended through Jan 14 instead of Jan 7
+        });
       });
 
-      // 2024-01-10 lies in the extended first interval [2024-01-01, 2024-01-14], not a
-      // phantom computed week starting 2024-01-08.
-      const result = resolve(CycleService).anchorOf("s", date("2024-01-10"));
+      it("nextAnchor after an extended interval starts at endDate + 1 day", () => {
+        const next = harness.resolve(CycleService).nextAnchor("s", anchor("2024-01-01"));
 
-      expect(result.isSome() && result.value).toBe("2024-01-01");
-    });
-
-    it("anchorOf steps past an extended interval to the next computed anchor", async () => {
-      const { resolve } = await testContainer({
-        modules: [journalsCoreModule],
-        data: { journals: { s: customJournal("s", "week", 1, "2024-01-01") } },
-      });
-      resolve(JournalsIndex).register({
-        journalName: "s",
-        anchor: anchor("2024-01-01"),
-        path: "S/1.md" as VaultPath,
-        endDate: anchor("2024-01-14"),
+        expect(next.isSome() && next.value).toBe("2024-01-15");
       });
 
-      // The interval after the extension starts 2024-01-15; 2024-01-20 falls inside it.
-      const result = resolve(CycleService).anchorOf("s", date("2024-01-20"));
+      it("anchorOf maps a date inside an extended interval to that interval's anchor", () => {
+        // 2024-01-10 lies in the extended first interval [2024-01-01, 2024-01-14], not a
+        // phantom computed week starting 2024-01-08.
+        const result = harness.resolve(CycleService).anchorOf("s", date("2024-01-10"));
 
-      expect(result.isSome() && result.value).toBe("2024-01-15");
+        expect(result.isSome() && result.value).toBe("2024-01-01");
+      });
+
+      it("anchorOf steps past an extended interval to the next computed anchor", () => {
+        // The interval after the extension starts 2024-01-15; 2024-01-20 falls inside it.
+        const result = harness.resolve(CycleService).anchorOf("s", date("2024-01-20"));
+
+        expect(result.isSome() && result.value).toBe("2024-01-15");
+      });
     });
 
     it("anchorOf maps a date inside an extended interval that precedes the configured anchor", async () => {
@@ -476,51 +461,51 @@ describe("CycleService", () => {
   });
 
   describe("countRepeats", () => {
-    it("counts intervals between two anchors for fixed weekly", async () => {
-      const { resolve } = await testContainer({
-        modules: [journalsCoreModule],
-        data: { journals: { w: fixedJournal("w", { type: "week" }) } },
+    describe("fixed weekly", () => {
+      let harness: TestHarness;
+
+      beforeEach(async () => {
+        harness = await testContainer({
+          modules: [journalsCoreModule],
+          data: { journals: { w: fixedJournal("w", { type: "week" }) } },
+        });
       });
 
-      // 2024-01-01 (Mon) and 2024-01-22 (Mon) are 3 weeks apart.
-      const result = resolve(CycleService).countRepeats("w", anchor("2024-01-01"), anchor("2024-01-22"));
+      it("counts intervals between two anchors for fixed weekly", () => {
+        // 2024-01-01 (Mon) and 2024-01-22 (Mon) are 3 weeks apart.
+        const result = harness.resolve(CycleService).countRepeats("w", anchor("2024-01-01"), anchor("2024-01-22"));
 
-      expect(result.isSome() && result.value).toBe(3);
-    });
-
-    it("returns None when the from anchor does not parse", async () => {
-      const { resolve } = await testContainer({
-        modules: [journalsCoreModule],
-        data: { journals: { w: fixedJournal("w", { type: "week" }) } },
+        expect(result.isSome() && result.value).toBe(3);
       });
 
-      const result = resolve(CycleService).countRepeats("w", anchor(""), anchor("2024-01-22"));
+      it("returns None when the from anchor does not parse", () => {
+        const result = harness.resolve(CycleService).countRepeats("w", anchor(""), anchor("2024-01-22"));
 
-      expect(result.isNone()).toBe(true);
-    });
-
-    it("returns None when the to anchor does not parse", async () => {
-      const { resolve } = await testContainer({
-        modules: [journalsCoreModule],
-        data: { journals: { w: fixedJournal("w", { type: "week" }) } },
+        expect(result.isNone()).toBe(true);
       });
 
-      const result = resolve(CycleService).countRepeats("w", anchor("2024-01-01"), anchor("nonsense"));
+      it("returns None when the to anchor does not parse", () => {
+        const result = harness.resolve(CycleService).countRepeats("w", anchor("2024-01-01"), anchor("nonsense"));
 
-      expect(result.isNone()).toBe(true);
-    });
-
-    it("counts whole weeks from a mid-week start date", async () => {
-      const { resolve } = await testContainer({
-        modules: [journalsCoreModule],
-        data: { journals: { w: fixedJournal("w", { type: "week" }) } },
+        expect(result.isNone()).toBe(true);
       });
 
-      // Wed 2024-01-03 sits in the week anchored Mon 2024-01-01; the week anchored
-      // 2024-01-15 is two weeks on, however far into its week the start date falls.
-      const result = resolve(CycleService).countRepeats("w", anchor("2024-01-03"), anchor("2024-01-15"));
+      it("counts whole weeks from a mid-week start date", () => {
+        // Wed 2024-01-03 sits in the week anchored Mon 2024-01-01; the week anchored
+        // 2024-01-15 is two weeks on, however far into its week the start date falls.
+        const result = harness.resolve(CycleService).countRepeats("w", anchor("2024-01-03"), anchor("2024-01-15"));
 
-      expect(result.isSome() && result.value).toBe(2);
+        expect(result.isSome() && result.value).toBe(2);
+      });
+
+      it("returns equal magnitude regardless of direction", () => {
+        const cycle = harness.resolve(CycleService);
+
+        const forward = unwrap(cycle.countRepeats("w", anchor("2024-01-01"), anchor("2024-01-22")));
+        const backward = unwrap(cycle.countRepeats("w", anchor("2024-01-22"), anchor("2024-01-01")));
+
+        expect(Math.abs(forward)).toBe(Math.abs(backward));
+      });
     });
 
     it("counts whole months from a mid-month start date", async () => {
@@ -532,19 +517,6 @@ describe("CycleService", () => {
       const result = resolve(CycleService).countRepeats("m", anchor("2024-06-15"), anchor("2024-08-01"));
 
       expect(result.isSome() && result.value).toBe(2);
-    });
-
-    it("returns equal magnitude regardless of direction", async () => {
-      const { resolve } = await testContainer({
-        modules: [journalsCoreModule],
-        data: { journals: { w: fixedJournal("w", { type: "week" }) } },
-      });
-      const cycle = resolve(CycleService);
-
-      const forward = unwrap(cycle.countRepeats("w", anchor("2024-01-01"), anchor("2024-01-22")));
-      const backward = unwrap(cycle.countRepeats("w", anchor("2024-01-22"), anchor("2024-01-01")));
-
-      expect(Math.abs(forward)).toBe(Math.abs(backward));
     });
 
     it("counts whole intervals from an off-anchor start for a custom cycle", async () => {
@@ -623,37 +595,33 @@ describe("CycleService", () => {
   });
 
   describe("anchorAtOffset", () => {
-    it("advances a custom anchor forward by the given number of intervals", async () => {
-      const { resolve } = await testContainer({
-        modules: [journalsCoreModule],
-        data: { journals: { s: customJournal("s", "week", 1, "2024-01-01") } },
+    describe("custom weekly anchored 2024-01-01", () => {
+      let harness: TestHarness;
+
+      beforeEach(async () => {
+        harness = await testContainer({
+          modules: [journalsCoreModule],
+          data: { journals: { s: customJournal("s", "week", 1, "2024-01-01") } },
+        });
       });
 
-      const result = resolve(CycleService).anchorAtOffset("s", anchor("2024-01-01"), 3);
+      it("advances a custom anchor forward by the given number of intervals", () => {
+        const result = harness.resolve(CycleService).anchorAtOffset("s", anchor("2024-01-01"), 3);
 
-      expect(result.isSome() && result.value).toBe("2024-01-22");
-    });
-
-    it("steps a custom anchor backward for a negative offset", async () => {
-      const { resolve } = await testContainer({
-        modules: [journalsCoreModule],
-        data: { journals: { s: customJournal("s", "week", 1, "2024-01-01") } },
+        expect(result.isSome() && result.value).toBe("2024-01-22");
       });
 
-      const result = resolve(CycleService).anchorAtOffset("s", anchor("2024-01-22"), -3);
+      it("steps a custom anchor backward for a negative offset", () => {
+        const result = harness.resolve(CycleService).anchorAtOffset("s", anchor("2024-01-22"), -3);
 
-      expect(result.isSome() && result.value).toBe("2024-01-01");
-    });
-
-    it("returns the same anchor for a zero offset", async () => {
-      const { resolve } = await testContainer({
-        modules: [journalsCoreModule],
-        data: { journals: { s: customJournal("s", "week", 1, "2024-01-01") } },
+        expect(result.isSome() && result.value).toBe("2024-01-01");
       });
 
-      const result = resolve(CycleService).anchorAtOffset("s", anchor("2024-01-08"), 0);
+      it("returns the same anchor for a zero offset", () => {
+        const result = harness.resolve(CycleService).anchorAtOffset("s", anchor("2024-01-08"), 0);
 
-      expect(result.isSome() && result.value).toBe("2024-01-08");
+        expect(result.isSome() && result.value).toBe("2024-01-08");
+      });
     });
 
     it("inverts countRepeats for a fixed cycle", async () => {
@@ -667,26 +635,27 @@ describe("CycleService", () => {
       expect(result.isSome() && result.value).toBe("2024-01-04");
     });
 
-    it("keeps a month-end anchor's phase across many intervals", async () => {
-      const { resolve } = await testContainer({
-        modules: [journalsCoreModule],
-        data: { journals: { s: customJournal("s", "month", 2, "2024-01-31") } },
+    describe("custom monthly anchored 2024-01-31, every 2 months", () => {
+      let harness: TestHarness;
+
+      beforeEach(async () => {
+        harness = await testContainer({
+          modules: [journalsCoreModule],
+          data: { journals: { s: customJournal("s", "month", 2, "2024-01-31") } },
+        });
       });
 
-      const result = resolve(CycleService).anchorAtOffset("s", anchor("2024-01-31"), 7);
+      it("keeps a month-end anchor's phase across many intervals", () => {
+        const result = harness.resolve(CycleService).anchorAtOffset("s", anchor("2024-01-31"), 7);
 
-      expect(result.isSome() && result.value).toBe("2025-03-31");
-    });
-
-    it("returns an off-grid custom anchor unchanged for a zero offset", async () => {
-      const { resolve } = await testContainer({
-        modules: [journalsCoreModule],
-        data: { journals: { s: customJournal("s", "month", 2, "2024-01-31") } },
+        expect(result.isSome() && result.value).toBe("2025-03-31");
       });
 
-      const result = resolve(CycleService).anchorAtOffset("s", anchor("2024-01-01"), 0);
+      it("returns an off-grid custom anchor unchanged for a zero offset", () => {
+        const result = harness.resolve(CycleService).anchorAtOffset("s", anchor("2024-01-01"), 0);
 
-      expect(result.isSome() && result.value).toBe("2024-01-01");
+        expect(result.isSome() && result.value).toBe("2024-01-01");
+      });
     });
 
     it("snaps an off-grid start onto the fixed cycle before stepping", async () => {
@@ -721,48 +690,50 @@ describe("CycleService", () => {
       expect(result.isSome() && result.value).toBe(true);
     });
 
-    it("rejects a non-first-of-month date for a fixed monthly journal", async () => {
-      const { resolve } = await testContainer({
-        modules: [journalsCoreModule],
-        data: { journals: { m: fixedJournal("m", { type: "month" }) } },
+    describe("fixed monthly", () => {
+      let harness: TestHarness;
+
+      beforeEach(async () => {
+        harness = await testContainer({
+          modules: [journalsCoreModule],
+          data: { journals: { m: fixedJournal("m", { type: "month" }) } },
+        });
       });
 
-      const result = resolve(CycleService).isCanonicalAnchor("m", anchor("2024-06-15"));
+      it("rejects a non-first-of-month date for a fixed monthly journal", () => {
+        const result = harness.resolve(CycleService).isCanonicalAnchor("m", anchor("2024-06-15"));
 
-      expect(result.isSome() && result.value).toBe(false);
+        expect(result.isSome() && result.value).toBe(false);
+      });
+
+      it("accepts the first-of-month date for a fixed monthly journal", () => {
+        const result = harness.resolve(CycleService).isCanonicalAnchor("m", anchor("2024-06-01"));
+
+        expect(result.isSome() && result.value).toBe(true);
+      });
     });
 
-    it("accepts the first-of-month date for a fixed monthly journal", async () => {
-      const { resolve } = await testContainer({
-        modules: [journalsCoreModule],
-        data: { journals: { m: fixedJournal("m", { type: "month" }) } },
+    describe("custom monthly anchored 2024-01-15", () => {
+      let harness: TestHarness;
+
+      beforeEach(async () => {
+        harness = await testContainer({
+          modules: [journalsCoreModule],
+          data: { journals: { s: customJournal("s", "month", 1, "2024-01-15") } },
+        });
       });
 
-      const result = resolve(CycleService).isCanonicalAnchor("m", anchor("2024-06-01"));
+      it("rejects an off-grid date for a custom interval journal", () => {
+        const result = harness.resolve(CycleService).isCanonicalAnchor("s", anchor("2024-02-20"));
 
-      expect(result.isSome() && result.value).toBe(true);
-    });
-
-    it("rejects an off-grid date for a custom interval journal", async () => {
-      const { resolve } = await testContainer({
-        modules: [journalsCoreModule],
-        data: { journals: { s: customJournal("s", "month", 1, "2024-01-15") } },
+        expect(result.isSome() && result.value).toBe(false);
       });
 
-      const result = resolve(CycleService).isCanonicalAnchor("s", anchor("2024-02-20"));
+      it("accepts an on-grid date for a custom interval journal", () => {
+        const result = harness.resolve(CycleService).isCanonicalAnchor("s", anchor("2024-02-15"));
 
-      expect(result.isSome() && result.value).toBe(false);
-    });
-
-    it("accepts an on-grid date for a custom interval journal", async () => {
-      const { resolve } = await testContainer({
-        modules: [journalsCoreModule],
-        data: { journals: { s: customJournal("s", "month", 1, "2024-01-15") } },
+        expect(result.isSome() && result.value).toBe(true);
       });
-
-      const result = resolve(CycleService).isCanonicalAnchor("s", anchor("2024-02-15"));
-
-      expect(result.isSome() && result.value).toBe(true);
     });
 
     it("returns None for an unknown journal", async () => {
