@@ -1,16 +1,8 @@
-import { afterEach, beforeEach, describe, expect, it } from "vitest";
-
-import { installTestCalendar } from "@/calendar/testing";
+import { describe, expect, it } from "vitest";
 
 import { formatToRegexp } from "./format-to-regexp";
 
 describe("formatToRegexp", () => {
-  let teardown: () => void;
-  beforeEach(() => {
-    ({ teardown } = installTestCalendar());
-  });
-  afterEach(() => teardown());
-
   it("matches an ISO date embedded in a longer title", () => {
     const re = formatToRegexp("YYYY-MM-DD");
     const match = "Daily note 2026-06-01 draft".match(re);

@@ -1,49 +1,49 @@
-import { describe, expect, it, vi } from "vitest";
+import { beforeEach, describe, expect, it, vi } from "vitest";
 
-import { Container } from "@/infrastructure/di";
 import { Flows } from "@/infrastructure/flows";
-import { NoticeService } from "@/infrastructure/host";
-import { ModalService } from "@/infrastructure/host/modals";
-import { FakeModalService } from "@/infrastructure/host/modals/testing";
-import { FakeNoticeService } from "@/infrastructure/host/testing";
-import { LoggerModule } from "@/infrastructure/logger";
-import { AsyncResult } from "@/infrastructure/result";
+import { testContainer, type TestHarness } from "@/testing";
 
-import { BulkAddService } from "../bulk-add-service";
+import { journalsCoreModule } from "../../../module";
+import { fixedJournal } from "../../../testing";
 import { defaultBulkAddParameters } from "../config";
 
 import { BulkAddFlow } from "./bulk-add.flow";
 
-function build() {
-  const c = new Container();
-  c.addModule(LoggerModule);
-  const service = { plan: vi.fn(() => AsyncResult.ok({ notes: [] })) };
-  const modals = new FakeModalService();
-  c.register(ModalService).useValue(modals as unknown as ModalService);
-  c.register(BulkAddService).useValue(service as unknown as BulkAddService);
-  c.register(NoticeService).useValue(new FakeNoticeService());
-  c.register(Flows).useClass(Flows);
-  c.register(BulkAddFlow).useClass(BulkAddFlow);
-  return { flows: c.resolve(Flows), modals, service };
-}
+import type { BulkPlan } from "../bulk-add-service";
+import type { BulkAddParameters } from "../config";
 
 describe("BulkAddFlow", () => {
+  let harness: TestHarness;
+
+  beforeEach(async () => {
+    harness = await testContainer({
+      modules: [journalsCoreModule],
+      data: { journals: { daily: fixedJournal("daily", { type: "day" }) } },
+    });
+  });
+
   it("plans with the configured parameters then opens the process modal", async () => {
-    const { flows, modals, service } = build();
-    const promise = flows.invoke(BulkAddFlow, { journalName: "daily" });
-    modals.lastOpen().submit({ ...defaultBulkAddParameters(), folder: "src" });
-    await vi.waitFor(() => expect(modals.opens).toHaveLength(2));
-    expect(service.plan).toHaveBeenCalledWith("daily", expect.objectContaining({ folder: "src" }));
-    modals.lastOpen<unknown, void>().submit(undefined);
+    harness.host.putFolder("src");
+    const promise = harness.resolve(Flows).invoke(BulkAddFlow, { journalName: "daily" });
+
+    harness.modals.lastOpen().submit({ ...defaultBulkAddParameters(), folder: "src" });
+    await vi.waitFor(() => expect(harness.modals.opens).toHaveLength(2));
+
+    const opened = harness.modals.lastOpen<{ journalName: string; plan: BulkPlan; parameters: BulkAddParameters }>();
+    expect(opened.props.plan).toEqual({ notes: [] });
+    expect(opened.props.parameters).toEqual(expect.objectContaining({ folder: "src" }));
+
+    harness.modals.lastOpen<unknown, void>().submit(undefined);
     await promise;
   });
 
   it("aborts cleanly when the configure modal is cancelled", async () => {
-    const { flows, modals, service } = build();
-    const promise = flows.invoke(BulkAddFlow, { journalName: "daily" });
-    modals.lastOpen().cancel();
+    const promise = harness.resolve(Flows).invoke(BulkAddFlow, { journalName: "daily" });
+
+    harness.modals.lastOpen().cancel();
     const result = await promise;
+
     expect(result.kind).toBe("err");
-    expect(service.plan).not.toHaveBeenCalled();
+    expect(harness.modals.opens).toHaveLength(1);
   });
 });
