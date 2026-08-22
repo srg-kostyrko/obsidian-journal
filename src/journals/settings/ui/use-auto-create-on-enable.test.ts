@@ -1,32 +1,22 @@
-import { beforeEach, describe, expect, it } from "vitest";
+import { beforeEach, describe, expect, it, vi, type MockInstance } from "vitest";
 import { defineComponent, nextTick, ref, type Ref } from "vue";
 
 import { journalsCoreModule } from "@/journals/module";
 import { AutoCreateService } from "@/journals/notes/auto-create";
 import { fixedJournal } from "@/journals/testing";
-import { overrideWith, testContainer, type TestHarness } from "@/testing";
+import { testContainer, type TestHarness } from "@/testing";
 
 import { useAutoCreateOnEnable } from "./use-auto-create-on-enable";
 
 import type { JournalConfig } from "../../config";
 
-class RecordingAutoCreate {
-  readonly created: string[] = [];
-  async createCurrent(name: string): Promise<void> {
-    this.created.push(name);
-  }
-}
-
 describe("useAutoCreateOnEnable", () => {
   let harness: TestHarness;
-  let recorder: RecordingAutoCreate;
+  let createCurrent: MockInstance<AutoCreateService["createCurrent"]>;
 
   beforeEach(async () => {
-    recorder = new RecordingAutoCreate();
-    harness = await testContainer({
-      modules: [journalsCoreModule],
-      overrides: [overrideWith(AutoCreateService, recorder as unknown as AutoCreateService)],
-    });
+    harness = await testContainer({ modules: [journalsCoreModule] });
+    createCurrent = vi.spyOn(harness.resolve(AutoCreateService), "createCurrent").mockResolvedValue(undefined);
   });
 
   function mount(config: Ref<JournalConfig>): void {
@@ -46,7 +36,7 @@ describe("useAutoCreateOnEnable", () => {
     config.value.autoCreate = true;
     await nextTick();
 
-    expect(recorder.created).toEqual(["Daily"]);
+    expect(createCurrent).toHaveBeenCalledWith("Daily");
   });
 
   it("does nothing when the toggle switches off", async () => {
@@ -56,7 +46,7 @@ describe("useAutoCreateOnEnable", () => {
     config.value.autoCreate = false;
     await nextTick();
 
-    expect(recorder.created).toEqual([]);
+    expect(createCurrent).not.toHaveBeenCalled();
   });
 
   it("does nothing when an unrelated field changes", async () => {
@@ -66,7 +56,7 @@ describe("useAutoCreateOnEnable", () => {
     config.value.confirmCreation = true;
     await nextTick();
 
-    expect(recorder.created).toEqual([]);
+    expect(createCurrent).not.toHaveBeenCalled();
   });
 
   it("does nothing on mount when the toggle is already on", async () => {
@@ -75,6 +65,6 @@ describe("useAutoCreateOnEnable", () => {
 
     await nextTick();
 
-    expect(recorder.created).toEqual([]);
+    expect(createCurrent).not.toHaveBeenCalled();
   });
 });

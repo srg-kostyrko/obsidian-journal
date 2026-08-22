@@ -1,9 +1,9 @@
 import userEvent from "@testing-library/user-event";
 import { screen } from "@testing-library/vue";
-import { describe, expect, it } from "vitest";
+import { beforeEach, describe, expect, it } from "vitest";
 
 import { dateModificationsModal } from "@/templates/ui/modals";
-import { testContainer } from "@/testing";
+import { testContainer, type TestHarness } from "@/testing";
 
 import { variableReferenceModal } from "./modals";
 import VariableReferenceHint from "./VariableReferenceHint.vue";
@@ -17,8 +17,13 @@ const baseProps = {
 };
 
 describe("VariableReferenceHint", () => {
+  let harness: TestHarness;
+
+  beforeEach(async () => {
+    harness = await testContainer();
+  });
+
   it("opens the variable reference modal with forwarded props", async () => {
-    const harness = await testContainer();
     harness.render(VariableReferenceHint, { props: baseProps });
 
     await userEvent.click(screen.getByRole("link"));
@@ -30,7 +35,6 @@ describe("VariableReferenceHint", () => {
   });
 
   it("supplies an openModifications callback that opens the date modifications modal", async () => {
-    const harness = await testContainer();
     harness.render(VariableReferenceHint, { props: baseProps });
 
     await userEvent.click(screen.getByRole("link"));
@@ -41,7 +45,6 @@ describe("VariableReferenceHint", () => {
   });
 
   it("forwards numberingVariableNames when provided", async () => {
-    const harness = await testContainer();
     harness.render(VariableReferenceHint, { props: { ...baseProps, numberingVariableNames: ["week_no"] } });
 
     await userEvent.click(screen.getByRole("link"));
