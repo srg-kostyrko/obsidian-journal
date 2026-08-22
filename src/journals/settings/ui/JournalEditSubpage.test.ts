@@ -1,6 +1,6 @@
 import userEvent from "@testing-library/user-event";
 import { screen, waitFor, type RenderResult } from "@testing-library/vue";
-import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
+import { afterEach, beforeEach, describe, expect, it, vi, type Mock } from "vitest";
 import { defineComponent, h, nextTick } from "vue";
 
 import { m } from "@/i18n";
@@ -9,6 +9,7 @@ import { Flows } from "@/infrastructure/flows";
 import { journalsCoreModule } from "@/journals/module";
 import { JournalsRepository } from "@/journals/repository";
 import { fixedJournal } from "@/journals/testing";
+import { journalsUiModule } from "@/journals/ui-module";
 import type { SubpageNav } from "@/settings";
 import { testContainer, type TestHarness } from "@/testing";
 
@@ -16,8 +17,6 @@ import { RenameJournalFlow } from "../flows/rename-journal.flow";
 
 import { JournalEditSectionToken, defineJournalEditSection } from "./journal-edit-section";
 import JournalEditSubpage from "./JournalEditSubpage.vue";
-
-import type { Mock } from "vitest";
 
 beforeEach(() => {
   vi.useFakeTimers({ toFake: ["Date"] });
@@ -37,7 +36,7 @@ describe("JournalEditSubpage", () => {
   describe("with a weekly journal", () => {
     beforeEach(async () => {
       const harness = await testContainer({
-        modules: [journalsCoreModule],
+        modules: [journalsCoreModule, journalsUiModule],
         data: { journals: { work: fixedJournal("work", { type: "week" }) } },
       });
       harness.render(JournalEditSubpage, { props: { journalName: "work", nav: noopNav } });
@@ -57,7 +56,7 @@ describe("JournalEditSubpage", () => {
 
     beforeEach(async () => {
       harness = await testContainer({
-        modules: [journalsCoreModule],
+        modules: [journalsCoreModule, journalsUiModule],
         data: { journals: { daily: fixedJournal("daily", { type: "day" }) } },
       });
     });
@@ -103,7 +102,7 @@ describe("JournalEditSubpage", () => {
 
     beforeEach(async () => {
       harness = await testContainer({
-        modules: [journalsCoreModule],
+        modules: [journalsCoreModule, journalsUiModule],
         data: { journals: { daily: fixedJournal("daily", { type: "day" }) } },
       });
       back = vi.fn();
@@ -138,7 +137,7 @@ describe("JournalEditSubpage", () => {
 describe("JournalEditSubpage collision warning", () => {
   it("names another journal that resolves to the same note path", async () => {
     const harness = await testContainer({
-      modules: [journalsCoreModule],
+      modules: [journalsCoreModule, journalsUiModule],
       data: {
         journals: {
           daily: fixedJournal("daily", { type: "day" }),
@@ -154,7 +153,7 @@ describe("JournalEditSubpage collision warning", () => {
 
   it("stays hidden when no other journal shares the resolved path", async () => {
     const harness = await testContainer({
-      modules: [journalsCoreModule],
+      modules: [journalsCoreModule, journalsUiModule],
       data: {
         journals: {
           daily: fixedJournal("daily", { type: "day" }),
@@ -170,7 +169,7 @@ describe("JournalEditSubpage collision warning", () => {
 
   it("stays hidden when this is the only journal", async () => {
     const harness = await testContainer({
-      modules: [journalsCoreModule],
+      modules: [journalsCoreModule, journalsUiModule],
       data: { journals: { daily: fixedJournal("daily", { type: "day" }) } },
     });
 
@@ -191,20 +190,20 @@ function makeSectionComponent(label: string) {
 
 // Registered in descending order so the ascending render order can only come from the sort.
 const outOfOrderSections: Module = {
-  register(c) {
-    c.register(JournalEditSectionToken).useValue(
-      defineJournalEditSection({ key: "b", order: 20, component: makeSectionComponent("B") }),
-    );
-    c.register(JournalEditSectionToken).useValue(
-      defineJournalEditSection({ key: "a", order: 10, component: makeSectionComponent("A") }),
-    );
+  register(container) {
+    container
+      .register(JournalEditSectionToken)
+      .useValue(defineJournalEditSection({ key: "b", order: 20, component: makeSectionComponent("B") }));
+    container
+      .register(JournalEditSectionToken)
+      .useValue(defineJournalEditSection({ key: "a", order: 10, component: makeSectionComponent("A") }));
   },
 };
 
 describe("JournalEditSubpage section ordering", () => {
   it("renders registered sections in ascending order", async () => {
     const harness = await testContainer({
-      modules: [journalsCoreModule, outOfOrderSections],
+      modules: [journalsCoreModule, journalsUiModule, outOfOrderSections],
       data: { journals: { daily: fixedJournal("daily", { type: "day" }) } },
     });
 
