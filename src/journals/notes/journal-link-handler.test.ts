@@ -1,46 +1,21 @@
-import { afterEach, beforeEach, describe, expect, it } from "vitest";
+import { assert, beforeEach, describe, expect, it } from "vitest";
 
 import { CalendarDate } from "@/calendar";
-import { anchor, installTestCalendar } from "@/calendar/testing";
-import { Container } from "@/infrastructure/di";
-import { LoggerModule } from "@/infrastructure/logger";
-import { FunctionHandlerToken, TemplateContext, TemplateEngine, type FunctionInput, type Modifier } from "@/templates";
+import { anchor } from "@/calendar/testing";
+import {
+  FunctionHandlerToken,
+  TemplateContext,
+  TemplateEngine,
+  type FunctionHandler,
+  type FunctionInput,
+  type Modifier,
+} from "@/templates";
+import { testContainer, type TestHarness } from "@/testing";
 
-import { CycleService } from "../cycle";
-import { FrontmatterService } from "../frontmatter";
-import { JournalsIndex } from "../journals-index";
-import { NumberingService } from "../numbering";
-import { JournalsRepository } from "../repository";
-import { customJournal, fakeRepo, fixedJournal } from "../testing";
-import { TimelineService } from "../timeline";
-
-import { JournalLinkHandler } from "./journal-link-handler";
-import { NotePathService } from "./note-path";
+import { journalsCoreModule } from "../module";
+import { customJournal, fixedJournal } from "../testing";
 
 import type { JournalConfig } from "../config";
-
-function buildContainer(journals: Record<string, JournalConfig>): Container {
-  const c = new Container();
-  c.addModule(LoggerModule);
-  c.register(JournalsRepository).useValue(fakeRepo(journals));
-  c.register(JournalsIndex).useClass(JournalsIndex);
-  c.register(CycleService).useClass(CycleService);
-  c.register(TimelineService).useClass(TimelineService);
-  c.register(NumberingService).useClass(NumberingService);
-  c.register(FrontmatterService).useClass(FrontmatterService);
-  c.register(NotePathService).useClass(NotePathService);
-  c.register(TemplateEngine).useClass(TemplateEngine);
-  c.register(JournalLinkHandler).useClass(JournalLinkHandler);
-  return c;
-}
-
-// Mirrors notes/module.ts: the engine resolves handlers from FunctionHandlerToken, so a
-// {{journal_link}} token only dispatches when the handler is bound under that token.
-function buildEngineContainer(journals: Record<string, JournalConfig>): Container {
-  const c = buildContainer(journals);
-  c.register(FunctionHandlerToken).useClass(JournalLinkHandler);
-  return c;
-}
 
 type ShiftUnit = Extract<Modifier, { kind: "shift" }>["unit"];
 
@@ -48,13 +23,21 @@ function shift(amount: number, unit: ShiftUnit): Modifier {
   return { kind: "shift", sign: amount < 0 ? -1 : 1, amount: Math.abs(amount), unit };
 }
 
-const ALL_JOURNALS = {
+const ALL_JOURNALS: Record<string, JournalConfig> = {
   weekly: fixedJournal("weekly", { type: "week" }),
   yearly: fixedJournal("yearly", { type: "year" }),
   monthly: fixedJournal("monthly", { type: "month" }),
   daily: fixedJournal("daily", { type: "day" }),
   custom_daily: customJournal("custom_daily", "day", 1, "2020-01-01", { nameTemplate: "{{date}}" }),
 };
+
+// Mirrors notes/module.ts: the engine resolves handlers from FunctionHandlerToken, so reaching the
+// handler through that token is also what proves a {{journal_link}} token can dispatch at all.
+function journalLinkHandler(harness: TestHarness): FunctionHandler {
+  const handler = harness.resolve(FunctionHandlerToken).find((candidate) => candidate.name === "journal_link");
+  assert(handler, "journal_link is not registered under FunctionHandlerToken");
+  return handler;
+}
 
 function hostContext(name: string, renderDate: string, startDate: string): TemplateContext {
   return TemplateContext.empty()
@@ -75,20 +58,17 @@ function dateOf(context: TemplateContext): CalendarDate {
 const crossYearWeek = (): TemplateContext => hostContext("weekly", "2026-01-01", "2025-12-29");
 
 describe("JournalLinkHandler", () => {
-  let teardown: () => void;
-  let container: Container;
-  let handler: JournalLinkHandler;
+  let harness: TestHarness;
+  let handler: FunctionHandler;
   let engine: TemplateEngine;
 
-  beforeEach(() => {
-    ({ teardown } = installTestCalendar());
-    container = buildContainer(ALL_JOURNALS);
-    handler = container.resolve(JournalLinkHandler);
-    engine = container.resolve(TemplateEngine);
-  });
-
-  afterEach(() => {
-    teardown();
+  beforeEach(async () => {
+    harness = await testContainer({
+      modules: [journalsCoreModule],
+      data: { journals: ALL_JOURNALS },
+    });
+    handler = journalLinkHandler(harness);
+    engine = harness.resolve(TemplateEngine);
   });
 
   function render(argument: string, context: TemplateContext, modifiers: Modifier[] = [], format?: string): string {
@@ -129,19 +109,25 @@ describe("JournalLinkHandler", () => {
     expect(render("custom_daily", crossYearWeek())).toBe("2026-01-01");
   });
 
-  it("returns the full vault path without the .md extension", () => {
-    const journals = {
-      ...ALL_JOURNALS,
-      diary: fixedJournal("diary", { type: "day" }, { folder: "Diary/{{date:YYYY}}" }),
-    };
-    const c = buildContainer(journals);
-    const result = c.resolve(JournalLinkHandler).render({
+  it("returns the full vault path without the .md extension", async () => {
+    const diaryHarness = await testContainer({
+      modules: [journalsCoreModule],
+      data: {
+        journals: {
+          ...ALL_JOURNALS,
+          diary: fixedJournal("diary", { type: "day" }, { folder: "Diary/{{date:YYYY}}" }),
+        },
+      },
+    });
+
+    const result = journalLinkHandler(diaryHarness).render({
       arg: "diary",
       sourceDate: CalendarDate.fromAnchor(anchor("2026-05-19")),
       modifiers: [],
       context: hostContext("daily", "2026-05-19", "2026-05-19"),
       engine,
     });
+
     expect(result.isOk() && result.value).toBe("Diary/2026/2026-05-19");
   });
 
@@ -166,22 +152,32 @@ describe("JournalLinkHandler", () => {
   });
 
   describe("timeline bounds", () => {
-    const bounded = fixedJournal(
-      "bounded",
-      { type: "day" },
-      { timeline: { start: anchor("2030-06-01"), end: { kind: "date", date: anchor("2030-06-30") } } },
-    );
+    let boundedHarness: TestHarness;
+
+    beforeEach(async () => {
+      boundedHarness = await testContainer({
+        modules: [journalsCoreModule],
+        data: {
+          journals: {
+            ...ALL_JOURNALS,
+            bounded: fixedJournal(
+              "bounded",
+              { type: "day" },
+              { timeline: { start: anchor("2030-06-01"), end: { kind: "date", date: anchor("2030-06-30") } } },
+            ),
+          },
+        },
+      });
+    });
 
     function renderResult(anchorDate: string) {
-      return buildContainer({ ...ALL_JOURNALS, bounded })
-        .resolve(JournalLinkHandler)
-        .render({
-          arg: "bounded",
-          sourceDate: CalendarDate.fromAnchor(anchor(anchorDate)),
-          modifiers: [],
-          context: hostContext("daily", anchorDate, anchorDate),
-          engine,
-        });
+      return journalLinkHandler(boundedHarness).render({
+        arg: "bounded",
+        sourceDate: CalendarDate.fromAnchor(anchor(anchorDate)),
+        modifiers: [],
+        context: hostContext("daily", anchorDate, anchorDate),
+        engine: boundedHarness.resolve(TemplateEngine),
+      });
     }
 
     it("errors when the target date is after the target timeline end", () => {
@@ -198,11 +194,10 @@ describe("JournalLinkHandler", () => {
     });
 
     it("leaves a {{journal_link}} token unresolved when the target is out of bounds", () => {
-      const tokenEngine = buildEngineContainer({ ...ALL_JOURNALS, bounded }).resolve(TemplateEngine);
-      const rendered = tokenEngine.renderString(
-        "See [[{{journal_link(bounded)}}]]",
-        hostContext("daily", "2030-07-10", "2030-07-10"),
-      );
+      const rendered = boundedHarness
+        .resolve(TemplateEngine)
+        .renderString("See [[{{journal_link(bounded)}}]]", hostContext("daily", "2030-07-10", "2030-07-10"));
+
       expect(rendered).toBe("See [[{{journal_link(bounded)}}]]");
     });
   });
@@ -212,20 +207,21 @@ describe("JournalLinkHandler", () => {
   // so a {{journal_link(...)}} token in a note body actually dispatches to the handler.
   describe("through the template engine (FunctionHandlerToken wiring)", () => {
     it("resolves a {{journal_link}} token to the target note path", () => {
-      const tokenEngine = buildEngineContainer(ALL_JOURNALS).resolve(TemplateEngine);
-      expect(tokenEngine.renderString("{{journal_link(yearly)}}", crossYearWeek())).toBe("2026");
+      expect(engine.renderString("{{journal_link(yearly)}}", crossYearWeek())).toBe("2026");
     });
 
     it("resolves a {{journal_link}} token embedded in note body text", () => {
-      const tokenEngine = buildEngineContainer(ALL_JOURNALS).resolve(TemplateEngine);
-      expect(tokenEngine.renderString("See [[{{journal_link(daily)}}]]", crossYearWeek())).toBe("See [[2025-12-29]]");
+      expect(engine.renderString("See [[{{journal_link(daily)}}]]", crossYearWeek())).toBe("See [[2025-12-29]]");
     });
 
-    it("leaves the token unresolved when no handler is registered under the token", () => {
+    it("leaves the token unresolved when no handler is registered under the token", async () => {
       // Guards the assertions above: without the FunctionHandlerToken binding the engine
       // cannot dispatch, so a passing render proves the wiring, not the grammar alone.
-      const bareEngine = buildContainer(ALL_JOURNALS).resolve(TemplateEngine);
-      expect(bareEngine.renderString("{{journal_link(yearly)}}", crossYearWeek())).toBe("{{journal_link(yearly)}}");
+      const bare = await testContainer({ data: { journals: ALL_JOURNALS } });
+
+      const rendered = bare.resolve(TemplateEngine).renderString("{{journal_link(yearly)}}", crossYearWeek());
+
+      expect(rendered).toBe("{{journal_link(yearly)}}");
     });
   });
 });

@@ -616,15 +616,12 @@ describe("NoteConnectionService", () => {
           anchor: anchor("2026-06-01"),
           path: "week/2026-W23.md" as VaultPath,
         });
-        // A rewrite to the same value is indistinguishable in the vault, so the skip can only be
-        // observed at the write boundary itself.
-        const spy = vi.spyOn(harness.resolve(NotesService), "updateFrontmatter");
-
-        await harness
+        const result = await harness
           .resolve(NoteConnectionService)
           .reanchorAll("weekly", new Map([["week/2026-W23.md" as VaultPath, { anchor: anchor("2026-06-01") }]]));
 
-        expect(spy).not.toHaveBeenCalled();
+        expectOk(result);
+        expect(result.value.rewritten).toBe(0);
       });
 
       it("reports how many notes it rewrote", async () => {

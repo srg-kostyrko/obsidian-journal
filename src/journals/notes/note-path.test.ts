@@ -238,22 +238,6 @@ function sprintJournal(anchorDate: string): JournalConfig {
   });
 }
 
-function issuesJournal(): JournalConfig {
-  return fixedJournal(
-    "issues",
-    { type: "day" },
-    {
-      nameTemplate: "Issue {{index}} - {{date}}",
-      numbering: {
-        enabled: true,
-        anchorDate: "2026-01-01" as AnchorString,
-        allowBefore: false,
-        sources: [{ variable: "index", frontmatterKey: "issue-number", anchorValue: 1, reset: { kind: "never" } }],
-      },
-    },
-  );
-}
-
 describe("NotePathService.candidateFor", () => {
   describe("a plain daily journal", () => {
     let harness: TestHarness;
@@ -476,7 +460,25 @@ describe("NotePathService.candidateFor", () => {
     beforeEach(async () => {
       harness = await testContainer({
         modules: [journalsCoreModule],
-        data: { journals: { issues: issuesJournal() } },
+        data: {
+          journals: {
+            issues: fixedJournal(
+              "issues",
+              { type: "day" },
+              {
+                nameTemplate: "Issue {{index}} - {{date}}",
+                numbering: {
+                  enabled: true,
+                  anchorDate: "2026-01-01" as AnchorString,
+                  allowBefore: false,
+                  sources: [
+                    { variable: "index", frontmatterKey: "issue-number", anchorValue: 1, reset: { kind: "never" } },
+                  ],
+                },
+              },
+            ),
+          },
+        },
       });
     });
 
