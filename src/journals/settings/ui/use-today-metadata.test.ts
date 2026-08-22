@@ -1,47 +1,22 @@
-import { cleanup, render } from "@testing-library/vue";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { defineComponent, type ComputedRef } from "vue";
 
-import { installTestCalendar } from "@/calendar/testing";
-import { Container, provideInjectorOnApp } from "@/infrastructure/di";
-import { LoggerModule } from "@/infrastructure/logger";
-import { CycleService, FrontmatterService, JournalsIndex, NumberingService } from "@/journals";
 import type { JournalMetadata } from "@/journals";
-import { JournalsRepository } from "@/journals/repository";
-import { fakeRepo, fixedJournal } from "@/journals/testing";
+import { journalsCoreModule } from "@/journals/module";
+import { fixedJournal } from "@/journals/testing";
+import { testContainer, type TestHarness } from "@/testing";
 
 import { useTodayMetadata } from "./use-today-metadata";
 
-let teardown: () => void;
 beforeEach(() => {
-  ({ teardown } = installTestCalendar());
-  vi.useFakeTimers();
+  vi.useFakeTimers({ toFake: ["Date"] });
   vi.setSystemTime(new Date("2026-05-19T12:00:00"));
 });
 afterEach(() => {
   vi.useRealTimers();
-  teardown();
-  cleanup();
 });
 
-function buildContainer(): Container {
-  const c = new Container();
-  c.addModule(LoggerModule);
-  c.register(JournalsRepository).useValue(
-    fakeRepo({
-      daily: fixedJournal("daily", { type: "day" }),
-      weekly: fixedJournal("weekly", { type: "week" }),
-    }),
-  );
-  c.register(JournalsIndex).useClass(JournalsIndex);
-  c.register(CycleService).useClass(CycleService);
-  c.register(NumberingService).useClass(NumberingService);
-  c.register(FrontmatterService).useClass(FrontmatterService);
-  return c;
-}
-
-function probe(journalName: string): ComputedRef<JournalMetadata | undefined> {
-  const container = buildContainer();
+function probe(harness: TestHarness, journalName: string): ComputedRef<JournalMetadata | undefined> {
   let captured: ComputedRef<JournalMetadata | undefined> | undefined;
   const Probe = defineComponent({
     template: "<div />",
@@ -49,31 +24,36 @@ function probe(journalName: string): ComputedRef<JournalMetadata | undefined> {
       captured = useTodayMetadata(journalName);
     },
   });
-  render(Probe, {
-    global: {
-      plugins: [
-        {
-          install(app) {
-            provideInjectorOnApp(app, container);
-          },
-        },
-      ],
-    },
-  });
-  return captured!;
+  harness.render(Probe);
+  if (!captured) throw new Error("probe did not capture the metadata ref");
+  return captured;
 }
 
 describe("useTodayMetadata", () => {
+  let harness: TestHarness;
+
+  beforeEach(async () => {
+    harness = await testContainer({
+      modules: [journalsCoreModule],
+      data: {
+        journals: {
+          daily: fixedJournal("daily", { type: "day" }),
+          weekly: fixedJournal("weekly", { type: "week" }),
+        },
+      },
+    });
+  });
+
   it("returns today's metadata for an existing journal", () => {
-    expect(probe("daily").value).toMatchObject({ journalName: "daily", anchor: "2026-05-19" });
+    expect(probe(harness, "daily").value).toMatchObject({ journalName: "daily", anchor: "2026-05-19" });
   });
 
   it("returns undefined for a missing journal", () => {
-    expect(probe("nope").value).toBeUndefined();
+    expect(probe(harness, "nope").value).toBeUndefined();
   });
 
   it("anchors the metadata at the start of today's period", () => {
-    const metadata = probe("weekly");
+    const metadata = probe(harness, "weekly");
     expect(metadata.value?.anchor).toBe("2026-05-18");
   });
 });
