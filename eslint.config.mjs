@@ -353,8 +353,7 @@ export default [
   },
   {
     // Must sit after the two test blocks above: rule options replace rather than merge, so the
-    // vi.mock selector is re-declared here, and no-restricted-imports is switched back on from
-    // the "off" the general test block sets.
+    // vi.mock selector is re-declared here or the ban lifts across all of src/journals.
     files: ["src/journals/**/*.test.ts"],
     ignores: ["**/*.isolated.test.ts"],
     rules: {
@@ -372,8 +371,10 @@ export default [
         {
           // Narrowed to a binding chain inside a test body. A bare `.register(` also names
           // JournalsIndex.register, the domain method the suite seeds index entries through.
+          // The second branch covers the `it.each(...)(...)` / `describe.each(...)(...)` shape,
+          // where the hook name sits one call deeper.
           selector:
-            "CallExpression[callee.name=/^(it|test|beforeEach|beforeAll)$/] MemberExpression[object.callee.property.name='register'][property.name=/^use(Value|Class|Factory|Existing)$/]",
+            ":matches(CallExpression[callee.name=/^(it|test|beforeEach|beforeAll|afterEach|afterAll)$/], CallExpression[callee.callee.property.name='each']) MemberExpression[object.callee.property.name='register'][property.name=/^use(Value|Class|Factory|Existing)$/]",
           message: "Pass a feature CORE/UI module to testContainer({ modules }) instead of registering by hand.",
         },
         {
@@ -381,33 +382,15 @@ export default [
             "FunctionDeclaration[id.name=/^(make|build|seed|create)(Journal|Command|View|Shelf|Decoration|Config)/]",
           message: "Entity fixtures live in the feature's testing.ts — use fixedJournal/customJournal.",
         },
-      ],
-    },
-  },
-  {
-    // Split from the block above so the three pure component tests can opt out of this one rule
-    // without losing the syntax bans. Their components inject nothing and take everything as
-    // props, so the harness's render would bind an injector nothing reads — c00576a4 removed the
-    // container from two of them for exactly that reason. Delete an entry the moment its
-    // component starts resolving a service.
-    files: ["src/journals/**/*.test.ts"],
-    ignores: [
-      "**/*.isolated.test.ts",
-      "src/journals/settings/ui/DateFormatPreview.test.ts",
-      "src/journals/settings/ui/TemplaterSupportModal.test.ts",
-      "src/journals/settings/ui/VariableReferenceModal.test.ts",
-    ],
-    rules: {
-      "no-restricted-imports": [
-        "error",
         {
-          paths: [
-            {
-              name: "@testing-library/vue",
-              importNames: ["render"],
-              message: "Use the harness's render, which binds the injector for you.",
-            },
-          ],
+          // Conditioned on the file already building a harness, rather than banning the raw import
+          // outright: a pure-tier component test whose component injects nothing needs no injector,
+          // and an allowlist of those files would go stale silently (a stale `ignores` glob that
+          // matches nothing is indistinguishable from a working one).
+          selector:
+            "Program:has(ImportDeclaration[source.value='@/testing']) ImportDeclaration[source.value='@testing-library/vue'] ImportSpecifier[imported.name='render']",
+          message:
+            "This file already builds a harness — mount through harness.render, which binds the injector for you.",
         },
       ],
     },
