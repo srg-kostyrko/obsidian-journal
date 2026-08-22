@@ -1,76 +1,70 @@
-import { cleanup, render } from "@testing-library/vue";
-import { afterEach, describe, expect, it } from "vitest";
-import { defineComponent, nextTick, ref } from "vue";
+import { beforeEach, describe, expect, it, vi, type MockInstance } from "vitest";
+import { defineComponent, nextTick, ref, type Ref } from "vue";
 
-import { Container, provideInjectorOnApp } from "@/infrastructure/di";
-
-import { AutoCreateService } from "../../notes/auto-create";
-import { fixedJournal } from "../../testing";
+import { journalsCoreModule } from "@/journals/module";
+import { AutoCreateService } from "@/journals/notes/auto-create";
+import { fixedJournal } from "@/journals/testing";
+import { testContainer, type TestHarness } from "@/testing";
 
 import { useAutoCreateOnEnable } from "./use-auto-create-on-enable";
 
 import type { JournalConfig } from "../../config";
 
-class RecordingAutoCreate {
-  readonly created: string[] = [];
-  async createCurrent(name: string): Promise<void> {
-    this.created.push(name);
-  }
-}
-
-function setup(autoCreate: boolean) {
-  const config = ref<JournalConfig>(fixedJournal("Daily", { type: "day" }, { autoCreate }));
-  const recorder = new RecordingAutoCreate();
-  const container = new Container();
-  container.register(AutoCreateService).useValue(recorder as unknown as AutoCreateService);
-
-  const Host = defineComponent({
-    setup() {
-      useAutoCreateOnEnable(config);
-    },
-    template: "<div />",
-  });
-  render(Host, {
-    global: {
-      plugins: [
-        {
-          install(app) {
-            provideInjectorOnApp(app, container);
-          },
-        },
-      ],
-    },
-  });
-  return { config, recorder };
-}
-
-afterEach(() => cleanup());
-
 describe("useAutoCreateOnEnable", () => {
+  let harness: TestHarness;
+  let createCurrent: MockInstance<AutoCreateService["createCurrent"]>;
+
+  beforeEach(async () => {
+    harness = await testContainer({ modules: [journalsCoreModule] });
+    createCurrent = vi.spyOn(harness.resolve(AutoCreateService), "createCurrent").mockResolvedValue(undefined);
+  });
+
+  function mount(config: Ref<JournalConfig>): void {
+    const Host = defineComponent({
+      setup() {
+        useAutoCreateOnEnable(config);
+      },
+      template: "<div />",
+    });
+    harness.render(Host);
+  }
+
   it("creates the current note when the toggle switches on", async () => {
-    const { config, recorder } = setup(false);
+    const config = ref<JournalConfig>(fixedJournal("Daily", { type: "day" }, { autoCreate: false }));
+    mount(config);
+
     config.value.autoCreate = true;
     await nextTick();
-    expect(recorder.created).toEqual(["Daily"]);
+
+    expect(createCurrent).toHaveBeenCalledWith("Daily");
   });
 
   it("does nothing when the toggle switches off", async () => {
-    const { config, recorder } = setup(true);
+    const config = ref<JournalConfig>(fixedJournal("Daily", { type: "day" }, { autoCreate: true }));
+    mount(config);
+
     config.value.autoCreate = false;
     await nextTick();
-    expect(recorder.created).toEqual([]);
+
+    expect(createCurrent).not.toHaveBeenCalled();
   });
 
   it("does nothing when an unrelated field changes", async () => {
-    const { config, recorder } = setup(false);
+    const config = ref<JournalConfig>(fixedJournal("Daily", { type: "day" }, { autoCreate: false }));
+    mount(config);
+
     config.value.confirmCreation = true;
     await nextTick();
-    expect(recorder.created).toEqual([]);
+
+    expect(createCurrent).not.toHaveBeenCalled();
   });
 
   it("does nothing on mount when the toggle is already on", async () => {
-    const { recorder } = setup(true);
+    const config = ref<JournalConfig>(fixedJournal("Daily", { type: "day" }, { autoCreate: true }));
+    mount(config);
+
     await nextTick();
-    expect(recorder.created).toEqual([]);
+
+    expect(createCurrent).not.toHaveBeenCalled();
   });
 });

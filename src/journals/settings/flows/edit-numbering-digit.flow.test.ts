@@ -1,53 +1,33 @@
-import { createNanoEvents } from "nanoevents";
-import { describe, expect, it, vi } from "vitest";
-import { reactive } from "vue";
+import { beforeEach, describe, expect, it, vi } from "vitest";
 
+import { anchor } from "@/calendar/testing";
 import { Flows, UserAborted } from "@/infrastructure/flows";
-import { NoticeService } from "@/infrastructure/host";
-import { ModalService } from "@/infrastructure/host/modals";
-import { FakeModalService } from "@/infrastructure/host/modals/testing";
-import { FakeNoticeService } from "@/infrastructure/host/testing";
-import { AsyncResult } from "@/infrastructure/result";
-import { JournalsRepository, journalDefaultsFor, type JournalConfig, type JournalsEvents } from "@/journals";
+import type { VaultPath } from "@/infrastructure/host";
+import { JournalsIndex } from "@/journals/journals-index";
+import { journalsCoreModule } from "@/journals/module";
 import { NoteConnectionService } from "@/journals/notes/note-connection";
-import { createSettingsService } from "@/settings/testing";
+import { JournalsRepository } from "@/journals/repository";
+import { fixedJournal } from "@/journals/testing";
+import { testContainer, type TestHarness } from "@/testing";
+
+import { journalsSettingsCoreModule } from "../module";
 
 import { EditNumberingDigitFlow } from "./edit-numbering-digit.flow";
 
 import type { NumberingDigitDraft } from "../ui/modals";
 
-function configWithDigits(name: string, variables: readonly string[]): JournalConfig {
-  const base = journalDefaultsFor({ type: "day" }, name);
-  return {
-    ...base,
+const journalWithIndexDigit = fixedJournal(
+  "j",
+  { type: "day" },
+  {
     numbering: {
-      ...base.numbering,
       enabled: true,
-      sources: variables.map((variable, i) => ({
-        variable,
-        frontmatterKey: `journal-${variable}`,
-        anchorValue: 1,
-        reset: i === 0 ? ({ kind: "never" } as const) : ({ kind: "after", count: 6 } as const),
-      })),
+      anchorDate: anchor(""),
+      allowBefore: false,
+      sources: [{ variable: "index", frontmatterKey: "journal-index", anchorValue: 1, reset: { kind: "never" } }],
     },
-  };
-}
-
-async function build(initial: Record<string, JournalConfig> = {}) {
-  const { container } = createSettingsService({ collections: [] });
-  const storage = reactive<Record<string, JournalConfig>>({ ...initial });
-  const events = createNanoEvents<JournalsEvents>();
-  const repo = JournalsRepository.fromParts(storage, events);
-  const modals = new FakeModalService();
-  const connection = { renameFieldAll: vi.fn(() => AsyncResult.ok()) };
-  container.register(ModalService).useValue(modals as unknown as ModalService);
-  container.register(JournalsRepository).useValue(repo);
-  container.register(NoteConnectionService).useValue(connection as unknown as NoteConnectionService);
-  container.register(NoticeService).useValue(new FakeNoticeService());
-  container.register(Flows).useClass(Flows);
-  container.register(EditNumberingDigitFlow).useClass(EditNumberingDigitFlow);
-  return { storage, repo, modals, connection, flows: container.resolve(Flows) };
-}
+  },
+);
 
 const draft = (over: Partial<NumberingDigitDraft> = {}): NumberingDigitDraft => ({
   variable: "sprint",
@@ -58,15 +38,24 @@ const draft = (over: Partial<NumberingDigitDraft> = {}): NumberingDigitDraft => 
 });
 
 describe("EditNumberingDigitFlow", () => {
+  let harness: TestHarness;
+
+  beforeEach(async () => {
+    harness = await testContainer({
+      modules: [journalsCoreModule, journalsSettingsCoreModule],
+      data: { journals: { j: journalWithIndexDigit } },
+    });
+  });
+
   it("appends a digit when no source index is given", async () => {
-    const { flows, modals, repo } = await build({ j: configWithDigits("j", ["index"]) });
-    const promise = flows.invoke(EditNumberingDigitFlow, { journalName: "j" });
-    modals.lastOpen<unknown, NumberingDigitDraft>().submit(draft());
+    const promise = harness.resolve(Flows).invoke(EditNumberingDigitFlow, { journalName: "j" });
+    harness.modals.lastOpen<unknown, NumberingDigitDraft>().submit(draft());
     const result = await promise;
 
     expect(result.isOk()).toBe(true);
     expect(
-      repo
+      harness
+        .resolve(JournalsRepository)
         .get("j")
         .getOrUndefined()
         ?.numbering.sources.map((s) => s.variable),
@@ -74,60 +63,65 @@ describe("EditNumberingDigitFlow", () => {
   });
 
   it("replaces the digit at the given index", async () => {
-    const { flows, modals, repo } = await build({ j: configWithDigits("j", ["index"]) });
-    const promise = flows.invoke(EditNumberingDigitFlow, { journalName: "j", sourceIndex: 0 });
-    modals
+    const promise = harness.resolve(Flows).invoke(EditNumberingDigitFlow, { journalName: "j", sourceIndex: 0 });
+    harness.modals
       .lastOpen<unknown, NumberingDigitDraft>()
       .submit(draft({ variable: "release", frontmatterKey: "journal-index", reset: { kind: "never" } }));
     const result = await promise;
 
     expect(result.isOk()).toBe(true);
-    const sources = repo.get("j").getOrUndefined()?.numbering.sources ?? [];
+    const sources = harness.resolve(JournalsRepository).get("j").getOrUndefined()?.numbering.sources ?? [];
     expect(sources[0]?.variable).toBe("release");
     expect(sources).toHaveLength(1);
   });
 
   it("moves the stored value across when the property key changes", async () => {
-    const { flows, modals, connection } = await build({ j: configWithDigits("j", ["index"]) });
-    const promise = flows.invoke(EditNumberingDigitFlow, { journalName: "j", sourceIndex: 0 });
-    modals
+    const path = "2026-06-01.md" as VaultPath;
+    harness.host.putFile(path, "content", { journal: "j", "journal-date": "2026-06-01", "journal-index": 3 });
+    harness.resolve(JournalsIndex).register({ journalName: "j", anchor: anchor("2026-06-01"), path });
+    const promise = harness.resolve(Flows).invoke(EditNumberingDigitFlow, { journalName: "j", sourceIndex: 0 });
+    harness.modals
       .lastOpen<unknown, NumberingDigitDraft>()
       .submit(draft({ variable: "release", frontmatterKey: "journal-release", reset: { kind: "never" } }));
     await promise;
 
-    expect(connection.renameFieldAll).toHaveBeenCalledWith("j", "journal-index", "journal-release");
+    expect(harness.host.files.get(path)?.frontmatter).toEqual({
+      journal: "j",
+      "journal-date": "2026-06-01",
+      "journal-release": 3,
+    });
   });
 
   it("does not rename the property when the key is unchanged", async () => {
-    const { flows, modals, connection } = await build({ j: configWithDigits("j", ["index"]) });
-    const promise = flows.invoke(EditNumberingDigitFlow, { journalName: "j", sourceIndex: 0 });
-    modals
+    const connection = harness.resolve(NoteConnectionService);
+    const spy = vi.spyOn(connection, "renameFieldAll");
+    const promise = harness.resolve(Flows).invoke(EditNumberingDigitFlow, { journalName: "j", sourceIndex: 0 });
+    harness.modals
       .lastOpen<unknown, NumberingDigitDraft>()
       .submit(draft({ variable: "release", frontmatterKey: "journal-index", reset: { kind: "never" } }));
     await promise;
 
-    expect(connection.renameFieldAll).not.toHaveBeenCalled();
+    expect(spy).not.toHaveBeenCalled();
   });
 
   it("returns the appended digit's variable on submit", async () => {
-    const { flows, modals } = await build({ j: configWithDigits("j", ["index"]) });
-    const promise = flows.invoke(EditNumberingDigitFlow, { journalName: "j" });
-    modals.lastOpen<unknown, NumberingDigitDraft>().submit(draft());
+    const promise = harness.resolve(Flows).invoke(EditNumberingDigitFlow, { journalName: "j" });
+    harness.modals.lastOpen<unknown, NumberingDigitDraft>().submit(draft());
     const result = await promise;
 
     expect(result.isOk() && result.value).toEqual({ variable: "sprint" });
   });
 
   it("returns UserAborted and leaves sources unchanged when the modal is cancelled", async () => {
-    const { flows, modals, repo } = await build({ j: configWithDigits("j", ["index"]) });
-    const promise = flows.invoke(EditNumberingDigitFlow, { journalName: "j" });
-    modals.lastOpen().cancel();
+    const promise = harness.resolve(Flows).invoke(EditNumberingDigitFlow, { journalName: "j" });
+    harness.modals.lastOpen().cancel();
     const result = await promise;
 
     expect(result.isErr()).toBe(true);
     expect(result.isErr() && result.error).toBeInstanceOf(UserAborted);
     expect(
-      repo
+      harness
+        .resolve(JournalsRepository)
         .get("j")
         .getOrUndefined()
         ?.numbering.sources.map((s) => s.variable),
@@ -135,15 +129,14 @@ describe("EditNumberingDigitFlow", () => {
   });
 
   it("errors for an unknown journal", async () => {
-    const { flows } = await build();
-    const result = await flows.invoke(EditNumberingDigitFlow, { journalName: "missing" });
+    harness = await testContainer({ modules: [journalsCoreModule, journalsSettingsCoreModule] });
+    const result = await harness.resolve(Flows).invoke(EditNumberingDigitFlow, { journalName: "missing" });
 
     expect(result.isErr()).toBe(true);
   });
 
   it("errors for a source index that does not exist", async () => {
-    const { flows } = await build({ j: configWithDigits("j", ["index"]) });
-    const result = await flows.invoke(EditNumberingDigitFlow, { journalName: "j", sourceIndex: 9 });
+    const result = await harness.resolve(Flows).invoke(EditNumberingDigitFlow, { journalName: "j", sourceIndex: 9 });
 
     expect(result.isErr()).toBe(true);
   });

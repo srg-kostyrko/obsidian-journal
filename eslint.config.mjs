@@ -352,6 +352,50 @@ export default [
     },
   },
   {
+    // Must sit after the two test blocks above: rule options replace rather than merge, so the
+    // vi.mock selector is re-declared here or the ban lifts across all of src/journals.
+    files: ["src/journals/**/*.test.ts"],
+    ignores: ["**/*.isolated.test.ts"],
+    rules: {
+      "no-restricted-syntax": [
+        "error",
+        {
+          selector: "CallExpression[callee.object.name='vi'][callee.property.name='mock']",
+          message:
+            "vi.mock replaces the module for every later file sharing the worker's registry. Rename this file to *.isolated.test.ts so it runs in its own.",
+        },
+        {
+          selector: "NewExpression[callee.name='Container']",
+          message: "Build the container with testContainer() from @/testing.",
+        },
+        {
+          // Narrowed to a binding chain inside a test body. A bare `.register(` also names
+          // JournalsIndex.register, the domain method the suite seeds index entries through.
+          // The second branch covers the `it.each(...)(...)` / `describe.each(...)(...)` shape,
+          // where the hook name sits one call deeper.
+          selector:
+            ":matches(CallExpression[callee.name=/^(it|test|beforeEach|beforeAll|afterEach|afterAll)$/], CallExpression[callee.callee.property.name='each']) MemberExpression[object.callee.property.name='register'][property.name=/^use(Value|Class|Factory|Existing)$/]",
+          message: "Pass a feature CORE/UI module to testContainer({ modules }) instead of registering by hand.",
+        },
+        {
+          selector:
+            "FunctionDeclaration[id.name=/^(make|build|seed|create)(Journal|Command|View|Shelf|Decoration|Config)/]",
+          message: "Entity fixtures live in the feature's testing.ts — use fixedJournal/customJournal.",
+        },
+        {
+          // Conditioned on the file already building a harness, rather than banning the raw import
+          // outright: a pure-tier component test whose component injects nothing needs no injector,
+          // and an allowlist of those files would go stale silently (a stale `ignores` glob that
+          // matches nothing is indistinguishable from a working one).
+          selector:
+            "Program:has(ImportDeclaration[source.value='@/testing']) ImportDeclaration[source.value='@testing-library/vue'] ImportSpecifier[imported.name='render']",
+          message:
+            "This file already builds a harness — mount through harness.render, which binds the injector for you.",
+        },
+      ],
+    },
+  },
+  {
     // moment is available transitively through the "obsidian" devDependency (which pins its own
     // "moment"), not declared directly; the ordinal round-trip test needs the real locale data
     // from these subpath imports for its assertions to mean anything.

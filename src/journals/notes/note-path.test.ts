@@ -1,19 +1,15 @@
 import { describe, it, expect, vi, beforeEach, afterEach, assert } from "vitest";
 
 import { CalendarDate, type AnchorString } from "@/calendar";
-import { anchor, installTestCalendar } from "@/calendar/testing";
-import { Container } from "@/infrastructure/di";
+import { anchor } from "@/calendar/testing";
 import type { VaultPath } from "@/infrastructure/host";
-import { LoggerModule } from "@/infrastructure/logger";
-import { TemplateEngine } from "@/templates";
+import type { TemplateContext } from "@/templates";
+import { testContainer, type TestHarness } from "@/testing";
 
 import { CycleService } from "../cycle";
 import { JournalNotFoundError } from "../errors";
-import { FrontmatterService } from "../frontmatter";
-import { JournalsIndex } from "../journals-index";
-import { NumberingService } from "../numbering";
-import { JournalsRepository } from "../repository";
-import { customJournal, fakeRepo, fixedJournal, unwrap } from "../testing";
+import { journalsCoreModule } from "../module";
+import { customJournal, fixedJournal, unwrap } from "../testing";
 
 import { EmptyNoteNameError } from "./errors";
 import { NotePathService } from "./note-path";
@@ -21,170 +17,209 @@ import { NotePathService } from "./note-path";
 import type { JournalConfig } from "../config";
 import type { JournalMetadata } from "../types";
 
-function buildContainer(repo: JournalsRepository): Container {
-  const c = new Container();
-  c.addModule(LoggerModule);
-  c.register(JournalsRepository).useValue(repo);
-  c.register(JournalsIndex).useClass(JournalsIndex);
-  c.register(CycleService).useClass(CycleService);
-  c.register(NumberingService).useClass(NumberingService);
-  c.register(FrontmatterService).useClass(FrontmatterService);
-  c.register(TemplateEngine).useClass(TemplateEngine);
-  c.register(NotePathService).useClass(NotePathService);
-  return c;
-}
-
 describe("NotePathService.pathFor", () => {
-  it("renders nameTemplate with .md suffix when folder is empty", () => {
-    const repo = fakeRepo({ daily: fixedJournal("daily", { type: "day" }) });
-    const c = buildContainer(repo);
+  it("renders nameTemplate with .md suffix when folder is empty", async () => {
+    const harness = await testContainer({
+      modules: [journalsCoreModule],
+      data: { journals: { daily: fixedJournal("daily", { type: "day" }) } },
+    });
     const meta: JournalMetadata = { journalName: "daily", anchor: anchor("2026-05-19") };
-    const result = c.resolve(NotePathService).pathFor("daily", meta);
+
+    const result = harness.resolve(NotePathService).pathFor("daily", meta);
+
     expect(result.isOk() && result.value).toBe("2026-05-19.md");
   });
 
-  it("renders a capitalized date variable rather than emitting it raw", () => {
-    const repo = fakeRepo({
-      daily: fixedJournal("daily", { type: "day" }, { nameTemplate: "{{Date:YYYY-MM-DD}}" }),
+  it("renders a capitalized date variable rather than emitting it raw", async () => {
+    const harness = await testContainer({
+      modules: [journalsCoreModule],
+      data: {
+        journals: { daily: fixedJournal("daily", { type: "day" }, { nameTemplate: "{{Date:YYYY-MM-DD}}" }) },
+      },
     });
-    const c = buildContainer(repo);
-    const result = c.resolve(NotePathService).pathForDate("daily", CalendarDate.fromAnchor(anchor("2026-05-19")));
+
+    const result = harness.resolve(NotePathService).pathForDate("daily", CalendarDate.fromAnchor(anchor("2026-05-19")));
+
     expect(result.isOk() && result.value).toBe("2026-05-19.md");
   });
 
-  it("prefixes folder when configured", () => {
-    const repo = fakeRepo({
-      daily: fixedJournal("daily", { type: "day" }, { folder: "Diary/{{date:YYYY}}" }),
+  it("prefixes folder when configured", async () => {
+    const harness = await testContainer({
+      modules: [journalsCoreModule],
+      data: { journals: { daily: fixedJournal("daily", { type: "day" }, { folder: "Diary/{{date:YYYY}}" }) } },
     });
-    const c = buildContainer(repo);
     const meta: JournalMetadata = { journalName: "daily", anchor: anchor("2026-05-19") };
-    const result = c.resolve(NotePathService).pathFor("daily", meta);
+
+    const result = harness.resolve(NotePathService).pathFor("daily", meta);
+
     expect(result.isOk() && result.value).toBe("Diary/2026/2026-05-19.md");
   });
 
-  it("resolves {{note_name}} in the folder template to the rendered note name", () => {
-    const repo = fakeRepo({
-      daily: fixedJournal("daily", { type: "day" }, { folder: "Journal/{{note_name}}" }),
+  it("resolves {{note_name}} in the folder template to the rendered note name", async () => {
+    const harness = await testContainer({
+      modules: [journalsCoreModule],
+      data: { journals: { daily: fixedJournal("daily", { type: "day" }, { folder: "Journal/{{note_name}}" }) } },
     });
-    const c = buildContainer(repo);
     const meta: JournalMetadata = { journalName: "daily", anchor: anchor("2026-05-19") };
-    const result = c.resolve(NotePathService).pathFor("daily", meta);
+
+    const result = harness.resolve(NotePathService).pathFor("daily", meta);
+
     expect(result.isOk() && result.value).toBe("Journal/2026-05-19/2026-05-19.md");
   });
 
-  it("treats {{title}} as an alias for the note name in the folder template", () => {
-    const repo = fakeRepo({
-      daily: fixedJournal("daily", { type: "day" }, { folder: "Journal/{{title}}" }),
+  it("treats {{title}} as an alias for the note name in the folder template", async () => {
+    const harness = await testContainer({
+      modules: [journalsCoreModule],
+      data: { journals: { daily: fixedJournal("daily", { type: "day" }, { folder: "Journal/{{title}}" }) } },
     });
-    const c = buildContainer(repo);
     const meta: JournalMetadata = { journalName: "daily", anchor: anchor("2026-05-19") };
-    const result = c.resolve(NotePathService).pathFor("daily", meta);
+
+    const result = harness.resolve(NotePathService).pathFor("daily", meta);
+
     expect(result.isOk() && result.value).toBe("Journal/2026-05-19/2026-05-19.md");
   });
 
-  it("returns JournalNotFoundError for an unknown journal", () => {
-    const repo = fakeRepo({});
-    const c = buildContainer(repo);
+  it("returns JournalNotFoundError for an unknown journal", async () => {
+    const harness = await testContainer({ modules: [journalsCoreModule], data: { journals: {} } });
     const meta: JournalMetadata = { journalName: "missing", anchor: anchor("2026-05-19") };
-    const result = c.resolve(NotePathService).pathFor("missing", meta);
+
+    const result = harness.resolve(NotePathService).pathFor("missing", meta);
+
     expect(result.isErr() && result.error instanceof JournalNotFoundError).toBe(true);
   });
 
-  it("returns EmptyNoteNameError when the name template is blank", () => {
-    const repo = fakeRepo({ daily: fixedJournal("daily", { type: "day" }, { nameTemplate: "" }) });
-    const c = buildContainer(repo);
+  it("returns EmptyNoteNameError when the name template is blank", async () => {
+    const harness = await testContainer({
+      modules: [journalsCoreModule],
+      data: { journals: { daily: fixedJournal("daily", { type: "day" }, { nameTemplate: "" }) } },
+    });
     const meta: JournalMetadata = { journalName: "daily", anchor: anchor("2026-05-19") };
-    const result = c.resolve(NotePathService).pathFor("daily", meta);
+
+    const result = harness.resolve(NotePathService).pathFor("daily", meta);
+
     expect(result.isErr() && result.error instanceof EmptyNoteNameError).toBe(true);
   });
 
-  it("returns EmptyNoteNameError when the name template is only whitespace", () => {
-    const repo = fakeRepo({ daily: fixedJournal("daily", { type: "day" }, { nameTemplate: " ".repeat(3) }) });
-    const c = buildContainer(repo);
+  it("returns EmptyNoteNameError when the name template is only whitespace", async () => {
+    const harness = await testContainer({
+      modules: [journalsCoreModule],
+      data: { journals: { daily: fixedJournal("daily", { type: "day" }, { nameTemplate: " ".repeat(3) }) } },
+    });
     const meta: JournalMetadata = { journalName: "daily", anchor: anchor("2026-05-19") };
-    const result = c.resolve(NotePathService).pathFor("daily", meta);
+
+    const result = harness.resolve(NotePathService).pathFor("daily", meta);
+
     expect(result.isErr() && result.error instanceof EmptyNoteNameError).toBe(true);
   });
 
-  it("returns EmptyNoteNameError when every variable in the name template renders empty", () => {
-    const repo = fakeRepo({
-      daily: fixedJournal(
-        "daily",
-        { type: "day" },
-        {
-          nameTemplate: "{{index}}",
-          numbering: {
-            enabled: false,
-            anchorDate: anchor("2026-01-01"),
-            allowBefore: false,
-            sources: [{ variable: "index", frontmatterKey: "index", anchorValue: 1, reset: { kind: "never" } }],
-          },
+  it("returns EmptyNoteNameError when every variable in the name template renders empty", async () => {
+    const harness = await testContainer({
+      modules: [journalsCoreModule],
+      data: {
+        journals: {
+          daily: fixedJournal(
+            "daily",
+            { type: "day" },
+            {
+              nameTemplate: "{{index}}",
+              numbering: {
+                enabled: false,
+                anchorDate: anchor("2026-01-01"),
+                allowBefore: false,
+                sources: [{ variable: "index", frontmatterKey: "index", anchorValue: 1, reset: { kind: "never" } }],
+              },
+            },
+          ),
         },
-      ),
+      },
     });
-    const c = buildContainer(repo);
     const meta: JournalMetadata = { journalName: "daily", anchor: anchor("2026-05-19") };
-    const result = c.resolve(NotePathService).pathFor("daily", meta);
+
+    const result = harness.resolve(NotePathService).pathFor("daily", meta);
+
     expect(result.isErr() && result.error instanceof EmptyNoteNameError).toBe(true);
   });
 
-  it("resolves the path when only the folder template renders empty", () => {
-    const repo = fakeRepo({
-      daily: fixedJournal("daily", { type: "day" }, { folder: "" }),
+  it("resolves the path when only the folder template renders empty", async () => {
+    const harness = await testContainer({
+      modules: [journalsCoreModule],
+      data: { journals: { daily: fixedJournal("daily", { type: "day" }, { folder: "" }) } },
     });
-    const c = buildContainer(repo);
     const meta: JournalMetadata = { journalName: "daily", anchor: anchor("2026-05-19") };
-    const result = c.resolve(NotePathService).pathFor("daily", meta);
+
+    const result = harness.resolve(NotePathService).pathFor("daily", meta);
+
     expect(result.isOk() && result.value).toBe("2026-05-19.md");
   });
 
-  it("renders an empty string for a numbering variable with no resolved value", () => {
-    const repo = fakeRepo({
-      sprints: customJournal("sprints", "week", 1, "2024-01-01", { nameTemplate: "{{journal_name}} {{index}}" }),
+  it("renders an empty string for a numbering variable with no resolved value", async () => {
+    const harness = await testContainer({
+      modules: [journalsCoreModule],
+      data: {
+        journals: {
+          sprints: customJournal("sprints", "week", 1, "2024-01-01", { nameTemplate: "{{journal_name}} {{index}}" }),
+        },
+      },
     });
-    const c = buildContainer(repo);
     const meta: JournalMetadata = { journalName: "sprints", anchor: anchor("2024-01-01") };
-    const result = c.resolve(NotePathService).pathFor("sprints", meta);
+
+    const result = harness.resolve(NotePathService).pathFor("sprints", meta);
+
     expect(result.isOk() && result.value).toBe("sprints .md");
   });
 });
 
 describe("NotePathService.pathForDate", () => {
-  it("resolves the note path for a date in a fixed day journal", () => {
-    const repo = fakeRepo({ daily: fixedJournal("daily", { type: "day" }) });
-    const c = buildContainer(repo);
-    const result = c.resolve(NotePathService).pathForDate("daily", CalendarDate.fromAnchor(anchor("2026-05-19")));
+  it("resolves the note path for a date in a fixed day journal", async () => {
+    const harness = await testContainer({
+      modules: [journalsCoreModule],
+      data: { journals: { daily: fixedJournal("daily", { type: "day" }) } },
+    });
+
+    const result = harness.resolve(NotePathService).pathForDate("daily", CalendarDate.fromAnchor(anchor("2026-05-19")));
+
     expect(result.isOk() && result.value).toBe("2026-05-19.md");
   });
 
-  it("resolves the enclosing week note when the journal writes weeks", () => {
-    const repo = fakeRepo({ weekly: fixedJournal("weekly", { type: "week" }) });
-    const c = buildContainer(repo);
-    const result = c.resolve(NotePathService).pathForDate("weekly", CalendarDate.fromAnchor(anchor("2026-05-19")));
+  it("resolves the enclosing week note when the journal writes weeks", async () => {
+    const harness = await testContainer({
+      modules: [journalsCoreModule],
+      data: { journals: { weekly: fixedJournal("weekly", { type: "week" }) } },
+    });
+
+    const result = harness
+      .resolve(NotePathService)
+      .pathForDate("weekly", CalendarDate.fromAnchor(anchor("2026-05-19")));
+
     expect(result.isOk() && result.value).toMatch(/^\d{4}-W\d{1,2}\.md$/);
   });
 
-  it("returns JournalNotFoundError for an unknown journal", () => {
-    const repo = fakeRepo({});
-    const c = buildContainer(repo);
-    const result = c.resolve(NotePathService).pathForDate("missing", CalendarDate.fromAnchor(anchor("2026-05-19")));
+  it("returns JournalNotFoundError for an unknown journal", async () => {
+    const harness = await testContainer({ modules: [journalsCoreModule], data: { journals: {} } });
+
+    const result = harness
+      .resolve(NotePathService)
+      .pathForDate("missing", CalendarDate.fromAnchor(anchor("2026-05-19")));
+
     expect(result.isErr() && result.error instanceof JournalNotFoundError).toBe(true);
   });
 });
 
 describe("NotePathService.noteNameFor", () => {
-  it("renders the name template without the folder or the .md extension", () => {
+  it("renders the name template without the folder or the .md extension", async () => {
     const config = fixedJournal("daily", { type: "day" }, { folder: "Journals/{{date:YYYY}}" });
-    const c = buildContainer(fakeRepo({ daily: config }));
+    const harness = await testContainer({ modules: [journalsCoreModule], data: { journals: { daily: config } } });
     const meta: JournalMetadata = { journalName: "daily", anchor: anchor("2026-05-19") };
-    expect(c.resolve(NotePathService).noteNameFor(config, meta)).toBe("2026-05-19");
+
+    expect(harness.resolve(NotePathService).noteNameFor(config, meta)).toBe("2026-05-19");
   });
 
-  it("renders a numbering variable from the metadata's stored numbers", () => {
+  it("renders a numbering variable from the metadata's stored numbers", async () => {
     const config = customJournal("sprint", "week", 2, "2024-01-01", { nameTemplate: "Sprint {{index}}" });
-    const c = buildContainer(fakeRepo({ sprint: config }));
+    const harness = await testContainer({ modules: [journalsCoreModule], data: { journals: { sprint: config } } });
     const meta: JournalMetadata = { journalName: "sprint", anchor: anchor("2024-01-15"), numbers: { index: 2 } };
-    expect(c.resolve(NotePathService).noteNameFor(config, meta)).toBe("Sprint 2");
+
+    expect(harness.resolve(NotePathService).noteNameFor(config, meta)).toBe("Sprint 2");
   });
 });
 
@@ -204,248 +239,348 @@ function sprintJournal(anchorDate: string): JournalConfig {
 }
 
 describe("NotePathService.candidateFor", () => {
-  it("inverts a {{date}}.md path into a metadata anchor", () => {
-    const repo = fakeRepo({ daily: fixedJournal("daily", { type: "day" }) });
-    const c = buildContainer(repo);
-    const result = c.resolve(NotePathService).candidateFor("daily", "2026-05-19.md" as VaultPath);
-    const metadata = unwrap(result);
-    expect(metadata.anchor).toBe("2026-05-19");
-    expect(metadata.journalName).toBe("daily");
+  describe("a plain daily journal", () => {
+    let harness: TestHarness;
+
+    beforeEach(async () => {
+      harness = await testContainer({
+        modules: [journalsCoreModule],
+        data: { journals: { daily: fixedJournal("daily", { type: "day" }) } },
+      });
+    });
+
+    it("inverts a {{date}}.md path into a metadata anchor", () => {
+      const result = harness.resolve(NotePathService).candidateFor("daily", "2026-05-19.md" as VaultPath);
+
+      const metadata = unwrap(result);
+      expect(metadata.anchor).toBe("2026-05-19");
+      expect(metadata.journalName).toBe("daily");
+    });
+
+    it("returns None when the path doesn't match the template", () => {
+      const result = harness.resolve(NotePathService).candidateFor("daily", "Inbox/note.md" as VaultPath);
+
+      expect(result.isNone()).toBe(true);
+    });
   });
 
-  it("inverts a path whose template capitalized the date variable", () => {
-    const repo = fakeRepo({
-      daily: fixedJournal("daily", { type: "day" }, { nameTemplate: "{{Date:YYYY-MM-DD}}" }),
+  it("inverts a path whose template capitalized the date variable", async () => {
+    const harness = await testContainer({
+      modules: [journalsCoreModule],
+      data: {
+        journals: { daily: fixedJournal("daily", { type: "day" }, { nameTemplate: "{{Date:YYYY-MM-DD}}" }) },
+      },
     });
-    const c = buildContainer(repo);
-    const result = c.resolve(NotePathService).candidateFor("daily", "2026-05-19.md" as VaultPath);
+
+    const result = harness.resolve(NotePathService).candidateFor("daily", "2026-05-19.md" as VaultPath);
+
     expect(unwrap(result).anchor).toBe("2026-05-19");
   });
 
-  it("returns None when the path doesn't match the template", () => {
-    const repo = fakeRepo({ daily: fixedJournal("daily", { type: "day" }) });
-    const c = buildContainer(repo);
-    const result = c.resolve(NotePathService).candidateFor("daily", "Inbox/note.md" as VaultPath);
-    expect(result.isNone()).toBe(true);
-  });
-
-  it("inverts folder + name combined", () => {
-    const repo = fakeRepo({
-      daily: fixedJournal("daily", { type: "day" }, { folder: "Diary/{{date:YYYY}}" }),
+  it("inverts folder + name combined", async () => {
+    const harness = await testContainer({
+      modules: [journalsCoreModule],
+      data: { journals: { daily: fixedJournal("daily", { type: "day" }, { folder: "Diary/{{date:YYYY}}" }) } },
     });
-    const c = buildContainer(repo);
-    const result = c.resolve(NotePathService).candidateFor("daily", "Diary/2026/2026-05-19.md" as VaultPath);
-    const metadata = unwrap(result);
-    expect(metadata.anchor).toBe("2026-05-19");
-  });
 
-  it("inverts a date split across folder segments and the filename", () => {
-    const repo = fakeRepo({
-      daily: fixedJournal(
-        "daily",
-        { type: "day" },
-        { folder: "Journals/{{date:YYYY}}/{{date:MM}}", nameTemplate: "{{date:DD}}" },
-      ),
-    });
-    const c = buildContainer(repo);
-    const result = c.resolve(NotePathService).candidateFor("daily", "Journals/2026/05/19.md" as VaultPath);
+    const result = harness.resolve(NotePathService).candidateFor("daily", "Diary/2026/2026-05-19.md" as VaultPath);
+
     expect(unwrap(result).anchor).toBe("2026-05-19");
   });
 
-  it("inverts a date split across multiple tokens in the filename", () => {
-    const repo = fakeRepo({
-      daily: fixedJournal("daily", { type: "day" }, { nameTemplate: "{{date:YYYY}}-{{date:MM}}-{{date:DD}}" }),
+  it("inverts a date split across folder segments and the filename", async () => {
+    const harness = await testContainer({
+      modules: [journalsCoreModule],
+      data: {
+        journals: {
+          daily: fixedJournal(
+            "daily",
+            { type: "day" },
+            { folder: "Journals/{{date:YYYY}}/{{date:MM}}", nameTemplate: "{{date:DD}}" },
+          ),
+        },
+      },
     });
-    const c = buildContainer(repo);
-    const result = c.resolve(NotePathService).candidateFor("daily", "2026-05-19.md" as VaultPath);
+
+    const result = harness.resolve(NotePathService).candidateFor("daily", "Journals/2026/05/19.md" as VaultPath);
+
     expect(unwrap(result).anchor).toBe("2026-05-19");
   });
 
-  it("inverts a quarter split between a year folder and the filename", () => {
-    const repo = fakeRepo({
-      quarterly: fixedJournal(
-        "quarterly",
-        { type: "quarter" },
-        { folder: "Quarters/{{date:YYYY}}", nameTemplate: "{{date:[Q]Q}}" },
-      ),
+  it("inverts a date split across multiple tokens in the filename", async () => {
+    const harness = await testContainer({
+      modules: [journalsCoreModule],
+      data: {
+        journals: {
+          daily: fixedJournal("daily", { type: "day" }, { nameTemplate: "{{date:YYYY}}-{{date:MM}}-{{date:DD}}" }),
+        },
+      },
     });
-    const c = buildContainer(repo);
-    const svc = c.resolve(NotePathService);
-    expect(unwrap(svc.candidateFor("quarterly", "Quarters/2027/Q3.md" as VaultPath)).anchor).toBe("2027-07-01");
-    expect(unwrap(svc.candidateFor("quarterly", "Quarters/2025/Q1.md" as VaultPath)).anchor).toBe("2025-01-01");
+
+    const result = harness.resolve(NotePathService).candidateFor("daily", "2026-05-19.md" as VaultPath);
+
+    expect(unwrap(result).anchor).toBe("2026-05-19");
   });
 
-  it("round-trips every quarter of a split template, including across years", () => {
-    const repo = fakeRepo({
-      quarterly: fixedJournal(
-        "quarterly",
-        { type: "quarter" },
-        { folder: "Quarters/{{date:YYYY}}", nameTemplate: "{{date:[Q]Q}}" },
-      ),
+  describe("a quarter split between a year folder and the filename", () => {
+    let harness: TestHarness;
+
+    beforeEach(async () => {
+      harness = await testContainer({
+        modules: [journalsCoreModule],
+        data: {
+          journals: {
+            quarterly: fixedJournal(
+              "quarterly",
+              { type: "quarter" },
+              { folder: "Quarters/{{date:YYYY}}", nameTemplate: "{{date:[Q]Q}}" },
+            ),
+          },
+        },
+      });
     });
-    const c = buildContainer(repo);
-    const svc = c.resolve(NotePathService);
-    for (const a of ["2025-01-01", "2025-04-01", "2025-07-01", "2025-10-01", "2027-10-01"]) {
-      const path = svc.pathFor("quarterly", { journalName: "quarterly", anchor: anchor(a) });
-      assert(path.isOk());
-      expect(unwrap(svc.candidateFor("quarterly", path.value)).anchor).toBe(a);
-    }
+
+    it("inverts a quarter split between a year folder and the filename", () => {
+      const service = harness.resolve(NotePathService);
+
+      expect(unwrap(service.candidateFor("quarterly", "Quarters/2027/Q3.md" as VaultPath)).anchor).toBe("2027-07-01");
+      expect(unwrap(service.candidateFor("quarterly", "Quarters/2025/Q1.md" as VaultPath)).anchor).toBe("2025-01-01");
+    });
+
+    it("round-trips every quarter of a split template, including across years", () => {
+      const service = harness.resolve(NotePathService);
+
+      for (const a of ["2025-01-01", "2025-04-01", "2025-07-01", "2025-10-01", "2027-10-01"]) {
+        const path = service.pathFor("quarterly", { journalName: "quarterly", anchor: anchor(a) });
+        assert(path.isOk());
+        expect(unwrap(service.candidateFor("quarterly", path.value)).anchor).toBe(a);
+      }
+    });
   });
 
   // A week's tokens render from its representative day, so the year written into the folder is the
   // week-year -- a week starting in the previous calendar year has to invert back to its own start.
-  it("round-trips a week split between a year folder and the filename across a year boundary", () => {
-    const repo = fakeRepo({
-      weekly: fixedJournal("weekly", { type: "week" }, { folder: "{{date:YYYY}}", nameTemplate: "{{date:[W]ww}}" }),
+  it("round-trips a week split between a year folder and the filename across a year boundary", async () => {
+    const harness = await testContainer({
+      modules: [journalsCoreModule],
+      data: {
+        journals: {
+          weekly: fixedJournal("weekly", { type: "week" }, { folder: "{{date:YYYY}}", nameTemplate: "{{date:[W]ww}}" }),
+        },
+      },
     });
-    const c = buildContainer(repo);
-    const svc = c.resolve(NotePathService);
-    const cycle = c.resolve(CycleService);
+    const service = harness.resolve(NotePathService);
+    const cycle = harness.resolve(CycleService);
+
     // Each seed day sits in a week whose start falls in the previous calendar year.
     for (const seed of ["2026-01-01", "2025-01-01", "2024-01-01"]) {
       const expected = cycle.anchorOf("weekly", CalendarDate.fromAnchor(anchor(seed)));
       assert(expected.isSome());
-      const path = svc.pathFor("weekly", { journalName: "weekly", anchor: expected.value });
+      const path = service.pathFor("weekly", { journalName: "weekly", anchor: expected.value });
       assert(path.isOk());
-      expect(unwrap(svc.candidateFor("weekly", path.value)).anchor).toBe(expected.value);
+      expect(unwrap(service.candidateFor("weekly", path.value)).anchor).toBe(expected.value);
     }
   });
 
-  it("recovers the period anchor from a note named by its start date", () => {
-    const repo = fakeRepo({
-      weekly: fixedJournal("weekly", { type: "week" }, { nameTemplate: "{{start_date:YYYY-MM-DD}}" }),
-    });
-    const c = buildContainer(repo);
-    const svc = c.resolve(NotePathService);
-    const day = CalendarDate.fromAnchor(anchor("2026-05-21"));
-    const path = svc.pathForDate("weekly", day);
-    assert(path.isOk());
-    const expected = c.resolve(CycleService).anchorOf("weekly", day);
-    assert(expected.isSome());
-    expect(unwrap(svc.candidateFor("weekly", path.value)).anchor).toBe(expected.value);
-  });
-
-  it("recovers the period anchor from a note named by its end date", () => {
-    const repo = fakeRepo({
-      weekly: fixedJournal("weekly", { type: "week" }, { nameTemplate: "{{end_date:YYYY-MM-DD}}" }),
-    });
-    const c = buildContainer(repo);
-    const svc = c.resolve(NotePathService);
-    const day = CalendarDate.fromAnchor(anchor("2026-05-21"));
-    const path = svc.pathForDate("weekly", day);
-    assert(path.isOk());
-    const expected = c.resolve(CycleService).anchorOf("weekly", day);
-    assert(expected.isSome());
-    expect(unwrap(svc.candidateFor("weekly", path.value)).anchor).toBe(expected.value);
-  });
-
-  it("captures numbering variables that appear only in the folder template", () => {
-    const repo = fakeRepo({
-      sprints: fixedJournal(
-        "sprints",
-        { type: "day" },
-        {
-          folder: "{{index}} - Sprints",
-          nameTemplate: "{{date}}",
-          numbering: {
-            enabled: true,
-            anchorDate: "2026-01-01" as AnchorString,
-            allowBefore: false,
-            sources: [{ variable: "index", frontmatterKey: "sprint-number", anchorValue: 1, reset: { kind: "never" } }],
-          },
+  it("recovers the period anchor from a note named by its start date", async () => {
+    const harness = await testContainer({
+      modules: [journalsCoreModule],
+      data: {
+        journals: {
+          weekly: fixedJournal("weekly", { type: "week" }, { nameTemplate: "{{start_date:YYYY-MM-DD}}" }),
         },
-      ),
+      },
     });
-    const c = buildContainer(repo);
-    const result = c.resolve(NotePathService).candidateFor("sprints", "42 - Sprints/2026-05-19.md" as VaultPath);
+    const service = harness.resolve(NotePathService);
+    const day = CalendarDate.fromAnchor(anchor("2026-05-21"));
+    const path = service.pathForDate("weekly", day);
+    assert(path.isOk());
+
+    const expected = harness.resolve(CycleService).anchorOf("weekly", day);
+
+    assert(expected.isSome());
+    expect(unwrap(service.candidateFor("weekly", path.value)).anchor).toBe(expected.value);
+  });
+
+  it("recovers the period anchor from a note named by its end date", async () => {
+    const harness = await testContainer({
+      modules: [journalsCoreModule],
+      data: {
+        journals: {
+          weekly: fixedJournal("weekly", { type: "week" }, { nameTemplate: "{{end_date:YYYY-MM-DD}}" }),
+        },
+      },
+    });
+    const service = harness.resolve(NotePathService);
+    const day = CalendarDate.fromAnchor(anchor("2026-05-21"));
+    const path = service.pathForDate("weekly", day);
+    assert(path.isOk());
+
+    const expected = harness.resolve(CycleService).anchorOf("weekly", day);
+
+    assert(expected.isSome());
+    expect(unwrap(service.candidateFor("weekly", path.value)).anchor).toBe(expected.value);
+  });
+
+  it("captures numbering variables that appear only in the folder template", async () => {
+    const harness = await testContainer({
+      modules: [journalsCoreModule],
+      data: {
+        journals: {
+          sprints: fixedJournal(
+            "sprints",
+            { type: "day" },
+            {
+              folder: "{{index}} - Sprints",
+              nameTemplate: "{{date}}",
+              numbering: {
+                enabled: true,
+                anchorDate: "2026-01-01" as AnchorString,
+                allowBefore: false,
+                sources: [
+                  { variable: "index", frontmatterKey: "sprint-number", anchorValue: 1, reset: { kind: "never" } },
+                ],
+              },
+            },
+          ),
+        },
+      },
+    });
+
+    const result = harness.resolve(NotePathService).candidateFor("sprints", "42 - Sprints/2026-05-19.md" as VaultPath);
+
     const metadata = unwrap(result);
     expect(metadata.anchor).toBe("2026-05-19");
     expect(metadata.numbers?.index).toBe(42);
   });
 
-  it("captures numbering variables when present in the template", () => {
-    const repo = fakeRepo({
-      issues: fixedJournal(
-        "issues",
-        { type: "day" },
-        {
-          nameTemplate: "Issue {{index}} - {{date}}",
-          numbering: {
-            enabled: true,
-            anchorDate: "2026-01-01" as AnchorString,
-            allowBefore: false,
-            sources: [{ variable: "index", frontmatterKey: "issue-number", anchorValue: 1, reset: { kind: "never" } }],
+  describe("a name template carrying a never-resetting index", () => {
+    let harness: TestHarness;
+
+    beforeEach(async () => {
+      harness = await testContainer({
+        modules: [journalsCoreModule],
+        data: {
+          journals: {
+            issues: fixedJournal(
+              "issues",
+              { type: "day" },
+              {
+                nameTemplate: "Issue {{index}} - {{date}}",
+                numbering: {
+                  enabled: true,
+                  anchorDate: "2026-01-01" as AnchorString,
+                  allowBefore: false,
+                  sources: [
+                    { variable: "index", frontmatterKey: "issue-number", anchorValue: 1, reset: { kind: "never" } },
+                  ],
+                },
+              },
+            ),
           },
         },
-      ),
+      });
     });
-    const c = buildContainer(repo);
-    const result = c.resolve(NotePathService).candidateFor("issues", "Issue 42 - 2026-05-19.md" as VaultPath);
-    const metadata = unwrap(result);
-    expect(metadata.anchor).toBe("2026-05-19");
-    expect(metadata.numbers?.index).toBe(42);
+
+    it("captures numbering variables when present in the template", () => {
+      const result = harness.resolve(NotePathService).candidateFor("issues", "Issue 42 - 2026-05-19.md" as VaultPath);
+
+      const metadata = unwrap(result);
+      expect(metadata.anchor).toBe("2026-05-19");
+      expect(metadata.numbers?.index).toBe(42);
+    });
+
+    it("keeps the date's reading when the numbering names a period the note name does not", () => {
+      const result = harness.resolve(NotePathService).candidateFor("issues", "Issue 42 - 2026-05-19.md" as VaultPath);
+
+      expect(unwrap(result).anchor).toBe("2026-05-19");
+    });
   });
 
-  it("recovers the anchor from an index-only template via numbering inversion", () => {
-    const repo = fakeRepo({
-      sprints: customJournal("sprints", "week", 1, "2024-01-01", { nameTemplate: "Sprint {{index}}" }),
+  it("recovers the anchor from an index-only template via numbering inversion", async () => {
+    const harness = await testContainer({
+      modules: [journalsCoreModule],
+      data: {
+        journals: { sprints: customJournal("sprints", "week", 1, "2024-01-01", { nameTemplate: "Sprint {{index}}" }) },
+      },
     });
-    const c = buildContainer(repo);
-    const result = c.resolve(NotePathService).candidateFor("sprints", "Sprint 3.md" as VaultPath);
+
+    const result = harness.resolve(NotePathService).candidateFor("sprints", "Sprint 3.md" as VaultPath);
+
     const metadata = unwrap(result);
     expect(metadata.anchor).toBe("2024-01-15");
     expect(metadata.numbers?.index).toBe(3);
   });
 
-  it("returns None when the filename's journal name differs from the journal", () => {
-    const repo = fakeRepo({
-      sprints: customJournal("sprints", "week", 1, "2024-01-01", { nameTemplate: "{{journal_name}} {{index}}" }),
-    });
-    const c = buildContainer(repo);
-    expect(
-      c
-        .resolve(NotePathService)
-        .candidateFor("sprints", "Other 3.md" as VaultPath)
-        .isNone(),
-    ).toBe(true);
-  });
+  describe("a name template carrying the journal name", () => {
+    let harness: TestHarness;
 
-  it("recovers the anchor when the filename's journal name matches", () => {
-    const repo = fakeRepo({
-      sprints: customJournal("sprints", "week", 1, "2024-01-01", { nameTemplate: "{{journal_name}} {{index}}" }),
-    });
-    const c = buildContainer(repo);
-    const result = c.resolve(NotePathService).candidateFor("sprints", "sprints 3.md" as VaultPath);
-    const metadata = unwrap(result);
-    expect(metadata.numbers?.index).toBe(3);
-  });
-
-  it("returns None for an index-only template when numbering is cyclic", () => {
-    const repo = fakeRepo({
-      sprints: customJournal("sprints", "week", 1, "2024-01-01", {
-        nameTemplate: "Sprint {{index}}",
-        numbering: {
-          enabled: true,
-          anchorDate: "2024-01-01" as AnchorString,
-          allowBefore: false,
-          sources: [
-            { variable: "index", frontmatterKey: "sprint-number", anchorValue: 1, reset: { kind: "after", count: 3 } },
-          ],
+    beforeEach(async () => {
+      harness = await testContainer({
+        modules: [journalsCoreModule],
+        data: {
+          journals: {
+            sprints: customJournal("sprints", "week", 1, "2024-01-01", { nameTemplate: "{{journal_name}} {{index}}" }),
+          },
         },
-      }),
+      });
     });
-    const c = buildContainer(repo);
+
+    it("returns None when the filename's journal name differs from the journal", () => {
+      expect(
+        harness
+          .resolve(NotePathService)
+          .candidateFor("sprints", "Other 3.md" as VaultPath)
+          .isNone(),
+      ).toBe(true);
+    });
+
+    it("recovers the anchor when the filename's journal name matches", () => {
+      const result = harness.resolve(NotePathService).candidateFor("sprints", "sprints 3.md" as VaultPath);
+
+      expect(unwrap(result).numbers?.index).toBe(3);
+    });
+  });
+
+  it("returns None for an index-only template when numbering is cyclic", async () => {
+    const harness = await testContainer({
+      modules: [journalsCoreModule],
+      data: {
+        journals: {
+          sprints: customJournal("sprints", "week", 1, "2024-01-01", {
+            nameTemplate: "Sprint {{index}}",
+            numbering: {
+              enabled: true,
+              anchorDate: "2024-01-01" as AnchorString,
+              allowBefore: false,
+              sources: [
+                {
+                  variable: "index",
+                  frontmatterKey: "sprint-number",
+                  anchorValue: 1,
+                  reset: { kind: "after", count: 3 },
+                },
+              ],
+            },
+          }),
+        },
+      },
+    });
+
     expect(
-      c
+      harness
         .resolve(NotePathService)
         .candidateFor("sprints", "Sprint 2.md" as VaultPath)
         .isNone(),
     ).toBe(true);
   });
-  it("inverts the numbering when the name's date variable cannot tell the periods apart", () => {
-    const repo = fakeRepo({ sprints: sprintJournal("2026-01-05") });
-    const c = buildContainer(repo);
-    const service = c.resolve(NotePathService);
+
+  it("inverts the numbering when the name's date variable cannot tell the periods apart", async () => {
+    const harness = await testContainer({
+      modules: [journalsCoreModule],
+      data: { journals: { sprints: sprintJournal("2026-01-05") } },
+    });
+    const service = harness.resolve(NotePathService);
 
     expect(unwrap(service.candidateFor("sprints", "2026-C1-S1.md" as VaultPath)).anchor).toBe("2026-01-05");
     expect(unwrap(service.candidateFor("sprints", "2026-C1-S2.md" as VaultPath)).anchor).toBe("2026-01-19");
@@ -456,156 +591,136 @@ describe("NotePathService.candidateFor", () => {
   // The year the date variable parses back to lands inside the journal's very first interval
   // of that year, so that one interval renders the note name it was handed — a name the rest
   // of the year renders too.
-  it("inverts the numbering when the coarse date renders back the same name as its own period", () => {
-    const repo = fakeRepo({ sprints: sprintJournal("2026-01-01") });
-    const c = buildContainer(repo);
-    const service = c.resolve(NotePathService);
+  it("inverts the numbering when the coarse date renders back the same name as its own period", async () => {
+    const harness = await testContainer({
+      modules: [journalsCoreModule],
+      data: { journals: { sprints: sprintJournal("2026-01-01") } },
+    });
+    const service = harness.resolve(NotePathService);
 
     expect(unwrap(service.candidateFor("sprints", "2026-C1-S1.md" as VaultPath)).anchor).toBe("2026-01-01");
     expect(unwrap(service.candidateFor("sprints", "2026-C2-S1.md" as VaultPath)).anchor).toBe("2026-02-12");
   });
 
-  it("keeps the date's reading when the numbering names a period the note name does not", () => {
-    const repo = fakeRepo({
-      issues: fixedJournal(
-        "issues",
-        { type: "day" },
-        {
-          nameTemplate: "Issue {{index}} - {{date}}",
-          numbering: {
-            enabled: true,
-            anchorDate: "2026-01-01" as AnchorString,
-            allowBefore: false,
-            sources: [{ variable: "index", frontmatterKey: "issue-number", anchorValue: 1, reset: { kind: "never" } }],
-          },
-        },
-      ),
-    });
-    const c = buildContainer(repo);
-
-    const result = c.resolve(NotePathService).candidateFor("issues", "Issue 42 - 2026-05-19.md" as VaultPath);
-
-    expect(unwrap(result).anchor).toBe("2026-05-19");
-  });
-  it("finds the period a coarse date and a cyclic digit identify only together", () => {
-    const repo = fakeRepo({
-      monthly: fixedJournal(
-        "monthly",
-        { type: "month" },
-        {
-          nameTemplate: "{{date:YYYY}}-M{{month}}",
-          numbering: {
-            enabled: true,
-            anchorDate: "2026-01-01" as AnchorString,
-            allowBefore: false,
-            sources: [
-              {
-                variable: "month",
-                frontmatterKey: "journal-month",
-                anchorValue: 1,
-                reset: { kind: "after", count: 12 },
+  it("finds the period a coarse date and a cyclic digit identify only together", async () => {
+    const harness = await testContainer({
+      modules: [journalsCoreModule],
+      data: {
+        journals: {
+          monthly: fixedJournal(
+            "monthly",
+            { type: "month" },
+            {
+              nameTemplate: "{{date:YYYY}}-M{{month}}",
+              numbering: {
+                enabled: true,
+                anchorDate: "2026-01-01" as AnchorString,
+                allowBefore: false,
+                sources: [
+                  {
+                    variable: "month",
+                    frontmatterKey: "journal-month",
+                    anchorValue: 1,
+                    reset: { kind: "after", count: 12 },
+                  },
+                ],
               },
-            ],
-          },
+            },
+          ),
         },
-      ),
+      },
     });
-    const c = buildContainer(repo);
-    const service = c.resolve(NotePathService);
+    const service = harness.resolve(NotePathService);
 
     expect(unwrap(service.candidateFor("monthly", "2026-M5.md" as VaultPath)).anchor).toBe("2026-05-01");
     expect(unwrap(service.candidateFor("monthly", "2026-M11.md" as VaultPath)).anchor).toBe("2026-11-01");
     expect(unwrap(service.candidateFor("monthly", "2027-M5.md" as VaultPath)).anchor).toBe("2027-05-01");
   });
 
-  it("takes the earliest period when a coarse date and a short cycle name several alike", () => {
-    const repo = fakeRepo({
-      sprints: customJournal("sprints", "week", 2, "2026-01-05", {
-        nameTemplate: "{{date:YYYY}}-S{{sprint}}",
-        numbering: {
-          enabled: true,
-          anchorDate: "2026-01-05" as AnchorString,
-          allowBefore: false,
-          sources: [
-            {
-              variable: "sprint",
-              frontmatterKey: "journal-sprint",
-              anchorValue: 1,
-              reset: { kind: "after", count: 3 },
+  it("takes the earliest period when a coarse date and a short cycle name several alike", async () => {
+    const harness = await testContainer({
+      modules: [journalsCoreModule],
+      data: {
+        journals: {
+          sprints: customJournal("sprints", "week", 2, "2026-01-05", {
+            nameTemplate: "{{date:YYYY}}-S{{sprint}}",
+            numbering: {
+              enabled: true,
+              anchorDate: "2026-01-05" as AnchorString,
+              allowBefore: false,
+              sources: [
+                {
+                  variable: "sprint",
+                  frontmatterKey: "journal-sprint",
+                  anchorValue: 1,
+                  reset: { kind: "after", count: 3 },
+                },
+              ],
             },
-          ],
+          }),
         },
-      }),
+      },
     });
-    const c = buildContainer(repo);
 
-    const result = c.resolve(NotePathService).candidateFor("sprints", "2026-S2.md" as VaultPath);
+    const result = harness.resolve(NotePathService).candidateFor("sprints", "2026-S2.md" as VaultPath);
 
     expect(unwrap(result).anchor).toBe("2026-01-19");
   });
 });
 
 describe("NotePathService.candidateFor weekly round trip", () => {
-  let teardown: () => void;
+  describe("a plain weekly journal", () => {
+    let harness: TestHarness;
 
-  beforeEach(() => {
-    ({ teardown } = installTestCalendar());
-  });
-  afterEach(() => {
-    teardown();
-  });
-
-  it("resolves a weekly note name to the journal's canonical anchor", () => {
-    const repo = fakeRepo({ weekly: fixedJournal("weekly", { type: "week" }) });
-    const c = buildContainer(repo);
-
-    const result = c.resolve(NotePathService).candidateFor("weekly", "2026-W1.md" as VaultPath);
-
-    expect(unwrap(result).anchor).toBe("2025-12-29");
-  });
-
-  it("resolves a day-precision weekly note name to the week's first day", () => {
-    const repo = fakeRepo({
-      weekly: fixedJournal("weekly", { type: "week" }, { dateFormat: "YYYY-MM-DD" }),
+    beforeEach(async () => {
+      harness = await testContainer({
+        modules: [journalsCoreModule],
+        data: { journals: { weekly: fixedJournal("weekly", { type: "week" }) } },
+      });
     });
-    const c = buildContainer(repo);
 
-    const result = c.resolve(NotePathService).candidateFor("weekly", "2026-01-01.md" as VaultPath);
+    it("resolves a weekly note name to the journal's canonical anchor", () => {
+      const result = harness.resolve(NotePathService).candidateFor("weekly", "2026-W1.md" as VaultPath);
 
-    expect(unwrap(result).anchor).toBe("2025-12-29");
+      expect(unwrap(result).anchor).toBe("2025-12-29");
+    });
+
+    it("renders a weekly note name from the week-year regardless of the stored anchor", () => {
+      const meta: JournalMetadata = { journalName: "weekly", anchor: anchor("2025-12-29") };
+
+      const result = harness.resolve(NotePathService).pathFor("weekly", meta);
+
+      expect(result.isOk() && result.value).toBe("2026-W1.md");
+    });
   });
 
-  it("renders a weekly note name from the week-year regardless of the stored anchor", () => {
-    const repo = fakeRepo({ weekly: fixedJournal("weekly", { type: "week" }) });
-    const c = buildContainer(repo);
-    const meta: JournalMetadata = { journalName: "weekly", anchor: anchor("2025-12-29") };
+  it("resolves a day-precision weekly note name to the week's first day", async () => {
+    const harness = await testContainer({
+      modules: [journalsCoreModule],
+      data: { journals: { weekly: fixedJournal("weekly", { type: "week" }, { dateFormat: "YYYY-MM-DD" }) } },
+    });
 
-    const result = c.resolve(NotePathService).pathFor("weekly", meta);
+    const result = harness.resolve(NotePathService).candidateFor("weekly", "2026-01-01.md" as VaultPath);
 
-    expect(result.isOk() && result.value).toBe("2026-W1.md");
+    expect(unwrap(result).anchor).toBe("2025-12-29");
   });
 });
 
 describe("NotePathService.inverterFor", () => {
-  let teardown: () => void;
-
-  beforeEach(() => {
-    ({ teardown } = installTestCalendar());
-  });
-  afterEach(() => {
-    teardown();
-  });
-
-  it("inverts many paths with one prepared inverter, matching candidateFor", () => {
-    const repo = fakeRepo({
-      weekly: fixedJournal(
-        "weekly",
-        { type: "week" },
-        { folder: "Weeks/{{date:YYYY}}", nameTemplate: "{{date:MM-DD}}" },
-      ),
+  it("inverts many paths with one prepared inverter, matching candidateFor", async () => {
+    const harness = await testContainer({
+      modules: [journalsCoreModule],
+      data: {
+        journals: {
+          weekly: fixedJournal(
+            "weekly",
+            { type: "week" },
+            { folder: "Weeks/{{date:YYYY}}", nameTemplate: "{{date:MM-DD}}" },
+          ),
+        },
+      },
     });
-    const c = buildContainer(repo);
-    const service = c.resolve(NotePathService);
+    const service = harness.resolve(NotePathService);
     const inverter = unwrap(service.inverterFor("weekly"));
 
     const firstPath = "Weeks/2026/01-15.md" as VaultPath;
@@ -618,56 +733,59 @@ describe("NotePathService.inverterFor", () => {
     expect(unwrap(first).anchor).not.toBe(unwrap(second).anchor);
   });
 
-  it("returns none for a journal that does not exist", () => {
-    const c = buildContainer(fakeRepo({}));
-    expect(c.resolve(NotePathService).inverterFor("missing").isSome()).toBe(false);
+  it("returns none for a journal that does not exist", async () => {
+    const harness = await testContainer({ modules: [journalsCoreModule], data: { journals: {} } });
+
+    expect(harness.resolve(NotePathService).inverterFor("missing").isSome()).toBe(false);
   });
 });
 
-// ISO test calendar: the week anchored Mon 2025-12-29 is week 1 of 2026, running to
-// Sun 2026-01-04, and its representative day is Thu 2026-01-01.
-function weeklyContextValue(variable: string): string {
-  const config = fixedJournal("weekly", { type: "week" }, { dateFormat: "YYYY-MM-DD" });
-  const service = buildContainer(fakeRepo({ weekly: config })).resolve(NotePathService);
-  const context = service.contextFor(config, { journalName: "weekly", anchor: anchor("2025-12-29") });
+function dateAnchorOf(context: TemplateContext, variable: string): string {
   const spec = context.get(variable);
   assert(spec?.kind === "date");
   return spec.value.toAnchor();
 }
 
+// ISO test calendar: the week anchored Mon 2025-12-29 is week 1 of 2026, running to
+// Sun 2026-01-04, and its representative day is Thu 2026-01-01.
 describe("contextFor — weekly period variables", () => {
-  let teardown: () => void;
+  let context: TemplateContext;
 
-  beforeEach(() => {
-    ({ teardown } = installTestCalendar());
-  });
-  afterEach(() => {
-    teardown();
+  beforeEach(async () => {
+    const config = fixedJournal("weekly", { type: "week" }, { dateFormat: "YYYY-MM-DD" });
+    const harness = await testContainer({
+      modules: [journalsCoreModule],
+      data: { journals: { weekly: config } },
+    });
+    context = harness
+      .resolve(NotePathService)
+      .contextFor(config, { journalName: "weekly", anchor: anchor("2025-12-29") });
   });
 
   it("renders date as the week's representative day", () => {
-    expect(weeklyContextValue("date")).toBe("2026-01-01");
+    expect(dateAnchorOf(context, "date")).toBe("2026-01-01");
   });
 
   it("renders start_date as the week's first day", () => {
-    expect(weeklyContextValue("start_date")).toBe("2025-12-29");
+    expect(dateAnchorOf(context, "start_date")).toBe("2025-12-29");
   });
 
   it("renders end_date as the week's last day", () => {
-    expect(weeklyContextValue("end_date")).toBe("2026-01-04");
+    expect(dateAnchorOf(context, "end_date")).toBe("2026-01-04");
   });
 });
 
-function buildFixture(): { service: NotePathService; config: JournalConfig; metadata: JournalMetadata } {
-  const config = fixedJournal("daily", { type: "day" }, { dateFormat: "DD/MM/YYYY" });
-  const repo = fakeRepo({ daily: config });
-  const service = buildContainer(repo).resolve(NotePathService);
-  const metadata: JournalMetadata = { journalName: "daily", anchor: anchor("2026-05-20") };
-  return { service, config, metadata };
-}
-
 describe("contextFor — render-time variables", () => {
-  beforeEach(() => {
+  const config = fixedJournal("daily", { type: "day" }, { dateFormat: "DD/MM/YYYY" });
+  const metadata: JournalMetadata = { journalName: "daily", anchor: anchor("2026-05-20") };
+  let service: NotePathService;
+
+  beforeEach(async () => {
+    const harness = await testContainer({
+      modules: [journalsCoreModule],
+      data: { journals: { daily: config } },
+    });
+    service = harness.resolve(NotePathService);
     vi.useFakeTimers();
   });
 
@@ -677,8 +795,9 @@ describe("contextFor — render-time variables", () => {
 
   it("exposes current_date as a non-invertible YYYY-MM-DD date snapshot", () => {
     vi.setSystemTime(new Date("2026-05-20T10:37:42"));
-    const { service, config, metadata } = buildFixture();
+
     const context = service.contextFor(config, metadata);
+
     const spec = context.get("current_date");
     expect(spec?.kind).toBe("date");
     assert(spec?.kind === "date");
@@ -688,8 +807,9 @@ describe("contextFor — render-time variables", () => {
 
   it("exposes time and current_time as the same clock spec object", () => {
     vi.setSystemTime(new Date("2026-05-20T10:37:42"));
-    const { service, config, metadata } = buildFixture();
+
     const context = service.contextFor(config, metadata);
+
     const time = context.get("time");
     const currentTime = context.get("current_time");
     expect(time?.kind).toBe("clock");
@@ -700,7 +820,16 @@ describe("contextFor — render-time variables", () => {
 });
 
 describe("bodyContextFor", () => {
-  beforeEach(() => {
+  const config = fixedJournal("daily", { type: "day" }, { dateFormat: "DD/MM/YYYY" });
+  const metadata: JournalMetadata = { journalName: "daily", anchor: anchor("2026-05-20") };
+  let service: NotePathService;
+
+  beforeEach(async () => {
+    const harness = await testContainer({
+      modules: [journalsCoreModule],
+      data: { journals: { daily: config } },
+    });
+    service = harness.resolve(NotePathService);
     vi.useFakeTimers();
   });
 
@@ -710,8 +839,9 @@ describe("bodyContextFor", () => {
 
   it("aliases note_name and title to the same string spec", () => {
     vi.setSystemTime(new Date("2026-05-20T10:37:42"));
-    const { service, config, metadata } = buildFixture();
+
     const body = service.bodyContextFor(config, metadata, "2026-05-20");
+
     const noteName = body.get("note_name");
     const title = body.get("title");
     expect(noteName?.kind).toBe("string");
@@ -722,69 +852,77 @@ describe("bodyContextFor", () => {
 
   it("inherits path-context variables", () => {
     vi.setSystemTime(new Date("2026-05-20T10:37:42"));
-    const { service, config, metadata } = buildFixture();
+
     const body = service.bodyContextFor(config, metadata, "2026-05-20");
+
     expect(body.get("date")).toBeDefined();
     expect(body.get("current_date")).toBeDefined();
     expect(body.get("time")).toBeDefined();
   });
 
   it("does not expose note_name in the path context", () => {
-    const { service, config, metadata } = buildFixture();
     const path = service.contextFor(config, metadata);
+
     expect(path.get("note_name")).toBeUndefined();
     expect(path.get("title")).toBeUndefined();
   });
 });
 
 describe("NotePathService week_of_month", () => {
-  let teardown: () => void;
+  describe("a weekly note named by its month and week number", () => {
+    let harness: TestHarness;
 
-  beforeEach(() => {
-    ({ teardown } = installTestCalendar());
-  });
-  afterEach(() => {
-    teardown();
-  });
-
-  it("renders the week's position within its own month", () => {
-    const repo = fakeRepo({
-      weekly: fixedJournal("weekly", { type: "week" }, { nameTemplate: "{{date:MMMM}} week {{week_of_month}}" }),
+    beforeEach(async () => {
+      harness = await testContainer({
+        modules: [journalsCoreModule],
+        data: {
+          journals: {
+            weekly: fixedJournal(
+              "weekly",
+              { type: "week" },
+              {
+                nameTemplate: "{{date:MMMM}} week {{week_of_month}}",
+              },
+            ),
+          },
+        },
+      });
     });
-    const c = buildContainer(repo);
-    const meta: JournalMetadata = { journalName: "weekly", anchor: anchor("2026-09-14") };
 
-    const result = c.resolve(NotePathService).pathFor("weekly", meta);
+    it("renders the week's position within its own month", () => {
+      const meta: JournalMetadata = { journalName: "weekly", anchor: anchor("2026-09-14") };
 
-    expect(result.isOk() && result.value).toBe("September week 3.md");
+      const result = harness.resolve(NotePathService).pathFor("weekly", meta);
+
+      expect(result.isOk() && result.value).toBe("September week 3.md");
+    });
+
+    it("recovers the week whose number a name carries", () => {
+      const result = harness.resolve(NotePathService).candidateFor("weekly", "September week 3.md" as VaultPath);
+
+      expect(unwrap(result).anchor).toBe("2026-09-14");
+    });
   });
 
   // Reading both halves of the name off the end of the week keeps them agreeing on a week that
   // straddles two months: August 31 2026 opens the week September 1 falls in.
-  it("counts within the month the week ends in when read from the end of the week", () => {
-    const repo = fakeRepo({
-      daily: fixedJournal(
-        "daily",
-        { type: "day" },
-        { nameTemplate: "{{date<endOf=week>:MMMM}} week {{week_of_month<endOf=week>}}" },
-      ),
+  it("counts within the month the week ends in when read from the end of the week", async () => {
+    const harness = await testContainer({
+      modules: [journalsCoreModule],
+      data: {
+        journals: {
+          daily: fixedJournal(
+            "daily",
+            { type: "day" },
+            { nameTemplate: "{{date<endOf=week>:MMMM}} week {{week_of_month<endOf=week>}}" },
+          ),
+        },
+      },
     });
-    const c = buildContainer(repo);
     const meta: JournalMetadata = { journalName: "daily", anchor: anchor("2026-08-31") };
 
-    const result = c.resolve(NotePathService).pathFor("daily", meta);
+    const result = harness.resolve(NotePathService).pathFor("daily", meta);
 
     expect(result.isOk() && result.value).toBe("September week 1.md");
-  });
-
-  it("recovers the week whose number a name carries", () => {
-    const repo = fakeRepo({
-      weekly: fixedJournal("weekly", { type: "week" }, { nameTemplate: "{{date:MMMM}} week {{week_of_month}}" }),
-    });
-    const c = buildContainer(repo);
-
-    const result = c.resolve(NotePathService).candidateFor("weekly", "September week 3.md" as VaultPath);
-
-    expect(unwrap(result).anchor).toBe("2026-09-14");
   });
 });

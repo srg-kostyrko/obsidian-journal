@@ -141,11 +141,23 @@ on it.
 
 ### Settings and schema
 
-- A user-clearable collection field with a schema `minLength` wipes the **whole
-  entity** on reload: the parse fails and the entity resets to defaults. Relax
-  the schema and fall back on read, or coerce on write. A live instance is
-  believed unfixed — `journalConfigSchema.dateFormat` is bound to a clearable
-  input in `NoteCreationSection.vue`.
+- A stored value that fails its schema on reload costs different amounts
+  depending on where it sits, and the "whole entity is wiped" reading is out of
+  date for collections. `repairCollectionEntry`
+  (`src/settings/settings-service.ts:335`) reads `issue.path[0].key` off every
+  issue, substitutes just those fields from `defaultItem`, and re-parses, so a
+  clearable field with a schema `minLength` costs that field alone —
+  `journalConfigSchema.dateFormat` seeded empty comes back as the write type's
+  default with `write`, `folder`, `nameTemplate` and `templates` untouched. Two
+  shapes still take the whole-value reset: a **slice**, because `parseSliceValue`
+  (`:360`) has no repair path and falls back to `definition.defaults` wholesale —
+  one out-of-range `dow` discards the rest of the calendar slice with it; and a
+  **collection entry whose issue carries no path**, which a root-level `v.check`
+  on the item schema produces, because the repair has no field to swap and
+  returns `undefined` into the entity reset at `:325`. No current item schema
+  has such a check, so that one is a shape to avoid rather than a live instance.
+  Relax the schema and fall back on read, or coerce on write, when the field is
+  in a slice.
 - The `@/journals` barrel re-exports settings flows that import
   `settings/ui/modals.ts`. Anything under `src/journals/settings/ui/` that
   `modals.ts` reaches must import services from their own submodules
@@ -378,9 +390,17 @@ on it.
   `periodOfKind` in `src/calendar/period.ts` all answer for the week grid
   installed in moment _right now_; nothing in that layer knows the grid an
   anchor was written under. Any decision that compares data written under the
-  old grid must be computed **before** the calendar slice is written — in
+  old grid must be computed while the old grid is still installed — in
   `WeekPresetService`'s snapshot, the one place straddling both grids — and
-  carried forward as a resolved value, never re-derived downstream.
+  carried forward as a resolved value, never re-derived downstream. The boundary
+  is **not** the slice write: `CalendarSettingsBridge` installs the new grid from
+  a `watchEffect`, which flushes on nextTick, so a read taken synchronously after
+  `calendarSlice.state = next` still answers for the old grid (measured
+  `{before:"2026-05-31", afterWrite:"2026-05-31", afterTick:"2026-06-01"}`). The
+  binding line is the `await nextTick()` at the top of `#reanchor`
+  (`src/journals/settings/week-preset-service.ts:100`) — anything derived after
+  it is under the new grid. Snapshot before the write anyway: it costs nothing
+  and survives an `await` appearing between the two.
 - The week-preset change and the notes it invalidates move together, and
   `WeekPresetApplier` (`WeekPresetService`, behind `WeekPresetApplierToken`) is
   the only thing that writes the **week grid** (`mode`/`dow`/`doy`) — the one

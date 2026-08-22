@@ -1,63 +1,29 @@
-import { cleanup, render } from "@testing-library/vue";
-import { afterEach, describe, expect, it } from "vitest";
+import { describe, expect, it } from "vitest";
 import { defineComponent, ref, type Ref } from "vue";
 
 import type { AnchorString } from "@/calendar";
-import { Container, provideInjectorOnApp } from "@/infrastructure/di";
-import { LoggerModule } from "@/infrastructure/logger";
-import { TemplateEngine } from "@/templates";
-import { installTestEngine } from "@/templates/testing";
-
-import { CycleService } from "../../cycle";
-import { FrontmatterService } from "../../frontmatter";
-import { JournalsIndex } from "../../journals-index";
-import { NotePathService } from "../../notes/note-path";
-import { NumberingService } from "../../numbering";
-import { JournalsRepository } from "../../repository";
-import { customJournal, fakeRepo, fixedJournal } from "../../testing";
+import { JournalsRepository } from "@/journals";
+import { journalsCoreModule } from "@/journals/module";
+import { customJournal, fixedJournal } from "@/journals/testing";
+import { testContainer, type TestHarness } from "@/testing";
 
 import { useInvertibilityCheck } from "./use-invertibility-check";
 
 import type { JournalConfig } from "../../config";
 
-afterEach(() => cleanup());
-
-function buildContainer(config: JournalConfig | undefined): Container {
-  const engine = installTestEngine();
-  const container = new Container();
-  container.addModule(LoggerModule);
-  container.register(TemplateEngine).useValue(engine);
-  container.register(JournalsRepository).useValue(fakeRepo(config ? { [config.name]: config } : {}));
-  container.register(JournalsIndex).useClass(JournalsIndex);
-  container.register(CycleService).useClass(CycleService);
-  container.register(NumberingService).useClass(NumberingService);
-  container.register(FrontmatterService).useClass(FrontmatterService);
-  container.register(NotePathService).useClass(NotePathService);
-  return container;
-}
-
-function probe(config: Ref<JournalConfig | undefined>): { warning: Ref<unknown> } {
-  const container = buildContainer(config.value);
+function probe(harness: TestHarness, journalName: string): Ref<unknown> {
+  const journal = ref(harness.resolve(JournalsRepository).get(journalName).getOrUndefined());
   let captured: Ref<unknown> | undefined;
   const Probe = defineComponent({
     setup() {
-      captured = useInvertibilityCheck(config);
+      captured = useInvertibilityCheck(journal);
       return undefined;
     },
     template: "<div />",
   });
-  render(Probe, {
-    global: {
-      plugins: [
-        {
-          install(app) {
-            provideInjectorOnApp(app, container);
-          },
-        },
-      ],
-    },
-  });
-  return { warning: captured! };
+  harness.render(Probe);
+  if (!captured) throw new Error("probe did not capture the warning ref");
+  return captured;
 }
 
 function withName(nameTemplate: string): JournalConfig {
@@ -65,39 +31,71 @@ function withName(nameTemplate: string): JournalConfig {
 }
 
 describe("useInvertibilityCheck", () => {
-  it("returns null for an invertible template with only known variables", () => {
-    const { warning } = probe(ref(withName("{{date}}-{{journal_name}}")));
-    expect(warning.value).toBeNull();
+  it("returns null for an invertible template with only known variables", async () => {
+    const config = withName("{{date}}-{{journal_name}}");
+    const harness = await testContainer({
+      modules: [journalsCoreModule],
+      data: { journals: { [config.name]: config } },
+    });
+
+    expect(probe(harness, config.name).value).toBeNull();
   });
 
-  it("returns null for a static template", () => {
-    const { warning } = probe(ref(withName("static-note")));
-    expect(warning.value).toBeNull();
+  it("returns null for a static template", async () => {
+    const config = withName("static-note");
+    const harness = await testContainer({
+      modules: [journalsCoreModule],
+      data: { journals: { [config.name]: config } },
+    });
+
+    expect(probe(harness, config.name).value).toBeNull();
   });
 
-  it("flags a template containing a function token", () => {
-    const { warning } = probe(ref(withName("{{date}}-{{format(YYYY)}}")));
-    expect(warning.value).toMatchObject({ kind: "non-invertible", reason: "function-token" });
+  it("flags a template containing a function token", async () => {
+    const config = withName("{{date}}-{{format(YYYY)}}");
+    const harness = await testContainer({
+      modules: [journalsCoreModule],
+      data: { journals: { [config.name]: config } },
+    });
+
+    expect(probe(harness, config.name).value).toMatchObject({ kind: "non-invertible", reason: "function-token" });
   });
 
-  it("flags a template containing an unknown variable", () => {
-    const { warning } = probe(ref(withName("{{date}}-{{mystery}}")));
-    expect(warning.value).toMatchObject({ kind: "non-invertible", reason: "unknown-variable", offending: "mystery" });
+  it("flags a template containing an unknown variable", async () => {
+    const config = withName("{{date}}-{{mystery}}");
+    const harness = await testContainer({
+      modules: [journalsCoreModule],
+      data: { journals: { [config.name]: config } },
+    });
+
+    expect(probe(harness, config.name).value).toMatchObject({
+      kind: "non-invertible",
+      reason: "unknown-variable",
+      offending: "mystery",
+    });
   });
 
-  it("does not flag a configured numbering variable alongside a date", () => {
+  it("does not flag a configured numbering variable alongside a date", async () => {
     const config = customJournal("sprints", "week", 1, "2024-01-01", { nameTemplate: "{{date}}-{{index}}" });
-    const { warning } = probe(ref(config));
-    expect(warning.value).toBeNull();
+    const harness = await testContainer({
+      modules: [journalsCoreModule],
+      data: { journals: { [config.name]: config } },
+    });
+
+    expect(probe(harness, config.name).value).toBeNull();
   });
 
-  it("returns null for an index-only template when the numbering is invertible", () => {
+  it("returns null for an index-only template when the numbering is invertible", async () => {
     const config = customJournal("sprints", "week", 1, "2024-01-01", { nameTemplate: "Sprint {{index}}" });
-    const { warning } = probe(ref(config));
-    expect(warning.value).toBeNull();
+    const harness = await testContainer({
+      modules: [journalsCoreModule],
+      data: { journals: { [config.name]: config } },
+    });
+
+    expect(probe(harness, config.name).value).toBeNull();
   });
 
-  it("flags a cyclic-top warning for an index-only template when the sole digit is cyclic", () => {
+  it("flags a cyclic-top warning for an index-only template when the sole digit is cyclic", async () => {
     const config = customJournal("sprints", "week", 1, "2024-01-01", {
       nameTemplate: "Sprint {{index}}",
       numbering: {
@@ -109,11 +107,15 @@ describe("useInvertibilityCheck", () => {
         ],
       },
     });
-    const { warning } = probe(ref(config));
-    expect(warning.value).toEqual({ kind: "cyclic-top" });
+    const harness = await testContainer({
+      modules: [journalsCoreModule],
+      data: { journals: { [config.name]: config } },
+    });
+
+    expect(probe(harness, config.name).value).toEqual({ kind: "cyclic-top" });
   });
 
-  it("reports cyclic-top when the most significant digit resets", () => {
+  it("reports cyclic-top when the most significant digit resets", async () => {
     const config = withName("Q{{quarter}}W{{week}}");
     config.numbering = {
       enabled: true,
@@ -124,11 +126,15 @@ describe("useInvertibilityCheck", () => {
         { variable: "week", frontmatterKey: "journal-week", anchorValue: 1, reset: { kind: "after", count: 13 } },
       ],
     };
-    const { warning } = probe(ref(config));
-    expect(warning.value).toEqual({ kind: "cyclic-top" });
+    const harness = await testContainer({
+      modules: [journalsCoreModule],
+      data: { journals: { [config.name]: config } },
+    });
+
+    expect(probe(harness, config.name).value).toEqual({ kind: "cyclic-top" });
   });
 
-  it("reports no warning when every invertible digit appears in the template", () => {
+  it("reports no warning when every invertible digit appears in the template", async () => {
     const config = withName("Release{{release}}Sprint{{sprint}}");
     config.numbering = {
       enabled: true,
@@ -139,11 +145,15 @@ describe("useInvertibilityCheck", () => {
         { variable: "sprint", frontmatterKey: "journal-sprint", anchorValue: 1, reset: { kind: "after", count: 6 } },
       ],
     };
-    const { warning } = probe(ref(config));
-    expect(warning.value).toBeNull();
+    const harness = await testContainer({
+      modules: [journalsCoreModule],
+      data: { journals: { [config.name]: config } },
+    });
+
+    expect(probe(harness, config.name).value).toBeNull();
   });
 
-  it("names the digits missing from the template", () => {
+  it("names the digits missing from the template", async () => {
     const config = withName("Sprint{{sprint}}");
     config.numbering = {
       enabled: true,
@@ -154,11 +164,15 @@ describe("useInvertibilityCheck", () => {
         { variable: "sprint", frontmatterKey: "journal-sprint", anchorValue: 1, reset: { kind: "after", count: 6 } },
       ],
     };
-    const { warning } = probe(ref(config));
-    expect(warning.value).toEqual({ kind: "unused-digits", missing: ["release"] });
+    const harness = await testContainer({
+      modules: [journalsCoreModule],
+      data: { journals: { [config.name]: config } },
+    });
+
+    expect(probe(harness, config.name).value).toEqual({ kind: "unused-digits", missing: ["release"] });
   });
 
-  it("counts a digit used only in the folder as present", () => {
+  it("counts a digit used only in the folder as present", async () => {
     const config = fixedJournal("daily", { type: "day" }, { nameTemplate: "Sprint{{sprint}}", folder: "R{{release}}" });
     config.numbering = {
       enabled: true,
@@ -169,11 +183,15 @@ describe("useInvertibilityCheck", () => {
         { variable: "sprint", frontmatterKey: "journal-sprint", anchorValue: 1, reset: { kind: "after", count: 6 } },
       ],
     };
-    const { warning } = probe(ref(config));
-    expect(warning.value).toBeNull();
+    const harness = await testContainer({
+      modules: [journalsCoreModule],
+      data: { journals: { [config.name]: config } },
+    });
+
+    expect(probe(harness, config.name).value).toBeNull();
   });
 
-  it("names the digit that emits no carry", () => {
+  it("names the digit that emits no carry", async () => {
     const config = withName("Release{{release}}Sprint{{sprint}}");
     config.numbering = {
       enabled: true,
@@ -184,11 +202,15 @@ describe("useInvertibilityCheck", () => {
         { variable: "sprint", frontmatterKey: "journal-sprint", anchorValue: 1, reset: { kind: "never" } },
       ],
     };
-    const { warning } = probe(ref(config));
-    expect(warning.value).toEqual({ kind: "no-carry", offending: "sprint" });
+    const harness = await testContainer({
+      modules: [journalsCoreModule],
+      data: { journals: { [config.name]: config } },
+    });
+
+    expect(probe(harness, config.name).value).toEqual({ kind: "no-carry", offending: "sprint" });
   });
 
-  it("reports the cyclic first digit ahead of a lower digit that emits no carry", () => {
+  it("reports the cyclic first digit ahead of a lower digit that emits no carry", async () => {
     const config = withName("Release{{release}}Sprint{{sprint}}");
     config.numbering = {
       enabled: true,
@@ -199,11 +221,15 @@ describe("useInvertibilityCheck", () => {
         { variable: "sprint", frontmatterKey: "journal-sprint", anchorValue: 1, reset: { kind: "never" } },
       ],
     };
-    const { warning } = probe(ref(config));
-    expect(warning.value).toEqual({ kind: "cyclic-top" });
+    const harness = await testContainer({
+      modules: [journalsCoreModule],
+      data: { journals: { [config.name]: config } },
+    });
+
+    expect(probe(harness, config.name).value).toEqual({ kind: "cyclic-top" });
   });
 
-  it("stays silent while sequential numbers are turned off", () => {
+  it("stays silent while sequential numbers are turned off", async () => {
     const config = withName("Sprint{{sprint}}");
     config.numbering = {
       enabled: false,
@@ -214,10 +240,15 @@ describe("useInvertibilityCheck", () => {
         { variable: "sprint", frontmatterKey: "journal-sprint", anchorValue: 1, reset: { kind: "after", count: 6 } },
       ],
     };
-    const { warning } = probe(ref(config));
-    expect(warning.value).toBeNull();
+    const harness = await testContainer({
+      modules: [journalsCoreModule],
+      data: { journals: { [config.name]: config } },
+    });
+
+    expect(probe(harness, config.name).value).toBeNull();
   });
-  it("reports the cyclic first digit behind a date variable too coarse to pin the period", () => {
+
+  it("reports the cyclic first digit behind a date variable too coarse to pin the period", async () => {
     const config = customJournal("sprints", "week", 2, "2026-01-05", {
       nameTemplate: "{{date:YYYY}}-S{{sprint}}",
       numbering: {
@@ -229,11 +260,15 @@ describe("useInvertibilityCheck", () => {
         ],
       },
     });
-    const { warning } = probe(ref(config));
-    expect(warning.value).toEqual({ kind: "cyclic-top" });
+    const harness = await testContainer({
+      modules: [journalsCoreModule],
+      data: { journals: { [config.name]: config } },
+    });
+
+    expect(probe(harness, config.name).value).toEqual({ kind: "cyclic-top" });
   });
 
-  it("stays silent when the numbering identifies the period a coarse date variable cannot", () => {
+  it("stays silent when the numbering identifies the period a coarse date variable cannot", async () => {
     const config = customJournal("sprints", "week", 2, "2026-01-05", {
       nameTemplate: "{{date:YYYY}}-C{{cycle}}-S{{sprint}}",
       numbering: {
@@ -246,24 +281,28 @@ describe("useInvertibilityCheck", () => {
         ],
       },
     });
-    const { warning } = probe(ref(config));
-    expect(warning.value).toBeNull();
-  });
-  it("flags a date variable too coarse to tell the periods apart when nothing numbers the notes", () => {
-    const config = customJournal("sprints", "week", 2, "2026-01-05", {
-      nameTemplate: "{{date:YYYY}}",
-      numbering: {
-        enabled: false,
-        anchorDate: "2026-01-05" as AnchorString,
-        allowBefore: false,
-        sources: [],
-      },
+    const harness = await testContainer({
+      modules: [journalsCoreModule],
+      data: { journals: { [config.name]: config } },
     });
-    const { warning } = probe(ref(config));
-    expect(warning.value).toEqual({ kind: "coarse-date" });
+
+    expect(probe(harness, config.name).value).toBeNull();
   });
 
-  it("flags a coarse date variable when the numbering runs but names no digit in the path", () => {
+  it("flags a date variable too coarse to tell the periods apart when nothing numbers the notes", async () => {
+    const config = customJournal("sprints", "week", 2, "2026-01-05", {
+      nameTemplate: "{{date:YYYY}}",
+      numbering: { enabled: false, anchorDate: "2026-01-05" as AnchorString, allowBefore: false, sources: [] },
+    });
+    const harness = await testContainer({
+      modules: [journalsCoreModule],
+      data: { journals: { [config.name]: config } },
+    });
+
+    expect(probe(harness, config.name).value).toEqual({ kind: "coarse-date" });
+  });
+
+  it("flags a coarse date variable when the numbering runs but names no digit in the path", async () => {
     const config = customJournal("sprints", "week", 2, "2026-01-05", {
       nameTemplate: "{{date:YYYY}}",
       numbering: {
@@ -273,19 +312,28 @@ describe("useInvertibilityCheck", () => {
         sources: [{ variable: "sprint", frontmatterKey: "journal-sprint", anchorValue: 1, reset: { kind: "never" } }],
       },
     });
-    const { warning } = probe(ref(config));
-    expect(warning.value).toEqual({ kind: "coarse-date" });
+    const harness = await testContainer({
+      modules: [journalsCoreModule],
+      data: { journals: { [config.name]: config } },
+    });
+
+    expect(probe(harness, config.name).value).toEqual({ kind: "coarse-date" });
   });
 
-  it("stays silent for a static name, which names no date to be too coarse", () => {
+  it("stays silent for a static name, which names no date to be too coarse", async () => {
     const config = customJournal("sprints", "week", 2, "2026-01-05", {
       nameTemplate: "static-note",
       numbering: { enabled: false, anchorDate: "2026-01-05" as AnchorString, allowBefore: false, sources: [] },
     });
-    const { warning } = probe(ref(config));
-    expect(warning.value).toBeNull();
+    const harness = await testContainer({
+      modules: [journalsCoreModule],
+      data: { journals: { [config.name]: config } },
+    });
+
+    expect(probe(harness, config.name).value).toBeNull();
   });
-  it("stays silent when a cyclic digit completes a coarse date exactly", () => {
+
+  it("stays silent when a cyclic digit completes a coarse date exactly", async () => {
     const config = fixedJournal(
       "monthly",
       { type: "month" },
@@ -301,7 +349,11 @@ describe("useInvertibilityCheck", () => {
         },
       },
     );
-    const { warning } = probe(ref(config));
-    expect(warning.value).toBeNull();
+    const harness = await testContainer({
+      modules: [journalsCoreModule],
+      data: { journals: { [config.name]: config } },
+    });
+
+    expect(probe(harness, config.name).value).toBeNull();
   });
 });

@@ -1,9 +1,7 @@
-import { cleanup, render, screen } from "@testing-library/vue";
-import { afterEach, describe, expect, it } from "vitest";
+import { render, screen } from "@testing-library/vue";
+import { describe, expect, it } from "vitest";
 
 import TemplaterSupportModal from "./TemplaterSupportModal.vue";
-
-afterEach(() => cleanup());
 
 describe("TemplaterSupportModal", () => {
   it("lists the three safe-setup options", () => {

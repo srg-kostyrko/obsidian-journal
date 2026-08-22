@@ -1,237 +1,270 @@
 import userEvent from "@testing-library/user-event";
-import { cleanup, render, screen } from "@testing-library/vue";
-import { afterEach, describe, expect, it, vi } from "vitest";
+import { screen, waitFor } from "@testing-library/vue";
+import { beforeEach, describe, expect, it } from "vitest";
 
-import type { AnchorString } from "@/calendar";
+import { anchor } from "@/calendar/testing";
 import { m } from "@/i18n";
-import { Container, provideInjectorOnApp } from "@/infrastructure/di";
 import type { VaultPath } from "@/infrastructure/host";
-import type { ModalApi } from "@/infrastructure/host/modals";
-import { provideModalApiOnApp } from "@/infrastructure/host/modals/testing";
-import { AsyncResult } from "@/infrastructure/result";
+import { testContainer, type TestHarness } from "@/testing";
 
-import { BulkAddService, type BulkPlan, type PlannedSkip } from "../bulk-add-service";
+import { JournalsIndex } from "../../../journals-index";
+import { journalsCoreModule } from "../../../module";
+import { fixedJournal } from "../../../testing";
 import { defaultBulkAddParameters } from "../config";
 
 import ProcessBulkAddModal from "./ProcessBulkAddModal.vue";
 
-interface MountOptions {
-  apply: ReturnType<typeof vi.fn>;
-  plan: BulkPlan;
-  dryRun?: boolean;
-}
-
-function mountModal({ apply, plan, dryRun }: MountOptions) {
-  const submit = vi.fn();
-  const cancel = vi.fn();
-  const api: ModalApi<void> = { submit, cancel };
-
-  const container = new Container();
-  container
-    .register(BulkAddService)
-    .useValue({ apply, resolve: BulkAddService.prototype.resolve } as unknown as BulkAddService);
-
-  render(ProcessBulkAddModal, {
-    props: {
-      journalName: "daily",
-      plan,
-      parameters: { ...defaultBulkAddParameters(), dryRun: dryRun ?? false },
-    },
-    global: {
-      plugins: [
-        {
-          install(app) {
-            provideInjectorOnApp(app, container);
-            provideModalApiOnApp(app, api as unknown as ModalApi<unknown>);
-          },
-        },
-      ],
-    },
-  });
-
-  return { submit, cancel };
-}
-
-afterEach(() => cleanup());
+import type { PlannedSkip } from "../bulk-add-service";
 
 describe("ProcessBulkAddModal", () => {
+  let harness: TestHarness;
+
+  beforeEach(async () => {
+    harness = await testContainer({
+      modules: [journalsCoreModule],
+      data: { journals: { daily: fixedJournal("daily", { type: "day" }, { folder: "Daily" }) } },
+    });
+  });
+
   it("shows the action log after running", async () => {
-    const apply = vi.fn(() =>
-      AsyncResult.ok([
-        {
-          path: "src/a.md" as VaultPath,
-          actions: [{ kind: "connected" as const, journalName: "daily", anchor: "2026-06-01" as AnchorString }],
+    harness.host.putFile("src/a.md", "content");
+    harness.renderModal(ProcessBulkAddModal, {
+      props: {
+        journalName: "daily",
+        plan: {
+          notes: [
+            {
+              kind: "action",
+              path: "src/a.md" as VaultPath,
+              anchor: anchor("2026-06-01"),
+              targetPath: "src/a.md" as VaultPath,
+              existing: "none",
+              folder: "n/a",
+              name: "n/a",
+            },
+          ],
         },
-      ]),
-    );
-    mountModal({
-      apply,
-      plan: {
-        notes: [
-          {
-            kind: "action",
-            path: "src/a.md" as VaultPath,
-            anchor: "2026-06-01" as AnchorString,
-            targetPath: "src/a.md" as VaultPath,
-            existing: "none",
-            folder: "n/a",
-            name: "n/a",
-          },
-        ],
+        parameters: { ...defaultBulkAddParameters(), dryRun: false },
       },
     });
+
     await userEvent.click(screen.getByText(m.bulk_add_run()));
+
     expect(await screen.findByText("Connected to daily at 2026-06-01.")).toBeTruthy();
   });
 
   it("words the log in the future tense for a dry run so it is not mistaken for a completed run", async () => {
-    const apply = vi.fn(() =>
-      AsyncResult.ok([
-        {
-          path: "src/a.md" as VaultPath,
-          actions: [{ kind: "connected" as const, journalName: "daily", anchor: "2026-06-01" as AnchorString }],
+    harness.host.putFile("src/a.md", "content");
+    harness.renderModal(ProcessBulkAddModal, {
+      props: {
+        journalName: "daily",
+        plan: {
+          notes: [
+            {
+              kind: "action",
+              path: "src/a.md" as VaultPath,
+              anchor: anchor("2026-06-01"),
+              targetPath: "src/a.md" as VaultPath,
+              existing: "none",
+              folder: "n/a",
+              name: "n/a",
+            },
+          ],
         },
-      ]),
-    );
-    mountModal({ apply, dryRun: true, plan: { notes: [] } });
+        parameters: { ...defaultBulkAddParameters(), dryRun: true },
+      },
+    });
+
     await userEvent.click(screen.getByText(m.bulk_add_run()));
+
     expect(await screen.findByText("Will connect to daily at 2026-06-01.")).toBeTruthy();
   });
 
   it("announces that a dry run changed nothing", async () => {
-    const apply = vi.fn(() => AsyncResult.ok([]));
-    mountModal({ apply, dryRun: true, plan: { notes: [] } });
+    harness.renderModal(ProcessBulkAddModal, {
+      props: { journalName: "daily", plan: { notes: [] }, parameters: { ...defaultBulkAddParameters(), dryRun: true } },
+    });
+
     await userEvent.click(screen.getByText(m.bulk_add_run()));
+
     expect(await screen.findByText(m.bulk_add_dry_run_banner())).toBeTruthy();
   });
 
   it("does not announce a dry run after a real run", async () => {
-    const apply = vi.fn(() => AsyncResult.ok([]));
-    mountModal({ apply, dryRun: false, plan: { notes: [] } });
+    harness.renderModal(ProcessBulkAddModal, {
+      props: {
+        journalName: "daily",
+        plan: { notes: [] },
+        parameters: { ...defaultBulkAddParameters(), dryRun: false },
+      },
+    });
+
     await userEvent.click(screen.getByText(m.bulk_add_run()));
+
     expect(screen.queryByText(m.bulk_add_dry_run_banner())).toBeNull();
   });
 
   it("runs apply with the dry-run flag from params", async () => {
-    const apply = vi.fn(() => AsyncResult.ok([]));
-    mountModal({ apply, dryRun: true, plan: { notes: [] } });
+    harness.host.putFile("src/a.md", "content");
+    harness.renderModal(ProcessBulkAddModal, {
+      props: {
+        journalName: "daily",
+        plan: {
+          notes: [
+            {
+              kind: "action",
+              path: "src/a.md" as VaultPath,
+              anchor: anchor("2026-06-01"),
+              targetPath: "src/a.md" as VaultPath,
+              existing: "none",
+              folder: "n/a",
+              name: "n/a",
+            },
+          ],
+        },
+        parameters: { ...defaultBulkAddParameters(), dryRun: true },
+      },
+    });
+
     await userEvent.click(screen.getByText(m.bulk_add_run()));
-    expect(apply).toHaveBeenCalledWith("daily", expect.any(Array), true, expect.any(Function));
+
+    await waitFor(() => expect(screen.getByText(m.common_action_close())).toBeTruthy());
+    expect(harness.host.files.get("src/a.md")?.frontmatter).toEqual({});
   });
 
   it("shows the occupying note and the target path for a conflicting action", () => {
-    const apply = vi.fn(() => AsyncResult.ok([]));
-    mountModal({
-      apply,
-      plan: {
-        notes: [
-          {
-            kind: "action",
-            path: "src/a.md" as VaultPath,
-            anchor: "2026-06-01" as AnchorString,
-            occupant: "daily/2026-06-01.md" as VaultPath,
-            targetPath: "daily/2026-06-01.md" as VaultPath,
-            existing: "ask",
-            folder: "move",
-            name: "rename",
-          },
-        ],
+    harness.renderModal(ProcessBulkAddModal, {
+      props: {
+        journalName: "daily",
+        plan: {
+          notes: [
+            {
+              kind: "action",
+              path: "src/a.md" as VaultPath,
+              anchor: anchor("2026-06-01"),
+              occupant: "daily/2026-06-01.md" as VaultPath,
+              targetPath: "daily/2026-06-01.md" as VaultPath,
+              existing: "ask",
+              folder: "move",
+              name: "rename",
+            },
+          ],
+        },
+        parameters: { ...defaultBulkAddParameters(), dryRun: false },
       },
     });
+
     expect(screen.getByText(m.bulk_add_occupant({ path: "daily/2026-06-01.md" }))).toBeTruthy();
     expect(screen.getByText(m.bulk_add_target({ path: "daily/2026-06-01.md" }))).toBeTruthy();
   });
 
   it("shows the skip reason for each skipped note", () => {
-    const apply = vi.fn(() => AsyncResult.ok([]));
     const skip: PlannedSkip = { kind: "skip", path: "src/x.md" as VaultPath, reason: "no-date" };
-    mountModal({ apply, plan: { notes: [skip] } });
+    harness.renderModal(ProcessBulkAddModal, {
+      props: { journalName: "daily", plan: { notes: [skip] }, parameters: defaultBulkAddParameters() },
+    });
+
     expect(screen.getByText("src/x.md")).toBeTruthy();
     expect(screen.getByText(m.bulk_add_skip_reason_no_date())).toBeTruthy();
   });
 
   it("resolves a per-note folder ask decision into the apply call", async () => {
-    const apply = vi.fn(() => AsyncResult.ok([]));
-    mountModal({
-      apply,
-      plan: {
-        notes: [
-          {
-            kind: "action",
-            path: "src/a.md" as VaultPath,
-            anchor: "2026-06-01" as AnchorString,
-            targetPath: "daily/a.md" as VaultPath,
-            existing: "none",
-            folder: "ask",
-            name: "n/a",
-          },
-        ],
+    harness.host.putFile("src/a.md", "content");
+    harness.renderModal(ProcessBulkAddModal, {
+      props: {
+        journalName: "daily",
+        plan: {
+          notes: [
+            {
+              kind: "action",
+              path: "src/a.md" as VaultPath,
+              anchor: anchor("2026-06-01"),
+              targetPath: "Daily/a.md" as VaultPath,
+              existing: "none",
+              folder: "ask",
+              name: "n/a",
+            },
+          ],
+        },
+        parameters: { ...defaultBulkAddParameters(), dryRun: false },
       },
     });
+
     await userEvent.selectOptions(screen.getByRole("combobox", { name: m.bulk_add_other_folder_label() }), "move");
     await userEvent.click(screen.getByText(m.bulk_add_run()));
-    expect(apply).toHaveBeenCalledWith(
-      "daily",
-      [expect.objectContaining({ path: "src/a.md", move: true })],
-      expect.any(Boolean),
-      expect.any(Function),
-    );
+
+    await waitFor(() => expect(screen.getByText(m.common_action_close())).toBeTruthy());
+    expect(harness.host.files.has("src/a.md")).toBe(false);
+    expect(harness.host.files.has("Daily/a.md")).toBe(true);
   });
 
   it("resolves a per-note existing ask decision into the apply call", async () => {
-    const apply = vi.fn(() => AsyncResult.ok([]));
-    mountModal({
-      apply,
-      plan: {
-        notes: [
-          {
-            kind: "action",
-            path: "src/a.md" as VaultPath,
-            anchor: "2026-06-01" as AnchorString,
-            occupant: "daily/2026-06-01.md" as VaultPath,
-            targetPath: "src/a.md" as VaultPath,
-            existing: "ask",
-            folder: "n/a",
-            name: "n/a",
-          },
-        ],
+    harness.host.putFile("Daily/2026-06-01.md", "OCCUPANT", {
+      journal: "daily",
+      "journal-date": "2026-06-01",
+    });
+    harness.resolve(JournalsIndex).register({
+      journalName: "daily",
+      anchor: anchor("2026-06-01"),
+      path: "Daily/2026-06-01.md" as VaultPath,
+    });
+    harness.host.putFile("src/a.md", "SOURCE");
+    harness.renderModal(ProcessBulkAddModal, {
+      props: {
+        journalName: "daily",
+        plan: {
+          notes: [
+            {
+              kind: "action",
+              path: "src/a.md" as VaultPath,
+              anchor: anchor("2026-06-01"),
+              targetPath: "src/a.md" as VaultPath,
+              occupant: "Daily/2026-06-01.md" as VaultPath,
+              existing: "ask",
+              folder: "n/a",
+              name: "n/a",
+            },
+          ],
+        },
+        parameters: { ...defaultBulkAddParameters(), dryRun: false },
       },
     });
+
     await userEvent.selectOptions(screen.getByRole("combobox", { name: m.bulk_add_existing_label() }), "merge");
     await userEvent.click(screen.getByText(m.bulk_add_run()));
-    expect(apply).toHaveBeenCalledWith(
-      "daily",
-      [expect.objectContaining({ path: "src/a.md", existing: "merge" })],
-      expect.any(Boolean),
-      expect.any(Function),
-    );
+
+    await waitFor(() => expect(screen.getByText(m.common_action_close())).toBeTruthy());
+    expect(harness.host.files.has("src/a.md")).toBe(false);
+    expect(harness.host.files.get("Daily/2026-06-01.md")?.content).toContain("SOURCE");
   });
 
   it("resolves a per-note name ask decision into the apply call", async () => {
-    const apply = vi.fn(() => AsyncResult.ok([]));
-    mountModal({
-      apply,
-      plan: {
-        notes: [
-          {
-            kind: "action",
-            path: "src/a.md" as VaultPath,
-            anchor: "2026-06-01" as AnchorString,
-            targetPath: "src/2026-06-01.md" as VaultPath,
-            existing: "none",
-            folder: "n/a",
-            name: "ask",
-          },
-        ],
+    harness.host.putFile("src/a.md", "content");
+    harness.renderModal(ProcessBulkAddModal, {
+      props: {
+        journalName: "daily",
+        plan: {
+          notes: [
+            {
+              kind: "action",
+              path: "src/a.md" as VaultPath,
+              anchor: anchor("2026-06-01"),
+              targetPath: "src/2026-06-01.md" as VaultPath,
+              existing: "none",
+              folder: "n/a",
+              name: "ask",
+            },
+          ],
+        },
+        parameters: { ...defaultBulkAddParameters(), dryRun: false },
       },
     });
+
     await userEvent.selectOptions(screen.getByRole("combobox", { name: m.bulk_add_other_name_label() }), "rename");
     await userEvent.click(screen.getByText(m.bulk_add_run()));
-    expect(apply).toHaveBeenCalledWith(
-      "daily",
-      [expect.objectContaining({ path: "src/a.md", rename: true })],
-      expect.any(Boolean),
-      expect.any(Function),
-    );
+
+    await waitFor(() => expect(screen.getByText(m.common_action_close())).toBeTruthy());
+    expect(harness.host.files.has("src/a.md")).toBe(false);
+    expect(harness.host.files.has("src/2026-06-01.md")).toBe(true);
   });
 });

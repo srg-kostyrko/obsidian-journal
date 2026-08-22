@@ -1,5 +1,6 @@
 import { describe, expect, it } from "vitest";
 
+import { anchor } from "@/calendar/testing";
 import type { JournalConfig } from "@/journals";
 
 import { extractFromNameTemplate, extractFromDateFormat } from "./use-folder-extractor";
@@ -8,7 +9,7 @@ function baseConfig(overrides: Partial<JournalConfig>): JournalConfig {
   return {
     name: "daily",
     write: { type: "day" },
-    timeline: { start: "2026-01-01" as never, end: { kind: "never" } },
+    timeline: { start: anchor("2026-01-01"), end: { kind: "never" } },
     dateFormat: "YYYY-MM-DD",
     frontmatter: {
       dateField: "journal-date",
@@ -17,7 +18,7 @@ function baseConfig(overrides: Partial<JournalConfig>): JournalConfig {
       addStartDate: false,
       addEndDate: false,
     },
-    numbering: { enabled: false, anchorDate: "2026-01-01" as never, allowBefore: false, sources: [] },
+    numbering: { enabled: false, anchorDate: anchor("2026-01-01"), allowBefore: false, sources: [] },
     nameTemplate: "{{date}}",
     folder: "",
     templates: [],

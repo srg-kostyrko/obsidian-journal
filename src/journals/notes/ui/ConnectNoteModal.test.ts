@@ -1,268 +1,227 @@
 import userEvent from "@testing-library/user-event";
-import { cleanup, render, screen, waitFor } from "@testing-library/vue";
-import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
+import { screen, waitFor } from "@testing-library/vue";
+import { beforeEach, describe, expect, it } from "vitest";
 
 import { DayPeriod, type OpenInterval } from "@/calendar";
-import { installTestCalendar, anchor, date } from "@/calendar/testing";
+import { anchor, date } from "@/calendar/testing";
 import { m } from "@/i18n";
-import { Container, provideInjectorOnApp } from "@/infrastructure/di";
 import type { VaultPath } from "@/infrastructure/host";
-import { ModalService, type ModalApi } from "@/infrastructure/host/modals";
-import { FakeModalService, provideModalApiOnApp } from "@/infrastructure/host/modals/testing";
-import { LoggerModule } from "@/infrastructure/logger";
-import { TemplateEngine } from "@/templates";
+import { testContainer, type TestHarness } from "@/testing";
 
-import { CycleService } from "../../cycle";
-import { FrontmatterService } from "../../frontmatter";
 import { JournalsIndex } from "../../journals-index";
-import { NumberingService } from "../../numbering";
-import { JournalsRepository } from "../../repository";
-import { fakeRepo, fixedJournal } from "../../testing";
-import { TimelineService } from "../../timeline";
-import { NotePathService } from "../note-path";
+import { journalsCoreModule } from "../../module";
+import { fixedJournal } from "../../testing";
 
 import ConnectNoteModal from "./ConnectNoteModal.vue";
 
-import type { ConnectNoteResult } from "./modals";
-
-function buildContainer(repo: JournalsRepository): { container: Container; modals: FakeModalService } {
-  const c = new Container();
-  const modals = new FakeModalService();
-  c.addModule(LoggerModule);
-  c.register(JournalsRepository).useValue(repo);
-  c.register(JournalsIndex).useClass(JournalsIndex);
-  c.register(CycleService).useClass(CycleService);
-  c.register(TimelineService).useClass(TimelineService);
-  c.register(NumberingService).useClass(NumberingService);
-  c.register(FrontmatterService).useClass(FrontmatterService);
-  c.register(TemplateEngine).useClass(TemplateEngine);
-  c.register(NotePathService).useClass(NotePathService);
-  c.register(ModalService).useValue(modals as unknown as ModalService);
-  return { container: c, modals };
-}
-
-function mountModal(path: VaultPath, container: Container, api: ModalApi<ConnectNoteResult>) {
-  return render(ConnectNoteModal, {
-    props: { path },
-    global: {
-      plugins: [
-        {
-          install(app) {
-            provideInjectorOnApp(app, container);
-            provideModalApiOnApp(app, api as unknown as ModalApi<unknown>);
-          },
-        },
-      ],
-    },
-  });
-}
-
-async function pickDate(modals: FakeModalService, when: string): Promise<void> {
+async function pickDate(harness: TestHarness, when: string): Promise<void> {
   await userEvent.click(screen.getByText(m.common_pick_a_date()));
-  modals.lastOpen<unknown, DayPeriod>().submit(DayPeriod.containing(date(when)));
+  harness.modals.lastOpen<unknown, DayPeriod>().submit(DayPeriod.containing(date(when)));
   await waitFor(() => {
     expect(screen.queryByText(m.common_pick_a_date())).toBeNull();
   });
 }
 
 describe("ConnectNoteModal", () => {
-  let teardown: () => void;
-
-  beforeEach(() => {
-    ({ teardown } = installTestCalendar());
-  });
-
-  afterEach(() => {
-    teardown();
-    cleanup();
-  });
-
   describe("when the note is already connected to a journal", () => {
-    it("offers Disconnect when the note is already connected", async () => {
-      const repo = fakeRepo({ daily: fixedJournal("daily", { type: "day" }) });
-      const { container } = buildContainer(repo);
-      const index = container.resolve(JournalsIndex);
-      index.register({
+    let harness: TestHarness;
+
+    beforeEach(async () => {
+      harness = await testContainer({
+        modules: [journalsCoreModule],
+        data: { journals: { daily: fixedJournal("daily", { type: "day" }) } },
+      });
+      harness.resolve(JournalsIndex).register({
         journalName: "daily",
         anchor: anchor("2026-06-01"),
         path: "Journal/2026-06-01.md" as VaultPath,
       });
+    });
 
-      const submit = vi.fn();
-      const cancel = vi.fn();
-      const api: ModalApi<ConnectNoteResult> = { submit, cancel };
+    it("offers Disconnect when the note is already connected", async () => {
+      const { submit } = harness.renderModal(ConnectNoteModal, {
+        props: { path: "Journal/2026-06-01.md" as VaultPath },
+      });
 
-      mountModal("Journal/2026-06-01.md" as VaultPath, container, api);
       await userEvent.click(screen.getByText(m.connect_note_modal_disconnect()));
+
       expect(submit).toHaveBeenCalledWith({ action: "disconnect", journalName: "daily" });
     });
 
     it("does not render the journal select when the note is connected", () => {
-      const repo = fakeRepo({ daily: fixedJournal("daily", { type: "day" }) });
-      const { container } = buildContainer(repo);
-      const index = container.resolve(JournalsIndex);
-      index.register({
-        journalName: "daily",
-        anchor: anchor("2026-06-01"),
-        path: "Journal/2026-06-01.md" as VaultPath,
-      });
+      harness.renderModal(ConnectNoteModal, { props: { path: "Journal/2026-06-01.md" as VaultPath } });
 
-      const api: ModalApi<ConnectNoteResult> = { submit: vi.fn(), cancel: vi.fn() };
-
-      mountModal("Journal/2026-06-01.md" as VaultPath, container, api);
       expect(screen.queryByRole("combobox")).toBeNull();
     });
   });
 
   describe("when the vault has no journals", () => {
-    it("says so and points at the settings instead of offering a dead form", () => {
-      const { container } = buildContainer(fakeRepo({}));
-      const api: ModalApi<ConnectNoteResult> = { submit: vi.fn(), cancel: vi.fn() };
+    let harness: TestHarness;
 
-      mountModal("inbox/note.md" as VaultPath, container, api);
+    beforeEach(async () => {
+      harness = await testContainer({ modules: [journalsCoreModule], data: { journals: {} } });
+    });
+
+    it("says so and points at the settings instead of offering a dead form", () => {
+      harness.renderModal(ConnectNoteModal, { props: { path: "inbox/note.md" as VaultPath } });
+
       expect(screen.getByText(m.common_no_journals_yet())).toBeTruthy();
     });
 
     it("offers no journal select to choose from", () => {
-      const { container } = buildContainer(fakeRepo({}));
-      const api: ModalApi<ConnectNoteResult> = { submit: vi.fn(), cancel: vi.fn() };
+      harness.renderModal(ConnectNoteModal, { props: { path: "inbox/note.md" as VaultPath } });
 
-      mountModal("inbox/note.md" as VaultPath, container, api);
       expect(screen.queryByRole("combobox")).toBeNull();
     });
   });
 
   describe("when the note is not connected", () => {
-    it("shows the note path", () => {
-      const repo = fakeRepo({ daily: fixedJournal("daily", { type: "day" }) });
-      const { container } = buildContainer(repo);
-      const api: ModalApi<ConnectNoteResult> = { submit: vi.fn(), cancel: vi.fn() };
+    describe("with a daily journal on defaults", () => {
+      let harness: TestHarness;
 
-      mountModal("inbox/note.md" as VaultPath, container, api);
-      expect(screen.getByText("inbox/note.md")).toBeTruthy();
-    });
+      beforeEach(async () => {
+        harness = await testContainer({
+          modules: [journalsCoreModule],
+          data: { journals: { daily: fixedJournal("daily", { type: "day" }) } },
+        });
+      });
 
-    it("submits a connect command for an unconnected note", async () => {
-      const repo = fakeRepo({ daily: fixedJournal("daily", { type: "day" }) });
-      const { container, modals } = buildContainer(repo);
+      it("shows the note path", () => {
+        harness.renderModal(ConnectNoteModal, { props: { path: "inbox/note.md" as VaultPath } });
 
-      const submit = vi.fn();
-      const cancel = vi.fn();
-      const api: ModalApi<ConnectNoteResult> = { submit, cancel };
+        expect(screen.getByText("inbox/note.md")).toBeTruthy();
+      });
 
-      mountModal("inbox/note.md" as VaultPath, container, api);
-      await pickDate(modals, "2026-06-15");
-      await userEvent.click(screen.getByRole("button", { name: m.connect_note_modal_connect() }));
-      expect(submit).toHaveBeenCalledWith(
-        expect.objectContaining({ action: "connect", journalName: "daily", anchor: "2026-06-15" }),
-      );
-    });
+      it("submits a connect command for an unconnected note", async () => {
+        const { submit } = harness.renderModal(ConnectNoteModal, { props: { path: "inbox/note.md" as VaultPath } });
 
-    it("disables Connect until a date is picked", () => {
-      const repo = fakeRepo({ daily: fixedJournal("daily", { type: "day" }) });
-      const { container } = buildContainer(repo);
-      const api: ModalApi<ConnectNoteResult> = { submit: vi.fn(), cancel: vi.fn() };
+        await pickDate(harness, "2026-06-15");
+        await userEvent.click(screen.getByRole("button", { name: m.connect_note_modal_connect() }));
 
-      mountModal("inbox/note.md" as VaultPath, container, api);
-      const connect = screen.getByRole("button", { name: m.connect_note_modal_connect() });
-      expect((connect as HTMLButtonElement).disabled).toBe(true);
+        expect(submit).toHaveBeenCalledWith(
+          expect.objectContaining({ action: "connect", journalName: "daily", anchor: "2026-06-15" }),
+        );
+      });
+
+      it("disables Connect until a date is picked", () => {
+        harness.renderModal(ConnectNoteModal, { props: { path: "inbox/note.md" as VaultPath } });
+
+        const connect = screen.getByRole("button", { name: m.connect_note_modal_connect() });
+        expect((connect as HTMLButtonElement).disabled).toBe(true);
+      });
     });
 
     it("picks whole weeks for a weekly journal", async () => {
-      const repo = fakeRepo({ weekly: fixedJournal("weekly", { type: "week" }) });
-      const { container, modals } = buildContainer(repo);
-      const api: ModalApi<ConnectNoteResult> = { submit: vi.fn(), cancel: vi.fn() };
+      const harness = await testContainer({
+        modules: [journalsCoreModule],
+        data: { journals: { weekly: fixedJournal("weekly", { type: "week" }) } },
+      });
+      harness.renderModal(ConnectNoteModal, { props: { path: "inbox/note.md" as VaultPath } });
 
-      mountModal("inbox/note.md" as VaultPath, container, api);
       await userEvent.click(screen.getByText(m.common_pick_a_date()));
-      expect(modals.lastOpen<{ picking: string }, DayPeriod>().props.picking).toBe("week");
+
+      expect(harness.modals.lastOpen<{ picking: string }, DayPeriod>().props.picking).toBe("week");
     });
 
     it("bounds the picker to the journal timeline", async () => {
-      const repo = fakeRepo({
-        daily: fixedJournal(
-          "daily",
-          { type: "day" },
-          { timeline: { start: anchor("2026-06-01"), end: { kind: "never" } } },
-        ),
+      const harness = await testContainer({
+        modules: [journalsCoreModule],
+        data: {
+          journals: {
+            daily: fixedJournal(
+              "daily",
+              { type: "day" },
+              { timeline: { start: anchor("2026-06-01"), end: { kind: "never" } } },
+            ),
+          },
+        },
       });
-      const { container, modals } = buildContainer(repo);
-      const api: ModalApi<ConnectNoteResult> = { submit: vi.fn(), cancel: vi.fn() };
+      harness.renderModal(ConnectNoteModal, { props: { path: "inbox/note.md" as VaultPath } });
 
-      mountModal("inbox/note.md" as VaultPath, container, api);
       await userEvent.click(screen.getByText(m.common_pick_a_date()));
-      const bounds = modals.lastOpen<{ bounds?: OpenInterval }, DayPeriod>().props.bounds;
+
+      const bounds = harness.modals.lastOpen<{ bounds?: OpenInterval }, DayPeriod>().props.bounds;
       expect(bounds?.start.match({ some: (d) => d.toAnchor(), none: () => null })).toBe("2026-06-01");
     });
 
-    it("disables Connect when the chosen date is outside the journal timeline", async () => {
-      const repo = fakeRepo({
-        daily: fixedJournal(
-          "daily",
-          { type: "day" },
-          { timeline: { start: anchor(""), end: { kind: "date", date: anchor("2026-06-01") } } },
-        ),
+    describe("with the journal restricted to a bounded timeline", () => {
+      let harness: TestHarness;
+
+      beforeEach(async () => {
+        harness = await testContainer({
+          modules: [journalsCoreModule],
+          data: {
+            journals: {
+              daily: fixedJournal(
+                "daily",
+                { type: "day" },
+                { timeline: { start: anchor(""), end: { kind: "date", date: anchor("2026-06-01") } } },
+              ),
+            },
+          },
+        });
       });
-      const { container, modals } = buildContainer(repo);
-      const api: ModalApi<ConnectNoteResult> = { submit: vi.fn(), cancel: vi.fn() };
 
-      mountModal("inbox/note.md" as VaultPath, container, api);
-      await pickDate(modals, "2026-09-15");
+      it("disables Connect when the chosen date is outside the journal timeline", async () => {
+        harness.renderModal(ConnectNoteModal, { props: { path: "inbox/note.md" as VaultPath } });
 
-      const connect = screen.getByRole("button", { name: m.connect_note_modal_connect() });
-      expect((connect as HTMLButtonElement).disabled).toBe(true);
-    });
+        await pickDate(harness, "2026-09-15");
 
-    it("explains that the chosen date is outside the journal timeline", async () => {
-      const repo = fakeRepo({
-        daily: fixedJournal(
-          "daily",
-          { type: "day" },
-          { timeline: { start: anchor(""), end: { kind: "date", date: anchor("2026-06-01") } } },
-        ),
+        const connect = screen.getByRole("button", { name: m.connect_note_modal_connect() });
+        expect((connect as HTMLButtonElement).disabled).toBe(true);
       });
-      const { container, modals } = buildContainer(repo);
-      const api: ModalApi<ConnectNoteResult> = { submit: vi.fn(), cancel: vi.fn() };
 
-      mountModal("inbox/note.md" as VaultPath, container, api);
-      await pickDate(modals, "2026-09-15");
+      it("explains that the chosen date is outside the journal timeline", async () => {
+        harness.renderModal(ConnectNoteModal, { props: { path: "inbox/note.md" as VaultPath } });
 
-      expect(screen.getByText(m.connect_note_modal_out_of_bounds())).toBeTruthy();
+        await pickDate(harness, "2026-09-15");
+
+        expect(screen.getByText(m.connect_note_modal_out_of_bounds())).toBeTruthy();
+      });
     });
 
-    it("spells out the current and configured folder on the move toggle", async () => {
-      const repo = fakeRepo({ daily: fixedJournal("daily", { type: "day" }, { folder: "journals" }) });
-      const { container, modals } = buildContainer(repo);
-      const api: ModalApi<ConnectNoteResult> = { submit: vi.fn(), cancel: vi.fn() };
+    describe("with the journal filed under a subfolder", () => {
+      let harness: TestHarness;
 
-      mountModal("inbox/note.md" as VaultPath, container, api);
-      await pickDate(modals, "2026-06-15");
-      expect(
-        screen.getByText(m.connect_note_modal_move_description({ current: "inbox", configured: "journals" })),
-      ).toBeTruthy();
-    });
+      beforeEach(async () => {
+        harness = await testContainer({
+          modules: [journalsCoreModule],
+          data: { journals: { daily: fixedJournal("daily", { type: "day" }, { folder: "journals" }) } },
+        });
+      });
 
-    it("names the vault root as the folder of a root-level note", async () => {
-      const repo = fakeRepo({ daily: fixedJournal("daily", { type: "day" }, { folder: "journals" }) });
-      const { container, modals } = buildContainer(repo);
-      const api: ModalApi<ConnectNoteResult> = { submit: vi.fn(), cancel: vi.fn() };
+      it("spells out the current and configured folder on the move toggle", async () => {
+        harness.renderModal(ConnectNoteModal, { props: { path: "inbox/note.md" as VaultPath } });
 
-      mountModal("note.md" as VaultPath, container, api);
-      await pickDate(modals, "2026-06-15");
-      expect(
-        screen.getByText(
-          m.connect_note_modal_move_description({ current: m.common_vault_root(), configured: "journals" }),
-        ),
-      ).toBeTruthy();
+        await pickDate(harness, "2026-06-15");
+
+        expect(
+          screen.getByText(m.connect_note_modal_move_description({ current: "inbox", configured: "journals" })),
+        ).toBeTruthy();
+      });
+
+      it("names the vault root as the folder of a root-level note", async () => {
+        harness.renderModal(ConnectNoteModal, { props: { path: "note.md" as VaultPath } });
+
+        await pickDate(harness, "2026-06-15");
+
+        expect(
+          screen.getByText(
+            m.connect_note_modal_move_description({ current: m.common_vault_root(), configured: "journals" }),
+          ),
+        ).toBeTruthy();
+      });
     });
 
     it("names the vault root as the configured folder of a root-level journal", async () => {
-      const repo = fakeRepo({ daily: fixedJournal("daily", { type: "day" }, { folder: "" }) });
-      const { container, modals } = buildContainer(repo);
-      const api: ModalApi<ConnectNoteResult> = { submit: vi.fn(), cancel: vi.fn() };
+      const harness = await testContainer({
+        modules: [journalsCoreModule],
+        data: { journals: { daily: fixedJournal("daily", { type: "day" }, { folder: "" }) } },
+      });
+      harness.renderModal(ConnectNoteModal, { props: { path: "inbox/note.md" as VaultPath } });
 
-      mountModal("inbox/note.md" as VaultPath, container, api);
-      await pickDate(modals, "2026-06-15");
+      await pickDate(harness, "2026-06-15");
+
       expect(
         screen.getByText(
           m.connect_note_modal_move_description({ current: "inbox", configured: m.common_vault_root() }),

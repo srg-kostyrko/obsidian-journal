@@ -1,95 +1,34 @@
 import userEvent from "@testing-library/user-event";
-import { cleanup, render, screen, waitFor } from "@testing-library/vue";
-import { createNanoEvents } from "nanoevents";
+import { screen, waitFor } from "@testing-library/vue";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
-import { reactive } from "vue";
 
-import { Calendar, DayPeriod, type AnchorString } from "@/calendar";
-import { date, installTestCalendar, testCalendar } from "@/calendar/testing";
+import { DayPeriod } from "@/calendar";
+import { anchor, date } from "@/calendar/testing";
 import { formatConjunction, m } from "@/i18n";
-import { Container, provideInjectorOnApp } from "@/infrastructure/di";
 import { Flows } from "@/infrastructure/flows";
-import { InputSuggestService, NotesService, TemplaterService, NoticeService } from "@/infrastructure/host";
-import { FakeInputSuggestService } from "@/infrastructure/host/input-suggests/testing";
-import { ModalService } from "@/infrastructure/host/modals";
-import { FakeModalService } from "@/infrastructure/host/modals/testing";
-import { FakeNotesService, FakeTemplaterService, FakeNoticeService } from "@/infrastructure/host/testing";
-import { createLoggerTestingModule } from "@/infrastructure/logger/testing";
-import {
-  CycleService,
-  FrontmatterService,
-  JournalsRepository,
-  JournalsViewModel,
-  NotePathService,
-  NumberingService,
-  journalDefaultsFor,
-  type JournalConfig,
-  type JournalsEvents,
-} from "@/journals";
-import { JournalsIndex } from "@/journals/journals-index";
-import { AutoCreateService } from "@/journals/notes/auto-create";
-import { JournalsEventsToken } from "@/journals/tokens";
-import { TemplateEngine } from "@/templates";
-import { installTestEngine } from "@/templates/testing";
+import { AsyncResult } from "@/infrastructure/result";
+import { JournalsRepository } from "@/journals";
+import type { JournalConfig } from "@/journals";
+import { journalsCoreModule } from "@/journals/module";
+import { fixedJournal } from "@/journals/testing";
+import { testContainer, type TestHarness } from "@/testing";
 
 import { EditNumberingDigitFlow } from "../../flows/edit-numbering-digit.flow";
 
 import SequenceSection from "./SequenceSection.vue";
 
-let teardown: () => void;
 beforeEach(() => {
-  ({ teardown } = installTestCalendar());
   vi.useFakeTimers({ toFake: ["Date"] });
   vi.setSystemTime(new Date("2026-05-19T12:00:00"));
 });
 afterEach(() => {
   vi.useRealTimers();
-  teardown();
-  cleanup();
 });
-
-function mount(overrides: Partial<JournalConfig> = {}) {
-  const fakeModalService = new FakeModalService();
-  const container = new Container();
-  const storage = reactive<Record<string, JournalConfig>>({
-    daily: { ...journalDefaultsFor({ type: "day" }, "daily"), ...overrides },
-  });
-  const events = createNanoEvents<JournalsEvents>();
-  const repo = JournalsRepository.fromParts(storage, events);
-  container.addModule(createLoggerTestingModule().module);
-  container.register(JournalsEventsToken).useValue(events);
-  container.register(JournalsRepository).useValue(repo);
-  container.register(JournalsViewModel).useValue(JournalsViewModel.fromRepository(repo));
-  container.register(JournalsIndex).useClass(JournalsIndex);
-  container.register(CycleService).useClass(CycleService);
-  container.register(NumberingService).useClass(NumberingService);
-  container.register(FrontmatterService).useClass(FrontmatterService);
-  container.register(NotePathService).useClass(NotePathService);
-  container.register(TemplateEngine).useValue(installTestEngine());
-  container.register(TemplaterService).useValue(new FakeTemplaterService() as unknown as TemplaterService);
-  container.register(NotesService).useValue(new FakeNotesService() as unknown as NotesService);
-  container.register(InputSuggestService).useValue(new FakeInputSuggestService() as unknown as InputSuggestService);
-  container.register(ModalService).useValue(fakeModalService as unknown as ModalService);
-  container.register(Calendar).useValue(testCalendar());
-  container
-    .register(AutoCreateService)
-    .useValue({ createCurrent: () => Promise.resolve() } as unknown as AutoCreateService);
-  container.register(NoticeService).useValue(new FakeNoticeService());
-  container.register(Flows).useClass(Flows);
-  const flows = container.resolve(Flows);
-  const invoke = vi.spyOn(flows, "invoke").mockReturnValue({} as never);
-  render(SequenceSection, {
-    props: { journalName: "daily" },
-    global: { plugins: [{ install: (app) => provideInjectorOnApp(app, container) }] },
-  });
-  const config = storage.daily;
-  return { storage, repo, flows, invoke, config, fakeModalService };
-}
 
 function enabledNumbering(variables: readonly string[]): JournalConfig["numbering"] {
   return {
     enabled: true,
-    anchorDate: "2026-01-05" as AnchorString,
+    anchorDate: anchor("2026-01-05"),
     allowBefore: false,
     sources: variables.map((variable, i) => ({
       variable,
@@ -100,152 +39,273 @@ function enabledNumbering(variables: readonly string[]): JournalConfig["numberin
   };
 }
 
+function numberingOf(harness: TestHarness): JournalConfig["numbering"] | undefined {
+  return harness.resolve(JournalsRepository).get("daily").getOrUndefined()?.numbering;
+}
+
 describe("SequenceSection", () => {
   describe("sequence toggle", () => {
     it("materializes the default source when sequential numbers is toggled on", async () => {
-      const { storage } = mount({
-        numbering: { enabled: false, anchorDate: "2024-01-01" as AnchorString, allowBefore: false, sources: [] },
+      const harness = await testContainer({
+        modules: [journalsCoreModule],
+        data: {
+          journals: {
+            daily: fixedJournal(
+              "daily",
+              { type: "day" },
+              {
+                numbering: { enabled: false, anchorDate: anchor("2024-01-01"), allowBefore: false, sources: [] },
+              },
+            ),
+          },
+        },
       });
+      harness.render(SequenceSection, { props: { journalName: "daily" } });
+
       await userEvent.click(screen.getByText(m.journal_edit_section_sequential_numbers()));
       await userEvent.click(screen.getByRole("checkbox"));
-      expect(storage.daily?.numbering.sources).toHaveLength(1);
-      expect(storage.daily?.numbering.enabled).toBe(true);
+
+      expect(numberingOf(harness)?.sources).toHaveLength(1);
+      expect(numberingOf(harness)?.enabled).toBe(true);
     });
   });
 
   describe("allow-before toggle", () => {
     it("hides the allow-before toggle when start date is set", async () => {
-      mount({
-        timeline: { start: "2024-01-01" as AnchorString, end: { kind: "never" } },
-        numbering: {
-          enabled: true,
-          anchorDate: "2024-01-01" as AnchorString,
-          allowBefore: false,
-          sources: [{ variable: "index", frontmatterKey: "journal-index", anchorValue: 1, reset: { kind: "never" } }],
+      const harness = await testContainer({
+        modules: [journalsCoreModule],
+        data: {
+          journals: {
+            daily: fixedJournal(
+              "daily",
+              { type: "day" },
+              {
+                timeline: { start: anchor("2024-01-01"), end: { kind: "never" } },
+                numbering: {
+                  enabled: true,
+                  anchorDate: anchor("2024-01-01"),
+                  allowBefore: false,
+                  sources: [
+                    { variable: "index", frontmatterKey: "journal-index", anchorValue: 1, reset: { kind: "never" } },
+                  ],
+                },
+              },
+            ),
+          },
         },
       });
+      harness.render(SequenceSection, { props: { journalName: "daily" } });
+
       await userEvent.click(screen.getByText(m.journal_edit_section_sequential_numbers()));
+
       expect(screen.queryByText(m.journal_edit_allow_before_label())).toBeNull();
     });
   });
 
   describe("anchor help text", () => {
     it("shows the anchor description when no start date is set", async () => {
-      mount({
-        timeline: { start: "" as AnchorString, end: { kind: "never" } },
-        numbering: {
-          enabled: true,
-          anchorDate: "2024-01-01" as AnchorString,
-          allowBefore: false,
-          sources: [{ variable: "index", frontmatterKey: "journal-index", anchorValue: 1, reset: { kind: "never" } }],
+      const harness = await testContainer({
+        modules: [journalsCoreModule],
+        data: {
+          journals: {
+            daily: fixedJournal(
+              "daily",
+              { type: "day" },
+              {
+                timeline: { start: anchor(""), end: { kind: "never" } },
+                numbering: {
+                  enabled: true,
+                  anchorDate: anchor("2024-01-01"),
+                  allowBefore: false,
+                  sources: [
+                    { variable: "index", frontmatterKey: "journal-index", anchorValue: 1, reset: { kind: "never" } },
+                  ],
+                },
+              },
+            ),
+          },
         },
       });
+      harness.render(SequenceSection, { props: { journalName: "daily" } });
+
       await userEvent.click(screen.getByText(m.journal_edit_section_sequential_numbers()));
+
       expect(screen.getByText(m.journal_edit_anchor_description())).toBeDefined();
     });
   });
 
   describe("numbering anchor DatePicker", () => {
     it("writes the picked date to numbering.anchorDate", async () => {
-      const { storage, fakeModalService } = mount({
-        timeline: { start: "" as AnchorString, end: { kind: "never" } },
-        numbering: {
-          enabled: true,
-          anchorDate: "2024-01-01" as AnchorString,
-          allowBefore: false,
-          sources: [{ variable: "index", frontmatterKey: "journal-index", anchorValue: 1, reset: { kind: "never" } }],
+      const harness = await testContainer({
+        modules: [journalsCoreModule],
+        data: {
+          journals: {
+            daily: fixedJournal(
+              "daily",
+              { type: "day" },
+              {
+                timeline: { start: anchor(""), end: { kind: "never" } },
+                numbering: {
+                  enabled: true,
+                  anchorDate: anchor("2024-01-01"),
+                  allowBefore: false,
+                  sources: [
+                    { variable: "index", frontmatterKey: "journal-index", anchorValue: 1, reset: { kind: "never" } },
+                  ],
+                },
+              },
+            ),
+          },
         },
       });
+      harness.render(SequenceSection, { props: { journalName: "daily" } });
+
       await userEvent.click(screen.getByText(m.journal_edit_section_sequential_numbers()));
       await userEvent.click(screen.getByRole("button", { name: "2024-01-01" }));
-      fakeModalService.lastOpen<unknown, DayPeriod>().submit(DayPeriod.containing(date("2025-01-10")));
+      harness.modals.lastOpen<unknown, DayPeriod>().submit(DayPeriod.containing(date("2025-01-10")));
+
       await waitFor(() => {
-        expect(storage.daily?.numbering.anchorDate).toBe("2025-01-10");
+        expect(numberingOf(harness)?.anchorDate).toBe("2025-01-10");
       });
     });
   });
 
   describe("digit list", () => {
     it("renders one row per digit", async () => {
-      mount({
-        numbering: {
-          enabled: true,
-          anchorDate: "2026-01-05" as AnchorString,
-          allowBefore: false,
-          sources: [
-            { variable: "release", frontmatterKey: "journal-release", anchorValue: 4711, reset: { kind: "never" } },
-            {
-              variable: "sprint",
-              frontmatterKey: "journal-sprint",
-              anchorValue: 1,
-              reset: { kind: "after", count: 6 },
-            },
-          ],
+      const harness = await testContainer({
+        modules: [journalsCoreModule],
+        data: {
+          journals: {
+            daily: fixedJournal(
+              "daily",
+              { type: "day" },
+              {
+                numbering: {
+                  enabled: true,
+                  anchorDate: anchor("2026-01-05"),
+                  allowBefore: false,
+                  sources: [
+                    {
+                      variable: "release",
+                      frontmatterKey: "journal-release",
+                      anchorValue: 4711,
+                      reset: { kind: "never" },
+                    },
+                    {
+                      variable: "sprint",
+                      frontmatterKey: "journal-sprint",
+                      anchorValue: 1,
+                      reset: { kind: "after", count: 6 },
+                    },
+                  ],
+                },
+              },
+            ),
+          },
         },
       });
+      harness.render(SequenceSection, { props: { journalName: "daily" } });
+
       await userEvent.click(screen.getByText(m.journal_edit_section_sequential_numbers()));
 
       expect(await screen.findByText("release")).toBeTruthy();
       expect(await screen.findByText("sprint")).toBeTruthy();
     });
 
-    it("invokes the digit flow with no index when adding", async () => {
-      const { invoke } = mount({ numbering: enabledNumbering(["index"]) });
-      await userEvent.click(screen.getByText(m.journal_edit_section_sequential_numbers()));
+    describe("with a single digit", () => {
+      let harness: TestHarness;
 
-      await userEvent.click(screen.getByLabelText(m.journal_sequence_digit_add()));
+      beforeEach(async () => {
+        harness = await testContainer({
+          modules: [journalsCoreModule],
+          data: {
+            journals: { daily: fixedJournal("daily", { type: "day" }, { numbering: enabledNumbering(["index"]) }) },
+          },
+        });
+        harness.render(SequenceSection, { props: { journalName: "daily" } });
+      });
 
-      expect(invoke).toHaveBeenCalledWith(EditNumberingDigitFlow, { journalName: "daily" });
-    });
+      it("invokes the digit flow with no index when adding", async () => {
+        const invoke = vi.spyOn(harness.resolve(Flows), "invoke").mockReturnValue(AsyncResult.ok(undefined));
+        await userEvent.click(screen.getByText(m.journal_edit_section_sequential_numbers()));
 
-    it("invokes the digit flow with the row index when editing", async () => {
-      const { invoke } = mount({ numbering: enabledNumbering(["release", "sprint"]) });
-      await userEvent.click(screen.getByText(m.journal_edit_section_sequential_numbers()));
+        await userEvent.click(screen.getByLabelText(m.journal_sequence_digit_add()));
 
-      await userEvent.click(screen.getAllByLabelText(m.journal_sequence_digit_edit())[1]);
+        expect(invoke).toHaveBeenCalledWith(EditNumberingDigitFlow, { journalName: "daily" });
+      });
 
-      expect(invoke).toHaveBeenCalledWith(EditNumberingDigitFlow, { journalName: "daily", sourceIndex: 1 });
-    });
+      it("does not offer to delete the only remaining digit", async () => {
+        await userEvent.click(screen.getByText(m.journal_edit_section_sequential_numbers()));
 
-    it("removes the digit at the clicked row", async () => {
-      const { config } = mount({ numbering: enabledNumbering(["release", "sprint"]) });
-      await userEvent.click(screen.getByText(m.journal_edit_section_sequential_numbers()));
-
-      await userEvent.click(screen.getAllByLabelText(m.journal_sequence_digit_delete())[1]);
-
-      await waitFor(() => {
-        expect(config.numbering.sources.map((source) => source.variable)).toEqual(["release"]);
+        expect(screen.queryByLabelText(m.journal_sequence_digit_delete())).toBeNull();
       });
     });
 
-    it("promotes the next digit to index 0 when the top digit is deleted", async () => {
-      const { config } = mount({ numbering: enabledNumbering(["release", "sprint"]) });
-      await userEvent.click(screen.getByText(m.journal_edit_section_sequential_numbers()));
+    describe("with two digits", () => {
+      let harness: TestHarness;
 
-      await userEvent.click(screen.getAllByLabelText(m.journal_sequence_digit_delete())[0]);
-
-      await waitFor(() => {
-        expect(config.numbering.sources.map((source) => source.variable)).toEqual(["sprint"]);
+      beforeEach(async () => {
+        harness = await testContainer({
+          modules: [journalsCoreModule],
+          data: {
+            journals: {
+              daily: fixedJournal("daily", { type: "day" }, { numbering: enabledNumbering(["release", "sprint"]) }),
+            },
+          },
+        });
+        harness.render(SequenceSection, { props: { journalName: "daily" } });
       });
-      // Promotion by position only — the promoted digit keeps its after-N reset rather than
-      // being silently rewritten to never, which is still a legal index-0 kind.
-      expect(config.numbering.sources[0]?.reset).toEqual({ kind: "after", count: 6 });
-    });
 
-    it("does not offer to delete the only remaining digit", async () => {
-      mount({ numbering: enabledNumbering(["index"]) });
-      await userEvent.click(screen.getByText(m.journal_edit_section_sequential_numbers()));
+      it("invokes the digit flow with the row index when editing", async () => {
+        const invoke = vi.spyOn(harness.resolve(Flows), "invoke").mockReturnValue(AsyncResult.ok(undefined));
+        await userEvent.click(screen.getByText(m.journal_edit_section_sequential_numbers()));
 
-      expect(screen.queryByLabelText(m.journal_sequence_digit_delete())).toBeNull();
+        await userEvent.click(screen.getAllByLabelText(m.journal_sequence_digit_edit())[1]);
+
+        expect(invoke).toHaveBeenCalledWith(EditNumberingDigitFlow, { journalName: "daily", sourceIndex: 1 });
+      });
+
+      it("removes the digit at the clicked row", async () => {
+        await userEvent.click(screen.getByText(m.journal_edit_section_sequential_numbers()));
+
+        await userEvent.click(screen.getAllByLabelText(m.journal_sequence_digit_delete())[1]);
+
+        await waitFor(() => {
+          expect(numberingOf(harness)?.sources.map((source) => source.variable)).toEqual(["release"]);
+        });
+      });
+
+      it("promotes the next digit to index 0 when the top digit is deleted", async () => {
+        await userEvent.click(screen.getByText(m.journal_edit_section_sequential_numbers()));
+
+        await userEvent.click(screen.getAllByLabelText(m.journal_sequence_digit_delete())[0]);
+
+        await waitFor(() => {
+          expect(numberingOf(harness)?.sources.map((source) => source.variable)).toEqual(["sprint"]);
+        });
+        // Promotion by position only — the promoted digit keeps its after-N reset rather than
+        // being silently rewritten to never, which is still a legal index-0 kind.
+        expect(numberingOf(harness)?.sources[0]?.reset).toEqual({ kind: "after", count: 6 });
+      });
     });
   });
 
   describe("invertibility warning", () => {
     it("warns about a stale numbering variable left over from a rename", async () => {
-      mount({
-        nameTemplate: "{{index}}",
-        numbering: enabledNumbering(["release", "sprint"]),
+      const harness = await testContainer({
+        modules: [journalsCoreModule],
+        data: {
+          journals: {
+            daily: fixedJournal(
+              "daily",
+              { type: "day" },
+              { nameTemplate: "{{index}}", numbering: enabledNumbering(["release", "sprint"]) },
+            ),
+          },
+        },
       });
+      harness.render(SequenceSection, { props: { journalName: "daily" } });
+
       await userEvent.click(screen.getByText(m.journal_edit_section_sequential_numbers()));
 
       expect(
@@ -256,38 +316,61 @@ describe("SequenceSection", () => {
     });
 
     it("warns when the first digit is cyclic", async () => {
-      mount({
-        nameTemplate: "{{release}}-{{sprint}}",
-        numbering: {
-          enabled: true,
-          anchorDate: "2026-01-05" as AnchorString,
-          allowBefore: false,
-          sources: [
-            {
-              variable: "release",
-              frontmatterKey: "journal-release",
-              anchorValue: 1,
-              reset: { kind: "after", count: 4 },
-            },
-            {
-              variable: "sprint",
-              frontmatterKey: "journal-sprint",
-              anchorValue: 1,
-              reset: { kind: "after", count: 6 },
-            },
-          ],
+      const harness = await testContainer({
+        modules: [journalsCoreModule],
+        data: {
+          journals: {
+            daily: fixedJournal(
+              "daily",
+              { type: "day" },
+              {
+                nameTemplate: "{{release}}-{{sprint}}",
+                numbering: {
+                  enabled: true,
+                  anchorDate: anchor("2026-01-05"),
+                  allowBefore: false,
+                  sources: [
+                    {
+                      variable: "release",
+                      frontmatterKey: "journal-release",
+                      anchorValue: 1,
+                      reset: { kind: "after", count: 4 },
+                    },
+                    {
+                      variable: "sprint",
+                      frontmatterKey: "journal-sprint",
+                      anchorValue: 1,
+                      reset: { kind: "after", count: 6 },
+                    },
+                  ],
+                },
+              },
+            ),
+          },
         },
       });
+      harness.render(SequenceSection, { props: { journalName: "daily" } });
+
       await userEvent.click(screen.getByText(m.journal_edit_section_sequential_numbers()));
 
       expect(await screen.findByText(m.journal_edit_name_template_cyclic_top_warning())).toBeTruthy();
     });
 
     it("names the digits the template leaves out", async () => {
-      mount({
-        nameTemplate: "Sprint {{sprint}}",
-        numbering: enabledNumbering(["release", "sprint"]),
+      const harness = await testContainer({
+        modules: [journalsCoreModule],
+        data: {
+          journals: {
+            daily: fixedJournal(
+              "daily",
+              { type: "day" },
+              { nameTemplate: "Sprint {{sprint}}", numbering: enabledNumbering(["release", "sprint"]) },
+            ),
+          },
+        },
       });
+      harness.render(SequenceSection, { props: { journalName: "daily" } });
+
       await userEvent.click(screen.getByText(m.journal_edit_section_sequential_numbers()));
 
       expect(
@@ -298,10 +381,20 @@ describe("SequenceSection", () => {
     });
 
     it("shows no warning once the template covers every numbering variable", async () => {
-      mount({
-        nameTemplate: "{{release}}-{{sprint}}",
-        numbering: enabledNumbering(["release", "sprint"]),
+      const harness = await testContainer({
+        modules: [journalsCoreModule],
+        data: {
+          journals: {
+            daily: fixedJournal(
+              "daily",
+              { type: "day" },
+              { nameTemplate: "{{release}}-{{sprint}}", numbering: enabledNumbering(["release", "sprint"]) },
+            ),
+          },
+        },
       });
+      harness.render(SequenceSection, { props: { journalName: "daily" } });
+
       await userEvent.click(screen.getByText(m.journal_edit_section_sequential_numbers()));
 
       expect(await screen.findByText("release")).toBeTruthy();

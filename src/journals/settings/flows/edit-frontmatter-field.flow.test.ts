@@ -1,103 +1,132 @@
-import { createNanoEvents } from "nanoevents";
-import { describe, expect, it, vi } from "vitest";
-import { reactive } from "vue";
+import { beforeEach, describe, expect, it, vi } from "vitest";
 
+import { anchor } from "@/calendar/testing";
 import { Flows, UserAborted } from "@/infrastructure/flows";
-import { NoticeService } from "@/infrastructure/host";
-import { ModalService } from "@/infrastructure/host/modals";
-import { FakeModalService } from "@/infrastructure/host/modals/testing";
-import { FakeNoticeService } from "@/infrastructure/host/testing";
-import { AsyncResult } from "@/infrastructure/result";
-import {
-  JournalLifecycleFlowError,
-  JournalsRepository,
-  UnknownJournalError,
-  journalDefaultsFor,
-  type JournalConfig,
-  type JournalsEvents,
-} from "@/journals";
+import type { VaultPath } from "@/infrastructure/host";
+import { JournalLifecycleFlowError, UnknownJournalError } from "@/journals/errors";
+import { JournalsIndex } from "@/journals/journals-index";
+import { journalsCoreModule } from "@/journals/module";
 import { NoteConnectionService } from "@/journals/notes/note-connection";
-import { createSettingsService } from "@/settings/testing";
+import { JournalsRepository } from "@/journals/repository";
+import { fixedJournal } from "@/journals/testing";
+import { testContainer, type TestHarness } from "@/testing";
+
+import { journalsSettingsCoreModule } from "../module";
 
 import { EditFrontmatterFieldFlow } from "./edit-frontmatter-field.flow";
 
-async function build(initial: Record<string, JournalConfig> = {}) {
-  const { container } = createSettingsService({ collections: [] });
-  const storage = reactive<Record<string, JournalConfig>>({ ...initial });
-  const events = createNanoEvents<JournalsEvents>();
-  const repo = JournalsRepository.fromParts(storage, events);
-  const modals = new FakeModalService();
-  const connection = { renameFieldAll: vi.fn(() => AsyncResult.ok()) };
-  container.register(ModalService).useValue(modals as unknown as ModalService);
-  container.register(JournalsRepository).useValue(repo);
-  container.register(NoteConnectionService).useValue(connection as unknown as NoteConnectionService);
-  container.register(NoticeService).useValue(new FakeNoticeService());
-  container.register(Flows).useClass(Flows);
-  container.register(EditFrontmatterFieldFlow).useClass(EditFrontmatterFieldFlow);
-  return { storage, repo, modals, connection, flows: container.resolve(Flows) };
-}
-
 describe("EditFrontmatterFieldFlow", () => {
+  let harness: TestHarness;
+
+  beforeEach(async () => {
+    harness = await testContainer({
+      modules: [journalsCoreModule, journalsSettingsCoreModule],
+      data: { journals: { daily: fixedJournal("daily", { type: "day" }) } },
+    });
+  });
+
   it("updates dateField on submit", async () => {
-    const { flows, modals, repo } = await build({ daily: journalDefaultsFor({ type: "day" }, "daily") });
-    const promise = flows.invoke(EditFrontmatterFieldFlow, { journalName: "daily", fieldName: "dateField" });
-    modals.lastOpen<unknown, { newValue: string }>().submit({ newValue: "happened-on" });
+    const promise = harness.resolve(Flows).invoke(EditFrontmatterFieldFlow, {
+      journalName: "daily",
+      fieldName: "dateField",
+    });
+    harness.modals.lastOpen<unknown, { newValue: string }>().submit({ newValue: "happened-on" });
     await promise;
-    expect(repo.get("daily").getOr(undefined as never).frontmatter.dateField).toBe("happened-on");
+    expect(harness.resolve(JournalsRepository).get("daily").getOrUndefined()?.frontmatter.dateField).toBe(
+      "happened-on",
+    );
   });
 
   it("updates startDateField on submit", async () => {
-    const { flows, modals, repo } = await build({ daily: journalDefaultsFor({ type: "day" }, "daily") });
-    const promise = flows.invoke(EditFrontmatterFieldFlow, { journalName: "daily", fieldName: "startDateField" });
-    modals.lastOpen<unknown, { newValue: string }>().submit({ newValue: "begins-on" });
+    const promise = harness.resolve(Flows).invoke(EditFrontmatterFieldFlow, {
+      journalName: "daily",
+      fieldName: "startDateField",
+    });
+    harness.modals.lastOpen<unknown, { newValue: string }>().submit({ newValue: "begins-on" });
     await promise;
-    expect(repo.get("daily").getOr(undefined as never).frontmatter.startDateField).toBe("begins-on");
+    expect(harness.resolve(JournalsRepository).get("daily").getOrUndefined()?.frontmatter.startDateField).toBe(
+      "begins-on",
+    );
   });
 
   it("updates endDateField on submit", async () => {
-    const { flows, modals, repo } = await build({ daily: journalDefaultsFor({ type: "day" }, "daily") });
-    const promise = flows.invoke(EditFrontmatterFieldFlow, { journalName: "daily", fieldName: "endDateField" });
-    modals.lastOpen<unknown, { newValue: string }>().submit({ newValue: "ends-on" });
+    const promise = harness.resolve(Flows).invoke(EditFrontmatterFieldFlow, {
+      journalName: "daily",
+      fieldName: "endDateField",
+    });
+    harness.modals.lastOpen<unknown, { newValue: string }>().submit({ newValue: "ends-on" });
     await promise;
-    expect(repo.get("daily").getOr(undefined as never).frontmatter.endDateField).toBe("ends-on");
+    expect(harness.resolve(JournalsRepository).get("daily").getOrUndefined()?.frontmatter.endDateField).toBe("ends-on");
   });
 
   it("moves note frontmatter from the old date-field key to the new one", async () => {
-    const { flows, modals, connection } = await build({ daily: journalDefaultsFor({ type: "day" }, "daily") });
-    const promise = flows.invoke(EditFrontmatterFieldFlow, { journalName: "daily", fieldName: "dateField" });
-    modals.lastOpen<unknown, { newValue: string }>().submit({ newValue: "happened-on" });
+    const path = "2026-06-01.md" as VaultPath;
+    harness.host.putFile(path, "content", { journal: "daily", "journal-date": "2026-06-01", title: "keep" });
+    harness.resolve(JournalsIndex).register({ journalName: "daily", anchor: anchor("2026-06-01"), path });
+    const promise = harness.resolve(Flows).invoke(EditFrontmatterFieldFlow, {
+      journalName: "daily",
+      fieldName: "dateField",
+    });
+    harness.modals.lastOpen<unknown, { newValue: string }>().submit({ newValue: "happened-on" });
     await promise;
-    expect(connection.renameFieldAll).toHaveBeenCalledWith("daily", "journal-date", "happened-on");
+    expect(harness.host.files.get(path)?.frontmatter).toEqual({
+      journal: "daily",
+      "happened-on": "2026-06-01",
+      title: "keep",
+    });
   });
 
   it("moves note frontmatter from the old start-date key to the new one", async () => {
-    const { flows, modals, connection } = await build({ daily: journalDefaultsFor({ type: "day" }, "daily") });
-    const promise = flows.invoke(EditFrontmatterFieldFlow, { journalName: "daily", fieldName: "startDateField" });
-    modals.lastOpen<unknown, { newValue: string }>().submit({ newValue: "begins-on" });
+    const path = "2026-06-01.md" as VaultPath;
+    harness.host.putFile(path, "content", {
+      journal: "daily",
+      "journal-date": "2026-06-01",
+      "journal-start-date": "2026-06-01",
+      title: "keep",
+    });
+    harness.resolve(JournalsIndex).register({ journalName: "daily", anchor: anchor("2026-06-01"), path });
+    const promise = harness.resolve(Flows).invoke(EditFrontmatterFieldFlow, {
+      journalName: "daily",
+      fieldName: "startDateField",
+    });
+    harness.modals.lastOpen<unknown, { newValue: string }>().submit({ newValue: "begins-on" });
     await promise;
-    expect(connection.renameFieldAll).toHaveBeenCalledWith("daily", "journal-start-date", "begins-on");
+    expect(harness.host.files.get(path)?.frontmatter).toEqual({
+      journal: "daily",
+      "journal-date": "2026-06-01",
+      "begins-on": "2026-06-01",
+      title: "keep",
+    });
   });
 
   it("does not move note frontmatter when the date field is unchanged", async () => {
-    const { flows, modals, connection } = await build({ daily: journalDefaultsFor({ type: "day" }, "daily") });
-    const promise = flows.invoke(EditFrontmatterFieldFlow, { journalName: "daily", fieldName: "dateField" });
-    modals.lastOpen<unknown, { newValue: string }>().submit({ newValue: "journal-date" });
+    const connection = harness.resolve(NoteConnectionService);
+    const spy = vi.spyOn(connection, "renameFieldAll");
+    const promise = harness.resolve(Flows).invoke(EditFrontmatterFieldFlow, {
+      journalName: "daily",
+      fieldName: "dateField",
+    });
+    harness.modals.lastOpen<unknown, { newValue: string }>().submit({ newValue: "journal-date" });
     await promise;
-    expect(connection.renameFieldAll).not.toHaveBeenCalled();
+    expect(spy).not.toHaveBeenCalled();
   });
 
   it("returns the new value on submit", async () => {
-    const { flows, modals } = await build({ daily: journalDefaultsFor({ type: "day" }, "daily") });
-    const promise = flows.invoke(EditFrontmatterFieldFlow, { journalName: "daily", fieldName: "dateField" });
-    modals.lastOpen<unknown, { newValue: string }>().submit({ newValue: "x" });
+    const promise = harness.resolve(Flows).invoke(EditFrontmatterFieldFlow, {
+      journalName: "daily",
+      fieldName: "dateField",
+    });
+    harness.modals.lastOpen<unknown, { newValue: string }>().submit({ newValue: "x" });
     const result = await promise;
     expect(result.kind === "ok" && result.value).toEqual({ newValue: "x" });
   });
 
   it("returns UserAborted('edit-frontmatter-field-modal') when cancelled", async () => {
-    const { flows, modals } = await build({ daily: journalDefaultsFor({ type: "day" }, "daily") });
-    const promise = flows.invoke(EditFrontmatterFieldFlow, { journalName: "daily", fieldName: "dateField" });
-    modals.lastOpen().cancel();
+    const promise = harness.resolve(Flows).invoke(EditFrontmatterFieldFlow, {
+      journalName: "daily",
+      fieldName: "dateField",
+    });
+    harness.modals.lastOpen().cancel();
     const result = await promise;
     expect(result.kind).toBe("err");
     expect(result.kind === "err" && result.error).toBeInstanceOf(UserAborted);
@@ -105,8 +134,11 @@ describe("EditFrontmatterFieldFlow", () => {
   });
 
   it("rejects when the journal does not exist", async () => {
-    const { flows } = await build();
-    const result = await flows.invoke(EditFrontmatterFieldFlow, { journalName: "ghost", fieldName: "dateField" });
+    harness = await testContainer({ modules: [journalsCoreModule, journalsSettingsCoreModule] });
+    const result = await harness.resolve(Flows).invoke(EditFrontmatterFieldFlow, {
+      journalName: "ghost",
+      fieldName: "dateField",
+    });
     expect(result.kind).toBe("err");
     expect(result.kind === "err" && result.error).toBeInstanceOf(JournalLifecycleFlowError);
     expect(result.kind === "err" && (result.error as JournalLifecycleFlowError).cause).toBeInstanceOf(

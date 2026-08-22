@@ -1,66 +1,54 @@
-import { cleanup, render } from "@testing-library/vue";
-import { afterEach, describe, expect, it } from "vitest";
-import { defineComponent, h } from "vue";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
+import { defineComponent } from "vue";
 
-import type { AnchorString } from "@/calendar";
-import { Container, provideInjectorOnApp } from "@/infrastructure/di";
 import type { VaultPath } from "@/infrastructure/host";
-import { Option } from "@/infrastructure/result";
-import { CycleService, JournalsIndex } from "@/journals";
+import { JournalsIndex } from "@/journals/journals-index";
+import { journalsCoreModule } from "@/journals/module";
+import { fixedJournal } from "@/journals/testing";
+import { testContainer, type TestHarness } from "@/testing";
 
 import { useCodeBlockPreviewPath } from "./use-code-block-preview-path";
 
-class FakeCycleService {
-  anchorOf(): Option<AnchorString> {
-    return Option.some("2026-05-27" as AnchorString);
-  }
-}
-
-function renderDiv() {
-  return h("div");
-}
-
-function setup() {
-  const index = new JournalsIndex();
-  const container = new Container();
-  container.register(JournalsIndex).useValue(index);
-  container.register(CycleService).useValue(new FakeCycleService() as unknown as CycleService);
-
-  let captured: VaultPath | null = null;
-  const Host = defineComponent({
-    setup() {
-      captured = useCodeBlockPreviewPath("Daily");
-      return renderDiv;
-    },
-  });
-
-  const utilities = render(Host, {
-    global: {
-      plugins: [
-        {
-          install(app) {
-            provideInjectorOnApp(app, container);
-          },
-        },
-      ],
-    },
-  });
-
-  if (captured === null) throw new Error("path not captured");
-  return { index, path: captured, unmount: () => utilities.unmount() };
-}
-
-afterEach(() => cleanup());
+beforeEach(() => {
+  vi.useFakeTimers({ toFake: ["Date"] });
+  vi.setSystemTime(new Date("2026-05-27T12:00:00"));
+});
+afterEach(() => {
+  vi.useRealTimers();
+});
 
 describe("useCodeBlockPreviewPath", () => {
+  let harness: TestHarness;
+  let index: JournalsIndex;
+  let path: VaultPath;
+  let unmount: () => void;
+
+  beforeEach(async () => {
+    harness = await testContainer({
+      modules: [journalsCoreModule],
+      data: { journals: { Daily: fixedJournal("Daily", { type: "day" }) } },
+    });
+    index = harness.resolve(JournalsIndex);
+
+    let captured: VaultPath | null = null;
+    const Host = defineComponent({
+      template: "<div />",
+      setup() {
+        captured = useCodeBlockPreviewPath("Daily");
+      },
+    });
+    const utilities = harness.render(Host);
+    if (captured === null) throw new Error("path not captured");
+    path = captured;
+    unmount = () => utilities.unmount();
+  });
+
   it("registers a synthetic entry resolvable by the returned path", () => {
-    const { index, path } = setup();
     const entry = index.entryByPath(path);
     expect(entry.isSome() && entry.value).toMatchObject({ journalName: "Daily", anchor: "2026-05-27", path });
   });
 
   it("unregisters the synthetic entry on unmount", () => {
-    const { index, path, unmount } = setup();
     unmount();
     expect(index.entryByPath(path).isSome()).toBe(false);
   });

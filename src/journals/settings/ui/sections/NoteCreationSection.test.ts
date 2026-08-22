@@ -1,81 +1,29 @@
 import userEvent from "@testing-library/user-event";
-import { cleanup, render, screen, waitFor } from "@testing-library/vue";
-import { createNanoEvents } from "nanoevents";
-import { afterEach, beforeEach, describe, expect, it } from "vitest";
-import { reactive } from "vue";
+import { screen, waitFor } from "@testing-library/vue";
+import { beforeEach, describe, expect, it } from "vitest";
 
-import { installTestCalendar } from "@/calendar/testing";
 import { m } from "@/i18n";
-import { Container, provideInjectorOnApp } from "@/infrastructure/di";
-import { InputSuggestService, NotesService, TemplaterService } from "@/infrastructure/host";
-import { FakeInputSuggestService } from "@/infrastructure/host/input-suggests/testing";
-import { ModalService } from "@/infrastructure/host/modals";
-import { FakeModalService } from "@/infrastructure/host/modals/testing";
-import { FakeNotesService, FakeTemplaterService } from "@/infrastructure/host/testing";
-import {
-  CycleService,
-  FrontmatterService,
-  JournalsRepository,
-  JournalsViewModel,
-  NotePathService,
-  NumberingService,
-  TimelineService,
-  journalDefaultsFor,
-  type JournalConfig,
-  type JournalsEvents,
-} from "@/journals";
-import { JournalsIndex } from "@/journals/journals-index";
-import { AutoCreateService } from "@/journals/notes/auto-create";
-import { JournalsEventsToken } from "@/journals/tokens";
-import { TemplateEngine } from "@/templates";
-import { installTestEngine } from "@/templates/testing";
+import { JournalsRepository } from "@/journals";
+import { journalsCoreModule } from "@/journals/module";
+import { fixedJournal } from "@/journals/testing";
+import { testContainer, type TestHarness } from "@/testing";
 
 import NoteCreationSection from "./NoteCreationSection.vue";
 
-let teardown: () => void;
-beforeEach(() => {
-  ({ teardown } = installTestCalendar());
-});
-afterEach(() => {
-  teardown();
-  cleanup();
-});
-
-function mount(overrides: Partial<JournalConfig> = {}) {
-  const container = new Container();
-  const storage = reactive<Record<string, JournalConfig>>({
-    daily: { ...journalDefaultsFor({ type: "day" }, "daily"), ...overrides },
-  });
-  const events = createNanoEvents<JournalsEvents>();
-  const repo = JournalsRepository.fromParts(storage, events);
-  container.register(JournalsEventsToken).useValue(events);
-  container.register(JournalsRepository).useValue(repo);
-  container.register(JournalsViewModel).useValue(JournalsViewModel.fromRepository(repo));
-  container.register(JournalsIndex).useClass(JournalsIndex);
-  container.register(CycleService).useClass(CycleService);
-  container.register(NumberingService).useClass(NumberingService);
-  container.register(FrontmatterService).useClass(FrontmatterService);
-  container.register(NotePathService).useClass(NotePathService);
-  container.register(TimelineService).useClass(TimelineService);
-  container.register(TemplateEngine).useValue(installTestEngine());
-  container.register(TemplaterService).useValue(new FakeTemplaterService() as unknown as TemplaterService);
-  container.register(NotesService).useValue(new FakeNotesService() as unknown as NotesService);
-  container.register(InputSuggestService).useValue(new FakeInputSuggestService() as unknown as InputSuggestService);
-  container.register(ModalService).useValue(new FakeModalService() as unknown as ModalService);
-  container
-    .register(AutoCreateService)
-    .useValue({ createCurrent: () => Promise.resolve() } as unknown as AutoCreateService);
-  render(NoteCreationSection, {
-    props: { journalName: "daily" },
-    global: { plugins: [{ install: (app) => provideInjectorOnApp(app, container) }] },
-  });
-  return { storage, repo };
+function configOf(harness: TestHarness) {
+  return harness.resolve(JournalsRepository).get("daily").getOrUndefined();
 }
 
 describe("NoteCreationSection", () => {
   describe("section heading", () => {
-    it("renders all five setting rows", () => {
-      mount();
+    it("renders all five setting rows", async () => {
+      const harness = await testContainer({
+        modules: [journalsCoreModule],
+        data: { journals: { daily: fixedJournal("daily", { type: "day" }) } },
+      });
+
+      harness.render(NoteCreationSection, { props: { journalName: "daily" } });
+
       expect(screen.getByText(m.journal_edit_section_note_creation())).toBeTruthy();
       expect(screen.getByText(m.journal_edit_name_template_label())).toBeTruthy();
       expect(screen.getByText(m.journal_edit_folder_label())).toBeTruthy();
@@ -86,114 +34,198 @@ describe("NoteCreationSection", () => {
   });
 
   describe("nameTemplate field", () => {
-    it("persists edits to the journal config", async () => {
-      const { storage } = mount();
-      const input = screen.getByDisplayValue("{{date}}");
-      await userEvent.clear(input);
-      await userEvent.type(input, "daily-note");
-      expect(storage.daily?.nameTemplate).toBe("daily-note");
-    });
+    it("names the colliding note path when every entry resolves to one note", async () => {
+      const harness = await testContainer({
+        modules: [journalsCoreModule],
+        data: { journals: { daily: fixedJournal("daily", { type: "day" }, { nameTemplate: "MyNote" }) } },
+      });
 
-    it("shows the invertibility warning for non-invertible templates", () => {
-      mount({ nameTemplate: "{{date}}-{{mystery}}" });
-      expect(
-        screen.getByText(
-          m.journal_edit_name_template_invertibility_warning({
-            reason: "unknown-variable",
-            offending: "mystery",
-          }),
-        ),
-      ).toBeTruthy();
-    });
+      harness.render(NoteCreationSection, { props: { journalName: "daily" } });
 
-    it("names the offending variable in the invertibility warning", () => {
-      mount({ nameTemplate: "{{date}}-{{mystery}}" });
-      expect(screen.getByText(/"mystery"/)).toBeTruthy();
-    });
-
-    it("keeps the internal reason code out of the invertibility warning", () => {
-      // Asserting against m.*() with the same arguments the component passes cannot catch a
-      // message that renders the reason union verbatim — it passes for any message body. This
-      // reads the rendered text instead, and stays true through copy edits.
-      mount({ nameTemplate: "{{date}}-{{mystery}}" });
-      expect(screen.queryByText(/unknown-variable/)).toBeNull();
-    });
-
-    it("names the colliding note path when every entry resolves to one note", () => {
-      mount({ nameTemplate: "MyNote" });
       expect(screen.getByText(/resolve to MyNote\.md/)).toBeTruthy();
     });
 
-    it("does not warn about collisions for the default date template", () => {
-      mount();
-      expect(screen.queryByText(/resolve to/)).toBeNull();
-    });
+    it("shows the move-to-folder recommendation when nameTemplate contains a slash", async () => {
+      const harness = await testContainer({
+        modules: [journalsCoreModule],
+        data: { journals: { daily: fixedJournal("daily", { type: "day" }, { nameTemplate: "year/{{date}}" }) } },
+      });
 
-    it("shows the move-to-folder recommendation when nameTemplate contains a slash", () => {
-      mount({ nameTemplate: "year/{{date}}" });
+      harness.render(NoteCreationSection, { props: { journalName: "daily" } });
+
       expect(screen.getByText(m.journal_edit_move_to_folder_recommendation_name_template())).toBeTruthy();
     });
 
     it("moves the path prefix from nameTemplate to folder when the recommendation is applied", async () => {
-      const { storage } = mount({ nameTemplate: "year/{{date}}", folder: "" });
+      const harness = await testContainer({
+        modules: [journalsCoreModule],
+        data: {
+          journals: {
+            daily: fixedJournal("daily", { type: "day" }, { nameTemplate: "year/{{date}}", folder: "" }),
+          },
+        },
+      });
+      harness.render(NoteCreationSection, { props: { journalName: "daily" } });
+
       await userEvent.click(screen.getByRole("link", { name: m.journal_edit_move_to_folder_apply_link() }));
-      expect(storage.daily?.folder).toBe("year");
-      expect(storage.daily?.nameTemplate).toBe("{{date}}");
+
+      expect(configOf(harness)?.folder).toBe("year");
+      expect(configOf(harness)?.nameTemplate).toBe("{{date}}");
     });
 
-    it("live-renders the note path preview as nameTemplate changes", async () => {
-      const { storage } = mount();
-      const input = screen.getByDisplayValue("{{date}}");
-      await userEvent.clear(input);
-      await userEvent.type(input, "note-prefix");
-      await waitFor(() => {
-        expect(storage.daily?.nameTemplate).toBe("note-prefix");
+    describe("on the default date template", () => {
+      let harness: TestHarness;
+
+      beforeEach(async () => {
+        harness = await testContainer({
+          modules: [journalsCoreModule],
+          data: { journals: { daily: fixedJournal("daily", { type: "day" }) } },
+        });
+        harness.render(NoteCreationSection, { props: { journalName: "daily" } });
       });
-      await waitFor(() => {
-        expect(screen.getByText("note-prefix.md")).toBeTruthy();
+
+      it("persists edits to the journal config", async () => {
+        const input = screen.getByDisplayValue("{{date}}");
+
+        await userEvent.clear(input);
+        await userEvent.type(input, "daily-note");
+
+        expect(configOf(harness)?.nameTemplate).toBe("daily-note");
+      });
+
+      it("does not warn about collisions for the default date template", () => {
+        expect(screen.queryByText(/resolve to/)).toBeNull();
+      });
+
+      it("live-renders the note path preview as nameTemplate changes", async () => {
+        const input = screen.getByDisplayValue("{{date}}");
+
+        await userEvent.clear(input);
+        await userEvent.type(input, "note-prefix");
+
+        await waitFor(() => {
+          expect(configOf(harness)?.nameTemplate).toBe("note-prefix");
+        });
+        await waitFor(() => {
+          expect(screen.getByText("note-prefix.md")).toBeTruthy();
+        });
+      });
+    });
+
+    describe("on a template with an unknown variable", () => {
+      beforeEach(async () => {
+        const harness = await testContainer({
+          modules: [journalsCoreModule],
+          data: {
+            journals: { daily: fixedJournal("daily", { type: "day" }, { nameTemplate: "{{date}}-{{mystery}}" }) },
+          },
+        });
+        harness.render(NoteCreationSection, { props: { journalName: "daily" } });
+      });
+
+      it("shows the invertibility warning for non-invertible templates", () => {
+        expect(
+          screen.getByText(
+            m.journal_edit_name_template_invertibility_warning({
+              reason: "unknown-variable",
+              offending: "mystery",
+            }),
+          ),
+        ).toBeTruthy();
+      });
+
+      it("names the offending variable in the invertibility warning", () => {
+        expect(screen.getByText(/"mystery"/)).toBeTruthy();
+      });
+
+      it("keeps the internal reason code out of the invertibility warning", () => {
+        // Asserting against m.*() with the same arguments the component passes cannot catch a
+        // message that renders the reason union verbatim — it passes for any message body. This
+        // reads the rendered text instead, and stays true through copy edits.
+        expect(screen.queryByText(/unknown-variable/)).toBeNull();
       });
     });
   });
 
   describe("dateFormat field", () => {
     it("persists edits to the journal config", async () => {
-      const { storage } = mount();
+      const harness = await testContainer({
+        modules: [journalsCoreModule],
+        data: { journals: { daily: fixedJournal("daily", { type: "day" }) } },
+      });
+      harness.render(NoteCreationSection, { props: { journalName: "daily" } });
       const input = screen.getByDisplayValue("YYYY-MM-DD");
+
       await userEvent.clear(input);
       await userEvent.type(input, "YYYY/MM");
-      expect(storage.daily?.dateFormat).toBe("YYYY/MM");
+
+      expect(configOf(harness)?.dateFormat).toBe("YYYY/MM");
     });
 
-    it("shows the move-to-folder recommendation when dateFormat contains a slash", () => {
-      mount({ dateFormat: "YYYY/MM/DD" });
+    it("shows the move-to-folder recommendation when dateFormat contains a slash", async () => {
+      const harness = await testContainer({
+        modules: [journalsCoreModule],
+        data: { journals: { daily: fixedJournal("daily", { type: "day" }, { dateFormat: "YYYY/MM/DD" }) } },
+      });
+
+      harness.render(NoteCreationSection, { props: { journalName: "daily" } });
+
       expect(screen.getByText(m.journal_edit_move_to_folder_recommendation_date_format())).toBeTruthy();
     });
 
     it("moves the path prefix from dateFormat to folder when the recommendation is applied", async () => {
-      const { storage } = mount({ dateFormat: "YYYY/MM/DD", folder: "" });
+      const harness = await testContainer({
+        modules: [journalsCoreModule],
+        data: {
+          journals: { daily: fixedJournal("daily", { type: "day" }, { dateFormat: "YYYY/MM/DD", folder: "" }) },
+        },
+      });
+      harness.render(NoteCreationSection, { props: { journalName: "daily" } });
+
       await userEvent.click(screen.getByRole("link", { name: m.journal_edit_move_to_folder_apply_link() }));
-      expect(storage.daily?.folder).toBe("{{date:YYYY}}/{{date:MM}}");
-      expect(storage.daily?.dateFormat).toBe("DD");
+
+      expect(configOf(harness)?.folder).toBe("{{date:YYYY}}/{{date:MM}}");
+      expect(configOf(harness)?.dateFormat).toBe("DD");
     });
   });
 
   describe("folder field", () => {
-    it("warns when the folder's date format uses the wrong week token", () => {
-      mount({ folder: "Journals/{{date:GGGG-[W]W}}" });
+    it("warns when the folder's date format uses the wrong week token", async () => {
+      const harness = await testContainer({
+        modules: [journalsCoreModule],
+        data: {
+          journals: { daily: fixedJournal("daily", { type: "day" }, { folder: "Journals/{{date:GGGG-[W]W}}" }) },
+        },
+      });
+
+      harness.render(NoteCreationSection, { props: { journalName: "daily" } });
+
       expect(screen.getByText(m.journal_edit_wrong_week_warning())).toBeTruthy();
     });
 
-    it("does not warn for a folder whose date format has no week token", () => {
-      mount({ folder: "Journals/{{date:YYYY}}" });
+    it("does not warn for a folder whose date format has no week token", async () => {
+      const harness = await testContainer({
+        modules: [journalsCoreModule],
+        data: { journals: { daily: fixedJournal("daily", { type: "day" }, { folder: "Journals/{{date:YYYY}}" }) } },
+      });
+
+      harness.render(NoteCreationSection, { props: { journalName: "daily" } });
+
       expect(screen.queryByText(m.journal_edit_wrong_week_warning())).toBeNull();
     });
   });
 
   describe("autoCreate field", () => {
     it("shows the confirmation-skip note only when confirmCreation is enabled", async () => {
-      const { repo } = mount();
+      const harness = await testContainer({
+        modules: [journalsCoreModule],
+        data: { journals: { daily: fixedJournal("daily", { type: "day" }) } },
+      });
+      harness.render(NoteCreationSection, { props: { journalName: "daily" } });
       expect(screen.queryByText(m.journal_edit_auto_create_confirmation_skip_note())).toBeNull();
-      repo.update("daily", { confirmCreation: true });
+
+      harness.resolve(JournalsRepository).update("daily", { confirmCreation: true });
+
       await waitFor(() => {
         expect(screen.getByText(m.journal_edit_auto_create_confirmation_skip_note())).toBeTruthy();
       });
@@ -201,14 +233,24 @@ describe("NoteCreationSection", () => {
   });
 
   describe("weekly date-format hint", () => {
-    it("explains the date variable on a weekly journal", () => {
-      mount({ write: { type: "week" } });
+    it("explains the date variable on a weekly journal", async () => {
+      const harness = await testContainer({
+        modules: [journalsCoreModule],
+        data: { journals: { daily: fixedJournal("daily", { type: "week" }) } },
+      });
+
+      harness.render(NoteCreationSection, { props: { journalName: "daily" } });
 
       expect(screen.getByText(/day inside the week/i)).toBeTruthy();
     });
 
-    it("omits the explanation on a day journal", () => {
-      mount();
+    it("omits the explanation on a day journal", async () => {
+      const harness = await testContainer({
+        modules: [journalsCoreModule],
+        data: { journals: { daily: fixedJournal("daily", { type: "day" }) } },
+      });
+
+      harness.render(NoteCreationSection, { props: { journalName: "daily" } });
 
       expect(screen.queryByText(/day inside the week/i)).toBeNull();
     });
