@@ -1,68 +1,22 @@
-import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
+import { beforeEach, describe, expect, it, vi } from "vitest";
 
-import { anchor, installTestCalendar } from "@/calendar/testing";
-import { Container } from "@/infrastructure/di";
-import { NoteDeleteError, NoteNotFoundError, NotesService, TemplaterService } from "@/infrastructure/host";
+import { anchor } from "@/calendar/testing";
+import { NoteDeleteError, NoteNotFoundError, NotesService } from "@/infrastructure/host";
 import type { VaultPath } from "@/infrastructure/host";
-import { ModalService } from "@/infrastructure/host/modals";
-import { FakeModalService } from "@/infrastructure/host/modals/testing";
-import { FakeNotesService, FakeTemplaterService } from "@/infrastructure/host/testing";
-import { LoggerModule } from "@/infrastructure/logger";
 import { AsyncResult } from "@/infrastructure/result";
 import { expectOk } from "@/infrastructure/result/testing";
-import { TemplateEngine } from "@/templates";
+import { testContainer, type TestHarness } from "@/testing";
 
-import { CycleService } from "../cycle";
-import { FrontmatterService } from "../frontmatter";
 import { JournalsIndex } from "../journals-index";
-import { NumberingService } from "../numbering";
-import { JournalsRepository } from "../repository";
-import { customJournal, fakeRepo, fixedJournal } from "../testing";
+import { journalsCoreModule } from "../module";
+import { customJournal, fixedJournal } from "../testing";
 
 import { AnchorOccupiedError, EmptyNoteNameError } from "./errors";
 import { NoteConnectionService } from "./note-connection";
-import { NoteCreationService } from "./note-creation";
-import { NotePathService } from "./note-path";
-import { SelfWriteGuard } from "./self-write-guard";
-import { TemplateContentService } from "./template-content";
-
-function build(
-  repo: JournalsRepository,
-  notes: FakeNotesService,
-  modals: FakeModalService,
-  templater = new FakeTemplaterService(),
-): { container: Container; index: JournalsIndex } {
-  const c = new Container();
-  c.addModule(LoggerModule);
-  c.register(JournalsRepository).useValue(repo);
-  c.register(NotesService).useValue(notes as unknown as NotesService);
-  c.register(ModalService).useValue(modals as unknown as ModalService);
-  c.register(TemplaterService).useValue(templater as unknown as TemplaterService);
-  c.register(JournalsIndex).useClass(JournalsIndex);
-  c.register(CycleService).useClass(CycleService);
-  c.register(NumberingService).useClass(NumberingService);
-  c.register(FrontmatterService).useClass(FrontmatterService);
-  c.register(TemplateEngine).useClass(TemplateEngine);
-  c.register(TemplateContentService).useClass(TemplateContentService);
-  c.register(NotePathService).useClass(NotePathService);
-  c.register(SelfWriteGuard).useClass(SelfWriteGuard);
-  c.register(NoteCreationService).useClass(NoteCreationService);
-  c.register(NoteConnectionService).useClass(NoteConnectionService);
-  const index = c.resolve(JournalsIndex);
-  return { container: c, index };
-}
 
 function dailyWithFrontmatter(patch: { addStartDate?: boolean; addEndDate?: boolean }) {
   const daily = fixedJournal("daily", { type: "day" });
   return { daily: { ...daily, frontmatter: { ...daily.frontmatter, ...patch } } };
-}
-
-async function readFrontmatter(notes: FakeNotesService, path: VaultPath): Promise<Record<string, unknown>> {
-  let captured: Record<string, unknown> = {};
-  await notes.updateFrontmatter(path, (fm) => {
-    captured = { ...fm };
-  });
-  return captured;
 }
 
 function weeklyWith(patch: { addStartDate?: boolean; addEndDate?: boolean } = {}) {
@@ -71,91 +25,87 @@ function weeklyWith(patch: { addStartDate?: boolean; addEndDate?: boolean } = {}
 }
 
 describe("NoteConnectionService", () => {
-  let teardown: () => void;
-
-  beforeEach(() => {
-    ({ teardown } = installTestCalendar());
-  });
-
-  afterEach(() => {
-    teardown();
-  });
-
   describe("disconnect", () => {
-    it("strips journal-owned frontmatter keys from a connected note", async () => {
-      const repo = fakeRepo({ daily: fixedJournal("daily", { type: "day" }) });
-      const notes = new FakeNotesService();
-      const path = "2026-06-01.md" as VaultPath;
-      notes.seed(path, "content", { journal: "daily", "journal-date": "2026-06-01", title: "keep" });
-      const { container, index } = build(repo, notes, new FakeModalService());
-      index.register({ journalName: "daily", anchor: anchor("2026-06-01"), path });
+    let harness: TestHarness;
 
-      const result = await container.resolve(NoteConnectionService).disconnect(path);
+    beforeEach(async () => {
+      harness = await testContainer({
+        modules: [journalsCoreModule],
+        data: { journals: { daily: fixedJournal("daily", { type: "day" }) } },
+      });
+    });
+
+    it("strips journal-owned frontmatter keys from a connected note", async () => {
+      const path = "2026-06-01.md" as VaultPath;
+      harness.host.putFile(path, "content", { journal: "daily", "journal-date": "2026-06-01", title: "keep" });
+      harness.resolve(JournalsIndex).register({ journalName: "daily", anchor: anchor("2026-06-01"), path });
+
+      const result = await harness.resolve(NoteConnectionService).disconnect(path);
 
       expect(result.isOk()).toBe(true);
-      const fm = await readFrontmatter(notes, path);
-      expect(fm).toEqual({ title: "keep" });
+      expect(harness.host.files.get(path)?.frontmatter).toEqual({ title: "keep" });
     });
 
     it("falls back to default-key stripping for an orphaned note with a stale journal key", async () => {
-      const repo = fakeRepo({ daily: fixedJournal("daily", { type: "day" }) });
-      const notes = new FakeNotesService();
       const path = "2026-06-01.md" as VaultPath;
-      notes.seed(path, "content", {
+      harness.host.putFile(path, "content", {
         journal: "deleted",
         "journal-date": "2026-06-01",
         "journal-index": 3,
         body: "keep",
       });
-      const { container } = build(repo, notes, new FakeModalService());
       // NOT registering in index — simulating an orphaned note
 
-      const result = await container.resolve(NoteConnectionService).disconnect(path);
+      const result = await harness.resolve(NoteConnectionService).disconnect(path);
 
       expect(result.isOk()).toBe(true);
-      const fm = await readFrontmatter(notes, path);
-      expect(fm).toEqual({ body: "keep" });
+      expect(harness.host.files.get(path)?.frontmatter).toEqual({ body: "keep" });
     });
   });
 
   describe("disconnectAll", () => {
+    let harness: TestHarness;
+
+    beforeEach(async () => {
+      harness = await testContainer({
+        modules: [journalsCoreModule],
+        data: { journals: { daily: fixedJournal("daily", { type: "day" }) } },
+      });
+    });
+
     it("strips the journal's frontmatter keys from every connected note", async () => {
-      const repo = fakeRepo({ daily: fixedJournal("daily", { type: "day" }) });
-      const notes = new FakeNotesService();
       const first = "a.md" as VaultPath;
       const second = "b.md" as VaultPath;
-      notes.seed(first, "content", { journal: "daily", "journal-date": "2026-06-01", title: "keep" });
-      notes.seed(second, "content", { journal: "daily", "journal-date": "2026-06-02", title: "keep" });
-      const { container, index } = build(repo, notes, new FakeModalService());
+      harness.host.putFile(first, "content", { journal: "daily", "journal-date": "2026-06-01", title: "keep" });
+      harness.host.putFile(second, "content", { journal: "daily", "journal-date": "2026-06-02", title: "keep" });
+      const index = harness.resolve(JournalsIndex);
       index.register({ journalName: "daily", anchor: anchor("2026-06-01"), path: first });
       index.register({ journalName: "daily", anchor: anchor("2026-06-02"), path: second });
 
-      await container.resolve(NoteConnectionService).disconnectAll("daily");
+      await harness.resolve(NoteConnectionService).disconnectAll("daily");
 
-      expect(await readFrontmatter(notes, first)).toEqual({ title: "keep" });
-      expect(await readFrontmatter(notes, second)).toEqual({ title: "keep" });
+      expect(harness.host.files.get(first)?.frontmatter).toEqual({ title: "keep" });
+      expect(harness.host.files.get(second)?.frontmatter).toEqual({ title: "keep" });
     });
 
     it("clears the remaining notes when one note's update fails", async () => {
-      const repo = fakeRepo({ daily: fixedJournal("daily", { type: "day" }) });
-      const notes = new FakeNotesService();
       const failing = "a.md" as VaultPath;
       const surviving = "b.md" as VaultPath;
-      notes.seed(failing, "content", { journal: "daily", "journal-date": "2026-06-01", title: "keep" });
-      notes.seed(surviving, "content", { journal: "daily", "journal-date": "2026-06-02", title: "keep" });
-      const { container, index } = build(repo, notes, new FakeModalService());
+      harness.host.putFile(failing, "content", { journal: "daily", "journal-date": "2026-06-01", title: "keep" });
+      harness.host.putFile(surviving, "content", { journal: "daily", "journal-date": "2026-06-02", title: "keep" });
+      const index = harness.resolve(JournalsIndex);
       index.register({ journalName: "daily", anchor: anchor("2026-06-01"), path: failing });
       index.register({ journalName: "daily", anchor: anchor("2026-06-02"), path: surviving });
+      const notes = harness.resolve(NotesService);
       const original = notes.updateFrontmatter.bind(notes);
       vi.spyOn(notes, "updateFrontmatter").mockImplementation((path, mutate) =>
         path === failing ? AsyncResult.err(new NoteNotFoundError(failing)) : original(path, mutate),
       );
 
-      await container.resolve(NoteConnectionService).disconnectAll("daily");
+      await harness.resolve(NoteConnectionService).disconnectAll("daily");
 
-      expect(await readFrontmatter(notes, surviving)).toEqual({ title: "keep" });
-      vi.mocked(notes.updateFrontmatter).mockRestore();
-      expect(await readFrontmatter(notes, failing)).toEqual({
+      expect(harness.host.files.get(surviving)?.frontmatter).toEqual({ title: "keep" });
+      expect(harness.host.files.get(failing)?.frontmatter).toEqual({
         journal: "daily",
         "journal-date": "2026-06-01",
         title: "keep",
@@ -164,65 +114,78 @@ describe("NoteConnectionService", () => {
   });
 
   describe("deleteAll", () => {
+    let harness: TestHarness;
+
+    beforeEach(async () => {
+      harness = await testContainer({
+        modules: [journalsCoreModule],
+        data: { journals: { daily: fixedJournal("daily", { type: "day" }) } },
+      });
+    });
+
     it("trashes every connected note", async () => {
-      const repo = fakeRepo({ daily: fixedJournal("daily", { type: "day" }) });
-      const notes = new FakeNotesService();
       const first = "a.md" as VaultPath;
       const second = "b.md" as VaultPath;
-      notes.seed(first, "content", { journal: "daily", "journal-date": "2026-06-01" });
-      notes.seed(second, "content", { journal: "daily", "journal-date": "2026-06-02" });
-      const { container, index } = build(repo, notes, new FakeModalService());
+      harness.host.putFile(first, "content", { journal: "daily", "journal-date": "2026-06-01" });
+      harness.host.putFile(second, "content", { journal: "daily", "journal-date": "2026-06-02" });
+      const index = harness.resolve(JournalsIndex);
       index.register({ journalName: "daily", anchor: anchor("2026-06-01"), path: first });
       index.register({ journalName: "daily", anchor: anchor("2026-06-02"), path: second });
 
-      await container.resolve(NoteConnectionService).deleteAll("daily");
+      await harness.resolve(NoteConnectionService).deleteAll("daily");
 
-      expect(notes.find(first).isNone()).toBe(true);
-      expect(notes.find(second).isNone()).toBe(true);
+      expect(harness.host.files.has(first)).toBe(false);
+      expect(harness.host.files.has(second)).toBe(false);
     });
 
     it("trashes the remaining notes when one note's deletion fails", async () => {
-      const repo = fakeRepo({ daily: fixedJournal("daily", { type: "day" }) });
-      const notes = new FakeNotesService();
       const failing = "a.md" as VaultPath;
       const surviving = "b.md" as VaultPath;
-      notes.seed(failing, "content", { journal: "daily", "journal-date": "2026-06-01" });
-      notes.seed(surviving, "content", { journal: "daily", "journal-date": "2026-06-02" });
-      const { container, index } = build(repo, notes, new FakeModalService());
+      harness.host.putFile(failing, "content", { journal: "daily", "journal-date": "2026-06-01" });
+      harness.host.putFile(surviving, "content", { journal: "daily", "journal-date": "2026-06-02" });
+      const index = harness.resolve(JournalsIndex);
       index.register({ journalName: "daily", anchor: anchor("2026-06-01"), path: failing });
       index.register({ journalName: "daily", anchor: anchor("2026-06-02"), path: surviving });
+      const notes = harness.resolve(NotesService);
       const original = notes.delete.bind(notes);
       vi.spyOn(notes, "delete").mockImplementation((path) =>
         path === failing ? AsyncResult.err(new NoteDeleteError(failing, new Error("boom"))) : original(path),
       );
 
-      await container.resolve(NoteConnectionService).deleteAll("daily");
+      await harness.resolve(NoteConnectionService).deleteAll("daily");
 
-      expect(notes.find(surviving).isNone()).toBe(true);
-      expect(notes.find(failing).isSome()).toBe(true);
+      expect(harness.host.files.has(surviving)).toBe(false);
+      expect(harness.host.files.has(failing)).toBe(true);
     });
   });
 
   describe("reconnectAll", () => {
+    let harness: TestHarness;
+
+    beforeEach(async () => {
+      harness = await testContainer({
+        modules: [journalsCoreModule],
+        data: { journals: { daily: fixedJournal("daily", { type: "day" }) } },
+      });
+    });
+
     it("rewrites the journal name in every connected note to the new name", async () => {
-      const repo = fakeRepo({ daily: fixedJournal("daily", { type: "day" }) });
-      const notes = new FakeNotesService();
       const first = "a.md" as VaultPath;
       const second = "b.md" as VaultPath;
-      notes.seed(first, "content", { journal: "daily", "journal-date": "2026-06-01", title: "keep" });
-      notes.seed(second, "content", { journal: "daily", "journal-date": "2026-06-02", title: "keep" });
-      const { container, index } = build(repo, notes, new FakeModalService());
+      harness.host.putFile(first, "content", { journal: "daily", "journal-date": "2026-06-01", title: "keep" });
+      harness.host.putFile(second, "content", { journal: "daily", "journal-date": "2026-06-02", title: "keep" });
+      const index = harness.resolve(JournalsIndex);
       index.register({ journalName: "daily", anchor: anchor("2026-06-01"), path: first });
       index.register({ journalName: "daily", anchor: anchor("2026-06-02"), path: second });
 
-      await container.resolve(NoteConnectionService).reconnectAll("daily", "morning");
+      await harness.resolve(NoteConnectionService).reconnectAll("daily", "morning");
 
-      expect(await readFrontmatter(notes, first)).toEqual({
+      expect(harness.host.files.get(first)?.frontmatter).toEqual({
         journal: "morning",
         "journal-date": "2026-06-01",
         title: "keep",
       });
-      expect(await readFrontmatter(notes, second)).toEqual({
+      expect(harness.host.files.get(second)?.frontmatter).toEqual({
         journal: "morning",
         "journal-date": "2026-06-02",
         title: "keep",
@@ -230,29 +193,27 @@ describe("NoteConnectionService", () => {
     });
 
     it("rewrites the remaining notes when one note's update fails", async () => {
-      const repo = fakeRepo({ daily: fixedJournal("daily", { type: "day" }) });
-      const notes = new FakeNotesService();
       const failing = "a.md" as VaultPath;
       const surviving = "b.md" as VaultPath;
-      notes.seed(failing, "content", { journal: "daily", "journal-date": "2026-06-01", title: "keep" });
-      notes.seed(surviving, "content", { journal: "daily", "journal-date": "2026-06-02", title: "keep" });
-      const { container, index } = build(repo, notes, new FakeModalService());
+      harness.host.putFile(failing, "content", { journal: "daily", "journal-date": "2026-06-01", title: "keep" });
+      harness.host.putFile(surviving, "content", { journal: "daily", "journal-date": "2026-06-02", title: "keep" });
+      const index = harness.resolve(JournalsIndex);
       index.register({ journalName: "daily", anchor: anchor("2026-06-01"), path: failing });
       index.register({ journalName: "daily", anchor: anchor("2026-06-02"), path: surviving });
+      const notes = harness.resolve(NotesService);
       const original = notes.updateFrontmatter.bind(notes);
       vi.spyOn(notes, "updateFrontmatter").mockImplementation((path, mutate) =>
         path === failing ? AsyncResult.err(new NoteNotFoundError(failing)) : original(path, mutate),
       );
 
-      await container.resolve(NoteConnectionService).reconnectAll("daily", "morning");
+      await harness.resolve(NoteConnectionService).reconnectAll("daily", "morning");
 
-      expect(await readFrontmatter(notes, surviving)).toEqual({
+      expect(harness.host.files.get(surviving)?.frontmatter).toEqual({
         journal: "morning",
         "journal-date": "2026-06-02",
         title: "keep",
       });
-      vi.mocked(notes.updateFrontmatter).mockRestore();
-      expect(await readFrontmatter(notes, failing)).toEqual({
+      expect(harness.host.files.get(failing)?.frontmatter).toEqual({
         journal: "daily",
         "journal-date": "2026-06-01",
         title: "keep",
@@ -261,450 +222,505 @@ describe("NoteConnectionService", () => {
   });
 
   describe("renameFieldAll", () => {
+    let harness: TestHarness;
+
+    beforeEach(async () => {
+      harness = await testContainer({
+        modules: [journalsCoreModule],
+        data: { journals: { daily: fixedJournal("daily", { type: "day" }) } },
+      });
+    });
+
     it("moves the value from the old key to the new key in every connected note", async () => {
-      const repo = fakeRepo({ daily: fixedJournal("daily", { type: "day" }) });
-      const notes = new FakeNotesService();
       const first = "a.md" as VaultPath;
       const second = "b.md" as VaultPath;
-      notes.seed(first, "content", { journal: "daily", "journal-date": "2026-06-01", title: "keep" });
-      notes.seed(second, "content", { journal: "daily", "journal-date": "2026-06-02", title: "keep" });
-      const { container, index } = build(repo, notes, new FakeModalService());
+      harness.host.putFile(first, "content", { journal: "daily", "journal-date": "2026-06-01", title: "keep" });
+      harness.host.putFile(second, "content", { journal: "daily", "journal-date": "2026-06-02", title: "keep" });
+      const index = harness.resolve(JournalsIndex);
       index.register({ journalName: "daily", anchor: anchor("2026-06-01"), path: first });
       index.register({ journalName: "daily", anchor: anchor("2026-06-02"), path: second });
 
-      await container.resolve(NoteConnectionService).renameFieldAll("daily", "journal-date", "date");
+      await harness.resolve(NoteConnectionService).renameFieldAll("daily", "journal-date", "date");
 
-      expect(await readFrontmatter(notes, first)).toEqual({ journal: "daily", date: "2026-06-01", title: "keep" });
-      expect(await readFrontmatter(notes, second)).toEqual({ journal: "daily", date: "2026-06-02", title: "keep" });
+      expect(harness.host.files.get(first)?.frontmatter).toEqual({
+        journal: "daily",
+        date: "2026-06-01",
+        title: "keep",
+      });
+      expect(harness.host.files.get(second)?.frontmatter).toEqual({
+        journal: "daily",
+        date: "2026-06-02",
+        title: "keep",
+      });
     });
 
     it("leaves a note that lacks the old key untouched", async () => {
-      const repo = fakeRepo({ daily: fixedJournal("daily", { type: "day" }) });
-      const notes = new FakeNotesService();
       const path = "a.md" as VaultPath;
-      notes.seed(path, "content", { journal: "daily", "journal-date": "2026-06-01" });
-      const { container, index } = build(repo, notes, new FakeModalService());
-      index.register({ journalName: "daily", anchor: anchor("2026-06-01"), path });
+      harness.host.putFile(path, "content", { journal: "daily", "journal-date": "2026-06-01" });
+      harness.resolve(JournalsIndex).register({ journalName: "daily", anchor: anchor("2026-06-01"), path });
 
-      await container.resolve(NoteConnectionService).renameFieldAll("daily", "absent-key", "date");
+      await harness.resolve(NoteConnectionService).renameFieldAll("daily", "absent-key", "date");
 
-      expect(await readFrontmatter(notes, path)).toEqual({ journal: "daily", "journal-date": "2026-06-01" });
+      expect(harness.host.files.get(path)?.frontmatter).toEqual({ journal: "daily", "journal-date": "2026-06-01" });
     });
   });
 
   describe("reapplyAll", () => {
     it("writes the start date property to every connected note when addStartDate is on", async () => {
-      const repo = fakeRepo(dailyWithFrontmatter({ addStartDate: true }));
-      const notes = new FakeNotesService();
+      const harness = await testContainer({
+        modules: [journalsCoreModule],
+        data: { journals: dailyWithFrontmatter({ addStartDate: true }) },
+      });
       const first = "a.md" as VaultPath;
       const second = "b.md" as VaultPath;
-      notes.seed(first, "content", { journal: "daily", "journal-date": "2026-06-01" });
-      notes.seed(second, "content", { journal: "daily", "journal-date": "2026-06-02" });
-      const { container, index } = build(repo, notes, new FakeModalService());
+      harness.host.putFile(first, "content", { journal: "daily", "journal-date": "2026-06-01" });
+      harness.host.putFile(second, "content", { journal: "daily", "journal-date": "2026-06-02" });
+      const index = harness.resolve(JournalsIndex);
       index.register({ journalName: "daily", anchor: anchor("2026-06-01"), path: first });
       index.register({ journalName: "daily", anchor: anchor("2026-06-02"), path: second });
 
-      await container.resolve(NoteConnectionService).reapplyAll("daily");
+      await harness.resolve(NoteConnectionService).reapplyAll("daily");
 
-      const firstFm = await readFrontmatter(notes, first);
-      const secondFm = await readFrontmatter(notes, second);
-      expect(firstFm["journal-start-date"]).toBe("2026-06-01");
-      expect(secondFm["journal-start-date"]).toBe("2026-06-02");
+      expect(harness.host.files.get(first)?.frontmatter["journal-start-date"]).toBe("2026-06-01");
+      expect(harness.host.files.get(second)?.frontmatter["journal-start-date"]).toBe("2026-06-02");
     });
 
     it("removes the start date property from connected notes when addStartDate is off", async () => {
-      const repo = fakeRepo(dailyWithFrontmatter({ addStartDate: false }));
-      const notes = new FakeNotesService();
+      const harness = await testContainer({
+        modules: [journalsCoreModule],
+        data: { journals: dailyWithFrontmatter({ addStartDate: false }) },
+      });
       const path = "a.md" as VaultPath;
-      notes.seed(path, "content", {
+      harness.host.putFile(path, "content", {
         journal: "daily",
         "journal-date": "2026-06-01",
         "journal-start-date": "2026-06-01",
       });
-      const { container, index } = build(repo, notes, new FakeModalService());
-      index.register({ journalName: "daily", anchor: anchor("2026-06-01"), path });
+      harness.resolve(JournalsIndex).register({ journalName: "daily", anchor: anchor("2026-06-01"), path });
 
-      await container.resolve(NoteConnectionService).reapplyAll("daily");
+      await harness.resolve(NoteConnectionService).reapplyAll("daily");
 
-      expect("journal-start-date" in (await readFrontmatter(notes, path))).toBe(false);
+      expect("journal-start-date" in (harness.host.files.get(path)?.frontmatter ?? {})).toBe(false);
     });
 
     it("writes the period end property to connected notes when addEndDate is on", async () => {
-      const repo = fakeRepo(dailyWithFrontmatter({ addEndDate: true }));
-      const notes = new FakeNotesService();
-      const path = "a.md" as VaultPath;
-      notes.seed(path, "content", { journal: "daily", "journal-date": "2026-06-01" });
-      const { container, index } = build(repo, notes, new FakeModalService());
-      index.register({ journalName: "daily", anchor: anchor("2026-06-01"), path });
-
-      await container.resolve(NoteConnectionService).reapplyAll("daily");
-
-      const fm = await readFrontmatter(notes, path);
-      expect(fm["journal-end-date"]).toBe("2026-06-01");
-    });
-
-    it("removes a period-default end property from connected notes when addEndDate is off", async () => {
-      const repo = fakeRepo(dailyWithFrontmatter({ addEndDate: false }));
-      const notes = new FakeNotesService();
-      const path = "a.md" as VaultPath;
-      notes.seed(path, "content", {
-        journal: "daily",
-        "journal-date": "2026-06-01",
-        "journal-end-date": "2026-06-01",
+      const harness = await testContainer({
+        modules: [journalsCoreModule],
+        data: { journals: dailyWithFrontmatter({ addEndDate: true }) },
       });
-      const { container, index } = build(repo, notes, new FakeModalService());
-      index.register({ journalName: "daily", anchor: anchor("2026-06-01"), path, endDate: anchor("2026-06-01") });
-
-      await container.resolve(NoteConnectionService).reapplyAll("daily");
-
-      expect("journal-end-date" in (await readFrontmatter(notes, path))).toBe(false);
-    });
-
-    it("keeps an extended end date when addEndDate is off", async () => {
-      const repo = fakeRepo(dailyWithFrontmatter({ addEndDate: false }));
-      const notes = new FakeNotesService();
       const path = "a.md" as VaultPath;
-      notes.seed(path, "content", {
-        journal: "daily",
-        "journal-date": "2026-06-01",
-        "journal-end-date": "2026-06-05",
-      });
-      const { container, index } = build(repo, notes, new FakeModalService());
-      index.register({ journalName: "daily", anchor: anchor("2026-06-01"), path, endDate: anchor("2026-06-05") });
+      harness.host.putFile(path, "content", { journal: "daily", "journal-date": "2026-06-01" });
+      harness.resolve(JournalsIndex).register({ journalName: "daily", anchor: anchor("2026-06-01"), path });
 
-      await container.resolve(NoteConnectionService).reapplyAll("daily");
+      await harness.resolve(NoteConnectionService).reapplyAll("daily");
 
-      const fm = await readFrontmatter(notes, path);
-      expect(fm["journal-end-date"]).toBe("2026-06-05");
+      expect(harness.host.files.get(path)?.frontmatter["journal-end-date"]).toBe("2026-06-01");
     });
 
-    it("removes a custom interval's duration-default end when addEndDate is off", async () => {
+    describe("a daily journal that no longer adds an end date", () => {
+      let harness: TestHarness;
+
+      beforeEach(async () => {
+        harness = await testContainer({
+          modules: [journalsCoreModule],
+          data: { journals: dailyWithFrontmatter({ addEndDate: false }) },
+        });
+      });
+
+      it("removes a period-default end property from connected notes when addEndDate is off", async () => {
+        const path = "a.md" as VaultPath;
+        harness.host.putFile(path, "content", {
+          journal: "daily",
+          "journal-date": "2026-06-01",
+          "journal-end-date": "2026-06-01",
+        });
+        harness
+          .resolve(JournalsIndex)
+          .register({ journalName: "daily", anchor: anchor("2026-06-01"), path, endDate: anchor("2026-06-01") });
+
+        await harness.resolve(NoteConnectionService).reapplyAll("daily");
+
+        expect("journal-end-date" in (harness.host.files.get(path)?.frontmatter ?? {})).toBe(false);
+      });
+
+      it("keeps an extended end date when addEndDate is off", async () => {
+        const path = "a.md" as VaultPath;
+        harness.host.putFile(path, "content", {
+          journal: "daily",
+          "journal-date": "2026-06-01",
+          "journal-end-date": "2026-06-05",
+        });
+        harness
+          .resolve(JournalsIndex)
+          .register({ journalName: "daily", anchor: anchor("2026-06-01"), path, endDate: anchor("2026-06-05") });
+
+        await harness.resolve(NoteConnectionService).reapplyAll("daily");
+
+        expect(harness.host.files.get(path)?.frontmatter["journal-end-date"]).toBe("2026-06-05");
+      });
+    });
+
+    describe("a custom interval journal", () => {
+      let harness: TestHarness;
+
       // 10-day intervals from 2026-06-01: the first interval's default end is 2026-06-10.
-      const repo = fakeRepo({ sprint: customJournal("sprint", "day", 10, "2026-06-01") });
-      const notes = new FakeNotesService();
-      const path = "a.md" as VaultPath;
-      notes.seed(path, "content", {
-        journal: "sprint",
-        "journal-date": "2026-06-01",
-        "journal-end-date": "2026-06-10",
+      beforeEach(async () => {
+        harness = await testContainer({
+          modules: [journalsCoreModule],
+          data: { journals: { sprint: customJournal("sprint", "day", 10, "2026-06-01") } },
+        });
       });
-      const { container, index } = build(repo, notes, new FakeModalService());
-      index.register({ journalName: "sprint", anchor: anchor("2026-06-01"), path, endDate: anchor("2026-06-10") });
 
-      await container.resolve(NoteConnectionService).reapplyAll("sprint");
+      it("removes a custom interval's duration-default end when addEndDate is off", async () => {
+        const path = "a.md" as VaultPath;
+        harness.host.putFile(path, "content", {
+          journal: "sprint",
+          "journal-date": "2026-06-01",
+          "journal-end-date": "2026-06-10",
+        });
+        harness
+          .resolve(JournalsIndex)
+          .register({ journalName: "sprint", anchor: anchor("2026-06-01"), path, endDate: anchor("2026-06-10") });
 
-      expect("journal-end-date" in (await readFrontmatter(notes, path))).toBe(false);
-    });
+        await harness.resolve(NoteConnectionService).reapplyAll("sprint");
 
-    it("keeps a custom interval's extended end when addEndDate is off", async () => {
-      const repo = fakeRepo({ sprint: customJournal("sprint", "day", 10, "2026-06-01") });
-      const notes = new FakeNotesService();
-      const path = "a.md" as VaultPath;
-      notes.seed(path, "content", {
-        journal: "sprint",
-        "journal-date": "2026-06-01",
-        "journal-end-date": "2026-06-20",
+        expect("journal-end-date" in (harness.host.files.get(path)?.frontmatter ?? {})).toBe(false);
       });
-      const { container, index } = build(repo, notes, new FakeModalService());
-      index.register({ journalName: "sprint", anchor: anchor("2026-06-01"), path, endDate: anchor("2026-06-20") });
 
-      await container.resolve(NoteConnectionService).reapplyAll("sprint");
+      it("keeps a custom interval's extended end when addEndDate is off", async () => {
+        const path = "a.md" as VaultPath;
+        harness.host.putFile(path, "content", {
+          journal: "sprint",
+          "journal-date": "2026-06-01",
+          "journal-end-date": "2026-06-20",
+        });
+        harness
+          .resolve(JournalsIndex)
+          .register({ journalName: "sprint", anchor: anchor("2026-06-01"), path, endDate: anchor("2026-06-20") });
 
-      const fm = await readFrontmatter(notes, path);
-      expect(fm["journal-end-date"]).toBe("2026-06-20");
+        await harness.resolve(NoteConnectionService).reapplyAll("sprint");
+
+        expect(harness.host.files.get(path)?.frontmatter["journal-end-date"]).toBe("2026-06-20");
+      });
     });
   });
 
   describe("connect", () => {
-    it("attaches the note at the resolved anchor when the slot is free", async () => {
-      const repo = fakeRepo({ daily: fixedJournal("daily", { type: "day" }) });
-      const notes = new FakeNotesService();
-      const path = "inbox/note.md" as VaultPath;
-      notes.seed(path, "");
-      const { container } = build(repo, notes, new FakeModalService());
+    describe("a plain daily journal", () => {
+      let harness: TestHarness;
 
-      const result = await container.resolve(NoteConnectionService).connect("daily", path, anchor("2026-06-01"));
-
-      expect(result.isOk()).toBe(true);
-      const fm = await readFrontmatter(notes, path);
-      expect(fm.journal).toBe("daily");
-      expect(typeof fm["journal-date"]).toBe("string");
-    });
-
-    it("errors with AnchorOccupiedError when another note holds the anchor and override is not set", async () => {
-      const repo = fakeRepo({ daily: fixedJournal("daily", { type: "day" }) });
-      const notes = new FakeNotesService();
-      const occupantPath = "2026-06-01.md" as VaultPath;
-      const incomingPath = "inbox/note.md" as VaultPath;
-      notes.seed(occupantPath, "content", { journal: "daily", "journal-date": "2026-06-01" });
-      notes.seed(incomingPath, "");
-      const { container, index } = build(repo, notes, new FakeModalService());
-      index.register({ journalName: "daily", anchor: anchor("2026-06-01"), path: occupantPath });
-
-      const result = await container
-        .resolve(NoteConnectionService)
-        .connect("daily", incomingPath, anchor("2026-06-01"));
-
-      expect(result.isErr()).toBe(true);
-      expect(result.isErr() && result.error instanceof AnchorOccupiedError).toBe(true);
-    });
-
-    it("disconnects the occupant first when override is true", async () => {
-      const repo = fakeRepo({ daily: fixedJournal("daily", { type: "day" }) });
-      const notes = new FakeNotesService();
-      const occupantPath = "2026-06-01.md" as VaultPath;
-      const incomingPath = "inbox/note.md" as VaultPath;
-      notes.seed(occupantPath, "content", { journal: "daily", "journal-date": "2026-06-01" });
-      notes.seed(incomingPath, "");
-      const { container, index } = build(repo, notes, new FakeModalService());
-      index.register({ journalName: "daily", anchor: anchor("2026-06-01"), path: occupantPath });
-
-      const result = await container
-        .resolve(NoteConnectionService)
-        .connect("daily", incomingPath, anchor("2026-06-01"), { override: true });
-
-      expect(result.isOk()).toBe(true);
-      const occupantFm = await readFrontmatter(notes, occupantPath);
-      expect(occupantFm.journal).toBeUndefined();
-      const incomingFm = await readFrontmatter(notes, incomingPath);
-      expect(incomingFm.journal).toBe("daily");
-    });
-
-    it("transfers the anchor's stored endDate to the new note when overriding", async () => {
-      const repo = fakeRepo({ daily: fixedJournal("daily", { type: "day" }) });
-      const notes = new FakeNotesService();
-      const occupantPath = "2026-06-01.md" as VaultPath;
-      const incomingPath = "inbox/note.md" as VaultPath;
-      notes.seed(occupantPath, "content", {
-        journal: "daily",
-        "journal-date": "2026-06-01",
-        "journal-end-date": "2026-06-05",
-      });
-      notes.seed(incomingPath, "");
-      const { container, index } = build(repo, notes, new FakeModalService());
-      index.register({
-        journalName: "daily",
-        anchor: anchor("2026-06-01"),
-        path: occupantPath,
-        endDate: anchor("2026-06-05"),
+      beforeEach(async () => {
+        harness = await testContainer({
+          modules: [journalsCoreModule],
+          data: { journals: { daily: fixedJournal("daily", { type: "day" }) } },
+        });
       });
 
-      const result = await container
-        .resolve(NoteConnectionService)
-        .connect("daily", incomingPath, anchor("2026-06-01"), { override: true });
+      it("attaches the note at the resolved anchor when the slot is free", async () => {
+        const path = "inbox/note.md" as VaultPath;
+        harness.host.putFile(path, "");
 
-      expect(result.isOk()).toBe(true);
-      const incomingFm = await readFrontmatter(notes, incomingPath);
-      expect(incomingFm["journal-end-date"]).toBe("2026-06-05");
+        const result = await harness.resolve(NoteConnectionService).connect("daily", path, anchor("2026-06-01"));
+
+        expect(result.isOk()).toBe(true);
+        const fm = harness.host.files.get(path)?.frontmatter;
+        expect(fm?.journal).toBe("daily");
+        expect(typeof fm?.["journal-date"]).toBe("string");
+      });
+
+      it("errors with AnchorOccupiedError when another note holds the anchor and override is not set", async () => {
+        const occupantPath = "2026-06-01.md" as VaultPath;
+        const incomingPath = "inbox/note.md" as VaultPath;
+        harness.host.putFile(occupantPath, "content", { journal: "daily", "journal-date": "2026-06-01" });
+        harness.host.putFile(incomingPath, "");
+        harness
+          .resolve(JournalsIndex)
+          .register({ journalName: "daily", anchor: anchor("2026-06-01"), path: occupantPath });
+
+        const result = await harness
+          .resolve(NoteConnectionService)
+          .connect("daily", incomingPath, anchor("2026-06-01"));
+
+        expect(result.isErr()).toBe(true);
+        expect(result.isErr() && result.error instanceof AnchorOccupiedError).toBe(true);
+      });
+
+      it("disconnects the occupant first when override is true", async () => {
+        const occupantPath = "2026-06-01.md" as VaultPath;
+        const incomingPath = "inbox/note.md" as VaultPath;
+        harness.host.putFile(occupantPath, "content", { journal: "daily", "journal-date": "2026-06-01" });
+        harness.host.putFile(incomingPath, "");
+        harness
+          .resolve(JournalsIndex)
+          .register({ journalName: "daily", anchor: anchor("2026-06-01"), path: occupantPath });
+
+        const result = await harness
+          .resolve(NoteConnectionService)
+          .connect("daily", incomingPath, anchor("2026-06-01"), { override: true });
+
+        expect(result.isOk()).toBe(true);
+        expect(harness.host.files.get(occupantPath)?.frontmatter.journal).toBeUndefined();
+        expect(harness.host.files.get(incomingPath)?.frontmatter.journal).toBe("daily");
+      });
+
+      it("transfers the anchor's stored endDate to the new note when overriding", async () => {
+        const occupantPath = "2026-06-01.md" as VaultPath;
+        const incomingPath = "inbox/note.md" as VaultPath;
+        harness.host.putFile(occupantPath, "content", {
+          journal: "daily",
+          "journal-date": "2026-06-01",
+          "journal-end-date": "2026-06-05",
+        });
+        harness.host.putFile(incomingPath, "");
+        harness.resolve(JournalsIndex).register({
+          journalName: "daily",
+          anchor: anchor("2026-06-01"),
+          path: occupantPath,
+          endDate: anchor("2026-06-05"),
+        });
+
+        const result = await harness
+          .resolve(NoteConnectionService)
+          .connect("daily", incomingPath, anchor("2026-06-01"), { override: true });
+
+        expect(result.isOk()).toBe(true);
+        expect(harness.host.files.get(incomingPath)?.frontmatter["journal-end-date"]).toBe("2026-06-05");
+      });
     });
 
-    it("renames and moves the note to the configured path when rename and move are true", async () => {
-      const repo = fakeRepo({
-        daily: fixedJournal("daily", { type: "day" }, { folder: "Journal" }),
+    describe("a daily journal writing into a folder", () => {
+      let harness: TestHarness;
+
+      beforeEach(async () => {
+        harness = await testContainer({
+          modules: [journalsCoreModule],
+          data: { journals: { daily: fixedJournal("daily", { type: "day" }, { folder: "Journal" }) } },
+        });
       });
-      const notes = new FakeNotesService();
-      const sourcePath = "inbox/note.md" as VaultPath;
-      const configuredPath = "Journal/2026-06-01.md" as VaultPath;
-      notes.seed(sourcePath, "");
-      const { container } = build(repo, notes, new FakeModalService());
 
-      const result = await container
-        .resolve(NoteConnectionService)
-        .connect("daily", sourcePath, anchor("2026-06-01"), { rename: true, move: true });
+      it("renames and moves the note to the configured path when rename and move are true", async () => {
+        const sourcePath = "inbox/note.md" as VaultPath;
+        const configuredPath = "Journal/2026-06-01.md" as VaultPath;
+        harness.host.putFile(sourcePath, "");
 
-      expect(result.isOk()).toBe(true);
-      expect(notes.find(sourcePath).isNone()).toBe(true);
-      expect(notes.find(configuredPath).isSome()).toBe(true);
-      const fm = await readFrontmatter(notes, configuredPath);
-      expect(fm.journal).toBe("daily");
+        const result = await harness
+          .resolve(NoteConnectionService)
+          .connect("daily", sourcePath, anchor("2026-06-01"), { rename: true, move: true });
+
+        expect(result.isOk()).toBe(true);
+        expect(harness.host.files.has(sourcePath)).toBe(false);
+        expect(harness.host.files.has(configuredPath)).toBe(true);
+        expect(harness.host.files.get(configuredPath)?.frontmatter.journal).toBe("daily");
+      });
+
+      it("trashes the occupant when overriding and relocating onto its path", async () => {
+        const occupantPath = "Journal/2026-06-01.md" as VaultPath;
+        const incomingPath = "inbox/note.md" as VaultPath;
+        harness.host.putFile(occupantPath, "OCCUPANT", { journal: "daily", "journal-date": "2026-06-01" });
+        harness.host.putFile(incomingPath, "INCOMING");
+        harness
+          .resolve(JournalsIndex)
+          .register({ journalName: "daily", anchor: anchor("2026-06-01"), path: occupantPath });
+
+        const result = await harness
+          .resolve(NoteConnectionService)
+          .connect("daily", incomingPath, anchor("2026-06-01"), { override: true, rename: true, move: true });
+
+        expectOk(result);
+        expect(harness.host.files.has(incomingPath)).toBe(false);
+        expect(harness.host.files.get(occupantPath)?.content).toBe("INCOMING");
+        expect(harness.host.files.get(occupantPath)?.frontmatter.journal).toBe("daily");
+      });
     });
 
-    it("trashes the occupant when overriding and relocating onto its path", async () => {
-      const repo = fakeRepo({
-        daily: fixedJournal("daily", { type: "day" }, { folder: "Journal" }),
+    describe("a folder journal whose name template resolves to an empty name", () => {
+      let harness: TestHarness;
+
+      beforeEach(async () => {
+        harness = await testContainer({
+          modules: [journalsCoreModule],
+          data: {
+            journals: { daily: fixedJournal("daily", { type: "day" }, { folder: "Journal", nameTemplate: "" }) },
+          },
+        });
       });
-      const notes = new FakeNotesService();
-      const occupantPath = "Journal/2026-06-01.md" as VaultPath;
-      const incomingPath = "inbox/note.md" as VaultPath;
-      notes.seed(occupantPath, "OCCUPANT", { journal: "daily", "journal-date": "2026-06-01" });
-      notes.seed(incomingPath, "INCOMING");
-      const { container, index } = build(repo, notes, new FakeModalService());
-      index.register({ journalName: "daily", anchor: anchor("2026-06-01"), path: occupantPath });
 
-      const result = await container
-        .resolve(NoteConnectionService)
-        .connect("daily", incomingPath, anchor("2026-06-01"), { override: true, rename: true, move: true });
+      it("refuses to rename the note when the name template resolves to an empty name", async () => {
+        const sourcePath = "inbox/note.md" as VaultPath;
+        harness.host.putFile(sourcePath, "");
 
-      expectOk(result);
-      expect(notes.find(incomingPath).isNone()).toBe(true);
-      expect(notes.find(occupantPath).isSome()).toBe(true);
-      const content = await notes.read(occupantPath);
-      expectOk(content);
-      expect(content.value).toBe("INCOMING");
-      const fm = await readFrontmatter(notes, occupantPath);
-      expect(fm.journal).toBe("daily");
-    });
+        const result = await harness
+          .resolve(NoteConnectionService)
+          .connect("daily", sourcePath, anchor("2026-06-01"), { rename: true, move: true });
 
-    it("refuses to rename the note when the name template resolves to an empty name", async () => {
-      const repo = fakeRepo({
-        daily: fixedJournal("daily", { type: "day" }, { folder: "Journal", nameTemplate: "" }),
+        expect(result.isErr() && result.error instanceof EmptyNoteNameError).toBe(true);
       });
-      const notes = new FakeNotesService();
-      const sourcePath = "inbox/note.md" as VaultPath;
-      notes.seed(sourcePath, "");
-      const { container } = build(repo, notes, new FakeModalService());
 
-      const result = await container
-        .resolve(NoteConnectionService)
-        .connect("daily", sourcePath, anchor("2026-06-01"), { rename: true, move: true });
+      it("leaves the note in place when it refuses to rename it", async () => {
+        const sourcePath = "inbox/note.md" as VaultPath;
+        harness.host.putFile(sourcePath, "");
 
-      expect(result.isErr() && result.error instanceof EmptyNoteNameError).toBe(true);
-    });
+        await harness
+          .resolve(NoteConnectionService)
+          .connect("daily", sourcePath, anchor("2026-06-01"), { rename: true, move: true });
 
-    it("leaves the note in place when it refuses to rename it", async () => {
-      const repo = fakeRepo({
-        daily: fixedJournal("daily", { type: "day" }, { folder: "Journal", nameTemplate: "" }),
+        expect(harness.host.files.has(sourcePath)).toBe(true);
       });
-      const notes = new FakeNotesService();
-      const sourcePath = "inbox/note.md" as VaultPath;
-      notes.seed(sourcePath, "");
-      const { container } = build(repo, notes, new FakeModalService());
-
-      await container
-        .resolve(NoteConnectionService)
-        .connect("daily", sourcePath, anchor("2026-06-01"), { rename: true, move: true });
-
-      expect(notes.find(sourcePath).isSome()).toBe(true);
     });
 
     it("does not derive a path when neither rename nor move is requested", async () => {
-      const repo = fakeRepo({ daily: fixedJournal("daily", { type: "day" }, { nameTemplate: "" }) });
-      const notes = new FakeNotesService();
+      const harness = await testContainer({
+        modules: [journalsCoreModule],
+        data: { journals: { daily: fixedJournal("daily", { type: "day" }, { nameTemplate: "" }) } },
+      });
       const sourcePath = "inbox/note.md" as VaultPath;
-      notes.seed(sourcePath, "");
-      const { container } = build(repo, notes, new FakeModalService());
+      harness.host.putFile(sourcePath, "");
 
-      const result = await container.resolve(NoteConnectionService).connect("daily", sourcePath, anchor("2026-06-01"));
+      const result = await harness.resolve(NoteConnectionService).connect("daily", sourcePath, anchor("2026-06-01"));
 
       expect(result.isOk()).toBe(true);
-      expect(notes.find(sourcePath).isSome()).toBe(true);
+      expect(harness.host.files.has(sourcePath)).toBe(true);
     });
   });
 
   describe("reanchorAll", () => {
-    it("writes the target anchor into the date field", async () => {
-      const notes = new FakeNotesService();
-      notes.seed("week/2026-W23.md" as VaultPath, "", { journal: "weekly", "journal-date": "2026-06-01" });
-      const { container, index } = build(fakeRepo(weeklyWith()), notes, new FakeModalService());
-      index.register({
-        journalName: "weekly",
-        anchor: anchor("2026-06-01"),
-        path: "week/2026-W23.md" as VaultPath,
+    describe("a weekly journal writing neither start nor end date", () => {
+      let harness: TestHarness;
+
+      beforeEach(async () => {
+        harness = await testContainer({
+          modules: [journalsCoreModule],
+          data: { journals: weeklyWith() },
+        });
       });
 
-      await container
-        .resolve(NoteConnectionService)
-        .reanchorAll("weekly", new Map([["week/2026-W23.md" as VaultPath, { anchor: anchor("2026-05-31") }]]));
+      it("writes the target anchor into the date field", async () => {
+        harness.host.putFile("week/2026-W23.md", "", { journal: "weekly", "journal-date": "2026-06-01" });
+        harness.resolve(JournalsIndex).register({
+          journalName: "weekly",
+          anchor: anchor("2026-06-01"),
+          path: "week/2026-W23.md" as VaultPath,
+        });
 
-      expect(notes.frontmatterOf("week/2026-W23.md" as VaultPath)?.["journal-date"]).toBe("2026-05-31");
+        await harness
+          .resolve(NoteConnectionService)
+          .reanchorAll("weekly", new Map([["week/2026-W23.md" as VaultPath, { anchor: anchor("2026-05-31") }]]));
+
+        expect(harness.host.files.get("week/2026-W23.md")?.frontmatter["journal-date"]).toBe("2026-05-31");
+      });
+
+      it("leaves a note whose target equals its current anchor untouched", async () => {
+        harness.host.putFile("week/2026-W23.md", "", { journal: "weekly", "journal-date": "2026-06-01" });
+        harness.resolve(JournalsIndex).register({
+          journalName: "weekly",
+          anchor: anchor("2026-06-01"),
+          path: "week/2026-W23.md" as VaultPath,
+        });
+        // A rewrite to the same value is indistinguishable in the vault, so the skip can only be
+        // observed at the write boundary itself.
+        const spy = vi.spyOn(harness.resolve(NotesService), "updateFrontmatter");
+
+        await harness
+          .resolve(NoteConnectionService)
+          .reanchorAll("weekly", new Map([["week/2026-W23.md" as VaultPath, { anchor: anchor("2026-06-01") }]]));
+
+        expect(spy).not.toHaveBeenCalled();
+      });
+
+      it("reports how many notes it rewrote", async () => {
+        harness.host.putFile("week/2026-W23.md", "", { journal: "weekly", "journal-date": "2026-06-01" });
+        harness.host.putFile("week/2026-W24.md", "", { journal: "weekly", "journal-date": "2026-06-08" });
+        const index = harness.resolve(JournalsIndex);
+        index.register({ journalName: "weekly", anchor: anchor("2026-06-01"), path: "week/2026-W23.md" as VaultPath });
+        index.register({ journalName: "weekly", anchor: anchor("2026-06-08"), path: "week/2026-W24.md" as VaultPath });
+
+        const result = await harness.resolve(NoteConnectionService).reanchorAll(
+          "weekly",
+          new Map([
+            ["week/2026-W23.md" as VaultPath, { anchor: anchor("2026-05-31") }],
+            ["week/2026-W24.md" as VaultPath, { anchor: anchor("2026-06-07") }],
+          ]),
+        );
+
+        expectOk(result);
+        expect(result.value.rewritten).toBe(2);
+      });
+
+      it("keeps rewriting the remaining notes after one note fails", async () => {
+        harness.host.putFile("week/2026-W23.md", "", { journal: "weekly", "journal-date": "2026-06-01" });
+        harness.host.putFile("week/2026-W24.md", "", { journal: "weekly", "journal-date": "2026-06-08" });
+        const index = harness.resolve(JournalsIndex);
+        index.register({ journalName: "weekly", anchor: anchor("2026-06-01"), path: "week/2026-W23.md" as VaultPath });
+        index.register({ journalName: "weekly", anchor: anchor("2026-06-08"), path: "week/2026-W24.md" as VaultPath });
+        vi.spyOn(harness.resolve(NotesService), "updateFrontmatter").mockImplementationOnce(() =>
+          AsyncResult.err(new NoteNotFoundError("week/2026-W23.md" as VaultPath)),
+        );
+
+        await harness.resolve(NoteConnectionService).reanchorAll(
+          "weekly",
+          new Map([
+            ["week/2026-W23.md" as VaultPath, { anchor: anchor("2026-05-31") }],
+            ["week/2026-W24.md" as VaultPath, { anchor: anchor("2026-06-07") }],
+          ]),
+        );
+
+        expect(harness.host.files.get("week/2026-W24.md")?.frontmatter["journal-date"]).toBe("2026-06-07");
+      });
+
+      it("counts a note whose write failed as failed", async () => {
+        harness.host.putFile("week/2026-W23.md", "", { journal: "weekly", "journal-date": "2026-06-01" });
+        harness
+          .resolve(JournalsIndex)
+          .register({ journalName: "weekly", anchor: anchor("2026-06-01"), path: "week/2026-W23.md" as VaultPath });
+        vi.spyOn(harness.resolve(NotesService), "updateFrontmatter").mockImplementation(() =>
+          AsyncResult.err(new NoteNotFoundError("week/2026-W23.md" as VaultPath)),
+        );
+
+        const result = await harness
+          .resolve(NoteConnectionService)
+          .reanchorAll("weekly", new Map([["week/2026-W23.md" as VaultPath, { anchor: anchor("2026-05-31") }]]));
+
+        expectOk(result);
+        expect(result.value.failed).toBe(1);
+      });
+
+      it("refuses a target already held by a note that is staying put", async () => {
+        harness.host.putFile("week/2026-W23.md", "", { journal: "weekly", "journal-date": "2026-06-01" });
+        harness.host.putFile("week/2026-W24.md", "", { journal: "weekly", "journal-date": "2026-06-08" });
+        const index = harness.resolve(JournalsIndex);
+        index.register({ journalName: "weekly", anchor: anchor("2026-06-01"), path: "week/2026-W23.md" as VaultPath });
+        index.register({ journalName: "weekly", anchor: anchor("2026-06-08"), path: "week/2026-W24.md" as VaultPath });
+
+        // W23 is told to move onto W24's anchor, which W24 keeps (no target of its own).
+        await harness
+          .resolve(NoteConnectionService)
+          .reanchorAll("weekly", new Map([["week/2026-W23.md" as VaultPath, { anchor: anchor("2026-06-08") }]]));
+
+        expect(harness.host.files.get("week/2026-W23.md")?.frontmatter["journal-date"]).toBe("2026-06-01");
+      });
     });
 
     it("recomputes the start date field from the new anchor", async () => {
-      const notes = new FakeNotesService();
-      notes.seed("week/2026-W23.md" as VaultPath, "", {
+      const harness = await testContainer({
+        modules: [journalsCoreModule],
+        data: { journals: weeklyWith({ addStartDate: true }) },
+      });
+      harness.host.putFile("week/2026-W23.md", "", {
         journal: "weekly",
         "journal-date": "2026-06-01",
         "journal-start-date": "2026-06-01",
       });
-      const { container, index } = build(fakeRepo(weeklyWith({ addStartDate: true })), notes, new FakeModalService());
-      index.register({
+      harness.resolve(JournalsIndex).register({
         journalName: "weekly",
         anchor: anchor("2026-06-01"),
         path: "week/2026-W23.md" as VaultPath,
       });
 
-      await container
+      await harness
         .resolve(NoteConnectionService)
         .reanchorAll("weekly", new Map([["week/2026-W23.md" as VaultPath, { anchor: anchor("2026-05-25") }]]));
 
-      expect(notes.frontmatterOf("week/2026-W23.md" as VaultPath)?.["journal-start-date"]).toBe("2026-05-25");
-    });
-
-    it("leaves a note whose target equals its current anchor untouched", async () => {
-      const notes = new FakeNotesService();
-      notes.seed("week/2026-W23.md" as VaultPath, "", { journal: "weekly", "journal-date": "2026-06-01" });
-      const { container, index } = build(fakeRepo(weeklyWith()), notes, new FakeModalService());
-      index.register({
-        journalName: "weekly",
-        anchor: anchor("2026-06-01"),
-        path: "week/2026-W23.md" as VaultPath,
-      });
-      const spy = vi.spyOn(notes, "updateFrontmatter");
-
-      await container
-        .resolve(NoteConnectionService)
-        .reanchorAll("weekly", new Map([["week/2026-W23.md" as VaultPath, { anchor: anchor("2026-06-01") }]]));
-
-      expect(spy).not.toHaveBeenCalled();
-    });
-
-    it("reports how many notes it rewrote", async () => {
-      const notes = new FakeNotesService();
-      notes.seed("week/2026-W23.md" as VaultPath, "", { journal: "weekly", "journal-date": "2026-06-01" });
-      notes.seed("week/2026-W24.md" as VaultPath, "", { journal: "weekly", "journal-date": "2026-06-08" });
-      const { container, index } = build(fakeRepo(weeklyWith()), notes, new FakeModalService());
-      index.register({ journalName: "weekly", anchor: anchor("2026-06-01"), path: "week/2026-W23.md" as VaultPath });
-      index.register({ journalName: "weekly", anchor: anchor("2026-06-08"), path: "week/2026-W24.md" as VaultPath });
-
-      const result = await container.resolve(NoteConnectionService).reanchorAll(
-        "weekly",
-        new Map([
-          ["week/2026-W23.md" as VaultPath, { anchor: anchor("2026-05-31") }],
-          ["week/2026-W24.md" as VaultPath, { anchor: anchor("2026-06-07") }],
-        ]),
-      );
-
-      expectOk(result);
-      expect(result.value.rewritten).toBe(2);
-    });
-
-    it("keeps rewriting the remaining notes after one note fails", async () => {
-      const notes = new FakeNotesService();
-      notes.seed("week/2026-W23.md" as VaultPath, "", { journal: "weekly", "journal-date": "2026-06-01" });
-      notes.seed("week/2026-W24.md" as VaultPath, "", { journal: "weekly", "journal-date": "2026-06-08" });
-      const { container, index } = build(fakeRepo(weeklyWith()), notes, new FakeModalService());
-      index.register({ journalName: "weekly", anchor: anchor("2026-06-01"), path: "week/2026-W23.md" as VaultPath });
-      index.register({ journalName: "weekly", anchor: anchor("2026-06-08"), path: "week/2026-W24.md" as VaultPath });
-      vi.spyOn(notes, "updateFrontmatter").mockImplementationOnce(() =>
-        AsyncResult.err(new NoteNotFoundError("week/2026-W23.md" as VaultPath)),
-      );
-
-      await container.resolve(NoteConnectionService).reanchorAll(
-        "weekly",
-        new Map([
-          ["week/2026-W23.md" as VaultPath, { anchor: anchor("2026-05-31") }],
-          ["week/2026-W24.md" as VaultPath, { anchor: anchor("2026-06-07") }],
-        ]),
-      );
-
-      expect(notes.frontmatterOf("week/2026-W24.md" as VaultPath)?.["journal-date"]).toBe("2026-06-07");
-    });
-
-    it("counts a note whose write failed as failed", async () => {
-      const notes = new FakeNotesService();
-      notes.seed("week/2026-W23.md" as VaultPath, "", { journal: "weekly", "journal-date": "2026-06-01" });
-      const { container, index } = build(fakeRepo(weeklyWith()), notes, new FakeModalService());
-      index.register({ journalName: "weekly", anchor: anchor("2026-06-01"), path: "week/2026-W23.md" as VaultPath });
-      vi.spyOn(notes, "updateFrontmatter").mockImplementation(() =>
-        AsyncResult.err(new NoteNotFoundError("week/2026-W23.md" as VaultPath)),
-      );
-
-      const result = await container
-        .resolve(NoteConnectionService)
-        .reanchorAll("weekly", new Map([["week/2026-W23.md" as VaultPath, { anchor: anchor("2026-05-31") }]]));
-
-      expectOk(result);
-      expect(result.value.failed).toBe(1);
+      expect(harness.host.files.get("week/2026-W23.md")?.frontmatter["journal-start-date"]).toBe("2026-05-25");
     });
 
     it("writes the target's end date into the frontmatter when the target supplies one", async () => {
@@ -712,105 +728,95 @@ describe("NoteConnectionService", () => {
       // judged against the grid it was written under — by the time a reanchor runs, the caller
       // has already moved the live grid to the new one (see ReanchorTarget). This service just
       // applies whatever endDate the caller decided on; it doesn't re-derive that decision.
-      const notes = new FakeNotesService();
-      notes.seed("week/2026-W23.md" as VaultPath, "", { journal: "weekly", "journal-date": "2026-06-01" });
-      const { container, index } = build(fakeRepo(weeklyWith({ addEndDate: false })), notes, new FakeModalService());
-      index.register({ journalName: "weekly", anchor: anchor("2026-06-01"), path: "week/2026-W23.md" as VaultPath });
+      const harness = await testContainer({
+        modules: [journalsCoreModule],
+        data: { journals: weeklyWith({ addEndDate: false }) },
+      });
+      harness.host.putFile("week/2026-W23.md", "", { journal: "weekly", "journal-date": "2026-06-01" });
+      harness
+        .resolve(JournalsIndex)
+        .register({ journalName: "weekly", anchor: anchor("2026-06-01"), path: "week/2026-W23.md" as VaultPath });
 
-      await container
+      await harness
         .resolve(NoteConnectionService)
         .reanchorAll(
           "weekly",
           new Map([["week/2026-W23.md" as VaultPath, { anchor: anchor("2026-05-25"), endDate: anchor("2026-06-21") }]]),
         );
 
-      expect(notes.frontmatterOf("week/2026-W23.md" as VaultPath)?.["journal-end-date"]).toBe("2026-06-21");
+      expect(harness.host.files.get("week/2026-W23.md")?.frontmatter["journal-end-date"]).toBe("2026-06-21");
     });
 
     it("recomputes the end date from the new anchor when the target omits one", async () => {
-      const notes = new FakeNotesService();
-      notes.seed("week/2026-W23.md" as VaultPath, "", {
+      const harness = await testContainer({
+        modules: [journalsCoreModule],
+        data: { journals: weeklyWith({ addEndDate: true }) },
+      });
+      harness.host.putFile("week/2026-W23.md", "", {
         journal: "weekly",
         "journal-date": "2026-06-01",
         "journal-end-date": "2026-06-07",
       });
-      const { container, index } = build(fakeRepo(weeklyWith({ addEndDate: true })), notes, new FakeModalService());
-      index.register({
+      harness.resolve(JournalsIndex).register({
         journalName: "weekly",
         anchor: anchor("2026-06-01"),
         path: "week/2026-W23.md" as VaultPath,
         endDate: anchor("2026-06-07"),
       });
 
-      await container
+      await harness
         .resolve(NoteConnectionService)
         .reanchorAll("weekly", new Map([["week/2026-W23.md" as VaultPath, { anchor: anchor("2026-05-25") }]]));
 
-      expect(notes.frontmatterOf("week/2026-W23.md" as VaultPath)?.["journal-end-date"]).toBe("2026-05-31");
-    });
-
-    it("refuses a target already held by a note that is staying put", async () => {
-      const notes = new FakeNotesService();
-      notes.seed("week/2026-W23.md" as VaultPath, "", { journal: "weekly", "journal-date": "2026-06-01" });
-      notes.seed("week/2026-W24.md" as VaultPath, "", { journal: "weekly", "journal-date": "2026-06-08" });
-      const { container, index } = build(fakeRepo(weeklyWith()), notes, new FakeModalService());
-      index.register({ journalName: "weekly", anchor: anchor("2026-06-01"), path: "week/2026-W23.md" as VaultPath });
-      index.register({ journalName: "weekly", anchor: anchor("2026-06-08"), path: "week/2026-W24.md" as VaultPath });
-
-      // W23 is told to move onto W24's anchor, which W24 keeps (no target of its own).
-      await container
-        .resolve(NoteConnectionService)
-        .reanchorAll("weekly", new Map([["week/2026-W23.md" as VaultPath, { anchor: anchor("2026-06-08") }]]));
-
-      expect(notes.frontmatterOf("week/2026-W23.md" as VaultPath)?.["journal-date"]).toBe("2026-06-01");
+      expect(harness.host.files.get("week/2026-W23.md")?.frontmatter["journal-end-date"]).toBe("2026-05-31");
     });
   });
 
   describe("reanchor", () => {
     it("rewrites a note the index never accepted", async () => {
-      const notes = new FakeNotesService();
-      notes.seed("Weeks/W03.md" as VaultPath, "", { journal: "weekly", "journal-date": "2026-01-14" });
-      const { container } = build(fakeRepo(weeklyWith()), notes, new FakeModalService());
+      const harness = await testContainer({
+        modules: [journalsCoreModule],
+        data: { journals: weeklyWith() },
+      });
+      harness.host.putFile("Weeks/W03.md", "", { journal: "weekly", "journal-date": "2026-01-14" });
       // Deliberately not registering in the index — this is a note the index rejected.
 
-      const result = await container
+      const result = await harness
         .resolve(NoteConnectionService)
         .reanchor("weekly", "Weeks/W03.md" as VaultPath, { anchor: anchor("2026-01-12") });
 
       expectOk(result);
-      expect(notes.frontmatterOf("Weeks/W03.md" as VaultPath)?.["journal-date"]).toBe("2026-01-12");
+      expect(harness.host.files.get("Weeks/W03.md")?.frontmatter["journal-date"]).toBe("2026-01-12");
     });
 
     it("recomputes the period end from config when the target carries no end date", async () => {
-      const notes = new FakeNotesService();
-      notes.seed("Weeks/W03.md" as VaultPath, "", {
+      const harness = await testContainer({
+        modules: [journalsCoreModule],
+        data: { journals: weeklyWith({ addStartDate: true, addEndDate: true }) },
+      });
+      harness.host.putFile("Weeks/W03.md", "", {
         journal: "weekly",
         "journal-date": "2026-01-12",
         "journal-start-date": "2026-01-12",
         "journal-end-date": "2026-01-12",
       });
-      const { container, index } = build(
-        fakeRepo(weeklyWith({ addStartDate: true, addEndDate: true })),
-        notes,
-        new FakeModalService(),
-      );
       // buildMetadata resolves endDate from whatever entry the index holds at the target
       // anchor. Seed a stale one here so the test actually exercises #reanchorOne's strip —
       // without this the index is empty, buildMetadata's endDate is already undefined, and the
       // strip has nothing to do.
-      index.register({
+      harness.resolve(JournalsIndex).register({
         journalName: "weekly",
         anchor: anchor("2026-01-12"),
         path: "Weeks/other.md" as VaultPath,
         endDate: anchor("2099-01-01"),
       });
 
-      const result = await container
+      const result = await harness
         .resolve(NoteConnectionService)
         .reanchor("weekly", "Weeks/W03.md" as VaultPath, { anchor: anchor("2026-01-12") });
 
       expectOk(result);
-      const fm = notes.frontmatterOf("Weeks/W03.md" as VaultPath);
+      const fm = harness.host.files.get("Weeks/W03.md")?.frontmatter;
       expect(fm?.["journal-start-date"]).toBe("2026-01-12");
       expect(fm?.["journal-end-date"]).toBe("2026-01-18");
     });
