@@ -108,6 +108,8 @@ describe("InsertJournalLinkFlow", () => {
         },
       },
     });
+    // Not asserted here: the spy only lets the flow run to completion, which is what settles the
+    // modal handle this test reads its props from.
     captureInsertions(harness);
     const promise = harness.resolve(Flows).invoke(InsertJournalLinkFlow);
     await tick();

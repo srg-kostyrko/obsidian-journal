@@ -1,4 +1,3 @@
-import { TFile } from "obsidian";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
 import { WorkspaceService } from "@/infrastructure/host";
@@ -26,9 +25,7 @@ describe("NoteConnectionCommands", () => {
   }
 
   function setActive(path: VaultPath): void {
-    harness.host.putFile(path);
-    const file = harness.host.app.vault.getAbstractFileByPath(path);
-    harness.host.emitActiveLeafChange(file instanceof TFile ? file : null);
+    harness.host.emitActiveLeafChange(harness.host.putFile(path));
   }
 
   function connectCheck() {
