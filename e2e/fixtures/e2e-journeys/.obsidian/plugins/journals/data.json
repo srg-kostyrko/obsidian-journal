@@ -526,7 +526,77 @@
             }
           ]
         }
-      ]
+      ],
+      "navBlock": {
+        "type": "create",
+        "decorateWholeBlock": false,
+        "rows": [
+          {
+            "template": "{{date:[W]w}}",
+            "fontSize": 3,
+            "bold": true,
+            "italic": false,
+            "color": {
+              "type": "theme",
+              "name": "text-normal"
+            },
+            "background": {
+              "type": "transparent"
+            },
+            "link": "self",
+            "journal": "",
+            "addDecorations": false
+          },
+          {
+            "template": "{{relative_date}}",
+            "fontSize": 0.7,
+            "bold": false,
+            "italic": false,
+            "color": {
+              "type": "theme",
+              "name": "text-normal"
+            },
+            "background": {
+              "type": "transparent"
+            },
+            "link": "none",
+            "journal": "",
+            "addDecorations": false
+          },
+          {
+            "template": "{{date:MMMM}}",
+            "fontSize": 1,
+            "bold": false,
+            "italic": false,
+            "color": {
+              "type": "theme",
+              "name": "text-normal"
+            },
+            "background": {
+              "type": "transparent"
+            },
+            "link": "none",
+            "journal": "",
+            "addDecorations": false
+          },
+          {
+            "template": "{{date:YYYY}}",
+            "fontSize": 1,
+            "bold": false,
+            "italic": false,
+            "color": {
+              "type": "theme",
+              "name": "text-normal"
+            },
+            "background": {
+              "type": "transparent"
+            },
+            "link": "none",
+            "journal": "",
+            "addDecorations": false
+          }
+        ]
+      }
     },
     "monthly": {
       "name": "monthly",
