@@ -2,6 +2,7 @@ import userEvent from "@testing-library/user-event";
 import { screen, waitFor } from "@testing-library/vue";
 import { beforeEach, describe, expect, it } from "vitest";
 
+import { anchor } from "@/calendar/testing";
 import { m } from "@/i18n";
 import { journalsCoreModule } from "@/journals/module";
 import { fixedJournal } from "@/journals/testing";
@@ -48,7 +49,7 @@ describe("EditNumberingDigitModal", () => {
               "daily",
               { type: "day" },
               {
-                numbering: { enabled: true, anchorDate: "2024-01-01" as never, allowBefore: false, sources: twoDigits },
+                numbering: { enabled: true, anchorDate: anchor("2024-01-01"), allowBefore: false, sources: twoDigits },
               },
             ),
           },
@@ -132,7 +133,7 @@ describe("EditNumberingDigitModal", () => {
               "daily",
               { type: "day" },
               {
-                numbering: { enabled: true, anchorDate: "2024-01-01" as never, allowBefore: false, sources: corrupted },
+                numbering: { enabled: true, anchorDate: anchor("2024-01-01"), allowBefore: false, sources: corrupted },
               },
             ),
           },
@@ -178,7 +179,7 @@ describe("EditNumberingDigitModal", () => {
             {
               numbering: {
                 enabled: true,
-                anchorDate: "2024-01-01" as never,
+                anchorDate: anchor("2024-01-01"),
                 allowBefore: false,
                 sources: [twoDigits[0]],
               },
@@ -212,7 +213,7 @@ describe("EditNumberingDigitModal", () => {
               {
                 numbering: {
                   enabled: true,
-                  anchorDate: "2024-01-01" as never,
+                  anchorDate: anchor("2024-01-01"),
                   allowBefore: false,
                   sources: [twoDigits[0]],
                 },
@@ -247,9 +248,13 @@ describe("EditNumberingDigitModal", () => {
         expect(keyInput.value).toBe("custom-key");
       });
     });
+  });
 
-    it("does not overwrite an existing digit's property key when its variable is renamed", async () => {
-      const solo = await testContainer({
+  describe("renaming an existing digit's variable", () => {
+    let harness: TestHarness;
+
+    beforeEach(async () => {
+      harness = await testContainer({
         modules: [journalsCoreModule],
         data: {
           journals: {
@@ -257,14 +262,16 @@ describe("EditNumberingDigitModal", () => {
               "daily",
               { type: "day" },
               {
-                numbering: { enabled: true, anchorDate: "2024-01-01" as never, allowBefore: false, sources: twoDigits },
+                numbering: { enabled: true, anchorDate: anchor("2024-01-01"), allowBefore: false, sources: twoDigits },
               },
             ),
           },
         },
       });
-      const { renderModal } = solo;
-      renderModal(EditNumberingDigitModal, { props: { journalName: "daily", sourceIndex: 1 } });
+    });
+
+    it("does not overwrite an existing digit's property key when its variable is renamed", async () => {
+      harness.renderModal(EditNumberingDigitModal, { props: { journalName: "daily", sourceIndex: 1 } });
       const [variableInput, keyInput] = screen.getAllByRole<HTMLInputElement>("textbox");
       await userEvent.clear(variableInput);
       await userEvent.type(variableInput, "cycle");
