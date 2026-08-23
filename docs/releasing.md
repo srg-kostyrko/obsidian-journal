@@ -76,7 +76,10 @@ branch you want built.
 
 **3.** Publish the draft pre-release the same way.
 
-Leave the pre-release flag on: it is the only thing BRAT uses to find a beta.
+Leave the pre-release flag on — it is what keeps the build out of the pool for
+everyone who has not opted into betas. It is not what makes BRAT _choose_ the
+build: that is the version in the tag, which has to coerce above the current
+stable. See the BRAT notes under Background before picking one.
 
 ## Background
 
@@ -96,13 +99,30 @@ the e2e matrix: `wdio.conf.mts` resolves its `earliest` spec from it.
 **`compile:i18n` before `check:types`,** always. `src/i18n/paraglide` is
 generated and git-ignored, so type-checking a fresh checkout fails without it.
 
-**BRAT ignores `manifest-beta.json`.** It picks the newest release flagged
-`prerelease` and installs the `manifest.json` attached to it; a version that
-disagrees with the tag gets the user a "Version mismatch detected" warning.
-`manifest-beta.json` is just where the beta version is written down —
-`release-beta.yml` reads it for the tag and attaches a copy of it as the
-release's `manifest.json`. A stable bump resets it to the stable version, so
-set it deliberately each time.
+**BRAT never fetches `manifest-beta.json`,** despite the name. Its
+`validateRepository` hardcodes the filename in
+`grabReleaseFileFromRepository(release, "manifest.json")`; the surviving `getBetaManifest` parameter is passed
+straight through as `includePrereleases`. So `manifest-beta.json` is only where
+the beta version is written down — `release-beta.yml` reads it for the tag and
+attaches a **copy of it as the release's `manifest.json`**, which is the file
+BRAT actually installs. A version that disagrees with the tag gets the user a
+"Version mismatch detected" warning. A stable bump resets `manifest-beta.json`
+to the stable version, so set it deliberately each time.
+
+**BRAT installs the highest-versioned release, not the newest.** It sorts every
+release by `semverCoerce(tag_name, { loose: true })` descending — falling back
+to `published_at` only when a tag will not coerce — then takes the first entry
+that survives `includePrereleases || !release.prerelease`. Adding a repo to BRAT
+therefore does **not** pin it to the beta channel: prereleases join the same
+pool as stable releases rather than outranking them, so today a BRAT user gets
+`3.2.0`, not the 2.0.1-series prereleases still on the repo.
+
+**A beta tag must coerce above the current stable,** which the historical
+`X.Y.Z.betaN` scheme does not. `semverCoerce("2.0.1.beta3")` yields plain
+`2.0.1` — identical to the stable `2.0.1` release, so `compareVersions` returns
+0 and the winner falls to an API-ordering tiebreak. Tag the next beta
+`3.3.0-beta1`: it coerces to `3.3.0` and sorts cleanly above `3.2.0`. This has
+never been exercised — see "What CI does not gate" below.
 
 **Against [Obsidian's reference workflow](https://docs.obsidian.md/Plugins/Releasing/Release+your+plugin+with+GitHub+Actions),**
 this repo adds: checks before the build, `npm ci` over `npm install`, Node 24,
@@ -122,9 +142,16 @@ series — treat the first v3 beta as untested machinery.
 `packages/api` (`obsidian-journals-api`) is published from your machine — no
 workflow, no `NPM_TOKEN`.
 
-**1. The plugin stable release completes first.** The published types describe a
-surface users must already have; publishing ahead of it hands integrators a
-compile-clean call against an API nobody is running.
+**1. The tag build goes green first.** An npm version number cannot be reused
+once published, so do not spend one until the release build has proven the
+surface it describes actually ships. That is the whole constraint — you may
+publish between the tag build passing and clicking Publish on the draft
+release, which is worth doing when the release notes link to the package.
+
+Not a reason to wait: "integrators would call an API nobody is running."
+`getJournalsApi` is `app?.plugins?.plugins?.journals?.api ?? null`, so an
+absent, disabled or older plugin yields the same `null` every integrator
+already handles, and TS narrowing forces the check.
 
 **2. Bump `packages/api/package.json`.** Major only when `apiVersion` moves in
 `src/api/public-api.ts`; minor for additions.
