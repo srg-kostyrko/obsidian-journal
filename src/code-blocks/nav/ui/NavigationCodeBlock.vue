@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { computed } from "vue";
+import { computed, ref } from "vue";
 
 import type { AnchorString, Period } from "@/calendar";
 import { hasOffsetCondition, useCellDecorations } from "@/decorations";
@@ -25,6 +25,7 @@ import { periodForJournal } from "../period-for-journal";
 import { resolveSegmentDecoration, type SegmentDecorationCell } from "../segment-decoration";
 
 import NavBlock from "./NavBlock.vue";
+import { useStackWhenTight } from "./use-stack-when-tight";
 
 const { path } = defineProps<CodeBlockProps<Record<string, never>>>();
 
@@ -166,6 +167,9 @@ useCellDecorations({
   filter: (binding) => !hasOffsetCondition(binding.decoration),
 });
 
+const row = ref<HTMLElement>();
+const stacked = useStackWhenTight(row);
+
 function openAdjacent(anchor: AnchorString | undefined, event: MouseEvent): void {
   const currentJournal = journal.value;
   if (!currentJournal || !anchor) return;
@@ -180,55 +184,60 @@ function openAdjacent(anchor: AnchorString | undefined, event: MouseEvent): void
 
 <template>
   <div v-if="!isConnected" class="journal-nav-not-connected">{{ m.code_blocks_nav_not_connected() }}</div>
-  <div v-else-if="journal && currentAnchor" class="nav-view">
-    <div v-if="adjacent.previous" class="nav-block-relative">
-      <NavBlock
-        class="nav-block-previous"
-        :block="journal.navBlock"
-        :journal
-        :ref-date="adjacent.previous"
-        :period="periodForJournal(journal.write, adjacent.previous)"
-        :block-scope="navBlockDecorationScope"
-        :shelf="decorationShelf"
-      />
+  <div v-else-if="journal && currentAnchor" ref="row" class="nav-view" :class="{ 'nav-view--stacked': stacked }">
+    <NavBlock
+      v-if="adjacent.previous"
+      class="nav-block-previous nav-block-side"
+      :block="journal.navBlock"
+      :journal
+      :ref-date="adjacent.previous"
+      :period="periodForJournal(journal.write, adjacent.previous)"
+      :block-scope="navBlockDecorationScope"
+      :shelf="decorationShelf"
+    />
+    <div v-else class="nav-block-placeholder" />
+
+    <!-- Both chevrons belong to the period they move, not to the neighbor they point at. Grouped
+         with the current block, a wrap can never strand the current period without its controls or
+         park an arrow beside the wrong date (#271). -->
+    <div class="nav-current-group">
       <UiIconButton
+        v-if="adjacent.previous"
         :icon="icons.nav.prev"
         class="nav-prev"
         :tooltip="m.code_blocks_nav_previous()"
         @click="(event: MouseEvent) => openAdjacent(adjacent.previous, event)"
         @auxclick.middle.prevent="(event: MouseEvent) => openAdjacent(adjacent.previous, event)"
       />
-    </div>
-    <div v-else class="nav-block-placeholder" />
-
-    <NavBlock
-      class="nav-block-current"
-      :block="journal.navBlock"
-      :journal
-      :ref-date="currentAnchor"
-      :period="periodForJournal(journal.write, currentAnchor)"
-      :block-scope="navBlockDecorationScope"
-      :shelf="decorationShelf"
-    />
-
-    <div v-if="adjacent.next" class="nav-block-relative">
+      <NavBlock
+        class="nav-block-current"
+        :block="journal.navBlock"
+        :journal
+        :ref-date="currentAnchor"
+        :period="periodForJournal(journal.write, currentAnchor)"
+        :block-scope="navBlockDecorationScope"
+        :shelf="decorationShelf"
+      />
       <UiIconButton
+        v-if="adjacent.next"
         :icon="icons.nav.next"
         class="nav-next"
         :tooltip="m.code_blocks_nav_next()"
         @click="(event: MouseEvent) => openAdjacent(adjacent.next, event)"
         @auxclick.middle.prevent="(event: MouseEvent) => openAdjacent(adjacent.next, event)"
       />
-      <NavBlock
-        class="nav-block-next"
-        :block="journal.navBlock"
-        :journal
-        :ref-date="adjacent.next"
-        :period="periodForJournal(journal.write, adjacent.next)"
-        :block-scope="navBlockDecorationScope"
-        :shelf="decorationShelf"
-      />
     </div>
+
+    <NavBlock
+      v-if="adjacent.next"
+      class="nav-block-next nav-block-side"
+      :block="journal.navBlock"
+      :journal
+      :ref-date="adjacent.next"
+      :period="periodForJournal(journal.write, adjacent.next)"
+      :block-scope="navBlockDecorationScope"
+      :shelf="decorationShelf"
+    />
     <div v-else class="nav-block-placeholder" />
   </div>
 </template>
@@ -239,32 +248,67 @@ function openAdjacent(anchor: AnchorString | undefined, event: MouseEvent): void
   flex-wrap: wrap;
   justify-content: center;
   align-items: center;
-  gap: 16px;
-  --icon-size: 3em;
+  gap: 8px;
+  /* Edge padding out of the gap the columns used to share, so the row keeps its old width
+     budget and still stops short of the note's own margin. */
+  padding-inline: 12px;
+  /* The two clamps below scale against this row's width, so the pane decides them — a split
+     editor pane is as narrow as a phone note, and the window's width says nothing about
+     either. A renderer without container queries pins both to their upper bound. */
+  container-type: inline-size;
 }
-/* Three equal columns that share the row and shrink to fit, so wide content
-   (e.g. custom-interval titles) wraps inside its block instead of pushing the
-   third block onto a second row. The min-width is the readability floor: once a
-   column can no longer stay that wide, flex-wrap stacks the blocks — preserving
-   the narrow-pane stacking from #216. */
-.nav-block-relative,
-.nav-block-current {
+/* Three columns that share the row and shrink to fit. Each floors at its own content rather
+   than a flat width: a column narrower than its longest word buys nothing but overlap, and a
+   flat floor breaks the row on a pane that could still hold all three (#271, #216). */
+.nav-block-side,
+.nav-current-group {
   flex: 1 1 0;
-  min-width: 130px;
+  min-width: min-content;
 }
 .nav-block-placeholder {
   flex: 1 1 0;
   min-width: 0;
 }
-/* Keep each chevron inline and vertically centered between its block and the
-   current block, rather than absolutely offset (which overflowed the pane). */
-.nav-block-relative {
+/* The neighboring periods carry the reading order, not the reading weight, so they render
+   below full size the way v2 sized them — and the narrower the pane, the further down, which
+   is what keeps a day or week block on one row on a phone. 0.6em at a phone's ~345px, 0.8em
+   from a full-width note up. */
+.nav-block-side {
+  font-size: clamp(0.6em, 0.9cqi + 6.5px, 0.8em);
+}
+/* Chevrons inline and vertically centered beside the current block, rather than absolutely
+   offset (which overflowed the pane). They ramp on the same rule as those blocks: at 3em
+   two of them cost a third of a phone pane. */
+.nav-current-group {
   display: flex;
   align-items: center;
   gap: 4px;
+  --icon-size: clamp(1.5em, 2.25cqi + 16px, 2em);
 }
-.nav-block-relative > .nav-block {
+.nav-current-group > .nav-block {
   flex: 1 1 auto;
   min-width: 0;
+}
+/* Held for the length of one measurement by use-stack-when-tight, which asks what the columns
+   need before deciding whether they can share a row. `width` alone would not answer: a flex item
+   takes its main size from `flex-basis`, so the columns would keep the widths they had grown to
+   and the row would measure as wide as itself. */
+.nav-view--measuring > * {
+  flex: 0 0 auto;
+  width: min-content;
+}
+/* Set by use-stack-when-tight when the three columns cannot share the row: every period takes a
+   row of its own, rather than flex dropping whichever one did not fit and leaving two side by
+   side. The columns keep their own heights here — `flex: 1 1 0` would divide the column axis
+   between them instead — and an absent neighbour's placeholder has nothing to hold open. */
+.nav-view--stacked {
+  flex-direction: column;
+  align-items: stretch;
+}
+.nav-view--stacked > * {
+  flex: 0 0 auto;
+}
+.nav-view--stacked > .nav-block-placeholder {
+  display: none;
 }
 </style>

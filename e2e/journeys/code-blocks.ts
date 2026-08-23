@@ -24,9 +24,10 @@ export const CODE_BLOCK_ERROR = ".code-block-error";
 export const NAV_VIEW = `${NAV_BLOCK} .nav-view`;
 export const NAV_NOT_CONNECTED = `${NAV_BLOCK} .journal-nav-not-connected`;
 export const NAV_NEXT = `${NAV_BLOCK} .nav-next`;
-// The current period's block is the *direct* child of .nav-view; prev/next blocks live
-// inside .nav-block-relative, so the `>` combinator keeps their unstyled decorations out.
-export const NAV_CURRENT = `${NAV_BLOCK} .nav-view > .nav-block`;
+// The current period's block, by the per-slot hook it carries: it sits inside
+// .nav-current-group between the two chevrons, so no child combinator separates it from the
+// neighboring blocks any more.
+export const NAV_CURRENT = `${NAV_BLOCK} .nav-block-current`;
 // Per-slot CSS styling hooks (#170): each block carries a modifier class so a snippet can
 // target previous/current/next independently.
 export const NAV_PREVIOUS_BLOCK = `${NAV_BLOCK} .nav-block-previous`;
@@ -99,8 +100,14 @@ export async function clickNavNext(): Promise<void> {
 export interface NavLayout {
   // px the content overflows its box horizontally; 0 means nothing is clipped.
   overflowX: number;
-  // distinct row offsets the prev/current/next blocks occupy; > 1 means they wrapped.
+  // flex lines the prev/current/next blocks occupy; > 1 means they wrapped.
   rows: number;
+}
+
+// A NavLayout tagged with the pane width it was read at, so a sweep's failure names the width
+// that broke rather than only the shape.
+export interface SweptNavLayout extends NavLayout {
+  width: number;
 }
 
 export interface MonthGridLayout {
@@ -164,19 +171,83 @@ export async function narrowNavLayout(widthPx: number): Promise<NavLayout> {
       ),
     { timeoutMsg: `no laid-out ${NAV_VIEW} to narrow to ${widthPx}px` },
   );
-  return browser.execute(
-    (sel: string, width: number) => {
+  // The row decides between one line and a stack in a ResizeObserver callback, which Chromium runs
+  // after layout and before the next paint — so wait out a frame rather than reading in the same
+  // task, where the answer still describes the width the block had a moment ago.
+  await browser.execute(
+    async (sel: string, width: number) => {
       const view = [...document.querySelectorAll<HTMLElement>(sel)].find((v) => v.clientWidth > 0);
-      if (!view) return { overflowX: -1, rows: 0 };
-      const block = view.closest<HTMLElement>(".block-language-calendar-nav");
+      const block = view?.closest<HTMLElement>(".block-language-calendar-nav");
       if (block) block.style.width = `${width}px`;
-      void view.offsetHeight;
-      const tops = [...view.children].map((child) => Math.round(child.getBoundingClientRect().top));
-      return { overflowX: view.scrollWidth - view.clientWidth, rows: new Set(tops).size };
+      await new Promise<void>((resolve) => {
+        requestAnimationFrame(() => requestAnimationFrame(() => resolve()));
+      });
     },
     NAV_VIEW,
     widthPx,
   );
+  return readNavLayout();
+}
+
+// Pane widths from below a phone note (~345px) up to a wide desktop one, the range a nav row
+// has to hold a sane layout across. The floor is not the narrowest width the row survives: a
+// weekly block whose week number runs to two digits clips below ~200px, because the current
+// group floors at its own min-content and two chevrons beside a 3em week number need more than
+// such a pane leaves. 280px keeps the sweep clear of that edge by a margin no font can close,
+// which is the whole point of sweeping rather than asserting a single width.
+export const NAV_PANE_WIDTHS = [280, 320, 360, 400, 440, 480, 560, 640];
+
+export async function navLayoutsAcross(widths: readonly number[]): Promise<SweptNavLayout[]> {
+  const swept: SweptNavLayout[] = [];
+  for (const width of widths) {
+    swept.push({ width, ...(await narrowNavLayout(width)) });
+  }
+  return swept;
+}
+
+function readNavLayout(): Promise<NavLayout> {
+  return browser.execute((sel: string) => {
+    const view = [...document.querySelectorAll<HTMLElement>(sel)].find((v) => v.clientWidth > 0);
+    if (!view) return { overflowX: -1, rows: 0 };
+    // Count vertical bands rather than distinct tops: the row centers its columns and the middle
+    // one is taller than the blocks beside it by the chevrons it carries, so three columns sharing
+    // one line already sit at three different tops. Flex lays wrapped items out in document order,
+    // so the children arrive top line first and need no sorting.
+    let rows = 0;
+    let bandBottom = -Infinity;
+    for (const child of view.children) {
+      const rect = child.getBoundingClientRect();
+      if (rect.width === 0 && rect.height === 0) continue;
+      if (rect.top >= bandBottom) rows += 1;
+      bandBottom = Math.max(bandBottom, rect.bottom);
+    }
+    return { overflowX: view.scrollWidth - view.clientWidth, rows };
+  }, NAV_VIEW);
+}
+
+// The row sizes its neighbors and chevrons against its own width, which makes it a container
+// query container — and `container-type: inline-size` collapses an element to zero width when
+// its parent sizes to its content rather than to the pane. Reading mode hands the block a
+// definite width, so Live Preview's editor widget is the mount where such a parent would show
+// up; measure the row against the block hosting it there.
+export async function navViewFill(): Promise<{ view: number; host: number }> {
+  await browser.waitUntil(
+    async () =>
+      browser.execute(
+        (sel: string) => [...document.querySelectorAll<HTMLElement>(sel)].some((el) => el.clientWidth > 0),
+        NAV_BLOCK,
+      ),
+    { timeoutMsg: `no laid-out ${NAV_BLOCK} to measure the nav row against` },
+  );
+  return browser.execute((sel: string) => {
+    const host = [...document.querySelectorAll<HTMLElement>(sel)].find((el) => el.clientWidth > 0);
+    if (!host) return { view: -1, host: -1 };
+    const view = host.querySelector<HTMLElement>(".nav-view");
+    return {
+      view: Math.round(view?.getBoundingClientRect().width ?? -1),
+      host: Math.round(host.getBoundingClientRect().width),
+    };
+  }, NAV_BLOCK);
 }
 
 // Live Preview, the other mode a code block mounts in: `source` with `source: false` is the

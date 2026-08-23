@@ -12,6 +12,7 @@ import {
   NAV_FENCE,
   NAV_NEXT,
   NAV_NEXT_BLOCK,
+  NAV_PANE_WIDTHS,
   NAV_PREVIOUS_BLOCK,
   NAV_VIEW,
   TIMELINE_BAD_FENCE,
@@ -21,8 +22,12 @@ import {
   TIMELINE_QUARTER_FENCE,
   clickNavNext,
   hostNote,
+  livePreviewNote,
   monthGridLayout,
   narrowNavLayout,
+  navLayoutsAcross,
+  navViewFill,
+  openInLivePreview,
   openInReadingMode,
   plainNote,
   renderBlock,
@@ -129,15 +134,60 @@ describe("code blocks", () => {
     });
 
     describe("responsive layout", () => {
-      it("stacks the weekly nav blocks without clipping when the pane is too narrow for one row", async () => {
+      it("keeps the daily nav blocks on one row at a phone-pane width", async () => {
+        await renderBlock("nav/narrow-daily.md", navHost("2026-09-09", ""), NAV_VIEW);
+        const layout = await narrowNavLayout(360);
+        // A day block's words are a fraction of a pane this wide; two up and one below is the
+        // #271 report, not a stack.
+        expect(layout.rows).toBe(1);
+        expect(layout.overflowX).toBe(0);
+      });
+
+      it("never leaves two weekly nav blocks sharing a row with the third below, at any pane width", async () => {
+        await renderBlock("nav/narrow-weekly-row.md", hostNote("weekly", "2026-09-06", NAV_FENCE), NAV_VIEW);
+        const swept = await navLayoutsAcross(NAV_PANE_WIDTHS);
+        // The #271 report is the two-up-one-below state, which greedy flex wrapping produces at
+        // every width between "all three fit" and "none fits beside another". Either the three
+        // share the line or each takes its own; nothing in between is a layout the block offers.
+        // Which width they stop sharing at is a property of the face the host renders in — a
+        // weekly block needs 344px of one and past 360px of another — so it is not asserted here,
+        // only that no width lands between the two states.
+        expect(swept.filter((layout) => layout.rows !== 1 && layout.rows !== 3)).toEqual([]);
+        // ... and nothing spills past the pane edge at any of them (#216).
+        expect(swept.filter((layout) => layout.overflowX !== 0)).toEqual([]);
+        // Both states are reachable, or a block that only ever stacked would satisfy the above.
+        expect(swept.at(0)?.rows).toBe(3);
+        expect(swept.at(-1)?.rows).toBe(1);
+      });
+
+      it("fills the pane with the nav row in Live Preview, where the block mounts in an editor widget", async () => {
+        await seedNote("nav/narrow-live.md", livePreviewNote("daily", "2026-09-10", NAV_FENCE));
+        await openInLivePreview("nav/narrow-live.md");
+        await $(NAV_VIEW).waitForExist({ timeoutMsg: "nav view did not render in Live Preview" });
+        // The row is its own container query container, and that collapses to zero width under a
+        // parent sized by its content — which is what this mount would be if any were.
+        const { view, host } = await navViewFill();
+        expect(view).toBeGreaterThanOrEqual(host - 1);
+      });
+
+      it("gives every weekly nav block its own row when the pane is too narrow for one row", async () => {
         // The note connects only when journal-date is the week's canonical anchor — the
         // week's first day (Sunday under the fixture's Sunday-start locale). Sun 2025-12-28
         // opens the week containing 2026-01-02; a non-anchor date is rejected as non-canonical.
         await renderBlock("nav/narrow-weekly.md", hostNote("weekly", "2025-12-28", NAV_FENCE), NAV_VIEW);
         const layout = await narrowNavLayout(180);
-        // Blocks wrap onto more than one row (impossible without flex-wrap) ...
-        expect(layout.rows).toBeGreaterThan(1);
+        // All three stack rather than two sharing a row and one dropping below it (#271) ...
+        expect(layout.rows).toBe(3);
         // ... and nothing spills past the pane edge (the #216 "right-side cut off").
+        expect(layout.overflowX).toBe(0);
+      });
+
+      it("stacks rather than leaving two blocks up and one below at a width that fits only two", async () => {
+        // 300px holds a weekly block beside its neighbor but not all three, which is exactly the
+        // width where flex wrapping alone drops a single column.
+        await renderBlock("nav/two-fit.md", hostNote("weekly", "2026-09-06", NAV_FENCE), NAV_VIEW);
+        const layout = await narrowNavLayout(300);
+        expect(layout.rows).toBe(3);
         expect(layout.overflowX).toBe(0);
       });
     });
