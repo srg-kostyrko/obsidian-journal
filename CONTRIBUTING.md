@@ -52,11 +52,12 @@ proceeds.
 ## Quality gates
 
 `checks.yml` runs `compile:i18n` → `check:i18n` → `check:types` → `test` →
-`check:lint` on every push (`compile:i18n` is covered in Development setup
-above). It triggers on `push`, not `pull_request`, so for a pull request from
-a fork it runs in your fork rather than as a check on the PR itself — these
-four are your real gate, not just a convenience. Run them before opening a
-pull request; the order between them doesn't matter locally:
+`check:lint` on every pull request and on every push to `main` (`compile:i18n`
+is covered in Development setup above). It reports as the `build` check, which
+— together with `e2e-gate`, the fixed name standing in for the whole e2e matrix
+— blocks the merge button until both are green. A check that is still running
+blocks it too. Run these before opening a pull request anyway; the order
+between them doesn't matter locally:
 
 ```bash
 npm run check:types   # vue-tsc, no emit

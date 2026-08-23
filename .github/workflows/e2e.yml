@@ -98,3 +98,18 @@ jobs:
           # default — so every run so far uploaded nothing and CI-only failures had no
           # screenshot and no junit XML to diagnose from.
           include-hidden-files: true
+
+  # The one fixed name for the matrix above, so branch protection can require e2e without
+  # naming its legs. `e2e (ubuntu-latest, latest/latest)` and friends are a function of the
+  # trigger — schedule and full_matrix expand the `obsidian` axis — so requiring the literal
+  # names would pin one trigger's matrix into repo settings, and any name that stops being
+  # produced hangs "Expected" forever.
+  e2e-gate:
+    if: always()
+    needs: e2e
+    runs-on: ubuntu-latest
+    steps:
+      # `needs.e2e.result` is 'success' only when every leg succeeded; a cancelled or
+      # skipped matrix must not read as a pass.
+      - if: ${{ needs.e2e.result != 'success' }}
+        run: exit 1
