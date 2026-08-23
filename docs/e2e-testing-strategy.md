@@ -282,7 +282,7 @@ Three deliberate clocks:
 | ------------------- | ------------------------------------------------------------------- | ------------------------------------------------------------------ |
 | Local per-task gate | `test` / `check:types` / `check:lint`                               | **Unchanged** — mock-only and fast. e2e is _not_ in it.            |
 | Local on-demand     | `npm run test:e2e`                                                  | A dev runs it when touching the integration seam. Never automatic. |
-| CI                  | `pull_request` + `push` to `main` (full suite) + nightly `schedule` | Separate job, **not** wired into the every-push `checks.yml`.      |
+| CI                  | `pull_request` + `push` to `main` (full suite) + nightly `schedule` | Separate job, **not** wired into `checks.yml`.                     |
 
 The whole stable suite runs on **every PR and every merge to `main`** — it finishes
 in well under a minute, so there is no longer a reason to split a thin smoke gate

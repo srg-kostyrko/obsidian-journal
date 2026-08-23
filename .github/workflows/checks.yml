@@ -1,6 +1,18 @@
 name: Checks
 
-on: [push]
+# `pull_request` and not a bare `push`: a check run attaches to a SHA, and a fork PR's
+# head SHA only ever sees push events in the fork, so a push-only workflow never reports
+# here. Required status checks read that as permanently pending, not as skipped, and the
+# PR becomes unmergeable with no way to clear it. The `push` half stays pinned to main so
+# the merge commit is covered without running every branch push twice.
+on:
+  pull_request:
+  push:
+    branches: [main]
+    # Tags stay covered because `release.yml` triggers on one and runs only
+    # `check:types` and `test`; dropping them here would quietly narrow what a
+    # release build is checked against. See docs/releasing.md.
+    tags: ["*"]
 
 jobs:
   build:
