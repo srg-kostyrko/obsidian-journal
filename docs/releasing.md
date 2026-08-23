@@ -21,8 +21,10 @@ npm run test:e2e:interop
 npx wdio run ./wdio.conf.mts --suite journeys
 ```
 
-**2. Changelog.** Run `/changelog <x.y.z>`, edit the draft, promote
-`## [Unreleased]` to `## [<x.y.z>] - YYYY-MM-DD`, and commit it on its own.
+**2. Changelog.** Run `/changelog <x.y.z>` and edit the draft under
+`## [Unreleased]`. Leave the heading alone — `version-bump.mjs` promotes it to
+`## [<x.y.z>] - YYYY-MM-DD` in step 3. Commit any edits to the notes themselves
+first, so the bump commit carries only the promotion.
 
 **3. Bump and tag.**
 
@@ -30,15 +32,32 @@ npx wdio run ./wdio.conf.mts --suite journeys
 npm version <x.y.z> -m "chore: v%s"
 ```
 
-One command: bumps `package.json`, propagates the version into `manifest.json`,
-`manifest-beta.json`, and `versions.json`, commits all four, and creates the
-annotated tag `<x.y.z>`. Read the commit before pushing — four files changed,
-`versions.json` up exactly one line.
+One command: bumps `package.json` and `package-lock.json`, propagates the
+version into `manifest.json`, `manifest-beta.json`, and `versions.json`,
+promotes the changelog's `## [Unreleased]` heading, commits all six, and creates
+the annotated tag `<x.y.z>`. Read the commit before pushing — six files changed,
+`versions.json` up exactly one line, and `CHANGELOG.md` showing only the heading
+rewrite. The changelog step is a no-op if a `## [<x.y.z>]` section already
+exists, so promoting by hand first is still safe.
 
-**4. Push.** Branch before tag; the tag starts the build.
+**4. Push.** The `main` ruleset requires a pull request and the `build` and
+`e2e-gate` checks, and grants **no bypass — not even to the owner**, so the two
+release commits cannot be pushed to `main` directly. Put them on a branch and
+merge the PR:
 
 ```bash
-git push origin main
+git switch -c release/<x.y.z>
+git push -u origin release/<x.y.z>
+gh pr create --fill && gh pr merge --merge
+```
+
+Merge, never squash or rebase: both rewrite the commit the tag points at,
+leaving it dangling off `main`. Only then push the tag, which must reach GitHub
+**after** the branch — `versions.json` is read from the default branch, and the
+tag starts the build.
+
+```bash
+git switch main && git pull
 git push origin <x.y.z>
 ```
 
